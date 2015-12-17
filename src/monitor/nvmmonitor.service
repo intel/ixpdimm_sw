@@ -1,0 +1,10 @@
+[Unit]
+Description=NVM Monitoring Service
+
+[Service]
+Type=forking
+ExecStart=/usr/bin/nvmmonitor -d
+PIDFile=/var/run/nvmmonitor.pid
+
+[Install]
+WantedBy=multi-user.target

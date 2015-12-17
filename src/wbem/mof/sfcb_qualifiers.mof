@@ -1,0 +1,9 @@
+// SFCB has an incomplete set of qualifiers pre-defined.
+
+Qualifier Reference : string = null, 
+    Scope(property);
+
+Qualifier Structure : boolean = false, 
+    Scope(class, indication), 
+    Flavor(DisableOverride, ToSubclass);
+

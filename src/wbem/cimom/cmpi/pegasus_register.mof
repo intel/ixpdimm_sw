@@ -1,0 +1,1382 @@
+instance of PG_ProviderModule
+{
+   Name = "intelwbemprovider";
+   Location = "nvmwbem"; // should only need "wbem" and CMPI will turn into libnvmwbem.so, but not working yet 
+   Vendor = "Intel";
+   Version = "1.0";
+   InterfaceType = "CMPI"; // This is important
+   InterfaceVersion = "2.0.0"; // This is important
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_BaseServer_Provider";
+};
+
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_BaseServer_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>BaseServer";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2 }; // Instance
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_NVDIMM_Provider";
+};
+
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_NVDIMM_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>NVDIMM";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2, 5 }; // Instance, Method
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_RawMemory_Provider";
+};
+
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_RawMemory_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>RawMemory";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2 }; // Instance
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_MemoryController_Provider";
+};
+
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_MemoryController_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>MemoryController";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2 }; // Instance
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_SystemProcessor_Provider";
+};
+
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_SystemProcessor_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>SystemProcessor";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2 }; // Instance
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_ServerChassis_Provider";
+};
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_ServerChassis_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>ServerChassis";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2 }; // Instance
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_NVDIMMFWVersion_Provider";
+};
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_NVDIMMFWVersion_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>NVDIMMFWVersion";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2 }; // Instance
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_AvailableFW_Provider";
+};
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_AvailableFW_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>AvailableFW";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2 }; // Instance
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_NVDIMMCollection_Provider";
+};
+
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_NVDIMMCollection_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>NVDIMMCollection";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2 }; // Instance
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_NVDIMMSoftwareInstallationService_Provider";
+};
+
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_NVDIMMSoftwareInstallationService_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>NVDIMMSoftwareInstallationService";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2, 5}; // Instance, Method
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_ErasureCapabilities_Provider";
+};
+
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_ErasureCapabilities_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>ErasureCapabilities";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2, 3 }; // Instance, Association
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_NVDIMMSensor_Provider";
+};
+
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_NVDIMMSensor_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>NVDIMMSensor";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2 }; // Instance
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_NVDIMMHealthSensorView_Provider";
+};
+
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_NVDIMMHealthSensorView_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>NVDIMMHealthSensorView";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2 }; // Instance
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_StaticFilter_Provider";
+};
+
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_StaticFilter_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>StaticFilter";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2 }; // Instance
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_PerformanceMetricDefinition_Provider";
+};
+
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_PerformanceMetricDefinition_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>PerformanceMetricDefinition";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2, 3 }; // Instance, Association
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_PerformanceMetric_Provider";
+};
+
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_PerformanceMetric_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>PerformanceMetric";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2, 3 }; // Instance, Association
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_NVDIMMPerformanceView_Provider";
+};
+
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_NVDIMMPerformanceView_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>NVDIMMPerformanceView";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2 }; // Instance
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_ErasureService_Provider";
+};
+
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_ErasureService_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>ErasureService";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2, 3, 5 }; // Instance, Association, Method
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_SupportDataService_Provider";
+};
+
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_SupportDataService_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>SupportDataService";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2, 5 }; // Instance
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_OpaqueSupportData_Provider";
+};
+
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_OpaqueSupportData_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>OpaqueSupportData";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2 }; // Instance
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_NVDIMMDiagnostic_Provider";
+};
+
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_NVDIMMDiagnostic_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>NVDIMMDiagnostic";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2, 5 }; // Instance
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_DiagnosticIdentity_Provider";
+};
+
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_DiagnosticIdentity_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>DiagnosticIdentity";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2 }; // Instance
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_MemoryResources_Provider";
+};
+
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_MemoryResources_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>MemoryResources";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2 }; // Instance
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_PersistentMemoryPool_Provider";
+};
+
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_PersistentMemoryPool_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>PersistentMemoryPool";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2 , 5 }; // Instance, method
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_VolatileMemory_Provider";
+};
+
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_VolatileMemory_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>VolatileMemory";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2 }; // Instance
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_PersistentMemory_Provider";
+};
+
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_PersistentMemory_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>PersistentMemory";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2 }; // Instance
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_MemoryCapabilities_Provider";
+};
+
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_MemoryCapabilities_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>MemoryCapabilities";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2 }; // Instance
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_MemoryConfigurationService_Provider";
+};
+
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_MemoryConfigurationService_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>MemoryConfigurationService";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2, 5 }; // Instance, Method
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_MemoryConfigurationCapabilities_Provider";
+};
+
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_MemoryConfigurationCapabilities_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>MemoryConfigurationCapabilities";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2, 5 }; // Instance, Method
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_MemoryAllocationSettings_Provider";
+};
+
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_MemoryAllocationSettings_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>MemoryAllocationSettings";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2 }; // Instance
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_FWEventLog_Provider";
+};
+
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_FWEventLog_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>FWEventLog";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2 }; // Instance
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_HostSoftware_Provider";
+};
+
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_HostSoftware_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>Hostsoftware";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2 }; // Instance
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_NVDIMMDriverIdentity_Provider";
+};
+
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_NVDIMMDriverIdentity_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>NVDIMMDriverIdentity";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2 }; // Instance
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_ManagementSoftwareIdentity_Provider";
+};
+
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_ManagementSoftwareIdentity_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>ManagementSoftwareIdentity";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2 }; // Instance
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_DiagnosticLog_Provider";
+};
+
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_DiagnosticLog_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>DiagnosticLog";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2, 5 }; // Instance, Method
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_DiagnosticCompletionRecord_Provider";
+};
+
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_DiagnosticCompletionRecord_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>DiagnosticCompletionRecord";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2 }; // Instance
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_NVDIMMEventLog_Provider";
+};
+
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_NVDIMMEventLog_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>NVDIMMEventLog";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2, 5 }; // Instance, Method
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_NVDIMMLogEntry_Provider";
+};
+
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_NVDIMMLogEntry_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>NVDIMMLogEntry";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2 }; // Instance
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_PersistentMemoryNamespace_Provider";
+};
+
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_PersistentMemoryNamespace_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>PersistentMemoryNamespace";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2, 5}; // Instance, Method
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_NamespaceSettings_Provider";
+};
+
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_NamespaceSettings_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>NamespaceSettings";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2 }; // Instance
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_PersistentMemoryCapabilities_Provider";
+};
+
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_PersistentMemoryCapabilities_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>PersistentMemoryCapabilities";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2, 5 }; // Instance, Method
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_PersistentMemoryService_Provider";
+};
+
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_PersistentMemoryService_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>PersistentMemoryService";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2, 5 }; // Instance, Method
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_PersistentConfigurationCapabilities_Provider";
+};
+
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_PersistentConfigurationCapabilities_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>PersistentConfigurationCapabilities";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2 }; // Instance
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_RegisteredProfile_Provider";
+};
+
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_RegisteredProfile_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>RegisteredProfile";
+  Namespaces = {"root/interop"};
+  ProviderType = { 2 }; // Instance
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+// ****************************************************************
+// Association Providers
+// ****************************************************************
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_SystemDevice_Provider";
+};
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_SystemDevice_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>SystemDevice";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2, 3 }; // Instance, Association
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_ControlledBy_Provider";
+};
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_ControlledBy_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>ControlledBy";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2, 3 }; // Instance, Association
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_ConcreteComponent_Provider";
+};
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_ConcreteComponent_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>ConcreteComponent";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2, 3 }; // Instance, Association
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_ConcreteDependency_Provider";
+};
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_ConcreteDependency_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>ConcreteDependency";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2, 3 }; // Instance, Association
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_HostedResourcePool_Provider";
+};
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_HostedResourcePool_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>HostedResourcePool";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2, 3 }; // Instance, Association
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_ComputerSystemPackage_Provider";
+};
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_ComputerSystemPackage_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>ComputerSystemPackage";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2, 3 }; // Instance, Association
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_Realizes_Provider";
+};
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_Realizes_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>Realizes";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2, 3 }; // Instance, Association
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_AssociatedMemory_Provider";
+};
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_AssociatedMemory_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>AssociatedMemory";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2, 3 }; // Instance, Association
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_MemberOfCollection_Provider";
+};
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_MemberOfCollection_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>MemberOfCollection";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2, 3 }; // Instance, Association
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_InstalledSoftwareIdentity_Provider";
+};
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_InstalledSoftwareIdentity_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>InstalledSoftwareIdentity";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2, 3 }; // Instance, Association
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_HostedCollection_Provider";
+};
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_HostedCollection_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>HostedCollection";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2, 3 }; // Instance, Association
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_ServiceAffectsElement_Provider";
+};
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_ServiceAffectsElement_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>ServiceAffectsElement";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2, 3 }; // Instance, Association
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_AssociatedSensor_Provider";
+};
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_AssociatedSensor_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>AssociatedSensor";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2, 3 }; // Instance, Association
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_HostedService_Provider";
+};
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_HostedService_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>HostedService";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2, 3 }; // Instance, Association
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_MetricDefForME_Provider";
+};
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_MetricDefForME_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>MetricDefForME";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2, 3 }; // Instance, Association
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_MetricForME_Provider";
+};
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_MetricForME_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>MetricForME";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2, 3 }; // Instance, Association
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_MetricInstance_Provider";
+};
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_MetricInstance_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>MetricInstance";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2, 3 }; // Instance, Association
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_HostedStoragePool_Provider";
+};
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_HostedStoragePool_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>HostedStoragePool";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2, 3 }; // Instance, Association
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_ElementCapabilities_Provider";
+};
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_ElementCapabilities_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>ElementCapabilities";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2, 3 }; // Instance, Association
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_AllocatedFromStoragePool_Provider";
+};
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_AllocatedFromStoragePool_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>AllocatedFromStoragePool";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2, 3 }; // Instance, Association
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_ElementSettingData_Provider";
+};
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_ElementSettingData_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>ElementSettingData";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2, 3 }; // Instance, Association
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_ElementAllocatedFromPool_Provider";
+};
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_ElementAllocatedFromPool_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>ElementAllocatedFromPool";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2, 3 }; // Instance, Association
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_BasedOn_Provider";
+};
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_BasedOn_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>BasedOn";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2, 3 }; // Instance, Association
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_HostedService_Provider";
+};
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_HostedService_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>HostedService";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2, 3 }; // Instance, Association
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_LogManagesRecord_Provider";
+};
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_LogManagesRecord_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>LogManagesRecord";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2, 3 }; // Instance, Association
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_UseOfLog_Provider";
+};
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_UseOfLog_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>UseOfLog";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2, 3 }; // Instance, Association
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_ElementSoftwareIdentity_Provider";
+};
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_ElementSoftwareIdentity_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>ElementSoftwareIdentity";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2, 3 }; // Instance, Association
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_ElementConformsToProfile_Provider";
+};
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_ElementConformsToProfile_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>ElementConformsToProfile";
+  Namespaces = {"root/intelwbem", "root/interop"};
+  ProviderType = { 2, 3 }; // Instance, Association
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_AvailableDiagnosticService_Provider";
+};
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_AvailableDiagnosticService_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>AvailableDiagnosticService";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2, 3 }; //  Instance, Association
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_ElementView_Provider";
+};
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_ElementView_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>ElementView";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2, 3 }; // Instance, Association
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+/*
+ * -------------------------------------------------------------------------------------------------
+ * Indication Provider Registrations
+ * -------------------------------------------------------------------------------------------------
+ */
+
+instance of PG_Provider
+{
+    ProviderModuleName = "intelwbemprovider";
+    Name = "Intel_NVDIMMEvent_Provider";
+};
+
+instance of PG_ProviderCapabilities
+{
+    ProviderModuleName = "intelwbemprovider";
+    ProviderName = "Intel_NVDIMMEvent_Provider";
+    CapabilityID = "1";
+    ClassName = "<NVM_WBEM_PREFIX>NVDIMMEvent";
+    ProviderType = { 4 };  // Indication
+    Namespaces = { "root/intelwbem" };
+};
+
+instance of PG_Provider
+{
+    ProviderModuleName = "intelwbemprovider";
+    Name = "Intel_InstCreation_Provider";
+};
+instance of PG_ProviderCapabilities
+{
+    ProviderModuleName = "intelwbemprovider";
+    ProviderName = "Intel_InstCreation_Provider";
+    CapabilityID = "1";
+    ClassName = "<NVM_WBEM_PREFIX>InstCreation";
+    ProviderType = { 4 };  // Indication
+    Namespaces = { "root/intelwbem" };
+};
+
+instance of PG_Provider
+{
+    ProviderModuleName = "intelwbemprovider";
+    Name = "Intel_InstDeletion_Provider";
+};
+instance of PG_ProviderCapabilities
+{
+    ProviderModuleName = "intelwbemprovider";
+    ProviderName = "Intel_InstDeletion_Provider";
+    CapabilityID = "1";
+    ClassName = "<NVM_WBEM_PREFIX>InstDeletion";
+    ProviderType = { 4 };  // Indication
+    Namespaces = { "root/intelwbem" };
+};
+
+instance of PG_Provider
+{
+    ProviderModuleName = "intelwbemprovider";
+    Name = "Intel_InstModification_Provider";
+};
+instance of PG_ProviderCapabilities
+{
+    ProviderModuleName = "intelwbemprovider";
+    ProviderName = "Intel_InstModification_Provider";
+    CapabilityID = "1";
+    ClassName = "<NVM_WBEM_PREFIX>InstModification";
+    ProviderType = { 4 };  // Indication
+    Namespaces = { "root/intelwbem" };
+};
+

@@ -1,0 +1,19 @@
+//==================================
+// Qualifiers requried by Windows
+//==================================
+Qualifier Implemented : boolean = true, 
+    Scope(method);
+Qualifier Dynamic : boolean = true, 
+    Scope(class);
+
+/* Instances */
+[dynamic, provider("intelwbemprovider")]
+class <NVM_WBEM_PREFIX>RegisteredProfile : CIM_RegisteredProfile
+{
+};
+
+/* Associations */
+[dynamic, provider("intelwbemprovider")]
+class <NVM_WBEM_PREFIX>ElementConformsToProfile : CIM_ElementConformsToProfile
+{
+};

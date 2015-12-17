@@ -1,0 +1,894 @@
+/*
+ * Copyright (c) 2015, Intel Corporation
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *   * Redistributions of source code must retain the above copyright notice,
+ *     this list of conditions and the following disclaimer.
+ *   * Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *   * Neither the name of Intel Corporation nor the names of its contributors
+ *     may be used to endorse or promote products derived from this software
+ *     without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/*
+ * This file implements the Linux driver adapter interface for managing namespaces.
+ */
+
+#include "device_adapter.h"
+#include "lnx_adapter.h"
+#include <fcntl.h>
+#include <unistd.h>
+#include <linux/fs.h>
+#include <string/s_str.h>
+#include <guid/guid.h>
+#include "utility.h"
+
+#define	DEFAULT_BTT_SECTOR_SIZE	4096
+
+/*
+ * Get the number of existing namespaces
+ */
+int get_namespace_count()
+{
+	COMMON_LOG_ENTRY();
+	int rc = 0; // returns the namespace count
+
+	int num_namespaces = 0;
+	struct ndctl_ctx *ctx;
+
+	if ((rc = ndctl_new(&ctx)) >= 0)
+	{
+		struct ndctl_bus *bus;
+		ndctl_bus_foreach(ctx, bus)
+		{
+			struct ndctl_region *region;
+			ndctl_region_foreach(bus, region)
+			{
+				int nstype = ndctl_region_get_nstype(region);
+				if (ndctl_region_is_enabled(region) &&
+					(nstype == ND_DEVICE_NAMESPACE_PMEM || nstype == ND_DEVICE_NAMESPACE_BLK))
+				{
+					struct ndctl_namespace *namespace;
+					ndctl_namespace_foreach(region, namespace)
+					{
+						if (ndctl_namespace_is_configured(namespace))
+						{
+							num_namespaces++;
+						}
+					}
+				}
+			}
+		}
+		rc = num_namespaces;
+		ndctl_unref(ctx);
+	}
+	else
+	{
+		rc = linux_err_to_nvm_lib_err(rc);
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+/*
+ * Get the discovery information for a given number of namespaces
+ */
+int get_namespaces(const NVM_UINT32 count,
+		struct nvm_namespace_discovery *p_namespaces)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	int namespace_index = 0;
+	struct ndctl_ctx *ctx;
+
+	if (p_namespaces == NULL)
+	{
+		COMMON_LOG_ERROR("p_namespaces is NULL");
+		rc = NVM_ERR_UNKNOWN;
+	}
+	else if ((rc = ndctl_new(&ctx)) >= 0)
+	{
+		memset(p_namespaces, 0, sizeof (struct nvm_namespace_discovery) * count);
+
+		struct ndctl_bus *bus;
+		ndctl_bus_foreach(ctx, bus)
+		{
+			struct ndctl_region *region;
+			ndctl_region_foreach(bus, region)
+			{
+				int nstype = ndctl_region_get_nstype(region);
+				if (ndctl_region_is_enabled(region) &&
+					(nstype == ND_DEVICE_NAMESPACE_PMEM || nstype == ND_DEVICE_NAMESPACE_BLK))
+				{
+					struct ndctl_namespace *namespace;
+					ndctl_namespace_foreach(region, namespace)
+					{
+						if (ndctl_namespace_is_configured(namespace))
+						{
+							if (namespace_index >= count)
+							{
+								rc = NVM_ERR_ARRAYTOOSMALL;
+								COMMON_LOG_ERROR("Invalid parameter, "
+										"count is smaller than number of "NVM_DIMM_NAME"s");
+								break;
+							}
+
+							ndctl_namespace_get_uuid(namespace,
+								p_namespaces[namespace_index].namespace_guid);
+							s_strcpy(p_namespaces[namespace_index].friendly_name,
+								ndctl_namespace_get_alt_name(namespace), NVM_NAMESPACE_NAME_LEN);
+
+							namespace_index++;
+						}
+					}
+				}
+			}
+		}
+		rc = namespace_index;
+		ndctl_unref(ctx);
+	}
+	else
+	{
+		rc = linux_err_to_nvm_lib_err(rc);
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+int get_namespace_lba_size(struct ndctl_namespace *namespace, NVM_UINT32 *lba_size)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	char ns_queue_lba_size_path[PATH_MAX];
+
+	*lba_size = 0;
+
+	snprintf(ns_queue_lba_size_path, PATH_MAX, "/sys/block/%s/queue/logical_block_size",
+		ndctl_namespace_get_block_device(namespace));
+
+	int fd = open(ns_queue_lba_size_path, O_RDONLY|O_CLOEXEC);
+	int bytes_read;
+
+	if (fd < 0)
+	{
+		COMMON_LOG_ERROR_F("Failed to open %s", ns_queue_lba_size_path);
+		rc = NVM_ERR_DRIVERFAILED;
+	}
+	else
+	{
+		char buf[SYSFS_ATTR_SIZE];
+		bytes_read = read(fd, buf, SYSFS_ATTR_SIZE);
+		close(fd);
+		if (bytes_read < 0 || bytes_read >= SYSFS_ATTR_SIZE)
+		{
+			COMMON_LOG_ERROR_F("Failed to read from %s", ns_queue_lba_size_path);
+			rc = NVM_ERR_DRIVERFAILED;
+		}
+		else
+		{
+			buf[bytes_read] = 0;
+			if (bytes_read && buf[bytes_read-1] == '\n')
+			{
+				buf[bytes_read-1] = 0;
+			}
+
+			*lba_size = strtoul(buf, NULL, 0);
+		}
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+int enable_namespace(struct ndctl_namespace *p_namespace)
+{
+	int rc = NVM_SUCCESS;
+
+	struct ndctl_btt *p_btt = ndctl_namespace_get_btt(p_namespace);
+	if (!p_btt)
+	{
+		// if not already enabled
+		if (!ndctl_namespace_is_enabled(p_namespace))
+		{
+			int tmp_rc = ndctl_namespace_enable(p_namespace);
+			if (tmp_rc < 0)
+			{
+				rc = linux_err_to_nvm_lib_err(tmp_rc);
+				COMMON_LOG_ERROR("Failed to enable the namespace");
+			}
+		}
+	}
+	else
+	{
+		// if not already enabled
+		if (!ndctl_btt_is_enabled(p_btt))
+		{
+			int tmp_rc = ndctl_btt_enable(p_btt);
+			if (tmp_rc < 0)
+			{
+				rc = linux_err_to_nvm_lib_err(tmp_rc);
+				COMMON_LOG_ERROR("Failed to enable the BTT namespace");
+			}
+		}
+	}
+	return rc;
+}
+
+int disable_namespace(struct ndctl_namespace *p_namespace)
+{
+	int rc = NVM_SUCCESS;
+
+	struct ndctl_btt *p_btt = ndctl_namespace_get_btt(p_namespace);
+	if (!p_btt)
+	{
+		// if not already disabled
+		if (ndctl_namespace_is_enabled(p_namespace))
+		{
+			int tmp_rc = ndctl_namespace_disable(p_namespace);
+			if (tmp_rc < 0)
+			{
+				rc = linux_err_to_nvm_lib_err(tmp_rc);
+				COMMON_LOG_ERROR("Failed to disable the namespace");
+			}
+		}
+	}
+	else
+	{
+		int tmp_rc = ndctl_btt_delete(p_btt);
+		if (tmp_rc < 0)
+		{
+			rc = linux_err_to_nvm_lib_err(tmp_rc);
+			COMMON_LOG_ERROR("Failed to disable the btt namespace");
+		}
+	}
+	return rc;
+}
+
+struct ndctl_namespace *get_ndctl_namespace_from_guid(struct ndctl_ctx *p_ctx,
+		const NVM_GUID namespace_guid)
+{
+	struct ndctl_bus *p_bus;
+	ndctl_bus_foreach(p_ctx, p_bus)
+	{
+		struct ndctl_region *p_region;
+		ndctl_region_foreach(p_bus, p_region)
+		{
+			int nstype = ndctl_region_get_nstype(p_region);
+			if (ndctl_region_is_enabled(p_region) &&
+				(nstype == ND_DEVICE_NAMESPACE_PMEM || nstype == ND_DEVICE_NAMESPACE_BLK))
+			{
+				struct ndctl_namespace *p_namespace = NULL;
+				ndctl_namespace_foreach(p_region, p_namespace)
+				{
+					NVM_GUID index_guid;
+					ndctl_namespace_get_uuid(p_namespace, index_guid);
+					if (ndctl_namespace_is_configured(p_namespace) &&
+						!memcmp(namespace_guid, index_guid, NVM_GUID_LEN))
+					{
+						return p_namespace;
+					}
+				}
+			}
+		}
+	}
+	return NULL;
+}
+
+/*
+ * Get the details for a specific namespace
+ */
+int get_namespace_details(
+		const NVM_GUID namespace_guid,
+		struct nvm_namespace_details *p_details)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	struct ndctl_ctx *ctx;
+	if (namespace_guid == NULL)
+	{
+			COMMON_LOG_ERROR("namespace guid cannot be NULL.");
+			rc = NVM_ERR_INVALIDPARAMETER;
+	}
+	else if (p_details == NULL)
+	{
+		COMMON_LOG_ERROR("nvm_namespace_details is NULL");
+		rc = NVM_ERR_INVALIDPARAMETER;
+	}
+	else if ((rc = ndctl_new(&ctx)) >= 0)
+	{
+		memset(p_details, 0, sizeof (struct nvm_namespace_details));
+		struct ndctl_namespace *p_namespace =
+				get_ndctl_namespace_from_guid(ctx, namespace_guid);
+		if (!p_namespace)
+		{
+			COMMON_LOG_ERROR("Specified namespace not found");
+			rc = NVM_ERR_BADNAMESPACE;
+		}
+		else
+		{
+			struct ndctl_region *p_region =
+					ndctl_namespace_get_region(p_namespace);
+			switch (ndctl_namespace_get_type(p_namespace))
+			{
+				case ND_DEVICE_NAMESPACE_PMEM:
+					p_details->type = NAMESPACE_TYPE_PMEM;
+					p_details->namespace_creation_id.interleave_setid =
+							ndctl_region_get_range_index(p_region);
+					p_details->block_size = 1;
+					break;
+
+				case ND_DEVICE_NAMESPACE_BLK:
+					p_details->type = NAMESPACE_TYPE_BLOCK;
+					struct ndctl_dimm *dimm = ndctl_region_get_first_dimm(p_region);
+					if (dimm)
+					{
+						p_details->namespace_creation_id.device_handle.handle =
+								ndctl_dimm_get_handle(dimm);
+						p_details->block_size = ndctl_namespace_get_sector_size(p_namespace);
+					}
+					else
+					{
+						rc = NVM_ERR_DRIVERFAILED;
+					}
+					break;
+
+				default:
+					p_details->type = NAMESPACE_TYPE_UNKNOWN;
+					break;
+			}
+
+			ndctl_namespace_get_uuid(p_namespace,
+				p_details->discovery.namespace_guid);
+
+			s_strcpy(p_details->discovery.friendly_name,
+				ndctl_namespace_get_alt_name(p_namespace),
+				NVM_NAMESPACE_NAME_LEN);
+
+			struct ndctl_btt *p_btt = ndctl_namespace_get_btt(p_namespace);
+			if (!p_btt)
+			{
+				p_details->enabled = ndctl_namespace_is_enabled(p_namespace) ?
+					NAMESPACE_ENABLE_STATE_ENABLED :
+					NAMESPACE_ENABLE_STATE_DISABLED;
+			}
+			else
+			{
+				p_details->btt = 1;
+				p_details->enabled = ndctl_btt_is_enabled(p_btt) ?
+					NAMESPACE_ENABLE_STATE_ENABLED :
+					NAMESPACE_ENABLE_STATE_DISABLED;
+			}
+
+			p_details->health = NAMESPACE_HEALTH_NORMAL;
+
+			p_details->block_count =
+				calculateBlockCount((ndctl_namespace_get_size(p_namespace)), p_details->block_size);
+		}
+		ndctl_unref(ctx);
+	}
+	else
+	{
+		rc = linux_err_to_nvm_lib_err(rc);
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+int get_idle_btt(struct ndctl_region *region, struct ndctl_btt **idle_btt)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_ERR_DRIVERFAILED;
+	struct ndctl_btt *btt;
+
+	*idle_btt = NULL;
+
+	ndctl_btt_foreach(region, btt)
+	{
+		if (!ndctl_btt_is_enabled(btt) && !ndctl_btt_is_configured(btt))
+		{
+			*idle_btt = btt;
+			rc = NVM_SUCCESS;
+			break;
+		}
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+int get_unconfigured_namespace(struct ndctl_namespace **unconfigured_namespace,
+	struct ndctl_region *region)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_ERR_DRIVERFAILED;
+
+	*unconfigured_namespace = NULL;
+
+	struct ndctl_namespace *namespace;
+	ndctl_namespace_foreach(region, namespace)
+	{
+		if (!ndctl_namespace_is_enabled(namespace) && !ndctl_namespace_is_configured(namespace))
+		{
+			*unconfigured_namespace = namespace;
+			rc = NVM_SUCCESS;
+			break;
+		}
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+int get_ndctl_pm_region_by_range_index(struct ndctl_ctx *ctx, struct ndctl_region **target_region,
+	unsigned int spa_index)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_ERR_DRIVERFAILED;
+
+	*target_region = NULL;
+
+	struct ndctl_bus *bus;
+	ndctl_bus_foreach(ctx, bus)
+	{
+		struct ndctl_region *region;
+		ndctl_region_foreach(bus, region)
+		{
+			int nstype = ndctl_region_get_nstype(region);
+			if (ndctl_region_is_enabled(region) &&
+				(nstype == ND_DEVICE_NAMESPACE_PMEM))
+			{
+				if (spa_index == ndctl_region_get_range_index(region))
+				{
+					*target_region = region;
+					rc = NVM_SUCCESS;
+					break;
+				}
+			}
+		}
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+int get_ndctl_blk_region_by_handle(struct ndctl_ctx *ctx, struct ndctl_region **target_region,
+	unsigned int handle)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_ERR_DRIVERFAILED;
+
+	*target_region = NULL;
+
+	struct ndctl_bus *bus;
+	ndctl_bus_foreach(ctx, bus)
+	{
+		struct ndctl_region *region;
+		ndctl_region_foreach(bus, region)
+		{
+			int nstype = ndctl_region_get_nstype(region);
+			if (ndctl_region_is_enabled(region) &&
+				(nstype == ND_DEVICE_NAMESPACE_BLK))
+			{
+				struct ndctl_dimm *dimm = ndctl_region_get_first_dimm(region);
+				if (dimm)
+				{
+					if (handle == ndctl_dimm_get_handle(dimm))
+					{
+						*target_region = region;
+						rc = NVM_SUCCESS;
+						break;
+					}
+				}
+				else
+				{
+					rc = NVM_ERR_DRIVERFAILED;
+					break;
+				}
+
+			}
+		}
+	}
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+int create_btt_namespace(struct ndctl_namespace *namespace,
+		const struct nvm_namespace_create_settings *p_settings)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	struct ndctl_region *region = ndctl_namespace_get_region(namespace);
+	struct ndctl_btt *btt;
+	if (region != NULL && ((rc = get_idle_btt(region, &btt)) == NVM_SUCCESS))
+	{
+		NVM_GUID btt_guid;
+		generate_guid(btt_guid);
+
+		// always have to set a sector size for the btt backing
+		// namespace. 1 is not valid for this, so use default of 4kB
+		// for app direct namespaces
+		unsigned int sector_size = DEFAULT_BTT_SECTOR_SIZE;
+		if (p_settings->type == NAMESPACE_TYPE_BLOCK)
+		{
+			sector_size = p_settings->block_size;
+		}
+
+		if (ndctl_btt_set_uuid(btt, btt_guid))
+		{
+			COMMON_LOG_ERROR("Set btt UUID failed");
+			rc = NVM_ERR_DRIVERFAILED;
+		}
+		else if (ndctl_btt_set_sector_size(btt, sector_size))
+		{
+			COMMON_LOG_ERROR("Set btt sector size failed");
+			rc = NVM_ERR_DRIVERFAILED;
+		}
+		else if (ndctl_btt_set_namespace(btt, namespace))
+		{
+			COMMON_LOG_ERROR("Set btt backing namespace failed");
+			rc = NVM_ERR_DRIVERFAILED;
+		}
+		else if (p_settings->enabled == NAMESPACE_ENABLE_STATE_ENABLED &&
+				ndctl_btt_enable(btt) < 0)
+		{
+			COMMON_LOG_ERROR("Enable btt failed");
+			// If a btt fails to enable it remains in a disabled state, so delete it
+			ndctl_btt_delete(btt);
+			rc = NVM_ERR_DRIVERFAILED;
+		}
+	}
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+/*
+ * Create a new namespace
+ */
+int create_namespace(
+		NVM_GUID *p_namespace_guid,
+		const struct nvm_namespace_create_settings *p_settings)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	struct ndctl_ctx *ctx;
+
+	if (p_settings == NULL)
+	{
+		COMMON_LOG_ERROR("namespace create settings structure cannot be NULL.");
+		rc = NVM_ERR_UNKNOWN;
+	}
+	else if (p_namespace_guid == NULL)
+	{
+		COMMON_LOG_ERROR("namespace GUID pointer cannot be NULL.");
+		rc = NVM_ERR_UNKNOWN;
+	}
+	else if ((rc = ndctl_new(&ctx)) >= 0)
+	{
+		struct ndctl_region *region;
+		if (p_settings->type == NAMESPACE_TYPE_PMEM)
+		{
+			rc = get_ndctl_pm_region_by_range_index(ctx, &region,
+				p_settings->namespace_creation_id.interleave_setid);
+		}
+		else if (p_settings->type == NAMESPACE_TYPE_BLOCK)
+		{
+			rc = get_ndctl_blk_region_by_handle(ctx, &region,
+				p_settings->namespace_creation_id.device_handle.handle);
+		}
+		else
+		{
+			COMMON_LOG_ERROR("Cannot create unknown namespace type");
+			rc = NVM_ERR_UNKNOWN;
+		}
+
+		struct ndctl_namespace *namespace;
+		if (rc == NVM_SUCCESS &&
+				((rc = get_unconfigured_namespace(&namespace, region)) == NVM_SUCCESS))
+		{
+			NVM_GUID namespace_guid;
+			generate_guid(namespace_guid);
+			memmove(p_namespace_guid, namespace_guid, NVM_GUID_LEN);
+
+			if (ndctl_namespace_set_uuid(namespace, namespace_guid))
+			{
+				COMMON_LOG_ERROR("Set UUID Failed");
+				rc = NVM_ERR_DRIVERFAILED;
+			}
+			else if (ndctl_namespace_set_alt_name(namespace, p_settings->friendly_name))
+			{
+				COMMON_LOG_ERROR("Set Alt Name Failed");
+				rc = NVM_ERR_DRIVERFAILED;
+			}
+			else if (ndctl_namespace_set_size(namespace,
+				adjust_namespace_size(p_settings->block_size, p_settings->block_count)))
+			{
+				COMMON_LOG_ERROR("Set SizeFailed");
+				rc = NVM_ERR_DRIVERFAILED;
+			}
+			else if (p_settings->type == NAMESPACE_TYPE_BLOCK)
+			{
+				if (ndctl_namespace_set_sector_size(namespace, p_settings->block_size))
+				{
+					COMMON_LOG_ERROR("Set SectorSize Failed");
+					rc = NVM_ERR_DRIVERFAILED;
+				}
+			}
+
+			if (rc == NVM_SUCCESS && ndctl_namespace_is_configured(namespace))
+			{
+				if (p_settings->btt)
+				{
+					if ((rc = create_btt_namespace(namespace, p_settings)) != NVM_SUCCESS)
+					{
+						COMMON_LOG_ERROR("Create BTT Failed");
+						ndctl_namespace_delete(namespace);
+					}
+				}
+				// enable the namespace if desired (only non-btt namespaces)
+				else if (rc == NVM_SUCCESS &&
+						p_settings->enabled == NAMESPACE_ENABLE_STATE_ENABLED)
+				{
+					rc = enable_namespace(namespace);
+				}
+			}
+			else
+			{
+				COMMON_LOG_ERROR("Failed to configure the namespace");
+			}
+		}
+		ndctl_unref(ctx);
+	}
+	else
+	{
+		rc = linux_err_to_nvm_lib_err(rc);
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+/*
+ * Delete an existing namespace
+ */
+int delete_namespace(const NVM_GUID namespace_guid)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	struct ndctl_ctx *p_ctx;
+	if (namespace_guid == NULL)
+	{
+			COMMON_LOG_ERROR("namespace guid cannot be NULL.");
+			rc = NVM_ERR_INVALIDPARAMETER;
+	}
+	else if ((rc = ndctl_new(&p_ctx)) >= 0)
+	{
+		struct ndctl_namespace *p_namespace =
+				get_ndctl_namespace_from_guid(p_ctx, namespace_guid);
+		if (!p_namespace)
+		{
+			COMMON_LOG_ERROR("Specified namespace not found");
+			rc = NVM_ERR_BADNAMESPACE;
+		}
+		else
+		{
+			// disable it
+			if ((rc = disable_namespace(p_namespace)) == NVM_SUCCESS)
+			{
+				// delete it
+				rc = linux_err_to_nvm_lib_err(ndctl_namespace_delete(p_namespace));
+			}
+		}
+		ndctl_unref(p_ctx);
+	}
+	else
+	{
+		rc = linux_err_to_nvm_lib_err(rc);
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+/*
+ * Modify an existing namespace name
+ */
+int modify_namespace_name(
+		const NVM_GUID namespace_guid,
+		const NVM_NAMESPACE_NAME name)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	struct ndctl_ctx *p_ctx;
+	if (namespace_guid == NULL)
+	{
+			COMMON_LOG_ERROR("namespace guid cannot be NULL.");
+			rc = NVM_ERR_INVALIDPARAMETER;
+	}
+	else if ((rc = ndctl_new(&p_ctx)) >= 0)
+	{
+		struct ndctl_namespace *p_namespace =
+				get_ndctl_namespace_from_guid(p_ctx, namespace_guid);
+		if (!p_namespace)
+		{
+			COMMON_LOG_ERROR("Specified namespace not found");
+			rc = NVM_ERR_BADNAMESPACE;
+		}
+		else
+		{
+			NVM_BOOL ns_enabled = 0;
+			struct ndctl_btt *p_btt = ndctl_namespace_get_btt(p_namespace);
+			if (!p_btt)
+			{
+				ns_enabled = ndctl_namespace_is_enabled(p_namespace);
+			}
+			else
+			{
+				ns_enabled = ndctl_btt_is_enabled(p_btt);
+			}
+
+			// disable it
+			if (ns_enabled && ((rc = disable_namespace(p_namespace)) != NVM_SUCCESS))
+			{
+				COMMON_LOG_ERROR("Failed to disable the namespace");
+			}
+			// change the name
+			else if ((rc = linux_err_to_nvm_lib_err(
+				ndctl_namespace_set_alt_name(p_namespace, name))) != NVM_SUCCESS)
+			{
+				COMMON_LOG_ERROR("Failed to set new friendly name");
+			}
+			// re-enable it
+			else if (ns_enabled && ((rc = enable_namespace(p_namespace)) != NVM_SUCCESS))
+			{
+				COMMON_LOG_ERROR("Failed to re-enable namespace ");
+			}
+		}
+		ndctl_unref(p_ctx);
+	}
+	else
+	{
+		rc = linux_err_to_nvm_lib_err(rc);
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+/*
+ * Modify an existing namespace size
+ */
+int modify_namespace_block_count(
+		const NVM_GUID namespace_guid,
+		const NVM_UINT64 block_count)
+{
+	int rc = NVM_ERR_NOTSUPPORTED;
+	return rc;
+}
+
+/*
+ * Modify an existing namespace enable
+ */
+int modify_namespace_enabled(
+		const NVM_GUID namespace_guid,
+		const enum namespace_enable_state enabled)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	struct ndctl_ctx *p_ctx;
+	if (namespace_guid == NULL)
+	{
+			COMMON_LOG_ERROR("namespace guid cannot be NULL.");
+			rc = NVM_ERR_INVALIDPARAMETER;
+	}
+	else if ((rc = ndctl_new(&p_ctx)) >= 0)
+	{
+		struct ndctl_namespace *p_namespace =
+				get_ndctl_namespace_from_guid(p_ctx, namespace_guid);
+		if (!p_namespace)
+		{
+			COMMON_LOG_ERROR("Specified namespace not found");
+			rc = NVM_ERR_BADNAMESPACE;
+		}
+		else
+		{
+			if (enabled == NAMESPACE_ENABLE_STATE_DISABLED)
+			{
+				rc = disable_namespace(p_namespace);
+			}
+			else if (enabled == NAMESPACE_ENABLE_STATE_ENABLED)
+			{
+				rc = enable_namespace(p_namespace);
+			}
+		}
+		ndctl_unref(p_ctx);
+	}
+	else
+	{
+		rc = linux_err_to_nvm_lib_err(rc);
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+/*
+ * Retrieves the maximum number of namespaces that can be created on a system given the
+ * current dimm topology.
+ * If an error is found log error but continue calculating max namespaces without that dimm
+ */
+int get_max_namespaces(unsigned int *max_namespaces)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	struct ndctl_ctx *ctx;
+
+	if (max_namespaces == NULL)
+	{
+		COMMON_LOG_ERROR("Invalid parameter - 'pointer to max namespaces' parameter is null");
+		rc = NVM_ERR_INVALIDPARAMETER;
+	}
+	else if ((rc = ndctl_new(&ctx)) >= 0)
+	{
+		*max_namespaces = 0;
+
+		struct ndctl_bus *bus;
+		ndctl_bus_foreach(ctx, bus)
+		{
+			struct ndctl_dimm *dimm;
+			ndctl_dimm_foreach(bus, dimm)
+			{
+				struct ndctl_cmd *size_cmd = ndctl_dimm_cmd_new_cfg_size(dimm);
+				if (!size_cmd)
+				{
+					COMMON_LOG_ERROR_F("%#x Failed to create cmd", ndctl_dimm_get_handle(dimm));
+				}
+				else if (ndctl_cmd_submit(size_cmd))
+				{
+					COMMON_LOG_ERROR_F("%#x failed to submit cmd", ndctl_dimm_get_handle(dimm));
+					ndctl_cmd_unref(size_cmd);
+				}
+				else
+				{
+					*max_namespaces += (ndctl_cmd_cfg_size_get_size(size_cmd)
+						- ndctl_sizeof_namespace_index()) / ndctl_sizeof_namespace_label();
+					ndctl_cmd_unref(size_cmd);
+				}
+			}
+		}
+		ndctl_unref(ctx);
+	}
+	else
+	{
+		rc = linux_err_to_nvm_lib_err(rc);
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}

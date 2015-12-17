@@ -1,0 +1,543 @@
+/*
+ * Copyright (c) 2015, Intel Corporation
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *   * Redistributions of source code must retain the above copyright notice,
+ *     this list of conditions and the following disclaimer.
+ *   * Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *   * Neither the name of Intel Corporation nor the names of its contributors
+ *     may be used to endorse or promote products derived from this software
+ *     without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/*
+ * This file contains the provider for the PoolView instances. PoolView
+ * is an internal view class for the Show -pool CLI command.
+ */
+
+#include <LogEnterExit.h>
+#include <nvm_management.h>
+#include <intel_cim_framework/Attribute.h>
+#include <server/BaseServerFactory.h>
+#include <server/SystemCapabilitiesFactory.h>
+#include <guid/guid.h>
+#include <intel_cim_framework/ExceptionBadParameter.h>
+#include <intel_cim_framework/ExceptionNoMemory.h>
+#include <sstream>
+#include "PoolViewFactory.h"
+
+#include <exception/NvmExceptionLibError.h>
+#include <lib_interface/NvmApi.h>
+#include <NvmStrings.h>
+#include "InterleaveSet.h"
+
+wbem::mem_config::PoolViewFactory::PoolViewFactory()
+throw(wbem::framework::Exception)
+{
+}
+
+wbem::mem_config::PoolViewFactory::~PoolViewFactory()
+{
+}
+
+void wbem::mem_config::PoolViewFactory::populateAttributeList(framework::attribute_names_t &attributes)
+throw(wbem::framework::Exception)
+{
+	// add key attributes
+	attributes.push_back(POOLID_KEY);
+
+	// add non-key attributes
+	attributes.push_back(POOLTYPE_KEY);
+	attributes.push_back(CAPACITY_KEY);
+	attributes.push_back(FREECAPACITY_KEY);
+	attributes.push_back(ENCRYPTIONCAPABLE_KEY);
+	attributes.push_back(ENCRYPTIONENABLED_KEY);
+	attributes.push_back(ERASECAPABLE_KEY);
+	attributes.push_back(SOCKETID_KEY);
+	attributes.push_back(APPDIRECTNAMESPACE_MAX_SIZE_KEY);
+	attributes.push_back(APPDIRECTNAMESPACE_MIN_SIZE_KEY);
+	attributes.push_back(APPDIRECTNAMESPACE_COUNT_KEY);
+	attributes.push_back(STORAGENAMESPACE_MAX_SIZE_KEY);
+	attributes.push_back(STORAGENAMESPACE_MIN_SIZE_KEY);
+	attributes.push_back(STORAGENAMESPACE_COUNT_KEY);
+	attributes.push_back(HEALTHSTATE_KEY);
+	attributes.push_back(PERSISTENTSETTINGS_KEY);
+}
+
+/*
+ * Retrieve a specific instance given an object path
+ */
+wbem::framework::Instance *wbem::mem_config::PoolViewFactory::getInstance(
+		framework::ObjectPath &path, framework::attribute_names_t &attributes)
+throw(wbem::framework::Exception)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	// create the instance, initialize with attributes from the path
+	framework::Instance *pInstance = new framework::Instance(path);
+	try
+	{
+		checkAttributes(attributes);
+
+		std::string poolGuidStr = path.getKeyValue(POOLID_KEY).stringValue();
+		if (poolGuidStr.length() != NVM_GUIDSTR_LEN - 1)
+		{
+			throw framework::ExceptionBadParameter(POOLID_KEY.c_str());
+		}
+
+		struct pool pool = getPool(poolGuidStr);
+		bool isVolatilePool = pool.type == POOL_TYPE_VOLATILE;
+
+		if (!isVolatilePool)
+		{
+			possible_namespace_ranges ranges;
+			int rc;
+			if ((rc = nvm_get_available_persistent_size_range(pool.pool_guid, &ranges)) != NVM_SUCCESS)
+			{
+				throw exception::NvmExceptionLibError(rc);
+			}
+
+			// PoolType - The type of pool. One of:  Volatile, Persistent,  Mirrored Persistent
+			if (containsAttribute(POOLTYPE_KEY, attributes))
+			{
+				framework::Attribute a(getPoolType(&pool), false);
+				pInstance->setAttribute(POOLTYPE_KEY, a, attributes);
+			}
+
+			// Capacity - Total usable capacity, both allocated and unallocated in bytes.
+			if (containsAttribute(CAPACITY_KEY, attributes))
+			{
+				framework::Attribute a(pool.capacity, false);
+				pInstance->setAttribute(CAPACITY_KEY, a, attributes);
+			}
+
+			// FreeCapacity - Remaining usable capacity in bytes.
+			if (containsAttribute(FREECAPACITY_KEY, attributes))
+			{
+				framework::Attribute a(pool.free_capacity, false);
+				pInstance->setAttribute(FREECAPACITY_KEY, a, attributes);
+			}
+
+			if (containsAttribute(ENCRYPTIONCAPABLE_KEY, attributes))
+			{
+				std::string encryption = getEncryptionCapable(&pool);
+				framework::Attribute a(encryption, false);
+				pInstance->setAttribute(ENCRYPTIONCAPABLE_KEY, a, attributes);
+			}
+
+			if (containsAttribute(ENCRYPTIONENABLED_KEY, attributes))
+			{
+				std::string encryption = getEncryptionEnabled(&pool);
+				framework::Attribute a(encryption, false);
+				pInstance->setAttribute(ENCRYPTIONENABLED_KEY, a, attributes);
+			}
+
+			if (containsAttribute(ERASECAPABLE_KEY, attributes))
+			{
+				std::string erase = getEraseCapable(&pool);
+				framework::Attribute a(erase, false);
+				pInstance->setAttribute(ERASECAPABLE_KEY, a, attributes);
+			}
+
+			if (containsAttribute(SOCKETID_KEY, attributes))
+			{
+				framework::Attribute a(getString(pool.socket_id), false);
+				pInstance->setAttribute(SOCKETID_KEY, a, attributes);
+			}
+
+			// AppDirectNamespaceMaxSize - Largest PM namespace that can be created
+			if (containsAttribute(APPDIRECTNAMESPACE_MAX_SIZE_KEY, attributes))
+			{
+				framework::Attribute a(ranges.largest_possible_pm_ns, false);
+				pInstance->setAttribute(APPDIRECTNAMESPACE_MAX_SIZE_KEY, a, attributes);
+			}
+
+			// AppDirectNamespaceMinSize - Smallest PM namespace that can be created (smallest alignment size)
+			if (containsAttribute(APPDIRECTNAMESPACE_MIN_SIZE_KEY, attributes))
+			{
+				framework::Attribute a(ranges.smallest_possible_pm_ns, false);
+				pInstance->setAttribute(APPDIRECTNAMESPACE_MIN_SIZE_KEY, a, attributes);
+			}
+
+			// AppDirectNamespaceCount - Current number of PM namespaces
+			if (containsAttribute(APPDIRECTNAMESPACE_COUNT_KEY, attributes))
+			{
+				framework::Attribute a(getString(countNamespaces(&pool, NAMESPACE_TYPE_PMEM)), false);
+				pInstance->setAttribute(APPDIRECTNAMESPACE_COUNT_KEY, a, attributes);
+			}
+
+			// StorageNamespaceMaxSize - Largest Block namespace that can be created
+			if (containsAttribute(STORAGENAMESPACE_MAX_SIZE_KEY, attributes))
+			{
+				framework::Attribute a(ranges.largest_possible_block_ns, false);
+				pInstance->setAttribute(STORAGENAMESPACE_MAX_SIZE_KEY, a, attributes);
+			}
+
+			// StorageNamespaceMinSize - Smallest Block namespace that can be created (smallest block size)
+			if (containsAttribute(STORAGENAMESPACE_MIN_SIZE_KEY, attributes))
+			{
+				framework::Attribute a(ranges.smallest_possible_block_ns, false);
+				pInstance->setAttribute(STORAGENAMESPACE_MIN_SIZE_KEY, a, attributes);
+			}
+
+			// StorageNamespacesCount - Current number of Block namespaces
+			if (containsAttribute(STORAGENAMESPACE_COUNT_KEY, attributes))
+			{
+				framework::Attribute a(getString(countNamespaces(&pool, NAMESPACE_TYPE_BLOCK)), false);
+				pInstance->setAttribute(STORAGENAMESPACE_COUNT_KEY, a, attributes);
+			}
+
+			// Health State = enum + string
+			if (containsAttribute(HEALTHSTATE_KEY, attributes))
+			{
+				framework::Attribute a((NVM_UINT16)pool.health,
+						poolHealthToStr(pool.health), false);
+				pInstance->setAttribute(HEALTHSTATE_KEY, a, attributes);
+			}
+
+			if (containsAttribute(PERSISTENTSETTINGS_KEY, attributes))
+			{
+				framework::Attribute attr(getPersistentSettings(&pool), false);
+				pInstance->setAttribute(PERSISTENTSETTINGS_KEY, attr, attributes);
+			}
+		}
+	}
+	catch (framework::Exception &) // clean up and re-throw
+	{
+		if (pInstance)
+		{
+			delete pInstance;
+		}
+		throw;
+	}
+
+	return pInstance;
+}
+
+/*
+ * Return the object paths for the Intel_PoolView class.
+ */
+wbem::framework::instance_names_t *wbem::mem_config::PoolViewFactory::getInstanceNames()
+	throw(wbem::framework::Exception)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	framework::instance_names_t *pNames = new framework::instance_names_t();
+	try
+	{
+		std::vector<struct pool> pools = getPoolList(true);
+		for (std::vector<struct pool>::const_iterator iter = pools.begin();
+				iter != pools.end(); iter++)
+		{
+			framework::attributes_t keys;
+
+			NVM_GUID_STR poolGuid;
+			guid_to_str((*iter).pool_guid, poolGuid);
+			keys[POOLID_KEY] = framework::Attribute(std::string(poolGuid), true);
+
+			framework::ObjectPath path(server::getHostName(), NVM_NAMESPACE,
+					INTEL_POOLVIEW_CREATIONCLASSNAME, keys);
+			pNames->push_back(path);
+		}
+	}
+	catch (framework::Exception &) // clean up and re-throw
+	{
+		delete pNames;
+		throw;
+	}
+	return pNames;
+}
+
+/*
+ * Helper function to retrieve a list of pools
+ */
+std::vector<struct pool> wbem::mem_config::PoolViewFactory::getPoolList(bool pmOnly)
+	throw (wbem::framework::Exception)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	std::vector<struct pool> poolList;
+
+	lib_interface::NvmApi *pApi = lib_interface::NvmApi::getApi();
+	pApi->getPools(poolList);
+
+	// remove non-persistent pools if necessary
+	if (pmOnly)
+	{
+		for (std::vector<struct pool>::iterator iter = poolList.begin();
+				iter != poolList.end(); )
+		{
+			if (iter->type != POOL_TYPE_PERSISTENT && iter->type != POOL_TYPE_PERSISTENT_MIRROR)
+			{
+				// returns iterator to the next item - no need to increment
+				iter = poolList.erase(iter);
+			}
+			else
+			{
+				iter++;
+			}
+		}
+	}
+
+	// return the vector
+	return poolList;
+}
+
+/*
+ * Helper function to retrieve a specific pool.
+ */
+struct pool wbem::mem_config::PoolViewFactory::getPool(const std::string &poolGuidStr)
+	throw (wbem::framework::Exception)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	NVM_GUID poolGuid;
+	str_to_guid(poolGuidStr.c_str(), poolGuid);
+
+	struct pool pool;
+	int rc = nvm_get_pool(poolGuid, &pool);
+	if (rc != NVM_SUCCESS)
+	{
+		throw exception::NvmExceptionLibError(rc);
+	}
+
+	return pool;
+}
+
+std::string wbem::mem_config::PoolViewFactory::getEraseCapable(pool *pPool)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	std::string result = NO;
+	if (pPool->erase_capable)
+	{
+		result = YES;
+	}
+
+	return result;
+}
+
+std::string wbem::mem_config::PoolViewFactory::getEncryptionCapable(pool *pPool)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	std::string result = NO;
+	if (pPool->encryption_capable)
+	{
+		result = YES;
+	}
+
+	return result;
+}
+
+std::string wbem::mem_config::PoolViewFactory::getEncryptionEnabled(const struct pool *pPool)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	std::string result = NO;
+	for (NVM_UINT16 i = 0; i < pPool->dimm_count && result == NO; i++)
+	{
+		struct device_discovery device;
+		int rc = nvm_get_device_discovery(pPool->dimms[i], &device);
+		if (rc != NVM_SUCCESS)
+		{
+			throw exception::NvmExceptionLibError(rc);
+		}
+
+		switch (device.lock_state)
+		{
+			case LOCK_STATE_UNLOCKED:
+			case LOCK_STATE_LOCKED:
+			case LOCK_STATE_FROZEN:
+			case LOCK_STATE_PASSPHRASE_LIMIT:
+				result = YES;
+				break;
+			case LOCK_STATE_DISABLED:
+			case LOCK_STATE_UNKNOWN:
+			default:
+				break;
+		}
+	}
+
+	return result;
+}
+
+std::string wbem::mem_config::PoolViewFactory::getPoolType(struct pool *pPool)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	std::string poolType;
+	switch (pPool->type)
+	{
+		case POOL_TYPE_PERSISTENT:
+			poolType = wbem::mem_config::POOLTYPE_PERSISTENT;
+			break;
+		case POOL_TYPE_VOLATILE:
+			poolType = wbem::mem_config::POOLTYPE_VOLATILE;
+			break;
+		case POOL_TYPE_PERSISTENT_MIRROR:
+			poolType = wbem::mem_config::POOLTYPE_MIRRORED;
+			break;
+		default:
+			poolType = wbem::mem_config::POOLTYPE_UNKNOWN;
+			break;
+	}
+	return poolType;
+}
+
+/*
+ * Get namespaces for pool.
+ * For each namespace increment count if it matches pool_type.
+ * If can't get namespaces for pool, throw an exception
+ */
+NVM_UINT32 wbem::mem_config::PoolViewFactory::countNamespaces(const struct pool *pPool,
+		namespace_type const type)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	NVM_UINT32 result = 0;
+
+	lazyInitNs();
+
+	for (size_t n = 0; n < m_nsCache.size(); n++)
+	{
+		if (guid_cmp(pPool->pool_guid, m_nsCache[n].pool_guid) &&
+				m_nsCache[n].type == type)
+		{
+			result++;
+		}
+	}
+	return result;
+}
+
+/*
+ * Create a cache of namespaces to be used in populating the attributes.
+ */
+void wbem::mem_config::PoolViewFactory::lazyInitNs()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	if (m_nsCache.size() == 0)
+	{
+		int rc = nvm_get_namespace_count();
+		if (rc < NVM_SUCCESS)
+		{
+			throw exception::NvmExceptionLibError(rc);
+		}
+		int nsCount = rc;
+		if (nsCount > 0)
+		{
+			struct namespace_discovery namespaces[nsCount];
+			rc = nvm_get_namespaces(namespaces, nsCount);
+			if (rc < NVM_SUCCESS)
+			{
+				throw exception::NvmExceptionLibError(rc);
+			}
+			nsCount = rc;
+			for (int n = 0; n < nsCount; n++)
+			{
+				struct namespace_details nsDetails;
+				rc = nvm_get_namespace_details(namespaces[n].namespace_guid, &nsDetails);
+				if (rc != NVM_SUCCESS)
+				{
+					throw exception::NvmExceptionLibError(rc);
+				}
+				m_nsCache.push_back(nsDetails);
+			}
+		}
+	}
+}
+
+/*
+ * convert an integer to string
+ */
+std::string wbem::mem_config::PoolViewFactory::getString(const NVM_UINT64 value)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	std::stringstream ss;
+	ss << value;
+	return ss.str();
+}
+
+/*
+ * Helper function to convert pool health to a string.
+ */
+std::string wbem::mem_config::PoolViewFactory::poolHealthToStr(
+		const enum pool_health &health)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	std::string healthStr;
+	switch (health)
+	{
+		case POOL_HEALTH_NORMAL:
+			healthStr = POOL_HEALTH_STR_NORMAL;
+			break;
+		case POOL_HEALTH_WARNING:
+		case POOL_HEALTH_DEGRADED:
+			healthStr = POOL_HEALTH_STR_DEGRADED;
+			break;
+		case POOL_HEALTH_FAILED:
+			healthStr = POOL_HEALTH_STR_FAILED;
+			break;
+		default:
+			healthStr = POOL_HEALTH_STR_UNKNOWN;
+			break;
+	}
+
+	return healthStr;
+}
+
+/*
+ * convert bytes to MB and append MB suffix string
+ */
+std::string wbem::mem_config::PoolViewFactory::getMbString(const NVM_UINT64 bytes)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	return getString(bytes / BYTES_PER_MB) + wbem::MB_SUFFIX;
+}
+
+std::string wbem::mem_config::PoolViewFactory::getInterleaveSetFormatStr(
+	const struct interleave_format &format)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	std::stringstream formatStr;
+	// output format
+	formatStr << wbem::mem_config::InterleaveSet::getInterleaveFormatString(&format);
+	// input format
+	formatStr << " (";
+	formatStr << wbem::mem_config::InterleaveSet::getInterleaveFormatInputString(&format, false);
+	formatStr << ")";
+
+	return formatStr.str();
+}
+
+wbem::framework::STR_LIST wbem::mem_config::PoolViewFactory::getPersistentSettings(
+		const struct pool *pPool)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	framework::STR_LIST persistentSettings;
+
+	if (pPool->ilset_count > 0)
+	{
+		for (NVM_UINT16 i = 0; i < pPool->ilset_count; i++)
+		{
+			server::SystemCapabilitiesFactory::addFormatStringIfNotInList(persistentSettings,
+					pPool->ilsets[i].settings, false);
+		}
+	}
+	else
+	{ // storage-only capacity
+		persistentSettings.push_back(wbem::NA);
+	}
+
+	return persistentSettings;
+}
