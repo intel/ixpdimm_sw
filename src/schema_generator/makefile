@@ -94,7 +94,7 @@ $(OBJECT_MODULE_DIR) $(BUILT_TOOLS_DIR) :
 
 # suffix rule for .cpp -> .o
 $(OBJECT_MODULE_DIR)/%.o : %.cpp
-	$(CPP) $(CPPFLAGS) $(INCS) -c $< -o $@
+	$(CPP) $(CPPFLAGS) $(INCS) -c $< -o $@ $(LDFLAGS)
 
 $(LIBCTEMPLATE_FILES) :
 	$(COPY) $(EXTERN_LIB_DIR)/ctemplate/* $(BUILT_TOOLS_DIR)/

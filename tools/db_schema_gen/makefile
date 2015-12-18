@@ -83,7 +83,7 @@ $(OBJECT_MODULE_DIR) :
 	
 # suffix rule for .cpp -> .o
 $(OBJECT_MODULE_DIR)/%.o : %.cpp %.h
-	$(CPP) $(CPPFLAGS) $(INCS) -c $< -o $@
+	$(CPP) $(CPPFLAGS) $(INCS) -c $< -o $@ $(LDFLAGS)
 
 clean:
 	rm -f $(TARGET) $(OBJNAMES)

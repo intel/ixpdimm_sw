@@ -81,8 +81,9 @@ ADD_MANUFACTURING ?= 1
 INTEL_I18N=-D__INTEL_I18N__
 
 # initialize/define compilation flag helper variables
-C_CPP_FLAGS_CMN =  -Wall -Werror -Wfatal-errors -fstack-protector-all -D_FORTIFY_SOURCE=2 -D_XOPEN_SOURCE=500 
+C_CPP_FLAGS_CMN = -Wall -Werror -Wfatal-errors -Wformat -Wformat-security -fstack-protector-all -D_FORTIFY_SOURCE=2 -D_XOPEN_SOURCE=500 
 C_CPP_FLAGS_SRC = -MMD -D__VERSION_MAJOR__=$(VERSION_MAJOR) -D__VERSION_MINOR__=$(VERSION_MINOR) -D__VERSION_HOTFIX__=$(VERSION_HOTFIX) -D__VERSION_BUILDNUM__=$(VERSION_BUILDNUM) -D__VERSION_NUMBER__=$(BUILDNUM) -D__ADD_MANUFACTURING__=$(ADD_MANUFACTURING)  -D__WBEM_PREFIX__='$(WBEM_PREFIX_INPUT)' $(INTEL_I18N)
+LDFLAGS = -z noexecstack -z relro -z now -pie
 
 CFLAGS_CMN = -std=c99
 CPPFLAGS_CMN =
@@ -124,7 +125,7 @@ ifeq ($(UNAME), Linux)
 			$(MGMT_SYSROOT)/usr/bin/g++ -m32 --sysroot=$(MGMT_SYSROOT)
 		CPP_RUNTIME = $(MGMT_SYSROOT)/usr/lib/libstdc++.so*
 
-		C_CPP_FLAGS_CMN += -fPIC
+		C_CPP_FLAGS_CMN += -fPIE -fPIC
 		C_CPP_FLAGS_SRC += -D__ESX__
 	else
 		BUILD_LINUX = 1
@@ -170,7 +171,7 @@ ifeq ($(UNAME), Linux)
 		DATADIR_FILES = apss.dat* public.rev0.pem
 		INIT_FILES = nvmmonitor.service
 		
-		C_CPP_FLAGS_CMN += -fPIC -D__PRODUCT_DATADIR__=\"$(PRODUCT_DATADIR)/\"
+		C_CPP_FLAGS_CMN += -fPIE -fPIC -D__PRODUCT_DATADIR__=\"$(PRODUCT_DATADIR)/\"
 		C_CPP_FLAGS_SRC += -D__LINUX__ 
 	endif		
 else

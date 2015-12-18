@@ -142,7 +142,7 @@ endif
 
 # suffix rule for .cpp -> .o
 $(OBJECT_MODULE_DIR)/%.o : %.cpp
-	$(CPP) $(CPPFLAGS) $(INCS) -c $< -o $@
+	$(CPP) $(CPPFLAGS) $(INCS) -c $< -o $@ $(LDFLAGS)
 	
 # suffix rule for .rc -> .o
 $(OBJECT_MODULE_DIR)/%.o : %.rc

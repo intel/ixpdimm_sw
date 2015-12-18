@@ -151,7 +151,7 @@ $(SUBMODULE_DIRS) :
 
 # suffix rule for .c -> .o
 $(OBJECT_MODULE_DIR)/%.o : %.c
-	$(CC) $(CFLAGS) $(INCS) -c $< -o $@
+	$(CC) $(CFLAGS) $(INCS) -c $< -o $@ $(LDFLAGS)
 
 file_ops :
 	$(MAKE) -C $(FILEOPS) all
@@ -171,7 +171,7 @@ endif
 
 # this is separate because I need to turn off warnings on ESX
 encryptdir:
-	$(CC) $(ENCRYPT_CFLAGS) $(INCS) -c encrypt/encrypt.c -o $(OBJECT_MODULE_DIR)/encrypt/encrypt.o
+	$(CC) $(ENCRYPT_CFLAGS) $(INCS) -c encrypt/encrypt.c -o $(OBJECT_MODULE_DIR)/encrypt/encrypt.o $(LDFLAGS)
 
 unittest :
 	$(MAKE) -C $(UNITTEST) all

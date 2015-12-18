@@ -104,7 +104,7 @@ $(OBJECT_MODULE_DIR)/%.o : %.mc
 
 # suffix rule for .c -> .o
 $(OBJECT_MODULE_DIR)/%.o : %.c
-	$(CC) $(CFLAGS) $(INCS) -c $< -o $@
+	$(CC) $(CFLAGS) $(INCS) -c $< -o $@ $(LDFLAGS)
 
 cstyle :
 	$(CSTYLE) $(HDR_NO_AUTOGEN) $(SRC)

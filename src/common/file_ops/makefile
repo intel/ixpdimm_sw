@@ -78,7 +78,7 @@ $(OBJECT_MODULE_DIR) :
 
 # suffix rule for .c -> .o
 $(OBJECT_MODULE_DIR)/%.o : %.c
-	$(CC) $(CFLAGS) $(INCS) -c $< -o $@
+	$(CC) $(CFLAGS) $(INCS) -c $< -o $@ $(LDFLAGS)
 
 cstyle :
 	$(CSTYLE) $(SRC)

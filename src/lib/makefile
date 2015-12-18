@@ -165,9 +165,9 @@ endif
 
 $(TARGETNAME) : $(OBJNAMES)
 ifdef BUILD_WINDOWS
-	$(CC) $(CFLAGS) -shared $^ $(LIBS) -o $@ 
+	$(CC) $(CFLAGS) -shared $^ $(LIBS) -o $@
 else
-	$(CC) $(CFLAGS) -shared $^ $(LIBS) -Wl,-soname,$(TARGETSO) -o $@
+	$(CC) $(CFLAGS) -shared $^ $(LIBS) -Wl,-soname,$(TARGETSO) -o $@ 
 	cd $(BUILD_DIR); $(RM) $(TARGETSO); $(SOFTLINK) $(TARGET) $(TARGETSO)
 	cd $(BUILD_DIR); $(RM) $(TARGETBASE); $(SOFTLINK) $(TARGET) $(TARGETBASE)
 endif
@@ -185,7 +185,7 @@ $(OBJECT_MODULE_DIR) :
 
 # suffix rule for .c -> .o
 $(OBJECT_MODULE_DIR)/%.o : %.c
-	$(CC) $(CFLAGS) $(INCS) -c $< -o $@
+	$(CC) $(CFLAGS) $(INCS) -c $< -o $@ $(LDFLAGS)
 
 # suffix rule for .rc -> .o
 $(OBJECT_MODULE_DIR)/%.o : %.rc
