@@ -48,7 +48,9 @@ namespace logic
 class NVM_API PostLayoutAddressDecoderLimitCheck: public PostLayoutCheck
 {
 	public:
-		PostLayoutAddressDecoderLimitCheck(const std::vector<struct device_discovery> &devices);
+		PostLayoutAddressDecoderLimitCheck(const std::vector<struct device_discovery> &devices,
+				const std::vector<struct pool> &pools,
+				const NVM_UINT16 numSystemSockets);
 		virtual ~PostLayoutAddressDecoderLimitCheck();
 		virtual void verify(
 				const struct MemoryAllocationRequest &request,
@@ -78,7 +80,18 @@ class NVM_API PostLayoutAddressDecoderLimitCheck: public PostLayoutCheck
 		NVM_UINT16 getNumberOfIlsetsOnSocket(
 				const struct MemoryAllocationLayout &layout, const NVM_UINT16 socketId);
 
+		NVM_UINT16 getNumberOfConfigGoalInterleaveSetsOnSocket(const struct MemoryAllocationLayout &layout,
+				const NVM_UINT16 socketId);
+		NVM_UINT16 getNumberOfUnchangedPoolInterleaveSetsOnSocket(const struct MemoryAllocationLayout &layout,
+				const NVM_UINT16 socketId);
+		NVM_UINT16 getNumberOfUnchangedInterleaveSetsInPool(const struct MemoryAllocationLayout& layout,
+				const struct pool &pool);
+		bool isInterleaveSetOverwrittenByLayout(const struct MemoryAllocationLayout &layout,
+				const struct interleave_set &interleave);
+
 		std::vector<struct device_discovery> m_devices;
+		std::vector<struct pool> m_pools;
+		NVM_UINT16 m_numSystemSockets;
 };
 
 } /* namespace logic */

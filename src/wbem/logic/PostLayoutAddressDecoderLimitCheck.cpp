@@ -38,8 +38,12 @@
 #include <iostream>
 
 wbem::logic::PostLayoutAddressDecoderLimitCheck::PostLayoutAddressDecoderLimitCheck(
-		const std::vector<struct device_discovery> &devices) :
-		m_devices(devices)
+		const std::vector<struct device_discovery> &devices,
+		const std::vector<struct pool> &pools,
+		const NVM_UINT16 numSystemSockets) :
+		m_devices(devices),
+		m_pools(pools),
+		m_numSystemSockets(numSystemSockets)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
@@ -82,6 +86,7 @@ std::list<NVM_UINT16> wbem::logic::PostLayoutAddressDecoderLimitCheck::getListOf
 		socketList.push_back(socketId);
 	}
 
+	socketList.sort();
 	socketList.unique();
 	return socketList;
 }
@@ -113,6 +118,40 @@ NVM_UINT16 wbem::logic::PostLayoutAddressDecoderLimitCheck::getNumberOfIlsetsOnS
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
+	NVM_UINT16 numGoalInterleaveSets = getNumberOfConfigGoalInterleaveSetsOnSocket(layout, socketId);
+	NVM_UINT16 numPoolInterleaveSets = getNumberOfUnchangedPoolInterleaveSetsOnSocket(layout, socketId);
+
+	return numGoalInterleaveSets + numPoolInterleaveSets;
+}
+
+void wbem::logic::PostLayoutAddressDecoderLimitCheck::verify(
+		const struct MemoryAllocationRequest& request,
+		const struct MemoryAllocationLayout &layout)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	if (m_numSystemSockets >= criticalNumberOfSockets)
+	{
+		// Only need to check the sockets we are configuring
+		std::list<NVM_UINT16> listOfSocketsInLayout = getListOfSocketsInLayout(layout);
+		for (std::list<NVM_UINT16>::iterator iter = listOfSocketsInLayout.begin();
+				iter != listOfSocketsInLayout.end(); iter++)
+		{
+			NVM_UINT16 numberOfIlsetsOnSocket = getNumberOfIlsetsOnSocket(layout, *iter);
+
+			if (numberOfIlsetsOnSocket > criticalNumberOfIlsetsOnSocket)
+			{
+				throw wbem::exception::NvmExceptionOverAddressDecoderLimit();
+			}
+		}
+	}
+}
+
+NVM_UINT16 wbem::logic::PostLayoutAddressDecoderLimitCheck::getNumberOfConfigGoalInterleaveSetsOnSocket(
+		const struct MemoryAllocationLayout& layout, const NVM_UINT16 socketId)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
 	std::vector<struct config_goal> configGoalsForSocket = getConfigGoalsForSocket(layout, socketId);
 	std::list<NVM_UINT16> interleaveSetIndexList;
 	for (std::vector<struct config_goal>::iterator iter = configGoalsForSocket.begin();
@@ -134,25 +173,62 @@ NVM_UINT16 wbem::logic::PostLayoutAddressDecoderLimitCheck::getNumberOfIlsetsOnS
 	return interleaveSetIndexList.size();
 }
 
-void wbem::logic::PostLayoutAddressDecoderLimitCheck::verify(
-		const struct MemoryAllocationRequest& request,
-		const struct MemoryAllocationLayout &layout)
+NVM_UINT16 wbem::logic::PostLayoutAddressDecoderLimitCheck::getNumberOfUnchangedPoolInterleaveSetsOnSocket(
+		const struct MemoryAllocationLayout& layout, const NVM_UINT16 socketId)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	std::list<NVM_UINT16> listOfSocketsInLayout = getListOfSocketsInLayout(layout);
+	NVM_UINT16 numPoolInterleaveSets = 0;
 
-	if (listOfSocketsInLayout.size() >= criticalNumberOfSockets)
+	for (std::vector<struct pool>::const_iterator poolIter = m_pools.begin();
+			poolIter != m_pools.end(); poolIter++)
 	{
-		for (std::list<NVM_UINT16>::iterator iter = listOfSocketsInLayout.begin();
-				iter != listOfSocketsInLayout.end(); iter++)
+		if (poolIter->socket_id == socketId)
 		{
-			NVM_UINT16 numberOfIlsetsOnSocket = getNumberOfIlsetsOnSocket(layout, *iter);
-
-			if (numberOfIlsetsOnSocket > criticalNumberOfIlsetsOnSocket)
-			{
-				throw wbem::exception::NvmExceptionOverAddressDecoderLimit();
-			}
+			numPoolInterleaveSets += getNumberOfUnchangedInterleaveSetsInPool(layout, *poolIter);
 		}
 	}
+
+	return numPoolInterleaveSets;
+}
+
+NVM_UINT16 wbem::logic::PostLayoutAddressDecoderLimitCheck::getNumberOfUnchangedInterleaveSetsInPool(
+		const struct MemoryAllocationLayout& layout, const struct pool& pool)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	NVM_UINT16 numUnchangedInterleaveSets = 0;
+
+	for (NVM_UINT16 i = 0; i < pool.ilset_count; i++)
+	{
+		if (!isInterleaveSetOverwrittenByLayout(layout, pool.ilsets[i]))
+		{
+			numUnchangedInterleaveSets++;
+		}
+	}
+
+	return numUnchangedInterleaveSets;
+}
+
+bool wbem::logic::PostLayoutAddressDecoderLimitCheck::isInterleaveSetOverwrittenByLayout(
+		const struct MemoryAllocationLayout& layout, const struct interleave_set& interleave)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	bool isOverwritten = false;
+
+	for (NVM_UINT16 i = 0; i < interleave.dimm_count; i++)
+	{
+		NVM_GUID_STR guidStr;
+		guid_to_str(interleave.dimms[i], guidStr);
+
+		// Any DIMM in the new layout will have all its interleave sets overwritten
+		if (layout.goals.find(guidStr) != layout.goals.end())
+		{
+			isOverwritten = true;
+			break;
+		}
+	}
+
+	return isOverwritten;
 }

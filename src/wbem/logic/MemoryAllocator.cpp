@@ -57,9 +57,13 @@
 
 wbem::logic::MemoryAllocator::MemoryAllocator(const struct nvm_capabilities &systemCapabilities,
 		const std::vector<struct device_discovery> &manageableDevices,
+		const std::vector<struct pool> &pools,
+		const NVM_UINT16 socketCount,
 		lib_interface::NvmApi *pApi) :
 		m_systemCapabilities(systemCapabilities),
 		m_manageableDevices(manageableDevices),
+		m_pools(pools),
+		m_socketCount(socketCount),
 		m_pLibApi(pApi)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -74,6 +78,8 @@ wbem::logic::MemoryAllocator::MemoryAllocator(const struct nvm_capabilities &sys
 
 wbem::logic::MemoryAllocator* wbem::logic::MemoryAllocator::getNewMemoryAllocator()
 {
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
 	lib_interface::NvmApi *pApi = wbem::lib_interface::NvmApi::getApi();
 
 	struct nvm_capabilities systemCapabilities;
@@ -87,8 +93,21 @@ wbem::logic::MemoryAllocator* wbem::logic::MemoryAllocator::getNewMemoryAllocato
 	std::vector<struct device_discovery> manageableDevices;
 	pApi->getManageableDimms(manageableDevices);
 
-	wbem::logic::MemoryAllocator *pAllocator =
-			new wbem::logic::MemoryAllocator(systemCapabilities, manageableDevices, pApi);
+	std::vector<struct pool> pools;
+	pApi->getPools(pools);
+
+	int numSockets = pApi->getSocketCount();
+	if (rc < 0)
+	{
+		throw exception::NvmExceptionLibError(rc);
+	}
+
+	wbem::logic::MemoryAllocator *pAllocator = new wbem::logic::MemoryAllocator(
+			systemCapabilities,
+			manageableDevices,
+			pools,
+			numSockets,
+			pApi);
 	if (!pAllocator)
 	{
 		throw wbem::framework::ExceptionNoMemory(__FILE__, __FUNCTION__,
@@ -145,7 +164,10 @@ void wbem::logic::MemoryAllocator::populatePostLayoutChecks()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	m_postLayoutChecks.push_back(new PostLayoutAddressDecoderLimitCheck(m_manageableDevices));
+	m_postLayoutChecks.push_back(new PostLayoutAddressDecoderLimitCheck(
+			m_manageableDevices,
+			m_pools,
+			m_socketCount));
 	m_postLayoutChecks.push_back(new PostLayoutRequestDeviationCheck());
 }
 

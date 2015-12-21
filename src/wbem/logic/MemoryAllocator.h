@@ -50,6 +50,8 @@ class NVM_API MemoryAllocator
 	public:
 		MemoryAllocator(const struct nvm_capabilities &systemCapabilities,
 				const std::vector<struct device_discovery> &manageableDevices,
+				const std::vector<struct pool> &pools,
+				const NVM_UINT16 socketCount,
 				lib_interface::NvmApi *pApi = NULL);
 		virtual ~MemoryAllocator();
 
@@ -74,10 +76,15 @@ class NVM_API MemoryAllocator
 		void populatePostLayoutChecks();
 		void deleteRequestRules();
 		void deleteLayoutRules();
+
 		std::vector<RequestRule *> m_requestRules;
 		std::vector<PostLayoutCheck *> m_postLayoutChecks;
+
 		struct nvm_capabilities m_systemCapabilities;
 		std::vector<struct device_discovery> m_manageableDevices;
+		std::vector<struct pool> m_pools;
+		NVM_UINT16 m_socketCount;
+
 		lib_interface::NvmApi *m_pLibApi;
 };
 
