@@ -194,6 +194,14 @@ class NvmExceptionTooManyPersistentExtents : public NvmExceptionBadRequest
 		{}
 };
 
+class NvmExceptionRequestedDimmLocked : public NvmExceptionBadRequest
+{
+	public:
+		NvmExceptionRequestedDimmLocked() :
+			NvmExceptionBadRequest("One or more requested " NVM_DIMM_NAME "s are locked.")
+		{}
+};
+
 } /* namespace exception */
 } /* namespace wbem */
 

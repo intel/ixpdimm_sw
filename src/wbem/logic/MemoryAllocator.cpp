@@ -44,6 +44,7 @@
 #include "RuleTooManyPersistentExtents.h"
 #include "RuleTooManyRemaining.h"
 #include "RuleReserveDimmPropertyInvalid.h"
+#include "RuleRejectLockedDimms.h"
 #include <LogEnterExit.h>
 #include "LayoutBuilder.h"
 #include <exception/NvmExceptionLibError.h>
@@ -157,6 +158,7 @@ void wbem::logic::MemoryAllocator::populateRequestRules()
 	m_requestRules.push_back(new RuleStorageCapacityNotSupported(m_systemCapabilities));
 	m_requestRules.push_back(new RuleDimmHasConfigGoal);
 	m_requestRules.push_back(new RuleNamespacesExist);
+	m_requestRules.push_back(new RuleRejectLockedDimms(m_manageableDevices));
 	m_requestRules.push_back(new RulePartialSocketConfigured(m_manageableDevices));
 }
 

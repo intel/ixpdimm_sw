@@ -803,6 +803,14 @@ cli::framework::ErrorResult *cli::nvmcli::NvmExceptionToResult(wbem::framework::
 				TRS(BAD_REQUEST_NOT_SUPPORTED_STR), prefix);
 	}
 
+	wbem::exception::NvmExceptionRequestedDimmLocked *pDimmLocked =
+			dynamic_cast<wbem::exception::NvmExceptionRequestedDimmLocked *>(&e);
+	if (pDimmLocked != NULL)
+	{
+		return new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
+				TRS(BAD_REQUEST_DIMM_SECURITY_STATE), prefix);
+	}
+
 	// Generic bad request - all other bad request cases
 	wbem::exception::NvmExceptionBadRequest *pBadRequest =
 			dynamic_cast<wbem::exception::NvmExceptionBadRequest *>(&e);

@@ -103,6 +103,7 @@ const std::string BAD_REQUEST_GOAL_BREAKS_CONFIG_STR = N_TR("The requested confi
 const std::string BAD_REQUEST_MUST_DELETE_NAMESPACES_STR = N_TR("Existing namespaces must be deleted before this method can be executed.");
 const std::string BAD_REQUEST_NOT_SUPPORTED_STR = N_TR("The requested configuration is not supported.");
 const std::string BAD_REQUEST_PM_SETTINGS_NOT_SUPPORTED_STR = N_TR("The requested persistent memory settings are not supported by the platform BIOS.");
+const std::string BAD_REQUEST_DIMM_SECURITY_STATE = N_TR("This method is not supported by the device in its current security state.");
 
 }
 }
