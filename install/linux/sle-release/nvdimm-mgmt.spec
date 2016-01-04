@@ -2,12 +2,12 @@
 %{!?product_name: %define product_name ApachePass}
 %{!?build_version: %define build_version 99.99.99.9999}
 %{!?build_release: %define build_release 1}
-%define cliname %{rpm_name}-cli
-%define monitorname %{rpm_name}-monitor
-%define cimlibs %{rpm_name}-cim
-%define dname %{rpm_name}-devel
+%define cliname %{rpm_name}
+%define monitorname lib%{rpm_name}-monitor
+%define cimlibs lib%{rpm_name}-cim
+%define dname lib%{rpm_name}-devel
 
-Name: %{rpm_name}-libs
+Name: lib%{rpm_name}
 Version: %{build_version}
 Release: %{build_release}%{?dist}
 Summary: API for development of %{product_name} management utilities
@@ -53,7 +53,8 @@ Summary:        Daemon for monitoring the status of %{product_name}
 License:        Prioprietary
 Group:          Application/System
 Requires:       %{cimlibs}%{?_isa} = %{version}-%{release}
-Requires:		systemd-units
+BuildRequires:  systemd-rpm-macros
+%{?systemd_requires}
 
 %description -n %monitorname
 A daemon for monitoring the health and status of %{product_name}
@@ -128,7 +129,8 @@ then
 fi
 
 %post -n %monitorname
-%systemd_post nvmmonitor.service
+%service_add_post nvmmonitor.service
+exit 0
 
 %post 
 /sbin/ldconfig
@@ -199,10 +201,10 @@ then
 fi
 
 %preun -n %monitorname
-%systemd_preun stop nvmmonitor.service
+%service_del_preun nvmmonitor.service
 
 %postun -n %monitorname
-%systemd_postun_with_restart nvmmonitor.service
+%service_del_postun nvmmonitor.service
 
 %preun
 /sbin/ldconfig
@@ -244,4 +246,3 @@ fi
 %changelog
 * Wed Dec 24 2015 nicholas.w.moulin@intel.com
 - Initial rpm release
-
