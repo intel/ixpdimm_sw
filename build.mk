@@ -87,7 +87,7 @@ LDFLAGS = -z noexecstack -z relro -z now -pie
 
 CFLAGS_CMN = -std=c99
 CPPFLAGS_CMN =
-CPPFLAGS_SRC = -DPOCO_STATIC #needed for POCO to work on Windows
+CPPFLAGS_SRC =
 CFLAGS_EXTERNAL ?=
 
 # OS specific settings
@@ -271,9 +271,6 @@ LIB_TEST_DIR = $(BUILD_DIR)/lib_test
 WBEM_TEST_DIR = $(BUILD_DIR)/wbem_test
 CLI_TEST_DIR = $(BUILD_DIR)/cli_test
 MONITOR_TEST_DIR = $(BUILD_DIR)/monitor_test
-
-# define utility variables
-POCO_BASE = $(abspath $(EXTERN_DIR)/poco/poco-1_4_6p1)
 
 # Tools
 CSTYLE = $(TOOLS_DIR)/cstyle/cstyle -o doxygen -pP
