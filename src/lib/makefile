@@ -163,7 +163,7 @@ ifndef SKIP_UNITTESTS
 	$(MAKE) $(UNITTEST)
 endif
 
-$(TARGETNAME) : $(OBJNAMES)
+$(TARGETNAME) : $(OBJNAMES) $(OBJECT_DIR)/common/libcommon.a
 ifdef BUILD_WINDOWS
 	$(CC) $(CFLAGS) -shared $^ $(LIBS) -o $@
 else

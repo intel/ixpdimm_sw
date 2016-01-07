@@ -97,6 +97,9 @@ ifeq ($(UNAME), Linux)
 		
 	# ESX builds occur on Linux but the environment will include this variable
 	ifdef ESXBUILD
+		# ESX path for CIM libraries - needs to be defined here so can be used as rpath in other makefiles
+		ESX_SUPPORT_DIR := /opt/intel/bin
+		
 		ifndef GLIBC_HASH
 			HASH_ERR := $(error GLIBC_HASH not set, see /opt/vmware/toolchain/cayman_esx_glibc* for hash)
 		endif
@@ -127,6 +130,8 @@ ifeq ($(UNAME), Linux)
 
 		C_CPP_FLAGS_CMN += -fPIE -fPIC
 		C_CPP_FLAGS_SRC += -D__ESX__
+		
+		PRODUCT_DATADIR = $(ESX_SUPPORT_DIR)
 	else
 		BUILD_LINUX = 1
 		OS_TYPE = linux
@@ -170,10 +175,10 @@ ifeq ($(UNAME), Linux)
 		SFCB_REG_FILE = INTEL_NVDIMM.reg 
 		DATADIR_FILES = apss.dat* public.rev0.pem
 		INIT_FILES = nvmmonitor.service
-		
-		C_CPP_FLAGS_CMN += -fPIE -fPIC -D__PRODUCT_DATADIR__=\"$(PRODUCT_DATADIR)/\"
+				
 		C_CPP_FLAGS_SRC += -D__LINUX__ 
-	endif		
+	endif
+	C_CPP_FLAGS_CMN += -fPIE -fPIC -D__PRODUCT_DATADIR__=\"$(PRODUCT_DATADIR)/\"		
 else
 	CORE_COUNT = $(NUMBER_OF_PROCESSORS)
 	BUILD_WINDOWS = 1
@@ -293,9 +298,6 @@ endif
 #get text package name - used in file name and set as the text domain
 LOCALE_DOMAIN = nvmcli
 LOCALE_DIR = $(abspath $(BUILD_DIR))/lang
-
-# ESX path for CIM libraries - needs to be defined here so can be used as rpath in other makefiles
-ESX_SUPPORT_DIR := /opt/intel/bin
 
 # output file for gettext 
 GETTEXT_OUTPUTFILE = $(BUILD_DIR)/$(LOCALE_DOMAIN).pot
