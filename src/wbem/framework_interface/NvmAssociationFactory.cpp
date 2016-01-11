@@ -416,7 +416,7 @@ void wbem::framework_interface::NvmAssociationFactory::initAssociationTable()
 		wbem::server::BASESERVER_CREATIONCLASSNAME,
 		wbem::pmem_config::PERSISTENTMEMORYPOOL_CREATIONCLASSNAME);
 
-	// TODO: DE5636
+	// Persistent Memory Pool
 	addAssociationToTable(wbem::framework_interface::ASSOCIATION_CLASS_ELEMENTALLOCATEDFROMPOOL,
 		wbem::framework::ASSOCIATIONTYPE_COMPLEX,
 		wbem::pmem_config::PERSISTENTMEMORYPOOL_CREATIONCLASSNAME,
