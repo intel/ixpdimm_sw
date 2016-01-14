@@ -431,6 +431,12 @@ class NVM_API NamespaceFeature : public cli::framework::FeatureBase
 		static void convertCapacityAndAddIsMirroredText(wbem::framework::Instance &instance,
 				const std::string capacityUnits = "");
 		static void generateBlockSizeAttributeValue(wbem::framework::Instance &instance);
+		static void convertEnabledStateAttributes(wbem::framework::Instance &wbemInstance);
+		static void addBlockCountAttribute(wbem::framework::Instance &wbemInstance);
+		static void populateNamespaceAttributes(wbem::framework::attribute_names_t &attributes,
+			cli::framework::ParsedCommand const &parsedCommand);
+		static void updateCliAttributes(wbem::framework::attribute_names_t &attributes,
+			const framework::ParsedCommand& parsedCommand);
 		static void convertActionRequiredEventsToNAIfEmpty(wbem::framework::Instance &wbemInstance);
 
 		/*

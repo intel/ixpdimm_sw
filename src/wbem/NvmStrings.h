@@ -438,5 +438,8 @@ static std::string CORETEMPERATUREUNITMODIFIER_KEY = "CoreTemperatureUnitModifie
 static std::string CORETEMPERATURETHRESHOLD_KEY = "CoreTemperatureThreshold";
 static std::string CORETEMPERATURESTATE_KEY = "CoreTemperatureState";
 
+// Namespace
+static std::string BLOCKCOUNT_KEY = "BlockCount";
+static std::string ENABLED_KEY = "Enabled";
 } // wbem
 #endif // _WBEM_FRAMEWORK_NVM_STRINGS_H_

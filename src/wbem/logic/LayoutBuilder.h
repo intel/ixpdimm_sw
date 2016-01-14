@@ -54,7 +54,6 @@ class NVM_API LayoutBuilder
 	protected:
 		void initLayoutGoals(const MemoryAllocationRequest &request, MemoryAllocationLayout &layout);
 
-		void populateLayoutSteps();
 		void populateAllLayoutStepsForRequest(const MemoryAllocationRequest& request);
 		void populateWarningGeneratingLayoutSteps();
 		void populateOrderedLayoutStepsForRequest(const MemoryAllocationRequest& request);

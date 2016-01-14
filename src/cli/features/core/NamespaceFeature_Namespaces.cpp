@@ -172,64 +172,26 @@ cli::framework::ResultBase *cli::nvmcli::NamespaceFeature::showNamespaces(
 		cli::framework::ParsedCommand const &parsedCommand)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
 	framework::ResultBase *pResult = NULL;
-	wbem::framework::attribute_names_t attributes;
 	wbem::framework::instances_t *pInstances = NULL;
 	try
 	{
-		// define default display attributes
-		wbem::framework::attribute_names_t defaultAttributes;
-		defaultAttributes.push_back(wbem::NAMESPACEID_KEY);
-		defaultAttributes.push_back(wbem::TYPE_KEY);
-		defaultAttributes.push_back(wbem::CAPACITY_KEY);
-		defaultAttributes.push_back(wbem::HEALTHSTATE_KEY);
-		defaultAttributes.push_back(wbem::ACTIONREQUIRED_KEY);
+		wbem::framework::attribute_names_t attributes;
+		populateNamespaceAttributes(attributes, parsedCommand);
 
-		// define all attributes
-		wbem::framework::attribute_names_t allAttributes(defaultAttributes);
-		allAttributes.push_back(wbem::NAME_KEY);
-		allAttributes.push_back(wbem::POOLID_KEY);
-		allAttributes.push_back(wbem::BLOCKSIZE_KEY);
-		allAttributes.push_back(wbem::NUMBEROFBLOCKS_KEY);
-		allAttributes.push_back(wbem::OPTIMIZE_KEY);
-		allAttributes.push_back(wbem::ENABLEDSTATE_KEY);
-		allAttributes.push_back(wbem::ACTIONREQUIREDEVENTS_KEY);
-		allAttributes.push_back(wbem::SECURITYFEATURES_KEY);
-		allAttributes.push_back(wbem::PERSISTENTSETTINGS_KEY);
-
-		// get the desired attributes
-		wbem::framework::attribute_names_t attributes =
-				GetAttributeNames(parsedCommand.options, defaultAttributes, allAttributes);
-
-		// make sure we have the NamespaceID in our display
-		// this would cover the case the user asks for specific display attributes, but they
-		// don't include the ID
-		if (!wbem::framework_interface::NvmInstanceFactory::containsAttribute(wbem::NAMESPACEID_KEY,
-				attributes))
-		{
-			attributes.insert(attributes.begin(), wbem::NAMESPACEID_KEY);
-		}
-
-		// make sure we have the Replication (mirrored) information. It will be filtered out later.
-		if (!wbem::framework_interface::NvmInstanceFactory::containsAttribute(wbem::REPLICATION_KEY,
-			attributes))
-		{
-			attributes.push_back(
-				wbem::REPLICATION_KEY);
-		}
 		// create the display filters
-		wbem::framework::attribute_names_t requestedAttributes = attributes;
 		cli::nvmcli::filters_t filters;
-		generateNamespaceFilter(parsedCommand, requestedAttributes, filters);
-		generatePoolFilter(parsedCommand, requestedAttributes, filters);
-		pResult = generateNamespaceTypeFilter(parsedCommand, requestedAttributes, filters);
+		generateNamespaceFilter(parsedCommand, attributes, filters);
+		generatePoolFilter(parsedCommand, attributes, filters);
+		pResult = generateNamespaceTypeFilter(parsedCommand, attributes, filters);
 		if (pResult == NULL)
 		{
-			pResult = generateNamespaceHealthFilter(parsedCommand, requestedAttributes, filters);
+			pResult = generateNamespaceHealthFilter(parsedCommand, attributes, filters);
 			if (pResult == NULL)
 			{
 				// get the instances from wbem
-				pInstances = m_pNsViewFactoryProvider->getInstances(requestedAttributes);
+				pInstances = m_pNsViewFactoryProvider->getInstances(attributes);
 				if (pInstances == NULL)
 				{
 					COMMON_LOG_ERROR("NamespaceViewFactory getInstances returned a NULL instances pointer");
@@ -249,12 +211,13 @@ cli::framework::ResultBase *cli::nvmcli::NamespaceFeature::showNamespaces(
 							convertCapacityAndAddIsMirroredText(instance, capacityUnits);
 							generateBlockSizeAttributeValue(instance);
 							convertSecurityAttributes(instance);
+							convertEnabledStateAttributes(instance);
+							addBlockCountAttribute(instance);
 							convertActionRequiredEventsToNAIfEmpty(instance);
 						}
 
-						// Always included for capacity info, but never displayed
-						RemoveAttributeName(attributes, wbem::REPLICATION_KEY);
-
+						// add/remove cli display attributes
+						updateCliAttributes(attributes, parsedCommand);
 						pResult = NvmInstanceToObjectListResult(*pInstances, "Namespace",
 								wbem::NAMESPACEID_KEY, attributes, filters);
 
@@ -1400,6 +1363,110 @@ void cli::nvmcli::NamespaceFeature::convertSecurityAttributes(wbem::framework::I
 		}
 		wbem::framework::Attribute newSecurityAttr(securityStr, false);
 		wbemInstance.setAttribute(wbem::SECURITYFEATURES_KEY, newSecurityAttr);
+	}
+}
+
+void cli::nvmcli::NamespaceFeature::convertEnabledStateAttributes(wbem::framework::Instance &wbemInstance)
+{
+	wbem::framework::Attribute enabledAattr;
+	if (wbemInstance.getAttribute(wbem::ENABLEDSTATE_KEY, enabledAattr) ==
+		wbem::framework::SUCCESS)
+	{
+		int enabled;
+		switch (enabledAattr.intValue())
+		{
+			case NAMESPACE_ENABLE_STATE_ENABLED:
+				enabled = 1;
+				break;
+			case NAMESPACE_ENABLE_STATE_DISABLED:
+			default:
+				enabled = 0;
+				break;
+		}
+
+		wbemInstance.setAttribute(wbem::ENABLED_KEY,
+			wbem::framework::Attribute(enabled, false));
+	}
+}
+
+void cli::nvmcli::NamespaceFeature::addBlockCountAttribute(wbem::framework::Instance &wbemInstance)
+{
+	wbem::framework::Attribute blockCountAattr;
+	if (wbemInstance.getAttribute(wbem::NUMBEROFBLOCKS_KEY, blockCountAattr) ==
+		wbem::framework::SUCCESS)
+	{
+		wbemInstance.setAttribute(wbem::BLOCKCOUNT_KEY,
+			wbem::framework::Attribute(blockCountAattr.uint64Value(), true));
+	}
+}
+
+void cli::nvmcli::NamespaceFeature::populateNamespaceAttributes(
+	wbem::framework::attribute_names_t &attributes,
+	cli::framework::ParsedCommand const &parsedCommand)
+{
+	// define default display attributes
+	wbem::framework::attribute_names_t defaultAttributes;
+	defaultAttributes.push_back(wbem::NAMESPACEID_KEY);
+	defaultAttributes.push_back(wbem::TYPE_KEY);
+	defaultAttributes.push_back(wbem::CAPACITY_KEY);
+	defaultAttributes.push_back(wbem::HEALTHSTATE_KEY);
+	defaultAttributes.push_back(wbem::ACTIONREQUIRED_KEY);
+
+	// define all attributes
+	wbem::framework::attribute_names_t allAttributes(defaultAttributes);
+	allAttributes.push_back(wbem::NAME_KEY);
+	allAttributes.push_back(wbem::POOLID_KEY);
+	allAttributes.push_back(wbem::BLOCKSIZE_KEY);
+	allAttributes.push_back(wbem::OPTIMIZE_KEY);
+	allAttributes.push_back(wbem::ENABLEDSTATE_KEY);
+	allAttributes.push_back(wbem::ACTIONREQUIREDEVENTS_KEY);
+	allAttributes.push_back(wbem::SECURITYFEATURES_KEY);
+	allAttributes.push_back(wbem::PERSISTENTSETTINGS_KEY);
+
+	// get the desired attributes
+	wbem::framework::attribute_names_t desiredAttributes =
+		GetAttributeNames(parsedCommand.options, defaultAttributes, allAttributes);
+	attributes = desiredAttributes;
+
+	// make sure we have the NamespaceID in our display
+	// this would cover the case the user asks for specific display attributes, but they
+	// don't include the ID
+	if (!wbem::framework_interface::NvmInstanceFactory::containsAttribute(wbem::NAMESPACEID_KEY,
+			attributes))
+	{
+		attributes.insert(attributes.begin(), wbem::NAMESPACEID_KEY);
+	}
+
+	// make sure we have the Replication (mirrored) information. It will be filtered out later.
+	if (!wbem::framework_interface::NvmInstanceFactory::containsAttribute(wbem::REPLICATION_KEY,
+		attributes))
+	{
+		attributes.push_back(wbem::REPLICATION_KEY);
+	}
+	if (!wbem::framework_interface::NvmInstanceFactory::containsAttribute(wbem::NUMBEROFBLOCKS_KEY,
+		attributes))
+	{
+		attributes.push_back(wbem::NUMBEROFBLOCKS_KEY);
+	}
+}
+
+void cli::nvmcli::NamespaceFeature::updateCliAttributes(wbem::framework::attribute_names_t &attributes,
+	const framework::ParsedCommand& parsedCommand)
+{
+	// not displayed in cli
+	RemoveAttributeName(attributes, wbem::REPLICATION_KEY);
+
+	// display NUMBEROFBLOCKS_KEY as BLOCKCOUNT_KEY
+	RemoveAttributeName(attributes, wbem::NUMBEROFBLOCKS_KEY);
+	if (framework::parsedCommandContains(parsedCommand, framework::OPTION_ALL))
+	{
+		attributes.push_back(wbem::BLOCKCOUNT_KEY);
+	}
+	// display ENABLEDSTATE_KEY as ENABLED_KEY
+	RemoveAttributeName(attributes, wbem::ENABLEDSTATE_KEY);
+	if (framework::parsedCommandContains(parsedCommand, framework::OPTION_ALL))
+	{
+		attributes.push_back(wbem::ENABLED_KEY);
 	}
 }
 

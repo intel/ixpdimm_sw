@@ -52,7 +52,6 @@ wbem::logic::LayoutBuilder::LayoutBuilder(
 	{
 		m_pLibApi = lib_interface::NvmApi::getApi();
 	}
-//	populateLayoutSteps();
 }
 
 wbem::logic::LayoutBuilder::~LayoutBuilder()
@@ -85,22 +84,6 @@ wbem::logic::MemoryAllocationLayout wbem::logic::LayoutBuilder::build(
 	deleteLayoutSteps();
 
 	return layout;
-}
-
-void wbem::logic::LayoutBuilder::populateLayoutSteps()
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	// Note that order matters
-	m_layoutSteps.push_back(new LayoutStepCheckDriverSupportsPersistent(m_systemCapabilities.nvm_features));
-	m_layoutSteps.push_back(new LayoutStepPersistentSettingsNotRecommended(m_systemCapabilities.platform_capabilities));
-	m_layoutSteps.push_back(new LayoutStepCheckDriverSupportsStorage(m_systemCapabilities.nvm_features));
-	m_layoutSteps.push_back(new LayoutStepCheckAsymmetricalPopulation());
-	m_layoutSteps.push_back(new LayoutStepReserveDimm());
-	m_layoutSteps.push_back(new LayoutStepVolatile());
-	m_layoutSteps.push_back(new LayoutStepPersistent(m_systemCapabilities, 0, m_pLibApi));
-	m_layoutSteps.push_back(new LayoutStepPersistent(m_systemCapabilities, 1, m_pLibApi));
-	m_layoutSteps.push_back(new LayoutStepStorage());
 }
 
 void wbem::logic::LayoutBuilder::populateAllLayoutStepsForRequest(const MemoryAllocationRequest& request)
