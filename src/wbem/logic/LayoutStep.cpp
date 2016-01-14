@@ -49,7 +49,8 @@ NVM_UINT64 wbem::logic::LayoutStep::getCountOfDimmsWithUnallocatedCapacity(
 	for (std::vector<struct Dimm>::const_iterator dimmIter = dimms.begin();
 				dimmIter != dimms.end(); dimmIter++)
 	{
-		if (getDimmUnallocatedBytes(dimmIter->capacity, goals[dimmIter->guid]) > 0)
+		if (getDimmUnallocatedGiBAlignedBytes(dimmIter->capacity, goals[dimmIter->guid])
+				> 0)
 		{
 			dimmCount++;
 		}
@@ -98,7 +99,8 @@ NVM_UINT64 wbem::logic::LayoutStep::getLargestPerDimmSymmetricalBytes(
 	for (std::vector<struct Dimm>::const_iterator dimmIter = dimms.begin();
 				dimmIter != dimms.end(); dimmIter++)
 	{
-		NVM_UINT64 dimmMaxBytes = getDimmUnallocatedBytes(dimmIter->capacity, goals[dimmIter->guid]);
+		NVM_UINT64 dimmMaxBytes = getDimmUnallocatedGiBAlignedBytes(
+				dimmIter->capacity, goals[dimmIter->guid]);
 		if (dimmMaxBytes > 0)
 		{
 			dimmsIncluded.push_back(*dimmIter);
@@ -128,7 +130,7 @@ NVM_UINT64 wbem::logic::LayoutStep::getRemainingBytesFromRequestedDimms(
 	for (std::vector<struct Dimm>::const_iterator dimmIter = request.dimms.begin();
 			dimmIter != request.dimms.end(); dimmIter++)
 	{
-		bytes += getDimmUnallocatedBytes(dimmIter->capacity, layout.goals[dimmIter->guid]);
+		bytes += getDimmUnallocatedGiBAlignedBytes(dimmIter->capacity, layout.goals[dimmIter->guid]);
 	}
 
 	// no remaining capacity left on any dimms
@@ -137,4 +139,14 @@ NVM_UINT64 wbem::logic::LayoutStep::getRemainingBytesFromRequestedDimms(
 		throw exception::NvmExceptionBadRequestSize();
 	}
 	return bytes;
+}
+
+NVM_UINT64 wbem::logic::LayoutStep::getDimmUnallocatedGiBAlignedBytes(
+		const NVM_UINT64& dimmCapacity, const struct config_goal& dimmGoal)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	NVM_UINT64 dimmRemainingBytes = getDimmUnallocatedBytes(dimmCapacity, dimmGoal);
+
+	return round_down(dimmRemainingBytes, BYTES_PER_GB);
 }

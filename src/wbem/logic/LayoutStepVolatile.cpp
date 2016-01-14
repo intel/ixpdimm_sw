@@ -55,7 +55,7 @@ void wbem::logic::LayoutStepVolatile::execute(const MemoryAllocationRequest& req
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	NVM_UINT64 bytesToAllocate = getRequestedCapacityBytes(request, layout);;
+	NVM_UINT64 bytesToAllocate = getRequestedCapacityBytes(request, layout);
 	if (bytesToAllocate)
 	{
 		std::vector<Dimm> dimmsToLayout;

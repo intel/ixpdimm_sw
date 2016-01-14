@@ -51,6 +51,9 @@ class NVM_API LayoutStep
 		NVM_UINT64 getDimmUnallocatedBytes(
 				const NVM_UINT64 &dimmCapacity,
 				const struct config_goal &dimmGoal);
+		NVM_UINT64 getDimmUnallocatedGiBAlignedBytes(
+				const NVM_UINT64 &dimmCapacity,
+				const struct config_goal &dimmGoal);
 		NVM_UINT64 getCountOfDimmsWithUnallocatedCapacity(
 				const std::vector<Dimm> &dimms,
 				std::map<std::string, struct config_goal> &goals);
