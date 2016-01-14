@@ -266,6 +266,8 @@ std::string AttributeToString(const wbem::framework::Attribute &attr);
 
 std::string AttributeToHexString(const wbem::framework::Attribute &attr);
 
+std::string getInvalidDimmIdErrorString(const std::string &invalidDimmId);
+
 #define SET_PROVIDER(currentProvider, newProvider) \
 	if (newProvider != NULL) \
 	{ \

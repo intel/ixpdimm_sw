@@ -697,8 +697,18 @@ cli::framework::ErrorResult *cli::nvmcli::NvmExceptionToResult(wbem::framework::
 			dynamic_cast<wbem::exception::NvmExceptionBadTarget *>(&e);
 	if (pBadTarget != NULL)
 	{
-		// return the wbem message
-		return new framework::ErrorResult(framework::ErrorResult::ERRORCODE_SYNTAX, e.what(), prefix);
+		// If the bad target was a DIMM, it's an invalid DIMM ID, not a syntax error
+		if (pBadTarget->getTarget() == nvmcli::TARGET_DIMM.name)
+		{
+			return new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
+					getInvalidDimmIdErrorString(pBadTarget->getBadTargetValue()),
+					prefix);
+		}
+		else
+		{
+			// return the wbem message
+			return new framework::ErrorResult(framework::ErrorResult::ERRORCODE_SYNTAX, e.what(), prefix);
+		}
 	}
 
 	// try NvmExceptionNotManageable
@@ -1277,4 +1287,11 @@ std::string cli::nvmcli::AttributeToHexString(const wbem::framework::Attribute &
 			break;
 	}
 	return result.str();
+}
+
+std::string cli::nvmcli::getInvalidDimmIdErrorString(const std::string& invalidDimmId)
+{
+	std::string errorString = framework::ResultBase::stringFromArgList(
+		TR(INVALID_DIMMID_ERROR_STR.c_str()), invalidDimmId.c_str());
+	return errorString;
 }
