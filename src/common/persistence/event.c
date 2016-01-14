@@ -276,6 +276,9 @@ const char *EVENT_MESSAGES_QUICK_DIAG[EVENT_CODE_DIAG_QUICK_UNKNOWN -
 	N_TR("The quick health check detected that the firmware "
 			"on "NVM_DIMM_NAME" %s has not initialized "
 			"successfully, the last known Major:Minor Checkpoint is %s."),
+	// EVENT_CODE_DIAG_QUICK_FW_HIT_ASSERT
+	N_TR("The quick health check detected that the firmware "
+			"on "NVM_DIMM_NAME" %s reported an assert."),
 	// EVENT_CODE_DIAG_QUICK_UNKNOWN
 	N_TR("The quick health check logged an unknown error code %d."),
 };

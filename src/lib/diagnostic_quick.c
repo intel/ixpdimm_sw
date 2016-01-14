@@ -49,6 +49,7 @@
 #define	MAILBOX_INTERFACE_READY_STATUS(bits)	((bits >> 20) & 0b01) // bit 20
 #define	MINOR_CHECKPOINT(bits)	((bits >> 8) & 0b11111111) // bits 15:8
 #define	MAJOR_CHECKPOINT(bits)	((bits) & 0b11111111) // bits 7:0
+#define	BSR_H_ASSERTION(bits)	((bits >> 32) & 0b01) // bit 32
 #define	STATUS_NOT_READY	0b00
 #define	STATUS_ERROR	0b10
 enum major_status_code
@@ -574,6 +575,32 @@ void check_fw_boot_status(const struct diagnostic *p_diagnostic,
 	COMMON_LOG_EXIT();
 }
 
+void check_fw_assert(const struct diagnostic *p_diagnostic,
+		const unsigned long long bsr,
+		const NVM_GUID device_guid,
+		NVM_UINT32 *p_results)
+{
+	COMMON_LOG_ENTRY();
+
+	if (BSR_H_ASSERTION(bsr))
+	{
+		NVM_GUID_STR guid_str;
+		guid_to_str(device_guid, guid_str);
+		store_event_by_parts(EVENT_TYPE_DIAG_QUICK,
+				EVENT_SEVERITY_CRITICAL,
+				EVENT_CODE_DIAG_QUICK_FW_HIT_ASSERT,
+				device_guid,
+				1,
+				guid_str,
+				NULL,
+				NULL,
+				DIAGNOSTIC_RESULT_FAILED);
+		(*p_results)++;
+	}
+
+	COMMON_LOG_EXIT();
+}
+
 int check_dimm_bsr(const NVM_GUID device_guid,
 		const NVM_NFIT_DEVICE_HANDLE device_handle,
 		const struct diagnostic *p_diagnostic, NVM_UINT32 *p_results)
@@ -604,6 +631,7 @@ int check_dimm_bsr(const NVM_GUID device_guid,
 		check_ddrt_init_complete_status(p_diagnostic, bsr, device_guid, p_results);
 		check_mailbox_ready_status(p_diagnostic, bsr, device_guid, p_results);
 		check_fw_boot_status(p_diagnostic, bsr, device_guid, p_results);
+		check_fw_assert(p_diagnostic, bsr, device_guid, p_results);
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
