@@ -254,7 +254,8 @@ int support_store_host(PersistentStore *p_store, int history_id,
 	{
 		struct db_sw_inventory db_inventory;
 
-		s_strncpy(db_inventory.name, SW_INVENTORY_NAME_LEN, p_host->name, NVM_VERSION_LEN);
+		s_strncpy(db_inventory.name, SW_INVENTORY_NAME_LEN, p_host->name,
+				NVM_COMPUTERNAME_LEN);
 		s_strncpy(db_inventory.mgmt_sw_rev, SW_INVENTORY_MGMT_SW_REV_LEN,
 				p_inventory->mgmt_sw_revision, NVM_VERSION_LEN);
 		s_strncpy(db_inventory.vendor_driver_rev, SW_INVENTORY_VENDOR_DRIVER_REV_LEN,
