@@ -502,7 +502,19 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::showDimms(
 					wbem::framework::Attribute firstFastRefreshStr(firstFastRefreshStream.str(), false);
 					(*pInstances)[i].setAttribute(wbem::FIRSTFASTREFRESH_KEY, firstFastRefreshStr);
 				}
-				
+
+				wbem::framework::Attribute arEventAttr;
+				if ((*pInstances)[i].getAttribute(wbem::ACTIONREQUIREDEVENTS_KEY, arEventAttr) == wbem::framework::SUCCESS)
+				{
+					wbem::framework::STR_LIST arEventList = arEventAttr.strListValue();
+					if (!arEventList.size())
+					{
+						arEventList.push_back(wbem::NA);
+						(*pInstances)[i].setAttribute(wbem::ACTIONREQUIREDEVENTS_KEY,
+										wbem::framework::Attribute(arEventList, false));
+					}
+				}
+
 				convertSecurityCapabilities((*pInstances)[i]);
 				
 				cli::nvmcli::convertCapacityAttribute((*pInstances)[i], wbem::CAPACITY_KEY);

@@ -281,12 +281,21 @@ bool cli::nvmcli::NamespaceFeature::convertConfigGoalInstance(
 		}
 
 		// action required event list
-		// only query db if attribute is requested
-		if (std::find(displayAttributes.begin(), displayAttributes.end(),
-				wbem::ACTIONREQUIREDEVENTS_KEY) != displayAttributes.end())
+		int eventCount = 0;
+		eventCount = nvm_get_event_count(&filter);
+		if (eventCount < 0)
 		{
-			int eventCount = 0;
-			eventCount = nvm_get_event_count(&filter);
+			COMMON_LOG_ERROR_F("Failed to retrieve the action required events "
+					"for the config goal on dimm %s, error %d",
+					parentAttr.stringValue().c_str(), eventCount);
+			throw wbem::exception::NvmExceptionLibError(eventCount);
+		}
+		wbem::framework::STR_LIST arEventList;
+		if (eventCount > 0)
+		{
+			// get the events
+			struct event events[eventCount];
+			eventCount = nvm_get_events(&filter, events, eventCount);
 			if (eventCount < 0)
 			{
 				COMMON_LOG_ERROR_F("Failed to retrieve the action required events "
@@ -294,39 +303,28 @@ bool cli::nvmcli::NamespaceFeature::convertConfigGoalInstance(
 						parentAttr.stringValue().c_str(), eventCount);
 				throw wbem::exception::NvmExceptionLibError(eventCount);
 			}
-			wbem::framework::STR_LIST arEventList;
-			if (eventCount > 0)
+
+			for (int i = 0; i < eventCount; i++)
 			{
-				// get the events
-				struct event events[eventCount];
-				eventCount = nvm_get_events(&filter, events, eventCount);
-				if (eventCount < 0)
-				{
-					COMMON_LOG_ERROR_F("Failed to retrieve the action required events "
-							"for the config goal on dimm %s, error %d",
-							parentAttr.stringValue().c_str(), eventCount);
-					throw wbem::exception::NvmExceptionLibError(eventCount);
-				}
-
-				for (int i = 0; i < eventCount; i++)
-				{
-					std::stringstream eventMsg;
-					eventMsg << "Event " << events[i].event_id;
-					char msg[NVM_EVENT_MSG_LEN + (3 * NVM_EVENT_ARG_LEN)];
-					s_snprintf(msg, (NVM_EVENT_MSG_LEN + (3 * NVM_EVENT_ARG_LEN)),
-							events[i].message,
-							events[i].args[0],
-							events[i].args[1],
-							events[i].args[2]);
-					eventMsg << " - " << msg;
-					arEventList.push_back(eventMsg.str());
-				}
-
+				std::stringstream eventMsg;
+				eventMsg << "Event " << events[i].event_id;
+				char msg[NVM_EVENT_MSG_LEN + (3 * NVM_EVENT_ARG_LEN)];
+				s_snprintf(msg, (NVM_EVENT_MSG_LEN + (3 * NVM_EVENT_ARG_LEN)),
+						events[i].message,
+						events[i].args[0],
+						events[i].args[1],
+						events[i].args[2]);
+				eventMsg << " - " << msg;
+				arEventList.push_back(eventMsg.str());
 			}
-			pCliInstance->setAttribute(wbem::ACTIONREQUIREDEVENTS_KEY,
-					wbem::framework::Attribute(arEventList, false),
-					displayAttributes);
 		}
+		else
+		{
+			arEventList.push_back(wbem::NA);
+		}
+		pCliInstance->setAttribute(wbem::ACTIONREQUIREDEVENTS_KEY,
+				wbem::framework::Attribute(arEventList, false),
+				displayAttributes);
 	}
 	catch (bool)
 	{

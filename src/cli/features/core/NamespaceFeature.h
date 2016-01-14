@@ -431,6 +431,7 @@ class NVM_API NamespaceFeature : public cli::framework::FeatureBase
 		static void convertCapacityAndAddIsMirroredText(wbem::framework::Instance &instance,
 				const std::string capacityUnits = "");
 		static void generateBlockSizeAttributeValue(wbem::framework::Instance &instance);
+		static void convertActionRequiredEventsToNAIfEmpty(wbem::framework::Instance &wbemInstance);
 
 		/*
 		 * Helper for adjusting modifyNamespace blockCount if needed for alignment purposes and if

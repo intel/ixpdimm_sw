@@ -249,6 +249,7 @@ cli::framework::ResultBase *cli::nvmcli::NamespaceFeature::showNamespaces(
 							convertCapacityAndAddIsMirroredText(instance, capacityUnits);
 							generateBlockSizeAttributeValue(instance);
 							convertSecurityAttributes(instance);
+							convertActionRequiredEventsToNAIfEmpty(instance);
 						}
 
 						// Always included for capacity info, but never displayed
@@ -1399,5 +1400,20 @@ void cli::nvmcli::NamespaceFeature::convertSecurityAttributes(wbem::framework::I
 		}
 		wbem::framework::Attribute newSecurityAttr(securityStr, false);
 		wbemInstance.setAttribute(wbem::SECURITYFEATURES_KEY, newSecurityAttr);
+	}
+}
+
+void cli::nvmcli::NamespaceFeature::convertActionRequiredEventsToNAIfEmpty(wbem::framework::Instance &wbemInstance)
+{
+	wbem::framework::Attribute arEventAttr;
+	if (wbemInstance.getAttribute(wbem::ACTIONREQUIREDEVENTS_KEY, arEventAttr) == wbem::framework::SUCCESS)
+	{
+		wbem::framework::STR_LIST arEventList = arEventAttr.strListValue();
+		if (!arEventList.size())
+		{
+			arEventList.push_back(wbem::NA);
+			wbemInstance.setAttribute(wbem::ACTIONREQUIREDEVENTS_KEY,
+					wbem::framework::Attribute(arEventList, false));
+		}
 	}
 }
