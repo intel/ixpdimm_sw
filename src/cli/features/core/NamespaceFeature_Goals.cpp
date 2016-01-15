@@ -740,6 +740,7 @@ std::string cli::nvmcli::NamespaceFeature::getPromptStringForLayout(
 
 	std::stringstream promptStr;
 	wbem::framework::instances_t *pGoalInstances = NULL;
+	cli::framework::ResultBase *pDisplayGoal = NULL;
 
 	try
 	{
@@ -750,9 +751,7 @@ std::string cli::nvmcli::NamespaceFeature::getPromptStringForLayout(
 		filters_t noFilters;
 		wbem::framework::attribute_names_t defaultAttributes;
 		populateCreateConfigGoalPromptDefaultAttributes(defaultAttributes);
-		cli::framework::ResultBase *pDisplayGoal = showConfigGoalForInstances(noFilters,
-				defaultAttributes,
-				pGoalInstances);
+		pDisplayGoal = showConfigGoalForInstances(noFilters, defaultAttributes, pGoalInstances);
 		pDisplayGoal->setOutputType(framework::ResultBase::OUTPUT_TEXTTABLE);
 
 		promptStr << CREATE_GOAL_CONFIRMATION_PREFIX << std::endl << std::endl;
@@ -777,10 +776,15 @@ std::string cli::nvmcli::NamespaceFeature::getPromptStringForLayout(
 
 		promptStr << CREATE_GOAL_CONFIRMATION_SUFFIX;
 
+		delete pDisplayGoal;
 		delete pGoalInstances;
 	}
 	catch (wbem::framework::Exception &)
 	{
+		if  (pDisplayGoal)
+		{
+			delete pDisplayGoal;
+		}
 		if (pGoalInstances)
 		{
 			delete pGoalInstances;

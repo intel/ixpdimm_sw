@@ -301,7 +301,7 @@ void wbem::mem_config::MemoryConfigurationFactory::populateCurrentConfigInstance
 
 void wbem::mem_config::MemoryConfigurationFactory::configGoalToGoalInstance(
 		const framework::attribute_names_t &attributes, const struct device_discovery *pDiscovery,
-		struct config_goal goal, wbem::framework::Instance *pInstance)
+		const struct config_goal &goal, wbem::framework::Instance *pInstance)
 {
 	// VolatileSize
 	if (containsAttribute(VOLATILESIZE_KEY, attributes))

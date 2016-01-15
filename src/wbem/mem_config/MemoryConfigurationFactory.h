@@ -148,7 +148,7 @@ class NVM_API MemoryConfigurationFactory  : public framework_interface::NvmInsta
 
 		void configGoalToGoalInstance(const framework::attribute_names_t &attributes,
 				const struct device_discovery *pDiscovery,
-				struct config_goal goal, wbem::framework::Instance *pInstance);
+				const struct config_goal &goal, wbem::framework::Instance *pInstance);
 
 		void populateInstanceDimmInfoFromDiscovery(
 				framework::attribute_names_t &attributes,

@@ -106,7 +106,7 @@ class NVM_API LayoutStepPersistent: public LayoutStep
 		bool interleaveSetFromPreviousExtent(
 				const std::string &dimmGuid,
 				struct config_goal &goal);
-		bool interleaveSetsMatch(const struct pm_attributes oldSet, const struct pm_attributes newSet);
+		bool interleaveSetsMatch(const struct pm_attributes &oldSet, const struct pm_attributes &newSet);
 		int getDimmPopulationMap(const std::vector<Dimm> &requestedDimms,
 						std::map<std::string, struct config_goal> &goals);
 		bool dimmPopulationMatchesInterleaveSet(const int &dimmMap, const int &interleaveSet);

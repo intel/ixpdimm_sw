@@ -521,6 +521,7 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::updateFirmware(
 						{
 							pSimpleList->setErrorCode(pError->getErrorCode());
 						}
+						delete(pError);
 					}
 				}
 				pResult = pSimpleList;
@@ -556,6 +557,7 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::updateFirmware(
 						cli::framework::ErrorResult *eResult = NvmExceptionToResult(e);
 						pSimpleList->insert(prefix + eResult->outputText());
 						pSimpleList->setErrorCode(eResult->getErrorCode());
+						delete(eResult);
 						break; // don't continue on failure
 					}
 				}

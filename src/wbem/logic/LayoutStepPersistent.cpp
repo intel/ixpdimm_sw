@@ -315,7 +315,7 @@ std::vector<wbem::logic::Dimm> wbem::logic::LayoutStepPersistent::getDimmsWithCa
 }
 
 bool wbem::logic::LayoutStepPersistent::interleaveSetsMatch(
-		const struct pm_attributes oldSet, const struct pm_attributes newSet)
+		const struct pm_attributes &oldSet, const struct pm_attributes &newSet)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 

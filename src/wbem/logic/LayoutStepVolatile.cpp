@@ -86,7 +86,7 @@ void wbem::logic::LayoutStepVolatile::execute(const MemoryAllocationRequest& req
 					bytesAllocated += bytesPerDimm;
 				}
 			}
-			catch (exception::NvmExceptionBadRequestSize &e)
+			catch (exception::NvmExceptionBadRequestSize &)
 			{
 				// out of capacity, clean up and pass along the exception
 				layout.volatileCapacity = bytesToConfigGoalSize(alignedBytesAllocated);

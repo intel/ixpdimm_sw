@@ -338,6 +338,7 @@ cli::framework::ResultBase *cli::nvmcli::NamespaceFeature::deleteNamespaces(
 				cli::framework::ErrorResult *eResult = NvmExceptionToResult(e);
 				pList->insert(deleteMsg +  eResult->outputText());
 				pList->setErrorCode(eResult->getErrorCode());
+				delete(eResult);
 			}
 		}
 	}
@@ -617,8 +618,7 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseCreateNsCapacity
 			pResult = new framework::SyntaxErrorBadValueResult(
 				framework::TOKENTYPE_PROPERTY, CREATE_NS_PROP_CAPACITY, value);
 		}
-
-		if (m_nsType == wbem::pmem_config::PM_SERVICE_PM_TYPE)
+		else if (m_nsType == wbem::pmem_config::PM_SERVICE_PM_TYPE)
 		{
 			if (m_blockSizeExists)
 			{
@@ -1010,6 +1010,7 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::modifyNamespace(
 				{
 					pList->setErrorCode(pError->getErrorCode());
 				}
+				delete(pError);
 			}
 		}
 	}

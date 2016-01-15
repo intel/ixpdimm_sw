@@ -416,6 +416,7 @@ cli::framework::ResultBase* cli::nvmcli::SensorFeature::modifySensor(
 						{
 							delete pInstance;
 						}
+						delete(pError);
 						break;
 					}
 				}
