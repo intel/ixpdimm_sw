@@ -1306,14 +1306,47 @@ int nvm_create_namespace(NVM_GUID *p_namespace_guid, const NVM_GUID pool_guid,
 				if (s_strnlen(p_settings->friendly_name, NAMESPACE_FRIENDLY_NAME_LEN) == 0)
 				{
 					char friendly_name[NVM_NAMESPACE_NAME_LEN];
+					int max_unique_id = 0;
 					int namespace_count = nvm_get_namespace_count();
 					if (namespace_count < 0)
 					{
 						namespace_count = 0;
 					}
-					// create a unique friendly name - NvDimmVolN
+
+					if (namespace_count > 0)
+					{
+						// Figure out a unique ID for the default namespace name
+						// Find the max value of the ID currently present,
+						// and generate max_unique_id+1 as the ID
+						struct nvm_namespace_discovery nvm_namespaces[namespace_count];
+						get_namespaces(namespace_count, nvm_namespaces);
+						for (int ns = 0; ns < namespace_count; ns++)
+						{
+							// Determine ID only if it is a default namespace name
+							if (!s_strncmp(NVM_DEFAULT_NAMESPACE_NAME,
+									nvm_namespaces[ns].friendly_name,
+									s_strnlen(NVM_DEFAULT_NAMESPACE_NAME,
+											NVM_NAMESPACE_NAME_LEN)))
+							{
+								unsigned int id = 0;
+								s_strtoui(nvm_namespaces[ns].friendly_name,
+									s_strnlen(nvm_namespaces[ns].friendly_name,
+										NVM_NAMESPACE_NAME_LEN),
+									NULL,
+									&id);
+								if (id > max_unique_id)
+								{
+									max_unique_id = id;
+								}
+							}
+						}
+					}
+					// create a unique friendly name - NvDimmVolN.
+					char namespace_name[NVM_NAMESPACE_NAME_LEN];
+					s_strcpy(namespace_name, NVM_DEFAULT_NAMESPACE_NAME, NVM_NAMESPACE_NAME_LEN);
 					s_snprintf(friendly_name, NVM_NAMESPACE_NAME_LEN,
-							NVM_DEFAULT_NAMESPACE_NAME, namespace_count + 1);
+							s_strcat(namespace_name, NVM_NAMESPACE_NAME_LEN, "%d"),
+									max_unique_id + 1);
 					s_strcpy(nvm_settings.friendly_name,
 							friendly_name, NVM_NAMESPACE_NAME_LEN);
 				}
