@@ -221,6 +221,16 @@ class NVM_API NVDIMMDiagnosticFactory : public framework_interface::NvmInstanceF
 	private:
 		void populateAttributeList(framework::attribute_names_t &attributes)
 			throw (framework::Exception);
+
+		struct diagnostic getDiagnosticStructure(const std::string &testType,
+				const framework::UINT16_LIST &ignoreList);
+		void validateObjectHostName(const wbem::framework::ObjectPath &object);
+		framework::UINT16_LIST getDiagnosticIgnoreList(wbem::framework::attributes_t &inParms);
+		void getGuidFromManagedElement(wbem::framework::attributes_t &inParms,
+				const std::string &testType,
+				NVM_GUID guid);
+		framework::ObjectPath validateManagedElementObjectPath(
+				const std::string &refPath, const std::string className);
 };
 
 } // support

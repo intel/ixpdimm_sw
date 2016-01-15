@@ -42,6 +42,7 @@
 #include <server/BaseServerFactory.h>
 #include <exception/NvmExceptionLibError.h>
 #include <framework_interface/NvmAssociationFactory.h>
+#include <physical_asset/NVDIMMFactory.h>
 
 wbem::support::NVDIMMDiagnosticFactory::NVDIMMDiagnosticFactory()
 	throw (wbem::framework::Exception)
@@ -180,6 +181,8 @@ wbem::framework::UINT32 wbem::support::NVDIMMDiagnosticFactory::executeMethod(
 		wbem::framework::attributes_t &inParms,
 		wbem::framework::attributes_t &outParms)
 {
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
 	framework::UINT32 httpRc = framework::MOF_ERR_SUCCESS;
 	wbemRc = framework::MOF_ERR_SUCCESS;
 
@@ -190,61 +193,17 @@ wbem::framework::UINT32 wbem::support::NVDIMMDiagnosticFactory::executeMethod(
 
 		if (method == NVDIMMDIAGNOSTIC_RUNDIAGNOSTICSERVICE)
 		{
-			// verify host
-			const std::string& hostName = wbem::server::getHostName();
-			std::string expectedHostName = object.getKeyValue(SYSTEMNAME_KEY).stringValue();
+			validateObjectHostName(object);
 
-			if (hostName.compare(expectedHostName) != 0)
-			{
-				// not looking for this host
-				httpRc = framework::MOF_ERR_INVALIDPARAMETER;
-			}
-			else
-			{
+			// which test?
+			std::string testType = object.getKeyValue(NAME_KEY).stringValue();
+			framework::UINT16_LIST ignoreResults = getDiagnosticIgnoreList(inParms);
 
-				// check for guid
-				std::string managedElementRef = inParms[wbem::MANAGEDELEMENT_KEY].stringValue();
+			// fill guid
+			COMMON_GUID guid;
+			getGuidFromManagedElement(inParms, testType, guid);
 
-				framework::ObjectPathBuilder pathBuilder(managedElementRef);
-				framework::ObjectPath managedElementPath;
-
-				if (!pathBuilder.Build(&managedElementPath)) // successfully built the path
-				{
-					COMMON_LOG_ERROR_F("parameter '%s' was not a valid object path: %s", wbem::MANAGEDELEMENT_KEY.c_str(),
-							managedElementRef.c_str());
-					throw framework::ExceptionBadParameter(wbem::MANAGEDELEMENT_KEY.c_str());
-				}
-				else
-				{
-					std::string settingsString = inParms[NVDIMMDIAGNOSTIC_SETTINGS].stringValue();
-
-					// which test?
-					std::string testType = object.getKeyValue(NAME_KEY).stringValue();
-
-					framework::CimXml settingsInstance(settingsString);
-					if (settingsInstance.getClass() != NVDIMMDIAGNOSTICINPUT_CREATIONCLASSNAME)
-					{
-						COMMON_LOG_ERROR_F("Settings XML is the wrong WBEM class: %s, expected: %s", settingsInstance.getClass().c_str(),
-								NVDIMMDIAGNOSTICINPUT_CREATIONCLASSNAME.c_str());
-						throw framework::ExceptionBadParameter(NVDIMMDIAGNOSTIC_SETTINGS.c_str());
-					}
-
-					// get the attributes & check test type
-					framework::attributes_t settingsAttrs = settingsInstance.getProperties();
-					framework::attributes_t::iterator testStrIter = settingsAttrs.find(NVDIMMDIAGNOSTIC_IGNORE_KEY);
-					framework::UINT16_LIST ignoreResults;
-					if (testStrIter != settingsAttrs.end())
-					{
-						ignoreResults = testStrIter->second.uint16ListValue();
-					}
-
-					// fill guid
-					COMMON_GUID guid;
-					str_to_guid(managedElementPath.getKeyValue(TAG_KEY).stringValue().c_str(), guid);
-
-					RunDiagnosticService(guid, ignoreResults, testType);
-				}
-			}
+			RunDiagnosticService(guid, ignoreResults, testType);
 		}	// if NVDIMMDIAGNOSTIC_RUNDIAGNOSTICSERVICE
 		else
 		{
@@ -282,190 +241,16 @@ wbem::framework::UINT32 wbem::support::NVDIMMDiagnosticFactory::executeMethod(
 //		 of returning error codes.  The out parameters are returned instead.
 // ------------------------------------------------------------------------------------------------
 
-/*
- * Create a snapshot
- * elementName is optional name used in the db to describe this snapshot
- */
 void wbem::support::NVDIMMDiagnosticFactory::RunDiagnosticService(NVM_GUID device_guid,
 		framework::UINT16_LIST ignoreList, std::string testType)
 	throw (framework::Exception)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	int rc;
 
-	int numIgnore = ignoreList.size();
+	struct diagnostic diags = getDiagnosticStructure(testType, ignoreList);
 
-	// fill the diagnostic structure
-	struct diagnostic diags;
-	memset(&diags, 0, sizeof (struct diagnostic));
-
-	if	(testType.compare(NVDIMMDIAGNOSTIC_TEST_QUICK) == 0)
-	{
-		diags.test = DIAG_TYPE_QUICK;
-
-		for (int i = 0; i < numIgnore; i++)
-		{
-			switch (ignoreList[i])
-			{
-			case HC_IGNORE_HEALTHSTATE:
-				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_QUICK_HEALTH;
-				break;
-			case HC_IGNORE_TEMPERATURE:
-				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_QUICK_TEMP;
-				break;
-			case HC_IGNORE_SPARE:
-				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_QUICK_AVAIL_SPARE;
-				break;
-			case HC_IGNORE_WEAR:
-				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_QUICK_PERC_USED;
-				break;
-			case HC_IGNORE_POWERLOSSPROTECTION:
-				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_QUICK_POWER_LOSS;
-				break;
-			case HC_IGNORE_INTERFACE:
-				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_QUICK_INTERFACE_ERR;
-				break;
-			case HC_IGNORE_THERMALTHROTTLE:
-				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_QUICK_THERM_THROTTLE;
-				break;
-			case HC_IGNORE_UNCORRECTABLE:
-				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_QUICK_UNCORRECT_ERRORS;
-				break;
-			case HC_IGNORE_CORRECTABLE:
-				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_QUICK_CORRECTED_ERRORS;
-				break;
-			case HC_IGNORE_ERASURE_CODE_CORRECTABLE:
-				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_QUICK_ERASURE_CODED_CORRECTED_ERRORS;
-				break;
-			case HC_IGNORE_VENDORID:
-				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_QUICK_VALID_VENDOR_ID;
-				break;
-			case HC_IGNORE_MANUFACTURER:
-				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_QUICK_VALID_MANUFACTURER;
-				break;
-			case HC_IGNORE_MODELNUMBER:
-				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_QUICK_VALID_MODEL_NUMBER;
-				break;
-			default:
-				COMMON_LOG_ERROR_F("Settings Ignore value %d is invalid for test %s",
-						ignoreList[i], NVDIMMDIAGNOSTIC_TEST_QUICK.c_str());
-			}
-		} // walk through ignore list
-	} // is quick test
-	else if (testType.compare(NVDIMMDIAGNOSTIC_TEST_SECURITY) == 0)
-	{
-		diags.test = DIAG_TYPE_SECURITY;
-		for (int i = 0; i < numIgnore; i++)
-		{
-			switch (ignoreList[i])
-			{
-			case SEC_IGNORE_SECDISABLED:
-				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_SECURITY_ALL_DISABLED;
-				break;
-			case SEC_IGNORE_SECCONSISTENT:
-				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_SECURITY_CONSISTENT;
-				break;
-			default:
-				COMMON_LOG_ERROR_F("Settings Ignore value %d is invalid for test %s",
-						ignoreList[i], NVDIMMDIAGNOSTIC_TEST_SECURITY.c_str());
-			}
-		}
-	} // is security check test
-	else if (testType.compare(NVDIMMDIAGNOSTIC_TEST_SETTING) == 0)
-	{
-		diags.test = DIAG_TYPE_FW_CONSISTENCY;
-		for (int i = 0; i < numIgnore; i++)
-		{
-			switch (ignoreList[i])
-			{
-			case SET_IGNORE_FWCONSISTENT:
-				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_FW_CONSISTENT;
-				break;
-			case SET_IGNORE_TEMPMEDIATHRESHOLD:
-				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_FW_MEDIA_TEMP;
-				break;
-			case SET_IGNORE_TEMPCORETHRESHOLD:
-				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_FW_CORE_TEMP;
-				break;
-			case SET_IGNORE_SPARETHRESHOLD:
-				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_FW_SPARE;
-				break;
-			case SET_IGNORE_POW_MGMT_POLICIES:
-				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_FW_POW_MGMT_POLICY
-						| (NVM_UINT64)DIAG_THRESHOLD_FW_TDP_POW_MIN
-						| (NVM_UINT64)DIAG_THRESHOLD_FW_TDP_POW_MAX
-						| (NVM_UINT64)DIAG_THRESHOLD_FW_PEAK_POW_BUDGET_MIN
-						| (NVM_UINT64)DIAG_THRESHOLD_FW_PEAK_POW_BUDGET_MAX
-						| (NVM_UINT64)DIAG_THRESHOLD_FW_AVG_POW_BUDGET_MIN
-						| (NVM_UINT64)DIAG_THRESHOLD_FW_PEAK_POW_BUDGET_MAX;
-				break;
-			case SET_IGNORE_DIE_SPARING_POLICIES:
-				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_FW_DIE_SPARING_POLICY
-						| DIAG_THRESHOLD_FW_DIE_SPARING_LEVEL;
-				break;
-			case SET_IGNORE_TIME:
-				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_FW_TIME;
-				break;
-			case SET_IGNORE_DEBUGLOG:
-				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_FW_DEBUGLOG;
-				break;
-			default:
-				COMMON_LOG_ERROR_F("Settings Ignore value %d is invalid for test %s",
-						ignoreList[i], NVDIMMDIAGNOSTIC_TEST_SETTING.c_str());
-			}
-		}
-	} // is firmware consistency check and settings test
-	else if (testType.compare(NVDIMMDIAGNOSTIC_TEST_PLATFORM) == 0)
-	{
-		diags.test = DIAG_TYPE_PLATFORM_CONFIG;
-		for (int i = 0; i < numIgnore; i++)
-		{
-			switch (ignoreList[i])
-			{
-			case PF_IGNORE_NFITHEADER:
-				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_PCONFIG_NFIT;
-				break;
-			case PF_IGNORE_CAPABILITYTABLE:
-				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_PCONFIG_PCAT;
-				break;
-			case PF_IGNORE_CONFIGDATA:
-				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_PCONFIG_PCD
-					| (NVM_UINT64)DIAG_THRESHOLD_PCONFIG_CURRENT_PCD
-					| (NVM_UINT64)DIAG_THRESHOLD_PCONFIG_UNCONFIGURED
-					| (NVM_UINT64)DIAG_THRESHOLD_PCONFIG_BROKEN_ISET
-					| (NVM_UINT64)DIAG_THRESHOLD_PCONFIG_MAPPED_CAPACITY;
-				break;
-			case PF_IGNORE_CURRENTCONFIG:
-				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_PCONFIG_CURRENT_PCD
-					| (NVM_UINT64)DIAG_THRESHOLD_PCONFIG_UNCONFIGURED
-					| (NVM_UINT64)DIAG_THRESHOLD_PCONFIG_BROKEN_ISET
-					| (NVM_UINT64)DIAG_THRESHOLD_PCONFIG_MAPPED_CAPACITY;
-				break;
-			case PF_IGNORE_DIMMSCONFIGURED:
-				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_PCONFIG_UNCONFIGURED;
-				break;
-			case PF_IGNORE_CONFIGERR:
-				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_PCONFIG_BROKEN_ISET;
-				break;
-			case PF_IGNORE_SPA:
-				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_PCONFIG_MAPPED_CAPACITY;
-				break;
-			default:
-				COMMON_LOG_ERROR_F("Settings Ignore value %d is invalid for test %s",
-						ignoreList[i], NVDIMMDIAGNOSTIC_TEST_PLATFORM.c_str());
-			}
-		}
-	}
-	else if	(testType.compare(NVDIMMDIAGNOSTIC_TEST_STORAGE) == 0)
-	{
-		diags.test = DIAG_TYPE_PM_META;
-	}
-	else
-	{
-		throw framework::ExceptionBadParameter(NAME_KEY.c_str());
-	}
-
-	NVM_UINT32 results;
+	int rc = NVM_SUCCESS;
+	NVM_UINT32 results = 0;
 	if ((rc = m_RunDiagProvider(device_guid,
 			&diags, &results)) != NVM_SUCCESS)
 	{
@@ -519,4 +304,277 @@ bool wbem::support::NVDIMMDiagnosticFactory::isAssociated(const std::string &ass
 
 
 	return result;
+}
+
+struct diagnostic wbem::support::NVDIMMDiagnosticFactory::getDiagnosticStructure(
+		const std::string& testType,
+		const framework::UINT16_LIST &ignoreList)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	struct diagnostic diags;
+	memset(&diags, 0, sizeof (diags));
+
+	if	(testType.compare(NVDIMMDIAGNOSTIC_TEST_QUICK) == 0)
+	{
+		diags.test = DIAG_TYPE_QUICK;
+
+		for (size_t i = 0; i < ignoreList.size(); i++)
+		{
+			switch (ignoreList[i])
+			{
+			case HC_IGNORE_HEALTHSTATE:
+				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_QUICK_HEALTH;
+				break;
+			case HC_IGNORE_TEMPERATURE:
+				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_QUICK_TEMP;
+				break;
+			case HC_IGNORE_SPARE:
+				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_QUICK_AVAIL_SPARE;
+				break;
+			case HC_IGNORE_WEAR:
+				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_QUICK_PERC_USED;
+				break;
+			case HC_IGNORE_POWERLOSSPROTECTION:
+				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_QUICK_POWER_LOSS;
+				break;
+			case HC_IGNORE_INTERFACE:
+				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_QUICK_INTERFACE_ERR;
+				break;
+			case HC_IGNORE_THERMALTHROTTLE:
+				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_QUICK_THERM_THROTTLE;
+				break;
+			case HC_IGNORE_UNCORRECTABLE:
+				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_QUICK_UNCORRECT_ERRORS;
+				break;
+			case HC_IGNORE_CORRECTABLE:
+				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_QUICK_CORRECTED_ERRORS;
+				break;
+			case HC_IGNORE_ERASURE_CODE_CORRECTABLE:
+				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_QUICK_ERASURE_CODED_CORRECTED_ERRORS;
+				break;
+			case HC_IGNORE_VENDORID:
+				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_QUICK_VALID_VENDOR_ID;
+				break;
+			case HC_IGNORE_MANUFACTURER:
+				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_QUICK_VALID_MANUFACTURER;
+				break;
+			case HC_IGNORE_MODELNUMBER:
+				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_QUICK_VALID_MODEL_NUMBER;
+				break;
+			default:
+				COMMON_LOG_ERROR_F("Settings Ignore value %d is invalid for test %s",
+						ignoreList[i], NVDIMMDIAGNOSTIC_TEST_QUICK.c_str());
+			}
+		} // walk through ignore list
+	} // is quick test
+	else if (testType.compare(NVDIMMDIAGNOSTIC_TEST_SECURITY) == 0)
+	{
+		diags.test = DIAG_TYPE_SECURITY;
+		for (size_t i = 0; i < ignoreList.size(); i++)
+		{
+			switch (ignoreList[i])
+			{
+			case SEC_IGNORE_SECDISABLED:
+				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_SECURITY_ALL_DISABLED;
+				break;
+			case SEC_IGNORE_SECCONSISTENT:
+				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_SECURITY_CONSISTENT;
+				break;
+			default:
+				COMMON_LOG_ERROR_F("Settings Ignore value %d is invalid for test %s",
+						ignoreList[i], NVDIMMDIAGNOSTIC_TEST_SECURITY.c_str());
+			}
+		}
+	} // is security check test
+	else if (testType.compare(NVDIMMDIAGNOSTIC_TEST_SETTING) == 0)
+	{
+		diags.test = DIAG_TYPE_FW_CONSISTENCY;
+		for (size_t i = 0; i < ignoreList.size(); i++)
+		{
+			switch (ignoreList[i])
+			{
+			case SET_IGNORE_FWCONSISTENT:
+				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_FW_CONSISTENT;
+				break;
+			case SET_IGNORE_TEMPMEDIATHRESHOLD:
+				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_FW_MEDIA_TEMP;
+				break;
+			case SET_IGNORE_TEMPCORETHRESHOLD:
+				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_FW_CORE_TEMP;
+				break;
+			case SET_IGNORE_SPARETHRESHOLD:
+				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_FW_SPARE;
+				break;
+			case SET_IGNORE_POW_MGMT_POLICIES:
+				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_FW_POW_MGMT_POLICY
+						| (NVM_UINT64)DIAG_THRESHOLD_FW_TDP_POW_MIN
+						| (NVM_UINT64)DIAG_THRESHOLD_FW_TDP_POW_MAX
+						| (NVM_UINT64)DIAG_THRESHOLD_FW_PEAK_POW_BUDGET_MIN
+						| (NVM_UINT64)DIAG_THRESHOLD_FW_PEAK_POW_BUDGET_MAX
+						| (NVM_UINT64)DIAG_THRESHOLD_FW_AVG_POW_BUDGET_MIN
+						| (NVM_UINT64)DIAG_THRESHOLD_FW_PEAK_POW_BUDGET_MAX;
+				break;
+			case SET_IGNORE_DIE_SPARING_POLICIES:
+				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_FW_DIE_SPARING_POLICY
+						| DIAG_THRESHOLD_FW_DIE_SPARING_LEVEL;
+				break;
+			case SET_IGNORE_TIME:
+				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_FW_TIME;
+				break;
+			case SET_IGNORE_DEBUGLOG:
+				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_FW_DEBUGLOG;
+				break;
+			default:
+				COMMON_LOG_ERROR_F("Settings Ignore value %d is invalid for test %s",
+						ignoreList[i], NVDIMMDIAGNOSTIC_TEST_SETTING.c_str());
+			}
+		}
+	} // is firmware consistency check and settings test
+	else if (testType.compare(NVDIMMDIAGNOSTIC_TEST_PLATFORM) == 0)
+	{
+		diags.test = DIAG_TYPE_PLATFORM_CONFIG;
+		for (size_t i = 0; i < ignoreList.size(); i++)
+		{
+			switch (ignoreList[i])
+			{
+			case PF_IGNORE_NFITHEADER:
+				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_PCONFIG_NFIT;
+				break;
+			case PF_IGNORE_CAPABILITYTABLE:
+				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_PCONFIG_PCAT;
+				break;
+			case PF_IGNORE_CONFIGDATA:
+				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_PCONFIG_PCD
+					| (NVM_UINT64)DIAG_THRESHOLD_PCONFIG_CURRENT_PCD
+					| (NVM_UINT64)DIAG_THRESHOLD_PCONFIG_UNCONFIGURED
+					| (NVM_UINT64)DIAG_THRESHOLD_PCONFIG_BROKEN_ISET
+					| (NVM_UINT64)DIAG_THRESHOLD_PCONFIG_MAPPED_CAPACITY;
+				break;
+			case PF_IGNORE_CURRENTCONFIG:
+				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_PCONFIG_CURRENT_PCD
+					| (NVM_UINT64)DIAG_THRESHOLD_PCONFIG_UNCONFIGURED
+					| (NVM_UINT64)DIAG_THRESHOLD_PCONFIG_BROKEN_ISET
+					| (NVM_UINT64)DIAG_THRESHOLD_PCONFIG_MAPPED_CAPACITY;
+				break;
+			case PF_IGNORE_DIMMSCONFIGURED:
+				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_PCONFIG_UNCONFIGURED;
+				break;
+			case PF_IGNORE_CONFIGERR:
+				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_PCONFIG_BROKEN_ISET;
+				break;
+			case PF_IGNORE_SPA:
+				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_PCONFIG_MAPPED_CAPACITY;
+				break;
+			default:
+				COMMON_LOG_ERROR_F("Settings Ignore value %d is invalid for test %s",
+						ignoreList[i], NVDIMMDIAGNOSTIC_TEST_PLATFORM.c_str());
+			}
+		}
+	}
+	else if	(testType.compare(NVDIMMDIAGNOSTIC_TEST_STORAGE) == 0)
+	{
+		diags.test = DIAG_TYPE_PM_META;
+	}
+	else
+	{
+		throw framework::ExceptionBadParameter(NAME_KEY.c_str());
+	}
+
+	return diags;
+}
+
+void wbem::support::NVDIMMDiagnosticFactory::validateObjectHostName(
+		const wbem::framework::ObjectPath& object)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	const std::string& hostName = wbem::server::getHostName();
+	std::string expectedHostName = object.getKeyValue(SYSTEMNAME_KEY).stringValue();
+
+	if (hostName.compare(expectedHostName) != 0)
+	{
+		// not looking for this host
+		throw framework::ExceptionBadParameter(SYSTEMNAME_KEY.c_str());
+	}
+}
+
+wbem::framework::UINT16_LIST wbem::support::NVDIMMDiagnosticFactory::getDiagnosticIgnoreList(
+		wbem::framework::attributes_t& inParms)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	std::string settingsString = inParms[NVDIMMDIAGNOSTIC_SETTINGS].stringValue();
+
+	framework::CimXml settingsInstance(settingsString);
+	if (settingsInstance.getClass() != NVDIMMDIAGNOSTICINPUT_CREATIONCLASSNAME)
+	{
+		COMMON_LOG_ERROR_F("Settings XML is the wrong WBEM class: %s, expected: %s",
+				settingsInstance.getClass().c_str(),
+				NVDIMMDIAGNOSTICINPUT_CREATIONCLASSNAME.c_str());
+		throw framework::ExceptionBadParameter(NVDIMMDIAGNOSTIC_SETTINGS.c_str());
+	}
+
+	// get the attributes & check test type
+	framework::attributes_t settingsAttrs = settingsInstance.getProperties();
+	framework::attributes_t::iterator testStrIter = settingsAttrs.find(NVDIMMDIAGNOSTIC_IGNORE_KEY);
+	framework::UINT16_LIST ignoreResults;
+	if (testStrIter != settingsAttrs.end())
+	{
+		ignoreResults = testStrIter->second.uint16ListValue();
+	}
+
+	return ignoreResults;
+}
+
+void wbem::support::NVDIMMDiagnosticFactory::getGuidFromManagedElement(
+		wbem::framework::attributes_t& inParms, const std::string &testType, NVM_GUID guid)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	std::string managedElementRef = inParms[wbem::MANAGEDELEMENT_KEY].stringValue();
+
+	// Only HealthCheck requires an NVDIMM
+	if (testType == NVDIMMDIAGNOSTIC_TEST_QUICK)
+	{
+		// check for guid
+		framework::ObjectPath managedElementPath = validateManagedElementObjectPath(managedElementRef,
+				physical_asset::NVDIMM_CREATIONCLASSNAME);
+		str_to_guid(managedElementPath.getKeyValue(TAG_KEY).stringValue().c_str(), guid);
+	}
+	else // other checks require either NULL or BaseServer
+	{
+		if (!managedElementRef.empty())
+		{
+			validateManagedElementObjectPath(managedElementRef, server::BASESERVER_CREATIONCLASSNAME);
+		}
+
+		memset(guid, 0, NVM_GUID_LEN);
+	}
+}
+
+wbem::framework::ObjectPath wbem::support::NVDIMMDiagnosticFactory::validateManagedElementObjectPath(
+		const std::string& refPath,
+		const std::string className)
+{
+	framework::ObjectPathBuilder pathBuilder(refPath);
+	framework::ObjectPath refObjectPath;
+
+	if (!pathBuilder.Build(&refObjectPath))
+	{
+		COMMON_LOG_ERROR_F("parameter '%s' was not a valid object path: %s",
+				wbem::MANAGEDELEMENT_KEY.c_str(),
+				refPath.c_str());
+		throw framework::ExceptionBadParameter(wbem::MANAGEDELEMENT_KEY.c_str());
+	}
+	else if (refObjectPath.getClass() != className)
+	{
+		COMMON_LOG_ERROR_F("parameter '%s' was not a %s ref: %s",
+				wbem::MANAGEDELEMENT_KEY.c_str(),
+				className.c_str(),
+				refPath.c_str());
+		throw framework::ExceptionBadParameter(wbem::MANAGEDELEMENT_KEY.c_str());
+	}
+
+	return refObjectPath;
 }
