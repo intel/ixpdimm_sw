@@ -1311,9 +1311,9 @@ int nvm_create_namespace(NVM_GUID *p_namespace_guid, const NVM_GUID pool_guid,
 					{
 						namespace_count = 0;
 					}
-					// create a unique friendly name - NvDimmNamespaceN
+					// create a unique friendly name - NvDimmVolN
 					s_snprintf(friendly_name, NVM_NAMESPACE_NAME_LEN,
-							"NvDimmNamespace%d", namespace_count + 1);
+							NVM_DEFAULT_NAMESPACE_NAME, namespace_count + 1);
 					s_strcpy(nvm_settings.friendly_name,
 							friendly_name, NVM_NAMESPACE_NAME_LEN);
 				}
