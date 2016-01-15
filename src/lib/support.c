@@ -60,7 +60,7 @@ int nvm_gather_support(const NVM_PATH support_file, const NVM_SIZE support_file_
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
-	int gather_support_enabled = 1;
+	int max_no_support_snapshots = atoi(MAX_SUPPORT_SNAPSHOTS_DEFAULT);
 
 	PersistentStore *p_store;
 	if (check_caller_permissions() != NVM_SUCCESS)
@@ -71,23 +71,20 @@ int nvm_gather_support(const NVM_PATH support_file, const NVM_SIZE support_file_
 	{
 		rc = NVM_ERR_UNKNOWN;
 	}
-	else if (get_config_value_int(SQL_KEY_GATHER_SUPPORT_ENABLED, &gather_support_enabled)
+	else if (get_config_value_int(SQL_KEY_SUPPORT_SNAPSHOT_MAX, &max_no_support_snapshots)
 				!= COMMON_SUCCESS)
 	{
 		// should never get here
 		COMMON_LOG_ERROR_F("Failed to retrieve key %s.  Defaulting dump support enabled.",
-				SQL_KEY_GATHER_SUPPORT_ENABLED);
-		// default to enabling support.
-		gather_support_enabled = 1;
+				SQL_KEY_SUPPORT_SNAPSHOT_MAX);
 	}
-	if (!gather_support_enabled)
+	else if (!max_no_support_snapshots)
 	{
 		COMMON_LOG_WARN("Gather support is disabled");
 		rc = NVM_ERR_NOTSUPPORTED;
 	}
 	else if (support_file == NULL)
 	{
-
 		COMMON_LOG_ERROR("Invalid parameter, support file buffer is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}

@@ -52,8 +52,7 @@
 			(((arr[1] >> 4) & 0xF) * 1000) + (arr[1] & 0xF) * 100 + \
 			(((arr[0] >> 4) & 0xF) * 10) + (arr[0] & 0xF));
 
-int support_store_host(PersistentStore *p_store, int history_id,
-		struct host *p_host, struct sw_inventory *p_inventory);
+int support_store_host(PersistentStore *p_store, int history_id);
 int support_store_sockets(PersistentStore *p_store, int history_id);
 int support_store_platform_capabilities(PersistentStore *p_store, int history_id);
 int support_store_dimm_topology(PersistentStore *p_store,
@@ -88,32 +87,30 @@ int support_store_die_sparing(PersistentStore *p_store, int history_id,
 int support_store_platform_config_data(PersistentStore *p_store, int history_id,
 		NVM_NFIT_DEVICE_HANDLE device_handle);
 
+int db_get_history_count(const PersistentStore *p_ps, int *p_count)
+{
+	return table_row_count(p_ps, "history", p_count);
+}
+
 /*
  * Capture a snapshot of the current state of the system in the configuration database
  * with the current date/time and optionally a user supplied name and description.
  */
 int nvm_save_state(const char *name, const NVM_SIZE name_len)
 {
-	// TODO (DE3927/HSD-20398): Need to add state to current tables as well
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
 
-	// Add a new row to the history table
-	int history_id;
-	int temprc = NVM_SUCCESS;
-	int gather_support_enabled = 1;
-
 	PersistentStore *p_store = NULL;
-	if (get_config_value_int(SQL_KEY_GATHER_SUPPORT_ENABLED, &gather_support_enabled)
+	int max_no_support_snapshots;
+	if (get_config_value_int(SQL_KEY_SUPPORT_SNAPSHOT_MAX, &max_no_support_snapshots)
 			!= COMMON_SUCCESS)
-	{
-		// should never get here
-		COMMON_LOG_ERROR_F("Failed to retrieve key %s.  Defaulting dump support enabled.",
-				SQL_KEY_GATHER_SUPPORT_ENABLED);
-		// default to enabling support.
-		gather_support_enabled = 1;
+	{ // should never get here
+		COMMON_LOG_ERROR_F("Failed to retrieve key %s.", SQL_KEY_SUPPORT_SNAPSHOT_MAX);
 	}
-	if (!gather_support_enabled)
+
+	int history_count = 0;
+	if (!max_no_support_snapshots)
 	{
 		COMMON_LOG_WARN("Gather support is disabled");
 		rc = NVM_ERR_NOTSUPPORTED;
@@ -122,105 +119,99 @@ int nvm_save_state(const char *name, const NVM_SIZE name_len)
 	{
 		rc = NVM_ERR_UNKNOWN;
 	}
-	else if ((rc = db_add_history(p_store, name, &history_id)) != DB_SUCCESS)
-	{
-		// if we can't add the history_id info, no sense in moving on
-		COMMON_LOG_ERROR("Failed creating a history table row.");
-	}
 	else
 	{
-		// get the host server information
-		struct host host_server;
-		if ((rc = nvm_get_host(&host_server)) == NVM_SUCCESS)
+		if ((rc = table_row_count(p_store, "history", &history_count)) != DB_SUCCESS)
 		{
-			struct sw_inventory inventory;
-			nvm_get_sw_inventory(&inventory);
-
-			// save the host to the history tables
-			if (DB_SUCCESS != support_store_host(p_store, history_id, &host_server, &inventory))
-			{
-				COMMON_LOG_ERROR("Failed storing host history information");
-				KEEP_ERROR(rc, NVM_ERR_UNKNOWN);
-			}
+			COMMON_LOG_ERROR("Failed to get number of entries in history table.");
 		}
-
-		// clear interleave tables from store file
-		db_delete_all_interleave_set_dimm_infos(p_store);
-		db_delete_all_dimm_interleave_sets(p_store);
-
-		KEEP_ERROR(rc, support_store_sockets(p_store, history_id));
-		KEEP_ERROR(rc, support_store_platform_capabilities(p_store, history_id));
-		KEEP_ERROR(rc, support_store_namespaces(p_store, history_id));
-		KEEP_ERROR(rc, support_store_driver_capabilities(p_store, history_id));
-
-
-		// TODO:  add dimm_long_op_status when implemented
-
-		// iterate through each device (for all adapters)
-		int dev_count = get_topology_count();
-		if (dev_count > 0)
+		else
 		{
-			// get topology, aka discovery info
-			struct nvm_topology topol[dev_count];
-			temprc = get_topology(dev_count, topol);
-			if (temprc < NVM_SUCCESS)
+			// add a new row to the history table
+			int history_id;
+			if ((rc = db_add_history(p_store, name, &history_id)) != DB_SUCCESS)
 			{
-				COMMON_LOG_ERROR("Failed getting topology information");
-				KEEP_ERROR(rc, temprc);
+				COMMON_LOG_ERROR("Failed creating a history table row.");
 			}
-			else
+
+			if (history_count++ >= max_no_support_snapshots)
 			{
-				dev_count = temprc;
-				for (int i = 0; i < dev_count; i++)
+				COMMON_LOG_INFO_F(
+				"Roll the history tables to user specified maximum number of support snapshots %d",
+				max_no_support_snapshots);
+				db_roll_history(p_store, max_no_support_snapshots);
+			}
+
+			KEEP_ERROR(rc, support_store_host(p_store, history_id));
+
+			// clear interleave tables from store file
+			db_delete_all_interleave_set_dimm_infos(p_store);
+			db_delete_all_dimm_interleave_sets(p_store);
+
+			KEEP_ERROR(rc, support_store_sockets(p_store, history_id));
+			KEEP_ERROR(rc, support_store_platform_capabilities(p_store, history_id));
+			KEEP_ERROR(rc, support_store_namespaces(p_store, history_id));
+			KEEP_ERROR(rc, support_store_driver_capabilities(p_store, history_id));
+
+			// TODO:  add dimm_long_op_status when implemented
+
+			// iterate through each device (for all adapters)
+			int dev_count = get_topology_count();
+			if (dev_count > 0)
+			{
+				// get topology, aka discovery info
+				struct nvm_topology topol[dev_count];
+				int temprc = get_topology(dev_count, topol);
+				if (temprc < NVM_SUCCESS)
 				{
-					KEEP_ERROR(rc, support_store_dimm_topology(p_store,
-							history_id, topol[i]));
-					KEEP_ERROR(rc, support_store_identify_dimm(p_store,
-							history_id,
-							topol[i].device_handle));
-					KEEP_ERROR(rc, support_store_smart(p_store,
+					COMMON_LOG_ERROR("Failed getting topology information");
+					KEEP_ERROR(rc, temprc);
+				}
+				else
+				{
+					dev_count = temprc;
+					for (int i = 0; i < dev_count; i++)
+					{
+						KEEP_ERROR(rc, support_store_dimm_topology(p_store,
+								history_id, topol[i]));
+						KEEP_ERROR(rc, support_store_identify_dimm(p_store,
+								history_id,
+								topol[i].device_handle));
+						KEEP_ERROR(rc, support_store_smart(p_store,
+								history_id, topol[i].device_handle));
+						KEEP_ERROR(rc, support_store_memory(p_store,
+								history_id, topol[i].device_handle));
+						KEEP_ERROR(rc, support_store_fw_image(p_store,
+								history_id, topol[i].device_handle));
+						KEEP_ERROR(rc,
+							support_store_dimm_details(p_store,
 							history_id, topol[i].device_handle));
-					KEEP_ERROR(rc, support_store_memory(p_store,
+						KEEP_ERROR(rc,
+							support_store_dimm_partition_info(p_store,
 							history_id, topol[i].device_handle));
-					KEEP_ERROR(rc, support_store_fw_image(p_store,
+						KEEP_ERROR(rc,
+							support_store_dimm_security_state(p_store,
 							history_id, topol[i].device_handle));
-					KEEP_ERROR(rc,
-						support_store_dimm_details(p_store,
-						history_id, topol[i].device_handle));
-					KEEP_ERROR(rc,
-						support_store_dimm_partition_info(p_store,
-						history_id, topol[i].device_handle));
-					KEEP_ERROR(rc,
-						support_store_dimm_security_state(p_store,
-						history_id, topol[i].device_handle));
-					KEEP_ERROR(rc,
-						support_store_fw_error_logs(p_store,
-						history_id, topol[i].device_handle));
-					KEEP_ERROR(rc,
-						support_store_fw_debug_logs(p_store,
-						history_id, topol[i].device_handle));
-					KEEP_ERROR(rc,
-						support_store_die_sparing(p_store,
-						history_id, topol[i].device_handle));
-					KEEP_ERROR(rc,
-						support_store_optional_config_data(p_store,
-						history_id, topol[i].device_handle));
-					KEEP_ERROR(rc,
-						support_store_platform_config_data(p_store,
-						history_id, topol[i].device_handle));
-				} // for each device
-			} // get topology success
-		} // if dev count > 0
-
-		// if configured, roll the history tables to user specified max
-		int max = 0;
-		get_config_value_int(SQL_KEY_SUPPORT_SNAPSHOT_MAX, &max);
-		if (max > 0)
-		{
-			db_roll_history(p_store, max);
-		}
-
-	} // added history entry ok
+						KEEP_ERROR(rc,
+							support_store_fw_error_logs(p_store,
+							history_id, topol[i].device_handle));
+						KEEP_ERROR(rc,
+							support_store_fw_debug_logs(p_store,
+							history_id, topol[i].device_handle));
+						KEEP_ERROR(rc,
+							support_store_die_sparing(p_store,
+							history_id, topol[i].device_handle));
+						KEEP_ERROR(rc,
+							support_store_optional_config_data(p_store,
+							history_id, topol[i].device_handle));
+						KEEP_ERROR(rc,
+							support_store_platform_config_data(p_store,
+							history_id, topol[i].device_handle));
+					} // for each device
+				} // get topology success
+			} // if dev count > 0
+		} // added history entry ok
+	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
@@ -233,36 +224,42 @@ int nvm_save_state(const char *name, const NVM_SIZE name_len)
 /*
  * Store the host server information in the database specified
  */
-int support_store_host(PersistentStore *p_store, int history_id,
-		struct host *p_host, struct sw_inventory *p_inventory)
+int support_store_host(PersistentStore *p_store, int history_id)
 {
 	int rc = NVM_SUCCESS;
 	COMMON_LOG_ENTRY();
 
-	// add host
-	struct db_host db_host;
-
-	// convert host struct to db_host struct
-	db_host.os_type = (int)p_host->os_type;
-	s_strncpy(db_host.name, HOST_NAME_LEN, p_host->name, NVM_COMPUTERNAME_LEN);
-	s_strncpy(db_host.os_name, HOST_OS_NAME_LEN, p_host->os_name, NVM_OSNAME_LEN);
-	s_strncpy(db_host.os_version, HOST_OS_VERSION_LEN, p_host->os_version, NVM_OSVERSION_LEN);
-
-	rc = db_save_host_state(p_store, history_id, &db_host);
-
-	if (NULL != p_inventory)
+	// get the host server information
+	struct host host_server;
+	if ((rc = nvm_get_host(&host_server)) == NVM_SUCCESS)
 	{
-		struct db_sw_inventory db_inventory;
+		// convert host struct to db_host struct
+		struct db_host db_host;
+		db_host.os_type = (int)host_server.os_type;
+		s_strncpy(db_host.name, HOST_NAME_LEN, host_server.name, NVM_COMPUTERNAME_LEN);
+		s_strncpy(db_host.os_name, HOST_OS_NAME_LEN, host_server.os_name, NVM_OSNAME_LEN);
+		s_strncpy(db_host.os_version, HOST_OS_VERSION_LEN,
+				host_server.os_version, NVM_OSVERSION_LEN);
+		if (db_save_host_state(p_store, history_id, &db_host) != DB_SUCCESS)
+		{
+			COMMON_LOG_ERROR("Failed storing host %s history information");
+		}
 
-		s_strncpy(db_inventory.name, SW_INVENTORY_NAME_LEN, p_host->name,
-				NVM_COMPUTERNAME_LEN);
-		s_strncpy(db_inventory.mgmt_sw_rev, SW_INVENTORY_MGMT_SW_REV_LEN,
-				p_inventory->mgmt_sw_revision, NVM_VERSION_LEN);
-		s_strncpy(db_inventory.vendor_driver_rev, SW_INVENTORY_VENDOR_DRIVER_REV_LEN,
-				p_inventory->vendor_driver_revision, NVM_VERSION_LEN);
-
-		int temprc = db_save_sw_inventory_state(p_store, history_id, &db_inventory);
-		KEEP_ERROR(rc, temprc);
+		struct sw_inventory inventory;
+		if ((rc = nvm_get_sw_inventory(&inventory)) == NVM_SUCCESS)
+		{
+			struct db_sw_inventory db_inventory;
+			s_strncpy(db_inventory.name, SW_INVENTORY_NAME_LEN, host_server.name,
+					NVM_COMPUTERNAME_LEN);
+			s_strncpy(db_inventory.mgmt_sw_rev, SW_INVENTORY_MGMT_SW_REV_LEN,
+					inventory.mgmt_sw_revision, NVM_VERSION_LEN);
+			s_strncpy(db_inventory.vendor_driver_rev, SW_INVENTORY_VENDOR_DRIVER_REV_LEN,
+					inventory.vendor_driver_revision, NVM_VERSION_LEN);
+			if (db_save_sw_inventory_state(p_store, history_id, &db_inventory) != DB_SUCCESS)
+			{
+				COMMON_LOG_ERROR("Failed storing software inventory history information");
+			}
+		}
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);

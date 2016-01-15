@@ -37,6 +37,9 @@ extern "C"
 {
 #endif
 
+//! Default maximum number of support snapshots to keep
+#define MAX_SUPPORT_SNAPSHOTS_DEFAULT "100"
+
 /*
  * SQL 'config' table KEY names
  */
@@ -46,9 +49,6 @@ extern "C"
 
 //! SQL Key name for the gather support filter
 #define	SQL_KEY_GATHER_SUPPORT_FILTER		"GATHER_SUPPORT_FILTER"
-
-//! SQL Key name for the gather support enabled
-#define	SQL_KEY_GATHER_SUPPORT_ENABLED		"GATHER_SUPPORT_ENABLED"
 
 //! SQL Key name for the maximum number of support snapshots to keep
 #define	SQL_KEY_SUPPORT_SNAPSHOT_MAX	"SUPPORT_SNAPSHOT_MAX"

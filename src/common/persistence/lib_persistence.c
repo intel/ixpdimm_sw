@@ -46,10 +46,10 @@
  * Determines if we enable support data by default
  */
 #ifdef BUILD_ESX
-const char *gather_support_enabled = "0";
+const char *max_snapshots = "0";
 const char *log_destination = "1"; // log to syslog by default
 #else
-const char *gather_support_enabled = "1";
+const char *max_snapshots = MAX_SUPPORT_SNAPSHOTS_DEFAULT;
 const char *log_destination = "0"; // log to DB by default
 #endif
 
@@ -328,10 +328,8 @@ int set_default_config_settings(PersistentStore *p_ps)
 		add_config_value_to_pstore(p_ps, SQL_KEY_ENCRYPT_GATHER_SUPPORT, "1");
 		add_config_value_to_pstore(p_ps, SQL_KEY_GATHER_SUPPORT_FILTER,
 			"15"); // GSF_HOST_DATA | GSF_NAMESPACE_DATA | GSF_SERIAL_NUMS | GSF_SYSTEM_LOG
-		add_config_value_to_pstore(p_ps, SQL_KEY_GATHER_SUPPORT_ENABLED,
-				gather_support_enabled);
 		add_config_value_to_pstore(p_ps, SQL_KEY_SUPPORT_SNAPSHOT_MAX,
-				"100");
+				max_snapshots);
 		add_config_value_to_pstore(p_ps, SQL_KEY_FW_MAJOR_MIN, "1");
 		add_config_value_to_pstore(p_ps, SQL_KEY_FW_MINOR_MIN, "0");
 		add_config_value_to_pstore(p_ps, SQL_KEY_WIN_DRIVER_MAJOR_MIN, "1");
