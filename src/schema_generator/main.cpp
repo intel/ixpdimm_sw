@@ -308,7 +308,7 @@ int main(int arg_count, char **args)
 	dimm_smart.addAttribute("unsafe_shutdowns").isInt32().isUnsigned();
 	dimm_smart.addAttribute("lss_details").isInt32().isUnsigned();
 	dimm_smart.addAttribute("last_shutdown_time").isInt64().isUnsigned();
-	dimm_smart.addAttribute("core_temperature").isInt32().isUnsigned();
+	dimm_smart.addAttribute("controller_temperature").isInt32().isUnsigned();
 	entities.push_back(dimm_smart);
 
 	/*
@@ -324,7 +324,7 @@ int main(int arg_count, char **args)
 	dimm_state.addAttribute("health_state").isInt32();
 	dimm_state.addAttribute("die_spares_used").isInt32().isUnsigned();
 	dimm_state.addAttribute("mediatemperature_state").isInt32();
-	dimm_state.addAttribute("coretemperature_state").isInt32();
+	dimm_state.addAttribute("controllertemperature_state").isInt32();
 	entities.push_back(dimm_state);
 
 	/*
@@ -340,7 +340,7 @@ int main(int arg_count, char **args)
 	dimm_alarm_thresholds.addAttribute("device_handle").isInt32().isUnsigned().isPk();
 	dimm_alarm_thresholds.addAttribute("enable").isInt32().isUnsigned();
 	dimm_alarm_thresholds.addAttribute("media_temperature").isInt32().isUnsigned();
-	dimm_alarm_thresholds.addAttribute("core_temperature").isInt32().isUnsigned();
+	dimm_alarm_thresholds.addAttribute("controller_temperature").isInt32().isUnsigned();
 	dimm_alarm_thresholds.addAttribute("spare").isInt32().isUnsigned();
 	entities.push_back(dimm_alarm_thresholds);
 

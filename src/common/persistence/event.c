@@ -183,13 +183,13 @@ const char *EVENT_MESSAGES_HEALTH[EVENT_CODE_HEALTH_UNKNOWN -
 	// EVENT_CODE_HEALTH_UNSAFE_SHUTDOWN
 	N_TR("The firmware on "NVM_DIMM_NAME" %s experienced an unsafe shutdown "
 			"before its latest restart."),
-	// EVENT_CODE_HEALTH_CORE_TEMPERATURE_OVER_THRESHOLD
+	// EVENT_CODE_HEALTH_CONTROLLER_TEMPERATURE_OVER_THRESHOLD
 	N_TR("The health monitor has detected that "NVM_DIMM_NAME" %s "
-			"is reporting a core temperature of %s C which is above the alarm "
+			"is reporting a controller temperature of %s C which is above the alarm "
 			"threshold of %s C."),
-	// EVENT_CODE_HEALTH_CORE_TEMPERATURE_UNDER_THRESHOLD
+	// EVENT_CODE_HEALTH_CONTROLLER_TEMPERATURE_UNDER_THRESHOLD
 	N_TR("The health monitor has detected that "NVM_DIMM_NAME" %s "
-			"is reporting a core temperature of %s C which is below the alarm "
+			"is reporting a controller temperature of %s C which is below the alarm "
 			"threshold of %s C."),
 	// EVENT_CODE_HEALTH_MIXED_SKU
 	N_TR("The health monitor has detected that one or more "NVM_DIMM_NAME"s "
@@ -243,9 +243,9 @@ const char *EVENT_MESSAGES_QUICK_DIAG[EVENT_CODE_DIAG_QUICK_UNKNOWN -
 	// EVENT_CODE_DIAG_QUICK_BAD_ERASURE_CODED_CORRECTED_MEDIA_ERRORS
 	N_TR("The quick health check detected that "NVM_DIMM_NAME" %s "
 			"is reporting %s Erasure Coded Corrected media errors."),
-	// EVENT_CODE_DIAG_QUICK_BAD_CORE_TEMP
+	// EVENT_CODE_DIAG_QUICK_BAD_CONTROLLER_TEMP
 	N_TR("The quick health check detected that "NVM_DIMM_NAME" %s "
-			"is reporting a core temperature of %s C which is above "
+			"is reporting a controller temperature of %s C which is above "
 			"the alarm threshold %s C."),
 	// EVENT_CODE_DIAG_QUICK_BAD_POWER_LIMITATION
 	N_TR("The quick health check detected that power is limited on socket %s."),
@@ -326,9 +326,9 @@ const char *EVENT_MESSAGES_FW_DIAG[EVENT_CODE_DIAG_FW_UNKNOWN -
 	N_TR("The firmware consistency and settings check detected that "NVM_DIMM_NAME" %s is "
 			"reporting a media temperature threshold of %s C which is above the recommended "
 			"threshold %s C."),
-	// EVENT_CODE_DIAG_FW_BAD_TEMP_CORE_THRESHOLD
+	// EVENT_CODE_DIAG_FW_BAD_TEMP_CONTROLLER_THRESHOLD
 	N_TR("The firmware consistency and settings check detected that "NVM_DIMM_NAME" %s is "
-			"reporting a core temperature threshold of %s C which is above the recommended "
+			"reporting a controller temperature threshold of %s C which is above the recommended "
 			"threshold %s C."),
 	// EVENT_CODE_DIAG_FW_BAD_SPARE_BLOCK
 	N_TR("The firmware consistency and settings check detected that "NVM_DIMM_NAME" %s is "

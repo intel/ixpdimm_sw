@@ -167,9 +167,9 @@ namespace monitor
 				struct sensor &sensor);
 
 		/*
-		 * Monitor Dimm Core Temperature
+		 * Monitor Dimm Controller Temperature
 		 */
-		void monitorDimmCoreTemperature(const std::string &guidStr,
+		void monitorDimmControllerTemperature(const std::string &guidStr,
 				const struct device_discovery &discovery,
 				struct db_dimm_state &storedState,
 				bool &storedStateChanged,

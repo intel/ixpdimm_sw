@@ -226,23 +226,23 @@ int get_smart_log_sensors(const NVM_GUID device_guid,
 			}
 		}
 
-		// Core Temperature
+		// Controller Temperature
 		{
-			p_sensor = &p_sensors[SENSOR_CORE_TEMPERATURE];
+			p_sensor = &p_sensors[SENSOR_CONTROLLER_TEMPERATURE];
 			if (dimm_smart.validation_flags.parts.sizeof_vendor_data_field)
 			{
 				p_sensor->reading = nvm_encode_temperature(
-					fw_convert_fw_celsius_to_float(dimm_smart.vendor_data.core_temperature));
+					fw_convert_fw_celsius_to_float(dimm_smart.vendor_data.controller_temperature));
 			}
 			p_sensor->upper_critical_settable = 1;
 			p_sensor->upper_critical_support  = 1;
 			p_sensor->settings.enabled = (NVM_BOOL)((thresholds.enable &
-					THRESHOLD_ENABLED_CORE_TEMP) ? 1 : 0);
+					THRESHOLD_ENABLED_CONTROLLER_TEMP) ? 1 : 0);
 			p_sensor->settings.upper_critical_threshold =
 					nvm_encode_temperature(
-						fw_convert_fw_celsius_to_float(thresholds.core_temperature));
+						fw_convert_fw_celsius_to_float(thresholds.controller_temperature));
 			if (dimm_smart.validation_flags.parts.alarm_trips_field &&
-					((dimm_smart.alarm_trips & CORE_TEMP_TRIP_BIT) != 0))
+					((dimm_smart.alarm_trips & CONTROLLER_TEMP_TRIP_BIT) != 0))
 			{
 				p_sensor->current_state = SENSOR_CRITICAL;
 			}
@@ -388,7 +388,7 @@ void initialize_sensors(const NVM_GUID device_guid,
 	sensors[SENSOR_MEDIAERRORS_NONHOST].units = UNIT_COUNT;
 	sensors[SENSOR_FWERRORLOGCOUNT].units = UNIT_COUNT;
 	sensors[SENSOR_POWERLIMITED].units = UNIT_COUNT;
-	sensors[SENSOR_CORE_TEMPERATURE].units = UNIT_CELSIUS;
+	sensors[SENSOR_CONTROLLER_TEMPERATURE].units = UNIT_CELSIUS;
 }
 
 int get_all_sensors(const NVM_GUID device_guid,
@@ -529,8 +529,8 @@ static const char *SENSOR_STRINGS[NVM_MAX_DEVICE_SENSORS] =
 	N_TR("Host Media Errors"),
 	// SENSOR_MEDIAERRORS_NONHOST
 	N_TR("Non-host Media Errors"),
-	// SENSOR_CORE_TEMPERATURE
-	N_TR("Core Temperature"),
+	// SENSOR_CONTROLLER_TEMPERATURE
+	N_TR("Controller Temperature"),
 };
 
 void sensor_type_to_string(const enum sensor_type type, char *p_dst, size_t dst_size)
@@ -570,7 +570,7 @@ int nvm_set_sensor_settings(const NVM_GUID device_guid, const enum sensor_type t
 		COMMON_LOG_ERROR("Invalid parameter, device_guid is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
-	else if ((type != SENSOR_CORE_TEMPERATURE) &&
+	else if ((type != SENSOR_CONTROLLER_TEMPERATURE) &&
 			(type != SENSOR_MEDIA_TEMPERATURE) &&
 			(type != SENSOR_SPARECAPACITY))
 	{
@@ -603,19 +603,19 @@ int nvm_set_sensor_settings(const NVM_GUID device_guid, const enum sensor_type t
 					thresholds.enable &= ~THRESHOLD_ENABLED_MEDIA_TEMP;
 				}
 			}
-			else if ((int)type == SENSOR_CORE_TEMPERATURE)
+			else if ((int)type == SENSOR_CONTROLLER_TEMPERATURE)
 			{
-				thresholds.core_temperature =
+				thresholds.controller_temperature =
 					fw_convert_float_to_fw_celsius(
 						nvm_decode_temperature(p_settings->upper_critical_threshold));
 
 				if (p_settings->enabled)
 				{
-					thresholds.enable |= THRESHOLD_ENABLED_CORE_TEMP;
+					thresholds.enable |= THRESHOLD_ENABLED_CONTROLLER_TEMP;
 				}
 				else
 				{
-					thresholds.enable &= ~THRESHOLD_ENABLED_CORE_TEMP;
+					thresholds.enable &= ~THRESHOLD_ENABLED_CONTROLLER_TEMP;
 				}
 			}
 			else

@@ -182,9 +182,9 @@ std::string wbem::support::NVDIMMSensorViewFactory::getSensorNameStr(int type)
 	{
 	   result = PROPERTY_SENSOR_TYPE_MEDIAERRORS_NONHOST;
 	}
-	else if (type ==  wbem::support::NVDIMMSensorFactory::SENSORTYPE_CORETEMPERATURE)
+	else if (type ==  wbem::support::NVDIMMSensorFactory::SENSORTYPE_CONTROLLER_TEMPERATURE)
 	{
-	   result = PROPERTY_SENSOR_TYPE_CORETEMP;
+	   result = PROPERTY_SENSOR_TYPE_CONTROLLERTEMP;
 	}
 	else
 	{
@@ -296,7 +296,7 @@ wbem::framework::Instance* wbem::support::NVDIMMSensorViewFactory::getInstance(
 				currentValue << std::setfill('0') << std::setw(2) << minutes << ":";
 				currentValue << std::setfill('0') << std::setw(2) << seconds;
 			}
-			else if (sensor.type == SENSOR_MEDIA_TEMPERATURE || sensor.type == SENSOR_CORE_TEMPERATURE)
+			else if (sensor.type == SENSOR_MEDIA_TEMPERATURE || sensor.type == SENSOR_CONTROLLER_TEMPERATURE)
 			{
 				float celsius = nvm_decode_temperature(sensor.reading);
 				currentValue << celsius << baseUnitToString(sensor.units);
@@ -320,7 +320,7 @@ wbem::framework::Instance* wbem::support::NVDIMMSensorViewFactory::getInstance(
 		{
 			std::string enabledState;
 			if ((sensor.type == SENSOR_MEDIA_TEMPERATURE) || (sensor.type == SENSOR_SPARECAPACITY)
-				|| (sensor.type == SENSOR_CORE_TEMPERATURE))
+				|| (sensor.type == SENSOR_CONTROLLER_TEMPERATURE))
 			{
 				enabledState = getEnabledStateStr(
 						sensor.settings.enabled ? SENSOR_ENABLEDSTATE_ENABLED : SENSOR_ENABLEDSTATE_DISABLED);
@@ -339,7 +339,7 @@ wbem::framework::Instance* wbem::support::NVDIMMSensorViewFactory::getInstance(
 		}
 		if (containsAttribute(UPPERTHRESHOLDCRITICAL_KEY, attributes))
 		{
-			if (sensor.type == SENSOR_MEDIA_TEMPERATURE || sensor.type == SENSOR_CORE_TEMPERATURE)
+			if (sensor.type == SENSOR_MEDIA_TEMPERATURE || sensor.type == SENSOR_CONTROLLER_TEMPERATURE)
 			{
 				float celsius = nvm_decode_temperature(sensor.settings.upper_critical_threshold);
 				pInstance->setAttribute(UPPERTHRESHOLDCRITICAL_KEY,

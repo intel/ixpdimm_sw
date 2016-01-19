@@ -400,8 +400,8 @@ struct diagnostic wbem::support::NVDIMMDiagnosticFactory::getDiagnosticStructure
 			case SET_IGNORE_TEMPMEDIATHRESHOLD:
 				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_FW_MEDIA_TEMP;
 				break;
-			case SET_IGNORE_TEMPCORETHRESHOLD:
-				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_FW_CORE_TEMP;
+			case SET_IGNORE_TEMPCONTROLLERTHRESHOLD:
+				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_FW_CONTROLLER_TEMP;
 				break;
 			case SET_IGNORE_SPARETHRESHOLD:
 				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_FW_SPARE;

@@ -55,7 +55,7 @@ static std::vector<std::string> getWbemSensors()
 {
 	std::vector<std::string> result;
 	result.push_back(wbem::support::PROPERTY_SENSOR_TYPE_MEDIATEMP);
-	result.push_back(wbem::support::PROPERTY_SENSOR_TYPE_CORETEMP);
+	result.push_back(wbem::support::PROPERTY_SENSOR_TYPE_CONTROLLERTEMP);
 	result.push_back(wbem::support::PROPERTY_SENSOR_TYPE_SPARE);
 	result.push_back(wbem::support::PROPERTY_SENSOR_TYPE_WEAR);
 	result.push_back(wbem::support::PROPERTY_SENSOR_TYPE_POWERCYCLES);
@@ -92,7 +92,7 @@ void cli::nvmcli::SensorFeature::getPaths(cli::framework::CommandSpecList &list)
 	showSensor.addOption(framework::OPTION_DISPLAY);
 	showSensor.addOption(framework::OPTION_ALL);
 	showSensor.addTarget(TARGET_SENSOR_R)
-			.valueText("MediaTemperature|CoreTemperature|SpareCapacity|WearLevel|UnsafeShutdowns|"
+			.valueText("MediaTemperature|ControllerTemperature|SpareCapacity|WearLevel|UnsafeShutdowns|"
 					"PowerOnTime|UpTime|PowerCycles|FWErrorCount|PowerLimited|"
 					"MediaErrorsUncorrectable|MediaErrorsCorrected|MediaErrorsErasureCoded|"
 					"WriteCountMax|WriteCountAvg|MediaErrorsHost|MediaErrorsNonHost")
@@ -108,7 +108,7 @@ void cli::nvmcli::SensorFeature::getPaths(cli::framework::CommandSpecList &list)
 			TR("Changing the sensor settings is a potentially destructive operation which requires confirmation from "
 			"the user for each " NVM_DIMM_NAME ". This option suppresses the confirmation."));
 	modifySensor.addTarget(TARGET_SENSOR_R)
-			.valueText("MediaTemperature|CoreTemperature|SpareCapacity")
+			.valueText("MediaTemperature|ControllerTemperature|SpareCapacity")
 			.isValueRequired(true)
 			.helpText(TR("The sensor type to modify."));
 	modifySensor.addTarget(TARGET_DIMM)
@@ -351,9 +351,9 @@ cli::framework::ResultBase* cli::nvmcli::SensorFeature::modifySensor(
 			{
 				wbemSensorType = wbem::support::NVDIMMSensorFactory::SENSORTYPE_MEDIATEMPERATURE;
 			}
-			else if (framework::stringsIEqual(sensorTarget, wbem::support::PROPERTY_SENSOR_TYPE_CORETEMP))
+			else if (framework::stringsIEqual(sensorTarget, wbem::support::PROPERTY_SENSOR_TYPE_CONTROLLERTEMP))
 			{
-				wbemSensorType = wbem::support::NVDIMMSensorFactory::SENSORTYPE_CORETEMPERATURE;
+				wbemSensorType = wbem::support::NVDIMMSensorFactory::SENSORTYPE_CONTROLLER_TEMPERATURE;
 			}
 			else
 			{
@@ -493,7 +493,7 @@ cli::framework::ResultBase* cli::nvmcli::SensorFeature::addModifiedSensorThresho
 					attributes[key] = wbem::framework::Attribute(thresholdValue, false);
 				}
 			}
-			else if (sensorType == wbem::support::NVDIMMSensorFactory::SENSORTYPE_CORETEMPERATURE)
+			else if (sensorType == wbem::support::NVDIMMSensorFactory::SENSORTYPE_CONTROLLER_TEMPERATURE)
 			{
 				wbem::framework::REAL32 realThresholdValue = 0;
 				if (!stringToReal32(thresholdProperty, &realThresholdValue))
@@ -595,7 +595,7 @@ bool cli::nvmcli::SensorFeature::isSensorTypeModifiable(
 
 	// Case-insensitive
 	return (framework::stringsIEqual(type, wbem::support::PROPERTY_SENSOR_TYPE_MEDIATEMP)
-		|| framework::stringsIEqual(type, wbem::support::PROPERTY_SENSOR_TYPE_CORETEMP)
+		|| framework::stringsIEqual(type, wbem::support::PROPERTY_SENSOR_TYPE_CONTROLLERTEMP)
 		|| framework::stringsIEqual(type, wbem::support::PROPERTY_SENSOR_TYPE_SPARE));
 }
 

@@ -227,7 +227,7 @@ enum alarm_thresholds_enabled
 {
 	THRESHOLD_ENABLED_SPARE = 1 << 0,
 	THRESHOLD_ENABLED_MEDIA_TEMP = 1 << 1,
-	THRESHOLD_ENABLED_CORE_TEMP = 1 << 2,
+	THRESHOLD_ENABLED_CONTROLLER_TEMP = 1 << 2,
 
 };
 
@@ -236,7 +236,7 @@ enum alarm_trip_bits
 {
 	SPARE_BLOCKS_TRIP_BIT = 1 << 0,
 	MEDIA_TEMPERATURE_TRIP_BIT = 1 << 1,
-	CORE_TEMP_TRIP_BIT = 1 << 2
+	CONTROLLER_TEMP_TRIP_BIT = 1 << 2
 };
 
 enum validation_flags
@@ -631,7 +631,7 @@ struct pt_payload_alarm_thresholds {
 	 * Bit
 	 * 0 - Spare Block
 	 * 1 - Media Temperature
-	 * 2 - Core Temperature
+	 * 2 - Controller Temperature
 	 * 16:3 RSVD
 	 *
 	 * 0	Disabled
@@ -667,7 +667,7 @@ struct pt_payload_alarm_thresholds {
 	 * 14-0	: Temperature in Celsius with 0.0625 C resolution
 	 * 15	: Sign Bit(1 = Negative 0 = Positive)
 	 */
-	unsigned short core_temperature;
+	unsigned short controller_temperature;
 
 	unsigned char reserved[121];
 } __attribute__((packed));
@@ -1239,11 +1239,11 @@ struct intel_smart_vendor_data
 	unsigned char lss_details;
 	unsigned long long last_shutdown_time; /* seconds since 1 January 1970 */
 	/*
-	 * 	Current core temperature in Celsius
+	 * 	Current controller temperature in Celsius
 	 * 	bits 14 - 0 = temperature in Celsius
 	 * 	bit 15 = sign bit (1 = negative, 0 = positive)
 	 */
-	unsigned short core_temperature;
+	unsigned short controller_temperature;
 	unsigned char reserved_b[69];
 } __attribute__((packed));
 
@@ -1286,7 +1286,7 @@ struct pt_payload_smart_health {
 	 * Alarm trips - Bits to signify whether or not values have tripped their respective alarm thresholds.
 	 * Bit 0		: Spare Block Trips
 	 * Bit 1		: Media Temperature Trips
-	 * Bit 2		: Core Temperature Trips
+	 * Bit 2		: Controller Temperature Trips
 	 * Bit 7 - 3	: Reserved
 	 */
 	unsigned char alarm_trips;
@@ -1622,7 +1622,7 @@ struct pt_fw_thermal_log_entry {
 	 * 	100b - Critcal
 	 * 20:19 Temperature type: Denotes which device the temperature is for
 	 * 	00b - Media temperature
-	 * 	01b - Core temperature
+	 * 	01b - Controller temperature
 	 * 	10b - Reserved
 	 * 	11b - Reserved
 	 * 31:21 Reserved

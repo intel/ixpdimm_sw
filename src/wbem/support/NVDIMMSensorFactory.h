@@ -81,7 +81,7 @@ public:
 	static const int SENSORTYPE_WRITECOUNT_AVERAGE; //!< Average number of data writes to all blocks across the device.
 	static const int SENSORTYPE_MEDIAERRORS_HOST; //!< Number of ECC errors encountered by hosts requests only.
 	static const int SENSORTYPE_MEDIAERRORS_NONHOST; //!< Number of ECC errors encountered by non-hosts requests only.
-	static const int SENSORTYPE_CORETEMPERATURE; //!< Device core temperature in degrees Celsius
+	static const int SENSORTYPE_CONTROLLER_TEMPERATURE; //!< Device controller temperature in degrees Celsius
 
 	/*!
 	 * Initialize a new NVDIMMSensor.

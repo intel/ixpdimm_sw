@@ -51,11 +51,11 @@ void wbem::support::NVDIMMHealthSensorViewFactory::populateAttributeList(framewo
 	attributes.push_back(MEDIATEMPERATUREUNITMODIFIER_KEY);
 	attributes.push_back(MEDIATEMPERATURETHRESHOLD_KEY);
 	attributes.push_back(MEDIATEMPERATURESTATE_KEY);
-	attributes.push_back(CORECURRENTTEMPERATURE_KEY);
-	attributes.push_back(CORETEMPERATUREUNITS_KEY);
-	attributes.push_back(CORETEMPERATUREUNITMODIFIER_KEY);
-	attributes.push_back(CORETEMPERATURETHRESHOLD_KEY);
-	attributes.push_back(CORETEMPERATURESTATE_KEY);
+	attributes.push_back(CONTROLLERCURRENTTEMPERATURE_KEY);
+	attributes.push_back(CONTROLLERTEMPERATUREUNITS_KEY);
+	attributes.push_back(CONTROLLERTEMPERATUREUNITMODIFIER_KEY);
+	attributes.push_back(CONTROLLERTEMPERATURETHRESHOLD_KEY);
+	attributes.push_back(CONTROLLERTEMPERATURESTATE_KEY);
 	attributes.push_back(CURRENTSPARELEVEL_KEY);
 	attributes.push_back(SPAREUNITS_KEY);
 	attributes.push_back(SPAREUNITMODIFIER_KEY);
@@ -166,8 +166,8 @@ wbem::framework::Instance* wbem::support::NVDIMMHealthSensorViewFactory::getInst
 					addCorrectedMediaErrorsAttributesToInstance(
 						*pInstance, attributes, sensors[i]);
 					break;
-				case SENSOR_CORE_TEMPERATURE:
-					addCoreTemperatureAttributesToInstance(
+				case SENSOR_CONTROLLER_TEMPERATURE:
+					addControllerTemperatureAttributesToInstance(
 						*pInstance, attributes, sensors[i]);
 					break;
 				default:
@@ -268,33 +268,33 @@ void wbem::support::NVDIMMHealthSensorViewFactory::addMediaTemperatureAttributes
 	}
 }
 
-void wbem::support::NVDIMMHealthSensorViewFactory::addCoreTemperatureAttributesToInstance(
+void wbem::support::NVDIMMHealthSensorViewFactory::addControllerTemperatureAttributesToInstance(
 	framework::Instance &instance,
 	framework::attribute_names_t &attrNames,
 	struct sensor &sensor)
 {
-	if (containsAttribute(CORECURRENTTEMPERATURE_KEY, attrNames))
+	if (containsAttribute(CONTROLLERCURRENTTEMPERATURE_KEY, attrNames))
 	{
 		framework::Attribute a((NVM_UINT32)sensor.reading, false);
-		instance.setAttribute(CORECURRENTTEMPERATURE_KEY, a,  attrNames);
+		instance.setAttribute(CONTROLLERCURRENTTEMPERATURE_KEY, a,  attrNames);
 	}
-	if (containsAttribute(CORETEMPERATUREUNITS_KEY, attrNames))
+	if (containsAttribute(CONTROLLERTEMPERATUREUNITS_KEY, attrNames))
 	{
 		framework::Attribute a(NVDIMMHEALTHSENSORVIEW_UNITS_TEMPERATURE,
 			NVDIMMHEALTHSENSORVIEW_UNITS_TEMPERATURE_STR, false);
-		instance.setAttribute(CORETEMPERATUREUNITS_KEY, a,  attrNames);
+		instance.setAttribute(CONTROLLERTEMPERATUREUNITS_KEY, a,  attrNames);
 	}
-	if (containsAttribute(CORETEMPERATUREUNITMODIFIER_KEY, attrNames))
+	if (containsAttribute(CONTROLLERTEMPERATUREUNITMODIFIER_KEY, attrNames))
 	{
 		framework::Attribute a((NVM_UINT16)0, false);
-		instance.setAttribute(CORETEMPERATUREUNITMODIFIER_KEY, a,  attrNames);
+		instance.setAttribute(CONTROLLERTEMPERATUREUNITMODIFIER_KEY, a,  attrNames);
 	}
-	if (containsAttribute(CORETEMPERATURETHRESHOLD_KEY, attrNames))
+	if (containsAttribute(CONTROLLERTEMPERATURETHRESHOLD_KEY, attrNames))
 	{
 		framework::Attribute a((NVM_UINT32)sensor.settings.upper_critical_threshold, false);
-		instance.setAttribute(CORETEMPERATURETHRESHOLD_KEY, a,  attrNames);
+		instance.setAttribute(CONTROLLERTEMPERATURETHRESHOLD_KEY, a,  attrNames);
 	}
-	if (containsAttribute(CORETEMPERATURESTATE_KEY, attrNames))
+	if (containsAttribute(CONTROLLERTEMPERATURESTATE_KEY, attrNames))
 	{
 		framework::Attribute a(translateSensorStatus(sensor.current_state), false);
 		instance.setAttribute(MEDIATEMPERATURESTATE_KEY, a,  attrNames);

@@ -149,7 +149,7 @@ wbem::framework::Instance* wbem::memory::RawMemoryFactory::getInstance(
 				else if ((SENSOR_CRITICAL == dimmDetails.sensors[SENSOR_WEARLEVEL].current_state) ||
 						(SENSOR_CRITICAL == dimmDetails.sensors[SENSOR_SPARECAPACITY].current_state) ||
 						(SENSOR_CRITICAL == dimmDetails.sensors[SENSOR_MEDIA_TEMPERATURE].current_state) ||
-						(SENSOR_CRITICAL == dimmDetails.sensors[SENSOR_CORE_TEMPERATURE].current_state))
+						(SENSOR_CRITICAL == dimmDetails.sensors[SENSOR_CONTROLLER_TEMPERATURE].current_state))
 				{
 					operationalStatusList.push_back(OPSTATUS_PREDICTIVEFAILURE);
 				}

@@ -325,7 +325,7 @@ void monitor::EventMonitor::monitorDimmMediaTemperature(const std::string &guidS
 /*
  * Check for device media temperature changes
  */
-void monitor::EventMonitor::monitorDimmCoreTemperature(const std::string &guidStr,
+void monitor::EventMonitor::monitorDimmControllerTemperature(const std::string &guidStr,
 		const struct device_discovery &discovery,
 		struct db_dimm_state &storedState,
 		bool &storedStateChanged,
@@ -334,22 +334,22 @@ void monitor::EventMonitor::monitorDimmCoreTemperature(const std::string &guidSt
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	// temp has changed state
-	if (sensor.current_state != storedState.coretemperature_state)
+	if (sensor.current_state != storedState.controllertemperature_state)
 	{
 		// log an event
-		enum event_code_health code = EVENT_CODE_HEALTH_CORE_TEMPERATURE_UNDER_THRESHOLD;
+		enum event_code_health code = EVENT_CODE_HEALTH_CONTROLLER_TEMPERATURE_UNDER_THRESHOLD;
 		enum event_severity severity = EVENT_SEVERITY_INFO;
 		bool actionRequired = false;
 		if (sensor.current_state == SENSOR_CRITICAL)
 		{
-			code = EVENT_CODE_HEALTH_CORE_TEMPERATURE_OVER_THRESHOLD;
+			code = EVENT_CODE_HEALTH_CONTROLLER_TEMPERATURE_OVER_THRESHOLD;
 			severity = EVENT_SEVERITY_WARN;
 			actionRequired = true;
 		}
 		// auto-acknowledge any existing temperature over threshold events
 		else if (sensor.current_state == SENSOR_NORMAL)
 		{
-			acknowledgeEvent(EVENT_CODE_HEALTH_CORE_TEMPERATURE_OVER_THRESHOLD, discovery.guid);
+			acknowledgeEvent(EVENT_CODE_HEALTH_CONTROLLER_TEMPERATURE_OVER_THRESHOLD, discovery.guid);
 		}
 
 		std::stringstream threshold, temperature;
@@ -367,7 +367,7 @@ void monitor::EventMonitor::monitorDimmCoreTemperature(const std::string &guidSt
 
 		// update stored state
 		storedStateChanged = true;
-		storedState.coretemperature_state = sensor.current_state;
+		storedState.controllertemperature_state = sensor.current_state;
 	}
 }
 
@@ -526,8 +526,8 @@ void monitor::EventMonitor::monitorDimmSensors(const std::string &guidStr,
 					sensors[SENSOR_WEARLEVEL].current_state;
 			storedState.mediatemperature_state =
 					sensors[SENSOR_MEDIA_TEMPERATURE].current_state;
-			storedState.coretemperature_state =
-					sensors[SENSOR_CORE_TEMPERATURE].current_state;
+			storedState.controllertemperature_state =
+					sensors[SENSOR_CONTROLLER_TEMPERATURE].current_state;
 			storedState.spare_capacity_state =
 					sensors[SENSOR_SPARECAPACITY].current_state;
 
@@ -539,9 +539,9 @@ void monitor::EventMonitor::monitorDimmSensors(const std::string &guidStr,
 			monitorDimmMediaTemperature(guidStr, discovery, storedState,
 					storedStateChanged, sensors[SENSOR_MEDIA_TEMPERATURE]);
 
-			// monitor core temperature
-			monitorDimmCoreTemperature(guidStr, discovery, storedState,
-					storedStateChanged, sensors[SENSOR_CORE_TEMPERATURE]);
+			// monitor controller temperature
+			monitorDimmControllerTemperature(guidStr, discovery, storedState,
+					storedStateChanged, sensors[SENSOR_CONTROLLER_TEMPERATURE]);
 
 			// monitor spare capacity
 			monitorDimmSpare(guidStr, discovery, storedState,

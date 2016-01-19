@@ -201,7 +201,7 @@ enum sensor_type
 	SENSOR_WRITECOUNT_AVERAGE = 13, // Avg num of data writes to all blocks across the device.
 	SENSOR_MEDIAERRORS_HOST = 14, // Num of ECC errors encountered by hosts requests only.
 	SENSOR_MEDIAERRORS_NONHOST = 15, // Num of ECC errors encountered by non-host requests only.
-	SENSOR_CORE_TEMPERATURE = 16, // Device media temperature in degrees Celsius.
+	SENSOR_CONTROLLER_TEMPERATURE = 16, // Device media temperature in degrees Celsius.
 };
 
 /*
@@ -357,7 +357,7 @@ enum diagnostic_threshold_type
 	DIAG_THRESHOLD_SECURITY_ALL_DISABLED = 1 << 15,
 	DIAG_THRESHOLD_FW_CONSISTENT = 1 << 16,
 	DIAG_THRESHOLD_FW_MEDIA_TEMP = 1 << 17,
-	DIAG_THRESHOLD_FW_CORE_TEMP = 1 << 18,
+	DIAG_THRESHOLD_FW_CONTROLLER_TEMP = 1 << 18,
 	DIAG_THRESHOLD_FW_SPARE = 1 << 19,
 	DIAG_THRESHOLD_FW_POW_MGMT_POLICY = 1 << 20,
 	DIAG_THRESHOLD_FW_TDP_POW_MIN = 1 << 21,

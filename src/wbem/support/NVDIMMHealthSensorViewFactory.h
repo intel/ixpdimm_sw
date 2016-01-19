@@ -110,7 +110,7 @@ class NVM_API NVDIMMHealthSensorViewFactory : public framework_interface::NvmIns
 			framework::attribute_names_t &attrNames, struct sensor &sensor);
 		void addCorrectedMediaErrorsAttributesToInstance(framework::Instance &instance,
 			framework::attribute_names_t &attrNames, struct sensor &sensor);
-		void addCoreTemperatureAttributesToInstance(framework::Instance &instance,
+		void addControllerTemperatureAttributesToInstance(framework::Instance &instance,
 			framework::attribute_names_t &attrNames, struct sensor &sensor);
 };
 

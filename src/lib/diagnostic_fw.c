@@ -283,20 +283,19 @@ int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 						(*p_results)++;
 					}
 
+					NVM_UINT64 actual_temp_threshold =
+						sensors[SENSOR_CONTROLLER_TEMPERATURE].settings.upper_critical_threshold;
 					if (!diag_check_real(p_diagnostic,
-							DIAG_THRESHOLD_FW_CORE_TEMP,
-							nvm_decode_temperature(
-							sensors[SENSOR_CORE_TEMPERATURE].settings.upper_critical_threshold),
+							DIAG_THRESHOLD_FW_CONTROLLER_TEMP,
+							nvm_decode_temperature(actual_temp_threshold),
 							&max_temp_threshold_config, EQUALITY_LESSTHANEQUAL))
 					{
-						NVM_UINT64 actual_temp_threshold =
-								sensors[SENSOR_CORE_TEMPERATURE].settings.upper_critical_threshold;
 						char actual_temp_threshold_str[10];
 						s_snprintf(actual_temp_threshold_str, 10, "%.4f",
 								nvm_decode_temperature(actual_temp_threshold));
 						store_event_by_parts(EVENT_TYPE_DIAG_FW_CONSISTENCY,
 								EVENT_SEVERITY_WARN,
-								EVENT_CODE_DIAG_FW_BAD_TEMP_CORE_THRESHOLD,
+								EVENT_CODE_DIAG_FW_BAD_TEMP_CONTROLLER_THRESHOLD,
 									dimms[current_dev].guid, 0, guid_str, actual_temp_threshold_str,
 									expected_temp_threshold_str,
 									DIAGNOSTIC_RESULT_FAILED);

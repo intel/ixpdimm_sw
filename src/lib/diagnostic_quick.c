@@ -293,25 +293,26 @@ int check_dimm_alarm_thresholds(const NVM_GUID device_guid,
 			(*p_results)++;
 		}
 
-		// check core temperature to alarm threshold
-		NVM_UINT64 core_temp_threshold = thresholds.core_temperature;
+		// check controller temperature to alarm threshold
+		NVM_UINT64 controller_temp_threshold = thresholds.controller_temperature;
 		if (p_dimm_smart->validation_flags.parts.sizeof_vendor_data_field &&
 				!diag_check(p_diagnostic, DIAG_THRESHOLD_QUICK_TEMP,
-						p_dimm_smart->vendor_data.core_temperature,
-						&core_temp_threshold, EQUALITY_LESSTHAN))
+						p_dimm_smart->vendor_data.controller_temperature,
+						&controller_temp_threshold, EQUALITY_LESSTHAN))
 		{
 			NVM_REAL32 actual =
-				fw_convert_fw_celsius_to_float(p_dimm_smart->vendor_data.core_temperature);
-			NVM_REAL32 core_threshold = fw_convert_fw_celsius_to_float(core_temp_threshold);
+				fw_convert_fw_celsius_to_float(p_dimm_smart->vendor_data.controller_temperature);
+			NVM_REAL32 controller_threshold =
+				fw_convert_fw_celsius_to_float(controller_temp_threshold);
 
 			// log error
 			char actual_temp_str[10];
 			s_snprintf(actual_temp_str, 10, "%.4f", actual);
 			char expected_temp_str[10];
-			s_snprintf(expected_temp_str, 10, "%.4f", core_threshold);
+			s_snprintf(expected_temp_str, 10, "%.4f", controller_threshold);
 			store_event_by_parts(EVENT_TYPE_DIAG_QUICK,
 					EVENT_SEVERITY_WARN,
-					EVENT_CODE_DIAG_QUICK_BAD_CORE_TEMP,
+					EVENT_CODE_DIAG_QUICK_BAD_CONTROLLER_TEMP,
 					device_guid,
 					0,
 					guid_str,

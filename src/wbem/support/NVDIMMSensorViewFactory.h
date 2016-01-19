@@ -70,7 +70,7 @@ static std::string PROPERTY_SENSOR_TYPE_WRITECOUNT_MAXIMUM = N_TR("WriteCountMax
 static std::string PROPERTY_SENSOR_TYPE_WRITECOUNT_AVERAGE = N_TR("WriteCountAvg"); //!< type value
 static std::string PROPERTY_SENSOR_TYPE_MEDIAERRORS_HOST = N_TR("MediaErrorsHost"); //!< type value
 static std::string PROPERTY_SENSOR_TYPE_MEDIAERRORS_NONHOST = N_TR("MediaErrorsNonHost"); //!< type value
-static std::string PROPERTY_SENSOR_TYPE_CORETEMP = N_TR("CoreTemperature"); //!< type value
+static std::string PROPERTY_SENSOR_TYPE_CONTROLLERTEMP = N_TR("ControllerTemperature"); //!< type value
 static std::string PROPERTY_SENSOR_TYPE_UNKNOWN = N_TR("Unknown"); //!< unknown type
 /*!
  * Provider Factory for NVDIMMSensorView

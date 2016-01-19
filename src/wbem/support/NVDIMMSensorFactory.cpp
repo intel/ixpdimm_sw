@@ -64,7 +64,7 @@ const int wbem::support::NVDIMMSensorFactory::SENSORTYPE_WRITECOUNT_MAXIMUM = SE
 const int wbem::support::NVDIMMSensorFactory::SENSORTYPE_WRITECOUNT_AVERAGE = SENSOR_WRITECOUNT_AVERAGE;
 const int wbem::support::NVDIMMSensorFactory::SENSORTYPE_MEDIAERRORS_HOST = SENSOR_MEDIAERRORS_HOST;
 const int wbem::support::NVDIMMSensorFactory::SENSORTYPE_MEDIAERRORS_NONHOST = SENSOR_MEDIAERRORS_NONHOST;
-const int wbem::support::NVDIMMSensorFactory::SENSORTYPE_CORETEMPERATURE = SENSOR_CORE_TEMPERATURE;
+const int wbem::support::NVDIMMSensorFactory::SENSORTYPE_CONTROLLER_TEMPERATURE = SENSOR_CONTROLLER_TEMPERATURE;
 
 /*
  * CIM list of possible sensor states.
@@ -124,7 +124,7 @@ const cimSensorDescriptionsMap& getSensorDescriptionMap()
 		result[SENSOR_WRITECOUNT_AVERAGE] = (cimSensorDescription) {"wcavg", wbem::support::NVDIMMSENSOR_ELEMENTPREFIX + "Write Count Average", SENSOR_TYPE_OTHER, "WriteCountAverage"};
 		result[SENSOR_MEDIAERRORS_HOST] = (cimSensorDescription) {"meh", wbem::support::NVDIMMSENSOR_ELEMENTPREFIX + "Media Errors Host", SENSOR_TYPE_OTHER, "MediaErrorsHost"};
 		result[SENSOR_MEDIAERRORS_NONHOST] = (cimSensorDescription) {"menh", wbem::support::NVDIMMSENSOR_ELEMENTPREFIX + "Media Errors Non-host", SENSOR_TYPE_OTHER, "MediaErrorsNonHost"};
-		result[SENSOR_CORE_TEMPERATURE] = (cimSensorDescription) {"coretemp", wbem::support::NVDIMMSENSOR_ELEMENTPREFIX + "Core Temp", SENSOR_TYPE_TEMP, ""};
+		result[SENSOR_CONTROLLER_TEMPERATURE] = (cimSensorDescription) {"controllertemp", wbem::support::NVDIMMSENSOR_ELEMENTPREFIX + "Controller Temp", SENSOR_TYPE_TEMP, ""};
 	}
 
 	return result;
@@ -422,7 +422,7 @@ throw (wbem::framework::Exception)
 		framework::UINT16 enabledState = 0;
 		// EnabledState only applies to temp and spare capacity sensors
 		if ((sensor.type == SENSOR_MEDIA_TEMPERATURE) || (sensor.type == SENSOR_SPARECAPACITY)
-			|| (sensor.type == SENSOR_CORE_TEMPERATURE))
+			|| (sensor.type == SENSOR_CONTROLLER_TEMPERATURE))
 		{
 			enabledState = (sensor.settings.enabled) ?
 				SENSOR_ENABLEDSTATE_ENABLED : SENSOR_ENABLEDSTATE_DISABLED;
@@ -544,11 +544,11 @@ throw (wbem::framework::Exception)
 	try
 	{
 		if (type == SENSORTYPE_MEDIATEMPERATURE || type == SENSORTYPE_SPARECAPACITY
-			|| type == SENSORTYPE_CORETEMPERATURE)
+			|| type == SENSORTYPE_CONTROLLER_TEMPERATURE)
 		{
 			framework::attribute_names_t modifyableAttributes;
 			modifyableAttributes.push_back(ENABLEDSTATE_KEY);
-			if (type == SENSORTYPE_MEDIATEMPERATURE || type == SENSORTYPE_CORETEMPERATURE)
+			if (type == SENSORTYPE_MEDIATEMPERATURE || type == SENSORTYPE_CONTROLLER_TEMPERATURE)
 			{
 				modifyableAttributes.push_back(UPPERTHRESHOLDCRITICAL_KEY);
 			}
@@ -674,7 +674,7 @@ void wbem::support::NVDIMMSensorFactory::updateSensor(const std::string &dimmGui
 	// Threshold may have changed
 	// set which threshold attribute is modifiable based on the sensor type
 	std::string thresholdAttribute =
-		(type == SENSORTYPE_MEDIATEMPERATURE || type == SENSORTYPE_CORETEMPERATURE) ?
+		(type == SENSORTYPE_MEDIATEMPERATURE || type == SENSORTYPE_CONTROLLER_TEMPERATURE) ?
 			UPPERTHRESHOLDCRITICAL_KEY : // temp
 			LOWERTHRESHOLDCRITICAL_KEY; // spare
 	if(getModifiableAttribute(thresholdAttribute, attributes, pInstance, currentAttribute, newAttribute))
@@ -691,7 +691,7 @@ void wbem::support::NVDIMMSensorFactory::updateSensor(const std::string &dimmGui
 			// Threshold values come in as signed ints but must be converted to uint64
 			if (thresholdAttribute == UPPERTHRESHOLDCRITICAL_KEY)
 			{
-				if (type == SENSOR_MEDIA_TEMPERATURE || type == SENSORTYPE_CORETEMPERATURE)
+				if (type == SENSOR_MEDIA_TEMPERATURE || type == SENSORTYPE_CONTROLLER_TEMPERATURE)
 				{
 					settings.upper_critical_threshold = newAttribute.uint64Value();
 				}
@@ -709,7 +709,7 @@ void wbem::support::NVDIMMSensorFactory::updateSensor(const std::string &dimmGui
 	{
 		if (thresholdAttribute == UPPERTHRESHOLDCRITICAL_KEY)
 		{
-			if (type == SENSOR_MEDIA_TEMPERATURE || type == SENSORTYPE_CORETEMPERATURE)
+			if (type == SENSOR_MEDIA_TEMPERATURE || type == SENSORTYPE_CONTROLLER_TEMPERATURE)
 			{
 				settings.upper_critical_threshold = currentAttribute.uint64Value();
 			}

@@ -536,7 +536,7 @@ int support_store_smart(PersistentStore *p_store, int history_id,
 		db_smart.unsafe_shutdowns = dimm_smart.vendor_data.unsafe_shutdowns;
 		db_smart.lss_details = dimm_smart.vendor_data.lss_details;
 		db_smart.last_shutdown_time = dimm_smart.vendor_data.last_shutdown_time;
-		db_smart.core_temperature = dimm_smart.vendor_data.core_temperature;
+		db_smart.controller_temperature = dimm_smart.vendor_data.controller_temperature;
 
 		if (DB_SUCCESS != db_save_dimm_smart_state(p_store, history_id, &db_smart))
 		{

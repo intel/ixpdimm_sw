@@ -376,11 +376,11 @@ class <NVM_WBEM_PREFIX>NVDIMMHealthSensorView : CIM_View
 	uint16 MediaTemperatureUnitModifier;
 	uint32 MediaTemperatureThreshold;
 	string MediaTemperatureState;
-	uint32 CurrentCoreTemperature;
-	uint16 CoreTemperatureUnits;
-	uint16 CoreTemperatureUnitModifier;
-	uint32 CoreTemperatureThreshold;
-	string CoreTemperatureState;
+	uint32 CurrentControllerTemperature;
+	uint16 ControllerTemperatureUnits;
+	uint16 ControllerTemperatureUnitModifier;
+	uint32 ControllerTemperatureThreshold;
+	string ControllerTemperatureState;
 	uint32 CurrentSpareLevel;
 	uint16 SpareUnits;
 	uint16 SpareUnitModifier;

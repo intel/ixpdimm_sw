@@ -432,11 +432,11 @@ static std::string MEDIAERRORSCORRECTED_KEY = "MediaErrorsCorrected";
 static std::string MEDIAERRORSCORRECTEDUNITS_KEY = "MediaErrorsCorrectedUnits";
 static std::string MEDIAERRORSCORRECTEDMODIFIER_KEY = "MediaErrorsCorrectedModifier";
 static std::string MEDIAERRORSCORRECTEDSTATE_KEY = "MediaErrorsCorrectedState";
-static std::string CORECURRENTTEMPERATURE_KEY = "CurrentCoreTemperature";
-static std::string CORETEMPERATUREUNITS_KEY = "CoreTemperatureUnits";
-static std::string CORETEMPERATUREUNITMODIFIER_KEY = "CoreTemperatureUnitModifier";
-static std::string CORETEMPERATURETHRESHOLD_KEY = "CoreTemperatureThreshold";
-static std::string CORETEMPERATURESTATE_KEY = "CoreTemperatureState";
+static std::string CONTROLLERCURRENTTEMPERATURE_KEY = "CurrentControllerTemperature";
+static std::string CONTROLLERTEMPERATUREUNITS_KEY = "ControllerTemperatureUnits";
+static std::string CONTROLLERTEMPERATUREUNITMODIFIER_KEY = "ControllerTemperatureUnitModifier";
+static std::string CONTROLLERTEMPERATURETHRESHOLD_KEY = "ControllerTemperatureThreshold";
+static std::string CONTROLLERTEMPERATURESTATE_KEY = "ControllerTemperatureState";
 
 // Namespace
 static std::string BLOCKCOUNT_KEY = "BlockCount";
