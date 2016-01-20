@@ -50,9 +50,6 @@ enum log_dest
 	LOG_DEST_SYSLOG = 1//!< LOG_DEST_SYSLOG - write to the syslog
 };
 
-#define SMOKE_LOG_F(file, format, ...)	\
-	smoke_log_write_f(file, format, __VA_ARGS__)
-
 /*
  * Macros to facilitate logging
  */
@@ -123,7 +120,6 @@ enum log_dest
 	COMMON_LOG_EXIT_RETURN("%d", return_value)
 
 void print_buffer_to_file(const char *filename, char *p_buf, size_t buf_size, char *p_prefix);
-void smoke_log_write_f(const char *filename, const char *format, ...);
 
 /*!
  * The global to contain the number of trace rows

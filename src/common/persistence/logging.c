@@ -83,65 +83,6 @@ void print_buffer_to_file(const char *filename, char *p_buf, size_t buf_size, ch
 	}
 }
 
-void smoke_log_write_f(const char *filename, const char *format, ...)
-{
-	char *message = NULL;
-	int size = 64;
-
-	// if we can't allocate memory, just exit - no logging
-	if ((message = (char *)malloc(size)) != NULL)
-	{
-		va_list args;
-		char *temp;
-		int need = 0;
-
-		while (1)
-		{
-			va_start(args, format);
-			need = vsnprintf(message, size, format, args);
-			va_end(args);
-
-			// size was big enough
-			if (need > -1 && need < size)
-			{
-				FILE *p_file = NULL;
-				if ((p_file = open_file(filename, COMMON_PATH_LEN, "a+")) != NULL)
-				{
-					fprintf(p_file, "%s\n", message);
-					fclose(p_file);
-				}
-				break;
-			}
-			else
-			{
-				// vsnprintf returned exact size
-				if (need > -1)
-				{
-					size = need + 1;
-				}
-				else // take another guess
-				{
-					size *= 2;
-				}
-
-				// attempt to build a bigger char array
-				if ((temp = (char *)realloc(message, size)) == NULL)
-				{
-					break;
-				}
-				else
-				{
-					message = temp;
-				}
-			}
-		}
-
-		// free up the memory for the message now that it has been sent
-		// or failed reallocation
-		free(message);
-		message = NULL;
-	}
-}
 
 /*
  * Helper function declarations

@@ -612,14 +612,13 @@ void cli::nvmcli::RenameAttributeKey(
 
 void cli::nvmcli::RenameAttributeKey(
 		wbem::framework::attribute_names_t &attributes,
-		std::string from, std::string to)
+		std::string fromStr, std::string toStr)
 {
 	wbem::framework::attribute_names_t::iterator found =
-			std::find(attributes.begin(), attributes.end(),from);
+			std::find(attributes.begin(), attributes.end(),fromStr);
 	if (found != attributes.end())
 	{
-		attributes.erase(found);
-		attributes.insert(found, to);
+		*found = toStr;
 	}
 }
 

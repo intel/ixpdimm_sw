@@ -908,8 +908,12 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::enableDeviceSecurity(
 			catch (wbem::framework::Exception &e)
 			{
 				cli::framework::ErrorResult *eResult = NvmExceptionToResult(e);
-				pListResults->insert(prefix + eResult->outputText());
-				pListResults->setErrorCode(eResult->getErrorCode());
+				if (eResult)
+				{
+					pListResults->insert(prefix + eResult->outputText());
+					pListResults->setErrorCode(eResult->getErrorCode());
+					delete eResult;
+				}
 				break; // don't continue on failure
 			}
 		}
@@ -1028,8 +1032,12 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::changeDevicePassphrase(
 				catch (wbem::framework::Exception &e)
 				{
 					cli::framework::ErrorResult *eResult = NvmExceptionToResult(e);
-					pListResults->insert(prefix + eResult->outputText());
-					pListResults->setErrorCode(eResult->getErrorCode());
+					if (eResult)
+					{
+						pListResults->insert(prefix + eResult->outputText());
+						pListResults->setErrorCode(eResult->getErrorCode());
+						delete eResult;
+					}
 					break; // don't continue on failure
 				}
 			}
@@ -1159,8 +1167,12 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::changeDeviceSecurity(
 				else
 				{
 					cli::framework::ErrorResult *eResult = NvmExceptionToResult(e);
-					pListResults->insert(prefix + eResult->outputText());
-					pListResults->setErrorCode(eResult->getErrorCode());
+					if (eResult)
+					{
+						pListResults->insert(prefix + eResult->outputText());
+						pListResults->setErrorCode(eResult->getErrorCode());
+						delete eResult;
+					}
 					break; // don't continue on failure
 				}
 			}
@@ -1292,8 +1304,12 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::eraseDeviceData(
 				catch (wbem::framework::Exception &e)
 				{
 					cli::framework::ErrorResult *eResult = NvmExceptionToResult(e);
-					pListResults->insert(prefix + eResult->outputText());
-					pListResults->setErrorCode(eResult->getErrorCode());
+					if (eResult)
+					{
+						pListResults->insert(prefix + eResult->outputText());
+						pListResults->setErrorCode(eResult->getErrorCode());
+						delete eResult;
+					}
 					break; // don't continue on failure
 				}
 			}

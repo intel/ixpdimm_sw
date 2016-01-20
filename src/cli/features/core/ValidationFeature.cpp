@@ -181,16 +181,21 @@ cli::framework::ResultBase* cli::nvmcli::ValidationFeature::injectError(
 						{
 							pListResult->setErrorCode(pError->getErrorCode());
 						}
+						delete pError;
 					}
 
 				}
 				catch (wbem::framework::Exception &e)
 				{
 					framework::ErrorResult *pError = NvmExceptionToResult(e);
-					pListResult->insert(prefixMsg + pError->outputText());
-					if (!pListResult->getErrorCode()) // keep any existing errors
+					if (pError)
 					{
-						pListResult->setErrorCode(pError->getErrorCode());
+						pListResult->insert(prefixMsg + pError->outputText());
+						if (!pListResult->getErrorCode()) // keep any existing errors
+						{
+							pListResult->setErrorCode(pError->getErrorCode());
+						}
+						delete pError;
 					}
 				}
 			} // end of for loop
