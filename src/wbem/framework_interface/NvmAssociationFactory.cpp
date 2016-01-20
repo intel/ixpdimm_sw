@@ -467,6 +467,8 @@ wbem::framework_interface::NvmAssociationFactory::NvmAssociationFactory(wbem::fr
 		AssociationFactory(pInstance, associationClassName,
 		resultClassName, roleName, resultRoleName)
 {
+	setCimNamespace(NVM_NAMESPACE);
+
 	initClassMap();
 	initAssociationTable();
 }
