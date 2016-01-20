@@ -94,6 +94,11 @@ int get_dimm_health(NVM_NFIT_DEVICE_HANDLE device_handle, enum device_health *p_
 enum device_health smart_health_status_to_device_health(enum smart_health_status smart_health);
 
 /*
+ * Helper function to convert firmware type into firmware type enumeration
+ */
+enum device_fw_type firmware_type_to_enum(unsigned char fw_type);
+
+/*
  * Helper function to get the partition info for a DIMM.
  */
 int get_partition_info(const NVM_NFIT_DEVICE_HANDLE device_handle,

@@ -48,6 +48,7 @@
 #define	DEV_BCD_TIME_LEN		3   /* Length of a BDC Formatted Time */
 #define	DEV_BCD_ETC_TIME_LEN	5   /* Len of a BDC Formatted Time for longop */
 #define	DEV_FW_REV_LEN		5   /* Length of the Firmware Revision string */
+#define	DEV_FW_COMMIT_ID_LEN		40   /* Length of commit identifier of Firmware */
 #define	DEV_MFR_LEN		2  /* Length of manufacturer ID buffer */
 #define	DEV_MODELNUM_LEN		20  /* Length of DIMM Model Number buffer */
 #define	DEV_OS_PARTITION		1   /* get platform config OS partition num */
@@ -274,6 +275,16 @@ enum smart_health_status
 	SMART_NON_CRITICAL = 1 << 0,
 	SMART_CRITICAL = 1 << 1,
 	SMART_FATAL = 1 << 2,
+};
+
+/*
+ * Values for the firmware type field of pt_payload_fw_image_info struct
+ */
+enum firmware_type
+{
+	FW_TYPE_PRODUCTION = 0x29,
+	FW_TYPE_DFX = 0x30,
+	FW_TYPE_DEBUG = 0x32,
 };
 
 /*
@@ -1320,7 +1331,7 @@ struct pt_payload_smart_health {
  */
 struct pt_payload_fw_image_info {
 	/*
-	 * Contains revision of the firmware in ASCII in the following format:
+	 * Contains BCD formatted revision of the FW in the following format:
 	 * aa.bb.cc.dddd
 	 *
 	 * aa = 2 digit Major Version
@@ -1329,14 +1340,43 @@ struct pt_payload_fw_image_info {
 	 * dddd = 4 digit Build Version
 	 */
 	unsigned char fw_rev[DEV_FW_REV_LEN];
+
 	/*
-	 * Valid Values:
+	 * Contains value designating FW type:
 	 * 		0x29 - production
 	 * 		0x30 - dfx
 	 * 		0x32 - debug
 	 */
 	unsigned char fw_type;
-	unsigned char rsvd[122];
+
+	unsigned char rsvd1[10];
+
+	/*
+	 * Contains info regarding updated/downloaded/staged FW via update FW cmd:
+	 * 		0x00 - no new fw staged
+	 * 		0x01 - new fw has been staged for execution
+	 * 		0xFF-0x02 - reserved
+	 */
+	unsigned char staged_fw_status;
+
+	/*
+	 * Contains BCD formatted revision of the FW in aa.bb.cc.dddd format
+	 */
+	unsigned char staged_fw_rev[DEV_FW_REV_LEN];
+
+	/*
+	 * Contains value designating the staged FW type
+	 */
+	unsigned char staged_fw_type;
+
+	unsigned char rsvd2[9];
+
+	/*
+	 * Contains commit identifier of the active FW for debug/troubleshooting purposes
+	 */
+	unsigned char commit_id[DEV_FW_COMMIT_ID_LEN];
+
+	unsigned char rsvd3[56];
 } __attribute__((packed));
 
 /*
@@ -1803,6 +1843,9 @@ int fw_get_fw_error_logs(const NVM_UINT32 device_handle,
 
 int fw_get_security_state(const NVM_UINT32 device_handle,
 	struct pt_payload_get_security_state *p_security_state);
+
+int fw_get_fw_image_info(const NVM_UINT32 device_handle,
+	struct pt_payload_fw_image_info *p_fw_image_info);
 
 float fw_convert_fw_celsius_to_float(unsigned short fw_celsius);
 unsigned short fw_convert_float_to_fw_celsius(float celsius);

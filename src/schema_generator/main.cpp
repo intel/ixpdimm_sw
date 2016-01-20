@@ -399,6 +399,11 @@ int main(int arg_count, char **args)
 	dimm_fw_image.includesHistory();
 	dimm_fw_image.addAttribute("device_handle").isInt32().isUnsigned().isPk();
 	dimm_fw_image.addAttribute("fw_rev").isText(14);
+	dimm_fw_image.addAttribute("fw_type").isInt32().isUnsigned();
+	dimm_fw_image.addAttribute("staged_fw_status").isInt32().isUnsigned();
+	dimm_fw_image.addAttribute("staged_fw_rev").isText(14);
+	dimm_fw_image.addAttribute("staged_fw_type").isInt32().isUnsigned();
+	dimm_fw_image.addAttribute("commit_id").isText(40);
 	entities.push_back(dimm_fw_image);
 
 	Entity dimm_fw_debug_log("dimm_fw_debug_log");

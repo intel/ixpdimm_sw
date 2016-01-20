@@ -638,15 +638,7 @@ int support_store_fw_image(PersistentStore *p_store, int history_id,
 
 	// add fw image table
 	struct pt_payload_fw_image_info fw_image_info;
-
-	struct fw_cmd cmd;
-	memset(&cmd, 0, sizeof (struct fw_cmd));
-	cmd.device_handle = device_handle.handle;
-	cmd.opcode = PT_GET_LOG;
-	cmd.sub_opcode = SUBOP_FW_IMAGE_INFO;
-	cmd.output_payload_size = sizeof (fw_image_info);
-	cmd.output_payload = &fw_image_info;
-	int temprc = ioctl_passthrough_cmd(&cmd);
+	int temprc = fw_get_fw_image_info(device_handle.handle, &fw_image_info);
 	if (NVM_SUCCESS != temprc)
 	{
 		COMMON_LOG_ERROR("Failed getting firmware image information");
@@ -658,7 +650,14 @@ int support_store_fw_image(PersistentStore *p_store, int history_id,
 
 		db_dimm_fw.device_handle = device_handle.handle;
 		// convert fw version to string
-		FW_VER_ARR_TO_STR(fw_image_info.fw_rev, db_dimm_fw.fw_rev, DIMM_FW_IMAGE_FW_REV_LEN)
+		FW_VER_ARR_TO_STR(fw_image_info.fw_rev, db_dimm_fw.fw_rev, DIMM_FW_IMAGE_FW_REV_LEN);
+		FW_VER_ARR_TO_STR(
+			fw_image_info.staged_fw_rev, db_dimm_fw.staged_fw_rev, DIMM_FW_IMAGE_FW_REV_LEN);
+		db_dimm_fw.fw_type = fw_image_info.fw_type;
+		db_dimm_fw.staged_fw_type = fw_image_info.staged_fw_type;
+		db_dimm_fw.staged_fw_status = fw_image_info.staged_fw_status;
+		memmove(db_dimm_fw.commit_id, fw_image_info.commit_id, DEV_FW_COMMIT_ID_LEN);
+
 		if (DB_SUCCESS != db_save_dimm_fw_image_state(p_store, history_id, &db_dimm_fw))
 		{
 			COMMON_LOG_ERROR("Failed storing firmware image history information");

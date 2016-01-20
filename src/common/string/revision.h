@@ -155,6 +155,8 @@ extern void build_revision(char *revision, size_t revision_len,
 extern void build_fw_revision(char *fw_revision, size_t fw_revision_len,
 		unsigned short int major, unsigned short int minor);
 
+extern void convert_fw_version_str_to_array(const char * const str, size_t len, unsigned char *arr);
+
 
 #ifdef __cplusplus
 }

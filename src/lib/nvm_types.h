@@ -94,6 +94,7 @@
 #define	NVM_VOLATILE_POOL_SOCKET_ID	-1 // Volatile pools are system wide and not tied to a socket
 #define	NVM_MAX_CONFIG_LINE_LEN	512 // Maximum line size for config data in a dump file
 #define	NVM_DIE_SPARES_MAX	4 // Maximum number of spare dies
+#define	NVM_COMMIT_ID_LEN	41
 
 /*
  * Macros for controlling what is exported by the library

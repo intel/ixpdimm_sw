@@ -422,6 +422,35 @@ enum device_health smart_health_status_to_device_health(enum smart_health_status
 }
 
 /*
+ * Convert firmware type into firmware type enumeration
+ */
+enum device_fw_type firmware_type_to_enum(unsigned char fw_type)
+{
+	COMMON_LOG_ENTRY();
+
+	enum device_fw_type fw_type_enum;
+	if (fw_type == FW_TYPE_PRODUCTION)
+	{
+		fw_type_enum = DEVICE_FW_TYPE_PRODUCTION;
+	}
+	else if (fw_type == FW_TYPE_DFX)
+	{
+		fw_type_enum = DEVICE_FW_TYPE_DFX;
+	}
+	else if (fw_type == FW_TYPE_DEBUG)
+	{
+		fw_type_enum = DEVICE_FW_TYPE_DEBUG;
+	}
+	else
+	{
+		fw_type_enum = DEVICE_FW_TYPE_UNKNOWN;
+	}
+
+	COMMON_LOG_EXIT();
+	return fw_type_enum;
+}
+
+/*
  * Helper function to fetch partition info from the DIMM
  */
 int get_partition_info(const NVM_NFIT_DEVICE_HANDLE device_handle,

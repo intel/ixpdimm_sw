@@ -487,6 +487,17 @@ enum encryption_status
 };
 
 /*
+ * firmware type
+ */
+enum device_fw_type
+{
+	DEVICE_FW_TYPE_UNKNOWN = 0, // fw image type cannot be determined
+	DEVICE_FW_TYPE_PRODUCTION = 1,
+	DEVICE_FW_TYPE_DFX = 2,
+	DEVICE_FW_TYPE_DEBUG = 3
+};
+
+/*
  * ****************************************************************************
  * STRUCTURES
  * ****************************************************************************
@@ -711,6 +722,26 @@ struct device_details
 };
 
 /*
+ * Detailed information about firmware image log information of a device.
+ */
+struct device_fw_info
+{
+	/*
+	 * BCD-formatted revision of the active firmware in the format MM.mm.hh.bbbb
+	 * MM = 2-digit major version
+	 * mm = 2-digit minor version
+	 * hh = 2-digit hot fix version
+	 * bbbb = 4-digit build version
+	 */
+	NVM_VERSION active_fw_revision;
+	enum device_fw_type active_fw_type; // active FW type.
+	char active_fw_commit_id[NVM_COMMIT_ID_LEN]; // commit id of active FW for debug/troubleshooting
+	NVM_BOOL staged_fw_pending; // set if new FW is staged for execution on the next reboot.
+	NVM_VERSION staged_fw_revision; //  BCD formatted revision of the staged FW.
+	enum device_fw_type staged_fw_type; // staged FW type.
+};
+
+/*
  * Details about a specific interleave format supported by memory
  */
 struct interleave_format
@@ -720,7 +751,6 @@ struct interleave_format
 	enum interleave_size imc; // memory controller interleave of this format
 	enum interleave_ways ways; // number of ways for this format
 };
-
 
 /*
  * Supported capabilities of a specific memory mode
@@ -1474,6 +1504,32 @@ extern NVM_API int nvm_get_device_details(const NVM_GUID device_guid,
  */
 extern NVM_API int nvm_get_device_performance(const NVM_GUID device_guid,
 		struct device_performance *p_performance);
+
+/*
+ * Retrieve the firmware image log information from the device specified.
+ * @param[in] device_guid
+ * 		The device identifier.
+ * @param[in, out] p_fw_info
+ * 		A pointer to a #device_fw_info structure allocated by the caller.
+ * @pre The caller has administrative privileges.
+ * @pre The device is manageable.
+ * @return Returns one of the following @link #return_code return_codes: @endlink @n
+ * 		#NVM_SUCCESS @n
+ * 		#NVM_ERR_INVALIDPERMISSIONS @n
+ * 		#NVM_ERR_NOTSUPPORTED @n
+ * 		#NVM_ERR_NOMEMORY @n
+ * 		#NVM_ERR_BADDEVICE @n
+ * 		#NVM_ERR_INVALIDPARAMETER @n
+ * 		#NVM_ERR_NOTMANAGEABLE @n
+ *		#NVM_ERR_DRIVERFAILED @n
+ * 		#NVM_ERR_DATATRANSFERERROR @n
+ * 		#NVM_ERR_DEVICEERROR @n
+ * 		#NVM_ERR_DEVICEBUSY @n
+ * 		#NVM_ERR_UNKNOWN @n
+ * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
+ */
+extern NVM_API int nvm_get_device_fw_image_info(const NVM_GUID device_guid,
+		struct device_fw_info *p_fw_info);
 
 /*
  * Push a new FW image to the device specified.

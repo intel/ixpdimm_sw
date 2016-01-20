@@ -915,6 +915,65 @@ int nvm_get_device_performance(const NVM_GUID device_guid,
 }
 
 /*
+ * Retrieve the firmware image log information from the device specified.
+ */
+int nvm_get_device_fw_image_info(const NVM_GUID device_guid,
+		struct device_fw_info *p_fw_info)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	struct device_discovery discovery;
+	if (check_caller_permissions() != NVM_SUCCESS)
+	{
+		rc = NVM_ERR_INVALIDPERMISSIONS;
+	}
+	else if (device_guid == NULL)
+	{
+		COMMON_LOG_ERROR("Invalid parameter, device_guid is NULL");
+		rc = NVM_ERR_INVALIDPARAMETER;
+	}
+	else if (p_fw_info == NULL)
+	{
+		COMMON_LOG_ERROR("Invalid parameter, p_settings is NULL");
+		rc = NVM_ERR_INVALIDPARAMETER;
+	}
+	else if ((rc = exists_and_manageable(device_guid, &discovery, 1)) == NVM_SUCCESS)
+	{
+		struct pt_payload_fw_image_info fw_image_info;
+		rc = fw_get_fw_image_info(discovery.device_handle.handle, &fw_image_info);
+		if (rc != NVM_SUCCESS)
+		{
+			COMMON_LOG_ERROR_F(
+				"Unable to get firmware image information for handle: [%d]",
+				discovery.device_handle.handle);
+		}
+		else
+		{
+			build_revision(p_fw_info->active_fw_revision,
+					NVM_VERSION_LEN,
+					fw_image_info.fw_rev[4],
+					fw_image_info.fw_rev[3],
+					fw_image_info.fw_rev[2],
+					((fw_image_info.fw_rev[1] * 100) + fw_image_info.fw_rev[0]));
+			p_fw_info->active_fw_type = firmware_type_to_enum(fw_image_info.fw_type);
+			memmove(p_fw_info->active_fw_commit_id, fw_image_info.commit_id, NVM_COMMIT_ID_LEN);
+			p_fw_info->staged_fw_pending = fw_image_info.staged_fw_status;
+			build_revision(p_fw_info->staged_fw_revision,
+					NVM_VERSION_LEN,
+					fw_image_info.staged_fw_rev[4],
+					fw_image_info.staged_fw_rev[3],
+					fw_image_info.staged_fw_rev[2],
+					((fw_image_info.staged_fw_rev[1] * 100) + fw_image_info.staged_fw_rev[0]));
+			p_fw_info->staged_fw_type = firmware_type_to_enum(fw_image_info.staged_fw_type);
+		}
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+/*
  * Push a new FW image to the device specified.
  */
 int nvm_update_device_fw(const NVM_GUID device_guid, const NVM_PATH path,

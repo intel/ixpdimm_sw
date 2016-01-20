@@ -215,6 +215,26 @@ int fw_get_security_state(const NVM_UINT32 device_handle,
 	return rc;
 }
 
+// get firmware image info using a passthrough ioctl
+int fw_get_fw_image_info(const NVM_UINT32 device_handle,
+		struct pt_payload_fw_image_info *p_fw_image_info)
+{
+	COMMON_LOG_ENTRY();
+	memset(p_fw_image_info, 0, sizeof (*p_fw_image_info));
+
+	struct fw_cmd cmd;
+	memset(&cmd, 0, sizeof (struct fw_cmd));
+	cmd.device_handle = device_handle;
+	cmd.opcode = PT_GET_LOG;
+	cmd.sub_opcode = SUBOP_FW_IMAGE_INFO;
+	cmd.output_payload_size = sizeof (*p_fw_image_info);
+	cmd.output_payload = p_fw_image_info;
+	int rc = ioctl_passthrough_cmd(&cmd);
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
 /*
  * Note: For the celsius conversion functions - FW represents celsius as a 16 bit value
  * 		bit 16 = sign value

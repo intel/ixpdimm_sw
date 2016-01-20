@@ -203,3 +203,20 @@ int parse_fw_revision(unsigned short int *p_major, unsigned short int *p_minor,
 
 	return success;
 }
+
+/*
+ * Convert a FW version string to an array
+ */
+void convert_fw_version_str_to_array(const char * const str, size_t len, unsigned char *arr)
+{
+	unsigned short int major = 0;
+	unsigned short int minor = 0;
+	unsigned short int hotfix = 0;
+	unsigned short int build = 0;
+	parse_main_revision(&major, &minor, &hotfix, &build, str, len);
+	arr[4] = (((major / 10) << 4) + (major % 10));
+	arr[3] = (((minor / 10) << 4) + (minor % 10));
+	arr[2] = (((hotfix / 10) << 4) + (hotfix % 10));
+	arr[1] = (((build / 1000) << 4) + ((build / 100) % 10));
+	arr[0] = ((((build / 10) % 10) << 4) + (build % 10));
+}
