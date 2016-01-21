@@ -943,7 +943,7 @@ void cli::nvmcli::findBestCapacityFormat(NVM_UINT64 capacityInBytes, char *capac
 // helper function to round number to decimal_places
 NVM_REAL32 round(NVM_REAL32 number, int decimal_places)
 {
-	return floor(number * pow(10, decimal_places)) / pow(10, decimal_places);
+	return floor(number * pow(10, decimal_places) + 0.5) / pow(10, decimal_places);
 }
 
 std::string cli::nvmcli::calculateAdvertisedCapacity(NVM_UINT64 capacityInBytes,
@@ -999,7 +999,7 @@ std::string cli::nvmcli::calculateAdvertisedCapacity(NVM_UINT64 capacityInBytes,
    Also, the lower three digits of the LBA count should be divisible by 8 with a remainder of
    0 (rounded up if necessary), to provide a even number of aligned sectors.
 */
-NVM_UINT64 cli::nvmcli::calculateBlockCountForNamespace(const NVM_UINT64 capacityInGB,
+NVM_UINT64 cli::nvmcli::calculateBlockCountForNamespace(const NVM_REAL32 capacityInGB,
 		const NVM_UINT64 blockSize)
 {
 	NVM_UINT64 blockCount = 0;

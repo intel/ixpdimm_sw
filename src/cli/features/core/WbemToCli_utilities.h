@@ -248,7 +248,7 @@ bool isStringValidNumber(const std::string &value);
 std::string calculateAdvertisedCapacity(NVM_UINT64 capacityInBytes,
 	const NVM_UINT64 blockCount = 0, const NVM_UINT64 blockSize = 0);
 
-NVM_UINT64 calculateBlockCountForNamespace(const NVM_UINT64 capacityInGB,
+NVM_UINT64 calculateBlockCountForNamespace(const NVM_REAL32 capacityInGB,
 	const NVM_UINT64 blockSize);
 
 std::string convertCapacityFormat(NVM_UINT64 capacityInBytes, const std::string capacityUnits = "",
