@@ -62,8 +62,8 @@ public:
 	 * @param name Name of the entity.  The generator will create a C struct and a database table with this name.
 	 * @param attributes List of the Attributes that define the entities columns/fields
 	 */
-	Entity(std::string name)
-	: m_name(name), m_includesHistory(false)
+	Entity(std::string name, std::string description)
+	: m_name(name), m_description(description), m_includesHistory(false)
 	{ }
 
 	/*!
@@ -71,6 +71,12 @@ public:
 	 * @return the Entity's name.
 	 */
 	std::string getName() { return m_name; }
+
+	/*!
+	 * getDescription
+	 * @return the Entity's description.
+	 */
+	std::string getDescription() { return m_description; }
 
 	/*!
 	 * Add a new attribute to the entity
@@ -107,6 +113,7 @@ public:
 
 private:
 	std::string m_name;
+	std::string m_description;
 	std::vector<Attribute> m_attributes;
 	std::vector<Relationship> m_relationships;
 	bool m_includesHistory;

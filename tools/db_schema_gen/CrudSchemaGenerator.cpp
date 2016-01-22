@@ -291,38 +291,6 @@ void CrudSchemaGenerator::Generate(std::vector<Entity> schema,
 				(*tableDict)["F_CLEAR_ATTRIBUTE"] = "db_clear_" + entity.getName() + "_" + attribute->getName();
 			}
 		}
-
-		std::vector<Relationship> relationships = entity.getRelationships();
-		std::vector<Relationship>::iterator rel;
-		for (rel = relationships.begin(); rel != relationships.end(); rel++)
-		{
-			Relationship relationship = *rel;
-
-			ctemplate::TemplateDictionary *relationshipDict = (*tableDict).AddSectionDictionary("RELATIONSHIP");
-			(*relationshipDict)["ATTRIBUTE_NAME"] = relationship.getName();
-			(*relationshipDict)["ATTRIBUTE_ARRAY_LEN"] = relationship.getCount();
-			(*relationshipDict)["ATTRIBUTE_RELATED_ENTITY"] = relationship.getRelatedEntity();
-
-			// this must match the child tables F_ADD function
-			(*relationshipDict)["F_ADD_RELATION"] = "db_add_" + relationship.getRelatedEntity();
-
-			// this must match the child tables F_GET_COUNT_BY_FK function
-			(*relationshipDict)["F_GET_RELATION_COUNT"] =
-					"db_get_" + relationship.getRelatedEntity() + "_count_by_"
-					+ entity.getName() + "_" + pk;
-			(*relationshipDict)["F_GET_RELATION_COUNT_HISTORY"] =
-					"db_get_" + relationship.getRelatedEntity() + "_count_by_"
-					+ entity.getName() + "_" + pk + "_history";
-			(*relationshipDict)["F_GET_RELATION"] =
-					"db_get_" + relationship.getRelatedEntity() + "s_by_"
-					+ entity.getName() + "_" + pk;
-			(*relationshipDict)["F_GET_RELATION_HISTORY"] =
-					"db_get_" + relationship.getRelatedEntity() + "s_by_"
-					+ entity.getName() + "_" + pk + "_history";
-
-			(*relationshipDict)["F_SAVE_RELATION_STATE"] =
-					"db_save_" + relationship.getRelatedEntity() + "_state";
-		}
 	}
 
 	// +1 more for the history table (an automatic table, not included in the schema map
@@ -339,4 +307,72 @@ void CrudSchemaGenerator::Generate(std::vector<Entity> schema,
 	delete capsModifier;
 	delete replaceModifier;
 	delete singleModifier;
+}
+
+/*!
+ * @copybrief CreateDoc
+ * @details
+ * 	- Creates database schema document
+ *
+ */
+void CrudSchemaGenerator::CreateDoc(std::vector<Entity> schema,
+		std::string outputPath)
+{
+	std::stringstream schemaDoc;
+
+	std::vector<Entity>::iterator iter;
+	for (iter = schema.begin(); iter != schema.end(); iter++)
+	{
+		Entity entity = *iter;
+
+		schemaDoc << "Table(s): " << "db_" << entity.getName() << " \n";
+		if (entity.getIncludesHistory())
+		{
+			schemaDoc << " \t  " << "db_" << entity.getName() << + "_history" << " \n";
+		}
+		schemaDoc << "Description: " << entity.getDescription() << " \n";
+
+		std::vector<Attribute> attributes = entity.getAttributes();
+		std::vector<Attribute>::iterator att;
+		int attribute_index = 0;
+		schemaDoc << "Attributes: \n";
+		for (att = attributes.begin(); att != attributes.end(); att++)
+		{
+			Attribute *attribute = &(*att);
+			if (attribute->getIsArray())
+			{
+				schemaDoc << "\t" << attribute->getCType() << " " << attribute->getName();
+				for (int i = 0; i < attribute->getArrayLen(); i++)
+				{
+					attribute_index++;
+				}
+				schemaDoc << "\n";
+			}
+			else
+			{
+				if (attribute->getIsPk())
+				{
+					schemaDoc << "\t" << attribute->getCType() << " " << attribute->getName() << "(PK)";
+					if (attribute->getIsIndexPk())
+					{
+						schemaDoc << "(Indexed)";
+					}
+				}
+				else if (attribute->getIsFk())
+				{
+					schemaDoc << "\t" << attribute->getCType() << " " << attribute->getName() << "(FK)";
+				}
+				else
+				{
+					schemaDoc << "\t" << attribute->getCType() << " " << attribute->getName();
+				}
+				schemaDoc << "\n";
+				attribute_index++;
+			}
+		}
+
+		schemaDoc << "\n";
+	}
+
+	WriteTextToFile(schemaDoc.str(), outputPath + "/schema.txt");
 }

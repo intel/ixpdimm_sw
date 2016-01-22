@@ -50,7 +50,7 @@ int main(int arg_count, char **args)
 	/*
 	 * Configuration
 	 */
-	Entity config("config");
+	Entity config("config", "User preferences and configuration settings.");
 	config.addAttribute("key").isText(256).isPk();
 	config.addAttribute("value").isText(1024);
 	entities.push_back(config);
@@ -58,7 +58,7 @@ int main(int arg_count, char **args)
 	/*
 	 * Logging
 	 */
-	Entity log("log");
+	Entity log("log", "Software debug logs.");
 	log.addAttribute("id").isInt32().isPk(true).orderByDesc();
 	log.addAttribute("thread_id").isInt64().isUnsigned();
 	log.addAttribute("time").isInt64().isUnsigned();
@@ -71,7 +71,7 @@ int main(int arg_count, char **args)
 	/*
 	 * Events
 	 */
-	Entity event("event");
+	Entity event("event", "Software generated events and diagnostic results.");
 	event.addAttribute("id").isInt32().isPk(true).orderByDesc();
 	// not really a FK but creates helpful functions
 	event.addAttribute("type").isInt32().isUnsigned().isFk("event_type", "type");
@@ -89,7 +89,7 @@ int main(int arg_count, char **args)
 	/*
 	 * Topology state - for detecting topology changes
 	 */
-	Entity topology_state("topology_state");
+	Entity topology_state("topology_state", "Monitor stored topology for detecting topology changes on restart.");
 	topology_state.addAttribute("device_handle").isInt32().isUnsigned().isPk();
 	topology_state.addAttribute("guid").isText(37);
 	topology_state.addAttribute("manufacturer").isInt32().isUnsigned();
@@ -102,7 +102,7 @@ int main(int arg_count, char **args)
 	/*
 	 * Simulated System
 	 */
-	Entity host("host");
+	Entity host("host", "Host server information.");
 	host.includesHistory();
 	host.addAttribute("name").isText(256).isPk();
 	host.addAttribute("os_type").isInt32();
@@ -110,14 +110,14 @@ int main(int arg_count, char **args)
 	host.addAttribute("os_version").isText(256);
 	entities.push_back(host);
 
-	Entity sw_inventory("sw_inventory");
+	Entity sw_inventory("sw_inventory", "Host software inventory.");
 	sw_inventory.includesHistory();
 	sw_inventory.addAttribute("name").isText(256).isPk();
 	sw_inventory.addAttribute("mgmt_sw_rev").isText(25);
 	sw_inventory.addAttribute("vendor_driver_rev").isText(25);
 	entities.push_back(sw_inventory);
 
-	Entity socket("socket");
+	Entity socket("socket", "Processor socket information.");
 	socket.includesHistory();
 	socket.addAttribute("socket_id").isInt32().isUnsigned().isPk();
 	socket.addAttribute("type").isInt32().isUnsigned();
@@ -130,10 +130,7 @@ int main(int arg_count, char **args)
 	socket.addAttribute("rapl_limited").isInt32().isUnsigned();
 	entities.push_back(socket);
 
-	/*
-	 * Tables to support simulated IOCTL calls: Non-Passthrough
-	 */
-	Entity runtime_config_validation("runtime_config_validation");
+	Entity runtime_config_validation("runtime_config_validation", "Platform Configuration Attributes Table (PCAT): Re-Configuration input validation Interface Table - Type 2.");
 	runtime_config_validation.includesHistory();
 	runtime_config_validation.addAttribute("id").isIndexPk();
 	runtime_config_validation.addAttribute("type").isInt32().isUnsigned();
@@ -151,7 +148,7 @@ int main(int arg_count, char **args)
 	runtime_config_validation.addAttribute("mask_2").isInt64().isUnsigned();
 	entities.push_back(runtime_config_validation);
 
-	Entity interleave_cap("interleave_capability");
+	Entity interleave_cap("interleave_capability", "Platform Configuration Attributes Table (PCAT): Memory Interleave Capability Information Table - Type 1.");
 	interleave_cap.includesHistory();
 	interleave_cap.addAttribute("id").isIndexPk();
 	interleave_cap.addAttribute("type").isInt32().isUnsigned();
@@ -162,7 +159,7 @@ int main(int arg_count, char **args)
 	interleave_cap.addAttribute("interleave_format_list").isInt32().isUnsigned().isArray(32);
 	entities.push_back(interleave_cap);
 
-	Entity platform_info_cap("platform_info_capability");
+	Entity platform_info_cap("platform_info_capability", "Platform Configuration Attributes Table (PCAT): Platform Capability Information Table - Type 0.");
 	platform_info_cap.includesHistory();
 	platform_info_cap.addAttribute("id").isIndexPk();
 	platform_info_cap.addAttribute("type").isInt32().isUnsigned();
@@ -174,7 +171,7 @@ int main(int arg_count, char **args)
 	entities.push_back(platform_info_cap);
 
 	// should only be one platform_cap so make signature the PK
-	Entity platform_capabilities("platform_capabilities");
+	Entity platform_capabilities("platform_capabilities", "Platform Configuration Attributes Table (PCAT): Header.");
 	platform_capabilities.includesHistory();
 	platform_capabilities.addAttribute("signature").isText(4).isPk();
 	platform_capabilities.addAttribute("length").isInt32().isUnsigned();
@@ -187,7 +184,7 @@ int main(int arg_count, char **args)
 	platform_capabilities.addAttribute("creator_revision").isInt32().isUnsigned();
 	entities.push_back(platform_capabilities);
 
-	Entity driver_capabilities("driver_capabilities");
+	Entity driver_capabilities("driver_capabilities", "Driver capabilities and limits.");
 	driver_capabilities.includesHistory();
 	driver_capabilities.addAttribute("id").isInt32().isPk(true); // artificial so can update
 	driver_capabilities.addAttribute("max_namespaces").isInt32().isUnsigned();
@@ -197,7 +194,7 @@ int main(int arg_count, char **args)
 	driver_capabilities.addAttribute("num_block_sizes").isInt32().isUnsigned();
 	entities.push_back(driver_capabilities);
 
-	Entity driver_features("driver_features");
+	Entity driver_features("driver_features", "Driver supported features.");
 	driver_features.includesHistory();
 	driver_features.addAttribute("id").isInt32().isPk(true);
 	driver_features.addAttribute("get_platform_capabilities").isInt32().isUnsigned();
@@ -231,7 +228,7 @@ int main(int arg_count, char **args)
 	driver_features.addAttribute("storage_mode").isInt32().isUnsigned();
 	entities.push_back(driver_features);
 
-	Entity dimm_topology("dimm_topology");
+	Entity dimm_topology("dimm_topology", "NVDIMM Firmware Interface Table (NFIT) DIMM topology.");
 	dimm_topology.includesHistory();
 	dimm_topology.addAttribute("device_handle").isInt32().isUnsigned().isPk();
 	dimm_topology.addAttribute("id").isInt32().isUnsigned();
@@ -241,7 +238,7 @@ int main(int arg_count, char **args)
 	dimm_topology.addAttribute("type").isInt32().isUnsigned();
 	entities.push_back(dimm_topology);
 
-	Entity nvm_namespace("namespace");
+	Entity nvm_namespace("namespace", "Persistent memory namespaces.");
 	nvm_namespace.includesHistory();
 	nvm_namespace.addAttribute("namespace_guid").isText(37).isPk();
 	nvm_namespace.addAttribute("friendly_name").isText(64);
@@ -259,7 +256,7 @@ int main(int arg_count, char **args)
 	/*
 	 * Tables to support simulated IOCTL calls: Passthrough FW Cmds
 	 */
-	Entity identify_dimm("identify_dimm"); // Updated to FIS 0.81
+	Entity identify_dimm("identify_dimm", "Vendor firmware command: Identify DIMM.");
 	identify_dimm.includesHistory();
 	identify_dimm.addAttribute("device_handle").isInt32().isUnsigned().isPk();
 	identify_dimm.addAttribute("vendor_id").isInt32().isUnsigned();
@@ -280,7 +277,7 @@ int main(int arg_count, char **args)
 	identify_dimm.addAttribute("model_num").isText(21);
 	entities.push_back(identify_dimm);
 
-	Entity dimm_partition("dimm_partition");
+	Entity dimm_partition("dimm_partition", "Vendor Firmware: Get Admin Features - DIMM Partition Info");
 	dimm_partition.includesHistory();
 	dimm_partition.addAttribute("device_handle").isInt32().isUnsigned().isPk();
 	dimm_partition.addAttribute("volatile_capacity").isInt32();
@@ -288,10 +285,9 @@ int main(int arg_count, char **args)
 	dimm_partition.addAttribute("pmem_capacity").isInt32();
 	dimm_partition.addAttribute("pm_start").isInt64();
 	dimm_partition.addAttribute("raw_capacity").isInt32();
-
 	entities.push_back(dimm_partition);
 
-	Entity dimm_smart("dimm_smart");
+	Entity dimm_smart("dimm_smart", "Vendor Firmware: Get Log Page - SMART and Health Info");
 	dimm_smart.includesHistory();
 	dimm_smart.addAttribute("device_handle").isInt32().isUnsigned().isPk();
 	dimm_smart.addAttribute("validation_flags").isInt32().isUnsigned();
@@ -314,7 +310,7 @@ int main(int arg_count, char **args)
 	/*
 	 * For event monitoring of dimm state transitions
 	 */
-	Entity dimm_state("dimm_state");
+	Entity dimm_state("dimm_state", "Monitor stored DIMM state for detecting changes.");
 	dimm_state.addAttribute("device_handle").isInt32().isUnsigned().isPk();
 	dimm_state.addAttribute("spare_capacity_state").isInt32();
 	dimm_state.addAttribute("wearlevel_state").isInt32();
@@ -330,12 +326,12 @@ int main(int arg_count, char **args)
 	/*
 	 * For event monitoring of namespace health state transitions
 	 */
-	Entity namespace_state("namespace_state");
+	Entity namespace_state("namespace_state", "Monitor stored namespace state for detecting changes.");
 	namespace_state.addAttribute("namespace_guid").isText(37).isPk();
 	namespace_state.addAttribute("health_state").isInt32();
 	entities.push_back(namespace_state);
 
-	Entity dimm_alarm_thresholds("dimm_alarm_thresholds");
+	Entity dimm_alarm_thresholds("dimm_alarm_thresholds", "Vendor Firmware: Get Features - Alarm Thresholds.");
 	dimm_alarm_thresholds.includesHistory();
 	dimm_alarm_thresholds.addAttribute("device_handle").isInt32().isUnsigned().isPk();
 	dimm_alarm_thresholds.addAttribute("enable").isInt32().isUnsigned();
@@ -344,7 +340,7 @@ int main(int arg_count, char **args)
 	dimm_alarm_thresholds.addAttribute("spare").isInt32().isUnsigned();
 	entities.push_back(dimm_alarm_thresholds);
 
-	Entity dimm_power_management("dimm_power_management");
+	Entity dimm_power_management("dimm_power_management", "Vendor Firmware: Get Features - Power Management Policy.");
 	dimm_power_management.includesHistory();
 	dimm_power_management.addAttribute("device_handle").isInt32().isUnsigned().isPk();
 	dimm_power_management.addAttribute("enable").isInt32().isUnsigned();
@@ -353,7 +349,7 @@ int main(int arg_count, char **args)
 	dimm_power_management.addAttribute("avg_power_budget").isInt32().isUnsigned();
 	entities.push_back(dimm_power_management);
 
-	Entity dimm_die_sparing("dimm_die_sparing");
+	Entity dimm_die_sparing("dimm_die_sparing", "Vendor Firmware: Get Features - Die Sparing Policy.");
 	dimm_die_sparing.includesHistory();
 	dimm_die_sparing.addAttribute("device_handle").isInt32().isUnsigned().isPk();
 	dimm_die_sparing.addAttribute("enable").isInt32().isUnsigned();
@@ -362,13 +358,13 @@ int main(int arg_count, char **args)
 	dimm_die_sparing.addAttribute("supported_by_rank").isInt32().isUnsigned().isArray(4);
 	entities.push_back(dimm_die_sparing);
 
-	Entity dimm_optional_config_data("dimm_optional_config_data");
+	Entity dimm_optional_config_data("dimm_optional_config_data", "Vendor Firmware: Get Features - Optional Configuration Data Policy.");
 	dimm_optional_config_data.includesHistory();
 	dimm_optional_config_data.addAttribute("device_handle").isInt32().isUnsigned().isPk();
 	dimm_optional_config_data.addAttribute("first_fast_refresh_enable").isInt32().isUnsigned();
 	entities.push_back(dimm_optional_config_data);
 
-	Entity dimm_err_correction("dimm_err_correction");
+	Entity dimm_err_correction("dimm_err_correction", "Obsolete.");
 	dimm_err_correction.includesHistory();
 	dimm_err_correction.addAttribute("device_handle").isInt32().isUnsigned().isPk();
 	dimm_err_correction.addAttribute("unrefreshed_enable").isInt32().isUnsigned();
@@ -377,7 +373,7 @@ int main(int arg_count, char **args)
 	dimm_err_correction.addAttribute("refreshed_force_write").isInt32().isUnsigned();
 	entities.push_back(dimm_err_correction);
 
-	Entity dimm_erasure_coding("dimm_erasure_coding");
+	Entity dimm_erasure_coding("dimm_erasure_coding", "Obsolete.");
 	dimm_erasure_coding.includesHistory();
 	dimm_erasure_coding.addAttribute("device_handle").isInt32().isUnsigned().isPk();
 	dimm_erasure_coding.addAttribute("verify_erc").isInt32().isUnsigned();
@@ -387,7 +383,7 @@ int main(int arg_count, char **args)
 	dimm_erasure_coding.addAttribute("refreshed_force_write").isInt32().isUnsigned();
 	entities.push_back(dimm_erasure_coding);
 
-	Entity dimm_thermal("dimm_thermal");
+	Entity dimm_thermal("dimm_thermal", "Obsolete.");
 	dimm_thermal.includesHistory();
 	dimm_thermal.addAttribute("device_handle").isInt32().isUnsigned().isPk();
 	dimm_thermal.addAttribute("throttling_enable").isInt32().isUnsigned();
@@ -395,7 +391,7 @@ int main(int arg_count, char **args)
 	dimm_thermal.addAttribute("critical_shutdown_enable").isInt32().isUnsigned();
 	entities.push_back(dimm_thermal);
 
-	Entity dimm_fw_image("dimm_fw_image");
+	Entity dimm_fw_image("dimm_fw_image", "Vendor Firmware: Get Log - Firmware Image Info.");;
 	dimm_fw_image.includesHistory();
 	dimm_fw_image.addAttribute("device_handle").isInt32().isUnsigned().isPk();
 	dimm_fw_image.addAttribute("fw_rev").isText(14);
@@ -406,13 +402,13 @@ int main(int arg_count, char **args)
 	dimm_fw_image.addAttribute("commit_id").isText(40);
 	entities.push_back(dimm_fw_image);
 
-	Entity dimm_fw_debug_log("dimm_fw_debug_log");
+	Entity dimm_fw_debug_log("dimm_fw_debug_log", "Vendor Firmware: Get Log - Firmware Debug Log.");
 	dimm_fw_debug_log.includesHistory();
 	dimm_fw_debug_log.addAttribute("device_handle").isInt32().isUnsigned().isFk("dimm_topology", "device_handle");
 	dimm_fw_debug_log.addAttribute("fw_log").isText(1024).isUnsigned().isPk();
 	entities.push_back(dimm_fw_debug_log);
 
-	Entity dimm_memory_info_page0("dimm_memory_info_page0");
+	Entity dimm_memory_info_page0("dimm_memory_info_page0", "Vendor Firmware: Get Log - Memory Info Page 0.");
 	dimm_memory_info_page0.includesHistory();
 	dimm_memory_info_page0.addAttribute("device_handle").isInt32().isUnsigned().isPk();
 	dimm_memory_info_page0.addAttribute("bytes_read").isInt64().isUnsigned();
@@ -421,10 +417,9 @@ int main(int arg_count, char **args)
 	dimm_memory_info_page0.addAttribute("write_reqs").isInt64().isUnsigned();
 	dimm_memory_info_page0.addAttribute("block_read_reqs").isInt64().isUnsigned();
 	dimm_memory_info_page0.addAttribute("block_write_reqs").isInt64().isUnsigned();
-
 	entities.push_back(dimm_memory_info_page0);
 
-	Entity dimm_memory_info_page1("dimm_memory_info_page1");
+	Entity dimm_memory_info_page1("dimm_memory_info_page1", "Vendor Firmware: Get Log - Memory Info Page 1.");
 	dimm_memory_info_page1.includesHistory();
 	dimm_memory_info_page1.addAttribute("device_handle").isInt32().isUnsigned().isPk();
 	dimm_memory_info_page1.addAttribute("total_bytes_read").isInt64().isUnsigned();
@@ -433,10 +428,9 @@ int main(int arg_count, char **args)
 	dimm_memory_info_page1.addAttribute("total_write_reqs").isInt64().isUnsigned();
 	dimm_memory_info_page1.addAttribute("total_block_read_reqs").isInt64().isUnsigned();
 	dimm_memory_info_page1.addAttribute("total_block_write_reqs").isInt64().isUnsigned();
-
 	entities.push_back(dimm_memory_info_page1);
 
-	Entity dimm_memory_info_page2("dimm_memory_info_page2");
+	Entity dimm_memory_info_page2("dimm_memory_info_page2", "Vendor Firmware: Get Log - Memory Info Page 2.");
 	dimm_memory_info_page2.includesHistory();
 	dimm_memory_info_page2.addAttribute("device_handle").isInt32().isUnsigned().isPk();
 	dimm_memory_info_page2.addAttribute("write_count_max").isInt64().isUnsigned();
@@ -448,7 +442,7 @@ int main(int arg_count, char **args)
 	dimm_memory_info_page2.addAttribute("media_errors_ecc").isInt64().isUnsigned();
 	entities.push_back(dimm_memory_info_page2);
 
-	Entity dimm_long_op_status("dimm_long_op_status");
+	Entity dimm_long_op_status("dimm_long_op_status", "Obsolete.");
 	dimm_long_op_status.includesHistory();
 	dimm_long_op_status.addAttribute("device_handle").isInt32().isUnsigned().isPk();
 	dimm_long_op_status.addAttribute("command0").isInt64();
@@ -458,7 +452,7 @@ int main(int arg_count, char **args)
 	dimm_long_op_status.addAttribute("etc").isText(13);
 	entities.push_back(dimm_long_op_status);
 
-	Entity dimm_details("dimm_details");
+	Entity dimm_details("dimm_details", "SMBIOS Type 17 Table.");
 	dimm_details.includesHistory();
 	dimm_details.addAttribute("device_handle").isInt32().isUnsigned();
 	dimm_details.addAttribute("form_factor").isInt32().isUnsigned();
@@ -475,20 +469,20 @@ int main(int arg_count, char **args)
 	dimm_details.addAttribute("id").isInt32().isUnsigned().isPk();
 	entities.push_back(dimm_details);
 
-	Entity dimm_security_info("dimm_security_info");
+	Entity dimm_security_info("dimm_security_info", "Vendor Firmware: Get Security Info - Get Security State.");
 	dimm_security_info.includesHistory();
 	dimm_security_info.addAttribute("device_handle").isInt32().isUnsigned().isPk();
 	dimm_security_info.addAttribute("security_state").isInt32();
 	entities.push_back(dimm_security_info);
 
-	Entity dimm_sanitize_info("dimm_sanitize_info");
+	Entity dimm_sanitize_info("dimm_sanitize_info", "Vendor Firmware: Get Security Info - Get Sanitize Status.");
 	dimm_sanitize_info.includesHistory();
 	dimm_sanitize_info.addAttribute("device_handle").isInt32().isUnsigned().isPk();
 	dimm_sanitize_info.addAttribute("sanitize_state").isInt32();
 	dimm_sanitize_info.addAttribute("sanitize_progress").isInt32();
 	entities.push_back(dimm_sanitize_info);
 
-	Entity fw_media_low_log_entry("fw_media_low_log_entry");
+	Entity fw_media_low_log_entry("fw_media_low_log_entry", "Vendor Firmware: Get Log - Error Log Low Media Log.");
 	fw_media_low_log_entry.includesHistory();
 	fw_media_low_log_entry.addAttribute("device_handle").isInt32().isUnsigned().isFk("dimm_topology", "device_handle");
 	fw_media_low_log_entry.addAttribute("system_timestamp").isInt64().isUnsigned().isPk();
@@ -500,7 +494,7 @@ int main(int arg_count, char **args)
 	fw_media_low_log_entry.addAttribute("transaction_type").isInt32().isUnsigned();
 	entities.push_back(fw_media_low_log_entry);
 
-	Entity fw_media_high_log_entry("fw_media_high_log_entry");
+	Entity fw_media_high_log_entry("fw_media_high_log_entry", "Vendor Firmware: Get Log - Error Log High Media Log.");
 	fw_media_high_log_entry.addAttribute("device_handle").isInt32().isUnsigned().isFk("dimm_topology", "device_handle");
 	fw_media_high_log_entry.includesHistory();
 	fw_media_high_log_entry.addAttribute("system_timestamp").isInt64().isUnsigned().isPk();
@@ -512,34 +506,34 @@ int main(int arg_count, char **args)
 	fw_media_high_log_entry.addAttribute("transaction_type").isInt32().isUnsigned();
 	entities.push_back(fw_media_high_log_entry);
 
-	Entity fw_thermal_low_log_entry("fw_thermal_low_log_entry");
+	Entity fw_thermal_low_log_entry("fw_thermal_low_log_entry", "Vendor Firmware: Get Log - Error Log Low Thermal Log.");
 	fw_thermal_low_log_entry.includesHistory();
 	fw_thermal_low_log_entry.addAttribute("device_handle").isInt32().isUnsigned().isFk("dimm_topology", "device_handle");
 	fw_thermal_low_log_entry.addAttribute("system_timestamp").isInt64().isUnsigned().isPk();
 	fw_thermal_low_log_entry.addAttribute("host_reported_temp_data").isInt32().isUnsigned();
 	entities.push_back(fw_thermal_low_log_entry);
 
-	Entity fw_thermal_high_log_entry("fw_thermal_high_log_entry");
+	Entity fw_thermal_high_log_entry("fw_thermal_high_log_entry", "Vendor Firmware: Get Log - Error Log High Thermal Log.");
 	fw_thermal_high_log_entry.addAttribute("device_handle").isInt32().isUnsigned().isFk("dimm_topology", "device_handle");
 	fw_thermal_high_log_entry.includesHistory();
 	fw_thermal_high_log_entry.addAttribute("system_timestamp").isInt64().isUnsigned().isPk();
 	fw_thermal_high_log_entry.addAttribute("host_reported_temp_data").isInt32().isUnsigned();
 	entities.push_back(fw_thermal_high_log_entry);
 
-	Entity dimm_fw_log_level("dimm_fw_log_level");
+	Entity dimm_fw_log_level("dimm_fw_log_level", "Vendor Firmware: Get Admin Features - FW Debug Log Level.");
 	dimm_fw_log_level.includesHistory();
 	dimm_fw_log_level.addAttribute("device_handle").isInt32().isPk();
 	dimm_fw_log_level.addAttribute("log_level").isInt32();
 	entities.push_back(dimm_fw_log_level);
 
-	Entity dimm_fw_time("dimm_fw_time");
+	Entity dimm_fw_time("dimm_fw_time", "Vendor Firmware: Get Admin Features - System Time.");
 	dimm_fw_time.includesHistory();
 	dimm_fw_time.addAttribute("device_handle").isInt32().isPk();
 	dimm_fw_time.addAttribute("time").isInt64().isUnsigned();
 	entities.push_back(dimm_fw_time);
 
 	// platform configuration data header table for a dimm
-	Entity dimm_platform_config("dimm_platform_config");
+	Entity dimm_platform_config("dimm_platform_config", "Vendor Firmware: Get Admin Features - Platform Config Data Header.");
 	dimm_platform_config.includesHistory();
 	dimm_platform_config.addAttribute("device_handle").isInt32().isUnsigned().isPk();
 	dimm_platform_config.addAttribute("signature").isText(4);
@@ -560,7 +554,7 @@ int main(int arg_count, char **args)
 	entities.push_back(dimm_platform_config);
 
 	// platform configuration data current configuration table for a dimm
-	Entity dimm_current_config("dimm_current_config");
+	Entity dimm_current_config("dimm_current_config", "Vendor Firmware: Get Admin Features - Platform Config Data Current Config.");
 	dimm_current_config.includesHistory();
 	dimm_current_config.addAttribute("device_handle").isInt32().isUnsigned().isPk();
 	dimm_current_config.addAttribute("signature").isText(4);
@@ -578,7 +572,7 @@ int main(int arg_count, char **args)
 	entities.push_back(dimm_current_config);
 
 	// platform configuration data configuration input table for a dimm
-	Entity dimm_config_input("dimm_config_input");
+	Entity dimm_config_input("dimm_config_input", "Vendor Firmware: Get Admin Features - Platform Config Data Config Input.");
 	dimm_config_input.includesHistory();
 	dimm_config_input.addAttribute("device_handle").isInt32().isUnsigned().isPk();
 	dimm_config_input.addAttribute("signature").isText(4);
@@ -594,7 +588,7 @@ int main(int arg_count, char **args)
 	entities.push_back(dimm_config_input);
 
 	// platform configuration data configuration output table for a dimm
-	Entity dimm_config_output("dimm_config_output");
+	Entity dimm_config_output("dimm_config_output", "Vendor Firmware: Get Admin Features - Platform Config Data Config Output.");
 	dimm_config_output.includesHistory();
 	dimm_config_output.addAttribute("device_handle").isInt32().isUnsigned().isPk();
 	dimm_config_output.addAttribute("signature").isText(4);
@@ -611,7 +605,7 @@ int main(int arg_count, char **args)
 	entities.push_back(dimm_config_output);
 
 	// Partition Size change
-	Entity dimm_partition_change("dimm_partition_change");
+	Entity dimm_partition_change("dimm_partition_change", "Vendor Firmware: Get Admin Features - Platform Config Data Partition Size Change Table Type 4.");
 	dimm_partition_change.includesHistory();
 	dimm_partition_change.addAttribute("device_handle").isInt32().isUnsigned().isFk("dimm_topology", "device_handle");
 	dimm_partition_change.addAttribute("id").isIndexPk();
@@ -624,7 +618,7 @@ int main(int arg_count, char **args)
 	entities.push_back(dimm_partition_change);
 
 	// Interleave set info table
-	Entity dimm_interleave_set("dimm_interleave_set");
+	Entity dimm_interleave_set("dimm_interleave_set", "Vendor Firmware: Get Admin Features - Platform Config Data DIMM Interleave Information Table Type 5.");
 	dimm_interleave_set.includesHistory();
 	dimm_interleave_set.addAttribute("id").isIndexPk();
 	// uniqueness is a combination of index, dimm id and table_type
@@ -643,7 +637,7 @@ int main(int arg_count, char **args)
 	entities.push_back(dimm_interleave_set);
 
 	// Interleave set dimm info table
-	Entity interleave_set_dimm_info("interleave_set_dimm_info");
+	Entity interleave_set_dimm_info("interleave_set_dimm_info", "Vendor Firmware: Get Admin Features - Platform Config Data DIMM Interleave Information Table Type 5 - DIMM Identification Information Extension Table.");
 	interleave_set_dimm_info.includesHistory();
 	interleave_set_dimm_info.addAttribute("id").isIndexPk();
 	// uniqueness is a combination of index, dimm id and table_type
@@ -661,14 +655,14 @@ int main(int arg_count, char **args)
 	entities.push_back(interleave_set_dimm_info);
 
 	// Temperature Error injection info table
-	Entity temperature_error_injection_info("temperature_error_injection_info");
+	Entity temperature_error_injection_info("temperature_error_injection_info", "Simulation only injected temperature errors.");
 	temperature_error_injection_info.includesHistory();
 	temperature_error_injection_info.addAttribute("device_handle").isInt32().isUnsigned().isPk();
 	temperature_error_injection_info.addAttribute("temperature").isInt32().isUnsigned();
 	entities.push_back(temperature_error_injection_info);
 
 	// Poison Error injection info table
-	Entity poison_error_injection_info("poison_error_injection_info");
+	Entity poison_error_injection_info("poison_error_injection_info", "Simulation only injected poison errors.");
 	poison_error_injection_info.addAttribute("id").isInt32().isPk(true).orderByDesc();
 	poison_error_injection_info.includesHistory();
 	poison_error_injection_info.addAttribute("device_handle").isInt32().isUnsigned().isFk("dimm_topology", "device_handle");
@@ -676,7 +670,7 @@ int main(int arg_count, char **args)
 	entities.push_back(poison_error_injection_info);
 
 	// Dimm Performance
-	Entity performance("performance");
+	Entity performance("performance", "Monitor stored DIMM performance metrics.");
 	performance.addAttribute("id").isInt32().isPk(true);
 	performance.addAttribute("dimm_guid").isText(37);
 	performance.addAttribute("time").isInt64().isUnsigned().orderByDesc();
@@ -689,7 +683,7 @@ int main(int arg_count, char **args)
 	entities.push_back(performance);
 
 	// Driver Metadata check diagnostic results
-	Entity driver_metadata_check_diag_result("driver_metadata_check_diag_result");
+	Entity driver_metadata_check_diag_result("driver_metadata_check_diag_result", "Simulation only driver metadata diagnostic results.");
 	driver_metadata_check_diag_result.addAttribute("id").isInt32().isPk(true);
 	driver_metadata_check_diag_result.addAttribute("result_type").isInt32();
 	driver_metadata_check_diag_result.addAttribute("ns_guid").isText(37);
@@ -698,7 +692,7 @@ int main(int arg_count, char **args)
 	entities.push_back(driver_metadata_check_diag_result);
 
 	// Boot status register
-	Entity boot_status_register("boot_status_register");
+	Entity boot_status_register("boot_status_register", "NVDIMM Controller boot status");
 	boot_status_register.addAttribute("device_handle").isInt32().isUnsigned().isPk();
 	boot_status_register.addAttribute("bsr").isInt64().isUnsigned();
 	entities.push_back(boot_status_register);
@@ -706,6 +700,7 @@ int main(int arg_count, char **args)
 	if (arg_count == 3) // allows caller to pass where the templates are and where to put the files
 	{
 		CrudSchemaGenerator::Generate(entities, args[1], args[2]);
+		CrudSchemaGenerator::CreateDoc(entities, args[2]);
 	}
 	else
 	{

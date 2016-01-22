@@ -116,6 +116,18 @@ public:
 	static void Generate(std::vector<Entity> schema,
 			std::string templatePath,
 			std::string outputPath);
+
+	/*!
+	 * Static function to generate the schema document.
+	 * @param schema The input schema model.  This is a list of Entities with defined attributes
+	 * and relationships.
+	 * @param outputPath Where to generate the output document file.
+	 * @details
+	 * If things go bad, then it prints a warning but will exit cleanly.
+	 *
+	 */
+	static void CreateDoc(std::vector<Entity> schema,
+			std::string outputPath);
 };
 
 
