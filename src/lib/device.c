@@ -957,7 +957,9 @@ int nvm_get_device_fw_image_info(const NVM_GUID device_guid,
 					fw_image_info.fw_rev[2],
 					((fw_image_info.fw_rev[1] * 100) + fw_image_info.fw_rev[0]));
 			p_fw_info->active_fw_type = firmware_type_to_enum(fw_image_info.fw_type);
-			memmove(p_fw_info->active_fw_commit_id, fw_image_info.commit_id, NVM_COMMIT_ID_LEN);
+			memmove(p_fw_info->active_fw_commit_id, fw_image_info.commit_id, DEV_FW_COMMIT_ID_LEN);
+			// make sure cstring is null terminated
+			p_fw_info->active_fw_commit_id[DEV_FW_COMMIT_ID_LEN] = 0;
 			p_fw_info->staged_fw_pending = fw_image_info.staged_fw_status;
 			build_revision(p_fw_info->staged_fw_revision,
 					NVM_VERSION_LEN,

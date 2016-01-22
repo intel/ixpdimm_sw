@@ -41,6 +41,8 @@
 #include "NVDIMMFWVersionFactory.h"
 #include <framework_interface/NvmAssociationFactory.h>
 #include <NvmStrings.h>
+#include <lib_interface/NvmApi.h>
+#include <sstream>
 
 wbem::software::NVDIMMFWVersionFactory::NVDIMMFWVersionFactory()
 throw (wbem::framework::Exception)
@@ -55,7 +57,6 @@ throw (wbem::framework::Exception)
 	// add key attributes
 	attributes.push_back(INSTANCEID_KEY);
 
-
 	// add non-key attributes
 	attributes.push_back(ELEMENTNAME_KEY);
 	attributes.push_back(MAJORVERSION_KEY);
@@ -66,6 +67,8 @@ throw (wbem::framework::Exception)
 	attributes.push_back(CLASSIFICATIONS_KEY);
 	attributes.push_back(SPECIFICATION_KEY);
 	attributes.push_back(ISENTITY_KEY);
+	attributes.push_back(FWTYPE_KEY);
+	attributes.push_back(COMMITID_KEY);
 }
 
 /*
@@ -86,20 +89,11 @@ throw (wbem::framework::Exception)
 		checkAttributes(attributes);
 
 		std::string instanceId = path.getKeyValue(INSTANCEID_KEY).stringValue();
-
 		COMMON_LOG_DEBUG_F("instanceID = %s", instanceId.c_str());
 
-		// InstanceID has the form "NVDIMMFW xx.xx.xx.xxxx-x.x"
-		// to get the fw version we lop off "NVDIMMFW " and then
-		// take everything up to the "-"
-		// to get the fwApiVersion we lop off everything up to and including
-		// the dash
-
-		// get rid of prefix
-		instanceId.erase(0, NVDIMMFWVERSION_INSTANCEID_PREFIX.length());
-
-		std::string fwVersion = instanceId.substr(0, instanceId.find("-"));
-		std::string fwApiVersion = instanceId.substr(instanceId.find("-") + 1, instanceId.length());
+		std::string fwVersion, fwApiVersion, commitId;
+		NVM_UINT16 fwType = DEVICE_FW_TYPE_UNKNOWN;
+		parseInstanceId(instanceId, fwVersion, fwApiVersion, fwType, commitId);
 
 		short unsigned int major, minor, hotfix, build;
 		parse_main_revision(&major, &minor, &hotfix, &build, fwVersion.c_str(), NVM_VERSION_LEN);
@@ -154,6 +148,18 @@ throw (wbem::framework::Exception)
 			framework::Attribute a(true, false);
 			pInstance->setAttribute(ISENTITY_KEY, a, attributes);
 		}
+
+		if (containsAttribute(FWTYPE_KEY, attributes))
+		{
+			framework::Attribute a(fwType, translateFwType((enum device_fw_type)fwType), false);
+			pInstance->setAttribute(FWTYPE_KEY, a, attributes);
+		}
+
+		if (containsAttribute(COMMITID_KEY, attributes))
+		{
+			framework::Attribute a(commitId, false);
+			pInstance->setAttribute(COMMITID_KEY, a, attributes);
+		}
 	}
 	catch (framework::Exception &) // clean up and re-throw
 	{
@@ -163,8 +169,6 @@ throw (wbem::framework::Exception)
 
 	return pInstance;
 }
-
-
 
 /*
  * Return the object paths for the NVDIMMFWVersion class.
@@ -181,16 +185,34 @@ throw (wbem::framework::Exception)
 
 		physical_asset::devices_t devices = physical_asset::NVDIMMFactory::getAllDevices();
 
+		lib_interface::NvmApi *pApi = lib_interface::NvmApi::getApi();
 		for (size_t i = 0; i < devices.size(); i++)
 		{
-			framework::attributes_t keys;
-
-			// InstanceID
 			std::string fwVersion = std::string(devices[i].fw_revision);
 			std::string fwApiVersion = std::string(devices[i].fw_api_version);
-			keys[INSTANCEID_KEY] = framework::Attribute(
-					NVDIMMFWVERSION_INSTANCEID_PREFIX + fwVersion + "-" + fwApiVersion, true);
 
+			// get FW type and Commit ID
+			struct device_fw_info fw_info;
+			memset(&fw_info, 0, sizeof(struct device_fw_info));
+			std::string fwType;
+			std::string active_commit_id;
+			if ( pApi->getDeviceFwImageInfo(devices[i].guid, &fw_info) == NVM_SUCCESS)
+			{
+				std::stringstream ss;
+				ss << fw_info.active_fw_type;
+				fwType = ss.str();
+				active_commit_id = std::string(fw_info.active_fw_commit_id);
+			}
+
+			// construct Instance ID
+			framework::attributes_t keys;
+			std::string instanceIDStr =
+					NVDIMMFWVERSION_INSTANCEID_PREFIX +
+					fwVersion + NVMDIMMFWVERSION_DELIMITER +
+					fwApiVersion + NVMDIMMFWVERSION_DELIMITER +
+					fwType + NVMDIMMFWVERSION_DELIMITER +
+					active_commit_id;
+			keys[INSTANCEID_KEY] = framework::Attribute(instanceIDStr,true);
 			framework::ObjectPath path(hostServer, NVM_NAMESPACE,
 					NVDIMMFWVERSION_CREATIONCLASSNAME, keys);
 
@@ -300,4 +322,53 @@ bool wbem::software::NVDIMMFWVersionFactory::isAssociated(
 		COMMON_LOG_WARN_F("This class has no associations of type: %s", associationClass.c_str());
 	}
 	return result;
+}
+
+std::string wbem::software::NVDIMMFWVersionFactory::translateFwType(
+	const enum device_fw_type fw_type)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	std::string fw_type_str = NVMDIMMFWVERSION_FWTYPE_UNKNOWN;
+	switch (fw_type)
+	{
+		case DEVICE_FW_TYPE_PRODUCTION:
+			fw_type_str = NVMDIMMFWVERSION_FWTYPE_PRODUCTION;
+			break;
+		case DEVICE_FW_TYPE_DFX:
+			fw_type_str = NVMDIMMFWVERSION_FWTYPE_DFX;
+			break;
+		case DEVICE_FW_TYPE_DEBUG:
+			fw_type_str = NVMDIMMFWVERSION_FWTYPE_DEBUG;
+			break;
+		default:
+			break;
+	}
+
+	return fw_type_str;
+}
+
+/*
+ * Parse instanceId string into FW version, FW API version, FW type and commit ID
+ */
+void wbem::software::NVDIMMFWVersionFactory::parseInstanceId(std::string instanceId,
+		std::string &fwVersion, std::string &fwApiVersion, NVM_UINT16 &fwType, std::string &commitId)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	/* InstanceID has the form NVDIMMFW fw_rev-fw_api-fw_type-commitid
+	 "NVDIMMFW xx.xx.xx.xxxx-x.x-x-<commid_id>"
+	 */
+	instanceId.erase(0, NVDIMMFWVERSION_INSTANCEID_PREFIX.length());
+
+	fwVersion = instanceId.substr(0, instanceId.find(NVMDIMMFWVERSION_DELIMITER));
+
+	instanceId.erase(0, instanceId.find(NVMDIMMFWVERSION_DELIMITER) + NVMDIMMFWVERSION_DELIMITER.length());
+	fwApiVersion = instanceId.substr(0, instanceId.find(NVMDIMMFWVERSION_DELIMITER));
+
+	instanceId.erase(0, instanceId.find(NVMDIMMFWVERSION_DELIMITER) + NVMDIMMFWVERSION_DELIMITER.length());
+	std::string fwtypeStr = instanceId.substr(0, instanceId.find(NVMDIMMFWVERSION_DELIMITER));
+	fwType = (NVM_UINT16)atoi(fwtypeStr.c_str());
+
+	commitId = instanceId.substr(instanceId.find(NVMDIMMFWVERSION_DELIMITER) + 1, instanceId.length());
 }

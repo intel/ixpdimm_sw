@@ -39,17 +39,12 @@
 #include <LogEnterExit.h>
 #include <algorithm>
 
-namespace wbem
-{
-namespace profile
-{
-
-RegisteredProfileFactory::RegisteredProfileFactory()
+wbem::profile::RegisteredProfileFactory::RegisteredProfileFactory()
 {
 	buildProfileInfoMap();
 }
 
-void RegisteredProfileFactory::buildProfileInfoMap()
+void wbem::profile::RegisteredProfileFactory::buildProfileInfoMap()
 {
 	// Set up the information for all the static instances
 
@@ -80,11 +75,11 @@ void RegisteredProfileFactory::buildProfileInfoMap()
 	m_profileInfoMap[REGISTEREDPROFILE_REGISTEREDNAME_MULTITYPESYSTEMMEMORY].advertiseTypes = defaultAdvertiseTypes;
 }
 
-RegisteredProfileFactory::~RegisteredProfileFactory()
+wbem::profile::RegisteredProfileFactory::~RegisteredProfileFactory()
 {
 }
 
-void RegisteredProfileFactory::populateAttributeList(framework::attribute_names_t& attributes)
+void wbem::profile::RegisteredProfileFactory::populateAttributeList(framework::attribute_names_t& attributes)
 		throw (framework::Exception)
 {
 	// add key attributes
@@ -98,7 +93,7 @@ void RegisteredProfileFactory::populateAttributeList(framework::attribute_names_
 	attributes.push_back(ADVERTISETYPES_KEY);
 }
 
-framework::Instance* RegisteredProfileFactory::getInstance(framework::ObjectPath& path,
+wbem::framework::Instance* wbem::profile::RegisteredProfileFactory::getInstance(framework::ObjectPath& path,
 		framework::attribute_names_t& attributes) throw (framework::Exception)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -125,7 +120,7 @@ framework::Instance* RegisteredProfileFactory::getInstance(framework::ObjectPath
 	return pInstance;
 }
 
-void RegisteredProfileFactory::buildInstanceFromProfileInfoMap(framework::Instance& instance,
+void wbem::profile::RegisteredProfileFactory::buildInstanceFromProfileInfoMap(framework::Instance& instance,
 		const framework::attribute_names_t& attributes) throw (framework::Exception)
 {
 	framework::Attribute instanceIdAttr;
@@ -157,7 +152,7 @@ void RegisteredProfileFactory::buildInstanceFromProfileInfoMap(framework::Instan
 	buildInstanceFromProfileInfo(instance, attributes, profileIter->second);
 }
 
-void RegisteredProfileFactory::buildInstanceFromProfileInfo(framework::Instance& instance,
+void wbem::profile::RegisteredProfileFactory::buildInstanceFromProfileInfo(framework::Instance& instance,
 		const framework::attribute_names_t& attributes, const struct ProfileInfo& info)
 {
 	// RegisteredName - string
@@ -196,7 +191,7 @@ void RegisteredProfileFactory::buildInstanceFromProfileInfo(framework::Instance&
 	}
 }
 
-framework::instance_names_t* RegisteredProfileFactory::getInstanceNames()
+wbem::framework::instance_names_t* wbem::profile::RegisteredProfileFactory::getInstanceNames()
 		throw (framework::Exception)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -232,7 +227,7 @@ framework::instance_names_t* RegisteredProfileFactory::getInstanceNames()
 	return pNames;
 }
 
-bool RegisteredProfileFactory::isAssociated(const std::string& associationClass,
+bool wbem::profile::RegisteredProfileFactory::isAssociated(const std::string& associationClass,
 		framework::Instance* pAntInstance, framework::Instance* pDepInstance)
 {
 	bool result = true;
@@ -246,7 +241,7 @@ bool RegisteredProfileFactory::isAssociated(const std::string& associationClass,
 	return result;
 }
 
-bool RegisteredProfileFactory::isElementConformsToProfileAssociation(
+bool wbem::profile::RegisteredProfileFactory::isElementConformsToProfileAssociation(
 		const framework::Instance& antecedentInstance,
 		const framework::Instance& dependentInstance)
 	throw (framework::Exception)
@@ -289,6 +284,3 @@ bool RegisteredProfileFactory::isElementConformsToProfileAssociation(
 
 	return result;
 }
-
-} /* namespace profile */
-} /* namespace wbem */

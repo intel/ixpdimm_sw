@@ -1374,7 +1374,7 @@ struct pt_payload_fw_image_info {
 	/*
 	 * Contains commit identifier of the active FW for debug/troubleshooting purposes
 	 */
-	unsigned char commit_id[DEV_FW_COMMIT_ID_LEN];
+	char commit_id[DEV_FW_COMMIT_ID_LEN];
 
 	unsigned char rsvd3[56];
 } __attribute__((packed));

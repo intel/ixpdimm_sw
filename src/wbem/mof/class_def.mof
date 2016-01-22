@@ -252,6 +252,8 @@ class <NVM_WBEM_PREFIX>DiagnosticIdentity : CIM_SoftwareIdentity
 class <NVM_WBEM_PREFIX>NVDIMMFWVersion : CIM_SoftwareIdentity
 {
 	string Specification;
+	uint16 FWType;
+	string CommitID;
 };
 
 [dynamic, provider("intelwbemprovider"), Description("Aggregation point for FW images")]

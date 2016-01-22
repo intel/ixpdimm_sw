@@ -148,6 +148,12 @@ class NVM_API NvmApi
 				struct device_performance *pPerformance);
 
 		/*
+		 * Retrieve firmware image information for the specified NVM-DIMM
+		 */
+		virtual int getDeviceFwImageInfo(const NVM_GUID deviceGuid,
+				struct device_fw_info *pFwInfo);
+
+		/*
 		 * Update the firmware on the specified NVM-DIMM
 		 */
 		virtual int updateDeviceFw(const NVM_GUID deviceGuid, const NVM_PATH path,

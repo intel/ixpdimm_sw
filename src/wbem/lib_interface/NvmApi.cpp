@@ -203,6 +203,11 @@ int NvmApi::getDevicePerformance(const NVM_GUID deviceGuid,
 	return nvm_get_device_performance(deviceGuid, pPerformance);
 }
 
+int NvmApi::getDeviceFwImageInfo(const NVM_GUID deviceGuid, struct device_fw_info *pFwInfo)
+{
+	return nvm_get_device_fw_image_info(deviceGuid, pFwInfo);
+}
+
 int NvmApi::updateDeviceFw(const NVM_GUID deviceGuid, const NVM_PATH path,
 				const NVM_SIZE path_len, const NVM_BOOL activate, const NVM_BOOL force)
 {

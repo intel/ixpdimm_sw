@@ -34,9 +34,7 @@
 #define	_WBEM_SOFTWARE_NVDIMMFWVERSION_FACTORY_H_
 
 #include <string>
-
 #include <framework_interface/NvmInstanceFactory.h>
-
 
 namespace wbem
 {
@@ -47,6 +45,13 @@ namespace software
 	static const NVM_UINT16 NVDIMMFWVERSION_CLASSIFICATIONS_FW = 10;
 
 	static const std::string NVDIMMFWVERSION_INSTANCEID_PREFIX = "NVDIMMFW ";
+
+	static const std::string NVMDIMMFWVERSION_FWTYPE_UNKNOWN = "Unknown";
+	static const std::string NVMDIMMFWVERSION_FWTYPE_PRODUCTION = "Production";
+	static const std::string NVMDIMMFWVERSION_FWTYPE_DFX = "DFx";
+	static const std::string NVMDIMMFWVERSION_FWTYPE_DEBUG = "Debug";
+
+	static const std::string NVMDIMMFWVERSION_DELIMITER = "-";
 
 /*!
  * Provider Factory for NVDIMMFWVersion
@@ -72,8 +77,6 @@ class NVM_API NVDIMMFWVersionFactory : public framework_interface::NvmInstanceFa
 		 * @param[in] attributes
 		 * 		The attributes to retrieve.
 		 * @throw Exception if unable to retrieve the host information.
-		 * @todo Should throw an exception if the object path doesn't match
-		 * the results of getHostName.
 		 * @return The instance.
 		 */
 		framework::Instance* getInstance(framework::ObjectPath &path,
@@ -89,8 +92,17 @@ class NVM_API NVDIMMFWVersionFactory : public framework_interface::NvmInstanceFa
 		bool isAssociated(const std::string &associationClass, framework::Instance* pAntInstance,
 								framework::Instance* pDepInstance);
 	private:
+
 		void populateAttributeList(framework::attribute_names_t &attributes)
 			throw (framework::Exception);
+
+		/*
+		 * Parse instanceId string into FW version, FW API version, FW type and commit ID
+		 */
+		void parseInstanceId(std::string instanceId, std::string &fwVersion,
+				std::string &fwApiVersion, NVM_UINT16 &fwType, std::string &commitId);
+
+		std::string translateFwType(const enum device_fw_type fw_type);
 };
 
 } // software

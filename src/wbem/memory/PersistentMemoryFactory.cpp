@@ -47,11 +47,6 @@
 #include <string.h>
 #include <lib_interface/NvmApi.h>
 
-namespace wbem
-{
-namespace memory
-{
-
 wbem::memory::PersistentMemoryFactory::PersistentMemoryFactory() :
 		framework_interface::NvmInstanceFactory()
 {
@@ -83,7 +78,7 @@ void wbem::memory::PersistentMemoryFactory::populateAttributeList(
 	attributes.push_back(ENABLEDSTATE_KEY);
 }
 
-framework::instance_names_t* wbem::memory::PersistentMemoryFactory::getInstanceNames()
+wbem::framework::instance_names_t* wbem::memory::PersistentMemoryFactory::getInstanceNames()
 		throw (framework::Exception)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -128,7 +123,7 @@ framework::instance_names_t* wbem::memory::PersistentMemoryFactory::getInstanceN
 }
 
 
-framework::ObjectPath PersistentMemoryFactory::getInstanceName(const std::string& deviceId)
+wbem::framework::ObjectPath wbem::memory::PersistentMemoryFactory::getInstanceName(const std::string& deviceId)
 {
 	std::string hostName = server::getHostName();
 
@@ -144,7 +139,7 @@ framework::ObjectPath PersistentMemoryFactory::getInstanceName(const std::string
 			PERSISTENTMEMORY_CREATIONCLASSNAME, keys);
 }
 
-void PersistentMemoryFactory::getInterleaveSetInstanceNames(
+void wbem::memory::PersistentMemoryFactory::getInterleaveSetInstanceNames(
 		framework::instance_names_t& instanceNames, const struct pool &pool)
 {
 	for (size_t i = 0; i < pool.ilset_count; i++)
@@ -157,8 +152,8 @@ void PersistentMemoryFactory::getInterleaveSetInstanceNames(
 	}
 }
 
-void PersistentMemoryFactory::getBlockRegionInstanceNames(
-		framework::instance_names_t& instanceNames, const struct pool &pool)
+void wbem::memory::PersistentMemoryFactory::getBlockRegionInstanceNames(
+		wbem::framework::instance_names_t& instanceNames, const struct pool &pool)
 {
 	for (size_t i = 0; i < pool.dimm_count; i++)
 	{
@@ -170,7 +165,7 @@ void PersistentMemoryFactory::getBlockRegionInstanceNames(
 	}
 }
 
-framework::Instance* wbem::memory::PersistentMemoryFactory::getInstance(
+wbem::framework::Instance* wbem::memory::PersistentMemoryFactory::getInstance(
 		framework::ObjectPath& path, framework::attribute_names_t& attributes)
 	throw (framework::Exception)
 {
@@ -238,7 +233,7 @@ framework::Instance* wbem::memory::PersistentMemoryFactory::getInstance(
 	return pInstance;
 }
 
-bool PersistentMemoryFactory::findInterleaveSetForUuid(const std::string& uuid,
+bool wbem::memory::PersistentMemoryFactory::findInterleaveSetForUuid(const std::string& uuid,
 		const struct pool& pool, struct interleave_set& interleave)
 {
 	bool found = false;
@@ -261,7 +256,7 @@ bool PersistentMemoryFactory::findInterleaveSetForUuid(const std::string& uuid,
 	return found;
 }
 
-bool PersistentMemoryFactory::findBlockDimmIndexForUuid(const std::string& uuid,
+bool wbem::memory::PersistentMemoryFactory::findBlockDimmIndexForUuid(const std::string& uuid,
 		const struct pool& pool, size_t& index)
 {
 	bool found = false;
@@ -283,7 +278,7 @@ bool PersistentMemoryFactory::findBlockDimmIndexForUuid(const std::string& uuid,
 	return found;
 }
 
-bool PersistentMemoryFactory::isAssociated(const std::string& associationClass,
+bool wbem::memory::PersistentMemoryFactory::isAssociated(const std::string& associationClass,
 		framework::Instance* pAntInstance, framework::Instance* pDepInstance)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -379,10 +374,10 @@ bool PersistentMemoryFactory::isAssociated(const std::string& associationClass,
 	return result;
 }
 
-bool PersistentMemoryFactory::mirroringMatches(struct pool *pool, framework::Instance* pPMObject)
+bool wbem::memory::PersistentMemoryFactory::mirroringMatches(struct pool *pool, framework::Instance* pPMObject)
 {
 	bool matches = false;
-	framework::Attribute replicationAttr;
+	wbem::framework::Attribute replicationAttr;
 	if (pPMObject->getAttribute(REPLICATION_KEY, replicationAttr) == framework::SUCCESS)
 	{
 		if (replicationAttr.intValue() == PERSISTENTMEMORY_REPLICATION_LOCAL &&
@@ -405,10 +400,10 @@ bool PersistentMemoryFactory::mirroringMatches(struct pool *pool, framework::Ins
 	return matches;
 }
 
-bool PersistentMemoryFactory::socketsMatch(struct pool *pool, framework::Instance* pPMObject)
+bool wbem::memory::PersistentMemoryFactory::socketsMatch(struct pool *pool, framework::Instance* pPMObject)
 {
 	bool matches = false;
-	framework::Attribute socketIdAttr;
+	wbem::framework::Attribute socketIdAttr;
 	if (pPMObject->getAttribute(PROCESSORAFFINITY_KEY, socketIdAttr) == framework::SUCCESS)
 	{
 		// socketIdStr has the form "CPU 0001"
@@ -429,10 +424,10 @@ bool PersistentMemoryFactory::socketsMatch(struct pool *pool, framework::Instanc
 	return matches;
 }
 
-bool PersistentMemoryFactory::pmTypesMatch(struct pool *pool, framework::Instance* pPMObject)
+bool wbem::memory::PersistentMemoryFactory::pmTypesMatch(struct pool *pool, framework::Instance* pPMObject)
 {
 	bool matches = false;
-	framework::Attribute deviceIdAttr;
+	wbem::framework::Attribute deviceIdAttr;
 	if (pPMObject->getAttribute(DEVICEID_KEY, deviceIdAttr) == framework::SUCCESS)
 	{
 		NVM_GUID guid;
@@ -457,12 +452,12 @@ bool PersistentMemoryFactory::pmTypesMatch(struct pool *pool, framework::Instanc
 	return matches;
 }
 
-bool PersistentMemoryFactory::poolMatchesPmObject(struct pool *pool, framework::Instance* pPMObject)
+bool wbem::memory::PersistentMemoryFactory::poolMatchesPmObject(struct pool *pool, framework::Instance* pPMObject)
 {
 	return socketsMatch(pool, pPMObject) && pmTypesMatch(pool, pPMObject);
 }
 
-std::string PersistentMemoryFactory::getInterleaveSetUuid(const NVM_UINT32 setIndex,
+std::string wbem::memory::PersistentMemoryFactory::getInterleaveSetUuid(const NVM_UINT32 setIndex,
 		const NVM_UINT32 socketId)
 {
 	std::stringstream srcStream;
@@ -478,13 +473,13 @@ std::string PersistentMemoryFactory::getInterleaveSetUuid(const NVM_UINT32 setIn
 	return std::string(uuidStr);
 }
 
-std::string PersistentMemoryFactory::getBlockRegionUuid(const std::string& dimmGuidStr)
+std::string wbem::memory::PersistentMemoryFactory::getBlockRegionUuid(const std::string& dimmGuidStr)
 {
 	// There's only one block region per DIMM, and the DIMM GUID is already unique
 	return dimmGuidStr;
 }
 
-void PersistentMemoryFactory::validatePath(const framework::ObjectPath& path)
+void wbem::memory::PersistentMemoryFactory::validatePath(const framework::ObjectPath& path)
 		throw (framework::Exception)
 {
 	// SystemName == the system host name
@@ -531,7 +526,7 @@ void PersistentMemoryFactory::validatePath(const framework::ObjectPath& path)
 	}
 }
 
-void PersistentMemoryFactory::setInterleaveSetInstanceAttributes(
+void wbem::memory::PersistentMemoryFactory::setInterleaveSetInstanceAttributes(
 		framework::Instance &instance,
 		const framework::attribute_names_t &attributes,
 		const struct interleave_set& interleave)
@@ -587,7 +582,7 @@ void PersistentMemoryFactory::setInterleaveSetInstanceAttributes(
 	}
 }
 
-void PersistentMemoryFactory::setBlockCapacityInstanceAttributes(
+void wbem::memory::PersistentMemoryFactory::setBlockCapacityInstanceAttributes(
 		framework::Instance &instance,
 		const framework::attribute_names_t &attributes,
 		const struct pool& pool,
@@ -640,7 +635,7 @@ void PersistentMemoryFactory::setBlockCapacityInstanceAttributes(
 	}
 }
 
-void PersistentMemoryFactory::setGenericInstanceAttributes(framework::Instance& instance,
+void wbem::memory::PersistentMemoryFactory::setGenericInstanceAttributes(framework::Instance& instance,
 		const framework::attribute_names_t& attributes,
 		const NVM_UINT16 socketId) throw (framework::Exception)
 {
@@ -682,7 +677,7 @@ void PersistentMemoryFactory::setGenericInstanceAttributes(framework::Instance& 
 	}
 }
 
-bool PersistentMemoryFactory::isPersistentMemoryUsingDimm(const std::string& pmUuid,
+bool wbem::memory::PersistentMemoryFactory::isPersistentMemoryUsingDimm(const std::string& pmUuid,
 		const std::string& dimmGuid) throw (framework::Exception)
 {
 	bool result = false;
@@ -724,7 +719,7 @@ bool PersistentMemoryFactory::isPersistentMemoryUsingDimm(const std::string& pmU
 	return result;
 }
 
-NVM_UINT64 PersistentMemoryFactory::getPmAlignment() throw (framework::Exception)
+NVM_UINT64 wbem::memory::PersistentMemoryFactory::getPmAlignment() throw (framework::Exception)
 {
 	struct nvm_capabilities systemCapabilities;
 	memset(&systemCapabilities, 0, sizeof(systemCapabilities));
@@ -746,7 +741,7 @@ NVM_UINT64 PersistentMemoryFactory::getPmAlignment() throw (framework::Exception
 	return alignment;
 }
 
-NVM_UINT64 PersistentMemoryFactory::getNumBlocks(const NVM_UINT64 capacity)
+NVM_UINT64 wbem::memory::PersistentMemoryFactory::getNumBlocks(const NVM_UINT64 capacity)
 		throw (framework::Exception)
 {
 	NVM_UINT64 numBlocks = 0;
@@ -759,7 +754,7 @@ NVM_UINT64 PersistentMemoryFactory::getNumBlocks(const NVM_UINT64 capacity)
 	return numBlocks;
 }
 
-NVM_UINT16 PersistentMemoryFactory::getInterleaveSetHealthState(
+NVM_UINT16 wbem::memory::PersistentMemoryFactory::getInterleaveSetHealthState(
 		const struct interleave_set& interleave)
 {
 	NVM_UINT16 healthState = PERSISTENTMEMORY_HEALTHSTATE_UNKNOWN;
@@ -782,7 +777,7 @@ NVM_UINT16 PersistentMemoryFactory::getInterleaveSetHealthState(
 	return healthState;
 }
 
-NVM_UINT16 PersistentMemoryFactory::getBlockRegionHealthState(const NVM_GUID dimmGuid)
+NVM_UINT16 wbem::memory::PersistentMemoryFactory::getBlockRegionHealthState(const NVM_GUID dimmGuid)
 		throw (framework::Exception)
 {
 	NVM_UINT16 healthState = PERSISTENTMEMORY_HEALTHSTATE_UNKNOWN;
@@ -835,7 +830,7 @@ NVM_UINT16 PersistentMemoryFactory::getBlockRegionHealthState(const NVM_GUID dim
 	return healthState;
 }
 
-NVM_UINT16 PersistentMemoryFactory::getInterleaveSetOperationalStatus(
+NVM_UINT16 wbem::memory::PersistentMemoryFactory::getInterleaveSetOperationalStatus(
 		const struct interleave_set& interleave) throw (framework::Exception)
 {
 	NVM_UINT16 opStatus = PERSISTENTMEMORY_OPSTATUS_UNKNOWN;
@@ -859,7 +854,7 @@ NVM_UINT16 PersistentMemoryFactory::getInterleaveSetOperationalStatus(
 	return opStatus;
 }
 
-NVM_UINT16 PersistentMemoryFactory::getBlockRegionOperationalStatus(const NVM_GUID dimmGuid)
+NVM_UINT16 wbem::memory::PersistentMemoryFactory::getBlockRegionOperationalStatus(const NVM_GUID dimmGuid)
 		throw (framework::Exception)
 {
 	NVM_UINT16 opStatus = PERSISTENTMEMORY_OPSTATUS_UNKNOWN;
@@ -918,7 +913,7 @@ NVM_UINT16 PersistentMemoryFactory::getBlockRegionOperationalStatus(const NVM_GU
 	return opStatus;
 }
 
-std::string PersistentMemoryFactory::getHealthStateString(const NVM_UINT16 value)
+std::string wbem::memory::PersistentMemoryFactory::getHealthStateString(const NVM_UINT16 value)
 {
 	std::string str;
 
@@ -942,7 +937,7 @@ std::string PersistentMemoryFactory::getHealthStateString(const NVM_UINT16 value
 	return str;
 }
 
-std::string PersistentMemoryFactory::getOperationalStatusString(const NVM_UINT16 value)
+std::string wbem::memory::PersistentMemoryFactory::getOperationalStatusString(const NVM_UINT16 value)
 {
 	std::string str;
 
@@ -966,7 +961,7 @@ std::string PersistentMemoryFactory::getOperationalStatusString(const NVM_UINT16
 	return str;
 }
 
-std::string PersistentMemoryFactory::getAccessGranularityString(const NVM_UINT16 value)
+std::string wbem::memory::PersistentMemoryFactory::getAccessGranularityString(const NVM_UINT16 value)
 {
 	std::string str;
 
@@ -987,7 +982,7 @@ std::string PersistentMemoryFactory::getAccessGranularityString(const NVM_UINT16
 	return str;
 }
 
-std::string PersistentMemoryFactory::getReplicationString(const NVM_UINT16 value)
+std::string wbem::memory::PersistentMemoryFactory::getReplicationString(const NVM_UINT16 value)
 {
 	std::string str;
 
@@ -1008,7 +1003,7 @@ std::string PersistentMemoryFactory::getReplicationString(const NVM_UINT16 value
 	return str;
 }
 
-std::string PersistentMemoryFactory::getEnabledStateString(const NVM_UINT16 value)
+std::string wbem::memory::PersistentMemoryFactory::getEnabledStateString(const NVM_UINT16 value)
 {
 	std::string str;
 
@@ -1025,7 +1020,7 @@ std::string PersistentMemoryFactory::getEnabledStateString(const NVM_UINT16 valu
 	return str;
 }
 
-bool PersistentMemoryFactory::isPersistentMemoryAssociatedToPersistentMemoryNamespace(
+bool wbem::memory::PersistentMemoryFactory::isPersistentMemoryAssociatedToPersistentMemoryNamespace(
 		framework::Instance& pmInstance, framework::Instance &pmnsInstance)
 {
 	bool result = false;
@@ -1072,6 +1067,3 @@ bool PersistentMemoryFactory::isPersistentMemoryAssociatedToPersistentMemoryName
 
 	return result;
 }
-
-} /* namespace memory */
-} /* namespace wbem */

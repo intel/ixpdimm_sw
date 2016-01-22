@@ -43,21 +43,16 @@
 #include <exception/NvmExceptionLibError.h>
 #include <lib_interface/NvmApi.h>
 
-namespace wbem
-{
-namespace physical_asset
-{
-
-MemoryTopologyViewFactory::MemoryTopologyViewFactory()
+wbem::physical_asset::MemoryTopologyViewFactory::MemoryTopologyViewFactory()
 		throw (framework::Exception)
 {
 }
 
-MemoryTopologyViewFactory::~MemoryTopologyViewFactory()
+wbem::physical_asset::MemoryTopologyViewFactory::~MemoryTopologyViewFactory()
 {
 }
 
-void MemoryTopologyViewFactory::populateAttributeList(framework::attribute_names_t &attributes)
+void wbem::physical_asset::MemoryTopologyViewFactory::populateAttributeList(framework::attribute_names_t &attributes)
 	throw (framework::Exception)
 {
 	// Key attributes
@@ -76,7 +71,7 @@ void MemoryTopologyViewFactory::populateAttributeList(framework::attribute_names
 	attributes.push_back(BANKLABEL_KEY);
 }
 
-framework::Instance* MemoryTopologyViewFactory::getInstance(
+wbem::framework::Instance* wbem::physical_asset::MemoryTopologyViewFactory::getInstance(
 		framework::ObjectPath& path, framework::attribute_names_t& attributes)
 				throw (framework::Exception)
 {
@@ -113,7 +108,7 @@ framework::Instance* MemoryTopologyViewFactory::getInstance(
 	return pInstance;
 }
 
-NVM_UINT16 MemoryTopologyViewFactory::getPhysicalIdValue(framework::Attribute& physicalIdAttr)
+NVM_UINT16 wbem::physical_asset::MemoryTopologyViewFactory::getPhysicalIdValue(framework::Attribute& physicalIdAttr)
 		throw (framework::Exception)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -137,7 +132,7 @@ NVM_UINT16 MemoryTopologyViewFactory::getPhysicalIdValue(framework::Attribute& p
 	return physicalId;
 }
 
-void MemoryTopologyViewFactory::populateInstanceFromMemoryTopology(framework::Instance& instance,
+void wbem::physical_asset::MemoryTopologyViewFactory::populateInstanceFromMemoryTopology(framework::Instance& instance,
 		framework::attribute_names_t &attributes, const struct memory_topology &memTopology)
 	throw (framework::Exception)
 {
@@ -184,7 +179,7 @@ void MemoryTopologyViewFactory::populateInstanceFromMemoryTopology(framework::In
 	}
 }
 
-void MemoryTopologyViewFactory::populateNvmDimmInstanceAttributes(
+void wbem::physical_asset::MemoryTopologyViewFactory::populateNvmDimmInstanceAttributes(
 		framework::Instance& instance, framework::attribute_names_t& attributes,
 		const struct memory_topology& memTopology)
 	throw (framework::Exception)
@@ -265,7 +260,7 @@ void MemoryTopologyViewFactory::populateNvmDimmInstanceAttributes(
 	}
 }
 
-void MemoryTopologyViewFactory::populateDramDimmInstanceAttributes(
+void wbem::physical_asset::MemoryTopologyViewFactory::populateDramDimmInstanceAttributes(
 		framework::Instance& instance, framework::attribute_names_t& attributes,
 		const struct memory_topology &memTopology)
 	throw (framework::Exception)
@@ -319,7 +314,7 @@ void MemoryTopologyViewFactory::populateDramDimmInstanceAttributes(
 	}
 }
 
-void MemoryTopologyViewFactory::getDeviceDiscoveryForPhysicalId(const NVM_UINT16 physicalId,
+void wbem::physical_asset::MemoryTopologyViewFactory::getDeviceDiscoveryForPhysicalId(const NVM_UINT16 physicalId,
 		struct device_discovery &device) throw (framework::Exception)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -348,7 +343,7 @@ void MemoryTopologyViewFactory::getDeviceDiscoveryForPhysicalId(const NVM_UINT16
 	}
 }
 
-std::string MemoryTopologyViewFactory::memoryTypeToString(const enum memory_type memoryType)
+std::string wbem::physical_asset::MemoryTopologyViewFactory::memoryTypeToString(const enum memory_type memoryType)
 {
 	std::string str;
 	switch(memoryType)
@@ -368,7 +363,7 @@ std::string MemoryTopologyViewFactory::memoryTypeToString(const enum memory_type
 	return str;
 }
 
-void MemoryTopologyViewFactory::getMemoryTopologyForPhysicalId(const NVM_UINT16 physicalId,
+void wbem::physical_asset::MemoryTopologyViewFactory::getMemoryTopologyForPhysicalId(const NVM_UINT16 physicalId,
 		struct memory_topology &memTopology)
 	throw (framework::Exception)
 {
@@ -396,7 +391,7 @@ void MemoryTopologyViewFactory::getMemoryTopologyForPhysicalId(const NVM_UINT16 
 	}
 }
 
-framework::instance_names_t* MemoryTopologyViewFactory::getInstanceNames()
+wbem::framework::instance_names_t* wbem::physical_asset::MemoryTopologyViewFactory::getInstanceNames()
 		throw (framework::Exception)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -424,7 +419,7 @@ framework::instance_names_t* MemoryTopologyViewFactory::getInstanceNames()
 	return pInstanceNames;
 }
 
-void MemoryTopologyViewFactory::populateInstanceNames(framework::instance_names_t& instanceNames)
+void wbem::physical_asset::MemoryTopologyViewFactory::populateInstanceNames(framework::instance_names_t& instanceNames)
 	throw (framework::Exception)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -447,6 +442,3 @@ void MemoryTopologyViewFactory::populateInstanceNames(framework::instance_names_
 		instanceNames.push_back(instanceName);
 	}
 }
-
-} /* namespace physical_asset */
-} /* namespace wbem */

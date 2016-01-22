@@ -186,6 +186,8 @@ static std::string VERSIONSTRING_KEY = "VersionString";
 static std::string CLASSIFICATIONS_KEY = "Classifications";
 static std::string SPECIFICATION_KEY = "Specification";
 static std::string ISENTITY_KEY = "IsEntity";
+static std::string FWTYPE_KEY = "FWType";
+static std::string COMMITID_KEY = "CommitID";
 
 // NumericSensorFactory Attribute keys
 static std::string SENSORTYPE_KEY = "SensorType";

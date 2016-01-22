@@ -33,12 +33,7 @@
 #include <intel_cim_framework/ExceptionBadParameter.h>
 #include <persistence/logging.h>
 
-namespace wbem
-{
-namespace support
-{
-
-EventLogFilter::EventLogFilter() :
+wbem::support::EventLogFilter::EventLogFilter() :
 		m_eventIdValueSet(false),
 		m_eventIdValue(0),
 		m_severityValueSet(false),
@@ -57,14 +52,14 @@ EventLogFilter::EventLogFilter() :
 {
 }
 
-EventLogFilter::~EventLogFilter()
+wbem::support::EventLogFilter::~EventLogFilter()
 {
 }
 
 /*
  * Set the event ID filter.
  */
-void EventLogFilter::setEventId(const framework::UINT32 &eventId)
+void wbem::support::EventLogFilter::setEventId(const framework::UINT32 &eventId)
 {
 	m_eventIdValue = eventId;
 	m_eventIdValueSet = true;
@@ -73,7 +68,7 @@ void EventLogFilter::setEventId(const framework::UINT32 &eventId)
 /*
  * Fetch the event ID filter value.
  */
-framework::UINT32 EventLogFilter::getEventId() throw (framework::Exception)
+wbem::framework::UINT32 wbem::support::EventLogFilter::getEventId() throw (framework::Exception)
 {
 	if (!hasEventId())
 	{
@@ -86,7 +81,7 @@ framework::UINT32 EventLogFilter::getEventId() throw (framework::Exception)
 /*
  * Set the event severity filter.
  */
-void EventLogFilter::setSeverity(const framework::UINT32 &severity)
+void wbem::support::EventLogFilter::setSeverity(const framework::UINT32 &severity)
 {
 	m_severityValue = severity;
 	m_severityValueSet = true;
@@ -96,7 +91,7 @@ void EventLogFilter::setSeverity(const framework::UINT32 &severity)
  * Fetch the event severity filter value.
  * @throw Exception if not set
  */
-framework::UINT32 EventLogFilter::getSeverity() throw (framework::Exception)
+wbem::framework::UINT32 wbem::support::EventLogFilter::getSeverity() throw (framework::Exception)
 {
 	if (!hasSeverity())
 	{
@@ -109,7 +104,7 @@ framework::UINT32 EventLogFilter::getSeverity() throw (framework::Exception)
 /*
  * Set the event type filter.
  */
-void EventLogFilter::setType(const framework::UINT32 &type)
+void wbem::support::EventLogFilter::setType(const framework::UINT32 &type)
 {
 	m_typeValue = type;
 	m_typeValueSet = true;
@@ -119,7 +114,7 @@ void EventLogFilter::setType(const framework::UINT32 &type)
  * Fetch the event type filter value.
  * @throw Exception if not set
  */
-framework::UINT32 EventLogFilter::getType() throw (framework::Exception)
+wbem::framework::UINT32 wbem::support::EventLogFilter::getType() throw (framework::Exception)
 {
 	if (!hasType())
 	{
@@ -132,7 +127,7 @@ framework::UINT32 EventLogFilter::getType() throw (framework::Exception)
 /*
  * Set the event code filter.
  */
-void EventLogFilter::setCode(const framework::UINT16 &code)
+void wbem::support::EventLogFilter::setCode(const framework::UINT16 &code)
 {
 	m_codeValue = code;
 	m_codeValueSet = true;
@@ -141,7 +136,7 @@ void EventLogFilter::setCode(const framework::UINT16 &code)
 /*
  * Fetch the event code filter value.
  */
-framework::UINT16 EventLogFilter::getCode() throw (framework::Exception)
+wbem::framework::UINT16 wbem::support::EventLogFilter::getCode() throw (framework::Exception)
 {
 	if (!hasCode())
 	{
@@ -154,7 +149,7 @@ framework::UINT16 EventLogFilter::getCode() throw (framework::Exception)
 /*
  * Set the GUID filter.
  */
-void EventLogFilter::setGuid(const std::string &guid)
+void wbem::support::EventLogFilter::setGuid(const std::string &guid)
 {
 	m_guidValue = guid;
 	m_guidValueSet = true;
@@ -163,7 +158,7 @@ void EventLogFilter::setGuid(const std::string &guid)
 /*
  * Fetch the GUID filter value.
  */
-std::string EventLogFilter::getGuid() throw (framework::Exception)
+std::string wbem::support::EventLogFilter::getGuid() throw (framework::Exception)
 {
 	if (!hasGuid())
 	{
@@ -176,7 +171,7 @@ std::string EventLogFilter::getGuid() throw (framework::Exception)
 /*
  * Set the action required filter.
  */
-void EventLogFilter::setActionRequired(const bool &actionRequired)
+void wbem::support::EventLogFilter::setActionRequired(const bool &actionRequired)
 {
 	m_actionReqValue = actionRequired;
 	m_actionReqValueSet = true;
@@ -185,7 +180,7 @@ void EventLogFilter::setActionRequired(const bool &actionRequired)
 /*
  * Fetch the action required filter value.
  */
-bool EventLogFilter::getActionRequired() throw (framework::Exception)
+bool wbem::support::EventLogFilter::getActionRequired() throw (framework::Exception)
 {
 	if (!hasActionRequired())
 	{
@@ -198,7 +193,7 @@ bool EventLogFilter::getActionRequired() throw (framework::Exception)
 /*
  * Set the event "before timestamp" filter.
  */
-void EventLogFilter::setBeforeTimestamp(const time_t &beforeTime)
+void wbem::support::EventLogFilter::setBeforeTimestamp(const time_t &beforeTime)
 {
 	m_beforeTimestampValue = beforeTime;
 	m_beforeTimestampValueSet = true;
@@ -207,7 +202,7 @@ void EventLogFilter::setBeforeTimestamp(const time_t &beforeTime)
 /*
  * Fetch the event "before timestamp" filter value.
  */
-time_t EventLogFilter::getBeforeTimestamp() throw (framework::Exception)
+time_t wbem::support::EventLogFilter::getBeforeTimestamp() throw (framework::Exception)
 {
 	if (!hasBeforeTimestamp())
 	{
@@ -220,7 +215,7 @@ time_t EventLogFilter::getBeforeTimestamp() throw (framework::Exception)
 /*
  * Set the event "after timestamp" filter.
  */
-void EventLogFilter::setAfterTimestamp(const time_t &afterTime)
+void wbem::support::EventLogFilter::setAfterTimestamp(const time_t &afterTime)
 {
 	m_afterTimestampValue = afterTime;
 	m_afterTimestampValueSet = true;
@@ -229,7 +224,7 @@ void EventLogFilter::setAfterTimestamp(const time_t &afterTime)
 /*!
  * Fetch the event "after timestamp" filter value.
  */
-time_t EventLogFilter::getAfterTimestamp() throw (framework::Exception)
+time_t wbem::support::EventLogFilter::getAfterTimestamp() throw (framework::Exception)
 {
 	if (!hasAfterTimestamp())
 	{
@@ -238,6 +233,3 @@ time_t EventLogFilter::getAfterTimestamp() throw (framework::Exception)
 	}
 	return m_afterTimestampValue;
 }
-
-} /* namespace support */
-} /* namespace wbem */
