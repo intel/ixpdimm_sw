@@ -243,12 +243,13 @@ enum alarm_trip_bits
 enum validation_flags
 {
 	SMART_VALIDATION_FLAG_HEALTH_STATUS = 1 << 0,
-	SMART_VALIDATION_FLAG_MEDIA_TEMPERATURE = 1 << 1,
-	SMART_VALIDATION_FLAG_SPARE_BLOCK = 1 << 2,
-	SMART_VALIDATION_FLAG_ALARM_TRIPS = 1 << 3,
-	SMART_VALIDATION_FLAG_PERCENT_USED = 1 << 4,
-	SMART_VALIDATION_FLAG_LSS = 1 << 5,
-	SMART_VALIDATION_FLAG_VENDOR_DATA = 1 << 6,
+	SMART_VALIDATION_FLAG_SPARE_BLOCK = 1 << 1,
+	SMART_VALIDATION_FLAG_PERCENT_USED = 1 << 2,
+	SMART_VALIDATION_FLAG_MEDIA_TEMPERATURE = 1 << 3,
+	SMART_VALIDATION_FLAG_CONTROLLER_TEMPERATURE = 1 << 4,
+	SMART_VALIDATION_FLAG_ALARM_TRIPS = 1 << 9,
+	SMART_VALIDATION_FLAG_LSS = 1 << 10,
+	SMART_VALIDATION_FLAG_VENDOR_DATA = 1 << 11,
 };
 
 /*
@@ -1227,13 +1228,15 @@ typedef union
 	struct smart_validation_flags
 	{
 		unsigned int health_status_field:1;
-		unsigned int media_temperature_field:1;
 		unsigned int spare_block_field:1;
-		unsigned int alarm_trips_field:1;
 		unsigned int percentage_used_field:1;
+		unsigned int media_temperature_field:1;
+		unsigned int controller_temperature_field:1;
+		unsigned int rsvd_a:4;
+		unsigned int alarm_trips_field:1;
 		unsigned int last_shutdown_status_field:1;
 		unsigned int sizeof_vendor_data_field:1;
-		unsigned int rsvd:25;
+		unsigned int rsvd_b:20;
 	} parts;
 	unsigned int flags;
 } SMART_VALIDATION_FLAGS;
@@ -1249,13 +1252,7 @@ struct intel_smart_vendor_data
 	unsigned int unsafe_shutdowns;
 	unsigned char lss_details;
 	unsigned long long last_shutdown_time; /* seconds since 1 January 1970 */
-	/*
-	 * 	Current controller temperature in Celsius
-	 * 	bits 14 - 0 = temperature in Celsius
-	 * 	bit 15 = sign bit (1 = negative, 0 = positive)
-	 */
-	unsigned short controller_temperature;
-	unsigned char reserved_b[69];
+	unsigned char reserved_b[55];
 } __attribute__((packed));
 
 /*
@@ -1268,7 +1265,7 @@ struct pt_payload_smart_health {
 
 	SMART_VALIDATION_FLAGS validation_flags;
 
-	unsigned int rsvd;
+	unsigned int rsvd_a;
 
 	/*
 	 * Overall health summary
@@ -1282,32 +1279,42 @@ struct pt_payload_smart_health {
 	 */
 	unsigned char health_status;
 
+        /*
+         * Remaining spare capacity as a percentage of factory configured spare
+         */
+	unsigned char spare;
+
+        /*
+         * Device life span as a percentage.
+         * 100 = warranted life span of device has been reached however values
+         * up to 255 can be used.
+         */
+	unsigned char percentage_used;
+
+        /*
+         * Alarm trips - Bits to signify whether or not values have tripped their respective alarm thresholds.
+         * Bit 0                : Spare Block Trips
+         * Bit 1                : Media Temperature Trips
+         * Bit 2                : Controller Temperature Trips
+         * Bit 7 - 3    : Reserved
+         */
+	unsigned char alarm_trips;
+
 	/*
 	 * 	Current media temperature in Celsius
 	 * 	bits 14 - 0 = temperature in Celsius
 	 * 	bit 15 = sign bit (1 = negative, 0 = positive)
 	 */
 	unsigned short media_temperature;
-	/*
-	 * Remaining spare capacity as a percentage of factory configured spare
-	 */
-	unsigned char spare;
 
 	/*
-	 * Alarm trips - Bits to signify whether or not values have tripped their respective alarm thresholds.
-	 * Bit 0		: Spare Block Trips
-	 * Bit 1		: Media Temperature Trips
-	 * Bit 2		: Controller Temperature Trips
-	 * Bit 7 - 3	: Reserved
+	 *      Current controller temperature in Celsius
+	 *      bits 14 - 0 = temperature in Celsius
+	 *      bit 15 = sign bit (1 = negative, 0 = positive)
 	 */
-	unsigned char alarm_trips;
+	unsigned short controller_temperature;
 
-	/*
-	 * Device life span as a percentage.
-	 * 100 = warranted life span of device has been reached however values
-	 * up to 255 can be used.
-	 */
-	unsigned char percentage_used;
+	unsigned char rsvd_b[15];
 
 	/*
 	 * Last Shutdown Status: Displays the last shutdown that occured
@@ -1315,8 +1322,6 @@ struct pt_payload_smart_health {
 	 * FF - 01h = Not clean shutdown
 	 */
 	unsigned char lss;
-
-	unsigned char reserved_a;
 
 	unsigned int vendor_specific_data_size;
 

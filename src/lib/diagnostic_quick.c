@@ -297,11 +297,11 @@ int check_dimm_alarm_thresholds(const NVM_GUID device_guid,
 		NVM_UINT64 controller_temp_threshold = thresholds.controller_temperature;
 		if (p_dimm_smart->validation_flags.parts.sizeof_vendor_data_field &&
 				!diag_check(p_diagnostic, DIAG_THRESHOLD_QUICK_TEMP,
-						p_dimm_smart->vendor_data.controller_temperature,
+						p_dimm_smart->controller_temperature,
 						&controller_temp_threshold, EQUALITY_LESSTHAN))
 		{
 			NVM_REAL32 actual =
-				fw_convert_fw_celsius_to_float(p_dimm_smart->vendor_data.controller_temperature);
+				fw_convert_fw_celsius_to_float(p_dimm_smart->controller_temperature);
 			NVM_REAL32 controller_threshold =
 				fw_convert_fw_celsius_to_float(controller_temp_threshold);
 

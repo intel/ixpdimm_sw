@@ -232,7 +232,7 @@ int get_smart_log_sensors(const NVM_GUID device_guid,
 			if (dimm_smart.validation_flags.parts.sizeof_vendor_data_field)
 			{
 				p_sensor->reading = nvm_encode_temperature(
-					fw_convert_fw_celsius_to_float(dimm_smart.vendor_data.controller_temperature));
+					fw_convert_fw_celsius_to_float(dimm_smart.controller_temperature));
 			}
 			p_sensor->upper_critical_settable = 1;
 			p_sensor->upper_critical_support  = 1;
