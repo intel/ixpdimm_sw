@@ -63,7 +63,6 @@ SUBMODULE_DIRS = $(foreach dir,$(SUBMODULES),$(OBJECT_MODULE_DIR)/$(dir))
 # defines the location of each submodule's object files
 SUBMODULE_OBJS := $(addprefix $(OBJECT_MODULE_DIR)/, $(patsubst %.c,%.o,$(SRC)))
 
-#Only use EXCLUDES for sourcedrop
 EXCLUDES = 
 # find all submodule elements (.c, .rc, .mc) that get turned into .o files
 INDEPENDENT_SUBMODULE_SRC = $(foreach dir,$(INDEPENDENT_SUBMODULES),$(wildcard $(dir)/*.*c))

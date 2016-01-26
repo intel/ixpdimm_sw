@@ -1,0 +1,55 @@
+Instance of __Win32Provider as $P   // $P is an alias
+{
+  // Name that describes your provider
+  Name        = "intelwbemprovider" ;
+  // CLSID - must match CLSID of registered DLL
+  ClsId   = "{7BADB4CD-9E85-429b-B5EA-4FB86BEF45EF}";  
+  HostingModel = "NetworkServiceHost";
+} ;  
+
+instance of __InstanceProviderRegistration
+{
+  Provider = $P;                // Alias to the __Win32Provider
+  SupportsPut = TRUE;          // Does not support the Put method
+  SupportsGet = TRUE;           // Supports the Get method
+  SupportsDelete = TRUE;       // Does not support the Delete method
+  SupportsEnumeration = TRUE;   // Supports enumeration.  
+};
+
+instance of __MethodProviderRegistration
+{
+	Provider = $P;
+};
+
+Instance of __EventProviderRegistration
+{
+  provider = $P;
+  EventQueryList = {
+    "SELECT * FROM __InstanceModificationEvent WHERE TargetInstance ISA \"CIM_Sensor\"",
+    "SELECT * FROM __InstanceCreationEvent WHERE TargetInstance ISA \"CIM_PersistentMemoryNamespace\"",
+    "SELECT * FROM __InstanceDeletionEvent WHERE TargetInstance ISA \"CIM_PersistentMemoryNamespace\"",
+    "SELECT * FROM __InstanceCreationEvent WHERE TargetInstance ISA \"CIM_PhysicalMemory\"",
+    "SELECT * FROM __InstanceDeletionEvent WHERE TargetInstance ISA \"CIM_PhysicalMemory\"",
+    "SELECT * FROM Intel_NVDIMMEvent"
+  };
+};
+
+// Provider for cross-namespace associations
+#pragma namespace("\\\\.\\root\\interop")
+Instance of __Win32Provider as $R   // $R is an alias
+{
+  // Name that describes your provider
+  Name        = "intelwbemprovider" ;
+  // CLSID - must match CLSID of registered DLL
+  ClsId   = "{7BADB4CD-9E85-429b-B5EA-4FB86BEF45EF}";  
+  HostingModel = "NetworkServiceHost";
+} ;  
+
+instance of __InstanceProviderRegistration
+{
+  Provider = $R;                // Alias to the __Win32Provider
+  SupportsPut = false;          // Does not support the Put method
+  SupportsGet = TRUE;           // Supports the Get method
+  SupportsDelete = false;       // Does not support the Delete method
+  SupportsEnumeration = TRUE;   // Supports enumeration.  
+};
