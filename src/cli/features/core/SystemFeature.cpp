@@ -449,6 +449,7 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::showDimms(
 		allAttributes.push_back(wbem::SECURITYCAPABILITIES_KEY);
 		allAttributes.push_back(wbem::DIESPARINGCAPABLE_KEY);
 		allAttributes.push_back(wbem::MEMORYMODESSUPPORTED_KEY);
+		allAttributes.push_back(wbem::CONFIGURATIONSTATUS_KEY);
 
 		// get the desired attributes
 		wbem::framework::attribute_names_t attributes =
