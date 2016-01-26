@@ -258,21 +258,24 @@ cli::framework::ObjectListResult * cli::nvmcli::NvmInstanceToObjectListResult(
 	framework::ObjectListResult *pResult = new framework::ObjectListResult();
 	pResult->setRoot(name);
 
-	wbem::framework::instances_t matchedInstances;
-
-	filterInstances(instances, name, filters, matchedInstances);
-
-	// add all matched instances to the results
-	for (wbem::framework::instances_t::const_iterator instanceIter = matchedInstances.begin();
-			instanceIter != matchedInstances.end(); instanceIter++)
+	if (!instances.empty())
 	{
-		framework::PropertyListResult *pPropertyList =
-				NvmInstanceToPropertyListResult(*instanceIter, attributes);
+		wbem::framework::instances_t matchedInstances;
 
-		wbem::framework::Attribute headerAttribute;
-		instanceIter->getAttribute(valueProperty, headerAttribute);
-		pResult->insert(AttributeToString(headerAttribute), *pPropertyList);
-		delete pPropertyList;
+		filterInstances(instances, name, filters, matchedInstances);
+
+		// add all matched instances to the results
+		for (wbem::framework::instances_t::const_iterator instanceIter = matchedInstances.begin();
+				instanceIter != matchedInstances.end(); instanceIter++)
+		{
+			framework::PropertyListResult *pPropertyList =
+					NvmInstanceToPropertyListResult(*instanceIter, attributes);
+
+			wbem::framework::Attribute headerAttribute;
+			instanceIter->getAttribute(valueProperty, headerAttribute);
+			pResult->insert(AttributeToString(headerAttribute), *pPropertyList);
+			delete pPropertyList;
+		}
 	}
 	return pResult;
 }
