@@ -277,6 +277,12 @@ int nvm_get_devices(struct device_discovery *p_devices, const NVM_UINT8 count)
 								p_devices[i].device_handle.parts.socket_id;
 						p_devices[i].memory_controller_id =
 								p_devices[i].device_handle.parts.memory_controller_id;
+						p_devices[i].node_controller_id =
+								p_devices[i].device_handle.parts.node_controller_id;
+						p_devices[i].channel_id =
+								p_devices[i].device_handle.parts.mem_channel_id;
+						p_devices[i].channel_pos =
+								p_devices[i].device_handle.parts.mem_channel_dimm_num;
 						// we only get NVMDIMMS from the driver
 						p_devices[i].memory_type = MEMORY_TYPE_NVMDIMM;
 

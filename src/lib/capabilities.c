@@ -472,6 +472,7 @@ int apply_dimm_sku_capabilities(struct nvm_capabilities *p_capabilities)
 	{
 		int dev_count = rc;
 		struct device_discovery devices[dev_count];
+		memset(&devices, 0, dev_count * sizeof (struct device_discovery));
 		rc = nvm_get_devices(devices, dev_count);
 		if (rc == dev_count)
 		{

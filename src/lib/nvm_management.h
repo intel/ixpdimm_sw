@@ -587,8 +587,11 @@ struct device_discovery
 	NVM_UINT16 vendor_id;	// The vendor identifier.
 	NVM_UINT16 device_id; // The device identifier.
 	NVM_UINT16 revision_id; // The revision identifier.
-	NVM_UINT16 socket_id; // The processor socket identifier.
+	NVM_UINT16 channel_pos; // The memory module's position in the memory channel
+	NVM_UINT16 channel_id; // The memory channel number
 	NVM_UINT16 memory_controller_id; // The ID of the associated memory controller
+	NVM_UINT16 socket_id; // The processor socket identifier.
+	NVM_UINT16 node_controller_id; // The node controller ID.
 
 	// SMBIOS
 	enum memory_type memory_type; //	The type of memory used by the DIMM.
