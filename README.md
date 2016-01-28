@@ -20,6 +20,11 @@ health monitoring, and troubleshooting.
 
 https://01.org/ixpdimm-sw/
 
+#Build
+GNU Make is used to build for Linux and Windows.
+As such we recommend mingw_w64 and msys be used to build in a windows
+environment. Both of which can be found at mingw.org
+
 #Build Windows
 
 #The following variables must be set to find the required dependencies necessary
@@ -43,8 +48,8 @@ where the makefile is located in:
 * OS_LIB_DIR - The path to any OS specific driver libraries.
 * RAPIDXML_INCLUDE_DIR - The path to the rapidxml headers. 
 * GETTEXT_EXE_DIR - The path to the xgettext.exe (for string translations). 
-* INTEL_CLI_FRAMEWORK_DIR - The path to intel_cli_framework libraries
-* INTEL_CIM_FRAMEWORK_DIR - The path to intel_cim_framework libraries
+* INTEL_CLI_FRAMEWORK_DIR - The path to Intel NVM CLI libraries
+* INTEL_CIM_FRAMEWORK_DIR - The path to Intel NVM CIM libraries
 
 Assuming default paths have been used execute 'make RELEASE=1'
 
@@ -52,7 +57,7 @@ build artifacts can then be found in output/build/windows/release
 
 #Build Linux
 
-Kernel 4.3 or newer is suggested, Pointer to a prebuilt fedora 4.3 kernel
+Kernel 4.3 or newer is suggested, a prebuilt fedora 4.3 kernel can be found at
 
 https://kojipkgs.fedoraproject.org/packages/kernel/4.3.0/1.fc24/x86_64/
 
@@ -64,18 +69,16 @@ and the source can be found at
 
 https://github.com/pmem/ndctl
 
+Intel NVM CIM library is required, the source can be found at
+
+https://github.com/01org/intelnvmcimlibrary
+
+Intel NVM CLI library is required, the source can be found at
+
+https://github.com/01org/intelnvmclilibrary
+
 All other dependencies are widely available. This includes ctemplate openssl
 sqlite and zlib.
-
-It is suggested that the provided libcliframework.so, libIntel_i18n.so, and 
-libcimframework.so libraries be moved to a location searched by ldd(/usr/lib64);
-else INTEL_CLI_FRAMEWORK_DIR and INTEL_CIM_FRAMEWORK_DIR will need to be 
-provided as enviroment variables.
-
-It is suggested that the provided intel_cli_framework, I18N, and 
-intel_cim_framework header directories be moved to a location searched by
-gcc(/usr/include); else INTEL_CLI_FRAMEWORK_DIR and INTEL_CIM_FRAMEWORK_DIR will
-need to be provided as enviroment variables.
 
 Once dependencies have been resolved execute 'make RELEASE=1'
 
