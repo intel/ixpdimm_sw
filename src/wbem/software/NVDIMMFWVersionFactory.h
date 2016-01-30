@@ -44,12 +44,17 @@ namespace software
 			std::string(NVM_WBEM_PREFIX) + "NVDIMMFWVersion"; //!< Creation Class Name static
 	static const NVM_UINT16 NVDIMMFWVERSION_CLASSIFICATIONS_FW = 10;
 
-	static const std::string NVDIMMFWVERSION_INSTANCEID_PREFIX = "NVDIMMFW ";
+	static const std::string NVDIMMFWVERSION_INSTANCEID_PREFIX = "NVDIMMFW";
 
-	static const std::string NVMDIMMFWVERSION_FWTYPE_UNKNOWN = "Unknown";
-	static const std::string NVMDIMMFWVERSION_FWTYPE_PRODUCTION = "Production";
-	static const std::string NVMDIMMFWVERSION_FWTYPE_DFX = "DFx";
-	static const std::string NVMDIMMFWVERSION_FWTYPE_DEBUG = "Debug";
+	static const std::string NVMDIMMFWVERSION_FWTYPE_UNKNOWN_STR = "Unknown";
+	static const std::string NVMDIMMFWVERSION_FWTYPE_PRODUCTION_STR = "Production";
+	static const std::string NVMDIMMFWVERSION_FWTYPE_DFX_STR = "DFx";
+	static const std::string NVMDIMMFWVERSION_FWTYPE_DEBUG_STR = "Debug";
+
+	static const NVM_UINT16 NVMDIMMFWVERSION_FWTYPE_UNKNOWN = 0;
+	static const NVM_UINT16 NVMDIMMFWVERSION_FWTYPE_PRODUCTION = 1;
+	static const NVM_UINT16 NVMDIMMFWVERSION_FWTYPE_DFX = 2;
+	static const NVM_UINT16 NVMDIMMFWVERSION_FWTYPE_DEBUG = 3;
 
 	static const std::string NVMDIMMFWVERSION_DELIMITER = "-";
 
@@ -102,7 +107,28 @@ class NVM_API NVDIMMFWVersionFactory : public framework_interface::NvmInstanceFa
 		void parseInstanceId(std::string instanceId, std::string &fwVersion,
 				std::string &fwApiVersion, NVM_UINT16 &fwType, std::string &commitId);
 
-		std::string translateFwType(const enum device_fw_type fw_type);
+		std::string translateFwType(const NVM_UINT16 fw_type);
+
+		std::string getInstanceId(const std::string &fwVersion,
+				const std::string &fwApiVersion,
+				const enum device_fw_type fwType,
+				const std::string &commitId = "");
+
+		void addFirmwareInstanceNamesForDevice(framework::instance_names_t &instanceNames,
+				const std::string &hostName,
+				const struct device_discovery &device,
+				const struct device_fw_info &fwInfo);
+
+		framework::ObjectPath getActiveFirmwareInstanceName(const std::string &hostName,
+				const struct device_discovery &device,
+				const struct device_fw_info &fwInfo);
+
+		framework::ObjectPath getStagedFirmwareInstanceName(const std::string &hostName,
+				const struct device_discovery &device,
+				const struct device_fw_info &fwInfo);
+
+		framework::ObjectPath getInstanceName(const std::string &hostName,
+				const std::string instanceId);
 };
 
 } // software
