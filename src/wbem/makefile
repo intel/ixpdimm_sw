@@ -50,7 +50,10 @@ ifdef BUILD_ESX
 	CIMOMBUILD = cmpi
 endif
 
-SUBMODULES = . framework_interface lib_interface exception server memory physical_asset profile support software performance erasure mem_config pmem_config indication pegasus cimom/$(CIMOMBUILD) logic
+SUBMODULES = . framework_interface lib_interface exception server memory physical_asset profile \
+	support software performance erasure mem_config pmem_config indication pegasus cimom/$(CIMOMBUILD) \
+	logic \
+	../logic ../logic/device ../logic/system ../logic/exceptions
 
 UNITTEST = unittest
 FRAMEWORK = $(BUILD_DIR)/libcimframework.$(LIB_SUFFIX)
@@ -97,6 +100,7 @@ INCS = 	-I$(SRC_DIR) \
 		-I$(SRC_DIR)/common \
 		-I$(SRC_DIR)/lib \
 		-I$(SRC_DIR)/wbem \
+		-I$(SRC_DIR) \
 		-I$(EXTERN_DIR)/rapidxml-1.13 \
 		-I$(CIM_FRAMEWORK_DIR)/include
 

@@ -34,7 +34,7 @@
 #include <LogEnterExit.h>
 #include <string/s_str.h>
 #include <guid/guid.h>
-#include <physical_asset/NVDIMMViewFactory.h>
+#include <physical_asset/NVDIMMViewFactoryOld.h>
 #include <logic/MemoryAllocationTypes.h>
 #include <logic/MemoryAllocator.h>
 #include <mem_config/MemoryConfigurationFactory.h>
@@ -75,7 +75,7 @@ bool cli::nvmcli::NamespaceFeature::convertConfigGoalInstance(
 
 		// Add dimm ID
 		wbem::framework::Attribute dimmIdAttr =
-				wbem::physical_asset::NVDIMMViewFactory::guidToDimmIdAttribute(parentAttr.stringValue());
+				wbem::physical_asset::NVDIMMViewFactoryOld::guidToDimmIdAttribute(parentAttr.stringValue());
 		pCliInstance->setAttribute(wbem::DIMMID_KEY,
 					dimmIdAttr,
 					displayAttributes);
@@ -642,7 +642,7 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::deleteConfigGoal(
 			std::string dimmId = instanceId.substr(0, NVM_GUIDSTR_LEN - 1);
 			std::string prefix = cli::framework::ResultBase::stringFromArgList(
 						(basePrefix + " %s").c_str(),
-						wbem::physical_asset::NVDIMMViewFactory::guidToDimmIdStr(dimmId).c_str()) + ": ";
+						wbem::physical_asset::NVDIMMViewFactoryOld::guidToDimmIdStr(dimmId).c_str()) + ": ";
 
 			wbem::framework::ObjectPath path = (*iter).getObjectPath();
 

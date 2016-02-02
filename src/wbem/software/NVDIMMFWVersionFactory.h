@@ -95,7 +95,10 @@ class NVM_API NVDIMMFWVersionFactory : public framework_interface::NvmInstanceFa
 		framework::instance_names_t* getInstanceNames() throw (framework::Exception);
 
 		bool isAssociated(const std::string &associationClass, framework::Instance* pAntInstance,
-								framework::Instance* pDepInstance);
+				framework::Instance* pDepInstance);
+
+		static std::string translateFwType(const NVM_UINT16 fw_type);
+
 	private:
 
 		void populateAttributeList(framework::attribute_names_t &attributes)
@@ -106,8 +109,6 @@ class NVM_API NVDIMMFWVersionFactory : public framework_interface::NvmInstanceFa
 		 */
 		void parseInstanceId(std::string instanceId, std::string &fwVersion,
 				std::string &fwApiVersion, NVM_UINT16 &fwType, std::string &commitId);
-
-		std::string translateFwType(const NVM_UINT16 fw_type);
 
 		std::string getInstanceId(const std::string &fwVersion,
 				const std::string &fwApiVersion,

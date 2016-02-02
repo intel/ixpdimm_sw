@@ -443,5 +443,12 @@ static std::string CONTROLLERTEMPERATURESTATE_KEY = "ControllerTemperatureState"
 // Namespace
 static std::string BLOCKCOUNT_KEY = "BlockCount";
 static std::string ENABLED_KEY = "Enabled";
+
+// Firmware
+static std::string ACTIVEFWVERSION_KEY = "ActiveFWVersion";
+static std::string ACTIVEFWTYPE_KEY = "ActiveFWType";
+static std::string ACTIVEFWCOMMITID_KEY = "ActiveFWCommitID";
+static std::string STAGEDFWVERSION_KEY = "StagedFWVersion";
+static std::string STAGEDFWTYPE_KEY = "StagedFWType";
 } // wbem
 #endif // _WBEM_FRAMEWORK_NVM_STRINGS_H_

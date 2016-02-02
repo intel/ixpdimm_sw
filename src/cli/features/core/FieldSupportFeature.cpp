@@ -38,7 +38,7 @@
 
 #include <server/BaseServerFactory.h>
 #include <physical_asset/NVDIMMFactory.h>
-#include <physical_asset/NVDIMMViewFactory.h>
+#include <physical_asset/NVDIMMViewFactoryOld.h>
 #include <intel_cim_framework/ExceptionBadParameter.h>
 
 #include <intel_cli_framework/FeatureBase.h>
@@ -58,6 +58,7 @@
 #include <software/NVDIMMSoftwareInstallationServiceFactory.h>
 #include <software/ManagementSoftwareIdentityFactory.h>
 #include <software/NVDIMMDriverIdentityFactory.h>
+#include <software/NVDIMMFWVersionFactory.h>
 #include <support/DiagnosticCompletionRecordFactory.h>
 #include <support/NVDIMMLogEntryFactory.h>
 #include <string.h>
@@ -70,6 +71,9 @@
 #include <persistence/config_settings.h>
 #include <persistence/lib_persistence.h>
 #include <exception/NvmExceptionLibError.h>
+#include <logic/device/DeviceFirmwareService.h>
+#include <framework_interface/FrameworkExtensions.h>
+#include <intel_cim_framework/ExceptionNoMemory.h>
 
 const std::string cli::nvmcli::FieldSupportFeature::Name = "Field Support";
 const std::string LOG_PROPERTY_NAME = "LogLevel";
@@ -93,6 +97,19 @@ static const std::string EVENT_OPTION_ENDTIME = "-endtime";
  */
 void cli::nvmcli::FieldSupportFeature::getPaths(cli::framework::CommandSpecList &list)
 {
+	cli::framework::CommandSpec showDeviceFirmware(SHOW_DEVICE_FIRMWARE, TR("Show Device Firmware"),
+			framework::VERB_SHOW,
+			TR("Show detailed information about the firmware on one or more " NVM_DIMM_NAME "s."));
+	showDeviceFirmware.addOption(framework::OPTION_ALL);
+	showDeviceFirmware.addOption(framework::OPTION_DISPLAY)
+			.helpText(TR("Filter the returned attributes by explicitly specifying a comma separated "
+			"list of attributes."));
+	showDeviceFirmware.addTarget(TARGET_FIRMWARE_R).isValueAccepted(false);
+	showDeviceFirmware.addTarget(TARGET_DIMM.name, true, DIMMIDS_STR, false,
+			TR("Restrict output to the firmware information for specific " NVM_DIMM_NAME "s by "
+			"supplying one or more comma-separated " NVM_DIMM_NAME " identifiers. The default "
+			"is to display the firmware information for all manageable " NVM_DIMM_NAME "s."));
+
 	cli::framework::CommandSpec updateFirmware(UPDATE_FIRMWARE, TR("Update Firmware"), framework::VERB_LOAD,
 			TR("Update the firmware on one or more " NVM_DIMM_NAME "s. On the next reboot the firmware will become active."));
 	updateFirmware.addOption(framework::OPTION_SOURCE_R)
@@ -261,6 +278,7 @@ void cli::nvmcli::FieldSupportFeature::getPaths(cli::framework::CommandSpecList 
 			true, "The maximum number of support snapshots to keep in the management software. "
 					"The default value is 100. The valid range is 0-100.");
 
+	list.push_back(showDeviceFirmware);
 	list.push_back(updateFirmware);
 	list.push_back(showPerformance);
 	list.push_back(runDiag);
@@ -285,7 +303,7 @@ cli::nvmcli::FieldSupportFeature::FieldSupportFeature() :
 		m_DumpSupport(wbemDumpSupport),
 		m_ClearSupport(wbemClearSupport),
 		m_getEvents(wbemGetEvents),
-		m_guidToDimmIdStr(wbem::physical_asset::NVDIMMViewFactory::guidToDimmIdStr)
+		m_guidToDimmIdStr(wbem::physical_asset::NVDIMMViewFactoryOld::guidToDimmIdStr)
 {
 }
 
@@ -335,6 +353,9 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::run(
 			break;
 		case CHANGE_PREFERENCES:
 			pResult = changePreferences(parsedCommand);
+			break;
+		case SHOW_DEVICE_FIRMWARE:
+			pResult = showDeviceFirmware(parsedCommand);
 			break;
 	}
 	return pResult;
@@ -1876,4 +1897,129 @@ cli::framework::ErrorResult *cli::nvmcli::FieldSupportFeature::wbemToCliGetNames
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	cli::nvmcli::WbemToCli wbemToCliProvider;
 	return wbemToCliProvider.getNamespaces(parsedCommand, namespaces);
+}
+
+cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::getDeviceFirmwareInstances(
+		const framework::ParsedCommand& parsedCommand,
+		wbem::framework::instances_t &instances)
+{
+	cli::framework::ResultBase *pResult = NULL;
+
+	std::vector<std::string> guids;
+
+	std::map<device_fw_type, std::string> fwTypeMap;
+	fwTypeMap[DEVICE_FW_TYPE_UNKNOWN] = TR("Unknown");
+	fwTypeMap[DEVICE_FW_TYPE_PRODUCTION] = TR("Production");
+	fwTypeMap[DEVICE_FW_TYPE_DFX] = TR("DFx");
+	fwTypeMap[DEVICE_FW_TYPE_DEBUG] = TR("Debug");
+
+	wbem::framework::Instance instance;
+
+	pResult = cli::nvmcli::getDimms(parsedCommand, guids);
+	if (pResult == NULL)
+	{
+		for (size_t i = 0; i < guids.size(); i++)
+		{
+			logic::device::DeviceFirmwareService &service = logic::device::DeviceFirmwareService::getService();
+
+			logic::device::DeviceFirmwareInfo *fwInfo = service.getFirmwareInfo(guids[i]);
+			if (!fwInfo)
+			{
+				throw wbem::framework::ExceptionNoMemory(__FILE__, __FUNCTION__, "fwInfo");
+			}
+			wbem::framework::Attribute dimmId = wbem::physical_asset::NVDIMMViewFactoryOld::guidToDimmIdAttribute(guids[i]);
+			instance.setAttribute(wbem::DIMMID_KEY, dimmId);
+
+			wbem::framework::Attribute fwRevAttr(fwInfo->getActiveRevision(), false);
+			instance.setAttribute(wbem::ACTIVEFWVERSION_KEY, fwRevAttr);
+
+			instance.setAttribute(wbem::ACTIVEFWTYPE_KEY,
+					wbem::framework::Attribute(fwTypeMap[fwInfo->getActiveType()], false));
+
+			// commit ID is displayed as N/A if it's not available
+			std::string commitIdStr = fwInfo->getActiveCommitId();
+			if (commitIdStr.empty())
+			{
+				commitIdStr = wbem::NA;
+			}
+
+			instance.setAttribute(wbem::ACTIVEFWCOMMITID_KEY, wbem::framework::Attribute (commitIdStr, false));
+
+			std::string stagedFwTypeStr = wbem::NA;
+			std::string stagedFwRevStr = wbem::NA;
+			if (fwInfo->isStagedPending())
+			{
+				stagedFwTypeStr =  fwTypeMap[fwInfo->getStagedType()];
+				stagedFwRevStr = fwInfo->getStagedRevision();
+			}
+
+			instance.setAttribute(wbem::STAGEDFWVERSION_KEY, wbem::framework::Attribute (stagedFwRevStr, false));
+			instance.setAttribute(wbem::STAGEDFWTYPE_KEY, wbem::framework::Attribute (stagedFwTypeStr, false));
+
+			instances.push_back(instance);
+
+			delete fwInfo;
+		}
+	}
+
+	return pResult;
+}
+
+/*!
+ * Show Device Firmware
+ */
+cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::showDeviceFirmware(
+		const framework::ParsedCommand &parsedCommand)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	cli::framework::ResultBase *pResult = NULL;
+	wbem::framework::instances_t instances;
+	try
+	{
+		pResult = getDeviceFirmwareInstances(parsedCommand, instances);
+		if (pResult == NULL)
+		{
+			wbem::framework::attribute_names_t defaultAttributes;
+			defaultAttributes.push_back(wbem::DIMMID_KEY);
+			defaultAttributes.push_back(wbem::ACTIVEFWVERSION_KEY);
+			defaultAttributes.push_back(wbem::STAGEDFWVERSION_KEY);
+
+			wbem::framework::attribute_names_t allAttributes = defaultAttributes;
+			allAttributes.push_back(wbem::ACTIVEFWTYPE_KEY);
+			allAttributes.push_back(wbem::ACTIVEFWCOMMITID_KEY);
+			allAttributes.push_back(wbem::STAGEDFWTYPE_KEY);
+
+			wbem::framework::attribute_names_t displayAttributes =
+					GetAttributeNames(parsedCommand.options, defaultAttributes, allAttributes);
+
+			// make sure we have the DIMMID in the display when user asks for specific display attributes
+			if (!wbem::framework_interface::NvmInstanceFactory::containsAttribute(wbem::DIMMID_KEY,
+					displayAttributes))
+			{
+				displayAttributes.insert(displayAttributes.begin(), wbem::DIMMID_KEY);
+			}
+
+			// format the return data
+			cli::nvmcli::filters_t filters;
+			pResult = NvmInstanceToObjectListResult(instances, "DimmFirmware",
+					wbem::DIMMID_KEY, displayAttributes, filters);
+
+			// Set layout to table unless the -all or -display option is present
+			if (!framework::parsedCommandContains(parsedCommand, framework::OPTION_DISPLAY) &&
+					!framework::parsedCommandContains(parsedCommand, framework::OPTION_ALL))
+			{
+				pResult->setOutputType(framework::ResultBase::OUTPUT_TEXTTABLE);
+			}
+		}
+	}
+	catch (wbem::framework::Exception &e)
+	{
+		if (pResult)
+		{
+			delete pResult;
+		}
+		pResult = NvmExceptionToResult(e);
+	}
+	return pResult;
 }

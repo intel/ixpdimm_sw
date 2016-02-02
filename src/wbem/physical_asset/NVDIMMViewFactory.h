@@ -25,151 +25,60 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * This file contains the provider for the NVDIMMView instances which
- * is an internal only NVM DIMM view used by the CLI.
- */
-
-#ifndef	_WBEM_PHYSICALASSET_NVDIMM_VIEW_FACTORY_H_
-#define	_WBEM_PHYSICALASSET_NVDIMM_VIEW_FACTORY_H_
+#ifndef    _WBEM_PHYSICALASSET_NEW_NVDIMM_VIEW_FACTORY_H_
+#define    _WBEM_PHYSICALASSET_NEW_NVDIMM_VIEW_FACTORY_H_
 
 #include <string>
 #include <nvm_management.h>
 #include <framework_interface/NvmInstanceFactory.h>
+#include <logic/device/DeviceService.h>
+#include <logic/system/SystemService.h>
 
 
 namespace wbem
 {
 namespace physical_asset
 {
-static const std::string NVDIMMVIEW_CREATIONCLASSNAME = std::string(NVM_WBEM_PREFIX) + "NVDIMMView"; //!< Creation ClassName static
-/*!
- * Provides a view of an Intel NVDIMM
- */
+static const std::string NVDIMMVIEW_CREATIONCLASSNAME = std::string(NVM_WBEM_PREFIX) + "NVDIMMView";
+
 class NVM_API NVDIMMViewFactory : public framework_interface::NvmInstanceFactory
 {
-	public:
+public:
+	NVDIMMViewFactory(
+		logic::device::DeviceService &deviceService = logic::device::DeviceService::getService(),
+		logic::system::SystemService &systemService = logic::system::SystemService::getService()) :
+		m_deviceService(deviceService),
+		m_systemService(systemService)
+	{
 
-		/*!
-		 * Initialize a new NVDIMMViewFactory.
-		 */
-		NVDIMMViewFactory() throw (wbem::framework::Exception);
+	}
+	~NVDIMMViewFactory() { }
 
-		/*!
-		 * Clean up the NVDIMMViewFactory
-		 */
-		~NVDIMMViewFactory();
+	framework::Instance *getInstance(framework::ObjectPath &path,
+		framework::attribute_names_t &attributes);
+	framework::instance_names_t *getInstanceNames();
 
-		/*!
-		 * Implementation of the standard CIM method to retrieve a specific instance
-		 * @param[in] path
-		 * 		The object path of the instance to retrieve.
-		 * @param[in] attributes
-		 * 		The attributes to retrieve.
-		 * @throw Exception if unable to retrieve the DIMM info
-		 * @return The NVDIMM instance.
-		 */
-		framework::Instance* getInstance(framework::ObjectPath &path,
-			framework::attribute_names_t &attributes) throw (framework::Exception);
+	virtual framework::instances_t *getInstances(framework::attribute_names_t &attributes);
 
-		/*!
-		 * Implementation of the standard CIM method to retrieve a list of
-		 * NVDIMM object paths.
-		 * @throw Exception if unable to retrieve the DIMM list
-		 * @throw Exception if unable to retrieve the server name
-		 * @return The object paths for each NVDIMM.
-		 */
-		framework::instance_names_t* getInstanceNames() throw (framework::Exception);
+	static void toInstance(logic::device::Device &nvdimm, framework::Instance &instance,
+		wbem::framework::attribute_names_t attributes);
 
-		/*!
-		 * Provider for nvm_get_fw_log_level
-		 * @param[out,in] p_log_level
-		 * 		A buffer for the log_level, allocated by the caller.
-		 * @return Returns one of the following @link #return_code return_codes: @endlink @n
-		 * 		#NVM_SUCCESS @n
-		 * 		#NVM_ERR_NOTSUPPORTED @n
-		 * 		#NVM_ERR_NOMEMORY @n
-		 * 		#NVM_ERR_INVALIDPARAMETER @n
-		 */
-		int (*m_GetFwLogLevel)(const NVM_GUID device_guid, enum fw_log_level *p_log_level);
+private:
+	logic::device::DeviceService &m_deviceService;
+	logic::system::SystemService &m_systemService;
+	std::string m_hostName;
+	void populateAttributeList(framework::attribute_names_t &attributes)
+		throw(framework::Exception);
+	framework::ObjectPath createPath(const std::string &guid);
+	std::string getHostName();
 
-		/*!
-		 * Utility method to convert a device physical id to a guid
-		 */
-		static bool handleToGuid(const NVM_UINT32 &handle, std::string &dimmGuid)
-			throw (framework::Exception);
 
-		/*!
-		 * Utility method to convert a guid to a handle
-		 */
-		static void guidToHandle(const std::string &dimmGuid, NVM_UINT32 &handle)
-			throw (framework::Exception);
+	static std::string getMemoryModeString(logic::device::Device &nvdimm);
 
-		/*!
-		 * Utility method to convert a Dimm GUID to an ID attribute based on the db setting
-		 */
-		static framework::Attribute guidToDimmIdAttribute(const std::string &dimmGuid)
-			throw (framework::Exception);
-
-		/*!
-		 * Utility method to convert a Dimm GUID to an string based on the db setting
-		 */
-		static std::string guidToDimmIdStr(const std::string &dimmGuid)
-			throw (wbem::framework::Exception);
-
-		/*!
-		 * API indirection for nvm_inject_device_error
-		 * @param device_guid
-		 * @param passphrase
-		 * @param passphrase_len
-		 * @return
-		 */
-		int (*m_injectDeviceError)(const NVM_GUID device_guid,
-				const struct device_error *p_error);
-
-		/*!
-		 * API indirection for nvm_clear_injected_device_error
-		 * @param device_guid
-		 * @param passphrase
-		 * @param passphrase_len
-		 * @return
-		 */
-		int (*m_clearInjectedDeviceError)(const NVM_GUID device_guid,
-				const struct device_error *p_error);
-
-		void injectTemperatureError(const std::string &dimmGuid,
-			const NVM_REAL32 temperature)
-			throw (framework::Exception);
-
-		void injectPoisonError(const std::string &dimmGuid,
-			const NVM_UINT64 dpa)
-			throw (framework::Exception);
-
-		void clearPoisonError(const std::string &dimmGuid,
-			const NVM_UINT64 dpa)
-			throw (framework::Exception);
-
-		void clearAllErrors(const std::string &dimmGuid)
-			throw (framework::Exception);
-
-	private:
-		void populateAttributeList(framework::attribute_names_t &attributes)
-			throw (framework::Exception);
-
-		void injectError(const std::string &dimmGuid,
-				struct device_error *p_error)
-			throw (wbem::framework::Exception);
-
-		void clearError(const std::string &dimmGuid,
-				struct device_error *p_error)
-			throw (wbem::framework::Exception);
-
-		std::string getMemoryModesSupported(const struct device_details &dimm);
-
-		std::string getMemoryModeString(const framework::UINT16 mode);
+	static std::string getDimmId(logic::device::Device &nvdimm);
 
 };
 
 } // physical_asset
 } // wbem
-#endif  // #ifndef _WBEM_PHYSICALASSET_NVDIMM_VIEW_FACTORY_H_
+#endif  // #ifndef _WBEM_PHYSICALASSET_NEW_NVDIMM_VIEW_FACTORY_H_

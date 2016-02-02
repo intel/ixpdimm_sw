@@ -133,7 +133,7 @@ cli::framework::ResultBase* cli::nvmcli::ValidationFeature::injectError(
 				std::string prefixMsg;
 				try 
 				{
-					m_dimmGuid = wbem::physical_asset::NVDIMMViewFactory::guidToDimmIdStr(*iGuid);
+					m_dimmGuid = wbem::physical_asset::NVDIMMViewFactoryOld::guidToDimmIdStr(*iGuid);
 					// handle clear error injection 
 					if (m_clearStateExists) 
 					{

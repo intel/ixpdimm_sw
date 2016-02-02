@@ -34,7 +34,7 @@
 
 #include <intel_cli_framework/FeatureBase.h>
 #include <nvm_types.h>
-#include <physical_asset/NVDIMMViewFactory.h>
+#include <physical_asset/NVDIMMViewFactoryOld.h>
 
 namespace cli
 {
@@ -82,7 +82,7 @@ public:
 		INJECT_ERROR,
 	};
 private:
-	wbem::physical_asset::NVDIMMViewFactory m_DimmProvider;
+	wbem::physical_asset::NVDIMMViewFactoryOld m_DimmProvider;
 	framework::ResultBase *injectError(const framework::ParsedCommand &parsedCommand);
 	
 	/*

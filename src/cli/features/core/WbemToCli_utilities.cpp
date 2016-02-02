@@ -40,7 +40,7 @@
 #include <intel_cim_framework/ExceptionBadAttribute.h>
 #include <intel_cim_framework/ExceptionNoMemory.h>
 #include <intel_cim_framework/ExceptionNotSupported.h>
-#include <physical_asset/NVDIMMViewFactory.h>
+#include <physical_asset/NVDIMMViewFactoryOld.h>
 #include <physical_asset/NVDIMMFactory.h>
 #include <nvm_management.h>
 #include <string.h>
@@ -205,7 +205,7 @@ int cli::nvmcli::filterInstances( const wbem::framework::instances_t &instances,
 						std::string dimmIdStr = attr.substr(dimmKeySize, attr.size()-dimmKeySize);
 						try
 						{
-							valueStr = wbem::physical_asset::NVDIMMViewFactory::guidToDimmIdStr(dimmIdStr);
+							valueStr = wbem::physical_asset::NVDIMMViewFactoryOld::guidToDimmIdStr(dimmIdStr);
 						}
 						catch (wbem::framework::Exception &)
 						{
@@ -370,7 +370,7 @@ void cli::nvmcli::generateDimmFilter(
 				std::string guidStr;
 				try
 				{
-					if (wbem::physical_asset::NVDIMMViewFactory::handleToGuid(handle, guidStr))
+					if (wbem::physical_asset::NVDIMMViewFactoryOld::handleToGuid(handle, guidStr))
 					{
 						guidFilter.attributeValues.push_back(guidStr);
 					}
@@ -460,7 +460,7 @@ cli::framework::ErrorResult *cli::nvmcli::getDimms(
 				if (isStringValidNumber(target))
 				{
 					NVM_UINT32 handle = strtoul(target.c_str(), NULL, 0);
-					if (!wbem::physical_asset::NVDIMMViewFactory::handleToGuid(handle, guid))
+					if (!wbem::physical_asset::NVDIMMViewFactoryOld::handleToGuid(handle, guid))
 					{
 						throw wbem::exception::NvmExceptionBadTarget(TARGET_DIMM.name.c_str(), target.c_str());
 					}
@@ -528,7 +528,7 @@ cli::framework::ErrorResult *cli::nvmcli::getDimmsFromSockets(
 			filters_t socketFilters;
 			generateSocketFilter(parsedCommand, socketAttributes, socketFilters);
 			wbem::framework::attribute_names_t attributes;
-			wbem::physical_asset::NVDIMMViewFactory dimmFactory;
+			wbem::physical_asset::NVDIMMViewFactoryOld dimmFactory;
 			pInstances = dimmFactory.getInstances(attributes);
 			if (pInstances)
 			{

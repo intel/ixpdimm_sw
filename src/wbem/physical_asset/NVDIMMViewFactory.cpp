@@ -32,33 +32,20 @@
 
 #include <exception/NvmExceptionLibError.h>
 #include <intel_cim_framework/ExceptionBadParameter.h>
-#include <server/BaseServerFactory.h>
 #include <physical_asset/NVDIMMViewFactory.h>
-#include <physical_asset/NVDIMMFactory.h>
 #include <LogEnterExit.h>
-#include <string/s_str.h>
-#include <sstream>
-#include <string.h>
-#include <guid/guid.h>
+#include <logic/exceptions/LibraryException.h>
 #include <persistence/lib_persistence.h>
 #include <persistence/config_settings.h>
+#include <logic/exceptions/InvalidArgumentException.h>
+#include <intel_cim_framework/ExceptionNoMemory.h>
 
-wbem::physical_asset::NVDIMMViewFactory::NVDIMMViewFactory()
-			throw (wbem::framework::Exception)
-			: m_GetFwLogLevel(nvm_get_fw_log_level),
-			  m_injectDeviceError(nvm_inject_device_error),
-			  m_clearInjectedDeviceError(nvm_clear_injected_device_error)
-{
-
-}
-
-wbem::physical_asset::NVDIMMViewFactory::~NVDIMMViewFactory()
-{
-}
+#include "NVDIMMFactory.h"
+#include "framework_interface/FrameworkExtensions.h"
 
 void wbem::physical_asset::NVDIMMViewFactory::populateAttributeList(
 	framework::attribute_names_t &attributes)
-	throw (wbem::framework::Exception)
+throw(wbem::framework::Exception)
 {
 	// add key attributes
 	attributes.push_back(DIMMGUID_KEY);
@@ -125,396 +112,263 @@ void wbem::physical_asset::NVDIMMViewFactory::populateAttributeList(
 	attributes.push_back(MEMCONTROLLERID_KEY);
 }
 
-/*
- * Retrieve a specific instance given an object path
- */
-wbem::framework::Instance* wbem::physical_asset::NVDIMMViewFactory::getInstance(
-	framework::ObjectPath &path, framework::attribute_names_t &attributes)
-	throw (wbem::framework::Exception)
+wbem::framework::instances_t *wbem::physical_asset::NVDIMMViewFactory::getInstances(
+	wbem::framework::attribute_names_t &attributes)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	framework::Instance *pInstance = new framework::Instance(path);
+	checkAttributes(attributes);
 
 	try
 	{
-		checkAttributes(attributes);
-		// extract the GUID from the object path
-		framework::Attribute guidAttr = path.getKeyValue(DIMMGUID_KEY);
+		logic::device::DeviceCollection devices = m_deviceService.getAllDevices();
 
-		// -1 because the length of the string does not include the null terminator
-		if (guidAttr.stringValue().length() != NVM_GUIDSTR_LEN - 1)
+		framework::instances_t *pResult = new framework::instances_t();
+		if (!pResult)
 		{
-			throw framework::ExceptionBadParameter(guidAttr.stringValue().c_str());
+			throw framework::ExceptionNoMemory(__FILE__, __FUNCTION__, "pResult");
 		}
+		for (size_t i = 0; i < devices.size(); i++)
+		{
+			framework::ObjectPath path = createPath(devices[i].getGuid());
+			framework::Instance instance(path);
 
-		NVM_GUID dimmGuid;
-		str_to_guid((char*)guidAttr.stringValue().c_str(), dimmGuid);
+			toInstance(devices[i], instance, attributes);
 
-		// get dimm info
-		struct device_details dimm;
-		memset(&dimm, 0, sizeof(dimm));
-		int rc = nvm_get_device_details(dimmGuid, &dimm);
-		// try to get device discovery if device is not manageable
-		if (rc == NVM_ERR_NOTMANAGEABLE)
-		{
-			int tmpRc = nvm_get_device_discovery(dimmGuid, &dimm.discovery);
-			if (tmpRc != NVM_SUCCESS)
-			{
-				// couldn't retrieve any dimm info, punt
-				throw exception::NvmExceptionLibError(rc);
-			}
+			pResult->push_back(instance);
 		}
-		// any other error besides not manageable, punt
-		else if (rc != NVM_SUCCESS)
-		{
-			// couldn't retrieve the dimm info for some other reason than not being manageable
-			throw exception::NvmExceptionLibError(rc);
-		}
-
-		NVDIMMFactory::fillInNVDIMMInstance(dimm, attributes, pInstance);
-
-		// DimmID = handle or guid depending on user selection
-		if (containsAttribute(DIMMID_KEY, attributes))
-		{
-			framework::Attribute attrDimmId = guidToDimmIdAttribute(guidAttr.stringValue());
-			pInstance->setAttribute(DIMMID_KEY, attrDimmId, attributes);
-		}
-		// DimmHandle = NFIT Handle
-		if (containsAttribute(DIMMHANDLE_KEY, attributes))
-		{
-			framework::Attribute attrDimmHandle(dimm.discovery.device_handle.handle, false);
-			pInstance->setAttribute(DIMMHANDLE_KEY, attrDimmHandle, attributes);
-		}
-		// FWLogLevel
-		if (containsAttribute(FWLOGLEVEL_KEY, attributes))
-		{
-			enum fw_log_level curr_log_level;
-			rc = m_GetFwLogLevel(dimmGuid, &curr_log_level);
-
-			if (rc != NVM_SUCCESS)
-			{
-				// couldn't retrieve event log level
-				curr_log_level = FW_LOG_LEVEL_UNKNOWN;
-			}
-
-			std::string FwLogLevelStr;
-			switch (curr_log_level)
-			{
-				case FW_LOG_LEVEL_DISABLED:
-					FwLogLevelStr = "Disabled";
-					break;
-				case FW_LOG_LEVEL_ERROR:
-					FwLogLevelStr = "Error";
-					break;
-				case FW_LOG_LEVEL_WARN:
-					FwLogLevelStr = "Warning";
-					break;
-				case FW_LOG_LEVEL_INFO:
-					FwLogLevelStr = "Info";
-					break;
-				case FW_LOG_LEVEL_DEBUG:
-					FwLogLevelStr = "Debug";
-					break;
-				default:
-					FwLogLevelStr = "Unknown";
-					break;
-
-			}
-			framework::Attribute attrFwLogLevel((NVM_UINT32)curr_log_level, FwLogLevelStr, false);
-			pInstance->setAttribute(FWLOGLEVEL_KEY, attrFwLogLevel, attributes);
-		}
-		// Device Locator
-		if (containsAttribute(DEVICELOCATOR_KEY, attributes))
-		{
-			framework::Attribute attrDeviceLocator(dimm.device_locator, false);
-			pInstance->setAttribute(DEVICELOCATOR_KEY, attrDeviceLocator, attributes);
-		}
-		// InterfaceFormatCode
-		if (containsAttribute(INTERFACEFORMATCODE_KEY, attributes))
-		{
-			framework::Attribute attrIfc(dimm.discovery.interface_format_code, false);
-			pInstance->setAttribute(INTERFACEFORMATCODE_KEY, attrIfc, attributes);
-		}
-		// FW API Version
-		if (containsAttribute(FWAPIVERSION_KEY, attributes))
-		{
-			framework::Attribute attrFwApiVersion(dimm.discovery.fw_api_version, false);
-			pInstance->setAttribute(FWAPIVERSION_KEY, attrFwApiVersion, attributes);
-		}
-		// FW Version
-		if (containsAttribute(FWVERSION_KEY, attributes))
-		{
-			framework::Attribute attrFwVersion(dimm.discovery.fw_revision, false);
-			pInstance->setAttribute(FWVERSION_KEY, attrFwVersion, attributes);
-		}
-
-		if (containsAttribute(UNCONFIGUREDCAPACITY_KEY, attributes))
-		{
-			framework::Attribute attrUnconfiguredCapacity(dimm.capacities.unconfigured_capacity, false);
-			pInstance->setAttribute(UNCONFIGUREDCAPACITY_KEY, attrUnconfiguredCapacity, attributes);
-		}
-
-		if (containsAttribute(INACCESSIBLECAPACITY_KEY, attributes))
-		{
-			framework::Attribute attrInaccessibleCapacity(dimm.capacities.inaccessible_capacity, false);
-			pInstance->setAttribute(INACCESSIBLECAPACITY_KEY, attrInaccessibleCapacity, attributes);
-		}
-
-		if (containsAttribute(RESERVEDCAPACITY_KEY, attributes))
-		{
-			framework::Attribute attrReservedCapacity(dimm.capacities.reserved_capacity, false);
-			pInstance->setAttribute(RESERVEDCAPACITY_KEY, attrReservedCapacity, attributes);
-		}
-
-		if (containsAttribute(ACTIONREQUIRED_KEY, attributes) ||
-						containsAttribute(ACTIONREQUIREDEVENTS_KEY, attributes))
-		{
-			struct event_filter filter;
-			memset(&filter, 0, sizeof (filter));
-			filter.filter_mask = NVM_FILTER_ON_AR | NVM_FILTER_ON_GUID;
-			filter.action_required = true;
-			memmove(filter.guid, dimmGuid, NVM_GUID_LEN);
-			int eventCount = nvm_get_event_count(&filter);
-			if (eventCount < 0)				{
-				COMMON_LOG_ERROR_F("Failed to retrieve events for namespace %s, error %d",
-						(char*)guidAttr.stringValue().c_str(), eventCount);
-				throw exception::NvmExceptionLibError(eventCount);
-			}
-
-			// ActionRequired = true if any unacknowledged action required events for this namespace
-			if (containsAttribute(ACTIONREQUIRED_KEY, attributes))
-			{
-				framework::Attribute a(eventCount > 0 ? true : false, false);
-				pInstance->setAttribute(ACTIONREQUIRED_KEY, a, attributes);
-			}
-
-			// ActionRequiredEvents = list of action required events ids and messages
-			if (containsAttribute(ACTIONREQUIREDEVENTS_KEY, attributes))
-			{
-				framework::STR_LIST arEventList;
-				if (eventCount > 0)
-				{
-					// get the events
-					struct event events[eventCount];
-					eventCount = nvm_get_events(&filter, events, eventCount);
-					if (eventCount < 0)
-					{
-						COMMON_LOG_ERROR_F("Failed to retrieve events for namespace %s, error %d",
-								(char*)guidAttr.stringValue().c_str(), eventCount);
-						throw exception::NvmExceptionLibError(eventCount);
-					}
-
-					for (int i = 0; i < eventCount; i++)
-					{
-						std::stringstream eventMsg;
-						eventMsg << "Event " << events[i].event_id;
-						char msg[NVM_EVENT_MSG_LEN + (3 * NVM_EVENT_ARG_LEN)];
-						s_snprintf(msg, (NVM_EVENT_MSG_LEN + (3 * NVM_EVENT_ARG_LEN)),
-								events[i].message,
-								events[i].args[0],
-								events[i].args[1],
-								events[i].args[2]);
-						eventMsg << " - " << msg;
-						arEventList.push_back(eventMsg.str());
-					}
-				}
-				framework::Attribute a(arEventList, false);
-				pInstance->setAttribute(ACTIONREQUIREDEVENTS_KEY, a, attributes);
-			}
-		}
-
-		// MemoryModesSupported
-		if (containsAttribute(MEMORYMODESSUPPORTED_KEY, attributes))
-		{
-			framework::Attribute a(getMemoryModesSupported(dimm), false);
-			pInstance->setAttribute(MEMORYMODESSUPPORTED_KEY, a, attributes);
-		}
-		// MixedSKU
-		if (containsAttribute(MIXEDSKU_KEY, attributes))
-		{
-			framework::Attribute a((bool)dimm.status.mixed_sku, false);
-			pInstance->setAttribute(MIXEDSKU_KEY, a, attributes);
-		}
-		// SKUViolation
-		if (containsAttribute(SKUVIOLATION_KEY, attributes))
-		{
-			framework::Attribute a((bool)dimm.status.sku_violation, false);
-			pInstance->setAttribute(SKUVIOLATION_KEY, a, attributes);
-		}
-		// MemControllerID
-		if (containsAttribute(MEMCONTROLLERID_KEY, attributes))
-		{
-			framework::Attribute attrMemCtrl(dimm.discovery.memory_controller_id, false);
-			pInstance->setAttribute(MEMCONTROLLERID_KEY, attrMemCtrl, attributes);
-		}
+		return pResult;
 	}
-	catch (framework::Exception &) // clean up and re-throw
+	catch(logic::LibraryException &e)
 	{
-		if (pInstance != NULL)
-		{
-			delete pInstance;
-		}
-		throw;
+		throw exception::NvmExceptionLibError(e.getErrorCode());
 	}
-
-	return pInstance;
+	catch(logic::InvalidArgumentException &e)
+	{
+		throw framework::ExceptionBadParameter(e.getArgumentName().c_str());
+	}
 }
 
-std::string wbem::physical_asset::NVDIMMViewFactory::getMemoryModesSupported(const struct device_details &dimm)
+wbem::framework::Instance *wbem::physical_asset::NVDIMMViewFactory::getInstance(
+	wbem::framework::ObjectPath &path, wbem::framework::attribute_names_t &attributes)
 {
-	std::stringstream memoryModes;
-
-	framework::UINT16_LIST memoryModeList;
-	NVDIMMFactory::buildMemoryTypeCapabilitiesFromDeviceCapabilities(dimm.discovery.device_capabilities, memoryModeList);
-
-	for (size_t i = 0; i < memoryModeList.size(); i++)
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	checkAttributes(attributes);
+	framework::Instance *pResult = new framework::Instance(path);
+	if (!pResult)
 	{
-		if (i > 0)
-		{
-			memoryModes << ", ";
-		}
-
-		memoryModes << getMemoryModeString(memoryModeList[i]);
+		throw framework::ExceptionNoMemory(__FILE__, __FUNCTION__, "pResult");
 	}
 
-	return memoryModes.str();
-}
+	framework::Attribute guidAttr = path.getKeyValue(DIMMGUID_KEY);
 
-std::string wbem::physical_asset::NVDIMMViewFactory::getMemoryModeString(const framework::UINT16 mode)
-{
-	std::string result;
-
-	switch (mode)
+	try
 	{
-	case NVDIMM_MEMORYTYPECAPABILITIES_MEMORYMODE:
-		result = TR("2LM");
-		break;
-	case NVDIMM_MEMORYTYPECAPABILITIES_STORAGEMODE:
-		result = TR("Storage");
-		break;
-	case NVDIMM_MEMORYTYPECAPABILITIES_APPDIRECTMODE:
-		result = TR("AppDirect");
-		break;
-	default:
-		result = TR("Unknown");
+		logic::device::Device *pNvdimm = m_deviceService.getDevice(guidAttr.stringValue());
+
+		toInstance(*pNvdimm, *pResult, attributes);
+		delete pNvdimm;
+	}
+	catch(logic::LibraryException &e)
+	{
+		throw exception::NvmExceptionLibError(e.getErrorCode());
+	}
+	catch(logic::InvalidArgumentException &e)
+	{
+		throw framework::ExceptionBadParameter(e.getArgumentName().c_str());
 	}
 
-	return result;
+	return pResult;
 }
 
-/*
- * Return an object path for each NVDIMM in the system
- */
-wbem::framework::instance_names_t* wbem::physical_asset::NVDIMMViewFactory::getInstanceNames()
-	throw (wbem::framework::Exception)
+wbem::framework::instance_names_t *wbem::physical_asset::NVDIMMViewFactory::getInstanceNames()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	framework::instance_names_t *pNames = new framework::instance_names_t();
+	framework::instance_names_t *pNames;
 	try
 	{
-		// get the host server name and array of devices
-		std::string hostName = wbem::server::getHostName();
-		wbem::physical_asset::devices_t devices = wbem::physical_asset::NVDIMMFactory::getAllDevices();
-
-		// create an object path for each dimm
-		wbem::physical_asset::devices_t::const_iterator iter = devices.begin();
-		for (; iter != devices.end(); iter++)
+		const std::vector<std::string> &guids = m_deviceService.getAllGuids();
+		pNames = new framework::instance_names_t();
+		if (!pNames)
 		{
-			framework::attributes_t keys;
-
-			// Tag = DIMM GUID
-			NVM_GUID_STR guidStr;
-			guid_to_str(iter->guid, guidStr);
-			framework::Attribute attrDimmID(guidStr, true);
-			keys.insert(std::pair<std::string, framework::Attribute>(
-					DIMMGUID_KEY, attrDimmID));
-
-			// generate the ObjectPath for the instance
-			framework::ObjectPath path(hostName, NVM_NAMESPACE,
-					NVDIMMVIEW_CREATIONCLASSNAME, keys);
-			pNames->push_back(path);
+			throw framework::ExceptionNoMemory(__FILE__, __FUNCTION__, "pNames");
+		}
+		for (size_t i = 0; i < guids.size(); i++)
+		{
+			pNames->push_back(createPath(guids[i]));
 		}
 	}
-	catch (framework::Exception &) // clean up and re-throw
+	catch (logic::LibraryException &e)
 	{
-		delete pNames;
-		throw;
+		throw exception::NvmExceptionLibError(e.getErrorCode());
 	}
 
 	return pNames;
 }
 
-/*
- * Attempt to convert a handle to a GUID. Return false if the
- * handle is not found.
- * TODO: there is a potential performance improvement to be had here
- * by caching the dimm list rather than retrieving it every time.
- */
-bool wbem::physical_asset::NVDIMMViewFactory::handleToGuid(
-		const NVM_UINT32 &handle, std::string &dimmGuid)
-		throw (wbem::framework::Exception)
+wbem::framework::ObjectPath wbem::physical_asset::NVDIMMViewFactory::createPath(const std::string &guid)
+{
+	framework::attributes_t keys;
+	ADD_KEY_ATTRIBUTE(keys, DIMMGUID_KEY, framework::STR, guid);
+	framework::ObjectPath path(getHostName(), NVM_NAMESPACE, NVDIMMVIEW_CREATIONCLASSNAME, keys);
+
+	return path;
+}
+
+std::string wbem::physical_asset::NVDIMMViewFactory::getHostName()
+{
+	if (m_hostName.empty())
+	{
+		m_hostName = m_systemService.getHostName();
+	}
+	return m_hostName;
+}
+
+
+void wbem::physical_asset::NVDIMMViewFactory::toInstance(logic::device::Device &nvdimm,
+	wbem::framework::Instance &instance, wbem::framework::attribute_names_t attributes)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	// enum to string look ups
+	std::map<memory_type, std::string> memoryMap;
+	memoryMap[MEMORY_TYPE_UNKNOWN] = "Unknown";
+	memoryMap[MEMORY_TYPE_DDR4] = "DDR4";
+	memoryMap[MEMORY_TYPE_NVMDIMM] = "NVM-DIMM";
 
-	bool validHandle = false;
+	std::map<lock_state, std::string> lockStateMap;
+	lockStateMap[LOCK_STATE_UNKNOWN] = "Unknown";
+	lockStateMap[LOCK_STATE_DISABLED] = "Disabled";
+	lockStateMap[LOCK_STATE_UNLOCKED] = "Unlocked";
+	lockStateMap[LOCK_STATE_LOCKED] = "Locked";
+	lockStateMap[LOCK_STATE_FROZEN] = "Frozen";
+	lockStateMap[LOCK_STATE_PASSPHRASE_LIMIT] = "Exceeded";
+	lockStateMap[LOCK_STATE_NOT_SUPPORTED] = "Not Supported";
 
-	wbem::physical_asset::devices_t devices = wbem::physical_asset::NVDIMMFactory::getAllDevices();
+	std::map<manageability_state, std::string> manageabilityMap;
+	manageabilityMap[MANAGEMENT_VALIDCONFIG] = "Manageable";
+	manageabilityMap[MANAGEMENT_INVALIDCONFIG] = "Unmanageable";
+	manageabilityMap[MANAGEMENT_UNKNOWN] = "Unknown";
 
-	physical_asset::devices_t::const_iterator iter = devices.begin();
-	// find the matching handle
-	for (; iter != devices.end(); iter++)
+	std::map<device_form_factor, std::string> formFactorMap; 
+	formFactorMap[DEVICE_FORM_FACTOR_DIMM] = "DIMM";
+	formFactorMap[DEVICE_FORM_FACTOR_SODIMM] = "SODIMM";
+	formFactorMap[DEVICE_FORM_FACTOR_UNKNOWN] = "Unknown";
+
+	NVM_UINT16 DEVICE_HEALTH_UNMANAGEABLE = 65534; //!< Additional health state for unmanageable dimms
+	std::map<framework::UINT16, std::string> healthStateMap;
+	healthStateMap[DEVICE_HEALTH_UNKNOWN] = "Unknown";
+	healthStateMap[DEVICE_HEALTH_NORMAL] = "OK";
+	healthStateMap[DEVICE_HEALTH_NONCRITICAL] = "Minor Failure";
+	healthStateMap[DEVICE_HEALTH_CRITICAL] = "Critical Failure";
+	healthStateMap[DEVICE_HEALTH_FATAL] = "Non-recoverable error";
+	healthStateMap[DEVICE_HEALTH_UNMANAGEABLE] = "Unmanageable";
+
+	std::map<config_status, std::string> configStatusMap;
+	configStatusMap[CONFIG_STATUS_NOT_CONFIGURED] = "Not configured";
+	configStatusMap[CONFIG_STATUS_VALID] = "Valid";
+	configStatusMap[CONFIG_STATUS_ERR_CORRUPT] = "Failed - Bad configuration";
+	configStatusMap[CONFIG_STATUS_ERR_BROKEN_INTERLEAVE] = "Failed - Broken interleave";
+	configStatusMap[CONFIG_STATUS_ERR_REVERTED] = "Failed - Reverted";
+	configStatusMap[CONFIG_STATUS_ERR_NOT_SUPPORTED] = "Failed - Unsupported";
+
+	std::map<fw_log_level, std::string> fwLogLevelMap;
+	fwLogLevelMap[FW_LOG_LEVEL_DISABLED] = "Disabled";
+	fwLogLevelMap[FW_LOG_LEVEL_ERROR] = "Error";
+	fwLogLevelMap[FW_LOG_LEVEL_WARN] = "Warning";
+	fwLogLevelMap[FW_LOG_LEVEL_INFO] = "Info";
+	fwLogLevelMap[FW_LOG_LEVEL_DEBUG] = "Debug";
+	fwLogLevelMap[FW_LOG_LEVEL_UNKNOWN] = "Unknown";
+
+	std::map<NVM_UINT16, std::string> communicationStatusMap;
+	communicationStatusMap[NVDIMM_COMMUNICATION_NOCONTACT] = "No Contact";
+	communicationStatusMap[NVDIMM_COMMUNICATION_OK] = "Communication OK";
+
+	ADD_ATTRIBUTE(instance, attributes, DIMMID_KEY, framework::STR, getDimmId(nvdimm));
+	ADD_ATTRIBUTE(instance, attributes, DIMMHANDLE_KEY, framework::UINT32, nvdimm.getDeviceHandle());
+	ADD_ATTRIBUTE(instance, attributes, PHYSICALID_KEY, framework::UINT16, nvdimm.getPhysicalId());
+	ADD_ATTRIBUTE(instance, attributes, MANUFACTURER_KEY, framework::STR, nvdimm.getManufacturer());
+	ADD_ATTRIBUTE(instance, attributes, MANUFACTURERID_KEY, framework::UINT16, nvdimm.getManufacturerId());
+	ADD_ATTRIBUTE(instance, attributes, MODEL_KEY, framework::STR, nvdimm.getModelNumber());
+	ADD_ATTRIBUTE(instance, attributes, CAPACITY_KEY, framework::UINT64, nvdimm.getRawCapacity());
+	ADD_ATTRIBUTE(instance, attributes, VENDORID_KEY, framework::UINT16, nvdimm.getVendorId());
+	ADD_ATTRIBUTE(instance, attributes, DEVICEID_KEY, framework::UINT16, nvdimm.getDeviceId());
+	ADD_ATTRIBUTE(instance, attributes, REVISIONID_KEY, framework::UINT16, nvdimm.getRevisionId());
+	ADD_ATTRIBUTE(instance, attributes, SOCKETID_KEY, framework::UINT16, nvdimm.getSocketId());
+	ADD_ENUM_ATTRIBUTE(instance, attributes, MEMORYTYPE_KEY, framework::UINT16,  nvdimm.getMemoryType(), memoryMap);
+	ADD_ATTRIBUTE(instance, attributes, SERIALNUMBER_KEY, framework::STR, nvdimm.getSerialNumber());
+	ADD_ENUM_ATTRIBUTE(instance, attributes, LOCKSTATE_KEY, framework::UINT16, nvdimm.getLockState(), lockStateMap);
+	ADD_ENUM_ATTRIBUTE(instance, attributes, MANAGEABILITYSTATE_KEY, framework::UINT16, nvdimm.getManageabilityState(), manageabilityMap);
+	ADD_ENUM_ATTRIBUTE(instance, attributes, FORMFACTOR_KEY, framework::UINT16, nvdimm.getFormFactor(), formFactorMap);
+	ADD_ATTRIBUTE(instance, attributes, DATAWIDTH_KEY, framework::UINT64, nvdimm.getDataWidth());
+	ADD_ATTRIBUTE(instance, attributes, TOTALWIDTH_KEY, framework::UINT64, nvdimm.getTotalWidth());
+	ADD_ATTRIBUTE(instance, attributes, SPEED_KEY, framework::UINT64, nvdimm.getSpeed());
+	ADD_ATTRIBUTE(instance, attributes, VOLATILECAPACITY_KEY, framework::UINT64, nvdimm.getVolatileCapacity());
+	ADD_ATTRIBUTE(instance, attributes, PERSISTENTCAPACITY_KEY, framework::UINT64, nvdimm.getPersistentCapacity());
+	ADD_ATTRIBUTE(instance, attributes, PARTNUMBER_KEY, framework::STR, nvdimm.getPartNumber());
+	ADD_ATTRIBUTE(instance, attributes, BANKLABEL_KEY, framework::STR, nvdimm.getBankLabel());
+	ADD_ENUM_ATTRIBUTE(instance, attributes, HEALTHSTATE_KEY, framework::UINT16, nvdimm.getHealthState(), healthStateMap);
+	framework::UINT16 communicationStatus = (framework::UINT16)(nvdimm.getIsMissing() ? NVDIMM_COMMUNICATION_NOCONTACT : NVDIMM_COMMUNICATION_OK);
+	ADD_ENUM_ATTRIBUTE(instance, attributes, COMMUNICATIONSTATUS_KEY, framework::UINT16, communicationStatus, communicationStatusMap);
+	ADD_ATTRIBUTE(instance, attributes, ISNEW_KEY, framework::BOOLEAN, nvdimm.isNew());
+	ADD_ATTRIBUTE(instance, attributes, POWERMANAGEMENTENABLED_KEY, framework::BOOLEAN, nvdimm.getPowerManagementEnabled());
+	ADD_ATTRIBUTE(instance, attributes, POWERLIMIT_KEY, framework::UINT8, nvdimm.getPowerLimit());
+	ADD_ATTRIBUTE(instance, attributes, PEAKPOWERBUDGET_KEY, framework::UINT16, nvdimm.getPeakPowerBudget());
+	ADD_ATTRIBUTE(instance, attributes, AVGPOWERBUDGET_KEY, framework::UINT16, nvdimm.getAvgPowerBudget());
+	ADD_ATTRIBUTE(instance, attributes, DIESPARINGENABLED_KEY, framework::BOOLEAN, nvdimm.getDieSparingEnabled());
+	ADD_ATTRIBUTE(instance, attributes, DIESPARINGLEVEL_KEY, framework::UINT8, nvdimm.getDieSparingLevel());
+	ADD_ATTRIBUTE(instance, attributes, LASTSHUTDOWNSTATUS_KEY, framework::UINT16_LIST, nvdimm.getLastShutdownStatus());
+	ADD_ATTRIBUTE(instance, attributes, DIESPARESUSED_KEY, framework::UINT8, nvdimm.getDieSparesUsed());
+	ADD_ATTRIBUTE(instance, attributes, FIRSTFASTREFRESH_KEY, framework::BOOLEAN, nvdimm.isFirstFastRefresh());
+	ADD_ATTRIBUTE(instance, attributes, CHANNEL_KEY, framework::UINT32, nvdimm.getChannelId());
+	ADD_ATTRIBUTE(instance, attributes, CHANNELPOS_KEY, framework::UINT32, nvdimm.getChannelPosition());
+	ADD_ENUM_ATTRIBUTE(instance, attributes, CONFIGURATIONSTATUS_KEY, framework::UINT16, nvdimm.getConfigStatus(), configStatusMap);
+	ADD_ATTRIBUTE(instance, attributes, SECURITYCAPABILITIES_KEY, framework::UINT32_LIST, nvdimm.getSecurityCapabilities());
+	ADD_DATETIME_ATTRIBUTE(instance, attributes, LASTSHUTDOWNTIME_KEY, nvdimm.getLastShutdownTime());
+	ADD_ATTRIBUTE(instance, attributes, DIESPARINGCAPABLE_KEY, framework::BOOLEAN, nvdimm.isDieSparingCapable());
+	ADD_ATTRIBUTE(instance, attributes, MEMORYTYPECAPABILITIES_KEY, framework::UINT16_LIST, nvdimm.getMemoryCapabilities());
+	ADD_ENUM_ATTRIBUTE(instance, attributes, FWLOGLEVEL_KEY, framework::UINT16, nvdimm.getFwLogLevel(), fwLogLevelMap);
+	ADD_ATTRIBUTE(instance, attributes, FWAPIVERSION_KEY, framework::STR, nvdimm.getFwApiVersion());
+	ADD_ATTRIBUTE(instance, attributes, FWVERSION_KEY, framework::STR, nvdimm.getFwRevision());
+	ADD_ATTRIBUTE(instance, attributes, UNCONFIGUREDCAPACITY_KEY, framework::UINT64, nvdimm.getUnconfiguredCapacity());
+	ADD_ATTRIBUTE(instance, attributes, INACCESSIBLECAPACITY_KEY, framework::UINT64, nvdimm.getInaccessibleCapacity());
+	ADD_ATTRIBUTE(instance, attributes, RESERVEDCAPACITY_KEY, framework::UINT64, nvdimm.getReservedCapacity());
+	ADD_ATTRIBUTE(instance, attributes, INTERFACEFORMATCODE_KEY, framework::UINT16, nvdimm.getInterfaceFormatCode());
+	ADD_ATTRIBUTE(instance, attributes, DEVICELOCATOR_KEY, framework::STR, nvdimm.getDeviceLocator());
+	ADD_ATTRIBUTE(instance, attributes, ACTIONREQUIRED_KEY, framework::BOOLEAN, nvdimm.isActionRequired());
+	ADD_ATTRIBUTE(instance, attributes, ACTIONREQUIREDEVENTS_KEY, framework::STR_LIST, nvdimm.getActionRequiredEvents());
+	ADD_ATTRIBUTE(instance, attributes, MEMORYMODESSUPPORTED_KEY, framework::STR, getMemoryModeString(nvdimm));
+	ADD_ATTRIBUTE(instance, attributes, MIXEDSKU_KEY, framework::BOOLEAN, nvdimm.isMixedSku());
+	ADD_ATTRIBUTE(instance, attributes, SKUVIOLATION_KEY, framework::BOOLEAN, nvdimm.isSkuViolation());
+	ADD_ATTRIBUTE(instance, attributes, MEMCONTROLLERID_KEY, framework::UINT16, nvdimm.getMemoryControllerId());
+}
+
+std::string wbem::physical_asset::NVDIMMViewFactory::getMemoryModeString(
+	logic::device::Device &nvdimm)
+{
+	std::map<NVM_UINT32, std::string> map;
+	map[NVDIMM_MEMORYTYPECAPABILITIES_MEMORYMODE] = TR("2LM");
+	map[NVDIMM_MEMORYTYPECAPABILITIES_STORAGEMODE] = TR("Storage");
+	map[NVDIMM_MEMORYTYPECAPABILITIES_APPDIRECTMODE] = TR("AppDirect");
+
+	std::stringstream result;
+	const std::vector<NVM_UINT16> &capabilities = nvdimm.getMemoryCapabilities();
+	for (size_t i = 0; i < capabilities.size(); i++)
 	{
-		if ((*iter).device_handle.handle == handle)
+		if (i > 0)
 		{
-			validHandle = true;
-			NVM_GUID_STR guidStr;
-			guid_to_str((*iter).guid, guidStr);
-			dimmGuid = guidStr;
-			break;
+			result << ", ";
 		}
-	}
 
-	return validHandle;
+		result << map[capabilities[i]];
+	}
+	return result.str();
 }
 
-/*
- * Attempt to convert a GUID to a handle. Throws an
- * exeption if not found.
- */
-void wbem::physical_asset::NVDIMMViewFactory::guidToHandle(
-		const std::string& guidStr,  NVM_UINT32& handle)
-		throw (wbem::framework::Exception)
+std::string  wbem::physical_asset::NVDIMMViewFactory::getDimmId(logic::device::Device &nvdimm)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	NVM_GUID guid;
-	handle = 0;
-
-	str_to_guid(guidStr.c_str(), guid);
-	struct device_discovery device;
-	int rc;
-	if ((rc = nvm_get_device_discovery(guid, &device)) == NVM_SUCCESS)
-	{
-		handle = device.device_handle.handle;
-	}
-	else
-	{
-		throw exception::NvmExceptionLibError(rc);
-	}
-}
-
-/*!
- * Utility method to convert a Dimm GUID to an ID attribute based on the db setting
- */
-wbem::framework::Attribute wbem::physical_asset::NVDIMMViewFactory::guidToDimmIdAttribute(
-		const std::string &dimmGuid)
-		throw (wbem::framework::Exception)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	framework::Attribute dimmIdAttr;
+	std::stringstream result;
 	// look up the database setting for the preferred DimmID output
 	// default to using dimm handle
 	bool useHandle = true;
@@ -531,125 +385,12 @@ wbem::framework::Attribute wbem::physical_asset::NVDIMMViewFactory::guidToDimmId
 	// convert GUID to handle
 	if (useHandle)
 	{
-		NVM_UINT32 handle;
-		guidToHandle(dimmGuid.c_str(), handle);
-		framework::Attribute attrHandle(handle, false);
-		dimmIdAttr = attrHandle;
+		result << nvdimm.getDeviceHandle();
 	}
-	// use GUID
+		// use GUID
 	else
 	{
-		framework::Attribute attrGuid(dimmGuid, false);
-		dimmIdAttr = attrGuid;
+		result << nvdimm.getGuid();
 	}
-	return dimmIdAttr;
+	return result.str();
 }
-
-/*!
- * Utility method to convert a Dimm GUID to a string based on the db setting
- */
-std::string wbem::physical_asset::NVDIMMViewFactory::guidToDimmIdStr(const std::string &dimmGuid)
-		throw (wbem::framework::Exception)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	wbem::framework::Attribute attribute = guidToDimmIdAttribute(dimmGuid);
-	return attribute.asStr();
-}
-
-void wbem::physical_asset::NVDIMMViewFactory::injectPoisonError(const std::string &dimmGuid,
-		const NVM_UINT64 dpa)
-throw (framework::Exception)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	struct device_error error;
-	memset(&error, 0, sizeof (error));
-	error.type = ERROR_TYPE_POISON;
-	error.error_injection_parameter.dpa = dpa;
-	injectError(dimmGuid, &error);
-}
-
-void wbem::physical_asset::NVDIMMViewFactory::clearPoisonError(const std::string &dimmGuid,
-		const NVM_UINT64 dpa)
-throw (framework::Exception)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	struct device_error error;
-	memset(&error, 0, sizeof (error));
-	error.type = ERROR_TYPE_POISON;
-	error.error_injection_parameter.dpa = dpa;
-	clearError(dimmGuid, &error);
-}
-
-void wbem::physical_asset::NVDIMMViewFactory::clearAllErrors(const std::string &dimmGuid)
-throw (framework::Exception)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	struct device_error error;
-	memset(&error, 0, sizeof (error));
-	error.type = ERROR_TYPE_CLEAR_ALL;
-	clearError(dimmGuid, &error);
-}
-
-void wbem::physical_asset::NVDIMMViewFactory::injectTemperatureError(
-		const std::string &dimmGuid,
-		const NVM_REAL32 temperature)
-throw (framework::Exception)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	struct device_error error;
-	memset(&error, 0, sizeof (error));
-	error.type = ERROR_TYPE_TEMPERATURE;
-	error.error_injection_parameter.temperature = nvm_encode_temperature(temperature);
-	injectError(dimmGuid, &error);
-}
-
-void wbem::physical_asset::NVDIMMViewFactory::clearError(const std::string &dimmGuid,
-		struct device_error *p_error)
-		throw (wbem::framework::Exception)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	// check for valid dimm guid
-	// note - .length() doesn't include NULL terminator
-	if (dimmGuid.empty() || dimmGuid.length() != NVM_GUIDSTR_LEN - 1)
-	{
-		COMMON_LOG_ERROR("Invalid dimm guid");
-		throw wbem::framework::ExceptionBadParameter(wbem::DEVICEID_KEY.c_str());
-	}
-	NVM_GUID guid;
-	str_to_guid(dimmGuid.c_str(), guid);
-
-	int rc = m_clearInjectedDeviceError(guid, p_error);
-	if (rc != NVM_SUCCESS)
-	{
-		throw wbem::exception::NvmExceptionLibError(rc);
-	}
-}
-
-void wbem::physical_asset::NVDIMMViewFactory::injectError(const std::string &dimmGuid,
-		struct device_error *p_error)
-		throw (wbem::framework::Exception)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	// check for valid dimm guid
-	// note - .length() doesn't include NULL terminator
-	if (dimmGuid.empty() || dimmGuid.length() != NVM_GUIDSTR_LEN - 1)
-	{
-		COMMON_LOG_ERROR("Invalid dimm guid");
-		throw wbem::framework::ExceptionBadParameter(wbem::DEVICEID_KEY.c_str());
-	}
-	NVM_GUID guid;
-	str_to_guid(dimmGuid.c_str(), guid);
-
-	int rc = m_injectDeviceError(guid, p_error);
-	if (rc != NVM_SUCCESS)
-	{
-		throw wbem::exception::NvmExceptionLibError(rc);
-	}
-}
-

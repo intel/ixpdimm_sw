@@ -76,6 +76,7 @@ const framework::CommandSpecPart TARGET_TOPOLOGY_R = {"-topology", true, "", fal
 		"No filtering is supported on this target.")};
 const framework::CommandSpecPart TARGET_JOB = {"-job", true, "", false, N_TR("Job ID.")};
 const framework::CommandSpecPart TARGET_PREFERENCES = {"-preferences", true, "", false, N_TR("The user preferences."), "", true};
+const framework::CommandSpecPart TARGET_FIRMWARE_R = {"-firmware", true, "", false, N_TR("The firmware information.")};
 
 const std::string UNKNOWN_ERROR_STR = N_TR("An unknown error occurred.");
 const std::string NOTSUPPORTED_ERROR_STR = N_TR("The command is not supported in the current context.");

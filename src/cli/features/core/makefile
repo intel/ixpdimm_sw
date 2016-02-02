@@ -72,6 +72,7 @@ INCS = 	-I$(SRC_DIR)/cli \
 		-I$(SRC_DIR)/lib \
 		-I$(SRC_DIR)/common \
 		-I$(SRC_DIR)/wbem \
+		-I$(SRC_DIR)/ \
 		-I$(CLI_FRAMEWORK_DIR)/include \
 		-I$(CIM_FRAMEWORK_DIR)/include
 

@@ -36,7 +36,7 @@
 #include <intel_cim_framework/ExceptionNoMemory.h>
 #include <intel_cim_framework/ExceptionBadAttribute.h>
 #include <server/BaseServerFactory.h>
-#include "NVDIMMViewFactory.h"
+#include "NVDIMMViewFactoryOld.h"
 #include <guid/guid.h>
 #include <sstream>
 #include <intel_cim_framework/Types.h>
@@ -197,7 +197,7 @@ void wbem::physical_asset::MemoryTopologyViewFactory::populateNvmDimmInstanceAtt
 		{
 			NVM_GUID_STR guidStr;
 			guid_to_str(device.guid, guidStr);
-			std::string dimmId = NVDIMMViewFactory::guidToDimmIdStr(std::string(guidStr));
+			std::string dimmId = NVDIMMViewFactoryOld::guidToDimmIdStr(std::string(guidStr));
 
 			framework::Attribute a(dimmId, false);
 			instance.setAttribute(DIMMID_KEY, a);

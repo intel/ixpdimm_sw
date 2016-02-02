@@ -147,7 +147,8 @@ public:
 		ACK_EVENT,
 		SHOW_EVENTS,
 		SHOW_PREFERENCES,
-		CHANGE_PREFERENCES
+		CHANGE_PREFERENCES,
+		SHOW_DEVICE_FIRMWARE,
 	};
 
 	/*!
@@ -207,6 +208,12 @@ public:
 	 * Return a list of supported preferences for display/change
 	 */
 	static std::vector<std::string> getSupportedPreferences();
+
+protected:
+
+	cli::framework::ResultBase *getDeviceFirmwareInstances(
+			const framework::ParsedCommand& parsedCommand,
+			wbem::framework::instances_t &Instances);
 
 private:
 
@@ -311,6 +318,11 @@ private:
 
 	static cli::framework::ErrorResult *wbemToCliGetNamespaces(
 			const framework::ParsedCommand &parsedCommand, std::vector<std::string> &namespaces);
+
+	/*!
+	 * Show Device Firmware
+	 */
+	cli::framework::ResultBase *showDeviceFirmware(const framework::ParsedCommand &parsedCommand);
 };
 
 };

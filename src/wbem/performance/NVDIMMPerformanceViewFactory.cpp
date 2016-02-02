@@ -34,7 +34,7 @@
 #include <nvm_management.h>
 #include <guid/guid.h>
 #include <server/BaseServerFactory.h>
-#include <physical_asset/NVDIMMViewFactory.h>
+#include <physical_asset/NVDIMMViewFactoryOld.h>
 #include <physical_asset/NVDIMMFactory.h>
 #include "NVDIMMPerformanceViewFactory.h"
 
@@ -94,14 +94,14 @@ throw (wbem::framework::Exception)
 		// DimmID = handle or guid depending on user selection
 		if (containsAttribute(DIMMID_KEY, attributes))
 		{
-			framework::Attribute attrDimmId = physical_asset::NVDIMMViewFactory::guidToDimmIdAttribute(guidStr);
+			framework::Attribute attrDimmId = physical_asset::NVDIMMViewFactoryOld::guidToDimmIdAttribute(guidStr);
 			pInstance->setAttribute(DIMMID_KEY, attrDimmId, attributes);
 		}
 		// DimmHandle
 		if (containsAttribute(DIMMHANDLE_KEY, attributes))
 		{
 			NVM_UINT32 dimmHandle;
-			physical_asset::NVDIMMViewFactory::guidToHandle(guidStr, dimmHandle);
+			physical_asset::NVDIMMViewFactoryOld::guidToHandle(guidStr, dimmHandle);
 			framework::Attribute attrDimmHandle(dimmHandle, false);
 			pInstance->setAttribute(DIMMHANDLE_KEY, attrDimmHandle, attributes);
 		}
