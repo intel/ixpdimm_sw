@@ -66,6 +66,7 @@ static const std::string NA = "N/A";
 static const std::string YES = "True";
 static const std::string NO = "False";
 static const std::string NONE = "None";
+static const std::string UNKNOWN = "Unknown";
 
 // some common constants
 static const char CURRENT_CONFIG    = 'C';

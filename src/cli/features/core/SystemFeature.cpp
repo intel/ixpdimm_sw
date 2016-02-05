@@ -1384,6 +1384,25 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::showMemoryResources(
 	return pResult;
 }
 
+// Display Unknown when the driver doesn't report any recommended namespace blocksizes
+void cli::nvmcli::SystemFeature::displayUnknownIfDriverReportsNoBlockSizes(wbem::framework::Instance &wbemInstance)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	wbem::framework::Attribute blockSizesAttr;
+	if (wbemInstance.getAttribute(wbem::BLOCKSIZES_KEY, blockSizesAttr) ==
+			wbem::framework::SUCCESS)
+	{
+		std::string blockSizesStr;
+		wbem::framework::UINT32_LIST blockSizesList = blockSizesAttr.uint32ListValue();
+		if (blockSizesList.empty())
+		{
+			blockSizesStr = wbem::UNKNOWN;
+			wbem::framework::Attribute newBlockSizesAttr(blockSizesStr, false);
+			wbemInstance.setAttribute(wbem::BLOCKSIZES_KEY, newBlockSizesAttr);
+		}
+	}
+}
 
 cli::framework::ResultBase *cli::nvmcli::SystemFeature::showSystemCapabilities(
 		const framework::ParsedCommand &parsedCommand)
@@ -1433,6 +1452,7 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::showSystemCapabilities(
 			// convert capacities to formatted sizes
 			cli::nvmcli::convertCapacityAttribute((*pInstances)[0], wbem::ALIGNMENT_KEY);
 			cli::nvmcli::convertCapacityAttribute((*pInstances)[0], wbem::MINNAMESPACESIZE_KEY);
+			displayUnknownIfDriverReportsNoBlockSizes((*pInstances)[0]);
 			pResult = NvmInstanceToPropertyListResult((*pInstances)[0], attributes, "SystemCapabilities");
 		}
 	}
@@ -1591,7 +1611,7 @@ void cli::nvmcli::SystemFeature::updateLastShutDownStatus(
 			switch(a.uint16ListValue()[i])
 			{
 			case wbem::physical_asset::DEVICE_LAST_SHUTDOWN_STATUS_UKNOWN:
-				newValue += "Unknown";
+				newValue += wbem::UNKNOWN;
 				break;
 			case wbem::physical_asset::DEVICE_LAST_SHUTDOWN_STATUS_FW_FLUSH_COMPLETE:
 				newValue += "FW Flush Complete";

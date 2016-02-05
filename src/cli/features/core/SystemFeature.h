@@ -167,6 +167,7 @@ private:
 		void convertSecurityCapabilities(wbem::framework::Instance &wbemInstance);
 		void updateLastShutDownTime(wbem::framework::Instance &instance);
 		void convertSystemOpStatusToSku(wbem::framework::Instance& instance);
+		void displayUnknownIfDriverReportsNoBlockSizes(wbem::framework::Instance &wbemInstance);
 
 		/*
 		 * Helper routine to convert a logLevel string to fw_log_level enum
