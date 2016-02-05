@@ -542,10 +542,18 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseCreateNsBlockSiz
 	if (m_nsType == wbem::pmem_config::PM_SERVICE_PM_TYPE)
 	{
 		m_blockSize = 1u;
-		if (m_blockSizeExists && value != "1")
+		if (m_blockSizeExists)
 		{
-			pResult = new framework::SyntaxErrorBadValueResult(
-					framework::TOKENTYPE_PROPERTY, CREATE_NS_PROP_BLOCKSIZE, value);
+			if(!isStringValidNumber(value))
+			{
+				pResult = new framework::SyntaxErrorBadValueResult(
+						framework::TOKENTYPE_PROPERTY, CREATE_NS_PROP_BLOCKSIZE, value);
+			}
+			else
+			{
+				// the library will determine if this is a valid size
+				m_blockSize = stringToUInt64(value);
+			}
 		}
 	}
 	else if (m_nsType == wbem::pmem_config::PM_SERVICE_BLOCK_TYPE)
