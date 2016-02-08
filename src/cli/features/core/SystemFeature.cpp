@@ -112,7 +112,7 @@ void cli::nvmcli::SystemFeature::getPaths(cli::framework::CommandSpecList &list)
 			TR("Modify specific " NVM_DIMM_NAME "s by supplying one or more comma-separated " NVM_DIMM_NAME " identifiers. "
 			"However, this is not recommended as it may put the system in an undesirable state. "
 			"The default is to modify all manageable " NVM_DIMM_NAME "s."));
-	modifyDevice.addProperty(FIRSTFASTREFRESH_PROPERTYNAME, true, "0 | 1", true,
+	modifyDevice.addProperty(FIRSTFASTREFRESH_PROPERTYNAME, true, "0|1", true,
 			TR("Whether acceleration of the first refresh cycle is enabled."));
 
 	framework::CommandSpec setFwLogging(SET_FW_LOGGING, TR("Set Firmware Logging"), framework::VERB_SET,
@@ -122,7 +122,7 @@ void cli::nvmcli::SystemFeature::getPaths(cli::framework::CommandSpecList &list)
 			TR("Modify specific " NVM_DIMM_NAME "s by supplying one or more comma-separated " NVM_DIMM_NAME " identifiers. "
 			"However, this is not recommended as it may put the system in an undesirable state. "
 			"The default is to modify all manageable " NVM_DIMM_NAME "s."));
-	setFwLogging.addProperty(FWLOGLEVEL_PROPERTYNAME, true, "Disabled | Error | Warning | Info | Debug", true,
+	setFwLogging.addProperty(FWLOGLEVEL_PROPERTYNAME, true, "Disabled|Error|Warning|Info|Debug", true,
 			TR("The firmware logging level."));
 
 	framework::CommandSpec enableDeviceSecurity(ENABLE_DEVICE_SECURITY, TR("Enable Device Security"), framework::VERB_SET,

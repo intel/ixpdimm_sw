@@ -1,0 +1,60 @@
+
+." -------------------- N A M E --------------------
+NAME
+**cliName** - CLI to manage **fullProductName**s
+
+." -------------------- S Y N O P S I S --------------------
+SYNOPSIS
+.B **cliName** 
+.R <verb> [<options>] [<targets>] [<properties>]
+
+.P
+verb
+.RS
+A command has a single verb which represents the action to be taken. 
+Verb choices are 
+.BR create ,
+.BR delete ,
+.BR dump ,
+.BR help ,
+.BR load ,
+.BR set ,
+.BR show ,
+.BR start ,
+and 
+.BR version .
+Use
+.RS
+.R <verb>
+.B -help
+.RE
+to see available commands for a specific verb.
+.RE
+
+options
+.RS
+Following the verb are zero or more options which modify the action of the verb; overriding the default behavior with explicitly requested behavior. 
+.RE
+
+targets
+.RS
+Generally one or more targets are required to indicate the object of the action.
+Use
+.RS
+.R <verb>
+.B -help
+.R <target>
+.RE
+to see available commands for a verb/target pair.
+.RE
+
+properties
+.RS
+Finally, zero or more properties defined as a key/value pair can be used to modify the target.
+.RE
+
+." -------------------- D E S C R I P T I O N --------------------
+DESCRIPTION
+
+Command line access to **abbrProductName** Management functionality is available through the **cliName** component. The NVMCLI exposes all available management features of the underlying **abbrProductName**. The Command Line Interface is an end-user, manufacturing and validation utility.
+

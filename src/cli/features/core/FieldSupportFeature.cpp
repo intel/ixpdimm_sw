@@ -135,7 +135,7 @@ void cli::nvmcli::FieldSupportFeature::getPaths(cli::framework::CommandSpecList 
 					"supplying one or more comma-separated " NVM_DIMM_NAME " identifiers. The default is to "
 					"display performance metrics for all manageable " NVM_DIMM_NAME "s."));
 	showPerformance.addTarget(PERFORMANCE_TARGET, true,
-		"BytesRead | BytesWritten | HostReads | HostWrites | BlockWrites | BlockReads", false,
+		"BytesRead|BytesWritten|HostReads|HostWrites|BlockWrites|BlockReads", false,
 			TR("Restrict output to a specific performance metric by supplying the metric name. "
 					"The default is to display all performance metrics."));
 

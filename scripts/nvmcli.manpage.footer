@@ -1,0 +1,122 @@
+
+." -------------------- O P T I O N S --------------------
+OPTIONS
+.B -all|-a
+.br
+.RS
+Show all attributes. Note: The all and display options are exclusive and may not be used together.
+.RE
+
+.B -display|-d 
+.I (Attributes)
+.br
+.RS
+Filter the returned attributes by explicitly specifying a comma separated list of any of the attributes defined in the Return Data section. Note: The all and display options are exclusive and may not be used together.
+.RE
+.br
+
+.B -help|-h
+.br
+.RS
+Display help for the command.
+.RE
+.br
+
+.B -output|-o text|nvmxml
+.br
+.RS
+Change the output format. One of: "text" (default) or "nvmxml".
+.RE
+	
+
+." -------------------- E X I T  C O D E S --------------------
+EXIT CODES
+.TP 
+.B 0
+The operation succeeded.
+.TP
+.B 1
+A general error occurred when executing the operation.
+.TP
+.B 2
+There was not enough memory to complete the requested operation.
+.TP
+.B 3
+The command is not supported in the current context.
+  
+
+." -------------------- E X A M P L E --------------------
+EXAMPLE
+.B **cliName** show -dimm
+.RS
+Show default information about all **abbrProductName**s
+.RE
+
+.B **cliName** show -a -dimm 1234
+.RS
+Show all information about **abbrProductName** 1234.
+.RE
+
+.B **cliName** show -d HealthState,LockState -dimm
+.RS
+Show HealthState and LockState information for all **abbrProductName**s.
+.RE
+
+.B **cliName** set -source mypassphrase.file -dimm 1234
+.br
+.B NewPassphrase="" ConfirmPassphrase=""
+.RS
+Set a passphrase on **abbrProductName** 1234 by supplying the passphrase in the file mypassphrase.file.  The format of the file would be: 
+.RS
+#ascii
+.br
+NewPassphrase=myNewPassphrase
+.RE
+.RE
+
+.B **cliName** create -goal VolatileSize=32 PersistentSize=Remaining PersistentSettings=4KB_4KB
+.RS
+Configure the capacity on each DIMM with 32 GiB of volatile memory, and the remaining persistent memory with specific QoS attributes.
+.RE
+
+.B nvncli set -sensor MediaTemperature -dimm 1234 CriticalThreshold=51 EnabledState=1
+.RS
+Change the media temperature threshold to 51 on the specified **abbrProductName** and enable the alarm.
+.RE
+
+.B **cliName** show -dimm -performance BytesRead
+.RS
+Show the number of bytes read for all DIMMs in the server.
+.RE
+
+.B nvncli set -sensor MediaTemperature -dimm 1234 CriticalThreshold=51 EnabledState=1
+.RS
+Change the media temperature threshold to 51 on the specified **abbrProductName** and enable the alarm.
+.RE
+
+.B **cliName** show -a -namspace 12345678-1234-1234-1234-123456789012
+.RS
+Show all attributes for the specified namespace
+.RE
+
+.B **cliName** create -namespace -pool 12345678-1234-1234-1234-123456789012
+.br
+.B Type=Storage BlockSize=512 BlockCount=2097152
+.RS
+Create a 1 GB Storage namespace on pool 12345678-1234-1234-1234-123456789012 with a block size of 512
+.RE
+
+." -------------------- F I L E S --------------------
+FILES
+/usr/share/nvdimm-mgmt/apss.dat
+.br
+/usr/share/nvdimm-mgmt/public.rev0.pem
+
+
+." -------------------- S E E  A L S O --------------------
+SEE ALSO
+**serviceName** (8)
+
+." -------------------- A U T H O R --------------------
+AUTHOR
+Created by Intel Corporation.
