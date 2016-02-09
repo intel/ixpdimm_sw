@@ -579,7 +579,7 @@ std::string monitor::EventMonitor::namespaceHealthToStr(enum namespace_health he
 	switch (health)
 	{
 		case NAMESPACE_HEALTH_NORMAL:
-			healthStr = TR("OK");
+			healthStr = TR("Healthy");
 			break;
 		case NAMESPACE_HEALTH_NONCRITICAL:
 			healthStr = TR("Degraded/Warning");

@@ -60,7 +60,7 @@ namespace pmem_config
 
 	// namespace health strings
 	static const std::string NS_HEALTH_STR_UNKNOWN = "Unknown";
-	static const std::string NS_HEALTH_STR_NORMAL = "OK";
+	static const std::string NS_HEALTH_STR_NORMAL = "Healthy";
 	static const std::string NS_HEALTH_STR_WARN = "Warning";
 	static const std::string NS_HEALTH_STR_ERR = "Critical";
 	static const std::string NS_HEALTH_STR_BROKENMIRROR = "BrokenMirror";

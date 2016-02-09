@@ -356,7 +356,7 @@ static inline const char *get_string_for_device_health_status(enum device_health
 	switch (health)
 	{
 		case DEVICE_HEALTH_NORMAL:
-			health_str = N_TR("OK");
+			health_str = N_TR("Healthy");
 			break;
 		case DEVICE_HEALTH_NONCRITICAL:
 			health_str = N_TR("Minor Failure");

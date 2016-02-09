@@ -177,7 +177,7 @@ wbem::framework::Instance* wbem::memory::RawMemoryFactory::getInstance(
 				switch (dimmDetails.status.health)
 				{
 					case DEVICE_HEALTH_NORMAL:
-						healthStateStr = "OK";
+						healthStateStr = "Healthy";
 						healthState = HEALTHSTATE_OK;
 						break;
 					case DEVICE_HEALTH_NONCRITICAL:

@@ -54,7 +54,7 @@ namespace wbem
 		static const std::string POOLENCRYPTION_MIXED = "Mixed";
 
 		static const std::string POOL_HEALTH_STR_UNKNOWN = "Unknown";
-		static const std::string POOL_HEALTH_STR_NORMAL = "Ok";
+		static const std::string POOL_HEALTH_STR_NORMAL = "Healthy";
 		static const std::string POOL_HEALTH_STR_DEGRADED = "Degraded";
 		static const std::string POOL_HEALTH_STR_FAILED = "Failed";
 

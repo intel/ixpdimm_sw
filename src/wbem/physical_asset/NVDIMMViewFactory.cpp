@@ -257,7 +257,7 @@ void wbem::physical_asset::NVDIMMViewFactory::toInstance(logic::device::Device &
 	NVM_UINT16 DEVICE_HEALTH_UNMANAGEABLE = 65534; //!< Additional health state for unmanageable dimms
 	std::map<framework::UINT16, std::string> healthStateMap;
 	healthStateMap[DEVICE_HEALTH_UNKNOWN] = "Unknown";
-	healthStateMap[DEVICE_HEALTH_NORMAL] = "OK";
+	healthStateMap[DEVICE_HEALTH_NORMAL] = "Healthy";
 	healthStateMap[DEVICE_HEALTH_NONCRITICAL] = "Minor Failure";
 	healthStateMap[DEVICE_HEALTH_CRITICAL] = "Critical Failure";
 	healthStateMap[DEVICE_HEALTH_FATAL] = "Non-recoverable error";

@@ -920,7 +920,7 @@ std::string wbem::memory::PersistentMemoryFactory::getHealthStateString(const NV
 	switch (value)
 	{
 	case PERSISTENTMEMORY_HEALTHSTATE_OK:
-		str = TR("OK");
+		str = TR("Healthy");
 		break;
 	case PERSISTENTMEMORY_HEALTHSTATE_DEGRADED:
 		str = TR("Degraded/Warning");
