@@ -68,7 +68,6 @@ void wbem::server::SystemCapabilitiesFactory::populateAttributeList(
 	attributes.push_back(CURRENTPERSISTENTMEMORYMODE_KEY);
 	attributes.push_back(SUPPORTEDPERSISTENTSETTINGS_KEY);
 	attributes.push_back(RECOMMENDEDPERSISTENTSETTINGS_KEY);
-	attributes.push_back(MAXNAMESPACES_KEY);
 	attributes.push_back(MINNAMESPACESIZE_KEY);
 	attributes.push_back(BLOCKSIZES_KEY);
 	attributes.push_back(PERSISTENTMEMORYMIRRORSUPPORT_KEY);
@@ -162,16 +161,6 @@ wbem::framework::Instance* wbem::server::SystemCapabilitiesFactory::getInstance(
 				pInstance->setAttribute(RECOMMENDEDPERSISTENTSETTINGS_KEY, attr, attributes);
 			}
 
-			if (containsAttribute(MAXNAMESPACES_KEY, attributes))
-			{
-				framework::UINT32 max = 0;
-				if (nvmCaps.nvm_features.create_namespace)
-				{
-					max = nvmCaps.sw_capabilities.max_namespaces;
-				}
-				framework::Attribute attr(max, false);
-				pInstance->setAttribute(MAXNAMESPACES_KEY, attr, attributes);
-			}
 			if (containsAttribute(MINNAMESPACESIZE_KEY, attributes))
 			{
 				framework::UINT32 minSize = 0;

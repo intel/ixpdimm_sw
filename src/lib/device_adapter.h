@@ -169,7 +169,6 @@ struct driver_feature_flags
  */
 struct nvm_driver_capabilities
 {
-	NVM_UINT32 max_namespaces;
 	NVM_UINT32 block_sizes[MAX_NUMBER_OF_BLOCK_SIZES]; // in bytes
 	NVM_UINT32 num_block_sizes;
 	NVM_UINT64 min_namespace_size; // in bytes

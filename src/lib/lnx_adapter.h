@@ -48,6 +48,5 @@ int get_dimm_by_handle(struct ndctl_ctx *ctx, unsigned int handle, struct ndctl_
 
 int get_unconfigured_namespace(struct ndctl_namespace **unconfigured_namespace,
 	struct ndctl_region *region);
-int get_max_namespaces(unsigned int *max_namespaces);
 
 #endif /* LNX_ADAPTER_H_ */

@@ -573,11 +573,6 @@ int get_driver_capabilities(struct nvm_driver_capabilities *p_capabilities)
 	}
 	else
 	{
-		if (get_max_namespaces(&p_capabilities->max_namespaces) != NVM_SUCCESS)
-		{
-			COMMON_LOG_ERROR("Unable to retrieve max number of namespaces");
-		}
-
 		p_capabilities->min_namespace_size = ndctl_min_namespace_size();
 
 		/*

@@ -529,8 +529,6 @@ int get_driver_capabilities(struct nvm_driver_capabilities *p_capabilities)
 		{
 			memset(p_capabilities, 0, sizeof (struct nvm_driver_capabilities));
 
-			p_capabilities->max_namespaces =
-					ioctl_data.OutputPayload.Capabilities.MaxNamespaces;
 			p_capabilities->min_namespace_size =
 					ioctl_data.OutputPayload.Capabilities.MinNamespaceSize;
 

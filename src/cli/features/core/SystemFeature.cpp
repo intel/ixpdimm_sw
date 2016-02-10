@@ -1421,7 +1421,6 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::showSystemCapabilities(
 	allAttributes.push_back(wbem::MEMORYMODESSUPPORTED_KEY);
 	allAttributes.push_back(wbem::SUPPORTEDPERSISTENTSETTINGS_KEY);
 	allAttributes.push_back(wbem::RECOMMENDEDPERSISTENTSETTINGS_KEY);
-	allAttributes.push_back(wbem::MAXNAMESPACES_KEY);
 	allAttributes.push_back(wbem::MINNAMESPACESIZE_KEY);
 	allAttributes.push_back(wbem::BLOCKSIZES_KEY);
 	allAttributes.push_back(wbem::PERSISTENTMEMORYMIRRORSUPPORT_KEY);

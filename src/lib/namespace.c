@@ -990,31 +990,6 @@ NVM_BOOL interleave_meets_persistent_settings(const struct interleave_set *p_int
 	return result;
 }
 
-/*
- * Helper function to make sure we haven't hit the system-wide namespace limit yet.
- */
-int validate_namespace_limit(struct nvm_capabilities *p_capabilities)
-{
-	COMMON_LOG_ENTRY();
-	int rc = NVM_SUCCESS;
-
-	// Make sure adding a namespace wouldn't exceed max namespaces
-	int ns_count = nvm_get_namespace_count();
-	if (ns_count < 0)
-	{
-		rc = ns_count;
-	}
-	else if (ns_count >= p_capabilities->sw_capabilities.max_namespaces)
-	{
-		COMMON_LOG_ERROR_F("too many namespaces, count=%u, max=%u",
-				rc, p_capabilities->sw_capabilities.max_namespaces);
-		rc = NVM_ERR_TOOMANYNAMESPACES;
-	}
-
-	COMMON_LOG_EXIT_RETURN_I(rc);
-	return rc;
-}
-
 int validate_ns_type_for_pool(enum namespace_type type, const struct pool *p_pool)
 {
 	COMMON_LOG_ENTRY();
@@ -1086,7 +1061,6 @@ int validate_namespace_create_settings(struct pool *p_pool,
 				rc = NVM_ERR_TOOMANYNAMESPACES;
 			}
 			else if ((rc = validate_ns_type_for_pool(p_settings->type, p_pool)) == NVM_SUCCESS &&
-				(rc = validate_namespace_limit(&nvm_caps)) == NVM_SUCCESS &&
 				(rc = validate_ns_enabled_state(p_settings->enabled)) == NVM_SUCCESS &&
 				(rc = validate_ns_size_for_creation(p_pool, p_settings,
 						&nvm_caps, &range)) == NVM_SUCCESS)

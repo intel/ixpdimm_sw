@@ -1130,9 +1130,6 @@ int support_store_driver_capabilities(PersistentStore *p_store, int history_id)
 		struct db_driver_capabilities db_capabilities;
 		memset(&db_capabilities, 0, sizeof (db_capabilities));
 
-
-
-		db_capabilities.max_namespaces = nvm_caps.max_namespaces;
 		db_capabilities.min_namespace_size = nvm_caps.min_namespace_size;
 		db_capabilities.num_block_sizes = nvm_caps.num_block_sizes;
 		for (unsigned int i = 0; i < nvm_caps.num_block_sizes; i++)

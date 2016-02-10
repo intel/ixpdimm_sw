@@ -168,7 +168,6 @@ int apply_driver_capabilities(struct nvm_capabilities *p_capabilities)
 	}
 	else
 	{
-		p_capabilities->sw_capabilities.max_namespaces = driver_caps.max_namespaces;
 		// driver minimum may be different than Mgmt SW 1 GB minimum
 #if __EARLY_HW__
 		p_capabilities->sw_capabilities.min_namespace_size =

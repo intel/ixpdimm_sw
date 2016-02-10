@@ -187,7 +187,6 @@ int main(int arg_count, char **args)
 	Entity driver_capabilities("driver_capabilities", "Driver capabilities and limits.");
 	driver_capabilities.includesHistory();
 	driver_capabilities.addAttribute("id").isInt32().isPk(true); // artificial so can update
-	driver_capabilities.addAttribute("max_namespaces").isInt32().isUnsigned();
 	driver_capabilities.addAttribute("min_namespace_size").isInt64().isUnsigned();
 	driver_capabilities.addAttribute("max_non_continguous_namespaces").isInt64().isUnsigned();
 	driver_capabilities.addAttribute("block_sizes").isInt32().isUnsigned().isArray(16);
