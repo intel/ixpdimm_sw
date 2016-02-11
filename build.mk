@@ -41,6 +41,9 @@ MOVE = mv
 MKDIR = mkdir -p
 RMDIR = rm -rf
 SOFTLINK = ln -s -f 
+SED = sed
+TAR = tar
+RPMBUILD = rpmbuild
 
 # useful makefile debugging tools
 # Its a hack, but it does the job! To unpause, simply hit the [ENTER] key.
@@ -60,7 +63,10 @@ EARLY_HW = 0 #Temporary compile option for PO HW with no media
 
 #version number passed in from the build server
 ifndef BUILDNUM
-	BUILDNUM=99.99.99.9999
+	BUILDNUM= $(shell git describe --abbrev=0 | sed -e 's/\([a-zA-Z_-]*\)\(.*\)/\2/g')
+	ifeq ($(strip $(BUILDNUM)),)
+		BUILDNUM=99.99.99.9999
+	endif
 endif
 
 #parse into individual pieces
@@ -177,6 +183,14 @@ ifeq ($(UNAME), Linux)
 		INIT_FILES = nvmmonitor.service
 				
 		C_CPP_FLAGS_SRC += -D__LINUX__ 
+		
+		ifneq ("$(wildcard /etc/redhat-release)","")
+			LINUX_DIST := rel
+		else ifneq ("$(wildcard /etc/SuSE-release)","")
+			LINUX_DIST := sle
+		else
+			LINUX_DIST := $(warning Unrecognized Linux distribution)
+		endif
 	endif
 	C_CPP_FLAGS_CMN += -fPIE -fPIC -D__PRODUCT_DATADIR__=\"$(PRODUCT_DATADIR)/\"		
 else
@@ -269,6 +283,7 @@ SOURCEDROP_DIR ?= $(OUTPUT_DIR)/workspace/ixpdimm_sw
 CLI_FRAMEWORK_DIR = $(ROOT_DIR)/external/intel_cli_framework
 CIM_FRAMEWORK_DIR = $(ROOT_DIR)/external/intel_cim_framework
 I18N_INCLUDE_DIR = $(EXTERN_DIR)/intel_cli_framework/include/
+RPMBUILD_DIR ?= $(shell pwd)/$(OUTPUT_DIR)/rpmbuild
 
 # unit test execution directories
 COMMON_TEST_DIR = $(BUILD_DIR)/common_test

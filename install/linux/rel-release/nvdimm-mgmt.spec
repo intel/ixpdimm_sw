@@ -1,7 +1,7 @@
-%{!?rpm_name: %define rpm_name ApachePass}
-%{!?product_name: %define product_name ApachePass}
-%{!?build_version: %define build_version 99.99.99.9999}
-%{!?build_release: %define build_release 1}
+%define rpm_name ixpdimm_sw
+%define product_name ApachePass
+%define build_version 99.99.99.9999
+%define build_release 1
 %define cliname %{rpm_name}-cli
 %define monitorname %{rpm_name}-monitor
 %define cimlibs %{rpm_name}-cim
@@ -71,7 +71,7 @@ capacity provisioning, health monitoring, and troubleshooting.
 
 
 %prep
-%setup -D -T -q -n %{rpm_name}
+%setup -q -n %{rpm_name}
 
 %build
 make BUILDNUM=%{build_version} RELEASE=1 DATADIR=%{_datadir} LINUX_PRODUCT_NAME=%{product_name} CFLAGS_EXTERNAL="%{?cflag}"

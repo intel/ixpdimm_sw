@@ -333,4 +333,21 @@ endif
 clean : 
 	$(RMDIR) $(OUTPUT_DIR)
 
-.PHONY : all clean install
+rpm :
+	#Make the Directories
+	$(MKDIR) $(RPMBUILD_DIR) $(RPMBUILD_DIR)/BUILD $(RPMBUILD_DIR)/SOURCES $(RPMBUILD_DIR)/RPMS \
+				$(RPMBUILD_DIR)/SRPMS $(RPMBUILD_DIR)/SPECS $(RPMBUILD_DIR)/BUILDROOT \
+				$(RPMBUILD_DIR)/BUILD/ixpdimm_sw
+	
+	#Copy Spec File
+	$(COPY) install/linux/$(LINUX_DIST)-release/*.spec $(RPMBUILD_DIR)/SPECS/ixpdimm_sw.spec
+	#Update the Spec file
+	$(SED) -i 's/^%define rpm_name .*/%define rpm_name ixpdimm_sw/g' $(RPMBUILD_DIR)/SPECS/ixpdimm_sw.spec
+	$(SED) -i 's/^%define build_version .*/%define build_version $(BUILDNUM)/g' $(RPMBUILD_DIR)/SPECS/ixpdimm_sw.spec
+	
+	#Archive the directory
+	git archive --format=tar --prefix="ixpdimm_sw/" HEAD | bzip2 -c > $(RPMBUILD_DIR)/SOURCES/ixpdimm_sw.tar.bz2
+	#rpmbuild 
+	$(RPMBUILD) -ba $(RPMBUILD_DIR)/SPECS/ixpdimm_sw.spec --define "_topdir $(RPMBUILD_DIR)" --define "cflag $(CFLAGS_EXTERNAL)"
+	
+.PHONY : all clean install rpm
