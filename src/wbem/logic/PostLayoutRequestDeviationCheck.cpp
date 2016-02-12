@@ -69,7 +69,8 @@ void wbem::logic::PostLayoutRequestDeviationCheck::checkIfVolatileCapacityLayout
 	{
 		double percentDeviation =
 				findPercentDeviation(request.volatileCapacity, layout.volatileCapacity);
-		if (!layoutDeviationIsWithinBounds(percentDeviation))
+		if ((layout.volatileCapacity == 0)  ||
+				(!layoutDeviationIsWithinBounds(percentDeviation)))
 		{
 			throw exception::NvmExceptionUnacceptableLayoutDeviation();
 		}
@@ -89,7 +90,8 @@ void wbem::logic::PostLayoutRequestDeviationCheck::checkPersistentCapacityLayout
 			double percentDeviation =
 					findPercentDeviation(request.persistentExtents[i].capacity,
 							layout.persistentCapacities[i]);
-			if (!layoutDeviationIsWithinBounds(percentDeviation))
+			if ((layout.persistentCapacities[i] == 0)  ||
+					(!layoutDeviationIsWithinBounds(percentDeviation)))
 			{
 				throw exception::NvmExceptionUnacceptableLayoutDeviation();
 			}
