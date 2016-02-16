@@ -84,3 +84,4 @@ Once dependencies have been resolved execute 'make RELEASE=1'
 
 build artifacts can be found in output/build/linux/release
 
+Artifacts can then be installed using 'make install RELEASE=1'

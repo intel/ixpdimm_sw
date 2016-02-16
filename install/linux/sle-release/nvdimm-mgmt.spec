@@ -11,7 +11,7 @@ Name: lib%{rpm_name}
 Version: %{build_version}
 Release: %{build_release}%{?dist}
 Summary: API for development of %{product_name} management utilities
-License: Prioprietary
+License: BSD
 Group: Applications/System
 URL: http://www.intel.com
 Source: %{rpm_name}.tar.bz2
@@ -25,7 +25,7 @@ health monitoring, and troubleshooting.
  
 %package -n %dname
 Summary:        Development files for %{name}
-License:        Prioprietary
+License:        BSD
 Group:          Development/Libraries
 Requires:       %{name}%{?_isa} = %{version}-%{release}
 
@@ -36,7 +36,7 @@ developing applications that use %{name}.
 %package -n %cimlibs
 Summary:        CIM provider for %{name}
 
-License:        Prioprietary
+License:        BSD
 Group:          Application/System
 Requires:       %{name}%{?_isa} = %{version}-%{release}
 Requires:       pywbem
@@ -50,7 +50,7 @@ common information model object managers (CIMOMS).
 
 %package -n %monitorname
 Summary:        Daemon for monitoring the status of %{product_name} 
-License:        Prioprietary
+License:        BSD
 Group:          Application/System
 Requires:       %{cimlibs}%{?_isa} = %{version}-%{release}
 BuildRequires:  systemd-rpm-macros
@@ -61,7 +61,7 @@ A daemon for monitoring the health and status of %{product_name}
 
 %package -n %cliname
 Summary:        CLI for managment of %{product_name}
-License:        Prioprietary
+License:        BSD
 Group:          Application/System
 Requires:       %{cimlibs}%{?_isa} = %{version}-%{release}
 
@@ -214,13 +214,15 @@ fi
 %{_libdir}/libnvm.so.*
 %dir %{_datadir}/%{rpm_name}
 %{_datadir}/%{rpm_name}/*.pem
-%{_datadir}/%{rpm_name}/*.dat*
+%config(noreplace) %{_datadir}/%{rpm_name}/*.dat*
+%license LICENSE
 
 %files -n %dname
 %defattr(-,root,root)
 %{_libdir}/libnvm.so
 %{_includedir}/nvm_types.h
 %{_includedir}/nvm_management.h
+%license LICENSE
 
 %files -n %cimlibs
 %defattr(-,root,root)
@@ -232,16 +234,19 @@ fi
 %{_datadir}/%{rpm_name}/sfcb/*.mof
 %{_datadir}/%{rpm_name}/Pegasus/mof/*.mof
 %{_sysconfdir}/ld.so.conf.d/%{rpm_name}-%{_arch}.conf
+%license LICENSE
 
 %files -n %monitorname
 %defattr(-,root,root)
 %{_bindir}/nvmmonitor
 %{_unitdir}/nvmmonitor.service
+%license LICENSE
 
 %files -n %cliname
 %defattr(-,root,root)
 %{_bindir}/nvmcli
 %{_libdir}/libcrfeatures.so*
+%license LICENSE
 
 %changelog
 * Wed Dec 24 2015 nicholas.w.moulin@intel.com
