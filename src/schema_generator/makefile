@@ -106,8 +106,8 @@ endif
 $(LIBSQLITE_FILES) :
 	$(COPY) $(EXTERN_LIB_DIR)/sqlite/* $(BUILT_TOOLS_DIR)/
 ifndef BUILD_WINDOWS
-	cd $(BUILT_TOOLS_DIR); $(RM) libsqlite3.so.1; $(SOFTLINK) libsqlite3.so.1.0.0 libsqlite3.so.1
-	cd $(BUILT_TOOLS_DIR); $(RM) libsqlite3.so; $(SOFTLINK) libsqlite3.so.1.0.0  libsqlite3.so
+	cd $(BUILT_TOOLS_DIR); $(RM) libsqlite3.so.1; $(SOFTLINK) libsqlite3.so.3.10.2 libsqlite3.so.3
+	cd $(BUILT_TOOLS_DIR); $(RM) libsqlite3.so; $(SOFTLINK) libsqlite3.so.3.10.2  libsqlite3.so
 endif
 
 clean:
