@@ -35,6 +35,7 @@
 #include <mem_config/InterleaveSet.h>
 #include <framework_interface/NvmInstanceFactory.h>
 #include "NamespaceSettingsFactory.h"
+#include <exception/NvmExceptionLibError.h>
 
 #ifndef	_WBEM_PMEMCONFIG_PERSISTENTMEMORYSERVICEFACTORY_H_
 #define	_WBEM_PMEMCONFIG_PERSISTENTMEMORYSERVICEFACTORY_H_
@@ -59,15 +60,13 @@ static const std::string PM_SERVICE_RESOURCE_POOL = "Pool";
 static const std::string PM_SERVICE_STATE = "State";
 
 // return values of extrinsic methods
-static const NVM_UINT32 PM_SERVICE_SUCCESS = 0;
-static const NVM_UINT32 PM_SERVICE_NOTSUPPORTED = 2;
-static const NVM_UINT32 PM_SERVICE_UNKNOWN = 3;
-static const NVM_UINT32 PM_SERVICE_TIMEOUT = 4;
-static const NVM_UINT32 PM_SERVICE_FAILED = 5;
-static const NVM_UINT32 PM_SERVICE_INVALIDPARAMETER = 6;
-static const NVM_UINT32 PM_SERVICE_INUSE = 7;
-static const NVM_UINT32 PM_SERVICE_RESERVED = 8;
-static const NVM_UINT32 PM_SERVICE_PARTIALRESULTS = 9;
+static const NVM_UINT32 PM_SERVICE_ERR_UNKNOWN = 2;
+static const NVM_UINT32 PM_SERVICE_ERR_TIMEOUT = 3;
+static const NVM_UINT32 PM_SERVICE_ERR_FAILED = 4;
+static const NVM_UINT32 PM_SERVICE_ERR_INVALIDPARAMETER = 5;
+static const NVM_UINT32 PM_SERVICE_ERR_INSUFFICIENT_RESOURCES = 4097;
+static const NVM_UINT32 PM_SERVICE_ERR_INCONSISTENT_PARAMETERS = 4098;
+static const NVM_UINT32 PM_SERVICE_ERR_IN_USE = 32768;
 
 // constants used in AllocateFromPool
 static const NVM_UINT32 PM_SERVICE_BLOCK_TYPE = NS_RESOURCETYPE_BLOCK; // Block addressable persistent memory
@@ -264,6 +263,11 @@ private:
 	void modifyNamespace(framework::attributes_t &inParms, framework::attributes_t &outParms,
 			NVM_UINT32 &httpRc);
 	void generateNamespaceRefAttribute(std::string namespaceGuidStr, wbem::framework::Attribute& value);
+
+	/*
+	 * convert NvmExceptionLibError to extrinsic return code
+	 */
+	wbem::framework::UINT32 getReturnCodeFromLibException(const exception::NvmExceptionLibError &e);
 };
 }
 

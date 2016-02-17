@@ -33,6 +33,7 @@
 #include <intel_cim_framework/Exception.h>
 #include <common_types.h>
 #include <framework_interface/NvmInstanceFactory.h>
+#include <exception/NvmExceptionLibError.h>
 
 #ifndef _WBEM_PMEMCONFIG_PERSISTENTMEMORYPOOL_FACTORY_H_
 #define _WBEM_PMEMCONFIG_PERSISTENTMEMORYPOOL_FACTORY_H_
@@ -53,6 +54,11 @@ namespace pmem_config
 	static const std::string PERSISTENTMEMORYPOOL_ALLOCATIONUNITS = "bytes"; //! AllocationUnits static string
 	static const NVM_UINT16 PERSISTENTMEMORYPOOL_RESOURCETYPE = 35; //! ResourceType other type "Non-Volatile Memory"
 
+	static const NVM_UINT32 PERSISTENTMEMORYPOOL_ERR_NOT_SUPPORTED = 1;
+	static const NVM_UINT32 PERSISTENTMEMORYPOOL_ERR_UNKNOWN = 2;
+	static const NVM_UINT32 PERSISTENTMEMORYPOOL_ERR_FAILED = 4;
+	static const NVM_UINT32 PERSISTENTMEMORYPOOL_ERR_INVALID_PARAMETER = 5;
+	static const NVM_UINT32 PERSISTENTMEMORYPOOL_ERR_INSUFFICIENT_RESOURCES = 4097;
 
 	class NVM_API PersistentMemoryPoolFactory: public wbem::framework_interface::NvmInstanceFactory
 	{

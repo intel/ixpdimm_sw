@@ -55,6 +55,8 @@ namespace support
 
 	static const std::string SUPPORTDATASERVICE_CLEAR = "Clear"; //!< extrinsic method name
 
+	static const NVM_UINT32 SUPPORTDATASERVICE_ERR_UNKNOWN = 2;
+
 /*!
  * Models the physical aspects of an Intel NVDIMM
  */

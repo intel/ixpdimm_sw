@@ -738,27 +738,52 @@ wbem::framework::UINT32 wbem::physical_asset::NVDIMMFactory::executeMethod(
 	}
 	catch(framework::ExceptionBadParameter &)
 	{
-		wbemRc = framework::MOF_ERR_INVALIDPARAMETER;
+		wbemRc = NVDIMM_ERR_INVALID_PARAMETER;
 	}
-	catch(exception::NvmExceptionLibError &)
+	catch(exception::NvmExceptionLibError &e)
 	{
-		wbemRc = framework::MOF_ERR_FAILED;
+		wbemRc = getReturnCodeFromLibException(e);
 	}
 	catch(framework::ExceptionNoMemory &)
 	{
-		wbemRc = framework::MOF_ERR_FAILED;
+		wbemRc = NVDIMM_ERR_FAILED;
 	}
 	catch(framework::ExceptionNotSupported &)
 	{
-		wbemRc = framework::MOF_ERR_NOTSUPPORTED;
+		wbemRc = NVDIMM_ERR_NOT_SUPPORTED;
 	}
 	catch(framework::Exception &)
 	{
-		wbemRc = framework::MOF_ERR_UNKNOWN;
+		wbemRc = NVDIMM_ERR_UNKNOWN;
 	}
 
 	COMMON_LOG_EXIT_RETURN("httpRc: %u, wbemRc: %u", httpRc, wbemRc);
 	return httpRc;
+}
+
+wbem::framework::UINT32 wbem::physical_asset::NVDIMMFactory::getReturnCodeFromLibException
+		(const exception::NvmExceptionLibError &e)
+{
+	wbem::framework::UINT32 rc = framework::MOF_ERR_SUCCESS;
+
+	switch(e.getLibError())
+	{
+		case NVM_ERR_INVALIDPERMISSIONS:
+		case NVM_ERR_BADSECURITYSTATE:
+			rc = NVDIMM_ERR_NOT_ALLOWED;
+			break;
+		case NVM_ERR_INVALIDPASSPHRASE:
+			rc = NVDIMM_ERR_INVALID_PARAMETER;
+			break;
+		case NVM_ERR_NOTSUPPORTED:
+			rc = NVDIMM_ERR_NOT_SUPPORTED;
+			break;
+		default:
+			rc = NVDIMM_ERR_FAILED;
+			break;
+	}
+
+	return rc;
 }
 
 /*

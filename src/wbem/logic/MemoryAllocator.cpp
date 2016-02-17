@@ -55,6 +55,7 @@
 #include <utility.h>
 #include "PostLayoutAddressDecoderLimitCheck.h"
 #include "PostLayoutRequestDeviationCheck.h"
+#include <exception/NvmExceptionBadRequest.h>
 
 wbem::logic::MemoryAllocator::MemoryAllocator(const struct nvm_capabilities &systemCapabilities,
 		const std::vector<struct device_discovery> &manageableDevices,
@@ -222,6 +223,7 @@ void wbem::logic::MemoryAllocator::deleteLayoutRules()
 void wbem::logic::MemoryAllocator::allocate(struct MemoryAllocationLayout &layout)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	bool atLeastOneRequestSucceeded = false;
 
 	for (std::map<std::string, struct config_goal>::iterator goalIter = layout.goals.begin();
 			goalIter != layout.goals.end(); goalIter++)
@@ -231,8 +233,17 @@ void wbem::logic::MemoryAllocator::allocate(struct MemoryAllocationLayout &layou
 		int rc = m_pLibApi->createConfigGoal(guid, &((*goalIter).second));
 		if (rc != NVM_SUCCESS)
 		{
-			throw exception::NvmExceptionLibError(rc);
+			COMMON_LOG_ERROR_F("creating config goal failed with rc = %d", rc);
+			if (atLeastOneRequestSucceeded)
+			{
+				throw exception::NvmExceptionPartialResultsCouldNotBeUndone();
+			}
+			else
+			{
+				throw exception::NvmExceptionLibError(rc);
+			}
 		}
+		atLeastOneRequestSucceeded = true;
 	}
 }
 

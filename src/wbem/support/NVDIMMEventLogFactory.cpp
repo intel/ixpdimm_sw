@@ -208,36 +208,45 @@ wbem::framework::UINT32 wbem::support::NVDIMMEventLogFactory::executeMethod(
 			{
 				COMMON_LOG_ERROR_F("method '%s' requires parameter '%s'",
 						NVDIMMEVENTLOG_FILTEREVENTS.c_str(), NVDIMMEVENTLOG_FILTER.c_str());
-				throw framework::ExceptionBadParameter(NVDIMMEVENTLOG_FILTER.c_str());
+				httpRc = wbem::framework::CIM_ERR_INVALID_PARAMETER;
 			}
+			else
+			{
+				// Output - a list of object paths
+				framework::STR_LIST logEntryRefs =
+						getFilteredEventRefsFromFilterString(paramIter->second.stringValue());
 
-			// Output - a list of object paths
-			framework::STR_LIST logEntryRefs =
-					getFilteredEventRefsFromFilterString(paramIter->second.stringValue());
-
-			// Save the output parameter
-			outParms[NVDIMMEVENTLOG_LOGENTRIES] = framework::Attribute(logEntryRefs, false);
+				// Save the output parameter
+				outParms[NVDIMMEVENTLOG_LOGENTRIES] = framework::Attribute(logEntryRefs, false);
+			}
 		}
 		else
 		{
 			httpRc = framework::CIM_ERR_METHOD_NOT_AVAILABLE;
 		}
 	}
-	catch (exception::NvmExceptionBadFilter &)
+	catch(exception::NvmExceptionBadFilter &)
 	{
-		wbemRc = framework::MOF_ERR_UNSUPPORTEDFILTER;
+		wbemRc = NVDIMMEVENTLOG_ERR_INVALID_PARAMETER;
 	}
 	catch (framework::ExceptionBadParameter &)
 	{
-		wbemRc = framework::MOF_ERR_INVALIDPARAMETER;
+		wbemRc = NVDIMMEVENTLOG_ERR_INVALID_PARAMETER;
 	}
-	catch(exception::NvmExceptionLibError &)
+	catch(exception::NvmExceptionLibError &e)
 	{
-		wbemRc = framework::MOF_ERR_FAILED;
+		if (e.getLibError() == NVM_ERR_NOMEMORY)
+		{
+			wbemRc = NVDIMMEVENTLOG_ERR_INSUFFICIENT_RESOURCES;
+		}
+		else
+		{
+			wbemRc = NVDIMMEVENTLOG_ERR_FAILED;
+		}
 	}
 	catch(framework::Exception &)
 	{
-		wbemRc = framework::MOF_ERR_FAILED;
+		wbemRc = NVDIMMEVENTLOG_ERR_UNKNOWN;
 	}
 
 	COMMON_LOG_EXIT_RETURN("httpRc: %u, wbemRc: %u", httpRc, wbemRc);

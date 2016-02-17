@@ -35,6 +35,7 @@
 #include <string>
 
 #include <framework_interface/NvmInstanceFactory.h>
+#include <exception/NvmExceptionLibError.h>
 
 
 namespace wbem
@@ -49,12 +50,11 @@ namespace pmem_config
 	// parameters of extrinsic methods
 	static const std::string PM_NAMESPACE_STATE = "RequestedState";
 
-	// return values of extrinsic methods
-	static const NVM_UINT32 PM_NAMESPACE_NOTSUPPORTED = 1;
-	static const NVM_UINT32 PM_NAMESPACE_UNKNOWN = 2;
-	static const NVM_UINT32 PM_NAMESPACE_FAILED = 4;
+	// Error constants
+	static const NVM_UINT32 PM_NAMESPACE_ERR_FAILED = 5;
 
 	// constants used in RequestStateChange
+	static const NVM_UINT32 PM_NAMESPACE_ENABLE_STATE_UNKNOWN = 0;
 	static const NVM_UINT32 PM_NAMESPACE_ENABLE_STATE_ENABLED = 2; // enabled
 	static const NVM_UINT32 PM_NAMESPACE_ENABLE_STATE_DISABLED = 3; // disabled
 
@@ -62,6 +62,13 @@ namespace pmem_config
 	static const NVM_UINT16 PM_NAMESPACE_OPSTATUS_INSERVICE = 11; // In service value
 	static const NVM_UINT16 PM_NAMESPACE_OPSTATUS_STOPPED = 10; // Stopped value
 	static const NVM_UINT16 PM_NAMESPACE_OPSTATUS_UNKNOWN = 0; // Unknown value
+
+	static const NVM_UINT32 PM_NAMESPACE_NOT_SUPPORTED = 1;
+	static const NVM_UINT32 PM_NAMESPACE_UNKNOWN = 2;
+	static const NVM_UINT32 PM_NAMESPACE_FAILED = 4;
+	static const NVM_UINT32 PM_NAMESPACE_INVALID_PARAMETER = 5;
+	static const NVM_UINT32 PM_NAMESPACE_IN_USE = 6;
+	static const NVM_UINT32 PM_NAMESPACE_INVALID_STATE_TRANSITION = 4097;
 
 /*!
  * Provider Factory for Intel_PersistentMemoryNamespace
@@ -159,6 +166,11 @@ class NVM_API PersistentMemoryNamespaceFactory : public framework_interface::Nvm
 				struct namespace_details *pNsDetails);
 
 		wbem::framework::Attribute getOperationalStatusAttr(const struct namespace_details &ns);
+
+		/*
+		 * convert NvmExceptionLibError to extrinsic return code
+		 */
+		wbem::framework::UINT32 getReturnCodeFromLibException(exception::NvmExceptionLibError e);
 }; // class
 
 } // pmem_config

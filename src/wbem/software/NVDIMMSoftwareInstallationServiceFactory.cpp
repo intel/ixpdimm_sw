@@ -258,11 +258,11 @@ wbem::framework::UINT32 wbem::software::NVDIMMSoftwareInstallationServiceFactory
 						framework::return_codes rc = examineFwImage(absPath, version);
 						if (rc == framework::REQUIRES_FORCE)
 						{
-							wbemRc = framework::MOF_ERR_DOWNGRADE_NOT_SUPPORTED;
+							wbemRc = SWINSTALLSERVICE_ERR_DOWNGRADE_NOT_SUPPORTED;
 						}
 						else if (rc != framework::SUCCESS)
 						{
-							wbemRc = framework::MOF_ERR_NOT_APPLICABLE_TO_TARGET;
+							wbemRc = SWINSTALLSERVICE_ERR_NOT_APPLICABLE_TO_TARGET;
 						}
 					}
 					else
@@ -281,11 +281,11 @@ wbem::framework::UINT32 wbem::software::NVDIMMSoftwareInstallationServiceFactory
 								absPath, version);
 						if (rc == framework::REQUIRES_FORCE)
 						{
-							wbemRc = framework::MOF_ERR_DOWNGRADE_NOT_SUPPORTED;
+							wbemRc = SWINSTALLSERVICE_ERR_DOWNGRADE_NOT_SUPPORTED;
 						}
 						else if (rc != framework::SUCCESS)
 						{
-							wbemRc = framework::MOF_ERR_NOT_APPLICABLE_TO_TARGET;
+							wbemRc = SWINSTALLSERVICE_ERR_NOT_APPLICABLE_TO_TARGET;
 						}
 					}
 					else
@@ -302,66 +302,23 @@ wbem::framework::UINT32 wbem::software::NVDIMMSoftwareInstallationServiceFactory
 		}
 		catch (wbem::framework::ExceptionBadParameter &)
 		{
-			wbemRc = framework::MOF_ERR_INVALIDPARAMETER;
+			wbemRc = SWINSTALLSERVICE_ERR_INVALID_PARAMETER;
 		}
 		catch (wbem::exception::NvmExceptionLibError &e)
 		{
-			// these are the errors that nvm_update_device_fw can return
-			switch(e.getLibError())
-			{
-			case NVM_ERR_NOTSUPPORTED:
-				wbemRc = framework::MOF_ERR_NOTSUPPORTED;
-				break;
-			case NVM_ERR_NOMEMORY:
-				wbemRc = framework::MOF_ERR_NOT_ENOUGH_MEMORY;
-				break;
-			case NVM_ERR_BADDEVICE:
-				wbemRc = framework::MOF_ERR_UNSUPPORTED_TARGET_TYPE;
-				break;
-			case NVM_ERR_INVALIDPERMISSIONS:
-				wbemRc = framework::MOF_ERR_UNKNOWN;
-				break;
-			case NVM_ERR_INVALIDPARAMETER:
-				wbemRc = framework::MOF_ERR_INVALIDPARAMETER;
-				break;
-			case NVM_ERR_NOTMANAGEABLE:
-				wbemRc = framework::MOF_ERR_UNSUPPORTED_TARGET_TYPE;
-				break;
-			case NVM_ERR_BADFILE:
-				wbemRc = framework::MOF_ERR_URI_NOT_ACCESSIBLE;
-				break;
-			case NVM_ERR_DATATRANSFERERROR:
-				wbemRc = framework::MOF_ERR_URI_NOT_ACCESSIBLE;
-				break;
-			case NVM_ERR_REQUIRESFORCE:
-				wbemRc = framework::MOF_ERR_DOWNGRADE_NOT_SUPPORTED;
-				break;
-			case NVM_ERR_DEVICEERROR:
-				wbemRc = framework::MOF_ERR_FAILED;
-				break;
-			case NVM_ERR_DEVICEBUSY:
-				wbemRc = framework::MOF_ERR_INUSE;
-				break;
-			case NVM_ERR_BADFIRMWARE:
-				wbemRc = framework::MOF_ERR_NOT_APPLICABLE_TO_TARGET;
-				break;
-			case NVM_ERR_UNKNOWN:
-			default:
-				wbemRc = framework::MOF_ERR_UNKNOWN;
-				break;
-			}
+			wbemRc = getReturnCodeFromLibException(e);
 		}
 		catch (wbem::framework::ExceptionNoMemory &)
 		{
-			wbemRc = framework::MOF_ERR_FAILED;
+			wbemRc = SWINSTALLSERVICE_ERR_NOT_ENOUGH_MEMORY;
 		}
 		catch (wbem::framework::ExceptionNotSupported &)
 		{
-			wbemRc = framework::MOF_ERR_NOTSUPPORTED;
+			wbemRc = SWINSTALLSERVICE_ERR_FAILED;
 		}
 		catch (wbem::framework::Exception &)
 		{
-			wbemRc = framework::MOF_ERR_FAILED;
+			wbemRc = SWINSTALLSERVICE_ERR_FAILED;
 		}
 	}
 	else
@@ -369,6 +326,45 @@ wbem::framework::UINT32 wbem::software::NVDIMMSoftwareInstallationServiceFactory
 		httpRc = framework::CIM_ERR_METHOD_NOT_AVAILABLE;
 	}
 	return httpRc;
+}
+
+wbem::framework::UINT32
+wbem::software::NVDIMMSoftwareInstallationServiceFactory::getReturnCodeFromLibException(
+		exception::NvmExceptionLibError e)
+{
+	wbem::framework::UINT32 rc;
+
+	// these are the errors that nvm_update_device_fw can return
+	switch(e.getLibError())
+	{
+	case NVM_ERR_NOMEMORY:
+		rc = SWINSTALLSERVICE_ERR_NOT_ENOUGH_MEMORY;
+		break;
+	case NVM_ERR_NOTMANAGEABLE:
+		rc = SWINSTALLSERVICE_ERR_UNSUPPORTED_TARGET_TYPE;
+		break;
+	case NVM_ERR_BADDEVICE:
+	case NVM_ERR_INVALIDPARAMETER:
+		rc = SWINSTALLSERVICE_ERR_INVALID_PARAMETER;
+		break;
+	case NVM_ERR_BADFILE:
+		rc = SWINSTALLSERVICE_ERR_URI_NOT_ACCESSIBLE;
+		break;
+	case NVM_ERR_REQUIRESFORCE:
+		rc = SWINSTALLSERVICE_ERR_DOWNGRADE_NOT_SUPPORTED;
+		break;
+	case NVM_ERR_BADFIRMWARE:
+		rc = SWINSTALLSERVICE_ERR_UNSUPPORTED_VERSION_TRANSITION;
+		break;
+	case NVM_ERR_UNKNOWN:
+		rc = SWINSTALLSERVICE_ERR_UNKNOWN;
+		break;
+	default:
+		rc = SWINSTALLSERVICE_ERR_FAILED;
+		break;
+	}
+
+	return rc;
 }
 
 /*

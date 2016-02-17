@@ -56,7 +56,7 @@ wbem::exception::NvmExceptionLibError::NvmExceptionLibError(int libError)
 /*
  * Retrieve the library error code that caused the exception
  */
-int wbem::exception::NvmExceptionLibError::getLibError()
+int wbem::exception::NvmExceptionLibError::getLibError() const
 {
 	return m_libErrorCode;
 }

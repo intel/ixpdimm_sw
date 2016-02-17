@@ -139,7 +139,7 @@ throw (wbem::framework::Exception)
 				DIAGNOSTICLOG_CREATIONCLASSNAME, keys);
 		pNames->push_back(path);
 	}
-	catch (framework::Exception) // clean up and re-throw
+	catch (framework::Exception &) // clean up and re-throw
 	{
 		delete pNames;
 		throw;
@@ -170,13 +170,13 @@ wbem::framework::UINT32 wbem::support::DiagnosticLogFactory::executeMethod(
 			httpRc = framework::CIM_ERR_METHOD_NOT_AVAILABLE;
 		}
 	}
-	catch(exception::NvmExceptionLibError)
+	catch(exception::NvmExceptionLibError &)
 	{
-		wbemRc = framework::MOF_ERR_FAILED;
+		wbemRc = DIAGNOSTICLOG_ERR_FAILED;
 	}
-	catch(framework::Exception)
+	catch(framework::Exception &)
 	{
-		wbemRc = framework::MOF_ERR_FAILED;
+		wbemRc = DIAGNOSTICLOG_ERR_FAILED;
 	}
 
 	COMMON_LOG_EXIT_RETURN("httpRc: %u, wbemRc: %u", httpRc, wbemRc);

@@ -204,38 +204,7 @@ wbem::framework::UINT32 wbem::erasure::ErasureServiceFactory::executeMethod(
 			}
 			catch (wbem::exception::NvmExceptionLibError &e)
 			{
-				switch(e.getLibError())
-				{
-				case NVM_SUCCESS:
-					break;
-				case NVM_ERR_NOTSUPPORTED:
-					httpRc = framework::CIM_ERR_METHOD_NOT_AVAILABLE;
-					break;
-				case NVM_ERR_NOMEMORY:
-				case NVM_ERR_BADDEVICE:
-				case NVM_ERR_DATATRANSFERERROR:
-				case NVM_ERR_DEVICEERROR:
-					wbemRc = framework::MOF_ERR_DEVICEFAILED;
-					break;
-				case NVM_ERR_INVALIDPARAMETER:
-					httpRc = framework::CIM_ERR_INVALID_PARAMETER;
-					break;
-				case NVM_ERR_INVALIDPERMISSIONS:
-				case NVM_ERR_BADPASSPHRASE:
-					wbemRc = framework::MOF_ERR_PERMISSIONFAILURE;
-					break;
-				case NVM_ERR_NOTMANAGEABLE:
-				case NVM_ERR_SECURITYFROZEN:
-				case NVM_ERR_SECURITYDISABLED:
-				case NVM_ERR_LIMITPASSPHRASE:
-				case NVM_ERR_DEVICEBUSY:
-					wbemRc = framework::MOF_ERR_BADSTATE;
-					break;
-				case NVM_ERR_UNKNOWN:
-				default:
-					wbemRc = framework::MOF_ERR_UNKNOWN;
-					break;
-				}
+				wbemRc = getReturnCodeFromLibException(e);
 			}
 			catch (wbem::framework::ExceptionBadParameter &)
 			{
@@ -248,7 +217,7 @@ wbem::framework::UINT32 wbem::erasure::ErasureServiceFactory::executeMethod(
 		// specific "Erase()" return code for "Not Supported"
 		// don't use httpRc here because it's a valid method,
 		// just not supported by our implementation
-		wbemRc = framework::MOF_ERR_NOTSUPPORTED;
+		wbemRc = ERASURESERVICE_ERR_NOT_SUPPORTED;
 	}
 	else
 	{
@@ -257,6 +226,33 @@ wbem::framework::UINT32 wbem::erasure::ErasureServiceFactory::executeMethod(
 	}
 
 	return httpRc;
+}
+
+wbem::framework::UINT32
+wbem::erasure::ErasureServiceFactory::getReturnCodeFromLibException(
+		const exception::NvmExceptionLibError &e)
+{
+	wbem::framework::UINT32 rc;
+
+	switch(e.getLibError())
+	{
+	case NVM_ERR_INVALIDPERMISSIONS:
+	case NVM_ERR_BADPASSPHRASE:
+		rc = ERASURESERVICE_ERR_PERMISSION_FAILURE;
+		break;
+	case NVM_ERR_NOTMANAGEABLE:
+	case NVM_ERR_SECURITYFROZEN:
+	case NVM_ERR_SECURITYDISABLED:
+	case NVM_ERR_LIMITPASSPHRASE:
+	case NVM_ERR_DEVICEBUSY:
+		rc = ERASURESERVICE_ERR_BAD_STATE;
+		break;
+	default:
+		rc = ERASURESERVICE_ERR_FAILED;
+		break;
+	}
+
+	return rc;
 }
 
 wbem::erasure::eraseType wbem::erasure::ErasureServiceFactory::getEraseType(std::string erasureMethod)

@@ -213,22 +213,22 @@ wbem::framework::UINT32 wbem::support::NVDIMMDiagnosticFactory::executeMethod(
 	} // try
 	catch(wbem::framework::ExceptionBadParameter &)
 	{
-		wbemRc = framework::MOF_ERR_INVALIDPARAMETER;
+		wbemRc = NVDIMMDIAGNOSTIC_ERR_INVALID_PARAMETER;
 	}
 	catch(exception::NvmExceptionLibError &e)
 	{
 		if (e.getLibError() == NVM_ERR_NOTSUPPORTED)
 		{
-			wbemRc = NVDIMMDIAG_MOF_ERR_NOT_SUPPORTED;
+			wbemRc = NVDIMMDIAGNOSTIC_ERR_NOT_SUPPORTED;
 		}
 		else
 		{
-			wbemRc = NVDIMMDIAG_MOF_ERR_FAILED;
+			wbemRc = NVDIMMDIAGNOSTIC_ERR_FAILED;
 		}
 	}
 	catch(framework::Exception &)
 	{
-		wbemRc = NVDIMMDIAG_MOF_ERR_NOT_SUPPORTED;
+		wbemRc = NVDIMMDIAGNOSTIC_ERR_FAILED;
 	}
 
 	COMMON_LOG_EXIT_RETURN("httpRc: %u, wbemRc: %u", httpRc, wbemRc);

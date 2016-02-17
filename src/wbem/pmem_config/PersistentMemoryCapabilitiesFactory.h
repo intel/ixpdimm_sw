@@ -35,6 +35,7 @@
 #include <string>
 
 #include <framework_interface/NvmInstanceFactory.h>
+#include <exception/NvmExceptionLibError.h>
 
 
 namespace wbem
@@ -52,6 +53,11 @@ namespace pmem_config
 	static const std::string PMCAP_GETBLOCKSIZES = "GetSupportedBlockSizes"; //!< extrinsic method name
 	static const std::string PMCAP_BLOCKSIZES_PARAMNAME = "BlockSizes"; //!< extrinsic method out param
 
+	static const NVM_UINT32 PMCAP_ERR_NOT_SUPPORTED = 1;
+	static const NVM_UINT32 PMCAP_ERR_UNKNOWN = 2;
+	static const NVM_UINT32 PMCAP_ERR_FAILED = 4;
+	static const NVM_UINT32 PMCAP_ERR_INVALID_PARAMETER = 5;
+	static const NVM_UINT32 PMCAP_ERR_INSUFFICIENT_RESOURCES = 4097;
 
 /*!
  * Provider Factory for Intel_PersistentMemoryNamespace
@@ -125,6 +131,11 @@ class NVM_API PersistentMemoryCapabilitiesFactory : public framework_interface::
 	private:
 		void populateAttributeList(framework::attribute_names_t &attributes)
 				throw (framework::Exception);
+
+		/*
+		 * convert NvmExceptionLibError to extrinsic return code
+		 */
+		wbem::framework::UINT32 getReturnCodeFromLibException(exception::NvmExceptionLibError e);
 }; // class
 
 } // pmem_config

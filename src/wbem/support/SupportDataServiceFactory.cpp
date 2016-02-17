@@ -138,13 +138,13 @@ wbem::framework::UINT32 wbem::support::SupportDataServiceFactory::executeMethod(
 			// eat the exception
 			catch (exception::NvmExceptionLibError&)
 			{
-				httpRc = framework::MOF_ERR_FAILED;
+				httpRc = framework::CIM_ERR_FAILED;
 			}
 
 			if (std::string::npos == inParms[SUPPORTDATASERVICE_OMD_OBJPATH].stringValue().find(hostName))
 			{
 				// not looking for this host
-				httpRc = framework::MOF_ERR_INVALIDPARAMETER;
+				httpRc = framework::CIM_ERR_INVALID_PARAMETER;
 			}
 			else
 			{
@@ -170,15 +170,15 @@ wbem::framework::UINT32 wbem::support::SupportDataServiceFactory::executeMethod(
 	}
 	catch(wbem::framework::ExceptionBadParameter &)
 	{
-		wbemRc = framework::MOF_ERR_INVALIDPARAMETER;
+		httpRc = framework::CIM_ERR_INVALID_PARAMETER;
 	}
 	catch(exception::NvmExceptionLibError &)
 	{
-		wbemRc = framework::MOF_ERR_FAILED;
+		wbemRc = SUPPORTDATASERVICE_ERR_UNKNOWN;
 	}
 	catch(framework::Exception &)
 	{
-		wbemRc = framework::MOF_ERR_UNKNOWN;
+		wbemRc = SUPPORTDATASERVICE_ERR_UNKNOWN;
 	}
 
 	COMMON_LOG_EXIT_RETURN("httpRc: %u, wbemRc: %u", httpRc, wbemRc);

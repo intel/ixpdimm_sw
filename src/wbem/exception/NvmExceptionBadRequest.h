@@ -202,6 +202,15 @@ class NvmExceptionRequestedDimmLocked : public NvmExceptionBadRequest
 		{}
 };
 
+class NvmExceptionPartialResultsCouldNotBeUndone : public NvmExceptionBadRequest
+{
+	public:
+		NvmExceptionPartialResultsCouldNotBeUndone() :
+			NvmExceptionBadRequest("Request did not complete in its entirety and partial"
+					"results could not be undone.")
+		{}
+};
+
 } /* namespace exception */
 } /* namespace wbem */
 

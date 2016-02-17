@@ -38,6 +38,7 @@
 #include <vector>
 
 #include <framework_interface/NvmInstanceFactory.h>
+#include <exception/NvmExceptionLibError.h>
 
 
 namespace wbem
@@ -50,6 +51,15 @@ namespace software
 	static const std::string NVDIMMSOFTWAREINSTALLATIONSERVICE_INSTALLFROMURI_PARAM_TARGET = "Target"; //!< InstallFromURI param
 	static const std::string NVDIMMSOFTWAREINSTALLATIONSERVICE_INSTALLFROMURI_INSTALLOPTIONS = "InstallOptions"; //!< InstallFromURI param
 
+	static const NVM_UINT32 SWINSTALLSERVICE_ERR_UNKNOWN = 2;
+	static const NVM_UINT32 SWINSTALLSERVICE_ERR_FAILED = 4;
+	static const NVM_UINT32 SWINSTALLSERVICE_ERR_INVALID_PARAMETER = 5;
+	static const NVM_UINT32 SWINSTALLSERVICE_ERR_UNSUPPORTED_TARGET_TYPE = 4097;
+	static const NVM_UINT32 SWINSTALLSERVICE_ERR_DOWNGRADE_NOT_SUPPORTED = 4099;
+	static const NVM_UINT32 SWINSTALLSERVICE_ERR_NOT_ENOUGH_MEMORY = 4100;
+	static const NVM_UINT32 SWINSTALLSERVICE_ERR_UNSUPPORTED_VERSION_TRANSITION = 4102;
+	static const NVM_UINT32 SWINSTALLSERVICE_ERR_NOT_APPLICABLE_TO_TARGET = 4106;
+	static const NVM_UINT32 SWINSTALLSERVICE_ERR_URI_NOT_ACCESSIBLE = 4107;
 /*!
  * Provider Factory for NVDIMMSoftwareInstallationService
  */
@@ -185,6 +195,11 @@ class NVM_API NVDIMMSoftwareInstallationServiceFactory : public framework_interf
 	private:
 		void populateAttributeList(framework::attribute_names_t &attributes)
 			throw (framework::Exception);
+
+		/*
+		 * convert NvmExceptionLibError to extrinsic return code
+		 */
+		wbem::framework::UINT32 getReturnCodeFromLibException(exception::NvmExceptionLibError e);
 };
 
 } // software

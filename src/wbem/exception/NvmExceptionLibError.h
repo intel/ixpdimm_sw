@@ -58,7 +58,7 @@ class NVM_API NvmExceptionLibError: public framework::ExceptionSystemError
 		/*!
 		 * Retrieve the library error code that caused the exception
 		 */
-		int getLibError();
+		int getLibError() const;
 
 	private:
 		int m_libErrorCode;

@@ -64,6 +64,13 @@ namespace mem_config
 	static const std::string MEMORYCONFIGURATIONSERVICE_REMOVEGOAL = "RemoveGoal"; //!< method name
 	static const std::string MEMORYCONFIGURATIONSERVICE_TARGETS = "Targets"; //!< method param
 
+	static const NVM_UINT32 MEMORYCONFIGURATIONSERVICE_ERR_FAILED = 4;
+	static const NVM_UINT32 MEMORYCONFIGURATIONSERVICE_ERR_INVALID_PARAMETER = 5;
+	static const NVM_UINT32 MEMORYCONFIGURATIONSERVICE_ERR_SUCCESSFULLY_STAGED_FOR_FUTURE = 4096;
+	static const NVM_UINT32 MEMORYCONFIGURATIONSERVICE_ERR_INSUFFICIENT_RESOURCES = 4097;
+	static const NVM_UINT32 MEMORYCONFIGURATIONSERVICE_ERR_INCONSISTENT_PARAMETERS = 4098;
+	static const NVM_UINT32 MEMORYCONFIGURATIONSERVICE_ERR_DID_NOT_COMPLETE = 4099;
+
 /*!
  * A service that provides access to memory configuration methods
  */
@@ -319,6 +326,11 @@ class NVM_API MemoryConfigurationServiceFactory : public framework_interface::Nv
 		void uriToPath(const std::string &uriParamName, const std::string &uri,
 				std::string &path, bool check_exists = false) const
 			throw (wbem::framework::Exception);
+
+		/*
+		 * convert NvmExceptionLibError to extrinsic return code
+		 */
+		wbem::framework::UINT32 getReturnCodeFromLibException(const exception::NvmExceptionLibError &e);
 };
 
 } // resource

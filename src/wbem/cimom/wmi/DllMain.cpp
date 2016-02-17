@@ -106,7 +106,7 @@ STDAPI NVM_API DllCanUnloadNow(void)
 
 	//It is OK to unload if there are no objects or locks on the
 	// class factory.
-	SCODE sc = (0L==g_cObj && 0L==g_cLock) ? S_OK : S_FALSE;
+	SCODE sc = wbem::wmi::IntelWmiProviderFactory::CimFrameworkDLLCanUnloadNow();
 	return sc;
 }
 

@@ -231,19 +231,50 @@ wbem::framework::UINT32 wbem::pmem_config::PersistentMemoryCapabilitiesFactory::
 			httpRc = framework::CIM_ERR_METHOD_NOT_AVAILABLE;
 		}
 	}
-	catch(exception::NvmExceptionLibError &)
+	catch (framework::ExceptionBadParameter &)
 	{
-		wbemRc = framework::MOF_ERR_FAILED;
+		wbemRc = PMCAP_ERR_INVALID_PARAMETER;
+	}
+	catch(exception::NvmExceptionLibError &e)
+	{
+		wbemRc = getReturnCodeFromLibException(e);
 	}
 	catch(framework::Exception &)
 	{
-		wbemRc = framework::MOF_ERR_FAILED;
+		wbemRc = PMCAP_ERR_UNKNOWN;
 	}
 
 	COMMON_LOG_EXIT_RETURN("httpRc: %u, wbemRc: %u", httpRc, wbemRc);
 	return httpRc;
 }
 
+wbem::framework::UINT32
+wbem::pmem_config::PersistentMemoryCapabilitiesFactory::getReturnCodeFromLibException(
+		exception::NvmExceptionLibError e)
+{
+	wbem::framework::UINT32 rc = framework::MOF_ERR_SUCCESS;
+
+	switch(e.getLibError())
+	{
+		case NVM_ERR_UNKNOWN:
+			rc = PMCAP_ERR_UNKNOWN;
+			break;
+		case NVM_ERR_NOTSUPPORTED:
+			rc = PMCAP_ERR_NOT_SUPPORTED;
+			break;
+		case NVM_ERR_INVALIDPARAMETER:
+			rc = PMCAP_ERR_INVALID_PARAMETER;
+			break;
+		case NVM_ERR_NOMEMORY:
+			rc = PMCAP_ERR_INSUFFICIENT_RESOURCES;
+			break;
+		default:
+			rc = PMCAP_ERR_FAILED;
+			break;
+	}
+
+	return rc;
+}
 /*!
  * Determine the security features of the dimms in the pool
  */

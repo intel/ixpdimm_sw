@@ -427,7 +427,7 @@ wbem::framework::UINT32 wbem::mem_config::MemoryConfigurationServiceFactory::exe
 		wbem::framework::attributes_t &outParms)
 {
 	framework::UINT32 httpRc = framework::MOF_ERR_SUCCESS;
-	wbemRc = framework::MOF_ERR_UNKNOWN;
+	wbemRc = MEMORYCONFIGURATIONSERVICE_ERR_FAILED;
 
 	COMMON_LOG_ENTRY_PARAMS("methodName: %s, number of in params: %d", method.c_str(), (int)(inParms.size()));
 
@@ -441,7 +441,7 @@ wbem::framework::UINT32 wbem::mem_config::MemoryConfigurationServiceFactory::exe
 		catch (wbem::framework::Exception &)
 		{
 			// can't get the host
-			httpRc = framework::MOF_ERR_FAILED;
+			httpRc = framework::CIM_ERR_FAILED;
 			throw;
 		}
 		// verify host
@@ -474,37 +474,61 @@ wbem::framework::UINT32 wbem::mem_config::MemoryConfigurationServiceFactory::exe
 			}
 		}
 	}
+	catch (exception::NvmExceptionPartialResultsCouldNotBeUndone &)
+	{
+		wbemRc = MEMORYCONFIGURATIONSERVICE_ERR_DID_NOT_COMPLETE;
+	}
 	catch (framework::ExceptionNotSupported &)
 	{
-		wbemRc = framework::MOF_ERR_NOTALLOWED;
+		wbemRc = MEMORYCONFIGURATIONSERVICE_ERR_FAILED;
 	}
 	catch (framework::ExceptionBadParameter &)
 	{
-		wbemRc = framework::MOF_ERR_INVALIDPARAMETER;
+		wbemRc = MEMORYCONFIGURATIONSERVICE_ERR_INVALID_PARAMETER;
 	}
 	catch (exception::NvmExceptionUnacceptableLayoutDeviation &)
 	{
-		wbemRc = framework::MOF_ERR_FAILED;
+		wbemRc = MEMORYCONFIGURATIONSERVICE_ERR_FAILED;
 	}
-	catch (exception::NvmExceptionLibError &)
+	catch (exception::NvmExceptionLibError &e)
 	{
-		wbemRc = framework::MOF_ERR_FAILED;
+		wbemRc = getReturnCodeFromLibException(e);
 	}
 	catch (exception::NvmExceptionBadRequest &)
 	{
-		wbemRc = framework::MOF_ERR_INVALIDPARAMETER;
+		wbemRc = MEMORYCONFIGURATIONSERVICE_ERR_INVALID_PARAMETER;
 	}
 	catch (framework::Exception &)
 	{
-		wbemRc = framework::MOF_ERR_UNKNOWN;
+		wbemRc = MEMORYCONFIGURATIONSERVICE_ERR_FAILED;
 	}
 
 	COMMON_LOG_EXIT_RETURN("httpRc: %u, wbemRc: %u", httpRc, wbemRc);
 	return httpRc;
 }
 
+wbem::framework::UINT32
+wbem::mem_config::MemoryConfigurationServiceFactory::getReturnCodeFromLibException(
+		const exception::NvmExceptionLibError &e)
+{
+	wbem::framework::UINT32 rc = framework::MOF_ERR_SUCCESS;
+
+	switch(e.getLibError())
+	{
+		case NVM_ERR_NOMEMORY:
+			rc = MEMORYCONFIGURATIONSERVICE_ERR_INSUFFICIENT_RESOURCES;
+			break;
+		default:
+			rc = MEMORYCONFIGURATIONSERVICE_ERR_FAILED;
+			break;
+	}
+
+	return rc;
+}
+
 void wbem::mem_config::MemoryConfigurationServiceFactory::removeGoalFromDimms(std::vector<std::string> dimmGuids)
 {
+	bool atLeastOneRequestSucceeded = false;
 	std::vector<std::string>::iterator guidIter = dimmGuids.begin();
 	for (; guidIter!= dimmGuids.end(); guidIter++)
 	{
@@ -514,7 +538,18 @@ void wbem::mem_config::MemoryConfigurationServiceFactory::removeGoalFromDimms(st
 		if (rc != NVM_SUCCESS && rc != NVM_ERR_NOTFOUND)
 		{
 			COMMON_LOG_ERROR_F("deleting config goal failed with rc = %d", rc);
-			throw wbem::exception::NvmExceptionLibError(rc);
+			if (atLeastOneRequestSucceeded)
+			{
+				throw exception::NvmExceptionPartialResultsCouldNotBeUndone();
+			}
+			else
+			{
+				throw wbem::exception::NvmExceptionLibError(rc);
+			}
+		}
+		if (rc == NVM_SUCCESS)
+		{
+			atLeastOneRequestSucceeded = true;
 		}
 	}
 }
@@ -1084,7 +1119,7 @@ wbem::framework::UINT32 wbem::mem_config::MemoryConfigurationServiceFactory::exe
 	}
 
 	// If we got here, the configuration succeeded
-	wbemRc = framework::MOF_ERR_SUCCESS;
+	wbemRc = MEMORYCONFIGURATIONSERVICE_ERR_SUCCESSFULLY_STAGED_FOR_FUTURE;
 	return httpRc;
 }
 

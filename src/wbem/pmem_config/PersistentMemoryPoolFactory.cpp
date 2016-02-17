@@ -342,23 +342,23 @@ wbem::framework::UINT32 wbem::pmem_config::PersistentMemoryPoolFactory::executeM
 	}
 	catch (wbem::framework::ExceptionBadParameter &)
 	{
-		wbemRc = framework::MOF_ERR_INVALIDPARAMETER;
+		wbemRc = PERSISTENTMEMORYPOOL_ERR_INVALID_PARAMETER;
 	}
-	catch (wbem::exception::NvmExceptionLibError &)
+	catch (wbem::exception::NvmExceptionLibError &e)
 	{
-		wbemRc = framework::MOF_ERR_FAILED;
+		wbemRc = PERSISTENTMEMORYPOOL_ERR_FAILED;
 	}
 	catch (wbem::framework::ExceptionNoMemory &)
 	{
-		wbemRc = framework::MOF_ERR_FAILED;
+		wbemRc = PERSISTENTMEMORYPOOL_ERR_INSUFFICIENT_RESOURCES;
 	}
 	catch (wbem::framework::ExceptionNotSupported &)
 	{
-		wbemRc = framework::MOF_ERR_NOTSUPPORTED;
+		wbemRc = PERSISTENTMEMORYPOOL_ERR_NOT_SUPPORTED;
 	}
 	catch (wbem::framework::Exception &)
 	{
-		wbemRc = framework::MOF_ERR_UNKNOWN;
+		wbemRc = PERSISTENTMEMORYPOOL_ERR_UNKNOWN;
 	}
 
 	COMMON_LOG_EXIT_RETURN("httpRc: %u, wbemRc: %u", httpRc, wbemRc);

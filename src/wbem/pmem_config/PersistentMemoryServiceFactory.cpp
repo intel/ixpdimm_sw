@@ -276,7 +276,7 @@ wbem::framework::UINT32 wbem::pmem_config::PersistentMemoryServiceFactory::execu
 			if (httpRc == framework::MOF_ERR_SUCCESS)
 			{
 				deleteNamespace(namespaceGuid);
-				wbemRc = PM_SERVICE_SUCCESS;
+				wbemRc = framework::MOF_ERR_SUCCESS;
 			}
 		}
 		else if (PM_SERVICE_ALLOCATEFROMPOOL == method)
@@ -294,58 +294,23 @@ wbem::framework::UINT32 wbem::pmem_config::PersistentMemoryServiceFactory::execu
 	}
 	catch (framework::ExceptionBadParameter &)
 	{
-		wbemRc = framework::MOF_ERR_INVALIDPARAMETER;
+		wbemRc = PM_SERVICE_ERR_INVALIDPARAMETER;
 	}
 	catch (exception::NvmExceptionLibError &e)
 	{
-		switch (e.getLibError())
-		{
-		case NVM_ERR_NOTSUPPORTED:
-			wbemRc = PM_SERVICE_NOTSUPPORTED;
-			break;
-		case NVM_ERR_NOMEMORY:
-			wbemRc = PM_SERVICE_FAILED;
-			break;
-		case NVM_ERR_INVALIDPARAMETER:
-			wbemRc = PM_SERVICE_INVALIDPARAMETER;
-			break;
-		case NVM_ERR_INVALIDPERMISSIONS:
-			wbemRc = PM_SERVICE_NOTSUPPORTED;
-			break;
-		case NVM_ERR_DEVICEBUSY:
-			wbemRc = PM_SERVICE_INUSE;
-			break;
-		case NVM_ERR_NOSIMULATOR:
-			wbemRc = PM_SERVICE_NOTSUPPORTED;
-			break;
-		case NVM_ERR_BADNAMESPACE:
-			wbemRc = PM_SERVICE_INVALIDPARAMETER;
-			break;
-		case NVM_ERR_BADSIZE:
-			wbemRc = PM_SERVICE_FAILED;
-			break;
-		case NVM_ERR_BADSECURITYGOAL:
-			wbemRc = PM_SERVICE_FAILED;
-			break;
-		case NVM_ERR_BADNAMESPACEPERSISTENTSETTING:
-			wbemRc = PM_SERVICE_FAILED;
-			break;
-		default:
-			wbemRc = PM_SERVICE_UNKNOWN;
-			break;
-		}
+		wbemRc = getReturnCodeFromLibException(e);
 	}
 	catch (framework::ExceptionNoMemory &)
 	{
-		wbemRc = PM_SERVICE_FAILED;
+		wbemRc = PM_SERVICE_ERR_FAILED;
 	}
 	catch (framework::ExceptionNotSupported &)
 	{
-		wbemRc = framework::MOF_ERR_NOTSUPPORTED;
+		wbemRc = PM_SERVICE_ERR_FAILED;
 	}
 	catch (framework::Exception &)
 	{
-		wbemRc = framework::MOF_ERR_UNKNOWN;
+		wbemRc = PM_SERVICE_ERR_UNKNOWN;
 	}
 
 	if (pGoalInstance)
@@ -354,6 +319,38 @@ wbem::framework::UINT32 wbem::pmem_config::PersistentMemoryServiceFactory::execu
 	}
 
 	return httpRc;
+}
+
+wbem::framework::UINT32
+wbem::pmem_config::PersistentMemoryServiceFactory::getReturnCodeFromLibException(
+		const exception::NvmExceptionLibError &e)
+{
+	wbem::framework::UINT32 rc = framework::MOF_ERR_SUCCESS;
+
+	switch(e.getLibError())
+	{
+		case NVM_ERR_UNKNOWN:
+			rc = PM_SERVICE_ERR_UNKNOWN;
+			break;
+		case NVM_ERR_BADSIZE:
+		case NVM_ERR_INVALIDPARAMETER:
+			rc = PM_SERVICE_ERR_INVALIDPARAMETER;
+			break;
+		case NVM_ERR_DEVICEBUSY:
+			rc = PM_SERVICE_ERR_IN_USE;
+			break;
+		case NVM_ERR_BADNAMESPACETYPE:
+			rc = PM_SERVICE_ERR_INCONSISTENT_PARAMETERS;
+			break;
+		case NVM_ERR_NOMEMORY:
+			rc = PM_SERVICE_ERR_INSUFFICIENT_RESOURCES;
+			break;
+		default:
+			rc = PM_SERVICE_ERR_FAILED;
+			break;
+	}
+
+	return rc;
 }
 
 void wbem::pmem_config::PersistentMemoryServiceFactory::allocateFromPool(

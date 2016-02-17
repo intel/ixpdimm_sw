@@ -375,55 +375,54 @@ wbem::framework::UINT32 wbem::pmem_config::PersistentMemoryNamespaceFactory::exe
 	}
 	catch (framework::ExceptionBadParameter &)
 	{
-		httpRc = framework::CIM_ERR_INVALID_PARAMETER;
-		wbemRc = framework::MOF_ERR_INVALIDPARAMETER;
+		wbemRc = PM_NAMESPACE_INVALID_PARAMETER;
 	}
 	catch (exception::NvmExceptionLibError &e)
 	{
-		switch (e.getLibError())
-		{
-			case NVM_ERR_NOTSUPPORTED:
-				wbemRc = PM_NAMESPACE_NOTSUPPORTED;
-				break;
-			case NVM_ERR_NOMEMORY:
-				wbemRc = PM_NAMESPACE_FAILED;
-				break;
-			case NVM_ERR_INVALIDPARAMETER:
-				wbemRc = framework::MOF_ERR_INVALIDPARAMETER;
-				break;
-			case NVM_ERR_INVALIDPERMISSIONS:
-				wbemRc = PM_NAMESPACE_NOTSUPPORTED;
-				break;
-			case NVM_ERR_DEVICEBUSY:
-				wbemRc = framework::MOF_ERR_INUSE;
-				break;
-			case NVM_ERR_NOSIMULATOR:
-				wbemRc = PM_NAMESPACE_NOTSUPPORTED;
-				break;
-			case NVM_ERR_BADNAMESPACE:
-				wbemRc = framework::MOF_ERR_INVALIDPARAMETER;
-				break;
-			case NVM_ERR_BADSIZE:
-				wbemRc = PM_NAMESPACE_FAILED;
-				break;
-			default:
-				wbemRc = PM_NAMESPACE_UNKNOWN;
-				break;
-		}
+		wbemRc = getReturnCodeFromLibException(e);
 	}
 	catch (framework::ExceptionNoMemory &)
 	{
-		wbemRc = PM_NAMESPACE_FAILED;
+		wbemRc = PM_NAMESPACE_ERR_FAILED;
 	}
 	catch (framework::ExceptionNotSupported &)
 	{
-		wbemRc = PM_NAMESPACE_NOTSUPPORTED;
+		wbemRc = PM_NAMESPACE_NOT_SUPPORTED;
 	}
 	catch (framework::Exception &)
 	{
 		wbemRc = PM_NAMESPACE_UNKNOWN;
 	}
 	return httpRc;
+}
+
+wbem::framework::UINT32
+wbem::pmem_config::PersistentMemoryNamespaceFactory::getReturnCodeFromLibException(
+		exception::NvmExceptionLibError e)
+{
+	wbem::framework::UINT32 rc = framework::MOF_ERR_SUCCESS;
+
+	switch(e.getLibError())
+	{
+		case NVM_ERR_NOTSUPPORTED:
+			rc = PM_NAMESPACE_INVALID_STATE_TRANSITION;
+			break;
+		case NVM_ERR_UNKNOWN:
+			rc = PM_NAMESPACE_UNKNOWN;
+			break;
+		case NVM_ERR_INVALIDPARAMETER:
+		case NVM_ERR_BADNAMESPACEENABLESTATE:
+			rc = PM_NAMESPACE_INVALID_PARAMETER;
+			break;
+		case NVM_ERR_DEVICEBUSY:
+			rc = PM_NAMESPACE_IN_USE;
+			break;
+		default:
+			rc = PM_NAMESPACE_ERR_FAILED;
+			break;
+	}
+
+	return rc;
 }
 
 bool wbem::pmem_config::PersistentMemoryNamespaceFactory::isModifyNamespaceEnabledSupported(

@@ -37,6 +37,7 @@
 #include <string>
 #include <nvm_management.h>
 #include <framework_interface/NvmInstanceFactory.h>
+#include <exception/NvmExceptionLibError.h>
 
 
 namespace wbem
@@ -79,6 +80,12 @@ namespace physical_asset
 	static const NVM_UINT16 NVDIMM_OPSTATUS_NONRECOVERABLEERROR = 7;
 	static const NVM_UINT16 NVDIMM_OPSTATUS_MIXEDSKU = 32768;
 	static const NVM_UINT16 NVDIMM_OPSTATUS_SKUVIOLATION = 32769;
+
+	static const NVM_UINT32 NVDIMM_ERR_UNKNOWN = 1;
+	static const NVM_UINT32 NVDIMM_ERR_FAILED = 2;
+	static const NVM_UINT32 NVDIMM_ERR_NOT_ALLOWED = 3;
+	static const NVM_UINT32 NVDIMM_ERR_NOT_SUPPORTED = 4;
+	static const NVM_UINT32 NVDIMM_ERR_INVALID_PARAMETER = 5;
 
 	typedef std::vector<struct device_discovery> devices_t;
 
@@ -286,6 +293,10 @@ private:
 		 */
 		enum fw_log_level convertToLogLevelEnum(NVM_UINT16 logLevel);
 
+		/*
+		 * convert NvmExceptionLibError to extrinsic return code
+		 */
+		wbem::framework::UINT32 getReturnCodeFromLibException(const exception::NvmExceptionLibError &e);
 
 };
 

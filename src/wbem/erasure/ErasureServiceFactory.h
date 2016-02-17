@@ -36,6 +36,7 @@
 #include <string>
 #include <server/BaseServerFactory.h>
 #include <framework_interface/NvmInstanceFactory.h>
+#include <exception/NvmExceptionLibError.h>
 
 
 namespace wbem
@@ -62,6 +63,11 @@ namespace erasure
 		ERASETYPE_MULTI_OVERWRITE = 1,
 		ERASETYPE_CRYPTO_ERASE = 2
 	};
+
+	static const NVM_UINT32 ERASURESERVICE_ERR_NOT_SUPPORTED = 1;
+	static const NVM_UINT32 ERASURESERVICE_ERR_FAILED = 4;
+	static const NVM_UINT32 ERASURESERVICE_ERR_PERMISSION_FAILURE = 32768;
+	static const NVM_UINT32 ERASURESERVICE_ERR_BAD_STATE = 32769;
 
 /*!
  * Provider Factory for ErasureService
@@ -151,6 +157,10 @@ class NVM_API ErasureServiceFactory : public framework_interface::NvmInstanceFac
 
 		wbem::erasure::eraseType getEraseType(std::string erasureMethod);
 
+		/*
+		 * convert NvmExceptionLibError to extrinsic return code
+		 */
+		wbem::framework::UINT32 getReturnCodeFromLibException(const exception::NvmExceptionLibError &e);
 };
 
 } // erasure

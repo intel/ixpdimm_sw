@@ -52,10 +52,6 @@ namespace support
 	static const std::string NVDIMMDIAGNOSTIC_TEST_SECURITY = "SecurityCheck"; //!< method parameter for security check
 	static const std::string NVDIMMDIAGNOSTIC_TEST_SETTING = "SettingCheck"; //!< method parameter for settings check
 
-	// MOF errors for this factory
-	static const wbem::framework::UINT32 NVDIMMDIAG_MOF_ERR_NOT_SUPPORTED = 1;
-	static const wbem::framework::UINT32 NVDIMMDIAG_MOF_ERR_FAILED = 4;
-
 	// methods
 	static const std::string NVDIMMDIAGNOSTIC_RUNDIAGNOSTICSERVICE = "RunDiagnosticService"; //!< method name
 
@@ -135,6 +131,10 @@ namespace support
 		SET_IGNORE_TIME,
 		SET_IGNORE_DEBUGLOG
 	};
+
+	static const NVM_UINT32 NVDIMMDIAGNOSTIC_ERR_NOT_SUPPORTED = 1;
+	static const NVM_UINT32 NVDIMMDIAGNOSTIC_ERR_FAILED = 4;
+	static const NVM_UINT32 NVDIMMDIAGNOSTIC_ERR_INVALID_PARAMETER = 5;
 
 /*!
  * Models the physical aspects of an Intel NVDIMM

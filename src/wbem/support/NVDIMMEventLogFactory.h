@@ -74,6 +74,10 @@ namespace support
 	const std::string NVDIMMEVENTLOG_FILTER = "Filter"; //!< extrinsic method param
 	const std::string NVDIMMEVENTLOG_LOGENTRIES = "LogEntries"; //!< extrinsic method param
 
+	static const NVM_UINT32 NVDIMMEVENTLOG_ERR_UNKNOWN = 2;
+	static const NVM_UINT32 NVDIMMEVENTLOG_ERR_FAILED = 4;
+	static const NVM_UINT32 NVDIMMEVENTLOG_ERR_INVALID_PARAMETER = 5;
+	static const NVM_UINT32 NVDIMMEVENTLOG_ERR_INSUFFICIENT_RESOURCES = 4097;
 /*!
  * Provider Factory for NVDIMMEventLogFactory
  * There is a single instance of this class.  It serves as an aggregation point

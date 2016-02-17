@@ -76,6 +76,8 @@ namespace support
 	 */
 	typedef std::vector<struct diagnosticResult> diagnosticResults_t;
 
+	static const NVM_UINT32 DIAGNOSTICLOG_ERR_FAILED = 4;
+
 /*!
  * Provider Factory for DiagnosticLog
  * There is a single instance of this class.  It serves as an aggregation point
