@@ -41,7 +41,7 @@ namespace mem_config
 {
 // object path strings
 static const std::string MEMORYCAPABILITIES_ELEMENTNAME = " NVM Capabilities"; //!< Element Name static
-static const std::string MEMORYCAPABILITIES_INSTANCEID = " NVM Capabilities"; //!< Instance ID static
+static const std::string MEMORYCAPABILITIES_INSTANCEID = "NVM Capabilities"; //!< Instance ID static
 
 static const std::string MEMORYCAPABILITIES_CREATIONCLASSNAME = std::string(NVM_WBEM_PREFIX) + "MemoryCapabilities"; //!< CreationClassName
 static const std::string MEMORYCAPABILITIES_SYSTEMCREATIONCLASSNAME = std::string(NVM_WBEM_PREFIX) + "MemoryCapabilities"; //!< CreationClassName
