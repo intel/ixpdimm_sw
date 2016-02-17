@@ -1,20 +1,19 @@
-%define rpm_name ixpdimm_sw
-%define product_name ApachePass
+%define product_name ixpdimm_sw
 %define build_version 99.99.99.9999
 %define build_release 1
-%define cliname %{rpm_name}-cli
-%define monitorname %{rpm_name}-monitor
-%define cimlibs %{rpm_name}-cim
-%define dname %{rpm_name}-devel
+%define cliname %{product_name}-cli
+%define monitorname %{product_name}-monitor
+%define cimlibs %{product_name}-cim
+%define dname %{product_name}-devel
 
-Name: %{rpm_name}-libs
+Name: %{product_name}-libs
 Version: %{build_version}
 Release: %{build_release}%{?dist}
 Summary: API for development of %{product_name} management utilities
 License: BSD
 Group: Applications/System
-URL: http://www.intel.com
-Source: %{rpm_name}.tar.bz2
+URL: https://01.org/ixpdimm-sw
+Source: %{product_name}.tar.bz2
 
 %define  debug_package %{nil}
 
@@ -71,13 +70,13 @@ capacity provisioning, health monitoring, and troubleshooting.
 
 
 %prep
-%setup -q -n %{rpm_name}
+%setup -q -n %{product_name}
 
 %build
 make BUILDNUM=%{build_version} RELEASE=1 DATADIR=%{_datadir} LINUX_PRODUCT_NAME=%{product_name} CFLAGS_EXTERNAL="%{?cflag}"
 
 %install
-make install RELEASE=1 RPM_ROOT=%{buildroot} LIB_DIR=%{_libdir} INCLUDE_DIR=%{_includedir} BIN_DIR=%{_bindir} DATADIR=%{_datadir} UNIT_DIR=%{_unitdir} LINUX_PRODUCT_NAME=%{rpm_name} SYSCONF_DIR=%{_sysconfdir}
+make install RELEASE=1 RPM_ROOT=%{buildroot} LIB_DIR=%{_libdir} INCLUDE_DIR=%{_includedir} BIN_DIR=%{_bindir} DATADIR=%{_datadir} UNIT_DIR=%{_unitdir} LINUX_PRODUCT_NAME=%{product_name} SYSCONF_DIR=%{_sysconfdir}
 
 %post -n %cimlibs
 /sbin/ldconfig
@@ -98,15 +97,15 @@ then
 	fi
 	for ns in interop root/interop root/PG_Interop;
 	do
-	   $CIMMOF -E -n$ns %{_datadir}/%{rpm_name}/Pegasus/mof/pegasus_register.mof &> /dev/null
+	   $CIMMOF -E -n$ns %{_datadir}/%{product_name}/Pegasus/mof/pegasus_register.mof &> /dev/null
 	   if [ $? -eq 0 ]
 	   then
-			$CIMMOF -uc -n$ns %{_datadir}/%{rpm_name}/Pegasus/mof/pegasus_register.mof &> /dev/null
-			$CIMMOF -uc -n$ns %{_datadir}/%{rpm_name}/Pegasus/mof/profile_registration.mof &> /dev/null
+			$CIMMOF -uc -n$ns %{_datadir}/%{product_name}/Pegasus/mof/pegasus_register.mof &> /dev/null
+			$CIMMOF -uc -n$ns %{_datadir}/%{product_name}/Pegasus/mof/profile_registration.mof &> /dev/null
 			break
 	   fi 
 	done
-	$CIMMOF -aE -uc -n root/intelwbem %{_datadir}/%{rpm_name}/Pegasus/mof/intelwbem.mof &> /dev/null
+	$CIMMOF -aE -uc -n root/intelwbem %{_datadir}/%{product_name}/Pegasus/mof/intelwbem.mof &> /dev/null
 fi
 if [ -x /usr/sbin/sfcbd ]
 then
@@ -118,7 +117,7 @@ then
 		systemctl stop sblim-sfcb.service &> /dev/null
 	fi
 
-	sfcbstage -n root/intelwbem -r %{_datadir}/%{rpm_name}/sfcb/INTEL_NVDIMM.reg %{_datadir}/%{rpm_name}/sfcb/sfcb_intelwbem.mof
+	sfcbstage -n root/intelwbem -r %{_datadir}/%{product_name}/sfcb/INTEL_NVDIMM.reg %{_datadir}/%{product_name}/sfcb/sfcb_intelwbem.mof
 	sfcbrepos -f
 
 	if [[ $RESTART -gt 0 ]]
@@ -150,8 +149,8 @@ if [ "$1" -gt 1 ]; then
 		fi
 		cimprovider -d -m intelwbemprovider &> /dev/null
 		cimprovider -r -m intelwbemprovider &> /dev/null
-		mofcomp -v -r -n root/intelwbem %{_datadir}/%{rpm_name}/Pegasus/mof/intelwbem.mof &> /dev/null
-		mofcomp -v -r -n root/intelwbem %{_datadir}/%{rpm_name}/Pegasus/mof/profile_registration.mof &> /dev/null
+		mofcomp -v -r -n root/intelwbem %{_datadir}/%{product_name}/Pegasus/mof/intelwbem.mof &> /dev/null
+		mofcomp -v -r -n root/intelwbem %{_datadir}/%{product_name}/Pegasus/mof/profile_registration.mof &> /dev/null
 		if [[ $RESTART -gt 0 ]]
 		then
 			cimserver -s &> /dev/null
@@ -171,8 +170,8 @@ then
 	fi
 	cimprovider -d -m intelwbemprovider &> /dev/null
 	cimprovider -r -m intelwbemprovider &> /dev/null
-	mofcomp -r -n root/intelwbem %{_datadir}/%{rpm_name}/Pegasus/mof/intelwbem.mof &> /dev/null
-	mofcomp -v -r -n root/intelwbem %{_datadir}/%{rpm_name}/Pegasus/mof/profile_registration.mof &> /dev/null
+	mofcomp -r -n root/intelwbem %{_datadir}/%{product_name}/Pegasus/mof/intelwbem.mof &> /dev/null
+	mofcomp -v -r -n root/intelwbem %{_datadir}/%{product_name}/Pegasus/mof/profile_registration.mof &> /dev/null
 	if [[ $RESTART -gt 0 ]]
 	then
 		cimserver -s &> /dev/null
@@ -210,9 +209,9 @@ fi
 %files
 %defattr(-,root,root)
 %{_libdir}/libnvm.so.*
-%dir %{_datadir}/%{rpm_name}
-%{_datadir}/%{rpm_name}/*.pem
-%config(noreplace) %{_datadir}/%{rpm_name}/*.dat*
+%dir %{_datadir}/%{product_name}
+%{_datadir}/%{product_name}/*.pem
+%config(noreplace) %{_datadir}/%{product_name}/*.dat*
 %license LICENSE
 
 %files -n %dname
@@ -225,13 +224,13 @@ fi
 %files -n %cimlibs
 %defattr(-,root,root)
 %{_libdir}/cmpi/libnvmwbem.so*
-%dir %{_datadir}/%{rpm_name}/Pegasus
-%dir %{_datadir}/%{rpm_name}/Pegasus/mof
-%dir %{_datadir}/%{rpm_name}/sfcb
-%{_datadir}/%{rpm_name}/sfcb/*.reg
-%{_datadir}/%{rpm_name}/sfcb/*.mof
-%{_datadir}/%{rpm_name}/Pegasus/mof/*.mof
-%{_sysconfdir}/ld.so.conf.d/%{rpm_name}-%{_arch}.conf
+%dir %{_datadir}/%{product_name}/Pegasus
+%dir %{_datadir}/%{product_name}/Pegasus/mof
+%dir %{_datadir}/%{product_name}/sfcb
+%{_datadir}/%{product_name}/sfcb/*.reg
+%{_datadir}/%{product_name}/sfcb/*.mof
+%{_datadir}/%{product_name}/Pegasus/mof/*.mof
+%{_sysconfdir}/ld.so.conf.d/%{product_name}-%{_arch}.conf
 %license LICENSE
 
 %files -n %monitorname
