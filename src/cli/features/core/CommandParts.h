@@ -89,6 +89,7 @@ const std::string NONINTEROPERABLEDIMM_ERROR_STR = N_TR("The command is not supp
 		"system are not compatible with each other.");
 const std::string INVALID_NS_PERSISTENT_SETTINGS = N_TR("Unable to create a namespace with the specified PersistentSetting.");
 const std::string INVALID_DIMMID_ERROR_STR = N_TR("The device identifier %s is not valid.");
+const std::string INVALID_NAMESPACEID_ERROR_STR = N_TR("The namespace identifier %s is not valid.");
 
 const std::string BAD_REQUEST_STR =
 		N_TR("Unable to find a valid mapping for the requested configuration.");

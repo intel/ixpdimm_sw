@@ -79,13 +79,11 @@ cli::framework::ErrorResult *cli::nvmcli::WbemToCli::getNamespaces(
                 else if (std::find(allNamespaces.begin(), allNamespaces.end(), nsList[i]) ==
                          allNamespaces.end())
                 {
-                    char errbuff[NVM_ERROR_LEN];
-                    s_snprintf(errbuff, NVM_ERROR_LEN,
-                               TRS(BADTARGETERROR_STR),
-                               nsList[i].c_str(), TARGET_NAMESPACE.name.c_str());
+                	std::string errorString = framework::ResultBase::stringFromArgList(
+                			TR(INVALID_NAMESPACEID_ERROR_STR.c_str()), nsList[i].c_str());
 
-                    pResult = new framework::ErrorResult(framework::ErrorResult::ERRORCODE_SYNTAX,
-                                                         std::string(errbuff));
+                    pResult = new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
+                    		errorString);
                     break;
                 }
                 else
