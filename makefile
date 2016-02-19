@@ -30,6 +30,11 @@
 ROOT_DIR := .
 include build.mk
 
+# Generate an absolute path for the root dir
+ROOT_DIR_PATH := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
+# Remove the trailing slash
+export ROOT_DIR_PATH := $(patsubst %/,%,$(ROOT_DIR_PATH))
+
 #settings 
 FLAGS := SKIP_UNITTESTS=1 ADD_MANUFACTURING=0
 I18N_TARGET := 
@@ -155,6 +160,7 @@ ifdef BUILD_LINUX
 	$(eval PEGASUS_MOF_FILES := $(addprefix $(BUILD_DIR)/, $(PEGASUS_MOF_FILES)))
 	$(eval SFCB_MOF_FILES := $(addprefix $(BUILD_DIR)/, $(SFCB_MOF_FILES)))
 	$(eval SFCB_REG_FILE := $(addprefix $(BUILD_DIR)/, $(SFCB_REG_FILE)))
+	$(eval MANPAGE_GZ_FILES := $(addprefix $(BUILD_DIR)/, $(MANPAGE_GZ_FILES)))
 	
 	# install files into LIB_DIR
 	$(MKDIR) $(RPM_ROOT)$(LIB_DIR)
@@ -180,6 +186,10 @@ ifdef BUILD_LINUX
 	$(MKDIR) $(RPM_ROOT)$(PRODUCT_DATADIR)
 	$(COPY) $(DATADIR_FILES) $(RPM_ROOT)$(PRODUCT_DATADIR)
 
+	#install manpage files into MAN8_DIR
+	$(MKDIR) $(RPM_ROOT)$(MAN8_DIR)
+	$(COPY) $(MANPAGE_GZ_FILES) $(RPM_ROOT)$(MAN8_DIR)
+	
 	#install Pegasus Files
 	$(MKDIR) $(RPM_ROOT)$(PEGASUS_MOFDIR)
 	$(COPY) $(PEGASUS_MOF_FILES) $(RPM_ROOT)$(PEGASUS_MOFDIR)
@@ -299,6 +309,7 @@ ifdef BUILD_LINUX
 	$(eval PEGASUS_MOF_FILES := $(addprefix $(RPM_ROOT)$(PEGASUS_MOFDIR)/, $(PEGASUS_MOF_FILES)))
 	$(eval SFCB_MOF_FILES := $(addprefix $(RPM_ROOT)$(SFCB_DIR)/, $(SFCB_MOF_FILES)))
 	$(eval SFCB_REG_FILE := $(addprefix $(RPM_ROOT)$(SFCB_DIR)/, $(SFCB_REG_FILE)))
+	$(eval MANPAGE_GZ_FILES := $(addprefix $(RPM_ROOT)$(MAN8_DIR)/, $(MANPAGE_GZ_FILES)))
 	
 	# uninstall files from LIB_DIR	
 	$(RM) $(LIB_FILES)
@@ -330,6 +341,10 @@ ifdef BUILD_LINUX
 	# uninstall shared files
 	$(RM) $(DATADIR_FILES)
 	-rmdir $(RPM_ROOT)$(PRODUCT_DATADIR)
+	
+	# uninstall man pages
+	$(RM) $(MANPAGE_GZ_FILES)
+	-rmdir $(RPM_ROOT)$(MAN8_DIR)
 endif
 
 clean : 

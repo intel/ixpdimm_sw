@@ -9,17 +9,18 @@ import sys
 #################################################################
 # Appends to create script name for usage info
 #################################################################
-usage = "[cliName=<name>] [serviceName=<name>] [fullProductName=<name>] [abbrProductName=<name>] [dataPath=<full-path>] [installPath=<full-path>]"
+usage = "[cliName=<name>] [serviceName=<name>] [fullProductName=<name>] [abbrProductName=<name>] [dataPath=<full-path>] [installPath=<full-path>] [outputPath=<full-path>]"
 
 #################################################################
 # Defaults.  If product name, etc. changes, change these.
 #################################################################
 cliName = "nvmcli"
-fullProductName = "Intel DIMM"
+fullProductName = "Intel(R) DIMM"
 abbrProductName = "DIMM"
 serviceName = "nvmmonitor"
 dataPath = "/usr/share/nvdimm-mgmt"
 installPath = "/var/run"
+outputPath = "../output/build/linux/real/debug"
 
 #################################################################
 # set full product name, abbreviated product name, and cli name from input
@@ -46,6 +47,9 @@ def setProductName(arg):
 		elif nameToSet == "installPath":
 			global installPath
 			installPath = nameStr
+		elif nameToSet == "outputPath":
+			global outputPath
+			outputPath = nameStr
 		else:
 			print("ERROR:  Invalid name setting '" + nameToSet + "'.")
 			rc = -1

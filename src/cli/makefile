@@ -31,6 +31,10 @@
 # ---- BUILD ENVIRONMENT ---------------------------------------------------------------------------
 ROOT_DIR = ../..
 
+SCRIPTS_PATH := $(dir $(realpath $(lastword $(realpath $(CURDIR)))))
+SCRIPTS_PATH := $(dir $(realpath $(lastword $(SCRIPTS_PATH))))scripts
+CLI_BUILD_PATH = $(realpath $(BUILD_DIR)) 
+
 # sets up standard build variables
 include $(ROOT_DIR)/build.mk
 
@@ -110,8 +114,9 @@ endif
 all :   
 	$(MAKE) $(JOBCOUNT) $(BUILD_DIR)
 	$(MAKE) features
-	$(MAKE) $(JOBCOUNT) $(TARGET_NAME) 
-
+	$(MAKE) $(JOBCOUNT) $(TARGET_NAME)
+	$(MAKE) doc
+	
 $(TARGET_NAME): $(FEATURES) $(OBJNAMES) 
 	$(CPP) -Wl,-rpath,$(ESX_SUPPORT_DIR) $(CPPFLAGS) $(OBJNAMES) $(LIBS) -o $@
 
@@ -120,6 +125,15 @@ $(BUILD_DIR):
 
 features:
 	$(MAKE) -C features all ADD_MANUFACTURING=$(ADD_MANUFACTURING)
+	
+doc :
+ifdef BUILD_LINUX
+	cd $(SCRIPTS_PATH); \
+	python $(SCRIPTS_PATH)/create_nvmcli_manpage.py dataPath=$(PRODUCT_DATADIR) outputPath=$(CLI_BUILD_PATH); \
+	python $(SCRIPTS_PATH)/create_nvmmonitor_manpage.py dataPath=$(PRODUCT_DATADIR); 
+	$(eval MANPAGE_GZ_FILES := $(addprefix $(SCRIPTS_PATH)/, $(MANPAGE_GZ_FILES)))
+	$(COPY) $(MANPAGE_GZ_FILES) $(BUILD_DIR)
+endif
 	
 test:
 ifndef ESX_BUILD # can't run ESX tests on build system

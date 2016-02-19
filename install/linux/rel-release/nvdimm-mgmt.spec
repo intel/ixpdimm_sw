@@ -5,6 +5,7 @@
 %define monitorname %{product_name}-monitor
 %define cimlibs %{product_name}-cim
 %define dname %{product_name}-devel
+%define _unpackaged_files_terminate_build 0
 
 Name: %{product_name}-libs
 Version: %{build_version}
@@ -76,7 +77,7 @@ capacity provisioning, health monitoring, and troubleshooting.
 make BUILDNUM=%{build_version} RELEASE=1 DATADIR=%{_datadir} LINUX_PRODUCT_NAME=%{product_name} CFLAGS_EXTERNAL="%{?cflag}"
 
 %install
-make install RELEASE=1 RPM_ROOT=%{buildroot} LIB_DIR=%{_libdir} INCLUDE_DIR=%{_includedir} BIN_DIR=%{_bindir} DATADIR=%{_datadir} UNIT_DIR=%{_unitdir} LINUX_PRODUCT_NAME=%{product_name} SYSCONF_DIR=%{_sysconfdir}
+make install RELEASE=1 RPM_ROOT=%{buildroot} LIB_DIR=%{_libdir} INCLUDE_DIR=%{_includedir} BIN_DIR=%{_bindir} DATADIR=%{_datadir} UNIT_DIR=%{_unitdir} LINUX_PRODUCT_NAME=%{product_name} SYSCONF_DIR=%{_sysconfdir} MANPAGE_DIR=%{_mandir}
 
 %post -n %cimlibs
 /sbin/ldconfig
@@ -238,12 +239,14 @@ fi
 %{_bindir}/nvmmonitor
 %{_unitdir}/nvmmonitor.service
 %license LICENSE
+%{_mandir}/man8/nvmmonitor*
 
 %files -n %cliname
 %defattr(-,root,root)
 %{_bindir}/nvmcli
 %{_libdir}/libcrfeatures.so*
 %license LICENSE
+%{_mandir}/man8/nvmcli*
 
 %changelog
 * Wed Dec 24 2015 nicholas.w.moulin@intel.com

@@ -42,7 +42,7 @@ with open(tempTextFileName, 'w') as manfile:
 
 # Create formatted man page from text file
 os.system('sed -f nvmcli.sed ' + tempTextFileName + ' > temp.txt')
-os.system('nroff -e -mandoc temp.txt')
+os.system('nroff -e -mandoc temp.txt 1>/dev/null')
 os.system('mv temp.txt ' + manpage_helper.serviceName + '.8')
 os.system('rm -f ' + manpage_helper.serviceName + '.8.gz')
 os.system('gzip ' + manpage_helper.serviceName + '.8')

@@ -15,7 +15,7 @@ usageString = "Usage: create_nvmcli_manpage.py " + manpage_helper.usage
 def captureHelpOutput():
 	# run nvmcli and save help output to a file	
 	currpath = os.getcwd()
-	os.chdir('../output/build/linux/real/debug')
+	os.chdir(manpage_helper.outputPath)
 	os.environ['LD_LIBRARY_PATH'] = '.'
 	oscmd = "./nvmcli > " + currpath + "/" + helpTempFile
 	rc = os.system(oscmd)
@@ -189,7 +189,7 @@ def formatCommands(commandlist):
 				# no choices, so just add option, bolded if not in parens
 				else:
 					if '(' in keyPairSplit[keysplitoffset]:
-							manpagecommand += "\n.R " + keyPairSplit[keysplitoffset]
+							manpagecommand += "\n" + keyPairSplit[keysplitoffset]
 					else:
 						manpagecommand += "\n.B " + keyPairSplit[keysplitoffset]
 					
@@ -244,9 +244,6 @@ with open(tempTextFileName, 'w') as manfile:
 with open(tempTextFileName, 'a') as manfile:
 	manfile.write(manpage_helper.getFileWithReplacedData(headerFileName));
 
-#		for line in infile:
-#			manfile.write(line)
-
 if (0 != captureHelpOutput()):
 	exit("ERROR:  Unable to capture help output for man page creation.")
 
@@ -268,7 +265,7 @@ with open(tempTextFileName, 'a') as manfile:
 
 # Create formatted man page from text file
 os.system('sed -f nvmcli.sed ' + tempTextFileName + ' > temp.txt')
-os.system('nroff -e -mandoc temp.txt')
+os.system('nroff -e -mandoc temp.txt 1>/dev/null')
 os.system('mv temp.txt ' + manpage_helper.cliName + '.8')
 os.system('rm -f ' + manpage_helper.cliName + '.8.gz')
 os.system('gzip ' + manpage_helper.cliName + '.8')

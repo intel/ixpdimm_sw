@@ -35,8 +35,7 @@ An error occurred.
 FILES
 **dataPath**/apss.dat
 .br
-**installPath**/**serviceName**.pid
-
+/var/run/**serviceName**.pid
 
 ." -------------------- S E E  A L S O --------------------
 SEE ALSO

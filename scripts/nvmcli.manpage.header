@@ -6,7 +6,7 @@ NAME
 ." -------------------- S Y N O P S I S --------------------
 SYNOPSIS
 .B **cliName** 
-.R <verb> [<options>] [<targets>] [<properties>]
+<verb> [<options>] [<targets>] [<properties>]
 
 .P
 verb
@@ -25,7 +25,7 @@ and
 .BR version .
 Use
 .RS
-.R <verb>
+<verb>
 .B -help
 .RE
 to see available commands for a specific verb.
@@ -41,9 +41,9 @@ targets
 Generally one or more targets are required to indicate the object of the action.
 Use
 .RS
-.R <verb>
+<verb>
 .B -help
-.R <target>
+<target>
 .RE
 to see available commands for a verb/target pair.
 .RE
