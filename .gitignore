@@ -1,0 +1,3 @@
+output/
+src/common/persistence/schema.*
+src/common/os/win_msgs.h
