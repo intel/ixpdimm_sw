@@ -288,6 +288,7 @@ RPMBUILD_DIR ?= $(shell pwd)/$(OUTPUT_DIR)/rpmbuild
 # unit test execution directories
 COMMON_TEST_DIR = $(BUILD_DIR)/common_test
 LIB_TEST_DIR = $(BUILD_DIR)/lib_test
+CORE_TEST_DIR = $(BUILD_DIR)/core_test
 WBEM_TEST_DIR = $(BUILD_DIR)/wbem_test
 CLI_TEST_DIR = $(BUILD_DIR)/cli_test
 MONITOR_TEST_DIR = $(BUILD_DIR)/monitor_test

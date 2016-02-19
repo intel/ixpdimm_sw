@@ -40,6 +40,7 @@
 #include <intel_cim_framework/Instance.h>
 #include <intel_cli_framework/SyntaxErrorBadValueResult.h>
 #include <framework_interface/NvmInstanceFactory.h>
+#include <core/StringList.h>
 
 namespace cli
 {
@@ -98,16 +99,6 @@ cli::framework::ObjectListResult *NvmInstanceToObjectListResult(
 		const std::string &headerProperty,
 		const wbem::framework::attribute_names_t &attributes = wbem::framework::attribute_names_t(),
 		const filters_t &filters = filters_t());
-
-/*!
- * Take a comma delimited list and convert to an attribute_names_t.
- * This is useful for taking in the value of the "-display" option
- * @param commaList
- * 		a string in the format of "attributeName1,attributeName2"
- * @return
- * 		the list converted to an attribute_names_t
- */
-wbem::framework::attribute_names_t CommaSeperatedToAttributeList(const std::string &commaList);
 
 /*!
  * Get display appropriate options and convert the list of attribute names that should be displayed
@@ -267,6 +258,9 @@ std::string AttributeToString(const wbem::framework::Attribute &attr);
 std::string AttributeToHexString(const wbem::framework::Attribute &attr);
 
 std::string getInvalidDimmIdErrorString(const std::string &invalidDimmId);
+
+std::string uint64ToString(const unsigned long long &value);
+std::string uint64ToHexString(const unsigned long long &value);
 
 #define SET_PROVIDER(currentProvider, newProvider) \
 	if (newProvider != NULL) \

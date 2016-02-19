@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, Intel Corporation
+ * Copyright (c) 2016, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -25,49 +25,64 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _CLI_NVMCLI_WBEMTOCLI_H_
-#define _CLI_NVMCLI_WBEMTOCLI_H_
+#include <string/s_str.h>
+#include <string/x_str.h>
+#include <string.h>
+#include "DisplayOptions.h"
+#include "CliHelper.h"
 
-#include <nvm_management.h>
-
-#include <intel_cli_framework/PropertyListResult.h>
-#include <intel_cli_framework/ObjectListResult.h>
-#include <intel_cim_framework/Instance.h>
-#include <intel_cli_framework/SyntaxErrorBadValueResult.h>
-#include <framework_interface/NvmInstanceFactory.h>
-
-namespace cli
+bool cli::framework::DisplayOptions::isDefault() const
 {
-namespace nvmcli
-{
-class WbemToCli
-{
-public:
-	/*
-	 * Constructor
-	 */
-	WbemToCli();
 
-	/*
-	 * Destructor
-	 */
-	virtual ~WbemToCli();
-
-	/*
-	* For commands that support an optional -namespace target,
-	* retrieve the namespace GUID(s) of the specified target
-	* or all namespace GUIDs if not specified.
-	*/
-	virtual cli::framework::ErrorResult *getNamespaces(
-		const framework::ParsedCommand &parsedCommand, std::vector<std::string> &namespaces);
-	/*
-	 * For commands that support the -pool target, verify the pool GUID specified
-	 * or retrieve it if not specified
-	 */
-	virtual cli::framework::ErrorResult *checkPoolGuid(
-		const framework::ParsedCommand &parsedCommand, std::string &poolGuid);
-
-};
+	return !isAll() && getDisplay().size() == 0;
 }
+bool cli::framework::DisplayOptions::isAll() const
+{
+
+	return m_options.find("-a") != m_options.end()
+		   || m_options.find("-all") != m_options.end();
 }
-#endif // _CLI_NVMCLI_WBEMTOCLI_H_
+
+bool cli::framework::DisplayOptions::contains(const std::string &name) const
+{
+	const std::vector<std::string> &displayNames = getDisplay();
+
+	bool found = false;
+	for (size_t i = 0; i < displayNames.size() && !found; i++)
+	{
+		if (stringsIEqual(displayNames[i], name))
+		{
+			found = true;
+		}
+	}
+
+	return found;
+}
+
+std::vector<std::string> cli::framework::DisplayOptions::getDisplay() const
+{
+	std::vector<std::string> result;
+
+	if (m_options.find("-display") != m_options.end())
+	{
+		std::string commaList = m_options.at("-display");
+
+		if (!commaList.empty())
+		{
+			result = framework::CliHelper::splitCommaSeperatedString(m_options.at("-display"));
+		}
+	}
+
+	return result;
+}
+
+cli::framework::DisplayOptions &cli::framework::DisplayOptions::operator=(const cli::framework::DisplayOptions &other)
+{
+
+	if (this == &other)
+		return *this;
+
+	m_options = other.m_options;
+
+	return *this;
+}

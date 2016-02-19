@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, Intel Corporation
+ * Copyright (c) 2016, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -25,49 +25,40 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _CLI_NVMCLI_WBEMTOCLI_H_
-#define _CLI_NVMCLI_WBEMTOCLI_H_
+#include "DeviceFirmwareService.h"
+#include "DeviceFirmwareInfoCollection.h"
 
-#include <nvm_management.h>
+#include <core/NvmApi.h>
+#include <core/exceptions/NoMemoryException.h>
 
-#include <intel_cli_framework/PropertyListResult.h>
-#include <intel_cli_framework/ObjectListResult.h>
-#include <intel_cim_framework/Instance.h>
-#include <intel_cli_framework/SyntaxErrorBadValueResult.h>
-#include <framework_interface/NvmInstanceFactory.h>
 
-namespace cli
+core::device::DeviceFirmwareService *core::device::DeviceFirmwareService::m_pSingleton =
+		new core::device::DeviceFirmwareService();
+
+core::device::DeviceFirmwareService &core::device::DeviceFirmwareService::getService()
 {
-namespace nvmcli
-{
-class WbemToCli
-{
-public:
-	/*
-	 * Constructor
-	 */
-	WbemToCli();
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	if (!m_pSingleton)
+	{
+		throw NoMemoryException();
+	}
 
-	/*
-	 * Destructor
-	 */
-	virtual ~WbemToCli();
-
-	/*
-	* For commands that support an optional -namespace target,
-	* retrieve the namespace GUID(s) of the specified target
-	* or all namespace GUIDs if not specified.
-	*/
-	virtual cli::framework::ErrorResult *getNamespaces(
-		const framework::ParsedCommand &parsedCommand, std::vector<std::string> &namespaces);
-	/*
-	 * For commands that support the -pool target, verify the pool GUID specified
-	 * or retrieve it if not specified
-	 */
-	virtual cli::framework::ErrorResult *checkPoolGuid(
-		const framework::ParsedCommand &parsedCommand, std::string &poolGuid);
-
-};
+	return *m_pSingleton;
 }
+
+core::device::DeviceFirmwareInfo *core::device::DeviceFirmwareService::getFirmwareInfo(
+		const std::string &deviceGuid)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	NVM_GUID guid;
+	Helper::stringToGuid(deviceGuid, guid);
+	device_fw_info fwInfo;
+	int rc = m_pApi.getDeviceFwInfo(guid, &fwInfo);
+	if (rc != NVM_SUCCESS)
+	{
+		throw LibraryException(rc);
+	}
+
+	DeviceFirmwareInfo *result = new DeviceFirmwareInfo(deviceGuid, fwInfo);
+	return result;
 }
-#endif // _CLI_NVMCLI_WBEMTOCLI_H_

@@ -71,7 +71,7 @@
 #include <persistence/config_settings.h>
 #include <persistence/lib_persistence.h>
 #include <exception/NvmExceptionLibError.h>
-#include <logic/device/DeviceFirmwareService.h>
+#include <core/device/DeviceFirmwareService.h>
 #include <framework_interface/FrameworkExtensions.h>
 #include <intel_cim_framework/ExceptionNoMemory.h>
 
@@ -1920,9 +1920,9 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::getDeviceFirmwareI
 	{
 		for (size_t i = 0; i < guids.size(); i++)
 		{
-			logic::device::DeviceFirmwareService &service = logic::device::DeviceFirmwareService::getService();
+			core::device::DeviceFirmwareService &service = core::device::DeviceFirmwareService::getService();
 
-			logic::device::DeviceFirmwareInfo *fwInfo = service.getFirmwareInfo(guids[i]);
+			core::device::DeviceFirmwareInfo *fwInfo = service.getFirmwareInfo(guids[i]);
 			if (!fwInfo)
 			{
 				throw wbem::framework::ExceptionNoMemory(__FILE__, __FUNCTION__, "fwInfo");

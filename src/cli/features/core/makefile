@@ -34,12 +34,13 @@ ROOT_DIR = ../../../..
 include $(ROOT_DIR)/build.mk
 
 OBJECT_MODULE_DIR = $(OBJECT_DIR)/cli/features/core
+TEMP_OBJECT_MODULE_DIR = $(OBJECT_DIR)/cli/features/core/framework
 
 # ---- COMPONENTS ----------------------------------------------------------------------------------
 UNITTEST = unittest
 
 # ---- FILES ---------------------------------------------------------------------------------------
-SRC = $(wildcard *.cpp)
+SRC = $(wildcard *.cpp) $(wildcard framework/*.cpp)
 HEADERS = $(wildcard *.h)
 
 OBJS = $(patsubst %.cpp,%.o,$(SRC))
@@ -81,6 +82,7 @@ LIBS = 	-L$(OBJECT_DIR)/common -lcommon \
 			-lcliframework \
 			-lcimframework \
 			-lnvm \
+			-lcore \
 			-lnvmwbem \
 			-lsqlite3 \
 			-lssl -lcrypto 
@@ -102,13 +104,13 @@ LIBS += -lIntel_i18n
 endif
 # ---- RECIPES -------------------------------------------------------------------------------------
 all :
-	$(MAKE) $(JOBCOUNT) $(OBJECT_MODULE_DIR)
+	$(MAKE) $(JOBCOUNT) $(OBJECT_MODULE_DIR) $(TEMP_OBJECT_MODULE_DIR)
 	$(MAKE) $(JOBCOUNT) $(TARGETNAME)
 ifndef SKIP_UNITTESTS
 	$(MAKE) $(UNITTEST)
 endif
 
-$(OBJECT_MODULE_DIR):
+$(OBJECT_MODULE_DIR) $(TEMP_OBJECT_MODULE_DIR):
 	$(MKDIR) $@
 	
 $(TARGETNAME) : $(OBJNAMES)
@@ -144,7 +146,9 @@ i18n:
 
 sourcedrop: 
 	$(MKDIR) $(SOURCEDROP_DIR)/src/cli/features/core
+	$(MKDIR) $(SOURCEDROP_DIR)/src/cli/features/core/framework
 	$(COPY) *.* $(SOURCEDROP_DIR)/src/cli/features/core/
+	$(COPY) framework/*.* $(SOURCEDROP_DIR)/src/cli/features/core/framework
 	$(COPY) makefile $(SOURCEDROP_DIR)/src/cli/features/core/
 	$(RM) $(SOURCEDROP_DIR)/src/cli/features/core/Example*.*
 	

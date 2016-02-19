@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, Intel Corporation
+ * Copyright (c) 2016, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -25,49 +25,41 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _CLI_NVMCLI_WBEMTOCLI_H_
-#define _CLI_NVMCLI_WBEMTOCLI_H_
+#include <LogEnterExit.h>
+#include "DeviceFirmwareInfoCollection.h"
 
-#include <nvm_management.h>
-
-#include <intel_cli_framework/PropertyListResult.h>
-#include <intel_cli_framework/ObjectListResult.h>
-#include <intel_cim_framework/Instance.h>
-#include <intel_cli_framework/SyntaxErrorBadValueResult.h>
-#include <framework_interface/NvmInstanceFactory.h>
-
-namespace cli
+core::device::DeviceFirmwareInfoCollection::DeviceFirmwareInfoCollection(
+	const DeviceFirmwareInfoCollection &other)
 {
-namespace nvmcli
-{
-class WbemToCli
-{
-public:
-	/*
-	 * Constructor
-	 */
-	WbemToCli();
-
-	/*
-	 * Destructor
-	 */
-	virtual ~WbemToCli();
-
-	/*
-	* For commands that support an optional -namespace target,
-	* retrieve the namespace GUID(s) of the specified target
-	* or all namespace GUIDs if not specified.
-	*/
-	virtual cli::framework::ErrorResult *getNamespaces(
-		const framework::ParsedCommand &parsedCommand, std::vector<std::string> &namespaces);
-	/*
-	 * For commands that support the -pool target, verify the pool GUID specified
-	 * or retrieve it if not specified
-	 */
-	virtual cli::framework::ErrorResult *checkPoolGuid(
-		const framework::ParsedCommand &parsedCommand, std::string &poolGuid);
-
-};
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	for (size_t i = 0; i < other.m_collection.size(); i++)
+	{
+		push_back(*(other.m_collection[i]));
+	}
 }
+core::device::DeviceFirmwareInfoCollection::~DeviceFirmwareInfoCollection()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	for (size_t i = 0; i < m_collection.size(); i++)
+	{
+		delete m_collection[i];
+	}
+	m_collection.clear();
 }
-#endif // _CLI_NVMCLI_WBEMTOCLI_H_
+core::device::DeviceFirmwareInfo &core::device::DeviceFirmwareInfoCollection::operator[](
+	const int i)
+{
+	return *(m_collection[i]);
+}
+
+void core::device::DeviceFirmwareInfoCollection::push_back(DeviceFirmwareInfo &info)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	DeviceFirmwareInfo *d = info.clone();
+	m_collection.push_back(d);
+}
+size_t core::device::DeviceFirmwareInfoCollection::size() const
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	return m_collection.size();
+}

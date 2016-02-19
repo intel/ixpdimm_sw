@@ -62,7 +62,7 @@ wbem::physical_asset::NVDIMMFactory::~NVDIMMFactory()
 
 void wbem::physical_asset::NVDIMMFactory::populateAttributeList(
 	framework::attribute_names_t &attributes)
-	throw (wbem::framework::Exception)
+throw(wbem::framework::Exception)
 {
 	// add key attributes
 	attributes.push_back(CREATIONCLASSNAME_KEY);
@@ -117,9 +117,9 @@ void wbem::physical_asset::NVDIMMFactory::populateAttributeList(
 /*
  * Retrieve a specific instance given an object path
  */
-wbem::framework::Instance* wbem::physical_asset::NVDIMMFactory::getInstance(
+wbem::framework::Instance *wbem::physical_asset::NVDIMMFactory::getInstance(
 	framework::ObjectPath &path, framework::attribute_names_t &attributes)
-	throw (wbem::framework::Exception)
+throw(wbem::framework::Exception)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
@@ -140,7 +140,7 @@ wbem::framework::Instance* wbem::physical_asset::NVDIMMFactory::getInstance(
 		}
 
 		NVM_GUID dimmGuid;
-		str_to_guid((char*)guidAttr.stringValue().c_str(), dimmGuid);
+		str_to_guid((char *) guidAttr.stringValue().c_str(), dimmGuid);
 
 		// get dimm info
 		struct device_details dimm;
@@ -156,7 +156,7 @@ wbem::framework::Instance* wbem::physical_asset::NVDIMMFactory::getInstance(
 				throw exception::NvmExceptionLibError(rc);
 			}
 		}
-		// any other error besides not manageable, punt
+			// any other error besides not manageable, punt
 		else if (rc != NVM_SUCCESS)
 		{
 			// couldn't retrieve the dimm info for some other reason than not being manageable
@@ -171,7 +171,7 @@ wbem::framework::Instance* wbem::physical_asset::NVDIMMFactory::getInstance(
 			NVM_GUID_STR guidStr;
 			guid_to_str(dimm.discovery.guid, guidStr);
 			framework::Attribute attrElementName(
-					NVDIMM_ELEMENTNAME_prefix + std::string(guidStr), false);
+				NVDIMM_ELEMENTNAME_prefix + std::string(guidStr), false);
 			pInstance->setAttribute(ELEMENTNAME_KEY, attrElementName, attributes);
 		}
 		// Operational Status
@@ -201,7 +201,7 @@ wbem::framework::Instance* wbem::physical_asset::NVDIMMFactory::getInstance(
  */
 void wbem::physical_asset::NVDIMMFactory::fillInNVDIMMInstance(
 	struct device_details &dimm, framework::attribute_names_t &attributes,
-	framework::Instance *pInstance)throw (wbem::framework::Exception)
+	framework::Instance *pInstance)throw(wbem::framework::Exception)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
@@ -212,8 +212,8 @@ void wbem::physical_asset::NVDIMMFactory::fillInNVDIMMInstance(
 		std::string manufacturerName = "";
 		char manufacturerStr[NVM_MANUFACTURERSTR_LEN];
 		if (lookup_jedec_jep106_manufacturer(
-				dimm.discovery.manufacturer, NVM_MANUFACTURER_LEN,
-				manufacturerStr, NVM_MANUFACTURERSTR_LEN) == COMMON_SUCCESS)
+			dimm.discovery.manufacturer, NVM_MANUFACTURER_LEN,
+			manufacturerStr, NVM_MANUFACTURERSTR_LEN) == COMMON_SUCCESS)
 		{
 			manufacturerName = manufacturerStr;
 		}
@@ -242,7 +242,7 @@ void wbem::physical_asset::NVDIMMFactory::fillInNVDIMMInstance(
 	// Vendor ID
 	if (containsAttribute(VENDORID_KEY, attributes))
 	{
-		framework::Attribute attrVendorID((NVM_UINT32)dimm.discovery.vendor_id, false);
+		framework::Attribute attrVendorID((NVM_UINT32) dimm.discovery.vendor_id, false);
 		pInstance->setAttribute(VENDORID_KEY, attrVendorID, attributes);
 	}
 	// Device ID
@@ -273,7 +273,7 @@ void wbem::physical_asset::NVDIMMFactory::fillInNVDIMMInstance(
 	if (containsAttribute(MEMORYTYPE_KEY, attributes))
 	{
 		std::string typeStr = memoryTypetoStr(dimm.discovery.memory_type);
-		framework::Attribute attrType((NVM_UINT16)dimm.discovery.memory_type, typeStr, false);
+		framework::Attribute attrType((NVM_UINT16) dimm.discovery.memory_type, typeStr, false);
 		pInstance->setAttribute(MEMORYTYPE_KEY, attrType, attributes);
 	}
 	// Serial Number - Convert serial number to a string
@@ -353,7 +353,7 @@ void wbem::physical_asset::NVDIMMFactory::fillInNVDIMMInstance(
 		else
 		{
 			healthStateStr = get_string_for_device_health_status(dimm.status.health);
-			framework::Attribute attrHealth((NVM_UINT16)dimm.status.health, healthStateStr, false);
+			framework::Attribute attrHealth((NVM_UINT16) dimm.status.health, healthStateStr, false);
 			pInstance->setAttribute(HEALTHSTATE_KEY, attrHealth, attributes);
 		}
 	}
@@ -373,25 +373,25 @@ void wbem::physical_asset::NVDIMMFactory::fillInNVDIMMInstance(
 				formFactorStr = "Unknown";
 				break;
 		}
-		framework::Attribute attrFormFactor((NVM_UINT16)dimm.form_factor, formFactorStr, false);
+		framework::Attribute attrFormFactor((NVM_UINT16) dimm.form_factor, formFactorStr, false);
 		pInstance->setAttribute(FORMFACTOR_KEY, attrFormFactor, attributes);
 	}
 	// Data Width
 	if (containsAttribute(DATAWIDTH_KEY, attributes))
 	{
-		framework::Attribute attrDataWidth((NVM_UINT16)dimm.data_width, false);
+		framework::Attribute attrDataWidth((NVM_UINT16) dimm.data_width, false);
 		pInstance->setAttribute(DATAWIDTH_KEY, attrDataWidth, attributes);
 	}
 	// Total Width
 	if (containsAttribute(TOTALWIDTH_KEY, attributes))
 	{
-		framework::Attribute attrTotalWidth((NVM_UINT16)dimm.total_width, false);
+		framework::Attribute attrTotalWidth((NVM_UINT16) dimm.total_width, false);
 		pInstance->setAttribute(TOTALWIDTH_KEY, attrTotalWidth, attributes);
 	}
 	// Speed
 	if (containsAttribute(SPEED_KEY, attributes))
 	{
-		framework::Attribute attrSpeed((NVM_UINT32)dimm.speed, false);
+		framework::Attribute attrSpeed((NVM_UINT32) dimm.speed, false);
 		pInstance->setAttribute(SPEED_KEY, attrSpeed, attributes);
 	}
 	// Volatile Capacity
@@ -434,13 +434,13 @@ void wbem::physical_asset::NVDIMMFactory::fillInNVDIMMInstance(
 	// Is New
 	if (containsAttribute(ISNEW_KEY, attributes))
 	{
-		framework::Attribute attrIsNew((bool)dimm.status.is_new, false);
+		framework::Attribute attrIsNew((bool) dimm.status.is_new, false);
 		pInstance->setAttribute(ISNEW_KEY, attrIsNew, attributes);
 	}
 	// PowerManagementEnabled
 	if (containsAttribute(POWERMANAGEMENTENABLED_KEY, attributes))
 	{
-		framework::Attribute attrPowerManagement((bool)dimm.power_management_enabled, false);
+		framework::Attribute attrPowerManagement((bool) dimm.power_management_enabled, false);
 		pInstance->setAttribute(POWERMANAGEMENTENABLED_KEY, attrPowerManagement, attributes);
 	}
 	// PowerLimit
@@ -452,25 +452,25 @@ void wbem::physical_asset::NVDIMMFactory::fillInNVDIMMInstance(
 	// PeakPowerBudget
 	if (containsAttribute(PEAKPOWERBUDGET_KEY, attributes))
 	{
-		framework::Attribute attrPeakPowerBudget((NVM_UINT32)dimm.peak_power_budget, false);
+		framework::Attribute attrPeakPowerBudget((NVM_UINT32) dimm.peak_power_budget, false);
 		pInstance->setAttribute(PEAKPOWERBUDGET_KEY, attrPeakPowerBudget, attributes);
 	}
 	// AvgPowerBudget
 	if (containsAttribute(AVGPOWERBUDGET_KEY, attributes))
 	{
-		framework::Attribute attrAvgPowerBudget((NVM_UINT32)dimm.avg_power_budget, false);
+		framework::Attribute attrAvgPowerBudget((NVM_UINT32) dimm.avg_power_budget, false);
 		pInstance->setAttribute(AVGPOWERBUDGET_KEY, attrAvgPowerBudget, attributes);
 	}
 	// DieSparingEnabled
 	if (containsAttribute(DIESPARINGENABLED_KEY, attributes))
 	{
-		framework::Attribute attrAvgPowerBudget((bool)dimm.die_sparing_enabled, false);
+		framework::Attribute attrAvgPowerBudget((bool) dimm.die_sparing_enabled, false);
 		pInstance->setAttribute(DIESPARINGENABLED_KEY, attrAvgPowerBudget, attributes);
 	}
 	// DieSparingLevel
 	if (containsAttribute(DIESPARINGLEVEL_KEY, attributes))
 	{
-		framework::Attribute attrAvgPowerBudget((NVM_UINT16)dimm.die_sparing_level, false);
+		framework::Attribute attrAvgPowerBudget((NVM_UINT16) dimm.die_sparing_level, false);
 		pInstance->setAttribute(DIESPARINGLEVEL_KEY, attrAvgPowerBudget, attributes);
 	}
 	// LastShutdownStatus
@@ -485,13 +485,13 @@ void wbem::physical_asset::NVDIMMFactory::fillInNVDIMMInstance(
 	// Die Spares Used
 	if (containsAttribute(DIESPARESUSED_KEY, attributes))
 	{
-		framework::Attribute attrDieSparesUsed((NVM_UINT8)dimm.status.die_spares_used, false);
+		framework::Attribute attrDieSparesUsed((NVM_UINT8) dimm.status.die_spares_used, false);
 		pInstance->setAttribute(DIESPARESUSED_KEY, attrDieSparesUsed, attributes);
 	}
 	// First fast refresh
 	if (containsAttribute(FIRSTFASTREFRESH_KEY, attributes))
 	{
-		framework::Attribute attrFirstFastRefresh((bool)dimm.settings.first_fast_refresh, false);
+		framework::Attribute attrFirstFastRefresh((bool) dimm.settings.first_fast_refresh, false);
 		pInstance->setAttribute(FIRSTFASTREFRESH_KEY, attrFirstFastRefresh, attributes);
 	}
 	// Channel
@@ -513,7 +513,7 @@ void wbem::physical_asset::NVDIMMFactory::fillInNVDIMMInstance(
 		framework::Attribute attrConfigStatus((NVM_UINT16)dimm.status.config_status, configStatusStr, false);
 		pInstance->setAttribute(CONFIGURATIONSTATUS_KEY, attrConfigStatus, attributes);
 	}
-	
+
 	// Security Capabilities Status
 	if (containsAttribute(SECURITYCAPABILITIES_KEY, attributes))
 	{
@@ -550,7 +550,7 @@ void wbem::physical_asset::NVDIMMFactory::fillInNVDIMMInstance(
 	{
 		framework::UINT16_LIST memCapabilitiesList;
 		buildMemoryTypeCapabilitiesFromDeviceCapabilities(dimm.discovery.device_capabilities,
-				memCapabilitiesList);
+			memCapabilitiesList);
 
 		framework::Attribute memCapabilitiesAttr(memCapabilitiesList, false);
 		pInstance->setAttribute(MEMORYTYPECAPABILITIES_KEY, memCapabilitiesAttr);
@@ -560,8 +560,8 @@ void wbem::physical_asset::NVDIMMFactory::fillInNVDIMMInstance(
 	if (containsAttribute(DIESPARINGCAPABLE_KEY, attributes))
 	{
 		framework::Attribute dieSparingAttr(
-				(bool)dimm.discovery.device_capabilities.die_sparing_capable,
-				false);
+			(bool) dimm.discovery.device_capabilities.die_sparing_capable,
+			false);
 		pInstance->setAttribute(DIESPARINGCAPABLE_KEY, dieSparingAttr);
 	}
 
@@ -579,7 +579,7 @@ void wbem::physical_asset::NVDIMMFactory::fillInNVDIMMInstance(
 			}
 		}
 
-		framework::Attribute fwLogLevelAttr((NVM_UINT16)fwLogLevel, false);
+		framework::Attribute fwLogLevelAttr((NVM_UINT16) fwLogLevel, false);
 		pInstance->setAttribute(FWLOGLEVEL_KEY, fwLogLevelAttr);
 	}
 }
@@ -638,7 +638,7 @@ void wbem::physical_asset::NVDIMMFactory::constructLastShutDownStatuses(NVM_UINT
 }
 
 void wbem::physical_asset::NVDIMMFactory::buildMemoryTypeCapabilitiesFromDeviceCapabilities(
-		const struct device_capabilities& capabilities, framework::UINT16_LIST &memoryTypeCapabilities)
+	const struct device_capabilities &capabilities, framework::UINT16_LIST &memoryTypeCapabilities)
 {
 	if (capabilities.memory_mode_capable)
 	{
@@ -659,8 +659,8 @@ void wbem::physical_asset::NVDIMMFactory::buildMemoryTypeCapabilitiesFromDeviceC
 /*
  * Return an object path for each NVDIMM in the system
  */
-wbem::framework::instance_names_t* wbem::physical_asset::NVDIMMFactory::getInstanceNames()
-	throw (wbem::framework::Exception)
+wbem::framework::instance_names_t *wbem::physical_asset::NVDIMMFactory::getInstanceNames()
+throw(wbem::framework::Exception)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
@@ -674,17 +674,17 @@ wbem::framework::instance_names_t* wbem::physical_asset::NVDIMMFactory::getInsta
 			// create an object path for each dimm
 			wbem::physical_asset::devices_t::const_iterator iter = devices.begin();
 			for (; iter != devices.end(); iter++)
-			{
-				framework::ObjectPath path;
-				createPathFromGuid(iter->guid, path);
-				pNames->push_back(path);
-			}
-		}
-		else // nvm_get_device_count returned 0 DIMMs
 		{
+			framework::ObjectPath path;
+				createPathFromGuid(iter->guid, path);
+			pNames->push_back(path);
+		}
+	}
+		else // nvm_get_device_count returned 0 DIMMs
+	{
 			// should never get here except in SIM
 			COMMON_LOG_DEBUG("No Intel NVDIMMs found.");
-		}
+	}
 	}
 	catch (framework::Exception &) // clean up and re-throw
 	{
@@ -696,11 +696,11 @@ wbem::framework::instance_names_t* wbem::physical_asset::NVDIMMFactory::getInsta
 }
 
 wbem::framework::UINT32 wbem::physical_asset::NVDIMMFactory::executeMethod(
-		wbem::framework::UINT32 &wbemRc,
-		const std::string method,
-		wbem::framework::ObjectPath &object,
-		wbem::framework::attributes_t &inParms,
-		wbem::framework::attributes_t &outParms)
+	wbem::framework::UINT32 &wbemRc,
+	const std::string method,
+	wbem::framework::ObjectPath &object,
+	wbem::framework::attributes_t &inParms,
+	wbem::framework::attributes_t &outParms)
 {
 	framework::UINT32 httpRc = framework::MOF_ERR_SUCCESS;
 
@@ -715,20 +715,20 @@ wbem::framework::UINT32 wbem::physical_asset::NVDIMMFactory::executeMethod(
 		{
 			// uint32 SetPassphrase(string NewPassphrase, string CurrentPassphrase);
 			setPassphrase(deviceGuid,
-					inParms[NVDIMM_SETPASSPHRASE_NEWPASSPHRASE].stringValue(),
-					inParms[NVDIMM_SETPASSPHRASE_CURRENTPASSPHRASE].stringValue());
+				inParms[NVDIMM_SETPASSPHRASE_NEWPASSPHRASE].stringValue(),
+				inParms[NVDIMM_SETPASSPHRASE_CURRENTPASSPHRASE].stringValue());
 		}
 		else if (method == NVDIMM_REMOVEPASSPHRASE)
 		{
 			// uint32 RemovePassphrase(string CurrentPassphrase);
 			removePassphrase(deviceGuid,
-					inParms[NVDIMM_SETPASSPHRASE_CURRENTPASSPHRASE].stringValue());
+				inParms[NVDIMM_SETPASSPHRASE_CURRENTPASSPHRASE].stringValue());
 		}
 		else if (method == NVDIMM_UNLOCK)
 		{
 			// uint32 Unlock(string CurrentPassphrase);
 			unlock(deviceGuid,
-					inParms[NVDIMM_SETPASSPHRASE_CURRENTPASSPHRASE].stringValue());
+				inParms[NVDIMM_SETPASSPHRASE_CURRENTPASSPHRASE].stringValue());
 		}
 		else
 		{
@@ -736,7 +736,7 @@ wbem::framework::UINT32 wbem::physical_asset::NVDIMMFactory::executeMethod(
 			COMMON_LOG_ERROR_F("methodName %s not supported", method.c_str());
 		}
 	}
-	catch(framework::ExceptionBadParameter &)
+	catch (framework::ExceptionBadParameter &)
 	{
 		wbemRc = NVDIMM_ERR_INVALID_PARAMETER;
 	}
@@ -744,15 +744,15 @@ wbem::framework::UINT32 wbem::physical_asset::NVDIMMFactory::executeMethod(
 	{
 		wbemRc = getReturnCodeFromLibException(e);
 	}
-	catch(framework::ExceptionNoMemory &)
+	catch (framework::ExceptionNoMemory &)
 	{
 		wbemRc = NVDIMM_ERR_FAILED;
 	}
-	catch(framework::ExceptionNotSupported &)
+	catch (framework::ExceptionNotSupported &)
 	{
 		wbemRc = NVDIMM_ERR_NOT_SUPPORTED;
 	}
-	catch(framework::Exception &)
+	catch (framework::Exception &)
 	{
 		wbemRc = NVDIMM_ERR_UNKNOWN;
 	}
@@ -790,7 +790,7 @@ wbem::framework::UINT32 wbem::physical_asset::NVDIMMFactory::getReturnCodeFromLi
  * set passphrase
  */
 void wbem::physical_asset::NVDIMMFactory::setPassphrase(std::string deviceGuid, std::string newPassphrase,
-		std::string currentPassphrase)
+	std::string currentPassphrase)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	if (deviceGuid.empty() || (deviceGuid.size() != NVM_GUIDSTR_LEN - 1))
@@ -808,14 +808,14 @@ void wbem::physical_asset::NVDIMMFactory::setPassphrase(std::string deviceGuid, 
 	// current passphrase is not required.  Pass NULL if it is not provided
 	const char *oldPassphrase = NULL;
 	int oldPassphraseLen = 0;
-	if(!currentPassphrase.empty())
+	if (!currentPassphrase.empty())
 	{
 		oldPassphrase = currentPassphrase.c_str();
 		oldPassphraseLen = currentPassphrase.length();
 	}
 
 	int rc = m_SetPassphrase(guid, oldPassphrase, oldPassphraseLen,
-			newPassphrase.c_str(), newPassphrase.length());
+		newPassphrase.c_str(), newPassphrase.length());
 	if (rc != NVM_SUCCESS)
 	{
 		throw exception::NvmExceptionLibError(rc);
@@ -826,7 +826,7 @@ void wbem::physical_asset::NVDIMMFactory::setPassphrase(std::string deviceGuid, 
  * remove passphrase
  */
 void wbem::physical_asset::NVDIMMFactory::removePassphrase(
-		std::string deviceGuid, std::string currentPassphrase)
+	std::string deviceGuid, std::string currentPassphrase)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	if (currentPassphrase.empty())
@@ -850,7 +850,7 @@ void wbem::physical_asset::NVDIMMFactory::removePassphrase(
 }
 
 void wbem::physical_asset::NVDIMMFactory::unlock(std::string deviceGuid,
-		std::string currentPassphrase)
+	std::string currentPassphrase)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	if (currentPassphrase.empty())
@@ -919,7 +919,7 @@ int wbem::physical_asset::NVDIMMFactory::existsAndIsManageable(const std::string
 }
 
 wbem::framework::Instance* wbem::physical_asset::NVDIMMFactory::modifyInstance(framework::ObjectPath &path,
-		framework::attributes_t &attributes) throw (framework::Exception)
+	framework::attributes_t &attributes) throw(framework::Exception)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	framework::Instance *pInstance = NULL;
@@ -1065,21 +1065,21 @@ std::string wbem::physical_asset::NVDIMMFactory::deviceConfigStatusToStr(int con
 }
 
 void wbem::physical_asset::NVDIMMFactory::createPathFromGuid(const std::string guid,
-		wbem::framework::ObjectPath &path)
+	wbem::framework::ObjectPath &path)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	framework::attributes_t keys;
 
-	keys[TAG_KEY] = framework::Attribute (guid, true);
+	keys[TAG_KEY] = framework::Attribute(guid, true);
 
 	// CreationClassName = physical_asset::NVDIMM_CREATIONCLASSNAME
 	framework::Attribute attrCCName(NVDIMM_CREATIONCLASSNAME, true);
 	keys.insert(std::pair<std::string, framework::Attribute>(
-			CREATIONCLASSNAME_KEY, attrCCName));
+		CREATIONCLASSNAME_KEY, attrCCName));
 
 	// generate the ObjectPath for the instance
 	path.setObjectPath(server::getHostName(), NVM_NAMESPACE,
-			NVDIMM_CREATIONCLASSNAME, keys);
+		NVDIMM_CREATIONCLASSNAME, keys);
 }
 
 
@@ -1138,12 +1138,12 @@ std::string wbem::physical_asset::NVDIMMFactory::memoryTypetoStr(enum memory_typ
 }
 
 wbem::framework::UINT16_LIST wbem::physical_asset::NVDIMMFactory::deviceStatusToOpStatus(
-		const struct device_status *p_status)
+	const struct device_status *p_status)
 {
 	framework::UINT16_LIST opStatus;
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-    // Apply device health
+	// Apply device health
 	if (p_status->health == DEVICE_HEALTH_UNKNOWN)
 	{
 		opStatus.push_back(NVDIMM_OPSTATUS_UNKNOWN);
@@ -1183,15 +1183,15 @@ bool wbem::physical_asset::NVDIMMFactory::attributeHasChanged(framework::Attribu
 }
 
 bool wbem::physical_asset::NVDIMMFactory::attributeIsModifiable(
-		framework::attribute_names_t modifiableAttributes, std::string attributeThatWasModified)
+	framework::attribute_names_t modifiableAttributes, std::string attributeThatWasModified)
 {
 	return (std::find(modifiableAttributes.begin(), modifiableAttributes.end(), attributeThatWasModified)
-								!= modifiableAttributes.end());
+			!= modifiableAttributes.end());
 }
 
 void wbem::physical_asset::NVDIMMFactory::checkAttributesAreModifiable(
-		wbem::framework::Instance *pInstance, wbem::framework::attributes_t &attributesToModify,
-		wbem::framework::attribute_names_t modifiableAttributes)
+	wbem::framework::Instance *pInstance, wbem::framework::attributes_t &attributesToModify,
+	wbem::framework::attribute_names_t modifiableAttributes)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 

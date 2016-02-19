@@ -62,6 +62,7 @@ all : extern libcopy
 	$(MAKE) -C src/schema_generator all $(FLAGS)
 	$(MAKE) -C src/common $(I18N_TARGET) all $(FLAGS)
 	$(MAKE) -C src/lib $(I18N_TARGET) all $(FLAGS)
+	$(MAKE) -C src/core $(I18N_TARGET) all $(FLAGS)
 	$(MAKE) -C src/wbem $(I18N_TARGET) all $(FLAGS)
 	$(MAKE) -C src/cli $(I18N_TARGET) all $(FLAGS)
 	$(MAKE) -C src/monitor all $(FLAGS)
@@ -240,6 +241,7 @@ else ifdef BUILD_ESX
 	$(COPY) $(BUILD_DIR)/nvmcli $(ESX_SUPPORT_DIR)
 	$(COPY) $(BUILD_DIR)/nvmmonitor $(ESX_SUPPORT_DIR)
 	$(COPY) $(BUILD_DIR)/libnvm.so* $(ESX_SUPPORT_DIR)
+	$(COPY) $(BUILD_DIR)/libcore.so* $(ESX_SUPPORT_DIR)
 	$(COPY) $(BUILD_DIR)/libcrfeatures.so* $(ESX_SUPPORT_DIR)
 	$(COPY) $(BUILD_DIR)/libnvmwbem.so* $(ESX_SUPPORT_DIR) # for CLI
 	$(COPY) $(BUILD_DIR)/libcimframework.so* $(ESX_SUPPORT_DIR) # for CLI

@@ -61,6 +61,8 @@
 #include <exception/NvmExceptionBadRequest.h>
 
 #include <framework_interface/NvmInstanceFactory.h>
+#include <core/StringList.h>
+#include <cli/features/core/framework/CliHelper.h>
 
 cli::framework::PropertyListResult* cli::nvmcli::NvmInstanceToPropertyListResult(
 		const wbem::framework::Instance& instance,
@@ -280,26 +282,6 @@ cli::framework::ObjectListResult * cli::nvmcli::NvmInstanceToObjectListResult(
 	return pResult;
 }
 
-wbem::framework::attribute_names_t cli::nvmcli::CommaSeperatedToAttributeList(
-		const std::string& commaList)
-{
-	wbem::framework::attribute_names_t result;
-	if (!commaList.empty())
-	{
-		char tmp[commaList.length()+1];
-		s_strcpy(tmp, commaList.c_str(), commaList.length()+1);
-		char *list = tmp;
-		char *tok = x_strtok(&list, ",");
-		while (tok != NULL)
-		{
-			s_strtrim(tok, strlen(tok)+1); // trim whitespace from beg and end
-			result.push_back(std::string(tok));
-			tok = x_strtok(&list, ",");
-		}
-	}
-	return result;
-}
-
 wbem::framework::attribute_names_t cli::nvmcli::GetAttributeNames(
 		const cli::framework::StringMap& options)
 {
@@ -329,7 +311,7 @@ wbem::framework::attribute_names_t cli::nvmcli::GetAttributeNames(
 	else if (options.find(framework::OPTION_DISPLAY.name) != options.end())
 	{
 		std::string displayValue = options.at(framework::OPTION_DISPLAY.name);
-		result = CommaSeperatedToAttributeList(displayValue);
+		result = framework::CliHelper::splitCommaSeperatedString(displayValue);
 	}
 	else // if user doesn't specify all or display, then use the default attributes
 	{
@@ -1296,4 +1278,18 @@ std::string cli::nvmcli::getInvalidDimmIdErrorString(const std::string& invalidD
 	std::string errorString = framework::ResultBase::stringFromArgList(
 		TR(INVALID_DIMMID_ERROR_STR.c_str()), invalidDimmId.c_str());
 	return errorString;
+}
+
+std::string cli::nvmcli::uint64ToString(const unsigned long long &value)
+{
+	std::stringstream result;
+	result << value;
+	return result.str();
+}
+
+std::string cli::nvmcli::uint64ToHexString(const unsigned long long &value)
+{
+	std::stringstream result;
+	result << std::hex << value;
+	return result.str();
 }

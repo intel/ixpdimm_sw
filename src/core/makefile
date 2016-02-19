@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2015, Intel Corporation
+# Copyright (c) 2016, Intel Corporation
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -25,135 +25,130 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #
-# Makefile for the NVMCLI application
+# Makefile for Core Library
 #
 
 # ---- BUILD ENVIRONMENT ---------------------------------------------------------------------------
 ROOT_DIR = ../..
-
 # sets up standard build variables
 include $(ROOT_DIR)/build.mk
 
-OBJECT_MODULE_DIR = $(OBJECT_DIR)/cli
-
-C_CPP_FLAGS_SRC += -DLOCALE_DOMAIN='"$(LOCALE_DOMAIN)"' -DLOCALE_DIR='"$(LOCALE_DIR)"'
+OBJECT_MODULE_DIR = $(OBJECT_DIR)/core
 
 # ---- COMPONENTS ----------------------------------------------------------------------------------
-FRAMEWORK = $(BUILD_DIR)/libcliframework.$(LIB_SUFFIX)
-FEATURES = $(BUILD_DIR)/libcrfeatures.$(LIB_SUFFIX)
+SUBMODULES = . device system exceptions
 
+UNITTEST = unittest
 # ---- FILES ---------------------------------------------------------------------------------------
-SRC = $(wildcard *.cpp)
-OBJS = $(patsubst %.cpp, %.o, $(SRC))
+SRC = $(foreach dir,$(SUBMODULES),$(wildcard $(dir)/*.cpp))
+HEADERS = $(foreach dir,$(SUBMODULES),$(wildcard $(dir)/*.h))
+
+OBJS = $(patsubst %.cpp,%.o,$(SRC))
 #add the resource file on windows
 ifdef BUILD_WINDOWS
-	OBJS += cli_resources.o
+	OBJS += core_resources.o
 endif
 OBJNAMES = $(addprefix $(OBJECT_MODULE_DIR)/, $(OBJS))
+
+# defines the location of each submodule's object files' path
+SUBMODULE_DIRS = $(foreach dir,$(SUBMODULES),$(OBJECT_MODULE_DIR)/$(dir))
+
+# defines the location of each submodule's object files
+SUBMODULE_OBJS = $(addprefix $(OBJECT_MODULE_DIR)/, $(patsubst %.cpp,%.o,$(SRC)))
 
 # pull in any previously generated source dependency declarations (.d files)
 # (hyphen preceeding the "include" keyword allows MAKE to continue if a .d file is not found) 
 -include $(addprefix $(OBJECT_MODULE_DIR)/, $(patsubst %.cpp,%.d,$(SRC)))
 
-TARGETBASE=nvmcli
+# Target library 'linker name'
+TARGETBASE = libcore.$(LIB_SUFFIX)
+# Target library 'soname'
+TARGETSO = $(TARGETBASE).$(VERSION_MAJOR)
+# Target library 'real name'
 ifdef BUILD_WINDOWS
-	TARGET = $(TARGETBASE).exe
-else
 	TARGET = $(TARGETBASE)
+else
+	TARGET = $(TARGETSO).$(VERSION_MINOR).0
 endif 
-TARGET_NAME = $(addprefix $(BUILD_DIR)/, $(TARGET))
+# Target library 'real name', prefixed with its output location
+# This library is packaged as its own library, therefore output to build directory 
+TARGETNAME = $(addprefix $(BUILD_DIR)/, $(TARGET))
 
 # ---- COMPILER PARAMETERS -------------------------------------------------------------------------
-INCS = 	-I$(SRC_DIR)/common \
-		-I$(EXTERN_DIR)/sqlite \
-		-I$(EXTERN_DIR)/openssl/include \
-		-I$(EXTERN_DIR)/zlib \
-		-I$(SRC_DIR)/cli \
+INCS = 	-I$(SRC_DIR) -I$(SRC_DIR)/core \
+		-I$(SRC_DIR)/common \
 		-I$(SRC_DIR)/lib \
-		-I$(SRC_DIR)/wbem \
-		-I$(CLI_FRAMEWORK_DIR)/include \
-		-I$(CIM_FRAMEWORK_DIR)/include
+		-I$(EXTERN_DIR)/intel_cli_framework/include
 
-LIBS =	-L$(OBJECT_DIR)/common -lcommon \
-		-L$(BUILD_DIR) \
-			-lcliframework \
-			-lcimframework \
-			-lnvm \
-			-lcore \
-			-lnvmwbem \
+LIBS = 	-L$(OBJECT_DIR)/common -lcommon \
+		-L$(BUILD_DIR) -lnvm \
 			-lsqlite3 \
-			-lz \
-			-lssl -lcrypto		
-		
+			-lssl -lcrypto
+
 ifdef BUILD_WINDOWS
-	LIBS += -lws2_32 -lmswsock -ladvapi32 -lversion -lGdi32 -lShlwapi \
-	 		-L$(BUILD_DIR) -lssp -lpthread -llibintl \
-			-L$(EXTERN_LIB_DIR)/zlib \
-			-L$(EXTERN_LIB_DIR)/openssl/openssl 
+	LIBS += -lws2_32 -lmswsock -lShlwapi -L$(EXTERN_LIB_DIR)/openssl/openssl
 else ifdef BUILD_LINUX
-	LIBS += -lpthread -ldl -lm
+	LIBS += -ldl -lm -lpthread
 	ifndef BUILD_SIM
 		LIBS += -lndctl -lkmod
 	endif
 else ifdef BUILD_ESX
-	LIBS += -lpthread -ldl -lm
-ifndef BUILD_SIM
-	LIBS += -L/opt/vmware/nvm-mgmt-6.0.0-$(DEVKIT_BUILD_NUM)/samples/lib -lvmkuserlib
-endif
+	LIBS += -ldl -lm
 endif
 
-ifdef INTEL_I18N
-INCS += -I$(I18N_INCLUDE_DIR)
-LIBS += -lIntel_i18n
-endif
+# Building a DLL - control exports
+CPPFLAGS += $(BUILD_DLL_FLAG)
+
 # ---- RECIPES -------------------------------------------------------------------------------------
-all :   
-	$(MAKE) $(JOBCOUNT) $(BUILD_DIR)
-	$(MAKE) features
-	$(MAKE) $(JOBCOUNT) $(TARGET_NAME) 
-
-$(TARGET_NAME): $(FEATURES) $(OBJNAMES) 
-	$(CPP) -Wl,-rpath,$(ESX_SUPPORT_DIR) $(CPPFLAGS) $(OBJNAMES) $(LIBS) -o $@
-
-$(BUILD_DIR):
+all :  
+	$(MAKE) $(JOBCOUNT) $(OBJECT_MODULE_DIR)
+	$(MAKE) $(JOBCOUNT) $(SUBMODULE_DIRS) 
+	$(MAKE) $(JOBCOUNT) $(TARGETNAME)
+ifndef SKIP_UNITTESTS
+	$(MAKE) $(UNITTEST)
+endif
+	
+$(OBJECT_MODULE_DIR) $(SUBMODULE_DIRS) :
 	$(MKDIR) $@
 
-features:
-	$(MAKE) -C features all ADD_MANUFACTURING=$(ADD_MANUFACTURING)
-	
-test:
-ifndef ESX_BUILD # can't run ESX tests on build system
-	$(MAKE) -C features test
+$(TARGETNAME) : $(OBJNAMES)
+ifdef BUILD_WINDOWS
+	$(CPP) $(CPPFLAGS) -shared $^ $(LIBS) -o $@ 
+else
+	$(CPP) $(CPPFLAGS) -Wl,-rpath,$(ESX_SUPPORT_DIR) -shared $^ $(LIBS) -Wl,-soname,$(TARGETSO) -o $@
+	cd $(BUILD_DIR); $(RM) $(TARGETSO); $(SOFTLINK) $(TARGET) $(TARGETSO)
+	cd $(BUILD_DIR); $(RM) $(TARGETBASE); $(SOFTLINK) $(TARGET) $(TARGETBASE)
 endif
 
 # suffix rule for .cpp -> .o
 $(OBJECT_MODULE_DIR)/%.o : %.cpp
 	$(CPP) $(CPPFLAGS) $(INCS) -c $< -o $@ $(LDFLAGS)
-
+	
 # suffix rule for .rc -> .o
 $(OBJECT_MODULE_DIR)/%.o : %.rc
 	$(RC) $(RCFLAGS) $(INCS) $< -o $@
-
-i18n:
-	$(GETTEXT) *.cpp
-	make -C features i18n
-
-clean : 
-	rm -f $(OBJNAMES)
-	$(MAKE) -C features clean
-
+	
+unittest:
+	$(MAKE) -C $(UNITTEST) all
+	
+test:
+ifndef ESX_BUILD # can't run ESX tests on build system
+	$(MAKE) -C $(UNITTEST) test
+endif
+	
+clean:
+	rm -f $(TARGET) $(OBJNAMES)
+	$(MAKE) -C $(UNITTEST) clean
+	
 clobber :
-	rm -f $(TARGET)
-	$(MAKE) -C features clobber
+	$(RMDIR) $(OBJECT_MODULE_DIR)
 
 sourcedrop: 
-	$(MKDIR) $(SOURCEDROP_DIR)/src/cli
-	$(COPY) *.* $(SOURCEDROP_DIR)/src/cli
-	$(COPY) makefile $(SOURCEDROP_DIR)/src/cli
-	$(MAKE) -C features sourcedrop
-ifdef BUILD_ESX
-	$(MKDIR) $(SOURCEDROP_DIR)/src/cli/esx
-	$(COPY) esx/esxcli-nvmcli.xml $(SOURCEDROP_DIR)/src/cli/esx
-endif
-		
-.PHONY : all clean clobber features i18n sourcedrop
+	$(MKDIR) $(SOURCEDROP_DIR)/src/core
+	$(COPY) makefile $(SOURCEDROP_DIR)/src/core
+	for dir in $(SUBMODULES); do \
+		$(MKDIR) $(SOURCEDROP_DIR)/src/core/$${dir}; \
+		$(COPY) $${dir}/*.* $(SOURCEDROP_DIR)/src/core/$${dir}/; \
+	done
+	
+.PHONY : all unittest test i18n clean sourcedrop

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, Intel Corporation
+ * Copyright (c) 2016, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -24,50 +24,50 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#ifndef CR_MGMT_DEVICECOLLECTION_H
+#define CR_MGMT_DEVICECOLLECTION_H
 
-#ifndef _CLI_NVMCLI_WBEMTOCLI_H_
-#define _CLI_NVMCLI_WBEMTOCLI_H_
+#include <vector>
+#include <stddef.h>
 
-#include <nvm_management.h>
-
-#include <intel_cli_framework/PropertyListResult.h>
-#include <intel_cli_framework/ObjectListResult.h>
-#include <intel_cim_framework/Instance.h>
-#include <intel_cli_framework/SyntaxErrorBadValueResult.h>
-#include <framework_interface/NvmInstanceFactory.h>
-
-namespace cli
+namespace core
 {
-namespace nvmcli
-{
-class WbemToCli
+template<class T>
+class Collection
 {
 public:
-	/*
-	 * Constructor
-	 */
-	WbemToCli();
+	T & operator[](const int i);
+	void push_back(T &item);
+	size_t size() const;
+	void removeAt(size_t index);
 
-	/*
-	 * Destructor
-	 */
-	virtual ~WbemToCli();
-
-	/*
-	* For commands that support an optional -namespace target,
-	* retrieve the namespace GUID(s) of the specified target
-	* or all namespace GUIDs if not specified.
-	*/
-	virtual cli::framework::ErrorResult *getNamespaces(
-		const framework::ParsedCommand &parsedCommand, std::vector<std::string> &namespaces);
-	/*
-	 * For commands that support the -pool target, verify the pool GUID specified
-	 * or retrieve it if not specified
-	 */
-	virtual cli::framework::ErrorResult *checkPoolGuid(
-		const framework::ParsedCommand &parsedCommand, std::string &poolGuid);
-
+protected:
+	std::vector<T *> m_collection;
 };
+
+template<class T>
+T &Collection<T>::operator[](const int i)
+{
+	return *(m_collection[i]);
 }
+
+template<class T>
+void Collection<T>::push_back(T &item)
+{
+	T *copy = item.clone();
+	m_collection.push_back(copy);
 }
-#endif // _CLI_NVMCLI_WBEMTOCLI_H_
+
+template<class T>
+size_t Collection<T>::size() const
+{
+	return m_collection.size();
+}
+template<class T>
+void Collection<T>::removeAt(size_t index)
+{
+	m_collection.erase(m_collection.begin() + index);
+}
+
+}
+#endif //CR_MGMT_DEVICECOLLECTION_H

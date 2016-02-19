@@ -34,10 +34,10 @@
 #include <intel_cim_framework/ExceptionBadParameter.h>
 #include <physical_asset/NVDIMMViewFactory.h>
 #include <LogEnterExit.h>
-#include <logic/exceptions/LibraryException.h>
+#include <core/exceptions/LibraryException.h>
 #include <persistence/lib_persistence.h>
 #include <persistence/config_settings.h>
-#include <logic/exceptions/InvalidArgumentException.h>
+#include <core/exceptions/InvalidArgumentException.h>
 #include <intel_cim_framework/ExceptionNoMemory.h>
 
 #include "NVDIMMFactory.h"
@@ -120,7 +120,7 @@ wbem::framework::instances_t *wbem::physical_asset::NVDIMMViewFactory::getInstan
 
 	try
 	{
-		logic::device::DeviceCollection devices = m_deviceService.getAllDevices();
+		core::device::DeviceCollection devices = m_deviceService.getAllDevices();
 
 		framework::instances_t *pResult = new framework::instances_t();
 		if (!pResult)
@@ -138,11 +138,11 @@ wbem::framework::instances_t *wbem::physical_asset::NVDIMMViewFactory::getInstan
 		}
 		return pResult;
 	}
-	catch(logic::LibraryException &e)
+	catch(core::LibraryException &e)
 	{
 		throw exception::NvmExceptionLibError(e.getErrorCode());
 	}
-	catch(logic::InvalidArgumentException &e)
+	catch(core::InvalidArgumentException &e)
 	{
 		throw framework::ExceptionBadParameter(e.getArgumentName().c_str());
 	}
@@ -163,16 +163,15 @@ wbem::framework::Instance *wbem::physical_asset::NVDIMMViewFactory::getInstance(
 
 	try
 	{
-		logic::device::Device *pNvdimm = m_deviceService.getDevice(guidAttr.stringValue());
+		core::Result<core::device::Device> device = m_deviceService.getDevice(guidAttr.stringValue());
 
-		toInstance(*pNvdimm, *pResult, attributes);
-		delete pNvdimm;
+		toInstance(device.getValue(), *pResult, attributes);
 	}
-	catch(logic::LibraryException &e)
+	catch(core::LibraryException &e)
 	{
 		throw exception::NvmExceptionLibError(e.getErrorCode());
 	}
-	catch(logic::InvalidArgumentException &e)
+	catch(core::InvalidArgumentException &e)
 	{
 		throw framework::ExceptionBadParameter(e.getArgumentName().c_str());
 	}
@@ -189,16 +188,13 @@ wbem::framework::instance_names_t *wbem::physical_asset::NVDIMMViewFactory::getI
 	{
 		const std::vector<std::string> &guids = m_deviceService.getAllGuids();
 		pNames = new framework::instance_names_t();
-		if (!pNames)
-		{
-			throw framework::ExceptionNoMemory(__FILE__, __FUNCTION__, "pNames");
-		}
+
 		for (size_t i = 0; i < guids.size(); i++)
 		{
 			pNames->push_back(createPath(guids[i]));
 		}
 	}
-	catch (logic::LibraryException &e)
+	catch (core::LibraryException &e)
 	{
 		throw exception::NvmExceptionLibError(e.getErrorCode());
 	}
@@ -225,7 +221,7 @@ std::string wbem::physical_asset::NVDIMMViewFactory::getHostName()
 }
 
 
-void wbem::physical_asset::NVDIMMViewFactory::toInstance(logic::device::Device &nvdimm,
+void wbem::physical_asset::NVDIMMViewFactory::toInstance(core::device::Device &nvdimm,
 	wbem::framework::Instance &instance, wbem::framework::attribute_names_t attributes)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -310,11 +306,13 @@ void wbem::physical_asset::NVDIMMViewFactory::toInstance(logic::device::Device &
 	framework::UINT16 communicationStatus = (framework::UINT16)(nvdimm.getIsMissing() ? NVDIMM_COMMUNICATION_NOCONTACT : NVDIMM_COMMUNICATION_OK);
 	ADD_ENUM_ATTRIBUTE(instance, attributes, COMMUNICATIONSTATUS_KEY, framework::UINT16, communicationStatus, communicationStatusMap);
 	ADD_ATTRIBUTE(instance, attributes, ISNEW_KEY, framework::BOOLEAN, nvdimm.isNew());
-	ADD_ATTRIBUTE(instance, attributes, POWERMANAGEMENTENABLED_KEY, framework::BOOLEAN, nvdimm.getPowerManagementEnabled());
+	ADD_ATTRIBUTE(instance, attributes, POWERMANAGEMENTENABLED_KEY, framework::BOOLEAN,
+		nvdimm.isPowerManagementEnabled());
 	ADD_ATTRIBUTE(instance, attributes, POWERLIMIT_KEY, framework::UINT8, nvdimm.getPowerLimit());
 	ADD_ATTRIBUTE(instance, attributes, PEAKPOWERBUDGET_KEY, framework::UINT16, nvdimm.getPeakPowerBudget());
 	ADD_ATTRIBUTE(instance, attributes, AVGPOWERBUDGET_KEY, framework::UINT16, nvdimm.getAvgPowerBudget());
-	ADD_ATTRIBUTE(instance, attributes, DIESPARINGENABLED_KEY, framework::BOOLEAN, nvdimm.getDieSparingEnabled());
+	ADD_ATTRIBUTE(instance, attributes, DIESPARINGENABLED_KEY, framework::BOOLEAN,
+		nvdimm.isDieSparingEnabled());
 	ADD_ATTRIBUTE(instance, attributes, DIESPARINGLEVEL_KEY, framework::UINT8, nvdimm.getDieSparingLevel());
 	ADD_ATTRIBUTE(instance, attributes, LASTSHUTDOWNSTATUS_KEY, framework::UINT16_LIST, nvdimm.getLastShutdownStatus());
 	ADD_ATTRIBUTE(instance, attributes, DIESPARESUSED_KEY, framework::UINT8, nvdimm.getDieSparesUsed());
@@ -343,7 +341,7 @@ void wbem::physical_asset::NVDIMMViewFactory::toInstance(logic::device::Device &
 }
 
 std::string wbem::physical_asset::NVDIMMViewFactory::getMemoryModeString(
-	logic::device::Device &nvdimm)
+	core::device::Device &nvdimm)
 {
 	std::map<NVM_UINT32, std::string> map;
 	map[NVDIMM_MEMORYTYPECAPABILITIES_MEMORYMODE] = TR("2LM");
@@ -364,7 +362,7 @@ std::string wbem::physical_asset::NVDIMMViewFactory::getMemoryModeString(
 	return result.str();
 }
 
-std::string  wbem::physical_asset::NVDIMMViewFactory::getDimmId(logic::device::Device &nvdimm)
+std::string  wbem::physical_asset::NVDIMMViewFactory::getDimmId(core::device::Device &nvdimm)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 

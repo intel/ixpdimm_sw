@@ -31,8 +31,8 @@
 #include <string>
 #include <nvm_management.h>
 #include <framework_interface/NvmInstanceFactory.h>
-#include <logic/device/DeviceService.h>
-#include <logic/system/SystemService.h>
+#include <core/device/DeviceService.h>
+#include <core/system/SystemService.h>
 
 
 namespace wbem
@@ -45,8 +45,8 @@ class NVM_API NVDIMMViewFactory : public framework_interface::NvmInstanceFactory
 {
 public:
 	NVDIMMViewFactory(
-		logic::device::DeviceService &deviceService = logic::device::DeviceService::getService(),
-		logic::system::SystemService &systemService = logic::system::SystemService::getService()) :
+		core::device::DeviceService &deviceService = core::device::DeviceService::getService(),
+		core::system::SystemService &systemService = core::system::SystemService::getService()) :
 		m_deviceService(deviceService),
 		m_systemService(systemService)
 	{
@@ -60,12 +60,12 @@ public:
 
 	virtual framework::instances_t *getInstances(framework::attribute_names_t &attributes);
 
-	static void toInstance(logic::device::Device &nvdimm, framework::Instance &instance,
+	static void toInstance(core::device::Device &nvdimm, framework::Instance &instance,
 		wbem::framework::attribute_names_t attributes);
 
 private:
-	logic::device::DeviceService &m_deviceService;
-	logic::system::SystemService &m_systemService;
+	core::device::DeviceService &m_deviceService;
+	core::system::SystemService &m_systemService;
 	std::string m_hostName;
 	void populateAttributeList(framework::attribute_names_t &attributes)
 		throw(framework::Exception);
@@ -73,9 +73,9 @@ private:
 	std::string getHostName();
 
 
-	static std::string getMemoryModeString(logic::device::Device &nvdimm);
+	static std::string getMemoryModeString(core::device::Device &nvdimm);
 
-	static std::string getDimmId(logic::device::Device &nvdimm);
+	static std::string getDimmId(core::device::Device &nvdimm);
 
 };
 
