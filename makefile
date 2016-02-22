@@ -251,7 +251,7 @@ else ifdef BUILD_ESX
 	$(COPY) $(BUILD_DIR)/nvmcli $(ESX_SUPPORT_DIR)
 	$(COPY) $(BUILD_DIR)/nvmmonitor $(ESX_SUPPORT_DIR)
 	$(COPY) $(BUILD_DIR)/libnvm.so* $(ESX_SUPPORT_DIR)
-	$(COPY) $(BUILD_DIR)/libcore.so* $(ESX_SUPPORT_DIR)
+	$(COPY) $(BUILD_DIR)/libnvm-core.so* $(ESX_SUPPORT_DIR)
 	$(COPY) $(BUILD_DIR)/libcrfeatures.so* $(ESX_SUPPORT_DIR)
 	$(COPY) $(BUILD_DIR)/libnvmwbem.so* $(ESX_SUPPORT_DIR) # for CLI
 	$(COPY) $(BUILD_DIR)/libcimframework.so* $(ESX_SUPPORT_DIR) # for CLI

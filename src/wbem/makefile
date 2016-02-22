@@ -108,7 +108,7 @@ endif
 
 LIBS = 	-L$(OBJECT_DIR)/common -lcommon \
 		-L$(BUILD_DIR) -lnvm \
-		-L$(BUILD_DIR) -lcore \
+		-L$(BUILD_DIR) -lnvm-core \
 		-lsqlite3 \
 		-lssl -lcrypto \
 		-lcimframework

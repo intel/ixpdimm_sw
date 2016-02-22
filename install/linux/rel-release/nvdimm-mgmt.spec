@@ -1,6 +1,7 @@
 %define product_name ixpdimm_sw
 %define build_version 99.99.99.9999
 %define build_release 1
+%define corename %{product_name}-core
 %define cliname %{product_name}-cli
 %define monitorname %{product_name}-monitor
 %define cimlibs %{product_name}-cim
@@ -33,12 +34,23 @@ Requires:       %{name}%{?_isa} = %{version}-%{release}
 The %{name}-devel package contains header files for
 developing applications that use %{name}.
 
+%package -n %corename
+Summary:        Development files for %{name}
+License:        BSD
+Group:          Application/System
+Requires:       %{name}%{?_isa} = %{version}-%{release}
+
+%description -n %corename
+The %{corename} package contains libraries that support
+other %{product_name} products.
+
+
 %package -n %cimlibs
 Summary:        CIM provider for %{name}
 
 License:        BSD
 Group:          Application/System
-Requires:       %{name}%{?_isa} = %{version}-%{release}
+Requires:       %{corename}%{?_isa} = %{version}-%{release}
 Requires:       pywbem
 Requires(pre):  pywbem
 Requires(post): pywbem
@@ -78,6 +90,9 @@ make BUILDNUM=%{build_version} RELEASE=1 DATADIR=%{_datadir} LINUX_PRODUCT_NAME=
 
 %install
 make install RELEASE=1 RPM_ROOT=%{buildroot} LIB_DIR=%{_libdir} INCLUDE_DIR=%{_includedir} BIN_DIR=%{_bindir} DATADIR=%{_datadir} UNIT_DIR=%{_unitdir} LINUX_PRODUCT_NAME=%{product_name} SYSCONF_DIR=%{_sysconfdir} MANPAGE_DIR=%{_mandir}
+
+%post -n %corename
+/sbin/ldconfig
 
 %post -n %cimlibs
 /sbin/ldconfig
@@ -133,7 +148,10 @@ fi
 %post 
 /sbin/ldconfig
 
-%postun -n %cimlibs 
+%postun -n %corename
+/sbin/ldconfig
+
+%postun -n %cimlibs
 /sbin/ldconfig
 
 %pre -n %cimlibs
@@ -220,6 +238,11 @@ fi
 %{_libdir}/libnvm.so
 %{_includedir}/nvm_types.h
 %{_includedir}/nvm_management.h
+%license LICENSE
+
+%files -n %corename
+%defattr(-,root,root)
+%{_libdir}/libnvm-core.so*
 %license LICENSE
 
 %files -n %cimlibs

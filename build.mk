@@ -172,9 +172,9 @@ ifeq ($(UNAME), Linux)
 		SYSCONF_DIR ?= /etc
 		MANPAGE_DIR ?= /usr/share/man
 		MAN8_DIR ?= $(MANPAGE_DIR)/man8
-		
+
 		# Linux Install Files
-		LIB_FILES = libnvm.so* libcrfeatures.so*
+		LIB_FILES = libnvm.so* libnvm-core.so* libcrfeatures.so*
 		CIM_LIB_FILES = libnvmwbem.so*
 		INCLUDE_FILES = nvm_management.h nvm_types.h
 		BIN_FILES = nvmcli nvmmonitor
@@ -185,7 +185,7 @@ ifeq ($(UNAME), Linux)
 		INIT_FILES = nvmmonitor.service
 		MANPAGE_GZ_FILES = nvmcli.8.gz nvmmonitor.8.gz
 		MANPAGE_SCRIPT_FILES = create_nvmcli_manpage.py create_nvmmonitor_manpage.py nvmcli.manpage.footer nvmcli.manpage.header nvmmonitor.manpage.text nvmcli.sed manpage_helper.py
-				
+
 		C_CPP_FLAGS_SRC += -D__LINUX__ 
 		
 		ifneq ("$(wildcard /etc/redhat-release)","")

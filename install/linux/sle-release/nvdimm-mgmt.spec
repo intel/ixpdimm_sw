@@ -1,6 +1,7 @@
 %define product_name ixpdimm_sw
 %define build_version 99.99.99.9999
 %define build_release 1
+%define corename lib%{product_name}-core
 %define cliname %{product_name}
 %define monitorname lib%{product_name}-monitor
 %define cimlibs lib%{product_name}-cim
@@ -22,7 +23,7 @@ Source: %{product_name}.tar.bz2
 An application program interface (API) for configuring and managing
 %{product_name}. Including basic inventory, capacity provisioning,
 health monitoring, and troubleshooting.
- 
+
 %package -n %dname
 Summary:        Development files for %{name}
 License:        BSD
@@ -33,12 +34,23 @@ Requires:       %{name}%{?_isa} = %{version}-%{release}
 The %{name}-devel package contains header files for
 developing applications that use %{name}.
 
+%package -n %corename
+Summary:        Development files for %{name}
+License:        BSD
+Group:          Application/System
+Requires:       %{name}%{?_isa} = %{version}-%{release}
+
+%description -n %corename
+The %{corename} package contains libraries that support
+other %{product_name} products.
+
+
 %package -n %cimlibs
 Summary:        CIM provider for %{name}
 
 License:        BSD
 Group:          Application/System
-Requires:       %{name}%{?_isa} = %{version}-%{release}
+Requires:       %{corename}%{?_isa} = %{version}-%{release}
 Requires:       pywbem
 Requires(pre):  pywbem
 Requires(post): pywbem
@@ -46,10 +58,10 @@ Requires(post): pywbem
 %description -n %cimlibs
 %{cimlibs} is a common information model (CIM) provider that exposes
 %{product_name} as standard CIM objects in order to plug-in to various
-common information model object managers (CIMOMS). 
+common information model object managers (CIMOMS).
 
 %package -n %monitorname
-Summary:        Daemon for monitoring the status of %{product_name} 
+Summary:        Daemon for monitoring the status of %{product_name}
 License:        BSD
 Group:          Application/System
 Requires:       %{cimlibs}%{?_isa} = %{version}-%{release}
@@ -66,7 +78,7 @@ Group:          Application/System
 Requires:       %{cimlibs}%{?_isa} = %{version}-%{release}
 
 %description -n %cliname
-A command line interface (CLI) application for configuring and 
+A command line interface (CLI) application for configuring and
 managing %{prodcut_name}. Including commands for basic inventory,
 capacity provisioning, health monitoring, and troubleshooting.
 
@@ -79,6 +91,9 @@ make BUILDNUM=%{build_version} RELEASE=1 DATADIR=%{_datadir} LINUX_PRODUCT_NAME=
 
 %install
 make install RELEASE=1 RPM_ROOT=%{buildroot} LIB_DIR=%{_libdir} INCLUDE_DIR=%{_includedir} BIN_DIR=%{_bindir} DATADIR=%{_datadir} UNIT_DIR=%{_unitdir} LINUX_PRODUCT_NAME=%{product_name} SYSCONF_DIR=%{_sysconfdir} MANPAGE_DIR=%{_mandir}
+
+%post -n %corename
+/sbin/ldconfig
 
 %post -n %cimlibs
 /sbin/ldconfig
@@ -105,7 +120,7 @@ then
 			$CIMMOF -uc -n$ns %{_datadir}/%{product_name}/Pegasus/mof/pegasus_register.mof &> /dev/null
 			$CIMMOF -uc -n$ns %{_datadir}/%{product_name}/Pegasus/mof/profile_registration.mof &> /dev/null
 			break
-	   fi 
+	   fi
 	done
 	$CIMMOF -aE -uc -n root/intelwbem %{_datadir}/%{product_name}/Pegasus/mof/intelwbem.mof &> /dev/null
 fi
@@ -132,7 +147,10 @@ fi
 %service_add_post nvmmonitor.service
 exit 0
 
-%post 
+%post
+/sbin/ldconfig
+
+%postun -n %corename
 /sbin/ldconfig
 
 %postun -n %cimlibs 

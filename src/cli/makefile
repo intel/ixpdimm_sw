@@ -83,7 +83,7 @@ LIBS =	-L$(OBJECT_DIR)/common -lcommon \
 			-lcliframework \
 			-lcimframework \
 			-lnvm \
-			-lcore \
+			-lnvm-core \
 			-lnvmwbem \
 			-lsqlite3 \
 			-lz \
