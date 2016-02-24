@@ -137,3 +137,32 @@ std::vector<device_discovery> core::device::DeviceService::getDiscoveries() cons
 
 	return result;
 }
+
+std::vector<memory_topology> core::device::DeviceService::getAllTopologies() const
+{
+        LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+        std::vector<memory_topology> result;
+        int rc = m_pApi.getMemoryTopologyCount();
+
+        if (rc < 0)
+        {
+                throw core::LibraryException(rc);
+        }
+
+        int count = rc;
+
+        memory_topology memDevices[count];
+
+        rc = m_pApi.getMemoryTopology(memDevices, count);
+        if (rc < 0)
+        {
+                throw core::LibraryException(rc);
+        }
+
+        for(int i = 0; i < count; i++)
+        {
+                result.push_back(memDevices[i]);
+        }
+
+        return result;
+}

@@ -56,6 +56,7 @@ public:
 
 private:
 	std::vector<device_discovery> getDiscoveries() const;
+	std::vector<memory_topology> getAllTopologies() const;
 	NvmApi &m_pApi;
 	static DeviceService *m_pSingleton;
 };
