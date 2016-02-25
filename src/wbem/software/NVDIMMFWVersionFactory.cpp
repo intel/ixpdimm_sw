@@ -37,6 +37,7 @@
 #include <algorithm>
 #include <server/BaseServerFactory.h>
 #include <physical_asset/NVDIMMFactory.h>
+#include "ElementSoftwareIdentityFactory.h"
 #include "NVDIMMCollectionFactory.h"
 #include "NVDIMMFWVersionFactory.h"
 #include <exception/NvmExceptionLibError.h>
@@ -46,10 +47,12 @@
 #include <sstream>
 #include <intel_cim_framework/ExceptionBadParameter.h>
 #include <exception/NvmExceptionLibError.h>
+#include <core/NvmApi.h>
 
 wbem::software::NVDIMMFWVersionFactory::NVDIMMFWVersionFactory()
 throw (wbem::framework::Exception)
-{ }
+{
+}
 
 wbem::software::NVDIMMFWVersionFactory::~NVDIMMFWVersionFactory()
 { }
@@ -185,27 +188,13 @@ throw (wbem::framework::Exception)
 	try
 	{
 		lib_interface::NvmApi *pApi = lib_interface::NvmApi::getApi();
-
 		std::string hostServer = pApi->getHostName();
 		std::vector<struct device_discovery> devices;
 		pApi->getDevices(devices);
 
 		for (size_t i = 0; i < devices.size(); i++)
 		{
-			struct device_fw_info fw_info;
-			memset(&fw_info, 0, sizeof (struct device_fw_info));
-			int rc = pApi->getDeviceFwImageInfo(devices[i].guid, &fw_info);
-			if (rc == NVM_ERR_NOTMANAGEABLE)
-			{
-				// Unmanageable DIMMs can coexist with us, we just can't get
-				// FW image details.
-			}
-			else if (rc != NVM_SUCCESS)
-			{
-				throw exception::NvmExceptionLibError(rc);
-			}
-
-			addFirmwareInstanceNamesForDevice(*pNames, hostServer, devices[i], fw_info);
+			addFirmwareInstanceNamesForDevice(*pNames, hostServer, devices[i]);
 		}
 	}
 	catch (framework::Exception &) // clean up and re-throw
@@ -221,10 +210,36 @@ throw (wbem::framework::Exception)
 }
 
 void wbem::software::NVDIMMFWVersionFactory::addFirmwareInstanceNamesForDevice(
+		framework::instance_names_t& instanceNames, const std::string& hostName,
+		const struct device_discovery& device)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	struct device_fw_info fw_info;
+	memset(&fw_info, 0, sizeof (struct device_fw_info));
+	int rc = lib_interface::NvmApi::getApi()->getDeviceFwImageInfo(device.guid, &fw_info);
+	if (rc == NVM_ERR_NOTMANAGEABLE)
+	{
+		// Unmanageable DIMMs can coexist with us, we just can't get
+		// FW image details.
+	}
+	else if (rc != NVM_SUCCESS)
+	{
+		throw exception::NvmExceptionLibError(rc);
+	}
+
+	// Use the core classes to access static methods
+	core::device::Device deviceWrapper(*core::NvmApi::getApi(), device);
+	core::device::DeviceFirmwareInfo fwInfoWrapper(deviceWrapper.getGuid(), fw_info);
+	addFirmwareInstanceNamesForDeviceFromFwInfo(instanceNames,
+			hostName, deviceWrapper, fwInfoWrapper);
+}
+
+void wbem::software::NVDIMMFWVersionFactory::addFirmwareInstanceNamesForDeviceFromFwInfo(
 		framework::instance_names_t& instanceNames,
 		const std::string& hostName,
-		const struct device_discovery& device,
-		const struct device_fw_info& fwInfo)
+		core::device::Device& device,
+		const core::device::DeviceFirmwareInfo& fwInfo)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
@@ -234,7 +249,7 @@ void wbem::software::NVDIMMFWVersionFactory::addFirmwareInstanceNamesForDevice(
 		instanceNames.push_back(activeFwPath);
 	}
 
-	if (fwInfo.staged_fw_pending)
+	if (fwInfo.isStagedPending())
 	{
 		framework::ObjectPath stagedFwPath = getStagedFirmwareInstanceName(hostName, device, fwInfo);
 		if (std::find(instanceNames.begin(), instanceNames.end(), stagedFwPath) == instanceNames.end())
@@ -275,121 +290,31 @@ wbem::framework::ObjectPath wbem::software::NVDIMMFWVersionFactory::getInstanceN
 
 wbem::framework::ObjectPath wbem::software::NVDIMMFWVersionFactory::getActiveFirmwareInstanceName(
 		const std::string &hostName,
-		const struct device_discovery& device,
-		const struct device_fw_info& fwInfo)
+		core::device::Device& device,
+		const core::device::DeviceFirmwareInfo& fwInfo)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	std::string instanceIDStr = getInstanceId(device.fw_revision,
-			device.fw_api_version,
-			fwInfo.active_fw_type,
-			fwInfo.active_fw_commit_id);
+	std::string instanceIDStr = getInstanceId(device.getFwRevision(),
+			device.getFwApiVersion(),
+			fwInfo.getActiveType(),
+			fwInfo.getActiveCommitId());
 
 	return getInstanceName(hostName, instanceIDStr);
 }
 
 wbem::framework::ObjectPath wbem::software::NVDIMMFWVersionFactory::getStagedFirmwareInstanceName(
 		const std::string &hostName,
-		const struct device_discovery& device,
-		const struct device_fw_info& fwInfo)
+		core::device::Device& device,
+		const core::device::DeviceFirmwareInfo& fwInfo)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	std::string instanceIDStr = getInstanceId(fwInfo.staged_fw_revision,
-			device.fw_api_version,
-			fwInfo.staged_fw_type);
+	std::string instanceIDStr = getInstanceId(fwInfo.getStagedRevision(),
+			device.getFwApiVersion(),
+			fwInfo.getStagedType());
 
 	return getInstanceName(hostName, instanceIDStr);
-}
-
-/*
- *  Determine if complex association.
- *   
- */
-bool wbem::software::NVDIMMFWVersionFactory::isAssociated(
-                const std::string &associationClass,
-                framework::Instance* pAntInstance,
-                framework::Instance* pDepInstance)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	bool result = false;
-
-	if (associationClass == wbem::framework_interface::ASSOCIATION_CLASS_ELEMENTSOFTWAREIDENTITY)
-	{
-		try
-		{
-			if ((pAntInstance->getClass() == wbem::software::NVDIMMFWVERSION_CREATIONCLASSNAME) &&
-			    (pDepInstance->getClass() == wbem::software::NVDIMMCOLLECTION_CREATIONCLASSNAME))
-			{
-				physical_asset::devices_t devices = physical_asset::NVDIMMFactory::getAllDevices();
-				if (devices.size() > 0)
-				{
-					std::string fwVersion = devices[0].fw_revision;
-					result = true;
-					for (size_t i = 1; i < devices.size(); i++)
-					{
-						std::string currentFwVersion = devices[i].fw_revision;
-						if (fwVersion != currentFwVersion)
-						{
-							result = false;
-							break;
-						}
-					}
-				}
-			}
-			else if ((pAntInstance->getClass() == wbem::software::NVDIMMFWVERSION_CREATIONCLASSNAME) &&
-				(pDepInstance->getClass() == wbem::physical_asset::NVDIMM_CREATIONCLASSNAME))
-			{
-				int rc = NVM_SUCCESS;
-				NVM_GUID guid;
-				struct device_discovery device;
-				framework::Attribute attr;
-
-				pAntInstance->getAttribute(wbem::VERSIONSTRING_KEY, attr);
-				std::string fwVersion = attr.stringValue();
-
-				pAntInstance->getAttribute(wbem::SPECIFICATION_KEY, attr);
-				std::string fwApiVersion = attr.stringValue();
-
-				pDepInstance->getAttribute(TAG_KEY, attr);
-				std::string guidStr = attr.stringValue();
-
-				str_to_guid(guidStr.c_str(), guid);
-				if ((rc = nvm_get_device_discovery(guid, &device)) == NVM_SUCCESS)
-				{
-					std::string deviceFwVersion = device.fw_revision;
-					std::string deviceFwApiVersion = device.fw_api_version;
-
-					if (fwVersion == deviceFwVersion && fwApiVersion == deviceFwApiVersion)
-					{
-						result = true;
-					}
-					else
-					{
-						result = false;
-					}
-				}
-				else
-				{
-					COMMON_LOG_WARN_F("nvm_get_device_discovery failed with %d", rc);
-				}
-			}
-			else
-			{
-				COMMON_LOG_WARN("Incorrect antecedent and dependent class instances");
-			}
-		}
-		catch (framework::Exception &)
-		{
-			COMMON_LOG_WARN_F("Cannot calculate if instances are an association "
-					"based on association class: %s", associationClass.c_str());
-		}
-	}
-	else
-	{
-		COMMON_LOG_WARN_F("This class has no associations of type: %s", associationClass.c_str());
-	}
-	return result;
 }
 
 std::string wbem::software::NVDIMMFWVersionFactory::translateFwType(
@@ -448,4 +373,3 @@ void wbem::software::NVDIMMFWVersionFactory::parseInstanceId(std::string instanc
 		commitId = instanceId.substr(commitIdPos + 1, instanceId.length());
 	}
 }
-

@@ -40,10 +40,12 @@ class NVM_API DeviceFirmwareService
 {
 public:
 	DeviceFirmwareService(NvmApi &pApi = *NvmApi::getApi()) : m_pApi(pApi) { }
-	DeviceFirmwareInfo *getFirmwareInfo(const std::string &deviceGuid);
+	virtual ~DeviceFirmwareService();
+	virtual core::Result<core::device::DeviceFirmwareInfo> getFirmwareInfo(const std::string &deviceGuid);
 
 	static DeviceFirmwareService &getService();
-private:
+
+protected:
 	NvmApi &m_pApi;
 	static DeviceFirmwareService *m_pSingleton;
 };

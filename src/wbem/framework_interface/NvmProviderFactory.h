@@ -42,9 +42,10 @@ public:
 
 	virtual framework::InstanceFactory *getInstanceFactory(const std::string &className);
 
-	virtual framework::InstanceFactory *getAssociationFactory(framework::Instance *pInstance = NULL,
-		const std::string &associationClassName = "", const std::string &resultClassName = "",
-		const std::string &roleName = "", const std::string &resultRoleName = "");
+	virtual std::vector<framework::InstanceFactory *> getAssociationFactories(
+			framework::Instance *pInstance = NULL,
+			const std::string &associationClassName = "", const std::string &resultClassName = "",
+			const std::string &roleName = "", const std::string &resultRoleName = "");
 
 	virtual framework::IndicationService *getIndicationService();
 };

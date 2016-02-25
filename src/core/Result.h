@@ -35,15 +35,24 @@ template<class T>
 class Result
 {
 public:
-		Result<T>(const Result<T> &other) : m_pResult(other.m_pResult->clone())
-		{
-		}
+	Result<T>(const Result<T> &other) : m_pResult(other.m_pResult->clone())
+	{
+	}
 
 	Result<T>(T &result) : m_pResult(result.clone())
 	{
 	}
 
 	~Result<T>() { delete m_pResult; }
+
+	void operator=(const Result<T> &other)
+	{
+		if (this != &other)
+		{
+			delete m_pResult;
+			m_pResult = other.m_pResult->clone();
+		}
+	}
 
 	T &getValue() { return *m_pResult; }
 

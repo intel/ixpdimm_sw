@@ -60,4 +60,10 @@ std::string core::system::SystemService::getHostName()
 	return std::string(hostname);
 }
 
-
+core::system::SystemService::~SystemService()
+{
+	if (this == m_pSingleton)
+	{
+		m_pSingleton = NULL;
+	}
+}

@@ -43,6 +43,7 @@
 #include <exception/NvmExceptionLibError.h>
 #include <framework_interface/NvmAssociationFactory.h>
 #include <physical_asset/NVDIMMFactory.h>
+#include <software/ElementSoftwareIdentityFactory.h>
 
 wbem::support::NVDIMMDiagnosticFactory::NVDIMMDiagnosticFactory()
 	throw (wbem::framework::Exception)
@@ -279,7 +280,7 @@ bool wbem::support::NVDIMMDiagnosticFactory::isAssociated(const std::string &ass
 {
 	bool result = true;
 
-	if (associationClass == framework_interface::ASSOCIATION_CLASS_ELEMENTSOFTWAREIDENTITY &&
+	if (associationClass == software::ELEMENTSOFTWAREIDENTITY_CREATIONCLASSNAME &&
 			pAntInstance->getClass() == DIAGNOSTICIDENTITY_CREATIONCLASSNAME &&
 			pDepInstance->getClass() == NVDIMMDIAGNOSTIC_CREATIONCLASSNAME)
 	{

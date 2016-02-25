@@ -27,39 +27,91 @@
 
 #include <LogEnterExit.h>
 #include "DeviceFirmwareInfoCollection.h"
+#include <iostream>
 
 core::device::DeviceFirmwareInfoCollection::DeviceFirmwareInfoCollection(
 	const DeviceFirmwareInfoCollection &other)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	for (size_t i = 0; i < other.m_collection.size(); i++)
+
+	*this = other;
+}
+
+void core::device::DeviceFirmwareInfoCollection::operator =(
+		const DeviceFirmwareInfoCollection& other)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	clear();
+	for (std::map<std::string, DeviceFirmwareInfo *>::const_iterator iter = other.m_collection.begin();
+			iter != other.m_collection.end(); iter++)
 	{
-		push_back(*(other.m_collection[i]));
+		DeviceFirmwareInfo *pOther = iter->second;
+		if (pOther)
+		{
+			m_collection[iter->first] = pOther->clone();
+		}
 	}
 }
+
 core::device::DeviceFirmwareInfoCollection::~DeviceFirmwareInfoCollection()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	for (size_t i = 0; i < m_collection.size(); i++)
-	{
-		delete m_collection[i];
-	}
-	m_collection.clear();
+	clear();
 }
-core::device::DeviceFirmwareInfo &core::device::DeviceFirmwareInfoCollection::operator[](
-	const int i)
+
+const core::device::DeviceFirmwareInfo &core::device::DeviceFirmwareInfoCollection::operator[](
+	const std::string &guid)
 {
-	return *(m_collection[i]);
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	std::map<std::string, DeviceFirmwareInfo *>::iterator existingItem = m_collection.find(guid);
+	if (existingItem == m_collection.end())
+	{
+		// Create a new empty DeviceFirmwareInfo if none found
+		struct device_fw_info emptyInfo;
+		memset(&emptyInfo, 0, sizeof (emptyInfo));
+		m_collection[guid] = new DeviceFirmwareInfo(guid, emptyInfo);
+	}
+
+	return *(m_collection[guid]);
 }
 
 void core::device::DeviceFirmwareInfoCollection::push_back(DeviceFirmwareInfo &info)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
 	DeviceFirmwareInfo *d = info.clone();
-	m_collection.push_back(d);
+
+	// Need to delete existing item, if any
+	std::map<std::string, DeviceFirmwareInfo *>::iterator existingItem =
+			m_collection.find(d->getGuid());
+	if (existingItem != m_collection.end())
+	{
+		delete existingItem->second;
+		existingItem->second = NULL;
+	}
+
+	m_collection[d->getGuid()] = d;
 }
+
 size_t core::device::DeviceFirmwareInfoCollection::size() const
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return m_collection.size();
+}
+
+void core::device::DeviceFirmwareInfoCollection::clear()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	for (std::map<std::string, DeviceFirmwareInfo *>::iterator iter = m_collection.begin();
+			iter != m_collection.end(); iter++)
+	{
+		DeviceFirmwareInfo *d = iter->second;
+		delete d;
+
+		iter->second = NULL;
+	}
+	m_collection.clear();
 }

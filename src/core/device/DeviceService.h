@@ -46,7 +46,7 @@ class NVM_API DeviceService
 {
 public:
 	DeviceService(NvmApi &pApi = *NvmApi::getApi()) : m_pApi(pApi) { }
-	virtual ~DeviceService() { }
+	virtual ~DeviceService() { if (m_pSingleton == this) m_pSingleton = NULL; }
 	virtual std::vector<std::string> getAllGuids();
 	virtual std::vector<std::string> getManageableGuids();
 	virtual DeviceCollection getAllDevices();
@@ -54,9 +54,10 @@ public:
 
 	static DeviceService &getService();
 
-private:
-	std::vector<device_discovery> getDiscoveries() const;
+protected:
+	virtual std::vector<device_discovery> getDiscoveries() const;
 	std::vector<memory_topology> getAllTopologies() const;
+
 	NvmApi &m_pApi;
 	static DeviceService *m_pSingleton;
 };

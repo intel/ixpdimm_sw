@@ -149,8 +149,6 @@ void wbem::framework_interface::NvmAssociationFactory::initClassMap()
 		ASSOCIATION_DEPENDENT);
 	addClassToMap(wbem::framework_interface::ASSOCIATION_CLASS_LOGMANAGESRECORD, ASSOCIATION_LOG,
 		ASSOCIATION_RECORD);
-	addClassToMap(wbem::framework_interface::ASSOCIATION_CLASS_ELEMENTSOFTWAREIDENTITY,
-		ASSOCIATION_ANTECEDENT, ASSOCIATION_DEPENDENT);
 	addClassToMap(wbem::framework_interface::ASSOCIATION_CLASS_USEOFLOG, ASSOCIATION_ANTECEDENT,
 		ASSOCIATION_DEPENDENT);
 	addClassToMap(wbem::framework_interface::ASSOCIATION_CLASS_METRIC_INSTANCE, ASSOCIATION_ANTECEDENT,
@@ -249,10 +247,6 @@ void wbem::framework_interface::NvmAssociationFactory::initAssociationTable()
 		wbem::framework::ASSOCIATIONTYPE_SIMPLEFK,
 		wbem::physical_asset::NVDIMM_CREATIONCLASSNAME, wbem::memory::RAWMEMORY_CREATIONCLASSNAME,
 		wbem::TAG_KEY, wbem::DEVICEID_KEY);
-	addAssociationToTable(wbem::framework_interface::ASSOCIATION_CLASS_ELEMENTSOFTWAREIDENTITY,
-		wbem::framework::ASSOCIATIONTYPE_COMPLEX,
-		wbem::software::NVDIMMFWVERSION_CREATIONCLASSNAME,
-		wbem::physical_asset::NVDIMM_CREATIONCLASSNAME);
 	addAssociationToTable(wbem::framework_interface::ASSOCIATION_CLASS_SERVICEAFFECTSELEMENT,
 		wbem::framework::ASSOCIATIONTYPE_BASIC,
 		wbem::physical_asset::NVDIMM_CREATIONCLASSNAME,
@@ -304,10 +298,6 @@ void wbem::framework_interface::NvmAssociationFactory::initAssociationTable()
 		wbem::software::NVDIMMCOLLECTION_CREATIONCLASSNAME,
 		wbem::physical_asset::NVDIMM_CREATIONCLASSNAME);
 
-	addAssociationToTable(wbem::framework_interface::ASSOCIATION_CLASS_ELEMENTSOFTWAREIDENTITY,
-		wbem::framework::ASSOCIATIONTYPE_COMPLEX,
-		wbem::software::NVDIMMFWVERSION_CREATIONCLASSNAME,
-		wbem::software::NVDIMMCOLLECTION_CREATIONCLASSNAME);
 	addAssociationToTable(wbem::framework_interface::ASSOCIATION_CLASS_SERVICEAFFECTSELEMENT,
 		wbem::framework::ASSOCIATIONTYPE_BASIC,
 		wbem::software::NVDIMMCOLLECTION_CREATIONCLASSNAME,
@@ -330,10 +320,6 @@ void wbem::framework_interface::NvmAssociationFactory::initAssociationTable()
 		wbem::framework::ASSOCIATIONTYPE_BASIC,
 		wbem::support::DIAGNOSTICLOG_CREATIONCLASSNAME,
 		wbem::support::DIAGNOSTICCOMPLETION_CREATIONCLASSNAME);
-	addAssociationToTable(wbem::framework_interface::ASSOCIATION_CLASS_ELEMENTSOFTWAREIDENTITY,
-		wbem::framework::ASSOCIATIONTYPE_COMPLEX,
-		wbem::support::DIAGNOSTICIDENTITY_CREATIONCLASSNAME,
-		wbem::support::NVDIMMDIAGNOSTIC_CREATIONCLASSNAME);
 	addAssociationToTable(wbem::framework_interface::ASSOCIATION_CLASS_USEOFLOG,
 		wbem::framework::ASSOCIATIONTYPE_BASIC,
 		wbem::support::DIAGNOSTICLOG_CREATIONCLASSNAME,

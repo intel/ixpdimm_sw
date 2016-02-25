@@ -28,37 +28,37 @@
 #include <LogEnterExit.h>
 #include "DeviceFirmwareInfo.h"
 
-std::string core::device::DeviceFirmwareInfo::getActiveRevision()
+std::string core::device::DeviceFirmwareInfo::getActiveRevision() const
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return std::string(m_info.active_fw_revision);
 }
-enum device_fw_type core::device::DeviceFirmwareInfo::getActiveType()
+enum device_fw_type core::device::DeviceFirmwareInfo::getActiveType() const
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return m_info.active_fw_type;
 }
-std::string core::device::DeviceFirmwareInfo::getActiveCommitId()
+std::string core::device::DeviceFirmwareInfo::getActiveCommitId() const
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return std::string(m_info.active_fw_commit_id);
 }
-enum device_fw_type core::device::DeviceFirmwareInfo::getStagedType()
+enum device_fw_type core::device::DeviceFirmwareInfo::getStagedType() const
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return m_info.staged_fw_type;
 }
-std::string core::device::DeviceFirmwareInfo::getStagedRevision()
+std::string core::device::DeviceFirmwareInfo::getStagedRevision() const
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return std::string(m_info.staged_fw_revision);
 }
-bool core::device::DeviceFirmwareInfo::isStagedPending()
+bool core::device::DeviceFirmwareInfo::isStagedPending() const
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return m_info.staged_fw_pending == 1;
 }
-core::device::DeviceFirmwareInfo *core::device::DeviceFirmwareInfo::clone()
+core::device::DeviceFirmwareInfo *core::device::DeviceFirmwareInfo::clone() const
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return new DeviceFirmwareInfo(*this);

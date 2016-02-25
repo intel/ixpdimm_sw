@@ -81,6 +81,8 @@ class NVM_API NVDIMMCollectionFactory : public framework_interface::NvmInstanceF
 		 */
 		framework::instance_names_t* getInstanceNames() throw (framework::Exception);
 
+		static framework::ObjectPath getObjectPath(const std::string &hostName);
+
 	private:
 		void populateAttributeList(framework::attribute_names_t &attributes)
 			throw (framework::Exception);

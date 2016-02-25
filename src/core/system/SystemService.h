@@ -37,13 +37,13 @@ namespace system
 class NVM_API SystemService
 {
 public:
-	NVM_API SystemService(const NvmApi &api = *NvmApi::getApi());
-	NVM_API static SystemService &getService();
+	SystemService(const NvmApi &api = *NvmApi::getApi());
+	virtual ~SystemService();
+	static SystemService &getService();
 
-	NVM_API virtual std::string getHostName();
+	virtual std::string getHostName();
 
-
-private:
+protected:
 	const NvmApi &m_api;
 	static SystemService *m_pSingleton;
 };

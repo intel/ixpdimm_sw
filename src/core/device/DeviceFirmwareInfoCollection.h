@@ -28,25 +28,30 @@
 #define CR_MGMT_DEVICEFIRMWAREINFOCOLLECTION_H
 
 #include "DeviceFirmwareInfo.h"
-#include <vector>
+#include <string>
+#include <map>
 namespace core
 {
 namespace device
 {
+
 class NVM_API DeviceFirmwareInfoCollection
 {
 public:
 	DeviceFirmwareInfoCollection() { }
 	DeviceFirmwareInfoCollection(const DeviceFirmwareInfoCollection &other);
+	void operator=(const DeviceFirmwareInfoCollection &other);
 	~DeviceFirmwareInfoCollection();
 
-	DeviceFirmwareInfo & operator[](const int i);
+	const DeviceFirmwareInfo &operator[](const std::string &guid);
 	void push_back(DeviceFirmwareInfo &device);
 	size_t size() const;
+	void clear();
 
-private:
-	std::vector<DeviceFirmwareInfo *> m_collection;
+protected:
+	std::map<std::string, DeviceFirmwareInfo *> m_collection;
 };
+
 }
 }
 

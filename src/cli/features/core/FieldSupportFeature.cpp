@@ -1922,22 +1922,19 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::getDeviceFirmwareI
 		{
 			core::device::DeviceFirmwareService &service = core::device::DeviceFirmwareService::getService();
 
-			core::device::DeviceFirmwareInfo *fwInfo = service.getFirmwareInfo(guids[i]);
-			if (!fwInfo)
-			{
-				throw wbem::framework::ExceptionNoMemory(__FILE__, __FUNCTION__, "fwInfo");
-			}
+			core::Result<core::device::DeviceFirmwareInfo> fwInfoResult = service.getFirmwareInfo(guids[i]);
+
 			wbem::framework::Attribute dimmId = wbem::physical_asset::NVDIMMViewFactoryOld::guidToDimmIdAttribute(guids[i]);
 			instance.setAttribute(wbem::DIMMID_KEY, dimmId);
 
-			wbem::framework::Attribute fwRevAttr(fwInfo->getActiveRevision(), false);
+			wbem::framework::Attribute fwRevAttr(fwInfoResult.getValue().getActiveRevision(), false);
 			instance.setAttribute(wbem::ACTIVEFWVERSION_KEY, fwRevAttr);
 
 			instance.setAttribute(wbem::ACTIVEFWTYPE_KEY,
-					wbem::framework::Attribute(fwTypeMap[fwInfo->getActiveType()], false));
+					wbem::framework::Attribute(fwTypeMap[fwInfoResult.getValue().getActiveType()], false));
 
 			// commit ID is displayed as N/A if it's not available
-			std::string commitIdStr = fwInfo->getActiveCommitId();
+			std::string commitIdStr = fwInfoResult.getValue().getActiveCommitId();
 			if (commitIdStr.empty())
 			{
 				commitIdStr = wbem::NA;
@@ -1947,18 +1944,16 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::getDeviceFirmwareI
 
 			std::string stagedFwTypeStr = wbem::NA;
 			std::string stagedFwRevStr = wbem::NA;
-			if (fwInfo->isStagedPending())
+			if (fwInfoResult.getValue().isStagedPending())
 			{
-				stagedFwTypeStr =  fwTypeMap[fwInfo->getStagedType()];
-				stagedFwRevStr = fwInfo->getStagedRevision();
+				stagedFwTypeStr =  fwTypeMap[fwInfoResult.getValue().getStagedType()];
+				stagedFwRevStr = fwInfoResult.getValue().getStagedRevision();
 			}
 
 			instance.setAttribute(wbem::STAGEDFWVERSION_KEY, wbem::framework::Attribute (stagedFwRevStr, false));
 			instance.setAttribute(wbem::STAGEDFWTYPE_KEY, wbem::framework::Attribute (stagedFwTypeStr, false));
 
 			instances.push_back(instance);
-
-			delete fwInfo;
 		}
 	}
 

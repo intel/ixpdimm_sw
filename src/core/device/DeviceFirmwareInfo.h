@@ -41,17 +41,17 @@ class NVM_API DeviceFirmwareInfo
 public:
 	DeviceFirmwareInfo(std::string guid, device_fw_info fw_info) : m_guid(guid), m_info(fw_info) { }
 
-	std::string getGuid() { return m_guid; }
+	std::string getGuid() const { return m_guid; }
 
-	std::string getActiveRevision();
-	enum device_fw_type getActiveType();
-	std::string getActiveCommitId();
+	std::string getActiveRevision() const;
+	enum device_fw_type getActiveType() const;
+	std::string getActiveCommitId() const;
 
-	std::string getStagedRevision();
-	enum device_fw_type getStagedType();
-	bool isStagedPending();
+	std::string getStagedRevision() const;
+	enum device_fw_type getStagedType() const;
+	bool isStagedPending() const;
 
-	DeviceFirmwareInfo * clone();
+	DeviceFirmwareInfo * clone() const;
 private:
 	std::string m_guid;
 	device_fw_info m_info;

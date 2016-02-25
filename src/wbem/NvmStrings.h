@@ -90,6 +90,10 @@ static std::string CURRENTSTATE_KEY = "CurrentState";
 static std::string HEALTHSTATE_KEY = "HealthState";
 static std::string COUNT_KEY = "Count";
 
+// Associations
+static std::string ANTECEDENT_KEY = "Antecedent";
+static std::string DEPENDENT_KEY = "Dependent";
+
 // BaseServer attribute keys
 static std::string OSNAME_KEY = "OsName";
 static std::string OSVERSION_KEY = "OsVersion";
@@ -451,5 +455,9 @@ static std::string ACTIVEFWTYPE_KEY = "ActiveFWType";
 static std::string ACTIVEFWCOMMITID_KEY = "ActiveFWCommitID";
 static std::string STAGEDFWVERSION_KEY = "StagedFWVersion";
 static std::string STAGEDFWTYPE_KEY = "StagedFWType";
+
+// ElementSoftwareIdentity
+static std::string ELEMENTSOFTWARESTATUS_KEY = "ElementSoftwareStatus";
+
 } // wbem
 #endif // _WBEM_FRAMEWORK_NVM_STRINGS_H_

@@ -99,14 +99,7 @@ throw (wbem::framework::Exception)
     try
     {
 		std::string hostName = wbem::server::getHostName();
-
-        framework::attributes_t keys;
-		// InstanceID - "DIMMCollection" + host name
-        keys[INSTANCEID_KEY] = framework::Attribute(std::string("DIMMCollection") + hostName, true);
-
-	    framework::ObjectPath path(hostName, NVM_NAMESPACE,
-				NVDIMMCOLLECTION_CREATIONCLASSNAME, keys);
-        pNames->push_back(path);
+        pNames->push_back(getObjectPath(hostName));
     }
     catch (framework::Exception &) // clean up and re-throw
     {
@@ -114,4 +107,19 @@ throw (wbem::framework::Exception)
         throw;
     }
     return pNames;
+}
+
+wbem::framework::ObjectPath wbem::software::NVDIMMCollectionFactory::getObjectPath(
+		const std::string& hostName)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+    framework::attributes_t keys;
+	// InstanceID - "DIMMCollection" + host name
+    keys[INSTANCEID_KEY] = framework::Attribute(std::string("DIMMCollection") + hostName, true);
+
+    framework::ObjectPath path(hostName, NVM_NAMESPACE,
+			NVDIMMCOLLECTION_CREATIONCLASSNAME, keys);
+
+    return path;
 }

@@ -61,7 +61,6 @@ static const std::string ASSOCIATION_CLASS_ELEMENTALLOCATEDFROMPOOL = std::strin
 static const std::string ASSOCIATION_CLASS_BASEDON = std::string(NVM_WBEM_PREFIX) + "BasedOn"; //<! BasedOn
 static const std::string ASSOCIATION_CLASS_HOSTEDSERVICE = std::string(NVM_WBEM_PREFIX) + "HostedService"; //<! HostedService
 static const std::string ASSOCIATION_CLASS_LOGMANAGESRECORD = std::string(NVM_WBEM_PREFIX) + "LogManagesRecord"; //!< Log Manages Record
-static const std::string ASSOCIATION_CLASS_ELEMENTSOFTWAREIDENTITY = std::string(NVM_WBEM_PREFIX) + "ElementSoftwareIdentity"; //!< ElementSoftwareIdentity
 static const std::string ASSOCIATION_CLASS_USEOFLOG = std::string(NVM_WBEM_PREFIX) + "UseOfLog"; //!< UseOfLog
 static const std::string ASSOCIATION_CLASS_AVAILABLEDIAGNOSTICSERVICE = std::string(NVM_WBEM_PREFIX) + "AvailableDiagnosticService"; //!< AvailableDiagnosticSevice
 static const std::string ASSOCIATION_CLASS_ELEMENTVIEW = std::string(NVM_WBEM_PREFIX) + "ElementView"; //!< ElementView

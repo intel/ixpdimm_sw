@@ -35,6 +35,8 @@
 
 #include <string>
 #include <framework_interface/NvmInstanceFactory.h>
+#include <core/device/Device.h>
+#include <core/device/DeviceFirmwareInfo.h>
 
 namespace wbem
 {
@@ -94,41 +96,42 @@ class NVM_API NVDIMMFWVersionFactory : public framework_interface::NvmInstanceFa
 		 */
 		framework::instance_names_t* getInstanceNames() throw (framework::Exception);
 
-		bool isAssociated(const std::string &associationClass, framework::Instance* pAntInstance,
-				framework::Instance* pDepInstance);
+		static void addFirmwareInstanceNamesForDevice(framework::instance_names_t &instanceNames,
+				const std::string &hostName,
+				const struct device_discovery &device);
+
+		static void addFirmwareInstanceNamesForDeviceFromFwInfo(
+				framework::instance_names_t &instanceNames,
+				const std::string &hostName,
+				core::device::Device &device,
+				const core::device::DeviceFirmwareInfo &fwInfo);
+
+		static std::string getInstanceId(const std::string &fwVersion,
+				const std::string &fwApiVersion,
+				const enum device_fw_type fwType,
+				const std::string &commitId = "");
+
+		static framework::ObjectPath getActiveFirmwareInstanceName(const std::string &hostName,
+				core::device::Device &device,
+				const core::device::DeviceFirmwareInfo &fwInfo);
+
+		static framework::ObjectPath getStagedFirmwareInstanceName(const std::string &hostName,
+				core::device::Device &device,
+				const core::device::DeviceFirmwareInfo &fwInfo);
 
 		static std::string translateFwType(const NVM_UINT16 fw_type);
 
-	private:
-
+	protected:
 		void populateAttributeList(framework::attribute_names_t &attributes)
 			throw (framework::Exception);
 
 		/*
 		 * Parse instanceId string into FW version, FW API version, FW type and commit ID
 		 */
-		void parseInstanceId(std::string instanceId, std::string &fwVersion,
+		static void parseInstanceId(std::string instanceId, std::string &fwVersion,
 				std::string &fwApiVersion, NVM_UINT16 &fwType, std::string &commitId);
 
-		std::string getInstanceId(const std::string &fwVersion,
-				const std::string &fwApiVersion,
-				const enum device_fw_type fwType,
-				const std::string &commitId = "");
-
-		void addFirmwareInstanceNamesForDevice(framework::instance_names_t &instanceNames,
-				const std::string &hostName,
-				const struct device_discovery &device,
-				const struct device_fw_info &fwInfo);
-
-		framework::ObjectPath getActiveFirmwareInstanceName(const std::string &hostName,
-				const struct device_discovery &device,
-				const struct device_fw_info &fwInfo);
-
-		framework::ObjectPath getStagedFirmwareInstanceName(const std::string &hostName,
-				const struct device_discovery &device,
-				const struct device_fw_info &fwInfo);
-
-		framework::ObjectPath getInstanceName(const std::string &hostName,
+		static framework::ObjectPath getInstanceName(const std::string &hostName,
 				const std::string instanceId);
 };
 

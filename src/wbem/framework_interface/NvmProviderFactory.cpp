@@ -65,6 +65,7 @@
 #include <software/HostSoftwareFactory.h>
 #include <software/NVDIMMDriverIdentityFactory.h>
 #include <software/ManagementSoftwareIdentityFactory.h>
+#include <software/ElementSoftwareIdentityFactory.h>
 #include <support/DiagnosticLogFactory.h>
 #include <support/DiagnosticCompletionRecordFactory.h>
 #include <support/SanitizeJobFactory.h>
@@ -284,18 +285,22 @@ wbem::framework::InstanceFactory *wbem::framework_interface::NvmProviderFactory:
 	}
 	else
 	{
-		NvmAssociationFactory *pAssocFactory = dynamic_cast<NvmAssociationFactory *>(getAssociationFactory(NULL, className));
-		if (pAssocFactory && pAssocFactory->isAssociationClass(className))
+		// Should have only gotten one result when querying by class name
+		std::vector<wbem::framework::InstanceFactory *> factories = getAssociationFactories(NULL, className);
+		if (factories.size() == 1)
 		{
-			pFactory = pAssocFactory;
+			pFactory = factories.back();
 		}
 		else
 		{
 			COMMON_LOG_ERROR_F("Error getting instance factory: %s", className.c_str());
 			pFactory = NULL;
 
-			if (pAssocFactory)
+			// Clean up
+			while (!factories.empty())
 			{
+				wbem::framework::InstanceFactory *pAssocFactory = factories.back();
+				factories.pop_back();
 				delete pAssocFactory;
 			}
 		}
@@ -304,16 +309,39 @@ wbem::framework::InstanceFactory *wbem::framework_interface::NvmProviderFactory:
 	return pFactory;
 }
 
-wbem::framework::InstanceFactory *wbem::framework_interface::NvmProviderFactory::getAssociationFactory(
+std::vector<wbem::framework::InstanceFactory *> wbem::framework_interface::NvmProviderFactory::getAssociationFactories(
 	wbem::framework::Instance *pInstance, const std::string &associationClassName,
 	const std::string &resultClassName, const std::string &roleName,
 	const std::string &resultRoleName)
 {
-	return new NvmAssociationFactory(pInstance, associationClassName, resultClassName, roleName, resultRoleName);
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	COMMON_LOG_DEBUG_F("Getting AssociationFactory for CIM Class '%s'", associationClassName.c_str());
+
+	std::vector<wbem::framework::InstanceFactory *> factories;
+
+	if (associationClassName.empty() || associationClassName == software::ELEMENTSOFTWAREIDENTITY_CREATIONCLASSNAME)
+	{
+		factories.push_back(new software::ElementSoftwareIdentityFactory(pInstance, resultClassName, roleName, resultRoleName));
+	}
+
+	wbem::framework::AssociationFactory *pFactory = new NvmAssociationFactory(
+			pInstance, associationClassName, resultClassName, roleName, resultRoleName);
+	if (associationClassName.empty() || pFactory->isAssociationClass(associationClassName))
+	{
+		factories.push_back(pFactory);
+	}
+	else
+	{
+		delete pFactory;
+	}
+
+	return factories;
 }
 
 wbem::framework::IndicationService *wbem::framework_interface::NvmProviderFactory::getIndicationService()
 {
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
 	return framework_interface::NvmIndicationService::getSingleton();
 }
 

@@ -46,7 +46,7 @@ core::device::DeviceFirmwareService &core::device::DeviceFirmwareService::getSer
 	return *m_pSingleton;
 }
 
-core::device::DeviceFirmwareInfo *core::device::DeviceFirmwareService::getFirmwareInfo(
+core::Result<core::device::DeviceFirmwareInfo> core::device::DeviceFirmwareService::getFirmwareInfo(
 		const std::string &deviceGuid)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -59,6 +59,15 @@ core::device::DeviceFirmwareInfo *core::device::DeviceFirmwareService::getFirmwa
 		throw LibraryException(rc);
 	}
 
-	DeviceFirmwareInfo *result = new DeviceFirmwareInfo(deviceGuid, fwInfo);
+	DeviceFirmwareInfo firmwareInfo(deviceGuid, fwInfo);
+	core::Result<DeviceFirmwareInfo> result(firmwareInfo);
 	return result;
+}
+
+core::device::DeviceFirmwareService::~DeviceFirmwareService()
+{
+	if (this == m_pSingleton)
+	{
+		m_pSingleton = NULL;
+	}
 }
