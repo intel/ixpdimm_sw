@@ -37,7 +37,7 @@ core::device::DeviceFirmwareInfoCollection::DeviceFirmwareInfoCollection(
 	*this = other;
 }
 
-void core::device::DeviceFirmwareInfoCollection::operator =(
+core::device::DeviceFirmwareInfoCollection& core::device::DeviceFirmwareInfoCollection::operator=(
 		const DeviceFirmwareInfoCollection& other)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -52,6 +52,8 @@ void core::device::DeviceFirmwareInfoCollection::operator =(
 			m_collection[iter->first] = pOther->clone();
 		}
 	}
+
+	return *this;
 }
 
 core::device::DeviceFirmwareInfoCollection::~DeviceFirmwareInfoCollection()

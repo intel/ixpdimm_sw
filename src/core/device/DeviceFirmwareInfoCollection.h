@@ -40,7 +40,7 @@ class NVM_API DeviceFirmwareInfoCollection
 public:
 	DeviceFirmwareInfoCollection() { }
 	DeviceFirmwareInfoCollection(const DeviceFirmwareInfoCollection &other);
-	void operator=(const DeviceFirmwareInfoCollection &other);
+	DeviceFirmwareInfoCollection& operator=(const DeviceFirmwareInfoCollection &other);
 	~DeviceFirmwareInfoCollection();
 
 	const DeviceFirmwareInfo &operator[](const std::string &guid);

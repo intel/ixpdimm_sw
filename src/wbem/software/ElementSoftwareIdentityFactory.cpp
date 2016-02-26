@@ -251,7 +251,8 @@ core::device::DeviceFirmwareInfo ElementSoftwareIdentityFactory::getFirmwareInfo
 		}
 	}
 
-	return fwInfoResult.getValue();
+	core::device::DeviceFirmwareInfo resultFwInfo = fwInfoResult.getValue();
+	return resultFwInfo;
 }
 
 framework::ObjectPath ElementSoftwareIdentityFactory::getAttributeObjectPathFromInstancePath(

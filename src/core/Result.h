@@ -45,13 +45,15 @@ public:
 
 	~Result<T>() { delete m_pResult; }
 
-	void operator=(const Result<T> &other)
+	Result& operator=(const Result<T> &other)
 	{
 		if (this != &other)
 		{
 			delete m_pResult;
 			m_pResult = other.m_pResult->clone();
 		}
+
+		return *this;
 	}
 
 	T &getValue() { return *m_pResult; }
