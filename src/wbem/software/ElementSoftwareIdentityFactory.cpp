@@ -491,7 +491,9 @@ void ElementSoftwareIdentityFactory::addInstanceNamesForDevice(framework::instan
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	framework::ObjectPath deviceInstanceName;
-	physical_asset::NVDIMMFactory::createPathFromGuid(device.getGuid(), deviceInstanceName);
+	physical_asset::NVDIMMFactory nvdimmFactory;
+	nvdimmFactory.createPathFromGuid(device.getGuid(), deviceInstanceName,
+			m_systemService.getHostName());
 
 	framework::instance_names_t fwVersionInstances;
 	NVDIMMFWVersionFactory::addFirmwareInstanceNamesForDeviceFromFwInfo(fwVersionInstances,

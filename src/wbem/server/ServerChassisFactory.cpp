@@ -34,6 +34,8 @@
 #include "ServerChassisFactory.h"
 
 #include <NvmStrings.h>
+#include <core/exceptions/LibraryException.h>
+#include <exception/NvmExceptionLibError.h>
 #include "BaseServerFactory.h"
 
 wbem::server::ServerChassisFactory::ServerChassisFactory()
@@ -120,6 +122,11 @@ throw (wbem::framework::Exception)
 		framework::ObjectPath path(hostName, NVM_NAMESPACE,
 				std::string(SERVERCHASSIS_CREATIONCLASSNAME), keys);
 		pNames->push_back(path);
+	}
+	catch (core::LibraryException &e)
+	{
+		delete pNames;
+		throw exception::NvmExceptionLibError(e.getErrorCode());
 	}
 	catch (framework::Exception &)
 	{

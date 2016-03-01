@@ -138,6 +138,8 @@ wbem::framework::attribute_names_t GetAttributeNames(
 		const wbem::framework::attribute_names_t defaultNames,
 		const wbem::framework::attribute_names_t allNames);
 
+bool handleToGuid(const NVM_UINT32 &handle, std::string &dimmGuid);
+
 /*!
  * Generate a dimm filter based on the parsed target
  */

@@ -36,7 +36,6 @@
 #include <LogEnterExit.h>
 
 #include <server/BaseServerFactory.h>
-#include <physical_asset/NVDIMMViewFactoryOld.h>
 
 #include <intel_cli_framework/FeatureBase.h>
 #include <intel_cli_framework/CommandSpec.h>
@@ -46,6 +45,7 @@
 #include <intel_cli_framework/Parser.h>
 #include <intel_cli_framework/SyntaxErrorBadValueResult.h>
 #include <intel_cli_framework/SyntaxErrorMissingValueResult.h>
+#include <physical_asset/NVDIMMFactory.h>
 
 #include "CommandParts.h"
 #include "WbemToCli_utilities.h"
@@ -375,7 +375,7 @@ cli::framework::ResultBase* cli::nvmcli::SensorFeature::modifySensor(
 
 					std::string prefixMsg = framework::ResultBase::stringFromArgList(
 							MODIFYSENSOR_MSG_PREFIX.c_str(), sensorTarget.c_str(),
-							wbem::physical_asset::NVDIMMViewFactoryOld::guidToDimmIdStr(*iGuid).c_str());
+							wbem::physical_asset::NVDIMMFactory::guidToDimmIdStr(*iGuid).c_str());
 					prefixMsg += ": ";
 					try
 					{
@@ -386,7 +386,7 @@ cli::framework::ResultBase* cli::nvmcli::SensorFeature::modifySensor(
 						// if user didn't specify the force option, prompt them to continue
 						std::string prompt = framework::ResultBase::stringFromArgList(
 								MODIFY_SENSOR_PROMPT.c_str(), sensorTarget.c_str(),
-								wbem::physical_asset::NVDIMMViewFactoryOld::guidToDimmIdStr(*iGuid).c_str());
+								wbem::physical_asset::NVDIMMFactory::guidToDimmIdStr(*iGuid).c_str());
 						if (!forceOption && !promptUserYesOrNo(prompt))
 						{
 							pListResult->insert(prefixMsg + cli::framework::UNCHANGED_MSG);

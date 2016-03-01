@@ -36,6 +36,20 @@ namespace cli
 {
 namespace framework
 {
+
+/*
+ * PropertyDefinitionList is helpful for defining results for a CLI command. Using templates, a
+ * PropertyDefinitionList will "wrap" a core business logic class and its methods. It can then
+ * convert an instance/object of the core class to a PropertyListResult object for the CLI. Each
+ * "PropertyDefinitionList::add" method takes the "key" for the property and the method of the
+ * class being "wrapped" that will return the value for the property.
+ *
+ * In order to convert the core business object to a PropertyListResult all values must be converted
+ * to strings. Each type has a default conversion. This conversion can be overwritten by using a 3rd
+ * parameter to many of the "PropertyDefinitionList::add" methods. This third parameter is a pointer
+ * to a function that will do the appropriate conversion. The signature of this function must be
+ * std::string func([type needing to convert].
+ */
 template<class T>
 class PropertyDefinitionList
 {
@@ -47,7 +61,6 @@ public:
 			delete m_props[i];
 		}
 	}
-
 
 	IPropertyDefinition<T> &addCustom(std::string key, std::string (*function)(T &))
 	{

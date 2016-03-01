@@ -38,13 +38,16 @@
 #include <nvm_management.h>
 #include <framework_interface/NvmInstanceFactory.h>
 #include <exception/NvmExceptionLibError.h>
+#include <core/device/DeviceService.h>
+#include <core/system/SystemService.h>
 
 
 namespace wbem
 {
 namespace physical_asset
 {
-	static const std::string NVDIMM_CREATIONCLASSNAME = std::string(NVM_WBEM_PREFIX) + "NVDIMM"; //!< Creation ClassName static
+static const std::string NVDIMM_CREATIONCLASSNAME =
+	std::string(NVM_WBEM_PREFIX) + "NVDIMM"; //!< Creation ClassName static
 static const std::string NVDIMM_ELEMENTNAME_prefix = "Intel NVDIMM "; //!< Element Name = prefix + GUID
 static const int NVDIMM_COMMUNICATION_OK = 2; //!< Communication status value for OK
 static const int NVDIMM_COMMUNICATION_NOCONTACT = 4; //!< Communication status value for no contact
@@ -95,65 +98,20 @@ typedef std::vector<struct device_discovery> devices_t;
 class NVM_API NVDIMMFactory : public framework_interface::NvmInstanceFactory
 {
 public:
-
-		/*!
-		 * Initialize a new NVDIMMFactory.
-		 */
-		NVDIMMFactory() throw (framework::Exception);
-
-		/*!
-		 * Clean up the NVDIMMFactory
-		 */
+	NVDIMMFactory(
+		core::device::DeviceService &deviceService = core::device::DeviceService::getService(),
+		core::system::SystemService &systemService = core::system::SystemService::getService()
+	);
 	~NVDIMMFactory();
 
-
-	/*!
-	 * Implementation of the standard CIM method to retrieve a specific instance
-	 * @param[in] path
-	 * 		The object path of the instance to retrieve.
-	 * @param[in] attributes
-	 * 		The attributes to retrieve.
-	 * @throw Exception if unable to retrieve the DIMM info
-	 * @return The NVDIMM instance.
-	 */
+	virtual framework::instances_t *getInstances(framework::attribute_names_t &attributes);
 	framework::Instance *getInstance(framework::ObjectPath &path,
-		framework::attribute_names_t &attributes) throw(framework::Exception);
+		framework::attribute_names_t &attributes);
 
-	/*!
-	 * Helper method to retrieve NVDIMM instance attributes
-	 * @param[in] dimm
-	 * 		The device details fetched using the API.
-	 * @param[in] attributes
-	 * 		The attributes to retrieve.
-	 * @param[out] pInstance
-	 * 		pointer to the instance
-	 * @throw Exception if unable to retrieve the DIMM info
-	 */
-	static void fillInNVDIMMInstance(struct device_details &dimm,
-		framework::attribute_names_t &attributes,
-		framework::Instance *pInstance) throw(framework::Exception);
+	framework::instance_names_t *getInstanceNames();
 
-	/*!
-	 * Implementation of the standard CIM method to retrieve a list of
-	 * NVDIMM object paths.
-	 * @throw Exception if unable to retrieve the DIMM list
-	 * @throw Exception if unable to retrieve the server name
-	 * @return The object paths for each NVDIMM.
-	 */
-	framework::instance_names_t *getInstanceNames() throw(framework::Exception);
-
-	/*!
-	 * Standard CIM method to modify an existing instance.
-	 * @param[in] path
-	 * 		The object path of the instance to modify.
-	 * @param[in] attributes
-	 * 		The attributes to modify.
-	 * @throw Exception if not implemented.
-	 * @return The updated instance.
-	 */
 	framework::Instance *modifyInstance(framework::ObjectPath &path,
-		framework::attributes_t &attributes) throw(framework::Exception);
-
+		framework::attributes_t &attributes) ;
 
 	wbem::framework::UINT32 executeMethod(
 		wbem::framework::UINT32 &wbem_return,
@@ -164,139 +122,90 @@ public:
 
 
 	// Extrinsic Methods
-	/*!
-	 * C++ entry point for setting a passphrase on a device
-	 * @param deviceGuid
-	 * @param newPassphrase
-	 * @param currentPassphrase
-	 */
-		void setPassphrase(std::string deviceGuid, std::string newPassphrase, std::string currentPassphrase);
+	void setPassphrase(std::string deviceGuid, std::string newPassphrase,
+		std::string currentPassphrase);
 
-	/*!
-	 * C++ entry point for removing a passphrase on a device
-	 * @param deviceGuid
-	 * @param currentPassphrase
-	 */
 	void removePassphrase(std::string deviceGuid, std::string currentPassphrase);
 
-	/*!
-	 * C++ entry point for unlocking a device
-	 * @param deviceGuid
-	 * @param currentPassphrase
-	 */
 	void unlock(std::string deviceGuid, std::string currentPassphrase);
 
-	/*!
-	 * Get all manageable device guids on system
-	 * @return
-	 */
+	void injectTemperatureError(const std::string &dimmGuid,
+			const NVM_REAL32 temperature);
+
+	void injectPoisonError(const std::string &dimmGuid,
+			const NVM_UINT64 dpa);
+
+	void clearPoisonError(const std::string &dimmGuid,
+			const NVM_UINT64 dpa);
+
+	// Helper functions
+	static void guidToHandle(const std::string &dimmGuid, NVM_UINT32 &handle);
+
 	static std::vector<std::string> getManageableDeviceGuids();
 
-	/*!
-	 * Utility method to check if a device is valid and manageable
-	 * @param dimmGuid
-	 * 		Device to validate
-	 * @return
-	 * 		If the device exists and is manageable return NVM_SUCCESS.
-	 * 		If device does not exist, return NVM_ERR_BADDEVICE.
-	 * 		If device is not manageable, return NVM_ERR_NOTMANAGEABLE.
-	 */
 	static int existsAndIsManageable(const std::string &dimmGuid);
-
-	/*!
-	 * Interface to the library API. This pointer allows for dependency injection and decouples the dependency on the API
-	 * @param device_guid
-	 * @param old_passphrase
-	 * @param old_passphrase_len
-	 * @param new_passphrase
-	 * @param new_passphrase_len
-	 * @return
-	 */
-	int (*m_SetPassphrase)(const NVM_GUID device_guid,
-		const NVM_PASSPHRASE old_passphrase, const NVM_SIZE old_passphrase_len,
-		const NVM_PASSPHRASE new_passphrase, const NVM_SIZE new_passphrase_len);
-	/*!
-	 * Interface to the library API. This pointer allows for dependency injection and decouples the dependency on the API
-	 * @param device_guid
-	 * @param passphrase
-	 * @param passphrase_len
-	 * @return
-	 */
-	int (*m_RemovePassphrase)(const NVM_GUID device_guid,
-		const NVM_PASSPHRASE passphrase, const NVM_SIZE passphrase_len);
-	/*!
-	 * Interface to the library API. This pointer allows for dependency injection and decouples the dependency on the API
-	 * @param device_guid
-	 * @param passphrase
-	 * @param passphrase_len
-	 * @return
-	 */
-	int (*m_UnlockDevice)(const NVM_GUID device_guid,
-		const NVM_PASSPHRASE passphrase, const NVM_SIZE passphrase_len);
-
-	/*
-	 * Helper to convert device config status to a string
-	 */
-	static std::string deviceConfigStatusToStr(int configState);
-
-	/*
-	 * Helper function to populate an objectpath with appropriate keys
-	 */
-	static void createPathFromGuid(const NVM_GUID guid, framework::ObjectPath &path);
-	static void createPathFromGuid(const std::string guid, framework::ObjectPath &path);
-
-	/*
-	 * Helper function to convert from struct device_capabilities to a list of memory modes.
-	 */
-		static void buildMemoryTypeCapabilitiesFromDeviceCapabilities(const struct device_capabilities &capabilities,
-		framework::UINT16_LIST &memoryTypeCapabilities);
 
 	static devices_t getAllDevices();
 
 	static devices_t getManageableDevices();
 
-	/*
-	 * Helper function to convert memory type enum to a string
-	 */
-	static std::string memoryTypetoStr(enum memory_type memoryType);
+	static framework::Attribute guidToDimmIdAttribute(const std::string &dimmGuid);
 
-	/*
-	 * Helper function to convert device status to operational status list
-	 */
-		static wbem::framework::UINT16_LIST deviceStatusToOpStatus(const struct device_status *p_status);
+	static std::string guidToDimmIdStr(const std::string &dimmGuid);
 
-	/*
-	 * Return true if the modified attribute is allowed to be modified
-	 */
-	static bool attributeIsModifiable(framework::attribute_names_t modifiableAttributes,
-		std::string attributeThatWasModified);
+	void createPathFromGuid(const NVM_GUID guid, framework::ObjectPath &path);
 
-	/*
-	 * Return true is the new attributes does not equal the old attribute
-	 */
-	static bool attributeHasChanged(framework::Attribute oldAttr, framework::Attribute newAttr);
+	void createPathFromGuid(const std::string guid, framework::ObjectPath &path,
+			std::string hostname = "");
 
-	/*
-	 * Helper function to check if the client is attempting to modify an unmodifyable attribute
-	 */
-		static void checkAttributesAreModifiable(framework::Instance *pInstance, framework::attributes_t &attributes,
-		framework::attribute_names_t modifyableAttributes);
+	static wbem::framework::UINT16_LIST deviceStatusToOpStatus(
+			core::device::Device &device);
+
+	static void toInstance(core::device::Device &nvdimm, framework::Instance &instance,
+			wbem::framework::attribute_names_t attributes);
+
+	// API Interfaces
+	int (*m_SetPassphrase)(const NVM_GUID device_guid,
+			const NVM_PASSPHRASE old_passphrase, const NVM_SIZE old_passphrase_len,
+			const NVM_PASSPHRASE new_passphrase, const NVM_SIZE new_passphrase_len);
+
+	int (*m_RemovePassphrase)(const NVM_GUID device_guid,
+			const NVM_PASSPHRASE passphrase, const NVM_SIZE passphrase_len);
+
+	int (*m_UnlockDevice)(const NVM_GUID device_guid,
+			const NVM_PASSPHRASE passphrase, const NVM_SIZE passphrase_len);
+
+	int (*m_GetFwLogLevel)(const NVM_GUID device_guid, enum fw_log_level *p_log_level);
+
+	int (*m_injectDeviceError)(const NVM_GUID device_guid,
+			const struct device_error *p_error);
+
+	int (*m_clearInjectedDeviceError)(const NVM_GUID device_guid,
+			const struct device_error *p_error);
+
 private:
+	core::device::DeviceService &m_deviceService;
+	core::system::SystemService &m_systemService;
 
-	void populateAttributeList(framework::attribute_names_t &attributes)
-		throw(framework::Exception);
-	static void constructLastShutDownStatuses(NVM_UINT8 lastShutdownState,
-		wbem::framework::UINT16_LIST &shutdownStatuses);
+	void populateAttributeList(framework::attribute_names_t &attributes);
 
 	/*
 	 * Helper to convert an integer to a fw_log_level enum.
 	 */
 	enum fw_log_level convertToLogLevelEnum(NVM_UINT16 logLevel);
 
-		/*
-		 * convert NvmExceptionLibError to extrinsic return code
-		 */
-		wbem::framework::UINT32 getReturnCodeFromLibException(const exception::NvmExceptionLibError &e);
+	/*
+	 * convert NvmExceptionLibError to extrinsic return code
+	 */
+	wbem::framework::UINT32 getReturnCodeFromLibException(const exception::NvmExceptionLibError &e);
+
+	static std::string getMemoryModeString(core::device::Device &nvdimm);
+
+	void injectError(const std::string &dimmGuid,
+			struct device_error *p_error);
+
+	void clearError(const std::string &dimmGuid,
+			struct device_error *p_error);
 
 };
 

@@ -63,7 +63,6 @@ static const NVM_UINT16 DEVICE_LAST_SHUTDOWN_STATUS_PMIC_12V_POWER_FAIL = 6;
 static const NVM_UINT16 DEVICE_LAST_SHUTDOWN_STATUS_PM_WARM_RESET = 7;
 static const NVM_UINT16 DEVICE_LAST_SHUTDOWN_STATUS_THERMAL_SHUTDOWN = 8;
 
-
 namespace core
 {
 namespace device
@@ -72,10 +71,10 @@ namespace device
 class NVM_API Device
 {
 public:
-
+	Device();
 	Device(NvmApi &api, const device_discovery &discovery);
 	virtual ~Device();
-	Device & operator=(const Device &other);
+	Device &operator=(const Device &other);
 	Device(const Device &other);
 
 	virtual Device *clone();
@@ -106,7 +105,7 @@ public:
 	virtual bool isUnlockDeviceCapable();
 	virtual bool isEraseOverwriteCapable();
 	virtual bool isEraseCryptoCapable();
-	virtual std::vector<NVM_UINT32> getSecurityCapabilities();
+	virtual std::vector<NVM_UINT16> getSecurityCapabilities();
 	virtual enum lock_state getLockState();
 	virtual bool isDieSparingCapable();
 	virtual bool isAppDirectModeCapable();

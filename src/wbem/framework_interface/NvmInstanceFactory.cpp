@@ -35,9 +35,11 @@
 #include <NvmStrings.h>
 #include "NvmProviderFactory.h"
 
-
-wbem::framework_interface::NvmInstanceFactory::NvmInstanceFactory() : InstanceFactory(
-		NVM_NAMESPACE), m_pApi(wbem::lib_interface::NvmApi::getApi())
+wbem::framework_interface::NvmInstanceFactory::NvmInstanceFactory(
+		core::system::SystemService &systemService):
+		InstanceFactory(NVM_NAMESPACE),
+		m_pApi(wbem::lib_interface::NvmApi::getApi()),
+		m_systemService(systemService)
 {
 }
 
@@ -50,3 +52,12 @@ wbem::framework::InstanceFactory* wbem::framework_interface::NvmInstanceFactory:
 	return NvmProviderFactory::getInstanceFactoryStatic(className);
 }
 
+std::string wbem::framework_interface::NvmInstanceFactory::getHostName()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	if (m_hostName.empty())
+	{
+		m_hostName = m_systemService.getHostName();
+	}
+	return m_hostName;
+}

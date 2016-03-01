@@ -43,6 +43,7 @@
 #include <intel_cim_framework/ExceptionNotSupported.h>
 #include <exception/NvmExceptionLibError.h>
 #include <NvmStrings.h>
+#include <framework_interface/FrameworkExtensions.h>
 
 wbem::support::NVDIMMLogEntryFactory::NVDIMMLogEntryFactory()
 throw (wbem::framework::Exception)
@@ -384,7 +385,7 @@ throw (wbem::framework::Exception)
 
 		framework::attribute_names_t modifyableAttributes;
 		modifyableAttributes.push_back(ACTIONREQUIRED_KEY);
-		wbem::physical_asset::NVDIMMFactory::checkAttributesAreModifiable(pInstance, attributes, modifyableAttributes);
+		checkAttributesAreModifiable(pInstance, attributes, modifyableAttributes);
 
 		if (pInstance)
 		{

@@ -274,7 +274,7 @@ std::string ShowDeviceCommand::convertMemoryModes(NVM_UINT16 mode)
 	return map[mode];
 }
 
-std::string ShowDeviceCommand::convertSecurityCapabilities(NVM_UINT32 capability)
+std::string ShowDeviceCommand::convertSecurityCapabilities(NVM_UINT16 capability)
 {
 	std::map<NVM_UINT32, std::string> map;
 	map[SECURITY_PASSPHRASE] = ENCRYPTION_STR;

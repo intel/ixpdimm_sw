@@ -132,7 +132,7 @@ private:
 	static std::string convertLastShutdownStatus(NVM_UINT16 status);
 	static std::string convertToDate(NVM_UINT64 timeValue);
 	static std::string convertMemoryModes(NVM_UINT16 mode);
-	static std::string convertSecurityCapabilities(NVM_UINT32 capability);
+	static std::string convertSecurityCapabilities(NVM_UINT16 capability);
 	static std::string convertCapacity(NVM_UINT64 capacity);
 	static std::string toHex(NVM_UINT16 value);
 

@@ -41,6 +41,7 @@
 #include <intel_cim_framework/Instance.h>
 #include <intel_cim_framework/ObjectPath.h>
 #include <intel_cim_framework/Attribute.h>
+#include <core/system/SystemService.h>
 
 namespace wbem
 {
@@ -54,13 +55,17 @@ namespace framework_interface
 class NVM_API NvmInstanceFactory : public framework::InstanceFactory
 {
 public:
-	NvmInstanceFactory();
+	NvmInstanceFactory(core::system::SystemService &systemService = core::system::SystemService::getService());
 
 	virtual ~NvmInstanceFactory() {}
 	static framework::InstanceFactory *getInstanceFactory(std::string className);
 
 protected:
 	wbem::lib_interface::NvmApi *m_pApi;
+	core::system::SystemService &m_systemService;
+	std::string m_hostName;
+
+	std::string getHostName();
 };
 
 }

@@ -186,7 +186,8 @@ wbem::framework::Instance *wbem::indication::InstIndicationFactory::createDevice
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	framework::Instance *pResult = NULL;
 	framework::ObjectPath path;
-	physical_asset::NVDIMMFactory::createPathFromGuid(pEvent->guid, path);
+	physical_asset::NVDIMMFactory nvdimmFactory;
+	nvdimmFactory.createPathFromGuid(pEvent->guid, path);
 	framework::Instance *pSourceInstance  = NULL;
 	std::string className;
 	if (isDeviceCreation(pEvent))

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, Intel Corporation
+ * Copyright (c) 2015, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -25,35 +25,37 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef CR_MGMT_FRAMEWORKEXTENSIONS_H
-#define CR_MGMT_FRAMEWORKEXTENSIONS_H
-
-#include <algorithm>
-
-#define ADD_KEY_ATTRIBUTE(keys, key, type, value) \
-    (keys)[(key)] = framework::Attribute ((type)(value), true)
-
-
-#define ADD_ATTRIBUTE(i, a, key, type, value) \
-    (i).setAttribute(key, framework::Attribute((type)value, false), a)
-
-#define ADD_DATETIME_ATTRIBUTE(i, a, key, value) \
-	instance.setAttribute(key, framework::Attribute ((value), \
-	wbem::framework::DATETIME_SUBTYPE_DATETIME, false) , a);
+#include <intel_cim_framework/Instance.h>
+#include <LogEnterExit.h>
+#include <nvm_types.h>
+#include <intel_cim_framework/ExceptionBadAttribute.h>
+#include "FrameworkExtensions.h"
 
 namespace wbem
 {
-
-void checkAttributesAreModifiable(framework::Instance *pInstance,
-	framework::attributes_t &attributes,
-	framework::attribute_names_t modifiableAttributes);
-
-inline bool isNameInAttributeNameList(wbem::framework::attribute_names_t names, std::string toFind)
+void checkAttributesAreModifiable(
+	wbem::framework::Instance *pInstance, wbem::framework::attributes_t &attributesToModify,
+	wbem::framework::attribute_names_t modifiableAttributes)
 {
-	return (std::find(names.begin(), names.end(), toFind) != names.end());
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	framework::attributes_t::iterator iter = attributesToModify.begin();
+
+	for (; iter != attributesToModify.end(); iter++)
+	{
+		std::string attributeName = iter->first;
+
+		framework::Attribute instanceAttr;
+		if (pInstance->getAttribute(attributeName, instanceAttr) == NVM_SUCCESS)
+		{
+			if ((instanceAttr !=  iter->second) &&
+				!isNameInAttributeNameList(modifiableAttributes, iter->first))
+			{
+				COMMON_LOG_ERROR_F("Cannot modify attribute %s", attributeName.c_str());
+				throw framework::ExceptionBadAttribute(iter->first.c_str());
+			}
+		}
+	}
 }
 }
 
-
-
-#endif //CR_MGMT_FRAMEWORKEXTENSIONS_H

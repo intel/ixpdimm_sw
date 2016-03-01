@@ -31,6 +31,16 @@ namespace core
 {
 namespace device
 {
+
+Device::Device() :
+		m_api(*NvmApi::getApi()),
+		m_discovery(device_discovery()),
+		m_pDetails(NULL),
+		m_pActionRequiredEvents(NULL)
+{
+
+}
+
 Device::Device(NvmApi &api, const device_discovery &discovery) :
 	m_api(api),
 	m_pDetails(NULL),
@@ -101,91 +111,109 @@ Device *Device::clone()
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return new Device(*this);
 }
+
 enum manageability_state Device::getManageabilityState()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDiscovery().manageability;
 }
+
 std::string Device::getGuid()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return Helper::guidToString(getDiscovery().guid);
 }
+
 enum memory_type Device::getMemoryType()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDiscovery().memory_type;
 }
+
 bool Device::isManageable()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getManageabilityState() == MANAGEMENT_VALIDCONFIG;
 }
+
 enum lock_state Device::getLockState()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDiscovery().lock_state;
 }
+
 NVM_UINT32 Device::getDeviceHandle()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDiscovery().device_handle.handle;
 }
+
 enum device_health Device::getDeviceStatusHealth()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDetails().status.health;
 }
+
 NVM_UINT32 Device::getChannelPosition()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDiscovery().device_handle.parts.mem_channel_dimm_num;
 }
+
 enum config_status Device::getConfigStatus()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDetails().status.config_status;
 }
+
 NVM_UINT32 Device::getChannelId()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDiscovery().device_handle.parts.mem_channel_id;
 }
+
 enum device_form_factor Device::getFormFactor()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDetails().form_factor;
 }
+
 NVM_UINT16 Device::getPhysicalId()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDiscovery().physical_id;
 }
+
 NVM_UINT16 Device::getVendorId()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDiscovery().vendor_id;
 }
+
 NVM_UINT16 Device::getDeviceId()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDiscovery().device_id;
 }
+
 NVM_UINT16 Device::getRevisionId()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDiscovery().revision_id;
 }
+
 NVM_UINT16 Device::getSocketId()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDiscovery().socket_id;
 }
+
 NVM_UINT16 Device::getMemoryControllerId()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDiscovery().memory_controller_id;
 }
+
 std::string Device::getManufacturer()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -199,11 +227,13 @@ std::string Device::getManufacturer()
 	}
 	return result;
 }
+
 NVM_UINT16 Device::getManufacturerId()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return MANUFACTURER_TO_UINT(getDiscovery().manufacturer);
 }
+
 std::string Device::getSerialNumber()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -211,21 +241,25 @@ std::string Device::getSerialNumber()
 	SERIAL_NUMBER_TO_STRING(getDiscovery().serial_number, serialNumStr);
 	return std::string(serialNumStr);
 }
+
 std::string Device::getModelNumber()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDiscovery().model_number;
 }
+
 std::string Device::getFwRevision()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDiscovery().fw_revision;
 }
+
 std::string Device::getFwApiVersion()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDiscovery().fw_api_version;
 }
+
 fw_log_level Device::getFwLogLevel()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -238,40 +272,47 @@ fw_log_level Device::getFwLogLevel()
 	}
 	return curr_log_level;
 }
+
 NVM_UINT64 Device::getRawCapacity()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDiscovery().capacity;
 }
+
 NVM_UINT16 Device::getInterfaceFormatCode()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDiscovery().interface_format_code;
 }
+
 bool Device::isPassphraseCapable()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDiscovery().security_capabilities.passphrase_capable;
 }
+
 bool Device::isUnlockDeviceCapable()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDiscovery().security_capabilities.unlock_device_capable;
 }
+
 bool Device::isEraseOverwriteCapable()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDiscovery().security_capabilities.erase_overwrite_capable;
 }
+
 bool Device::isEraseCryptoCapable()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDiscovery().security_capabilities.erase_crypto_capable;
 }
-std::vector<NVM_UINT32> Device::getSecurityCapabilities()
+
+std::vector<NVM_UINT16> Device::getSecurityCapabilities()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	std::vector<NVM_UINT32> result;
+	std::vector<NVM_UINT16> result;
 	if (isPassphraseCapable())
 	{
 		result.push_back(SECURITY_PASSPHRASE);
@@ -287,26 +328,31 @@ std::vector<NVM_UINT32> Device::getSecurityCapabilities()
 
 	return result;
 }
+
 bool Device::isDieSparingCapable()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDiscovery().device_capabilities.die_sparing_capable;
 }
+
 bool Device::isAppDirectModeCapable()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDiscovery().device_capabilities.app_direct_mode_capable;
 }
+
 bool Device::isMemoryModeCapable()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDiscovery().device_capabilities.memory_mode_capable;
 }
+
 bool Device::isStorageModeCapable()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDiscovery().device_capabilities.storage_mode_capable;
 }
+
 std::vector<NVM_UINT16> Device::getMemoryCapabilities()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -326,11 +372,13 @@ std::vector<NVM_UINT16> Device::getMemoryCapabilities()
 	}
 	return result;
 }
+
 NVM_UINT32 Device::getSku()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDiscovery().dimm_sku;
 }
+
 NVM_UINT16 Device::getHealthState()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -343,16 +391,19 @@ bool Device::isNew()
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDetails().status.is_new;
 }
+
 bool Device::getIsMissing()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDetails().status.is_missing;
 }
+
 NVM_UINT8 Device::getDieSparesUsed()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDetails().status.die_spares_used;
 }
+
 std::vector<NVM_UINT16> Device::getLastShutdownStatus()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -401,169 +452,203 @@ std::vector<NVM_UINT16> Device::getLastShutdownStatus()
 
 	return result;
 }
+
 NVM_UINT64 Device::getLastShutdownTime()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDetails().status.last_shutdown_time;
 }
+
 bool Device::isMixedSku()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDetails().status.mixed_sku;
 }
+
 bool Device::isSkuViolation()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDetails().status.sku_violation;
 }
+
 time_t Device::getPerformanceTime()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDetails().performance.time;
 }
+
 NVM_UINT64 Device::getBytesRead()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDetails().performance.bytes_read;
 }
+
 NVM_UINT64 Device::getHostReads()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDetails().performance.host_reads;
 }
+
 NVM_UINT64 Device::getBytesWritten()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDetails().performance.bytes_written;
 }
+
 NVM_UINT64 Device::getHostWrites()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDetails().performance.host_writes;
 }
+
 NVM_UINT64 Device::getBlockReads()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDetails().performance.block_reads;
 }
+
 NVM_UINT64 Device::getBlockWrites()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDetails().performance.block_writes;
 }
+
 NVM_UINT64 Device::getTotalCapacity()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDetails().capacities.capacity;
 }
+
 NVM_UINT64 Device::getVolatileCapacity()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDetails().capacities.volatile_capacity;
 }
+
 NVM_UINT64 Device::getPersistentCapacity()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDetails().capacities.persistent_capacity;
 }
+
 NVM_UINT64 Device::getBlockCapacity()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDetails().capacities.block_capacity;
 }
+
 NVM_UINT64 Device::getUnconfiguredCapacity()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDetails().capacities.unconfigured_capacity;
 }
+
 NVM_UINT64 Device::getInaccessibleCapacity()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDetails().capacities.inaccessible_capacity;
 }
+
 NVM_UINT64 Device::getReservedCapacity()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDetails().capacities.reserved_capacity;
 }
+
 NVM_UINT64 Device::getDataWidth()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDetails().data_width;
 }
+
 NVM_UINT64 Device::getTotalWidth()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDetails().total_width;
 }
+
 NVM_UINT64 Device::getSpeed()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDetails().speed;
 }
+
 bool Device::isPowerManagementEnabled()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDetails().power_management_enabled;
 }
+
 NVM_UINT8 Device::getPowerLimit()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDetails().power_limit;
 }
+
 NVM_UINT16 Device::getPeakPowerBudget()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDetails().peak_power_budget;
 }
+
 NVM_UINT16 Device::getAvgPowerBudget()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDetails().avg_power_budget;
 }
+
 bool Device::isDieSparingEnabled()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDetails().die_sparing_enabled;
 }
+
 std::string Device::getPartNumber()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return std::string(getDetails().part_number);
 }
+
 NVM_UINT8 Device::getDieSparingLevel()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDetails().die_sparing_level;
 }
+
 std::string Device::getDeviceLocator()
 {
 	return std::string(getDetails().device_locator);
 }
+
 std::string Device::getBankLabel()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return std::string(getDetails().bank_label);
 }
+
 bool Device::isFirstFastRefresh()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDetails().settings.first_fast_refresh;
 }
+
 bool Device::isActionRequired()
 {
 	return getEvents().size() > 0;
 }
+
 std::vector<std::string> Device::getActionRequiredEvents()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getEvents();
 }
+
 const device_discovery &Device::getDiscovery()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return m_discovery;
 }
+
 const device_details &Device::getDetails()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -580,6 +665,7 @@ const device_details &Device::getDetails()
 	}
 	return *m_pDetails;
 }
+
 const std::vector<std::string> &Device::getEvents()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);

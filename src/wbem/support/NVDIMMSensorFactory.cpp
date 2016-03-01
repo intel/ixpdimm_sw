@@ -44,6 +44,7 @@
 
 #include <exception/NvmExceptionLibError.h>
 #include <NvmStrings.h>
+#include <framework_interface/FrameworkExtensions.h>
 
 /*
  * Sensor Types are the same as the library
@@ -560,7 +561,7 @@ throw (wbem::framework::Exception)
 			framework::attribute_names_t attributeNames;
 			pInstance = getInstance(path, attributeNames);
 
-			wbem::physical_asset::NVDIMMFactory::checkAttributesAreModifiable(pInstance, attributes, modifyableAttributes);
+			checkAttributesAreModifiable(pInstance, attributes, modifyableAttributes);
 
 			if (pInstance)
 			{

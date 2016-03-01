@@ -38,7 +38,6 @@
 
 #include <server/BaseServerFactory.h>
 #include <physical_asset/NVDIMMFactory.h>
-#include <physical_asset/NVDIMMViewFactoryOld.h>
 #include <intel_cim_framework/ExceptionBadParameter.h>
 
 #include <intel_cli_framework/FeatureBase.h>
@@ -303,7 +302,7 @@ cli::nvmcli::FieldSupportFeature::FieldSupportFeature() :
 		m_DumpSupport(wbemDumpSupport),
 		m_ClearSupport(wbemClearSupport),
 		m_getEvents(wbemGetEvents),
-		m_guidToDimmIdStr(wbem::physical_asset::NVDIMMViewFactoryOld::guidToDimmIdStr)
+		m_guidToDimmIdStr(wbem::physical_asset::NVDIMMFactory::guidToDimmIdStr)
 {
 }
 
@@ -1924,7 +1923,7 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::getDeviceFirmwareI
 
 			core::Result<core::device::DeviceFirmwareInfo> fwInfoResult = service.getFirmwareInfo(guids[i]);
 
-			wbem::framework::Attribute dimmId = wbem::physical_asset::NVDIMMViewFactoryOld::guidToDimmIdAttribute(guids[i]);
+			wbem::framework::Attribute dimmId = wbem::physical_asset::NVDIMMFactory::guidToDimmIdAttribute(guids[i]);
 			instance.setAttribute(wbem::DIMMID_KEY, dimmId);
 
 			wbem::framework::Attribute fwRevAttr(fwInfoResult.getValue().getActiveRevision(), false);

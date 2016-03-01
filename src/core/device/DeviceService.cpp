@@ -123,7 +123,7 @@ std::vector<device_discovery> core::device::DeviceService::getDiscoveries() cons
 	int count = rc;
 
 	device_discovery devices[count];
-
+	memset(devices, 0, sizeof (device_discovery) * count);
 	rc = m_pApi.getDevices(devices, count);
 	if (rc < 0)
 	{

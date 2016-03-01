@@ -68,8 +68,6 @@
 #include <unistd.h>
 
 #endif
-#include <physical_asset/NVDIMMViewFactory.h>
-#include <physical_asset/NVDIMMViewFactoryOld.h>
 #include <physical_asset/NVDIMMFactory.h>
 #include <cli/features/core/ShowDeviceCommand.h>
 
@@ -442,7 +440,7 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::modifyDevice(
 		std::vector<std::string>::iterator iter = dimms.begin();
 		for (; iter != dimms.end(); iter++)
 		{
-			std::string dimmStr = wbem::physical_asset::NVDIMMViewFactoryOld::guidToDimmIdStr((*iter));
+			std::string dimmStr = wbem::physical_asset::NVDIMMFactory::guidToDimmIdStr((*iter));
 			std::string prefix = cli::framework::ResultBase::stringFromArgList((basePrefix + " %s").c_str(),
 					dimmStr.c_str());
 			prefix += ": ";
@@ -523,7 +521,7 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::setFwLogging(
 		std::vector<std::string>::iterator iter = dimms.begin();
 		for (; iter != dimms.end(); iter++)
 		{
-			std::string dimmStr = wbem::physical_asset::NVDIMMViewFactoryOld::guidToDimmIdStr((*iter));
+			std::string dimmStr = wbem::physical_asset::NVDIMMFactory::guidToDimmIdStr((*iter));
 			std::string prefix = cli::framework::ResultBase::stringFromArgList((basePrefix + " %s").c_str(),
 					dimmStr.c_str());
 			prefix += ": ";
@@ -735,7 +733,7 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::enableDeviceSecurity(
 				dimmIter != dimms.end(); dimmIter++)
 		{
 			std::string prefix = cli::framework::ResultBase::stringFromArgList((basePrefix + " %s").c_str(),
-					wbem::physical_asset::NVDIMMViewFactoryOld::guidToDimmIdStr((*dimmIter)).c_str());
+					wbem::physical_asset::NVDIMMFactory::guidToDimmIdStr((*dimmIter)).c_str());
 			prefix += ": ";
 			try
 			{
@@ -858,7 +856,7 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::changeDevicePassphrase(
 					dimmIter != dimms.end(); dimmIter++)
 			{
 				std::string prefix = cli::framework::ResultBase::stringFromArgList((basePrefix + " %s").c_str(),
-						wbem::physical_asset::NVDIMMViewFactoryOld::guidToDimmIdStr((*dimmIter)).c_str());
+						wbem::physical_asset::NVDIMMFactory::guidToDimmIdStr((*dimmIter)).c_str());
 				prefix += ": ";
 
 				try
@@ -978,7 +976,7 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::changeDeviceSecurity(
 				dimmIter != dimms.end(); dimmIter++)
 		{
 			std::string prefix = cli::framework::ResultBase::stringFromArgList((basePrefix + " %s").c_str(),
-					wbem::physical_asset::NVDIMMViewFactoryOld::guidToDimmIdStr((*dimmIter)).c_str());
+					wbem::physical_asset::NVDIMMFactory::guidToDimmIdStr((*dimmIter)).c_str());
 			prefix += ": ";
 			try
 			{
@@ -1114,7 +1112,7 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::eraseDeviceData(
 			for (std::vector<std::string>::const_iterator dimmIter = dimms.begin();
 					dimmIter != dimms.end(); dimmIter++)
 			{
-				std::string dimmStr = wbem::physical_asset::NVDIMMViewFactoryOld::guidToDimmIdStr((*dimmIter));
+				std::string dimmStr = wbem::physical_asset::NVDIMMFactory::guidToDimmIdStr((*dimmIter));
 				std::string prefix = cli::framework::ResultBase::stringFromArgList((basePrefix + " %s").c_str(),
 						dimmStr.c_str());
 				prefix += ": ";

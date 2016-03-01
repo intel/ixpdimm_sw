@@ -37,10 +37,10 @@
 #include <guid/guid.h>
 #include <intel_cim_framework/ObjectPath.h>
 #include <intel_cim_framework/ExceptionBadParameter.h>
-#include <physical_asset/NVDIMMViewFactoryOld.h>
 #include <sstream>
 #include <iomanip>
 #include <exception/NvmExceptionLibError.h>
+#include <physical_asset/NVDIMMFactory.h>
 
 wbem::support::NVDIMMSensorViewFactory::NVDIMMSensorViewFactory()
 throw (wbem::framework::Exception)
@@ -258,7 +258,7 @@ wbem::framework::Instance* wbem::support::NVDIMMSensorViewFactory::getInstance(
 		// DimmID = handle or guid depending on user selection
 		if (containsAttribute(DIMMID_KEY, attributes))
 		{
-				framework::Attribute attrDimmId = physical_asset::NVDIMMViewFactoryOld::guidToDimmIdAttribute(guidStr);
+				framework::Attribute attrDimmId = physical_asset::NVDIMMFactory::guidToDimmIdAttribute(guidStr);
 				pInstance->setAttribute(DIMMID_KEY, attrDimmId, attributes);
 		}
 		// DimmGUID
@@ -271,7 +271,7 @@ wbem::framework::Instance* wbem::support::NVDIMMSensorViewFactory::getInstance(
 		if (containsAttribute(DIMMHANDLE_KEY, attributes))
 		{
 			NVM_UINT32 handle;
-			physical_asset::NVDIMMViewFactoryOld::guidToHandle(guidStr, handle);
+			physical_asset::NVDIMMFactory::guidToHandle(guidStr, handle);
 			framework::Attribute attrDimmHandle(handle, false);
 			pInstance->setAttribute(DIMMHANDLE_KEY, attrDimmHandle, attributes);
 		}
