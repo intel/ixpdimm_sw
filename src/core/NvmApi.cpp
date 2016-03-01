@@ -97,7 +97,7 @@ core::NvmApi* core::NvmApi::getApi()
 	return m_pSingleton;
 }
 
-int core::NvmApi::getHost(struct host *pHost)
+int core::NvmApi::getHost(struct host *pHost) const
 {
 	return nvm_get_host(pHost);
 }
@@ -132,7 +132,7 @@ int core::NvmApi::getNvmCapabilities(struct nvm_capabilities *pCapabilities)
 	return nvm_get_nvm_capabilities(pCapabilities);
 }
 
-int core::NvmApi::getNvmCapacities(struct device_capacities *pCapacities)
+int core::NvmApi::getNvmCapacities(struct device_capacities *pCapacities) const
 {
 	return nvm_get_nvm_capacities(pCapacities);
 }
@@ -448,7 +448,7 @@ int core::NvmApi::removeSimulator()
 	return nvm_remove_simulator();
 }
 
-int core::NvmApi::debugLoggingEnabled()
+int core::NvmApi::debugLoggingEnabled() const
 {
 	return nvm_debug_logging_enabled();
 }

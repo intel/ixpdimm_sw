@@ -37,6 +37,8 @@
 
 #include <framework_interface/NvmInstanceFactory.h>
 
+#include <core/system/SystemService.h>
+
 namespace wbem
 {
 namespace server
@@ -118,13 +120,16 @@ class NVM_API BaseServerFactory : public framework_interface::NvmInstanceFactory
 		/*
 		 * Helper function to convert the host information into operational status
 		 */
-		static wbem::framework::UINT16_LIST hostToOpStatus(const struct host *p_host);
+		static wbem::framework::UINT16_LIST hostToOpStatus(bool mixedSku, bool skuViolation);
 
 	private:
 		void populateAttributeList(framework::attribute_names_t &attributes)
 			throw (framework::Exception);
 		void validateObjectPath(framework::ObjectPath &path)
 			throw (wbem::framework::Exception);
+		void toInstance(core::system::SystemInfo &hostInfo,
+				framework::Instance &instance, wbem::framework::attribute_names_t attributes);
+
 };
 
 } // server

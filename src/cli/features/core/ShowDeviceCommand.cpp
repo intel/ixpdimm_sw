@@ -39,74 +39,75 @@ namespace cli
 {
 namespace nvmcli
 {
+
 ShowDeviceCommand::ShowDeviceCommand(core::device::DeviceService &service)
 	: m_service(service), m_pResult(NULL)
 {
-	m_props.addCustom(DIMMID, getDimmId).setIsRequired();
-	m_props.addUint64(CAPACITY, &core::device::Device::getRawCapacity, &convertCapacity).setIsDefault();
-	m_props.addOther(LOCKSTATE, &core::device::Device::getLockState, &convertLockState).setIsDefault();
-	m_props.addUint16(HEALTHSTATE, &core::device::Device::getHealthState,
+	m_props.addCustom("DimmID", getDimmId).setIsRequired();
+	m_props.addUint64("Capacity", &core::device::Device::getRawCapacity, &convertCapacity).setIsDefault();
+	m_props.addOther("LockState", &core::device::Device::getLockState, &convertLockState).setIsDefault();
+	m_props.addUint16("HealthState", &core::device::Device::getHealthState,
 			&convertHealthState).setIsDefault();
-	m_props.addStr(FWVERSION, &core::device::Device::getFwRevision).setIsDefault();
-	m_props.addBool(ACTIONREQUIRED, &core::device::Device::isActionRequired).setIsDefault();
-	m_props.addStr(FWAPIVERSION, &core::device::Device::getFwApiVersion);
-	m_props.addUint16(INTERFACEFORMATCODE, &core::device::Device::getInterfaceFormatCode);
-	m_props.addOther(MANAGEABILITYSTATE, &core::device::Device::getManageabilityState,
+	m_props.addStr("FWVersion", &core::device::Device::getFwRevision).setIsDefault();
+	m_props.addBool("ActionRequired", &core::device::Device::isActionRequired).setIsDefault();
+	m_props.addStr("FWAPIVersion", &core::device::Device::getFwApiVersion);
+	m_props.addUint16("InterfaceFormatCode", &core::device::Device::getInterfaceFormatCode);
+	m_props.addOther("ManageabilityState", &core::device::Device::getManageabilityState,
 			&convertManageabilityState);
-	m_props.addUint16(PHYSICALID, &core::device::Device::getPhysicalId);
-	m_props.addUint32(DIMMHANDLE, &core::device::Device::getDeviceHandle);
-	m_props.addStr(DIMMGUID, &core::device::Device::getGuid);
-	m_props.addUint16(SOCKETID, &core::device::Device::getSocketId);
-	m_props.addUint16(MEMCONTROLLERID, &core::device::Device::getMemoryControllerId);
-	m_props.addUint32(CHANNELID, &core::device::Device::getChannelId);
-	m_props.addUint32(CHANNELPOS, &core::device::Device::getChannelPosition);
-	m_props.addOther(MEMORYTYPE, &core::device::Device::getMemoryType, &convertMemoryType);
-	m_props.addStr(MANUFACTURER, &core::device::Device::getManufacturer);
-	m_props.addUint16(MANUFACTURERID, &core::device::Device::getManufacturerId);
-	m_props.addStr(MODEL, &core::device::Device::getModelNumber);
-	m_props.addUint16(VENDORID, &core::device::Device::getVendorId, toHex);
-	m_props.addUint16(DEVICEID, &core::device::Device::getDeviceId, toHex);
-	m_props.addUint16(REVISIONID, &core::device::Device::getRevisionId);
-	m_props.addStr(SERIALNUMBER, &core::device::Device::getSerialNumber);
-	m_props.addList(ACTIONREQUIREDEVENTS, &core::device::Device::getActionRequiredEvents);
-	m_props.addBool(ISNEW, &core::device::Device::isNew);
-	m_props.addOther(FORMFACTOR, &core::device::Device::getFormFactor, &convertFormFactor);
-	m_props.addUint64(VOLATILECAPACITY, &core::device::Device::getVolatileCapacity,
+	m_props.addUint16("PhysicalID", &core::device::Device::getPhysicalId);
+	m_props.addUint32("DimmHandle", &core::device::Device::getDeviceHandle);
+	m_props.addStr("DimmGUID", &core::device::Device::getGuid);
+	m_props.addUint16("SocketID", &core::device::Device::getSocketId);
+	m_props.addUint16("MemControllerID", &core::device::Device::getMemoryControllerId);
+	m_props.addUint32("ChannelID", &core::device::Device::getChannelId);
+	m_props.addUint32("ChannelPos", &core::device::Device::getChannelPosition);
+	m_props.addOther("MemoryType", &core::device::Device::getMemoryType, &convertMemoryType);
+	m_props.addStr("Manufacturer", &core::device::Device::getManufacturer);
+	m_props.addUint16("ManufacturerID", &core::device::Device::getManufacturerId);
+	m_props.addStr("Model", &core::device::Device::getModelNumber);
+	m_props.addUint16("VendorID", &core::device::Device::getVendorId, toHex);
+	m_props.addUint16("DeviceID", &core::device::Device::getDeviceId, toHex);
+	m_props.addUint16("RevisionID", &core::device::Device::getRevisionId);
+	m_props.addStr("SerialNumber", &core::device::Device::getSerialNumber);
+	m_props.addList("ActionRequiredEvents", &core::device::Device::getActionRequiredEvents);
+	m_props.addBool("IsNew", &core::device::Device::isNew);
+	m_props.addOther("FormFactor", &core::device::Device::getFormFactor, &convertFormFactor);
+	m_props.addUint64("VolatileCapacity", &core::device::Device::getVolatileCapacity,
 			convertCapacity);
-	m_props.addUint64(PERSISTENTCAPACITY, &core::device::Device::getPersistentCapacity,
+	m_props.addUint64("PersistentCapacity", &core::device::Device::getPersistentCapacity,
 			convertCapacity);
-	m_props.addUint64(UNCONFIGUREDCAPACITY, &core::device::Device::getUnconfiguredCapacity,
+	m_props.addUint64("UnconfiguredCapacity", &core::device::Device::getUnconfiguredCapacity,
 			convertCapacity);
-	m_props.addUint64(INACCESSIBLECAPACITY, &core::device::Device::getInaccessibleCapacity,
+	m_props.addUint64("InaccessibleCapacity", &core::device::Device::getInaccessibleCapacity,
 			convertCapacity);
-	m_props.addUint64(RESERVEDCAPACITY, &core::device::Device::getReservedCapacity,
+	m_props.addUint64("ReservedCapacity", &core::device::Device::getReservedCapacity,
 			convertCapacity);
-	m_props.addStr(PARTNUMBER, &core::device::Device::getPartNumber);
-	m_props.addStr(DEVICELOCATOR, &core::device::Device::getDeviceLocator);
-	m_props.addStr(BANKLABEL, &core::device::Device::getBankLabel);
-	m_props.addUint64(DATAWIDTH, &core::device::Device::getDataWidth);
-	m_props.addUint64(TOTALWIDTH, &core::device::Device::getTotalWidth);
-	m_props.addUint64(SPEED, &core::device::Device::getSpeed);
-	m_props.addOther(FWLOGLEVEL, &core::device::Device::getFwLogLevel, &convertFwLogLevel);
-	m_props.addBool(POWERMANAGEMENTENABLED, &core::device::Device::isPowerManagementEnabled);
-	m_props.addUint8(POWERLIMIT, &core::device::Device::getPowerLimit);
-	m_props.addUint16(PEAKPOWERBUDGET, &core::device::Device::getPeakPowerBudget);
-	m_props.addUint16(AVGPOWERBUDGET, &core::device::Device::getAvgPowerBudget);
-	m_props.addBool(DIESPARINGCAPABLE, &core::device::Device::isDieSparingCapable);
-	m_props.addBool(DIESPARINGENABLED, &core::device::Device::isDieSparingEnabled);
-	m_props.addUint8(DIESPARINGLEVEL, &core::device::Device::getDieSparingLevel);
-	m_props.addUint8(DIESPARESUSED, &core::device::Device::getDieSparesUsed);
-	m_props.addList(LASTSHUTDOWNSTATUS, &core::device::Device::getLastShutdownStatus,
+	m_props.addStr("PartNumber", &core::device::Device::getPartNumber);
+	m_props.addStr("DeviceLocator", &core::device::Device::getDeviceLocator);
+	m_props.addStr("BankLabel", &core::device::Device::getBankLabel);
+	m_props.addUint64("DataWidth", &core::device::Device::getDataWidth);
+	m_props.addUint64("TotalWidth", &core::device::Device::getTotalWidth);
+	m_props.addUint64("Speed", &core::device::Device::getSpeed);
+	m_props.addOther("FWLogLevel", &core::device::Device::getFwLogLevel, &convertFwLogLevel);
+	m_props.addBool("PowerManagementEnabled", &core::device::Device::isPowerManagementEnabled);
+	m_props.addUint8("PowerLimit", &core::device::Device::getPowerLimit);
+	m_props.addUint16("PeakPowerBudget", &core::device::Device::getPeakPowerBudget);
+	m_props.addUint16("AvgPowerBudget", &core::device::Device::getAvgPowerBudget);
+	m_props.addBool("DieSparingCapable", &core::device::Device::isDieSparingCapable);
+	m_props.addBool("DieSparingEnabled", &core::device::Device::isDieSparingEnabled);
+	m_props.addUint8("DieSparingLevel", &core::device::Device::getDieSparingLevel);
+	m_props.addUint8("DieSparesUsed", &core::device::Device::getDieSparesUsed);
+	m_props.addList("LastShutdownStatus", &core::device::Device::getLastShutdownStatus,
 			&convertLastShutdownStatus);
-	m_props.addUint64(LASTSHUTDOWNTIME, &core::device::Device::getLastShutdownTime, &convertToDate);
-	m_props.addBool(FIRSTFASTREFRESH, &core::device::Device::isFirstFastRefresh);
-	m_props.addList(MEMORYMODESSUPPORTED, &core::device::Device::getMemoryCapabilities,
+	m_props.addUint64("LastShutdownTime", &core::device::Device::getLastShutdownTime, &convertToDate);
+	m_props.addBool("FirstFastRefresh", &core::device::Device::isFirstFastRefresh);
+	m_props.addList("MemoryModesSupported", &core::device::Device::getMemoryCapabilities,
 			&convertMemoryModes);
-	m_props.addList(SECURITYCAPABILITIES, &core::device::Device::getSecurityCapabilities,
+	m_props.addList("SecurityCapabilities", &core::device::Device::getSecurityCapabilities,
 			&convertSecurityCapabilities);
-	m_props.addOther(CONFIGURATIONSTATUS, &core::device::Device::getConfigStatus,
+	m_props.addOther("ConfigurationStatus", &core::device::Device::getConfigStatus,
 			&convertConfigStatus);
-	m_props.addBool(SKUVIOLATION, &core::device::Device::isSkuViolation);
+	m_props.addBool("SKUViolation", &core::device::Device::isSkuViolation);
 }
 
 

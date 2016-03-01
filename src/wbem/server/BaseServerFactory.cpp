@@ -43,6 +43,7 @@
 #include <lib_interface/NvmApi.h>
 #include <NvmStrings.h>
 
+#include "framework_interface/FrameworkExtensions.h"
 
 wbem::server::BaseServerFactory::BaseServerFactory()
 	throw (wbem::framework::Exception)
@@ -91,80 +92,54 @@ void wbem::server::BaseServerFactory::validateObjectPath(framework::ObjectPath &
 	}
 }
 
+void wbem::server::BaseServerFactory::toInstance(core::system::SystemInfo &hostInfo,
+		wbem::framework::Instance &instance, wbem::framework::attribute_names_t attributes)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	ADD_ATTRIBUTE(instance, attributes, OSNAME_KEY, framework::STR, hostInfo.getOsName());
+
+	ADD_ATTRIBUTE(instance, attributes, OSVERSION_KEY, framework::STR, hostInfo.getOsVersion());
+
+	ADD_ATTRIBUTE(instance, attributes, LOGLEVEL_KEY, framework::UINT16, hostInfo.getLogLevel());
+
+	framework::UINT16_LIST dedicatedValue;
+	dedicatedValue.push_back(1u); // "unknown"
+	ADD_ATTRIBUTE(instance, attributes, DEDICATED_KEY, framework::UINT16_LIST, dedicatedValue);
+
+	wbem::framework::UINT16_LIST hostOpStatusList =
+			hostToOpStatus(hostInfo.getMixedSku(), hostInfo.getSkuViolation());
+	ADD_ATTRIBUTE(instance, attributes, OPERATIONALSTATUS_KEY,
+			framework::UINT16_LIST, hostOpStatusList);
+}
+
 /*
  * Retrieve a specific instance given an object path
  */
 wbem::framework::Instance* wbem::server::BaseServerFactory::getInstance(
-	framework::ObjectPath &path, framework::attribute_names_t &attributes)
-	throw (wbem::framework::Exception)
+		framework::ObjectPath &path, framework::attribute_names_t &attributes)
+throw (wbem::framework::Exception)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	// create the instance, initialize with attributes from the path
-	framework::Instance *pInstance = new framework::Instance(path);
+	framework::Instance *pResult = new framework::Instance(path);
 	try
 	{
 		checkAttributes(attributes);
 		validateObjectPath(path);
 
-		// get host info
-		struct host hostServer;
-		int rc = nvm_get_host(&hostServer);
-		if (rc != NVM_SUCCESS)
-		{
-			// couldn't retrieve the host info
-			throw exception::NvmExceptionLibError(rc);
-		}
+		core::system::SystemService &service = core::system::SystemService::getService();
+		core::Result<core::system::SystemInfo> s = service.getHostInfo();
 
-		// OsName
-		if (containsAttribute(OSNAME_KEY, attributes))
-		{
-			framework::Attribute attrOsName(hostServer.os_name, false);
-			pInstance->setAttribute(OSNAME_KEY, attrOsName, attributes);
-		}
-
-		// OsVersion
-		if (containsAttribute(OSVERSION_KEY, attributes))
-		{
-			framework::Attribute attrOsVersion(hostServer.os_version, false);
-			pInstance->setAttribute(OSVERSION_KEY, attrOsVersion, attributes);
-		}
-
-		// LogLevel
-		if (containsAttribute(LOGLEVEL_KEY, attributes))
-		{
-			int rc = nvm_debug_logging_enabled();
-			if (rc < 0)
-			{
-				throw exception::NvmExceptionLibError(rc);
-			}
-
-			framework::UINT16 logLevel = (framework::UINT16)rc;
-			framework::Attribute attrLog(logLevel, false);
-			pInstance->setAttribute(LOGLEVEL_KEY, attrLog, attributes);
-		}
-		// Dedicated
-		if (containsAttribute(DEDICATED_KEY, attributes))
-		{
-			framework::UINT16_LIST dedicatedValue;
-			dedicatedValue.push_back(1u); // "unknown"
-			framework::Attribute attrDedicated(dedicatedValue, false);
-			pInstance->setAttribute(DEDICATED_KEY, attrDedicated, attributes);
-		}
-		// OperationalStatus
-		if (containsAttribute(OPERATIONALSTATUS_KEY, attributes))
-		{
-			framework::Attribute attrOpStatus(hostToOpStatus(&hostServer), false);
-			pInstance->setAttribute(OPERATIONALSTATUS_KEY, attrOpStatus, attributes);
-		}
+		toInstance(s.getValue(), *pResult, attributes);
 	}
-	catch (framework::Exception &) // clean up and re-throw
+	catch (framework::Exception &)
 	{
-		delete pInstance;
 		throw;
 	}
 
-	return pInstance;
+	return pResult;
 }
 
 /*
@@ -211,8 +186,6 @@ wbem::framework::instance_names_t* wbem::server::BaseServerFactory::getInstanceN
 
 	return pNames;
 }
-
-
 
 /*
  * Add a default simulator to be loaded when the nvm library is loaded
@@ -273,7 +246,7 @@ const std::string wbem::server::getHostName()
 /*
  * Helper function to convert the host information into operational status
  */
-wbem::framework::UINT16_LIST wbem::server::BaseServerFactory::hostToOpStatus(const struct host *p_host)
+wbem::framework::UINT16_LIST wbem::server::BaseServerFactory::hostToOpStatus(bool mixedSku, bool skuViolation)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	framework::UINT16_LIST opStatus;
@@ -281,19 +254,15 @@ wbem::framework::UINT16_LIST wbem::server::BaseServerFactory::hostToOpStatus(con
 	// OK - this is always set as we don't have a "health" state for the server
 	opStatus.push_back(BASESERVER_OPSTATUS_OK);
 
-	// mixed SKU
-	if (p_host->mixed_sku)
+	if (mixedSku)
 	{
 		opStatus.push_back(BASESERVER_OPSTATUS_MIXEDSKU);
 	}
 
-	// SKU violation
-	if (p_host->sku_violation)
+	if (skuViolation)
 	{
 		opStatus.push_back(BASESERVER_OPSTATUS_SKUVIOLATION);
 	}
 
 	return opStatus;
 }
-
-

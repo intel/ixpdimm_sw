@@ -24,21 +24,43 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#ifndef CR_MGMT_SYSTEMMEMORYRESOURCES_H
+#define CR_MGMT_SYSTEMMEMORYRESOURCES_H
 
-#include <LogEnterExit.h>
+#include <string>
+#include <nvm_management.h>
+#include <core/NvmApi.h>
 
-#include "CommandBase.h"
-
-namespace cli
+namespace core
 {
-namespace framework
+namespace system
 {
 
-CommandBase::CommandBase()
+class NVM_API SystemMemoryResources
 {
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	m_pResult = NULL;
-}
+public:
+	SystemMemoryResources();
+	SystemMemoryResources(struct device_capacities device_capacities);
+	virtual ~SystemMemoryResources();
+	SystemMemoryResources & operator=(const SystemMemoryResources &other);
+	SystemMemoryResources(const SystemMemoryResources &other);
+
+	NVM_UINT64 getTotalCapacity();
+	NVM_UINT64 getTotalVolatileCapacity();
+	NVM_UINT64 getTotalPersistentCapacity();
+	NVM_UINT64 getTotalBlockCapacity();
+	NVM_UINT64 getTotalUnconfiguredCapacity();
+	NVM_UINT64 getTotalInaccessibleCapacity();
+	NVM_UINT64 getTotalReservedCapacity();
+
+	SystemMemoryResources * clone();
+
+private:
+	device_capacities m_capacities;
+
+	void copy(const SystemMemoryResources &other);
+};
 
 }
 }
+#endif //CR_MGMT_SYSTEMMEMORYRESOURCES_H

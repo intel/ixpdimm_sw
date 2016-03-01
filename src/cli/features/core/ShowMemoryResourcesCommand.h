@@ -24,21 +24,42 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#ifndef CR_MGMT_SHOWMEMORYRESOURCESCOMMAND_H
+#define CR_MGMT_SHOWMEMORYRESOURCESCOMMAND_H
 
-#include <LogEnterExit.h>
+#include <intel_cli_framework/CliFrameworkTypes.h>
+#include <intel_cli_framework/ResultBase.h>
+#include "framework/PropertyDefinitionList.h"
+#include <cli/features/core/framework/CommandBase.h>
 
-#include "CommandBase.h"
+#include <core/system/SystemService.h>
 
 namespace cli
 {
-namespace framework
+namespace nvmcli
 {
 
-CommandBase::CommandBase()
+class NVM_API ShowMemoryResourcesCommand : framework::CommandBase
 {
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	m_pResult = NULL;
-}
+public:
+	ShowMemoryResourcesCommand(
+			core::system::SystemService &service = core::system::SystemService::getService());
+
+	framework::ResultBase *execute(const framework::ParsedCommand &parsedCommand);
+
+private:
+	core::system::SystemService &m_service;
+
+	framework::PropertyDefinitionList<core::system::SystemMemoryResources> m_props;
+
+	core::system::SystemMemoryResources m_memoryResourcesInfo;
+
+	void createResults();
+	bool displayOptionsAreValid();
+	bool isPropertyDisplayed(framework::IPropertyDefinition<core::system::SystemMemoryResources> &p);
+};
 
 }
 }
+
+#endif //CR_MGMT_SHOWMEMORYRESOURCESCOMMAND_H

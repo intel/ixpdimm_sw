@@ -37,7 +37,7 @@
 #include <string>
 
 #include <framework_interface/NvmInstanceFactory.h>
-
+#include <core/system/SystemService.h>
 
 namespace wbem
 {
@@ -88,6 +88,10 @@ class NVM_API MemoryResourcesFactory : public framework_interface::NvmInstanceFa
 		 */
 		framework::instance_names_t* getInstanceNames() throw (framework::Exception);
 
+	private:
+		void populateAttributeList(framework::attribute_names_t &attributes)
+			throw (framework::Exception);
+
 		/*
 		 * Helper function to convert block size to allocation units
 		 */
@@ -98,9 +102,8 @@ class NVM_API MemoryResourcesFactory : public framework_interface::NvmInstanceFa
 		 */
 		NVM_UINT64 getCapacityAllocatedFromPool();
 
-	private:
-		void populateAttributeList(framework::attribute_names_t &attributes)
-			throw (framework::Exception);
+		void toInstance(core::system::SystemMemoryResources &memoryResourcesInfo,
+				wbem::framework::Instance &instance, wbem::framework::attribute_names_t attributes);
 };
 
 } // mem_config

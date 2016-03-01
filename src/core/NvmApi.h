@@ -45,7 +45,7 @@ public:
 	/*
 	 * Retrieve basic information about the host server
 	 */
-	virtual int getHost(struct host *pHost);
+	virtual int getHost(struct host *pHost) const;
 
 	/*
 	 * Retrieve the name of the host server
@@ -80,7 +80,7 @@ public:
 	/*
 	 * Retrieve the total NVM-DIMM resource allocation
 	 */
-	virtual int getNvmCapacities(struct device_capacities *pCapacities);
+	virtual int getNvmCapacities(struct device_capacities *pCapacities) const;
 
 	/*
 	 * Retrieve the number of memory devices installed on the system
@@ -395,7 +395,7 @@ public:
 	/*
 	 * Determine if host software logging is enabled
 	 */
-	virtual int debugLoggingEnabled();
+	virtual int debugLoggingEnabled() const;
 
 	/*
 	 * Enable or disable host software logging

@@ -29,6 +29,7 @@
 
 #include <intel_cli_framework/CliFrameworkTypes.h>
 #include <intel_cli_framework/ResultBase.h>
+#include "DisplayOptions.h"
 
 namespace cli
 {
@@ -37,7 +38,12 @@ namespace framework
 class CommandBase
 {
 public:
+	CommandBase();
 	virtual ResultBase *execute(const ParsedCommand &parsedCommand) = 0;
+
+	framework::ResultBase *m_pResult;
+	framework::ParsedCommand m_parsedCommand;
+	framework::DisplayOptions m_displayOptions;
 };
 }
 }

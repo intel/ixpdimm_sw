@@ -42,7 +42,10 @@
 #include <sstream>
 #include <mem_config/PoolViewFactory.h>
 #include <exception/NvmExceptionLibError.h>
+#include <core/exceptions/LibraryException.h>
 #include <NvmStrings.h>
+
+#include "framework_interface/FrameworkExtensions.h"
 
 wbem::mem_config::MemoryResourcesFactory::MemoryResourcesFactory()
 	throw (wbem::framework::Exception)
@@ -76,6 +79,26 @@ void wbem::mem_config::MemoryResourcesFactory::populateAttributeList(
 	attributes.push_back(wbem::RESERVEDCAPACITY_KEY);
 }
 
+void wbem::mem_config::MemoryResourcesFactory::toInstance(core::system::SystemMemoryResources &memoryResourcesInfo,
+		wbem::framework::Instance &instance, wbem::framework::attribute_names_t attributes)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	ADD_ATTRIBUTE(instance, attributes, ELEMENTNAME_KEY, framework::STR, MEMORYRESOURCES_ELEMENTNAME);
+	ADD_ATTRIBUTE(instance, attributes, PRIMORDIAL_KEY, framework::BOOLEAN, true);
+	ADD_ATTRIBUTE(instance, attributes, POOLID_KEY, framework::STR, MEMORYRESOURCES_POOLID);
+	ADD_ATTRIBUTE(instance, attributes, RESERVED_KEY, framework::UINT64, getCapacityAllocatedFromPool());
+	ADD_ATTRIBUTE(instance, attributes, RESOURCETYPE_KEY, framework::UINT16, (NVM_UINT16)MEMORYRESOURCES_RESOURCETYPE_VAL);
+	ADD_ATTRIBUTE(instance, attributes, ALLOCATIONUNITS_KEY, framework::STR, allocationUnitsToStr(memoryResourcesInfo.getTotalCapacity()));
+	ADD_ATTRIBUTE(instance, attributes, CAPACITY_KEY, framework::UINT64, memoryResourcesInfo.getTotalCapacity());
+	ADD_ATTRIBUTE(instance, attributes, VOLATILECAPACITY_KEY, framework::UINT64, memoryResourcesInfo.getTotalVolatileCapacity());
+	ADD_ATTRIBUTE(instance, attributes, PERSISTENTCAPACITY_KEY, framework::UINT64, memoryResourcesInfo.getTotalPersistentCapacity());
+	ADD_ATTRIBUTE(instance, attributes, BLOCKCAPACITY_KEY, framework::UINT64, memoryResourcesInfo.getTotalBlockCapacity());
+	ADD_ATTRIBUTE(instance, attributes, UNCONFIGUREDCAPACITY_KEY, framework::UINT64, memoryResourcesInfo.getTotalUnconfiguredCapacity());
+	ADD_ATTRIBUTE(instance, attributes, INACCESSIBLECAPACITY_KEY, framework::UINT64, memoryResourcesInfo.getTotalInaccessibleCapacity());
+	ADD_ATTRIBUTE(instance, attributes, RESERVEDCAPACITY_KEY, framework::UINT64, memoryResourcesInfo.getTotalReservedCapacity());
+}
+
 /*
  * Retrieve a specific instance given an object path
  */
@@ -86,7 +109,7 @@ wbem::framework::Instance* wbem::mem_config::MemoryResourcesFactory::getInstance
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	// create the instance, initialize with attributes from the path
-	framework::Instance *pInstance = new framework::Instance(path);
+	framework::Instance *pResult = new framework::Instance(path);
 	try
 	{
 		checkAttributes(attributes);
@@ -101,113 +124,21 @@ wbem::framework::Instance* wbem::mem_config::MemoryResourcesFactory::getInstance
 			throw framework::ExceptionBadParameter(INSTANCEID_KEY.c_str());
 		}
 
-		// get aggregate capacities
-		struct device_capacities capacities;
-		int rc = m_pApi->getNvmCapacities(&capacities);
-		if (rc != NVM_SUCCESS)
-		{
-			// couldn't retrieve the capacities
-			throw exception::NvmExceptionLibError(rc);
-		}
+		core::system::SystemService &service = core::system::SystemService::getService();
+		core::Result<core::system::SystemMemoryResources> r = service.getMemoryResources();
 
-		// Element Name = "Platform NVM Primordial Pool"
-		if (containsAttribute(ELEMENTNAME_KEY, attributes))
-		{
-			framework::Attribute attrElementName(MEMORYRESOURCES_ELEMENTNAME, false);
-			pInstance->setAttribute(ELEMENTNAME_KEY, attrElementName, attributes);
-		}
-
-		// Primordial = true
-		if (containsAttribute(PRIMORDIAL_KEY, attributes))
-		{
-			framework::Attribute attrPrimodial(true, false);
-			pInstance->setAttribute(PRIMORDIAL_KEY, attrPrimodial, attributes);
-		}
-
-		// PoolID - NVMPool1  (arbitrary ID)
-		if (containsAttribute(POOLID_KEY, attributes))
-		{
-			framework::Attribute a(MEMORYRESOURCES_POOLID, false);
-			pInstance->setAttribute(POOLID_KEY, a, attributes);
-		}
-
-		// Total Capacity
-		if (containsAttribute(CAPACITY_KEY, attributes))
-		{
-			framework::Attribute attrCapacity(capacities.capacity, false);
-			pInstance->setAttribute(CAPACITY_KEY, attrCapacity, attributes);
-		}
-
-		// ResourceType = 34, "Multi-mode memory"
-		if (containsAttribute(RESOURCETYPE_KEY, attributes))
-		{
-			framework::Attribute attrResourceType((NVM_UINT16)MEMORYRESOURCES_RESOURCETYPE_VAL, false);
-			pInstance->setAttribute(RESOURCETYPE_KEY, attrResourceType, attributes);
-		}
-
-		// AllocationUnits - bytes
-		if (containsAttribute(ALLOCATIONUNITS_KEY, attributes))
-		{
-			framework::Attribute attrAllocationUnitsType(allocationUnitsToStr(capacities.capacity), false);
-			pInstance->setAttribute(ALLOCATIONUNITS_KEY, attrAllocationUnitsType, attributes);
-		}
-
-		// Reserved - Capacity allocated from the pool
-		if (containsAttribute(RESERVED_KEY, attributes))
-		{
-			framework::Attribute attrReservedType(getCapacityAllocatedFromPool(), false);
-			pInstance->setAttribute(RESERVED_KEY, attrReservedType, attributes);
-		}
-
-		// TotalVolatileCapacity - Bytes of NVM capacity currently allocated for use as volatile memory
-		if (containsAttribute(VOLATILECAPACITY_KEY, attributes))
-		{
-			framework::Attribute attrVolCapacity(capacities.volatile_capacity, false);
-			pInstance->setAttribute(VOLATILECAPACITY_KEY, attrVolCapacity, attributes);
-		}
-
-		// TotalPMCapableCapacity - Bytes of NVM capacity currently allocated for use as persistent memory
-		if (containsAttribute(PERSISTENTCAPACITY_KEY, attributes))
-		{
-			framework::Attribute attrPmCapacity(capacities.persistent_capacity, false);
-			pInstance->setAttribute(PERSISTENTCAPACITY_KEY, attrPmCapacity, attributes);
-		}
-
-		// TotalBlockCapableCapacity - Bytes of NVM capacity allocated as PM that can be accessed using a block aperture
-		if (containsAttribute(BLOCKCAPACITY_KEY, attributes))
-		{
-			framework::Attribute attrBlockCapacity(capacities.block_capacity, false);
-			pInstance->setAttribute(BLOCKCAPACITY_KEY, attrBlockCapacity, attributes);
-		}
-
-		// TotalUnconfiguredCapacity
-		if (containsAttribute(UNCONFIGUREDCAPACITY_KEY, attributes))
-		{
-			framework::Attribute attrUnconfiguredCapacity(capacities.unconfigured_capacity, false);
-			pInstance->setAttribute(UNCONFIGUREDCAPACITY_KEY, attrUnconfiguredCapacity, attributes);
-		}
-
-		// TotalInaccessibleCapacity
-		if (containsAttribute(INACCESSIBLECAPACITY_KEY, attributes))
-		{
-			framework::Attribute attrInaccessibleCapacity(capacities.inaccessible_capacity, false);
-			pInstance->setAttribute(INACCESSIBLECAPACITY_KEY, attrInaccessibleCapacity, attributes);
-		}
-
-		// TotalReservedCapacity
-		if (containsAttribute(RESERVEDCAPACITY_KEY, attributes))
-		{
-			framework::Attribute attrReservedCapacity(capacities.reserved_capacity, false);
-			pInstance->setAttribute(RESERVEDCAPACITY_KEY, attrReservedCapacity, attributes);
-		}
+		toInstance(r.getValue(), *pResult, attributes);
 	}
 	catch (framework::Exception &) // clean up and re-throw
 	{
-		delete pInstance;
 		throw;
 	}
+	catch (core::LibraryException&e)
+	{
+		throw exception::NvmExceptionLibError(e.getErrorCode());
+	}
 
-	return pInstance;
+	return pResult;
 }
 
 /*

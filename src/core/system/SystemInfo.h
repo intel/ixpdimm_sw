@@ -24,21 +24,45 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#ifndef CR_MGMT_SYSTEMINFO_H
+#define CR_MGMT_SYSTEMINFO_H
 
-#include <LogEnterExit.h>
+#include <string>
+#include <nvm_types.h>
+#include <nvm_management.h>
+#include <core/NvmApi.h>
 
-#include "CommandBase.h"
-
-namespace cli
+namespace core
 {
-namespace framework
+namespace system
 {
 
-CommandBase::CommandBase()
+class NVM_API SystemInfo
 {
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	m_pResult = NULL;
-}
+public:
+	SystemInfo();
+	SystemInfo(struct host host, int logLevel);
+	virtual ~SystemInfo();
+	SystemInfo & operator=(const SystemInfo &other);
+	SystemInfo(const SystemInfo &other);
+
+	std::string getHostName();
+	std::string getOsName();
+	std::string getOsVersion();
+	enum os_type getOsType();
+	bool getMixedSku();
+	bool getSkuViolation();
+	NVM_UINT16 getLogLevel();
+
+	SystemInfo * clone();
+
+private:
+	host m_info;
+	int m_logLevel;
+
+	void copy(const SystemInfo &other);
+};
 
 }
 }
+#endif //CR_MGMT_SYSTEMINFO_H

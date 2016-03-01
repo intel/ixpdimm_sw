@@ -29,6 +29,11 @@
 
 #include <string>
 #include <core/NvmApi.h>
+#include <core/Result.h>
+#include "SystemInfo.h"
+#include "SystemMemoryResources.h"
+
+#include <core/exceptions/LibraryException.h>
 
 namespace core
 {
@@ -37,11 +42,13 @@ namespace system
 class NVM_API SystemService
 {
 public:
-	SystemService(const NvmApi &api = *NvmApi::getApi());
+	NVM_API SystemService(const NvmApi &api = *NvmApi::getApi());
 	virtual ~SystemService();
 	static SystemService &getService();
 
 	virtual std::string getHostName();
+	virtual Result<SystemInfo> getHostInfo();
+	virtual Result<SystemMemoryResources> getMemoryResources();
 
 protected:
 	const NvmApi &m_api;

@@ -25,82 +25,106 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <core/exceptions/NoMemoryException.h>
 #include <LogEnterExit.h>
-#include "SystemService.h"
+#include "SystemInfo.h"
 
-core::system::SystemService *core::system::SystemService::m_pSingleton = new core::system::SystemService();
+namespace core
+{
+namespace system
+{
 
-core::system::SystemService::SystemService(const NvmApi &pApi) : m_api(pApi)
+SystemInfo::SystemInfo() :
+		m_info(),
+		m_logLevel(0)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
 
-core::system::SystemService::~SystemService()
-{
-	if (this == m_pSingleton)
-	{
-		m_pSingleton = NULL;
-	}
-}
-
-core::system::SystemService &core::system::SystemService::getService()
+SystemInfo::SystemInfo(struct host host, int logLevel) :
+		m_info(host),
+		m_logLevel(logLevel)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	if (m_pSingleton == NULL)
-	{
-		throw NoMemoryException();
-	}
-	return *m_pSingleton;
 }
 
-std::string core::system::SystemService::getHostName()
+SystemInfo::SystemInfo(const SystemInfo &other) :
+		m_info(other.m_info),
+		m_logLevel(other.m_logLevel)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	char hostname[NVM_COMPUTERNAME_LEN];
-	int rc = m_api.getHostName(hostname, NVM_COMPUTERNAME_LEN);
-
-	if (rc != NVM_SUCCESS)
-	{
-		throw LibraryException(rc);
-	}
-
-	return std::string(hostname);
+	copy(other);
 }
 
-core::Result<core::system::SystemInfo> core::system::SystemService::getHostInfo()
+SystemInfo &SystemInfo::operator=(const SystemInfo &other)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	if (&other == this)
+		return *this;
 
-	host host;
-	int rc = m_api.getHost(&host);
-	if (rc != NVM_SUCCESS)
-	{
-		throw LibraryException(rc);
-	}
+	copy(other);
 
-	rc = m_api.debugLoggingEnabled();
-	if (rc < 0)
-	{
-		throw LibraryException(rc);
-	}
-	int logLevel = rc;
-
-	SystemInfo result(host, logLevel);
-	return Result<SystemInfo>(result);
+	return *this;
 }
 
-core::Result<core::system::SystemMemoryResources> core::system::SystemService::getMemoryResources()
+void SystemInfo::copy(const SystemInfo &other)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	this->m_info = other.m_info;
+	this->m_logLevel = other.m_logLevel;
+}
 
-	device_capacities device_capacities;
-	int rc = m_api.getNvmCapacities(&device_capacities);
-	if (rc != NVM_SUCCESS)
-	{
-		throw LibraryException(rc);
-	}
+SystemInfo::~SystemInfo()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+}
 
-	SystemMemoryResources result(device_capacities);
-	return Result<SystemMemoryResources>(result);
+SystemInfo *SystemInfo::clone()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	return new SystemInfo(*this);
+}
+
+std::string SystemInfo::getHostName()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	return std::string(m_info.name);
+}
+
+enum os_type SystemInfo::getOsType()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	return m_info.os_type;
+}
+
+std::string SystemInfo::getOsName()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	return std::string(m_info.os_name);
+}
+
+std::string SystemInfo::getOsVersion()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	return std::string(m_info.os_version);
+}
+
+bool SystemInfo::getMixedSku()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	return m_info.mixed_sku;
+}
+
+bool SystemInfo::getSkuViolation()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	return m_info.sku_violation;
+}
+
+NVM_UINT16 SystemInfo::getLogLevel()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	return (NVM_UINT16)m_logLevel;
+}
+
+}
 }
