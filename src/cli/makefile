@@ -132,7 +132,7 @@ ifdef BUILD_LINUX
 	python $(SCRIPTS_PATH)/create_nvmcli_manpage.py dataPath=$(PRODUCT_DATADIR) outputPath=$(CLI_BUILD_PATH); \
 	python $(SCRIPTS_PATH)/create_nvmmonitor_manpage.py dataPath=$(PRODUCT_DATADIR); 
 	$(eval MANPAGE_GZ_FILES := $(addprefix $(SCRIPTS_PATH)/, $(MANPAGE_GZ_FILES)))
-	$(COPY) $(MANPAGE_GZ_FILES) $(BUILD_DIR)
+	$(MOVE) $(MANPAGE_GZ_FILES) $(BUILD_DIR)
 endif
 	
 test:

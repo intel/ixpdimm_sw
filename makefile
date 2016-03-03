@@ -188,7 +188,7 @@ ifdef BUILD_LINUX
 
 	#install manpage files into MAN8_DIR
 	$(MKDIR) $(RPM_ROOT)$(MAN8_DIR)
-	$(COPY) $(MANPAGE_GZ_FILES) $(RPM_ROOT)$(MAN8_DIR)
+	$(MOVE) $(MANPAGE_GZ_FILES) $(RPM_ROOT)$(MAN8_DIR)
 	
 	#install Pegasus Files
 	$(MKDIR) $(RPM_ROOT)$(PEGASUS_MOFDIR)
