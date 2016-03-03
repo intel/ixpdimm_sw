@@ -37,7 +37,9 @@
 #include <nvm_management.h>
 #include <lib_interface/NvmApi.h>
 
-wbem::logic::RuleNamespacesExist::RuleNamespacesExist()
+wbem::logic::RuleNamespacesExist::RuleNamespacesExist(
+		const struct nvm_capabilities &systemCapabilities) :
+		m_systemCapabilities(systemCapabilities)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
@@ -55,14 +57,34 @@ void wbem::logic::RuleNamespacesExist::verify(const MemoryAllocationRequest &req
 
 	// check each dimm in the request to every namespace
 	for (std::vector<struct Dimm>::const_iterator dimmIter = request.dimms.begin();
-				dimmIter != request.dimms.end(); dimmIter++)
+			dimmIter != request.dimms.end(); dimmIter++)
 	{
 		NVM_GUID dimmGuid;
 		str_to_guid(dimmIter->guid.c_str(), dimmGuid);
 		int nsCount = pApi->getDeviceNamespaceCount(dimmGuid, NAMESPACE_TYPE_UNKNOWN);
 		if (nsCount < 0) // error
 		{
-			throw exception::NvmExceptionLibError(nsCount);
+			// If retrieving NS' is not supported, allow Volatile goal creation on MemoryMode SKU
+			if (nsCount == NVM_ERR_NOTSUPPORTED)
+			{
+				if ((request.volatileCapacity != 0) &&
+						(request.persistentExtents.size() == 0) &&
+						(!request.storageRemaining))
+				{
+					if (!m_systemCapabilities.nvm_features.memory_mode)
+					{
+						throw exception::NvmExceptionVolatileNotSupported();
+					}
+				}
+				else
+				{
+					throw exception::NvmExceptionLibError(nsCount);
+				}
+			}
+			else
+			{
+				throw exception::NvmExceptionLibError(nsCount);
+			}
 		}
 		else if (nsCount > 0) // namespaces exist
 		{

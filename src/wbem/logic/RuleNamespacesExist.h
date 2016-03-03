@@ -43,9 +43,12 @@ namespace logic
 class NVM_API RuleNamespacesExist : public RequestRule
 {
 	public:
-		RuleNamespacesExist();
+		RuleNamespacesExist(const struct nvm_capabilities &systemCapabilities);
 		virtual ~RuleNamespacesExist();
 		virtual void verify(const MemoryAllocationRequest &request);
+
+	protected:
+		struct nvm_capabilities m_systemCapabilities;
 };
 
 } /* namespace logic */
