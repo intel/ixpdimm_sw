@@ -41,7 +41,7 @@
 #include "Shlwapi.h"
 
 /*
- * Create an empty file
+ * Create an empty file, this function will fail is the file already exits
  */
 int create_trunc_file(const COMMON_PATH path, const COMMON_SIZE path_len)
 {
@@ -59,7 +59,7 @@ int create_trunc_file(const COMMON_PATH path, const COMMON_SIZE path_len)
 			GENERIC_READ | GENERIC_WRITE,
 			FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
 			NULL,
-			CREATE_ALWAYS,
+			CREATE_NEW,
 			FILE_ATTRIBUTE_NORMAL,
 			NULL);
 
@@ -123,6 +123,7 @@ int create_dir(const COMMON_PATH path, const COMMON_SIZE path_len)
 
 /*
  * Copies a file. If the destination file does not exist it is created.
+ * If the destination file exists the function will fail
  * Returns 1 on success, 0 if the operation failed.
  * Note: Windows version must convert paths to UTF-16 first
  */
@@ -140,7 +141,7 @@ int copy_file(const COMMON_PATH source, const COMMON_SIZE source_len,
 	utf8_to_wchar(w_source, (size_t)COMMON_PATH_LEN, source_path, (int)COMMON_PATH_LEN);
 	utf8_to_wchar(w_dest, (size_t)COMMON_PATH_LEN, destination_path, (int)COMMON_PATH_LEN);
 
-	return (CopyFileW(w_source, w_dest, 0) != 0);
+	return (CopyFileW(w_source, w_dest, 1) != 0);
 }
 
 /*

@@ -45,6 +45,7 @@
 #include "capabilities.h"
 #include "nvm_context.h"
 #include "system.h"
+#include <unistd.h>
 
 /*
  * Declare Internal Helper functions
@@ -112,6 +113,12 @@ int nvm_gather_support(const NVM_PATH support_file, const NVM_SIZE support_file_
 
 		// store the logs
 		log_gather();
+
+		struct stat statbuf;
+		if (stat(support_file, &statbuf) != -1)
+		{
+			unlink(support_file);
+		}
 
 		// Copy the database to the path specified in p_support_file
 		COMMON_PATH config_file;

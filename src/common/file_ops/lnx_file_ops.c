@@ -48,7 +48,7 @@ extern char *realpath(__const char *__restrict __name,
 	char *__restrict __resolved) __THROW __wur;
 
 /*
- * Create a file that is empty
+ * Create a file that is empty, this function will fail is the file already exits
  */
 int create_trunc_file(const COMMON_PATH path, const COMMON_SIZE path_len)
 {
@@ -59,7 +59,7 @@ int create_trunc_file(const COMMON_PATH path, const COMMON_SIZE path_len)
 	s_strncpy(file_path, COMMON_PATH_LEN, path, path_len);
 
 	// open the file and get the file descriptor
-	int oflag = O_RDWR | O_CREAT | O_TRUNC;
+	int oflag = O_RDWR | O_CREAT | O_EXCL | O_TRUNC;
 	mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
 	int file_des = open(file_path, oflag, mode);
 	if (file_des > 0)
@@ -83,7 +83,7 @@ int create_file(const COMMON_PATH path, const COMMON_SIZE path_len)
 	s_strncpy(file_path, COMMON_PATH_LEN, path, path_len);
 
 	// open the file and get the file descriptor
-	int oflag = O_RDWR | O_CREAT;
+	int oflag = O_RDWR | O_CREAT | O_EXCL;
 	mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
 	int file_des = open(file_path, oflag, mode);
 	if (file_des > 0)
@@ -118,6 +118,7 @@ int create_dir(const COMMON_PATH path, const COMMON_SIZE path_len)
 
 /*
  * Copies a file. If the destination file does not exist it is created.
+ * If the destination file exists the function will fail
  * Returns 1 on success, 0 if the operation failed.
  */
 int copy_file(const COMMON_PATH source, const COMMON_SIZE source_len,
@@ -131,7 +132,7 @@ int copy_file(const COMMON_PATH source, const COMMON_SIZE source_len,
 
 	// open both files
 	int fd_in = open(source_path, O_RDONLY);
-	int fd_out = open(destination_path, O_WRONLY|O_CREAT, 0x0664);
+	int fd_out = open(destination_path, O_WRONLY|O_CREAT|O_EXCL, 0x0664);
 	char buf[512];
 	size_t copied = 0;
 	size_t bytestocopy;

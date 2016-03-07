@@ -36,6 +36,7 @@
 #include <zlib.h>
 #include <string.h>
 #include <assert.h>
+#include <unistd.h>
 
 // file I/O
 #include <sys/stat.h>
@@ -107,6 +108,12 @@ int compress_file(const COMMON_PATH src_file, COMMON_PATH out_file)
 	{
 		s_strncpy(out_file, COMMON_PATH_LEN, temp_file, COMMON_PATH_LEN);
 
+		struct stat statbuf;
+		if (stat(out_file, &statbuf) != -1)
+		{
+			unlink(out_file);
+		}
+
 		// Prepare compression variable
 		zvar.zalloc = Z_NULL;
 		zvar.zfree = Z_NULL;
@@ -119,7 +126,7 @@ int compress_file(const COMMON_PATH src_file, COMMON_PATH out_file)
 		{
 			rc = COMMON_ERR_BADFILE;
 		}
-		else if ((ofd = open(out_file, O_RDWR | O_TRUNC | O_CREAT | OS_flags,
+		else if ((ofd = open(out_file, O_RDWR | O_TRUNC | O_CREAT | O_EXCL | OS_flags,
 				GENERIC_NEW_FILE_PERMISSION)) == -1)
 		{
 			rc = COMMON_ERR_BADFILE;
@@ -251,7 +258,7 @@ int decompress_file(const COMMON_PATH srcFile, COMMON_PATH outFile)
 		// Unable to open encrypted file
 		retval = 0;
 	}
-	else if ((ofd = open(outFile, O_RDWR|O_TRUNC|O_CREAT|OS_flags,
+	else if ((ofd = open(outFile, O_RDWR|O_TRUNC|O_CREAT|O_EXCL|OS_flags,
 			GENERIC_NEW_FILE_PERMISSION)) == -1)
 	{
 		// Unable to create decrypted file
@@ -339,6 +346,12 @@ int rsa_encrypt(const COMMON_PATH src_file, COMMON_PATH out_file)
 		{
 			bio = BIO_new_file(key_file, "r");
 
+			struct stat statbuf;
+			if (stat(out_file, &statbuf) != -1)
+			{
+				unlink(out_file);
+			}
+
 			// Convert the memory copy PEM format into an openssl data structure
 			if (PEM_read_bio_RSA_PUBKEY(bio, &rsa, NULL, NULL) == NULL)
 			{
@@ -348,7 +361,7 @@ int rsa_encrypt(const COMMON_PATH src_file, COMMON_PATH out_file)
 			{
 				rc = COMMON_ERR_BADFILE;
 			}
-			else if ((efd = open(out_file, O_RDWR | O_TRUNC | O_CREAT | OS_flags,
+			else if ((efd = open(out_file, O_RDWR | O_TRUNC | O_CREAT | O_EXCL | OS_flags,
 					GENERIC_NEW_FILE_PERMISSION)) == -1)
 			{
 				rc = COMMON_ERR_BADFILE;
@@ -456,7 +469,7 @@ int rsa_decrypt(const COMMON_PATH rsaKeyFile, const COMMON_PATH encryptedFile,
 		// Unable to open encrypted file
 		retval = 0;
 	}
-	else if ((dfd = open(decryptedFile, O_RDWR|O_TRUNC|O_CREAT|OS_flags,
+	else if ((dfd = open(decryptedFile, O_RDWR|O_TRUNC|O_CREAT|O_EXCL|OS_flags,
 		GENERIC_NEW_FILE_PERMISSION)) == -1)
 	{
 		// Unable to create decrypted file

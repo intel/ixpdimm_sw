@@ -157,7 +157,7 @@ int write_pid_file(const char *pid_file, pid_t pid)
 
 	int fd;
 
-	fd = open(pid_file, O_RDWR | O_CREAT | O_CLOEXEC | O_TRUNC, S_IRUSR | S_IWUSR);
+	fd = open(pid_file, O_RDWR | O_CREAT | O_EXCL | O_CLOEXEC | O_TRUNC, S_IRUSR | S_IWUSR);
 
 	if (fd < 0)
 	{
