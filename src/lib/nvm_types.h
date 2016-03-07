@@ -205,7 +205,8 @@ enum return_code
 	NVM_ERR_TOOMANYNAMESPACES = -43, // The maximum number of namespaces is already present.
 	NVM_ERR_CONFIGNOTSUPPORTED = -44, // The requested configuration is not supported.
 	NVM_ERR_SKUVIOLATION = -45, // The method is not supported because of a license violation.
-	NVM_ERR_BADNAMESPACEPERSISTENTSETTING = -46 // Could not create ns with persistent setting.
+	NVM_ERR_BADNAMESPACEPERSISTENTSETTING = -46, // Could not create ns with persistent setting.
+	NVM_ERR_INVALIDPASSPHRASEFILE = -47, // The passphrase file is invalid.
 };
 
 /*

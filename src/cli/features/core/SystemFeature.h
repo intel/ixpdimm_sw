@@ -175,10 +175,10 @@ private:
 		enum fw_log_level logLevelStringToEnum(std::string logLevel);
 
 		/*
-		 * helper method to pull passphrase from the specified file, returns pResults if failed
+		 * helper method to read passphrases from passphrase file
 		 */
-		cli::framework::ResultBase *readPassphrases(std::string passphraseFile,
-				std::string *pPassphrase, std::string *pNewPassphrase, std::string prefix);
+		enum return_code readPassphrases(std::string passphraseFile,
+				std::string *pPassphrase, std::string *pNewPassphrase);
 
 		wbem::physical_asset::MemoryTopologyViewFactory *m_pTopologyProvider;
 
@@ -187,6 +187,9 @@ private:
 
 		enum return_code getPassphrasesFromString(std::string lineStr,
 				std::string *pPassphrase, std::string *pNewPassphrase);
+
+		cli::framework::ResultBase *generateErrorResult(
+				enum return_code rc, std::string basePrefix, std::vector<std::string> dimms);
 };
 
 }

@@ -59,8 +59,6 @@
 #include <exception/NvmExceptionBadTarget.h>
 #include <exception/NvmExceptionLibError.h>
 
-
-
 #ifdef __WINDOWS__
 #include <windows.h>
 #else
@@ -555,13 +553,14 @@ enum return_code cli::nvmcli::SystemFeature::setFirstPassphrase(std::string *pPa
 		if (!(*pPassphrase).empty())
 		{
 			// shouldn't have password twice in the file
-			rc = NVM_ERR_BADFILE;
+			rc = NVM_ERR_INVALIDPASSPHRASEFILE;;
 		}
 		else
 		{
 			*pPassphrase = newValue;
 		}
 	}
+
 	return rc;
 }
 
@@ -590,7 +589,6 @@ enum return_code cli::nvmcli::SystemFeature::getPassphrasesFromString(
 					newPassphraseLowercase.begin(), ::tolower);
 			if (property.compare(passphraseLowercase) == 0)
 			{
-				// set passphrase property from file
 				rc = setFirstPassphrase(pPassphrase, value);
 			}
 			else if (property.compare(newPassphraseLowercase) == 0)
@@ -599,20 +597,19 @@ enum return_code cli::nvmcli::SystemFeature::getPassphrasesFromString(
 			} // no need for else - just ignore and it'll fail with invalid password
 		}
 	}
+
 	return rc;
 }
 
 /*
- * helper method to pull passphrase from the specified file, returns pResults if failed
+ * helper method to read passphrases from passphrase file
  */
-cli::framework::ResultBase *cli::nvmcli::SystemFeature::readPassphrases(std::string passphraseFile,
-		std::string *pPassphrase, std::string *pNewPassphrase, std::string prefix)
+enum return_code cli::nvmcli::SystemFeature::readPassphrases(std::string passphraseFile,
+		std::string *pPassphrase, std::string *pNewPassphrase)
 {
-	enum return_code rc = NVM_SUCCESS;
+	enum return_code rc = NVM_ERR_INVALIDPASSPHRASEFILE;
 
 	std::string line;
-	cli::framework::ResultBase *pResults = NULL;
-
 	std::ifstream readfile(passphraseFile.c_str());
 	if (readfile.fail())
 	{
@@ -626,16 +623,12 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::readPassphrases(std::str
 		if (0 != line.compare("#ascii"))
 		{
 			readfile.close();
-			rc = NVM_ERR_BADFILE;
 		}
 		else
 		{
 			std::string line;
-
-			enum return_code rc;
-			while (getline(readfile, line) && (!pResults))
+			while (getline(readfile, line))
 			{
-
 				if ((rc = getPassphrasesFromString(line, pPassphrase, pNewPassphrase))
 						!= NVM_SUCCESS)
 				{
@@ -645,13 +638,20 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::readPassphrases(std::str
 		}
 	}
 
-	if (rc != NVM_SUCCESS)
-	{
-		NVM_ERROR_DESCRIPTION errStr;
-		nvm_get_error(rc, errStr, NVM_ERROR_LEN);
-		pResults = new framework::ErrorResult(framework::ResultBase::ERRORCODE_UNKNOWN, errStr, prefix);
-	}
+	return rc;
+}
 
+cli::framework::ResultBase *cli::nvmcli::SystemFeature::generateErrorResult(
+		enum return_code rc, std::string basePrefix, std::vector<std::string> dimms)
+{
+	framework::ResultBase *pResults = NULL;
+
+	std::string prefix = cli::framework::ResultBase::stringFromArgList((basePrefix + " %s").c_str(),
+			wbem::physical_asset::NVDIMMFactory::guidToDimmIdStr((dimms[0])).c_str());
+
+	NVM_ERROR_DESCRIPTION errStr;
+	nvm_get_error(rc, errStr, NVM_ERROR_LEN);
+	pResults = new framework::ErrorResult(framework::ResultBase::ERRORCODE_UNKNOWN, errStr, prefix);
 	return pResults;
 }
 
@@ -661,189 +661,50 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::enableDeviceSecurity(
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	framework::ResultBase *pResults = NULL;
-	std::string basePrefix = TRS(SETPASSPHRASE_MSG);
 	std::vector<std::string> dimms;
-
-	std::string newPassphrase;
-	std::string confirmPassphrase;
-
-	// if user provided a password file as an option, read passwords from the file
-	framework::StringMap::const_iterator source = parsedCommand.options.find(framework::OPTION_SOURCE.name);
-	if (source != parsedCommand.options.end() && !source->second.empty())
-	{
-		// get path
-		std::string passphraseFile = source->second;
-
-		// password file option existed, so expect to use files for retrieving
-		// all passwords
-		pResults = readPassphrases(passphraseFile.c_str(), NULL, &newPassphrase, basePrefix);
-		if (!pResults)
-		{
-			if (newPassphrase.empty())
-			{
-				pResults = new framework::SyntaxErrorMissingValueResult(
-						framework::TOKENTYPE_PROPERTY,
-						NEWPASSPHRASE_PROPERTYNAME.c_str());
-			}
-			else
-			{
-				confirmPassphrase = newPassphrase;
-			}
-		}
-	}
-	else
-	{
-		// file name source was not specified for passwords, expect caller to have provided them
-		// on the command line
-		newPassphrase = framework::Parser::getPropertyValue(parsedCommand, NEWPASSPHRASE_PROPERTYNAME);
-		if (newPassphrase.empty())
-		{
-			// caller didn't give the new password, so prompt for it
-			newPassphrase = promptUserHiddenString(TRS(NEW_PASSPHRASE_PROMPT));
-		}
-
-		confirmPassphrase = framework::Parser::getPropertyValue(parsedCommand, CONFIRMPASSPHRASE_PROPERTYNAME);
-		if (confirmPassphrase.empty())
-		{
-			confirmPassphrase = promptUserHiddenString(TRS(CONFIRM_NEW_PASSPHRASE_PROMPT));
-		}
-	}
-
-	// make sure confirm matches new
-	if ((pResults == NULL) && (newPassphrase.compare(confirmPassphrase) != 0))
-	{
-		pResults = new framework::ErrorResult(
-				ERRORCODE_SECURITY_PASSPHRASEMISSMATCH,
-				TRS(ERRORMSG_SECURITY_PASSPHRASEMISSMATCH),
-				basePrefix);
-	}
-
-	if (pResults == NULL)
-	{
-		pResults = cli::nvmcli::getDimms(parsedCommand, dimms);
-	}
-
-	if (pResults == NULL)
-	{
-		framework::SimpleListResult *pListResults = new framework::SimpleListResult();
-		pResults = pListResults;
-		wbem::physical_asset::NVDIMMFactory dimmProvider;
-
-		for (std::vector<std::string>::const_iterator dimmIter = dimms.begin();
-				dimmIter != dimms.end(); dimmIter++)
-		{
-			std::string prefix = cli::framework::ResultBase::stringFromArgList((basePrefix + " %s").c_str(),
-					wbem::physical_asset::NVDIMMFactory::guidToDimmIdStr((*dimmIter)).c_str());
-			prefix += ": ";
-			try
-			{
-				dimmProvider.setPassphrase((*dimmIter), newPassphrase, "");
-				pListResults->insert(prefix + TRS(cli::framework::SUCCESS_MSG));
-			}
-			catch (wbem::framework::Exception &e)
-			{
-				cli::framework::ErrorResult *eResult = NvmExceptionToResult(e);
-				if (eResult)
-				{
-					pListResults->insert(prefix + eResult->outputText());
-					pListResults->setErrorCode(eResult->getErrorCode());
-					delete eResult;
-				}
-				break; // don't continue on failure
-			}
-		}
-	}
-
-	return pResults;
-}
-
-/*
- * Change passphrase on one or more dimms
- */
-cli::framework::ResultBase *cli::nvmcli::SystemFeature::changeDevicePassphrase(
-		const framework::ParsedCommand &parsedCommand)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	cli::framework::ResultBase *pResults = NULL;
-	std::string basePrefix = TRS(CHANGEPASSPHRASE_MSG);
-	std::vector<std::string> dimms;
-
-	std::string passphrase;
-	std::string newPassphrase;
-	std::string confirmPassphrase;
-
-	// if user provided a password file as an option, read passwords from the file
-	framework::StringMap::const_iterator source = parsedCommand.options.find(framework::OPTION_SOURCE.name);
-	if (source != parsedCommand.options.end() && !source->second.empty())
-	{
-		// get path
-		std::string passphraseFile = source->second;
-
-		// password file option existed, so expect to use files for retrieving
-		// all passwords
-		pResults = readPassphrases(passphraseFile.c_str(), &passphrase,
-				&newPassphrase, basePrefix);
-		if (!pResults)
-		{
-			if (passphrase.empty())
-			{
-				pResults = new framework::SyntaxErrorMissingValueResult(
-						framework::TOKENTYPE_PROPERTY,
-						PASSPHRASE_PROPERTYNAME.c_str());
-			}
-			else if (newPassphrase.empty())
-			{
-				pResults = new framework::SyntaxErrorMissingValueResult(
-						framework::TOKENTYPE_PROPERTY,
-						NEWPASSPHRASE_PROPERTYNAME.c_str());
-			}
-			else
-			{
-				confirmPassphrase = newPassphrase;
-			}
-		}
-	}
-	else
-	{
-		// file name source was not specified for passwords, expect caller to have provided them
-		// on the command line
-
-		passphrase = framework::Parser::getPropertyValue(parsedCommand, PASSPHRASE_PROPERTYNAME);
-		if (passphrase.empty())
-		{
-			// caller didn't give the passphrase, so prompt for it
-			passphrase = promptUserHiddenString(TRS(PASSPHRASE_PROMPT));
-		}
-
-		newPassphrase = framework::Parser::getPropertyValue(parsedCommand, NEWPASSPHRASE_PROPERTYNAME);
-		if (newPassphrase.empty())
-		{
-			// caller didn't give the new passphrase, so prompt for it
-			newPassphrase = promptUserHiddenString(TRS(NEW_PASSPHRASE_PROMPT));
-		}
-
-		confirmPassphrase = framework::Parser::getPropertyValue(parsedCommand, CONFIRMPASSPHRASE_PROPERTYNAME);
-		if (confirmPassphrase.empty())
-		{
-			// caller didn't give the confirmation passphrase, so prompt for it
-			confirmPassphrase = promptUserHiddenString(TRS(CONFIRM_NEW_PASSPHRASE_PROMPT));
-		}
-	}
-
+	pResults = cli::nvmcli::getDimms(parsedCommand, dimms);
 	if (!pResults)
 	{
+		std::string basePrefix = TRS(SETPASSPHRASE_MSG);
+		std::string newPassphrase;
+		std::string confirmPassphrase;
+
+		framework::StringMap::const_iterator source = parsedCommand.options.find(framework::OPTION_SOURCE.name);
+		if (source != parsedCommand.options.end() && !source->second.empty())
+		{ // passphrase provided via passphrase file
+			std::string passphraseFile = source->second;
+			enum return_code rc = readPassphrases(passphraseFile.c_str(), NULL, &newPassphrase);
+			if ((rc != NVM_SUCCESS) || (newPassphrase.empty()))
+			{
+				pResults = generateErrorResult(rc, basePrefix, dimms);
+			}
+			else
+			{
+				confirmPassphrase = newPassphrase;
+			}
+		}
+		else
+		{ // passphrase provided via command line
+			newPassphrase = framework::Parser::getPropertyValue(parsedCommand, NEWPASSPHRASE_PROPERTYNAME);
+			if (newPassphrase.empty())
+			{
+				newPassphrase = promptUserHiddenString(TRS(NEW_PASSPHRASE_PROMPT));
+			}
+
+			confirmPassphrase = framework::Parser::getPropertyValue(parsedCommand, CONFIRMPASSPHRASE_PROPERTYNAME);
+			if (confirmPassphrase.empty())
+			{
+				confirmPassphrase = promptUserHiddenString(TRS(CONFIRM_NEW_PASSPHRASE_PROMPT));
+			}
+		}
+
 		// make sure confirm matches new
-		if (newPassphrase.compare(confirmPassphrase) != 0)
+		if ((pResults == NULL) && (newPassphrase.compare(confirmPassphrase) != 0))
 		{
 			pResults = new framework::ErrorResult(
 					ERRORCODE_SECURITY_PASSPHRASEMISSMATCH,
 					TRS(ERRORMSG_SECURITY_PASSPHRASEMISSMATCH),
 					basePrefix);
-		}
-		else
-		{
-			pResults = cli::nvmcli::getDimms(parsedCommand, dimms);
 		}
 
 		if (pResults == NULL)
@@ -858,10 +719,9 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::changeDevicePassphrase(
 				std::string prefix = cli::framework::ResultBase::stringFromArgList((basePrefix + " %s").c_str(),
 						wbem::physical_asset::NVDIMMFactory::guidToDimmIdStr((*dimmIter)).c_str());
 				prefix += ": ";
-
 				try
 				{
-					dimmProvider.setPassphrase((*dimmIter), newPassphrase, passphrase);
+					dimmProvider.setPassphrase((*dimmIter), newPassphrase, "");
 					pListResults->insert(prefix + TRS(cli::framework::SUCCESS_MSG));
 				}
 				catch (wbem::framework::Exception &e)
@@ -882,6 +742,110 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::changeDevicePassphrase(
 }
 
 /*
+ * Change passphrase on one or more dimms
+ */
+cli::framework::ResultBase *cli::nvmcli::SystemFeature::changeDevicePassphrase(
+		const framework::ParsedCommand &parsedCommand)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	cli::framework::ResultBase *pResults = NULL;
+	std::vector<std::string> dimms;
+	pResults = cli::nvmcli::getDimms(parsedCommand, dimms);
+	if (!pResults)
+	{
+		std::string passphrase;
+		std::string newPassphrase;
+		std::string confirmPassphrase;
+		std::string basePrefix = TRS(CHANGEPASSPHRASE_MSG);
+
+		framework::StringMap::const_iterator source = parsedCommand.options.find(framework::OPTION_SOURCE.name);
+		if (source != parsedCommand.options.end() && !source->second.empty())
+		{ // passphrase provided via passphrase file
+			std::string passphraseFile = source->second;
+			enum return_code rc = readPassphrases(passphraseFile.c_str(), &passphrase,
+					&newPassphrase);
+			if ((rc == NVM_SUCCESS) &&
+					!passphrase.empty() &&
+					!newPassphrase.empty())
+			{
+				confirmPassphrase = newPassphrase;
+			}
+			else
+			{
+				pResults = generateErrorResult(NVM_ERR_INVALIDPASSPHRASEFILE, basePrefix, dimms);
+			}
+		}
+		else
+		{ // passphrase provided via command line
+			passphrase = framework::Parser::getPropertyValue(parsedCommand, PASSPHRASE_PROPERTYNAME);
+			if (passphrase.empty())
+			{
+				passphrase = promptUserHiddenString(TRS(PASSPHRASE_PROMPT));
+			}
+
+			newPassphrase = framework::Parser::getPropertyValue(parsedCommand, NEWPASSPHRASE_PROPERTYNAME);
+			if (newPassphrase.empty())
+			{
+				newPassphrase = promptUserHiddenString(TRS(NEW_PASSPHRASE_PROMPT));
+			}
+
+			confirmPassphrase = framework::Parser::getPropertyValue(parsedCommand, CONFIRMPASSPHRASE_PROPERTYNAME);
+			if (confirmPassphrase.empty())
+			{
+				confirmPassphrase = promptUserHiddenString(TRS(CONFIRM_NEW_PASSPHRASE_PROMPT));
+			}
+		}
+
+		if (!pResults)
+		{
+			// make sure confirm matches new
+			if (newPassphrase.compare(confirmPassphrase) != 0)
+			{
+				pResults = new framework::ErrorResult(
+						ERRORCODE_SECURITY_PASSPHRASEMISSMATCH,
+						TRS(ERRORMSG_SECURITY_PASSPHRASEMISSMATCH),
+						basePrefix);
+			}
+
+			if (pResults == NULL)
+			{
+				framework::SimpleListResult *pListResults = new framework::SimpleListResult();
+				pResults = pListResults;
+				wbem::physical_asset::NVDIMMFactory dimmProvider;
+
+				for (std::vector<std::string>::const_iterator dimmIter = dimms.begin();
+						dimmIter != dimms.end(); dimmIter++)
+				{
+					std::string prefix = cli::framework::ResultBase::stringFromArgList((basePrefix + " %s").c_str(),
+							wbem::physical_asset::NVDIMMFactory::guidToDimmIdStr((*dimmIter)).c_str());
+					prefix += ": ";
+
+					try
+					{
+						dimmProvider.setPassphrase((*dimmIter), newPassphrase, passphrase);
+						pListResults->insert(prefix + TRS(cli::framework::SUCCESS_MSG));
+					}
+					catch (wbem::framework::Exception &e)
+					{
+						cli::framework::ErrorResult *eResult = NvmExceptionToResult(e);
+						if (eResult)
+						{
+							pListResults->insert(prefix + eResult->outputText());
+							pListResults->setErrorCode(eResult->getErrorCode());
+							delete eResult;
+						}
+						break; // don't continue on failure
+					}
+				}
+			}
+		}
+	}
+
+	return pResults;
+}
+
+/*
  * Unlock all devices in list
  */
 cli::framework::ResultBase *cli::nvmcli::SystemFeature::changeDeviceSecurity(
@@ -889,62 +853,14 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::changeDeviceSecurity(
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	std::string basePrefix = "";
-	std::vector<std::string> dimms;
 	framework::ResultBase *pResults = NULL;
-
-	std::string newLockState = framework::Parser::getPropertyValue(parsedCommand, LOCKSTATE_PROPERTYNAME);
-	std::string passphrase;
-
-	// if user provided a password file as an option, read passwords from the file
-	framework::StringMap::const_iterator source = parsedCommand.options.find(framework::OPTION_SOURCE.name);
-	if (source != parsedCommand.options.end() && !source->second.empty())
-	{
-		// get path
-		std::string passphraseFile = source->second;
-
-		// password file option existed, so expect to use files for retrieving
-		// all passwords
-		pResults = readPassphrases(passphraseFile.c_str(), &passphrase, NULL, basePrefix);
-		if (!pResults)
-		{
-			if (passphrase.empty())
-			{
-				pResults = new framework::SyntaxErrorMissingValueResult(
-						framework::TOKENTYPE_PROPERTY,
-						PASSPHRASE_PROPERTYNAME.c_str());
-			}
-		}
-	}
-	else
-	{
-		// file name source was not specified for passwords, expect caller to have provided them
-		// on the command line
-
-		passphrase = framework::Parser::getPropertyValue(parsedCommand, PASSPHRASE_PROPERTYNAME);
-		if (passphrase.empty())
-		{
-			// caller didn't give the password, so prompt for it
-			passphrase = promptUserHiddenString(TRS(PASSPHRASE_PROMPT));
-
-		}
-	}
-
+	std::vector<std::string> dimms;
+	pResults = cli::nvmcli::getDimms(parsedCommand, dimms);
 	if (!pResults)
 	{
-		if (passphrase.empty())
-		{
-			pResults = new framework::SyntaxErrorMissingValueResult(
-				framework::TOKENTYPE_PROPERTY,
-				PASSPHRASE_PROPERTYNAME.c_str());
-		}
-		else if (newLockState.empty())
-		{
-			pResults = new framework::SyntaxErrorMissingValueResult(
-					framework::TOKENTYPE_PROPERTY,
-					LOCKSTATE_PROPERTYNAME.c_str());
-		}
-		else if (!cli::framework::stringsIEqual(newLockState, UNLOCKED_PROPERTYVALUE) &&
+		std::string basePrefix = TRS(UNLOCK_MSG);
+		std::string newLockState = framework::Parser::getPropertyValue(parsedCommand, LOCKSTATE_PROPERTYNAME);
+		if (!cli::framework::stringsIEqual(newLockState, UNLOCKED_PROPERTYVALUE) &&
 				!cli::framework::stringsIEqual(newLockState, DISABLED_PROPERTYVALUE))
 		{
 			pResults = new framework::SyntaxErrorBadValueResult(
@@ -952,74 +868,94 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::changeDeviceSecurity(
 					LOCKSTATE_PROPERTYNAME.c_str(),
 					newLockState);
 		}
-		else
+
+		std::string passphrase;
+		if (!pResults)
 		{
-			if (cli::framework::stringsIEqual(newLockState, cli::nvmcli::UNLOCKED_PROPERTYVALUE))
-			{
-				basePrefix = TRS(UNLOCK_MSG);
+			framework::StringMap::const_iterator source = parsedCommand.options.find(framework::OPTION_SOURCE.name);
+			if (source != parsedCommand.options.end() && !source->second.empty())
+			{ // passphrase provided via passphrase file
+				std::string passphraseFile = source->second;
+				enum return_code rc = readPassphrases(passphraseFile.c_str(), &passphrase, NULL);
+				if ((rc != NVM_SUCCESS) ||
+						(passphrase.empty()))
+				{
+					basePrefix = TRS(REMOVEPASSPHRASE_MSG);
+					pResults = generateErrorResult(NVM_ERR_INVALIDPASSPHRASEFILE, basePrefix, dimms);
+				}
 			}
 			else
-			{
-				basePrefix = TRS(REMOVEPASSPHRASE_MSG);
+			{ // passphrase provided via command line
+				passphrase = framework::Parser::getPropertyValue(parsedCommand, PASSPHRASE_PROPERTYNAME);
+				if (passphrase.empty())
+				{
+					passphrase = promptUserHiddenString(TRS(PASSPHRASE_PROMPT));
+				}
 			}
-
-			pResults = cli::nvmcli::getDimms(parsedCommand, dimms);
 		}
-	}
-
-	if (pResults == NULL)
-	{
-		wbem::physical_asset::NVDIMMFactory dimmProvider;
-		framework::SimpleListResult *pListResults = new framework::SimpleListResult();
-		pResults = pListResults;
-		for (std::vector<std::string>::const_iterator dimmIter = dimms.begin();
-				dimmIter != dimms.end(); dimmIter++)
+		if (pResults == NULL)
 		{
-			std::string prefix = cli::framework::ResultBase::stringFromArgList((basePrefix + " %s").c_str(),
-					wbem::physical_asset::NVDIMMFactory::guidToDimmIdStr((*dimmIter)).c_str());
-			prefix += ": ";
-			try
+			wbem::physical_asset::NVDIMMFactory dimmProvider;
+			framework::SimpleListResult *pListResults = new framework::SimpleListResult();
+			pResults = pListResults;
+			for (std::vector<std::string>::const_iterator dimmIter = dimms.begin();
+					dimmIter != dimms.end(); dimmIter++)
 			{
-				// Based on the logic above, if the newLockState is not unlocked then it must be disabled
-				if (cli::framework::stringsIEqual(newLockState, UNLOCKED_PROPERTYVALUE))
+				std::string prefix = "";
+				try
 				{
-					dimmProvider.unlock((*dimmIter), passphrase);
-				}
-				else
-				{
-					dimmProvider.removePassphrase((*dimmIter), passphrase);
-				}
+					// Based on the logic above, if the newLockState is not unlocked then it must be disabled
+					if (cli::framework::stringsIEqual(newLockState, UNLOCKED_PROPERTYVALUE))
+					{
+						basePrefix = TRS(UNLOCK_MSG);
+						prefix += cli::framework::ResultBase::stringFromArgList((basePrefix + " %s").c_str(),
+								wbem::physical_asset::NVDIMMFactory::guidToDimmIdStr((*dimmIter)).c_str());
+						prefix += ": ";
 
-				pListResults->insert(prefix + TRS(cli::framework::SUCCESS_MSG));
-			}
-			catch (wbem::exception::NvmExceptionLibError &e)
-			{
-				// security is disabled and the device is already unlocked so this isn't really an error
-				if (e.getLibError() == NVM_ERR_SECURITYDISABLED)
-				{
-					pListResults->insert(prefix + TRS(UNLOCK_ALREADYDISABLED_MSG));
+						dimmProvider.unlock((*dimmIter), passphrase);
+					}
+					else
+					{
+						basePrefix = TRS(REMOVEPASSPHRASE_MSG);
+						prefix += cli::framework::ResultBase::stringFromArgList((basePrefix + " %s").c_str(),
+								wbem::physical_asset::NVDIMMFactory::guidToDimmIdStr((*dimmIter)).c_str());
+						prefix += ": ";
+
+						dimmProvider.removePassphrase((*dimmIter), passphrase);
+					}
+
+					pListResults->insert(prefix + TRS(cli::framework::SUCCESS_MSG));
 				}
-				else
+				catch (wbem::exception::NvmExceptionLibError &e)
+				{
+					// security is disabled and the device is already unlocked so this isn't really an error
+					if (e.getLibError() == NVM_ERR_SECURITYDISABLED)
+					{
+						pListResults->insert(prefix + TRS(UNLOCK_ALREADYDISABLED_MSG));
+					}
+					else
+					{
+						cli::framework::ErrorResult *eResult = NvmExceptionToResult(e);
+						if (eResult)
+						{
+							pListResults->insert(prefix + eResult->outputText());
+							pListResults->setErrorCode(eResult->getErrorCode());
+							delete eResult;
+						}
+						break; // don't continue on failure
+					}
+				}
+				catch (wbem::framework::Exception &e)
 				{
 					cli::framework::ErrorResult *eResult = NvmExceptionToResult(e);
-					if (eResult)
-					{
-						pListResults->insert(prefix + eResult->outputText());
-						pListResults->setErrorCode(eResult->getErrorCode());
-						delete eResult;
-					}
+					pListResults->insert(prefix + eResult->outputText());
+					pListResults->setErrorCode(eResult->getErrorCode());
 					break; // don't continue on failure
 				}
 			}
-			catch (wbem::framework::Exception &e)
-			{
-				cli::framework::ErrorResult *eResult = NvmExceptionToResult(e);
-				pListResults->insert(prefix + eResult->outputText());
-				pListResults->setErrorCode(eResult->getErrorCode());
-				break; // don't continue on failure
-			}
 		}
 	}
+
 	return pResults;
 }
 
@@ -1031,125 +967,111 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::eraseDeviceData(
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	std::string basePrefix = TRS(ERASEDEVICEDATA_MSG);
 	std::vector<std::string> dimms;
 	framework::ResultBase *pResults = NULL;
-
-	std::string passphrase;
-
-	// if user provided a password file as an option, read passwords from the file
-	framework::StringMap::const_iterator source = parsedCommand.options.find(framework::OPTION_SOURCE.name);
-	if (source != parsedCommand.options.end() && !source->second.empty())
-	{
-		// get path
-		std::string passphraseFile = source->second;
-
-		// password file option existed, so expect to use files for retrieving
-		// all passwords
-		pResults = readPassphrases(passphraseFile.c_str(), &passphrase, NULL, basePrefix);
-		if (!pResults)
-		{
-			if (passphrase.empty())
-			{
-				pResults = new framework::SyntaxErrorMissingValueResult(
-						framework::TOKENTYPE_PROPERTY,
-						PASSPHRASE_PROPERTYNAME.c_str());
-			}
-		}
-	}
-	else
-	{
-		// file name source was not specified for passwords, expect caller to have provided them
-		// on the command line
-
-		passphrase = framework::Parser::getPropertyValue(parsedCommand, PASSPHRASE_PROPERTYNAME);
-		if (passphrase.empty())
-		{
-			// caller didn't give the password, so prompt for it
-			passphrase = promptUserHiddenString(TRS(PASSPHRASE_PROMPT));
-		}
-	}
-
-	if (pResults == NULL)
-	{
-		pResults = cli::nvmcli::getDimms(parsedCommand, dimms);
-	}
-
+	pResults = cli::nvmcli::getDimms(parsedCommand, dimms);
 	if (!pResults)
 	{
-		wbem::erasure::eraseType eraseType = wbem::erasure::ERASETYPE_CRYPTO_ERASE;
-		bool eraseTypeExists = false;
-		std::string eraseTypeString = framework::Parser::getPropertyValue(parsedCommand,
-				ERASETYPE_PROPERTYNAME, &eraseTypeExists);
+		std::string passphrase;
+		std::string basePrefix = TRS(ERASEDEVICEDATA_MSG);
 
-		if (eraseTypeExists)
-		{
-			if (cli::framework::stringsIEqual(eraseTypeString, ERASETYPE_PROPERTY_CRYPTO))
+		framework::StringMap::const_iterator source = parsedCommand.options.find(framework::OPTION_SOURCE.name);
+		if (source != parsedCommand.options.end() && !source->second.empty())
+		{ // passphrase provided via passphrase file
+			std::string passphraseFile = source->second;
+			enum return_code rc = readPassphrases(passphraseFile.c_str(), &passphrase, NULL);
+			if ((rc != NVM_SUCCESS) ||
+					(passphrase.empty()))
 			{
-				eraseType = wbem::erasure::ERASETYPE_CRYPTO_ERASE;
+				pResults = generateErrorResult(NVM_ERR_INVALIDPASSPHRASEFILE, basePrefix, dimms);
 			}
-			else if (cli::framework::stringsIEqual(eraseTypeString, ERASETYPE_PROPERTYNAME_MULTIOVERWRITE))
+		}
+		else
+		{ // passphrase provided via command line
+			passphrase = framework::Parser::getPropertyValue(parsedCommand, PASSPHRASE_PROPERTYNAME);
+			if (passphrase.empty())
 			{
-				eraseType = wbem::erasure::ERASETYPE_MULTI_OVERWRITE;
-			}
-			else if (cli::framework::stringsIEqual(eraseTypeString, ERASETYPE_PROPERTY_QUICKOVERWRITE))
-			{
-				eraseType = wbem::erasure::ERASETYPE_QUICK_OVERWRITE;
-			}
-			else
-			{
-				pResults = new cli::framework::SyntaxErrorBadValueResult(
-						framework::TOKENTYPE_PROPERTY, ERASETYPE_PROPERTYNAME, eraseTypeString);
+				passphrase = promptUserHiddenString(TRS(PASSPHRASE_PROMPT));
 			}
 		}
 
-		if (pResults == NULL)
+		if (!pResults)
 		{
-			wbem::erasure::ErasureServiceFactory erasureProvider;
-			framework::SimpleListResult *pListResults = new framework::SimpleListResult();
-			pResults = pListResults;
+			wbem::erasure::eraseType eraseType = wbem::erasure::ERASETYPE_CRYPTO_ERASE;
+			bool eraseTypeExists = false;
+			std::string eraseTypeString = framework::Parser::getPropertyValue(parsedCommand,
+					ERASETYPE_PROPERTYNAME, &eraseTypeExists);
 
-			for (std::vector<std::string>::const_iterator dimmIter = dimms.begin();
-					dimmIter != dimms.end(); dimmIter++)
+			if (eraseTypeExists)
 			{
-				std::string dimmStr = wbem::physical_asset::NVDIMMFactory::guidToDimmIdStr((*dimmIter));
-				std::string prefix = cli::framework::ResultBase::stringFromArgList((basePrefix + " %s").c_str(),
-						dimmStr.c_str());
-				prefix += ": ";
-				try
+				if (cli::framework::stringsIEqual(eraseTypeString, ERASETYPE_PROPERTY_CRYPTO))
 				{
-					bool forceOption = parsedCommand.options.find(framework::OPTION_FORCE.name)
-							!= parsedCommand.options.end();
-
-					// if user didn't specify the force option, prompt them to continue
-					std::string prompt = framework::ResultBase::stringFromArgList(
-							ERASE_DEV_PROMPT.c_str(), dimmStr.c_str());
-					if (!forceOption && !promptUserYesOrNo(prompt))
-					{
-						pListResults->insert(prefix + cli::framework::UNCHANGED_MSG);
-					}
-					else
-					{
-						erasureProvider.eraseDevice((*dimmIter), passphrase,
-							eraseType);
-
-						pListResults->insert(prefix + TRS(cli::framework::SUCCESS_MSG));
-					}
+					eraseType = wbem::erasure::ERASETYPE_CRYPTO_ERASE;
 				}
-				catch (wbem::framework::Exception &e)
+				else if (cli::framework::stringsIEqual(eraseTypeString, ERASETYPE_PROPERTYNAME_MULTIOVERWRITE))
 				{
-					cli::framework::ErrorResult *eResult = NvmExceptionToResult(e);
-					if (eResult)
+					eraseType = wbem::erasure::ERASETYPE_MULTI_OVERWRITE;
+				}
+				else if (cli::framework::stringsIEqual(eraseTypeString, ERASETYPE_PROPERTY_QUICKOVERWRITE))
+				{
+					eraseType = wbem::erasure::ERASETYPE_QUICK_OVERWRITE;
+				}
+				else
+				{
+					pResults = new cli::framework::SyntaxErrorBadValueResult(
+							framework::TOKENTYPE_PROPERTY, ERASETYPE_PROPERTYNAME, eraseTypeString);
+				}
+			}
+
+			if (pResults == NULL)
+			{
+				wbem::erasure::ErasureServiceFactory erasureProvider;
+				framework::SimpleListResult *pListResults = new framework::SimpleListResult();
+				pResults = pListResults;
+
+				for (std::vector<std::string>::const_iterator dimmIter = dimms.begin();
+						dimmIter != dimms.end(); dimmIter++)
+				{
+					std::string dimmStr = wbem::physical_asset::NVDIMMFactory::guidToDimmIdStr((*dimmIter));
+					std::string prefix = cli::framework::ResultBase::stringFromArgList((basePrefix + " %s").c_str(),
+							dimmStr.c_str());
+					prefix += ": ";
+					try
 					{
-						pListResults->insert(prefix + eResult->outputText());
-						pListResults->setErrorCode(eResult->getErrorCode());
-						delete eResult;
+						bool forceOption = parsedCommand.options.find(framework::OPTION_FORCE.name)
+											!= parsedCommand.options.end();
+
+						// if user didn't specify the force option, prompt them to continue
+						std::string prompt = framework::ResultBase::stringFromArgList(
+								ERASE_DEV_PROMPT.c_str(), dimmStr.c_str());
+						if (!forceOption && !promptUserYesOrNo(prompt))
+						{
+							pListResults->insert(prefix + cli::framework::UNCHANGED_MSG);
+						}
+						else
+						{
+							erasureProvider.eraseDevice((*dimmIter), passphrase,
+									eraseType);
+
+							pListResults->insert(prefix + TRS(cli::framework::SUCCESS_MSG));
+						}
 					}
-					break; // don't continue on failure
+					catch (wbem::framework::Exception &e)
+					{
+						cli::framework::ErrorResult *eResult = NvmExceptionToResult(e);
+						if (eResult)
+						{
+							pListResults->insert(prefix + eResult->outputText());
+							pListResults->setErrorCode(eResult->getErrorCode());
+							delete eResult;
+						}
+						break; // don't continue on failure
+					}
 				}
 			}
 		}
 	}
+
 	return pResults;
 }
 

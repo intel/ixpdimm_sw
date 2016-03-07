@@ -319,6 +319,11 @@ int nvm_get_error(const enum return_code code, NVM_ERROR_DESCRIPTION description
 							"are configured in violation of the license."),
 						description_len);
 				break;
+			case NVM_ERR_INVALIDPASSPHRASEFILE:
+				s_strcpy(description,
+						TR("The passphrase file is invalid."),
+						description_len);
+				break;
 			default:
 				s_strcpy(description, TR("The return code is not valid."),
 						description_len);
