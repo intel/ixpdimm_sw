@@ -334,10 +334,7 @@ std::vector<std::string>
 			nsCount = nvm_get_namespaces(namespaces, nsCount);
 			if (nsCount < 0)
 			{
-				if (namespaces)
-				{
-					free (namespaces);
-				}
+				free (namespaces);
 				throw exception::NvmExceptionLibError(nsCount);
 			}
 			for (int i = 0; i < nsCount; i++)

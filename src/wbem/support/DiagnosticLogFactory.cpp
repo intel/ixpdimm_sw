@@ -247,8 +247,7 @@ throw (framework::Exception)
 				if ((*iter).type == events[i].type)
 				{
 					// matched existing result - update data but do not count
-					if ((*iter).device_guid == NULL ||
-						guid_cmp((*iter).device_guid, events[i].guid))
+					if (guid_cmp((*iter).device_guid, events[i].guid))
 					{
 						matched = true;
 						// update id (if necessary)

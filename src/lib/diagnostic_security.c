@@ -88,8 +88,7 @@ int diag_security_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 				for (int i = 0; i < dev_count; i++)
 				{
 					// only take dimms that are manageable into account
-					if ((dimms[i].lock_state <= security_state_count) &&
-							(dimms[i].manageability == MANAGEMENT_VALIDCONFIG))
+					if (dimms[i].manageability == MANAGEMENT_VALIDCONFIG)
 						{
 							count[dimms[i].lock_state]++;
 							manageable_dev_count++;

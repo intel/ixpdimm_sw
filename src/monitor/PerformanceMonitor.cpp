@@ -187,9 +187,12 @@ void monitor::PerformanceMonitor::trimPerformanceData()
 
 	// max and trim percent are configurable
 	int maxPerformanceRows = 10000;
-	int trimPercent = 30;
+	int defaultTrimPercent = 30;
+	int trimPercent = defaultTrimPercent;
 	get_config_value_int(SQL_KEY_PERFORMANCE_LOG_MAX, &maxPerformanceRows);
 	get_config_value_int(SQL_KEY_PERFORMANCE_LOG_TRIM_PERCENT, &trimPercent);
+	if (trimPercent < 0)
+		trimPercent = defaultTrimPercent;
 
 	int currentPerformanceRows = 0;
 	table_row_count(m_pStore, PERFORMANCE_TABLE_NAME.c_str(), &currentPerformanceRows);

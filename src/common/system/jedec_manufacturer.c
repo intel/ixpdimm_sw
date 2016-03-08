@@ -1201,14 +1201,11 @@ int lookup_jedec_jep106_manufacturer(
 		while ((--byte && (*manufacturer_id++ == 0x7f)));
 		id = *--manufacturer_id;
 
-		if (index != 0)
+		if (parity(id) == 1)
 		{
-			if (parity(id) == 1)
-			{
-				s_strcpy(manufacturer, (char *)manufacturers[index - 1][(id & 0x7f) - 1],
-						manufacturer_len);
-				rc = COMMON_SUCCESS;
-			}
+			s_strcpy(manufacturer, (char *)manufacturers[index - 1][(id & 0x7f) - 1],
+					manufacturer_len);
+			rc = COMMON_SUCCESS;
 		}
 
 		if (rc != COMMON_SUCCESS)

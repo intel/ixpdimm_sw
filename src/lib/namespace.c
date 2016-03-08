@@ -1915,11 +1915,11 @@ int get_largest_block_namespace(const struct pool *p_pool, NVM_UINT64 *p_size)
 	{
 		*p_size = 0;
 
-		for (int i = 0; i < p_pool->dimm_count; i++)
+		for (int i = 0; (i < p_pool->dimm_count) && (rc == NVM_SUCCESS); i++)
 		{
 			NVM_UINT64 dimm_largest_block_namespace;
 
-			if ((get_largest_block_namespace_on_a_dimm(p_pool, p_pool->dimms[i],
+			if ((rc = get_largest_block_namespace_on_a_dimm(p_pool, p_pool->dimms[i],
 				&dimm_largest_block_namespace)) == NVM_SUCCESS)
 			{
 				if (dimm_largest_block_namespace > *p_size)

@@ -951,10 +951,7 @@ int config_input_table_to_config_goal(const NVM_GUID device_guid,
 					// If this is the requested DIMM, get the size
 					if (guid_cmp(p_qos->dimms[i], device_guid))
 					{
-						if (p_size)
-						{
-							*p_size = (p_dimm->size / BYTES_PER_GB);
-						}
+						*p_size = (p_dimm->size / BYTES_PER_GB);
 					}
 					set_offset += sizeof (struct dimm_info_extension_table);
 				}

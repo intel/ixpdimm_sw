@@ -99,11 +99,6 @@ wbem::logic::MemoryAllocator* wbem::logic::MemoryAllocator::getNewMemoryAllocato
 	pApi->getPools(pools);
 
 	int numSockets = pApi->getSocketCount();
-	if (rc < 0)
-	{
-		throw exception::NvmExceptionLibError(rc);
-	}
-
 	wbem::logic::MemoryAllocator *pAllocator = new wbem::logic::MemoryAllocator(
 			systemCapabilities,
 			manageableDevices,

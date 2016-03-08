@@ -298,7 +298,7 @@ int nvm_set_fw_log_level(const NVM_GUID device_guid, const enum fw_log_level log
 	struct device_discovery discovery;
 
 	// verify log_level is within range
-	if (log_level < FW_LOG_LEVEL_DISABLED || log_level > FW_LOG_LEVEL_DEBUG)
+	if (log_level > FW_LOG_LEVEL_DEBUG)
 	{
 		rc = NVM_ERR_INVALIDPARAMETER;
 		COMMON_LOG_ERROR_F("Invalid parameter, log_level is %d", log_level);

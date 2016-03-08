@@ -214,7 +214,7 @@ enum event_severity get_pm_metadata_severity(struct health_event event)
 {
 	enum event_severity severity = EVENT_SEVERITY_INFO;
 	if ((event.event_type == HEALTH_EVENT_TYPE_NAMESPACE &&
-			event.health.namespace_event.health_flag != NAMESPACE_HEALTH_RESULT_OK) &&
+			event.health.namespace_event.health_flag != NAMESPACE_HEALTH_RESULT_OK) ||
 		(event.event_type == HEALTH_EVENT_TYPE_LABEL_AREA &&
 			event.health.label_area_event.health_flag != LABEL_AREA_HEALTH_RESULT_OK))
 	{

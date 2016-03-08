@@ -687,7 +687,7 @@ int read_dimm_config(FILE *p_file, struct config_goal *p_goal,
 			char *pLine = line;
 
 			str = x_strtok(&pLine, delim);
-			if (str == NULL || s_strtous(str, strlen(str),
+			if (s_strtous(str, strlen(str),
 					&p_end, p_socket) != strlen(str))
 			{
 				bad_format = 1;

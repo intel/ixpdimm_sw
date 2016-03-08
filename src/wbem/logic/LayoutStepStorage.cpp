@@ -57,14 +57,11 @@ void wbem::logic::LayoutStepStorage::execute(const MemoryAllocationRequest& requ
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	NVM_UINT64 bytesToAllocate = getRemainingBytesFromRequestedDimms(request, layout);
-	if (bytesToAllocate)
+	NVM_UINT64 bytesRemaining = bytesToAllocate;
+	for (std::vector<struct Dimm>::const_iterator dimmIter = request.dimms.begin();
+			dimmIter != request.dimms.end(); dimmIter++)
 	{
-		NVM_UINT64 bytesRemaining = bytesToAllocate;
-		for (std::vector<struct Dimm>::const_iterator dimmIter = request.dimms.begin();
-				dimmIter != request.dimms.end(); dimmIter++)
-		{
-			bytesRemaining -= getDimmUnallocatedBytes(dimmIter->capacity, layout.goals[dimmIter->guid]);
-		}
-		layout.storageCapacity = bytesToConfigGoalSize(bytesToAllocate - bytesRemaining);
+		bytesRemaining -= getDimmUnallocatedBytes(dimmIter->capacity, layout.goals[dimmIter->guid]);
 	}
+	layout.storageCapacity = bytesToConfigGoalSize(bytesToAllocate - bytesRemaining);
 }

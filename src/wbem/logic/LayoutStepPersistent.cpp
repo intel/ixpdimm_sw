@@ -170,7 +170,7 @@ NVM_UINT64 wbem::logic::LayoutStepPersistent::layoutInterleavedPm(
 	}
 	NVM_UINT64 dimmCount = removeEmptySockets(sockets, bytesToAllocate, request, layout);
 
-	if (sockets.size())
+	if (sockets.size() && dimmCount > 0)
 	{
 		NVM_UINT64 bytesPerDimm = bytesToAllocate / dimmCount;
 		for (std::map<NVM_UINT16, std::vector<Dimm> >::iterator socketIter = sockets.begin();
