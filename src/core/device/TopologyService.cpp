@@ -49,25 +49,47 @@ core::device::TopologyCollection core::device::TopologyService::getAllTopologies
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	TopologyCollection result;
 
-	int rc = m_pApi.getMemoryTopologyCount();
-
-	if (rc < 0)
+	int tc = m_pApi.getMemoryTopologyCount();
+	if (tc < 0)
 	{
-		throw LibraryException(rc);
+		throw LibraryException(tc);
 	}
 
-	int count = rc;
-	memory_topology mem_topology[count];
+	int dc = m_pApi.getDeviceCount();
+	if (dc < 0)
+        {
+                throw LibraryException(dc);
+        }
 
-	rc = m_pApi.getMemoryTopology(mem_topology, count);
-	if (rc < 0)
+	device_discovery devices[dc];
+	memory_topology mem_topology[tc];
+
+	int topology_count = tc;
+	tc = m_pApi.getMemoryTopology(mem_topology, topology_count);
+	if (tc < 0)
 	{
-		throw LibraryException(rc);
+		throw LibraryException(tc);
 	}
 
-	for (int i = 0; i < count; i++)
+	int devices_count = dc;
+	dc = m_pApi.getDevices(devices, devices_count);
+	if (dc < 0)
+        {
+                throw LibraryException(dc);
+        }
+
+	for (int i = 0; i < topology_count; i++)
 	{
-		Topology topology(mem_topology[i]);
+		device_discovery device;
+		for (int j = 0; j < devices_count; j++)
+		{
+			if (devices[j].physical_id == mem_topology[i].physical_id)
+			{
+				device = devices[j];
+				break;
+			}
+		}
+		Topology topology(mem_topology[i], device);
 		result.push_back(topology);
 	}
 

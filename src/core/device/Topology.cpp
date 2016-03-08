@@ -33,6 +33,46 @@ const memory_topology &core::device::Topology::getTopology()
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return m_topology;
 }
+const device_discovery &core::device::Topology::getDiscovery()
+{
+        LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+        return m_device;
+}
+std::string core::device::Topology::getGuid()
+{
+        LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+        return Helper::guidToString(getDiscovery().guid);
+}
+NVM_UINT32 core::device::Topology::getDeviceHandle()
+{
+        LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+        return getDiscovery().device_handle.handle;
+}
+NVM_UINT32 core::device::Topology::getChannelPosition()
+{
+        LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+        return getDiscovery().device_handle.parts.mem_channel_dimm_num;
+}
+NVM_UINT32 core::device::Topology::getChannelId()
+{
+        LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+        return getDiscovery().device_handle.parts.mem_channel_id;
+}
+NVM_UINT16 core::device::Topology::getSocketId()
+{
+        LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+        return getDiscovery().socket_id;
+}
+NVM_UINT16 core::device::Topology::getMemoryControllerId()
+{
+        LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+        return getDiscovery().memory_controller_id;
+}
+NVM_UINT16 core::device::Topology::getNodeControllerId()
+{
+        LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+        return getDiscovery().node_controller_id;
+}
 NVM_UINT16 core::device::Topology::getPhysicalID()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);

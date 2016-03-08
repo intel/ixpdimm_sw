@@ -91,6 +91,7 @@ public:
 	virtual NVM_UINT16 getRevisionId();
 	virtual NVM_UINT16 getSocketId();
 	virtual NVM_UINT16 getMemoryControllerId();
+	virtual NVM_UINT16 getNodeControllerId();
 	virtual enum memory_type getMemoryType();
 	virtual std::string getManufacturer();
 	virtual NVM_UINT16 getManufacturerId();

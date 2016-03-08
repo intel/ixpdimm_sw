@@ -213,7 +213,11 @@ NVM_UINT16 Device::getMemoryControllerId()
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDiscovery().memory_controller_id;
 }
-
+NVM_UINT16 Device::getNodeControllerId()
+{
+        LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+        return getDiscovery().node_controller_id;
+}
 std::string Device::getManufacturer()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);

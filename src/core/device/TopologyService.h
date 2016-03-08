@@ -39,7 +39,8 @@ class NVM_API TopologyService
 {
 public:
 	TopologyService(NvmApi &pApi = *NvmApi::getApi()) : m_pApi(pApi) { }
-	TopologyCollection getAllTopologies();
+	virtual TopologyCollection getAllTopologies();
+	device_discovery getDeviceForTopology(memory_topology topologies);
 	virtual ~TopologyService() { }
 
 	static TopologyService &getService();

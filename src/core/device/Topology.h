@@ -52,14 +52,18 @@ namespace device
 class NVM_API Topology
 {
 public:
-	Topology(const memory_topology &topology)
+	Topology(const memory_topology &topology, const device_discovery &device) :
+		m_pDetails(NULL)
 	{
 		memmove(&m_topology, &topology, sizeof(m_topology));
+		memmove(&m_device, &device, sizeof(m_device));
 	}
 
-	Topology(const Topology &other)
+	Topology(const Topology &other) :
+		m_pDetails(NULL)
 	{
 		this->m_topology = other.m_topology;
+		this->m_device = other.m_device;
 	}
 
 	Topology &operator=(const Topology &other)
@@ -67,24 +71,37 @@ public:
 		if (&other == this)
 			return *this;
 		this->m_topology = other.m_topology;
+		this->m_device = other.m_device;
 		return *this;
 	}
 
-	Topology *clone();
-	NVM_UINT16 getPhysicalID();
-	enum memory_type getMemoryType();
-	enum device_form_factor getFormFactor();
-	NVM_UINT64 getRawCapacity();
-	NVM_UINT64 getDataWidth();
-	NVM_UINT64 getTotalWidth();
-	NVM_UINT64 getSpeed();
-	std::string getPartNumber();
-	std::string getDeviceLocator();
-	std::string getBankLabel();
+	virtual ~Topology() { }
+
+	virtual Topology *clone();
+	virtual std::string getGuid();
+	virtual NVM_UINT32 getDeviceHandle();
+	virtual NVM_UINT32 getChannelPosition();
+        virtual NVM_UINT32 getChannelId();
+        virtual NVM_UINT16 getSocketId();
+        virtual NVM_UINT16 getMemoryControllerId();
+        virtual NVM_UINT16 getNodeControllerId();
+        virtual NVM_UINT16 getPhysicalID();
+	virtual enum memory_type getMemoryType();
+	virtual enum device_form_factor getFormFactor();
+	virtual NVM_UINT64 getRawCapacity();
+	virtual NVM_UINT64 getDataWidth();
+	virtual NVM_UINT64 getTotalWidth();
+	virtual NVM_UINT64 getSpeed();
+	virtual std::string getPartNumber();
+	virtual std::string getDeviceLocator();
+	virtual std::string getBankLabel();
 
 private:
 	const memory_topology &getTopology();
+	const device_discovery &getDiscovery();
+	device_details *m_pDetails;
 	memory_topology m_topology;
+	device_discovery m_device;
 };
 
 class NVM_API TopologyCollection : public Collection<Topology>
