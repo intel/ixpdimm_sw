@@ -344,7 +344,7 @@ wbem::framework::UINT32 wbem::pmem_config::PersistentMemoryPoolFactory::executeM
 	{
 		wbemRc = PERSISTENTMEMORYPOOL_ERR_INVALID_PARAMETER;
 	}
-	catch (wbem::exception::NvmExceptionLibError &e)
+	catch (wbem::exception::NvmExceptionLibError &)
 	{
 		wbemRc = PERSISTENTMEMORYPOOL_ERR_FAILED;
 	}

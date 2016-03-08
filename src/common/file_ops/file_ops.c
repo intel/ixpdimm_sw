@@ -106,11 +106,8 @@ int copy_file_to_buffer(const COMMON_PATH path, const COMMON_SIZE path_len,
 			if (rc != COMMON_SUCCESS)
 			{
 				*p_buf_len = 0;
-				if (*pp_buf != NULL)
-				{
-					free(*pp_buf);
-					*pp_buf = NULL;
-				}
+				free(*pp_buf);
+				*pp_buf = NULL;
 			}
 		}
 	}

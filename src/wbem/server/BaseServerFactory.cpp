@@ -136,6 +136,7 @@ throw (wbem::framework::Exception)
 	}
 	catch (framework::Exception &)
 	{
+		delete pResult;
 		throw;
 	}
 

@@ -41,7 +41,7 @@ class NVM_API SystemInfo
 {
 public:
 	SystemInfo();
-	SystemInfo(struct host host, int logLevel);
+	SystemInfo(struct host& host, int logLevel);
 	virtual ~SystemInfo();
 	SystemInfo & operator=(const SystemInfo &other);
 	SystemInfo(const SystemInfo &other);

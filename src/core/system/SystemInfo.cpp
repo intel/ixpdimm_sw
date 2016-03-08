@@ -40,7 +40,7 @@ SystemInfo::SystemInfo() :
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
 
-SystemInfo::SystemInfo(struct host host, int logLevel) :
+SystemInfo::SystemInfo(struct host& host, int logLevel) :
 		m_info(host),
 		m_logLevel(logLevel)
 {

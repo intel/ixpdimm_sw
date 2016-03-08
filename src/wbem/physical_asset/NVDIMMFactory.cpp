@@ -131,7 +131,7 @@ wbem::framework::Instance *NVDIMMFactory::getInstance(
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	framework::Instance *pInstance = NULL;
+	framework::Instance *pInstance = new framework::Instance(path);
 
 	try
 	{
@@ -144,15 +144,16 @@ wbem::framework::Instance *NVDIMMFactory::getInstance(
 		core::Result<core::device::Device> device =
 				m_deviceService.getDevice(guidAttr.stringValue());
 
-		pInstance = new framework::Instance(path);
 		toInstance(device.getValue(), *pInstance, attributes);
 	}
 	catch (core::LibraryException &e)
 	{
+		delete pInstance;
 		throw exception::NvmExceptionLibError(e.getErrorCode());
 	}
 	catch (core::InvalidArgumentException &e)
 	{
+		delete pInstance;
 		throw framework::ExceptionBadParameter(e.getArgumentName().c_str());
 	}
 

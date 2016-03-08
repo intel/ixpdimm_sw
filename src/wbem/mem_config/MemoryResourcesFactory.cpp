@@ -131,10 +131,12 @@ wbem::framework::Instance* wbem::mem_config::MemoryResourcesFactory::getInstance
 	}
 	catch (framework::Exception &) // clean up and re-throw
 	{
+		delete pResult;
 		throw;
 	}
 	catch (core::LibraryException&e)
 	{
+		delete pResult;
 		throw exception::NvmExceptionLibError(e.getErrorCode());
 	}
 
