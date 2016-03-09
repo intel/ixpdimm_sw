@@ -226,50 +226,45 @@ fi
 /sbin/ldconfig
 
 %files
-%defattr(-,root,root)
-%{_libdir}/libnvm.so.*
-%dir %{_datadir}/%{product_name}
-%{_datadir}/%{product_name}/*.pem
-%config(noreplace) %{_datadir}/%{product_name}/*.dat*
+%attr(755,root,root) %{_libdir}/libnvm.so.*
+%attr(755,root,root) %dir %{_datadir}/%{product_name}
+%attr(640,root,root) %{_datadir}/%{product_name}/*.pem
+%attr(640,root,root) %config(noreplace) %{_datadir}/%{product_name}/*.dat*
 %license LICENSE
 
 %files -n %dname
-%defattr(-,root,root)
-%{_libdir}/libnvm.so
-%{_includedir}/nvm_types.h
-%{_includedir}/nvm_management.h
+%attr(755,root,root) %{_libdir}/libnvm.so
+%attr(644,root,root) %{_includedir}/nvm_types.h
+%attr(644,root,root) %{_includedir}/nvm_management.h
 %license LICENSE
 
 %files -n %corename
-%defattr(-,root,root)
-%{_libdir}/libnvm-core.so*
+%attr(755,root,root) %{_libdir}/libnvm-core.so*
 %license LICENSE
 
 %files -n %cimlibs
-%defattr(-,root,root)
-%{_libdir}/cmpi/libnvmwbem.so*
-%dir %{_datadir}/%{product_name}/Pegasus
-%dir %{_datadir}/%{product_name}/Pegasus/mof
-%dir %{_datadir}/%{product_name}/sfcb
-%{_datadir}/%{product_name}/sfcb/*.reg
-%{_datadir}/%{product_name}/sfcb/*.mof
-%{_datadir}/%{product_name}/Pegasus/mof/*.mof
-%{_sysconfdir}/ld.so.conf.d/%{product_name}-%{_arch}.conf
+%attr(755,root,root) %{_libdir}/cmpi/libnvmwbem.so*
+%attr(755,root,root) %dir %{_datadir}/%{product_name}/Pegasus
+%attr(755,root,root) %dir %{_datadir}/%{product_name}/Pegasus/mof
+%attr(755,root,root) %dir %{_datadir}/%{product_name}/sfcb
+%attr(644,root,root) %{_datadir}/%{product_name}/sfcb/*.reg
+%attr(644,root,root) %{_datadir}/%{product_name}/sfcb/*.mof
+%attr(644,root,root) %{_datadir}/%{product_name}/Pegasus/mof/*.mof
+%attr(644,root,root) %{_sysconfdir}/ld.so.conf.d/%{product_name}-%{_arch}.conf
 %license LICENSE
 
 %files -n %monitorname
-%defattr(-,root,root)
-%{_bindir}/nvmmonitor
-%{_unitdir}/nvmmonitor.service
+%attr(755,root,root) %{_bindir}/nvmmonitor
+%attr(755,root,root) %{_unitdir}/nvmmonitor.service
 %license LICENSE
-%{_mandir}/man8/nvmmonitor*
+%attr(644,root,root) %{_mandir}/man8/nvmmonitor*
 
 %files -n %cliname
 %defattr(-,root,root)
-%{_bindir}/nvmcli
-%{_libdir}/libcrfeatures.so*
+%attr(755,root,root) %{_bindir}/nvmcli
+%attr(755,root,root) %{_libdir}/libcrfeatures.so*
 %license LICENSE
-%{_mandir}/man8/nvmcli*
+%attr(644,root,root) %{_mandir}/man8/nvmcli*
 
 %changelog
 * Wed Dec 24 2015 nicholas.w.moulin@intel.com
