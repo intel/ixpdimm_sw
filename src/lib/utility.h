@@ -432,6 +432,10 @@ static inline NVM_UINT64 round_down(const NVM_UINT64 num_to_round, const NVM_UIN
 	return rounded;
 }
 
+/*
+ * when a block size of 520, 528, 4104 is requested, the actual block size used by the
+ * block driver is rounded up to the nearest multiple of cache line size.
+ */
 static inline NVM_UINT32 get_real_block_size(NVM_UINT32 block_size)
 {
 	NVM_UINT32 real_block_size = 1;
@@ -444,49 +448,23 @@ static inline NVM_UINT32 get_real_block_size(NVM_UINT32 block_size)
 	return real_block_size;
 }
 
-enum small_block_sizes
-{
-	BLOCK_SIZE_520 = 520,
-	BLOCK_SIZE_528 = 528,
-	BLOCK_SIZE_576 = 576
-};
-
-static inline NVM_BOOL smallerBlockSizeIsSelected(NVM_UINT16 block_size)
-{
-	NVM_BOOL result = 0;
-	if (block_size == BLOCK_SIZE_520 || block_size == BLOCK_SIZE_528)
-	{
-		result = 1;
-	}
-	return result;
-}
-
 /*
- * When a smaller block size with protection information (PI) i.e. 520 and 528 is selected the
- * actual size used is 576 bytes. The extra space is not used by the block driver wasting a
- * substantial fraction of the allocated space.
- * This function calculates the size of the namespace to accomodate this wastage.
+ * returns the actual NS size with the actual block size taking into account the real block size
  */
 static inline NVM_UINT64 adjust_namespace_size(NVM_UINT16 block_size, NVM_UINT64 block_count)
 {
-	if (smallerBlockSizeIsSelected(block_size))
-	{
-		block_size = BLOCK_SIZE_576;
-	}
+	block_size = get_real_block_size(block_size);
+
 	return block_size * block_count;
 }
 
 static inline NVM_UINT64 calculateBlockCount(NVM_UINT64 namespace_size, NVM_UINT16 block_size)
 {
 	NVM_UINT64 block_count;
-	if (smallerBlockSizeIsSelected(block_size))
-	{
-		block_count = namespace_size/ BLOCK_SIZE_576;
-	}
-	else
-	{
-		block_count = namespace_size/ block_size;
-	}
+
+	block_size = get_real_block_size(block_size);
+	block_count = namespace_size/ block_size;
+
 	return block_count;
 }
 

@@ -749,16 +749,16 @@ int find_dimm_with_capacity(const struct pool *p_pool,
 	COMMON_LOG_ENTRY();
 	int rc = NVM_ERR_BADALIGNMENT;
 
-	// Block namespaces are always by one
+	NVM_UINT8 ways = 1; // Block namespaces are always by one
 	NVM_UINT64 minimum_ns_size =
-			get_minimum_ns_size(1, p_nvm_caps->sw_capabilities.min_namespace_size);
+			get_minimum_ns_size(ways, p_nvm_caps->sw_capabilities.min_namespace_size);
 	NVM_UINT64 new_block_count = p_settings->block_count;
 	NVM_UINT32 real_block_size = get_real_block_size(p_settings->block_size);
 	adjust_namespace_block_count_if_allowed(&new_block_count,
-			real_block_size, 1, allow_adjustment);
+			real_block_size, ways, allow_adjustment);
 	NVM_UINT64 namespace_capacity = new_block_count * real_block_size;
 
-	if (check_namespace_alignment(namespace_capacity, real_block_size, 1))
+	if (check_namespace_alignment(namespace_capacity, real_block_size, ways))
 	{
 		if ((rc = check_namespace_capacity_and_security(p_pool,
 				namespace_capacity, minimum_ns_size,
@@ -772,7 +772,7 @@ int find_dimm_with_capacity(const struct pool *p_pool,
 			// available size we may have gone over. We don't want to fail that request so we will
 			// try rounding down to an aligned size and see if that works. If its still not happy
 			// then we will fail
-			NVM_UINT64 alignment_size = get_alignment_size(real_block_size, 1);
+			NVM_UINT64 alignment_size = get_alignment_size(real_block_size, ways);
 			namespace_capacity -= alignment_size;
 			if ((rc = check_namespace_capacity_and_security(
 					p_pool, namespace_capacity, minimum_ns_size,
@@ -1074,8 +1074,6 @@ int validate_namespace_create_settings(struct pool *p_pool,
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
-
-
 
 NVM_UINT32 get_alignment_size(NVM_UINT32 block_size, NVM_UINT32 ways)
 {

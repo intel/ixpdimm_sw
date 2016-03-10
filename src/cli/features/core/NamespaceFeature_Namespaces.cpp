@@ -259,11 +259,12 @@ void cli::nvmcli::NamespaceFeature::generateBlockSizeAttributeValue(wbem::framew
 		wbem::framework::SUCCESS)
 	{
 		blockSizeInt = bsAttr.uint64Value();
-		if (smallerBlockSizeIsSelected(blockSizeInt))
+		NVM_UINT64 alignedBlockSize = get_real_block_size(blockSizeInt);
+		if (blockSizeInt != alignedBlockSize)
 		{ // report the selected block size and the actual size used
 			std::stringstream bsStr;
 			bsStr << bsAttr.asStr();
-			bsStr << " (" << BLOCK_SIZE_576 << " B aligned)";
+			bsStr << " (" << alignedBlockSize << " B aligned)";
 			instance.setAttribute(wbem::BLOCKSIZE_KEY,
 				wbem::framework::Attribute(bsStr.str(), false));
 		}
@@ -1236,12 +1237,13 @@ bool cli::nvmcli::NamespaceFeature::confirmNamespaceBlockSizeUsage()
 {
 	bool result = true;
 
-	// actual size used is 576 bytes when a smaller block size with PI (i.e. 520 and 528) is selected
-	if (smallerBlockSizeIsSelected(m_blockSize))
+	// actual block size used is rounded up to the nearest multiple of cache line size
+	NVM_UINT64 blockSizeInt = get_real_block_size(m_blockSize);
+	if (blockSizeInt != m_blockSize)
 	{
 		std::string prompt = framework::ResultBase::stringFromArgList(
 			CREATE_NS_SMALL_BLOCK_SIZE_PROMPT.c_str(),
-			m_blockSize * m_blockCount , BLOCK_SIZE_576 * m_blockCount);
+			m_blockSize * m_blockCount , blockSizeInt * m_blockCount);
 
 		if (!m_forceOption && !promptUserYesOrNo(prompt))
 		{
