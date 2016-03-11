@@ -90,7 +90,6 @@ void cmpiMonitor::Cleanup()
 			pthread_join(g_pThreads[t], (void **)&i);
 		}
 
-		g_pThreads = 0;
 		if (g_pThreads)
 		{
 			delete g_pThreads;

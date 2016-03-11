@@ -168,10 +168,10 @@ int copy_file(const COMMON_PATH source, const COMMON_SIZE source_len,
 	}
 
 	close(fd_in);
-	close(fd_out);
 
 	// set the permissions on the copy
-	chmod(destination_path, S_IROTH | S_IRGRP | S_IWUSR | S_IRUSR);
+	fchmod(fd_out, S_IROTH | S_IRGRP | S_IWUSR | S_IRUSR);
+	close(fd_out);
 
 	return rc;
 }

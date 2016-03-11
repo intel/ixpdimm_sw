@@ -281,11 +281,8 @@ void getMappedVolatileCapacity(const NVM_NFIT_DEVICE_HANDLE device_handle,
 				(index = get_dimm_index_in_pool(device_handle,
 						&(pools[pool_index]))) != NVM_ERR_NOTFOUND)
 		{
-			if (index < NVM_MAX_DEVICES_PER_POOL)
-			{
-				*p_volatile_capacity += pools[pool_index].volatile_capacities[index];
-				break;
-			}
+			*p_volatile_capacity += pools[pool_index].volatile_capacities[index];
+			break;
 		}
 	}
 

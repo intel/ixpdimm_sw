@@ -648,8 +648,7 @@ int create_namespace(
 					}
 				}
 				// enable the namespace if desired (only non-btt namespaces)
-				else if (rc == NVM_SUCCESS &&
-						p_settings->enabled == NAMESPACE_ENABLE_STATE_ENABLED)
+				else if (p_settings->enabled == NAMESPACE_ENABLE_STATE_ENABLED)
 				{
 					rc = enable_namespace(namespace);
 				}

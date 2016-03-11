@@ -709,9 +709,14 @@ int store_event(struct event *p_event, COMMON_BOOL syslog)
 		{
 			// roll table
 			int max_events = 10000; // default if key is missing
-			int trim_percent = 10;
+			int defaultTrimPercent = 10;
+			int trim_percent = defaultTrimPercent;
 			get_config_value_int(SQL_KEY_EVENT_LOG_MAX, &max_events);
 			get_config_value_int(SQL_KEY_EVENT_LOG_TRIM_PERCENT, &trim_percent);
+			if (trim_percent < 0)
+			{
+				trim_percent = defaultTrimPercent;
+			}
 
 			int event_count = 0;
 			table_row_count(p_store, "event", &event_count);

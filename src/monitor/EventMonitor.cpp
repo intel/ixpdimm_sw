@@ -925,7 +925,7 @@ void monitor::EventMonitor::checkConfigGoalStatus(const std::string &guidStr, co
 		enum config_goal_status configGoalStatus = goal.status;
 		// ensure this is a new event
 		if (!device.stored ||
-		    (device.stored && configGoalStatus != device.storedState.config_goal_status))
+		    configGoalStatus != device.storedState.config_goal_status)
 		{
 			// configuration processed successfully
 			if (configGoalStatus == CONFIG_GOAL_STATUS_SUCCESS)

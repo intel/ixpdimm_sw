@@ -280,14 +280,7 @@ throw (framework::Exception)
 				diag.id = events[i].event_id;
 				diag.time = events[i].time;
 				diag.type = events[i].type;
-				if (events[i].guid)
-				{
-					memmove(diag.device_guid, events[i].guid, NVM_GUID_LEN);
-				}
-				else
-				{
-					memset(diag.device_guid, 0, NVM_GUID_LEN);
-				}
+				memmove(diag.device_guid, events[i].guid, NVM_GUID_LEN);
 				diag.result = events[i].diag_result;
 				diag.messages.push_back(buildDiagnosticResultMessage(&events[i]));
 				pResults->push_back(diag);

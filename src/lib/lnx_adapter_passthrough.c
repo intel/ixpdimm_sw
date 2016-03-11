@@ -400,7 +400,7 @@ int ioctl_passthrough_cmd(struct fw_cmd *p_fw_cmd)
 							p_fw_cmd->output_payload_size);
 					}
 
-					if (rc == NVM_SUCCESS && p_fw_cmd->large_output_payload_size > 0)
+					if (p_fw_cmd->large_output_payload_size > 0)
 					{
 						rc = bios_read_large_payload(p_dimm, p_fw_cmd);
 					}
