@@ -587,10 +587,7 @@ void NvmApi::getPools(std::vector<struct pool>& pools) const
 			rc = nvm_get_pools(pPoolArray, count);
 			if (rc < 0)
 			{
-				if (pPoolArray)
-				{
-					free (pPoolArray);
-				}
+				free (pPoolArray);
 				throw exception::NvmExceptionLibError(rc);
 			}
 

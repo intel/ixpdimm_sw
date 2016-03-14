@@ -447,7 +447,7 @@ int nvm_get_sensors(const NVM_GUID device_guid, struct sensor *p_sensors,
 
 		// even if the array is too small, we still want to fill in as many as possible.
 		// Just return the error code
-		if (rc == NVM_SUCCESS && count < NVM_MAX_DEVICE_SENSORS)
+		if (count < NVM_MAX_DEVICE_SENSORS)
 		{
 			rc = NVM_ERR_ARRAYTOOSMALL;
 		}

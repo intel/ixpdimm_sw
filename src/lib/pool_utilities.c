@@ -572,10 +572,7 @@ int calculate_pm_capacities(struct nvm_pool *p_pool)
 				}
 			}
 
-			if (rc >= 0)
-			{
-				rc = NVM_SUCCESS;
-			}
+			rc = NVM_SUCCESS;
 		}
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);

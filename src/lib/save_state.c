@@ -277,14 +277,7 @@ int support_store_sockets(PersistentStore *p_store, int history_id)
 		if (socket_count != nvm_get_sockets(sockets, socket_count))
 		{
 			COMMON_LOG_ERROR("Failed getting socket information");
-			if (socket_count < 0)
-			{
-				rc = socket_count;
-			}
-			else
-			{
-				rc = NVM_ERR_UNKNOWN;
-			}
+			rc = NVM_ERR_UNKNOWN;
 		}
 		else
 		{
