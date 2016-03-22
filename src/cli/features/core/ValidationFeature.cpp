@@ -205,26 +205,6 @@ cli::framework::ResultBase* cli::nvmcli::ValidationFeature::injectError(
 	return pResult;
 }
 
-/*
- * try parsing the string str to an int.  If it succeeds return true and put the int value into
- * p_value. Else return false;
- */
-bool cli::nvmcli::ValidationFeature::tryParseInt(const std::string& str, NVM_UINT64* p_value) const
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	bool result = false;
-	std::istringstream stream(str);
-
-	stream >> *p_value; // try to read the number
-	stream >> std::ws; // eat any whitespace
-
-	if (!stream.fail() && stream.eof())
-	{
-        	result = true;
-	}
-	return result;
-}
-
 cli::framework::ResultBase* cli::nvmcli::ValidationFeature::parseClearProperty(
 		const framework::ParsedCommand& parsedCommand)
 {
@@ -269,7 +249,7 @@ cli::framework::ResultBase* cli::nvmcli::ValidationFeature::parseTemperatureProp
 
 	std::string temperaturePropertyValue = framework::Parser::getPropertyValue(parsedCommand,
 		TEMPERATURE_PROPERTYNAME, &m_temperatureExists);
-	
+
 	if (m_temperatureExists)
 	{	
 		m_errorType = ERROR_TYPE_TEMPERATURE;
@@ -283,13 +263,16 @@ cli::framework::ResultBase* cli::nvmcli::ValidationFeature::parseTemperatureProp
 		}
 		else
 		{
-			NVM_UINT64 temperatureintValue;
-			if (!tryParseInt(temperaturePropertyValue, &temperatureintValue)) // it must be an int
+			if(!isStringValidNumber(temperaturePropertyValue))
 			{
 				pResult = new framework::SyntaxErrorBadValueResult(framework::TOKENTYPE_PROPERTY,
 					TEMPERATURE_PROPERTYNAME, temperaturePropertyValue);
 			}
-			m_temperature = (NVM_UINT16) temperatureintValue;
+			else
+			{
+				m_temperature = stringToUInt64(temperaturePropertyValue);
+
+			}
 		}
 	}
 
@@ -308,13 +291,15 @@ cli::framework::ResultBase* cli::nvmcli::ValidationFeature::parsePoisonProperty(
 	if (m_poisonExists)
 	{
 		m_errorType = ERROR_TYPE_POISON;
-		NVM_UINT64 dpaIntValue;
-		if (!tryParseInt(poisonPropertyValue, &dpaIntValue)) // it must be an int
+		if(!isStringHex(poisonPropertyValue))
 		{
 			pResult = new framework::SyntaxErrorBadValueResult(framework::TOKENTYPE_PROPERTY,
 					POISON_PROPERTYNAME, poisonPropertyValue);
 		}
-		m_poison = (NVM_UINT64) dpaIntValue;
+		else
+		{
+			m_poison = stringToUInt64(poisonPropertyValue);
+		}
 	}
 
 	return pResult;

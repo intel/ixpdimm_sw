@@ -238,6 +238,8 @@ bool stringToInt(const std::string& str, int* p_value);
  */
 bool isStringValidNumber(const std::string &value);
 
+bool isStringHex(const std::string &value);
+
 std::string calculateAdvertisedCapacity(NVM_UINT64 capacityInBytes,
 	const NVM_UINT64 blockCount = 0, const NVM_UINT64 blockSize = 0);
 

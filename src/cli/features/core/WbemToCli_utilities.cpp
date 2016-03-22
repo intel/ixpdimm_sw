@@ -888,6 +888,21 @@ bool cli::nvmcli::stringToInt(const std::string& str, int* p_value)
 	return result;
 }
 
+bool cli::nvmcli::isStringHex(const std::string &value)
+{
+	bool result = false;
+	if (value.substr(0, 2) == "0x" || value.substr(0, 2) == "0X")
+	{
+		result = true;
+		for (size_t i = 2; i < value.size() && result; i++)
+		{
+			result &= std::isxdigit(value[i]) != 0;
+		}
+	}
+
+	return result;
+}
+
 bool cli::nvmcli::isStringValidNumber(const std::string &value)
 {
 	bool result = true;

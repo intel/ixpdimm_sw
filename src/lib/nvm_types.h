@@ -40,6 +40,7 @@
 #define	NVM_DIMM_NAME	"AEP DIMM"
 #define	NVM_SYSLOG_SOURCE	"NVM_MGMT"
 #define	NVM_DEFAULT_NAMESPACE_NAME	"NvDimmVol"
+#define	NVM_SYSTEM	"Apache Pass"
 
 #define	NVM_COMPUTERNAME_LEN 256 // Length of host string
 #define	NVM_OSNAME_LEN	256 // Length of host OS string
