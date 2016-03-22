@@ -57,6 +57,7 @@ private:
 	void createResults();
 	bool displayOptionsAreValid();
 	bool isPropertyDisplayed(framework::IPropertyDefinition<core::system::SystemMemoryResources> &p);
+	static std::string convertCapacity(NVM_UINT64 capacity);
 };
 
 }

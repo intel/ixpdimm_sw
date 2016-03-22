@@ -42,8 +42,6 @@ ShowHostServerCommand::ShowHostServerCommand(core::system::SystemService &servic
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	core::Result<core::system::SystemInfo> s = m_service.getHostInfo();
-	m_hostInfo = s.getValue();
 	m_props.addStr("Name", &core::system::SystemInfo::getHostName).setIsDefault();
 	m_props.addStr("OsName", &core::system::SystemInfo::getOsName).setIsDefault();
 	m_props.addStr("OsVersion", &core::system::SystemInfo::getOsVersion).setIsDefault();
@@ -63,6 +61,9 @@ framework::ResultBase *ShowHostServerCommand::execute(const framework::ParsedCom
 	{
 		try
 		{
+			core::Result<core::system::SystemInfo> s = m_service.getHostInfo();
+			m_hostInfo = s.getValue();
+
 			createResults();
 		}
 		catch (core::LibraryException &e)

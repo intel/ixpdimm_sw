@@ -42,15 +42,12 @@ ShowMemoryResourcesCommand::ShowMemoryResourcesCommand(core::system::SystemServi
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	core::Result<core::system::SystemMemoryResources> s = m_service.getMemoryResources();
-	m_memoryResourcesInfo = s.getValue();
-
-	m_props.addUint64("Capacity", &core::system::SystemMemoryResources::getTotalCapacity).setIsDefault();
-	m_props.addUint64("VolatileCapacity", &core::system::SystemMemoryResources::getTotalVolatileCapacity).setIsDefault();
-	m_props.addUint64("PersistentCapacity", &core::system::SystemMemoryResources::getTotalPersistentCapacity).setIsDefault();
-	m_props.addUint64("UnconfiguredCapacity", &core::system::SystemMemoryResources::getTotalUnconfiguredCapacity).setIsDefault();
-	m_props.addUint64("InaccessibleCapacity", &core::system::SystemMemoryResources::getTotalInaccessibleCapacity).setIsDefault();
-	m_props.addUint64("ReservedCapacity", &core::system::SystemMemoryResources::getTotalReservedCapacity).setIsDefault();
+	m_props.addUint64("Capacity", &core::system::SystemMemoryResources::getTotalCapacity, &convertCapacity).setIsDefault();
+	m_props.addUint64("VolatileCapacity", &core::system::SystemMemoryResources::getTotalVolatileCapacity, &convertCapacity).setIsDefault();
+	m_props.addUint64("PersistentCapacity", &core::system::SystemMemoryResources::getTotalPersistentCapacity, &convertCapacity).setIsDefault();
+	m_props.addUint64("UnconfiguredCapacity", &core::system::SystemMemoryResources::getTotalUnconfiguredCapacity, &convertCapacity).setIsDefault();
+	m_props.addUint64("InaccessibleCapacity", &core::system::SystemMemoryResources::getTotalInaccessibleCapacity, &convertCapacity).setIsDefault();
+	m_props.addUint64("ReservedCapacity", &core::system::SystemMemoryResources::getTotalReservedCapacity, &convertCapacity).setIsDefault();
 }
 
 framework::ResultBase *ShowMemoryResourcesCommand::execute(const framework::ParsedCommand &parsedCommand)
@@ -64,6 +61,9 @@ framework::ResultBase *ShowMemoryResourcesCommand::execute(const framework::Pars
 	{
 		try
 		{
+			core::Result<core::system::SystemMemoryResources> s = m_service.getMemoryResources();
+			m_memoryResourcesInfo = s.getValue();
+
 			createResults();
 		}
 		catch (core::LibraryException &e)
@@ -135,6 +135,11 @@ void ShowMemoryResourcesCommand::createResults()
 			m_displayOptions.isDefault() ?
 					framework::ResultBase::OUTPUT_TEXTTABLE :
 					framework::ResultBase::OUTPUT_TEXT);
+}
+
+std::string ShowMemoryResourcesCommand::convertCapacity(NVM_UINT64 value)
+{
+	return convertCapacityFormat(value);
 }
 
 }

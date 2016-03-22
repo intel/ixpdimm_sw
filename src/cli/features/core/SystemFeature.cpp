@@ -68,6 +68,8 @@
 #endif
 #include <physical_asset/NVDIMMFactory.h>
 #include <cli/features/core/ShowDeviceCommand.h>
+#include <cli/features/core/ShowHostServerCommand.h>
+#include <cli/features/core/ShowMemoryResourcesCommand.h>
 
 const std::string cli::nvmcli::SystemFeature::Name = "System";
 
@@ -320,66 +322,9 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::showSystem(
 		const framework::ParsedCommand &parsedCommand)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	framework::ResultBase *pResult = NULL;
-	try
-	{
-		// get the host server info from wbem
-		wbem::server::BaseServerFactory serverProvider;
 
-		// populate the default attributes
-		wbem::framework::attribute_names_t defaultAttributes;
-		defaultAttributes.push_back(wbem::NAME_KEY);
-		defaultAttributes.push_back(wbem::OSNAME_KEY);
-		defaultAttributes.push_back(wbem::OSVERSION_KEY);
-		defaultAttributes.push_back(wbem::MIXEDSKU_KEY);
-		defaultAttributes.push_back(wbem::SKUVIOLATION_KEY);
-
-		// populate the all option attributes
-		wbem::framework::attribute_names_t allAttributes(defaultAttributes);
-		allAttributes.push_back(wbem::LOGLEVEL_KEY);
-
-		// retrieve the actual based on the user input
-		wbem::framework::attribute_names_t display_attributes =
-				GetAttributeNames(parsedCommand.options, defaultAttributes, allAttributes);
-
-		wbem::framework::attribute_names_t wbem_attributes(display_attributes);
-		wbem_attributes.push_back(wbem::OPERATIONALSTATUS_KEY);
-		FilterAttributeNames(wbem_attributes, wbem::MIXEDSKU_KEY);
-		FilterAttributeNames(wbem_attributes, wbem::SKUVIOLATION_KEY);
-
-		// get the server information
-		wbem::framework::instances_t *pInstances = serverProvider.getInstances(wbem_attributes);
-		if (pInstances)
-		{
-			// convert operational status to sku violation and mixed sku
-			convertSystemOpStatusToSku(*(pInstances->begin()));
-
-			cli::framework::PropertyListResult *pListResult =
-					NvmInstanceToPropertyListResult(*(pInstances->begin()), display_attributes);
-			pListResult->setName("Host");
-			pResult = pListResult;
-			delete pInstances;
-		}
-		// failures will throw an exception, this would prevent a crash due to an unexpected error
-		else
-		{
-			if (NULL != pResult)
-			{
-				delete pResult;
-			}
-			pResult = new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
-				TRS(nvmcli::UNKNOWN_ERROR_STR));
-		}
-	}
-	catch (wbem::framework::Exception &e)
-	{
-		if (NULL != pResult)
-		{
-			delete pResult;
-		}
-		pResult = NvmExceptionToResult(e);
-	}
-	return pResult;
+	ShowHostServerCommand cmd;
+	return cmd.execute(parsedCommand);
 }
 
 cli::framework::ResultBase *cli::nvmcli::SystemFeature::showDimms(
@@ -1080,62 +1025,8 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::showMemoryResources(
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	framework::ResultBase *pResult = NULL;
-	try
-	{
-		// define default display attributes
-		wbem::framework::attribute_names_t defaultAttributes;
-		defaultAttributes.push_back(wbem::CAPACITY_KEY);
-		defaultAttributes.push_back(wbem::VOLATILECAPACITY_KEY);
-		defaultAttributes.push_back(wbem::PERSISTENTCAPACITY_KEY);
-		defaultAttributes.push_back(wbem::UNCONFIGUREDCAPACITY_KEY);
-		defaultAttributes.push_back(wbem::INACCESSIBLECAPACITY_KEY);
-		defaultAttributes.push_back(wbem::RESERVEDCAPACITY_KEY);
-
-		// read the options
-		wbem::framework::attribute_names_t attributes = GetAttributeNames(parsedCommand.options, defaultAttributes);
-
-		// get memory resources capacities from wbem
-		wbem::mem_config::MemoryResourcesFactory capacityProvider;
-
-		wbem::framework::instances_t *pInstances = capacityProvider.getInstances(attributes);
-		if (pInstances)
-		{
-			cli::framework::PropertyListResult *pListResult;
-			if (pInstances->size() > 0)
-			{
-				cli::nvmcli::convertCapacityAttribute((*pInstances)[0], wbem::CAPACITY_KEY);
-				cli::nvmcli::convertCapacityAttribute((*pInstances)[0], wbem::VOLATILECAPACITY_KEY);
-				cli::nvmcli::convertCapacityAttribute((*pInstances)[0], wbem::PERSISTENTCAPACITY_KEY);
-				cli::nvmcli::convertCapacityAttribute((*pInstances)[0], wbem::UNCONFIGUREDCAPACITY_KEY);
-				cli::nvmcli::convertCapacityAttribute((*pInstances)[0], wbem::INACCESSIBLECAPACITY_KEY);
-				cli::nvmcli::convertCapacityAttribute((*pInstances)[0], wbem::RESERVEDCAPACITY_KEY);
-				pListResult = NvmInstanceToPropertyListResult(*(pInstances->begin()), attributes);
-			}
-			else
-			{
-				pListResult = new framework::PropertyListResult();
-			}
-
-			pListResult->setName("MemoryResources");
-			pResult = pListResult;
-			delete pInstances;
-		}
-		else
-		{
-			pResult = new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
-				TRS(nvmcli::UNKNOWN_ERROR_STR));
-		}
-	}
-	catch (wbem::framework::Exception &e)
-	{
-		if (NULL != pResult)
-		{
-			delete pResult;
-		}
-	pResult = NvmExceptionToResult(e);
-}
-	return pResult;
+	ShowMemoryResourcesCommand cmd;
+	return cmd.execute(parsedCommand);
 }
 
 // Display Unknown when the driver doesn't report any recommended namespace blocksizes

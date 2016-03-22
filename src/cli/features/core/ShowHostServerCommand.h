@@ -43,7 +43,7 @@ class NVM_API ShowHostServerCommand : framework::CommandBase
 {
 public:
 	ShowHostServerCommand(
-			core::system::SystemService &service = core::system::SystemService::getService());
+		core::system::SystemService &service = core::system::SystemService::getService());
 
 	framework::ResultBase *execute(const framework::ParsedCommand &parsedCommand);
 
