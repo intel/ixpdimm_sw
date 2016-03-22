@@ -339,6 +339,7 @@ int nvm_get_devices(struct device_discovery *p_devices, const NVM_UINT8 count)
 							}
 						}
 					}
+					s_memset(&id_dimm, sizeof (id_dimm));
 				}
 
 				if (rc == NVM_SUCCESS)

@@ -498,6 +498,7 @@ int get_dimm_manageability(const NVM_NFIT_DEVICE_HANDLE device_handle,
 	{
 		set_device_manageability(driver_rev, &id_dimm, p_manageability);
 	}
+	s_memset(&id_dimm, sizeof (id_dimm));
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;

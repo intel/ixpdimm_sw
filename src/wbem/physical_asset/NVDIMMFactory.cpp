@@ -323,6 +323,7 @@ void NVDIMMFactory::setPassphrase(std::string deviceGuid,
 
 	int rc = m_SetPassphrase(guid, oldPassphrase, oldPassphraseLen,
 			newPassphrase.c_str(), newPassphrase.length());
+	s_memset(&oldPassphrase, sizeof (oldPassphrase));
 	if (rc != NVM_SUCCESS)
 	{
 		throw exception::NvmExceptionLibError(rc);

@@ -430,6 +430,15 @@ extern void *dlib_find_symbol(void *handle, const char *symbol);
 extern int get_cpuid(unsigned int level, unsigned int *eax,
 		unsigned int *ebx, unsigned int *ecx, unsigned int *edx);
 
+/*!
+ * Securely clears the first num bytes of the memory area pointed to by ptr.
+ * Compiler optimizations may remove call to memset() and not clear sensitive data from memory.
+ * @param ptr
+ *	memory area to be cleared
+ * @param num
+ * 	number of bytes of the memory to be cleared
+ */
+extern void s_memset(void *ptr, size_t num);
 
 #ifdef __cplusplus
 }

@@ -246,6 +246,7 @@ int check_dimm_identification(const NVM_GUID device_guid,
 		check_valid_dimm_model_number(p_diagnostic, &id_dimm, device_guid, p_results);
 		check_valid_dimm_vendor_id(p_diagnostic, &id_dimm, device_guid, p_results);
 	}
+	s_memset(&id_dimm, sizeof (id_dimm));
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;

@@ -32,6 +32,7 @@
 
 #include "device_adapter.h"
 #include "win_adapter.h"
+#include <os/os_adapter.h>
 
 /*
  * Execute an emulated BIOS ioctl to retrieve information about the bios large mailboxes
@@ -398,6 +399,7 @@ int ioctl_passthrough_cmd(struct fw_cmd *p_cmd)
 		}
 	}
 
+	s_memset(&p_cmd, sizeof (p_cmd));
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }

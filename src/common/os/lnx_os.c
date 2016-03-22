@@ -451,3 +451,9 @@ int get_cpuid(unsigned int level, unsigned int *eax,
 {
 	return __get_cpuid(level, eax, ebx, ecx, edx);
 }
+
+void s_memset(void *ptr, size_t num)
+{
+	volatile unsigned char *p = ptr;
+	while (num--) *p++ = 0;
+}

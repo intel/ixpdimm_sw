@@ -32,6 +32,7 @@
 
 #include "device_adapter.h"
 #include "lnx_adapter.h"
+#include <os/os_adapter.h>
 
 #define	BIOS_INPUT(NAME, IN_LEN)		\
 struct NAME {								\
@@ -411,6 +412,7 @@ int ioctl_passthrough_cmd(struct fw_cmd *p_fw_cmd)
 		ndctl_unref(ctx);
 	}
 
+	s_memset(&p_fw_cmd, sizeof (p_fw_cmd));
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }

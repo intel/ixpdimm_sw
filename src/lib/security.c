@@ -44,6 +44,7 @@
 #include "capabilities.h"
 #include "nvm_context.h"
 #include "system.h"
+#include <os/os_adapter.h>
 
 /*
  * Helper functions
@@ -58,7 +59,6 @@ int freeze_security(NVM_NFIT_DEVICE_HANDLE device_handle)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
-
 
 	struct fw_cmd cmd;
 	memset(&cmd, 0, sizeof (struct fw_cmd));
@@ -132,6 +132,7 @@ int security_change_prepare(struct device_discovery *p_discovery,
 		cmd.input_payload_size = sizeof (input_payload);
 		cmd.input_payload = &input_payload;
 		rc = ioctl_passthrough_cmd(&cmd);
+		s_memset(&input_payload, sizeof (input_payload));
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -268,6 +269,7 @@ int nvm_set_passphrase(const NVM_GUID device_guid,
 					0, // no action required
 					guid_arg, NULL, NULL);
 		}
+		s_memset(&input_payload, sizeof (input_payload));
 
 		// clear any device context - security state has likely changed
 		invalidate_devices();
@@ -362,6 +364,7 @@ int nvm_remove_passphrase(const NVM_GUID device_guid,
 					0, // no action required
 					guid_arg, NULL, NULL);
 		}
+		s_memset(&input_payload, sizeof (input_payload));
 
 		// clear any device context - security state has likely changed
 		invalidate_devices();
@@ -430,6 +433,7 @@ int nvm_unlock_device(const NVM_GUID device_guid,
 					0, // no action required
 					guid_arg, NULL, NULL);
 		}
+		s_memset(&input_payload, sizeof (input_payload));
 
 		// clear any device context - security state has likely changed
 		invalidate_devices();
@@ -476,6 +480,7 @@ int overwrite_dimm(NVM_BOOL quick, struct device_discovery *p_discovery)
 	do
 	{
 		rc = ioctl_passthrough_cmd(&cmd);
+		s_memset(&input_payload, sizeof (input_payload));
 
 		count++;
 	}
@@ -521,8 +526,8 @@ int crypto_scramble_dimm(struct device_discovery *p_discovery)
 		cmd.device_handle = p_discovery->device_handle.handle;
 		cmd.opcode = PT_SET_SEC_INFO;
 		cmd.sub_opcode = SUBOP_CRYPTO_SCRAMBLE;
-
 		rc = ioctl_passthrough_cmd(&cmd);
+
 		count++;
 	}
 	while (rc == NVM_ERR_DEVICEBUSY && count < 5);
@@ -573,6 +578,8 @@ int secure_erase(const NVM_PASSPHRASE passphrase,
 		cmd.input_payload_size = sizeof (input_payload);
 		cmd.input_payload = &input_payload;
 		rc = ioctl_passthrough_cmd(&cmd);
+		s_memset(&input_payload, sizeof (input_payload));
+
 		count++;
 	}
 	while (rc == NVM_ERR_DEVICEBUSY && count < 5);
