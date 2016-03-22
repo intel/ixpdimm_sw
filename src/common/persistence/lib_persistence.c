@@ -322,8 +322,6 @@ int set_default_config_settings(PersistentStore *p_ps)
 		// Add default configuration settings
 		add_config_value_to_pstore(p_ps, SQL_KEY_LOG_LEVEL, "0");
 		add_config_value_to_pstore(p_ps, SQL_KEY_EVENTS_ENABLED, "1");
-		// Default minimum event severity for syslog: EVENT_SEVERITY_CRITICAL
-		add_config_value_to_pstore(p_ps, SQL_KEY_EVENT_SYSLOG_MIN_SEVERITY, "6");
 		add_config_value_to_pstore(p_ps, SQL_KEY_EVENT_POLLING_INTERVAL_SECONDS, "60");
 		add_config_value_to_pstore(p_ps, SQL_KEY_ENCRYPT_GATHER_SUPPORT, "1");
 		add_config_value_to_pstore(p_ps, SQL_KEY_GATHER_SUPPORT_FILTER,

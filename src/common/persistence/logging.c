@@ -227,29 +227,14 @@ int log_gather()
  */
 void log_to_syslog(int level, const char *file_name, int line_number, const char *message)
 {
-	char long_message[SYSLOG_MESSAGE_MAX];
-	snprintf(long_message, SYSLOG_MESSAGE_MAX, "%s [%d] - %s", file_name, line_number, message);
-
-	// convert level to syslog level
-	enum system_event_type syslog_level;
-	switch (level)
+	// limit tracing to error level logs
+	if (level == LOGGING_LEVEL_ERROR)
 	{
-		case LOGGING_LEVEL_ERROR:
-			syslog_level = SYSTEM_EVENT_TYPE_ERROR;
-			break;
-		case LOGGING_LEVEL_WARN:
-			syslog_level = SYSTEM_EVENT_TYPE_WARNING;
-			break;
-		case LOGGING_LEVEL_DEBUG:
-			syslog_level = SYSTEM_EVENT_TYPE_DEBUG;
-			break;
-		case LOGGING_LEVEL_INFO:
-		default:
-			syslog_level = SYSTEM_EVENT_TYPE_INFO;
-			break;
-		}
+		char long_message[SYSLOG_MESSAGE_MAX];
+		snprintf(long_message, SYSLOG_MESSAGE_MAX, "%s [%d] - %s", file_name, line_number, message);
 
-	log_system_event(syslog_level, SYSLOG_SOURCE, long_message);
+		log_system_event(SYSTEM_EVENT_TYPE_ERROR, SYSLOG_SOURCE, long_message);
+	}
 }
 
 /*

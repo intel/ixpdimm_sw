@@ -784,46 +784,18 @@ NVM_BOOL log_event_in_syslog(const struct event *p_event, const char *source)
 	NVM_BOOL result = 0;
 	if (p_event != NULL)
 	{
-		// Config DB has the minimum severity we should log to syslog
-		int min_severity = 0;
-		if (get_config_value_int(SQL_KEY_EVENT_SYSLOG_MIN_SEVERITY, &min_severity) ==
-				COMMON_SUCCESS)
+		// limit tracing to critical and fatal events
+		if ((int)p_event->severity >= EVENT_SEVERITY_CRITICAL)
 		{
-			// only log if the event severity is equal/higher
-			if ((int)p_event->severity >= min_severity)
-			{
-				enum system_event_type type;
-				switch (p_event->severity)
-				{
-					case EVENT_SEVERITY_INFO:
-						type = SYSTEM_EVENT_TYPE_INFO;
-						break;
-					case EVENT_SEVERITY_WARN:
-						type = SYSTEM_EVENT_TYPE_WARNING;
-						break;
-					case EVENT_SEVERITY_CRITICAL:
-					case EVENT_SEVERITY_FATAL:
-					default:
-						type = SYSTEM_EVENT_TYPE_ERROR;
-						break;
-				}
-				log_system_event(type, source, p_event->message);
+			log_system_event(SYSTEM_EVENT_TYPE_ERROR, source, p_event->message);
 
-				// successfully logged
-				result = 1;
-			}
-		}
-		else
-		{
-			COMMON_LOG_ERROR_F("couldn't get key '%s' from config DB",
-					SQL_KEY_EVENT_SYSLOG_MIN_SEVERITY);
+			result = 1;
 		}
 	}
 
 	COMMON_LOG_EXIT();
 	return result;
 }
-
 
 NVM_BOOL event_matches_filter(const struct event_filter *p_filter,
 		const struct db_event *p_db_event)

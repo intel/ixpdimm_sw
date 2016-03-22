@@ -586,7 +586,7 @@ int change_hostname_in_host(PersistentStore *p_ps)
 		if (DB_SUCCESS !=
 				db_run_custom_sql(p_ps, "UPDATE host SET name='NVMDIMMHOST'"))
 		{
-			COMMON_LOG_ERROR("update topology_state failed.");
+			COMMON_LOG_ERROR("update host failed.");
 			rc = NVM_ERR_DEVICEERROR;
 		}
 	}
@@ -612,7 +612,59 @@ int change_hostname_in_host_history(PersistentStore *p_ps)
 		if (DB_SUCCESS !=
 				db_run_custom_sql(p_ps, "UPDATE host_history SET name='NVMDIMMHOST'"))
 		{
-			COMMON_LOG_ERROR("update topology_state failed.");
+			COMMON_LOG_ERROR("update host_history failed.");
+			rc = NVM_ERR_DEVICEERROR;
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR("Database is invalid");
+		rc = NVM_ERR_UNKNOWN;
+	}
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+/*
+ * Returns DEVICEERROR if the database access fails otherwise return SUCCESS
+ */
+int change_hostname_in_sw_inventory(PersistentStore *p_ps)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	if (p_ps != NULL)
+	{
+		if (DB_SUCCESS !=
+				db_run_custom_sql(p_ps, "UPDATE sw_inventory SET name='NVMDIMMHOST'"))
+		{
+			COMMON_LOG_ERROR("update sw_inventory failed.");
+			rc = NVM_ERR_DEVICEERROR;
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR("Database is invalid");
+		rc = NVM_ERR_UNKNOWN;
+	}
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+/*
+ * Returns DEVICEERROR if the database access fails otherwise return SUCCESS
+ */
+int change_hostname_in_sw_inventory_history(PersistentStore *p_ps)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	if (p_ps != NULL)
+	{
+		if (DB_SUCCESS !=
+				db_run_custom_sql(p_ps, "UPDATE sw_inventory_history SET name='NVMDIMMHOST'"))
+		{
+			COMMON_LOG_ERROR("update sw_inventory_history failed.");
 			rc = NVM_ERR_DEVICEERROR;
 		}
 	}
@@ -641,13 +693,16 @@ int support_filter_data(const NVM_PATH support_file, NVM_UINT16 filter_mask)
 	}
 	else
 	{
-
 		// filter host tables
 		if (filter_mask & GSF_HOST_DATA)
 		{
 			db_tbl_rc = change_hostname_in_host(p_support);
 			KEEP_ERROR(db_rc, db_tbl_rc);
 			db_tbl_rc = change_hostname_in_host_history(p_support);
+			KEEP_ERROR(db_rc, db_tbl_rc);
+			db_tbl_rc = change_hostname_in_sw_inventory(p_support);
+			KEEP_ERROR(db_rc, db_tbl_rc);
+			db_tbl_rc = change_hostname_in_sw_inventory_history(p_support);
 			KEEP_ERROR(db_rc, db_tbl_rc);
 		}
 
