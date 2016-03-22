@@ -149,11 +149,17 @@ wbem::framework::Instance *NVDIMMFactory::getInstance(
 	catch (core::LibraryException &e)
 	{
 		delete pInstance;
+		pInstance = NULL;
+		if (e.getErrorCode() == NVM_ERR_BADDEVICE)
+		{
+			throw framework::ExceptionBadParameter(TAG_KEY.c_str());
+		}
 		throw exception::NvmExceptionLibError(e.getErrorCode());
 	}
 	catch (core::InvalidArgumentException &e)
 	{
 		delete pInstance;
+		pInstance = NULL;
 		throw framework::ExceptionBadParameter(e.getArgumentName().c_str());
 	}
 

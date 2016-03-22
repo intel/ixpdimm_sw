@@ -160,6 +160,19 @@ throw(wbem::framework::Exception)
 					getOperationalStatusAttr(ns), attributes);
 		}
 	}
+	catch (exception::NvmExceptionLibError &e)
+	{
+		if (pInstance)
+		{
+			delete pInstance;
+			pInstance = NULL;
+		}
+		if (e.getLibError() == NVM_ERR_BADNAMESPACE)
+		{
+			throw framework::ExceptionBadParameter(DEVICEID_KEY.c_str());
+		}
+		throw;
+	}
 	catch (framework::Exception &) // clean up and re-throw
 	{
 		if (pInstance)
