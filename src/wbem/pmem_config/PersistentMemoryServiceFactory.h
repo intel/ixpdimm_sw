@@ -71,8 +71,6 @@ static const NVM_UINT32 PM_SERVICE_ERR_IN_USE = 32768;
 // constants used in AllocateFromPool
 static const NVM_UINT32 PM_SERVICE_BLOCK_TYPE = NS_RESOURCETYPE_BLOCK; // Block addressable persistent memory
 static const NVM_UINT32 PM_SERVICE_PM_TYPE = NS_RESOURCETYPE_PM; // Byte addressable persistent memory
-static const NVM_UINT32 PM_SERVICE_READ_ACCESS_TYPE = 2; // read
-static const NVM_UINT32 PM_SERVICE_READWRITE_ACCESS_TYPE = 4; // read/write
 static const NVM_UINT32 PM_SERVICE_OPTIMIZE_NONE = 2; // best performance
 static const NVM_UINT32 PM_SERVICE_OPTIMIZE_BEST_PERFORMANCE = 3; // best performance
 static const NVM_UINT32 PM_SERVICE_OPTIMIZE_SMALLEST_SIZE = 4; // smallest size

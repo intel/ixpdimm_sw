@@ -342,7 +342,6 @@ static std::string ACTIONREQUIRED_KEY = "ActionRequired";
 static std::string NAMESPACEID_KEY = "NamespaceID";
 static std::string ALLOCATIONUNITS_KEY = "AllocationUnits";
 static std::string RESERVATION_KEY = "Reservation";
-static std::string ACCESSTYPE_KEY = "AccessType";
 static std::string OPTIMIZE_KEY = "Optimize";
 static std::string SECURITYGOAL_KEY = "SecurityGoal";
 static std::string CONFIGGOALTABLENAME = "ConfigGoal";

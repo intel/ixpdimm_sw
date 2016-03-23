@@ -440,17 +440,6 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::allocateFromPool(
 				throw framework::ExceptionBadParameter(PM_SERVICE_GOAL.c_str());
 			}
 
-			// get access type from goal
-			wbem::framework::Attribute accessTypeAttribute;
-			pGoalInstance->getAttribute(wbem::ACCESSTYPE_KEY, accessTypeAttribute);
-			NVM_UINT16 accessType = accessTypeAttribute.uintValue();
-			if ((accessType != wbem::pmem_config::PM_SERVICE_READ_ACCESS_TYPE) &&
-				(accessType != wbem::pmem_config::PM_SERVICE_READWRITE_ACCESS_TYPE))
-			{
-				COMMON_LOG_ERROR_F("Invalid access type in object path: %d", accessType);
-				throw framework::ExceptionBadParameter(PM_SERVICE_GOAL.c_str());
-			}
-
 			// get optimize type from goal
 			wbem::framework::Attribute optimizeAttribute;
 			pGoalInstance->getAttribute(wbem::OPTIMIZE_KEY, optimizeAttribute);
