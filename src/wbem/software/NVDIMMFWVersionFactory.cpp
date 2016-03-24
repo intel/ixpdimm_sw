@@ -47,7 +47,6 @@
 #include <sstream>
 #include <intel_cim_framework/ExceptionBadParameter.h>
 #include <exception/NvmExceptionLibError.h>
-#include <core/NvmApi.h>
 
 wbem::software::NVDIMMFWVersionFactory::NVDIMMFWVersionFactory()
 throw (wbem::framework::Exception)
@@ -229,7 +228,7 @@ void wbem::software::NVDIMMFWVersionFactory::addFirmwareInstanceNamesForDevice(
 	}
 
 	// Use the core classes to access static methods
-	core::device::Device deviceWrapper(*core::NvmApi::getApi(), device);
+	core::device::Device deviceWrapper(core::NvmLibrary::getNvmLibrary(), device);
 	core::device::DeviceFirmwareInfo fwInfoWrapper(deviceWrapper.getGuid(), fw_info);
 	addFirmwareInstanceNamesForDeviceFromFwInfo(instanceNames,
 			hostName, deviceWrapper, fwInfoWrapper);

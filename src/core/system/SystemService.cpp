@@ -31,7 +31,7 @@
 
 core::system::SystemService *core::system::SystemService::m_pSingleton = new core::system::SystemService();
 
-core::system::SystemService::SystemService(const NvmApi &pApi) : m_api(pApi)
+core::system::SystemService::SystemService(NvmLibrary &lib) : m_lib(lib)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
@@ -57,34 +57,17 @@ core::system::SystemService &core::system::SystemService::getService()
 std::string core::system::SystemService::getHostName()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	char hostname[NVM_COMPUTERNAME_LEN];
-	int rc = m_api.getHostName(hostname, NVM_COMPUTERNAME_LEN);
 
-	if (rc != NVM_SUCCESS)
-	{
-		throw LibraryException(rc);
-	}
-
-	return std::string(hostname);
+	return m_lib.getHostName();
 }
 
 core::Result<core::system::SystemInfo> core::system::SystemService::getHostInfo()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	host host;
-	int rc = m_api.getHost(&host);
-	if (rc != NVM_SUCCESS)
-	{
-		throw LibraryException(rc);
-	}
+	host host = m_lib.getHost();
 
-	rc = m_api.debugLoggingEnabled();
-	if (rc < 0)
-	{
-		throw LibraryException(rc);
-	}
-	int logLevel = rc;
+	bool logLevel = m_lib.isDebugLoggingEnabled();
 
 	SystemInfo result(host, logLevel);
 	return Result<SystemInfo>(result);
@@ -94,12 +77,7 @@ core::Result<core::system::SystemMemoryResources> core::system::SystemService::g
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	device_capacities device_capacities;
-	int rc = m_api.getNvmCapacities(&device_capacities);
-	if (rc != NVM_SUCCESS)
-	{
-		throw LibraryException(rc);
-	}
+	device_capacities device_capacities = m_lib.getNvmCapacities();
 
 	SystemMemoryResources result(device_capacities);
 	return Result<SystemMemoryResources>(result);

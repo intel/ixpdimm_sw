@@ -41,7 +41,6 @@
 #include <string/s_str.h>
 #include <sstream>
 #include <core/exceptions/LibraryException.h>
-#include <core/NvmApi.h>
 #include <core/Collection.h>
 #include "Device.h"
 

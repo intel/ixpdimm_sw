@@ -50,7 +50,7 @@ std::vector<std::string> core::device::DeviceService::getAllGuids()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	std::vector<std::string> result = std::vector<std::string>();
-	const std::vector<device_discovery> &discoveries = getDiscoveries();
+	const std::vector<device_discovery> &discoveries = m_lib.getDevices();
 
 	for(size_t i = 0; i < discoveries.size(); i++)
 	{
@@ -64,7 +64,7 @@ std::vector<std::string> core::device::DeviceService::getManageableGuids()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	std::vector<std::string> result = std::vector<std::string>();
-	const std::vector<device_discovery> &discoveries = getDiscoveries();
+	const std::vector<device_discovery> &discoveries = m_lib.getDevices();
 
 	for(size_t i = 0; i < discoveries.size(); i++)
 	{
@@ -82,10 +82,10 @@ core::device::DeviceCollection core::device::DeviceService::getAllDevices()
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	DeviceCollection result;
 
-	const std::vector<device_discovery> &discoveries = getDiscoveries();
+	const std::vector<device_discovery> &discoveries = m_lib.getDevices();
 	for(size_t i = 0; i < discoveries.size(); i++)
 	{
-		Device device(m_pApi, discoveries[i]);
+		Device device(m_lib, discoveries[i]);
 		result.push_back(device);
 	}
 
@@ -95,74 +95,7 @@ core::device::DeviceCollection core::device::DeviceService::getAllDevices()
 core::Result<core::device::Device> core::device::DeviceService::getDevice(std::string guid)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	device_discovery d;
-	NVM_GUID nvmGuid;
-	Helper::stringToGuid(guid, nvmGuid);
-	int rc = m_pApi.getDeviceDiscovery(nvmGuid, &d);
-	if (rc != NVM_SUCCESS)
-	{
-		throw LibraryException(rc);
-	}
-	Device result(m_pApi, d);
+	Device result(m_lib, m_lib.getDeviceDiscovery(guid));
 
 	return Result<Device>(result);
-}
-
-
-std::vector<device_discovery> core::device::DeviceService::getDiscoveries() const
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	std::vector<device_discovery> result;
-	int rc = m_pApi.getDeviceCount();
-
-	if (rc < 0)
-	{
-		throw core::LibraryException(rc);
-	}
-
-	int count = rc;
-
-	device_discovery devices[count];
-	memset(devices, 0, sizeof (device_discovery) * count);
-	rc = m_pApi.getDevices(devices, count);
-	if (rc < 0)
-	{
-		throw core::LibraryException(rc);
-	}
-
-	for(int i = 0; i < count; i++)
-	{
-		result.push_back(devices[i]);
-	}
-
-	return result;
-}
-
-std::vector<memory_topology> core::device::DeviceService::getAllTopologies() const
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	std::vector<memory_topology> result;
-	int rc = m_pApi.getMemoryTopologyCount();
-
-	if (rc < 0)
-	{
-			throw core::LibraryException(rc);
-	}
-
-	int count = rc;
-
-	memory_topology memDevices[count];
-
-	rc = m_pApi.getMemoryTopology(memDevices, count);
-	if (rc < 0)
-	{
-			throw core::LibraryException(rc);
-	}
-
-	for(int i = 0; i < count; i++)
-	{
-			result.push_back(memDevices[i]);
-	}
-
-	return result;
 }

@@ -33,25 +33,26 @@ namespace device
 {
 
 Device::Device() :
-		m_api(*NvmApi::getApi()),
-		m_discovery(device_discovery()),
-		m_pDetails(NULL),
-		m_pActionRequiredEvents(NULL)
+	m_lib(NvmLibrary::getNvmLibrary()),
+	m_discovery(device_discovery()),
+	m_pDetails(NULL),
+	m_pActionRequiredEvents(NULL)
 {
 
 }
 
-Device::Device(NvmApi &api, const device_discovery &discovery) :
-	m_api(api),
+Device::Device(NvmLibrary &lib, const device_discovery &discovery) :
+	m_lib(lib),
 	m_pDetails(NULL),
 	m_pActionRequiredEvents(NULL)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	memmove(&m_discovery, &discovery, sizeof(m_discovery));
+	m_deviceGuid = Helper::guidToString(m_discovery.guid);
 }
 
 Device::Device(const Device &other) :
-	m_api(other.m_api),
+	m_lib(other.m_lib),
 	m_pDetails(NULL),
 	m_pActionRequiredEvents(NULL)
 {
@@ -70,13 +71,12 @@ Device &Device::operator=(const Device &other)
 	return *this;
 }
 
-
 void Device::copy(const Device &other)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	this->m_api = other.m_api;
+	this->m_lib = other.m_lib;
 	this->m_discovery = other.m_discovery;
-
+	this->m_deviceGuid = other.m_deviceGuid;
 	if (other.m_pDetails)
 	{
 		this->m_pDetails = new device_details();
@@ -267,14 +267,17 @@ std::string Device::getFwApiVersion()
 fw_log_level Device::getFwLogLevel()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	enum fw_log_level curr_log_level;
-	int rc = m_api.getFwLogLevel(getDiscovery().guid, &curr_log_level);
-
-	if (rc != NVM_SUCCESS)
+	fw_log_level result = FW_LOG_LEVEL_UNKNOWN;
+	try
 	{
-		curr_log_level = FW_LOG_LEVEL_UNKNOWN;
+		result = m_lib.getFwLogLevel(m_deviceGuid);
 	}
-	return curr_log_level;
+	catch (core::LibraryException &)
+	{
+		// don't rethrow
+	}
+
+	return result;
 }
 
 NVM_UINT64 Device::getRawCapacity()
@@ -390,6 +393,7 @@ NVM_UINT16 Device::getHealthState()
 											: DEVICE_HEALTH_UNMANAGEABLE;
 	return healthState;
 }
+
 bool Device::isNew()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -659,13 +663,19 @@ const device_details &Device::getDetails()
 	if (m_pDetails == NULL)
 	{
 		m_pDetails = new device_details();
-		memset(m_pDetails, 0, sizeof(device_details));
-		int rc = m_api.getDeviceDetails(m_discovery.guid, m_pDetails);
-
-		if (rc != NVM_SUCCESS && rc != NVM_ERR_NOTMANAGEABLE)
+		try
 		{
-			throw LibraryException(rc);
+			const device_details &details = m_lib.getDeviceDetails(m_deviceGuid);
+			memmove(m_pDetails, &details, sizeof(details));
 		}
+		catch (core::LibraryException &e)
+		{
+			if (e.getErrorCode() != NVM_ERR_NOTMANAGEABLE)
+			{
+				throw;
+			}
+		}
+
 	}
 	return *m_pDetails;
 }
@@ -682,29 +692,26 @@ const std::vector<std::string> &Device::getEvents()
 		filter.action_required = 1;
 		memmove(filter.guid, getDiscovery().guid, sizeof(filter.guid));
 
-		int rc = m_api.getEventCount(&filter);
-		if (rc > 0)
+		try
 		{
-			int count = rc;
-			event events[count];
-			rc = m_api.getEvents(&filter, events, count);
-			if (rc > 0)
+			const std::vector<event> &events = m_lib.getEvents(filter);
+			for (size_t i = 0; i < events.size(); i++)
 			{
-				for (int i = 0; i < count; i++)
-				{
-					std::stringstream eventMsg;
-					eventMsg << "Event " << events[i].event_id;
-					char msg[NVM_EVENT_MSG_LEN + (3 * NVM_EVENT_ARG_LEN)];
-					s_snprintf(msg, (NVM_EVENT_MSG_LEN + (3 * NVM_EVENT_ARG_LEN)),
-						events[i].message,
-						events[i].args[0],
-						events[i].args[1],
-						events[i].args[2]);
-					eventMsg << " - " << msg;
-					m_pActionRequiredEvents->push_back(eventMsg.str());
-				}
-
+				std::stringstream eventMsg;
+				eventMsg << "Event " << events[i].event_id;
+				char msg[NVM_EVENT_MSG_LEN + (3 * NVM_EVENT_ARG_LEN)];
+				s_snprintf(msg, (NVM_EVENT_MSG_LEN + (3 * NVM_EVENT_ARG_LEN)),
+					events[i].message,
+					events[i].args[0],
+					events[i].args[1],
+					events[i].args[2]);
+				eventMsg << " - " << msg;
+				m_pActionRequiredEvents->push_back(eventMsg.str());
 			}
+		}
+		catch (core::LibraryException &)
+		{
+			// don't throw
 		}
 	}
 	return *m_pActionRequiredEvents;

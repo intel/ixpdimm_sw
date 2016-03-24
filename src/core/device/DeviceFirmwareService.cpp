@@ -26,11 +26,8 @@
  */
 
 #include "DeviceFirmwareService.h"
-#include "DeviceFirmwareInfoCollection.h"
-
-#include <core/NvmApi.h>
 #include <core/exceptions/NoMemoryException.h>
-
+#include <LogEnterExit.h>
 
 core::device::DeviceFirmwareService *core::device::DeviceFirmwareService::m_pSingleton =
 		new core::device::DeviceFirmwareService();
@@ -50,14 +47,7 @@ core::Result<core::device::DeviceFirmwareInfo> core::device::DeviceFirmwareServi
 		const std::string &deviceGuid)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	NVM_GUID guid;
-	Helper::stringToGuid(deviceGuid, guid);
-	device_fw_info fwInfo;
-	int rc = m_pApi.getDeviceFwInfo(guid, &fwInfo);
-	if (rc != NVM_SUCCESS)
-	{
-		throw LibraryException(rc);
-	}
+	device_fw_info fwInfo =  m_lib.getDeviceFwInfo(deviceGuid);
 
 	DeviceFirmwareInfo firmwareInfo(deviceGuid, fwInfo);
 	core::Result<DeviceFirmwareInfo> result(firmwareInfo);

@@ -28,12 +28,12 @@
 #define CR_MGMT_GETSYSTEM_H
 
 #include <string>
-#include <core/NvmApi.h>
 #include <core/Result.h>
 #include "SystemInfo.h"
 #include "SystemMemoryResources.h"
 
 #include <core/exceptions/LibraryException.h>
+#include <core/NvmLibrary.h>
 
 namespace core
 {
@@ -42,7 +42,7 @@ namespace system
 class NVM_API SystemService
 {
 public:
-	NVM_API SystemService(const NvmApi &api = *NvmApi::getApi());
+	NVM_API SystemService(NvmLibrary &lib = NvmLibrary::getNvmLibrary());
 	virtual ~SystemService();
 	static SystemService &getService();
 
@@ -51,7 +51,7 @@ public:
 	virtual Result<SystemMemoryResources> getMemoryResources();
 
 protected:
-	const NvmApi &m_api;
+	NvmLibrary &m_lib;
 	static SystemService *m_pSingleton;
 };
 

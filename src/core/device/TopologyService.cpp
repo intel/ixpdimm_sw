@@ -26,7 +26,6 @@
  */
 
 #include "TopologyService.h"
-#include <core/NvmApi.h>
 #include <core/exceptions/NoMemoryException.h>
 
 
@@ -48,40 +47,12 @@ core::device::TopologyCollection core::device::TopologyService::getAllTopologies
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	TopologyCollection result;
-
-	int tc = m_pApi.getMemoryTopologyCount();
-	if (tc < 0)
-	{
-		throw LibraryException(tc);
-	}
-
-	int dc = m_pApi.getDeviceCount();
-	if (dc < 0)
-        {
-                throw LibraryException(dc);
-        }
-
-	device_discovery devices[dc];
-	memory_topology mem_topology[tc];
-
-	int topology_count = tc;
-	tc = m_pApi.getMemoryTopology(mem_topology, topology_count);
-	if (tc < 0)
-	{
-		throw LibraryException(tc);
-	}
-
-	int devices_count = dc;
-	dc = m_pApi.getDevices(devices, devices_count);
-	if (dc < 0)
-        {
-                throw LibraryException(dc);
-        }
-
-	for (int i = 0; i < topology_count; i++)
+	const std::vector<device_discovery> &devices = m_lib.getDevices();
+	const std::vector<memory_topology> &mem_topology = m_lib.getMemoryTopology();
+	for (size_t i = 0; i < mem_topology.size(); i++)
 	{
 		device_discovery device;
-		for (int j = 0; j < devices_count; j++)
+		for (size_t j = 0; j < devices.size(); j++)
 		{
 			if (devices[j].physical_id == mem_topology[i].physical_id)
 			{

@@ -28,7 +28,6 @@
 #define CR_MGMT_TOPOLOGYSERVICE_H
 
 #include <nvm_types.h>
-#include <core/NvmApi.h>
 #include "Topology.h"
 
 namespace core
@@ -38,14 +37,13 @@ namespace device
 class NVM_API TopologyService
 {
 public:
-	TopologyService(NvmApi &pApi = *NvmApi::getApi()) : m_pApi(pApi) { }
+	TopologyService(NvmLibrary &lib = NvmLibrary::getNvmLibrary()) : m_lib(lib) { }
 	virtual TopologyCollection getAllTopologies();
-	device_discovery getDeviceForTopology(memory_topology topologies);
 	virtual ~TopologyService() { }
 
 	static TopologyService &getService();
 private:
-	NvmApi &m_pApi;
+	NvmLibrary &m_lib;
 	static TopologyService *m_pSingleton;
 };
 }

@@ -30,7 +30,6 @@
 #include <string>
 #include <nvm_types.h>
 #include <nvm_management.h>
-#include <core/NvmApi.h>
 
 namespace core
 {

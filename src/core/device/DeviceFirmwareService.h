@@ -28,9 +28,9 @@
 #define CR_MGMT_DEVICEFIRMWARESERVICE_H
 
 #include <nvm_types.h>
-#include <core/NvmApi.h>
+#include <core/NvmLibrary.h>
+#include <core/Result.h>
 #include "DeviceFirmwareInfoCollection.h"
-#include "DeviceService.h"
 
 namespace core
 {
@@ -39,14 +39,14 @@ namespace device
 class NVM_API DeviceFirmwareService
 {
 public:
-	DeviceFirmwareService(NvmApi &pApi = *NvmApi::getApi()) : m_pApi(pApi) { }
+	DeviceFirmwareService(NvmLibrary &lib = NvmLibrary::getNvmLibrary()) : m_lib(lib) { }
 	virtual ~DeviceFirmwareService();
 	virtual core::Result<core::device::DeviceFirmwareInfo> getFirmwareInfo(const std::string &deviceGuid);
 
 	static DeviceFirmwareService &getService();
 
 protected:
-	NvmApi &m_pApi;
+	NvmLibrary &m_lib;
 	static DeviceFirmwareService *m_pSingleton;
 };
 

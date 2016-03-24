@@ -29,7 +29,6 @@
 
 #include <string>
 #include <nvm_management.h>
-#include <core/NvmApi.h>
 
 namespace core
 {

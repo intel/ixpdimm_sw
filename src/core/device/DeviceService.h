@@ -30,7 +30,6 @@
 #include <vector>
 #include <string>
 #include <nvm_types.h>
-#include <core/NvmApi.h>
 #include <guid/guid.h>
 #include <nvm_types.h>
 #include <core/Result.h>
@@ -45,7 +44,7 @@ namespace device
 class NVM_API DeviceService
 {
 public:
-	DeviceService(NvmApi &pApi = *NvmApi::getApi()) : m_pApi(pApi) { }
+	DeviceService(NvmLibrary &api = NvmLibrary::getNvmLibrary()) : m_lib(api) { }
 	virtual ~DeviceService() { if (m_pSingleton == this) m_pSingleton = NULL; }
 	virtual std::vector<std::string> getAllGuids();
 	virtual std::vector<std::string> getManageableGuids();
@@ -55,10 +54,7 @@ public:
 	static DeviceService &getService();
 
 protected:
-	virtual std::vector<device_discovery> getDiscoveries() const;
-	std::vector<memory_topology> getAllTopologies() const;
-
-	NvmApi &m_pApi;
+	NvmLibrary &m_lib;
 	static DeviceService *m_pSingleton;
 };
 }

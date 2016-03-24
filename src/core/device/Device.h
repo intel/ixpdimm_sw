@@ -40,8 +40,8 @@
 #include <string/s_str.h>
 #include <sstream>
 #include <core/exceptions/LibraryException.h>
-#include <core/NvmApi.h>
 #include <core/Collection.h>
+#include <core/NvmLibrary.h>
 
 static const NVM_UINT32 SECURITY_PASSPHRASE = 0;
 static const NVM_UINT32 SECURITY_UNLOCK = 1;
@@ -72,7 +72,7 @@ class NVM_API Device
 {
 public:
 	Device();
-	Device(NvmApi &api, const device_discovery &discovery);
+	Device(NvmLibrary &lib, const device_discovery &discovery);
 	virtual ~Device();
 	Device &operator=(const Device &other);
 	Device(const Device &other);
@@ -156,10 +156,11 @@ public:
 	virtual std::vector<std::string> getActionRequiredEvents();
 
 private:
-	NvmApi &m_api;
+	NvmLibrary &m_lib;
 	device_discovery m_discovery;
 	device_details *m_pDetails;
 	std::vector<std::string> *m_pActionRequiredEvents;
+	std::string m_deviceGuid;
 
 	const device_discovery &getDiscovery();
 	const device_details &getDetails();
