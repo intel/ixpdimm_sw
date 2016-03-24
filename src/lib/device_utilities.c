@@ -348,8 +348,8 @@ int check_firmware_revision(unsigned char fw_api_version)
 	// retrieve the config settings and perform the checks
 	if ((get_config_value_int(SQL_KEY_FW_MAJOR_MIN, &supported_major_min) == COMMON_SUCCESS) &&
 			(get_config_value_int(SQL_KEY_FW_MINOR_MIN, &supported_minor_min) == COMMON_SUCCESS) &&
-			(major >= supported_major_min) &&
-			(minor >= supported_minor_min))
+			((major > supported_major_min) ||
+			(major == supported_major_min && minor >= supported_minor_min)))
 	{
 		rc = 1;
 	}
