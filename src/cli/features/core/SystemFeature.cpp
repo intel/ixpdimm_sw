@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, Intel Corporation
+ * Copyright (c) 2016, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -589,14 +589,20 @@ enum return_code cli::nvmcli::SystemFeature::readPassphrases(std::string passphr
 cli::framework::ResultBase *cli::nvmcli::SystemFeature::generateErrorResult(
 		enum return_code rc, std::string basePrefix, std::vector<std::string> dimms)
 {
+	NVM_ERROR_DESCRIPTION errStr;
+	nvm_get_error(rc, errStr, NVM_ERROR_LEN);
+	return generateErrorResultFromString(errStr, basePrefix, dimms);
+}
+
+cli::framework::ResultBase *cli::nvmcli::SystemFeature::generateErrorResultFromString(
+		std::string errorMsg, std::string basePrefix, std::vector<std::string> dimms)
+{
 	framework::ResultBase *pResults = NULL;
 
 	std::string prefix = cli::framework::ResultBase::stringFromArgList((basePrefix + " %s").c_str(),
 			wbem::physical_asset::NVDIMMFactory::guidToDimmIdStr((dimms[0])).c_str());
 
-	NVM_ERROR_DESCRIPTION errStr;
-	nvm_get_error(rc, errStr, NVM_ERROR_LEN);
-	pResults = new framework::ErrorResult(framework::ResultBase::ERRORCODE_UNKNOWN, errStr, prefix);
+	pResults = new framework::ErrorResult(framework::ResultBase::ERRORCODE_UNKNOWN, errorMsg, prefix);
 	return pResults;
 }
 
@@ -614,34 +620,8 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::enableDeviceSecurity(
 		std::string newPassphrase;
 		std::string confirmPassphrase;
 
-		framework::StringMap::const_iterator source = parsedCommand.options.find(framework::OPTION_SOURCE.name);
-		if (source != parsedCommand.options.end() && !source->second.empty())
-		{ // passphrase provided via passphrase file
-			std::string passphraseFile = source->second;
-			enum return_code rc = readPassphrases(passphraseFile.c_str(), NULL, &newPassphrase);
-			if ((rc != NVM_SUCCESS) || (newPassphrase.empty()))
-			{
-				pResults = generateErrorResult(rc, basePrefix, dimms);
-			}
-			else
-			{
-				confirmPassphrase = newPassphrase;
-			}
-		}
-		else
-		{ // passphrase provided via command line
-			newPassphrase = framework::Parser::getPropertyValue(parsedCommand, NEWPASSPHRASE_PROPERTYNAME);
-			if (newPassphrase.empty())
-			{
-				newPassphrase = promptUserHiddenString(TRS(NEW_PASSPHRASE_PROMPT));
-			}
-
-			confirmPassphrase = framework::Parser::getPropertyValue(parsedCommand, CONFIRMPASSPHRASE_PROPERTYNAME);
-			if (confirmPassphrase.empty())
-			{
-				confirmPassphrase = promptUserHiddenString(TRS(CONFIRM_NEW_PASSPHRASE_PROMPT));
-			}
-		}
+		pResults = getPassphraseProperties(parsedCommand, basePrefix, dimms,
+				NULL, newPassphrase, confirmPassphrase);
 
 		// make sure confirm matches new
 		if ((pResults == NULL) && (newPassphrase.compare(confirmPassphrase) != 0))
@@ -686,6 +666,89 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::enableDeviceSecurity(
 	return pResults;
 }
 
+cli::framework::ResultBase *cli::nvmcli::SystemFeature::getPassphraseProperties(
+		const framework::ParsedCommand &parsedCommand,
+		const std::string &basePrefix, const std::vector<std::string> &dimms,
+		std::string *pPassphrase, std::string &newPassphrase, std::string &confirmPassphrase)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	cli::framework::ResultBase *pResult = NULL;
+
+	framework::StringMap::const_iterator source = parsedCommand.options.find(framework::OPTION_SOURCE.name);
+	if (source != parsedCommand.options.end() && !source->second.empty())
+	{ // passphrase provided via passphrase file
+		pResult = validateCommandLinePropertiesEmptyWhenUsingPassphraseFile(parsedCommand);
+
+		if (!pResult)
+		{
+			std::string passphraseFile = source->second;
+			enum return_code rc = readPassphrases(passphraseFile.c_str(), pPassphrase,
+					&newPassphrase);
+			if ((rc == NVM_SUCCESS) &&
+					(!pPassphrase || !pPassphrase->empty()) &&
+					!newPassphrase.empty())
+			{
+				confirmPassphrase = newPassphrase;
+			}
+			else
+			{
+				pResult = generateErrorResult(NVM_ERR_INVALIDPASSPHRASEFILE, basePrefix, dimms);
+			}
+		}
+	}
+	else
+	{ // passphrase values provided via command line
+		if (pPassphrase)
+		{
+			*pPassphrase = getPassphrasePropertyValueFromCommandLine(PASSPHRASE_PROPERTYNAME,
+					parsedCommand, PASSPHRASE_PROMPT);
+		}
+
+		newPassphrase = getPassphrasePropertyValueFromCommandLine(NEWPASSPHRASE_PROPERTYNAME,
+				parsedCommand, NEW_PASSPHRASE_PROMPT);
+
+		confirmPassphrase = getPassphrasePropertyValueFromCommandLine(CONFIRMPASSPHRASE_PROPERTYNAME,
+				parsedCommand, CONFIRM_NEW_PASSPHRASE_PROMPT);
+	}
+
+	return pResult;
+}
+
+std::string cli::nvmcli::SystemFeature::getPassphrasePropertyValueFromCommandLine(
+		const std::string &propertyName,
+		const framework::ParsedCommand &parsedCommand,
+		const std::string &prompt)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	std::string value = framework::Parser::getPropertyValue(parsedCommand, propertyName);
+	if (value.empty())
+	{
+		value = promptUserHiddenString(TRS(prompt));
+	}
+
+	return value;
+}
+
+cli::framework::ResultBase *cli::nvmcli::SystemFeature::validateCommandLinePropertiesEmptyWhenUsingPassphraseFile(
+		const framework::ParsedCommand &parsedCommand)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	cli::framework::ResultBase *pResult = NULL;
+
+	std::string passphrase = framework::Parser::getPropertyValue(parsedCommand, PASSPHRASE_PROPERTYNAME);
+	std::string newPassphrase = framework::Parser::getPropertyValue(parsedCommand, NEWPASSPHRASE_PROPERTYNAME);
+	std::string confirmPassphrase = framework::Parser::getPropertyValue(parsedCommand, CONFIRMPASSPHRASE_PROPERTYNAME);
+	if (!passphrase.empty() || !newPassphrase.empty() || !confirmPassphrase.empty())
+	{
+		pResult = new cli::framework::SyntaxErrorResult(TRS(PASSPHRASE_FILE_AND_COMMAND_LINE_PARAMS_MSG));
+	}
+
+	return pResult;
+}
+
 /*
  * Change passphrase on one or more dimms
  */
@@ -704,43 +767,8 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::changeDevicePassphrase(
 		std::string confirmPassphrase;
 		std::string basePrefix = TRS(CHANGEPASSPHRASE_MSG);
 
-		framework::StringMap::const_iterator source = parsedCommand.options.find(framework::OPTION_SOURCE.name);
-		if (source != parsedCommand.options.end() && !source->second.empty())
-		{ // passphrase provided via passphrase file
-			std::string passphraseFile = source->second;
-			enum return_code rc = readPassphrases(passphraseFile.c_str(), &passphrase,
-					&newPassphrase);
-			if ((rc == NVM_SUCCESS) &&
-					!passphrase.empty() &&
-					!newPassphrase.empty())
-			{
-				confirmPassphrase = newPassphrase;
-			}
-			else
-			{
-				pResults = generateErrorResult(NVM_ERR_INVALIDPASSPHRASEFILE, basePrefix, dimms);
-			}
-		}
-		else
-		{ // passphrase provided via command line
-			passphrase = framework::Parser::getPropertyValue(parsedCommand, PASSPHRASE_PROPERTYNAME);
-			if (passphrase.empty())
-			{
-				passphrase = promptUserHiddenString(TRS(PASSPHRASE_PROMPT));
-			}
-
-			newPassphrase = framework::Parser::getPropertyValue(parsedCommand, NEWPASSPHRASE_PROPERTYNAME);
-			if (newPassphrase.empty())
-			{
-				newPassphrase = promptUserHiddenString(TRS(NEW_PASSPHRASE_PROMPT));
-			}
-
-			confirmPassphrase = framework::Parser::getPropertyValue(parsedCommand, CONFIRMPASSPHRASE_PROPERTYNAME);
-			if (confirmPassphrase.empty())
-			{
-				confirmPassphrase = promptUserHiddenString(TRS(CONFIRM_NEW_PASSPHRASE_PROMPT));
-			}
-		}
+		pResults = getPassphraseProperties(parsedCommand, basePrefix, dimms,
+				&passphrase, newPassphrase, confirmPassphrase);
 
 		if (!pResults)
 		{

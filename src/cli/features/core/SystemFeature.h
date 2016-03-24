@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, Intel Corporation
+ * Copyright (c) 2016, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -85,6 +85,8 @@ static const std::string ERASE_DEV_PROMPT = N_TR(
 		"Erase all data on " NVM_DIMM_NAME " %s?"); //!< prompt for user if not forced
 static const std::string MODIFY_DEV_PROMPT = N_TR(
 		"Change settings for " NVM_DIMM_NAME " %s?"); //!< prompt for user if not forced
+static const std::string PASSPHRASE_FILE_AND_COMMAND_LINE_PARAMS_MSG =
+		N_TR("An empty string is expected for the passphrase properties when using the source option.");
 
 static const std::string STRING_PARAM = "string";
 
@@ -188,8 +190,26 @@ private:
 		enum return_code getPassphrasesFromString(std::string lineStr,
 				std::string *pPassphrase, std::string *pNewPassphrase);
 
+		/*
+		 * pPassphrase is optional - expect NULL if not used
+		 */
+		cli::framework::ResultBase *getPassphraseProperties(
+				const framework::ParsedCommand &parsedCommand,
+				const std::string &basePrefix, const std::vector<std::string> &dimms,
+				std::string *pPassphrase, std::string &newPassphrase, std::string &confirmPassphrase);
+
+		cli::framework::ResultBase *validateCommandLinePropertiesEmptyWhenUsingPassphraseFile(
+				const framework::ParsedCommand &parsedCommand);
+
+		std::string getPassphrasePropertyValueFromCommandLine(
+				const std::string &propertyName,
+				const framework::ParsedCommand &parsedCommand,
+				const std::string &prompt);
+
 		cli::framework::ResultBase *generateErrorResult(
 				enum return_code rc, std::string basePrefix, std::vector<std::string> dimms);
+		cli::framework::ResultBase *generateErrorResultFromString(
+				std::string errorMsg, std::string basePrefix, std::vector<std::string> dimms);
 };
 
 }
