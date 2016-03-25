@@ -144,6 +144,8 @@ fi
 
 %post -n %monitorname
 %systemd_post nvmmonitor.service
+/bin/systemctl --no-reload enable nvmmonitor.service &> /dev/null || :
+/bin/systemctl start nvmmonitor.service &> /dev/null || :
 
 %post 
 /sbin/ldconfig
