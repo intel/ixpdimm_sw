@@ -152,10 +152,6 @@ extern "C"
 //! SQL Key name for whether the topology state has been initialized
 #define	SQL_KEY_TOPOLOGY_STATE_VALID "TOPOLOGY_STATE_VALID"
 
-// Internal Eventing keys
-//! SQL Key name for indicating that eventing is enabled.
-#define	SQL_KEY_EVENTS_ENABLED	"EVENT_LOG_ENABLED"
-
 //! SQL Key name for minimum severity an event must have to log it to syslog
 #define	SQL_KEY_EVENT_SYSLOG_MIN_SEVERITY	"EVENT_SYSLOG_MIN_SEVERITY"
 
