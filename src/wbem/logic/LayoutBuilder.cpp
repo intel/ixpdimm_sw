@@ -37,6 +37,7 @@
 #include "LayoutStepCheckDriverSupportsStorage.h"
 #include "LayoutStepPersistentSettingsNotRecommended.h"
 #include "LayoutStepCheckAsymmetricalPopulation.h"
+#include "LayoutStepCheckCurrentVolatileMode.h"
 #include "LayoutStepVolatile.h"
 #include "LayoutStepPersistent.h"
 #include "LayoutStepStorage.h"
@@ -103,6 +104,7 @@ void wbem::logic::LayoutBuilder::populateWarningGeneratingLayoutSteps()
 	m_layoutSteps.push_back(new LayoutStepPersistentSettingsNotRecommended(m_systemCapabilities.platform_capabilities));
 	m_layoutSteps.push_back(new LayoutStepCheckDriverSupportsStorage(m_systemCapabilities.nvm_features));
 	m_layoutSteps.push_back(new LayoutStepCheckAsymmetricalPopulation());
+	m_layoutSteps.push_back(new LayoutStepCheckCurrentVolatileMode(m_systemCapabilities.platform_capabilities));
 }
 
 void wbem::logic::LayoutBuilder::populateOrderedLayoutStepsForRequest(

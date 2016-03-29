@@ -810,10 +810,13 @@ std::string cli::nvmcli::NamespaceFeature::getStringForLayoutWarning(
 		warningStr = CREATE_GOAL_BLOCK_ONLY_NOT_SUPPORTED_BY_DRIVER_WARNING;
 		break;
 	case wbem::logic::LAYOUT_WARNING_PERSISTENT_SETTINGS_NOT_RECOMMENDED:
-		warningStr = CREATE_GOAL_SETTINGS_NOT_RECOMMENDED_BY_BIOS_WARNING;
+		warningStr = CREATE_GOAL_PM_SETTINGS_NOT_RECOMMENDED_BY_BIOS_WARNING;
 		break;
 	case wbem::logic::LAYOUT_WARNING_NONOPTIMAL_POPULATION:
 		warningStr = CREATE_GOAL_NON_OPTIMAL_DIMM_POPULATION_WARNING;
+		break;
+	case wbem::logic::LAYOUT_WARNING_CURRENT_VOLATILE_MODE_NOT_2LM:
+		warningStr = CREATE_GOAL_CURRENT_VOLATILE_MODE_NOT_2LM_WARNING;
 		break;
 	default:
 		COMMON_LOG_ERROR_F("Unrecognized layout warning code: %d", warningCode);

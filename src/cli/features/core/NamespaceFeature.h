@@ -110,8 +110,10 @@ static const std::string CREATE_GOAL_BLOCK_ONLY_NOT_SUPPORTED_BY_DRIVER_WARNING 
 		"accessible storage which is not supported by the host software.");
 static const std::string CREATE_GOAL_APPDIRECT_NOT_SUPPORTED_BY_DRIVER_WARNING = TR("The requested goal will result in "
 		"app-direct persistent memory which is not supported by the host software.");
-static const std::string CREATE_GOAL_SETTINGS_NOT_RECOMMENDED_BY_BIOS_WARNING = TR("The selected persistent memory settings "
+static const std::string CREATE_GOAL_PM_SETTINGS_NOT_RECOMMENDED_BY_BIOS_WARNING = TR("The selected persistent memory settings "
 		"are not recommended by the platform BIOS.");
+static const std::string CREATE_GOAL_CURRENT_VOLATILE_MODE_NOT_2LM_WARNING = TR("The requested goal will result in volatile "
+		"memory capacity that is unusable with the currently selected platform BIOS volatile memory mode.");
 
 static const std::string NS_ALIGNMENT_PROMPT = TR(
 		"The requested namespace capacity %llu will be changed to %llu to align properly. Do you want to continue?");
