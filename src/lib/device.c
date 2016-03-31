@@ -1224,11 +1224,9 @@ int nvm_examine_device_fw(const NVM_GUID device_guid, const NVM_PATH path, const
 			}
 			else
 			{
-				int lt_moduletype_css;
-				get_config_value_int(SQL_KEY_LT_MODULETYPE_CSS, &lt_moduletype_css);
 				fwImageHeader *p_header = (fwImageHeader *)p_buf;
 				// check some of the header values
-				if (p_header->moduleType != lt_moduletype_css ||
+				if (p_header->moduleType != FW_HEADER_MODULETYPE ||
 						p_header->moduleVendor != FW_HEADER_MODULEVENDOR)
 				{
 					COMMON_LOG_ERROR("The FW image file is not valid. ");

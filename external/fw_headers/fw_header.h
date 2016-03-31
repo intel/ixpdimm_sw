@@ -39,6 +39,7 @@ extern "C"
 #endif
 
 #define	FW_HEADER_MODULEVENDOR 0x8086
+#define FW_HEADER_MODULETYPE 6
 
 typedef unsigned char u8;
 typedef unsigned short u16;

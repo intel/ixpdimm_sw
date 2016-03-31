@@ -107,9 +107,6 @@ extern "C"
 //! SQL Key name for the percent used threshold
 #define	SQL_KEY_MAX_HEALTH_STATUS "MAX_HEALTH_STATUS"
 
-//! SQL Key name for the LT_MODULETYPE_CSS value
-#define	SQL_KEY_LT_MODULETYPE_CSS "LT_MODULETYPE_CSS"
-
 //! SQL Key name for where to write the logs
 #define	SQL_KEY_LOG_DESTINATION "LOG_DESTINATION"
 

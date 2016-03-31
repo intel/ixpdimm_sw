@@ -346,7 +346,6 @@ int set_default_config_settings(PersistentStore *p_ps)
 			SQL_KEY_PERCENT_USED_THRESHOLD, "90"); // TODO: value TBD
 		add_config_value_to_pstore(p_ps, SQL_KEY_MAX_HEALTH_STATUS, "0"); // 0 means normal
 		add_config_value_to_pstore(p_ps, SQL_KEY_LOG_DESTINATION, log_destination);
-		add_config_value_to_pstore(p_ps, SQL_KEY_LT_MODULETYPE_CSS, "6");
 		add_config_value_to_pstore(p_ps, SQL_KEY_LOG_MAX, "10000");
 		add_config_value_to_pstore(p_ps, SQL_KEY_DEFAULT_TEMPERATURE_THRESHOLD, "81.5");
 		add_config_value_to_pstore(p_ps, SQL_KEY_DEFAULT_SPARE_BLOCK_THRESHOLD, "50");
