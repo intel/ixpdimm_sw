@@ -286,7 +286,8 @@ SOURCEDROP_WORKSPACE ?= $(OUTPUT_DIR)/workspace
 SOURCEDROP_DIR ?= $(OUTPUT_DIR)/workspace/ixpdimm_sw
 CLI_FRAMEWORK_DIR = $(ROOT_DIR)/external/intel_cli_framework
 CIM_FRAMEWORK_DIR = $(ROOT_DIR)/external/intel_cim_framework
-I18N_INCLUDE_DIR = $(EXTERN_DIR)/intel_cli_framework/include/
+I18N_DIR = $(ROOT_DIR)/external/intel_i18n
+I18N_INCLUDE_DIR = $(EXTERN_DIR)/intel_i18n/include/
 RPMBUILD_DIR ?= $(shell pwd)/$(OUTPUT_DIR)/rpmbuild
 
 # unit test execution directories

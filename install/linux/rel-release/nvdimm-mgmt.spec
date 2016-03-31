@@ -228,27 +228,31 @@ fi
 /sbin/ldconfig
 
 %files
-%attr(755,root,root) %{_libdir}/libnvm.so.*
-%attr(755,root,root) %dir %{_datadir}/%{product_name}
+%defattr(755,root,root,755)
+%{_libdir}/libnvm.so.*
+%dir %{_datadir}/%{product_name}
 %attr(640,root,root) %{_datadir}/%{product_name}/*.pem
 %attr(640,root,root) %config(noreplace) %{_datadir}/%{product_name}/*.dat*
 %license LICENSE
 
 %files -n %dname
-%attr(755,root,root) %{_libdir}/libnvm.so
+%defattr(755,root,root,755)
+%{_libdir}/libnvm.so
 %attr(644,root,root) %{_includedir}/nvm_types.h
 %attr(644,root,root) %{_includedir}/nvm_management.h
 %license LICENSE
 
 %files -n %corename
-%attr(755,root,root) %{_libdir}/libnvm-core.so*
+%defattr(755,root,root,755)
+%{_libdir}/libnvm-core.so*
 %license LICENSE
 
 %files -n %cimlibs
-%attr(755,root,root) %{_libdir}/cmpi/libnvmwbem.so*
-%attr(755,root,root) %dir %{_datadir}/%{product_name}/Pegasus
-%attr(755,root,root) %dir %{_datadir}/%{product_name}/Pegasus/mof
-%attr(755,root,root) %dir %{_datadir}/%{product_name}/sfcb
+%defattr(755,root,root,755)
+%{_libdir}/cmpi/libnvmwbem.so*
+%dir %{_datadir}/%{product_name}/Pegasus
+%dir %{_datadir}/%{product_name}/Pegasus/mof
+%dir %{_datadir}/%{product_name}/sfcb
 %attr(644,root,root) %{_datadir}/%{product_name}/sfcb/*.reg
 %attr(644,root,root) %{_datadir}/%{product_name}/sfcb/*.mof
 %attr(644,root,root) %{_datadir}/%{product_name}/Pegasus/mof/*.mof
@@ -256,15 +260,16 @@ fi
 %license LICENSE
 
 %files -n %monitorname
-%attr(755,root,root) %{_bindir}/nvmmonitor
-%attr(755,root,root) %{_unitdir}/nvmmonitor.service
+%defattr(755,root,root,755)
+%{_bindir}/nvmmonitor
+%{_unitdir}/nvmmonitor.service
 %license LICENSE
 %attr(644,root,root) %{_mandir}/man8/nvmmonitor*
 
 %files -n %cliname
-%defattr(-,root,root)
-%attr(755,root,root) %{_bindir}/nvmcli
-%attr(755,root,root) %{_libdir}/libcrfeatures.so*
+%defattr(755,root,root,755)
+%{_bindir}/nvmcli
+%{_libdir}/libcrfeatures.so*
 %license LICENSE
 %attr(644,root,root) %{_mandir}/man8/nvmcli*
 

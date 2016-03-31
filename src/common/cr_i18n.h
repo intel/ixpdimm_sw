@@ -33,7 +33,7 @@
 #define	CR_I18N_H_
 
 #ifdef __INTEL_I18N__
-#include <I18N/libIntel_i18n.h>
+#include <intel_i18n/libIntel_i18n.h>
 #else
 #include <libintl.h>
 #endif

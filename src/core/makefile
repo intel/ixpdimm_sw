@@ -78,7 +78,7 @@ TARGETNAME = $(addprefix $(BUILD_DIR)/, $(TARGET))
 INCS = 	-I$(SRC_DIR) -I$(SRC_DIR)/core \
 		-I$(SRC_DIR)/common \
 		-I$(SRC_DIR)/lib \
-		-I$(EXTERN_DIR)/intel_cli_framework/include
+		-I$(EXTERN_DIR)/intel_i18n/include
 
 LIBS = 	-L$(OBJECT_DIR)/common -lcommon \
 		-L$(BUILD_DIR) -lnvm \
