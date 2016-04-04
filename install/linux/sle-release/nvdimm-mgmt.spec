@@ -16,6 +16,7 @@ License: BSD
 Group: Applications/System
 URL: https://01.org/ixpdimm-sw
 Source: %{product_name}.tar.bz2
+Requires: libndctl6 >= 51
 
 %define  debug_package %{nil}
 
@@ -79,7 +80,7 @@ Requires:       %{cimlibs}%{?_isa} = %{version}-%{release}
 
 %description -n %cliname
 A command line interface (CLI) application for configuring and
-managing %{prodcut_name}. Including commands for basic inventory,
+managing %{product_name}. Including commands for basic inventory,
 capacity provisioning, health monitoring, and troubleshooting.
 
 
@@ -276,5 +277,5 @@ fi
 %attr(644,root,root) %{_mandir}/man8/nvmcli*
 
 %changelog
-* Wed Dec 24 2015 nicholas.w.moulin@intel.com
+* Wed Dec 24 2015 Nicholas Moulin <nicholas.w.moulin@intel.com>
 - Initial rpm release
