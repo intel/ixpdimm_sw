@@ -33,9 +33,9 @@ BEGIN
 			VALUE "CompanyName", INTEL_COMPANY_NAME
 			VALUE "FileDescription", "Command Line Application"
 			VALUE "FileVersion", VERSION_STR
-			VALUE "InternalName", "nvmcli.exe"
+			VALUE "InternalName", "ixpdimm-cli.exe"
 			VALUE "LegalCopyright", INTEL_COPYRIGHT_STRING
-			VALUE "OriginalFilename", "nvmcli.exe"
+			VALUE "OriginalFilename", "ixpdimm-cli.exe"
 			VALUE "ProductName", NVM_PRODUCT_NAME
 			VALUE "ProductVersion", VERSION_STR
 		END

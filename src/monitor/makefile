@@ -25,7 +25,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #
-# Makefile for NVM Monitor service
+# Makefile for IXPDIMM Monitor service
 #
 
 # ---- BUILD ENVIRONMENT ---------------------------------------------------------------------------
@@ -75,13 +75,13 @@ OBJNAMES = $(addprefix $(OBJECT_MODULE_DIR)/, $(OBJS))
 -include $(addprefix $(OBJECT_MODULE_DIR)/, $(patsubst %.cpp,%.d,$(SRC)))
 
 # Target executable
-TARGET = nvmmonitor$(TARGET_EXTENSION)
+TARGET = $(MONITOR_NAME)$(TARGET_EXTENSION)
 
 # Target library 'real name', prefixed with its output location
 # This library is packaged as its own library, therefore output to build directory 
 TARGETNAME = $(addprefix $(BUILD_DIR)/, $(TARGET))
 
-INIT_SCRIPT = nvmmonitor.service
+INIT_SCRIPT = $(MONITOR_NAME).service
 
 # Control exports
 CPPFLAGS += $(BUILD_DLL_FLAG)
@@ -92,7 +92,7 @@ INCS = 	-I$(SRC_DIR)/common \
 		-I$(SRC_DIR)/lib
 
 LIBS = 	-L$(OBJECT_DIR)/common -lcommon \
-		-L$(BUILD_DIR) -lnvm \
+		-L$(BUILD_DIR) -l$(API_LIB_NAME) \
 			-lsqlite3 -lssl -lcrypto -lz
 
 ifdef BUILD_WINDOWS

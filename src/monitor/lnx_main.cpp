@@ -43,7 +43,7 @@
 
 #include "NvmMonitorBase.h"
 
-#define PID_FILE_NAME "/var/run/nvmmonitor.pid"
+#define PID_FILE_NAME "/var/run/ixpdimm-monitor.pid"
 
 int setupDaemon();
 void signalHandler(int sigNum);

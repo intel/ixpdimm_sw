@@ -44,7 +44,7 @@ C_CPP_FLAGS_SRC += -DLOCALE_DOMAIN='"$(LOCALE_DOMAIN)"' -DLOCALE_DIR='"$(LOCALE_
 
 # ---- COMPONENTS ----------------------------------------------------------------------------------
 FRAMEWORK = $(BUILD_DIR)/libcliframework.$(LIB_SUFFIX)
-FEATURES = $(BUILD_DIR)/libcrfeatures.$(LIB_SUFFIX)
+FEATURES = $(BUILD_DIR)/$(CLI_LIB_BASENAME).$(LIB_SUFFIX)
 
 # ---- FILES ---------------------------------------------------------------------------------------
 SRC = $(wildcard *.cpp)
@@ -59,7 +59,7 @@ OBJNAMES = $(addprefix $(OBJECT_MODULE_DIR)/, $(OBJS))
 # (hyphen preceeding the "include" keyword allows MAKE to continue if a .d file is not found) 
 -include $(addprefix $(OBJECT_MODULE_DIR)/, $(patsubst %.cpp,%.d,$(SRC)))
 
-TARGETBASE=nvmcli
+TARGETBASE=$(CLI_NAME)
 ifdef BUILD_WINDOWS
 	TARGET = $(TARGETBASE).exe
 else
@@ -82,9 +82,9 @@ LIBS =	-L$(OBJECT_DIR)/common -lcommon \
 		-L$(BUILD_DIR) \
 			-lcliframework \
 			-lcimframework \
-			-lnvm \
-			-lnvm-core \
-			-lnvmwbem \
+			-l$(API_LIB_NAME) \
+			-l$(CORE_LIB_NAME) \
+			-l$(CIM_LIB_NAME) \
 			-lsqlite3 \
 			-lz \
 			-lssl -lcrypto		
@@ -129,8 +129,8 @@ features:
 doc :
 ifdef BUILD_LINUX
 	cd $(SCRIPTS_PATH); \
-	python $(SCRIPTS_PATH)/create_nvmcli_manpage.py dataPath=$(PRODUCT_DATADIR) outputPath=$(CLI_BUILD_PATH); \
-	python $(SCRIPTS_PATH)/create_nvmmonitor_manpage.py dataPath=$(PRODUCT_DATADIR); 
+	python $(SCRIPTS_PATH)/create_$(CLI_NAME)_manpage.py dataPath=$(PRODUCT_DATADIR) outputPath=$(CLI_BUILD_PATH); \
+	python $(SCRIPTS_PATH)/create_$(MONITOR_NAME)_manpage.py dataPath=$(PRODUCT_DATADIR); 
 	$(eval MANPAGE_GZ_FILES := $(addprefix $(SCRIPTS_PATH)/, $(MANPAGE_GZ_FILES)))
 	$(MOVE) $(MANPAGE_GZ_FILES) $(BUILD_DIR)
 endif

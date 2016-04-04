@@ -1,14 +1,16 @@
 %define product_name ixpdimm_sw
+%define product_base_name ixpdimm
 %define build_version 99.99.99.9999
 %define build_release 1
-%define corename %{product_name}-core
-%define cliname %{product_name}-cli
-%define monitorname %{product_name}-monitor
-%define cimlibs %{product_name}-cim
-%define dname %{product_name}-devel
+%define apiname lib%{product_base_name}-api
+%define corename lib%{product_base_name}-core
+%define cliname %{product_base_name}-cli
+%define monitorname %{product_base_name}-monitor
+%define cimlibs lib%{product_base_name}-cim
+%define dname lib%{product_base_name}-api-devel
 %define _unpackaged_files_terminate_build 0
 
-Name: %{product_name}-libs
+Name: %{apiname}
 Version: %{build_version}
 Release: %{build_release}%{?dist}
 Summary: API for development of %{product_name} management utilities
@@ -144,9 +146,9 @@ then
 fi
 
 %post -n %monitorname
-%systemd_post nvmmonitor.service
-/bin/systemctl --no-reload enable nvmmonitor.service &> /dev/null || :
-/bin/systemctl start nvmmonitor.service &> /dev/null || :
+%systemd_post ixpdimm-monitor.service
+/bin/systemctl --no-reload enable ixpdimm-monitor.service &> /dev/null || :
+/bin/systemctl start ixpdimm-monitor.service &> /dev/null || :
 
 %post 
 /sbin/ldconfig
@@ -220,17 +222,17 @@ then
 fi
 
 %preun -n %monitorname
-%systemd_preun stop nvmmonitor.service
+%systemd_preun stop ixpdimm-monitor.service
 
 %postun -n %monitorname
-%systemd_postun_with_restart nvmmonitor.service
+%systemd_postun_with_restart ixpdimm-monitor.service
 
 %preun
 /sbin/ldconfig
 
 %files
 %defattr(755,root,root,755)
-%{_libdir}/libnvm.so.*
+%{_libdir}/libixpdimm-api.so.*
 %dir %{_datadir}/%{product_name}
 %attr(640,root,root) %{_datadir}/%{product_name}/*.pem
 %attr(640,root,root) %config(noreplace) %{_datadir}/%{product_name}/*.dat*
@@ -238,19 +240,19 @@ fi
 
 %files -n %dname
 %defattr(755,root,root,755)
-%{_libdir}/libnvm.so
+%{_libdir}/libixpdimm-api.so
 %attr(644,root,root) %{_includedir}/nvm_types.h
 %attr(644,root,root) %{_includedir}/nvm_management.h
 %license LICENSE
 
 %files -n %corename
 %defattr(755,root,root,755)
-%{_libdir}/libnvm-core.so*
+%{_libdir}/libixpdimm-core.so*
 %license LICENSE
 
 %files -n %cimlibs
 %defattr(755,root,root,755)
-%{_libdir}/cmpi/libnvmwbem.so*
+%{_libdir}/cmpi/libixpdimm-cim.so*
 %dir %{_datadir}/%{product_name}/Pegasus
 %dir %{_datadir}/%{product_name}/Pegasus/mof
 %dir %{_datadir}/%{product_name}/sfcb
@@ -262,17 +264,17 @@ fi
 
 %files -n %monitorname
 %defattr(755,root,root,755)
-%{_bindir}/nvmmonitor
-%{_unitdir}/nvmmonitor.service
+%{_bindir}/ixpdimm-monitor
+%{_unitdir}/ixpdimm-monitor.service
 %license LICENSE
-%attr(644,root,root) %{_mandir}/man8/nvmmonitor*
+%attr(644,root,root) %{_mandir}/man8/ixpdimm-monitor*
 
 %files -n %cliname
 %defattr(755,root,root,755)
-%{_bindir}/nvmcli
-%{_libdir}/libcrfeatures.so*
+%{_bindir}/ixpdimm-cli
+%{_libdir}/libixpdimm-cli.so*
 %license LICENSE
-%attr(644,root,root) %{_mandir}/man8/nvmcli*
+%attr(644,root,root) %{_mandir}/man8/ixpdimm-cli*
 
 %changelog
 * Wed Dec 24 2015 Nicholas Moulin <nicholas.w.moulin@intel.com>

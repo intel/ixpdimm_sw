@@ -14,10 +14,10 @@ usage = "[cliName=<name>] [serviceName=<name>] [fullProductName=<name>] [abbrPro
 #################################################################
 # Defaults.  If product name, etc. changes, change these.
 #################################################################
-cliName = "nvmcli"
+cliName = "ixpdimm-cli"
 fullProductName = "Intel(R) DIMM"
 abbrProductName = "DIMM"
-serviceName = "nvmmonitor"
+serviceName = "ixpdimm-monitor"
 dataPath = "/usr/share/nvdimm-mgmt"
 installPath = "/var/run"
 outputPath = "../output/build/linux/real/debug"

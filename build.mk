@@ -96,6 +96,20 @@ CPPFLAGS_CMN =
 CPPFLAGS_SRC =
 CFLAGS_EXTERNAL ?=
 
+MARKETING_PRODUCT_NAME=ixpdimm_sw
+API_LIB_BASENAME=libixpdimm-api
+CORE_LIB_BASENAME=libixpdimm-core
+CLI_LIB_BASENAME=libixpdimm-cli
+CIM_LIB_BASENAME=libixpdimm-cim
+
+API_LIB_NAME=ixpdimm-api
+CORE_LIB_NAME=ixpdimm-core
+CLI_LIB_NAME=ixpdimm-cli
+CIM_LIB_NAME=ixpdimm-cim
+
+CLI_NAME=ixpdimm-cli
+MONITOR_NAME=ixpdimm-monitor
+
 # OS specific settings
 UNAME := $(shell uname)
 ifeq ($(UNAME), Linux)
@@ -174,17 +188,17 @@ ifeq ($(UNAME), Linux)
 		MAN8_DIR ?= $(MANPAGE_DIR)/man8
 
 		# Linux Install Files
-		LIB_FILES = libnvm.so* libnvm-core.so* libcrfeatures.so*
-		CIM_LIB_FILES = libnvmwbem.so*
+		LIB_FILES = $(API_LIB_BASENAME).so* $(CORE_LIB_BASENAME).so* $(CLI_LIB_BASENAME).so*
+		CIM_LIB_FILES = $(CIM_LIB_BASENAME).so*
 		INCLUDE_FILES = nvm_management.h nvm_types.h
-		BIN_FILES = nvmcli nvmmonitor
+		BIN_FILES = $(CLI_NAME) $(MONITOR_NAME)
 		PEGASUS_MOF_FILES = pegasus_register.mof profile_registration.mof intelwbem.mof
 		SFCB_MOF_FILES = sfcb_intelwbem.mof
 		SFCB_REG_FILE = INTEL_NVDIMM.reg 
 		DATADIR_FILES = apss.dat* public.rev0.pem
-		INIT_FILES = nvmmonitor.service
-		MANPAGE_GZ_FILES = nvmcli.8.gz nvmmonitor.8.gz
-		MANPAGE_SCRIPT_FILES = create_nvmcli_manpage.py create_nvmmonitor_manpage.py nvmcli.manpage.footer nvmcli.manpage.header nvmmonitor.manpage.text nvmcli.sed manpage_helper.py
+		INIT_FILES = $(MONITOR_NAME).service
+		MANPAGE_GZ_FILES = $(CLI_NAME).8.gz $(MONITOR_NAME).8.gz
+		MANPAGE_SCRIPT_FILES = create_$(CLI_NAME)_manpage.py create_$(MONITOR_NAME)_manpage.py $(CLI_NAME).manpage.footer $(CLI_NAME).manpage.header $(MONITOR_NAME).manpage.text $(CLI_NAME).sed manpage_helper.py
 
 		C_CPP_FLAGS_SRC += -D__LINUX__ 
 		
@@ -283,7 +297,7 @@ OBJECT_DIR = $(OUTPUT_DIR)/obj/$(OS_TYPE)/$(ADAPTER_TYPE)/$(BUILD_TYPE)
 BUILD_DIR = $(OUTPUT_DIR)/build/$(OS_TYPE)/$(ADAPTER_TYPE)/$(BUILD_TYPE)
 DOCS_DIR = $(OUTPUT_DIR)/docs
 SOURCEDROP_WORKSPACE ?= $(OUTPUT_DIR)/workspace
-SOURCEDROP_DIR ?= $(OUTPUT_DIR)/workspace/ixpdimm_sw
+SOURCEDROP_DIR ?= $(OUTPUT_DIR)/workspace/$(PRODUCT_NAME)
 CLI_FRAMEWORK_DIR = $(ROOT_DIR)/external/intel_cli_framework
 CIM_FRAMEWORK_DIR = $(ROOT_DIR)/external/intel_cim_framework
 I18N_DIR = $(ROOT_DIR)/external/intel_i18n
@@ -317,7 +331,7 @@ ifdef CCOV
 endif
 
 #get text package name - used in file name and set as the text domain
-LOCALE_DOMAIN = nvmcli
+LOCALE_DOMAIN = $(CLI_NAME)
 LOCALE_DIR = $(abspath $(BUILD_DIR))/lang
 
 # output file for gettext 

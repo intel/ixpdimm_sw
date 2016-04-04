@@ -1,7 +1,7 @@
 instance of PG_ProviderModule
 {
    Name = "intelwbemprovider";
-   Location = "nvmwbem"; // should only need "wbem" and CMPI will turn into libnvmwbem.so, but not working yet 
+   Location = "nvmwbem"; // should only need "wbem" and CMPI will turn into libixpdimm-cim.so, but not working yet 
    Vendor = "Intel";
    Version = "1.0";
    InterfaceType = "CMPI"; // This is important

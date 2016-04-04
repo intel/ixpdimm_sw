@@ -31,7 +31,7 @@
  * in order to perform management actions.
  *
  * To compile applications using the Native Management API, include this header file
- * and link with the -lnvm option.
+ * and link with the -lixpdimm-api option.
  */
 
 #ifndef	_NVM_MANAGEMENT_H_

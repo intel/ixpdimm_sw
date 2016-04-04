@@ -55,7 +55,7 @@ OBJNAMES = $(addprefix $(OBJECT_MODULE_DIR)/, $(OBJS))
 -include $(addprefix $(OBJECT_MODULE_DIR)/, $(patsubst %.cpp,%.d,$(SRC)))
 
 # Target library 'linker name'
-TARGETBASE = libcrfeatures.$(LIB_SUFFIX)
+TARGETBASE = $(CLI_LIB_BASENAME).$(LIB_SUFFIX)
 # Target library 'soname'
 TARGETSO = $(TARGETBASE).$(VERSION_MAJOR)
 # Target library 'real name'
@@ -81,9 +81,9 @@ LIBS = 	-L$(OBJECT_DIR)/common -lcommon \
 		-L$(BUILD_DIR) \
 			-lcliframework \
 			-lcimframework \
-			-lnvm \
-			-lnvm-core \
-			-lnvmwbem \
+			-l$(API_LIB_NAME) \
+			-l$(CORE_LIB_NAME) \
+			-l$(CIM_LIB_NAME) \
 			-lsqlite3 \
 			-lssl -lcrypto 
 

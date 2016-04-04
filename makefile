@@ -248,14 +248,14 @@ else ifdef BUILD_ESX
 	chmod 644 $(CIM_STAGE_NAMESPACE)/sfcb_intelwbem.mof
 	$(COPY) $(BUILD_DIR)/INTEL_NVDIMM.reg $(CIM_STAGE_REGISTRATION)/intelwbem.reg
 	chmod 644 $(CIM_STAGE_REGISTRATION)/intelwbem.reg
-	$(COPY) $(BUILD_DIR)/nvmcli $(ESX_SUPPORT_DIR)
-	$(COPY) $(BUILD_DIR)/nvmmonitor $(ESX_SUPPORT_DIR)
-	$(COPY) $(BUILD_DIR)/libnvm.so* $(ESX_SUPPORT_DIR)
-	$(COPY) $(BUILD_DIR)/libnvm-core.so* $(ESX_SUPPORT_DIR)
-	$(COPY) $(BUILD_DIR)/libcrfeatures.so* $(ESX_SUPPORT_DIR)
-	$(COPY) $(BUILD_DIR)/libnvmwbem.so* $(ESX_SUPPORT_DIR) # for CLI
+	$(COPY) $(BUILD_DIR)/$(CLI_NAME) $(ESX_SUPPORT_DIR)
+	$(COPY) $(BUILD_DIR)/$(MONITOR_NAME) $(ESX_SUPPORT_DIR)
+	$(COPY) $(BUILD_DIR)/$(API_LIB_BASENAME).so* $(ESX_SUPPORT_DIR)
+	$(COPY) $(BUILD_DIR)/$(CORE_LIB_BASENAME).so* $(ESX_SUPPORT_DIR)
+	$(COPY) $(BUILD_DIR)/$(CLI_LIB_BASENAME).so* $(ESX_SUPPORT_DIR)
+	$(COPY) $(BUILD_DIR)/$(CIM_LIB_BASENAME).so* $(ESX_SUPPORT_DIR) # for CLI
 	$(COPY) $(BUILD_DIR)/libcimframework.so* $(ESX_SUPPORT_DIR) # for CLI
-	$(COPY) $(BUILD_DIR)/libnvmwbem.so* $(CIM_LIB_DIR) # for SFCB
+	$(COPY) $(BUILD_DIR)/$(CIM_LIB_BASENAME).so* $(CIM_LIB_DIR) # for SFCB
 	$(COPY) $(BUILD_DIR)/libcimframework.so* $(CIM_LIB_DIR) # for SFCB
 	$(COPY) $(BUILD_DIR)/libcliframework.so* $(ESX_SUPPORT_DIR)
 	$(COPY) $(BUILD_DIR)/libsqlite3.so* $(ESX_SUPPORT_DIR)
@@ -324,7 +324,7 @@ ifdef BUILD_LINUX
 	$(RM) $(BIN_FILES)
 	
 	# uninstall monitor service
-	$(RM) $(RPM_ROOT)$(INITD_DIR)/nvmmonitor	
+	$(RM) $(RPM_ROOT)$(INITD_DIR)/$(MONITOR_NAME)	
 	
 	#uninstall Pegasus files
 	$(RM) $(PEGASUS_MOF_FILES)
@@ -354,17 +354,16 @@ rpm :
 	#Make the Directories
 	$(MKDIR) $(RPMBUILD_DIR) $(RPMBUILD_DIR)/BUILD $(RPMBUILD_DIR)/SOURCES $(RPMBUILD_DIR)/RPMS \
 				$(RPMBUILD_DIR)/SRPMS $(RPMBUILD_DIR)/SPECS $(RPMBUILD_DIR)/BUILDROOT \
-				$(RPMBUILD_DIR)/BUILD/ixpdimm_sw
+				$(RPMBUILD_DIR)/BUILD/$(MARKETING_PRODUCT_NAME)
 	
 	#Copy Spec File
-	$(COPY) install/linux/$(LINUX_DIST)-release/*.spec $(RPMBUILD_DIR)/SPECS/ixpdimm_sw.spec
-	#Update the Spec file
-	$(SED) -i 's/^%define rpm_name .*/%define rpm_name ixpdimm_sw/g' $(RPMBUILD_DIR)/SPECS/ixpdimm_sw.spec
-	$(SED) -i 's/^%define build_version .*/%define build_version $(BUILDNUM)/g' $(RPMBUILD_DIR)/SPECS/ixpdimm_sw.spec
+	$(COPY) install/linux/$(LINUX_DIST)-release/*.spec $(RPMBUILD_DIR)/SPECS/$(MARKETING_PRODUCT_NAME).spec
+	#Update the Spec file	
+	$(SED) -i 's/^%define build_version .*/%define build_version $(BUILDNUM)/g' $(RPMBUILD_DIR)/SPECS/$(MARKETING_PRODUCT_NAME).spec
 	
 	#Archive the directory
-	git archive --format=tar --prefix="ixpdimm_sw/" HEAD | bzip2 -c > $(RPMBUILD_DIR)/SOURCES/ixpdimm_sw.tar.bz2
+	git archive --format=tar --prefix="$(MARKETING_PRODUCT_NAME)/" HEAD | bzip2 -c > $(RPMBUILD_DIR)/SOURCES/$(MARKETING_PRODUCT_NAME).tar.bz2
 	#rpmbuild 
-	$(RPMBUILD) -ba $(RPMBUILD_DIR)/SPECS/ixpdimm_sw.spec --define "_topdir $(RPMBUILD_DIR)" --define "cflag $(CFLAGS_EXTERNAL)"
+	$(RPMBUILD) -ba $(RPMBUILD_DIR)/SPECS/$(MARKETING_PRODUCT_NAME).spec --define "_topdir $(RPMBUILD_DIR)" --define "cflag $(CFLAGS_EXTERNAL)"
 	
 .PHONY : all clean install rpm

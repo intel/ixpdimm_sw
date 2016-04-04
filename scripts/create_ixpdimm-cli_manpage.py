@@ -7,17 +7,17 @@ import time
 import sys
 import manpage_helper
 
-usageString = "Usage: create_nvmcli_manpage.py " + manpage_helper.usage
+usageString = "Usage: create_ixpdimm-cli_manpage.py " + manpage_helper.usage
 
 #################################################################
-# Run the nvmcli command, and pipe the output to a file
+# Run the ixpdimm-cli command, and pipe the output to a file
 #################################################################
 def captureHelpOutput():
-	# run nvmcli and save help output to a file	
+	# run ixpdimm-cli and save help output to a file	
 	currpath = os.getcwd()
 	os.chdir(manpage_helper.outputPath)
 	os.environ['LD_LIBRARY_PATH'] = '.'
-	oscmd = "./nvmcli > " + currpath + "/" + helpTempFile
+	oscmd = "./ixpdimm-cli > " + currpath + "/" + helpTempFile
 	rc = os.system(oscmd)
 	os.chdir(currpath)
 	return rc
@@ -217,17 +217,17 @@ if "Linux" not in platform.system():
 	exit("ERROR:  Man page creation must be done on Linux.")
 	
 # Header and footer files must exist
-headerFileName = "nvmcli.manpage.header"
+headerFileName = "ixpdimm-cli.manpage.header"
 
 if not os.path.exists(headerFileName):
 	exit("ERROR:  Missing header file '" + headerFileName + "' to create man page.")
-footerFileName = "nvmcli.manpage.footer"
+footerFileName = "ixpdimm-cli.manpage.footer"
 if not os.path.exists(footerFileName):
 	exit("ERROR:  Missing footer file '" + footerFileName + "' to create man page.")
 
 #create temporary files
 helpTempFile = "helpout.tmp"
-tempTextFileName = "nvmcliMan.tmp"
+tempTextFileName = "ixpdimm-cliMan.tmp"
 
 # names from command line inputs override defaults
 for i in range(len(sys.argv)):
@@ -264,7 +264,7 @@ with open(tempTextFileName, 'a') as manfile:
 	manfile.write(manpage_helper.getFileWithReplacedData(footerFileName));
 
 # Create formatted man page from text file
-os.system('sed -f nvmcli.sed ' + tempTextFileName + ' > temp.txt')
+os.system('sed -f ixpdimm-cli.sed ' + tempTextFileName + ' > temp.txt')
 os.system('nroff -e -mandoc temp.txt 1>/dev/null')
 os.system('mv temp.txt ' + manpage_helper.cliName + '.8')
 os.system('rm -f ' + manpage_helper.cliName + '.8.gz')
@@ -274,6 +274,6 @@ os.system('gzip ' + manpage_helper.cliName + '.8')
 os.system('rm ' + tempTextFileName)
 os.system('rm ' + helpTempFile)
 
-# View man page by doing a 'man ./nvmcli.8.gz'
-# Installation needs to put this nvmcli.8.gz file in the man8 subdirectory in the 
+# View man page by doing a 'man ./ixpdimm-cli.8.gz'
+# Installation needs to put this ixpdimm-cli.8.gz file in the man8 subdirectory in the 
 #    system's man path

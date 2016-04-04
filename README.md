@@ -33,7 +33,7 @@ to build.
 The default path to these dependencies for windows is: 
 	workspace/external/
 where the makefile is located in: 
-	workspace/ixpdimm_sw/makefile
+	workspace/ixpdimm/makefile
 
 * MINGW_DIR - On Windows, the path to the MinGW 64-bit tools.
 * CTEMPLATE_INCLUDE_DIR - The path to the ctemplate headers.

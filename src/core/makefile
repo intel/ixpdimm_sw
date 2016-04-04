@@ -61,7 +61,7 @@ SUBMODULE_OBJS = $(addprefix $(OBJECT_MODULE_DIR)/, $(patsubst %.cpp,%.o,$(SRC))
 -include $(addprefix $(OBJECT_MODULE_DIR)/, $(patsubst %.cpp,%.d,$(SRC)))
 
 # Target library 'linker name'
-TARGETBASE = libnvm-core.$(LIB_SUFFIX)
+TARGETBASE = $(CORE_LIB_BASENAME).$(LIB_SUFFIX)
 # Target library 'soname'
 TARGETSO = $(TARGETBASE).$(VERSION_MAJOR)
 # Target library 'real name'
@@ -81,7 +81,7 @@ INCS = 	-I$(SRC_DIR) -I$(SRC_DIR)/core \
 		-I$(EXTERN_DIR)/intel_i18n/include
 
 LIBS = 	-L$(OBJECT_DIR)/common -lcommon \
-		-L$(BUILD_DIR) -lnvm \
+		-L$(BUILD_DIR) -l$(API_LIB_NAME) \
 			-lsqlite3 \
 			-lssl -lcrypto
 

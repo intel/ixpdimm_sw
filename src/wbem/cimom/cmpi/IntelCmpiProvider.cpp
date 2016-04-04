@@ -32,7 +32,7 @@
  * shortly after the CIMOM has called any intrinsic method. The CIMOM may call multiple intrinsic
  * methods prior to executing the cleanup function.  Currently the cleanup function is used to
  * gather all the logs from the csv file to the database as the CIMOM process may not release the
- * libnvmwbem library (which would call lib_unload).
+ * libixpdimm-cim library (which would call lib_unload).
  */
 
 #include <intel_cim_framework/IntelCmpiProvider.h>

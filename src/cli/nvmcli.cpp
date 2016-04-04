@@ -26,7 +26,7 @@
  */
 
 /*
- * Entry point for the NVMCLI application.
+ * Entry point for the ixpdimm-cli application.
  */
 
 #include <string>
@@ -44,7 +44,7 @@
 #endif
 
 #ifndef LOCALE_DOMAIN
-#define	LOCALE_DOMAIN	"nvmcli"
+#define	LOCALE_DOMAIN	"ixpdimm-cli"
 #endif
 
 // function pointer to register functions
@@ -83,7 +83,7 @@ bool tryLoadLib(std::string name, bool load)
 }
 
 /*
- * Entry point for NVMCLI application
+ * Entry point for ixpdimm-cli application
  */
 int main(int argc, char * argv[])
 {
@@ -108,7 +108,7 @@ int main(int argc, char * argv[])
 	int rc = 0;
 
 	// use shared libraries to register feature sets
-    if (!tryLoadLib("libcrfeatures", true)) // crfeatures are required .. if they don't load fail
+    if (!tryLoadLib("libixpdimm-cli", true)) // ixpdimm-cli are required .. if they don't load fail
     {
 		std::cout << "Couldn't load features" << std::endl;
     }
@@ -122,7 +122,7 @@ int main(int argc, char * argv[])
 		// Now that all features have been registered, we can attempt to execute the command
 		cli::framework::StringList argList;
 
-		// set executable name, nvmcli
+		// set executable name, ixpdimm-cli
 		pFrameworkInst->executableName = argv[0];
 
 		int i = 1; // skip utility name
@@ -161,7 +161,7 @@ int main(int argc, char * argv[])
 		wbem::lib_interface::freeNvmContext();
 
 		// unregister features
-		tryLoadLib("libcrfeatures", false);
+		tryLoadLib("libixpdimm-cli", false);
 
 		// close the connection to the db for this process
 		close_lib_store();
