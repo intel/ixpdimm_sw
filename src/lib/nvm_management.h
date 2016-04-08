@@ -596,7 +596,7 @@ struct device_discovery
 	// SMBIOS
 	enum memory_type memory_type; //	The type of memory used by the DIMM.
 
-	// Identify Apache Pass DIMM
+	// Identify Intel DIMM Gen 1
 	NVM_MANUFACTURER manufacturer; // The manufacturer ID code determined by JEDEC JEP-106
 	NVM_SERIAL_NUMBER serial_number;	// Serial number assigned by the vendor.
 	char model_number[NVM_MODEL_LEN]; // Model number assigned by the vendor.

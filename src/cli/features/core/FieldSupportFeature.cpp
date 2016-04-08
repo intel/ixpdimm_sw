@@ -887,7 +887,7 @@ cli::framework::PropertyListResult *cli::nvmcli::FieldSupportFeature::getProduct
 }
 
 /*
- * Display the Apache Pass DIMM host software inventory
+ * Display the Intel DIMM Gen 1 host software inventory
  */
 cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::showVersion(
 		const framework::ParsedCommand &parsedCommand)

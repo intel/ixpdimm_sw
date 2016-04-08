@@ -240,7 +240,7 @@ private:
 	framework::ResultBase *ackEvent(const framework::ParsedCommand &parsedCommand);
 
 	/*!
-	 * Show the Apache Pass software inventory
+	 * Show the Intel DIMM Gen 1 software inventory
 	 */
 	framework::ResultBase *showVersion(const framework::ParsedCommand &parsedCommand);
 

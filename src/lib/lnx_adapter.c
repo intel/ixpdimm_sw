@@ -680,7 +680,7 @@ int linux_err_to_nvm_lib_err(int crbd_err)
  * encounters a problem in processing a request.
  *
  * A positive return code from the pass through ioctl indicates a problem with a
- * command to an Apache Pass FW mail box. In this case, the return code will be a
+ * command to an Intel DIMM Gen 1 FW mail box. In this case, the return code will be a
  * positive value that directly maps to FW error code.
  */
 int send_ioctl_command(int fd, unsigned long request, void* parg)

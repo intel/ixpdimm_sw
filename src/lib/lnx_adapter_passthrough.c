@@ -344,9 +344,8 @@ int ioctl_passthrough_cmd(struct fw_cmd *p_fw_cmd)
 	else if ((p_fw_cmd->opcode == 0x08 && p_fw_cmd->sub_opcode == 0x02) || // get fw debug log
 				(p_fw_cmd->opcode == 0x0A)) // inject error
 	{
-		COMMON_LOG_ERROR_F("Apache Pass FW command OpCode: 0x%x SubOpCode: 0x%x is not supported",
-				p_fw_cmd->opcode, p_fw_cmd->sub_opcode);
-		printf("Apache Pass FW command OpCode: 0x%x SubOpCode: 0x%x is not supported\n",
+		COMMON_LOG_ERROR_F("Intel DIMM Gen 1 FW command OpCode: 0x%x SubOpCode: "
+				"0x%x is not supported",
 				p_fw_cmd->opcode, p_fw_cmd->sub_opcode);
 		rc = NVM_ERR_NOTSUPPORTED;
 	}

@@ -44,7 +44,7 @@
 #include <string/unicode_utilities.h>
 #include <cpuid.h>
 
-#define	MGMTSW_REG_KEY "SOFTWARE\\INTEL\\APACHE PASS DIMM SOFTWARE"
+#define	MGMTSW_REG_KEY "SOFTWARE\\INTEL\\INTEL DIMM GEN 1"
 #define	INSTALLDIR_REG_SUBKEY "InstallDir"
 
 #define	EVENT_SOURCE	"IntelASM"

@@ -35,12 +35,12 @@
 #include <stddef.h>
 #include <limits.h>
 
-#define	NVM_PRODUCT_NAME	"Intel Apache Pass DIMM Software\0"
-#define	NVM_DIMM_NAME_LONG	"Apache Pass DIMM"
+#define	NVM_PRODUCT_NAME	"Intel DIMM Gen 1 Software\0"
+#define	NVM_DIMM_NAME_LONG	"Intel DIMM Gen 1"
 #define	NVM_DIMM_NAME	"AEP DIMM"
 #define	NVM_SYSLOG_SOURCE	"NVM_MGMT"
 #define	NVM_DEFAULT_NAMESPACE_NAME	"NvDimmVol"
-#define	NVM_SYSTEM	"Apache Pass"
+#define	NVM_SYSTEM	"Intel DIMM Gen 1"
 
 #define	NVM_COMPUTERNAME_LEN 256 // Length of host string
 #define	NVM_OSNAME_LEN	256 // Length of host OS string
