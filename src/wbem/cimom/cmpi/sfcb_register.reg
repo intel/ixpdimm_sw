@@ -1,6 +1,6 @@
 [<NVM_WBEM_PREFIX>BaseServer]
    provider: Intel_BaseServer_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type: instance
    group: intel
 # autoload: yes # Required for ESX but not SFCB in general
