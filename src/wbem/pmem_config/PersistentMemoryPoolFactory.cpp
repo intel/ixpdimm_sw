@@ -227,21 +227,21 @@ struct possible_namespace_ranges wbem::pmem_config::PersistentMemoryPoolFactory:
 
 void wbem::pmem_config::PersistentMemoryPoolFactory::getSupportedSizeRange(
 		const std::string &poolGuid,
-		COMMON_UINT64 &largestPossiblePmNs,
-		COMMON_UINT64 &smallestPossiblePmNs,
-		COMMON_UINT64 &pmIncrement,
-		COMMON_UINT64 &largestPossibleBlockNs,
-		COMMON_UINT64 &smallestPossibleBlockNs,
-		COMMON_UINT64 &blockIncrement)
+		COMMON_UINT64 &largestPossibleAdNs,
+		COMMON_UINT64 &smallestPossibleAdNs,
+		COMMON_UINT64 &adIncrement,
+		COMMON_UINT64 &largestPossibleStorageNs,
+		COMMON_UINT64 &smallestPossibleStorageNs,
+		COMMON_UINT64 &storageIncrement)
 {
 	struct possible_namespace_ranges range = getSupportedSizeRange(poolGuid);
-	largestPossiblePmNs = range.largest_possible_pm_ns;
-	smallestPossiblePmNs = range.smallest_possible_pm_ns;
-	pmIncrement = range.pm_increment;
+	largestPossibleAdNs = range.largest_possible_app_direct_ns;
+	smallestPossibleAdNs = range.smallest_possible_app_direct_ns;
+	adIncrement = range.app_direct_increment;
 
-	largestPossibleBlockNs = range.largest_possible_block_ns;
-	smallestPossibleBlockNs = range.smallest_possible_block_ns;
-	blockIncrement = range.block_increment;
+	largestPossibleStorageNs = range.largest_possible_storage_ns;
+	smallestPossibleStorageNs = range.smallest_possible_storage_ns;
+	storageIncrement = range.storage_increment;
 }
 
 wbem::framework::UINT32 wbem::pmem_config::PersistentMemoryPoolFactory::executeMethod(
@@ -300,8 +300,8 @@ wbem::framework::UINT32 wbem::pmem_config::PersistentMemoryPoolFactory::executeM
 			wbem::framework::Attribute namespaceTypeAttribute;
 			pGoalInstance->getAttribute(wbem::RESOURCETYPE_KEY, namespaceTypeAttribute);
 			NVM_UINT16 type = namespaceTypeAttribute.uintValue();
-			if ((type != wbem::pmem_config::NS_RESOURCETYPE_BLOCK) &&
-					(type != wbem::pmem_config::NS_RESOURCETYPE_PM))
+			if ((type != wbem::pmem_config::NS_RESOURCETYPE_BLOCK_ADDRESSABLE) &&
+				(type != wbem::pmem_config::NS_RESOURCETYPE_BYTE_ADDRESSABLE))
 			{
 				delete pGoalInstance;
 				COMMON_LOG_ERROR_F("Invalid namespace type in object path: %d", type);
@@ -315,23 +315,23 @@ wbem::framework::UINT32 wbem::pmem_config::PersistentMemoryPoolFactory::executeM
 			wbemRc = wbem::framework::SUCCESS;
 
 			// send back sizes based on specified namespace type
-			if (type == wbem::pmem_config::NS_RESOURCETYPE_BLOCK)
+			if (type == wbem::pmem_config::NS_RESOURCETYPE_BLOCK_ADDRESSABLE)
 			{
 				outParms[PERSISTENTMEMORYPOOL_MIN_NS_SIZE] =
-						framework::Attribute(p_range.smallest_possible_block_ns, false);
+						framework::Attribute(p_range.smallest_possible_storage_ns, false);
 				outParms[PERSISTENTMEMORYPOOL_MAX_NS_SIZE] =
-						framework::Attribute(p_range.largest_possible_block_ns, false);
+						framework::Attribute(p_range.largest_possible_storage_ns, false);
 				outParms[PERSISTENTMEMORYPOOL_NS_SIZE_DIVISOR] =
-						framework::Attribute(p_range.block_increment, false);
+						framework::Attribute(p_range.storage_increment, false);
 			}
 			else
 			{
 				outParms[PERSISTENTMEMORYPOOL_MIN_NS_SIZE] =
-						framework::Attribute(p_range.smallest_possible_pm_ns, false);
+						framework::Attribute(p_range.smallest_possible_app_direct_ns, false);
 				outParms[PERSISTENTMEMORYPOOL_MAX_NS_SIZE] =
-						framework::Attribute(p_range.largest_possible_pm_ns, false);
+						framework::Attribute(p_range.largest_possible_app_direct_ns, false);
 				outParms[PERSISTENTMEMORYPOOL_NS_SIZE_DIVISOR] =
-						framework::Attribute(p_range.pm_increment, false);
+						framework::Attribute(p_range.app_direct_increment, false);
 			}
 		}
 		else

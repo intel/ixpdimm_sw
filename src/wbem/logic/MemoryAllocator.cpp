@@ -33,15 +33,14 @@
 #include <common_types.h>
 #include "RuleNoDimms.h"
 #include "RuleProvisionCapacityNotSupported.h"
-#include "RulePersistentNotSupported.h"
-#include "RuleMirroredPersistentNotSupported.h"
-#include "RuleVolatileCapacityNotSupported.h"
+#include "RuleAppDirectNotSupported.h"
+#include "RuleMirroredAppDirectNotSupported.h"
 #include "RuleStorageCapacityNotSupported.h"
 #include "RuleNamespacesExist.h"
 #include "RuleDimmHasConfigGoal.h"
 #include "RulePartialSocketConfigured.h"
 #include "RuleDimmListInvalid.h"
-#include "RuleTooManyPersistentExtents.h"
+#include "RuleTooManyAppDirectExtents.h"
 #include "RuleTooManyRemaining.h"
 #include "RuleReserveDimmPropertyInvalid.h"
 #include "RuleRejectLockedDimms.h"
@@ -56,6 +55,7 @@
 #include "PostLayoutAddressDecoderLimitCheck.h"
 #include "PostLayoutRequestDeviationCheck.h"
 #include <exception/NvmExceptionBadRequest.h>
+#include "RuleMemoryModeCapacityNotSupported.h"
 
 wbem::logic::MemoryAllocator::MemoryAllocator(const struct nvm_capabilities &systemCapabilities,
 		const std::vector<struct device_discovery> &manageableDevices,
@@ -144,13 +144,13 @@ void wbem::logic::MemoryAllocator::populateRequestRules()
 	// Note that order matters
 	m_requestRules.push_back(new RuleProvisionCapacityNotSupported(m_systemCapabilities));
 	m_requestRules.push_back(new RuleNoDimms());
-	m_requestRules.push_back(new RuleTooManyPersistentExtents());
+	m_requestRules.push_back(new RuleTooManyAppDirectExtents());
 	m_requestRules.push_back(new RuleTooManyRemaining());
 	m_requestRules.push_back(new RuleReserveDimmPropertyInvalid());
 	m_requestRules.push_back(new RuleDimmListInvalid(m_manageableDevices));
-	m_requestRules.push_back(new RuleVolatileCapacityNotSupported(m_systemCapabilities));
-	m_requestRules.push_back(new RulePersistentNotSupported(m_systemCapabilities));
-	m_requestRules.push_back(new RuleMirroredPersistentNotSupported);
+	m_requestRules.push_back(new RuleMemoryModeCapacityNotSupported(m_systemCapabilities));
+	m_requestRules.push_back(new RuleAppDirectNotSupported(m_systemCapabilities));
+	m_requestRules.push_back(new RuleMirroredAppDirectNotSupported);
 	m_requestRules.push_back(new RuleStorageCapacityNotSupported(m_systemCapabilities));
 	m_requestRules.push_back(new RuleDimmHasConfigGoal);
 	m_requestRules.push_back(new RuleNamespacesExist(m_systemCapabilities));

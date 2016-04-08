@@ -26,33 +26,52 @@
  */
 
 /*
- * Rule that checks that the platform supports memory mode
- * if volatile capacity is requested.
+ * Lay out the Memory Mode region.
  */
 
-#include "RuleVolatileCapacityNotSupported.h"
-#include <exception/NvmExceptionBadRequest.h>
-#include <LogEnterExit.h>
+#ifndef _WBEM_LOGIC_LAYOUTSTEPMEMORY_H_
+#define _WBEM_LOGIC_LAYOUTSTEPMEMORY_H_
 
-wbem::logic::RuleVolatileCapacityNotSupported::RuleVolatileCapacityNotSupported(
-		const struct nvm_capabilities &systemCapabilities) :
-		m_systemCapabilities(systemCapabilities)
+#include "LayoutStep.h"
+#include <nvm_management.h>
+
+namespace wbem
 {
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-}
-
-wbem::logic::RuleVolatileCapacityNotSupported::~RuleVolatileCapacityNotSupported()
+namespace logic
 {
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-}
 
-void wbem::logic::RuleVolatileCapacityNotSupported::verify(const MemoryAllocationRequest &request)
+class NVM_API LayoutStepMemory : public LayoutStep
 {
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	public:
+		LayoutStepMemory();
+		virtual ~LayoutStepMemory();
 
-	if (request.volatileCapacity != 0 &&
-		!m_systemCapabilities.nvm_features.memory_mode)
-	{
-		throw exception::NvmExceptionVolatileNotSupported();
-	}
-}
+		virtual void execute(const MemoryAllocationRequest &request,
+				MemoryAllocationLayout &layout);
+
+		virtual bool isRemainingStep(const MemoryAllocationRequest &request);
+
+	protected:
+		NVM_UINT64 getRequestedCapacityBytes(
+				const struct MemoryAllocationRequest& request,
+				MemoryAllocationLayout &layout);
+		NVM_UINT64 getAlignedDimmBytes(const MemoryAllocationRequest& request, const Dimm &dimm,
+				MemoryAllocationLayout& layout, const NVM_UINT64 &requestedBytes);
+		NVM_UINT64 getTotalMemoryBytes(const NVM_UINT64 &requestedBytes,
+				const NVM_UINT64 &existingBytes);
+		NVM_UINT64 roundDownMemoryToPMAlignment(
+				const Dimm &dimm, MemoryAllocationLayout& layout,
+				const NVM_UINT64 &requestedBytes, const NVM_UINT64 dimmBytes);
+		NVM_UINT64 roundUpMemoryToPMAlignment(
+				const Dimm &dimm, MemoryAllocationLayout& layout,
+				const NVM_UINT64 &requestedBytes, const NVM_UINT64 dimmBytes);
+		NVM_UINT64 roundMemoryToNearestPMAlignment(
+				const Dimm &dimm, MemoryAllocationLayout& layout,
+				const NVM_UINT64 &requestedBytes, const NVM_UINT64 dimmBytes);
+
+};
+
+} /* namespace logic */
+} /* namespace wbem */
+
+#endif /* _WBEM_LOGIC_LAYOUTSTEPMEMORY_H_ */

@@ -42,8 +42,8 @@ namespace wbem {
 namespace mem_config {
 
 static const std::string SIZE_REMAINING = "Remaining";
-static const std::string PERSISTENTSETTING_MIRROR = "Mirror";
-static const std::string PERSISTENTSETTING_BYONE = "ByOne";
+static const std::string APP_DIRECT_SETTING_MIRROR = "Mirror";
+static const std::string APP_DIRECT_SETTING_BYONE = "ByOne";
 static const std::string MEMORYPROP_TOKENSEP = "_";
 
 enum MemoryAllocationSettingsInterleaveSizeExponent {
@@ -57,9 +57,9 @@ enum MemoryAllocationSettingsInterleaveSizeExponent {
 
 enum MemoryAllocationSettingsResourceType {
 	MEMORYALLOCATIONSETTINGS_RESOURCETYPE_UNKNOWN     = 0,   // resource type unknown
-	MEMORYALLOCATIONSETTINGS_RESOURCETYPE_OTHER       = 1,   // resource type not volatile or persistent
+	MEMORYALLOCATIONSETTINGS_RESOURCETYPE_OTHER       = 1,   // resource type not volatile or app direct
 	MEMORYALLOCATIONSETTINGS_RESOURCETYPE_MEMORY      = 4,   // resource type volatile
-	MEMORYALLOCATIONSETTINGS_RESOURCETYPE_NONVOLATILE = 35   // resource type persistent
+	MEMORYALLOCATIONSETTINGS_RESOURCETYPE_NONVOLATILE = 35   // resource type app direct
 };
 
 enum MemoryAllocationSettingsReplication {

@@ -68,13 +68,13 @@ class NvmExceptionBadRequestSize : public NvmExceptionBadRequest
 		{}
 };
 
-class NvmExceptionBadRequestVolatileSize : public NvmExceptionBadRequestSize
+class NvmExceptionBadRequestMemorySize : public NvmExceptionBadRequestSize
 {
 	public:
-		NvmExceptionBadRequestVolatileSize() :
+		NvmExceptionBadRequestMemorySize() :
 			NvmExceptionBadRequestSize()
 		{
-			m_Message = "The requested volatile capacity was invalid.";
+			m_Message = "The requested Memory Mode capacity was invalid.";
 		}
 };
 
@@ -112,19 +112,19 @@ class NvmExceptionBadRequestRemaining : public NvmExceptionBadRequest
 		{}
 };
 
-class NvmExceptionPersistentSettingsNotSupported : public NvmExceptionBadRequest
+class NvmExceptionAppDirectSettingsNotSupported : public NvmExceptionBadRequest
 {
 	public:
-		NvmExceptionPersistentSettingsNotSupported() :
-			NvmExceptionBadRequest("The requested persistent memory settings are not supported.")
+		NvmExceptionAppDirectSettingsNotSupported() :
+			NvmExceptionBadRequest("The requested app direct memory settings are not supported.")
 		{}
 };
 
-class NvmExceptionVolatileNotSupported : public NvmExceptionBadRequest
+class NvmExceptionMemoryModeNotSupported : public NvmExceptionBadRequest
 {
 	public:
-		NvmExceptionVolatileNotSupported() :
-			NvmExceptionBadRequest("The requested volatile memory settings are not supported.")
+		NvmExceptionMemoryModeNotSupported() :
+			NvmExceptionBadRequest("The requested Memory Mode settings are not supported.")
 		{}
 };
 
@@ -186,11 +186,11 @@ class NvmExceptionUnacceptableLayoutDeviation : public NvmExceptionBadRequest
 		{}
 };
 
-class NvmExceptionTooManyPersistentExtents : public NvmExceptionBadRequest
+class NvmExceptionTooManyAppDirectExtents : public NvmExceptionBadRequest
 {
 	public:
-		NvmExceptionTooManyPersistentExtents() :
-			NvmExceptionBadRequest("The request contains too many persistent extents.")
+		NvmExceptionTooManyAppDirectExtents() :
+			NvmExceptionBadRequest("The request contains too many app direct extents.")
 		{}
 };
 

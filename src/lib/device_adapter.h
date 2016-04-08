@@ -240,12 +240,12 @@ struct nvm_pool
 	NVM_INT16 socket_id; // The processor socket identifier.  -1 for system level pool.
 	NVM_UINT8 dimm_count; // number of dimms in pool
 	NVM_UINT8 ilset_count; // the number of interleave sets in the pool
-	// The volatile capacities of the dimms in the pool
-	NVM_UINT64 volatile_capacities[NVM_MAX_DEVICES_PER_POOL];
+	// The memory capacities of the dimms in the pool
+	NVM_UINT64 memory_capacities[NVM_MAX_DEVICES_PER_POOL];
 	// The raw capacities of the dimms in the pool in bytes
 	NVM_UINT64 raw_capacities[NVM_MAX_DEVICES_PER_POOL];
-	// The block ONLY capacities of the dimms in the pool in bytes
-	NVM_UINT64 block_capacities[NVM_MAX_DEVICES_PER_POOL];
+	// The storage ONLY capacities of the dimms in the pool in bytes
+	NVM_UINT64 storage_capacities[NVM_MAX_DEVICES_PER_POOL];
 	NVM_NFIT_DEVICE_HANDLE dimms[NVM_MAX_DEVICES_PER_POOL]; // Unique ID's of underlying NVM-DIMMs.
 	// The interleave sets in this pool
 	struct nvm_interleave_set ilsets[NVM_MAX_DEVICES_PER_SOCKET * 2];
@@ -253,14 +253,14 @@ struct nvm_pool
 };
 
 /*
- * Describes the block capacity (total and available) of a DIMM.
+ * Describes the storage capacity (total and available) of a DIMM.
  */
-struct nvm_block_capacities
+struct nvm_storage_capacities
 {
 	NVM_NFIT_DEVICE_HANDLE device_handle; // DIMM handle
-	NVM_UINT64 total_block_capacity; // total block capacity - block-only + unmirrored interleave
-	NVM_UINT64 free_block_capacity; // portion of total block capacity not used by a namespace
-	NVM_UINT64 block_only_capacity; // block-only capacity - non-interleaved
+	NVM_UINT64 total_storage_capacity; // total storage capacity - storage-only + App Direct
+	NVM_UINT64 free_storage_capacity; // portion of total storage capacity not used by a namespace
+	NVM_UINT64 storage_only_capacity; // storage-only capacity - unmapped
 };
 
 /*
@@ -285,8 +285,8 @@ struct nvm_namespace_details
 	NVM_BOOL btt; // optimized for speed
 	union
 	{
-		NVM_NFIT_DEVICE_HANDLE device_handle; // Used when creating a Block Namespace
-		NVM_UINT32 interleave_setid; // Used when creating a PM Namespace
+		NVM_NFIT_DEVICE_HANDLE device_handle; // Used when creating a Storage Namespace
+		NVM_UINT32 interleave_setid; // Used when creating an App Direct Namespace
 	} namespace_creation_id; // the identifier used by the driver when creating a Namespace
 };
 
@@ -303,8 +303,8 @@ struct nvm_namespace_create_settings
 	NVM_BOOL btt; // optimized for speed
 	union
 	{
-		NVM_NFIT_DEVICE_HANDLE device_handle; // Used when creating a Block Namespace
-		NVM_UINT32 interleave_setid; // Used when creating a PM Namespace
+		NVM_NFIT_DEVICE_HANDLE device_handle; // Used when creating a Storage Namespace
+		NVM_UINT32 interleave_setid; // Used when creating a App Direct Namespace
 	} namespace_creation_id; // the identifier used by the driver when creating a Namespace
 };
 
@@ -551,9 +551,10 @@ int modify_namespace_enabled(
 		const enum namespace_enable_state enabled);
 
 /*
- * Retrieve the block capacities of all DIMMs
+ * Retrieve the storage capacities of all DIMMs
  */
-int get_dimm_block_capacities(const NVM_UINT32 count, struct nvm_block_capacities *p_capacities);
+int get_dimm_storage_capacities(const NVM_UINT32 count,
+		struct nvm_storage_capacities *p_capacities);
 
 /*
  * Return the capabilities supported by the device driver

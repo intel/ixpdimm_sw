@@ -64,8 +64,8 @@ enum config_table_type
 enum interleave_memory_type
 {
 	INTERLEAVE_MEMORY_TYPE_UNKNOWN = 0,
-	INTERLEAVE_MEMORY_TYPE_VOLATILE = 1,
-	INTERLEAVE_MEMORY_TYPE_PERSISTENT = 2
+	INTERLEAVE_MEMORY_TYPE_MEMORY = 1,
+	INTERLEAVE_MEMORY_TYPE_APP_DIRECT = 2
 };
 
 enum extension_table_type
@@ -170,7 +170,7 @@ struct interleave_info_extension_table
 
 	NVM_UINT16 index; // logical index number
 	NVM_UINT8 dimm_count; // number of dimms in interleave
-	NVM_UINT8 memory_type; // 1 - volatile, 2 - pm
+	NVM_UINT8 memory_type; // 1 - memory mode, 2 - app direct mode
 	NVM_UINT32 interleave_format; // interleave format
 	NVM_UINT8 mirror_enable; // 0 - disabled, 1 enabled
 
@@ -257,8 +257,8 @@ struct current_config_table
 
 	NVM_UINT8 reserved[2];
 
-	NVM_UINT64 mapped_volatile_capacity; // 2LM capacity in bytes mapped into the SPA
-	NVM_UINT64 mapped_pm_capacity; // PM capacity in bytes mapped into the SPA
+	NVM_UINT64 mapped_memory_capacity; // memory mode capacity in bytes mapped into the SPA
+	NVM_UINT64 mapped_app_direct_capacity; // app direct capacity in bytes mapped into the SPA
 
 	// Extension tables
 	NVM_UINT8 p_ext_tables[0];

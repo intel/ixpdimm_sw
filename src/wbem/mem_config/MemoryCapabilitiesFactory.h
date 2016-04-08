@@ -52,14 +52,14 @@ static const NVM_UINT16 REPLICATION_LOCAL = 3;
 
 // supported memory mode values
 static const NVM_UINT16 MEMORYMODE_1LM = 2;
-static const NVM_UINT16 MEMORYMODE_2LM = 3;
-static const NVM_UINT16 MEMORYMODE_BLOCK = 4;
-static const NVM_UINT16 MEMORYMODE_PMDIRECT = 5;
+static const NVM_UINT16 MEMORYMODE_MEMORY = 3;
+static const NVM_UINT16 MEMORYMODE_STORAGE = 4;
+static const NVM_UINT16 MEMORYMODE_APP_DIRECT = 5;
 
 // current values
 static const NVM_UINT16 MEMORYMODE_UNKNOWN = 0;
 static const NVM_UINT16 MEMORYMODE_AUTO = 32768;
-static const NVM_UINT16 MEMORYMODE_PMDISABLED = 32769;
+static const NVM_UINT16 MEMORYMODE_APP_DIRECT_DISABLED = 32769;
 
 // memory reliability values
 static const NVM_UINT16 RELIABILITY_DIMMSPARING = 5;
@@ -96,7 +96,7 @@ class NVM_API MemoryCapabilitiesFactory  : public framework_interface::NvmInstan
 	static framework::UINT16_LIST getReplicationSupport(const struct nvm_capabilities &nvmCaps);
 	static framework::UINT16_LIST getReliabilitySupport(const struct nvm_capabilities &nvmCaps);
 	static framework::UINT16 translateVolatileMode(const struct nvm_capabilities &cap);
-	static framework::UINT16 translatePMMode(const struct nvm_capabilities &cap);
+	static framework::UINT16 translateAppDirectMode(const struct nvm_capabilities &cap);
 
 	private:
 		void populateAttributeList(framework::attribute_names_t &attributes)

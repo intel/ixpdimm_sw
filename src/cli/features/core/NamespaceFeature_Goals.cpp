@@ -88,19 +88,19 @@ bool cli::nvmcli::NamespaceFeature::convertConfigGoalInstance(
 		}
 		pCliInstance->setAttribute(wbem::SOCKETID_KEY, socketIdAttr, displayAttributes);
 
-		// VolatileSize
-		wbem::framework::Attribute volatileSizeAttr;
-		if (pWbemInstance->getAttribute(wbem::VOLATILESIZE_KEY,
-				volatileSizeAttr) != wbem::framework::SUCCESS)
+		// MemorySize
+		wbem::framework::Attribute memorySizeAttr;
+		if (pWbemInstance->getAttribute(wbem::MEMORYSIZE_KEY,
+				memorySizeAttr) != wbem::framework::SUCCESS)
 		{
 			throw false;
 		}
-		pCliInstance->setAttribute(wbem::VOLATILESIZE_KEY,
-				wbem::framework::Attribute(volatileSizeAttr.uint64Value(), false),
+		pCliInstance->setAttribute(wbem::MEMORYSIZE_KEY,
+				wbem::framework::Attribute(memorySizeAttr.uint64Value(), false),
 				displayAttributes);
-		cli::nvmcli::convertCapacityAttribute(*pCliInstance, wbem::VOLATILESIZE_KEY);
+		cli::nvmcli::convertCapacityAttribute(*pCliInstance, wbem::MEMORYSIZE_KEY);
 
-		// Persistent1Size, Persistent1Settings, Persistent2Size, Persistent2Settings
+		// AppDirect1Size, AppDirect1Settings, AppDirect2Size, AppDirect2Settings
 		// all come from the interleave format, size and redundancy vectors
 		// gather all the vectors first
 
@@ -140,102 +140,102 @@ bool cli::nvmcli::NamespaceFeature::convertConfigGoalInstance(
 		}
 		wbem::framework::UINT16_LIST intIndexList = intIndexesAttr.uint16ListValue();
 
-		NVM_UINT16 pm1Index = 0;
-		NVM_UINT64 pm1SizeB = 0;
-		bool pm1Mirrored = false;
-		NVM_UINT32 pm1Settings = 0;
-		NVM_UINT16 pm2Index = 0;
-		NVM_UINT64 pm2SizeB = 0;
-		bool pm2Mirrored = false;
-		NVM_UINT32 pm2Settings = 0;
+		NVM_UINT16 appDirect1Index = 0;
+		NVM_UINT64 appDirect1SizeB = 0;
+		bool appDirect1Mirrored = false;
+		NVM_UINT32 appDirect1Settings = 0;
+		NVM_UINT16 appDirect2Index = 0;
+		NVM_UINT64 appDirect2SizeB = 0;
+		bool appDirect2Mirrored = false;
+		NVM_UINT32 appDirect2Settings = 0;
 		if (intFormatList.size() >= 1u &&
 				intSizeList.size() >= 1u &&
 				mirrorsList.size() >= 1u &&
 				intIndexList.size() >= 1u)
 		{
-			pm1Index = intIndexList[0];
-			pm1Settings = intFormatList[0];
-			pm1SizeB = intSizeList[0];
-			pm1Mirrored = (mirrorsList[0] == 1);
+			appDirect1Index = intIndexList[0];
+			appDirect1Settings = intFormatList[0];
+			appDirect1SizeB = intSizeList[0];
+			appDirect1Mirrored = (mirrorsList[0] == 1);
 		}
 		if (intFormatList.size() >= 2u &&
 					intSizeList.size() >= 2u &&
 					mirrorsList.size() >= 2u &&
 					intIndexList.size() >= 2u)
 		{
-			pm2Index = intIndexList[1];
-			pm2Settings = intFormatList[1];
-			pm2SizeB = intSizeList[1];
-			pm2Mirrored = (mirrorsList[1] == 1);
+			appDirect2Index = intIndexList[1];
+			appDirect2Settings = intFormatList[1];
+			appDirect2SizeB = intSizeList[1];
+			appDirect2Mirrored = (mirrorsList[1] == 1);
 		}
 
-		pCliInstance->setAttribute(wbem::PERSISTENT1SIZE_KEY,
-				wbem::framework::Attribute(pm1SizeB, false),
+		pCliInstance->setAttribute(wbem::APPDIRECT1SIZE_KEY,
+				wbem::framework::Attribute(appDirect1SizeB, false),
 				displayAttributes);
-		cli::nvmcli::convertCapacityAttribute(*pCliInstance, wbem::PERSISTENT1SIZE_KEY);
+		cli::nvmcli::convertCapacityAttribute(*pCliInstance, wbem::APPDIRECT1SIZE_KEY);
 
 		// add mirror string
-		if (pm1Mirrored)
+		if (appDirect1Mirrored)
 		{
-			wbem::framework::Attribute pmAttr;
-			if (pCliInstance->getAttribute(wbem::PERSISTENT1SIZE_KEY,
-				pmAttr) == wbem::framework::SUCCESS)
+			wbem::framework::Attribute appDirectAttr;
+			if (pCliInstance->getAttribute(wbem::APPDIRECT1SIZE_KEY,
+				appDirectAttr) == wbem::framework::SUCCESS)
 			{
-				std::stringstream pmSizeStr;
-				pmSizeStr << pmAttr.stringValue()<< cli::nvmcli::MIRRORED_CAPACITY;
-				pCliInstance->setAttribute(wbem::PERSISTENT1SIZE_KEY,
-						wbem::framework::Attribute(pmSizeStr.str(), false), displayAttributes);
+				std::stringstream appDirectSizeStr;
+				appDirectSizeStr << appDirectAttr.stringValue()<< cli::nvmcli::MIRRORED_CAPACITY;
+				pCliInstance->setAttribute(wbem::APPDIRECT1SIZE_KEY,
+						wbem::framework::Attribute(appDirectSizeStr.str(), false), displayAttributes);
 			}
 		}
 
 		// Interleave1Index
-		pCliInstance->setAttribute(wbem::PERSISTENT1INDEX_KEY,
-				wbem::framework::Attribute(pm1Index, false),
+		pCliInstance->setAttribute(wbem::APPDIRECT1INDEX_KEY,
+				wbem::framework::Attribute(appDirect1Index, false),
 				displayAttributes);
 
-		// Persistent1Settings
+		// AppDirect1Settings
 		// convert NVM_UINT32 to struct
-		pCliInstance->setAttribute(wbem::PERSISTENT1SETTINGS_KEY,
-				wbem::framework::Attribute(wbem::mem_config::InterleaveSet::getInterleaveFormatStringFromInt(pm1Settings), false),
+		pCliInstance->setAttribute(wbem::APPDIRECT1SETTINGS_KEY,
+				wbem::framework::Attribute(wbem::mem_config::InterleaveSet::getInterleaveFormatStringFromInt(appDirect1Settings), false),
 				displayAttributes);
 
-		pCliInstance->setAttribute(wbem::PERSISTENT2SIZE_KEY,
-				wbem::framework::Attribute(pm2SizeB, false), displayAttributes);
-		cli::nvmcli::convertCapacityAttribute(*pCliInstance, wbem::PERSISTENT2SIZE_KEY);
+		pCliInstance->setAttribute(wbem::APPDIRECT2SIZE_KEY,
+				wbem::framework::Attribute(appDirect2SizeB, false), displayAttributes);
+		cli::nvmcli::convertCapacityAttribute(*pCliInstance, wbem::APPDIRECT2SIZE_KEY);
 
 		// add mirror string
-		if (pm2Mirrored)
+		if (appDirect2Mirrored)
 		{
-			wbem::framework::Attribute pm2Attr;
-			if (pCliInstance->getAttribute(wbem::PERSISTENT2SIZE_KEY,
-				pm2Attr) == wbem::framework::SUCCESS)
+			wbem::framework::Attribute appDirect2Attr;
+			if (pCliInstance->getAttribute(wbem::APPDIRECT2SIZE_KEY,
+				appDirect2Attr) == wbem::framework::SUCCESS)
 			{
-				std::stringstream pm2SizeStr;
-				pm2SizeStr << pm2Attr.stringValue()<< cli::nvmcli::MIRRORED_CAPACITY;
-				pCliInstance->setAttribute(wbem::PERSISTENT2SIZE_KEY,
-					wbem::framework::Attribute(pm2SizeStr.str(), false), displayAttributes);
+				std::stringstream appDirect2SizeStr;
+				appDirect2SizeStr << appDirect2Attr.stringValue()<< cli::nvmcli::MIRRORED_CAPACITY;
+				pCliInstance->setAttribute(wbem::APPDIRECT2SIZE_KEY,
+					wbem::framework::Attribute(appDirect2SizeStr.str(), false), displayAttributes);
 			}
 		}
 
-		// Interleave2Index
-		pCliInstance->setAttribute(wbem::PERSISTENT2INDEX_KEY,
-				wbem::framework::Attribute(pm2Index, false),
+		// AppDirect2Index
+		pCliInstance->setAttribute(wbem::APPDIRECT2INDEX_KEY,
+				wbem::framework::Attribute(appDirect2Index, false),
 				displayAttributes);
 
-		// Persistent2Settings
-		pCliInstance->setAttribute(wbem::PERSISTENT2SETTINGS_KEY,
-				wbem::framework::Attribute(wbem::mem_config::InterleaveSet::getInterleaveFormatStringFromInt(pm2Settings), false),
+		// AppDirect2Settings
+		pCliInstance->setAttribute(wbem::APPDIRECT2SETTINGS_KEY,
+				wbem::framework::Attribute(wbem::mem_config::InterleaveSet::getInterleaveFormatStringFromInt(appDirect2Settings), false),
 				displayAttributes);
 
-		// BlockCapacity
-		wbem::framework::Attribute blockCapacityAttr;
-		if (pWbemInstance->getAttribute(wbem::BLOCKCAPACITY_KEY,
-				blockCapacityAttr) != wbem::framework::SUCCESS)
+		// StorageCapacity
+		wbem::framework::Attribute storageCapacityAttr;
+		if (pWbemInstance->getAttribute(wbem::STORAGECAPACITY_KEY,
+				storageCapacityAttr) != wbem::framework::SUCCESS)
 		{
 			throw false;
 		}
 		pCliInstance->setAttribute(wbem::STORAGECAPACITY_KEY,
-				wbem::framework::Attribute(blockCapacityAttr.uint64Value(), false),
+				wbem::framework::Attribute(storageCapacityAttr.uint64Value(), false),
 				displayAttributes);
 		cli::nvmcli::convertCapacityAttribute(*pCliInstance, wbem::STORAGECAPACITY_KEY);
 
@@ -366,9 +366,9 @@ void cli::nvmcli::NamespaceFeature::populateCreateConfigGoalPromptDefaultAttribu
 {
 	defaultAttributes.push_back(wbem::SOCKETID_KEY);
 	defaultAttributes.push_back(wbem::DIMMID_KEY);
-	defaultAttributes.push_back(wbem::VOLATILESIZE_KEY);
-	defaultAttributes.push_back(wbem::PERSISTENT1SIZE_KEY);
-	defaultAttributes.push_back(wbem::PERSISTENT2SIZE_KEY);
+	defaultAttributes.push_back(wbem::MEMORYSIZE_KEY);
+	defaultAttributes.push_back(wbem::APPDIRECT1SIZE_KEY);
+	defaultAttributes.push_back(wbem::APPDIRECT2SIZE_KEY);
 	defaultAttributes.push_back(wbem::STORAGECAPACITY_KEY);
 }
 
@@ -377,9 +377,9 @@ void cli::nvmcli::NamespaceFeature::populateCurrentConfigGoalDefaultAttributes(
 {
 	defaultAttributes.push_back(wbem::SOCKETID_KEY);
 	defaultAttributes.push_back(wbem::DIMMID_KEY);
-	defaultAttributes.push_back(wbem::VOLATILESIZE_KEY);
-	defaultAttributes.push_back(wbem::PERSISTENT1SIZE_KEY);
-	defaultAttributes.push_back(wbem::PERSISTENT2SIZE_KEY);
+	defaultAttributes.push_back(wbem::MEMORYSIZE_KEY);
+	defaultAttributes.push_back(wbem::APPDIRECT1SIZE_KEY);
+	defaultAttributes.push_back(wbem::APPDIRECT2SIZE_KEY);
 	defaultAttributes.push_back(wbem::STORAGECAPACITY_KEY);
 	defaultAttributes.push_back(wbem::ACTIONREQUIRED_KEY);
 
@@ -390,13 +390,13 @@ void cli::nvmcli::NamespaceFeature::populateAllAttributes(
 {
 	allAttributes.push_back(wbem::SOCKETID_KEY);
 	allAttributes.push_back(wbem::DIMMID_KEY);
-	allAttributes.push_back(wbem::VOLATILESIZE_KEY);
-	allAttributes.push_back(wbem::PERSISTENT1SIZE_KEY);
-	allAttributes.push_back(wbem::PERSISTENT1INDEX_KEY);
-	allAttributes.push_back(wbem::PERSISTENT1SETTINGS_KEY);
-	allAttributes.push_back(wbem::PERSISTENT2SIZE_KEY);
-	allAttributes.push_back(wbem::PERSISTENT2INDEX_KEY);
-	allAttributes.push_back(wbem::PERSISTENT2SETTINGS_KEY);
+	allAttributes.push_back(wbem::MEMORYSIZE_KEY);
+	allAttributes.push_back(wbem::APPDIRECT1SIZE_KEY);
+	allAttributes.push_back(wbem::APPDIRECT1INDEX_KEY);
+	allAttributes.push_back(wbem::APPDIRECT1SETTINGS_KEY);
+	allAttributes.push_back(wbem::APPDIRECT2SIZE_KEY);
+	allAttributes.push_back(wbem::APPDIRECT2INDEX_KEY);
+	allAttributes.push_back(wbem::APPDIRECT2SETTINGS_KEY);
 	allAttributes.push_back(wbem::STORAGECAPACITY_KEY);
 	allAttributes.push_back(wbem::STATUS_KEY);
 	allAttributes.push_back(wbem::ACTIONREQUIRED_KEY);
@@ -803,20 +803,20 @@ std::string cli::nvmcli::NamespaceFeature::getStringForLayoutWarning(
 
 	switch (warningCode)
 	{
-	case wbem::logic::LAYOUT_WARNING_APPDIRECT_NOT_SUPPORTED_BY_DRIVER:
-		warningStr = CREATE_GOAL_APPDIRECT_NOT_SUPPORTED_BY_DRIVER_WARNING;
+	case wbem::logic::LAYOUT_WARNING_APP_DIRECT_NOT_SUPPORTED_BY_DRIVER:
+		warningStr = CREATE_GOAL_APP_DIRECT_NOT_SUPPORTED_BY_DRIVER_WARNING;
 		break;
 	case wbem::logic::LAYOUT_WARNING_STORAGE_NOT_SUPPORTED_BY_DRIVER:
-		warningStr = CREATE_GOAL_BLOCK_ONLY_NOT_SUPPORTED_BY_DRIVER_WARNING;
+		warningStr = CREATE_GOAL_STORAGE_ONLY_NOT_SUPPORTED_BY_DRIVER_WARNING;
 		break;
-	case wbem::logic::LAYOUT_WARNING_PERSISTENT_SETTINGS_NOT_RECOMMENDED:
-		warningStr = CREATE_GOAL_PM_SETTINGS_NOT_RECOMMENDED_BY_BIOS_WARNING;
+	case wbem::logic::LAYOUT_WARNING_APP_DIRECT_SETTINGS_NOT_RECOMMENDED:
+		warningStr = CREATE_GOAL_APP_DIRECT_SETTINGS_NOT_RECOMMENDED_BY_BIOS_WARNING;
 		break;
 	case wbem::logic::LAYOUT_WARNING_NONOPTIMAL_POPULATION:
 		warningStr = CREATE_GOAL_NON_OPTIMAL_DIMM_POPULATION_WARNING;
 		break;
-	case wbem::logic::LAYOUT_WARNING_CURRENT_VOLATILE_MODE_NOT_2LM:
-		warningStr = CREATE_GOAL_CURRENT_VOLATILE_MODE_NOT_2LM_WARNING;
+	case wbem::logic::LAYOUT_WARNING_REQUESTED_MEMORY_MODE_NOT_USABLE:
+		warningStr = CREATE_GOAL_REQUESTED_MEMORY_MODE_NOT_USABLE_WARNING;
 		break;
 	default:
 		COMMON_LOG_ERROR_F("Unrecognized layout warning code: %d", warningCode);
@@ -834,13 +834,13 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parsedCreateGoalParam
 
 	cli::framework::ResultBase *pResult = NULL;
 
-	MemoryProperty volatileProp(parsedCommand, VOLATILESIZE_PROPERTYNAME);
-	MemoryProperty pm0Prop(parsedCommand, PERSISTENTSIZE_PROPERTYNAME,
-			PERSISTENTSETTINGS_PROPERTYNAME);
-	MemoryProperty pm1Prop(parsedCommand, PERSISTENT1SIZE_PROPERTYNAME,
-			PERSISTENT1SETTINGS_PROPERTYNAME);
-	MemoryProperty pm2Prop(parsedCommand, PERSISTENT2SIZE_PROPERTYNAME,
-			PERSISTENT2SETTINGS_PROPERTYNAME);
+	MemoryProperty memoryModeProp(parsedCommand, MEMORYSIZE_PROPERTYNAME);
+	MemoryProperty appDirect0Prop(parsedCommand, APPDIRECTSIZE_PROPERTYNAME,
+			APPDIRECTSETTINGS_PROPERTYNAME);
+	MemoryProperty appDirect1Prop(parsedCommand, APPDIRECT1SIZE_PROPERTYNAME,
+			APPDIRECT1SETTINGS_PROPERTYNAME);
+	MemoryProperty appDirect2Prop(parsedCommand, APPDIRECT2SIZE_PROPERTYNAME,
+			APPDIRECT2SETTINGS_PROPERTYNAME);
 
 	pResult = parseReserveDimmProperty(parsedCommand);
 	request.reserveDimm = m_reserveDimm;
@@ -857,14 +857,14 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parsedCreateGoalParam
 				STORAGECAPACITY_PROPERTYNAME,
 				&m_storageIsRemaining);
 
-		// Persistent or Persistent1 is valid, not both
-		MemoryProperty &pmProp = pm0Prop.getSizeExists() ? pm0Prop : pm1Prop;
+		// AppDirect or AppDirect1 is valid, not both
+		MemoryProperty &appDirectProp = appDirect0Prop.getSizeExists() ? appDirect0Prop : appDirect1Prop;
 
-		// If at least one of the PM regions is specified as "remaining"
+		// If at least one of the App Direct regions is specified as "remaining"
 		// then set a flag
-		if (pm0Prop.getIsRemaining() || pm1Prop.getIsRemaining() || pm2Prop.getIsRemaining())
+		if (appDirect0Prop.getIsRemaining() || appDirect1Prop.getIsRemaining() || appDirect2Prop.getIsRemaining())
 		{
-			m_pmIsRemaining = true;
+			m_appDirectIsRemaining = true;
 		}
 
 		// if reserveDimm property is set when creating a goal on a single
@@ -873,8 +873,8 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parsedCreateGoalParam
 			cli::framework::Parser::getTargetValues(parsedCommand, TARGET_DIMM.name);
 		if ((dimmList.size() == 1) && (m_reserveDimm))
 		{
-			if (pm2Prop.getSizeExists() || pmProp.getSizeExists() ||
-				pm1Prop.getSizeExists() || volatileProp.getSizeExists())
+			if (appDirect2Prop.getSizeExists() || appDirectProp.getSizeExists() ||
+				appDirect1Prop.getSizeExists() || memoryModeProp.getSizeExists())
 			{
 				pResult = new framework::SyntaxErrorResult(
 						framework::ResultBase::stringFromArgList(
@@ -884,7 +884,7 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parsedCreateGoalParam
 						STORAGECAPACITY_PROPERTYNAME.c_str(),
 						RESERVEDIMM_PROPERTYNAME.c_str()));
 			}
-			request.volatileCapacity = 0;
+			request.memoryCapacity = 0;
 		}
 		// StorageCapacity can only be "Remaining" if it exists
 		else if (m_storageIsRemaining && !framework::stringsIEqual(storageCapacityValue, wbem::mem_config::SIZE_REMAINING))
@@ -893,67 +893,67 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parsedCreateGoalParam
 					STORAGECAPACITY_PROPERTYNAME, storageCapacityValue);
 		}
 		// Only one can have 'Remaining' keyword
-		else if ((volatileProp.getIsRemaining() +
-				pmProp.getIsRemaining() +
-				pm2Prop.getIsRemaining() +
+		else if ((memoryModeProp.getIsRemaining() +
+				appDirectProp.getIsRemaining() +
+				appDirect2Prop.getIsRemaining() +
 				m_storageIsRemaining) > 1)
 		{
 			pResult = new framework::SyntaxErrorResult(framework::ResultBase::stringFromArgList(
 					TR("'%s' can only be used once."), wbem::mem_config::SIZE_REMAINING.c_str()));
 		}
 		// must have at least one property
-		else if (!(volatileProp.getSizeExists() || pmProp.getSizeExists() || m_storageIsRemaining))
+		else if (!(memoryModeProp.getSizeExists() || appDirectProp.getSizeExists() || m_storageIsRemaining))
 		{
 			pResult = new framework::SyntaxErrorResult(framework::ResultBase::stringFromArgList(
 					TR("'%s' or '%s' or '%s' is required."),
-					VOLATILESIZE_PROPERTYNAME.c_str(),
-					PERSISTENTSIZE_PROPERTYNAME.c_str(),
+					MEMORYSIZE_PROPERTYNAME.c_str(),
+					APPDIRECTSIZE_PROPERTYNAME.c_str(),
 					STORAGECAPACITY_PROPERTYNAME.c_str()));
 		}
-		// using pm and pm1 is redundant
-		else if (pm0Prop.getSizeExists() && pm1Prop.getSizeExists())
+		// using AD and AD1 is redundant
+		else if (appDirect0Prop.getSizeExists() && appDirect1Prop.getSizeExists())
 		{
 			pResult = new framework::SyntaxErrorResult(
 					framework::ResultBase::stringFromArgList(
 							TR("'%s' and '%s' cannot be used together."),
-							PERSISTENTSIZE_PROPERTYNAME.c_str(),
-							PERSISTENT1SIZE_PROPERTYNAME.c_str()));
+							APPDIRECTSIZE_PROPERTYNAME.c_str(),
+							APPDIRECT1SIZE_PROPERTYNAME.c_str()));
 		}
-		// pm2 without pm or pm1 is invalid
-		else if (pm2Prop.getSizeExists() && !pmProp.getSizeExists() && !pm1Prop.getSizeExists())
+		// AD2 without AD or AD1 is invalid
+		else if (appDirect2Prop.getSizeExists() && !appDirectProp.getSizeExists() && !appDirect1Prop.getSizeExists())
 		{
 			pResult = new framework::SyntaxErrorResult(
 					framework::ResultBase::stringFromArgList(
 							TR("'%s' is invalid without '%s' or '%s'."),
-							PERSISTENT2SIZE_PROPERTYNAME.c_str(),
-							PERSISTENTSIZE_PROPERTYNAME.c_str(),
-							PERSISTENT1SIZE_PROPERTYNAME.c_str()
+							APPDIRECT2SIZE_PROPERTYNAME.c_str(),
+							APPDIRECTSIZE_PROPERTYNAME.c_str(),
+							APPDIRECT1SIZE_PROPERTYNAME.c_str()
 							)
 					);
 		}
 		// all properties used must be valid
-		else if ((pResult = volatileProp.validate()) == NULL &&
-				(pResult = pm0Prop.validate()) == NULL &&
-				(pResult = pm1Prop.validate()) == NULL &&
-				(pResult = pm2Prop.validate()) == NULL)
+		else if ((pResult = memoryModeProp.validate()) == NULL &&
+				(pResult = appDirect0Prop.validate()) == NULL &&
+				(pResult = appDirect1Prop.validate()) == NULL &&
+				(pResult = appDirect2Prop.validate()) == NULL)
 		{
-			// Set volatile size
-			request.volatileCapacity = volatileProp.getIsRemaining() ?
+			// Set memory size
+			request.memoryCapacity = memoryModeProp.getIsRemaining() ?
 					wbem::logic::REQUEST_REMAINING_CAPACITY :
-					volatileProp.getSizeGiB();
+					memoryModeProp.getSizeGiB();
 
 			request.storageRemaining = m_storageIsRemaining;
 
 			// Set information for first interleave set
-			if (pmProp.getSizeExists())
+			if (appDirectProp.getSizeExists())
 			{
-				request.persistentExtents.push_back(memoryPropToPersistentExtent(pmProp));
+				request.appDirectExtents.push_back(memoryPropToAppDirectExtent(appDirectProp));
 			}
 
 			// Set information for second interleave set
-			if (pm2Prop.getSizeExists())
+			if (appDirect2Prop.getSizeExists())
 			{
-				request.persistentExtents.push_back(memoryPropToPersistentExtent(pm2Prop));
+				request.appDirectExtents.push_back(memoryPropToAppDirectExtent(appDirect2Prop));
 			}
 		}
 	}
@@ -1104,24 +1104,24 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::addDimmsToRequestFrom
 	return pResult;
 }
 
-wbem::logic::PersistentExtent cli::nvmcli::NamespaceFeature::memoryPropToPersistentExtent(
-		const MemoryProperty &pmProp)
+wbem::logic::AppDirectExtent cli::nvmcli::NamespaceFeature::memoryPropToAppDirectExtent(
+		const MemoryProperty &appDirectProp)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	struct wbem::logic::PersistentExtent pmExtent;
+	struct wbem::logic::AppDirectExtent appDirectExtent;
 
-	struct interleave_format format = pmProp.getFormatSizes();
+	struct interleave_format format = appDirectProp.getFormatSizes();
 
-	pmExtent.imc = format.imc;
-	pmExtent.channel = format.channel;
-	pmExtent.capacity = pmProp.getIsRemaining() ?
+	appDirectExtent.imc = format.imc;
+	appDirectExtent.channel = format.channel;
+	appDirectExtent.capacity = appDirectProp.getIsRemaining() ?
 			wbem::logic::REQUEST_REMAINING_CAPACITY :
-			pmProp.getSizeGiB();
-	pmExtent.byOne = pmProp.getIsByOne();
-	pmExtent.mirrored = pmProp.getIsMirrored();
+			appDirectProp.getSizeGiB();
+	appDirectExtent.byOne = appDirectProp.getIsByOne();
+	appDirectExtent.mirrored = appDirectProp.getIsMirrored();
 
-	return pmExtent;
+	return appDirectExtent;
 }
 
 void cli::nvmcli::NamespaceFeature::getDimmInfoForGuids(

@@ -131,11 +131,11 @@ class NVM_API PersistentMemoryFactory : public framework_interface::NvmInstanceF
 				const NVM_UINT32 socketId);
 
 		/*!
-		 * Generate a UUID string for a block-only region.
-		 * @param the DIMM whose block region we should fetch
+		 * Generate a UUID string for a storage-only region.
+		 * @param the DIMM whose storage region we should fetch
 		 * @return unique ID string
 		 */
-		static std::string getBlockRegionUuid(const std::string &dimmGuidStr);
+		static std::string getStorageRegionUuid(const std::string &dimmGuidStr);
 
 	protected:
 		/*
@@ -161,9 +161,9 @@ class NVM_API PersistentMemoryFactory : public framework_interface::NvmInstanceF
 				const struct pool &pool);
 
 		/*
-		 * Look up block region instance names and add them to instanceNames
+		 * Look up storage region instance names and add them to instanceNames
 		 */
-		void getBlockRegionInstanceNames(framework::instance_names_t &instanceNames,
+		void getStorageRegionInstanceNames(framework::instance_names_t &instanceNames,
 				const struct pool &pool);
 
 		/*
@@ -177,13 +177,13 @@ class NVM_API PersistentMemoryFactory : public framework_interface::NvmInstanceF
 				struct interleave_set &interleave);
 
 		/*
-		 * Search the pool for a block region with a given UUID.
+		 * Search the pool for a storage region with a given UUID.
 		 * @param uuid
 		 * @param pool
 		 * @param index - if found, the DIMM index is returned in this param
 		 * @return true if found, false otherwise
 		 */
-		bool findBlockDimmIndexForUuid(const std::string &uuid, const struct pool &pool, size_t &index);
+		bool findStorageDimmIndexForUuid(const std::string &uuid, const struct pool &pool, size_t &index);
 
 		/*
 		 * Set up the attributes peculiar to interleave sets.
@@ -193,9 +193,9 @@ class NVM_API PersistentMemoryFactory : public framework_interface::NvmInstanceF
 				const struct interleave_set &interleave) throw (framework::Exception);
 
 		/*
-		 * Set up the attributes peculiar to block regions.
+		 * Set up the attributes peculiar to storage regions.
 		 */
-		void setBlockCapacityInstanceAttributes(framework::Instance &instance,
+		void setStorageCapacityInstanceAttributes(framework::Instance &instance,
 				const framework::attribute_names_t &attributes,
 				const struct pool &pool, const size_t &dimmIdx) throw (framework::Exception);
 
@@ -215,7 +215,7 @@ class NVM_API PersistentMemoryFactory : public framework_interface::NvmInstanceF
 		/*
 		 * Fetch the PM alignment from capabilities in bytes.
 		 */
-		NVM_UINT64 getPmAlignment() throw (framework::Exception);
+		NVM_UINT64 getAppDirectAlignment() throw (framework::Exception);
 
 		/*
 		 * Calculate the number of blocks based on the extent capacity.
@@ -228,9 +228,9 @@ class NVM_API PersistentMemoryFactory : public framework_interface::NvmInstanceF
 		NVM_UINT16 getInterleaveSetHealthState(const struct interleave_set &interleave);
 
 		/*
-		 * Get the HealthState for a block region on a given DIMM.
+		 * Get the HealthState for a storage region on a given DIMM.
 		 */
-		NVM_UINT16 getBlockRegionHealthState(const NVM_GUID dimmGuid) throw (framework::Exception);
+		NVM_UINT16 getStorageRegionHealthState(const NVM_GUID dimmGuid) throw (framework::Exception);
 
 		/*
 		 * Get the OperationalStatus for an interleave set.
@@ -239,9 +239,9 @@ class NVM_API PersistentMemoryFactory : public framework_interface::NvmInstanceF
 			throw (framework::Exception);
 
 		/*
-		 * Get the OperationalSTatus for a block region on a given DIMM.
+		 * Get the OperationalSTatus for a storage region on a given DIMM.
 		 */
-		NVM_UINT16 getBlockRegionOperationalStatus(const NVM_GUID dimmGuid) throw (framework::Exception);
+		NVM_UINT16 getStorageRegionOperationalStatus(const NVM_GUID dimmGuid) throw (framework::Exception);
 
 		/*
 		 * Translate HealthState value to string

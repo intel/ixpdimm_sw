@@ -26,7 +26,7 @@
  */
 
 /*
- * Add a layout warning if the current volatile mode reported by BIOS is not auto or 2LM.
+ * Add a layout warning if the current volatile mode reported by BIOS does not match the requested mode.
  */
 
 #include "LayoutStepCheckCurrentVolatileMode.h"
@@ -49,9 +49,9 @@ void wbem::logic::LayoutStepCheckCurrentVolatileMode::execute(
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	if ((m_platformCapabilities.current_volatile_mode != VOLATILE_MODE_2LM) &&
+	if ((m_platformCapabilities.current_volatile_mode != VOLATILE_MODE_MEMORY) &&
 			(m_platformCapabilities.current_volatile_mode !=VOLATILE_MODE_AUTO))
 	{
-		layout.warnings.push_back(LAYOUT_WARNING_CURRENT_VOLATILE_MODE_NOT_2LM);
+		layout.warnings.push_back(LAYOUT_WARNING_REQUESTED_MEMORY_MODE_NOT_USABLE);
 	}
 }

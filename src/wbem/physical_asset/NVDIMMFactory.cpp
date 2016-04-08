@@ -99,8 +99,8 @@ void NVDIMMFactory::populateAttributeList(
 	attributes.push_back(DATAWIDTH_KEY);
 	attributes.push_back(TOTALWIDTH_KEY);
 	attributes.push_back(SPEED_KEY);
-	attributes.push_back(VOLATILECAPACITY_KEY);
-	attributes.push_back(PERSISTENTCAPACITY_KEY);
+	attributes.push_back(MEMORYCAPACITY_KEY);
+	attributes.push_back(APP_DIRECT_CAPACITY_KEY);
 	attributes.push_back(PARTNUMBER_KEY);
 	attributes.push_back(BANKLABEL_KEY);
 	attributes.push_back(HEALTHSTATE_KEY);
@@ -660,10 +660,10 @@ void NVDIMMFactory::toInstance(core::device::Device &device,
 	ADD_ATTRIBUTE(instance, attributes, DATAWIDTH_KEY, framework::UINT16, device.getDataWidth());
 	ADD_ATTRIBUTE(instance, attributes, TOTALWIDTH_KEY, framework::UINT16, device.getTotalWidth());
 	ADD_ATTRIBUTE(instance, attributes, SPEED_KEY, framework::UINT32, device.getSpeed());
-	ADD_ATTRIBUTE(instance, attributes, VOLATILECAPACITY_KEY, framework::UINT64,
-			device.getVolatileCapacity());
-	ADD_ATTRIBUTE(instance, attributes, PERSISTENTCAPACITY_KEY, framework::UINT64,
-			device.getPersistentCapacity());
+	ADD_ATTRIBUTE(instance, attributes, MEMORYCAPACITY_KEY, framework::UINT64,
+			device.getMemoryCapacity());
+	ADD_ATTRIBUTE(instance, attributes, APP_DIRECT_CAPACITY_KEY, framework::UINT64,
+			device.getAppDirectCapacity());
 	ADD_ATTRIBUTE(instance, attributes, PARTNUMBER_KEY, framework::STR, device.getPartNumber());
 	ADD_ATTRIBUTE(instance, attributes, BANKLABEL_KEY, framework::STR, device.getBankLabel());
 	ADD_ATTRIBUTE(instance, attributes, HEALTHSTATE_KEY, framework::UINT16,
@@ -734,7 +734,7 @@ void NVDIMMFactory::toInstance(core::device::Device &device,
 std::string NVDIMMFactory::getMemoryModeString(core::device::Device &device)
 {
 	std::map<NVM_UINT32, std::string> map;
-	map[NVDIMM_MEMORYTYPECAPABILITIES_MEMORYMODE] = TR("2LM");
+	map[NVDIMM_MEMORYTYPECAPABILITIES_MEMORYMODE] = TR("Memory");
 	map[NVDIMM_MEMORYTYPECAPABILITIES_STORAGEMODE] = TR("Storage");
 	map[NVDIMM_MEMORYTYPECAPABILITIES_APPDIRECTMODE] = TR("AppDirect");
 

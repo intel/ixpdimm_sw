@@ -26,29 +26,33 @@
  */
 
 /*
- * Check if the driver supports persistent. If not, create a warning.
+ * Rule that checks that the platform supports memory mode
+ * if memory capacity is requested.
  */
 
-#include "LayoutStepCheckDriverSupportsPersistent.h"
+#include <exception/NvmExceptionBadRequest.h>
 #include <LogEnterExit.h>
+#include "RuleMemoryModeCapacityNotSupported.h"
 
-wbem::logic::LayoutStepCheckDriverSupportsPersistent::LayoutStepCheckDriverSupportsPersistent(
-		const struct nvm_features &driverFeatures) : m_driverFeatures(driverFeatures)
+wbem::logic::RuleMemoryModeCapacityNotSupported::RuleMemoryModeCapacityNotSupported(
+		const struct nvm_capabilities &systemCapabilities) :
+		m_systemCapabilities(systemCapabilities)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
 
-wbem::logic::LayoutStepCheckDriverSupportsPersistent::~LayoutStepCheckDriverSupportsPersistent()
+wbem::logic::RuleMemoryModeCapacityNotSupported::~RuleMemoryModeCapacityNotSupported()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
 
-void wbem::logic::LayoutStepCheckDriverSupportsPersistent::execute(const MemoryAllocationRequest& request,
-		MemoryAllocationLayout& layout)
+void wbem::logic::RuleMemoryModeCapacityNotSupported::verify(const MemoryAllocationRequest &request)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	if (request.persistentExtents.size() > 0 && !m_driverFeatures.app_direct_mode)
+
+	if (request.memoryCapacity != 0 &&
+		!m_systemCapabilities.nvm_features.memory_mode)
 	{
-		layout.warnings.push_back(LAYOUT_WARNING_APPDIRECT_NOT_SUPPORTED_BY_DRIVER);
+		throw exception::NvmExceptionMemoryModeNotSupported();
 	}
 }

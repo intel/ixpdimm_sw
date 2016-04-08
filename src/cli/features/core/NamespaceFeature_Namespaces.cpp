@@ -492,18 +492,18 @@ void cli::nvmcli::NamespaceFeature::wbemGetSupportedBlockSizes(
 }
 
 void cli::nvmcli::NamespaceFeature::wbemGetSupportedSizeRange(const std::string &poolGuid,
-		COMMON_UINT64 &largestPossiblePmNs,
-		COMMON_UINT64 &smallestPossiblePmNs,
-		COMMON_UINT64 &pmIncrement,
-		COMMON_UINT64 &largestPossibleBlockNs,
-		COMMON_UINT64 &smallestPossibleBlockNs,
-		COMMON_UINT64 &blockIncrement)
+		COMMON_UINT64 &largestPossibleAdNs,
+		COMMON_UINT64 &smallestPossibleAdNs,
+		COMMON_UINT64 &adIncrement,
+		COMMON_UINT64 &largestPossibleStorageNs,
+		COMMON_UINT64 &smallestPossibleStorageNs,
+		COMMON_UINT64 &storageIncrement)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	wbem::pmem_config::PersistentMemoryPoolFactory provider;
 
-	provider.getSupportedSizeRange(poolGuid, largestPossiblePmNs, smallestPossiblePmNs, pmIncrement,
-			largestPossibleBlockNs, smallestPossibleBlockNs, blockIncrement);
+	provider.getSupportedSizeRange(poolGuid, largestPossibleAdNs, smallestPossibleAdNs, adIncrement,
+			largestPossibleStorageNs, smallestPossibleStorageNs, storageIncrement);
 }
 
 cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseCreateNsType(
@@ -515,11 +515,11 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseCreateNsType(
 
 	if (framework::stringsIEqual(m_nsTypeStr, CREATE_NS_PROP_TYPE_APPDIRECT))
 	{
-		m_nsType = wbem::pmem_config::PM_SERVICE_PM_TYPE;
+		m_nsType = wbem::pmem_config::PM_SERVICE_APP_DIRECT_TYPE;
 	}
 	else if (framework::stringsIEqual(m_nsTypeStr, CREATE_NS_PROP_TYPE_STORAGE))
 	{
-		m_nsType = wbem::pmem_config::PM_SERVICE_BLOCK_TYPE;
+		m_nsType = wbem::pmem_config::PM_SERVICE_STORAGE_TYPE;
 	}
 	else
 	{
@@ -540,7 +540,7 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseCreateNsBlockSiz
 			CREATE_NS_PROP_BLOCKSIZE, &m_blockSizeExists);
 	m_blockSize = 0;
 
-	if (m_nsType == wbem::pmem_config::PM_SERVICE_PM_TYPE)
+	if (m_nsType == wbem::pmem_config::PM_SERVICE_APP_DIRECT_TYPE)
 	{
 		m_blockSize = 1u;
 		if (m_blockSizeExists)
@@ -557,7 +557,7 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseCreateNsBlockSiz
 			}
 		}
 	}
-	else if (m_nsType == wbem::pmem_config::PM_SERVICE_BLOCK_TYPE)
+	else if (m_nsType == wbem::pmem_config::PM_SERVICE_STORAGE_TYPE)
 	{
 		if (m_blockSizeExists)
 		{
@@ -627,7 +627,7 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseCreateNsCapacity
 			pResult = new framework::SyntaxErrorBadValueResult(
 				framework::TOKENTYPE_PROPERTY, CREATE_NS_PROP_CAPACITY, value);
 		}
-		else if (m_nsType == wbem::pmem_config::PM_SERVICE_PM_TYPE)
+		else if (m_nsType == wbem::pmem_config::PM_SERVICE_APP_DIRECT_TYPE)
 		{
 			if (m_blockSizeExists)
 			{
@@ -684,25 +684,25 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseCreateNsBlockCou
 		{
 			if (!m_capacityExists)
 			{
-				COMMON_UINT64 minPmNamespaceSize = 0;
-				COMMON_UINT64 maxPmNamespaceSize = 0;
-				COMMON_UINT64 pmNamespaceDivisor = 0;
-				COMMON_UINT64 minBlockNamespaceSize = 0;
-				COMMON_UINT64 maxBlockNamespaceSize = 0;
-				COMMON_UINT64 blockNamespaceDivisor = 0;
+				COMMON_UINT64 minAdNamespaceSize = 0;
+				COMMON_UINT64 maxAdNamespaceSize = 0;
+				COMMON_UINT64 adNamespaceDivisor = 0;
+				COMMON_UINT64 minStorageNamespaceSize = 0;
+				COMMON_UINT64 maxStorageNamespaceSize = 0;
+				COMMON_UINT64 storageNamespaceDivisor = 0;
 				m_pPmPoolProvider->getSupportedSizeRange(m_poolGuid,
-						maxPmNamespaceSize, minPmNamespaceSize, pmNamespaceDivisor,
-						maxBlockNamespaceSize, minBlockNamespaceSize, blockNamespaceDivisor);
+						maxAdNamespaceSize, minAdNamespaceSize, adNamespaceDivisor,
+						maxStorageNamespaceSize, minStorageNamespaceSize, storageNamespaceDivisor);
 
-				if (m_nsType == wbem::pmem_config::PM_SERVICE_PM_TYPE)
+				if (m_nsType == wbem::pmem_config::PM_SERVICE_APP_DIRECT_TYPE)
 				{
-					m_blockCount = maxPmNamespaceSize; // PM NS has block size = 1
+					m_blockCount = maxAdNamespaceSize; // App Direct NS has block size = 1
 
 				}
-				else if (m_nsType == wbem::pmem_config::PM_SERVICE_BLOCK_TYPE)
+				else if (m_nsType == wbem::pmem_config::PM_SERVICE_STORAGE_TYPE)
 				{
 					NVM_UINT32 realBlockSize = get_real_block_size(m_blockSize);
-					m_blockCount = maxBlockNamespaceSize / realBlockSize;
+					m_blockCount = maxStorageNamespaceSize / realBlockSize;
 				}
 			}
 			else
@@ -813,11 +813,11 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseCreateNsOptimize
 	}
 	else
 	{
-		if (m_nsType == wbem::pmem_config::PM_SERVICE_PM_TYPE)
+		if (m_nsType == wbem::pmem_config::PM_SERVICE_APP_DIRECT_TYPE)
 		{
 			m_optimize = wbem::pmem_config::PM_SERVICE_OPTIMIZE_NONE;
 		}
-		else if (m_nsType == wbem::pmem_config::PM_SERVICE_BLOCK_TYPE)
+		else if (m_nsType == wbem::pmem_config::PM_SERVICE_STORAGE_TYPE)
 		{
 			m_optimize = wbem::pmem_config::PM_SERVICE_OPTIMIZE_COPYONWRITE;
 		}
@@ -897,22 +897,22 @@ cli::framework::ResultBase *cli::nvmcli::NamespaceFeature::parseInterleaveSizes(
 
 	bool exists;
 	const std::string &value = cli::framework::Parser::getPropertyValue(parsedCommand,
-		PERSISTENTSETTINGS_PROPERTYNAME, &exists);
+		APPDIRECTSETTINGS_PROPERTYNAME, &exists);
 
-	MemoryProperty interleaveSizes(parsedCommand, "", PERSISTENTSETTINGS_PROPERTYNAME);
+	MemoryProperty interleaveSizes(parsedCommand, "", APPDIRECTSETTINGS_PROPERTYNAME);
 	if (exists)
 	{
-		const bool isNotValidNsPersistentSetting =
+		const bool isNotValidNsAppDirectSetting =
 			interleaveSizes.getIsMirrored() || !interleaveSizes.getIsSettingsValid();
-		if (isNotValidNsPersistentSetting)
+		if (isNotValidNsAppDirectSetting)
 		{
 			pResult = new framework::SyntaxErrorBadValueResult(framework::TOKENTYPE_PROPERTY,
-				PERSISTENTSETTINGS_PROPERTYNAME, value);
+				APPDIRECTSETTINGS_PROPERTYNAME, value);
 		}
-		else if (m_nsType != wbem::pmem_config::PM_SERVICE_PM_TYPE)
+		else if (m_nsType != wbem::pmem_config::PM_SERVICE_APP_DIRECT_TYPE)
 		{
 			pResult = new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
-				TRS(INVALID_NS_PERSISTENT_SETTINGS));
+				TRS(INVALID_NS_APP_DIRECT_SETTINGS));
 		}
 		else
 		{
@@ -1157,10 +1157,10 @@ cli::framework::ErrorResult* cli::nvmcli::NamespaceFeature::nsNvmExceptionToResu
 			return new framework::ErrorResult(framework::ResultBase::ERRORCODE_UNKNOWN,
 					errbuff);
 		}
-		case NVM_ERR_BADNAMESPACEPERSISTENTSETTING:
+		case NVM_ERR_BADNAMESPACESETTING:
 		{
 			return new framework::ErrorResult(framework::ResultBase::ERRORCODE_UNKNOWN,
-				TRS(INVALID_NS_PERSISTENT_SETTINGS));
+				TRS(INVALID_NS_APP_DIRECT_SETTINGS));
 		}
 		} // end switch
 	}
@@ -1432,7 +1432,7 @@ void cli::nvmcli::NamespaceFeature::populateNamespaceAttributes(
 	allAttributes.push_back(wbem::ENABLEDSTATE_KEY);
 	allAttributes.push_back(wbem::ACTIONREQUIREDEVENTS_KEY);
 	allAttributes.push_back(wbem::SECURITYFEATURES_KEY);
-	allAttributes.push_back(wbem::PERSISTENTSETTINGS_KEY);
+	allAttributes.push_back(wbem::APP_DIRECT_SETTINGS_KEY);
 
 	// get the desired attributes
 	wbem::framework::attribute_names_t desiredAttributes =

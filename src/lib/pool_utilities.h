@@ -32,10 +32,10 @@
  * The drivers don't provide pools so they must be constructed.
  * The following understanding of pools is used.
  * Pools:
- * 		All platform volatile capacity forms a single volatile pool.
+ * 		All platform memory capacity forms a single memory pool.
  * 		All mirrored interleave sets on a socket are included in one pool.
  * 		All remaining PM space on a socket is included in one pool. This can include non-mirrored
- * 		interleave sets as well as block only capacity.
+ * 		interleave sets as well as storage only capacity.
  */
 
 #ifndef POOL_UTILITIES_H_
@@ -61,18 +61,18 @@ int get_pool_count();
 int get_pools(const NVM_UINT32 count, struct nvm_pool *p_pools);
 
 /*
- * Get if the system has a volatile pool configured
+ * Get if the system has a memory pool configured
  * @return
- * 		1 if has volatile pool, 0 if not, or an error code
+ * 		1 if has memory pool, 0 if not, or an error code
  */
-int has_volatile_pool();
+int has_memory_pool();
 
 /*
- * If a system is configured to have volatile memory, setup the volatile pool.
+ * If a system is configured to have memory memory, setup the memory pool.
  * @return
  * 		NVM_SUCCESS or appropriate error code
  */
-int get_volatile_pool(struct nvm_pool *p_pool);
+int get_memory_pool(struct nvm_pool *p_pool);
 
 /*
  * Get the number of mirrored pools on the system
@@ -141,9 +141,9 @@ int get_dimm_ilset_capacity(NVM_NFIT_DEVICE_HANDLE handle, NVM_UINT64 *p_mirrore
 		NVM_UINT64 *p_unmirrored_size);
 
 /*
- * Get the capacity of a DIMM occupied by volatile memory
+ * Get the Memory Mode capacity of a DIMM
  */
-int get_dimm_volatile_capacity(NVM_NFIT_DEVICE_HANDLE handle, NVM_UINT64 *p_size);
+int get_dimm_memory_capacity(NVM_NFIT_DEVICE_HANDLE handle, NVM_UINT64 *p_size);
 
 /*
  * Initialize a new pool with its UUID and type
@@ -154,7 +154,7 @@ int init_pool(struct nvm_pool *p_pool, const char *uuid_src, const enum pool_typ
 /*
  * Determine the security status for an interleave set.
  */
-int calculate_pmem_interleave_security(NVM_UINT32 interleave_setid,
+int calculate_app_direct_interleave_security(NVM_UINT32 interleave_setid,
 	enum encryption_status *p_encryption, NVM_BOOL *p_erase_capable,
 	enum encryption_status *p_encryption_capable /* could be NULL */);
 

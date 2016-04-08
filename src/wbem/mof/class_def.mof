@@ -34,8 +34,8 @@ class <NVM_WBEM_PREFIX>NVDIMM : CIM_PhysicalMemory
 	uint16 InterleaveDataDepth;
 	uint16 LockState;
 	uint32 ManageabilityState;
-	uint64 VolatileCapacity;
-	uint64 PersistentCapacity;
+	uint64 MemoryCapacity;
+	uint64 AppDirectCapacity;
 	uint16 PhysicalID;
 	boolean IsNew;
 	boolean PowerManagementEnabled;
@@ -464,15 +464,12 @@ class <NVM_WBEM_PREFIX>NVDIMMPerformanceView : CIM_View
 [dynamic, provider("intelwbemprovider")]
 class <NVM_WBEM_PREFIX>MemoryCapabilities : CIM_MemoryCapabilities
 {
-	uint16 TwoLevelMemoryAlignment;
-	uint16 PersistentMemoryAlignment;
-	uint16 CachedPersistentMemoryAlignment;
+	uint16 MemoryModeAlignment;
+	uint16 AppDirectAlignment;
 	boolean PlatformConfigSupported;
 	boolean PlatformRuntimeSupported;
-	uint16 CurrentVolatileMemoryMode;
-	uint16 CurrentPersistentMemoryMode;
-	string SupportedPersistentSettings[];
-	string RecommendedPersistentSettings[];
+	uint16 CurrentVolatileMode;
+	uint16 CurrentAppDirectMode;
 };
 
 [dynamic, provider("intelwbemprovider")]
@@ -489,9 +486,9 @@ class <NVM_WBEM_PREFIX>MemoryAllocationSettings : CIM_MemoryAllocationSettingDat
 [dynamic, provider("intelwbemprovider")]
 class <NVM_WBEM_PREFIX>MemoryResources : CIM_ResourcePool
 {
-	uint64 VolatileCapacity;
-	uint64 PersistentCapacity;
-	uint64 BlockCapacity;
+	uint64 MemoryCapacity;
+	uint64 AppDirectCapacity;
+	uint64 StorageCapacity;
 	uint64 UnconfiguredCapacity;
 };
 

@@ -71,9 +71,9 @@ void wbem::mem_config::MemoryResourcesFactory::populateAttributeList(
 	attributes.push_back(wbem::RESOURCETYPE_KEY);
 	attributes.push_back(wbem::ALLOCATIONUNITS_KEY);
 	attributes.push_back(wbem::RESERVED_KEY);
-	attributes.push_back(wbem::VOLATILECAPACITY_KEY);
-	attributes.push_back(wbem::PERSISTENTCAPACITY_KEY);
-	attributes.push_back(wbem::BLOCKCAPACITY_KEY);
+	attributes.push_back(wbem::MEMORYCAPACITY_KEY);
+	attributes.push_back(wbem::APP_DIRECT_CAPACITY_KEY);
+	attributes.push_back(wbem::STORAGECAPACITY_KEY);
 	attributes.push_back(wbem::UNCONFIGUREDCAPACITY_KEY);
 	attributes.push_back(wbem::INACCESSIBLECAPACITY_KEY);
 	attributes.push_back(wbem::RESERVEDCAPACITY_KEY);
@@ -91,9 +91,9 @@ void wbem::mem_config::MemoryResourcesFactory::toInstance(core::system::SystemMe
 	ADD_ATTRIBUTE(instance, attributes, RESOURCETYPE_KEY, framework::UINT16, (NVM_UINT16)MEMORYRESOURCES_RESOURCETYPE_VAL);
 	ADD_ATTRIBUTE(instance, attributes, ALLOCATIONUNITS_KEY, framework::STR, allocationUnitsToStr(memoryResourcesInfo.getTotalCapacity()));
 	ADD_ATTRIBUTE(instance, attributes, CAPACITY_KEY, framework::UINT64, memoryResourcesInfo.getTotalCapacity());
-	ADD_ATTRIBUTE(instance, attributes, VOLATILECAPACITY_KEY, framework::UINT64, memoryResourcesInfo.getTotalVolatileCapacity());
-	ADD_ATTRIBUTE(instance, attributes, PERSISTENTCAPACITY_KEY, framework::UINT64, memoryResourcesInfo.getTotalPersistentCapacity());
-	ADD_ATTRIBUTE(instance, attributes, BLOCKCAPACITY_KEY, framework::UINT64, memoryResourcesInfo.getTotalBlockCapacity());
+	ADD_ATTRIBUTE(instance, attributes, MEMORYCAPACITY_KEY, framework::UINT64, memoryResourcesInfo.getTotalMemoryCapacity());
+	ADD_ATTRIBUTE(instance, attributes, APP_DIRECT_CAPACITY_KEY, framework::UINT64, memoryResourcesInfo.getTotalAppDirectCapacity());
+	ADD_ATTRIBUTE(instance, attributes, STORAGECAPACITY_KEY, framework::UINT64, memoryResourcesInfo.getTotalStorageCapacity());
 	ADD_ATTRIBUTE(instance, attributes, UNCONFIGUREDCAPACITY_KEY, framework::UINT64, memoryResourcesInfo.getTotalUnconfiguredCapacity());
 	ADD_ATTRIBUTE(instance, attributes, INACCESSIBLECAPACITY_KEY, framework::UINT64, memoryResourcesInfo.getTotalInaccessibleCapacity());
 	ADD_ATTRIBUTE(instance, attributes, RESERVEDCAPACITY_KEY, framework::UINT64, memoryResourcesInfo.getTotalReservedCapacity());

@@ -55,7 +55,7 @@ NVM_BOOL pool_interleave_sets_need_namespace(
 			NVM_BOOL namespace_found = 0;
 			for (NVM_UINT32 j = 0; j < namespace_count; j++)
 			{
-				if ((p_namespaces[j].type == NAMESPACE_TYPE_PMEM) &&
+				if ((p_namespaces[j].type == NAMESPACE_TYPE_APP_DIRECT) &&
 						(p_namespaces[j].namespace_creation_id.interleave_setid == interleave_id))
 				{
 					namespace_found = 1;
@@ -74,7 +74,7 @@ NVM_BOOL pool_interleave_sets_need_namespace(
 	return result;
 }
 
-NVM_BOOL pool_block_regions_need_namespace(
+NVM_BOOL pool_storage_regions_need_namespace(
 		const struct nvm_namespace_details *p_namespaces,
 		const NVM_UINT32 namespace_count,
 		const struct nvm_pool *p_pool)
@@ -85,12 +85,12 @@ NVM_BOOL pool_block_regions_need_namespace(
 	{
 		for (NVM_UINT16 i = 0; i < p_pool->dimm_count; i++)
 		{
-			if (p_pool->block_capacities[i] > 0)
+			if (p_pool->storage_capacities[i] > 0)
 			{
 				NVM_BOOL namespace_found = 0;
 				for (NVM_UINT32 j = 0; j < namespace_count; j++)
 				{
-					if ((p_namespaces[j].type == NAMESPACE_TYPE_BLOCK) &&
+					if ((p_namespaces[j].type == NAMESPACE_TYPE_STORAGE) &&
 							(p_namespaces[j].namespace_creation_id.device_handle.handle ==
 									p_pool->dimms[i].handle))
 					{
@@ -123,7 +123,7 @@ void check_if_pool_interleave_sets_need_namespace(NVM_UINT32 *p_results,
 
 		store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG,
 				EVENT_SEVERITY_INFO,
-				EVENT_CODE_DIAG_PCONFIG_POOL_NEEDS_PMEM_NAMESPACES,
+				EVENT_CODE_DIAG_PCONFIG_POOL_NEEDS_APP_DIRECT_NAMESPACES,
 				p_pool->pool_guid,
 				0,
 				pool_guid_str, NULL, NULL,
@@ -133,19 +133,19 @@ void check_if_pool_interleave_sets_need_namespace(NVM_UINT32 *p_results,
 	}
 }
 
-void check_if_pool_block_regions_need_namespace(NVM_UINT32 *p_results,
+void check_if_pool_storage_regions_need_namespace(NVM_UINT32 *p_results,
 		const struct nvm_namespace_details *p_namespaces,
 		const NVM_UINT32 namespace_count,
 		const struct nvm_pool *p_pool)
 {
-	if (pool_block_regions_need_namespace(p_namespaces, namespace_count, p_pool))
+	if (pool_storage_regions_need_namespace(p_namespaces, namespace_count, p_pool))
 	{
 		NVM_GUID_STR pool_guid_str;
 		guid_to_str(p_pool->pool_guid, pool_guid_str);
 
 		store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG,
 				EVENT_SEVERITY_INFO,
-				EVENT_CODE_DIAG_PCONFIG_POOL_NEEDS_BLOCK_NAMESPACES,
+				EVENT_CODE_DIAG_PCONFIG_POOL_NEEDS_STORAGE_NAMESPACES,
 				p_pool->pool_guid,
 				0,
 				pool_guid_str, NULL, NULL,
@@ -171,7 +171,7 @@ void check_if_pools_need_namespaces(NVM_UINT32 *p_results,
 					p_namespaces, namespace_count,
 					&(p_pools[i]));
 
-			check_if_pool_block_regions_need_namespace(p_results,
+			check_if_pool_storage_regions_need_namespace(p_results,
 					p_namespaces, namespace_count,
 					&(p_pools[i]));
 		}
@@ -248,7 +248,7 @@ void check_for_namespaces_smaller_than_containing_interleave_set(NVM_UINT32 *p_r
 
 	for (NVM_UINT32 i = 0; i < namespace_count; i++)
 	{
-		if (p_namespaces[i].type == NAMESPACE_TYPE_PMEM)
+		if (p_namespaces[i].type == NAMESPACE_TYPE_APP_DIRECT)
 		{
 			NVM_GUID_STR namespace_guid_str;
 			guid_to_str(p_namespaces[i].discovery.namespace_guid, namespace_guid_str);
@@ -269,7 +269,7 @@ void check_for_namespaces_smaller_than_containing_interleave_set(NVM_UINT32 *p_r
 
 					store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG,
 							EVENT_SEVERITY_INFO,
-							EVENT_CODE_DIAG_PCONFIG_PMEM_NAMESPACE_TOO_SMALL,
+							EVENT_CODE_DIAG_PCONFIG_APP_DIRECT_NAMESPACE_TOO_SMALL,
 							p_namespaces[i].discovery.namespace_guid,
 							0,
 							namespace_guid_str, difference_mb_str, NULL,
@@ -630,7 +630,7 @@ NVM_UINT32 get_number_of_unbalanced_dimms_on_mem_controller(const NVM_UINT16 soc
 	return count;
 }
 
-NVM_UINT32 get_minimum_recommended_ways_for_nonmirrored_pm_interleave(
+NVM_UINT32 get_minimum_recommended_ways_for_nonmirrored_ad_interleave(
 		const struct nvm_interleave_set *p_interleave_set,
 		const struct device_discovery *p_devices,
 		const NVM_UINT8 device_count)
@@ -692,7 +692,7 @@ NVM_UINT32 get_minimum_recommended_interleave_ways(
 	}
 	else
 	{
-		recommended_interleave_ways = get_minimum_recommended_ways_for_nonmirrored_pm_interleave(
+		recommended_interleave_ways = get_minimum_recommended_ways_for_nonmirrored_ad_interleave(
 				p_interleave_set, p_devices, device_count);
 	}
 

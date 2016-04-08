@@ -216,7 +216,7 @@ class NVM_API NvmApi
 		virtual int getPool(NVM_GUID poolGuid, struct pool *pPool);
 
 		/*
-		 * Retrieve the largest and smallest persistent and block namespaces that can
+		 * Retrieve the largest and smallest persistent and storage namespaces that can
 		 * be create on a given pool
 		 */
 		virtual int getAvailablePersistentSizeRange(const NVM_GUID poolGuid,

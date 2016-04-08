@@ -26,14 +26,13 @@
  */
 
 /*
- * Rule that checks that the platform supports memory mode
- * if volatile capacity is requested.
+ * Add a layout warning if BIOS doesn't recommend the specified interleave format.
  */
 
-#ifndef _WBEM_LOGIC_RULEVOLATILECAPACITYNOTSUPPORTED_H_
-#define _WBEM_LOGIC_RULEVOLATILECAPACITYNOTSUPPORTED_H_
+#ifndef _WBEM_LOGIC_LAYOUTSTEPAPPDIRECTSETTINGSNOTRECOMMENDED_H_
+#define _WBEM_LOGIC_LAYOUTSTEPAPPDIRECTSETTINGSNOTRECOMMENDED_H_
 
-#include "RequestRule.h"
+#include "LayoutStep.h"
 #include <nvm_types.h>
 
 namespace wbem
@@ -41,18 +40,21 @@ namespace wbem
 namespace logic
 {
 
-class NVM_API RuleVolatileCapacityNotSupported: public RequestRule
+class NVM_API LayoutStepAppDirectSettingsNotRecommended : public LayoutStep
 {
 	public:
-		RuleVolatileCapacityNotSupported(const struct nvm_capabilities &systemCapabilities);
-		virtual ~RuleVolatileCapacityNotSupported();
-		virtual void verify(const MemoryAllocationRequest &request);
+		LayoutStepAppDirectSettingsNotRecommended(const struct platform_capabilities &platformCapabilities);
+		virtual ~LayoutStepAppDirectSettingsNotRecommended();
+
+		virtual void execute(const MemoryAllocationRequest &request, MemoryAllocationLayout &layout);
 
 	protected:
-		struct nvm_capabilities m_systemCapabilities;
+		bool formatRecommended(const struct AppDirectExtent &appDirectRequest);
+
+		struct platform_capabilities m_platformCapabilities;
 };
 
 } /* namespace logic */
 } /* namespace wbem */
 
-#endif /* _WBEM_LOGIC_RULEVOLATILECAPACITYNOTSUPPORTED_H_ */
+#endif /* _WBEM_LOGIC_LAYOUTSTEPAPPDIRECTSETTINGSNOTRECOMMENDED_H_ */

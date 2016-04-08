@@ -741,7 +741,7 @@ int support_store_dimm_partition_info(PersistentStore *p_store, int history_id,
 		db_partition.pmem_capacity = pi.pmem_capacity;
 		db_partition.raw_capacity = pi.raw_capacity;
 		db_partition.volatile_capacity = pi.volatile_capacity;
-		db_partition.volatile_start = pi.start_2lm;
+		db_partition.volatile_start = pi.start_volatile;
 		if (db_save_dimm_partition_state(p_store,
 				history_id, &db_partition) != DB_SUCCESS)
 		{
@@ -1522,9 +1522,10 @@ int support_store_platform_config_data(PersistentStore *p_store, int history_id,
 				db_current_config.creator_revision =
 						p_current_config->header.creator_revision;
 				db_current_config.config_status = p_current_config->config_status;
-				db_current_config.mapped_volatile_capacity =
-						p_current_config->mapped_volatile_capacity;
-				db_current_config.mapped_pm_capacity = p_current_config->mapped_pm_capacity;
+				db_current_config.mapped_memory_capacity =
+						p_current_config->mapped_memory_capacity;
+				db_current_config.mapped_app_direct_capacity =
+						p_current_config->mapped_app_direct_capacity;
 
 				KEEP_ERROR(rc, db_save_dimm_current_config_state(p_store,
 						history_id, &db_current_config));

@@ -83,10 +83,10 @@ enum pcat_ext_table_type
 enum mem_mode_capabilities_bits
 {
 	MEM_MODE_1LM = 1, /* 1LM mode supported */
-	MEM_MODE_2LM = 1 << 1, /* 2LM mode supported */
-	MEM_MODE_PMEM_DIRECT = 1 << 2, /* App-Direct mode supported */
+	MEM_MODE_MEMORY = 1 << 1, /* Memory mode supported */
+	MEM_MODE_APP_DIRECT = 1 << 2, /* App Direct mode supported */
 	MEM_MODE_RESERVED = 1 << 3,
-	MEM_MODE_BLOCK = 1 << 4, /* Storage mode supported */
+	MEM_MODE_STORAGE = 1 << 4, /* Storage mode supported */
 	MEM_MODE_SUBNUMA = 1 << 5
 };
 
@@ -94,7 +94,7 @@ enum mem_mode_interleave
 {
 	INTERLEAVE_MEM_MODE_1LM = 0,
 	INTERLEAVE_MEM_MODE_2LM = 1,
-	INTERLEAVE_MEM_MODE_PM_DIRECT = 3,
+	INTERLEAVE_MEM_MODE_APP_DIRECT = 3,
 };
 
 /*
@@ -181,7 +181,7 @@ struct platform_capabilities_ext_table
 	 * Memory Mode Capabilities
 	 * Bit0 - 1LM Mode
 	 * Bit1 - 2LM Mode
-	 * Bit2 - App-Direct Mode
+	 * Bit2 - App Direct Mode
 	 * Bit3 - Reserved
 	 * Bit4 - Storage Mode
 	 * Bit5 - SubNUMA Cluster
@@ -193,12 +193,12 @@ struct platform_capabilities_ext_table
 	 * Current Memory mode selected by the BIOS
 	 * Bits1:0 - Volatile Memory Mode
 	 * 	00b - 1LM Mode
-	 * 	01b - 2LM Mode
-	 * 	10b - Auto (2LM if DDR4+Intel NVDIMM with volatile mode present, 1LM otherwise)
+	 * 	01b - Memory Mode
+	 * 	10b - Auto (Memory if DDR4+Intel NVDIMM with memory mode present, 1LM otherwise)
 	 * 	11b - Reserved
-	 * Bits3:2 - Persistent Memory Mode
+	 * Bits3:2 - App Direct Memory Mode
 	 *  00b - Disabled
-	 *  01b - App Direct PM Mode
+	 *  01b - App Direct Mode
 	 *  10b/11b - Reserved
 	 * Bits6:4 - Reserved
 	 * Bits7 - SubNUMA Cluster Mode Enabled
@@ -232,7 +232,7 @@ struct memory_interleave_capabilities_ext_table
 	 * Value defines memory mode
 	 * 0 - 1LM
 	 * 1 - 2LM
-	 * 3 - App-Direct PM
+	 * 3 - App Direct
 	 * 4 - Reserved
 	 * Other values reserved
 	 */

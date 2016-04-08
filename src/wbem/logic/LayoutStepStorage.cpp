@@ -26,7 +26,7 @@
  */
 
 /*
- * Lay out the block region in memory.
+ * Lay out the storage region in memory.
  */
 
 #include <logic/LayoutStepStorage.h>

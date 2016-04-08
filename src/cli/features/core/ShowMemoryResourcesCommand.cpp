@@ -43,8 +43,8 @@ ShowMemoryResourcesCommand::ShowMemoryResourcesCommand(core::system::SystemServi
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	m_props.addUint64("Capacity", &core::system::SystemMemoryResources::getTotalCapacity, &convertCapacity).setIsDefault();
-	m_props.addUint64("VolatileCapacity", &core::system::SystemMemoryResources::getTotalVolatileCapacity, &convertCapacity).setIsDefault();
-	m_props.addUint64("PersistentCapacity", &core::system::SystemMemoryResources::getTotalPersistentCapacity, &convertCapacity).setIsDefault();
+	m_props.addUint64("MemoryCapacity", &core::system::SystemMemoryResources::getTotalMemoryCapacity, &convertCapacity).setIsDefault();
+	m_props.addUint64("AppDirectCapacity", &core::system::SystemMemoryResources::getTotalAppDirectCapacity, &convertCapacity).setIsDefault();
 	m_props.addUint64("UnconfiguredCapacity", &core::system::SystemMemoryResources::getTotalUnconfiguredCapacity, &convertCapacity).setIsDefault();
 	m_props.addUint64("InaccessibleCapacity", &core::system::SystemMemoryResources::getTotalInaccessibleCapacity, &convertCapacity).setIsDefault();
 	m_props.addUint64("ReservedCapacity", &core::system::SystemMemoryResources::getTotalReservedCapacity, &convertCapacity).setIsDefault();

@@ -55,42 +55,41 @@ namespace nvmcli
 static const std::string MEGABYTES_UNITS = " MB";
 static const std::string MIRRORED_CAPACITY = " Mirrored";
 
-static const std::string VOLATILESIZE_PROPERTYNAME = "VolatileSize";
-static const std::string PERSISTENTSIZE_PROPERTYNAME = "PersistentSize";
-static const std::string PERSISTENTSETTINGS_PROPERTYNAME = "PersistentSetting";
-static const std::string PERSISTENT1SIZE_PROPERTYNAME = "Persistent1Size";
-static const std::string PERSISTENT1SETTINGS_PROPERTYNAME = "Persistent1Setting";
-static const std::string PERSISTENT2SIZE_PROPERTYNAME = "Persistent2Size";
-static const std::string PERSISTENT2SETTINGS_PROPERTYNAME = "Persistent2Setting";
+static const std::string MEMORYSIZE_PROPERTYNAME = "MemorySize";
+static const std::string APPDIRECTSIZE_PROPERTYNAME = "AppDirectSize";
+static const std::string APPDIRECTSETTINGS_PROPERTYNAME = "AppDirectSetting";
+static const std::string APPDIRECT1SIZE_PROPERTYNAME = "AppDirect1Size";
+static const std::string APPDIRECT1SETTINGS_PROPERTYNAME = "AppDirect1Setting";
+static const std::string APPDIRECT2SIZE_PROPERTYNAME = "AppDirect2Size";
+static const std::string APPDIRECT2SETTINGS_PROPERTYNAME = "AppDirect2Setting";
 static const std::string RESERVEDIMM_PROPERTYNAME = "ReserveDimm";
 static const std::string STORAGECAPACITY_PROPERTYNAME = wbem::STORAGECAPACITY_KEY;
-static const std::string PERSISTENT1SIZE_PROPERTYDESC =
-		"The size in megabytes of the first region of persistent memory or \"Remaining\" "
+static const std::string APPDIRECT1SIZE_PROPERTYDESC =
+		"The size in gibibytes of the first App Direct interleave set or \"Remaining\" "
 		"if all remaining unconfigured space is desired. Must be a multiple of the memory alignment "
 		"size defined in Show System Capabilities.";
-static const std::string PERSISTENT2SIZE_PROPERTYDESC =
-		"The size in megabytes of the second region of persistent memory or \"Remaining\" "
-		"if all remaining unconfigured space is desired. Only applicable if Persistent1Size "
+static const std::string APPDIRECT2SIZE_PROPERTYDESC =
+		"The size in gibibytes of the second App Direct interleave set or \"Remaining\" "
+		"if all remaining unconfigured space is desired. Only applicable if AppDirect1Size "
 		"is specified. Must be a multiple of the memory alignment "
 		"size defined in Show System Capabilities.";
-static const std::string PERSISTENT1SETTING_PROPERTYDESC =
-		"The quality of service attributes for the first region of persistent memory. "
-		"Only applicable if Persistent1Size is specified.";
-static const std::string PERSISTENT2SETTING_PROPERTYDESC =
-		"The quality of service attributes for the second region of persistent memory. "
-		"Only applicable if Persistent2Size is specified.";
+static const std::string APPDIRECT1SETTING_PROPERTYDESC =
+		"The quality of service attributes for the first App Direct interleave set. "
+		"Only applicable if AppDirect1Size is specified.";
+static const std::string APPDIRECT2SETTING_PROPERTYDESC =
+		"The quality of service attributes for the second App Direct interleave set. "
+		"Only applicable if AppDirect2Size is specified.";
 static const std::string RESERVEDIMM_PROPERTYDESC = "Reserve one " NVM_DIMM_NAME " across the "
-		"specified target (the system, socket or the " NVM_DIMM_NAME ") for use as a storage device by allocating "
-		"it as unmapped block accessible persistent memory. If this property "
-		"is set when creating a memory allocation goal on a single " NVM_DIMM_NAME ", the only "
-		"valid property is StorageCapacity=Remaining.";
+		"specified target (the system, socket or the " NVM_DIMM_NAME ") for use in Storage Mode. "
+		"If this property is set when creating a memory allocation goal on a single " NVM_DIMM_NAME
+		", the only valid property is StorageCapacity=Remaining.";
 static const std::string STORAGECAPACITY_PROPERTYDESC =
-		"Utilize the remaining capacity on the " NVM_DIMM_NAME " as unmapped "
-		"block accessible storage. By default, all the remaining capacity "
-		"after the volatile and persistent memory is mapped is left as "
-		"Storage. Therefore this property is only necessary if neither "
-		"VolatileSize or PersistentSize are specified (i.e. leave the entire "
-		"" NVM_DIMM_NAME " as unmapped block accessible Storage).";
+		"Utilize the remaining capacity on the " NVM_DIMM_NAME " in Storage Mode."
+		"By default, all the remaining capacity after the Memory Mode and "
+		"App Direct interleave sets are allocated is left as Storage. Therefore "
+		"this property is only necessary if neither MemorySize or "
+		"AppDirectSize are specified (i.e. set the entire "
+		NVM_DIMM_NAME " to Storage Mode.";
 
 static const std::string DELETECONFIGGOAL_FROMDIMM_MSG = "Delete configuration goal from " NVM_DIMM_NAME;
 static const std::string DUMPSYSTEMCONFIG_FROMDIMM_MSG = "Dump system configuration to file";
@@ -106,14 +105,14 @@ static const std::string CREATE_GOAL_CONFIRMATION_SUFFIX = TR("Do you want to co
 static const std::string CREATE_GOAL_NON_OPTIMAL_DIMM_POPULATION_WARNING = TR(
 		"The requested goal may result in a non-optimal configuration due to the population "
 		"of " NVM_DIMM_NAME "s in the system.");
-static const std::string CREATE_GOAL_BLOCK_ONLY_NOT_SUPPORTED_BY_DRIVER_WARNING = TR("The requested goal will result in block "
-		"accessible storage which is not supported by the host software.");
-static const std::string CREATE_GOAL_APPDIRECT_NOT_SUPPORTED_BY_DRIVER_WARNING = TR("The requested goal will result in "
-		"app-direct persistent memory which is not supported by the host software.");
-static const std::string CREATE_GOAL_PM_SETTINGS_NOT_RECOMMENDED_BY_BIOS_WARNING = TR("The selected persistent memory settings "
+static const std::string CREATE_GOAL_STORAGE_ONLY_NOT_SUPPORTED_BY_DRIVER_WARNING = TR("The requested goal will result in "
+		"Storage Mode capacity which is not supported by the host software.");
+static const std::string CREATE_GOAL_APP_DIRECT_NOT_SUPPORTED_BY_DRIVER_WARNING = TR("The requested goal will result in "
+		"App Direct capacity which is not supported by the host software.");
+static const std::string CREATE_GOAL_APP_DIRECT_SETTINGS_NOT_RECOMMENDED_BY_BIOS_WARNING = TR("The selected App Direct settings "
 		"are not recommended by the platform BIOS.");
-static const std::string CREATE_GOAL_CURRENT_VOLATILE_MODE_NOT_2LM_WARNING = TR("The requested goal will result in memory "
-		"mode capacity that is unusable with the currently selected platform BIOS volatile mode.");
+static const std::string CREATE_GOAL_REQUESTED_MEMORY_MODE_NOT_USABLE_WARNING = TR("The requested goal will result in Memory "
+		"Mode capacity that is unusable with the currently selected platform BIOS volatile mode.");
 
 static const std::string NS_ALIGNMENT_PROMPT = TR(
 		"The requested namespace capacity %llu will be changed to %llu to align properly. Do you want to continue?");
@@ -192,12 +191,12 @@ class NVM_API NamespaceFeature : public cli::framework::FeatureBase
 
 		// Interface for WBEM getSupportedSizeRange functionaliry
 		void (*m_getSupportedSizeRange)(const std::string &poolGuid,
-				COMMON_UINT64 &largestPossiblePmNs,
-				COMMON_UINT64 &smallestPossiblePmNs,
-				COMMON_UINT64 &pmIncrement,
-				COMMON_UINT64 &largestPossibleBlockNs,
-				COMMON_UINT64 &smallestPossibleBlockNs,
-				COMMON_UINT64 &blockIncrement);
+				COMMON_UINT64 &largestPossibleAppDirectNs,
+				COMMON_UINT64 &smallestPossibleAppDirectNs,
+				COMMON_UINT64 &appDirectIncrement,
+				COMMON_UINT64 &largestPossibleStorageNs,
+				COMMON_UINT64 &smallestPossibleStorageNs,
+				COMMON_UINT64 &storageIncrement);
 
 		// Setters for WBEM Providers
 		void setPersistentMemoryServiceProvider(wbem::pmem_config::PersistentMemoryServiceFactory *pProvider);
@@ -266,7 +265,7 @@ class NVM_API NamespaceFeature : public cli::framework::FeatureBase
 		bool m_byOne;
 		bool m_forceOption;
 		std::string m_prefix;
-		bool m_pmIsRemaining;
+		bool m_appDirectIsRemaining;
 		bool m_storageIsRemaining;
 
 		/*
@@ -348,7 +347,7 @@ class NVM_API NamespaceFeature : public cli::framework::FeatureBase
 		cli::framework::ResultBase* addDimmsToRequestFromSocketList(
 				const std::vector<std::string> &socketList,
 				wbem::logic::MemoryAllocationRequest &request);
-		wbem::logic::PersistentExtent memoryPropToPersistentExtent(
+		wbem::logic::AppDirectExtent memoryPropToAppDirectExtent(
 				const MemoryProperty &pmProp);
 		cli::framework::ResultBase* addParsedDimmListToRequest(
 				const framework::ParsedCommand& parsedCommand,
@@ -380,12 +379,12 @@ class NVM_API NamespaceFeature : public cli::framework::FeatureBase
 
 		static void wbemGetSupportedBlockSizes(std::vector<COMMON_UINT64> &sizes);
 		static void wbemGetSupportedSizeRange(const std::string &poolGuid,
-				COMMON_UINT64 &largestPossiblePmNs,
-				COMMON_UINT64 &smallestPossiblePmNs,
-				COMMON_UINT64 &pmIncrement,
-				COMMON_UINT64 &largestPossibleBlockNs,
-				COMMON_UINT64 &smallestPossibleBlockNs,
-				COMMON_UINT64 &blockIncrement);
+				COMMON_UINT64 &largestPossibleAdNs,
+				COMMON_UINT64 &smallestPossibleAdNs,
+				COMMON_UINT64 &adIncrement,
+				COMMON_UINT64 &largestPossibleStorageNs,
+				COMMON_UINT64 &smallestPossibleStorageNs,
+				COMMON_UINT64 &storageIncrement);
 
 		/*
 		 * Parsing helpers for creating a namespace

@@ -107,29 +107,29 @@ void cli::nvmcli::NamespaceFeature::getPaths(cli::framework::CommandSpecList &li
 					"socket target and one or more comma-separated socket identifiers. The default is "
 					"to configure all manageable " NVM_DIMM_NAME "s on all sockets."));
 	createGoal.addTarget(TARGET_GOAL_R);
-	createGoal.addProperty(VOLATILESIZE_PROPERTYNAME).isValueRequired(true)
-		.valueText("MB")
-		.helpText(TR("Megabytes of the requested " NVM_DIMM_NAME "s' capacity to use as volatile memory or \"Remaining\" "
+	createGoal.addProperty(MEMORYSIZE_PROPERTYNAME).isValueRequired(true)
+		.valueText("GiB")
+		.helpText(TR("Gibibytes of the requested " NVM_DIMM_NAME "s' capacity to use in Memory Mode or \"Remaining\" "
 				"if all remaining unconfigured space is desired. Must be a multiple of the memory alignment "
 				"size defined in Show System Capabilities."));
-	createGoal.addProperty(PERSISTENTSIZE_PROPERTYNAME).isValueRequired(true)
-		.valueText("MB")
-		.helpText(TR(PERSISTENT1SIZE_PROPERTYDESC.c_str()));
-	createGoal.addProperty(PERSISTENTSETTINGS_PROPERTYNAME).isValueRequired(true)
+	createGoal.addProperty(APPDIRECTSIZE_PROPERTYNAME).isValueRequired(true)
+		.valueText("GiB")
+		.helpText(TR(APPDIRECT1SIZE_PROPERTYDESC.c_str()));
+	createGoal.addProperty(APPDIRECTSETTINGS_PROPERTYNAME).isValueRequired(true)
 		.valueText("value")
-		.helpText(TR(PERSISTENT1SETTING_PROPERTYDESC.c_str()));
-	createGoal.addProperty(PERSISTENT1SIZE_PROPERTYNAME).isValueRequired(true)
-		.valueText("MB")
-		.helpText(TR(PERSISTENT1SIZE_PROPERTYDESC.c_str()));
-	createGoal.addProperty(PERSISTENT1SETTINGS_PROPERTYNAME).isValueRequired(true)
+		.helpText(TR(APPDIRECT1SETTING_PROPERTYDESC.c_str()));
+	createGoal.addProperty(APPDIRECT1SIZE_PROPERTYNAME).isValueRequired(true)
+		.valueText("GiB")
+		.helpText(TR(APPDIRECT1SIZE_PROPERTYDESC.c_str()));
+	createGoal.addProperty(APPDIRECT1SETTINGS_PROPERTYNAME).isValueRequired(true)
 		.valueText("value")
-		.helpText(TR(PERSISTENT1SETTING_PROPERTYDESC.c_str()));
-	createGoal.addProperty(PERSISTENT2SIZE_PROPERTYNAME).isValueRequired(true)
-		.valueText("MB")
-		.helpText(TR(PERSISTENT2SIZE_PROPERTYDESC.c_str()));
-	createGoal.addProperty(PERSISTENT2SETTINGS_PROPERTYNAME).isValueRequired(true)
+		.helpText(TR(APPDIRECT1SETTING_PROPERTYDESC.c_str()));
+	createGoal.addProperty(APPDIRECT2SIZE_PROPERTYNAME).isValueRequired(true)
+		.valueText("GiB")
+		.helpText(TR(APPDIRECT2SIZE_PROPERTYDESC.c_str()));
+	createGoal.addProperty(APPDIRECT2SETTINGS_PROPERTYNAME).isValueRequired(true)
 		.valueText("value")
-		.helpText(TR(PERSISTENT2SETTING_PROPERTYDESC.c_str()));
+		.helpText(TR(APPDIRECT2SETTING_PROPERTYDESC.c_str()));
 	createGoal.addProperty(RESERVEDIMM_PROPERTYNAME)
 		.isValueRequired(true)
 		.valueText("0|1")
@@ -194,10 +194,10 @@ void cli::nvmcli::NamespaceFeature::getPaths(cli::framework::CommandSpecList &li
 			TR("If the namespace has Encryption turned on after creation."));
 	createNamespace.addProperty(CREATE_NS_PROP_ERASECAPABLE, false, "0|1|False|True", true,
 			TR("If the namespace supports erase capability after creation."));
-	createNamespace.addProperty(PERSISTENTSETTINGS_PROPERTYNAME, false, "value", true,
+	createNamespace.addProperty(APPDIRECTSETTINGS_PROPERTYNAME, false, "value", true,
 			TR("Create the namespace on persistent memory matching the "
 					"specified quality of service attributes. Only applicable if the "
-					"type is AppDirect."));
+					"type is App Direct."));
 	createNamespace.addProperty(CREATE_NS_PROP_CAPACITY, false, "capacity", true,
 			TR("The size of the namespace in GB. Capacity and BlockCount are exclusive "
 					"and therefore cannot be used together. Note: Capacity can only be provided "
@@ -297,7 +297,7 @@ cli::nvmcli::NamespaceFeature::NamespaceFeature() : cli::framework::FeatureBase(
 	m_optimize(0), m_encryption(0), m_eraseCapable(0), m_reserveDimm(false),
 	m_channelSize(wbem::mem_config::MEMORYALLOCATIONSETTINGS_EXPONENT_UNKNOWN),
 	m_controllerSize(wbem::mem_config::MEMORYALLOCATIONSETTINGS_EXPONENT_UNKNOWN),
-	m_byOne(false), m_pmIsRemaining(false),
+	m_byOne(false), m_appDirectIsRemaining(false),
 	m_pPmNamespaceProvider(new wbem::pmem_config::PersistentMemoryNamespaceFactory()),
 	m_pPmServiceProvider(new wbem::pmem_config::PersistentMemoryServiceFactory()),
 	m_pPmPoolProvider(new wbem::pmem_config::PersistentMemoryPoolFactory()),
@@ -393,7 +393,7 @@ cli::framework::ResultBase *cli::nvmcli::NamespaceFeature::showPools(cli::framew
 		allAttributes.push_back(wbem::STORAGENAMESPACE_MIN_SIZE_KEY);
 		allAttributes.push_back(wbem::STORAGENAMESPACE_COUNT_KEY);
 		allAttributes.push_back(wbem::HEALTHSTATE_KEY);
-		allAttributes.push_back(wbem::PERSISTENTSETTINGS_KEY);
+		allAttributes.push_back(wbem::APP_DIRECT_SETTINGS_KEY);
 
 		// get the desired attributes
 		wbem::framework::attribute_names_t attributes =

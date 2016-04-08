@@ -59,17 +59,17 @@ bool wbem::logic::PostLayoutRequestDeviationCheck::layoutDeviationIsWithinBounds
 	return (percentDeviation <= ACCEPTED_PERCENT_DEVIATION);
 }
 
-void wbem::logic::PostLayoutRequestDeviationCheck::checkIfVolatileCapacityLayoutIsAcceptable(
+void wbem::logic::PostLayoutRequestDeviationCheck::checkIfMemoryCapacityLayoutIsAcceptable(
 		const struct MemoryAllocationRequest& request,
 		const MemoryAllocationLayout& layout)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	if (request.volatileCapacity)
+	if (request.memoryCapacity)
 	{
 		double percentDeviation =
-				findPercentDeviation(request.volatileCapacity, layout.volatileCapacity);
-		if ((layout.volatileCapacity == 0)  ||
+				findPercentDeviation(request.memoryCapacity, layout.memoryCapacity);
+		if ((layout.memoryCapacity == 0)  ||
 				(!layoutDeviationIsWithinBounds(percentDeviation)))
 		{
 			throw exception::NvmExceptionUnacceptableLayoutDeviation();
@@ -77,20 +77,20 @@ void wbem::logic::PostLayoutRequestDeviationCheck::checkIfVolatileCapacityLayout
 	}
 }
 
-void wbem::logic::PostLayoutRequestDeviationCheck::checkPersistentCapacityLayoutIsAcceptable(
+void wbem::logic::PostLayoutRequestDeviationCheck::checkAppDirectCapacityLayoutIsAcceptable(
 		const struct MemoryAllocationRequest& request,
 		const MemoryAllocationLayout& layout)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	if (request.persistentExtents.size())
+	if (request.appDirectExtents.size())
 	{
-		for (size_t i = 0;  i < request.persistentExtents.size(); i++)
+		for (size_t i = 0;  i < request.appDirectExtents.size(); i++)
 		{
 			double percentDeviation =
-					findPercentDeviation(request.persistentExtents[i].capacity,
-							layout.persistentCapacities[i]);
-			if ((layout.persistentCapacities[i] == 0)  ||
+					findPercentDeviation(request.appDirectExtents[i].capacity,
+							layout.appDirectCapacities[i]);
+			if ((layout.appDirectCapacities[i] == 0)  ||
 					(!layoutDeviationIsWithinBounds(percentDeviation)))
 			{
 				throw exception::NvmExceptionUnacceptableLayoutDeviation();
@@ -105,6 +105,6 @@ void wbem::logic::PostLayoutRequestDeviationCheck::verify(
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	checkIfVolatileCapacityLayoutIsAcceptable(request, layout);
-	checkPersistentCapacityLayoutIsAcceptable(request, layout);
+	checkIfMemoryCapacityLayoutIsAcceptable(request, layout);
+	checkAppDirectCapacityLayoutIsAcceptable(request, layout);
 }

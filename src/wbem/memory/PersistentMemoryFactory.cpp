@@ -105,8 +105,8 @@ wbem::framework::instance_names_t* wbem::memory::PersistentMemoryFactory::getIns
 
 			if (pool.type == POOL_TYPE_PERSISTENT)
 			{
-				// un-mirrored persistent pools can have block regions
-				getBlockRegionInstanceNames(*pNames, pool);
+				// un-mirrored persistent pools can have storage-only regions
+				getStorageRegionInstanceNames(*pNames, pool);
 			}
 		}
 	}
@@ -152,14 +152,14 @@ void wbem::memory::PersistentMemoryFactory::getInterleaveSetInstanceNames(
 	}
 }
 
-void wbem::memory::PersistentMemoryFactory::getBlockRegionInstanceNames(
+void wbem::memory::PersistentMemoryFactory::getStorageRegionInstanceNames(
 		wbem::framework::instance_names_t& instanceNames, const struct pool &pool)
 {
 	for (size_t i = 0; i < pool.dimm_count; i++)
 	{
 		NVM_GUID_STR guidStr;
 		guid_to_str(pool.dimms[i], guidStr);
-		std::string deviceId = getBlockRegionUuid(std::string(guidStr));
+		std::string deviceId = getStorageRegionUuid(std::string(guidStr));
 
 		instanceNames.push_back(getInstanceName(deviceId));
 	}
@@ -183,7 +183,7 @@ wbem::framework::Instance* wbem::memory::PersistentMemoryFactory::getInstance(
 
 	try
 	{
-		// Find the appropriate PM region
+		// Find the appropriate App Direct region
 		std::string deviceId = path.getKeyValue(DEVICEID_KEY).stringValue();
 
 		std::vector<struct pool> pools = mem_config::PoolViewFactory::getPoolList(true);
@@ -203,12 +203,12 @@ wbem::framework::Instance* wbem::memory::PersistentMemoryFactory::getInstance(
 				}
 				else if (pool.type == POOL_TYPE_PERSISTENT)
 				{
-					// Non-mirrored persistent pools may have block-only regions
+					// Non-mirrored persistent pools may have Storage-only regions
 					size_t dimmIndex = 0;
-					found = findBlockDimmIndexForUuid(deviceId, pool, dimmIndex);
+					found = findStorageDimmIndexForUuid(deviceId, pool, dimmIndex);
 					if (found)
 					{
-						setBlockCapacityInstanceAttributes(*pInstance, attributes, pool, dimmIndex);
+						setStorageCapacityInstanceAttributes(*pInstance, attributes, pool, dimmIndex);
 					}
 				}
 			}
@@ -216,7 +216,7 @@ wbem::framework::Instance* wbem::memory::PersistentMemoryFactory::getInstance(
 
 		if (!found)
 		{
-			COMMON_LOG_ERROR_F("no interleave or block region found with UUID %s",
+			COMMON_LOG_ERROR_F("no app direct or storage region found with UUID %s",
 					deviceId.c_str());
 			throw framework::ExceptionBadAttribute(DEVICEID_KEY.c_str());
 		}
@@ -256,7 +256,7 @@ bool wbem::memory::PersistentMemoryFactory::findInterleaveSetForUuid(const std::
 	return found;
 }
 
-bool wbem::memory::PersistentMemoryFactory::findBlockDimmIndexForUuid(const std::string& uuid,
+bool wbem::memory::PersistentMemoryFactory::findStorageDimmIndexForUuid(const std::string& uuid,
 		const struct pool& pool, size_t& index)
 {
 	bool found = false;
@@ -265,7 +265,7 @@ bool wbem::memory::PersistentMemoryFactory::findBlockDimmIndexForUuid(const std:
 	{
 		NVM_GUID_STR guidStr;
 		guid_to_str(pool.dimms[i], guidStr);
-		std::string tmpUuid = getBlockRegionUuid(std::string(guidStr));
+		std::string tmpUuid = getStorageRegionUuid(std::string(guidStr));
 
 		if (uuid == tmpUuid)
 		{
@@ -473,9 +473,9 @@ std::string wbem::memory::PersistentMemoryFactory::getInterleaveSetUuid(const NV
 	return std::string(uuidStr);
 }
 
-std::string wbem::memory::PersistentMemoryFactory::getBlockRegionUuid(const std::string& dimmGuidStr)
+std::string wbem::memory::PersistentMemoryFactory::getStorageRegionUuid(const std::string& dimmGuidStr)
 {
-	// There's only one block region per DIMM, and the DIMM GUID is already unique
+	// There's only one storage region per DIMM, and the DIMM GUID is already unique
 	return dimmGuidStr;
 }
 
@@ -514,7 +514,7 @@ void wbem::memory::PersistentMemoryFactory::validatePath(const framework::Object
 		throw framework::ExceptionBadAttribute(CREATIONCLASSNAME_KEY.c_str());
 	}
 
-	// DeviceID == UUID for interleave or block region
+	// DeviceID == UUID for interleave or storage region
 	// See that it's the right size to be a UUID - we'll look it up later
 	const framework::Attribute &deviceId = path.getKeyValue(DEVICEID_KEY);
 	if (deviceId.stringValue().size() != (NVM_GUIDSTR_LEN - 1))
@@ -582,7 +582,7 @@ void wbem::memory::PersistentMemoryFactory::setInterleaveSetInstanceAttributes(
 	}
 }
 
-void wbem::memory::PersistentMemoryFactory::setBlockCapacityInstanceAttributes(
+void wbem::memory::PersistentMemoryFactory::setStorageCapacityInstanceAttributes(
 		framework::Instance &instance,
 		const framework::attribute_names_t &attributes,
 		const struct pool& pool,
@@ -594,14 +594,14 @@ void wbem::memory::PersistentMemoryFactory::setBlockCapacityInstanceAttributes(
 	// NumberOfBlocks - uint64
 	if (containsAttribute(NUMBEROFBLOCKS_KEY, attributes))
 	{
-		framework::Attribute attr(getNumBlocks(pool.block_capacities[dimmIdx]), false);
+		framework::Attribute attr(getNumBlocks(pool.storage_capacities[dimmIdx]), false);
 		instance.setAttribute(NUMBEROFBLOCKS_KEY, attr);
 	}
 
 	// HealthState - uint16 enum
 	if (containsAttribute(HEALTHSTATE_KEY, attributes))
 	{
-		NVM_UINT16 healthState = getBlockRegionHealthState(pool.dimms[dimmIdx]);
+		NVM_UINT16 healthState = getStorageRegionHealthState(pool.dimms[dimmIdx]);
 		framework::Attribute attr(healthState, getHealthStateString(healthState), false);
 		instance.setAttribute(HEALTHSTATE_KEY, attr);
 	}
@@ -610,13 +610,13 @@ void wbem::memory::PersistentMemoryFactory::setBlockCapacityInstanceAttributes(
 	if (containsAttribute(OPERATIONALSTATUS_KEY, attributes))
 	{
 		framework::UINT16_LIST opStatus;
-		opStatus.push_back(getBlockRegionOperationalStatus(pool.dimms[dimmIdx]));
+		opStatus.push_back(getStorageRegionOperationalStatus(pool.dimms[dimmIdx]));
 		framework::Attribute attr(opStatus, false);
 		instance.setAttribute(OPERATIONALSTATUS_KEY, attr);
 	}
 
 	// AccessGranularity - uint16 - enum
-	// Always block-accessible for block region
+	// Always block-accessible for Storage region
 	if (containsAttribute(ACCESSGRANULARITY_KEY, attributes))
 	{
 		NVM_UINT16 accessGranularity = PERSISTENTMEMORY_ACCESSGRANULARITY_BLOCK;
@@ -626,7 +626,7 @@ void wbem::memory::PersistentMemoryFactory::setBlockCapacityInstanceAttributes(
 	}
 
 	// Replication - uint16 - enum
-	// Block is never mirrored
+	// Storage is never mirrored
 	if (containsAttribute(REPLICATION_KEY, attributes))
 	{
 		NVM_UINT16 replication = PERSISTENTMEMORY_REPLICATION_NONE;
@@ -672,7 +672,7 @@ void wbem::memory::PersistentMemoryFactory::setGenericInstanceAttributes(framewo
 	// BlockSize - uint64 - for PM, it's the alignment
 	if (containsAttribute(BLOCKSIZE_KEY, attributes))
 	{
-		framework::Attribute attr(getPmAlignment(), false);
+		framework::Attribute attr(getAppDirectAlignment(), false);
 		instance.setAttribute(BLOCKSIZE_KEY, attr);
 	}
 }
@@ -683,7 +683,7 @@ bool wbem::memory::PersistentMemoryFactory::isPersistentMemoryUsingDimm(const st
 	bool result = false;
 
 
-	// Block region UUID is the same as the corresponding DIMM GUID
+	// Storage region UUID is the same as the corresponding DIMM GUID
 	if (pmUuid == dimmGuid)
 	{
 		result = true;
@@ -719,7 +719,7 @@ bool wbem::memory::PersistentMemoryFactory::isPersistentMemoryUsingDimm(const st
 	return result;
 }
 
-NVM_UINT64 wbem::memory::PersistentMemoryFactory::getPmAlignment() throw (framework::Exception)
+NVM_UINT64 wbem::memory::PersistentMemoryFactory::getAppDirectAlignment() throw (framework::Exception)
 {
 	struct nvm_capabilities systemCapabilities;
 	memset(&systemCapabilities, 0, sizeof(systemCapabilities));
@@ -730,12 +730,12 @@ NVM_UINT64 wbem::memory::PersistentMemoryFactory::getPmAlignment() throw (framew
 	}
 
 	// Alignment is provided as an exponent n - 2^n bytes
-	NVM_UINT16 alignmentExponent = systemCapabilities.platform_capabilities.pm_direct.interleave_alignment_size;
+	NVM_UINT16 alignmentExponent = systemCapabilities.platform_capabilities.app_direct_mode.interleave_alignment_size;
 	NVM_UINT64 alignment = 1 << alignmentExponent;
 	if (alignment == 0) // something went wrong
 	{
-		COMMON_LOG_ERROR("PM alignment from capabilities was 0");
-		throw framework::Exception("PM alignment was 0");
+		COMMON_LOG_ERROR("App Direct alignment from capabilities was 0");
+		throw framework::Exception("App Direct alignment was 0");
 	}
 
 	return alignment;
@@ -745,7 +745,7 @@ NVM_UINT64 wbem::memory::PersistentMemoryFactory::getNumBlocks(const NVM_UINT64 
 		throw (framework::Exception)
 {
 	NVM_UINT64 numBlocks = 0;
-	NVM_UINT64 blockSize = getPmAlignment();
+	NVM_UINT64 blockSize = getAppDirectAlignment();
 	if (blockSize > 0)
 	{
 		numBlocks = capacity / blockSize;
@@ -777,12 +777,12 @@ NVM_UINT16 wbem::memory::PersistentMemoryFactory::getInterleaveSetHealthState(
 	return healthState;
 }
 
-NVM_UINT16 wbem::memory::PersistentMemoryFactory::getBlockRegionHealthState(const NVM_GUID dimmGuid)
+NVM_UINT16 wbem::memory::PersistentMemoryFactory::getStorageRegionHealthState(const NVM_GUID dimmGuid)
 		throw (framework::Exception)
 {
 	NVM_UINT16 healthState = PERSISTENTMEMORY_HEALTHSTATE_UNKNOWN;
 
-	// Block region health is based on DIMM health
+	// Storage region health is based on DIMM health
 	struct device_status status;
 	memset(&status, 0, sizeof (status));
 	int rc = nvm_get_device_status(dimmGuid, &status);
@@ -854,7 +854,7 @@ NVM_UINT16 wbem::memory::PersistentMemoryFactory::getInterleaveSetOperationalSta
 	return opStatus;
 }
 
-NVM_UINT16 wbem::memory::PersistentMemoryFactory::getBlockRegionOperationalStatus(const NVM_GUID dimmGuid)
+NVM_UINT16 wbem::memory::PersistentMemoryFactory::getStorageRegionOperationalStatus(const NVM_GUID dimmGuid)
 		throw (framework::Exception)
 {
 	NVM_UINT16 opStatus = PERSISTENTMEMORY_OPSTATUS_UNKNOWN;
@@ -1045,13 +1045,13 @@ bool wbem::memory::PersistentMemoryFactory::isPersistentMemoryAssociatedToPersis
 		lib_interface::NvmApi::getApi()->getNamespaceDetails(nsGuid, &details);
 
 		std::string nsBasedOnGuid = "";
-		if (details.type == NAMESPACE_TYPE_BLOCK)
+		if (details.type == NAMESPACE_TYPE_STORAGE)
 		{
 			NVM_GUID_STR guidStr;
 			guid_to_str(details.creation_id.device_guid, guidStr);
 			nsBasedOnGuid = std::string(guidStr);
 		}
-		else if (details.type == NAMESPACE_TYPE_PMEM)
+		else if (details.type == NAMESPACE_TYPE_APP_DIRECT)
 		{
 			struct pool pool;
 			lib_interface::NvmApi::getApi()->getPool(details.pool_guid, &pool);

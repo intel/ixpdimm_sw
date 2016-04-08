@@ -25,30 +25,34 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "RuleMirroredPersistentNotSupported.h"
-#include <exception/NvmExceptionBadRequest.h>
-#include <LogEnterExit.h>
+/*
+ * Rule that checks that the platform supports memory mode
+ * if memory capacity is requested.
+ */
 
-wbem::logic::RuleMirroredPersistentNotSupported::RuleMirroredPersistentNotSupported()
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-}
+#ifndef _WBEM_LOGIC_RULEMEMORYCAPACITYNOTSUPPORTED_H_
+#define _WBEM_LOGIC_RULEMEMORYCAPACITYNOTSUPPORTED_H_
 
-wbem::logic::RuleMirroredPersistentNotSupported::~RuleMirroredPersistentNotSupported()
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-}
+#include "RequestRule.h"
+#include <nvm_types.h>
 
-void wbem::logic::RuleMirroredPersistentNotSupported::verify(
-		const MemoryAllocationRequest& request)
+namespace wbem
 {
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	for (std::vector<PersistentExtent>::const_iterator iter = request.persistentExtents.begin();
-			iter != request.persistentExtents.end(); iter++)
-	{
-		if (iter->mirrored)
-		{
-			throw exception::NvmExceptionRequestNotSupported();
-		}
-	}
-}
+namespace logic
+{
+
+class NVM_API RuleMemoryModeCapacityNotSupported: public RequestRule
+{
+	public:
+		RuleMemoryModeCapacityNotSupported(const struct nvm_capabilities &systemCapabilities);
+		virtual ~RuleMemoryModeCapacityNotSupported();
+		virtual void verify(const MemoryAllocationRequest &request);
+
+	protected:
+		struct nvm_capabilities m_systemCapabilities;
+};
+
+} /* namespace logic */
+} /* namespace wbem */
+
+#endif /* _WBEM_LOGIC_RULEMEMORYCAPACITYNOTSUPPORTED_H_ */

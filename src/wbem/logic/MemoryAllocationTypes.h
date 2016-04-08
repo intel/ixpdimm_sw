@@ -48,7 +48,7 @@ namespace logic
 
 static const NVM_UINT64 REQUEST_REMAINING_CAPACITY = (NVM_UINT64)-1;
 static const int REQUEST_DEFAULT_INTERLEAVE_FORMAT = -1;
-static const int MAX_PERSISTENT_EXTENTS = 2;
+static const int MAX_APPDIRECT_EXTENTS = 2;
 static const NVM_UINT16 DIMMS_PER_SOCKET = 6;
 static const NVM_UINT16 IMCS_PER_SOCKET = 2;
 static const NVM_UINT16 CHANNELS_PER_IMC = 3;
@@ -106,9 +106,9 @@ struct Dimm
 	NVM_UINT32 channel;
 };
 
-struct PersistentExtent
+struct AppDirectExtent
 {
-	PersistentExtent() : capacity(0), mirrored(false), byOne(false),
+	AppDirectExtent() : capacity(0), mirrored(false), byOne(false),
 			channel(REQUEST_DEFAULT_INTERLEAVE_FORMAT), imc(REQUEST_DEFAULT_INTERLEAVE_FORMAT) {}
 
 	NVM_UINT64 capacity; // total in GiB
@@ -121,10 +121,10 @@ struct PersistentExtent
 struct MemoryAllocationRequest
 {
 	MemoryAllocationRequest() :
-		volatileCapacity(0), persistentExtents(), storageRemaining(false), reserveDimm(false), dimms() {}
+		memoryCapacity(0), appDirectExtents(), storageRemaining(false), reserveDimm(false), dimms() {}
 
-	NVM_UINT64 volatileCapacity; // total in GiB
-	std::vector<struct PersistentExtent> persistentExtents;
+	NVM_UINT64 memoryCapacity; // total in GiB
+	std::vector<struct AppDirectExtent> appDirectExtents;
 	bool storageRemaining;
 	bool reserveDimm;
 
@@ -133,20 +133,20 @@ struct MemoryAllocationRequest
 
 enum LayoutWarningCode
 {
-	LAYOUT_WARNING_APPDIRECT_NOT_SUPPORTED_BY_DRIVER,
+	LAYOUT_WARNING_APP_DIRECT_NOT_SUPPORTED_BY_DRIVER,
 	LAYOUT_WARNING_STORAGE_NOT_SUPPORTED_BY_DRIVER,
-	LAYOUT_WARNING_PERSISTENT_SETTINGS_NOT_RECOMMENDED,
+	LAYOUT_WARNING_APP_DIRECT_SETTINGS_NOT_RECOMMENDED,
 	LAYOUT_WARNING_NONOPTIMAL_POPULATION,
-	LAYOUT_WARNING_CURRENT_VOLATILE_MODE_NOT_2LM
+	LAYOUT_WARNING_REQUESTED_MEMORY_MODE_NOT_USABLE
 };
 
 struct MemoryAllocationLayout
 {
 	MemoryAllocationLayout() :
-		volatileCapacity(0), persistentCapacities(), storageCapacity(0), goals() {}
+		memoryCapacity(0), appDirectCapacities(), storageCapacity(0), goals() {}
 
-	NVM_UINT64 volatileCapacity; // total in GiB
-	std::vector<NVM_UINT64> persistentCapacities; // in GiB
+	NVM_UINT64 memoryCapacity; // total in GiB
+	std::vector<NVM_UINT64> appDirectCapacities; // in GiB
 	NVM_UINT64 storageCapacity; // in GiB
 
 	// the string is a DIMM GUID

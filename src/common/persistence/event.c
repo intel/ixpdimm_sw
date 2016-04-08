@@ -399,22 +399,22 @@ const char *EVENT_MESSAGES_PCONFIG_DIAG[EVENT_CODE_DIAG_PCONFIG_UNKNOWN -
 	N_TR("The platform configuration check detected that "NVM_DIMM_NAME" %s has "
 			"a goal configuration that has not yet been applied. A system reboot "
 			"is required for the new configuration to take effect."),
-	// EVENT_CODE_DIAG_PCONFIG_PMEM_NAMESPACE_TOO_SMALL
-	N_TR("The platform configuration check detected that the capacity of persistent memory "
+	// EVENT_CODE_DIAG_PCONFIG_APP_DIRECT_NAMESPACE_TOO_SMALL
+	N_TR("The platform configuration check detected that the capacity of App Direct "
 			"namespace %s is smaller than the capacity of its containing extent. The remaining %s "
-			"of the extent cannot be accessed as app-direct persistent memory. This capacity may "
-			"be included in block namespaces on each "NVM_DIMM_NAME"."),
-	// EVENT_CODE_DIAG_PCONFIG_POOL_NEEDS_PMEM_NAMESPACES
-	N_TR("The platform configuration check detected that pool %s contains empty app-direct "
-			"persistent capacity. Create persistent namespaces in the pool to access this "
+			"of the extent cannot be accessed as App Direct. This capacity may "
+			"be included in Storage namespaces on each "NVM_DIMM_NAME"."),
+	// EVENT_CODE_DIAG_PCONFIG_POOL_NEEDS_APP_DIRECT_NAMESPACES
+	N_TR("The platform configuration check detected that pool %s contains empty App Direct "
+			"capacity. Create App Direct namespaces in the pool to access this "
 			"capacity."),
-	// EVENT_CODE_DIAG_PCONFIG_POOL_NEEDS_BLOCK_NAMESPACES
-	N_TR("The platform configuration check detected that pool %s contains empty block-only "
-			"capacity. Create block namespaces in the pool to access this capacity."),
+	// EVENT_CODE_DIAG_PCONFIG_POOL_NEEDS_STORAGE_NAMESPACES
+	N_TR("The platform configuration check detected that pool %s contains empty Storage "
+			"capacity. Create Storage namespaces in the pool to access this capacity."),
 	// EVENT_CODE_DIAG_PCONFIG_DIMMS_LIMITED_TO_PERSISTENT_MODES
 	N_TR("The platform configuration check detected that all "NVM_DIMM_NAME"s on socket %s are "
 			"arranged on a single memory controller. Configuration of "NVM_DIMM_NAME"s on "
-			"this socket is limited to persistent memory and block modes."),
+			"this socket is limited to App Direct and Storage Mode."),
 	// EVENT_CODE_DIAG_PCONFIG_DIMM_CONFIG_UNBALANCED
 	N_TR("The platform configuration check detected that "NVM_DIMM_NAME"s on "
 			"socket %s are arranged in an unbalanced configuration. "
@@ -470,7 +470,7 @@ const char *EVENT_MESSAGES_DIAG_PM_METADATA_CHECK[EVENT_CODE_DIAG_PM_META_UNKNOW
 			"from the label area of the Platform Configuration Data does not match "
 			"the nlabel count in the first label."),
 	// EVENT_CODE_DIAG_PM_META_NS_CORRUPT_INTERLEAVE_SET - 3
-	N_TR("The PM Metadata check detected more than one pmem namespace "
+	N_TR("The PM Metadata check detected more than one App Direct namespace "
 			"for a given interleave set."),
 	// EVENT_CODE_DIAG_PM_META_NS_INCONSISTENT_LABELS - 4
 	N_TR("The PM Metadata check detected that the nlabel or lbasize fields "
@@ -489,7 +489,7 @@ const char *EVENT_MESSAGES_DIAG_PM_METADATA_CHECK[EVENT_CODE_DIAG_PM_META_UNKNOW
 	N_TR("The PM Metadata check detected no valid Namespace Index Blocks or an uninitialized "
 			"label area in the Platform Configuration Data."),
 	// EVENT_CODE_DIAG_PM_META_LABEL_INSUFFICIENT_PM - 10
-	N_TR("The PM Metadata check detected a Block Namespace described in the "
+	N_TR("The PM Metadata check detected a Storage Namespace described in the "
 			"Platform Configuration Data is bigger than the "NVM_DIMM_NAME"'s "
 			"available persistent memory."),
 	// EVENT_CODE_DIAG_PM_META_LABEL_LABELS_OVERLAP - 11

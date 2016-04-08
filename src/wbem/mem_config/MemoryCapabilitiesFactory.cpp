@@ -67,12 +67,12 @@ void wbem::mem_config::MemoryCapabilitiesFactory::populateAttributeList(
 	attributes.push_back(CHANNELINTERLEAVESUPPORT_KEY);
 	attributes.push_back(CHANNELINTERLEAVEWAYSUPPORT_KEY);
 	attributes.push_back(MEMORYCONTROLLERINTERLEAVESUPPORT_KEY);
-	attributes.push_back(TWOLEVELMEMALIGNMENT_KEY);
-	attributes.push_back(PMALIGNMENT_KEY);
+	attributes.push_back(MEMORYMODEALIGNMENT_KEY);
+	attributes.push_back(APPDIRECTALIGNMENT_KEY);
 	attributes.push_back(PLATFORMCONFIGSUPPORTED_KEY);
 	attributes.push_back(PLATFORMRUNTIMESUPPORTED_KEY);
-	attributes.push_back(CURRENTVOLATILEMEMORYMODE_KEY);
-	attributes.push_back(CURRENTPERSISTENTMEMORYMODE_KEY);
+	attributes.push_back(CURRENTVOLATILEMODE_KEY);
+	attributes.push_back(CURRENTAPPDIRECTMODE_KEY);
 }
 
 /*
@@ -137,7 +137,7 @@ wbem::framework::Instance* wbem::mem_config::MemoryCapabilitiesFactory::getInsta
 			// Alignment - BIOS reported alignment requirement
 			if (containsAttribute(ALIGNMENT_KEY, attributes))
 			{
-				framework::Attribute a((NVM_UINT16)(nvmCaps.platform_capabilities.pm_direct.interleave_alignment_size), false);
+				framework::Attribute a((NVM_UINT16)(nvmCaps.platform_capabilities.app_direct_mode.interleave_alignment_size), false);
 				pInstance->setAttribute(ALIGNMENT_KEY, a, attributes);
 			}
 
@@ -147,17 +147,17 @@ wbem::framework::Instance* wbem::mem_config::MemoryCapabilitiesFactory::getInsta
 			framework::UINT16_LIST imcSizeList; // BIOS reported iMC interleave sizes
 			if (nvmCaps.nvm_features.app_direct_mode)
 			{
-				for (int i = 0; i < nvmCaps.platform_capabilities.pm_direct.interleave_formats_count; i++)
+				for (int i = 0; i < nvmCaps.platform_capabilities.app_direct_mode.interleave_formats_count; i++)
 				{
 					NVM_UINT16 channelSize = (NVM_UINT16) wbem::mem_config::InterleaveSet::getExponentFromInterleaveSize(
-							nvmCaps.platform_capabilities.pm_direct.interleave_formats[i].channel);
+							nvmCaps.platform_capabilities.app_direct_mode.interleave_formats[i].channel);
 					// only add unique values
 					if (std::find(channelSizeList.begin(), channelSizeList.end(), channelSize) == channelSizeList.end())
 					{
 						channelSizeList.push_back(channelSize);
 					}
 
-					NVM_UINT16 way = nvmCaps.platform_capabilities.pm_direct.interleave_formats[i].ways;
+					NVM_UINT16 way = nvmCaps.platform_capabilities.app_direct_mode.interleave_formats[i].ways;
 					// only add unique values
 					if (std::find(imcSizeList.begin(), imcSizeList.end(), way) == imcSizeList.end())
 					{
@@ -165,7 +165,7 @@ wbem::framework::Instance* wbem::mem_config::MemoryCapabilitiesFactory::getInsta
 					}
 
 					NVM_UINT16 imcSize = (NVM_UINT16) wbem::mem_config::InterleaveSet::getExponentFromInterleaveSize(
-							nvmCaps.platform_capabilities.pm_direct.interleave_formats[i].imc);
+							nvmCaps.platform_capabilities.app_direct_mode.interleave_formats[i].imc);
 					// only add unique values
 					if (std::find(imcSizeList.begin(), imcSizeList.end(), imcSize) == imcSizeList.end())
 					{
@@ -195,17 +195,17 @@ wbem::framework::Instance* wbem::mem_config::MemoryCapabilitiesFactory::getInsta
 
 
 			// TwoLevelMemoryAlignment - BIOS reported alignment requirement in bytes
-			if (containsAttribute(TWOLEVELMEMALIGNMENT_KEY, attributes))
+			if (containsAttribute(MEMORYMODEALIGNMENT_KEY, attributes))
 			{
-				framework::Attribute a((NVM_UINT16)nvmCaps.platform_capabilities.two_lm.interleave_alignment_size, false);
-				pInstance->setAttribute(TWOLEVELMEMALIGNMENT_KEY, a, attributes);
+				framework::Attribute a((NVM_UINT16)nvmCaps.platform_capabilities.memory_mode.interleave_alignment_size, false);
+				pInstance->setAttribute(MEMORYMODEALIGNMENT_KEY, a, attributes);
 			}
 
-			// PersistentMemoryAlignment - BIOS reported alignment requirement in bytes
-			if (containsAttribute(PMALIGNMENT_KEY, attributes))
+			// AppDirectAlignment - BIOS reported alignment requirement in bytes
+			if (containsAttribute(APPDIRECTALIGNMENT_KEY, attributes))
 			{
-				framework::Attribute a((NVM_UINT16)(nvmCaps.platform_capabilities.pm_direct.interleave_alignment_size), false);
-				pInstance->setAttribute(PMALIGNMENT_KEY, a, attributes);
+				framework::Attribute a((NVM_UINT16)(nvmCaps.platform_capabilities.app_direct_mode.interleave_alignment_size), false);
+				pInstance->setAttribute(APPDIRECTALIGNMENT_KEY, a, attributes);
 			}
 
 			// PlatformConfigSupported - boolean
@@ -226,17 +226,17 @@ wbem::framework::Instance* wbem::mem_config::MemoryCapabilitiesFactory::getInsta
 			}
 
 			// CurrentVolatileMode - volatile memory mode currently selected by the BIOS
-			if (containsAttribute(CURRENTVOLATILEMEMORYMODE_KEY, attributes))
+			if (containsAttribute(CURRENTVOLATILEMODE_KEY, attributes))
 			{
 				framework::Attribute a(translateVolatileMode(nvmCaps), false);
-				pInstance->setAttribute(CURRENTVOLATILEMEMORYMODE_KEY, a, attributes);
+				pInstance->setAttribute(CURRENTVOLATILEMODE_KEY, a, attributes);
 			}
 
-			// CurrentPMMode - persistent memory mode currently selected by the BIOS
-			if (containsAttribute(CURRENTPERSISTENTMEMORYMODE_KEY, attributes))
+			// CurrentAppDirectMode - App Direct mode currently selected by the BIOS
+			if (containsAttribute(CURRENTAPPDIRECTMODE_KEY, attributes))
 			{
-				framework::Attribute a(translatePMMode(nvmCaps), false);
-				pInstance->setAttribute(CURRENTPERSISTENTMEMORYMODE_KEY, a, attributes);
+				framework::Attribute a(translateAppDirectMode(nvmCaps), false);
+				pInstance->setAttribute(CURRENTAPPDIRECTMODE_KEY, a, attributes);
 			}
 
 		}
@@ -283,21 +283,21 @@ wbem::framework::UINT16_LIST wbem::mem_config::MemoryCapabilitiesFactory::getMem
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	framework::UINT16_LIST modes;
-	if (nvmCaps.platform_capabilities.one_lm.supported)
+	if (nvmCaps.platform_capabilities.one_lm_mode.supported)
 	{
 		modes.push_back(MEMORYMODE_1LM);
 	}
 	if (nvmCaps.nvm_features.memory_mode)
 	{
-		modes.push_back(MEMORYMODE_2LM);
+		modes.push_back(MEMORYMODE_MEMORY);
 	}
 	if (nvmCaps.nvm_features.storage_mode)
 	{
-		modes.push_back(MEMORYMODE_BLOCK);
+		modes.push_back(MEMORYMODE_STORAGE);
 	}
 	if (nvmCaps.nvm_features.app_direct_mode)
 	{
-		modes.push_back(MEMORYMODE_PMDIRECT);
+		modes.push_back(MEMORYMODE_APP_DIRECT);
 	}
 
 	return modes;
@@ -350,7 +350,7 @@ wbem::framework::UINT16 wbem::mem_config::MemoryCapabilitiesFactory::translateVo
 	// if memory mode is not supported, default to 1lm
 	enum volatile_mode mode = nvmCaps.platform_capabilities.current_volatile_mode;
 	if (!nvmCaps.nvm_features.memory_mode &&
-			mode == VOLATILE_MODE_2LM) // bios support but DIMM SKU does not support
+			mode == VOLATILE_MODE_MEMORY) // bios support but DIMM SKU does not support
 	{
 		mode = VOLATILE_MODE_1LM;
 	}
@@ -360,8 +360,8 @@ wbem::framework::UINT16 wbem::mem_config::MemoryCapabilitiesFactory::translateVo
 		case VOLATILE_MODE_1LM:
 			wbemVolatileMode = MEMORYMODE_1LM;
 			break;
-		case VOLATILE_MODE_2LM:
-			wbemVolatileMode = MEMORYMODE_2LM;
+		case VOLATILE_MODE_MEMORY:
+			wbemVolatileMode = MEMORYMODE_MEMORY;
 			break;
 		case VOLATILE_MODE_AUTO:
 			wbemVolatileMode = MEMORYMODE_AUTO;
@@ -374,38 +374,39 @@ wbem::framework::UINT16 wbem::mem_config::MemoryCapabilitiesFactory::translateVo
 }
 
 /*
- * Convert library enumeration for current PM mode to wbem value
+ * Convert library enumeration for current App Direct mode to wbem value
  */
-wbem::framework::UINT16 wbem::mem_config::MemoryCapabilitiesFactory::translatePMMode(const struct nvm_capabilities &nvmCaps)
+wbem::framework::UINT16 wbem::mem_config::MemoryCapabilitiesFactory::translateAppDirectMode(
+		const struct nvm_capabilities &nvmCaps)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	framework::UINT16 wbemPmMode;
+	framework::UINT16 wbemAppDirectMode;
 
 	// if app direct is not supported, default to disabled
-	enum pm_mode mode = nvmCaps.platform_capabilities.current_pm_mode;
+	enum app_direct_mode mode = nvmCaps.platform_capabilities.current_app_direct_mode;
 	if (!nvmCaps.nvm_features.app_direct_mode &&
-			mode == PM_MODE_PM_DIRECT) // bios support but DIMM SKU does not support
+			mode == APP_DIRECT_MODE_ENABLED) // bios support but DIMM SKU does not support
 	{
-		mode = PM_MODE_DISABLED;
+		mode = APP_DIRECT_MODE_DISABLED;
 	}
 
 	switch (mode)
 	{
-		case PM_MODE_DISABLED:
-			wbemPmMode = MEMORYMODE_PMDISABLED;
+		case APP_DIRECT_MODE_DISABLED:
+			wbemAppDirectMode = MEMORYMODE_APP_DIRECT_DISABLED;
 			break;
-		case PM_MODE_PM_DIRECT:
-			wbemPmMode = MEMORYMODE_PMDIRECT;
+		case APP_DIRECT_MODE_ENABLED:
+			wbemAppDirectMode = MEMORYMODE_APP_DIRECT;
 			break;
 		default:
-			wbemPmMode = MEMORYMODE_UNKNOWN;
+			wbemAppDirectMode = MEMORYMODE_UNKNOWN;
 			break;
 	}
-	return wbemPmMode;
+	return wbemAppDirectMode;
 }
 
 /*
- * Static method to get the recommended IMC/channel interleave sizes for persistent memory.
+ * Static method to get the recommended IMC/channel interleave sizes for App Direct memory.
  */
 bool wbem::mem_config::MemoryCapabilitiesFactory::getRecommendedInterleaveSizes(
 		interleave_size &imcSize,
@@ -420,17 +421,17 @@ bool wbem::mem_config::MemoryCapabilitiesFactory::getRecommendedInterleaveSizes(
 		int rc = nvm_get_nvm_capabilities(&nvmcaps);
 		if (rc == NVM_SUCCESS)
 		{
-			// Ignore all 2LM formats - we don't let users select volatile interleave
-			// Add all PM formats but only if pm is supported.
-			if (nvmcaps.platform_capabilities.pm_direct.interleave_formats_count > 0)
+			// Ignore all Memory Mode formats - we don't let users select volatile interleave
+			// Add all App Direct formats but only if supported.
+			if (nvmcaps.platform_capabilities.app_direct_mode.interleave_formats_count > 0)
 			{
-				for (NVM_UINT8 i = 0; i < nvmcaps.platform_capabilities.pm_direct.interleave_formats_count; i++)
+				for (NVM_UINT8 i = 0; i < nvmcaps.platform_capabilities.app_direct_mode.interleave_formats_count; i++)
 				{
-					if (nvmcaps.platform_capabilities.pm_direct.interleave_formats[i].recommended)
+					if (nvmcaps.platform_capabilities.app_direct_mode.interleave_formats[i].recommended)
 					{
 						// take the IMC and channel sizes
-						imcSize = nvmcaps.platform_capabilities.pm_direct.interleave_formats[i].imc;
-						channelSize = nvmcaps.platform_capabilities.pm_direct.interleave_formats[i].channel;
+						imcSize = nvmcaps.platform_capabilities.app_direct_mode.interleave_formats[i].imc;
+						channelSize = nvmcaps.platform_capabilities.app_direct_mode.interleave_formats[i].channel;
 						result = true;
 						break;
 					}

@@ -25,8 +25,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SRC_WBEM_LOGIC_RULEMIRROREDPERSISTENTNOTSUPPORTED_H_
-#define SRC_WBEM_LOGIC_RULEMIRROREDPERSISTENTNOTSUPPORTED_H_
+#ifndef SRC_WBEM_LOGIC_RULEMIRROREDAPPDIRECTNOTSUPPORTED_H_
+#define SRC_WBEM_LOGIC_RULEMIRROREDAPPDIRECTNOTSUPPORTED_H_
 
 #include "RequestRule.h"
 #include <nvm_types.h>
@@ -36,11 +36,11 @@ namespace wbem
 namespace logic
 {
 
-class NVM_API RuleMirroredPersistentNotSupported: public RequestRule
+class NVM_API RuleMirroredAppDirectNotSupported: public RequestRule
 {
 public:
-	RuleMirroredPersistentNotSupported();
-	virtual ~RuleMirroredPersistentNotSupported();
+	RuleMirroredAppDirectNotSupported();
+	virtual ~RuleMirroredAppDirectNotSupported();
 
 	virtual void verify(const MemoryAllocationRequest &request);
 };
@@ -48,4 +48,4 @@ public:
 } /* namespace logic */
 } /* namespace wbem */
 
-#endif /* SRC_WBEM_LOGIC_RULEMIRROREDPERSISTENTNOTSUPPORTED_H_ */
+#endif /* SRC_WBEM_LOGIC_RULEMIRROREDAPPDIRECTNOTSUPPORTED_H_ */

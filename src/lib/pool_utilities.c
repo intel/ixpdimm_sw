@@ -39,7 +39,7 @@
 #include "device_utilities.h"
 #include "platform_config_data.h"
 
-#define	MAX_PM_PER_SOCKET 2
+#define	MAX_PERSISTENT_POOLS_PER_SOCKET 2
 
 extern int get_device_status_by_handle(NVM_NFIT_DEVICE_HANDLE dimm_handle,
 		struct device_status *p_status, struct nvm_capabilities *p_capabilities);
@@ -57,7 +57,7 @@ int get_pool_count()
 	int p_rc = 0;
 
 
-	if ((v_rc = has_volatile_pool()) < 0)
+	if ((v_rc = has_memory_pool()) < 0)
 	{
 		rc = v_rc;
 	}
@@ -100,7 +100,7 @@ int get_pools(const NVM_UINT32 count, struct nvm_pool *p_pools)
 		// volatile pool
 		struct nvm_pool v_pool;
 		NVM_BOOL has_volatile_pool = 0;
-		if ((rc = get_volatile_pool(&v_pool)) == NVM_SUCCESS)
+		if ((rc = get_memory_pool(&v_pool)) == NVM_SUCCESS)
 		{
 			has_volatile_pool = v_pool.capacity > 0 ? 1 : 0;
 		}
@@ -200,13 +200,13 @@ int get_pools(const NVM_UINT32 count, struct nvm_pool *p_pools)
 /*
  * returns 1 if a volatile pool exists, 0 if not, or an appropriate error code
  */
-int has_volatile_pool()
+int has_memory_pool()
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
 	struct nvm_pool pool;
 
-	if ((rc = get_volatile_pool(&pool)) == NVM_SUCCESS)
+	if ((rc = get_memory_pool(&pool)) == NVM_SUCCESS)
 	{
 		rc = pool.capacity > 0 ? 1 : 0;
 	}
@@ -215,7 +215,7 @@ int has_volatile_pool()
 	return rc;
 }
 
-int get_volatile_pool(struct nvm_pool *p_pool)
+int get_memory_pool(struct nvm_pool *p_pool)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
@@ -253,12 +253,12 @@ int get_volatile_pool(struct nvm_pool *p_pool)
 						{
 							if (is_device_manageable(topology[i].device_handle) > 0)
 							{
-								NVM_UINT64 dimm_volatile_size = 0;
-								if ((rc = get_dimm_volatile_capacity(topology[i].device_handle,
-										&dimm_volatile_size)) == NVM_SUCCESS &&
-										dimm_volatile_size)
+								NVM_UINT64 dimm_memory_size = 0;
+								if ((rc = get_dimm_memory_capacity(topology[i].device_handle,
+										&dimm_memory_size)) == NVM_SUCCESS &&
+										dimm_memory_size)
 								{
-									p_pool->capacity += dimm_volatile_size;
+									p_pool->capacity += dimm_memory_size;
 									rc = add_dimm_to_pool(p_pool, topology[i].device_handle);
 								}
 							}
@@ -274,28 +274,28 @@ int get_volatile_pool(struct nvm_pool *p_pool)
 }
 
 /*
- * Return the volatile capacity on the dimm
+ * Return the memory mode capacity on the dimm
  */
-int get_dimm_volatile_capacity(NVM_NFIT_DEVICE_HANDLE handle, NVM_UINT64 *p_size)
+int get_dimm_memory_capacity(NVM_NFIT_DEVICE_HANDLE handle, NVM_UINT64 *p_size)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
 
 	*p_size = 0;
 
-	// get BIOS mapped volatile capacity from the platform config data
+	// get BIOS mapped memory capacity from the platform config data
 	struct platform_config_data *p_cfg_data = NULL;
 	if ((rc = get_dimm_platform_config(handle, &p_cfg_data)) == NVM_SUCCESS)
 	{
 		struct current_config_table *p_current_config = cast_current_config(p_cfg_data);
 		if (!p_current_config)
 		{
-			COMMON_LOG_ERROR("Failed to retrieve mapped volatile capacity");
+			COMMON_LOG_ERROR("Failed to retrieve mapped memory capacity");
 			rc = NVM_ERR_DRIVERFAILED;
 		}
 		else
 		{
-			*p_size = p_current_config->mapped_volatile_capacity;
+			*p_size = p_current_config->mapped_memory_capacity;
 		}
 		free(p_cfg_data);
 	}
@@ -485,10 +485,10 @@ int get_dimm_ilset_capacity(NVM_NFIT_DEVICE_HANDLE handle, NVM_UINT64 *p_mirrore
 }
 
 /*
- * For persistent pools there may be block regions that are not part of an
- * interleave set and thus not accounted for in the pool
+ * For persistent pools there may be storage regions that are not part of an
+ * app direct interleave set and thus not accounted for in the pool
  */
-int add_blk_regions_to_pools(struct nvm_pool *p_pools, int *p_pool_count)
+int add_storage_regions_to_pools(struct nvm_pool *p_pools, int *p_pool_count)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
@@ -500,11 +500,11 @@ int add_blk_regions_to_pools(struct nvm_pool *p_pools, int *p_pool_count)
 	}
 	else if ((rc = get_topology_count()) > 0)
 	{
-		// At max there could be block capacity on each DIMM
+		// At max there could be storage capacity on each DIMM
 		int num_dimms = rc;
-		struct nvm_block_capacities capacities[num_dimms];
+		struct nvm_storage_capacities capacities[num_dimms];
 		memset(&capacities, 0, sizeof (capacities));
-		if ((rc = get_dimm_block_capacities(num_dimms, capacities)) > 0)
+		if ((rc = get_dimm_storage_capacities(num_dimms, capacities)) > 0)
 		{
 			int num_caps = rc;
 			for (int i = 0; i < num_caps; i++)
@@ -514,7 +514,7 @@ int add_blk_regions_to_pools(struct nvm_pool *p_pools, int *p_pool_count)
 				// skip unmanageable dimms
 				if (is_device_manageable(handle))
 				{
-					if (capacities[i].total_block_capacity > 0)
+					if (capacities[i].total_storage_capacity > 0)
 					{
 						rc = add_dimm_to_pools(p_pools, p_pool_count,
 								handle,	POOL_TYPE_PERSISTENT, "persistent");
@@ -525,7 +525,7 @@ int add_blk_regions_to_pools(struct nvm_pool *p_pools, int *p_pool_count)
 					}
 				}
 			} // end capacities loop
-		} // either error or no block capacities returned
+		} // either error or no storage capacities returned
 	} // else no dimms in topology
 
 	if (rc >= 0)
@@ -538,7 +538,7 @@ int add_blk_regions_to_pools(struct nvm_pool *p_pools, int *p_pool_count)
 }
 
 /*
- * Add the non-mirrored PM and block capacities to the pool
+ * Add the non-mirrored App Direct and Storage capacities to the pool
  */
 int calculate_pm_capacities(struct nvm_pool *p_pool)
 {
@@ -548,25 +548,25 @@ int calculate_pm_capacities(struct nvm_pool *p_pool)
 	if ((rc = get_topology_count()) > 0)
 	{
 		int total_dimm_count = rc;
-		struct nvm_block_capacities capacities[total_dimm_count];
-		if ((rc = get_dimm_block_capacities(total_dimm_count, capacities)) > 0)
+		struct nvm_storage_capacities capacities[total_dimm_count];
+		if ((rc = get_dimm_storage_capacities(total_dimm_count, capacities)) > 0)
 		{
 			int capacity_count = total_dimm_count < rc ? total_dimm_count : rc;
 			for (int i = 0; i < p_pool->dimm_count; i++)
 			{
-				// look for this DIMM's block capacity
-				// if we couldn't find it, it might mean the capacity is all interleaved
+				// look for this DIMM's storage capacity
+				// if we couldn't find it, it might mean the capacity is all App Direct
 				for (int j = 0; j < capacity_count; j++)
 				{
 					if (capacities[j].device_handle.handle == p_pool->dimms[i].handle)
 					{
-						// Total block capacity == block-only + PM
-						// If there's ever a DIMM with no block regions, this could break.
-						p_pool->block_capacities[i] = capacities[j].block_only_capacity;
+						// Total storage capacity = storage-only + app direct
+						// If there's ever a DIMM with no storage regions, this could break.
+						p_pool->storage_capacities[i] = capacities[j].storage_only_capacity;
 						if (p_pool->type == POOL_TYPE_PERSISTENT)
 						{
-							p_pool->capacity += capacities[j].total_block_capacity;
-							p_pool->free_capacity += capacities[j].free_block_capacity;
+							p_pool->capacity += capacities[j].total_storage_capacity;
+							p_pool->free_capacity += capacities[j].free_storage_capacity;
 						}
 					}
 				}
@@ -624,16 +624,16 @@ int get_persistent_pools(struct nvm_pool *p_pools, const NVM_UINT32 count)
 
 	if (rc == NVM_SUCCESS)
 	{
-		// cycle through all blk regions, make sure the dimm is in a pool
+		// cycle through all storage regions, make sure the dimm is in a pool
 		// and calculate overall pool capacity
-		if ((rc = add_blk_regions_to_pools(pm_pools, &pm_pools_count)) == NVM_SUCCESS)
+		if ((rc = add_storage_regions_to_pools(pm_pools, &pm_pools_count)) == NVM_SUCCESS)
 		{
 			for (int j = 0; j < pm_pools_count && rc == NVM_SUCCESS; j++)
 			{
 				if ((rc = calculate_pm_capacities(&pm_pools[j]))
 					!= NVM_SUCCESS)
 				{
-					COMMON_LOG_ERROR("Failed to calculate blk only capacity");
+					COMMON_LOG_ERROR("Failed to calculate storage only capacity");
 					break; // don't continue on failure
 				}
 			}
@@ -675,7 +675,7 @@ int add_dimm_to_pool(struct nvm_pool *p_pool, NVM_NFIT_DEVICE_HANDLE handle)
 		{
 			p_pool->dimms[p_pool->dimm_count].handle = handle.handle;
 
-			get_dimm_volatile_capacity(handle, &p_pool->volatile_capacities[p_pool->dimm_count]);
+			get_dimm_memory_capacity(handle, &p_pool->memory_capacities[p_pool->dimm_count]);
 			p_pool->raw_capacities[p_pool->dimm_count] = pi.raw_capacity * BYTES_PER_4K_CHUNK;
 
 			p_pool->dimm_count++;
@@ -986,9 +986,9 @@ int get_interleaveset_by_driver_id(NVM_UINT32 driver_id, struct nvm_interleave_s
 }
 
 /*
- * Calculate security information about the pmem interleave set specified.
+ * Calculate security information about the interleave set specified.
  */
-int calculate_pmem_interleave_security(
+int calculate_app_direct_interleave_security(
 	NVM_UINT32 interleave_setid,
 	enum encryption_status *p_encryption_enabled, NVM_BOOL *p_erase_capable,
 	enum encryption_status *p_encryption_capable /* could be NULL */)
@@ -1037,7 +1037,7 @@ int get_pool_guid_from_namespace_details(
 			pool_count = get_pools(pool_count, pools);
 			if (pool_count > 0)
 			{
-				if (p_details->type == NAMESPACE_TYPE_BLOCK)
+				if (p_details->type == NAMESPACE_TYPE_STORAGE)
 				{
 					struct device_discovery discovery;
 					if (lookup_dev_handle(p_details->namespace_creation_id.device_handle,
@@ -1072,7 +1072,7 @@ int get_pool_guid_from_namespace_details(
 						}
 					}
 				}
-				else if (p_details->type == NAMESPACE_TYPE_PMEM)
+				else if (p_details->type == NAMESPACE_TYPE_APP_DIRECT)
 				{
 					int tmprc = NVM_ERR_NOTFOUND;
 					for (int i = 0; i < pool_count; i++)

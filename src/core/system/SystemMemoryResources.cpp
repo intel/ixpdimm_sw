@@ -86,22 +86,22 @@ NVM_UINT64 SystemMemoryResources::getTotalCapacity()
 	return m_capacities.capacity;
 }
 
-NVM_UINT64 SystemMemoryResources::getTotalVolatileCapacity()
+NVM_UINT64 SystemMemoryResources::getTotalMemoryCapacity()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	return m_capacities.volatile_capacity;
+	return m_capacities.memory_capacity;
 }
 
-NVM_UINT64 SystemMemoryResources::getTotalPersistentCapacity()
+NVM_UINT64 SystemMemoryResources::getTotalAppDirectCapacity()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	return m_capacities.persistent_capacity;
+	return m_capacities.app_direct_capacity;
 }
 
-NVM_UINT64 SystemMemoryResources::getTotalBlockCapacity()
+NVM_UINT64 SystemMemoryResources::getTotalStorageCapacity()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	return m_capacities.block_capacity;
+	return m_capacities.storage_capacity;
 }
 
 NVM_UINT64 SystemMemoryResources::getTotalUnconfiguredCapacity()

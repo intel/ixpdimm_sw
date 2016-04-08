@@ -26,30 +26,30 @@
  */
 
 /*
- * Rule that checks a MemoryAllocationRequest to make sure there are only
- * two PM extents
+ * Rule that checks a MemoryAllocationRequest to make sure there are not
+ * too many AD extents requested
  */
 
-#include "RuleTooManyPersistentExtents.h"
-#include <exception/NvmExceptionBadRequest.h>
-#include <LogEnterExit.h>
+#ifndef _WBEM_LOGIC_RULETOOMANYAPPDIRECTEXTENTS_H_
+#define _WBEM_LOGIC_RULETOOMANYAPPDIRECTEXTENTS_H_
 
-wbem::logic::RuleTooManyPersistentExtents::RuleTooManyPersistentExtents()
+#include "RequestRule.h"
+#include <nvm_types.h>
+
+namespace wbem
 {
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-}
-
-wbem::logic::RuleTooManyPersistentExtents::~RuleTooManyPersistentExtents()
+namespace logic
 {
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-}
 
-void wbem::logic::RuleTooManyPersistentExtents::verify(const MemoryAllocationRequest &request)
+class NVM_API RuleTooManyAppDirectExtents: public RequestRule
 {
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	public:
+		RuleTooManyAppDirectExtents();
+		virtual ~RuleTooManyAppDirectExtents();
+		virtual void verify(const MemoryAllocationRequest &request);
+};
 
-	if (request.persistentExtents.size() > (size_t)MAX_PERSISTENT_EXTENTS)
-	{
-		throw exception::NvmExceptionTooManyPersistentExtents();
-	}
-}
+} /* namespace logic */
+} /* namespace wbem */
+
+#endif /* _WBEM_LOGIC_RULETOOMANYAPPDIRECTEXTENTS_H_ */

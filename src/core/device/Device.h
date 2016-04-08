@@ -132,9 +132,9 @@ public:
 	virtual NVM_UINT64 getBlockReads();
 	virtual NVM_UINT64 getBlockWrites();
 	virtual NVM_UINT64 getTotalCapacity();
-	virtual NVM_UINT64 getVolatileCapacity();
-	virtual NVM_UINT64 getPersistentCapacity();
-	virtual NVM_UINT64 getBlockCapacity();
+	virtual NVM_UINT64 getMemoryCapacity();
+	virtual NVM_UINT64 getAppDirectCapacity();
+	virtual NVM_UINT64 getStorageCapacity();
 	virtual NVM_UINT64 getUnconfiguredCapacity();
 	virtual NVM_UINT64 getInaccessibleCapacity();
 	virtual NVM_UINT64 getReservedCapacity();

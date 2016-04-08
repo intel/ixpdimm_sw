@@ -26,7 +26,7 @@
  */
 
 /*
- * This file contains the implementation of persistent memory namespace
+ * This file contains the implementation of App Direct and Storage namespace
  * management functions of the Native API.
  */
 
@@ -71,7 +71,7 @@ int find_id_for_ns_creation(const struct pool *p_pool,
 		struct namespace_create_settings *p_settings, NVM_UINT32 *p_namespace_creation_id,
 		const struct interleave_format *p_format, NVM_BOOL allow_adjustment);
 
-NVM_BOOL interleave_meets_persistent_settings(const struct interleave_set *p_interleave,
+NVM_BOOL interleave_meets_app_direct_settings(const struct interleave_set *p_interleave,
 		const struct interleave_format *p_format);
 
 void adjust_namespace_block_count_if_allowed(NVM_UINT64 *p_block_count,
@@ -282,9 +282,9 @@ int nvm_get_namespace_details(const NVM_GUID namespace_guid, struct namespace_de
 			p_namespace->btt = nvm_details.btt;
 
 			int temprc;
-			if (p_namespace->type == NAMESPACE_TYPE_PMEM)
+			if (p_namespace->type == NAMESPACE_TYPE_APP_DIRECT)
 			{
-				if ((temprc = calculate_pmem_interleave_security(
+				if ((temprc = calculate_app_direct_interleave_security(
 						nvm_details.namespace_creation_id.interleave_setid,
 						&p_namespace->security_features.encryption, // enabled
 						&p_namespace->security_features.erase_capable,
@@ -311,7 +311,7 @@ int nvm_get_namespace_details(const NVM_GUID namespace_guid, struct namespace_de
 				p_namespace->creation_id.interleave_setid =
 										nvm_details.namespace_creation_id.interleave_setid;
 			}
-			else if (p_namespace->type == NAMESPACE_TYPE_BLOCK)
+			else if (p_namespace->type == NAMESPACE_TYPE_STORAGE)
 			{
 				if ((temprc = get_security_attributes_from_device(
 						nvm_details.namespace_creation_id.device_handle,
@@ -357,10 +357,11 @@ int validate_ns_enabled_state(enum namespace_enable_state enabled)
 }
 
 /*
- * Return the capacity of the largest block namespace that can be created on the specified dimm.
+ * Return the capacity of the largest storage namespace that can be created on the
+ * specified dimm.
  * Expect p_pool and p_size to not be NULL.
  */
-int get_largest_block_namespace_on_a_dimm(const struct pool *p_pool,
+int get_largest_storage_namespace_on_a_dimm(const struct pool *p_pool,
 		const NVM_GUID device_guid, NVM_UINT64 *p_size)
 {
 	COMMON_LOG_ENTRY();
@@ -381,17 +382,17 @@ int get_largest_block_namespace_on_a_dimm(const struct pool *p_pool,
 	{
 		*p_size = 0;
 
-		struct nvm_block_capacities capacities[num_dimms];
+		struct nvm_storage_capacities capacities[num_dimms];
 		memset(capacities, 0, sizeof (capacities));
 		int num_caps = 0;
-		if ((num_caps = get_dimm_block_capacities(num_dimms, capacities)) > 0)
+		if ((num_caps = get_dimm_storage_capacities(num_dimms, capacities)) > 0)
 		{
 			for (int j = 0; j < num_caps; j++)
 			{
 				if (discovery.device_handle.handle
 						== capacities[j].device_handle.handle)
 				{
-					*p_size = capacities[j].free_block_capacity;
+					*p_size = capacities[j].free_storage_capacity;
 					rc = NVM_SUCCESS;
 					break;
 				}
@@ -404,7 +405,8 @@ int get_largest_block_namespace_on_a_dimm(const struct pool *p_pool,
 }
 
 /*
- * Helper function to check if dimm meets security requirements to create a block NS
+ * Helper function to check if dimm meets security requirements to create
+ * a storage NS
  */
 NVM_BOOL dimm_meets_security_criteria(const NVM_GUID dimm,
 		struct namespace_security_features security_features)
@@ -490,7 +492,8 @@ NVM_BOOL dimm_meets_security_criteria(const NVM_GUID dimm,
 }
 
 /*
- * Helper function to check if interleave set meets security requirements to create a PM NS
+ * Helper function to check if interleave set meets security requirements to create
+ * App Direct NS
  */
 NVM_BOOL interleave_meets_security_criteria(const struct interleave_set *p_ilset,
 		const struct namespace_security_features *p_security_features)
@@ -632,15 +635,15 @@ int validate_ns_size_for_creation(struct pool *p_pool,
 		}
 	}
 	if ((namespace_blocksize_supported == 0) &&
-			(p_settings->type == NAMESPACE_TYPE_BLOCK))
+			(p_settings->type == NAMESPACE_TYPE_STORAGE))
 	{
-		COMMON_LOG_ERROR("Invalid block size to create a Block memory namespace.");
+		COMMON_LOG_ERROR("Invalid block size to create a Storage namespace.");
 		rc = NVM_ERR_BADBLOCKSIZE;
 	}
-	else if ((p_settings->type == NAMESPACE_TYPE_PMEM) &&
+	else if ((p_settings->type == NAMESPACE_TYPE_APP_DIRECT) &&
 			(p_settings->block_size != 1))
 	{
-		COMMON_LOG_ERROR("Invalid block size to create a Persistent memory namespace.");
+		COMMON_LOG_ERROR("Invalid block size to create an App Direct namespace.");
 		rc = NVM_ERR_BADBLOCKSIZE;
 	}
 	else if (namespace_capacity > p_pool->free_capacity)
@@ -650,20 +653,20 @@ int validate_ns_size_for_creation(struct pool *p_pool,
 				namespace_capacity, p_pool->free_capacity);
 		rc = NVM_ERR_BADSIZE;
 	}
-	else if (p_settings->type == NAMESPACE_TYPE_PMEM &&
-			namespace_capacity > p_range->largest_possible_pm_ns)
+	else if (p_settings->type == NAMESPACE_TYPE_APP_DIRECT &&
+			namespace_capacity > p_range->largest_possible_app_direct_ns)
 	{
 		COMMON_LOG_ERROR_F("Requested namespace capacity %llu bytes \
 					is more than the maximum available size of %llu bytes",
-				namespace_capacity, p_range->largest_possible_pm_ns);
+				namespace_capacity, p_range->largest_possible_app_direct_ns);
 		rc = NVM_ERR_BADSIZE;
 	}
-	else if (p_settings->type == NAMESPACE_TYPE_BLOCK &&
-			namespace_capacity > p_range->largest_possible_block_ns)
+	else if (p_settings->type == NAMESPACE_TYPE_STORAGE &&
+			namespace_capacity > p_range->largest_possible_storage_ns)
 	{
 		COMMON_LOG_ERROR_F("Requested namespace capacity %llu bytes \
 					is more than the maximum available size of %llu bytes",
-				namespace_capacity, p_range->largest_possible_block_ns);
+				namespace_capacity, p_range->largest_possible_storage_ns);
 		rc = NVM_ERR_BADSIZE;
 	}
 
@@ -681,12 +684,12 @@ int find_id_for_ns_creation(const struct pool *p_pool,
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
 
-	if (p_settings->type == NAMESPACE_TYPE_PMEM)
+	if (p_settings->type == NAMESPACE_TYPE_APP_DIRECT)
 	{
 		rc = find_interleave_with_capacity(p_pool, p_nvm_caps, p_settings,
 				p_namespace_creation_id, p_format, allow_adjustment);
 	}
-	else if (p_settings->type == NAMESPACE_TYPE_BLOCK)
+	else if (p_settings->type == NAMESPACE_TYPE_STORAGE)
 	{
 		rc = find_dimm_with_capacity(p_pool, p_nvm_caps, p_settings,
 				p_namespace_creation_id, allow_adjustment);
@@ -713,7 +716,7 @@ int check_namespace_capacity_and_security(const struct pool *p_pool,
 		{
 			NVM_UINT64 current_size;
 			// verify if the requested namespace capacity is available
-			rc = get_largest_block_namespace_on_a_dimm(p_pool,
+			rc = get_largest_storage_namespace_on_a_dimm(p_pool,
 					discovery.guid, &current_size);
 			if (rc == NVM_SUCCESS)
 			{
@@ -746,7 +749,7 @@ int find_dimm_with_capacity(const struct pool *p_pool,
 	COMMON_LOG_ENTRY();
 	int rc = NVM_ERR_BADALIGNMENT;
 
-	NVM_UINT8 ways = 1; // Block namespaces are always by one
+	NVM_UINT8 ways = 1; // storage namespaces are restricted to a single DIMM
 	NVM_UINT64 minimum_ns_size =
 			get_minimum_ns_size(ways, p_nvm_caps->sw_capabilities.min_namespace_size);
 	NVM_UINT64 new_block_count = p_settings->block_count;
@@ -836,7 +839,7 @@ NVM_BOOL interleave_set_has_namespace(const NVM_UINT32 interleave_set_driver_id)
 				if (get_namespace_details(namespaces[i].namespace_guid, &details) == NVM_SUCCESS)
 				{
 					if (details.namespace_creation_id.interleave_setid ==
-							interleave_set_driver_id && details.type == NAMESPACE_TYPE_PMEM)
+							interleave_set_driver_id && details.type == NAMESPACE_TYPE_APP_DIRECT)
 					{
 						ns_exists = 1;
 						break;
@@ -888,7 +891,7 @@ int find_interleave_with_capacity(const struct pool *p_pool,
 				const NVM_BOOL is_security_met = interleave_meets_security_criteria(p_interleave,
 						&p_settings->security_features);
 				const NVM_BOOL is_interleave_format_met =
-						interleave_meets_persistent_settings(p_interleave, p_format);
+						interleave_meets_app_direct_settings(p_interleave, p_format);
 				const NVM_BOOL namespace_alignment_is_good =
 						check_namespace_alignment(new_namespace_capacity,
 						p_settings->block_size, p_interleave->dimm_count);
@@ -930,7 +933,7 @@ int find_interleave_with_capacity(const struct pool *p_pool,
 	}
 	else if (at_least_one_security_met)
 	{
-		rc = NVM_ERR_BADNAMESPACEPERSISTENTSETTING;
+		rc = NVM_ERR_BADNAMESPACESETTING;
 	}
 	else if (at_least_size_is_good)
 	{
@@ -948,7 +951,7 @@ int find_interleave_with_capacity(const struct pool *p_pool,
 	return rc;
 }
 
-NVM_BOOL interleave_meets_persistent_settings(const struct interleave_set *p_interleave,
+NVM_BOOL interleave_meets_app_direct_settings(const struct interleave_set *p_interleave,
 		const struct interleave_format *p_format)
 {
 	COMMON_LOG_ENTRY();
@@ -992,19 +995,19 @@ int validate_ns_type_for_pool(enum namespace_type type, const struct pool *p_poo
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
 
-	if ((type != NAMESPACE_TYPE_BLOCK) && (type != NAMESPACE_TYPE_PMEM))
+	if ((type != NAMESPACE_TYPE_STORAGE) && (type != NAMESPACE_TYPE_APP_DIRECT))
 	{
 		COMMON_LOG_ERROR("Invalid namespace type.");
 		rc = NVM_ERR_BADNAMESPACETYPE;
 	}
-	else if (type == NAMESPACE_TYPE_PMEM &&
+	else if (type == NAMESPACE_TYPE_APP_DIRECT &&
 			((p_pool->type != POOL_TYPE_PERSISTENT_MIRROR) &&
 			(p_pool->type != POOL_TYPE_PERSISTENT)))
 	{
 		COMMON_LOG_ERROR("Invalid namespace type for the specified pool.");
 		rc = NVM_ERR_BADNAMESPACETYPE;
 	}
-	else if (type == NAMESPACE_TYPE_BLOCK &&
+	else if (type == NAMESPACE_TYPE_STORAGE &&
 			p_pool->type != POOL_TYPE_PERSISTENT)
 	{
 		COMMON_LOG_ERROR("Invalid namespace type for the specified pool.");
@@ -1032,7 +1035,7 @@ int validate_namespace_create_settings(struct pool *p_pool,
 	memset(&nvm_caps, 0, sizeof (nvm_caps));
 
 	if ((p_pool->type == POOL_TYPE_PERSISTENT_MIRROR) &&
-			(p_settings->type == NAMESPACE_TYPE_BLOCK))
+			(p_settings->type == NAMESPACE_TYPE_STORAGE))
 	{
 		COMMON_LOG_ERROR("Cannot create storage namespace in mirrored pool");
 		rc = NVM_ERR_BADNAMESPACETYPE;
@@ -1045,14 +1048,14 @@ int validate_namespace_create_settings(struct pool *p_pool,
 		if ((rc = get_pool_supported_size_ranges(p_pool, &nvm_caps, &range)) == NVM_SUCCESS)
 		{
 			// can we even create a ns on this pool?
-			if (p_settings->type == NAMESPACE_TYPE_PMEM &&
-				range.largest_possible_pm_ns == 0)
+			if (p_settings->type == NAMESPACE_TYPE_APP_DIRECT &&
+				range.largest_possible_app_direct_ns == 0)
 			{
-				COMMON_LOG_ERROR("No more AppDirect namespaces can be created on the pool");
+				COMMON_LOG_ERROR("No more App Direct namespaces can be created on the pool");
 				rc = NVM_ERR_TOOMANYNAMESPACES;
 			}
-			else if (p_settings->type == NAMESPACE_TYPE_BLOCK &&
-				range.largest_possible_block_ns == 0)
+			else if (p_settings->type == NAMESPACE_TYPE_STORAGE &&
+				range.largest_possible_storage_ns == 0)
 			{
 				COMMON_LOG_ERROR("No more Storage namespaces can be created on the pool");
 				rc = NVM_ERR_TOOMANYNAMESPACES;
@@ -1258,11 +1261,11 @@ int nvm_create_namespace(NVM_GUID *p_namespace_guid, const NVM_GUID pool_guid,
 				memset(&nvm_settings, 0, sizeof (nvm_settings));
 
 				nvm_settings.type = p_settings->type;
-				if (nvm_settings.type == NAMESPACE_TYPE_PMEM)
+				if (nvm_settings.type == NAMESPACE_TYPE_APP_DIRECT)
 				{
 					nvm_settings.namespace_creation_id.interleave_setid
 						= namespace_creation_id;
-					COMMON_LOG_DEBUG_F("Creating AppDirect namespace on interleave set %u",
+					COMMON_LOG_DEBUG_F("Creating App Direct namespace on interleave set %u",
 							namespace_creation_id);
 				}
 				else
@@ -1359,7 +1362,7 @@ int nvm_create_namespace(NVM_GUID *p_namespace_guid, const NVM_GUID pool_guid,
 	return rc;
 }
 
-int validate_pmem_namespace_size_for_modification(
+int validate_app_direct_namespace_size_for_modification(
 		const struct pool *p_pool,
 		NVM_UINT64 *p_block_count,
 		struct nvm_namespace_details *p_nvm_details,
@@ -1419,7 +1422,7 @@ int validate_pmem_namespace_size_for_modification(
 	return rc;
 }
 
-int validate_block_namespace_size_for_modification(const struct pool *p_pool,
+int validate_storage_namespace_size_for_modification(const struct pool *p_pool,
 		NVM_UINT64 *p_block_count,
 		struct nvm_namespace_details *p_nvm_details,
 		struct nvm_capabilities *p_nvm_caps,
@@ -1431,7 +1434,7 @@ int validate_block_namespace_size_for_modification(const struct pool *p_pool,
 	if (lookup_dev_handle(p_nvm_details->namespace_creation_id.device_handle,
 			&discovery) >= 0)
 	{
-		// block namespaces are always by one
+		// storage namespaces are restricted to one DIMM
 		NVM_UINT64 minimum_ns_size =
 				get_minimum_ns_size(1, p_nvm_caps->sw_capabilities.min_namespace_size);
 		NVM_UINT32 real_block_size =
@@ -1444,7 +1447,7 @@ int validate_block_namespace_size_for_modification(const struct pool *p_pool,
 		NVM_UINT64 namespace_capacity = new_block_count * real_block_size;
 		NVM_UINT64 available_size = 0;
 
-		if ((rc = get_largest_block_namespace_on_a_dimm(p_pool, discovery.guid, &available_size))
+		if ((rc = get_largest_storage_namespace_on_a_dimm(p_pool, discovery.guid, &available_size))
 				== NVM_SUCCESS)
 		{
 			if ((namespace_capacity > old_namespace_capacity) &&
@@ -1517,14 +1520,14 @@ int validate_namespace_size_for_modification(const struct pool *p_pool, NVM_UINT
 					namespace_capacity, p_pool->free_capacity);
 			rc = NVM_ERR_BADSIZE;
 		}
-		else if (p_nvm_details->type == NAMESPACE_TYPE_PMEM)
+		else if (p_nvm_details->type == NAMESPACE_TYPE_APP_DIRECT)
 		{
-			rc = validate_pmem_namespace_size_for_modification(p_pool, p_block_count,
+			rc = validate_app_direct_namespace_size_for_modification(p_pool, p_block_count,
 					p_nvm_details, &nvm_caps, allow_adjustment);
 		}
-		else if (p_nvm_details->type == NAMESPACE_TYPE_BLOCK)
+		else if (p_nvm_details->type == NAMESPACE_TYPE_STORAGE)
 		{
-			rc = validate_block_namespace_size_for_modification(p_pool, p_block_count,
+			rc = validate_storage_namespace_size_for_modification(p_pool, p_block_count,
 					p_nvm_details, &nvm_caps, allow_adjustment);
 		}
 		else
@@ -1844,10 +1847,10 @@ int nvm_delete_namespace(const NVM_GUID namespace_guid)
 }
 
 /*
- * Return the size of the largest persistent namespace that can be created.
+ * Return the size of the largest App Direct namespace that can be created.
  * Expect pool_guid and p_size to not be NULL
  */
-void get_largest_pm_namespace(const struct pool *p_pool, NVM_UINT64 *p_size)
+void get_largest_app_direct_namespace(const struct pool *p_pool, NVM_UINT64 *p_size)
 {
 	COMMON_LOG_ENTRY();
 
@@ -1867,9 +1870,9 @@ void get_largest_pm_namespace(const struct pool *p_pool, NVM_UINT64 *p_size)
 }
 
 /*
- * Return the size of the smallest persistent namespace that can be created.
+ * Return the size of the smallest App Direct namespace that can be created.
  */
-void get_smallest_pm_namespace(const struct pool *p_pool,
+void get_smallest_app_direct_namespace(const struct pool *p_pool,
 		const NVM_UINT64 interleave_alignment_size, NVM_UINT64 *p_size)
 {
 	COMMON_LOG_ENTRY();
@@ -1894,9 +1897,9 @@ void get_smallest_pm_namespace(const struct pool *p_pool,
 }
 
 /*
- * Return the size of the largest block namespace that can be created
+ * Return the size of the largest storage namespace that can be created
  */
-int get_largest_block_namespace(const struct pool *p_pool, NVM_UINT64 *p_size)
+int get_largest_storage_namespace(const struct pool *p_pool, NVM_UINT64 *p_size)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
@@ -1912,14 +1915,14 @@ int get_largest_block_namespace(const struct pool *p_pool, NVM_UINT64 *p_size)
 
 		for (int i = 0; (i < p_pool->dimm_count) && (rc == NVM_SUCCESS); i++)
 		{
-			NVM_UINT64 dimm_largest_block_namespace;
+			NVM_UINT64 dimm_largest_storage_namespace;
 
-			if ((rc = get_largest_block_namespace_on_a_dimm(p_pool, p_pool->dimms[i],
-				&dimm_largest_block_namespace)) == NVM_SUCCESS)
+			if ((rc = get_largest_storage_namespace_on_a_dimm(p_pool, p_pool->dimms[i],
+				&dimm_largest_storage_namespace)) == NVM_SUCCESS)
 			{
-				if (dimm_largest_block_namespace > *p_size)
+				if (dimm_largest_storage_namespace > *p_size)
 				{
-					*p_size = dimm_largest_block_namespace;
+					*p_size = dimm_largest_storage_namespace;
 				}
 			}
 		}
@@ -1955,22 +1958,22 @@ int get_pool_supported_size_ranges(const struct pool *p_pool,
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
 
-	get_largest_pm_namespace(p_pool, &(p_range->largest_possible_pm_ns));
-	if (p_range->largest_possible_pm_ns > 0)
+	get_largest_app_direct_namespace(p_pool, &(p_range->largest_possible_app_direct_ns));
+	if (p_range->largest_possible_app_direct_ns > 0)
 	{
 		NVM_UINT64 interleave_alignment_size =
 				(NVM_UINT64)pow(2,
-				p_caps->platform_capabilities.pm_direct.interleave_alignment_size);
-		p_range->pm_increment = interleave_alignment_size;
-		get_smallest_pm_namespace(p_pool, interleave_alignment_size,
-				&(p_range->smallest_possible_pm_ns));
+				p_caps->platform_capabilities.app_direct_mode.interleave_alignment_size);
+		p_range->app_direct_increment = interleave_alignment_size;
+		get_smallest_app_direct_namespace(p_pool, interleave_alignment_size,
+				&(p_range->smallest_possible_app_direct_ns));
 	}
-	rc = get_largest_block_namespace(p_pool, &(p_range->largest_possible_block_ns));
-	if (p_range->largest_possible_block_ns > 0)
+	rc = get_largest_storage_namespace(p_pool, &(p_range->largest_possible_storage_ns));
+	if (p_range->largest_possible_storage_ns > 0)
 	{
-		p_range->smallest_possible_block_ns =
+		p_range->smallest_possible_storage_ns =
 				get_minimum_ns_size(1, p_caps->sw_capabilities.min_namespace_size);
-		p_range->block_increment = get_smallest_block_size(p_caps);
+		p_range->storage_increment = get_smallest_block_size(p_caps);
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);

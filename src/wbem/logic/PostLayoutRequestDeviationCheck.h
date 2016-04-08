@@ -49,11 +49,11 @@ class NVM_API PostLayoutRequestDeviationCheck: public PostLayoutCheck
 				const struct MemoryAllocationLayout &layout);
 
 	protected:
-		void checkIfVolatileCapacityLayoutIsAcceptable(
+		void checkIfMemoryCapacityLayoutIsAcceptable(
 				const struct MemoryAllocationRequest& request,
 				const MemoryAllocationLayout& layout);
 
-		void checkPersistentCapacityLayoutIsAcceptable(
+		void checkAppDirectCapacityLayoutIsAcceptable(
 				const struct MemoryAllocationRequest& request,
 				const MemoryAllocationLayout& layout);
 

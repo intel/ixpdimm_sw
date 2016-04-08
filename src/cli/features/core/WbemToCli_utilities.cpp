@@ -732,20 +732,20 @@ cli::framework::ErrorResult *cli::nvmcli::NvmExceptionToResult(wbem::framework::
 	}
 
 	// try NvmExceptionBadRequest subclasses
-	wbem::exception::NvmExceptionBadRequestVolatileSize *pBadRequestVolatileSize =
-			dynamic_cast<wbem::exception::NvmExceptionBadRequestVolatileSize *>(&e);
-	if (pBadRequestVolatileSize != NULL)
+	wbem::exception::NvmExceptionBadRequestMemorySize *pBadRequestMemorySize =
+			dynamic_cast<wbem::exception::NvmExceptionBadRequestMemorySize *>(&e);
+	if (pBadRequestMemorySize != NULL)
 	{
 		return new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
-				TRS(BAD_REQUEST_VOLATILE_SIZE_STR), prefix);
+				TRS(BAD_REQUEST_MEMORY_SIZE_STR), prefix);
 	}
 
-	wbem::exception::NvmExceptionBadRequestSize *pBadRequestPersistentSize =
+	wbem::exception::NvmExceptionBadRequestSize *pBadRequestAppDirectSize =
 			dynamic_cast<wbem::exception::NvmExceptionBadRequestSize *>(&e);
-	if (pBadRequestPersistentSize != NULL)
+	if (pBadRequestAppDirectSize != NULL)
 	{
 		return new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
-				TRS(BAD_REQUEST_PERSISTENT_SIZE_STR), prefix);
+				TRS(BAD_REQUEST_APP_DIRECT_SIZE_STR), prefix);
 	}
 
 	wbem::exception::NvmExceptionDimmHasConfigGoal *pBadRequestExistingGoal =
@@ -780,12 +780,12 @@ cli::framework::ErrorResult *cli::nvmcli::NvmExceptionToResult(wbem::framework::
 				TRS(BAD_REQUEST_EXCEEDS_SYSTEM_RESOURCES_STR), prefix);
 	}
 
-	wbem::exception::NvmExceptionPersistentSettingsNotSupported *pSettingsNotSupported =
-			dynamic_cast<wbem::exception::NvmExceptionPersistentSettingsNotSupported *>(&e);
+	wbem::exception::NvmExceptionAppDirectSettingsNotSupported *pSettingsNotSupported =
+			dynamic_cast<wbem::exception::NvmExceptionAppDirectSettingsNotSupported *>(&e);
 	if (pSettingsNotSupported != NULL)
 	{
 		return new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
-				TRS(BAD_REQUEST_PM_SETTINGS_NOT_SUPPORTED_STR), prefix);
+				TRS(BAD_REQUEST_APP_DIRECT_SETTINGS_NOT_RECOMMENDED_STR), prefix);
 	}
 
 	wbem::exception::NvmExceptionRequestNotSupported *pRequestNotSupported =

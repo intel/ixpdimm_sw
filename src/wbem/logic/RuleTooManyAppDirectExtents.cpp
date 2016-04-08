@@ -26,33 +26,30 @@
  */
 
 /*
- * Check if the driver supports persistent. If not, create a warning.
+ * Rule that checks a MemoryAllocationRequest to make sure there are only
+ * two AD extents
  */
 
-#ifndef _WBEM_LOGIC_LAYOUTSTEPCHECKDRIVERSUPPORTSPERSISTENT_H_
-#define _WBEM_LOGIC_LAYOUTSTEPCHECKDRIVERSUPPORTSPERSISTENT_H_
+#include "RuleTooManyAppDirectExtents.h"
+#include <exception/NvmExceptionBadRequest.h>
+#include <LogEnterExit.h>
 
-#include "LayoutStep.h"
-#include <nvm_types.h>
-
-namespace wbem
+wbem::logic::RuleTooManyAppDirectExtents::RuleTooManyAppDirectExtents()
 {
-namespace logic
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+}
+
+wbem::logic::RuleTooManyAppDirectExtents::~RuleTooManyAppDirectExtents()
 {
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+}
 
-class NVM_API LayoutStepCheckDriverSupportsPersistent : public LayoutStep
+void wbem::logic::RuleTooManyAppDirectExtents::verify(const MemoryAllocationRequest &request)
 {
-	public:
-		LayoutStepCheckDriverSupportsPersistent(const struct nvm_features &driverFeatures);
-		virtual ~LayoutStepCheckDriverSupportsPersistent();
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-		virtual void execute(const MemoryAllocationRequest &request, MemoryAllocationLayout &layout);
-
-	protected:
-		struct nvm_features m_driverFeatures;
-};
-
-} /* namespace logic */
-} /* namespace wbem */
-
-#endif /* _WBEM_LOGIC_LAYOUTSTEPCHECKDRIVERSUPPORTSPERSISTENT_H_ */
+	if (request.appDirectExtents.size() > (size_t)MAX_APPDIRECT_EXTENTS)
+	{
+		throw exception::NvmExceptionTooManyAppDirectExtents();
+	}
+}

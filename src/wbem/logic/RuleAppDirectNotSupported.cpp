@@ -26,71 +26,71 @@
  */
 
 /*
- * Rule to determine if persistent memory request is supported
+ * Rule to determine if app direct memory request is supported
  */
 
-#include "RulePersistentNotSupported.h"
+#include "RuleAppDirectNotSupported.h"
 #include <exception/NvmExceptionBadRequest.h>
 #include <LogEnterExit.h>
 
-wbem::logic::RulePersistentNotSupported::RulePersistentNotSupported(
+wbem::logic::RuleAppDirectNotSupported::RuleAppDirectNotSupported(
 		const struct nvm_capabilities &cap) : m_systemCap(cap)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
 
-wbem::logic::RulePersistentNotSupported::~RulePersistentNotSupported()
+wbem::logic::RuleAppDirectNotSupported::~RuleAppDirectNotSupported()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
 
-void wbem::logic::RulePersistentNotSupported::verify(const MemoryAllocationRequest& request)
+void wbem::logic::RuleAppDirectNotSupported::verify(const MemoryAllocationRequest& request)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	if (request.persistentExtents.size() > 0)
+	if (request.appDirectExtents.size() > 0)
 	{
 		verifyAppDirectSupported();
-		verifyPersistentSettingsSupported(request);
+		verifyAppDirectSettingsSupported(request);
 	}
 }
 
-void wbem::logic::RulePersistentNotSupported::verifyAppDirectSupported()
+void wbem::logic::RuleAppDirectNotSupported::verifyAppDirectSupported()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	if (!m_systemCap.platform_capabilities.pm_direct.supported)
+	if (!m_systemCap.platform_capabilities.app_direct_mode.supported)
 	{
 		throw exception::NvmExceptionRequestNotSupported();
 	}
 }
 
-void wbem::logic::RulePersistentNotSupported::verifyPersistentSettingsSupported(
+void wbem::logic::RuleAppDirectNotSupported::verifyAppDirectSettingsSupported(
 		const MemoryAllocationRequest& request)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	for (std::vector<PersistentExtent>::const_iterator iter = request.persistentExtents.begin();
-				iter != request.persistentExtents.end(); iter++)
+	for (std::vector<AppDirectExtent>::const_iterator iter = request.appDirectExtents.begin();
+				iter != request.appDirectExtents.end(); iter++)
 	{
 		// check way + iMC size + channel size
 		if (!formatSupported(*iter))
 		{
-			throw exception::NvmExceptionPersistentSettingsNotSupported();
+			throw exception::NvmExceptionAppDirectSettingsNotSupported();
 		}
 	}
 }
 
-bool wbem::logic::RulePersistentNotSupported::formatSupported(
-		const struct wbem::logic::PersistentExtent &pmRequest)
+bool wbem::logic::RuleAppDirectNotSupported::formatSupported(
+		const struct wbem::logic::AppDirectExtent &adRequest)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	bool supported = false;
-	for (NVM_UINT16 i  = 0; i < m_systemCap.platform_capabilities.pm_direct.interleave_formats_count; i++)
+	for (NVM_UINT16 i  = 0; i < m_systemCap.platform_capabilities.app_direct_mode.interleave_formats_count; i++)
 	{
-		struct interleave_format &format = m_systemCap.platform_capabilities.pm_direct.interleave_formats[i];
-		if (pmRequest.byOne)
+		struct interleave_format &format = m_systemCap.platform_capabilities.app_direct_mode.interleave_formats[i];
+		if (adRequest.byOne)
 		{
 			if (format.ways == INTERLEAVE_WAYS_1)
 			{
@@ -101,15 +101,15 @@ bool wbem::logic::RulePersistentNotSupported::formatSupported(
 		else
 		{
 			// if either is set to default then both are
-			if (pmRequest.imc == wbem::logic::REQUEST_DEFAULT_INTERLEAVE_FORMAT ||
-				pmRequest.channel == wbem::logic::REQUEST_DEFAULT_INTERLEAVE_FORMAT)
+			if (adRequest.imc == wbem::logic::REQUEST_DEFAULT_INTERLEAVE_FORMAT ||
+				adRequest.channel == wbem::logic::REQUEST_DEFAULT_INTERLEAVE_FORMAT)
 			{
 				supported = true;
 				break;
 			}
 
-			if (pmRequest.imc == format.imc &&
-				pmRequest.channel == format.channel)
+			if (adRequest.imc == format.imc &&
+				adRequest.channel == format.channel)
 			{
 				supported = true;
 				break;

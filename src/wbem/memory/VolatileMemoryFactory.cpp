@@ -27,7 +27,7 @@
 
 /*
  * This file contains the provider for the VolatileMemory instances
- * which represent all NVM-DIMM volatile capacity in the system.
+ * which represent all NVM-DIMM Memory Mode capacity in the system.
  */
 
 #include "VolatileMemoryFactory.h"
@@ -76,7 +76,7 @@ void wbem::memory::VolatileMemoryFactory::populateAttributeList(
 /*
  * Get volatile memory capacity for the whole system
  */
-wbem::framework::UINT64 wbem::memory::VolatileMemoryFactory::getVolatileCapacity()
+wbem::framework::UINT64 wbem::memory::VolatileMemoryFactory::getMemoryCapacity()
 	throw (wbem::framework::Exception)
 {
 	device_capacities capacities;
@@ -87,7 +87,7 @@ wbem::framework::UINT64 wbem::memory::VolatileMemoryFactory::getVolatileCapacity
 		throw exception::NvmExceptionLibError(rc);
 	}
 
-	return capacities.volatile_capacity;
+	return capacities.memory_capacity;
 }
 
 /*
@@ -155,10 +155,10 @@ throw (wbem::framework::Exception)
 			{
 				if (dimms[device_index].manageability == MANAGEMENT_VALIDCONFIG)
 				{
-					// ignore dimm if it does not have any volatile capacity
+					// ignore dimm if it does not have any Memory Mode capacity
 					NVM_GUID_STR guidStr;
 					guid_to_str(dimms[device_index].guid, guidStr);
-					NVM_UINT64 volatileCapacity = getDimmVolatileCapacity(guidStr);
+					NVM_UINT64 volatileCapacity = getDimmMemoryCapacity(guidStr);
 					if (volatileCapacity > 0)
 					{
 						struct device_status status;
@@ -214,7 +214,7 @@ throw (wbem::framework::Exception)
 /*
  * Get volatile memory capacity for a single DIMM
  */
-wbem::framework::UINT64 wbem::memory::VolatileMemoryFactory::getDimmVolatileCapacity(std::string guidStr)
+wbem::framework::UINT64 wbem::memory::VolatileMemoryFactory::getDimmMemoryCapacity(std::string guidStr)
 	throw (wbem::framework::Exception)
 {
 	NVM_UINT64 volatileCapacity = 0;
@@ -235,7 +235,7 @@ wbem::framework::UINT64 wbem::memory::VolatileMemoryFactory::getDimmVolatileCapa
 	}
 	else if (details.discovery.manageability == MANAGEMENT_VALIDCONFIG)
 	{
-		volatileCapacity = details.capacities.volatile_capacity;
+		volatileCapacity = details.capacities.memory_capacity;
 	}
 	return volatileCapacity;
 }
@@ -265,10 +265,10 @@ bool wbem::memory::VolatileMemoryFactory::isAssociated(
 				try
 				{
 					// Look up DIMM by GUID
-					NVM_UINT64 volatileCapacity = getDimmVolatileCapacity(guidAttr.stringValue());
+					NVM_UINT64 memoryCapacity = getDimmMemoryCapacity(guidAttr.stringValue());
 
-					// Does it have any volatile memory?
-					if (volatileCapacity > 0)
+					// Does it have any Memory Mode capacity?
+					if (memoryCapacity > 0)
 					{
 						result = true;
 					}
@@ -374,7 +374,7 @@ wbem::framework::Instance* wbem::memory::VolatileMemoryFactory::getInstance(
 			// NumberOfBlocks - actually number of bytes
 			if (containsAttribute(NUMBEROFBLOCKS_KEY, attributes))
 			{
-				NVM_UINT64 capacity = getVolatileCapacity(); // in bytes
+				NVM_UINT64 capacity = getMemoryCapacity(); // in bytes
 
 				framework::Attribute attrNumBlocks(capacity, false);
 				pInstance->setAttribute(NUMBEROFBLOCKS_KEY, attrNumBlocks, attributes);
@@ -466,8 +466,8 @@ wbem::framework::instance_names_t* wbem::memory::VolatileMemoryFactory::getInsta
 	{
 		try
 		{
-			// If there is any volatile capacity, there is one VolatileMemory instance.
-			if(getVolatileCapacity() > 0)
+			// If there is any Memory Mode capacity, there is one VolatileMemory instance.
+			if(getMemoryCapacity() > 0)
 			{
 				framework::attributes_t keys;
 

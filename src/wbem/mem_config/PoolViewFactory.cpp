@@ -76,7 +76,7 @@ throw(wbem::framework::Exception)
 	attributes.push_back(STORAGENAMESPACE_MIN_SIZE_KEY);
 	attributes.push_back(STORAGENAMESPACE_COUNT_KEY);
 	attributes.push_back(HEALTHSTATE_KEY);
-	attributes.push_back(PERSISTENTSETTINGS_KEY);
+	attributes.push_back(APP_DIRECT_SETTINGS_KEY);
 }
 
 /*
@@ -112,7 +112,7 @@ throw(wbem::framework::Exception)
 				throw exception::NvmExceptionLibError(rc);
 			}
 
-			// PoolType - The type of pool. One of:  Volatile, Persistent,  Mirrored Persistent
+			// PoolType - The type of pool. One of:  Volatile, Persistent, Mirrored
 			if (containsAttribute(POOLTYPE_KEY, attributes))
 			{
 				framework::Attribute a(getPoolType(&pool), false);
@@ -160,45 +160,45 @@ throw(wbem::framework::Exception)
 				pInstance->setAttribute(SOCKETID_KEY, a, attributes);
 			}
 
-			// AppDirectNamespaceMaxSize - Largest PM namespace that can be created
+			// AppDirectNamespaceMaxSize - Largest AD namespace that can be created
 			if (containsAttribute(APPDIRECTNAMESPACE_MAX_SIZE_KEY, attributes))
 			{
-				framework::Attribute a(ranges.largest_possible_pm_ns, false);
+				framework::Attribute a(ranges.largest_possible_app_direct_ns, false);
 				pInstance->setAttribute(APPDIRECTNAMESPACE_MAX_SIZE_KEY, a, attributes);
 			}
 
-			// AppDirectNamespaceMinSize - Smallest PM namespace that can be created (smallest alignment size)
+			// AppDirectNamespaceMinSize - Smallest AD namespace that can be created (smallest alignment size)
 			if (containsAttribute(APPDIRECTNAMESPACE_MIN_SIZE_KEY, attributes))
 			{
-				framework::Attribute a(ranges.smallest_possible_pm_ns, false);
+				framework::Attribute a(ranges.smallest_possible_app_direct_ns, false);
 				pInstance->setAttribute(APPDIRECTNAMESPACE_MIN_SIZE_KEY, a, attributes);
 			}
 
-			// AppDirectNamespaceCount - Current number of PM namespaces
+			// AppDirectNamespaceCount - Current number of AD namespaces
 			if (containsAttribute(APPDIRECTNAMESPACE_COUNT_KEY, attributes))
 			{
-				framework::Attribute a(getString(countNamespaces(&pool, NAMESPACE_TYPE_PMEM)), false);
+				framework::Attribute a(getString(countNamespaces(&pool, NAMESPACE_TYPE_APP_DIRECT)), false);
 				pInstance->setAttribute(APPDIRECTNAMESPACE_COUNT_KEY, a, attributes);
 			}
 
-			// StorageNamespaceMaxSize - Largest Block namespace that can be created
+			// StorageNamespaceMaxSize - Largest Storage namespace that can be created
 			if (containsAttribute(STORAGENAMESPACE_MAX_SIZE_KEY, attributes))
 			{
-				framework::Attribute a(ranges.largest_possible_block_ns, false);
+				framework::Attribute a(ranges.largest_possible_storage_ns, false);
 				pInstance->setAttribute(STORAGENAMESPACE_MAX_SIZE_KEY, a, attributes);
 			}
 
-			// StorageNamespaceMinSize - Smallest Block namespace that can be created (smallest block size)
+			// StorageNamespaceMinSize - Smallest Storage namespace that can be created (smallest block size)
 			if (containsAttribute(STORAGENAMESPACE_MIN_SIZE_KEY, attributes))
 			{
-				framework::Attribute a(ranges.smallest_possible_block_ns, false);
+				framework::Attribute a(ranges.smallest_possible_storage_ns, false);
 				pInstance->setAttribute(STORAGENAMESPACE_MIN_SIZE_KEY, a, attributes);
 			}
 
-			// StorageNamespacesCount - Current number of Block namespaces
+			// StorageNamespacesCount - Current number of Storage namespaces
 			if (containsAttribute(STORAGENAMESPACE_COUNT_KEY, attributes))
 			{
-				framework::Attribute a(getString(countNamespaces(&pool, NAMESPACE_TYPE_BLOCK)), false);
+				framework::Attribute a(getString(countNamespaces(&pool, NAMESPACE_TYPE_STORAGE)), false);
 				pInstance->setAttribute(STORAGENAMESPACE_COUNT_KEY, a, attributes);
 			}
 
@@ -210,10 +210,10 @@ throw(wbem::framework::Exception)
 				pInstance->setAttribute(HEALTHSTATE_KEY, a, attributes);
 			}
 
-			if (containsAttribute(PERSISTENTSETTINGS_KEY, attributes))
+			if (containsAttribute(APP_DIRECT_SETTINGS_KEY, attributes))
 			{
-				framework::Attribute attr(getPersistentSettings(&pool), false);
-				pInstance->setAttribute(PERSISTENTSETTINGS_KEY, attr, attributes);
+				framework::Attribute attr(getAppDirectSettings(&pool), false);
+				pInstance->setAttribute(APP_DIRECT_SETTINGS_KEY, attr, attributes);
 			}
 		}
 	}
@@ -380,7 +380,7 @@ std::string wbem::mem_config::PoolViewFactory::getPoolType(struct pool *pPool)
 	switch (pPool->type)
 	{
 		case POOL_TYPE_PERSISTENT:
-			poolType = wbem::mem_config::POOLTYPE_PERSISTENT;
+			poolType = wbem::mem_config::POOLTYPE_APPDIRECT;
 			break;
 		case POOL_TYPE_VOLATILE:
 			poolType = wbem::mem_config::POOLTYPE_VOLATILE;
@@ -520,24 +520,24 @@ std::string wbem::mem_config::PoolViewFactory::getInterleaveSetFormatStr(
 	return formatStr.str();
 }
 
-wbem::framework::STR_LIST wbem::mem_config::PoolViewFactory::getPersistentSettings(
+wbem::framework::STR_LIST wbem::mem_config::PoolViewFactory::getAppDirectSettings(
 		const struct pool *pPool)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	framework::STR_LIST persistentSettings;
+	framework::STR_LIST appDirectSettings;
 
 	if (pPool->ilset_count > 0)
 	{
 		for (NVM_UINT16 i = 0; i < pPool->ilset_count; i++)
 		{
-			server::SystemCapabilitiesFactory::addFormatStringIfNotInList(persistentSettings,
+			server::SystemCapabilitiesFactory::addFormatStringIfNotInList(appDirectSettings,
 					pPool->ilsets[i].settings, false);
 		}
 	}
 	else
 	{ // storage-only capacity
-		persistentSettings.push_back(wbem::NA);
+		appDirectSettings.push_back(wbem::NA);
 	}
 
-	return persistentSettings;
+	return appDirectSettings;
 }

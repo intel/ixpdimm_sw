@@ -331,14 +331,14 @@ int get_namespace_details(
 			switch (ndctl_namespace_get_type(p_namespace))
 			{
 				case ND_DEVICE_NAMESPACE_PMEM:
-					p_details->type = NAMESPACE_TYPE_PMEM;
+					p_details->type = NAMESPACE_TYPE_APP_DIRECT;
 					p_details->namespace_creation_id.interleave_setid =
 							ndctl_region_get_range_index(p_region);
 					p_details->block_size = 1;
 					break;
 
 				case ND_DEVICE_NAMESPACE_BLK:
-					p_details->type = NAMESPACE_TYPE_BLOCK;
+					p_details->type = NAMESPACE_TYPE_STORAGE;
 					struct ndctl_dimm *dimm = ndctl_region_get_first_dimm(p_region);
 					if (dimm)
 					{
@@ -440,8 +440,8 @@ int get_unconfigured_namespace(struct ndctl_namespace **unconfigured_namespace,
 	return rc;
 }
 
-int get_ndctl_pm_region_by_range_index(struct ndctl_ctx *ctx, struct ndctl_region **target_region,
-	unsigned int spa_index)
+int get_ndctl_app_direct_region_by_range_index(struct ndctl_ctx *ctx,
+		struct ndctl_region **target_region, unsigned int spa_index)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_ERR_DRIVERFAILED;
@@ -472,8 +472,8 @@ int get_ndctl_pm_region_by_range_index(struct ndctl_ctx *ctx, struct ndctl_regio
 	return rc;
 }
 
-int get_ndctl_blk_region_by_handle(struct ndctl_ctx *ctx, struct ndctl_region **target_region,
-	unsigned int handle)
+int get_ndctl_storage_region_by_handle(struct ndctl_ctx *ctx,
+		struct ndctl_region **target_region, unsigned int handle)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_ERR_DRIVERFAILED;
@@ -530,7 +530,7 @@ int create_btt_namespace(struct ndctl_namespace *namespace,
 		// namespace. 1 is not valid for this, so use default of 4kB
 		// for app direct namespaces
 		unsigned int sector_size = DEFAULT_BTT_SECTOR_SIZE;
-		if (p_settings->type == NAMESPACE_TYPE_BLOCK)
+		if (p_settings->type == NAMESPACE_TYPE_STORAGE)
 		{
 			sector_size = p_settings->block_size;
 		}
@@ -588,14 +588,14 @@ int create_namespace(
 	else if ((rc = ndctl_new(&ctx)) >= 0)
 	{
 		struct ndctl_region *region;
-		if (p_settings->type == NAMESPACE_TYPE_PMEM)
+		if (p_settings->type == NAMESPACE_TYPE_APP_DIRECT)
 		{
-			rc = get_ndctl_pm_region_by_range_index(ctx, &region,
+			rc = get_ndctl_app_direct_region_by_range_index(ctx, &region,
 				p_settings->namespace_creation_id.interleave_setid);
 		}
-		else if (p_settings->type == NAMESPACE_TYPE_BLOCK)
+		else if (p_settings->type == NAMESPACE_TYPE_STORAGE)
 		{
-			rc = get_ndctl_blk_region_by_handle(ctx, &region,
+			rc = get_ndctl_storage_region_by_handle(ctx, &region,
 				p_settings->namespace_creation_id.device_handle.handle);
 		}
 		else
@@ -628,7 +628,7 @@ int create_namespace(
 				COMMON_LOG_ERROR("Set SizeFailed");
 				rc = NVM_ERR_DRIVERFAILED;
 			}
-			else if (p_settings->type == NAMESPACE_TYPE_BLOCK)
+			else if (p_settings->type == NAMESPACE_TYPE_STORAGE)
 			{
 				if (ndctl_namespace_set_sector_size(namespace, p_settings->block_size))
 				{

@@ -71,9 +71,9 @@ static const std::string UNKNOWN = "Unknown";
 // some common constants
 static const char CURRENT_CONFIG    = 'C';
 static const char GOAL_CONFIG       = 'G';
-static const char VOLATILE_MEMORY   = 'V';
-static const char PERSISTENT_MEMORY = 'P';
-static const char UNMAPPED_MEMORY   = 'U';
+static const char MEMORY_MODE_PREFIX = 'V';
+static const char APP_DIRECT_PREFIX = 'P';
+static const char STORAGE_PREFIX   	= 'U';
 
 // Attribute keys that apply to many classes
 static std::string CREATIONCLASSNAME_KEY = "CreationClassName";
@@ -124,8 +124,8 @@ static std::string FORMFACTOR_KEY = "FormFactor";
 static std::string DATAWIDTH_KEY = "DataWidth";
 static std::string TOTALWIDTH_KEY = "TotalWidth";
 static std::string SPEED_KEY = "Speed";
-static std::string VOLATILECAPACITY_KEY = "VolatileCapacity";
-static std::string PERSISTENTCAPACITY_KEY = "PersistentCapacity";
+static std::string MEMORYCAPACITY_KEY = "MemoryCapacity";
+static std::string APP_DIRECT_CAPACITY_KEY = "AppDirectCapacity";
 static std::string PARTNUMBER_KEY = "PartNumber";
 static std::string DEVICELOCATOR_KEY = "DeviceLocator";
 static std::string COMMUNICATIONSTATUS_KEY = "CommunicationStatus";
@@ -133,8 +133,7 @@ static std::string ISNEW_KEY = "IsNew";
 static std::string FWLOGLEVEL_KEY = "FWLogLevel";
 static std::string FWAPIVERSION_KEY = "FWAPIVersion";
 static std::string FWVERSION_KEY = "FWVersion";
-static std::string INACCESSIBLEVOLATILECAPACITY_KEY = "InaccessibleVolatileCapacity";
-static std::string INACCESSIBLEPERSISTENTCAPACITY_KEY = "InaccessiblePersistentCapacity";
+static std::string INACCESSIBLE_APP_DIRECT_CAPACITY_KEY = "InaccessibleAppDirectCapacity";
 static std::string UNCONFIGUREDCAPACITY_KEY = "UnconfiguredCapacity";
 static std::string INTERFACEFORMATCODE_KEY = "InterfaceFormatCode";
 static std::string POWERMANAGEMENTENABLED_KEY = "PowerManagementEnabled";
@@ -240,14 +239,14 @@ static std::string ALIGNMENT_KEY = "Alignment";
 static std::string CHANNELINTERLEAVESUPPORT_KEY = "ChannelInterleaveSupport";
 static std::string CHANNELINTERLEAVEWAYSUPPORT_KEY = "ChannelInterleaveWaySupport";
 static std::string MEMORYCONTROLLERINTERLEAVESUPPORT_KEY = "MemoryControllerInterleaveSupport";
-static std::string TWOLEVELMEMALIGNMENT_KEY = "TwoLevelMemoryAlignment";
-static std::string PMALIGNMENT_KEY = "PersistentMemoryAlignment";
+static std::string MEMORYMODEALIGNMENT_KEY = "MemoryModeAlignment";
+static std::string APPDIRECTALIGNMENT_KEY = "AppDirectAlignment";
 static std::string PLATFORMCONFIGSUPPORTED_KEY = "PlatformConfigSupported";
 static std::string PLATFORMRUNTIMESUPPORTED_KEY = "PlatformRuntimeSupported";
-static std::string CURRENTVOLATILEMEMORYMODE_KEY = "CurrentVolatileMemoryMode";
-static std::string CURRENTPERSISTENTMEMORYMODE_KEY = "CurrentPersistentMemoryMode";
-static std::string SUPPORTEDPERSISTENTSETTINGS_KEY = "SupportedPersistentSettings";
-static std::string RECOMMENDEDPERSISTENTSETTINGS_KEY = "RecommendedPersistentSettings";
+static std::string CURRENTVOLATILEMODE_KEY = "CurrentVolatileMode";
+static std::string CURRENTAPPDIRECTMODE_KEY = "CurrentAppDirectMode";
+static std::string SUPPORTEDAPP_DIRECT_SETTINGS_KEY = "SupportedAppDirectSettings";
+static std::string RECOMMENDEDAPP_DIRECT_SETTINGS_KEY = "RecommendedAppDirectSettings";
 
 // MemoryResources
 static std::string PRIMORDIAL_KEY = "Primordial";
@@ -261,7 +260,7 @@ static std::string MAXNUMBEROFRECORDS_KEY = "MaxNumberOfRecords";
 static std::string CURRENTNUMBEROFRECORDS_KEY = "CurrentNumberOfRecords";
 static std::string OVERWRITEPOLICY_KEY = "OverwritePolicy";
 
-// PersistentMemoryPool
+// AppDirectMemoryPool
 static std::string POOLID_KEY = "PoolID";
 static std::string TOTALMANAGEDSPACE_KEY = "TotalManagedSpace";
 static std::string REMAININGMANAGEDSPACE_KEY = "RemainingManagedSpace";
@@ -278,14 +277,13 @@ static std::string APPDIRECTNAMESPACE_COUNT_KEY = "AppDirectNamespaceCount";
 static std::string STORAGENAMESPACE_MAX_SIZE_KEY = "StorageNamespaceMaxSize";
 static std::string STORAGENAMESPACE_MIN_SIZE_KEY = "StorageNamespaceMinSize";
 static std::string STORAGENAMESPACE_COUNT_KEY = "StorageNamespaceCount";
-static std::string PERSISTENTSETTINGS_KEY = "PersistentSettings";
+static std::string APP_DIRECT_SETTINGS_KEY = "AppDirectSettings";
 
 // VolatileMemory
 static std::string VOLATILE_KEY = "Volatile";
-static std::string VOLATILESIZE_KEY = "VolatileSize";
+static std::string MEMORYSIZE_KEY = "MemorySize";
 
 // MemoryPoolConfigurationServiceFactory
-static std::string BLOCKCAPACITY_KEY = "BlockCapacity";
 static std::string INTERLEAVESIZES_KEY = "InterleaveSizes";
 static std::string PACKAGEREDUNDANCY_KEY = "PackageRedundancy";
 
@@ -305,12 +303,12 @@ static std::string INTERLEAVEINDEXES_KEY = "InterleaveIndexes";
 static std::string INTERLEAVEFORMATS_KEY = "InterleaveFormats";
 
 // MemoryAllocationSettings for CLI
-static std::string PERSISTENT1SIZE_KEY = "Persistent1Size";
-static std::string PERSISTENT1INDEX_KEY = "Persistent1Index";
-static std::string PERSISTENT2SIZE_KEY = "Persistent2Size";
-static std::string PERSISTENT2INDEX_KEY = "Persistent2Index";
-static std::string PERSISTENT1SETTINGS_KEY = "Persistent1Settings";
-static std::string PERSISTENT2SETTINGS_KEY = "Persistent2Settings";
+static std::string APPDIRECT1SIZE_KEY = "AppDirect1Size";
+static std::string APPDIRECT1INDEX_KEY = "AppDirect1Index";
+static std::string APPDIRECT2SIZE_KEY = "AppDirect2Size";
+static std::string APPDIRECT2INDEX_KEY = "AppDirect2Index";
+static std::string APPDIRECT1SETTINGS_KEY = "AppDirect1Settings";
+static std::string APPDIRECT2SETTINGS_KEY = "AppDirect2Settings";
 static std::string STORAGECAPACITY_KEY = "StorageCapacity";
 
 // DiagnosticCompletionRecord
@@ -348,7 +346,7 @@ static std::string CONFIGGOALTABLENAME = "ConfigGoal";
 static std::string DELETECONFIGGOALTABLENAME = "DeleteConfigGoalTable";
 static std::string INITIALSTATE_KEY = "InitialState";
 
-// PersistentMemoryCapabilities
+// AppDirectMemoryCapabilities
 static std::string MAXNAMESPACES_KEY = "MaxNamespaces";
 static std::string SECURITYFEATURES_KEY = "SecurityFeatures";
 static std::string ACCESSGRANULARITY_KEY = "AccessGranularity";
@@ -358,7 +356,7 @@ static std::string REPLICATION_KEY = "Replication";
 // Events
 static std::string ACTIONREQUIREDEVENTS_KEY = "ActionRequiredEvents";
 
-// PersistentMemory
+// AppDirectMemory
 static std::string PROCESSORAFFINITY_KEY = "ProcessorAffinity";
 
 // Indications
@@ -383,9 +381,9 @@ static std::string ALERTINGMANAGEDELEMENT_KEY = "AlertingManagedElement";
 static std::string MEMORYMODESSUPPORTED_KEY = "MemoryModesSupported";
 static std::string MINNAMESPACESIZE_KEY = "MinNamespaceSize";
 static std::string BLOCKSIZES_KEY = "BlockSizes";
-static std::string PERSISTENTMEMORYMIRRORSUPPORT_KEY = "PersistentMemoryMirrorSupported";
+static std::string APP_DIRECT_MEMORY_MIRROR_SUPPORT_KEY = "AppDirectMemoryMirrorSupported";
 static std::string DIMMSPARESUPPORT_KEY = "DimmSpareSupported";
-static std::string PERSISTENTMEMORYMIGRATIONSUPPORT_KEY = "PersistentMemoryMigrationSupported";
+static std::string APP_DIRECT_MEMORY_MIGRATION_SUPPORT_KEY = "AppDirectMemoryMigrationSupported";
 static std::string RENAMENAMESPACESUPPORT_KEY = "RenameNamespaceSupported";
 static std::string ENABLENAMESPACESUPPORT_KEY = "EnableNamespaceSupported";
 static std::string DISABLENAMESPACESUPPORT_KEY = "DisableNamespaceSupported";

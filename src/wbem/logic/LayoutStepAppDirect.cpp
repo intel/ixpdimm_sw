@@ -26,10 +26,10 @@
  */
 
 /*
- * Lay out the persistent extent.
+ * Lay out the app direct extent.
  */
 
-#include <logic/LayoutStepPersistent.h>
+#include <logic/LayoutStepAppDirect.h>
 #include <exception/NvmExceptionBadRequest.h>
 #include <LogEnterExit.h>
 #include <utility.h>
@@ -38,11 +38,11 @@
 #define	DIMM_LOCATION(iMC, channel) 2 * (channel % CHANNELS_PER_IMC) + iMC
 #define	DIMM_POPULATED(map, dimmIndex) ((map >> dimmIndex) & 0b1)
 
-wbem::logic::LayoutStepPersistent::LayoutStepPersistent(
+wbem::logic::LayoutStepAppDirect::LayoutStepAppDirect(
 		const struct nvm_capabilities &cap,
-		const int pmExtentIndex,
+		const int appDirectExtentIndex,
 		lib_interface::NvmApi *pApi)
-	: m_systemCap(cap), m_pmExtentIndex(pmExtentIndex), m_pLibApi(pApi)
+	: m_systemCap(cap), m_adExtentIndex(appDirectExtentIndex), m_pLibApi(pApi)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
@@ -52,29 +52,29 @@ wbem::logic::LayoutStepPersistent::LayoutStepPersistent(
 	}
 }
 
-wbem::logic::LayoutStepPersistent::~LayoutStepPersistent()
+wbem::logic::LayoutStepAppDirect::~LayoutStepAppDirect()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
 
-bool wbem::logic::LayoutStepPersistent::isRemainingStep(const MemoryAllocationRequest &request)
+bool wbem::logic::LayoutStepAppDirect::isRemainingStep(const MemoryAllocationRequest &request)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	bool isRemaining = false;
-	if (request.persistentExtents.size() > m_pmExtentIndex)
+	if (request.appDirectExtents.size() > m_adExtentIndex)
 	{
-		isRemaining = request.persistentExtents[m_pmExtentIndex].capacity == REQUEST_REMAINING_CAPACITY;
+		isRemaining = request.appDirectExtents[m_adExtentIndex].capacity == REQUEST_REMAINING_CAPACITY;
 	}
 	return isRemaining;
 }
 
-void wbem::logic::LayoutStepPersistent::execute(const MemoryAllocationRequest& request,
+void wbem::logic::LayoutStepAppDirect::execute(const MemoryAllocationRequest& request,
 		MemoryAllocationLayout& layout)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	if (request.persistentExtents.size() > m_pmExtentIndex)
+	if (request.appDirectExtents.size() > m_adExtentIndex)
 	{
 		std::vector<Dimm> dimmsToLayout;
 		for (std::vector<Dimm>::const_iterator dimmIter = request.dimms.begin();
@@ -84,12 +84,12 @@ void wbem::logic::LayoutStepPersistent::execute(const MemoryAllocationRequest& r
 			{
 				dimmsToLayout.push_back(*dimmIter);
 				m_dimmExistingSets[dimmIter->guid] =
-						layout.goals[dimmIter->guid].persistent_count;
+						layout.goals[dimmIter->guid].app_direct_count;
 			}
 		}
 
 		NVM_UINT64 bytesToAllocate = getRequestedCapacityBytes(
-				request.persistentExtents[m_pmExtentIndex].capacity, request, layout);
+				request.appDirectExtents[m_adExtentIndex].capacity, request, layout);
 		if (bytesToAllocate)
 		{
 			NVM_UINT64 bytesRemaining = bytesToAllocate;
@@ -97,28 +97,28 @@ void wbem::logic::LayoutStepPersistent::execute(const MemoryAllocationRequest& r
 			{
 				try
 				{
-					if (request.persistentExtents[m_pmExtentIndex].byOne)
+					if (request.appDirectExtents[m_adExtentIndex].byOne)
 					{
-						bytesRemaining = layoutByOnePm(bytesRemaining, dimmsToLayout, request, layout);
+						bytesRemaining = layoutByOneAd(bytesRemaining, dimmsToLayout, request, layout);
 					}
 					else
 					{
-						bytesRemaining = layoutInterleavedPm(bytesRemaining, dimmsToLayout, request, layout);
+						bytesRemaining = layoutInterleavedAd(bytesRemaining, dimmsToLayout, request, layout);
 					}
 				}
 				catch (exception::NvmExceptionBadRequestSize &e)
 				{
 					// out of capacity, clean up and pass along the exception
-					layout.persistentCapacities.push_back(bytesToConfigGoalSize(bytesToAllocate - bytesRemaining));
+					layout.appDirectCapacities.push_back(bytesToConfigGoalSize(bytesToAllocate - bytesRemaining));
 					throw e;
 				}
 			}
-			layout.persistentCapacities.push_back(bytesToConfigGoalSize(bytesToAllocate - bytesRemaining));
+			layout.appDirectCapacities.push_back(bytesToConfigGoalSize(bytesToAllocate - bytesRemaining));
 		}
 	}
 }
 
-NVM_UINT64 wbem::logic::LayoutStepPersistent::layoutByOnePm(
+NVM_UINT64 wbem::logic::LayoutStepAppDirect::layoutByOneAd(
 		const NVM_UINT64 &bytesToAllocate,
 		const std::vector<Dimm> &dimms,
 		const wbem::logic::MemoryAllocationRequest &request,
@@ -152,7 +152,7 @@ NVM_UINT64 wbem::logic::LayoutStepPersistent::layoutByOnePm(
 	return (bytesToAllocate - bytesAllocated);
 }
 
-NVM_UINT64 wbem::logic::LayoutStepPersistent::layoutInterleavedPm(
+NVM_UINT64 wbem::logic::LayoutStepAppDirect::layoutInterleavedAd(
 		const NVM_UINT64 &bytesToAllocate,
 		const std::vector<wbem::logic::Dimm> &dimms,
 		const MemoryAllocationRequest& request,
@@ -177,7 +177,7 @@ NVM_UINT64 wbem::logic::LayoutStepPersistent::layoutInterleavedPm(
 			socketIter != sockets.end(); socketIter++)
 		{
 			NVM_UINT64 bytesPerSocket = bytesPerDimm * socketIter->second.size();
-			bytesAllocated += layoutInterleavedPmAcrossSocket(bytesPerSocket, socketIter->second, request, layout);
+			bytesAllocated += layoutInterleavedAdAcrossSocket(bytesPerSocket, socketIter->second, request, layout);
 		}
 	}
 
@@ -190,7 +190,7 @@ NVM_UINT64 wbem::logic::LayoutStepPersistent::layoutInterleavedPm(
 	return (bytesToAllocate - bytesAllocated);
 }
 
-NVM_UINT64 wbem::logic::LayoutStepPersistent::layoutInterleavedPmAcrossSocket(
+NVM_UINT64 wbem::logic::LayoutStepAppDirect::layoutInterleavedAdAcrossSocket(
 		const NVM_UINT64 &bytesPerSocket,
 		const std::vector<wbem::logic::Dimm> &dimms,
 		const MemoryAllocationRequest& request,
@@ -223,7 +223,7 @@ NVM_UINT64 wbem::logic::LayoutStepPersistent::layoutInterleavedPmAcrossSocket(
 	return bytesAllocated;
 }
 
-NVM_UINT64 wbem::logic::LayoutStepPersistent::layoutInterleaveSet(
+NVM_UINT64 wbem::logic::LayoutStepAppDirect::layoutInterleaveSet(
 		const NVM_UINT64 &bytesPerDimm,
 		const std::vector<wbem::logic::Dimm> &dimms,
 		const MemoryAllocationRequest& request,
@@ -240,7 +240,7 @@ NVM_UINT64 wbem::logic::LayoutStepPersistent::layoutInterleaveSet(
 	for (std::vector<Dimm>::const_iterator dimmIter = dimms.begin();
 					dimmIter != dimms.end(); dimmIter++)
 	{
-		struct pm_attributes settings;
+		struct app_direct_attributes settings;
 		memset(&settings, 0, sizeof (settings));
 		settings.interleave.ways = way;
 		settings.interleave.channel = channelSize;
@@ -255,7 +255,7 @@ NVM_UINT64 wbem::logic::LayoutStepPersistent::layoutInterleaveSet(
 	return bytesAllocated;
 }
 
-NVM_UINT64 wbem::logic::LayoutStepPersistent::removeEmptySockets(
+NVM_UINT64 wbem::logic::LayoutStepAppDirect::removeEmptySockets(
 		std::map<NVM_UINT16, std::vector<Dimm> > &sockets,
 		const NVM_UINT64 &bytesToAllocate,
 		const MemoryAllocationRequest& request,
@@ -296,7 +296,7 @@ NVM_UINT64 wbem::logic::LayoutStepPersistent::removeEmptySockets(
 	return dimmCount;
 }
 
-std::vector<wbem::logic::Dimm> wbem::logic::LayoutStepPersistent::getDimmsWithCapacity(
+std::vector<wbem::logic::Dimm> wbem::logic::LayoutStepAppDirect::getDimmsWithCapacity(
 		const std::vector<Dimm> &dimms,
 		MemoryAllocationLayout& layout)
 {
@@ -314,8 +314,8 @@ std::vector<wbem::logic::Dimm> wbem::logic::LayoutStepPersistent::getDimmsWithCa
 	return dimmsWithCapacity;
 }
 
-bool wbem::logic::LayoutStepPersistent::interleaveSetsMatch(
-		const struct pm_attributes &oldSet, const struct pm_attributes &newSet)
+bool wbem::logic::LayoutStepAppDirect::interleaveSetsMatch(
+		const struct app_direct_attributes &oldSet, const struct app_direct_attributes &newSet)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
@@ -338,18 +338,18 @@ bool wbem::logic::LayoutStepPersistent::interleaveSetsMatch(
 	return match;
 }
 
-bool wbem::logic::LayoutStepPersistent::interleaveSetFromPreviousExtent(
+bool wbem::logic::LayoutStepAppDirect::interleaveSetFromPreviousExtent(
 		const std::string &dimmGuid,
 		struct config_goal &goal)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	return (goal.persistent_count <= m_dimmExistingSets[dimmGuid]);
+	return (goal.app_direct_count <= m_dimmExistingSets[dimmGuid]);
 }
 
-void wbem::logic::LayoutStepPersistent::addInterleaveSetToGoal(
+void wbem::logic::LayoutStepAppDirect::addInterleaveSetToGoal(
 		const std::string &dimmGuid,
 		struct config_goal &goal, const NVM_UINT64 &sizeBytes,
-		const NVM_UINT16 &setId, const struct pm_attributes &settings)
+		const NVM_UINT16 &setId, const struct app_direct_attributes &settings)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
@@ -357,39 +357,39 @@ void wbem::logic::LayoutStepPersistent::addInterleaveSetToGoal(
 	bool extended = false;
 	if (!interleaveSetFromPreviousExtent(dimmGuid, goal))
 	{
-		if (goal.persistent_count == 1 &&
-				interleaveSetsMatch(goal.persistent_1_settings, settings))
+		if (goal.app_direct_count == 1 &&
+				interleaveSetsMatch(goal.app_direct_1_settings, settings))
 		{
-			goal.persistent_1_size += bytesToConfigGoalSize(sizeBytes);
+			goal.app_direct_1_size += bytesToConfigGoalSize(sizeBytes);
 			extended = true;
 		}
-		else if (goal.persistent_count == 2 &&
-				interleaveSetsMatch(goal.persistent_2_settings, settings))
+		else if (goal.app_direct_count == 2 &&
+				interleaveSetsMatch(goal.app_direct_2_settings, settings))
 		{
-			goal.persistent_2_size += bytesToConfigGoalSize(sizeBytes);
+			goal.app_direct_2_size += bytesToConfigGoalSize(sizeBytes);
 			extended = true;
 		}
 	}
 	// or create a new one
 	if (!extended)
 	{
-		goal.persistent_count++;
-		if (goal.persistent_count == 1)
+		goal.app_direct_count++;
+		if (goal.app_direct_count == 1)
 		{
-			goal.persistent_1_size = bytesToConfigGoalSize(sizeBytes);
-			goal.persistent_1_set_id = setId;
-			memmove(&goal.persistent_1_settings, &settings, sizeof (settings));
+			goal.app_direct_1_size = bytesToConfigGoalSize(sizeBytes);
+			goal.app_direct_1_set_id = setId;
+			memmove(&goal.app_direct_1_settings, &settings, sizeof (settings));
 		}
 		else
 		{
-			goal.persistent_2_size = bytesToConfigGoalSize(sizeBytes);
-			goal.persistent_2_set_id = setId;
-			memmove(&goal.persistent_2_settings, &settings, sizeof (settings));
+			goal.app_direct_2_size = bytesToConfigGoalSize(sizeBytes);
+			goal.app_direct_2_set_id = setId;
+			memmove(&goal.app_direct_2_settings, &settings, sizeof (settings));
 		}
 	}
 }
 
-NVM_UINT64 wbem::logic::LayoutStepPersistent::getRequestedCapacityBytes(
+NVM_UINT64 wbem::logic::LayoutStepAppDirect::getRequestedCapacityBytes(
 		const NVM_UINT64 &requestedCapacity,
 		const struct MemoryAllocationRequest& request,
 		MemoryAllocationLayout& layout)
@@ -403,19 +403,19 @@ NVM_UINT64 wbem::logic::LayoutStepPersistent::getRequestedCapacityBytes(
 	}
 	else
 	{
-		capacityBytes = getRemainingPersistentBytesFromDimms(request, layout);
+		capacityBytes = getRemainingAppDirectBytesFromDimms(request, layout);
 	}
 
 	return capacityBytes;
 }
 
-NVM_UINT64 wbem::logic::LayoutStepPersistent::getDimmUnallocatedPersistentBytes(
+NVM_UINT64 wbem::logic::LayoutStepAppDirect::getDimmUnallocatedAppDirectBytes(
 		const struct Dimm &dimm, const struct config_goal &goal)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	NVM_UINT64 bytes = 0;
-	if (goal.persistent_count < MAX_PERSISTENT_EXTENTS)
+	if (goal.app_direct_count < MAX_APPDIRECT_EXTENTS)
 	{
 		bytes = getDimmUnallocatedBytes(dimm.capacity, goal);
 	}
@@ -423,7 +423,7 @@ NVM_UINT64 wbem::logic::LayoutStepPersistent::getDimmUnallocatedPersistentBytes(
 	return bytes;
 }
 
-NVM_UINT64 wbem::logic::LayoutStepPersistent::getRemainingPersistentBytesFromDimms(
+NVM_UINT64 wbem::logic::LayoutStepAppDirect::getRemainingAppDirectBytesFromDimms(
 		const MemoryAllocationRequest &request,
 		MemoryAllocationLayout &layout)
 {
@@ -435,11 +435,11 @@ NVM_UINT64 wbem::logic::LayoutStepPersistent::getRemainingPersistentBytesFromDim
 	{
 		if (layout.reserveDimmGuid != dimmIter->guid)
 		{
-			bytes += getDimmUnallocatedPersistentBytes(*dimmIter, layout.goals[dimmIter->guid]);
+			bytes += getDimmUnallocatedAppDirectBytes(*dimmIter, layout.goals[dimmIter->guid]);
 		}
 	}
 
-	// no remaining persistent capacity left on any dimms
+	// no remaining app direct capacity left on any dimms
 	if (bytes == 0)
 	{
 		throw exception::NvmExceptionBadRequestSize();
@@ -447,7 +447,7 @@ NVM_UINT64 wbem::logic::LayoutStepPersistent::getRemainingPersistentBytesFromDim
 	return bytes;
 }
 
-int wbem::logic::LayoutStepPersistent::getDimmPopulationMap(
+int wbem::logic::LayoutStepAppDirect::getDimmPopulationMap(
 		const std::vector<wbem::logic::Dimm> &requestedDimms,
 		std::map<std::string, struct config_goal> &goals)
 {
@@ -465,7 +465,7 @@ int wbem::logic::LayoutStepPersistent::getDimmPopulationMap(
 	return map;
 }
 
-bool wbem::logic::LayoutStepPersistent::dimmPopulationMatchesInterleaveSet(
+bool wbem::logic::LayoutStepAppDirect::dimmPopulationMatchesInterleaveSet(
 		const int &dimmMap, const int &interleaveSet)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -483,7 +483,7 @@ bool wbem::logic::LayoutStepPersistent::dimmPopulationMatchesInterleaveSet(
 	return match;
 }
 
-std::vector<wbem::logic::Dimm> wbem::logic::LayoutStepPersistent::getDimmsMatchingInterleaveSet(
+std::vector<wbem::logic::Dimm> wbem::logic::LayoutStepAppDirect::getDimmsMatchingInterleaveSet(
 		const int &interleaveSet,
 		const std::vector<wbem::logic::Dimm> &requestedDimms)
 {
@@ -502,7 +502,7 @@ std::vector<wbem::logic::Dimm> wbem::logic::LayoutStepPersistent::getDimmsMatchi
 	return dimms;
 }
 
-NVM_UINT64 wbem::logic::LayoutStepPersistent::getBestInterleaveBytesPerDimm(
+NVM_UINT64 wbem::logic::LayoutStepAppDirect::getBestInterleaveBytesPerDimm(
 		const std::vector<wbem::logic::Dimm> &requestedDimms,
 		std::map<std::string, struct config_goal> &goals,
 		const NVM_UINT64 &requestedBytes,
@@ -541,7 +541,7 @@ NVM_UINT64 wbem::logic::LayoutStepPersistent::getBestInterleaveBytesPerDimm(
 	return bytesPerDimm;
 }
 
-bool wbem::logic::LayoutStepPersistent::canMapInterleavedCapacity(
+bool wbem::logic::LayoutStepAppDirect::canMapInterleavedCapacity(
 		const std::vector<wbem::logic::Dimm> &dimms,
 		std::map<std::string, struct config_goal> &goals,
 		const wbem::logic::MemoryAllocationRequest &request)
@@ -550,9 +550,9 @@ bool wbem::logic::LayoutStepPersistent::canMapInterleavedCapacity(
 
 	bool setExtendable = true;
 	// new set
-	struct pm_attributes newSet;
+	struct app_direct_attributes newSet;
 	memset(&newSet, 0, sizeof (newSet));
-	newSet.interleave.ways = request.persistentExtents[m_pmExtentIndex].byOne ?
+	newSet.interleave.ways = request.appDirectExtents[m_adExtentIndex].byOne ?
 			INTERLEAVE_WAYS_1 : getInterleaveWay(dimms.size());
 	newSet.interleave.channel = getInterleaveChannelSize(request, dimms.size());
 	newSet.interleave.imc = getInterleaveImcSize(request, dimms.size());
@@ -566,14 +566,14 @@ bool wbem::logic::LayoutStepPersistent::canMapInterleavedCapacity(
 	for (std::vector<Dimm>::const_iterator dimmIter = dimms.begin();
 			dimmIter != dimms.end(); dimmIter++)
 	{
-		if (goals[dimmIter->guid].persistent_count == MAX_PERSISTENT_EXTENTS)
+		if (goals[dimmIter->guid].app_direct_count == MAX_APPDIRECT_EXTENTS)
 		{
 			if (interleaveSetFromPreviousExtent(dimmIter->guid, goals[dimmIter->guid]))
 			{
 				setExtendable = false;
 				break;
 			}
-			if (!interleaveSetsMatch(goals[dimmIter->guid].persistent_2_settings, newSet))
+			if (!interleaveSetsMatch(goals[dimmIter->guid].app_direct_2_settings, newSet))
 			{
 				setExtendable = false;
 				break;
@@ -583,7 +583,7 @@ bool wbem::logic::LayoutStepPersistent::canMapInterleavedCapacity(
 	return setExtendable;
 }
 
-bool wbem::logic::LayoutStepPersistent::isValidWay(const size_t &numDimms)
+bool wbem::logic::LayoutStepAppDirect::isValidWay(const size_t &numDimms)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
@@ -592,7 +592,7 @@ bool wbem::logic::LayoutStepPersistent::isValidWay(const size_t &numDimms)
 	{
 		getInterleaveWay(numDimms);
 	}
-	catch (exception::NvmExceptionPersistentSettingsNotSupported &)
+	catch (exception::NvmExceptionAppDirectSettingsNotSupported &)
 	{
 		isValid = false;
 	}
@@ -600,7 +600,7 @@ bool wbem::logic::LayoutStepPersistent::isValidWay(const size_t &numDimms)
 }
 
 // TODO: platform specific
-enum interleave_ways wbem::logic::LayoutStepPersistent::getInterleaveWay(
+enum interleave_ways wbem::logic::LayoutStepAppDirect::getInterleaveWay(
 		const size_t &numDimms)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -624,28 +624,28 @@ enum interleave_ways wbem::logic::LayoutStepPersistent::getInterleaveWay(
 			ways = INTERLEAVE_WAYS_6;
 			break;
 		default:
-			throw exception::NvmExceptionPersistentSettingsNotSupported();
+			throw exception::NvmExceptionAppDirectSettingsNotSupported();
 			break;
 	}
 	return ways;
 }
 
-enum interleave_size wbem::logic::LayoutStepPersistent::getInterleaveChannelSize(
+enum interleave_size wbem::logic::LayoutStepAppDirect::getInterleaveChannelSize(
 		const MemoryAllocationRequest &request, const size_t &numDimms)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	enum interleave_size channelSize =
-			(enum interleave_size)request.persistentExtents[m_pmExtentIndex].channel;
-	if (request.persistentExtents[m_pmExtentIndex].channel == REQUEST_DEFAULT_INTERLEAVE_FORMAT)
+			(enum interleave_size)request.appDirectExtents[m_adExtentIndex].channel;
+	if (request.appDirectExtents[m_adExtentIndex].channel == REQUEST_DEFAULT_INTERLEAVE_FORMAT)
 	{
 		// lookup recommended
-		for (int i = 0; i < m_systemCap.platform_capabilities.pm_direct.interleave_formats_count; i++)
+		for (int i = 0; i < m_systemCap.platform_capabilities.app_direct_mode.interleave_formats_count; i++)
 		{
-			if (m_systemCap.platform_capabilities.pm_direct.interleave_formats[i].ways == numDimms)
+			if (m_systemCap.platform_capabilities.app_direct_mode.interleave_formats[i].ways == numDimms)
 			{
-				channelSize = m_systemCap.platform_capabilities.pm_direct.interleave_formats[i].channel;
-				if (m_systemCap.platform_capabilities.pm_direct.interleave_formats[i].recommended)
+				channelSize = m_systemCap.platform_capabilities.app_direct_mode.interleave_formats[i].channel;
+				if (m_systemCap.platform_capabilities.app_direct_mode.interleave_formats[i].recommended)
 				{
 					// found a recommended size, stop looking
 					break;
@@ -657,22 +657,22 @@ enum interleave_size wbem::logic::LayoutStepPersistent::getInterleaveChannelSize
 	return channelSize;
 }
 
-enum interleave_size wbem::logic::LayoutStepPersistent::getInterleaveImcSize(
+enum interleave_size wbem::logic::LayoutStepAppDirect::getInterleaveImcSize(
 		const MemoryAllocationRequest &request, const size_t &numDimms)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	enum interleave_size imcSize =
-			(enum interleave_size)request.persistentExtents[m_pmExtentIndex].imc;
-	if (request.persistentExtents[m_pmExtentIndex].imc == REQUEST_DEFAULT_INTERLEAVE_FORMAT)
+			(enum interleave_size)request.appDirectExtents[m_adExtentIndex].imc;
+	if (request.appDirectExtents[m_adExtentIndex].imc == REQUEST_DEFAULT_INTERLEAVE_FORMAT)
 	{
 		// lookup recommended
-		for (int i = 0; i < m_systemCap.platform_capabilities.pm_direct.interleave_formats_count; i++)
+		for (int i = 0; i < m_systemCap.platform_capabilities.app_direct_mode.interleave_formats_count; i++)
 		{
-			if (m_systemCap.platform_capabilities.pm_direct.interleave_formats[i].ways == numDimms)
+			if (m_systemCap.platform_capabilities.app_direct_mode.interleave_formats[i].ways == numDimms)
 			{
-				imcSize = m_systemCap.platform_capabilities.pm_direct.interleave_formats[i].imc;
-				if (m_systemCap.platform_capabilities.pm_direct.interleave_formats[i].recommended)
+				imcSize = m_systemCap.platform_capabilities.app_direct_mode.interleave_formats[i].imc;
+				if (m_systemCap.platform_capabilities.app_direct_mode.interleave_formats[i].recommended)
 				{
 					// found a recommended size, stop looking
 					break;
@@ -684,7 +684,7 @@ enum interleave_size wbem::logic::LayoutStepPersistent::getInterleaveImcSize(
 	return imcSize;
 }
 
-std::vector<wbem::logic::Dimm> wbem::logic::LayoutStepPersistent::getRemainingDimms(
+std::vector<wbem::logic::Dimm> wbem::logic::LayoutStepAppDirect::getRemainingDimms(
 		const std::vector<Dimm> &dimms, const std::vector<Dimm> &dimmsIncluded)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);

@@ -192,7 +192,7 @@ int get_namespace_details(
 
 			if (ioctl_data.OutputPayload.NamespaceAttributes & NAMESPACE_ATTRIB_LOCAL)
 			{
-				p_details->type = NAMESPACE_TYPE_BLOCK;
+				p_details->type = NAMESPACE_TYPE_STORAGE;
 				p_details->block_size = ioctl_data.OutputPayload.Ns.BlockNamespace.LogicalBlockSize;
 				p_details->namespace_creation_id.device_handle.handle =
 					ioctl_data.OutputPayload.Ns.BlockNamespace.DeviceHandle.DeviceHandle;
@@ -201,7 +201,7 @@ int get_namespace_details(
 			}
 			else
 			{
-				p_details->type = NAMESPACE_TYPE_PMEM;
+				p_details->type = NAMESPACE_TYPE_APP_DIRECT;
 				p_details->block_size = 1;
 				p_details->namespace_creation_id.interleave_setid =
 					ioctl_data.OutputPayload.Ns.PmemNamespace.InterleaveSetId;
@@ -261,14 +261,14 @@ int create_namespace(
 		ioctl_data.InputPayload.RawNamespaceSize =
 			adjust_namespace_size(p_settings->block_size, p_settings->block_count);
 
-		if (p_settings->type == NAMESPACE_TYPE_BLOCK)
+		if (p_settings->type == NAMESPACE_TYPE_STORAGE)
 		{
 			ioctl_data.InputPayload.Ns.BlockNamespace.DeviceHandle.DeviceHandle =
 				p_settings->namespace_creation_id.device_handle.handle;
 			ioctl_data.InputPayload.NamespaceAttributes |= NAMESPACE_ATTRIB_LOCAL;
 			ioctl_data.InputPayload.Ns.BlockNamespace.LogicalBlockSize = p_settings->block_size;
 		}
-		if (p_settings->type == NAMESPACE_TYPE_PMEM)
+		if (p_settings->type == NAMESPACE_TYPE_APP_DIRECT)
 		{
 			ioctl_data.InputPayload.Ns.PmemNamespace.InterleaveSetId =
 				p_settings->namespace_creation_id.interleave_setid;

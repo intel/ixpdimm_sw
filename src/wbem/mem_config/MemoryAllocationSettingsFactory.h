@@ -56,7 +56,7 @@ static const std::string MEMORYALLOCATIONSETTINGS_ALLOCATIONUNITS = "bytes";
 // A MemoryAllocationSettings instanceId has the form AA.B.CCCC.D
 // Where:
 // AA is the socket number
-// B is the type of memory region (V - volatile, P - persistent, U - unmapped)
+// B is the type of memory region (V - memory, P - app direct, U - unmapped)
 // CCCC is the regionID - all digits
 // D is the config type - either C (current config) or G (goal config)
 
@@ -117,14 +117,14 @@ public:
 	static bool isADeviceGuid(const NVM_GUID guid);
 
 	/*
-	 * Return true if the instance is a volatile, goal config instance
+	 * Return true if the instance is a memory mode, goal config instance
 	 */
-	bool isVolatileGoalConfigInstance(const framework::Instance* pInstance);
+	bool isMemoryModeGoalConfigInstance(const framework::Instance* pInstance);
 
 	/*
-	 * Return true if the instance is a persistent, goal config instance
+	 * Return true if the instance is a app direct, goal config instance
 	 */
-	bool isPersistentGoalConfigInstance(const framework::Instance* pInstance);
+	bool isAppDirectGoalConfigInstance(const framework::Instance* pInstance);
 
 private:
 	/*
@@ -134,29 +134,29 @@ private:
 		const NVM_GUID guid);
 
 	/*
-	 * Return the guid that makes up the DEVICEID of the PersistentMemory instance
+	 * Return the guid that makes up the DEVICEID of the AppDirectMemory instance
 	 */
-	void getPersistentMemoryGuid(const framework::Instance* pMemoryInstance,
+	void getAppDirectMemoryGuid(const framework::Instance* pMemoryInstance,
 		NVM_GUID guid);
 
 	/*
-	 * Return true if the persistent region is associated with the PersistentMemory instance
+	 * Return true if the app direct region is associated with the AppDirectMemory instance
 	 */
-	bool isPersistentSettingAssociatedWithMemoryInstance(
+	bool isAppDirectSettingAssociatedWithMemoryInstance(
 		const framework::Instance* pSettingInstance,
 		const framework::Instance* pMemoryInstance);
 
 	/*
-	 * Return true if the unmapped region is associated with the PersistentMemory instance
+	 * Return true if the unmapped region is associated with the AppDirectMemory instance
 	 */
 	bool isUnmappedSettingAssociatedWithMemoryInstance(
 		const framework::Instance* pSettingInstance,
 		const framework::Instance* pMemoryInstance);
 
 	/*
-	 * Return true if the setting instance describes an persistent memory region
+	 * Return true if the setting instance describes an app direct memory region
 	 */
-	bool isPersistentInstance(const framework::Instance* pSettingInstance);
+	bool isAppDirectInstance(const framework::Instance* pSettingInstance);
 
 	/*
 	 * Return true if the setting instance describes an unmapped memory region
@@ -164,8 +164,8 @@ private:
 	bool isUnmappedInstance(const framework::Instance* pSettingInstance);
 
 	/*
-	 * Return true if the the persistent memory setting described by the
-	 * setting instance is associated with the PersistentMemory
+	 * Return true if the the app direct memory setting described by the
+	 * setting instance is associated with the AppDirectMemory
 	 * class instance.
 	 */
 	bool isSettingAssociatedWithMemoryInstance(
@@ -184,9 +184,9 @@ private:
 	bool isGoalInstance(const framework::Instance* pInstance);
 
 	/*
-	 * Return true if the instance is a volatile, current config instance
+	 * Return true if the instance is a memory mode, current config instance
 	 */
-	bool isVolatileCurrentConfigInstance(const framework::Instance* pInstance);
+	bool isMemoryModeCurrentConfigInstance(const framework::Instance* pInstance);
 
 	/*
 	 * return the handle that corresponds to the dimm guid
@@ -213,15 +213,15 @@ private:
 		const std::string instanceIdStr, const framework::attribute_names_t attributes);
 
 	/*
-	 * Finish a volatile or unmapped instance given a reservation
+	 * Finish a memory or storage instance given a reservation
 	 */
-	void finishVolatileOrUnmappedInstance(framework::Instance *pInstance, NVM_UINT64 reservation,
+	void finishMemoryOrStorageInstance(framework::Instance *pInstance, NVM_UINT64 reservation,
 		framework::attribute_names_t attributes);
 
 	/*
-	 * Finish a persistent instance given a reservation
+	 * Finish a app direct instance given a reservation
 	 */
-	void finishPersistentInstance(framework::Instance *pInstance, InterleaveSet &ilset,
+	void finishAppDirectInstance(framework::Instance *pInstance, InterleaveSet &ilset,
 		framework::attribute_names_t attributes);
 	/*
 	 * Get the instanceNames derived from the current config
@@ -255,22 +255,22 @@ private:
 	char getInstanceType(const std::string instanceIdStr);
 
 	/*
-	 * Get the volatile capacity for the given socket from the pools structs
+	 * Get the Memory Mode capacity for the given socket from the pools structs
 	 */
-	NVM_UINT64 getVolatileReservationFromPools(const std::vector<struct pool> &pools,
+	NVM_UINT64 getMemoryReservationFromPools(const std::vector<struct pool> &pools,
 		std::string instanceIdStr);
 
 	/*
-	 * Get the block capacity of the dimm described by the instanceID
+	 * Get the storage capacity of the dimm described by the instanceID
 	 * from the pool structs
 	 */
 	NVM_UINT64 getUnmappedReservationFromPools(const std::vector<struct pool> &pools,
 		const std::string instanceIdStr);
 
 	/*
-	 * From the pool struct get the volatile capacity on a socket
+	 * From the pool struct get the Memory Mode capacity on a socket
 	 */
-	NVM_UINT64 getVolatileCapacityForSocket(const struct pool *pool,
+	NVM_UINT64 getMemoryCapacityForSocket(const struct pool *pool,
 		const NVM_UINT16 socketId);
 
 	/*
@@ -286,9 +286,9 @@ private:
 		const NVM_UINT32 memoryControllerId, const NVM_UINT32 channelId, NVM_GUID guid);
 
 	/*
-	 *  From the pool struct return the block capacity of a dimm
+	 *  From the pool struct return the storage capacity of a dimm
 	 */
-	NVM_UINT64 getBlockCapacityForDimm(const std::vector<struct pool> &pools,
+	NVM_UINT64 getStorageCapacityForDimm(const std::vector<struct pool> &pools,
 		const NVM_GUID guid);
 
 	/*
@@ -297,9 +297,9 @@ private:
 	int getIndexOfDimmInPoolOrReturnNotFound(const struct pool *pPool, const NVM_GUID guid);
 
 	/*
-	 * Find the amount of volatile capacity for the goals on the given socket
+	 * Find the amount of memory mode capacity for the goals on the given socket
 	 */
-	NVM_UINT64 getVolatileReservationFromGoals(const physical_asset::devices_t &devices, std::string instanceIdStr);
+	NVM_UINT64 getMemoryReservationFromGoals(const physical_asset::devices_t &devices, std::string instanceIdStr);
 
 	/*
 	 * Derive the vector of ilsets from the array of goal structs
@@ -362,14 +362,14 @@ private:
 	bool isGoal (const std::string instanceId);
 
 	/*
-	 * Return true if the instanceId describes a persistent memory instance
+	 * Return true if the instanceId describes a app direct memory instance
 	 */
-	bool isPersistentMemory(const std::string instanceIdStr);
+	bool isAppDirectMemory(const std::string instanceIdStr);
 
 	/*
-	 * Return true if the instanceId describes a volatile memory instance
+	 * Return true if the instanceId describes a memory mode instance
 	 */
-	bool isVolatileMemory(const std::string instanceIdStr);
+	bool isMemory(const std::string instanceIdStr);
 };
 
 } // mem_config

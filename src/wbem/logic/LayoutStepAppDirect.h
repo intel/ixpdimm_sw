@@ -26,11 +26,11 @@
  */
 
 /*
- * Lay out the persistent region in memory.
+ * Lay out the app direct region in memory.
  */
 
-#ifndef _WBEM_LOGIC_LAYOUTSTEPPERSISTENT_H_
-#define _WBEM_LOGIC_LAYOUTSTEPPERSISTENT_H_
+#ifndef _WBEM_LOGIC_LAYOUTSTEPAPPDIRECT_H_
+#define _WBEM_LOGIC_LAYOUTSTEPAPPDIRECT_H_
 
 #include "LayoutStep.h"
 #include <nvm_types.h>
@@ -41,13 +41,13 @@ namespace wbem
 namespace logic
 {
 
-class NVM_API LayoutStepPersistent: public LayoutStep
+class NVM_API LayoutStepAppDirect: public LayoutStep
 {
 	public:
-		LayoutStepPersistent(const struct nvm_capabilities &cap,
-				const int pmExtentIndex = 0,
+		LayoutStepAppDirect(const struct nvm_capabilities &cap,
+				const int appDirectExtentIndex = 0,
 				lib_interface::NvmApi *pApi = NULL);
-		virtual ~LayoutStepPersistent();
+		virtual ~LayoutStepAppDirect();
 
 		virtual void execute(const MemoryAllocationRequest &request,
 				MemoryAllocationLayout &layout);
@@ -59,17 +59,17 @@ class NVM_API LayoutStepPersistent: public LayoutStep
 				const NVM_UINT64 &requestedCapacity,
 				const struct MemoryAllocationRequest& request,
 				MemoryAllocationLayout &layout);
-		NVM_UINT64 layoutByOnePm(
+		NVM_UINT64 layoutByOneAd(
 				const NVM_UINT64 &bytesToAllocate,
 				const std::vector<Dimm> &dimms,
 				const MemoryAllocationRequest &request,
 				MemoryAllocationLayout &layout);
-		NVM_UINT64 layoutInterleavedPm(
+		NVM_UINT64 layoutInterleavedAd(
 				const NVM_UINT64 &bytesToAllocate,
 				const std::vector<Dimm> &dimms,
 				const MemoryAllocationRequest &request,
 				MemoryAllocationLayout &layout);
-		NVM_UINT64 layoutInterleavedPmAcrossSocket(
+		NVM_UINT64 layoutInterleavedAdAcrossSocket(
 				const NVM_UINT64 &bytesPerSocket,
 				const std::vector<Dimm> &dimms,
 				const MemoryAllocationRequest& request,
@@ -89,9 +89,9 @@ class NVM_API LayoutStepPersistent: public LayoutStep
 				const std::vector<Dimm> &dimms,
 				std::map<std::string, struct config_goal> &goals,
 				const MemoryAllocationRequest &request);
-		NVM_UINT64 getDimmUnallocatedPersistentBytes(
+		NVM_UINT64 getDimmUnallocatedAppDirectBytes(
 				const struct Dimm &dimm, const struct config_goal &goal);
-		NVM_UINT64 getRemainingPersistentBytesFromDimms(
+		NVM_UINT64 getRemainingAppDirectBytesFromDimms(
 				const MemoryAllocationRequest &request,
 				MemoryAllocationLayout &layout);
 		bool isValidWay(const size_t &numDimms);
@@ -102,11 +102,11 @@ class NVM_API LayoutStepPersistent: public LayoutStep
 				const MemoryAllocationRequest &request, const size_t &numDimms);
 		void addInterleaveSetToGoal(const std::string &dimmGuid,
 				struct config_goal &goal, const NVM_UINT64 &sizeBytes,
-				const NVM_UINT16 &setId, const struct pm_attributes &settings);
+				const NVM_UINT16 &setId, const struct app_direct_attributes &settings);
 		bool interleaveSetFromPreviousExtent(
 				const std::string &dimmGuid,
 				struct config_goal &goal);
-		bool interleaveSetsMatch(const struct pm_attributes &oldSet, const struct pm_attributes &newSet);
+		bool interleaveSetsMatch(const struct app_direct_attributes &oldSet, const struct app_direct_attributes &newSet);
 		int getDimmPopulationMap(const std::vector<Dimm> &requestedDimms,
 						std::map<std::string, struct config_goal> &goals);
 		bool dimmPopulationMatchesInterleaveSet(const int &dimmMap, const int &interleaveSet);
@@ -122,12 +122,12 @@ class NVM_API LayoutStepPersistent: public LayoutStep
 				const std::vector<Dimm> &dimmsIncluded);
 
 		struct nvm_capabilities m_systemCap;
-		unsigned int m_pmExtentIndex;
+		unsigned int m_adExtentIndex;
 		lib_interface::NvmApi *m_pLibApi;
-		std::map<std::string, int> m_dimmExistingSets; // dimm GUID to PM count map
+		std::map<std::string, int> m_dimmExistingSets; // dimm GUID to App Direct count map
 };
 
 } /* namespace logic */
 } /* namespace wbem */
 
-#endif /* _WBEM_LOGIC_LAYOUTSTEPPERSISTENT_H_ */
+#endif /* _WBEM_LOGIC_LAYOUTSTEPAPPDIRECT_H_ */

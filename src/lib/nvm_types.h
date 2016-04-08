@@ -77,7 +77,7 @@
 #define	NVM_MAX_SOCKETS	4 // Maximum number of sockets per system
 #define	NVM_MAX_SOCKET_DIGIT_COUNT	4 // Maximum number of digits in a socket count
 #define	NVM_MEMORY_CONTROLLER_CHANNEL_COUNT	3 // expected number of channels per iMC
-#define	NVM_MAX_PM_POOLS_PER_DIMM	2 // Maximum number of persistent memory pools per DIMM
+#define	NVM_MAX_INTERLEAVE_SETS_PER_DIMM	2 // Max number of App Direct interleave sets per DIMM
 #define	NVM_MAX_POOLS_PER_NAMESPACE	128 // Maximum number of pools for a namespace
 #define	NVM_PART_NUM_LEN	32 // Length of device part number string : TBD, guessing at 32
 // TODO -guessing and interleave formats size. HSD-20363 should address this.
@@ -206,7 +206,7 @@ enum return_code
 	NVM_ERR_TOOMANYNAMESPACES = -43, // The maximum number of namespaces is already present.
 	NVM_ERR_CONFIGNOTSUPPORTED = -44, // The requested configuration is not supported.
 	NVM_ERR_SKUVIOLATION = -45, // The method is not supported because of a license violation.
-	NVM_ERR_BADNAMESPACEPERSISTENTSETTING = -46, // Could not create ns with persistent setting.
+	NVM_ERR_BADNAMESPACESETTING = -46, // Could not create ns with App Direct setting.
 	NVM_ERR_INVALIDPASSPHRASEFILE = -47, // The passphrase file is invalid.
 };
 
@@ -216,7 +216,7 @@ enum return_code
 enum pool_type
 {
 	POOL_TYPE_UNKNOWN = 0,
-	POOL_TYPE_PERSISTENT = 1, // Pool type is non-mirrored persistent or block.
+	POOL_TYPE_PERSISTENT = 1, // Pool type is non-mirrored App Direct or Storage.
 	POOL_TYPE_VOLATILE = 2, // Volatile.
 	POOL_TYPE_PERSISTENT_MIRROR = 3, // Persistent.
 };
@@ -250,8 +250,8 @@ enum interleave_set_health
 enum namespace_type
 {
 	NAMESPACE_TYPE_UNKNOWN = 0, // Type cannot be determined
-	NAMESPACE_TYPE_BLOCK = 1, // Block namespace
-	NAMESPACE_TYPE_PMEM = 2 // Persistent memory namespace
+	NAMESPACE_TYPE_STORAGE = 1, // Storage namespace
+	NAMESPACE_TYPE_APP_DIRECT = 2 // App Direct namespace
 };
 
 /*

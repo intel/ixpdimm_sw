@@ -118,23 +118,23 @@ class NVM_API MemoryConfigurationFactory  : public framework_interface::NvmInsta
 				std::vector<struct InterleaveSetInfo> &ilsetInfos);
 
 		/*
-		 * Return the volatile capacity for the given dimm guid
+		 * Return the Memory Mode capacity for the given dimm guid
 		 */
-		NVM_UINT64 getDimmVolatileCapacityFromCurrentConfig
+		NVM_UINT64 getDimmMemoryCapacityFromCurrentConfig
 				(const NVM_GUID guid, const std::vector<struct pool> &pools)
 						throw (framework::Exception);
 
 		/*
-		 * Return the block capacity for the given dimm guid for the current config
+		 * Return the Storage Mode capacity for the given dimm guid for the current config
 		 */
-		NVM_UINT64 getDimmBlockCapacityFromCurrentConfig
+		NVM_UINT64 getDimmStorageCapacityFromCurrentConfig
 				(const NVM_GUID guid, const std::vector<struct pool> &pools)
 						throw (framework::Exception);
 
 		/*
-		 * Return the block capacity for the given dimm for the goal config
+		 * Return the Storage Mode capacity for the given dimm for the goal config
 		 */
-		static NVM_UINT64 getDimmBlockCapacityFromGoal
+		static NVM_UINT64 getDimmStorageCapacityFromGoal
 			(const struct device_discovery *pDiscovery, const struct config_goal &goal);
 
 		/*

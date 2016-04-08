@@ -72,9 +72,9 @@ ShowDeviceCommand::ShowDeviceCommand(core::device::DeviceService &service)
 	m_props.addList("ActionRequiredEvents", &core::device::Device::getActionRequiredEvents);
 	m_props.addBool("IsNew", &core::device::Device::isNew);
 	m_props.addOther("FormFactor", &core::device::Device::getFormFactor, &convertFormFactor);
-	m_props.addUint64("VolatileCapacity", &core::device::Device::getVolatileCapacity,
+	m_props.addUint64("MemoryCapacity", &core::device::Device::getMemoryCapacity,
 			convertCapacity);
-	m_props.addUint64("PersistentCapacity", &core::device::Device::getPersistentCapacity,
+	m_props.addUint64("AppDirectCapacity", &core::device::Device::getAppDirectCapacity,
 			convertCapacity);
 	m_props.addUint64("UnconfiguredCapacity", &core::device::Device::getUnconfiguredCapacity,
 			convertCapacity);
@@ -268,9 +268,9 @@ std::string ShowDeviceCommand::convertToDate(NVM_UINT64 timeValue)
 std::string ShowDeviceCommand::convertMemoryModes(NVM_UINT16 mode)
 {
 	std::map<NVM_UINT16, std::string> map;
-	map[MEMORY_CAPABILITY_MEMORYMODE] = TR("2LM");
+	map[MEMORY_CAPABILITY_MEMORYMODE] = TR("Memory");
 	map[MEMORYTYPE_CAPABILITY_STORAGEMODE] = TR("Storage");
-	map[MEMORYTYPE_CAPABILITY_APPDIRECTMODE] = TR("AppDirect");
+	map[MEMORYTYPE_CAPABILITY_APPDIRECTMODE] = TR("App Direct");
 	return map[mode];
 }
 

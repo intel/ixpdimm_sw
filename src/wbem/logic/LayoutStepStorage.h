@@ -26,7 +26,7 @@
  */
 
 /*
- * Lay out the block region in memory.
+ * Lay out the storage region in memory.
  */
 
 #ifndef _WBEM_LOGIC_LAYOUTSTEPSTORAGE_H_

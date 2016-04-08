@@ -192,7 +192,7 @@ void wbem::logic::LayoutStepReserveDimm::setReserveDimmForStorage(struct Dimm re
 		MemoryAllocationLayout& layout)
 {
 	layout.storageCapacity = reserveDimm.capacity / BYTES_PER_GB;
-	layout.goals[reserveDimm.guid].volatile_size = 0;
-	layout.goals[reserveDimm.guid].persistent_count = 0;
+	layout.goals[reserveDimm.guid].memory_size = 0;
+	layout.goals[reserveDimm.guid].app_direct_count = 0;
 	layout.reserveDimmGuid = reserveDimm.guid;
 }

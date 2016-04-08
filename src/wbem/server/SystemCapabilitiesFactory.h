@@ -49,9 +49,9 @@ static const std::string MEMORYMODE_UNKNOWN_STR = "Unknown";
 static const std::string MEMORYMODE_1LM_STR = "1LM";
 static const std::string MEMORYMODE_MEMORY_STR = "Memory";
 static const std::string MEMORYMODE_AUTO_STR = "Auto";
-static const std::string MEMORYMODE_PMDIRECT_STR = "AppDirect";
-static const std::string MEMORYMODE_PMDISABLED_STR = "Disabled";
-static const std::string MEMORYMODE_BLOCK_STR = "Storage";
+static const std::string MEMORYMODE_APP_DIRECT_STR = "App Direct";
+static const std::string MEMORYMODE_APP_DIRECT_DISABLED_STR = "Disabled";
+static const std::string MEMORYMODE_STORAGE_STR = "Storage";
 
 // Reliability strings
 static const std::string RELIABILITY_DIMM_SPARING = "DIMM Sparing";
@@ -76,11 +76,11 @@ class NVM_API SystemCapabilitiesFactory  : public framework_interface::NvmInstan
 
 	static framework::STR_LIST getSupportedMemoryModes(const struct nvm_capabilities &nvmCaps);
 	static std::string getCurrentVolatileMode(const struct nvm_capabilities &nvmCaps);
-	static std::string getCurrentPMMode(const struct nvm_capabilities &nvmCaps);
+	static std::string getCurrentAppDirectMode(const struct nvm_capabilities &nvmCaps);
 	static framework::STR_LIST getSupportedSettings(const struct nvm_capabilities &nvmCaps);
 	static framework::STR_LIST getRecommendedSettings(const struct nvm_capabilities &nvmCaps);
 	static std::string getInterleaveSetFormatStr(const struct interleave_format &format, bool mirrorSupported);
-	static framework::UINT64 getPMAlignment(const struct nvm_capabilities &nvmCaps);
+	static framework::UINT64 getAppDirectAlignment(const struct nvm_capabilities &nvmCaps);
 
 	static void addFormatStringIfNotInList(wbem::framework::STR_LIST &list,
 			const struct interleave_format &format, bool mirrorSupported);

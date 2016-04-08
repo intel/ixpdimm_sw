@@ -46,7 +46,7 @@ namespace nvmcli
 {
 
 /*
- * Helper class to wrap a Volatile or Persistent Property
+ * Helper class to wrap a Memory Mode or App Direct Property
  */
 class MemoryProperty
 {

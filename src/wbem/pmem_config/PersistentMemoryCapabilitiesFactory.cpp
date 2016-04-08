@@ -111,11 +111,11 @@ throw(wbem::framework::Exception)
 			pInstance->setAttribute(SECURITYFEATURES_KEY, a, attributes);
 		}
 
-		// AccessGranularity = Block/PM
+		// AccessGranularity = Block/byte
 		if (containsAttribute(ACCESSGRANULARITY_KEY, attributes))
 		{
 			framework::UINT16_LIST accessList;
-			accessList.push_back(PMCAP_ACCESSGRANULARITY_BYTE); // all pm pools are pm capable
+			accessList.push_back(PMCAP_ACCESSGRANULARITY_BYTE); // all app direct is byte accessible
 			if (pool.type == POOL_TYPE_PERSISTENT)
 			{
 				accessList.push_back(PMCAP_ACCESSGRANULARITY_BLOCK); // non mirrored = block capable
@@ -322,7 +322,7 @@ wbem::framework::UINT64 wbem::pmem_config::PersistentMemoryCapabilitiesFactory::
 	throw (framework::Exception)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	NVM_UINT64 maxPmemNS = 0;
+	NVM_UINT64 maxAppDirectNS = 0;
 	NVM_UINT64 maxBlockNS = 0;
 
 	NVM_GUID_STR poolGuidStr;
@@ -331,28 +331,28 @@ wbem::framework::UINT64 wbem::pmem_config::PersistentMemoryCapabilitiesFactory::
 	int rc = nvm_get_nvm_capabilities(&nvm_caps);
 	if (rc == NVM_SUCCESS)
 	{
-		// A pool can have as many PM Namespaces as its interleave sets as long as the size is greater
+		// A pool can have as many App Direct Namespaces as its interleave sets as long as the size is greater
 		// than minimum namespace size
 		for (int i = 0; i < pPool->ilset_count; i++)
 		{
 			if (pPool->ilsets[i].size >= nvm_caps.sw_capabilities.min_namespace_size)
 			{
-				maxPmemNS++;
+				maxAppDirectNS++;
 			}
 		}
 
-		// A pool can have as many block Namespaces as its dimms as long as the size is greater
+		// A pool can have as many storage namespaces as its dimms as long as the size is greater
 		// than minimum namespace size
 		for (int j = 0; j < pPool->dimm_count; j++)
 		{
-			if (pPool->block_capacities[j] >= nvm_caps.sw_capabilities.min_namespace_size)
+			if (pPool->storage_capacities[j] >= nvm_caps.sw_capabilities.min_namespace_size)
 			{
 				maxBlockNS++;
 			}
 		}
 	}
 
-	return (maxPmemNS + maxBlockNS);
+	return (maxAppDirectNS + maxBlockNS);
 }
 
 /*

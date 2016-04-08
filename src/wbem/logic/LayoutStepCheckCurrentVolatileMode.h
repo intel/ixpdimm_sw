@@ -26,7 +26,7 @@
  */
 
 /*
- * Add a layout warning if the current volatile mode reported by BIOS is not auto or 2LM.
+ * Add a layout warning if the current volatile mode reported by BIOS does not match the requested mode.
  */
 
 #ifndef _WBEM_LOGIC_LAYOUTSTEPCHECKCURRENTVOLATILEMODE_H_

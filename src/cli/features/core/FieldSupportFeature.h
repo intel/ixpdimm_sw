@@ -77,7 +77,7 @@ static const int NUMDIAGTESTTYPES = 5;
 // diagnostic test type CLI input strings
 static const std::string CLIDIAGNOSTIC_TEST_QUICK = "Quick"; //!< method parameter for quick health check
 static const std::string CLIDIAGNOSTIC_TEST_PLATFORM = "Config"; //!< method parameter for platform config check
-static const std::string CLIDIAGNOSTIC_TEST_STORAGE = "PM"; //!< method parameter for PM metadata check
+static const std::string CLIDIAGNOSTIC_TEST_PM = "PM"; //!< method parameter for PM metadata check
 static const std::string CLIDIAGNOSTIC_TEST_SECURITY = "Security"; //!< method parameter for security check
 static const std::string CLIDIAGNOSTIC_TEST_SETTING = "FW"; //!< method parameter for settings check
 
@@ -86,12 +86,12 @@ static const std::string CLIDIAGNOSTIC_LOGENTRYTIMESTAMP = "DateTime"; //!< log 
 static const std::string CLIDIAGNOSTIC_COMPLETIONSTATE = "State"; //!< diagnostic test completion state
 static const std::string CLIDIAGNOSTIC_COMPLETIONMESSAGE = "Message"; //!< diagnostic test completion log messages
 
-static const std::string diagTestTypes[NUMDIAGTESTTYPES] =
-		{	CLIDIAGNOSTIC_TEST_QUICK,
-			CLIDIAGNOSTIC_TEST_PLATFORM,
-			CLIDIAGNOSTIC_TEST_STORAGE,
-			CLIDIAGNOSTIC_TEST_SECURITY,
-			CLIDIAGNOSTIC_TEST_SETTING 	};
+static const std::string diagTestTypes[NUMDIAGTESTTYPES] = {
+				CLIDIAGNOSTIC_TEST_QUICK,
+				CLIDIAGNOSTIC_TEST_PLATFORM,
+				CLIDIAGNOSTIC_TEST_PM,
+				CLIDIAGNOSTIC_TEST_SECURITY,
+				CLIDIAGNOSTIC_TEST_SETTING};
 
 const size_t MAX_EVENTS = 50;
 

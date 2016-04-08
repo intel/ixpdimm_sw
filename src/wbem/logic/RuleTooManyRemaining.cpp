@@ -49,7 +49,7 @@ void wbem::logic::RuleTooManyRemaining::verify(const MemoryAllocationRequest &re
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	int remainingCount = 0;
-	if (request.volatileCapacity == REQUEST_REMAINING_CAPACITY)
+	if (request.memoryCapacity == REQUEST_REMAINING_CAPACITY)
 	{
 		remainingCount++;
 	}
@@ -57,10 +57,10 @@ void wbem::logic::RuleTooManyRemaining::verify(const MemoryAllocationRequest &re
 	{
 		remainingCount++;
 	}
-	for (std::vector<PersistentExtent>::const_iterator pmIter = request.persistentExtents.begin();
-			pmIter != request.persistentExtents.end(); pmIter++)
+	for (std::vector<AppDirectExtent>::const_iterator adIter = request.appDirectExtents.begin();
+			adIter != request.appDirectExtents.end(); adIter++)
 	{
-		if (pmIter->capacity == REQUEST_REMAINING_CAPACITY)
+		if (adIter->capacity == REQUEST_REMAINING_CAPACITY)
 		{
 			remainingCount++;
 		}

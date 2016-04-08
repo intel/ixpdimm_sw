@@ -527,22 +527,22 @@ NVM_UINT64 Device::getTotalCapacity()
 	return getDetails().capacities.capacity;
 }
 
-NVM_UINT64 Device::getVolatileCapacity()
+NVM_UINT64 Device::getMemoryCapacity()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	return getDetails().capacities.volatile_capacity;
+	return getDetails().capacities.memory_capacity;
 }
 
-NVM_UINT64 Device::getPersistentCapacity()
+NVM_UINT64 Device::getAppDirectCapacity()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	return getDetails().capacities.persistent_capacity;
+	return getDetails().capacities.app_direct_capacity;
 }
 
-NVM_UINT64 Device::getBlockCapacity()
+NVM_UINT64 Device::getStorageCapacity()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	return getDetails().capacities.block_capacity;
+	return getDetails().capacities.storage_capacity;
 }
 
 NVM_UINT64 Device::getUnconfiguredCapacity()

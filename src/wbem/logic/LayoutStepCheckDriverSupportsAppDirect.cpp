@@ -26,37 +26,29 @@
  */
 
 /*
- * Rule to determine if persistent memory request is supported
+ * Check if the driver supports app direct. If not, create a warning.
  */
 
-#ifndef _WBEM_LOGIC_RULEPERSISTENTNOTSUPPORTED_H_
-#define _WBEM_LOGIC_RULEPERSISTENTNOTSUPPORTED_H_
+#include "LayoutStepCheckDriverSupportsAppDirect.h"
+#include <LogEnterExit.h>
 
-#include "RequestRule.h"
-#include <nvm_types.h>
-
-namespace wbem
+wbem::logic::LayoutStepCheckDriverSupportsAppDirect::LayoutStepCheckDriverSupportsAppDirect(
+		const struct nvm_features &driverFeatures) : m_driverFeatures(driverFeatures)
 {
-namespace logic
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+}
+
+wbem::logic::LayoutStepCheckDriverSupportsAppDirect::~LayoutStepCheckDriverSupportsAppDirect()
 {
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+}
 
-class NVM_API RulePersistentNotSupported : public RequestRule
+void wbem::logic::LayoutStepCheckDriverSupportsAppDirect::execute(const MemoryAllocationRequest& request,
+		MemoryAllocationLayout& layout)
 {
-	public:
-		RulePersistentNotSupported(const struct nvm_capabilities &cap);
-		virtual ~RulePersistentNotSupported();
-
-		virtual void verify(const MemoryAllocationRequest &request);
-
-	protected:
-		struct nvm_capabilities m_systemCap;
-
-		void verifyAppDirectSupported();
-		void verifyPersistentSettingsSupported(const MemoryAllocationRequest& request);
-		bool formatSupported(const struct PersistentExtent &pmRequest);
-};
-
-} /* namespace logic */
-} /* namespace wbem */
-
-#endif /* _WBEM_LOGIC_RULEPERSISTENTNOTSUPPORTED_H_ */
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	if (request.appDirectExtents.size() > 0 && !m_driverFeatures.app_direct_mode)
+	{
+		layout.warnings.push_back(LAYOUT_WARNING_APP_DIRECT_NOT_SUPPORTED_BY_DRIVER);
+	}
+}

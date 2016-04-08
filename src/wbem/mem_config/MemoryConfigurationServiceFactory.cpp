@@ -701,12 +701,12 @@ void wbem::mem_config::MemoryConfigurationServiceFactory::validatePool(std::stri
  */
 void wbem::mem_config::MemoryConfigurationServiceFactory::settingsStringsToRequestedExtents(
 		const framework::STR_LIST &settingsStrings,
-		NVM_UINT64 &volatileCapacity,
-		std::vector<struct logic::PersistentExtent> &persistentCapacities)
+		NVM_UINT64 &memoryCapacity,
+		std::vector<struct logic::AppDirectExtent> &appDirectCapacities)
 	throw (wbem::framework::Exception)
 {
-	volatileCapacity  = 0;
-	persistentCapacities.clear();
+	memoryCapacity  = 0;
+	appDirectCapacities.clear();
 
 	// If settings are empty, don't bother
 	if (settingsStrings.empty())
@@ -773,17 +773,17 @@ void wbem::mem_config::MemoryConfigurationServiceFactory::settingsStringsToReque
 
 		if (resourceType == MEMORYALLOCATIONSETTINGS_RESOURCETYPE_MEMORY)
 		{
-			volatileCapacity += reservationGiB;
+			memoryCapacity += reservationGiB;
 		}
 		else if (resourceType == MEMORYALLOCATIONSETTINGS_RESOURCETYPE_NONVOLATILE)
 		{
-			struct logic::PersistentExtent persistentExtent;
-			persistentExtent.capacity = reservationGiB;
-			persistentExtent.channel = InterleaveSet::getInterleaveSizeFromExponent(channelInterleaveSize);
-			persistentExtent.imc = InterleaveSet::getInterleaveSizeFromExponent(controllerInterleaveSize);
-			persistentExtent.byOne = (channelCount == INTERLEAVE_WAYS_1);
-			persistentExtent.mirrored = (replication == MEMORYALLOCATIONSETTINGS_REPLICATION_LOCAL);
-			persistentCapacities.push_back(persistentExtent);
+			struct logic::AppDirectExtent appDirectExtent;
+			appDirectExtent.capacity = reservationGiB;
+			appDirectExtent.channel = InterleaveSet::getInterleaveSizeFromExponent(channelInterleaveSize);
+			appDirectExtent.imc = InterleaveSet::getInterleaveSizeFromExponent(controllerInterleaveSize);
+			appDirectExtent.byOne = (channelCount == INTERLEAVE_WAYS_1);
+			appDirectExtent.mirrored = (replication == MEMORYALLOCATIONSETTINGS_REPLICATION_LOCAL);
+			appDirectCapacities.push_back(appDirectExtent);
 		}
 	}
 }
@@ -1055,7 +1055,7 @@ wbem::logic::MemoryAllocationRequest wbem::mem_config::MemoryConfigurationServic
 
 	getDimmsForMemAllocSettings(memoryAllocationSettings, request.dimms);
 	settingsStringsToRequestedExtents(memoryAllocationSettings,
-			request.volatileCapacity, request.persistentExtents);
+			request.memoryCapacity, request.appDirectExtents);
 	request.reserveDimm = false;
 	request.storageRemaining = true;
 

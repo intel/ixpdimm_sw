@@ -33,13 +33,13 @@
 #include <LogEnterExit.h>
 #include <utility.h>
 #include <exception/NvmExceptionBadRequest.h>
-#include "LayoutStepCheckDriverSupportsPersistent.h"
+#include "LayoutStepCheckDriverSupportsAppDirect.h"
 #include "LayoutStepCheckDriverSupportsStorage.h"
-#include "LayoutStepPersistentSettingsNotRecommended.h"
+#include "LayoutStepAppDirectSettingsNotRecommended.h"
 #include "LayoutStepCheckAsymmetricalPopulation.h"
 #include "LayoutStepCheckCurrentVolatileMode.h"
-#include "LayoutStepVolatile.h"
-#include "LayoutStepPersistent.h"
+#include "LayoutStepAppDirect.h"
+#include "LayoutStepMemory.h"
 #include "LayoutStepStorage.h"
 #include "LayoutStepReserveDimm.h"
 
@@ -100,8 +100,8 @@ void wbem::logic::LayoutBuilder::populateWarningGeneratingLayoutSteps()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	m_layoutSteps.push_back(new LayoutStepCheckDriverSupportsPersistent(m_systemCapabilities.nvm_features));
-	m_layoutSteps.push_back(new LayoutStepPersistentSettingsNotRecommended(m_systemCapabilities.platform_capabilities));
+	m_layoutSteps.push_back(new LayoutStepCheckDriverSupportsAppDirect(m_systemCapabilities.nvm_features));
+	m_layoutSteps.push_back(new LayoutStepAppDirectSettingsNotRecommended(m_systemCapabilities.platform_capabilities));
 	m_layoutSteps.push_back(new LayoutStepCheckDriverSupportsStorage(m_systemCapabilities.nvm_features));
 	m_layoutSteps.push_back(new LayoutStepCheckAsymmetricalPopulation());
 	m_layoutSteps.push_back(new LayoutStepCheckCurrentVolatileMode(m_systemCapabilities.platform_capabilities));
@@ -118,26 +118,26 @@ void wbem::logic::LayoutBuilder::populateOrderedLayoutStepsForRequest(
 	// Any capacity marked REMAINING must go last (but before storage)
 	LayoutStep *pRemainingStep = NULL;
 
-	LayoutStep *pVolatile = new LayoutStepVolatile();
-	if (pVolatile->isRemainingStep(request))
+	LayoutStep *pMemory = new LayoutStepMemory();
+	if (pMemory->isRemainingStep(request))
 	{
-		pRemainingStep = pVolatile;
+		pRemainingStep = pMemory;
 	}
 	else
 	{
-		m_layoutSteps.push_back(pVolatile);
+		m_layoutSteps.push_back(pMemory);
 	}
 
-	for (size_t i = 0; i < request.persistentExtents.size(); i++)
+	for (size_t i = 0; i < request.appDirectExtents.size(); i++)
 	{
-		LayoutStep *pPersistent = new LayoutStepPersistent(m_systemCapabilities, (int)i, m_pLibApi);
-		if (pPersistent->isRemainingStep(request))
+		LayoutStep *pAppDirect = new LayoutStepAppDirect(m_systemCapabilities, (int)i, m_pLibApi);
+		if (pAppDirect->isRemainingStep(request))
 		{
-			pRemainingStep = pPersistent;
+			pRemainingStep = pAppDirect;
 		}
 		else
 		{
-			m_layoutSteps.push_back(pPersistent);
+			m_layoutSteps.push_back(pAppDirect);
 		}
 	}
 

@@ -204,10 +204,10 @@ int calculate_pool_security(struct pool *p_pool)
 	 * wholly contained on eraseable NVDIMMs.
 	 */
 
-	// check if a block namespace can be created
-	NVM_BOOL create_block_encryption_enabled_ns = 0;
-	NVM_BOOL create_block_encryption_capable_ns = 0;
-	NVM_BOOL create_block_erase_capable_ns = 0;
+	// check if a storage namespace can be created
+	NVM_BOOL create_storage_encryption_enabled_ns = 0;
+	NVM_BOOL create_storage_encryption_capable_ns = 0;
+	NVM_BOOL create_storage_erase_capable_ns = 0;
 	if (p_pool->type == POOL_TYPE_PERSISTENT)
 	{
 		struct nvm_capabilities nvm_caps;
@@ -221,20 +221,20 @@ int calculate_pool_security(struct pool *p_pool)
 					p_pool->dimms[i],
 					&discovery)) == NVM_SUCCESS)
 				{
-					if ((p_pool->block_capacities[i] >
+					if ((p_pool->storage_capacities[i] >
 						nvm_caps.sw_capabilities.min_namespace_size))
 					{
 						if (device_is_encryption_enabled(discovery.lock_state))
 						{
-							create_block_encryption_enabled_ns = 1;
+							create_storage_encryption_enabled_ns = 1;
 						}
 						if (discovery.security_capabilities.passphrase_capable)
 						{
-							create_block_encryption_capable_ns = 1;
+							create_storage_encryption_capable_ns = 1;
 						}
 						if (device_is_erase_capable(discovery.security_capabilities))
 						{
-							create_block_erase_capable_ns = 1;
+							create_storage_erase_capable_ns = 1;
 						}
 					}
 				}
@@ -246,11 +246,11 @@ int calculate_pool_security(struct pool *p_pool)
 		}
 	}
 
-	// check if a pm namespace can be created if block ns can't be created
-	NVM_BOOL create_pm_encryption_enabled_ns = 0;
-	NVM_BOOL create_pm_encryption_capable_ns = 0;
-	NVM_BOOL create_pm_erase_capable_ns = 0;
-	if (!create_block_encryption_enabled_ns)
+	// check if a app direct namespace can be created if storage ns can't be created
+	NVM_BOOL create_ad_encryption_enabled_ns = 0;
+	NVM_BOOL create_ad_encryption_capable_ns = 0;
+	NVM_BOOL create_ad_erase_capable_ns = 0;
+	if (!create_storage_encryption_enabled_ns)
 	{
 		if ((p_pool->type == POOL_TYPE_PERSISTENT_MIRROR) ||
 			(p_pool->type == POOL_TYPE_PERSISTENT))
@@ -260,30 +260,30 @@ int calculate_pool_security(struct pool *p_pool)
 			NVM_BOOL erase_capable;
 			for (int i = 0; i < p_pool->ilset_count; i++)
 			{
-				rc = calculate_pmem_interleave_security(p_pool->ilsets[i].driver_id,
+				rc = calculate_app_direct_interleave_security(p_pool->ilsets[i].driver_id,
 						&encryption_enabled, &erase_capable, &encryption_capable);
 				if (rc == NVM_SUCCESS)
 				{
 					if (encryption_capable == NVM_ENCRYPTION_ON)
 					{
-						create_pm_encryption_capable_ns = 1;
+						create_ad_encryption_capable_ns = 1;
 
 						if (encryption_enabled == NVM_ENCRYPTION_ON)
 						{
-							create_pm_encryption_enabled_ns = 1;
+							create_ad_encryption_enabled_ns = 1;
 						}
 					}
 					if (erase_capable)
 					{
-						create_pm_erase_capable_ns = 1;
+						create_ad_erase_capable_ns = 1;
 					}
 				}
 			}
 		}
 	}
 
-	// if a block or pm namespace cannot be created, security attributes are on
-	if (create_block_encryption_enabled_ns || create_pm_encryption_enabled_ns)
+	// if a storage or app direct namespace cannot be created, security attributes are on
+	if (create_storage_encryption_enabled_ns || create_ad_encryption_enabled_ns)
 	{
 		p_pool->encryption_enabled = 1;
 	}
@@ -292,7 +292,7 @@ int calculate_pool_security(struct pool *p_pool)
 		p_pool->encryption_enabled = 0;
 	}
 
-	if (create_block_encryption_capable_ns || create_pm_encryption_capable_ns)
+	if (create_storage_encryption_capable_ns || create_ad_encryption_capable_ns)
 	{
 		p_pool->encryption_capable = 1;
 	}
@@ -301,7 +301,7 @@ int calculate_pool_security(struct pool *p_pool)
 		p_pool->encryption_capable = 0;
 	}
 
-	if (create_block_erase_capable_ns || create_pm_erase_capable_ns)
+	if (create_storage_erase_capable_ns || create_ad_erase_capable_ns)
 	{
 		p_pool->erase_capable = 1;
 	}
@@ -334,10 +334,10 @@ int convert_nvm_pool_to_pool(struct nvm_pool *p_nvm_pool, struct pool *p_pool)
 
 	for (int j = 0; j < p_pool->dimm_count; j++)
 	{
-		p_pool->volatile_capacities[j] =
-				p_nvm_pool->volatile_capacities[j];
-		p_pool->block_capacities[j] =
-				p_nvm_pool->block_capacities[j];
+		p_pool->memory_capacities[j] =
+				p_nvm_pool->memory_capacities[j];
+		p_pool->storage_capacities[j] =
+				p_nvm_pool->storage_capacities[j];
 		p_pool->raw_capacities[j] =
 				p_nvm_pool->raw_capacities[j];
 	}
@@ -634,10 +634,10 @@ int nvm_dump_config(const NVM_GUID device_guid,
 					// convert current config into config_goal struct
 					struct config_goal goal;
 					memset(&goal, 0, sizeof (goal));
-					// default volatile size to the current in case there
+					// default memory size to the current in case there
 					// is no partition size change table
-					goal.volatile_size =
-							(p_current_config->mapped_volatile_capacity / BYTES_PER_GB);
+					goal.memory_size =
+							(p_current_config->mapped_memory_capacity / BYTES_PER_GB);
 					rc = config_input_table_to_config_goal(device_guid,
 							(unsigned char *)p_current_config, sizeof (struct current_config_table),
 							p_current_config->header.length, &goal);
@@ -709,14 +709,14 @@ int read_dimm_config(FILE *p_file, struct config_goal *p_goal,
 
 			str = x_strtok(&pLine, delim);
 			if (str == NULL || s_strtoull(str, strlen(str),
-					&p_end, &p_goal->volatile_size) != strlen(str))
+					&p_end, &p_goal->memory_size) != strlen(str))
 			{
 				bad_format = 1;
 			}
 
 			str = x_strtok(&pLine, delim);
 			if (str == NULL || s_strtoull(str, strlen(str),
-					&p_end, &p_goal->persistent_1_size) != strlen(str))
+					&p_end, &p_goal->app_direct_1_size) != strlen(str))
 			{
 				bad_format = 1;
 			}
@@ -730,21 +730,21 @@ int read_dimm_config(FILE *p_file, struct config_goal *p_goal,
 
 			str = x_strtok(&pLine, delim);
 			if (str == NULL || s_digitstrtouc(str, strlen(str),
-					&p_end, &p_goal->persistent_1_settings.mirrored) != strlen(str))
+					&p_end, &p_goal->app_direct_1_settings.mirrored) != strlen(str))
 			{
 				bad_format = 1;
 			}
 
 			str = x_strtok(&pLine, delim);
 			if (str == NULL || s_strtous(str, strlen(str),
-					&p_end, &p_goal->persistent_1_set_id) != strlen(str))
+					&p_end, &p_goal->app_direct_1_set_id) != strlen(str))
 			{
 				bad_format = 1;
 			}
 
 			str = x_strtok(&pLine, delim);
 			if (str == NULL || s_strtoull(str, strlen(str),
-					&p_end, &p_goal->persistent_2_size) != strlen(str))
+					&p_end, &p_goal->app_direct_2_size) != strlen(str))
 			{
 				bad_format = 1;
 			}
@@ -758,14 +758,14 @@ int read_dimm_config(FILE *p_file, struct config_goal *p_goal,
 
 			str = x_strtok(&pLine, delim);
 			if (str == NULL || s_digitstrtouc(str, strlen(str),
-					&p_end, &p_goal->persistent_2_settings.mirrored) != strlen(str))
+					&p_end, &p_goal->app_direct_2_settings.mirrored) != strlen(str))
 			{
 				bad_format = 1;
 			}
 
 			str = x_strtok(&pLine, delim);
 			if (str == NULL || s_strtous(str, strlen(str),
-					&p_end, &p_goal->persistent_2_set_id) != strlen(str))
+					&p_end, &p_goal->app_direct_2_set_id) != strlen(str))
 			{
 				bad_format = 1;
 			}
@@ -788,9 +788,9 @@ int read_dimm_config(FILE *p_file, struct config_goal *p_goal,
 			{
 				// convert the format to the goal
 				interleave_format_to_struct(p1_format,
-						&p_goal->persistent_1_settings.interleave);
+						&p_goal->app_direct_1_settings.interleave);
 				interleave_format_to_struct(p2_format,
-						&p_goal->persistent_2_settings.interleave);
+						&p_goal->app_direct_2_settings.interleave);
 				rc = 1;
 			}
 			else
@@ -823,8 +823,8 @@ int fill_goal_dimm_guids(FILE *p_file, struct config_goal *p_goal)
 	while ((rc = read_dimm_config(p_file, &tmp, &socket, &dimm_handle, &dimm_size_gb)) > 0)
 	{
 		// if our goal has a P1, check for a matching index
-		if (p_goal->persistent_count > 0 &&
-			p_goal->persistent_1_set_id == tmp.persistent_1_set_id)
+		if (p_goal->app_direct_count > 0 &&
+			p_goal->app_direct_1_set_id == tmp.app_direct_1_set_id)
 		{
 			// convert the dimm_handle to a guid
 			NVM_NFIT_DEVICE_HANDLE handle;
@@ -832,21 +832,21 @@ int fill_goal_dimm_guids(FILE *p_file, struct config_goal *p_goal)
 			struct device_discovery discovery;
 			if (lookup_dev_handle(handle, &discovery) == NVM_SUCCESS)
 			{
-				memmove(p_goal->persistent_1_settings.dimms[p1_count],
+				memmove(p_goal->app_direct_1_settings.dimms[p1_count],
 						discovery.guid, NVM_GUID_LEN);
 				p1_count++;
 			}
 		}
 		// if our goal has a P2 index and it matches this one
-		if (p_goal->persistent_count > 1 &&
-				p_goal->persistent_2_set_id == tmp.persistent_2_set_id)
+		if (p_goal->app_direct_count > 1 &&
+				p_goal->app_direct_2_set_id == tmp.app_direct_2_set_id)
 		{
 			NVM_NFIT_DEVICE_HANDLE handle;
 			handle.handle = dimm_handle;
 			struct device_discovery discovery;
 			if (lookup_dev_handle(handle, &discovery) == NVM_SUCCESS)
 			{
-				memmove(p_goal->persistent_2_settings.dimms[p2_count],
+				memmove(p_goal->app_direct_2_settings.dimms[p2_count],
 						discovery.guid, NVM_GUID_LEN);
 				p2_count++;
 			}
@@ -854,9 +854,9 @@ int fill_goal_dimm_guids(FILE *p_file, struct config_goal *p_goal)
 	}
 
 	// make sure we found all dimms in the interleave set for P1
-	if (p_goal->persistent_count > 0)
+	if (p_goal->app_direct_count > 0)
 	{
-		if (p1_count != p_goal->persistent_1_settings.interleave.ways)
+		if (p1_count != p_goal->app_direct_1_settings.interleave.ways)
 		{
 			COMMON_LOG_ERROR(
 					"Not all the DIMMs in the p1 interleave set were found in the file");
@@ -864,9 +864,9 @@ int fill_goal_dimm_guids(FILE *p_file, struct config_goal *p_goal)
 		}
 	}
 	// make sure we found all dimms in the interleave set for P2
-	if (p_goal->persistent_count > 1)
+	if (p_goal->app_direct_count > 1)
 	{
-		if (p2_count != p_goal->persistent_2_settings.interleave.ways)
+		if (p2_count != p_goal->app_direct_2_settings.interleave.ways)
 		{
 			COMMON_LOG_ERROR(
 					"Not all the DIMMs in the p2 interleave set were found in the file");
@@ -962,14 +962,14 @@ int nvm_load_config(const NVM_GUID device_guid,
 							// make sure dimm is big enough for config
 							if ((discovery.capacity / BYTES_PER_GB) >= dimm_size_gb)
 							{
-								// set persistent count
-								if (goal.persistent_1_size)
+								// set App Direct count
+								if (goal.app_direct_1_size)
 								{
-									goal.persistent_count = 1;
+									goal.app_direct_count = 1;
 								}
-								if (goal.persistent_2_size)
+								if (goal.app_direct_2_size)
 								{
-									goal.persistent_count = 2;
+									goal.app_direct_count = 2;
 								}
 								// find matching dimm guids for the interleave sets
 								if ((rc = fill_goal_dimm_guids(p_file, &goal)) == NVM_SUCCESS)

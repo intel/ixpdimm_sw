@@ -126,12 +126,12 @@ namespace pmem_config
 		 * 		The pool identifier.
 		 */
 		virtual void getSupportedSizeRange(const std::string &poolGuid,
-				COMMON_UINT64 &largestPossiblePmNs,
-				COMMON_UINT64 &smallestPossiblePmNs,
-				COMMON_UINT64 &pmIncrement,
-				COMMON_UINT64 &largestPossibleBlockNs,
-				COMMON_UINT64 &smallestPossibleBlockNs,
-				COMMON_UINT64 &blockIncrement);
+				COMMON_UINT64 &largestPossibleAdNs,
+				COMMON_UINT64 &smallestPossibleAdNs,
+				COMMON_UINT64 &adIncrement,
+				COMMON_UINT64 &largestPossibleStorageNs,
+				COMMON_UINT64 &smallestPossibleStorageNs,
+				COMMON_UINT64 &storageIncrement);
 
 		/*!
 		 * Provider for extern int nvm_get_available_persistent_size_range

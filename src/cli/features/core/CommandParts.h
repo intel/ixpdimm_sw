@@ -87,16 +87,16 @@ const std::string BADTARGETERROR_STR = wbem::EXCEPTION_BADTARGET_MSG;
 const std::string BADSECURITY_ERROR_STR = N_TR("The command is not supported by the device in its current security state.");
 const std::string NONINTEROPERABLEDIMM_ERROR_STR = N_TR("The command is not supported because some " NVM_DIMM_NAME "s in the "
 		"system are not compatible with each other.");
-const std::string INVALID_NS_PERSISTENT_SETTINGS = N_TR("Unable to create a namespace with the specified PersistentSetting.");
+const std::string INVALID_NS_APP_DIRECT_SETTINGS = N_TR("Unable to create a namespace with the specified AppDirectSetting.");
 const std::string INVALID_DIMMID_ERROR_STR = N_TR("The device identifier %s is not valid.");
 const std::string INVALID_NAMESPACEID_ERROR_STR = N_TR("The namespace identifier %s is not valid.");
 
 const std::string BAD_REQUEST_STR =
 		N_TR("Unable to find a valid mapping for the requested configuration.");
-const std::string BAD_REQUEST_VOLATILE_SIZE_STR =
-		N_TR("The requested volatile capacity won't fit on the requested " NVM_DIMM_NAME "(s).");
-const std::string BAD_REQUEST_PERSISTENT_SIZE_STR =
-		N_TR("The requested persistent capacity won't fit on the requested " NVM_DIMM_NAME "(s).");
+const std::string BAD_REQUEST_MEMORY_SIZE_STR =
+		N_TR("The requested memory capacity won't fit on the requested " NVM_DIMM_NAME "(s).");
+const std::string BAD_REQUEST_APP_DIRECT_SIZE_STR =
+		N_TR("The requested App Direct capacity won't fit on the requested " NVM_DIMM_NAME "(s).");
 const std::string BAD_REQUEST_EXCEEDS_SYSTEM_RESOURCES_STR =
 		N_TR("The requested configuration exceeds the system resources with too many interleave sets per socket.");
 const std::string BAD_REQUEST_GOAL_ALREADY_EXISTS_STR = N_TR("A requested " NVM_DIMM_NAME
@@ -105,7 +105,7 @@ const std::string BAD_REQUEST_GOAL_BREAKS_CONFIG_STR = N_TR("The requested confi
 		" unconfigured or break an existing configuration.");
 const std::string BAD_REQUEST_MUST_DELETE_NAMESPACES_STR = N_TR("Existing namespaces must be deleted before this method can be executed.");
 const std::string BAD_REQUEST_NOT_SUPPORTED_STR = N_TR("The requested configuration is not supported.");
-const std::string BAD_REQUEST_PM_SETTINGS_NOT_SUPPORTED_STR = N_TR("The requested persistent memory settings are not supported by the platform BIOS.");
+const std::string BAD_REQUEST_APP_DIRECT_SETTINGS_NOT_RECOMMENDED_STR = N_TR("The selected App Direct settings are not recommended by the platform BIOS.");
 const std::string BAD_REQUEST_DIMM_SECURITY_STATE = N_TR("This method is not supported by the device in its current security state.");
 
 }

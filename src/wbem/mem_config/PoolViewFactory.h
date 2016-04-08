@@ -45,8 +45,8 @@ namespace wbem
 		static const std::string INTEL_POOLVIEW_CREATIONCLASSNAME = "Intel_PoolView"; //!< Creation Class Name static
 
 		static const std::string POOLTYPE_VOLATILE = "Volatile";
-		static const std::string POOLTYPE_MIRRORED = "MirroredPersistent";
-		static const std::string POOLTYPE_PERSISTENT = "Persistent";
+		static const std::string POOLTYPE_MIRRORED = "MirroredAppDirect";
+		static const std::string POOLTYPE_APPDIRECT = "AppDirect";
 		static const std::string POOLTYPE_UNKNOWN = "Unknown";
 
 		static const std::string POOLENCRYPTION_ENCRYPTED = "Encrypted";
@@ -106,7 +106,7 @@ namespace wbem
 			 */
 			static struct pool getPool(const std::string &poolGuidStr) throw (wbem::framework::Exception);
 
-			static wbem::framework::STR_LIST getPersistentSettings(const struct pool * pPool);
+			static wbem::framework::STR_LIST getAppDirectSettings(const struct pool * pPool);
 
 		private:
 			std::vector<struct namespace_details> m_nsCache; // cache for namespace_details to avoid repeated library calls

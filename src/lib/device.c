@@ -1327,14 +1327,14 @@ int nvm_get_nvm_capacities(struct device_capacities *p_capacities)
 								{
 									p_capacities->capacity +=
 											dimm_capacities.capacity;
-									p_capacities->volatile_capacity +=
-											dimm_capacities.volatile_capacity;
-									p_capacities->persistent_capacity +=
-											dimm_capacities.persistent_capacity;
+									p_capacities->memory_capacity +=
+											dimm_capacities.memory_capacity;
+									p_capacities->app_direct_capacity +=
+											dimm_capacities.app_direct_capacity;
 									p_capacities->unconfigured_capacity +=
 											dimm_capacities.unconfigured_capacity;
-									p_capacities->block_capacity +=
-											dimm_capacities.block_capacity;
+									p_capacities->storage_capacity +=
+											dimm_capacities.storage_capacity;
 									p_capacities->inaccessible_capacity +=
 											dimm_capacities.inaccessible_capacity;
 									p_capacities->reserved_capacity +=

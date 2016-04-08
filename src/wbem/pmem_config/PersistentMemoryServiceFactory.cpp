@@ -172,11 +172,11 @@ enum namespace_type wbem::pmem_config::PersistentMemoryServiceFactory::namespace
 	enum namespace_type enum_val;
 	switch (type)
 	{
-		case wbem::pmem_config::PM_SERVICE_BLOCK_TYPE:
-			enum_val = NAMESPACE_TYPE_BLOCK;
+		case wbem::pmem_config::PM_SERVICE_STORAGE_TYPE:
+			enum_val = NAMESPACE_TYPE_STORAGE;
 			break;
-		case wbem::pmem_config::PM_SERVICE_PM_TYPE:
-			enum_val = NAMESPACE_TYPE_PMEM;
+		case wbem::pmem_config::PM_SERVICE_APP_DIRECT_TYPE:
+			enum_val = NAMESPACE_TYPE_APP_DIRECT;
 			break;
 		default:
 			enum_val = NAMESPACE_TYPE_UNKNOWN;
@@ -433,8 +433,8 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::allocateFromPool(
 			pGoalInstance->getAttribute(wbem::RESOURCETYPE_KEY, namespaceTypeAttribute);
 			NVM_UINT16 type = namespaceTypeAttribute.uintValue();
 
-			if ((type != wbem::pmem_config::PM_SERVICE_PM_TYPE) &&
-				(type != wbem::pmem_config::PM_SERVICE_BLOCK_TYPE))
+			if ((type != wbem::pmem_config::PM_SERVICE_APP_DIRECT_TYPE) &&
+				(type != wbem::pmem_config::PM_SERVICE_STORAGE_TYPE))
 			{
 				COMMON_LOG_ERROR_F("Invalid namespace type in object path: %d", type);
 				throw framework::ExceptionBadParameter(PM_SERVICE_GOAL.c_str());

@@ -367,9 +367,10 @@ int update_dimm_platform_config_in_db(PersistentStore *p_db,
 				db_current_config.creator_revision =
 						p_current_config->header.creator_revision;
 				db_current_config.config_status = p_current_config->config_status;
-				db_current_config.mapped_volatile_capacity =
-						p_current_config->mapped_volatile_capacity;
-				db_current_config.mapped_pm_capacity = p_current_config->mapped_pm_capacity;
+				db_current_config.mapped_memory_capacity =
+						p_current_config->mapped_memory_capacity;
+				db_current_config.mapped_app_direct_capacity =
+						p_current_config->mapped_app_direct_capacity;
 				DB_DIMM_ERROR(rc, db_add_dimm_current_config(p_db, &db_current_config),
 					"Failed to add the current configuration data for "NVM_DIMM_NAME" %d",
 					device_handle);
@@ -892,10 +893,10 @@ int get_dimm_current_config_from_db(PersistentStore *p_db,
 				db_current_config.creator_revision;
 		p_current_config->config_status =
 				db_current_config.config_status;
-		p_current_config->mapped_volatile_capacity =
-				db_current_config.mapped_volatile_capacity;
-		p_current_config->mapped_pm_capacity =
-				db_current_config.mapped_pm_capacity;
+		p_current_config->mapped_memory_capacity =
+				db_current_config.mapped_memory_capacity;
+		p_current_config->mapped_app_direct_capacity =
+				db_current_config.mapped_app_direct_capacity;
 
 		// get the interleave extension tables
 		int interleave_tables_size = get_dimm_interleave_tables_from_db(

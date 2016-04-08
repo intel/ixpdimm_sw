@@ -91,7 +91,7 @@ cli::framework::SyntaxErrorResult* cli::nvmcli::MemoryProperty::validate() const
 					m_settingPropertyName, m_settingsPropertyValue);
 		}
 	}
-	else if (m_settingsPropertyExists) // PersistentSettings requires corresponding PersistentSize
+	else if (m_settingsPropertyExists) // AppDirectSettings requires corresponding AppDirectSize
 	{
 		pResult = new framework::SyntaxErrorMissingValueResult(framework::TOKENTYPE_PROPERTY,
 				m_sizePropertyName);
@@ -141,11 +141,11 @@ bool cli::nvmcli::MemoryProperty::validateSettings()
 				if (imcFound) // IMC was previously found, this is the channel setting
 				{
 					channelFound = true;
-					if (framework::stringsIEqual(m_settingsTokens[tokenIdx], PERSISTENTSETTING_64B))
+					if (framework::stringsIEqual(m_settingsTokens[tokenIdx], APP_DIRECTSETTING_64B))
 					{
 						m_format.channel = INTERLEAVE_SIZE_64B;
 					}
-					else if (framework::stringsIEqual(m_settingsTokens[tokenIdx], PERSISTENTSETTING_128B))
+					else if (framework::stringsIEqual(m_settingsTokens[tokenIdx], APP_DIRECTSETTING_128B))
 					{
 						m_format.channel = INTERLEAVE_SIZE_128B;
 
@@ -155,7 +155,7 @@ bool cli::nvmcli::MemoryProperty::validateSettings()
 							result = false;
 						}
 					}
-					else if (framework::stringsIEqual(m_settingsTokens[tokenIdx], PERSISTENTSETTING_256B))
+					else if (framework::stringsIEqual(m_settingsTokens[tokenIdx], APP_DIRECTSETTING_256B))
 					{
 						m_format.channel = INTERLEAVE_SIZE_256B;
 
@@ -165,7 +165,7 @@ bool cli::nvmcli::MemoryProperty::validateSettings()
 							result = false;
 						}
 					}
-					else if (framework::stringsIEqual(m_settingsTokens[tokenIdx], PERSISTENTSETTING_4KB))
+					else if (framework::stringsIEqual(m_settingsTokens[tokenIdx], APP_DIRECTSETTING_4KB))
 					{
 						m_format.channel = INTERLEAVE_SIZE_4KB;
 
@@ -175,7 +175,7 @@ bool cli::nvmcli::MemoryProperty::validateSettings()
 							result = false;
 						}
 					}
-					else if (framework::stringsIEqual(m_settingsTokens[tokenIdx], PERSISTENTSETTING_1GB))
+					else if (framework::stringsIEqual(m_settingsTokens[tokenIdx], APP_DIRECTSETTING_1GB))
 					{
 						m_format.channel = INTERLEAVE_SIZE_1GB;
 
@@ -193,23 +193,23 @@ bool cli::nvmcli::MemoryProperty::validateSettings()
 				else // This is the first size token - IMC setting
 				{
 					imcFound = true;
-					if (framework::stringsIEqual(m_settingsTokens[tokenIdx], PERSISTENTSETTING_64B))
+					if (framework::stringsIEqual(m_settingsTokens[tokenIdx], APP_DIRECTSETTING_64B))
 					{
 						m_format.imc = INTERLEAVE_SIZE_64B;
 					}
-					else if (framework::stringsIEqual(m_settingsTokens[tokenIdx], PERSISTENTSETTING_128B))
+					else if (framework::stringsIEqual(m_settingsTokens[tokenIdx], APP_DIRECTSETTING_128B))
 					{
 						m_format.imc = INTERLEAVE_SIZE_128B;
 					}
-					else if (framework::stringsIEqual(m_settingsTokens[tokenIdx], PERSISTENTSETTING_256B))
+					else if (framework::stringsIEqual(m_settingsTokens[tokenIdx], APP_DIRECTSETTING_256B))
 					{
 						m_format.imc = INTERLEAVE_SIZE_256B;
 					}
-					else if (framework::stringsIEqual(m_settingsTokens[tokenIdx], PERSISTENTSETTING_4KB))
+					else if (framework::stringsIEqual(m_settingsTokens[tokenIdx], APP_DIRECTSETTING_4KB))
 					{
 						m_format.imc = INTERLEAVE_SIZE_4KB;
 					}
-					else if (framework::stringsIEqual(m_settingsTokens[tokenIdx], PERSISTENTSETTING_1GB))
+					else if (framework::stringsIEqual(m_settingsTokens[tokenIdx], APP_DIRECTSETTING_1GB))
 					{
 						m_format.imc = INTERLEAVE_SIZE_1GB;
 					}
@@ -296,8 +296,8 @@ bool cli::nvmcli::MemoryProperty::isValidInterleaveSetting(const std::string &to
 
 	static const size_t numSettings = 2;
 	static const std::string validSettings[] = {
-			wbem::mem_config::PERSISTENTSETTING_MIRROR,
-			wbem::mem_config::PERSISTENTSETTING_BYONE };
+			wbem::mem_config::APP_DIRECT_SETTING_MIRROR,
+			wbem::mem_config::APP_DIRECT_SETTING_BYONE };
 
 	for (size_t i = 0; i < numSettings; i++)
 	{
@@ -328,12 +328,12 @@ bool cli::nvmcli::MemoryProperty::getIsSizePart(const std::string& value) const
 
 bool cli::nvmcli::MemoryProperty::getIsMirrored() const
 {
-	return getIsFirstSettingPart(wbem::mem_config::PERSISTENTSETTING_MIRROR);
+	return getIsFirstSettingPart(wbem::mem_config::APP_DIRECT_SETTING_MIRROR);
 }
 
 bool cli::nvmcli::MemoryProperty::getIsByOne() const
 {
-	return getIsFirstSettingPart(wbem::mem_config::PERSISTENTSETTING_BYONE);
+	return getIsFirstSettingPart(wbem::mem_config::APP_DIRECT_SETTING_BYONE);
 }
 
 bool cli::nvmcli::MemoryProperty::getIsFirstSettingPart(

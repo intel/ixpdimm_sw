@@ -29,58 +29,58 @@
  * Add a layout warning if BIOS doesn't recommend the specified interleave format.
  */
 
-#include "LayoutStepPersistentSettingsNotRecommended.h"
+#include "LayoutStepAppDirectSettingsNotRecommended.h"
 #include <LogEnterExit.h>
 
-wbem::logic::LayoutStepPersistentSettingsNotRecommended::LayoutStepPersistentSettingsNotRecommended(
+wbem::logic::LayoutStepAppDirectSettingsNotRecommended::LayoutStepAppDirectSettingsNotRecommended(
 		const struct platform_capabilities &pcap) : m_platformCapabilities(pcap)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
 
-wbem::logic::LayoutStepPersistentSettingsNotRecommended::~LayoutStepPersistentSettingsNotRecommended()
+wbem::logic::LayoutStepAppDirectSettingsNotRecommended::~LayoutStepAppDirectSettingsNotRecommended()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
 
-void wbem::logic::LayoutStepPersistentSettingsNotRecommended::execute(
+void wbem::logic::LayoutStepAppDirectSettingsNotRecommended::execute(
 		const MemoryAllocationRequest& request,
 		MemoryAllocationLayout& layout)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	for (std::vector<PersistentExtent>::const_iterator pmIter = request.persistentExtents.begin();
-			pmIter != request.persistentExtents.end(); pmIter++)
+	for (std::vector<AppDirectExtent>::const_iterator appDirectIter = request.appDirectExtents.begin();
+			appDirectIter != request.appDirectExtents.end(); appDirectIter++)
 	{
 		// check way + iMC size + channel size
-		if (pmIter->byOne ||
-			(!pmIter->byOne &&
-			!(pmIter->channel == wbem::logic::REQUEST_DEFAULT_INTERLEAVE_FORMAT ||
-			  pmIter->imc == wbem::logic::REQUEST_DEFAULT_INTERLEAVE_FORMAT)))
+		if (appDirectIter->byOne ||
+			(!appDirectIter->byOne &&
+			!(appDirectIter->channel == wbem::logic::REQUEST_DEFAULT_INTERLEAVE_FORMAT ||
+			  appDirectIter->imc == wbem::logic::REQUEST_DEFAULT_INTERLEAVE_FORMAT)))
 		{
-			if (!formatRecommended(*pmIter))
+			if (!formatRecommended(*appDirectIter))
 			{
 				// only add the warning once
-				layout.warnings.push_back(LAYOUT_WARNING_PERSISTENT_SETTINGS_NOT_RECOMMENDED);
+				layout.warnings.push_back(LAYOUT_WARNING_APP_DIRECT_SETTINGS_NOT_RECOMMENDED);
 				break;
 			}
 		}
 	}
 }
 
-bool wbem::logic::LayoutStepPersistentSettingsNotRecommended::formatRecommended(
-		const struct wbem::logic::PersistentExtent &pmRequest)
+bool wbem::logic::LayoutStepAppDirectSettingsNotRecommended::formatRecommended(
+		const struct wbem::logic::AppDirectExtent &appDirectRequest)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	bool isRecommended = false;
 
-	for (NVM_UINT16 i  = 0; i < m_platformCapabilities.pm_direct.interleave_formats_count; i++)
+	for (NVM_UINT16 i  = 0; i < m_platformCapabilities.app_direct_mode.interleave_formats_count; i++)
 	{
-		struct interleave_format &format = m_platformCapabilities.pm_direct.interleave_formats[i];
+		struct interleave_format &format = m_platformCapabilities.app_direct_mode.interleave_formats[i];
 		if (format.ways == INTERLEAVE_WAYS_1)
 		{
-			 if (pmRequest.byOne && format.recommended)
+			 if (appDirectRequest.byOne && format.recommended)
 			 {
 				 isRecommended = true;
 				 break;
@@ -88,8 +88,8 @@ bool wbem::logic::LayoutStepPersistentSettingsNotRecommended::formatRecommended(
 		}
 		else
 		{
-			if (pmRequest.imc == format.imc &&
-				pmRequest.channel == format.channel &&
+			if (appDirectRequest.imc == format.imc &&
+				appDirectRequest.channel == format.channel &&
 				format.recommended)
 			{
 				isRecommended = true;

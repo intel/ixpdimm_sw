@@ -143,7 +143,7 @@ wbem::framework::Instance* wbem::mem_config::MemoryAllocationSettingsFactory::ge
 		if (containsAttribute(RESOURCETYPE_KEY, attributes))
 		{
 			NVM_UINT16 resourceType = MEMORYALLOCATIONSETTINGS_RESOURCETYPE_UNKNOWN;
-			if (isVolatileMemory(instanceIdStr))
+			if (isMemory(instanceIdStr))
 			{
 				resourceType = MEMORYALLOCATIONSETTINGS_RESOURCETYPE_MEMORY;
 			}
@@ -187,15 +187,15 @@ void wbem::mem_config::MemoryAllocationSettingsFactory::finishGoalInstance(
 
 	physical_asset::devices_t devices = physical_asset::NVDIMMFactory::getManageableDevices();
 
-	if (isVolatileMemory(instanceIdStr))
+	if (isMemory(instanceIdStr))
 	{
-		NVM_UINT64 reservation = getVolatileReservationFromGoals(devices, instanceIdStr);
-		finishVolatileOrUnmappedInstance(pInstance, reservation, attributes);
+		NVM_UINT64 reservation = getMemoryReservationFromGoals(devices, instanceIdStr);
+		finishMemoryOrStorageInstance(pInstance, reservation, attributes);
 	}
-	else // persistent
+	else // app direct
 	{
 		InterleaveSet ilset = getInterleaveSetFromGoals(devices, instanceIdStr);
-		finishPersistentInstance(pInstance, ilset, attributes);
+		finishAppDirectInstance(pInstance, ilset, attributes);
 	}
 }
 
@@ -208,34 +208,34 @@ void wbem::mem_config::MemoryAllocationSettingsFactory::finishCurrentConfigInsta
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	// There can be more than one PM region on a socket and the name
+	// There can be more than one App Direct region on a socket and the name
 	// alone is not sufficient to identify a specific region. So we
-	// will adopt the convention that PM regions are ordered by
+	// will adopt the convention that App Direct regions are ordered by
 	// interleave_set index and numbered accordingly.
 
 	std::vector<struct pool> pools = wbem::mem_config::PoolViewFactory::getPoolList();
 
-	if (isVolatileMemory(instanceIdStr))
+	if (isMemory(instanceIdStr))
 	{
-		NVM_UINT64 reservation = getVolatileReservationFromPools(pools, instanceIdStr);
-		finishVolatileOrUnmappedInstance(pInstance, reservation, attributes);
+		NVM_UINT64 reservation = getMemoryReservationFromPools(pools, instanceIdStr);
+		finishMemoryOrStorageInstance(pInstance, reservation, attributes);
 	}
-	else if (isPersistentMemory(instanceIdStr))
+	else if (isAppDirectMemory(instanceIdStr))
 	{
 		InterleaveSet ilset = getInterleaveSetFromPools(pools, instanceIdStr);
-		finishPersistentInstance(pInstance, ilset, attributes);
+		finishAppDirectInstance(pInstance, ilset, attributes);
 	}
 	else // unmapped
 	{
 		NVM_UINT64 reservation = getUnmappedReservationFromPools(pools, instanceIdStr);
-		finishVolatileOrUnmappedInstance(pInstance, reservation, attributes);
+		finishMemoryOrStorageInstance(pInstance, reservation, attributes);
 	}
 }
 
 /*
- * Finish a persistent instance given a reservation
+ * Finish a app direct instance given a reservation
  */
-void wbem::mem_config::MemoryAllocationSettingsFactory::finishPersistentInstance(
+void wbem::mem_config::MemoryAllocationSettingsFactory::finishAppDirectInstance(
 		framework::Instance *pInstance, InterleaveSet &ilset,
 		framework::attribute_names_t attributes)
 {
@@ -247,7 +247,7 @@ void wbem::mem_config::MemoryAllocationSettingsFactory::finishPersistentInstance
 		pInstance->setAttribute(RESERVATION_KEY, a, attributes);
 	}
 
-	// ChannelInterleaveSize - only applicable for PM, otherwise 0
+	// ChannelInterleaveSize - only applicable for App Direct, otherwise 0
 	if (containsAttribute(CHANNELINTERLEAVESIZE_KEY, attributes))
 	{
 		NVM_UINT16 channelInterleaveSize = ilset.getChannelInterleaveSize();
@@ -255,7 +255,7 @@ void wbem::mem_config::MemoryAllocationSettingsFactory::finishPersistentInstance
 		pInstance->setAttribute(CHANNELINTERLEAVESIZE_KEY, a, attributes);
 	}
 
-	// ChannelCount - only applicable for PM, otherwise 0
+	// ChannelCount - only applicable for App Direct, otherwise 0
 	if (containsAttribute(CHANNELCOUNT_KEY, attributes))
 	{
 		NVM_UINT16 channelCount = ilset.getChannelCount();
@@ -263,7 +263,7 @@ void wbem::mem_config::MemoryAllocationSettingsFactory::finishPersistentInstance
 		pInstance->setAttribute(CHANNELCOUNT_KEY, a, attributes);
 	}
 
-	// ControllerInterleaveSize - only applicable for PM, otherwise 0
+	// ControllerInterleaveSize - only applicable for App Direct, otherwise 0
 	if (containsAttribute(CONTROLLERINTERLEAVESIZE_KEY, attributes))
 	{
 		NVM_UINT16 controllerInterleaveSize = ilset.getControllerInterleaveSize();
@@ -281,9 +281,9 @@ void wbem::mem_config::MemoryAllocationSettingsFactory::finishPersistentInstance
 }
 
 /*
- * Finish a volatile or unmapped instance given a reservation
+ * Finish a memory mode or storage mode instance given a reservation
  */
-void wbem::mem_config::MemoryAllocationSettingsFactory::finishVolatileOrUnmappedInstance(
+void wbem::mem_config::MemoryAllocationSettingsFactory::finishMemoryOrStorageInstance(
 		framework::Instance *pInstance, NVM_UINT64 reservation,
 		framework::attribute_names_t attributes)
 {
@@ -294,21 +294,21 @@ void wbem::mem_config::MemoryAllocationSettingsFactory::finishVolatileOrUnmapped
 		pInstance->setAttribute(RESERVATION_KEY, a, attributes);
 	}
 
-	// ChannelInterleaveSize - only applicable for PM, otherwise 0
+	// ChannelInterleaveSize - only applicable for App Direct, otherwise 0
 	if (containsAttribute(CHANNELINTERLEAVESIZE_KEY, attributes))
 	{
 		framework::Attribute a(0, false);
 		pInstance->setAttribute(CHANNELINTERLEAVESIZE_KEY, a, attributes);
 	}
 
-	// ChannelCount - only applicable for PM, otherwise 0
+	// ChannelCount - only applicable for App Direct, otherwise 0
 	if (containsAttribute(CHANNELCOUNT_KEY, attributes))
 	{
 		framework::Attribute a(0, false);
 		pInstance->setAttribute(CHANNELCOUNT_KEY, a, attributes);
 	}
 
-	// ControllerInterleaveSize - only applicable for PM, otherwise 0
+	// ControllerInterleaveSize - only applicable for App Direct, otherwise 0
 	if (containsAttribute(CONTROLLERINTERLEAVESIZE_KEY, attributes))
 	{
 		framework::Attribute a(0, false);
@@ -323,7 +323,7 @@ void wbem::mem_config::MemoryAllocationSettingsFactory::finishVolatileOrUnmapped
 	}
 }
 
-NVM_UINT64 wbem::mem_config::MemoryAllocationSettingsFactory::getVolatileReservationFromGoals
+NVM_UINT64 wbem::mem_config::MemoryAllocationSettingsFactory::getMemoryReservationFromGoals
 		(const physical_asset::devices_t &devices, std::string instanceIdStr)
 {
 	NVM_UINT64 reservation = 0;
@@ -340,7 +340,7 @@ NVM_UINT64 wbem::mem_config::MemoryAllocationSettingsFactory::getVolatileReserva
 
 			if (rc == NVM_SUCCESS)
 			{
-				reservation += goal.volatile_size * BYTES_PER_GB;
+				reservation += goal.memory_size * BYTES_PER_GB;
 			}
 			else if (rc != NVM_ERR_NOTFOUND)
 			{
@@ -356,11 +356,11 @@ void wbem::mem_config::MemoryAllocationSettingsFactory::addIlsetsFromGoal
 	(std::vector<InterleaveSet> &ilsets, const struct config_goal *pGoal)
 {
 	std::vector<InterleaveSet>::iterator iter;
-	if (pGoal->persistent_count > 0)
+	if (pGoal->app_direct_count > 0)
 	{
 		addIlset(ilsets, pGoal, 1);
 	}
-	if (pGoal->persistent_count > 1)
+	if (pGoal->app_direct_count > 1)
 	{
 		addIlset(ilsets, pGoal, 2);
 	}
@@ -437,7 +437,7 @@ NVM_UINT64 wbem::mem_config::MemoryAllocationSettingsFactory::getUnmappedReserva
 
 	getGuidFromHandleInfo(socketId, memoryControllerId, channelId, guid);
 
-	return getBlockCapacityForDimm(pools, guid);
+	return getStorageCapacityForDimm(pools, guid);
 }
 
 void wbem::mem_config::MemoryAllocationSettingsFactory::getGuidFromHandleInfo
@@ -457,10 +457,10 @@ void wbem::mem_config::MemoryAllocationSettingsFactory::getGuidFromHandleInfo
 	}
 }
 
-NVM_UINT64 wbem::mem_config::MemoryAllocationSettingsFactory::getBlockCapacityForDimm
+NVM_UINT64 wbem::mem_config::MemoryAllocationSettingsFactory::getStorageCapacityForDimm
 			(const std::vector<struct pool> &pools, const NVM_GUID guid)
 {
-	NVM_UINT64 blockCapacity = 0;
+	NVM_UINT64 storageCapacity = 0;
 
 	for (size_t i = 0; i < pools.size(); i++)
 	{
@@ -470,11 +470,11 @@ NVM_UINT64 wbem::mem_config::MemoryAllocationSettingsFactory::getBlockCapacityFo
 
 			if ((index = getIndexOfDimmInPoolOrReturnNotFound(&(pools[i]), guid)) != framework::NOTFOUND)
 			{
-				blockCapacity = pools[i].block_capacities[index];
+				storageCapacity = pools[i].storage_capacities[index];
 			}
 		}
 	}
-	return blockCapacity;
+	return storageCapacity;
 }
 
 int wbem::mem_config::MemoryAllocationSettingsFactory::getIndexOfDimmInPoolOrReturnNotFound
@@ -493,10 +493,10 @@ int wbem::mem_config::MemoryAllocationSettingsFactory::getIndexOfDimmInPoolOrRet
 	return index;
 }
 
-NVM_UINT64 wbem::mem_config::MemoryAllocationSettingsFactory::getVolatileCapacityForSocket
+NVM_UINT64 wbem::mem_config::MemoryAllocationSettingsFactory::getMemoryCapacityForSocket
 	(const struct pool *pPool, const NVM_UINT16 socketId)
 {
-	NVM_UINT64 volatileCapacity = 0;
+	NVM_UINT64 memoryCapacity = 0;
 
 	for (size_t i = 0; i < pPool->dimm_count; i++)
 	{
@@ -508,7 +508,7 @@ NVM_UINT64 wbem::mem_config::MemoryAllocationSettingsFactory::getVolatileCapacit
 		{
 			if (details.discovery.socket_id == socketId)
 			{
-				volatileCapacity += details.capacities.volatile_capacity;
+				memoryCapacity += details.capacities.memory_capacity;
 			}
 		}
 		else
@@ -517,13 +517,13 @@ NVM_UINT64 wbem::mem_config::MemoryAllocationSettingsFactory::getVolatileCapacit
 			throw wbem::exception::NvmExceptionLibError(rc);
 		}
 	}
-	return volatileCapacity;
+	return memoryCapacity;
 }
 
-NVM_UINT64 wbem::mem_config::MemoryAllocationSettingsFactory::getVolatileReservationFromPools
+NVM_UINT64 wbem::mem_config::MemoryAllocationSettingsFactory::getMemoryReservationFromPools
 	(const std::vector<struct pool> &pools, std::string instanceIdStr)
 {
-	NVM_UINT64 volatileReservation = 0;
+	NVM_UINT64 memoryReservation = 0;
 
 	NVM_UINT16 socketId = getSocketId(instanceIdStr);
 
@@ -531,10 +531,10 @@ NVM_UINT64 wbem::mem_config::MemoryAllocationSettingsFactory::getVolatileReserva
 	{
 		if (pools[i].type == POOL_TYPE_VOLATILE)
 		{
-			volatileReservation = getVolatileCapacityForSocket(&(pools[i]), socketId);
+			memoryReservation = getMemoryCapacityForSocket(&(pools[i]), socketId);
 		}
 	}
-	return volatileReservation;
+	return memoryReservation;
 }
 
 NVM_UINT16 wbem::mem_config::MemoryAllocationSettingsFactory::validateAndReturnSocketId(const std::string instanceIdStr)
@@ -596,9 +596,9 @@ void wbem::mem_config::MemoryAllocationSettingsFactory::validateNameFormat(const
 		throw wbem::framework::ExceptionBadParameter(instanceIdStr.c_str());
 	}
 
-	if (instanceIdStr[MEMORYALLOCATIONSETTINGS_MEMORYTYPE_POSITION] != VOLATILE_MEMORY &&
-			instanceIdStr[MEMORYALLOCATIONSETTINGS_MEMORYTYPE_POSITION] != PERSISTENT_MEMORY &&
-			instanceIdStr[MEMORYALLOCATIONSETTINGS_MEMORYTYPE_POSITION] != UNMAPPED_MEMORY)
+	if (instanceIdStr[MEMORYALLOCATIONSETTINGS_MEMORYTYPE_POSITION] != MEMORY_MODE_PREFIX &&
+			instanceIdStr[MEMORYALLOCATIONSETTINGS_MEMORYTYPE_POSITION] != APP_DIRECT_PREFIX &&
+			instanceIdStr[MEMORYALLOCATIONSETTINGS_MEMORYTYPE_POSITION] != STORAGE_PREFIX)
 	{
 		COMMON_LOG_ERROR_F("Bad MemoryAllocationSettings instanceId format: Memory type incorrect - %s", instanceIdStr.c_str());
 		throw wbem::framework::ExceptionBadParameter(instanceIdStr.c_str());
@@ -651,7 +651,7 @@ bool wbem::mem_config::MemoryAllocationSettingsFactory::isAssociated(
     		else if (pDepInstance->getClass() == MEMORYALLOCATIONSETTINGS_CREATIONCLASSNAME &&
     				 pAntInstance->getClass() == memory::VOLATILEMEMORY_CREATIONCLASSNAME)
     		{
-    			result = (isVolatileCurrentConfigInstance(pDepInstance));
+    			result = (isMemoryModeCurrentConfigInstance(pDepInstance));
     		}
     		else if (pDepInstance->getClass() == MEMORYALLOCATIONSETTINGS_CREATIONCLASSNAME &&
     				 pAntInstance->getClass() == memory::PERSISTENTMEMORY_CREATIONCLASSNAME)
@@ -686,15 +686,15 @@ bool
 	{
 		associated = isUnmappedSettingAssociatedWithMemoryInstance(pSettingInstance, pMemoryInstance);
 	}
-	else if (isPersistentInstance(pSettingInstance))
+	else if (isAppDirectInstance(pSettingInstance))
 	{
-		associated = isPersistentSettingAssociatedWithMemoryInstance(pSettingInstance, pMemoryInstance);
+		associated = isAppDirectSettingAssociatedWithMemoryInstance(pSettingInstance, pMemoryInstance);
 	}
 	return associated;
 }
 
 bool
-	wbem::mem_config::MemoryAllocationSettingsFactory::isPersistentSettingAssociatedWithMemoryInstance
+	wbem::mem_config::MemoryAllocationSettingsFactory::isAppDirectSettingAssociatedWithMemoryInstance
 		(const framework::Instance* pSettingInstance, const framework::Instance* pMemoryInstance)
 {
 	bool associated = false;
@@ -702,10 +702,10 @@ bool
 
 	getIlsetGuidFromSettingInstance(pSettingInstance, ilsetGuid);
 
-	NVM_GUID persistentMemoryGuid;
-	getPersistentMemoryGuid(pMemoryInstance, persistentMemoryGuid);
+	NVM_GUID appDirectMemoryGuid;
+	getAppDirectMemoryGuid(pMemoryInstance, appDirectMemoryGuid);
 
-	if (memcmp(persistentMemoryGuid, ilsetGuid, NVM_GUID_LEN) == 0)
+	if (memcmp(appDirectMemoryGuid, ilsetGuid, NVM_GUID_LEN) == 0)
 	{
 		associated = true;
 	}
@@ -739,9 +739,9 @@ bool
 	bool associated = false;
 	NVM_GUID guid;
 
-	getPersistentMemoryGuid(pMemoryInstance, guid);
+	getAppDirectMemoryGuid(pMemoryInstance, guid);
 
-	// The guid contained in the deviceId of the PersistentMemory instance
+	// The guid contained in the deviceId of the AppDirectMemory instance
 	// may be an interleave set guid and if so, we'll just return false
 	if (isADeviceGuid(guid))
 	{
@@ -769,7 +769,7 @@ bool wbem::mem_config::MemoryAllocationSettingsFactory::isADeviceGuid(const NVM_
 }
 
 void
-	wbem::mem_config::MemoryAllocationSettingsFactory::getPersistentMemoryGuid
+	wbem::mem_config::MemoryAllocationSettingsFactory::getAppDirectMemoryGuid
 		(const framework::Instance* pMemoryInstance, NVM_GUID guid)
 {
 	wbem::framework::Attribute attr;
@@ -802,19 +802,19 @@ bool
 }
 
 bool
-	wbem::mem_config::MemoryAllocationSettingsFactory::isPersistentInstance
+	wbem::mem_config::MemoryAllocationSettingsFactory::isAppDirectInstance
 		(const framework::Instance* pSettingInstance)
 {
-	bool isPersistent = false;
+	bool isAppDirect = false;
 
 	wbem::framework::Attribute attr;
 	pSettingInstance->getAttribute(wbem::INSTANCEID_KEY, attr);
 	std::string instanceIdStr = attr.stringValue();
-	if (getRegionType(instanceIdStr) == PERSISTENT_MEMORY)
+	if (getRegionType(instanceIdStr) == APP_DIRECT_PREFIX)
 	{
-		isPersistent = true;
+		isAppDirect = true;
 	}
-	return isPersistent;
+	return isAppDirect;
 }
 
 bool
@@ -826,17 +826,17 @@ bool
 	wbem::framework::Attribute attr;
 	pSettingInstance->getAttribute(wbem::INSTANCEID_KEY, attr);
 	std::string instanceIdStr = attr.stringValue();
-	if (getRegionType(instanceIdStr) == UNMAPPED_MEMORY)
+	if (getRegionType(instanceIdStr) == STORAGE_PREFIX)
 	{
 		isUnmapped = true;
 	}
 	return isUnmapped;
 }
 
-bool wbem::mem_config::MemoryAllocationSettingsFactory::isVolatileCurrentConfigInstance
+bool wbem::mem_config::MemoryAllocationSettingsFactory::isMemoryModeCurrentConfigInstance
 	(const framework::Instance* pInstance)
 {
-	bool isVolatile = false;
+	bool isMemory = false;
 	wbem::framework::Attribute attr;
 
 	pInstance->getAttribute(wbem::INSTANCEID_KEY, attr);
@@ -845,17 +845,17 @@ bool wbem::mem_config::MemoryAllocationSettingsFactory::isVolatileCurrentConfigI
 	char regionType = getRegionType(attr.stringValue());
 
 	if (instanceType == CURRENT_CONFIG &&
-		regionType == VOLATILE_MEMORY)
+		regionType == MEMORY_MODE_PREFIX)
 	{
-		isVolatile = true;
+		isMemory = true;
 	}
-	return isVolatile;
+	return isMemory;
 }
 
-bool wbem::mem_config::MemoryAllocationSettingsFactory::isVolatileGoalConfigInstance
+bool wbem::mem_config::MemoryAllocationSettingsFactory::isMemoryModeGoalConfigInstance
 	(const framework::Instance* pInstance)
 {
-	bool isVolatile = false;
+	bool isMemory = false;
 	wbem::framework::Attribute attr;
 
 	pInstance->getAttribute(wbem::INSTANCEID_KEY, attr);
@@ -864,17 +864,17 @@ bool wbem::mem_config::MemoryAllocationSettingsFactory::isVolatileGoalConfigInst
 	char regionType = getRegionType(attr.stringValue());
 
 	if (instanceType == GOAL_CONFIG &&
-		regionType == VOLATILE_MEMORY)
+		regionType == MEMORY_MODE_PREFIX)
 	{
-		isVolatile = true;
+		isMemory = true;
 	}
-	return isVolatile;
+	return isMemory;
 }
 
-bool wbem::mem_config::MemoryAllocationSettingsFactory::isPersistentGoalConfigInstance
+bool wbem::mem_config::MemoryAllocationSettingsFactory::isAppDirectGoalConfigInstance
 	(const framework::Instance* pInstance)
 {
-	bool isPersistent = false;
+	bool isAppDirect = false;
 	wbem::framework::Attribute attr;
 
 	pInstance->getAttribute(wbem::INSTANCEID_KEY, attr);
@@ -883,11 +883,11 @@ bool wbem::mem_config::MemoryAllocationSettingsFactory::isPersistentGoalConfigIn
 	char regionType = getRegionType(attr.stringValue());
 
 	if (instanceType == GOAL_CONFIG &&
-		regionType == PERSISTENT_MEMORY)
+		regionType == APP_DIRECT_PREFIX)
 	{
-		isPersistent = true;
+		isAppDirect = true;
 	}
-	return isPersistent;
+	return isAppDirect;
 }
 
 /*
@@ -945,26 +945,26 @@ wbem::mem_config::StringListType wbem::mem_config::MemoryAllocationSettingsFacto
 	std::vector<struct pool>::const_iterator poolIter = pools.begin();
 	for (; poolIter != pools.end(); poolIter++)
 	{
-		int pmRegionId = 0;
+		int appDirectRegionId = 0;
 		struct pool pool = *poolIter;
 		for (int i = 0; i < pool.dimm_count; i++)
 		{
 			NVM_NFIT_DEVICE_HANDLE handle = getHandleForDimmGuid(devices, pool.dimms[i]);
-			// for each volatile region, generate an instance name
-			if (pool.volatile_capacities[i] > 0)
+			// for each Memory Mode region, generate an instance name
+			if (pool.memory_capacities[i] > 0)
 			{
-				char volatileName[MEMORYALLOCATIONSETTINGS_INSTANCEID_LEN + 1];
-				s_snprintf(volatileName, MEMORYALLOCATIONSETTINGS_INSTANCEID_LEN + 1,
-						"%02u.%c.0000.%c", handle.parts.socket_id, VOLATILE_MEMORY, CURRENT_CONFIG);
-				names.push_back(volatileName);
+				char memoryInstanceName[MEMORYALLOCATIONSETTINGS_INSTANCEID_LEN + 1];
+				s_snprintf(memoryInstanceName, MEMORYALLOCATIONSETTINGS_INSTANCEID_LEN + 1,
+						"%02u.%c.0000.%c", handle.parts.socket_id, MEMORY_MODE_PREFIX, CURRENT_CONFIG);
+				names.push_back(memoryInstanceName);
 			}
 
 			// for each unmapped instance, generate an instance name
-			if (pool.block_capacities[i] > 0)
+			if (pool.storage_capacities[i] > 0)
 			{
 				char unmappedName[MEMORYALLOCATIONSETTINGS_INSTANCEID_LEN + 1];
 				s_snprintf(unmappedName, MEMORYALLOCATIONSETTINGS_INSTANCEID_LEN + 1,
-						"%02u.%c.%02u%02u.%c", handle.parts.socket_id, UNMAPPED_MEMORY,
+						"%02u.%c.%02u%02u.%c", handle.parts.socket_id, STORAGE_PREFIX,
 						handle.parts.memory_controller_id,
 						handle.parts.mem_channel_id,
 						CURRENT_CONFIG);
@@ -975,12 +975,12 @@ wbem::mem_config::StringListType wbem::mem_config::MemoryAllocationSettingsFacto
 		// for each interleave set, generate an instance name
 		for (size_t i = 0; i < pool.ilset_count; i++)
 		{
-			char pmName[MEMORYALLOCATIONSETTINGS_INSTANCEID_LEN + 1];
-			s_snprintf(pmName, MEMORYALLOCATIONSETTINGS_INSTANCEID_LEN + 1,
-					"%02u.%c.%04u.%c", pool.socket_id, PERSISTENT_MEMORY,
-					 pmRegionId, CURRENT_CONFIG);
-			pmRegionId++;
-			names.push_back(pmName);
+			char appDirectName[MEMORYALLOCATIONSETTINGS_INSTANCEID_LEN + 1];
+			s_snprintf(appDirectName, MEMORYALLOCATIONSETTINGS_INSTANCEID_LEN + 1,
+					"%02u.%c.%04u.%c", pool.socket_id, APP_DIRECT_PREFIX,
+					 appDirectRegionId, CURRENT_CONFIG);
+			appDirectRegionId++;
+			names.push_back(appDirectName);
 		}
 	}
 	names.sort();
@@ -1015,8 +1015,8 @@ wbem::mem_config::StringListType wbem::mem_config::MemoryAllocationSettingsFacto
 	(const physical_asset::devices_t &devices, NVM_UINT16 socketId)
 {
 	StringListType names;
-	std::map<NVM_UINT16, int> pmIds;
-	int pmRegionId = 0;
+	std::map<NVM_UINT16, int> appDirectIds;
+	int appDirectRegionId = 0;
 	physical_asset::devices_t::const_iterator devIter = devices.begin();
 	for (;devIter != devices.end(); devIter++)
 	{
@@ -1027,40 +1027,40 @@ wbem::mem_config::StringListType wbem::mem_config::MemoryAllocationSettingsFacto
 			int rc = nvm_get_config_goal((*devIter).guid, &goal);
 			if (rc == NVM_SUCCESS)
 			{
-				if (goal.volatile_size > 0)
+				if (goal.memory_size > 0)
 				{
-					char volatileName[MEMORYALLOCATIONSETTINGS_INSTANCEID_LEN + 1];
-					s_snprintf(volatileName, MEMORYALLOCATIONSETTINGS_INSTANCEID_LEN + 1,
-							"%02u.%c.0000.%c", (*devIter).socket_id, VOLATILE_MEMORY, GOAL_CONFIG);
-					names.push_back(volatileName);
+					char memoryName[MEMORYALLOCATIONSETTINGS_INSTANCEID_LEN + 1];
+					s_snprintf(memoryName, MEMORYALLOCATIONSETTINGS_INSTANCEID_LEN + 1,
+							"%02u.%c.0000.%c", (*devIter).socket_id, MEMORY_MODE_PREFIX, GOAL_CONFIG);
+					names.push_back(memoryName);
 				}
 
-				if (goal.persistent_count > 1)
+				if (goal.app_direct_count > 1)
 				{
-					char pmName[MEMORYALLOCATIONSETTINGS_INSTANCEID_LEN + 1];
-					if (pmIds.find(goal.persistent_2_set_id) == pmIds.end())
+					char appDirectName[MEMORYALLOCATIONSETTINGS_INSTANCEID_LEN + 1];
+					if (appDirectIds.find(goal.app_direct_2_set_id) == appDirectIds.end())
 					{
-						pmIds[goal.persistent_2_set_id] = pmRegionId;
-						pmRegionId++;
+						appDirectIds[goal.app_direct_2_set_id] = appDirectRegionId;
+						appDirectRegionId++;
 					}
-					s_snprintf(pmName, MEMORYALLOCATIONSETTINGS_INSTANCEID_LEN + 1,
-							"%02u.%c.%04u.%c", (*devIter).socket_id, PERSISTENT_MEMORY,
-							pmIds[goal.persistent_2_set_id], GOAL_CONFIG);
-					names.push_back(pmName);
+					s_snprintf(appDirectName, MEMORYALLOCATIONSETTINGS_INSTANCEID_LEN + 1,
+							"%02u.%c.%04u.%c", (*devIter).socket_id, APP_DIRECT_PREFIX,
+							appDirectIds[goal.app_direct_2_set_id], GOAL_CONFIG);
+					names.push_back(appDirectName);
 				}
 
-				if (goal.persistent_count > 0)
+				if (goal.app_direct_count > 0)
 				{
-					char pmName[MEMORYALLOCATIONSETTINGS_INSTANCEID_LEN + 1];
-					if (pmIds.find(goal.persistent_1_set_id) == pmIds.end())
+					char appDirectName[MEMORYALLOCATIONSETTINGS_INSTANCEID_LEN + 1];
+					if (appDirectIds.find(goal.app_direct_1_set_id) == appDirectIds.end())
 					{
-						pmIds[goal.persistent_1_set_id] = pmRegionId;
-						pmRegionId++;
+						appDirectIds[goal.app_direct_1_set_id] = appDirectRegionId;
+						appDirectRegionId++;
 					}
-					s_snprintf(pmName, MEMORYALLOCATIONSETTINGS_INSTANCEID_LEN + 1,
-							"%02u.%c.%04u.%c", (*devIter).socket_id, PERSISTENT_MEMORY,
-							pmIds[goal.persistent_1_set_id], GOAL_CONFIG);
-					names.push_back(pmName);
+					s_snprintf(appDirectName, MEMORYALLOCATIONSETTINGS_INSTANCEID_LEN + 1,
+							"%02u.%c.%04u.%c", (*devIter).socket_id, APP_DIRECT_PREFIX,
+							appDirectIds[goal.app_direct_1_set_id], GOAL_CONFIG);
+					names.push_back(appDirectName);
 				}
 			}
 			else if (rc != NVM_ERR_NOTFOUND)
@@ -1141,24 +1141,24 @@ wbem::mem_config::InterleaveSet
  * This section of code implements utilities function
  */
 
-bool wbem::mem_config::MemoryAllocationSettingsFactory::isPersistentMemory(const std::string instanceIdStr)
+bool wbem::mem_config::MemoryAllocationSettingsFactory::isAppDirectMemory(const std::string instanceIdStr)
 {
-	bool isPersistent = false;
-	if (getRegionType(instanceIdStr) == PERSISTENT_MEMORY)
+	bool isAppDirect = false;
+	if (getRegionType(instanceIdStr) == APP_DIRECT_PREFIX)
 	{
-		isPersistent = true;
+		isAppDirect = true;
 	}
-	return isPersistent;
+	return isAppDirect;
 }
 
-bool wbem::mem_config::MemoryAllocationSettingsFactory::isVolatileMemory(const std::string instanceIdStr)
+bool wbem::mem_config::MemoryAllocationSettingsFactory::isMemory(const std::string instanceIdStr)
 {
-	bool isVolatile = false;
-	if (getRegionType(instanceIdStr) == VOLATILE_MEMORY)
+	bool isMemory = false;
+	if (getRegionType(instanceIdStr) == MEMORY_MODE_PREFIX)
 	{
-		isVolatile = true;
+		isMemory = true;
 	}
-	return isVolatile;
+	return isMemory;
 }
 
 bool

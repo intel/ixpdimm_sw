@@ -51,7 +51,7 @@ void wbem::logic::RuleStorageCapacityNotSupported::verify(const MemoryAllocation
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	if (request.storageRemaining &&
-		!m_systemCapabilities.platform_capabilities.block_mode_supported)
+		!m_systemCapabilities.platform_capabilities.storage_mode_supported)
 	{
 		throw exception::NvmExceptionStorageNotSupported();
 	}

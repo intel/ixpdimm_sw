@@ -201,15 +201,15 @@ int get_interleave_sets(const NVM_UINT32 count, struct nvm_interleave_set *p_int
 	return rc;
 }
 
-int get_dimm_free_block_capacity(NVM_NFIT_DEVICE_HANDLE handle,
-		NVM_UINT64 *free_block_capacity)
+int get_dimm_free_storage_capacity(NVM_NFIT_DEVICE_HANDLE handle,
+		NVM_UINT64 *free_storage_capacity)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
 
-	if (free_block_capacity == NULL)
+	if (free_storage_capacity == NULL)
 	{
-		COMMON_LOG_ERROR("Invalid parameter, free_block_capacity is NULL");
+		COMMON_LOG_ERROR("Invalid parameter, free_storage_capacity is NULL");
 		rc = NVM_ERR_UNKNOWN;
 	}
 	else
@@ -222,7 +222,7 @@ int get_dimm_free_block_capacity(NVM_NFIT_DEVICE_HANDLE handle,
 		if ((rc = execute_ioctl(sizeof (ioctl_data), &ioctl_data, IOCTL_CR_GET_DIMM_DETAILS))
 			== NVM_SUCCESS && (rc = ind_err_to_nvm_lib_err(ioctl_data.ReturnCode)) == NVM_SUCCESS)
 		{
-			*free_block_capacity = ioctl_data.OutputPayload.FreeBlockCapacity;
+			*free_storage_capacity = ioctl_data.OutputPayload.FreeBlockCapacity;
 		}
 	}
 
@@ -230,9 +230,9 @@ int get_dimm_free_block_capacity(NVM_NFIT_DEVICE_HANDLE handle,
 	return rc;
 }
 /*
- * Retrieve the block capacities of all DIMMs
+ * Retrieve the storage capacities of all DIMMs
  */
-int get_dimm_block_capacities(const NVM_UINT32 count, struct nvm_block_capacities *p_capacities)
+int get_dimm_storage_capacities(const NVM_UINT32 count, struct nvm_storage_capacities *p_capacities)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
@@ -243,7 +243,7 @@ int get_dimm_block_capacities(const NVM_UINT32 count, struct nvm_block_capacitie
 	}
 	else
 	{
-		memset(p_capacities, 0, count * sizeof (struct nvm_block_capacities));
+		memset(p_capacities, 0, count * sizeof (struct nvm_storage_capacities));
 
 		if ((rc = get_topology_count()) > 0)
 		{
@@ -264,15 +264,15 @@ int get_dimm_block_capacities(const NVM_UINT32 count, struct nvm_block_capacitie
 					NVM_NFIT_DEVICE_HANDLE handle = topology[i].device_handle;
 					struct pt_payload_get_dimm_partition_info pi;
 
-					NVM_UINT64 volatile_capacity = 0;
+					NVM_UINT64 memory_capacity = 0;
 					NVM_UINT64 ilset_capacity = 0; // unmirrored interleaves
 					NVM_UINT64 mirrored_capacity = 0; // mirrored interleaves
 
 					p_capacities[i].device_handle = handle;
 
-					if (get_dimm_volatile_capacity(handle, &volatile_capacity) != NVM_SUCCESS)
+					if (get_dimm_memory_capacity(handle, &memory_capacity) != NVM_SUCCESS)
 					{
-						COMMON_LOG_ERROR("Failed to retrieve dimm volatile capacity");
+						COMMON_LOG_ERROR("Failed to retrieve dimm memory capacity");
 						rc = NVM_ERR_DRIVERFAILED;
 						break; // don't continue on failure
 					}
@@ -293,20 +293,20 @@ int get_dimm_block_capacities(const NVM_UINT32 count, struct nvm_block_capacitie
 					{
 						NVM_UINT64 usable_capacity = USABLE_CAPACITY_BYTES(
 								(NVM_UINT64)pi.raw_capacity * BYTES_PER_4K_CHUNK);
-						if ((volatile_capacity + ilset_capacity + mirrored_capacity) <=
+						if ((memory_capacity + ilset_capacity + mirrored_capacity) <=
 								usable_capacity)
 						{
-							p_capacities[i].total_block_capacity = usable_capacity -
-								volatile_capacity - mirrored_capacity;
-							p_capacities[i].block_only_capacity = usable_capacity -
-									volatile_capacity - mirrored_capacity - ilset_capacity;
+							p_capacities[i].total_storage_capacity = usable_capacity -
+								memory_capacity - mirrored_capacity;
+							p_capacities[i].storage_only_capacity = usable_capacity -
+									memory_capacity - mirrored_capacity - ilset_capacity;
 
-							rc = get_dimm_free_block_capacity(handle,
-								&p_capacities[i].free_block_capacity);
+							rc = get_dimm_free_storage_capacity(handle,
+								&p_capacities[i].free_storage_capacity);
 						}
 						else
 						{
-							COMMON_LOG_ERROR("Volatile and Ilset capacity greater than total "
+							COMMON_LOG_ERROR("Memory and Ilset capacity greater than total "
 									"dimm capacity");
 							rc = NVM_ERR_UNKNOWN;
 						}

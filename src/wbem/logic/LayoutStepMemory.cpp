@@ -26,31 +26,31 @@
  */
 
 /*
- * Lay out the volatile region in memory.
+ * Lay out the Memory Mode region.
  */
 
-#include "LayoutStepVolatile.h"
 #include <utility.h>
 #include <LogEnterExit.h>
 #include <exception/NvmExceptionBadRequest.h>
+#include "LayoutStepMemory.h"
 
-wbem::logic::LayoutStepVolatile::LayoutStepVolatile()
+wbem::logic::LayoutStepMemory::LayoutStepMemory()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
 
-wbem::logic::LayoutStepVolatile::~LayoutStepVolatile()
+wbem::logic::LayoutStepMemory::~LayoutStepMemory()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
 
-bool wbem::logic::LayoutStepVolatile::isRemainingStep(const MemoryAllocationRequest &request)
+bool wbem::logic::LayoutStepMemory::isRemainingStep(const MemoryAllocationRequest &request)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	return request.volatileCapacity == REQUEST_REMAINING_CAPACITY;
+	return request.memoryCapacity == REQUEST_REMAINING_CAPACITY;
 }
 
-void wbem::logic::LayoutStepVolatile::execute(const MemoryAllocationRequest& request,
+void wbem::logic::LayoutStepMemory::execute(const MemoryAllocationRequest& request,
 		MemoryAllocationLayout& layout)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -81,7 +81,7 @@ void wbem::logic::LayoutStepVolatile::execute(const MemoryAllocationRequest& req
 								dimmIter != dimmsIncluded.end(); dimmIter++)
 				{
 					NVM_UINT64 alignedBytes = getAlignedDimmBytes(request, *dimmIter, layout, bytesPerDimm);
-					layout.goals[dimmIter->guid].volatile_size += bytesToConfigGoalSize(alignedBytes);
+					layout.goals[dimmIter->guid].memory_size += bytesToConfigGoalSize(alignedBytes);
 					alignedBytesAllocated += alignedBytes;
 					bytesAllocated += bytesPerDimm;
 				}
@@ -89,24 +89,24 @@ void wbem::logic::LayoutStepVolatile::execute(const MemoryAllocationRequest& req
 			catch (exception::NvmExceptionBadRequestSize &)
 			{
 				// out of capacity, clean up and pass along the exception
-				layout.volatileCapacity = bytesToConfigGoalSize(alignedBytesAllocated);
-				throw exception::NvmExceptionBadRequestVolatileSize();
+				layout.memoryCapacity = bytesToConfigGoalSize(alignedBytesAllocated);
+				throw exception::NvmExceptionBadRequestMemorySize();
 			}
 		}
-		layout.volatileCapacity = bytesToConfigGoalSize(alignedBytesAllocated);
+		layout.memoryCapacity = bytesToConfigGoalSize(alignedBytesAllocated);
 	}
 }
 
-NVM_UINT64 wbem::logic::LayoutStepVolatile::getRequestedCapacityBytes(
+NVM_UINT64 wbem::logic::LayoutStepMemory::getRequestedCapacityBytes(
 		const struct MemoryAllocationRequest& request,
 		MemoryAllocationLayout& layout)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	NVM_UINT64 bytes = 0;
-	if (request.volatileCapacity != REQUEST_REMAINING_CAPACITY)
+	if (request.memoryCapacity != REQUEST_REMAINING_CAPACITY)
 	{
-		bytes = configGoalSizeToBytes(request.volatileCapacity);
+		bytes = configGoalSizeToBytes(request.memoryCapacity);
 	}
 	else
 	{
@@ -115,7 +115,7 @@ NVM_UINT64 wbem::logic::LayoutStepVolatile::getRequestedCapacityBytes(
 	return bytes;
 }
 
-NVM_UINT64 wbem::logic::LayoutStepVolatile::getAlignedDimmBytes(
+NVM_UINT64 wbem::logic::LayoutStepMemory::getAlignedDimmBytes(
 		const MemoryAllocationRequest& request,
 		const Dimm &dimm,
 		MemoryAllocationLayout& layout,
@@ -123,33 +123,33 @@ NVM_UINT64 wbem::logic::LayoutStepVolatile::getAlignedDimmBytes(
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	NVM_UINT64 existingVolatileBytes = bytesToConfigGoalSize(layout.goals[dimm.guid].volatile_size);
-	NVM_UINT64 totalVolatileBytes = getTotalVolatileBytes(requestedBytes, existingVolatileBytes);
+	NVM_UINT64 existingMemoryBytes = bytesToConfigGoalSize(layout.goals[dimm.guid].memory_size);
+	NVM_UINT64 totalMemoryBytes = getTotalMemoryBytes(requestedBytes, existingMemoryBytes);
 	NVM_UINT64 dimmBytes = round_down(dimm.capacity, BYTES_PER_GB);
 
-	NVM_UINT64 alignedTotalVolatileBytes = totalVolatileBytes;
-	// volatile layout is last step
-	if (request.volatileCapacity == REQUEST_REMAINING_CAPACITY)
+	NVM_UINT64 alignedTotalMemoryBytes = totalMemoryBytes;
+	// Memory Mode layout is last step
+	if (request.memoryCapacity == REQUEST_REMAINING_CAPACITY)
 	{
-		if (request.persistentExtents.size() > 0)
+		if (request.appDirectExtents.size() > 0)
 		{
-			alignedTotalVolatileBytes = roundDownVolatileToPMAlignment(
-					dimm, layout, totalVolatileBytes, dimmBytes);
+			alignedTotalMemoryBytes = roundDownMemoryToPMAlignment(
+					dimm, layout, totalMemoryBytes, dimmBytes);
 		}
 	}
-	// volatile is first step
+	// Memory Mode is first step
 	else
 	{
-		// round up volatile by consuming storage
-		alignedTotalVolatileBytes = roundVolatileToNearestPMAlignment(
-				dimm, layout, totalVolatileBytes, dimmBytes);
+		// round up by consuming storage
+		alignedTotalMemoryBytes = roundMemoryToNearestPMAlignment(
+				dimm, layout, totalMemoryBytes, dimmBytes);
 	}
 
-	if (alignedTotalVolatileBytes <= existingVolatileBytes)
+	if (alignedTotalMemoryBytes <= existingMemoryBytes)
 	{
 		throw exception::NvmExceptionBadRequestSize();
 	}
-	NVM_UINT64 alignedBytes = alignedTotalVolatileBytes - existingVolatileBytes;
+	NVM_UINT64 alignedBytes = alignedTotalMemoryBytes - existingMemoryBytes;
 	if (alignedBytes < BYTES_PER_GB)
 	{
 		throw exception::NvmExceptionBadRequestSize();
@@ -157,7 +157,7 @@ NVM_UINT64 wbem::logic::LayoutStepVolatile::getAlignedDimmBytes(
 	return alignedBytes;
 }
 
-NVM_UINT64 wbem::logic::LayoutStepVolatile::getTotalVolatileBytes(
+NVM_UINT64 wbem::logic::LayoutStepMemory::getTotalMemoryBytes(
 		const NVM_UINT64 &requestedBytes, const NVM_UINT64 &existingBytes)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -167,18 +167,18 @@ NVM_UINT64 wbem::logic::LayoutStepVolatile::getTotalVolatileBytes(
 	{
 		throw exception::NvmExceptionBadRequestSize();
 	}
-	NVM_UINT64 totalVolatileBytes = existingBytes + requestedBytes;
-	bytes = round_down(totalVolatileBytes, BYTES_PER_GB); // always 1 GiB aligned
+	NVM_UINT64 totalMemoryBytes = existingBytes + requestedBytes;
+	bytes = round_down(totalMemoryBytes, BYTES_PER_GB); // always 1 GiB aligned
 	return bytes;
 }
 
-NVM_UINT64 wbem::logic::LayoutStepVolatile::roundDownVolatileToPMAlignment(
+NVM_UINT64 wbem::logic::LayoutStepMemory::roundDownMemoryToPMAlignment(
 		const Dimm &dimm, MemoryAllocationLayout& layout,
-		const NVM_UINT64 &volatileBytes, const NVM_UINT64 dimmBytes)
+		const NVM_UINT64 &memoryBytes, const NVM_UINT64 dimmBytes)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	NVM_UINT64 pmBytes = dimmBytes - volatileBytes;
+	NVM_UINT64 pmBytes = dimmBytes - memoryBytes;
 	NVM_UINT64 pmAlignedBytes = pmBytes;
 	if (pmBytes > 0)
 	{
@@ -188,21 +188,21 @@ NVM_UINT64 wbem::logic::LayoutStepVolatile::roundDownVolatileToPMAlignment(
 			throw exception::NvmExceptionBadRequestSize();
 		}
 	}
-	NVM_UINT64 alignedVolatileBytes = dimmBytes - pmAlignedBytes;
-	if (alignedVolatileBytes < BYTES_PER_GB)
+	NVM_UINT64 alignedMemoryBytes = dimmBytes - pmAlignedBytes;
+	if (alignedMemoryBytes < BYTES_PER_GB)
 	{
 		throw exception::NvmExceptionBadRequestSize();
 	}
-	return alignedVolatileBytes;
+	return alignedMemoryBytes;
 }
 
-NVM_UINT64 wbem::logic::LayoutStepVolatile::roundUpVolatileToPMAlignment(
+NVM_UINT64 wbem::logic::LayoutStepMemory::roundUpMemoryToPMAlignment(
 		const Dimm &dimm, MemoryAllocationLayout& layout,
-		const NVM_UINT64 &volatileBytes, const NVM_UINT64 dimmBytes)
+		const NVM_UINT64 &memoryBytes, const NVM_UINT64 dimmBytes)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	NVM_UINT64 pmBytes = dimmBytes - volatileBytes;
+	NVM_UINT64 pmBytes = dimmBytes - memoryBytes;
 	NVM_UINT64 pmAlignedBytes = pmBytes;
 	if (pmBytes > 0)
 	{
@@ -212,13 +212,13 @@ NVM_UINT64 wbem::logic::LayoutStepVolatile::roundUpVolatileToPMAlignment(
 			throw exception::NvmExceptionBadRequestSize();
 		}
 	}
-	NVM_UINT64 alignedVolatileBytes = dimmBytes - pmAlignedBytes;
-	return alignedVolatileBytes;
+	NVM_UINT64 alignedMemoryBytes = dimmBytes - pmAlignedBytes;
+	return alignedMemoryBytes;
 }
 
-NVM_UINT64 wbem::logic::LayoutStepVolatile::roundVolatileToNearestPMAlignment(
+NVM_UINT64 wbem::logic::LayoutStepMemory::roundMemoryToNearestPMAlignment(
 		const Dimm &dimm, MemoryAllocationLayout& layout,
-		const NVM_UINT64 &volatileBytes, const NVM_UINT64 dimmBytes)
+		const NVM_UINT64 &memoryBytes, const NVM_UINT64 dimmBytes)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
@@ -230,8 +230,8 @@ NVM_UINT64 wbem::logic::LayoutStepVolatile::roundVolatileToNearestPMAlignment(
 	NVM_UINT64 roundedDownDiff = 0;
 	try
 	{
-		roundedUpBytes = roundUpVolatileToPMAlignment(dimm, layout, volatileBytes, dimmBytes);
-		roundedUpDiff = roundedUpBytes - volatileBytes;
+		roundedUpBytes = roundUpMemoryToPMAlignment(dimm, layout, memoryBytes, dimmBytes);
+		roundedUpDiff = roundedUpBytes - memoryBytes;
 		if (roundedUpDiff < BYTES_PER_GB || roundedUpBytes > dimmBytes)
 		{
 			canRoundUp = false;
@@ -244,8 +244,8 @@ NVM_UINT64 wbem::logic::LayoutStepVolatile::roundVolatileToNearestPMAlignment(
 
 	try
 	{
-		roundedDownBytes = roundDownVolatileToPMAlignment(dimm, layout, volatileBytes, dimmBytes);
-		roundedDownDiff = volatileBytes - roundedDownBytes;
+		roundedDownBytes = roundDownMemoryToPMAlignment(dimm, layout, memoryBytes, dimmBytes);
+		roundedDownDiff = memoryBytes - roundedDownBytes;
 		if (roundedDownDiff < BYTES_PER_GB || roundedDownBytes > dimmBytes)
 		{
 			canRoundUp = false;

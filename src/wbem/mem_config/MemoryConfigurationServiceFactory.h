@@ -277,14 +277,14 @@ class NVM_API MemoryConfigurationServiceFactory : public framework_interface::Nv
 
 		/*
 		 * Converts a list of embedded MemoryAllocationSettings instances (CIM XML) to a quantity of
-		 * volatile memory (in GiB) and a list of AppDirect Persistent extents.
-		 * Throws an exception if the settings are invalid MemoryAllocationSettings instances
+		 * memory (in GiB) and a list of AppDirect extents
+		 s Throws an exception if the settings are invalid MemoryAllocationSettings instances
 		 * or if the capacity of the requested config doesn't add up to the total capacity of
 		 * DIMMs requested.
 		 */
 		void settingsStringsToRequestedExtents(const framework::STR_LIST &settingsStrings,
-				NVM_UINT64 &volatileCapacity,
-				std::vector<struct logic::PersistentExtent> &persistentCapacities)
+				NVM_UINT64 &memoryCapacity,
+				std::vector<struct logic::AppDirectExtent> &appDirectCapacities)
 			throw (wbem::framework::Exception);
 
 		/*

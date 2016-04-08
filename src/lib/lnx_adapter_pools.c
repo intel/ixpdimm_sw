@@ -42,7 +42,7 @@
 int get_interleave_set_count()
 {
 	COMMON_LOG_ENTRY();
-	int rc = 0; // returns the pm region count
+	int rc = 0;
 
 	struct ndctl_ctx *ctx;
 
@@ -184,7 +184,7 @@ int interleave_set_ndctl_to_nvm(struct ndctl_interleave_set *p_ndctl_interleave,
 int get_interleave_sets(const NVM_UINT32 count, struct nvm_interleave_set *sets)
 {
 	COMMON_LOG_ENTRY();
-	int rc = NVM_SUCCESS; // returns the pm region count
+	int rc = NVM_SUCCESS;
 	int interleave_index = 0;
 	struct ndctl_ctx *ctx;
 
@@ -243,9 +243,9 @@ int get_interleave_sets(const NVM_UINT32 count, struct nvm_interleave_set *sets)
 }
 
 /*
- * Retrieve the block capacity for each DIMM
+ * Retrieve the storage capacity for each DIMM
  */
-int get_dimm_block_capacities(const NVM_UINT32 count, struct nvm_block_capacities *p_capacities)
+int get_dimm_storage_capacities(const NVM_UINT32 count, struct nvm_storage_capacities *p_capacities)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
@@ -259,7 +259,7 @@ int get_dimm_block_capacities(const NVM_UINT32 count, struct nvm_block_capacitie
 	}
 	else if ((rc = ndctl_new(&ctx)) >= 0)
 	{
-		memset(p_capacities, 0, count * sizeof (struct nvm_block_capacities));
+		memset(p_capacities, 0, count * sizeof (struct nvm_storage_capacities));
 
 		int cap_count = 0;
 		struct ndctl_bus *bus;
@@ -269,7 +269,7 @@ int get_dimm_block_capacities(const NVM_UINT32 count, struct nvm_block_capacitie
 			struct ndctl_region *region;
 			ndctl_region_foreach(bus, region)
 			{
-				// Only count regions that can create a blk namespace
+				// Only count regions that can create a storage namespace
 				if (ndctl_region_is_enabled(region) &&
 					ndctl_region_get_type(region) == ND_DEVICE_REGION_BLK &&
 					ndctl_region_get_mappings(region) > 0)
@@ -279,7 +279,7 @@ int get_dimm_block_capacities(const NVM_UINT32 count, struct nvm_block_capacitie
 					if (dimm == NULL)
 					{
 						rc = NVM_ERR_DRIVERFAILED;
-						COMMON_LOG_ERROR("BLK region with associated dimm");
+						COMMON_LOG_ERROR("Can't get Storage region with associated dimm");
 						break;
 					}
 					else
@@ -305,7 +305,7 @@ int get_dimm_block_capacities(const NVM_UINT32 count, struct nvm_block_capacitie
 						{
 							rc = NVM_ERR_DRIVERFAILED;
 							COMMON_LOG_ERROR_F("Driver reported DIMM with handle %u has multiple "
-									"block regions",
+									"storage regions",
 									handle.handle);
 							break;
 						}
@@ -317,7 +317,7 @@ int get_dimm_block_capacities(const NVM_UINT32 count, struct nvm_block_capacitie
 							break;
 						}
 
-						// Get interleave info so we can calculate block-only capacity
+						// Get interleave info so we can calculate storage-only capacity
 						NVM_UINT64 ilset_capacity = 0;
 						NVM_UINT64 mirrored_capacity = 0;
 						if ((rc = get_dimm_ilset_capacity(handle, &mirrored_capacity,
@@ -327,17 +327,18 @@ int get_dimm_block_capacities(const NVM_UINT32 count, struct nvm_block_capacitie
 							break;
 						}
 
-						p_capacities[cap_idx].total_block_capacity = ndctl_region_get_size(region);
-						p_capacities[cap_idx].free_block_capacity =
+						p_capacities[cap_idx].total_storage_capacity =
+								ndctl_region_get_size(region);
+						p_capacities[cap_idx].free_storage_capacity =
 								ndctl_region_get_available_size(region);
-						if (p_capacities[cap_idx].total_block_capacity > ilset_capacity)
+						if (p_capacities[cap_idx].total_storage_capacity > ilset_capacity)
 						{
-							p_capacities[cap_idx].block_only_capacity =
-									p_capacities[cap_idx].total_block_capacity - ilset_capacity;
+							p_capacities[cap_idx].storage_only_capacity =
+									p_capacities[cap_idx].total_storage_capacity - ilset_capacity;
 						}
 						else
 						{
-							p_capacities[cap_idx].block_only_capacity = 0;
+							p_capacities[cap_idx].storage_only_capacity = 0;
 						}
 						p_capacities[cap_idx].device_handle = handle;
 						cap_count++;

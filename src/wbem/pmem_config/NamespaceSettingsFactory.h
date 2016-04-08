@@ -46,8 +46,8 @@ namespace pmem_config
 	static const std::string NSSETTINGS_CREATIONCLASSNAME = std::string(NVM_WBEM_PREFIX) + "NamespaceSettings"; //!< Creation Class Name static
 	static const std::string NSSETTINGS_ELEMENTNAME_PREFIX = "Setting for ";
 	static const std::string NSSETTINGS_ALLOCATIONUNITS_BYTES = "bytes";
-	static const NVM_UINT16 NS_RESOURCETYPE_BLOCK = 36; //!< Resource Type Block
-	static const NVM_UINT16 NS_RESOURCETYPE_PM = 35; //!< Resource Type PM
+	static const NVM_UINT16 NS_RESOURCETYPE_BLOCK_ADDRESSABLE = 36;
+	static const NVM_UINT16 NS_RESOURCETYPE_BYTE_ADDRESSABLE = 35;
 	static const NVM_UINT16 NSSETTINGS_CHANGEABLETYPE_NOTCHANGEABLETRANSIENT = 3;
 
 /*!

@@ -113,27 +113,27 @@ wbem::mem_config::InterleaveSet::InterleaveSet(const struct config_goal *goal, c
 	m_socketId = getSocketIdForGoal(goal);
 	if (setNum == 1)
 	{
-		m_setIndex = goal->persistent_1_set_id;
-		m_size = goal->persistent_1_size * BYTES_PER_GB;
-		m_replication = goal->persistent_1_settings.mirrored ?
+		m_setIndex = goal->app_direct_1_set_id;
+		m_size = goal->app_direct_1_size * BYTES_PER_GB;
+		m_replication = goal->app_direct_1_settings.mirrored ?
 				MEMORYALLOCATIONSETTINGS_REPLICATION_LOCAL : MEMORYALLOCATIONSETTINGS_REPLICATION_NONE;
-		m_channelCount = goal->persistent_1_settings.interleave.ways;
+		m_channelCount = goal->app_direct_1_settings.interleave.ways;
 
 		// This class is intended to be used to create MemoryAllocationSettings instances and in
 		// those instances the interleave sizes are the base 2 exponent of the interleave size.
 		// So we do a conversion from the size that comes from the library to the corresponding exponent.
-		m_channelInterleaveSize = getExponentFromInterleaveSize(goal->persistent_1_settings.interleave.channel);
-		m_controllerInterleaveSize = getExponentFromInterleaveSize(goal->persistent_1_settings.interleave.imc);
+		m_channelInterleaveSize = getExponentFromInterleaveSize(goal->app_direct_1_settings.interleave.channel);
+		m_controllerInterleaveSize = getExponentFromInterleaveSize(goal->app_direct_1_settings.interleave.imc);
 	}
 	else
 	{
-		m_setIndex = goal->persistent_2_set_id;
-		m_size = goal->persistent_2_size * BYTES_PER_GB;
-		m_replication = goal->persistent_2_settings.mirrored ?
+		m_setIndex = goal->app_direct_2_set_id;
+		m_size = goal->app_direct_2_size * BYTES_PER_GB;
+		m_replication = goal->app_direct_2_settings.mirrored ?
 				MEMORYALLOCATIONSETTINGS_REPLICATION_LOCAL : MEMORYALLOCATIONSETTINGS_REPLICATION_NONE;
-		m_channelInterleaveSize = getExponentFromInterleaveSize(goal->persistent_2_settings.interleave.channel);
-		m_channelCount = goal->persistent_2_settings.interleave.ways;
-		m_controllerInterleaveSize = getExponentFromInterleaveSize(goal->persistent_2_settings.interleave.imc);
+		m_channelInterleaveSize = getExponentFromInterleaveSize(goal->app_direct_2_settings.interleave.channel);
+		m_channelCount = goal->app_direct_2_settings.interleave.ways;
+		m_controllerInterleaveSize = getExponentFromInterleaveSize(goal->app_direct_2_settings.interleave.imc);
 	}
 }
 
@@ -142,11 +142,11 @@ NVM_UINT16 wbem::mem_config::InterleaveSet::getSocketIdForGoal(const struct conf
 	NVM_UINT16 socket = 0;
 	if (goal != NULL)
 	{
-		if (goal->persistent_count > 0)
+		if (goal->app_direct_count > 0)
 		{
 			int rc = NVM_SUCCESS;
 			NVM_GUID guid;
-			memmove(guid, goal->persistent_1_settings.dimms[0], NVM_GUID_LEN);
+			memmove(guid, goal->app_direct_1_settings.dimms[0], NVM_GUID_LEN);
 			struct device_discovery device;
 			memset(&device, 0, sizeof(struct device_discovery));
 			if ((rc = nvm_get_device_discovery(guid, &device)) == NVM_SUCCESS)
@@ -331,7 +331,7 @@ std::string wbem::mem_config::InterleaveSet::getInterleaveFormatInputString(
 	switch (p_format->ways)
 	{
 		case INTERLEAVE_WAYS_1:
-			formatStr << wbem::mem_config::PERSISTENTSETTING_BYONE;
+			formatStr << wbem::mem_config::APP_DIRECT_SETTING_BYONE;
 			break;
 		case INTERLEAVE_WAYS_2:
 		case INTERLEAVE_WAYS_3:
@@ -353,7 +353,7 @@ std::string wbem::mem_config::InterleaveSet::getInterleaveFormatInputString(
 
 	if (mirrorSupported && addMirror)
 	{
-		formatStr << "[" << PERSISTENTSETTING_MIRROR << MEMORYPROP_TOKENSEP << "]";
+		formatStr << "[" << APP_DIRECT_SETTING_MIRROR << MEMORYPROP_TOKENSEP << "]";
 	}
 
 	if (addSizes)

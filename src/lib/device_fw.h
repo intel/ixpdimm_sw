@@ -517,7 +517,7 @@ struct pt_payload_identify_dimm {
 	unsigned short nwfa; /* Number write flush addresses */
 	unsigned long long wfas; /* Start address of the write flush addresses */
 	unsigned int obmcr; /* Offset of block mode control region */
-	unsigned int rc; /* raw capacity (volatile+persistent in 4KB multiples*/
+	unsigned int rc; /* raw capacity in 4KB multiples*/
 	unsigned char mf[DEV_MFR_LEN]; /* ASCII Manufacturer */
 	unsigned char sn[DEV_SN_LEN]; /* ASCII Serial Number */
 	char mn[DEV_MODELNUM_LEN]; /* ASCII Model Number */
@@ -916,8 +916,8 @@ struct pt_payload_get_dimm_partition_info {
 	unsigned int volatile_capacity;
 	unsigned char rsvd1[4];
 
-	/* The DPA start address of the 2LM region */
-	unsigned long long start_2lm;
+	/* The DPA start address of the volatile region */
+	unsigned long long start_volatile;
 
 	/*
 	 * DIMM PMEM capacity (in 4KB multiples of bytes).
@@ -930,7 +930,7 @@ struct pt_payload_get_dimm_partition_info {
 	/* The DPA start address of the PMEM region */
 	unsigned long long start_pmem;
 
-	/* The raw usable size of the DIMM (Volatile + Persistent)
+	/* The raw usable size of the DIMM (Volatile + PMEM)
 	 * (in 4KB multiples of bytes) */
 	unsigned int raw_capacity;
 	unsigned char rsvd3[92];

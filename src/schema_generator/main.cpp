@@ -566,8 +566,8 @@ int main(int arg_count, char **args)
 	dimm_current_config.addAttribute("creator_id").isInt32().isUnsigned();
 	dimm_current_config.addAttribute("creator_revision").isInt32().isUnsigned();
 	dimm_current_config.addAttribute("config_status").isInt32().isUnsigned();
-	dimm_current_config.addAttribute("mapped_volatile_capacity").isInt64().isUnsigned();
-	dimm_current_config.addAttribute("mapped_pm_capacity").isInt64().isUnsigned();
+	dimm_current_config.addAttribute("mapped_memory_capacity").isInt64().isUnsigned();
+	dimm_current_config.addAttribute("mapped_app_direct_capacity").isInt64().isUnsigned();
 	entities.push_back(dimm_current_config);
 
 	// platform configuration data configuration input table for a dimm

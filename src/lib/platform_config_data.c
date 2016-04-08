@@ -50,16 +50,16 @@
  * Line format for a single dimm's configuration in a file.
  * SocketID
  * DeviceHandle
- * Capacity (MB)
- * VolatileSize (MB)
- * Persistent1Size (MB)
- * Persistent1Format
- * Persistent1Mirrored
- * Persistent1Index
- * Persistent2Size (MB)
- * Persistent2Format
- * Persistent2Mirrored
- * Persistent2Index
+ * Capacity (GiB)
+ * MemorySize (GiB)
+ * AppDirect1Size (GiB)
+ * AppDirect1Format
+ * AppDirect1Mirrored
+ * AppDirect1Index
+ * AppDirect2Size (GiB)
+ * AppDirect2Format
+ * AppDirect2Mirrored
+ * AppDirect2Index
  */
 #define	config_line_format	"%hu,%u,%llu,%llu,%llu,%u,%hhu,%hu,%llu,%u,%hhu,%hu\n"
 
@@ -317,10 +317,10 @@ void print_pcd_current(struct current_config_table *p_current)
 {
 	print_config_data_table_header(p_current->header);
 	COMMON_LOG_DEBUG_F("Current Config Table - Config Status: %hu", p_current->config_status);
-	COMMON_LOG_DEBUG_F("Current Config Table - Config Mapped Volatile: %llu",
-		p_current->mapped_volatile_capacity);
-	COMMON_LOG_DEBUG_F("Current Config Table - Config Mapped PM: %llu",
-		p_current->mapped_pm_capacity);
+	COMMON_LOG_DEBUG_F("Current Config Table - Config Mapped Memory: %llu",
+		p_current->mapped_memory_capacity);
+	COMMON_LOG_DEBUG_F("Current Config Table - Config Mapped App Direct: %llu",
+		p_current->mapped_app_direct_capacity);
 
 	if (p_current->header.length > sizeof (struct current_config_table))
 	{
@@ -963,15 +963,15 @@ int write_dimm_config(const struct device_discovery *p_discovery,
 						"#SocketID,"
 						"DimmHandle,"
 						"Capacity,"
-						"VolatileSize,"
-						"Persistent1Size,"
-						"Persistent1Format,"
-						"Persistent1Mirrored,"
-						"Persistent1Index,"
-						"Persistent2Size,"
-						"Persistent2Format,"
-						"Persistent2Mirrored,"
-						"Persistent2Index\n");
+						"MemorySize,"
+						"AppDirect1Size,"
+						"AppDirect1Format,"
+						"AppDirect1Mirrored,"
+						"AppDirect1Index,"
+						"AppDirect2Size,"
+						"AppDirect2Format,"
+						"AppDirect2Mirrored,"
+						"AppDirect2Index\n");
 			}
 
 			// DIMM capacity to GiB
@@ -980,9 +980,9 @@ int write_dimm_config(const struct device_discovery *p_discovery,
 			// convert interleave format structs to number
 			NVM_UINT32 p1_format = 0;
 			NVM_UINT32 p2_format = 0;
-			interleave_struct_to_format(&p_goal->persistent_1_settings.interleave,
+			interleave_struct_to_format(&p_goal->app_direct_1_settings.interleave,
 					&p1_format);
-			interleave_struct_to_format(&p_goal->persistent_2_settings.interleave,
+			interleave_struct_to_format(&p_goal->app_direct_2_settings.interleave,
 					&p2_format);
 
 			// write to the file
@@ -990,15 +990,15 @@ int write_dimm_config(const struct device_discovery *p_discovery,
 					p_discovery->socket_id,
 					p_discovery->device_handle.handle,
 					dimm_size_gb,
-					p_goal->volatile_size,
-					p_goal->persistent_1_size,
+					p_goal->memory_size,
+					p_goal->app_direct_1_size,
 					p1_format,
-					p_goal->persistent_1_settings.mirrored,
-					p_goal->persistent_1_set_id,
-					p_goal->persistent_2_size,
+					p_goal->app_direct_1_settings.mirrored,
+					p_goal->app_direct_1_set_id,
+					p_goal->app_direct_2_size,
 					p2_format,
-					p_goal->persistent_2_settings.mirrored,
-					p_goal->persistent_2_set_id);
+					p_goal->app_direct_2_settings.mirrored,
+					p_goal->app_direct_2_set_id);
 
 			lock_file(p_file, FILE_LOCK_MODE_UNLOCK);
 		}
@@ -1327,7 +1327,7 @@ int get_interleave_settings_from_platform_config_data(const NVM_NFIT_DEVICE_HAND
 					struct interleave_info_extension_table *p_interleave_table =
 							(struct interleave_info_extension_table *)((void*) p_header);
 
-					if (p_interleave_table->memory_type == INTERLEAVE_MEMORY_TYPE_PERSISTENT &&
+					if (p_interleave_table->memory_type == INTERLEAVE_MEMORY_TYPE_APP_DIRECT &&
 							interleave_set_has_offset(p_interleave_table, interleave_set_offset))
 					{
 						found = 1;

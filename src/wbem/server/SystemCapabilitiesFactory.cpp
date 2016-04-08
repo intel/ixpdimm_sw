@@ -64,15 +64,15 @@ void wbem::server::SystemCapabilitiesFactory::populateAttributeList(
 	attributes.push_back(PLATFORMCONFIGSUPPORTED_KEY);
 	attributes.push_back(ALIGNMENT_KEY);
 	attributes.push_back(MEMORYMODESSUPPORTED_KEY);
-	attributes.push_back(CURRENTVOLATILEMEMORYMODE_KEY);
-	attributes.push_back(CURRENTPERSISTENTMEMORYMODE_KEY);
-	attributes.push_back(SUPPORTEDPERSISTENTSETTINGS_KEY);
-	attributes.push_back(RECOMMENDEDPERSISTENTSETTINGS_KEY);
+	attributes.push_back(CURRENTVOLATILEMODE_KEY);
+	attributes.push_back(CURRENTAPPDIRECTMODE_KEY);
+	attributes.push_back(SUPPORTEDAPP_DIRECT_SETTINGS_KEY);
+	attributes.push_back(RECOMMENDEDAPP_DIRECT_SETTINGS_KEY);
 	attributes.push_back(MINNAMESPACESIZE_KEY);
 	attributes.push_back(BLOCKSIZES_KEY);
-	attributes.push_back(PERSISTENTMEMORYMIRRORSUPPORT_KEY);
+	attributes.push_back(APP_DIRECT_MEMORY_MIRROR_SUPPORT_KEY);
 	attributes.push_back(DIMMSPARESUPPORT_KEY);
-	attributes.push_back(PERSISTENTMEMORYMIGRATIONSUPPORT_KEY);
+	attributes.push_back(APP_DIRECT_MEMORY_MIGRATION_SUPPORT_KEY);
 	attributes.push_back(RENAMENAMESPACESUPPORT_KEY);
 	attributes.push_back(ENABLENAMESPACESUPPORT_KEY);
 	attributes.push_back(DISABLENAMESPACESUPPORT_KEY);
@@ -124,7 +124,7 @@ wbem::framework::Instance* wbem::server::SystemCapabilitiesFactory::getInstance(
 			// Alignment - BIOS reported alignment requirement
 			if (containsAttribute(ALIGNMENT_KEY, attributes))
 			{
-				framework::Attribute attr(getPMAlignment(nvmCaps), false);
+				framework::Attribute attr(getAppDirectAlignment(nvmCaps), false);
 				pInstance->setAttribute(ALIGNMENT_KEY, attr, attributes);
 			}
 
@@ -136,29 +136,29 @@ wbem::framework::Instance* wbem::server::SystemCapabilitiesFactory::getInstance(
 			}
 
 			// CurrentVolatileMode - volatile memory mode currently selected by the BIOS
-			if (containsAttribute(CURRENTVOLATILEMEMORYMODE_KEY, attributes))
+			if (containsAttribute(CURRENTVOLATILEMODE_KEY, attributes))
 			{
 				framework::Attribute attr(getCurrentVolatileMode(nvmCaps), false);
-				pInstance->setAttribute(CURRENTVOLATILEMEMORYMODE_KEY, attr, attributes);
+				pInstance->setAttribute(CURRENTVOLATILEMODE_KEY, attr, attributes);
 			}
 
-			// CurrentPMMode - persistent memory mode currently selected by the BIOS
-			if (containsAttribute(CURRENTPERSISTENTMEMORYMODE_KEY, attributes))
+			// CurrentAppDirectMode - App Direct mode currently selected by the BIOS
+			if (containsAttribute(CURRENTAPPDIRECTMODE_KEY, attributes))
 			{
-				framework::Attribute attr(getCurrentPMMode(nvmCaps), false);
-				pInstance->setAttribute(CURRENTPERSISTENTMEMORYMODE_KEY, attr, attributes);
+				framework::Attribute attr(getCurrentAppDirectMode(nvmCaps), false);
+				pInstance->setAttribute(CURRENTAPPDIRECTMODE_KEY, attr, attributes);
 			}
 
-			if (containsAttribute(SUPPORTEDPERSISTENTSETTINGS_KEY, attributes))
+			if (containsAttribute(SUPPORTEDAPP_DIRECT_SETTINGS_KEY, attributes))
 			{
 				framework::Attribute attr(getSupportedSettings(nvmCaps), false);
-				pInstance->setAttribute(SUPPORTEDPERSISTENTSETTINGS_KEY, attr, attributes);
+				pInstance->setAttribute(SUPPORTEDAPP_DIRECT_SETTINGS_KEY, attr, attributes);
 			}
 
-			if (containsAttribute(RECOMMENDEDPERSISTENTSETTINGS_KEY, attributes))
+			if (containsAttribute(RECOMMENDEDAPP_DIRECT_SETTINGS_KEY, attributes))
 			{
 				framework::Attribute attr(getRecommendedSettings(nvmCaps), false);
-				pInstance->setAttribute(RECOMMENDEDPERSISTENTSETTINGS_KEY, attr, attributes);
+				pInstance->setAttribute(RECOMMENDEDAPP_DIRECT_SETTINGS_KEY, attr, attributes);
 			}
 
 			if (containsAttribute(MINNAMESPACESIZE_KEY, attributes))
@@ -184,7 +184,7 @@ wbem::framework::Instance* wbem::server::SystemCapabilitiesFactory::getInstance(
 				framework::Attribute attr(blockSizeList, false);
 				pInstance->setAttribute(BLOCKSIZES_KEY, attr, attributes);
 			}
-			if (containsAttribute(PERSISTENTMEMORYMIRRORSUPPORT_KEY, attributes))
+			if (containsAttribute(APP_DIRECT_MEMORY_MIRROR_SUPPORT_KEY, attributes))
 			{
 				framework::UINT16 mirror = 0;
 				if (nvmCaps.nvm_features.app_direct_mode)
@@ -192,7 +192,7 @@ wbem::framework::Instance* wbem::server::SystemCapabilitiesFactory::getInstance(
 					mirror = nvmCaps.platform_capabilities.memory_mirror_supported;
 				}
 				framework::Attribute attr(mirror, false);
-				pInstance->setAttribute(PERSISTENTMEMORYMIRRORSUPPORT_KEY, attr, attributes);
+				pInstance->setAttribute(APP_DIRECT_MEMORY_MIRROR_SUPPORT_KEY, attr, attributes);
 			}
 			if (containsAttribute(DIMMSPARESUPPORT_KEY, attributes))
 			{
@@ -204,7 +204,7 @@ wbem::framework::Instance* wbem::server::SystemCapabilitiesFactory::getInstance(
 				framework::Attribute attr(spare, false);
 				pInstance->setAttribute(DIMMSPARESUPPORT_KEY, attr, attributes);
 			}
-			if (containsAttribute(PERSISTENTMEMORYMIGRATIONSUPPORT_KEY, attributes))
+			if (containsAttribute(APP_DIRECT_MEMORY_MIGRATION_SUPPORT_KEY, attributes))
 			{
 				framework::UINT16 migration = 0;
 				if (nvmCaps.nvm_features.app_direct_mode)
@@ -212,7 +212,7 @@ wbem::framework::Instance* wbem::server::SystemCapabilitiesFactory::getInstance(
 					migration = nvmCaps.platform_capabilities.memory_migration_supported;
 				}
 				framework::Attribute attr(migration, false);
-				pInstance->setAttribute(PERSISTENTMEMORYMIGRATIONSUPPORT_KEY, attr, attributes);
+				pInstance->setAttribute(APP_DIRECT_MEMORY_MIGRATION_SUPPORT_KEY, attr, attributes);
 			}
 
 			addCapabilitySupportedAttribute(pInstance, attributes,
@@ -282,7 +282,7 @@ wbem::framework::STR_LIST wbem::server::SystemCapabilitiesFactory::getSupportedM
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	framework::STR_LIST modes;
-	if (nvmCaps.platform_capabilities.one_lm.supported)
+	if (nvmCaps.platform_capabilities.one_lm_mode.supported)
 	{
 		modes.push_back(MEMORYMODE_1LM_STR);
 	}
@@ -292,11 +292,11 @@ wbem::framework::STR_LIST wbem::server::SystemCapabilitiesFactory::getSupportedM
 	}
 	if (nvmCaps.nvm_features.storage_mode)
 	{
-		modes.push_back(MEMORYMODE_BLOCK_STR);
+		modes.push_back(MEMORYMODE_STORAGE_STR);
 	}
 	if (nvmCaps.nvm_features.app_direct_mode)
 	{
-		modes.push_back(MEMORYMODE_PMDIRECT_STR);
+		modes.push_back(MEMORYMODE_APP_DIRECT_STR);
 	}
 
 	return modes;
@@ -311,7 +311,7 @@ std::string wbem::server::SystemCapabilitiesFactory::getCurrentVolatileMode(
 	// if memory mode is not supported, default to 1lm
 	enum volatile_mode mode = nvmCaps.platform_capabilities.current_volatile_mode;
 	if (!nvmCaps.nvm_features.memory_mode &&
-			mode == VOLATILE_MODE_2LM) // bios support but DIMM SKU does not support
+			mode == VOLATILE_MODE_MEMORY) // bios support but DIMM SKU does not support
 	{
 		mode = VOLATILE_MODE_1LM;
 	}
@@ -322,7 +322,7 @@ std::string wbem::server::SystemCapabilitiesFactory::getCurrentVolatileMode(
 		case VOLATILE_MODE_1LM:
 			returnStr = MEMORYMODE_1LM_STR;
 			break;
-		case VOLATILE_MODE_2LM:
+		case VOLATILE_MODE_MEMORY:
 			returnStr = MEMORYMODE_MEMORY_STR;
 			break;
 		case VOLATILE_MODE_AUTO:
@@ -336,29 +336,29 @@ std::string wbem::server::SystemCapabilitiesFactory::getCurrentVolatileMode(
 	return returnStr;
 }
 
-std::string wbem::server::SystemCapabilitiesFactory::getCurrentPMMode(
+std::string wbem::server::SystemCapabilitiesFactory::getCurrentAppDirectMode(
 		const struct nvm_capabilities &nvmCaps)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	// if app direct is not supported, default to disabled
-	enum pm_mode mode = nvmCaps.platform_capabilities.current_pm_mode;
+	enum app_direct_mode mode = nvmCaps.platform_capabilities.current_app_direct_mode;
 	if (!nvmCaps.nvm_features.app_direct_mode &&
-			mode == PM_MODE_PM_DIRECT) // bios support but DIMM SKU does not support
+			mode == APP_DIRECT_MODE_ENABLED) // bios support but DIMM SKU does not support
 	{
-		mode = PM_MODE_DISABLED;
+		mode = APP_DIRECT_MODE_DISABLED;
 	}
 
 	std::string returnStr;
 	switch (mode)
 	{
-		case PM_MODE_DISABLED:
-			returnStr = MEMORYMODE_PMDISABLED_STR;
+		case APP_DIRECT_MODE_DISABLED:
+			returnStr = MEMORYMODE_APP_DIRECT_DISABLED_STR;
 			break;
-		case PM_MODE_PM_DIRECT:
-			returnStr = MEMORYMODE_PMDIRECT_STR;
+		case APP_DIRECT_MODE_ENABLED:
+			returnStr = MEMORYMODE_APP_DIRECT_STR;
 			break;
-		case PM_MODE_UNKNOWN:
+		case APP_DIRECT_MODE_UNKNOWN:
 		default:
 			returnStr = MEMORYMODE_UNKNOWN_STR;
 			break;
@@ -399,10 +399,10 @@ wbem::framework::STR_LIST wbem::server::SystemCapabilitiesFactory::getSupportedS
 	if (nvmCaps.nvm_features.app_direct_mode)
 	{
 		bool mirrorSupported = nvmCaps.platform_capabilities.memory_mirror_supported;
-		for (NVM_UINT16 i = 0; i < nvmCaps.platform_capabilities.pm_direct.interleave_formats_count; i++)
+		for (NVM_UINT16 i = 0; i < nvmCaps.platform_capabilities.app_direct_mode.interleave_formats_count; i++)
 		{
 			const struct interleave_format &format =
-					nvmCaps.platform_capabilities.pm_direct.interleave_formats[i];
+					nvmCaps.platform_capabilities.app_direct_mode.interleave_formats[i];
 
 			addFormatStringIfNotInList(supportedSettings, format, mirrorSupported);
 		}
@@ -419,10 +419,10 @@ wbem::framework::STR_LIST wbem::server::SystemCapabilitiesFactory::getRecommende
 	if (nvmCaps.nvm_features.app_direct_mode)
 	{
 		bool mirrorSupported = nvmCaps.platform_capabilities.memory_mirror_supported;
-		for (NVM_UINT16 i = 0; i < nvmCaps.platform_capabilities.pm_direct.interleave_formats_count; i++)
+		for (NVM_UINT16 i = 0; i < nvmCaps.platform_capabilities.app_direct_mode.interleave_formats_count; i++)
 		{
 			const struct interleave_format &format =
-					nvmCaps.platform_capabilities.pm_direct.interleave_formats[i];
+					nvmCaps.platform_capabilities.app_direct_mode.interleave_formats[i];
 			if (format.recommended)
 			{
 				addFormatStringIfNotInList(recommendedSettings, format, mirrorSupported);
@@ -432,14 +432,14 @@ wbem::framework::STR_LIST wbem::server::SystemCapabilitiesFactory::getRecommende
 	return recommendedSettings;
 }
 
-wbem::framework::UINT64 wbem::server::SystemCapabilitiesFactory::getPMAlignment(
+wbem::framework::UINT64 wbem::server::SystemCapabilitiesFactory::getAppDirectAlignment(
 		const struct nvm_capabilities &nvmCaps)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	NVM_UINT64 alignment = 0;
 	if (nvmCaps.nvm_features.app_direct_mode)
 	{
-		alignment = 1 << nvmCaps.platform_capabilities.pm_direct.interleave_alignment_size; // 2^n
+		alignment = 1 << nvmCaps.platform_capabilities.app_direct_mode.interleave_alignment_size; // 2^n
 	}
 	return alignment;
 }

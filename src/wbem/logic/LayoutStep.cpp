@@ -65,18 +65,18 @@ NVM_UINT64 wbem::logic::LayoutStep::getDimmUnallocatedBytes(
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	NVM_UINT64 remaining = dimmCapacity;
-	if (dimmGoal.volatile_size)
+	if (dimmGoal.memory_size)
 	{
-		remaining -= configGoalSizeToBytes(dimmGoal.volatile_size);
-		round_down(remaining, BYTES_PER_GB); // volatile eats metadata
+		remaining -= configGoalSizeToBytes(dimmGoal.memory_size);
+		round_down(remaining, BYTES_PER_GB); // memory partition eats metadata
 	}
-	if (dimmGoal.persistent_count >= 2)
+	if (dimmGoal.app_direct_count >= 2)
 	{
-		remaining -= configGoalSizeToBytes(dimmGoal.persistent_2_size);
+		remaining -= configGoalSizeToBytes(dimmGoal.app_direct_2_size);
 	}
-	if (dimmGoal.persistent_count >= 1)
+	if (dimmGoal.app_direct_count >= 1)
 	{
-		remaining -= configGoalSizeToBytes(dimmGoal.persistent_1_size);
+		remaining -= configGoalSizeToBytes(dimmGoal.app_direct_1_size);
 	}
 	return remaining;
 }

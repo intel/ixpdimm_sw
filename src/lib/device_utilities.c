@@ -654,7 +654,7 @@ enum device_form_factor get_device_form_factor_from_smbios_form_factor(
 	return form_factor;
 }
 
-int get_dimm_block_capacity(NVM_UINT32 handle, NVM_UINT64 *p_block_capacity)
+int get_dimm_storage_capacity(NVM_UINT32 handle, NVM_UINT64 *p_storage_capacity)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
@@ -662,18 +662,18 @@ int get_dimm_block_capacity(NVM_UINT32 handle, NVM_UINT64 *p_block_capacity)
 	if ((rc = get_topology_count()) > 0)
 	{
 		int num_dimms = rc;
-		struct nvm_block_capacities capacities[num_dimms];
-		memset(&capacities, 0, (sizeof (struct nvm_block_capacities) * num_dimms));
-		if ((rc = get_dimm_block_capacities(num_dimms, capacities)) > 0)
+		struct nvm_storage_capacities capacities[num_dimms];
+		memset(&capacities, 0, (sizeof (struct nvm_storage_capacities) * num_dimms));
+		if ((rc = get_dimm_storage_capacities(num_dimms, capacities)) > 0)
 		{
 			num_dimms = rc;
 			rc = NVM_ERR_BADDEVICE;
-			*p_block_capacity = 0;
+			*p_storage_capacity = 0;
 			for (int i = 0; i < num_dimms; i++)
 			{
 				if (handle == capacities[i].device_handle.handle)
 				{
-					*p_block_capacity = capacities[i].total_block_capacity;
+					*p_storage_capacity = capacities[i].total_storage_capacity;
 					rc = NVM_SUCCESS;
 					break;
 				}
@@ -702,8 +702,8 @@ int update_capacities_based_on_sku(const NVM_NFIT_DEVICE_HANDLE device_handle,
 		convert_sku_to_device_capabilities(discovery.dimm_sku, &device_capabilities);
 
 		NVM_UINT64 raw_capacity = p_capacities->capacity;
-		NVM_UINT64 volatile_capacity = p_capacities->volatile_capacity;
-		NVM_UINT64 pm_capacity = p_capacities->persistent_capacity +
+		NVM_UINT64 memory_capacity = p_capacities->memory_capacity;
+		NVM_UINT64 pm_capacity = p_capacities->app_direct_capacity +
 				p_capacities->unconfigured_capacity;
 
 		// no support, all capacity in inaccessible
@@ -715,18 +715,18 @@ int update_capacities_based_on_sku(const NVM_NFIT_DEVICE_HANDLE device_handle,
 			!device_capabilities.storage_mode_capable))
 		{
 			p_capacities->inaccessible_capacity += raw_capacity;
-			p_capacities->volatile_capacity = 0;
-			p_capacities->persistent_capacity = 0;
-			p_capacities->block_capacity = 0;
+			p_capacities->memory_capacity = 0;
+			p_capacities->app_direct_capacity = 0;
+			p_capacities->storage_capacity = 0;
 			p_capacities->unconfigured_capacity = 0;
 		}
-		// check volatile to memory mode support
-		else if (volatile_capacity > 0 &&
+		// check memory mode support
+		else if (memory_capacity > 0 &&
 				(!p_capabilities->nvm_features.memory_mode ||
 				!device_capabilities.memory_mode_capable))
 		{
-			p_capacities->inaccessible_capacity += volatile_capacity;
-			p_capacities->volatile_capacity = 0;
+			p_capacities->inaccessible_capacity += memory_capacity;
+			p_capacities->memory_capacity = 0;
 		}
 		else if (pm_capacity > 0)
 		{
@@ -737,25 +737,25 @@ int update_capacities_based_on_sku(const NVM_NFIT_DEVICE_HANDLE device_handle,
 				!device_capabilities.storage_mode_capable))
 			{
 				p_capacities->inaccessible_capacity += pm_capacity;
-				p_capacities->persistent_capacity = 0;
-				p_capacities->block_capacity = 0;
+				p_capacities->app_direct_capacity = 0;
+				p_capacities->storage_capacity = 0;
 				p_capacities->unconfigured_capacity = 0;
 			}
-			// Storage but no App-Direct
-			else if (p_capacities->persistent_capacity > 0 &&
+			// Storage but no App Direct
+			else if (p_capacities->app_direct_capacity > 0 &&
 					(!p_capabilities->nvm_features.app_direct_mode ||
 							!device_capabilities.app_direct_mode_capable))
 			{
-				p_capacities->inaccessible_capacity += p_capacities->persistent_capacity;
-				p_capacities->persistent_capacity = 0;
+				p_capacities->inaccessible_capacity += p_capacities->app_direct_capacity;
+				p_capacities->app_direct_capacity = 0;
 			}
-			// App-direct but no Storage
-			else if (p_capacities->block_capacity > 0 &&
+			// App direct but no Storage
+			else if (p_capacities->storage_capacity > 0 &&
 					(!p_capabilities->nvm_features.storage_mode ||
 					!device_capabilities.storage_mode_capable))
 			{
-				// Block capacity is considered "un-configured", not inaccessible
-				p_capacities->block_capacity = 0;
+				// Storage capacity is considered "un-configured", not inaccessible
+				p_capacities->storage_capacity = 0;
 			}
 		}
 	}
@@ -782,8 +782,8 @@ int get_dimm_capacities(const NVM_NFIT_DEVICE_HANDLE device_handle,
 	{
 		p_capacities->capacity = MULTIPLES_TO_BYTES(pi.raw_capacity);
 		p_capacities->reserved_capacity = RESERVED_CAPACITY_BYTES(p_capacities->capacity);
-		p_capacities->volatile_capacity = MULTIPLES_TO_BYTES(pi.volatile_capacity);
-		p_capacities->persistent_capacity = MULTIPLES_TO_BYTES(pi.pmem_capacity);
+		p_capacities->memory_capacity = MULTIPLES_TO_BYTES(pi.volatile_capacity);
+		p_capacities->app_direct_capacity = MULTIPLES_TO_BYTES(pi.pmem_capacity);
 
 		// get BIOS mapped capacities from the platform config data
 		struct platform_config_data *p_cfg_data = NULL;
@@ -794,16 +794,16 @@ int get_dimm_capacities(const NVM_NFIT_DEVICE_HANDLE device_handle,
 					cast_current_config(p_cfg_data);
 			if (p_current_config)
 			{
-				p_capacities->volatile_capacity =
-					p_current_config->mapped_volatile_capacity;
-				p_capacities->persistent_capacity =
-					p_current_config->mapped_pm_capacity;
-				get_dimm_block_capacity(device_handle.handle,
-						&p_capacities->block_capacity);
+				p_capacities->memory_capacity =
+					p_current_config->mapped_memory_capacity;
+				p_capacities->app_direct_capacity =
+					p_current_config->mapped_app_direct_capacity;
+				get_dimm_storage_capacity(device_handle.handle,
+						&p_capacities->storage_capacity);
 				p_capacities->unconfigured_capacity =
 						p_capacities->capacity
-						- p_current_config->mapped_volatile_capacity
-						- p_current_config->mapped_pm_capacity
+						- p_current_config->mapped_memory_capacity
+						- p_current_config->mapped_app_direct_capacity
 						- p_capacities->reserved_capacity;
 			}
 		}
@@ -855,8 +855,8 @@ int dimm_has_namespaces_of_type(const NVM_NFIT_DEVICE_HANDLE dimm_handle,
 					// check type we're looking for
 					if (ns_type == NAMESPACE_TYPE_UNKNOWN || ns_details.type == ns_type)
 					{
-						// block, check if dimm handle matches
-						if (ns_details.type == NAMESPACE_TYPE_BLOCK)
+						// storage, check if dimm handle matches
+						if (ns_details.type == NAMESPACE_TYPE_STORAGE)
 						{
 							if (ns_details.namespace_creation_id.device_handle.handle ==
 									dimm_handle.handle)
@@ -865,7 +865,7 @@ int dimm_has_namespaces_of_type(const NVM_NFIT_DEVICE_HANDLE dimm_handle,
 							}
 						}
 						// check if dimm is in interleave set
-						else if (ns_details.type == NAMESPACE_TYPE_PMEM)
+						else if (ns_details.type == NAMESPACE_TYPE_APP_DIRECT)
 						{
 							struct nvm_interleave_set set;
 							memset(&set, 0, sizeof (set));

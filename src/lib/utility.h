@@ -47,12 +47,12 @@ extern "C"
 {
 #endif
 
-#define	PERSISTENTSETTING_UNKNOWN	"Unknown"
-#define	PERSISTENTSETTING_64B	"64B"
-#define	PERSISTENTSETTING_128B	"128B"
-#define	PERSISTENTSETTING_256B	"256B"
-#define	PERSISTENTSETTING_4KB	"4KB"
-#define	PERSISTENTSETTING_1GB	"1GB"
+#define	APP_DIRECTSETTING_UNKNOWN	"Unknown"
+#define	APP_DIRECTSETTING_64B	"64B"
+#define	APP_DIRECTSETTING_128B	"128B"
+#define	APP_DIRECTSETTING_256B	"256B"
+#define	APP_DIRECTSETTING_4KB	"4KB"
+#define	APP_DIRECTSETTING_1GB	"1GB"
 
 /*
  * Convert manufacturer ID array to number for DB storage and display
@@ -323,24 +323,24 @@ static inline void interleave_struct_to_format(const struct interleave_format *p
 
 static inline const char *get_string_for_interleave_size(const enum interleave_size size)
 {
-	const char *size_str = PERSISTENTSETTING_UNKNOWN;
+	const char *size_str = APP_DIRECTSETTING_UNKNOWN;
 
 	switch (size)
 	{
 		case INTERLEAVE_SIZE_64B:
-			size_str = PERSISTENTSETTING_64B;
+			size_str = APP_DIRECTSETTING_64B;
 			break;
 		case INTERLEAVE_SIZE_128B:
-			size_str = PERSISTENTSETTING_128B;
+			size_str = APP_DIRECTSETTING_128B;
 			break;
 		case INTERLEAVE_SIZE_256B:
-			size_str = PERSISTENTSETTING_256B;
+			size_str = APP_DIRECTSETTING_256B;
 			break;
 		case INTERLEAVE_SIZE_4KB:
-			size_str = PERSISTENTSETTING_4KB;
+			size_str = APP_DIRECTSETTING_4KB;
 			break;
 		case INTERLEAVE_SIZE_1GB:
-			size_str = PERSISTENTSETTING_1GB;
+			size_str = APP_DIRECTSETTING_1GB;
 			break;
 		default:
 			break;
@@ -434,7 +434,7 @@ static inline NVM_UINT64 round_down(const NVM_UINT64 num_to_round, const NVM_UIN
 
 /*
  * when a block size of 520, 528, 4104 is requested, the actual block size used by the
- * block driver is rounded up to the nearest multiple of cache line size.
+ * driver is rounded up to the nearest multiple of cache line size.
  */
 static inline NVM_UINT32 get_real_block_size(NVM_UINT32 block_size)
 {

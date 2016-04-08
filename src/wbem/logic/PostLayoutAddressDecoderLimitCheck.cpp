@@ -157,14 +157,14 @@ NVM_UINT16 wbem::logic::PostLayoutAddressDecoderLimitCheck::getNumberOfConfigGoa
 	for (std::vector<struct config_goal>::iterator iter = configGoalsForSocket.begin();
 			iter != configGoalsForSocket.end(); iter++)
 	{
-		if (iter->persistent_count > 0)
+		if (iter->app_direct_count > 0)
 		{
-			interleaveSetIndexList.push_back(iter->persistent_1_set_id);
+			interleaveSetIndexList.push_back(iter->app_direct_1_set_id);
 		}
 
-		if (iter->persistent_count > 1)
+		if (iter->app_direct_count > 1)
 		{
-			interleaveSetIndexList.push_back(iter->persistent_2_set_id);
+			interleaveSetIndexList.push_back(iter->app_direct_2_set_id);
 		}
 	}
 

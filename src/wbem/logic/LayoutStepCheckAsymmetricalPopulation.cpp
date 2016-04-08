@@ -47,7 +47,7 @@ void wbem::logic::LayoutStepCheckAsymmetricalPopulation::execute(const MemoryAll
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	if (request.volatileCapacity != 0 || request.persistentExtents.size() > 0)
+	if (request.memoryCapacity != 0 || request.appDirectExtents.size() > 0)
 	{
 		std::map<NVM_UINT16, std::vector<Dimm> > socketDimmsMap;
 		for (std::vector<Dimm>::const_iterator dimmIter = request.dimms.begin();

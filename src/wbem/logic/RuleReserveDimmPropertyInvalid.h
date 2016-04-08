@@ -50,7 +50,7 @@ class NVM_API RuleReserveDimmPropertyInvalid : public RequestRule
 		virtual void verify(const MemoryAllocationRequest &request);
 	protected:
 		bool reserveSingleDimm(const MemoryAllocationRequest &request);
-		bool volatileOrPersistentMemIsRequested(const MemoryAllocationRequest &request);
+		bool memoryOrAppDirectIsRequested(const MemoryAllocationRequest &request);
 };
 
 } /* namespace logic */

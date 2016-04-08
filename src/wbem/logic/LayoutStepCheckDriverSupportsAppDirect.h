@@ -26,11 +26,11 @@
  */
 
 /*
- * Add a layout warning if BIOS doesn't recommend the specified interleave format.
+ * Check if the driver supports app direct. If not, create a warning.
  */
 
-#ifndef _WBEM_LOGIC_LAYOUTSTEPPERSISTENTSETTINGSNOTRECOMMENDED_H_
-#define _WBEM_LOGIC_LAYOUTSTEPPERSISTENTSETTINGSNOTRECOMMENDED_H_
+#ifndef _WBEM_LOGIC_LAYOUTSTEPCHECKDRIVERSUPPORTSAPPDIRECT_H_
+#define _WBEM_LOGIC_LAYOUTSTEPCHECKDRIVERSUPPORTSAPPDIRECT_H_
 
 #include "LayoutStep.h"
 #include <nvm_types.h>
@@ -40,21 +40,19 @@ namespace wbem
 namespace logic
 {
 
-class NVM_API LayoutStepPersistentSettingsNotRecommended : public LayoutStep
+class NVM_API LayoutStepCheckDriverSupportsAppDirect : public LayoutStep
 {
 	public:
-		LayoutStepPersistentSettingsNotRecommended(const struct platform_capabilities &platformCapabilities);
-		virtual ~LayoutStepPersistentSettingsNotRecommended();
+		LayoutStepCheckDriverSupportsAppDirect(const struct nvm_features &driverFeatures);
+		virtual ~LayoutStepCheckDriverSupportsAppDirect();
 
 		virtual void execute(const MemoryAllocationRequest &request, MemoryAllocationLayout &layout);
 
 	protected:
-		bool formatRecommended(const struct PersistentExtent &pmRequest);
-
-		struct platform_capabilities m_platformCapabilities;
+		struct nvm_features m_driverFeatures;
 };
 
 } /* namespace logic */
 } /* namespace wbem */
 
-#endif /* _WBEM_LOGIC_LAYOUTSTEPPERSISTENTSETTINGSNOTRECOMMENDED_H_ */
+#endif /* _WBEM_LOGIC_LAYOUTSTEPCHECKDRIVERSUPPORTSAPPDIRECT_H_ */

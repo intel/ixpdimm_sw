@@ -73,29 +73,29 @@ int validate_config_goal_alignment(const struct config_goal *p_goal,
 	int rc = NVM_SUCCESS;
 
 	// verify requested sizes match our alignment capabilities
-	// volatile - 2^n bytes
-	NVM_UINT8 vm_alignment_exp =
-			p_capabilities->platform_capabilities.two_lm.interleave_alignment_size;
-	// persistent - 2^n bytes
-	NVM_UINT8 pm_alignment_exp =
-			p_capabilities->platform_capabilities.pm_direct.interleave_alignment_size;
-	if ((vm_alignment_exp < 64) && (pm_alignment_exp < 64))
+	// memory - 2^n bytes
+	NVM_UINT8 mem_alignment_exp =
+			p_capabilities->platform_capabilities.memory_mode.interleave_alignment_size;
+	// app direct - 2^n bytes
+	NVM_UINT8 ad_alignment_exp =
+			p_capabilities->platform_capabilities.app_direct_mode.interleave_alignment_size;
+	if ((mem_alignment_exp < 64) && (ad_alignment_exp < 64))
 		// alignments will fit in 64 bits
 	{
-		NVM_UINT64 volatile_alignment = (1 << vm_alignment_exp); // bytes
-		NVM_UINT64 persistent_alignment = (1 << pm_alignment_exp); // bytes
+		NVM_UINT64 memory_alignment = (1 << mem_alignment_exp); // bytes
+		NVM_UINT64 app_direct_alignment = (1 << ad_alignment_exp); // bytes
 
-		// Volatile size is OK
-		rc = validate_size_alignment(p_goal->volatile_size, volatile_alignment);
+		// memory size is OK
+		rc = validate_size_alignment(p_goal->memory_size, memory_alignment);
 		if (rc == NVM_SUCCESS)
 		{
-			// Verify persistent sizes
-			NVM_UINT64 sizes[NVM_MAX_PM_POOLS_PER_DIMM][2] = {
-					{p_goal->persistent_1_size, persistent_alignment},
-					{p_goal->persistent_2_size, persistent_alignment}
+			// Verify app direct sizes
+			NVM_UINT64 sizes[NVM_MAX_INTERLEAVE_SETS_PER_DIMM][2] = {
+					{p_goal->app_direct_1_size, app_direct_alignment},
+					{p_goal->app_direct_2_size, app_direct_alignment}
 			};
 
-			for (unsigned int i = 0; (i < p_goal->persistent_count) &&
+			for (unsigned int i = 0; (i < p_goal->app_direct_count) &&
 				(rc == NVM_SUCCESS); i++)
 			{
 				rc = validate_size_alignment(sizes[i][0], sizes[i][1]);
@@ -105,10 +105,10 @@ int validate_config_goal_alignment(const struct config_goal *p_goal,
 	else // Got bogus alignment sizes
 	{
 		COMMON_LOG_ERROR_F("Driver returned bad alignment size (2^n). "
-				"2LM alignment_size: %d,"
-				"PM alignment_size: %d",
-				vm_alignment_exp,
-				pm_alignment_exp);
+				"memory alignment_size: %d,"
+				"App Direct alignment_size: %d",
+				mem_alignment_exp,
+				ad_alignment_exp);
 		rc = NVM_ERR_UNKNOWN;
 	}
 
@@ -198,21 +198,21 @@ int validate_config_goal_size(const struct config_goal *p_goal,
 	int rc = NVM_SUCCESS;
 	NVM_UINT64 capacity = USABLE_CAPACITY_BYTES(p_discovery->capacity);
 
-	// Validate volatile size
-	rc = validate_interleave_set_size(p_goal->volatile_size, &capacity, 0);
+	// Validate memory size
+	rc = validate_interleave_set_size(p_goal->memory_size, &capacity, 0);
 	if (rc == NVM_SUCCESS)
 	{
-		// Validate PM interleave set sizes
-		NVM_UINT64 sizes[NVM_MAX_PM_POOLS_PER_DIMM] = {
-				p_goal->persistent_1_size,
-				p_goal->persistent_2_size
+		// Validate interleave set sizes
+		NVM_UINT64 sizes[NVM_MAX_INTERLEAVE_SETS_PER_DIMM] = {
+				p_goal->app_direct_1_size,
+				p_goal->app_direct_2_size
 		};
-		NVM_BOOL mirrored[NVM_MAX_PM_POOLS_PER_DIMM] = {
-				p_goal->persistent_1_settings.mirrored,
-				p_goal->persistent_2_settings.mirrored
+		NVM_BOOL mirrored[NVM_MAX_INTERLEAVE_SETS_PER_DIMM] = {
+				p_goal->app_direct_1_settings.mirrored,
+				p_goal->app_direct_2_settings.mirrored
 		};
 
-		for (unsigned int i = 0; (i < p_goal->persistent_count) && (rc == NVM_SUCCESS); i++)
+		for (unsigned int i = 0; (i < p_goal->app_direct_count) && (rc == NVM_SUCCESS); i++)
 		{
 			if (sizes[i] == 0) // we expect a pool to have a capacity > 0
 			{
@@ -228,16 +228,16 @@ int validate_config_goal_size(const struct config_goal *p_goal,
 	return rc;
 }
 
-NVM_UINT32 get_number_of_mirrored_pm_interleave_sets(const struct config_goal *p_goal)
+NVM_UINT32 get_number_of_mirrored_app_direct_interleave_sets(const struct config_goal *p_goal)
 {
 	NVM_UINT32 num_mirrored = 0;
 
-	if ((p_goal->persistent_count > 0) && p_goal->persistent_1_settings.mirrored)
+	if ((p_goal->app_direct_count > 0) && p_goal->app_direct_1_settings.mirrored)
 	{
 		num_mirrored++;
 	}
 
-	if ((p_goal->persistent_count > 1) && p_goal->persistent_2_settings.mirrored)
+	if ((p_goal->app_direct_count > 1) && p_goal->app_direct_2_settings.mirrored)
 	{
 		num_mirrored++;
 	}
@@ -249,7 +249,7 @@ int current_volatile_mode_is_supported(enum volatile_mode volatile_mode)
 {
 	int result = 0;
 
-	if ((volatile_mode == VOLATILE_MODE_2LM) ||
+	if ((volatile_mode == VOLATILE_MODE_MEMORY) ||
 		(volatile_mode == VOLATILE_MODE_AUTO))
 	{
 		result = 1;
@@ -257,12 +257,12 @@ int current_volatile_mode_is_supported(enum volatile_mode volatile_mode)
 	return result;
 }
 
-int memory_capacity_is_requested_but_not_supported(NVM_UINT64 volatile_size,
+int memory_capacity_is_requested_but_not_supported(NVM_UINT64 memory_size,
 	enum volatile_mode current_volatile_mode, NVM_BOOL memory_mode_capable)
 {
 	int result = 0;
 
-	if (volatile_size > 0 &&
+	if (memory_size > 0 &&
 		(!current_volatile_mode_is_supported(current_volatile_mode) ||
 			!memory_mode_capable))
 	{
@@ -271,13 +271,13 @@ int memory_capacity_is_requested_but_not_supported(NVM_UINT64 volatile_size,
 	return result;
 }
 
-int appdirect_capacity_is_requested_but_not_supported(NVM_UINT16 persistent_count,
-	enum pm_mode current_pm_mode, NVM_BOOL app_direct_mode_capable)
+int app_direct_capacity_is_requested_but_not_supported(NVM_UINT16 app_direct_count,
+	enum app_direct_mode current_mode, NVM_BOOL app_direct_mode_capable)
 {
 	int result = 0;
 
-	if (persistent_count > 0 &&
-		((current_pm_mode != PM_MODE_PM_DIRECT) ||
+	if (app_direct_count > 0 &&
+		((current_mode != APP_DIRECT_MODE_ENABLED) ||
 			!app_direct_mode_capable))
 	{
 		result = 1;
@@ -296,23 +296,23 @@ int validate_config_goal_supported(const struct config_goal *p_goal,
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
 
-	if (memory_capacity_is_requested_but_not_supported(p_goal->volatile_size,
+	if (memory_capacity_is_requested_but_not_supported(p_goal->memory_size,
 			p_capabilities->platform_capabilities.current_volatile_mode,
 			p_discovery->device_capabilities.memory_mode_capable))
 	{
 		COMMON_LOG_WARN("Memory capacity requested but is not supported.");
 		rc = NVM_ERR_CONFIGNOTSUPPORTED;
 	}
-	else if (appdirect_capacity_is_requested_but_not_supported(p_goal->persistent_count,
-			p_capabilities->platform_capabilities.current_pm_mode,
+	else if (app_direct_capacity_is_requested_but_not_supported(p_goal->app_direct_count,
+			p_capabilities->platform_capabilities.current_app_direct_mode,
 			p_discovery->device_capabilities.app_direct_mode_capable))
 	{
-		COMMON_LOG_WARN("App-direct capacity requested but is not supported.");
+		COMMON_LOG_WARN("App direct capacity requested but is not supported.");
 		rc = NVM_ERR_CONFIGNOTSUPPORTED;
 	}
 	else
 	{
-		NVM_UINT32 num_mirrored = get_number_of_mirrored_pm_interleave_sets(p_goal);
+		NVM_UINT32 num_mirrored = get_number_of_mirrored_app_direct_interleave_sets(p_goal);
 		if (num_mirrored > 0 &&
 			!p_capabilities->platform_capabilities.memory_mirror_supported)
 		// mirroring not supported
@@ -358,7 +358,7 @@ int validate_config_goal(const struct config_goal *p_goal,
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
 
-	if (p_goal->persistent_count > NVM_MAX_PM_POOLS_PER_DIMM)
+	if (p_goal->app_direct_count > NVM_MAX_INTERLEAVE_SETS_PER_DIMM)
 	{
 		rc = NVM_ERR_BADDEVICECONFIG;
 	}
@@ -390,15 +390,15 @@ void config_goal_to_partition_ext_table(const struct config_goal *p_goal,
 	NVM_UINT64 overall_capacity = USABLE_CAPACITY_BYTES(p_discovery->capacity);
 	NVM_UINT64 pm_capacity = 0; // in bytes
 
-	// Goal entered for volatile gets first dibs.
-	// In BIOS all space not designated PM is volatile.
-	// -1 => all capacity used for volatile
-	if (p_goal->volatile_size != (NVM_UINT64)-1)
+	// Goal entered for memory gets first dibs.
+	// In BIOS all space not designated PM is memory.
+	// -1 => all capacity used for memory
+	if (p_goal->memory_size != (NVM_UINT64)-1)
 	{
-		// Everything else is PM - either direct or block
-		NVM_UINT64 volatile_size_gb = get_size_from_capacity(p_goal->volatile_size,
+		// Everything else is PM - either app direct or storage
+		NVM_UINT64 memory_size_gb = get_size_from_capacity(p_goal->memory_size,
 				overall_capacity, 0);
-		pm_capacity = overall_capacity - (volatile_size_gb * BYTES_PER_GB);
+		pm_capacity = overall_capacity - (memory_size_gb * BYTES_PER_GB);
 	}
 
 	p_table->partition_size = pm_capacity; // in bytes
@@ -410,7 +410,7 @@ void config_goal_to_partition_ext_table(const struct config_goal *p_goal,
  * return the allocated memory with the table populated.
  * Caller is responsible for freeing *pp_table.
  */
-int config_goal_to_interleave_ext_table(const struct pm_attributes *p_qos,
+int config_goal_to_interleave_ext_table(const struct app_direct_attributes *p_qos,
 		const NVM_UINT64 interleave_set_size,
 		const NVM_UINT64 interleave_set_offset,
 		const NVM_UINT16 interleave_set_id,
@@ -498,45 +498,44 @@ int config_goal_to_config_input(const NVM_GUID device_guid,
 	ext_table_length += partition_table.header.length;
 
 	// Interleave tables
-	struct interleave_info_extension_table *p_pm1_interleave_table = NULL;
-	struct interleave_info_extension_table *p_pm2_interleave_table = NULL;
+	struct interleave_info_extension_table *p_ad1_interleave_table = NULL;
+	struct interleave_info_extension_table *p_ad2_interleave_table = NULL;
 
 	NVM_UINT64 capacity = USABLE_CAPACITY_BYTES(p_discovery->capacity);
-	capacity -= (p_goal->volatile_size * BYTES_PER_GB); // subtract volatile space
+	capacity -= (p_goal->memory_size * BYTES_PER_GB); // subtract memory space
 
-	// interleave - persistent
-	if (p_goal->persistent_count > 0)
+	// interleave - app direct
+	if (p_goal->app_direct_count > 0)
 	{
-		// interleave - persistent pool 1
-		NVM_UINT64 pm1_size = get_size_from_capacity(p_goal->persistent_1_size,
-				capacity, p_goal->persistent_1_settings.mirrored);
-		rc = config_goal_to_interleave_ext_table(&p_goal->persistent_1_settings,
-				pm1_size, // in GiB
+		// interleave - app direct
+		NVM_UINT64 ad1_size = get_size_from_capacity(p_goal->app_direct_1_size,
+				capacity, p_goal->app_direct_1_settings.mirrored);
+		rc = config_goal_to_interleave_ext_table(&p_goal->app_direct_1_settings,
+				ad1_size, // in GiB
 				0, // offset - top of PM partition
-				p_goal->persistent_1_set_id,
-				&p_pm1_interleave_table);
+				p_goal->app_direct_1_set_id,
+				&p_ad1_interleave_table);
 		if (rc == NVM_SUCCESS)
 		{
-			p_pm1_interleave_table->memory_type = INTERLEAVE_MEMORY_TYPE_PERSISTENT;
-			ext_table_length += p_pm1_interleave_table->header.length;
-			capacity -= (pm1_size * BYTES_PER_GB);
+			p_ad1_interleave_table->memory_type = INTERLEAVE_MEMORY_TYPE_APP_DIRECT;
+			ext_table_length += p_ad1_interleave_table->header.length;
+			capacity -= (ad1_size * BYTES_PER_GB);
 
-			// interleave - persistent pool 2
-			if (p_goal->persistent_count > 1)
+			// interleave - app direct
+			if (p_goal->app_direct_count > 1)
 			{
-				// interleave - persistent pool 2
-				NVM_UINT64 pm2_size = get_size_from_capacity(p_goal->persistent_2_size,
-						capacity, p_goal->persistent_2_settings.mirrored);
-				rc = config_goal_to_interleave_ext_table(&p_goal->persistent_2_settings,
-						pm2_size, // in GiB
-						p_goal->persistent_1_size, // offset - after first pool
-						p_goal->persistent_2_set_id,
-						&p_pm2_interleave_table);
+				NVM_UINT64 ad2_size = get_size_from_capacity(p_goal->app_direct_2_size,
+						capacity, p_goal->app_direct_2_settings.mirrored);
+				rc = config_goal_to_interleave_ext_table(&p_goal->app_direct_2_settings,
+						ad2_size, // in GiB
+						p_goal->app_direct_1_size, // offset - after first interleave set
+						p_goal->app_direct_2_set_id,
+						&p_ad2_interleave_table);
 				if (rc == NVM_SUCCESS)
 				{
-					p_pm2_interleave_table->memory_type = INTERLEAVE_MEMORY_TYPE_PERSISTENT;
-					ext_table_length += p_pm2_interleave_table->header.length;
-					capacity -= (pm2_size * BYTES_PER_GB);
+					p_ad2_interleave_table->memory_type = INTERLEAVE_MEMORY_TYPE_APP_DIRECT;
+					ext_table_length += p_ad2_interleave_table->header.length;
+					capacity -= (ad2_size * BYTES_PER_GB);
 				}
 			}
 		}
@@ -580,16 +579,16 @@ int config_goal_to_config_input(const NVM_GUID device_guid,
 				memmove(p_table, &partition_table, table_size);
 				p_table += table_size;
 
-				if (p_pm1_interleave_table)
+				if (p_ad1_interleave_table)
 				{
-					table_size = p_pm1_interleave_table->header.length;
-					memmove(p_table, p_pm1_interleave_table, table_size);
+					table_size = p_ad1_interleave_table->header.length;
+					memmove(p_table, p_ad1_interleave_table, table_size);
 					p_table += table_size;
 
-					if (p_pm2_interleave_table)
+					if (p_ad2_interleave_table)
 					{
-						table_size = p_pm2_interleave_table->header.length;
-						memmove(p_table, p_pm2_interleave_table, table_size);
+						table_size = p_ad2_interleave_table->header.length;
+						memmove(p_table, p_ad2_interleave_table, table_size);
 						p_table += table_size;
 					}
 				}
@@ -608,14 +607,14 @@ int config_goal_to_config_input(const NVM_GUID device_guid,
 	}
 
 	// Free dynamically-sized ext tables
-	if (p_pm1_interleave_table)
+	if (p_ad1_interleave_table)
 	{
-		free(p_pm1_interleave_table);
+		free(p_ad1_interleave_table);
 	}
 
-	if (p_pm2_interleave_table)
+	if (p_ad2_interleave_table)
 	{
-		free(p_pm2_interleave_table);
+		free(p_ad2_interleave_table);
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -856,7 +855,7 @@ int config_input_table_to_config_goal(const NVM_GUID device_guid,
 			break;
 		}
 
-		// get volatile size from the partition size change table
+		// get memory size from the partition size change table
 		if (p_header->type == PARTITION_CHANGE_TABLE)
 		{
 			struct partition_size_change_extension_table *p_partition =
@@ -870,49 +869,49 @@ int config_input_table_to_config_goal(const NVM_GUID device_guid,
 				break;
 			}
 
-			// if no pm partition, all dimm capacity is volatile
-			p_config_goal->volatile_size = USABLE_CAPACITY_BYTES(discovery.capacity) / BYTES_PER_GB;
+			// if no pm partition, all dimm capacity is memory
+			p_config_goal->memory_size = USABLE_CAPACITY_BYTES(discovery.capacity) / BYTES_PER_GB;
 			if (p_partition->partition_size != 0)
 			{
-				// else volatile size is total dimm capacity - pm partition
-				p_config_goal->volatile_size -= (p_partition->partition_size / BYTES_PER_GB);
+				// else memory size is total dimm capacity - pm partition
+				p_config_goal->memory_size -= (p_partition->partition_size / BYTES_PER_GB);
 			}
 		}
-		// get persistent interleave sets from interleave table
+		// get app direct interleave sets from interleave table
 		else if (p_header->type == INTERLEAVE_TABLE)
 		{
 			struct interleave_info_extension_table *p_interleave =
 					(struct interleave_info_extension_table *)
 					((void*)p_header);
-			if (p_interleave->memory_type == INTERLEAVE_MEMORY_TYPE_PERSISTENT)
+			if (p_interleave->memory_type == INTERLEAVE_MEMORY_TYPE_APP_DIRECT)
 			{
-				struct pm_attributes *p_qos = NULL;
+				struct app_direct_attributes *p_qos = NULL;
 				NVM_UINT64 *p_size = NULL;
-				if (p_config_goal->persistent_1_size)
+				if (p_config_goal->app_direct_1_size)
 				{
-					// bad data, more than 2 pm pools
-					if (p_config_goal->persistent_2_size)
+					// bad data, more than 2 interleave sets
+					if (p_config_goal->app_direct_2_size)
 					{
-						COMMON_LOG_ERROR("Bad config data, more than two PM interleave sets found");
+						COMMON_LOG_ERROR("Bad config data, more than two AD interleave sets found");
 						rc =  NVM_ERR_BADDEVICECONFIG;
 						break;
 					}
-					// this is our second pm pool
+					// this is our second interleave set
 					else
 					{
-						p_config_goal->persistent_count = 2;
-						p_config_goal->persistent_2_set_id = p_interleave->index;
-						p_qos = &p_config_goal->persistent_2_settings;
-						p_size = &p_config_goal->persistent_2_size;
+						p_config_goal->app_direct_count = 2;
+						p_config_goal->app_direct_2_set_id = p_interleave->index;
+						p_qos = &p_config_goal->app_direct_2_settings;
+						p_size = &p_config_goal->app_direct_2_size;
 					}
 				}
-				// this is our first pm pool
+				// this is our first interleave set
 				else
 				{
-					p_config_goal->persistent_count = 1;
-					p_config_goal->persistent_1_set_id = p_interleave->index;
-					p_qos = &p_config_goal->persistent_1_settings;
-					p_size = &p_config_goal->persistent_1_size;
+					p_config_goal->app_direct_count = 1;
+					p_config_goal->app_direct_1_set_id = p_interleave->index;
+					p_qos = &p_config_goal->app_direct_1_settings;
+					p_size = &p_config_goal->app_direct_1_size;
 				}
 
 				p_qos->mirrored = p_interleave->mirror_enable;
@@ -956,8 +955,8 @@ int config_input_table_to_config_goal(const NVM_GUID device_guid,
 					set_offset += sizeof (struct dimm_info_extension_table);
 				}
 			}
-			// recognize but ignore volatile interleave tables
-			else if (p_interleave->memory_type != INTERLEAVE_MEMORY_TYPE_VOLATILE)
+			// recognize but ignore memory interleave tables
+			else if (p_interleave->memory_type != INTERLEAVE_MEMORY_TYPE_MEMORY)
 			{
 				COMMON_LOG_ERROR("Bad config data, unrecognized interleave set type");
 				rc =  NVM_ERR_BADDEVICECONFIG;
@@ -1031,24 +1030,6 @@ int nvm_get_config_goal(const NVM_GUID device_guid, struct config_goal *p_goal)
 			free(p_cfg_data);
 		}
 	}
-
-	COMMON_LOG_EXIT_RETURN_I(rc);
-	return rc;
-}
-
-/*
- * Change the configuration goal on an NVM-DIMM without reconfiguring the
- * it completely (e.g. modify the quality of service attributes
- * on existing interleave sets, add a persistent memory interleave set).
- */
-int nvm_modify_config_goal(const NVM_GUID device_guid, struct config_goal *p_goal)
-{
-	COMMON_LOG_ENTRY();
-	int rc = NVM_SUCCESS;
-
-	// Differences between create and modify TBD.
-	// For now, overwrite the existing goal.
-	rc = nvm_create_config_goal(device_guid, p_goal);
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;

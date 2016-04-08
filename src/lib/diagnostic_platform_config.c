@@ -45,9 +45,9 @@
 void verify_pcat(NVM_UINT32 *p_results);
 int verify_pcd(int dev_count, const struct diagnostic *p_diagnostic, NVM_UINT32 *p_results);
 #define	MEMORY_EVENT_ARG	"memory"
-#define	APPDIRECT_EVENT_ARG	"App-Direct"
-#define	VOLATILE_CAP_STR	"volatile"
-#define	PM_CAP_STR	"persistent"
+#define	APP_DIRECT_EVENT_ARG	"App Direct"
+#define	MEMORY_CAP_STR		"Memory Mode"
+#define	APP_DIRECT_CAP_STR	"App Direct"
 
 /*
  * Run the platform configuration check diagnostic
@@ -266,10 +266,10 @@ NVM_BOOL dimm_is_in_interleave_set(const NVM_NFIT_DEVICE_HANDLE device_handle,
 }
 
 /*
- * find mapped volatile capacity of this dimm
+ * find mapped memory capacity of this dimm
  */
-void getMappedVolatileCapacity(const NVM_NFIT_DEVICE_HANDLE device_handle,
-		const struct nvm_pool *pools, const int pool_count, NVM_UINT64 *p_volatile_capacity)
+void get_mapped_memory_capacity(const NVM_NFIT_DEVICE_HANDLE device_handle,
+		const struct nvm_pool *pools, const int pool_count, NVM_UINT64 *p_memory_capacity)
 {
 	COMMON_LOG_ENTRY();
 
@@ -281,7 +281,7 @@ void getMappedVolatileCapacity(const NVM_NFIT_DEVICE_HANDLE device_handle,
 				(index = get_dimm_index_in_pool(device_handle,
 						&(pools[pool_index]))) != NVM_ERR_NOTFOUND)
 		{
-			*p_volatile_capacity += pools[pool_index].volatile_capacities[index];
+			*p_memory_capacity += pools[pool_index].memory_capacities[index];
 			break;
 		}
 	}
@@ -290,10 +290,10 @@ void getMappedVolatileCapacity(const NVM_NFIT_DEVICE_HANDLE device_handle,
 }
 
 /*
- * find mapped persistent capacity of this dimm
+ * find mapped app direct capacity of this dimm
  */
-void getMappedPersistentCapacity(const NVM_NFIT_DEVICE_HANDLE device_handle,
-		const struct nvm_pool *pools, const int pool_count, NVM_UINT64 *p_persistent_capacity)
+void get_mapped_app_direct_capacity(const NVM_NFIT_DEVICE_HANDLE device_handle,
+		const struct nvm_pool *pools, const int pool_count, NVM_UINT64 *p_app_direct_capacity)
 {
 	COMMON_LOG_ENTRY();
 
@@ -321,7 +321,7 @@ void getMappedPersistentCapacity(const NVM_NFIT_DEVICE_HANDLE device_handle,
 							ilset_capacity *= (NVM_UINT64)2;
 						}
 
-						*p_persistent_capacity += ilset_capacity;
+						*p_app_direct_capacity += ilset_capacity;
 					}
 				}
 			}
@@ -331,33 +331,33 @@ void getMappedPersistentCapacity(const NVM_NFIT_DEVICE_HANDLE device_handle,
 	COMMON_LOG_EXIT();
 }
 
-void check_device_mapped_volatile_capacity(NVM_UINT32 *p_results,
+void check_device_mapped_memory_capacity(NVM_UINT32 *p_results,
 		const struct device_discovery *p_device,
 		const struct current_config_table *p_current_config,
 		const struct nvm_pool *p_pools, const NVM_UINT32 pool_count)
 {
 	COMMON_LOG_ENTRY();
 
-	NVM_UINT64 volatile_capacity = 0;
-	getMappedVolatileCapacity(p_device->device_handle, p_pools, pool_count, &volatile_capacity);
+	NVM_UINT64 memory_capacity = 0;
+	get_mapped_memory_capacity(p_device->device_handle, p_pools, pool_count, &memory_capacity);
 
-	// compare mapped volatile capacity reported by
+	// compare mapped memory capacity reported by
 	// the bios to that by the driver
-	if (p_current_config->mapped_volatile_capacity != volatile_capacity)
+	if (p_current_config->mapped_memory_capacity != memory_capacity)
 	{
 		char mapped_vcap_str[NVM_EVENT_ARG_LEN];
 		char vcap_str[NVM_EVENT_ARG_LEN];
 		s_snprintf(mapped_vcap_str,
-				NVM_EVENT_ARG_LEN, "%llu", p_current_config->mapped_volatile_capacity);
+				NVM_EVENT_ARG_LEN, "%llu", p_current_config->mapped_memory_capacity);
 		s_snprintf(vcap_str,
-		NVM_EVENT_ARG_LEN, "%llu", volatile_capacity);
+		NVM_EVENT_ARG_LEN, "%llu", memory_capacity);
 
 		store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG,
 				EVENT_SEVERITY_WARN,
 				EVENT_CODE_DIAG_PCONFIG_MAPPED_CAPACITY,
 				p_device->guid,
 				0,
-				VOLATILE_CAP_STR,
+				MEMORY_CAP_STR,
 				mapped_vcap_str,
 				vcap_str,
 				DIAGNOSTIC_RESULT_FAILED);
@@ -367,26 +367,27 @@ void check_device_mapped_volatile_capacity(NVM_UINT32 *p_results,
 	COMMON_LOG_EXIT();
 }
 
-void check_device_mapped_persistent_capacity(NVM_UINT32 *p_results,
+void check_device_mapped_app_direct_capacity(NVM_UINT32 *p_results,
 		const struct device_discovery *p_device,
 		const struct current_config_table *p_current_config,
 		const struct nvm_pool *p_pools, const NVM_UINT32 pool_count)
 {
 	COMMON_LOG_ENTRY();
 
-	NVM_UINT64 persistent_capacity = 0;
-	getMappedPersistentCapacity(p_device->device_handle, p_pools, pool_count, &persistent_capacity);
+	NVM_UINT64 app_direct_capacity = 0;
+	get_mapped_app_direct_capacity(p_device->device_handle, p_pools, pool_count,
+			&app_direct_capacity);
 
-	// compare mapped persistent capacity reported
+	// compare mapped app direct capacity reported
 	// by the bios to that by the driver
-	if (p_current_config->mapped_pm_capacity != persistent_capacity)
+	if (p_current_config->mapped_app_direct_capacity != app_direct_capacity)
 	{
-		char mapped_pm_str[NVM_EVENT_ARG_LEN];
-		char pm_str[NVM_EVENT_ARG_LEN];
-		s_snprintf(mapped_pm_str,
-				NVM_EVENT_ARG_LEN, "%llu", p_current_config->mapped_pm_capacity);
-		s_snprintf(pm_str,
-				NVM_EVENT_ARG_LEN, "%llu", persistent_capacity);
+		char mapped_app_direct_str[NVM_EVENT_ARG_LEN];
+		char app_direct_str[NVM_EVENT_ARG_LEN];
+		s_snprintf(mapped_app_direct_str,
+				NVM_EVENT_ARG_LEN, "%llu", p_current_config->mapped_app_direct_capacity);
+		s_snprintf(app_direct_str,
+				NVM_EVENT_ARG_LEN, "%llu", app_direct_capacity);
 
 
 		store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG,
@@ -394,9 +395,9 @@ void check_device_mapped_persistent_capacity(NVM_UINT32 *p_results,
 				EVENT_CODE_DIAG_PCONFIG_MAPPED_CAPACITY,
 				p_device->guid,
 				0,
-				PM_CAP_STR,
-				mapped_pm_str,
-				pm_str,
+				APP_DIRECT_CAP_STR,
+				mapped_app_direct_str,
+				app_direct_str,
 				DIAGNOSTIC_RESULT_FAILED);
 		(*p_results)++;
 	}
@@ -425,10 +426,10 @@ int check_mapped_capacities_for_device(NVM_UINT32 *p_results,
 			pool_count = get_pools(pool_count, pools);
 			if (pool_count > 0)
 			{
-				check_device_mapped_volatile_capacity(p_results, p_device,
+				check_device_mapped_memory_capacity(p_results, p_device,
 						p_current_config, pools, pool_count);
 
-				check_device_mapped_persistent_capacity(p_results, p_device,
+				check_device_mapped_app_direct_capacity(p_results, p_device,
 						p_current_config, pools, pool_count);
 			}
 
@@ -596,11 +597,11 @@ void check_current_sku_violations(NVM_UINT32 *p_results,
 		guid_to_str(p_device->guid, guid_str);
 
 		// DIMM is configured with memory but memory mode is not supported
-		if (p_current_config->mapped_volatile_capacity > 0 &&
+		if (p_current_config->mapped_memory_capacity > 0 &&
 			(!p_capabilities->nvm_features.memory_mode ||
 			!p_device->device_capabilities.memory_mode_capable))
 		{
-			COMMON_LOG_DEBUG_F(NVM_DIMM_NAME" %s has mapped volatile capacity "
+			COMMON_LOG_DEBUG_F(NVM_DIMM_NAME" %s has mapped memory capacity "
 					"but memory mode is not supported.", guid_str);
 			store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG,
 					EVENT_SEVERITY_CRITICAL,
@@ -614,20 +615,20 @@ void check_current_sku_violations(NVM_UINT32 *p_results,
 			(*p_results)++;
 		}
 
-		// DIMM is configured with app-direct but app-direct mode is not supported
-		if (p_current_config->mapped_pm_capacity > 0 &&
+		// DIMM is configured with app direct but app direct mode is not supported
+		if (p_current_config->mapped_app_direct_capacity > 0 &&
 			(!p_capabilities->nvm_features.app_direct_mode ||
 			!p_device->device_capabilities.app_direct_mode_capable))
 		{
-			COMMON_LOG_DEBUG_F(NVM_DIMM_NAME" %s has mapped persistent memory "
-					"but app-direct mode is not supported.", guid_str);
+			COMMON_LOG_DEBUG_F(NVM_DIMM_NAME" %s has mapped app direct memory "
+					"but app direct mode is not supported.", guid_str);
 			store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG,
 					EVENT_SEVERITY_CRITICAL,
 					EVENT_CODE_DIAG_PCONFIG_DIMM_SKU_VIOLATION,
 					p_device->guid,
 					0,
 					guid_str,
-					APPDIRECT_EVENT_ARG,
+					APP_DIRECT_EVENT_ARG,
 					NULL,
 					DIAGNOSTIC_RESULT_FAILED);
 			(*p_results)++;
@@ -661,12 +662,12 @@ void check_goal_sku_violations(NVM_UINT32 *p_results,
 			NVM_GUID_STR guid_str;
 			guid_to_str(p_device->guid, guid_str);
 
-			// DIMM goal contains volatile memory but memory mode is not supported
-			if (goal.volatile_size > 0 &&
+			// DIMM goal contains memory mode capacity but memory mode is not supported
+			if (goal.memory_size > 0 &&
 				(!p_capabilities->nvm_features.memory_mode ||
 				!p_device->device_capabilities.memory_mode_capable))
 			{
-				COMMON_LOG_DEBUG_F(NVM_DIMM_NAME" %s has a goal with requested volatile capacity "
+				COMMON_LOG_DEBUG_F(NVM_DIMM_NAME" %s has a goal with requested memory capacity "
 						"but memory mode is not supported.", guid_str);
 				store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG,
 						EVENT_SEVERITY_CRITICAL,
@@ -680,20 +681,20 @@ void check_goal_sku_violations(NVM_UINT32 *p_results,
 				(*p_results)++;
 			}
 
-			// DIMM goal contains mapped pm but app-direct mode is not supported
-			if (goal.persistent_count > 0 &&
+			// DIMM goal contains mapped app direct but mode is not supported
+			if (goal.app_direct_count > 0 &&
 				(!p_capabilities->nvm_features.app_direct_mode ||
 				!p_device->device_capabilities.app_direct_mode_capable))
 			{
-				COMMON_LOG_DEBUG_F(NVM_DIMM_NAME" %s has a goal with mapped persistent memory "
-						"but app-direct mode is not supported.", guid_str);
+				COMMON_LOG_DEBUG_F(NVM_DIMM_NAME" %s has a goal with mapped app direct memory "
+						"but app direct mode is not supported.", guid_str);
 				store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG,
 						EVENT_SEVERITY_CRITICAL,
 						EVENT_CODE_DIAG_PCONFIG_DIMM_GOAL_SKU_VIOLATION,
 						p_device->guid,
 						0,
 						guid_str,
-						APPDIRECT_EVENT_ARG,
+						APP_DIRECT_EVENT_ARG,
 						NULL,
 						DIAGNOSTIC_RESULT_FAILED);
 				(*p_results)++;

@@ -50,7 +50,7 @@ void wbem::logic::RuleReserveDimmPropertyInvalid::verify(const MemoryAllocationR
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	if (reserveSingleDimm(request) &&
-			volatileOrPersistentMemIsRequested(request))
+			memoryOrAppDirectIsRequested(request))
 	{
 		throw exception::NvmExceptionBadRequestReserveDimm();
 	}
@@ -67,12 +67,12 @@ bool wbem::logic::RuleReserveDimmPropertyInvalid::reserveSingleDimm(
 	return result;
 }
 
-bool wbem::logic::RuleReserveDimmPropertyInvalid::volatileOrPersistentMemIsRequested(
+bool wbem::logic::RuleReserveDimmPropertyInvalid::memoryOrAppDirectIsRequested(
 		const MemoryAllocationRequest &request)
 {
 	bool result = false;
-	if ((request.volatileCapacity != 0) ||
-			(request.persistentExtents.size() > 0))
+	if ((request.memoryCapacity != 0) ||
+			(request.appDirectExtents.size() > 0))
 	{
 		result = true;
 	}

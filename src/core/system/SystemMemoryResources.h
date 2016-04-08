@@ -45,9 +45,9 @@ public:
 	SystemMemoryResources(const SystemMemoryResources &other);
 
 	NVM_UINT64 getTotalCapacity();
-	NVM_UINT64 getTotalVolatileCapacity();
-	NVM_UINT64 getTotalPersistentCapacity();
-	NVM_UINT64 getTotalBlockCapacity();
+	NVM_UINT64 getTotalMemoryCapacity();
+	NVM_UINT64 getTotalAppDirectCapacity();
+	NVM_UINT64 getTotalStorageCapacity();
 	NVM_UINT64 getTotalUnconfiguredCapacity();
 	NVM_UINT64 getTotalInaccessibleCapacity();
 	NVM_UINT64 getTotalReservedCapacity();

@@ -216,33 +216,33 @@ void platform_capabilities_to_nvm_features(const struct platform_capabilities *p
 	}
 #endif
 
-	// driver doesn't have concept of 2lm so set based on bios only
-	p_features->memory_mode = p_pcat->two_lm.supported;
+	// driver doesn't have concept of Memory Mode so set based on bios only
+	p_features->memory_mode = p_pcat->memory_mode.supported;
 
 	// turn off app direct if bios doesn't support
-	if (!p_pcat->pm_direct.supported)
+	if (!p_pcat->app_direct_mode.supported)
 	{
 		p_features->app_direct_mode = 0;
 	}
-	// turn off block if bios doesn't support
-	if (!p_pcat->block_mode_supported)
+	// turn off storage mode if bios doesn't support
+	if (!p_pcat->storage_mode_supported)
 	{
 		p_features->storage_mode = 0;
 	}
 }
 
-enum pm_mode get_current_pm_mode(NVM_UINT8 current_mem_mode)
+enum app_direct_mode get_current_app_direct_mode(NVM_UINT8 current_mode)
 {
-	enum pm_mode pm_mode;
+	enum app_direct_mode app_direct_mode;
 
-	pm_mode = ((current_mem_mode >> 2) & 0b11); // bits 3:2
-	if ((pm_mode != PM_MODE_DISABLED) &&
-		(pm_mode != PM_MODE_PM_DIRECT))
+	app_direct_mode = ((current_mode >> 2) & 0b11); // bits 3:2
+	if ((app_direct_mode != APP_DIRECT_MODE_DISABLED) &&
+		(app_direct_mode != APP_DIRECT_MODE_ENABLED))
 	{
-		pm_mode = PM_MODE_UNKNOWN;
+		app_direct_mode = APP_DIRECT_MODE_UNKNOWN;
 	}
 
-	return pm_mode;
+	return app_direct_mode;
 }
 
 /*
@@ -305,8 +305,8 @@ int apply_bios_capabilities(struct nvm_capabilities *p_capabilities)
 									RUNTIME_CONFIG_SUPPORTED(p_plat_info->mgmt_sw_config_support);
 							p_capabilities->platform_capabilities.current_volatile_mode =
 									CURRENT_VOLATILE_MODE(p_plat_info->current_mem_mode);
-							p_capabilities->platform_capabilities.current_pm_mode =
-									get_current_pm_mode(p_plat_info->current_mem_mode);
+							p_capabilities->platform_capabilities.current_app_direct_mode =
+									get_current_app_direct_mode(p_plat_info->current_mem_mode);
 							p_capabilities->platform_capabilities.memory_mirror_supported =
 									PMEM_MIRROR_SUPPORTED(p_plat_info->pmem_ras_capabilities);
 							p_capabilities->platform_capabilities.memory_spare_supported =
@@ -316,19 +316,19 @@ int apply_bios_capabilities(struct nvm_capabilities *p_capabilities)
 
 							if (p_plat_info->mem_mode_capabilities & MEM_MODE_1LM)
 							{
-								p_capabilities->platform_capabilities.one_lm.supported = 1;
+								p_capabilities->platform_capabilities.one_lm_mode.supported = 1;
 							}
-							if (p_plat_info->mem_mode_capabilities & MEM_MODE_2LM)
+							if (p_plat_info->mem_mode_capabilities & MEM_MODE_MEMORY)
 							{
-								p_capabilities->platform_capabilities.two_lm.supported = 1;
+								p_capabilities->platform_capabilities.memory_mode.supported = 1;
 							}
-							if (p_plat_info->mem_mode_capabilities & MEM_MODE_PMEM_DIRECT)
+							if (p_plat_info->mem_mode_capabilities & MEM_MODE_APP_DIRECT)
 							{
-								p_capabilities->platform_capabilities.pm_direct.supported = 1;
+								p_capabilities->platform_capabilities.app_direct_mode.supported = 1;
 							}
-							if (p_plat_info->mem_mode_capabilities & MEM_MODE_BLOCK)
+							if (p_plat_info->mem_mode_capabilities & MEM_MODE_STORAGE)
 							{
-								p_capabilities->platform_capabilities.block_mode_supported = 1;
+								p_capabilities->platform_capabilities.storage_mode_supported = 1;
 							}
 						}
 						// memory interleave capability table
@@ -340,13 +340,14 @@ int apply_bios_capabilities(struct nvm_capabilities *p_capabilities)
 							switch (p_mic->memory_mode)
 							{
 								case INTERLEAVE_MEM_MODE_1LM:
-									p_cap = &(p_capabilities->platform_capabilities.one_lm);
+									p_cap = &(p_capabilities->platform_capabilities.one_lm_mode);
 									break;
 								case INTERLEAVE_MEM_MODE_2LM:
-									p_cap = &(p_capabilities->platform_capabilities.two_lm);
+									p_cap = &(p_capabilities->platform_capabilities.memory_mode);
 									break;
-								case INTERLEAVE_MEM_MODE_PM_DIRECT:
-									p_cap = &(p_capabilities->platform_capabilities.pm_direct);
+								case INTERLEAVE_MEM_MODE_APP_DIRECT:
+									p_cap = &(p_capabilities->platform_capabilities.
+											app_direct_mode);
 									break;
 							}
 							if (p_cap == NULL)
@@ -500,7 +501,7 @@ int apply_dimm_sku_capabilities(struct nvm_capabilities *p_capabilities)
 					{
 						p_capabilities->sku_capabilities.memory_sku = 1;
 					}
-					// at least one manageable dimm supports app-direct mode
+					// at least one manageable dimm supports app direct mode
 					if (devices[i].dimm_sku & SKU_APP_DIRECT_MODE_ENABLED)
 					{
 						p_capabilities->sku_capabilities.app_direct_sku = 1;
@@ -603,20 +604,21 @@ int nvm_get_nvm_capabilities(struct nvm_capabilities *p_capabilities)
 	return rc;
 }
 
-int check_device_pmem_namespaces_for_sku_violation(const struct nvm_capabilities *p_capabilities,
+int check_device_app_direct_namespaces_for_sku_violation(
+		const struct nvm_capabilities *p_capabilities,
 		const NVM_NFIT_DEVICE_HANDLE device_handle, NVM_BOOL *p_sku_violation)
 {
 	int rc = NVM_SUCCESS;
 	if (!p_capabilities->nvm_features.app_direct_mode)
 	{
-		int has_namespaces = dimm_has_namespaces_of_type(device_handle, NAMESPACE_TYPE_PMEM);
+		int has_namespaces = dimm_has_namespaces_of_type(device_handle, NAMESPACE_TYPE_APP_DIRECT);
 		if (has_namespaces < 0)
 		{
 			KEEP_ERROR(rc, has_namespaces);
 		}
 		else if (has_namespaces)
 		{
-			COMMON_LOG_ERROR_F("An unsupported App-Direct namespace exists on "NVM_DIMM_NAME" %u",
+			COMMON_LOG_ERROR_F("An unsupported App Direct namespace exists on "NVM_DIMM_NAME" %u",
 					device_handle.handle);
 			*p_sku_violation = 1;
 		}
@@ -624,13 +626,14 @@ int check_device_pmem_namespaces_for_sku_violation(const struct nvm_capabilities
 	return rc;
 }
 
-int check_device_storage_namespaces_for_sku_violation(const struct nvm_capabilities *p_capabilities,
+int check_device_storage_namespaces_for_sku_violation(
+		const struct nvm_capabilities *p_capabilities,
 		const NVM_NFIT_DEVICE_HANDLE device_handle, NVM_BOOL *p_sku_violation)
 {
 	int rc = NVM_SUCCESS;
 	if (!p_capabilities->nvm_features.storage_mode)
 	{
-		int has_namespaces = dimm_has_namespaces_of_type(device_handle, NAMESPACE_TYPE_BLOCK);
+		int has_namespaces = dimm_has_namespaces_of_type(device_handle, NAMESPACE_TYPE_STORAGE);
 		if (has_namespaces < 0)
 		{
 			KEEP_ERROR(rc, has_namespaces);
@@ -671,7 +674,7 @@ int device_in_sku_violation(const NVM_NFIT_DEVICE_HANDLE device_handle,
 			*p_sku_violation = 1;
 		}
 
-		// check for block namespaces when storage mode is not supported
+		// check for storage namespaces when storage mode is not supported
 		if (!(*p_sku_violation))
 		{
 			int tmprc = check_device_storage_namespaces_for_sku_violation(p_capabilities,
@@ -682,10 +685,10 @@ int device_in_sku_violation(const NVM_NFIT_DEVICE_HANDLE device_handle,
 			}
 		}
 
-		// check for pmem namespaces when app-direct mode is not supported
+		// check for app direct namespaces when app direct mode is not supported
 		if (!(*p_sku_violation))
 		{
-			int tmprc = check_device_pmem_namespaces_for_sku_violation(p_capabilities,
+			int tmprc = check_device_app_direct_namespaces_for_sku_violation(p_capabilities,
 					device_handle, p_sku_violation);
 			if (tmprc != NVM_ERR_NOTSUPPORTED) // ignore not supported
 			{

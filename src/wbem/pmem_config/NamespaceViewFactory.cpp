@@ -74,7 +74,7 @@ throw(wbem::framework::Exception)
 	attributes.push_back(ACTIONREQUIRED_KEY);
 	attributes.push_back(ACTIONREQUIREDEVENTS_KEY);
 	attributes.push_back(SECURITYFEATURES_KEY);
-	attributes.push_back(PERSISTENTSETTINGS_KEY);
+	attributes.push_back(APP_DIRECT_SETTINGS_KEY);
 	attributes.push_back(REPLICATION_KEY);
 }
 
@@ -249,12 +249,12 @@ throw(wbem::framework::Exception)
 			pInstance->setAttribute(SECURITYFEATURES_KEY, a, attributes);
 		}
 
-		if (containsAttribute(PERSISTENTSETTINGS_KEY, attributes))
+		if (containsAttribute(APP_DIRECT_SETTINGS_KEY, attributes))
 		{
 			std::string format =
 					wbem::mem_config::InterleaveSet::getInterleaveFormatString(&ns.interleave_format);
 
-			pInstance->setAttribute(PERSISTENTSETTINGS_KEY,
+			pInstance->setAttribute(APP_DIRECT_SETTINGS_KEY,
 			framework::Attribute(format, false));
 		}
 
@@ -441,10 +441,10 @@ std::string wbem::pmem_config::NamespaceViewFactory::namespaceTypeToStr(const en
 	std::string typeStr;
 	switch (type)
 	{
-		case NAMESPACE_TYPE_BLOCK:
+		case NAMESPACE_TYPE_STORAGE:
 			typeStr = NS_TYPE_STR_STORAGE;
 			break;
-		case NAMESPACE_TYPE_PMEM:
+		case NAMESPACE_TYPE_APP_DIRECT:
 			typeStr = NS_TYPE_STR_APPDIRECT;
 			break;
 		default:

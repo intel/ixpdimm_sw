@@ -26,12 +26,11 @@
  */
 
 /*
- * Rule that checks a MemoryAllocationRequest to make sure there are not
- * too many PM extents requested
+ * Rule to determine if app direct memory request is supported
  */
 
-#ifndef _WBEM_LOGIC_RULETOOMANYPERSISTENTEXTENTS_H_
-#define _WBEM_LOGIC_RULETOOMANYPERSISTENTEXTENTS_H_
+#ifndef _WBEM_LOGIC_RULEAPPDIRECTNOTSUPPORTED_H_
+#define _WBEM_LOGIC_RULEAPPDIRECTNOTSUPPORTED_H_
 
 #include "RequestRule.h"
 #include <nvm_types.h>
@@ -41,15 +40,23 @@ namespace wbem
 namespace logic
 {
 
-class NVM_API RuleTooManyPersistentExtents: public RequestRule
+class NVM_API RuleAppDirectNotSupported : public RequestRule
 {
 	public:
-		RuleTooManyPersistentExtents();
-		virtual ~RuleTooManyPersistentExtents();
+		RuleAppDirectNotSupported(const struct nvm_capabilities &cap);
+		virtual ~RuleAppDirectNotSupported();
+
 		virtual void verify(const MemoryAllocationRequest &request);
+
+	protected:
+		struct nvm_capabilities m_systemCap;
+
+		void verifyAppDirectSupported();
+		void verifyAppDirectSettingsSupported(const MemoryAllocationRequest& request);
+		bool formatSupported(const struct AppDirectExtent &adRequest);
 };
 
 } /* namespace logic */
 } /* namespace wbem */
 
-#endif /* _WBEM_LOGIC_RULETOOMANYPERSISTENTEXTENTS_H_ */
+#endif /* _WBEM_LOGIC_RULEAPPDIRECTNOTSUPPORTED_H_ */

@@ -1087,18 +1087,18 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::showSystemCapabilities(
 	wbem::framework::attribute_names_t defaultAttributes;
 	defaultAttributes.push_back(wbem::PLATFORMCONFIGSUPPORTED_KEY);
 	defaultAttributes.push_back(wbem::ALIGNMENT_KEY);
-	defaultAttributes.push_back(wbem::CURRENTVOLATILEMEMORYMODE_KEY);
-	defaultAttributes.push_back(wbem::CURRENTPERSISTENTMEMORYMODE_KEY);
+	defaultAttributes.push_back(wbem::CURRENTVOLATILEMODE_KEY);
+	defaultAttributes.push_back(wbem::CURRENTAPPDIRECTMODE_KEY);
 
 	wbem::framework::attribute_names_t allAttributes(defaultAttributes);
 	allAttributes.push_back(wbem::MEMORYMODESSUPPORTED_KEY);
-	allAttributes.push_back(wbem::SUPPORTEDPERSISTENTSETTINGS_KEY);
-	allAttributes.push_back(wbem::RECOMMENDEDPERSISTENTSETTINGS_KEY);
+	allAttributes.push_back(wbem::SUPPORTEDAPP_DIRECT_SETTINGS_KEY);
+	allAttributes.push_back(wbem::RECOMMENDEDAPP_DIRECT_SETTINGS_KEY);
 	allAttributes.push_back(wbem::MINNAMESPACESIZE_KEY);
 	allAttributes.push_back(wbem::BLOCKSIZES_KEY);
-	allAttributes.push_back(wbem::PERSISTENTMEMORYMIRRORSUPPORT_KEY);
+	allAttributes.push_back(wbem::APP_DIRECT_MEMORY_MIRROR_SUPPORT_KEY);
 	allAttributes.push_back(wbem::DIMMSPARESUPPORT_KEY);
-	allAttributes.push_back(wbem::PERSISTENTMEMORYMIGRATIONSUPPORT_KEY);
+	allAttributes.push_back(wbem::APP_DIRECT_MEMORY_MIGRATION_SUPPORT_KEY);
 	allAttributes.push_back(wbem::RENAMENAMESPACESUPPORT_KEY);
 	allAttributes.push_back(wbem::ENABLENAMESPACESUPPORT_KEY);
 	allAttributes.push_back(wbem::DISABLENAMESPACESUPPORT_KEY);

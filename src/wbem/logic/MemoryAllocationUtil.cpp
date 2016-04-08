@@ -106,15 +106,15 @@ NVM_UINT16 wbem::logic::MemoryAllocationUtil::getDimmInterleaveInfoMaxSetIndex(c
 		struct config_goal goal;
 		m_pApi->getConfigGoalForDimm(dimmGuid, goal);
 
-		if (goal.persistent_count > 0)
+		if (goal.app_direct_count > 0)
 		{
-			maxInterleaveIndex = goal.persistent_1_set_id;
+			maxInterleaveIndex = goal.app_direct_1_set_id;
 		}
-		if (goal.persistent_count > 1)
+		if (goal.app_direct_count > 1)
 		{
-			if (goal.persistent_2_set_id > maxInterleaveIndex)
+			if (goal.app_direct_2_set_id > maxInterleaveIndex)
 			{
-				maxInterleaveIndex = goal.persistent_2_set_id;
+				maxInterleaveIndex = goal.app_direct_2_set_id;
 			}
 		}
 	}
@@ -138,18 +138,18 @@ void wbem::logic::MemoryAllocationUtil::getLastInterleaveSetIdFromLayout(
 	for (std::map<std::string, struct config_goal>::const_iterator goalIter = layout.goals.begin();
 			goalIter != layout.goals.end(); goalIter++)
 	{
-		if (goalIter->second.persistent_count > 1)
+		if (goalIter->second.app_direct_count > 1)
 		{
-			if (goalIter->second.persistent_2_set_id > maxId)
+			if (goalIter->second.app_direct_2_set_id > maxId)
 			{
-				maxId = goalIter->second.persistent_2_set_id;
+				maxId = goalIter->second.app_direct_2_set_id;
 			}
 		}
-		if (goalIter->second.persistent_count > 0)
+		if (goalIter->second.app_direct_count > 0)
 		{
-			if (goalIter->second.persistent_1_set_id > maxId)
+			if (goalIter->second.app_direct_1_set_id > maxId)
 			{
-				maxId = goalIter->second.persistent_1_set_id;
+				maxId = goalIter->second.app_direct_1_set_id;
 			}
 		}
 	}

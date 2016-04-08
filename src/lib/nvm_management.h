@@ -385,17 +385,17 @@ enum diagnostic_threshold_type
 enum volatile_mode
 {
 	VOLATILE_MODE_1LM = 0, // 1LM Mode
-	VOLATILE_MODE_2LM = 1, // 2LM Mode
-	VOLATILE_MODE_AUTO = 2, // 2LM Mode
+	VOLATILE_MODE_MEMORY = 1, // Memory Mode
+	VOLATILE_MODE_AUTO = 2, // Memory Mode if DDR4 + AEP DIMM present, 1LM otherwise
 	VOLATILE_MODE_UNKNOWN = 3, // The current volatile memory mode cannot be determined.
 };
 
-// The persistent memory mode currently selected by the BIOS.
-enum pm_mode
+// The App Direct mode currently selected by the BIOS.
+enum app_direct_mode
 {
-	PM_MODE_DISABLED = 0, // Persistent Memory disabled.
-	PM_MODE_PM_DIRECT = 1, // App-direct persistent memory mode.
-	PM_MODE_UNKNOWN = 2, // Reserved
+	APP_DIRECT_MODE_DISABLED = 0, // App Direct mode disabled.
+	APP_DIRECT_MODE_ENABLED = 1, // App Direct mode enabled.
+	APP_DIRECT_MODE_UNKNOWN = 2, // The current App Direct mode cannot be determined.
 };
 
 // Interface format code as reported by NFIT
@@ -562,7 +562,7 @@ struct device_capabilities
 	NVM_BOOL die_sparing_capable; // AEP DIMM supports die sparing
 	NVM_BOOL memory_mode_capable; // AEP DIMM supports memory mode
 	NVM_BOOL storage_mode_capable; // AEP DIMM supports storage mode
-	NVM_BOOL app_direct_mode_capable; // AEP DIMM supports app-direct mode
+	NVM_BOOL app_direct_mode_capable; // AEP DIMM supports app direct mode
 };
 
 /*
@@ -678,9 +678,9 @@ struct sensor
 struct device_capacities
 {
 	NVM_UINT64 capacity; // The total AEP DIMM capacity in bytes.
-	NVM_UINT64 volatile_capacity; // The total AEP DIMM capacity in bytes for volatile memory.
-	NVM_UINT64 persistent_capacity; // The total AEP DIMM capacity in bytes for persistent memory.
-	NVM_UINT64 block_capacity; // AEP DIMM capacity allocated as PM that can be used as storage.
+	NVM_UINT64 memory_capacity; // The total AEP DIMM capacity in bytes for memory mode.
+	NVM_UINT64 app_direct_capacity; // The total AEP DIMM capacity in bytes for app direct mode.
+	NVM_UINT64 storage_capacity; // AEP DIMM capacity allocated that can be used as storage.
 	NVM_UINT64 unconfigured_capacity; // Unconfigured AEP DIMM capacity. Can be used as storage.
 	NVM_UINT64 inaccessible_capacity; // AEP DIMM capacity not licensed for this AEP DIMM SKU.
 	NVM_UINT64 reserved_capacity; // AEP DIMM capacity reserved for metadata.
@@ -774,14 +774,14 @@ struct platform_capabilities
 	NVM_BOOL bios_config_support; // available BIOS support for CR config changes
 	NVM_BOOL bios_runtime_support; // runtime interface used to validate management configuration
 	NVM_BOOL memory_mirror_supported; // indicates if DIMM mirror is supported
-	NVM_BOOL block_mode_supported; // is block mode supported
+	NVM_BOOL storage_mode_supported; // is storage mode supported
 	NVM_BOOL memory_spare_supported; // pm spare is supported
 	NVM_BOOL memory_migration_supported; // pm memory migration is supported
-	struct memory_capabilities one_lm; // capabilities for 1 LM mode
-	struct memory_capabilities two_lm; // capabilities for 2 LM mode
-	struct memory_capabilities pm_direct; // capabilities for PM mode
+	struct memory_capabilities one_lm_mode; // capabilities for 1LM mode
+	struct memory_capabilities memory_mode; // capabilities for Memory mode
+	struct memory_capabilities app_direct_mode; // capabilities for App Direct mode
 	enum volatile_mode current_volatile_mode; // The volatile memory mode selected by the BIOS.
-	enum pm_mode current_pm_mode; // The PM memory mode selected by the BIOS.
+	enum app_direct_mode current_app_direct_mode; // The App Direct mode selected by the BIOS.
 };
 
 /*
@@ -822,7 +822,7 @@ struct nvm_features
 	NVM_BOOL security_diagnostic; // security diagnostic
 	NVM_BOOL fw_consistency_diagnostic; // firmware consistency diagnostic
 	NVM_BOOL memory_mode; // access AEP DIMM capacity as memory
-	NVM_BOOL app_direct_mode; // access AEP DIMM persistent memory in App-Direct Mode
+	NVM_BOOL app_direct_mode; // access AEP DIMM persistent memory in App Direct Mode
 	NVM_BOOL storage_mode; // access AEP DIMM persistent memory in Storage Mode
 };
 
@@ -843,7 +843,7 @@ struct dimm_sku_capabilities
 {
 	NVM_BOOL mixed_sku; // One or more AEP DIMMs have different SKUs.
 	NVM_BOOL memory_sku; // One or more AEP DIMMs support memory mode.
-	NVM_BOOL app_direct_sku; // One or more AEP DIMMs support app-direct mode.
+	NVM_BOOL app_direct_sku; // One or more AEP DIMMs support app direct mode.
 	NVM_BOOL storage_sku; // One or more AEP DIMMs support storage mode.
 };
 
@@ -859,9 +859,9 @@ struct nvm_capabilities
 };
 
 /*
- * Quality of service attributes for a persistent memory interleave set
+ * Quality of service attributes for an app direct interleave set
  */
-struct pm_attributes
+struct app_direct_attributes
 {
 	struct interleave_format interleave; // The interleave format
 	NVM_BOOL mirrored; // Mirrored by the iMC
@@ -896,16 +896,16 @@ struct pool
 	enum pool_type type; // The type of pool.
 	NVM_UINT64 capacity; // Size of the pool in bytes.
 	NVM_UINT64 free_capacity; // Available size of the pool in bytes.
-	// The processor socket identifier.  For volatile pool set to "NVM_VOLATILE_POOL_SOCKET_ID".
+	// The processor socket identifier.
 	NVM_INT16 socket_id;
 	NVM_UINT16 dimm_count; // The number of dimms in this pool.
 	NVM_UINT16 ilset_count; // The number of interleave sets in this pool.
 	// Raw capacity of each dimm in the pool in bytes.
 	NVM_UINT64 raw_capacities[NVM_MAX_DEVICES_PER_POOL];
-	// Volatile capacity of each dimm in the pool in bytes.
-	NVM_UINT64 volatile_capacities[NVM_MAX_DEVICES_PER_POOL];
-	// Block capacity of each dimm in the pool in bytes.
-	NVM_UINT64 block_capacities[NVM_MAX_DEVICES_PER_POOL];
+	// Memory mode capacity of each dimm in the pool in bytes.
+	NVM_UINT64 memory_capacities[NVM_MAX_DEVICES_PER_POOL];
+	// Storage mode capacity of each dimm in the pool in bytes.
+	NVM_UINT64 storage_capacities[NVM_MAX_DEVICES_PER_POOL];
 	NVM_GUID dimms[NVM_MAX_DEVICES_PER_POOL]; // Unique ID's of underlying AEP DIMMs.
 	// The interleave sets in this pool
 	struct interleave_set ilsets[NVM_MAX_DEVICES_PER_POOL * 2];
@@ -923,14 +923,14 @@ struct pool
  */
 struct config_goal
 {
-	NVM_UINT64 volatile_size; // Gibibytes of volatile memory on the DIMM.
-	NVM_UINT16 persistent_count; // The number of persistent memory interleave sets (0-2).
-	NVM_UINT64 persistent_1_size; // Gibibytes of PM 1 interleave set on the DIMM.
-	NVM_UINT16 persistent_1_set_id; // Unique index identifying interleave set for PM 1.
-	struct pm_attributes persistent_1_settings; // PM 1 QoS attributes.
-	NVM_UINT64 persistent_2_size; // Gibibytes of PM 2 interleave set on the DIMM.
-	NVM_UINT16 persistent_2_set_id; // Unique index identifying interleave set for PM 2.
-	struct pm_attributes persistent_2_settings; // PM 2 QoS attributes.
+	NVM_UINT64 memory_size; // Gibibytes of memory mode capacity on the DIMM.
+	NVM_UINT16 app_direct_count; // The number of app direct interleave sets (0-2).
+	NVM_UINT64 app_direct_1_size; // Gibibytes of AD 1 interleave set on the DIMM.
+	NVM_UINT16 app_direct_1_set_id; // Unique index identifying interleave set for AD 1.
+	struct app_direct_attributes app_direct_1_settings; // AD 1 QoS attributes.
+	NVM_UINT64 app_direct_2_size; // Gibibytes of AD 2 interleave set on the DIMM.
+	NVM_UINT16 app_direct_2_set_id; // Unique index identifying interleave set for AD 2.
+	struct app_direct_attributes app_direct_2_settings; // AD 2 QoS attributes.
 	enum config_goal_status status; // Status for the config goal. Ignored for input.
 };
 
@@ -970,8 +970,8 @@ struct namespace_details
 	NVM_BOOL mirrored;
 	union
 	{
-		NVM_GUID device_guid; // Used when creating a Block Namespace
-		NVM_UINT32 interleave_setid; // Used when creating a PM Namespace
+		NVM_GUID device_guid; // Used when creating a storage Namespace
+		NVM_UINT32 interleave_setid; // Used when creating an app direct Namespace
 	} creation_id; // the identifier used by the driver when creating a Namespace
 };
 
@@ -994,12 +994,12 @@ struct namespace_create_settings
  */
 struct possible_namespace_ranges
 {
-    NVM_UINT64 largest_possible_pm_ns; // largest pm namespace size possible
-    NVM_UINT64 smallest_possible_pm_ns; // smallest pm namespace size possible
-    NVM_UINT64 pm_increment; // Valid increment between smallest & largest pm possible size
-    NVM_UINT64 largest_possible_block_ns; // largest block namespace size possible
-    NVM_UINT64 smallest_possible_block_ns; // smallest block namespace size possible
-    NVM_UINT64 block_increment; // Valid increment between smallest & largest block possible size
+    NVM_UINT64 largest_possible_app_direct_ns; // largest app direct namespace size possible
+    NVM_UINT64 smallest_possible_app_direct_ns; // smallest app direct namespace size possible
+    NVM_UINT64 app_direct_increment; // Valid increment between smallest & largest app direct size
+    NVM_UINT64 largest_possible_storage_ns; // largest storage namespace size possible
+    NVM_UINT64 smallest_possible_storage_ns; // smallest storage namespace size possible
+    NVM_UINT64 storage_increment; // Valid increment between smallest & largest storage size
 };
 
 /*
@@ -2070,7 +2070,7 @@ extern NVM_API int nvm_get_pools(struct pool *p_pools, const NVM_UINT8 count);
 extern NVM_API int nvm_get_pool(const NVM_GUID pool_guid, struct pool *p_pool);
 
 /*
- * Takes a pool UUID and returns the largest and smallest pm and block namespaces
+ * Takes a pool UUID and returns the largest and smallest app direct and storage namespaces
  * that can be created on that pool.
  * @pre The caller has administrative privileges.
  * @param[in] pool_id
@@ -2230,7 +2230,7 @@ extern NVM_API int nvm_dump_config(const NVM_GUID device_guid,
  * @pre The specified AEP DIMM is manageable by the host software.
  * @pre Any existing namespaces created from capacity on the
  * 		AEP DIMM must be deleted first.
- * @pre If the configuration goal contains any interleaved persistent memory,
+ * @pre If the configuration goal contains any app direct memory,
  * 		all AEP DIMMs that are part of the interleave set must be included in the file.
  * @pre The specified AEP DIMM must be >= the total capacity of the AEP DIMM
  * 		specified in the file.
@@ -2362,7 +2362,7 @@ extern NVM_API int nvm_get_namespace_details(const NVM_GUID namespace_guid,
  *		#NVM_ERR_DRIVERFAILED @n
  *		#NVM_ERR_DATATRANSFERERROR @n
  *		#NVM_ERR_BADSECURITYGOAL @n
- *		#NVM_ERR_BADNAMESPACEPERSISTENTSETTING @n
+ *		#NVM_ERR_BADNAMESPACESETTINGS @n
  *		#NVM_ERR_BADDEVICE @n
  *		#NVM_ERR_DEVICEERROR @n
  *		#NVM_ERR_DEVICEBUSY @n
@@ -2427,7 +2427,7 @@ extern NVM_API int nvm_adjust_modify_namespace_block_count(
  * 		#NVM_ERR_BADNAMESPACETYPE @n
  * 		#NVM_ERR_BADNAMESPACEENABLESTATE @n
  * 		#NVM_ERR_BADSECURITYGOAL @n
- * 		#NVM_ERR_BADNAMESPACEPERSISTENTSETTING @n
+ * 		#NVM_ERR_BADNAMESPACESETTINGS @n
  * 		#NVM_ERR_DRIVERFAILED @n
  * 		#NVM_ERR_UNKNOWN @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)

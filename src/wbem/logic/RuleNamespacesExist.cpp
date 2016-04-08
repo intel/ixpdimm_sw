@@ -64,16 +64,16 @@ void wbem::logic::RuleNamespacesExist::verify(const MemoryAllocationRequest &req
 		int nsCount = pApi->getDeviceNamespaceCount(dimmGuid, NAMESPACE_TYPE_UNKNOWN);
 		if (nsCount < 0) // error
 		{
-			// If retrieving NS' is not supported, allow Volatile goal creation on MemoryMode SKU
+			// If retrieving NS' is not supported, allow Memory goal creation on MemoryMode SKU
 			if (nsCount == NVM_ERR_NOTSUPPORTED)
 			{
-				if ((request.volatileCapacity != 0) &&
-						(request.persistentExtents.size() == 0) &&
+				if ((request.memoryCapacity != 0) &&
+						(request.appDirectExtents.size() == 0) &&
 						(!request.storageRemaining))
 				{
 					if (!m_systemCapabilities.nvm_features.memory_mode)
 					{
-						throw exception::NvmExceptionVolatileNotSupported();
+						throw exception::NvmExceptionMemoryModeNotSupported();
 					}
 				}
 				else

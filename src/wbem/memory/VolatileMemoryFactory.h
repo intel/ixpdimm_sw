@@ -73,7 +73,7 @@ static const wbem::framework::UINT16 VOLATILEMEMORY_OPERATIONALSTATUS_DEGRADED =
 static const wbem::framework::UINT16 VOLATILEMEMORY_OPERATIONALSTATUS_SUPPORTINGENTITYINERROR = 16; //!< this element is ok, but another element it depends on is in error
 
 /*!
- * Represents NVM-DIMM volatile capacity.
+ * Represents NVM-DIMM Memory Mode capacity.
  */
 class NVM_API VolatileMemoryFactory: public framework_interface::NvmInstanceFactory
 {
@@ -94,7 +94,7 @@ class NVM_API VolatileMemoryFactory: public framework_interface::NvmInstanceFact
 		 * 		The object path of the instance to retrieve.
 		 * @param[in] attributes
 		 * 		The attributes to retrieve.
-		 * @throw Exception if unable to retrieve the volatile capacity information.
+		 * @throw Exception if unable to retrieve the memory capacity information.
 		 * @return The instance.
 		 */
 		framework::Instance* getInstance(framework::ObjectPath &path,
@@ -129,10 +129,10 @@ class NVM_API VolatileMemoryFactory: public framework_interface::NvmInstanceFact
 		void validateObjectPath(framework::ObjectPath &path)
 			throw (wbem::framework::Exception);
 
-		wbem::framework::UINT64 getVolatileCapacity()
+		wbem::framework::UINT64 getMemoryCapacity()
 			throw (wbem::framework::Exception);
 
-		wbem::framework::UINT64 getDimmVolatileCapacity(std::string guidStr)
+		wbem::framework::UINT64 getDimmMemoryCapacity(std::string guidStr)
 			throw (wbem::framework::Exception);
 
 		wbem::framework::UINT16 getHealthState()

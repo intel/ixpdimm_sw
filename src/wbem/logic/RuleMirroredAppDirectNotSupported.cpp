@@ -25,53 +25,30 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Lay out the volatile region in memory.
- */
+#include "RuleMirroredAppDirectNotSupported.h"
+#include <exception/NvmExceptionBadRequest.h>
+#include <LogEnterExit.h>
 
-#ifndef _WBEM_LOGIC_LAYOUTSTEPVOLATILE_H_
-#define _WBEM_LOGIC_LAYOUTSTEPVOLATILE_H_
-
-#include "LayoutStep.h"
-#include <nvm_management.h>
-
-namespace wbem
+wbem::logic::RuleMirroredAppDirectNotSupported::RuleMirroredAppDirectNotSupported()
 {
-namespace logic
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+}
+
+wbem::logic::RuleMirroredAppDirectNotSupported::~RuleMirroredAppDirectNotSupported()
 {
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+}
 
-class NVM_API LayoutStepVolatile : public LayoutStep
+void wbem::logic::RuleMirroredAppDirectNotSupported::verify(
+		const MemoryAllocationRequest& request)
 {
-	public:
-		LayoutStepVolatile();
-		virtual ~LayoutStepVolatile();
-
-		virtual void execute(const MemoryAllocationRequest &request,
-				MemoryAllocationLayout &layout);
-
-		virtual bool isRemainingStep(const MemoryAllocationRequest &request);
-
-	protected:
-		NVM_UINT64 getRequestedCapacityBytes(
-				const struct MemoryAllocationRequest& request,
-				MemoryAllocationLayout &layout);
-		NVM_UINT64 getAlignedDimmBytes(const MemoryAllocationRequest& request, const Dimm &dimm,
-				MemoryAllocationLayout& layout, const NVM_UINT64 &requestedBytes);
-		NVM_UINT64 getTotalVolatileBytes(const NVM_UINT64 &requestedBytes,
-				const NVM_UINT64 &existingBytes);
-		NVM_UINT64 roundDownVolatileToPMAlignment(
-				const Dimm &dimm, MemoryAllocationLayout& layout,
-				const NVM_UINT64 &requestedBytes, const NVM_UINT64 dimmBytes);
-		NVM_UINT64 roundUpVolatileToPMAlignment(
-				const Dimm &dimm, MemoryAllocationLayout& layout,
-				const NVM_UINT64 &requestedBytes, const NVM_UINT64 dimmBytes);
-		NVM_UINT64 roundVolatileToNearestPMAlignment(
-				const Dimm &dimm, MemoryAllocationLayout& layout,
-				const NVM_UINT64 &requestedBytes, const NVM_UINT64 dimmBytes);
-
-};
-
-} /* namespace logic */
-} /* namespace wbem */
-
-#endif /* _WBEM_LOGIC_LAYOUTSTEPVOLATILE_H_ */
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	for (std::vector<AppDirectExtent>::const_iterator iter = request.appDirectExtents.begin();
+			iter != request.appDirectExtents.end(); iter++)
+	{
+		if (iter->mirrored)
+		{
+			throw exception::NvmExceptionRequestNotSupported();
+		}
+	}
+}
