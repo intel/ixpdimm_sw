@@ -113,7 +113,7 @@ MONITOR_NAME=ixpdimm-monitor
 # OS specific settings
 UNAME := $(shell uname)
 ifeq ($(UNAME), Linux)
-	CORE_COUNT = $(nproc)
+	CORE_COUNT = $(shell nproc)
 		
 	# ESX builds occur on Linux but the environment will include this variable
 	ifdef ESXBUILD

@@ -637,7 +637,7 @@ class <NVM_WBEM_PREFIX>PersistentMemoryNamespace : CIM_PersistentMemoryNamespace
 };
 
 [dynamic, provider("intelwbemprovider")]
-class <NVM_WBEM_PREFIX>NamespaceSettings : CIM_PersistentMemoryNamespaceSettingData
+class <NVM_WBEM_PREFIX>NamespaceSettings : CIM_NamespaceSettings
 {
 	uint16 InitialState;
 	[Description ( 
