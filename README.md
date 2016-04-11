@@ -50,6 +50,7 @@ where the makefile is located in:
 * GETTEXT_EXE_DIR - The path to the xgettext.exe (for string translations). 
 * INTEL_CLI_FRAMEWORK_DIR - The path to Intel NVM CLI libraries
 * INTEL_CIM_FRAMEWORK_DIR - The path to Intel NVM CIM libraries
+* INTEL_I18N_DIR - The path to Intel I18N libraries
 
 Assuming default paths have been used execute 'make RELEASE=1'
 
@@ -76,6 +77,10 @@ https://github.com/01org/intelnvmcimlibrary
 Intel NVM CLI library is required, the source can be found at
 
 https://github.com/01org/intelnvmclilibrary
+
+Intel NVM I18N library is required, the source can be found at
+
+https://github.com/01org/intelnvmi18nlibrary
 
 All other dependencies are widely available. This includes ctemplate openssl
 sqlite and zlib.

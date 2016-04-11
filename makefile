@@ -60,6 +60,7 @@ GETTEXT_EXE_DIR ?= ../external/gettext
 ESX_DIR ?= ../external/esx
 INTEL_CLI_FRAMEWORK_DIR ?= ../external/intel_cli_framework
 INTEL_CIM_FRAMEWORK_DIR ?= ../external/intel_cim_framework
+INTEL_I18N_DIR ?= ../external/intelnvmi18n
 
 #build targets
 all : extern libcopy 
@@ -115,6 +116,12 @@ endif
 	$(COPY) $(INTEL_CIM_FRAMEWORK_DIR)/lib/lib* $(EXTERN_DIR)/intel_cim_framework/$(OS_TYPE)_$(BUILD_TYPE)/
 	$(MKDIR) $(EXTERN_DIR)/intel_cim_framework/include 
 	$(COPY) $(INTEL_CIM_FRAMEWORK_DIR)/include/* $(EXTERN_DIR)/intel_cim_framework/include/
+	
+	$(MKDIR) $(EXTERN_DIR)/intel_i18n/$(OS_TYPE)_$(BUILD_TYPE) 
+	$(COPY) $(INTEL_I18N_DIR)/lib/lib* $(EXTERN_DIR)/intel_i18n/$(OS_TYPE)_$(BUILD_TYPE)/
+	$(MKDIR) $(EXTERN_DIR)/intel_i18n/include 
+	$(COPY) $(INTEL_I18N_DIR)/include/* $(EXTERN_DIR)/intel_i18n/include/
+
 endif	
 ifdef $(INTERNATIONALIZE)
 	$(MKDIR) tools/gettext
