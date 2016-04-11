@@ -47,7 +47,7 @@ namespace performance
 /*
  * Shared string constant for Metric definitions
  */
-static const std::string METRICDEF_DEFINITION_STR = "Metric Definition";
+static const std::string METRICDEF_DEFINITION_STR = "Metric Definition ";
 static const std::string METRICDEF_BYTES_READ_STR = "Bytes Read";
 static const std::string METRICDEF_BYTES_WRITTEN_STR = "Bytes Written";
 static const std::string METRICDEF_HOST_READS_STR = "Host Reads";

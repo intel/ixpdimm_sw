@@ -191,7 +191,7 @@ const std::string wbem::performance::PerformanceMetricDefinitionFactory
 throw(wbem::framework::Exception)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	std::string ret = prefix.empty() ? "" : prefix + " ";
+	std::string ret = prefix.empty() ? "" : prefix;
 	switch (metric)
 	{
 		case METRIC_BYTES_READ :
