@@ -490,6 +490,8 @@ class <NVM_WBEM_PREFIX>MemoryResources : CIM_ResourcePool
 	uint64 AppDirectCapacity;
 	uint64 StorageCapacity;
 	uint64 UnconfiguredCapacity;
+	uint64 InaccesibleCapacity;
+	uint64 ReservedCapacity;
 };
 
 [dynamic, provider("intelwbemprovider")]

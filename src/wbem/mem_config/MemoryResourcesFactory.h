@@ -43,8 +43,9 @@ namespace wbem
 {
 namespace mem_config
 {
+	static const std::string MEMORYRESOURCES_ALLOCATIONUNITS_VAL = "bytes"; //!< Allocation Units Static Value
 	static const std::string MEMORYRESOURCES_CREATIONCLASSNAME = std::string(NVM_WBEM_PREFIX) + "MemoryResources"; //!< CreationClassName
-	static const std::string MEMORYRESOURCES_INSTANCEID = " NVM Pool"; //!< InstanceID Static String
+	static const std::string MEMORYRESOURCES_INSTANCEID = "NVM Pool"; //!< InstanceID Static String
 	static const std::string MEMORYRESOURCES_POOLID = "NVMPool1"; //!< PoolId Static String
 	static const std::string MEMORYRESOURCES_ELEMENTNAME = "Platform NVM Primordial Pool"; //!< ElementName Static String
 	static const std::string MEMORYRESOURCES_RESOURCETYPE = "Multi-mode memory"; //!< Resource Type Static String
@@ -91,11 +92,6 @@ class NVM_API MemoryResourcesFactory : public framework_interface::NvmInstanceFa
 	private:
 		void populateAttributeList(framework::attribute_names_t &attributes)
 			throw (framework::Exception);
-
-		/*
-		 * Helper function to convert block size to allocation units
-		 */
-		std::string allocationUnitsToStr(const NVM_UINT32 &blockSize);
 
 		/*
 		 * Helper function to get capacity allocated from pool

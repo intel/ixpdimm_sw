@@ -89,7 +89,7 @@ void wbem::mem_config::MemoryResourcesFactory::toInstance(core::system::SystemMe
 	ADD_ATTRIBUTE(instance, attributes, POOLID_KEY, framework::STR, MEMORYRESOURCES_POOLID);
 	ADD_ATTRIBUTE(instance, attributes, RESERVED_KEY, framework::UINT64, getCapacityAllocatedFromPool());
 	ADD_ATTRIBUTE(instance, attributes, RESOURCETYPE_KEY, framework::UINT16, (NVM_UINT16)MEMORYRESOURCES_RESOURCETYPE_VAL);
-	ADD_ATTRIBUTE(instance, attributes, ALLOCATIONUNITS_KEY, framework::STR, allocationUnitsToStr(memoryResourcesInfo.getTotalCapacity()));
+	ADD_ATTRIBUTE(instance, attributes, ALLOCATIONUNITS_KEY, framework::STR, MEMORYRESOURCES_ALLOCATIONUNITS_VAL);
 	ADD_ATTRIBUTE(instance, attributes, CAPACITY_KEY, framework::UINT64, memoryResourcesInfo.getTotalCapacity());
 	ADD_ATTRIBUTE(instance, attributes, MEMORYCAPACITY_KEY, framework::UINT64, memoryResourcesInfo.getTotalMemoryCapacity());
 	ADD_ATTRIBUTE(instance, attributes, APP_DIRECT_CAPACITY_KEY, framework::UINT64, memoryResourcesInfo.getTotalAppDirectCapacity());
@@ -176,17 +176,6 @@ wbem::framework::instance_names_t* wbem::mem_config::MemoryResourcesFactory::get
 	}
 
 	return pNames;
-}
-
-/*
- * Helper function to convert block size to allocation units
- */
-std::string wbem::mem_config::MemoryResourcesFactory::allocationUnitsToStr(
-		const NVM_UINT32 &blockSize)
-{
-	std::stringstream sizeStr;
-	sizeStr << "bytes*" << blockSize;
-	return sizeStr.str();
 }
 
 /*
