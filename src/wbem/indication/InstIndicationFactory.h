@@ -37,8 +37,8 @@
 #define _WBEM_INDICATION_INSTINDICATION_FACTORY_H_
 
 #include "NvmIndicationFactory.h"
-#include <intel_cim_framework/ObjectPath.h>
-#include <intel_cim_framework/Types.h>
+#include <libintelnvm-cim/ObjectPath.h>
+#include <libintelnvm-cim/Types.h>
 #include <NvmStrings.h>
 
 namespace  wbem

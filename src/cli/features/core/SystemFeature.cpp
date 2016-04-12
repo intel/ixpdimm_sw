@@ -41,17 +41,17 @@
 #include <erasure/ErasureServiceFactory.h>
 #include <mem_config/MemoryResourcesFactory.h>
 #include <server/SystemCapabilitiesFactory.h>
-#include <intel_cim_framework/Types.h>
+#include <libintelnvm-cim/Types.h>
 
-#include <intel_cli_framework/CliFrameworkTypes.h>
-#include <intel_cli_framework/FeatureBase.h>
-#include <intel_cli_framework/CommandSpec.h>
-#include <intel_cli_framework/SimpleListResult.h>
-#include <intel_cli_framework/PropertyListResult.h>
-#include <intel_cli_framework/SyntaxErrorMissingValueResult.h>
-#include <intel_cli_framework/SyntaxErrorBadValueResult.h>
-#include <intel_cli_framework/NotImplementedErrorResult.h>
-#include <intel_cli_framework/Parser.h>
+#include <libintelnvm-cli/CliFrameworkTypes.h>
+#include <libintelnvm-cli/FeatureBase.h>
+#include <libintelnvm-cli/CommandSpec.h>
+#include <libintelnvm-cli/SimpleListResult.h>
+#include <libintelnvm-cli/PropertyListResult.h>
+#include <libintelnvm-cli/SyntaxErrorMissingValueResult.h>
+#include <libintelnvm-cli/SyntaxErrorBadValueResult.h>
+#include <libintelnvm-cli/NotImplementedErrorResult.h>
+#include <libintelnvm-cli/Parser.h>
 #include <physical_asset/MemoryTopologyViewFactory.h>
 #include "CommandParts.h"
 #include "WbemToCli_utilities.h"

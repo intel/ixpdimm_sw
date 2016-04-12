@@ -34,14 +34,14 @@
 #include <LogEnterExit.h>
 #include <string/s_str.h>
 #include "CommandParts.h"
-#include <intel_cli_framework/SimpleListResult.h>
+#include <libintelnvm-cli/SimpleListResult.h>
 #include <pmem_config/NamespaceViewFactory.h>
 #include <pmem_config/PersistentMemoryServiceFactory.h>
 #include <pmem_config/PersistentMemoryCapabilitiesFactory.h>
 #include <pmem_config/PersistentMemoryPoolFactory.h>
 #include <pmem_config/PersistentMemoryNamespaceFactory.h>
-#include <intel_cim_framework/ExceptionNotSupported.h>
-#include <intel_cim_framework/ExceptionBadParameter.h>
+#include <libintelnvm-cim/ExceptionNotSupported.h>
+#include <libintelnvm-cim/ExceptionBadParameter.h>
 #include <utility.h>
 #include <exception/NvmExceptionLibError.h>
 #include <exception/NvmExceptionUndoModifyFailed.h>

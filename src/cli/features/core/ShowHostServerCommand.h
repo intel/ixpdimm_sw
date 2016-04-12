@@ -27,8 +27,8 @@
 #ifndef CR_MGMT_SHOWHOSTSERVERCOMMAND_H
 #define CR_MGMT_SHOWHOSTSERVERCOMMAND_H
 
-#include <intel_cli_framework/CliFrameworkTypes.h>
-#include <intel_cli_framework/ResultBase.h>
+#include <libintelnvm-cli/CliFrameworkTypes.h>
+#include <libintelnvm-cli/ResultBase.h>
 #include "framework/PropertyDefinitionList.h"
 #include <cli/features/core/framework/CommandBase.h>
 

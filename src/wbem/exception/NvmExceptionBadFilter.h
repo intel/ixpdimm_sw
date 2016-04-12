@@ -33,7 +33,7 @@
 #ifndef NVMEXCEPTIONBADFILTER_H_
 #define NVMEXCEPTIONBADFILTER_H_
 
-#include <intel_cim_framework/Exception.h>
+#include <libintelnvm-cim/Exception.h>
 #include <cr_i18n.h>
 #include <nvm_types.h>
 

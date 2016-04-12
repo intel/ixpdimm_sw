@@ -29,7 +29,7 @@
 
 #include <vector>
 #include <nvm_types.h>
-#include <intel_cli_framework/CliFrameworkTypes.h>
+#include <libintelnvm-cli/CliFrameworkTypes.h>
 #include "PropertyDefinitionBase.h"
 
 namespace cli

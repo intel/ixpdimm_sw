@@ -36,7 +36,7 @@
 #include <string.h>
 #include <sstream>
 #include <nvm_management.h>
-#include <intel_cim_framework/ExceptionBadParameter.h>
+#include <libintelnvm-cim/ExceptionBadParameter.h>
 #include <utility.h>
 #include <exception/NvmExceptionLibError.h>
 #include <NvmStrings.h>

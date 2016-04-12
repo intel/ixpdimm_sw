@@ -30,7 +30,7 @@
  * which represent NVM-DIMM hosted persistent capacity with a given set of QoS attributes.
  */
 
-#include <intel_cim_framework/Exception.h>
+#include <libintelnvm-cim/Exception.h>
 #include <common_types.h>
 #include <framework_interface/NvmInstanceFactory.h>
 #include <exception/NvmExceptionLibError.h>

@@ -38,17 +38,17 @@
 
 #include <server/BaseServerFactory.h>
 #include <physical_asset/NVDIMMFactory.h>
-#include <intel_cim_framework/ExceptionBadParameter.h>
+#include <libintelnvm-cim/ExceptionBadParameter.h>
 
-#include <intel_cli_framework/FeatureBase.h>
-#include <intel_cli_framework/SimpleResult.h>
-#include <intel_cli_framework/CommandSpec.h>
-#include <intel_cli_framework/PropertyListResult.h>
-#include <intel_cli_framework/ObjectListResult.h>
-#include <intel_cli_framework/SyntaxErrorResult.h>
-#include <intel_cli_framework/SyntaxErrorBadValueResult.h>
-#include <intel_cli_framework/SyntaxErrorMissingValueResult.h>
-#include <intel_cli_framework/Parser.h>
+#include <libintelnvm-cli/FeatureBase.h>
+#include <libintelnvm-cli/SimpleResult.h>
+#include <libintelnvm-cli/CommandSpec.h>
+#include <libintelnvm-cli/PropertyListResult.h>
+#include <libintelnvm-cli/ObjectListResult.h>
+#include <libintelnvm-cli/SyntaxErrorResult.h>
+#include <libintelnvm-cli/SyntaxErrorBadValueResult.h>
+#include <libintelnvm-cli/SyntaxErrorMissingValueResult.h>
+#include <libintelnvm-cli/Parser.h>
 #include <guid/guid.h>
 
 #include <support/NVDIMMDiagnosticFactory.h>
@@ -72,7 +72,7 @@
 #include <exception/NvmExceptionLibError.h>
 #include <core/device/DeviceFirmwareService.h>
 #include <framework_interface/FrameworkExtensions.h>
-#include <intel_cim_framework/ExceptionNoMemory.h>
+#include <libintelnvm-cim/ExceptionNoMemory.h>
 
 const std::string cli::nvmcli::FieldSupportFeature::Name = "Field Support";
 const std::string LOG_PROPERTY_NAME = "LogLevel";

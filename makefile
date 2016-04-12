@@ -261,15 +261,15 @@ else ifdef BUILD_ESX
 	$(COPY) $(BUILD_DIR)/$(CORE_LIB_BASENAME).so* $(ESX_SUPPORT_DIR)
 	$(COPY) $(BUILD_DIR)/$(CLI_LIB_BASENAME).so* $(ESX_SUPPORT_DIR)
 	$(COPY) $(BUILD_DIR)/$(CIM_LIB_BASENAME).so* $(ESX_SUPPORT_DIR) # for CLI
-	$(COPY) $(BUILD_DIR)/libcimframework.so* $(ESX_SUPPORT_DIR) # for CLI
+	$(COPY) $(BUILD_DIR)/$(CIM_FRAMEWORK_LIB_BASENAME).so* $(ESX_SUPPORT_DIR) # for CLI
 	$(COPY) $(BUILD_DIR)/$(CIM_LIB_BASENAME).so* $(CIM_LIB_DIR) # for SFCB
-	$(COPY) $(BUILD_DIR)/libcimframework.so* $(CIM_LIB_DIR) # for SFCB
-	$(COPY) $(BUILD_DIR)/libcliframework.so* $(ESX_SUPPORT_DIR)
+	$(COPY) $(BUILD_DIR)/$(CIM_FRAMEWORK_LIB_BASENAME).so* $(CIM_LIB_DIR) # for SFCB
+	$(COPY) $(BUILD_DIR)/$(CLI_FRAMEWORK_LIB_BASENAME).so* $(ESX_SUPPORT_DIR)
 	$(COPY) $(BUILD_DIR)/libsqlite3.so* $(ESX_SUPPORT_DIR)
 	$(COPY) $(BUILD_DIR)/libssl.so* $(ESX_SUPPORT_DIR)
 	$(COPY) $(BUILD_DIR)/libcrypto.so* $(ESX_SUPPORT_DIR)
 	$(COPY) $(BUILD_DIR)/libz.so* $(ESX_SUPPORT_DIR)
-	$(COPY) $(BUILD_DIR)/libIntel_i18n.so* $(ESX_SUPPORT_DIR)
+	$(COPY) $(BUILD_DIR)/$(I18N_LIB_BASENAME).so* $(ESX_SUPPORT_DIR)
 	$(COPY) $(BUILD_DIR)/public.rev0.pem $(ESX_SUPPORT_DIR)
 	# must provide own C++ runtime - CPP_RUNTIME defined in build.mk
 	$(COPY) $(CPP_RUNTIME) $(ESX_SUPPORT_DIR)

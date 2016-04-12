@@ -31,11 +31,11 @@
 #include <algorithm>
 #include <nvm_management.h>
 #include <LogEnterExit.h>
-#include <intel_cim_framework/Attribute.h>
-#include <intel_cim_framework/ExceptionNotSupported.h>
-#include <intel_cim_framework/ExceptionBadParameter.h>
-#include <intel_cim_framework/ExceptionBadAttribute.h>
-#include <intel_cim_framework/ExceptionNoMemory.h>
+#include <libintelnvm-cim/Attribute.h>
+#include <libintelnvm-cim/ExceptionNotSupported.h>
+#include <libintelnvm-cim/ExceptionBadParameter.h>
+#include <libintelnvm-cim/ExceptionBadAttribute.h>
+#include <libintelnvm-cim/ExceptionNoMemory.h>
 #include <server/BaseServerFactory.h>
 #include "NVDIMMFactory.h"
 #include <utility.h>

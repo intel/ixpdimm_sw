@@ -38,8 +38,8 @@
 #include <guid/guid.h>
 #include <nvm_management.h>
 #include <LogEnterExit.h>
-#include <intel_cim_framework/Attribute.h>
-#include <intel_cim_framework/ObjectPath.h>
+#include <libintelnvm-cim/Attribute.h>
+#include <libintelnvm-cim/ObjectPath.h>
 #include <exception/NvmExceptionLibError.h>
 #include <framework_interface/NvmInstanceFactory.h>
 #include <NvmStrings.h>

@@ -30,9 +30,9 @@
 #include "framework/PropertyDefinitionBase.h"
 #include "framework/PropertyDefinitionList.h"
 #include "framework/DisplayOptions.h"
-#include <intel_cli_framework/CliFrameworkTypes.h>
-#include <intel_cli_framework/ResultBase.h>
-#include <intel_cli_framework/PropertyListResult.h>
+#include <libintelnvm-cli/CliFrameworkTypes.h>
+#include <libintelnvm-cli/ResultBase.h>
+#include <libintelnvm-cli/PropertyListResult.h>
 #include <lib/nvm_types.h>
 #include <core/device/TopologyService.h>
 #include <core/device/DeviceService.h>

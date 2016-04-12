@@ -36,9 +36,9 @@
 #include "NVDIMMEventLogFactory.h"
 #include <LogEnterExit.h>
 #include <server/BaseServerFactory.h>
-#include <intel_cim_framework/ExceptionBadParameter.h>
-#include <intel_cim_framework/ExceptionNoMemory.h>
-#include <intel_cim_framework/ExceptionInvalidWqlQuery.h>
+#include <libintelnvm-cim/ExceptionBadParameter.h>
+#include <libintelnvm-cim/ExceptionNoMemory.h>
+#include <libintelnvm-cim/ExceptionInvalidWqlQuery.h>
 #include <support/NVDIMMLogEntryFactory.h>
 #include <sstream>
 #include <cerrno>

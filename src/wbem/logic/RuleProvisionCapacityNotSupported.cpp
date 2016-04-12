@@ -30,7 +30,7 @@
  */
 
 #include "RuleProvisionCapacityNotSupported.h"
-#include <intel_cim_framework/ExceptionNotSupported.h>
+#include <libintelnvm-cim/ExceptionNotSupported.h>
 #include <LogEnterExit.h>
 
 wbem::logic::RuleProvisionCapacityNotSupported::RuleProvisionCapacityNotSupported(

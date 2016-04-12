@@ -33,13 +33,13 @@
 
 #include "MemoryTopologyViewFactory.h"
 #include <LogEnterExit.h>
-#include <intel_cim_framework/ExceptionNoMemory.h>
-#include <intel_cim_framework/ExceptionBadAttribute.h>
+#include <libintelnvm-cim/ExceptionNoMemory.h>
+#include <libintelnvm-cim/ExceptionBadAttribute.h>
 #include <server/BaseServerFactory.h>
 #include "NVDIMMFactory.h"
 #include <guid/guid.h>
 #include <sstream>
-#include <intel_cim_framework/Types.h>
+#include <libintelnvm-cim/Types.h>
 #include <exception/NvmExceptionLibError.h>
 #include <lib_interface/NvmApi.h>
 

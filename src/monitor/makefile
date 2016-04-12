@@ -116,7 +116,7 @@ endif
 
 ifdef INTEL_I18N
 INCS += -I$(I18N_INCLUDE_DIR)
-LIBS += -lIntel_i18n
+LIBS += -l$(I18N_LIB_NAME)
 endif
 # ---- RECIPES -------------------------------------------------------------------------------------
 all : 

@@ -32,14 +32,14 @@
 
 #include "WbemToCli_utilities.h"
 #include <iomanip>
-#include <intel_cli_framework/CliFrameworkTypes.h>
-#include <intel_cli_framework/Parser.h>
+#include <libintelnvm-cli/CliFrameworkTypes.h>
+#include <libintelnvm-cli/Parser.h>
 #include "CommandParts.h"
-#include <intel_cli_framework/SyntaxErrorBadValueResult.h>
-#include <intel_cli_framework/ObjectListResult.h>
-#include <intel_cim_framework/ExceptionBadAttribute.h>
-#include <intel_cim_framework/ExceptionNoMemory.h>
-#include <intel_cim_framework/ExceptionNotSupported.h>
+#include <libintelnvm-cli/SyntaxErrorBadValueResult.h>
+#include <libintelnvm-cli/ObjectListResult.h>
+#include <libintelnvm-cim/ExceptionBadAttribute.h>
+#include <libintelnvm-cim/ExceptionNoMemory.h>
+#include <libintelnvm-cim/ExceptionNotSupported.h>
 #include <physical_asset/NVDIMMFactory.h>
 #include <nvm_management.h>
 #include <string.h>

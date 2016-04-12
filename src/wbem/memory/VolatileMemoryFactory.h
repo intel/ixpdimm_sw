@@ -34,7 +34,7 @@
 #define _WBEM_MEMORY_VOLATILE_MEMORY_FACTORY_H_
 
 #include <string>
-#include <intel_cim_framework/Types.h>
+#include <libintelnvm-cim/Types.h>
 #include <server/BaseServerFactory.h>
 #include <framework_interface/NvmInstanceFactory.h>
 

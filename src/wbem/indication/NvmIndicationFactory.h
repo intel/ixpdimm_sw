@@ -34,8 +34,8 @@
 #define    _WBEM_FRAMEWORK_NVMINDICATIONFACTORY_H_
 
 
-#include <intel_cim_framework/Instance.h>
-#include <intel_cim_framework/Exception.h>
+#include <libintelnvm-cim/Instance.h>
+#include <libintelnvm-cim/Exception.h>
 #include <nvm_management.h>
 
 namespace wbem

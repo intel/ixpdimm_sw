@@ -35,7 +35,7 @@
  * libixpdimm-cim library (which would call lib_unload).
  */
 
-#include <intel_cim_framework/IntelCmpiProvider.h>
+#include <libintelnvm-cim/IntelCmpiProvider.h>
 #ifdef __ESX__
 #include "cmpiMonitor.h"
 #endif

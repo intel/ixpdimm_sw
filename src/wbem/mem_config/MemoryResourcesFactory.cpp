@@ -35,8 +35,8 @@
 
 #include <LogEnterExit.h>
 
-#include <intel_cim_framework/ExceptionBadParameter.h>
-#include <intel_cim_framework/ExceptionNoMemory.h>
+#include <libintelnvm-cim/ExceptionBadParameter.h>
+#include <libintelnvm-cim/ExceptionNoMemory.h>
 #include "MemoryResourcesFactory.h"
 #include <server/BaseServerFactory.h>
 #include <sstream>

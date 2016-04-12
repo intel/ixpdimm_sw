@@ -110,6 +110,13 @@ CIM_LIB_NAME=ixpdimm-cim
 CLI_NAME=ixpdimm-cli
 MONITOR_NAME=ixpdimm-monitor
 
+CIM_FRAMEWORK_LIB_BASENAME=libintelnvm-cim
+CIM_FRAMEWORK_LIB_NAME=intelnvm-cim
+I18N_LIB_BASENAME=libintelnvm-i18n
+I18N_LIB_NAME=intelnvm-i18n
+CLI_FRAMEWORK_LIB_BASENAME=libintelnvm-cli
+CLI_FRAMEWORK_LIB_NAME=intelnvm-cli
+
 # OS specific settings
 UNAME := $(shell uname)
 ifeq ($(UNAME), Linux)
@@ -169,7 +176,7 @@ ifeq ($(UNAME), Linux)
 		AR = ar
 
 		#Linux Product Names
-		LINUX_PRODUCT_NAME ?= nvdimm-mgmt
+		LINUX_PRODUCT_NAME = $(MARKETING_PRODUCT_NAME)
 		CIM_NAMESPACE = intelwbem
 		
 		# Linux Install Directories

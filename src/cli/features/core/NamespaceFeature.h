@@ -32,7 +32,7 @@
 #ifndef _CLI_NVMCLI_NAMESPACEFEATURE_H_
 #define _CLI_NVMCLI_NAMESPACEFEATURE_H_
 
-#include <intel_cli_framework/FeatureBase.h>
+#include <libintelnvm-cli/FeatureBase.h>
 #include "WbemToCli.h"
 #include "WbemToCli_utilities.h"
 #include "MemoryProperty.h"

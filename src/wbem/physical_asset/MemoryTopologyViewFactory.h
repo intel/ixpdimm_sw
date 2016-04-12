@@ -38,9 +38,9 @@
 
 #include <nvm_types.h>
 #include <nvm_management.h>
-#include <intel_cim_framework/Attribute.h>
-#include <intel_cim_framework/Instance.h>
-#include <intel_cim_framework/ObjectPath.h>
+#include <libintelnvm-cim/Attribute.h>
+#include <libintelnvm-cim/Instance.h>
+#include <libintelnvm-cim/ObjectPath.h>
 #include <framework_interface/NvmInstanceFactory.h>
 #include <NvmStrings.h>
 

@@ -27,9 +27,9 @@
 
 #include "ElementSoftwareIdentityFactory.h"
 #include <LogEnterExit.h>
-#include <intel_cim_framework/ObjectPathBuilder.h>
-#include <intel_cim_framework/ExceptionBadAttribute.h>
-#include <intel_cim_framework/ExceptionNoMemory.h>
+#include <libintelnvm-cim/ObjectPathBuilder.h>
+#include <libintelnvm-cim/ExceptionBadAttribute.h>
+#include <libintelnvm-cim/ExceptionNoMemory.h>
 #include <exception/NvmExceptionLibError.h>
 #include <guid/guid.h>
 

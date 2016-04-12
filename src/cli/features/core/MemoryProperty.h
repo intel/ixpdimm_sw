@@ -36,8 +36,8 @@
 
 #include <common_types.h>
 #include <nvm_management.h>
-#include <intel_cli_framework/Parser.h>
-#include <intel_cli_framework/SyntaxErrorResult.h>
+#include <libintelnvm-cli/Parser.h>
+#include <libintelnvm-cli/SyntaxErrorResult.h>
 #include <mem_config/InterleaveSet.h>
 
 namespace cli

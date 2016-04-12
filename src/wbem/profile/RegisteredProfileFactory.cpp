@@ -33,8 +33,8 @@
 #include <server/BaseServerFactory.h>
 #include <memory/VolatileMemoryFactory.h>
 #include <memory/PersistentMemoryFactory.h>
-#include <intel_cim_framework/ExceptionBadAttribute.h>
-#include <intel_cim_framework/ExceptionNoMemory.h>
+#include <libintelnvm-cim/ExceptionBadAttribute.h>
+#include <libintelnvm-cim/ExceptionNoMemory.h>
 #include <framework_interface/NvmAssociationFactory.h>
 #include <LogEnterExit.h>
 #include <algorithm>

@@ -32,9 +32,9 @@
 #ifndef REGISTEREDPROFILEFACTORY_H_
 #define REGISTEREDPROFILEFACTORY_H_
 
-#include <intel_cim_framework/Instance.h>
-#include <intel_cim_framework/Exception.h>
-#include <intel_cim_framework/Types.h>
+#include <libintelnvm-cim/Instance.h>
+#include <libintelnvm-cim/Exception.h>
+#include <libintelnvm-cim/Types.h>
 #include <string>
 #include <vector>
 #include <map>

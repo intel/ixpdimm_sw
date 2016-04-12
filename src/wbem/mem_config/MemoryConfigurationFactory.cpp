@@ -35,10 +35,10 @@
 #include <nvm_management.h>
 #include <utility.h>
 #include <LogEnterExit.h>
-#include <intel_cim_framework/Types.h>
-#include <intel_cim_framework/ExceptionBadParameter.h>
-#include <intel_cim_framework/ExceptionBadAttribute.h>
-#include <intel_cim_framework/ExceptionNoMemory.h>
+#include <libintelnvm-cim/Types.h>
+#include <libintelnvm-cim/ExceptionBadParameter.h>
+#include <libintelnvm-cim/ExceptionBadAttribute.h>
+#include <libintelnvm-cim/ExceptionNoMemory.h>
 #include <physical_asset/NVDIMMFactory.h>
 #include "MemoryConfigurationFactory.h"
 

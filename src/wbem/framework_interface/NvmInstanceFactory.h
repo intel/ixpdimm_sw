@@ -34,13 +34,13 @@
 
 #include <lib_interface/NvmApi.h>
 #include <NvmStrings.h>
-#include <intel_cim_framework/Types.h>
+#include <libintelnvm-cim/Types.h>
 
-#include <intel_cim_framework/InstanceFactory.h>
-#include <intel_cim_framework/Exception.h>
-#include <intel_cim_framework/Instance.h>
-#include <intel_cim_framework/ObjectPath.h>
-#include <intel_cim_framework/Attribute.h>
+#include <libintelnvm-cim/InstanceFactory.h>
+#include <libintelnvm-cim/Exception.h>
+#include <libintelnvm-cim/Instance.h>
+#include <libintelnvm-cim/ObjectPath.h>
+#include <libintelnvm-cim/Attribute.h>
 #include <core/system/SystemService.h>
 
 namespace wbem

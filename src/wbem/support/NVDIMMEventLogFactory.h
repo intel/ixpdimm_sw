@@ -35,7 +35,7 @@
 
 #include <string>
 #include <vector>
-#include <intel_cim_framework/WqlConditional.h>
+#include <libintelnvm-cim/WqlConditional.h>
 #include <nvm_management.h>
 
 #include <framework_interface/NvmInstanceFactory.h>

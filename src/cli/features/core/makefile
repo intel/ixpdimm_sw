@@ -79,8 +79,8 @@ INCS = 	-I$(SRC_DIR)/cli \
 
 LIBS = 	-L$(OBJECT_DIR)/common -lcommon \
 		-L$(BUILD_DIR) \
-			-lcliframework \
-			-lcimframework \
+			-l$(CLI_FRAMEWORK_LIB_NAME) \
+			-l$(CIM_FRAMEWORK_LIB_NAME) \
 			-l$(API_LIB_NAME) \
 			-l$(CORE_LIB_NAME) \
 			-l$(CIM_LIB_NAME) \
@@ -100,7 +100,7 @@ CPPFLAGS += $(BUILD_DLL_FLAG)
 
 ifdef INTEL_I18N
 INCS += -I$(I18N_INCLUDE_DIR)
-LIBS += -lIntel_i18n
+LIBS += -l$(I18N_LIB_NAME)
 endif
 # ---- RECIPES -------------------------------------------------------------------------------------
 all :

@@ -43,7 +43,7 @@ OBJECT_MODULE_DIR = $(OBJECT_DIR)/cli
 C_CPP_FLAGS_SRC += -DLOCALE_DOMAIN='"$(LOCALE_DOMAIN)"' -DLOCALE_DIR='"$(LOCALE_DIR)"'
 
 # ---- COMPONENTS ----------------------------------------------------------------------------------
-FRAMEWORK = $(BUILD_DIR)/libcliframework.$(LIB_SUFFIX)
+FRAMEWORK = $(BUILD_DIR)/$(CLI_FRAMEWORK_LIB_BASENAME).$(LIB_SUFFIX)
 FEATURES = $(BUILD_DIR)/$(CLI_LIB_BASENAME).$(LIB_SUFFIX)
 
 # ---- FILES ---------------------------------------------------------------------------------------
@@ -80,8 +80,8 @@ INCS = 	-I$(SRC_DIR)/common \
 
 LIBS =	-L$(OBJECT_DIR)/common -lcommon \
 		-L$(BUILD_DIR) \
-			-lcliframework \
-			-lcimframework \
+			-l$(CLI_FRAMEWORK_LIB_NAME) \
+			-l$(CIM_FRAMEWORK_LIB_NAME) \
 			-l$(API_LIB_NAME) \
 			-l$(CORE_LIB_NAME) \
 			-l$(CIM_LIB_NAME) \
@@ -108,7 +108,7 @@ endif
 
 ifdef INTEL_I18N
 INCS += -I$(I18N_INCLUDE_DIR)
-LIBS += -lIntel_i18n
+LIBS += -l$(I18N_LIB_NAME)
 endif
 # ---- RECIPES -------------------------------------------------------------------------------------
 all :   

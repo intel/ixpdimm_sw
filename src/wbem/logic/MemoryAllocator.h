@@ -38,7 +38,7 @@
 #include "PostLayoutCheck.h"
 #include <lib_interface/NvmApi.h>
 
-#include <intel_cim_framework/Exception.h>
+#include <libintelnvm-cim/Exception.h>
 
 namespace wbem
 {

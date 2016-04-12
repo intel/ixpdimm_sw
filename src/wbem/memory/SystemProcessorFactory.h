@@ -34,7 +34,7 @@
 #define _WBEM_MEMORY_SYSTEM_PROCESSOR_FACTORY_H_
 
 #include <string>
-#include <intel_cim_framework/InstanceFactory.h>
+#include <libintelnvm-cim/InstanceFactory.h>
 
 namespace wbem
 {

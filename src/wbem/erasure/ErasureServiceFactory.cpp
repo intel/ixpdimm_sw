@@ -33,8 +33,8 @@
 #include <LogEnterExit.h>
 #include <nvm_management.h>
 #include <guid/guid.h>
-#include <intel_cim_framework/ExceptionBadParameter.h>
-#include <intel_cim_framework/ObjectPathBuilder.h>
+#include <libintelnvm-cim/ExceptionBadParameter.h>
+#include <libintelnvm-cim/ObjectPathBuilder.h>
 #include <physical_asset/NVDIMMFactory.h>
 #include <software/NVDIMMCollectionFactory.h>
 #include <server/BaseServerFactory.h>

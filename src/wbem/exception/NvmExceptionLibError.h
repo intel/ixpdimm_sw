@@ -34,7 +34,7 @@
 #ifndef	_WBEM_FRAMEWORK_NVMEXCEPTION_LIBERROR_H_
 #define	_WBEM_FRAMEWORK_NVMEXCEPTION_LIBERROR_H_
 
-#include <intel_cim_framework/ExceptionSystemError.h>
+#include <libintelnvm-cim/ExceptionSystemError.h>
 #include <nvm_types.h>
 
 namespace wbem

@@ -33,12 +33,12 @@
 #include <LogEnterExit.h>
 #include <nvm_management.h>
 #include <utility.h>
-#include <intel_cim_framework/Attribute.h>
+#include <libintelnvm-cim/Attribute.h>
 #include <server/BaseServerFactory.h>
 #include <guid/guid.h>
 #include <string/s_str.h>
-#include <intel_cim_framework/ExceptionBadParameter.h>
-#include <intel_cim_framework/ExceptionNoMemory.h>
+#include <libintelnvm-cim/ExceptionBadParameter.h>
+#include <libintelnvm-cim/ExceptionNoMemory.h>
 #include <sstream>
 #include "NamespaceViewFactory.h"
 #include <string.h>

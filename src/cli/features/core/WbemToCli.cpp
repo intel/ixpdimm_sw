@@ -27,10 +27,10 @@
 
 #include "WbemToCli.h"
 #include <LogEnterExit.h>
-#include <intel_cli_framework/Parser.h>
+#include <libintelnvm-cli/Parser.h>
 #include "CommandParts.h"
-#include <intel_cli_framework/SyntaxErrorBadValueResult.h>
-#include <intel_cli_framework/SyntaxErrorMissingValueResult.h>
+#include <libintelnvm-cli/SyntaxErrorBadValueResult.h>
+#include <libintelnvm-cli/SyntaxErrorMissingValueResult.h>
 #include "WbemToCli_utilities.h"
 #include <pmem_config/NamespaceViewFactory.h>
 #include <string/s_str.h>

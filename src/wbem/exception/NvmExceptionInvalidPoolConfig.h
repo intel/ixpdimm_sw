@@ -33,7 +33,7 @@
 #ifndef NVMEXCEPTIONINVALIDPOOLCONFIG_H_
 #define NVMEXCEPTIONINVALIDPOOLCONFIG_H_
 
-#include <intel_cim_framework/Exception.h>
+#include <libintelnvm-cim/Exception.h>
 #include <nvm_types.h>
 
 namespace wbem

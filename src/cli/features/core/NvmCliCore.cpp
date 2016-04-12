@@ -29,7 +29,7 @@
  * DLL entry point for the NVMCLI core features.
  */
 
-#include <intel_cli_framework/Framework.h>
+#include <libintelnvm-cli/Framework.h>
 #include "SystemFeature.h"
 #include "NamespaceFeature.h"
 #include "ValidationFeature.h"

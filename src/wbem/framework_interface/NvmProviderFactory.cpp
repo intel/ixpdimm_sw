@@ -30,7 +30,7 @@
 #include <persistence/logging.h>
 #include <LogEnterExit.h>
 
-#include <intel_cim_framework/ObjectPathBuilder.h>
+#include <libintelnvm-cim/ObjectPathBuilder.h>
 #include <server/BaseServerFactory.h>
 #include <physical_asset/NVDIMMFactory.h>
 #include <memory/RawMemoryFactory.h>

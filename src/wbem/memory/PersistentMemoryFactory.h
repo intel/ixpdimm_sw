@@ -33,7 +33,7 @@
 #ifndef _WBEM_MEMORY_PERSISTENTMEMORY_FACTORY_H_
 #define _WBEM_MEMORY_PERSISTENTMEMORY_FACTORY_H_
 
-#include <intel_cim_framework/Types.h>
+#include <libintelnvm-cim/Types.h>
 #include <server/BaseServerFactory.h>
 #include <nvm_management.h>
 #include <string>

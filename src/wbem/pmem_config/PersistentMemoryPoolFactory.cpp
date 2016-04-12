@@ -32,9 +32,9 @@
 
 #include <string>
 
-#include <intel_cim_framework/ExceptionBadParameter.h>
-#include <intel_cim_framework/ExceptionNoMemory.h>
-#include <intel_cim_framework/ExceptionNotSupported.h>
+#include <libintelnvm-cim/ExceptionBadParameter.h>
+#include <libintelnvm-cim/ExceptionNoMemory.h>
+#include <libintelnvm-cim/ExceptionNotSupported.h>
 #include <server/BaseServerFactory.h>
 #include <LogEnterExit.h>
 #include <nvm_management.h>

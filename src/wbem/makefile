@@ -54,7 +54,7 @@ SUBMODULES = . framework_interface lib_interface exception server memory physica
 	logic support software performance erasure mem_config pmem_config indication pegasus cimom/$(CIMOMBUILD)
 
 UNITTEST = unittest
-FRAMEWORK = $(BUILD_DIR)/libcimframework.$(LIB_SUFFIX)
+FRAMEWORK = $(BUILD_DIR)/$(CIM_FRAMEWORK_LIB_BASENAME).$(LIB_SUFFIX)
 # ---- FILES ---------------------------------------------------------------------------------------
 SRC = $(foreach dir,$(SUBMODULES),$(wildcard $(dir)/*.cpp)) \
 		../monitor/NvmMonitorBase.cpp \
@@ -111,7 +111,7 @@ LIBS = 	-L$(OBJECT_DIR)/common -lcommon \
 		-L$(BUILD_DIR) -l$(CORE_LIB_NAME) \
 		-lsqlite3 \
 		-lssl -lcrypto \
-		-lcimframework
+		-l$(CIM_FRAMEWORK_LIB_NAME)
 
 ifdef BUILD_WINDOWS
 	LIBS += -lws2_32 -lmswsock -lShlwapi
@@ -138,7 +138,7 @@ endif
 
 ifdef INTEL_I18N
 INCS += -I$(I18N_INCLUDE_DIR)
-LIBS += -lIntel_i18n
+LIBS += -l$(I18N_LIB_NAME)
 endif
 # ---- RECIPES -------------------------------------------------------------------------------------
 all :  

@@ -34,7 +34,7 @@
 #include <file_ops/file_ops_adapter.h>
 #include <nvm_management.h>
 #include <LogEnterExit.h>
-#include <intel_cim_framework/ExceptionBadParameter.h>
+#include <libintelnvm-cim/ExceptionBadParameter.h>
 #include "SupportDataServiceFactory.h"
 #include "OpaqueSupportDataFactory.h"
 #include <server/BaseServerFactory.h>

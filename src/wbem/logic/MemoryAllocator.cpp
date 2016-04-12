@@ -47,7 +47,7 @@
 #include <LogEnterExit.h>
 #include "LayoutBuilder.h"
 #include <exception/NvmExceptionLibError.h>
-#include <intel_cim_framework/ExceptionNoMemory.h>
+#include <libintelnvm-cim/ExceptionNoMemory.h>
 #include <nvm_management.h>
 #include <guid/guid.h>
 #include <lib_interface/NvmApi.h>
