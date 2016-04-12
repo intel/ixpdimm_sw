@@ -120,40 +120,10 @@ cli::framework::ErrorResult *cli::nvmcli::WbemToCli::checkPoolGuid(
     try
     {
     	std::vector<struct pool> allPools = wbem::mem_config::PoolViewFactory::getPoolList(true);
-    	// a pool target was specified, make sure it's valid
+    	// validity of the pool target is verified in the API layer
         if (!poolTarget.empty())
         {
-        	// bad pool length
-			if (poolTarget.length() + 1 != COMMON_GUID_STR_LEN)
-			{
-				pResult = new framework::SyntaxErrorBadValueResult(
-						framework::TOKENTYPE_TARGET, TARGET_POOL.name, poolTarget);
-			}
-			// check if the pool exists
-			else
-			{
-				bool found = false;
-				for (std::vector<struct pool>::const_iterator iter = allPools.begin();
-						iter != allPools.end(); iter++)
-				{
-					NVM_GUID_STR guidStr;
-					guid_to_str((*iter).pool_guid, guidStr);
-					if (strncmp(guidStr, poolTarget.c_str(), NVM_GUIDSTR_LEN) == 0)
-					{
-						found = true;
-						break;
-					}
-				}
-				if (!found)
-				{
-					pResult = new framework::SyntaxErrorBadValueResult(
-							framework::TOKENTYPE_TARGET, TARGET_POOL.name, poolTarget);
-				}
-				else
-				{
-					poolGuid = poolTarget;
-				}
-			}
+        	poolGuid = poolTarget;
         }
         // no pool target was specified.
         else

@@ -1123,12 +1123,9 @@ cli::framework::ErrorResult* cli::nvmcli::NamespaceFeature::nsNvmExceptionToResu
 		{
 		case NVM_ERR_BADPOOL:
 		{
-			char errbuff[NVM_ERROR_LEN];
-			s_snprintf(errbuff, NVM_ERROR_LEN,
-					TRS(BADTARGETERROR_STR),
-					m_poolGuid.c_str(), TARGET_POOL.name.c_str());
-			return new framework::ErrorResult(framework::ResultBase::ERRORCODE_SYNTAX,
-					errbuff);
+			// Use the underlying API error message string
+			return new framework::ErrorResult(framework::ResultBase::ERRORCODE_UNKNOWN,
+					TR(pLibError->what()));
 		}
 		case NVM_ERR_BADBLOCKSIZE:
 		{
