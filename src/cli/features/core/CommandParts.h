@@ -107,6 +107,8 @@ const std::string BAD_REQUEST_MUST_DELETE_NAMESPACES_STR = N_TR("Existing namesp
 const std::string BAD_REQUEST_NOT_SUPPORTED_STR = N_TR("The requested configuration is not supported.");
 const std::string BAD_REQUEST_APP_DIRECT_SETTINGS_NOT_RECOMMENDED_STR = N_TR("The selected App Direct settings are not recommended by the platform BIOS.");
 const std::string BAD_REQUEST_DIMM_SECURITY_STATE = N_TR("This method is not supported by the device in its current security state.");
+const std::string BAD_REQUEST_RESERVE_DIMM_STR = N_TR("Cannot create volatile or persistent "
+		"regions on an " NVM_DIMM_NAME " and have it reserved as a storage device.");
 
 }
 }

@@ -804,6 +804,14 @@ cli::framework::ErrorResult *cli::nvmcli::NvmExceptionToResult(wbem::framework::
 				TRS(BAD_REQUEST_DIMM_SECURITY_STATE), prefix);
 	}
 
+	wbem::exception::NvmExceptionBadRequestReserveDimm *pBadReserveDimmRequest =
+			dynamic_cast<wbem::exception::NvmExceptionBadRequestReserveDimm *>(&e);
+	if (pBadReserveDimmRequest!= NULL)
+	{
+		return new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
+				TRS(BAD_REQUEST_RESERVE_DIMM_STR), prefix);
+	}
+
 	// Generic bad request - all other bad request cases
 	wbem::exception::NvmExceptionBadRequest *pBadRequest =
 			dynamic_cast<wbem::exception::NvmExceptionBadRequest *>(&e);
