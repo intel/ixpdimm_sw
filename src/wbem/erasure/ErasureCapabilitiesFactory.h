@@ -44,8 +44,6 @@ namespace erasure
 {
 	static const std::string ERASURECAPABILITIES_CREATIONCLASSNAME = std::string(NVM_WBEM_PREFIX) + "ErasureCapabilities"; //!< Creation Class Name static
 	static const std::string ERASURECAPABILITIES_ELEMENTNAME = "Erasure Capabilities"; //!< ElementName Value
-	static const std::string ERASURECAPABILITIES_ERASUREMETHOD_QUICK_OVERWRITE = "Quick Overwrite"; //!< ErasureMethod
-	static const std::string ERASURECAPABILITIES_ERASUREMETHOD_MULTI_OVERWRITE = "Multi Overwrite"; //!< ErasureMethod
 	static const std::string ERASURECAPABILITIES_ERASUREMETHOD_CRYPTO_ERASE = "Crypto Erase"; //!< ErasureMethod
 	static const NVM_UINT16 ERASURECAPABILITIES_ELEMENTTYPESSUPPORTED_EXTENT = 3;
 
@@ -80,7 +78,7 @@ class NVM_API ErasureCapabilitiesFactory : public framework_interface::NvmInstan
 
 		/*!
 		 * Implementation of the standard CIM method to retrieve a list of
-		 * object paths.		 
+		 * object paths.
 		 * @return The object path.
 		 */
 		framework::instance_names_t* getInstanceNames() throw (framework::Exception);

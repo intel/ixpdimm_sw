@@ -241,10 +241,10 @@ int NvmApi::unlockDevice(const NVM_GUID deviceGuid, const NVM_PASSPHRASE passphr
 	return nvm_unlock_device(deviceGuid, passphrase, passphraseLen);
 }
 
-int NvmApi::eraseDevice(const NVM_GUID deviceGuid, const erase_type type, const NVM_PASSPHRASE passphrase,
+int NvmApi::eraseDevice(const NVM_GUID deviceGuid, const NVM_PASSPHRASE passphrase,
 				const NVM_SIZE passphraseLen)
 {
-	return nvm_erase_device(deviceGuid, type, passphrase, passphraseLen);
+	return nvm_erase_device(deviceGuid, passphrase, passphraseLen);
 }
 
 int NvmApi::getJobCount()

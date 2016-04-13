@@ -195,11 +195,11 @@ wbem::framework::UINT32 wbem::erasure::ErasureServiceFactory::executeMethod(
 					}
 					NVM_GUID deviceGuid;
 					str_to_guid(deviceGuidStr.c_str(), deviceGuid);
-					eraseDevice(deviceGuidStr, password, eraseType);
+					eraseDevice(deviceGuidStr, password);
 				}
 				else if (elementObject.getClass() == software::NVDIMMCOLLECTION_CREATIONCLASSNAME)
 				{
-					eraseDevice(password, eraseType);
+					eraseDevice(password);
 				}
 			}
 			catch (wbem::exception::NvmExceptionLibError &e)
@@ -262,14 +262,6 @@ wbem::erasure::eraseType wbem::erasure::ErasureServiceFactory::getEraseType(std:
 	{
 		result = ERASETYPE_CRYPTO_ERASE;
 	}
-	else if (erasureMethod == ERASURECAPABILITIES_ERASUREMETHOD_MULTI_OVERWRITE)
-	{
-		result = ERASETYPE_MULTI_OVERWRITE;
-	}
-	else if (erasureMethod == ERASURECAPABILITIES_ERASUREMETHOD_QUICK_OVERWRITE)
-	{
-		result = ERASETYPE_QUICK_OVERWRITE;
-	}
 	else
 	{
 		result = ERASETYPE_UNKNOWN;
@@ -279,7 +271,7 @@ wbem::erasure::eraseType wbem::erasure::ErasureServiceFactory::getEraseType(std:
 }
 
 void wbem::erasure::ErasureServiceFactory::eraseDevice(std::string deviceGuid,
-		std::string password, enum wbem::erasure::eraseType eraseType)
+		std::string password)
 throw (wbem::framework::Exception)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -291,20 +283,19 @@ throw (wbem::framework::Exception)
 	NVM_GUID guid;
 	str_to_guid(deviceGuid.c_str(), guid);
 
-	int rc = m_eraseDevice(guid, (enum erase_type)eraseType, password.c_str(), password.length());
+	int rc = m_eraseDevice(guid, password.c_str(), password.length());
 	if (rc != NVM_SUCCESS)
 	{
 		throw exception::NvmExceptionLibError(rc);
 	}
 }
 
-void wbem::erasure::ErasureServiceFactory::eraseDevice(std::string password,
-		enum wbem::erasure::eraseType eraseType)
+void wbem::erasure::ErasureServiceFactory::eraseDevice(std::string password)
 throw (framework::Exception)
 {
 	std::vector<std::string> devices = m_GetManageableDeviceGuids();
 	for (size_t i = 0; i < devices.size(); i++)
 	{
-		eraseDevice(devices[i], password, eraseType);
+		eraseDevice(devices[i], password);
 	}
 }

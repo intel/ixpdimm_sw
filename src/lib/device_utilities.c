@@ -543,8 +543,7 @@ NVM_BOOL device_is_encryption_enabled(enum lock_state lock_state)
 NVM_BOOL device_is_erase_capable(struct device_security_capabilities security_capabilities)
 {
 	NVM_BOOL is_erase_capable = 0;
-	if ((security_capabilities.erase_overwrite_capable) ||
-		(security_capabilities.erase_crypto_capable))
+	if (security_capabilities.erase_crypto_capable)
 	{
 		is_erase_capable = 1;
 	}
@@ -592,14 +591,6 @@ void map_sku_security_capabilities(unsigned int dimm_sku,
 		p_security_capabilities->passphrase_capable = 1;
 		p_security_capabilities->unlock_device_capable = 1;
 		p_security_capabilities->erase_crypto_capable = 1;
-	}
-
-	// OVERWRITE (3/19/15): Overwrite has been removed however it may come back.
-	// So this 'special' SKU is used to allow testing of code that actually isn't executable by
-	// the API.
-	if (dimm_sku == 0xAAAA)
-	{
-		p_security_capabilities->erase_overwrite_capable = 1;
 	}
 }
 

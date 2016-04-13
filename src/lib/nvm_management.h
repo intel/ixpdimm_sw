@@ -448,16 +448,6 @@ enum config_goal_status
 };
 
 /*
- * Types of device erases
- */
-enum erase_type
-{
-	ERASE_TYPE_QUICK_OVERWRITE = 0, // overwrite, 1 pass, all zeros, no invert
-	ERASE_TYPE_MULTI_OVERWRITE = 1, // overwrite, 3 passes, all zeros, with invert
-	ERASE_TYPE_CRYPTO = 2 // crypto scramble erase
-};
-
-/*
  *  * Status of NVM jobs
  */
 enum nvm_job_status
@@ -550,7 +540,6 @@ struct device_security_capabilities
 {
 	NVM_BOOL passphrase_capable; // AEP DIMM supports the nvm_(set|remove)_passphrase command
 	NVM_BOOL unlock_device_capable;  // AEP DIMM supports the nvm_unlock_device command
-	NVM_BOOL erase_overwrite_capable;  // AEP DIMM supports nvm_erase command with the OVERWRITE
 	NVM_BOOL erase_crypto_capable;  // AEP DIMM supports nvm_erase command with the CRYPTO
 };
 
@@ -1805,7 +1794,7 @@ extern NVM_API int nvm_unlock_device(const NVM_GUID device_guid,
  * 		#NVM_ERR_UNKNOWN @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
-extern NVM_API int nvm_erase_device(const NVM_GUID device_guid, const enum erase_type type,
+extern NVM_API int nvm_erase_device(const NVM_GUID device_guid,
 		const NVM_PASSPHRASE passphrase, const NVM_SIZE passphrase_len);
 
 /*

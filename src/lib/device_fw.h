@@ -376,14 +376,6 @@ enum get_sec_info_subop {
  * Defines the Sub-Opcodes for PT_SET_SEC_INFO
  */
 enum set_sec_info_subop {
-	/* sanitize by overwriting PM */
-	SUBOP_OVERWRITE_DIMM = 0x01,
-	/* sanitize by deleting and regenerating PMRK */
-	SUBOP_CRYPTO_SCRAMBLE = 0x02,
-	/* put DIMM into sanitize frozen state */
-	SUBOP_SANITIZE_FREEZE_LOCK = 0x03,
-	/* reject all sanitize freeze lock commands */
-	SUBOP_SANITIZE_ANTIFREEZE_LOCK = 0x04,
 	/* Changes the security administrator passphrase */
 	SUBOP_SET_PASS = 0xF1,
 	/* Disables the current password on a drive*/
@@ -612,20 +604,6 @@ struct pt_payload_secure_erase_unit {
 	char passphrase_current[DEV_PASSPHRASE_LEN];
 	unsigned char invert_pattern_flag;
 	char reserved[3];
-} __attribute__((packed));
-
-#define	OVERWRITE_DIMM_INVERT_FLAG	0x10
-/*
- * Passthrough Payload:
- *		Opcode:		0x03h (Set Security Info)
- *		Sub-Opcode:	0x01h (Overwrite DIMM)
- *	Small Input Payload
- */
-struct pt_payload_overwrite_dimm {
-	unsigned int pattern;	/* pattern to write */
-	unsigned int options;	/* bits 3:0 -  overwrite pas count */
-							/* bit 4 - invert pattern flag */
-							/* bits 7:5 - reserved */
 } __attribute__((packed));
 
 /*

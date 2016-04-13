@@ -304,12 +304,6 @@ bool Device::isUnlockDeviceCapable()
 	return getDiscovery().security_capabilities.unlock_device_capable;
 }
 
-bool Device::isEraseOverwriteCapable()
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	return getDiscovery().security_capabilities.erase_overwrite_capable;
-}
-
 bool Device::isEraseCryptoCapable()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);

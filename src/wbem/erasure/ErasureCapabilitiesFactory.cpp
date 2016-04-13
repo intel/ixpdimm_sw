@@ -86,12 +86,10 @@ throw (wbem::framework::Exception)
 			pInstance->setAttribute(ELEMENTNAME_KEY, a, attributes);
 		}
 
-		// ErasureMethods - "Quick Overwrite", "Multi Overwrite", "Crypto Erase"
+		// ErasureMethods - "Crypto Erase"
 		if (containsAttribute(ERASUREMETHODS_KEY, attributes))
 		{
 			framework::STR_LIST methods;
-			methods.push_back(ERASURECAPABILITIES_ERASUREMETHOD_QUICK_OVERWRITE);
-			methods.push_back(ERASURECAPABILITIES_ERASUREMETHOD_MULTI_OVERWRITE);
 			methods.push_back(ERASURECAPABILITIES_ERASUREMETHOD_CRYPTO_ERASE);
 
 			framework::Attribute a(methods, false);

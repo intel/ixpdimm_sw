@@ -53,14 +53,12 @@ namespace erasure
 	static const std::string ERASURESERVICE_ERASEDEVICE_PASSWORD = "Password"; //!< EraseDevice Method param
 
 	/*
-	 * WBEM version of API erase_type so can be exposed to CLI. Keep aligned with API 
+	 * WBEM version of API erase_type so can be exposed to CLI. Keep aligned with API
 	 * erase_type values to make conversion easier.
 	 */
 	enum eraseType
 	{
 		ERASETYPE_UNKNOWN = 99,
-		ERASETYPE_QUICK_OVERWRITE = 0,
-		ERASETYPE_MULTI_OVERWRITE = 1,
 		ERASETYPE_CRYPTO_ERASE = 2
 	};
 
@@ -100,7 +98,7 @@ class NVM_API ErasureServiceFactory : public framework_interface::NvmInstanceFac
 
 		/*!
 		 * Implementation of the standard CIM method to retrieve a list of
-		 * object paths.		 
+		 * object paths.
 		 * @return The object path.
 		 */
 		framework::instance_names_t* getInstanceNames() throw (framework::Exception);
@@ -120,8 +118,7 @@ class NVM_API ErasureServiceFactory : public framework_interface::NvmInstanceFac
 		 * @param password
 		 * 		Password to the device
 		 */
-		void eraseDevice(std::string deviceGuid, std::string password,
-				enum wbem::erasure::eraseType eraseType)
+		void eraseDevice(std::string deviceGuid, std::string password)
 				throw (framework::Exception);
 
 		/*!
@@ -129,8 +126,7 @@ class NVM_API ErasureServiceFactory : public framework_interface::NvmInstanceFac
 		 * @param password
 		 * 		Password to the device
 		 */
-		void eraseDevice(std::string password,
-				enum wbem::erasure::eraseType eraseType)
+		void eraseDevice(std::string password)
 				throw (framework::Exception);
 
 		/*!
@@ -141,7 +137,6 @@ class NVM_API ErasureServiceFactory : public framework_interface::NvmInstanceFac
 		 * @return
 		 */
 		int (*m_eraseDevice)(const NVM_GUID device_guid,
-				const enum erase_type eraseType,
 				const NVM_PASSPHRASE passphrase, const NVM_SIZE passphrase_len);
 
 		/*!

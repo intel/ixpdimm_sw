@@ -198,12 +198,12 @@ int LibWrapper::unlockDevice(const NVM_GUID deviceGuid, const NVM_PASSPHRASE pas
 	return nvm_unlock_device(deviceGuid, passphrase, passphraseLen);
 }
 
-int LibWrapper::eraseDevice(const NVM_GUID deviceGuid, const erase_type type,
+int LibWrapper::eraseDevice(const NVM_GUID deviceGuid,
 	const NVM_PASSPHRASE passphrase,
 	const NVM_SIZE passphraseLen) const
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
-	return nvm_erase_device(deviceGuid, type, passphrase, passphraseLen);
+	return nvm_erase_device(deviceGuid, passphrase, passphraseLen);
 }
 
 int LibWrapper::getJobCount() const

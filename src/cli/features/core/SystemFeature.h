@@ -68,8 +68,6 @@ static const std::string NEWPASSPHRASE_PROPERTYNAME = "NewPassphrase"; //!< New 
 static const std::string CONFIRMPASSPHRASE_PROPERTYNAME = "ConfirmPassphrase"; //!< Confirm Passphrase Property
 static const std::string ERASETYPE_PROPERTYNAME = "EraseType"; //!< which type of erase
 static const std::string ERASETYPE_PROPERTY_CRYPTO = "crypto"; //!< which type of erase
-static const std::string ERASETYPE_PROPERTY_QUICKOVERWRITE = "quickoverwrite"; //!< which type of erase
-static const std::string ERASETYPE_PROPERTYNAME_MULTIOVERWRITE = "multioverwrite"; //!< which type of erase
 
 static const std::string MODIFYDEVICE_MSG = N_TR("Modify " NVM_DIMM_NAME ""); //!< Modify NVM-DIMM message
 static const std::string SETFWLOGGING_MSG = N_TR("Set firmware log level on " NVM_DIMM_NAME); //!< Set fw logging message

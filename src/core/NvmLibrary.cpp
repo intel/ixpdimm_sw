@@ -502,7 +502,7 @@ void NvmLibrary::unlockDevice(const std::string &deviceGuid, const std::string p
 
 }
 
-void NvmLibrary::eraseDevice(const std::string &deviceGuid, const erase_type type,
+void NvmLibrary::eraseDevice(const std::string &deviceGuid,
 	const std::string passphrase)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -514,7 +514,7 @@ void NvmLibrary::eraseDevice(const std::string &deviceGuid, const erase_type typ
 	char lib_passphrase[passphrase.size()];
 	s_strcpy(lib_passphrase, passphrase.c_str(), passphrase.size());
 
-	rc = m_lib.eraseDevice(lib_deviceGuid, type, lib_passphrase, passphrase.size());
+	rc = m_lib.eraseDevice(lib_deviceGuid, lib_passphrase, passphrase.size());
 	if (rc < 0)
 	{
 		throw core::LibraryException(rc);

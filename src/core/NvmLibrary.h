@@ -72,7 +72,7 @@ public:
 		const std::string newPassphrase);
 	virtual void removePassphrase(const std::string &deviceGuid, const std::string passphrase);
 	virtual void unlockDevice(const std::string &deviceGuid, const std::string passphrase);
-	virtual void eraseDevice(const std::string &deviceGuid, const enum erase_type type,
+	virtual void eraseDevice(const std::string &deviceGuid,
 		const std::string passphrase);
 	virtual int getJobCount();
 	virtual std::vector<struct job> getJobs();

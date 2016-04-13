@@ -1018,8 +1018,6 @@ NVM_BOOL dimm_security_skus_are_different(const struct device_discovery *p_devic
 
 	if ((p_device1->security_capabilities.erase_crypto_capable !=
 			p_device2->security_capabilities.erase_crypto_capable) ||
-			(p_device1->security_capabilities.erase_overwrite_capable !=
-					p_device2->security_capabilities.erase_overwrite_capable) ||
 			(p_device1->security_capabilities.passphrase_capable !=
 					p_device2->security_capabilities.passphrase_capable) ||
 			(p_device1->security_capabilities.unlock_device_capable !=

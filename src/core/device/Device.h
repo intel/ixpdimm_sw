@@ -104,7 +104,6 @@ public:
 	virtual NVM_UINT16 getInterfaceFormatCode();
 	virtual bool isPassphraseCapable();
 	virtual bool isUnlockDeviceCapable();
-	virtual bool isEraseOverwriteCapable();
 	virtual bool isEraseCryptoCapable();
 	virtual std::vector<NVM_UINT16> getSecurityCapabilities();
 	virtual enum lock_state getLockState();

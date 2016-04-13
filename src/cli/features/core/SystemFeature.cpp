@@ -188,10 +188,6 @@ void cli::nvmcli::SystemFeature::getPaths(cli::framework::CommandSpecList &list)
 	eraseDeviceData.addProperty(PASSPHRASE_PROPERTYNAME, true, STRING_PARAM, false,
 			TR("The current passphrase (1-32 characters). "
 			"Required if security is enabled on the " NVM_DIMM_NAME "."));
-// OVERWRITE (3/19/15): Overwrite has been removed however it may come back.
-//	eraseDeviceData.addProperty(ERASETYPE_PROPERTYNAME, false,
-//			"Crypto|MultiOverwrite|QuickOverwrite", true,
-//			TR("The type of erase to be performed. Crypto is default if not specified."));
 
 	framework::CommandSpec showMemoryResources(SHOW_MEMORYRESOURCES, TR("Show Memory Resources"), framework::VERB_SHOW,
 			TR("Show the total " NVM_DIMM_NAME " memory resource allocation across the host server."));
@@ -970,76 +966,47 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::eraseDeviceData(
 
 		if (!pResults)
 		{
-			wbem::erasure::eraseType eraseType = wbem::erasure::ERASETYPE_CRYPTO_ERASE;
-			bool eraseTypeExists = false;
-			std::string eraseTypeString = framework::Parser::getPropertyValue(parsedCommand,
-					ERASETYPE_PROPERTYNAME, &eraseTypeExists);
 
-			if (eraseTypeExists)
+			wbem::erasure::ErasureServiceFactory erasureProvider;
+			framework::SimpleListResult *pListResults = new framework::SimpleListResult();
+			pResults = pListResults;
+
+			for (std::vector<std::string>::const_iterator dimmIter = dimms.begin();
+					dimmIter != dimms.end(); dimmIter++)
 			{
-				if (cli::framework::stringsIEqual(eraseTypeString, ERASETYPE_PROPERTY_CRYPTO))
+				std::string dimmStr = wbem::physical_asset::NVDIMMFactory::guidToDimmIdStr((*dimmIter));
+				std::string prefix = cli::framework::ResultBase::stringFromArgList((basePrefix + " %s").c_str(),
+						dimmStr.c_str());
+				prefix += ": ";
+				try
 				{
-					eraseType = wbem::erasure::ERASETYPE_CRYPTO_ERASE;
-				}
-				else if (cli::framework::stringsIEqual(eraseTypeString, ERASETYPE_PROPERTYNAME_MULTIOVERWRITE))
-				{
-					eraseType = wbem::erasure::ERASETYPE_MULTI_OVERWRITE;
-				}
-				else if (cli::framework::stringsIEqual(eraseTypeString, ERASETYPE_PROPERTY_QUICKOVERWRITE))
-				{
-					eraseType = wbem::erasure::ERASETYPE_QUICK_OVERWRITE;
-				}
-				else
-				{
-					pResults = new cli::framework::SyntaxErrorBadValueResult(
-							framework::TOKENTYPE_PROPERTY, ERASETYPE_PROPERTYNAME, eraseTypeString);
-				}
-			}
+					bool forceOption = parsedCommand.options.find(framework::OPTION_FORCE.name)
+										!= parsedCommand.options.end();
 
-			if (pResults == NULL)
-			{
-				wbem::erasure::ErasureServiceFactory erasureProvider;
-				framework::SimpleListResult *pListResults = new framework::SimpleListResult();
-				pResults = pListResults;
-
-				for (std::vector<std::string>::const_iterator dimmIter = dimms.begin();
-						dimmIter != dimms.end(); dimmIter++)
-				{
-					std::string dimmStr = wbem::physical_asset::NVDIMMFactory::guidToDimmIdStr((*dimmIter));
-					std::string prefix = cli::framework::ResultBase::stringFromArgList((basePrefix + " %s").c_str(),
-							dimmStr.c_str());
-					prefix += ": ";
-					try
+					// if user didn't specify the force option, prompt them to continue
+					std::string prompt = framework::ResultBase::stringFromArgList(
+							ERASE_DEV_PROMPT.c_str(), dimmStr.c_str());
+					if (!forceOption && !promptUserYesOrNo(prompt))
 					{
-						bool forceOption = parsedCommand.options.find(framework::OPTION_FORCE.name)
-											!= parsedCommand.options.end();
-
-						// if user didn't specify the force option, prompt them to continue
-						std::string prompt = framework::ResultBase::stringFromArgList(
-								ERASE_DEV_PROMPT.c_str(), dimmStr.c_str());
-						if (!forceOption && !promptUserYesOrNo(prompt))
-						{
-							pListResults->insert(prefix + cli::framework::UNCHANGED_MSG);
-						}
-						else
-						{
-							erasureProvider.eraseDevice((*dimmIter), passphrase,
-									eraseType);
-
-							pListResults->insert(prefix + TRS(cli::framework::SUCCESS_MSG));
-						}
+						pListResults->insert(prefix + cli::framework::UNCHANGED_MSG);
 					}
-					catch (wbem::framework::Exception &e)
+					else
 					{
-						cli::framework::ErrorResult *eResult = NvmExceptionToResult(e);
-						if (eResult)
-						{
-							pListResults->insert(prefix + eResult->outputText());
-							pListResults->setErrorCode(eResult->getErrorCode());
-							delete eResult;
-						}
-						break; // don't continue on failure
+						erasureProvider.eraseDevice((*dimmIter), passphrase);
+
+						pListResults->insert(prefix + TRS(cli::framework::SUCCESS_MSG));
 					}
+				}
+				catch (wbem::framework::Exception &e)
+				{
+					cli::framework::ErrorResult *eResult = NvmExceptionToResult(e);
+					if (eResult)
+					{
+						pListResults->insert(prefix + eResult->outputText());
+						pListResults->setErrorCode(eResult->getErrorCode());
+						delete eResult;
+					}
+					break; // don't continue on failure
 				}
 			}
 		}

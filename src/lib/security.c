@@ -139,26 +139,6 @@ int security_change_prepare(struct device_discovery *p_discovery,
 	return rc;
 }
 
-int overwrite_crypto_change_prepare(struct device_discovery *p_discovery)
-{
-	COMMON_LOG_ENTRY();
-	int rc = NVM_SUCCESS;
-	NVM_GUID_STR guid_str;
-
-	// Do not proceed if frozen
-	if (p_discovery->lock_state == LOCK_STATE_FROZEN)
-	{
-		guid_to_str(p_discovery->guid, guid_str);
-		COMMON_LOG_ERROR_F("Failed to modify security on device %s \
-				because security is frozen",
-				guid_str);
-		rc = NVM_ERR_SECURITYFROZEN;
-	}
-
-	COMMON_LOG_EXIT_RETURN_I(rc);
-	return rc;
-}
-
 /*
  * Check a passphrase for validity.
  * There are no restrictions on passphrase characters, just min and max length.
@@ -445,115 +425,6 @@ int nvm_unlock_device(const NVM_GUID device_guid,
 }
 
 /*
- * Helper method to make the overwrite erase call.
- */
-int overwrite_dimm(NVM_BOOL quick, struct device_discovery *p_discovery)
-{
-	int rc = NVM_ERR_UNKNOWN;
-
-	// Set up the payload
-	struct pt_payload_overwrite_dimm input_payload;
-	memset(&input_payload, 0, sizeof (struct pt_payload_overwrite_dimm));
-	input_payload.pattern = 0;  // pattern is all zeros
-	NVM_UINT32 num_passes = 0;
-	if (quick)
-	{
-		num_passes = 1; // one pass, no invert for quick
-	}
-	else
-	{
-		num_passes = 3; // three passes, with invert for multi
-		input_payload.options |= OVERWRITE_DIMM_INVERT_FLAG;
-	}
-	input_payload.options |= num_passes;
-
-	struct fw_cmd cmd;
-	memset(&cmd, 0, sizeof (struct fw_cmd));
-	cmd.device_handle = p_discovery->device_handle.handle;
-	cmd.opcode = PT_SET_SEC_INFO;
-	cmd.sub_opcode = SUBOP_OVERWRITE_DIMM;
-	cmd.input_payload_size = sizeof (input_payload);
-	cmd.input_payload = &input_payload;
-
-	// try to send the overwrite cimm command combo up to 5 times
-	int count = 0;
-	do
-	{
-		rc = ioctl_passthrough_cmd(&cmd);
-		s_memset(&input_payload, sizeof (input_payload));
-
-		count++;
-	}
-	while (rc == NVM_ERR_DEVICEBUSY && count < 5);
-
-	// log event if it succeeded
-	if (rc == NVM_SUCCESS)
-	{
-		// arg 1: GUID as string
-		NVM_GUID_STR guid_str;
-		guid_to_str(p_discovery->guid, guid_str);
-
-		// arg 2: Number of passes as string
-		NVM_EVENT_ARG num_passes_str;
-		s_snprintf(num_passes_str, NVM_EVENT_ARG_LEN, "%u", num_passes);
-
-		store_event_by_parts(EVENT_TYPE_MGMT,
-				EVENT_SEVERITY_INFO,
-				EVENT_CODE_MGMT_SANITIZE_OVERWRITE,
-				p_discovery->guid,
-				0, // no action required
-				guid_str,
-				num_passes_str,
-				NULL,
-				DIAGNOSTIC_RESULT_UNKNOWN);
-	}
-
-	return rc;
-}
-
-/*
- * Helper method to make the crypto scramble erase call.
- */
-int crypto_scramble_dimm(struct device_discovery *p_discovery)
-{
-	int rc = NVM_ERR_UNKNOWN;
-	// try to send the crypto scramble erase command combo up to 5 times
-	int count = 0;
-	do
-	{
-		struct fw_cmd cmd;
-		memset(&cmd, 0, sizeof (struct fw_cmd));
-		cmd.device_handle = p_discovery->device_handle.handle;
-		cmd.opcode = PT_SET_SEC_INFO;
-		cmd.sub_opcode = SUBOP_CRYPTO_SCRAMBLE;
-		rc = ioctl_passthrough_cmd(&cmd);
-
-		count++;
-	}
-	while (rc == NVM_ERR_DEVICEBUSY && count < 5);
-
-	// log event if it succeeded
-	if (rc == NVM_SUCCESS)
-	{
-		// arg 1: GUID as string
-		NVM_GUID_STR guid_str;
-		guid_to_str(p_discovery->guid, guid_str);
-
-		store_event_by_parts(EVENT_TYPE_MGMT,
-				EVENT_SEVERITY_INFO,
-				EVENT_CODE_MGMT_SANITIZE_CRYPTOSCRAMBLE,
-				p_discovery->guid,
-				0, // no action required
-				guid_str,
-				NULL,
-				NULL,
-				DIAGNOSTIC_RESULT_UNKNOWN);
-	}
-
-	return rc;
-}
-
-/*
  * Helper method to make secure erase call
  */
 int secure_erase(const NVM_PASSPHRASE passphrase,
@@ -608,7 +479,7 @@ int secure_erase(const NVM_PASSPHRASE passphrase,
 /*
  * Erases the data on the device specified.
  */
-int nvm_erase_device(const NVM_GUID device_guid, const enum erase_type type,
+int nvm_erase_device(const NVM_GUID device_guid,
 		const NVM_PASSPHRASE passphrase, const NVM_SIZE passphrase_len)
 {
 	COMMON_LOG_ENTRY();
@@ -631,85 +502,28 @@ int nvm_erase_device(const NVM_GUID device_guid, const enum erase_type type,
 	}
 	else if ((rc = exists_and_manageable(device_guid, &discovery, 1)) == NVM_SUCCESS)
 	{
-		switch (type)
+		if (discovery.security_capabilities.passphrase_capable)
 		{
-			case ERASE_TYPE_QUICK_OVERWRITE:
-				if (!discovery.security_capabilities.erase_overwrite_capable)
-				{
-					COMMON_LOG_ERROR("Invalid parameter. "
-							"Quick overwrite is not valid in the current security state");
-					rc = NVM_ERR_NOTSUPPORTED;
-				}
-				else
-				{
-					// verify device is in the right state to accept an overwrite
-					if ((rc = overwrite_crypto_change_prepare(&discovery)) == NVM_SUCCESS)
-					{
-						rc = overwrite_dimm(1, &discovery);
-						// clear any device context - security state has likely changed
-						invalidate_devices();
-					}
-				}
-				break;
-			case ERASE_TYPE_MULTI_OVERWRITE:
-				if (!discovery.security_capabilities.erase_overwrite_capable)
-				{
-					COMMON_LOG_ERROR("Invalid parameter. "
-							"Multi overwrite is not valid in the current security state");
-					rc = NVM_ERR_NOTSUPPORTED;
-				}
-				else
-				{
-					// verify device is in the right state to accept an overwrite
-					if ((rc = overwrite_crypto_change_prepare(&discovery)) == NVM_SUCCESS)
-					{
-						rc = overwrite_dimm(0, &discovery);
-						// clear any device context - security state has likely changed
-						invalidate_devices();
-					}
-
-				}
-				break;
-			case ERASE_TYPE_CRYPTO:
-				// if secure erase capable, choose that one first
-				if (discovery.security_capabilities.passphrase_capable)
-				{
-					// check passphrase length
-					if (passphrase_len > NVM_PASSPHRASE_LEN)
-					{
-						rc = NVM_ERR_BADPASSPHRASE;
-					}
-					// verify device is in the right state to accept a secure erase
-					else if ((rc =
-							security_change_prepare(&discovery, passphrase, passphrase_len, 1))
-							== NVM_SUCCESS)
-					{
-						rc = secure_erase(passphrase, passphrase_len, &discovery);
-						// clear any device context - security state has likely changed
-						invalidate_devices();
-					}
-				}
-				else if (discovery.security_capabilities.erase_crypto_capable)
-				{
-					// verify device is in the right state to accept a crypto scramble
-					if ((rc = overwrite_crypto_change_prepare(&discovery)) == NVM_SUCCESS)
-					{
-						rc = crypto_scramble_dimm(&discovery);
-						// clear any device context - security state has likely changed
-						invalidate_devices();
-					}
-				}
-				else
-				{
-					COMMON_LOG_ERROR("Invalid parameter. "
-							"Crypto scramble erase is not valid in the current security state");
-					rc = NVM_ERR_INVALIDPARAMETER;
-				}
-				break;
-			default:
-				COMMON_LOG_ERROR("Invalid erase type");
-				rc = NVM_ERR_INVALIDPARAMETER;
-				break;
+			// check passphrase length
+			if (passphrase_len > NVM_PASSPHRASE_LEN)
+			{
+				rc = NVM_ERR_BADPASSPHRASE;
+			}
+			// verify device is in the right state to accept a secure erase
+			else if ((rc =
+					security_change_prepare(&discovery, passphrase, passphrase_len, 1))
+					== NVM_SUCCESS)
+			{
+				rc = secure_erase(passphrase, passphrase_len, &discovery);
+				// clear any device context - security state has likely changed
+				invalidate_devices();
+			}
+		}
+		else
+		{
+			COMMON_LOG_ERROR("Invalid parameter. "
+					"Crypto scramble erase is not valid in the current security state");
+			rc = NVM_ERR_INVALIDPARAMETER;
 		}
 	}
 

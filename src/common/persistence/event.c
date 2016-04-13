@@ -135,10 +135,6 @@ const char *EVENT_MESSAGES_MGMT[EVENT_CODE_MGMT_UNKNOWN -
 	N_TR("The "NVM_DIMM_NAME" driver has been uninstalled."),
 	// EVENT_CODE_MGMT_PERMIT_APPLIED
 	N_TR("A permit has been applied."),
-	// EVENT_CODE_MGMT_SANITIZE_OVERWRITE
-	N_TR("The persistent data on "NVM_DIMM_NAME" %s has been erased by overwriting it %s times."),
-	// EVENT_CODE_MGMT_SANITIZE_CRYPTOSCRAMBLE
-	N_TR("The persistent data on "NVM_DIMM_NAME" %s has been erased by crypto-scrambling it."),
 	// EVENT_CODE_MGMT_SECURITY_SECURE_ERASE
 	N_TR("The persistent data on "NVM_DIMM_NAME" %s has been securely erased."),
 

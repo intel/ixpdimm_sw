@@ -187,7 +187,7 @@ class NVM_API NvmApi
 		/*
 		 * Erase persistent data on the specified NVM-DIMM
 		 */
-		virtual int eraseDevice(const NVM_GUID deviceGuid, const erase_type type, const NVM_PASSPHRASE passphrase,
+		virtual int eraseDevice(const NVM_GUID deviceGuid, const NVM_PASSPHRASE passphrase,
 				const NVM_SIZE passphraseLen);
 
 		/*
