@@ -303,7 +303,7 @@ int get_topology_count()
 
 	// If NvmdimmCount is not equal to the number of NVDIMMS found internally by the driver
 	// during device enumeration, this var is set to the exact value expected by the driver
-	ioctl_data.InputPayload.NvdimmCount = 0;
+	ioctl_data.InputPayload.TopologiesCount = 0;
 
 	if ((rc = execute_ioctl(buf_size, &ioctl_data, IOCTL_CR_GET_TOPOLOGY)) == NVM_SUCCESS)
 	{
@@ -314,7 +314,7 @@ int get_topology_count()
 				ioctl_data.ReturnCode == CR_RETURN_CODE_BUFFER_UNDERRUN ||
 				ioctl_data.ReturnCode == CR_RETURN_CODE_SUCCESS)
 		{
-			rc = (int)ioctl_data.InputPayload.NvdimmCount;
+			rc = (int)ioctl_data.InputPayload.TopologiesCount;
 		}
 		else
 		{
@@ -345,12 +345,12 @@ int get_topology(const NVM_UINT8 count, struct nvm_topology *p_dimm_topo)
 		int actual_count = rc;
 
 		size_t buf_size = sizeof (CR_GET_TOPOLOGY_IOCTL) +
-				(actual_count - 1) * sizeof (CR_NVM_TOPOLOGY);
+				(actual_count - 1) * sizeof (NVDIMM_TOPOLOGY);
 		CR_GET_TOPOLOGY_IOCTL *p_ioctl_data = calloc(1, buf_size);
 
 		if (p_ioctl_data)
 		{
-			p_ioctl_data->InputPayload.NvdimmCount = actual_count;
+			p_ioctl_data->InputPayload.TopologiesCount = actual_count;
 
 			if ((rc = execute_ioctl(buf_size, p_ioctl_data, IOCTL_CR_GET_TOPOLOGY))
 				== NVM_SUCCESS &&
@@ -377,17 +377,17 @@ int get_topology(const NVM_UINT8 count, struct nvm_topology *p_dimm_topo)
 					for (int i = 0; i < return_count; i++)
 					{
 						p_dimm_topo[i].device_handle.handle =
-							p_ioctl_data->OutputPayload.Topology[i].
+							p_ioctl_data->OutputPayload.TopologiesList[i].
 								NfitDeviceHandle.DeviceHandle;
-						p_dimm_topo[i].id = p_ioctl_data->OutputPayload.Topology[i].Id;
+						p_dimm_topo[i].id = p_ioctl_data->OutputPayload.TopologiesList[i].Id;
 						p_dimm_topo[i].vendor_id =
-							p_ioctl_data->OutputPayload.Topology[i].VendorId;
+							p_ioctl_data->OutputPayload.TopologiesList[i].VendorId;
 						p_dimm_topo[i].device_id =
-							p_ioctl_data->OutputPayload.Topology[i].DeviceId;
+							p_ioctl_data->OutputPayload.TopologiesList[i].DeviceId;
 						p_dimm_topo[i].revision_id =
-							p_ioctl_data->OutputPayload.Topology[i].RevisionId;
+							p_ioctl_data->OutputPayload.TopologiesList[i].RevisionId;
 						p_dimm_topo[i].fmt_interface_code =
-							p_ioctl_data->OutputPayload.Topology[i].FmtInterfaceCode;
+							p_ioctl_data->OutputPayload.TopologiesList[i].FmtInterfaceCode;
 
 						int mem_type = get_device_memory_type_from_smbios_table(
 								p_smbios_table, smbios_table_size,
