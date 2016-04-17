@@ -541,6 +541,7 @@ int get_driver_capabilities(struct nvm_driver_capabilities *p_capabilities)
 				p_capabilities->block_sizes[i] =
 						ioctl_data.OutputPayload.Capabilities.BlockSizes[i];
 			}
+			p_capabilities->namespace_memory_page_allocation_capable = 0;
 
 			p_capabilities->features.get_platform_capabilities = 1;
 			p_capabilities->features.get_topology =

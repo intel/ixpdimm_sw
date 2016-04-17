@@ -276,4 +276,18 @@ enum namespace_enable_state
 	NAMESPACE_ENABLE_STATE_DISABLED = 3 // Hidden from OS
 };
 
+/*
+ * Where the capacity is allocated from for the underlying OS structures
+ * if access to the AppDirect namespace capacity is supported using
+ * legacy memory page protocols such as DMA/RDMA
+ */
+enum namespace_memory_page_allocation
+{
+	NAMESPACE_MEMORY_PAGE_ALLOCATION_UNKNOWN = 0, // Cannot be determined
+	NAMESPACE_MEMORY_PAGE_ALLOCATION_NONE, // No support to access NS using memory page protocols
+	NAMESPACE_MEMORY_PAGE_ALLOCATION_DRAM, // Capacity is allocated from DRAM
+	NAMESPACE_MEMORY_PAGE_ALLOCATION_APP_DIRECT // Capacity is allocated from the NS itself
+
+};
+
 #endif /* NVM_TYPES_H_ */

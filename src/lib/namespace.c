@@ -280,6 +280,7 @@ int nvm_get_namespace_details(const NVM_GUID namespace_guid, struct namespace_de
 			p_namespace->health = nvm_details.health;
 			p_namespace->enabled = nvm_details.enabled;
 			p_namespace->btt = nvm_details.btt;
+			p_namespace->memory_page_allocation = nvm_details.memory_page_allocation;
 
 			int temprc;
 			if (p_namespace->type == NAMESPACE_TYPE_APP_DIRECT)
@@ -1018,6 +1019,12 @@ int validate_ns_type_for_pool(enum namespace_type type, const struct pool *p_poo
 	return rc;
 }
 
+int allocatedPageStructsAreInDramOrPmem(struct namespace_create_settings *p_settings)
+{
+	return ((p_settings->memory_page_allocation == NAMESPACE_MEMORY_PAGE_ALLOCATION_DRAM) ||
+	(p_settings->memory_page_allocation == NAMESPACE_MEMORY_PAGE_ALLOCATION_APP_DIRECT));
+}
+
 /*
  * Helper function to validate namespace settings
  * Also determines namespace_creation_id to be used by the driver
@@ -1048,25 +1055,50 @@ int validate_namespace_create_settings(struct pool *p_pool,
 		if ((rc = get_pool_supported_size_ranges(p_pool, &nvm_caps, &range)) == NVM_SUCCESS)
 		{
 			// can we even create a ns on this pool?
-			if (p_settings->type == NAMESPACE_TYPE_APP_DIRECT &&
-				range.largest_possible_app_direct_ns == 0)
+			if (p_settings->type == NAMESPACE_TYPE_APP_DIRECT)
 			{
-				COMMON_LOG_ERROR("No more App Direct namespaces can be created on the pool");
-				rc = NVM_ERR_TOOMANYNAMESPACES;
+				if (range.largest_possible_app_direct_ns == 0)
+				{
+					COMMON_LOG_ERROR("No more App Direct namespaces can be created on the pool");
+					rc = NVM_ERR_TOOMANYNAMESPACES;
+				}
+				else if ((p_settings->btt) &&
+					(allocatedPageStructsAreInDramOrPmem(p_settings)))
+				{
+					COMMON_LOG_ERROR("Namespace can either be claimed by pfn or btt configuration");
+					rc = NVM_ERR_NOTSUPPORTED;
+				}
+				else if ((allocatedPageStructsAreInDramOrPmem(p_settings)) &&
+					(!nvm_caps.sw_capabilities.namespace_memory_page_allocation_capable))
+				{
+					COMMON_LOG_ERROR("Memory page allocation is not supported.");
+					rc = NVM_ERR_NOTSUPPORTED;
+				}
 			}
-			else if (p_settings->type == NAMESPACE_TYPE_STORAGE &&
-				range.largest_possible_storage_ns == 0)
+			else if (p_settings->type == NAMESPACE_TYPE_STORAGE)
 			{
-				COMMON_LOG_ERROR("No more Storage namespaces can be created on the pool");
-				rc = NVM_ERR_TOOMANYNAMESPACES;
+				if (range.largest_possible_storage_ns == 0)
+				{
+					COMMON_LOG_ERROR("No more Storage namespaces can be created on the pool");
+					rc = NVM_ERR_TOOMANYNAMESPACES;
+				}
+				else if (allocatedPageStructsAreInDramOrPmem(p_settings))
+				{
+					COMMON_LOG_ERROR("storage namespace do not support memory mode");
+					rc = NVM_ERR_NOTSUPPORTED;
+				}
 			}
-			else if ((rc = validate_ns_type_for_pool(p_settings->type, p_pool)) == NVM_SUCCESS &&
-				(rc = validate_ns_enabled_state(p_settings->enabled)) == NVM_SUCCESS &&
-				(rc = validate_ns_size_for_creation(p_pool, p_settings,
-						&nvm_caps, &range)) == NVM_SUCCESS)
+
+			if (rc == NVM_SUCCESS)
 			{
-				rc = find_id_for_ns_creation(p_pool, &nvm_caps, p_settings,
-						p_ns_creation_id, p_format, allow_adjustment);
+				if ((rc = validate_ns_type_for_pool(p_settings->type, p_pool)) == NVM_SUCCESS &&
+					(rc = validate_ns_enabled_state(p_settings->enabled)) == NVM_SUCCESS &&
+					(rc = validate_ns_size_for_creation(p_pool, p_settings,
+							&nvm_caps, &range)) == NVM_SUCCESS)
+				{
+					rc = find_id_for_ns_creation(p_pool, &nvm_caps, p_settings,
+							p_ns_creation_id, p_format, allow_adjustment);
+				}
 			}
 		}
 	}
@@ -1331,6 +1363,7 @@ int nvm_create_namespace(NVM_GUID *p_namespace_guid, const NVM_GUID pool_guid,
 				nvm_settings.block_size = p_settings->block_size;
 				nvm_settings.block_count = p_settings->block_count;
 				nvm_settings.btt = p_settings->btt;
+				nvm_settings.memory_page_allocation = p_settings->memory_page_allocation;
 
 				rc = create_namespace(p_namespace_guid, &nvm_settings);
 				if (rc == NVM_SUCCESS)

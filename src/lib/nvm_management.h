@@ -823,6 +823,7 @@ struct sw_capabilities
 	NVM_UINT32 block_size_count; // number of supported block sizes in the block sizes array
 	NVM_UINT32 block_sizes[NVM_MAX_BLOCK_SIZES]; // the driver-validated list of block sizes
 	NVM_UINT64 min_namespace_size; // smallest namespace supported by the driver, in bytes
+	NVM_BOOL namespace_memory_page_allocation_capable;
 };
 
 /*
@@ -962,6 +963,7 @@ struct namespace_details
 		NVM_GUID device_guid; // Used when creating a storage Namespace
 		NVM_UINT32 interleave_setid; // Used when creating an app direct Namespace
 	} creation_id; // the identifier used by the driver when creating a Namespace
+	enum namespace_memory_page_allocation memory_page_allocation;
 };
 
 /*
@@ -976,6 +978,7 @@ struct namespace_create_settings
 	enum namespace_enable_state enabled; // If the namespace is exposed to OS after creation.
 	NVM_BOOL btt; // optimized for speed
 	struct namespace_security_features security_features; // Security features
+	enum namespace_memory_page_allocation memory_page_allocation;
 };
 
 /*

@@ -379,6 +379,7 @@ int support_store_namespaces(PersistentStore *p_store, int history_id)
 					db_namespace.enabled = details.enabled;
 					db_namespace.health = details.health;
 					db_namespace.type = details.type;
+					db_namespace.memory_page_allocation = details.memory_page_allocation;
 				}
 
 				// save the namespace to the history table
@@ -1116,7 +1117,6 @@ int support_store_driver_capabilities(PersistentStore *p_store, int history_id)
 	if (NVM_SUCCESS != (rc = get_driver_capabilities(&nvm_caps)))
 	{
 		COMMON_LOG_ERROR("Failed to get driver capabilities information");
-
 	}
 	else
 	{
@@ -1129,6 +1129,8 @@ int support_store_driver_capabilities(PersistentStore *p_store, int history_id)
 		{
 			db_capabilities.block_sizes[i] = nvm_caps.block_sizes[i];
 		}
+		db_capabilities.namespace_memory_page_allocation_capable =
+				nvm_caps.namespace_memory_page_allocation_capable;
 
 		struct db_driver_features db_features;
 		memset(&db_features, 0, sizeof (db_features));
@@ -1167,6 +1169,7 @@ int support_store_driver_capabilities(PersistentStore *p_store, int history_id)
 
 		rc =  NVM_SUCCESS;
 	}
+
 	return rc;
 }
 

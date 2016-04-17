@@ -39,6 +39,7 @@
 #include "utility.h"
 
 #define	DEFAULT_BTT_SECTOR_SIZE	4096
+#define	DEFAULT_PFN_ALIGNMENT	0x00200000 // recommended defaults for align
 
 /*
  * Get the number of existing namespaces
@@ -204,7 +205,8 @@ int enable_namespace(struct ndctl_namespace *p_namespace)
 	int rc = NVM_SUCCESS;
 
 	struct ndctl_btt *p_btt = ndctl_namespace_get_btt(p_namespace);
-	if (!p_btt)
+	struct ndctl_pfn *p_pfn = ndctl_namespace_get_pfn(p_namespace);
+	if ((!p_btt) && (!p_pfn))
 	{
 		// if not already enabled
 		if (!ndctl_namespace_is_enabled(p_namespace))
@@ -219,17 +221,33 @@ int enable_namespace(struct ndctl_namespace *p_namespace)
 	}
 	else
 	{
-		// if not already enabled
-		if (!ndctl_btt_is_enabled(p_btt))
+		if (p_btt)
 		{
-			int tmp_rc = ndctl_btt_enable(p_btt);
-			if (tmp_rc < 0)
+			if (!ndctl_btt_is_enabled(p_btt))
 			{
-				rc = linux_err_to_nvm_lib_err(tmp_rc);
-				COMMON_LOG_ERROR("Failed to enable the BTT namespace");
+				int tmp_rc = ndctl_btt_enable(p_btt);
+				if (tmp_rc < 0)
+				{
+					rc = linux_err_to_nvm_lib_err(tmp_rc);
+					COMMON_LOG_ERROR("Failed to enable the BTT namespace");
+				}
+			}
+		}
+
+		if (p_pfn)
+		{
+			if (!ndctl_pfn_is_enabled(p_pfn))
+			{
+				int tmp_rc = ndctl_pfn_enable(p_pfn);
+				if (tmp_rc < 0)
+				{
+					rc = linux_err_to_nvm_lib_err(tmp_rc);
+					COMMON_LOG_ERROR("Failed to enable the PFN namespace");
+				}
 			}
 		}
 	}
+
 	return rc;
 }
 
@@ -379,6 +397,37 @@ int get_namespace_details(
 					NAMESPACE_ENABLE_STATE_DISABLED;
 			}
 
+			struct ndctl_pfn *p_pfn = ndctl_namespace_get_pfn(p_namespace);
+			if (!p_pfn)
+			{
+				enum ndctl_pfn_loc loc = ndctl_pfn_get_location(p_pfn);
+				if (loc == NDCTL_PFN_LOC_PMEM)
+				{
+					p_details->memory_page_allocation =
+							NAMESPACE_MEMORY_PAGE_ALLOCATION_APP_DIRECT;
+				}
+				else if (loc == NDCTL_PFN_LOC_RAM)
+				{
+					p_details->memory_page_allocation =
+							NAMESPACE_MEMORY_PAGE_ALLOCATION_DRAM;
+				}
+				else
+				{
+					p_details->memory_page_allocation =
+							NAMESPACE_MEMORY_PAGE_ALLOCATION_NONE;
+				}
+
+				p_details->enabled = ndctl_namespace_is_enabled(p_namespace) ?
+						NAMESPACE_ENABLE_STATE_ENABLED :
+						NAMESPACE_ENABLE_STATE_DISABLED;
+			}
+			else
+			{
+				p_details->memory_page_allocation =
+						NAMESPACE_MEMORY_PAGE_ALLOCATION_NONE;
+				p_details->enabled = ndctl_pfn_is_enabled(p_pfn);
+			}
+
 			p_details->health = NAMESPACE_HEALTH_NORMAL;
 
 			p_details->block_count =
@@ -410,6 +459,26 @@ int get_idle_btt(struct ndctl_region *region, struct ndctl_btt **idle_btt)
 			*idle_btt = btt;
 			rc = NVM_SUCCESS;
 			break;
+		}
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+int get_idle_pfn(struct ndctl_region *region, struct ndctl_pfn **idle_pfn)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_ERR_DRIVERFAILED;
+
+	struct ndctl_pfn *pfn;
+	*idle_pfn = NULL;
+
+	ndctl_pfn_foreach(region, pfn)
+	{
+		if (!ndctl_pfn_is_enabled(pfn) && !ndctl_pfn_is_configured(pfn))
+		{
+			*idle_pfn = pfn;
 		}
 	}
 
@@ -509,6 +578,85 @@ int get_ndctl_storage_region_by_handle(struct ndctl_ctx *ctx,
 			}
 		}
 	}
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+int create_pfn_namespace(struct ndctl_namespace *namespace,
+		const struct nvm_namespace_create_settings *p_settings)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	if (ndctl_namespace_get_type(namespace) == ND_DEVICE_NAMESPACE_PMEM)
+	{
+		if ((p_settings->memory_page_allocation == NAMESPACE_MEMORY_PAGE_ALLOCATION_APP_DIRECT) ||
+				(p_settings->memory_page_allocation == NAMESPACE_MEMORY_PAGE_ALLOCATION_DRAM))
+		{
+			struct ndctl_region *region = ndctl_namespace_get_region(namespace);
+			struct ndctl_pfn *pfn;
+			if (region != NULL && ((rc = get_idle_pfn(region, &pfn)) == NVM_SUCCESS))
+			{
+				NVM_GUID pfn_guid;
+				generate_guid(pfn_guid);
+
+				// For AppDirect namespaces, the default is
+				// NAMESPACE_MEMORY_PAGE_ALLOCATION_APPDIRECT
+				enum ndctl_pfn_loc loc = NDCTL_PFN_LOC_PMEM;
+				unsigned long align = DEFAULT_PFN_ALIGNMENT;
+
+				if (p_settings->memory_page_allocation ==
+						NAMESPACE_MEMORY_PAGE_ALLOCATION_DRAM)
+				{ // enable PFN and page structures in DRAM
+					loc = NDCTL_PFN_LOC_RAM;
+				}
+				else if (p_settings->memory_page_allocation ==
+						NAMESPACE_MEMORY_PAGE_ALLOCATION_APP_DIRECT)
+				{ // enable PFN and page structures in PMEM
+					loc = NDCTL_PFN_LOC_PMEM;
+				}
+				else if (p_settings->memory_page_allocation ==
+						NAMESPACE_MEMORY_PAGE_ALLOCATION_NONE)
+				{
+					loc = NDCTL_PFN_LOC_NONE;
+				}
+
+				if (ndctl_pfn_set_uuid(pfn, pfn_guid))
+				{
+					COMMON_LOG_ERROR("Set pfn UUID failed");
+					rc = NVM_ERR_DRIVERFAILED;
+				}
+				else if (ndctl_pfn_set_location(pfn, loc))
+				{
+					COMMON_LOG_ERROR("Set pfn sector size failed");
+					rc = NVM_ERR_DRIVERFAILED;
+				}
+				else if (ndctl_pfn_set_align(pfn, align))
+				{
+					COMMON_LOG_ERROR("Set pfn align failed");
+					rc = NVM_ERR_DRIVERFAILED;
+				}
+				else if (ndctl_pfn_set_namespace(pfn, namespace))
+				{
+					COMMON_LOG_ERROR("Set pfn backing namespace failed");
+					rc = NVM_ERR_DRIVERFAILED;
+				}
+				else if (p_settings->enabled == NAMESPACE_ENABLE_STATE_ENABLED &&
+						ndctl_pfn_enable(pfn) < 0)
+				{ // if pfn fails to enable it remains in a disabled state, delete it
+					COMMON_LOG_ERROR("Enable pfn failed");
+					ndctl_pfn_delete(pfn);
+					rc = NVM_ERR_DRIVERFAILED;
+				}
+			}
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR("blk namespace does not support memory mode.");
+		rc = NVM_ERR_NOTSUPPORTED;
+	}
+
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
@@ -647,7 +795,16 @@ int create_namespace(
 						ndctl_namespace_delete(namespace);
 					}
 				}
-				// enable the namespace if desired (only non-btt namespaces)
+				if (p_settings->memory_page_allocation !=
+						NAMESPACE_MEMORY_PAGE_ALLOCATION_NONE)
+				{
+					if ((rc = create_pfn_namespace(namespace, p_settings)) != NVM_SUCCESS)
+					{
+						COMMON_LOG_ERROR("Create PFN Failed");
+						ndctl_namespace_delete(namespace);
+					}
+				}
+				// enable the namespace if desired (only non-btt or non-pfn namespaces)
 				else if (p_settings->enabled == NAMESPACE_ENABLE_STATE_ENABLED)
 				{
 					rc = enable_namespace(namespace);

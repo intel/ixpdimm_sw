@@ -583,6 +583,7 @@ int get_driver_capabilities(struct nvm_driver_capabilities *p_capabilities)
 		{
 			COMMON_LOG_ERROR("Unable to retrieve driver supported block sizes");
 		}
+		p_capabilities->namespace_memory_page_allocation_capable = 1;
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);

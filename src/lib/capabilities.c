@@ -189,6 +189,8 @@ int apply_driver_capabilities(struct nvm_capabilities *p_capabilities)
 		{
 			p_capabilities->sw_capabilities.block_sizes[i] = driver_caps.block_sizes[i];
 		}
+		p_capabilities->sw_capabilities.namespace_memory_page_allocation_capable =
+				driver_caps.namespace_memory_page_allocation_capable;
 
 		// apply driver supported features to host software supported features
 		driver_features_to_nvm_features(&driver_caps.features, &p_capabilities->nvm_features);

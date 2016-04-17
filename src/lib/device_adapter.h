@@ -121,7 +121,6 @@ enum label_area_health_result
 	LABEL_AREA_HEALTH_RESULT_LABELS_OVERLAP
 };
 
-
 /*
  * ------------------------------------------------------------------------------------------------
  * Structures
@@ -172,6 +171,7 @@ struct nvm_driver_capabilities
 	NVM_UINT32 block_sizes[MAX_NUMBER_OF_BLOCK_SIZES]; // in bytes
 	NVM_UINT32 num_block_sizes;
 	NVM_UINT64 min_namespace_size; // in bytes
+	NVM_BOOL namespace_memory_page_allocation_capable;
 	struct driver_feature_flags features;
 };
 
@@ -288,6 +288,7 @@ struct nvm_namespace_details
 		NVM_NFIT_DEVICE_HANDLE device_handle; // Used when creating a Storage Namespace
 		NVM_UINT32 interleave_setid; // Used when creating an App Direct Namespace
 	} namespace_creation_id; // the identifier used by the driver when creating a Namespace
+	enum namespace_memory_page_allocation memory_page_allocation;
 };
 
 /*
@@ -306,6 +307,7 @@ struct nvm_namespace_create_settings
 		NVM_NFIT_DEVICE_HANDLE device_handle; // Used when creating a Storage Namespace
 		NVM_UINT32 interleave_setid; // Used when creating a App Direct Namespace
 	} namespace_creation_id; // the identifier used by the driver when creating a Namespace
+	enum namespace_memory_page_allocation memory_page_allocation;
 };
 
 /*

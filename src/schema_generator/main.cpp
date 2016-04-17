@@ -191,6 +191,7 @@ int main(int arg_count, char **args)
 	driver_capabilities.addAttribute("max_non_continguous_namespaces").isInt64().isUnsigned();
 	driver_capabilities.addAttribute("block_sizes").isInt32().isUnsigned().isArray(16);
 	driver_capabilities.addAttribute("num_block_sizes").isInt32().isUnsigned();
+	driver_capabilities.addAttribute("namespace_memory_page_allocation_capable").isInt32().isUnsigned();
 	entities.push_back(driver_capabilities);
 
 	Entity driver_features("driver_features", "Driver supported features.");
@@ -250,6 +251,7 @@ int main(int arg_count, char **args)
 	nvm_namespace.addAttribute("device_handle").isInt32().isUnsigned().isFk("dimm_topology", "device_handle");
 	// for simulator, PCD index = NFIT driver ID
 	nvm_namespace.addAttribute("interleave_set_index").isInt32().isUnsigned().isFk("interleave_set_dimm_info", "index_id");
+	nvm_namespace.addAttribute("memory_page_allocation").isInt32().isUnsigned();
 	entities.push_back(nvm_namespace);
 
 	/*
