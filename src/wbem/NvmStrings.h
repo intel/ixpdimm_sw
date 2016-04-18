@@ -378,12 +378,12 @@ static std::string ALERTTYPE_KEY = "AlertType";
 static std::string ALERTINGMANAGEDELEMENT_KEY = "AlertingManagedElement";
 
 // SystemCapabilities
-static std::string MEMORYMODESSUPPORTED_KEY = "MemoryModesSupported";
+static std::string MEMORYMODESSUPPORTED_KEY = "ModesSupported";
 static std::string MINNAMESPACESIZE_KEY = "MinNamespaceSize";
 static std::string BLOCKSIZES_KEY = "BlockSizes";
-static std::string APP_DIRECT_MEMORY_MIRROR_SUPPORT_KEY = "AppDirectMemoryMirrorSupported";
+static std::string APP_DIRECT_MEMORY_MIRROR_SUPPORT_KEY = "AppDirectMirrorSupported";
 static std::string DIMMSPARESUPPORT_KEY = "DimmSpareSupported";
-static std::string APP_DIRECT_MEMORY_MIGRATION_SUPPORT_KEY = "AppDirectMemoryMigrationSupported";
+static std::string APP_DIRECT_MEMORY_MIGRATION_SUPPORT_KEY = "AppDirectMigrationSupported";
 static std::string RENAMENAMESPACESUPPORT_KEY = "RenameNamespaceSupported";
 static std::string ENABLENAMESPACESUPPORT_KEY = "EnableNamespaceSupported";
 static std::string DISABLENAMESPACESUPPORT_KEY = "DisableNamespaceSupported";

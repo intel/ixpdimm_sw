@@ -101,7 +101,7 @@ ShowDeviceCommand::ShowDeviceCommand(core::device::DeviceService &service)
 			&convertLastShutdownStatus);
 	m_props.addUint64("LastShutdownTime", &core::device::Device::getLastShutdownTime, &convertToDate);
 	m_props.addBool("FirstFastRefresh", &core::device::Device::isFirstFastRefresh);
-	m_props.addList("MemoryModesSupported", &core::device::Device::getMemoryCapabilities,
+	m_props.addList("ModesSupported", &core::device::Device::getMemoryCapabilities,
 			&convertMemoryModes);
 	m_props.addList("SecurityCapabilities", &core::device::Device::getSecurityCapabilities,
 			&convertSecurityCapabilities);
@@ -268,8 +268,8 @@ std::string ShowDeviceCommand::convertToDate(NVM_UINT64 timeValue)
 std::string ShowDeviceCommand::convertMemoryModes(NVM_UINT16 mode)
 {
 	std::map<NVM_UINT16, std::string> map;
-	map[MEMORY_CAPABILITY_MEMORYMODE] = TR("Memory");
-	map[MEMORYTYPE_CAPABILITY_STORAGEMODE] = TR("Storage");
+	map[MEMORY_CAPABILITY_MEMORYMODE] = TR("Memory Mode");
+	map[MEMORYTYPE_CAPABILITY_STORAGEMODE] = TR("Storage Mode");
 	map[MEMORYTYPE_CAPABILITY_APPDIRECTMODE] = TR("App Direct");
 	return map[mode];
 }

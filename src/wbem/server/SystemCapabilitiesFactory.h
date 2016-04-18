@@ -47,11 +47,11 @@ static const std::string SYSTEMCAPABILITIES_CREATIONCLASSNAME = "SystemCapabilit
 // Memory mode strings
 static const std::string MEMORYMODE_UNKNOWN_STR = "Unknown";
 static const std::string MEMORYMODE_1LM_STR = "1LM";
-static const std::string MEMORYMODE_MEMORY_STR = "Memory";
+static const std::string MEMORYMODE_MEMORY_STR = "Memory Mode";
 static const std::string MEMORYMODE_AUTO_STR = "Auto";
 static const std::string MEMORYMODE_APP_DIRECT_STR = "App Direct";
 static const std::string MEMORYMODE_APP_DIRECT_DISABLED_STR = "Disabled";
-static const std::string MEMORYMODE_STORAGE_STR = "Storage";
+static const std::string MEMORYMODE_STORAGE_STR = "Storage Mode";
 
 // Reliability strings
 static const std::string RELIABILITY_DIMM_SPARING = "DIMM Sparing";
