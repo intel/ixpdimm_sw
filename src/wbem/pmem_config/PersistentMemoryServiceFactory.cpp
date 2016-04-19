@@ -461,7 +461,7 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::allocateFromPool(
 				{
 					encryption = 1;
 				}
-				else
+				if (securityValueList[i] == wbem::pmem_config::NS_SECURITY_ENCRYPTION_OFF)
 				{
 					encryption = 0;
 				}
