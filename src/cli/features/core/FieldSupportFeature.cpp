@@ -257,16 +257,16 @@ void cli::nvmcli::FieldSupportFeature::getPaths(cli::framework::CommandSpecList 
 	changePreferences.addProperty(SQL_KEY_PERFORMANCE_MONITOR_ENABLED, false, "0|1",
 			true, "Whether or not the monitor is periodically storing performance metrics "
 					"for the " NVM_DIMM_NAME "s in the host server.");
-	changePreferences.addProperty(SQL_KEY_PERFORMANCE_MONITOR_INTERVAL, false, "seconds",
-			true, "The interval in seconds that the monitor is "
+	changePreferences.addProperty(SQL_KEY_PERFORMANCE_MONITOR_INTERVAL_MINUTES, false, "minutes",
+			true, "The interval in minutes that the monitor is "
 					"storing performance metrics (if enabled). "
-					"The default value is 10800 seconds and must be > 0.");
+					"The default value is 180 minutes and must be > 0.");
 	changePreferences.addProperty(SQL_KEY_EVENT_MONITOR_ENABLED, false, "0|1",
 			true, "Whether or not the monitor is periodically checking for " NVM_DIMM_NAME " events.");
-	changePreferences.addProperty(SQL_KEY_EVENT_MONITOR_INTERVAL, false, "seconds",
-			true, "The interval in seconds that the monitor is checking for "
+	changePreferences.addProperty(SQL_KEY_EVENT_MONITOR_INTERVAL_MINUTES, false, "minutes",
+			true, "The interval in minutes that the monitor is checking for "
 					"" NVM_DIMM_NAME " events (if enabled). "
-					"The default value is 60 seconds and must be > 0.");
+					"The default value is 1 minute and must be > 0.");
 	changePreferences.addProperty(SQL_KEY_EVENT_LOG_MAX, false, "count",
 			true, "The maximum number of events to keep in the management software. "
 					"The default value is 10000. The valid range is 0-100000.");
@@ -1713,14 +1713,27 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::showPreferences(
 	framework::PropertyListResult *pResult = new framework::PropertyListResult();
 	pResult->setName("Preferences");
 
-	// get the current setting for each preferences
 	std::vector<std::string> preferences = getSupportedPreferences();
 	for (std::vector<std::string>::const_iterator prefIter = preferences.begin();
-			prefIter != preferences.end(); prefIter++)
+					prefIter != preferences.end(); prefIter++)
 	{
-		char currentSetting[CONFIG_VALUE_LEN] = "";
-		get_config_value(prefIter->c_str(), currentSetting);
-		pResult->insert(prefIter->c_str(), currentSetting);
+		char currentSetting[CONFIG_VALUE_LEN];
+		if ((*prefIter == SQL_KEY_CLI_DIMM_ID) ||
+			(*prefIter == SQL_KEY_CLI_SIZE) ||
+			(*prefIter == SQL_KEY_PERFORMANCE_MONITOR_ENABLED) ||
+			(*prefIter == SQL_KEY_EVENT_MONITOR_ENABLED))
+		{
+			memset(currentSetting, 0, sizeof (currentSetting));
+			get_config_value((*prefIter).c_str(), currentSetting);
+			pResult->insert((*prefIter).c_str(), currentSetting);
+		}
+		else
+		{
+			memset(currentSetting, 0, sizeof (currentSetting));
+			get_bounded_config_value((*prefIter).c_str(), currentSetting);
+			pResult->insert((*prefIter).c_str(), currentSetting);
+		}
+
 	}
 
 	return pResult;
@@ -1737,9 +1750,9 @@ std::vector<std::string> cli::nvmcli::FieldSupportFeature::getSupportedPreferenc
 	preferences.push_back(SQL_KEY_CLI_DIMM_ID);
 	preferences.push_back(SQL_KEY_CLI_SIZE);
 	preferences.push_back(SQL_KEY_PERFORMANCE_MONITOR_ENABLED);
-	preferences.push_back(SQL_KEY_PERFORMANCE_MONITOR_INTERVAL);
+	preferences.push_back(SQL_KEY_PERFORMANCE_MONITOR_INTERVAL_MINUTES);
 	preferences.push_back(SQL_KEY_EVENT_MONITOR_ENABLED);
-	preferences.push_back(SQL_KEY_EVENT_MONITOR_INTERVAL);
+	preferences.push_back(SQL_KEY_EVENT_MONITOR_INTERVAL_MINUTES);
 	preferences.push_back(SQL_KEY_EVENT_LOG_MAX);
 	preferences.push_back(SQL_KEY_LOG_MAX);
 	preferences.push_back(SQL_KEY_SUPPORT_SNAPSHOT_MAX);
@@ -1798,38 +1811,17 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::changePreferences(
 					validValue = false;
 				}
 			}
-			else if (framework::stringsIEqual(propIter->first, SQL_KEY_PERFORMANCE_MONITOR_INTERVAL) ||
-					framework::stringsIEqual(propIter->first, SQL_KEY_EVENT_MONITOR_INTERVAL))
+			else if (framework::stringsIEqual(propIter->first, SQL_KEY_PERFORMANCE_MONITOR_INTERVAL_MINUTES) ||
+					 framework::stringsIEqual(propIter->first, SQL_KEY_EVENT_MONITOR_INTERVAL_MINUTES) ||
+					 framework::stringsIEqual(propIter->first, SQL_KEY_EVENT_LOG_MAX) ||
+					 framework::stringsIEqual(propIter->first, SQL_KEY_LOG_MAX) ||
+					 framework::stringsIEqual(propIter->first, SQL_KEY_SUPPORT_SNAPSHOT_MAX))
 			{
-				// valid number > 0
-				if (!isStringValidNumber(propIter->second) ||
-						strtol(propIter->second.c_str(), NULL, 0) <= 0)
+				if (!valueIsValidNumberForKey(propIter->first, propIter->second))
 				{
 					validValue = false;
 				}
 			}
-			else if (framework::stringsIEqual(propIter->first, SQL_KEY_EVENT_LOG_MAX))
-			{
-				if (!stringIsNumberInRange(propIter->second, 0, EVENT_LOG_MAX_LIMIT))
-				{
-					validValue = false;
-				}
-			}
-			else if (framework::stringsIEqual(propIter->first, SQL_KEY_LOG_MAX))
-			{
-				if (!stringIsNumberInRange(propIter->second, 0, LOG_MAX_LIMIT))
-				{
-					validValue = false;
-				}
-			}
-			else if (framework::stringsIEqual(propIter->first, SQL_KEY_SUPPORT_SNAPSHOT_MAX))
-			{
-				if (!stringIsNumberInRange(propIter->second, 0, SUPPORT_SNAPSHOT_MAX_LIMIT))
-				{
-					validValue = false;
-				}
-			}
-
 			if (!validValue)
 			{
 				pResult = new framework::SyntaxErrorBadValueResult(
@@ -1888,6 +1880,20 @@ bool cli::nvmcli::FieldSupportFeature::stringIsNumberInRange(const std::string &
 	}
 
 	return result;
+}
+
+bool cli::nvmcli::FieldSupportFeature::valueIsValidNumberForKey(const std::string key, const std::string value)
+{
+	bool isValid = false;
+	if (isStringValidNumber(value))
+	{
+		int intValue = strtol(value.c_str(), NULL, 0);
+		if (is_valid_value(key.c_str(), intValue))
+		{
+			isValid = true;
+		}
+	}
+	return isValid;
 }
 
 cli::framework::ErrorResult *cli::nvmcli::FieldSupportFeature::wbemToCliGetNamespaces(

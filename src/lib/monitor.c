@@ -48,6 +48,7 @@
 #include "capabilities.h"
 #include "nvm_context.h"
 #include "system.h"
+#include <time/time_utilities.h>
 
 /*
  * Local defines
@@ -792,10 +793,10 @@ int init_event_notify()
 
 			g_current_event_id = get_nvm_event_id();
 			int poll_interval = 0;
-			if (NVM_SUCCESS ==
-					get_config_value_int(SQL_KEY_EVENT_POLLING_INTERVAL_SECONDS, &poll_interval))
+			if (NVM_SUCCESS == get_bounded_config_value_int(
+					SQL_KEY_EVENT_POLLING_INTERVAL_MINUTES, &poll_interval))
 			{
-				g_poll_interval_sec = (NVM_UINT32)poll_interval;
+				g_poll_interval_sec = (NVM_UINT32)poll_interval * SECONDSPERMINUTE;
 			}
 
 			g_is_polling = 1;

@@ -104,10 +104,6 @@ static const std::string PREFERENCE_SIZE_GIB = "GiB"; // Gibibytes
 static const std::string PREFERENCE_ENABLED = "1";
 static const std::string PREFERENCE_DISABLED = "0";
 
-static const int EVENT_LOG_MAX_LIMIT = 100000;
-static const int LOG_MAX_LIMIT = 100000;
-static const int SUPPORT_SNAPSHOT_MAX_LIMIT = 100;
-
 /*!
  * Implements the CR Field Support Commands.
  */
@@ -204,8 +200,8 @@ public:
 	std::string (*m_guidToDimmIdStr)(const std::string &dimmGuid)
 			throw (wbem::framework::Exception);
 
-	/*!
-	 * Return a list of supported preferences for display/change
+	/*
+	 * Retrieve a list of supported preferences
 	 */
 	static std::vector<std::string> getSupportedPreferences();
 
@@ -318,6 +314,11 @@ private:
 
 	static cli::framework::ErrorResult *wbemToCliGetNamespaces(
 			const framework::ParsedCommand &parsedCommand, std::vector<std::string> &namespaces);
+
+	/*
+	 * Return true if the value is valid for the key
+	 */
+	bool valueIsValidNumberForKey(const std::string key, const std::string value);
 
 	/*!
 	 * Show Device Firmware

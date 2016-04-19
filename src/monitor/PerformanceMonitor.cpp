@@ -189,8 +189,8 @@ void monitor::PerformanceMonitor::trimPerformanceData()
 	int maxPerformanceRows = 10000;
 	int defaultTrimPercent = 30;
 	int trimPercent = defaultTrimPercent;
-	get_config_value_int(SQL_KEY_PERFORMANCE_LOG_MAX, &maxPerformanceRows);
-	get_config_value_int(SQL_KEY_PERFORMANCE_LOG_TRIM_PERCENT, &trimPercent);
+	get_bounded_config_value_int(SQL_KEY_PERFORMANCE_LOG_MAX, &maxPerformanceRows);
+	get_bounded_config_value_int(SQL_KEY_PERFORMANCE_LOG_TRIM_PERCENT, &trimPercent);
 	if (trimPercent < 0)
 		trimPercent = defaultTrimPercent;
 

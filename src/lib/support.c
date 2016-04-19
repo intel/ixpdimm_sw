@@ -72,7 +72,7 @@ int nvm_gather_support(const NVM_PATH support_file, const NVM_SIZE support_file_
 	{
 		rc = NVM_ERR_UNKNOWN;
 	}
-	else if (get_config_value_int(SQL_KEY_SUPPORT_SNAPSHOT_MAX, &max_no_support_snapshots)
+	else if (get_bounded_config_value_int(SQL_KEY_SUPPORT_SNAPSHOT_MAX, &max_no_support_snapshots)
 				!= COMMON_SUCCESS)
 	{
 		// should never get here

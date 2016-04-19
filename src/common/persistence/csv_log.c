@@ -106,7 +106,7 @@ int roll_db_log(PersistentStore *p_db)
 {
 	int rc = COMMON_SUCCESS;
 	int max_logs = MAX_LOGS;
-	get_config_value_int(SQL_KEY_LOG_MAX, &max_logs);
+	get_bounded_config_value_int(SQL_KEY_LOG_MAX, &max_logs);
 	if (max_logs)
 	{
 		char sql[TRIM_LOG_SQL_LEN];

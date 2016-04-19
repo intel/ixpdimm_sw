@@ -53,7 +53,7 @@ monitor::NvmMonitorBase::NvmMonitorBase(std::string const &name)
 	m_enabled = DEFAULT_MONITOR_ENABLED;
 
 	int configResult;
-	if (get_config_value_int(intervalKey.c_str(), &configResult) == COMMON_SUCCESS)
+	if (get_bounded_config_value_int(intervalKey.c_str(), &configResult) == COMMON_SUCCESS)
 	{
 		m_intervalSeconds = (size_t) configResult;
 	}

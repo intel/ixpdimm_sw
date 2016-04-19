@@ -40,6 +40,39 @@ extern "C"
 //! Default maximum number of support snapshots to keep
 #define MAX_SUPPORT_SNAPSHOTS_DEFAULT "100"
 
+//! Maximum number of support snapshots to keep
+#define MAX_SUPPORT_SNAPSHOTS_BOUND 100
+
+//! Minimum allowed interval for event polling
+#define EVENT_POLLING_INTERVAL_MINUTES_BOUND 1
+
+//! Minimum allowed interval for performance monitor
+#define PERFORMANCE_MONITOR_INTERVAL_MINUTES_BOUND 1
+
+//! Maximum number of performance log entries
+#define PERFORMANCE_LOG_MAX_BOUND 10000
+
+//! Minimum performance log trim percent
+#define PERFORMANCE_LOG_TRIM_PERCENT_BOUND 10
+
+//! Maximum number of log entries
+#define LOG_MAX_BOUND 10000
+
+//! Minimum allowed interval for event monitor
+#define EVENT_MONITOR_INTERVAL_MINUTES_BOUND 1
+
+//! Minimum event log trim percent
+#define EVENT_LOG_TRIM_PERCENT_BOUND 10
+
+//! Maximum event log entries
+#define EVENT_LOG_MAX_BOUND 10000
+
+//! The maximum length of a config setting SQL key
+#define CONFIG_SETTINGS_KEY_MAX_LEN 256
+
+//! The maximum trim percentage
+#define MAX_TRIM_PERCENT 100
+
 /*
  * SQL 'config' table KEY names
  */
@@ -153,7 +186,7 @@ extern "C"
 #define	SQL_KEY_EVENT_SYSLOG_MIN_SEVERITY	"EVENT_SYSLOG_MIN_SEVERITY"
 
 //! SQL Key name for the event polling interval
-#define	SQL_KEY_EVENT_POLLING_INTERVAL_SECONDS "EVENT_POLLING_INTERVAL_SECONDS"
+#define	SQL_KEY_EVENT_POLLING_INTERVAL_MINUTES "EVENT_POLLING_INTERVAL_MINUTES"
 
 //! SQL Key name for default CLI device identifier
 #define	SQL_KEY_CLI_DIMM_ID	"CLI_DEFAULT_DIMM_ID"
@@ -166,7 +199,7 @@ extern "C"
 #define	SQL_KEY_EVENT_MONITOR_ENABLED "EVENT_MONITOR_ENABLED"
 
 //! SQL Key name for event monitor interval
-#define	SQL_KEY_EVENT_MONITOR_INTERVAL "EVENT_MONITOR_INTERVAL_SECONDS"
+#define	SQL_KEY_EVENT_MONITOR_INTERVAL_MINUTES "EVENT_MONITOR_INTERVAL_MINUTES"
 
 //! SQL Key name for maximum number of events to store.
 #define	SQL_KEY_EVENT_LOG_MAX	"EVENT_LOG_MAX"
@@ -180,7 +213,7 @@ extern "C"
 #define	SQL_KEY_PERFORMANCE_MONITOR_ENABLED "PERFORMANCE_MONITOR_ENABLED"
 
 //! SQL Key name for performance monitor interval
-#define	SQL_KEY_PERFORMANCE_MONITOR_INTERVAL "PERFORMANCE_MONITOR_INTERVAL_SECONDS"
+#define	SQL_KEY_PERFORMANCE_MONITOR_INTERVAL_MINUTES "PERFORMANCE_MONITOR_INTERVAL_MINUTES"
 
 //! SQL Key name for max performance logs stored
 #define	SQL_KEY_PERFORMANCE_LOG_MAX "PERFORMANCE_LOG_MAX"

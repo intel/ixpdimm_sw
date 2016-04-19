@@ -56,8 +56,10 @@ const char *log_destination = "0"; // log to DB by default
 // GLOBAL database pointer for this process
 PersistentStore *p_store;
 
-// helper function
+// helper functions
 void add_config_value_to_pstore(const PersistentStore *p_ps, const char *key, const char *value);
+void apply_bound_to_config_value(const char *key, int *value);
+void apply_bound(int *value, int lower, int upper);
 
 /*
  * get the path to the config database file
@@ -245,6 +247,112 @@ int get_config_value(const char *key, char *value)
 }
 
 /*
+ * Return a bounded config value as an int
+ */
+int get_bounded_config_value(const char *key, char *value)
+{
+	int intValue;
+	int rc = get_bounded_config_value_int(key, &intValue);
+
+	s_snprintf(value, CONFIG_VALUE_LEN, "%d", intValue);
+
+	return rc;
+}
+
+NVM_BOOL is_valid_value(const char *key, int value)
+{
+	NVM_BOOL isValid = 1;
+
+	int boundedValue = value;
+
+	apply_bound_to_config_value(key, &boundedValue);
+
+	if (value != boundedValue)
+	{
+		isValid = 0;
+	}
+	return isValid;
+}
+
+int get_bounded_config_value_int(const char *key, int *value)
+{
+	int rc = get_config_value_int(key, value);
+
+	if (rc == COMMON_SUCCESS)
+	{
+		apply_bound_to_config_value(key, value);
+	}
+	return rc;
+}
+
+void apply_bound_to_config_value(const char *key, int *value)
+{
+	if ((s_strncmp(key, SQL_KEY_EVENT_POLLING_INTERVAL_MINUTES,
+			s_strnlen(key, CONFIG_SETTINGS_KEY_MAX_LEN)) == 0) &&
+			(*value < EVENT_POLLING_INTERVAL_MINUTES_BOUND))
+	{
+		apply_bound(value, EVENT_POLLING_INTERVAL_MINUTES_BOUND, INT_MAX);
+	}
+	else if ((s_strncmp(key, SQL_KEY_SUPPORT_SNAPSHOT_MAX,
+			s_strnlen(key, CONFIG_SETTINGS_KEY_MAX_LEN)) == 0))
+	{
+		apply_bound(value, 0, MAX_SUPPORT_SNAPSHOTS_BOUND);
+	}
+	else if ((s_strncmp(key, SQL_KEY_LOG_MAX,
+			s_strnlen(key, CONFIG_SETTINGS_KEY_MAX_LEN)) == 0))
+	{
+		apply_bound(value, 0, LOG_MAX_BOUND);
+	}
+	else if ((s_strncmp(key, SQL_KEY_PERFORMANCE_MONITOR_INTERVAL_MINUTES,
+			s_strnlen(key, CONFIG_SETTINGS_KEY_MAX_LEN)) == 0) &&
+			(*value < PERFORMANCE_MONITOR_INTERVAL_MINUTES_BOUND))
+	{
+		apply_bound(value, PERFORMANCE_MONITOR_INTERVAL_MINUTES_BOUND, INT_MAX);
+	}
+	else if ((s_strncmp(key, SQL_KEY_PERFORMANCE_LOG_MAX,
+			s_strnlen(key, CONFIG_SETTINGS_KEY_MAX_LEN)) == 0) &&
+			(*value > PERFORMANCE_LOG_MAX_BOUND))
+	{
+		apply_bound(value, 0, PERFORMANCE_LOG_MAX_BOUND);
+	}
+	else if ((s_strncmp(key, SQL_KEY_PERFORMANCE_LOG_TRIM_PERCENT,
+			s_strnlen(key, CONFIG_SETTINGS_KEY_MAX_LEN)) == 0) &&
+			(*value < PERFORMANCE_LOG_TRIM_PERCENT_BOUND))
+	{
+		apply_bound(value, PERFORMANCE_LOG_TRIM_PERCENT_BOUND, MAX_TRIM_PERCENT);
+	}
+	else if ((s_strncmp(key, SQL_KEY_EVENT_LOG_TRIM_PERCENT,
+			s_strnlen(key, CONFIG_SETTINGS_KEY_MAX_LEN)) == 0) &&
+			(*value < EVENT_LOG_TRIM_PERCENT_BOUND))
+	{
+		apply_bound(value, EVENT_LOG_TRIM_PERCENT_BOUND, MAX_TRIM_PERCENT);
+	}
+	else if ((s_strncmp(key, SQL_KEY_EVENT_MONITOR_INTERVAL_MINUTES,
+			s_strnlen(key, CONFIG_SETTINGS_KEY_MAX_LEN)) == 0) &&
+			(*value < EVENT_MONITOR_INTERVAL_MINUTES_BOUND))
+	{
+		apply_bound(value, EVENT_MONITOR_INTERVAL_MINUTES_BOUND, INT_MAX);
+	}
+	else if ((s_strncmp(key, SQL_KEY_EVENT_LOG_MAX,
+			s_strnlen(key, CONFIG_SETTINGS_KEY_MAX_LEN)) == 0))
+	{
+		apply_bound(value, 0, EVENT_LOG_MAX_BOUND);
+	}
+}
+
+void apply_bound(int *value, int lower, int upper)
+{
+	if (*value < lower)
+	{
+		*value = lower;
+	}
+
+	if (*value > upper)
+	{
+		*value = upper;
+	}
+}
+/*
  * Add a new config setting
  */
 int add_config_value(const char *key, const char *value)
@@ -321,7 +429,7 @@ int set_default_config_settings(PersistentStore *p_ps)
 	{
 		// Add default configuration settings
 		add_config_value_to_pstore(p_ps, SQL_KEY_LOG_LEVEL, "0");
-		add_config_value_to_pstore(p_ps, SQL_KEY_EVENT_POLLING_INTERVAL_SECONDS, "60");
+		add_config_value_to_pstore(p_ps, SQL_KEY_EVENT_POLLING_INTERVAL_MINUTES, "1");
 		add_config_value_to_pstore(p_ps, SQL_KEY_ENCRYPT_GATHER_SUPPORT, "1");
 		add_config_value_to_pstore(p_ps, SQL_KEY_GATHER_SUPPORT_FILTER,
 			"15"); // GSF_HOST_DATA | GSF_NAMESPACE_DATA | GSF_SERIAL_NUMS | GSF_SYSTEM_LOG
@@ -361,13 +469,13 @@ int set_default_config_settings(PersistentStore *p_ps)
 
 		// monitor configs
 		add_config_value_to_pstore(p_ps, SQL_KEY_PERFORMANCE_MONITOR_ENABLED, "1");
-		// 10800 = every 3 hours
-		add_config_value_to_pstore(p_ps, SQL_KEY_PERFORMANCE_MONITOR_INTERVAL, "10800");
+		// 180 = every 3 hours
+		add_config_value_to_pstore(p_ps, SQL_KEY_PERFORMANCE_MONITOR_INTERVAL_MINUTES, "180");
 		add_config_value_to_pstore(p_ps, SQL_KEY_PERFORMANCE_LOG_MAX, "10000");
 		add_config_value_to_pstore(p_ps, SQL_KEY_PERFORMANCE_LOG_TRIM_PERCENT, "30");
 
 		add_config_value_to_pstore(p_ps, SQL_KEY_EVENT_MONITOR_ENABLED, "1");
-		add_config_value_to_pstore(p_ps, SQL_KEY_EVENT_MONITOR_INTERVAL, "60");
+		add_config_value_to_pstore(p_ps, SQL_KEY_EVENT_MONITOR_INTERVAL_MINUTES, "1");
 		add_config_value_to_pstore(p_ps, SQL_KEY_EVENT_LOG_MAX, "10000");
 		add_config_value_to_pstore(p_ps, SQL_KEY_EVENT_LOG_TRIM_PERCENT, "10");
 		add_config_value_to_pstore(p_ps, SQL_KEY_TOPOLOGY_STATE_VALID, "0");

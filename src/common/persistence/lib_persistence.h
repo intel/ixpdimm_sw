@@ -34,6 +34,7 @@
 #define	_LIB_PERSISTENCE_H_
 
 #include <common_types.h>
+#include <nvm_types.h>
 #include "schema.h"
 
 #ifdef __cplusplus
@@ -95,6 +96,53 @@ PersistentStore *open_default_lib_store();
  * 		#COMMON_ERR_UNKNOWN
  */
 extern int get_config_value(const char *key, char *value);
+
+/*!
+ * Retrieve a bounded configuration value given a key, whose value is expected to be an integer.
+ * @param[in] key
+ * 		The key to retrieve
+ * @param[out] value
+ * 		A buffer to hold the value
+ * @return
+ * 		#COMMON_SUCCESS @n
+ * 		#COMMON_ERR_UNKNOWN
+ */
+extern int get_bounded_config_value_int(const char *key, int *value);
+
+/*!
+ * Retrieve a bounded configuration value given a key
+ * @param[in] key
+ * 		The key to retrieve
+ * @param[out] value
+ * 		A buffer to hold the value
+ * @return
+ * 		#COMMON_SUCCESS @n
+ * 		#COMMON_ERR_UNKNOWN
+ */
+extern int get_bounded_config_value(const char *key, char *value);
+
+/*!
+ * Retrieve a bounded configuration value given a key
+ * @param[in] key
+ * 		The key to retrieve
+ * @param[out] value
+ * 		A buffer to hold the value
+ * @return
+ * 		#COMMON_SUCCESS @n
+ * 		#COMMON_ERR_UNKNOWN
+ */
+
+/*!
+ * Return true if the given value is in the valid range for the given key
+ * @param[in] key
+ * 		The key to retrieve
+ * @param[out] value
+ * 		The given value
+ * @return
+ * 		0 False
+ * 		1 True
+ */
+extern NVM_BOOL is_valid_value(const char *key, int value);
 
 /*!
  * Retrieve a configuration value given a key, whose value is expected to be an integer.

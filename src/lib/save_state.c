@@ -103,7 +103,7 @@ int nvm_save_state(const char *name, const NVM_SIZE name_len)
 
 	PersistentStore *p_store = NULL;
 	int max_no_support_snapshots;
-	if (get_config_value_int(SQL_KEY_SUPPORT_SNAPSHOT_MAX, &max_no_support_snapshots)
+	if (get_bounded_config_value_int(SQL_KEY_SUPPORT_SNAPSHOT_MAX, &max_no_support_snapshots)
 			!= COMMON_SUCCESS)
 	{ // should never get here
 		COMMON_LOG_ERROR_F("Failed to retrieve key %s.", SQL_KEY_SUPPORT_SNAPSHOT_MAX);
