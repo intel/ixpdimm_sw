@@ -210,7 +210,7 @@ int get_config_value_int(const char *key, int *value)
 	else
 	{
 		char value_str[CONFIG_VALUE_LEN];
-		if ((rc == get_config_value(key, value_str)) == COMMON_SUCCESS)
+		if ((rc = get_config_value(key, value_str)) == COMMON_SUCCESS)
 		{
 			*value = strtol(value_str, NULL, 0);
 			rc = COMMON_SUCCESS;
@@ -234,7 +234,7 @@ int get_config_value(const char *key, char *value)
 		if (p_store)
 		{
 			struct db_config config;
-			if ((rc == db_get_config_by_key(p_store, key, &config)) == DB_SUCCESS)
+			if ((rc = db_get_config_by_key(p_store, key, &config)) == DB_SUCCESS)
 			{
 				s_strcpy(value, config.value, CONFIG_VALUE_LEN);
 				rc = COMMON_SUCCESS;
