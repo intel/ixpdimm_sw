@@ -33,7 +33,7 @@
 #include <exception/NvmExceptionBadRequest.h>
 #include <exception/NvmExceptionNotManageable.h>
 #include <LogEnterExit.h>
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include <map>
 #include <iostream>
 
@@ -61,7 +61,7 @@ NVM_UINT16 wbem::logic::PostLayoutAddressDecoderLimitCheck::getSocketIdForDimm(N
 	for (std::vector<struct device_discovery>::const_iterator iter = m_devices.begin();
 			iter != m_devices.end(); iter++)
 	{
-		if (guid_cmp(iter->guid, guid))
+		if (uid_cmp(iter->guid, guid))
 		{
 			socketId = iter->socket_id;
 			break;
@@ -81,7 +81,7 @@ std::list<NVM_UINT16> wbem::logic::PostLayoutAddressDecoderLimitCheck::getListOf
 			iter != layout.goals.end(); iter++)
 	{
 		NVM_GUID guid;
-		str_to_guid((*iter).first.c_str(), guid);
+		uid_copy((*iter).first.c_str(), guid);
 		NVM_UINT16 socketId = getSocketIdForDimm(guid);
 		socketList.push_back(socketId);
 	}
@@ -101,7 +101,7 @@ std::vector<struct config_goal> wbem::logic::PostLayoutAddressDecoderLimitCheck:
 			iter != layout.goals.end(); iter++)
 	{
 		NVM_GUID guid;
-		str_to_guid((*iter).first.c_str(), guid);
+		uid_copy((*iter).first.c_str(), guid);
 		NVM_UINT16 dimmSocketId = getSocketIdForDimm(guid);
 
 		if (dimmSocketId == socketId)
@@ -220,7 +220,7 @@ bool wbem::logic::PostLayoutAddressDecoderLimitCheck::isInterleaveSetOverwritten
 	for (NVM_UINT16 i = 0; i < interleave.dimm_count; i++)
 	{
 		NVM_GUID_STR guidStr;
-		guid_to_str(interleave.dimms[i], guidStr);
+		uid_copy(interleave.dimms[i], guidStr);
 
 		// Any DIMM in the new layout will have all its interleave sets overwritten
 		if (layout.goals.find(guidStr) != layout.goals.end())

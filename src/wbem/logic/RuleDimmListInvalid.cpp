@@ -33,7 +33,7 @@
 #include <exception/NvmExceptionBadRequest.h>
 #include <LogEnterExit.h>
 #include <nvm_types.h>
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include "RuleDimmListInvalid.h"
 #include <list>
 #include "MemoryAllocator.h"
@@ -129,13 +129,13 @@ void wbem::logic::RuleDimmListInvalid::checkIfDimmListIsValid(
 		bool guidExists = false;
 
 		NVM_GUID requestedDimmGuid;
-		str_to_guid(requestIter->guid.c_str(), requestedDimmGuid);
+		uid_copy(requestIter->guid.c_str(), requestedDimmGuid);
 
 		for (std::vector<struct device_discovery>::const_iterator manageableDimmIter =
 				m_manageableDimms.begin(); manageableDimmIter != m_manageableDimms.end();
 				manageableDimmIter++)
 		{
-			if (guid_cmp(requestedDimmGuid, manageableDimmIter->guid))
+			if (uid_cmp(requestedDimmGuid, manageableDimmIter->guid))
 			{
 				guidExists = true;
 				checkIfSocketIdsMatch(requestIter, manageableDimmIter);

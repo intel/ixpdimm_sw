@@ -30,7 +30,7 @@
  */
 
 
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include <server/BaseServerFactory.h>
 #include <support/NVDIMMLogEntryFactory.h>
 #include <LogEnterExit.h>
@@ -74,7 +74,7 @@ wbem::framework::Instance *wbem::indication::NVDIMMEventFactory::createIndicatio
 				framework::DATETIME_SUBTYPE_DATETIME, false));
 
 		NVM_GUID_STR guid;
-		guid_to_str(pEvent->guid, guid);
+		uid_copy(pEvent->guid, guid);
 		pResult->setAttribute(ALERTINGMANAGEDELEMENT_KEY,
 				framework::Attribute(std::string(guid), false));
 

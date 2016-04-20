@@ -33,7 +33,7 @@
 #include "nvm_management.h"
 #include "device_adapter.h"
 #include "utility.h"
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include <persistence/event.h>
 #include <string/s_str.h>
 #include "pool_utilities.h"
@@ -119,7 +119,7 @@ void check_if_pool_interleave_sets_need_namespace(NVM_UINT32 *p_results,
 	if (pool_interleave_sets_need_namespace(p_namespaces, namespace_count, p_pool))
 	{
 		NVM_GUID_STR pool_guid_str;
-		guid_to_str(p_pool->pool_guid, pool_guid_str);
+		uid_copy(p_pool->pool_guid, pool_guid_str);
 
 		store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG,
 				EVENT_SEVERITY_INFO,
@@ -141,7 +141,7 @@ void check_if_pool_storage_regions_need_namespace(NVM_UINT32 *p_results,
 	if (pool_storage_regions_need_namespace(p_namespaces, namespace_count, p_pool))
 	{
 		NVM_GUID_STR pool_guid_str;
-		guid_to_str(p_pool->pool_guid, pool_guid_str);
+		uid_copy(p_pool->pool_guid, pool_guid_str);
 
 		store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG,
 				EVENT_SEVERITY_INFO,
@@ -196,7 +196,7 @@ const struct nvm_pool *get_namespace_pool(const NVM_GUID namespace_guid,
 		{
 			for (NVM_UINT32 i = 0; i < pool_count; i++)
 			{
-				if (guid_cmp(pool_guid, p_pools[i].pool_guid) == 1)
+				if (uid_cmp(pool_guid, p_pools[i].pool_guid) == 1)
 				{
 					p_pool = &(p_pools[i]);
 					break;
@@ -207,7 +207,7 @@ const struct nvm_pool *get_namespace_pool(const NVM_GUID namespace_guid,
 	else
 	{
 		NVM_GUID_STR namespace_guid_str;
-		guid_to_str(namespace_guid, namespace_guid_str);
+		uid_copy(namespace_guid, namespace_guid_str);
 		COMMON_LOG_ERROR_F("couldn't get namespace details for '%s', rc = %d",
 				namespace_guid_str, rc);
 	}
@@ -251,7 +251,7 @@ void check_for_namespaces_smaller_than_containing_interleave_set(NVM_UINT32 *p_r
 		if (p_namespaces[i].type == NAMESPACE_TYPE_APP_DIRECT)
 		{
 			NVM_GUID_STR namespace_guid_str;
-			guid_to_str(p_namespaces[i].discovery.namespace_guid, namespace_guid_str);
+			uid_copy(p_namespaces[i].discovery.namespace_guid, namespace_guid_str);
 
 			const struct nvm_pool *p_pool = get_namespace_pool(
 					p_namespaces[i].discovery.namespace_guid,
@@ -303,7 +303,7 @@ int get_all_driver_namespace_details(struct nvm_namespace_details *p_namespaces,
 			if (rc < 0)
 			{
 				NVM_GUID_STR guid_str;
-				guid_to_str(namespace_discovery[i].namespace_guid, guid_str);
+				uid_copy(namespace_discovery[i].namespace_guid, guid_str);
 				COMMON_LOG_ERROR_F("error fetching namespace details for namespace %s, rc = %d",
 						guid_str, rc);
 

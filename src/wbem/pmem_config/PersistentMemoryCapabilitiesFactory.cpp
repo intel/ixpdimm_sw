@@ -33,7 +33,7 @@
 #include <nvm_management.h>
 #include <libintelnvm-cim/Attribute.h>
 #include <server/BaseServerFactory.h>
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include <libintelnvm-cim/ExceptionBadParameter.h>
 #include <sstream>
 #include "PersistentMemoryCapabilitiesFactory.h"
@@ -91,7 +91,7 @@ throw(wbem::framework::Exception)
 		if (containsAttribute(ELEMENTNAME_KEY, attributes))
 		{
 			NVM_GUID_STR poolGuidStr;
-			guid_to_str(pool.pool_guid, poolGuidStr);
+			uid_copy(pool.pool_guid, poolGuidStr);
 			std::string elementNameStr = PMCAP_ELEMENTNAME + poolGuidStr;
 			framework::Attribute a(elementNameStr, false);
 			pInstance->setAttribute(ELEMENTNAME_KEY, a, attributes);
@@ -188,7 +188,7 @@ wbem::framework::instance_names_t *wbem::pmem_config::PersistentMemoryCapabiliti
 
 			// Instance ID = Pool GUID
 			NVM_GUID_STR poolGuidStr;
-			guid_to_str((*iter).pool_guid, poolGuidStr);
+			uid_copy((*iter).pool_guid, poolGuidStr);
 			keys[INSTANCEID_KEY] = framework::Attribute(poolGuidStr, true);
 
 			framework::ObjectPath path(wbem::server::getHostName(),
@@ -336,7 +336,7 @@ wbem::framework::UINT64 wbem::pmem_config::PersistentMemoryCapabilitiesFactory::
 	NVM_UINT64 maxBlockNS = 0;
 
 	NVM_GUID_STR poolGuidStr;
-	guid_to_str(pPool->pool_guid, poolGuidStr);
+	uid_copy(pPool->pool_guid, poolGuidStr);
 
 	// A pool can have as many App Direct Namespaces as its interleave sets as long as the size is greater
 	// than minimum namespace size

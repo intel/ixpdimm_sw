@@ -31,7 +31,7 @@
  */
 
 #include <nvm_management.h>
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include <LogEnterExit.h>
 #include <physical_asset/NVDIMMFactory.h>
 #include <libintelnvm-cim/ExceptionBadParameter.h>
@@ -88,7 +88,7 @@ wbem::framework::Instance* wbem::support::FWEventLogFactory::getInstance(
 			throw framework::ExceptionBadParameter("InstanceId");
 		}
 		NVM_GUID dimmGuid;
-		str_to_guid(deviceGuidStr.c_str(), dimmGuid);
+		uid_copy(deviceGuidStr.c_str(), dimmGuid);
 
 		int eamrc;
 		if (NVM_SUCCESS != (eamrc = wbem::physical_asset::NVDIMMFactory::existsAndIsManageable(deviceGuidStr)))
@@ -108,7 +108,7 @@ wbem::framework::Instance* wbem::support::FWEventLogFactory::getInstance(
 		if (containsAttribute(ELEMENTNAME_KEY, attributes))
 		{
 			NVM_GUID_STR guidStr;
-			guid_to_str(dimmdiscovery.guid, guidStr);
+			uid_copy(dimmdiscovery.guid, guidStr);
 			framework::Attribute attrElementName(
 					FWEVENTLOG_ELEMENTNAME + std::string(guidStr), false);
 			pInstance->setAttribute(ELEMENTNAME_KEY, attrElementName, attributes);

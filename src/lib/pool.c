@@ -36,7 +36,7 @@
 #include "config_goal.h"
 #include "utility.h"
 #include "platform_config_data.h"
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include <persistence/lib_persistence.h>
 #include <string/s_str.h>
 #include <string/x_str.h>
@@ -133,7 +133,7 @@ int calculate_interleave_health(struct interleave_set *p_interleave)
 			}
 
 			NVM_GUID_STR guid_str;
-			guid_to_str(p_interleave->dimms[i], guid_str);
+			uid_copy(p_interleave->dimms[i], guid_str);
 			COMMON_LOG_ERROR_F("couldn't get status of underlying DIMM %s",
 					guid_str);
 			break;
@@ -396,7 +396,7 @@ int get_nvm_pool(const NVM_GUID pool_guid, struct nvm_pool *p_nvm_pool)
 			rc = NVM_ERR_BADPOOL;
 			for (int i = 0; i < pool_count; i++)
 			{
-				if (guid_cmp(nvm_pools[i].pool_guid, pool_guid))
+				if (uid_cmp(nvm_pools[i].pool_guid, pool_guid))
 				{
 					rc = NVM_SUCCESS;
 					memmove(p_nvm_pool, &nvm_pools[i], sizeof (struct nvm_pool));

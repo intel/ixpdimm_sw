@@ -33,7 +33,7 @@
 
 #include <libintelnvm-cim/ExceptionNoMemory.h>
 #include <libintelnvm-cim/ExceptionBadParameter.h>
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include <LogEnterExit.h>
 #include <os/os_adapter.h>
 #include <exception/NvmExceptionLibError.h>
@@ -494,7 +494,7 @@ void NvmApi::stringToNvmGuid(const std::string& guidStr, NVM_GUID guid)
 		throw framework::ExceptionBadParameter("guidStr");
 	}
 
-	str_to_guid(guidStr.c_str(), guid);
+	uid_copy(guidStr.c_str(), guid);
 }
 
 std::string NvmApi::getHostName() const

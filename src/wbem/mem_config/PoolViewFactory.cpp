@@ -35,7 +35,7 @@
 #include <libintelnvm-cim/Attribute.h>
 #include <server/BaseServerFactory.h>
 #include <server/SystemCapabilitiesFactory.h>
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include <libintelnvm-cim/ExceptionBadParameter.h>
 #include <libintelnvm-cim/ExceptionNoMemory.h>
 #include <sstream>
@@ -247,7 +247,7 @@ wbem::framework::instance_names_t *wbem::mem_config::PoolViewFactory::getInstanc
 			framework::attributes_t keys;
 
 			NVM_GUID_STR poolGuid;
-			guid_to_str((*iter).pool_guid, poolGuid);
+			uid_copy((*iter).pool_guid, poolGuid);
 			keys[POOLID_KEY] = framework::Attribute(std::string(poolGuid), true);
 
 			framework::ObjectPath path(server::getHostName(), NVM_NAMESPACE,
@@ -306,7 +306,7 @@ struct pool wbem::mem_config::PoolViewFactory::getPool(const std::string &poolGu
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	NVM_GUID poolGuid;
-	str_to_guid(poolGuidStr.c_str(), poolGuid);
+	uid_copy(poolGuidStr.c_str(), poolGuid);
 
 	struct pool pool;
 	int rc = nvm_get_pool(poolGuid, &pool);
@@ -410,7 +410,7 @@ NVM_UINT32 wbem::mem_config::PoolViewFactory::countNamespaces(const struct pool 
 
 	for (size_t n = 0; n < m_nsCache.size(); n++)
 	{
-		if (guid_cmp(pPool->pool_guid, m_nsCache[n].pool_guid) &&
+		if (uid_cmp(pPool->pool_guid, m_nsCache[n].pool_guid) &&
 				m_nsCache[n].type == type)
 		{
 			result++;

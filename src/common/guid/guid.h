@@ -111,6 +111,11 @@ extern void generate_guid_str(COMMON_GUID_STR guid_str);
 int guid_hash(const unsigned char *source,
 		const size_t source_len, unsigned char *p_guid);
 
+/*
+ * Create hash guid represented by char array
+ */
+extern int guid_hash_str(const unsigned char *source, const size_t source_len, char *p_guid);
+
 #ifdef __cplusplus
 }
 #endif

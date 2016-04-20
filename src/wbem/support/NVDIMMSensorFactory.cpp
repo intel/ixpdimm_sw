@@ -33,7 +33,7 @@
 #include <LogEnterExit.h>
 #include <nvm_management.h>
 #include <string/revision.h>
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include <libintelnvm-cim/ExceptionBadParameter.h>
 #include <physical_asset/NVDIMMFactory.h>
 #include "NVDIMMSensorFactory.h"
@@ -312,7 +312,7 @@ throw (wbem::framework::Exception)
 	}
 
 	NVM_GUID nvm_guid;
-	str_to_guid(str_guid.c_str(), nvm_guid);
+	uid_copy(str_guid.c_str(), nvm_guid);
 
 	int rc;
 	struct sensor sensor;
@@ -460,7 +460,7 @@ throw (wbem::framework::Exception)
 		{
 			std::string guidStr = manageableDevices[dimmIdx];
 			NVM_GUID guid;
-			str_to_guid(guidStr.c_str(), guid);
+			uid_copy(guidStr.c_str(), guid);
 
 			rc = nvm_get_sensors(guid, sensors, NVM_MAX_DEVICE_SENSORS);
 			if (rc != NVM_SUCCESS)
@@ -731,7 +731,7 @@ void wbem::support::NVDIMMSensorFactory::updateSensor(const std::string &dimmGui
 	if (changed)
 	{
 		NVM_GUID guid;
-		str_to_guid(dimmGuid.c_str(), guid);
+		uid_copy(dimmGuid.c_str(), guid);
 		int rc = nvm_set_sensor_settings(guid, (enum sensor_type)type, &settings);
 		if (rc != NVM_SUCCESS)
 		{

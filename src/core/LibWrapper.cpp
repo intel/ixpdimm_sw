@@ -26,7 +26,7 @@
  */
 
 #include "LibWrapper.h"
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include <LogEnterExit.h>
 
 namespace core

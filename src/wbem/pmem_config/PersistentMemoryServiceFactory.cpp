@@ -34,7 +34,7 @@
 #include <LogEnterExit.h>
 #include <libintelnvm-cim/ExceptionNoMemory.h>
 #include <libintelnvm-cim/ExceptionBadParameter.h>
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include <libintelnvm-cim/ExceptionNotSupported.h>
 #include <libintelnvm-cim/ObjectPathBuilder.h>
 #include "pmem_config/PersistentMemoryPoolFactory.h"
@@ -662,7 +662,7 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::deleteNamespace(const st
 	}
 
 	NVM_GUID guid;
-	str_to_guid(namespaceGuid.c_str(), guid);
+	uid_copy(namespaceGuid.c_str(), guid);
 
 	int rc = m_deleteNamespace(guid);
 	if (rc != NVM_SUCCESS)
@@ -691,7 +691,7 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::createNamespace(std::str
 	}
 
 	NVM_GUID poolGuid;
-	str_to_guid(poolGuidStr.c_str(), poolGuid);
+	uid_copy(poolGuidStr.c_str(), poolGuid);
 	NVM_GUID namespaceGuid;
 	NVM_GUID_STR namespace_guid_str;
 
@@ -734,7 +734,7 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::createNamespace(std::str
 	{
 		throw exception::NvmExceptionLibError(rc);
 	}
-	guid_to_str(namespaceGuid, namespace_guid_str);
+	uid_copy(namespaceGuid, namespace_guid_str);
 	namespaceGuidStr = std::string(namespace_guid_str);
 }
 
@@ -792,7 +792,7 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::performAtomicModificatio
 		std::string namespaceGuidStr, NVM_UINT64 reservation, std::string friendlyNameStr)
 {
 	NVM_GUID namespaceGuid;
-	str_to_guid(namespaceGuidStr.c_str(), namespaceGuid);
+	uid_copy(namespaceGuidStr.c_str(), namespaceGuid);
 	struct namespace_details details;
 	memset(&details, 0, sizeof (details));
 	int rc = nvm_get_namespace_details(namespaceGuid, &details);
@@ -855,7 +855,7 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::modifyNamespaceName(
 	}
 
 	NVM_GUID namespaceGuid;
-	str_to_guid(namespaceGuidStr.c_str(), namespaceGuid);
+	uid_copy(namespaceGuidStr.c_str(), namespaceGuid);
 
 	int rc = m_modifyNamespaceName(namespaceGuid, friendlyNameStr.c_str());
 	if (rc != NVM_SUCCESS)
@@ -875,7 +875,7 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::modifyNamespaceBlockCoun
 	}
 
 	NVM_GUID namespaceGuid;
-	str_to_guid(namespaceGuidStr.c_str(), namespaceGuid);
+	uid_copy(namespaceGuidStr.c_str(), namespaceGuid);
 
 	int rc = m_modifyNamespaceBlockCount(namespaceGuid, blockCount, 1);
 	if (rc != NVM_SUCCESS)
@@ -894,7 +894,7 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::getNamespaceDetails(
 		const std::string namespaceGuidStr, struct namespace_details &details)
 {
 	NVM_GUID namespaceGuid;
-	str_to_guid(namespaceGuidStr.c_str(), namespaceGuid);
+	uid_copy(namespaceGuidStr.c_str(), namespaceGuid);
 	memset(&details, 0, sizeof (struct namespace_details));
 	int rc = nvm_get_namespace_details(namespaceGuid, &details);
 
@@ -935,7 +935,7 @@ NVM_UINT64 wbem::pmem_config::PersistentMemoryServiceFactory::getAdjustedCreateN
 	settings.enabled = (enum namespace_enable_state) enableState;
 
 	NVM_GUID poolGuid;
-	str_to_guid(poolGuidStr.c_str(), poolGuid);
+	uid_copy(poolGuidStr.c_str(), poolGuid);
 
 	if ((rc = nvm_adjust_create_namespace_block_count(poolGuid, &settings, NULL)) != NVM_SUCCESS)
 	{
@@ -951,7 +951,7 @@ NVM_UINT64 wbem::pmem_config::PersistentMemoryServiceFactory::getAdjustedModifyN
 	int rc = NVM_SUCCESS;
 	NVM_GUID namespaceGuid;
 	NVM_UINT64 newBlockCount = blockCount;
-	str_to_guid(namespaceGuidStr.c_str(), namespaceGuid);
+	uid_copy(namespaceGuidStr.c_str(), namespaceGuid);
 
 	if ((rc = nvm_adjust_modify_namespace_block_count(namespaceGuid, &newBlockCount)) != NVM_SUCCESS)
 	{

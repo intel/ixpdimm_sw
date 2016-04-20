@@ -31,7 +31,7 @@
 #include <libintelnvm-cim/ExceptionBadAttribute.h>
 #include <libintelnvm-cim/ExceptionNoMemory.h>
 #include <exception/NvmExceptionLibError.h>
-#include <guid/guid.h>
+#include <uid/uid.h>
 
 #include <software/NVDIMMFWVersionFactory.h>
 #include <physical_asset/NVDIMMFactory.h>

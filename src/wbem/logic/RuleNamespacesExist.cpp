@@ -33,7 +33,7 @@
 #include <exception/NvmExceptionLibError.h>
 #include <exception/NvmExceptionBadRequest.h>
 #include <LogEnterExit.h>
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include <nvm_management.h>
 #include <lib_interface/NvmApi.h>
 
@@ -60,7 +60,7 @@ void wbem::logic::RuleNamespacesExist::verify(const MemoryAllocationRequest &req
 			dimmIter != request.dimms.end(); dimmIter++)
 	{
 		NVM_GUID dimmGuid;
-		str_to_guid(dimmIter->guid.c_str(), dimmGuid);
+		uid_copy(dimmIter->guid.c_str(), dimmGuid);
 		int nsCount = pApi->getDeviceNamespaceCount(dimmGuid, NAMESPACE_TYPE_UNKNOWN);
 		if (nsCount < 0) // error
 		{

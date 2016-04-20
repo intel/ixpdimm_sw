@@ -30,7 +30,7 @@
 #include <vector>
 #include <string>
 #include <nvm_types.h>
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include <nvm_types.h>
 #include <core/Result.h>
 #include "Device.h"

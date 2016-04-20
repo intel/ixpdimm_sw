@@ -31,7 +31,7 @@
  */
 
 #include <string.h>
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include <nvm_management.h>
 #include <LogEnterExit.h>
 #include <server/BaseServerFactory.h>
@@ -91,7 +91,7 @@ wbem::framework::Instance* wbem::memory::RawMemoryFactory::getInstance(
 		// extract the GUID from the object path
 		framework::Attribute attrDeviceID = path.getKeyValue(DEVICEID_KEY);
 		NVM_GUID dimmGuid;
-		str_to_guid((char*)attrDeviceID.stringValue().c_str(), dimmGuid);
+		uid_copy((char *) attrDeviceID.stringValue().c_str(), dimmGuid);
 
 		// get dimm discovery info
 		struct device_discovery dimmDiscovery;
@@ -107,7 +107,7 @@ wbem::framework::Instance* wbem::memory::RawMemoryFactory::getInstance(
 		if (containsAttribute(ELEMENTNAME_KEY, attributes))
 		{
 			NVM_GUID_STR guidStr;
-			guid_to_str(dimmDiscovery.guid, guidStr);
+			uid_copy(dimmDiscovery.guid, guidStr);
 			framework::Attribute attrElementName(
 					RAWMEMORY_ELEMENTNAME_prefix + std::string(guidStr), false);
 			pInstance->setAttribute(ELEMENTNAME_KEY, attrElementName, attributes);
@@ -251,7 +251,7 @@ wbem::framework::instance_names_t* wbem::memory::RawMemoryFactory::getInstanceNa
 
 			// DeviceID = DIMM GUID
 			NVM_GUID_STR guidStr;
-			guid_to_str((*iter).guid, guidStr);
+			uid_copy((*iter).guid, guidStr);
 			framework::Attribute attrDeviceID(guidStr, true);
 			keys.insert(std::pair<std::string, framework::Attribute>(
 					DEVICEID_KEY, attrDeviceID));

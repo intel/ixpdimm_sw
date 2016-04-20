@@ -32,7 +32,7 @@
 #include "nvm_context.h"
 #include <os/os_adapter.h>
 #include <persistence/logging.h>
-#include <guid/guid.h>
+#include <uid/uid.h>
 
 #ifdef __WINDOWS__
 #include <Windows.h>
@@ -486,7 +486,7 @@ void invalidate_device_pcd(const NVM_GUID device_guid)
 		{
 			for (int i = 0; i < p_context->device_count; i++)
 			{
-				if (guid_cmp(device_guid, p_context->p_devices[i].guid))
+				if (uid_cmp(device_guid, p_context->p_devices[i].guid))
 				{
 					// found it
 					if (p_context->p_devices[i].p_pcd)
@@ -527,7 +527,7 @@ int get_nvm_context_device_details(const NVM_GUID device_guid, struct device_det
 		{
 			for (int i = 0; i < p_context->device_count; i++)
 			{
-				if (guid_cmp(device_guid, p_context->p_devices[i].guid))
+				if (uid_cmp(device_guid, p_context->p_devices[i].guid))
 				{
 					// found it
 					if (p_context->p_devices[i].p_device_details)
@@ -572,7 +572,7 @@ int set_nvm_context_device_details(const NVM_GUID device_guid,
 		{
 			for (int i = 0; i < p_context->device_count; i++)
 			{
-				if (guid_cmp(device_guid, p_context->p_devices[i].guid))
+				if (uid_cmp(device_guid, p_context->p_devices[i].guid))
 				{
 					// found it
 					// clear any existing details
@@ -630,7 +630,7 @@ int get_nvm_context_device_pcd(const NVM_GUID device_guid,
 		{
 			for (int i = 0; i < p_context->device_count; i++)
 			{
-				if (guid_cmp(device_guid, p_context->p_devices[i].guid))
+				if (uid_cmp(device_guid, p_context->p_devices[i].guid))
 				{
 					// found it
 					if (p_context->p_devices[i].pcd_size > 0 && p_context->p_devices[i].p_pcd)
@@ -685,7 +685,7 @@ int set_nvm_context_device_pcd(const NVM_GUID device_guid,
 		{
 			for (int i = 0; i < p_context->device_count; i++)
 			{
-				if (guid_cmp(device_guid, p_context->p_devices[i].guid))
+				if (uid_cmp(device_guid, p_context->p_devices[i].guid))
 				{
 					// found it
 					// clear any existing pcd
@@ -878,7 +878,7 @@ int get_nvm_context_pool(const NVM_GUID pool_guid, struct pool *p_pool)
 		{
 			for (int i = 0; i < p_context->pool_count; i++)
 			{
-				if (guid_cmp(pool_guid, p_context->p_pools[i].pool_guid))
+				if (uid_cmp(pool_guid, p_context->p_pools[i].pool_guid))
 				{
 					// found it
 					memset(p_pool, 0, sizeof (struct pool));
@@ -1079,7 +1079,7 @@ int get_nvm_context_namespace_details(const NVM_GUID namespace_guid,
 		{
 			for (int i = 0; i < p_context->namespace_count; i++)
 			{
-				if (guid_cmp(namespace_guid, p_context->p_namespaces[i].guid))
+				if (uid_cmp(namespace_guid, p_context->p_namespaces[i].guid))
 				{
 					// found it
 					if (p_context->p_namespaces[i].p_namespace_details)
@@ -1123,7 +1123,7 @@ int set_nvm_context_namespace_details(const NVM_GUID namespace_guid,
 		{
 			for (int i = 0; i < p_context->namespace_count; i++)
 			{
-				if (guid_cmp(namespace_guid, p_context->p_namespaces[i].guid))
+				if (uid_cmp(namespace_guid, p_context->p_namespaces[i].guid))
 				{
 					// found it
 					// clear any existing details

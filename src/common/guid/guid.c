@@ -43,12 +43,12 @@ int randomSeed = 1;
  * used in hexdec to convert hex string to number
  */
 static const char hextable[] =
-{
-		[0 ... 255] = -1,
-		['0'] = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
-		['A'] = 10, 11, 12, 13, 14, 15,
-		['a'] = 10, 11, 12, 13, 14, 15
-};
+		{
+				[0 ... 255] = -1,
+				['0'] = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+				['A'] = 10, 11, 12, 13, 14, 15,
+				['a'] = 10, 11, 12, 13, 14, 15
+		};
 
 /*
  * Helper function for guid_to_str to convert an integer
@@ -275,4 +275,20 @@ int guid_hash(const unsigned char *source,
 	p_guid[15] = outHash[15];
 
 	return 1;
+}
+
+/*
+ * Create hash guid from specified input string
+ */
+int guid_hash_str(const unsigned char *source,
+	const size_t source_len, char *p_guid)
+{
+	COMMON_GUID guid_old;
+	int rc = guid_hash(source, source_len, guid_old);
+	if (rc)
+	{
+		guid_to_str(guid_old, p_guid);
+	}
+
+	return rc;
 }

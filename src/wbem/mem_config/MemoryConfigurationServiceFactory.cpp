@@ -38,7 +38,7 @@
 #include <nvm_management.h>
 #include <utility.h>
 #include <LogEnterExit.h>
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include <libintelnvm-cim/StringUtil.h>
 #include <libintelnvm-cim/CimXml.h>
 #include <libintelnvm-cim/ExceptionBadParameter.h>
@@ -533,7 +533,7 @@ void wbem::mem_config::MemoryConfigurationServiceFactory::removeGoalFromDimms(st
 	for (; guidIter!= dimmGuids.end(); guidIter++)
 	{
 		NVM_GUID guid;
-		str_to_guid((*guidIter).c_str(), guid);
+		uid_copy((*guidIter).c_str(), guid);
 		int rc = m_pApi->deleteConfigGoal(guid);
 		if (rc != NVM_SUCCESS && rc != NVM_ERR_NOTFOUND)
 		{
@@ -802,7 +802,7 @@ bool wbem::mem_config::MemoryConfigurationServiceFactory::dimmHasGoal(const NVM_
 	bool hasGoal = false;
 
 	NVM_GUID_STR guidStr;
-	guid_to_str(dimmGuid, guidStr);
+	uid_copy(dimmGuid, guidStr);
 
 	lib_interface::NvmApi *pApi = lib_interface::NvmApi::getApi();
 	try
@@ -867,7 +867,7 @@ wbem::framework::Instance* wbem::mem_config::MemoryConfigurationServiceFactory::
 	std::string deviceGuid = instanceId.substr(0, NVM_GUIDSTR_LEN - 1);
 
 	NVM_GUID guid;
-	str_to_guid(deviceGuid.c_str(), guid);
+	uid_copy(deviceGuid.c_str(), guid);
 
 	int rc = m_DeleteConfigGoalProvider(guid);
 	if (rc != NVM_SUCCESS)
@@ -938,7 +938,7 @@ void wbem::mem_config::MemoryConfigurationServiceFactory::exportSystemConfigToPa
 			iter != dimms.end(); iter++)
 	{
 		NVM_GUID guid;
-		str_to_guid((*iter).c_str(), guid);
+		uid_copy((*iter).c_str(), guid);
 		int rc = nvm_dump_config(guid, path.c_str(), path.length() + 1, append);
 		if (rc != NVM_SUCCESS)
 		{
@@ -991,7 +991,7 @@ void wbem::mem_config::MemoryConfigurationServiceFactory::importDimmConfigsFromP
 			dimmIter != dimms.end(); dimmIter++)
 	{
 		NVM_GUID guid;
-		str_to_guid((*dimmIter).c_str(), guid);
+		uid_copy((*dimmIter).c_str(), guid);
 		int rc = m_pApi->loadConfig(guid, path.c_str(), path.length() + 1);
 		// revert all only any failure
 		if (rc != NVM_SUCCESS)
@@ -1038,7 +1038,7 @@ std::vector<std::string>
 		if (((*iter).socket_id == socketId))
 		{
 			NVM_GUID_STR guidStr;
-			guid_to_str((*iter).guid, guidStr);
+			uid_copy((*iter).guid, guidStr);
 			dimmIDs.push_back(std::string(guidStr));
 		}
 	}

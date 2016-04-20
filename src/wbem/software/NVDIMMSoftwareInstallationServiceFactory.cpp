@@ -33,7 +33,7 @@
 
 #include <LogEnterExit.h>
 #include <nvm_management.h>
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include <file_ops/file_ops_adapter.h>
 #include <libintelnvm-cim/ObjectPathBuilder.h>
 #include <libintelnvm-cim/ExceptionBadParameter.h>
@@ -389,7 +389,7 @@ throw (framework::Exception)
 
 	int rc;
 	NVM_GUID guid;
-	str_to_guid(deviceGuid.c_str(), guid);
+	uid_copy(deviceGuid.c_str(), guid);
 	// library will check if device is manageable and can update the FW ... if not it will return an error
 	if (NVM_SUCCESS !=
 			(rc = m_UpdateDeviceFw(guid, path.c_str(), path.length(), activate, force)))
@@ -447,7 +447,7 @@ throw (framework::Exception)
 	}
 
 	NVM_GUID guid;
-	str_to_guid(deviceGuid.c_str(), guid);
+	uid_copy(deviceGuid.c_str(), guid);
 	NVM_VERSION fw_version;
 	memset(fw_version, 0, NVM_VERSION_LEN);
 	int lib_rc;

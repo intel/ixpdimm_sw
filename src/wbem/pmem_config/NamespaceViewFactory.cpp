@@ -35,7 +35,7 @@
 #include <utility.h>
 #include <libintelnvm-cim/Attribute.h>
 #include <server/BaseServerFactory.h>
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include <string/s_str.h>
 #include <libintelnvm-cim/ExceptionBadParameter.h>
 #include <libintelnvm-cim/ExceptionNoMemory.h>
@@ -118,7 +118,7 @@ throw(wbem::framework::Exception)
 		if (containsAttribute(POOLID_KEY, attributes))
 		{
 			NVM_GUID_STR poolGuidStr;
-			guid_to_str(ns.pool_guid, poolGuidStr);
+			uid_copy(ns.pool_guid, poolGuidStr);
 			framework::Attribute a(poolGuidStr, false);
 			pInstance->setAttribute(POOLID_KEY, a, attributes);
 		}
@@ -348,7 +348,7 @@ std::vector<std::string>
 			for (int i = 0; i < nsCount; i++)
 			{
 				NVM_GUID_STR guidStr;
-				guid_to_str(namespaces[i].namespace_guid, guidStr);
+				uid_copy(namespaces[i].namespace_guid, guidStr);
 				nsList.push_back(std::string(guidStr));
 			}
 			free(namespaces);
@@ -372,7 +372,7 @@ struct namespace_details
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	NVM_GUID nsGuid;
-	str_to_guid(nsGuidStr.c_str(), nsGuid);
+	uid_copy(nsGuidStr.c_str(), nsGuid);
 
 	struct namespace_details details;
 	memset(&details, 0, sizeof (details));

@@ -30,7 +30,7 @@
  */
 
 #include <stdlib.h>
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include <os/os_adapter.h>
 #include <string/s_str.h>
 #include <string/revision.h>

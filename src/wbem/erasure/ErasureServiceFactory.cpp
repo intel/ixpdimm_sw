@@ -32,7 +32,7 @@
 
 #include <LogEnterExit.h>
 #include <nvm_management.h>
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include <libintelnvm-cim/ExceptionBadParameter.h>
 #include <libintelnvm-cim/ObjectPathBuilder.h>
 #include <physical_asset/NVDIMMFactory.h>
@@ -194,7 +194,7 @@ wbem::framework::UINT32 wbem::erasure::ErasureServiceFactory::executeMethod(
 						throw framework::ExceptionBadParameter("Tag");
 					}
 					NVM_GUID deviceGuid;
-					str_to_guid(deviceGuidStr.c_str(), deviceGuid);
+					uid_copy(deviceGuidStr.c_str(), deviceGuid);
 					eraseDevice(deviceGuidStr, password);
 				}
 				else if (elementObject.getClass() == software::NVDIMMCOLLECTION_CREATIONCLASSNAME)
@@ -281,7 +281,7 @@ throw (wbem::framework::Exception)
 	}
 
 	NVM_GUID guid;
-	str_to_guid(deviceGuid.c_str(), guid);
+	uid_copy(deviceGuid.c_str(), guid);
 
 	int rc = m_eraseDevice(guid, password.c_str(), password.length());
 	if (rc != NVM_SUCCESS)

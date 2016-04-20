@@ -38,7 +38,7 @@
 #include <server/BaseServerFactory.h>
 #include <LogEnterExit.h>
 #include <nvm_management.h>
-#include <guid/guid.h>
+#include <uid/uid.h>
 
 #include "PersistentMemoryPoolFactory.h"
 #include "mem_config/PoolViewFactory.h"
@@ -187,7 +187,7 @@ wbem::framework::instance_names_t* wbem::pmem_config::PersistentMemoryPoolFactor
 
 			// InstanceID = pool UUID
 			NVM_GUID_STR poolGuidStr;
-			guid_to_str((*iter).pool_guid, poolGuidStr);
+			uid_copy((*iter).pool_guid, poolGuidStr);
 			framework::Attribute attrInstanceID(poolGuidStr, true);
 			keys[INSTANCEID_KEY] = attrInstanceID;
 
@@ -216,7 +216,7 @@ struct possible_namespace_ranges wbem::pmem_config::PersistentMemoryPoolFactory:
 
 	struct possible_namespace_ranges range;
 	NVM_GUID guid;
-	str_to_guid(poolGuid.c_str(), guid);
+	uid_copy(poolGuid.c_str(), guid);
 	int rc = m_GetAvailablePersistentSizeRange(guid, &range);
 	if (rc < NVM_SUCCESS)
 	{

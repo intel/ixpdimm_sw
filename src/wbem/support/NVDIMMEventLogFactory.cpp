@@ -31,7 +31,7 @@
  */
 
 #include <string.h>
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include <string/s_str.h>
 #include "NVDIMMEventLogFactory.h"
 #include <LogEnterExit.h>
@@ -300,7 +300,7 @@ void wbem::support::NVDIMMEventLogFactory::convertFactoryToEventFilter(
 	}
 	if (pEventLogFilter->hasGuid())
 	{
-		str_to_guid(pEventLogFilter->getGuid().c_str(), pFilter->guid);
+		uid_copy(pEventLogFilter->getGuid().c_str(), pFilter->guid);
 		pFilter->filter_mask |= NVM_FILTER_ON_GUID;
 	}
 	if (pEventLogFilter->hasActionRequired())

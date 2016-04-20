@@ -27,7 +27,7 @@
 
 #include "MemoryAllocationUtil.h"
 #include <physical_asset/NVDIMMFactory.h>
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include <exception/NvmExceptionLibError.h>
 #include <LogEnterExit.h>
 
@@ -163,7 +163,7 @@ wbem::logic::Dimm wbem::logic::MemoryAllocationUtil::deviceDiscoveryToDimm(
 	wbem::logic::Dimm dimm;
 
 	NVM_GUID_STR guidStr;
-	guid_to_str(deviceDiscovery.guid, guidStr);
+	uid_copy(deviceDiscovery.guid, guidStr);
 	dimm.guid = guidStr;
 
 	dimm.capacity = deviceDiscovery.capacity;

@@ -36,7 +36,7 @@
 #include <libintelnvm-cim/ObjectPath.h>
 #include <libintelnvm-cim/ExceptionBadParameter.h>
 #include <server/BaseServerFactory.h>
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include "SanitizeJobFactory.h"
 
 #include <exception/NvmExceptionLibError.h>
@@ -93,7 +93,7 @@ wbem::framework::instance_names_t* wbem::support::SanitizeJobFactory::getInstanc
 						framework::attributes_t keys;
 						NVM_GUID_STR job_guid_str;
 
-						guid_to_str(jobs[i].guid, job_guid_str);
+						uid_copy(jobs[i].guid, job_guid_str);
 						std::string instanceIdStr = job_guid_str;
 
 						keys[INSTANCEID_KEY] = framework::Attribute(instanceIdStr, true);
@@ -161,7 +161,7 @@ wbem::framework::Instance* wbem::support::SanitizeJobFactory::getInstance(wbem::
 		for (int i = 0; i < jobCount; i++)
 		{
 			NVM_GUID_STR jobGuidStr;
-			guid_to_str(jobs[i].guid, jobGuidStr);
+			uid_copy(jobs[i].guid, jobGuidStr);
 
 			if ((instanceGuid.compare(jobGuidStr) == 0) &&
 					(jobs[i].type == NVM_JOB_TYPE_SANITIZE))

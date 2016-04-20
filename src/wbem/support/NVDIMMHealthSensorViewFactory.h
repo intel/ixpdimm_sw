@@ -35,7 +35,7 @@
 #define	_WBEM_SUPPORT_NVDIMMHEALTHSENSORVIEW_FACTORY_H_
 
 #include <string>
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include <nvm_management.h>
 #include <LogEnterExit.h>
 #include <libintelnvm-cim/Attribute.h>

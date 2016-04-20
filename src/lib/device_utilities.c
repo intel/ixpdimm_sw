@@ -34,7 +34,7 @@
 #include <persistence/lib_persistence.h>
 #include <persistence/config_settings.h>
 #include <os/os_adapter.h>
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include <platform_config_data.h>
 #include <string/s_str.h>
 #include <string/revision.h>
@@ -104,7 +104,7 @@ int calculate_device_guid(NVM_GUID device_guid, const unsigned char *mfr, size_t
 		memmove(guid_data+mfr_len+mn_len, sn, sn_len);
 
 		// feed the component string into SHA1 to deterministically generate a GUID
-		if (!guid_hash(guid_data, guid_data_len, device_guid))
+		if (!guid_hash_str(guid_data, guid_data_len, device_guid))
 		{
 			COMMON_LOG_ERROR("DIMM guid hash creation FAILED");
 			rc = NVM_ERR_INVALIDPARAMETER;
@@ -166,7 +166,7 @@ int lookup_dev_guid(const NVM_GUID dev_guid, struct device_discovery *p_dev)
 		{
 			for (int i = 0; i < dev_count; i++)
 			{
-				if (guid_cmp(dev_guid, p_devices[i].guid))
+				if (uid_cmp(dev_guid, p_devices[i].guid))
 				{
 					rc = NVM_SUCCESS;
 					if (p_dev)

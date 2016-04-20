@@ -32,7 +32,7 @@
 #include <stdlib.h>
 #include <algorithm>
 #include <string.h>
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include <string>
 #include <sstream>
 #include <string/s_str.h>
@@ -729,7 +729,7 @@ void
 	std::string ilsetGuidStr = memory::PersistentMemoryFactory::getInterleaveSetUuid(
 			ilset.getSetIndex(), socketId);
 
-	str_to_guid(ilsetGuidStr.c_str(), ilsetGuid);
+	uid_copy(ilsetGuidStr.c_str(), ilsetGuid);
 }
 
 bool
@@ -775,7 +775,7 @@ void
 	wbem::framework::Attribute attr;
 
 	pMemoryInstance->getAttribute(wbem::DEVICEID_KEY, attr);
-	str_to_guid(attr.stringValue().c_str(), guid);
+	uid_copy(attr.stringValue().c_str(), guid);
 }
 
 bool
@@ -1096,7 +1096,7 @@ NVM_NFIT_DEVICE_HANDLE
 	if (!found)
 	{
 		NVM_GUID_STR guidStr;
-		guid_to_str(guid, guidStr);
+		uid_copy(guid, guidStr);
 		COMMON_LOG_ERROR_F("Device guid %s could not be found.", guidStr);
 		throw framework::ExceptionBadParameter(guidStr);
 	}

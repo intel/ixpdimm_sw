@@ -32,7 +32,7 @@
 
 #include <LogEnterExit.h>
 #include <nvm_management.h>
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include <server/BaseServerFactory.h>
 #include <physical_asset/NVDIMMFactory.h>
 #include "NVDIMMPerformanceViewFactory.h"
@@ -80,7 +80,7 @@ throw (wbem::framework::Exception)
 
 		std::string guidStr = path.getKeyValue(INSTANCEID_KEY).stringValue();
 		NVM_GUID guid;
-		str_to_guid(guidStr.c_str(), guid);
+		uid_copy(guidStr.c_str(), guid);
 		int rc;
 		struct device_performance performance;
 		if ((rc = nvm_get_device_performance(guid, &performance)) != NVM_SUCCESS)

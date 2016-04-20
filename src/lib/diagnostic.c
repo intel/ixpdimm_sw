@@ -35,7 +35,7 @@
 #include <persistence/logging.h>
 #include <persistence/lib_persistence.h>
 #include <string/s_str.h>
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include "system.h"
 
 /*
@@ -250,9 +250,9 @@ void diag_clear_results(const enum diagnostic_test type,
 			// check for a matching guid is requested
 			if (clear_specific_device)
 			{
-				COMMON_GUID guid;
-				str_to_guid(events[i].guid, guid);
-				if (guid_cmp(guid, device_guid) != 1)
+				COMMON_UID guid;
+				uid_copy(events[i].guid, guid);
+				if (uid_cmp(guid, device_guid) != 1)
 				{
 					matched = 0;
 				}

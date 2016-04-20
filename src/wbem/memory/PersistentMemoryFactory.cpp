@@ -42,7 +42,7 @@
 #include <libintelnvm-cim/ExceptionBadAttribute.h>
 #include <exception/NvmExceptionLibError.h>
 #include <LogEnterExit.h>
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include <sstream>
 #include <string.h>
 #include <lib_interface/NvmApi.h>
@@ -158,7 +158,7 @@ void wbem::memory::PersistentMemoryFactory::getStorageRegionInstanceNames(
 	for (size_t i = 0; i < pool.dimm_count; i++)
 	{
 		NVM_GUID_STR guidStr;
-		guid_to_str(pool.dimms[i], guidStr);
+		uid_copy(pool.dimms[i], guidStr);
 		std::string deviceId = getStorageRegionUuid(std::string(guidStr));
 
 		instanceNames.push_back(getInstanceName(deviceId));
@@ -264,7 +264,7 @@ bool wbem::memory::PersistentMemoryFactory::findStorageDimmIndexForUuid(const st
 	for (size_t i = 0; i < pool.dimm_count; i++)
 	{
 		NVM_GUID_STR guidStr;
-		guid_to_str(pool.dimms[i], guidStr);
+		uid_copy(pool.dimms[i], guidStr);
 		std::string tmpUuid = getStorageRegionUuid(std::string(guidStr));
 
 		if (uuid == tmpUuid)
@@ -334,7 +334,7 @@ bool wbem::memory::PersistentMemoryFactory::isAssociated(const std::string& asso
 				if (pAntInstance->getAttribute(INSTANCEID_KEY, instanceIdAttr) == framework::SUCCESS)
 				{
 					NVM_GUID poolGuid;
-					str_to_guid(instanceIdAttr.stringValue().c_str(), poolGuid);
+					uid_copy(instanceIdAttr.stringValue().c_str(), poolGuid);
 					if (nvm_get_pool(poolGuid, pool) == NVM_SUCCESS)
 					{
 						result = poolMatchesPmObject(pool, pDepInstance);
@@ -431,7 +431,7 @@ bool wbem::memory::PersistentMemoryFactory::pmTypesMatch(struct pool *pool, fram
 	if (pPMObject->getAttribute(DEVICEID_KEY, deviceIdAttr) == framework::SUCCESS)
 	{
 		NVM_GUID guid;
-		str_to_guid(deviceIdAttr.stringValue().c_str(), guid);
+		uid_copy(deviceIdAttr.stringValue().c_str(), guid);
 		if (mem_config::MemoryAllocationSettingsFactory::isADeviceGuid(guid) && pool->type == POOL_TYPE_PERSISTENT)
 		{
 			matches = true;
@@ -465,10 +465,10 @@ std::string wbem::memory::PersistentMemoryFactory::getInterleaveSetUuid(const NV
 
 	std::string srcStr = srcStream.str();
 	NVM_GUID uuid;
-	guid_hash((NVM_UINT8*)srcStr.c_str(), srcStr.size(), uuid);
+	guid_hash_str((NVM_UINT8 *) srcStr.c_str(), srcStr.size(), uuid);
 
 	NVM_GUID_STR uuidStr;
-	guid_to_str(uuid, uuidStr);
+	uid_copy(uuid, uuidStr);
 
 	return std::string(uuidStr);
 }
@@ -703,7 +703,7 @@ bool wbem::memory::PersistentMemoryFactory::isPersistentMemoryUsingDimm(const st
 				for (size_t j = 0; j < interleave.dimm_count; j++)
 				{
 					NVM_GUID_STR tmpGuidStr;
-					guid_to_str(interleave.dimms[j], tmpGuidStr);
+					uid_copy(interleave.dimms[j], tmpGuidStr);
 					if (dimmGuid == tmpGuidStr)
 					{
 						result = true;
@@ -815,7 +815,7 @@ NVM_UINT16 wbem::memory::PersistentMemoryFactory::getStorageRegionHealthState(co
 	else
 	{
 		NVM_GUID_STR guidStr;
-		guid_to_str(dimmGuid, guidStr);
+		uid_copy(dimmGuid, guidStr);
 		COMMON_LOG_ERROR_F("couldn't get status for DIMM %s", guidStr);
 
 		if (rc == NVM_ERR_BADDEVICE) // missing
@@ -865,7 +865,7 @@ NVM_UINT16 wbem::memory::PersistentMemoryFactory::getStorageRegionOperationalSta
 	if (rc != NVM_SUCCESS)
 	{
 		NVM_GUID_STR guidStr;
-		guid_to_str(dimmGuid, guidStr);
+		uid_copy(dimmGuid, guidStr);
 		COMMON_LOG_ERROR_F("couldn't get status for DIMM %s", guidStr);
 	}
 
@@ -1040,7 +1040,7 @@ bool wbem::memory::PersistentMemoryFactory::isPersistentMemoryAssociatedToPersis
 		std::string pmnsGuidStr = pmnsDeviceIdAttribute.stringValue();
 
 		NVM_GUID nsGuid;
-		str_to_guid(pmnsGuidStr.c_str(), nsGuid);
+		uid_copy(pmnsGuidStr.c_str(), nsGuid);
 		struct namespace_details details;
 		lib_interface::NvmApi::getApi()->getNamespaceDetails(nsGuid, &details);
 
@@ -1048,7 +1048,7 @@ bool wbem::memory::PersistentMemoryFactory::isPersistentMemoryAssociatedToPersis
 		if (details.type == NAMESPACE_TYPE_STORAGE)
 		{
 			NVM_GUID_STR guidStr;
-			guid_to_str(details.creation_id.device_guid, guidStr);
+			uid_copy(details.creation_id.device_guid, guidStr);
 			nsBasedOnGuid = std::string(guidStr);
 		}
 		else if (details.type == NAMESPACE_TYPE_APP_DIRECT)

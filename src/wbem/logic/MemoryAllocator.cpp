@@ -49,7 +49,7 @@
 #include <exception/NvmExceptionLibError.h>
 #include <libintelnvm-cim/ExceptionNoMemory.h>
 #include <nvm_management.h>
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include <lib_interface/NvmApi.h>
 #include <utility.h>
 #include "PostLayoutAddressDecoderLimitCheck.h"
@@ -224,7 +224,7 @@ void wbem::logic::MemoryAllocator::allocate(struct MemoryAllocationLayout &layou
 			goalIter != layout.goals.end(); goalIter++)
 	{
 		NVM_GUID guid;
-		str_to_guid((*goalIter).first.c_str(), guid);
+		uid_copy((*goalIter).first.c_str(), guid);
 		int rc = m_pLibApi->createConfigGoal(guid, &((*goalIter).second));
 		if (rc != NVM_SUCCESS)
 		{

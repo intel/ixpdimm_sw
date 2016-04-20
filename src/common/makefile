@@ -42,7 +42,7 @@ OS = os
 UNITTEST = unittest
 
 # defines the submodules compiled via this makefile (note encrypt not included intentionally)
-SUBMODULES = string time guid system persistence smbios
+SUBMODULES = string time guid uid system persistence smbios
 
 # defines the submodules compiled independent of this makefile
 INDEPENDENT_SUBMODULES = file_ops os

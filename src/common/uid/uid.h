@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 2016, Intel Corporation
+ * Copyright (c) 2016, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -25,52 +25,25 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Rule that checks that no config goals exist on the dimms requested
- */
+#ifndef UID_H_
+#define	UID_H_
 
-#include "RuleDimmHasConfigGoal.h"
-#include <exception/NvmExceptionBadRequest.h>
-#include <LogEnterExit.h>
-#include <uid/uid.h>
-#include <lib_interface/NvmApi.h>
-#include <exception/NvmExceptionLibError.h>
-
-wbem::logic::RuleDimmHasConfigGoal::RuleDimmHasConfigGoal()
+#ifdef __cplusplus
+extern "C"
 {
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+#endif
+
+#include <stdio.h>
+#include <common_types.h>
+
+extern void uid_copy(const COMMON_UID src, COMMON_UID dst);
+
+extern void guid_to_uid(const COMMON_GUID guid, COMMON_UID uid);
+
+extern int uid_cmp(const COMMON_UID uid1, const COMMON_UID uid2);
+
+#ifdef __cplusplus
 }
+#endif
 
-wbem::logic::RuleDimmHasConfigGoal::~RuleDimmHasConfigGoal()
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-}
-
-void wbem::logic::RuleDimmHasConfigGoal::verify(const MemoryAllocationRequest &request)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	wbem::lib_interface::NvmApi *pApi = wbem::lib_interface::NvmApi::getApi();
-
-	for (std::vector<struct Dimm>::const_iterator dimmIter = request.dimms.begin();
-				dimmIter != request.dimms.end(); dimmIter++)
-	{
-		NVM_GUID guid;
-		uid_copy((*dimmIter).guid.c_str(), guid);
-
-		struct config_goal goal;
-		int rc = pApi->getConfigGoal(guid, &goal);
-
-		if (rc == NVM_SUCCESS)
-		{
-			if (goal.status != CONFIG_GOAL_STATUS_SUCCESS)
-			{
-				throw exception::NvmExceptionDimmHasConfigGoal();
-			}
-		}
-		else if (rc != NVM_ERR_NOTFOUND)
-		{
-			throw exception::NvmExceptionLibError(rc);
-		}
-	}
-}
+#endif /* UID_H_ */

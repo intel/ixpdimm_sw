@@ -157,7 +157,7 @@ void check_interleave_sets(struct current_config_table *p_current_config,
 			if (p_header->length == 0)
 			{
 				NVM_GUID_STR guid_str;
-				guid_to_str(dimm_guid, guid_str);
+				uid_copy(dimm_guid, guid_str);
 				COMMON_LOG_ERROR(
 						"Invalid extension table, length is 0.");
 				store_event_by_parts(
@@ -464,7 +464,7 @@ void check_unmapped_device_config(NVM_UINT32 *p_results,
 	COMMON_LOG_ENTRY();
 
 	NVM_GUID_STR guid_str;
-	guid_to_str(guid, guid_str);
+	uid_copy(guid, guid_str);
 
 	if ((p_current_config->config_status == CURRENT_CONFIG_STATUS_UNCONFIGURED) ||
 			(p_current_config->config_status == CURRENT_CONFIG_STATUS_ERROR_UNMAPPED))
@@ -562,7 +562,7 @@ void check_for_unapplied_config_goal(NVM_UINT32 *p_results,
 	if (config_goal_is_unapplied(p_config_input, p_config_output))
 	{
 		NVM_GUID_STR guid_str;
-		guid_to_str(p_device->guid, guid_str);
+		uid_copy(p_device->guid, guid_str);
 
 		store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG,
 				EVENT_SEVERITY_INFO,
@@ -594,7 +594,7 @@ void check_current_sku_violations(NVM_UINT32 *p_results,
 	if (p_current_config)
 	{
 		NVM_GUID_STR guid_str;
-		guid_to_str(p_device->guid, guid_str);
+		uid_copy(p_device->guid, guid_str);
 
 		// DIMM is configured with memory but memory mode is not supported
 		if (p_current_config->mapped_memory_capacity > 0 &&
@@ -660,7 +660,7 @@ void check_goal_sku_violations(NVM_UINT32 *p_results,
 				p_config_input->header.length, &goal) == NVM_SUCCESS)
 		{
 			NVM_GUID_STR guid_str;
-			guid_to_str(p_device->guid, guid_str);
+			uid_copy(p_device->guid, guid_str);
 
 			// DIMM goal contains memory mode capacity but memory mode is not supported
 			if (goal.memory_size > 0 &&
@@ -712,7 +712,7 @@ int check_platform_config_data_for_device(NVM_UINT32* p_results,
 	COMMON_LOG_ENTRY();
 
 	NVM_GUID_STR guid_str;
-	guid_to_str(p_device->guid, guid_str);
+	uid_copy(p_device->guid, guid_str);
 
 	// fetch the platform config tables for the DIMM
 	struct platform_config_data *p_config = NULL;

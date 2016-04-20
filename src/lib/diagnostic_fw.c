@@ -40,7 +40,7 @@
 #include <persistence/config_settings.h>
 #include <string/s_str.h>
 #include <string/revision.h>
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include "device_utilities.h"
 #include "capabilities.h"
 
@@ -143,7 +143,7 @@ int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 										dimms[dev_num].fw_revision, NVM_VERSION_LEN) != 0)
 								{
 									NVM_GUID_STR guid_str;
-									guid_to_str(dimms[dev_num].guid, guid_str);
+									uid_copy(dimms[dev_num].guid, guid_str);
 									s_strcat(guid_str, (NVM_GUIDSTR_LEN + 2), ", ");
 									s_strcat(inconsistent_guids_event_str,
 											NVM_EVENT_ARG_LEN, guid_str);
@@ -258,11 +258,11 @@ int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 							&discovery, 1)) == NVM_SUCCESS)
 					{
 						NVM_GUID_STR guid_str;
-						guid_to_str(dimms[current_dev].guid, guid_str);
+						uid_copy(dimms[current_dev].guid, guid_str);
 						// verify if threshold values of temperature and spare capacity are
 						// in accordance with best practices
 						nvm_get_sensors(dimms[current_dev].guid, sensors, NVM_MAX_DEVICE_SENSORS);
-						guid_to_str(dimms[current_dev].guid, device_guid_str);
+						uid_copy(dimms[current_dev].guid, device_guid_str);
 						if (!diag_check_real(p_diagnostic,
 							DIAG_THRESHOLD_FW_MEDIA_TEMP,
 							nvm_decode_temperature(

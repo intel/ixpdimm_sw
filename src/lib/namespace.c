@@ -43,7 +43,7 @@
 #include "platform_config_data.h"
 #include "utility.h"
 #include <file_ops/file_ops_adapter.h>
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include <string/s_str.h>
 #include "device_utilities.h"
 #include "string/x_str.h"

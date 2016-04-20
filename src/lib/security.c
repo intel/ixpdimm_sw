@@ -38,7 +38,7 @@
 #include <persistence/lib_persistence.h>
 #include "device_adapter.h"
 #include "monitor.h"
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include <string/s_str.h>
 #include "device_utilities.h"
 #include "capabilities.h"
@@ -82,7 +82,7 @@ int security_change_prepare(struct device_discovery *p_discovery,
 	// Do not proceed if frozen
 	if (p_discovery->lock_state == LOCK_STATE_FROZEN)
 	{
-		guid_to_str(p_discovery->guid, guid_str);
+		uid_copy(p_discovery->guid, guid_str);
 		COMMON_LOG_ERROR_F("Failed to modify security on device %s \
 				because security is frozen",
 				guid_str);
@@ -91,7 +91,7 @@ int security_change_prepare(struct device_discovery *p_discovery,
 	// Do not proceed if max password attempts have been reached
 	else if (p_discovery->lock_state == LOCK_STATE_PASSPHRASE_LIMIT)
 	{
-		guid_to_str(p_discovery->guid, guid_str);
+		uid_copy(p_discovery->guid, guid_str);
 		COMMON_LOG_ERROR_F("Failed to modify security on device %s \
 				because the passphrase limit has been reached",
 				guid_str);
@@ -100,7 +100,7 @@ int security_change_prepare(struct device_discovery *p_discovery,
 	// Do not proceed if unknown
 	else if (p_discovery->lock_state == LOCK_STATE_UNKNOWN)
 	{
-		guid_to_str(p_discovery->guid, guid_str);
+		uid_copy(p_discovery->guid, guid_str);
 		COMMON_LOG_ERROR_F("Failed to modify security on device %s \
 					because security is unknown",
 					guid_str);
@@ -109,7 +109,7 @@ int security_change_prepare(struct device_discovery *p_discovery,
 	// Do not proceed if security is not enabled (only for certain commads)
 	else if (check_enabled && p_discovery->lock_state == LOCK_STATE_DISABLED)
 	{
-		guid_to_str(p_discovery->guid, guid_str);
+		uid_copy(p_discovery->guid, guid_str);
 		COMMON_LOG_ERROR_F("Failed to modify security on device %s \
 				because the security is disabled",
 				guid_str);
@@ -460,7 +460,7 @@ int secure_erase(const NVM_PASSPHRASE passphrase,
 	{
 		// arg 1: GUID as string
 		NVM_GUID_STR guid_str;
-		guid_to_str(p_discovery->guid, guid_str);
+		uid_copy(p_discovery->guid, guid_str);
 
 		store_event_by_parts(EVENT_TYPE_MGMT,
 				EVENT_SEVERITY_INFO,

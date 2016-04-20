@@ -25,7 +25,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <common/guid/guid.h>
+#include <common/uid/uid.h>
 #include <core/exceptions/InvalidArgumentException.h>
 #include "Helper.h"
 
@@ -33,7 +33,7 @@ std::string core::Helper::guidToString(const NVM_GUID guid)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	NVM_GUID_STR result;
-	guid_to_str(guid, result);
+	uid_copy(guid, result);
 	return std::string(result);
 }
 
@@ -44,5 +44,5 @@ void core::Helper::stringToGuid(const std::string &string, NVM_GUID guid)
 	{
 		throw InvalidArgumentException("stringGuid");
 	}
-	str_to_guid(string.c_str(), guid);
+	uid_copy(string.c_str(), guid);
 }

@@ -36,7 +36,7 @@
 #include <libintelnvm-cim/ExceptionBadParameter.h>
 #include <libintelnvm-cim/ObjectPathBuilder.h>
 #include <libintelnvm-cim/CimXml.h>
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include "NVDIMMDiagnosticFactory.h"
 #include "DiagnosticIdentityFactory.h"
 #include <server/BaseServerFactory.h>
@@ -201,7 +201,7 @@ wbem::framework::UINT32 wbem::support::NVDIMMDiagnosticFactory::executeMethod(
 			framework::UINT16_LIST ignoreResults = getDiagnosticIgnoreList(inParms);
 
 			// fill guid
-			COMMON_GUID guid;
+			COMMON_UID guid;
 			getGuidFromManagedElement(inParms, testType, guid);
 
 			RunDiagnosticService(guid, ignoreResults, testType);
@@ -541,7 +541,7 @@ void wbem::support::NVDIMMDiagnosticFactory::getGuidFromManagedElement(
 		// check for guid
 		framework::ObjectPath managedElementPath = validateManagedElementObjectPath(managedElementRef,
 				physical_asset::NVDIMM_CREATIONCLASSNAME);
-		str_to_guid(managedElementPath.getKeyValue(TAG_KEY).stringValue().c_str(), guid);
+		uid_copy(managedElementPath.getKeyValue(TAG_KEY).stringValue().c_str(), guid);
 	}
 	else // other checks require either NULL or BaseServer
 	{

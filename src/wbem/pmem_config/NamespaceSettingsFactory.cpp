@@ -34,7 +34,7 @@
 #include <LogEnterExit.h>
 #include <libintelnvm-cim/Attribute.h>
 #include <server/BaseServerFactory.h>
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include <libintelnvm-cim/ExceptionBadParameter.h>
 #include <mem_config/InterleaveSet.h>
 #include "NamespaceSettingsFactory.h"
@@ -129,7 +129,7 @@ throw(wbem::framework::Exception)
 		if (containsAttribute(POOLID_KEY, attributes))
 		{
 			NVM_GUID_STR poolGuidStr;
-			guid_to_str(ns.pool_guid, poolGuidStr);
+			uid_copy(ns.pool_guid, poolGuidStr);
 			framework::Attribute a(poolGuidStr, false);
 			pInstance->setAttribute(POOLID_KEY, a, attributes);
 		}

@@ -86,7 +86,7 @@ int wbem::mem_config::MemoryConfigurationFactory::getDimmIndexInPoolOrReturnNotF
 
 	for (int i = 0; i < pool->dimm_count; i++)
 	{
-		if (guid_cmp(guid, pool->dimms[i]))
+		if (uid_cmp(guid, pool->dimms[i]))
 		{
 			result = i;
 			break;
@@ -105,7 +105,7 @@ bool wbem::mem_config::MemoryConfigurationFactory::dimmIsInIlset(const NVM_GUID 
 
 	for (int i = 0; i < ilset.dimm_count; i++)
 	{
-		if (guid_cmp(guid, ilset.dimms[i]))
+		if (uid_cmp(guid, ilset.dimms[i]))
 		{
 			result = true;
 			break;
@@ -450,7 +450,7 @@ void wbem::mem_config::MemoryConfigurationFactory::populateInstanceDimmInfoFromD
 	if (containsAttribute(PARENT_KEY, attributes))
 	{
 		NVM_GUID_STR guidStr;
-		guid_to_str(discovery.guid, guidStr);
+		uid_copy(discovery.guid, guidStr);
 
 		framework::Attribute guidAttr(guidStr, false);
 		pInstance->setAttribute(PARENT_KEY, guidAttr, attributes);
@@ -594,7 +594,7 @@ wbem::framework::instance_names_t* wbem::mem_config::MemoryConfigurationFactory:
 			framework::attributes_t keys;
 
 			NVM_GUID guid;
-			str_to_guid(guids[i].c_str(), guid);
+			uid_copy(guids[i].c_str(), guid);
 
 			if (MemoryConfigurationServiceFactory::dimmHasGoal(guid))
 			{
@@ -651,7 +651,7 @@ wbem::framework::instance_names_t* wbem::mem_config::MemoryConfigurationFactory:
 			struct config_goal goal;
 
 			NVM_GUID guid;
-			str_to_guid(guids[i].c_str(), guid);
+			uid_copy(guids[i].c_str(), guid);
 			int rc;
 			if ((rc = nvm_get_config_goal(guid, &goal)) == NVM_SUCCESS)
 			{

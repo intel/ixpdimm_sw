@@ -112,7 +112,7 @@ wbem::framework::Instance* wbem::support::NVDIMMHealthSensorViewFactory::getInst
 
 		std::string guidStr = path.getKeyValue(INSTANCEID_KEY).stringValue();
 		NVM_GUID guid;
-		str_to_guid(guidStr.c_str(), guid);
+		uid_copy(guidStr.c_str(), guid);
 
 		struct sensor sensors[NVM_MAX_DEVICE_SENSORS];
 		int rc = NVM_SUCCESS;

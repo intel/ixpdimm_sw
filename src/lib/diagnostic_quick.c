@@ -156,7 +156,7 @@ void check_valid_dimm_manufacturer(const struct diagnostic *p_diagnostic,
 			&valid_manufacturer, EQUALITY_EQUAL))
 	{
 		NVM_GUID_STR guid_str;
-		guid_to_str(device_guid, guid_str);
+		uid_copy(device_guid, guid_str);
 		char actual_manufacturer_str[10];
 		s_snprintf(actual_manufacturer_str, 10, "0x%02llx", actual_manufacturer);
 		char valid_manufacturer_str[10];
@@ -183,7 +183,7 @@ void check_valid_dimm_model_number(const struct diagnostic *p_diagnostic,
 			valid_model))
 	{
 		NVM_GUID_STR guid_str;
-		guid_to_str(device_guid, guid_str);
+		uid_copy(device_guid, guid_str);
 
 		store_event_by_parts(EVENT_TYPE_DIAG_QUICK,
 				EVENT_SEVERITY_WARN,
@@ -208,7 +208,7 @@ void check_valid_dimm_vendor_id(const struct diagnostic *p_diagnostic,
 			(NVM_UINT64) p_id_dimm->vendor_id, &valid_vendor, EQUALITY_EQUAL))
 	{
 		NVM_GUID_STR guid_str;
-		guid_to_str(device_guid, guid_str);
+		uid_copy(device_guid, guid_str);
 
 		char actual_vendor_str[10];
 		s_snprintf(actual_vendor_str, 10, "0x%04x", p_id_dimm->vendor_id);
@@ -266,7 +266,7 @@ int check_dimm_alarm_thresholds(const NVM_GUID device_guid,
 			== (rc = fw_get_alarm_thresholds(device_handle.handle, &thresholds)))
 	{
 		NVM_GUID_STR guid_str;
-		guid_to_str(device_guid, guid_str);
+		uid_copy(device_guid, guid_str);
 
 		// check media temperature to alarm threshold
 		NVM_UINT64 media_temp_threshold = thresholds.media_temperature;
@@ -395,7 +395,7 @@ void check_dimm_smart_health_status(const struct diagnostic *p_diagnostic,
 			&max_health_status, EQUALITY_LESSTHANEQUAL))
 	{
 		NVM_GUID_STR guid_str;
-		guid_to_str(device_guid, guid_str);
+		uid_copy(device_guid, guid_str);
 
 		NVM_EVENT_ARG actual_health_str;
 		dimm_smart_health_status_to_string(p_dimm_smart->health_status,
@@ -455,7 +455,7 @@ void check_media_ready_status(const struct diagnostic *p_diagnostic,
 	if (code != EVENT_CODE_DIAG_QUICK_UNKNOWN)
 	{
 		NVM_GUID_STR guid_str;
-		guid_to_str(device_guid, guid_str);
+		uid_copy(device_guid, guid_str);
 		store_event_by_parts(EVENT_TYPE_DIAG_QUICK,
 				EVENT_SEVERITY_CRITICAL,
 				code,
@@ -491,7 +491,7 @@ void check_ddrt_init_complete_status(const struct diagnostic *p_diagnostic,
 	if (code != EVENT_CODE_DIAG_QUICK_UNKNOWN)
 	{
 		NVM_GUID_STR guid_str;
-		guid_to_str(device_guid, guid_str);
+		uid_copy(device_guid, guid_str);
 		store_event_by_parts(EVENT_TYPE_DIAG_QUICK,
 				EVENT_SEVERITY_CRITICAL,
 				code,
@@ -517,7 +517,7 @@ void check_mailbox_ready_status(const struct diagnostic *p_diagnostic,
 	if (MAILBOX_INTERFACE_READY_STATUS(bsr) == STATUS_NOT_READY)
 	{
 		NVM_GUID_STR guid_str;
-		guid_to_str(device_guid, guid_str);
+		uid_copy(device_guid, guid_str);
 		store_event_by_parts(EVENT_TYPE_DIAG_QUICK,
 				EVENT_SEVERITY_CRITICAL,
 				EVENT_CODE_DIAG_QUICK_MAILBOX_INTERFACE_NOT_READY,
@@ -561,7 +561,7 @@ void check_fw_boot_status(const struct diagnostic *p_diagnostic,
 	if (code != EVENT_CODE_DIAG_QUICK_UNKNOWN)
 	{
 		NVM_GUID_STR guid_str;
-		guid_to_str(device_guid, guid_str);
+		uid_copy(device_guid, guid_str);
 		store_event_by_parts(EVENT_TYPE_DIAG_QUICK,
 				EVENT_SEVERITY_CRITICAL,
 				code,
@@ -587,7 +587,7 @@ void check_fw_assert(const struct diagnostic *p_diagnostic,
 	if (BSR_H_ASSERTION(bsr))
 	{
 		NVM_GUID_STR guid_str;
-		guid_to_str(device_guid, guid_str);
+		uid_copy(device_guid, guid_str);
 		store_event_by_parts(EVENT_TYPE_DIAG_QUICK,
 				EVENT_SEVERITY_CRITICAL,
 				EVENT_CODE_DIAG_QUICK_FW_HIT_ASSERT,
@@ -615,7 +615,7 @@ int check_dimm_bsr(const NVM_GUID device_guid,
 	if (rc != NVM_SUCCESS)
 	{
 		NVM_GUID_STR guid_str;
-		guid_to_str(device_guid, guid_str);
+		uid_copy(device_guid, guid_str);
 		store_event_by_parts(EVENT_TYPE_DIAG_QUICK,
 				EVENT_SEVERITY_CRITICAL,
 				EVENT_CODE_DIAG_QUICK_UNREADABLE_BSR,
@@ -694,7 +694,7 @@ void check_given_errors(const struct diagnostic *p_diagnostic,
 		media_errors, &error_threshold, EQUALITY_LESSTHANEQUAL))
 	{
 		NVM_GUID_STR guid_str;
-		guid_to_str(device_guid, guid_str);
+		uid_copy(device_guid, guid_str);
 
 		char actual_errors_str[10];
 		s_snprintf(actual_errors_str, 10, "%u", media_errors);

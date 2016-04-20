@@ -34,7 +34,7 @@
 #include <LogEnterExit.h>
 #include <nvm_management.h>
 #include <string/revision.h>
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include <libintelnvm-cim/ExceptionBadParameter.h>
 #include <physical_asset/NVDIMMFactory.h>
 #include "PerformanceMetricFactory.h"
@@ -125,7 +125,7 @@ throw (wbem::framework::Exception)
 		}
 
 		NVM_GUID nvmGuid;
-		str_to_guid(deviceGuid.c_str(), nvmGuid);
+		uid_copy(deviceGuid.c_str(), nvmGuid);
 
 		// serialNumberStr is used in more than 1 attribute so getting here.
 		std::string serialNumberStr = getDeviceSerialNumber(nvmGuid);

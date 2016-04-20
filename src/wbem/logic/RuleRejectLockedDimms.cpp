@@ -28,7 +28,7 @@
 #include "RuleRejectLockedDimms.h"
 #include <LogEnterExit.h>
 #include <exception/NvmExceptionBadRequest.h>
-#include <guid/guid.h>
+#include <uid/uid.h>
 
 wbem::logic::RuleRejectLockedDimms::RuleRejectLockedDimms(
 		const std::vector<struct device_discovery> &manageableDevices) :
@@ -62,12 +62,12 @@ bool wbem::logic::RuleRejectLockedDimms::isDimmLocked(const wbem::logic::Dimm& d
 	bool isLocked = false;
 
 	NVM_GUID dimmGuid;
-	str_to_guid(dimm.guid.c_str(), dimmGuid);
+	uid_copy(dimm.guid.c_str(), dimmGuid);
 
 	for (std::vector<struct device_discovery>::const_iterator iter = m_manageableDevices.begin();
 			iter != m_manageableDevices.end(); iter++)
 	{
-		if (guid_cmp(iter->guid, dimmGuid))
+		if (uid_cmp(iter->guid, dimmGuid))
 		{
 			isLocked = isSecurityStateLocked(iter->lock_state);
 			break;

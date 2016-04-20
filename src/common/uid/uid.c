@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 2016, Intel Corporation
+ * Copyright (c) 2016, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -25,52 +25,37 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Rule that checks that no config goals exist on the dimms requested
- */
+#include <stdlib.h>
+#include <string.h>
+#include <guid/guid.h>
 
-#include "RuleDimmHasConfigGoal.h"
-#include <exception/NvmExceptionBadRequest.h>
-#include <LogEnterExit.h>
-#include <uid/uid.h>
-#include <lib_interface/NvmApi.h>
-#include <exception/NvmExceptionLibError.h>
+#include "uid.h"
 
-wbem::logic::RuleDimmHasConfigGoal::RuleDimmHasConfigGoal()
+
+void uid_copy(const COMMON_UID src, COMMON_UID dst)
 {
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-}
-
-wbem::logic::RuleDimmHasConfigGoal::~RuleDimmHasConfigGoal()
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-}
-
-void wbem::logic::RuleDimmHasConfigGoal::verify(const MemoryAllocationRequest &request)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	wbem::lib_interface::NvmApi *pApi = wbem::lib_interface::NvmApi::getApi();
-
-	for (std::vector<struct Dimm>::const_iterator dimmIter = request.dimms.begin();
-				dimmIter != request.dimms.end(); dimmIter++)
+	if (src != NULL && dst != NULL)
 	{
-		NVM_GUID guid;
-		uid_copy((*dimmIter).guid.c_str(), guid);
-
-		struct config_goal goal;
-		int rc = pApi->getConfigGoal(guid, &goal);
-
-		if (rc == NVM_SUCCESS)
-		{
-			if (goal.status != CONFIG_GOAL_STATUS_SUCCESS)
-			{
-				throw exception::NvmExceptionDimmHasConfigGoal();
-			}
-		}
-		else if (rc != NVM_ERR_NOTFOUND)
-		{
-			throw exception::NvmExceptionLibError(rc);
-		}
+		memmove(dst, src, sizeof (char) * COMMON_UID_LEN);
 	}
+}
+
+/*
+ * Convert binary guid to a string.
+ * Note requirement that caller supply buffer of appropriate size.
+ */
+void guid_to_uid(const COMMON_GUID guid, COMMON_UID uid)
+{
+	guid_to_str(guid, uid);
+}
+
+/*
+ * Check if two guids are equal
+ */
+int uid_cmp(const COMMON_UID guid1, const COMMON_UID guid2)
+{
+	if (strncmp(guid1, guid2, COMMON_UID_LEN) == 0)
+		return 1;
+	else
+		return 0;
 }

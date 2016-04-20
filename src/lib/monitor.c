@@ -40,7 +40,7 @@
 #include "monitor.h"
 #include <persistence/logging.h>
 #include <string/s_str.h>
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include <cr_i18n.h>
 #include <os/os_adapter.h>
 #include <persistence/schema.h>
@@ -675,7 +675,7 @@ void guid_to_event_arg(const NVM_GUID guid, NVM_EVENT_ARG arg)
 	if (guid && arg)
 	{
 		NVM_GUID_STR guid_str;
-		guid_to_str(guid, guid_str);
+		uid_copy(guid, guid_str);
 		s_strcpy(arg, guid_str, NVM_EVENT_ARG_LEN);
 	}
 }

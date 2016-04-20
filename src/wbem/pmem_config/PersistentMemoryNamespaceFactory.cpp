@@ -33,7 +33,7 @@
 #include <nvm_management.h>
 #include <libintelnvm-cim/Attribute.h>
 #include <server/BaseServerFactory.h>
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include <libintelnvm-cim/ExceptionBadParameter.h>
 #include "PersistentMemoryNamespaceFactory.h"
 #include "NamespaceViewFactory.h"
@@ -243,7 +243,7 @@ void wbem::pmem_config::PersistentMemoryNamespaceFactory::createPathFromGuid(con
 {
 	NVM_GUID guid;
 
-	str_to_guid(nsGuid.c_str(), guid);
+	uid_copy(nsGuid.c_str(), guid);
 	createPathFromGuid(guid, path);
 
 }
@@ -252,7 +252,7 @@ void wbem::pmem_config::PersistentMemoryNamespaceFactory::createPathFromGuid(con
 		framework::ObjectPath &path)
 {
 	NVM_GUID_STR nsGuid;
-	guid_to_str(guid, nsGuid);
+	uid_copy(guid, nsGuid);
 
 	wbem::framework::attributes_t keys;
 
@@ -303,9 +303,9 @@ bool wbem::pmem_config::PersistentMemoryNamespaceFactory::isAssociated(
 				{
 					// check if the pool GUIDs match
 					NVM_GUID poolId;
-					str_to_guid(poolIdAttr.stringValue().c_str(), poolId);
+					uid_copy(poolIdAttr.stringValue().c_str(), poolId);
 
-					result = guid_cmp(poolId, nsDetails.pool_guid);
+					result = uid_cmp(poolId, nsDetails.pool_guid);
 				}
 				else
 				{
@@ -343,7 +343,7 @@ int wbem::pmem_config::PersistentMemoryNamespaceFactory::namespaceDetailsFromIns
 	{
 		// get the namespace details using the namespace GUID
 		NVM_GUID nsGuid;
-		str_to_guid(nsGuidAttr.stringValue().c_str(), nsGuid);
+		uid_copy(nsGuidAttr.stringValue().c_str(), nsGuid);
 		rc = nvm_get_namespace_details(nsGuid, pNsDetails);
 	}
 	return rc;
@@ -488,7 +488,7 @@ void wbem::pmem_config::PersistentMemoryNamespaceFactory::modifyNamespace(
 		throw framework::ExceptionBadParameter(wbem::DEVICEID_KEY.c_str());
 	}
 	NVM_GUID namespaceGuid;
-	str_to_guid(namespaceGuidStr.c_str(), namespaceGuid);
+	uid_copy(namespaceGuidStr.c_str(), namespaceGuid);
 
 	enum namespace_enable_state enabled = PersistentMemoryServiceFactory::namespaceEnabledToEnum(stateValue);
 	int rc = m_modifyNamespaceEnabled(namespaceGuid, enabled);

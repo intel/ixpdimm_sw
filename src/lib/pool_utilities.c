@@ -32,10 +32,11 @@
 
 #include "pool_utilities.h"
 #include <persistence/logging.h>
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include "system.h"
 #include <string.h>
 #include <string/s_str.h>
+#include <guid/guid.h>
 #include "device_utilities.h"
 #include "platform_config_data.h"
 
@@ -866,7 +867,8 @@ int init_pool(struct nvm_pool *p_pool, const char *uuid_src, const enum pool_typ
 	int rc = NVM_SUCCESS;
 	memset(p_pool, 0, sizeof (struct nvm_pool));
 
-	if (!guid_hash((unsigned char *)uuid_src, strlen((const char *)uuid_src), p_pool->pool_guid))
+	if (!guid_hash_str((unsigned char *) uuid_src, strlen((const char *) uuid_src),
+		p_pool->pool_guid))
 	{
 		// should never get here
 		COMMON_LOG_ERROR("Pool guid hash creation FAILED");
@@ -1061,7 +1063,7 @@ int get_pool_guid_from_namespace_details(
 						if (tmprc == NVM_ERR_NOTFOUND)
 						{
 							NVM_GUID_STR ns_guid_str;
-							guid_to_str(p_details->discovery.namespace_guid, ns_guid_str);
+							uid_copy(p_details->discovery.namespace_guid, ns_guid_str);
 							COMMON_LOG_ERROR_F("Failed to find the pool associated with the \
 									namespace %s.", ns_guid_str);
 							rc = NVM_ERR_DRIVERFAILED;
@@ -1091,7 +1093,7 @@ int get_pool_guid_from_namespace_details(
 					if (tmprc == NVM_ERR_NOTFOUND)
 					{
 						NVM_GUID_STR ns_guid_str;
-						guid_to_str(p_details->discovery.namespace_guid, ns_guid_str);
+						uid_copy(p_details->discovery.namespace_guid, ns_guid_str);
 						COMMON_LOG_ERROR_F("Failed to find the pool associated with the namespace \
 								 %s.", ns_guid_str);
 						rc = NVM_ERR_DRIVERFAILED;

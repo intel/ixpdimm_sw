@@ -38,7 +38,7 @@
 #include "config_settings.h"
 #include "logging.h"
 #include <string/s_str.h>
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include <cr_i18n.h>
 #include <os/os_adapter.h>
 #include "schema.h"
@@ -694,7 +694,7 @@ int store_event(struct event *p_event, COMMON_BOOL syslog)
 		db_event.severity = p_event->severity;
 		db_event.code = p_event->code;
 		db_event.action_required = p_event->action_required;
-		guid_to_str(p_event->guid, db_event.guid);
+		uid_copy(p_event->guid, db_event.guid);
 		s_strcpy(db_event.arg1, p_event->args[0], NVM_EVENT_ARG_LEN);
 		s_strcpy(db_event.arg2, p_event->args[1], NVM_EVENT_ARG_LEN);
 		s_strcpy(db_event.arg3, p_event->args[2], NVM_EVENT_ARG_LEN);
@@ -844,8 +844,8 @@ NVM_BOOL event_matches_filter(const struct event_filter *p_filter,
 		if (rc && (p_filter->filter_mask & NVM_FILTER_ON_GUID))
 		{
 			NVM_GUID db_guid;
-			str_to_guid(p_db_event->guid, db_guid);
-			if (guid_cmp(db_guid, p_filter->guid) != 1)
+			uid_copy(p_db_event->guid, db_guid);
+			if (uid_cmp(db_guid, p_filter->guid) != 1)
 			{
 				rc = 0;
 			}
@@ -964,7 +964,7 @@ int process_events_matching_filter(const struct event_filter *p_filter,
 								p_events[rc-1].code = db_events[i].code;
 								p_events[rc-1].time = db_events[i].time;
 								p_events[rc-1].action_required = db_events[i].action_required;
-								str_to_guid(db_events[i].guid, p_events[rc-1].guid);
+								uid_copy(db_events[i].guid, p_events[rc - 1].guid);
 
 								s_strcpy(p_events[rc-1].args[0], db_events[i].arg1,
 										NVM_EVENT_ARG_LEN);

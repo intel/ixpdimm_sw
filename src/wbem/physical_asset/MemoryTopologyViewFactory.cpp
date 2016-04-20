@@ -37,7 +37,7 @@
 #include <libintelnvm-cim/ExceptionBadAttribute.h>
 #include <server/BaseServerFactory.h>
 #include "NVDIMMFactory.h"
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include <sstream>
 #include <libintelnvm-cim/Types.h>
 #include <exception/NvmExceptionLibError.h>
@@ -196,7 +196,7 @@ void wbem::physical_asset::MemoryTopologyViewFactory::populateNvmDimmInstanceAtt
 		if (containsAttribute(DIMMID_KEY, attributes))
 		{
 			NVM_GUID_STR guidStr;
-			guid_to_str(device.guid, guidStr);
+			uid_copy(device.guid, guidStr);
 			std::string dimmId = NVDIMMFactory::guidToDimmIdStr(std::string(guidStr));
 
 			framework::Attribute a(dimmId, false);

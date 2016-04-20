@@ -33,7 +33,7 @@
 #include <exception/NvmExceptionLibError.h>
 #include <exception/NvmExceptionBadRequest.h>
 #include <LogEnterExit.h>
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include <nvm_management.h>
 #include <lib_interface/NvmApi.h>
 #include <mem_config/MemoryConfigurationServiceFactory.h>
@@ -77,7 +77,7 @@ std::set<std::string> wbem::logic::RulePartialSocketConfigured::getSetOfAllDimms
 		if ((*iter).socket_id == socketId)
 		{
 			NVM_GUID_STR guidStr;
-			guid_to_str((*iter).guid, guidStr);
+			uid_copy((*iter).guid, guidStr);
 			dimmSet.insert(guidStr);
 		}
 	}
@@ -139,7 +139,7 @@ std::set<std::string> wbem::logic::RulePartialSocketConfigured::getSetOfNewDimms
 		if ((*iter).socket_id == socketId && deviceIsNew(iter->guid))
 		{
 			NVM_GUID_STR guidStr;
-			guid_to_str(iter->guid, guidStr);
+			uid_copy(iter->guid, guidStr);
 			newDimms.insert(guidStr);
 		}
 	}

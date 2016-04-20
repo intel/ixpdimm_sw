@@ -34,7 +34,7 @@
 #include <string.h>
 #include "PerformanceMonitor.h"
 #include <LogEnterExit.h>
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include <string/s_str.h>
 #include <persistence/config_settings.h>
 #include <nvm_context.h>
@@ -82,7 +82,7 @@ void monitor::PerformanceMonitor::monitor()
 	{
 		std::string dimmGuidStr = *dimmGuidIter;
 		NVM_GUID dimmGuid;
-		str_to_guid(dimmGuidStr.c_str(), dimmGuid);
+		uid_copy(dimmGuidStr.c_str(), dimmGuid);
 
 		// get performance data for the dimm
 		struct device_performance devPerformance;
@@ -141,7 +141,7 @@ std::vector<std::string> monitor::PerformanceMonitor::getDimmList()
 				if (dimms[i].manageability == MANAGEMENT_VALIDCONFIG)
 				{
 					NVM_GUID_STR guidStr;
-					guid_to_str(dimms[i].guid, guidStr);
+					uid_copy(dimms[i].guid, guidStr);
 					dimmList.push_back(std::string(guidStr));
 				}
 			}

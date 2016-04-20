@@ -331,7 +331,7 @@ int validate_config_goal_supported(const struct config_goal *p_goal,
 	if (rc == NVM_ERR_CONFIGNOTSUPPORTED)
 	{
 		NVM_GUID_STR guid_str;
-		guid_to_str(p_discovery->guid, guid_str);
+		uid_copy(p_discovery->guid, guid_str);
 		store_event_by_parts(
 				EVENT_TYPE_HEALTH,
 				EVENT_SEVERITY_CRITICAL,
@@ -948,7 +948,7 @@ int config_input_table_to_config_goal(const NVM_GUID device_guid,
 					memmove(p_qos->dimms[i], discovery.guid, NVM_GUID_LEN);
 
 					// If this is the requested DIMM, get the size
-					if (guid_cmp(p_qos->dimms[i], device_guid))
+					if (uid_cmp(p_qos->dimms[i], device_guid))
 					{
 						*p_size = (p_dimm->size / BYTES_PER_GB);
 					}

@@ -33,7 +33,7 @@
 #include "NamespaceFeature.h"
 #include <LogEnterExit.h>
 #include <string/s_str.h>
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include <logic/MemoryAllocationTypes.h>
 #include <logic/MemoryAllocator.h>
 #include <mem_config/MemoryConfigurationFactory.h>
@@ -255,7 +255,7 @@ bool cli::nvmcli::NamespaceFeature::convertConfigGoalInstance(
 		filter.filter_mask = NVM_FILTER_ON_GUID | NVM_FILTER_ON_AR | NVM_FILTER_ON_TYPE;
 		// guid to str
 		NVM_GUID dimmGuid;
-		str_to_guid(parentAttr.stringValue().c_str(), dimmGuid);
+		uid_copy(parentAttr.stringValue().c_str(), dimmGuid);
 		memmove(filter.guid, dimmGuid, NVM_GUID_LEN);
 		filter.action_required = true;
 		filter.type = EVENT_TYPE_CONFIG;

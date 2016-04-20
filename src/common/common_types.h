@@ -51,7 +51,7 @@ extern "C"
 /*!
  * Copyright, Null-terminated string.
  */
-#define	INTEL_COPYRIGHT_STRING	"Copyright© 2015 Intel Corporation. All rights reserved\0"
+#define	INTEL_COPYRIGHT_STRING	"CopyrightÂ© 2015 Intel Corporation. All rights reserved\0"
 
 /*!
  * Company Name, Null-terminated string.
@@ -253,26 +253,13 @@ typedef wchar_t COMMON_WPATH[COMMON_PATH_LEN];
  */
 typedef char COMMON_DATETIME_STR[COMMON_DATETIME_LEN];
 
-/*!
- * The number of bytes in a COMMON_GUID
- */
 #define	COMMON_GUID_LEN	16
+#define	COMMON_UID_LEN	(16 * 2) + 5
+#define	COMMON_GUID_STR_LEN	(16 * 2) + 5
 
-/*!
- * The number of chars needed to display a COMMON_GUID_STR
- */
-#define	COMMON_GUID_STR_LEN	(COMMON_GUID_LEN * 2) + 5
-
-/*!
- * The type used to encapsulate a guid
- */
-typedef unsigned char COMMON_GUID[COMMON_GUID_LEN];
-
-/*!
- * The @b char array used to encapsulate a formatted guid string
- */
+typedef char COMMON_UID[COMMON_GUID_STR_LEN];
 typedef char COMMON_GUID_STR[COMMON_GUID_STR_LEN];
-
+typedef unsigned char COMMON_GUID[COMMON_GUID_LEN];
 
 /*
  * *******************************************************************************************

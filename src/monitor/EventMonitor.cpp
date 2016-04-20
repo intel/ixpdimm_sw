@@ -32,7 +32,7 @@
 
 #include <string.h>
 #include <nvm_management.h>
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include <persistence/config_settings.h>
 #include <algorithm>
 #include "EventMonitor.h"
@@ -628,7 +628,7 @@ void monitor::EventMonitor::monitorNamespaces(PersistentStore *pStore)
 					struct namespace_details details;
 					memset(&details, 0, sizeof (details));
 					NVM_GUID_STR guidStr;
-					guid_to_str(namespaces[i].namespace_guid, guidStr);
+					uid_copy(namespaces[i].namespace_guid, guidStr);
 					int rc = nvm_get_namespace_details(namespaces[i].namespace_guid, &details);
 					if (rc != NVM_SUCCESS)
 					{
@@ -795,7 +795,7 @@ bool monitor::EventMonitor::namespaceDeleted(const NVM_GUID nsGuid,
 
 	// look for the guid in the list
 	NVM_GUID_STR guidStr;
-	guid_to_str(nsGuid, guidStr);
+	uid_copy(nsGuid, guidStr);
 	if (std::find(nsGuids.begin(), nsGuids.end(), guidStr) == nsGuids.end())
 	{
 		// if not found, then deleted
@@ -865,7 +865,7 @@ void monitor::EventMonitor::acknowledgeDeletedNamespaces()
 					for (int i = 0; i < nsCount; i++)
 					{
 						NVM_GUID_STR guidStr;
-						guid_to_str(namespaces[i].namespace_guid, guidStr);
+						uid_copy(namespaces[i].namespace_guid, guidStr);
 						nsGuids.push_back(guidStr);
 					}
 				}
@@ -1151,7 +1151,7 @@ void monitor::EventMonitor::processTopologyNewDimms(const DeviceMap &devices,
 
 				// acknowledge any action required events on the replaced dimm
 				NVM_GUID guid;
-				str_to_guid(replacedGuid.c_str(), guid);
+				uid_copy(replacedGuid.c_str(), guid);
 				acknowledgeEvent(-1, guid);
 			}
 		}
@@ -1193,7 +1193,7 @@ void monitor::EventMonitor::processTopologyModifiedDimms(const DeviceMap &device
 					guidStr) == replacedGuids.end())
 			{
 				NVM_GUID guid;
-				str_to_guid(guidStr.c_str(), guid);
+				uid_copy(guidStr.c_str(), guid);
 				store_event_by_parts(EVENT_TYPE_CONFIG,
 							EVENT_SEVERITY_CRITICAL,
 							EVENT_CODE_CONFIG_TOPOLOGY_MISSING_DEVICE,
@@ -1313,7 +1313,7 @@ void monitor::EventMonitor::buildDeviceMap(DeviceMap& map, bool addStoredTopolog
 			for (int i = 0; i < devCount; i++)
 			{
 				NVM_GUID_STR guidStr;
-				guid_to_str(devList[i].guid, guidStr);
+				uid_copy(devList[i].guid, guidStr);
 				struct deviceInfo devInfo;
 				memset(&devInfo, 0, sizeof (deviceInfo));
 				devInfo.discovered = true;

@@ -35,11 +35,14 @@
 #include <unistd.h>
 #include <linux/fs.h>
 #include <string/s_str.h>
+#include <uid/uid.h>
 #include <guid/guid.h>
 #include "utility.h"
 
 #define	DEFAULT_BTT_SECTOR_SIZE	4096
 #define	DEFAULT_PFN_ALIGNMENT	0x00200000 // recommended defaults for align
+
+void get_namespace_guid(struct ndctl_namespace *p_namespace, COMMON_UID guid);
 
 /*
  * Get the number of existing namespaces
@@ -118,10 +121,10 @@ int get_namespaces(const NVM_UINT32 count,
 				if (ndctl_region_is_enabled(region) &&
 					(nstype == ND_DEVICE_NAMESPACE_PMEM || nstype == ND_DEVICE_NAMESPACE_BLK))
 				{
-					struct ndctl_namespace *namespace;
-					ndctl_namespace_foreach(region, namespace)
+					struct ndctl_namespace *p_namespace;
+					ndctl_namespace_foreach(region, p_namespace)
 					{
-						if (ndctl_namespace_is_configured(namespace))
+						if (ndctl_namespace_is_configured(p_namespace))
 						{
 							if (namespace_index >= count)
 							{
@@ -131,10 +134,10 @@ int get_namespaces(const NVM_UINT32 count,
 								break;
 							}
 
-							ndctl_namespace_get_uuid(namespace,
+							get_namespace_guid(p_namespace,
 								p_namespaces[namespace_index].namespace_guid);
 							s_strcpy(p_namespaces[namespace_index].friendly_name,
-								ndctl_namespace_get_alt_name(namespace), NVM_NAMESPACE_NAME_LEN);
+								ndctl_namespace_get_alt_name(p_namespace), NVM_NAMESPACE_NAME_LEN);
 
 							namespace_index++;
 						}
@@ -298,9 +301,9 @@ struct ndctl_namespace *get_ndctl_namespace_from_guid(struct ndctl_ctx *p_ctx,
 				ndctl_namespace_foreach(p_region, p_namespace)
 				{
 					NVM_GUID index_guid;
-					ndctl_namespace_get_uuid(p_namespace, index_guid);
+					get_namespace_guid(p_namespace, index_guid);
 					if (ndctl_namespace_is_configured(p_namespace) &&
-						!memcmp(namespace_guid, index_guid, NVM_GUID_LEN))
+						uid_cmp(namespace_guid, index_guid))
 					{
 						return p_namespace;
 					}
@@ -375,7 +378,7 @@ int get_namespace_details(
 					break;
 			}
 
-			ndctl_namespace_get_uuid(p_namespace,
+			get_namespace_guid(p_namespace,
 				p_details->discovery.namespace_guid);
 
 			s_strcpy(p_details->discovery.friendly_name,
@@ -597,7 +600,7 @@ int create_pfn_namespace(struct ndctl_namespace *namespace,
 			struct ndctl_pfn *pfn;
 			if (region != NULL && ((rc = get_idle_pfn(region, &pfn)) == NVM_SUCCESS))
 			{
-				NVM_GUID pfn_guid;
+				COMMON_GUID pfn_guid;
 				generate_guid(pfn_guid);
 
 				// For AppDirect namespaces, the default is
@@ -671,7 +674,7 @@ int create_btt_namespace(struct ndctl_namespace *namespace,
 	struct ndctl_btt *btt;
 	if (region != NULL && ((rc = get_idle_btt(region, &btt)) == NVM_SUCCESS))
 	{
-		NVM_GUID btt_guid;
+		COMMON_GUID btt_guid;
 		generate_guid(btt_guid);
 
 		// always have to set a sector size for the btt backing
@@ -756,9 +759,9 @@ int create_namespace(
 		if (rc == NVM_SUCCESS &&
 				((rc = get_unconfigured_namespace(&namespace, region)) == NVM_SUCCESS))
 		{
-			NVM_GUID namespace_guid;
+			COMMON_GUID namespace_guid;
 			generate_guid(namespace_guid);
-			memmove(p_namespace_guid, namespace_guid, NVM_GUID_LEN);
+			guid_to_uid(namespace_guid, *p_namespace_guid);
 
 			if (ndctl_namespace_set_uuid(namespace, namespace_guid))
 			{
@@ -991,4 +994,12 @@ int modify_namespace_enabled(
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
+}
+
+
+void get_namespace_guid(struct ndctl_namespace *p_namespace, COMMON_UID guid)
+{
+	COMMON_GUID tmp;
+	ndctl_namespace_get_uuid(p_namespace, tmp);
+	guid_to_uid(tmp, guid);
 }

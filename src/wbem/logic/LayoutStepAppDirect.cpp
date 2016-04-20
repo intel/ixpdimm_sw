@@ -247,7 +247,7 @@ NVM_UINT64 wbem::logic::LayoutStepAppDirect::layoutInterleaveSet(
 		settings.interleave.imc = imcSize;
 		for (size_t i = 0; i < dimms.size(); i++)
 		{
-			str_to_guid(dimms[i].guid.c_str(), settings.dimms[i]);
+			uid_copy(dimms[i].guid.c_str(), settings.dimms[i]);
 		}
 		addInterleaveSetToGoal(dimmIter->guid, layout.goals[dimmIter->guid], bytesPerDimm, setId, settings);
 		bytesAllocated += bytesPerDimm;
@@ -329,7 +329,7 @@ bool wbem::logic::LayoutStepAppDirect::interleaveSetsMatch(
 			oldSet.interleave.imc == newSet.interleave.imc &&
 			cmp_bytes((const unsigned char *)oldSet.dimms,
 					(const unsigned char *)newSet.dimms,
-					COMMON_GUID_LEN * NVM_MAX_DEVICES_PER_POOL)))
+					COMMON_UID_LEN * NVM_MAX_DEVICES_PER_POOL)))
 		{
 			match = true;
 		}
@@ -560,7 +560,7 @@ bool wbem::logic::LayoutStepAppDirect::canMapInterleavedCapacity(
 	for (std::vector<Dimm>::const_iterator dimmIter = dimms.begin();
 				dimmIter != dimms.end(); dimmIter++)
 	{
-		str_to_guid(dimmIter->guid.c_str(), newSet.dimms[dimmIndex++]);
+		uid_copy(dimmIter->guid.c_str(), newSet.dimms[dimmIndex++]);
 	}
 
 	for (std::vector<Dimm>::const_iterator dimmIter = dimms.begin();

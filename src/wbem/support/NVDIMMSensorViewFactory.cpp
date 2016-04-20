@@ -34,7 +34,7 @@
 #include "NVDIMMSensorViewFactory.h"
 #include "NVDIMMSensorFactory.h"
 #include <libintelnvm-cim/Attribute.h>
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include <libintelnvm-cim/ObjectPath.h>
 #include <libintelnvm-cim/ExceptionBadParameter.h>
 #include <sstream>
@@ -246,7 +246,7 @@ wbem::framework::Instance* wbem::support::NVDIMMSensorViewFactory::getInstance(
 		}
 
 		NVM_GUID guid;
-		str_to_guid(guidStr.c_str(), guid);
+		uid_copy(guidStr.c_str(), guid);
 
 		struct sensor sensor;
 		int rc = NVM_SUCCESS;

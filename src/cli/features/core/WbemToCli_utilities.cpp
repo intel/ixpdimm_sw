@@ -1332,7 +1332,7 @@ bool cli::nvmcli::handleToGuid(const NVM_UINT32 &handle, std::string &dimmGuid)
 		{
 			validHandle = true;
 			NVM_GUID_STR guidStr;
-			guid_to_str((*iter).guid, guidStr);
+			uid_copy((*iter).guid, guidStr);
 			dimmGuid = guidStr;
 			break;
 		}

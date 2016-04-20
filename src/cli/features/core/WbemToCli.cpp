@@ -35,7 +35,7 @@
 #include <pmem_config/NamespaceViewFactory.h>
 #include <string/s_str.h>
 #include <mem_config/PoolViewFactory.h>
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include <string/s_str.h>
 
 cli::nvmcli::WbemToCli::WbemToCli()
@@ -70,7 +70,7 @@ cli::framework::ErrorResult *cli::nvmcli::WbemToCli::getNamespaces(
             // check each namespace guid, validate it's format if it exists
             for (size_t i = 0; i < nsList.size(); i++)
             {
-                if (nsList[i].length() + 1 != COMMON_GUID_STR_LEN)
+                if (nsList[i].length() + 1 != COMMON_UID_LEN)
                 {
                     pResult = new framework::SyntaxErrorBadValueResult(framework::TOKENTYPE_TARGET,
                                                                        TARGET_NAMESPACE.name, nsList[i]);
@@ -132,7 +132,7 @@ cli::framework::ErrorResult *cli::nvmcli::WbemToCli::checkPoolGuid(
             if (allPools.size() == 1)
             {
             	NVM_GUID_STR guidStr;
-            	guid_to_str(allPools[0].pool_guid, guidStr);
+                uid_copy(allPools[0].pool_guid, guidStr);
             	poolGuid = guidStr;
             }
             // more than one pool, the pool target is required

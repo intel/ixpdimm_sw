@@ -38,7 +38,7 @@
 #include "platform_config_data.h"
 #include <string/s_str.h>
 #include <string/revision.h>
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include "device_utilities.h"
 
 /*
@@ -356,7 +356,7 @@ int support_store_namespaces(PersistentStore *p_store, int history_id)
 				// store as much info as we can get - start with discovery info
 				struct db_namespace db_namespace;
 				memset(&db_namespace, 0, sizeof (db_namespace));
-				guid_to_str(namespaces[i].namespace_guid, db_namespace.namespace_guid);
+				uid_copy(namespaces[i].namespace_guid, db_namespace.namespace_guid);
 				s_strcpy(db_namespace.friendly_name, namespaces[i].friendly_name,
 						NVM_NAMESPACE_NAME_LEN);
 
@@ -366,7 +366,7 @@ int support_store_namespaces(PersistentStore *p_store, int history_id)
 				if (tmp_rc != NVM_SUCCESS)
 				{
 					NVM_GUID_STR guid_str;
-					guid_to_str(namespaces[i].namespace_guid, guid_str);
+					uid_copy(namespaces[i].namespace_guid, guid_str);
 					COMMON_LOG_ERROR_F(
 						"Failed to retrieve namespace details for namespace %s", guid_str);
 					KEEP_ERROR(rc, tmp_rc);

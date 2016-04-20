@@ -49,7 +49,7 @@
 #include <libintelnvm-cli/SyntaxErrorBadValueResult.h>
 #include <libintelnvm-cli/SyntaxErrorMissingValueResult.h>
 #include <libintelnvm-cli/Parser.h>
-#include <guid/guid.h>
+#include <uid/uid.h>
 
 #include <support/NVDIMMDiagnosticFactory.h>
 #include <support/SupportDataServiceFactory.h>
@@ -1102,8 +1102,8 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::runDiagnostic(
 								propertyList.insert(CLIDIAGNOSTIC_TESTNAME, diagTestTypes[i]);
 
 								// convert guid string to guid
-								COMMON_GUID guid;
-								str_to_guid((*dimmTargetIter).c_str(), guid);
+								COMMON_UID guid;
+								uid_copy((*dimmTargetIter).c_str(), guid);
 								wbem::framework::UINT16_LIST ignoreResults;
 
 								try

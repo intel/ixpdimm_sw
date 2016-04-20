@@ -32,7 +32,7 @@
 
 
 #include <string.h>
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include <string/s_str.h>
 #include "DiagnosticLogFactory.h"
 #include <LogEnterExit.h>
@@ -247,7 +247,7 @@ throw (framework::Exception)
 				if ((*iter).type == events[i].type)
 				{
 					// matched existing result - update data but do not count
-					if (guid_cmp((*iter).device_guid, events[i].guid))
+					if (uid_cmp((*iter).device_guid, events[i].guid))
 					{
 						matched = true;
 						// update id (if necessary)

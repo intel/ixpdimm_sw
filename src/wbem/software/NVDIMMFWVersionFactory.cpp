@@ -33,7 +33,7 @@
 #include <LogEnterExit.h>
 #include <nvm_management.h>
 #include <string/revision.h>
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include <algorithm>
 #include <server/BaseServerFactory.h>
 #include <physical_asset/NVDIMMFactory.h>

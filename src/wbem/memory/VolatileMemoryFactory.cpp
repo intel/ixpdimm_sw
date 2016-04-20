@@ -34,7 +34,7 @@
 
 #include <LogEnterExit.h>
 #include <nvm_management.h>
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include <libintelnvm-cim/ExceptionNoMemory.h>
 #include <libintelnvm-cim/ExceptionBadParameter.h>
 #include <framework_interface/NvmAssociationFactory.h>
@@ -157,7 +157,7 @@ throw (wbem::framework::Exception)
 				{
 					// ignore dimm if it does not have any Memory Mode capacity
 					NVM_GUID_STR guidStr;
-					guid_to_str(dimms[device_index].guid, guidStr);
+					uid_copy(dimms[device_index].guid, guidStr);
 					NVM_UINT64 volatileCapacity = getDimmMemoryCapacity(guidStr);
 					if (volatileCapacity > 0)
 					{
@@ -224,7 +224,7 @@ wbem::framework::UINT64 wbem::memory::VolatileMemoryFactory::getDimmMemoryCapaci
 	}
 
 	NVM_GUID guid;
-	str_to_guid(guidStr.c_str(), guid);
+	uid_copy(guidStr.c_str(), guid);
 
 	struct device_details details;
 	int rc = nvm_get_device_details(guid, &details);

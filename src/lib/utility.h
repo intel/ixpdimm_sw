@@ -37,6 +37,7 @@
 #include "platform_capabilities.h"
 #include "nvm_types.h"
 #include <guid/guid.h>
+#include <uid/uid.h>
 #include <persistence/logging.h>
 #include <cr_i18n.h>
 #include <os/os_adapter.h>

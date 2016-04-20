@@ -49,7 +49,7 @@
 #define	NVM_VERSION_LEN	25  // Length of version string
 #define	NVM_ERROR_LEN	256 // Length of return code description
 #define	NVM_MODEL_LEN	21 // Length of device model number
-#define	NVM_GUID_LEN	16 // Length of Unique ID
+#define	NVM_GUID_LEN	37 // Length of Unique ID
 #define	NVM_GUIDSTR_LEN	37 // Length of Unique ID string
 #define	NVM_SOCKET_MANUFACTURER_LEN	32 // Socket manufacturer string length
 #define	NVM_MANUFACTURER_LEN	2 // Number of bytes in the manufacturer ID
@@ -133,7 +133,7 @@ typedef long long NVM_INT64; // 64 bit integer
 typedef float NVM_REAL32; // 32 bit floating point number
 typedef char NVM_VERSION[NVM_VERSION_LEN]; // Version number string
 typedef char NVM_ERROR_DESCRIPTION[NVM_ERROR_LEN]; // Return code description
-typedef unsigned char NVM_GUID[NVM_GUID_LEN]; // Unique ID
+typedef char NVM_GUID[NVM_GUID_LEN]; // Unique ID
 typedef char NVM_GUID_STR[NVM_GUIDSTR_LEN]; // Unique ID string
 typedef char NVM_PASSPHRASE[NVM_PASSPHRASE_LEN]; // Security passphrase
 typedef char NVM_EVENT_MSG[NVM_EVENT_MSG_LEN]; // Event message string

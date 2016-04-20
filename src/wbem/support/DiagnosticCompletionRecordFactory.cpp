@@ -31,7 +31,7 @@
  */
 
 #include <sstream>
-#include <guid/guid.h>
+#include <uid/uid.h>
 #include "DiagnosticLogFactory.h"
 #include "DiagnosticCompletionRecordFactory.h"
 #include "NVDIMMDiagnosticFactory.h"
@@ -131,7 +131,7 @@ throw (wbem::framework::Exception)
 					if (diag.device_guid)
 					{
 						NVM_GUID_STR guid_str;
-						guid_to_str(diag.device_guid, guid_str);
+						uid_copy(diag.device_guid, guid_str);
 						elementName = wbem::physical_asset::NVDIMM_ELEMENTNAME_prefix + guid_str;
 					}
 
