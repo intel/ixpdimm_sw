@@ -66,6 +66,7 @@ throw(wbem::framework::Exception)
 	attributes.push_back(ACCESSGRANULARITY_KEY);
 	attributes.push_back(MEMORYARCHITECTURE_KEY);
 	attributes.push_back(REPLICATION_KEY);
+	attributes.push_back(MEMORYPAGEALLOCATIONCAPABLE_KEY);
 }
 
 /*
@@ -84,6 +85,7 @@ throw(wbem::framework::Exception)
 		checkAttributes(attributes);
 
 		struct pool pool = getPool(path);
+		struct nvm_capabilities capabilities = getNvmCapabilities();
 
 		// ElementName = "Pool Capabilities for: " + pool UUID
 		if (containsAttribute(ELEMENTNAME_KEY, attributes))
@@ -98,7 +100,7 @@ throw(wbem::framework::Exception)
 		// MaxNamespaces = Max namespaces for this pool
 		if (containsAttribute(MAXNAMESPACES_KEY, attributes))
 		{
-			framework::UINT64 maxNs = getMaxNamespacesPerPool(&pool);
+			framework::UINT64 maxNs = getMaxNamespacesPerPool(&pool, capabilities.sw_capabilities.min_namespace_size);
 			framework::Attribute a(maxNs, false);
 			pInstance->setAttribute(MAXNAMESPACES_KEY, a, attributes);
 		}
@@ -143,6 +145,13 @@ throw(wbem::framework::Exception)
 			}
 			framework::Attribute a(replicationList, false);
 			pInstance->setAttribute(REPLICATION_KEY, a, attributes);
+		}
+
+		if (containsAttribute(MEMORYPAGEALLOCATIONCAPABLE_KEY, attributes))
+		{
+			framework::BOOLEAN capable = capabilities.sw_capabilities.namespace_memory_page_allocation_capable;
+			framework::Attribute a(capable, false);
+			pInstance->setAttribute(MEMORYPAGEALLOCATIONCAPABLE_KEY, a, attributes);
 		}
 	}
 	catch (framework::Exception &) // clean up and re-throw
@@ -318,7 +327,8 @@ wbem::framework::UINT16_LIST wbem::pmem_config::PersistentMemoryCapabilitiesFact
 	return secFeaturesList;
 }
 
-wbem::framework::UINT64 wbem::pmem_config::PersistentMemoryCapabilitiesFactory::getMaxNamespacesPerPool(struct pool *pPool)
+wbem::framework::UINT64 wbem::pmem_config::PersistentMemoryCapabilitiesFactory::getMaxNamespacesPerPool(struct pool *pPool,
+		NVM_UINT64 minNamespaceSize)
 	throw (framework::Exception)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -327,28 +337,24 @@ wbem::framework::UINT64 wbem::pmem_config::PersistentMemoryCapabilitiesFactory::
 
 	NVM_GUID_STR poolGuidStr;
 	guid_to_str(pPool->pool_guid, poolGuidStr);
-	struct nvm_capabilities nvm_caps;
-	int rc = nvm_get_nvm_capabilities(&nvm_caps);
-	if (rc == NVM_SUCCESS)
-	{
-		// A pool can have as many App Direct Namespaces as its interleave sets as long as the size is greater
-		// than minimum namespace size
-		for (int i = 0; i < pPool->ilset_count; i++)
-		{
-			if (pPool->ilsets[i].size >= nvm_caps.sw_capabilities.min_namespace_size)
-			{
-				maxAppDirectNS++;
-			}
-		}
 
-		// A pool can have as many storage namespaces as its dimms as long as the size is greater
-		// than minimum namespace size
-		for (int j = 0; j < pPool->dimm_count; j++)
+	// A pool can have as many App Direct Namespaces as its interleave sets as long as the size is greater
+	// than minimum namespace size
+	for (int i = 0; i < pPool->ilset_count; i++)
+	{
+		if (pPool->ilsets[i].size >= minNamespaceSize)
 		{
-			if (pPool->storage_capacities[j] >= nvm_caps.sw_capabilities.min_namespace_size)
-			{
-				maxBlockNS++;
-			}
+			maxAppDirectNS++;
+		}
+	}
+
+	// A pool can have as many storage namespaces as its dimms as long as the size is greater
+	// than minimum namespace size
+	for (int j = 0; j < pPool->dimm_count; j++)
+	{
+		if (pPool->storage_capacities[j] >= minNamespaceSize)
+		{
+			maxBlockNS++;
 		}
 	}
 

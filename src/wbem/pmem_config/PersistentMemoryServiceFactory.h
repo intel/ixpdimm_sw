@@ -80,6 +80,9 @@ static const NVM_UINT16 PM_SERVICE_SECURITY_ENCRYPTION_ON = 1;
 static const NVM_UINT32 PM_SERVICE_OPTIMIZE_CRYPTO_ERASE = 3; // crypto erase
 static const NVM_UINT32 PM_SERVICE_NAMESPACE_ENABLE_STATE_ENABLED = 2; // enabled
 static const NVM_UINT32 PM_SERVICE_NAMESPACE_ENABLE_STATE_DISABLED = 3; // disabled
+static const NVM_UINT16 PM_SERVICE_MEMORYPAGEALLOCATION_NONE = 1;
+static const NVM_UINT16 PM_SERVICE_MEMORYPAGEALLOCATION_DRAM = 2;
+static const NVM_UINT16 PM_SERVICE_MEMORYPAGEALLOCATION_APP_DIRECT = 3;
 
 class NVM_API PersistentMemoryServiceFactory : public framework_interface::NvmInstanceFactory
 {
@@ -160,6 +163,7 @@ public:
 		enum mem_config::MemoryAllocationSettingsInterleaveSizeExponent interleaveChannelSize;
 		enum mem_config::MemoryAllocationSettingsInterleaveSizeExponent interleaveControllerSize;
 		bool byOne;
+		NVM_UINT16 memoryPageAllocation;
 	} createNamespaceParams;
 
 	/*!
@@ -174,7 +178,7 @@ public:
 			const NVM_UINT16 encryption, const NVM_UINT16 eraseCapable,
 			const mem_config::MemoryAllocationSettingsInterleaveSizeExponent channelSize,
 			const mem_config::MemoryAllocationSettingsInterleaveSizeExponent controllerSize,
-			const bool byOne);
+			const bool byOne, const NVM_UINT16 memoryPageAllocation);
 
 	/*!
 	 * Interface to the library API nvm_modify_namespace_name function.
@@ -224,6 +228,7 @@ public:
 	static enum namespace_type namespaceTypeToEnum(const NVM_UINT32 type);
 	static enum encryption_status encryptionTypeToEnum(const NVM_UINT16 type);
 	static enum encryption_status integerToEncryptionEnum(const NVM_UINT16 type);
+	static enum namespace_memory_page_allocation memoryPageAllocationTypeToEnum(const NVM_UINT16 memoryPageAllocation);
 
 	/*
 	 * Retrieve the namespace guid from a persistent memory namespace path

@@ -284,10 +284,9 @@ enum namespace_enable_state
 enum namespace_memory_page_allocation
 {
 	NAMESPACE_MEMORY_PAGE_ALLOCATION_UNKNOWN = 0, // Cannot be determined
-	NAMESPACE_MEMORY_PAGE_ALLOCATION_NONE, // No support to access NS using memory page protocols
-	NAMESPACE_MEMORY_PAGE_ALLOCATION_DRAM, // Capacity is allocated from DRAM
-	NAMESPACE_MEMORY_PAGE_ALLOCATION_APP_DIRECT // Capacity is allocated from the NS itself
-
+	NAMESPACE_MEMORY_PAGE_ALLOCATION_NONE = 1, // No support to access NS using memoryPageProtocols
+	NAMESPACE_MEMORY_PAGE_ALLOCATION_DRAM = 2, // Capacity is allocated from DRAM
+	NAMESPACE_MEMORY_PAGE_ALLOCATION_APP_DIRECT = 3 // Capacity is allocated from the NS itself
 };
 
 #endif /* NVM_TYPES_H_ */

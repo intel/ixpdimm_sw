@@ -57,7 +57,6 @@ wbem::pmem_config::PersistentMemoryServiceFactory::~PersistentMemoryServiceFacto
 
 }
 
-
 void wbem::pmem_config::PersistentMemoryServiceFactory::populateAttributeList(std::vector<std::string> &attributes)
 throw (framework::Exception)
 {
@@ -224,6 +223,27 @@ enum encryption_status wbem::pmem_config::PersistentMemoryServiceFactory::encryp
 			break;
 	};
 	return enum_val;
+}
+
+/*
+ * Utility fn to convert memory  page allocation type int to enum value
+ */
+enum namespace_memory_page_allocation wbem::pmem_config::PersistentMemoryServiceFactory::memoryPageAllocationTypeToEnum(
+		const NVM_UINT16 memoryPageAllocation)
+{
+	enum namespace_memory_page_allocation val = NAMESPACE_MEMORY_PAGE_ALLOCATION_NONE;
+	switch (memoryPageAllocation)
+	{
+		case wbem::pmem_config::PM_SERVICE_MEMORYPAGEALLOCATION_DRAM:
+			val = NAMESPACE_MEMORY_PAGE_ALLOCATION_DRAM;
+			break;
+		case wbem::pmem_config::PM_SERVICE_MEMORYPAGEALLOCATION_APP_DIRECT:
+			val = NAMESPACE_MEMORY_PAGE_ALLOCATION_APP_DIRECT;
+			break;
+		default:
+			break;
+	};
+	return val;
 }
 
 enum encryption_status wbem::pmem_config::PersistentMemoryServiceFactory::integerToEncryptionEnum(const NVM_UINT16 encryption)
@@ -444,7 +464,9 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::allocateFromPool(
 			wbem::framework::Attribute optimizeAttribute;
 			pGoalInstance->getAttribute(wbem::OPTIMIZE_KEY, optimizeAttribute);
 			NVM_UINT16 optimize = optimizeAttribute.uintValue();
-			if (optimize != wbem::pmem_config::PM_SERVICE_OPTIMIZE_SMALLEST_SIZE)
+			if ((optimize != PM_SERVICE_OPTIMIZE_SMALLEST_SIZE) &&
+				(optimize != PM_SERVICE_OPTIMIZE_NONE) &&
+				(optimize != PM_SERVICE_OPTIMIZE_BEST_PERFORMANCE))
 			{
 				optimize = wbem::pmem_config::PM_SERVICE_OPTIMIZE_COPYONWRITE;
 			}
@@ -472,6 +494,11 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::allocateFromPool(
 				}
 			}
 
+			NVM_UINT16 memoryPageAllocation = 0;
+			wbem::framework::Attribute memoryPageAllocationAttribute;
+			pGoalInstance->getAttribute(wbem::MEMORYPAGEALLOCATION_KEY, memoryPageAllocationAttribute);
+			memoryPageAllocation = memoryPageAllocationAttribute.uintValue();
+
 			std::string namespaceGuidStr;
 
 			// interleave sizes
@@ -489,7 +516,7 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::allocateFromPool(
 					poolGuidStr, initialState,
 					friendlyNameStr, blocksizestr_to_int(blockSizeStr), blockCount, type, optimize,
 					encryption, eraseCapable,
-					channelSize, controllerSize, false);
+					channelSize, controllerSize, false, memoryPageAllocation);
 			}
 			else
 			{
@@ -498,7 +525,8 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::allocateFromPool(
 					friendlyNameStr, blocksizestr_to_int(blockSizeStr), blockCount, type, optimize,
 					encryption, eraseCapable,
 					wbem::mem_config::MEMORYALLOCATIONSETTINGS_EXPONENT_UNKNOWN,
-					wbem::mem_config::MEMORYALLOCATIONSETTINGS_EXPONENT_UNKNOWN, false);
+					wbem::mem_config::MEMORYALLOCATIONSETTINGS_EXPONENT_UNKNOWN, false,
+					memoryPageAllocation);
 			}
 
 			if (pGoalInstance)
@@ -651,7 +679,8 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::createNamespace(std::str
 		const NVM_UINT16 encryption, const NVM_UINT16 eraseCapable,
 		const mem_config::MemoryAllocationSettingsInterleaveSizeExponent channelSize,
 		const mem_config::MemoryAllocationSettingsInterleaveSizeExponent controllerSize,
-		const bool byOne)
+		const bool byOne,
+		const NVM_UINT16 memoryPageAllocation)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
@@ -670,20 +699,10 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::createNamespace(std::str
 	struct namespace_create_settings namespace_settings;
 	memset(&namespace_settings, 0, sizeof (namespace_settings));
 
-	bool btt;
-	if (optimize == PM_SERVICE_OPTIMIZE_COPYONWRITE ||
-			optimize == PM_SERVICE_OPTIMIZE_SMALLEST_SIZE)
+	bool btt = false;
+	if (optimize == PM_SERVICE_OPTIMIZE_COPYONWRITE)
 	{
 		btt = true;
-	}
-	else if (optimize == PM_SERVICE_OPTIMIZE_NONE ||
-			optimize == PM_SERVICE_OPTIMIZE_BEST_PERFORMANCE )
-	{
-		btt = false;
-	}
-	else
-	{
-		throw framework::ExceptionBadParameter("Optimize");
 	}
 
 	namespace_settings.btt = btt ? 1 : 0;
@@ -693,6 +712,7 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::createNamespace(std::str
 	namespace_settings.type = namespaceTypeToEnum(type);
 	namespace_settings.security_features.erase_capable = eraseCapable ? 1 : 0;
 	namespace_settings.security_features.encryption = encryptionTypeToEnum(encryption);
+	namespace_settings.memory_page_allocation = memoryPageAllocationTypeToEnum(memoryPageAllocation);
 
 	s_strncpy(namespace_settings.friendly_name, NVM_NAMESPACE_NAME_LEN,
 			friendlyNameStr.c_str(), NVM_NAMESPACE_NAME_LEN);
@@ -892,7 +912,8 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::createNamespace(
 		settings.poolId, settings.enabled,
 		settings.friendlyName, settings.blockSize, settings.blockCount, settings.type,
 		settings.optimize, settings.encryption, settings.eraseCapable,
-		settings.interleaveChannelSize, settings.interleaveControllerSize, settings.byOne);
+		settings.interleaveChannelSize, settings.interleaveControllerSize, settings.byOne,
+		settings.memoryPageAllocation);
 }
 
 NVM_UINT64 wbem::pmem_config::PersistentMemoryServiceFactory::getAdjustedCreateNamespaceBlockCount(

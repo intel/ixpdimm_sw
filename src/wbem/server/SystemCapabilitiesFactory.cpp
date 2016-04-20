@@ -81,6 +81,7 @@ void wbem::server::SystemCapabilitiesFactory::populateAttributeList(
 	attributes.push_back(GROWSTORAGENAMESPACESUPPORT_KEY);
 	attributes.push_back(SHRINKSTORAGENAMESPACESUPPORT_KEY);
 	attributes.push_back(INITIATESCRUBSUPPORT_KEY);
+	attributes.push_back(MEMORYPAGEALLOCATIONCAPABLE_KEY);
 }
 
 /*
@@ -239,6 +240,9 @@ wbem::framework::Instance* wbem::server::SystemCapabilitiesFactory::getInstance(
 			addCapabilitySupportedAttribute(pInstance, attributes,
 					INITIATESCRUBSUPPORT_KEY,
 					(bool)nvmCaps.nvm_features.start_address_scrub);
+			addCapabilitySupportedAttribute(pInstance, attributes,
+					MEMORYPAGEALLOCATIONCAPABLE_KEY,
+					(bool)nvmCaps.sw_capabilities.namespace_memory_page_allocation_capable);
 		}
 		else
 		{

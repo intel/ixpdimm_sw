@@ -70,7 +70,12 @@ namespace pmem_config
 	static const NVM_UINT16 NS_SECURITY_ENCRYPTION_ON = 1;
 	static const NVM_UINT16 NS_SECURITY_ERASE = 2;
 
-	/*!
+	// namespace memory page allocation strings
+	static const std::string NS_MEMORY_PAGE_ALLOCATION_STR_NONE = "None";
+	static const std::string NS_MEMORY_PAGE_ALLOCATION_STR_DRAM = "DRAM";
+	static const std::string NS_MEMORY_PAGE_ALLOCATION_STR_APP_DIRECT = "AppDirect";
+
+/*!
  * Provider Factory for Intel_NamespaceView
  */
 class NVM_API NamespaceViewFactory : public framework_interface::NvmInstanceFactory
@@ -150,9 +155,14 @@ class NVM_API NamespaceViewFactory : public framework_interface::NvmInstanceFact
 		 */
 		static framework::UINT16_LIST namespaceSecurityToValue(struct namespace_security_features security);
 
+		/*
+		 * Helper function to convert namespace memory page allocation attribute to a memory page allocation string
+		 */
+		static std::string namespaceMemoryPageAllocationToStr(const enum namespace_memory_page_allocation allocation);
+
 	private:
 		void populateAttributeList(framework::attribute_names_t &attributes)
-				throw (framework::Exception);
+		throw (framework::Exception);
 }; // class
 
 } // pmem_config

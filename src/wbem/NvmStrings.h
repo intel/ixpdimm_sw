@@ -392,6 +392,8 @@ static std::string SHRINKAPPDIRECTNAMESPACESUPPORT_KEY = "ShrinkAppDirectNamespa
 static std::string GROWSTORAGENAMESPACESUPPORT_KEY = "GrowStorageNamespaceSupported";
 static std::string SHRINKSTORAGENAMESPACESUPPORT_KEY = "ShrinkStorageNamespaceSupported";
 static std::string INITIATESCRUBSUPPORT_KEY = "InitiateScrubSupported";
+static std::string MEMORYPAGEALLOCATIONCAPABLE_KEY = "MemoryPageAllocationCapable";
+static std::string MEMORYPAGEALLOCATION_KEY = "MemoryPageAllocation";
 
 // HealthSensorView
 static std::string MEDIACURRENTTEMPERATURE_KEY = "CurrentMediaTemperature";

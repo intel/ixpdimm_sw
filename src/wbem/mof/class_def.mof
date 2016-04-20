@@ -648,11 +648,13 @@ class <NVM_WBEM_PREFIX>NamespaceSettings : CIM_NamespaceSettings
 	uint16 SecurityFeatures[];
 	uint16 ChannelInterleaveSize;
 	uint16 ControllerInterleaveSize;
+	uint16 MemoryPageAllocation;
 };
 
 [dynamic, provider("intelwbemprovider")]
 class <NVM_WBEM_PREFIX>PersistentMemoryCapabilities : CIM_PersistentMemoryCapabilities
 {
+	boolean MemoryPageAllocationCapable;
 	uint64 MaxNamespaces;
 	// methods
      [implemented,

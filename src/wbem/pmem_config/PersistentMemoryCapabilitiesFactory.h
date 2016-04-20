@@ -111,7 +111,8 @@ class NVM_API PersistentMemoryCapabilitiesFactory : public framework_interface::
 		 */
 		framework::UINT16_LIST getPoolSecurityFeatures(struct pool *pPool) throw (framework::Exception);
 
-		framework::UINT64 getMaxNamespacesPerPool(struct pool *pPool) throw (framework::Exception);
+		framework::UINT64 getMaxNamespacesPerPool(struct pool *pPool, NVM_UINT64 min_namespace_size)
+		throw (framework::Exception);
 
 		/*!
 		 * Get the supported block sizes

@@ -68,6 +68,7 @@ throw(wbem::framework::Exception)
 	attributes.push_back(SECURITYFEATURES_KEY);
 	attributes.push_back(CHANNELINTERLEAVESIZE_KEY);
 	attributes.push_back(CONTROLLERINTERLEAVESIZE_KEY);
+	attributes.push_back(MEMORYPAGEALLOCATION_KEY);
 
 	// NOTE: No need to populate InitialState - only for create
 }
@@ -186,6 +187,13 @@ throw(wbem::framework::Exception)
 
 			framework::Attribute a(channelSize, false);
 			pInstance->setAttribute(CONTROLLERINTERLEAVESIZE_KEY, a, attributes);
+		}
+
+		if (containsAttribute(MEMORYPAGEALLOCATION_KEY, attributes))
+		{
+			framework::Attribute a((NVM_UINT16)ns.memory_page_allocation,
+				NamespaceViewFactory::namespaceMemoryPageAllocationToStr(ns.memory_page_allocation), false);
+			pInstance->setAttribute(MEMORYPAGEALLOCATION_KEY, a, attributes);
 		}
 
 		// NOTE: No need to populate Parent, or InitialState - only for create

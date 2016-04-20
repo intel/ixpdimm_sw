@@ -76,6 +76,7 @@ throw(wbem::framework::Exception)
 	attributes.push_back(SECURITYFEATURES_KEY);
 	attributes.push_back(APP_DIRECT_SETTINGS_KEY);
 	attributes.push_back(REPLICATION_KEY);
+	attributes.push_back(MEMORYPAGEALLOCATION_KEY);
 }
 
 /*
@@ -262,6 +263,13 @@ throw(wbem::framework::Exception)
 		{
 			pInstance->setAttribute(REPLICATION_KEY,
 					framework::Attribute((bool)ns.mirrored, false));
+		}
+
+		if (containsAttribute(MEMORYPAGEALLOCATION_KEY, attributes))
+		{
+			framework::Attribute a((NVM_UINT16)ns.memory_page_allocation,
+					namespaceMemoryPageAllocationToStr(ns.memory_page_allocation), false);
+			pInstance->setAttribute(MEMORYPAGEALLOCATION_KEY, a, attributes);
 		}
 	}
 	catch (framework::Exception &) // clean up and re-throw
@@ -511,4 +519,28 @@ wbem::framework::UINT16_LIST wbem::pmem_config::NamespaceViewFactory::namespaceS
 		securityList.push_back(NS_SECURITY_ERASE);
 	}
 	return securityList;
+}
+
+/*
+ * Helper function to convert namespace memory page allocation attribute to a memory page allocation string
+ */
+std::string wbem::pmem_config::NamespaceViewFactory::namespaceMemoryPageAllocationToStr(
+		const enum namespace_memory_page_allocation allocation)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	std::string str = NS_MEMORY_PAGE_ALLOCATION_STR_NONE;
+	switch (allocation)
+	{
+	case NAMESPACE_MEMORY_PAGE_ALLOCATION_APP_DIRECT:
+		str = NS_MEMORY_PAGE_ALLOCATION_STR_APP_DIRECT;
+		break;
+	case NAMESPACE_MEMORY_PAGE_ALLOCATION_DRAM:
+		str = NS_MEMORY_PAGE_ALLOCATION_STR_DRAM;
+		break;
+	default:
+		break;
+	}
+
+	return str;
 }
