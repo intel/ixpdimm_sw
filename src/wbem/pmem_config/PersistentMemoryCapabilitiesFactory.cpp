@@ -90,9 +90,9 @@ throw(wbem::framework::Exception)
 		// ElementName = "Pool Capabilities for: " + pool UUID
 		if (containsAttribute(ELEMENTNAME_KEY, attributes))
 		{
-			NVM_GUID_STR poolGuidStr;
-			uid_copy(pool.pool_guid, poolGuidStr);
-			std::string elementNameStr = PMCAP_ELEMENTNAME + poolGuidStr;
+			NVM_UID poolUidStr;
+			uid_copy(pool.pool_uid, poolUidStr);
+			std::string elementNameStr = PMCAP_ELEMENTNAME + poolUidStr;
 			framework::Attribute a(elementNameStr, false);
 			pInstance->setAttribute(ELEMENTNAME_KEY, a, attributes);
 		}
@@ -186,10 +186,10 @@ wbem::framework::instance_names_t *wbem::pmem_config::PersistentMemoryCapabiliti
 		{
 			framework::attributes_t keys;
 
-			// Instance ID = Pool GUID
-			NVM_GUID_STR poolGuidStr;
-			uid_copy((*iter).pool_guid, poolGuidStr);
-			keys[INSTANCEID_KEY] = framework::Attribute(poolGuidStr, true);
+			// Instance ID = Pool UID
+			NVM_UID poolUidStr;
+			uid_copy((*iter).pool_uid, poolUidStr);
+			keys[INSTANCEID_KEY] = framework::Attribute(poolUidStr, true);
 
 			framework::ObjectPath path(wbem::server::getHostName(),
 					NVM_NAMESPACE, PMCAP_CREATIONCLASSNAME, keys);
@@ -335,8 +335,8 @@ wbem::framework::UINT64 wbem::pmem_config::PersistentMemoryCapabilitiesFactory::
 	NVM_UINT64 maxAppDirectNS = 0;
 	NVM_UINT64 maxBlockNS = 0;
 
-	NVM_GUID_STR poolGuidStr;
-	uid_copy(pPool->pool_guid, poolGuidStr);
+	NVM_UID poolUidStr;
+	uid_copy(pPool->pool_uid, poolUidStr);
 
 	// A pool can have as many App Direct Namespaces as its interleave sets as long as the size is greater
 	// than minimum namespace size
@@ -388,14 +388,14 @@ struct pool wbem::pmem_config::PersistentMemoryCapabilitiesFactory::getPool(
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	std::string poolGuidStr = object.getKeyValue(INSTANCEID_KEY).stringValue();
-	if (poolGuidStr.length() != NVM_GUIDSTR_LEN - 1)
+	std::string poolUidStr = object.getKeyValue(INSTANCEID_KEY).stringValue();
+	if (poolUidStr.length() != NVM_MAX_UID_LEN - 1)
 	{
-		COMMON_LOG_ERROR_F("PersistentMemoryCapabilitiesFactory InstanceID is not a valid pool guid %s",
-				poolGuidStr.c_str());
+		COMMON_LOG_ERROR_F("PersistentMemoryCapabilitiesFactory InstanceID is not a valid pool uid %s",
+				poolUidStr.c_str());
 		throw framework::ExceptionBadParameter(INSTANCEID_KEY.c_str());
 	}
-	return mem_config::PoolViewFactory::getPool(poolGuidStr);
+	return mem_config::PoolViewFactory::getPool(poolUidStr);
 }
 
 void wbem::pmem_config::PersistentMemoryCapabilitiesFactory::getSupportedBlockSizes(

@@ -330,15 +330,15 @@ int validate_config_goal_supported(const struct config_goal *p_goal,
 	// log an event
 	if (rc == NVM_ERR_CONFIGNOTSUPPORTED)
 	{
-		NVM_GUID_STR guid_str;
-		uid_copy(p_discovery->guid, guid_str);
+		NVM_UID uid_str;
+		uid_copy(p_discovery->uid, uid_str);
 		store_event_by_parts(
 				EVENT_TYPE_HEALTH,
 				EVENT_SEVERITY_CRITICAL,
 				EVENT_CODE_CONFIG_GOAL_SKU_VIOLATION,
-				p_discovery->guid,
+				p_discovery->uid,
 				0,
-				guid_str,
+				uid_str,
 				NULL,
 				NULL,
 				DIAGNOSTIC_RESULT_UNKNOWN);
@@ -478,7 +478,7 @@ int config_goal_to_interleave_ext_table(const struct app_direct_attributes *p_qo
  * Expect expect pp_input_table to point to a NULL pointer.
  * Caller must free *pp_input_table.
  */
-int config_goal_to_config_input(const NVM_GUID device_guid,
+int config_goal_to_config_input(const NVM_UID device_uid,
 		const struct config_goal *p_goal,
 		struct config_input_table **pp_input_table,
 		const struct nvm_capabilities *p_capabilities,
@@ -645,7 +645,7 @@ int update_config_goal(const struct device_discovery *p_discovery,
 			NVM_UINT32 seq_num = 0;
 			seq_num = get_last_config_output_sequence_number(p_old_cfg) + 1;
 
-			rc = config_goal_to_config_input(p_discovery->guid, p_goal, &p_input_table,
+			rc = config_goal_to_config_input(p_discovery->uid, p_goal, &p_input_table,
 					p_capabilities, p_discovery, seq_num);
 			if (rc == NVM_SUCCESS)
 			{
@@ -695,7 +695,7 @@ int update_config_goal(const struct device_discovery *p_discovery,
 /*
  * Provision the capacity of the specified NVM-DIMM into one or more pools.
  */
-int nvm_create_config_goal(const NVM_GUID device_guid,
+int nvm_create_config_goal(const NVM_UID device_uid,
 		struct config_goal *p_goal)
 {
 	COMMON_LOG_ENTRY();
@@ -718,9 +718,9 @@ int nvm_create_config_goal(const NVM_GUID device_guid,
 				COMMON_LOG_WARN("Modifying device capacity is not supported.");
 				rc = NVM_ERR_NOTSUPPORTED;
 			}
-			else if (device_guid == NULL)
+			else if (device_uid == NULL)
 			{
-				COMMON_LOG_ERROR("Invalid parameter, device_guid is NULL");
+				COMMON_LOG_ERROR("Invalid parameter, device_uid is NULL");
 				rc = NVM_ERR_INVALIDPARAMETER;
 			}
 			else if (p_goal == NULL)
@@ -728,7 +728,7 @@ int nvm_create_config_goal(const NVM_GUID device_guid,
 				COMMON_LOG_ERROR("Invalid parameter, p_goal is NULL");
 				rc = NVM_ERR_INVALIDPARAMETER;
 			}
-			else if ((rc = exists_and_manageable(device_guid, &discovery, 1)) == NVM_SUCCESS)
+			else if ((rc = exists_and_manageable(device_uid, &discovery, 1)) == NVM_SUCCESS)
 			{
 				// Check that no namespaces exist on this DIMM
 				if ((rc = dimm_has_namespaces_of_type(discovery.device_handle,
@@ -746,13 +746,13 @@ int nvm_create_config_goal(const NVM_GUID device_guid,
 					if (rc == NVM_SUCCESS)
 					{
 						// Log an event indicating we successfully applied the goal
-						NVM_EVENT_ARG guid_arg;
-						guid_to_event_arg(device_guid, guid_arg);
+						NVM_EVENT_ARG uid_arg;
+						uid_to_event_arg(device_uid, uid_arg);
 						log_mgmt_event(EVENT_SEVERITY_INFO,
 								EVENT_CODE_MGMT_CONFIG_GOAL_CREATED,
-								device_guid,
+								device_uid,
 								0, // no action required
-								guid_arg, NULL, NULL);
+								uid_arg, NULL, NULL);
 					}
 				}
 			}
@@ -833,7 +833,7 @@ enum config_goal_status get_config_goal_status_from_platform_config_data(
  * Helper function to convert a platform config data input table to a config
  * goal structure.
  */
-int config_input_table_to_config_goal(const NVM_GUID device_guid,
+int config_input_table_to_config_goal(const NVM_UID device_uid,
 		unsigned char *p_table,
 		const NVM_UINT32 ext_table_offset,
 		const NVM_UINT32 table_length,
@@ -863,7 +863,7 @@ int config_input_table_to_config_goal(const NVM_GUID device_guid,
 					((void*)p_header);
 
 			struct device_discovery discovery;
-			rc = nvm_get_device_discovery(device_guid, &discovery);
+			rc = nvm_get_device_discovery(device_uid, &discovery);
 			if (rc != NVM_SUCCESS) // failed to get discovery info
 			{
 				break;
@@ -931,7 +931,7 @@ int config_input_table_to_config_goal(const NVM_GUID device_guid,
 
 					struct dimm_info_extension_table *p_dimm =
 						(struct dimm_info_extension_table *)(p_table + set_offset);
-					// dimm info to dimm guid
+					// dimm info to dimm uid
 					struct device_discovery discovery;
 					if (lookup_dev_manufacturer_serial_model(p_dimm->manufacturer,
 							p_dimm->serial_number,
@@ -945,10 +945,10 @@ int config_input_table_to_config_goal(const NVM_GUID device_guid,
 						rc = NVM_ERR_BADDEVICECONFIG; // bad data unrecognized device
 						break;
 					}
-					memmove(p_qos->dimms[i], discovery.guid, NVM_GUID_LEN);
+					memmove(p_qos->dimms[i], discovery.uid, NVM_MAX_UID_LEN);
 
 					// If this is the requested DIMM, get the size
-					if (uid_cmp(p_qos->dimms[i], device_guid))
+					if (uid_cmp(p_qos->dimms[i], device_uid))
 					{
 						*p_size = (p_dimm->size / BYTES_PER_GB);
 					}
@@ -974,7 +974,7 @@ int config_input_table_to_config_goal(const NVM_GUID device_guid,
 /*
  * Retrieve the configuration goal from the specified NVM-DIMM.
  */
-int nvm_get_config_goal(const NVM_GUID device_guid, struct config_goal *p_goal)
+int nvm_get_config_goal(const NVM_UID device_uid, struct config_goal *p_goal)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
@@ -988,9 +988,9 @@ int nvm_get_config_goal(const NVM_GUID device_guid, struct config_goal *p_goal)
 	{
 		COMMON_LOG_ERROR("Retrieving device capacity is not supported.");
 	}
-	else if (device_guid == NULL)
+	else if (device_uid == NULL)
 	{
-		COMMON_LOG_ERROR("Invalid parameter, device_guid is NULL");
+		COMMON_LOG_ERROR("Invalid parameter, device_uid is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
 	else if (p_goal == NULL)
@@ -998,7 +998,7 @@ int nvm_get_config_goal(const NVM_GUID device_guid, struct config_goal *p_goal)
 		COMMON_LOG_ERROR("Invalid parameter, p_goal is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
-	else if ((rc = exists_and_manageable(device_guid, &discovery, 1)) == NVM_SUCCESS)
+	else if ((rc = exists_and_manageable(device_uid, &discovery, 1)) == NVM_SUCCESS)
 	{
 		// assume no config goal
 		memset(p_goal, 0, sizeof (*p_goal));
@@ -1023,7 +1023,7 @@ int nvm_get_config_goal(const NVM_GUID device_guid, struct config_goal *p_goal)
 				p_goal->status = get_config_goal_status_from_platform_config_data(p_cfg_data);
 
 				// Fill in the remaining data from the config input table
-				rc = config_input_table_to_config_goal(device_guid,
+				rc = config_input_table_to_config_goal(device_uid,
 						(unsigned char *)p_config_input, sizeof (struct config_input_table),
 						p_config_input->header.length, p_goal);
 			}
@@ -1038,7 +1038,7 @@ int nvm_get_config_goal(const NVM_GUID device_guid, struct config_goal *p_goal)
 /*
  * Erase the configuration goal from the specified NVM-DIMM.
  */
-int nvm_delete_config_goal(const NVM_GUID device_guid)
+int nvm_delete_config_goal(const NVM_UID device_uid)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
@@ -1052,16 +1052,16 @@ int nvm_delete_config_goal(const NVM_GUID device_guid)
 	{
 		COMMON_LOG_ERROR("Modifying device capacity is not supported.");
 	}
-	else if (device_guid == NULL)
+	else if (device_uid == NULL)
 	{
-		COMMON_LOG_ERROR("Invalid parameter, device_guid is NULL");
+		COMMON_LOG_ERROR("Invalid parameter, device_uid is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
-	else if ((rc = exists_and_manageable(device_guid, &discovery, 1)) == NVM_SUCCESS)
+	else if ((rc = exists_and_manageable(device_uid, &discovery, 1)) == NVM_SUCCESS)
 	{
 		// Is there a config goal on this DIMM?
 		struct config_goal current_goal;
-		rc = nvm_get_config_goal(device_guid, &current_goal);
+		rc = nvm_get_config_goal(device_uid, &current_goal);
 		if (rc == NVM_SUCCESS) // Goal found!
 		{
 			// Delete it
@@ -1069,19 +1069,19 @@ int nvm_delete_config_goal(const NVM_GUID device_guid)
 			if (rc == NVM_SUCCESS)
 			{
 				// Log an event indicating we successfully removed the goal
-				NVM_EVENT_ARG guid_arg;
-				guid_to_event_arg(device_guid, guid_arg);
+				NVM_EVENT_ARG uid_arg;
+				uid_to_event_arg(device_uid, uid_arg);
 				log_mgmt_event(EVENT_SEVERITY_INFO,
 						EVENT_CODE_MGMT_CONFIG_GOAL_DELETED,
-						device_guid,
+						device_uid,
 						0, // no action required
-						guid_arg, NULL, NULL);
+						uid_arg, NULL, NULL);
 
 				// clear any action required events for the bad config goals on this dimm
 				struct event_filter filter;
 				memset(&filter, 0, sizeof (filter));
-				filter.filter_mask = NVM_FILTER_ON_GUID | NVM_FILTER_ON_AR | NVM_FILTER_ON_TYPE;
-				memmove(filter.guid, device_guid, NVM_GUID_LEN);
+				filter.filter_mask = NVM_FILTER_ON_UID | NVM_FILTER_ON_AR | NVM_FILTER_ON_TYPE;
+				memmove(filter.uid, device_uid, NVM_MAX_UID_LEN);
 				filter.action_required = 1;
 				filter.type = EVENT_TYPE_CONFIG;
 				acknowledge_events(&filter);

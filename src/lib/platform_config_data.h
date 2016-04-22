@@ -482,7 +482,7 @@ int write_dimm_config(const struct device_discovery *p_discovery,
 /*
  * Get the next interleave index
  */
-int get_dimm_interleave_info_max_set_index(const NVM_GUID device_guid,
+int get_dimm_interleave_info_max_set_index(const NVM_UID device_uid,
 		NVM_UINT32 *p_set_index);
 
 /*

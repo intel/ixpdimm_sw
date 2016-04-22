@@ -49,8 +49,8 @@
 /*
  * Helper functions
  */
-int check_passphrase_capable(const NVM_GUID device_guid);
-int check_unlock_device_capable(const NVM_GUID device_guid);
+int check_passphrase_capable(const NVM_UID device_uid);
+int check_unlock_device_capable(const NVM_UID device_uid);
 
 /*
  * Helper function to free lock a dimm
@@ -77,42 +77,42 @@ int security_change_prepare(struct device_discovery *p_discovery,
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
-	NVM_GUID_STR guid_str;
+	NVM_UID uid_str;
 
 	// Do not proceed if frozen
 	if (p_discovery->lock_state == LOCK_STATE_FROZEN)
 	{
-		uid_copy(p_discovery->guid, guid_str);
+		uid_copy(p_discovery->uid, uid_str);
 		COMMON_LOG_ERROR_F("Failed to modify security on device %s \
 				because security is frozen",
-				guid_str);
+				uid_str);
 		rc = NVM_ERR_SECURITYFROZEN;
 	}
 	// Do not proceed if max password attempts have been reached
 	else if (p_discovery->lock_state == LOCK_STATE_PASSPHRASE_LIMIT)
 	{
-		uid_copy(p_discovery->guid, guid_str);
+		uid_copy(p_discovery->uid, uid_str);
 		COMMON_LOG_ERROR_F("Failed to modify security on device %s \
 				because the passphrase limit has been reached",
-				guid_str);
+				uid_str);
 		rc = NVM_ERR_LIMITPASSPHRASE;
 	}
 	// Do not proceed if unknown
 	else if (p_discovery->lock_state == LOCK_STATE_UNKNOWN)
 	{
-		uid_copy(p_discovery->guid, guid_str);
+		uid_copy(p_discovery->uid, uid_str);
 		COMMON_LOG_ERROR_F("Failed to modify security on device %s \
 					because security is unknown",
-					guid_str);
+					uid_str);
 		rc = NVM_ERR_NOTSUPPORTED;
 	}
 	// Do not proceed if security is not enabled (only for certain commads)
 	else if (check_enabled && p_discovery->lock_state == LOCK_STATE_DISABLED)
 	{
-		uid_copy(p_discovery->guid, guid_str);
+		uid_copy(p_discovery->uid, uid_str);
 		COMMON_LOG_ERROR_F("Failed to modify security on device %s \
 				because the security is disabled",
-				guid_str);
+				uid_str);
 		rc = NVM_ERR_SECURITYDISABLED;
 	}
 	// if locked, try to unlock
@@ -177,7 +177,7 @@ int check_passphrase(const NVM_PASSPHRASE passphrase, const NVM_SIZE passphrase_
  * the passphrase to the new passphrase specified. The device will be
  * unlocked if it is currently locked.
  */
-int nvm_set_passphrase(const NVM_GUID device_guid,
+int nvm_set_passphrase(const NVM_UID device_uid,
 		const NVM_PASSPHRASE old_passphrase, const NVM_SIZE old_passphrase_len,
 		const NVM_PASSPHRASE new_passphrase, const NVM_SIZE new_passphrase_len)
 {
@@ -193,9 +193,9 @@ int nvm_set_passphrase(const NVM_GUID device_guid,
 	{
 		COMMON_LOG_ERROR("Modifying "NVM_DIMM_NAME" security is not supported.");
 	}
-	else if (device_guid == NULL)
+	else if (device_uid == NULL)
 	{
-		COMMON_LOG_ERROR("Invalid parameter, device_guid is NULL");
+		COMMON_LOG_ERROR("Invalid parameter, device_uid is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
 	else if (check_passphrase(new_passphrase, new_passphrase_len) != NVM_SUCCESS)
@@ -210,8 +210,8 @@ int nvm_set_passphrase(const NVM_GUID device_guid,
 		rc = check_passphrase(old_passphrase, old_passphrase_len);
 	}
 	if (rc == NVM_SUCCESS &&
-			((rc = exists_and_manageable(device_guid, &discovery, 1)) == NVM_SUCCESS) &&
-			((rc = check_passphrase_capable(device_guid)) == NVM_SUCCESS) &&
+			((rc = exists_and_manageable(device_uid, &discovery, 1)) == NVM_SUCCESS) &&
+			((rc = check_passphrase_capable(device_uid)) == NVM_SUCCESS) &&
 			((rc = security_change_prepare(&discovery, old_passphrase,
 					old_passphrase_len, 0)) == NVM_SUCCESS))
 	{
@@ -241,13 +241,13 @@ int nvm_set_passphrase(const NVM_GUID device_guid,
 		if (rc == NVM_SUCCESS)
 		{
 			// Log an event indicating we successfully set a passphrase
-			NVM_EVENT_ARG guid_arg;
-			guid_to_event_arg(device_guid, guid_arg);
+			NVM_EVENT_ARG uid_arg;
+			uid_to_event_arg(device_uid, uid_arg);
 			log_mgmt_event(EVENT_SEVERITY_INFO,
 					EVENT_CODE_MGMT_SECURITY_PASSWORD_SET,
-					device_guid,
+					device_uid,
 					0, // no action required
-					guid_arg, NULL, NULL);
+					uid_arg, NULL, NULL);
 		}
 		s_memset(&input_payload, sizeof (input_payload));
 
@@ -259,12 +259,12 @@ int nvm_set_passphrase(const NVM_GUID device_guid,
 	return rc;
 }
 
-int check_passphrase_capable(const NVM_GUID device_guid)
+int check_passphrase_capable(const NVM_UID device_uid)
 {
 	int rc;
 
 	struct device_discovery discovery;
-	if ((rc = nvm_get_device_discovery(device_guid, &discovery)) == NVM_SUCCESS)
+	if ((rc = nvm_get_device_discovery(device_uid, &discovery)) == NVM_SUCCESS)
 	{
 		rc = discovery.security_capabilities.passphrase_capable == 1
 				? NVM_SUCCESS : NVM_ERR_NOTSUPPORTED;
@@ -273,13 +273,13 @@ int check_passphrase_capable(const NVM_GUID device_guid)
 	return rc;
 }
 
-int check_unlock_device_capable(const NVM_GUID device_guid)
+int check_unlock_device_capable(const NVM_UID device_uid)
 
 {
 	int rc;
 
 	struct device_discovery discovery;
-	if ((rc = nvm_get_device_discovery(device_guid, &discovery)) == NVM_SUCCESS)
+	if ((rc = nvm_get_device_discovery(device_uid, &discovery)) == NVM_SUCCESS)
 	{
 		rc = discovery.security_capabilities.unlock_device_capable == 1
 				? NVM_SUCCESS : NVM_ERR_NOTSUPPORTED;
@@ -292,7 +292,7 @@ int check_unlock_device_capable(const NVM_GUID device_guid)
  * Disables data at rest security and removes the passphrase.
  * The device will be unlocked if it is currently locked.
  */
-int nvm_remove_passphrase(const NVM_GUID device_guid,
+int nvm_remove_passphrase(const NVM_UID device_uid,
 		const NVM_PASSPHRASE passphrase, const NVM_SIZE passphrase_len)
 {
 	COMMON_LOG_ENTRY();
@@ -308,14 +308,14 @@ int nvm_remove_passphrase(const NVM_GUID device_guid,
 	{
 		COMMON_LOG_ERROR("Modifying "NVM_DIMM_NAME" security is not supported.");
 	}
-	else if (device_guid == NULL)
+	else if (device_uid == NULL)
 	{
-		COMMON_LOG_ERROR("Invalid parameter, device_guid is NULL");
+		COMMON_LOG_ERROR("Invalid parameter, device_uid is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
 	else if (((rc = check_passphrase(passphrase, passphrase_len)) == NVM_SUCCESS) &&
-			((rc = exists_and_manageable(device_guid, &discovery, 1)) == NVM_SUCCESS) &&
-			((rc = check_passphrase_capable(device_guid)) == NVM_SUCCESS) &&
+			((rc = exists_and_manageable(device_uid, &discovery, 1)) == NVM_SUCCESS) &&
+			((rc = check_passphrase_capable(device_uid)) == NVM_SUCCESS) &&
 			((rc = security_change_prepare(&discovery, passphrase, passphrase_len, 1))
 					== NVM_SUCCESS))
 	{
@@ -336,13 +336,13 @@ int nvm_remove_passphrase(const NVM_GUID device_guid,
 		if (rc == NVM_SUCCESS)
 		{
 			// Log an event indicating we successfully removed the passphrase
-			NVM_EVENT_ARG guid_arg;
-			guid_to_event_arg(device_guid, guid_arg);
+			NVM_EVENT_ARG uid_arg;
+			uid_to_event_arg(device_uid, uid_arg);
 			log_mgmt_event(EVENT_SEVERITY_INFO,
 					EVENT_CODE_MGMT_SECURITY_PASSWORD_REMOVED,
-					device_guid,
+					device_uid,
 					0, // no action required
-					guid_arg, NULL, NULL);
+					uid_arg, NULL, NULL);
 		}
 		s_memset(&input_payload, sizeof (input_payload));
 
@@ -357,7 +357,7 @@ int nvm_remove_passphrase(const NVM_GUID device_guid,
 /*
  * Unlocks the device with the passphrase specified.
  */
-int nvm_unlock_device(const NVM_GUID device_guid,
+int nvm_unlock_device(const NVM_UID device_uid,
 		const NVM_PASSPHRASE passphrase, const NVM_SIZE passphrase_len)
 {
 	COMMON_LOG_ENTRY();
@@ -373,14 +373,14 @@ int nvm_unlock_device(const NVM_GUID device_guid,
 	{
 		COMMON_LOG_ERROR("Modifying "NVM_DIMM_NAME" security is not supported.");
 	}
-	else if (device_guid == NULL)
+	else if (device_uid == NULL)
 	{
-		COMMON_LOG_ERROR("Invalid parameter, device_guid is NULL");
+		COMMON_LOG_ERROR("Invalid parameter, device_uid is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
 	else if (((rc = check_passphrase(passphrase, passphrase_len)) == NVM_SUCCESS) &&
-			((rc = exists_and_manageable(device_guid, &discovery, 1)) == NVM_SUCCESS) &&
-			((rc = check_unlock_device_capable(device_guid)) == NVM_SUCCESS) &&
+			((rc = exists_and_manageable(device_uid, &discovery, 1)) == NVM_SUCCESS) &&
+			((rc = check_unlock_device_capable(device_uid)) == NVM_SUCCESS) &&
 			((rc = security_change_prepare(&discovery, passphrase, passphrase_len, 1))
 					== NVM_SUCCESS))
 	{
@@ -405,13 +405,13 @@ int nvm_unlock_device(const NVM_GUID device_guid,
 		if (rc == NVM_SUCCESS)
 		{
 			// Log an event indicating we successfully unlocked
-			NVM_EVENT_ARG guid_arg;
-			guid_to_event_arg(device_guid, guid_arg);
+			NVM_EVENT_ARG uid_arg;
+			uid_to_event_arg(device_uid, uid_arg);
 			log_mgmt_event(EVENT_SEVERITY_INFO,
 					EVENT_CODE_MGMT_SECURITY_UNLOCK,
-					device_guid,
+					device_uid,
 					0, // no action required
-					guid_arg, NULL, NULL);
+					uid_arg, NULL, NULL);
 		}
 		s_memset(&input_payload, sizeof (input_payload));
 
@@ -458,16 +458,16 @@ int secure_erase(const NVM_PASSPHRASE passphrase,
 	// log event if it succeeded
 	if (rc == NVM_SUCCESS)
 	{
-		// arg 1: GUID as string
-		NVM_GUID_STR guid_str;
-		uid_copy(p_discovery->guid, guid_str);
+		// arg 1: uid as string
+		NVM_UID uid_str;
+		uid_copy(p_discovery->uid, uid_str);
 
 		store_event_by_parts(EVENT_TYPE_MGMT,
 				EVENT_SEVERITY_INFO,
 				EVENT_CODE_MGMT_SECURITY_SECURE_ERASE,
-				p_discovery->guid,
+				p_discovery->uid,
 				0, // no action required
-				guid_str,
+				uid_str,
 				NULL,
 				NULL,
 				DIAGNOSTIC_RESULT_UNKNOWN);
@@ -479,7 +479,7 @@ int secure_erase(const NVM_PASSPHRASE passphrase,
 /*
  * Erases the data on the device specified.
  */
-int nvm_erase_device(const NVM_GUID device_guid,
+int nvm_erase_device(const NVM_UID device_uid,
 		const NVM_PASSPHRASE passphrase, const NVM_SIZE passphrase_len)
 {
 	COMMON_LOG_ENTRY();
@@ -495,12 +495,12 @@ int nvm_erase_device(const NVM_GUID device_guid,
 	{
 		COMMON_LOG_ERROR("Modifying "NVM_DIMM_NAME" security is not supported.");
 	}
-	else if (device_guid == NULL)
+	else if (device_uid == NULL)
 	{
-		COMMON_LOG_ERROR("Invalid parameter, device_guid is NULL");
+		COMMON_LOG_ERROR("Invalid parameter, device_uid is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
-	else if ((rc = exists_and_manageable(device_guid, &discovery, 1)) == NVM_SUCCESS)
+	else if ((rc = exists_and_manageable(device_uid, &discovery, 1)) == NVM_SUCCESS)
 	{
 		if (discovery.security_capabilities.passphrase_capable)
 		{

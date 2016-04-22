@@ -762,17 +762,17 @@ int get_dimm_platform_config(const NVM_NFIT_DEVICE_HANDLE handle,
 	int rc = NVM_SUCCESS;
 
 	NVM_SIZE pcd_size = 0;
-	// get the guid from the handle
+	// get the UID from the handle
 	struct device_discovery discovery;
 	if ((rc = lookup_dev_handle(handle, &discovery)) == NVM_SUCCESS)
 	{
 		// look up pcd in context
-		if (get_nvm_context_device_pcd(discovery.guid, pp_config, &pcd_size) != NVM_SUCCESS)
+		if (get_nvm_context_device_pcd(discovery.uid, pp_config, &pcd_size) != NVM_SUCCESS)
 		{
 			rc = get_hw_dimm_platform_config_alloc(handle.handle, &pcd_size, (void **)pp_config);
 			if (rc == NVM_SUCCESS && *pp_config)
 			{
-				set_nvm_context_device_pcd(discovery.guid, *pp_config, pcd_size);
+				set_nvm_context_device_pcd(discovery.uid, *pp_config, pcd_size);
 			}
 		}
 	}
@@ -870,7 +870,7 @@ int set_dimm_platform_config(const NVM_NFIT_DEVICE_HANDLE handle,
 		struct device_discovery discovery;
 		if ((rc = lookup_dev_handle(handle, &discovery)) == NVM_SUCCESS)
 		{
-			invalidate_device_pcd(discovery.guid);
+			invalidate_device_pcd(discovery.uid);
 		}
 	}
 
@@ -1016,7 +1016,7 @@ int write_dimm_config(const struct device_discovery *p_discovery,
  * If successful, the maximum set index is returned in *p_set_index.
  * If there are no interleave sets in current config or goal, *p_set_index will be 0.
  */
-int get_dimm_interleave_info_max_set_index(const NVM_GUID device_guid,
+int get_dimm_interleave_info_max_set_index(const NVM_UID device_uid,
 		NVM_UINT32 *p_set_index)
 {
 	COMMON_LOG_ENTRY();
@@ -1024,12 +1024,12 @@ int get_dimm_interleave_info_max_set_index(const NVM_GUID device_guid,
 
 	struct device_discovery discovery;
 
-	if (device_guid == NULL)
+	if (device_uid == NULL)
 	{
-		COMMON_LOG_ERROR("Invalid parameter, device_guid is NULL");
+		COMMON_LOG_ERROR("Invalid parameter, device_uid is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
-	else if ((rc = exists_and_manageable(device_guid, &discovery, 1)) == NVM_SUCCESS)
+	else if ((rc = exists_and_manageable(device_uid, &discovery, 1)) == NVM_SUCCESS)
 	{
 		// Fetch the platform config tables for the DIMM
 		struct platform_config_data *p_config = NULL;

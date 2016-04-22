@@ -138,7 +138,7 @@ wbem::framework::attribute_names_t GetAttributeNames(
 		const wbem::framework::attribute_names_t defaultNames,
 		const wbem::framework::attribute_names_t allNames);
 
-bool handleToGuid(const NVM_UINT32 &handle, std::string &dimmGuid);
+bool handleToUid(const NVM_UINT32 &handle, std::string &dimmUid);
 
 /*!
  * Generate a dimm filter based on the parsed target
@@ -147,7 +147,7 @@ void generateDimmFilter(
 		const cli::framework::ParsedCommand& parsedCommand,
 		wbem::framework::attribute_names_t &attributes,
 		cli::nvmcli::filters_t &filters,
-		std::string dimmAttributeKey = wbem::DIMMGUID_KEY);
+		std::string dimmAttributeKey = wbem::DIMMUID_KEY);
 
 /*!
  * Generate a socket filter based on the parsed target
@@ -165,8 +165,8 @@ void generateFilterForAttributeWithTargetValues(const cli::framework::ParsedComm
                                                 const std::string &attributeName, cli::nvmcli::filters_t &filters);
 
 /*!
- * For commands that support an optional -dimm target, retrieve the dimm GUID of the specified target
- * or all manageable dimm GUIDs if not specified. Return a syntax error if the dimm target value
+ * For commands that support an optional -dimm target, retrieve the dimm UID of the specified target
+ * or all manageable dimm UIDs if not specified. Return a syntax error if the dimm target value
  * is invalid.
  */
 cli::framework::ErrorResult *getDimms(
@@ -174,7 +174,7 @@ cli::framework::ErrorResult *getDimms(
 		std::vector<std::string> &dimms);
 
 /*!
- * For commands that support an optional -socket target, retrieve the dimm GUID for all dimms on the
+ * For commands that support an optional -socket target, retrieve the dimm UID for all dimms on the
  * specified socket(s). Return a syntax error if the socket target value is invalid.
  */
 cli::framework::ErrorResult *getDimmsFromSockets(

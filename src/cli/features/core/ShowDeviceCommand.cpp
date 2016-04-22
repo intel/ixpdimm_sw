@@ -56,7 +56,7 @@ ShowDeviceCommand::ShowDeviceCommand(core::device::DeviceService &service)
 			&convertManageabilityState);
 	m_props.addUint16("PhysicalID", &core::device::Device::getPhysicalId);
 	m_props.addUint32("DimmHandle", &core::device::Device::getDeviceHandle);
-	m_props.addStr("DimmGUID", &core::device::Device::getGuid);
+	m_props.addStr("DimmUID", &core::device::Device::getUid);
 	m_props.addUint16("SocketID", &core::device::Device::getSocketId);
 	m_props.addUint16("MemControllerID", &core::device::Device::getMemoryControllerId);
 	m_props.addUint32("ChannelID", &core::device::Device::getChannelId);
@@ -309,7 +309,7 @@ void ShowDeviceCommand::filterDevicesOnDimmIds()
 
 			std::string deviceHandle = uint64ToString(device.getDeviceHandle());
 
-			if (!m_dimmIds.contains(device.getGuid()) && !m_dimmIds.contains(deviceHandle))
+			if (!m_dimmIds.contains(device.getUid()) && !m_dimmIds.contains(deviceHandle))
 			{
 				m_devices.removeAt(i - 1);
 			}
@@ -380,7 +380,7 @@ std::string ShowDeviceCommand::getFirstBadDimmId(core::device::DeviceCollection 
 		bool dimmIdFound = false;
 		for (size_t j = 0; j < devices.size() && ~dimmIdFound; j++)
 		{
-			if (framework::stringsIEqual(m_dimmIds[i], devices[j].getGuid()) ||
+			if (framework::stringsIEqual(m_dimmIds[i], devices[j].getUid()) ||
 				m_dimmIds[i] == uint64ToString(devices[j].getDeviceHandle()))
 			{
 				dimmIdFound = true;
@@ -457,8 +457,8 @@ std::string ShowDeviceCommand::getDimmId(core::device::Device &device)
 	char value[CONFIG_VALUE_LEN];
 	if (get_config_value(SQL_KEY_CLI_DIMM_ID, value) == COMMON_SUCCESS)
 	{
-		// switch to guid
-		if (s_strncmpi("GUID", value, strlen("GUID")) == 0)
+		// switch to uid
+		if (s_strncmpi("UID", value, strlen("UID")) == 0)
 		{
 			useHandle = false;
 		}
@@ -470,7 +470,7 @@ std::string ShowDeviceCommand::getDimmId(core::device::Device &device)
 	}
 	else
 	{
-		result << device.getGuid();
+		result << device.getUid();
 	}
 	return result.str();
 }

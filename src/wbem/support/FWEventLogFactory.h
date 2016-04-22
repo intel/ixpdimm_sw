@@ -78,7 +78,7 @@ class NVM_API FWEventLogFactory  : public framework_interface::NvmInstanceFactor
 
 		/*!
 		 * Provider for nvm_get_fw_log_level
-		 * @param[in] device_guid
+		 * @param[in] device_uid
 		 * 		The device identifier. @n
 		 * @param[out,in] p_log_level
 		 * 		A buffer for the log_level, allocated by the caller. @n
@@ -88,13 +88,13 @@ class NVM_API FWEventLogFactory  : public framework_interface::NvmInstanceFactor
 		 * 		#NVM_ERR_NOMEMORY @n
 		 * 		#NVM_ERR_INVALIDPARAMETER @n
 		 */
-		int (*m_GetFwLogLevel)(const NVM_GUID device_guid, enum fw_log_level *p_log_level);
+		int (*m_GetFwLogLevel)(const NVM_UID device_uid, enum fw_log_level *p_log_level);
 
 		/*!
 		 * Removes direct dependency on static method
 		 * @return
 		 */
-		std::vector<std::string> (*m_GetManageableDeviceGuids)();
+		std::vector<std::string> (*m_GetManageabledeviceUids)();
 
 	private:
 		void populateAttributeList(framework::attribute_names_t &attributes)

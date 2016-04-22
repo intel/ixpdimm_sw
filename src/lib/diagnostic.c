@@ -41,7 +41,7 @@
 /*
  * Run a diagnostic test on the device specified.
  */
-int nvm_run_diagnostic(const NVM_GUID device_guid,
+int nvm_run_diagnostic(const NVM_UID device_uid,
 		const struct diagnostic *p_diagnostic, NVM_UINT32 *p_results)
 {
 	COMMON_LOG_ENTRY();
@@ -66,7 +66,7 @@ int nvm_run_diagnostic(const NVM_GUID device_guid,
 		switch (p_diagnostic->test)
 		{
 			case DIAG_TYPE_QUICK:
-				rc = diag_quick_health_check(device_guid, p_diagnostic, p_results);
+				rc = diag_quick_health_check(device_uid, p_diagnostic, p_results);
 				break;
 			case DIAG_TYPE_PLATFORM_CONFIG:
 				rc = diag_platform_config_check(p_diagnostic, p_results);
@@ -235,7 +235,7 @@ NVM_BOOL diag_check_str(const struct diagnostic *p_diagnostic,
  * and optionally for the specified device.
  */
 void diag_clear_results(const enum diagnostic_test type,
-		const NVM_BOOL clear_specific_device, const NVM_GUID device_guid)
+		const NVM_BOOL clear_specific_device, const NVM_UID device_uid)
 {
 	int event_count;
 	PersistentStore *p_store = get_lib_store();
@@ -247,12 +247,12 @@ void diag_clear_results(const enum diagnostic_test type,
 		for (int i = 0; i < event_count; i++)
 		{
 			NVM_BOOL matched = 1;
-			// check for a matching guid is requested
+			// check for a matching uid is requested
 			if (clear_specific_device)
 			{
-				COMMON_UID guid;
-				uid_copy(events[i].guid, guid);
-				if (uid_cmp(guid, device_guid) != 1)
+				COMMON_UID uid;
+				uid_copy(events[i].uid, uid);
+				if (uid_cmp(uid, device_uid) != 1)
 				{
 					matched = 0;
 				}

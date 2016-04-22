@@ -126,7 +126,7 @@ void ShowTopologyCommand::filterTopologiesOnDimmIds()
 
                         std::string deviceHandle = uint64ToString(topology.getDeviceHandle());
 
-                        if (!m_dimmIds.contains(topology.getGuid()) &&
+                        if (!m_dimmIds.contains(topology.getUid()) &&
 				 !m_dimmIds.contains(deviceHandle))
                         {
                                 m_topologies.removeAt(i - 1);
@@ -210,7 +210,7 @@ std::string ShowTopologyCommand::getFirstBadDimmId(core::device::TopologyCollect
                 bool dimmIdFound = false;
                 for (size_t j = 0; j < topologies.size() && ~dimmIdFound; j++)
                 {
-                        if (framework::stringsIEqual(m_dimmIds[i], topologies[j].getGuid()) ||
+                        if (framework::stringsIEqual(m_dimmIds[i], topologies[j].getUid()) ||
                                 m_dimmIds[i] == uint64ToString(topologies[j].getDeviceHandle()))
                         {
                                 dimmIdFound = true;
@@ -289,8 +289,8 @@ std::string ShowTopologyCommand::getDimmId(core::device::Topology &topology)
         char value[CONFIG_VALUE_LEN];
         if (get_config_value(SQL_KEY_CLI_DIMM_ID, value) == COMMON_SUCCESS)
         {
-		// switch to guid
-                if (s_strncmpi("GUID", value, strlen("GUID")) == 0)
+		// switch to uid
+                if (s_strncmpi("UID", value, strlen("UID")) == 0)
                 {
                         useHandle = false;
                 }
@@ -304,7 +304,7 @@ std::string ShowTopologyCommand::getDimmId(core::device::Topology &topology)
 	        }
 		else
 	        {
-			result << topology.getGuid();
+			result << topology.getUid();
 	        }
 	}
 	else if (topology.getMemoryType() == MEMORY_TYPE_DDR4)

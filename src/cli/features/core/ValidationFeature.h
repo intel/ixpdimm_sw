@@ -88,7 +88,7 @@ private:
 	/*
 	 * member variables for storing parsed information
 	 */
-	std::string m_dimmGuid;
+	std::string m_dimmUid;
 	NVM_UINT16 m_temperature;
 	NVM_UINT64 m_poison;
 	NVM_UINT16 m_errorType;

@@ -110,15 +110,15 @@ wbem::framework::Instance* wbem::support::NVDIMMHealthSensorViewFactory::getInst
 	{
 		checkAttributes(attributes);
 
-		std::string guidStr = path.getKeyValue(INSTANCEID_KEY).stringValue();
-		NVM_GUID guid;
-		uid_copy(guidStr.c_str(), guid);
+		std::string uidStr = path.getKeyValue(INSTANCEID_KEY).stringValue();
+		NVM_UID uid;
+		uid_copy(uidStr.c_str(), uid);
 
 		struct sensor sensors[NVM_MAX_DEVICE_SENSORS];
 		int rc = NVM_SUCCESS;
-		if ((rc = nvm_get_sensors(guid, sensors, NVM_MAX_DEVICE_SENSORS)) != NVM_SUCCESS)
+		if ((rc = nvm_get_sensors(uid, sensors, NVM_MAX_DEVICE_SENSORS)) != NVM_SUCCESS)
 		{
-			COMMON_LOG_ERROR_F("Failed to get sensor information for DIMM %s", guidStr.c_str());
+			COMMON_LOG_ERROR_F("Failed to get sensor information for DIMM %s", uidStr.c_str());
 			throw exception::NvmExceptionLibError(rc);
 		}
 
@@ -196,10 +196,10 @@ wbem::framework::instance_names_t* wbem::support::NVDIMMHealthSensorViewFactory:
 	try
 	{
 		framework::attributes_t keys;
-		std::vector<std::string> guids = physical_asset::NVDIMMFactory::getManageableDeviceGuids();
-		for (size_t i = 0; i < guids.size(); i ++)
+		std::vector<std::string> uids = physical_asset::NVDIMMFactory::getManageableDeviceUids();
+		for (size_t i = 0; i < uids.size(); i ++)
 		{
-			keys[INSTANCEID_KEY] = framework::Attribute(std::string(guids[i]), true);
+			keys[INSTANCEID_KEY] = framework::Attribute(std::string(uids[i]), true);
 			framework::ObjectPath path(server::getHostName(), NVM_NAMESPACE,
 				NVDIMMHEALTHSENSORVIEW_CREATIONCLASSNAME, keys);
 			pNames->push_back(path);

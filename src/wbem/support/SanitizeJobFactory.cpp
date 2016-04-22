@@ -91,10 +91,10 @@ wbem::framework::instance_names_t* wbem::support::SanitizeJobFactory::getInstanc
 					if (jobs[i].type == NVM_JOB_TYPE_SANITIZE)
 					{
 						framework::attributes_t keys;
-						NVM_GUID_STR job_guid_str;
+						NVM_UID job_uid_str;
 
-						uid_copy(jobs[i].guid, job_guid_str);
-						std::string instanceIdStr = job_guid_str;
+						uid_copy(jobs[i].uid, job_uid_str);
+						std::string instanceIdStr = job_uid_str;
 
 						keys[INSTANCEID_KEY] = framework::Attribute(instanceIdStr, true);
 
@@ -137,10 +137,10 @@ wbem::framework::Instance* wbem::support::SanitizeJobFactory::getInstance(wbem::
 
 		// Verify InstanceID
 		framework::Attribute attribute = path.getKeyValue(INSTANCEID_KEY);
-		std::string instanceGuid = attribute.stringValue();
+		std::string instanceUid = attribute.stringValue();
 
 		// -1 since we have no null terminator
-		if (instanceGuid.length() != NVM_GUIDSTR_LEN - 1)
+		if (instanceUid.length() != NVM_MAX_UID_LEN - 1)
 		{
 			throw framework::ExceptionBadParameter(INSTANCEID_KEY.c_str());
 		}
@@ -160,10 +160,10 @@ wbem::framework::Instance* wbem::support::SanitizeJobFactory::getInstance(wbem::
 
 		for (int i = 0; i < jobCount; i++)
 		{
-			NVM_GUID_STR jobGuidStr;
-			uid_copy(jobs[i].guid, jobGuidStr);
+			NVM_UID jobUidStr;
+			uid_copy(jobs[i].uid, jobUidStr);
 
-			if ((instanceGuid.compare(jobGuidStr) == 0) &&
+			if ((instanceUid.compare(jobUidStr) == 0) &&
 					(jobs[i].type == NVM_JOB_TYPE_SANITIZE))
 			{
 				foundIndex = i;
@@ -177,8 +177,8 @@ wbem::framework::Instance* wbem::support::SanitizeJobFactory::getInstance(wbem::
 			throw framework::ExceptionBadParameter(INSTANCEID_KEY.c_str());
 		}
 
-		// InstanceID - the job guid
-		framework::Attribute a(instanceGuid, true);
+		// InstanceID - the job uid
+		framework::Attribute a(instanceUid, true);
 		pInstance->setAttribute(INSTANCEID_KEY, a, attributes);
 
 		// Name - the type of job e.g. Sanitize

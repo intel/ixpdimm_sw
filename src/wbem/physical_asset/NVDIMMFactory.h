@@ -48,7 +48,7 @@ namespace physical_asset
 {
 static const std::string NVDIMM_CREATIONCLASSNAME =
 	std::string(NVM_WBEM_PREFIX) + "NVDIMM"; //!< Creation ClassName static
-static const std::string NVDIMM_ELEMENTNAME_prefix = "Intel NVDIMM "; //!< Element Name = prefix + GUID
+static const std::string NVDIMM_ELEMENTNAME_prefix = "Intel NVDIMM "; //!< Element Name = prefix + UID
 static const int NVDIMM_COMMUNICATION_OK = 2; //!< Communication status value for OK
 static const int NVDIMM_COMMUNICATION_NOCONTACT = 4; //!< Communication status value for no contact
 static const std::string NVDIMM_SETPASSPHRASE = "SetPassphrase"; //!< extrinsic method name
@@ -122,40 +122,40 @@ public:
 
 
 	// Extrinsic Methods
-	void setPassphrase(std::string deviceGuid, std::string newPassphrase,
+	void setPassphrase(std::string deviceUid, std::string newPassphrase,
 		std::string currentPassphrase);
 
-	void removePassphrase(std::string deviceGuid, std::string currentPassphrase);
+	void removePassphrase(std::string deviceUid, std::string currentPassphrase);
 
-	void unlock(std::string deviceGuid, std::string currentPassphrase);
+	void unlock(std::string deviceUid, std::string currentPassphrase);
 
-	void injectTemperatureError(const std::string &dimmGuid,
+	void injectTemperatureError(const std::string &dimmUid,
 			const NVM_REAL32 temperature);
 
-	void injectPoisonError(const std::string &dimmGuid,
+	void injectPoisonError(const std::string &dimmUid,
 			const NVM_UINT64 dpa);
 
-	void clearPoisonError(const std::string &dimmGuid,
+	void clearPoisonError(const std::string &dimmUid,
 			const NVM_UINT64 dpa);
 
 	// Helper functions
-	static void guidToHandle(const std::string &dimmGuid, NVM_UINT32 &handle);
+	static void uidToHandle(const std::string &dimmUid, NVM_UINT32 &handle);
 
-	static std::vector<std::string> getManageableDeviceGuids();
+	static std::vector<std::string> getManageableDeviceUids();
 
-	static int existsAndIsManageable(const std::string &dimmGuid);
+	static int existsAndIsManageable(const std::string &dimmUid);
 
 	static devices_t getAllDevices();
 
 	static devices_t getManageableDevices();
 
-	static framework::Attribute guidToDimmIdAttribute(const std::string &dimmGuid);
+	static framework::Attribute uidToDimmIdAttribute(const std::string &dimmUid);
 
-	static std::string guidToDimmIdStr(const std::string &dimmGuid);
+	static std::string uidToDimmIdStr(const std::string &dimmUid);
 
-	void createPathFromGuid(const NVM_GUID guid, framework::ObjectPath &path);
+	void createPathFromUid(const NVM_UID uid, framework::ObjectPath &path);
 
-	void createPathFromGuid(const std::string guid, framework::ObjectPath &path,
+	void createPathFromUid(const std::string uid, framework::ObjectPath &path,
 			std::string hostname = "");
 
 	static wbem::framework::UINT16_LIST deviceStatusToOpStatus(
@@ -165,22 +165,22 @@ public:
 			wbem::framework::attribute_names_t attributes);
 
 	// API Interfaces
-	int (*m_SetPassphrase)(const NVM_GUID device_guid,
+	int (*m_SetPassphrase)(const NVM_UID device_uid,
 			const NVM_PASSPHRASE old_passphrase, const NVM_SIZE old_passphrase_len,
 			const NVM_PASSPHRASE new_passphrase, const NVM_SIZE new_passphrase_len);
 
-	int (*m_RemovePassphrase)(const NVM_GUID device_guid,
+	int (*m_RemovePassphrase)(const NVM_UID device_uid,
 			const NVM_PASSPHRASE passphrase, const NVM_SIZE passphrase_len);
 
-	int (*m_UnlockDevice)(const NVM_GUID device_guid,
+	int (*m_UnlockDevice)(const NVM_UID device_uid,
 			const NVM_PASSPHRASE passphrase, const NVM_SIZE passphrase_len);
 
-	int (*m_GetFwLogLevel)(const NVM_GUID device_guid, enum fw_log_level *p_log_level);
+	int (*m_GetFwLogLevel)(const NVM_UID device_uid, enum fw_log_level *p_log_level);
 
-	int (*m_injectDeviceError)(const NVM_GUID device_guid,
+	int (*m_injectDeviceError)(const NVM_UID device_uid,
 			const struct device_error *p_error);
 
-	int (*m_clearInjectedDeviceError)(const NVM_GUID device_guid,
+	int (*m_clearInjectedDeviceError)(const NVM_UID device_uid,
 			const struct device_error *p_error);
 
 private:
@@ -201,10 +201,10 @@ private:
 
 	static std::string getMemoryModeString(core::device::Device &nvdimm);
 
-	void injectError(const std::string &dimmGuid,
+	void injectError(const std::string &dimmUid,
 			struct device_error *p_error);
 
-	void clearError(const std::string &dimmGuid,
+	void clearError(const std::string &dimmUid,
 			struct device_error *p_error);
 
 };

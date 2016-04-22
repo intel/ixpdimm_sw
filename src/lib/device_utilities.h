@@ -42,15 +42,15 @@ extern "C"
 {
 #endif
 
-int exists_and_manageable(const NVM_GUID device_guid, struct device_discovery *p_dev,
+int exists_and_manageable(const NVM_UID device_uid, struct device_discovery *p_dev,
 		NVM_BOOL check_manageability);
 
-int calculate_device_guid(NVM_GUID device_guid,
+int calculate_device_uid(NVM_UID device_uid,
 		const unsigned char *mfr, size_t mfr_len,
 		const char *mn, size_t mn_len,
 		const unsigned char *sn, size_t sn_len);
 
-int lookup_dev_guid(const NVM_GUID dev_guid, struct device_discovery *p_dev);
+int lookup_dev_uid(const NVM_UID dev_uid, struct device_discovery *p_dev);
 
 int lookup_dev_handle(const NVM_NFIT_DEVICE_HANDLE dev_handle, struct device_discovery *p_dev);
 

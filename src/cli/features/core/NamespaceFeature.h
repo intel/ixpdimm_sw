@@ -184,13 +184,13 @@ class NVM_API NamespaceFeature : public cli::framework::FeatureBase
 		};
 
 		// Interface for WBEM deleteNamespace functionality
-		void (*m_deleteNamespace) (const std::string & namespaceGuid);
+		void (*m_deleteNamespace) (const std::string & namespaceUid);
 
 		// Interface for WBEM getSupportedBlockSizes functionality
 		void (*m_getSupportedBlockSizes)(std::vector<COMMON_UINT64> &sizes);
 
 		// Interface for WBEM getSupportedSizeRange functionaliry
-		void (*m_getSupportedSizeRange)(const std::string &poolGuid,
+		void (*m_getSupportedSizeRange)(const std::string &poolUid,
 				COMMON_UINT64 &largestPossibleAppDirectNs,
 				COMMON_UINT64 &smallestPossibleAppDirectNs,
 				COMMON_UINT64 &appDirectIncrement,
@@ -243,7 +243,7 @@ class NVM_API NamespaceFeature : public cli::framework::FeatureBase
 				std::string prefix = "");
 
 		// member variables for storing parsed information
-		std::string m_poolGuid;
+		std::string m_poolUid;
 		COMMON_UINT64 m_blockSize;
 		bool m_blockSizeExists;
 		COMMON_UINT64 m_blockCount;
@@ -271,7 +271,7 @@ class NVM_API NamespaceFeature : public cli::framework::FeatureBase
 		/*
 		 * Return true if the namespace block count has the correct alignment
 		 */
-		bool isBlockCountAligned(std::string namespaceGuidStr);
+		bool isBlockCountAligned(std::string namespaceUidStr);
 
 		/*
 		 * Return true if the modification request is supported
@@ -280,17 +280,17 @@ class NVM_API NamespaceFeature : public cli::framework::FeatureBase
 		bool namespaceCapacityModificationIsSupported(const namespace_details &details);
 
 		void atomicModifyNamespace(
-				const std::string namespaceGuidStr, const struct namespace_details &details);
+				const std::string namespaceUidStr, const struct namespace_details &details);
 
 		/*
 		 * Attempt the complete modifyNamespace operation
 		 */
-		void modifyNamespace(const std::string namespaceGuidStr);
+		void modifyNamespace(const std::string namespaceUidStr);
 
 		/*
 		 * Undo the complete modifyNamespace operation
 		 */
-		void undoModifyNamespace(const std::string namespaceGuidStr,
+		void undoModifyNamespace(const std::string namespaceUidStr,
 				const struct namespace_details &details, const int originalError);
 
 		/*
@@ -362,7 +362,7 @@ class NVM_API NamespaceFeature : public cli::framework::FeatureBase
 		std::string getStringForLayoutWarning(enum wbem::logic::LayoutWarningCode warningCode);
 
 		// May throw
-		void getDimmInfoForGuids(const std::vector<std::string> &dimmGuids,
+		void getDimmInfoForUids(const std::vector<std::string> &dimmUids,
 				std::vector<wbem::logic::Dimm> &dimmList);
 
 		framework::ResultBase* parseReserveDimmProperty(const framework::ParsedCommand& parsedCommand);
@@ -374,11 +374,11 @@ class NVM_API NamespaceFeature : public cli::framework::FeatureBase
 						const wbem::framework::instances_t &requestedInstances);
 
 		
-		static void wbemDeleteNamespace (const std::string & namespaceGuid)
+		static void wbemDeleteNamespace (const std::string & namespaceUid)
 				throw (wbem::framework::Exception);
 
 		static void wbemGetSupportedBlockSizes(std::vector<COMMON_UINT64> &sizes);
-		static void wbemGetSupportedSizeRange(const std::string &poolGuid,
+		static void wbemGetSupportedSizeRange(const std::string &poolUid,
 				COMMON_UINT64 &largestPossibleAdNs,
 				COMMON_UINT64 &smallestPossibleAdNs,
 				COMMON_UINT64 &adIncrement,
@@ -403,16 +403,16 @@ class NVM_API NamespaceFeature : public cli::framework::FeatureBase
 		/*
 		 * WBEM wrappers for modify namespace
 		 */
-		static void getNamespaceDetails(const std::string namespaceGuidStr,
+		static void getNamespaceDetails(const std::string namespaceUidStr,
 				struct namespace_details &details);
 
-		static void modifyNamespaceName(const std::string namespaceGuidStr,
+		static void modifyNamespaceName(const std::string namespaceUidStr,
 				const std::string friendlyNameStr);
 
-		static void modifyNamespaceBlockCount(const std::string namespaceGuidStr,
+		static void modifyNamespaceBlockCount(const std::string namespaceUidStr,
 				const NVM_UINT64 blockCount);
 
-		static void requestStateChange(const std::string &namespaceGuidStr,
+		static void requestStateChange(const std::string &namespaceUidStr,
 				const NVM_UINT16 blockCount);
 
 		static bool isModifyNamespaceNameSupported();

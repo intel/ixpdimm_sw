@@ -132,19 +132,19 @@ public:
 	 * Interface to the library API nvm_delete_namespace function.
 	 * This pointer allows for dependency injection and decouples the dependency on the API
 	 */
-	int (*m_deleteNamespace)(const NVM_GUID namespace_guid);
+	int (*m_deleteNamespace)(const NVM_UID namespace_uid);
 
 	/*!
 	 * delete a namespace
 	 */
-	void deleteNamespace(const std::string &namespaceGuid);
+	void deleteNamespace(const std::string &namespaceUid);
 
 	/*!
 	 * Interface to the library API nvm_create_namespace function.
 	 * This pointer allows for dependency injection and decouples the dependency on the API
 	 */
-	int (*m_createNamespace)(NVM_GUID *p_namespace_guid,
-			const NVM_GUID pool_guid,
+	int (*m_createNamespace)(NVM_UID *p_namespace_uid,
+			const NVM_UID pool_uid,
 			struct namespace_create_settings *p_create_settings,
 			const struct interleave_format *p_format, NVM_BOOL allow_adjustment);
 
@@ -169,9 +169,9 @@ public:
 	/*!
  	* Create a namespace
  	*/
-	virtual void createNamespace(const createNamespaceParams &settings, std::string &namespaceGuid);
-	virtual void createNamespace(std::string &namespaceGuidStr,
-			const std::string poolGuidStr, const NVM_UINT16 stateValue,
+	virtual void createNamespace(const createNamespaceParams &settings, std::string &namespaceUid);
+	virtual void createNamespace(std::string &namespaceUidStr,
+			const std::string poolUidStr, const NVM_UINT16 stateValue,
 			const std::string friendlyNameStr, const NVM_UINT64 blockSize,
 			const NVM_UINT64 blockCount, const NVM_UINT16 type,
 			const NVM_UINT16 optimize,
@@ -184,14 +184,14 @@ public:
 	 * Interface to the library API nvm_modify_namespace_name function.
 	 * This pointer allows for dependency injection and decouples the dependency on the API
 	 */
-	int (*m_modifyNamespaceName)(const NVM_GUID namespace_guid, const NVM_NAMESPACE_NAME name);
+	int (*m_modifyNamespaceName)(const NVM_UID namespace_uid, const NVM_NAMESPACE_NAME name);
 
 	/*!
 	 * Interface to the library API nvm_modify_namespace_name_block_count function.
 	 * This pointer allows for dependency injection and decouples the dependency on the API
 	 */
 	int (*m_modifyNamespaceBlockCount)(
-			const NVM_GUID namespace_guid, NVM_UINT64 block_count, NVM_BOOL allow_adjustment);
+			const NVM_UID namespace_uid, NVM_UINT64 block_count, NVM_BOOL allow_adjustment);
 
 	/*!
 	 *  Check if the modifyNamespaceName operation is supported
@@ -206,17 +206,17 @@ public:
 	/*!
 	 * modify a namespace name
 	 */
-	virtual void modifyNamespaceName(const std::string namespaceGuidStr, const std::string friendlyNameStr);
+	virtual void modifyNamespaceName(const std::string namespaceUidStr, const std::string friendlyNameStr);
 
 	/*!
 	 * modify a namespace block count
 	 */
-	virtual void modifyNamespaceBlockCount(const std::string namespaceGuidStr, const NVM_UINT64 blockCount);
+	virtual void modifyNamespaceBlockCount(const std::string namespaceUidStr, const NVM_UINT64 blockCount);
 
 	/*
 	 * get the details for a given namespace
 	 */
-	virtual void getNamespaceDetails(const std::string namespaceGuidStr, struct namespace_details &details);
+	virtual void getNamespaceDetails(const std::string namespaceUidStr, struct namespace_details &details);
 
 	/*
 	 * Verifies the ParentPool reference refers to a real MemoryResources instance.
@@ -231,15 +231,15 @@ public:
 	static enum namespace_memory_page_allocation memoryPageAllocationTypeToEnum(const NVM_UINT16 memoryPageAllocation);
 
 	/*
-	 * Retrieve the namespace guid from a persistent memory namespace path
+	 * Retrieve the namespace uid from a persistent memory namespace path
 	 */
 	static framework::UINT32 getNamespaceFromPath(
-			const wbem::framework::ObjectPath &path, std::string &namespaceGuid);
+			const wbem::framework::ObjectPath &path, std::string &namespaceUid);
 
 	/*
 	 * Retrieve the adjusted block count for a namespace creation request
 	 */
-	virtual NVM_UINT64 getAdjustedCreateNamespaceBlockCount(std::string poolGuidStr,
+	virtual NVM_UINT64 getAdjustedCreateNamespaceBlockCount(std::string poolUidStr,
 			const NVM_UINT16 type, const NVM_UINT32 blockSize, const NVM_UINT64 blockCount,
 			const NVM_UINT16 eraseCapable, const NVM_UINT16 encryption,
 			const NVM_UINT16 enableState);
@@ -247,7 +247,7 @@ public:
 	/*
  	* Retrieve the adjusted block count for a namespace modification request
  	*/
-	virtual NVM_UINT64 getAdjustedModifyNamespaceBlockCount(std::string namespaceGuidStr, const NVM_UINT64 blockCount);
+	virtual NVM_UINT64 getAdjustedModifyNamespaceBlockCount(std::string namespaceUidStr, const NVM_UINT64 blockCount);
 private:
 	void populateAttributeList(framework::attribute_names_t &attributes)
 			throw (framework::Exception);
@@ -260,12 +260,12 @@ private:
 	/*
 	 * Perform the modification atomically, either it is all successful or none of it is
 	 */
-	void performAtomicModification(std::string namespaceGuidStr, NVM_UINT64 reservation, std::string friendlyNameStr);
+	void performAtomicModification(std::string namespaceUidStr, NVM_UINT64 reservation, std::string friendlyNameStr);
 	void allocateFromPool(framework::attributes_t &inParms, framework::attributes_t &outParms,
 			NVM_UINT32 &httpRc);
 	void modifyNamespace(framework::attributes_t &inParms, framework::attributes_t &outParms,
 			NVM_UINT32 &httpRc);
-	void generateNamespaceRefAttribute(std::string namespaceGuidStr, wbem::framework::Attribute& value);
+	void generateNamespaceRefAttribute(std::string namespaceUidStr, wbem::framework::Attribute& value);
 
 	/*
 	 * convert NvmExceptionLibError to extrinsic return code

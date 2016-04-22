@@ -106,8 +106,8 @@ class NVM_API NVDIMMSoftwareInstallationServiceFactory : public framework_interf
 
 		/*!
 		 * install firmware onto a device
-		 * @param deviceGuid
-		 * 		List of guids to install the firmware onto
+		 * @param deviceUid
+		 * 		List of uids to install the firmware onto
 		 * @param path
 		 * 		path to where the firmware file is.
 		 * @param activate
@@ -116,7 +116,7 @@ class NVM_API NVDIMMSoftwareInstallationServiceFactory : public framework_interf
 		 * 		If true, the firmware will be loaded even if the minor version is less then
 		 * 		the current FW version.
 		 */
-		void installFromPath(const std::string &deviceGuid, const std::string &path,
+		void installFromPath(const std::string &deviceUid, const std::string &path,
 				bool activate = false, bool force = false) const throw (framework::Exception);
 
 		/*!
@@ -134,7 +134,7 @@ class NVM_API NVDIMMSoftwareInstallationServiceFactory : public framework_interf
 
 		/*!
 		 * Examine a FW image and determine if it is valid for a given device
-		 * @param deviceGuid
+		 * @param deviceUid
 		 * 		Device to examine FW image for
 		 * @param path
 		 * 		Path to FW image
@@ -143,7 +143,7 @@ class NVM_API NVDIMMSoftwareInstallationServiceFactory : public framework_interf
 		 * @return
 		 * 		Returns the success if the
 		 */
-		enum wbem::framework::return_codes examineFwImage(const std::string &deviceGuid,
+		enum wbem::framework::return_codes examineFwImage(const std::string &deviceUid,
 				const std::string &path, std::string &version) const
 		throw (framework::Exception);
 
@@ -163,26 +163,26 @@ class NVM_API NVDIMMSoftwareInstallationServiceFactory : public framework_interf
 
 		/*!
 		 * API indirection
-		 * @param device_guid
+		 * @param device_uid
 		 * @param path
 		 * @param path_len
 		 * @param activate
 		 * @param force
 		 * @return
 		 */
-		int (*m_UpdateDeviceFw)(const NVM_GUID device_guid, const NVM_PATH path,
+		int (*m_UpdateDeviceFw)(const NVM_UID device_uid, const NVM_PATH path,
 				const NVM_SIZE path_len, NVM_BOOL activate, NVM_BOOL force);
 
 		/*!
 		 * API for examine FW image
-		 * @param device_guid
+		 * @param device_uid
 		 * @param path
 		 * @param path_len
 		 * @param image_version
 		 * @param image_version_len
 		 * @return
 		 */
-		int (*m_ExamineFwImage)(const NVM_GUID device_guid,
+		int (*m_ExamineFwImage)(const NVM_UID device_uid,
 				const NVM_PATH path, const NVM_SIZE path_len,
 				NVM_VERSION image_version, const NVM_SIZE image_version_len);
 
@@ -190,7 +190,7 @@ class NVM_API NVDIMMSoftwareInstallationServiceFactory : public framework_interf
 		 * Removes direct dependency on static method
 		 * @return
 		 */
-		std::vector<std::string> (*m_GetManageableDeviceGuids)();
+		std::vector<std::string> (*m_GetManageableDeviceUids)();
 
 	private:
 		void populateAttributeList(framework::attribute_names_t &attributes)

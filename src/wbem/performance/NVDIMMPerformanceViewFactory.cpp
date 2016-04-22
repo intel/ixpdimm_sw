@@ -78,29 +78,29 @@ throw (wbem::framework::Exception)
 	try
 	{
 
-		std::string guidStr = path.getKeyValue(INSTANCEID_KEY).stringValue();
-		NVM_GUID guid;
-		uid_copy(guidStr.c_str(), guid);
+		std::string uidStr = path.getKeyValue(INSTANCEID_KEY).stringValue();
+		NVM_UID uid;
+		uid_copy(uidStr.c_str(), uid);
 		int rc;
 		struct device_performance performance;
-		if ((rc = nvm_get_device_performance(guid, &performance)) != NVM_SUCCESS)
+		if ((rc = nvm_get_device_performance(uid, &performance)) != NVM_SUCCESS)
 		{
 			throw wbem::exception::NvmExceptionLibError(rc);
 		}
 
 		checkAttributes(attributes);
 
-		// DimmID = handle or guid depending on user selection
+		// DimmID = handle or uid depending on user selection
 		if (containsAttribute(DIMMID_KEY, attributes))
 		{
-			framework::Attribute attrDimmId = physical_asset::NVDIMMFactory::guidToDimmIdAttribute(guidStr);
+			framework::Attribute attrDimmId = physical_asset::NVDIMMFactory::uidToDimmIdAttribute(uidStr);
 			pInstance->setAttribute(DIMMID_KEY, attrDimmId, attributes);
 		}
 		// DimmHandle
 		if (containsAttribute(DIMMHANDLE_KEY, attributes))
 		{
 			NVM_UINT32 dimmHandle;
-			physical_asset::NVDIMMFactory::guidToHandle(guidStr, dimmHandle);
+			physical_asset::NVDIMMFactory::uidToHandle(uidStr, dimmHandle);
 			framework::Attribute attrDimmHandle(dimmHandle, false);
 			pInstance->setAttribute(DIMMHANDLE_KEY, attrDimmHandle, attributes);
 		}
@@ -167,11 +167,11 @@ throw (wbem::framework::Exception)
 	try
 	{
 		framework::attributes_t keys;
-		std::vector<std::string> guids = physical_asset::NVDIMMFactory::getManageableDeviceGuids();
-		for (size_t i = 0; i < guids.size(); i ++)
+		std::vector<std::string> uids = physical_asset::NVDIMMFactory::getManageableDeviceUids();
+		for (size_t i = 0; i < uids.size(); i ++)
 		{
-			// DIMM GUID
-			keys[INSTANCEID_KEY] = framework::Attribute(std::string(guids[i]), true);
+			// DIMM UID
+			keys[INSTANCEID_KEY] = framework::Attribute(std::string(uids[i]), true);
 			framework::ObjectPath path(server::getHostName(), NVM_NAMESPACE,
 					NVDIMMPERFORMANCEVIEW_CREATIONCLASSNAME, keys);
 			pNames->push_back(path);

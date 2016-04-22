@@ -190,18 +190,18 @@ const std::string& wbem::support::NVDIMMSensorFactory
 }
 
 /*
- * splits a DeviceID attribute and splits it into guid + decoded nvm sensor type.
- * sets deviceGuid and 'type' and returns non-zero on success.
+ * splits a DeviceID attribute and splits it into uid + decoded nvm sensor type.
+ * sets deviceUid and 'type' and returns non-zero on success.
  */
 bool wbem::support::NVDIMMSensorFactory::splitDeviceIdAttribute(
-		const framework::Attribute& deviceIdAttribute, std::string &deviceGuid, int& type)
+		const framework::Attribute& deviceIdAttribute, std::string &deviceUid, int& type)
 {
 	bool found = false;
 	const std::string devIdAttrStr = deviceIdAttribute.stringValue();
 
-	if (devIdAttrStr.length() >  NVM_GUIDSTR_LEN)
+	if (devIdAttrStr.length() >  NVM_MAX_UID_LEN)
 	{
-		const std::string sensorTypeName = devIdAttrStr.substr(NVM_GUIDSTR_LEN-1);
+		const std::string sensorTypeName = devIdAttrStr.substr(NVM_MAX_UID_LEN-1);
 		cimSensorConstDescriptionsIter it = cimSensorDescriptions.begin();
 		for (;it != cimSensorDescriptions.end() && !found; it++)
 		{
@@ -212,7 +212,7 @@ bool wbem::support::NVDIMMSensorFactory::splitDeviceIdAttribute(
 			}
 
 		}
-		deviceGuid = deviceIdAttribute.stringValue().substr(0, NVM_GUIDSTR_LEN-1);
+		deviceUid = deviceIdAttribute.stringValue().substr(0, NVM_MAX_UID_LEN-1);
 	}
 	return found;
 }
@@ -302,21 +302,21 @@ throw (wbem::framework::Exception)
 
 	attribute = path.getKeyValue(DEVICEID_KEY);
 
-	// Verify DeviceID and get the device GUID && NVM_SENSOR_TYPE based on sensor type name from the device ID
+	// Verify DeviceID and get the device UID && NVM_SENSOR_TYPE based on sensor type name from the device ID
 	// Device ID format: DIMM UUID + elementof("temp", "spare", "wear", "poh", "pc", "us", "me")
-	std::string str_guid;
+	std::string str_uid;
 	enum sensor_type type;
-	if(!splitDeviceIdAttribute(attribute, str_guid, (int &)type))
+	if(!splitDeviceIdAttribute(attribute, str_uid, (int &)type))
 	{
 		throw framework::ExceptionBadParameter(DEVICEID_KEY.c_str());
 	}
 
-	NVM_GUID nvm_guid;
-	uid_copy(str_guid.c_str(), nvm_guid);
+	NVM_UID NVM_UID;
+	uid_copy(str_uid.c_str(), NVM_UID);
 
 	int rc;
 	struct sensor sensor;
-	if ((rc = nvm_get_sensor(nvm_guid, type, &sensor)) != NVM_SUCCESS)
+	if ((rc = nvm_get_sensor(NVM_UID, type, &sensor)) != NVM_SUCCESS)
 	{
 		throw exception::NvmExceptionLibError(rc);
 	}
@@ -455,14 +455,14 @@ throw (wbem::framework::Exception)
 	{
 		std::string hostName = wbem::server::getHostName();
 
-		std::vector<std::string> manageableDevices = wbem::physical_asset::NVDIMMFactory::getManageableDeviceGuids();
+		std::vector<std::string> manageableDevices = wbem::physical_asset::NVDIMMFactory::getManageableDeviceUids();
 		for (size_t dimmIdx = 0; dimmIdx < manageableDevices.size(); dimmIdx++)
 		{
-			std::string guidStr = manageableDevices[dimmIdx];
-			NVM_GUID guid;
-			uid_copy(guidStr.c_str(), guid);
+			std::string uidStr = manageableDevices[dimmIdx];
+			NVM_UID uid;
+			uid_copy(uidStr.c_str(), uid);
 
-			rc = nvm_get_sensors(guid, sensors, NVM_MAX_DEVICE_SENSORS);
+			rc = nvm_get_sensors(uid, sensors, NVM_MAX_DEVICE_SENSORS);
 			if (rc != NVM_SUCCESS)
 			{
 				throw exception::NvmExceptionLibError(rc);
@@ -470,7 +470,7 @@ throw (wbem::framework::Exception)
 			for (int sensorIdx = 0; sensorIdx < NVM_MAX_DEVICE_SENSORS; sensorIdx++)
 			{
 				framework::ObjectPath path = getSensorPath(sensors[sensorIdx].type, hostName,
-						guidStr);
+						uidStr);
 
 				pNames->push_back(path);
 			}
@@ -497,7 +497,7 @@ throw (wbem::framework::Exception)
 }
 
 wbem::framework::ObjectPath wbem::support::NVDIMMSensorFactory::getSensorPath(const int type,
-		const std::string &hostname, const std::string &dimmGuid)
+		const std::string &hostname, const std::string &dimmUid)
 	throw (framework::Exception)
 {
 	std::string sensorTypeName;
@@ -514,7 +514,7 @@ wbem::framework::ObjectPath wbem::support::NVDIMMSensorFactory::getSensorPath(co
 		framework::Attribute(NVDIMMSENSOR_CREATIONCLASSNAME, true);
 
 	keys[DEVICEID_KEY] =
-		framework::Attribute(dimmGuid + sensorTypeName, true);
+		framework::Attribute(dimmUid + sensorTypeName, true);
 
 	return framework::ObjectPath(hostname, NVM_NAMESPACE,
 			NVDIMMSENSOR_CREATIONCLASSNAME, keys);
@@ -533,11 +533,11 @@ throw (wbem::framework::Exception)
 
 	framework::Instance *pInstance = NULL; // return value
 
-	// get the device GUID and sensor type from the device ID
+	// get the device UID and sensor type from the device ID
 	framework::Attribute deviceIdAttribute = path.getKeyValue(DEVICEID_KEY);
-	std::string guidStr;
+	std::string uidStr;
 	int type = 0;
-	if(!splitDeviceIdAttribute(deviceIdAttribute, guidStr, type))
+	if(!splitDeviceIdAttribute(deviceIdAttribute, uidStr, type))
 	{
 		throw framework::ExceptionBadParameter(DEVICEID_KEY.c_str());
 	}
@@ -565,7 +565,7 @@ throw (wbem::framework::Exception)
 
 			if (pInstance)
 			{
-				updateSensor(guidStr, type, attributes, pInstance);
+				updateSensor(uidStr, type, attributes, pInstance);
 			}
 		}
 		else
@@ -610,7 +610,7 @@ bool wbem::support::NVDIMMSensorFactory::getModifiableAttribute(const std::strin
 	return found;
 }
 
-void wbem::support::NVDIMMSensorFactory::updateSensor(const std::string &dimmGuid,
+void wbem::support::NVDIMMSensorFactory::updateSensor(const std::string &dimmUid,
 		const int type,
 		const framework::attributes_t &attributes,
 		framework::Instance *pInstance)
@@ -659,7 +659,7 @@ void wbem::support::NVDIMMSensorFactory::updateSensor(const std::string &dimmGui
 		if (oldEnabledState != enabledState)
 		{
 			COMMON_LOG_INFO_F("DeviceId %s - %s changing to %hu",
-					dimmGuid.c_str(),
+					dimmUid.c_str(),
 					ENABLEDSTATE_KEY.c_str(),
 					enabledState);
 
@@ -685,7 +685,7 @@ void wbem::support::NVDIMMSensorFactory::updateSensor(const std::string &dimmGui
 		if (currentAttribute.intValue() != newAttribute.intValue())
 		{
 			COMMON_LOG_INFO_F("DeviceId %s - %s changing to %d",
-					dimmGuid.c_str(),
+					dimmUid.c_str(),
 					thresholdAttribute.c_str(),
 					newAttribute.intValue());
 
@@ -724,15 +724,15 @@ void wbem::support::NVDIMMSensorFactory::updateSensor(const std::string &dimmGui
 	if (!modifiablePropFound)
 	{
 		COMMON_LOG_WARN_F("Tried to modify '%s' without a modifiable property",
-				dimmGuid.c_str());
+				dimmUid.c_str());
 	}
 
 	// If any of the values were modified, update the settings
 	if (changed)
 	{
-		NVM_GUID guid;
-		uid_copy(dimmGuid.c_str(), guid);
-		int rc = nvm_set_sensor_settings(guid, (enum sensor_type)type, &settings);
+		NVM_UID uid;
+		uid_copy(dimmUid.c_str(), uid);
+		int rc = nvm_set_sensor_settings(uid, (enum sensor_type)type, &settings);
 		if (rc != NVM_SUCCESS)
 		{
 			throw exception::NvmExceptionLibError(rc);
@@ -763,7 +763,7 @@ std::string wbem::support::NVDIMMSensorFactory::getSensorEnabledString(const NVM
 }
 /*
  * Determine if the instances are associated based on the AssociatedSensor association class.
- * Because the Sensor deviceID Attribute has the sensor type appended to the Device GUID,
+ * Because the Sensor deviceID Attribute has the sensor type appended to the Device UID,
  * this is a little more complex matching.
  */
 bool wbem::support::NVDIMMSensorFactory::isAssociated(const std::string &associationClass,

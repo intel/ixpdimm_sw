@@ -53,7 +53,7 @@ HMODULE ghModule;
 
 // will work for testing, but should generate own CLSID for production (use guidgen.exe)
 // {7BADB4CD-9E85-429b-B5EA-4FB86BEF45EF}
-DEFINE_GUID(CLSID_instprovider, 
+DEFINE_GUID(CLSID_instprovider,
 		0x7badb4cd, 0x9e85, 0x429b, 0xb5, 0xea, 0x4f, 0xb8, 0x6b, 0xef, 0x45, 0xef);
 #define	CLSID_PATH "Software\\classes\\CLSID\\"
 

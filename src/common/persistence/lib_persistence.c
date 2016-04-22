@@ -480,7 +480,7 @@ int set_default_config_settings(PersistentStore *p_ps)
 		add_config_value_to_pstore(p_ps, SQL_KEY_EVENT_LOG_TRIM_PERCENT, "10");
 		add_config_value_to_pstore(p_ps, SQL_KEY_TOPOLOGY_STATE_VALID, "0");
 
-		// CLI default device identifier output - HANDLE (or GUID)
+		// CLI default device identifier output - HANDLE (or uid)
 		add_config_value_to_pstore(p_ps, SQL_KEY_CLI_DIMM_ID, "HANDLE");
 		add_config_value_to_pstore(p_ps, SQL_KEY_CLI_SIZE, "AUTO");
 		rc = COMMON_SUCCESS;

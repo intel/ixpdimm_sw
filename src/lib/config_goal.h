@@ -41,7 +41,7 @@ extern "C"
 /*
  * Convert a platform config data input table to a config goal structure.
  */
-int config_input_table_to_config_goal(const NVM_GUID device_guid,
+int config_input_table_to_config_goal(const NVM_UID device_uid,
 		unsigned char *p_table,
 		const NVM_UINT32 ext_table_offset,
 		const NVM_UINT32 table_length,

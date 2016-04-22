@@ -216,7 +216,7 @@ void wbem::software::NVDIMMFWVersionFactory::addFirmwareInstanceNamesForDevice(
 
 	struct device_fw_info fw_info;
 	memset(&fw_info, 0, sizeof (struct device_fw_info));
-	int rc = lib_interface::NvmApi::getApi()->getDeviceFwImageInfo(device.guid, &fw_info);
+	int rc = lib_interface::NvmApi::getApi()->getDeviceFwImageInfo(device.uid, &fw_info);
 	if (rc == NVM_ERR_NOTMANAGEABLE)
 	{
 		// Unmanageable DIMMs can coexist with us, we just can't get
@@ -229,7 +229,7 @@ void wbem::software::NVDIMMFWVersionFactory::addFirmwareInstanceNamesForDevice(
 
 	// Use the core classes to access static methods
 	core::device::Device deviceWrapper(core::NvmLibrary::getNvmLibrary(), device);
-	core::device::DeviceFirmwareInfo fwInfoWrapper(deviceWrapper.getGuid(), fw_info);
+	core::device::DeviceFirmwareInfo fwInfoWrapper(deviceWrapper.getUid(), fw_info);
 	addFirmwareInstanceNamesForDeviceFromFwInfo(instanceNames,
 			hostName, deviceWrapper, fwInfoWrapper);
 }

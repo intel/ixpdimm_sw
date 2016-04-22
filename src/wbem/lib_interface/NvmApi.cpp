@@ -171,80 +171,80 @@ int NvmApi::getDevices(struct device_discovery *pDevices, const NVM_UINT8 count)
 	return nvm_get_devices(pDevices, count);
 }
 
-int NvmApi::getDeviceDiscovery(NVM_GUID guid, struct device_discovery *pDevice)
+int NvmApi::getDeviceDiscovery(NVM_UID uid, struct device_discovery *pDevice)
 {
-	return nvm_get_device_discovery(guid, pDevice);
+	return nvm_get_device_discovery(uid, pDevice);
 }
 
-int NvmApi::getDeviceStatus(const NVM_GUID deviceGuid, struct device_status *pStatus)
+int NvmApi::getDeviceStatus(const NVM_UID deviceUid, struct device_status *pStatus)
 {
-	return nvm_get_device_status(deviceGuid, pStatus);
+	return nvm_get_device_status(deviceUid, pStatus);
 }
 
-int NvmApi::getDeviceSettings(const NVM_GUID deviceGuid, struct device_settings *pSettings)
+int NvmApi::getDeviceSettings(const NVM_UID deviceUid, struct device_settings *pSettings)
 {
-	return nvm_get_device_settings(deviceGuid, pSettings);
+	return nvm_get_device_settings(deviceUid, pSettings);
 }
 
-int NvmApi::modifyDeviceSettings(const NVM_GUID deviceGuid,
+int NvmApi::modifyDeviceSettings(const NVM_UID deviceUid,
 				const struct device_settings *pSettings)
 {
-	return nvm_modify_device_settings(deviceGuid, pSettings);
+	return nvm_modify_device_settings(deviceUid, pSettings);
 }
 
-int NvmApi::getDeviceDetails(const NVM_GUID deviceGuid, struct device_details *pDetails)
+int NvmApi::getDeviceDetails(const NVM_UID deviceUid, struct device_details *pDetails)
 {
-	return nvm_get_device_details(deviceGuid, pDetails);
+	return nvm_get_device_details(deviceUid, pDetails);
 }
 
-int NvmApi::getDevicePerformance(const NVM_GUID deviceGuid,
+int NvmApi::getDevicePerformance(const NVM_UID deviceUid,
 				struct device_performance *pPerformance)
 {
-	return nvm_get_device_performance(deviceGuid, pPerformance);
+	return nvm_get_device_performance(deviceUid, pPerformance);
 }
 
-int NvmApi::getDeviceFwImageInfo(const NVM_GUID deviceGuid, struct device_fw_info *pFwInfo)
+int NvmApi::getDeviceFwImageInfo(const NVM_UID deviceUid, struct device_fw_info *pFwInfo)
 {
-	return nvm_get_device_fw_image_info(deviceGuid, pFwInfo);
+	return nvm_get_device_fw_image_info(deviceUid, pFwInfo);
 }
 
-int NvmApi::updateDeviceFw(const NVM_GUID deviceGuid, const NVM_PATH path,
+int NvmApi::updateDeviceFw(const NVM_UID deviceUid, const NVM_PATH path,
 				const NVM_SIZE path_len, const NVM_BOOL activate, const NVM_BOOL force)
 {
-	return nvm_update_device_fw(deviceGuid, path, path_len, activate, force);
+	return nvm_update_device_fw(deviceUid, path, path_len, activate, force);
 }
 
-int NvmApi::examineDeviceFw(const NVM_GUID deviceGuid, const NVM_PATH path,
+int NvmApi::examineDeviceFw(const NVM_UID deviceUid, const NVM_PATH path,
 				const NVM_SIZE pathLen, NVM_VERSION imageVersion,
 				const NVM_SIZE imageVersionSize)
 {
-	return nvm_examine_device_fw(deviceGuid, path, pathLen, imageVersion, imageVersionSize);
+	return nvm_examine_device_fw(deviceUid, path, pathLen, imageVersion, imageVersionSize);
 }
 
-int NvmApi::setPassphrase(const NVM_GUID deviceGuid, const NVM_PASSPHRASE oldPassphrase,
+int NvmApi::setPassphrase(const NVM_UID deviceUid, const NVM_PASSPHRASE oldPassphrase,
 				const NVM_SIZE oldPassphraseLen, const NVM_PASSPHRASE newPassphrase,
 				const NVM_SIZE newPassphraseLen)
 {
-	return nvm_set_passphrase(deviceGuid, oldPassphrase, oldPassphraseLen,
+	return nvm_set_passphrase(deviceUid, oldPassphrase, oldPassphraseLen,
 			newPassphrase, newPassphraseLen);
 }
 
-int NvmApi::removePassphrase(const NVM_GUID deviceGuid, const NVM_PASSPHRASE passphrase,
+int NvmApi::removePassphrase(const NVM_UID deviceUid, const NVM_PASSPHRASE passphrase,
 				const NVM_SIZE passphraseLen)
 {
-	return nvm_remove_passphrase(deviceGuid, passphrase, passphraseLen);
+	return nvm_remove_passphrase(deviceUid, passphrase, passphraseLen);
 }
 
-int NvmApi::unlockDevice(const NVM_GUID deviceGuid, const NVM_PASSPHRASE passphrase,
+int NvmApi::unlockDevice(const NVM_UID deviceUid, const NVM_PASSPHRASE passphrase,
 				const NVM_SIZE passphraseLen)
 {
-	return nvm_unlock_device(deviceGuid, passphrase, passphraseLen);
+	return nvm_unlock_device(deviceUid, passphrase, passphraseLen);
 }
 
-int NvmApi::eraseDevice(const NVM_GUID deviceGuid, const NVM_PASSPHRASE passphrase,
+int NvmApi::eraseDevice(const NVM_UID deviceUid, const NVM_PASSPHRASE passphrase,
 				const NVM_SIZE passphraseLen)
 {
-	return nvm_erase_device(deviceGuid, passphrase, passphraseLen);
+	return nvm_erase_device(deviceUid, passphrase, passphraseLen);
 }
 
 int NvmApi::getJobCount()
@@ -267,41 +267,41 @@ int NvmApi::getPools(struct pool *pPools, const NVM_UINT8 count)
 	return nvm_get_pools(pPools, count);
 }
 
-int NvmApi::getPool(NVM_GUID poolGuid, struct pool *pPool)
+int NvmApi::getPool(NVM_UID poolUid, struct pool *pPool)
 {
-	return nvm_get_pool(poolGuid, pPool);
+	return nvm_get_pool(poolUid, pPool);
 }
 
-int NvmApi::getAvailablePersistentSizeRange(const NVM_GUID poolGuid,
+int NvmApi::getAvailablePersistentSizeRange(const NVM_UID poolUid,
 				struct possible_namespace_ranges *pRange)
 {
-	return nvm_get_available_persistent_size_range(poolGuid, pRange);
+	return nvm_get_available_persistent_size_range(poolUid, pRange);
 }
 
-int NvmApi::createConfigGoal(const NVM_GUID deviceGuid, struct config_goal *pGoal)
+int NvmApi::createConfigGoal(const NVM_UID deviceUid, struct config_goal *pGoal)
 {
-	return nvm_create_config_goal(deviceGuid, pGoal);
+	return nvm_create_config_goal(deviceUid, pGoal);
 }
 
-int NvmApi::getConfigGoal(const NVM_GUID deviceGuid, struct config_goal *pGoal)
+int NvmApi::getConfigGoal(const NVM_UID deviceUid, struct config_goal *pGoal)
 {
-	return nvm_get_config_goal(deviceGuid, pGoal);
+	return nvm_get_config_goal(deviceUid, pGoal);
 }
 
-int NvmApi::deleteConfigGoal(const NVM_GUID deviceGuid)
+int NvmApi::deleteConfigGoal(const NVM_UID deviceUid)
 {
-	return nvm_delete_config_goal(deviceGuid);
+	return nvm_delete_config_goal(deviceUid);
 }
 
-int NvmApi::dumpConfig(const NVM_GUID deviceGuid, const NVM_PATH file,
+int NvmApi::dumpConfig(const NVM_UID deviceUid, const NVM_PATH file,
 				const NVM_SIZE fileLen, const NVM_BOOL append)
 {
-	return nvm_dump_config(deviceGuid, file, fileLen, append);
+	return nvm_dump_config(deviceUid, file, fileLen, append);
 }
 
-int NvmApi::loadConfig(const NVM_GUID deviceGuid, const NVM_PATH file, const NVM_SIZE fileLen)
+int NvmApi::loadConfig(const NVM_UID deviceUid, const NVM_PATH file, const NVM_SIZE fileLen)
 {
-	return nvm_load_config(deviceGuid, file, fileLen);
+	return nvm_load_config(deviceUid, file, fileLen);
 }
 
 int NvmApi::getNamespaceCount()
@@ -309,10 +309,10 @@ int NvmApi::getNamespaceCount()
 	return nvm_get_namespace_count();
 }
 
-int NvmApi::getDeviceNamespaceCount(const NVM_GUID deviceGuid,
+int NvmApi::getDeviceNamespaceCount(const NVM_UID deviceUid,
 		const enum namespace_type nsType)
 {
-	return nvm_get_device_namespace_count(deviceGuid, nsType);
+	return nvm_get_device_namespace_count(deviceUid, nsType);
 }
 
 int NvmApi::getNamespaces(struct namespace_discovery *pNamespaces, const NVM_UINT8 count)
@@ -320,65 +320,65 @@ int NvmApi::getNamespaces(struct namespace_discovery *pNamespaces, const NVM_UIN
 	return nvm_get_namespaces(pNamespaces, count);
 }
 
-int NvmApi::getNamespaceDetails(const NVM_GUID namespaceGuid, struct namespace_details *pNamespace)
+int NvmApi::getNamespaceDetails(const NVM_UID namespaceUid, struct namespace_details *pNamespace)
 {
-	return nvm_get_namespace_details(namespaceGuid, pNamespace);
+	return nvm_get_namespace_details(namespaceUid, pNamespace);
 }
 
-int NvmApi::createNamespace(NVM_GUID *pNamespaceGuid, const NVM_GUID poolGuid,
+int NvmApi::createNamespace(NVM_UID *pNamespaceUid, const NVM_UID poolUid,
 				struct namespace_create_settings *pSettings, const struct interleave_format *pFormat,
 				const NVM_BOOL allowAdjustment)
 {
-	return nvm_create_namespace(pNamespaceGuid, poolGuid, pSettings, pFormat, allowAdjustment);
+	return nvm_create_namespace(pNamespaceUid, poolUid, pSettings, pFormat, allowAdjustment);
 }
 
-int NvmApi::modifyNamespaceName(const NVM_GUID namespaceGuid, const NVM_NAMESPACE_NAME name)
+int NvmApi::modifyNamespaceName(const NVM_UID namespaceUid, const NVM_NAMESPACE_NAME name)
 {
-	return nvm_modify_namespace_name(namespaceGuid, name);
+	return nvm_modify_namespace_name(namespaceUid, name);
 }
 
-int NvmApi::modifyNamespaceBlockCount(const NVM_GUID namespaceGuid, const NVM_UINT64 blockCount,
+int NvmApi::modifyNamespaceBlockCount(const NVM_UID namespaceUid, const NVM_UINT64 blockCount,
 				NVM_BOOL allowAdjustment)
 {
-	return nvm_modify_namespace_block_count(namespaceGuid, blockCount, allowAdjustment);
+	return nvm_modify_namespace_block_count(namespaceUid, blockCount, allowAdjustment);
 }
 
-int NvmApi::modifyNamespaceEnabled(const NVM_GUID namespaceGuid,
+int NvmApi::modifyNamespaceEnabled(const NVM_UID namespaceUid,
 				const enum namespace_enable_state enabled)
 {
-	return nvm_modify_namespace_enabled(namespaceGuid, enabled);
+	return nvm_modify_namespace_enabled(namespaceUid, enabled);
 }
 
-int NvmApi::deleteNamespace(const NVM_GUID namespaceGuid)
+int NvmApi::deleteNamespace(const NVM_UID namespaceUid)
 {
-	return nvm_delete_namespace(namespaceGuid);
+	return nvm_delete_namespace(namespaceUid);
 }
 
-int NvmApi::adjustCreateNamespaceBlockCount(const NVM_GUID poolGuid, struct namespace_create_settings *pSettings,
+int NvmApi::adjustCreateNamespaceBlockCount(const NVM_UID poolUid, struct namespace_create_settings *pSettings,
 											const struct interleave_format *pFormat)
 {
-	return nvm_adjust_create_namespace_block_count(poolGuid, pSettings, pFormat);
+	return nvm_adjust_create_namespace_block_count(poolUid, pSettings, pFormat);
 }
 
-int NvmApi::adjustModifyNamespaceBlockCount(const NVM_GUID namespaceGuid, NVM_UINT64 *pBlockCount)
+int NvmApi::adjustModifyNamespaceBlockCount(const NVM_UID namespaceUid, NVM_UINT64 *pBlockCount)
 {
-	return nvm_adjust_modify_namespace_block_count(namespaceGuid, pBlockCount);
+	return nvm_adjust_modify_namespace_block_count(namespaceUid, pBlockCount);
 }
 
-int NvmApi::getSensors(const NVM_GUID deviceGuid, struct sensor *pSensors, const NVM_UINT16 count)
+int NvmApi::getSensors(const NVM_UID deviceUid, struct sensor *pSensors, const NVM_UINT16 count)
 {
-	return nvm_get_sensors(deviceGuid, pSensors, count);
+	return nvm_get_sensors(deviceUid, pSensors, count);
 }
 
-int NvmApi::getSensor(const NVM_GUID deviceGuid, const enum sensor_type type, struct sensor *pSensor)
+int NvmApi::getSensor(const NVM_UID deviceUid, const enum sensor_type type, struct sensor *pSensor)
 {
-	return nvm_get_sensor(deviceGuid, type, pSensor);
+	return nvm_get_sensor(deviceUid, type, pSensor);
 }
 
-int NvmApi::setSensorSettings(const NVM_GUID deviceGuid, const enum sensor_type type,
+int NvmApi::setSensorSettings(const NVM_UID deviceUid, const enum sensor_type type,
 							const struct sensor_settings *pSettings)
 {
-	return nvm_set_sensor_settings(deviceGuid, type, pSettings);
+	return nvm_set_sensor_settings(deviceUid, type, pSettings);
 }
 
 int NvmApi::addEventNotify(const enum event_type type, void (*pEventCallback) (struct event *pEvent))
@@ -426,30 +426,30 @@ int NvmApi::gatherSupport(const NVM_PATH supportFile, const NVM_SIZE supportFile
 	return nvm_gather_support(supportFile, supportFileLen);
 }
 
-int NvmApi::runDiagnostic(const NVM_GUID deviceGuid, const struct diagnostic *pDiagnostic,
+int NvmApi::runDiagnostic(const NVM_UID deviceUid, const struct diagnostic *pDiagnostic,
 				NVM_UINT32 *pResults)
 {
-	return nvm_run_diagnostic(deviceGuid, pDiagnostic, pResults);
+	return nvm_run_diagnostic(deviceUid, pDiagnostic, pResults);
 }
 
-int NvmApi::getFwLogLevel(const NVM_GUID deviceGuid, enum fw_log_level *pLogLevel)
+int NvmApi::getFwLogLevel(const NVM_UID deviceUid, enum fw_log_level *pLogLevel)
 {
-	return nvm_get_fw_log_level(deviceGuid, pLogLevel);
+	return nvm_get_fw_log_level(deviceUid, pLogLevel);
 }
 
-int NvmApi::setFwLogLevel(const NVM_GUID deviceGuid, const enum fw_log_level logLevel)
+int NvmApi::setFwLogLevel(const NVM_UID deviceUid, const enum fw_log_level logLevel)
 {
-	return nvm_set_fw_log_level(deviceGuid, logLevel);
+	return nvm_set_fw_log_level(deviceUid, logLevel);
 }
 
-int NvmApi::injectDeviceError(const NVM_GUID deviceGuid, const struct device_error *pError)
+int NvmApi::injectDeviceError(const NVM_UID deviceUid, const struct device_error *pError)
 {
-	return nvm_inject_device_error(deviceGuid, pError);
+	return nvm_inject_device_error(deviceUid, pError);
 }
 
-int NvmApi::clearInjectedDeviceError(const NVM_GUID deviceGuid, const struct device_error *pError)
+int NvmApi::clearInjectedDeviceError(const NVM_UID deviceUid, const struct device_error *pError)
 {
-	return nvm_clear_injected_device_error(deviceGuid, pError);
+	return nvm_clear_injected_device_error(deviceUid, pError);
 }
 
 int NvmApi::addSimulator(const NVM_PATH simulator, const NVM_SIZE simulatorLen)
@@ -487,14 +487,14 @@ int NvmApi::purgeDebugLog()
 	return nvm_purge_debug_log();
 }
 
-void NvmApi::stringToNvmGuid(const std::string& guidStr, NVM_GUID guid)
+void NvmApi::stringToNvmUid(const std::string& uidStr, NVM_UID uid)
 {
-	if (guidStr.size() != (NVM_GUIDSTR_LEN - 1))
+	if (uidStr.size() != (NVM_MAX_UID_LEN - 1))
 	{
-		throw framework::ExceptionBadParameter("guidStr");
+		throw framework::ExceptionBadParameter("uidStr");
 	}
 
-	uid_copy(guidStr.c_str(), guid);
+	uid_copy(uidStr.c_str(), uid);
 }
 
 std::string NvmApi::getHostName() const
@@ -606,29 +606,29 @@ void NvmApi::getPools(std::vector<struct pool>& pools) const
 	}
 }
 
-void NvmApi::getDeviceDiscoveryForDimm(const std::string& dimmGuid,
+void NvmApi::getDeviceDiscoveryForDimm(const std::string& dimmUid,
 		struct device_discovery& device) const
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
 
-	NVM_GUID guid;
-	stringToNvmGuid(dimmGuid, guid);
+	NVM_UID uid;
+	stringToNvmUid(dimmUid, uid);
 
-	int rc = nvm_get_device_discovery(guid, &device);
+	int rc = nvm_get_device_discovery(uid, &device);
 	if (rc != NVM_SUCCESS)
 	{
 		throw exception::NvmExceptionLibError(rc);
 	}
 }
 
-void NvmApi::getConfigGoalForDimm(const std::string &dimmGuid, struct config_goal &goal) const
+void NvmApi::getConfigGoalForDimm(const std::string &dimmUid, struct config_goal &goal) const
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
 
-	NVM_GUID guid;
-	stringToNvmGuid(dimmGuid, guid);
+	NVM_UID uid;
+	stringToNvmUid(dimmUid, uid);
 
-	int rc = nvm_get_config_goal(guid, &goal);
+	int rc = nvm_get_config_goal(uid, &goal);
 	if (rc != NVM_SUCCESS)
 	{
 		throw exception::NvmExceptionLibError(rc);

@@ -43,7 +43,7 @@ public:
 	DeviceFirmwareInfoCollection& operator=(const DeviceFirmwareInfoCollection &other);
 	~DeviceFirmwareInfoCollection();
 
-	const DeviceFirmwareInfo &operator[](const std::string &guid);
+	const DeviceFirmwareInfo &operator[](const std::string &uid);
 	void push_back(DeviceFirmwareInfo &device);
 	size_t size() const;
 	void clear();

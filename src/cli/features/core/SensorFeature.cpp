@@ -157,7 +157,7 @@ cli::framework::ResultBase * cli::nvmcli::SensorFeature::run(
 
 /*
  * Show sensors provided by the NVDIMMSensorFactory::getInstances function.  If 
- * a device GUID or a sensor type is provided, then filter the results.
+ * a device UID or a sensor type is provided, then filter the results.
  */
 cli::framework::ResultBase* cli::nvmcli::SensorFeature::showSensor(
 		const framework::ParsedCommand& parsedCommand)
@@ -227,7 +227,7 @@ cli::framework::ResultBase* cli::nvmcli::SensorFeature::showSensor(
 				}
 				if (!dimmTarget.empty())
 				{
-					requestedAttributes.push_back(wbem::DIMMGUID_KEY);
+					requestedAttributes.push_back(wbem::DIMMUID_KEY);
 					requestedAttributes.push_back(wbem::DIMMHANDLE_KEY);
 				}
 
@@ -325,10 +325,10 @@ cli::framework::ResultBase* cli::nvmcli::SensorFeature::modifySensor(
 	// No obvious syntax errors
 	else
 	{
-		// Validate the DIMM list and translate PIDs into GUIDs
-		std::vector<std::string> guids;
+		// Validate the DIMM list and translate PIDs into UIDs
+		std::vector<std::string> uids;
 		std::string hostname; // Get the host name as well - we'll need it later
-		pResult = cli::nvmcli::getDimms(parsedCommand, guids);
+		pResult = cli::nvmcli::getDimms(parsedCommand, uids);
 		try
 		{
 			hostname = wbem::server::getHostName();
@@ -367,15 +367,15 @@ cli::framework::ResultBase* cli::nvmcli::SensorFeature::modifySensor(
 			{
 				framework::SimpleListResult *pListResult = new framework::SimpleListResult();
 				pResult = pListResult;
-				for(std::vector<std::string>::iterator iGuid = guids.begin();
-						iGuid != guids.end(); iGuid ++)
+				for(std::vector<std::string>::iterator iUid = uids.begin();
+						iUid != uids.end(); iUid ++)
 				{
 					wbem::framework::Instance *pInstance = NULL;
 					wbem::framework::attribute_names_t attrNames;
 
 					std::string prefixMsg = framework::ResultBase::stringFromArgList(
 							MODIFYSENSOR_MSG_PREFIX.c_str(), sensorTarget.c_str(),
-							wbem::physical_asset::NVDIMMFactory::guidToDimmIdStr(*iGuid).c_str());
+							wbem::physical_asset::NVDIMMFactory::uidToDimmIdStr(*iUid).c_str());
 					prefixMsg += ": ";
 					try
 					{
@@ -386,7 +386,7 @@ cli::framework::ResultBase* cli::nvmcli::SensorFeature::modifySensor(
 						// if user didn't specify the force option, prompt them to continue
 						std::string prompt = framework::ResultBase::stringFromArgList(
 								MODIFY_SENSOR_PROMPT.c_str(), sensorTarget.c_str(),
-								wbem::physical_asset::NVDIMMFactory::guidToDimmIdStr(*iGuid).c_str());
+								wbem::physical_asset::NVDIMMFactory::uidToDimmIdStr(*iUid).c_str());
 						if (!forceOption && !promptUserYesOrNo(prompt))
 						{
 							pListResult->insert(prefixMsg + cli::framework::UNCHANGED_MSG);
@@ -395,11 +395,11 @@ cli::framework::ResultBase* cli::nvmcli::SensorFeature::modifySensor(
 						{
 							// Get the current instance - wbem uses it to see if anything changed
 							wbem::framework::ObjectPath path = m_SensorProvider.getSensorPath(
-								wbemSensorType, hostname, *iGuid);
+								wbemSensorType, hostname, *iUid);
 							pInstance = m_SensorProvider.getInstance(path, attrNames);
 							if (pInstance)
 							{
-								m_SensorProvider.updateSensor(*iGuid, wbemSensorType, attributes,
+								m_SensorProvider.updateSensor(*iUid, wbemSensorType, attributes,
 									pInstance);
 								pListResult->insert(prefixMsg + cli::framework::SUCCESS_MSG);
 

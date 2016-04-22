@@ -55,17 +55,17 @@ public:
 
 	/*
 	* For commands that support an optional -namespace target,
-	* retrieve the namespace GUID(s) of the specified target
-	* or all namespace GUIDs if not specified.
+	* retrieve the namespace UID(s) of the specified target
+	* or all namespace UIDs if not specified.
 	*/
 	virtual cli::framework::ErrorResult *getNamespaces(
 		const framework::ParsedCommand &parsedCommand, std::vector<std::string> &namespaces);
 	/*
-	 * For commands that support the -pool target, verify the pool GUID specified
+	 * For commands that support the -pool target, verify the pool UID specified
 	 * or retrieve it if not specified
 	 */
-	virtual cli::framework::ErrorResult *checkPoolGuid(
-		const framework::ParsedCommand &parsedCommand, std::string &poolGuid);
+	virtual cli::framework::ErrorResult *checkPoolUid(
+		const framework::ParsedCommand &parsedCommand, std::string &poolUid);
 
 };
 }

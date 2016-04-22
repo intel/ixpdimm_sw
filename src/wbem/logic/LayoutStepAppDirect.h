@@ -100,11 +100,11 @@ class NVM_API LayoutStepAppDirect: public LayoutStep
 				const MemoryAllocationRequest &request, const size_t &numDimms);
 		enum interleave_size getInterleaveImcSize(
 				const MemoryAllocationRequest &request, const size_t &numDimms);
-		void addInterleaveSetToGoal(const std::string &dimmGuid,
+		void addInterleaveSetToGoal(const std::string &dimmUid,
 				struct config_goal &goal, const NVM_UINT64 &sizeBytes,
 				const NVM_UINT16 &setId, const struct app_direct_attributes &settings);
 		bool interleaveSetFromPreviousExtent(
-				const std::string &dimmGuid,
+				const std::string &dimmUid,
 				struct config_goal &goal);
 		bool interleaveSetsMatch(const struct app_direct_attributes &oldSet, const struct app_direct_attributes &newSet);
 		int getDimmPopulationMap(const std::vector<Dimm> &requestedDimms,
@@ -124,7 +124,7 @@ class NVM_API LayoutStepAppDirect: public LayoutStep
 		struct nvm_capabilities m_systemCap;
 		unsigned int m_adExtentIndex;
 		lib_interface::NvmApi *m_pLibApi;
-		std::map<std::string, int> m_dimmExistingSets; // dimm GUID to App Direct count map
+		std::map<std::string, int> m_dimmExistingSets; // dimm UID to App Direct count map
 };
 
 } /* namespace logic */

@@ -68,13 +68,13 @@ bool cli::nvmcli::NamespaceFeature::convertConfigGoalInstance(
 			// bypass the rest of method instead of nested if/else
 			throw false;
 		}
-		// add the GUID for filtering
-		pCliInstance->setAttribute(wbem::DIMMGUID_KEY,
+		// add the UID for filtering
+		pCliInstance->setAttribute(wbem::DIMMUID_KEY,
 				parentAttr);
 
 		// Add dimm ID
 		wbem::framework::Attribute dimmIdAttr =
-				wbem::physical_asset::NVDIMMFactory::guidToDimmIdAttribute(parentAttr.stringValue());
+				wbem::physical_asset::NVDIMMFactory::uidToDimmIdAttribute(parentAttr.stringValue());
 		pCliInstance->setAttribute(wbem::DIMMID_KEY,
 					dimmIdAttr,
 					displayAttributes);
@@ -252,11 +252,11 @@ bool cli::nvmcli::NamespaceFeature::convertConfigGoalInstance(
 		// action required
 		struct event_filter filter;
 		memset(&filter, 0, sizeof (filter));
-		filter.filter_mask = NVM_FILTER_ON_GUID | NVM_FILTER_ON_AR | NVM_FILTER_ON_TYPE;
-		// guid to str
-		NVM_GUID dimmGuid;
-		uid_copy(parentAttr.stringValue().c_str(), dimmGuid);
-		memmove(filter.guid, dimmGuid, NVM_GUID_LEN);
+		filter.filter_mask = NVM_FILTER_ON_UID | NVM_FILTER_ON_AR | NVM_FILTER_ON_TYPE;
+		// uid to str
+		NVM_UID dimmUid;
+		uid_copy(parentAttr.stringValue().c_str(), dimmUid);
+		memmove(filter.uid, dimmUid, NVM_MAX_UID_LEN);
 		filter.action_required = true;
 		filter.type = EVENT_TYPE_CONFIG;
 
@@ -584,8 +584,8 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::deleteConfigGoal(
 			throw wbem::framework::Exception("MemoryConfigurationFactory.getInstances returned NULL");
 		}
 
-		// rename the Parent to GUID to work with filterInstances
-		RenameAttributeKey(*pInstances, wbem::PARENT_KEY, wbem::DIMMGUID_KEY);
+		// rename the Parent to UID to work with filterInstances
+		RenameAttributeKey(*pInstances, wbem::PARENT_KEY, wbem::DIMMUID_KEY);
 
 		cli::nvmcli::filters_t filters;
 
@@ -638,10 +638,10 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::deleteConfigGoal(
 			wbem::framework::Attribute idAttr;
 			iter->getAttribute(wbem::INSTANCEID_KEY, idAttr);
 			std::string instanceId = idAttr.stringValue();
-			std::string dimmId = instanceId.substr(0, NVM_GUIDSTR_LEN - 1);
+			std::string dimmId = instanceId.substr(0, NVM_MAX_UID_LEN - 1);
 			std::string prefix = cli::framework::ResultBase::stringFromArgList(
 						(basePrefix + " %s").c_str(),
-						wbem::physical_asset::NVDIMMFactory::guidToDimmIdStr(dimmId).c_str()) + ": ";
+						wbem::physical_asset::NVDIMMFactory::uidToDimmIdStr(dimmId).c_str()) + ": ";
 
 			wbem::framework::ObjectPath path = (*iter).getObjectPath();
 
@@ -973,7 +973,7 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::addParsedDimmListToRe
 	std::vector<std::string> dimmList =
 				cli::framework::Parser::getTargetValues(parsedCommand, TARGET_DIMM.name);
 	bool userEnteredDimms = !dimmList.empty();
-	dimmList.clear(); // clear it so we can re-use the container for GUIDs
+	dimmList.clear(); // clear it so we can re-use the container for UIDs
 
 	// get sockets as user entered them
 	std::vector<std::string> socketList =
@@ -982,13 +982,13 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::addParsedDimmListToRe
 
 	if (!userEnteredSockets) // -dimm values only - or no target values (all DIMMs)
 	{
-		// get DIMMs as GUIDs
+		// get DIMMs as UIDs
 		pResult = getDimms(parsedCommand, dimmList);
 		if (pResult == NULL)
 		{
 			try
 			{
-				getDimmInfoForGuids(dimmList, request.dimms);
+				getDimmInfoForUids(dimmList, request.dimms);
 			}
 			catch (wbem::framework::Exception &e)
 			{
@@ -1124,8 +1124,8 @@ wbem::logic::AppDirectExtent cli::nvmcli::NamespaceFeature::memoryPropToAppDirec
 	return appDirectExtent;
 }
 
-void cli::nvmcli::NamespaceFeature::getDimmInfoForGuids(
-		const std::vector<std::string> &dimmGuids,
+void cli::nvmcli::NamespaceFeature::getDimmInfoForUids(
+		const std::vector<std::string> &dimmUids,
 		std::vector<wbem::logic::Dimm> &dimmList)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -1140,12 +1140,12 @@ void cli::nvmcli::NamespaceFeature::getDimmInfoForGuids(
 
 	wbem::physical_asset::NVDIMMFactory dimmFactory;
 
-	for (std::vector<std::string>::const_iterator guidIter = dimmGuids.begin();
-			guidIter != dimmGuids.end(); guidIter++)
+	for (std::vector<std::string>::const_iterator uidIter = dimmUids.begin();
+			uidIter != dimmUids.end(); uidIter++)
 	{
 		wbem::framework::attributes_t keys;
 		keys[wbem::CREATIONCLASSNAME_KEY] = wbem::framework::Attribute(wbem::physical_asset::NVDIMM_CREATIONCLASSNAME, true);
-		keys[wbem::TAG_KEY] = wbem::framework::Attribute(*guidIter, true);
+		keys[wbem::TAG_KEY] = wbem::framework::Attribute(*uidIter, true);
 
 		wbem::framework::ObjectPath path(hostName, wbem::NVM_NAMESPACE,
 				wbem::physical_asset::NVDIMM_CREATIONCLASSNAME, keys);
@@ -1164,8 +1164,8 @@ wbem::logic::Dimm cli::nvmcli::NamespaceFeature::nvdimmInstanceToDimm(const wbem
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	wbem::framework::Attribute guidAttr;
-	instance.getAttribute(wbem::TAG_KEY, guidAttr);
+	wbem::framework::Attribute uidAttr;
+	instance.getAttribute(wbem::TAG_KEY, uidAttr);
 	wbem::framework::Attribute capacityAttr;
 	instance.getAttribute(wbem::CAPACITY_KEY, capacityAttr);
 	wbem::framework::Attribute socketAttr;
@@ -1176,7 +1176,7 @@ wbem::logic::Dimm cli::nvmcli::NamespaceFeature::nvdimmInstanceToDimm(const wbem
 	instance.getAttribute(wbem::CHANNEL_KEY, channelAttr);
 
 	wbem::logic::Dimm dimm;
-	dimm.guid = guidAttr.stringValue();
+	dimm.uid = uidAttr.stringValue();
 	dimm.capacity = capacityAttr.uint64Value();
 	dimm.socket = socketAttr.uintValue();
 	dimm.memoryController = memControllerAttr.uintValue();
@@ -1283,7 +1283,7 @@ cli::framework::ResultBase *cli::nvmcli::NamespaceFeature::loadGoal(const framew
 			}
 			else
 			{
-				std::vector<std::string> dimms; // list of DIMM GUIDs to be constructed from target list
+				std::vector<std::string> dimms; // list of DIMM UIDs to be constructed from target list
 				if (socketTargetExists) // -socket target provided
 				{
 					pResult = getDimmsFromSockets(parsedCommand, dimms);

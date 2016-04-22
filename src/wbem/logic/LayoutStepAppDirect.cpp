@@ -80,11 +80,11 @@ void wbem::logic::LayoutStepAppDirect::execute(const MemoryAllocationRequest& re
 		for (std::vector<Dimm>::const_iterator dimmIter = request.dimms.begin();
 				dimmIter != request.dimms.end(); dimmIter++)
 		{
-			if (layout.reserveDimmGuid != dimmIter->guid)
+			if (layout.reservedimmUid != dimmIter->uid)
 			{
 				dimmsToLayout.push_back(*dimmIter);
-				m_dimmExistingSets[dimmIter->guid] =
-						layout.goals[dimmIter->guid].app_direct_count;
+				m_dimmExistingSets[dimmIter->uid] =
+						layout.goals[dimmIter->uid].app_direct_count;
 			}
 		}
 
@@ -247,9 +247,9 @@ NVM_UINT64 wbem::logic::LayoutStepAppDirect::layoutInterleaveSet(
 		settings.interleave.imc = imcSize;
 		for (size_t i = 0; i < dimms.size(); i++)
 		{
-			uid_copy(dimms[i].guid.c_str(), settings.dimms[i]);
+			uid_copy(dimms[i].uid.c_str(), settings.dimms[i]);
 		}
-		addInterleaveSetToGoal(dimmIter->guid, layout.goals[dimmIter->guid], bytesPerDimm, setId, settings);
+		addInterleaveSetToGoal(dimmIter->uid, layout.goals[dimmIter->uid], bytesPerDimm, setId, settings);
 		bytesAllocated += bytesPerDimm;
 	}
 	return bytesAllocated;
@@ -306,7 +306,7 @@ std::vector<wbem::logic::Dimm> wbem::logic::LayoutStepAppDirect::getDimmsWithCap
 	for (std::vector<Dimm>::const_iterator dimmIter = dimms.begin();
 			dimmIter != dimms.end(); dimmIter++)
 	{
-		if (getDimmUnallocatedBytes(dimmIter->capacity, layout.goals[dimmIter->guid]) > 0)
+		if (getDimmUnallocatedBytes(dimmIter->capacity, layout.goals[dimmIter->uid]) > 0)
 		{
 			dimmsWithCapacity.push_back(*dimmIter);
 		}
@@ -339,15 +339,15 @@ bool wbem::logic::LayoutStepAppDirect::interleaveSetsMatch(
 }
 
 bool wbem::logic::LayoutStepAppDirect::interleaveSetFromPreviousExtent(
-		const std::string &dimmGuid,
+		const std::string &dimmUid,
 		struct config_goal &goal)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	return (goal.app_direct_count <= m_dimmExistingSets[dimmGuid]);
+	return (goal.app_direct_count <= m_dimmExistingSets[dimmUid]);
 }
 
 void wbem::logic::LayoutStepAppDirect::addInterleaveSetToGoal(
-		const std::string &dimmGuid,
+		const std::string &dimmUid,
 		struct config_goal &goal, const NVM_UINT64 &sizeBytes,
 		const NVM_UINT16 &setId, const struct app_direct_attributes &settings)
 {
@@ -355,7 +355,7 @@ void wbem::logic::LayoutStepAppDirect::addInterleaveSetToGoal(
 
 	// extend existing
 	bool extended = false;
-	if (!interleaveSetFromPreviousExtent(dimmGuid, goal))
+	if (!interleaveSetFromPreviousExtent(dimmUid, goal))
 	{
 		if (goal.app_direct_count == 1 &&
 				interleaveSetsMatch(goal.app_direct_1_settings, settings))
@@ -433,9 +433,9 @@ NVM_UINT64 wbem::logic::LayoutStepAppDirect::getRemainingAppDirectBytesFromDimms
 	for (std::vector<struct Dimm>::const_iterator dimmIter = request.dimms.begin();
 			dimmIter != request.dimms.end(); dimmIter++)
 	{
-		if (layout.reserveDimmGuid != dimmIter->guid)
+		if (layout.reservedimmUid != dimmIter->uid)
 		{
-			bytes += getDimmUnallocatedAppDirectBytes(*dimmIter, layout.goals[dimmIter->guid]);
+			bytes += getDimmUnallocatedAppDirectBytes(*dimmIter, layout.goals[dimmIter->uid]);
 		}
 	}
 
@@ -456,7 +456,7 @@ int wbem::logic::LayoutStepAppDirect::getDimmPopulationMap(
 	for (std::vector<struct Dimm>::const_iterator dimmIter = requestedDimms.begin();
 				dimmIter != requestedDimms.end(); dimmIter++)
 	{
-		if (getDimmUnallocatedBytes(dimmIter->capacity, goals[dimmIter->guid]) > 0)
+		if (getDimmUnallocatedBytes(dimmIter->capacity, goals[dimmIter->uid]) > 0)
 		{
 			int dimmLocation = DIMM_LOCATION(dimmIter->memoryController, dimmIter->channel);
 			map += (1 << dimmLocation);
@@ -560,20 +560,20 @@ bool wbem::logic::LayoutStepAppDirect::canMapInterleavedCapacity(
 	for (std::vector<Dimm>::const_iterator dimmIter = dimms.begin();
 				dimmIter != dimms.end(); dimmIter++)
 	{
-		uid_copy(dimmIter->guid.c_str(), newSet.dimms[dimmIndex++]);
+		uid_copy(dimmIter->uid.c_str(), newSet.dimms[dimmIndex++]);
 	}
 
 	for (std::vector<Dimm>::const_iterator dimmIter = dimms.begin();
 			dimmIter != dimms.end(); dimmIter++)
 	{
-		if (goals[dimmIter->guid].app_direct_count == MAX_APPDIRECT_EXTENTS)
+		if (goals[dimmIter->uid].app_direct_count == MAX_APPDIRECT_EXTENTS)
 		{
-			if (interleaveSetFromPreviousExtent(dimmIter->guid, goals[dimmIter->guid]))
+			if (interleaveSetFromPreviousExtent(dimmIter->uid, goals[dimmIter->uid]))
 			{
 				setExtendable = false;
 				break;
 			}
-			if (!interleaveSetsMatch(goals[dimmIter->guid].app_direct_2_settings, newSet))
+			if (!interleaveSetsMatch(goals[dimmIter->uid].app_direct_2_settings, newSet))
 			{
 				setExtendable = false;
 				break;
@@ -697,7 +697,7 @@ std::vector<wbem::logic::Dimm> wbem::logic::LayoutStepAppDirect::getRemainingDim
 		for (std::vector<Dimm>::const_iterator includedIter = dimmsIncluded.begin();
 				includedIter != dimmsIncluded.end(); includedIter++)
 		{
-			if (allIter->guid == includedIter->guid)
+			if (allIter->uid == includedIter->uid)
 			{
 				included = true;
 				break;

@@ -138,11 +138,11 @@ wbem::framework::Instance *NVDIMMFactory::getInstance(
 		checkAttributes(attributes);
 		path.checkKey(CREATIONCLASSNAME_KEY, NVDIMM_CREATIONCLASSNAME);
 
-		// extract the GUID from the object path
-		framework::Attribute guidAttr = path.getKeyValue(TAG_KEY);
+		// extract the UID from the object path
+		framework::Attribute uidAttr = path.getKeyValue(TAG_KEY);
 
 		core::Result<core::device::Device> device =
-				m_deviceService.getDevice(guidAttr.stringValue());
+				m_deviceService.getDevice(uidAttr.stringValue());
 
 		toInstance(device.getValue(), *pInstance, attributes);
 	}
@@ -174,14 +174,14 @@ wbem::framework::instance_names_t *NVDIMMFactory::getInstanceNames()
 	framework::instance_names_t *pNames = new framework::instance_names_t();
 	try
 	{
-		const std::vector<std::string> &devices = m_deviceService.getAllGuids();
+		const std::vector<std::string> &devices = m_deviceService.getAllUids();
 
 		if (devices.size() != 0)
 		{
 			for (size_t i = 0; i < devices.size(); i++)
 			{
 				framework::ObjectPath path;
-				createPathFromGuid(devices[i], path);
+				createPathFromUid(devices[i], path);
 				pNames->push_back(path);
 			}
 		}
@@ -214,26 +214,26 @@ wbem::framework::UINT32 NVDIMMFactory::executeMethod(
 
 	// tag is needed for all methods
 	framework::Attribute tag = object.getKeyValue(TAG_KEY);
-	std::string deviceGuid = tag.stringValue();
+	std::string deviceUid = tag.stringValue();
 	try
 	{
 		if (method == NVDIMM_SETPASSPHRASE)
 		{
 			// uint32 SetPassphrase(string NewPassphrase, string CurrentPassphrase);
-			setPassphrase(deviceGuid,
+			setPassphrase(deviceUid,
 					inParms[NVDIMM_SETPASSPHRASE_NEWPASSPHRASE].stringValue(),
 					inParms[NVDIMM_SETPASSPHRASE_CURRENTPASSPHRASE].stringValue());
 		}
 		else if (method == NVDIMM_REMOVEPASSPHRASE)
 		{
 			// uint32 RemovePassphrase(string CurrentPassphrase);
-			removePassphrase(deviceGuid,
+			removePassphrase(deviceUid,
 					inParms[NVDIMM_SETPASSPHRASE_CURRENTPASSPHRASE].stringValue());
 		}
 		else if (method == NVDIMM_UNLOCK)
 		{
 			// uint32 Unlock(string CurrentPassphrase);
-			unlock(deviceGuid,
+			unlock(deviceUid,
 					inParms[NVDIMM_SETPASSPHRASE_CURRENTPASSPHRASE].stringValue());
 		}
 		else
@@ -295,22 +295,22 @@ wbem::framework::UINT32 NVDIMMFactory::getReturnCodeFromLibException
 /*
  * set passphrase
  */
-void NVDIMMFactory::setPassphrase(std::string deviceGuid,
+void NVDIMMFactory::setPassphrase(std::string deviceUid,
 		std::string newPassphrase,
 		std::string currentPassphrase)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	if (deviceGuid.empty() || (deviceGuid.size() != NVM_GUIDSTR_LEN - 1))
+	if (deviceUid.empty() || (deviceUid.size() != NVM_MAX_UID_LEN - 1))
 	{
-		throw framework::ExceptionBadParameter("deviceGuid");
+		throw framework::ExceptionBadParameter("deviceUid");
 	}
 	// new passphrase is required
 	if (newPassphrase.empty())
 	{
 		throw framework::ExceptionBadParameter(NVDIMM_SETPASSPHRASE_NEWPASSPHRASE.c_str());
 	}
-	NVM_GUID guid;
-	uid_copy(deviceGuid.c_str(), guid);
+	NVM_UID uid;
+	uid_copy(deviceUid.c_str(), uid);
 
 	// current passphrase is not required.  Pass NULL if it is not provided
 	const char *oldPassphrase = NULL;
@@ -321,7 +321,7 @@ void NVDIMMFactory::setPassphrase(std::string deviceGuid,
 		oldPassphraseLen = currentPassphrase.length();
 	}
 
-	int rc = m_SetPassphrase(guid, oldPassphrase, oldPassphraseLen,
+	int rc = m_SetPassphrase(uid, oldPassphrase, oldPassphraseLen,
 			newPassphrase.c_str(), newPassphrase.length());
 	s_memset(&oldPassphrase, sizeof (oldPassphrase));
 	if (rc != NVM_SUCCESS)
@@ -334,22 +334,22 @@ void NVDIMMFactory::setPassphrase(std::string deviceGuid,
  * remove passphrase
  */
 void NVDIMMFactory::removePassphrase(
-		std::string deviceGuid, std::string currentPassphrase)
+		std::string deviceUid, std::string currentPassphrase)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	if (currentPassphrase.empty())
 	{
 		throw framework::ExceptionBadParameter(NVDIMM_SETPASSPHRASE_CURRENTPASSPHRASE.c_str());
 	}
-	if (deviceGuid.empty() || (deviceGuid.size() != NVM_GUIDSTR_LEN - 1))
+	if (deviceUid.empty() || (deviceUid.size() != NVM_MAX_UID_LEN - 1))
 	{
-		throw framework::ExceptionBadParameter("deviceGuid");
+		throw framework::ExceptionBadParameter("deviceUid");
 	}
 
-	NVM_GUID guid;
-	uid_copy(deviceGuid.c_str(), guid);
+	NVM_UID uid;
+	uid_copy(deviceUid.c_str(), uid);
 
-	int rc = m_RemovePassphrase(guid, currentPassphrase.c_str(), currentPassphrase.length());
+	int rc = m_RemovePassphrase(uid, currentPassphrase.c_str(), currentPassphrase.length());
 
 	if (rc != NVM_SUCCESS)
 	{
@@ -357,7 +357,7 @@ void NVDIMMFactory::removePassphrase(
 	}
 }
 
-void NVDIMMFactory::unlock(std::string deviceGuid,
+void NVDIMMFactory::unlock(std::string deviceUid,
 		std::string currentPassphrase)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -365,15 +365,15 @@ void NVDIMMFactory::unlock(std::string deviceGuid,
 	{
 		throw framework::ExceptionBadParameter(NVDIMM_SETPASSPHRASE_CURRENTPASSPHRASE.c_str());
 	}
-	if (deviceGuid.empty() || (deviceGuid.size() != NVM_GUIDSTR_LEN - 1))
+	if (deviceUid.empty() || (deviceUid.size() != NVM_MAX_UID_LEN - 1))
 	{
-		throw framework::ExceptionBadParameter("deviceGuid");
+		throw framework::ExceptionBadParameter("deviceUid");
 	}
 
-	NVM_GUID guid;
-	uid_copy(deviceGuid.c_str(), guid);
+	NVM_UID uid;
+	uid_copy(deviceUid.c_str(), uid);
 
-	int rc = m_UnlockDevice(guid, currentPassphrase.c_str(), currentPassphrase.length());
+	int rc = m_UnlockDevice(uid, currentPassphrase.c_str(), currentPassphrase.length());
 
 	if (rc != NVM_SUCCESS)
 	{
@@ -381,7 +381,7 @@ void NVDIMMFactory::unlock(std::string deviceGuid,
 	}
 }
 
-std::vector<std::string>  wbem::physical_asset::NVDIMMFactory::getManageableDeviceGuids()
+std::vector<std::string>  wbem::physical_asset::NVDIMMFactory::getManageableDeviceUids()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	std::vector<std::string> result;
@@ -391,9 +391,9 @@ std::vector<std::string>  wbem::physical_asset::NVDIMMFactory::getManageableDevi
 	wbem::physical_asset::devices_t::const_iterator iter = devices.begin();
 	for (; iter != devices.end(); iter++)
 	{
-		NVM_GUID_STR guidStr;
-		uid_copy(iter->guid, guidStr);
-		result.push_back(std::string(guidStr));
+		NVM_UID uidStr;
+		uid_copy(iter->uid, uidStr);
+		result.push_back(std::string(uidStr));
 	}
 
 	return result;
@@ -405,14 +405,14 @@ std::vector<std::string>  wbem::physical_asset::NVDIMMFactory::getManageableDevi
  * If doesn't exist, return NVM_ERR_BADDEVICE.
  * If is not manageable, return NVM_ERR_NOTMANAGEABLE
  */
-int NVDIMMFactory::existsAndIsManageable(const std::string &dimmGuid)
+int NVDIMMFactory::existsAndIsManageable(const std::string &dimmUid)
 {
 	struct device_discovery discover;
-	NVM_GUID guid;
-	uid_copy(dimmGuid.c_str(), guid);
+	NVM_UID uid;
+	uid_copy(dimmUid.c_str(), uid);
 	int rc = NVM_SUCCESS;
 
-	if (NVM_SUCCESS != nvm_get_device_discovery(guid, &discover))
+	if (NVM_SUCCESS != nvm_get_device_discovery(uid, &discover))
 	{
 		rc = NVM_ERR_BADDEVICE;
 	}
@@ -432,10 +432,10 @@ wbem::framework::Instance *NVDIMMFactory::modifyInstance(
 
 	try
 	{
-		// get the device GUID from the path
+		// get the device UID from the path
 		framework::Attribute tagAttribute = path.getKeyValue(TAG_KEY);
-		NVM_GUID guid;
-		uid_copy(tagAttribute.stringValue().c_str(), guid);
+		NVM_UID uid;
+		uid_copy(tagAttribute.stringValue().c_str(), uid);
 
 
 		framework::attribute_names_t attributeNames;
@@ -457,7 +457,7 @@ wbem::framework::Instance *NVDIMMFactory::modifyInstance(
 
 				settings.first_fast_refresh = attr.boolValue() ? 1 : 0;
 
-				if ((rc = nvm_modify_device_settings(guid, &settings)) == NVM_SUCCESS)
+				if ((rc = nvm_modify_device_settings(uid, &settings)) == NVM_SUCCESS)
 				{
 					pInstance->setAttribute(FIRSTFASTREFRESH_KEY, attr);
 				}
@@ -474,7 +474,7 @@ wbem::framework::Instance *NVDIMMFactory::modifyInstance(
 				framework::Attribute attr = attributes[FWLOGLEVEL_KEY];
 				enum fw_log_level fwLogLevel = convertToLogLevelEnum(attr.uintValue());
 
-				if ((rc = nvm_set_fw_log_level(guid, fwLogLevel)) == NVM_SUCCESS)
+				if ((rc = nvm_set_fw_log_level(uid, fwLogLevel)) == NVM_SUCCESS)
 				{
 					pInstance->setAttribute(FWLOGLEVEL_KEY, attr);
 				}
@@ -530,7 +530,7 @@ enum fw_log_level NVDIMMFactory::convertToLogLevelEnum(NVM_UINT16 logLevel)
 	return level;
 }
 
-void NVDIMMFactory::createPathFromGuid(const std::string guid,
+void NVDIMMFactory::createPathFromUid(const std::string uid,
 		wbem::framework::ObjectPath &path, std::string hostname)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -542,7 +542,7 @@ void NVDIMMFactory::createPathFromGuid(const std::string guid,
 
 	framework::attributes_t keys;
 
-	keys[TAG_KEY] = framework::Attribute(guid, true);
+	keys[TAG_KEY] = framework::Attribute(uid, true);
 
 	// CreationClassName = physical_asset::NVDIMM_CREATIONCLASSNAME
 	framework::Attribute attrCCName(NVDIMM_CREATIONCLASSNAME, true);
@@ -554,16 +554,16 @@ void NVDIMMFactory::createPathFromGuid(const std::string guid,
 }
 
 
-void NVDIMMFactory::createPathFromGuid(const NVM_GUID guid,
+void NVDIMMFactory::createPathFromUid(const NVM_UID uid,
 		framework::ObjectPath &path)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	// Tag = DIMM GUID
-	NVM_GUID_STR guidStr;
-	uid_copy(guid, guidStr);
+	// Tag = DIMM UID
+	NVM_UID uidStr;
+	uid_copy(uid, uidStr);
 
-	createPathFromGuid(std::string(guidStr), path);
+	createPathFromUid(std::string(uidStr), path);
 
 }
 
@@ -637,7 +637,7 @@ void NVDIMMFactory::toInstance(core::device::Device &device,
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	ADD_ATTRIBUTE(instance, attributes, ELEMENTNAME_KEY, framework::STR,
-			NVDIMM_ELEMENTNAME_prefix + device.getGuid());
+			NVDIMM_ELEMENTNAME_prefix + device.getUid());
 	ADD_ATTRIBUTE(instance, attributes, MANUFACTURER_KEY, framework::STR, device.getManufacturer());
 	ADD_ATTRIBUTE(instance, attributes, MANUFACTURERID_KEY, framework::UINT16,
 			device.getManufacturerId());
@@ -770,7 +770,7 @@ wbem::framework::instances_t *NVDIMMFactory::getInstances(
 		for (size_t i = 0; i < devices.size(); i++)
 		{
 			framework::ObjectPath path;
-			createPathFromGuid(devices[i].getGuid(), path);
+			createPathFromUid(devices[i].getUid(), path);
 			framework::Instance instance(path);
 
 			toInstance(devices[i], instance, attributes);
@@ -789,18 +789,18 @@ wbem::framework::instances_t *NVDIMMFactory::getInstances(
 	}
 }
 
-void NVDIMMFactory::guidToHandle(const std::string &dimmGuid,
+void NVDIMMFactory::uidToHandle(const std::string &dimmUid,
 		NVM_UINT32 &handle)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	NVM_GUID guid;
+	NVM_UID uid;
 	handle = 0;
 
-	uid_copy(dimmGuid.c_str(), guid);
+	uid_copy(dimmUid.c_str(), uid);
 	struct device_discovery device;
 	int rc;
-	if ((rc = nvm_get_device_discovery(guid, &device)) == NVM_SUCCESS)
+	if ((rc = nvm_get_device_discovery(uid, &device)) == NVM_SUCCESS)
 	{
 		handle = device.device_handle.handle;
 	}
@@ -811,7 +811,7 @@ void NVDIMMFactory::guidToHandle(const std::string &dimmGuid,
 }
 
 
-void NVDIMMFactory::injectPoisonError(const std::string &dimmGuid,
+void NVDIMMFactory::injectPoisonError(const std::string &dimmUid,
 		const NVM_UINT64 dpa)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -820,10 +820,10 @@ void NVDIMMFactory::injectPoisonError(const std::string &dimmGuid,
 	memset(&error, 0, sizeof(error));
 	error.type = ERROR_TYPE_POISON;
 	error.error_injection_parameter.dpa = dpa;
-	injectError(dimmGuid, &error);
+	injectError(dimmUid, &error);
 }
 
-void NVDIMMFactory::clearPoisonError(const std::string &dimmGuid,
+void NVDIMMFactory::clearPoisonError(const std::string &dimmUid,
 		const NVM_UINT64 dpa)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -832,11 +832,11 @@ void NVDIMMFactory::clearPoisonError(const std::string &dimmGuid,
 	memset(&error, 0, sizeof(error));
 	error.type = ERROR_TYPE_POISON;
 	error.error_injection_parameter.dpa = dpa;
-	clearError(dimmGuid, &error);
+	clearError(dimmUid, &error);
 }
 
 void NVDIMMFactory::injectTemperatureError(
-		const std::string &dimmGuid,
+		const std::string &dimmUid,
 		const NVM_REAL32 temperature)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -845,62 +845,62 @@ void NVDIMMFactory::injectTemperatureError(
 	memset(&error, 0, sizeof(error));
 	error.type = ERROR_TYPE_TEMPERATURE;
 	error.error_injection_parameter.temperature = nvm_encode_temperature(temperature);
-	injectError(dimmGuid, &error);
+	injectError(dimmUid, &error);
 }
 
-void NVDIMMFactory::clearError(const std::string &dimmGuid,
+void NVDIMMFactory::clearError(const std::string &dimmUid,
 		struct device_error *p_error)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	// check for valid dimm guid
+	// check for valid dimm uid
 	// note - .length() doesn't include NULL terminator
-	if (dimmGuid.empty() || dimmGuid.length() != NVM_GUIDSTR_LEN - 1)
+	if (dimmUid.empty() || dimmUid.length() != NVM_MAX_UID_LEN - 1)
 	{
-		COMMON_LOG_ERROR("Invalid dimm guid");
+		COMMON_LOG_ERROR("Invalid dimm uid");
 		throw wbem::framework::ExceptionBadParameter(wbem::DEVICEID_KEY.c_str());
 	}
-	NVM_GUID guid;
-	uid_copy(dimmGuid.c_str(), guid);
+	NVM_UID uid;
+	uid_copy(dimmUid.c_str(), uid);
 
-	int rc = m_clearInjectedDeviceError(guid, p_error);
+	int rc = m_clearInjectedDeviceError(uid, p_error);
 	if (rc != NVM_SUCCESS)
 	{
 		throw wbem::exception::NvmExceptionLibError(rc);
 	}
 }
 
-void NVDIMMFactory::injectError(const std::string &dimmGuid,
+void NVDIMMFactory::injectError(const std::string &dimmUid,
 		struct device_error *p_error)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	// check for valid dimm guid
+	// check for valid dimm uid
 	// note - .length() doesn't include NULL terminator
-	if (dimmGuid.empty() || dimmGuid.length() != NVM_GUIDSTR_LEN - 1)
+	if (dimmUid.empty() || dimmUid.length() != NVM_MAX_UID_LEN - 1)
 	{
-		COMMON_LOG_ERROR("Invalid dimm guid");
+		COMMON_LOG_ERROR("Invalid dimm uid");
 		throw wbem::framework::ExceptionBadParameter(wbem::DEVICEID_KEY.c_str());
 	}
-	NVM_GUID guid;
-	uid_copy(dimmGuid.c_str(), guid);
+	NVM_UID uid;
+	uid_copy(dimmUid.c_str(), uid);
 
-	int rc = m_injectDeviceError(guid, p_error);
+	int rc = m_injectDeviceError(uid, p_error);
 	if (rc != NVM_SUCCESS)
 	{
 		throw wbem::exception::NvmExceptionLibError(rc);
 	}
 }
 
-std::string NVDIMMFactory::guidToDimmIdStr(const std::string &dimmGuid)
+std::string NVDIMMFactory::uidToDimmIdStr(const std::string &dimmUid)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	wbem::framework::Attribute attribute = guidToDimmIdAttribute(dimmGuid);
+	wbem::framework::Attribute attribute = uidToDimmIdAttribute(dimmUid);
 	return attribute.asStr();
 }
 
-wbem::framework::Attribute NVDIMMFactory::guidToDimmIdAttribute(
-		const std::string &dimmGuid)
+wbem::framework::Attribute NVDIMMFactory::uidToDimmIdAttribute(
+		const std::string &dimmUid)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
@@ -911,26 +911,26 @@ wbem::framework::Attribute NVDIMMFactory::guidToDimmIdAttribute(
 	char value[CONFIG_VALUE_LEN];
 	if (get_config_value(SQL_KEY_CLI_DIMM_ID, value) == COMMON_SUCCESS)
 	{
-		// switch to guid
-		if (s_strncmpi("GUID", value, strlen("GUID")) == 0)
+		// switch to uid
+		if (s_strncmpi("UID", value, strlen("UID")) == 0)
 		{
 			useHandle = false;
 		}
 	}
 
-	// convert GUID to handle
+	// convert UID to handle
 	if (useHandle)
 	{
 		NVM_UINT32 handle;
-		NVDIMMFactory::guidToHandle(dimmGuid.c_str(), handle);
+		NVDIMMFactory::uidToHandle(dimmUid.c_str(), handle);
 		framework::Attribute attrHandle(handle, false);
 		dimmIdAttr = attrHandle;
 	}
-		// use GUID
+		// use UID
 	else
 	{
-		framework::Attribute attrGuid(dimmGuid, false);
-		dimmIdAttr = attrGuid;
+		framework::Attribute attrUid(dimmUid, false);
+		dimmIdAttr = attrUid;
 	}
 	return dimmIdAttr;
 }

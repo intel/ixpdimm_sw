@@ -176,7 +176,7 @@ class NVM_API NVDIMMDiagnosticFactory : public framework_interface::NvmInstanceF
 
 		/*!
 		 * Provider for extern int nvm_run_diagnostic
-		 * @param[in] device_guid
+		 * @param[in] device_uid
 		 * 		The device identifier.
 		 * @param[in] p_diagnostic
 		 * 		A pointer to a #diagnostic structure containing the
@@ -184,7 +184,7 @@ class NVM_API NVDIMMDiagnosticFactory : public framework_interface::NvmInstanceF
 		 * @param[in,out] p_results
 		 * 		The number of diagnostic failures. To see full results use #nvm_get_diagnostic_result
 		 */
-		int (*m_RunDiagProvider)(const NVM_GUID device_guid,
+		int (*m_RunDiagProvider)(const NVM_UID device_uid,
 				const struct diagnostic *p_diagnostic,
 				NVM_UINT32 *p_results);
 
@@ -203,7 +203,7 @@ class NVM_API NVDIMMDiagnosticFactory : public framework_interface::NvmInstanceF
 		 * @param testType test type as defined for NAME_KEY
 		 * @throw Exception if unable to run the diagnostics
 		 */
-		void RunDiagnosticService(NVM_GUID device_guid,
+		void RunDiagnosticService(NVM_UID device_uid,
 				framework::UINT16_LIST ignoreList,
 				std::string testType)
 			throw (framework::Exception);
@@ -226,9 +226,9 @@ class NVM_API NVDIMMDiagnosticFactory : public framework_interface::NvmInstanceF
 				const framework::UINT16_LIST &ignoreList);
 		void validateObjectHostName(const wbem::framework::ObjectPath &object);
 		framework::UINT16_LIST getDiagnosticIgnoreList(wbem::framework::attributes_t &inParms);
-		void getGuidFromManagedElement(wbem::framework::attributes_t &inParms,
+		void getUidFromManagedElement(wbem::framework::attributes_t &inParms,
 				const std::string &testType,
-				NVM_GUID guid);
+				NVM_UID uid);
 		framework::ObjectPath validateManagedElementObjectPath(
 				const std::string &refPath, const std::string className);
 };

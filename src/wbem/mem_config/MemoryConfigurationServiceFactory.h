@@ -204,10 +204,10 @@ class NVM_API MemoryConfigurationServiceFactory : public framework_interface::Nv
 		 * Returns true if the DIMM already has a config goal.
 		 * Throws an exception if it encounters a lib error.
 		 */
-		static bool dimmHasGoal(const NVM_GUID dimmGuid);
+		static bool dimmHasGoal(const NVM_UID dimmUid);
 
 		/*
-		 * Get all manageable dimm guids for a socket
+		 * Get all manageable dimm uids for a socket
 		 */
 		static std::vector<std::string> getManageableDimmIDsForSocket(NVM_UINT32 socketId);
 
@@ -215,7 +215,7 @@ class NVM_API MemoryConfigurationServiceFactory : public framework_interface::Nv
 		/*!
 		 * Provider for nvm_delete_config_goal
 		 */
-		int (*m_DeleteConfigGoalProvider)(const NVM_GUID device_guid);
+		int (*m_DeleteConfigGoalProvider)(const NVM_UID device_uid);
 
 		/*
 		 * Adds all valid attributes to the attribute list.
@@ -298,7 +298,7 @@ class NVM_API MemoryConfigurationServiceFactory : public framework_interface::Nv
 		 * Verifies that the DIMM list won't break an existing config or leave
 		 * a socket partially unconfigured.
 		 */
-		void validateDimmList(const std::vector<std::string> dimmGuids);
+		void validateDimmList(const std::vector<std::string> dimmUids);
 
 		/*
 		 * Extract the socketId from the SystemProcessorRef
@@ -308,7 +308,7 @@ class NVM_API MemoryConfigurationServiceFactory : public framework_interface::Nv
 		/*
 		 * Remove the config_goals from the dimms in the given list
 		 */
-		void removeGoalFromDimms(std::vector<std::string> dimmGuids);
+		void removeGoalFromDimms(std::vector<std::string> dimmUids);
 
 		/*
 		 * Return true if the given socketId is valid, false otherwise

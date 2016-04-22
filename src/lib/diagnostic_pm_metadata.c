@@ -39,7 +39,7 @@
 #include "capabilities.h"
 
 NVM_UINT16 get_pm_metadata_code(struct health_event event);
-void get_pm_metadata_entity_guid(struct health_event event, NVM_GUID result);
+void get_pm_metadata_entity_uid(struct health_event event, NVM_UID result);
 enum diagnostic_result get_pm_metadata_result(struct health_event event);
 enum event_severity get_pm_metadata_severity(struct health_event event);
 
@@ -73,13 +73,13 @@ int diag_pm_metadata_check(NVM_UINT32 *p_results)
 				COMMON_LOG_DEBUG_F("Got %d results from driver", result_count);
 				for (NVM_UINT32 i = 0; i < result_count && i < MAX_DIAGNOSTIC_RESULTS; i ++)
 				{
-					NVM_GUID guid;
-					get_pm_metadata_entity_guid(results[i], guid);
+					NVM_UID uid;
+					get_pm_metadata_entity_uid(results[i], uid);
 					store_event_by_parts(
 							EVENT_TYPE_DIAG_PM_META,
 							get_pm_metadata_severity(results[i]),
 							get_pm_metadata_code(results[i]),
-							guid,
+							uid,
 							0, // action is not required
 							NULL,
 							NULL,
@@ -181,14 +181,14 @@ NVM_UINT16 get_pm_metadata_code(struct health_event event)
 
 /*
  * Driver metadata check diagnostic:
- * Populate result with the appropriate namespace or device guid, depending on the type
+ * Populate result with the appropriate namespace or device uid, depending on the type
  * of event.
  */
-void get_pm_metadata_entity_guid(struct health_event event, NVM_GUID result)
+void get_pm_metadata_entity_uid(struct health_event event, NVM_UID result)
 {
 	if (event.event_type == HEALTH_EVENT_TYPE_NAMESPACE)
 	{
-		memmove(result, event.health.namespace_event.namespace_guid, NVM_GUID_LEN);
+		memmove(result, event.health.namespace_event.namespace_uid, NVM_MAX_UID_LEN);
 	}
 	else if (event.event_type == HEALTH_EVENT_TYPE_LABEL_AREA)
 	{
@@ -197,7 +197,7 @@ void get_pm_metadata_entity_guid(struct health_event event, NVM_GUID result)
 		handle.handle = event.health.label_area_event.device_handle;
 		if (lookup_dev_handle(handle, &discovery) == NVM_SUCCESS)
 		{
-			memmove(result, discovery.guid, NVM_GUID_LEN);
+			memmove(result, discovery.uid, NVM_MAX_UID_LEN);
 		}
 	}
 	else

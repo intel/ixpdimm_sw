@@ -255,16 +255,16 @@ int NvmLibrary::getDeviceCount()
 
 }
 
-struct device_discovery NvmLibrary::getDeviceDiscovery(const std::string &guid)
+struct device_discovery NvmLibrary::getDeviceDiscovery(const std::string &uid)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	int rc;
 
-	NVM_GUID lib_guid;
-	core::Helper::stringToGuid(guid, lib_guid);
+	NVM_UID lib_uid;
+	core::Helper::stringToUid(uid, lib_uid);
 
 	struct device_discovery result;
-	rc = m_lib.getDeviceDiscovery(lib_guid, &result);
+	rc = m_lib.getDeviceDiscovery(lib_uid, &result);
 	if (rc < 0)
 	{
 		throw core::LibraryException(rc);
@@ -303,16 +303,16 @@ std::vector<struct device_discovery> NvmLibrary::getDevices()
 
 }
 
-struct device_status NvmLibrary::getDeviceStatus(const std::string &deviceGuid)
+struct device_status NvmLibrary::getDeviceStatus(const std::string &deviceUid)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	int rc;
 
-	NVM_GUID lib_deviceGuid;
-	core::Helper::stringToGuid(deviceGuid, lib_deviceGuid);
+	NVM_UID lib_deviceUid;
+	core::Helper::stringToUid(deviceUid, lib_deviceUid);
 
 	struct device_status result;
-	rc = m_lib.getDeviceStatus(lib_deviceGuid, &result);
+	rc = m_lib.getDeviceStatus(lib_deviceUid, &result);
 	if (rc < 0)
 	{
 		throw core::LibraryException(rc);
@@ -322,16 +322,16 @@ struct device_status NvmLibrary::getDeviceStatus(const std::string &deviceGuid)
 
 }
 
-struct device_settings NvmLibrary::getDeviceSettings(const std::string &deviceGuid)
+struct device_settings NvmLibrary::getDeviceSettings(const std::string &deviceUid)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	int rc;
 
-	NVM_GUID lib_deviceGuid;
-	core::Helper::stringToGuid(deviceGuid, lib_deviceGuid);
+	NVM_UID lib_deviceUid;
+	core::Helper::stringToUid(deviceUid, lib_deviceUid);
 
 	struct device_settings result;
-	rc = m_lib.getDeviceSettings(lib_deviceGuid, &result);
+	rc = m_lib.getDeviceSettings(lib_deviceUid, &result);
 	if (rc < 0)
 	{
 		throw core::LibraryException(rc);
@@ -341,16 +341,16 @@ struct device_settings NvmLibrary::getDeviceSettings(const std::string &deviceGu
 
 }
 
-void NvmLibrary::modifyDeviceSettings(const std::string &deviceGuid,
+void NvmLibrary::modifyDeviceSettings(const std::string &deviceUid,
 	const struct device_settings &pSettings)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	int rc;
 
-	NVM_GUID lib_deviceGuid;
-	core::Helper::stringToGuid(deviceGuid, lib_deviceGuid);
+	NVM_UID lib_deviceUid;
+	core::Helper::stringToUid(deviceUid, lib_deviceUid);
 
-	rc = m_lib.modifyDeviceSettings(lib_deviceGuid, &pSettings);
+	rc = m_lib.modifyDeviceSettings(lib_deviceUid, &pSettings);
 	if (rc < 0)
 	{
 		throw core::LibraryException(rc);
@@ -358,16 +358,16 @@ void NvmLibrary::modifyDeviceSettings(const std::string &deviceGuid,
 
 }
 
-struct device_details NvmLibrary::getDeviceDetails(const std::string &deviceGuid)
+struct device_details NvmLibrary::getDeviceDetails(const std::string &deviceUid)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	int rc;
 
-	NVM_GUID lib_deviceGuid;
-	core::Helper::stringToGuid(deviceGuid, lib_deviceGuid);
+	NVM_UID lib_deviceUid;
+	core::Helper::stringToUid(deviceUid, lib_deviceUid);
 
 	struct device_details result;
-	rc = m_lib.getDeviceDetails(lib_deviceGuid, &result);
+	rc = m_lib.getDeviceDetails(lib_deviceUid, &result);
 	if (rc < 0)
 	{
 		throw core::LibraryException(rc);
@@ -377,16 +377,16 @@ struct device_details NvmLibrary::getDeviceDetails(const std::string &deviceGuid
 
 }
 
-struct device_performance NvmLibrary::getDevicePerformance(const std::string &deviceGuid)
+struct device_performance NvmLibrary::getDevicePerformance(const std::string &deviceUid)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	int rc;
 
-	NVM_GUID lib_deviceGuid;
-	core::Helper::stringToGuid(deviceGuid, lib_deviceGuid);
+	NVM_UID lib_deviceUid;
+	core::Helper::stringToUid(deviceUid, lib_deviceUid);
 
 	struct device_performance result;
-	rc = m_lib.getDevicePerformance(lib_deviceGuid, &result);
+	rc = m_lib.getDevicePerformance(lib_deviceUid, &result);
 	if (rc < 0)
 	{
 		throw core::LibraryException(rc);
@@ -396,19 +396,19 @@ struct device_performance NvmLibrary::getDevicePerformance(const std::string &de
 
 }
 
-void NvmLibrary::updateDeviceFw(const std::string &deviceGuid, const std::string path,
+void NvmLibrary::updateDeviceFw(const std::string &deviceUid, const std::string path,
 	const bool activate, const bool force)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	int rc;
 
-	NVM_GUID lib_deviceGuid;
-	core::Helper::stringToGuid(deviceGuid, lib_deviceGuid);
+	NVM_UID lib_deviceUid;
+	core::Helper::stringToUid(deviceUid, lib_deviceUid);
 
 	char lib_path[path.size()];
 	s_strcpy(lib_path, path.c_str(), path.size());
 
-	rc = m_lib.updateDeviceFw(lib_deviceGuid, lib_path, path.size(), activate, force);
+	rc = m_lib.updateDeviceFw(lib_deviceUid, lib_path, path.size(), activate, force);
 	if (rc < 0)
 	{
 		throw core::LibraryException(rc);
@@ -416,14 +416,14 @@ void NvmLibrary::updateDeviceFw(const std::string &deviceGuid, const std::string
 
 }
 
-void NvmLibrary::examineDeviceFw(const std::string &deviceGuid, const std::string path,
+void NvmLibrary::examineDeviceFw(const std::string &deviceUid, const std::string path,
 	std::string imageVersion)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	int rc;
 
-	NVM_GUID lib_deviceGuid;
-	core::Helper::stringToGuid(deviceGuid, lib_deviceGuid);
+	NVM_UID lib_deviceUid;
+	core::Helper::stringToUid(deviceUid, lib_deviceUid);
 
 	char lib_path[path.size()];
 	s_strcpy(lib_path, path.c_str(), path.size());
@@ -431,7 +431,7 @@ void NvmLibrary::examineDeviceFw(const std::string &deviceGuid, const std::strin
 	char lib_imageVersion[imageVersion.size()];
 	s_strcpy(lib_imageVersion, imageVersion.c_str(), imageVersion.size());
 
-	rc = m_lib.examineDeviceFw(lib_deviceGuid, lib_path, path.size(), lib_imageVersion,
+	rc = m_lib.examineDeviceFw(lib_deviceUid, lib_path, path.size(), lib_imageVersion,
 		imageVersion.size());
 	if (rc < 0)
 	{
@@ -440,14 +440,14 @@ void NvmLibrary::examineDeviceFw(const std::string &deviceGuid, const std::strin
 
 }
 
-void NvmLibrary::setPassphrase(const std::string &deviceGuid, const std::string oldPassphrase,
+void NvmLibrary::setPassphrase(const std::string &deviceUid, const std::string oldPassphrase,
 	const std::string newPassphrase)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	int rc;
 
-	NVM_GUID lib_deviceGuid;
-	core::Helper::stringToGuid(deviceGuid, lib_deviceGuid);
+	NVM_UID lib_deviceUid;
+	core::Helper::stringToUid(deviceUid, lib_deviceUid);
 
 	char lib_oldPassphrase[oldPassphrase.size()];
 	s_strcpy(lib_oldPassphrase, oldPassphrase.c_str(), oldPassphrase.size());
@@ -455,7 +455,7 @@ void NvmLibrary::setPassphrase(const std::string &deviceGuid, const std::string 
 	char lib_newPassphrase[newPassphrase.size()];
 	s_strcpy(lib_newPassphrase, newPassphrase.c_str(), newPassphrase.size());
 
-	rc = m_lib.setPassphrase(lib_deviceGuid, lib_oldPassphrase, oldPassphrase.size(),
+	rc = m_lib.setPassphrase(lib_deviceUid, lib_oldPassphrase, oldPassphrase.size(),
 		lib_newPassphrase, newPassphrase.size());
 	if (rc < 0)
 	{
@@ -464,18 +464,18 @@ void NvmLibrary::setPassphrase(const std::string &deviceGuid, const std::string 
 
 }
 
-void NvmLibrary::removePassphrase(const std::string &deviceGuid, const std::string passphrase)
+void NvmLibrary::removePassphrase(const std::string &deviceUid, const std::string passphrase)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	int rc;
 
-	NVM_GUID lib_deviceGuid;
-	core::Helper::stringToGuid(deviceGuid, lib_deviceGuid);
+	NVM_UID lib_deviceUid;
+	core::Helper::stringToUid(deviceUid, lib_deviceUid);
 
 	char lib_passphrase[passphrase.size()];
 	s_strcpy(lib_passphrase, passphrase.c_str(), passphrase.size());
 
-	rc = m_lib.removePassphrase(lib_deviceGuid, lib_passphrase, passphrase.size());
+	rc = m_lib.removePassphrase(lib_deviceUid, lib_passphrase, passphrase.size());
 	if (rc < 0)
 	{
 		throw core::LibraryException(rc);
@@ -483,18 +483,18 @@ void NvmLibrary::removePassphrase(const std::string &deviceGuid, const std::stri
 
 }
 
-void NvmLibrary::unlockDevice(const std::string &deviceGuid, const std::string passphrase)
+void NvmLibrary::unlockDevice(const std::string &deviceUid, const std::string passphrase)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	int rc;
 
-	NVM_GUID lib_deviceGuid;
-	core::Helper::stringToGuid(deviceGuid, lib_deviceGuid);
+	NVM_UID lib_deviceUid;
+	core::Helper::stringToUid(deviceUid, lib_deviceUid);
 
 	char lib_passphrase[passphrase.size()];
 	s_strcpy(lib_passphrase, passphrase.c_str(), passphrase.size());
 
-	rc = m_lib.unlockDevice(lib_deviceGuid, lib_passphrase, passphrase.size());
+	rc = m_lib.unlockDevice(lib_deviceUid, lib_passphrase, passphrase.size());
 	if (rc < 0)
 	{
 		throw core::LibraryException(rc);
@@ -502,19 +502,19 @@ void NvmLibrary::unlockDevice(const std::string &deviceGuid, const std::string p
 
 }
 
-void NvmLibrary::eraseDevice(const std::string &deviceGuid,
+void NvmLibrary::eraseDevice(const std::string &deviceUid,
 	const std::string passphrase)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	int rc;
 
-	NVM_GUID lib_deviceGuid;
-	core::Helper::stringToGuid(deviceGuid, lib_deviceGuid);
+	NVM_UID lib_deviceUid;
+	core::Helper::stringToUid(deviceUid, lib_deviceUid);
 
 	char lib_passphrase[passphrase.size()];
 	s_strcpy(lib_passphrase, passphrase.c_str(), passphrase.size());
 
-	rc = m_lib.eraseDevice(lib_deviceGuid, lib_passphrase, passphrase.size());
+	rc = m_lib.eraseDevice(lib_deviceUid, lib_passphrase, passphrase.size());
 	if (rc < 0)
 	{
 		throw core::LibraryException(rc);
@@ -606,16 +606,16 @@ std::vector<struct pool> NvmLibrary::getPools()
 
 }
 
-struct pool NvmLibrary::getPool(const std::string &poolGuid)
+struct pool NvmLibrary::getPool(const std::string &poolUid)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	int rc;
 
-	NVM_GUID lib_poolGuid;
-	core::Helper::stringToGuid(poolGuid, lib_poolGuid);
+	NVM_UID lib_poolUid;
+	core::Helper::stringToUid(poolUid, lib_poolUid);
 
 	struct pool result;
-	rc = m_lib.getPool(lib_poolGuid, &result);
+	rc = m_lib.getPool(lib_poolUid, &result);
 	if (rc < 0)
 	{
 		throw core::LibraryException(rc);
@@ -626,16 +626,16 @@ struct pool NvmLibrary::getPool(const std::string &poolGuid)
 }
 
 struct possible_namespace_ranges NvmLibrary::getAvailablePersistentSizeRange(
-	const std::string &poolGuid)
+	const std::string &poolUid)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	int rc;
 
-	NVM_GUID lib_poolGuid;
-	core::Helper::stringToGuid(poolGuid, lib_poolGuid);
+	NVM_UID lib_poolUid;
+	core::Helper::stringToUid(poolUid, lib_poolUid);
 
 	struct possible_namespace_ranges result;
-	rc = m_lib.getAvailablePersistentSizeRange(lib_poolGuid, &result);
+	rc = m_lib.getAvailablePersistentSizeRange(lib_poolUid, &result);
 	if (rc < 0)
 	{
 		throw core::LibraryException(rc);
@@ -645,15 +645,15 @@ struct possible_namespace_ranges NvmLibrary::getAvailablePersistentSizeRange(
 
 }
 
-void NvmLibrary::createConfigGoal(const std::string &deviceGuid, struct config_goal &pGoal)
+void NvmLibrary::createConfigGoal(const std::string &deviceUid, struct config_goal &pGoal)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	int rc;
 
-	NVM_GUID lib_deviceGuid;
-	core::Helper::stringToGuid(deviceGuid, lib_deviceGuid);
+	NVM_UID lib_deviceUid;
+	core::Helper::stringToUid(deviceUid, lib_deviceUid);
 
-	rc = m_lib.createConfigGoal(lib_deviceGuid, &pGoal);
+	rc = m_lib.createConfigGoal(lib_deviceUid, &pGoal);
 	if (rc < 0)
 	{
 		throw core::LibraryException(rc);
@@ -661,16 +661,16 @@ void NvmLibrary::createConfigGoal(const std::string &deviceGuid, struct config_g
 
 }
 
-struct config_goal NvmLibrary::getConfigGoal(const std::string &deviceGuid)
+struct config_goal NvmLibrary::getConfigGoal(const std::string &deviceUid)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	int rc;
 
-	NVM_GUID lib_deviceGuid;
-	core::Helper::stringToGuid(deviceGuid, lib_deviceGuid);
+	NVM_UID lib_deviceUid;
+	core::Helper::stringToUid(deviceUid, lib_deviceUid);
 
 	struct config_goal result;
-	rc = m_lib.getConfigGoal(lib_deviceGuid, &result);
+	rc = m_lib.getConfigGoal(lib_deviceUid, &result);
 	if (rc < 0)
 	{
 		throw core::LibraryException(rc);
@@ -680,15 +680,15 @@ struct config_goal NvmLibrary::getConfigGoal(const std::string &deviceGuid)
 
 }
 
-void NvmLibrary::deleteConfigGoal(const std::string &deviceGuid)
+void NvmLibrary::deleteConfigGoal(const std::string &deviceUid)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	int rc;
 
-	NVM_GUID lib_deviceGuid;
-	core::Helper::stringToGuid(deviceGuid, lib_deviceGuid);
+	NVM_UID lib_deviceUid;
+	core::Helper::stringToUid(deviceUid, lib_deviceUid);
 
-	rc = m_lib.deleteConfigGoal(lib_deviceGuid);
+	rc = m_lib.deleteConfigGoal(lib_deviceUid);
 	if (rc < 0)
 	{
 		throw core::LibraryException(rc);
@@ -696,19 +696,19 @@ void NvmLibrary::deleteConfigGoal(const std::string &deviceGuid)
 
 }
 
-void NvmLibrary::dumpConfig(const std::string &deviceGuid, const std::string file,
+void NvmLibrary::dumpConfig(const std::string &deviceUid, const std::string file,
 	const bool append)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	int rc;
 
-	NVM_GUID lib_deviceGuid;
-	core::Helper::stringToGuid(deviceGuid, lib_deviceGuid);
+	NVM_UID lib_deviceUid;
+	core::Helper::stringToUid(deviceUid, lib_deviceUid);
 
 	char lib_file[file.size()];
 	s_strcpy(lib_file, file.c_str(), file.size());
 
-	rc = m_lib.dumpConfig(lib_deviceGuid, lib_file, file.size(), append);
+	rc = m_lib.dumpConfig(lib_deviceUid, lib_file, file.size(), append);
 	if (rc < 0)
 	{
 		throw core::LibraryException(rc);
@@ -716,18 +716,18 @@ void NvmLibrary::dumpConfig(const std::string &deviceGuid, const std::string fil
 
 }
 
-void NvmLibrary::loadConfig(const std::string &deviceGuid, const std::string file)
+void NvmLibrary::loadConfig(const std::string &deviceUid, const std::string file)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	int rc;
 
-	NVM_GUID lib_deviceGuid;
-	core::Helper::stringToGuid(deviceGuid, lib_deviceGuid);
+	NVM_UID lib_deviceUid;
+	core::Helper::stringToUid(deviceUid, lib_deviceUid);
 
 	char lib_file[file.size()];
 	s_strcpy(lib_file, file.c_str(), file.size());
 
-	rc = m_lib.loadConfig(lib_deviceGuid, lib_file, file.size());
+	rc = m_lib.loadConfig(lib_deviceUid, lib_file, file.size());
 	if (rc < 0)
 	{
 		throw core::LibraryException(rc);
@@ -749,16 +749,16 @@ int NvmLibrary::getNamespaceCount()
 
 }
 
-int NvmLibrary::getDeviceNamespaceCount(const std::string &deviceGuid,
+int NvmLibrary::getDeviceNamespaceCount(const std::string &deviceUid,
 	const enum namespace_type type)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	int rc;
 
-	NVM_GUID lib_deviceGuid;
-	core::Helper::stringToGuid(deviceGuid, lib_deviceGuid);
+	NVM_UID lib_deviceUid;
+	core::Helper::stringToUid(deviceUid, lib_deviceUid);
 
-	rc = m_lib.getDeviceNamespaceCount(lib_deviceGuid, type);
+	rc = m_lib.getDeviceNamespaceCount(lib_deviceUid, type);
 	if (rc < 0)
 	{
 		throw core::LibraryException(rc);
@@ -795,16 +795,16 @@ std::vector<struct namespace_discovery> NvmLibrary::getNamespaces()
 
 }
 
-struct namespace_details NvmLibrary::getNamespaceDetails(const std::string &namespaceGuid)
+struct namespace_details NvmLibrary::getNamespaceDetails(const std::string &namespaceUid)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	int rc;
 
-	NVM_GUID lib_namespaceGuid;
-	core::Helper::stringToGuid(namespaceGuid, lib_namespaceGuid);
+	NVM_UID lib_namespaceUid;
+	core::Helper::stringToUid(namespaceUid, lib_namespaceUid);
 
 	struct namespace_details result;
-	rc = m_lib.getNamespaceDetails(lib_namespaceGuid, &result);
+	rc = m_lib.getNamespaceDetails(lib_namespaceUid, &result);
 	if (rc < 0)
 	{
 		throw core::LibraryException(rc);
@@ -814,36 +814,36 @@ struct namespace_details NvmLibrary::getNamespaceDetails(const std::string &name
 
 }
 
-std::string NvmLibrary::createNamespace(const std::string &pool_guid,
+std::string NvmLibrary::createNamespace(const std::string &pool_uid,
 	struct namespace_create_settings &p_settings, const struct interleave_format &p_format,
 	const bool allow_adjustment)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	int rc;
-	NVM_GUID lib_pool_guid;
-	core::Helper::stringToGuid(pool_guid, lib_pool_guid);
+	NVM_UID lib_pool_uid;
+	core::Helper::stringToUid(pool_uid, lib_pool_uid);
 
-	NVM_GUID fromLibNamespaceGuid;
-	rc = m_lib.createNamespace(&fromLibNamespaceGuid, lib_pool_guid, &p_settings, &p_format,
+	NVM_UID fromLibNamespaceUid;
+	rc = m_lib.createNamespace(&fromLibNamespaceUid, lib_pool_uid, &p_settings, &p_format,
 		allow_adjustment);
 	if (rc < 0)
 	{
 		throw core::LibraryException(rc);
 	}
-	return core::Helper::guidToString(fromLibNamespaceGuid);
+	return core::Helper::uidToString(fromLibNamespaceUid);
 }
 
-void NvmLibrary::modifyNamespaceName(const std::string &namespaceGuid,
+void NvmLibrary::modifyNamespaceName(const std::string &namespaceUid,
 	const std::string &name)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	int rc;
 
-	NVM_GUID lib_namespaceGuid;
-	core::Helper::stringToGuid(namespaceGuid, lib_namespaceGuid);
+	NVM_UID lib_namespaceUid;
+	core::Helper::stringToUid(namespaceUid, lib_namespaceUid);
 	NVM_NAMESPACE_NAME lib_name;
 	memmove(lib_name, name.c_str(), NVM_NAMESPACE_NAME_LEN);
-	rc = m_lib.modifyNamespaceName(lib_namespaceGuid, lib_name);
+	rc = m_lib.modifyNamespaceName(lib_namespaceUid, lib_name);
 	if (rc < 0)
 	{
 		throw core::LibraryException(rc);
@@ -851,16 +851,16 @@ void NvmLibrary::modifyNamespaceName(const std::string &namespaceGuid,
 
 }
 
-int NvmLibrary::modifyNamespaceBlockCount(const std::string &namespaceGuid,
+int NvmLibrary::modifyNamespaceBlockCount(const std::string &namespaceUid,
 	const NVM_UINT64 blockCount, bool allowAdjustment)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	int rc;
 
-	NVM_GUID lib_namespaceGuid;
-	core::Helper::stringToGuid(namespaceGuid, lib_namespaceGuid);
+	NVM_UID lib_namespaceUid;
+	core::Helper::stringToUid(namespaceUid, lib_namespaceUid);
 
-	rc = m_lib.modifyNamespaceBlockCount(lib_namespaceGuid, blockCount, allowAdjustment);
+	rc = m_lib.modifyNamespaceBlockCount(lib_namespaceUid, blockCount, allowAdjustment);
 	if (rc < 0)
 	{
 		throw core::LibraryException(rc);
@@ -869,16 +869,16 @@ int NvmLibrary::modifyNamespaceBlockCount(const std::string &namespaceGuid,
 
 }
 
-void NvmLibrary::modifyNamespaceEnabled(const std::string &namespaceGuid,
+void NvmLibrary::modifyNamespaceEnabled(const std::string &namespaceUid,
 	const enum namespace_enable_state enabled)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	int rc;
 
-	NVM_GUID lib_namespaceGuid;
-	core::Helper::stringToGuid(namespaceGuid, lib_namespaceGuid);
+	NVM_UID lib_namespaceUid;
+	core::Helper::stringToUid(namespaceUid, lib_namespaceUid);
 
-	rc = m_lib.modifyNamespaceEnabled(lib_namespaceGuid, enabled);
+	rc = m_lib.modifyNamespaceEnabled(lib_namespaceUid, enabled);
 	if (rc < 0)
 	{
 		throw core::LibraryException(rc);
@@ -886,15 +886,15 @@ void NvmLibrary::modifyNamespaceEnabled(const std::string &namespaceGuid,
 
 }
 
-void NvmLibrary::deleteNamespace(const std::string &namespaceGuid)
+void NvmLibrary::deleteNamespace(const std::string &namespaceUid)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	int rc;
 
-	NVM_GUID lib_namespaceGuid;
-	core::Helper::stringToGuid(namespaceGuid, lib_namespaceGuid);
+	NVM_UID lib_namespaceUid;
+	core::Helper::stringToUid(namespaceUid, lib_namespaceUid);
 
-	rc = m_lib.deleteNamespace(lib_namespaceGuid);
+	rc = m_lib.deleteNamespace(lib_namespaceUid);
 	if (rc < 0)
 	{
 		throw core::LibraryException(rc);
@@ -902,49 +902,49 @@ void NvmLibrary::deleteNamespace(const std::string &namespaceGuid)
 
 }
 
-void NvmLibrary::adjustCreateNamespaceBlockCount(const std::string &poolGuid,
+void NvmLibrary::adjustCreateNamespaceBlockCount(const std::string &poolUid,
 	struct namespace_create_settings &pSettings, const struct interleave_format &pFormat)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	int rc;
 
-	NVM_GUID lib_poolGuid;
-	core::Helper::stringToGuid(poolGuid, lib_poolGuid);
+	NVM_UID lib_poolUid;
+	core::Helper::stringToUid(poolUid, lib_poolUid);
 
-	rc = m_lib.adjustCreateNamespaceBlockCount(lib_poolGuid, &pSettings, &pFormat);
+	rc = m_lib.adjustCreateNamespaceBlockCount(lib_poolUid, &pSettings, &pFormat);
 	if (rc < 0)
 	{
 		throw core::LibraryException(rc);
 	}
 }
 
-void NvmLibrary::adjustModifyNamespaceBlockCount(const std::string &namespaceGuid,
+void NvmLibrary::adjustModifyNamespaceBlockCount(const std::string &namespaceUid,
 	NVM_UINT64 &pBlockCount)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	int rc;
 
-	NVM_GUID lib_namespaceGuid;
-	core::Helper::stringToGuid(namespaceGuid, lib_namespaceGuid);
+	NVM_UID lib_namespaceUid;
+	core::Helper::stringToUid(namespaceUid, lib_namespaceUid);
 
-	rc = m_lib.adjustModifyNamespaceBlockCount(lib_namespaceGuid, &pBlockCount);
+	rc = m_lib.adjustModifyNamespaceBlockCount(lib_namespaceUid, &pBlockCount);
 	if (rc < 0)
 	{
 		throw core::LibraryException(rc);
 	}
 }
 
-std::vector<struct sensor> NvmLibrary::getSensors(const std::string &deviceGuid)
+std::vector<struct sensor> NvmLibrary::getSensors(const std::string &deviceUid)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	int rc;
 
-	NVM_GUID lib_deviceGuid;
-	core::Helper::stringToGuid(deviceGuid, lib_deviceGuid);
+	NVM_UID lib_deviceUid;
+	core::Helper::stringToUid(deviceUid, lib_deviceUid);
 
 	std::vector<struct sensor> result;
 	struct sensor sensors[NVM_MAX_DEVICE_SENSORS];
-	rc = m_lib.getSensors(lib_deviceGuid, sensors, NVM_MAX_DEVICE_SENSORS);
+	rc = m_lib.getSensors(lib_deviceUid, sensors, NVM_MAX_DEVICE_SENSORS);
 	if (rc < 0)
 	{
 		throw core::LibraryException(rc);
@@ -959,16 +959,16 @@ std::vector<struct sensor> NvmLibrary::getSensors(const std::string &deviceGuid)
 
 }
 
-struct sensor NvmLibrary::getSensor(const std::string &deviceGuid, const enum sensor_type type)
+struct sensor NvmLibrary::getSensor(const std::string &deviceUid, const enum sensor_type type)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	int rc;
 
-	NVM_GUID lib_deviceGuid;
-	core::Helper::stringToGuid(deviceGuid, lib_deviceGuid);
+	NVM_UID lib_deviceUid;
+	core::Helper::stringToUid(deviceUid, lib_deviceUid);
 
 	struct sensor result;
-	rc = m_lib.getSensor(lib_deviceGuid, type, &result);
+	rc = m_lib.getSensor(lib_deviceUid, type, &result);
 	if (rc < 0)
 	{
 		throw core::LibraryException(rc);
@@ -978,16 +978,16 @@ struct sensor NvmLibrary::getSensor(const std::string &deviceGuid, const enum se
 
 }
 
-void NvmLibrary::setSensorSettings(const std::string &deviceGuid, const enum sensor_type type,
+void NvmLibrary::setSensorSettings(const std::string &deviceUid, const enum sensor_type type,
 	const struct sensor_settings &pSettings)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	int rc;
 
-	NVM_GUID lib_deviceGuid;
-	core::Helper::stringToGuid(deviceGuid, lib_deviceGuid);
+	NVM_UID lib_deviceUid;
+	core::Helper::stringToUid(deviceUid, lib_deviceUid);
 
-	rc = m_lib.setSensorSettings(lib_deviceGuid, type, &pSettings);
+	rc = m_lib.setSensorSettings(lib_deviceUid, type, &pSettings);
 	if (rc < 0)
 	{
 		throw core::LibraryException(rc);
@@ -1135,16 +1135,16 @@ void NvmLibrary::gatherSupport(const std::string supportFile)
 
 }
 
-void NvmLibrary::runDiagnostic(const std::string &deviceGuid, const struct diagnostic &pDiagnostic,
+void NvmLibrary::runDiagnostic(const std::string &deviceUid, const struct diagnostic &pDiagnostic,
 	NVM_UINT32 &pResults)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	int rc;
 
-	NVM_GUID lib_deviceGuid;
-	core::Helper::stringToGuid(deviceGuid, lib_deviceGuid);
+	NVM_UID lib_deviceUid;
+	core::Helper::stringToUid(deviceUid, lib_deviceUid);
 
-	rc = m_lib.runDiagnostic(lib_deviceGuid, &pDiagnostic, &pResults);
+	rc = m_lib.runDiagnostic(lib_deviceUid, &pDiagnostic, &pResults);
 	if (rc < 0)
 	{
 		throw core::LibraryException(rc);
@@ -1152,16 +1152,16 @@ void NvmLibrary::runDiagnostic(const std::string &deviceGuid, const struct diagn
 
 }
 
-enum fw_log_level NvmLibrary::getFwLogLevel(const std::string &deviceGuid)
+enum fw_log_level NvmLibrary::getFwLogLevel(const std::string &deviceUid)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	int rc;
 
-	NVM_GUID lib_deviceGuid;
-	core::Helper::stringToGuid(deviceGuid, lib_deviceGuid);
+	NVM_UID lib_deviceUid;
+	core::Helper::stringToUid(deviceUid, lib_deviceUid);
 
 	enum fw_log_level result;
-	rc = m_lib.getFwLogLevel(lib_deviceGuid, &result);
+	rc = m_lib.getFwLogLevel(lib_deviceUid, &result);
 	if (rc < 0)
 	{
 		throw core::LibraryException(rc);
@@ -1171,15 +1171,15 @@ enum fw_log_level NvmLibrary::getFwLogLevel(const std::string &deviceGuid)
 
 }
 
-void NvmLibrary::setFwLogLevel(const std::string &deviceGuid, const enum fw_log_level logLevel)
+void NvmLibrary::setFwLogLevel(const std::string &deviceUid, const enum fw_log_level logLevel)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	int rc;
 
-	NVM_GUID lib_deviceGuid;
-	core::Helper::stringToGuid(deviceGuid, lib_deviceGuid);
+	NVM_UID lib_deviceUid;
+	core::Helper::stringToUid(deviceUid, lib_deviceUid);
 
-	rc = m_lib.setFwLogLevel(lib_deviceGuid, logLevel);
+	rc = m_lib.setFwLogLevel(lib_deviceUid, logLevel);
 	if (rc < 0)
 	{
 		throw core::LibraryException(rc);
@@ -1187,16 +1187,16 @@ void NvmLibrary::setFwLogLevel(const std::string &deviceGuid, const enum fw_log_
 
 }
 
-struct device_fw_info NvmLibrary::getDeviceFwInfo(const std::string &device_guid)
+struct device_fw_info NvmLibrary::getDeviceFwInfo(const std::string &device_uid)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	int rc;
 
-	NVM_GUID lib_device_guid;
-	core::Helper::stringToGuid(device_guid, lib_device_guid);
+	NVM_UID lib_device_uid;
+	core::Helper::stringToUid(device_uid, lib_device_uid);
 
 	struct device_fw_info result;
-	rc = m_lib.getDeviceFwInfo(lib_device_guid, &result);
+	rc = m_lib.getDeviceFwInfo(lib_device_uid, &result);
 	if (rc < 0)
 	{
 		throw core::LibraryException(rc);
@@ -1206,15 +1206,15 @@ struct device_fw_info NvmLibrary::getDeviceFwInfo(const std::string &device_guid
 
 }
 
-void NvmLibrary::injectDeviceError(const std::string &deviceGuid, const struct device_error &pError)
+void NvmLibrary::injectDeviceError(const std::string &deviceUid, const struct device_error &pError)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	int rc;
 
-	NVM_GUID lib_deviceGuid;
-	core::Helper::stringToGuid(deviceGuid, lib_deviceGuid);
+	NVM_UID lib_deviceUid;
+	core::Helper::stringToUid(deviceUid, lib_deviceUid);
 
-	rc = m_lib.injectDeviceError(lib_deviceGuid, &pError);
+	rc = m_lib.injectDeviceError(lib_deviceUid, &pError);
 	if (rc < 0)
 	{
 		throw core::LibraryException(rc);
@@ -1222,16 +1222,16 @@ void NvmLibrary::injectDeviceError(const std::string &deviceGuid, const struct d
 
 }
 
-void NvmLibrary::clearInjectedDeviceError(const std::string &deviceGuid,
+void NvmLibrary::clearInjectedDeviceError(const std::string &deviceUid,
 	const struct device_error &pError)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	int rc;
 
-	NVM_GUID lib_deviceGuid;
-	core::Helper::stringToGuid(deviceGuid, lib_deviceGuid);
+	NVM_UID lib_deviceUid;
+	core::Helper::stringToUid(deviceUid, lib_deviceUid);
 
-	rc = m_lib.clearInjectedDeviceError(lib_deviceGuid, &pError);
+	rc = m_lib.clearInjectedDeviceError(lib_deviceUid, &pError);
 	if (rc < 0)
 	{
 		throw core::LibraryException(rc);

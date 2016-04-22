@@ -102,8 +102,8 @@ static std::string DEDICATED_KEY = "Dedicated";
 
 // NVDIMM attribute keys
 static std::string TAG_KEY = "Tag";
-static std::string DIMMID_KEY = "DimmID"; // GUID, handle or PID based on db selection
-static std::string DIMMGUID_KEY = "DimmGUID";
+static std::string DIMMID_KEY = "DimmID"; // UID, handle or PID based on db selection
+static std::string DIMMUID_KEY = "DimmUid";
 static std::string DIMMHANDLE_KEY = "DimmHandle";
 static std::string MANUFACTURER_KEY = "Manufacturer";
 static std::string MANUFACTURERID_KEY = "ManufacturerID";

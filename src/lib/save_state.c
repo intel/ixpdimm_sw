@@ -356,19 +356,19 @@ int support_store_namespaces(PersistentStore *p_store, int history_id)
 				// store as much info as we can get - start with discovery info
 				struct db_namespace db_namespace;
 				memset(&db_namespace, 0, sizeof (db_namespace));
-				uid_copy(namespaces[i].namespace_guid, db_namespace.namespace_guid);
+				uid_copy(namespaces[i].namespace_uid, db_namespace.namespace_uid);
 				s_strcpy(db_namespace.friendly_name, namespaces[i].friendly_name,
 						NVM_NAMESPACE_NAME_LEN);
 
 				// get details
 				struct namespace_details details;
-				int tmp_rc = nvm_get_namespace_details(namespaces[i].namespace_guid, &details);
+				int tmp_rc = nvm_get_namespace_details(namespaces[i].namespace_uid, &details);
 				if (tmp_rc != NVM_SUCCESS)
 				{
-					NVM_GUID_STR guid_str;
-					uid_copy(namespaces[i].namespace_guid, guid_str);
+					NVM_UID uid_str;
+					uid_copy(namespaces[i].namespace_uid, uid_str);
 					COMMON_LOG_ERROR_F(
-						"Failed to retrieve namespace details for namespace %s", guid_str);
+						"Failed to retrieve namespace details for namespace %s", uid_str);
 					KEEP_ERROR(rc, tmp_rc);
 				}
 				else

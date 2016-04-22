@@ -90,7 +90,7 @@ void check_if_all_dimms_from_smbios_are_in_topology(NVM_UINT32 *p_results,
 			store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG,
 					EVENT_SEVERITY_CRITICAL,
 					EVENT_CODE_DIAG_PCONFIG_DIMM_INIT_FAILED,
-					NULL, // no way to generate a GUID without NFIT info
+					NULL, // no way to generate a uid without NFIT info
 					0,
 					physical_id_str, NULL, NULL,
 					DIAGNOSTIC_RESULT_FAILED);

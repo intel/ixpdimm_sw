@@ -130,7 +130,7 @@ int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 					}
 
 					// compare firmware revisions of dimms having the same model number
-					char inconsistent_guids_event_str[NVM_EVENT_ARG_LEN] = {0};
+					char inconsistent_uids_event_str[NVM_EVENT_ARG_LEN] = {0};
 					NVM_BOOL inconsistency_flag = 0;
 					for (int model_num = 0; model_num < model_count; model_num++)
 					{
@@ -142,11 +142,11 @@ int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 								if (strncmp(optimal_fw_rev[model_num],
 										dimms[dev_num].fw_revision, NVM_VERSION_LEN) != 0)
 								{
-									NVM_GUID_STR guid_str;
-									uid_copy(dimms[dev_num].guid, guid_str);
-									s_strcat(guid_str, (NVM_GUIDSTR_LEN + 2), ", ");
-									s_strcat(inconsistent_guids_event_str,
-											NVM_EVENT_ARG_LEN, guid_str);
+									NVM_UID uid_str;
+									uid_copy(dimms[dev_num].uid, uid_str);
+									s_strcat(uid_str, (NVM_MAX_UID_LEN + 2), ", ");
+									s_strcat(inconsistent_uids_event_str,
+											NVM_EVENT_ARG_LEN, uid_str);
 									inconsistency_flag = 1;
 								}
 							}
@@ -157,7 +157,7 @@ int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 							store_event_by_parts(EVENT_TYPE_DIAG_FW_CONSISTENCY,
 									EVENT_SEVERITY_WARN,
 									EVENT_CODE_DIAG_FW_INCONSISTENT, NULL, 0,
-									inconsistent_guids_event_str,
+									inconsistent_uids_event_str,
 									model_list[model_num], optimal_fw_rev[model_num],
 									DIAGNOSTIC_RESULT_FAILED);
 							(*p_results)++;
@@ -250,19 +250,19 @@ int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 				NVM_UINT64 default_die_sparing_level = default_die_sparing_level_config;
 
 				struct sensor sensors[NVM_MAX_DEVICE_SENSORS];
-				NVM_GUID_STR device_guid_str;
+				NVM_UID device_uid_str;
 				struct device_discovery discovery;
 				for (int current_dev = 0; current_dev < dev_count; current_dev++)
 				{
-					if ((rc = exists_and_manageable(dimms[current_dev].guid,
+					if ((rc = exists_and_manageable(dimms[current_dev].uid,
 							&discovery, 1)) == NVM_SUCCESS)
 					{
-						NVM_GUID_STR guid_str;
-						uid_copy(dimms[current_dev].guid, guid_str);
+						NVM_UID uid_str;
+						uid_copy(dimms[current_dev].uid, uid_str);
 						// verify if threshold values of temperature and spare capacity are
 						// in accordance with best practices
-						nvm_get_sensors(dimms[current_dev].guid, sensors, NVM_MAX_DEVICE_SENSORS);
-						uid_copy(dimms[current_dev].guid, device_guid_str);
+						nvm_get_sensors(dimms[current_dev].uid, sensors, NVM_MAX_DEVICE_SENSORS);
+						uid_copy(dimms[current_dev].uid, device_uid_str);
 						if (!diag_check_real(p_diagnostic,
 							DIAG_THRESHOLD_FW_MEDIA_TEMP,
 							nvm_decode_temperature(
@@ -277,7 +277,7 @@ int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 							store_event_by_parts(EVENT_TYPE_DIAG_FW_CONSISTENCY,
 									EVENT_SEVERITY_WARN,
 								EVENT_CODE_DIAG_FW_BAD_TEMP_MEDIA_THRESHOLD,
-								dimms[current_dev].guid, 0, guid_str, actual_temp_threshold_str,
+								dimms[current_dev].uid, 0, uid_str, actual_temp_threshold_str,
 								expected_temp_threshold_str,
 								DIAGNOSTIC_RESULT_FAILED);
 						(*p_results)++;
@@ -296,7 +296,7 @@ int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 						store_event_by_parts(EVENT_TYPE_DIAG_FW_CONSISTENCY,
 								EVENT_SEVERITY_WARN,
 								EVENT_CODE_DIAG_FW_BAD_TEMP_CONTROLLER_THRESHOLD,
-									dimms[current_dev].guid, 0, guid_str, actual_temp_threshold_str,
+									dimms[current_dev].uid, 0, uid_str, actual_temp_threshold_str,
 									expected_temp_threshold_str,
 									DIAGNOSTIC_RESULT_FAILED);
 							(*p_results)++;
@@ -313,7 +313,7 @@ int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 							store_event_by_parts(EVENT_TYPE_DIAG_FW_CONSISTENCY,
 									EVENT_SEVERITY_WARN,
 									EVENT_CODE_DIAG_FW_BAD_SPARE_BLOCK,
-									dimms[current_dev].guid, 0, guid_str,
+									dimms[current_dev].uid, 0, uid_str,
 									expected_spare_block_threshold_str,
 									actual_spare_block_threshold_str,
 									DIAGNOSTIC_RESULT_FAILED);
@@ -322,7 +322,7 @@ int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 
 						// verify FW debug log level is set in accordance with best practices
 						enum fw_log_level log_level;
-						if (NVM_SUCCESS == nvm_get_fw_log_level(dimms[current_dev].guid,
+						if (NVM_SUCCESS == nvm_get_fw_log_level(dimms[current_dev].uid,
 								&log_level))
 						{
 							if ((!(p_diagnostic->excludes & DIAG_THRESHOLD_FW_DEBUGLOG)) &&
@@ -334,7 +334,7 @@ int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 								store_event_by_parts(EVENT_TYPE_DIAG_FW_CONSISTENCY,
 										EVENT_SEVERITY_WARN,
 										EVENT_CODE_DIAG_FW_BAD_FW_LOG_LEVEL,
-										dimms[current_dev].guid, 0, guid_str, current_log_level_str,
+										dimms[current_dev].uid, 0, uid_str, current_log_level_str,
 										default_log_level_str,
 										DIAGNOSTIC_RESULT_FAILED);
 								(*p_results)++;
@@ -365,7 +365,7 @@ int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 											EVENT_TYPE_DIAG_FW_CONSISTENCY,
 											EVENT_SEVERITY_WARN,
 											EVENT_CODE_DIAG_FW_SYSTEM_TIME_DRIFT,
-											dimms[current_dev].guid, 0, guid_str,
+											dimms[current_dev].uid, 0, uid_str,
 											time_drift_lag_str, current_time_drift_str,
 											DIAGNOSTIC_RESULT_FAILED);
 									(*p_results)++;
@@ -382,7 +382,7 @@ int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 											EVENT_TYPE_DIAG_FW_CONSISTENCY,
 											EVENT_SEVERITY_WARN,
 											EVENT_CODE_DIAG_FW_SYSTEM_TIME_DRIFT,
-											dimms[current_dev].guid, 0, guid_str,
+											dimms[current_dev].uid, 0, uid_str,
 											time_drift_lag_str, current_time_drift_str,
 											DIAGNOSTIC_RESULT_FAILED);
 									(*p_results)++;
@@ -417,7 +417,7 @@ int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 											EVENT_TYPE_DIAG_FW_CONSISTENCY,
 											EVENT_SEVERITY_WARN,
 											EVENT_CODE_DIAG_FW_BAD_POWER_MGMT_POLICY,
-											dimms[current_dev].guid, 0, guid_str,
+											dimms[current_dev].uid, 0, uid_str,
 											field_str, expected_tdp_power_range_str,
 											DIAGNOSTIC_RESULT_FAILED);
 									(*p_results)++;
@@ -441,7 +441,7 @@ int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 											EVENT_TYPE_DIAG_FW_CONSISTENCY,
 											EVENT_SEVERITY_WARN,
 											EVENT_CODE_DIAG_FW_BAD_POWER_MGMT_POLICY,
-											dimms[current_dev].guid, 0, guid_str,
+											dimms[current_dev].uid, 0, uid_str,
 											field_str,
 											expected_avg_power_budget_range_str,
 											DIAGNOSTIC_RESULT_FAILED);
@@ -466,7 +466,7 @@ int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 											EVENT_TYPE_DIAG_FW_CONSISTENCY,
 											EVENT_SEVERITY_WARN,
 											EVENT_CODE_DIAG_FW_BAD_POWER_MGMT_POLICY,
-											dimms[current_dev].guid, 0, guid_str,
+											dimms[current_dev].uid, 0, uid_str,
 											field_str,
 											expected_peak_power_budget_range_str,
 											DIAGNOSTIC_RESULT_FAILED);
@@ -484,7 +484,7 @@ int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 								store_event_by_parts(EVENT_TYPE_DIAG_FW_CONSISTENCY,
 										EVENT_SEVERITY_WARN,
 										EVENT_CODE_DIAG_FW_BAD_POWER_MGMT_POLICY,
-										dimms[current_dev].guid, 0, guid_str, field_str,
+										dimms[current_dev].uid, 0, uid_str, field_str,
 										expected_power_mgmt_enabled_str,
 										DIAGNOSTIC_RESULT_FAILED);
 								(*p_results)++;
@@ -513,7 +513,7 @@ int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 											EVENT_TYPE_DIAG_FW_CONSISTENCY,
 											EVENT_SEVERITY_WARN,
 											EVENT_CODE_DIAG_FW_BAD_DIE_SPARING_POLICY,
-											dimms[current_dev].guid, 0, guid_str, field_str,
+											dimms[current_dev].uid, 0, uid_str, field_str,
 											expected_die_sparing_aggressiveness_str,
 											DIAGNOSTIC_RESULT_FAILED);
 									(*p_results)++;
@@ -530,7 +530,7 @@ int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 								store_event_by_parts(EVENT_TYPE_DIAG_FW_CONSISTENCY,
 										EVENT_SEVERITY_WARN,
 										EVENT_CODE_DIAG_FW_BAD_DIE_SPARING_POLICY,
-										dimms[current_dev].guid, 0, guid_str, field_str,
+										dimms[current_dev].uid, 0, uid_str, field_str,
 										expected_die_sparing_enabled_str,
 										DIAGNOSTIC_RESULT_FAILED);
 								(*p_results)++;

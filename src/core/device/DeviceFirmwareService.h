@@ -41,7 +41,7 @@ class NVM_API DeviceFirmwareService
 public:
 	DeviceFirmwareService(NvmLibrary &lib = NvmLibrary::getNvmLibrary()) : m_lib(lib) { }
 	virtual ~DeviceFirmwareService();
-	virtual core::Result<core::device::DeviceFirmwareInfo> getFirmwareInfo(const std::string &deviceGuid);
+	virtual core::Result<core::device::DeviceFirmwareInfo> getFirmwareInfo(const std::string &deviceUid);
 
 	static DeviceFirmwareService &getService();
 

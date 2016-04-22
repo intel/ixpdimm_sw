@@ -55,11 +55,11 @@ void wbem::logic::RuleDimmHasConfigGoal::verify(const MemoryAllocationRequest &r
 	for (std::vector<struct Dimm>::const_iterator dimmIter = request.dimms.begin();
 				dimmIter != request.dimms.end(); dimmIter++)
 	{
-		NVM_GUID guid;
-		uid_copy((*dimmIter).guid.c_str(), guid);
+		NVM_UID uid;
+		uid_copy((*dimmIter).uid.c_str(), uid);
 
 		struct config_goal goal;
-		int rc = pApi->getConfigGoal(guid, &goal);
+		int rc = pApi->getConfigGoal(uid, &goal);
 
 		if (rc == NVM_SUCCESS)
 		{

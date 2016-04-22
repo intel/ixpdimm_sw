@@ -157,9 +157,9 @@ void wbem::memory::PersistentMemoryFactory::getStorageRegionInstanceNames(
 {
 	for (size_t i = 0; i < pool.dimm_count; i++)
 	{
-		NVM_GUID_STR guidStr;
-		uid_copy(pool.dimms[i], guidStr);
-		std::string deviceId = getStorageRegionUuid(std::string(guidStr));
+		NVM_UID uidStr;
+		uid_copy(pool.dimms[i], uidStr);
+		std::string deviceId = getStorageRegionUuid(std::string(uidStr));
 
 		instanceNames.push_back(getInstanceName(deviceId));
 	}
@@ -263,9 +263,9 @@ bool wbem::memory::PersistentMemoryFactory::findStorageDimmIndexForUuid(const st
 
 	for (size_t i = 0; i < pool.dimm_count; i++)
 	{
-		NVM_GUID_STR guidStr;
-		uid_copy(pool.dimms[i], guidStr);
-		std::string tmpUuid = getStorageRegionUuid(std::string(guidStr));
+		NVM_UID uidStr;
+		uid_copy(pool.dimms[i], uidStr);
+		std::string tmpUuid = getStorageRegionUuid(std::string(uidStr));
 
 		if (uuid == tmpUuid)
 		{
@@ -291,13 +291,13 @@ bool wbem::memory::PersistentMemoryFactory::isAssociated(const std::string& asso
 		if ((pAntInstance->getClass() == memory::RAWMEMORY_CREATIONCLASSNAME) &&
 				(pDepInstance->getClass() == memory::PERSISTENTMEMORY_CREATIONCLASSNAME))
 		{
-			framework::Attribute rawMemGuidAttr;
-			if(pAntInstance->getAttribute(DEVICEID_KEY, rawMemGuidAttr) != framework::SUCCESS)
+			framework::Attribute rawMemUidAttr;
+			if(pAntInstance->getAttribute(DEVICEID_KEY, rawMemUidAttr) != framework::SUCCESS)
 			{
 				COMMON_LOG_ERROR("Couldn't get RawMemory DeviceID");
 				throw framework::ExceptionBadAttribute(DEVICEID_KEY.c_str());
 			}
-			std::string dimmGuid = rawMemGuidAttr.stringValue();
+			std::string dimmUid = rawMemUidAttr.stringValue();
 
 			framework::Attribute persistentMemUuidAttr;
 			if(pDepInstance->getAttribute(DEVICEID_KEY, persistentMemUuidAttr) != framework::SUCCESS)
@@ -307,7 +307,7 @@ bool wbem::memory::PersistentMemoryFactory::isAssociated(const std::string& asso
 			}
 			std::string persistentMemUuid = persistentMemUuidAttr.stringValue();
 
-			result = isPersistentMemoryUsingDimm(persistentMemUuid, dimmGuid);
+			result = isPersistentMemoryUsingDimm(persistentMemUuid, dimmUid);
 		}
 		else if ((pAntInstance->getClass() == memory::PERSISTENTMEMORY_CREATIONCLASSNAME) &&
 				(pDepInstance->getClass() == pmem_config::PMNS_CREATIONCLASSNAME))
@@ -333,9 +333,9 @@ bool wbem::memory::PersistentMemoryFactory::isAssociated(const std::string& asso
 				framework::Attribute instanceIdAttr;
 				if (pAntInstance->getAttribute(INSTANCEID_KEY, instanceIdAttr) == framework::SUCCESS)
 				{
-					NVM_GUID poolGuid;
-					uid_copy(instanceIdAttr.stringValue().c_str(), poolGuid);
-					if (nvm_get_pool(poolGuid, pool) == NVM_SUCCESS)
+					NVM_UID poolUid;
+					uid_copy(instanceIdAttr.stringValue().c_str(), poolUid);
+					if (nvm_get_pool(poolUid, pool) == NVM_SUCCESS)
 					{
 						result = poolMatchesPmObject(pool, pDepInstance);
 					}
@@ -430,9 +430,9 @@ bool wbem::memory::PersistentMemoryFactory::pmTypesMatch(struct pool *pool, fram
 	wbem::framework::Attribute deviceIdAttr;
 	if (pPMObject->getAttribute(DEVICEID_KEY, deviceIdAttr) == framework::SUCCESS)
 	{
-		NVM_GUID guid;
-		uid_copy(deviceIdAttr.stringValue().c_str(), guid);
-		if (mem_config::MemoryAllocationSettingsFactory::isADeviceGuid(guid) && pool->type == POOL_TYPE_PERSISTENT)
+		NVM_UID uid;
+		uid_copy(deviceIdAttr.stringValue().c_str(), uid);
+		if (mem_config::MemoryAllocationSettingsFactory::isADeviceUid(uid) && pool->type == POOL_TYPE_PERSISTENT)
 		{
 			matches = true;
 		}
@@ -464,19 +464,19 @@ std::string wbem::memory::PersistentMemoryFactory::getInterleaveSetUuid(const NV
 	srcStream << "/socket" << socketId << "/interleave" << setIndex;
 
 	std::string srcStr = srcStream.str();
-	NVM_GUID uuid;
+	NVM_UID uuid;
 	guid_hash_str((NVM_UINT8 *) srcStr.c_str(), srcStr.size(), uuid);
 
-	NVM_GUID_STR uuidStr;
+	NVM_UID uuidStr;
 	uid_copy(uuid, uuidStr);
 
 	return std::string(uuidStr);
 }
 
-std::string wbem::memory::PersistentMemoryFactory::getStorageRegionUuid(const std::string& dimmGuidStr)
+std::string wbem::memory::PersistentMemoryFactory::getStorageRegionUuid(const std::string& dimmUidStr)
 {
-	// There's only one storage region per DIMM, and the DIMM GUID is already unique
-	return dimmGuidStr;
+	// There's only one storage region per DIMM, and the DIMM UID is already unique
+	return dimmUidStr;
 }
 
 void wbem::memory::PersistentMemoryFactory::validatePath(const framework::ObjectPath& path)
@@ -517,7 +517,7 @@ void wbem::memory::PersistentMemoryFactory::validatePath(const framework::Object
 	// DeviceID == UUID for interleave or storage region
 	// See that it's the right size to be a UUID - we'll look it up later
 	const framework::Attribute &deviceId = path.getKeyValue(DEVICEID_KEY);
-	if (deviceId.stringValue().size() != (NVM_GUIDSTR_LEN - 1))
+	if (deviceId.stringValue().size() != (NVM_MAX_UID_LEN - 1))
 	{
 		COMMON_LOG_ERROR_F("invalid value for key '%s': %s",
 				DEVICEID_KEY.c_str(),
@@ -678,13 +678,13 @@ void wbem::memory::PersistentMemoryFactory::setGenericInstanceAttributes(framewo
 }
 
 bool wbem::memory::PersistentMemoryFactory::isPersistentMemoryUsingDimm(const std::string& pmUuid,
-		const std::string& dimmGuid) throw (framework::Exception)
+		const std::string& dimmUid) throw (framework::Exception)
 {
 	bool result = false;
 
 
-	// Storage region UUID is the same as the corresponding DIMM GUID
-	if (pmUuid == dimmGuid)
+	// Storage region UUID is the same as the corresponding DIMM UID
+	if (pmUuid == dimmUid)
 	{
 		result = true;
 	}
@@ -702,9 +702,9 @@ bool wbem::memory::PersistentMemoryFactory::isPersistentMemoryUsingDimm(const st
 			{
 				for (size_t j = 0; j < interleave.dimm_count; j++)
 				{
-					NVM_GUID_STR tmpGuidStr;
-					uid_copy(interleave.dimms[j], tmpGuidStr);
-					if (dimmGuid == tmpGuidStr)
+					NVM_UID tmpUidStr;
+					uid_copy(interleave.dimms[j], tmpUidStr);
+					if (dimmUid == tmpUidStr)
 					{
 						result = true;
 						break;
@@ -777,7 +777,7 @@ NVM_UINT16 wbem::memory::PersistentMemoryFactory::getInterleaveSetHealthState(
 	return healthState;
 }
 
-NVM_UINT16 wbem::memory::PersistentMemoryFactory::getStorageRegionHealthState(const NVM_GUID dimmGuid)
+NVM_UINT16 wbem::memory::PersistentMemoryFactory::getStorageRegionHealthState(const NVM_UID dimmUid)
 		throw (framework::Exception)
 {
 	NVM_UINT16 healthState = PERSISTENTMEMORY_HEALTHSTATE_UNKNOWN;
@@ -785,7 +785,7 @@ NVM_UINT16 wbem::memory::PersistentMemoryFactory::getStorageRegionHealthState(co
 	// Storage region health is based on DIMM health
 	struct device_status status;
 	memset(&status, 0, sizeof (status));
-	int rc = nvm_get_device_status(dimmGuid, &status);
+	int rc = nvm_get_device_status(dimmUid, &status);
 	if (rc == NVM_SUCCESS)
 	{
 		if (status.is_missing)
@@ -814,9 +814,9 @@ NVM_UINT16 wbem::memory::PersistentMemoryFactory::getStorageRegionHealthState(co
 	}
 	else
 	{
-		NVM_GUID_STR guidStr;
-		uid_copy(dimmGuid, guidStr);
-		COMMON_LOG_ERROR_F("couldn't get status for DIMM %s", guidStr);
+		NVM_UID uidStr;
+		uid_copy(dimmUid, uidStr);
+		COMMON_LOG_ERROR_F("couldn't get status for DIMM %s", uidStr);
 
 		if (rc == NVM_ERR_BADDEVICE) // missing
 		{
@@ -854,19 +854,19 @@ NVM_UINT16 wbem::memory::PersistentMemoryFactory::getInterleaveSetOperationalSta
 	return opStatus;
 }
 
-NVM_UINT16 wbem::memory::PersistentMemoryFactory::getStorageRegionOperationalStatus(const NVM_GUID dimmGuid)
+NVM_UINT16 wbem::memory::PersistentMemoryFactory::getStorageRegionOperationalStatus(const NVM_UID dimmUid)
 		throw (framework::Exception)
 {
 	NVM_UINT16 opStatus = PERSISTENTMEMORY_OPSTATUS_UNKNOWN;
 
 	struct device_status status;
 	memset(&status, 0, sizeof (status));
-	int rc = nvm_get_device_status(dimmGuid, &status);
+	int rc = nvm_get_device_status(dimmUid, &status);
 	if (rc != NVM_SUCCESS)
 	{
-		NVM_GUID_STR guidStr;
-		uid_copy(dimmGuid, guidStr);
-		COMMON_LOG_ERROR_F("couldn't get status for DIMM %s", guidStr);
+		NVM_UID uidStr;
+		uid_copy(dimmUid, uidStr);
+		COMMON_LOG_ERROR_F("couldn't get status for DIMM %s", uidStr);
 	}
 
 	switch (rc)
@@ -1025,7 +1025,7 @@ bool wbem::memory::PersistentMemoryFactory::isPersistentMemoryAssociatedToPersis
 {
 	bool result = false;
 
-	// get device IDs (GUIDs) from the PM and PMNS instances
+	// get device IDs (UIDs) from the PM and PMNS instances
 	bool instancesAreGood = true;
 	framework::Attribute pmDeviceIdAttribute;
 	framework::Attribute pmnsDeviceIdAttribute;
@@ -1036,32 +1036,32 @@ bool wbem::memory::PersistentMemoryFactory::isPersistentMemoryAssociatedToPersis
 
 	if (instancesAreGood)
 	{
-		std::string pmGuidStr = pmDeviceIdAttribute.stringValue();
-		std::string pmnsGuidStr = pmnsDeviceIdAttribute.stringValue();
+		std::string pmUidStr = pmDeviceIdAttribute.stringValue();
+		std::string pmnsUidStr = pmnsDeviceIdAttribute.stringValue();
 
-		NVM_GUID nsGuid;
-		uid_copy(pmnsGuidStr.c_str(), nsGuid);
+		NVM_UID nsUid;
+		uid_copy(pmnsUidStr.c_str(), nsUid);
 		struct namespace_details details;
-		lib_interface::NvmApi::getApi()->getNamespaceDetails(nsGuid, &details);
+		lib_interface::NvmApi::getApi()->getNamespaceDetails(nsUid, &details);
 
-		std::string nsBasedOnGuid = "";
+		std::string nsBasedOnUid = "";
 		if (details.type == NAMESPACE_TYPE_STORAGE)
 		{
-			NVM_GUID_STR guidStr;
-			uid_copy(details.creation_id.device_guid, guidStr);
-			nsBasedOnGuid = std::string(guidStr);
+			NVM_UID uidStr;
+			uid_copy(details.creation_id.device_uid, uidStr);
+			nsBasedOnUid = std::string(uidStr);
 		}
 		else if (details.type == NAMESPACE_TYPE_APP_DIRECT)
 		{
 			struct pool pool;
-			lib_interface::NvmApi::getApi()->getPool(details.pool_guid, &pool);
+			lib_interface::NvmApi::getApi()->getPool(details.pool_uid, &pool);
 			int socketId = pool.socket_id;
-			nsBasedOnGuid = getInterleaveSetUuid(details.creation_id.interleave_setid, socketId);
+			nsBasedOnUid = getInterleaveSetUuid(details.creation_id.interleave_setid, socketId);
 		}
 
-		if (!nsBasedOnGuid.empty())
+		if (!nsBasedOnUid.empty())
 		{
-			result = nsBasedOnGuid == pmGuidStr;
+			result = nsBasedOnUid == pmUidStr;
 		}
 	}
 

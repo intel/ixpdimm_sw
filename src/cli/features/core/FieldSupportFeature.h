@@ -96,7 +96,7 @@ static const std::string diagTestTypes[NUMDIAGTESTTYPES] = {
 const size_t MAX_EVENTS = 50;
 
 static const std::string PREFERENCE_DIMMID_HANDLE = "HANDLE";
-static const std::string PREFERENCE_DIMMID_GUID = "GUID";
+static const std::string PREFERENCE_DIMMID_UID = "UID";
 static const std::string PREFERENCE_SIZE_AUTO = "AUTO";
 static const std::string PREFERENCE_SIZE_B = "B";
 static const std::string PREFERENCE_SIZE_MIB = "MiB"; // Mebibytes
@@ -149,22 +149,22 @@ public:
 
 	/*!
 	 * API for installing from a URI on a single device
-	 * @param deviceGuid
+	 * @param deviceUid
 	 * @param uri
 	 * @param force
 	 */
-	void (*m_InstallFromPath)(const std::string &deviceGuid, const std::string &uri, bool force);
+	void (*m_InstallFromPath)(const std::string &deviceUid, const std::string &uri, bool force);
 
 	/*!
 	 * API for examining a FW image
-	 * @param deviceGuid
+	 * @param deviceUid
 	 * @param path
 	 */
-	int (*m_ExamineFwImage)(const std::string &deviceGuid, const std::string &path,
+	int (*m_ExamineFwImage)(const std::string &deviceUid, const std::string &path,
 			std::string &fwVersion);
 
 	/*!
-	 * API for getting list of manageable DIMM Guids
+	 * API for getting list of manageable DIMM Uids
 	 * @return
 	 * 		If there is an error with the parsed command it will return a syntax error
 	 */
@@ -195,9 +195,9 @@ public:
 	wbem::framework::instances_t *(*m_getEvents)(wbem::support::EventLogFilter &);
 
 	/*!
-	 * API for converting a Dimm GUID to a DIMM ID string
+	 * API for converting a Dimm UID to a DIMM ID string
 	 */
-	std::string (*m_guidToDimmIdStr)(const std::string &dimmGuid)
+	std::string (*m_uidToDimmIdStr)(const std::string &dimmUid)
 			throw (wbem::framework::Exception);
 
 	/*
@@ -247,19 +247,19 @@ private:
 
 	/*!
 	 * Wrapper around wbem installFromUri
-	 * @param deviceGuid
+	 * @param deviceUid
 	 * @param uri
 	 * @param force
 	 */
-	static void wbemInstallFromPath(const std::string &deviceGuid, const std::string &uri, bool force);
+	static void wbemInstallFromPath(const std::string &deviceUid, const std::string &uri, bool force);
 
 	/*!
 	 * Wrapper around wbem examinFwImage
-	 * @param deviceGuid
+	 * @param deviceUid
 	 * @param path
 	 * @return
 	 */
-	static int wbemExamineFwImage(const std::string &deviceGuid, const std::string &path,
+	static int wbemExamineFwImage(const std::string &deviceUid, const std::string &path,
 			std::string &fwVersion);
 
 	/*!

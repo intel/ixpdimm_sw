@@ -107,11 +107,11 @@ const char *EVENT_MESSAGES_MGMT[EVENT_CODE_MGMT_UNKNOWN -
 	// EVENT_CODE_MGMT_CONFIG_GOAL_DELETED
 	N_TR("A configuration goal has been deleted from "NVM_DIMM_NAME" %s."),
 	// EVENT_CODE_MGMT_NAMESPACE_CREATED
-	N_TR("A new namespace has been created. (Name: %s, GUID: %s)"),
+	N_TR("A new namespace has been created. (Name: %s, uid: %s)"),
 	// EVENT_CODE_MGMT_NAMESPACE_DELETED
-	N_TR("A namespace has been deleted. (Name: %s, GUID: %s)"),
+	N_TR("A namespace has been deleted. (Name: %s, uid: %s)"),
 	// EVENT_CODE_MGMT_NAMESPACE_MODIFIED
-	N_TR("A namespace's settings have been modified. (Name: %s, GUID: %s)"),
+	N_TR("A namespace's settings have been modified. (Name: %s, uid: %s)"),
 	// EVENT_CODE_MGMT_SENSOR_SETTINGS_CHANGE
 	N_TR("The %s sensor settings have been changed on "NVM_DIMM_NAME" %s."),
 	// EVENT_CODE_MGMT_FIRMWARE_UPDATE
@@ -641,7 +641,7 @@ void populate_event_message(struct event *p_event)
  * Helper function to copy a list of params into an event struct
  */
 void params_to_event(const enum event_type type, const enum event_severity severity,
-		const NVM_UINT16 code, const NVM_GUID device_guid, const NVM_BOOL action_required,
+		const NVM_UINT16 code, const NVM_UID device_uid, const NVM_BOOL action_required,
 		const NVM_EVENT_ARG arg1, const NVM_EVENT_ARG arg2, const NVM_EVENT_ARG arg3,
 		const enum diagnostic_result result, struct event *p_event)
 {
@@ -653,9 +653,9 @@ void params_to_event(const enum event_type type, const enum event_severity sever
 		p_event->severity = severity;
 		p_event->code = code;
 		p_event->action_required = action_required;
-		if (device_guid)
+		if (device_uid)
 		{
-			memmove(p_event->guid, device_guid, NVM_GUID_LEN);
+			memmove(p_event->uid, device_uid, NVM_MAX_UID_LEN);
 		}
 		s_strcpy(p_event->args[0], arg1, NVM_EVENT_ARG_LEN);
 		s_strcpy(p_event->args[1], arg2, NVM_EVENT_ARG_LEN);
@@ -694,7 +694,7 @@ int store_event(struct event *p_event, COMMON_BOOL syslog)
 		db_event.severity = p_event->severity;
 		db_event.code = p_event->code;
 		db_event.action_required = p_event->action_required;
-		uid_copy(p_event->guid, db_event.guid);
+		uid_copy(p_event->uid, db_event.uid);
 		s_strcpy(db_event.arg1, p_event->args[0], NVM_EVENT_ARG_LEN);
 		s_strcpy(db_event.arg2, p_event->args[1], NVM_EVENT_ARG_LEN);
 		s_strcpy(db_event.arg3, p_event->args[2], NVM_EVENT_ARG_LEN);
@@ -755,7 +755,7 @@ int store_event(struct event *p_event, COMMON_BOOL syslog)
  * Store an event log entry in the db
  */
 int store_event_by_parts(const enum event_type type, const enum event_severity severity,
-		const NVM_UINT16 code, const NVM_GUID device_guid, const NVM_BOOL action_required,
+		const NVM_UINT16 code, const NVM_UID device_uid, const NVM_BOOL action_required,
 		const NVM_EVENT_ARG arg1, const NVM_EVENT_ARG arg2, const NVM_EVENT_ARG arg3,
 		const enum diagnostic_result result)
 {
@@ -764,7 +764,7 @@ int store_event_by_parts(const enum event_type type, const enum event_severity s
 
 	struct event event;
 	memset(&event, 0, sizeof (struct event));
-	params_to_event(type, severity, code, device_guid, action_required, arg1,
+	params_to_event(type, severity, code, device_uid, action_required, arg1,
 			arg2, arg3, result, &event);
 
 	rc = store_event(&event, 1);
@@ -840,12 +840,12 @@ NVM_BOOL event_matches_filter(const struct event_filter *p_filter,
 				rc = 0;
 			}
 		}
-		// match guid
-		if (rc && (p_filter->filter_mask & NVM_FILTER_ON_GUID))
+		// match uid
+		if (rc && (p_filter->filter_mask & NVM_FILTER_ON_UID))
 		{
-			NVM_GUID db_guid;
-			uid_copy(p_db_event->guid, db_guid);
-			if (uid_cmp(db_guid, p_filter->guid) != 1)
+			NVM_UID db_uid;
+			uid_copy(p_db_event->uid, db_uid);
+			if (uid_cmp(db_uid, p_filter->uid) != 1)
 			{
 				rc = 0;
 			}
@@ -964,7 +964,7 @@ int process_events_matching_filter(const struct event_filter *p_filter,
 								p_events[rc-1].code = db_events[i].code;
 								p_events[rc-1].time = db_events[i].time;
 								p_events[rc-1].action_required = db_events[i].action_required;
-								uid_copy(db_events[i].guid, p_events[rc - 1].guid);
+								uid_copy(db_events[i].uid, p_events[rc - 1].uid);
 
 								s_strcpy(p_events[rc-1].args[0], db_events[i].arg1,
 										NVM_EVENT_ARG_LEN);

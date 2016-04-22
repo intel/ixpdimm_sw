@@ -74,12 +74,12 @@ NVM_BOOL diag_check_str(const struct diagnostic *p_diagnostic,
  * and optionally for the specified device.
  */
 void diag_clear_results(const enum diagnostic_test type,
-		const NVM_BOOL clear_specific_device, const NVM_GUID device_guid);
+		const NVM_BOOL clear_specific_device, const NVM_UID device_uid);
 
 /*
  * Available diagnostics
  */
-int diag_quick_health_check(const NVM_GUID device_guid,
+int diag_quick_health_check(const NVM_UID device_uid,
 		const struct diagnostic *p_diagnostic, NVM_UINT32 *p_results);
 int diag_security_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_results);
 int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_results);

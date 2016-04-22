@@ -42,7 +42,7 @@ namespace wbem
 namespace memory
 {
 	static const std::string RAWMEMORY_CREATIONCLASSNAME = std::string(NVM_WBEM_PREFIX) + "RawMemory"; //!< CreationClassName static
-	static const std::string RAWMEMORY_ELEMENTNAME_prefix = "NVDIMM Memory for "; //!< Element Name = prefix + GUID
+	static const std::string RAWMEMORY_ELEMENTNAME_prefix = "NVDIMM Memory for "; //!< Element Name = prefix + UID
 	static const NVM_UINT16 OPSTATUS_UNKNOWN = 0;
 	static const NVM_UINT16 OPSTATUS_OK = 2;
 	static const NVM_UINT16 OPSTATUS_PREDICTIVEFAILURE = 5;

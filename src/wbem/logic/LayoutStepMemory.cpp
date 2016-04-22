@@ -62,7 +62,7 @@ void wbem::logic::LayoutStepMemory::execute(const MemoryAllocationRequest& reque
 		for (std::vector<Dimm>::const_iterator dimmIter = request.dimms.begin();
 				dimmIter != request.dimms.end(); dimmIter++)
 		{
-			if (layout.reserveDimmGuid != dimmIter->guid)
+			if (layout.reservedimmUid != dimmIter->uid)
 			{
 				dimmsToLayout.push_back(*dimmIter);
 			}
@@ -81,7 +81,7 @@ void wbem::logic::LayoutStepMemory::execute(const MemoryAllocationRequest& reque
 								dimmIter != dimmsIncluded.end(); dimmIter++)
 				{
 					NVM_UINT64 alignedBytes = getAlignedDimmBytes(request, *dimmIter, layout, bytesPerDimm);
-					layout.goals[dimmIter->guid].memory_size += bytesToConfigGoalSize(alignedBytes);
+					layout.goals[dimmIter->uid].memory_size += bytesToConfigGoalSize(alignedBytes);
 					alignedBytesAllocated += alignedBytes;
 					bytesAllocated += bytesPerDimm;
 				}
@@ -123,7 +123,7 @@ NVM_UINT64 wbem::logic::LayoutStepMemory::getAlignedDimmBytes(
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	NVM_UINT64 existingMemoryBytes = bytesToConfigGoalSize(layout.goals[dimm.guid].memory_size);
+	NVM_UINT64 existingMemoryBytes = bytesToConfigGoalSize(layout.goals[dimm.uid].memory_size);
 	NVM_UINT64 totalMemoryBytes = getTotalMemoryBytes(requestedBytes, existingMemoryBytes);
 	NVM_UINT64 dimmBytes = round_down(dimm.capacity, BYTES_PER_GB);
 

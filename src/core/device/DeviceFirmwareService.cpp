@@ -44,12 +44,12 @@ core::device::DeviceFirmwareService &core::device::DeviceFirmwareService::getSer
 }
 
 core::Result<core::device::DeviceFirmwareInfo> core::device::DeviceFirmwareService::getFirmwareInfo(
-		const std::string &deviceGuid)
+		const std::string &deviceUid)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	device_fw_info fwInfo =  m_lib.getDeviceFwInfo(deviceGuid);
+	device_fw_info fwInfo =  m_lib.getDeviceFwInfo(deviceUid);
 
-	DeviceFirmwareInfo firmwareInfo(deviceGuid, fwInfo);
+	DeviceFirmwareInfo firmwareInfo(deviceUid, fwInfo);
 	core::Result<DeviceFirmwareInfo> result(firmwareInfo);
 	return result;
 }

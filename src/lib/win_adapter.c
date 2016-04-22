@@ -58,12 +58,9 @@
 short g_scsi_port = -1;
 
 // Helper function declarations
-
 enum label_area_health_result convert_label_health_result(LABEL_AREA_HEALTH_EVENT event);
 enum ns_health_result convert_ns_health_status(NAMESPACE_HEALTH_EVENT event);
 DIAGNOSTIC_TEST convert_diagnostic_test(enum driver_diagnostic diagnostic);
-
-void win_to_nvm_guid(GUID guid, NVM_GUID namespace_guid);
 
 /*
  * Retrieve the NVDIMM driver version.
@@ -896,8 +893,8 @@ int run_test(enum driver_diagnostic diagnostic, const NVM_UINT32 count,
 						results[i].event_type = HEALTH_EVENT_TYPE_NAMESPACE;
 						results[i].health.namespace_event.health_flag =
 								convert_ns_health_status(event);
-						memmove(results[i].health.namespace_event.namespace_guid,
-								&event.NamespaceId, NVM_GUID_LEN);
+						win_guid_to_uid(event.NamespaceId,
+										results[i].health.namespace_event.namespace_uid);
 					}
 					else if (p_ioctl_data->OutputPayload.Data[i].HealthEventType ==
 							LABEL_AREA_HEALTH_EVENT_TYPE)
@@ -1037,4 +1034,18 @@ int execute_ioctl(size_t bufSize, void *p_ioctl_data, unsigned long io_controlco
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
+}
+
+void win_guid_to_uid(const GUID guid, COMMON_UID uid)
+{
+	COMMON_GUID tmp;
+	memmove(tmp, &guid, COMMON_GUID_LEN);
+	guid_to_uid(tmp, uid);
+}
+
+void win_uid_to_guid(const COMMON_UID uid, GUID guid)
+{
+	COMMON_GUID tmp;
+	str_to_guid(uid, tmp);
+	memmove(&guid, tmp, COMMON_GUID_LEN);
 }

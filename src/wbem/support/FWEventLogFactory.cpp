@@ -41,7 +41,7 @@
 #include <NvmStrings.h>
 
 wbem::support::FWEventLogFactory::FWEventLogFactory()
-: m_GetManageableDeviceGuids(physical_asset::NVDIMMFactory::getManageableDeviceGuids)
+: m_GetManageabledeviceUids(physical_asset::NVDIMMFactory::getManageableDeviceUids)
 {
 	m_GetFwLogLevel = nvm_get_fw_log_level;
 }
@@ -81,36 +81,36 @@ wbem::framework::Instance* wbem::support::FWEventLogFactory::getInstance(
 		checkAttributes(attributes);
 		path.checkKey(CREATIONCLASSNAME_KEY, FWEVENTLOG_CREATIONCLASSNAME);
 
-		// extract the GUID from the object path
-		std::string deviceGuidStr = path.getKeyValue(INSTANCEID_KEY).stringValue();
-		if (deviceGuidStr.length() != NVM_GUIDSTR_LEN - 1)
+		// extract the UID from the object path
+		std::string deviceUidStr = path.getKeyValue(INSTANCEID_KEY).stringValue();
+		if (deviceUidStr.length() != NVM_MAX_UID_LEN - 1)
 		{
 			throw framework::ExceptionBadParameter("InstanceId");
 		}
-		NVM_GUID dimmGuid;
-		uid_copy(deviceGuidStr.c_str(), dimmGuid);
+		NVM_UID dimmUid;
+		uid_copy(deviceUidStr.c_str(), dimmUid);
 
 		int eamrc;
-		if (NVM_SUCCESS != (eamrc = wbem::physical_asset::NVDIMMFactory::existsAndIsManageable(deviceGuidStr)))
+		if (NVM_SUCCESS != (eamrc = wbem::physical_asset::NVDIMMFactory::existsAndIsManageable(deviceUidStr)))
 		{
 			throw exception::NvmExceptionLibError(eamrc);
 		}
 
-		// get dimm discovery info to pull guid
+		// get dimm discovery info to pull uid
 		struct device_discovery dimmdiscovery;
-		int rc = nvm_get_device_discovery(dimmGuid, &dimmdiscovery);
+		int rc = nvm_get_device_discovery(dimmUid, &dimmdiscovery);
 		if (rc != NVM_SUCCESS)
 		{
 			// couldn't retrieve any dimm info
 			throw exception::NvmExceptionLibError(rc);
 		}
-		// populate Element Name = FWEVENTLOG_ELEMENTNAME + GUID
+		// populate Element Name = FWEVENTLOG_ELEMENTNAME + UID
 		if (containsAttribute(ELEMENTNAME_KEY, attributes))
 		{
-			NVM_GUID_STR guidStr;
-			uid_copy(dimmdiscovery.guid, guidStr);
+			NVM_UID uidStr;
+			uid_copy(dimmdiscovery.uid, uidStr);
 			framework::Attribute attrElementName(
-					FWEVENTLOG_ELEMENTNAME + std::string(guidStr), false);
+					FWEVENTLOG_ELEMENTNAME + std::string(uidStr), false);
 			pInstance->setAttribute(ELEMENTNAME_KEY, attrElementName, attributes);
 		}
 
@@ -135,7 +135,7 @@ wbem::framework::Instance* wbem::support::FWEventLogFactory::getInstance(
 
 		// call nvm_get_fw_log_level to get current enabled state
 		enum fw_log_level curr_log_level;
-		rc = m_GetFwLogLevel(dimmGuid, &curr_log_level);
+		rc = m_GetFwLogLevel(dimmUid, &curr_log_level);
 		if (rc != NVM_SUCCESS)
 		{
 			// couldn't retrieve event log level
@@ -199,7 +199,7 @@ wbem::framework::instance_names_t* wbem::support::FWEventLogFactory::getInstance
 		// get the host server name
 		std::string hostName = wbem::server::getHostName();
 
-		std::vector<std::string> devices = wbem::physical_asset::NVDIMMFactory::getManageableDeviceGuids();
+		std::vector<std::string> devices = wbem::physical_asset::NVDIMMFactory::getManageableDeviceUids();
 		// get the list of dimms
 		if (devices.size()/*dimmCount*/ > 0)
 		{

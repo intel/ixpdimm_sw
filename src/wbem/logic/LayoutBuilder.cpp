@@ -160,7 +160,7 @@ void wbem::logic::LayoutBuilder::initLayoutGoals(
 	for (std::vector<struct Dimm>::const_iterator dimmIter = request.dimms.begin();
 			dimmIter != request.dimms.end(); dimmIter++)
 	{
-		layout.goals[dimmIter->guid] = goal;
+		layout.goals[dimmIter->uid] = goal;
 	}
 }
 

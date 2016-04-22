@@ -239,7 +239,7 @@ throw (framework::Exception)
 		for (int i = 0; i < total_count; i++)
 		{
 			bool matched = false;
-			// only add a new structure if the test is unique to the type and guid
+			// only add a new structure if the test is unique to the type and uid
 			// else another message and update the result
 			for (diagnosticResults_t::iterator iter = pResults->begin();
 					iter != pResults->end(); iter++)
@@ -247,7 +247,7 @@ throw (framework::Exception)
 				if ((*iter).type == events[i].type)
 				{
 					// matched existing result - update data but do not count
-					if (uid_cmp((*iter).device_guid, events[i].guid))
+					if (uid_cmp((*iter).device_uid, events[i].uid))
 					{
 						matched = true;
 						// update id (if necessary)
@@ -280,7 +280,7 @@ throw (framework::Exception)
 				diag.id = events[i].event_id;
 				diag.time = events[i].time;
 				diag.type = events[i].type;
-				memmove(diag.device_guid, events[i].guid, NVM_GUID_LEN);
+				memmove(diag.device_uid, events[i].uid, NVM_MAX_UID_LEN);
 				diag.result = events[i].diag_result;
 				diag.messages.push_back(buildDiagnosticResultMessage(&events[i]));
 				pResults->push_back(diag);

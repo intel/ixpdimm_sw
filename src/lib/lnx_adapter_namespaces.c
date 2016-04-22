@@ -135,7 +135,7 @@ int get_namespaces(const NVM_UINT32 count,
 							}
 
 							get_namespace_guid(p_namespace,
-								p_namespaces[namespace_index].namespace_guid);
+								p_namespaces[namespace_index].namespace_uid);
 							s_strcpy(p_namespaces[namespace_index].friendly_name,
 								ndctl_namespace_get_alt_name(p_namespace), NVM_NAMESPACE_NAME_LEN);
 
@@ -285,7 +285,7 @@ int disable_namespace(struct ndctl_namespace *p_namespace)
 }
 
 struct ndctl_namespace *get_ndctl_namespace_from_guid(struct ndctl_ctx *p_ctx,
-		const NVM_GUID namespace_guid)
+		const NVM_UID namespace_guid)
 {
 	struct ndctl_bus *p_bus;
 	ndctl_bus_foreach(p_ctx, p_bus)
@@ -300,7 +300,7 @@ struct ndctl_namespace *get_ndctl_namespace_from_guid(struct ndctl_ctx *p_ctx,
 				struct ndctl_namespace *p_namespace = NULL;
 				ndctl_namespace_foreach(p_region, p_namespace)
 				{
-					NVM_GUID index_guid;
+					NVM_UID index_guid;
 					get_namespace_guid(p_namespace, index_guid);
 					if (ndctl_namespace_is_configured(p_namespace) &&
 						uid_cmp(namespace_guid, index_guid))
@@ -318,7 +318,7 @@ struct ndctl_namespace *get_ndctl_namespace_from_guid(struct ndctl_ctx *p_ctx,
  * Get the details for a specific namespace
  */
 int get_namespace_details(
-		const NVM_GUID namespace_guid,
+		const NVM_UID namespace_guid,
 		struct nvm_namespace_details *p_details)
 {
 	COMMON_LOG_ENTRY();
@@ -379,7 +379,7 @@ int get_namespace_details(
 			}
 
 			get_namespace_guid(p_namespace,
-				p_details->discovery.namespace_guid);
+				p_details->discovery.namespace_uid);
 
 			s_strcpy(p_details->discovery.friendly_name,
 				ndctl_namespace_get_alt_name(p_namespace),
@@ -718,7 +718,7 @@ int create_btt_namespace(struct ndctl_namespace *namespace,
  * Create a new namespace
  */
 int create_namespace(
-		NVM_GUID *p_namespace_guid,
+		NVM_UID *p_namespace_guid,
 		const struct nvm_namespace_create_settings *p_settings)
 {
 	COMMON_LOG_ENTRY();
@@ -832,7 +832,7 @@ int create_namespace(
 /*
  * Delete an existing namespace
  */
-int delete_namespace(const NVM_GUID namespace_guid)
+int delete_namespace(const NVM_UID namespace_guid)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
@@ -876,7 +876,7 @@ int delete_namespace(const NVM_GUID namespace_guid)
  * Modify an existing namespace name
  */
 int modify_namespace_name(
-		const NVM_GUID namespace_guid,
+		const NVM_UID namespace_guid,
 		const NVM_NAMESPACE_NAME name)
 {
 	COMMON_LOG_ENTRY();
@@ -942,7 +942,7 @@ int modify_namespace_name(
  * Modify an existing namespace size
  */
 int modify_namespace_block_count(
-		const NVM_GUID namespace_guid,
+		const NVM_UID namespace_guid,
 		const NVM_UINT64 block_count)
 {
 	int rc = NVM_ERR_NOTSUPPORTED;
@@ -953,7 +953,7 @@ int modify_namespace_block_count(
  * Modify an existing namespace enable
  */
 int modify_namespace_enabled(
-		const NVM_GUID namespace_guid,
+		const NVM_UID namespace_guid,
 		const enum namespace_enable_state enabled)
 {
 	COMMON_LOG_ENTRY();

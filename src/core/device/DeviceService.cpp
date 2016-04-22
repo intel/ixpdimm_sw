@@ -46,7 +46,7 @@ core::device::DeviceService &core::device::DeviceService::getService()
 	return *m_pSingleton;
 }
 
-std::vector<std::string> core::device::DeviceService::getAllGuids()
+std::vector<std::string> core::device::DeviceService::getAllUids()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	std::vector<std::string> result = std::vector<std::string>();
@@ -54,13 +54,13 @@ std::vector<std::string> core::device::DeviceService::getAllGuids()
 
 	for(size_t i = 0; i < discoveries.size(); i++)
 	{
-		result.push_back(Helper::guidToString(discoveries[i].guid));
+		result.push_back(Helper::uidToString(discoveries[i].uid));
 	}
 
 	return result;
 }
 
-std::vector<std::string> core::device::DeviceService::getManageableGuids()
+std::vector<std::string> core::device::DeviceService::getManageableUids()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	std::vector<std::string> result = std::vector<std::string>();
@@ -70,7 +70,7 @@ std::vector<std::string> core::device::DeviceService::getManageableGuids()
 	{
 		if(discoveries[i].manageability == MANAGEMENT_VALIDCONFIG)
 		{
-			result.push_back(Helper::guidToString(discoveries[i].guid));
+			result.push_back(Helper::uidToString(discoveries[i].uid));
 		}
 	}
 
@@ -92,10 +92,10 @@ core::device::DeviceCollection core::device::DeviceService::getAllDevices()
 	return result;
 }
 
-core::Result<core::device::Device> core::device::DeviceService::getDevice(std::string guid)
+core::Result<core::device::Device> core::device::DeviceService::getDevice(std::string uid)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	Device result(m_lib, m_lib.getDeviceDiscovery(guid));
+	Device result(m_lib, m_lib.getDeviceDiscovery(uid));
 
 	return Result<Device>(result);
 }

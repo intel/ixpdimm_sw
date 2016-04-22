@@ -85,7 +85,7 @@ void cli::nvmcli::ValidationFeature::getPaths(cli::framework::CommandSpecList &l
 
 // Constructor, just calls super class 
 cli::nvmcli::ValidationFeature::ValidationFeature() : cli::framework::FeatureBase(),
-	m_dimmGuid(""), m_temperature(0), m_poison(0), m_errorType(0), m_clearStateExists(false)
+	m_dimmUid(""), m_temperature(0), m_poison(0), m_errorType(0), m_clearStateExists(false)
 { }
 
 /*
@@ -116,9 +116,9 @@ cli::framework::ResultBase* cli::nvmcli::ValidationFeature::injectError(
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	framework::ResultBase *pResult = NULL;
 
-	// Validate the DIMM list and translate PIDs into GUIDs
-	std::vector<std::string> guids;
-	pResult = cli::nvmcli::getDimms(parsedCommand, guids);
+	// Validate the DIMM list and translate PIDs into UIDs
+	std::vector<std::string> uids;
+	pResult = cli::nvmcli::getDimms(parsedCommand, uids);
 	// No error found in DIMM list
 	if (pResult == NULL)
 	{
@@ -127,22 +127,22 @@ cli::framework::ResultBase* cli::nvmcli::ValidationFeature::injectError(
 		{
 			framework::SimpleListResult *pListResult = new framework::SimpleListResult();
 			pResult = pListResult;
-			for(std::vector<std::string>::iterator iGuid = guids.begin();
-						iGuid != guids.end(); iGuid ++)
+			for(std::vector<std::string>::iterator iUid = uids.begin();
+						iUid != uids.end(); iUid ++)
 			{
 				std::string prefixMsg;
 				try 
 				{
-					m_dimmGuid = wbem::physical_asset::NVDIMMFactory::guidToDimmIdStr(*iGuid);
+					m_dimmUid = wbem::physical_asset::NVDIMMFactory::uidToDimmIdStr(*iUid);
 					// handle clear error injection 
 					if (m_clearStateExists) 
 					{
 						if (m_errorType == ERROR_TYPE_POISON)
 						{
-							m_DimmProvider.clearPoisonError(*iGuid, m_poison);
+							m_DimmProvider.clearPoisonError(*iUid, m_poison);
 							prefixMsg = framework::ResultBase::stringFromArgList(
 								CLEARPOISON_MSG_PREFIX.c_str(), m_poison,
-								m_dimmGuid.c_str());
+								m_dimmUid.c_str());
 							prefixMsg += ": ";
 
 							pListResult->insert(prefixMsg + cli::framework::SUCCESS_MSG);
@@ -155,17 +155,17 @@ cli::framework::ResultBase* cli::nvmcli::ValidationFeature::injectError(
 						{
 							prefixMsg = framework::ResultBase::stringFromArgList(
 									SETPOISON_MSG_PREFIX.c_str(), m_poison,
-									m_dimmGuid.c_str());
+									m_dimmUid.c_str());
 							prefixMsg += ": ";
-							m_DimmProvider.injectPoisonError(*iGuid, m_poison);
+							m_DimmProvider.injectPoisonError(*iUid, m_poison);
 						}
 						if (m_errorType == ERROR_TYPE_TEMPERATURE)
 						{
 							prefixMsg = framework::ResultBase::stringFromArgList(
 									SETTEMPERATURE_MSG_PREFIX.c_str(),
-									m_dimmGuid.c_str());
+									m_dimmUid.c_str());
 							prefixMsg += ": ";
-							m_DimmProvider.injectTemperatureError(*iGuid, m_temperature);
+							m_DimmProvider.injectTemperatureError(*iUid, m_temperature);
 						}
 
 						pListResult->insert(prefixMsg + cli::framework::SUCCESS_MSG);
@@ -349,7 +349,7 @@ cli::framework::ErrorResult* cli::nvmcli::ValidationFeature::ieNvmExceptionToRes
 				char errbuff[NVM_ERROR_LEN];
 				s_snprintf(errbuff, NVM_ERROR_LEN,
 						TRS(SETPOISON_INVALIDPARAMETER_MSG), 
-						m_poison, m_dimmGuid.c_str());
+						m_poison, m_dimmUid.c_str());
 				pResult = new framework::ErrorResult(framework::ResultBase::ERRORCODE_UNKNOWN,
 						errbuff);
 				break;

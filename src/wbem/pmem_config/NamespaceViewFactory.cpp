@@ -94,8 +94,8 @@ throw(wbem::framework::Exception)
 	{
 		checkAttributes(attributes);
 
-		std::string nsGuidStr = path.getKeyValue(NAMESPACEID_KEY).stringValue();
-		if (nsGuidStr.length() != NVM_GUIDSTR_LEN - 1)
+		std::string nsUidStr = path.getKeyValue(NAMESPACEID_KEY).stringValue();
+		if (nsUidStr.length() != NVM_MAX_UID_LEN - 1)
 		{
 			if (pInstance)
 			{
@@ -105,7 +105,7 @@ throw(wbem::framework::Exception)
 			throw framework::ExceptionBadParameter(NAMESPACEID_KEY.c_str());
 		}
 
-		struct namespace_details ns = getNamespaceDetails(nsGuidStr);
+		struct namespace_details ns = getNamespaceDetails(nsUidStr);
 
 		// Name = Friendly Name
 		if (containsAttribute(NAME_KEY, attributes))
@@ -114,12 +114,12 @@ throw(wbem::framework::Exception)
 			pInstance->setAttribute(NAME_KEY, a, attributes);
 		}
 
-		// PoolID = Pool GUID
+		// PoolID = Pool UID
 		if (containsAttribute(POOLID_KEY, attributes))
 		{
-			NVM_GUID_STR poolGuidStr;
-			uid_copy(ns.pool_guid, poolGuidStr);
-			framework::Attribute a(poolGuidStr, false);
+			NVM_UID poolUidStr;
+			uid_copy(ns.pool_uid, poolUidStr);
+			framework::Attribute a(poolUidStr, false);
 			pInstance->setAttribute(POOLID_KEY, a, attributes);
 		}
 
@@ -190,14 +190,14 @@ throw(wbem::framework::Exception)
 		{
 			struct event_filter filter;
 			memset(&filter, 0, sizeof (filter));
-			filter.filter_mask = NVM_FILTER_ON_AR | NVM_FILTER_ON_GUID;
+			filter.filter_mask = NVM_FILTER_ON_AR | NVM_FILTER_ON_UID;
 			filter.action_required = true;
-			memmove(filter.guid, ns.discovery.namespace_guid, NVM_GUID_LEN);
+			memmove(filter.uid, ns.discovery.namespace_uid, NVM_MAX_UID_LEN);
 			int eventCount = nvm_get_event_count(&filter);
 			if (eventCount < 0)
 			{
 				COMMON_LOG_ERROR_F("Failed to retrieve events for namespace %s, error %d",
-						nsGuidStr.c_str(), eventCount);
+						nsUidStr.c_str(), eventCount);
 				throw exception::NvmExceptionLibError(eventCount);
 			}
 
@@ -220,7 +220,7 @@ throw(wbem::framework::Exception)
 					if (eventCount < 0)
 					{
 						COMMON_LOG_ERROR_F("Failed to retrieve events for namespace %s, error %d",
-								nsGuidStr.c_str(), eventCount);
+								nsUidStr.c_str(), eventCount);
 						throw exception::NvmExceptionLibError(eventCount);
 					}
 
@@ -296,12 +296,12 @@ throw(wbem::framework::Exception)
 	framework::instance_names_t *pNames = new framework::instance_names_t();
 	try
 	{
-		std::vector<std::string> nsList = getNamespaceGuidList();
+		std::vector<std::string> nsList = getNamespaceUidList();
 		for (std::vector<std::string>::const_iterator iter = nsList.begin();
 				iter != nsList.end(); iter++)
 		{
 			framework::attributes_t keys;
-			std::string guidStr = *iter;
+			std::string uidStr = *iter;
 			keys[NAMESPACEID_KEY] = framework::Attribute(*iter, true);
 
 			framework::ObjectPath path(server::getHostName(), NVM_NAMESPACE,
@@ -321,7 +321,7 @@ throw(wbem::framework::Exception)
  * Helper function to retrieve a list of namespaces.
  */
 std::vector<std::string>
-	wbem::pmem_config::NamespaceViewFactory::getNamespaceGuidList()
+	wbem::pmem_config::NamespaceViewFactory::getNamespaceUidList()
 	throw (wbem::framework::Exception)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -347,9 +347,9 @@ std::vector<std::string>
 			}
 			for (int i = 0; i < nsCount; i++)
 			{
-				NVM_GUID_STR guidStr;
-				uid_copy(namespaces[i].namespace_guid, guidStr);
-				nsList.push_back(std::string(guidStr));
+				NVM_UID uidStr;
+				uid_copy(namespaces[i].namespace_uid, uidStr);
+				nsList.push_back(std::string(uidStr));
 			}
 			free(namespaces);
 		}
@@ -366,17 +366,17 @@ std::vector<std::string>
  * Helper function to retrieve details about a specific namespace.
  */
 struct namespace_details
-	wbem::pmem_config::NamespaceViewFactory::getNamespaceDetails(const std::string &nsGuidStr)
+	wbem::pmem_config::NamespaceViewFactory::getNamespaceDetails(const std::string &nsUidStr)
 	throw (wbem::framework::Exception)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	NVM_GUID nsGuid;
-	uid_copy(nsGuidStr.c_str(), nsGuid);
+	NVM_UID nsUid;
+	uid_copy(nsUidStr.c_str(), nsUid);
 
 	struct namespace_details details;
 	memset(&details, 0, sizeof (details));
-	int rc = nvm_get_namespace_details(nsGuid, &details);
+	int rc = nvm_get_namespace_details(nsUid, &details);
 	if (rc < NVM_SUCCESS)
 	{
 		throw exception::NvmExceptionLibError(rc);

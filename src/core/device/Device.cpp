@@ -48,7 +48,7 @@ Device::Device(NvmLibrary &lib, const device_discovery &discovery) :
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	memmove(&m_discovery, &discovery, sizeof(m_discovery));
-	m_deviceGuid = Helper::guidToString(m_discovery.guid);
+	m_deviceUid = Helper::uidToString(m_discovery.uid);
 }
 
 Device::Device(const Device &other) :
@@ -76,7 +76,7 @@ void Device::copy(const Device &other)
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	this->m_lib = other.m_lib;
 	this->m_discovery = other.m_discovery;
-	this->m_deviceGuid = other.m_deviceGuid;
+	this->m_deviceUid = other.m_deviceUid;
 	if (other.m_pDetails)
 	{
 		this->m_pDetails = new device_details();
@@ -118,10 +118,10 @@ enum manageability_state Device::getManageabilityState()
 	return getDiscovery().manageability;
 }
 
-std::string Device::getGuid()
+std::string Device::getUid()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	return Helper::guidToString(getDiscovery().guid);
+	return Helper::uidToString(getDiscovery().uid);
 }
 
 enum memory_type Device::getMemoryType()
@@ -270,7 +270,7 @@ fw_log_level Device::getFwLogLevel()
 	fw_log_level result = FW_LOG_LEVEL_UNKNOWN;
 	try
 	{
-		result = m_lib.getFwLogLevel(m_deviceGuid);
+		result = m_lib.getFwLogLevel(m_deviceUid);
 	}
 	catch (core::LibraryException &)
 	{
@@ -659,7 +659,7 @@ const device_details &Device::getDetails()
 		m_pDetails = new device_details();
 		try
 		{
-			const device_details &details = m_lib.getDeviceDetails(m_deviceGuid);
+			const device_details &details = m_lib.getDeviceDetails(m_deviceUid);
 			memmove(m_pDetails, &details, sizeof(details));
 		}
 		catch (core::LibraryException &e)
@@ -682,9 +682,9 @@ const std::vector<std::string> &Device::getEvents()
 		m_pActionRequiredEvents = new std::vector<std::string>();
 		event_filter filter;
 		memset(&filter, 0, sizeof(filter));
-		filter.filter_mask = NVM_FILTER_ON_AR | NVM_FILTER_ON_GUID;
+		filter.filter_mask = NVM_FILTER_ON_AR | NVM_FILTER_ON_UID;
 		filter.action_required = 1;
-		memmove(filter.guid, getDiscovery().guid, sizeof(filter.guid));
+		memmove(filter.uid, getDiscovery().uid, sizeof(filter.uid));
 
 		try
 		{

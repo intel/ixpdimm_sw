@@ -42,7 +42,7 @@ wbem::support::EventLogFilter::EventLogFilter() :
 		m_typeValue(0),
 		m_codeValueSet(false),
 		m_codeValue(0),
-		m_guidValueSet(false),
+		m_uidValueSet(false),
 		m_actionReqValueSet(false),
 		m_actionReqValue(false),
 		m_beforeTimestampValueSet(false),
@@ -147,25 +147,25 @@ wbem::framework::UINT16 wbem::support::EventLogFilter::getCode() throw (framewor
 }
 
 /*
- * Set the GUID filter.
+ * Set the UID filter.
  */
-void wbem::support::EventLogFilter::setGuid(const std::string &guid)
+void wbem::support::EventLogFilter::setUid(const std::string &uid)
 {
-	m_guidValue = guid;
-	m_guidValueSet = true;
+	m_uidValue = uid;
+	m_uidValueSet = true;
 }
 
 /*
- * Fetch the GUID filter value.
+ * Fetch the UID filter value.
  */
-std::string wbem::support::EventLogFilter::getGuid() throw (framework::Exception)
+std::string wbem::support::EventLogFilter::getUid() throw (framework::Exception)
 {
-	if (!hasGuid())
+	if (!hasUid())
 	{
-		COMMON_LOG_ERROR("requested GUID filter when none set");
-		throw framework::ExceptionBadParameter("guid");
+		COMMON_LOG_ERROR("requested UID filter when none set");
+		throw framework::ExceptionBadParameter("uid");
 	}
-	return m_guidValue;
+	return m_uidValue;
 }
 
 /*

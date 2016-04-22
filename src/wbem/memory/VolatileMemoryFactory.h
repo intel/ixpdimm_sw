@@ -132,7 +132,7 @@ class NVM_API VolatileMemoryFactory: public framework_interface::NvmInstanceFact
 		wbem::framework::UINT64 getMemoryCapacity()
 			throw (wbem::framework::Exception);
 
-		wbem::framework::UINT64 getDimmMemoryCapacity(std::string guidStr)
+		wbem::framework::UINT64 getDimmMemoryCapacity(std::string uidStr)
 			throw (wbem::framework::Exception);
 
 		wbem::framework::UINT16 getHealthState()

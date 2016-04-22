@@ -138,17 +138,17 @@ public:
 	static void scaleNumberBaseTen(COMMON_UINT64 num, COMMON_INT32* pscaled, COMMON_INT32* pscaler);
 
 	/*!
-	 * Helper function to split the deviceId Property into its respective device GUID and sensor
+	 * Helper function to split the deviceId Property into its respective device UID and sensor
 	 * type
 	 * @param[in] deviceIdAttribute
-	 * @param[out] deviceGuid
+	 * @param[out] deviceUid
 	 * @param[out] type
 	 * @return
 	 * 		true if the type is valid, false if not
 	 *
 	 */
 	static bool splitDeviceIdAttribute(const framework::Attribute& deviceIdAttribute,
-			std::string &deviceGuid, int& type);
+			std::string &deviceUid, int& type);
 
 	/*!
 	 * Helper function to get the element name given the type
@@ -161,22 +161,22 @@ public:
 	 * Fetch the expected object path for the sensor of a given type on a given DIMM.
 	 * @param type - WBEM sensor type
 	 * @param hostname - local hostname
-	 * @param dimmGuid
+	 * @param dimmUid
 	 * @return the sensor's object path
 	 * @throw Exception if type is invalid
 	 */
 	static framework::ObjectPath getSensorPath(const int type,
-			const std::string &hostname, const std::string &dimmGuid)
+			const std::string &hostname, const std::string &dimmUid)
 			throw (framework::Exception);
 
 	/*!
 	 * Helper function to update the sensor. Mostly provided as passthrough for the CLI
-	 * @param dimmGuid
+	 * @param dimmUid
 	 * @param type - sensor type
 	 * @param attributes - list of attributes to change
 	 * @param pInstance - Instance to update
 	 */
-	void updateSensor(const std::string &dimmGuid, const int type, const framework::attributes_t &attributes,
+	void updateSensor(const std::string &dimmUid, const int type, const framework::attributes_t &attributes,
 			framework::Instance *pInstance);
 
 	bool isAssociated(const std::string &associationClass, framework::Instance *pAntInstance,

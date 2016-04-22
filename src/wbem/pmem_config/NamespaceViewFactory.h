@@ -113,9 +113,9 @@ class NVM_API NamespaceViewFactory : public framework_interface::NvmInstanceFact
 		framework::instance_names_t* getInstanceNames() throw (framework::Exception);
 
 		/*
-		 * Helper function to retrieve a list of namespace Guids
+		 * Helper function to retrieve a list of namespace Uids
 		 */
-		static std::vector<std::string> getNamespaceGuidList()
+		static std::vector<std::string> getNamespaceUidList()
 			throw (framework::Exception);
 
 		/*

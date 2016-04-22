@@ -39,9 +39,9 @@ namespace device
 class NVM_API DeviceFirmwareInfo
 {
 public:
-	DeviceFirmwareInfo(std::string guid, device_fw_info fw_info) : m_guid(guid), m_info(fw_info) { }
+	DeviceFirmwareInfo(std::string uid, device_fw_info fw_info) : m_uid(uid), m_info(fw_info) { }
 
-	std::string getGuid() const { return m_guid; }
+	std::string getUid() const { return m_uid; }
 
 	std::string getActiveRevision() const;
 	enum device_fw_type getActiveType() const;
@@ -53,7 +53,7 @@ public:
 
 	DeviceFirmwareInfo * clone() const;
 private:
-	std::string m_guid;
+	std::string m_uid;
 	device_fw_info m_info;
 };
 }

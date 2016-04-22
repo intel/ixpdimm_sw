@@ -289,7 +289,7 @@ cli::nvmcli::NamespaceFeature::NamespaceFeature() : cli::framework::FeatureBase(
 	m_deleteNamespace(wbemDeleteNamespace),
 	m_getSupportedBlockSizes(wbemGetSupportedBlockSizes),
 	m_getSupportedSizeRange(wbemGetSupportedSizeRange),
-	m_poolGuid(""), m_blockSize(0), m_blockSizeExists(false),
+	m_poolUid(""), m_blockSize(0), m_blockSizeExists(false),
 	m_blockCount(0), m_blockCountExists(false), m_nsTypeStr(""),
 	m_nsType(0), m_capacityExists(false), m_capacityGB(0),
 	m_friendlyName(""), m_friendlyNameExists(false),

@@ -78,7 +78,7 @@ int main(int arg_count, char **args)
 	event.addAttribute("severity").isInt32().isUnsigned();
 	event.addAttribute("code").isInt32().isUnsigned();
 	event.addAttribute("action_required").isInt32().isUnsigned();
-	event.addAttribute("guid").isText(37);
+	event.addAttribute("uid").isText(37);
 	event.addAttribute("time").isInt64().isUnsigned();
 	event.addAttribute("arg1").isText(1024);
 	event.addAttribute("arg2").isText(1024);
@@ -91,7 +91,7 @@ int main(int arg_count, char **args)
 	 */
 	Entity topology_state("topology_state", "Monitor stored topology for detecting topology changes on restart.");
 	topology_state.addAttribute("device_handle").isInt32().isUnsigned().isPk();
-	topology_state.addAttribute("guid").isText(37);
+	topology_state.addAttribute("uid").isText(37);
 	topology_state.addAttribute("manufacturer").isInt32().isUnsigned();
 	topology_state.addAttribute("serial_num").isInt32().isUnsigned();
 	topology_state.addAttribute("model_num").isText(21);
@@ -240,7 +240,7 @@ int main(int arg_count, char **args)
 
 	Entity nvm_namespace("namespace", "Persistent memory namespaces.");
 	nvm_namespace.includesHistory();
-	nvm_namespace.addAttribute("namespace_guid").isText(37).isPk();
+	nvm_namespace.addAttribute("namespace_uid").isText(37).isPk();
 	nvm_namespace.addAttribute("friendly_name").isText(64);
 	nvm_namespace.addAttribute("block_size").isInt32().isUnsigned();
 	nvm_namespace.addAttribute("block_count").isInt64().isUnsigned();
@@ -328,7 +328,7 @@ int main(int arg_count, char **args)
 	 * For event monitoring of namespace health state transitions
 	 */
 	Entity namespace_state("namespace_state", "Monitor stored namespace state for detecting changes.");
-	namespace_state.addAttribute("namespace_guid").isText(37).isPk();
+	namespace_state.addAttribute("namespace_uid").isText(37).isPk();
 	namespace_state.addAttribute("health_state").isInt32();
 	entities.push_back(namespace_state);
 
@@ -673,7 +673,7 @@ int main(int arg_count, char **args)
 	// Dimm Performance
 	Entity performance("performance", "Monitor stored DIMM performance metrics.");
 	performance.addAttribute("id").isInt32().isPk(true);
-	performance.addAttribute("dimm_guid").isText(37);
+	performance.addAttribute("dimm_uid").isText(37);
 	performance.addAttribute("time").isInt64().isUnsigned().orderByDesc();
 	performance.addAttribute("bytes_read").isInt64().isUnsigned();
 	performance.addAttribute("bytes_written").isInt64().isUnsigned();
@@ -687,7 +687,7 @@ int main(int arg_count, char **args)
 	Entity driver_metadata_check_diag_result("driver_metadata_check_diag_result", "Simulation only driver metadata diagnostic results.");
 	driver_metadata_check_diag_result.addAttribute("id").isInt32().isPk(true);
 	driver_metadata_check_diag_result.addAttribute("result_type").isInt32();
-	driver_metadata_check_diag_result.addAttribute("ns_guid").isText(37);
+	driver_metadata_check_diag_result.addAttribute("ns_uid").isText(37);
 	driver_metadata_check_diag_result.addAttribute("device_handle").isInt32().isUnsigned();
 	driver_metadata_check_diag_result.addAttribute("health_flag").isInt32().isUnsigned();
 	entities.push_back(driver_metadata_check_diag_result);

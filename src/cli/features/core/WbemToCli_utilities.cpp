@@ -192,21 +192,21 @@ int cli::nvmcli::filterInstances( const wbem::framework::instances_t &instances,
 					std::string attr = (*foundIter).first;
 					std::string keyStr = "";
 					std::string valueStr = "";
-					int dimmKeySize = wbem::DIMMGUID_KEY.size();
+					int dimmKeySize = wbem::DIMMUID_KEY.size();
 					int socketKeySize = wbem::SOCKETID_KEY.size();
 					int poolKeySize = wbem::POOLID_KEY.size();
 					int instanceIdKeySize = wbem::INSTANCEID_KEY.size();
 					int namespaceIdKeySize = wbem::NAMESPACEID_KEY.size();
 
-					if (attr.compare(0, dimmKeySize, wbem::DIMMGUID_KEY) == 0)
+					if (attr.compare(0, dimmKeySize, wbem::DIMMUID_KEY) == 0)
 					{
 						keyStr = TARGET_DIMM.name;
 
-						// attempt to convert guids to ID's for property output
+						// attempt to convert uids to ID's for property output
 						std::string dimmIdStr = attr.substr(dimmKeySize, attr.size()-dimmKeySize);
 						try
 						{
-							valueStr = wbem::physical_asset::NVDIMMFactory::guidToDimmIdStr(dimmIdStr);
+							valueStr = wbem::physical_asset::NVDIMMFactory::uidToDimmIdStr(dimmIdStr);
 						}
 						catch (wbem::framework::Exception &)
 						{
@@ -325,53 +325,53 @@ void cli::nvmcli::generateDimmFilter(
 		cli::nvmcli::filters_t &filters,
 		std::string dimmAttributeKey)
 {
-	// filter on one or more dimm GUIDs or dimm handles
+	// filter on one or more dimm UIDs or dimm handles
 	std::vector<std::string> dimmTargets =
 			cli::framework::Parser::getTargetValues(parsedCommand,
 					cli::nvmcli::TARGET_DIMM.name);
 	if (!dimmTargets.empty())
 	{
-		// guids or handles can be mixed
-		struct instanceFilter guidFilter;
-		guidFilter.attributeName = dimmAttributeKey;
+		// uids or handles can be mixed
+		struct instanceFilter uidFilter;
+		uidFilter.attributeName = dimmAttributeKey;
 
 		for (std::vector<std::string>::const_iterator dimmTargetIter = dimmTargets.begin();
 				dimmTargetIter != dimmTargets.end(); dimmTargetIter++)
 		{
-			// assume guid if not a number
+			// assume uid if not a number
 			std::string target = (*dimmTargetIter);
 			if (!isStringValidNumber(target))
 			{
-				guidFilter.attributeValues.push_back(target);
+				uidFilter.attributeValues.push_back(target);
 			}
 			else
 			{
-				// convert the handle to a guid
+				// convert the handle to a uid
 				NVM_UINT32 handle = strtoul(target.c_str(), NULL, 0);
-				std::string guidStr;
+				std::string uidStr;
 				try
 				{
-					if (handleToGuid(handle, guidStr))
+					if (handleToUid(handle, uidStr))
 					{
-						guidFilter.attributeValues.push_back(guidStr);
+						uidFilter.attributeValues.push_back(uidStr);
 					}
 					else // couldn't find it ... so just add the target value.
 					{
-						guidFilter.attributeValues.push_back(target);
+						uidFilter.attributeValues.push_back(target);
 					}
 				}
-				// handle the case where we throw an exception looking up the GUID
+				// handle the case where we throw an exception looking up the UID
 				catch (wbem::framework::Exception &)
 				{
-					guidFilter.attributeValues.push_back(target);
+					uidFilter.attributeValues.push_back(target);
 				}
 			}
 		}
 
-		if (!guidFilter.attributeValues.empty())
+		if (!uidFilter.attributeValues.empty())
 		{
-			filters.push_back(guidFilter);
-			// make sure we have the guid filter attribute
+			filters.push_back(uidFilter);
+			// make sure we have the uid filter attribute
 			if (!wbem::framework_interface::NvmInstanceFactory::containsAttribute(dimmAttributeKey, attributes))
 			{
 				attributes.insert(attributes.begin(), dimmAttributeKey);
@@ -415,8 +415,8 @@ void cli::nvmcli::generateSocketFilter(
 
 /*
  * For commands that support an optional -dimm target,
- * retrieve the dimm GUID(s) of the specified target
- * or all manageable dimm GUIDs if not specified.
+ * retrieve the dimm UID(s) of the specified target
+ * or all manageable dimm UIDs if not specified.
  */
 cli::framework::ErrorResult *cli::nvmcli::getDimms(
 		const framework::ParsedCommand &parsedCommand,
@@ -431,28 +431,28 @@ cli::framework::ErrorResult *cli::nvmcli::getDimms(
 		// a target value was specified
 		if (!dimmTargets.empty())
 		{
-			// iterate through all the targets and convert any handles to guids
+			// iterate through all the targets and convert any handles to uids
 			for (std::vector<std::string>::const_iterator dimmIter = dimmTargets.begin();
 					dimmIter != dimmTargets.end(); dimmIter++)
 			{
-				// assume handle if number, otherwise guid
+				// assume handle if number, otherwise uid
 				std::string target = (*dimmIter);
-				std::string guid;
+				std::string uid;
 				if (isStringValidNumber(target))
 				{
 					NVM_UINT32 handle = strtoul(target.c_str(), NULL, 0);
-					if (!handleToGuid(handle, guid))
+					if (!handleToUid(handle, uid))
 					{
 						throw wbem::exception::NvmExceptionBadTarget(TARGET_DIMM.name.c_str(), target.c_str());
 					}
 				}
 				else
 				{
-					guid = target;
+					uid = target;
 				}
 				// make sure it exists and is manageable
 				int rc;
-				if ((rc = wbem::physical_asset::NVDIMMFactory::existsAndIsManageable(guid))
+				if ((rc = wbem::physical_asset::NVDIMMFactory::existsAndIsManageable(uid))
 							!= NVM_SUCCESS)
 				{
 					if (NVM_ERR_BADDEVICE == rc)
@@ -467,14 +467,14 @@ cli::framework::ErrorResult *cli::nvmcli::getDimms(
 				}
 				else
 				{
-					dimms.push_back(guid);
+					dimms.push_back(uid);
 				}
 			}
 		}
 		// a dimm target value was not specified so get all manageable devices
 		else
 		{
-			dimms = wbem::physical_asset::NVDIMMFactory::getManageableDeviceGuids();
+			dimms = wbem::physical_asset::NVDIMMFactory::getManageableDeviceUids();
 		}
 	}
 	catch (wbem::framework::Exception &e)
@@ -487,8 +487,8 @@ cli::framework::ErrorResult *cli::nvmcli::getDimms(
 
 /*
  * For commands that support an optional -socket target,
- * retrieve the manageable dimm GUID(s) of the specified target
- * or all manageable dimm GUIDs if not specified.
+ * retrieve the manageable dimm UID(s) of the specified target
+ * or all manageable dimm UIDs if not specified.
  */
 cli::framework::ErrorResult *cli::nvmcli::getDimmsFromSockets(
 		const framework::ParsedCommand &parsedCommand,
@@ -524,7 +524,7 @@ cli::framework::ErrorResult *cli::nvmcli::getDimmsFromSockets(
 				}
 				else
 				{
-					// add their guids to the dimm list
+					// add their uids to the dimm list
 					for (wbem::framework::instances_t::const_iterator iter = matches.begin();
 							iter != matches.end(); iter++)
 					{
@@ -534,11 +534,11 @@ cli::framework::ErrorResult *cli::nvmcli::getDimmsFromSockets(
 						{
 							if (manageabilityAttr.uintValue() == MANAGEMENT_VALIDCONFIG)
 							{
-								wbem::framework::Attribute guidAttr;
-								if (iter->getAttribute(wbem::TAG_KEY, guidAttr) ==
+								wbem::framework::Attribute uidAttr;
+								if (iter->getAttribute(wbem::TAG_KEY, uidAttr) ==
 										wbem::framework::SUCCESS)
 								{
-									dimms.push_back(guidAttr.stringValue());
+									dimms.push_back(uidAttr.stringValue());
 								}
 								else
 								{
@@ -565,7 +565,7 @@ cli::framework::ErrorResult *cli::nvmcli::getDimmsFromSockets(
 
 		else // no socket target so get all manageable DIMMs
 		{
-			dimms = wbem::physical_asset::NVDIMMFactory::getManageableDeviceGuids();
+			dimms = wbem::physical_asset::NVDIMMFactory::getManageableDeviceUids();
 		}
 	}
 	catch (wbem::framework::Exception &e)
@@ -1316,7 +1316,7 @@ std::string cli::nvmcli::uint64ToHexString(const unsigned long long &value)
 	return result.str();
 }
 
-bool cli::nvmcli::handleToGuid(const NVM_UINT32 &handle, std::string &dimmGuid)
+bool cli::nvmcli::handleToUid(const NVM_UINT32 &handle, std::string &dimmUid)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
@@ -1331,9 +1331,9 @@ bool cli::nvmcli::handleToGuid(const NVM_UINT32 &handle, std::string &dimmGuid)
 		if ((*iter).device_handle.handle == handle)
 		{
 			validHandle = true;
-			NVM_GUID_STR guidStr;
-			uid_copy((*iter).guid, guidStr);
-			dimmGuid = guidStr;
+			NVM_UID uidStr;
+			uid_copy((*iter).uid, uidStr);
+			dimmUid = uidStr;
 			break;
 		}
 	}

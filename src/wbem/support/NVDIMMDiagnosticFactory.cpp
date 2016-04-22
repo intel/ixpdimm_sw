@@ -200,11 +200,11 @@ wbem::framework::UINT32 wbem::support::NVDIMMDiagnosticFactory::executeMethod(
 			std::string testType = object.getKeyValue(NAME_KEY).stringValue();
 			framework::UINT16_LIST ignoreResults = getDiagnosticIgnoreList(inParms);
 
-			// fill guid
-			COMMON_UID guid;
-			getGuidFromManagedElement(inParms, testType, guid);
+			// fill uid
+			COMMON_UID uid;
+			getUidFromManagedElement(inParms, testType, uid);
 
-			RunDiagnosticService(guid, ignoreResults, testType);
+			RunDiagnosticService(uid, ignoreResults, testType);
 		}	// if NVDIMMDIAGNOSTIC_RUNDIAGNOSTICSERVICE
 		else
 		{
@@ -242,7 +242,7 @@ wbem::framework::UINT32 wbem::support::NVDIMMDiagnosticFactory::executeMethod(
 //		 of returning error codes.  The out parameters are returned instead.
 // ------------------------------------------------------------------------------------------------
 
-void wbem::support::NVDIMMDiagnosticFactory::RunDiagnosticService(NVM_GUID device_guid,
+void wbem::support::NVDIMMDiagnosticFactory::RunDiagnosticService(NVM_UID device_uid,
 		framework::UINT16_LIST ignoreList, std::string testType)
 	throw (framework::Exception)
 {
@@ -252,7 +252,7 @@ void wbem::support::NVDIMMDiagnosticFactory::RunDiagnosticService(NVM_GUID devic
 
 	int rc = NVM_SUCCESS;
 	NVM_UINT32 results = 0;
-	if ((rc = m_RunDiagProvider(device_guid,
+	if ((rc = m_RunDiagProvider(device_uid,
 			&diags, &results)) != NVM_SUCCESS)
 	{
 		throw exception::NvmExceptionLibError(rc);
@@ -528,8 +528,8 @@ wbem::framework::UINT16_LIST wbem::support::NVDIMMDiagnosticFactory::getDiagnost
 	return ignoreResults;
 }
 
-void wbem::support::NVDIMMDiagnosticFactory::getGuidFromManagedElement(
-		wbem::framework::attributes_t& inParms, const std::string &testType, NVM_GUID guid)
+void wbem::support::NVDIMMDiagnosticFactory::getUidFromManagedElement(
+		wbem::framework::attributes_t& inParms, const std::string &testType, NVM_UID uid)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
@@ -538,10 +538,10 @@ void wbem::support::NVDIMMDiagnosticFactory::getGuidFromManagedElement(
 	// Only HealthCheck requires an NVDIMM
 	if (testType == NVDIMMDIAGNOSTIC_TEST_QUICK)
 	{
-		// check for guid
+		// check for uid
 		framework::ObjectPath managedElementPath = validateManagedElementObjectPath(managedElementRef,
 				physical_asset::NVDIMM_CREATIONCLASSNAME);
-		uid_copy(managedElementPath.getKeyValue(TAG_KEY).stringValue().c_str(), guid);
+		uid_copy(managedElementPath.getKeyValue(TAG_KEY).stringValue().c_str(), uid);
 	}
 	else // other checks require either NULL or BaseServer
 	{
@@ -550,7 +550,7 @@ void wbem::support::NVDIMMDiagnosticFactory::getGuidFromManagedElement(
 			validateManagedElementObjectPath(managedElementRef, server::BASESERVER_CREATIONCLASSNAME);
 		}
 
-		memset(guid, 0, NVM_GUID_LEN);
+		memset(uid, 0, NVM_MAX_UID_LEN);
 	}
 }
 

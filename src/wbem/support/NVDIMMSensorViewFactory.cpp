@@ -58,7 +58,7 @@ void wbem::support::NVDIMMSensorViewFactory::populateAttributeList(framework::at
 	// Add the View attributes needed by the CLI
 	attributes.push_back(TYPE_KEY);
 	attributes.push_back(DIMMID_KEY); // Id is what gets displayed in CLI
-	attributes.push_back(DIMMGUID_KEY); // GUID is for filtering
+	attributes.push_back(DIMMUID_KEY); // UID is for filtering
 	attributes.push_back(DIMMHANDLE_KEY); // Handle is for filtering
 	attributes.push_back(CURRENTVALUE_KEY);
 	attributes.push_back(CURRENTSTATE_KEY);
@@ -238,40 +238,40 @@ wbem::framework::Instance* wbem::support::NVDIMMSensorViewFactory::getInstance(
 
 		framework::Attribute attribute = path.getKeyValue(DEVICEID_KEY);
 
-		std::string guidStr;
+		std::string uidStr;
 		enum sensor_type type;
-		if(!NVDIMMSensorFactory::splitDeviceIdAttribute(attribute, guidStr, (int &)type))
+		if(!NVDIMMSensorFactory::splitDeviceIdAttribute(attribute, uidStr, (int &)type))
 		{
 			throw framework::ExceptionBadParameter(DEVICEID_KEY.c_str());
 		}
 
-		NVM_GUID guid;
-		uid_copy(guidStr.c_str(), guid);
+		NVM_UID uid;
+		uid_copy(uidStr.c_str(), uid);
 
 		struct sensor sensor;
 		int rc = NVM_SUCCESS;
-		if ((rc = nvm_get_sensor(guid, type, &sensor)) != NVM_SUCCESS)
+		if ((rc = nvm_get_sensor(uid, type, &sensor)) != NVM_SUCCESS)
 		{
 			throw exception::NvmExceptionLibError(rc);
 		}
 
-		// DimmID = handle or guid depending on user selection
+		// DimmID = handle or uid depending on user selection
 		if (containsAttribute(DIMMID_KEY, attributes))
 		{
-				framework::Attribute attrDimmId = physical_asset::NVDIMMFactory::guidToDimmIdAttribute(guidStr);
+				framework::Attribute attrDimmId = physical_asset::NVDIMMFactory::uidToDimmIdAttribute(uidStr);
 				pInstance->setAttribute(DIMMID_KEY, attrDimmId, attributes);
 		}
-		// DimmGUID
-		if (containsAttribute(DIMMGUID_KEY, attributes))
+		// dimmUid
+		if (containsAttribute(DIMMUID_KEY, attributes))
 		{
-			framework::Attribute attrDimmHandle(guidStr, false);
-			pInstance->setAttribute(DIMMGUID_KEY, attrDimmHandle, attributes);
+			framework::Attribute attrDimmHandle(uidStr, false);
+			pInstance->setAttribute(DIMMUID_KEY, attrDimmHandle, attributes);
 		}
 		// DimmHandle = NFIT Handle
 		if (containsAttribute(DIMMHANDLE_KEY, attributes))
 		{
 			NVM_UINT32 handle;
-			physical_asset::NVDIMMFactory::guidToHandle(guidStr, handle);
+			physical_asset::NVDIMMFactory::uidToHandle(uidStr, handle);
 			framework::Attribute attrDimmHandle(handle, false);
 			pInstance->setAttribute(DIMMHANDLE_KEY, attrDimmHandle, attributes);
 		}

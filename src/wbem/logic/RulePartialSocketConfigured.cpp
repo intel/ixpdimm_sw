@@ -76,9 +76,9 @@ std::set<std::string> wbem::logic::RulePartialSocketConfigured::getSetOfAllDimms
 	{
 		if ((*iter).socket_id == socketId)
 		{
-			NVM_GUID_STR guidStr;
-			uid_copy((*iter).guid, guidStr);
-			dimmSet.insert(guidStr);
+			NVM_UID uidStr;
+			uid_copy((*iter).uid, uidStr);
+			dimmSet.insert(uidStr);
 		}
 	}
 
@@ -96,14 +96,14 @@ std::set<std::string> wbem::logic::RulePartialSocketConfigured::getSetOfRequeste
 	{
 		if ((*iter).socket == socketId)
 		{
-			dimmSet.insert((*iter).guid);
+			dimmSet.insert((*iter).uid);
 		}
 	}
 
 	return dimmSet;
 }
 
-bool wbem::logic::RulePartialSocketConfigured::deviceIsNew(NVM_GUID guid)
+bool wbem::logic::RulePartialSocketConfigured::deviceIsNew(NVM_UID uid)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
@@ -112,7 +112,7 @@ bool wbem::logic::RulePartialSocketConfigured::deviceIsNew(NVM_GUID guid)
 
 	struct device_status status;
 	memset(&status, 0, sizeof (struct device_status));
-	int rc = pApi->getDeviceStatus(guid, &status);
+	int rc = pApi->getDeviceStatus(uid, &status);
 	if (rc != NVM_SUCCESS)
 	{
 		COMMON_LOG_ERROR_F("Failed to retrieve device status rc = ", rc);
@@ -136,11 +136,11 @@ std::set<std::string> wbem::logic::RulePartialSocketConfigured::getSetOfNewDimms
 	for (std::vector<struct device_discovery>::iterator iter = m_manageableDimms.begin();
 			iter != m_manageableDimms.end(); iter ++)
 	{
-		if ((*iter).socket_id == socketId && deviceIsNew(iter->guid))
+		if ((*iter).socket_id == socketId && deviceIsNew(iter->uid))
 		{
-			NVM_GUID_STR guidStr;
-			uid_copy(iter->guid, guidStr);
-			newDimms.insert(guidStr);
+			NVM_UID uidStr;
+			uid_copy(iter->uid, uidStr);
+			newDimms.insert(uidStr);
 		}
 	}
 	return newDimms;

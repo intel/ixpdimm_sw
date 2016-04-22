@@ -297,7 +297,7 @@ void wbem::mem_config::MemoryConfigurationServiceFactory::getDimmsForMemAllocSet
 			struct device_status status;
 			memset(&status, 0, sizeof(device_status));
 			int rc = NVM_SUCCESS;
-			if ((rc = m_pApi->getDeviceStatus(devices[i].guid, &status)) != NVM_SUCCESS)
+			if ((rc = m_pApi->getDeviceStatus(devices[i].uid, &status)) != NVM_SUCCESS)
 			{
 				COMMON_LOG_ERROR("Could not get device status");
 				throw exception::NvmExceptionLibError(rc);
@@ -526,15 +526,15 @@ wbem::mem_config::MemoryConfigurationServiceFactory::getReturnCodeFromLibExcepti
 	return rc;
 }
 
-void wbem::mem_config::MemoryConfigurationServiceFactory::removeGoalFromDimms(std::vector<std::string> dimmGuids)
+void wbem::mem_config::MemoryConfigurationServiceFactory::removeGoalFromDimms(std::vector<std::string> dimmUids)
 {
 	bool atLeastOneRequestSucceeded = false;
-	std::vector<std::string>::iterator guidIter = dimmGuids.begin();
-	for (; guidIter!= dimmGuids.end(); guidIter++)
+	std::vector<std::string>::iterator uidIter = dimmUids.begin();
+	for (; uidIter!= dimmUids.end(); uidIter++)
 	{
-		NVM_GUID guid;
-		uid_copy((*guidIter).c_str(), guid);
-		int rc = m_pApi->deleteConfigGoal(guid);
+		NVM_UID uid;
+		uid_copy((*uidIter).c_str(), uid);
+		int rc = m_pApi->deleteConfigGoal(uid);
 		if (rc != NVM_SUCCESS && rc != NVM_ERR_NOTFOUND)
 		{
 			COMMON_LOG_ERROR_F("deleting config goal failed with rc = %d", rc);
@@ -797,18 +797,18 @@ void wbem::mem_config::MemoryConfigurationServiceFactory::settingsStringsToReque
 /*
  * Detect whether the DIMM has a config goal.
  */
-bool wbem::mem_config::MemoryConfigurationServiceFactory::dimmHasGoal(const NVM_GUID dimmGuid)
+bool wbem::mem_config::MemoryConfigurationServiceFactory::dimmHasGoal(const NVM_UID dimmUid)
 {
 	bool hasGoal = false;
 
-	NVM_GUID_STR guidStr;
-	uid_copy(dimmGuid, guidStr);
+	NVM_UID uidStr;
+	uid_copy(dimmUid, uidStr);
 
 	lib_interface::NvmApi *pApi = lib_interface::NvmApi::getApi();
 	try
 	{
 		struct config_goal goal;
-		pApi->getConfigGoalForDimm(guidStr, goal);
+		pApi->getConfigGoalForDimm(uidStr, goal);
 
 		// Goals that have been successfully applied are no longer goals
 		// for the purposes of this view
@@ -823,7 +823,7 @@ bool wbem::mem_config::MemoryConfigurationServiceFactory::dimmHasGoal(const NVM_
 		if (errorCode != NVM_ERR_NOTMANAGEABLE && errorCode != NVM_ERR_NOTFOUND)
 		{
 			COMMON_LOG_ERROR_F("Couldn't get config goal for DIMM %s, error %d",
-			                   guidStr, errorCode);
+			                   uidStr, errorCode);
 			throw;
 		}
 	}
@@ -844,10 +844,10 @@ wbem::framework::Instance* wbem::mem_config::MemoryConfigurationServiceFactory::
 	framework::Attribute idAttr = path.getKeyValue(INSTANCEID_KEY);
 	std::string instanceId = idAttr.stringValue();
 
-	// We expect the the instanceId to be the device guid as a string + either a 'C' or 'G'.
-	// So its length should be the same as NVM_GUIDSTR_LEN because the 'C' or 'G' character
+	// We expect the the instanceId to be the device uid as a string + either a 'C' or 'G'.
+	// So its length should be the same as NVM_MAX_UID_LEN because the 'C' or 'G' character
 	// will take the place of the null terminator.
-	if (instanceId.size() != NVM_GUIDSTR_LEN )
+	if (instanceId.size() != NVM_MAX_UID_LEN )
 	{
 		throw framework::ExceptionBadParameter(INSTANCEID_KEY.c_str());
 	}
@@ -864,12 +864,12 @@ wbem::framework::Instance* wbem::mem_config::MemoryConfigurationServiceFactory::
 		throw;
 	}
 	
-	std::string deviceGuid = instanceId.substr(0, NVM_GUIDSTR_LEN - 1);
+	std::string deviceUid = instanceId.substr(0, NVM_MAX_UID_LEN - 1);
 
-	NVM_GUID guid;
-	uid_copy(deviceGuid.c_str(), guid);
+	NVM_UID uid;
+	uid_copy(deviceUid.c_str(), uid);
 
-	int rc = m_DeleteConfigGoalProvider(guid);
+	int rc = m_DeleteConfigGoalProvider(uid);
 	if (rc != NVM_SUCCESS)
 	{
 		delete pInstance;
@@ -933,13 +933,13 @@ void wbem::mem_config::MemoryConfigurationServiceFactory::exportSystemConfigToPa
 	// iterate over all manageable dimms
 	size_t unconfigured_dimm_count = 0;
 	bool append = false;
-	std::vector<std::string> dimms = physical_asset::NVDIMMFactory::getManageableDeviceGuids();
+	std::vector<std::string> dimms = physical_asset::NVDIMMFactory::getManageableDeviceUids();
 	for (std::vector<std::string>::const_iterator iter = dimms.begin();
 			iter != dimms.end(); iter++)
 	{
-		NVM_GUID guid;
-		uid_copy((*iter).c_str(), guid);
-		int rc = nvm_dump_config(guid, path.c_str(), path.length() + 1, append);
+		NVM_UID uid;
+		uid_copy((*iter).c_str(), uid);
+		int rc = nvm_dump_config(uid, path.c_str(), path.length() + 1, append);
 		if (rc != NVM_SUCCESS)
 		{
 			if (rc == NVM_ERR_NOTFOUND)
@@ -990,9 +990,9 @@ void wbem::mem_config::MemoryConfigurationServiceFactory::importDimmConfigsFromP
 	for (std::vector<std::string>::const_iterator dimmIter = dimms.begin();
 			dimmIter != dimms.end(); dimmIter++)
 	{
-		NVM_GUID guid;
-		uid_copy((*dimmIter).c_str(), guid);
-		int rc = m_pApi->loadConfig(guid, path.c_str(), path.length() + 1);
+		NVM_UID uid;
+		uid_copy((*dimmIter).c_str(), uid);
+		int rc = m_pApi->loadConfig(uid, path.c_str(), path.length() + 1);
 		// revert all only any failure
 		if (rc != NVM_SUCCESS)
 		{
@@ -1003,18 +1003,18 @@ void wbem::mem_config::MemoryConfigurationServiceFactory::importDimmConfigsFromP
 }
 
 void wbem::mem_config::MemoryConfigurationServiceFactory::validateDimmList(
-		const std::vector<std::string> dimmGuids)
+		const std::vector<std::string> dimmUids)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	logic::MemoryAllocationRequest request;
 
-	for (std::vector<std::string>::const_iterator guidIter = dimmGuids.begin();
-			guidIter != dimmGuids.end(); guidIter++)
+	for (std::vector<std::string>::const_iterator uidIter = dimmUids.begin();
+			uidIter != dimmUids.end(); uidIter++)
 	{
 		struct device_discovery discovery;
 		memset(&discovery, 0, sizeof (discovery));
-		m_pApi->getDeviceDiscoveryForDimm(*guidIter, discovery);
+		m_pApi->getDeviceDiscoveryForDimm(*uidIter, discovery);
 
 		request.dimms.push_back(logic::MemoryAllocationUtil::deviceDiscoveryToDimm(discovery));
 	}
@@ -1037,9 +1037,9 @@ std::vector<std::string>
 	{
 		if (((*iter).socket_id == socketId))
 		{
-			NVM_GUID_STR guidStr;
-			uid_copy((*iter).guid, guidStr);
-			dimmIDs.push_back(std::string(guidStr));
+			NVM_UID uidStr;
+			uid_copy((*iter).uid, uidStr);
+			dimmIDs.push_back(std::string(uidStr));
 		}
 	}
 
@@ -1169,12 +1169,12 @@ wbem::framework::UINT32 wbem::mem_config::MemoryConfigurationServiceFactory::exe
 		throw framework::ExceptionBadParameter(MEMORYCONFIGURATIONSERVICE_TARGETS.c_str());
 	}
 
-	// convert target object path strings to dimm guids
-	framework::STR_LIST dimmGuids;
+	// convert target object path strings to dimm uids
+	framework::STR_LIST dimmUids;
 	for (framework::STR_LIST::const_iterator iter = dimmRefs.begin();
 		 iter!= dimmRefs.end(); iter++)
 	{
-		std::string guidStr;
+		std::string uidStr;
 		// Build the object path from the attribute
 		framework::ObjectPathBuilder builder(*iter);
 		framework::ObjectPath objPath;
@@ -1193,14 +1193,14 @@ wbem::framework::UINT32 wbem::mem_config::MemoryConfigurationServiceFactory::exe
 				throw framework::ExceptionBadParameter(MEMORYCONFIGURATIONSERVICE_TARGETS.c_str());
 			}
 
-			// make sure it contains a GUID and the GUID is valid
-			guidStr = objPath.getKeyValue(TAG_KEY).stringValue();
-			if (guidStr.length() != NVM_GUIDSTR_LEN - 1)
+			// make sure it contains a UID and the UID is valid
+			uidStr = objPath.getKeyValue(TAG_KEY).stringValue();
+			if (uidStr.length() != NVM_MAX_UID_LEN - 1)
 			{
 				COMMON_LOG_ERROR_F("Bad NVDIMM object path %s", (*iter).c_str());
 				throw framework::ExceptionBadParameter(MEMORYCONFIGURATIONSERVICE_TARGETS.c_str());
 			}
-			dimmGuids.push_back(guidStr);
+			dimmUids.push_back(uidStr);
 		}
 		catch (framework::Exception &)
 		{
@@ -1209,7 +1209,7 @@ wbem::framework::UINT32 wbem::mem_config::MemoryConfigurationServiceFactory::exe
 			throw;
 		}
 	}
-	importDimmConfigsFromURI(importFilePath, dimmGuids);
+	importDimmConfigsFromURI(importFilePath, dimmUids);
 	wbemRc = framework::MOF_ERR_SUCCESS;
 	return httpRc;
 }
@@ -1223,10 +1223,10 @@ wbem::framework::UINT32 wbem::mem_config::MemoryConfigurationServiceFactory::exe
 
 	std::string ref = inParms[MEMORYCONFIGURATIONSERVICE_SYSTEMPROCESSOR].stringValue();
 
-	std::vector<std::string> dimmGuids;
+	std::vector<std::string> dimmUids;
 	if (ref.empty())
 	{
-		dimmGuids = wbem::physical_asset::NVDIMMFactory::getManageableDeviceGuids();
+		dimmUids = wbem::physical_asset::NVDIMMFactory::getManageableDeviceUids();
 	}
 	else
 	{
@@ -1235,7 +1235,7 @@ wbem::framework::UINT32 wbem::mem_config::MemoryConfigurationServiceFactory::exe
 
 		if (socketIdIsValid(socketId))
 		{
-			dimmGuids = getManageableDimmIDsForSocket(socketId);
+			dimmUids = getManageableDimmIDsForSocket(socketId);
 		}
 		else
 		{
@@ -1244,7 +1244,7 @@ wbem::framework::UINT32 wbem::mem_config::MemoryConfigurationServiceFactory::exe
 		}
 	}
 
-	removeGoalFromDimms(dimmGuids);
+	removeGoalFromDimms(dimmUids);
 
 	wbemRc = framework::MOF_ERR_SUCCESS;
 	return httpRc;

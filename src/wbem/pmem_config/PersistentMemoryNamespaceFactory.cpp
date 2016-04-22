@@ -96,15 +96,15 @@ throw(wbem::framework::Exception)
 		path.checkKey(SYSTEMNAME_KEY, server::getHostName());
 		path.checkKey(CREATIONCLASSNAME_KEY, PMNS_CREATIONCLASSNAME);
 
-		std::string nsGuidStr = path.getKeyValue(DEVICEID_KEY).stringValue();
-		if (nsGuidStr.length() != NVM_GUIDSTR_LEN - 1)
+		std::string nsUidStr = path.getKeyValue(DEVICEID_KEY).stringValue();
+		if (nsUidStr.length() != NVM_MAX_UID_LEN - 1)
 		{
-			COMMON_LOG_ERROR_F("PersistentMemoryNamespace DeviceID is not a valid namespace guid %s",
-					nsGuidStr.c_str());
+			COMMON_LOG_ERROR_F("PersistentMemoryNamespace DeviceID is not a valid namespace uid %s",
+					nsUidStr.c_str());
 			throw framework::ExceptionBadParameter(DEVICEID_KEY.c_str());
 		}
 
-		struct namespace_details ns = NamespaceViewFactory::getNamespaceDetails(nsGuidStr);
+		struct namespace_details ns = NamespaceViewFactory::getNamespaceDetails(nsUidStr);
 
 		// Health State = enum + string
 		if (containsAttribute(HEALTHSTATE_KEY, attributes))
@@ -197,13 +197,13 @@ throw(wbem::framework::Exception)
 	framework::instance_names_t *pNames = new framework::instance_names_t();
 	try
 	{
-		std::vector<std::string> nsList = NamespaceViewFactory::getNamespaceGuidList();
+		std::vector<std::string> nsList = NamespaceViewFactory::getNamespaceUidList();
 		for (std::vector<std::string>::const_iterator iter = nsList.begin();
 				iter != nsList.end(); iter++)
 		{
-			std::string nsGuid = *iter;
+			std::string nsUid = *iter;
 			wbem::framework::ObjectPath path;
-			createPathFromGuid(nsGuid, path);
+			createPathFromUid(nsUid, path);
 
 			pNames->push_back(path);
 		}
@@ -238,21 +238,21 @@ wbem::framework::Attribute wbem::pmem_config::PersistentMemoryNamespaceFactory::
 	return opStatusAttr;
 }
 
-void wbem::pmem_config::PersistentMemoryNamespaceFactory::createPathFromGuid(const std::string &nsGuid,
+void wbem::pmem_config::PersistentMemoryNamespaceFactory::createPathFromUid(const std::string &nsUid,
 		framework::ObjectPath &path)
 {
-	NVM_GUID guid;
+	NVM_UID uid;
 
-	uid_copy(nsGuid.c_str(), guid);
-	createPathFromGuid(guid, path);
+	uid_copy(nsUid.c_str(), uid);
+	createPathFromUid(uid, path);
 
 }
 
-void wbem::pmem_config::PersistentMemoryNamespaceFactory::createPathFromGuid(const NVM_GUID guid,
+void wbem::pmem_config::PersistentMemoryNamespaceFactory::createPathFromUid(const NVM_UID uid,
 		framework::ObjectPath &path)
 {
-	NVM_GUID_STR nsGuid;
-	uid_copy(guid, nsGuid);
+	NVM_UID nsUid;
+	uid_copy(uid, nsUid);
 
 	wbem::framework::attributes_t keys;
 
@@ -268,8 +268,8 @@ void wbem::pmem_config::PersistentMemoryNamespaceFactory::createPathFromGuid(con
 	keys[wbem::CREATIONCLASSNAME_KEY] =
 					framework::Attribute(wbem::pmem_config::PMNS_CREATIONCLASSNAME, true);
 
-	// DeviceID = Namespace GUID
-	keys[wbem::DEVICEID_KEY] = framework::Attribute(nsGuid, true);
+	// DeviceID = Namespace UID
+	keys[wbem::DEVICEID_KEY] = framework::Attribute(nsUid, true);
 
 	path.setObjectPath(hostName, NVM_NAMESPACE, PMNS_CREATIONCLASSNAME, keys);
 }
@@ -293,7 +293,7 @@ bool wbem::pmem_config::PersistentMemoryNamespaceFactory::isAssociated(
 		if ((pDepInstance->getClass() == wbem::pmem_config::PMNS_CREATIONCLASSNAME)
 			&& (pAntInstance->getClass() == wbem::pmem_config::PERSISTENTMEMORYPOOL_CREATIONCLASSNAME))
 		{
-			// get pool GUID from pool class
+			// get pool UID from pool class
 			framework::Attribute poolIdAttr;
 			if (pAntInstance->getAttribute(INSTANCEID_KEY, poolIdAttr) == framework::SUCCESS)
 			{
@@ -301,11 +301,11 @@ bool wbem::pmem_config::PersistentMemoryNamespaceFactory::isAssociated(
 				struct namespace_details nsDetails;
 				if (namespaceDetailsFromInstance(pDepInstance, &nsDetails) == NVM_SUCCESS)
 				{
-					// check if the pool GUIDs match
-					NVM_GUID poolId;
+					// check if the pool UIDs match
+					NVM_UID poolId;
 					uid_copy(poolIdAttr.stringValue().c_str(), poolId);
 
-					result = uid_cmp(poolId, nsDetails.pool_guid);
+					result = uid_cmp(poolId, nsDetails.pool_uid);
 				}
 				else
 				{
@@ -337,14 +337,14 @@ int wbem::pmem_config::PersistentMemoryNamespaceFactory::namespaceDetailsFromIns
 {
 	int rc = NVM_SUCCESS;
 
-	// get the namespace GUID
-	framework::Attribute nsGuidAttr;
-	if (pNsInstance->getAttribute(DEVICEID_KEY, nsGuidAttr) == framework::SUCCESS)
+	// get the namespace UID
+	framework::Attribute nsUidAttr;
+	if (pNsInstance->getAttribute(DEVICEID_KEY, nsUidAttr) == framework::SUCCESS)
 	{
-		// get the namespace details using the namespace GUID
-		NVM_GUID nsGuid;
-		uid_copy(nsGuidAttr.stringValue().c_str(), nsGuid);
-		rc = nvm_get_namespace_details(nsGuid, pNsDetails);
+		// get the namespace details using the namespace UID
+		NVM_UID nsUid;
+		uid_copy(nsUidAttr.stringValue().c_str(), nsUid);
+		rc = nvm_get_namespace_details(nsUid, pNsDetails);
 	}
 	return rc;
 }
@@ -366,8 +366,8 @@ wbem::framework::UINT32 wbem::pmem_config::PersistentMemoryNamespaceFactory::exe
 	{
 		if (PM_NAMESPACE_REQUESTSTATECHANGE == method)
 		{
-			std::string namespaceGuidStr;
-			httpRc = PersistentMemoryServiceFactory::getNamespaceFromPath(object, namespaceGuidStr);
+			std::string namespaceUidStr;
+			httpRc = PersistentMemoryServiceFactory::getNamespaceFromPath(object, namespaceUidStr);
 			if (httpRc == framework::MOF_ERR_SUCCESS)
 			{
 				NVM_UINT16 stateValue = inParms[PM_NAMESPACE_STATE].uintValue();
@@ -377,7 +377,7 @@ wbem::framework::UINT32 wbem::pmem_config::PersistentMemoryNamespaceFactory::exe
 				{
 					throw exception::NvmExceptionLibError(NVM_ERR_NOTSUPPORTED);
 				}
-				modifyNamespace(namespaceGuidStr, stateValue);
+				modifyNamespace(namespaceUidStr, stateValue);
 				wbemRc = framework::MOF_ERR_SUCCESS;
 			}
 		}
@@ -468,7 +468,7 @@ bool wbem::pmem_config::PersistentMemoryNamespaceFactory::isModifyNamespaceEnabl
 }
 
 void wbem::pmem_config::PersistentMemoryNamespaceFactory::modifyNamespace(
-		const std::string namespaceGuidStr, const NVM_UINT16 stateValue)
+		const std::string namespaceUidStr, const NVM_UINT16 stateValue)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
@@ -480,18 +480,18 @@ void wbem::pmem_config::PersistentMemoryNamespaceFactory::modifyNamespace(
 		throw framework::ExceptionBadParameter(PM_NAMESPACE_STATE.c_str());
 	}
 
-	// check for valid namespace guid
+	// check for valid namespace uid
 	// note - .length() doesn't include NULL terminator
-	if (namespaceGuidStr.empty() || namespaceGuidStr.length() != NVM_GUIDSTR_LEN - 1)
+	if (namespaceUidStr.empty() || namespaceUidStr.length() != NVM_MAX_UID_LEN - 1)
 	{
-		COMMON_LOG_ERROR("Invalid namespace guid");
+		COMMON_LOG_ERROR("Invalid namespace uid");
 		throw framework::ExceptionBadParameter(wbem::DEVICEID_KEY.c_str());
 	}
-	NVM_GUID namespaceGuid;
-	uid_copy(namespaceGuidStr.c_str(), namespaceGuid);
+	NVM_UID namespaceUid;
+	uid_copy(namespaceUidStr.c_str(), namespaceUid);
 
 	enum namespace_enable_state enabled = PersistentMemoryServiceFactory::namespaceEnabledToEnum(stateValue);
-	int rc = m_modifyNamespaceEnabled(namespaceGuid, enabled);
+	int rc = m_modifyNamespaceEnabled(namespaceUid, enabled);
 	if (rc != NVM_SUCCESS)
 	{
 		throw exception::NvmExceptionLibError(rc);

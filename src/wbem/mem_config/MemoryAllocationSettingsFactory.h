@@ -112,9 +112,9 @@ public:
 	static NVM_UINT32 getSocketId(const std::string instanceIdStr);
 
 	/*
-	 * Return true if the given guid is a device guid
+	 * Return true if the given uid is a device uid
 	 */
-	static bool isADeviceGuid(const NVM_GUID guid);
+	static bool isADeviceUid(const NVM_UID uid);
 
 	/*
 	 * Return true if the instance is a memory mode, goal config instance
@@ -128,16 +128,16 @@ public:
 
 private:
 	/*
-	 * Return the guid generated from the settings instance
+	 * Return the uid generated from the settings instance
 	 */
-	bool deviceGuidMatchesSetting(const framework::Instance* pSettingInstance,
-		const NVM_GUID guid);
+	bool deviceUidMatchesSetting(const framework::Instance* pSettingInstance,
+		const NVM_UID uid);
 
 	/*
-	 * Return the guid that makes up the DEVICEID of the AppDirectMemory instance
+	 * Return the uid that makes up the DEVICEID of the AppDirectMemory instance
 	 */
-	void getAppDirectMemoryGuid(const framework::Instance* pMemoryInstance,
-		NVM_GUID guid);
+	void getAppDirectMemoryUid(const framework::Instance* pMemoryInstance,
+		NVM_UID uid);
 
 	/*
 	 * Return true if the app direct region is associated with the AppDirectMemory instance
@@ -173,10 +173,10 @@ private:
 		const framework::Instance* pMemoryInstance);
 
 	/*
-	 * Get the interleave set guid described by the setting instance
+	 * Get the interleave set uid described by the setting instance
 	 */
-	void getIlsetGuidFromSettingInstance(
-		const framework::Instance* pSettingInstance, NVM_GUID ilsetGuid);
+	void getIlsetUidFromSettingInstance(
+		const framework::Instance* pSettingInstance, NVM_UID ilsetUid);
 
 	/*
 	 * Return true if the instance is a goal instance
@@ -189,10 +189,10 @@ private:
 	bool isMemoryModeCurrentConfigInstance(const framework::Instance* pInstance);
 
 	/*
-	 * return the handle that corresponds to the dimm guid
+	 * return the handle that corresponds to the dimm uid
 	 */
-	NVM_NFIT_DEVICE_HANDLE getHandleForDimmGuid(
-		const wbem::physical_asset::devices_t &devices, const NVM_GUID guid);
+	NVM_NFIT_DEVICE_HANDLE getHandleForDimmUid(
+			const wbem::physical_asset::devices_t &devices, const NVM_UID uid);
 
 	/*
 	 * Add the attributes that go with this class
@@ -280,21 +280,21 @@ private:
 		(const std::vector<struct pool> &pools, std::string instanceIdStr);
 
 	/*
-	 * From the handle info get the dimm guid
+	 * From the handle info get the dimm uid
 	 */
-	void getGuidFromHandleInfo(NVM_UINT16 socketId,
-		const NVM_UINT32 memoryControllerId, const NVM_UINT32 channelId, NVM_GUID guid);
+	void getUidFromHandleInfo(NVM_UINT16 socketId,
+		const NVM_UINT32 memoryControllerId, const NVM_UINT32 channelId, NVM_UID uid);
 
 	/*
 	 *  From the pool struct return the storage capacity of a dimm
 	 */
 	NVM_UINT64 getStorageCapacityForDimm(const std::vector<struct pool> &pools,
-		const NVM_GUID guid);
+		const NVM_UID uid);
 
 	/*
 	 * Find the index of the given dimm in the array of dimms that participate in the pool
 	 */
-	int getIndexOfDimmInPoolOrReturnNotFound(const struct pool *pPool, const NVM_GUID guid);
+	int getIndexOfDimmInPoolOrReturnNotFound(const struct pool *pPool, const NVM_UID uid);
 
 	/*
 	 * Find the amount of memory mode capacity for the goals on the given socket

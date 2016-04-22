@@ -38,10 +38,10 @@ const device_discovery &core::device::Topology::getDiscovery()
         LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
         return m_device;
 }
-std::string core::device::Topology::getGuid()
+std::string core::device::Topology::getUid()
 {
         LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-        return Helper::guidToString(getDiscovery().guid);
+        return Helper::uidToString(getDiscovery().uid);
 }
 NVM_UINT32 core::device::Topology::getDeviceHandle()
 {

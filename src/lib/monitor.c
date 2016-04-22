@@ -81,7 +81,7 @@ static int timeToQuit(unsigned long timeoutSeconds); // helps polling to know wh
 static int get_nvm_event_id(); // get most recent id from event table
 
 
-int get_smart_log_sensors(const NVM_GUID device_guid,
+int get_smart_log_sensors(const NVM_UID device_uid,
 		const NVM_UINT32 dev_handle, struct sensor *p_sensors)
 {
 	COMMON_LOG_ENTRY();
@@ -263,7 +263,7 @@ int get_smart_log_sensors(const NVM_GUID device_guid,
 	return rc;
 }
 
-int get_media_page2_sensors(const NVM_GUID device_guid,
+int get_media_page2_sensors(const NVM_UID device_uid,
 		const NVM_UINT32 dev_handle, struct sensor *p_sensors)
 {
 	COMMON_LOG_ENTRY();
@@ -307,7 +307,7 @@ int get_media_page2_sensors(const NVM_GUID device_guid,
 	return rc;
 }
 
-int get_fw_error_log_sensors(const NVM_GUID device_guid,
+int get_fw_error_log_sensors(const NVM_UID device_uid,
 		const NVM_UINT32 dev_handle, struct sensor sensors[NVM_MAX_DEVICE_SENSORS])
 {
 	COMMON_LOG_ENTRY();
@@ -336,13 +336,13 @@ int get_fw_error_log_sensors(const NVM_GUID device_guid,
 	return rc;
 }
 
-int get_power_limited_sensor(const NVM_GUID device_guid,
+int get_power_limited_sensor(const NVM_UID device_uid,
 		const NVM_UINT32 dev_handle, struct sensor sensors[NVM_MAX_DEVICE_SENSORS])
 {
 	COMMON_LOG_ENTRY();
 	struct device_discovery device;
 	memset(&device, 0, sizeof (device));
-	int rc = nvm_get_device_discovery(device_guid, &device);
+	int rc = nvm_get_device_discovery(device_uid, &device);
 	if (rc == NVM_SUCCESS)
 	{
 		int power_reading = get_dimm_power_limited(device.socket_id);
@@ -365,12 +365,12 @@ int get_power_limited_sensor(const NVM_GUID device_guid,
  * Helper function to populate sensor information with default attributes
  * that don't require current values.
  */
-void initialize_sensors(const NVM_GUID device_guid,
+void initialize_sensors(const NVM_UID device_uid,
 		struct sensor sensors[NVM_MAX_DEVICE_SENSORS])
 {
 	for (int i = 0; i < NVM_MAX_DEVICE_SENSORS; i++)
 	{
-		memmove(sensors[i].device_guid, device_guid, NVM_GUID_LEN);
+		memmove(sensors[i].device_uid, device_uid, NVM_MAX_UID_LEN);
 		sensors[i].type = i;
 	}
 	sensors[SENSOR_MEDIA_TEMPERATURE].units = UNIT_CELSIUS;
@@ -392,16 +392,16 @@ void initialize_sensors(const NVM_GUID device_guid,
 	sensors[SENSOR_CONTROLLER_TEMPERATURE].units = UNIT_CELSIUS;
 }
 
-int get_all_sensors(const NVM_GUID device_guid,
+int get_all_sensors(const NVM_UID device_uid,
 		const NVM_UINT32 dev_handle, struct sensor sensors[NVM_MAX_DEVICE_SENSORS])
 {
 	COMMON_LOG_ENTRY();
 
-	initialize_sensors(device_guid, sensors);
-	int rc = get_smart_log_sensors(device_guid, dev_handle, sensors);
-	KEEP_ERROR(rc, get_media_page2_sensors(device_guid, dev_handle, sensors));
-	KEEP_ERROR(rc, get_fw_error_log_sensors(device_guid, dev_handle, sensors));
-	KEEP_ERROR(rc, get_power_limited_sensor(device_guid, dev_handle, sensors));
+	initialize_sensors(device_uid, sensors);
+	int rc = get_smart_log_sensors(device_uid, dev_handle, sensors);
+	KEEP_ERROR(rc, get_media_page2_sensors(device_uid, dev_handle, sensors));
+	KEEP_ERROR(rc, get_fw_error_log_sensors(device_uid, dev_handle, sensors));
+	KEEP_ERROR(rc, get_power_limited_sensor(device_uid, dev_handle, sensors));
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
@@ -414,7 +414,7 @@ int get_all_sensors(const NVM_GUID device_guid,
  * as part of the device_details structure.
  * The number of sensors for a given device is defined as NVM_MAX_DEVICE_SENSORS.
  */
-int nvm_get_sensors(const NVM_GUID device_guid, struct sensor *p_sensors,
+int nvm_get_sensors(const NVM_UID device_uid, struct sensor *p_sensors,
 		const NVM_UINT16 count)
 {
 	COMMON_LOG_ENTRY();
@@ -429,9 +429,9 @@ int nvm_get_sensors(const NVM_GUID device_guid, struct sensor *p_sensors,
 	{
 		COMMON_LOG_ERROR("Retrieving "NVM_DIMM_NAME" sensors is not supported.");
 	}
-	else if (device_guid == NULL)
+	else if (device_uid == NULL)
 	{
-		COMMON_LOG_ERROR("Invalid parameter, device_guid is NULL");
+		COMMON_LOG_ERROR("Invalid parameter, device_uid is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
 	else if (p_sensors == NULL)
@@ -439,12 +439,12 @@ int nvm_get_sensors(const NVM_GUID device_guid, struct sensor *p_sensors,
 		COMMON_LOG_ERROR("Invalid parameter, p_status is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
-	else if ((rc = exists_and_manageable(device_guid, &discovery, 1)) == NVM_SUCCESS)
+	else if ((rc = exists_and_manageable(device_uid, &discovery, 1)) == NVM_SUCCESS)
 	{
 		struct sensor sensors[NVM_MAX_DEVICE_SENSORS];
 		memset(sensors, 0, sizeof (sensors));
 		const NVM_UINT32 dev_handle = discovery.device_handle.handle;
-		get_all_sensors(device_guid, dev_handle, sensors);
+		get_all_sensors(device_uid, dev_handle, sensors);
 
 		// even if the array is too small, we still want to fill in as many as possible.
 		// Just return the error code
@@ -467,7 +467,7 @@ int nvm_get_sensors(const NVM_GUID device_guid, struct sensor *p_sensors,
 /*
  * This function queries and passes back information about a specific sensor.
  */
-int nvm_get_sensor(const NVM_GUID device_guid, const enum sensor_type type,
+int nvm_get_sensor(const NVM_UID device_uid, const enum sensor_type type,
 		struct sensor *p_sensor)
 {
 	COMMON_LOG_ENTRY();
@@ -484,7 +484,7 @@ int nvm_get_sensor(const NVM_GUID device_guid, const enum sensor_type type,
 		COMMON_LOG_ERROR("request for an out of range sensor type");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
-	else if ((rc = nvm_get_sensors(device_guid, sensors, NVM_MAX_DEVICE_SENSORS))
+	else if ((rc = nvm_get_sensors(device_uid, sensors, NVM_MAX_DEVICE_SENSORS))
 			== NVM_SUCCESS)
 	{
 		memmove(p_sensor, &sensors[type], sizeof (struct sensor));
@@ -549,7 +549,7 @@ void sensor_type_to_string(const enum sensor_type type, char *p_dst, size_t dst_
 /*
  * This function modifies the settings for the sensor specified.
  */
-int nvm_set_sensor_settings(const NVM_GUID device_guid, const enum sensor_type type,
+int nvm_set_sensor_settings(const NVM_UID device_uid, const enum sensor_type type,
 		const struct sensor_settings *p_settings)
 {
 	COMMON_LOG_ENTRY();
@@ -566,9 +566,9 @@ int nvm_set_sensor_settings(const NVM_GUID device_guid, const enum sensor_type t
 	{
 		COMMON_LOG_ERROR("Modifying "NVM_DIMM_NAME" sensors is not supported.");
 	}
-	else if (device_guid == NULL)
+	else if (device_uid == NULL)
 	{
-		COMMON_LOG_ERROR("Invalid parameter, device_guid is NULL");
+		COMMON_LOG_ERROR("Invalid parameter, device_uid is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
 	else if ((type != SENSOR_CONTROLLER_TEMPERATURE) &&
@@ -583,7 +583,7 @@ int nvm_set_sensor_settings(const NVM_GUID device_guid, const enum sensor_type t
 		COMMON_LOG_ERROR("Invalid parameter, p_sensor_settings is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
-	else if ((rc = exists_and_manageable(device_guid, &discovery, 1))
+	else if ((rc = exists_and_manageable(device_uid, &discovery, 1))
 			== NVM_SUCCESS)
 	{
 		if ((rc = fw_get_alarm_thresholds(discovery.device_handle.handle, &thresholds))
@@ -648,13 +648,13 @@ int nvm_set_sensor_settings(const NVM_GUID device_guid, const enum sensor_type t
 					// Log an event indicating we successfully changed the settings
 					NVM_EVENT_ARG type_arg;
 					sensor_type_to_string(type, type_arg, NVM_EVENT_ARG_LEN);
-					NVM_EVENT_ARG guid_arg;
-					guid_to_event_arg(device_guid, guid_arg);
+					NVM_EVENT_ARG uid_arg;
+					uid_to_event_arg(device_uid, uid_arg);
 					log_mgmt_event(EVENT_SEVERITY_INFO,
 							EVENT_CODE_MGMT_SENSOR_SETTINGS_CHANGE,
-							device_guid,
+							device_uid,
 							0, // no action required
-							type_arg, guid_arg, NULL);
+							type_arg, uid_arg, NULL);
 				}
 
 				// clear any device context - device has changed
@@ -668,15 +668,15 @@ int nvm_set_sensor_settings(const NVM_GUID device_guid, const enum sensor_type t
 
 
 /*
- * Convert a GUID to an event argument (string)
+ * Convert a uid to an event argument (string)
  */
-void guid_to_event_arg(const NVM_GUID guid, NVM_EVENT_ARG arg)
+void uid_to_event_arg(const NVM_UID uid, NVM_EVENT_ARG arg)
 {
-	if (guid && arg)
+	if (uid && arg)
 	{
-		NVM_GUID_STR guid_str;
-		uid_copy(guid, guid_str);
-		s_strcpy(arg, guid_str, NVM_EVENT_ARG_LEN);
+		NVM_UID uid_str;
+		uid_copy(uid, uid_str);
+		s_strcpy(arg, uid_str, NVM_EVENT_ARG_LEN);
 	}
 }
 
@@ -684,14 +684,14 @@ void guid_to_event_arg(const NVM_GUID guid, NVM_EVENT_ARG arg)
  * Log a management software event to the config DB and to syslog if applicable
  */
 int log_mgmt_event(const enum event_severity severity, const NVM_UINT16 code,
-		const NVM_GUID device_guid, const NVM_BOOL action_required, const NVM_EVENT_ARG arg1,
+		const NVM_UID device_uid, const NVM_BOOL action_required, const NVM_EVENT_ARG arg1,
 		const NVM_EVENT_ARG arg2, const NVM_EVENT_ARG arg3)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
 
 	// store the event in the db and syslog
-	rc = store_event_by_parts(EVENT_TYPE_MGMT, severity, code, device_guid,
+	rc = store_event_by_parts(EVENT_TYPE_MGMT, severity, code, device_uid,
 			action_required, arg1, arg2, arg3, DIAGNOSTIC_RESULT_UNKNOWN);
 
 	COMMON_LOG_EXIT_RETURN_I(rc);

@@ -116,30 +116,30 @@ public:
 	bool isAssociated(const std::string &associationClass, framework::Instance* pAntInstance,
 		 framework::Instance* pDepInstance);
 	/*!
-	 * Splits Performance Metrics InstanceID into the metric type and device guid.
+	 * Splits Performance Metrics InstanceID into the metric type and device uid.
 	 * @param[in] instanceId
 	 * 		The Attribute containing the instance id to parse.
-	 * @param[out] deviceGuid
-	 * 		If successfully parsed, the guid for the device.
+	 * @param[out] deviceUid
+	 * 		If successfully parsed, the uid for the device.
 	 * @param[out] metric
 	 * 		If successful, the enumerated type code for the metric type requested.
 	 * @return false on fail, true on success.
 	 */
 	static bool splitInstanceID(const framework::Attribute& instanceId,
-		std::string &deviceGuid,
+		std::string &deviceUid,
 		metric_type& metric);
 
 private:
 	void populateAttributeList(framework::attribute_names_t &attributes)
 		throw (framework::Exception);
 
-	static NVM_UINT64 getValueForDeviceMetric(const NVM_GUID deviceGuid, const enum metric_type metricType)
+	static NVM_UINT64 getValueForDeviceMetric(const NVM_UID deviceUid, const enum metric_type metricType)
 		throw (framework::Exception);
 
 	static std::string getMetricElementNameFromType(const metric_type type)
 		throw (framework::Exception);
 
-	static std::string getDeviceSerialNumber(const NVM_GUID guid)
+	static std::string getDeviceSerialNumber(const NVM_UID uid)
 		throw (framework::Exception);
 };
 

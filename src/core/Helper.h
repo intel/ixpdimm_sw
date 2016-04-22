@@ -36,8 +36,8 @@ namespace core
 class NVM_API Helper
 {
 public:
-	static std::string guidToString(const NVM_GUID guid);
-	static void stringToGuid(const std::string &string, NVM_GUID guid);
+	static std::string uidToString(const NVM_UID uid);
+	static void stringToUid(const std::string &string, NVM_UID uid);
 private:
 	Helper() {}
 

@@ -53,7 +53,7 @@ wbem::logic::PostLayoutAddressDecoderLimitCheck::~PostLayoutAddressDecoderLimitC
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
 
-NVM_UINT16 wbem::logic::PostLayoutAddressDecoderLimitCheck::getSocketIdForDimm(NVM_GUID &guid)
+NVM_UINT16 wbem::logic::PostLayoutAddressDecoderLimitCheck::getSocketIdForDimm(NVM_UID &uid)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
@@ -61,7 +61,7 @@ NVM_UINT16 wbem::logic::PostLayoutAddressDecoderLimitCheck::getSocketIdForDimm(N
 	for (std::vector<struct device_discovery>::const_iterator iter = m_devices.begin();
 			iter != m_devices.end(); iter++)
 	{
-		if (uid_cmp(iter->guid, guid))
+		if (uid_cmp(iter->uid, uid))
 		{
 			socketId = iter->socket_id;
 			break;
@@ -80,9 +80,9 @@ std::list<NVM_UINT16> wbem::logic::PostLayoutAddressDecoderLimitCheck::getListOf
 	for (std::map<std::string, struct config_goal>::const_iterator iter = layout.goals.begin();
 			iter != layout.goals.end(); iter++)
 	{
-		NVM_GUID guid;
-		uid_copy((*iter).first.c_str(), guid);
-		NVM_UINT16 socketId = getSocketIdForDimm(guid);
+		NVM_UID uid;
+		uid_copy((*iter).first.c_str(), uid);
+		NVM_UINT16 socketId = getSocketIdForDimm(uid);
 		socketList.push_back(socketId);
 	}
 
@@ -100,9 +100,9 @@ std::vector<struct config_goal> wbem::logic::PostLayoutAddressDecoderLimitCheck:
 	for (std::map<std::string, struct config_goal>::const_iterator iter = layout.goals.begin();
 			iter != layout.goals.end(); iter++)
 	{
-		NVM_GUID guid;
-		uid_copy((*iter).first.c_str(), guid);
-		NVM_UINT16 dimmSocketId = getSocketIdForDimm(guid);
+		NVM_UID uid;
+		uid_copy((*iter).first.c_str(), uid);
+		NVM_UINT16 dimmSocketId = getSocketIdForDimm(uid);
 
 		if (dimmSocketId == socketId)
 		{
@@ -219,11 +219,11 @@ bool wbem::logic::PostLayoutAddressDecoderLimitCheck::isInterleaveSetOverwritten
 
 	for (NVM_UINT16 i = 0; i < interleave.dimm_count; i++)
 	{
-		NVM_GUID_STR guidStr;
-		uid_copy(interleave.dimms[i], guidStr);
+		NVM_UID uidStr;
+		uid_copy(interleave.dimms[i], uidStr);
 
 		// Any DIMM in the new layout will have all its interleave sets overwritten
-		if (layout.goals.find(guidStr) != layout.goals.end())
+		if (layout.goals.find(uidStr) != layout.goals.end())
 		{
 			isOverwritten = true;
 			break;

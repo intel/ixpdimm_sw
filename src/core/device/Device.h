@@ -79,7 +79,7 @@ public:
 
 	virtual Device *clone();
 
-	virtual std::string getGuid();
+	virtual std::string getUid();
 	virtual enum manageability_state getManageabilityState();
 	virtual bool isManageable();
 	virtual NVM_UINT32 getDeviceHandle();
@@ -159,7 +159,7 @@ private:
 	device_discovery m_discovery;
 	device_details *m_pDetails;
 	std::vector<std::string> *m_pActionRequiredEvents;
-	std::string m_deviceGuid;
+	std::string m_deviceUid;
 
 	const device_discovery &getDiscovery();
 	const device_details &getDetails();

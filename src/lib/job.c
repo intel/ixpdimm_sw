@@ -130,9 +130,9 @@ int nvm_get_jobs(struct job *p_jobs, const NVM_UINT32 count)
 
 								p_jobs[job_index].type = NVM_JOB_TYPE_SANITIZE;
 								p_jobs[job_index].percent_complete = sanitize_status.progress;
-								memmove(p_jobs[job_index].guid, devices[i].guid, NVM_GUID_LEN);
+								memmove(p_jobs[job_index].uid, devices[i].uid, NVM_MAX_UID_LEN);
 								memmove(p_jobs[job_index].affected_element,
-									devices[i].guid, NVM_GUID_LEN);
+									devices[i].uid, NVM_MAX_UID_LEN);
 								p_jobs[job_index].result = NULL;
 								job_index++;
 							}

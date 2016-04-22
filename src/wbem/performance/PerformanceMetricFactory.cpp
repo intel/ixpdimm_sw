@@ -47,27 +47,27 @@
 #include <NvmStrings.h>
 
 /*
- * splits a instance ID attribute into guid + decoded metric type.
- * sets deviceGuid and 'type' and returns non-zero on success.
+ * splits a instance ID attribute into uid + decoded metric type.
+ * sets deviceUid and 'type' and returns non-zero on success.
  */
 bool wbem::performance::PerformanceMetricFactory::splitInstanceID(
-	const framework::Attribute& instanceId, std::string &deviceGuid, metric_type& metric)
+	const framework::Attribute& instanceId, std::string &deviceUid, metric_type& metric)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	bool found = false;
 	std::string metricTypeStr = instanceId.stringValue();
 	metric = METRIC_UNDEFINED;
-	deviceGuid.clear();
-	if (metricTypeStr.length() >  NVM_GUIDSTR_LEN)
+	deviceUid.clear();
+	if (metricTypeStr.length() >  NVM_MAX_UID_LEN)
 	{
-		metricTypeStr.erase(metricTypeStr.length() - NVM_GUIDSTR_LEN + 1);
+		metricTypeStr.erase(metricTypeStr.length() - NVM_MAX_UID_LEN + 1);
 		metric = getTypeFromInstanceIdName(metricTypeStr);
 		found = metric != METRIC_UNDEFINED;
 	}
-	if (found && ((metricTypeStr.length() + NVM_GUIDSTR_LEN-1) <= instanceId.stringValue().length()))
+	if (found && ((metricTypeStr.length() + NVM_MAX_UID_LEN-1) <= instanceId.stringValue().length()))
 	{
-		deviceGuid = instanceId.stringValue().substr(metricTypeStr.length(), NVM_GUIDSTR_LEN);
-		COMMON_LOG_DEBUG_F("Returning metric: %s GUID: %s", metricTypeStr.c_str(), deviceGuid.c_str());
+		deviceUid = instanceId.stringValue().substr(metricTypeStr.length(), NVM_MAX_UID_LEN);
+		COMMON_LOG_DEBUG_F("Returning metric: %s UID: %s", metricTypeStr.c_str(), deviceUid.c_str());
 	}
 	else
 	{
@@ -117,18 +117,18 @@ throw (wbem::framework::Exception)
 
 		framework::Attribute instanceIdAttr = path.getKeyValue(INSTANCEID_KEY);
 
-		std::string deviceGuid;
+		std::string deviceUid;
 		metric_type metric;
-		if (!splitInstanceID(instanceIdAttr, deviceGuid, metric))
+		if (!splitInstanceID(instanceIdAttr, deviceUid, metric))
 		{
 			throw framework::ExceptionBadParameter(instanceIdAttr.asStr().c_str());
 		}
 
-		NVM_GUID nvmGuid;
-		uid_copy(deviceGuid.c_str(), nvmGuid);
+		NVM_UID nvmUid;
+		uid_copy(deviceUid.c_str(), nvmUid);
 
 		// serialNumberStr is used in more than 1 attribute so getting here.
-		std::string serialNumberStr = getDeviceSerialNumber(nvmGuid);
+		std::string serialNumberStr = getDeviceSerialNumber(nvmUid);
 
 		if (containsAttribute(wbem::ELEMENTNAME_KEY, attributes))
 		{
@@ -155,7 +155,7 @@ throw (wbem::framework::Exception)
 
 		if (containsAttribute(wbem::METRICVALUE_KEY, attributes))
 		{
-			NVM_UINT64 metricValue = getValueForDeviceMetric(nvmGuid, metric);
+			NVM_UINT64 metricValue = getValueForDeviceMetric(nvmUid, metric);
 			std::ostringstream stream;
 			stream << metricValue;
 			framework::Attribute a(stream.str(), false);
@@ -184,7 +184,7 @@ throw (wbem::framework::Exception)
 	framework::instance_names_t *pNames = new framework::instance_names_t();
 	try
 	{
-		std::vector<std::string> manageableDevices = wbem::physical_asset::NVDIMMFactory::getManageableDeviceGuids();
+		std::vector<std::string> manageableDevices = wbem::physical_asset::NVDIMMFactory::getManageableDeviceUids();
 		std::vector<std::string>::const_iterator lastDevice = manageableDevices.end();
 		std::vector<std::string>::const_iterator device = manageableDevices.begin();
 		for(; device != lastDevice; ++device)
@@ -214,7 +214,7 @@ throw (wbem::framework::Exception)
 }
 
 /*
- * Determine if the metric value is associated based on device guid.
+ * Determine if the metric value is associated based on device uid.
  */
 bool wbem::performance::PerformanceMetricFactory::isAssociated(
 		const std::string &associationClass,
@@ -334,14 +334,14 @@ wbem::performance::metric_type wbem::performance::PerformanceMetricFactory::getT
 
 
 NVM_UINT64 wbem::performance::PerformanceMetricFactory::getValueForDeviceMetric(
-	const NVM_GUID deviceGuid, const enum metric_type metricType)
+	const NVM_UID deviceUid, const enum metric_type metricType)
 throw (framework::Exception)
 {
 	int rc;
 	NVM_UINT64 metricValue = 0;
 
 	struct device_performance nvmPerformance;
-	if ((rc = nvm_get_device_performance(deviceGuid, &nvmPerformance)) != NVM_SUCCESS)
+	if ((rc = nvm_get_device_performance(deviceUid, &nvmPerformance)) != NVM_SUCCESS)
 	{
 		throw wbem::exception::NvmExceptionLibError(rc);
 	}
@@ -417,12 +417,12 @@ throw (framework::Exception)
 }
 
 std::string wbem::performance::PerformanceMetricFactory::getDeviceSerialNumber(
-	const NVM_GUID guid)
+	const NVM_UID uid)
 throw (framework::Exception)
 {
 	int rc;
 	struct device_discovery nvmDiscovery;
-	if ((rc = nvm_get_device_discovery(guid, &nvmDiscovery)) != NVM_SUCCESS)
+	if ((rc = nvm_get_device_discovery(uid, &nvmDiscovery)) != NVM_SUCCESS)
 	{
 		throw wbem::exception::NvmExceptionLibError(rc);
 	}

@@ -197,16 +197,16 @@ int clear_injected_poison_error(NVM_UINT32 device_handle, NVM_UINT64 dpa)
 /*
  * Inject an error into the device specified.
  */
-int nvm_inject_device_error(const NVM_GUID device_guid,
+int nvm_inject_device_error(const NVM_UID device_uid,
 		const struct device_error *p_error)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
 	struct device_discovery discovery;
 
-	if (device_guid == NULL)
+	if (device_uid == NULL)
 	{
-		COMMON_LOG_ERROR("Invalid parameter, device_guid is NULL");
+		COMMON_LOG_ERROR("Invalid parameter, device_uid is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
 	else if (p_error == NULL)
@@ -218,7 +218,7 @@ int nvm_inject_device_error(const NVM_GUID device_guid,
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
 	}
-	else if ((rc = exists_and_manageable(device_guid, &discovery, 1)) == NVM_SUCCESS)
+	else if ((rc = exists_and_manageable(device_uid, &discovery, 1)) == NVM_SUCCESS)
 	{
 		switch (p_error->type)
 		{
@@ -241,16 +241,16 @@ int nvm_inject_device_error(const NVM_GUID device_guid,
 /*
  * Clear an injected error into the device specified.
  */
-int nvm_clear_injected_device_error(const NVM_GUID device_guid,
+int nvm_clear_injected_device_error(const NVM_UID device_uid,
 		const struct device_error *p_error)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
 	struct device_discovery discovery;
 
-	if (device_guid == NULL)
+	if (device_uid == NULL)
 	{
-		COMMON_LOG_ERROR("Invalid parameter, device_guid is NULL");
+		COMMON_LOG_ERROR("Invalid parameter, device_uid is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
 	else if (p_error == NULL)
@@ -262,7 +262,7 @@ int nvm_clear_injected_device_error(const NVM_GUID device_guid,
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
 	}
-	else if ((rc = exists_and_manageable(device_guid, &discovery, 1)) == NVM_SUCCESS)
+	else if ((rc = exists_and_manageable(device_uid, &discovery, 1)) == NVM_SUCCESS)
 	{
 		switch (p_error->type)
 		{

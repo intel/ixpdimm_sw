@@ -55,7 +55,7 @@ class NVM_API RulePartialSocketConfigured : public RequestRule
 		std::set<std::string> getSetOfRequestedDimmsOnSocket(
 				const std::vector<Dimm> &requestedDimms, NVM_UINT16 socketId);
 		std::set<std::string> getSetOfNewDimmsOnSocket(NVM_UINT16 socketId);
-		bool deviceIsNew(NVM_GUID guid);
+		bool deviceIsNew(NVM_UID uid);
 		void validateRequestForSocket(const std::vector<Dimm> &requestDimms, NVM_UINT16 socketId);
 
 		std::vector<struct device_discovery> m_manageableDimms;

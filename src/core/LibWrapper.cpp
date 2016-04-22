@@ -121,89 +121,89 @@ int LibWrapper::getDevices(struct device_discovery *pDevices, const NVM_UINT8 co
 	return nvm_get_devices(pDevices, count);
 }
 
-int LibWrapper::getDeviceDiscovery(NVM_GUID guid, struct device_discovery *pDevice) const
+int LibWrapper::getDeviceDiscovery(NVM_UID uid, struct device_discovery *pDevice) const
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
-	return nvm_get_device_discovery(guid, pDevice);
+	return nvm_get_device_discovery(uid, pDevice);
 }
 
-int LibWrapper::getDeviceStatus(const NVM_GUID deviceGuid, struct device_status *pStatus) const
+int LibWrapper::getDeviceStatus(const NVM_UID deviceUid, struct device_status *pStatus) const
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
-	return nvm_get_device_status(deviceGuid, pStatus);
+	return nvm_get_device_status(deviceUid, pStatus);
 }
 
-int LibWrapper::getDeviceSettings(const NVM_GUID deviceGuid,
+int LibWrapper::getDeviceSettings(const NVM_UID deviceUid,
 	struct device_settings *pSettings) const
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
-	return nvm_get_device_settings(deviceGuid, pSettings);
+	return nvm_get_device_settings(deviceUid, pSettings);
 }
 
-int LibWrapper::modifyDeviceSettings(const NVM_GUID deviceGuid,
+int LibWrapper::modifyDeviceSettings(const NVM_UID deviceUid,
 	const struct device_settings *pSettings) const
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
-	return nvm_modify_device_settings(deviceGuid, pSettings);
+	return nvm_modify_device_settings(deviceUid, pSettings);
 }
 
-int LibWrapper::getDeviceDetails(const NVM_GUID deviceGuid, struct device_details *pDetails) const
+int LibWrapper::getDeviceDetails(const NVM_UID deviceUid, struct device_details *pDetails) const
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
-	return nvm_get_device_details(deviceGuid, pDetails);
+	return nvm_get_device_details(deviceUid, pDetails);
 }
 
-int LibWrapper::getDevicePerformance(const NVM_GUID deviceGuid,
+int LibWrapper::getDevicePerformance(const NVM_UID deviceUid,
 	struct device_performance *pPerformance) const
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
-	return nvm_get_device_performance(deviceGuid, pPerformance);
+	return nvm_get_device_performance(deviceUid, pPerformance);
 }
 
-int LibWrapper::updateDeviceFw(const NVM_GUID deviceGuid, const NVM_PATH path,
+int LibWrapper::updateDeviceFw(const NVM_UID deviceUid, const NVM_PATH path,
 	const NVM_SIZE path_len, const NVM_BOOL activate, const NVM_BOOL force) const
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
-	return nvm_update_device_fw(deviceGuid, path, path_len, activate, force);
+	return nvm_update_device_fw(deviceUid, path, path_len, activate, force);
 }
 
-int LibWrapper::examineDeviceFw(const NVM_GUID deviceGuid, const NVM_PATH path,
+int LibWrapper::examineDeviceFw(const NVM_UID deviceUid, const NVM_PATH path,
 	const NVM_SIZE pathLen, NVM_VERSION imageVersion,
 	const NVM_SIZE imageVersionSize) const
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
-	return nvm_examine_device_fw(deviceGuid, path, pathLen, imageVersion, imageVersionSize);
+	return nvm_examine_device_fw(deviceUid, path, pathLen, imageVersion, imageVersionSize);
 }
 
-int LibWrapper::setPassphrase(const NVM_GUID deviceGuid, const NVM_PASSPHRASE oldPassphrase,
+int LibWrapper::setPassphrase(const NVM_UID deviceUid, const NVM_PASSPHRASE oldPassphrase,
 	const NVM_SIZE oldPassphraseLen, const NVM_PASSPHRASE newPassphrase,
 	const NVM_SIZE newPassphraseLen) const
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
-	return nvm_set_passphrase(deviceGuid, oldPassphrase, oldPassphraseLen,
+	return nvm_set_passphrase(deviceUid, oldPassphrase, oldPassphraseLen,
 		newPassphrase, newPassphraseLen);
 }
 
-int LibWrapper::removePassphrase(const NVM_GUID deviceGuid, const NVM_PASSPHRASE passphrase,
+int LibWrapper::removePassphrase(const NVM_UID deviceUid, const NVM_PASSPHRASE passphrase,
 	const NVM_SIZE passphraseLen) const
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
-	return nvm_remove_passphrase(deviceGuid, passphrase, passphraseLen);
+	return nvm_remove_passphrase(deviceUid, passphrase, passphraseLen);
 }
 
-int LibWrapper::unlockDevice(const NVM_GUID deviceGuid, const NVM_PASSPHRASE passphrase,
+int LibWrapper::unlockDevice(const NVM_UID deviceUid, const NVM_PASSPHRASE passphrase,
 	const NVM_SIZE passphraseLen) const
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
-	return nvm_unlock_device(deviceGuid, passphrase, passphraseLen);
+	return nvm_unlock_device(deviceUid, passphrase, passphraseLen);
 }
 
-int LibWrapper::eraseDevice(const NVM_GUID deviceGuid,
+int LibWrapper::eraseDevice(const NVM_UID deviceUid,
 	const NVM_PASSPHRASE passphrase,
 	const NVM_SIZE passphraseLen) const
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
-	return nvm_erase_device(deviceGuid, passphrase, passphraseLen);
+	return nvm_erase_device(deviceUid, passphrase, passphraseLen);
 }
 
 int LibWrapper::getJobCount() const
@@ -230,49 +230,49 @@ int LibWrapper::getPools(struct pool *pPools, const NVM_UINT8 count) const
 	return nvm_get_pools(pPools, count);
 }
 
-int LibWrapper::getPool(NVM_GUID poolGuid, struct pool *pPool) const
+int LibWrapper::getPool(NVM_UID poolUid, struct pool *pPool) const
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
-	return nvm_get_pool(poolGuid, pPool);
+	return nvm_get_pool(poolUid, pPool);
 }
 
-int LibWrapper::getAvailablePersistentSizeRange(const NVM_GUID poolGuid,
+int LibWrapper::getAvailablePersistentSizeRange(const NVM_UID poolUid,
 	struct possible_namespace_ranges *pRange) const
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
-	return nvm_get_available_persistent_size_range(poolGuid, pRange);
+	return nvm_get_available_persistent_size_range(poolUid, pRange);
 }
 
-int LibWrapper::createConfigGoal(const NVM_GUID deviceGuid, struct config_goal *pGoal) const
+int LibWrapper::createConfigGoal(const NVM_UID deviceUid, struct config_goal *pGoal) const
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
-	return nvm_create_config_goal(deviceGuid, pGoal);
+	return nvm_create_config_goal(deviceUid, pGoal);
 }
 
-int LibWrapper::getConfigGoal(const NVM_GUID deviceGuid, struct config_goal *pGoal) const
+int LibWrapper::getConfigGoal(const NVM_UID deviceUid, struct config_goal *pGoal) const
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
-	return nvm_get_config_goal(deviceGuid, pGoal);
+	return nvm_get_config_goal(deviceUid, pGoal);
 }
 
-int LibWrapper::deleteConfigGoal(const NVM_GUID deviceGuid) const
+int LibWrapper::deleteConfigGoal(const NVM_UID deviceUid) const
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
-	return nvm_delete_config_goal(deviceGuid);
+	return nvm_delete_config_goal(deviceUid);
 }
 
-int LibWrapper::dumpConfig(const NVM_GUID deviceGuid, const NVM_PATH file,
+int LibWrapper::dumpConfig(const NVM_UID deviceUid, const NVM_PATH file,
 	const NVM_SIZE fileLen, const NVM_BOOL append) const
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
-	return nvm_dump_config(deviceGuid, file, fileLen, append);
+	return nvm_dump_config(deviceUid, file, fileLen, append);
 }
 
-int LibWrapper::loadConfig(const NVM_GUID deviceGuid, const NVM_PATH file,
+int LibWrapper::loadConfig(const NVM_UID deviceUid, const NVM_PATH file,
 	const NVM_SIZE fileLen) const
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
-	return nvm_load_config(deviceGuid, file, fileLen);
+	return nvm_load_config(deviceUid, file, fileLen);
 }
 
 int LibWrapper::getNamespaceCount() const
@@ -281,11 +281,11 @@ int LibWrapper::getNamespaceCount() const
 	return nvm_get_namespace_count();
 }
 
-int LibWrapper::getDeviceNamespaceCount(const NVM_GUID deviceGuid,
+int LibWrapper::getDeviceNamespaceCount(const NVM_UID deviceUid,
 	const enum namespace_type nsType) const
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
-	return nvm_get_device_namespace_count(deviceGuid, nsType);
+	return nvm_get_device_namespace_count(deviceUid, nsType);
 }
 
 int LibWrapper::getNamespaces(struct namespace_discovery *pNamespaces, const NVM_UINT8 count) const
@@ -294,83 +294,83 @@ int LibWrapper::getNamespaces(struct namespace_discovery *pNamespaces, const NVM
 	return nvm_get_namespaces(pNamespaces, count);
 }
 
-int LibWrapper::getNamespaceDetails(const NVM_GUID namespaceGuid,
+int LibWrapper::getNamespaceDetails(const NVM_UID namespaceUid,
 	struct namespace_details *pNamespace) const
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
-	return nvm_get_namespace_details(namespaceGuid, pNamespace);
+	return nvm_get_namespace_details(namespaceUid, pNamespace);
 }
 
-int LibWrapper::createNamespace(NVM_GUID *pNamespaceGuid, const NVM_GUID poolGuid,
+int LibWrapper::createNamespace(NVM_UID *pNamespaceUid, const NVM_UID poolUid,
 	struct namespace_create_settings *pSettings, const struct interleave_format *pFormat,
 	const NVM_BOOL allowAdjustment) const
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
-	return nvm_create_namespace(pNamespaceGuid, poolGuid, pSettings, pFormat, allowAdjustment);
+	return nvm_create_namespace(pNamespaceUid, poolUid, pSettings, pFormat, allowAdjustment);
 }
 
-int LibWrapper::modifyNamespaceName(const NVM_GUID namespaceGuid,
+int LibWrapper::modifyNamespaceName(const NVM_UID namespaceUid,
 	const NVM_NAMESPACE_NAME name) const
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
-	return nvm_modify_namespace_name(namespaceGuid, name);
+	return nvm_modify_namespace_name(namespaceUid, name);
 }
 
-int LibWrapper::modifyNamespaceBlockCount(const NVM_GUID namespaceGuid,
+int LibWrapper::modifyNamespaceBlockCount(const NVM_UID namespaceUid,
 	const NVM_UINT64 blockCount,
 	NVM_BOOL allowAdjustment) const
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
-	return nvm_modify_namespace_block_count(namespaceGuid, blockCount, allowAdjustment);
+	return nvm_modify_namespace_block_count(namespaceUid, blockCount, allowAdjustment);
 }
 
-int LibWrapper::modifyNamespaceEnabled(const NVM_GUID namespaceGuid,
+int LibWrapper::modifyNamespaceEnabled(const NVM_UID namespaceUid,
 	const enum namespace_enable_state enabled) const
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
-	return nvm_modify_namespace_enabled(namespaceGuid, enabled);
+	return nvm_modify_namespace_enabled(namespaceUid, enabled);
 }
 
-int LibWrapper::deleteNamespace(const NVM_GUID namespaceGuid) const
+int LibWrapper::deleteNamespace(const NVM_UID namespaceUid) const
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
-	return nvm_delete_namespace(namespaceGuid);
+	return nvm_delete_namespace(namespaceUid);
 }
 
-int LibWrapper::adjustCreateNamespaceBlockCount(const NVM_GUID poolGuid,
+int LibWrapper::adjustCreateNamespaceBlockCount(const NVM_UID poolUid,
 	struct namespace_create_settings *pSettings,
 	const struct interleave_format *pFormat) const
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
-	return nvm_adjust_create_namespace_block_count(poolGuid, pSettings, pFormat);
+	return nvm_adjust_create_namespace_block_count(poolUid, pSettings, pFormat);
 }
 
-int LibWrapper::adjustModifyNamespaceBlockCount(const NVM_GUID namespaceGuid,
+int LibWrapper::adjustModifyNamespaceBlockCount(const NVM_UID namespaceUid,
 	NVM_UINT64 *pBlockCount) const
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
-	return nvm_adjust_modify_namespace_block_count(namespaceGuid, pBlockCount);
+	return nvm_adjust_modify_namespace_block_count(namespaceUid, pBlockCount);
 }
 
-int LibWrapper::getSensors(const NVM_GUID deviceGuid, struct sensor *pSensors,
+int LibWrapper::getSensors(const NVM_UID deviceUid, struct sensor *pSensors,
 	const NVM_UINT16 count) const
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
-	return nvm_get_sensors(deviceGuid, pSensors, count);
+	return nvm_get_sensors(deviceUid, pSensors, count);
 }
 
-int LibWrapper::getSensor(const NVM_GUID deviceGuid, const enum sensor_type type,
+int LibWrapper::getSensor(const NVM_UID deviceUid, const enum sensor_type type,
 	struct sensor *pSensor) const
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
-	return nvm_get_sensor(deviceGuid, type, pSensor);
+	return nvm_get_sensor(deviceUid, type, pSensor);
 }
 
-int LibWrapper::setSensorSettings(const NVM_GUID deviceGuid, const enum sensor_type type,
+int LibWrapper::setSensorSettings(const NVM_UID deviceUid, const enum sensor_type type,
 	const struct sensor_settings *pSettings) const
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
-	return nvm_set_sensor_settings(deviceGuid, type, pSettings);
+	return nvm_set_sensor_settings(deviceUid, type, pSettings);
 }
 
 int LibWrapper::addEventNotify(const enum event_type type,
@@ -429,43 +429,43 @@ int LibWrapper::gatherSupport(const NVM_PATH supportFile, const NVM_SIZE support
 	return nvm_gather_support(supportFile, supportFileLen);
 }
 
-int LibWrapper::runDiagnostic(const NVM_GUID deviceGuid, const struct diagnostic *pDiagnostic,
+int LibWrapper::runDiagnostic(const NVM_UID deviceUid, const struct diagnostic *pDiagnostic,
 	NVM_UINT32 *pResults) const
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
-	return nvm_run_diagnostic(deviceGuid, pDiagnostic, pResults);
+	return nvm_run_diagnostic(deviceUid, pDiagnostic, pResults);
 }
 
-int LibWrapper::getFwLogLevel(const NVM_GUID deviceGuid, enum fw_log_level *pLogLevel) const
+int LibWrapper::getFwLogLevel(const NVM_UID deviceUid, enum fw_log_level *pLogLevel) const
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
-	return nvm_get_fw_log_level(deviceGuid, pLogLevel);
+	return nvm_get_fw_log_level(deviceUid, pLogLevel);
 }
 
-int LibWrapper::setFwLogLevel(const NVM_GUID deviceGuid, const enum fw_log_level logLevel) const
+int LibWrapper::setFwLogLevel(const NVM_UID deviceUid, const enum fw_log_level logLevel) const
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
-	return nvm_set_fw_log_level(deviceGuid, logLevel);
+	return nvm_set_fw_log_level(deviceUid, logLevel);
 }
 
-int LibWrapper::getDeviceFwInfo(const NVM_GUID device_guid, struct device_fw_info *p_fw_info) const
+int LibWrapper::getDeviceFwInfo(const NVM_UID device_uid, struct device_fw_info *p_fw_info) const
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
-	return nvm_get_device_fw_image_info(device_guid, p_fw_info);
+	return nvm_get_device_fw_image_info(device_uid, p_fw_info);
 }
 
-int LibWrapper::injectDeviceError(const NVM_GUID deviceGuid,
+int LibWrapper::injectDeviceError(const NVM_UID deviceUid,
 	const struct device_error *pError) const
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
-	return nvm_inject_device_error(deviceGuid, pError);
+	return nvm_inject_device_error(deviceUid, pError);
 }
 
-int LibWrapper::clearInjectedDeviceError(const NVM_GUID deviceGuid,
+int LibWrapper::clearInjectedDeviceError(const NVM_UID deviceUid,
 	const struct device_error *pError) const
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
-	return nvm_clear_injected_device_error(deviceGuid, pError);
+	return nvm_clear_injected_device_error(deviceUid, pError);
 }
 
 int LibWrapper::addSimulator(const NVM_PATH simulator, const NVM_SIZE simulatorLen) const

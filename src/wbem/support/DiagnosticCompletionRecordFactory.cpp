@@ -128,11 +128,11 @@ throw (wbem::framework::Exception)
 				if (containsAttribute(MANAGEDELEMENTNAME_KEY, attributes))
 				{
 					std::string elementName = "";
-					if (diag.device_guid)
+					if (diag.device_uid)
 					{
-						NVM_GUID_STR guid_str;
-						uid_copy(diag.device_guid, guid_str);
-						elementName = wbem::physical_asset::NVDIMM_ELEMENTNAME_prefix + guid_str;
+						NVM_UID uid_str;
+						uid_copy(diag.device_uid, uid_str);
+						elementName = wbem::physical_asset::NVDIMM_ELEMENTNAME_prefix + uid_str;
 					}
 
 					framework::Attribute dimmAttr(elementName, false);

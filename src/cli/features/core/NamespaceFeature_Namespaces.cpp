@@ -350,12 +350,12 @@ cli::framework::ResultBase *cli::nvmcli::NamespaceFeature::deleteNamespaces(
 /*
  * Wrapper around wbem deleteNamespace function
  */
-void cli::nvmcli::NamespaceFeature::wbemDeleteNamespace(const std::string &namespaceGuid)
+void cli::nvmcli::NamespaceFeature::wbemDeleteNamespace(const std::string &namespaceUid)
 throw (wbem::framework::Exception)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	wbem::pmem_config::PersistentMemoryServiceFactory provider;
-	provider.deleteNamespace(namespaceGuid);
+	provider.deleteNamespace(namespaceUid);
 }
 
 /*
@@ -367,8 +367,8 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::createNamespace(
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	framework::ResultBase *pResult = NULL;
 
-	// Get the Pool GUID
-	pResult = m_pWbemToCli->checkPoolGuid(parsedCommand, m_poolGuid);
+	// Get the Pool UID
+	pResult = m_pWbemToCli->checkPoolUid(parsedCommand, m_poolUid);
 
 	m_forceOption = parsedCommand.options.find(framework::OPTION_FORCE.name)
 					!= parsedCommand.options.end();
@@ -431,10 +431,10 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::createNamespace(
 	{
 		try
 		{
-			std::string namespaceGuid;
+			std::string namespaceUid;
 
 			NVM_UINT64 adjustedBlockCount = m_pPmServiceProvider->getAdjustedCreateNamespaceBlockCount(
-					m_poolGuid, m_nsType, m_blockSize, m_blockCount,
+					m_poolUid, m_nsType, m_blockSize, m_blockCount,
 					m_eraseCapable, m_encryption, m_enableState);
 
 			if (!adjustNamespaceBlockCount(adjustedBlockCount) || !confirmNamespaceBlockSizeUsage())
@@ -452,15 +452,15 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::createNamespace(
 			parms.eraseCapable = m_eraseCapable;
 			parms.friendlyName = m_friendlyName;
 			parms.optimize = m_optimize;
-			parms.poolId = m_poolGuid;
+			parms.poolId = m_poolUid;
 			parms.interleaveChannelSize = m_channelSize;
 			parms.interleaveControllerSize = m_controllerSize;
 			parms.byOne = m_byOne;
-			m_pPmServiceProvider->createNamespace(parms, namespaceGuid);
+			m_pPmServiceProvider->createNamespace(parms, namespaceUid);
 
 			// display output from showNamespace
 			framework::ParsedCommand showNamespaceCommand;
-			showNamespaceCommand.targets[TARGET_NAMESPACE.name] = namespaceGuid;
+			showNamespaceCommand.targets[TARGET_NAMESPACE.name] = namespaceUid;
 			showNamespaceCommand.options[framework::OPTION_ALL.name] = "";
 			std::string capacityUnits;
 			pResult = getCapacityUnits(parsedCommand, &capacityUnits);
@@ -491,7 +491,7 @@ void cli::nvmcli::NamespaceFeature::wbemGetSupportedBlockSizes(
 	provider.getSupportedBlockSizes(sizes);
 }
 
-void cli::nvmcli::NamespaceFeature::wbemGetSupportedSizeRange(const std::string &poolGuid,
+void cli::nvmcli::NamespaceFeature::wbemGetSupportedSizeRange(const std::string &poolUid,
 		COMMON_UINT64 &largestPossibleAdNs,
 		COMMON_UINT64 &smallestPossibleAdNs,
 		COMMON_UINT64 &adIncrement,
@@ -502,7 +502,7 @@ void cli::nvmcli::NamespaceFeature::wbemGetSupportedSizeRange(const std::string 
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	wbem::pmem_config::PersistentMemoryPoolFactory provider;
 
-	provider.getSupportedSizeRange(poolGuid, largestPossibleAdNs, smallestPossibleAdNs, adIncrement,
+	provider.getSupportedSizeRange(poolUid, largestPossibleAdNs, smallestPossibleAdNs, adIncrement,
 			largestPossibleStorageNs, smallestPossibleStorageNs, storageIncrement);
 }
 
@@ -690,7 +690,7 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseCreateNsBlockCou
 				COMMON_UINT64 minStorageNamespaceSize = 0;
 				COMMON_UINT64 maxStorageNamespaceSize = 0;
 				COMMON_UINT64 storageNamespaceDivisor = 0;
-				m_pPmPoolProvider->getSupportedSizeRange(m_poolGuid,
+				m_pPmPoolProvider->getSupportedSizeRange(m_poolUid,
 						maxAdNamespaceSize, minAdNamespaceSize, adNamespaceDivisor,
 						maxStorageNamespaceSize, minStorageNamespaceSize, storageNamespaceDivisor);
 
@@ -1030,14 +1030,14 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::modifyNamespace(
 /*
  * Return true if the namespace block count has the correct alignment
  */
-bool cli::nvmcli::NamespaceFeature::isBlockCountAligned(std::string namespaceGuidStr)
+bool cli::nvmcli::NamespaceFeature::isBlockCountAligned(std::string namespaceUidStr)
 {
 	bool isAligned = true;
 
 	if (m_blockCountExists || m_capacityExists)
 	{
 		NVM_UINT64 adjustedBlockCount = m_pPmServiceProvider->getAdjustedModifyNamespaceBlockCount(
-				namespaceGuidStr, m_blockCount);
+				namespaceUidStr, m_blockCount);
 
 		isAligned = adjustNamespaceBlockCount(adjustedBlockCount);
 	}
@@ -1252,67 +1252,67 @@ bool cli::nvmcli::NamespaceFeature::confirmNamespaceBlockSizeUsage()
 }
 
 void cli::nvmcli::NamespaceFeature::atomicModifyNamespace(
-		const std::string namespaceGuidStr,
+		const std::string namespaceUidStr,
 		const struct namespace_details &details)
 {
 	try
 	{
-		modifyNamespace(namespaceGuidStr);
+		modifyNamespace(namespaceUidStr);
 	}
 	catch (wbem::framework::ExceptionBadParameter &)
 	{
-		COMMON_LOG_ERROR("Namespace guid is not valid.");
+		COMMON_LOG_ERROR("Namespace uid is not valid.");
 		throw;
 	}
 	catch (wbem::exception::NvmExceptionLibError &e)
 	{
-		undoModifyNamespace(namespaceGuidStr, details, e.getLibError());
+		undoModifyNamespace(namespaceUidStr, details, e.getLibError());
 		throw;
 	}
 }
 
 void cli::nvmcli::NamespaceFeature::modifyNamespace(
-		const std::string namespaceGuidStr)
+		const std::string namespaceUidStr)
 {
 	if (m_friendlyNameExists)
 	{
-		m_pPmServiceProvider->modifyNamespaceName(namespaceGuidStr, m_friendlyName);
+		m_pPmServiceProvider->modifyNamespaceName(namespaceUidStr, m_friendlyName);
 	}
 
 	if (m_blockCountExists || m_capacityExists)
 	{
-		m_pPmServiceProvider->modifyNamespaceBlockCount(namespaceGuidStr, m_blockCount);
+		m_pPmServiceProvider->modifyNamespaceBlockCount(namespaceUidStr, m_blockCount);
 	}
 
 	if (m_enabledStateExists)
 	{
-		m_pPmNamespaceProvider->modifyNamespace(namespaceGuidStr, m_enableState);
+		m_pPmNamespaceProvider->modifyNamespace(namespaceUidStr, m_enableState);
 	}
 }
 
 void cli::nvmcli::NamespaceFeature::undoModifyNamespace(
-		const std::string namespaceGuidStr, const struct namespace_details &previousDetails, const int modifyError)
+		const std::string namespaceUidStr, const struct namespace_details &previousDetails, const int modifyError)
 {
 	struct namespace_details newDetails;
 
 	try
 	{
-		m_pPmServiceProvider->getNamespaceDetails(namespaceGuidStr, newDetails);
+		m_pPmServiceProvider->getNamespaceDetails(namespaceUidStr, newDetails);
 
 		if (s_strncmp(newDetails.discovery.friendly_name,
 						previousDetails.discovery.friendly_name, NVM_NAMESPACE_NAME_LEN) != 0)
 		{
-			m_pPmServiceProvider->modifyNamespaceName(namespaceGuidStr, previousDetails.discovery.friendly_name);
+			m_pPmServiceProvider->modifyNamespaceName(namespaceUidStr, previousDetails.discovery.friendly_name);
 		}
 
 		if (newDetails.block_count != previousDetails.block_count)
 		{
-			m_pPmServiceProvider->modifyNamespaceBlockCount(namespaceGuidStr, previousDetails.block_count);
+			m_pPmServiceProvider->modifyNamespaceBlockCount(namespaceUidStr, previousDetails.block_count);
 		}
 
 		if (newDetails.enabled != previousDetails.enabled)
 		{
-			 m_pPmNamespaceProvider->modifyNamespace(namespaceGuidStr, previousDetails.enabled);
+			 m_pPmNamespaceProvider->modifyNamespace(namespaceUidStr, previousDetails.enabled);
 		}
 	}
 	catch (wbem::framework::Exception &)

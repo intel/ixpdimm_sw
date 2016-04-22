@@ -59,9 +59,9 @@ void wbem::logic::RuleNamespacesExist::verify(const MemoryAllocationRequest &req
 	for (std::vector<struct Dimm>::const_iterator dimmIter = request.dimms.begin();
 			dimmIter != request.dimms.end(); dimmIter++)
 	{
-		NVM_GUID dimmGuid;
-		uid_copy(dimmIter->guid.c_str(), dimmGuid);
-		int nsCount = pApi->getDeviceNamespaceCount(dimmGuid, NAMESPACE_TYPE_UNKNOWN);
+		NVM_UID dimmUid;
+		uid_copy(dimmIter->uid.c_str(), dimmUid);
+		int nsCount = pApi->getDeviceNamespaceCount(dimmUid, NAMESPACE_TYPE_UNKNOWN);
 		if (nsCount < 0) // error
 		{
 			// If retrieving NS' is not supported, allow Memory goal creation on MemoryMode SKU
@@ -89,7 +89,7 @@ void wbem::logic::RuleNamespacesExist::verify(const MemoryAllocationRequest &req
 		else if (nsCount > 0) // namespaces exist
 		{
 			COMMON_LOG_ERROR_F("%d namespaces exist on " NVM_DIMM_NAME " %s",
-					nsCount, dimmIter->guid.c_str());
+					nsCount, dimmIter->uid.c_str());
 			throw exception::NvmExceptionNamespacesExist();
 		}
 	}

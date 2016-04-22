@@ -60,7 +60,7 @@ class NVM_API PostLayoutAddressDecoderLimitCheck: public PostLayoutCheck
 		/*
 		 * For a given dimm, get the socketId
 		 */
-		NVM_UINT16 getSocketIdForDimm(NVM_GUID &guid);
+		NVM_UINT16 getSocketIdForDimm(NVM_UID &uid);
 
 		/*
 		 * Get a list of all the sockets involved in the layout

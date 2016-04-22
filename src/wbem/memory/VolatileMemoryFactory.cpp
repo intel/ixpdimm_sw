@@ -156,13 +156,13 @@ throw (wbem::framework::Exception)
 				if (dimms[device_index].manageability == MANAGEMENT_VALIDCONFIG)
 				{
 					// ignore dimm if it does not have any Memory Mode capacity
-					NVM_GUID_STR guidStr;
-					uid_copy(dimms[device_index].guid, guidStr);
-					NVM_UINT64 volatileCapacity = getDimmMemoryCapacity(guidStr);
+					NVM_UID uidStr;
+					uid_copy(dimms[device_index].uid, uidStr);
+					NVM_UINT64 volatileCapacity = getDimmMemoryCapacity(uidStr);
 					if (volatileCapacity > 0)
 					{
 						struct device_status status;
-						int rc = nvm_get_device_status(dimms[device_index].guid, &status);
+						int rc = nvm_get_device_status(dimms[device_index].uid, &status);
 						if (rc != NVM_SUCCESS)
 						{
 							// couldn't retrieve device status
@@ -214,20 +214,20 @@ throw (wbem::framework::Exception)
 /*
  * Get volatile memory capacity for a single DIMM
  */
-wbem::framework::UINT64 wbem::memory::VolatileMemoryFactory::getDimmMemoryCapacity(std::string guidStr)
+wbem::framework::UINT64 wbem::memory::VolatileMemoryFactory::getDimmMemoryCapacity(std::string uidStr)
 	throw (wbem::framework::Exception)
 {
 	NVM_UINT64 volatileCapacity = 0;
-	if (guidStr.length() != (NVM_GUIDSTR_LEN - 1))
+	if (uidStr.length() != (NVM_MAX_UID_LEN - 1))
 	{
-		throw framework::ExceptionBadParameter("GUID");
+		throw framework::ExceptionBadParameter("UID");
 	}
 
-	NVM_GUID guid;
-	uid_copy(guidStr.c_str(), guid);
+	NVM_UID uid;
+	uid_copy(uidStr.c_str(), uid);
 
 	struct device_details details;
-	int rc = nvm_get_device_details(guid, &details);
+	int rc = nvm_get_device_details(uid, &details);
 	if (rc != NVM_SUCCESS && rc != NVM_ERR_NOTMANAGEABLE)
 	{
 		// couldn't retrieve the capacity info
@@ -259,13 +259,13 @@ bool wbem::memory::VolatileMemoryFactory::isAssociated(
 		if ((pDepInstance->getClass() == wbem::memory::VOLATILEMEMORY_CREATIONCLASSNAME)
 			&& (pAntInstance->getClass() == wbem::memory::RAWMEMORY_CREATIONCLASSNAME))
 		{
-			framework::Attribute guidAttr;
-			if (pAntInstance->getAttribute(DEVICEID_KEY, guidAttr) == framework::SUCCESS)
+			framework::Attribute uidAttr;
+			if (pAntInstance->getAttribute(DEVICEID_KEY, uidAttr) == framework::SUCCESS)
 			{
 				try
 				{
-					// Look up DIMM by GUID
-					NVM_UINT64 memoryCapacity = getDimmMemoryCapacity(guidAttr.stringValue());
+					// Look up DIMM by UID
+					NVM_UINT64 memoryCapacity = getDimmMemoryCapacity(uidAttr.stringValue());
 
 					// Does it have any Memory Mode capacity?
 					if (memoryCapacity > 0)

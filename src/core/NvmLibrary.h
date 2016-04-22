@@ -56,57 +56,57 @@ public:
 	virtual int getMemoryTopologyCount();
 	virtual std::vector<struct memory_topology> getMemoryTopology();
 	virtual int getDeviceCount();
-	virtual struct device_discovery getDeviceDiscovery(const std::string &guid);
+	virtual struct device_discovery getDeviceDiscovery(const std::string &uid);
 	virtual std::vector<struct device_discovery> getDevices();
-	virtual struct device_status getDeviceStatus(const std::string &deviceGuid);
-	virtual struct device_settings getDeviceSettings(const std::string &deviceGuid);
-	virtual void modifyDeviceSettings(const std::string &deviceGuid,
+	virtual struct device_status getDeviceStatus(const std::string &deviceUid);
+	virtual struct device_settings getDeviceSettings(const std::string &deviceUid);
+	virtual void modifyDeviceSettings(const std::string &deviceUid,
 		const struct device_settings &settings);
-	virtual struct device_details getDeviceDetails(const std::string &deviceGuid);
-	virtual struct device_performance getDevicePerformance(const std::string &deviceGuid);
-	virtual void updateDeviceFw(const std::string &deviceGuid, const std::string path,
+	virtual struct device_details getDeviceDetails(const std::string &deviceUid);
+	virtual struct device_performance getDevicePerformance(const std::string &deviceUid);
+	virtual void updateDeviceFw(const std::string &deviceUid, const std::string path,
 		const bool activate, const bool force);
-	virtual void examineDeviceFw(const std::string &deviceGuid, const std::string path,
+	virtual void examineDeviceFw(const std::string &deviceUid, const std::string path,
 		std::string imageVersion);
-	virtual void setPassphrase(const std::string &deviceGuid, const std::string oldPassphrase,
+	virtual void setPassphrase(const std::string &deviceUid, const std::string oldPassphrase,
 		const std::string newPassphrase);
-	virtual void removePassphrase(const std::string &deviceGuid, const std::string passphrase);
-	virtual void unlockDevice(const std::string &deviceGuid, const std::string passphrase);
-	virtual void eraseDevice(const std::string &deviceGuid,
+	virtual void removePassphrase(const std::string &deviceUid, const std::string passphrase);
+	virtual void unlockDevice(const std::string &deviceUid, const std::string passphrase);
+	virtual void eraseDevice(const std::string &deviceUid,
 		const std::string passphrase);
 	virtual int getJobCount();
 	virtual std::vector<struct job> getJobs();
 	virtual int getPoolCount();
 	virtual std::vector<struct pool> getPools();
-	virtual struct pool getPool(const std::string &poolGuid);
-	virtual struct possible_namespace_ranges getAvailablePersistentSizeRange(const std::string &poolGuid);
-	virtual void createConfigGoal(const std::string &deviceGuid, struct config_goal &pGoal);
-	virtual struct config_goal getConfigGoal(const std::string &deviceGuid);
-	virtual void deleteConfigGoal(const std::string &deviceGuid);
-	virtual void dumpConfig(const std::string &deviceGuid, const std::string file,
+	virtual struct pool getPool(const std::string &poolUid);
+	virtual struct possible_namespace_ranges getAvailablePersistentSizeRange(const std::string &poolUid);
+	virtual void createConfigGoal(const std::string &deviceUid, struct config_goal &pGoal);
+	virtual struct config_goal getConfigGoal(const std::string &deviceUid);
+	virtual void deleteConfigGoal(const std::string &deviceUid);
+	virtual void dumpConfig(const std::string &deviceUid, const std::string file,
 		const bool append);
-	virtual void loadConfig(const std::string &deviceGuid, const std::string file);
+	virtual void loadConfig(const std::string &deviceUid, const std::string file);
 	virtual int getNamespaceCount();
-	virtual int getDeviceNamespaceCount(const std::string &deviceGuid,
+	virtual int getDeviceNamespaceCount(const std::string &deviceUid,
 		const enum namespace_type type);
 	virtual std::vector<struct namespace_discovery> getNamespaces();
-	virtual struct namespace_details getNamespaceDetails(const std::string &namespaceGuid);
-	virtual std::string createNamespace(const std::string &pool_guid,
+	virtual struct namespace_details getNamespaceDetails(const std::string &namespaceUid);
+	virtual std::string createNamespace(const std::string &pool_uid,
 		struct namespace_create_settings &p_settings, const struct interleave_format &p_format,
 		const bool allow_adjustment);
-	virtual void modifyNamespaceName(const std::string &namespaceGuid,
+	virtual void modifyNamespaceName(const std::string &namespaceUid,
 		const std::string &name);
-	virtual int modifyNamespaceBlockCount(const std::string &namespaceGuid,
+	virtual int modifyNamespaceBlockCount(const std::string &namespaceUid,
 		const NVM_UINT64 blockCount, bool allowAdjustment);
-	virtual void modifyNamespaceEnabled(const std::string &namespaceGuid,
+	virtual void modifyNamespaceEnabled(const std::string &namespaceUid,
 		const enum namespace_enable_state enabled);
-	virtual void deleteNamespace(const std::string &namespaceGuid);
-	virtual void adjustCreateNamespaceBlockCount(const std::string &poolGuid,
+	virtual void deleteNamespace(const std::string &namespaceUid);
+	virtual void adjustCreateNamespaceBlockCount(const std::string &poolUid,
 		struct namespace_create_settings &pSettings, const struct interleave_format &pFormat);
-	virtual void adjustModifyNamespaceBlockCount(const std::string &namespaceGuid, NVM_UINT64 &pBlockCount);
-	virtual std::vector<struct sensor> getSensors(const std::string &deviceGuid);
-	virtual struct sensor getSensor(const std::string &deviceGuid, const enum sensor_type type);
-	virtual void setSensorSettings(const std::string &deviceGuid, const enum sensor_type type,
+	virtual void adjustModifyNamespaceBlockCount(const std::string &namespaceUid, NVM_UINT64 &pBlockCount);
+	virtual std::vector<struct sensor> getSensors(const std::string &deviceUid);
+	virtual struct sensor getSensor(const std::string &deviceUid, const enum sensor_type type);
+	virtual void setSensorSettings(const std::string &deviceUid, const enum sensor_type type,
 		const struct sensor_settings &pSettings);
 	virtual void addEventNotify(const enum event_type type,
 		void (*pEventCallback)(struct event *pEvent));
@@ -118,13 +118,13 @@ public:
 	virtual void saveState(const std::string name);
 	virtual void purgeStateData();
 	virtual void gatherSupport(const std::string supportFile);
-	virtual void runDiagnostic(const std::string &deviceGuid, const struct diagnostic &pDiagnostic, NVM_UINT32 &pResults);
-	virtual enum fw_log_level getFwLogLevel(const std::string &deviceGuid);
-	virtual void setFwLogLevel(const std::string &deviceGuid, const enum fw_log_level logLevel);
-	virtual struct device_fw_info getDeviceFwInfo(const std::string &device_guid);
-	virtual void injectDeviceError(const std::string &deviceGuid,
+	virtual void runDiagnostic(const std::string &deviceUid, const struct diagnostic &pDiagnostic, NVM_UINT32 &pResults);
+	virtual enum fw_log_level getFwLogLevel(const std::string &deviceUid);
+	virtual void setFwLogLevel(const std::string &deviceUid, const enum fw_log_level logLevel);
+	virtual struct device_fw_info getDeviceFwInfo(const std::string &device_uid);
+	virtual void injectDeviceError(const std::string &deviceUid,
 		const struct device_error &pError);
-	virtual void clearInjectedDeviceError(const std::string &deviceGuid,
+	virtual void clearInjectedDeviceError(const std::string &deviceUid,
 		const struct device_error &pError);
 	virtual void addSimulator(const std::string simulator);
 	virtual void removeSimulator();

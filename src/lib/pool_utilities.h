@@ -164,8 +164,8 @@ int calculate_app_direct_interleave_security(NVM_UINT32 interleave_setid,
 int get_interleaveset_by_driver_id(NVM_UINT32 driver_id,
 		struct nvm_interleave_set *p_interleave);
 
-int get_pool_guid_from_namespace_details(
-		const struct nvm_namespace_details *p_details, NVM_GUID *p_pool_guid);
+int get_pool_uid_from_namespace_details(
+		const struct nvm_namespace_details *p_details, NVM_UID *p_pool_uid);
 
 /*
  * Converts DPA offset (from start of DIMM) to offset from the start of the PM partition.

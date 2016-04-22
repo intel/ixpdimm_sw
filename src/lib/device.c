@@ -264,7 +264,7 @@ int nvm_get_devices(struct device_discovery *p_devices, const NVM_UINT8 count)
 					{
 						copy_count++;
 
-						calculate_device_guid(p_devices[i].guid,
+						calculate_device_uid(p_devices[i].uid,
 								id_dimm.mf, DEV_MFR_LEN,
 								(char *)id_dimm.mn, DEV_MODELNUM_LEN,
 								id_dimm.sn, DEV_SN_LEN);
@@ -361,7 +361,7 @@ int nvm_get_devices(struct device_discovery *p_devices, const NVM_UINT8 count)
 /*
  * Retrieve discovery information about the device specified
  */
-int nvm_get_device_discovery(const NVM_GUID device_guid,
+int nvm_get_device_discovery(const NVM_UID device_uid,
 		struct device_discovery *p_discovery)
 {
 	COMMON_LOG_ENTRY();
@@ -375,9 +375,9 @@ int nvm_get_device_discovery(const NVM_GUID device_guid,
 	{
 		COMMON_LOG_ERROR("Retrieving devices is not supported.");
 	}
-	else if (device_guid == NULL)
+	else if (device_uid == NULL)
 	{
-		COMMON_LOG_ERROR("device_guid cannot be NULL");
+		COMMON_LOG_ERROR("device_uid cannot be NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
 	else if (p_discovery == NULL)
@@ -387,7 +387,7 @@ int nvm_get_device_discovery(const NVM_GUID device_guid,
 	}
 	else
 	{
-		rc = lookup_dev_guid(device_guid, p_discovery);
+		rc = lookup_dev_uid(device_uid, p_discovery);
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -550,7 +550,7 @@ int get_device_status_by_handle(NVM_NFIT_DEVICE_HANDLE dimm_handle,
 /*
  * Retrieve the status of the device specified
  */
-int nvm_get_device_status(const NVM_GUID device_guid,
+int nvm_get_device_status(const NVM_UID device_uid,
 		struct device_status *p_status)
 {
 	COMMON_LOG_ENTRY();
@@ -562,9 +562,9 @@ int nvm_get_device_status(const NVM_GUID device_guid,
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
 	}
-	else if (device_guid == NULL)
+	else if (device_uid == NULL)
 	{
-		COMMON_LOG_ERROR("Invalid parameter, device_guid is NULL");
+		COMMON_LOG_ERROR("Invalid parameter, device_uid is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
 	else if ((rc = nvm_get_nvm_capabilities(&capabilities)) != NVM_SUCCESS)
@@ -581,7 +581,7 @@ int nvm_get_device_status(const NVM_GUID device_guid,
 		COMMON_LOG_ERROR("Invalid parameter, p_status is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
-	else if ((rc = exists_and_manageable(device_guid, &discovery, 1)) == NVM_SUCCESS)
+	else if ((rc = exists_and_manageable(device_uid, &discovery, 1)) == NVM_SUCCESS)
 	{
 		rc = get_device_status_by_handle(discovery.device_handle, p_status, &capabilities);
 
@@ -594,7 +594,7 @@ int nvm_get_device_status(const NVM_GUID device_guid,
 /*
  * Helper function to populate current values for the sensors using the smart log
  */
-int get_details(const NVM_GUID device_guid,
+int get_details(const NVM_UID device_uid,
 		struct device_discovery *p_discovery,
 		struct device_details *p_details)
 {
@@ -640,7 +640,7 @@ int get_fw_power_mgmt_policy(NVM_NFIT_DEVICE_HANDLE dimm_handle,
 /*
  * Retrieve #device_settings information about the device specified
  */
-int nvm_get_device_settings(const NVM_GUID device_guid,
+int nvm_get_device_settings(const NVM_UID device_uid,
 		struct device_settings *p_settings)
 {
 	COMMON_LOG_ENTRY();
@@ -655,9 +655,9 @@ int nvm_get_device_settings(const NVM_GUID device_guid,
 	{
 		COMMON_LOG_ERROR("Retrieving device settings is not supported.");
 	}
-	else if (device_guid == NULL)
+	else if (device_uid == NULL)
 	{
-		COMMON_LOG_ERROR("Invalid parameter, device_guid is NULL");
+		COMMON_LOG_ERROR("Invalid parameter, device_uid is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
 	else if (p_settings == NULL)
@@ -665,7 +665,7 @@ int nvm_get_device_settings(const NVM_GUID device_guid,
 		COMMON_LOG_ERROR("Invalid parameter, p_settings is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
-	else if ((rc = exists_and_manageable(device_guid, &discovery, 1)) == NVM_SUCCESS)
+	else if ((rc = exists_and_manageable(device_uid, &discovery, 1)) == NVM_SUCCESS)
 	{
 		memset(p_settings, 0, sizeof (*p_settings));
 		struct pt_payload_config_data_policy config_data;
@@ -697,7 +697,7 @@ int nvm_get_device_settings(const NVM_GUID device_guid,
  * A given property change may require similar changes to related devices to
  * represent a consistent correct configuration.
  */
-int nvm_modify_device_settings(const NVM_GUID device_guid,
+int nvm_modify_device_settings(const NVM_UID device_uid,
 		const struct device_settings *p_settings)
 {
 	COMMON_LOG_ENTRY();
@@ -712,9 +712,9 @@ int nvm_modify_device_settings(const NVM_GUID device_guid,
 	{
 		COMMON_LOG_ERROR("Modifying device settings is not supported.");
 	}
-	else if (device_guid == NULL)
+	else if (device_uid == NULL)
 	{
-		COMMON_LOG_ERROR("Invalid parameter, device_guid is NULL");
+		COMMON_LOG_ERROR("Invalid parameter, device_uid is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
 	else if (p_settings == NULL)
@@ -722,7 +722,7 @@ int nvm_modify_device_settings(const NVM_GUID device_guid,
 		COMMON_LOG_ERROR("Invalid parameter, p_settings is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
-	else if ((rc = exists_and_manageable(device_guid, &discovery, 1)) == NVM_SUCCESS)
+	else if ((rc = exists_and_manageable(device_uid, &discovery, 1)) == NVM_SUCCESS)
 	{
 		struct pt_payload_config_data_policy config_data;
 		struct fw_cmd cmd;
@@ -753,7 +753,7 @@ int nvm_modify_device_settings(const NVM_GUID device_guid,
 /*
  * Retrieve detailed information about the device specified
  */
-int nvm_get_device_details(const NVM_GUID device_guid,
+int nvm_get_device_details(const NVM_UID device_uid,
 		struct device_details *p_details)
 {
 	COMMON_LOG_ENTRY();
@@ -773,9 +773,9 @@ int nvm_get_device_details(const NVM_GUID device_guid,
 			{
 				rc = NVM_ERR_NOTSUPPORTED;
 			}
-			else if (device_guid == NULL)
+			else if (device_uid == NULL)
 			{
-				COMMON_LOG_ERROR("Invalid parameter, device_guid is NULL");
+				COMMON_LOG_ERROR("Invalid parameter, device_uid is NULL");
 				rc = NVM_ERR_INVALIDPARAMETER;
 			}
 			else if (p_details == NULL)
@@ -783,27 +783,27 @@ int nvm_get_device_details(const NVM_GUID device_guid,
 				COMMON_LOG_ERROR("Invalid parameter, p_details is NULL");
 				rc = NVM_ERR_INVALIDPARAMETER;
 			}
-			else if (get_nvm_context_device_details(device_guid, p_details) != NVM_SUCCESS)
+			else if (get_nvm_context_device_details(device_uid, p_details) != NVM_SUCCESS)
 			{
 				memset(p_details, 0, sizeof (*p_details));
-				if ((rc = exists_and_manageable(device_guid,
+				if ((rc = exists_and_manageable(device_uid,
 						&p_details->discovery, 1)) == NVM_SUCCESS)
 				{
 					// get status
-					int temprc = nvm_get_device_status(device_guid, &(p_details->status));
+					int temprc = nvm_get_device_status(device_uid, &(p_details->status));
 					KEEP_ERROR(rc, temprc);
 
 					// get performance
-					temprc = nvm_get_device_performance(device_guid, &(p_details->performance));
+					temprc = nvm_get_device_performance(device_uid, &(p_details->performance));
 					KEEP_ERROR(rc, temprc);
 
 					// get sensors
-					temprc = nvm_get_sensors(device_guid,
+					temprc = nvm_get_sensors(device_uid,
 							p_details->sensors, NVM_MAX_DEVICE_SENSORS);
 					KEEP_ERROR(rc, temprc);
 
 					// get details
-					temprc = get_details(device_guid, &p_details->discovery, p_details);
+					temprc = get_details(device_uid, &p_details->discovery, p_details);
 					KEEP_ERROR(rc, temprc);
 
 					// get capacities
@@ -843,13 +843,13 @@ int nvm_get_device_details(const NVM_GUID device_guid,
 					KEEP_ERROR(rc, temprc);
 
 					// get device_settings
-					temprc = nvm_get_device_settings(device_guid, &(p_details->settings));
+					temprc = nvm_get_device_settings(device_uid, &(p_details->settings));
 					KEEP_ERROR(rc, temprc);
 
 					// TODO: workaround for Simics - returns as much data as possible to wbem
 					// this doesn't seem to hurt the unit tests so skip errors for now
 					rc = NVM_SUCCESS;
-					set_nvm_context_device_details(device_guid, p_details);
+					set_nvm_context_device_details(device_uid, p_details);
 				}
 				else
 				{
@@ -866,7 +866,7 @@ int nvm_get_device_details(const NVM_GUID device_guid,
 /*
  * Retrieve a snapshot of the performance metrics for the device specified.
  */
-int nvm_get_device_performance(const NVM_GUID device_guid,
+int nvm_get_device_performance(const NVM_UID device_uid,
 		struct device_performance *p_performance)
 {
 	COMMON_LOG_ENTRY();
@@ -881,9 +881,9 @@ int nvm_get_device_performance(const NVM_GUID device_guid,
 	{
 		COMMON_LOG_ERROR("Retrieving device performance is not supported.");
 	}
-	else if (device_guid == NULL)
+	else if (device_uid == NULL)
 	{
-		COMMON_LOG_ERROR("Invalid parameter, device_guid is NULL");
+		COMMON_LOG_ERROR("Invalid parameter, device_uid is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
 	else if (p_performance == NULL)
@@ -891,7 +891,7 @@ int nvm_get_device_performance(const NVM_GUID device_guid,
 		COMMON_LOG_ERROR("Invalid parameter, p_performance is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
-	else if ((rc = exists_and_manageable(device_guid, &discovery, 1)) == NVM_SUCCESS)
+	else if ((rc = exists_and_manageable(device_uid, &discovery, 1)) == NVM_SUCCESS)
 	{
 		NVM_UINT32 handle = discovery.device_handle.handle;
 
@@ -924,7 +924,7 @@ int nvm_get_device_performance(const NVM_GUID device_guid,
 /*
  * Retrieve the firmware image log information from the device specified.
  */
-int nvm_get_device_fw_image_info(const NVM_GUID device_guid,
+int nvm_get_device_fw_image_info(const NVM_UID device_uid,
 		struct device_fw_info *p_fw_info)
 {
 	COMMON_LOG_ENTRY();
@@ -935,9 +935,9 @@ int nvm_get_device_fw_image_info(const NVM_GUID device_guid,
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
 	}
-	else if (device_guid == NULL)
+	else if (device_uid == NULL)
 	{
-		COMMON_LOG_ERROR("Invalid parameter, device_guid is NULL");
+		COMMON_LOG_ERROR("Invalid parameter, device_uid is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
 	else if (p_fw_info == NULL)
@@ -945,7 +945,7 @@ int nvm_get_device_fw_image_info(const NVM_GUID device_guid,
 		COMMON_LOG_ERROR("Invalid parameter, p_settings is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
-	else if ((rc = exists_and_manageable(device_guid, &discovery, 1)) == NVM_SUCCESS)
+	else if ((rc = exists_and_manageable(device_uid, &discovery, 1)) == NVM_SUCCESS)
 	{
 		struct pt_payload_fw_image_info fw_image_info;
 		rc = fw_get_fw_image_info(discovery.device_handle.handle, &fw_image_info);
@@ -985,7 +985,7 @@ int nvm_get_device_fw_image_info(const NVM_GUID device_guid,
 /*
  * Push a new FW image to the device specified.
  */
-int nvm_update_device_fw(const NVM_GUID device_guid, const NVM_PATH path,
+int nvm_update_device_fw(const NVM_UID device_uid, const NVM_PATH path,
 		const NVM_SIZE path_len, const NVM_BOOL activate, const NVM_BOOL force)
 {
 	COMMON_LOG_ENTRY();
@@ -1000,9 +1000,9 @@ int nvm_update_device_fw(const NVM_GUID device_guid, const NVM_PATH path,
 	{
 		COMMON_LOG_ERROR("Modifying device settings is not supported.");
 	}
-	else if (device_guid == NULL)
+	else if (device_uid == NULL)
 	{
-		COMMON_LOG_ERROR("Invalid parameter, device_guid is NULL");
+		COMMON_LOG_ERROR("Invalid parameter, device_uid is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
 	else if (path == NULL)
@@ -1027,10 +1027,10 @@ int nvm_update_device_fw(const NVM_GUID device_guid, const NVM_PATH path,
 		COMMON_LOG_ERROR_F("File %s does not exist", path);
 		rc = NVM_ERR_BADFILE;
 	}
-	else if ((rc = exists_and_manageable(device_guid, &discovery, 1)) == NVM_SUCCESS)
+	else if ((rc = exists_and_manageable(device_uid, &discovery, 1)) == NVM_SUCCESS)
 	{
 		NVM_VERSION fw_version;
-		if ((rc = nvm_examine_device_fw(device_guid, path, path_len, fw_version, NVM_VERSION_LEN))
+		if ((rc = nvm_examine_device_fw(device_uid, path, path_len, fw_version, NVM_VERSION_LEN))
 				== NVM_SUCCESS ||
 				(rc == NVM_ERR_REQUIRESFORCE && force == 1))
 		{
@@ -1117,15 +1117,15 @@ int nvm_update_device_fw(const NVM_GUID device_guid, const NVM_PATH path,
 				if (rc == NVM_SUCCESS)
 				{
 					// Log an event indicating we successfully updated
-					NVM_EVENT_ARG guid_arg;
-					guid_to_event_arg(device_guid, guid_arg);
+					NVM_EVENT_ARG uid_arg;
+					uid_to_event_arg(device_uid, uid_arg);
 					NVM_EVENT_ARG version_arg;
 					s_strcpy(version_arg, fw_version, NVM_EVENT_ARG_LEN);
 					log_mgmt_event(EVENT_SEVERITY_INFO,
 							EVENT_CODE_MGMT_FIRMWARE_UPDATE,
-							device_guid,
+							device_uid,
 							0, // no action required
-							guid_arg, version_arg, NULL);
+							uid_arg, version_arg, NULL);
 
 					if (activate == 1)
 					{
@@ -1160,7 +1160,7 @@ int nvm_update_device_fw(const NVM_GUID device_guid, const NVM_PATH path,
 /*
  * Determine if the FW image is valid to load onto a device
  */
-int nvm_examine_device_fw(const NVM_GUID device_guid, const NVM_PATH path, const NVM_SIZE path_len,
+int nvm_examine_device_fw(const NVM_UID device_uid, const NVM_PATH path, const NVM_SIZE path_len,
 		NVM_VERSION image_version, const NVM_SIZE image_version_len)
 {
 	COMMON_LOG_ENTRY();
@@ -1172,9 +1172,9 @@ int nvm_examine_device_fw(const NVM_GUID device_guid, const NVM_PATH path, const
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
 	}
-	else if (device_guid == NULL)
+	else if (device_uid == NULL)
 	{
-		COMMON_LOG_ERROR("Invalid parameter, device_guid is NULL");
+		COMMON_LOG_ERROR("Invalid parameter, device_uid is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
 	else if (path == NULL)
@@ -1209,7 +1209,7 @@ int nvm_examine_device_fw(const NVM_GUID device_guid, const NVM_PATH path, const
 		COMMON_LOG_ERROR_F("File %s does not exist", path);
 		rc = NVM_ERR_BADFILE;
 	}
-	else if ((rc = exists_and_manageable(device_guid, &discovery, 1)) == NVM_SUCCESS)
+	else if ((rc = exists_and_manageable(device_uid, &discovery, 1)) == NVM_SUCCESS)
 	{
 		unsigned int buf_len = 0;
 		unsigned char *p_buf = NULL;
@@ -1366,7 +1366,7 @@ int nvm_get_nvm_capacities(struct device_capacities *p_capacities)
  * 		#NVM_ERR_UNKNOWN @n
  * 		#NVM_ERR_BADDEVICE @n
  */
-int nvm_send_device_passthrough_cmd(const NVM_GUID device_guid,
+int nvm_send_device_passthrough_cmd(const NVM_UID device_uid,
 		struct device_pt_cmd *p_cmd)
 {
 	COMMON_LOG_ENTRY();
@@ -1381,9 +1381,9 @@ int nvm_send_device_passthrough_cmd(const NVM_GUID device_guid,
 	{ // also confirms pass through
 		COMMON_LOG_ERROR("Retrieving "NVM_DIMM_NAME" health is not supported.");
 	}
-	else if (device_guid == NULL)
+	else if (device_uid == NULL)
 	{
-		COMMON_LOG_ERROR("Invalid parameter, device_guid is NULL");
+		COMMON_LOG_ERROR("Invalid parameter, device_uid is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
 	else if (p_cmd == NULL)
@@ -1392,7 +1392,7 @@ int nvm_send_device_passthrough_cmd(const NVM_GUID device_guid,
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
 	// get the device_handle
-	else if ((rc = exists_and_manageable(device_guid, &discovery, 0)) == NVM_SUCCESS)
+	else if ((rc = exists_and_manageable(device_uid, &discovery, 0)) == NVM_SUCCESS)
 	{
 		// send the pass through command
 		struct fw_cmd fw_cmd;

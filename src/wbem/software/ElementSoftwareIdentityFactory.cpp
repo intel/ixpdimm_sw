@@ -160,7 +160,7 @@ void ElementSoftwareIdentityFactory::validateFwVersionToDeviceRefPaths(
 	{
 		// Need to make sure this path corresponds to a real FW version on a real DIMM
 		core::device::Device device = getDeviceForObjectPath(dependent);
-		core::device::DeviceFirmwareInfo fwInfo = getFirmwareInfoForDevice(device.getGuid());
+		core::device::DeviceFirmwareInfo fwInfo = getFirmwareInfoForDevice(device.getUid());
 
 		std::string fwInstanceId = antecedent.getKeyValue(INSTANCEID_KEY).stringValue();
 		addActiveVersionStatus = isActiveFwVersion(fwInstanceId, device, fwInfo);
@@ -222,13 +222,13 @@ core::device::Device ElementSoftwareIdentityFactory::getDeviceForObjectPath(
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	std::string guidStr = path.getKeyValue(wbem::TAG_KEY).stringValue();
-	core::Result<core::device::Device> deviceResult = m_deviceService.getDevice(guidStr);
+	std::string uidStr = path.getKeyValue(wbem::TAG_KEY).stringValue();
+	core::Result<core::device::Device> deviceResult = m_deviceService.getDevice(uidStr);
 	return deviceResult.getValue();
 }
 
 core::device::DeviceFirmwareInfo ElementSoftwareIdentityFactory::getFirmwareInfoForDevice(
-		const std::string& deviceGuid)
+		const std::string& deviceUid)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
@@ -236,11 +236,11 @@ core::device::DeviceFirmwareInfo ElementSoftwareIdentityFactory::getFirmwareInfo
 	// the DIMM is unmanageable
 	struct device_fw_info blankFwInfo;
 	memset(&blankFwInfo, 0, sizeof (blankFwInfo));
-	core::device::DeviceFirmwareInfo emptyFwInfo(deviceGuid, blankFwInfo);
+	core::device::DeviceFirmwareInfo emptyFwInfo(deviceUid, blankFwInfo);
 	core::Result<core::device::DeviceFirmwareInfo> fwInfoResult(emptyFwInfo);
 	try
 	{
-		fwInfoResult = m_deviceFirmwareService.getFirmwareInfo(deviceGuid);
+		fwInfoResult = m_deviceFirmwareService.getFirmwareInfo(deviceUid);
 	}
 	catch (core::LibraryException &e)
 	{
@@ -342,7 +342,7 @@ void ElementSoftwareIdentityFactory::getAllDeviceFwInfo(
 	for (size_t i = 0; i < devices.size(); i++)
 	{
 		core::device::DeviceFirmwareInfo fwInfo =
-				getFirmwareInfoForDevice(devices[i].getGuid());
+				getFirmwareInfoForDevice(devices[i].getUid());
 
 		fwInfoForDevice.push_back(fwInfo);
 	}
@@ -377,8 +377,8 @@ framework::instance_names_t* ElementSoftwareIdentityFactory::getInstanceNames() 
 		{
 			for (size_t i = 0; i < devices.size(); i++)
 			{
-				std::string guidStr = devices[i].getGuid();
-				addInstanceNamesForDevice(*pNames, hostName, devices[i], deviceFwInfo[guidStr]);
+				std::string uidStr = devices[i].getUid();
+				addInstanceNamesForDevice(*pNames, hostName, devices[i], deviceFwInfo[uidStr]);
 			}
 		}
 
@@ -492,7 +492,7 @@ void ElementSoftwareIdentityFactory::addInstanceNamesForDevice(framework::instan
 
 	framework::ObjectPath deviceInstanceName;
 	physical_asset::NVDIMMFactory nvdimmFactory;
-	nvdimmFactory.createPathFromGuid(device.getGuid(), deviceInstanceName,
+	nvdimmFactory.createPathFromUid(device.getUid(), deviceInstanceName,
 			m_systemService.getHostName());
 
 	framework::instance_names_t fwVersionInstances;
@@ -560,16 +560,16 @@ bool ElementSoftwareIdentityFactory::allDeviceFirmwareVersionsMatch(
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	std::string firstGuidStr = devices[0].getGuid();
+	std::string firstUidStr = devices[0].getUid();
 	framework::ObjectPath firstFwObjectPath = NVDIMMFWVersionFactory::getActiveFirmwareInstanceName(
-			"", devices[0], deviceFwInfo[firstGuidStr]);
+			"", devices[0], deviceFwInfo[firstUidStr]);
 
 	bool fwMatches = true;
 	for (size_t i = 0; i < devices.size(); i++)
 	{
-		std::string guidStr = devices[i].getGuid();
+		std::string uidStr = devices[i].getUid();
 		framework::ObjectPath deviceFwObjectPath = NVDIMMFWVersionFactory::getActiveFirmwareInstanceName("",
-			devices[i], deviceFwInfo[guidStr]);
+			devices[i], deviceFwInfo[uidStr]);
 		if (deviceFwObjectPath.asString(true) != firstFwObjectPath.asString(true))
 		{
 			fwMatches = false;
@@ -590,9 +590,9 @@ void ElementSoftwareIdentityFactory::addInstanceNameForDeviceCollection(
 	if ((devices.size() > 0) && allDeviceFirmwareVersionsMatch(devices, deviceFwInfo))
 	{
 		// If all versions are the same, it doesn't matter which one we pick
-		std::string guidStr = devices[0].getGuid();
+		std::string uidStr = devices[0].getUid();
 		framework::ObjectPath fwObjectPath = NVDIMMFWVersionFactory::getActiveFirmwareInstanceName(
-				hostName, devices[0], deviceFwInfo[guidStr]);
+				hostName, devices[0], deviceFwInfo[uidStr]);
 		framework::ObjectPath collectionObjectPath = NVDIMMCollectionFactory::getObjectPath(hostName);
 
 		framework::attributes_t keys;

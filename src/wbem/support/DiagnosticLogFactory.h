@@ -65,7 +65,7 @@ namespace support
 	{
 		NVM_UINT32 id; //!< the lowest of the event id's
 		enum event_type type; //!< test type
-		NVM_GUID device_guid; //!< option, some tests run on a specific NVM DIMM, some do not
+		NVM_UID device_uid; //!< option, some tests run on a specific NVM DIMM, some do not
 		time_t time; //!< time the test was run, take the first event
 		wbem::framework::STR_LIST messages; //!< all the event log messages
 		enum diagnostic_result result; //!< store the worst of all the event logs

@@ -135,7 +135,7 @@ void verify_pcat(NVM_UINT32 *p_results)
  * verify that all interleave sets described by current config data are complete
  */
 void check_interleave_sets(struct current_config_table *p_current_config,
-		NVM_GUID dimm_guid, NVM_UINT32 *p_results)
+		NVM_UID dimm_uid, NVM_UINT32 *p_results)
 {
 	COMMON_LOG_ENTRY();
 
@@ -156,16 +156,16 @@ void check_interleave_sets(struct current_config_table *p_current_config,
 							&p_current_config->p_ext_tables + offset);
 			if (p_header->length == 0)
 			{
-				NVM_GUID_STR guid_str;
-				uid_copy(dimm_guid, guid_str);
+				NVM_UID uid_str;
+				uid_copy(dimm_uid, uid_str);
 				COMMON_LOG_ERROR(
 						"Invalid extension table, length is 0.");
 				store_event_by_parts(
 						EVENT_TYPE_DIAG_PLATFORM_CONFIG,
 						EVENT_SEVERITY_WARN,
 						EVENT_CODE_DIAG_PCONFIG_INVALID_CURRENT_PCD,
-						dimm_guid, 0,
-						guid_str, NULL, NULL,
+						dimm_uid, 0,
+						uid_str, NULL, NULL,
 						DIAGNOSTIC_RESULT_FAILED);
 				(*p_results)++;
 				break; // can't progress any further
@@ -220,8 +220,8 @@ void check_interleave_sets(struct current_config_table *p_current_config,
 }
 
 /*
- * Return the index where the guid is found in the pool's dimms array.
- * Return NVM_ERR_NOTFOUND if the guid is not in the array.
+ * Return the index where the uid is found in the pool's dimms array.
+ * Return NVM_ERR_NOTFOUND if the uid is not in the array.
  */
 int get_dimm_index_in_pool(const NVM_NFIT_DEVICE_HANDLE device_handle,
 		const struct nvm_pool *p_pool)
@@ -355,7 +355,7 @@ void check_device_mapped_memory_capacity(NVM_UINT32 *p_results,
 		store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG,
 				EVENT_SEVERITY_WARN,
 				EVENT_CODE_DIAG_PCONFIG_MAPPED_CAPACITY,
-				p_device->guid,
+				p_device->uid,
 				0,
 				MEMORY_CAP_STR,
 				mapped_vcap_str,
@@ -393,7 +393,7 @@ void check_device_mapped_app_direct_capacity(NVM_UINT32 *p_results,
 		store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG,
 				EVENT_SEVERITY_WARN,
 				EVENT_CODE_DIAG_PCONFIG_MAPPED_CAPACITY,
-				p_device->guid,
+				p_device->uid,
 				0,
 				APP_DIRECT_CAP_STR,
 				mapped_app_direct_str,
@@ -459,12 +459,12 @@ int check_mapped_capacities_for_device(NVM_UINT32 *p_results,
 }
 
 void check_unmapped_device_config(NVM_UINT32 *p_results,
-		const NVM_GUID guid, const struct current_config_table *p_current_config)
+		const NVM_UID uid, const struct current_config_table *p_current_config)
 {
 	COMMON_LOG_ENTRY();
 
-	NVM_GUID_STR guid_str;
-	uid_copy(guid, guid_str);
+	NVM_UID uid_str;
+	uid_copy(uid, uid_str);
 
 	if ((p_current_config->config_status == CURRENT_CONFIG_STATUS_UNCONFIGURED) ||
 			(p_current_config->config_status == CURRENT_CONFIG_STATUS_ERROR_UNMAPPED))
@@ -472,9 +472,9 @@ void check_unmapped_device_config(NVM_UINT32 *p_results,
 		store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG,
 				EVENT_SEVERITY_WARN,
 				EVENT_CODE_DIAG_PCONFIG_UNCONFIGURED,
-				guid,
+				uid,
 				0,
-				guid_str, NULL, NULL,
+				uid_str, NULL, NULL,
 				DIAGNOSTIC_RESULT_FAILED);
 		(*p_results)++;
 	}
@@ -498,7 +498,7 @@ int check_pcd_current_config_for_device(NVM_UINT32 *p_results,
 		{
 			if (!(p_diagnostic->excludes & DIAG_THRESHOLD_PCONFIG_UNCONFIGURED))
 			{
-				check_unmapped_device_config(p_results, p_device->guid, p_current_config);
+				check_unmapped_device_config(p_results, p_device->uid, p_current_config);
 			}
 		}
 		else
@@ -512,7 +512,7 @@ int check_pcd_current_config_for_device(NVM_UINT32 *p_results,
 		if (!(p_diagnostic->excludes & DIAG_THRESHOLD_PCONFIG_BROKEN_ISET))
 		{
 			// check for complete interleave sets
-			check_interleave_sets(p_current_config, p_device->guid, p_results);
+			check_interleave_sets(p_current_config, p_device->uid, p_results);
 		}
 	}
 
@@ -561,15 +561,15 @@ void check_for_unapplied_config_goal(NVM_UINT32 *p_results,
 
 	if (config_goal_is_unapplied(p_config_input, p_config_output))
 	{
-		NVM_GUID_STR guid_str;
-		uid_copy(p_device->guid, guid_str);
+		NVM_UID uid_str;
+		uid_copy(p_device->uid, uid_str);
 
 		store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG,
 				EVENT_SEVERITY_INFO,
 				EVENT_CODE_DIAG_PCONFIG_REBOOT_NEEDED_TO_APPLY_GOAL,
-				p_device->guid,
+				p_device->uid,
 				0,
-				guid_str,
+				uid_str,
 				NULL,
 				NULL,
 				DIAGNOSTIC_RESULT_WARNING);
@@ -593,8 +593,8 @@ void check_current_sku_violations(NVM_UINT32 *p_results,
 	struct current_config_table *p_current_config = cast_current_config(p_config);
 	if (p_current_config)
 	{
-		NVM_GUID_STR guid_str;
-		uid_copy(p_device->guid, guid_str);
+		NVM_UID uid_str;
+		uid_copy(p_device->uid, uid_str);
 
 		// DIMM is configured with memory but memory mode is not supported
 		if (p_current_config->mapped_memory_capacity > 0 &&
@@ -602,13 +602,13 @@ void check_current_sku_violations(NVM_UINT32 *p_results,
 			!p_device->device_capabilities.memory_mode_capable))
 		{
 			COMMON_LOG_DEBUG_F(NVM_DIMM_NAME" %s has mapped memory capacity "
-					"but memory mode is not supported.", guid_str);
+					"but memory mode is not supported.", uid_str);
 			store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG,
 					EVENT_SEVERITY_CRITICAL,
 					EVENT_CODE_DIAG_PCONFIG_DIMM_SKU_VIOLATION,
-					p_device->guid,
+					p_device->uid,
 					0,
-					guid_str,
+					uid_str,
 					MEMORY_EVENT_ARG,
 					NULL,
 					DIAGNOSTIC_RESULT_FAILED);
@@ -621,13 +621,13 @@ void check_current_sku_violations(NVM_UINT32 *p_results,
 			!p_device->device_capabilities.app_direct_mode_capable))
 		{
 			COMMON_LOG_DEBUG_F(NVM_DIMM_NAME" %s has mapped app direct memory "
-					"but app direct mode is not supported.", guid_str);
+					"but app direct mode is not supported.", uid_str);
 			store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG,
 					EVENT_SEVERITY_CRITICAL,
 					EVENT_CODE_DIAG_PCONFIG_DIMM_SKU_VIOLATION,
-					p_device->guid,
+					p_device->uid,
 					0,
-					guid_str,
+					uid_str,
 					APP_DIRECT_EVENT_ARG,
 					NULL,
 					DIAGNOSTIC_RESULT_FAILED);
@@ -655,12 +655,12 @@ void check_goal_sku_violations(NVM_UINT32 *p_results,
 		struct config_goal goal;
 		// bad config goals are captured elsewhere in this diagnostic,
 		// just proceed with SKU violation check if valid
-		if (config_input_table_to_config_goal(p_device->guid,
+		if (config_input_table_to_config_goal(p_device->uid,
 				(unsigned char *)p_config_input, sizeof (struct config_input_table),
 				p_config_input->header.length, &goal) == NVM_SUCCESS)
 		{
-			NVM_GUID_STR guid_str;
-			uid_copy(p_device->guid, guid_str);
+			NVM_UID uid_str;
+			uid_copy(p_device->uid, uid_str);
 
 			// DIMM goal contains memory mode capacity but memory mode is not supported
 			if (goal.memory_size > 0 &&
@@ -668,13 +668,13 @@ void check_goal_sku_violations(NVM_UINT32 *p_results,
 				!p_device->device_capabilities.memory_mode_capable))
 			{
 				COMMON_LOG_DEBUG_F(NVM_DIMM_NAME" %s has a goal with requested memory capacity "
-						"but memory mode is not supported.", guid_str);
+						"but memory mode is not supported.", uid_str);
 				store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG,
 						EVENT_SEVERITY_CRITICAL,
 						EVENT_CODE_DIAG_PCONFIG_DIMM_GOAL_SKU_VIOLATION,
-						p_device->guid,
+						p_device->uid,
 						0,
-						guid_str,
+						uid_str,
 						MEMORY_EVENT_ARG,
 						NULL,
 						DIAGNOSTIC_RESULT_FAILED);
@@ -687,13 +687,13 @@ void check_goal_sku_violations(NVM_UINT32 *p_results,
 				!p_device->device_capabilities.app_direct_mode_capable))
 			{
 				COMMON_LOG_DEBUG_F(NVM_DIMM_NAME" %s has a goal with mapped app direct memory "
-						"but app direct mode is not supported.", guid_str);
+						"but app direct mode is not supported.", uid_str);
 				store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG,
 						EVENT_SEVERITY_CRITICAL,
 						EVENT_CODE_DIAG_PCONFIG_DIMM_GOAL_SKU_VIOLATION,
-						p_device->guid,
+						p_device->uid,
 						0,
-						guid_str,
+						uid_str,
 						APP_DIRECT_EVENT_ARG,
 						NULL,
 						DIAGNOSTIC_RESULT_FAILED);
@@ -711,8 +711,8 @@ int check_platform_config_data_for_device(NVM_UINT32* p_results,
 {
 	COMMON_LOG_ENTRY();
 
-	NVM_GUID_STR guid_str;
-	uid_copy(p_device->guid, guid_str);
+	NVM_UID uid_str;
+	uid_copy(p_device->uid, uid_str);
 
 	// fetch the platform config tables for the DIMM
 	struct platform_config_data *p_config = NULL;
@@ -726,9 +726,9 @@ int check_platform_config_data_for_device(NVM_UINT32* p_results,
 			store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG,
 					EVENT_SEVERITY_WARN,
 					EVENT_CODE_DIAG_PCONFIG_INVALID_PCD,
-					p_device->guid,
+					p_device->uid,
 					0,
-					guid_str,
+					uid_str,
 					NULL,
 					NULL, DIAGNOSTIC_RESULT_FAILED);
 			(*p_results)++;

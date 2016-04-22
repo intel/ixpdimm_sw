@@ -48,8 +48,8 @@ cli::nvmcli::WbemToCli::~WbemToCli()
 
 /*
  * For commands that support an optional -namespace target,
- * retrieve the namespace GUID(s) of the specified target
- * or all namespace GUIDs if not specified.
+ * retrieve the namespace UID(s) of the specified target
+ * or all namespace UIDs if not specified.
  */
 cli::framework::ErrorResult *cli::nvmcli::WbemToCli::getNamespaces(
         const framework::ParsedCommand &parsedCommand,
@@ -66,8 +66,8 @@ cli::framework::ErrorResult *cli::nvmcli::WbemToCli::getNamespaces(
         if (!nsList.empty())
         {
             std::vector<std::string> allNamespaces =
-                    wbem::pmem_config::NamespaceViewFactory::getNamespaceGuidList();
-            // check each namespace guid, validate it's format if it exists
+                    wbem::pmem_config::NamespaceViewFactory::getNamespaceUidList();
+            // check each namespace uid, validate it's format if it exists
             for (size_t i = 0; i < nsList.size(); i++)
             {
                 if (nsList[i].length() + 1 != COMMON_UID_LEN)
@@ -92,10 +92,10 @@ cli::framework::ErrorResult *cli::nvmcli::WbemToCli::getNamespaces(
                 }
             }
         }
-            // no target specified, just get all namespace guids
+            // no target specified, just get all namespace uids
         else
         {
-            namespaces = wbem::pmem_config::NamespaceViewFactory::getNamespaceGuidList();
+            namespaces = wbem::pmem_config::NamespaceViewFactory::getNamespaceUidList();
         }
     }
     catch (wbem::framework::Exception &e)
@@ -106,11 +106,11 @@ cli::framework::ErrorResult *cli::nvmcli::WbemToCli::getNamespaces(
 }
 
 /*
- * For commands that support the -pool target, verify the pool GUID specified
+ * For commands that support the -pool target, verify the pool UID specified
  * or retrieve it if not specified
  */
-cli::framework::ErrorResult *cli::nvmcli::WbemToCli::checkPoolGuid(
-		const cli::framework::ParsedCommand &parsedCommand, std::string &poolGuid)
+cli::framework::ErrorResult *cli::nvmcli::WbemToCli::checkPoolUid(
+		const cli::framework::ParsedCommand &parsedCommand, std::string &poolUid)
 {
     LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
@@ -123,7 +123,7 @@ cli::framework::ErrorResult *cli::nvmcli::WbemToCli::checkPoolGuid(
     	// validity of the pool target is verified in the API layer
         if (!poolTarget.empty())
         {
-        	poolGuid = poolTarget;
+        	poolUid = poolTarget;
         }
         // no pool target was specified.
         else
@@ -131,9 +131,9 @@ cli::framework::ErrorResult *cli::nvmcli::WbemToCli::checkPoolGuid(
         	// only 1 pool, then use it
             if (allPools.size() == 1)
             {
-            	NVM_GUID_STR guidStr;
-                uid_copy(allPools[0].pool_guid, guidStr);
-            	poolGuid = guidStr;
+            	NVM_UID uidStr;
+                uid_copy(allPools[0].pool_uid, uidStr);
+            	poolUid = uidStr;
             }
             // more than one pool, the pool target is required
             else

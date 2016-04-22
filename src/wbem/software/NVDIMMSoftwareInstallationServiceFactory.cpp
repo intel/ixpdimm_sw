@@ -53,7 +53,7 @@
 wbem::software::NVDIMMSoftwareInstallationServiceFactory::NVDIMMSoftwareInstallationServiceFactory()
 throw (wbem::framework::Exception) : m_UpdateDeviceFw(nvm_update_device_fw),
 m_ExamineFwImage(nvm_examine_device_fw),
-m_GetManageableDeviceGuids(physical_asset::NVDIMMFactory::getManageableDeviceGuids)
+m_GetManageableDeviceUids(physical_asset::NVDIMMFactory::getManageableDeviceUids)
 { }
 
 wbem::software::NVDIMMSoftwareInstallationServiceFactory::~NVDIMMSoftwareInstallationServiceFactory()
@@ -368,10 +368,10 @@ wbem::software::NVDIMMSoftwareInstallationServiceFactory::getReturnCodeFromLibEx
 }
 
 /*
- * for each device guid, call the library to update it's firmware with the path provided
+ * for each device uid, call the library to update it's firmware with the path provided
  */
 void wbem::software::NVDIMMSoftwareInstallationServiceFactory::installFromPath(
-		const std::string& deviceGuid,
+		const std::string& deviceUid,
 		const std::string& path, bool activate, bool force) const
 throw (framework::Exception)
 {
@@ -382,17 +382,17 @@ throw (framework::Exception)
 	{
 		throw framework::ExceptionBadParameter("path");
 	}
-	if (deviceGuid.empty() || (deviceGuid.size() != NVM_GUIDSTR_LEN - 1))
+	if (deviceUid.empty() || (deviceUid.size() != NVM_MAX_UID_LEN - 1))
 	{
-		throw framework::ExceptionBadParameter("deviceGuid");
+		throw framework::ExceptionBadParameter("deviceUid");
 	}
 
 	int rc;
-	NVM_GUID guid;
-	uid_copy(deviceGuid.c_str(), guid);
+	NVM_UID uid;
+	uid_copy(deviceUid.c_str(), uid);
 	// library will check if device is manageable and can update the FW ... if not it will return an error
 	if (NVM_SUCCESS !=
-			(rc = m_UpdateDeviceFw(guid, path.c_str(), path.length(), activate, force)))
+			(rc = m_UpdateDeviceFw(uid, path.c_str(), path.length(), activate, force)))
 	{
 		throw exception::NvmExceptionLibError(rc);
 	}
@@ -404,7 +404,7 @@ throw (framework::Exception)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	std::vector<std::string> devices = m_GetManageableDeviceGuids();
+	std::vector<std::string> devices = m_GetManageableDeviceUids();
 
 
 	for (size_t i = 0; i < devices.size(); i++)
@@ -419,7 +419,7 @@ throw (framework::Exception)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	framework::return_codes rc = framework::SUCCESS;
-	std::vector<std::string> devices = m_GetManageableDeviceGuids();
+	std::vector<std::string> devices = m_GetManageableDeviceUids();
 
 	for (size_t i = 0; i < devices.size(); i++)
 	{
@@ -432,7 +432,7 @@ throw (framework::Exception)
 	return rc;
 }
 enum wbem::framework::return_codes wbem::software::NVDIMMSoftwareInstallationServiceFactory::examineFwImage(
-		const std::string& deviceGuid, const std::string& path, std::string &version) const
+		const std::string& deviceUid, const std::string& path, std::string &version) const
 throw (framework::Exception)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -441,17 +441,17 @@ throw (framework::Exception)
 	{
 		throw framework::ExceptionBadParameter("path");
 	}
-	if (deviceGuid.empty() || (deviceGuid.size() != NVM_GUIDSTR_LEN - 1))
+	if (deviceUid.empty() || (deviceUid.size() != NVM_MAX_UID_LEN - 1))
 	{
-		throw framework::ExceptionBadParameter("deviceGuid");
+		throw framework::ExceptionBadParameter("deviceUid");
 	}
 
-	NVM_GUID guid;
-	uid_copy(deviceGuid.c_str(), guid);
+	NVM_UID uid;
+	uid_copy(deviceUid.c_str(), uid);
 	NVM_VERSION fw_version;
 	memset(fw_version, 0, NVM_VERSION_LEN);
 	int lib_rc;
-	if ((lib_rc = m_ExamineFwImage(guid, path.c_str(), path.length(), fw_version, NVM_VERSION_LEN))
+	if ((lib_rc = m_ExamineFwImage(uid, path.c_str(), path.length(), fw_version, NVM_VERSION_LEN))
 			!= NVM_SUCCESS)
 	{
 		if (lib_rc == NVM_ERR_REQUIRESFORCE)

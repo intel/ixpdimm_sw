@@ -61,13 +61,13 @@ bool wbem::logic::RuleRejectLockedDimms::isDimmLocked(const wbem::logic::Dimm& d
 
 	bool isLocked = false;
 
-	NVM_GUID dimmGuid;
-	uid_copy(dimm.guid.c_str(), dimmGuid);
+	NVM_UID dimmUid;
+	uid_copy(dimm.uid.c_str(), dimmUid);
 
 	for (std::vector<struct device_discovery>::const_iterator iter = m_manageableDevices.begin();
 			iter != m_manageableDevices.end(); iter++)
 	{
-		if (uid_cmp(iter->guid, dimmGuid))
+		if (uid_cmp(iter->uid, dimmUid))
 		{
 			isLocked = isSecurityStateLocked(iter->lock_state);
 			break;

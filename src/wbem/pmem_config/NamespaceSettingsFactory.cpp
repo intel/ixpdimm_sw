@@ -88,15 +88,15 @@ throw(wbem::framework::Exception)
 	{
 		checkAttributes(attributes);
 
-		std::string nsGuidStr = path.getKeyValue(INSTANCEID_KEY).stringValue();
-		if (nsGuidStr.length() != NVM_GUIDSTR_LEN - 1)
+		std::string nsUidStr = path.getKeyValue(INSTANCEID_KEY).stringValue();
+		if (nsUidStr.length() != NVM_MAX_UID_LEN - 1)
 		{
-			COMMON_LOG_ERROR_F("NamespaceSettings InstanceID is not a valid namespace guid %s",
-					nsGuidStr.c_str());
+			COMMON_LOG_ERROR_F("NamespaceSettings InstanceID is not a valid namespace uid %s",
+					nsUidStr.c_str());
 			throw framework::ExceptionBadParameter(INSTANCEID_KEY.c_str());
 		}
 
-		struct namespace_details ns = NamespaceViewFactory::getNamespaceDetails(nsGuidStr);
+		struct namespace_details ns = NamespaceViewFactory::getNamespaceDetails(nsUidStr);
 
 		// ElementName = Friendly Name
 		if (containsAttribute(ELEMENTNAME_KEY, attributes))
@@ -125,12 +125,12 @@ throw(wbem::framework::Exception)
 			pInstance->setAttribute(RESERVATION_KEY, a, attributes);
 		}
 
-		// PoolID = Pool GUID
+		// PoolID = Pool UID
 		if (containsAttribute(POOLID_KEY, attributes))
 		{
-			NVM_GUID_STR poolGuidStr;
-			uid_copy(ns.pool_guid, poolGuidStr);
-			framework::Attribute a(poolGuidStr, false);
+			NVM_UID poolUidStr;
+			uid_copy(ns.pool_uid, poolUidStr);
+			framework::Attribute a(poolUidStr, false);
 			pInstance->setAttribute(POOLID_KEY, a, attributes);
 		}
 
@@ -222,13 +222,13 @@ throw(wbem::framework::Exception)
 	framework::instance_names_t *pNames = new framework::instance_names_t();
 	try
 	{
-		std::vector<std::string> nsList = NamespaceViewFactory::getNamespaceGuidList();
+		std::vector<std::string> nsList = NamespaceViewFactory::getNamespaceUidList();
 		for (std::vector<std::string>::const_iterator iter = nsList.begin();
 				iter != nsList.end(); iter++)
 		{
 			framework::attributes_t keys;
 
-			// InstanceID = Namespace GUID
+			// InstanceID = Namespace UID
 			keys[INSTANCEID_KEY] = framework::Attribute(*iter, true);
 
 			framework::ObjectPath path(server::getHostName(), NVM_NAMESPACE,

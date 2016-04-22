@@ -55,7 +55,7 @@ namespace monitor
 		struct db_topology_state storedState;
 	};
 
-	//!< Map with a GUID string key and deviceInfo Struct
+	//!< Map with a UID string key and deviceInfo Struct
 	typedef std::map<std::string, struct deviceInfo> DeviceMap;
 
 	/*!
@@ -90,7 +90,7 @@ namespace monitor
 		/*
 		 * Find and acknowledge an event of the specified code
 		 */
-		static void acknowledgeEvent(const int eventCode, const NVM_GUID deviceGuid);
+		static void acknowledgeEvent(const int eventCode, const NVM_UID deviceUid);
 
 
 	private:
@@ -104,17 +104,17 @@ namespace monitor
 		 */
 		void processDeviceStartupStatus(DeviceMap &devices);
 
-		void checkConfigGoalStatus(const std::string &guidStr, const deviceInfo &device) const;
+		void checkConfigGoalStatus(const std::string &uidStr, const deviceInfo &device) const;
 
-		void checkShutdownStatus(const std::string &guidStr, const deviceInfo &device) const;
+		void checkShutdownStatus(const std::string &uidStr, const deviceInfo &device) const;
 
-		void checkSkuViolation(const std::string &guidStr, const deviceInfo &device) const;
+		void checkSkuViolation(const std::string &uidStr, const deviceInfo &device) const;
 
 		/*
 		 * Helper to determine if the given dimm handle is a replacement of a missing dimm
-		 * If it is, return the dimm guid, if not return empty string.
+		 * If it is, return the dimm uid, if not return empty string.
 		 */
-		std::string getReplacedDimmGuid(const DeviceMap &devices, const NVM_UINT32 &handle);
+		std::string getReplacedDimmUid(const DeviceMap &devices, const NVM_UINT32 &handle);
 
 		/*
 		 * Helper function to look at previous topology state and detect newly-added/replaced DIMMS.
@@ -142,7 +142,7 @@ namespace monitor
 		/*
 		 * Monitor dimm health status transitions
 		 */
-		void monitorDimmStatus(const std::string &guidStr,
+		void monitorDimmStatus(const std::string &uidStr,
 				const struct device_discovery &discovery,
 				struct db_dimm_state &storedState,
 				bool &storedStateChanged,
@@ -151,7 +151,7 @@ namespace monitor
 		/*
 		 * Monitor dimm sensors
 		 */
-		void monitorDimmSensors(const std::string &guidStr,
+		void monitorDimmSensors(const std::string &uidStr,
 				const struct device_discovery &discovery,
 				struct db_dimm_state &storedState,
 				bool &storedStateChanged,
@@ -160,7 +160,7 @@ namespace monitor
 		/*
 		 * Monitor Dimm Media Temperature
 		 */
-		void monitorDimmMediaTemperature(const std::string &guidStr,
+		void monitorDimmMediaTemperature(const std::string &uidStr,
 				const struct device_discovery &discovery,
 				struct db_dimm_state &storedState,
 				bool &storedStateChanged,
@@ -169,7 +169,7 @@ namespace monitor
 		/*
 		 * Monitor Dimm Controller Temperature
 		 */
-		void monitorDimmControllerTemperature(const std::string &guidStr,
+		void monitorDimmControllerTemperature(const std::string &uidStr,
 				const struct device_discovery &discovery,
 				struct db_dimm_state &storedState,
 				bool &storedStateChanged,
@@ -178,7 +178,7 @@ namespace monitor
 		/*
 		 * Monitor Dimm Spare Capacity
 		 */
-		void monitorDimmSpare(const std::string &guidStr,
+		void monitorDimmSpare(const std::string &uidStr,
 				const struct device_discovery &discovery,
 				struct db_dimm_state &storedState,
 				bool &storedStateChanged,
@@ -187,7 +187,7 @@ namespace monitor
 		/*
 		 * Monitor Dimm Wear Level
 		 */
-		void monitorDimmWearLevel(const std::string &guidStr,
+		void monitorDimmWearLevel(const std::string &uidStr,
 				const struct device_discovery &discovery,
 				struct db_dimm_state &storedState,
 				bool &storedStateChanged,
@@ -196,7 +196,7 @@ namespace monitor
 		/*
 		 * Monitor Dimm Error Counts
 		 */
-		void monitorDimmErrors(const std::string &guidStr,
+		void monitorDimmErrors(const std::string &uidStr,
 				const struct device_discovery &discovery,
 				NVM_UINT64 &stored,
 				const NVM_UINT64 &current,
@@ -214,7 +214,7 @@ namespace monitor
 		void monitorNamespaces(PersistentStore *p_Store);
 
 		/*
-		 * Build a map of guids to discovery information for all NVM-DIMM in the system
+		 * Build a map of uids to discovery information for all NVM-DIMM in the system
 		 */
 		void buildDeviceMap(monitor::DeviceMap& map, bool addStoredTopology = false);
 
@@ -231,8 +231,8 @@ namespace monitor
 		/*
 		 * Helper to determine if a namespace has been deleted
 		 */
-		bool namespaceDeleted(const NVM_GUID nsGuid,
-				const std::vector<std::string> &nsGuids);
+		bool namespaceDeleted(const NVM_UID nsUid,
+				const std::vector<std::string> &nsUids);
 
 		/*
 		 * On start-up log an event for mixed SKUs.

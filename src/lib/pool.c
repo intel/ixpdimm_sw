@@ -47,9 +47,9 @@
 #include "system.h"
 
 /*
- * Use the device handles in struct nvm_pool to get guids for struct pool
+ * Use the device handles in struct nvm_pool to get uids for struct pool
  */
-int fill_in_device_guids(struct pool *p_pool, struct nvm_pool *p_nvm_pool)
+int fill_in_device_uids(struct pool *p_pool, struct nvm_pool *p_nvm_pool)
 {
 	int rc = NVM_SUCCESS;
 	int tmp_rc = NVM_SUCCESS;
@@ -68,7 +68,7 @@ int fill_in_device_guids(struct pool *p_pool, struct nvm_pool *p_nvm_pool)
 		}
 		else
 		{
-			memmove(p_pool->dimms[i], discovery.guid, NVM_GUID_LEN);
+			memmove(p_pool->dimms[i], discovery.uid, NVM_MAX_UID_LEN);
 		}
 	}
 
@@ -89,7 +89,7 @@ int fill_in_device_guids(struct pool *p_pool, struct nvm_pool *p_nvm_pool)
 			else
 			{
 				memmove(p_pool->ilsets[i].dimms[j],
-						discovery.guid, NVM_GUID_LEN);
+						discovery.uid, NVM_MAX_UID_LEN);
 			}
 		}
 	}
@@ -132,10 +132,10 @@ int calculate_interleave_health(struct interleave_set *p_interleave)
 				health = INTERLEAVE_HEALTH_UNKNOWN;
 			}
 
-			NVM_GUID_STR guid_str;
-			uid_copy(p_interleave->dimms[i], guid_str);
+			NVM_UID uid_str;
+			uid_copy(p_interleave->dimms[i], uid_str);
 			COMMON_LOG_ERROR_F("couldn't get status of underlying DIMM %s",
-					guid_str);
+					uid_str);
 			break;
 		}
 
@@ -323,7 +323,7 @@ int convert_nvm_pool_to_pool(struct nvm_pool *p_nvm_pool, struct pool *p_pool)
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
 
-	memmove(p_pool->pool_guid, p_nvm_pool->pool_guid, NVM_GUID_LEN);
+	memmove(p_pool->pool_uid, p_nvm_pool->pool_uid, NVM_MAX_UID_LEN);
 	p_pool->type = p_nvm_pool->type;
 	p_pool->capacity = p_nvm_pool->capacity;
 	p_pool->free_capacity = p_nvm_pool->free_capacity;
@@ -356,7 +356,7 @@ int convert_nvm_pool_to_pool(struct nvm_pool *p_nvm_pool, struct pool *p_pool)
 		p_pool->ilsets[j].socket_id = p_nvm_pool->ilsets[j].socket_id;
 	}
 
-	rc = fill_in_device_guids(p_pool, p_nvm_pool);
+	rc = fill_in_device_uids(p_pool, p_nvm_pool);
 	if (rc != NVM_SUCCESS)
 	{
 		COMMON_LOG_ERROR("The device is not in the device table.");
@@ -372,7 +372,7 @@ int convert_nvm_pool_to_pool(struct nvm_pool *p_nvm_pool, struct pool *p_pool)
 /*
  * Helper function to retrieve the nvm_pool directly from the driver
  */
-int get_nvm_pool(const NVM_GUID pool_guid, struct nvm_pool *p_nvm_pool)
+int get_nvm_pool(const NVM_UID pool_uid, struct nvm_pool *p_nvm_pool)
 {
 	COMMON_LOG_ENTRY();
 
@@ -396,7 +396,7 @@ int get_nvm_pool(const NVM_GUID pool_guid, struct nvm_pool *p_nvm_pool)
 			rc = NVM_ERR_BADPOOL;
 			for (int i = 0; i < pool_count; i++)
 			{
-				if (uid_cmp(nvm_pools[i].pool_guid, pool_guid))
+				if (uid_cmp(nvm_pools[i].pool_uid, pool_uid))
 				{
 					rc = NVM_SUCCESS;
 					memmove(p_nvm_pool, &nvm_pools[i], sizeof (struct nvm_pool));
@@ -521,7 +521,7 @@ int nvm_get_pools(struct pool *p_pools, const NVM_UINT8 count)
 /*
  * Retrieve a list of the configured pools of NVM-DIMM capacity in host server.
  */
-int nvm_get_pool(const NVM_GUID pool_guid, struct pool *p_pool)
+int nvm_get_pool(const NVM_UID pool_uid, struct pool *p_pool)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_ERR_BADPOOL;
@@ -534,9 +534,9 @@ int nvm_get_pool(const NVM_GUID pool_guid, struct pool *p_pool)
 	{
 		COMMON_LOG_ERROR("Retrieving pools is not supported.");
 	}
-	else if (pool_guid == NULL)
+	else if (pool_uid == NULL)
 	{
-		COMMON_LOG_ERROR("Invalid parameter, pool_guid is NULL");
+		COMMON_LOG_ERROR("Invalid parameter, pool_uid is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
 	else if (p_pool == NULL)
@@ -544,13 +544,13 @@ int nvm_get_pool(const NVM_GUID pool_guid, struct pool *p_pool)
 		COMMON_LOG_ERROR("Invalid parameter, p_pool is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
-	else if ((rc = get_nvm_context_pool(pool_guid, p_pool)) != NVM_SUCCESS)
+	else if ((rc = get_nvm_context_pool(pool_uid, p_pool)) != NVM_SUCCESS)
 	{
 		memset(p_pool, 0, sizeof (struct pool));
 
 		struct nvm_pool nvm_pool;
 		memset(&nvm_pool, 0, sizeof (nvm_pool));
-		if ((rc = get_nvm_pool(pool_guid, &nvm_pool)) == NVM_SUCCESS)
+		if ((rc = get_nvm_pool(pool_uid, &nvm_pool)) == NVM_SUCCESS)
 		{
 			rc = convert_nvm_pool_to_pool(&nvm_pool, p_pool);
 		}
@@ -564,7 +564,7 @@ int nvm_get_pool(const NVM_GUID pool_guid, struct pool *p_pool)
  * Store the configuration settings from the specified NVM-DIMM
  * to a file in order to duplicate the configuration elsewhere.
  */
-int nvm_dump_config(const NVM_GUID device_guid,
+int nvm_dump_config(const NVM_UID device_uid,
 		const NVM_PATH path, const NVM_SIZE path_len,
 		const NVM_BOOL append)
 {
@@ -580,9 +580,9 @@ int nvm_dump_config(const NVM_GUID device_guid,
 	{
 		COMMON_LOG_ERROR("Retrieving device capacity is not supported.");
 	}
-	else if (device_guid == NULL)
+	else if (device_uid == NULL)
 	{
-		COMMON_LOG_ERROR("Invalid parameter, device_guid is NULL");
+		COMMON_LOG_ERROR("Invalid parameter, device_uid is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
 	else if (path == NULL)
@@ -602,7 +602,7 @@ int nvm_dump_config(const NVM_GUID device_guid,
 		COMMON_LOG_ERROR("Invalid parameter, path length is 0");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
-	else if ((rc = exists_and_manageable(device_guid, &discovery, 1)) == NVM_SUCCESS)
+	else if ((rc = exists_and_manageable(device_uid, &discovery, 1)) == NVM_SUCCESS)
 	{
 		// get the platform config data for this dimm
 		struct platform_config_data *p_cfg_data = NULL;
@@ -638,7 +638,7 @@ int nvm_dump_config(const NVM_GUID device_guid,
 					// is no partition size change table
 					goal.memory_size =
 							(p_current_config->mapped_memory_capacity / BYTES_PER_GB);
-					rc = config_input_table_to_config_goal(device_guid,
+					rc = config_input_table_to_config_goal(device_uid,
 							(unsigned char *)p_current_config, sizeof (struct current_config_table),
 							p_current_config->header.length, &goal);
 					if (rc == NVM_SUCCESS)
@@ -807,7 +807,7 @@ int read_dimm_config(FILE *p_file, struct config_goal *p_goal,
 	return rc;
 }
 
-int fill_goal_dimm_guids(FILE *p_file, struct config_goal *p_goal)
+int fill_goal_dimm_uids(FILE *p_file, struct config_goal *p_goal)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
@@ -826,14 +826,14 @@ int fill_goal_dimm_guids(FILE *p_file, struct config_goal *p_goal)
 		if (p_goal->app_direct_count > 0 &&
 			p_goal->app_direct_1_set_id == tmp.app_direct_1_set_id)
 		{
-			// convert the dimm_handle to a guid
+			// convert the dimm_handle to a uid
 			NVM_NFIT_DEVICE_HANDLE handle;
 			handle.handle = dimm_handle;
 			struct device_discovery discovery;
 			if (lookup_dev_handle(handle, &discovery) == NVM_SUCCESS)
 			{
 				memmove(p_goal->app_direct_1_settings.dimms[p1_count],
-						discovery.guid, NVM_GUID_LEN);
+						discovery.uid, NVM_MAX_UID_LEN);
 				p1_count++;
 			}
 		}
@@ -847,7 +847,7 @@ int fill_goal_dimm_guids(FILE *p_file, struct config_goal *p_goal)
 			if (lookup_dev_handle(handle, &discovery) == NVM_SUCCESS)
 			{
 				memmove(p_goal->app_direct_2_settings.dimms[p2_count],
-						discovery.guid, NVM_GUID_LEN);
+						discovery.uid, NVM_MAX_UID_LEN);
 				p2_count++;
 			}
 		}
@@ -880,7 +880,7 @@ int fill_goal_dimm_guids(FILE *p_file, struct config_goal *p_goal)
 /*
  * Apply a previously stored configuration goal from a file onto the specified NVM-DIMM.
  */
-int nvm_load_config(const NVM_GUID device_guid,
+int nvm_load_config(const NVM_UID device_uid,
 		const NVM_PATH path, const NVM_SIZE path_len)
 {
 	COMMON_LOG_ENTRY();
@@ -895,9 +895,9 @@ int nvm_load_config(const NVM_GUID device_guid,
 	{
 		COMMON_LOG_ERROR("Modifying device capacity is not supported.");
 	}
-	else if (device_guid == NULL)
+	else if (device_uid == NULL)
 	{
-		COMMON_LOG_ERROR("Invalid parameter, device_guid is NULL");
+		COMMON_LOG_ERROR("Invalid parameter, device_uid is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
 	else if (path == NULL)
@@ -922,7 +922,7 @@ int nvm_load_config(const NVM_GUID device_guid,
 		COMMON_LOG_ERROR_F("File %s does not exist", path);
 		rc = NVM_ERR_BADFILE;
 	}
-	else if ((rc = exists_and_manageable(device_guid, &discovery, 1)) == NVM_SUCCESS)
+	else if ((rc = exists_and_manageable(device_uid, &discovery, 1)) == NVM_SUCCESS)
 	{
 		// read the file to get the desired config goal for this dimm
 		FILE *p_file = NULL;
@@ -956,7 +956,7 @@ int nvm_load_config(const NVM_GUID device_guid,
 					{
 						dimm_found = 1;
 						struct device_discovery discovery;
-						if ((rc = nvm_get_device_discovery(device_guid, &discovery))
+						if ((rc = nvm_get_device_discovery(device_uid, &discovery))
 								== NVM_SUCCESS)
 						{
 							// make sure dimm is big enough for config
@@ -971,10 +971,10 @@ int nvm_load_config(const NVM_GUID device_guid,
 								{
 									goal.app_direct_count = 2;
 								}
-								// find matching dimm guids for the interleave sets
-								if ((rc = fill_goal_dimm_guids(p_file, &goal)) == NVM_SUCCESS)
+								// find matching dimm uids for the interleave sets
+								if ((rc = fill_goal_dimm_uids(p_file, &goal)) == NVM_SUCCESS)
 								{
-									rc = nvm_create_config_goal(discovery.guid, &goal);
+									rc = nvm_create_config_goal(discovery.uid, &goal);
 								}
 							} // end dimm big enough
 						} // end get discovery

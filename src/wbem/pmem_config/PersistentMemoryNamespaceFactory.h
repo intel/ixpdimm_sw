@@ -135,19 +135,19 @@ class NVM_API PersistentMemoryNamespaceFactory : public framework_interface::Nvm
 		 * Interface to the library API nvm_modify_namespace function.
 		 * This pointer allows for dependency injection and decouples the dependency on the API
 		 */
-		int (*m_modifyNamespaceEnabled)(const NVM_GUID namespace_guid, const enum namespace_enable_state enabled);
+		int (*m_modifyNamespaceEnabled)(const NVM_UID namespace_uid, const enum namespace_enable_state enabled);
 
 		/*!
 		 * modify a namespace
 		 */
-		virtual void modifyNamespace(std::string namespaceGuidStr, const NVM_UINT16 stateValue);
+		virtual void modifyNamespace(std::string namespaceUidStr, const NVM_UINT16 stateValue);
 
 		/*!
-		 * create the object path give the namespace GUID
+		 * create the object path give the namespace UID
 		 */
-		static void createPathFromGuid(const NVM_GUID nsGuid,
+		static void createPathFromUid(const NVM_UID nsUid,
 				framework::ObjectPath &path);
-		static void createPathFromGuid(const std::string &nsGuid,
+		static void createPathFromUid(const std::string &nsUid,
 				framework::ObjectPath &path);
 
 		/*

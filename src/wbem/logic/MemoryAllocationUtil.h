@@ -54,7 +54,7 @@ class NVM_API MemoryAllocationUtil
 		void getLastInterleaveSetIdFromCurrentConfig(NVM_UINT16 &maxId);
 		void getLastInterleaveSetIdFromConfigGoals(NVM_UINT16 &maxId);
 		void getLastInterleaveSetIdFromLayout(const MemoryAllocationLayout &layout, NVM_UINT16 &maxId);
-		NVM_UINT16 getDimmInterleaveInfoMaxSetIndex(const std::string &dimmGuid);
+		NVM_UINT16 getDimmInterleaveInfoMaxSetIndex(const std::string &dimmUid);
 };
 
 } /* namespace logic */

@@ -557,7 +557,7 @@ struct device_capabilities
 /*
  * The device_discovery structure describes an enterprise-level view of a device with
  * enough information to allow callers to uniquely identify a device and determine its status.
- * The GUID in this structure is used for all other device management calls to uniquely
+ * The UID in this structure is used for all other device management calls to uniquely
  * identify a device.  It is intended that this structure will not change over time to
  * allow the native API library to communicate with older and newer revisions of devices.
  * @internal
@@ -567,7 +567,7 @@ struct device_capabilities
 struct device_discovery
 {
 	// Calculated by MGMT
-	NVM_GUID guid; // Unique identifier of the device.
+	NVM_UID uid; // Unique identifier of the device.
 	enum manageability_state manageability; // Compatibility of device, FW and mgmt.
 
 	// ACPI
@@ -649,7 +649,7 @@ struct sensor_settings
  */
 struct sensor
 {
-	NVM_GUID device_guid; // The unique identifier of the device this sensor applies to.
+	NVM_UID device_uid; // The unique identifier of the device this sensor applies to.
 	enum sensor_type type; // The type of sensor.
 	enum sensor_units units; // The units of measurement for the sensor.
 	enum sensor_status current_state; // The current state of the sensor.
@@ -855,7 +855,7 @@ struct app_direct_attributes
 {
 	struct interleave_format interleave; // The interleave format
 	NVM_BOOL mirrored; // Mirrored by the iMC
-	NVM_GUID dimms[NVM_MAX_DEVICES_PER_POOL]; // Unique ID's of underlying AEP DIMMs.
+	NVM_UID dimms[NVM_MAX_DEVICES_PER_POOL]; // Unique ID's of underlying AEP DIMMs.
 };
 
 /*
@@ -870,7 +870,7 @@ struct interleave_set
 	struct interleave_format settings;
 	NVM_UINT8 socket_id;
 	NVM_UINT8 dimm_count;
-	NVM_GUID dimms[NVM_MAX_DEVICES_PER_SOCKET];
+	NVM_UID dimms[NVM_MAX_DEVICES_PER_SOCKET];
 	NVM_BOOL mirrored;
 	enum interleave_set_health health;
 	enum encryption_status encryption; // on if lockstates of all dimms is enabled
@@ -882,7 +882,7 @@ struct interleave_set
  */
 struct pool
 {
-	NVM_GUID pool_guid; // Unique identifier of the pool.
+	NVM_UID pool_uid; // Unique identifier of the pool.
 	enum pool_type type; // The type of pool.
 	NVM_UINT64 capacity; // Size of the pool in bytes.
 	NVM_UINT64 free_capacity; // Available size of the pool in bytes.
@@ -896,7 +896,7 @@ struct pool
 	NVM_UINT64 memory_capacities[NVM_MAX_DEVICES_PER_POOL];
 	// Storage mode capacity of each dimm in the pool in bytes.
 	NVM_UINT64 storage_capacities[NVM_MAX_DEVICES_PER_POOL];
-	NVM_GUID dimms[NVM_MAX_DEVICES_PER_POOL]; // Unique ID's of underlying AEP DIMMs.
+	NVM_UID dimms[NVM_MAX_DEVICES_PER_POOL]; // Unique ID's of underlying AEP DIMMs.
 	// The interleave sets in this pool
 	struct interleave_set ilsets[NVM_MAX_DEVICES_PER_POOL * 2];
 	enum pool_health health; // Rolled up health of the underlying AEP DIMMs.
@@ -929,7 +929,7 @@ struct config_goal
  */
 struct namespace_discovery
 {
-	NVM_GUID namespace_guid; // Unique identifier of the namespace.
+	NVM_UID namespace_uid; // Unique identifier of the namespace.
 	char friendly_name[NVM_NAMESPACE_NAME_LEN]; // User supplied friendly name.
 };
 
@@ -948,7 +948,7 @@ struct namespace_security_features
 struct namespace_details
 {
 	struct namespace_discovery discovery; // Basic discovery information.
-	NVM_GUID pool_guid; // The pool the namespace is created from.
+	NVM_UID pool_uid; // The pool the namespace is created from.
 	NVM_UINT32 block_size; // Block size in bytes.
 	NVM_UINT64 block_count; // Number of blocks.
 	enum namespace_type type; // The type of namespace
@@ -960,7 +960,7 @@ struct namespace_details
 	NVM_BOOL mirrored;
 	union
 	{
-		NVM_GUID device_guid; // Used when creating a storage Namespace
+		NVM_UID device_uid; // Used when creating a storage Namespace
 		NVM_UINT32 interleave_setid; // Used when creating an app direct Namespace
 	} creation_id; // the identifier used by the driver when creating a Namespace
 	enum namespace_memory_page_allocation memory_page_allocation;
@@ -1005,7 +1005,7 @@ struct event
 	enum event_severity severity; // The severity of the event.
 	NVM_UINT16 code; // A numerical code for the specific event that occurred.
 	NVM_BOOL action_required; // A flag indicating that the event needs a corrective action.
-	NVM_GUID guid; // The unique ID of the item that had the event.
+	NVM_UID uid; // The unique ID of the item that had the event.
 	time_t time; // The time the event occurred.
 	NVM_EVENT_MSG message; // A detailed description of the event type that occurred in English.
 	NVM_EVENT_ARG args[NVM_MAX_EVENT_ARGS]; // The message arguments.
@@ -1024,7 +1024,7 @@ struct event_filter
 	 * #NVM_FILTER_ON_TYPE
 	 * #NVM_FITLER_ON_SEVERITY
 	 * #NVM_FILTER_ON_CODE
-	 * #NVM_FILTER_ON_GUID
+	 * #NVM_FILTER_ON_UID
 	 * #NVM_FILTER_ON_AFTER
 	 * #NVM_FILTER_ON_BEFORE
 	 * #NVM_FILTER_ON_EVENT
@@ -1052,9 +1052,9 @@ struct event_filter
 
 	/*
 	 * The identifier to retrieve events for.
-	 * Only used if #NVM_FILTER_ON_GUID is set in the #filter_mask.
+	 * Only used if #NVM_FILTER_ON_UID is set in the #filter_mask.
 	 */
-	NVM_GUID guid; // filter on specific item
+	NVM_UID uid; // filter on specific item
 
 	/*
 	 * The time after which to retrieve events.
@@ -1144,11 +1144,11 @@ struct socket
 
 struct job
 {
-	NVM_GUID guid;
+	NVM_UID uid;
 	NVM_UINT8 percent_complete;
 	enum nvm_job_status status;
 	enum nvm_job_type type;
-	NVM_GUID affected_element;
+	NVM_UID affected_element;
 	void *result;
 };
 
@@ -1343,7 +1343,7 @@ extern NVM_API int nvm_get_devices(struct device_discovery *p_devices, const NVM
 
 /*
  * Retrieve #device_discovery information about the device specified.
- * @param[in] device_guid
+ * @param[in] device_uid
  * 		The device identifier.
  * @param[in,out] p_discovery
  * 		A pointer to a #device_discovery structure allocated by the caller.
@@ -1362,12 +1362,12 @@ extern NVM_API int nvm_get_devices(struct device_discovery *p_devices, const NVM
  * 		#NVM_ERR_UNKNOWN @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
-extern NVM_API int nvm_get_device_discovery(const NVM_GUID device_guid,
+extern NVM_API int nvm_get_device_discovery(const NVM_UID device_uid,
 		struct device_discovery *p_discovery);
 
 /*
  * Retrieve the #device_status of the device specified.
- * @param[in] device_guid
+ * @param[in] device_uid
  * 		The device identifier.
  * @param[in,out] p_status
  * 		A pointer to a #device_status structure allocated by the caller.
@@ -1388,12 +1388,12 @@ extern NVM_API int nvm_get_device_discovery(const NVM_GUID device_guid,
  * 		#NVM_ERR_UNKNOWN @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
-extern NVM_API int nvm_get_device_status(const NVM_GUID device_guid,
+extern NVM_API int nvm_get_device_status(const NVM_UID device_uid,
 		struct device_status *p_status);
 
 /*
  * Retrieve #device_settings information about the device specified.
- * @param[in] device_guid
+ * @param[in] device_uid
  * 		The device identifier.
  * @param[out] p_settings
  * 		A pointer to a #device_settings structure allocated by the caller.
@@ -1414,12 +1414,12 @@ extern NVM_API int nvm_get_device_status(const NVM_GUID device_guid,
  * 		#NVM_ERR_UNKNOWN @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
-extern NVM_API int nvm_get_device_settings(const NVM_GUID device_guid,
+extern NVM_API int nvm_get_device_settings(const NVM_UID device_uid,
 		struct device_settings *p_settings);
 
 /*
  * Set one or more configurable properties on the specified device.
- * @param[in] device_guid
+ * @param[in] device_uid
  * 		The device identifier.
  * @param[in] p_settings
  * 		A pointer to an #device_settings structure containing the modified settings.
@@ -1444,12 +1444,12 @@ extern NVM_API int nvm_get_device_settings(const NVM_GUID device_guid,
  * 		#NVM_ERR_UNKNOWN @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
-extern NVM_API int nvm_modify_device_settings(const NVM_GUID device_guid,
+extern NVM_API int nvm_modify_device_settings(const NVM_UID device_uid,
 		const struct device_settings *p_settings);
 
 /*
  * Retrieve #device_details information about the device specified.
- * @param[in] device_guid
+ * @param[in] device_uid
  * 		The device identifier.
  * @param[in,out] p_details
  * 		A pointer to a #device_details structure allocated by the caller.
@@ -1470,12 +1470,12 @@ extern NVM_API int nvm_modify_device_settings(const NVM_GUID device_guid,
  * 		#NVM_ERR_UNKNOWN @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
-extern NVM_API int nvm_get_device_details(const NVM_GUID device_guid,
+extern NVM_API int nvm_get_device_details(const NVM_UID device_uid,
 		struct device_details *p_details);
 
 /*
  * Retrieve a current snapshot of the performance metrics for the device specified.
- * @param[in] device_guid
+ * @param[in] device_uid
  * 		The device identifier.
  * @param[in,out] p_performance
  * 		A pointer to a #device_performance structure allocated by the caller.
@@ -1496,12 +1496,12 @@ extern NVM_API int nvm_get_device_details(const NVM_GUID device_guid,
  * 		#NVM_ERR_UNKNOWN @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
-extern NVM_API int nvm_get_device_performance(const NVM_GUID device_guid,
+extern NVM_API int nvm_get_device_performance(const NVM_UID device_uid,
 		struct device_performance *p_performance);
 
 /*
  * Retrieve the firmware image log information from the device specified.
- * @param[in] device_guid
+ * @param[in] device_uid
  * 		The device identifier.
  * @param[in, out] p_fw_info
  * 		A pointer to a #device_fw_info structure allocated by the caller.
@@ -1522,12 +1522,12 @@ extern NVM_API int nvm_get_device_performance(const NVM_GUID device_guid,
  * 		#NVM_ERR_UNKNOWN @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
-extern NVM_API int nvm_get_device_fw_image_info(const NVM_GUID device_guid,
+extern NVM_API int nvm_get_device_fw_image_info(const NVM_UID device_uid,
 		struct device_fw_info *p_fw_info);
 
 /*
  * Push a new FW image to the device specified.
- * @param[in] device_guid
+ * @param[in] device_uid
  * 		The device identifier.
  * @param[in] path
  * 		Absolute file path to the new firmware image.
@@ -1562,13 +1562,13 @@ extern NVM_API int nvm_get_device_fw_image_info(const NVM_GUID device_guid,
  * 		#NVM_ERR_REQUIRESFORCE @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
-extern NVM_API int nvm_update_device_fw(const NVM_GUID device_guid,
+extern NVM_API int nvm_update_device_fw(const NVM_UID device_uid,
 		const NVM_PATH path, const NVM_SIZE path_len, const NVM_BOOL activate,
 		const NVM_BOOL force);
 
 /*
  * Examine the FW image to determine if it is valid for the device specified.
- * @param[in] device_guid
+ * @param[in] device_uid
  * 		The device identifier.
  * @param[in] path
  * 		Absolute file path to the new firmware image.
@@ -1600,7 +1600,7 @@ extern NVM_API int nvm_update_device_fw(const NVM_GUID device_guid,
  * 		#NVM_ERR_UNKNOWN @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
-extern NVM_API int nvm_examine_device_fw(const NVM_GUID device_guid,
+extern NVM_API int nvm_examine_device_fw(const NVM_UID device_uid,
 		const NVM_PATH path, const NVM_SIZE path_len,
 		NVM_VERSION image_version, const NVM_SIZE image_version_len);
 
@@ -1653,7 +1653,7 @@ extern NVM_API int nvm_get_nvm_capacities(struct device_capacities *p_capacities
  * If data at rest security is not enabled, this method enables it and
  * sets the passphrase. If data at rest security was previously enabled, this method changes
  * the passphrase to the new passphrase specified.
- * @param[in] device_guid
+ * @param[in] device_uid
  * 		The device identifier.
  * @param[in] old_passphrase
  * 		The current passphrase or NULL if security is disabled.
@@ -1689,13 +1689,13 @@ extern NVM_API int nvm_get_nvm_capacities(struct device_capacities *p_capacities
  * 		#NVM_ERR_UNKNOWN @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
-extern NVM_API int nvm_set_passphrase(const NVM_GUID device_guid,
+extern NVM_API int nvm_set_passphrase(const NVM_UID device_uid,
 		const NVM_PASSPHRASE old_passphrase, const NVM_SIZE old_passphrase_len,
 		const NVM_PASSPHRASE new_passphrase, const NVM_SIZE new_passphrase_len);
 
 /*
  * Disables data at rest security and removes the passphrase.
- * @param[in] device_guid
+ * @param[in] device_uid
  * 		The device identifier.
  * @param[in] passphrase
  * 		The current passphrase.
@@ -1727,12 +1727,12 @@ extern NVM_API int nvm_set_passphrase(const NVM_GUID device_guid,
  * 		#NVM_ERR_UNKNOWN @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
-extern NVM_API int nvm_remove_passphrase(const NVM_GUID device_guid,
+extern NVM_API int nvm_remove_passphrase(const NVM_UID device_uid,
 		const NVM_PASSPHRASE passphrase, const NVM_SIZE passphrase_len);
 
 /*
  * Unlocks the device with the passphrase specified.
- * @param[in] device_guid
+ * @param[in] device_uid
  * 		The device identifier.
  * @param[in] passphrase
  * 		The current passphrase.
@@ -1763,12 +1763,12 @@ extern NVM_API int nvm_remove_passphrase(const NVM_GUID device_guid,
  *		#NVM_ERR_UNKNOWN @n
  *		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
-extern NVM_API int nvm_unlock_device(const NVM_GUID device_guid,
+extern NVM_API int nvm_unlock_device(const NVM_UID device_uid,
 		const NVM_PASSPHRASE passphrase, const NVM_SIZE passphrase_len);
 
 /*
  * Erases data on the device specified by zeroing the device encryption key.
- * @param[in] device_guid
+ * @param[in] device_uid
  * 		The device identifier.
  * @param[in] passphrase
  * 		The current passphrase.
@@ -1797,7 +1797,7 @@ extern NVM_API int nvm_unlock_device(const NVM_GUID device_guid,
  * 		#NVM_ERR_UNKNOWN @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
-extern NVM_API int nvm_erase_device(const NVM_GUID device_guid,
+extern NVM_API int nvm_erase_device(const NVM_UID device_uid,
 		const NVM_PASSPHRASE passphrase, const NVM_SIZE passphrase_len);
 
 /*
@@ -1806,7 +1806,7 @@ extern NVM_API int nvm_erase_device(const NVM_GUID device_guid,
 
 /*
  * Retrieve all the health sensors for the specified AEP DIMM.
- * @param[in] device_guid
+ * @param[in] device_uid
  * 		The device identifier.
  * @param[in,out] p_sensors
  * 		An array of #sensor structures allocated by the caller.
@@ -1834,12 +1834,12 @@ extern NVM_API int nvm_erase_device(const NVM_GUID device_guid,
  * 		#NVM_ERR_UNKNOWN @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
-extern NVM_API int nvm_get_sensors(const NVM_GUID device_guid, struct sensor *p_sensors,
+extern NVM_API int nvm_get_sensors(const NVM_UID device_uid, struct sensor *p_sensors,
 		const NVM_UINT16 count);
 
 /*
  * Retrieve a specific health sensor from the specified AEP DIMM.
- * @param[in] device_guid
+ * @param[in] device_uid
  * 		The device identifier.
  * @param[in] s_type
  * 		The specific #sensor_type to retrieve.
@@ -1862,13 +1862,13 @@ extern NVM_API int nvm_get_sensors(const NVM_GUID device_guid, struct sensor *p_
  * 		#NVM_ERR_UNKNOWN @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
-extern NVM_API int nvm_get_sensor(const NVM_GUID device_guid, const enum sensor_type type,
+extern NVM_API int nvm_get_sensor(const NVM_UID device_uid, const enum sensor_type type,
 		struct sensor *p_sensor);
 
 /*
  * Change the critical threshold on the specified health sensor for the specified
  * AEP DIMM.
- * @param[in] device_guid
+ * @param[in] device_uid
  * 		The device identifier.
  * @param[in] s_type
  * 		The specific #sensor_type to modify.
@@ -1891,7 +1891,7 @@ extern NVM_API int nvm_get_sensor(const NVM_GUID device_guid, const enum sensor_
  * 		#NVM_ERR_UNKNOWN @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
-extern NVM_API int nvm_set_sensor_settings(const NVM_GUID device_guid,
+extern NVM_API int nvm_set_sensor_settings(const NVM_UID device_uid,
 		const enum sensor_type type, const struct sensor_settings *p_settings);
 
 /*
@@ -2043,7 +2043,7 @@ extern NVM_API int nvm_get_pools(struct pool *p_pools, const NVM_UINT8 count);
 
 /*
  * Retrieve a specific pool of AEP DIMM capacity.
- * @param[in] pool_guid
+ * @param[in] pool_uid
  * 		The identifier of the pool to retrieve
  * @param[in,out] p_pool
  * 		A pointer to a #pool structure allocated by the caller.
@@ -2059,7 +2059,7 @@ extern NVM_API int nvm_get_pools(struct pool *p_pools, const NVM_UINT8 count);
  * 		#NVM_ERR_UNKNOWN @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only) @n
  */
-extern NVM_API int nvm_get_pool(const NVM_GUID pool_guid, struct pool *p_pool);
+extern NVM_API int nvm_get_pool(const NVM_UID pool_uid, struct pool *p_pool);
 
 /*
  * Takes a pool UUID and returns the largest and smallest app direct and storage namespaces
@@ -2080,12 +2080,12 @@ extern NVM_API int nvm_get_pool(const NVM_GUID pool_guid, struct pool *p_pool);
  * 		#NVM_ERR_UNKNOWN @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only) @n
  */
-extern NVM_API int nvm_get_available_persistent_size_range(const NVM_GUID pool_guid,
+extern NVM_API int nvm_get_available_persistent_size_range(const NVM_UID pool_uid,
 		struct possible_namespace_ranges *p_range);
 
 /*
  * Modify how the AEP DIMM capacity is provisioned by the BIOS on the next reboot.
- * @param[in] device_guid
+ * @param[in] device_uid
  * 		The AEP DIMM identifier.
  * @param[in] p_goal
  * 		A pointer to a #config_goal structure allocated and populated by the caller.
@@ -2113,12 +2113,12 @@ extern NVM_API int nvm_get_available_persistent_size_range(const NVM_GUID pool_g
  * 		#NVM_ERR_UNKNOWN @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only) @n
  */
-extern NVM_API int nvm_create_config_goal(const NVM_GUID device_guid,
+extern NVM_API int nvm_create_config_goal(const NVM_UID device_uid,
 		struct config_goal *p_goal);
 
 /*
  * Retrieve the configuration goal from the specified AEP DIMM.
- * @param device_guid
+ * @param device_uid
  * 		The AEP DIMM identifier.
  * @param p_goal
  * 		A pointer to a #config_goal structure allocated by the caller.
@@ -2145,11 +2145,11 @@ extern NVM_API int nvm_create_config_goal(const NVM_GUID device_guid,
  * 		#NVM_ERR_UNKNOWN @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only) @n
  */
-extern NVM_API int nvm_get_config_goal(const NVM_GUID device_guid, struct config_goal *p_goal);
+extern NVM_API int nvm_get_config_goal(const NVM_UID device_uid, struct config_goal *p_goal);
 
 /*
  * Erase the pool configuration goal from the specified AEP DIMM.
- * @param device_guid
+ * @param device_uid
  * 		The AEP DIMM identifier.
  * @pre The caller has administrative privileges.
  * @pre The specified AEP DIMM is manageable by the host software.
@@ -2168,13 +2168,13 @@ extern NVM_API int nvm_get_config_goal(const NVM_GUID device_guid, struct config
  * 		#NVM_ERR_UNKNOWN @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only) @n
  */
-extern NVM_API int nvm_delete_config_goal(const NVM_GUID device_guid);
+extern NVM_API int nvm_delete_config_goal(const NVM_UID device_uid);
 
 /*
  * Store the configuration settings of how the AEP DIMM capacity
  * is currently provisioned to a file in order to duplicate the
  * configuration elsewhere.
- * @param device_guid
+ * @param device_uid
  * 		The AEP DIMM identifier.
  * @param file
  * 		The absolute file path in which to store the configuration data.
@@ -2204,7 +2204,7 @@ extern NVM_API int nvm_delete_config_goal(const NVM_GUID device_guid);
  * 		#NVM_ERR_UNKNOWN @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only) @n
  */
-extern NVM_API int nvm_dump_config(const NVM_GUID device_guid,
+extern NVM_API int nvm_dump_config(const NVM_UID device_uid,
 		const NVM_PATH file, const NVM_SIZE file_len,
 		const NVM_BOOL append);
 
@@ -2212,7 +2212,7 @@ extern NVM_API int nvm_dump_config(const NVM_GUID device_guid,
  * Modify how the AEP DIMM capacity is provisioned by the BIOS on the
  * next reboot by applying the configuration goal previously stored in the
  * specified file with @link nvm_dump_config @endlink.
- * @param device_guid
+ * @param device_uid
  * 		The AEP DIMM identifier.
  * @param file
  * 		The absolute file path containing the pool configuration goal to load.
@@ -2245,7 +2245,7 @@ extern NVM_API int nvm_dump_config(const NVM_GUID device_guid,
  * 		#NVM_ERR_UNKNOWN @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only) @n
  */
-extern NVM_API int nvm_load_config(const NVM_GUID device_guid,
+extern NVM_API int nvm_load_config(const NVM_UID device_uid,
 		const NVM_PATH file, const NVM_SIZE file_len);
 
 /*
@@ -2267,7 +2267,7 @@ extern NVM_API int nvm_get_namespace_count();
 /*
  * Determine if any existing namespaces of the specified type
  * utilize capacity from the specified device.
- * @param device_guid
+ * @param device_uid
  * 		The AEP DIMM identifier.
  * @param[in] type
  * 		The type of namespace, use UNKNOWN to check for all namespaces.
@@ -2283,7 +2283,7 @@ extern NVM_API int nvm_get_namespace_count();
  * 		#NVM_ERR_UNKNOWN @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
-extern NVM_API int nvm_get_device_namespace_count(const NVM_GUID guid,
+extern NVM_API int nvm_get_device_namespace_count(const NVM_UID uid,
 		const enum namespace_type type);
 
 /*
@@ -2312,7 +2312,7 @@ extern NVM_API int nvm_get_namespaces(struct namespace_discovery *p_namespaces,
 
 /*
  * Retrieve detailed information about the specified namespace.
- * @param[in] namespace_guid
+ * @param[in] namespace_uid
  * 		The namespace identifier.
  * @param[in,out] p_namespace
  * 		A pointer to an #namespace_details structure allocated by the caller.
@@ -2328,13 +2328,13 @@ extern NVM_API int nvm_get_namespaces(struct namespace_discovery *p_namespaces,
  * 		#NVM_ERR_UNKNOWN @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
-extern NVM_API int nvm_get_namespace_details(const NVM_GUID namespace_guid,
+extern NVM_API int nvm_get_namespace_details(const NVM_UID namespace_uid,
 		struct namespace_details *p_namespace);
 
 /*
  * Given a struct namespace_create_settings, adjust the block count so that the namespace
  * size meets alignment requirements for a namespace creation request.
- * @param[in] pool_guid
+ * @param[in] pool_uid
  * 		The pool identifier to create the namespace from.
  * @param[in,out] p_settings
  * 		The creation settings for a namespace
@@ -2361,12 +2361,12 @@ extern NVM_API int nvm_get_namespace_details(const NVM_GUID namespace_guid,
  *		#NVM_ERR_UNKNOWN @n
  *		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
-extern NVM_API int nvm_adjust_create_namespace_block_count(const NVM_GUID pool_guid,
+extern NVM_API int nvm_adjust_create_namespace_block_count(const NVM_UID pool_uid,
 		struct namespace_create_settings *p_settings, const struct interleave_format *p_format);
 /*
- * Given namespace_guid and a block count, adjust the block count so that the namespace
+ * Given namespace_uid and a block count, adjust the block count so that the namespace
  * size meets alignment requirements for a namespace modification request.
- * @param[in] namespace_guid
+ * @param[in] namespace_uid
  * 		The namespace that is to be modified.
  * @param[in,out] block_count
  * 		The requested block count for the namespace
@@ -2390,13 +2390,13 @@ extern NVM_API int nvm_adjust_create_namespace_block_count(const NVM_GUID pool_g
  *		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
 extern NVM_API int nvm_adjust_modify_namespace_block_count(
-		const NVM_GUID namespace_guid, NVM_UINT64 *p_block_count);
+		const NVM_UID namespace_uid, NVM_UINT64 *p_block_count);
 
 /*
  * Create a new namespace on the specified persistent memory pool of AEP DIMM capacity.
- * @param[in,out] p_namespace_guid
+ * @param[in,out] p_namespace_uid
  * 		The namespace identifier of the newly created namespace.
- * @param[in] pool_guid
+ * @param[in] pool_uid
  * 		The pool identifier to create the namespace from.
  * @param[in] p_settings
  * 		A pointer to an #namespace_create_settings structure describing the new
@@ -2424,13 +2424,13 @@ extern NVM_API int nvm_adjust_modify_namespace_block_count(
  * 		#NVM_ERR_UNKNOWN @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
-extern NVM_API int nvm_create_namespace(NVM_GUID *p_namespace_guid, const NVM_GUID pool_guid,
+extern NVM_API int nvm_create_namespace(NVM_UID *p_namespace_uid, const NVM_UID pool_uid,
 		struct namespace_create_settings *p_settings,
 		const struct interleave_format *p_format, const NVM_BOOL allow_adjustment);
 
 /*
  * Change the friendly_name setting on the specified namespace.
- * @param[in] namespace_guid
+ * @param[in] namespace_uid
  * 		The namespace identifier.
  * @param[in] name
  * 		A c-style string that contains the friendly name of the namespace.
@@ -2446,12 +2446,12 @@ extern NVM_API int nvm_create_namespace(NVM_GUID *p_namespace_guid, const NVM_GU
  * 		#NVM_ERR_UNKNOWN @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
-extern NVM_API int nvm_modify_namespace_name(const NVM_GUID namespace_guid,
+extern NVM_API int nvm_modify_namespace_name(const NVM_UID namespace_uid,
 		const NVM_NAMESPACE_NAME name);
 
 /*
  * Change the block_count setting on the specified namespace.
- * @param[in] namespace_guid
+ * @param[in] namespace_uid
  * 		The namespace identifier.
  * @param[in] block_count
  * 		The number of blocks in the new size of the namespace.
@@ -2469,12 +2469,12 @@ extern NVM_API int nvm_modify_namespace_name(const NVM_GUID namespace_guid,
  * 		#NVM_ERR_UNKNOWN @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
-extern NVM_API int nvm_modify_namespace_block_count(const NVM_GUID namespace_guid,
+extern NVM_API int nvm_modify_namespace_block_count(const NVM_UID namespace_uid,
 		NVM_UINT64 block_count, NVM_BOOL allow_adjustment);
 
 /*
  * Change the enabled setting on the specified namespace.
- * @param[in] namespace_guid
+ * @param[in] namespace_uid
  * 		The namespace identifier.
  * @param[in] enabled
  * 		NAMESPACE_ENABLE_STATE_ENABLED or NAMESPACE_ENABLE_STATE_DISABLED
@@ -2490,11 +2490,11 @@ extern NVM_API int nvm_modify_namespace_block_count(const NVM_GUID namespace_gui
  * 		#NVM_ERR_UNKNOWN @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
-extern NVM_API int nvm_modify_namespace_enabled(const NVM_GUID namespace_guid,
+extern NVM_API int nvm_modify_namespace_enabled(const NVM_UID namespace_uid,
 		const enum namespace_enable_state enabled);
 /*
  * Delete an existing namespace.
- * @param[in] namespace_guid
+ * @param[in] namespace_uid
  * 		The namespace identifier.
  * @pre The caller has administrative privileges.
  * @remarks Resources allocated to the deleted namespace are returned to the
@@ -2509,7 +2509,7 @@ extern NVM_API int nvm_modify_namespace_enabled(const NVM_GUID namespace_guid,
  * 		#NVM_ERR_UNKNOWN @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
-extern NVM_API int nvm_delete_namespace(const NVM_GUID namespace_guid);
+extern NVM_API int nvm_delete_namespace(const NVM_UID namespace_uid);
 
 /*
  * support.c
@@ -2676,7 +2676,7 @@ extern NVM_API int nvm_remove_simulator();
 
 /*
  * Retrieve the current level of debug logging performed on the specified AEP DIMM.
- * @param[in] device_guid
+ * @param[in] device_uid
  * 		The device identifier.
  * @param[out,in] p_log_level
  * 		A buffer for the log_level, allocated by the caller.
@@ -2695,11 +2695,11 @@ extern NVM_API int nvm_remove_simulator();
  * 		#NVM_ERR_UNKNOWN @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
-extern NVM_API int nvm_get_fw_log_level(const NVM_GUID device_guid, enum fw_log_level *p_log_level);
+extern NVM_API int nvm_get_fw_log_level(const NVM_UID device_uid, enum fw_log_level *p_log_level);
 
 /*
  * Set the current level of debug logging performed on the specified AEP DIMM.
- * @param[in] device_guid
+ * @param[in] device_uid
  * 		The device identifier.
  * @param[in] log_level
  * 		The firmware log level.
@@ -2718,12 +2718,12 @@ extern NVM_API int nvm_get_fw_log_level(const NVM_GUID device_guid, enum fw_log_
  * 		#NVM_ERR_UNKNOWN @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
-extern NVM_API int nvm_set_fw_log_level(const NVM_GUID device_guid,
+extern NVM_API int nvm_set_fw_log_level(const NVM_UID device_uid,
 		const enum fw_log_level log_level);
 
 /*
  * Inject an error into the device specified for debugging purposes.
- * @param[in] device_guid
+ * @param[in] device_uid
  * 		The device identifier.
  * @param[in] p_error
  * 		A pointer to a #device_error structure containing the injected
@@ -2746,12 +2746,12 @@ extern NVM_API int nvm_set_fw_log_level(const NVM_GUID device_guid,
  * 		#NVM_ERR_UNKNOWN @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
-extern NVM_API int nvm_inject_device_error(const NVM_GUID device_guid,
+extern NVM_API int nvm_inject_device_error(const NVM_UID device_uid,
 		const struct device_error *p_error);
 
 /*
  * Clear an injected error into the device specified for debugging purposes.
- * @param[in] device_guid
+ * @param[in] device_uid
  * 		The device identifier.
  * @param[in] p_error
  * 		A pointer to a #device_error structure containing the injected
@@ -2774,12 +2774,12 @@ extern NVM_API int nvm_inject_device_error(const NVM_GUID device_guid,
  * 		#NVM_ERR_UNKNOWN @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
-extern NVM_API int nvm_clear_injected_device_error(const NVM_GUID device_guid,
+extern NVM_API int nvm_clear_injected_device_error(const NVM_UID device_uid,
 		const struct device_error *p_error);
 
 /*
  * Run a diagnostic test on the device specified.
- * @param[in] device_guid
+ * @param[in] device_uid
  * 		The device identifier.
  * @param[in] p_diagnostic
  * 		A pointer to a #diagnostic structure containing the
@@ -2803,7 +2803,7 @@ extern NVM_API int nvm_clear_injected_device_error(const NVM_GUID device_guid,
  * 		#NVM_ERR_UNKNOWN @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
-extern NVM_API int nvm_run_diagnostic(const NVM_GUID device_guid,
+extern NVM_API int nvm_run_diagnostic(const NVM_UID device_uid,
 		const struct diagnostic *p_diagnostic, NVM_UINT32 *p_results);
 
 /*
@@ -2931,7 +2931,7 @@ struct device_pt_cmd
 /*
  * Send a firmware command directly to the specified device without
  * checking for valid input.
- * @param device_guid
+ * @param device_uid
  * 		The device identifier.
  * @param p_cmd
  * 		A pointer to a @link #device_pt_command @endlink structure defining the command to send.
@@ -2949,7 +2949,7 @@ struct device_pt_cmd
  * 		#NVM_ERR_DEVICEBUSY @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
-extern NVM_API int nvm_send_device_passthrough_cmd(const NVM_GUID device_guid,
+extern NVM_API int nvm_send_device_passthrough_cmd(const NVM_UID device_uid,
 		struct device_pt_cmd *p_cmd);
 
 #endif

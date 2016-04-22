@@ -88,14 +88,14 @@ wbem::framework::Instance* wbem::memory::RawMemoryFactory::getInstance(
 		path.checkKey(SYSTEMCREATIONCLASSNAME_KEY, server::BASESERVER_CREATIONCLASSNAME);
 		path.checkKey(SYSTEMNAME_KEY, server::getHostName());
 
-		// extract the GUID from the object path
+		// extract the UID from the object path
 		framework::Attribute attrDeviceID = path.getKeyValue(DEVICEID_KEY);
-		NVM_GUID dimmGuid;
-		uid_copy((char *) attrDeviceID.stringValue().c_str(), dimmGuid);
+		NVM_UID dimmUid;
+		uid_copy((char *) attrDeviceID.stringValue().c_str(), dimmUid);
 
 		// get dimm discovery info
 		struct device_discovery dimmDiscovery;
-		int rc = nvm_get_device_discovery(dimmGuid, &dimmDiscovery);
+		int rc = nvm_get_device_discovery(dimmUid, &dimmDiscovery);
 
 		if (rc != NVM_SUCCESS)
 		{
@@ -103,13 +103,13 @@ wbem::framework::Instance* wbem::memory::RawMemoryFactory::getInstance(
 			throw exception::NvmExceptionLibError(rc);
 		}
 
-		// Element Name = RAWMEMORY_ELEMENTNAME_prefix + GUID
+		// Element Name = RAWMEMORY_ELEMENTNAME_prefix + UID
 		if (containsAttribute(ELEMENTNAME_KEY, attributes))
 		{
-			NVM_GUID_STR guidStr;
-			uid_copy(dimmDiscovery.guid, guidStr);
+			NVM_UID uidStr;
+			uid_copy(dimmDiscovery.uid, uidStr);
 			framework::Attribute attrElementName(
-					RAWMEMORY_ELEMENTNAME_prefix + std::string(guidStr), false);
+					RAWMEMORY_ELEMENTNAME_prefix + std::string(uidStr), false);
 			pInstance->setAttribute(ELEMENTNAME_KEY, attrElementName, attributes);
 		}
 
@@ -130,7 +130,7 @@ wbem::framework::Instance* wbem::memory::RawMemoryFactory::getInstance(
 		// get dimm details
 		struct device_details dimmDetails;
 		memset(&dimmDetails, 0, sizeof(dimmDetails));
-		int getDeviceDetailsReturnCode = nvm_get_device_details(dimmDiscovery.guid, &dimmDetails);
+		int getDeviceDetailsReturnCode = nvm_get_device_details(dimmDiscovery.uid, &dimmDetails);
 
 		// OperationalStatus
 		if (containsAttribute(OPERATIONALSTATUS_KEY, attributes))
@@ -249,10 +249,10 @@ wbem::framework::instance_names_t* wbem::memory::RawMemoryFactory::getInstanceNa
 			keys.insert(std::pair<std::string, framework::Attribute>(
 					CREATIONCLASSNAME_KEY, attrCCName));
 
-			// DeviceID = DIMM GUID
-			NVM_GUID_STR guidStr;
-			uid_copy((*iter).guid, guidStr);
-			framework::Attribute attrDeviceID(guidStr, true);
+			// DeviceID = DIMM UID
+			NVM_UID uidStr;
+			uid_copy((*iter).uid, uidStr);
+			framework::Attribute attrDeviceID(uidStr, true);
 			keys.insert(std::pair<std::string, framework::Attribute>(
 					DEVICEID_KEY, attrDeviceID));
 

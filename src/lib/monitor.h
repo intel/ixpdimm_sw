@@ -49,16 +49,16 @@ struct event_notify_callback
 
 
 /*
- * Changes a GUID to a string and copies it into an NVM_EVENT_ARG
+ * Changes a uid to a string and copies it into an NVM_EVENT_ARG
  */
-void guid_to_event_arg(const NVM_GUID guid, NVM_EVENT_ARG arg);
+void uid_to_event_arg(const NVM_UID uid, NVM_EVENT_ARG arg);
 
 /*
  * Logs a management event to the event log, and to syslog if
  * applicable.
  */
 int log_mgmt_event(const enum event_severity severity, const NVM_UINT16 code,
-		const NVM_GUID device_guid, const NVM_BOOL action_required, const NVM_EVENT_ARG arg1,
+		const NVM_UID device_uid, const NVM_BOOL action_required, const NVM_EVENT_ARG arg1,
 		const NVM_EVENT_ARG arg2, const NVM_EVENT_ARG arg3);
 
 

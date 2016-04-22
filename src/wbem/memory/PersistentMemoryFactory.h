@@ -135,7 +135,7 @@ class NVM_API PersistentMemoryFactory : public framework_interface::NvmInstanceF
 		 * @param the DIMM whose storage region we should fetch
 		 * @return unique ID string
 		 */
-		static std::string getStorageRegionUuid(const std::string &dimmGuidStr);
+		static std::string getStorageRegionUuid(const std::string &dimmUidStr);
 
 	protected:
 		/*
@@ -209,7 +209,7 @@ class NVM_API PersistentMemoryFactory : public framework_interface::NvmInstanceF
 		/*
 		 * Determine if the DIMM is in use by the PersistentMemory instance
 		 */
-		bool isPersistentMemoryUsingDimm(const std::string &pmUuid, const std::string &dimmGuid)
+		bool isPersistentMemoryUsingDimm(const std::string &pmUuid, const std::string &dimmUid)
 			throw (framework::Exception);
 
 		/*
@@ -230,7 +230,7 @@ class NVM_API PersistentMemoryFactory : public framework_interface::NvmInstanceF
 		/*
 		 * Get the HealthState for a storage region on a given DIMM.
 		 */
-		NVM_UINT16 getStorageRegionHealthState(const NVM_GUID dimmGuid) throw (framework::Exception);
+		NVM_UINT16 getStorageRegionHealthState(const NVM_UID dimmUid) throw (framework::Exception);
 
 		/*
 		 * Get the OperationalStatus for an interleave set.
@@ -241,7 +241,7 @@ class NVM_API PersistentMemoryFactory : public framework_interface::NvmInstanceF
 		/*
 		 * Get the OperationalSTatus for a storage region on a given DIMM.
 		 */
-		NVM_UINT16 getStorageRegionOperationalStatus(const NVM_GUID dimmGuid) throw (framework::Exception);
+		NVM_UINT16 getStorageRegionOperationalStatus(const NVM_UID dimmUid) throw (framework::Exception);
 
 		/*
 		 * Translate HealthState value to string

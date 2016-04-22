@@ -195,9 +195,9 @@ void wbem::physical_asset::MemoryTopologyViewFactory::populateNvmDimmInstanceAtt
 		// DimmID - string
 		if (containsAttribute(DIMMID_KEY, attributes))
 		{
-			NVM_GUID_STR guidStr;
-			uid_copy(device.guid, guidStr);
-			std::string dimmId = NVDIMMFactory::guidToDimmIdStr(std::string(guidStr));
+			NVM_UID uidStr;
+			uid_copy(device.uid, uidStr);
+			std::string dimmId = NVDIMMFactory::uidToDimmIdStr(std::string(uidStr));
 
 			framework::Attribute a(dimmId, false);
 			instance.setAttribute(DIMMID_KEY, a);

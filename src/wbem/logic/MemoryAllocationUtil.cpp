@@ -86,10 +86,10 @@ void wbem::logic::MemoryAllocationUtil::getLastInterleaveSetIdFromConfigGoals(NV
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	std::vector<std::string> guids = physical_asset::NVDIMMFactory::getManageableDeviceGuids();
-	for (NVM_UINT32 i = 0; i < guids.size(); i++)
+	std::vector<std::string> uids = physical_asset::NVDIMMFactory::getManageableDeviceUids();
+	for (NVM_UINT32 i = 0; i < uids.size(); i++)
 	{
-		NVM_UINT32 maxDimmInterleaveIndex = getDimmInterleaveInfoMaxSetIndex(guids[i]);
+		NVM_UINT32 maxDimmInterleaveIndex = getDimmInterleaveInfoMaxSetIndex(uids[i]);
 		if (maxDimmInterleaveIndex > maxId)
 		{
 			maxId = maxDimmInterleaveIndex;
@@ -97,14 +97,14 @@ void wbem::logic::MemoryAllocationUtil::getLastInterleaveSetIdFromConfigGoals(NV
 	}
 }
 
-NVM_UINT16 wbem::logic::MemoryAllocationUtil::getDimmInterleaveInfoMaxSetIndex(const std::string &dimmGuid)
+NVM_UINT16 wbem::logic::MemoryAllocationUtil::getDimmInterleaveInfoMaxSetIndex(const std::string &dimmUid)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	NVM_UINT16 maxInterleaveIndex = 0;
 	try
 	{
 		struct config_goal goal;
-		m_pApi->getConfigGoalForDimm(dimmGuid, goal);
+		m_pApi->getConfigGoalForDimm(dimmUid, goal);
 
 		if (goal.app_direct_count > 0)
 		{
@@ -162,9 +162,9 @@ wbem::logic::Dimm wbem::logic::MemoryAllocationUtil::deviceDiscoveryToDimm(
 
 	wbem::logic::Dimm dimm;
 
-	NVM_GUID_STR guidStr;
-	uid_copy(deviceDiscovery.guid, guidStr);
-	dimm.guid = guidStr;
+	NVM_UID uidStr;
+	uid_copy(deviceDiscovery.uid, uidStr);
+	dimm.uid = uidStr;
 
 	dimm.capacity = deviceDiscovery.capacity;
 	dimm.socket = deviceDiscovery.socket_id;

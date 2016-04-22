@@ -48,10 +48,10 @@
  *         NVM_BADDEVICE if device is not in the lookup table
  *         NVM_ERR_NOTMANAGEABLE if device is not manageable
  */
-int exists_and_manageable(const NVM_GUID device_guid, struct device_discovery *p_dev,
+int exists_and_manageable(const NVM_UID device_uid, struct device_discovery *p_dev,
 		NVM_BOOL check_manageability)
 {
-	int rc = lookup_dev_guid(device_guid, p_dev);
+	int rc = lookup_dev_uid(device_uid, p_dev);
 	if (rc == NVM_SUCCESS)
 	{
 		if (check_manageability &&
@@ -65,19 +65,19 @@ int exists_and_manageable(const NVM_GUID device_guid, struct device_discovery *p
 }
 
 /*
- * used to generate a guid from the following components:
+ * used to generate a uid from the following components:
  *		Manufacturer Name
  *		Model Number
  *		Serial Number
  */
-int calculate_device_guid(NVM_GUID device_guid, const unsigned char *mfr, size_t mfr_len,
+int calculate_device_uid(NVM_UID device_uid, const unsigned char *mfr, size_t mfr_len,
 		const char *mn, size_t mn_len, const unsigned char *sn, size_t sn_len)
 {
 	int rc = NVM_ERR_UNKNOWN;
 
-	if (device_guid == NULL)
+	if (device_uid == NULL)
 	{
-		COMMON_LOG_ERROR("Invalid parameter, device_guid is NULL");
+		COMMON_LOG_ERROR("Invalid parameter, device_uid is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
 	else if (mfr == NULL)
@@ -97,16 +97,16 @@ int calculate_device_guid(NVM_GUID device_guid, const unsigned char *mfr, size_t
 	}
 	else
 	{
-		size_t guid_data_len = mfr_len + mn_len + sn_len;
-		unsigned char guid_data[guid_data_len];
-		memmove(guid_data, mfr, mfr_len);
-		memmove(guid_data+mfr_len, mn, mn_len);
-		memmove(guid_data+mfr_len+mn_len, sn, sn_len);
+		size_t uid_data_len = mfr_len + mn_len + sn_len;
+		unsigned char uid_data[uid_data_len];
+		memmove(uid_data, mfr, mfr_len);
+		memmove(uid_data+mfr_len, mn, mn_len);
+		memmove(uid_data+mfr_len+mn_len, sn, sn_len);
 
-		// feed the component string into SHA1 to deterministically generate a GUID
-		if (!guid_hash_str(guid_data, guid_data_len, device_guid))
+		// feed the component string into SHA1 to deterministically generate a uid
+		if (!guid_hash_str(uid_data, uid_data_len, device_uid))
 		{
-			COMMON_LOG_ERROR("DIMM guid hash creation FAILED");
+			COMMON_LOG_ERROR("DIMM uid hash creation FAILED");
 			rc = NVM_ERR_INVALIDPARAMETER;
 		}
 		else
@@ -142,16 +142,16 @@ int get_devices(struct device_discovery **pp_devices)
 }
 
 /*
- * Lookup a device from the guid
+ * Lookup a device from the uid
  */
 
-int lookup_dev_guid(const NVM_GUID dev_guid, struct device_discovery *p_dev)
+int lookup_dev_uid(const NVM_UID dev_uid, struct device_discovery *p_dev)
 {
 	int rc = NVM_ERR_BADDEVICE;
 
-	if (dev_guid == NULL)
+	if (dev_uid == NULL)
 	{
-		COMMON_LOG_ERROR("Invalid parameter, device GUID is NULL");
+		COMMON_LOG_ERROR("Invalid parameter, device uid is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
 	else
@@ -166,7 +166,7 @@ int lookup_dev_guid(const NVM_GUID dev_guid, struct device_discovery *p_dev)
 		{
 			for (int i = 0; i < dev_count; i++)
 			{
-				if (uid_cmp(dev_guid, p_devices[i].guid))
+				if (uid_cmp(dev_uid, p_devices[i].uid))
 				{
 					rc = NVM_SUCCESS;
 					if (p_dev)
@@ -840,7 +840,7 @@ int dimm_has_namespaces_of_type(const NVM_NFIT_DEVICE_HANDLE dimm_handle,
 			{
 				struct nvm_namespace_details ns_details;
 				memset(&ns_details, 0, sizeof (ns_details));
-				if ((rc = get_namespace_details(namespaces[i].namespace_guid,
+				if ((rc = get_namespace_details(namespaces[i].namespace_uid,
 						&ns_details)) == NVM_SUCCESS)
 				{
 					// check type we're looking for

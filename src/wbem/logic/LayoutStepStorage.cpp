@@ -61,7 +61,7 @@ void wbem::logic::LayoutStepStorage::execute(const MemoryAllocationRequest& requ
 	for (std::vector<struct Dimm>::const_iterator dimmIter = request.dimms.begin();
 			dimmIter != request.dimms.end(); dimmIter++)
 	{
-		bytesRemaining -= getDimmUnallocatedBytes(dimmIter->capacity, layout.goals[dimmIter->guid]);
+		bytesRemaining -= getDimmUnallocatedBytes(dimmIter->capacity, layout.goals[dimmIter->uid]);
 	}
 	layout.storageCapacity = bytesToConfigGoalSize(bytesToAllocate - bytesRemaining);
 }

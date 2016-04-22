@@ -46,10 +46,10 @@ class NVM_API DeviceService
 public:
 	DeviceService(NvmLibrary &api = NvmLibrary::getNvmLibrary()) : m_lib(api) { }
 	virtual ~DeviceService() { if (m_pSingleton == this) m_pSingleton = NULL; }
-	virtual std::vector<std::string> getAllGuids();
-	virtual std::vector<std::string> getManageableGuids();
+	virtual std::vector<std::string> getAllUids();
+	virtual std::vector<std::string> getManageableUids();
 	virtual DeviceCollection getAllDevices();
-	virtual Result<Device> getDevice(std::string guid);
+	virtual Result<Device> getDevice(std::string uid);
 
 	static DeviceService &getService();
 

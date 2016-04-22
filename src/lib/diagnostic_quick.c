@@ -59,64 +59,64 @@ enum major_status_code
 	INIT_MJ_INIT_COMPLETE = 0XF0, // FW initialization complete
 };
 
-int check_dimm_identification(const NVM_GUID device_guid,
+int check_dimm_identification(const NVM_UID device_uid,
 		const NVM_NFIT_DEVICE_HANDLE device_handle,
 		const struct diagnostic *p_diagnostic, NVM_UINT32 *p_results);
-int check_dimm_health(const NVM_GUID device_guid, const NVM_NFIT_DEVICE_HANDLE device_handle,
+int check_dimm_health(const NVM_UID device_uid, const NVM_NFIT_DEVICE_HANDLE device_handle,
 		const struct diagnostic *p_diagnostic, NVM_UINT32 *p_results);
-int check_dimm_media_errors(const NVM_GUID device_guid,
+int check_dimm_media_errors(const NVM_UID device_uid,
 		const NVM_NFIT_DEVICE_HANDLE device_handle,
 		const struct diagnostic *p_diagnostic, NVM_UINT32* p_results);
-void check_dimm_power_limitation(const NVM_GUID device_guid,
+void check_dimm_power_limitation(const NVM_UID device_uid,
 		const NVM_NFIT_DEVICE_HANDLE device_handle,
 		const struct diagnostic *p_diagnostic, NVM_UINT32* p_results);
-int check_dimm_bsr(const NVM_GUID device_guid,
+int check_dimm_bsr(const NVM_UID device_uid,
 		const NVM_NFIT_DEVICE_HANDLE device_handle,
 		const struct diagnostic *p_diagnostic, NVM_UINT32* p_results);
 
 /*
  * Run the quick health check diagnostic algorithm
  */
-int diag_quick_health_check(const NVM_GUID device_guid,
+int diag_quick_health_check(const NVM_UID device_uid,
 		const struct diagnostic *p_diagnostic, NVM_UINT32 *p_results)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
 
 	// clear previous results
-	diag_clear_results(EVENT_TYPE_DIAG_QUICK, 1, device_guid);
+	diag_clear_results(EVENT_TYPE_DIAG_QUICK, 1, device_uid);
 	*p_results = 0;
 
 	if ((rc = IS_NVM_FEATURE_SUPPORTED(quick_diagnostic)) != NVM_SUCCESS)
 	{
 		COMMON_LOG_ERROR("The quick health diagnostic is not supported.");
 	}
-	else if (device_guid == NULL)
+	else if (device_uid == NULL)
 	{
-		COMMON_LOG_ERROR("Invalid parameter, device_guid is NULL");
+		COMMON_LOG_ERROR("Invalid parameter, device_uid is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
 	else
 	{
 		struct device_discovery discovery;
-		if ((rc = exists_and_manageable(device_guid, &discovery, 1)) == NVM_SUCCESS)
+		if ((rc = exists_and_manageable(device_uid, &discovery, 1)) == NVM_SUCCESS)
 		{
 			NVM_NFIT_DEVICE_HANDLE device_handle = discovery.device_handle;
 
-			int tmp_rc = check_dimm_bsr(device_guid, device_handle, p_diagnostic, p_results);
+			int tmp_rc = check_dimm_bsr(device_uid, device_handle, p_diagnostic, p_results);
 			KEEP_ERROR(rc, tmp_rc);
 
-			if (((rc = check_dimm_identification(device_guid, device_handle,
+			if (((rc = check_dimm_identification(device_uid, device_handle,
 					p_diagnostic, p_results)) == NVM_SUCCESS) &&
 					((*p_results) == 0)) // abort test if DIMM is unrecognized
 			{
-				tmp_rc = check_dimm_health(device_guid, device_handle, p_diagnostic, p_results);
+				tmp_rc = check_dimm_health(device_uid, device_handle, p_diagnostic, p_results);
 				KEEP_ERROR(rc, tmp_rc);
 
-				check_dimm_power_limitation(device_guid, device_handle, p_diagnostic,
+				check_dimm_power_limitation(device_uid, device_handle, p_diagnostic,
 					p_results);
 
-				tmp_rc = check_dimm_media_errors(device_guid, device_handle, p_diagnostic,
+				tmp_rc = check_dimm_media_errors(device_uid, device_handle, p_diagnostic,
 						p_results);
 				KEEP_ERROR(rc, tmp_rc);
 
@@ -127,7 +127,7 @@ int diag_quick_health_check(const NVM_GUID device_guid,
 						EVENT_TYPE_DIAG_QUICK,
 						EVENT_SEVERITY_INFO,
 						EVENT_CODE_DIAG_QUICK_SUCCESS,
-						device_guid,
+						device_uid,
 						0,
 						NULL,
 						NULL,
@@ -144,7 +144,7 @@ int diag_quick_health_check(const NVM_GUID device_guid,
 }
 
 void check_valid_dimm_manufacturer(const struct diagnostic *p_diagnostic,
-		const struct pt_payload_identify_dimm *p_id_dimm, const NVM_GUID device_guid,
+		const struct pt_payload_identify_dimm *p_id_dimm, const NVM_UID device_uid,
 		NVM_UINT32 *p_results)
 {
 	int config_manufacturer = 0;
@@ -155,8 +155,8 @@ void check_valid_dimm_manufacturer(const struct diagnostic *p_diagnostic,
 	if (!diag_check(p_diagnostic, DIAG_THRESHOLD_QUICK_VALID_MANUFACTURER, actual_manufacturer,
 			&valid_manufacturer, EQUALITY_EQUAL))
 	{
-		NVM_GUID_STR guid_str;
-		uid_copy(device_guid, guid_str);
+		NVM_UID uid_str;
+		uid_copy(device_uid, uid_str);
 		char actual_manufacturer_str[10];
 		s_snprintf(actual_manufacturer_str, 10, "0x%02llx", actual_manufacturer);
 		char valid_manufacturer_str[10];
@@ -164,9 +164,9 @@ void check_valid_dimm_manufacturer(const struct diagnostic *p_diagnostic,
 		store_event_by_parts(EVENT_TYPE_DIAG_QUICK,
 				EVENT_SEVERITY_WARN,
 				EVENT_CODE_DIAG_QUICK_INVALID_MANUFACTURER,
-				device_guid,
+				device_uid,
 				0,
-				guid_str,
+				uid_str,
 				actual_manufacturer_str,
 				valid_manufacturer_str, DIAGNOSTIC_RESULT_ABORTED);
 		(*p_results)++;
@@ -174,7 +174,7 @@ void check_valid_dimm_manufacturer(const struct diagnostic *p_diagnostic,
 }
 
 void check_valid_dimm_model_number(const struct diagnostic *p_diagnostic,
-		const struct pt_payload_identify_dimm *p_id_dimm, const NVM_GUID device_guid,
+		const struct pt_payload_identify_dimm *p_id_dimm, const NVM_UID device_uid,
 		NVM_UINT32 *p_results)
 {
 	char valid_model[CONFIG_VALUE_LEN] = "";
@@ -182,15 +182,15 @@ void check_valid_dimm_model_number(const struct diagnostic *p_diagnostic,
 	if (!diag_check_str(p_diagnostic, DIAG_THRESHOLD_QUICK_VALID_MODEL_NUMBER, p_id_dimm->mn,
 			valid_model))
 	{
-		NVM_GUID_STR guid_str;
-		uid_copy(device_guid, guid_str);
+		NVM_UID uid_str;
+		uid_copy(device_uid, uid_str);
 
 		store_event_by_parts(EVENT_TYPE_DIAG_QUICK,
 				EVENT_SEVERITY_WARN,
 				EVENT_CODE_DIAG_QUICK_INVALID_MODEL_NUMBER,
-				device_guid,
+				device_uid,
 				0,
-				guid_str,
+				uid_str,
 				p_id_dimm->mn,
 				valid_model, DIAGNOSTIC_RESULT_ABORTED);
 		(*p_results)++;
@@ -199,7 +199,7 @@ void check_valid_dimm_model_number(const struct diagnostic *p_diagnostic,
 
 void check_valid_dimm_vendor_id(const struct diagnostic *p_diagnostic,
 		const struct pt_payload_identify_dimm *p_id_dimm,
-		const NVM_GUID device_guid, NVM_UINT32 *p_results)
+		const NVM_UID device_uid, NVM_UINT32 *p_results)
 {
 	int vendor_config = 0;
 	get_config_value_int(SQL_KEY_VALID_VENDOR_ID, &vendor_config);
@@ -207,22 +207,22 @@ void check_valid_dimm_vendor_id(const struct diagnostic *p_diagnostic,
 	if (!diag_check(p_diagnostic, DIAG_THRESHOLD_QUICK_VALID_VENDOR_ID,
 			(NVM_UINT64) p_id_dimm->vendor_id, &valid_vendor, EQUALITY_EQUAL))
 	{
-		NVM_GUID_STR guid_str;
-		uid_copy(device_guid, guid_str);
+		NVM_UID uid_str;
+		uid_copy(device_uid, uid_str);
 
 		char actual_vendor_str[10];
 		s_snprintf(actual_vendor_str, 10, "0x%04x", p_id_dimm->vendor_id);
 		char expected_vendor_str[10];
 		s_snprintf(expected_vendor_str, 10, "0x%04x", valid_vendor);
 		store_event_by_parts(EVENT_TYPE_DIAG_QUICK, EVENT_SEVERITY_WARN,
-				EVENT_CODE_DIAG_QUICK_INVALID_VENDORID, device_guid,
-				0, guid_str, actual_vendor_str,
+				EVENT_CODE_DIAG_QUICK_INVALID_VENDORID, device_uid,
+				0, uid_str, actual_vendor_str,
 				expected_vendor_str, DIAGNOSTIC_RESULT_ABORTED);
 		(*p_results)++;
 	}
 }
 
-int check_dimm_identification(const NVM_GUID device_guid,
+int check_dimm_identification(const NVM_UID device_uid,
 		const NVM_NFIT_DEVICE_HANDLE device_handle,
 		const struct diagnostic *p_diagnostic, NVM_UINT32 *p_results)
 {
@@ -242,9 +242,9 @@ int check_dimm_identification(const NVM_GUID device_guid,
 
 	if ((rc = ioctl_passthrough_cmd(&id_cmd)) == NVM_SUCCESS)
 	{
-		check_valid_dimm_manufacturer(p_diagnostic, &id_dimm, device_guid, p_results);
-		check_valid_dimm_model_number(p_diagnostic, &id_dimm, device_guid, p_results);
-		check_valid_dimm_vendor_id(p_diagnostic, &id_dimm, device_guid, p_results);
+		check_valid_dimm_manufacturer(p_diagnostic, &id_dimm, device_uid, p_results);
+		check_valid_dimm_model_number(p_diagnostic, &id_dimm, device_uid, p_results);
+		check_valid_dimm_vendor_id(p_diagnostic, &id_dimm, device_uid, p_results);
 	}
 	s_memset(&id_dimm, sizeof (id_dimm));
 
@@ -252,7 +252,7 @@ int check_dimm_identification(const NVM_GUID device_guid,
 	return rc;
 }
 
-int check_dimm_alarm_thresholds(const NVM_GUID device_guid,
+int check_dimm_alarm_thresholds(const NVM_UID device_uid,
 		const NVM_NFIT_DEVICE_HANDLE device_handle,
 		struct pt_payload_smart_health *p_dimm_smart,
 		const struct diagnostic *p_diagnostic, NVM_UINT32* p_results)
@@ -265,8 +265,8 @@ int check_dimm_alarm_thresholds(const NVM_GUID device_guid,
 	if (NVM_SUCCESS
 			== (rc = fw_get_alarm_thresholds(device_handle.handle, &thresholds)))
 	{
-		NVM_GUID_STR guid_str;
-		uid_copy(device_guid, guid_str);
+		NVM_UID uid_str;
+		uid_copy(device_uid, uid_str);
 
 		// check media temperature to alarm threshold
 		NVM_UINT64 media_temp_threshold = thresholds.media_temperature;
@@ -286,9 +286,9 @@ int check_dimm_alarm_thresholds(const NVM_GUID device_guid,
 			store_event_by_parts(EVENT_TYPE_DIAG_QUICK,
 					EVENT_SEVERITY_WARN,
 					EVENT_CODE_DIAG_QUICK_BAD_MEDIA_TEMP,
-					device_guid,
+					device_uid,
 					0,
-					guid_str,
+					uid_str,
 					actual_temp_str,
 					expected_temp_str, DIAGNOSTIC_RESULT_FAILED);
 			(*p_results)++;
@@ -314,9 +314,9 @@ int check_dimm_alarm_thresholds(const NVM_GUID device_guid,
 			store_event_by_parts(EVENT_TYPE_DIAG_QUICK,
 					EVENT_SEVERITY_WARN,
 					EVENT_CODE_DIAG_QUICK_BAD_CONTROLLER_TEMP,
-					device_guid,
+					device_uid,
 					0,
-					guid_str,
+					uid_str,
 					actual_temp_str,
 					expected_temp_str, DIAGNOSTIC_RESULT_FAILED);
 			(*p_results)++;
@@ -336,9 +336,9 @@ int check_dimm_alarm_thresholds(const NVM_GUID device_guid,
 			store_event_by_parts(EVENT_TYPE_DIAG_QUICK,
 					EVENT_SEVERITY_WARN,
 					EVENT_CODE_DIAG_QUICK_BAD_SPARE,
-					device_guid,
+					device_uid,
 					0,
-					guid_str,
+					uid_str,
 					actual_spare_str,
 					expected_spare_str,
 					DIAGNOSTIC_RESULT_FAILED);
@@ -361,9 +361,9 @@ int check_dimm_alarm_thresholds(const NVM_GUID device_guid,
 			store_event_by_parts(EVENT_TYPE_DIAG_QUICK,
 					EVENT_SEVERITY_WARN,
 					EVENT_CODE_DIAG_QUICK_BAD_PERCENT_USED,
-					device_guid,
+					device_uid,
 					0,
-					guid_str,
+					uid_str,
 					actual_percent_str,
 					expected_percent_str,
 					DIAGNOSTIC_RESULT_FAILED);
@@ -384,7 +384,7 @@ void dimm_smart_health_status_to_string(const enum smart_health_status health_st
 }
 
 void check_dimm_smart_health_status(const struct diagnostic *p_diagnostic,
-		struct pt_payload_smart_health *p_dimm_smart, const NVM_GUID device_guid,
+		struct pt_payload_smart_health *p_dimm_smart, const NVM_UID device_uid,
 		NVM_UINT32 *p_results)
 {
 	int max_health_status_config = 0;
@@ -394,8 +394,8 @@ void check_dimm_smart_health_status(const struct diagnostic *p_diagnostic,
 			!diag_check(p_diagnostic, DIAG_THRESHOLD_QUICK_HEALTH, p_dimm_smart->health_status,
 			&max_health_status, EQUALITY_LESSTHANEQUAL))
 	{
-		NVM_GUID_STR guid_str;
-		uid_copy(device_guid, guid_str);
+		NVM_UID uid_str;
+		uid_copy(device_uid, uid_str);
 
 		NVM_EVENT_ARG actual_health_str;
 		dimm_smart_health_status_to_string(p_dimm_smart->health_status,
@@ -407,9 +407,9 @@ void check_dimm_smart_health_status(const struct diagnostic *p_diagnostic,
 		store_event_by_parts(EVENT_TYPE_DIAG_QUICK,
 				EVENT_SEVERITY_WARN,
 				EVENT_CODE_DIAG_QUICK_BAD_HEALTH,
-				device_guid,
+				device_uid,
 				0,
-				guid_str,
+				uid_str,
 				actual_health_str,
 				expected_health_str,
 				DIAGNOSTIC_RESULT_FAILED);
@@ -437,7 +437,7 @@ int get_bsr(const NVM_NFIT_DEVICE_HANDLE device_handle, unsigned long long *p_bs
 
 void check_media_ready_status(const struct diagnostic *p_diagnostic,
 		const unsigned long long bsr,
-		const NVM_GUID device_guid,
+		const NVM_UID device_uid,
 		NVM_UINT32 *p_results)
 {
 	COMMON_LOG_ENTRY();
@@ -454,14 +454,14 @@ void check_media_ready_status(const struct diagnostic *p_diagnostic,
 
 	if (code != EVENT_CODE_DIAG_QUICK_UNKNOWN)
 	{
-		NVM_GUID_STR guid_str;
-		uid_copy(device_guid, guid_str);
+		NVM_UID uid_str;
+		uid_copy(device_uid, uid_str);
 		store_event_by_parts(EVENT_TYPE_DIAG_QUICK,
 				EVENT_SEVERITY_CRITICAL,
 				code,
-				device_guid,
+				device_uid,
 				1,
-				guid_str,
+				uid_str,
 				NULL,
 				NULL,
 				DIAGNOSTIC_RESULT_FAILED);
@@ -473,7 +473,7 @@ void check_media_ready_status(const struct diagnostic *p_diagnostic,
 
 void check_ddrt_init_complete_status(const struct diagnostic *p_diagnostic,
 		const unsigned long long bsr,
-		const NVM_GUID device_guid,
+		const NVM_UID device_uid,
 		NVM_UINT32 *p_results)
 {
 	COMMON_LOG_ENTRY();
@@ -490,14 +490,14 @@ void check_ddrt_init_complete_status(const struct diagnostic *p_diagnostic,
 
 	if (code != EVENT_CODE_DIAG_QUICK_UNKNOWN)
 	{
-		NVM_GUID_STR guid_str;
-		uid_copy(device_guid, guid_str);
+		NVM_UID uid_str;
+		uid_copy(device_uid, uid_str);
 		store_event_by_parts(EVENT_TYPE_DIAG_QUICK,
 				EVENT_SEVERITY_CRITICAL,
 				code,
-				device_guid,
+				device_uid,
 				1,
-				guid_str,
+				uid_str,
 				NULL,
 				NULL,
 				DIAGNOSTIC_RESULT_FAILED);
@@ -509,21 +509,21 @@ void check_ddrt_init_complete_status(const struct diagnostic *p_diagnostic,
 
 void check_mailbox_ready_status(const struct diagnostic *p_diagnostic,
 		const unsigned long long bsr,
-		const NVM_GUID device_guid,
+		const NVM_UID device_uid,
 		NVM_UINT32 *p_results)
 {
 	COMMON_LOG_ENTRY();
 
 	if (MAILBOX_INTERFACE_READY_STATUS(bsr) == STATUS_NOT_READY)
 	{
-		NVM_GUID_STR guid_str;
-		uid_copy(device_guid, guid_str);
+		NVM_UID uid_str;
+		uid_copy(device_uid, uid_str);
 		store_event_by_parts(EVENT_TYPE_DIAG_QUICK,
 				EVENT_SEVERITY_CRITICAL,
 				EVENT_CODE_DIAG_QUICK_MAILBOX_INTERFACE_NOT_READY,
-				device_guid,
+				device_uid,
 				1,
-				guid_str,
+				uid_str,
 				NULL,
 				NULL,
 				DIAGNOSTIC_RESULT_FAILED);
@@ -535,7 +535,7 @@ void check_mailbox_ready_status(const struct diagnostic *p_diagnostic,
 
 void check_fw_boot_status(const struct diagnostic *p_diagnostic,
 		const unsigned long long bsr,
-		const NVM_GUID device_guid,
+		const NVM_UID device_uid,
 		NVM_UINT32 *p_results)
 {
 	COMMON_LOG_ENTRY();
@@ -560,14 +560,14 @@ void check_fw_boot_status(const struct diagnostic *p_diagnostic,
 
 	if (code != EVENT_CODE_DIAG_QUICK_UNKNOWN)
 	{
-		NVM_GUID_STR guid_str;
-		uid_copy(device_guid, guid_str);
+		NVM_UID uid_str;
+		uid_copy(device_uid, uid_str);
 		store_event_by_parts(EVENT_TYPE_DIAG_QUICK,
 				EVENT_SEVERITY_CRITICAL,
 				code,
-				device_guid,
+				device_uid,
 				1,
-				guid_str,
+				uid_str,
 				checkpoint_str,
 				NULL,
 				DIAGNOSTIC_RESULT_FAILED);
@@ -579,21 +579,21 @@ void check_fw_boot_status(const struct diagnostic *p_diagnostic,
 
 void check_fw_assert(const struct diagnostic *p_diagnostic,
 		const unsigned long long bsr,
-		const NVM_GUID device_guid,
+		const NVM_UID device_uid,
 		NVM_UINT32 *p_results)
 {
 	COMMON_LOG_ENTRY();
 
 	if (BSR_H_ASSERTION(bsr))
 	{
-		NVM_GUID_STR guid_str;
-		uid_copy(device_guid, guid_str);
+		NVM_UID uid_str;
+		uid_copy(device_uid, uid_str);
 		store_event_by_parts(EVENT_TYPE_DIAG_QUICK,
 				EVENT_SEVERITY_CRITICAL,
 				EVENT_CODE_DIAG_QUICK_FW_HIT_ASSERT,
-				device_guid,
+				device_uid,
 				1,
-				guid_str,
+				uid_str,
 				NULL,
 				NULL,
 				DIAGNOSTIC_RESULT_FAILED);
@@ -603,7 +603,7 @@ void check_fw_assert(const struct diagnostic *p_diagnostic,
 	COMMON_LOG_EXIT();
 }
 
-int check_dimm_bsr(const NVM_GUID device_guid,
+int check_dimm_bsr(const NVM_UID device_uid,
 		const NVM_NFIT_DEVICE_HANDLE device_handle,
 		const struct diagnostic *p_diagnostic, NVM_UINT32 *p_results)
 {
@@ -614,14 +614,14 @@ int check_dimm_bsr(const NVM_GUID device_guid,
 	rc = get_bsr(device_handle, &bsr);
 	if (rc != NVM_SUCCESS)
 	{
-		NVM_GUID_STR guid_str;
-		uid_copy(device_guid, guid_str);
+		NVM_UID uid_str;
+		uid_copy(device_uid, uid_str);
 		store_event_by_parts(EVENT_TYPE_DIAG_QUICK,
 				EVENT_SEVERITY_CRITICAL,
 				EVENT_CODE_DIAG_QUICK_UNREADABLE_BSR,
-				device_guid,
+				device_uid,
 				1,
-				guid_str,
+				uid_str,
 				NULL,
 				NULL,
 				DIAGNOSTIC_RESULT_FAILED);
@@ -629,18 +629,18 @@ int check_dimm_bsr(const NVM_GUID device_guid,
 	}
 	else
 	{
-		check_media_ready_status(p_diagnostic, bsr, device_guid, p_results);
-		check_ddrt_init_complete_status(p_diagnostic, bsr, device_guid, p_results);
-		check_mailbox_ready_status(p_diagnostic, bsr, device_guid, p_results);
-		check_fw_boot_status(p_diagnostic, bsr, device_guid, p_results);
-		check_fw_assert(p_diagnostic, bsr, device_guid, p_results);
+		check_media_ready_status(p_diagnostic, bsr, device_uid, p_results);
+		check_ddrt_init_complete_status(p_diagnostic, bsr, device_uid, p_results);
+		check_mailbox_ready_status(p_diagnostic, bsr, device_uid, p_results);
+		check_fw_boot_status(p_diagnostic, bsr, device_uid, p_results);
+		check_fw_assert(p_diagnostic, bsr, device_uid, p_results);
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
 
-int check_dimm_health(const NVM_GUID device_guid,
+int check_dimm_health(const NVM_UID device_uid,
 		const NVM_NFIT_DEVICE_HANDLE device_handle,
 		const struct diagnostic *p_diagnostic, NVM_UINT32 *p_results)
 {
@@ -651,9 +651,9 @@ int check_dimm_health(const NVM_GUID device_guid,
 	if (NVM_SUCCESS == (rc =
 			fw_get_smart_health(device_handle.handle, &dimm_smart)))
 	{
-		check_dimm_smart_health_status(p_diagnostic, &dimm_smart, device_guid, p_results);
+		check_dimm_smart_health_status(p_diagnostic, &dimm_smart, device_uid, p_results);
 
-		rc = check_dimm_alarm_thresholds(device_guid, device_handle, &dimm_smart,
+		rc = check_dimm_alarm_thresholds(device_uid, device_handle, &dimm_smart,
 				p_diagnostic, p_results);
 	}
 
@@ -661,7 +661,7 @@ int check_dimm_health(const NVM_GUID device_guid,
 	return rc;
 }
 
-void check_dimm_power_limitation(const NVM_GUID device_guid,
+void check_dimm_power_limitation(const NVM_UID device_uid,
 	const NVM_NFIT_DEVICE_HANDLE device_handle,
 	const struct diagnostic *p_diagnostic, NVM_UINT32 *p_results)
 {
@@ -680,7 +680,7 @@ void check_dimm_power_limitation(const NVM_GUID device_guid,
 }
 
 void check_given_errors(const struct diagnostic *p_diagnostic,
-	NVM_UINT32 *p_results, const NVM_GUID device_guid,
+	NVM_UINT32 *p_results, const NVM_UID device_uid,
 	NVM_UINT64 media_errors, const char *p_sql_key,
 	const NVM_UINT32 threshold_key, const NVM_UINT16 event_key)
 {
@@ -693,13 +693,13 @@ void check_given_errors(const struct diagnostic *p_diagnostic,
 	if (!diag_check(p_diagnostic, threshold_key,
 		media_errors, &error_threshold, EQUALITY_LESSTHANEQUAL))
 	{
-		NVM_GUID_STR guid_str;
-		uid_copy(device_guid, guid_str);
+		NVM_UID uid_str;
+		uid_copy(device_uid, uid_str);
 
 		char actual_errors_str[10];
 		s_snprintf(actual_errors_str, 10, "%u", media_errors);
 		store_event_by_parts(EVENT_TYPE_DIAG_QUICK, EVENT_SEVERITY_WARN,
-			event_key, device_guid, 0, guid_str,
+			event_key, device_uid, 0, uid_str,
 			actual_errors_str, NULL, DIAGNOSTIC_RESULT_FAILED);
 		(*p_results)++;
 	}
@@ -707,7 +707,7 @@ void check_given_errors(const struct diagnostic *p_diagnostic,
 	COMMON_LOG_EXIT();
 }
 
-int check_dimm_media_errors(const NVM_GUID device_guid,
+int check_dimm_media_errors(const NVM_UID device_uid,
 		const NVM_NFIT_DEVICE_HANDLE device_handle,
 		const struct diagnostic *p_diagnostic, NVM_UINT32 *p_results)
 {
@@ -718,21 +718,21 @@ int check_dimm_media_errors(const NVM_GUID device_guid,
 	if (NVM_SUCCESS == (rc = fw_get_memory_info_page(device_handle.handle, 2,
 		&memory_info_page2, sizeof (memory_info_page2))))
 	{
-		check_given_errors(p_diagnostic, p_results, device_guid, memory_info_page2.media_errors_uc,
+		check_given_errors(p_diagnostic, p_results, device_uid, memory_info_page2.media_errors_uc,
 			SQL_KEY_UNCORRECTABLE_THRESHOLD,
 			DIAG_THRESHOLD_QUICK_UNCORRECT_ERRORS,
 			EVENT_CODE_DIAG_QUICK_BAD_UNCORRECTABLE_MEDIA_ERRORS);
 
 		NVM_UINT64 media_errors_ce = 0;
 		NVM_8_BYTE_ARRAY_TO_64_BIT_VALUE(memory_info_page2.media_errors_ce, media_errors_ce);
-		check_given_errors(p_diagnostic, p_results, device_guid, media_errors_ce,
+		check_given_errors(p_diagnostic, p_results, device_uid, media_errors_ce,
 			SQL_KEY_CORRECTED_THRESHOLD,
 			DIAG_THRESHOLD_QUICK_CORRECTED_ERRORS,
 			EVENT_CODE_DIAG_QUICK_BAD_CORRECTED_MEDIA_ERRORS);
 
 		NVM_UINT64 media_errors_ecc = 0;
 		NVM_8_BYTE_ARRAY_TO_64_BIT_VALUE(memory_info_page2.media_errors_ecc, media_errors_ecc);
-		check_given_errors(p_diagnostic, p_results, device_guid, media_errors_ecc,
+		check_given_errors(p_diagnostic, p_results, device_uid, media_errors_ecc,
 			SQL_KEY_ERASURE_CODED_CORRECTED_THRESHOLD,
 			DIAG_THRESHOLD_QUICK_ERASURE_CODED_CORRECTED_ERRORS,
 			EVENT_CODE_DIAG_QUICK_BAD_ERASURE_CODED_CORRECTED_MEDIA_ERRORS);

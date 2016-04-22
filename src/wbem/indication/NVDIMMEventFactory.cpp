@@ -73,10 +73,10 @@ wbem::framework::Instance *wbem::indication::NVDIMMEventFactory::createIndicatio
 		pResult->setAttribute(INDICATIONTIME_KEY, framework::Attribute((NVM_UINT64)pEvent->time,
 				framework::DATETIME_SUBTYPE_DATETIME, false));
 
-		NVM_GUID_STR guid;
-		uid_copy(pEvent->guid, guid);
+		NVM_UID uid;
+		uid_copy(pEvent->uid, uid);
 		pResult->setAttribute(ALERTINGMANAGEDELEMENT_KEY,
-				framework::Attribute(std::string(guid), false));
+				framework::Attribute(std::string(uid), false));
 
 		// These are attributes we want populated from NVDIMMLogEntryFactory
 		framework::attribute_names_t attributes;

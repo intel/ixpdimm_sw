@@ -59,7 +59,7 @@ void wbem::logic::RuleDimmListInvalid::checkifDimmsInRequestAreUnique(
 	std::vector<Dimm>::const_iterator requestIter = dimms.begin();
 	for (; requestIter != dimms.end(); requestIter++)
 	{
-		dimmList.push_back(requestIter->guid);
+		dimmList.push_back(requestIter->uid);
 	}
 
 	std::list<std::string> uniqueDimmList(dimmList.begin(), dimmList.end());
@@ -126,24 +126,24 @@ void wbem::logic::RuleDimmListInvalid::checkIfDimmListIsValid(
 	std::vector<Dimm>::const_iterator requestIter = dimms.begin();
 	for (; requestIter != dimms.end(); requestIter++)
 	{
-		bool guidExists = false;
+		bool uidExists = false;
 
-		NVM_GUID requestedDimmGuid;
-		uid_copy(requestIter->guid.c_str(), requestedDimmGuid);
+		NVM_UID requesteddimmUid;
+		uid_copy(requestIter->uid.c_str(), requesteddimmUid);
 
 		for (std::vector<struct device_discovery>::const_iterator manageableDimmIter =
 				m_manageableDimms.begin(); manageableDimmIter != m_manageableDimms.end();
 				manageableDimmIter++)
 		{
-			if (uid_cmp(requestedDimmGuid, manageableDimmIter->guid))
+			if (uid_cmp(requesteddimmUid, manageableDimmIter->uid))
 			{
-				guidExists = true;
+				uidExists = true;
 				checkIfSocketIdsMatch(requestIter, manageableDimmIter);
 				checkIfMemControllersMatch(requestIter, manageableDimmIter);
 				checkIfDimmCapacitiesMatch(requestIter, manageableDimmIter);
 			}
 		}
-		if (!guidExists)
+		if (!uidExists)
 		{
 			throw exception::NvmExceptionInvalidDimm();
 		}

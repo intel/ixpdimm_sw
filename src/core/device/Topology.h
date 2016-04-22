@@ -77,7 +77,7 @@ public:
 	virtual ~Topology() { }
 
 	virtual Topology *clone();
-	virtual std::string getGuid();
+	virtual std::string getUid();
 	virtual NVM_UINT32 getDeviceHandle();
 	virtual NVM_UINT32 getChannelPosition();
         virtual NVM_UINT32 getChannelId();

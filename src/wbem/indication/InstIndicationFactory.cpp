@@ -155,7 +155,7 @@ wbem::framework::Instance *wbem::indication::InstIndicationFactory::createNamesp
 	pmem_config::PersistentMemoryNamespaceFactory nsFactory;
 
 	framework::ObjectPath nsPath;
-	nsFactory.createPathFromGuid(pEvent->guid, nsPath);
+	nsFactory.createPathFromUid(pEvent->uid, nsPath);
 
 	std::string className;
 	framework::Instance *pSourceInstance = NULL;
@@ -187,7 +187,7 @@ wbem::framework::Instance *wbem::indication::InstIndicationFactory::createDevice
 	framework::Instance *pResult = NULL;
 	framework::ObjectPath path;
 	physical_asset::NVDIMMFactory nvdimmFactory;
-	nvdimmFactory.createPathFromGuid(pEvent->guid, path);
+	nvdimmFactory.createPathFromUid(pEvent->uid, path);
 	framework::Instance *pSourceInstance  = NULL;
 	std::string className;
 	if (isDeviceCreation(pEvent))
@@ -260,13 +260,13 @@ wbem::framework::Instance *wbem::indication::InstIndicationFactory::createSensor
 	wbem::support::NVDIMMSensorFactory factory;
 	framework::Instance *pResult = NULL;
 
-	std::string dimmGuid(pEvent->args[0]);
+	std::string dimmUid(pEvent->args[0]);
 	enum sensor_type sensorType;
 	if (canGetEventSensorType(pEvent, &sensorType))
 	{
 		// need sensor path to get sensor instances for the indication
 		framework::ObjectPath sensorPath = factory.getSensorPath(
-				sensorType, server::getHostName(), dimmGuid);
+				sensorType, server::getHostName(), dimmUid);
 		framework::attribute_names_t attributes;
 		attributes.push_back(CURRENTSTATE_KEY);
 		framework::Instance *pSourceInstance = factory.getInstance(sensorPath, attributes);

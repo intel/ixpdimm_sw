@@ -29,20 +29,20 @@
 #include <core/exceptions/InvalidArgumentException.h>
 #include "Helper.h"
 
-std::string core::Helper::guidToString(const NVM_GUID guid)
+std::string core::Helper::uidToString(const NVM_UID uid)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	NVM_GUID_STR result;
-	uid_copy(guid, result);
+	NVM_UID result;
+	uid_copy(uid, result);
 	return std::string(result);
 }
 
-void core::Helper::stringToGuid(const std::string &string, NVM_GUID guid)
+void core::Helper::stringToUid(const std::string &string, NVM_UID uid)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	if (string.length() != NVM_GUIDSTR_LEN - 1)
+	if (string.length() != NVM_MAX_UID_LEN - 1)
 	{
-		throw InvalidArgumentException("stringGuid");
+		throw InvalidArgumentException("stringUid");
 	}
-	uid_copy(string.c_str(), guid);
+	uid_copy(string.c_str(), uid);
 }

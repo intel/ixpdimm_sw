@@ -113,12 +113,12 @@ class NVM_API ErasureServiceFactory : public framework_interface::NvmInstanceFac
 
 		/*!
 		 * Secure erase device
-		 * @param deviceGuid
-		 * 		GUID of the device to erase
+		 * @param deviceUid
+		 * 		UID of the device to erase
 		 * @param password
 		 * 		Password to the device
 		 */
-		void eraseDevice(std::string deviceGuid, std::string password)
+		void eraseDevice(std::string deviceUid, std::string password)
 				throw (framework::Exception);
 
 		/*!
@@ -131,12 +131,12 @@ class NVM_API ErasureServiceFactory : public framework_interface::NvmInstanceFac
 
 		/*!
 		 * API indirection
-		 * @param device_guid
+		 * @param device_uid
 		 * @param passphrase
 		 * @param passphrase_len
 		 * @return
 		 */
-		int (*m_eraseDevice)(const NVM_GUID device_guid,
+		int (*m_eraseDevice)(const NVM_UID device_uid,
 				const NVM_PASSPHRASE passphrase, const NVM_SIZE passphrase_len);
 
 		/*!
@@ -144,7 +144,7 @@ class NVM_API ErasureServiceFactory : public framework_interface::NvmInstanceFac
 		 * constructor, but can be changed for testing purposes.
 		 * @return
 		 */
-		std::vector<std::string> (*m_GetManageableDeviceGuids)();
+		std::vector<std::string> (*m_GetManageabledeviceUids)();
 
 	private:
 		void populateAttributeList(framework::attribute_names_t &attributes)

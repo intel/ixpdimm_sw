@@ -94,20 +94,20 @@ throw(wbem::framework::Exception)
 	{
 		checkAttributes(attributes);
 
-		std::string poolGuidStr = path.getKeyValue(POOLID_KEY).stringValue();
-		if (poolGuidStr.length() != NVM_GUIDSTR_LEN - 1)
+		std::string poolUidStr = path.getKeyValue(POOLID_KEY).stringValue();
+		if (poolUidStr.length() != NVM_MAX_UID_LEN - 1)
 		{
 			throw framework::ExceptionBadParameter(POOLID_KEY.c_str());
 		}
 
-		struct pool pool = getPool(poolGuidStr);
+		struct pool pool = getPool(poolUidStr);
 		bool isVolatilePool = pool.type == POOL_TYPE_VOLATILE;
 
 		if (!isVolatilePool)
 		{
 			possible_namespace_ranges ranges;
 			int rc;
-			if ((rc = nvm_get_available_persistent_size_range(pool.pool_guid, &ranges)) != NVM_SUCCESS)
+			if ((rc = nvm_get_available_persistent_size_range(pool.pool_uid, &ranges)) != NVM_SUCCESS)
 			{
 				throw exception::NvmExceptionLibError(rc);
 			}
@@ -246,9 +246,9 @@ wbem::framework::instance_names_t *wbem::mem_config::PoolViewFactory::getInstanc
 		{
 			framework::attributes_t keys;
 
-			NVM_GUID_STR poolGuid;
-			uid_copy((*iter).pool_guid, poolGuid);
-			keys[POOLID_KEY] = framework::Attribute(std::string(poolGuid), true);
+			NVM_UID poolUid;
+			uid_copy((*iter).pool_uid, poolUid);
+			keys[POOLID_KEY] = framework::Attribute(std::string(poolUid), true);
 
 			framework::ObjectPath path(server::getHostName(), NVM_NAMESPACE,
 					INTEL_POOLVIEW_CREATIONCLASSNAME, keys);
@@ -300,16 +300,16 @@ std::vector<struct pool> wbem::mem_config::PoolViewFactory::getPoolList(bool pmO
 /*
  * Helper function to retrieve a specific pool.
  */
-struct pool wbem::mem_config::PoolViewFactory::getPool(const std::string &poolGuidStr)
+struct pool wbem::mem_config::PoolViewFactory::getPool(const std::string &poolUidStr)
 	throw (wbem::framework::Exception)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	NVM_GUID poolGuid;
-	uid_copy(poolGuidStr.c_str(), poolGuid);
+	NVM_UID poolUid;
+	uid_copy(poolUidStr.c_str(), poolUid);
 
 	struct pool pool;
-	int rc = nvm_get_pool(poolGuid, &pool);
+	int rc = nvm_get_pool(poolUid, &pool);
 	if (rc != NVM_SUCCESS)
 	{
 		throw exception::NvmExceptionLibError(rc);
@@ -410,7 +410,7 @@ NVM_UINT32 wbem::mem_config::PoolViewFactory::countNamespaces(const struct pool 
 
 	for (size_t n = 0; n < m_nsCache.size(); n++)
 	{
-		if (uid_cmp(pPool->pool_guid, m_nsCache[n].pool_guid) &&
+		if (uid_cmp(pPool->pool_uid, m_nsCache[n].pool_uid) &&
 				m_nsCache[n].type == type)
 		{
 			result++;
@@ -445,7 +445,7 @@ void wbem::mem_config::PoolViewFactory::lazyInitNs()
 			for (int n = 0; n < nsCount; n++)
 			{
 				struct namespace_details nsDetails;
-				rc = nvm_get_namespace_details(namespaces[n].namespace_guid, &nsDetails);
+				rc = nvm_get_namespace_details(namespaces[n].namespace_uid, &nsDetails);
 				if (rc != NVM_SUCCESS)
 				{
 					throw exception::NvmExceptionLibError(rc);

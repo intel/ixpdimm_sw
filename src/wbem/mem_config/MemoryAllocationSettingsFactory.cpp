@@ -336,7 +336,7 @@ NVM_UINT64 wbem::mem_config::MemoryAllocationSettingsFactory::getMemoryReservati
 		{
 			struct config_goal goal;
 			memset(&goal, 0, sizeof(struct config_goal));
-			int rc = nvm_get_config_goal(devices[i].guid, &goal);
+			int rc = nvm_get_config_goal(devices[i].uid, &goal);
 
 			if (rc == NVM_SUCCESS)
 			{
@@ -399,7 +399,7 @@ wbem::mem_config::InterleaveSet
 			int rc = NVM_SUCCESS;
 			struct config_goal goal;
 			memset(&goal, 0, sizeof(struct config_goal));
-			rc = nvm_get_config_goal(devices[i].guid, &goal);
+			rc = nvm_get_config_goal(devices[i].uid, &goal);
 			if (rc  == NVM_SUCCESS)
 			{
 				addIlsetsFromGoal(ilsets, &goal);
@@ -429,19 +429,19 @@ wbem::mem_config::InterleaveSet
 NVM_UINT64 wbem::mem_config::MemoryAllocationSettingsFactory::getUnmappedReservationFromPools
 			(const std::vector<struct pool> &pools, const std::string instanceIdStr)
 {
-	NVM_GUID guid;
+	NVM_UID uid;
 
 	NVM_UINT16 socketId = getSocketId(instanceIdStr);
 	NVM_UINT32 memoryControllerId = getMemoryControllerId(instanceIdStr);
 	NVM_UINT32 channelId = getChannelId(instanceIdStr);
 
-	getGuidFromHandleInfo(socketId, memoryControllerId, channelId, guid);
+	getUidFromHandleInfo(socketId, memoryControllerId, channelId, uid);
 
-	return getStorageCapacityForDimm(pools, guid);
+	return getStorageCapacityForDimm(pools, uid);
 }
 
-void wbem::mem_config::MemoryAllocationSettingsFactory::getGuidFromHandleInfo
-			(const NVM_UINT16 socketId, const NVM_UINT32 memoryControllerId, const NVM_UINT32 channelId, NVM_GUID guid)
+void wbem::mem_config::MemoryAllocationSettingsFactory::getUidFromHandleInfo
+			(const NVM_UINT16 socketId, const NVM_UINT32 memoryControllerId, const NVM_UINT32 channelId, NVM_UID uid)
 {
 	physical_asset::devices_t devices = physical_asset::NVDIMMFactory::getManageableDevices();
 
@@ -451,14 +451,14 @@ void wbem::mem_config::MemoryAllocationSettingsFactory::getGuidFromHandleInfo
 			devices[i].device_handle.parts.memory_controller_id == memoryControllerId &&
 			devices[i].device_handle.parts.mem_channel_id == channelId)
 		{
-			memmove(guid, devices[i].guid, NVM_GUID_LEN);
+			memmove(uid, devices[i].uid, NVM_MAX_UID_LEN);
 			break;
 		}
 	}
 }
 
 NVM_UINT64 wbem::mem_config::MemoryAllocationSettingsFactory::getStorageCapacityForDimm
-			(const std::vector<struct pool> &pools, const NVM_GUID guid)
+			(const std::vector<struct pool> &pools, const NVM_UID uid)
 {
 	NVM_UINT64 storageCapacity = 0;
 
@@ -466,9 +466,9 @@ NVM_UINT64 wbem::mem_config::MemoryAllocationSettingsFactory::getStorageCapacity
 	{
 		if (pools[i].type == POOL_TYPE_PERSISTENT)
 		{
-			int index = getIndexOfDimmInPoolOrReturnNotFound(&(pools[i]), guid);
+			int index = getIndexOfDimmInPoolOrReturnNotFound(&(pools[i]), uid);
 
-			if ((index = getIndexOfDimmInPoolOrReturnNotFound(&(pools[i]), guid)) != framework::NOTFOUND)
+			if ((index = getIndexOfDimmInPoolOrReturnNotFound(&(pools[i]), uid)) != framework::NOTFOUND)
 			{
 				storageCapacity = pools[i].storage_capacities[index];
 			}
@@ -478,13 +478,13 @@ NVM_UINT64 wbem::mem_config::MemoryAllocationSettingsFactory::getStorageCapacity
 }
 
 int wbem::mem_config::MemoryAllocationSettingsFactory::getIndexOfDimmInPoolOrReturnNotFound
-			(const struct pool *pPool, const NVM_GUID guid)
+			(const struct pool *pPool, const NVM_UID uid)
 {
 	int index = framework::NOTFOUND;
 
 	for (size_t i = 0; i < pPool->dimm_count; i++)
 	{
-		if (memcmp(guid, pPool->dimms[i], NVM_GUID_LEN) == 0)
+		if (memcmp(uid, pPool->dimms[i], NVM_MAX_UID_LEN) == 0)
 		{
 			index = i;
 			break;
@@ -698,14 +698,14 @@ bool
 		(const framework::Instance* pSettingInstance, const framework::Instance* pMemoryInstance)
 {
 	bool associated = false;
-	NVM_GUID ilsetGuid;
+	NVM_UID ilsetUid;
 
-	getIlsetGuidFromSettingInstance(pSettingInstance, ilsetGuid);
+	getIlsetUidFromSettingInstance(pSettingInstance, ilsetUid);
 
-	NVM_GUID appDirectMemoryGuid;
-	getAppDirectMemoryGuid(pMemoryInstance, appDirectMemoryGuid);
+	NVM_UID appDirectMemoryUid;
+	getAppDirectMemoryUid(pMemoryInstance, appDirectMemoryUid);
 
-	if (memcmp(appDirectMemoryGuid, ilsetGuid, NVM_GUID_LEN) == 0)
+	if (memcmp(appDirectMemoryUid, ilsetUid, NVM_MAX_UID_LEN) == 0)
 	{
 		associated = true;
 	}
@@ -713,8 +713,8 @@ bool
 }
 
 void
-	wbem::mem_config::MemoryAllocationSettingsFactory::getIlsetGuidFromSettingInstance
-		(const framework::Instance* pSettingInstance, NVM_GUID ilsetGuid)
+	wbem::mem_config::MemoryAllocationSettingsFactory::getIlsetUidFromSettingInstance
+		(const framework::Instance* pSettingInstance, NVM_UID ilsetUid)
 {
 	std::vector<struct pool> pools = wbem::mem_config::PoolViewFactory::getPoolList(false);
 
@@ -726,10 +726,10 @@ void
 
 	InterleaveSet ilset = getInterleaveSetFromPools(pools, instanceIdStr);
 
-	std::string ilsetGuidStr = memory::PersistentMemoryFactory::getInterleaveSetUuid(
+	std::string ilsetUidStr = memory::PersistentMemoryFactory::getInterleaveSetUuid(
 			ilset.getSetIndex(), socketId);
 
-	uid_copy(ilsetGuidStr.c_str(), ilsetGuid);
+	uid_copy(ilsetUidStr.c_str(), ilsetUid);
 }
 
 bool
@@ -737,15 +737,15 @@ bool
 		(const framework::Instance* pSettingInstance, const framework::Instance* pMemoryInstance)
 {
 	bool associated = false;
-	NVM_GUID guid;
+	NVM_UID uid;
 
-	getAppDirectMemoryGuid(pMemoryInstance, guid);
+	getAppDirectMemoryUid(pMemoryInstance, uid);
 
-	// The guid contained in the deviceId of the AppDirectMemory instance
-	// may be an interleave set guid and if so, we'll just return false
-	if (isADeviceGuid(guid))
+	// The uid contained in the deviceId of the AppDirectMemory instance
+	// may be an interleave set uid and if so, we'll just return false
+	if (isADeviceUid(uid))
 	{
-		if (deviceGuidMatchesSetting(pSettingInstance, guid))
+		if (deviceUidMatchesSetting(pSettingInstance, uid))
 		{
 			associated = true;
 		}
@@ -753,40 +753,40 @@ bool
 	return associated;
 }
 
-bool wbem::mem_config::MemoryAllocationSettingsFactory::isADeviceGuid(const NVM_GUID guid)
+bool wbem::mem_config::MemoryAllocationSettingsFactory::isADeviceUid(const NVM_UID uid)
 {
-	bool isADeviceGuid = false;
+	bool isADeviceUid = false;
 
 	struct device_discovery device;
 	memset(&device, 0, sizeof(struct device_discovery));
-	int rc = nvm_get_device_discovery(guid, &device);
+	int rc = nvm_get_device_discovery(uid, &device);
 
 	if (rc == NVM_SUCCESS)
 	{
-		isADeviceGuid = true;
+		isADeviceUid = true;
 	}
-	return isADeviceGuid;
+	return isADeviceUid;
 }
 
 void
-	wbem::mem_config::MemoryAllocationSettingsFactory::getAppDirectMemoryGuid
-		(const framework::Instance* pMemoryInstance, NVM_GUID guid)
+	wbem::mem_config::MemoryAllocationSettingsFactory::getAppDirectMemoryUid
+		(const framework::Instance* pMemoryInstance, NVM_UID uid)
 {
 	wbem::framework::Attribute attr;
 
 	pMemoryInstance->getAttribute(wbem::DEVICEID_KEY, attr);
-	uid_copy(attr.stringValue().c_str(), guid);
+	uid_copy(attr.stringValue().c_str(), uid);
 }
 
 bool
-	wbem::mem_config::MemoryAllocationSettingsFactory::deviceGuidMatchesSetting
-		(const framework::Instance* pSettingInstance, const NVM_GUID guid)
+	wbem::mem_config::MemoryAllocationSettingsFactory::deviceUidMatchesSetting
+		(const framework::Instance* pSettingInstance, const NVM_UID uid)
 {
 	bool matches = false;
 
 	physical_asset::devices_t devices = physical_asset::NVDIMMFactory::getManageableDevices();
 
-	NVM_NFIT_DEVICE_HANDLE handle = getHandleForDimmGuid(devices, guid);
+	NVM_NFIT_DEVICE_HANDLE handle = getHandleForDimmUid(devices, uid);
 
 	NVM_UINT32 socketId = getSocketIdFromSettingInstance(pSettingInstance);
 	NVM_UINT32 memoryControllerId = getMemoryControllerIdFromSettingInstance(pSettingInstance);
@@ -949,7 +949,7 @@ wbem::mem_config::StringListType wbem::mem_config::MemoryAllocationSettingsFacto
 		struct pool pool = *poolIter;
 		for (int i = 0; i < pool.dimm_count; i++)
 		{
-			NVM_NFIT_DEVICE_HANDLE handle = getHandleForDimmGuid(devices, pool.dimms[i]);
+			NVM_NFIT_DEVICE_HANDLE handle = getHandleForDimmUid(devices, pool.dimms[i]);
 			// for each Memory Mode region, generate an instance name
 			if (pool.memory_capacities[i] > 0)
 			{
@@ -1024,7 +1024,7 @@ wbem::mem_config::StringListType wbem::mem_config::MemoryAllocationSettingsFacto
 		{
 			struct config_goal goal;
 			memset(&goal, 0, sizeof(struct config_goal));
-			int rc = nvm_get_config_goal((*devIter).guid, &goal);
+			int rc = nvm_get_config_goal((*devIter).uid, &goal);
 			if (rc == NVM_SUCCESS)
 			{
 				if (goal.memory_size > 0)
@@ -1077,15 +1077,15 @@ wbem::mem_config::StringListType wbem::mem_config::MemoryAllocationSettingsFacto
 }
 
 NVM_NFIT_DEVICE_HANDLE
-	wbem::mem_config::MemoryAllocationSettingsFactory::getHandleForDimmGuid
-		(const wbem::physical_asset::devices_t &devices, const NVM_GUID guid)
+	wbem::mem_config::MemoryAllocationSettingsFactory::getHandleForDimmUid
+			(const wbem::physical_asset::devices_t &devices, const NVM_UID uid)
 {
 	NVM_NFIT_DEVICE_HANDLE handle;
 	bool found = false;
 
 	for (size_t i = 0; i < devices.size(); i++)
 	{
-		if (memcmp(guid, devices[i].guid, NVM_GUID_LEN) == 0)
+		if (memcmp(uid, devices[i].uid, NVM_MAX_UID_LEN) == 0)
 		{
 			handle = devices[i].device_handle;
 			found = true;
@@ -1095,10 +1095,10 @@ NVM_NFIT_DEVICE_HANDLE
 
 	if (!found)
 	{
-		NVM_GUID_STR guidStr;
-		uid_copy(guid, guidStr);
-		COMMON_LOG_ERROR_F("Device guid %s could not be found.", guidStr);
-		throw framework::ExceptionBadParameter(guidStr);
+		NVM_UID uidStr;
+		uid_copy(uid, uidStr);
+		COMMON_LOG_ERROR_F("Device uid %s could not be found.", uidStr);
+		throw framework::ExceptionBadParameter(uidStr);
 	}
 	return handle;
 }

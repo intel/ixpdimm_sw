@@ -407,19 +407,19 @@ struct mgmt_attributes_ext_table
 	NVM_UINT8 reserved[2];
 
 	/*
-	 * Generator of GUID who maintains the format of the GUID data
+	 * Generator of UID who maintains the format of the UID data
 	 */
 	NVM_UINT16 vendor_id;
 
 	/*
-	 * Vendor Specific GUID
+	 * Vendor Specific UID
 	 */
-	NVM_UINT8 guid[16];
+	NVM_UINT8 uid[16];
 
 	/*
 	 * 8 byte aligned vendor specific data
 	 */
-	NVM_UINT8 guid_data[0];
+	NVM_UINT8 uid_data[0];
 
 } __attribute__((packed));
 

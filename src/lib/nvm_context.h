@@ -44,7 +44,7 @@ extern "C"
  */
 struct nvm_device_context
 {
-	NVM_GUID guid;
+	NVM_UID uid;
 	struct device_discovery *p_device_discovery;
 	struct device_details *p_device_details;
 	NVM_SIZE pcd_size;
@@ -56,7 +56,7 @@ struct nvm_device_context
  */
 struct nvm_namespace_context
 {
-	NVM_GUID guid;
+	NVM_UID uid;
 	struct namespace_discovery *p_namespace_discovery;
 	struct namespace_details *p_namespace_details;
 };
@@ -91,17 +91,17 @@ int set_nvm_context_capabilities(const struct nvm_capabilities *p_capabilities);
 
 // devices
 void invalidate_devices();
-void invalidate_device_pcd(const NVM_GUID device_guid);
+void invalidate_device_pcd(const NVM_UID device_uid);
 int get_nvm_context_device_count();
 int get_nvm_context_devices(struct device_discovery *p_devices, const int dev_count);
 int set_nvm_context_devices(const struct device_discovery *p_devices, const int dev_count);
-int get_nvm_context_device_details(const NVM_GUID device_guid,
+int get_nvm_context_device_details(const NVM_UID device_uid,
 		struct device_details *p_details);
-int set_nvm_context_device_details(const NVM_GUID device_guid,
+int set_nvm_context_device_details(const NVM_UID device_uid,
 		const struct device_details *p_details);
-int get_nvm_context_device_pcd(const NVM_GUID device_guid,
+int get_nvm_context_device_pcd(const NVM_UID device_uid,
 		struct platform_config_data **pp_pcd, NVM_SIZE *p_pcd_size);
-int set_nvm_context_device_pcd(const NVM_GUID device_guid,
+int set_nvm_context_device_pcd(const NVM_UID device_uid,
 		const struct platform_config_data *p_pcd, const NVM_SIZE pcd_size);
 
 // pools
@@ -109,7 +109,7 @@ void invalidate_pools();
 int get_nvm_context_pool_count();
 int get_nvm_context_pools(struct pool *p_pools, const int pool_count);
 int set_nvm_context_pools(const struct pool *p_pools, const int pool_count);
-int get_nvm_context_pool(const NVM_GUID pool_guid, struct pool *p_pool);
+int get_nvm_context_pool(const NVM_UID pool_uid, struct pool *p_pool);
 
 // namespaces
 void invalidate_namespaces();
@@ -118,9 +118,9 @@ int get_nvm_context_namespaces(struct namespace_discovery *p_namespaces,
 		const int namespace_count);
 int set_nvm_context_namespaces(const struct namespace_discovery *p_namespaces,
 		const int namespace_count);
-int get_nvm_context_namespace_details(const NVM_GUID namespace_guid,
+int get_nvm_context_namespace_details(const NVM_UID namespace_uid,
 		struct namespace_details *p_namespace);
-int set_nvm_context_namespace_details(const NVM_GUID namespace_guid,
+int set_nvm_context_namespace_details(const NVM_UID namespace_uid,
 		const struct namespace_details *p_namespace);
 
 #ifdef __cplusplus

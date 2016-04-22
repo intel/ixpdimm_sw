@@ -102,7 +102,7 @@ class NVM_API ElementSoftwareIdentityFactory : public framework::AssociationFact
 		bool isAssociationBetweenClasses(const framework::ObjectPath &antecedent, const framework::ObjectPath &dependent,
 				const std::string &antecedentClass, const std::string &dependentClass);
 		core::device::Device getDeviceForObjectPath(const framework::ObjectPath &devicePath);
-		core::device::DeviceFirmwareInfo getFirmwareInfoForDevice(const std::string &deviceGuid);
+		core::device::DeviceFirmwareInfo getFirmwareInfoForDevice(const std::string &deviceUid);
 		framework::ObjectPath getAttributeObjectPathFromInstancePath(
 				const framework::ObjectPath &instancePath,
 				const std::string &attributeKey);

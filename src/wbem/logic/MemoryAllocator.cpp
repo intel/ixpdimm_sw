@@ -223,9 +223,9 @@ void wbem::logic::MemoryAllocator::allocate(struct MemoryAllocationLayout &layou
 	for (std::map<std::string, struct config_goal>::iterator goalIter = layout.goals.begin();
 			goalIter != layout.goals.end(); goalIter++)
 	{
-		NVM_GUID guid;
-		uid_copy((*goalIter).first.c_str(), guid);
-		int rc = m_pLibApi->createConfigGoal(guid, &((*goalIter).second));
+		NVM_UID uid;
+		uid_copy((*goalIter).first.c_str(), uid);
+		int rc = m_pLibApi->createConfigGoal(uid, &((*goalIter).second));
 		if (rc != NVM_SUCCESS)
 		{
 			COMMON_LOG_ERROR_F("creating config goal failed with rc = %d", rc);

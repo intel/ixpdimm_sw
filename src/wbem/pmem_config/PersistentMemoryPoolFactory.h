@@ -115,17 +115,17 @@ namespace pmem_config
 
 		/*!
 		 * Gets the available capacity for creating a namespace.
-		 * @param pool_guid
+		 * @param pool_uid
 		 * 		The pool identifier.
 		 */
-		struct possible_namespace_ranges getSupportedSizeRange(const std::string &poolGuid);
+		struct possible_namespace_ranges getSupportedSizeRange(const std::string &poolUid);
 
 		/*!
 		 * Gets the available capacities for creating a namespace.
-		 * @param pool_guid
+		 * @param pool_uid
 		 * 		The pool identifier.
 		 */
-		virtual void getSupportedSizeRange(const std::string &poolGuid,
+		virtual void getSupportedSizeRange(const std::string &poolUid,
 				COMMON_UINT64 &largestPossibleAdNs,
 				COMMON_UINT64 &smallestPossibleAdNs,
 				COMMON_UINT64 &adIncrement,
@@ -140,7 +140,7 @@ namespace pmem_config
 		 * @param[in,out] p_range
 		 * 		Structure that will contain the ranges
 		 */
-		int (*m_GetAvailablePersistentSizeRange)(const NVM_GUID pool_guid,
+		int (*m_GetAvailablePersistentSizeRange)(const NVM_UID pool_uid,
 				struct possible_namespace_ranges *p_range);
 
 	private:

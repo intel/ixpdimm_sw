@@ -57,7 +57,7 @@ namespace monitor
 
 		private:
 			std::vector<std::string> getDimmList();
-			bool storeDimmPerformanceData(const std::string &dimmGuidStr, struct device_performance &performance);
+			bool storeDimmPerformanceData(const std::string &dimmUidStr, struct device_performance &performance);
 			void trimPerformanceData();
 			PersistentStore *m_pStore;
 	};

@@ -291,7 +291,7 @@ int nvm_remove_simulator()
 /*
  * Set NVM DIMM FW logging level.
  */
-int nvm_set_fw_log_level(const NVM_GUID device_guid, const enum fw_log_level log_level)
+int nvm_set_fw_log_level(const NVM_UID device_uid, const enum fw_log_level log_level)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_ERR_UNKNOWN;
@@ -311,7 +311,7 @@ int nvm_set_fw_log_level(const NVM_GUID device_guid, const enum fw_log_level log
 	{
 		COMMON_LOG_ERROR("Modifying device settings is not supported.");
 	}
-	else if ((rc = exists_and_manageable(device_guid, &discovery, 1)) == NVM_SUCCESS)
+	else if ((rc = exists_and_manageable(device_uid, &discovery, 1)) == NVM_SUCCESS)
 	{
 		struct fw_cmd cmd = {0};
 		cmd.device_handle = discovery.device_handle.handle;
@@ -335,7 +335,7 @@ int nvm_set_fw_log_level(const NVM_GUID device_guid, const enum fw_log_level log
 /*
  * get current NVM DIMM FW logging level
  */
-int nvm_get_fw_log_level(const NVM_GUID device_guid, enum fw_log_level *p_log_level)
+int nvm_get_fw_log_level(const NVM_UID device_uid, enum fw_log_level *p_log_level)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_ERR_UNKNOWN;
@@ -354,7 +354,7 @@ int nvm_get_fw_log_level(const NVM_GUID device_guid, enum fw_log_level *p_log_le
 	{
 		COMMON_LOG_ERROR("Updating device firmware is not supported.");
 	}
-	else if ((rc = exists_and_manageable(device_guid, &discovery, 1)) == NVM_SUCCESS)
+	else if ((rc = exists_and_manageable(device_uid, &discovery, 1)) == NVM_SUCCESS)
 	{
 		unsigned char log_level;
 		struct fw_cmd cmd = {0};

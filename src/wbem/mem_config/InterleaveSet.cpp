@@ -145,11 +145,11 @@ NVM_UINT16 wbem::mem_config::InterleaveSet::getSocketIdForGoal(const struct conf
 		if (goal->app_direct_count > 0)
 		{
 			int rc = NVM_SUCCESS;
-			NVM_GUID guid;
-			memmove(guid, goal->app_direct_1_settings.dimms[0], NVM_GUID_LEN);
+			NVM_UID uid;
+			memmove(uid, goal->app_direct_1_settings.dimms[0], NVM_MAX_UID_LEN);
 			struct device_discovery device;
 			memset(&device, 0, sizeof(struct device_discovery));
-			if ((rc = nvm_get_device_discovery(guid, &device)) == NVM_SUCCESS)
+			if ((rc = nvm_get_device_discovery(uid, &device)) == NVM_SUCCESS)
 			{
 				socket = device.socket_id;
 			}

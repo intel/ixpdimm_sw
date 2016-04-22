@@ -425,8 +425,8 @@ int set_nvm_context_devices(const struct device_discovery *p_devices, const int 
 					}
 					else
 					{
-						memmove(p_context->p_devices[i].guid,
-								p_devices[i].guid, sizeof (NVM_GUID));
+						memmove(p_context->p_devices[i].uid,
+								p_devices[i].uid, sizeof (NVM_UID));
 						memmove(p_context->p_devices[i].p_device_discovery,
 								&p_devices[i], sizeof (struct device_discovery));
 					}
@@ -472,7 +472,7 @@ void invalidate_devices()
 /*
  * Clear the pcd from a specific device
  */
-void invalidate_device_pcd(const NVM_GUID device_guid)
+void invalidate_device_pcd(const NVM_UID device_uid)
 {
 	COMMON_LOG_ENTRY();
 	// lock
@@ -486,7 +486,7 @@ void invalidate_device_pcd(const NVM_GUID device_guid)
 		{
 			for (int i = 0; i < p_context->device_count; i++)
 			{
-				if (uid_cmp(device_guid, p_context->p_devices[i].guid))
+				if (uid_cmp(device_uid, p_context->p_devices[i].uid))
 				{
 					// found it
 					if (p_context->p_devices[i].p_pcd)
@@ -510,7 +510,7 @@ void invalidate_device_pcd(const NVM_GUID device_guid)
 	COMMON_LOG_EXIT();
 }
 
-int get_nvm_context_device_details(const NVM_GUID device_guid, struct device_details *p_details)
+int get_nvm_context_device_details(const NVM_UID device_uid, struct device_details *p_details)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_ERR_UNKNOWN;
@@ -527,7 +527,7 @@ int get_nvm_context_device_details(const NVM_GUID device_guid, struct device_det
 		{
 			for (int i = 0; i < p_context->device_count; i++)
 			{
-				if (uid_cmp(device_guid, p_context->p_devices[i].guid))
+				if (uid_cmp(device_uid, p_context->p_devices[i].uid))
 				{
 					// found it
 					if (p_context->p_devices[i].p_device_details)
@@ -554,7 +554,7 @@ int get_nvm_context_device_details(const NVM_GUID device_guid, struct device_det
 	return rc;
 }
 
-int set_nvm_context_device_details(const NVM_GUID device_guid,
+int set_nvm_context_device_details(const NVM_UID device_uid,
 		const struct device_details *p_details)
 {
 	COMMON_LOG_ENTRY();
@@ -572,7 +572,7 @@ int set_nvm_context_device_details(const NVM_GUID device_guid,
 		{
 			for (int i = 0; i < p_context->device_count; i++)
 			{
-				if (uid_cmp(device_guid, p_context->p_devices[i].guid))
+				if (uid_cmp(device_uid, p_context->p_devices[i].uid))
 				{
 					// found it
 					// clear any existing details
@@ -612,7 +612,7 @@ int set_nvm_context_device_details(const NVM_GUID device_guid,
 	return rc;
 }
 
-int get_nvm_context_device_pcd(const NVM_GUID device_guid,
+int get_nvm_context_device_pcd(const NVM_UID device_uid,
 		struct platform_config_data **pp_pcd, NVM_SIZE *p_pcd_size)
 {
 	COMMON_LOG_ENTRY();
@@ -630,7 +630,7 @@ int get_nvm_context_device_pcd(const NVM_GUID device_guid,
 		{
 			for (int i = 0; i < p_context->device_count; i++)
 			{
-				if (uid_cmp(device_guid, p_context->p_devices[i].guid))
+				if (uid_cmp(device_uid, p_context->p_devices[i].uid))
 				{
 					// found it
 					if (p_context->p_devices[i].pcd_size > 0 && p_context->p_devices[i].p_pcd)
@@ -667,7 +667,7 @@ int get_nvm_context_device_pcd(const NVM_GUID device_guid,
 	return rc;
 }
 
-int set_nvm_context_device_pcd(const NVM_GUID device_guid,
+int set_nvm_context_device_pcd(const NVM_UID device_uid,
 		const struct platform_config_data *p_pcd, const NVM_SIZE pcd_size)
 {
 	COMMON_LOG_ENTRY();
@@ -685,7 +685,7 @@ int set_nvm_context_device_pcd(const NVM_GUID device_guid,
 		{
 			for (int i = 0; i < p_context->device_count; i++)
 			{
-				if (uid_cmp(device_guid, p_context->p_devices[i].guid))
+				if (uid_cmp(device_uid, p_context->p_devices[i].uid))
 				{
 					// found it
 					// clear any existing pcd
@@ -861,7 +861,7 @@ int set_nvm_context_pools(const struct pool *p_pools, const int pool_count)
 
 }
 
-int get_nvm_context_pool(const NVM_GUID pool_guid, struct pool *p_pool)
+int get_nvm_context_pool(const NVM_UID pool_uid, struct pool *p_pool)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_ERR_UNKNOWN;
@@ -878,7 +878,7 @@ int get_nvm_context_pool(const NVM_GUID pool_guid, struct pool *p_pool)
 		{
 			for (int i = 0; i < p_context->pool_count; i++)
 			{
-				if (uid_cmp(pool_guid, p_context->p_pools[i].pool_guid))
+				if (uid_cmp(pool_uid, p_context->p_pools[i].pool_uid))
 				{
 					// found it
 					memset(p_pool, 0, sizeof (struct pool));
@@ -1041,8 +1041,8 @@ int set_nvm_context_namespaces(const struct namespace_discovery *p_namespaces,
 					}
 					else
 					{
-						memmove(p_context->p_namespaces[i].guid,
-								p_namespaces[i].namespace_guid, sizeof (NVM_GUID));
+						memmove(p_context->p_namespaces[i].uid,
+								p_namespaces[i].namespace_uid, sizeof (NVM_UID));
 						memmove(p_context->p_namespaces[i].p_namespace_discovery,
 								&p_namespaces[i], sizeof (struct namespace_discovery));
 					}
@@ -1061,7 +1061,7 @@ int set_nvm_context_namespaces(const struct namespace_discovery *p_namespaces,
 	return rc;
 }
 
-int get_nvm_context_namespace_details(const NVM_GUID namespace_guid,
+int get_nvm_context_namespace_details(const NVM_UID namespace_uid,
 		struct namespace_details *p_details)
 {
 	COMMON_LOG_ENTRY();
@@ -1079,7 +1079,7 @@ int get_nvm_context_namespace_details(const NVM_GUID namespace_guid,
 		{
 			for (int i = 0; i < p_context->namespace_count; i++)
 			{
-				if (uid_cmp(namespace_guid, p_context->p_namespaces[i].guid))
+				if (uid_cmp(namespace_uid, p_context->p_namespaces[i].uid))
 				{
 					// found it
 					if (p_context->p_namespaces[i].p_namespace_details)
@@ -1105,7 +1105,7 @@ int get_nvm_context_namespace_details(const NVM_GUID namespace_guid,
 	return rc;
 }
 
-int set_nvm_context_namespace_details(const NVM_GUID namespace_guid,
+int set_nvm_context_namespace_details(const NVM_UID namespace_uid,
 		const struct namespace_details *p_details)
 {
 	COMMON_LOG_ENTRY();
@@ -1123,7 +1123,7 @@ int set_nvm_context_namespace_details(const NVM_GUID namespace_guid,
 		{
 			for (int i = 0; i < p_context->namespace_count; i++)
 			{
-				if (uid_cmp(namespace_guid, p_context->p_namespaces[i].guid))
+				if (uid_cmp(namespace_uid, p_context->p_namespaces[i].uid))
 				{
 					// found it
 					// clear any existing details

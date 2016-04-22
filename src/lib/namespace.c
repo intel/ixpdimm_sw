@@ -53,7 +53,7 @@
 #include "system.h"
 #include "nvm_context.h"
 
-int validate_namespace_block_count(const NVM_GUID namespace_guid,
+int validate_namespace_block_count(const NVM_UID namespace_uid,
 		NVM_UINT64 *block_count, const NVM_BOOL allow_adjustment);
 
 int find_interleave_with_capacity(const struct pool *p_pool,
@@ -235,7 +235,7 @@ int get_security_attributes_from_device(
 /*
  * Retrieve detailed information about the namespace specified.
  */
-int nvm_get_namespace_details(const NVM_GUID namespace_guid, struct namespace_details *p_namespace)
+int nvm_get_namespace_details(const NVM_UID namespace_uid, struct namespace_details *p_namespace)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
@@ -248,9 +248,9 @@ int nvm_get_namespace_details(const NVM_GUID namespace_guid, struct namespace_de
 	{
 		COMMON_LOG_ERROR("Retrieving namespaces is not supported.");
 	}
-	else if (namespace_guid == NULL)
+	else if (namespace_uid == NULL)
 	{
-		COMMON_LOG_ERROR("Invalid parameter, namespace_guid is NULL");
+		COMMON_LOG_ERROR("Invalid parameter, namespace_uid is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
 	else if (p_namespace == NULL)
@@ -258,22 +258,22 @@ int nvm_get_namespace_details(const NVM_GUID namespace_guid, struct namespace_de
 		COMMON_LOG_ERROR("Invalid parameter, p_namespace is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
-	else if (get_nvm_context_namespace_details(namespace_guid, p_namespace) != NVM_SUCCESS)
+	else if (get_nvm_context_namespace_details(namespace_uid, p_namespace) != NVM_SUCCESS)
 	{
 		memset(p_namespace, 0, sizeof (*p_namespace));
 
 		// get the namespace from the driver
 		struct nvm_namespace_details nvm_details;
 		memset(&nvm_details, 0, sizeof (nvm_details));
-		NVM_GUID pool_guid;
-		if ((rc = get_namespace_details(namespace_guid, &nvm_details)) == NVM_SUCCESS &&
-			(rc = get_pool_guid_from_namespace_details(&nvm_details, &pool_guid)) == NVM_SUCCESS)
+		NVM_UID pool_uid;
+		if ((rc = get_namespace_details(namespace_uid, &nvm_details)) == NVM_SUCCESS &&
+			(rc = get_pool_uid_from_namespace_details(&nvm_details, &pool_uid)) == NVM_SUCCESS)
 		{
-			memmove(p_namespace->pool_guid, pool_guid, NVM_GUID_LEN);
+			memmove(p_namespace->pool_uid, pool_uid, NVM_MAX_UID_LEN);
 			s_strcpy(p_namespace->discovery.friendly_name,
 					nvm_details.discovery.friendly_name, NVM_NAMESPACE_NAME_LEN);
-			memmove(p_namespace->discovery.namespace_guid,
-					nvm_details.discovery.namespace_guid, NVM_GUID_LEN);
+			memmove(p_namespace->discovery.namespace_uid,
+					nvm_details.discovery.namespace_uid, NVM_MAX_UID_LEN);
 			p_namespace->block_count = nvm_details.block_count;
 			p_namespace->block_size = nvm_details.block_size;
 			p_namespace->type = nvm_details.type;
@@ -324,12 +324,12 @@ int nvm_get_namespace_details(const NVM_GUID namespace_guid, struct namespace_de
 				struct device_discovery device;
 				lookup_dev_handle(nvm_details.namespace_creation_id.device_handle,
 						&device);
-				memmove(p_namespace->creation_id.device_guid, device.guid, NVM_GUID_LEN);
+				memmove(p_namespace->creation_id.device_uid, device.uid, NVM_MAX_UID_LEN);
 			}
 			// update the context
 			if (rc)
 			{
-				set_nvm_context_namespace_details(namespace_guid, p_namespace);
+				set_nvm_context_namespace_details(namespace_uid, p_namespace);
 			}
 		}
 	}
@@ -363,14 +363,14 @@ int validate_ns_enabled_state(enum namespace_enable_state enabled)
  * Expect p_pool and p_size to not be NULL.
  */
 int get_largest_storage_namespace_on_a_dimm(const struct pool *p_pool,
-		const NVM_GUID device_guid, NVM_UINT64 *p_size)
+		const NVM_UID device_uid, NVM_UINT64 *p_size)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_ERR_DRIVERFAILED;
 	int num_dimms = 0;
 
 	struct device_discovery discovery;
-	if (lookup_dev_guid(device_guid, &discovery) != NVM_SUCCESS)
+	if (lookup_dev_uid(device_uid, &discovery) != NVM_SUCCESS)
 	{
 		COMMON_LOG_ERROR("Failed to find the device in the lookup table");
 	}
@@ -409,7 +409,7 @@ int get_largest_storage_namespace_on_a_dimm(const struct pool *p_pool,
  * Helper function to check if dimm meets security requirements to create
  * a storage NS
  */
-NVM_BOOL dimm_meets_security_criteria(const NVM_GUID dimm,
+NVM_BOOL dimm_meets_security_criteria(const NVM_UID dimm,
 		struct namespace_security_features security_features)
 {
 	COMMON_LOG_ENTRY();
@@ -713,12 +713,12 @@ int check_namespace_capacity_and_security(const struct pool *p_pool,
 	// find a dimm with the requested capacity and security features
 	for (int dimm_index = 0; dimm_index < p_pool->dimm_count; dimm_index++)
 	{
-		if (lookup_dev_guid(p_pool->dimms[dimm_index], &discovery) == NVM_SUCCESS)
+		if (lookup_dev_uid(p_pool->dimms[dimm_index], &discovery) == NVM_SUCCESS)
 		{
 			NVM_UINT64 current_size;
 			// verify if the requested namespace capacity is available
 			rc = get_largest_storage_namespace_on_a_dimm(p_pool,
-					discovery.guid, &current_size);
+					discovery.uid, &current_size);
 			if (rc == NVM_SUCCESS)
 			{
 				rc = NVM_ERR_BADSIZE;
@@ -837,7 +837,7 @@ NVM_BOOL interleave_set_has_namespace(const NVM_UINT32 interleave_set_driver_id)
 			{
 				struct nvm_namespace_details details;
 				memset(&details, 0, sizeof (details));
-				if (get_namespace_details(namespaces[i].namespace_guid, &details) == NVM_SUCCESS)
+				if (get_namespace_details(namespaces[i].namespace_uid, &details) == NVM_SUCCESS)
 				{
 					if (details.namespace_creation_id.interleave_setid ==
 							interleave_set_driver_id && details.type == NAMESPACE_TYPE_APP_DIRECT)
@@ -1142,7 +1142,7 @@ void adjust_namespace_block_count_if_allowed(NVM_UINT64 *p_block_count, const NV
 	COMMON_LOG_EXIT();
 }
 
-int nvm_adjust_create_namespace_block_count(const NVM_GUID pool_guid,
+int nvm_adjust_create_namespace_block_count(const NVM_UID pool_uid,
 		struct namespace_create_settings *p_settings,
 		const struct interleave_format *p_format)
 {
@@ -1157,9 +1157,9 @@ int nvm_adjust_create_namespace_block_count(const NVM_GUID pool_guid,
 	{
 		COMMON_LOG_ERROR("Creating a namespace is not supported.");
 	}
-	else if (pool_guid == NULL)
+	else if (pool_uid == NULL)
 	{
-		COMMON_LOG_ERROR("Invalid parameter, pool guid is NULL");
+		COMMON_LOG_ERROR("Invalid parameter, pool uid is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
 	else if (p_settings == NULL)
@@ -1171,7 +1171,7 @@ int nvm_adjust_create_namespace_block_count(const NVM_GUID pool_guid,
 	{
 		struct pool pool;
 		memset(&pool, 0, sizeof (pool));
-		if ((rc = nvm_get_pool(pool_guid, &pool)) == NVM_SUCCESS)
+		if ((rc = nvm_get_pool(pool_uid, &pool)) == NVM_SUCCESS)
 		{
 			NVM_UINT32 namespace_creation_id;
 			rc = validate_namespace_create_settings(&pool, p_settings,
@@ -1188,7 +1188,7 @@ int nvm_adjust_create_namespace_block_count(const NVM_GUID pool_guid,
 }
 
 int nvm_adjust_modify_namespace_block_count(
-		const NVM_GUID namespace_guid, NVM_UINT64 *p_block_count)
+		const NVM_UID namespace_uid, NVM_UINT64 *p_block_count)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
@@ -1200,9 +1200,9 @@ int nvm_adjust_modify_namespace_block_count(
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
 	}
-	else if (namespace_guid == NULL)
+	else if (namespace_uid == NULL)
 	{
-		COMMON_LOG_ERROR("Invalid parameter, namespace guid is NULL");
+		COMMON_LOG_ERROR("Invalid parameter, namespace uid is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
 	else if (p_block_count == NULL)
@@ -1215,7 +1215,7 @@ int nvm_adjust_modify_namespace_block_count(
 		COMMON_LOG_ERROR("Invalid parameter, block_count must be greater than zero");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
-	else if ((rc = nvm_get_namespace_details(namespace_guid, &details)) == NVM_SUCCESS)
+	else if ((rc = nvm_get_namespace_details(namespace_uid, &details)) == NVM_SUCCESS)
 	{
 		if (details.block_count < *p_block_count &&
 			(rc = IS_NVM_FEATURE_LICENSED(grow_namespace)) != NVM_SUCCESS)
@@ -1229,7 +1229,7 @@ int nvm_adjust_modify_namespace_block_count(
 		}
 		else
 		{
-			rc = validate_namespace_block_count(namespace_guid, p_block_count, 1);
+			rc = validate_namespace_block_count(namespace_uid, p_block_count, 1);
 		}
 	}
 	else
@@ -1244,7 +1244,7 @@ int nvm_adjust_modify_namespace_block_count(
 /*
  * Create a new namespace from the specified pool.
  */
-int nvm_create_namespace(NVM_GUID *p_namespace_guid, const NVM_GUID pool_guid,
+int nvm_create_namespace(NVM_UID *p_namespace_uid, const NVM_UID pool_uid,
 		struct namespace_create_settings *p_settings,
 		const struct interleave_format *p_format, const NVM_BOOL allow_adjustment)
 {
@@ -1263,9 +1263,9 @@ int nvm_create_namespace(NVM_GUID *p_namespace_guid, const NVM_GUID pool_guid,
 	{
 		COMMON_LOG_ERROR("Creating a namespace is not supported.");
 	}
-	else if (pool_guid == NULL)
+	else if (pool_uid == NULL)
 	{
-		COMMON_LOG_ERROR("Invalid parameter, pool guid is NULL");
+		COMMON_LOG_ERROR("Invalid parameter, pool uid is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
 	else if (p_settings == NULL)
@@ -1273,7 +1273,7 @@ int nvm_create_namespace(NVM_GUID *p_namespace_guid, const NVM_GUID pool_guid,
 		COMMON_LOG_ERROR("Invalid parameter, p_settings is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
-	else if (p_namespace_guid == NULL)
+	else if (p_namespace_uid == NULL)
 	{
 		COMMON_LOG_ERROR("Invalid parameter, p_namespace is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
@@ -1284,7 +1284,7 @@ int nvm_create_namespace(NVM_GUID *p_namespace_guid, const NVM_GUID pool_guid,
 		struct pool pool;
 		memset(&pool, 0, sizeof (pool));
 
-		if ((rc = nvm_get_pool(pool_guid, &pool)) == NVM_SUCCESS)
+		if ((rc = nvm_get_pool(pool_uid, &pool)) == NVM_SUCCESS)
 		{
 			if ((rc = validate_namespace_create_settings(&pool, p_settings, p_format,
 						&namespace_creation_id, allow_adjustment)) == NVM_SUCCESS)
@@ -1365,23 +1365,23 @@ int nvm_create_namespace(NVM_GUID *p_namespace_guid, const NVM_GUID pool_guid,
 				nvm_settings.btt = p_settings->btt;
 				nvm_settings.memory_page_allocation = p_settings->memory_page_allocation;
 
-				rc = create_namespace(p_namespace_guid, &nvm_settings);
+				rc = create_namespace(p_namespace_uid, &nvm_settings);
 				if (rc == NVM_SUCCESS)
 				{
 					// the context is no longer valid
 					invalidate_namespaces();
 
 					// Log an event indicating we successfully created a namespace
-					NVM_EVENT_ARG ns_guid_arg;
-					guid_to_event_arg(*p_namespace_guid, ns_guid_arg);
+					NVM_EVENT_ARG ns_uid_arg;
+					uid_to_event_arg(*p_namespace_uid, ns_uid_arg);
 					NVM_EVENT_ARG ns_name_arg;
 					s_strncpy(ns_name_arg, NVM_EVENT_ARG_LEN,
 							nvm_settings.friendly_name, NVM_NAMESPACE_NAME_LEN);
 					log_mgmt_event(EVENT_SEVERITY_INFO,
 							EVENT_CODE_MGMT_NAMESPACE_CREATED,
-							*p_namespace_guid,
+							*p_namespace_uid,
 							0, // no action required
-							ns_name_arg, ns_guid_arg, NULL);
+							ns_name_arg, ns_uid_arg, NULL);
 				}
 			}
 		}
@@ -1480,7 +1480,7 @@ int validate_storage_namespace_size_for_modification(const struct pool *p_pool,
 		NVM_UINT64 namespace_capacity = new_block_count * real_block_size;
 		NVM_UINT64 available_size = 0;
 
-		if ((rc = get_largest_storage_namespace_on_a_dimm(p_pool, discovery.guid, &available_size))
+		if ((rc = get_largest_storage_namespace_on_a_dimm(p_pool, discovery.uid, &available_size))
 				== NVM_SUCCESS)
 		{
 			if ((namespace_capacity > old_namespace_capacity) &&
@@ -1580,22 +1580,22 @@ int validate_namespace_size_for_modification(const struct pool *p_pool, NVM_UINT
 /*
  * Helper function to validate modify namespace settings
  */
-int validate_namespace_block_count(const NVM_GUID namespace_guid,
+int validate_namespace_block_count(const NVM_UID namespace_uid,
 		NVM_UINT64 *p_block_count, const NVM_BOOL allow_adjustment)
 {
 	// check if the namespace exists
 	struct nvm_namespace_details nvm_details;
 	memset(&nvm_details, 0, sizeof (nvm_details));
-	int rc = get_namespace_details(namespace_guid, &nvm_details);
+	int rc = get_namespace_details(namespace_uid, &nvm_details);
 	if (rc == NVM_SUCCESS)
 	{
-		NVM_GUID pool_guid;
-		rc = get_pool_guid_from_namespace_details(&nvm_details, &pool_guid);
+		NVM_UID pool_uid;
+		rc = get_pool_uid_from_namespace_details(&nvm_details, &pool_uid);
 		if (rc == NVM_SUCCESS)
 		{
 			struct pool pool;
 			memset(&pool, 0, sizeof (pool));
-			rc = nvm_get_pool(pool_guid, &pool);
+			rc = nvm_get_pool(pool_uid, &pool);
 			if (rc == NVM_SUCCESS)
 			{
 				rc = validate_namespace_size_for_modification(&pool, p_block_count,
@@ -1615,7 +1615,7 @@ int validate_namespace_block_count(const NVM_GUID namespace_guid,
 /*
  * Modify the namespace specified.
  */
-int nvm_modify_namespace_name(const NVM_GUID namespace_guid,
+int nvm_modify_namespace_name(const NVM_UID namespace_uid,
 		const NVM_NAMESPACE_NAME name)
 {
 	COMMON_LOG_ENTRY();
@@ -1629,9 +1629,9 @@ int nvm_modify_namespace_name(const NVM_GUID namespace_guid,
 	{
 		COMMON_LOG_ERROR("Renaming a namespace is not supported.");
 	}
-	else if (namespace_guid == NULL)
+	else if (namespace_uid == NULL)
 	{
-		COMMON_LOG_ERROR("Invalid parameter, namespace_guid is NULL");
+		COMMON_LOG_ERROR("Invalid parameter, namespace_uid is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
 	else if (name == NULL)
@@ -1641,23 +1641,23 @@ int nvm_modify_namespace_name(const NVM_GUID namespace_guid,
 	}
 	else
 	{
-		rc = modify_namespace_name(namespace_guid, name);
+		rc = modify_namespace_name(namespace_uid, name);
 		if (rc == NVM_SUCCESS)
 		{
 			// the namespace context is no longer valid
 			invalidate_namespaces();
 
 			// Log an event indicating we successfully modified a namespace
-			NVM_EVENT_ARG ns_guid_arg;
-			guid_to_event_arg(namespace_guid, ns_guid_arg);
+			NVM_EVENT_ARG ns_uid_arg;
+			uid_to_event_arg(namespace_uid, ns_uid_arg);
 			NVM_EVENT_ARG ns_name_arg;
 			s_strncpy(ns_name_arg, NVM_EVENT_ARG_LEN,
 					name, NVM_NAMESPACE_NAME_LEN);
 			log_mgmt_event(EVENT_SEVERITY_INFO,
 					EVENT_CODE_MGMT_NAMESPACE_MODIFIED,
-					namespace_guid,
+					namespace_uid,
 					0, // no action required
-					ns_name_arg, ns_guid_arg, NULL);
+					ns_name_arg, ns_uid_arg, NULL);
 		}
 		else
 		{
@@ -1672,15 +1672,15 @@ int nvm_modify_namespace_name(const NVM_GUID namespace_guid,
 /*
  * Modify the namespace specified.
  */
-int nvm_modify_namespace_block_count(const NVM_GUID namespace_guid,
+int nvm_modify_namespace_block_count(const NVM_UID namespace_uid,
 		NVM_UINT64 block_count, NVM_BOOL allow_adjustment)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
 
-	if (namespace_guid == NULL)
+	if (namespace_uid == NULL)
 	{
-		COMMON_LOG_ERROR("Invalid parameter, namespace_guid is NULL");
+		COMMON_LOG_ERROR("Invalid parameter, namespace_uid is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
 	else if (block_count == 0)
@@ -1692,7 +1692,7 @@ int nvm_modify_namespace_block_count(const NVM_GUID namespace_guid,
 	{
 		struct namespace_details details;
 		memset(&details, 0, sizeof (details));
-		rc = nvm_get_namespace_details(namespace_guid, &details);
+		rc = nvm_get_namespace_details(namespace_uid, &details);
 		if (rc == NVM_SUCCESS)
 		{
 			if (details.block_count < block_count &&
@@ -1707,27 +1707,27 @@ int nvm_modify_namespace_block_count(const NVM_GUID namespace_guid,
 			}
 			else
 			{
-				rc = validate_namespace_block_count(namespace_guid,
+				rc = validate_namespace_block_count(namespace_uid,
 						&block_count, allow_adjustment);
 				if (rc == NVM_SUCCESS)
 				{
-					rc = modify_namespace_block_count(namespace_guid, block_count);
+					rc = modify_namespace_block_count(namespace_uid, block_count);
 					if (rc == NVM_SUCCESS)
 					{
 						// the namespace context is no longer valid
 						invalidate_namespaces();
 
 						// Log an event indicating we successfully modified a namespace
-						NVM_EVENT_ARG ns_guid_arg;
-						guid_to_event_arg(namespace_guid, ns_guid_arg);
+						NVM_EVENT_ARG ns_uid_arg;
+						uid_to_event_arg(namespace_uid, ns_uid_arg);
 						NVM_EVENT_ARG ns_name_arg;
 						s_strncpy(ns_name_arg, NVM_EVENT_ARG_LEN,
 								details.discovery.friendly_name, NVM_NAMESPACE_NAME_LEN);
 						log_mgmt_event(EVENT_SEVERITY_INFO,
 								EVENT_CODE_MGMT_NAMESPACE_MODIFIED,
-								namespace_guid,
+								namespace_uid,
 								0, // no action required
-								ns_name_arg, ns_guid_arg, NULL);
+								ns_name_arg, ns_uid_arg, NULL);
 					}
 					else
 					{
@@ -1753,15 +1753,15 @@ int nvm_modify_namespace_block_count(const NVM_GUID namespace_guid,
 /*
  * Modify the namespace specified.
  */
-int nvm_modify_namespace_enabled(const NVM_GUID namespace_guid,
+int nvm_modify_namespace_enabled(const NVM_UID namespace_uid,
 		const enum namespace_enable_state enabled)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
 
-	if (namespace_guid == NULL)
+	if (namespace_uid == NULL)
 	{
-		COMMON_LOG_ERROR("Invalid parameter, namespace_guid is NULL");
+		COMMON_LOG_ERROR("Invalid parameter, namespace_uid is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
 	else if (enabled == NAMESPACE_ENABLE_STATE_DISABLED ||
@@ -1781,26 +1781,26 @@ int nvm_modify_namespace_enabled(const NVM_GUID namespace_guid,
 		{
 			struct namespace_details details;
 			memset(&details, 0, sizeof (details));
-			rc = nvm_get_namespace_details(namespace_guid, &details);
+			rc = nvm_get_namespace_details(namespace_uid, &details);
 			if (rc == NVM_SUCCESS && details.enabled != enabled)
 			{
-				rc = modify_namespace_enabled(namespace_guid, enabled);
+				rc = modify_namespace_enabled(namespace_uid, enabled);
 				if (rc == NVM_SUCCESS)
 				{
 					// the namespace context is no longer valid
 					invalidate_namespaces();
 
 					// Log an event indicating we successfully modified a namespace
-					NVM_EVENT_ARG ns_guid_arg;
-					guid_to_event_arg(namespace_guid, ns_guid_arg);
+					NVM_EVENT_ARG ns_uid_arg;
+					uid_to_event_arg(namespace_uid, ns_uid_arg);
 					NVM_EVENT_ARG ns_name_arg;
 					s_strncpy(ns_name_arg, NVM_EVENT_ARG_LEN,
 							details.discovery.friendly_name, NVM_NAMESPACE_NAME_LEN);
 					log_mgmt_event(EVENT_SEVERITY_INFO,
 							EVENT_CODE_MGMT_NAMESPACE_MODIFIED,
-							namespace_guid,
+							namespace_uid,
 							0, // no action required
-							ns_name_arg, ns_guid_arg, NULL);
+							ns_name_arg, ns_uid_arg, NULL);
 				}
 				else
 				{
@@ -1821,7 +1821,7 @@ int nvm_modify_namespace_enabled(const NVM_GUID namespace_guid,
 /*
  * Delete an existing namespace.
  */
-int nvm_delete_namespace(const NVM_GUID namespace_guid)
+int nvm_delete_namespace(const NVM_UID namespace_uid)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
@@ -1834,41 +1834,41 @@ int nvm_delete_namespace(const NVM_GUID namespace_guid)
 	{
 		COMMON_LOG_ERROR("Deleting a namespace is not supported.");
 	}
-	else if (namespace_guid == NULL)
+	else if (namespace_uid == NULL)
 	{
-		COMMON_LOG_ERROR("Invalid parameter, namespace_guid is NULL");
+		COMMON_LOG_ERROR("Invalid parameter, namespace_uid is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
 	else
 	{
 		struct namespace_details details;
 		memset(&details, 0, sizeof (details));
-		rc = nvm_get_namespace_details(namespace_guid, &details);
+		rc = nvm_get_namespace_details(namespace_uid, &details);
 		if (rc == NVM_SUCCESS)
 		{
-			rc = delete_namespace(namespace_guid);
+			rc = delete_namespace(namespace_uid);
 			if (rc == NVM_SUCCESS)
 			{
 				// the namespace context is no longer valid
 				invalidate_namespaces();
 
 				// Log an event indicating we successfully deleted a namespace
-				NVM_EVENT_ARG ns_guid_arg;
-				guid_to_event_arg(namespace_guid, ns_guid_arg);
+				NVM_EVENT_ARG ns_uid_arg;
+				uid_to_event_arg(namespace_uid, ns_uid_arg);
 				NVM_EVENT_ARG ns_name_arg;
 				s_strncpy(ns_name_arg, NVM_EVENT_ARG_LEN,
 						details.discovery.friendly_name, NVM_NAMESPACE_NAME_LEN);
 				log_mgmt_event(EVENT_SEVERITY_INFO,
 						EVENT_CODE_MGMT_NAMESPACE_DELETED,
-						namespace_guid,
+						namespace_uid,
 						0, // no action required
-						ns_name_arg, ns_guid_arg, NULL);
+						ns_name_arg, ns_uid_arg, NULL);
 
 				// clear any action required events for the deleted namespace
 				struct event_filter filter;
 				memset(&filter, 0, sizeof (filter));
-				filter.filter_mask = NVM_FILTER_ON_GUID | NVM_FILTER_ON_AR;
-				memmove(filter.guid, namespace_guid, NVM_GUID_LEN);
+				filter.filter_mask = NVM_FILTER_ON_UID | NVM_FILTER_ON_AR;
+				memmove(filter.uid, namespace_uid, NVM_MAX_UID_LEN);
 				filter.action_required = 1;
 				acknowledge_events(&filter);
 			}
@@ -1881,7 +1881,7 @@ int nvm_delete_namespace(const NVM_GUID namespace_guid)
 
 /*
  * Return the size of the largest App Direct namespace that can be created.
- * Expect pool_guid and p_size to not be NULL
+ * Expect pool_uid and p_size to not be NULL
  */
 void get_largest_app_direct_namespace(const struct pool *p_pool, NVM_UINT64 *p_size)
 {
@@ -2020,15 +2020,15 @@ int get_pool_supported_size_ranges(const struct pool *p_pool,
  * that must be used to determine the valid capacities between the smallest and
  * largest namespaces.
  */
-int nvm_get_available_persistent_size_range(const NVM_GUID pool_guid,
+int nvm_get_available_persistent_size_range(const NVM_UID pool_uid,
 		struct possible_namespace_ranges *p_range)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
 
-	if (pool_guid == NULL)
+	if (pool_uid == NULL)
 	{
-		COMMON_LOG_ERROR("Invalid parameter, pool_guid is NULL");
+		COMMON_LOG_ERROR("Invalid parameter, pool_uid is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
 	else if (p_range == NULL)
@@ -2047,7 +2047,7 @@ int nvm_get_available_persistent_size_range(const NVM_GUID pool_guid,
 		// retrieve the pool
 		struct pool pool;
 		memset(&pool, 0, sizeof (pool));
-		if ((rc = nvm_get_pool(pool_guid, &pool)) == NVM_SUCCESS)
+		if ((rc = nvm_get_pool(pool_uid, &pool)) == NVM_SUCCESS)
 		{
 			// retrieve the capabilities
 			struct nvm_capabilities nvm_caps;
@@ -2067,7 +2067,7 @@ int nvm_get_available_persistent_size_range(const NVM_GUID pool_guid,
  * Determine if any existing namespaces of the specified type
  * utilize capacity from the specified device.
  */
-int nvm_get_device_namespace_count(const NVM_GUID device_guid,
+int nvm_get_device_namespace_count(const NVM_UID device_uid,
 		const enum namespace_type type)
 {
 	int rc = 0; // return namespace count
@@ -2087,12 +2087,12 @@ int nvm_get_device_namespace_count(const NVM_GUID device_guid,
 		COMMON_LOG_ERROR("Retrieving namespaces is not supported.");
 		rc = NVM_ERR_NOTSUPPORTED;
 	}
-	else if (device_guid == NULL)
+	else if (device_uid == NULL)
 	{
-		COMMON_LOG_ERROR("Invalid parameter, device_guid is NULL");
+		COMMON_LOG_ERROR("Invalid parameter, device_uid is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
-	else if ((rc = exists_and_manageable(device_guid, &discovery, 1)) == NVM_SUCCESS)
+	else if ((rc = exists_and_manageable(device_uid, &discovery, 1)) == NVM_SUCCESS)
 	{
 		rc = dimm_has_namespaces_of_type(discovery.device_handle, type);
 	}

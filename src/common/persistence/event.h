@@ -274,7 +274,7 @@ int store_event(struct event *p_event, COMMON_BOOL syslog);
  */
 int store_event_by_parts(const enum event_type type,
 		const enum event_severity severity, const NVM_UINT16 code,
-		const NVM_GUID device_guid, const NVM_BOOL action_required, const NVM_EVENT_ARG arg1,
+		const NVM_UID device_uid, const NVM_BOOL action_required, const NVM_EVENT_ARG arg1,
 		const NVM_EVENT_ARG arg2, const NVM_EVENT_ARG arg3,
 		const enum diagnostic_result result);
 

@@ -250,7 +250,7 @@ void cli::nvmcli::FieldSupportFeature::getPaths(cli::framework::CommandSpecList 
 	cli::framework::CommandSpec changePreferences(CHANGE_PREFERENCES, TR("Change Preferences"), framework::VERB_SET,
 			TR("Modify one or more user preferences in the " NVM_DIMM_NAME " management software."));
 	changePreferences.addTarget(TARGET_PREFERENCES);
-	changePreferences.addProperty(SQL_KEY_CLI_DIMM_ID, false, "HANDLE|GUID",
+	changePreferences.addProperty(SQL_KEY_CLI_DIMM_ID, false, "HANDLE|UID",
 			true, "The default display of " NVM_DIMM_NAME " identifiers.");
 	changePreferences.addProperty(SQL_KEY_CLI_SIZE, false, "Auto|B|MiB|GiB",
 			true, "The default display of capacities in the NVMCLI.");
@@ -302,7 +302,7 @@ cli::nvmcli::FieldSupportFeature::FieldSupportFeature() :
 		m_DumpSupport(wbemDumpSupport),
 		m_ClearSupport(wbemClearSupport),
 		m_getEvents(wbemGetEvents),
-		m_guidToDimmIdStr(wbem::physical_asset::NVDIMMFactory::guidToDimmIdStr)
+		m_uidToDimmIdStr(wbem::physical_asset::NVDIMMFactory::uidToDimmIdStr)
 {
 }
 
@@ -486,8 +486,8 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::updateFirmware(
 		bool examineOption = parsedCommand.options.find(framework::OPTION_EXAMINE.name)
 				!= parsedCommand.options.end();
 
-		std::vector<std::string> guids;
-		pResult = m_getDimms(parsedCommand, guids);
+		std::vector<std::string> uids;
+		pResult = m_getDimms(parsedCommand, uids);
 
 		if (pResult == NULL) // no syntax error from getDimm
 		{
@@ -496,16 +496,16 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::updateFirmware(
 				// used to store results
 				framework::SimpleListResult *pSimpleList = new framework::SimpleListResult();
 
-				for (size_t i = 0; i < guids.size(); i++)
+				for (size_t i = 0; i < uids.size(); i++)
 				{
 					std::string prefix = framework::ResultBase::stringFromArgList(
 							TRS(UPDATEFIRMWARE_MSG),
-							m_guidToDimmIdStr(guids[i]).c_str());
+							m_uidToDimmIdStr(uids[i]).c_str());
 					prefix += ": ";
 					try
 					{
 						std::string fwVersion;
-						int rc = m_ExamineFwImage(guids[i], path, fwVersion);
+						int rc = m_ExamineFwImage(uids[i], path, fwVersion);
 						if (fwVersion.empty())
 						{
 							fwVersion = TRS(UPDATEFIRMWARE_EXAMINE_NO_VERSION_MSG);
@@ -535,7 +535,7 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::updateFirmware(
 					catch (wbem::framework::Exception &e)
 					{
 						framework::ErrorResult *pError = NvmExceptionToResult(e);
-						pSimpleList->insert(m_guidToDimmIdStr(guids[i]).c_str() +
+						pSimpleList->insert(m_uidToDimmIdStr(uids[i]).c_str() +
 								pError->outputText());
 						if (!pSimpleList->getErrorCode())  // keep existing errors
 						{
@@ -549,25 +549,25 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::updateFirmware(
 			else // do FW update
 			{
 				framework::SimpleListResult *pSimpleList = new framework::SimpleListResult();
-				for (size_t i = 0; i < guids.size(); i++)
+				for (size_t i = 0; i < uids.size(); i++)
 				{
 					std::string prefix = framework::ResultBase::stringFromArgList(
 							TRS(UPDATEFIRMWARE_MSG),
-							m_guidToDimmIdStr(guids[i]).c_str());
+							m_uidToDimmIdStr(uids[i]).c_str());
 					prefix += ": ";
 					try
 					{
 						std::string fwVersion;
 						// if user didn't specify the force option, and it's required, prompt them to continue
 						std::string prompt = framework::ResultBase::stringFromArgList(
-								DOWNGRADE_FW_PROMPT.c_str(), m_guidToDimmIdStr(guids[i]).c_str());
-						if (!forceOption && wbem::framework::REQUIRES_FORCE == m_ExamineFwImage(guids[i], path, fwVersion) && !promptUserYesOrNo(prompt))
+								DOWNGRADE_FW_PROMPT.c_str(), m_uidToDimmIdStr(uids[i]).c_str());
+						if (!forceOption && wbem::framework::REQUIRES_FORCE == m_ExamineFwImage(uids[i], path, fwVersion) && !promptUserYesOrNo(prompt))
 						{
 							pSimpleList->insert(prefix + TRS(cli::framework::UNCHANGED_MSG));
 						}
 						else
 						{
-							m_InstallFromPath(guids[i], path, true);
+							m_InstallFromPath(uids[i], path, true);
 							pSimpleList->insert(prefix +
 									std::string(TRS(cli::framework::SUCCESS_MSG)) + TRS(UPDATEFIRMWARE_RESET_MSG));
 						}
@@ -596,21 +596,21 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::updateFirmware(
 /*
  * Simple wrapper around WBEM
  */
-void cli::nvmcli::FieldSupportFeature::wbemInstallFromPath(const std::string &deviceGuid,
+void cli::nvmcli::FieldSupportFeature::wbemInstallFromPath(const std::string &deviceUid,
 		const std::string &uri, bool force)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	wbem::software::NVDIMMSoftwareInstallationServiceFactory provider;
-	provider.installFromPath(deviceGuid, uri, false, force);
+	provider.installFromPath(deviceUid, uri, false, force);
 }
 
-int cli::nvmcli::FieldSupportFeature::wbemExamineFwImage(const std::string &deviceGuid,
+int cli::nvmcli::FieldSupportFeature::wbemExamineFwImage(const std::string &deviceUid,
 		const std::string &path, std::string &fwVersion)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	wbem::software::NVDIMMSoftwareInstallationServiceFactory provider;
 
-	return provider.examineFwImage(deviceGuid, path, fwVersion);
+	return provider.examineFwImage(deviceUid, path, fwVersion);
 }
 
 /*
@@ -1101,18 +1101,18 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::runDiagnostic(
 								propertyList.setName("Diagnostic");
 								propertyList.insert(CLIDIAGNOSTIC_TESTNAME, diagTestTypes[i]);
 
-								// convert guid string to guid
-								COMMON_UID guid;
-								uid_copy((*dimmTargetIter).c_str(), guid);
+								// convert uid string to uid
+								COMMON_UID uid;
+								uid_copy((*dimmTargetIter).c_str(), uid);
 								wbem::framework::UINT16_LIST ignoreResults;
 
 								try
 								{
 									// run diagnostic test
-									provider.RunDiagnosticService(guid, ignoreResults, wbem::support::validTestTypes[i]);
+									provider.RunDiagnosticService(uid, ignoreResults, wbem::support::validTestTypes[i]);
 									// if we got this far, pull the results out of the event table for this test
 									// there should only be one event table entry per test,
-									// and per guid if it's guid specific
+									// and per uid if it's uid specific
 
 									// get results
 									wbem::framework::attribute_names_t attributes;
@@ -1154,8 +1154,8 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::runDiagnostic(
 												// found a match, collect the data & add results to output
 												if (perDimm)
 												{
-													// convert dimm GUID to dimm ID
-													std::string dimmIdStr = m_guidToDimmIdStr(
+													// convert dimm UID to dimm ID
+													std::string dimmIdStr = m_uidToDimmIdStr(
 															dimmAttr.stringValue().substr(prefixStrLen, dimmStrLen - prefixStrLen));
 													propertyList.insert(wbem::DIMMID_KEY, dimmIdStr);
 												}
@@ -1515,9 +1515,9 @@ cli::framework::ErrorResult *cli::nvmcli::FieldSupportFeature::showEvents_inputT
 
 	/*
 	 * Dimm ID - specifying only 1 DIMM is supported, but want to take advantage of the
-	 * getDimms function to convert handles to GUIDs and DIMM validation. So checking the dimm target manually to see if
-	 * user supplied a DIMM GUID, then will call getDimms to convert to GUID (if needed) and check
-	 * DIMM is valid (exists and is manageable). As long as only one GUID was found all is good.
+	 * getDimms function to convert handles to UIDs and DIMM validation. So checking the dimm target manually to see if
+	 * user supplied a DIMM UID, then will call getDimms to convert to UID (if needed) and check
+	 * DIMM is valid (exists and is manageable). As long as only one UID was found all is good.
 	 */
 	if (pResult == NULL)
 	{
@@ -1537,7 +1537,7 @@ cli::framework::ErrorResult *cli::nvmcli::FieldSupportFeature::showEvents_inputT
 				}
 				else
 				{
-					filter.setGuid(dimmsFound[0]);
+					filter.setUid(dimmsFound[0]);
 				}
 			}
 		}
@@ -1566,7 +1566,7 @@ cli::framework::ErrorResult *cli::nvmcli::FieldSupportFeature::showEvents_inputT
 				}
 				else
 				{
-					filter.setGuid(nsList[0]);
+					filter.setUid(nsList[0]);
 				}
 			}
 		}
@@ -1783,9 +1783,8 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::changePreferences(
 			bool validValue = true;
 			if (framework::stringsIEqual(propIter->first, SQL_KEY_CLI_DIMM_ID))
 			{
-				// Handle|GUID
 				if (!framework::stringsIEqual(propIter->second, PREFERENCE_DIMMID_HANDLE) &&
-					!framework::stringsIEqual(propIter->second, PREFERENCE_DIMMID_GUID))
+					!framework::stringsIEqual(propIter->second, PREFERENCE_DIMMID_UID))
 				{
 					validValue = false;
 				}
@@ -1910,7 +1909,7 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::getDeviceFirmwareI
 {
 	cli::framework::ResultBase *pResult = NULL;
 
-	std::vector<std::string> guids;
+	std::vector<std::string> uids;
 
 	std::map<device_fw_type, std::string> fwTypeMap;
 	fwTypeMap[DEVICE_FW_TYPE_UNKNOWN] = TR("Unknown");
@@ -1920,16 +1919,16 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::getDeviceFirmwareI
 
 	wbem::framework::Instance instance;
 
-	pResult = cli::nvmcli::getDimms(parsedCommand, guids);
+	pResult = cli::nvmcli::getDimms(parsedCommand, uids);
 	if (pResult == NULL)
 	{
-		for (size_t i = 0; i < guids.size(); i++)
+		for (size_t i = 0; i < uids.size(); i++)
 		{
 			core::device::DeviceFirmwareService &service = core::device::DeviceFirmwareService::getService();
 
-			core::Result<core::device::DeviceFirmwareInfo> fwInfoResult = service.getFirmwareInfo(guids[i]);
+			core::Result<core::device::DeviceFirmwareInfo> fwInfoResult = service.getFirmwareInfo(uids[i]);
 
-			wbem::framework::Attribute dimmId = wbem::physical_asset::NVDIMMFactory::guidToDimmIdAttribute(guids[i]);
+			wbem::framework::Attribute dimmId = wbem::physical_asset::NVDIMMFactory::uidToDimmIdAttribute(uids[i]);
 			instance.setAttribute(wbem::DIMMID_KEY, dimmId);
 
 			wbem::framework::Attribute fwRevAttr(fwInfoResult.getValue().getActiveRevision(), false);

@@ -48,7 +48,7 @@
 wbem::erasure::ErasureServiceFactory::ErasureServiceFactory()
 	throw (wbem::framework::Exception) :
 	m_eraseDevice(nvm_erase_device),
-	m_GetManageableDeviceGuids(physical_asset::NVDIMMFactory::getManageableDeviceGuids)
+	m_GetManageabledeviceUids(physical_asset::NVDIMMFactory::getManageableDeviceUids)
 { }
 
 wbem::erasure::ErasureServiceFactory::~ErasureServiceFactory()
@@ -188,14 +188,14 @@ wbem::framework::UINT32 wbem::erasure::ErasureServiceFactory::executeMethod(
 			{
 				if (elementObject.getClass() == physical_asset::NVDIMM_CREATIONCLASSNAME)
 				{
-					std::string deviceGuidStr = elementObject.getKeyValue(TAG_KEY).stringValue();
-					if (deviceGuidStr.length() != NVM_GUIDSTR_LEN - 1)
+					std::string deviceUidStr = elementObject.getKeyValue(TAG_KEY).stringValue();
+					if (deviceUidStr.length() != NVM_MAX_UID_LEN - 1)
 					{
 						throw framework::ExceptionBadParameter("Tag");
 					}
-					NVM_GUID deviceGuid;
-					uid_copy(deviceGuidStr.c_str(), deviceGuid);
-					eraseDevice(deviceGuidStr, password);
+					NVM_UID deviceUid;
+					uid_copy(deviceUidStr.c_str(), deviceUid);
+					eraseDevice(deviceUidStr, password);
 				}
 				else if (elementObject.getClass() == software::NVDIMMCOLLECTION_CREATIONCLASSNAME)
 				{
@@ -270,20 +270,20 @@ wbem::erasure::eraseType wbem::erasure::ErasureServiceFactory::getEraseType(std:
 	return result;
 }
 
-void wbem::erasure::ErasureServiceFactory::eraseDevice(std::string deviceGuid,
+void wbem::erasure::ErasureServiceFactory::eraseDevice(std::string deviceUid,
 		std::string password)
 throw (wbem::framework::Exception)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	if (deviceGuid.empty() || deviceGuid.length() != NVM_GUIDSTR_LEN - 1)
+	if (deviceUid.empty() || deviceUid.length() != NVM_MAX_UID_LEN - 1)
 	{
-		throw framework::ExceptionBadParameter("deviceGuid");
+		throw framework::ExceptionBadParameter("deviceUid");
 	}
 
-	NVM_GUID guid;
-	uid_copy(deviceGuid.c_str(), guid);
+	NVM_UID uid;
+	uid_copy(deviceUid.c_str(), uid);
 
-	int rc = m_eraseDevice(guid, password.c_str(), password.length());
+	int rc = m_eraseDevice(uid, password.c_str(), password.length());
 	if (rc != NVM_SUCCESS)
 	{
 		throw exception::NvmExceptionLibError(rc);
@@ -293,7 +293,7 @@ throw (wbem::framework::Exception)
 void wbem::erasure::ErasureServiceFactory::eraseDevice(std::string password)
 throw (framework::Exception)
 {
-	std::vector<std::string> devices = m_GetManageableDeviceGuids();
+	std::vector<std::string> devices = m_GetManageabledeviceUids();
 	for (size_t i = 0; i < devices.size(); i++)
 	{
 		eraseDevice(devices[i], password);

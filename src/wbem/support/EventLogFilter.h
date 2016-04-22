@@ -149,21 +149,21 @@ class NVM_API EventLogFilter
 		framework::UINT16 getCode() throw (framework::Exception);
 
 		/*!
-		 * Set the GUID filter.
+		 * Set the UID filter.
 		 */
-		void setGuid(const std::string &guid);
+		void setUid(const std::string &uid);
 
 		/*!
-		 * Is the GUID filter set?
-		 * @return true if GUID is set, false otherwise
+		 * Is the UID filter set?
+		 * @return true if UID is set, false otherwise
 		 */
-		bool hasGuid() { return m_guidValueSet; }
+		bool hasUid() { return m_uidValueSet; }
 
 		/*!
-		 * Fetch the GUID filter value.
+		 * Fetch the UID filter value.
 		 * @throw Exception if not set
 		 */
-		std::string getGuid() throw (framework::Exception);
+		std::string getUid() throw (framework::Exception);
 
 		/*!
 		 * Set the action required filter.
@@ -230,8 +230,8 @@ class NVM_API EventLogFilter
 		bool m_codeValueSet; //!< is the event code filter value set
 		framework::UINT16 m_codeValue; //!< event code
 
-		bool m_guidValueSet; //!< is the GUID filter value set
-		std::string m_guidValue; //!< GUID as string
+		bool m_uidValueSet; //!< is the UID filter value set
+		std::string m_uidValue; //!< UID as string
 
 		bool m_actionReqValueSet; //!< is the action required filter value set
 		bool m_actionReqValue; //!< action required on event

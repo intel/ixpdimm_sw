@@ -118,15 +118,15 @@ void check_if_pool_interleave_sets_need_namespace(NVM_UINT32 *p_results,
 {
 	if (pool_interleave_sets_need_namespace(p_namespaces, namespace_count, p_pool))
 	{
-		NVM_GUID_STR pool_guid_str;
-		uid_copy(p_pool->pool_guid, pool_guid_str);
+		NVM_UID pool_uid_str;
+		uid_copy(p_pool->pool_uid, pool_uid_str);
 
 		store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG,
 				EVENT_SEVERITY_INFO,
 				EVENT_CODE_DIAG_PCONFIG_POOL_NEEDS_APP_DIRECT_NAMESPACES,
-				p_pool->pool_guid,
+				p_pool->pool_uid,
 				0,
-				pool_guid_str, NULL, NULL,
+				pool_uid_str, NULL, NULL,
 				DIAGNOSTIC_RESULT_WARNING);
 
 		(*p_results)++;
@@ -140,15 +140,15 @@ void check_if_pool_storage_regions_need_namespace(NVM_UINT32 *p_results,
 {
 	if (pool_storage_regions_need_namespace(p_namespaces, namespace_count, p_pool))
 	{
-		NVM_GUID_STR pool_guid_str;
-		uid_copy(p_pool->pool_guid, pool_guid_str);
+		NVM_UID pool_uid_str;
+		uid_copy(p_pool->pool_uid, pool_uid_str);
 
 		store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG,
 				EVENT_SEVERITY_INFO,
 				EVENT_CODE_DIAG_PCONFIG_POOL_NEEDS_STORAGE_NAMESPACES,
-				p_pool->pool_guid,
+				p_pool->pool_uid,
 				0,
-				pool_guid_str, NULL, NULL,
+				pool_uid_str, NULL, NULL,
 				DIAGNOSTIC_RESULT_WARNING);
 
 		(*p_results)++;
@@ -180,23 +180,23 @@ void check_if_pools_need_namespaces(NVM_UINT32 *p_results,
 	COMMON_LOG_EXIT();
 }
 
-const struct nvm_pool *get_namespace_pool(const NVM_GUID namespace_guid,
+const struct nvm_pool *get_namespace_pool(const NVM_UID namespace_uid,
 		const struct nvm_pool *p_pools, const NVM_UINT32 pool_count)
 {
 	const struct nvm_pool *p_pool = NULL;
 
 	struct nvm_namespace_details details;
 	memset(&details, 0, sizeof (details));
-	int rc = get_namespace_details(namespace_guid, &details);
+	int rc = get_namespace_details(namespace_uid, &details);
 	if (rc == NVM_SUCCESS)
 	{
-		NVM_GUID pool_guid;
-		rc = get_pool_guid_from_namespace_details(&details, &pool_guid);
+		NVM_UID pool_uid;
+		rc = get_pool_uid_from_namespace_details(&details, &pool_uid);
 		if (rc == NVM_SUCCESS)
 		{
 			for (NVM_UINT32 i = 0; i < pool_count; i++)
 			{
-				if (uid_cmp(pool_guid, p_pools[i].pool_guid) == 1)
+				if (uid_cmp(pool_uid, p_pools[i].pool_uid) == 1)
 				{
 					p_pool = &(p_pools[i]);
 					break;
@@ -206,10 +206,10 @@ const struct nvm_pool *get_namespace_pool(const NVM_GUID namespace_guid,
 	}
 	else
 	{
-		NVM_GUID_STR namespace_guid_str;
-		uid_copy(namespace_guid, namespace_guid_str);
+		NVM_UID namespace_uid_str;
+		uid_copy(namespace_uid, namespace_uid_str);
 		COMMON_LOG_ERROR_F("couldn't get namespace details for '%s', rc = %d",
-				namespace_guid_str, rc);
+				namespace_uid_str, rc);
 	}
 
 	return p_pool;
@@ -250,11 +250,11 @@ void check_for_namespaces_smaller_than_containing_interleave_set(NVM_UINT32 *p_r
 	{
 		if (p_namespaces[i].type == NAMESPACE_TYPE_APP_DIRECT)
 		{
-			NVM_GUID_STR namespace_guid_str;
-			uid_copy(p_namespaces[i].discovery.namespace_guid, namespace_guid_str);
+			NVM_UID namespace_uid_str;
+			uid_copy(p_namespaces[i].discovery.namespace_uid, namespace_uid_str);
 
 			const struct nvm_pool *p_pool = get_namespace_pool(
-					p_namespaces[i].discovery.namespace_guid,
+					p_namespaces[i].discovery.namespace_uid,
 					p_pools, pool_count);
 			if (p_pool)
 			{
@@ -270,9 +270,9 @@ void check_for_namespaces_smaller_than_containing_interleave_set(NVM_UINT32 *p_r
 					store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG,
 							EVENT_SEVERITY_INFO,
 							EVENT_CODE_DIAG_PCONFIG_APP_DIRECT_NAMESPACE_TOO_SMALL,
-							p_namespaces[i].discovery.namespace_guid,
+							p_namespaces[i].discovery.namespace_uid,
 							0,
-							namespace_guid_str, difference_mb_str, NULL,
+							namespace_uid_str, difference_mb_str, NULL,
 							DIAGNOSTIC_RESULT_WARNING);
 
 					(*p_results)++;
@@ -280,7 +280,7 @@ void check_for_namespaces_smaller_than_containing_interleave_set(NVM_UINT32 *p_r
 			}
 			else
 			{
-				COMMON_LOG_ERROR_F("No pool found for namespace %s", namespace_guid_str);
+				COMMON_LOG_ERROR_F("No pool found for namespace %s", namespace_uid_str);
 			}
 		}
 	}
@@ -299,13 +299,13 @@ int get_all_driver_namespace_details(struct nvm_namespace_details *p_namespaces,
 	{
 		for (int i = 0; i < namespace_count; i++)
 		{
-			rc = get_namespace_details(namespace_discovery[i].namespace_guid, &(p_namespaces[i]));
+			rc = get_namespace_details(namespace_discovery[i].namespace_uid, &(p_namespaces[i]));
 			if (rc < 0)
 			{
-				NVM_GUID_STR guid_str;
-				uid_copy(namespace_discovery[i].namespace_guid, guid_str);
+				NVM_UID uid_str;
+				uid_copy(namespace_discovery[i].namespace_uid, uid_str);
 				COMMON_LOG_ERROR_F("error fetching namespace details for namespace %s, rc = %d",
-						guid_str, rc);
+						uid_str, rc);
 
 				break;
 			}
@@ -425,7 +425,7 @@ void create_event_for_interleave_size(const enum event_code_diag_platform_config
 	store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG,
 			EVENT_SEVERITY_INFO,
 			event_code,
-			NULL, // no GUID
+			NULL, // no uid
 			0, // no action required
 			interleave_set_index_str, // arg1
 			get_string_for_interleave_size(size), // arg2
@@ -730,7 +730,7 @@ void check_interleave_ways(NVM_UINT32 *p_results,
 		store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG,
 				EVENT_SEVERITY_INFO,
 				EVENT_CODE_DIAG_PCONFIG_RECOMMENDED_INTERLEAVE_WAYS,
-				NULL, // no GUID
+				NULL, // no uid
 				0, // no action required
 				interleave_set_index_str, // arg1
 				interleave_ways_str, // arg2

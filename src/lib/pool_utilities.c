@@ -36,6 +36,7 @@
 #include "system.h"
 #include <string.h>
 #include <string/s_str.h>
+#include <uid/uid.h>
 #include <guid/guid.h>
 #include "device_utilities.h"
 #include "platform_config_data.h"
@@ -868,10 +869,10 @@ int init_pool(struct nvm_pool *p_pool, const char *uuid_src, const enum pool_typ
 	memset(p_pool, 0, sizeof (struct nvm_pool));
 
 	if (!guid_hash_str((unsigned char *) uuid_src, strlen((const char *) uuid_src),
-		p_pool->pool_guid))
+		p_pool->pool_uid))
 	{
 		// should never get here
-		COMMON_LOG_ERROR("Pool guid hash creation FAILED");
+		COMMON_LOG_ERROR("Pool uid hash creation FAILED");
 		rc = NVM_ERR_UNKNOWN;
 	}
 
@@ -1014,11 +1015,11 @@ int calculate_app_direct_interleave_security(
 }
 
 /*
- * Helper function to get pool guid corresponding to a namespace,
+ * Helper function to get pool uid corresponding to a namespace,
  * given the device handle or interleave set index, based on the namespace type.
  */
-int get_pool_guid_from_namespace_details(
-		const struct nvm_namespace_details *p_details, NVM_GUID *p_pool_guid)
+int get_pool_uid_from_namespace_details(
+		const struct nvm_namespace_details *p_details, NVM_UID *p_pool_uid)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_ERR_DRIVERFAILED;
@@ -1054,7 +1055,7 @@ int get_pool_guid_from_namespace_details(
 										pools[i].dimms[j].handle) &&
 										(pools[i].type == POOL_TYPE_PERSISTENT))
 								{
-									memmove(p_pool_guid, pools[i].pool_guid, NVM_GUID_LEN);
+									memmove(p_pool_uid, pools[i].pool_uid, NVM_MAX_UID_LEN);
 									tmprc = NVM_SUCCESS;
 									break;
 								}
@@ -1062,10 +1063,10 @@ int get_pool_guid_from_namespace_details(
 						}
 						if (tmprc == NVM_ERR_NOTFOUND)
 						{
-							NVM_GUID_STR ns_guid_str;
-							uid_copy(p_details->discovery.namespace_guid, ns_guid_str);
+							NVM_UID ns_uid_str;
+							uid_copy(p_details->discovery.namespace_uid, ns_uid_str);
 							COMMON_LOG_ERROR_F("Failed to find the pool associated with the \
-									namespace %s.", ns_guid_str);
+									namespace %s.", ns_uid_str);
 							rc = NVM_ERR_DRIVERFAILED;
 						}
 						else
@@ -1084,7 +1085,7 @@ int get_pool_guid_from_namespace_details(
 							if (p_details->namespace_creation_id.interleave_setid
 									== pools[i].ilsets[j].driver_id)
 							{
-								memmove(p_pool_guid, pools[i].pool_guid, NVM_GUID_LEN);
+								memmove(p_pool_uid, pools[i].pool_uid, NVM_MAX_UID_LEN);
 								tmprc = NVM_SUCCESS;
 								break;
 							}
@@ -1092,10 +1093,10 @@ int get_pool_guid_from_namespace_details(
 					}
 					if (tmprc == NVM_ERR_NOTFOUND)
 					{
-						NVM_GUID_STR ns_guid_str;
-						uid_copy(p_details->discovery.namespace_guid, ns_guid_str);
+						NVM_UID ns_uid_str;
+						uid_copy(p_details->discovery.namespace_uid, ns_uid_str);
 						COMMON_LOG_ERROR_F("Failed to find the pool associated with the namespace \
-								 %s.", ns_guid_str);
+								 %s.", ns_uid_str);
 						rc = NVM_ERR_DRIVERFAILED;
 					}
 					else

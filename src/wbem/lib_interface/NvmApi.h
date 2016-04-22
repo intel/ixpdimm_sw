@@ -113,7 +113,7 @@ class NVM_API NvmApi
 		/*
 		 * Retrieve the information about a given device
 		 */
-		virtual int getDeviceDiscovery(NVM_GUID guid, struct device_discovery *pDevice);
+		virtual int getDeviceDiscovery(NVM_UID uid, struct device_discovery *pDevice);
 
 		/*
 		 * Retrieve discovery information about each NVM-DIMM
@@ -123,71 +123,71 @@ class NVM_API NvmApi
 		/*
 		 * Retrieve the current status of the specifies NVM-DIMM
 		 */
-		virtual int getDeviceStatus(const NVM_GUID deviceGuid, struct device_status *pStatus);
+		virtual int getDeviceStatus(const NVM_UID deviceUid, struct device_status *pStatus);
 
 		/*
 		 * Retrieve the optional configuration data from the specified NVM-DIMM
 		 */
-		virtual int getDeviceSettings(const NVM_GUID deviceGuid, struct device_settings *pSettings);
+		virtual int getDeviceSettings(const NVM_UID deviceUid, struct device_settings *pSettings);
 
 		/*
 		 * Modify the optional configuration data on the specified NVM-DIMM
 		 */
-		virtual int modifyDeviceSettings(const NVM_GUID deviceGuid,
+		virtual int modifyDeviceSettings(const NVM_UID deviceUid,
 				const struct device_settings *pSettings);
 
 		/*
 		 * Retrieve detailed information about the specified NVM-DIMM
 		 */
-		virtual int getDeviceDetails(const NVM_GUID deviceGuid, struct device_details *pDetails);
+		virtual int getDeviceDetails(const NVM_UID deviceUid, struct device_details *pDetails);
 
 		/*
 		 * Retrieve a snapshot of the performance metrics for the specified NVM-DIMM
 		 */
-		virtual int getDevicePerformance(const NVM_GUID deviceGuid,
+		virtual int getDevicePerformance(const NVM_UID deviceUid,
 				struct device_performance *pPerformance);
 
 		/*
 		 * Retrieve firmware image information for the specified NVM-DIMM
 		 */
-		virtual int getDeviceFwImageInfo(const NVM_GUID deviceGuid,
+		virtual int getDeviceFwImageInfo(const NVM_UID deviceUid,
 				struct device_fw_info *pFwInfo);
 
 		/*
 		 * Update the firmware on the specified NVM-DIMM
 		 */
-		virtual int updateDeviceFw(const NVM_GUID deviceGuid, const NVM_PATH path,
+		virtual int updateDeviceFw(const NVM_UID deviceUid, const NVM_PATH path,
 				const NVM_SIZE path_len, const NVM_BOOL activate, const NVM_BOOL force);
 
 		/*
 		 * Examine a firmware image against a specified NVM-DIMM to determine if it is valid
 		 */
-		virtual int examineDeviceFw(const NVM_GUID deviceGuid, const NVM_PATH path,
+		virtual int examineDeviceFw(const NVM_UID deviceUid, const NVM_PATH path,
 				const NVM_SIZE pathLen, NVM_VERSION imageVersion, const NVM_SIZE imageVersionSize);
 
 		/*
 		 * Set or change the passphrase and enable security on the specified NVM-DIMM
 		 */
-		virtual int setPassphrase(const NVM_GUID deviceGuid, const NVM_PASSPHRASE oldPassphrase,
+		virtual int setPassphrase(const NVM_UID deviceUid, const NVM_PASSPHRASE oldPassphrase,
 				const NVM_SIZE oldPassphraseLen, const NVM_PASSPHRASE newPassphrase,
 				const NVM_SIZE newPassphraseLen);
 
 		/*
 		 * Disable security on the specified NVM-DIMM
 		 */
-		virtual int removePassphrase(const NVM_GUID deviceGuid, const NVM_PASSPHRASE passphrase,
+		virtual int removePassphrase(const NVM_UID deviceUid, const NVM_PASSPHRASE passphrase,
 				const NVM_SIZE passphraseLen);
 
 		/*
 		 * Unlock the specified NVM-DIMM
 		 */
-		virtual int unlockDevice(const NVM_GUID deviceGuid, const NVM_PASSPHRASE passphrase,
+		virtual int unlockDevice(const NVM_UID deviceUid, const NVM_PASSPHRASE passphrase,
 				const NVM_SIZE passphraseLen);
 
 		/*
 		 * Erase persistent data on the specified NVM-DIMM
 		 */
-		virtual int eraseDevice(const NVM_GUID deviceGuid, const NVM_PASSPHRASE passphrase,
+		virtual int eraseDevice(const NVM_UID deviceUid, const NVM_PASSPHRASE passphrase,
 				const NVM_SIZE passphraseLen);
 
 		/*
@@ -213,40 +213,40 @@ class NVM_API NvmApi
 		/*
 		 * Retrieve information about a specified pool
 		 */
-		virtual int getPool(NVM_GUID poolGuid, struct pool *pPool);
+		virtual int getPool(NVM_UID poolUid, struct pool *pPool);
 
 		/*
 		 * Retrieve the largest and smallest persistent and storage namespaces that can
 		 * be create on a given pool
 		 */
-		virtual int getAvailablePersistentSizeRange(const NVM_GUID poolGuid,
+		virtual int getAvailablePersistentSizeRange(const NVM_UID poolUid,
 				struct possible_namespace_ranges *pRange);
 
 		/*
 		 * Modify how the NVM-DIMM capacity will be provisioned
 		 */
-		virtual int createConfigGoal(const NVM_GUID deviceGuid, struct config_goal *pGoal);
+		virtual int createConfigGoal(const NVM_UID deviceUid, struct config_goal *pGoal);
 
 		/*
 		 * Retrieve the configuration goal from the specified NVM-DIMM
 		 */
-		virtual int getConfigGoal(const NVM_GUID deviceGuid, struct config_goal *pGoal);
+		virtual int getConfigGoal(const NVM_UID deviceUid, struct config_goal *pGoal);
 
 		/*
 		 * Erase the config goal from the specified NVM-DIMM
 		 */
-		virtual int deleteConfigGoal(const NVM_GUID deviceGuid);
+		virtual int deleteConfigGoal(const NVM_UID deviceUid);
 
 		/*
 		 * Store the configuration goal of the specified NVM-DIMM to a given file
 		 */
-		virtual int dumpConfig(const NVM_GUID deviceGuid, const NVM_PATH file,
+		virtual int dumpConfig(const NVM_UID deviceUid, const NVM_PATH file,
 				const NVM_SIZE fileLen, const NVM_BOOL append);
 
 		/*
 		 * Load the configuration goal for a specified NVM-DIMM from a file
 		 */
-		virtual int loadConfig(const NVM_GUID deviceGuid, const NVM_PATH file, const NVM_SIZE fileLen);
+		virtual int loadConfig(const NVM_UID deviceUid, const NVM_PATH file, const NVM_SIZE fileLen);
 
 		/*
 		 * Retrieve the number of namespaces
@@ -256,7 +256,7 @@ class NVM_API NvmApi
 		/*
 		 * Retrieve the number of namespaces allocated from the capacity of the specified device
 		 */
-		virtual int getDeviceNamespaceCount(const NVM_GUID deviceGuid,
+		virtual int getDeviceNamespaceCount(const NVM_UID deviceUid,
 				const enum namespace_type type);
 
 		/*
@@ -267,62 +267,62 @@ class NVM_API NvmApi
 		/*
 		 * Retrieve detailed information about the specified namespace
 		 */
-		virtual int getNamespaceDetails(const NVM_GUID namespaceGuid, struct namespace_details *pNamespace);
+		virtual int getNamespaceDetails(const NVM_UID namespaceUid, struct namespace_details *pNamespace);
 
 		/*
 		 * Create a namespace on the specified persistent memory pool
 		 */
-		virtual int createNamespace(NVM_GUID *pNamespaceGuid, const NVM_GUID poolGuid,
+		virtual int createNamespace(NVM_UID *pNamespaceUid, const NVM_UID poolUid,
 				struct namespace_create_settings *pSettings, const struct interleave_format *pFormat,
 				const NVM_BOOL allowAdjustment);
 
 		/*
 		 * Change the friendly name of a specified namespace
 		 */
-		virtual int modifyNamespaceName(const NVM_GUID namespaceGuid, const NVM_NAMESPACE_NAME name);
+		virtual int modifyNamespaceName(const NVM_UID namespaceUid, const NVM_NAMESPACE_NAME name);
 
 		/*
 		 * Change the block count of the specified namespace
 		 */
-		virtual int modifyNamespaceBlockCount(const NVM_GUID namespaceGuid, const NVM_UINT64 blockCount,
+		virtual int modifyNamespaceBlockCount(const NVM_UID namespaceUid, const NVM_UINT64 blockCount,
 				NVM_BOOL allowAdjustment);
 
 		/*
 		 * Enable or disable the specified namespace
 		 */
-		virtual int modifyNamespaceEnabled(const NVM_GUID namespaceGuid,
+		virtual int modifyNamespaceEnabled(const NVM_UID namespaceUid,
 				const enum namespace_enable_state enabled);
 
 		/*
 		 * Delete the specified namespace
 		 */
-		virtual int deleteNamespace(const NVM_GUID namespaceGuid);
+		virtual int deleteNamespace(const NVM_UID namespaceUid);
 
 		/*
 		 * adjuste the block count to meet namespace creation alignment requirements
 		 */
-		virtual int adjustCreateNamespaceBlockCount(const NVM_GUID poolGuid,
+		virtual int adjustCreateNamespaceBlockCount(const NVM_UID poolUid,
 							struct namespace_create_settings *pSettings, const struct interleave_format *pFormat);
 
 		/*
 		 * adjuste the block count to meet namespace modification alignment requirements
 		 */
-		virtual int adjustModifyNamespaceBlockCount(const NVM_GUID namespaceGuid, NVM_UINT64 *pBlockCount);
+		virtual int adjustModifyNamespaceBlockCount(const NVM_UID namespaceUid, NVM_UINT64 *pBlockCount);
 
 		/*
 		 * Retrieve all the health sensors from the specified NVM-DIMM
 		 */
-		virtual int getSensors(const NVM_GUID deviceGuid, struct sensor *pSensors, const NVM_UINT16 count);
+		virtual int getSensors(const NVM_UID deviceUid, struct sensor *pSensors, const NVM_UINT16 count);
 
 		/*
 		 * Retrieve a specific health sensor from the specified NVM-DIMM
 		 */
-		virtual int getSensor(const NVM_GUID deviceGuid, const enum sensor_type type, struct sensor *pSensor);
+		virtual int getSensor(const NVM_UID deviceUid, const enum sensor_type type, struct sensor *pSensor);
 
 		/*
 		 * Change the critical threshold on the specified sensor
 		 */
-		virtual int setSensorSettings(const NVM_GUID deviceGuid, const enum sensor_type type,
+		virtual int setSensorSettings(const NVM_UID deviceUid, const enum sensor_type type,
 							const struct sensor_settings *pSettings);
 
 		/*
@@ -373,28 +373,28 @@ class NVM_API NvmApi
 		/*
 		 * Run a diagnostic test on a specified NVM-DIMM
 		 */
-		virtual int runDiagnostic(const NVM_GUID deviceGuid, const struct diagnostic *pDiagnostic,
+		virtual int runDiagnostic(const NVM_UID deviceUid, const struct diagnostic *pDiagnostic,
 				NVM_UINT32 *pResults);
 
 		/*
 		 * Retrieve the current level of debug logging
 		 */
-		virtual int getFwLogLevel(const NVM_GUID deviceGuid, enum fw_log_level *pLogLevel);
+		virtual int getFwLogLevel(const NVM_UID deviceUid, enum fw_log_level *pLogLevel);
 
 		/*
 		 * Modify the current level of debug logging
 		 */
-		virtual int setFwLogLevel(const NVM_GUID deviceGuid, const enum fw_log_level logLevel);
+		virtual int setFwLogLevel(const NVM_UID deviceUid, const enum fw_log_level logLevel);
 
 		/*
 		 * Inject an error into the specified NVM-DIMM
 		 */
-		virtual int injectDeviceError(const NVM_GUID deviceGuid, const struct device_error *pError);
+		virtual int injectDeviceError(const NVM_UID deviceUid, const struct device_error *pError);
 
 		/*
 		 * Clear the injected error
 		 */
-		virtual int clearInjectedDeviceError(const NVM_GUID deviceGuid, const struct device_error *pError);
+		virtual int clearInjectedDeviceError(const NVM_UID deviceUid, const struct device_error *pError);
 
 		/*
 		 * Load the simulator file
@@ -432,20 +432,20 @@ class NVM_API NvmApi
 		virtual int purgeDebugLog();
 
 		/*
-		 * Translates a standard string to an NVM_GUID, with error checking.
+		 * Translates a standard string to an NVM_UID, with error checking.
 		 */
-		static void stringToNvmGuid(const std::string &guidStr, NVM_GUID guid);
+		static void stringToNvmUid(const std::string &uidStr, NVM_UID uid);
 
 		/*
 		 * Retrieve the device discovery data for a specific DIMM.
 		 */
-		virtual void getDeviceDiscoveryForDimm(const std::string &dimmGuid,
+		virtual void getDeviceDiscoveryForDimm(const std::string &dimmUid,
 				struct device_discovery &device) const;
 
 		/*
 		 * Retrieve the configuration goal for a specific DIMM.
 		 */
-		virtual void getConfigGoalForDimm(const std::string &dimmGuid,
+		virtual void getConfigGoalForDimm(const std::string &dimmUid,
 				struct config_goal &goal) const;
 
 		/*

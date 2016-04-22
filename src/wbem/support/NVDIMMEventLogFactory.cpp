@@ -298,10 +298,10 @@ void wbem::support::NVDIMMEventLogFactory::convertFactoryToEventFilter(
 		pFilter->code = pEventLogFilter->getCode();
 		pFilter->filter_mask |= NVM_FILTER_ON_CODE;
 	}
-	if (pEventLogFilter->hasGuid())
+	if (pEventLogFilter->hasUid())
 	{
-		uid_copy(pEventLogFilter->getGuid().c_str(), pFilter->guid);
-		pFilter->filter_mask |= NVM_FILTER_ON_GUID;
+		uid_copy(pEventLogFilter->getUid().c_str(), pFilter->uid);
+		pFilter->filter_mask |= NVM_FILTER_ON_UID;
 	}
 	if (pEventLogFilter->hasActionRequired())
 	{

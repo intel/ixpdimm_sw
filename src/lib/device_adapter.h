@@ -233,7 +233,7 @@ struct nvm_interleave_set
  */
 struct nvm_pool
 {
-	NVM_GUID pool_guid; // Unique identifier of the pool.
+	NVM_UID pool_uid; // Unique identifier of the pool.
 	enum pool_type type; // The type of pool.
 	NVM_UINT64 capacity; // Size of the pool in bytes.
 	NVM_UINT64 free_capacity; // Available size of the pool in bytes.
@@ -268,7 +268,7 @@ struct nvm_storage_capacities
  */
 struct nvm_namespace_discovery
 {
-	NVM_GUID namespace_guid; // Unique identifier of the namespace
+	NVM_UID namespace_uid; // Unique identifier of the namespace
 	char friendly_name[NVM_NAMESPACE_NAME_LEN]; // Human assigned name of the namespace
 };
 /*
@@ -326,7 +326,7 @@ struct nvm_namespace_modify_settings
 struct namespace_health_event
 {
 	enum ns_health_result health_flag;
-	NVM_GUID namespace_guid;
+	NVM_UID namespace_uid;
 };
 
 /*
@@ -486,70 +486,70 @@ int get_namespaces(const NVM_UINT32 count,
 
 /*
  * Get the details for a specific namespace
- * @param[in] namespace_guid
+ * @param[in] namespace_uid
  * 		The namespace identifier to retrieve.
  * @param[out] p_details
  * 		The detailed namespace information returned
  * @return
  */
 int get_namespace_details(
-		const NVM_GUID namespace_guid,
+		const NVM_UID namespace_uid,
 		struct nvm_namespace_details *p_details);
 
 /*
  * Create a new namespace
- * @param[in,out] p_namespace_guid
- * 		guid of the created namespace
+ * @param[in,out] p_namespace_uid
+ * 		uid of the created namespace
  * @param[in] p_settings
  * 		The namespace setting
  * @return
  */
 int create_namespace(
-		NVM_GUID *p_namespace_guid,
+		NVM_UID *p_namespace_uid,
 		const struct nvm_namespace_create_settings *p_settings);
 
 /*
  * Delete an existing namespace
- * @param[in] namespace_guid
+ * @param[in] namespace_uid
  * 		The namespace to delete
  * @return
  */
-int delete_namespace(const NVM_GUID namespace_guid);
+int delete_namespace(const NVM_UID namespace_uid);
 
 /*
  * Modify an existing namespace name property
- * @param[in] namespace_guid
+ * @param[in] namespace_uid
  * 		The namespace to modify
  * @param[in] name
  * 		The new name of the namespace
  * @return
  */
 int modify_namespace_name(
-		const NVM_GUID namespace_guid,
+		const NVM_UID namespace_uid,
 		const NVM_NAMESPACE_NAME name);
 
 /*
  * Modify an existing namespace block count property
- * @param[in] namespace_guid
+ * @param[in] namespace_uid
  * 		The namespace to modify
  * @param[in] block_count
  * 		The new block count of the namespace
  * @return
  */
 int modify_namespace_block_count(
-		const NVM_GUID namespace_guid,
+		const NVM_UID namespace_uid,
 		const NVM_UINT64 block_count);
 
 /*
  * Modify an existing namespace enabled  property
- * @param[in] namespace_guid
+ * @param[in] namespace_uid
  * 		The namespace to modify
  * @param[in] enabled
  * 		The new enabled state of the namespace
  * @return
  */
 int modify_namespace_enabled(
-		const NVM_GUID namespace_guid,
+		const NVM_UID namespace_uid,
 		const enum namespace_enable_state enabled);
 
 /*

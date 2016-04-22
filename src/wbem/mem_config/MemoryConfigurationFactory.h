@@ -91,7 +91,7 @@ class NVM_API MemoryConfigurationFactory  : public framework_interface::NvmInsta
 		/*
 		 * Return true if the given dimm is in at least one pool
 		 */
-		bool dimmIsInAPool(NVM_GUID guid, std::vector<struct pool> pools);
+		bool dimmIsInAPool(NVM_UID uid, std::vector<struct pool> pools);
 
 		/*
 		 * Populate the attribute list with the attributes specific to this class
@@ -100,35 +100,35 @@ class NVM_API MemoryConfigurationFactory  : public framework_interface::NvmInsta
 			throw (framework::Exception);
 
 		/*
-		 * Return the index the given dimm guid in the array of dimms in this pool
+		 * Return the index the given dimm uid in the array of dimms in this pool
 		 * or return NOTFOUND.
 		 */
-		int getDimmIndexInPoolOrReturnNotFound(const NVM_GUID guid, const struct pool *pool);
+		int getDimmIndexInPoolOrReturnNotFound(const NVM_UID uid, const struct pool *pool);
 
 		/*
-		 * Return true if the given dimm guid is in the list of dimms in this interleave set
+		 * Return true if the given dimm uid is in the list of dimms in this interleave set
 		 */
-		bool dimmIsInIlset(const NVM_GUID guid, const struct interleave_set &ilset);
+		bool dimmIsInIlset(const NVM_UID uid, const struct interleave_set &ilset);
 
 		/*
 		 * Get the InterleaveSetInfo for the current configuration
 		 */
 		void getCurrentIlsetInfo
-				(const NVM_GUID guid, const std::vector<struct pool> &pools,
+				(const NVM_UID uid, const std::vector<struct pool> &pools,
 				std::vector<struct InterleaveSetInfo> &ilsetInfos);
 
 		/*
-		 * Return the Memory Mode capacity for the given dimm guid
+		 * Return the Memory Mode capacity for the given dimm uid
 		 */
 		NVM_UINT64 getDimmMemoryCapacityFromCurrentConfig
-				(const NVM_GUID guid, const std::vector<struct pool> &pools)
+				(const NVM_UID uid, const std::vector<struct pool> &pools)
 						throw (framework::Exception);
 
 		/*
-		 * Return the Storage Mode capacity for the given dimm guid for the current config
+		 * Return the Storage Mode capacity for the given dimm uid for the current config
 		 */
 		NVM_UINT64 getDimmStorageCapacityFromCurrentConfig
-				(const NVM_GUID guid, const std::vector<struct pool> &pools)
+				(const NVM_UID uid, const std::vector<struct pool> &pools)
 						throw (framework::Exception);
 
 		/*
@@ -142,7 +142,7 @@ class NVM_API MemoryConfigurationFactory  : public framework_interface::NvmInsta
 		 */
 		void populateGoalInstance(
 			const framework::attribute_names_t &attributes,
-			const std::string &guidStr,
+			const std::string &uidStr,
 			wbem::framework::Instance* pInstance,
 			const struct device_discovery *p_discovery);
 
@@ -160,7 +160,7 @@ class NVM_API MemoryConfigurationFactory  : public framework_interface::NvmInsta
 		 */
 		void populateCurrentConfigInstance(
 			const framework::attribute_names_t &attributes,
-			const std::string &guidStr,
+			const std::string &uidStr,
 			wbem::framework::Instance* pInstance,
 			const struct device_discovery *p_discovery);
 

@@ -91,15 +91,15 @@ wbem::framework::Instance* wbem::pmem_config::PersistentMemoryPoolFactory::getIn
 		{
 			checkAttributes(attributes);
 
-			// InstanceID is the pool GUID we should fetch
+			// InstanceID is the pool UID we should fetch
 			framework::Attribute instanceID = path.getKeyValue(INSTANCEID_KEY);
-			std::string guidStr = instanceID.stringValue();
-			if (guidStr.length() != (NVM_GUIDSTR_LEN - 1))
+			std::string uidStr = instanceID.stringValue();
+			if (uidStr.length() != (NVM_MAX_UID_LEN - 1))
 			{
 				throw framework::ExceptionBadParameter(INSTANCEID_KEY.c_str());
 			}
 
-			struct pool pool = wbem::mem_config::PoolViewFactory::getPool(guidStr);
+			struct pool pool = wbem::mem_config::PoolViewFactory::getPool(uidStr);
 
 			// Element Name = "NVMDIMM Available Capacity Pool"
 			if (containsAttribute(ELEMENTNAME_KEY, attributes))
@@ -186,9 +186,9 @@ wbem::framework::instance_names_t* wbem::pmem_config::PersistentMemoryPoolFactor
 			framework::attributes_t keys;
 
 			// InstanceID = pool UUID
-			NVM_GUID_STR poolGuidStr;
-			uid_copy((*iter).pool_guid, poolGuidStr);
-			framework::Attribute attrInstanceID(poolGuidStr, true);
+			NVM_UID poolUidStr;
+			uid_copy((*iter).pool_uid, poolUidStr);
+			framework::Attribute attrInstanceID(poolUidStr, true);
 			keys[INSTANCEID_KEY] = attrInstanceID;
 
 			// generate the ObjectPath for the instance
@@ -210,14 +210,14 @@ wbem::framework::instance_names_t* wbem::pmem_config::PersistentMemoryPoolFactor
  * Helper function to retrieve the largest and smallest namespace that can be created
  */
 struct possible_namespace_ranges wbem::pmem_config::PersistentMemoryPoolFactory::getSupportedSizeRange(
-		const std::string &poolGuid)
+		const std::string &poolUid)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	struct possible_namespace_ranges range;
-	NVM_GUID guid;
-	uid_copy(poolGuid.c_str(), guid);
-	int rc = m_GetAvailablePersistentSizeRange(guid, &range);
+	NVM_UID uid;
+	uid_copy(poolUid.c_str(), uid);
+	int rc = m_GetAvailablePersistentSizeRange(uid, &range);
 	if (rc < NVM_SUCCESS)
 	{
 		throw exception::NvmExceptionLibError(rc);
@@ -226,7 +226,7 @@ struct possible_namespace_ranges wbem::pmem_config::PersistentMemoryPoolFactory:
 }
 
 void wbem::pmem_config::PersistentMemoryPoolFactory::getSupportedSizeRange(
-		const std::string &poolGuid,
+		const std::string &poolUid,
 		COMMON_UINT64 &largestPossibleAdNs,
 		COMMON_UINT64 &smallestPossibleAdNs,
 		COMMON_UINT64 &adIncrement,
@@ -234,7 +234,7 @@ void wbem::pmem_config::PersistentMemoryPoolFactory::getSupportedSizeRange(
 		COMMON_UINT64 &smallestPossibleStorageNs,
 		COMMON_UINT64 &storageIncrement)
 {
-	struct possible_namespace_ranges range = getSupportedSizeRange(poolGuid);
+	struct possible_namespace_ranges range = getSupportedSizeRange(poolUid);
 	largestPossibleAdNs = range.largest_possible_app_direct_ns;
 	smallestPossibleAdNs = range.smallest_possible_app_direct_ns;
 	adIncrement = range.app_direct_increment;
@@ -267,11 +267,11 @@ wbem::framework::UINT32 wbem::pmem_config::PersistentMemoryPoolFactory::executeM
 				uint64 NamespaceSizeDivisor);
 			 */
 
-			// get pool GUID from object path
-			std::string poolGuidStr;
+			// get pool UID from object path
+			std::string poolUidStr;
 			try
 			{
-				poolGuidStr = object.getKeyValue(wbem::INSTANCEID_KEY).stringValue();
+				poolUidStr = object.getKeyValue(wbem::INSTANCEID_KEY).stringValue();
 			}
 			catch (framework::ExceptionBadParameter &)
 			{
@@ -279,9 +279,9 @@ wbem::framework::UINT32 wbem::pmem_config::PersistentMemoryPoolFactory::executeM
 				httpRc = framework::CIM_ERR_INVALID_PARAMETER;
 				throw;
 			}
-			if (poolGuidStr.empty() || poolGuidStr.length() != NVM_GUIDSTR_LEN - 1)
+			if (poolUidStr.empty() || poolUidStr.length() != NVM_MAX_UID_LEN - 1)
 			{
-				COMMON_LOG_ERROR_F("Invalid pool guid in object path: %s", poolGuidStr.c_str());
+				COMMON_LOG_ERROR_F("Invalid pool uid in object path: %s", poolUidStr.c_str());
 				httpRc = framework::CIM_ERR_INVALID_PARAMETER;
 				throw framework::ExceptionBadParameter(wbem::INSTANCEID_KEY.c_str());
 			}
@@ -311,7 +311,7 @@ wbem::framework::UINT32 wbem::pmem_config::PersistentMemoryPoolFactory::executeM
 			delete pGoalInstance;
 
 			// get supported namespace size range
-			struct possible_namespace_ranges p_range = getSupportedSizeRange(poolGuidStr);
+			struct possible_namespace_ranges p_range = getSupportedSizeRange(poolUidStr);
 			wbemRc = wbem::framework::SUCCESS;
 
 			// send back sizes based on specified namespace type

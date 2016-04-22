@@ -122,9 +122,8 @@ int get_namespaces(const NVM_UINT32 count,
 
 				for (int i = 0; i < return_count; i++)
 				{
-					memmove(p_namespaces[i].namespace_guid,
-						&p_ioctl_data->OutputPayload.NamespaceList[i].NamespaceUuid,
-						NVM_GUID_LEN);
+					win_guid_to_uid(p_ioctl_data->OutputPayload.NamespaceList[i].NamespaceUuid,
+						p_namespaces[i].namespace_uid);
 					s_strcpy(p_namespaces[i].friendly_name,
 						p_ioctl_data->OutputPayload.NamespaceList[i].FriendlyName,
 						NVM_NAMESPACE_NAME_LEN);
@@ -148,15 +147,15 @@ int get_namespaces(const NVM_UINT32 count,
  * Get the details for a specific namespace
  */
 int get_namespace_details(
-		const NVM_GUID namespace_guid,
+		const NVM_UID namespace_uid,
 		struct nvm_namespace_details *p_details)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
 
-	if (namespace_guid == NULL)
+	if (namespace_uid == NULL)
 	{
-		COMMON_LOG_ERROR("namespace guid cannot be NULL.");
+		COMMON_LOG_ERROR("namespace uid cannot be NULL.");
 		rc = NVM_ERR_UNKNOWN;
 	}
 	else if (p_details == NULL)
@@ -171,7 +170,7 @@ int get_namespace_details(
 		GET_NAMESPACE_DETAILS_IOCTL ioctl_data;
 		memset(&ioctl_data, 0, sizeof (ioctl_data));
 
-		memmove(&ioctl_data.InputPayload.NamespaceUuid, namespace_guid, NVM_GUID_LEN);
+		win_uid_to_guid(namespace_uid, ioctl_data.InputPayload.NamespaceUuid);
 
 		if ((rc = execute_ioctl(sizeof (ioctl_data), &ioctl_data, IOCTL_CR_GET_NAMESPACE_DETAILS))
 			== NVM_SUCCESS && (rc = ind_err_to_nvm_lib_err(ioctl_data.ReturnCode)) == NVM_SUCCESS)
@@ -183,7 +182,7 @@ int get_namespace_details(
 				ioctl_data.OutputPayload.FriendlyName,
 				NVM_NAMESPACE_NAME_LEN);
 
-			memmove(p_details->discovery.namespace_guid, namespace_guid, NVM_GUID_LEN);
+			uid_copy(namespace_uid, p_details->discovery.namespace_uid);
 
 			if (ioctl_data.OutputPayload.NamespaceAttributes & NAMESPACE_ATTRIB_BTT)
 			{
@@ -236,7 +235,7 @@ int get_namespace_details(
  * Create a new namespace
  */
 int create_namespace(
-		NVM_GUID *p_namespace_guid,
+		NVM_UID *p_namespace_uid,
 		const struct nvm_namespace_create_settings *p_settings)
 {
 	COMMON_LOG_ENTRY();
@@ -246,9 +245,9 @@ int create_namespace(
 		COMMON_LOG_ERROR("namespace create settings structure cannot be NULL.");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
-	else if (p_namespace_guid == NULL)
+	else if (p_namespace_uid == NULL)
 	{
-		COMMON_LOG_ERROR("namespace GUID pointer cannot be NULL.");
+		COMMON_LOG_ERROR("namespace uid pointer cannot be NULL.");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
 	else
@@ -282,7 +281,7 @@ int create_namespace(
 		if ((rc = execute_ioctl(sizeof (ioctl_data), &ioctl_data, IOCTL_CR_CREATE_NAMESPACE))
 			== NVM_SUCCESS && (rc = ind_err_to_nvm_lib_err(ioctl_data.ReturnCode)) == NVM_SUCCESS)
 		{
-			memmove(p_namespace_guid, &ioctl_data.OutputPayload.NamespaceUuid, NVM_GUID_LEN);
+			win_guid_to_uid(ioctl_data.OutputPayload.NamespaceUuid, *p_namespace_uid);
 		}
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -292,14 +291,14 @@ int create_namespace(
 /*
  * Delete an existing namespace
  */
-int delete_namespace(const NVM_GUID namespace_guid)
+int delete_namespace(const NVM_UID namespace_uid)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
 
-	if (namespace_guid == NULL)
+	if (namespace_uid == NULL)
 	{
-			COMMON_LOG_ERROR("namespace guid cannot be NULL.");
+			COMMON_LOG_ERROR("namespace uid cannot be NULL.");
 			rc = NVM_ERR_INVALIDPARAMETER;
 	}
 	else
@@ -307,7 +306,7 @@ int delete_namespace(const NVM_GUID namespace_guid)
 		DELETE_NAMESPACE_IOCTL ioctl_data;
 		memset(&ioctl_data, 0, sizeof (ioctl_data));
 
-		memmove(&ioctl_data.InputPayload.NamespaceUuid, namespace_guid, NVM_GUID_LEN);
+		win_uid_to_guid(namespace_uid, ioctl_data.InputPayload.NamespaceUuid);
 
 		if ((rc = execute_ioctl(sizeof (ioctl_data), &ioctl_data, IOCTL_CR_DELETE_NAMESPACE))
 			== NVM_SUCCESS)
@@ -324,7 +323,7 @@ int delete_namespace(const NVM_GUID namespace_guid)
  * Modify an existing namespace name
  */
 int modify_namespace_name(
-		const NVM_GUID namespace_guid,
+		const NVM_UID namespace_uid,
 		const NVM_NAMESPACE_NAME name)
 {
 	COMMON_LOG_ENTRY();
@@ -334,9 +333,9 @@ int modify_namespace_name(
 		COMMON_LOG_ERROR("namespace modify settings structure cannot be NULL.");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
-	else if (namespace_guid == NULL)
+	else if (namespace_uid == NULL)
 	{
-		COMMON_LOG_ERROR("namespace GUID pointer cannot be NULL.");
+		COMMON_LOG_ERROR("namespace UID pointer cannot be NULL.");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
 	else if ((rc = init_scsi_port()) != NVM_SUCCESS)
@@ -350,8 +349,7 @@ int modify_namespace_name(
 		{
 			RENAME_NAMESPACE_IOCTL payload;
 			memset(&payload, 0, sizeof (payload));
-
-			memmove(&payload.InputPayload.NamespaceUuid, namespace_guid, NVM_GUID_LEN);
+			win_uid_to_guid(namespace_uid, payload.InputPayload.NamespaceUuid);
 			memmove(payload.InputPayload.FriendlyName, name, NSLABEL_NAME_LEN);
 
 			// Verify IOCTL is sent successfully and that the driver had no errors
@@ -373,7 +371,7 @@ int modify_namespace_name(
  * Modify an existing namespace size
  */
 int modify_namespace_block_count(
-		const NVM_GUID namespace_guid,
+		const NVM_UID namespace_uid,
 		const NVM_UINT64 block_count)
 {
 	int rc = NVM_ERR_NOTSUPPORTED;
@@ -384,7 +382,7 @@ int modify_namespace_block_count(
  * Modify an existing namespace enable
  */
 int modify_namespace_enabled(
-		const NVM_GUID namespace_guid,
+		const NVM_UID namespace_uid,
 		const enum namespace_enable_state enabled)
 {
 	int rc = NVM_ERR_NOTSUPPORTED;

@@ -76,17 +76,17 @@ void wbem::mem_config::MemoryConfigurationFactory::populateAttributeList(
 }
 
 /*
- * Return the index where the guid is found in the pool's dimms array. Return -1 if the guid
+ * Return the index where the uid is found in the pool's dimms array. Return -1 if the uid
  * is not in the array.
  */
 int wbem::mem_config::MemoryConfigurationFactory::getDimmIndexInPoolOrReturnNotFound
-		(const NVM_GUID guid, const struct pool *pool)
+		(const NVM_UID uid, const struct pool *pool)
 {
 	int result = framework::NOTFOUND;
 
 	for (int i = 0; i < pool->dimm_count; i++)
 	{
-		if (uid_cmp(guid, pool->dimms[i]))
+		if (uid_cmp(uid, pool->dimms[i]))
 		{
 			result = i;
 			break;
@@ -98,14 +98,14 @@ int wbem::mem_config::MemoryConfigurationFactory::getDimmIndexInPoolOrReturnNotF
 /*
  * Return true or false depending on whether or not the dimm belongs to the interleave set
  */
-bool wbem::mem_config::MemoryConfigurationFactory::dimmIsInIlset(const NVM_GUID guid,
+bool wbem::mem_config::MemoryConfigurationFactory::dimmIsInIlset(const NVM_UID uid,
 					const struct interleave_set &ilset)
 {
 	bool result = false;
 
 	for (int i = 0; i < ilset.dimm_count; i++)
 	{
-		if (uid_cmp(guid, ilset.dimms[i]))
+		if (uid_cmp(uid, ilset.dimms[i]))
 		{
 			result = true;
 			break;
@@ -119,17 +119,17 @@ bool wbem::mem_config::MemoryConfigurationFactory::dimmIsInIlset(const NVM_GUID 
  * (mirrored and unmirrored) to see if 1) the dimm is in the pool and 2) the dimm is in one of the
  * interleave sets in the pool.
  */
-void wbem::mem_config::MemoryConfigurationFactory::getCurrentIlsetInfo(const NVM_GUID deviceGuid,
+void wbem::mem_config::MemoryConfigurationFactory::getCurrentIlsetInfo(const NVM_UID deviceUid,
 			const std::vector<struct pool> &pools, std::vector<struct InterleaveSetInfo> &ilsetInfos)
 {
 	for (size_t i = 0; i < pools.size(); i++)
 	{
 		if (pools[i].type != POOL_TYPE_VOLATILE &&
-				getDimmIndexInPoolOrReturnNotFound(deviceGuid, &(pools[i])) != framework::NOTFOUND)
+				getDimmIndexInPoolOrReturnNotFound(deviceUid, &(pools[i])) != framework::NOTFOUND)
 		{
 			for (int j = 0; j < pools[i].ilset_count; j++)
 			{
-				if (dimmIsInIlset(deviceGuid, (pools[i].ilsets[j])))
+				if (dimmIsInIlset(deviceUid, (pools[i].ilsets[j])))
 				{
 					struct InterleaveSetInfo ilsetInfo;
 					// If this dimm belongs to more that two interleave sets
@@ -155,7 +155,7 @@ void wbem::mem_config::MemoryConfigurationFactory::getCurrentIlsetInfo(const NVM
  * find the memory capacity of this dimm
  */
 NVM_UINT64 wbem::mem_config::MemoryConfigurationFactory::getDimmMemoryCapacityFromCurrentConfig
-		(const NVM_GUID guid, const std::vector<struct pool> &pools) throw (wbem::framework::Exception)
+		(const NVM_UID uid, const std::vector<struct pool> &pools) throw (wbem::framework::Exception)
 {
 	int index = 0;
 	NVM_UINT64 size = 0;
@@ -163,7 +163,7 @@ NVM_UINT64 wbem::mem_config::MemoryConfigurationFactory::getDimmMemoryCapacityFr
 	for (size_t i = 0; i < pools.size(); i++)
 	{
 		if (pools[i].type == POOL_TYPE_VOLATILE && 
-			(index = getDimmIndexInPoolOrReturnNotFound(guid, &(pools[i]))) != framework::NOTFOUND)
+			(index = getDimmIndexInPoolOrReturnNotFound(uid, &(pools[i]))) != framework::NOTFOUND)
 		{
 			if (index < NVM_MAX_DEVICES_PER_POOL)
 			{
@@ -183,14 +183,14 @@ NVM_UINT64 wbem::mem_config::MemoryConfigurationFactory::getDimmMemoryCapacityFr
  * find the storage capacity of this dimm
  */
 NVM_UINT64 wbem::mem_config::MemoryConfigurationFactory::getDimmStorageCapacityFromCurrentConfig(
-		const NVM_GUID guid, const std::vector<struct pool> &pools) throw (wbem::framework::Exception)
+		const NVM_UID uid, const std::vector<struct pool> &pools) throw (wbem::framework::Exception)
 {
 	int index;
 	NVM_UINT64 size = 0;
 	for (size_t i = 0; i < pools.size(); i++)
 	{
 		if (pools[i].type == POOL_TYPE_PERSISTENT && 
-			(index = getDimmIndexInPoolOrReturnNotFound(guid, &(pools[i]))) != framework::NOTFOUND)
+			(index = getDimmIndexInPoolOrReturnNotFound(uid, &(pools[i]))) != framework::NOTFOUND)
 		{
 			if (index < NVM_MAX_DEVICES_PER_POOL)
 			{
@@ -211,7 +211,7 @@ NVM_UINT64 wbem::mem_config::MemoryConfigurationFactory::getDimmStorageCapacityF
  */
 void wbem::mem_config::MemoryConfigurationFactory::populateCurrentConfigInstance(
 		const framework::attribute_names_t &attributes,
-		const std::string &guidStr,
+		const std::string &uidStr,
 		wbem::framework::Instance* pInstance,
 		const struct device_discovery *p_discovery)
 {
@@ -222,8 +222,8 @@ void wbem::mem_config::MemoryConfigurationFactory::populateCurrentConfigInstance
 	framework::UINT16_LIST redundancies;
 	framework::UINT16_LIST setIndexes;
 
-	NVM_GUID guid;
-	lib_interface::NvmApi::stringToNvmGuid(guidStr, guid);
+	NVM_UID uid;
+	lib_interface::NvmApi::stringToNvmUid(uidStr, uid);
 
 	lib_interface::NvmApi *pApi = lib_interface::NvmApi::getApi();
 
@@ -232,11 +232,11 @@ void wbem::mem_config::MemoryConfigurationFactory::populateCurrentConfigInstance
 
 	if (pools.size() > 0)
 	{
-		memoryCapacity = getDimmMemoryCapacityFromCurrentConfig(guid, pools);
-		storageCapacity = getDimmStorageCapacityFromCurrentConfig(guid, pools);
+		memoryCapacity = getDimmMemoryCapacityFromCurrentConfig(uid, pools);
+		storageCapacity = getDimmStorageCapacityFromCurrentConfig(uid, pools);
 
 		std::vector <InterleaveSetInfo> infos;
-		getCurrentIlsetInfo(guid, pools, infos);
+		getCurrentIlsetInfo(uid, pools, infos);
 
 		for (size_t i = 0; i < infos.size(); i++)
 		{
@@ -389,14 +389,14 @@ void wbem::mem_config::MemoryConfigurationFactory::configGoalToGoalInstance(
  */
 void wbem::mem_config::MemoryConfigurationFactory::populateGoalInstance(
 			const framework::attribute_names_t &attributes,
-			const std::string &guidStr,
+			const std::string &uidStr,
 			wbem::framework::Instance* pInstance,
 			const struct device_discovery *pDiscovery)
 {
 	lib_interface::NvmApi *pApi = lib_interface::NvmApi::getApi();
 
 	struct config_goal goal;
-	pApi->getConfigGoalForDimm(guidStr, goal);
+	pApi->getConfigGoalForDimm(uidStr, goal);
 
 	// Goals that have already been applied are no longer goals
 	if (goal.status == CONFIG_GOAL_STATUS_SUCCESS)
@@ -446,14 +446,14 @@ void wbem::mem_config::MemoryConfigurationFactory::populateInstanceDimmInfoFromD
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	// Parent - dimm GUID
+	// Parent - dimm UID
 	if (containsAttribute(PARENT_KEY, attributes))
 	{
-		NVM_GUID_STR guidStr;
-		uid_copy(discovery.guid, guidStr);
+		NVM_UID uidStr;
+		uid_copy(discovery.uid, uidStr);
 
-		framework::Attribute guidAttr(guidStr, false);
-		pInstance->setAttribute(PARENT_KEY, guidAttr, attributes);
+		framework::Attribute uidAttr(uidStr, false);
+		pInstance->setAttribute(PARENT_KEY, uidAttr, attributes);
 	}
 
 	// SocketID of DIMM
@@ -487,10 +487,10 @@ wbem::framework::instances_t *wbem::mem_config::MemoryConfigurationFactory::getI
 		{
 			wbem::framework::Instance instance;
 
-			std::string goalDimmGuid = goalIter->first;
+			std::string goaldimmUid = goalIter->first;
 
 			struct device_discovery discovery;
-			pApi->getDeviceDiscoveryForDimm(goalDimmGuid, discovery);
+			pApi->getDeviceDiscoveryForDimm(goaldimmUid, discovery);
 
 			populateInstanceDimmInfoFromDiscovery(attributes, &instance, discovery);
 			configGoalToGoalInstance(attributes, &discovery, goalIter->second, &instance);
@@ -528,17 +528,17 @@ wbem::framework::Instance* wbem::mem_config::MemoryConfigurationFactory::getInst
 		framework::Attribute idAttr = path.getKeyValue(INSTANCEID_KEY);
 		std::string instanceId = idAttr.stringValue();
 
-		// InstanceID = dimmGuid + 'G' or 'C'. Length should be = NVM_GUIDSTR_LEN
-		// because .length() doesn't include the NULL terminator but NVM_GUIDSTR_LEN does.
-		if (instanceId.length() != NVM_GUIDSTR_LEN ||
+		// InstanceID = dimmUid + 'G' or 'C'. Length should be = NVM_MAX_UID_LEN
+		// because .length() doesn't include the NULL terminator but NVM_MAX_UID_LEN does.
+		if (instanceId.length() != NVM_MAX_UID_LEN ||
 				(!isCurrentConfig(instanceId) && !isGoalConfig(instanceId)))
 		{
 			throw framework::ExceptionBadParameter(INSTANCEID_KEY.c_str());
 		}
 
-		std::string guidStr = instanceId.substr(0, NVM_GUIDSTR_LEN - 1);
+		std::string uidStr = instanceId.substr(0, NVM_MAX_UID_LEN - 1);
 		struct device_discovery deviceDiscovery;
-		pApi->getDeviceDiscoveryForDimm(guidStr, deviceDiscovery);
+		pApi->getDeviceDiscoveryForDimm(uidStr, deviceDiscovery);
 
 		// ElementName - host name + " NVM allocation setting"
 		if (containsAttribute(ELEMENTNAME_KEY, attributes))
@@ -554,11 +554,11 @@ wbem::framework::Instance* wbem::mem_config::MemoryConfigurationFactory::getInst
 
 		if (isGoalConfig(instanceId))
 		{
-			populateGoalInstance(attributes, guidStr, pInstance, &deviceDiscovery);
+			populateGoalInstance(attributes, uidStr, pInstance, &deviceDiscovery);
 		}
 		else
 		{
-			populateCurrentConfigInstance(attributes, guidStr, pInstance, &deviceDiscovery);
+			populateCurrentConfigInstance(attributes, uidStr, pInstance, &deviceDiscovery);
 		}
 	}
 	catch (framework::Exception &) // clean up and re-throw
@@ -587,18 +587,18 @@ wbem::framework::instance_names_t* wbem::mem_config::MemoryConfigurationFactory:
 		std::vector<struct pool> pools;
 		pApi->getPools(pools);
 
-		std::vector<std::string> guids = wbem::physical_asset::NVDIMMFactory::getManageableDeviceGuids();
+		std::vector<std::string> uids = wbem::physical_asset::NVDIMMFactory::getManageableDeviceUids();
 
-		for (unsigned int i = 0; i < guids.size(); i++)
+		for (unsigned int i = 0; i < uids.size(); i++)
 		{
 			framework::attributes_t keys;
 
-			NVM_GUID guid;
-			uid_copy(guids[i].c_str(), guid);
+			NVM_UID uid;
+			uid_copy(uids[i].c_str(), uid);
 
-			if (MemoryConfigurationServiceFactory::dimmHasGoal(guid))
+			if (MemoryConfigurationServiceFactory::dimmHasGoal(uid))
 			{
-				std::string instanceIdStr(guids[i]);
+				std::string instanceIdStr(uids[i]);
 				instanceIdStr += GOAL_CONFIG;
 				keys[INSTANCEID_KEY] = framework::Attribute(instanceIdStr, true);
 
@@ -607,9 +607,9 @@ wbem::framework::instance_names_t* wbem::mem_config::MemoryConfigurationFactory:
 				pNames->push_back(configPath);
 			}
 
-			if (dimmIsInAPool(guid, pools))
+			if (dimmIsInAPool(uid, pools))
 			{
-				std::string instanceIdStr(guids[i]);
+				std::string instanceIdStr(uids[i]);
 				instanceIdStr += CURRENT_CONFIG;
 				keys[INSTANCEID_KEY] = framework::Attribute(instanceIdStr, true);
 
@@ -642,22 +642,22 @@ wbem::framework::instance_names_t* wbem::mem_config::MemoryConfigurationFactory:
 	{
 		std::string hostName = wbem::server::getHostName();
 
-		// get dimm guids
-		std::vector<std::string> guids = wbem::physical_asset::NVDIMMFactory::getManageableDeviceGuids();
+		// get dimm uids
+		std::vector<std::string> uids = wbem::physical_asset::NVDIMMFactory::getManageableDeviceUids();
 
-		for (unsigned int i = 0; i < guids.size(); i++)
+		for (unsigned int i = 0; i < uids.size(); i++)
 		{
 			framework::attributes_t keys;
 			struct config_goal goal;
 
-			NVM_GUID guid;
-			uid_copy(guids[i].c_str(), guid);
+			NVM_UID uid;
+			uid_copy(uids[i].c_str(), uid);
 			int rc;
-			if ((rc = nvm_get_config_goal(guid, &goal)) == NVM_SUCCESS)
+			if ((rc = nvm_get_config_goal(uid, &goal)) == NVM_SUCCESS)
 			{
 				if (goal.status != CONFIG_GOAL_STATUS_SUCCESS)
 				{
-					std::string instanceIdStr(guids[i]);
+					std::string instanceIdStr(uids[i]);
 					instanceIdStr += GOAL_CONFIG;
 					keys[INSTANCEID_KEY] = framework::Attribute(instanceIdStr, true);
 
@@ -668,7 +668,7 @@ wbem::framework::instance_names_t* wbem::mem_config::MemoryConfigurationFactory:
 				if ((!onlyUnappliedGoals) &&
 					(goal.status == CONFIG_GOAL_STATUS_SUCCESS))
 				{
-					std::string instanceIdStr(guids[i]);
+					std::string instanceIdStr(uids[i]);
 					instanceIdStr += CURRENT_CONFIG;
 					keys[INSTANCEID_KEY] = framework::Attribute(instanceIdStr, true);
 
@@ -783,12 +783,12 @@ NVM_UINT64 wbem::mem_config::MemoryConfigurationFactory::getDimmStorageCapacityF
 	return storageCapacity;
 }
 
-bool wbem::mem_config::MemoryConfigurationFactory::dimmIsInAPool(NVM_GUID guid, std::vector<struct pool> pools)
+bool wbem::mem_config::MemoryConfigurationFactory::dimmIsInAPool(NVM_UID uid, std::vector<struct pool> pools)
 {
 	bool inAPool = false;
 	for (size_t i = 0; i < pools.size(); i++)
 	{
-		if (getDimmIndexInPoolOrReturnNotFound(guid, &(pools[i])) != framework::NOTFOUND)
+		if (getDimmIndexInPoolOrReturnNotFound(uid, &(pools[i])) != framework::NOTFOUND)
 		{
 			inAPool = true;
 			break;

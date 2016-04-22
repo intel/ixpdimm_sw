@@ -97,9 +97,9 @@ static const int INTERLEAVE_SETS[] =
 
 struct Dimm
 {
-	Dimm() : guid(""), capacity(0), socket(0), memoryController(0), channel(0) {}
+	Dimm() : uid(""), capacity(0), socket(0), memoryController(0), channel(0) {}
 
-	std::string guid;
+	std::string uid;
 	NVM_UINT64 capacity; // bytes
 	NVM_UINT16 socket;
 	NVM_UINT16 memoryController;
@@ -149,9 +149,9 @@ struct MemoryAllocationLayout
 	std::vector<NVM_UINT64> appDirectCapacities; // in GiB
 	NVM_UINT64 storageCapacity; // in GiB
 
-	// the string is a DIMM GUID
+	// the string is a DIMM UID
 	std::map<std::string, struct config_goal> goals;
-	std::string reserveDimmGuid;
+	std::string reservedimmUid;
 	std::vector<enum LayoutWarningCode> warnings;
 };
 
