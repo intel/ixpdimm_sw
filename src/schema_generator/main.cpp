@@ -400,7 +400,8 @@ int main(int arg_count, char **args)
 	dimm_fw_image.addAttribute("staged_fw_status").isInt32().isUnsigned();
 	dimm_fw_image.addAttribute("staged_fw_rev").isText(14);
 	dimm_fw_image.addAttribute("staged_fw_type").isInt32().isUnsigned();
-	dimm_fw_image.addAttribute("commit_id").isText(40);
+	dimm_fw_image.addAttribute("commit_id").isText(41);
+	dimm_fw_image.addAttribute("build_configuration").isText(17);
 	entities.push_back(dimm_fw_image);
 
 	Entity dimm_fw_debug_log("dimm_fw_debug_log", "Vendor Firmware: Get Log - Firmware Debug Log.");

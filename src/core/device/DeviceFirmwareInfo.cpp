@@ -43,6 +43,11 @@ std::string core::device::DeviceFirmwareInfo::getActiveCommitId() const
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return std::string(m_info.active_fw_commit_id);
 }
+std::string core::device::DeviceFirmwareInfo::getActiveBuildConfiguration() const
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	return std::string(m_info.active_fw_build_configuration);
+}
 enum device_fw_type core::device::DeviceFirmwareInfo::getStagedType() const
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);

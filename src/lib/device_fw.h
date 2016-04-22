@@ -48,7 +48,7 @@
 #define	DEV_BCD_TIME_LEN		3   /* Length of a BDC Formatted Time */
 #define	DEV_BCD_ETC_TIME_LEN	5   /* Len of a BDC Formatted Time for longop */
 #define	DEV_FW_REV_LEN		5   /* Length of the Firmware Revision string */
-#define	DEV_FW_COMMIT_ID_LEN		40   /* Length of commit identifier of Firmware */
+#define	DEV_FW_COMMIT_ID_LEN	40   /* Length of commit identifier of Firmware including null */
 #define	DEV_MFR_LEN		2  /* Length of manufacturer ID buffer */
 #define	DEV_MODELNUM_LEN		20  /* Length of DIMM Model Number buffer */
 #define	DEV_OS_PARTITION		1   /* get platform config OS partition num */
@@ -65,6 +65,7 @@
 #define DEV_PLT_CFG_PART_SIZE	(128 << 10) /* Size of one partition in platform config data */
 #define DEV_ERR_LOG_SIZE		(1 << 20) /* Size of one FW error log */
 #define DEV_FW_LOG_PAGE_SIZE	1024 /* Size of one FW log page */
+#define	DEV_FW_BUILD_CONFIGURATION_LEN 16 /* Size of the build configuration including null */
 /* Number of bytes that can be written to PCD through small payload path at a time */
 #define DEV_PLT_CFG_SMALL_PAYLOAD_WRITE_SIZE 64
 
@@ -1359,7 +1360,12 @@ struct pt_payload_fw_image_info {
 	 */
 	char commit_id[DEV_FW_COMMIT_ID_LEN];
 
-	unsigned char rsvd3[56];
+	/*
+	 * Contains the build configuration of the active firmware for debug and troubleshoot purpose
+	 */
+	char build_configuration[DEV_FW_BUILD_CONFIGURATION_LEN];
+
+	unsigned char rsvd3[40];
 } __attribute__((packed));
 
 /*

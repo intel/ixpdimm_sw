@@ -74,6 +74,7 @@ throw (wbem::framework::Exception)
 	attributes.push_back(ISENTITY_KEY);
 	attributes.push_back(FWTYPE_KEY);
 	attributes.push_back(COMMITID_KEY);
+	attributes.push_back(BUILDCONFIGURATION_KEY);
 }
 
 /*
@@ -96,9 +97,9 @@ throw (wbem::framework::Exception)
 		std::string instanceId = path.getKeyValue(INSTANCEID_KEY).stringValue();
 		COMMON_LOG_DEBUG_F("instanceID = %s", instanceId.c_str());
 
-		std::string fwVersion, fwApiVersion, commitId;
+		std::string fwVersion, fwApiVersion, commitId, build_configuration;
 		NVM_UINT16 fwType = DEVICE_FW_TYPE_UNKNOWN;
-		parseInstanceId(instanceId, fwVersion, fwApiVersion, fwType, commitId);
+		parseInstanceId(instanceId, fwVersion, fwApiVersion, fwType, commitId, build_configuration);
 
 		short unsigned int major, minor, hotfix, build;
 		parse_main_revision(&major, &minor, &hotfix, &build, fwVersion.c_str(), NVM_VERSION_LEN);
@@ -164,6 +165,11 @@ throw (wbem::framework::Exception)
 		{
 			framework::Attribute a(commitId, false);
 			pInstance->setAttribute(COMMITID_KEY, a, attributes);
+		}
+		if (containsAttribute(BUILDCONFIGURATION_KEY, attributes))
+		{
+			framework::Attribute a(build_configuration, false);
+			pInstance->setAttribute(BUILDCONFIGURATION_KEY, a, attributes);
 		}
 	}
 	catch (framework::Exception &) // clean up and re-throw
@@ -260,7 +266,7 @@ void wbem::software::NVDIMMFWVersionFactory::addFirmwareInstanceNamesForDeviceFr
 
 std::string wbem::software::NVDIMMFWVersionFactory::getInstanceId(const std::string& fwVersion,
 		const std::string& fwApiVersion, const enum device_fw_type fwType,
-		const std::string& commitId)
+		const std::string& commitId, const std::string &build_configuration)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
@@ -272,6 +278,10 @@ std::string wbem::software::NVDIMMFWVersionFactory::getInstanceId(const std::str
 	if (!commitId.empty())
 	{
 		instanceId << NVMDIMMFWVERSION_DELIMITER << commitId;
+	}
+	if (!build_configuration.empty())
+	{
+		instanceId << NVMDIMMFWVERSION_DELIMITER << build_configuration;
 	}
 
 	return instanceId.str();
@@ -297,7 +307,8 @@ wbem::framework::ObjectPath wbem::software::NVDIMMFWVersionFactory::getActiveFir
 	std::string instanceIDStr = getInstanceId(device.getFwRevision(),
 			device.getFwApiVersion(),
 			fwInfo.getActiveType(),
-			fwInfo.getActiveCommitId());
+			fwInfo.getActiveCommitId(),
+			fwInfo.getActiveBuildConfiguration());
 
 	return getInstanceName(hostName, instanceIDStr);
 }
@@ -344,13 +355,14 @@ std::string wbem::software::NVDIMMFWVersionFactory::translateFwType(
  * Parse instanceId string into FW version, FW API version, FW type and commit ID
  */
 void wbem::software::NVDIMMFWVersionFactory::parseInstanceId(std::string instanceId,
-		std::string &fwVersion, std::string &fwApiVersion, NVM_UINT16 &fwType, std::string &commitId)
+		std::string &fwVersion, std::string &fwApiVersion, NVM_UINT16 &fwType, std::string &commitId, std::string &build_configuration)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	/* InstanceID has the form NVDIMMFW fw_rev-fw_api-fw_type-commitid
-	 "NVDIMMFW xx.xx.xx.xxxx-x.x-x-<commid_id>"
+	/* InstanceID has the form NVDIMMFW fw_rev-fw_api-fw_type-commitid-build_configuration
+	 "NVDIMMFW xx.xx.xx.xxxx-x.x-x-<commid_id>-<build_configuration>"
 	 */
+
 	instanceId.erase(0, NVDIMMFWVERSION_INSTANCEID_PREFIX.length());
 
 	fwVersion = instanceId.substr(0, instanceId.find(NVMDIMMFWVERSION_DELIMITER));
@@ -369,6 +381,18 @@ void wbem::software::NVDIMMFWVersionFactory::parseInstanceId(std::string instanc
 	}
 	else
 	{
-		commitId = instanceId.substr(commitIdPos + 1, instanceId.length());
+		instanceId.erase(0, instanceId.find(NVMDIMMFWVERSION_DELIMITER) + NVMDIMMFWVERSION_DELIMITER.length());
+		commitId = instanceId.substr(0, instanceId.find(NVMDIMMFWVERSION_DELIMITER));
+	}
+
+	size_t buildConfigPos = instanceId.find(NVMDIMMFWVERSION_DELIMITER);
+	if (buildConfigPos == std::string::npos)
+	{
+		build_configuration = "";
+	}
+	else
+	{
+		instanceId.erase(0, instanceId.find(NVMDIMMFWVERSION_DELIMITER) + NVMDIMMFWVERSION_DELIMITER.length());
+		build_configuration = instanceId.substr(0, instanceId.length());
 	}
 }

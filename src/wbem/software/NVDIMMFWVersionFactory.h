@@ -109,7 +109,8 @@ class NVM_API NVDIMMFWVersionFactory : public framework_interface::NvmInstanceFa
 		static std::string getInstanceId(const std::string &fwVersion,
 				const std::string &fwApiVersion,
 				const enum device_fw_type fwType,
-				const std::string &commitId = "");
+				const std::string &commitId = "",
+				const std::string &build_configuration = "");
 
 		static framework::ObjectPath getActiveFirmwareInstanceName(const std::string &hostName,
 				core::device::Device &device,
@@ -126,10 +127,12 @@ class NVM_API NVDIMMFWVersionFactory : public framework_interface::NvmInstanceFa
 			throw (framework::Exception);
 
 		/*
-		 * Parse instanceId string into FW version, FW API version, FW type and commit ID
+		 * Parse instanceId string into FW version, FW API version, FW type commit ID
+		 * and build configuration
 		 */
 		static void parseInstanceId(std::string instanceId, std::string &fwVersion,
-				std::string &fwApiVersion, NVM_UINT16 &fwType, std::string &commitId);
+				std::string &fwApiVersion, NVM_UINT16 &fwType, std::string &commitId,
+				std::string &build_configuration);
 
 		static framework::ObjectPath getInstanceName(const std::string &hostName,
 				const std::string instanceId);

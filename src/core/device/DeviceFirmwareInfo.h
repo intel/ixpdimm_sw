@@ -46,6 +46,7 @@ public:
 	std::string getActiveRevision() const;
 	enum device_fw_type getActiveType() const;
 	std::string getActiveCommitId() const;
+	std::string getActiveBuildConfiguration() const;
 
 	std::string getStagedRevision() const;
 	enum device_fw_type getStagedType() const;

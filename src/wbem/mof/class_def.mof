@@ -1,14 +1,14 @@
 //==================================
 // Qualifiers requried by Windows
 //==================================
-Qualifier Implemented : boolean = true, 
+Qualifier Implemented : boolean = true,
     Scope(method);
-Qualifier Dynamic : boolean = true, 
+Qualifier Dynamic : boolean = true,
     Scope(class);
 
 [dynamic, provider("intelwbemprovider"), Description("Host information")]
 class <NVM_WBEM_PREFIX>BaseServer : CIM_ComputerSystem
-{  
+{
   string OsName;
   string OsVersion;
   uint16 LogLevel;
@@ -55,21 +55,21 @@ class <NVM_WBEM_PREFIX>NVDIMM : CIM_PhysicalMemory
 	boolean DieSparingCapable;
 	uint16 FWLogLevel;
 
-	// methods	
+	// methods
 	[implemented,
-	   ValueMap { "0", "1", "2", "3", "4", "5" }, 
+	   ValueMap { "0", "1", "2", "3", "4", "5" },
        Values { "Success", "Unknown", "Failed", "Not Allowed",
        "Not Supported", "Invalid Parameter" }]
 	uint32 SetPassphrase(string NewPassphrase, string CurrentPassphrase);
-	
+
 	[implemented,
-	   ValueMap { "0", "1", "2", "3", "4", "5" }, 
+	   ValueMap { "0", "1", "2", "3", "4", "5" },
        Values { "Success", "Unknown", "Failed", "Not Allowed",
        "Not Supported", "Invalid Parameter" }]
 	uint32 Unlock(string CurrentPassphrase);
-	
+
 	[implemented,
-	   ValueMap { "0", "1", "2", "3", "4", "5" }, 
+	   ValueMap { "0", "1", "2", "3", "4", "5" },
        Values { "Success", "Unknown", "Failed", "Not Allowed",
        "Not Supported", "Invalid Parameter" }]
 	uint32 RemovePassphrase(string CurrentPassphrase);
@@ -100,100 +100,100 @@ class <NVM_WBEM_PREFIX>SystemProcessor : CIM_Processor
 [dynamic, provider("intelwbemprovider"), Description("Intel Support Data Service")]
 class <NVM_WBEM_PREFIX>SupportDataService : CIM_OpaqueManagementDataService
 {
-	// methods	
+	// methods
 	[implemented,
 	   ValueMap { "0", "2" },
 	   Values { "Success", "Unknown" }]
 	uint32 Create(
-         [Required, IN, Description ( 
+         [Required, IN, Description (
              "The requested value of the MaxSize property in the "
              "CIM_OpaqueManagementData instance created by this "
              "method. The actual property value shall not be "
-             "less than this value." ), 
+             "less than this value." ),
           ModelCorrespondence { "CIM_OpaqueManagementData.MaxSize" }]
-      uint64 MaxSize, 
-         [IN, Description ( 
+      uint64 MaxSize,
+         [IN, Description (
              "The value of the DataFormat property in the "
              "CIM_OpaqueManagementData instance created by this "
-             "method." ), 
-          ModelCorrespondence { 
+             "method." ),
+          ModelCorrespondence {
              "CIM_OpaqueManagementData.DataFormat" }]
-      string DataFormat, 
-         [IN, Description ( 
+      string DataFormat,
+         [IN, Description (
              "The value of the ElementName property in the "
              "CIM_OpaqueManagementData instance created by this "
-             "method." ), 
-          ModelCorrespondence { 
+             "method." ),
+          ModelCorrespondence {
              "CIM_OpaqueManagementData.ElementName" }]
-      string ElementName, 
-         [Required, IN, Description ( 
+      string ElementName,
+         [Required, IN, Description (
              "Specifies the instance of CIM_Identity or its "
              "subclass that shall be the owner of the new "
              "CIM_OpaqueManagementData instance. Create() shall "
              "associate the new CIM_OpaqueManagementData "
              "instance with this CIM_Identity instance using a "
              "new instance of CIM_AssociatedPrivilege." )]
-      CIM_Identity REF Owner, 
-         [IN, Description ( 
+      CIM_Identity REF Owner,
+         [IN, Description (
              "Specifies the instance of CIM_StorageExtent on "
              "which the new instance of CIM_OpaqueManagementData "
              "shall be based (i.e., in which it shall be "
              "stored). If this parameter is NULL, the choice of "
              "storage location shall be left to the "
              "implementation." )]
-      CIM_StorageExtent REF BasedOnExtent, 
-         [IN ( false ), OUT, Description ( 
+      CIM_StorageExtent REF BasedOnExtent,
+         [IN ( false ), OUT, Description (
              "Reference to the instance of "
              "CIM_OpaqueManagementData created when the method "
              "returns a value of 0." )]
-      CIM_OpaqueManagementData REF OpaqueManagementData, 
-         [IN ( false ), OUT, Description ( 
+      CIM_OpaqueManagementData REF OpaqueManagementData,
+         [IN ( false ), OUT, Description (
              "Reference to the job (may be null if job completed)."
               )]
       CIM_ConcreteJob REF Job);
-      
+
 	[implemented,
 	   ValueMap { "0", "2" },
 	   Values { "Success", "Unknown" }]
 	uint32 ExportToURI(
-         [Required, IN, Description ( 
+         [Required, IN, Description (
              "The CIM_OpaqueManagementData instance that "
              "represents the extent that is the target of the "
              "operation." )]
-      CIM_OpaqueManagementData REF OpaqueManagementData, 
-         [Required, IN, Description ( 
+      CIM_OpaqueManagementData REF OpaqueManagementData,
+         [Required, IN, Description (
              "Offset specifies the byte offset at which to start reading."
-              ), 
+              ),
           PUnit ( "byte" )]
-      uint64 Offset, 
-         [Required, IN, OUT, Description ( 
+      uint64 Offset,
+         [Required, IN, OUT, Description (
              "On entry, Length contains the number of bytes to "
              "be read, starting at the byte offset in the Offset "
              "property. On return, Length contains the number of "
-             "bytes that were actually read." ), 
+             "bytes that were actually read." ),
           PUnit ( "byte" )]
-      uint64 Length, 
-         [Required, IN, Description ( 
+      uint64 Length,
+         [Required, IN, Description (
              "On entry, ExportURI contains a URI based on RFC "
              "3986 that indicates the location to which the "
              "service shall copy the specified bytes of opaque "
              "management data and from which the client "
-             "subsequently retrieves them." ), 
-          ModelCorrespondence { 
+             "subsequently retrieves them." ),
+          ModelCorrespondence {
              "CIM_OpaqueManagementDataCapabilities.SupportedExportURISchemes" }]
-      string ExportURI, 
-         [IN, Description ( 
+      string ExportURI,
+         [IN, Description (
              "A token that represents a Lock placed on the data "
              "in the extent referenced by the "
              "OpaqueManagementData parameter, using the Lock() "
-             "method." ), 
+             "method." ),
           OctetString]
-      uint8 LockToken[], 
-         [IN ( false ), OUT, Description ( 
+      uint8 LockToken[],
+         [IN ( false ), OUT, Description (
              "Reference to the job (may be null if job completed)."
               )]
       CIM_ConcreteJob REF Job);
-	
+
 	[implemented,
 	   ValueMap { "0", "2" },
 	   Values { "Success", "Unknown" }]
@@ -207,7 +207,7 @@ class <NVM_WBEM_PREFIX>OpaqueSupportData : CIM_OpaqueManagementData
 [dynamic, provider("intelwbemprovider"), Description("Intel NVDIMM Diagnostic")]
 class <NVM_WBEM_PREFIX>NVDIMMDiagnostic : CIM_DiagnosticTest
 {
-      [implemented, Description ( 
+      [implemented, Description (
           "The RunDiagnosticService method is invoked to commence "
           "execution of a diagnostic program on a specific managed "
           "element. The input parameters specify this managed "
@@ -229,29 +229,29 @@ class <NVM_WBEM_PREFIX>NVDIMMDiagnostic : CIM_DiagnosticTest
           "The \"Busy\" return code indicates that the method "
           "cannot be invoked \"at this time\". It is not an error "
           "condition, but signals that the provider is doing "
-          "something else and cannot respond." ), 
-       ValueMap { "0", "1", "4", "5" }, 
+          "something else and cannot respond." ),
+       ValueMap { "0", "1", "4", "5" },
        Values { "Success", "Not Supported", "Failed", "Invalid Parameter" }]
    uint32 RunDiagnosticService(
-         [IN, Description ( 
+         [IN, Description (
              "Specifies the element upon which the "
              "DiagnosticService SHOULD be run." )]
-      CIM_ManagedElement REF ManagedElement, 
-         [IN, Description ( 
+      CIM_ManagedElement REF ManagedElement,
+         [IN, Description (
              "A string containing an encoding of the "
              "DiagnosticSettingData instance to be applied to "
              "the diagnostic. If null, the diagnostic\'s "
-             "defaults are used." ), 
+             "defaults are used." ),
           EmbeddedInstance ( "CIM_DiagnosticSettingData" )]
-      string DiagnosticSettings, 
-         [IN, Description ( 
+      string DiagnosticSettings,
+         [IN, Description (
              "A string containing an encoding of the "
              "JobSettingData instance to be applied to the "
              "resulting job. If null, the job\'s defaults are "
-             "used." ), 
+             "used." ),
           EmbeddedInstance ( "CIM_JobSettingData" )]
-      string JobSettings, 
-         [IN ( false ), OUT, Description ( 
+      string JobSettings,
+         [IN ( false ), OUT, Description (
              "Returns a reference to the resulting Job." )]
       CIM_ConcreteJob REF Job);
 };
@@ -266,6 +266,7 @@ class <NVM_WBEM_PREFIX>NVDIMMFWVersion : CIM_SoftwareIdentity
 	string Specification;
 	uint16 FWType;
 	string CommitID;
+	string BuildConfiguration;
 };
 
 [dynamic, provider("intelwbemprovider"), Description("Aggregation point for FW images")]
@@ -274,41 +275,41 @@ class <NVM_WBEM_PREFIX>AvailableFW : CIM_SystemSpecificCollection
 
 [dynamic, provider("intelwbemprovider")]
 class <NVM_WBEM_PREFIX>NVDIMMSoftwareInstallationService : CIM_SoftwareInstallationService
-{ 
-   [implemented, 
-	  ValueMap { "0", "2", "4", "5", "4097", "4099", "4100", "4102", "4106", "4107" }, 
+{
+   [implemented,
+	  ValueMap { "0", "2", "4", "5", "4097", "4099", "4100", "4102", "4106", "4107" },
       Values { "Success", "Unknown", "Failed", "Invalid Parameter", "Unsupported Target Type",
       "Downgrade/reinstall Not Supported", "Not Enough Memory", "Unsupported Version Transition",
       "Not Applicable To Target", "URI Not Accessible" }]
    uint32 InstallFromURI(
-         [IN ( false ), OUT, Description ( 
+         [IN ( false ), OUT, Description (
              "Reference to the job (may be null if job completed)."
               )]
-      CIM_ConcreteJob REF Job, 
-         [IN, Description ( 
+      CIM_ConcreteJob REF Job,
+         [IN, Description (
              "A URI for the software based on RFC 2079." )]
-      string URI, 
+      string URI,
          [IN, Description ( "The installation target." )]
-      CIM_ManagedElement REF Target, 
-         [IN, Description ( 
+      CIM_ManagedElement REF Target,
+         [IN, Description (
              "Options to control the install process. \n"
              "See the InstallOptions parameter of the "
              "SoftwareInstallationService.InstallFromSoftwareIdentity "
-             "method for the description of these values." ), 
-          ValueMap { "2", "3", "4", "5", "6", "7", "8", "9", 
-             "10", "11", "12", "13", "..", "32768..65535" }, 
-          Values { "Defer target/system reset", 
-             "Force installation", "Install", "Update", "Repair", 
-             "Reboot", "Password", "Uninstall", "Log", 
-             "SilentMode", "AdministrativeMode", 
-             "ScheduleInstallAt", "DMTF Reserved", 
-             "Vendor Specific" }, 
-          ArrayType ( "Indexed" ), 
-          ModelCorrespondence { 
-             "CIM_SoftwareInstallationService.InstallFromURI.InstallOptionsValues[]", 
+             "method for the description of these values." ),
+          ValueMap { "2", "3", "4", "5", "6", "7", "8", "9",
+             "10", "11", "12", "13", "..", "32768..65535" },
+          Values { "Defer target/system reset",
+             "Force installation", "Install", "Update", "Repair",
+             "Reboot", "Password", "Uninstall", "Log",
+             "SilentMode", "AdministrativeMode",
+             "ScheduleInstallAt", "DMTF Reserved",
+             "Vendor Specific" },
+          ArrayType ( "Indexed" ),
+          ModelCorrespondence {
+             "CIM_SoftwareInstallationService.InstallFromURI.InstallOptionsValues[]",
              "CIM_SoftwareInstallationServiceCapabilities.SupportedInstallOptions[]" }]
-      uint16 InstallOptions[], 
-         [IN, Description ( 
+      uint16 InstallOptions[],
+         [IN, Description (
              "InstallOptionsValues is an array of strings "
              "providing additionalinformation to InstallOptions "
              "for the method to install the software. Each entry "
@@ -321,9 +322,9 @@ class <NVM_WBEM_PREFIX>NVDIMMSoftwareInstallationService : CIM_SoftwareInstallat
              "description of the InstallOptionsValues parameter "
              "of the "
              "SoftwareInstallationService.InstallFromSoftwareIdentity "
-             "method." ), 
-          ArrayType ( "Indexed" ), 
-          ModelCorrespondence { 
+             "method." ),
+          ArrayType ( "Indexed" ),
+          ModelCorrespondence {
              "CIM_SoftwareInstallationService.InstallFromByteStream.InstallOptions[]" }]
       string InstallOptionsValues[]);
 };
@@ -340,7 +341,7 @@ class <NVM_WBEM_PREFIX>ErasureCapabilities : SNIA_ErasureCapabilities
 [dynamic, provider("intelwbemprovider")]
 class <NVM_WBEM_PREFIX>ErasureService : SNIA_ErasureService
 {
-	// methods	
+	// methods
 	[implemented,
 		ValueMap { "0", "4", "32768", "32769" },
 		Values { "Success", "Failed", "Permission Failure", "Bad State" }]
@@ -348,33 +349,33 @@ class <NVM_WBEM_PREFIX>ErasureService : SNIA_ErasureService
 		CIM_Job REF Job,
 		CIM_ManagedElement REF Element,
 		string ErasureMethod, string Password);
-	
+
 	[implemented,
 		ValueMap { "1" },
 		Values { "Not Supported" }]
 	uint32 Erase(
-         [Description ( "Reference to the job created, if any" ), 
+         [Description ( "Reference to the job created, if any" ),
           OUT]
-    CIM_Job REF Job, 
-         [Description ( 
-             "StorageVolume or LogicalDisk to be erased" ), 
+    CIM_Job REF Job,
+         [Description (
+             "StorageVolume or LogicalDisk to be erased" ),
           IN]
-    CIM_StorageExtent REF Element, 
-         [Description ( 
+    CIM_StorageExtent REF Element,
+         [Description (
              "Enumeration indicating the type of element being "
-             "erased. 1: StorageVolume 2: LogicalDisk" ), 
-          ValueMap { "1", "2" }, 
-          Values { "StorageVolume", "LogicalDisk" }, 
+             "erased. 1: StorageVolume 2: LogicalDisk" ),
+          ValueMap { "1", "2" },
+          Values { "StorageVolume", "LogicalDisk" },
           IN]
-    uint16 ElementType, 
-         [Description ( 
+    uint16 ElementType,
+         [Description (
              "Erasure method to use. This must match one of the "
              "methods listed in the "
              "ErasureConfigurationService\'s "
              "SupportedErasureMethods property. If NULL, then "
              "the DefaultErasureMethod from the "
              "ErasureCapabilites will be used as the erasure "
-             "method" ), 
+             "method" ),
           IN]
     string ErasureMethod);
 };
@@ -497,9 +498,9 @@ class <NVM_WBEM_PREFIX>MemoryResources : CIM_ResourcePool
 [dynamic, provider("intelwbemprovider")]
 class <NVM_WBEM_PREFIX>PersistentMemoryPool : CIM_ResourcePool
 {
-	// methods	
+	// methods
      [implemented,
-	    ValueMap { "0", "1", "2", "4", "5", "4097" }, 
+	    ValueMap { "0", "1", "2", "4", "5", "4097" },
         Values { "Success", "Not Supported", "Unknown", "Failed", "Invalid Parameter",
         "Insufficient Resources" }]
 	uint32 GetSupportedSizeRange(
@@ -575,7 +576,7 @@ class <NVM_WBEM_PREFIX>NVDIMMLogEntry : CIM_LogEntry
 [dynamic, provider("intelwbemprovider")]
 class <NVM_WBEM_PREFIX>PersistentMemoryNamespace : CIM_PersistentMemoryNamespace
 {
-      [implemented, Description ( 
+      [implemented, Description (
           "Requests that the state of the element be changed to the "
           "value specified in the RequestedState parameter. When "
           "the requested state change takes place, the EnabledState "
@@ -592,15 +593,15 @@ class <NVM_WBEM_PREFIX>PersistentMemoryNamespace : CIM_PersistentMemoryNamespace
           "change was successfully initiated, a ConcreteJob has "
           "been created, and its reference returned in the output "
           "parameter Job. Any other return code indicates an error "
-          "condition." ), 
-       ValueMap { "0", "1", "2", "4", "5", "6", "4097" }, 
-       Values { "Completed with No Error", "Not Supported", 
+          "condition." ),
+       ValueMap { "0", "1", "2", "4", "5", "6", "4097" },
+       Values { "Completed with No Error", "Not Supported",
           "Unknown or Unspecified Error", "Failed",  "Invalid Parameter",
-          "In Use", "Invalid State Transition" }, 
-       ModelCorrespondence { 
+          "In Use", "Invalid State Transition" },
+       ModelCorrespondence {
           "CIM_EnabledLogicalElement.RequestedState" }]
    uint32 RequestStateChange(
-         [IN, Description ( 
+         [IN, Description (
              "The state requested for the element. This "
              "information will be placed into the RequestedState "
              "property of the instance if the return code of the "
@@ -608,21 +609,21 @@ class <NVM_WBEM_PREFIX>PersistentMemoryNamespace : CIM_PersistentMemoryNamespace
              "No Error\'), or 4096 (0x1000) (\'Job Started\'). "
              "Refer to the description of the EnabledState and "
              "RequestedState properties for the detailed "
-             "explanations of the RequestedState values." ), 
-          ValueMap { "2", "3", "4", "6", "7", "8", "9", "10", 
-             "11", "..", "32768..65535" }, 
-          Values { "Enabled", "Disabled", "Shut Down", "Offline", 
-             "Test", "Defer", "Quiesce", "Reboot", "Reset", 
-             "DMTF Reserved", "Vendor Reserved" }, 
-          ModelCorrespondence { 
+             "explanations of the RequestedState values." ),
+          ValueMap { "2", "3", "4", "6", "7", "8", "9", "10",
+             "11", "..", "32768..65535" },
+          Values { "Enabled", "Disabled", "Shut Down", "Offline",
+             "Test", "Defer", "Quiesce", "Reboot", "Reset",
+             "DMTF Reserved", "Vendor Reserved" },
+          ModelCorrespondence {
              "CIM_EnabledLogicalElement.RequestedState" }]
-      uint16 RequestedState, 
-         [IN ( false ), OUT, Description ( 
+      uint16 RequestedState,
+         [IN ( false ), OUT, Description (
              "May contain a reference to the ConcreteJob created "
              "to track the state transition initiated by the "
              "method invocation." )]
-      CIM_ConcreteJob REF Job, 
-         [IN, Description ( 
+      CIM_ConcreteJob REF Job,
+         [IN, Description (
              "A timeout period that specifies the maximum amount "
              "of time that the client expects the transition to "
              "the new state to take. The interval format must be "
@@ -640,10 +641,10 @@ class <NVM_WBEM_PREFIX>PersistentMemoryNamespace : CIM_PersistentMemoryNamespace
 class <NVM_WBEM_PREFIX>NamespaceSettings : CIM_NamespaceSettings
 {
 	uint16 InitialState;
-	[Description ( 
+	[Description (
 	"Used to define encryption and erase capabilities."
- 	), 
-	ValueMap { "0", "1", "2" }, 
+ 	),
+	ValueMap { "0", "1", "2" },
 	Values { "Encryption Off", "Encryption On", "Security Erase" }]
 	uint16 SecurityFeatures[];
 	uint16 ChannelInterleaveSize;
@@ -658,7 +659,7 @@ class <NVM_WBEM_PREFIX>PersistentMemoryCapabilities : CIM_PersistentMemoryCapabi
 	uint64 MaxNamespaces;
 	// methods
      [implemented,
-	    ValueMap { "0", "1", "2", "4", "5", "4097" }, 
+	    ValueMap { "0", "1", "2", "4", "5", "4097" },
         Values { "Success", "Not Supported", "Unknown", "Failed", "Invalid Parameter",
         "Insufficient Resources" }]
 	uint32 GetSupportedBlockSizes(uint64 BlockSizes[]);
@@ -668,54 +669,54 @@ class <NVM_WBEM_PREFIX>PersistentMemoryCapabilities : CIM_PersistentMemoryCapabi
 class <NVM_WBEM_PREFIX>PersistentMemoryService : CIM_PersistentMemoryService
 {
      [implemented,
-	    ValueMap { "0", "2", "3", "4", "5", "4097", "4098" }, 
+	    ValueMap { "0", "2", "3", "4", "5", "4097", "4098" },
         Values { "Success", "Unknown", "Timeout", "Failed", "Invalid Parameter"
         "Insufficient Resources", "Inconsistent Parameters" }]
   	uint32 AllocateFromPool(
-         [IN, Description ( 
+         [IN, Description (
              "Reference to the persistent memory resource pool." )]
-    CIM_ResourcePool REF Pool, 
-         [IN, Description ( 
+    CIM_ResourcePool REF Pool,
+         [IN, Description (
              "An embedded instance of "
              "CIM_PersistentMemoryNamespaceSettingData describe "
-             "the allocation request." ), 
-          EmbeddedInstance ( 
+             "the allocation request." ),
+          EmbeddedInstance (
              "CIM_PersistentMemoryNamespaceSettingData" )]
-    string Goal,  
-         [OUT, Description ( 
+    string Goal,
+         [OUT, Description (
              "When the return result is successful, this "
              "parameter contains a reference to the "
              "CIM_PersistentMemoryNamespace instance created as "
              "a result of this call." )]
     CIM_PersistentMemoryNamespace REF Namespace);
-    
-     [implemented, Description ( 
+
+     [implemented, Description (
           "Use this method to modify a persistent memory namespace." ),
-	    ValueMap { "0", "2", "3", "4", "5", "4097", "32768" }, 
+	    ValueMap { "0", "2", "3", "4", "5", "4097", "32768" },
         Values { "Success", "Unknown", "Timeout", "Failed", "Invalid Parameter"
         "Insufficient Resources", "In use" }]
     uint32 ModifyNamespace(
-         [IN, Description ( 
+         [IN, Description (
              "Reference to a persistent memory namespace to be deallocated."
               )]
-      CIM_PersistentMemoryNamespace REF Namespace, 
-         [IN, Description ( 
+      CIM_PersistentMemoryNamespace REF Namespace,
+         [IN, Description (
              "An embedded instance of "
              "CIM_PersistentMemoryNamespaceSettingData which "
-             "describe the modification request." ), 
-          EmbeddedInstance ( 
+             "describe the modification request." ),
+          EmbeddedInstance (
              "CIM_PersistentMemoryNamespaceSettingData" )]
       string Goal);
-       
-     [implemented, Description ( 
+
+     [implemented, Description (
           "Use this method to delete a persistent memory namespace, "
           "returning its capacity to the ResourcePool from which it "
           "was allocated." ),
-	    ValueMap { "0", "2", "3", "4", "5", "32768" }, 
+	    ValueMap { "0", "2", "3", "4", "5", "32768" },
         Values { "Success", "Unknown", "Timeout", "Failed",
         "Invalid Parameter" "In use" }]
     uint32 ReturnToPool(
-         [IN, Description ( 
+         [IN, Description (
              "Reference to a persistent memory namespace to be deallocated."
               )]
       CIM_PersistentMemoryNamespace REF Namespace);
@@ -825,55 +826,55 @@ class <NVM_WBEM_PREFIX>ElementAllocatedFromPool : CIM_ElementAllocatedFromPool
 [dynamic, provider("intelwbemprovider")]
 class <NVM_WBEM_PREFIX>MemoryConfigurationService : CIM_MemoryConfigurationService
 {
-	// methods	
+	// methods
 	 [implemented,
-	    ValueMap { "0", "1", "2", "4", "5", "4097" }, 
+	    ValueMap { "0", "1", "2", "4", "5", "4097" },
         Values { "Job completed with no error", "Not Supported", "Unknown", "Failed",
         "Invalid Parameter", "Insufficient Resources" }]
      uint32 ExportToURI(
          [IN, Description ( "The file URI writeable by the CIM provider with sufficient "
          	"free capacity to hold the exported data." )]
-      string ExportURI, 
-         [IN ( false ), OUT, Description ( 
+      string ExportURI,
+         [IN ( false ), OUT, Description (
              "Reference to the job (may be null if job completed).")]
       CIM_ConcreteJob REF Job);
-      
+
      [implemented,
-	    ValueMap { "0", "1", "2", "4", "5", "4097" }, 
+	    ValueMap { "0", "1", "2", "4", "5", "4097" },
         Values { "Job completed with no error", "Not Supported", "Unknown", "Failed",
         "Invalid Parameter", "Insufficient Resources" }]
      uint32 ImportFromURI(
          [IN, Description ( "A URI to a locally accessible settings file." )]
-      string ImportURI, 
+      string ImportURI,
       	 [IN, Description ( "A reference to one or more NVDIMMs to apply the settings to." )]
-      CIM_ManagedElement REF Targets[], 
-         [IN ( false ), OUT, Description ( 
+      CIM_ManagedElement REF Targets[],
+         [IN ( false ), OUT, Description (
              "Reference to the job (may be null if job completed).")]
       CIM_ConcreteJob REF Job);
-      
+
      [implemented,
-	    ValueMap { "4", "5", "4096", "4097", "4098", "4099" }, 
+	    ValueMap { "4", "5", "4096", "4097", "4098", "4099" },
         Values { "Failed", "Invalid Parameter", "Request was successfully staged for future execution",
         "Insufficient Resources", "Inconsistent Parameters",
         "Request did not complete in its entirety and partial results could not be undone" }]
       uint32 AllocateFromPool(
          [IN, Description ( "Reference to the resource pool." )]
-      CIM_ResourcePool REF Pool, 
-         [IN, Description ( 
+      CIM_ResourcePool REF Pool,
+         [IN, Description (
              "One or more embedded instances of "
              "CIM_MemoryAllocationSettingData which describe the "
-             "allocation request." ), 
+             "allocation request." ),
           EmbeddedInstance ( "CIM_MemoryAllocationSettingData" )]
-      string Goal[], 
-         [OUT, Description ( 
+      string Goal[],
+         [OUT, Description (
              "When results are successful, non-staged this "
              "parameter contains references to CIM_VisibleMemory "
              "instances representing the allocated memory "
              "extents." )]
       CIM_VisibleMemory REF MemoryExtents[]);
-      
+
      [implemented,
-	    ValueMap { "0", "1", "2", "4", "5", "4097", "4099" }, 
+	    ValueMap { "0", "1", "2", "4", "5", "4097", "4099" },
         Values { "Job completed with no error", "Not supported", "Unknown", "Failed",
         "Invalid Parameter", "Insufficient Resources",
         "Request did not complete in its entirety and partial results could not be undone" }]
@@ -884,17 +885,17 @@ class <NVM_WBEM_PREFIX>MemoryConfigurationService : CIM_MemoryConfigurationServi
 
 [dynamic, provider("intelwbemprovider")]
 class <NVM_WBEM_PREFIX>HostSoftware : CIM_SystemSpecificCollection
-{  
+{
 };
 
 [dynamic, provider("intelwbemprovider")]
 class <NVM_WBEM_PREFIX>NVDIMMDriverIdentity : CIM_SoftwareIdentity
-{  
+{
 };
 
 [dynamic, provider("intelwbemprovider")]
 class <NVM_WBEM_PREFIX>ManagementSoftwareIdentity : CIM_SoftwareIdentity
-{  
+{
 };
 
 [dynamic, provider("intelwbemprovider")]

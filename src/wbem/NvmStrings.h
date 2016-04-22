@@ -192,6 +192,7 @@ static std::string SPECIFICATION_KEY = "Specification";
 static std::string ISENTITY_KEY = "IsEntity";
 static std::string FWTYPE_KEY = "FWType";
 static std::string COMMITID_KEY = "CommitID";
+static std::string BUILDCONFIGURATION_KEY = "BuildConfiguration";
 
 // NumericSensorFactory Attribute keys
 static std::string SENSORTYPE_KEY = "SensorType";
@@ -452,6 +453,7 @@ static std::string ENABLED_KEY = "Enabled";
 static std::string ACTIVEFWVERSION_KEY = "ActiveFWVersion";
 static std::string ACTIVEFWTYPE_KEY = "ActiveFWType";
 static std::string ACTIVEFWCOMMITID_KEY = "ActiveFWCommitID";
+static std::string ACTIVEBUILDCONFIGURATION_KEY = "ActiveFWBuildConfiguration";
 static std::string STAGEDFWVERSION_KEY = "StagedFWVersion";
 static std::string STAGEDFWTYPE_KEY = "StagedFWType";
 

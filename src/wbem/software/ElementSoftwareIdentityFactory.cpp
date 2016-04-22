@@ -282,7 +282,7 @@ bool ElementSoftwareIdentityFactory::isActiveFwVersion(
 	bool match = false;
 
 	std::string activeInstanceId = NVDIMMFWVersionFactory::getInstanceId(device.getFwRevision(),
-			device.getFwApiVersion(), fwInfo.getActiveType(), fwInfo.getActiveCommitId());
+			device.getFwApiVersion(), fwInfo.getActiveType(), fwInfo.getActiveCommitId(), fwInfo.getActiveBuildConfiguration());
 	if (fwVersionInstanceId == activeInstanceId)
 	{
 		match = true;
@@ -514,6 +514,7 @@ void ElementSoftwareIdentityFactory::addInstanceNamesForDevice(framework::instan
 
 		framework::ObjectPath associationPath(hostName, m_cimNamespace,
 				ELEMENTSOFTWAREIDENTITY_CREATIONCLASSNAME, keys);
+
 		if (associationObjectPathMatchesFilter(associationPath))
 		{
 			instanceNames.push_back(associationPath);
