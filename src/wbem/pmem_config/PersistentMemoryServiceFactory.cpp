@@ -211,18 +211,43 @@ enum namespace_enable_state wbem::pmem_config::PersistentMemoryServiceFactory::n
  */
 enum encryption_status wbem::pmem_config::PersistentMemoryServiceFactory::encryptionTypeToEnum(const NVM_UINT16 encryption)
 {
-	enum encryption_status enum_val;
+	enum encryption_status status;
 	switch (encryption)
 	{
 		case wbem::pmem_config::PM_SERVICE_SECURITY_ENCRYPTION_ON:
-			enum_val = NVM_ENCRYPTION_ON;
+			status = NVM_ENCRYPTION_ON;
 			break;
 		case wbem::pmem_config::PM_SERVICE_SECURITY_ENCRYPTION_OFF:
+			status = NVM_ENCRYPTION_OFF;
+			break;
+		case wbem::pmem_config::PM_SERVICE_SECURITY_ENCRYPTION_IGNORE:
 		default:
-			enum_val = NVM_ENCRYPTION_OFF;
+			status = NVM_ENCRYPTION_IGNORE;
 			break;
 	};
-	return enum_val;
+	return status;
+}
+
+/*
+ * Utility fn to convert erase capable int to enum value
+ */
+enum erase_capable_status wbem::pmem_config::PersistentMemoryServiceFactory::eraseCapableToEnum(const NVM_UINT16 eraseCapable)
+{
+	enum erase_capable_status status;
+	switch (eraseCapable)
+	{
+		case wbem::pmem_config::PM_SERVICE_SECURITY_ERASE_CAPABLE_TRUE:
+			status = NVM_ERASE_CAPABLE_TRUE;
+			break;
+		case wbem::pmem_config::PM_SERVICE_SECURITY_ERASE_CAPABLE_FALSE:
+			status = NVM_ERASE_CAPABLE_FALSE;
+			break;
+		case wbem::pmem_config::PM_SERVICE_SECURITY_ERASE_CAPABLE_IGNORE:
+		default:
+			status = NVM_ERASE_CAPABLE_IGNORE;
+			break;
+	};
+	return status;
 }
 
 /*
@@ -244,11 +269,6 @@ enum namespace_memory_page_allocation wbem::pmem_config::PersistentMemoryService
 			break;
 	};
 	return val;
-}
-
-enum encryption_status wbem::pmem_config::PersistentMemoryServiceFactory::integerToEncryptionEnum(const NVM_UINT16 encryption)
-{
-	return encryption ? NVM_ENCRYPTION_ON : NVM_ENCRYPTION_OFF;
 }
 
 /*
@@ -471,27 +491,26 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::allocateFromPool(
 				optimize = wbem::pmem_config::PM_SERVICE_OPTIMIZE_COPYONWRITE;
 			}
 
-			// get security features from goal and then harvest encryption and erase capable fields
-			NVM_UINT16 encryption = 0;
-			NVM_UINT16 eraseCapable = 0;
-			wbem::framework::Attribute securityFeaturesAttribute;
-			pGoalInstance->getAttribute(wbem::SECURITYFEATURES_KEY, securityFeaturesAttribute);
-			wbem::framework::UINT16_LIST securityValueList = securityFeaturesAttribute.uint16ListValue();
-			for (int i = 0; i < (int)securityValueList.size(); i++)
+			// get encryption from goal
+			wbem::framework::Attribute encryptionAttribute;
+			pGoalInstance->getAttribute(wbem::ENCRYPTIONENABLED_KEY, encryptionAttribute);
+			NVM_UINT16 encryption = pGoalInstance->getAttribute(wbem::ENCRYPTIONENABLED_KEY, encryptionAttribute) ?
+				wbem::pmem_config::PM_SERVICE_SECURITY_ENCRYPTION_IGNORE : encryptionAttribute.uintValue();
+			if (encryption > wbem::pmem_config::PM_SERVICE_SECURITY_ENCRYPTION_IGNORE)
 			{
-				if (securityValueList[i] == wbem::pmem_config::NS_SECURITY_ENCRYPTION_ON)
-				{
-					encryption = 1;
-				}
-				if (securityValueList[i] == wbem::pmem_config::NS_SECURITY_ENCRYPTION_OFF)
-				{
-					encryption = 0;
-				}
+				COMMON_LOG_ERROR_F("Invalid value for Encryption Enabled: %d", encryption);
+                                throw framework::ExceptionBadParameter(PM_SERVICE_GOAL.c_str());
+			}
 
-				if (securityValueList[i] == wbem::pmem_config::NS_SECURITY_ERASE)
-				{
-					eraseCapable = 1;
-				}
+			// get erase capability from goal
+			wbem::framework::Attribute eraseCapableAttribute;
+			pGoalInstance->getAttribute(wbem::ERASECAPABLE_KEY, eraseCapableAttribute);
+			NVM_UINT16 eraseCapable = pGoalInstance->getAttribute(wbem::ERASECAPABLE_KEY, eraseCapableAttribute) ?
+				wbem::pmem_config::PM_SERVICE_SECURITY_ERASE_CAPABLE_IGNORE : eraseCapableAttribute.uintValue();
+			if (eraseCapable > wbem::pmem_config::PM_SERVICE_SECURITY_ERASE_CAPABLE_IGNORE)
+			{
+				COMMON_LOG_ERROR_F("Invalid value for Erase Capable: %d", eraseCapable);
+                                throw framework::ExceptionBadParameter(PM_SERVICE_GOAL.c_str());
 			}
 
 			NVM_UINT16 memoryPageAllocation = 0;
@@ -710,7 +729,7 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::createNamespace(std::str
 	namespace_settings.block_size = blockSize;
 	namespace_settings.enabled = namespaceEnabledToEnum(stateValue);
 	namespace_settings.type = namespaceTypeToEnum(type);
-	namespace_settings.security_features.erase_capable = eraseCapable ? 1 : 0;
+	namespace_settings.security_features.erase_capable = eraseCapableToEnum(eraseCapable);
 	namespace_settings.security_features.encryption = encryptionTypeToEnum(encryption);
 	namespace_settings.memory_page_allocation = memoryPageAllocationTypeToEnum(memoryPageAllocation);
 
@@ -930,8 +949,8 @@ NVM_UINT64 wbem::pmem_config::PersistentMemoryServiceFactory::getAdjustedCreateN
 	settings.type = namespaceTypeToEnum(type);
 	settings.block_size = blockSize;
 	settings.block_count = blockCount;
-	settings.security_features.erase_capable = eraseCapable;
-	settings.security_features.encryption = integerToEncryptionEnum(encryption);
+	settings.security_features.erase_capable = eraseCapableToEnum(eraseCapable);
+	settings.security_features.encryption = encryptionTypeToEnum(encryption);
 	settings.enabled = (enum namespace_enable_state) enableState;
 
 	NVM_UID poolUid;

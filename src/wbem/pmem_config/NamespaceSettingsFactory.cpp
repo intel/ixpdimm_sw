@@ -65,7 +65,8 @@ throw(wbem::framework::Exception)
 	attributes.push_back(POOLID_KEY);
 	attributes.push_back(RESOURCETYPE_KEY);
 	attributes.push_back(OPTIMIZE_KEY);
-	attributes.push_back(SECURITYFEATURES_KEY);
+	attributes.push_back(ENCRYPTIONENABLED_KEY);
+	attributes.push_back(ERASECAPABLE_KEY);
 	attributes.push_back(CHANNELINTERLEAVESIZE_KEY);
 	attributes.push_back(CONTROLLERINTERLEAVESIZE_KEY);
 	attributes.push_back(MEMORYPAGEALLOCATION_KEY);
@@ -160,12 +161,17 @@ throw(wbem::framework::Exception)
 		}
 	
 		// SecurityFeatures
-		if (containsAttribute(SECURITYFEATURES_KEY, attributes))
-		{
-			framework::Attribute a(NamespaceViewFactory::namespaceSecurityToValue(
-					ns.security_features), false);
-			pInstance->setAttribute(SECURITYFEATURES_KEY, a, attributes);
-		}
+                if (containsAttribute(ENCRYPTIONENABLED_KEY, attributes))
+                {
+                        pInstance->setAttribute(ENCRYPTIONENABLED_KEY,
+                                framework::Attribute((NVM_UINT16)ns.security_features.encryption, false));
+                }
+
+                if (containsAttribute(ERASECAPABLE_KEY, attributes))
+                {
+                        pInstance->setAttribute(ERASECAPABLE_KEY,
+                                framework::Attribute((NVM_UINT16)ns.security_features.erase_capable, false));
+                }
 
 		// ChannelInterleaveSize
 		if (containsAttribute(CHANNELINTERLEAVESIZE_KEY, attributes))

@@ -473,7 +473,18 @@ enum nvm_job_type
 enum encryption_status
 {
 	NVM_ENCRYPTION_OFF = 0,
-	NVM_ENCRYPTION_ON = 1
+	NVM_ENCRYPTION_ON = 1,
+	NVM_ENCRYPTION_IGNORE = 2
+};
+
+/*
+ * Erase capable definition of interleave set or namespace.
+ */
+enum erase_capable_status
+{
+	NVM_ERASE_CAPABLE_FALSE = 0,
+	NVM_ERASE_CAPABLE_TRUE = 1,
+	NVM_ERASE_CAPABLE_IGNORE = 2
 };
 
 /*
@@ -942,8 +953,10 @@ struct namespace_discovery
  */
 struct namespace_security_features
 {
-	enum encryption_status encryption; // encryption status of the NVDIMM or interleave set
-	NVM_BOOL erase_capable; //  true if the parent NVDIMM or interleave set is erase capable
+	// encryption status of the NVDIMM or interleave set
+	enum encryption_status encryption;
+	// true if the parent NVDIMM or interleave set is erase capable
+	enum erase_capable_status erase_capable;
 };
 
 /*

@@ -888,7 +888,8 @@ int init_pool(struct nvm_pool *p_pool, const char *uuid_src, const enum pool_typ
  */
 int calculate_security_attributes_all_dimms(struct nvm_interleave_set *p_interleave,
 	enum encryption_status *p_encryption_enabled,
-	NVM_BOOL *p_erase_capable, enum encryption_status *p_encryption_capable /* could be NULL */)
+	enum erase_capable_status *p_erase_capable,
+	enum encryption_status *p_encryption_capable /* could be NULL */)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
@@ -934,7 +935,7 @@ int calculate_security_attributes_all_dimms(struct nvm_interleave_set *p_interle
 	{
 		*p_encryption_capable = NVM_ENCRYPTION_OFF;
 	}
-	*p_erase_capable = 0;
+	*p_erase_capable = NVM_ERASE_CAPABLE_FALSE;
 	if (rc == NVM_SUCCESS)
 	{
 		if (encryption_enabled_flag)
@@ -949,7 +950,7 @@ int calculate_security_attributes_all_dimms(struct nvm_interleave_set *p_interle
 
 		if (erasecapable_flag)
 		{
-			*p_erase_capable = 1;
+			*p_erase_capable = NVM_ERASE_CAPABLE_TRUE;
 		}
 	}
 
@@ -993,7 +994,8 @@ int get_interleaveset_by_driver_id(NVM_UINT32 driver_id, struct nvm_interleave_s
  */
 int calculate_app_direct_interleave_security(
 	NVM_UINT32 interleave_setid,
-	enum encryption_status *p_encryption_enabled, NVM_BOOL *p_erase_capable,
+	enum encryption_status *p_encryption_enabled,
+	enum erase_capable_status *p_erase_capable,
 	enum encryption_status *p_encryption_capable /* could be NULL */)
 {
 	COMMON_LOG_ENTRY();

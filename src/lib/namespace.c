@@ -212,7 +212,8 @@ enum encryption_status namespace_encryption_to_enum(const NVM_BOOL passphrase_ca
  */
 int get_security_attributes_from_device(
 	const NVM_NFIT_DEVICE_HANDLE device_handle,
-	enum encryption_status *p_encryption, NVM_BOOL *p_erase_capable)
+	enum encryption_status *p_encryption,
+	enum erase_capable_status *p_erase_capable)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_ERR_DRIVERFAILED;
@@ -224,7 +225,8 @@ int get_security_attributes_from_device(
 	{
 		*p_encryption = device_is_encryption_enabled(discovery.lock_state)?
 				NVM_ENCRYPTION_ON:NVM_ENCRYPTION_OFF;
-		*p_erase_capable = device_is_erase_capable(discovery.security_capabilities);
+		*p_erase_capable = device_is_erase_capable(discovery.security_capabilities)?
+				NVM_ERASE_CAPABLE_TRUE:NVM_ERASE_CAPABLE_FALSE;
 		rc = NVM_SUCCESS;
 	}
 
@@ -406,6 +408,46 @@ int get_largest_storage_namespace_on_a_dimm(const struct pool *p_pool,
 }
 
 /*
+ * Helper function to check if a device meets a requested encryption requirement
+ */
+NVM_BOOL device_meets_encryption_criteria(const enum encryption_status criteria,
+		const struct device_discovery *discovery)
+{
+	NVM_BOOL criteria_met = 1;
+	NVM_BOOL encryption_enabled = device_is_encryption_enabled(discovery->lock_state);
+	if (criteria == NVM_ENCRYPTION_ON && !encryption_enabled)
+	{
+		criteria_met = 0;
+	}
+	else if (criteria == NVM_ENCRYPTION_OFF && encryption_enabled)
+	{
+		criteria_met = 0;
+	}
+	// else NVM_ENCRYPTION_IGNORE
+	return criteria_met;
+}
+
+/*
+ * Helper function to check if a device meets a requested encryption requirement
+ */
+NVM_BOOL device_meets_erase_capable_criteria(const enum erase_capable_status criteria,
+		const struct device_discovery *discovery)
+{
+	NVM_BOOL criteria_met = 1;
+	NVM_BOOL erase_capable = device_is_erase_capable(discovery->security_capabilities);
+	if (criteria == NVM_ERASE_CAPABLE_TRUE && !erase_capable)
+	{
+		criteria_met = 0;
+	}
+	else if (criteria == NVM_ERASE_CAPABLE_FALSE && erase_capable)
+	{
+		criteria_met = 0;
+	}
+	// else NVM_ERASE_CAPABLE_IGNORE
+	return criteria_met;
+}
+
+/*
  * Helper function to check if dimm meets security requirements to create
  * a storage NS
  */
@@ -414,77 +456,26 @@ NVM_BOOL dimm_meets_security_criteria(const NVM_UID dimm,
 {
 	COMMON_LOG_ENTRY();
 
-	NVM_BOOL security_criteria_met = 0;
-	// ignore security features if these fields are 0
-	if ((security_features.erase_capable == 0) &&
-		(security_features.encryption == NVM_ENCRYPTION_OFF))
+	NVM_BOOL security_criteria_met = 1;
+	// ignore security features if these fields are set to ignore
+	if ((security_features.erase_capable != NVM_ERASE_CAPABLE_IGNORE) ||
+		(security_features.encryption != NVM_ENCRYPTION_IGNORE))
 	{
-		security_criteria_met = 1;
-	}
-	else
-	{
-		int temprc;
 		struct device_discovery discovery;
-		if (nvm_get_device_discovery(dimm, &discovery) == NVM_SUCCESS)
-		{
-			if (security_features.encryption == NVM_ENCRYPTION_ON)
-			{
-				// encryption is on if lock states of parent dimm is enabled
-				if (device_is_encryption_enabled(discovery.lock_state))
-				{
-					temprc = NVM_SUCCESS;
-				}
-				else
-				{
-					temprc = NVM_ERR_BADSECURITYGOAL;
-				}
-			}
-			else // NVM_ENCRYPTION_OFF
-			{
-				if (!device_is_encryption_enabled(discovery.lock_state))
-				{
-					temprc = NVM_SUCCESS;
-				}
-				else
-				{
-					temprc = NVM_ERR_BADSECURITYGOAL;
-				}
-			}
-
-			if ((temprc == NVM_SUCCESS) &&
-				(security_features.erase_capable == 1))
-			{
-				// erasecapable is on if parent dimms supports erase
-				if (device_is_erase_capable(discovery.security_capabilities))
-				{
-					security_criteria_met = 1;
-				}
-				else
-				{
-					security_criteria_met = 0;
-				}
-			}
-			else if ((temprc == NVM_SUCCESS) &&
-				(security_features.erase_capable == 0))
-			{
-				if (!device_is_erase_capable(discovery.security_capabilities))
-				{
-					security_criteria_met = 1;
-				}
-				else
-				{
-					security_criteria_met = 0;
-				}
-			}
-			else
-			{
-				security_criteria_met = 0;
-			}
-		}
-		else
+		if (nvm_get_device_discovery(dimm, &discovery) != NVM_SUCCESS)
 		{
 			COMMON_LOG_ERROR("Failed to get device discovery information.");
 			security_criteria_met = 0;
+		}
+		if (security_criteria_met)
+		{
+			security_criteria_met = device_meets_encryption_criteria(
+				security_features.encryption, &discovery);
+		}
+		if (security_criteria_met)
+		{
+			security_criteria_met = device_meets_erase_capable_criteria(
+				security_features.erase_capable, &discovery);
 		}
 	}
 
@@ -501,112 +492,20 @@ NVM_BOOL interleave_meets_security_criteria(const struct interleave_set *p_ilset
 {
 	COMMON_LOG_ENTRY();
 
-	NVM_BOOL allDimmsAreLockEnabled = 0;
-	NVM_BOOL allDimmsAreEraseCapable = 0;
-
-	NVM_BOOL security_criteria_met = 0;
-	// ignore security features if these fields are 0
-	if ((p_security_features->erase_capable == 0) &&
-		(p_security_features->encryption == NVM_ENCRYPTION_OFF))
-	{
-		security_criteria_met = 1;
-	}
-	else
+	NVM_BOOL security_criteria_met = 1;
+	// ignore security features if these fields are set to ignore
+	if ((p_security_features->erase_capable != NVM_ERASE_CAPABLE_IGNORE) ||
+		(p_security_features->encryption != NVM_ENCRYPTION_IGNORE))
 	{
 		for (int dimm_index = 0; dimm_index < p_ilset->dimm_count; dimm_index++)
 		{
 			// verify if the security features match with the pool
-			struct device_discovery discovery;
-			int temprc;
-			if ((temprc = nvm_get_device_discovery(
-					p_ilset->dimms[dimm_index],
-					&discovery)) == NVM_SUCCESS)
+			if (!dimm_meets_security_criteria(p_ilset->dimms[dimm_index], *p_security_features))
 			{
-				if (p_security_features->encryption == NVM_ENCRYPTION_ON)
-				{
-					// encryption is on if lock states of all dimms are enabled
-					if (device_is_encryption_enabled(discovery.lock_state))
-					{
-						allDimmsAreLockEnabled = 1;
-					}
-					else
-					{
-						allDimmsAreLockEnabled = 0;
-						break;
-					}
-				}
-				else // NVM_ENCRYPTION_OFF
-				{
-					// encryption is off if lock states of all dimms are not enabled
-					if (!device_is_encryption_enabled(discovery.lock_state))
-					{
-						allDimmsAreLockEnabled = 0;
-					}
-					else
-					{
-						allDimmsAreLockEnabled = 1;
-						break;
-					}
-				}
-
-				if (p_security_features->erase_capable == 1)
-				{
-					// erasecapable is on if all dimms are in set support erase
-					if (device_is_erase_capable(discovery.security_capabilities))
-					{
-						allDimmsAreEraseCapable = 1;
-					}
-					else
-					{
-						allDimmsAreEraseCapable = 0;
-						break;
-					}
-				}
-				else // Erase capable false
-				{
-					if (!device_is_erase_capable(discovery.security_capabilities))
-					{
-						allDimmsAreEraseCapable = 0;
-					}
-					else
-					{
-						allDimmsAreEraseCapable = 1;
-						break;
-					}
-				}
-			}
-			else
-			{
-				COMMON_LOG_ERROR("Failed to get device discovery information.");
+				security_criteria_met = 0;
 				break;
 			}
 		} // end of for loop
-	}
-
-	if (!security_criteria_met)
-	{
-		NVM_BOOL iset_found_encryption = 0;
-		if (((p_security_features->encryption == NVM_ENCRYPTION_ON) &&
-				(allDimmsAreLockEnabled == 1)) ||
-		((p_security_features->encryption == NVM_ENCRYPTION_OFF) &&
-				(allDimmsAreLockEnabled == 0)))
-		{
-			iset_found_encryption = 1;
-		}
-
-		NVM_BOOL iset_found_erase_capable = 0;
-		if (((p_security_features->erase_capable == 1) &&
-				(allDimmsAreEraseCapable == 1)) ||
-		((p_security_features->erase_capable == 0) &&
-				(allDimmsAreEraseCapable == 0)))
-		{
-			iset_found_erase_capable = 1;
-		}
-
-		if ((iset_found_erase_capable) && (iset_found_encryption))
-		{
-			security_criteria_met = 1;
-		}
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(security_criteria_met);

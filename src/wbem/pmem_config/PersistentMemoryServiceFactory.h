@@ -77,6 +77,10 @@ static const NVM_UINT32 PM_SERVICE_OPTIMIZE_SMALLEST_SIZE = 4; // smallest size
 static const NVM_UINT32 PM_SERVICE_OPTIMIZE_COPYONWRITE = 5; // best performance
 static const NVM_UINT16 PM_SERVICE_SECURITY_ENCRYPTION_OFF = 0; 
 static const NVM_UINT16 PM_SERVICE_SECURITY_ENCRYPTION_ON = 1; 
+static const NVM_UINT16 PM_SERVICE_SECURITY_ENCRYPTION_IGNORE = 2; 
+static const NVM_UINT16 PM_SERVICE_SECURITY_ERASE_CAPABLE_FALSE = 0; 
+static const NVM_UINT16 PM_SERVICE_SECURITY_ERASE_CAPABLE_TRUE = 1; 
+static const NVM_UINT16 PM_SERVICE_SECURITY_ERASE_CAPABLE_IGNORE = 2; 
 static const NVM_UINT32 PM_SERVICE_OPTIMIZE_CRYPTO_ERASE = 3; // crypto erase
 static const NVM_UINT32 PM_SERVICE_NAMESPACE_ENABLE_STATE_ENABLED = 2; // enabled
 static const NVM_UINT32 PM_SERVICE_NAMESPACE_ENABLE_STATE_DISABLED = 3; // disabled
@@ -227,7 +231,7 @@ public:
 	static enum namespace_enable_state namespaceEnabledToEnum(const unsigned int enabled);
 	static enum namespace_type namespaceTypeToEnum(const NVM_UINT32 type);
 	static enum encryption_status encryptionTypeToEnum(const NVM_UINT16 type);
-	static enum encryption_status integerToEncryptionEnum(const NVM_UINT16 type);
+	static enum erase_capable_status eraseCapableToEnum(const NVM_UINT16 type);
 	static enum namespace_memory_page_allocation memoryPageAllocationTypeToEnum(const NVM_UINT16 memoryPageAllocation);
 
 	/*

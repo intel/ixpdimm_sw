@@ -257,7 +257,7 @@ int calculate_pool_security(struct pool *p_pool)
 		{
 			enum encryption_status encryption_enabled;
 			enum encryption_status encryption_capable;
-			NVM_BOOL erase_capable;
+			enum erase_capable_status erase_capable;
 			for (int i = 0; i < p_pool->ilset_count; i++)
 			{
 				rc = calculate_app_direct_interleave_security(p_pool->ilsets[i].driver_id,

@@ -73,7 +73,8 @@ throw(wbem::framework::Exception)
 	attributes.push_back(OPTIMIZE_KEY);
 	attributes.push_back(ACTIONREQUIRED_KEY);
 	attributes.push_back(ACTIONREQUIREDEVENTS_KEY);
-	attributes.push_back(SECURITYFEATURES_KEY);
+	attributes.push_back(ENCRYPTIONENABLED_KEY);
+	attributes.push_back(ERASECAPABLE_KEY);
 	attributes.push_back(APP_DIRECT_SETTINGS_KEY);
 	attributes.push_back(REPLICATION_KEY);
 	attributes.push_back(MEMORYPAGEALLOCATION_KEY);
@@ -243,11 +244,16 @@ throw(wbem::framework::Exception)
 			}
 		}
 
-		if (containsAttribute(SECURITYFEATURES_KEY, attributes))
+		if (containsAttribute(ENCRYPTIONENABLED_KEY, attributes))
 		{
-			wbem::framework::UINT16_LIST securityValueList = namespaceSecurityToValue(ns.security_features);
-			framework::Attribute a(securityValueList, false);
-			pInstance->setAttribute(SECURITYFEATURES_KEY, a, attributes);
+			pInstance->setAttribute(ENCRYPTIONENABLED_KEY,
+				framework::Attribute((NVM_UINT16)ns.security_features.encryption, false));
+		}
+
+		if (containsAttribute(ERASECAPABLE_KEY, attributes))
+		{
+			pInstance->setAttribute(ERASECAPABLE_KEY,
+				framework::Attribute((NVM_UINT16)ns.security_features.erase_capable, false));
 		}
 
 		if (containsAttribute(APP_DIRECT_SETTINGS_KEY, attributes))
@@ -495,30 +501,6 @@ NVM_UINT16 wbem::pmem_config::NamespaceViewFactory::namespaceOptimizeToValue(con
 		optimize = NS_OPTIMIZE_COPYONWRITE;
 	}
 	return optimize;
-}
-
-/*
- * Helper function to convert namespace security attributes to a security value
- */
-wbem::framework::UINT16_LIST wbem::pmem_config::NamespaceViewFactory::namespaceSecurityToValue(struct namespace_security_features security)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	wbem::framework::UINT16_LIST securityList;
-	if (security.encryption == NVM_ENCRYPTION_ON)
-	{
-		securityList.push_back(NS_SECURITY_ENCRYPTION_ON);
-	}
-	else
-	{
-		securityList.push_back(NS_SECURITY_ENCRYPTION_OFF);
-	}
-
-	if (security.erase_capable)
-	{
-		securityList.push_back(NS_SECURITY_ERASE);
-	}
-	return securityList;
 }
 
 /*

@@ -155,7 +155,8 @@ int init_pool(struct nvm_pool *p_pool, const char *uuid_src, const enum pool_typ
  * Determine the security status for an interleave set.
  */
 int calculate_app_direct_interleave_security(NVM_UINT32 interleave_setid,
-	enum encryption_status *p_encryption, NVM_BOOL *p_erase_capable,
+	enum encryption_status *p_encryption,
+	enum erase_capable_status *p_erase_capable,
 	enum encryption_status *p_encryption_capable /* could be NULL */);
 
 /*

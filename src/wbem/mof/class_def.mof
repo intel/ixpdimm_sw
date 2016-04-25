@@ -641,12 +641,18 @@ class <NVM_WBEM_PREFIX>PersistentMemoryNamespace : CIM_PersistentMemoryNamespace
 class <NVM_WBEM_PREFIX>NamespaceSettings : CIM_NamespaceSettings
 {
 	uint16 InitialState;
-	[Description (
-	"Used to define encryption and erase capabilities."
- 	),
-	ValueMap { "0", "1", "2" },
-	Values { "Encryption Off", "Encryption On", "Security Erase" }]
-	uint16 SecurityFeatures[];
+	[Description ( 
+	"Used to define encryption capabilities."
+ 	), 
+	ValueMap { "0", "1", "2" }, 
+	Values { "Disabled", "Enabled", "Ignore" }]
+	uint16 EncryptionEnabled;
+	[Description ( 
+	"Used to define erase capabilities."
+ 	), 
+	ValueMap { "0", "1", "2" }, 
+	Values { "Not Eraseable", "Crypto Erase", "Ignore" }]
+	uint16 EraseCapable;
 	uint16 ChannelInterleaveSize;
 	uint16 ControllerInterleaveSize;
 	uint16 MemoryPageAllocation;

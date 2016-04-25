@@ -210,7 +210,6 @@ cli::framework::ResultBase *cli::nvmcli::NamespaceFeature::showNamespaces(
 							wbem::framework::Instance &instance = (*pInstances)[i];
 							convertCapacityAndAddIsMirroredText(instance, capacityUnits);
 							generateBlockSizeAttributeValue(instance);
-							convertSecurityAttributes(instance);
 							convertEnabledStateAttributes(instance);
 							addBlockCountAttribute(instance);
 							convertActionRequiredEventsToNAIfEmpty(instance);
@@ -836,13 +835,19 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseCreateNsEncrypti
 	std::string value = framework::Parser::getPropertyValue(parsedCommand, CREATE_NS_PROP_ENCRYPTION, &hasProp);
 	if (hasProp)
 	{
-		if (value == "0" || framework::stringsIEqual(value, "false"))
+		if (value == "0" || framework::stringsIEqual(value, "false") ||
+			framework::stringsIEqual(value, "no"))
 		{
-			m_encryption = 0;
+			m_encryption = wbem::pmem_config::PM_SERVICE_SECURITY_ENCRYPTION_OFF;
 		}
-		else if (value == "1" || framework::stringsIEqual(value, "true"))
+		else if (value == "1" || framework::stringsIEqual(value, "true") ||
+			framework::stringsIEqual(value, "yes"))
 		{
-			m_encryption = 1;
+			m_encryption = wbem::pmem_config::PM_SERVICE_SECURITY_ENCRYPTION_ON;
+		}
+		else if (framework::stringsIEqual(value, "ignore"))
+		{
+			m_encryption = wbem::pmem_config::PM_SERVICE_SECURITY_ENCRYPTION_IGNORE;
 		}
 		else
 		{
@@ -852,7 +857,7 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseCreateNsEncrypti
 	}
 	else
 	{
-		m_encryption = 0;
+		m_encryption = wbem::pmem_config::PM_SERVICE_SECURITY_ENCRYPTION_IGNORE;
 	}
 
 	return pResult;
@@ -868,13 +873,19 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseCreateNsEraseCap
 	std::string value = framework::Parser::getPropertyValue(parsedCommand, CREATE_NS_PROP_ERASECAPABLE, &hasProp);
 	if (hasProp)
 	{
-		if (value == "0" || framework::stringsIEqual(value, "false"))
+		if (value == "0" || framework::stringsIEqual(value, "false") ||
+			framework::stringsIEqual(value, "no"))
 		{
-			m_eraseCapable = 0;
+			m_eraseCapable = wbem::pmem_config::PM_SERVICE_SECURITY_ERASE_CAPABLE_FALSE;
 		}
-		else if (value == "1" || framework::stringsIEqual(value, "true"))
+		else if (value == "1" || framework::stringsIEqual(value, "true") ||
+			framework::stringsIEqual(value, "yes"))
 		{
-			m_eraseCapable = 1;
+			m_eraseCapable = wbem::pmem_config::PM_SERVICE_SECURITY_ERASE_CAPABLE_TRUE;
+		}
+		else if (framework::stringsIEqual(value, "ignore"))
+		{
+			m_eraseCapable = wbem::pmem_config::PM_SERVICE_SECURITY_ERASE_CAPABLE_IGNORE;
 		}
 		else
 		{
@@ -884,7 +895,7 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseCreateNsEraseCap
 	}
 	else
 	{
-		m_eraseCapable = 0;
+		m_eraseCapable = wbem::pmem_config::PM_SERVICE_SECURITY_ERASE_CAPABLE_IGNORE;
 	}
 
 	return pResult;
@@ -1322,58 +1333,6 @@ void cli::nvmcli::NamespaceFeature::undoModifyNamespace(
 	}
 }
 
-void cli::nvmcli::NamespaceFeature::convertSecurityAttributes(wbem::framework::Instance &wbemInstance)
-{
-	wbem::framework::Attribute securityAttr;
-	if (wbemInstance.getAttribute(wbem::SECURITYFEATURES_KEY, securityAttr) ==
-			wbem::framework::SUCCESS)
-	{
-		wbem::framework::UINT16_LIST securityList = securityAttr.uint16ListValue();
-
-		// make a pass through the list to convert wbem security attribute values
-		// to appropriate cli display security values
-		bool encryption = false;
-		bool erase = false;
-		for (wbem::framework::UINT16_LIST::const_iterator iter = securityList.begin();
-				iter != securityList.end(); iter++)
-		{
-			NVM_UINT16  mode = *iter;
-			switch (mode)
-			{
-			case wbem::pmem_config::NS_SECURITY_ENCRYPTION_ON:
-				encryption = true;
-				break;
-			case wbem::pmem_config::NS_SECURITY_ERASE:
-				erase = true;
-				break;
-			default:
-				break;
-			}
-		}
-
-		std::string securityStr;
-		if (encryption)
-		{
-			securityStr += ", " + ENCRYPTION_STR;
-		}
-		if (erase)
-		{
-			securityStr += ", " + ERASE_STR;
-		}
-		if (!encryption && !erase)
-		{
-			securityStr += ", " + wbem::NONE;
-		}
-
-		if (!securityStr.empty())
-		{
-			securityStr = securityStr.erase(0, 2);
-		}
-		wbem::framework::Attribute newSecurityAttr(securityStr, false);
-		wbemInstance.setAttribute(wbem::SECURITYFEATURES_KEY, newSecurityAttr);
-	}
-}
-
 void cli::nvmcli::NamespaceFeature::convertEnabledStateAttributes(wbem::framework::Instance &wbemInstance)
 {
 	wbem::framework::Attribute enabledAattr;
@@ -1428,7 +1387,8 @@ void cli::nvmcli::NamespaceFeature::populateNamespaceAttributes(
 	allAttributes.push_back(wbem::OPTIMIZE_KEY);
 	allAttributes.push_back(wbem::ENABLEDSTATE_KEY);
 	allAttributes.push_back(wbem::ACTIONREQUIREDEVENTS_KEY);
-	allAttributes.push_back(wbem::SECURITYFEATURES_KEY);
+	allAttributes.push_back(wbem::ENCRYPTIONENABLED_KEY);
+	allAttributes.push_back(wbem::ERASECAPABLE_KEY);
 	allAttributes.push_back(wbem::APP_DIRECT_SETTINGS_KEY);
 
 	// get the desired attributes
