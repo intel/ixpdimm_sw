@@ -400,6 +400,9 @@ int get_namespace_details(
 					NAMESPACE_ENABLE_STATE_DISABLED;
 			}
 
+			p_details->memory_page_allocation = NAMESPACE_MEMORY_PAGE_ALLOCATION_UNKNOWN;
+
+#if 0
 			struct ndctl_pfn *p_pfn = ndctl_namespace_get_pfn(p_namespace);
 			if (!p_pfn)
 			{
@@ -435,6 +438,7 @@ int get_namespace_details(
 
 			p_details->block_count =
 				calculateBlockCount((ndctl_namespace_get_size(p_namespace)), p_details->block_size);
+#endif
 		}
 		ndctl_unref(ctx);
 	}
