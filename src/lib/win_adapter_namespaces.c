@@ -170,7 +170,7 @@ int get_namespace_details(
 		GET_NAMESPACE_DETAILS_IOCTL ioctl_data;
 		memset(&ioctl_data, 0, sizeof (ioctl_data));
 
-		win_uid_to_guid(namespace_uid, ioctl_data.InputPayload.NamespaceUuid);
+		win_uid_to_guid(namespace_uid, &(ioctl_data.InputPayload.NamespaceUuid));
 
 		if ((rc = execute_ioctl(sizeof (ioctl_data), &ioctl_data, IOCTL_CR_GET_NAMESPACE_DETAILS))
 			== NVM_SUCCESS && (rc = ind_err_to_nvm_lib_err(ioctl_data.ReturnCode)) == NVM_SUCCESS)
@@ -306,7 +306,7 @@ int delete_namespace(const NVM_UID namespace_uid)
 		DELETE_NAMESPACE_IOCTL ioctl_data;
 		memset(&ioctl_data, 0, sizeof (ioctl_data));
 
-		win_uid_to_guid(namespace_uid, ioctl_data.InputPayload.NamespaceUuid);
+		win_uid_to_guid(namespace_uid, &(ioctl_data.InputPayload.NamespaceUuid));
 
 		if ((rc = execute_ioctl(sizeof (ioctl_data), &ioctl_data, IOCTL_CR_DELETE_NAMESPACE))
 			== NVM_SUCCESS)
@@ -349,7 +349,7 @@ int modify_namespace_name(
 		{
 			RENAME_NAMESPACE_IOCTL payload;
 			memset(&payload, 0, sizeof (payload));
-			win_uid_to_guid(namespace_uid, payload.InputPayload.NamespaceUuid);
+			win_uid_to_guid(namespace_uid, &(payload.InputPayload.NamespaceUuid));
 			memmove(payload.InputPayload.FriendlyName, name, NSLABEL_NAME_LEN);
 
 			// Verify IOCTL is sent successfully and that the driver had no errors

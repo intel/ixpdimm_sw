@@ -1043,9 +1043,9 @@ void win_guid_to_uid(const GUID guid, COMMON_UID uid)
 	guid_to_uid(tmp, uid);
 }
 
-void win_uid_to_guid(const COMMON_UID uid, GUID guid)
+void win_uid_to_guid(const COMMON_UID uid, GUID *p_guid)
 {
 	COMMON_GUID tmp;
 	str_to_guid(uid, tmp);
-	memmove(&guid, tmp, COMMON_GUID_LEN);
+	memmove(p_guid, tmp, COMMON_GUID_LEN);
 }
