@@ -292,8 +292,8 @@ int get_dimm_memory_capacity(NVM_NFIT_DEVICE_HANDLE handle, NVM_UINT64 *p_size)
 		struct current_config_table *p_current_config = cast_current_config(p_cfg_data);
 		if (!p_current_config)
 		{
-			COMMON_LOG_ERROR("Failed to retrieve mapped memory capacity");
-			rc = NVM_ERR_DRIVERFAILED;
+			COMMON_LOG_WARN("Failed to retrieve mapped memory capacity - no PCD "
+					"current config");
 		}
 		else
 		{
