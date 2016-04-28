@@ -46,6 +46,7 @@
 #include <sstream>
 #include <string.h>
 #include <lib_interface/NvmApi.h>
+#include <core/device/DeviceHelper.h>
 
 wbem::memory::PersistentMemoryFactory::PersistentMemoryFactory() :
 		framework_interface::NvmInstanceFactory()
@@ -175,11 +176,6 @@ wbem::framework::Instance* wbem::memory::PersistentMemoryFactory::getInstance(
 	validatePath(path);
 
 	framework::Instance *pInstance = new framework::Instance(path);
-	if (!pInstance)
-	{
-		throw framework::ExceptionNoMemory(__FILE__, __FUNCTION__,
-				"couldn't allocate new PersistentMemory instance");
-	}
 
 	try
 	{
@@ -514,10 +510,10 @@ void wbem::memory::PersistentMemoryFactory::validatePath(const framework::Object
 		throw framework::ExceptionBadAttribute(CREATIONCLASSNAME_KEY.c_str());
 	}
 
-	// DeviceID == UUID for interleave or storage region
-	// See that it's the right size to be a UUID - we'll look it up later
+	// DeviceID == UID for interleave or storage region
 	const framework::Attribute &deviceId = path.getKeyValue(DEVICEID_KEY);
-	if (deviceId.stringValue().size() != (NVM_MAX_UID_LEN - 1))
+	if (!core::device::isUidValid(deviceId.stringValue()) &&
+		!core::Helper::isValidPoolUid(deviceId.stringValue()))
 	{
 		COMMON_LOG_ERROR_F("invalid value for key '%s': %s",
 				DEVICEID_KEY.c_str(),

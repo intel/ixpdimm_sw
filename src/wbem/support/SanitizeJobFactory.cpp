@@ -41,6 +41,8 @@
 
 #include <exception/NvmExceptionLibError.h>
 #include <NvmStrings.h>
+#include <core/device/Device.h>
+#include <core/device/DeviceHelper.h>
 
 wbem::support::SanitizeJobFactory::SanitizeJobFactory()
 	throw (wbem::framework::Exception)
@@ -139,8 +141,7 @@ wbem::framework::Instance* wbem::support::SanitizeJobFactory::getInstance(wbem::
 		framework::Attribute attribute = path.getKeyValue(INSTANCEID_KEY);
 		std::string instanceUid = attribute.stringValue();
 
-		// -1 since we have no null terminator
-		if (instanceUid.length() != NVM_MAX_UID_LEN - 1)
+		if (!core::device::isUidValid(instanceUid))
 		{
 			throw framework::ExceptionBadParameter(INSTANCEID_KEY.c_str());
 		}

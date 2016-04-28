@@ -45,6 +45,7 @@
 #include <pmem_config/NamespaceSettingsFactory.h>
 #include <exception/NvmExceptionLibError.h>
 #include <NvmStrings.h>
+#include <core/Helper.h>
 
 wbem::pmem_config::PersistentMemoryPoolFactory::PersistentMemoryPoolFactory()
 	throw (wbem::framework::Exception)
@@ -279,7 +280,7 @@ wbem::framework::UINT32 wbem::pmem_config::PersistentMemoryPoolFactory::executeM
 				httpRc = framework::CIM_ERR_INVALID_PARAMETER;
 				throw;
 			}
-			if (poolUidStr.empty() || poolUidStr.length() != NVM_MAX_UID_LEN - 1)
+			if (!core::Helper::isValidPoolUid(poolUidStr))
 			{
 				COMMON_LOG_ERROR_F("Invalid pool uid in object path: %s", poolUidStr.c_str());
 				httpRc = framework::CIM_ERR_INVALID_PARAMETER;

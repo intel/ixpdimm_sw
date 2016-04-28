@@ -31,7 +31,6 @@ namespace core
 {
 namespace device
 {
-
 Device::Device() :
 	m_lib(NvmLibrary::getNvmLibrary()),
 	m_discovery(device_discovery()),
@@ -111,6 +110,7 @@ Device *Device::clone()
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return new Device(*this);
 }
+
 
 enum manageability_state Device::getManageabilityState()
 {

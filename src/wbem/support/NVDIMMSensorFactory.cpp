@@ -45,6 +45,7 @@
 #include <exception/NvmExceptionLibError.h>
 #include <NvmStrings.h>
 #include <framework_interface/FrameworkExtensions.h>
+#include <core/device/DeviceHelper.h>
 
 /*
  * Sensor Types are the same as the library
@@ -199,9 +200,10 @@ bool wbem::support::NVDIMMSensorFactory::splitDeviceIdAttribute(
 	bool found = false;
 	const std::string devIdAttrStr = deviceIdAttribute.stringValue();
 
-	if (devIdAttrStr.length() >  NVM_MAX_UID_LEN)
+	int uidIndex = core::device::findUidEnd(devIdAttrStr);
+	if (uidIndex >= 0)
 	{
-		const std::string sensorTypeName = devIdAttrStr.substr(NVM_MAX_UID_LEN-1);
+		const std::string sensorTypeName = devIdAttrStr.substr(uidIndex);
 		cimSensorConstDescriptionsIter it = cimSensorDescriptions.begin();
 		for (;it != cimSensorDescriptions.end() && !found; it++)
 		{
@@ -212,7 +214,7 @@ bool wbem::support::NVDIMMSensorFactory::splitDeviceIdAttribute(
 			}
 
 		}
-		deviceUid = deviceIdAttribute.stringValue().substr(0, NVM_MAX_UID_LEN-1);
+		deviceUid = deviceIdAttribute.stringValue().substr(0, uidIndex);
 	}
 	return found;
 }
@@ -311,12 +313,12 @@ throw (wbem::framework::Exception)
 		throw framework::ExceptionBadParameter(DEVICEID_KEY.c_str());
 	}
 
-	NVM_UID NVM_UID;
-	uid_copy(str_uid.c_str(), NVM_UID);
+	NVM_UID uid;
+	uid_copy(str_uid.c_str(), uid);
 
 	int rc;
 	struct sensor sensor;
-	if ((rc = nvm_get_sensor(NVM_UID, type, &sensor)) != NVM_SUCCESS)
+	if ((rc = nvm_get_sensor(uid, type, &sensor)) != NVM_SUCCESS)
 	{
 		throw exception::NvmExceptionLibError(rc);
 	}

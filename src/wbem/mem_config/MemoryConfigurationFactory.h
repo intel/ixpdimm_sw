@@ -87,6 +87,8 @@ class NVM_API MemoryConfigurationFactory  : public framework_interface::NvmInsta
 		wbem::framework::instances_t *getInstancesFromLayout(const wbem::logic::MemoryAllocationLayout &layout,
 				framework::attribute_names_t &attributes);
 
+		static bool isValidInstanceId(std::string instanceId);
+
 	private:
 		/*
 		 * Return true if the given dimm is in at least one pool
@@ -167,12 +169,12 @@ class NVM_API MemoryConfigurationFactory  : public framework_interface::NvmInsta
 		/*
 		 * Return true if the instanceId describes a goal instance
 		 */
-		bool isGoalConfig(std::string instanceId);
+		static bool isGoalConfig(std::string instanceId);
 
 		/*
 		 * Return true if the instanceId describes a current config instance
 		 */
-		bool isCurrentConfig(std::string instanceId);
+		static bool isCurrentConfig(std::string instanceId);
 
 		/*
 		 * Translates a config goal status into a helpful string

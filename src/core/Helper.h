@@ -38,6 +38,10 @@ class NVM_API Helper
 public:
 	static std::string uidToString(const NVM_UID uid);
 	static void stringToUid(const std::string &string, NVM_UID uid);
+
+	// TODO: These should be moved to appropriate core objects when available (US13835, US13836)
+	static bool isValidNamespaceUid(std::string uid);
+	static bool isValidPoolUid(std::string uid);
 private:
 	Helper() {}
 

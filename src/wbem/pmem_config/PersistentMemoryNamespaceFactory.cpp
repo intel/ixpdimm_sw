@@ -45,6 +45,7 @@
 #include <exception/NvmExceptionLibError.h>
 #include <framework_interface/NvmAssociationFactory.h>
 #include <NvmStrings.h>
+#include <core/Helper.h>
 #include "PersistentMemoryServiceFactory.h"
 
 wbem::pmem_config::PersistentMemoryNamespaceFactory::PersistentMemoryNamespaceFactory()
@@ -97,7 +98,7 @@ throw(wbem::framework::Exception)
 		path.checkKey(CREATIONCLASSNAME_KEY, PMNS_CREATIONCLASSNAME);
 
 		std::string nsUidStr = path.getKeyValue(DEVICEID_KEY).stringValue();
-		if (nsUidStr.length() != NVM_MAX_UID_LEN - 1)
+		if (!core::Helper::isValidNamespaceUid(nsUidStr))
 		{
 			COMMON_LOG_ERROR_F("PersistentMemoryNamespace DeviceID is not a valid namespace uid %s",
 					nsUidStr.c_str());
@@ -482,7 +483,7 @@ void wbem::pmem_config::PersistentMemoryNamespaceFactory::modifyNamespace(
 
 	// check for valid namespace uid
 	// note - .length() doesn't include NULL terminator
-	if (namespaceUidStr.empty() || namespaceUidStr.length() != NVM_MAX_UID_LEN - 1)
+	if (!core::Helper::isValidNamespaceUid(namespaceUidStr))
 	{
 		COMMON_LOG_ERROR("Invalid namespace uid");
 		throw framework::ExceptionBadParameter(wbem::DEVICEID_KEY.c_str());

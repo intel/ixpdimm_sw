@@ -39,6 +39,7 @@
 #include <server/BaseServerFactory.h>
 #include <exception/NvmExceptionLibError.h>
 #include <NvmStrings.h>
+#include <core/device/DeviceHelper.h>
 
 wbem::support::FWEventLogFactory::FWEventLogFactory()
 : m_GetManageabledeviceUids(physical_asset::NVDIMMFactory::getManageableDeviceUids)
@@ -83,7 +84,7 @@ wbem::framework::Instance* wbem::support::FWEventLogFactory::getInstance(
 
 		// extract the UID from the object path
 		std::string deviceUidStr = path.getKeyValue(INSTANCEID_KEY).stringValue();
-		if (deviceUidStr.length() != NVM_MAX_UID_LEN - 1)
+		if (!core::device::isUidValid(deviceUidStr))
 		{
 			throw framework::ExceptionBadParameter("InstanceId");
 		}

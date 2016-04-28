@@ -65,54 +65,33 @@ int exists_and_manageable(const NVM_UID device_uid, struct device_discovery *p_d
 }
 
 /*
- * used to generate a uid from the following components:
- *		Manufacturer Name
- *		Model Number
- *		Serial Number
+ * Used to update the uid of a device_discovery struct.
+ *
+ * Valid device UID comes from ACPI 6.1 spec. Valid UIDs are one of:
+ * "XXXX-XXXXXXXX"
+ * <vendor id>-<serial number>
+ * or
+ * "XXXX-XX-XXXX-XXXXXXXX"
+ * <vendor id>-<manufacturer location>-<manufacturer date><serial number>
+ *
  */
-int calculate_device_uid(NVM_UID device_uid, const unsigned char *mfr, size_t mfr_len,
-		const char *mn, size_t mn_len, const unsigned char *sn, size_t sn_len)
+int calculate_device_uid(struct device_discovery *p_device)
 {
-	int rc = NVM_ERR_UNKNOWN;
+	int rc;
 
-	if (device_uid == NULL)
+	if (p_device == NULL)
 	{
-		COMMON_LOG_ERROR("Invalid parameter, device_uid is NULL");
-		rc = NVM_ERR_INVALIDPARAMETER;
-	}
-	else if (mfr == NULL)
-	{
-		COMMON_LOG_ERROR("Invalid parameter, manufacturer is NULL");
-		rc = NVM_ERR_INVALIDPARAMETER;
-	}
-	else if (mn == NULL)
-	{
-		COMMON_LOG_ERROR("Invalid parameter, model number is NULL");
-		rc = NVM_ERR_INVALIDPARAMETER;
-	}
-	else if (sn == NULL)
-	{
-		COMMON_LOG_ERROR("Invalid parameter, serial number is NULL");
+		COMMON_LOG_ERROR("Invalid parameter, p_device is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
 	else
 	{
-		size_t uid_data_len = mfr_len + mn_len + sn_len;
-		unsigned char uid_data[uid_data_len];
-		memmove(uid_data, mfr, mfr_len);
-		memmove(uid_data+mfr_len, mn, mn_len);
-		memmove(uid_data+mfr_len+mn_len, sn, sn_len);
-
-		// feed the component string into SHA1 to deterministically generate a uid
-		if (!guid_hash_str(uid_data, uid_data_len, device_uid))
-		{
-			COMMON_LOG_ERROR("DIMM uid hash creation FAILED");
-			rc = NVM_ERR_INVALIDPARAMETER;
-		}
-		else
-		{
-			rc = NVM_SUCCESS;
-		}
+		sprintf(p_device->uid, "%04x-%02x%02x%02x%02x", p_device->vendor_id,
+			p_device->serial_number[0],
+			p_device->serial_number[1],
+			p_device->serial_number[2],
+			p_device->serial_number[3]);
+		rc = NVM_SUCCESS;
 	}
 
 	return rc;

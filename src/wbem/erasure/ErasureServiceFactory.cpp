@@ -42,6 +42,7 @@
 
 #include <exception/NvmExceptionLibError.h>
 #include <NvmStrings.h>
+#include <core/device/DeviceHelper.h>
 #include "ErasureCapabilitiesFactory.h"
 
 
@@ -189,7 +190,7 @@ wbem::framework::UINT32 wbem::erasure::ErasureServiceFactory::executeMethod(
 				if (elementObject.getClass() == physical_asset::NVDIMM_CREATIONCLASSNAME)
 				{
 					std::string deviceUidStr = elementObject.getKeyValue(TAG_KEY).stringValue();
-					if (deviceUidStr.length() != NVM_MAX_UID_LEN - 1)
+					if (!core::device::isUidValid(deviceUidStr))
 					{
 						throw framework::ExceptionBadParameter("Tag");
 					}
@@ -275,7 +276,7 @@ void wbem::erasure::ErasureServiceFactory::eraseDevice(std::string deviceUid,
 throw (wbem::framework::Exception)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	if (deviceUid.empty() || deviceUid.length() != NVM_MAX_UID_LEN - 1)
+	if (!core::device::isUidValid(deviceUid))
 	{
 		throw framework::ExceptionBadParameter("deviceUid");
 	}

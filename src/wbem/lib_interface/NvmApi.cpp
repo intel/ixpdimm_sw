@@ -489,7 +489,9 @@ int NvmApi::purgeDebugLog()
 
 void NvmApi::stringToNvmUid(const std::string& uidStr, NVM_UID uid)
 {
-	if (uidStr.size() != (NVM_MAX_UID_LEN - 1))
+	// note: uidStr.size() doesn't include the null terminator so the '>=' comparator leaves
+	// a char for that.
+	if (uidStr.size() >= NVM_MAX_UID_LEN)
 	{
 		throw framework::ExceptionBadParameter("uidStr");
 	}

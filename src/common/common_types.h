@@ -257,7 +257,7 @@ typedef char COMMON_DATETIME_STR[COMMON_DATETIME_LEN];
 #define	COMMON_UID_LEN	(16 * 2) + 5
 #define	COMMON_GUID_STR_LEN	(16 * 2) + 5
 
-typedef char COMMON_UID[COMMON_GUID_STR_LEN];
+typedef char COMMON_UID[COMMON_UID_LEN];
 typedef char COMMON_GUID_STR[COMMON_GUID_STR_LEN];
 typedef unsigned char COMMON_GUID[COMMON_GUID_LEN];
 

@@ -44,6 +44,7 @@
 #include <exception/NvmExceptionLibError.h>
 #include <lib_interface/NvmApi.h>
 #include <NvmStrings.h>
+#include <core/Helper.h>
 #include "InterleaveSet.h"
 
 wbem::mem_config::PoolViewFactory::PoolViewFactory()
@@ -95,7 +96,7 @@ throw(wbem::framework::Exception)
 		checkAttributes(attributes);
 
 		std::string poolUidStr = path.getKeyValue(POOLID_KEY).stringValue();
-		if (poolUidStr.length() != NVM_MAX_UID_LEN - 1)
+		if (!core::Helper::isValidPoolUid(poolUidStr))
 		{
 			throw framework::ExceptionBadParameter(POOLID_KEY.c_str());
 		}

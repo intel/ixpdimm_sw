@@ -45,6 +45,7 @@
 #include <exception/NvmExceptionLibError.h>
 #include <lib_interface/NvmApi.h>
 #include <NvmStrings.h>
+#include <core/device/DeviceHelper.h>
 #include "MemoryConfigurationServiceFactory.h"
 
 wbem::mem_config::MemoryConfigurationFactory::MemoryConfigurationFactory()
@@ -528,15 +529,12 @@ wbem::framework::Instance* wbem::mem_config::MemoryConfigurationFactory::getInst
 		framework::Attribute idAttr = path.getKeyValue(INSTANCEID_KEY);
 		std::string instanceId = idAttr.stringValue();
 
-		// InstanceID = dimmUid + 'G' or 'C'. Length should be = NVM_MAX_UID_LEN
-		// because .length() doesn't include the NULL terminator but NVM_MAX_UID_LEN does.
-		if (instanceId.length() != NVM_MAX_UID_LEN ||
-				(!isCurrentConfig(instanceId) && !isGoalConfig(instanceId)))
+		if (!isValidInstanceId(instanceId))
 		{
 			throw framework::ExceptionBadParameter(INSTANCEID_KEY.c_str());
 		}
 
-		std::string uidStr = instanceId.substr(0, NVM_MAX_UID_LEN - 1);
+		std::string uidStr = instanceId.substr(0, instanceId.length() - 1);
 		struct device_discovery deviceDiscovery;
 		pApi->getDeviceDiscoveryForDimm(uidStr, deviceDiscovery);
 
@@ -795,6 +793,14 @@ bool wbem::mem_config::MemoryConfigurationFactory::dimmIsInAPool(NVM_UID uid, st
 		}
 	}
 	return inAPool;
+}
+
+bool wbem::mem_config::MemoryConfigurationFactory::isValidInstanceId(std::string instanceId)
+{
+	// InstanceID = dimmUid + 'G' or 'C'.
+	std::string uid = instanceId.substr(0, instanceId.length() - 1);
+	return core::device::isUidValid(uid) &&
+			 (isCurrentConfig(instanceId) || isGoalConfig(instanceId));
 }
 
 bool wbem::mem_config::MemoryConfigurationFactory::isGoalConfig(std::string instanceId)

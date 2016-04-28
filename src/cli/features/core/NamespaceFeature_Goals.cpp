@@ -638,7 +638,7 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::deleteConfigGoal(
 			wbem::framework::Attribute idAttr;
 			iter->getAttribute(wbem::INSTANCEID_KEY, idAttr);
 			std::string instanceId = idAttr.stringValue();
-			std::string dimmId = instanceId.substr(0, NVM_MAX_UID_LEN - 1);
+			std::string dimmId = instanceId.substr(0, instanceId.length() - 1);
 			std::string prefix = cli::framework::ResultBase::stringFromArgList(
 						(basePrefix + " %s").c_str(),
 						wbem::physical_asset::NVDIMMFactory::uidToDimmIdStr(dimmId).c_str()) + ": ";

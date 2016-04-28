@@ -49,6 +49,7 @@
 
 #include <exception/NvmExceptionLibError.h>
 #include <NvmStrings.h>
+#include <core/device/DeviceHelper.h>
 
 wbem::software::NVDIMMSoftwareInstallationServiceFactory::NVDIMMSoftwareInstallationServiceFactory()
 throw (wbem::framework::Exception) : m_UpdateDeviceFw(nvm_update_device_fw),
@@ -382,7 +383,7 @@ throw (framework::Exception)
 	{
 		throw framework::ExceptionBadParameter("path");
 	}
-	if (deviceUid.empty() || (deviceUid.size() != NVM_MAX_UID_LEN - 1))
+	if (!core::device::isUidValid(deviceUid))
 	{
 		throw framework::ExceptionBadParameter("deviceUid");
 	}
@@ -441,7 +442,7 @@ throw (framework::Exception)
 	{
 		throw framework::ExceptionBadParameter("path");
 	}
-	if (deviceUid.empty() || (deviceUid.size() != NVM_MAX_UID_LEN - 1))
+	if (!core::device::isUidValid(deviceUid))
 	{
 		throw framework::ExceptionBadParameter("deviceUid");
 	}

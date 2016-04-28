@@ -42,6 +42,7 @@
 #include <mem_config/MemoryAllocationSettingsFactory.h>
 #include <exception/NvmExceptionLibError.h>
 #include <NvmStrings.h>
+#include <core/device/DeviceHelper.h>
 
 wbem::memory::VolatileMemoryFactory::VolatileMemoryFactory()
 {
@@ -218,7 +219,7 @@ wbem::framework::UINT64 wbem::memory::VolatileMemoryFactory::getDimmMemoryCapaci
 	throw (wbem::framework::Exception)
 {
 	NVM_UINT64 volatileCapacity = 0;
-	if (uidStr.length() != (NVM_MAX_UID_LEN - 1))
+	if (!core::device::isUidValid(uidStr))
 	{
 		throw framework::ExceptionBadParameter("UID");
 	}

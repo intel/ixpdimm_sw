@@ -590,7 +590,7 @@ std::vector<struct pool> NvmLibrary::getPools()
 		throw core::LibraryException(rc);
 	}
 	int count = rc;
-	struct pool fromLib[count];
+	struct pool *fromLib = (struct pool *)malloc(sizeof (struct pool) * count);
 
 	rc = m_lib.getPools(fromLib, count);
 	if (rc < 0)
@@ -602,6 +602,8 @@ std::vector<struct pool> NvmLibrary::getPools()
 	{
 		result.push_back(fromLib[i]);
 	}
+	free(fromLib);
+
 	return result;
 
 }
@@ -1047,19 +1049,23 @@ std::vector<struct event> NvmLibrary::getEvents(const struct event_filter &pFilt
 	{
 		throw core::LibraryException(rc);
 	}
-	int count = rc;
-	struct event fromLib[count];
 
-	rc = m_lib.getEvents(&pFilter, fromLib, count);
-	if (rc < 0)
+	if (rc > 0)
 	{
-		throw core::LibraryException(rc);
+		int count = rc;
+		struct event fromLib[count];
+		rc = m_lib.getEvents(&pFilter, fromLib, count);
+		if (rc < 0)
+		{
+			throw core::LibraryException(rc);
+		}
+
+		for (int i = 0; i < count; i++)
+		{
+			result.push_back(fromLib[i]);
+		}
 	}
 
-	for (int i = 0; i < count; i++)
-	{
-		result.push_back(fromLib[i]);
-	}
 	return result;
 
 }

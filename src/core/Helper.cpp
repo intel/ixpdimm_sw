@@ -40,9 +40,19 @@ std::string core::Helper::uidToString(const NVM_UID uid)
 void core::Helper::stringToUid(const std::string &string, NVM_UID uid)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	if (string.length() != NVM_MAX_UID_LEN - 1)
+	if (string.length() > NVM_MAX_UID_LEN - 1)
 	{
 		throw InvalidArgumentException("stringUid");
 	}
 	uid_copy(string.c_str(), uid);
+}
+
+bool core::Helper::isValidNamespaceUid(std::string uid)
+{
+	return uid.length() == COMMON_GUID_STR_LEN - 1;
+}
+
+bool core::Helper::isValidPoolUid(std::string uid)
+{
+	return uid.length() == COMMON_GUID_STR_LEN - 1;
 }

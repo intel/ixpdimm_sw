@@ -264,10 +264,6 @@ int nvm_get_devices(struct device_discovery *p_devices, const NVM_UINT8 count)
 					{
 						copy_count++;
 
-						calculate_device_uid(p_devices[i].uid,
-								id_dimm.mf, DEV_MFR_LEN,
-								(char *)id_dimm.mn, DEV_MODELNUM_LEN,
-								id_dimm.sn, DEV_SN_LEN);
 						p_devices[i].device_handle = dimm_list[i].device_handle;
 						p_devices[i].physical_id = dimm_list[i].id;
 						p_devices[i].vendor_id = dimm_list[i].vendor_id;
@@ -339,6 +335,7 @@ int nvm_get_devices(struct device_discovery *p_devices, const NVM_UINT8 count)
 							}
 						}
 					}
+					calculate_device_uid(&(p_devices[i]));
 					s_memset(&id_dimm, sizeof (id_dimm));
 				}
 

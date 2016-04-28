@@ -1085,7 +1085,7 @@ NVM_NFIT_DEVICE_HANDLE
 
 	for (size_t i = 0; i < devices.size(); i++)
 	{
-		if (memcmp(uid, devices[i].uid, NVM_MAX_UID_LEN) == 0)
+		if (uid_cmp(uid, devices[i].uid))
 		{
 			handle = devices[i].device_handle;
 			found = true;

@@ -45,6 +45,7 @@
 #include <exception/NvmExceptionLibError.h>
 #include <framework_interface/NvmAssociationFactory.h>
 #include <NvmStrings.h>
+#include <core/device/DeviceHelper.h>
 
 /*
  * splits a instance ID attribute into uid + decoded metric type.
@@ -55,24 +56,22 @@ bool wbem::performance::PerformanceMetricFactory::splitInstanceID(
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	bool found = false;
-	std::string metricTypeStr = instanceId.stringValue();
 	metric = METRIC_UNDEFINED;
-	deviceUid.clear();
-	if (metricTypeStr.length() >  NVM_MAX_UID_LEN)
+
+	const std::string &instanceIdStr = instanceId.stringValue();
+	int index = core::device::findUidStart(instanceIdStr);
+	if (index >= 0)
 	{
-		metricTypeStr.erase(metricTypeStr.length() - NVM_MAX_UID_LEN + 1);
-		metric = getTypeFromInstanceIdName(metricTypeStr);
-		found = metric != METRIC_UNDEFINED;
-	}
-	if (found && ((metricTypeStr.length() + NVM_MAX_UID_LEN-1) <= instanceId.stringValue().length()))
-	{
-		deviceUid = instanceId.stringValue().substr(metricTypeStr.length(), NVM_MAX_UID_LEN);
-		COMMON_LOG_DEBUG_F("Returning metric: %s UID: %s", metricTypeStr.c_str(), deviceUid.c_str());
+		found = true;
+		deviceUid = instanceIdStr.substr(index);
+		std::string metricStr = instanceIdStr.substr(0, index);
+		metric = stringToMetric(metricStr);
 	}
 	else
 	{
-		COMMON_LOG_WARN_F("Could not find a performance metric type in %s", instanceId.stringValue().c_str());
+		COMMON_LOG_WARN_F("Could not find a uid in %s", instanceId.stringValue().c_str());
 	}
+
 	return found;
 }
 
@@ -293,7 +292,7 @@ throw(wbem::framework::Exception)
 	return (ret);
 }
 
-wbem::performance::metric_type wbem::performance::PerformanceMetricFactory::getTypeFromInstanceIdName(
+wbem::performance::metric_type wbem::performance::PerformanceMetricFactory::stringToMetric(
 	const std::string &str)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -301,27 +300,27 @@ wbem::performance::metric_type wbem::performance::PerformanceMetricFactory::getT
 	// preset return type to unknown
 	wbem::performance::metric_type metricType = wbem::performance::METRIC_UNDEFINED;
 	// test for the metric type requested and set the metric type code appropriately.
-	if (std::string::npos != str.find(METRICVAL_BYTES_READ_STR))
+	if (str == METRICVAL_BYTES_READ_STR)
 	{
 		metricType = METRIC_BYTES_READ;
 	}
-	else if (std::string::npos != str.find(METRICVAL_BYTES_WRITTEN_STR))
+	else if (str == METRICVAL_BYTES_WRITTEN_STR)
 	{
 		metricType = METRIC_BYTES_WRITTEN;
 	}
-	else if (std::string::npos != str.find(METRICVAL_HOST_READS_STR))
+	else if (str == METRICVAL_HOST_READS_STR)
 	{
 		metricType = METRIC_HOST_READS;
 	}
-	else if (std::string::npos != str.find(METRICVAL_HOST_WRITES_STR))
+	else if (str == METRICVAL_HOST_WRITES_STR)
 	{
 		metricType = METRIC_HOST_WRITES;
 	}
-	else if (std::string::npos != str.find(METRICVAL_BLOCK_READS_STR))
+	else if (str == METRICVAL_BLOCK_READS_STR)
 	{
 		metricType = METRIC_BLOCK_READS;
 	}
-	else if (std::string::npos != str.find(METRICVAL_BLOCK_WRITES_STR))
+	else if (str == METRICVAL_BLOCK_WRITES_STR)
 	{
 		metricType = METRIC_BLOCK_WRITES;
 	}

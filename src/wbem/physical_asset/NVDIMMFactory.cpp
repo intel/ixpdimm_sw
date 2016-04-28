@@ -47,7 +47,7 @@
 #include <persistence/config_settings.h>
 #include <persistence/lib_persistence.h>
 #include <core/exceptions/InvalidArgumentException.h>
-
+#include <core/device/DeviceHelper.h>
 
 namespace wbem
 {
@@ -300,7 +300,7 @@ void NVDIMMFactory::setPassphrase(std::string deviceUid,
 		std::string currentPassphrase)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	if (deviceUid.empty() || (deviceUid.size() != NVM_MAX_UID_LEN - 1))
+	if (!core::device::isUidValid(deviceUid))
 	{
 		throw framework::ExceptionBadParameter("deviceUid");
 	}
@@ -341,7 +341,7 @@ void NVDIMMFactory::removePassphrase(
 	{
 		throw framework::ExceptionBadParameter(NVDIMM_SETPASSPHRASE_CURRENTPASSPHRASE.c_str());
 	}
-	if (deviceUid.empty() || (deviceUid.size() != NVM_MAX_UID_LEN - 1))
+	if (!core::device::isUidValid(deviceUid))
 	{
 		throw framework::ExceptionBadParameter("deviceUid");
 	}
@@ -365,7 +365,7 @@ void NVDIMMFactory::unlock(std::string deviceUid,
 	{
 		throw framework::ExceptionBadParameter(NVDIMM_SETPASSPHRASE_CURRENTPASSPHRASE.c_str());
 	}
-	if (deviceUid.empty() || (deviceUid.size() != NVM_MAX_UID_LEN - 1))
+	if (!core::device::isUidValid(deviceUid))
 	{
 		throw framework::ExceptionBadParameter("deviceUid");
 	}
@@ -855,7 +855,7 @@ void NVDIMMFactory::clearError(const std::string &dimmUid,
 
 	// check for valid dimm uid
 	// note - .length() doesn't include NULL terminator
-	if (dimmUid.empty() || dimmUid.length() != NVM_MAX_UID_LEN - 1)
+	if (!core::device::isUidValid(dimmUid))
 	{
 		COMMON_LOG_ERROR("Invalid dimm uid");
 		throw wbem::framework::ExceptionBadParameter(wbem::DEVICEID_KEY.c_str());
@@ -877,7 +877,7 @@ void NVDIMMFactory::injectError(const std::string &dimmUid,
 
 	// check for valid dimm uid
 	// note - .length() doesn't include NULL terminator
-	if (dimmUid.empty() || dimmUid.length() != NVM_MAX_UID_LEN - 1)
+	if (!core::device::isUidValid(dimmUid))
 	{
 		COMMON_LOG_ERROR("Invalid dimm uid");
 		throw wbem::framework::ExceptionBadParameter(wbem::DEVICEID_KEY.c_str());

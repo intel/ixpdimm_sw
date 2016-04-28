@@ -36,7 +36,7 @@ extern "C"
 #include <stdio.h>
 #include <common_types.h>
 
-extern void uid_copy(const COMMON_UID src, COMMON_UID dst);
+extern void uid_copy(const char *src, COMMON_UID dst);
 
 extern void guid_to_uid(const COMMON_GUID guid, COMMON_UID uid);
 

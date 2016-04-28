@@ -91,7 +91,7 @@ public:
 	 * 		the string to parse.
 	 * @return metric value code for the string found (METRIC_UNDEFINED, if not found).
 	 */
-	static metric_type getTypeFromInstanceIdName(const std::string &str);
+	static metric_type stringToMetric(const std::string &str);
 	/*!
 	 * Utility function to convert a metric type code back into a text string.
 	 * @param[in] metric

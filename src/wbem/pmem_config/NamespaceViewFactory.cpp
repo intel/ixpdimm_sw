@@ -45,6 +45,7 @@
 #include <mem_config/InterleaveSet.h>
 #include <exception/NvmExceptionLibError.h>
 #include <NvmStrings.h>
+#include <core/Helper.h>
 
 wbem::pmem_config::NamespaceViewFactory::NamespaceViewFactory()
 throw(wbem::framework::Exception)
@@ -96,7 +97,7 @@ throw(wbem::framework::Exception)
 		checkAttributes(attributes);
 
 		std::string nsUidStr = path.getKeyValue(NAMESPACEID_KEY).stringValue();
-		if (nsUidStr.length() != NVM_MAX_UID_LEN - 1)
+		if (!core::Helper::isValidNamespaceUid(nsUidStr))
 		{
 			if (pInstance)
 			{

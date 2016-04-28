@@ -63,7 +63,7 @@
 #include <logic/MemoryAllocator.h>
 #include <logic/MemoryAllocationUtil.h>
 #include <logic/RulePartialSocketConfigured.h>
-
+#include <core/device/DeviceHelper.h>
 
 wbem::mem_config::MemoryConfigurationServiceFactory::MemoryConfigurationServiceFactory()
 	throw (wbem::framework::Exception) :
@@ -847,7 +847,7 @@ wbem::framework::Instance* wbem::mem_config::MemoryConfigurationServiceFactory::
 	// We expect the the instanceId to be the device uid as a string + either a 'C' or 'G'.
 	// So its length should be the same as NVM_MAX_UID_LEN because the 'C' or 'G' character
 	// will take the place of the null terminator.
-	if (instanceId.size() != NVM_MAX_UID_LEN )
+	if (!MemoryConfigurationFactory::isValidInstanceId(instanceId))
 	{
 		throw framework::ExceptionBadParameter(INSTANCEID_KEY.c_str());
 	}
@@ -864,7 +864,7 @@ wbem::framework::Instance* wbem::mem_config::MemoryConfigurationServiceFactory::
 		throw;
 	}
 	
-	std::string deviceUid = instanceId.substr(0, NVM_MAX_UID_LEN - 1);
+	std::string deviceUid = instanceId.substr(0, instanceId.length() - 1);
 
 	NVM_UID uid;
 	uid_copy(deviceUid.c_str(), uid);
@@ -1195,7 +1195,7 @@ wbem::framework::UINT32 wbem::mem_config::MemoryConfigurationServiceFactory::exe
 
 			// make sure it contains a UID and the UID is valid
 			uidStr = objPath.getKeyValue(TAG_KEY).stringValue();
-			if (uidStr.length() != NVM_MAX_UID_LEN - 1)
+			if (!core::device::isUidValid(uidStr))
 			{
 				COMMON_LOG_ERROR_F("Bad NVDIMM object path %s", (*iter).c_str());
 				throw framework::ExceptionBadParameter(MEMORYCONFIGURATIONSERVICE_TARGETS.c_str());

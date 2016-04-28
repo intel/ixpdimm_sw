@@ -42,6 +42,7 @@
 #include <string/s_str.h>
 #include <exception/NvmExceptionLibError.h>
 #include <lib_interface/NvmApi.h>
+#include <core/Helper.h>
 
 wbem::pmem_config::PersistentMemoryServiceFactory::PersistentMemoryServiceFactory()
 throw (framework::Exception)
@@ -618,7 +619,7 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::modifyNamespace(
 				wbem::framework::Attribute uidAttribute;
 				goalInstance.getAttribute(wbem::POOLID_KEY, uidAttribute);
 				std::string poolUidStr = uidAttribute.stringValue();
-				if (poolUidStr.empty() || poolUidStr.length() != NVM_MAX_UID_LEN - 1)
+				if (!core::Helper::isValidPoolUid(poolUidStr))
 				{
 					COMMON_LOG_ERROR_F("Invalid pool uid in object path: %s", goalString.c_str());
 					httpRc = framework::CIM_ERR_INVALID_PARAMETER;
@@ -674,8 +675,7 @@ wbem::framework::UINT32 wbem::pmem_config::PersistentMemoryServiceFactory::getNa
 void wbem::pmem_config::PersistentMemoryServiceFactory::deleteNamespace(const std::string &namespaceUid)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	// note - .length() doesn't include NULL terminator
-	if (namespaceUid.empty() || namespaceUid.length() != NVM_MAX_UID_LEN - 1)
+	if (!core::Helper::isValidNamespaceUid(namespaceUid))
 	{
 		throw framework::ExceptionBadParameter(PM_SERVICE_NAMESPACE.c_str());
 	}
@@ -703,8 +703,7 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::createNamespace(std::str
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	// note - .length() doesn't include NULL terminator
-	if (poolUidStr.empty() || poolUidStr.length() != NVM_MAX_UID_LEN - 1)
+	if (!core::Helper::isValidPoolUid(poolUidStr))
 	{
 		throw framework::ExceptionBadParameter(PM_SERVICE_RESOURCE_POOL.c_str());
 	}
@@ -867,8 +866,7 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::modifyNamespaceName(
 		const std::string namespaceUidStr, const std::string friendlyNameStr)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	// note - .length() doesn't include NULL terminator
-	if (namespaceUidStr.empty() || namespaceUidStr.length() != NVM_MAX_UID_LEN - 1)
+	if (!core::Helper::isValidNamespaceUid(namespaceUidStr))
 	{
 		throw framework::ExceptionBadParameter(PM_SERVICE_NAMESPACE.c_str());
 	}
@@ -887,8 +885,7 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::modifyNamespaceBlockCoun
 		const std::string namespaceUidStr, const NVM_UINT64 blockCount)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	// note - .length() doesn't include NULL terminator
-	if (namespaceUidStr.empty() || namespaceUidStr.length() != NVM_MAX_UID_LEN - 1)
+	if (!core::Helper::isValidNamespaceUid(namespaceUidStr))
 	{
 		throw framework::ExceptionBadParameter(PM_SERVICE_NAMESPACE.c_str());
 	}

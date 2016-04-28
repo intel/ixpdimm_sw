@@ -43,6 +43,7 @@
 #include <exception/NvmExceptionLibError.h>
 #include <framework_interface/NvmAssociationFactory.h>
 #include <NvmStrings.h>
+#include <core/Helper.h>
 
 wbem::pmem_config::PersistentMemoryCapabilitiesFactory::PersistentMemoryCapabilitiesFactory()
 throw(wbem::framework::Exception)
@@ -389,7 +390,7 @@ struct pool wbem::pmem_config::PersistentMemoryCapabilitiesFactory::getPool(
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	std::string poolUidStr = object.getKeyValue(INSTANCEID_KEY).stringValue();
-	if (poolUidStr.length() != NVM_MAX_UID_LEN - 1)
+	if (!core::Helper::isValidPoolUid(poolUidStr))
 	{
 		COMMON_LOG_ERROR_F("PersistentMemoryCapabilitiesFactory InstanceID is not a valid pool uid %s",
 				poolUidStr.c_str());

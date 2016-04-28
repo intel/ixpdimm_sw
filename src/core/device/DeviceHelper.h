@@ -24,39 +24,26 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#ifndef CR_MGMT_DEVICEHELPER_H
+#define CR_MGMT_DEVICEHELPER_H
 
-#include <stdlib.h>
-#include <string.h>
-#include <guid/guid.h>
-#include <string/s_str.h>
+#include <string>
+#include <nvm_types.h>
 
-#include "uid.h"
-
-
-void uid_copy(const char *src, COMMON_UID dst)
+namespace core
 {
-	if (src != NULL && dst != NULL)
-	{
-		s_strcpy(dst, src, COMMON_UID_LEN);
-	}
-}
+namespace device
+{
+
+NVM_API bool isUidValid(const std::string &uid);
 
 /*
- * Convert binary guid to a string.
- * Note requirement that caller supply buffer of appropriate size.
+ * The following two functions are useful when needing to split a string that is part UID part
+ * something else. For example: 8080-12345678temp
  */
-void guid_to_uid(const COMMON_GUID guid, COMMON_UID uid)
-{
-	guid_to_str(guid, uid);
+NVM_API int findUidEnd(const std::string &stringWithUidAtBeginning);
+NVM_API int findUidStart(const std::string &stringWithUidAtEnd);
+}
 }
 
-/*
- * Check if two guids are equal
- */
-int uid_cmp(const COMMON_UID guid1, const COMMON_UID guid2)
-{
-	if (strncmp(guid1, guid2, COMMON_UID_LEN) == 0)
-		return 1;
-	else
-		return 0;
-}
+#endif //CR_MGMT_DEVICEHELPER_H

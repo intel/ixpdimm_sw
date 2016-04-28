@@ -41,6 +41,7 @@
 #include "NamespaceViewFactory.h"
 #include <sstream>
 #include <NvmStrings.h>
+#include <core/Helper.h>
 
 wbem::pmem_config::NamespaceSettingsFactory::NamespaceSettingsFactory()
 throw(wbem::framework::Exception)
@@ -90,7 +91,7 @@ throw(wbem::framework::Exception)
 		checkAttributes(attributes);
 
 		std::string nsUidStr = path.getKeyValue(INSTANCEID_KEY).stringValue();
-		if (nsUidStr.length() != NVM_MAX_UID_LEN - 1)
+		if (!core::Helper::isValidNamespaceUid(nsUidStr))
 		{
 			COMMON_LOG_ERROR_F("NamespaceSettings InstanceID is not a valid namespace uid %s",
 					nsUidStr.c_str());
