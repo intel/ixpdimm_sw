@@ -310,32 +310,23 @@ int check_driver_revision(const char *driver_rev)
 }
 
 /*
- * Helper function to compare the firmware api version to the configuration
- * database to determine if the device is manageable. Because the firmware is backwards
- * compatible need to make sure api version is >= configured supported API.
+ * Helper function to compare the firmware API version to the supported version
+ * to determine if the device is manageable. Because the firmware is backwards
+ * compatible need to make sure API version is >= supported API.
  */
 int check_firmware_revision(unsigned char fw_api_version)
 {
 	int rc = 0;
 
-	// parse the firmware revision string into major and minor
-	int major = (fw_api_version > 4) & 0xF;
-	int minor = fw_api_version & 0xF;
-	int supported_minor_min;
-	int supported_major_min;
+	// parse the firmware API revision into major and minor
+	unsigned int major = (fw_api_version > 4) & 0xF;
+	unsigned int minor = fw_api_version & 0xF;
 
-	// retrieve the config settings and perform the checks
-	if ((get_config_value_int(SQL_KEY_FW_MAJOR_MIN, &supported_major_min) == COMMON_SUCCESS) &&
-			(get_config_value_int(SQL_KEY_FW_MINOR_MIN, &supported_minor_min) == COMMON_SUCCESS) &&
-			((major > supported_major_min) ||
-			(major == supported_major_min && minor >= supported_minor_min)))
-	{
-		rc = 1;
-	}
-	else
+	rc = is_fw_api_version_supported(major, minor);
+	if (rc == 0)
 	{
 		COMMON_LOG_ERROR_F(
-			"FW API revision %d.%d is not supported by the host software",
+			"FW API revision %u.%u is not supported by the host software",
 			major, minor);
 	}
 

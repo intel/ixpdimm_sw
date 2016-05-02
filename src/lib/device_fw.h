@@ -1808,6 +1808,14 @@ static inline int dsm_err_to_nvm_lib_err(unsigned int status)
 	return rc;
 }
 
+/*
+ * Compare the firmware API version to the supported version.
+ * Because the firmware is backwards compatible need to make sure API version
+ * is >= supported API.
+ */
+NVM_BOOL is_fw_api_version_supported(const unsigned int major_version,
+	const unsigned int minor_version);
+
 int fw_get_alarm_thresholds(NVM_UINT32 const device_handle,
 	struct pt_payload_alarm_thresholds *p_thresholds);
 

@@ -31,6 +31,29 @@
 
 #include "device_fw.h"
 #include "device_adapter.h"
+#include "utility.h"
+
+/*
+ * Minimum supported version of FW API: 1.0
+ */
+#define	DEV_FW_API_VERSION_MAJOR_MIN	1
+#define	DEV_FW_API_VERSION_MINOR_MIN	0
+
+NVM_BOOL is_fw_api_version_supported(const unsigned int major_version,
+		const unsigned int minor_version)
+{
+	COMMON_LOG_ENTRY();
+	NVM_BOOL is_supported = 0;
+
+	if (version_cmp(major_version, minor_version,
+			DEV_FW_API_VERSION_MAJOR_MIN, DEV_FW_API_VERSION_MINOR_MIN) >= 0)
+	{
+		is_supported = 1;
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(is_supported);
+	return is_supported;
+}
 
 // send a pass-through command to get the current alarm thresholds
 int fw_get_alarm_thresholds(NVM_UINT32 const device_handle,

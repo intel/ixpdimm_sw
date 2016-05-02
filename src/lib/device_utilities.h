@@ -73,9 +73,8 @@ void set_device_manageability(const char *driver_revision,
 int check_driver_revision(const char *driver_rev);
 
 /*
- * Compare the firmware api version to the configuration database to determine
- * if the device is manageable. Because the firmware is backwards
- * compatible need to make sure api version is >= configured supported API.
+ * Compare the firmware api version to the supported versions to determine
+ * if the device is manageable.
  */
 int check_firmware_revision(unsigned char fw_api_version);
 

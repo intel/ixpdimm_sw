@@ -92,12 +92,6 @@ extern "C"
 //! SQL Key name for the default simulator file location
 #define	SQL_KEY_DEFAULT_SIMULATOR	"DEFAULT_SIMULATOR"
 
-//! SQL Key name for the minimum firmware major version supported
-#define	SQL_KEY_FW_MAJOR_MIN "FW_MAJOR_MIN"
-
-//! SQL Key name for the maximum firmware major version supported
-#define	SQL_KEY_FW_MINOR_MIN "FW_MAJOR_MAX"
-
 //! SQL Key name for the minimum Windows driver major version supported
 #define	SQL_KEY_WIN_DRIVER_MAJOR_MIN "WIN_DRIVER_MAJOR_MIN"
 

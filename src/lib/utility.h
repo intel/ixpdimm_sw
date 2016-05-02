@@ -123,6 +123,35 @@ static inline void SERIAL_NUMBER_TO_STRING(const unsigned char *serial_number,
 	}
 }
 
+/*
+ * Compare major and minor version numbers to discover if versions
+ * are greater, lesser, or equal.
+ * Returns 1 if version1 is greater, -1 if version1 is lesser, 0 if equal
+ */
+static inline int version_cmp(const unsigned int version1_major,
+		const unsigned int version1_minor,
+		const unsigned int version2_major,
+		const unsigned int version2_minor)
+{
+	int rc = 0;
+
+	if ((version1_major > version2_major) ||
+			(version1_major == version2_major &&
+					version1_minor > version2_minor))
+	{
+		rc = 1;
+	}
+	else if ((version1_major < version2_major) ||
+			(version1_major == version2_major &&
+					version1_minor < version2_minor))
+	{
+		rc = -1;
+	}
+	// Otherwise must be equal
+
+	return rc;
+}
+
 static inline enum interleave_ways interleave_way_to_enum(int way)
 {
 	enum interleave_ways enum_way;
