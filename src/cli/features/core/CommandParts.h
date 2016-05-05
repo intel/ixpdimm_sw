@@ -109,6 +109,7 @@ const std::string BAD_REQUEST_APP_DIRECT_SETTINGS_NOT_RECOMMENDED_STR = N_TR("Th
 const std::string BAD_REQUEST_DIMM_SECURITY_STATE = N_TR("This method is not supported by the device in its current security state.");
 const std::string BAD_REQUEST_RESERVE_DIMM_STR = N_TR("Cannot create volatile or persistent "
 		"regions on an " NVM_DIMM_NAME " and have it reserved as a storage device.");
+const std::string BLOCKSIZE_NOT_SUPPORTED_STR = N_TR("The block size '%llu' is not supported.");
 
 }
 }

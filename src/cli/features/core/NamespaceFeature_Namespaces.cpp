@@ -605,6 +605,16 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseCreateNsBlockSiz
 		}
 	}
 
+	// blocksize of 0 is not supported, fail before further parsing of capacity property
+	if (m_blockSize == 0)
+	{
+		std::string errorString = framework::ResultBase::stringFromArgList(
+				TR(BLOCKSIZE_NOT_SUPPORTED_STR.c_str()), m_blockSize);
+
+		return new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
+				errorString);
+	}
+
 	return pResult;
 }
 
@@ -1128,6 +1138,8 @@ cli::framework::ErrorResult* cli::nvmcli::NamespaceFeature::nsNvmExceptionToResu
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	wbem::exception::NvmExceptionLibError * pLibError =
 			dynamic_cast<wbem::exception::NvmExceptionLibError *>(&e);
+
+	framework::ErrorResult *pResult = NULL;
 	if (pLibError)
 	{
 		switch (pLibError->getLibError())
@@ -1135,17 +1147,18 @@ cli::framework::ErrorResult* cli::nvmcli::NamespaceFeature::nsNvmExceptionToResu
 		case NVM_ERR_BADPOOL:
 		{
 			// Use the underlying API error message string
-			return new framework::ErrorResult(framework::ResultBase::ERRORCODE_UNKNOWN,
+			pResult = new framework::ErrorResult(framework::ResultBase::ERRORCODE_UNKNOWN,
 					TR(pLibError->what()));
+			break;
 		}
 		case NVM_ERR_BADBLOCKSIZE:
 		{
-			char errbuff[NVM_ERROR_LEN];
-			s_snprintf(errbuff, NVM_ERROR_LEN,
-					TR("The block size '%llu' is not supported."),
-					m_blockSize);
-			return new framework::ErrorResult(framework::ResultBase::ERRORCODE_UNKNOWN,
-					errbuff);
+			std::string errorString = framework::ResultBase::stringFromArgList(
+					TR(BLOCKSIZE_NOT_SUPPORTED_STR.c_str()), m_blockSize);
+
+			pResult = new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
+					errorString);
+			break;
 		}
 		case NVM_ERR_BADSIZE:
 		{
@@ -1153,8 +1166,9 @@ cli::framework::ErrorResult* cli::nvmcli::NamespaceFeature::nsNvmExceptionToResu
 			s_snprintf(errbuff, NVM_ERROR_LEN,
 					TR("The block count '%llu' is not valid."),
 					m_blockCount);
-			return new framework::ErrorResult(framework::ResultBase::ERRORCODE_UNKNOWN,
+			pResult = new framework::ErrorResult(framework::ResultBase::ERRORCODE_UNKNOWN,
 					errbuff);
+			break;
 		}
 		case NVM_ERR_BADNAMESPACETYPE:
 		{
@@ -1162,18 +1176,24 @@ cli::framework::ErrorResult* cli::nvmcli::NamespaceFeature::nsNvmExceptionToResu
 			s_snprintf(errbuff, NVM_ERROR_LEN,
 					TR("The namespace type '%s' is not valid for the given pool."),
 					m_nsTypeStr.c_str());
-			return new framework::ErrorResult(framework::ResultBase::ERRORCODE_UNKNOWN,
+			pResult = new framework::ErrorResult(framework::ResultBase::ERRORCODE_UNKNOWN,
 					errbuff);
+			break;
 		}
 		case NVM_ERR_BADNAMESPACESETTING:
 		{
-			return new framework::ErrorResult(framework::ResultBase::ERRORCODE_UNKNOWN,
-				TRS(INVALID_NS_APP_DIRECT_SETTINGS));
+			pResult = new framework::ErrorResult(framework::ResultBase::ERRORCODE_UNKNOWN,
+					TRS(INVALID_NS_APP_DIRECT_SETTINGS));
+			break;
 		}
 		} // end switch
 	}
 
-	return NvmExceptionToResult(e, prefix);
+	if (!pResult)
+	{
+		pResult = NvmExceptionToResult(e, prefix);
+	}
+	return pResult;
 }
 
 bool cli::nvmcli::NamespaceFeature::namespaceCapacityModificationIsSupported(
