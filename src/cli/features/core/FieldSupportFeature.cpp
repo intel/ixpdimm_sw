@@ -235,7 +235,7 @@ void cli::nvmcli::FieldSupportFeature::getPaths(cli::framework::CommandSpecList 
 	showEvents.addProperty(EVENT_PROPERTY_CATEGORY)
 			.isRequired(false)
 			.isValueRequired(true)
-			.valueText("Diag|FW|PlatformConfig|PM|Quick|Security|Error|Health|Mgmt|Sensor")
+			.valueText("Diag|FW|PlatformConfig|PM|Quick|Security|Health|Mgmt")
 			.helpText(TR("Filter output to events of a specific category."));
 	showEvents.addProperty(ACTIONREQUIRED_PROPERTY_NAME)
 			.isRequired(false)
