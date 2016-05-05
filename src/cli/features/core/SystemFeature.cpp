@@ -1074,6 +1074,7 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::showSystemCapabilities(
 	allAttributes.push_back(wbem::GROWSTORAGENAMESPACESUPPORT_KEY);
 	allAttributes.push_back(wbem::SHRINKSTORAGENAMESPACESUPPORT_KEY);
 	allAttributes.push_back(wbem::INITIATESCRUBSUPPORT_KEY);
+	allAttributes.push_back(wbem::MEMORYPAGEALLOCATIONCAPABLE_KEY);
 
 	wbem::framework::attribute_names_t attributes =
 			GetAttributeNames(parsedCommand.options, defaultAttributes, allAttributes);

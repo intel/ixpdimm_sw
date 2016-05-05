@@ -40,7 +40,8 @@
 #include "utility.h"
 
 #define	DEFAULT_BTT_SECTOR_SIZE	4096
-#define	DEFAULT_PFN_ALIGNMENT	0x00200000 // recommended defaults for align
+#define	DEFAULT_PFN_NS_ALIGNMENT	0x08000000 // recommended data offset alignment
+// TODO: Change this to 2MB(0x00200000) instead of 128MB(0x04000000) for the next pmem build.
 
 void get_namespace_guid(struct ndctl_namespace *p_namespace, COMMON_UID guid);
 
@@ -259,7 +260,8 @@ int disable_namespace(struct ndctl_namespace *p_namespace)
 	int rc = NVM_SUCCESS;
 
 	struct ndctl_btt *p_btt = ndctl_namespace_get_btt(p_namespace);
-	if (!p_btt)
+	struct ndctl_pfn *p_pfn = ndctl_namespace_get_pfn(p_namespace);
+	if ((!p_btt) && (!p_pfn))
 	{
 		// if not already disabled
 		if (ndctl_namespace_is_enabled(p_namespace))
@@ -274,11 +276,24 @@ int disable_namespace(struct ndctl_namespace *p_namespace)
 	}
 	else
 	{
-		int tmp_rc = ndctl_btt_delete(p_btt);
-		if (tmp_rc < 0)
+		if (p_btt)
 		{
-			rc = linux_err_to_nvm_lib_err(tmp_rc);
-			COMMON_LOG_ERROR("Failed to disable the btt namespace");
+			int tmp_rc = ndctl_btt_delete(p_btt);
+			if (tmp_rc < 0)
+			{
+				rc = linux_err_to_nvm_lib_err(tmp_rc);
+				COMMON_LOG_ERROR("Failed to disable the btt namespace");
+			}
+		}
+
+		if (p_pfn)
+		{
+			int tmp_rc = ndctl_pfn_delete(p_pfn);
+			if (tmp_rc < 0)
+			{
+				rc = linux_err_to_nvm_lib_err(tmp_rc);
+				COMMON_LOG_ERROR("Failed to disable the pfn namespace");
+			}
 		}
 	}
 	return rc;
@@ -401,10 +416,8 @@ int get_namespace_details(
 			}
 
 			p_details->memory_page_allocation = NAMESPACE_MEMORY_PAGE_ALLOCATION_UNKNOWN;
-
-#if 0
 			struct ndctl_pfn *p_pfn = ndctl_namespace_get_pfn(p_namespace);
-			if (!p_pfn)
+			if (p_pfn)
 			{
 				enum ndctl_pfn_loc loc = ndctl_pfn_get_location(p_pfn);
 				if (loc == NDCTL_PFN_LOC_PMEM)
@@ -423,7 +436,7 @@ int get_namespace_details(
 							NAMESPACE_MEMORY_PAGE_ALLOCATION_NONE;
 				}
 
-				p_details->enabled = ndctl_namespace_is_enabled(p_namespace) ?
+				p_details->enabled = ndctl_pfn_is_enabled(p_pfn) ?
 						NAMESPACE_ENABLE_STATE_ENABLED :
 						NAMESPACE_ENABLE_STATE_DISABLED;
 			}
@@ -431,14 +444,15 @@ int get_namespace_details(
 			{
 				p_details->memory_page_allocation =
 						NAMESPACE_MEMORY_PAGE_ALLOCATION_NONE;
-				p_details->enabled = ndctl_pfn_is_enabled(p_pfn);
+				p_details->enabled = ndctl_namespace_is_enabled(p_namespace) ?
+						NAMESPACE_ENABLE_STATE_ENABLED :
+						NAMESPACE_ENABLE_STATE_DISABLED;
 			}
 
 			p_details->health = NAMESPACE_HEALTH_NORMAL;
 
 			p_details->block_count =
 				calculateBlockCount((ndctl_namespace_get_size(p_namespace)), p_details->block_size);
-#endif
 		}
 		ndctl_unref(ctx);
 	}
@@ -486,6 +500,8 @@ int get_idle_pfn(struct ndctl_region *region, struct ndctl_pfn **idle_pfn)
 		if (!ndctl_pfn_is_enabled(pfn) && !ndctl_pfn_is_configured(pfn))
 		{
 			*idle_pfn = pfn;
+			rc = NVM_SUCCESS;
+			break;
 		}
 	}
 
@@ -610,7 +626,7 @@ int create_pfn_namespace(struct ndctl_namespace *namespace,
 				// For AppDirect namespaces, the default is
 				// NAMESPACE_MEMORY_PAGE_ALLOCATION_APPDIRECT
 				enum ndctl_pfn_loc loc = NDCTL_PFN_LOC_PMEM;
-				unsigned long align = DEFAULT_PFN_ALIGNMENT;
+				unsigned long align = DEFAULT_PFN_NS_ALIGNMENT;
 
 				if (p_settings->memory_page_allocation ==
 						NAMESPACE_MEMORY_PAGE_ALLOCATION_DRAM)
@@ -627,7 +643,6 @@ int create_pfn_namespace(struct ndctl_namespace *namespace,
 				{
 					loc = NDCTL_PFN_LOC_NONE;
 				}
-
 				if (ndctl_pfn_set_uuid(pfn, pfn_guid))
 				{
 					COMMON_LOG_ERROR("Set pfn UUID failed");
@@ -635,7 +650,7 @@ int create_pfn_namespace(struct ndctl_namespace *namespace,
 				}
 				else if (ndctl_pfn_set_location(pfn, loc))
 				{
-					COMMON_LOG_ERROR("Set pfn sector size failed");
+					COMMON_LOG_ERROR("Set pfn location failed");
 					rc = NVM_ERR_DRIVERFAILED;
 				}
 				else if (ndctl_pfn_set_align(pfn, align))
@@ -907,7 +922,15 @@ int modify_namespace_name(
 			struct ndctl_btt *p_btt = ndctl_namespace_get_btt(p_namespace);
 			if (!p_btt)
 			{
-				ns_enabled = ndctl_namespace_is_enabled(p_namespace);
+				struct ndctl_pfn *p_pfn = ndctl_namespace_get_pfn(p_namespace);
+				if (!p_pfn)
+				{
+					ns_enabled = ndctl_namespace_is_enabled(p_namespace);
+				}
+				else
+				{
+					ns_enabled = ndctl_pfn_is_enabled(p_pfn);
+				}
 			}
 			else
 			{

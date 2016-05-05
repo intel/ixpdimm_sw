@@ -409,3 +409,9 @@ void wbem::pmem_config::PersistentMemoryCapabilitiesFactory::getSupportedBlockSi
 		list.push_back((NVM_UINT64)capabilities.sw_capabilities.block_sizes[i]);
 	}
 }
+
+NVM_BOOL wbem::pmem_config::PersistentMemoryCapabilitiesFactory::getMemoryPageAllocationCapability()
+{
+	struct nvm_capabilities capabilities = getNvmCapabilities();
+	return capabilities.sw_capabilities.namespace_memory_page_allocation_capable;
+}

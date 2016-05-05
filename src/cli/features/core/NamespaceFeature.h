@@ -141,10 +141,12 @@ static const std::string CREATE_NS_PROP_ENABLED = "Enabled";
 static const std::string CREATE_NS_PROP_READONLY = "ReadOnly";
 static const std::string CREATE_NS_PROP_OPTIMIZE = "Optimize";
 static const std::string CREATE_NS_PROP_OPTIMIZE_COPYONWRITE = "CopyOnWrite";
-static const std::string CREATE_NS_PROP_OPTIMIZE_NONE = "None";
 static const std::string CREATE_NS_PROP_ENCRYPTION = "Encryption";
 static const std::string CREATE_NS_PROP_ERASECAPABLE = "EraseCapable";
 static const std::string CREATE_NS_PROP_CAPACITY = "Capacity";
+static const std::string CREATE_NS_PROP_MEMORYPAGEALLOCATION = "MemoryPageAllocation";
+static const std::string CREATE_NS_PROP_MEMORYPAGEALLOCATION_DRAM = "DRAM";
+static const std::string CREATE_NS_PROP_MEMORYPAGEALLOCATION_APPDIRECT = "AppDirect";
 static const std::string NS_UNITS_OPTION_DESC = "Change the units the namespace capacity is displayed in.";
 
 /*!
@@ -267,6 +269,8 @@ class NVM_API NamespaceFeature : public cli::framework::FeatureBase
 		std::string m_prefix;
 		bool m_appDirectIsRemaining;
 		bool m_storageIsRemaining;
+		COMMON_UINT16 m_memoryPageAllocation;
+		bool m_optimizeExists;
 
 		/*
 		 * Return true if the namespace block count has the correct alignment
@@ -399,7 +403,7 @@ class NVM_API NamespaceFeature : public cli::framework::FeatureBase
 		framework::ResultBase * parseCreateNsEraseCapable(const framework::ParsedCommand& parsedCommand);
 		framework::ResultBase * parseInterleaveSizes(const framework::ParsedCommand &command);
 		framework::ResultBase * parseCreateNsCapacity(const framework::ParsedCommand& parsedCommand);
-
+		framework::ResultBase * parseCreateNsMemoryPageAllocation(const framework::ParsedCommand& parsedCommand);
 		/*
 		 * WBEM wrappers for modify namespace
 		 */
@@ -448,6 +452,9 @@ class NVM_API NamespaceFeature : public cli::framework::FeatureBase
 
 		// helper functions for create namespace
 		bool confirmNamespaceBlockSizeUsage();
+		bool optimizePropertyExists();
+		framework::ResultBase* parseMemoryPageAllocationForAppDirectNS(
+			const std::string& requestedMode);
 
 		// WBEM Dependencies
 		wbem::pmem_config::PersistentMemoryNamespaceFactory *m_pPmNamespaceProvider;

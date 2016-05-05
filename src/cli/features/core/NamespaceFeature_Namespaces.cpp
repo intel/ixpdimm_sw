@@ -428,6 +428,11 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::createNamespace(
 
 	if (!pResult)
 	{
+		pResult = parseCreateNsMemoryPageAllocation(parsedCommand);
+	}
+
+	if (!pResult)
+	{
 		try
 		{
 			std::string namespaceUid;
@@ -455,6 +460,7 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::createNamespace(
 			parms.interleaveChannelSize = m_channelSize;
 			parms.interleaveControllerSize = m_controllerSize;
 			parms.byOne = m_byOne;
+			parms.memoryPageAllocation = m_memoryPageAllocation;
 			m_pPmServiceProvider->createNamespace(parms, namespaceUid);
 
 			// display output from showNamespace
@@ -801,10 +807,9 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseCreateNsOptimize
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	framework::ResultBase *pResult = NULL;
 
-	bool hasProp;
-	std::string value = framework::Parser::getPropertyValue(parsedCommand, CREATE_NS_PROP_OPTIMIZE, &hasProp);
+	std::string value = framework::Parser::getPropertyValue(parsedCommand, CREATE_NS_PROP_OPTIMIZE, &m_optimizeExists);
 
-	if (hasProp)
+	if (m_optimizeExists)
 	{
 		if (framework::stringsIEqual(value, CREATE_NS_PROP_OPTIMIZE_COPYONWRITE))
 		{
@@ -830,6 +835,109 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseCreateNsOptimize
 		{
 			m_optimize = wbem::pmem_config::PM_SERVICE_OPTIMIZE_COPYONWRITE;
 		}
+	}
+
+	return pResult;
+}
+
+bool cli::nvmcli::NamespaceFeature::optimizePropertyExists()
+{
+	return (m_optimizeExists)
+			&& (m_optimize != wbem::pmem_config::PM_SERVICE_OPTIMIZE_NONE);
+}
+
+cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseMemoryPageAllocationForAppDirectNS(
+		const std::string& requestedMode)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	framework::ResultBase *pResult = NULL;
+
+	if (framework::stringsIEqual(requestedMode, CREATE_NS_PROP_MEMORYPAGEALLOCATION_DRAM) &&
+			m_pCapProvider->getMemoryPageAllocationCapability())
+	{
+		m_memoryPageAllocation =
+				wbem::pmem_config::PM_SERVICE_MEMORYPAGEALLOCATION_DRAM;
+	}
+	else if (framework::stringsIEqual(requestedMode, CREATE_NS_PROP_MEMORYPAGEALLOCATION_APPDIRECT) &&
+			m_pCapProvider->getMemoryPageAllocationCapability())
+	{
+		m_memoryPageAllocation =
+				wbem::pmem_config::PM_SERVICE_MEMORYPAGEALLOCATION_APP_DIRECT;
+	}
+	else if ((framework::stringsIEqual(requestedMode, CREATE_NS_PROP_MEMORYPAGEALLOCATION_DRAM) ||
+		framework::stringsIEqual(requestedMode, CREATE_NS_PROP_MEMORYPAGEALLOCATION_APPDIRECT)) &&
+		(!m_pCapProvider->getMemoryPageAllocationCapability()))
+	{
+		COMMON_LOG_ERROR("Driver does not support legacy memory page protocols.");
+		pResult = new framework::ErrorResult(
+				framework::ErrorResult::ERRORCODE_NOTSUPPORTED,
+				NOTSUPPORTED_ERROR_STR, "");
+	}
+	else if (framework::stringsIEqual(requestedMode, wbem::NONE))
+	{
+		m_memoryPageAllocation =
+				wbem::pmem_config::PM_SERVICE_MEMORYPAGEALLOCATION_NONE;
+	}
+	else
+	{
+		pResult = new framework::SyntaxErrorBadValueResult(
+				framework::TOKENTYPE_PROPERTY,
+				CREATE_NS_PROP_MEMORYPAGEALLOCATION, requestedMode);
+	}
+
+	return pResult;
+}
+
+cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseCreateNsMemoryPageAllocation(
+		const framework::ParsedCommand& parsedCommand)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	framework::ResultBase *pResult = NULL;
+
+	m_memoryPageAllocation = wbem::pmem_config::PM_SERVICE_MEMORYPAGEALLOCATION_NONE;
+
+	bool hasProp;
+	std::string requestedMode =
+			framework::Parser::getPropertyValue(parsedCommand, CREATE_NS_PROP_MEMORYPAGEALLOCATION, &hasProp);
+	if (hasProp)
+	{
+		if (m_nsType == wbem::pmem_config::PM_SERVICE_APP_DIRECT_TYPE)
+		{
+			pResult = parseMemoryPageAllocationForAppDirectNS(requestedMode);
+		}
+		else
+		{ // storage namespace
+			if (!framework::stringsIEqual(requestedMode, wbem::NONE))
+			{
+				COMMON_LOG_ERROR("Memory page allocation is not supported for storage namespaces");
+				pResult = new framework::ErrorResult(
+						framework::ErrorResult::ERRORCODE_NOTSUPPORTED, NOTSUPPORTED_ERROR_STR, "");
+			}
+		}
+	}
+	else
+	{ // default values
+		m_memoryPageAllocation = wbem::pmem_config::PM_SERVICE_MEMORYPAGEALLOCATION_NONE;
+
+		// default to AppDirect for AppDirect Namespaces if capable and if btt is not requested
+		if (!optimizePropertyExists() &&
+				(m_nsType == wbem::pmem_config::PM_SERVICE_APP_DIRECT_TYPE) &&
+				(m_pCapProvider->getMemoryPageAllocationCapability()))
+		{
+			m_memoryPageAllocation = wbem::pmem_config::PM_SERVICE_MEMORYPAGEALLOCATION_APP_DIRECT;
+		}
+	}
+
+	if (optimizePropertyExists() &&
+			m_memoryPageAllocation != wbem::pmem_config::PM_SERVICE_MEMORYPAGEALLOCATION_NONE)
+	{
+		COMMON_LOG_ERROR(
+				"Namespace can be claimed by either btt or pfn configurations.");
+		pResult = new framework::SyntaxErrorResult(
+				framework::ResultBase::stringFromArgList(
+						TR("'%s' and '%s' cannot be used together."),
+						CREATE_NS_PROP_OPTIMIZE.c_str(),
+						CREATE_NS_PROP_MEMORYPAGEALLOCATION.c_str()));
 	}
 
 	return pResult;
@@ -1410,6 +1518,7 @@ void cli::nvmcli::NamespaceFeature::populateNamespaceAttributes(
 	allAttributes.push_back(wbem::ENCRYPTIONENABLED_KEY);
 	allAttributes.push_back(wbem::ERASECAPABLE_KEY);
 	allAttributes.push_back(wbem::APP_DIRECT_SETTINGS_KEY);
+	allAttributes.push_back(wbem::MEMORYPAGEALLOCATION_KEY);
 
 	// get the desired attributes
 	wbem::framework::attribute_names_t desiredAttributes =

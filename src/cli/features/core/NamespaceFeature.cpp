@@ -202,6 +202,9 @@ void cli::nvmcli::NamespaceFeature::getPaths(cli::framework::CommandSpecList &li
 			TR("The size of the namespace in GB. Capacity and BlockCount are exclusive "
 					"and therefore cannot be used together. Note: Capacity can only be provided "
 					"as decimal gigabytes and not gibibytes (e.g. 16.7 GB vs 16 GiB)."));
+	createNamespace.addProperty(CREATE_NS_PROP_MEMORYPAGEALLOCATION, false, "None|DRAM|AppDirect", true,
+			TR("Support access to the AppDirect namespace capacity using legacy memory page protocols "
+					"such as DMA/RDMA by specifying where to create the underlying OS structures."));
 
 	cli::framework::CommandSpec modifyNamespace(MODIFY_NAMESPACE, TR("Modify Namespace"), framework::VERB_SET,
 			TR("Modify one or more existing namespaces."));
@@ -297,7 +300,7 @@ cli::nvmcli::NamespaceFeature::NamespaceFeature() : cli::framework::FeatureBase(
 	m_optimize(0), m_encryption(0), m_eraseCapable(0), m_reserveDimm(false),
 	m_channelSize(wbem::mem_config::MEMORYALLOCATIONSETTINGS_EXPONENT_UNKNOWN),
 	m_controllerSize(wbem::mem_config::MEMORYALLOCATIONSETTINGS_EXPONENT_UNKNOWN),
-	m_byOne(false), m_appDirectIsRemaining(false),
+	m_byOne(false), m_appDirectIsRemaining(false), m_optimizeExists(false),
 	m_pPmNamespaceProvider(new wbem::pmem_config::PersistentMemoryNamespaceFactory()),
 	m_pPmServiceProvider(new wbem::pmem_config::PersistentMemoryServiceFactory()),
 	m_pPmPoolProvider(new wbem::pmem_config::PersistentMemoryPoolFactory()),

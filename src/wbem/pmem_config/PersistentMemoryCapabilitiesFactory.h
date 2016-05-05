@@ -120,6 +120,11 @@ class NVM_API PersistentMemoryCapabilitiesFactory : public framework_interface::
 		virtual void getSupportedBlockSizes(framework::UINT64_LIST &list);
 
 		/*!
+		 * Get memory page allocation capability
+		 */
+		virtual NVM_BOOL getMemoryPageAllocationCapability();
+
+		/*!
 		 * Retrieve platform NVM capabilities
 		 */
 		static struct nvm_capabilities getNvmCapabilities() throw (wbem::framework::Exception);
