@@ -84,7 +84,7 @@ OBJNAMES = $(addprefix $(OBJECT_MODULE_DIR)/, $(OBJS))
 CSTYLE_FILES = $(filter-out $(STYLE_IGNORE),$(HEADERS) $(SRC))
 
 # Target library 'linker name'
-TARGETBASE = $(API_LIB_BASENAME).$(LIB_SUFFIX)
+TARGETBASE = $(API_LIB_SONAME).$(LIB_SUFFIX)
 # Target library 'soname'
 TARGETSO = $(TARGETBASE).$(VERSION_MAJOR)
 # Target library 'real name'

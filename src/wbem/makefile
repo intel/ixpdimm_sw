@@ -54,7 +54,7 @@ SUBMODULES = . framework_interface lib_interface exception server memory physica
 	logic support software performance erasure mem_config pmem_config indication pegasus cimom/$(CIMOMBUILD)
 
 UNITTEST = unittest
-FRAMEWORK = $(BUILD_DIR)/$(CIM_FRAMEWORK_LIB_BASENAME).$(LIB_SUFFIX)
+FRAMEWORK = $(BUILD_DIR)/$(CIM_FRAMEWORK_LIB_SONAME).$(LIB_SUFFIX)
 # ---- FILES ---------------------------------------------------------------------------------------
 SRC = $(foreach dir,$(SUBMODULES),$(wildcard $(dir)/*.cpp)) \
 		../monitor/NvmMonitorBase.cpp \
@@ -80,7 +80,7 @@ SUBMODULE_OBJS = $(addprefix $(OBJECT_MODULE_DIR)/, $(patsubst %.cpp,%.o,$(SRC))
 -include $(addprefix $(OBJECT_MODULE_DIR)/, $(patsubst %.cpp,%.d,$(SRC)))
 
 # Target library 'linker name'
-TARGETBASE = $(CIM_LIB_BASENAME).$(LIB_SUFFIX)
+TARGETBASE = $(CIM_LIB_SONAME).$(LIB_SUFFIX)
 # Target library 'soname'
 TARGETSO = $(TARGETBASE).$(VERSION_MAJOR)
 # Target library 'real name'

@@ -43,8 +43,8 @@ OBJECT_MODULE_DIR = $(OBJECT_DIR)/cli
 C_CPP_FLAGS_SRC += -DLOCALE_DOMAIN='"$(LOCALE_DOMAIN)"' -DLOCALE_DIR='"$(LOCALE_DIR)"'
 
 # ---- COMPONENTS ----------------------------------------------------------------------------------
-FRAMEWORK = $(BUILD_DIR)/$(CLI_FRAMEWORK_LIB_BASENAME).$(LIB_SUFFIX)
-FEATURES = $(BUILD_DIR)/$(CLI_LIB_BASENAME).$(LIB_SUFFIX)
+FRAMEWORK = $(BUILD_DIR)/$(CLI_FRAMEWORK_LIB_SONAME).$(LIB_SUFFIX)
+FEATURES = $(BUILD_DIR)/$(CLI_LIB_SONAME).$(LIB_SUFFIX)
 
 # ---- FILES ---------------------------------------------------------------------------------------
 SRC = $(wildcard *.cpp)

@@ -55,7 +55,7 @@ OBJNAMES = $(addprefix $(OBJECT_MODULE_DIR)/, $(OBJS))
 -include $(addprefix $(OBJECT_MODULE_DIR)/, $(patsubst %.cpp,%.d,$(SRC)))
 
 # Target library 'linker name'
-TARGETBASE = $(CLI_LIB_BASENAME).$(LIB_SUFFIX)
+TARGETBASE = $(CLI_LIB_SONAME).$(LIB_SUFFIX)
 # Target library 'soname'
 TARGETSO = $(TARGETBASE).$(VERSION_MAJOR)
 # Target library 'real name'

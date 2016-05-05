@@ -40,19 +40,18 @@ developing applications that use %{name}.
 %package -n %corename
 Summary:        Development files for %{name}
 License:        BSD
-Group:          Application/System
+Group:          Development/Libraries
 Requires:       %{name}%{?_isa} = %{version}-%{release}
 
 %description -n %corename
 The %{corename} package contains libraries that support
 other %{product_name} products.
 
-
 %package -n %cimlibs
 Summary:        CIM provider for %{name}
 
 License:        BSD
-Group:          Application/System
+Group:          Development/Libraries
 Requires:       %{corename}%{?_isa} = %{version}-%{release}
 Requires:       pywbem
 Requires(pre):  pywbem
@@ -66,7 +65,7 @@ common information model object managers (CIMOMS).
 %package -n %monitorname
 Summary:        Daemon for monitoring the status of %{product_name}
 License:        BSD
-Group:          Application/System
+Group:          System Environment/Daemons
 Requires:       %{cimlibs}%{?_isa} = %{version}-%{release}
 BuildRequires:  systemd-rpm-macros
 %{?systemd_requires}
@@ -77,14 +76,13 @@ A daemon for monitoring the health and status of %{product_name}
 %package -n %cliname
 Summary:        CLI for managment of %{product_name}
 License:        BSD
-Group:          Application/System
+Group:          Development/Tools
 Requires:       %{cimlibs}%{?_isa} = %{version}-%{release}
 
 %description -n %cliname
 A command line interface (CLI) application for configuring and
 managing %{product_name}. Including commands for basic inventory,
 capacity provisioning, health monitoring, and troubleshooting.
-
 
 %prep
 %setup -q -n %{product_name}
@@ -102,48 +100,48 @@ make install RELEASE=1 RPM_ROOT=%{buildroot} LIB_DIR=%{_libdir} INCLUDE_DIR=%{_i
 /sbin/ldconfig
 if [ -x /usr/sbin/cimserver ]
 then
-	cimserver --status &> /dev/null
-	if [ $? -eq 0 ]
-	then
-	CIMMOF=cimmof
-	else
+    cimserver --status &> /dev/null
+    if [ $? -eq 0 ]
+    then
+    CIMMOF=cimmof
+    else
     for repo in /var/lib/Pegasus /var/lib/pegasus /usr/local/var/lib/pegasus /var/local/lib/pegasus /var/opt/tog-pegasus /opt/ibm/icc/cimom
     do
-      if [ -d $repo/repository ]
-      then
-	  CIMMOF="cimmofl -R $repo"
+    if [ -d $repo/repository ]
+    then
+      CIMMOF="cimmofl -R $repo"
       fi
     done
-	fi
-	for ns in interop root/interop root/PG_Interop;
-	do
-	   $CIMMOF -E -n$ns %{_datadir}/%{product_name}/Pegasus/mof/pegasus_register.mof &> /dev/null
-	   if [ $? -eq 0 ]
-	   then
-			$CIMMOF -uc -n$ns %{_datadir}/%{product_name}/Pegasus/mof/pegasus_register.mof &> /dev/null
-			$CIMMOF -uc -n$ns %{_datadir}/%{product_name}/Pegasus/mof/profile_registration.mof &> /dev/null
-			break
-	   fi
-	done
-	$CIMMOF -aE -uc -n root/intelwbem %{_datadir}/%{product_name}/Pegasus/mof/intelwbem.mof &> /dev/null
+    fi
+    for ns in interop root/interop root/PG_Interop;
+    do
+       $CIMMOF -E -n$ns %{_datadir}/%{product_name}/Pegasus/mof/pegasus_register.mof &> /dev/null
+       if [ $? -eq 0 ]
+       then
+            $CIMMOF -uc -n$ns %{_datadir}/%{product_name}/Pegasus/mof/pegasus_register.mof &> /dev/null
+            $CIMMOF -uc -n$ns %{_datadir}/%{product_name}/Pegasus/mof/profile_registration.mof &> /dev/null
+            break
+       fi
+    done
+    $CIMMOF -aE -uc -n root/intelwbem %{_datadir}/%{product_name}/Pegasus/mof/intelwbem.mof &> /dev/null
 fi
 if [ -x /usr/sbin/sfcbd ]
 then
-	RESTART=0
-	systemctl is-active sblim-sfcb.service &> /dev/null
-	if [ $? -eq 0 ]
-	then
-		RESTART=1
-		systemctl stop sblim-sfcb.service &> /dev/null
-	fi
+    RESTART=0
+    systemctl is-active sblim-sfcb.service &> /dev/null
+    if [ $? -eq 0 ]
+    then
+        RESTART=1
+        systemctl stop sblim-sfcb.service &> /dev/null
+    fi
 
-	sfcbstage -n root/intelwbem -r %{_datadir}/%{product_name}/sfcb/INTEL_NVDIMM.reg %{_datadir}/%{product_name}/sfcb/sfcb_intelwbem.mof
-	sfcbrepos -f
+    sfcbstage -n root/intelwbem -r %{_datadir}/%{product_name}/sfcb/INTEL_NVDIMM.reg %{_datadir}/%{product_name}/sfcb/sfcb_intelwbem.mof
+    sfcbrepos -f
 
-	if [[ $RESTART -gt 0 ]]
-	then
-		systemctl start sblim-sfcb.service &> /dev/null
-	fi
+    if [[ $RESTART -gt 0 ]]
+    then
+        systemctl start sblim-sfcb.service &> /dev/null
+    fi
 fi
 
 %post -n %monitorname
@@ -158,69 +156,69 @@ exit 0
 %postun -n %corename
 /sbin/ldconfig
 
-%postun -n %cimlibs 
+%postun -n %cimlibs
 /sbin/ldconfig
 
 %pre -n %cimlibs
 # If upgrading, deregister old version
 if [ "$1" -gt 1 ]; then
-	RESTART=0
-	if [ -x /usr/sbin/cimserver ]
-	then
-		cimserver --status &> /dev/null
-		if [ $? -gt 0 ]
-		then
-			RESTART=1
-			cimserver enableHttpConnection=false enableHttpsConnection=false enableRemotePrivilegedUserAccess=false slp=false &> /dev/null
-		fi
-		cimprovider -d -m intelwbemprovider &> /dev/null
-		cimprovider -r -m intelwbemprovider &> /dev/null
-		mofcomp -v -r -n root/intelwbem %{_datadir}/%{product_name}/Pegasus/mof/intelwbem.mof &> /dev/null
-		mofcomp -v -r -n root/intelwbem %{_datadir}/%{product_name}/Pegasus/mof/profile_registration.mof &> /dev/null
-		if [[ $RESTART -gt 0 ]]
-		then
-			cimserver -s &> /dev/null
-		fi
-	fi
+    RESTART=0
+    if [ -x /usr/sbin/cimserver ]
+    then
+        cimserver --status &> /dev/null
+        if [ $? -gt 0 ]
+        then
+            RESTART=1
+            cimserver enableHttpConnection=false enableHttpsConnection=false enableRemotePrivilegedUserAccess=false slp=false &> /dev/null
+        fi
+        cimprovider -d -m intelwbemprovider &> /dev/null
+        cimprovider -r -m intelwbemprovider &> /dev/null
+        mofcomp -v -r -n root/intelwbem %{_datadir}/%{product_name}/Pegasus/mof/intelwbem.mof &> /dev/null
+        mofcomp -v -r -n root/intelwbem %{_datadir}/%{product_name}/Pegasus/mof/profile_registration.mof &> /dev/null
+        if [[ $RESTART -gt 0 ]]
+        then
+            cimserver -s &> /dev/null
+        fi
+    fi
 fi
 
 %preun -n %cimlibs
 RESTART=0
 if [ -x /usr/sbin/cimserver ]
 then
-	cimserver --status &> /dev/null
-	if [ $? -gt 0 ]
-	then
-		RESTART=1
-		cimserver enableHttpConnection=false enableHttpsConnection=false enableRemotePrivilegedUserAccess=false slp=false &> /dev/null
-	fi
-	cimprovider -d -m intelwbemprovider &> /dev/null
-	cimprovider -r -m intelwbemprovider &> /dev/null
-	mofcomp -r -n root/intelwbem %{_datadir}/%{product_name}/Pegasus/mof/intelwbem.mof &> /dev/null
-	mofcomp -v -r -n root/intelwbem %{_datadir}/%{product_name}/Pegasus/mof/profile_registration.mof &> /dev/null
-	if [[ $RESTART -gt 0 ]]
-	then
-		cimserver -s &> /dev/null
-	fi
+    cimserver --status &> /dev/null
+    if [ $? -gt 0 ]
+    then
+        RESTART=1
+        cimserver enableHttpConnection=false enableHttpsConnection=false enableRemotePrivilegedUserAccess=false slp=false &> /dev/null
+    fi
+    cimprovider -d -m intelwbemprovider &> /dev/null
+    cimprovider -r -m intelwbemprovider &> /dev/null
+    mofcomp -r -n root/intelwbem %{_datadir}/%{product_name}/Pegasus/mof/intelwbem.mof &> /dev/null
+    mofcomp -v -r -n root/intelwbem %{_datadir}/%{product_name}/Pegasus/mof/profile_registration.mof &> /dev/null
+    if [[ $RESTART -gt 0 ]]
+    then
+        cimserver -s &> /dev/null
+    fi
 fi
 
 if [ -x /usr/sbin/sfcbd ]
 then
-	RESTART=0
-	systemctl is-active sblim-sfcb.service &> /dev/null
-	if [ $? -eq 0 ]
-	then
-		RESTART=1
-		systemctl stop sblim-sfcb.service &> /dev/null
-	fi
+    RESTART=0
+    systemctl is-active sblim-sfcb.service &> /dev/null
+    if [ $? -eq 0 ]
+    then
+        RESTART=1
+        systemctl stop sblim-sfcb.service &> /dev/null
+    fi
 
-	sfcbunstage -n root/intelwbem -r INTEL_NVDIMM.reg sfcb_intelwbem.mof
-	sfcbrepos -f
+    sfcbunstage -n root/intelwbem -r INTEL_NVDIMM.reg sfcb_intelwbem.mof
+    sfcbrepos -f
 
-	if [[ $RESTART -gt 0 ]]
-	then
-		systemctl start sblim-sfcb.service &> /dev/null
-	fi
+    if [[ $RESTART -gt 0 ]]
+    then
+        systemctl start sblim-sfcb.service &> /dev/null
+    fi
 fi
 
 %preun -n %monitorname
@@ -279,5 +277,5 @@ fi
 %attr(644,root,root) %{_mandir}/man8/ixpdimm-cli*
 
 %changelog
-* Wed Dec 24 2015 Nicholas Moulin <nicholas.w.moulin@intel.com>
+* Thu Dec 24 2015 Nicholas Moulin <nicholas.w.moulin@intel.com>
 - Initial rpm release

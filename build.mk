@@ -98,24 +98,23 @@ CFLAGS_EXTERNAL ?=
 CPPFLAGS_EXTERNAL ?=
 
 MARKETING_PRODUCT_NAME=ixpdimm_sw
-API_LIB_BASENAME=libixpdimm-api
-CORE_LIB_BASENAME=libixpdimm-core
-CLI_LIB_BASENAME=libixpdimm-cli
-CIM_LIB_BASENAME=libixpdimm-cim
-
+API_LIB_SONAME=libixpdimm-api
 API_LIB_NAME=ixpdimm-api
+CORE_LIB_SONAME=libixpdimm-core
 CORE_LIB_NAME=ixpdimm-core
+CLI_LIB_SONAME=libixpdimm-cli
 CLI_LIB_NAME=ixpdimm-cli
+CIM_LIB_SONAME=libixpdimm-cim
 CIM_LIB_NAME=ixpdimm-cim
 
 CLI_NAME=ixpdimm-cli
 MONITOR_NAME=ixpdimm-monitor
 
-CIM_FRAMEWORK_LIB_BASENAME=libintelnvm-cim
+CIM_FRAMEWORK_LIB_SONAME=libintelnvm-cim
 CIM_FRAMEWORK_LIB_NAME=intelnvm-cim
-I18N_LIB_BASENAME=libintelnvm-i18n
+I18N_LIB_SONAME=libintelnvm-i18n
 I18N_LIB_NAME=intelnvm-i18n
-CLI_FRAMEWORK_LIB_BASENAME=libintelnvm-cli
+CLI_FRAMEWORK_LIB_SONAME=libintelnvm-cli
 CLI_FRAMEWORK_LIB_NAME=intelnvm-cli
 
 # OS specific settings
@@ -196,8 +195,8 @@ ifeq ($(UNAME), Linux)
 		MAN8_DIR ?= $(MANPAGE_DIR)/man8
 
 		# Linux Install Files
-		LIB_FILES = $(API_LIB_BASENAME).so* $(CORE_LIB_BASENAME).so* $(CLI_LIB_BASENAME).so*
-		CIM_LIB_FILES = $(CIM_LIB_BASENAME).so*
+		LIB_FILES = $(API_LIB_SONAME).so* $(CORE_LIB_SONAME).so* $(CLI_LIB_SONAME).so*
+		CIM_LIB_FILES = $(CIM_LIB_SONAME).so*
 		INCLUDE_FILES = nvm_management.h nvm_types.h
 		BIN_FILES = $(CLI_NAME) $(MONITOR_NAME)
 		PEGASUS_MOF_FILES = pegasus_register.mof profile_registration.mof intelwbem.mof
