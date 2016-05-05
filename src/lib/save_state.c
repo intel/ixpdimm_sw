@@ -414,6 +414,12 @@ int support_store_dimm_topology(PersistentStore *p_store, int history_id,
 	db_dimm_topo.vendor_id = topol.vendor_id;
 	db_dimm_topo.device_id = topol.device_id;
 	db_dimm_topo.revision_id = topol.revision_id;
+	db_dimm_topo.subsystem_vendor_id = topol.subsystem_vendor_id;
+	db_dimm_topo.subsystem_device_id = topol.subsystem_device_id;
+	db_dimm_topo.subsystem_revision_id = topol.subsystem_revision_id;
+	db_dimm_topo.manufacturing_info_valid = topol.manufacturing_info_valid;
+	db_dimm_topo.manufacturing_location = topol.manufacturing_location;
+	db_dimm_topo.manufacturing_date = topol.manufacturing_date;
 	db_dimm_topo.type = topol.type;
 
 	if (DB_SUCCESS != db_save_dimm_topology_state(p_store, history_id, &db_dimm_topo))

@@ -383,6 +383,19 @@ int get_topology(const NVM_UINT8 count, struct nvm_topology *p_dimm_topo)
 							p_ioctl_data->OutputPayload.TopologiesList[i].DeviceId;
 						p_dimm_topo[i].revision_id =
 							p_ioctl_data->OutputPayload.TopologiesList[i].RevisionId;
+						p_dimm_topo[i].subsystem_vendor_id =
+								p_ioctl_data->OutputPayload.TopologiesList[i].SubsystemVendorId;
+						p_dimm_topo[i].subsystem_device_id =
+								p_ioctl_data->OutputPayload.TopologiesList[i].SubsystemDeviceId;
+						p_dimm_topo[i].subsystem_revision_id =
+								p_ioctl_data->OutputPayload.TopologiesList[i].SubsystemRevisionId;
+						p_dimm_topo[i].manufacturing_info_valid =
+								p_ioctl_data->OutputPayload.TopologiesList[i].
+									ManufacturingInfoValid;
+						p_dimm_topo[i].manufacturing_location =
+								p_ioctl_data->OutputPayload.TopologiesList[i].ManufacturingLocation;
+						p_dimm_topo[i].manufacturing_date =
+								p_ioctl_data->OutputPayload.TopologiesList[i].ManufacturingDate;
 						p_dimm_topo[i].fmt_interface_code =
 							p_ioctl_data->OutputPayload.TopologiesList[i].FmtInterfaceCode;
 

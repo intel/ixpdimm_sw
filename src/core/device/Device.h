@@ -96,6 +96,12 @@ public:
 	virtual std::string getManufacturer();
 	virtual NVM_UINT16 getManufacturerId();
 	virtual std::string getSerialNumber();
+	virtual NVM_UINT16 getSubsystemVendor();
+	virtual NVM_UINT16 getSubsystemDevice();
+	virtual NVM_UINT16 getSubsystemRevision();
+	virtual bool isManufacturingInfoValid();
+	virtual NVM_UINT8 getManufacturingLoc();
+	virtual NVM_UINT16 getManufacturingDate();
 	virtual std::string getModelNumber();
 	virtual std::string getFwRevision();
 	virtual std::string getFwApiVersion();

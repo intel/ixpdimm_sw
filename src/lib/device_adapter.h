@@ -184,6 +184,19 @@ struct nvm_topology {
 	NVM_UINT16 vendor_id; /* The vendor identifier */
 	NVM_UINT16 device_id; /* The device identifier */
 	NVM_UINT16 revision_id; /* The revision identifier */
+
+	NVM_UINT16 subsystem_vendor_id;		// vendor identifier of the AEP DIMM non-volatile
+										// memory subsystem controller
+	NVM_UINT16 subsystem_device_id;		// device identifier of the AEP DIMM non-volatile
+										// memory subsystem controller
+	NVM_UINT16 subsystem_revision_id; 	// revision identifier of the AEP DIMM non-volatile
+										// memory subsystem controller
+	NVM_BOOL manufacturing_info_valid;	// manufacturing location and date validity
+	NVM_UINT8 manufacturing_location;	// AEP DIMM manufacturing location assigned by vendor
+										// only valid if manufacturing_info_valid=1
+	NVM_UINT16 manufacturing_date;		// Date the AEP DIMM was manufactured, assigned by vendor
+										// only valid if manufacturing_info_valid=1
+
 	NVM_UINT8 type; /* From SMBIOS 7.18.2 Memory Device <97> Type */
 	NVM_UINT16 fmt_interface_code; /* The device type from NFIT */
 };

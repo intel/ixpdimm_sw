@@ -235,6 +235,12 @@ int main(int arg_count, char **args)
 	dimm_topology.addAttribute("vendor_id").isInt32().isUnsigned();
 	dimm_topology.addAttribute("device_id").isInt32().isUnsigned();
 	dimm_topology.addAttribute("revision_id").isInt32().isUnsigned();
+	dimm_topology.addAttribute("subsystem_vendor_id").isInt32().isUnsigned();
+	dimm_topology.addAttribute("subsystem_device_id").isInt32().isUnsigned();
+	dimm_topology.addAttribute("subsystem_revision_id").isInt32().isUnsigned();
+	dimm_topology.addAttribute("manufacturing_info_valid").isInt32().isUnsigned();
+	dimm_topology.addAttribute("manufacturing_location").isInt32().isUnsigned();
+	dimm_topology.addAttribute("manufacturing_date").isInt32().isUnsigned();
 	dimm_topology.addAttribute("type").isInt32().isUnsigned();
 	entities.push_back(dimm_topology);
 

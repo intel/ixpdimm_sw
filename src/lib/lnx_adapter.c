@@ -51,6 +51,7 @@
 #define	DATA_FORMAT_REVISION	1
 
 #define	PCAT_LOCATION	"/sys/firmware/acpi/tables/PCAT"
+#define	NFIT_LOCATION	"/sys/firmware/acpi/tables/NFIT"
 
 /*
  * Retrieve the vendor specific NVDIMM driver version.

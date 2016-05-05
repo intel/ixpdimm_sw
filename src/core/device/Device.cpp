@@ -218,6 +218,58 @@ NVM_UINT16 Device::getNodeControllerId()
         LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
         return getDiscovery().node_controller_id;
 }
+
+std::string Device::getSerialNumber()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	char serialNumStr[NVM_SERIALSTR_LEN];
+	SERIAL_NUMBER_TO_STRING(getDiscovery().serial_number, serialNumStr);
+	return std::string(serialNumStr);
+}
+
+NVM_UINT16 Device::getSubsystemVendor()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	return getDiscovery().subsystem_vendor_id;
+}
+
+NVM_UINT16 Device::getSubsystemDevice()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	return getDiscovery().subsystem_device_id;
+}
+
+NVM_UINT16 Device::getSubsystemRevision()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	return getDiscovery().subsystem_revision_id;
+}
+
+bool Device::isManufacturingInfoValid()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	if (getDiscovery().manufacturing_info_valid  == 0)
+	{
+		return false;
+	}
+	else
+	{
+		return true;
+	}
+}
+
+NVM_UINT8 Device::getManufacturingLoc()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	return getDiscovery().manufacturing_location;
+}
+
+NVM_UINT16 Device::getManufacturingDate()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	return getDiscovery().manufacturing_date;
+}
+
 std::string Device::getManufacturer()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -236,14 +288,6 @@ NVM_UINT16 Device::getManufacturerId()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return MANUFACTURER_TO_UINT(getDiscovery().manufacturer);
-}
-
-std::string Device::getSerialNumber()
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	char serialNumStr[NVM_SERIALSTR_LEN];
-	SERIAL_NUMBER_TO_STRING(getDiscovery().serial_number, serialNumStr);
-	return std::string(serialNumStr);
 }
 
 std::string Device::getModelNumber()

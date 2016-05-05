@@ -269,6 +269,13 @@ int nvm_get_devices(struct device_discovery *p_devices, const NVM_UINT8 count)
 						p_devices[i].vendor_id = dimm_list[i].vendor_id;
 						p_devices[i].device_id = dimm_list[i].device_id;
 						p_devices[i].revision_id = dimm_list[i].revision_id;
+						p_devices[i].subsystem_vendor_id = dimm_list[i].subsystem_vendor_id;
+						p_devices[i].subsystem_device_id = dimm_list[i].subsystem_device_id;
+						p_devices[i].subsystem_revision_id = dimm_list[i].subsystem_revision_id;
+						p_devices[i].manufacturing_info_valid =
+							dimm_list[i].manufacturing_info_valid;
+						p_devices[i].manufacturing_location = dimm_list[i].manufacturing_location;
+						p_devices[i].manufacturing_date = dimm_list[i].manufacturing_date;
 						p_devices[i].socket_id =
 								p_devices[i].device_handle.parts.socket_id;
 						p_devices[i].memory_controller_id =
