@@ -1943,8 +1943,14 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::getDeviceFirmwareI
 			{
 				commitIdStr = wbem::NA;
 			}
-
 			instance.setAttribute(wbem::ACTIVEFWCOMMITID_KEY, wbem::framework::Attribute (commitIdStr, false));
+
+			std::string buildConfiguration = fwInfoResult.getValue().getActiveBuildConfiguration();
+			if (buildConfiguration.empty())
+			{
+				buildConfiguration = wbem::NA;
+			}
+			instance.setAttribute(wbem::ACTIVEBUILDCONFIGURATION_KEY, wbem::framework::Attribute (buildConfiguration, false));
 
 			std::string stagedFwTypeStr = wbem::NA;
 			std::string stagedFwRevStr = wbem::NA;
@@ -1987,6 +1993,7 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::showDeviceFirmware
 			wbem::framework::attribute_names_t allAttributes = defaultAttributes;
 			allAttributes.push_back(wbem::ACTIVEFWTYPE_KEY);
 			allAttributes.push_back(wbem::ACTIVEFWCOMMITID_KEY);
+			allAttributes.push_back(wbem::ACTIVEBUILDCONFIGURATION_KEY);
 			allAttributes.push_back(wbem::STAGEDFWTYPE_KEY);
 
 			wbem::framework::attribute_names_t displayAttributes =
