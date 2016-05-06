@@ -505,7 +505,7 @@ int nvm_erase_device(const NVM_UID device_uid,
 		if (discovery.security_capabilities.passphrase_capable)
 		{
 			// check passphrase length
-			if (passphrase_len > NVM_PASSPHRASE_LEN)
+			if (check_passphrase(passphrase, passphrase_len) != NVM_SUCCESS)
 			{
 				rc = NVM_ERR_BADPASSPHRASE;
 			}
