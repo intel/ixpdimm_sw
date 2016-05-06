@@ -106,15 +106,15 @@ INCS =  -I. \
 		-I$(EXTERN_DIR)/openssl/include \
 		-I$(EXTERN_LIB_DIR)/openssl \
 		-I$(EXTERN_DIR)/zlib \
-		-I$(EXTERN_DIR)/os_headers \
 		-I$(EXTERN_DIR)/fw_headers
-		
+
 LIBS =	-L$(OBJECT_DIR)/common -lcommon \
 		-L$(BUILD_DIR) -lsqlite3 \
 		-lz \
 		-lssl -lcrypto
 
 ifdef BUILD_WINDOWS
+	INCS += -I$(EXTERN_DIR)/os_headers
 	LIBS += -lws2_32 -lmswsock -ladvapi32 -lversion -lGdi32 -lShlwapi\
 	 		-L$(BUILD_DIR) -lssp -lpthread -llibintl \
 			-L$(EXTERN_LIB_DIR)/zlib \
@@ -122,7 +122,8 @@ ifdef BUILD_WINDOWS
 
 	CFLAGS += -D_WIN32_WINNT=0x0601
 else ifdef BUILD_LINUX
-	INCS += -I$(EXTERN_DIR)/os_headers/linux \
+	INCS += -isystem$(EXTERN_DIR)/os_headers \
+			-I$(EXTERN_DIR)/os_headers/linux
 	
 	LIBS += -lpthread -ldl -lm
 	ifndef BUILD_SIM
@@ -133,6 +134,7 @@ ifndef BUILD_SIM
 	LIBS += -lnuma
 endif
 else ifdef BUILD_ESX
+	INCS += -I$(EXTERN_DIR)/os_headers
 	LIBS += -lpthread -ldl -lm
 ifndef BUILD_SIM
 	LIBS += -L/opt/vmware/nvm-mgmt-6.0.0-$(DEVKIT_BUILD_NUM)/samples/lib -lvmkuserlib
@@ -224,6 +226,8 @@ clobber :
 sourcedrop: 
 	$(MKDIR) $(SOURCEDROP_DIR)/src/lib
 	$(MKDIR) $(SOURCEDROP_DIR)/src/lib/$(CREATE_CFG_DB)
+	$(MKDIR) -p $(SOURCEDROP_DIR)/external/os_headers/linux
+	$(COPY) $(EXTERN_DIR)/os_headers/linux/ndctl.h $(SOURCEDROP_DIR)/external/os_headers/linux
 	$(COPY) $(HEADERS) $(SOURCEDROP_DIR)/src/lib/
 	$(COPY) makefile $(SOURCEDROP_DIR)/src/lib/
 	$(COPY) $(SRC) $(SOURCEDROP_DIR)/src/lib/
