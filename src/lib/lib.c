@@ -185,7 +185,8 @@ int nvm_get_error(const enum return_code code, NVM_ERROR_DESCRIPTION description
 				break;
 			case NVM_ERR_LIMITPASSPHRASE:
 				s_strcpy(description,
-						TR("The maximum passphrase submission limit has been reached."),
+						TR("The maximum passphrase submission limit has been reached. "
+								"A reboot is required to change the security state."),
 						description_len);
 				break;
 			case NVM_ERR_SECURITYDISABLED:
