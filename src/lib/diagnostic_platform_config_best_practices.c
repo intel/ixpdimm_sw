@@ -887,31 +887,6 @@ NVM_BOOL all_dimms_on_socket_on_one_memory_controller(const NVM_UINT16 socket_id
 	return result;
 }
 
-void check_socket_limited_to_persistent_modes(NVM_UINT32 *p_results,
-		const NVM_UINT16 socket_id, const struct device_discovery *p_devices,
-		const NVM_UINT32 device_count)
-{
-	COMMON_LOG_ENTRY();
-
-	if (all_dimms_on_socket_on_one_memory_controller(socket_id, p_devices, device_count))
-	{
-		NVM_EVENT_ARG socket_id_str;
-		s_snprintf(socket_id_str, sizeof (socket_id_str), "%hu", socket_id);
-
-		store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG,
-				EVENT_SEVERITY_INFO,
-				EVENT_CODE_DIAG_PCONFIG_DIMMS_LIMITED_TO_PERSISTENT_MODES,
-				NULL,
-				0,
-				socket_id_str, NULL, NULL,
-				DIAGNOSTIC_RESULT_WARNING);
-
-		(*p_results)++;
-	}
-
-	COMMON_LOG_EXIT();
-}
-
 void check_dimm_socket_layout_balance(NVM_UINT32 *p_results,
 		const struct device_discovery *p_devices, const NVM_UINT32 device_count,
 		const struct socket *p_sockets, const NVM_UINT16 socket_count)
@@ -934,9 +909,6 @@ void check_dimm_socket_layout_balance(NVM_UINT32 *p_results,
 					socket_id_str, NULL, NULL,
 					DIAGNOSTIC_RESULT_WARNING);
 			(*p_results)++;
-
-			// Only worth checking if the socket is unbalanced
-			check_socket_limited_to_persistent_modes(p_results, socket_id, p_devices, device_count);
 		}
 	}
 

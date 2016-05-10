@@ -407,10 +407,6 @@ const char *EVENT_MESSAGES_PCONFIG_DIAG[EVENT_CODE_DIAG_PCONFIG_UNKNOWN -
 	// EVENT_CODE_DIAG_PCONFIG_POOL_NEEDS_STORAGE_NAMESPACES
 	N_TR("The platform configuration check detected that pool %s contains empty Storage "
 			"capacity. Create Storage namespaces in the pool to access this capacity."),
-	// EVENT_CODE_DIAG_PCONFIG_DIMMS_LIMITED_TO_PERSISTENT_MODES
-	N_TR("The platform configuration check detected that all "NVM_DIMM_NAME"s on socket %s are "
-			"arranged on a single memory controller. Configuration of "NVM_DIMM_NAME"s on "
-			"this socket is limited to App Direct and Storage Mode."),
 	// EVENT_CODE_DIAG_PCONFIG_DIMM_CONFIG_UNBALANCED
 	N_TR("The platform configuration check detected that "NVM_DIMM_NAME"s on "
 			"socket %s are arranged in an unbalanced configuration. "
