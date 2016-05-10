@@ -172,6 +172,11 @@ wbem::framework::UINT32 wbem::erasure::ErasureServiceFactory::executeMethod(
 			COMMON_LOG_ERROR_F("%s is required.", ERASURESERVICE_ERASEDEVICE_ERASUREMETHOD.c_str());
 			httpRc = framework::CIM_ERR_INVALID_PARAMETER;
 		}
+		else if (password.empty())
+		{
+			COMMON_LOG_ERROR_F("%s is required.", ERASURESERVICE_ERASEDEVICE_PASSWORD.c_str());
+                        httpRc = framework::CIM_ERR_INVALID_PARAMETER;
+		}
 		else if (eraseType == ERASETYPE_UNKNOWN)
 		{
 			COMMON_LOG_ERROR_F("Erasure Method %s is not supported", erasureMethod.c_str());
