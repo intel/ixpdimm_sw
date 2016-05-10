@@ -155,6 +155,8 @@ static std::string MEMORYTYPECAPABILITIES_KEY = "MemoryTypeCapabilities";
 static std::string DIESPARINGCAPABLE_KEY = "DieSparingCapable";
 static std::string MIXEDSKU_KEY = "MixedSKU";
 static std::string SKUVIOLATION_KEY = "SKUViolation";
+static std::string VIRALPOLICY_KEY = "ViralPolicy";
+static std::string VIRALSTATE_KEY = "ViralState";
 
 // RawMemory attribute keys
 static std::string BLOCKSIZE_KEY = "BlockSize";

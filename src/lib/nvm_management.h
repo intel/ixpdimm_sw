@@ -638,6 +638,7 @@ struct device_status
 	NVM_UINT64 last_shutdown_time; // Time of the last shutdown - seconds since 1 January 1970
 	NVM_BOOL mixed_sku; // One or more AEP DIMMs have different SKUs.
 	NVM_BOOL sku_violation; // The AEP DIMM configuration is unsupported due to a license issue.
+	NVM_BOOL viral_state; // Current viral status of AEP DIMM.
 };
 
 /*
@@ -705,6 +706,7 @@ struct device_capacities
 struct device_settings
 {
 	NVM_BOOL first_fast_refresh; // Enable/disable acceleration of first refresh cycle.
+	NVM_BOOL viral_policy; // Enable/disable viral policies.
 };
 
 /*

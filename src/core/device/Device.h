@@ -159,6 +159,8 @@ public:
 	virtual bool isFirstFastRefresh();
 	virtual bool isActionRequired();
 	virtual std::vector<std::string> getActionRequiredEvents();
+	virtual bool isViralPolicyEnabled();
+	virtual bool getCurrentViralState();
 
 private:
 	NvmLibrary &m_lib;

@@ -678,6 +678,18 @@ bool Device::isFirstFastRefresh()
 	return getDetails().settings.first_fast_refresh;
 }
 
+bool Device::isViralPolicyEnabled()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	return getDetails().settings.viral_policy;
+}
+
+bool Device::getCurrentViralState()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	return getDetails().status.viral_state;
+}
+
 bool Device::isActionRequired()
 {
 	return getEvents().size() > 0;

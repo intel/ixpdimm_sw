@@ -108,6 +108,8 @@ ShowDeviceCommand::ShowDeviceCommand(core::device::DeviceService &service)
 	m_props.addOther("ConfigurationStatus", &core::device::Device::getConfigStatus,
 			&convertConfigStatus);
 	m_props.addBool("SKUViolation", &core::device::Device::isSkuViolation);
+	m_props.addBool("ViralPolicy", &core::device::Device::isViralPolicyEnabled);
+	m_props.addBool("ViralState", &core::device::Device::getCurrentViralState);
 }
 
 

@@ -1221,7 +1221,6 @@ int support_store_die_sparing(PersistentStore *p_store, int history_id,
 	return rc;
 }
 
-
 // add optional config data
 int support_store_optional_config_data(PersistentStore *p_store, int history_id,
 		NVM_NFIT_DEVICE_HANDLE device_handle)
@@ -1229,16 +1228,9 @@ int support_store_optional_config_data(PersistentStore *p_store, int history_id,
 	int rc = NVM_SUCCESS;
 	COMMON_LOG_ENTRY();
 
-	struct pt_payload_config_data_policy config_data;
-	struct fw_cmd cmd;
-	memset(&cmd, 0, sizeof (cmd));
-	cmd.device_handle = device_handle.handle;
-	cmd.opcode = PT_GET_FEATURES;
-	cmd.sub_opcode = SUBOP_OPT_CONFIG_DATA_POLICY;
-	cmd.output_payload_size = sizeof (config_data);
-	cmd.output_payload = &config_data;
-
-	rc = ioctl_passthrough_cmd(&cmd);
+	struct pt_payload_get_config_data_policy config_data;
+	rc = fw_get_config_data_policy(
+			device_handle.handle, &config_data);
 	if (rc != NVM_SUCCESS)
 	{
 		COMMON_LOG_ERROR_F("Unable to get the optional configuration data policy \
@@ -1251,6 +1243,8 @@ int support_store_optional_config_data(PersistentStore *p_store, int history_id,
 
 		db_optional_config_data.device_handle = device_handle.handle;
 		db_optional_config_data.first_fast_refresh_enable = config_data.first_fast_refresh;
+		db_optional_config_data.viral_policy_enable = config_data.viral_policy_enable;
+		db_optional_config_data.viral_status = config_data.viral_status;
 
 		db_save_dimm_optional_config_data_state(p_store, history_id, &db_optional_config_data);
 	}

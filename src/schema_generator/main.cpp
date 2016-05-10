@@ -369,6 +369,8 @@ int main(int arg_count, char **args)
 	dimm_optional_config_data.includesHistory();
 	dimm_optional_config_data.addAttribute("device_handle").isInt32().isUnsigned().isPk();
 	dimm_optional_config_data.addAttribute("first_fast_refresh_enable").isInt32().isUnsigned();
+	dimm_optional_config_data.addAttribute("viral_policy_enable").isInt32().isUnsigned();
+	dimm_optional_config_data.addAttribute("viral_status").isInt32().isUnsigned();
 	entities.push_back(dimm_optional_config_data);
 
 	Entity dimm_err_correction("dimm_err_correction", "Obsolete.");

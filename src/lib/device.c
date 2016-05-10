@@ -672,15 +672,9 @@ int nvm_get_device_settings(const NVM_UID device_uid,
 	else if ((rc = exists_and_manageable(device_uid, &discovery, 1)) == NVM_SUCCESS)
 	{
 		memset(p_settings, 0, sizeof (*p_settings));
-		struct pt_payload_config_data_policy config_data;
-		struct fw_cmd cmd;
-		memset(&cmd, 0, sizeof (cmd));
-		cmd.device_handle = discovery.device_handle.handle;
-		cmd.opcode = PT_GET_FEATURES;
-		cmd.sub_opcode = SUBOP_OPT_CONFIG_DATA_POLICY;
-		cmd.output_payload_size = sizeof (config_data);
-		cmd.output_payload = &config_data;
-		rc = ioctl_passthrough_cmd(&cmd);
+		struct pt_payload_get_config_data_policy config_data;
+		rc = fw_get_config_data_policy(
+				discovery.device_handle.handle, &config_data);
 		if (rc != NVM_SUCCESS)
 		{
 			COMMON_LOG_ERROR_F("Unable to get the optional configuration data policy \
@@ -689,6 +683,7 @@ int nvm_get_device_settings(const NVM_UID device_uid,
 		else
 		{
 			p_settings->first_fast_refresh = config_data.first_fast_refresh;
+			p_settings->viral_policy = config_data.viral_policy_enable;
 		}
 	}
 
@@ -728,16 +723,11 @@ int nvm_modify_device_settings(const NVM_UID device_uid,
 	}
 	else if ((rc = exists_and_manageable(device_uid, &discovery, 1)) == NVM_SUCCESS)
 	{
-		struct pt_payload_config_data_policy config_data;
-		struct fw_cmd cmd;
-		memset(&cmd, 0, sizeof (cmd));
-		cmd.device_handle = discovery.device_handle.handle;
-		cmd.opcode = PT_SET_FEATURES;
-		cmd.sub_opcode = SUBOP_OPT_CONFIG_DATA_POLICY;
-		cmd.input_payload_size = sizeof (config_data);
-		cmd.input_payload = &config_data;
+		struct pt_payload_set_config_data_policy config_data;
+		memset(&config_data, 0, sizeof (struct pt_payload_set_config_data_policy));
 		config_data.first_fast_refresh = p_settings->first_fast_refresh;
-		rc = ioctl_passthrough_cmd(&cmd);
+		config_data.viral_policy_enable = p_settings->viral_policy;
+		rc = fw_set_config_data_policy(discovery.device_handle.handle, &config_data);
 		if (rc != NVM_SUCCESS)
 		{
 			COMMON_LOG_ERROR_F("Unable to update the optional configuration data policy \

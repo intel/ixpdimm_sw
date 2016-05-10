@@ -259,6 +259,48 @@ int fw_get_fw_image_info(const NVM_UINT32 device_handle,
 }
 
 /*
+ * Helper function to get config data policy
+ */
+int fw_get_config_data_policy(unsigned int device_handle,
+		struct pt_payload_get_config_data_policy *p_config_data)
+{
+	COMMON_LOG_ENTRY();
+
+	struct fw_cmd fw_cmd;
+	memset(&fw_cmd, 0, sizeof (fw_cmd));
+	fw_cmd.device_handle = device_handle;
+	fw_cmd.opcode = PT_GET_FEATURES;
+	fw_cmd.sub_opcode = SUBOP_OPT_CONFIG_DATA_POLICY;
+	fw_cmd.output_payload_size = sizeof (*p_config_data);
+	fw_cmd.output_payload = p_config_data;
+
+	int rc = ioctl_passthrough_cmd(&fw_cmd);
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+/*
+ * Helper function to set config data policy
+ */
+int fw_set_config_data_policy(unsigned int device_handle,
+		struct pt_payload_set_config_data_policy *p_config_data)
+{
+	COMMON_LOG_ENTRY();
+
+	struct fw_cmd fw_cmd;
+	memset(&fw_cmd, 0, sizeof (fw_cmd));
+	fw_cmd.device_handle = device_handle;
+	fw_cmd.opcode = PT_SET_FEATURES;
+	fw_cmd.sub_opcode = SUBOP_OPT_CONFIG_DATA_POLICY;
+	fw_cmd.input_payload_size = sizeof (*p_config_data);
+	fw_cmd.input_payload = p_config_data;
+
+	int rc = ioctl_passthrough_cmd(&fw_cmd);
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+/*
  * Note: For the celsius conversion functions - FW represents celsius as a 16 bit value
  * 		bit 16 = sign value
  * 		bits 14 - 4 = exponent

@@ -753,21 +753,62 @@ struct pt_ddrt_alert {
 
 /*
  * Passthrough Payload:
- *		Opcode:		0x04h/0x05h (Get/Set Features)
+ *		Opcode:		0x04h (Get Features)
  *		Sub-Opcode:	0x06h (Optional Configuration Data Policy)
  *	Get - Small Output Payload
- *	Set - Small Input Payload
  */
-struct pt_payload_config_data_policy {
+struct pt_payload_get_config_data_policy {
 	/*
-	 *	Reflects whether acceleration of the first refresh cycle is enabled/disabled.
-	 *
-	 *	Value
-	 *	0x00 - Disabled (Default)
-	 *	0x01 - Enabled
+	 * Current state of acceleration of the first refresh cycle
+	 * 0x00 - Disabled (Default)
+	 * 0x01 - Enabled
 	 */
 	unsigned char first_fast_refresh;
-	unsigned char rsvd[127];
+
+	/*
+	 * Current state of Viral Policies of the NVM DIMM
+	 * 0x00 - Disable (default)
+	 * 0x01 - Enable
+	 */
+	unsigned char viral_policy_enable;
+
+	/*
+	 * Current Viral status of the NVM DIMM
+	 * 0x00 - Not viral
+	 * 0x01 - Viral
+	 */
+	unsigned char viral_status;
+	unsigned char rsvd[125];
+} __attribute__((packed));
+
+/*
+ * Passthrough Payload:
+ *		Opcode:		0x05h (Set Features)
+ *		Sub-Opcode:	0x06h (Optional Configuration Data Policy)
+ *	Set - Small Input Payload
+ */
+struct pt_payload_set_config_data_policy {
+	/*
+	 * Enable/disable acceleration of the first refresh cycle
+	 * 0x00 - Disabled (Default)
+	 * 0x01 - Enabled
+	 */
+	unsigned char first_fast_refresh;
+
+	/*
+	 *  Enable/disable the Viral Policies of the NVM DIMM
+	 *  0x00 - Disable (default)
+	 *  0x01 - Enable
+	 */
+	unsigned char viral_policy_enable;
+
+	/*
+	 * Clear the viral status of the NVM DIMM
+	 * 0x00 - Do Not Clear
+	 * 0x01 - Clear Viral
+	 */
+	unsigned char viral_clear;
+	unsigned char rsvd[125];
 } __attribute__((packed));
 
 /*
@@ -1843,6 +1884,12 @@ int fw_get_security_state(const NVM_UINT32 device_handle,
 
 int fw_get_fw_image_info(const NVM_UINT32 device_handle,
 	struct pt_payload_fw_image_info *p_fw_image_info);
+
+int fw_get_config_data_policy(unsigned int device_handle,
+	struct pt_payload_get_config_data_policy *payload);
+
+int fw_set_config_data_policy(unsigned int device_handle,
+	struct pt_payload_set_config_data_policy *p_config_data);
 
 float fw_convert_fw_celsius_to_float(unsigned short fw_celsius);
 unsigned short fw_convert_float_to_fw_celsius(float celsius);
