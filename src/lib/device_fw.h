@@ -178,8 +178,11 @@ enum dsm_vendor_error {
 	DSM_VENDOR_SUCCESS = 0x0000,
 	DSM_VENDOR_ERR_NOT_SUPPORTED = 0x0001,
 	DSM_VENDOR_ERR_NONEXISTING = 0x0002,
-	DSM_VENDOR_RSVD = 0x0003,
-	DSM_VENDOR_ERR_NON_SPECIFIC = 0x0004,
+	DSM_VENDOR_INVALID_INPUT = 0x0003,
+	DSM_VENDOR_HW_ERR = 0x0004,
+	DSM_VENDOR_RETRY_SUGGESTED = 0x0005,
+	DSM_VENDOR_UNKNOWN = 0x0006,
+	DSM_VENDOR_SPECIFIC_ERR = 0x0007,
 };
 
 /*
@@ -1836,7 +1839,19 @@ static inline int dsm_err_to_nvm_lib_err(unsigned int status)
 			case DSM_VENDOR_ERR_NONEXISTING:
 				rc = NVM_ERR_BADDEVICE;
 				break;
-			case DSM_VENDOR_ERR_NON_SPECIFIC:
+			case DSM_VENDOR_INVALID_INPUT:
+				rc = NVM_ERR_UNKNOWN;
+				break;
+			case DSM_VENDOR_HW_ERR:
+				rc = NVM_ERR_DEVICEERROR;
+				break;
+			case DSM_VENDOR_RETRY_SUGGESTED:
+				rc = NVM_ERR_DEVICEERROR;
+				break;
+			case DSM_VENDOR_UNKNOWN:
+				rc = NVM_ERR_UNKNOWN;
+				break;
+			case DSM_VENDOR_SPECIFIC_ERR:
 				rc = fw_mb_err_to_nvm_lib_err(status);
 				break;
 			default:
