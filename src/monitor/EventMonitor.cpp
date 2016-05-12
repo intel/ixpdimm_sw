@@ -208,6 +208,7 @@ void monitor::EventMonitor::monitorDimmStatus(const std::string &uidStr,
 		{
 			storedState.health_state = status.health;
 			storedState.die_spares_used = status.die_spares_used;
+			storedState.viral_state = status.viral_state;
 		}
 		// check for changes
 		else
@@ -267,6 +268,31 @@ void monitor::EventMonitor::monitorDimmStatus(const std::string &uidStr,
 						DIAGNOSTIC_RESULT_UNKNOWN);
 
 				storedState.die_spares_used = status.die_spares_used;
+				storedStateChanged = true;
+			}
+
+			if (status.viral_state != storedState.viral_state)
+			{
+				enum event_code_health code = EVENT_CODE_HEALTH_VIRAL_STATE;
+				if (status.viral_state)
+				{
+					store_event_by_parts(EVENT_TYPE_HEALTH,
+							EVENT_SEVERITY_CRITICAL,
+							code,
+							discovery.uid,
+							true,
+							uidStr.c_str(),
+							NULL,
+							NULL,
+							DIAGNOSTIC_RESULT_UNKNOWN);
+				}
+				else
+				{
+					acknowledgeEvent(code, discovery.uid);
+				}
+
+				// update stored state
+				storedState.viral_state = status.viral_state;
 				storedStateChanged = true;
 			}
 		}

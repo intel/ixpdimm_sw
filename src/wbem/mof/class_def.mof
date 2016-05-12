@@ -54,6 +54,8 @@ class <NVM_WBEM_PREFIX>NVDIMM : CIM_PhysicalMemory
 	uint16 MemoryTypeCapabilities[];
 	boolean DieSparingCapable;
 	uint16 FWLogLevel;
+	boolean ViralPolicy;
+	boolean ViralState;
 
 	// methods
 	[implemented,

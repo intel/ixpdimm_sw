@@ -190,6 +190,9 @@ const char *EVENT_MESSAGES_HEALTH[EVENT_CODE_HEALTH_UNKNOWN -
 	// EVENT_CODE_HEALTH_MIXED_SKU
 	N_TR("The health monitor has detected that one or more "NVM_DIMM_NAME"s "
 			"in the system have different SKUs."),
+	// EVENT_CODE_HEALTH_VIRAL_STATE
+	N_TR("The health monitor has detected that "NVM_DIMM_NAME" %s "
+			"is reporting a viral state."),
 	// EVENT_CODE_HEALTH_UNKNOWN
 	N_TR("The health monitor has logged an unknown error code %d."),
 };
@@ -275,6 +278,9 @@ const char *EVENT_MESSAGES_QUICK_DIAG[EVENT_CODE_DIAG_QUICK_UNKNOWN -
 	// EVENT_CODE_DIAG_QUICK_FW_HIT_ASSERT
 	N_TR("The quick health check detected that the firmware "
 			"on "NVM_DIMM_NAME" %s reported an assert."),
+	// EVENT_CODE_DIAG_QUICK_VIRAL_STATE
+	N_TR("The quick health check detected that "NVM_DIMM_NAME" %s "
+			"is reporting a viral state."),
 	// EVENT_CODE_DIAG_QUICK_UNKNOWN
 	N_TR("The quick health check logged an unknown error code %d."),
 };

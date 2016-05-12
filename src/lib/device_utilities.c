@@ -341,18 +341,11 @@ int check_firmware_revision(unsigned char fw_api_version)
 int get_dimm_health(NVM_NFIT_DEVICE_HANDLE device_handle, enum device_health *p_health)
 {
 	COMMON_LOG_ENTRY();
-	int rc;
-	struct pt_payload_smart_health dimm_smart;
 
 	// send a pass through command to get the smart data
-	struct fw_cmd cmd;
-	memset(&cmd, 0, sizeof (struct fw_cmd));
-	cmd.device_handle = device_handle.handle;
-	cmd.opcode = PT_GET_LOG;
-	cmd.sub_opcode = SUBOP_SMART_HEALTH;
-	cmd.output_payload_size = sizeof (dimm_smart);
-	cmd.output_payload = &dimm_smart;
-	if ((NVM_SUCCESS == (rc = ioctl_passthrough_cmd(&cmd))) &&
+	struct pt_payload_smart_health dimm_smart;
+	int rc = fw_get_smart_health(device_handle.handle, &dimm_smart);
+	if ((NVM_SUCCESS == rc) &&
 			dimm_smart.validation_flags.parts.health_status_field)
 	{
 		*p_health = smart_health_status_to_device_health(dimm_smart.health_status);

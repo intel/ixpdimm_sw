@@ -505,14 +505,7 @@ int get_device_status_by_handle(NVM_NFIT_DEVICE_HANDLE dimm_handle,
 	}
 
 	struct pt_payload_smart_health dimm_smart;
-	struct fw_cmd cmd;
-	memset(&cmd, 0, sizeof (struct fw_cmd));
-	cmd.device_handle = dimm_handle.handle;
-	cmd.opcode = PT_GET_LOG;
-	cmd.sub_opcode = SUBOP_SMART_HEALTH;
-	cmd.output_payload_size = sizeof (dimm_smart);
-	cmd.output_payload = &dimm_smart;
-	temprc = ioctl_passthrough_cmd(&cmd);
+	temprc = fw_get_smart_health(dimm_handle.handle, &dimm_smart);
 	if (temprc != NVM_SUCCESS)
 	{
 		COMMON_LOG_ERROR_F("Failed to retrieve the DIMM smart data with error %d", temprc);
@@ -547,6 +540,19 @@ int get_device_status_by_handle(NVM_NFIT_DEVICE_HANDLE dimm_handle,
 	// determine if the dimm is in violation of it's supported sku
 	KEEP_ERROR(rc, device_in_sku_violation(dimm_handle,
 			p_capabilities, &p_status->sku_violation));
+
+	struct pt_payload_get_config_data_policy config_data;
+	temprc = fw_get_config_data_policy(dimm_handle.handle, &config_data);
+	if (temprc != NVM_SUCCESS)
+	{
+		COMMON_LOG_ERROR_F(
+			"Failed to retrieve DIMM optional configuration data policy with error %d", temprc);
+		KEEP_ERROR(rc, temprc);
+	}
+	else
+	{
+		p_status->viral_state = config_data.viral_status;
+	}
 
 	return rc;
 }

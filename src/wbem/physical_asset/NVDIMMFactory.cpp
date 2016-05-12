@@ -124,6 +124,8 @@ void NVDIMMFactory::populateAttributeList(
 	attributes.push_back(MEMORYTYPECAPABILITIES_KEY);
 	attributes.push_back(DIESPARINGCAPABLE_KEY);
 	attributes.push_back(FWLOGLEVEL_KEY);
+	attributes.push_back(VIRALPOLICY_KEY);
+	attributes.push_back(VIRALSTATE_KEY);
 }
 
 wbem::framework::Instance *NVDIMMFactory::getInstance(
@@ -444,22 +446,27 @@ wbem::framework::Instance *NVDIMMFactory::modifyInstance(
 		framework::attribute_names_t modifyableAttributes;
 		modifyableAttributes.push_back(FIRSTFASTREFRESH_KEY);
 		modifyableAttributes.push_back(FWLOGLEVEL_KEY);
+		modifyableAttributes.push_back(VIRALPOLICY_KEY);
 
 		checkAttributesAreModifiable(pInstance, attributes, modifyableAttributes);
 
 		if (pInstance)
 		{
-			if (attributes.count(FIRSTFASTREFRESH_KEY))
+			if ((attributes.count(FIRSTFASTREFRESH_KEY)) ||
+					(attributes.count(VIRALPOLICY_KEY)))
 			{
 				int rc = 0;
 				struct device_settings settings;
-				framework::Attribute attr = attributes[FIRSTFASTREFRESH_KEY];
 
-				settings.first_fast_refresh = attr.boolValue() ? 1 : 0;
+				framework::Attribute refreshAttr = attributes[FIRSTFASTREFRESH_KEY];
+				settings.first_fast_refresh = refreshAttr.boolValue() ? 1 : 0;
+				framework::Attribute viralAttr = attributes[VIRALPOLICY_KEY];
+				settings.viral_policy = viralAttr.boolValue() ? 1 : 0;
 
 				if ((rc = nvm_modify_device_settings(uid, &settings)) == NVM_SUCCESS)
 				{
-					pInstance->setAttribute(FIRSTFASTREFRESH_KEY, attr);
+					pInstance->setAttribute(FIRSTFASTREFRESH_KEY, refreshAttr);
+					pInstance->setAttribute(VIRALPOLICY_KEY, viralAttr);
 				}
 				else
 				{
@@ -729,6 +736,8 @@ void NVDIMMFactory::toInstance(core::device::Device &device,
 	ADD_ATTRIBUTE(instance, attributes, MIXEDSKU_KEY, framework::BOOLEAN, device.isMixedSku());
 	ADD_ATTRIBUTE(instance, attributes, SKUVIOLATION_KEY, framework::BOOLEAN,
 			device.isSkuViolation());
+	ADD_ATTRIBUTE(instance, attributes, VIRALPOLICY_KEY, framework::BOOLEAN, device.isViralPolicyEnabled());
+	ADD_ATTRIBUTE(instance, attributes, VIRALSTATE_KEY, framework::BOOLEAN, device.getCurrentViralState());
 }
 
 std::string NVDIMMFactory::getMemoryModeString(core::device::Device &device)

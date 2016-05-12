@@ -64,6 +64,7 @@ static const std::string LOCKSTATE_PROPERTYNAME = "LockState"; //!< Lockstate Pr
 static const std::string PASSPHRASE_PROPERTYNAME = "Passphrase"; //!< Passphrase Property
 static const std::string FIRSTFASTREFRESH_PROPERTYNAME = "FirstFastRefresh"; //!< FirstFastRefresh Property
 static const std::string FWLOGLEVEL_PROPERTYNAME = "FwLogLevel"; //!< FwLogLevel Property
+static const std::string VIRALPOLICY_PROPERTYNAME = "ViralPolicy"; //!< ViralPolicy Property
 static const std::string NEWPASSPHRASE_PROPERTYNAME = "NewPassphrase"; //!< New Passphrase Property
 static const std::string CONFIRMPASSPHRASE_PROPERTYNAME = "ConfirmPassphrase"; //!< Confirm Passphrase Property
 static const std::string ERASETYPE_PROPERTYNAME = "EraseType"; //!< which type of erase

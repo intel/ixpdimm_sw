@@ -73,6 +73,9 @@ void check_dimm_power_limitation(const NVM_UID device_uid,
 int check_dimm_bsr(const NVM_UID device_uid,
 		const NVM_NFIT_DEVICE_HANDLE device_handle,
 		const struct diagnostic *p_diagnostic, NVM_UINT32* p_results);
+int check_dimm_viral_state(const NVM_UID device_uid,
+		const NVM_NFIT_DEVICE_HANDLE device_handle,
+		const struct diagnostic *p_diagnostic, NVM_UINT32* p_results);
 
 /*
  * Run the quick health check diagnostic algorithm
@@ -120,6 +123,10 @@ int diag_quick_health_check(const NVM_UID device_uid,
 						p_results);
 				KEEP_ERROR(rc, tmp_rc);
 
+				int tmp_rc =
+					check_dimm_viral_state(device_uid, device_handle, p_diagnostic, p_results);
+				KEEP_ERROR(rc, tmp_rc);
+
 				if ((rc == NVM_SUCCESS) && (*p_results == 0)) // No errors/warnings
 				{
 					// store success event
@@ -155,8 +162,6 @@ void check_valid_dimm_manufacturer(const struct diagnostic *p_diagnostic,
 	if (!diag_check(p_diagnostic, DIAG_THRESHOLD_QUICK_VALID_MANUFACTURER, actual_manufacturer,
 			&valid_manufacturer, EQUALITY_EQUAL))
 	{
-		NVM_UID uid_str;
-		uid_copy(device_uid, uid_str);
 		char actual_manufacturer_str[10];
 		s_snprintf(actual_manufacturer_str, 10, "0x%02llx", actual_manufacturer);
 		char valid_manufacturer_str[10];
@@ -166,7 +171,7 @@ void check_valid_dimm_manufacturer(const struct diagnostic *p_diagnostic,
 				EVENT_CODE_DIAG_QUICK_INVALID_MANUFACTURER,
 				device_uid,
 				0,
-				uid_str,
+				device_uid,
 				actual_manufacturer_str,
 				valid_manufacturer_str, DIAGNOSTIC_RESULT_ABORTED);
 		(*p_results)++;
@@ -182,15 +187,12 @@ void check_valid_dimm_model_number(const struct diagnostic *p_diagnostic,
 	if (!diag_check_str(p_diagnostic, DIAG_THRESHOLD_QUICK_VALID_MODEL_NUMBER, p_id_dimm->mn,
 			valid_model))
 	{
-		NVM_UID uid_str;
-		uid_copy(device_uid, uid_str);
-
 		store_event_by_parts(EVENT_TYPE_DIAG_QUICK,
 				EVENT_SEVERITY_WARN,
 				EVENT_CODE_DIAG_QUICK_INVALID_MODEL_NUMBER,
 				device_uid,
 				0,
-				uid_str,
+				device_uid,
 				p_id_dimm->mn,
 				valid_model, DIAGNOSTIC_RESULT_ABORTED);
 		(*p_results)++;
@@ -207,16 +209,13 @@ void check_valid_dimm_vendor_id(const struct diagnostic *p_diagnostic,
 	if (!diag_check(p_diagnostic, DIAG_THRESHOLD_QUICK_VALID_VENDOR_ID,
 			(NVM_UINT64) p_id_dimm->vendor_id, &valid_vendor, EQUALITY_EQUAL))
 	{
-		NVM_UID uid_str;
-		uid_copy(device_uid, uid_str);
-
 		char actual_vendor_str[10];
 		s_snprintf(actual_vendor_str, 10, "0x%04x", p_id_dimm->vendor_id);
 		char expected_vendor_str[10];
 		s_snprintf(expected_vendor_str, 10, "0x%04x", valid_vendor);
 		store_event_by_parts(EVENT_TYPE_DIAG_QUICK, EVENT_SEVERITY_WARN,
 				EVENT_CODE_DIAG_QUICK_INVALID_VENDORID, device_uid,
-				0, uid_str, actual_vendor_str,
+				0, device_uid, actual_vendor_str,
 				expected_vendor_str, DIAGNOSTIC_RESULT_ABORTED);
 		(*p_results)++;
 	}
@@ -265,9 +264,6 @@ int check_dimm_alarm_thresholds(const NVM_UID device_uid,
 	if (NVM_SUCCESS
 			== (rc = fw_get_alarm_thresholds(device_handle.handle, &thresholds)))
 	{
-		NVM_UID uid_str;
-		uid_copy(device_uid, uid_str);
-
 		// check media temperature to alarm threshold
 		NVM_UINT64 media_temp_threshold = thresholds.media_temperature;
 		if (p_dimm_smart->validation_flags.parts.media_temperature_field &&
@@ -288,7 +284,7 @@ int check_dimm_alarm_thresholds(const NVM_UID device_uid,
 					EVENT_CODE_DIAG_QUICK_BAD_MEDIA_TEMP,
 					device_uid,
 					0,
-					uid_str,
+					device_uid,
 					actual_temp_str,
 					expected_temp_str, DIAGNOSTIC_RESULT_FAILED);
 			(*p_results)++;
@@ -316,7 +312,7 @@ int check_dimm_alarm_thresholds(const NVM_UID device_uid,
 					EVENT_CODE_DIAG_QUICK_BAD_CONTROLLER_TEMP,
 					device_uid,
 					0,
-					uid_str,
+					device_uid,
 					actual_temp_str,
 					expected_temp_str, DIAGNOSTIC_RESULT_FAILED);
 			(*p_results)++;
@@ -338,7 +334,7 @@ int check_dimm_alarm_thresholds(const NVM_UID device_uid,
 					EVENT_CODE_DIAG_QUICK_BAD_SPARE,
 					device_uid,
 					0,
-					uid_str,
+					device_uid,
 					actual_spare_str,
 					expected_spare_str,
 					DIAGNOSTIC_RESULT_FAILED);
@@ -363,7 +359,7 @@ int check_dimm_alarm_thresholds(const NVM_UID device_uid,
 					EVENT_CODE_DIAG_QUICK_BAD_PERCENT_USED,
 					device_uid,
 					0,
-					uid_str,
+					device_uid,
 					actual_percent_str,
 					expected_percent_str,
 					DIAGNOSTIC_RESULT_FAILED);
@@ -394,9 +390,6 @@ void check_dimm_smart_health_status(const struct diagnostic *p_diagnostic,
 			!diag_check(p_diagnostic, DIAG_THRESHOLD_QUICK_HEALTH, p_dimm_smart->health_status,
 			&max_health_status, EQUALITY_LESSTHANEQUAL))
 	{
-		NVM_UID uid_str;
-		uid_copy(device_uid, uid_str);
-
 		NVM_EVENT_ARG actual_health_str;
 		dimm_smart_health_status_to_string(p_dimm_smart->health_status,
 				actual_health_str, sizeof (actual_health_str));
@@ -409,7 +402,7 @@ void check_dimm_smart_health_status(const struct diagnostic *p_diagnostic,
 				EVENT_CODE_DIAG_QUICK_BAD_HEALTH,
 				device_uid,
 				0,
-				uid_str,
+				device_uid,
 				actual_health_str,
 				expected_health_str,
 				DIAGNOSTIC_RESULT_FAILED);
@@ -454,14 +447,12 @@ void check_media_ready_status(const struct diagnostic *p_diagnostic,
 
 	if (code != EVENT_CODE_DIAG_QUICK_UNKNOWN)
 	{
-		NVM_UID uid_str;
-		uid_copy(device_uid, uid_str);
 		store_event_by_parts(EVENT_TYPE_DIAG_QUICK,
 				EVENT_SEVERITY_CRITICAL,
 				code,
 				device_uid,
 				1,
-				uid_str,
+				device_uid,
 				NULL,
 				NULL,
 				DIAGNOSTIC_RESULT_FAILED);
@@ -603,6 +594,34 @@ void check_fw_assert(const struct diagnostic *p_diagnostic,
 	COMMON_LOG_EXIT();
 }
 
+int check_dimm_viral_state(const NVM_UID device_uid,
+		const NVM_NFIT_DEVICE_HANDLE device_handle,
+		const struct diagnostic *p_diagnostic, NVM_UINT32 *p_results)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	struct pt_payload_get_config_data_policy config_data;
+	rc = fw_get_config_data_policy(device_handle.handle, &config_data);
+	if ((rc == NVM_SUCCESS) &&
+			(config_data.viral_status))
+	{
+		store_event_by_parts(EVENT_TYPE_DIAG_QUICK,
+				EVENT_SEVERITY_CRITICAL,
+				EVENT_CODE_DIAG_QUICK_VIRAL_STATE,
+				device_uid,
+				1,
+				device_uid,
+				NULL,
+				NULL,
+				DIAGNOSTIC_RESULT_FAILED);
+		(*p_results)++;
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
 int check_dimm_bsr(const NVM_UID device_uid,
 		const NVM_NFIT_DEVICE_HANDLE device_handle,
 		const struct diagnostic *p_diagnostic, NVM_UINT32 *p_results)
@@ -614,14 +633,12 @@ int check_dimm_bsr(const NVM_UID device_uid,
 	rc = get_bsr(device_handle, &bsr);
 	if (rc != NVM_SUCCESS)
 	{
-		NVM_UID uid_str;
-		uid_copy(device_uid, uid_str);
 		store_event_by_parts(EVENT_TYPE_DIAG_QUICK,
 				EVENT_SEVERITY_CRITICAL,
 				EVENT_CODE_DIAG_QUICK_UNREADABLE_BSR,
 				device_uid,
 				1,
-				uid_str,
+				device_uid,
 				NULL,
 				NULL,
 				DIAGNOSTIC_RESULT_FAILED);

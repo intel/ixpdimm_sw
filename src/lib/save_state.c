@@ -504,15 +504,7 @@ int support_store_smart(PersistentStore *p_store, int history_id,
 
 	// add smart table
 	struct pt_payload_smart_health dimm_smart;
-
-	struct fw_cmd cmd;
-	memset(&cmd, 0, sizeof (struct fw_cmd));
-	cmd.device_handle = device_handle.handle;
-	cmd.opcode = PT_GET_LOG;
-	cmd.sub_opcode = SUBOP_SMART_HEALTH;
-	cmd.output_payload_size = sizeof (dimm_smart);
-	cmd.output_payload = &dimm_smart;
-	int temprc = ioctl_passthrough_cmd(&cmd);
+	int temprc = fw_get_smart_health(device_handle.handle, &dimm_smart);
 	if (NVM_SUCCESS != temprc)
 	{
 		COMMON_LOG_ERROR("Failed getting dimm smart information");

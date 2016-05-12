@@ -111,8 +111,10 @@ void cli::nvmcli::SystemFeature::getPaths(cli::framework::CommandSpecList &list)
 			TR("Modify specific " NVM_DIMM_NAME "s by supplying one or more comma-separated " NVM_DIMM_NAME " identifiers. "
 			"However, this is not recommended as it may put the system in an undesirable state. "
 			"The default is to modify all manageable " NVM_DIMM_NAME "s."));
-	modifyDevice.addProperty(FIRSTFASTREFRESH_PROPERTYNAME, true, "0|1", true,
+	modifyDevice.addProperty(FIRSTFASTREFRESH_PROPERTYNAME, false, "0|1", true,
 			TR("Whether acceleration of the first refresh cycle is enabled."));
+	modifyDevice.addProperty(VIRALPOLICY_PROPERTYNAME, false, "0|1", true,
+			TR("Whether the viral policies are enabled."));
 
 	framework::CommandSpec setFwLogging(SET_FW_LOGGING, TR("Set Firmware Logging"), framework::VERB_SET,
 			TR("Set the firmware logging level on one or more " NVM_DIMM_NAME "s."));
@@ -341,77 +343,90 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::modifyDevice(
 	std::vector<std::string> dimms;
 	framework::ResultBase *pResults = NULL;
 
-	std::string firstFastRefresh = framework::Parser::getPropertyValue(parsedCommand, FIRSTFASTREFRESH_PROPERTYNAME);
-
-	if ((!cli::framework::stringsIEqual(firstFastRefresh, ZERO_PROPERTYVALUE)) &&
-			(!cli::framework::stringsIEqual(firstFastRefresh, ONE_PROPERTYVALUE)))
+	if (parsedCommand.properties.size() == 0)
 	{
-		pResults = new framework::SyntaxErrorBadValueResult(
-							framework::TOKENTYPE_PROPERTY,
-							FIRSTFASTREFRESH_PROPERTYNAME.c_str(),
-							firstFastRefresh);
-	}
-	else
-	{
-		basePrefix = TRS(MODIFYDEVICE_MSG);
-		pResults = cli::nvmcli::getDimms(parsedCommand, dimms);
+		pResults = new framework::SyntaxErrorResult(TRS(NOMODIFIABLEPROPERTY_ERROR_STR));
 	}
 
-	if (pResults == NULL)
+	if (!pResults)
 	{
-		wbem::physical_asset::NVDIMMFactory dimmFactory;
+		bool hasRefreshProp, hasViralProp;
+		std::string firstFastRefresh = framework::Parser::getPropertyValue(parsedCommand, FIRSTFASTREFRESH_PROPERTYNAME, &hasRefreshProp);
+		std::string viralPolicy = framework::Parser::getPropertyValue(parsedCommand, VIRALPOLICY_PROPERTYNAME, &hasViralProp);
 
-		wbem::framework::attributes_t attributes;
-		if (cli::framework::stringsIEqual(firstFastRefresh, ZERO_PROPERTYVALUE))
-
+		if (hasRefreshProp &&
+				(!cli::framework::stringsIEqual(firstFastRefresh, ZERO_PROPERTYVALUE) &&
+						!cli::framework::stringsIEqual(firstFastRefresh, ONE_PROPERTYVALUE)))
 		{
-			wbem::framework::Attribute attr(false, false);
-			attributes[wbem::FIRSTFASTREFRESH_KEY] = attr;
+			pResults = new framework::SyntaxErrorBadValueResult(
+					framework::TOKENTYPE_PROPERTY,
+					FIRSTFASTREFRESH_PROPERTYNAME.c_str(),
+					firstFastRefresh);
 		}
-		else
+		else if (hasViralProp &&
+				(!cli::framework::stringsIEqual(viralPolicy, ZERO_PROPERTYVALUE) &&
+						!cli::framework::stringsIEqual(viralPolicy, ONE_PROPERTYVALUE)))
 		{
-			wbem::framework::Attribute attr(true, false);
-			attributes[wbem::FIRSTFASTREFRESH_KEY] = attr;
+			pResults = new framework::SyntaxErrorBadValueResult(
+					framework::TOKENTYPE_PROPERTY,
+					VIRALPOLICY_PROPERTYNAME.c_str(),
+					viralPolicy);
+		}
+		else if (!pResults)
+		{
+			basePrefix = TRS(MODIFYDEVICE_MSG);
+			pResults = cli::nvmcli::getDimms(parsedCommand, dimms);
 		}
 
-		framework::SimpleListResult *pListResults = new framework::SimpleListResult();
-
-		std::vector<std::string>::iterator iter = dimms.begin();
-		for (; iter != dimms.end(); iter++)
+		if (!pResults)
 		{
-			std::string dimmStr = wbem::physical_asset::NVDIMMFactory::uidToDimmIdStr((*iter));
-			std::string prefix = cli::framework::ResultBase::stringFromArgList((basePrefix + " %s").c_str(),
-					dimmStr.c_str());
-			prefix += ": ";
+			wbem::physical_asset::NVDIMMFactory dimmFactory;
 
-			try
+			wbem::framework::attributes_t attributes;
+			wbem::framework::Attribute refreshAttr(!cli::framework::stringsIEqual(firstFastRefresh, ZERO_PROPERTYVALUE), false);
+			attributes[wbem::FIRSTFASTREFRESH_KEY] = refreshAttr;
+			wbem::framework::Attribute viralAttr(!cli::framework::stringsIEqual(viralPolicy, ZERO_PROPERTYVALUE), false);
+			attributes[wbem::VIRALPOLICY_KEY] = viralAttr;
+
+			framework::SimpleListResult *pListResults = new framework::SimpleListResult();
+
+			std::vector<std::string>::iterator iter = dimms.begin();
+			for (; iter != dimms.end(); iter++)
 			{
-				bool forceOption = parsedCommand.options.find(framework::OPTION_FORCE.name)
-						!= parsedCommand.options.end();
+				std::string dimmStr = wbem::physical_asset::NVDIMMFactory::uidToDimmIdStr((*iter));
+				std::string prefix = cli::framework::ResultBase::stringFromArgList((basePrefix + " %s").c_str(),
+						dimmStr.c_str());
+				prefix += ": ";
 
-				// if user didn't specify the force option, prompt them to continue
-				std::string prompt = framework::ResultBase::stringFromArgList(
-						MODIFY_DEV_PROMPT.c_str(), dimmStr.c_str());
-				if (!forceOption && !promptUserYesOrNo(prompt))
+				try
 				{
-					pListResults->insert(prefix + cli::framework::UNCHANGED_MSG);
+					bool forceOption = parsedCommand.options.find(framework::OPTION_FORCE.name)
+								!= parsedCommand.options.end();
+
+					// if user didn't specify the force option, prompt them to continue
+					std::string prompt = framework::ResultBase::stringFromArgList(
+							MODIFY_DEV_PROMPT.c_str(), dimmStr.c_str());
+					if (!forceOption && !promptUserYesOrNo(prompt))
+					{
+						pListResults->insert(prefix + cli::framework::UNCHANGED_MSG);
+					}
+					else
+					{
+						wbem::framework::ObjectPath path;
+						dimmFactory.createPathFromUid(*iter, path);
+						dimmFactory.modifyInstance(path, attributes);
+
+						pListResults->insert(prefix + TRS(cli::framework::SUCCESS_MSG));
+					}
 				}
-				else
+				catch (wbem::framework::Exception &e)
 				{
-					wbem::framework::ObjectPath path;
-					dimmFactory.createPathFromUid(*iter, path);
-					dimmFactory.modifyInstance(path, attributes);
-
-					pListResults->insert(prefix + TRS(cli::framework::SUCCESS_MSG));
+					pListResults->insert(prefix + e.what());
+					SetResultErrorCodeFromException(*pListResults, e);
 				}
 			}
-			catch (wbem::framework::Exception &e)
-			{
-				pListResults->insert(prefix + e.what());
-				SetResultErrorCodeFromException(*pListResults, e);
-			}
+			pResults = pListResults;
 		}
-		pResults = pListResults;
 	}
 
 	return pResults;
