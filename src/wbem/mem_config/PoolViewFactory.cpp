@@ -91,6 +91,7 @@ throw(wbem::framework::Exception)
 
 	// create the instance, initialize with attributes from the path
 	framework::Instance *pInstance = new framework::Instance(path);
+	struct pool *pPool = NULL;
 	try
 	{
 		checkAttributes(attributes);
@@ -101,14 +102,14 @@ throw(wbem::framework::Exception)
 			throw framework::ExceptionBadParameter(POOLID_KEY.c_str());
 		}
 
-		struct pool pool = getPool(poolUidStr);
-		bool isVolatilePool = pool.type == POOL_TYPE_VOLATILE;
+		pPool = getPool(poolUidStr);
+		bool isVolatilePool = pPool->type == POOL_TYPE_VOLATILE;
 
 		if (!isVolatilePool)
 		{
 			possible_namespace_ranges ranges;
 			int rc;
-			if ((rc = nvm_get_available_persistent_size_range(pool.pool_uid, &ranges)) != NVM_SUCCESS)
+			if ((rc = nvm_get_available_persistent_size_range(pPool->pool_uid, &ranges)) != NVM_SUCCESS)
 			{
 				throw exception::NvmExceptionLibError(rc);
 			}
@@ -116,48 +117,48 @@ throw(wbem::framework::Exception)
 			// PoolType - The type of pool. One of:  Volatile, Persistent, Mirrored
 			if (containsAttribute(POOLTYPE_KEY, attributes))
 			{
-				framework::Attribute a(getPoolType(&pool), false);
+				framework::Attribute a(getPoolType(pPool), false);
 				pInstance->setAttribute(POOLTYPE_KEY, a, attributes);
 			}
 
 			// Capacity - Total usable capacity, both allocated and unallocated in bytes.
 			if (containsAttribute(CAPACITY_KEY, attributes))
 			{
-				framework::Attribute a(pool.capacity, false);
+				framework::Attribute a(pPool->capacity, false);
 				pInstance->setAttribute(CAPACITY_KEY, a, attributes);
 			}
 
 			// FreeCapacity - Remaining usable capacity in bytes.
 			if (containsAttribute(FREECAPACITY_KEY, attributes))
 			{
-				framework::Attribute a(pool.free_capacity, false);
+				framework::Attribute a(pPool->free_capacity, false);
 				pInstance->setAttribute(FREECAPACITY_KEY, a, attributes);
 			}
 
 			if (containsAttribute(ENCRYPTIONCAPABLE_KEY, attributes))
 			{
-				std::string encryption = getEncryptionCapable(&pool);
+				std::string encryption = getEncryptionCapable(pPool);
 				framework::Attribute a(encryption, false);
 				pInstance->setAttribute(ENCRYPTIONCAPABLE_KEY, a, attributes);
 			}
 
 			if (containsAttribute(ENCRYPTIONENABLED_KEY, attributes))
 			{
-				std::string encryption = getEncryptionEnabled(&pool);
+				std::string encryption = getEncryptionEnabled(pPool);
 				framework::Attribute a(encryption, false);
 				pInstance->setAttribute(ENCRYPTIONENABLED_KEY, a, attributes);
 			}
 
 			if (containsAttribute(ERASECAPABLE_KEY, attributes))
 			{
-				std::string erase = getEraseCapable(&pool);
+				std::string erase = getEraseCapable(pPool);
 				framework::Attribute a(erase, false);
 				pInstance->setAttribute(ERASECAPABLE_KEY, a, attributes);
 			}
 
 			if (containsAttribute(SOCKETID_KEY, attributes))
 			{
-				framework::Attribute a(getString(pool.socket_id), false);
+				framework::Attribute a(getString(pPool->socket_id), false);
 				pInstance->setAttribute(SOCKETID_KEY, a, attributes);
 			}
 
@@ -178,7 +179,7 @@ throw(wbem::framework::Exception)
 			// AppDirectNamespaceCount - Current number of AD namespaces
 			if (containsAttribute(APPDIRECTNAMESPACE_COUNT_KEY, attributes))
 			{
-				framework::Attribute a(getString(countNamespaces(&pool, NAMESPACE_TYPE_APP_DIRECT)), false);
+				framework::Attribute a(getString(countNamespaces(pPool, NAMESPACE_TYPE_APP_DIRECT)), false);
 				pInstance->setAttribute(APPDIRECTNAMESPACE_COUNT_KEY, a, attributes);
 			}
 
@@ -199,30 +200,35 @@ throw(wbem::framework::Exception)
 			// StorageNamespacesCount - Current number of Storage namespaces
 			if (containsAttribute(STORAGENAMESPACE_COUNT_KEY, attributes))
 			{
-				framework::Attribute a(getString(countNamespaces(&pool, NAMESPACE_TYPE_STORAGE)), false);
+				framework::Attribute a(getString(countNamespaces(pPool, NAMESPACE_TYPE_STORAGE)), false);
 				pInstance->setAttribute(STORAGENAMESPACE_COUNT_KEY, a, attributes);
 			}
 
 			// Health State = enum + string
 			if (containsAttribute(HEALTHSTATE_KEY, attributes))
 			{
-				framework::Attribute a((NVM_UINT16)pool.health,
-						poolHealthToStr(pool.health), false);
+				framework::Attribute a((NVM_UINT16)pPool->health,
+						poolHealthToStr(pPool->health), false);
 				pInstance->setAttribute(HEALTHSTATE_KEY, a, attributes);
 			}
 
 			if (containsAttribute(APP_DIRECT_SETTINGS_KEY, attributes))
 			{
-				framework::Attribute attr(getAppDirectSettings(&pool), false);
+				framework::Attribute attr(getAppDirectSettings(pPool), false);
 				pInstance->setAttribute(APP_DIRECT_SETTINGS_KEY, attr, attributes);
 			}
 		}
+		delete pPool;
 	}
 	catch (framework::Exception &) // clean up and re-throw
 	{
 		if (pInstance)
 		{
 			delete pInstance;
+		}
+		if (pPool)
+		{
+			delete pPool;
 		}
 		throw;
 	}
@@ -301,7 +307,7 @@ std::vector<struct pool> wbem::mem_config::PoolViewFactory::getPoolList(bool pmO
 /*
  * Helper function to retrieve a specific pool.
  */
-struct pool wbem::mem_config::PoolViewFactory::getPool(const std::string &poolUidStr)
+struct pool *wbem::mem_config::PoolViewFactory::getPool(const std::string &poolUidStr)
 	throw (wbem::framework::Exception)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -309,14 +315,18 @@ struct pool wbem::mem_config::PoolViewFactory::getPool(const std::string &poolUi
 	NVM_UID poolUid;
 	uid_copy(poolUidStr.c_str(), poolUid);
 
-	struct pool pool;
-	int rc = nvm_get_pool(poolUid, &pool);
+	struct pool *pPool = new struct pool;
+	int rc = nvm_get_pool(poolUid, pPool);
 	if (rc != NVM_SUCCESS)
 	{
+		if (pPool)
+		{
+			delete pPool;
+		}
 		throw exception::NvmExceptionLibError(rc);
 	}
 
-	return pool;
+	return pPool;
 }
 
 std::string wbem::mem_config::PoolViewFactory::getEraseCapable(pool *pPool)

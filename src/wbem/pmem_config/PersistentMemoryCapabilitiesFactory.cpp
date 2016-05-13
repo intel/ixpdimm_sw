@@ -81,18 +81,19 @@ throw(wbem::framework::Exception)
 
 	// create the instance, initialize with attributes from the path
 	framework::Instance *pInstance = new framework::Instance(path);
+	struct pool *pPool = NULL;
 	try
 	{
 		checkAttributes(attributes);
 
-		struct pool pool = getPool(path);
+		pPool = getPool(path);
 		struct nvm_capabilities capabilities = getNvmCapabilities();
 
 		// ElementName = "Pool Capabilities for: " + pool UUID
 		if (containsAttribute(ELEMENTNAME_KEY, attributes))
 		{
 			NVM_UID poolUidStr;
-			uid_copy(pool.pool_uid, poolUidStr);
+			uid_copy(pPool->pool_uid, poolUidStr);
 			std::string elementNameStr = PMCAP_ELEMENTNAME + poolUidStr;
 			framework::Attribute a(elementNameStr, false);
 			pInstance->setAttribute(ELEMENTNAME_KEY, a, attributes);
@@ -101,7 +102,7 @@ throw(wbem::framework::Exception)
 		// MaxNamespaces = Max namespaces for this pool
 		if (containsAttribute(MAXNAMESPACES_KEY, attributes))
 		{
-			framework::UINT64 maxNs = getMaxNamespacesPerPool(&pool, capabilities.sw_capabilities.min_namespace_size);
+			framework::UINT64 maxNs = getMaxNamespacesPerPool(pPool, capabilities.sw_capabilities.min_namespace_size);
 			framework::Attribute a(maxNs, false);
 			pInstance->setAttribute(MAXNAMESPACES_KEY, a, attributes);
 		}
@@ -109,7 +110,7 @@ throw(wbem::framework::Exception)
 		// SecurityFeatures = Supported security features of the pool
 		if (containsAttribute(SECURITYFEATURES_KEY, attributes))
 		{
-			framework::UINT16_LIST secFeaturesList = getPoolSecurityFeatures(&pool);
+			framework::UINT16_LIST secFeaturesList = getPoolSecurityFeatures(pPool);
 			framework::Attribute a(secFeaturesList, false);
 			pInstance->setAttribute(SECURITYFEATURES_KEY, a, attributes);
 		}
@@ -119,7 +120,7 @@ throw(wbem::framework::Exception)
 		{
 			framework::UINT16_LIST accessList;
 			accessList.push_back(PMCAP_ACCESSGRANULARITY_BYTE); // all app direct is byte accessible
-			if (pool.type == POOL_TYPE_PERSISTENT)
+			if (pPool->type == POOL_TYPE_PERSISTENT)
 			{
 				accessList.push_back(PMCAP_ACCESSGRANULARITY_BLOCK); // non mirrored = block capable
 			}
@@ -140,7 +141,7 @@ throw(wbem::framework::Exception)
 		if (containsAttribute(REPLICATION_KEY, attributes))
 		{
 			framework::UINT16_LIST replicationList;
-			if (pool.type == POOL_TYPE_PERSISTENT_MIRROR)
+			if (pPool->type == POOL_TYPE_PERSISTENT_MIRROR)
 			{
 				replicationList.push_back(PMCAP_REPLICATION_LOCAL);
 			}
@@ -154,6 +155,7 @@ throw(wbem::framework::Exception)
 			framework::Attribute a(capable, false);
 			pInstance->setAttribute(MEMORYPAGEALLOCATIONCAPABLE_KEY, a, attributes);
 		}
+		delete pPool;
 	}
 	catch (framework::Exception &) // clean up and re-throw
 	{
@@ -161,6 +163,11 @@ throw(wbem::framework::Exception)
 		{
 			delete pInstance;
 			pInstance = NULL;
+		}
+		if (pPool)
+		{
+			delete pPool;
+			pPool = NULL;
 		}
 		throw;
 	}
@@ -217,6 +224,7 @@ wbem::framework::UINT32 wbem::pmem_config::PersistentMemoryCapabilitiesFactory::
 {
 	framework::UINT32 httpRc = framework::MOF_ERR_SUCCESS;
 	wbemRc = framework::MOF_ERR_SUCCESS;
+	struct pool *pPool = NULL;
 
 	COMMON_LOG_ENTRY_PARAMS("methodName: %s, number of in params: %d", method.c_str(), (int)(inParms.size()));
 
@@ -226,9 +234,9 @@ wbem::framework::UINT32 wbem::pmem_config::PersistentMemoryCapabilitiesFactory::
 		{
 			// get the supported block sizes for this pool
 			wbem::framework::UINT64_LIST blockSizes;
-			struct pool pool = getPool(object);
+			pPool = getPool(object);
 			// if pool is block capable, then retrieve supported block sizes, else empty
-			if (pool.type == POOL_TYPE_PERSISTENT)
+			if (pPool->type == POOL_TYPE_PERSISTENT)
 			{
 				// get system supported block sizes
 				getSupportedBlockSizes(blockSizes);
@@ -252,6 +260,10 @@ wbem::framework::UINT32 wbem::pmem_config::PersistentMemoryCapabilitiesFactory::
 	catch(framework::Exception &)
 	{
 		wbemRc = PMCAP_ERR_UNKNOWN;
+	}
+	if (pPool)
+	{
+		delete pPool;
 	}
 
 	COMMON_LOG_EXIT_RETURN("httpRc: %u, wbemRc: %u", httpRc, wbemRc);
@@ -383,7 +395,7 @@ struct nvm_capabilities wbem::pmem_config::PersistentMemoryCapabilitiesFactory::
 /*
  * Retrieve pool struct given an object path
  */
-struct pool wbem::pmem_config::PersistentMemoryCapabilitiesFactory::getPool(
+struct pool *wbem::pmem_config::PersistentMemoryCapabilitiesFactory::getPool(
 	wbem::framework::ObjectPath &object)
 	throw (wbem::framework::Exception)
 {

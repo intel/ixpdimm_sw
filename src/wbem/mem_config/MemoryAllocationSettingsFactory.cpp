@@ -946,12 +946,11 @@ wbem::mem_config::StringListType wbem::mem_config::MemoryAllocationSettingsFacto
 	for (; poolIter != pools.end(); poolIter++)
 	{
 		int appDirectRegionId = 0;
-		struct pool pool = *poolIter;
-		for (int i = 0; i < pool.dimm_count; i++)
+		for (int i = 0; i < poolIter->dimm_count; i++)
 		{
-			NVM_NFIT_DEVICE_HANDLE handle = getHandleForDimmUid(devices, pool.dimms[i]);
+			NVM_NFIT_DEVICE_HANDLE handle = getHandleForDimmUid(devices, poolIter->dimms[i]);
 			// for each Memory Mode region, generate an instance name
-			if (pool.memory_capacities[i] > 0)
+			if (poolIter->memory_capacities[i] > 0)
 			{
 				char memoryInstanceName[MEMORYALLOCATIONSETTINGS_INSTANCEID_LEN + 1];
 				s_snprintf(memoryInstanceName, MEMORYALLOCATIONSETTINGS_INSTANCEID_LEN + 1,
@@ -960,7 +959,7 @@ wbem::mem_config::StringListType wbem::mem_config::MemoryAllocationSettingsFacto
 			}
 
 			// for each unmapped instance, generate an instance name
-			if (pool.storage_capacities[i] > 0)
+			if (poolIter->storage_capacities[i] > 0)
 			{
 				char unmappedName[MEMORYALLOCATIONSETTINGS_INSTANCEID_LEN + 1];
 				s_snprintf(unmappedName, MEMORYALLOCATIONSETTINGS_INSTANCEID_LEN + 1,
@@ -973,11 +972,11 @@ wbem::mem_config::StringListType wbem::mem_config::MemoryAllocationSettingsFacto
 		}
 
 		// for each interleave set, generate an instance name
-		for (size_t i = 0; i < pool.ilset_count; i++)
+		for (size_t i = 0; i < poolIter->ilset_count; i++)
 		{
 			char appDirectName[MEMORYALLOCATIONSETTINGS_INSTANCEID_LEN + 1];
 			s_snprintf(appDirectName, MEMORYALLOCATIONSETTINGS_INSTANCEID_LEN + 1,
-					"%02u.%c.%04u.%c", pool.socket_id, APP_DIRECT_PREFIX,
+					"%02u.%c.%04u.%c", poolIter->socket_id, APP_DIRECT_PREFIX,
 					 appDirectRegionId, CURRENT_CONFIG);
 			appDirectRegionId++;
 			names.push_back(appDirectName);

@@ -27,6 +27,7 @@
 
 #include <core/exceptions/InvalidArgumentException.h>
 #include <core/exceptions/LibraryException.h>
+#include <core/exceptions/NoMemoryException.h>
 #include "NvmLibrary.h"
 #include "NvmLibrary.h"
 #include "Helper.h"
@@ -608,22 +609,27 @@ std::vector<struct pool> NvmLibrary::getPools()
 
 }
 
-struct pool NvmLibrary::getPool(const std::string &poolUid)
+struct pool *NvmLibrary::getPool(const std::string &poolUid)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	int rc;
+	int rc = 0;
 
 	NVM_UID lib_poolUid;
 	core::Helper::stringToUid(poolUid, lib_poolUid);
 
-	struct pool result;
-	rc = m_lib.getPool(lib_poolUid, &result);
+	struct pool *pPool = new struct pool;
+	if (pPool == NULL)
+	{
+		throw core::NoMemoryException();
+	}
+	rc = m_lib.getPool(lib_poolUid, pPool);
 	if (rc < 0)
 	{
+		delete pPool;
 		throw core::LibraryException(rc);
 	}
 
-	return result;
+	return pPool;
 
 }
 

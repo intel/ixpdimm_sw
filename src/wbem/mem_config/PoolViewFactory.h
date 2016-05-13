@@ -104,7 +104,7 @@ namespace wbem
 			/*
 			 * Helper function to retrieve a specific pool.
 			 */
-			static struct pool getPool(const std::string &poolUidStr) throw (wbem::framework::Exception);
+			static struct pool *getPool(const std::string &poolUidStr) throw (wbem::framework::Exception);
 
 			static wbem::framework::STR_LIST getAppDirectSettings(const struct pool * pPool);
 

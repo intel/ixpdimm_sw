@@ -1049,10 +1049,19 @@ bool wbem::memory::PersistentMemoryFactory::isPersistentMemoryAssociatedToPersis
 		}
 		else if (details.type == NAMESPACE_TYPE_APP_DIRECT)
 		{
-			struct pool pool;
-			lib_interface::NvmApi::getApi()->getPool(details.pool_uid, &pool);
-			int socketId = pool.socket_id;
-			nsBasedOnUid = getInterleaveSetUuid(details.creation_id.interleave_setid, socketId);
+			struct pool *pPool = new struct pool;
+			if (pPool != NULL)
+			{
+				lib_interface::NvmApi::getApi()->getPool(details.pool_uid, pPool);
+				nsBasedOnUid = getInterleaveSetUuid(details.creation_id.interleave_setid,
+									pPool->socket_id);
+				delete pPool;
+			}
+			else
+			{
+				throw framework::ExceptionNoMemory(__FILE__, __FUNCTION__,
+						"couldn't allocate pool");
+			}
 		}
 
 		if (!nsBasedOnUid.empty())

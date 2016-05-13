@@ -85,6 +85,7 @@ wbem::framework::Instance* wbem::pmem_config::PersistentMemoryPoolFactory::getIn
 
 	// create the instance, initialize with attributes from the path
 	framework::Instance *pInstance = new framework::Instance(path);
+	struct pool *pPool = NULL;
 
 	if (pInstance != NULL)
 	{
@@ -100,7 +101,7 @@ wbem::framework::Instance* wbem::pmem_config::PersistentMemoryPoolFactory::getIn
 				throw framework::ExceptionBadParameter(INSTANCEID_KEY.c_str());
 			}
 
-			struct pool pool = wbem::mem_config::PoolViewFactory::getPool(uidStr);
+			pPool = wbem::mem_config::PoolViewFactory::getPool(uidStr);
 
 			// Element Name = "NVMDIMM Available Capacity Pool"
 			if (containsAttribute(ELEMENTNAME_KEY, attributes))
@@ -112,14 +113,14 @@ wbem::framework::Instance* wbem::pmem_config::PersistentMemoryPoolFactory::getIn
 			// Allocated capacity in bytes
 			if (containsAttribute(RESERVED_KEY, attributes))
 			{
-				framework::Attribute attrRemainingManagedSpace(pool.capacity - pool.free_capacity, false);
+				framework::Attribute attrRemainingManagedSpace(pPool->capacity - pPool->free_capacity, false);
 				pInstance->setAttribute(RESERVED_KEY, attrRemainingManagedSpace, attributes);
 			}
 
 			// Number of bytes in the pool
 			if (containsAttribute(CAPACITY_KEY, attributes))
 			{
-				framework::Attribute attrManagedSpace(pool.capacity, false);
+				framework::Attribute attrManagedSpace(pPool->capacity, false);
 				pInstance->setAttribute(CAPACITY_KEY, attrManagedSpace, attributes);
 			}
 
@@ -150,10 +151,15 @@ wbem::framework::Instance* wbem::pmem_config::PersistentMemoryPoolFactory::getIn
 				framework::Attribute attrResourceType(PERSISTENTMEMORYPOOL_RESOURCETYPE, false);
 				pInstance->setAttribute(RESOURCETYPE_KEY, attrResourceType, attributes);
 			}
+			delete pPool;
 		}
 		catch (framework::Exception &) // clean up and re-throw
 		{
 			delete pInstance;
+			if (pPool)
+			{
+				delete pPool;
+			}
 			throw;
 		}
 	}

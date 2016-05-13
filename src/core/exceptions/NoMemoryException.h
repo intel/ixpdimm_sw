@@ -30,11 +30,13 @@
 
 #include <exception>
 #include <nvm_types.h>
-
+namespace core
+{
 class NVM_API NoMemoryException : std::exception
 {
 
 };
 
+}
 
 #endif //CR_MGMT_NOMEMORYEXCEPTION_H

@@ -1068,17 +1068,24 @@ int nvm_adjust_create_namespace_block_count(const NVM_UID pool_uid,
 	}
 	else
 	{
-		struct pool pool;
-		memset(&pool, 0, sizeof (pool));
-		if ((rc = nvm_get_pool(pool_uid, &pool)) == NVM_SUCCESS)
+		struct pool *p_pool = (struct pool *)calloc(1, sizeof (struct pool));
+		if (p_pool)
 		{
-			NVM_UINT32 namespace_creation_id;
-			rc = validate_namespace_create_settings(&pool, p_settings,
-					p_format, &namespace_creation_id, 1);
+			if ((rc = nvm_get_pool(pool_uid, p_pool)) == NVM_SUCCESS)
+			{
+				NVM_UINT32 namespace_creation_id;
+				rc = validate_namespace_create_settings(p_pool, p_settings,
+						p_format, &namespace_creation_id, 1);
+			}
+			else
+			{
+				COMMON_LOG_ERROR_F("nvm_get_pool failed with rc - %d", rc);
+			}
+			free(p_pool);
 		}
 		else
 		{
-			COMMON_LOG_ERROR_F("nvm_get_pool failed with rc - %d", rc);
+			rc = NVM_ERR_NOMEMORY;
 		}
 	}
 
@@ -1180,113 +1187,120 @@ int nvm_create_namespace(NVM_UID *p_namespace_uid, const NVM_UID pool_uid,
 	else
 	{
 		// check if pool exists
-		struct pool pool;
-		memset(&pool, 0, sizeof (pool));
-
-		if ((rc = nvm_get_pool(pool_uid, &pool)) == NVM_SUCCESS)
+		struct pool *p_pool = (struct pool *)calloc(1, sizeof (struct pool));
+		if (p_pool)
 		{
-			if ((rc = validate_namespace_create_settings(&pool, p_settings, p_format,
-						&namespace_creation_id, allow_adjustment)) == NVM_SUCCESS)
+			if ((rc = nvm_get_pool(pool_uid, p_pool)) == NVM_SUCCESS)
 			{
-				struct nvm_namespace_create_settings nvm_settings;
-				memset(&nvm_settings, 0, sizeof (nvm_settings));
+				if ((rc = validate_namespace_create_settings(p_pool, p_settings, p_format,
+							&namespace_creation_id, allow_adjustment)) == NVM_SUCCESS)
+				{
+					struct nvm_namespace_create_settings nvm_settings;
+					memset(&nvm_settings, 0, sizeof (nvm_settings));
 
-				nvm_settings.type = p_settings->type;
-				if (nvm_settings.type == NAMESPACE_TYPE_APP_DIRECT)
-				{
-					nvm_settings.namespace_creation_id.interleave_setid
-						= namespace_creation_id;
-					COMMON_LOG_DEBUG_F("Creating App Direct namespace on interleave set %u",
-							namespace_creation_id);
-				}
-				else
-				{
-					nvm_settings.namespace_creation_id.device_handle.handle
-						= namespace_creation_id;
-					COMMON_LOG_DEBUG_F("Creating storage namespace on DIMM %u",
-							namespace_creation_id);
-				}
-				if (s_strnlen(p_settings->friendly_name, NAMESPACE_FRIENDLY_NAME_LEN) == 0)
-				{
-					char friendly_name[NVM_NAMESPACE_NAME_LEN];
-					int max_unique_id = 0;
-					int namespace_count = nvm_get_namespace_count();
-					if (namespace_count < 0)
+					nvm_settings.type = p_settings->type;
+					if (nvm_settings.type == NAMESPACE_TYPE_APP_DIRECT)
 					{
-						namespace_count = 0;
+						nvm_settings.namespace_creation_id.interleave_setid
+							= namespace_creation_id;
+						COMMON_LOG_DEBUG_F("Creating App Direct namespace on interleave set %u",
+								namespace_creation_id);
 					}
-
-					if (namespace_count > 0)
+					else
 					{
-						// Figure out a unique ID for the default namespace name
-						// Find the max value of the ID currently present,
-						// and generate max_unique_id+1 as the ID
-						struct nvm_namespace_discovery nvm_namespaces[namespace_count];
-						get_namespaces(namespace_count, nvm_namespaces);
-						for (int ns = 0; ns < namespace_count; ns++)
+						nvm_settings.namespace_creation_id.device_handle.handle
+							= namespace_creation_id;
+						COMMON_LOG_DEBUG_F("Creating storage namespace on DIMM %u",
+								namespace_creation_id);
+					}
+					if (s_strnlen(p_settings->friendly_name, NAMESPACE_FRIENDLY_NAME_LEN) == 0)
+					{
+						char friendly_name[NVM_NAMESPACE_NAME_LEN];
+						int max_unique_id = 0;
+						int namespace_count = nvm_get_namespace_count();
+						if (namespace_count < 0)
 						{
-							// Determine ID only if it is a default namespace name
-							if (!s_strncmp(NVM_DEFAULT_NAMESPACE_NAME,
-									nvm_namespaces[ns].friendly_name,
-									s_strnlen(NVM_DEFAULT_NAMESPACE_NAME,
-											NVM_NAMESPACE_NAME_LEN)))
+							namespace_count = 0;
+						}
+
+						if (namespace_count > 0)
+						{
+							// Figure out a unique ID for the default namespace name
+							// Find the max value of the ID currently present,
+							// and generate max_unique_id+1 as the ID
+							struct nvm_namespace_discovery nvm_namespaces[namespace_count];
+							get_namespaces(namespace_count, nvm_namespaces);
+							for (int ns = 0; ns < namespace_count; ns++)
 							{
-								unsigned int id = 0;
-								s_strtoui(nvm_namespaces[ns].friendly_name,
-									s_strnlen(nvm_namespaces[ns].friendly_name,
-										NVM_NAMESPACE_NAME_LEN),
-									NULL,
-									&id);
-								if (id > max_unique_id)
+								// Determine ID only if it is a default namespace name
+								if (!s_strncmp(NVM_DEFAULT_NAMESPACE_NAME,
+										nvm_namespaces[ns].friendly_name,
+										s_strnlen(NVM_DEFAULT_NAMESPACE_NAME,
+												NVM_NAMESPACE_NAME_LEN)))
 								{
-									max_unique_id = id;
+									unsigned int id = 0;
+									s_strtoui(nvm_namespaces[ns].friendly_name,
+										s_strnlen(nvm_namespaces[ns].friendly_name,
+											NVM_NAMESPACE_NAME_LEN),
+										NULL,
+										&id);
+									if (id > max_unique_id)
+									{
+										max_unique_id = id;
+									}
 								}
 							}
 						}
+						// create a unique friendly name - NvDimmVolN.
+						char namespace_name[NVM_NAMESPACE_NAME_LEN];
+						s_strcpy(namespace_name, NVM_DEFAULT_NAMESPACE_NAME,
+								NVM_NAMESPACE_NAME_LEN);
+						s_snprintf(friendly_name, NVM_NAMESPACE_NAME_LEN,
+								s_strcat(namespace_name, NVM_NAMESPACE_NAME_LEN, "%d"),
+										max_unique_id + 1);
+						s_strcpy(nvm_settings.friendly_name,
+								friendly_name, NVM_NAMESPACE_NAME_LEN);
 					}
-					// create a unique friendly name - NvDimmVolN.
-					char namespace_name[NVM_NAMESPACE_NAME_LEN];
-					s_strcpy(namespace_name, NVM_DEFAULT_NAMESPACE_NAME, NVM_NAMESPACE_NAME_LEN);
-					s_snprintf(friendly_name, NVM_NAMESPACE_NAME_LEN,
-							s_strcat(namespace_name, NVM_NAMESPACE_NAME_LEN, "%d"),
-									max_unique_id + 1);
-					s_strcpy(nvm_settings.friendly_name,
-							friendly_name, NVM_NAMESPACE_NAME_LEN);
-				}
-				else
-				{
-					s_strncpy(nvm_settings.friendly_name, NVM_NAMESPACE_NAME_LEN,
-							p_settings->friendly_name, NVM_NAMESPACE_NAME_LEN);
-				}
-				nvm_settings.enabled = p_settings->enabled;
-				nvm_settings.block_size = p_settings->block_size;
-				nvm_settings.block_count = p_settings->block_count;
-				nvm_settings.btt = p_settings->btt;
-				nvm_settings.memory_page_allocation = p_settings->memory_page_allocation;
+					else
+					{
+						s_strncpy(nvm_settings.friendly_name, NVM_NAMESPACE_NAME_LEN,
+								p_settings->friendly_name, NVM_NAMESPACE_NAME_LEN);
+					}
+					nvm_settings.enabled = p_settings->enabled;
+					nvm_settings.block_size = p_settings->block_size;
+					nvm_settings.block_count = p_settings->block_count;
+					nvm_settings.btt = p_settings->btt;
+					nvm_settings.memory_page_allocation = p_settings->memory_page_allocation;
 
-				rc = create_namespace(p_namespace_uid, &nvm_settings);
-				if (rc == NVM_SUCCESS)
-				{
-					// the context is no longer valid
-					invalidate_namespaces();
+					rc = create_namespace(p_namespace_uid, &nvm_settings);
+					if (rc == NVM_SUCCESS)
+					{
+						// the context is no longer valid
+						invalidate_namespaces();
 
-					// Log an event indicating we successfully created a namespace
-					NVM_EVENT_ARG ns_uid_arg;
-					uid_to_event_arg(*p_namespace_uid, ns_uid_arg);
-					NVM_EVENT_ARG ns_name_arg;
-					s_strncpy(ns_name_arg, NVM_EVENT_ARG_LEN,
-							nvm_settings.friendly_name, NVM_NAMESPACE_NAME_LEN);
-					log_mgmt_event(EVENT_SEVERITY_INFO,
-							EVENT_CODE_MGMT_NAMESPACE_CREATED,
-							*p_namespace_uid,
-							0, // no action required
-							ns_name_arg, ns_uid_arg, NULL);
+						// Log an event indicating we successfully created a namespace
+						NVM_EVENT_ARG ns_uid_arg;
+						uid_to_event_arg(*p_namespace_uid, ns_uid_arg);
+						NVM_EVENT_ARG ns_name_arg;
+						s_strncpy(ns_name_arg, NVM_EVENT_ARG_LEN,
+								nvm_settings.friendly_name, NVM_NAMESPACE_NAME_LEN);
+						log_mgmt_event(EVENT_SEVERITY_INFO,
+								EVENT_CODE_MGMT_NAMESPACE_CREATED,
+								*p_namespace_uid,
+								0, // no action required
+								ns_name_arg, ns_uid_arg, NULL);
+					}
 				}
 			}
+			else
+			{
+				COMMON_LOG_ERROR_F("couldn't get pool, rc = %d", rc);
+			}
+			free(p_pool);
 		}
 		else
 		{
-			COMMON_LOG_ERROR_F("couldn't get pool, rc = %d", rc);
+			rc = NVM_ERR_NOMEMORY;
 		}
 	}
 
@@ -1492,13 +1506,20 @@ int validate_namespace_block_count(const NVM_UID namespace_uid,
 		rc = get_pool_uid_from_namespace_details(&nvm_details, &pool_uid);
 		if (rc == NVM_SUCCESS)
 		{
-			struct pool pool;
-			memset(&pool, 0, sizeof (pool));
-			rc = nvm_get_pool(pool_uid, &pool);
-			if (rc == NVM_SUCCESS)
+			struct pool *p_pool = (struct pool *)calloc(1, sizeof (struct pool));
+			if (p_pool)
 			{
-				rc = validate_namespace_size_for_modification(&pool, p_block_count,
-						&nvm_details, allow_adjustment);
+				rc = nvm_get_pool(pool_uid, p_pool);
+				if (rc == NVM_SUCCESS)
+				{
+					rc = validate_namespace_size_for_modification(p_pool, p_block_count,
+							&nvm_details, allow_adjustment);
+				}
+				free(p_pool);
+			}
+			else
+			{
+				rc = NVM_ERR_NOMEMORY;
 			}
 		}
 	}
@@ -1944,17 +1965,24 @@ int nvm_get_available_persistent_size_range(const NVM_UID pool_uid,
 		memset(p_range, 0, sizeof (struct possible_namespace_ranges));
 
 		// retrieve the pool
-		struct pool pool;
-		memset(&pool, 0, sizeof (pool));
-		if ((rc = nvm_get_pool(pool_uid, &pool)) == NVM_SUCCESS)
+		struct pool *p_pool = (struct pool *)calloc(1, sizeof (struct pool));
+		if (p_pool)
 		{
-			// retrieve the capabilities
-			struct nvm_capabilities nvm_caps;
-			memset(&nvm_caps, 0, sizeof (nvm_caps));
-			if ((rc = nvm_get_nvm_capabilities(&nvm_caps)) == NVM_SUCCESS)
+			if ((rc = nvm_get_pool(pool_uid, p_pool)) == NVM_SUCCESS)
 			{
-				rc = get_pool_supported_size_ranges(&pool, &nvm_caps, p_range);
+				// retrieve the capabilities
+				struct nvm_capabilities nvm_caps;
+				memset(&nvm_caps, 0, sizeof (nvm_caps));
+				if ((rc = nvm_get_nvm_capabilities(&nvm_caps)) == NVM_SUCCESS)
+				{
+					rc = get_pool_supported_size_ranges(p_pool, &nvm_caps, p_range);
+				}
 			}
+			free(p_pool);
+		}
+		else
+		{
+			rc = NVM_ERR_NOMEMORY;
 		}
 	}
 

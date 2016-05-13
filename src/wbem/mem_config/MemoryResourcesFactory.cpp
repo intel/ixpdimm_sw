@@ -189,8 +189,7 @@ NVM_UINT64 wbem::mem_config::MemoryResourcesFactory::getCapacityAllocatedFromPoo
 	for (std::vector<struct pool>::const_iterator iter = pools.begin();
 			iter != pools.end(); iter++)
 	{
-		struct pool pool = (*iter);
-		reservedCapacity += pool.capacity;
+		reservedCapacity += iter->capacity;
 	}
 
 	return reservedCapacity;

@@ -132,7 +132,7 @@ class NVM_API PersistentMemoryCapabilitiesFactory : public framework_interface::
 		/*
 		 * Retrieve pool struct given an object path
 		 */
-		static struct pool getPool(wbem::framework::ObjectPath &object) throw (wbem::framework::Exception);
+		static struct pool *getPool(wbem::framework::ObjectPath &object) throw (wbem::framework::Exception);
 
 	private:
 		void populateAttributeList(framework::attribute_names_t &attributes)
