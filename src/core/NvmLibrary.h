@@ -45,6 +45,7 @@ public:
 	NvmLibrary &operator=(const NvmLibrary &other);
 	static NvmLibrary &getNvmLibrary();
 
+	virtual std::string getErrorMessage(const int errorCode);
 	virtual struct host getHost();
 	virtual std::string getHostName();
 	virtual struct sw_inventory getSwInventory();

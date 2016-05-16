@@ -25,43 +25,51 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <common/uid/uid.h>
-#include <core/exceptions/InvalidArgumentException.h>
-#include <core/NvmLibrary.h>
-#include "Helper.h"
+#ifndef SHOWVERSIONCOMMAND_H_
+#define SHOWVERSIONCOMMAND_H_
 
-std::string core::Helper::uidToString(const NVM_UID uid)
+#include <nvm_types.h>
+#include <cli/features/core/framework/CommandBase.h>
+#include <core/system/SystemService.h>
+#include <core/system/SoftwareInfo.h>
+#include <libintelnvm-cli/ErrorResult.h>
+
+namespace cli
 {
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	NVM_UID result;
-	uid_copy(uid, result);
-	return std::string(result);
-}
-
-void core::Helper::stringToUid(const std::string &string, NVM_UID uid)
+namespace nvmcli
 {
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	if (string.length() > NVM_MAX_UID_LEN - 1)
-	{
-		throw InvalidArgumentException("stringUid");
-	}
-	uid_copy(string.c_str(), uid);
-}
 
-bool core::Helper::isValidNamespaceUid(std::string uid)
+const std::string SHOWVERSION_ROOT = "Software";
+const std::string SHOWVERSION_COMPONENT = "Component";
+const std::string SHOWVERSION_VERSION = "Version";
+
+const std::string SHOWVERSION_MGMTSW_KEY = N_TR(NVM_SYSTEM" Software Version");
+const std::string SHOWVERSION_DRIVER_KEY = N_TR(NVM_SYSTEM" Driver Version");
+
+class NVM_API ShowVersionCommand : public framework::CommandBase
 {
-	return uid.length() == COMMON_GUID_STR_LEN - 1;
-}
+	public:
+		ShowVersionCommand(
+				core::system::SystemService &service = core::system::SystemService::getService());
+		virtual ~ShowVersionCommand();
 
-bool core::Helper::isValidPoolUid(std::string uid)
-{
-	return uid.length() == COMMON_GUID_STR_LEN - 1;
-}
+		framework::ResultBase *execute(const framework::ParsedCommand &parsedCommand);
 
-std::string core::Helper::getErrorMessage(const int errorCode)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	protected:
+		core::system::SystemService &m_service;
+		core::system::SoftwareInfo m_softwareInfo;
+		std::string m_mgmtSwVersionString;
+		std::string m_driverVersionString;
 
-	NvmLibrary &lib = NvmLibrary::getNvmLibrary();
-	return lib.getErrorMessage(errorCode);
-}
+		void createVersionStrings();
+		void createDriverVersionStringFromSoftwareInfo();
+		std::string getBadDriverErrorMessage();
+		std::string getErrorMessage(const int errorCode);
+		void createResult();
+		cli::framework::ErrorResult::ErrorCode getResultErrorCode();
+};
+
+} /* namespace nvmcli */
+} /* namespace cli */
+
+#endif /* SHOWVERSIONCOMMAND_H_ */

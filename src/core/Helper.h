@@ -42,6 +42,9 @@ public:
 	// TODO: These should be moved to appropriate core objects when available (US13835, US13836)
 	static bool isValidNamespaceUid(std::string uid);
 	static bool isValidPoolUid(std::string uid);
+
+	// Get the error message for some error code from the library
+	static std::string getErrorMessage(const int errorCode);
 private:
 	Helper() {}
 

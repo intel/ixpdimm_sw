@@ -39,6 +39,7 @@
 #include <os/os_adapter.h>
 #include <system/system.h>
 #include <string/s_str.h>
+#include <string/revision.h>
 #include <windows.h>
 #include <winioctl.h>
 #include <ntddscsi.h>
@@ -48,6 +49,8 @@
 #include <windows/DiagnosticExport.h>
 #include "device_utilities.h"
 
+#define	WIN_DRIVER_VERSION_MAJOR_MIN	1
+#define	WIN_DRIVER_VERSION_MAJOR_MAX	1
 #define	SCSI_PORT_MAX 32
 /*
  * Bit selection as defined for the MSR_DRAM_POWER_LIMIT register,
@@ -61,6 +64,34 @@ short g_scsi_port = -1;
 enum label_area_health_result convert_label_health_result(LABEL_AREA_HEALTH_EVENT event);
 enum ns_health_result convert_ns_health_status(NAMESPACE_HEALTH_EVENT event);
 DIAGNOSTIC_TEST convert_diagnostic_test(enum driver_diagnostic diagnostic);
+
+/*
+ * Support is determined by driver version
+ */
+NVM_BOOL is_supported_driver_available()
+{
+	COMMON_LOG_ENTRY();
+	NVM_BOOL is_supported = 0;
+
+	NVM_VERSION driver_rev;
+	int rc = get_vendor_driver_revision(driver_rev, NVM_VERSION_LEN);
+	if (rc == NVM_SUCCESS)
+	{
+		// parse the version string into parts
+		NVM_UINT16 major, minor, hotfix, build = 0;
+		parse_main_revision(&major, &minor, &hotfix, &build, driver_rev,
+				NVM_VERSION_LEN);
+
+		if (major >= WIN_DRIVER_VERSION_MAJOR_MIN &&
+				major <= WIN_DRIVER_VERSION_MAJOR_MAX)
+		{
+			is_supported = 1;
+		}
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(is_supported);
+	return is_supported;
+}
 
 /*
  * Retrieve the NVDIMM driver version.
@@ -137,6 +168,11 @@ int get_vendor_driver_revision(NVM_VERSION version_str, const NVM_SIZE str_len)
 		{
 			s_strcpy(version_str, (char *)ioctl_data.OutputPayload.VendorDriverVersion,
 				str_len);
+		}
+		else if (rc == NVM_ERR_DRIVERFAILED)
+		{
+			COMMON_LOG_ERROR("Failed to communicate with driver to get version");
+			rc = NVM_ERR_BADDRIVER;
 		}
 	}
 

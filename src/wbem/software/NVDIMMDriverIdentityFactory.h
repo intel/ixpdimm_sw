@@ -37,7 +37,7 @@
 #include <vector>
 
 #include <framework_interface/NvmInstanceFactory.h>
-
+#include <core/system/SystemService.h>
 
 namespace wbem
 {
@@ -57,7 +57,9 @@ class NVM_API NVDIMMDriverIdentityFactory : public framework_interface::NvmInsta
 		/*!
 		 * Initialize a new NVDIMMDriverIdentityFactory.
 		 */
-		NVDIMMDriverIdentityFactory() throw (framework::Exception);
+		NVDIMMDriverIdentityFactory(
+				core::system::SystemService &systemService = core::system::SystemService::getService())
+			throw (framework::Exception);
 
 		/*!
 		 * Clean up the NVDIMMDriverIdentityFactory
@@ -88,6 +90,12 @@ class NVM_API NVDIMMDriverIdentityFactory : public framework_interface::NvmInsta
 	private:
 		void populateAttributeList(framework::attribute_names_t &attributes)
 			throw (framework::Exception);
+
+		std::string getInstanceId();
+		std::string getElementName();
+
+		core::system::SystemService &m_systemService;
+		std::string m_hostName;
 };
 
 } // software

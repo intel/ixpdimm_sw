@@ -92,24 +92,6 @@ extern "C"
 //! SQL Key name for the default simulator file location
 #define	SQL_KEY_DEFAULT_SIMULATOR	"DEFAULT_SIMULATOR"
 
-//! SQL Key name for the minimum Windows driver major version supported
-#define	SQL_KEY_WIN_DRIVER_MAJOR_MIN "WIN_DRIVER_MAJOR_MIN"
-
-//! SQL Key name for the maximum Windows driver major version supported
-#define	SQL_KEY_WIN_DRIVER_MAJOR_MAX "WIN_DRIVER_MAJOR_MAX"
-
-//! SQL Key name for the minimum Linux driver major version supported
-#define	SQL_KEY_LNX_DRIVER_MAJOR_MIN "LNX_DRIVER_MAJOR_MIN"
-
-//! SQL Key name for the maximum Linux driver major version supported
-#define	SQL_KEY_LNX_DRIVER_MAJOR_MAX "LNX_DRIVER_MAJOR_MAX"
-
-//! SQL Key name for the minimum ESX driver major version supported
-#define	SQL_KEY_ESX_DRIVER_MAJOR_MIN "ESX_DRIVER_MAJOR_MIN"
-
-//! SQL Key name for the maximum ESX driver major version supported
-#define	SQL_KEY_ESX_DRIVER_MAJOR_MAX "ESX_DRIVER_MAJOR_MAX"
-
 //! SQL Key name for the valid manufacturer value
 #define	SQL_KEY_VALID_MANUFACTURER "VALID_MANUFACTURER"
 

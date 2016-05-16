@@ -218,6 +218,10 @@ int nvm_inject_device_error(const NVM_UID device_uid,
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
 	}
+	else if (!is_supported_driver_available())
+	{
+		rc = NVM_ERR_BADDRIVER;
+	}
 	else if ((rc = exists_and_manageable(device_uid, &discovery, 1)) == NVM_SUCCESS)
 	{
 		switch (p_error->type)
@@ -261,6 +265,10 @@ int nvm_clear_injected_device_error(const NVM_UID device_uid,
 	else if (check_caller_permissions() != NVM_SUCCESS)
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
+	}
+	else if (!is_supported_driver_available())
+	{
+		rc = NVM_ERR_BADDRIVER;
 	}
 	else if ((rc = exists_and_manageable(device_uid, &discovery, 1)) == NVM_SUCCESS)
 	{

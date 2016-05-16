@@ -425,6 +425,10 @@ int nvm_get_sensors(const NVM_UID device_uid, struct sensor *p_sensors,
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
 	}
+	else if (!is_supported_driver_available())
+	{
+		rc = NVM_ERR_BADDRIVER;
+	}
 	else if ((rc = IS_NVM_FEATURE_SUPPORTED(get_sensors)) != NVM_SUCCESS)
 	{
 		COMMON_LOG_ERROR("Retrieving "NVM_DIMM_NAME" sensors is not supported.");
@@ -561,6 +565,10 @@ int nvm_set_sensor_settings(const NVM_UID device_uid, const enum sensor_type typ
 	if (check_caller_permissions() != COMMON_SUCCESS)
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
+	}
+	else if (!is_supported_driver_available())
+	{
+		rc = NVM_ERR_BADDRIVER;
 	}
 	else if ((rc = IS_NVM_FEATURE_SUPPORTED(modify_sensors)) != NVM_SUCCESS)
 	{

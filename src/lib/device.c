@@ -147,6 +147,10 @@ int nvm_get_device_count()
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
 	}
+	else if (!is_supported_driver_available())
+	{
+		rc = NVM_ERR_BADDRIVER;
+	}
 	else if ((rc = get_devices_is_supported()) != NVM_SUCCESS)
 	{
 		COMMON_LOG_ERROR("Retrieving devices is not supported.");
@@ -210,6 +214,10 @@ int nvm_get_devices(struct device_discovery *p_devices, const NVM_UINT8 count)
 	if (check_caller_permissions() != NVM_SUCCESS)
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
+	}
+	else if (!is_supported_driver_available())
+	{
+		rc = NVM_ERR_BADDRIVER;
 	}
 	else if ((rc = get_devices_is_supported()) != NVM_SUCCESS)
 	{
@@ -374,6 +382,10 @@ int nvm_get_device_discovery(const NVM_UID device_uid,
 	if (check_caller_permissions() != NVM_SUCCESS)
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
+	}
+	else if (!is_supported_driver_available())
+	{
+		rc = NVM_ERR_BADDRIVER;
 	}
 	else if ((rc = get_devices_is_supported()) != NVM_SUCCESS)
 	{
@@ -572,6 +584,10 @@ int nvm_get_device_status(const NVM_UID device_uid,
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
 	}
+	else if (!is_supported_driver_available())
+	{
+		rc = NVM_ERR_BADDRIVER;
+	}
 	else if (device_uid == NULL)
 	{
 		COMMON_LOG_ERROR("Invalid parameter, device_uid is NULL");
@@ -661,6 +677,10 @@ int nvm_get_device_settings(const NVM_UID device_uid,
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
 	}
+	else if (!is_supported_driver_available())
+	{
+		rc = NVM_ERR_BADDRIVER;
+	}
 	else if ((rc = IS_NVM_FEATURE_SUPPORTED(get_device_settings)) != NVM_SUCCESS)
 	{
 		COMMON_LOG_ERROR("Retrieving device settings is not supported.");
@@ -713,6 +733,10 @@ int nvm_modify_device_settings(const NVM_UID device_uid,
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
 	}
+	else if (!is_supported_driver_available())
+	{
+		rc = NVM_ERR_BADDRIVER;
+	}
 	else if ((rc = IS_NVM_FEATURE_SUPPORTED(modify_device_settings)) != NVM_SUCCESS)
 	{
 		COMMON_LOG_ERROR("Modifying device settings is not supported.");
@@ -762,6 +786,10 @@ int nvm_get_device_details(const NVM_UID device_uid,
 	if (check_caller_permissions() != NVM_SUCCESS)
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
+	}
+	else if (!is_supported_driver_available())
+	{
+		rc = NVM_ERR_BADDRIVER;
 	}
 	else
 	{
@@ -877,6 +905,10 @@ int nvm_get_device_performance(const NVM_UID device_uid,
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
 	}
+	else if (!is_supported_driver_available())
+	{
+		rc = NVM_ERR_BADDRIVER;
+	}
 	else if ((rc = IS_NVM_FEATURE_SUPPORTED(get_device_performance)) != NVM_SUCCESS)
 	{
 		COMMON_LOG_ERROR("Retrieving device performance is not supported.");
@@ -934,6 +966,10 @@ int nvm_get_device_fw_image_info(const NVM_UID device_uid,
 	if (check_caller_permissions() != NVM_SUCCESS)
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
+	}
+	else if (!is_supported_driver_available())
+	{
+		rc = NVM_ERR_BADDRIVER;
 	}
 	else if (device_uid == NULL)
 	{
@@ -998,6 +1034,10 @@ int nvm_update_device_fw(const NVM_UID device_uid, const NVM_PATH path,
 	if (check_caller_permissions() != NVM_SUCCESS)
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
+	}
+	else if (!is_supported_driver_available())
+	{
+		rc = NVM_ERR_BADDRIVER;
 	}
 	else if ((rc = IS_NVM_FEATURE_SUPPORTED(modify_device_settings)) != NVM_SUCCESS)
 	{
@@ -1175,6 +1215,10 @@ int nvm_examine_device_fw(const NVM_UID device_uid, const NVM_PATH path, const N
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
 	}
+	else if (!is_supported_driver_available())
+	{
+		rc = NVM_ERR_BADDRIVER;
+	}
 	else if (device_uid == NULL)
 	{
 		COMMON_LOG_ERROR("Invalid parameter, device_uid is NULL");
@@ -1288,6 +1332,10 @@ int nvm_get_nvm_capacities(struct device_capacities *p_capacities)
 	if (check_caller_permissions() != NVM_SUCCESS)
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
+	}
+	else if (!is_supported_driver_available())
+	{
+		rc = NVM_ERR_BADDRIVER;
 	}
 	else
 	{

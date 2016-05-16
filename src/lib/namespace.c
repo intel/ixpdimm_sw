@@ -99,6 +99,10 @@ int nvm_get_namespace_count()
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
 	}
+	else if (!is_supported_driver_available())
+	{
+		rc = NVM_ERR_BADDRIVER;
+	}
 	else if ((rc = IS_NVM_FEATURE_LICENSED(get_namespaces)) != NVM_SUCCESS)
 	{
 		COMMON_LOG_ERROR("Retrieving namespaces is not supported.");
@@ -123,6 +127,10 @@ int nvm_get_namespaces(struct namespace_discovery *p_namespaces, const NVM_UINT8
 	if (check_caller_permissions() != COMMON_SUCCESS)
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
+	}
+	else if (!is_supported_driver_available())
+	{
+		rc = NVM_ERR_BADDRIVER;
 	}
 	else if ((rc = IS_NVM_FEATURE_LICENSED(get_namespaces)) != NVM_SUCCESS)
 	{
@@ -245,6 +253,10 @@ int nvm_get_namespace_details(const NVM_UID namespace_uid, struct namespace_deta
 	if (check_caller_permissions() != COMMON_SUCCESS)
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
+	}
+	else if (!is_supported_driver_available())
+	{
+		rc = NVM_ERR_BADDRIVER;
 	}
 	else if ((rc = IS_NVM_FEATURE_LICENSED(get_namespace_details)) != NVM_SUCCESS)
 	{
@@ -833,7 +845,7 @@ int find_interleave_with_capacity(const struct pool *p_pool,
 	}
 	else if (at_least_one_security_met)
 	{
-		rc = NVM_ERR_BADNAMESPACESETTING;
+		rc = NVM_ERR_BADNAMESPACESETTINGS;
 	}
 	else if (at_least_size_is_good)
 	{
@@ -1052,6 +1064,10 @@ int nvm_adjust_create_namespace_block_count(const NVM_UID pool_uid,
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
 	}
+	else if (!is_supported_driver_available())
+	{
+		rc = NVM_ERR_BADDRIVER;
+	}
 	else if ((rc = IS_NVM_FEATURE_LICENSED(create_namespace)) != NVM_SUCCESS)
 	{
 		COMMON_LOG_ERROR("Creating a namespace is not supported.");
@@ -1105,6 +1121,10 @@ int nvm_adjust_modify_namespace_block_count(
 	if (check_caller_permissions() != NVM_SUCCESS)
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
+	}
+	else if (!is_supported_driver_available())
+	{
+		rc = NVM_ERR_BADDRIVER;
 	}
 	else if (namespace_uid == NULL)
 	{
@@ -1164,6 +1184,10 @@ int nvm_create_namespace(NVM_UID *p_namespace_uid, const NVM_UID pool_uid,
 	if (check_caller_permissions() != NVM_SUCCESS)
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
+	}
+	else if (!is_supported_driver_available())
+	{
+		rc = NVM_ERR_BADDRIVER;
 	}
 	else if ((rc = IS_NVM_FEATURE_LICENSED(create_namespace)) != NVM_SUCCESS)
 	{
@@ -1545,6 +1569,10 @@ int nvm_modify_namespace_name(const NVM_UID namespace_uid,
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
 	}
+	else if (!is_supported_driver_available())
+	{
+		rc = NVM_ERR_BADDRIVER;
+	}
 	else if ((rc = IS_NVM_FEATURE_LICENSED(rename_namespace)) != NVM_SUCCESS)
 	{
 		COMMON_LOG_ERROR("Renaming a namespace is not supported.");
@@ -1598,7 +1626,15 @@ int nvm_modify_namespace_block_count(const NVM_UID namespace_uid,
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
 
-	if (namespace_uid == NULL)
+	if (check_caller_permissions() != NVM_SUCCESS)
+	{
+		rc = NVM_ERR_INVALIDPERMISSIONS;
+	}
+	else if (!is_supported_driver_available())
+	{
+		rc = NVM_ERR_BADDRIVER;
+	}
+	else if (namespace_uid == NULL)
 	{
 		COMMON_LOG_ERROR("Invalid parameter, namespace_uid is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
@@ -1679,7 +1715,15 @@ int nvm_modify_namespace_enabled(const NVM_UID namespace_uid,
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
 
-	if (namespace_uid == NULL)
+	if (check_caller_permissions() != NVM_SUCCESS)
+	{
+		rc = NVM_ERR_INVALIDPERMISSIONS;
+	}
+	else if (!is_supported_driver_available())
+	{
+		rc = NVM_ERR_BADDRIVER;
+	}
+	else if (namespace_uid == NULL)
 	{
 		COMMON_LOG_ERROR("Invalid parameter, namespace_uid is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
@@ -1749,6 +1793,10 @@ int nvm_delete_namespace(const NVM_UID namespace_uid)
 	if (check_caller_permissions() != NVM_SUCCESS)
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
+	}
+	else if (!is_supported_driver_available())
+	{
+		rc = NVM_ERR_BADDRIVER;
 	}
 	else if ((rc = IS_NVM_FEATURE_LICENSED(delete_namespace)) != NVM_SUCCESS)
 	{
@@ -1960,6 +2008,10 @@ int nvm_get_available_persistent_size_range(const NVM_UID pool_uid,
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
 	}
+	else if (!is_supported_driver_available())
+	{
+		rc = NVM_ERR_BADDRIVER;
+	}
 	else
 	{
 		memset(p_range, 0, sizeof (struct possible_namespace_ranges));
@@ -2004,6 +2056,10 @@ int nvm_get_device_namespace_count(const NVM_UID device_uid,
 	if (check_caller_permissions() != NVM_SUCCESS)
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
+	}
+	else if (!is_supported_driver_available())
+	{
+		rc = NVM_ERR_BADDRIVER;
 	}
 	else if ((rc = nvm_get_nvm_capabilities(&capabilities)) != NVM_SUCCESS)
 	{

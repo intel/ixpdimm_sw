@@ -294,9 +294,9 @@ int nvm_get_error(const enum return_code code, NVM_ERROR_DESCRIPTION description
 						TR("The specified namespace enable state is invalid."),
 						description_len);
 				break;
-			case NVM_ERR_BADSECURITYGOAL:
+			case NVM_ERR_BADNAMESPACESETTINGS:
 				s_strcpy(description,
-						TR("Unable to create a namespace with the specified security goal."),
+						TR("Unable to create a namespace with the specified namespace settings."),
 						description_len);
 				break;
 			case NVM_ERR_BADPCAT:
@@ -318,6 +318,23 @@ int nvm_get_error(const enum return_code code, NVM_ERROR_DESCRIPTION description
 				s_strcpy(description,
 						TR("The method is not supported because one or more "NVM_DIMM_NAME"s "
 							"are configured in violation of the license."),
+						description_len);
+				break;
+			case NVM_ERR_BADDRIVER:
+				s_strcpy(description,
+						TR("The underlying software is missing or incompatible with this "
+								"version of the management software."),
+						description_len);
+				break;
+			case NVM_ERR_ARSINPROGRESS:
+				s_strcpy(description,
+						TR("Namespaces are unavailable because an address range scrub operation "
+								"is currently in progress."),
+						description_len);
+				break;
+			case NVM_ERR_BADSECURITYGOAL:
+				s_strcpy(description,
+						TR("Unable to create a namespace with the specified security goal."),
 						description_len);
 				break;
 			case NVM_ERR_INVALIDPASSPHRASEFILE:

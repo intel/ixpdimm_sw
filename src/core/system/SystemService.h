@@ -31,6 +31,7 @@
 #include <core/Result.h>
 #include "SystemInfo.h"
 #include "SystemMemoryResources.h"
+#include "SoftwareInfo.h"
 
 #include <core/exceptions/LibraryException.h>
 #include <core/NvmLibrary.h>
@@ -49,6 +50,7 @@ public:
 	virtual std::string getHostName();
 	virtual Result<SystemInfo> getHostInfo();
 	virtual Result<SystemMemoryResources> getMemoryResources();
+	virtual Result<SoftwareInfo> getSoftwareInfo();
 
 protected:
 	NvmLibrary &m_lib;

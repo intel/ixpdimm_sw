@@ -34,13 +34,13 @@
 #include <nvm_management.h>
 #include <LogEnterExit.h>
 #include <server/BaseServerFactory.h>
-#include <libintelnvm-cim/ExceptionBadParameter.h>
+#include <libintelnvm-cim/ExceptionBadAttribute.h>
 #include <string/revision.h>
 #include <exception/NvmExceptionLibError.h>
 #include <NvmStrings.h>
 
-wbem::software::NVDIMMDriverIdentityFactory::NVDIMMDriverIdentityFactory()
-throw (wbem::framework::Exception)
+wbem::software::NVDIMMDriverIdentityFactory::NVDIMMDriverIdentityFactory(core::system::SystemService &systemService)
+throw (wbem::framework::Exception) : m_systemService(systemService)
 { }
 
 wbem::software::NVDIMMDriverIdentityFactory::~NVDIMMDriverIdentityFactory()
@@ -81,59 +81,56 @@ throw (wbem::framework::Exception)
 		checkAttributes(attributes);
 
 		// get the host server name
-		std::string hostName = wbem::server::getHostName();
+		m_hostName = m_systemService.getHostName();
 
-		// make sure the instance ID passed in matches this host
+		// get the driver version
+		core::Result<core::system::SoftwareInfo> swInfo =
+				m_systemService.getSoftwareInfo();
+
+		// make sure the instance ID matches the system and that any
+		// instance exists
 		framework::Attribute instanceID = path.getKeyValue(INSTANCEID_KEY);
-		if (instanceID.stringValue() == std::string(NVDIMMDRIVERIDENTITY_INSTANCEID + hostName))
+		if (swInfo.getValue().isDriverInstalled() &&
+				instanceID.stringValue() == getInstanceId())
 		{
-			// get the driver version
-			struct sw_inventory inventory;
-			int rc = nvm_get_sw_inventory(&inventory);
-			if (rc != NVM_SUCCESS)
-			{
-				throw exception::NvmExceptionLibError(rc);
-			}
-
-			// split the version number into parts
-			NVM_UINT16 major, minor, hotfix, build;
-			parse_main_revision(&major, &minor, &hotfix, &build,
-					inventory.vendor_driver_revision, NVM_VERSION_LEN);
-
 			// ElementName - driver name + host name
 			if (containsAttribute(ELEMENTNAME_KEY, attributes))
 			{
-				framework::Attribute a(std::string(NVM_DIMM_NAME_LONG" Driver Version ") + hostName, false);
+				framework::Attribute a(getElementName(), false);
 				pInstance->setAttribute(ELEMENTNAME_KEY, a, attributes);
 			}
 			// MajorVersion - Driver major version number
 			if (containsAttribute(MAJORVERSION_KEY, attributes))
 			{
-				framework::Attribute a(major, false);
+				framework::Attribute a(swInfo.getValue().getDriverMajorVersion(),
+						false);
 				pInstance->setAttribute(MAJORVERSION_KEY, a, attributes);
 			}
 			// MinorVersion - Driver minor version number
 			if (containsAttribute(MINORVERSION_KEY, attributes))
 			{
-				framework::Attribute a(minor, false);
+				framework::Attribute a(swInfo.getValue().getDriverMinorVersion(),
+						false);
 				pInstance->setAttribute(MINORVERSION_KEY, a, attributes);
 			}
-			// RevisionNumber - Driver host fix number
+			// RevisionNumber - Driver hotfix number
 			if (containsAttribute(REVISIONNUMBER_KEY, attributes))
 			{
-				framework::Attribute a(hotfix, false);
+				framework::Attribute a(swInfo.getValue().getDriverHotfixVersion(),
+						false);
 				pInstance->setAttribute(REVISIONNUMBER_KEY, a, attributes);
 			}
 			// BuildNumber - Driver build number
 			if (containsAttribute(BUILDNUMBER_KEY, attributes))
 			{
-				framework::Attribute a(build, false);
+				framework::Attribute a(swInfo.getValue().getDriverBuildVersion(),
+						false);
 				pInstance->setAttribute(BUILDNUMBER_KEY, a, attributes);
 			}
 			// VersionString - Driver version as a string
 			if (containsAttribute(VERSIONSTRING_KEY, attributes))
 			{
-				framework::Attribute a(inventory.vendor_driver_revision, false);
+				framework::Attribute a(swInfo.getValue().getDriverVersion(), false);
 				pInstance->setAttribute(VERSIONSTRING_KEY, a, attributes);
 			}
 			// Manufacturer - Intel
@@ -159,13 +156,18 @@ throw (wbem::framework::Exception)
 		}
 		else
 		{
-			throw framework::ExceptionBadParameter(INSTANCEID_KEY.c_str());
+			throw framework::ExceptionBadAttribute(INSTANCEID_KEY.c_str());
 		}
 	}
-	catch (framework::Exception) // clean up and re-throw
+	catch (framework::Exception &) // clean up and re-throw
 	{
 		delete pInstance;
 		throw;
+	}
+	catch (core::LibraryException &e)
+	{
+		delete pInstance;
+		throw exception::NvmExceptionLibError(e.getErrorCode());
 	}
 
 	return pInstance;
@@ -182,23 +184,47 @@ throw (wbem::framework::Exception)
 	framework::instance_names_t *pNames = new framework::instance_names_t();
 	try
 	{
-		// get the host server name
-		std::string hostName = wbem::server::getHostName();
-		framework::attributes_t keys;
+		core::Result<core::system::SoftwareInfo> swInfo =
+				m_systemService.getSoftwareInfo();
 
-		// Instance ID = "HostSoftware" + host name
-		keys[INSTANCEID_KEY] =
-				framework::Attribute(NVDIMMDRIVERIDENTITY_INSTANCEID + hostName, true);
+		if (swInfo.getValue().isDriverInstalled())
+		{
+			// get the host server name
+			m_hostName = m_systemService.getHostName();
+			framework::attributes_t keys;
 
-		// create the object path
-		framework::ObjectPath path(hostName, NVM_NAMESPACE,
-				NVDIMMDRIVERIDENTITY_CREATIONCLASSNAME, keys);
-		pNames->push_back(path);
+			// Instance ID = "HostSoftware" + host name
+			keys[INSTANCEID_KEY] = framework::Attribute(getInstanceId(), true);
+
+			// create the object path
+			framework::ObjectPath path(m_hostName, NVM_NAMESPACE,
+					NVDIMMDRIVERIDENTITY_CREATIONCLASSNAME, keys);
+			pNames->push_back(path);
+		}
 	}
-	catch (framework::Exception) // clean up and re-throw
+	catch (framework::Exception &) // clean up and re-throw
 	{
 		delete pNames;
 		throw;
 	}
+	catch (core::LibraryException &e)
+	{
+		delete pNames;
+		throw exception::NvmExceptionLibError(e.getErrorCode());
+	}
 	return pNames;
+}
+
+std::string wbem::software::NVDIMMDriverIdentityFactory::getInstanceId()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	return NVDIMMDRIVERIDENTITY_INSTANCEID + m_hostName;
+}
+
+std::string wbem::software::NVDIMMDriverIdentityFactory::getElementName()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	return std::string(NVM_DIMM_NAME_LONG" Driver Version ") + m_hostName;
 }

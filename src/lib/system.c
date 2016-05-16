@@ -126,6 +126,35 @@ int nvm_get_host(struct host *p_host)
 }
 
 /*
+ * Harvest the driver version and compatibility into sw_inventory
+ */
+void get_driver_version_info(struct sw_inventory *p_inventory)
+{
+	COMMON_LOG_ENTRY();
+
+	int rc = get_vendor_driver_revision(p_inventory->vendor_driver_revision,
+			NVM_VERSION_LEN);
+	if (rc == NVM_SUCCESS)
+	{
+		// Got the driver version - can we talk to it?
+		p_inventory->vendor_driver_compatible = is_supported_driver_available();
+		if (!p_inventory->vendor_driver_compatible)
+		{
+			COMMON_LOG_ERROR_F("Driver version %s is not supported",
+					p_inventory->vendor_driver_revision);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR("Couldn't get driver version");
+		s_strcpy(p_inventory->vendor_driver_revision, "", NVM_VERSION_LEN);
+		p_inventory->vendor_driver_compatible = 0;
+	}
+
+	COMMON_LOG_EXIT();
+}
+
+/*
  * Retrieves a list of installed software versions related to NVM DIMM management.
  */
 int nvm_get_sw_inventory(struct sw_inventory *p_inventory)
@@ -144,23 +173,13 @@ int nvm_get_sw_inventory(struct sw_inventory *p_inventory)
 	}
 	else
 	{
-		// clear to zeros
 		memset(p_inventory, 0, sizeof (struct sw_inventory));
 
-		// copy the management software version
-		rc = nvm_get_version(p_inventory->mgmt_sw_revision, NVM_VERSION_LEN);
-		if (rc != NVM_SUCCESS)
-		{
-			s_strcpy(p_inventory->mgmt_sw_revision, "0.0.0.0", NVM_VERSION_LEN);
-		}
+		// if we fail to get the driver info, it's just not compatible
+		get_driver_version_info(p_inventory);
 
-		// get the vendor specific driver version
-		int temp_rc = get_vendor_driver_revision(
-				p_inventory->vendor_driver_revision, NVM_VERSION_LEN);
-		if (temp_rc != NVM_SUCCESS)
-		{
-			s_strcpy(p_inventory->vendor_driver_revision, "0.0.0", NVM_VERSION_LEN);
-		}
+		// management software version - not likely to fail
+		rc = nvm_get_version(p_inventory->mgmt_sw_revision, NVM_VERSION_LEN);
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -182,7 +201,6 @@ int nvm_get_socket_count()
 	}
 	else
 	{
-		// call the device adapter
 		rc = get_socket_count();
 	}
 

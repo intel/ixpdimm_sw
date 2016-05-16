@@ -424,6 +424,10 @@ int nvm_get_pool_count()
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
 	}
+	else if (!is_supported_driver_available())
+	{
+		rc = NVM_ERR_BADDRIVER;
+	}
 	else if ((rc = IS_NVM_FEATURE_LICENSED(get_pools)) != NVM_SUCCESS)
 	{
 		COMMON_LOG_ERROR("Retrieving pools is not supported.");
@@ -449,6 +453,10 @@ int nvm_get_pools(struct pool *p_pools, const NVM_UINT8 count)
 	if (check_caller_permissions() != COMMON_SUCCESS)
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
+	}
+	else if (!is_supported_driver_available())
+	{
+		rc = NVM_ERR_BADDRIVER;
 	}
 	else if ((rc = IS_NVM_FEATURE_LICENSED(get_pools)) != NVM_SUCCESS)
 	{
@@ -530,6 +538,10 @@ int nvm_get_pool(const NVM_UID pool_uid, struct pool *p_pool)
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
 	}
+	else if (!is_supported_driver_available())
+	{
+		rc = NVM_ERR_BADDRIVER;
+	}
 	else if ((rc = IS_NVM_FEATURE_LICENSED(get_pools)) != NVM_SUCCESS)
 	{
 		COMMON_LOG_ERROR("Retrieving pools is not supported.");
@@ -575,6 +587,10 @@ int nvm_dump_config(const NVM_UID device_uid,
 	if (check_caller_permissions() != COMMON_SUCCESS)
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
+	}
+	else if (!is_supported_driver_available())
+	{
+		rc = NVM_ERR_BADDRIVER;
 	}
 	else if ((rc = IS_NVM_FEATURE_SUPPORTED(get_device_capacity)) != NVM_SUCCESS)
 	{
@@ -890,6 +906,10 @@ int nvm_load_config(const NVM_UID device_uid,
 	if (check_caller_permissions() != COMMON_SUCCESS)
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
+	}
+	else if (!is_supported_driver_available())
+	{
+		rc = NVM_ERR_BADDRIVER;
 	}
 	else if ((rc = IS_NVM_FEATURE_SUPPORTED(modify_device_capacity)) != NVM_SUCCESS)
 	{

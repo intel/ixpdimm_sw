@@ -435,12 +435,6 @@ int set_default_config_settings(PersistentStore *p_ps)
 			"15"); // GSF_HOST_DATA | GSF_NAMESPACE_DATA | GSF_SERIAL_NUMS | GSF_SYSTEM_LOG
 		add_config_value_to_pstore(p_ps, SQL_KEY_SUPPORT_SNAPSHOT_MAX,
 				max_snapshots);
-		add_config_value_to_pstore(p_ps, SQL_KEY_WIN_DRIVER_MAJOR_MIN, "1");
-		add_config_value_to_pstore(p_ps, SQL_KEY_WIN_DRIVER_MAJOR_MAX, "1");
-		add_config_value_to_pstore(p_ps, SQL_KEY_LNX_DRIVER_MAJOR_MIN, "0");
-		add_config_value_to_pstore(p_ps, SQL_KEY_LNX_DRIVER_MAJOR_MAX, "0");
-		add_config_value_to_pstore(p_ps, SQL_KEY_ESX_DRIVER_MAJOR_MIN, "0");
-		add_config_value_to_pstore(p_ps, SQL_KEY_ESX_DRIVER_MAJOR_MAX, "6");
 		// TODO: These values need to be confirmed with real HW
 		add_config_value_to_pstore(p_ps, SQL_KEY_VALID_MANUFACTURER, "0x8086");
 		add_config_value_to_pstore(p_ps, SQL_KEY_VALID_MODEL_NUM, "Simulated DIMM");

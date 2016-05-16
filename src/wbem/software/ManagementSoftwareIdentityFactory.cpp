@@ -37,15 +37,17 @@
 #include <server/BaseServerFactory.h>
 #include <libintelnvm-cim/ExceptionBadParameter.h>
 #include <string/revision.h>
+#include <core/exceptions/LibraryException.h>
 #include <exception/NvmExceptionLibError.h>
 #include <NvmStrings.h>
 
-wbem::software::ManagementSoftwareIdentityFactory::ManagementSoftwareIdentityFactory()
-throw (wbem::framework::Exception)
-{ }
+wbem::software::ManagementSoftwareIdentityFactory::ManagementSoftwareIdentityFactory(
+		core::system::SystemService &systemService)
+throw (wbem::framework::Exception) : m_systemService(systemService)
+{}
 
 wbem::software::ManagementSoftwareIdentityFactory::~ManagementSoftwareIdentityFactory()
-{ }
+{}
 
 
 void wbem::software::ManagementSoftwareIdentityFactory::populateAttributeList(framework::attribute_names_t &attributes)
@@ -80,64 +82,53 @@ throw (wbem::framework::Exception)
 	framework::Instance *pInstance = new framework::Instance(path);
 	try
 	{
+		m_hostName = m_systemService.getHostName();
 		checkAttributes(attributes);
-
-		// get the host server name
-		std::string hostName = wbem::server::getHostName();
 
 		// make sure the instance ID passed in matches this host
 		framework::Attribute instanceID = path.getKeyValue(INSTANCEID_KEY);
-		if (instanceID.stringValue() == std::string(MANAGEMENTSWIDENTITY_INSTANCEID + hostName))
+		if (instanceID.stringValue() == getInstanceId())
 		{
-			// get the mgmt sw revision
-			// since nvm_get_sw_inventory can fail because of the driver not
-			// being there, use nvm_get_version instead
-			NVM_VERSION version;
-			int rc = nvm_get_version(version, NVM_VERSION_LEN);
-			if (rc != NVM_SUCCESS)
-			{
-				throw exception::NvmExceptionLibError(rc);
-			}
-
-			// split the version number into parts
-			NVM_UINT16 major, minor, hotfix, build;
-			parse_main_revision(&major, &minor, &hotfix, &build,
-					version, NVM_VERSION_LEN);
+			core::Result<core::system::SoftwareInfo> swInfo = m_systemService.getSoftwareInfo();
 
 			// ElementName - mgmt sw name + host name
 			if (containsAttribute(ELEMENTNAME_KEY, attributes))
 			{
-				framework::Attribute a(std::string(NVM_DIMM_NAME_LONG" Software Version ") + hostName, false);
+				framework::Attribute a(getElementName(), false);
 				pInstance->setAttribute(ELEMENTNAME_KEY, a, attributes);
 			}
-			// MajorVersion - Driver major version number
+			// MajorVersion - Mgmt sw major version number
 			if (containsAttribute(MAJORVERSION_KEY, attributes))
 			{
-				framework::Attribute a(major, false);
+				framework::Attribute a(swInfo.getValue().getMgmtSoftwareMajorVersion(),
+						false);
 				pInstance->setAttribute(MAJORVERSION_KEY, a, attributes);
 			}
-			// MinorVersion - Driver minor version number
+			// MinorVersion - Mgmt sw minor version number
 			if (containsAttribute(MINORVERSION_KEY, attributes))
 			{
-				framework::Attribute a(minor, false);
+				framework::Attribute a(swInfo.getValue().getMgmtSoftwareMinorVersion(),
+						false);
 				pInstance->setAttribute(MINORVERSION_KEY, a, attributes);
 			}
-			// RevisionNumber - Driver host fix number
+			// RevisionNumber - Mgmt sw hotfix number
 			if (containsAttribute(REVISIONNUMBER_KEY, attributes))
 			{
-				framework::Attribute a(hotfix, false);
+				framework::Attribute a(swInfo.getValue().getMgmtSoftwareHotfixVersion(),
+						false);
 				pInstance->setAttribute(REVISIONNUMBER_KEY, a, attributes);
 			}
-			// BuildNumber - Driver build number
+			// BuildNumber - Mgmt sw build number
 			if (containsAttribute(BUILDNUMBER_KEY, attributes))
 			{
-				framework::Attribute a(build, false);
+				framework::Attribute a(swInfo.getValue().getMgmtSoftwareBuildVersion(),
+						false);
 				pInstance->setAttribute(BUILDNUMBER_KEY, a, attributes);
 			}
-			// VersionString - Driver version as a string
+			// VersionString - Mgmt sw version as a string
 			if (containsAttribute(VERSIONSTRING_KEY, attributes))
 			{
-				framework::Attribute a(version, false);
+				framework::Attribute a(swInfo.getValue().getMgmtSoftwareVersion(), false);
 				pInstance->setAttribute(VERSIONSTRING_KEY, a, attributes);
 			}
 			// Manufacturer - Intel
@@ -166,10 +157,15 @@ throw (wbem::framework::Exception)
 			throw framework::ExceptionBadParameter(INSTANCEID_KEY.c_str());
 		}
 	}
-	catch (framework::Exception) // clean up and re-throw
+	catch (framework::Exception &) // clean up and re-throw
 	{
 		delete pInstance;
 		throw;
+	}
+	catch (core::LibraryException &e)
+	{
+		delete pInstance;
+		throw exception::NvmExceptionLibError(e.getErrorCode());
 	}
 
 	return pInstance;
@@ -186,23 +182,41 @@ throw (wbem::framework::Exception)
 	framework::instance_names_t *pNames = new framework::instance_names_t();
 	try
 	{
-		// get the host server name
-		std::string hostName = wbem::server::getHostName();
+		m_hostName = m_systemService.getHostName();
 		framework::attributes_t keys;
 
 		// Instance ID = "HostSoftware" + host name
-		keys[INSTANCEID_KEY] =
-				framework::Attribute(MANAGEMENTSWIDENTITY_INSTANCEID + hostName, true);
+		keys[INSTANCEID_KEY] = framework::Attribute(getInstanceId(), true);
 
 		// create the object path
-		framework::ObjectPath path(hostName, NVM_NAMESPACE,
+		framework::ObjectPath path(m_hostName, NVM_NAMESPACE,
 				MANAGEMENTSWIDENTITY_CREATIONCLASSNAME, keys);
 		pNames->push_back(path);
 	}
-	catch (framework::Exception) // clean up and re-throw
+	catch (framework::Exception &) // clean up and re-throw
 	{
 		delete pNames;
 		throw;
 	}
+	catch (core::LibraryException &e)
+	{
+		delete pNames;
+		throw exception::NvmExceptionLibError(e.getErrorCode());
+	}
 	return pNames;
 }
+
+std::string wbem::software::ManagementSoftwareIdentityFactory::getInstanceId()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	return MANAGEMENTSWIDENTITY_INSTANCEID + m_hostName;
+}
+
+std::string wbem::software::ManagementSoftwareIdentityFactory::getElementName()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	return std::string(NVM_DIMM_NAME_LONG" Software Version ") + m_hostName;
+}
+

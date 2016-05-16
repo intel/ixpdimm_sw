@@ -36,6 +36,7 @@
 #include <string>
 #include <vector>
 #include <framework_interface/NvmInstanceFactory.h>
+#include <core/system/SystemService.h>
 
 namespace wbem
 {
@@ -55,7 +56,9 @@ class NVM_API ManagementSoftwareIdentityFactory : public framework_interface::Nv
 		/*!
 		 * Initialize a new ManagementSoftwareIdentityFactory.
 		 */
-		ManagementSoftwareIdentityFactory() throw (framework::Exception);
+		ManagementSoftwareIdentityFactory(
+				core::system::SystemService &systemService = core::system::SystemService::getService())
+			throw (framework::Exception);
 
 		/*!
 		 * Clean up the ManagementSoftwareIdentityFactory
@@ -86,6 +89,12 @@ class NVM_API ManagementSoftwareIdentityFactory : public framework_interface::Nv
 	private:
 		void populateAttributeList(framework::attribute_names_t &attributes)
 			throw (framework::Exception);
+
+		std::string getInstanceId();
+		std::string getElementName();
+
+		core::system::SystemService &m_systemService;
+		std::string m_hostName;
 };
 
 } // software

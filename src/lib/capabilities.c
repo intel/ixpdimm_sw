@@ -540,6 +540,10 @@ int nvm_get_nvm_capabilities(struct nvm_capabilities *p_capabilities)
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
 	}
+	else if (!is_supported_driver_available())
+	{
+		rc = NVM_ERR_BADDRIVER;
+	}
 	else if (p_capabilities == NULL)
 	{
 		COMMON_LOG_ERROR("Invalid parameter, p_capabilties is NULL");

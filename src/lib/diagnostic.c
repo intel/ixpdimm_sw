@@ -37,6 +37,7 @@
 #include <string/s_str.h>
 #include <uid/uid.h>
 #include "system.h"
+#include "device_adapter.h"
 
 /*
  * Run a diagnostic test on the device specified.
@@ -60,6 +61,10 @@ int nvm_run_diagnostic(const NVM_UID device_uid,
 	else if (check_caller_permissions() != NVM_SUCCESS)
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
+	}
+	else if (!is_supported_driver_available())
+	{
+		rc = NVM_ERR_BADDRIVER;
 	}
 	else
 	{

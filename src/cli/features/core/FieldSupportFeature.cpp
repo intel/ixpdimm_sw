@@ -74,6 +74,8 @@
 #include <framework_interface/FrameworkExtensions.h>
 #include <libintelnvm-cim/ExceptionNoMemory.h>
 
+#include "ShowVersionCommand.h"
+
 const std::string cli::nvmcli::FieldSupportFeature::Name = "Field Support";
 const std::string LOG_PROPERTY_NAME = "LogLevel";
 
@@ -82,8 +84,6 @@ static const std::string PERFORMANCE_TARGET = "-performance";
 static const std::string FWLOGLEVEL_PROPERTY = "FwLogLevel";
 static const std::string DIAGNOSTIC_TARGET = "-diagnostic";
 
-static const std::string SHOWVERSION_COMPONENT = "Component";
-static const std::string SHOWVERSION_VERSION = "Version";
 const std::string ACTIONREQUIRED_PROPERTY_NAME = "ActionRequired";
 
 static const std::string EVENT_PROPERTY_SEVERITY = "Severity";
@@ -806,103 +806,15 @@ void cli::nvmcli::FieldSupportFeature::wbemClearSupport()
 }
 
 /*
- * Helper function to get the management software version
- */
-cli::framework::PropertyListResult *cli::nvmcli::FieldSupportFeature::getMgmtSwVersion()
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	framework::PropertyListResult *pResult = new framework::PropertyListResult();
-
-
-	try
-	{
-		pResult->insert(SHOWVERSION_COMPONENT, TRS(VERSION_MGMTSW_MSG));
-
-		wbem::software::ManagementSoftwareIdentityFactory mgmtSwProvider;
-		wbem::framework::attribute_names_t attributes;
-		attributes.push_back(wbem::VERSIONSTRING_KEY);
-		wbem::framework::instances_t *pInstances = mgmtSwProvider.getInstances(attributes);
-
-		if (pInstances && pInstances->size() > 0)
-		{
-			wbem::framework::Attribute versionAttr;
-			(*pInstances)[0].getAttribute(wbem::VERSIONSTRING_KEY, versionAttr);
-			pResult->insert(SHOWVERSION_VERSION, versionAttr.stringValue());
-		}
-			// failures will throw an exception, this would prevent a crash due to an unexpected error
-		else
-		{
-			pResult->insert(SHOWVERSION_VERSION, "0.0.0.0");
-		}
-	}
-	catch (wbem::framework::Exception &e)
-	{
-		framework::ErrorResult *pError = NvmExceptionToResult(e);
-		pResult->insert(SHOWVERSION_VERSION, pError);
-		if (!pResult->getErrorCode())  // keep existing errors
-		{
-			pResult->setErrorCode(pError->getErrorCode());
-		}
-	}
-	return pResult;
-}
-
-/*
- * Helper function to get the product driver version
- */
-cli::framework::PropertyListResult *cli::nvmcli::FieldSupportFeature::getProductDriverVersion()
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	framework::PropertyListResult *pResult = new framework::PropertyListResult();
-	try
-	{
-		pResult->insert(SHOWVERSION_COMPONENT, TRS(VERSION_PRODDIVER_MSG));
-
-		wbem::software::NVDIMMDriverIdentityFactory prodDriverProvider;
-		wbem::framework::attribute_names_t attributes;
-		attributes.push_back(wbem::VERSIONSTRING_KEY);
-		wbem::framework::instances_t *pInstances = prodDriverProvider.getInstances(attributes);
-		if (pInstances && pInstances->size() > 0)
-		{
-			wbem::framework::Attribute versionAttr;
-			(*pInstances)[0].getAttribute(wbem::VERSIONSTRING_KEY, versionAttr);
-			pResult->insert(SHOWVERSION_VERSION, versionAttr.stringValue());
-		}
-			// failures will throw an exception, this would prevent a crash due to an unexpected error
-		else
-		{
-			pResult->insert(SHOWVERSION_VERSION, "0.0.0");
-		}
-	}
-	catch (wbem::framework::Exception &e)
-	{
-		framework::ErrorResult *pError = NvmExceptionToResult(e);
-		pResult->insert(SHOWVERSION_VERSION, pError);
-		if (!pResult->getErrorCode())  // keep existing errors
-		{
-			pResult->setErrorCode(pError->getErrorCode());
-		}
-	}
-	return pResult;
-}
-
-/*
  * Display the Intel DIMM Gen 1 host software inventory
  */
 cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::showVersion(
 		const framework::ParsedCommand &parsedCommand)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	framework::ObjectListResult *pResult = new framework::ObjectListResult();
-	pResult->setRoot("Software");
 
-	// get the management software version
-	pResult->insert(TRS(VERSION_MGMTSW_MSG), *getMgmtSwVersion());
-	pResult->insert(TRS(VERSION_PRODDIVER_MSG), *getProductDriverVersion());
-
-	pResult->setOutputType(framework::ResultBase::OUTPUT_TEXTTABLE);
-
-	return pResult;
+	ShowVersionCommand command;
+	return command.execute(parsedCommand);
 }
 
 /*

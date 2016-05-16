@@ -255,6 +255,7 @@ int support_store_host(PersistentStore *p_store, int history_id)
 					inventory.mgmt_sw_revision, NVM_VERSION_LEN);
 			s_strncpy(db_inventory.vendor_driver_rev, SW_INVENTORY_VENDOR_DRIVER_REV_LEN,
 					inventory.vendor_driver_revision, NVM_VERSION_LEN);
+			db_inventory.supported_driver_available = inventory.vendor_driver_compatible;
 			if (db_save_sw_inventory_state(p_store, history_id, &db_inventory) != DB_SUCCESS)
 			{
 				COMMON_LOG_ERROR("Failed storing software inventory history information");

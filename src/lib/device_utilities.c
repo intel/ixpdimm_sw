@@ -245,13 +245,8 @@ void set_device_manageability(const char *driver_revision,
 
 	*p_manageability = MANAGEMENT_VALIDCONFIG;
 
-	// check driver version
-	if (!check_driver_revision(driver_revision))
-	{
-		*p_manageability = MANAGEMENT_INVALIDCONFIG;
-	}
 	// check FW API version
-	else if (!check_firmware_revision(p_id_dimm->api_ver))
+	if (!check_firmware_revision(p_id_dimm->api_ver))
 	{
 		*p_manageability = MANAGEMENT_INVALIDCONFIG;
 	}
@@ -263,50 +258,6 @@ void set_device_manageability(const char *driver_revision,
 			p_id_dimm->ifc);
 		*p_manageability = MANAGEMENT_INVALIDCONFIG;
 	}
-}
-
-/*
- * helper function to compare the driver version passed in to the configuration settings
- * in the database to see if the device is manageable.
- */
-int check_driver_revision(const char *driver_rev)
-{
-	int rc = 0;
-
-#ifdef __WINDOWS__
-	char *cfg_major_min = SQL_KEY_WIN_DRIVER_MAJOR_MIN;
-	char *cfg_major_max = SQL_KEY_WIN_DRIVER_MAJOR_MAX;
-#elif defined __ESX__
-	char *cfg_major_min = SQL_KEY_ESX_DRIVER_MAJOR_MIN;
-	char *cfg_major_max = SQL_KEY_ESX_DRIVER_MAJOR_MAX;
-#else
-	char *cfg_major_min = SQL_KEY_LNX_DRIVER_MAJOR_MIN;
-	char *cfg_major_max = SQL_KEY_LNX_DRIVER_MAJOR_MAX;
-#endif
-
-	// parse the version string into parts
-	NVM_UINT16 major, minor, hotfix, build = 0;
-	parse_main_revision(&major, &minor, &hotfix, &build, driver_rev,
-			NVM_VERSION_LEN);
-
-	// get config values and perform check
-	int driver_major_min;
-	int driver_major_max;
-	if (get_config_value_int(cfg_major_min, &driver_major_min) == COMMON_SUCCESS &&
-			get_config_value_int(cfg_major_max, &driver_major_max) == COMMON_SUCCESS &&
-			(major >= driver_major_min) &&
-			(major <= driver_major_max))
-	{
-		rc = 1;
-	}
-	else
-	{
-		COMMON_LOG_ERROR_F(
-			"Driver revision %s is not supported by the host software",
-			driver_rev);
-	}
-
-	return rc;
 }
 
 /*

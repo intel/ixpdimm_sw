@@ -115,6 +115,7 @@ int main(int arg_count, char **args)
 	sw_inventory.addAttribute("name").isText(256).isPk();
 	sw_inventory.addAttribute("mgmt_sw_rev").isText(25);
 	sw_inventory.addAttribute("vendor_driver_rev").isText(25);
+	sw_inventory.addAttribute("supported_driver_available").isInt32().isUnsigned();
 	entities.push_back(sw_inventory);
 
 	Entity socket("socket", "Processor socket information.");

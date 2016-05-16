@@ -62,6 +62,16 @@ NvmLibrary::~NvmLibrary()
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
 }
 
+std::string NvmLibrary::getErrorMessage(const int errorCode)
+{
+	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
+
+	NVM_ERROR_DESCRIPTION errorMessage;
+	m_lib.getError((const enum return_code)errorCode, errorMessage,
+			sizeof (errorMessage));
+	return errorMessage;
+}
+
 struct host NvmLibrary::getHost()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);

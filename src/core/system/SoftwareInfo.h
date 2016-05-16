@@ -25,43 +25,58 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <common/uid/uid.h>
-#include <core/exceptions/InvalidArgumentException.h>
-#include <core/NvmLibrary.h>
-#include "Helper.h"
+#ifndef SOFTWAREINFO_H_
+#define SOFTWAREINFO_H_
 
-std::string core::Helper::uidToString(const NVM_UID uid)
+#include <string>
+#include <nvm_management.h>
+
+namespace core
 {
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	NVM_UID result;
-	uid_copy(uid, result);
-	return std::string(result);
-}
-
-void core::Helper::stringToUid(const std::string &string, NVM_UID uid)
+namespace system
 {
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	if (string.length() > NVM_MAX_UID_LEN - 1)
-	{
-		throw InvalidArgumentException("stringUid");
-	}
-	uid_copy(string.c_str(), uid);
-}
 
-bool core::Helper::isValidNamespaceUid(std::string uid)
+class NVM_API SoftwareInfo
 {
-	return uid.length() == COMMON_GUID_STR_LEN - 1;
-}
+	public:
+		SoftwareInfo();
+		SoftwareInfo(const SoftwareInfo &other);
+		SoftwareInfo(const struct sw_inventory &swInv);
+		virtual ~SoftwareInfo();
 
-bool core::Helper::isValidPoolUid(std::string uid)
-{
-	return uid.length() == COMMON_GUID_STR_LEN - 1;
-}
+		SoftwareInfo& operator=(const SoftwareInfo &other);
 
-std::string core::Helper::getErrorMessage(const int errorCode)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+		std::string getMgmtSoftwareVersion();
+		NVM_UINT16 getMgmtSoftwareMajorVersion();
+		NVM_UINT16 getMgmtSoftwareMinorVersion();
+		NVM_UINT16 getMgmtSoftwareHotfixVersion();
+		NVM_UINT16 getMgmtSoftwareBuildVersion();
 
-	NvmLibrary &lib = NvmLibrary::getNvmLibrary();
-	return lib.getErrorMessage(errorCode);
-}
+		std::string getDriverVersion();
+		bool isDriverSupported();
+		bool isDriverInstalled();
+		NVM_UINT16 getDriverMajorVersion();
+		NVM_UINT16 getDriverMinorVersion();
+		NVM_UINT16 getDriverHotfixVersion();
+		NVM_UINT16 getDriverBuildVersion();
+
+		SoftwareInfo *clone();
+
+	protected:
+		struct sw_inventory m_swInventory;
+
+		NVM_UINT16 m_mgmtMajorVersion;
+		NVM_UINT16 m_mgmtMinorVersion;
+		NVM_UINT16 m_mgmtHotfixVersion;
+		NVM_UINT16 m_mgmtBuildVersion;
+
+		NVM_UINT16 m_driverMajorVersion;
+		NVM_UINT16 m_driverMinorVersion;
+		NVM_UINT16 m_driverHotfixVersion;
+		NVM_UINT16 m_driverBuildVersion;
+};
+
+} /* namespace system */
+} /* namespace core */
+
+#endif /* SOFTWAREINFO_H_ */

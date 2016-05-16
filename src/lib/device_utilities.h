@@ -67,12 +67,6 @@ void set_device_manageability(const char *driver_revision,
 	enum manageability_state *p_manageability);
 
 /*
- * compare the driver version passed in to the configuration settings
- * in the database to see if the device is manageable.
- */
-int check_driver_revision(const char *driver_rev);
-
-/*
  * Compare the firmware api version to the supported versions to determine
  * if the device is manageable.
  */

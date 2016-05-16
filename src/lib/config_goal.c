@@ -706,6 +706,10 @@ int nvm_create_config_goal(const NVM_UID device_uid,
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
 	}
+	else if (!is_supported_driver_available())
+	{
+		rc = NVM_ERR_BADDRIVER;
+	}
 	else
 	{
 		// Get system capabilities so we can validate
@@ -984,6 +988,10 @@ int nvm_get_config_goal(const NVM_UID device_uid, struct config_goal *p_goal)
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
 	}
+	else if (!is_supported_driver_available())
+	{
+		rc = NVM_ERR_BADDRIVER;
+	}
 	else if ((rc = IS_NVM_FEATURE_SUPPORTED(get_device_capacity)) != NVM_SUCCESS)
 	{
 		COMMON_LOG_ERROR("Retrieving device capacity is not supported.");
@@ -1047,6 +1055,10 @@ int nvm_delete_config_goal(const NVM_UID device_uid)
 	if (check_caller_permissions() != COMMON_SUCCESS)
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
+	}
+	else if (!is_supported_driver_available())
+	{
+		rc = NVM_ERR_BADDRIVER;
 	}
 	else if ((rc = IS_NVM_FEATURE_SUPPORTED(modify_device_capacity)) != NVM_SUCCESS)
 	{

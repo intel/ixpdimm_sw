@@ -82,3 +82,13 @@ core::Result<core::system::SystemMemoryResources> core::system::SystemService::g
 	SystemMemoryResources result(device_capacities);
 	return Result<SystemMemoryResources>(result);
 }
+
+core::Result<core::system::SoftwareInfo> core::system::SystemService::getSoftwareInfo()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	sw_inventory swInv = m_lib.getSwInventory();
+
+	SoftwareInfo result(swInv);
+	return Result<SoftwareInfo>(result);
+}

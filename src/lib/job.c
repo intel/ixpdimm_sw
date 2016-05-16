@@ -45,6 +45,10 @@ int nvm_get_job_count()
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
 	}
+	else if (!is_supported_driver_available())
+	{
+		rc = NVM_ERR_BADDRIVER;
+	}
 	else
 	{
 		rc = get_job_count();
@@ -63,6 +67,10 @@ int nvm_get_jobs(struct job *p_jobs, const NVM_UINT32 count)
 	if (check_caller_permissions() != NVM_SUCCESS)
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
+	}
+	else if (!is_supported_driver_available())
+	{
+		rc = NVM_ERR_BADDRIVER;
 	}
 	else if (p_jobs == NULL)
 	{

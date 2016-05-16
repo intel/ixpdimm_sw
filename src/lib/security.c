@@ -189,6 +189,10 @@ int nvm_set_passphrase(const NVM_UID device_uid,
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
 	}
+	else if (!is_supported_driver_available())
+	{
+		rc = NVM_ERR_BADDRIVER;
+	}
 	else if ((rc = IS_NVM_FEATURE_SUPPORTED(modify_device_security)) != NVM_SUCCESS)
 	{
 		COMMON_LOG_ERROR("Modifying "NVM_DIMM_NAME" security is not supported.");
@@ -304,6 +308,10 @@ int nvm_remove_passphrase(const NVM_UID device_uid,
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
 	}
+	else if (!is_supported_driver_available())
+	{
+		rc = NVM_ERR_BADDRIVER;
+	}
 	else if ((rc = IS_NVM_FEATURE_SUPPORTED(modify_device_security)) != NVM_SUCCESS)
 	{
 		COMMON_LOG_ERROR("Modifying "NVM_DIMM_NAME" security is not supported.");
@@ -368,6 +376,10 @@ int nvm_unlock_device(const NVM_UID device_uid,
 	if (check_caller_permissions() != COMMON_SUCCESS)
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
+	}
+	else if (!is_supported_driver_available())
+	{
+		rc = NVM_ERR_BADDRIVER;
 	}
 	else if ((rc = IS_NVM_FEATURE_SUPPORTED(modify_device_security)) != NVM_SUCCESS)
 	{
@@ -490,6 +502,10 @@ int nvm_erase_device(const NVM_UID device_uid,
 	if (check_caller_permissions() != COMMON_SUCCESS)
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
+	}
+	else if (!is_supported_driver_available())
+	{
+		rc = NVM_ERR_BADDRIVER;
 	}
 	else if ((rc = IS_NVM_FEATURE_SUPPORTED(modify_device_security)) != NVM_SUCCESS)
 	{

@@ -524,6 +524,7 @@ struct sw_inventory
 {
 	NVM_VERSION mgmt_sw_revision; // Host software version.
 	NVM_VERSION vendor_driver_revision; // Vendor specific NVDIMM driver version.
+	NVM_BOOL vendor_driver_compatible; // Is vendor driver compatible with MGMT SW?
 };
 
 /*
@@ -1342,6 +1343,7 @@ extern NVM_API int nvm_get_memory_topology(struct memory_topology *p_devices,
  * 		#NVM_ERR_NOMEMORY @n
  *		#NVM_ERR_DRIVERFAILED @n
  * 		#NVM_ERR_UNKNOWN @n
+ * 		#NVM_ERR_BADDRIVER @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
 extern NVM_API int nvm_get_device_count();
@@ -1369,6 +1371,7 @@ extern NVM_API int nvm_get_device_count();
  * 		#NVM_ERR_DEVICEERROR @n
  * 		#NVM_ERR_DEVICEBUSY @n
  * 		#NVM_ERR_UNKNOWN @n
+ * 		#NVM_ERR_BADDRIVER @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
 extern NVM_API int nvm_get_devices(struct device_discovery *p_devices, const NVM_UINT8 count);
@@ -1392,6 +1395,7 @@ extern NVM_API int nvm_get_devices(struct device_discovery *p_devices, const NVM
  * 		#NVM_ERR_DEVICEERROR @n
  * 		#NVM_ERR_DEVICEBUSY @n
  * 		#NVM_ERR_UNKNOWN @n
+ * 		#NVM_ERR_BADDRIVER @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
 extern NVM_API int nvm_get_device_discovery(const NVM_UID device_uid,
@@ -1418,6 +1422,7 @@ extern NVM_API int nvm_get_device_discovery(const NVM_UID device_uid,
  * 		#NVM_ERR_DEVICEERROR @n
  * 		#NVM_ERR_DEVICEBUSY @n
  * 		#NVM_ERR_UNKNOWN @n
+ * 		#NVM_ERR_BADDRIVER @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
 extern NVM_API int nvm_get_device_status(const NVM_UID device_uid,
@@ -1444,6 +1449,7 @@ extern NVM_API int nvm_get_device_status(const NVM_UID device_uid,
  * 		#NVM_ERR_DEVICEERROR @n
  * 		#NVM_ERR_DEVICEBUSY @n
  * 		#NVM_ERR_UNKNOWN @n
+ * 		#NVM_ERR_BADDRIVER @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
 extern NVM_API int nvm_get_device_settings(const NVM_UID device_uid,
@@ -1474,6 +1480,7 @@ extern NVM_API int nvm_get_device_settings(const NVM_UID device_uid,
  * 		#NVM_ERR_DEVICEERROR @n
  * 		#NVM_ERR_DEVICEBUSY @n
  * 		#NVM_ERR_UNKNOWN @n
+ * 		#NVM_ERR_BADDRIVER @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
 extern NVM_API int nvm_modify_device_settings(const NVM_UID device_uid,
@@ -1500,6 +1507,7 @@ extern NVM_API int nvm_modify_device_settings(const NVM_UID device_uid,
  * 		#NVM_ERR_DEVICEERROR @n
  * 		#NVM_ERR_DEVICEBUSY @n
  * 		#NVM_ERR_UNKNOWN @n
+ * 		#NVM_ERR_BADDRIVER @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
 extern NVM_API int nvm_get_device_details(const NVM_UID device_uid,
@@ -1526,6 +1534,7 @@ extern NVM_API int nvm_get_device_details(const NVM_UID device_uid,
  * 		#NVM_ERR_DEVICEERROR @n
  * 		#NVM_ERR_DEVICEBUSY @n
  * 		#NVM_ERR_UNKNOWN @n
+ * 		#NVM_ERR_BADDRIVER @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
 extern NVM_API int nvm_get_device_performance(const NVM_UID device_uid,
@@ -1552,6 +1561,7 @@ extern NVM_API int nvm_get_device_performance(const NVM_UID device_uid,
  * 		#NVM_ERR_DEVICEERROR @n
  * 		#NVM_ERR_DEVICEBUSY @n
  * 		#NVM_ERR_UNKNOWN @n
+ * 		#NVM_ERR_BADDRIVER @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
 extern NVM_API int nvm_get_device_fw_image_info(const NVM_UID device_uid,
@@ -1592,6 +1602,7 @@ extern NVM_API int nvm_get_device_fw_image_info(const NVM_UID device_uid,
  * 		#NVM_ERR_UNKNOWN @n
  * 		#NVM_ERR_BADFIRMWARE @n
  * 		#NVM_ERR_REQUIRESFORCE @n
+ * 		#NVM_ERR_BADDRIVER @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
 extern NVM_API int nvm_update_device_fw(const NVM_UID device_uid,
@@ -1630,6 +1641,7 @@ extern NVM_API int nvm_update_device_fw(const NVM_UID device_uid,
  * 		#NVM_ERR_DEVICEBUSY @n
  * 		#NVM_ERR_REQUIRESFORCE @n
  * 		#NVM_ERR_UNKNOWN @n
+ * 		#NVM_ERR_BADDRIVER @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
 extern NVM_API int nvm_examine_device_fw(const NVM_UID device_uid,
@@ -1653,6 +1665,7 @@ extern NVM_API int nvm_examine_device_fw(const NVM_UID device_uid,
  * 		#NVM_ERR_DEVICEBUSY @n
  * 		#NVM_ERR_BADPCAT @n
  * 		#NVM_ERR_UNKNOWN @n
+ * 		#NVM_ERR_BADDRIVER @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
 extern NVM_API int nvm_get_nvm_capabilities(struct nvm_capabilities *p_capabilties);
@@ -1673,6 +1686,7 @@ extern NVM_API int nvm_get_nvm_capabilities(struct nvm_capabilities *p_capabilti
  * 		#NVM_ERR_DEVICEERROR @n
  * 		#NVM_ERR_DEVICEBUSY @n
  * 		#NVM_ERR_UNKNOWN @n
+ * 		#NVM_ERR_BADDRIVER @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
 extern NVM_API int nvm_get_nvm_capacities(struct device_capacities *p_capacities);
@@ -1719,6 +1733,7 @@ extern NVM_API int nvm_get_nvm_capacities(struct device_capacities *p_capacities
  * 		#NVM_ERR_DEVICEERROR @n
  * 		#NVM_ERR_DEVICEBUSY @n
  * 		#NVM_ERR_UNKNOWN @n
+ * 		#NVM_ERR_BADDRIVER @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
 extern NVM_API int nvm_set_passphrase(const NVM_UID device_uid,
@@ -1757,6 +1772,7 @@ extern NVM_API int nvm_set_passphrase(const NVM_UID device_uid,
  * 		#NVM_ERR_DEVICEERROR @n
  * 		#NVM_ERR_DEVICEBUSY @n
  * 		#NVM_ERR_UNKNOWN @n
+ * 		#NVM_ERR_BADDRIVER @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
 extern NVM_API int nvm_remove_passphrase(const NVM_UID device_uid,
@@ -1793,6 +1809,7 @@ extern NVM_API int nvm_remove_passphrase(const NVM_UID device_uid,
  *		#NVM_ERR_DEVICEERROR @n
  * 		#NVM_ERR_DEVICEBUSY @n
  *		#NVM_ERR_UNKNOWN @n
+ * 		#NVM_ERR_BADDRIVER @n
  *		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
 extern NVM_API int nvm_unlock_device(const NVM_UID device_uid,
@@ -1827,6 +1844,7 @@ extern NVM_API int nvm_unlock_device(const NVM_UID device_uid,
  * 		#NVM_ERR_DEVICEERROR @n
  * 		#NVM_ERR_DEVICEBUSY @n
  * 		#NVM_ERR_UNKNOWN @n
+ * 		#NVM_ERR_BADDRIVER @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
 extern NVM_API int nvm_erase_device(const NVM_UID device_uid,
@@ -1864,6 +1882,7 @@ extern NVM_API int nvm_erase_device(const NVM_UID device_uid,
  *		#NVM_ERR_DEVICEERROR @n
  * 		#NVM_ERR_DEVICEBUSY @n
  * 		#NVM_ERR_UNKNOWN @n
+ * 		#NVM_ERR_BADDRIVER @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
 extern NVM_API int nvm_get_sensors(const NVM_UID device_uid, struct sensor *p_sensors,
@@ -1892,6 +1911,7 @@ extern NVM_API int nvm_get_sensors(const NVM_UID device_uid, struct sensor *p_se
  * 		#NVM_ERR_DEVICEERROR @n
  * 		#NVM_ERR_DEVICEBUSY @n
  * 		#NVM_ERR_UNKNOWN @n
+ * 		#NVM_ERR_BADDRIVER @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
 extern NVM_API int nvm_get_sensor(const NVM_UID device_uid, const enum sensor_type type,
@@ -1921,6 +1941,7 @@ extern NVM_API int nvm_get_sensor(const NVM_UID device_uid, const enum sensor_ty
  * 		#NVM_ERR_DEVICEERROR @n
  *		#NVM_ERR_DEVICEBUSY @n
  * 		#NVM_ERR_UNKNOWN @n
+ * 		#NVM_ERR_BADDRIVER @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
 extern NVM_API int nvm_set_sensor_settings(const NVM_UID device_uid,
@@ -2047,6 +2068,7 @@ extern NVM_API int nvm_acknowledge_event(NVM_UINT32 event_id);
  * 		#NVM_ERR_NOMEMORY @n
  * 		#NVM_ERR_DRIVERFAILED @n
  * 		#NVM_ERR_UNKNOWN @n
+ * 		#NVM_ERR_BADDRIVER @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only) @n
  */
 extern NVM_API int nvm_get_pool_count();
@@ -2069,6 +2091,7 @@ extern NVM_API int nvm_get_pool_count();
  * 		#NVM_ERR_ARRAYTOOSMALL @n
  * 		#NVM_ERR_DRIVERFAILED @n
  * 		#NVM_ERR_UNKNOWN @n
+ * 		#NVM_ERR_BADDRIVER @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only) @n
  */
 extern NVM_API int nvm_get_pools(struct pool *p_pools, const NVM_UINT8 count);
@@ -2089,6 +2112,7 @@ extern NVM_API int nvm_get_pools(struct pool *p_pools, const NVM_UINT8 count);
  * 		#NVM_ERR_INVALIDPARAMETER @n
  * 		#NVM_ERR_DRIVERFAILED @n
  * 		#NVM_ERR_UNKNOWN @n
+ * 		#NVM_ERR_BADDRIVER @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only) @n
  */
 extern NVM_API int nvm_get_pool(const NVM_UID pool_uid, struct pool *p_pool);
@@ -2110,6 +2134,7 @@ extern NVM_API int nvm_get_pool(const NVM_UID pool_uid, struct pool *p_pool);
  * 		#NVM_ERR_INVALIDPARAMETER @n
  * 		#NVM_ERR_DRIVERFAILED @n
  * 		#NVM_ERR_UNKNOWN @n
+ * 		#NVM_ERR_BADDRIVER @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only) @n
  */
 extern NVM_API int nvm_get_available_persistent_size_range(const NVM_UID pool_uid,
@@ -2143,6 +2168,7 @@ extern NVM_API int nvm_get_available_persistent_size_range(const NVM_UID pool_ui
  * 		#NVM_ERR_BADSIZE @n
  * 		#NVM_ERR_BADDEVICECONFIG @n
  * 		#NVM_ERR_UNKNOWN @n
+ * 		#NVM_ERR_BADDRIVER @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only) @n
  */
 extern NVM_API int nvm_create_config_goal(const NVM_UID device_uid,
@@ -2175,6 +2201,7 @@ extern NVM_API int nvm_create_config_goal(const NVM_UID device_uid,
  * 		#NVM_ERR_NOTFOUND @n
  * 		#NVM_ERR_BADDEVICECONFIG @n
  * 		#NVM_ERR_UNKNOWN @n
+ * 		#NVM_ERR_BADDRIVER @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only) @n
  */
 extern NVM_API int nvm_get_config_goal(const NVM_UID device_uid, struct config_goal *p_goal);
@@ -2198,6 +2225,7 @@ extern NVM_API int nvm_get_config_goal(const NVM_UID device_uid, struct config_g
  * 		#NVM_ERR_DEVICEERROR @n
  * 		#NVM_ERR_DEVICEBUSY @n
  * 		#NVM_ERR_UNKNOWN @n
+ * 		#NVM_ERR_BADDRIVER @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only) @n
  */
 extern NVM_API int nvm_delete_config_goal(const NVM_UID device_uid);
@@ -2234,6 +2262,7 @@ extern NVM_API int nvm_delete_config_goal(const NVM_UID device_uid);
  * 		#NVM_ERR_BADDEVICECONFIG
  * 		#NVM_ERR_NOTFOUND
  * 		#NVM_ERR_UNKNOWN @n
+ * 		#NVM_ERR_BADDRIVER @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only) @n
  */
 extern NVM_API int nvm_dump_config(const NVM_UID device_uid,
@@ -2275,6 +2304,7 @@ extern NVM_API int nvm_dump_config(const NVM_UID device_uid,
  * 		#NVM_ERR_BADSIZE @n
  * 		#NVM_ERR_BADDEVICECONFIG @n
  * 		#NVM_ERR_UNKNOWN @n
+ * 		#NVM_ERR_BADDRIVER @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only) @n
  */
 extern NVM_API int nvm_load_config(const NVM_UID device_uid,
@@ -2292,6 +2322,7 @@ extern NVM_API int nvm_load_config(const NVM_UID device_uid,
  * 		#NVM_ERR_NOMEMORY @n
  * 		#NVM_ERR_DRIVERFAILED @n
  * 		#NVM_ERR_UNKNOWN @n
+ * 		#NVM_ERR_BADDRIVER @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
 extern NVM_API int nvm_get_namespace_count();
@@ -2313,6 +2344,7 @@ extern NVM_API int nvm_get_namespace_count();
  * 		#NVM_ERR_INVALIDPARAMETER @n
  * 		#NVM_ERR_BADDEVICE @n
  * 		#NVM_ERR_UNKNOWN @n
+ * 		#NVM_ERR_BADDRIVER @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
 extern NVM_API int nvm_get_device_namespace_count(const NVM_UID uid,
@@ -2337,6 +2369,7 @@ extern NVM_API int nvm_get_device_namespace_count(const NVM_UID uid,
  * 		#NVM_ERR_INVALIDPARAMETER @n
  * 		#NVM_ERR_DRIVERFAILED @n
  * 		#NVM_ERR_UNKNOWN @n
+ * 		#NVM_ERR_BADDRIVER @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
 extern NVM_API int nvm_get_namespaces(struct namespace_discovery *p_namespaces,
@@ -2358,6 +2391,7 @@ extern NVM_API int nvm_get_namespaces(struct namespace_discovery *p_namespaces,
  * 		#NVM_ERR_INVALIDPARAMETER @n
  * 		#NVM_ERR_DRIVERFAILED @n
  * 		#NVM_ERR_UNKNOWN @n
+ * 		#NVM_ERR_BADDRIVER @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
 extern NVM_API int nvm_get_namespace_details(const NVM_UID namespace_uid,
@@ -2391,6 +2425,7 @@ extern NVM_API int nvm_get_namespace_details(const NVM_UID namespace_uid,
  *		#NVM_ERR_DEVICEERROR @n
  *		#NVM_ERR_DEVICEBUSY @n
  *		#NVM_ERR_UNKNOWN @n
+ * 		#NVM_ERR_BADDRIVER @n
  *		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
 extern NVM_API int nvm_adjust_create_namespace_block_count(const NVM_UID pool_uid,
@@ -2419,6 +2454,7 @@ extern NVM_API int nvm_adjust_create_namespace_block_count(const NVM_UID pool_ui
  *		#NVM_ERR_DEVICEBUSY @n
  *		#NVM_ERR_BADDEVICE @n
  *		#NVM_ERR_UNKNOWN @n
+ * 		#NVM_ERR_BADDRIVER @n
  *		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
 extern NVM_API int nvm_adjust_modify_namespace_block_count(
@@ -2454,6 +2490,7 @@ extern NVM_API int nvm_adjust_modify_namespace_block_count(
  * 		#NVM_ERR_BADNAMESPACESETTINGS @n
  * 		#NVM_ERR_DRIVERFAILED @n
  * 		#NVM_ERR_UNKNOWN @n
+ * 		#NVM_ERR_BADDRIVER @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
 extern NVM_API int nvm_create_namespace(NVM_UID *p_namespace_uid, const NVM_UID pool_uid,
@@ -2476,6 +2513,7 @@ extern NVM_API int nvm_create_namespace(NVM_UID *p_namespace_uid, const NVM_UID 
  * 		#NVM_ERR_BADNAMESPACE @n
  * 		#NVM_ERR_BADSIZE @n*
  * 		#NVM_ERR_UNKNOWN @n
+ * 		#NVM_ERR_BADDRIVER @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
 extern NVM_API int nvm_modify_namespace_name(const NVM_UID namespace_uid,
@@ -2499,6 +2537,7 @@ extern NVM_API int nvm_modify_namespace_name(const NVM_UID namespace_uid,
  * 		#NVM_ERR_BADNAMESPACE @n
  * 		#NVM_ERR_BADSIZE @n*
  * 		#NVM_ERR_UNKNOWN @n
+ * 		#NVM_ERR_BADDRIVER @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
 extern NVM_API int nvm_modify_namespace_block_count(const NVM_UID namespace_uid,
@@ -2518,8 +2557,9 @@ extern NVM_API int nvm_modify_namespace_block_count(const NVM_UID namespace_uid,
  * 		#NVM_ERR_INVALIDPERMISSIONS @n
  * 		#NVM_ERR_INVALIDPARAMETER @n
  * 		#NVM_ERR_BADNAMESPACE @n
- * 		#NVM_ERR_BADSIZE @n*
+ * 		#NVM_ERR_BADSIZE @n
  * 		#NVM_ERR_UNKNOWN @n
+ * 		#NVM_ERR_BADDRIVER @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
 extern NVM_API int nvm_modify_namespace_enabled(const NVM_UID namespace_uid,
@@ -2539,6 +2579,7 @@ extern NVM_API int nvm_modify_namespace_enabled(const NVM_UID namespace_uid,
  * 		#NVM_ERR_INVALIDPARAMETER @n
  * 		#NVM_ERR_BADNAMESPACE @n
  * 		#NVM_ERR_UNKNOWN @n
+ * 		#NVM_ERR_BADDRIVER @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
 extern NVM_API int nvm_delete_namespace(const NVM_UID namespace_uid);
@@ -2725,6 +2766,7 @@ extern NVM_API int nvm_remove_simulator();
  * 		#NVM_ERR_DEVICEERROR @n
  * 		#NVM_ERR_DEVICEBUSY @n
  * 		#NVM_ERR_UNKNOWN @n
+ * 		#NVM_ERR_BADDRIVER @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
 extern NVM_API int nvm_get_fw_log_level(const NVM_UID device_uid, enum fw_log_level *p_log_level);
@@ -2748,6 +2790,7 @@ extern NVM_API int nvm_get_fw_log_level(const NVM_UID device_uid, enum fw_log_le
  * 		#NVM_ERR_DEVICEERROR @n
  * 		#NVM_ERR_DEVICEBUSY @n
  * 		#NVM_ERR_UNKNOWN @n
+ * 		#NVM_ERR_BADDRIVER @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
 extern NVM_API int nvm_set_fw_log_level(const NVM_UID device_uid,
@@ -2776,6 +2819,7 @@ extern NVM_API int nvm_set_fw_log_level(const NVM_UID device_uid,
  * 		#NVM_ERR_DEVICEERROR @n
  * 		#NVM_ERR_DEVICEBUSY @n
  * 		#NVM_ERR_UNKNOWN @n
+ * 		#NVM_ERR_BADDRIVER @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
 extern NVM_API int nvm_inject_device_error(const NVM_UID device_uid,
@@ -2804,6 +2848,7 @@ extern NVM_API int nvm_inject_device_error(const NVM_UID device_uid,
  * 		#NVM_ERR_DEVICEERROR @n
  * 		#NVM_ERR_DEVICEBUSY @n
  * 		#NVM_ERR_UNKNOWN @n
+ * 		#NVM_ERR_BADDRIVER @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
 extern NVM_API int nvm_clear_injected_device_error(const NVM_UID device_uid,
@@ -2833,6 +2878,7 @@ extern NVM_API int nvm_clear_injected_device_error(const NVM_UID device_uid,
  * 		#NVM_ERR_DEVICEERROR @n
  * 		#NVM_ERR_DEVICEBUSY @n
  * 		#NVM_ERR_UNKNOWN @n
+ * 		#NVM_ERR_BADDRIVER @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
 extern NVM_API int nvm_run_diagnostic(const NVM_UID device_uid,
@@ -2913,6 +2959,7 @@ extern NVM_API int nvm_get_debug_logs(struct log *p_logs, const NVM_UINT32 count
  * @pre The caller must have administrative privileges.
  * @return Return the number of current jobs: @endlink @n
  * 		#NVM_ERR_INVALIDPERMISSIONS @n
+ * 		#NVM_ERR_BADDRIVER @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
 extern NVM_API int nvm_get_job_count();
@@ -2936,6 +2983,7 @@ extern NVM_API int nvm_get_job_count();
  * 		#NVM_ERR_DEVICEERROR @n
  * 		#NVM_ERR_DEVICEBUSY @n
  * 		#NVM_ERR_UNKNOWN @n
+ * 		#NVM_ERR_BADDRIVER @n
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
 extern NVM_API int nvm_get_jobs(struct job *p_jobs, const NVM_UINT32 count);

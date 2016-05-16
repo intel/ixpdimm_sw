@@ -371,6 +371,12 @@ struct health_event
  */
 
 /*
+ * Determine if a supported AEP DIMM driver is installed.
+ * Returns 1 if a compatible driver is detected, 0 otherwise.
+ */
+NVM_BOOL is_supported_driver_available();
+
+/*
  * Retrieve the vendor specific NVDIMM driver version.
  * @return Returns one of the following return_codes:
  * 		#NVM_SUCCESS @n

@@ -53,12 +53,48 @@
 #define	PCAT_LOCATION	"/sys/firmware/acpi/tables/PCAT"
 #define	NFIT_LOCATION	"/sys/firmware/acpi/tables/NFIT"
 
+NVM_BOOL is_driver_module_installed()
+{
+	COMMON_LOG_ENTRY();
+	NVM_BOOL is_installed = 0;
+
+	struct ndctl_ctx *ctx;
+	if (ndctl_new(&ctx) >= 0)
+	{
+		// If the NFIT driver is alive, we'll be able to get a bus
+		struct ndctl_bus *bus = ndctl_bus_get_by_provider(ctx, "ACPI.NFIT");
+		if (bus != NULL)
+		{
+			is_installed = 1;
+		}
+
+		ndctl_unref(ctx);
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(is_installed);
+	return is_installed;
+}
+
+/*
+ * No way to detect compatibility - NDCTL makes no assumptions about
+ * driver built with the kernel and returns nothing if requested
+ * functionality is unsupported by the driver.
+ */
+NVM_BOOL is_supported_driver_available()
+{
+	COMMON_LOG_ENTRY();
+	NVM_BOOL is_supported = is_driver_module_installed();
+
+	COMMON_LOG_EXIT_RETURN_I(is_supported);
+	return is_supported;
+}
+
 /*
  * Retrieve the vendor specific NVDIMM driver version.
  */
 int get_vendor_driver_revision(NVM_VERSION version_str, const NVM_SIZE str_len)
 {
-	int rc = NVM_ERR_UNKNOWN;
+	int rc = NVM_ERR_BADDRIVER;
 	COMMON_LOG_ENTRY();
 
 	if (version_str == NULL)
@@ -71,7 +107,7 @@ int get_vendor_driver_revision(NVM_VERSION version_str, const NVM_SIZE str_len)
 		COMMON_LOG_ERROR("Invalid parameter, version buffer length is 0");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
-	else
+	else if (is_driver_module_installed())
 	{
 		s_strcpy(version_str, "0.0.0.0", NVM_VERSION_LEN);
 		rc = NVM_SUCCESS;

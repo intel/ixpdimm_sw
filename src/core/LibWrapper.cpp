@@ -49,6 +49,13 @@ LibWrapper::~LibWrapper()
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
 }
 
+int LibWrapper::getError(const enum return_code code,
+		NVM_ERROR_DESCRIPTION description, const NVM_SIZE descriptionLen) const
+{
+	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
+	return nvm_get_error(code, description, descriptionLen);
+}
+
 int LibWrapper::getHost(struct host *pHost) const
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);

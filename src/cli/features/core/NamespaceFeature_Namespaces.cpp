@@ -1288,7 +1288,7 @@ cli::framework::ErrorResult* cli::nvmcli::NamespaceFeature::nsNvmExceptionToResu
 					errbuff);
 			break;
 		}
-		case NVM_ERR_BADNAMESPACESETTING:
+		case NVM_ERR_BADNAMESPACESETTINGS:
 		{
 			pResult = new framework::ErrorResult(framework::ResultBase::ERRORCODE_UNKNOWN,
 					TRS(INVALID_NS_APP_DIRECT_SETTINGS));

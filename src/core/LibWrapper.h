@@ -38,6 +38,9 @@ public:
 
 	static LibWrapper &getLibWrapper();
 
+	virtual int getError(const enum return_code code, NVM_ERROR_DESCRIPTION description,
+		const NVM_SIZE descriptionLen) const;
+
 	virtual int getHost(struct host *pHost) const;
 
 	virtual int getHostName(char *hostName, const NVM_SIZE hostNameLen) const;

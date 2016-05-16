@@ -200,13 +200,15 @@ enum return_code
 	NVM_ERR_EXCEEDSMAXSUBSCRIBERS = -38, // Exceeded maximum number of notify subscribers
 	NVM_ERR_BADNAMESPACETYPE = -39, // The specified namespace type is not valid.
 	NVM_ERR_BADNAMESPACEENABLESTATE = -40, // The specified namespace enable state is not valid.
-	NVM_ERR_BADSECURITYGOAL = -41, // No dimm found with matching security goal to create a NS.
+	NVM_ERR_BADNAMESPACESETTINGS = -41, // Could not create ns with specified settings.
 	NVM_ERR_BADPCAT = -42, // The PCAT table is invalid.
 	NVM_ERR_TOOMANYNAMESPACES = -43, // The maximum number of namespaces is already present.
 	NVM_ERR_CONFIGNOTSUPPORTED = -44, // The requested configuration is not supported.
 	NVM_ERR_SKUVIOLATION = -45, // The method is not supported because of a license violation.
-	NVM_ERR_BADNAMESPACESETTING = -46, // Could not create ns with App Direct setting.
-	NVM_ERR_INVALIDPASSPHRASEFILE = -47, // The passphrase file is invalid.
+	NVM_ERR_BADDRIVER = -46, // The underlying software is missing or incompatible.
+	NVM_ERR_ARSINPROGRESS = -47, // Address range scrub in progress.
+	NVM_ERR_BADSECURITYGOAL = -48, // No dimm found with matching security goal to create a NS.
+	NVM_ERR_INVALIDPASSPHRASEFILE = -49, // The passphrase file is invalid.
 };
 
 /*

@@ -67,8 +67,6 @@ static const std::string DELETESUPPORT_MSG = N_TR(
 		"Delete support data"); //!< delete support success message
 static const std::string SETFWRESULT_MSG = N_TR(
 		"Set FW log level to %d on " NVM_DIMM_NAME " %s"); //!< FW log level set message
-static const std::string VERSION_MGMTSW_MSG = N_TR(NVM_SYSTEM" Software Version");
-static const std::string VERSION_PRODDIVER_MSG = N_TR(NVM_SYSTEM" Driver Version");
 static const std::string RUNDIAGNOSTIC_MSG = N_TR(
 		"Run diagnostic"); //!< run diagnostic success message
 
@@ -278,12 +276,6 @@ private:
 	 * Defaults to just calling checkUserResponse above.
 	 */
 	static bool localpromptUser(std::string promptString);
-
-	/*!
-	 * Helper functions to retrieve specific version
-	 */
-	framework::PropertyListResult* getMgmtSwVersion();
-	framework::PropertyListResult* getProductDriverVersion();
 
 	/*
 	 * Helper functions for the show -events command
