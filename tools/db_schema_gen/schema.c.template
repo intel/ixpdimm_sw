@@ -70,40 +70,44 @@ PersistentStore *create_PersistentStore(const char *path, int force)
 		}
 
 		// build the schema ...
-		struct { char table_name[256]; char create_statement[2048]; }
-		tables[TABLE_COUNT] =
+		struct table { char table_name[256]; char create_statement[2048]; };
+		struct table *tables = (struct table *)malloc(TABLE_COUNT * sizeof (struct table));
+		if (tables)
 		{
-			{"history",
+			int populate_index = 0;
+
+			tables[populate_index++] = ((struct table){"history",
 				"CREATE TABLE history(history_id INTEGER PRIMARY KEY NOT NULL UNIQUE, \
-					timestamp DATETIME NOT NULL, history_name TEXT )"},
-			{{#TABLE}}{"{{TABLE_NAME}}",
+					timestamp DATETIME NOT NULL, history_name TEXT )"});
+			{{#TABLE}}tables[populate_index++] = ((struct table){"{{TABLE_NAME}}",
 				"CREATE TABLE {{TABLE_NAME}} (       \
 					{{#ATTRIBUTE}} {{COLUMN_NAME}} {{ATTRIBUTE_TYPE}} {{#PK}} PRIMARY KEY {{/PK}}{{#AUTOINC_ATTRIBUTE}} AUTOINCREMENT {{/AUTOINC_ATTRIBUTE}}{{#PK}} NOT NULL UNIQUE {{/PK}} {{#ATTRIBUTE_separator}}, \
 					{{/ATTRIBUTE_separator}}{{/ATTRIBUTE}} \
-					);"}{{HISTORY_START}},
-			{"{{TABLE_NAME}}_history",
+					);"}{{HISTORY_START}});
+			tables[populate_index++] = ((struct table){"{{TABLE_NAME}}_history",
 				"CREATE TABLE {{TABLE_NAME}}_history (       \
 					history_id INTEGER NOT NULL, \
 					{{#ATTRIBUTE}} {{COLUMN_NAME}} {{ATTRIBUTE_TYPE}} {{#ATTRIBUTE_separator}}, \
 					{{/ATTRIBUTE_separator}}{{/ATTRIBUTE}} \
-					);"}{{HISTORY_END}}{{#TABLE_separator}},
-			{{/TABLE_separator}}{{/TABLE}}
-		};
+					);"}{{HISTORY_END}});
+				{{/TABLE}}
 
-		if (sqlite3_open_v2(path, &(result->db),
-			SQLITE_OPEN_READWRITE|SQLITE_OPEN_CREATE|SQLITE_OPEN_FULLMUTEX, NULL) == SQLITE_OK)
-		{
-			for (int i = 0; i < TABLE_COUNT; i++)
+			if (sqlite3_open_v2(path, &(result->db),
+				SQLITE_OPEN_READWRITE|SQLITE_OPEN_CREATE|SQLITE_OPEN_FULLMUTEX, NULL) == SQLITE_OK)
 			{
-				if (!table_exists(result->db, tables[i].table_name))
+				for (int i = 0; i < TABLE_COUNT; i++)
 				{
-					run_sql_no_results(result->db, tables[i].create_statement);
+					if (!table_exists(result->db, tables[i].table_name))
+					{
+						run_sql_no_results(result->db, tables[i].create_statement);
+					}
 				}
 			}
-		}
-		else
-		{
-			free_PersistentStore(&result);
+			else
+			{
+				free_PersistentStore(&result);
+			}
+			free(tables);
 		}
 	}
 	return result;

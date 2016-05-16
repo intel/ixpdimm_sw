@@ -594,6 +594,7 @@ void NvmApi::getPools(std::vector<struct pool>& pools) const
 			}
 
 			pools.clear();
+			pools.reserve(count);
 			for (int i = 0; i < count; i++)
 			{
 				pools.push_back(pPoolArray[i]);

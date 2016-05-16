@@ -591,6 +591,7 @@ std::vector<struct pool> NvmLibrary::getPools()
 		throw core::LibraryException(rc);
 	}
 	int count = rc;
+	result.reserve(count);
 	struct pool *fromLib = (struct pool *)malloc(sizeof (struct pool) * count);
 
 	rc = m_lib.getPools(fromLib, count);
