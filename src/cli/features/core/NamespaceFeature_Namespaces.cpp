@@ -211,12 +211,14 @@ cli::framework::ResultBase *cli::nvmcli::NamespaceFeature::showNamespaces(
 							convertCapacityAndAddIsMirroredText(instance, capacityUnits);
 							generateBlockSizeAttributeValue(instance);
 							convertEnabledStateAttributes(instance);
-							addBlockCountAttribute(instance);
 							convertActionRequiredEventsToNAIfEmpty(instance);
 						}
 
 						// add/remove cli display attributes
-						updateCliAttributes(attributes, parsedCommand);
+						RenameAttributeKey(*pInstances, attributes, wbem::NUMBEROFBLOCKS_KEY, wbem::BLOCKCOUNT_KEY);
+						RenameAttributeKey(*pInstances, attributes, wbem::ENABLEDSTATE_KEY, wbem::ENABLED_KEY);
+						RemoveAttributeName(attributes, wbem::REPLICATION_KEY);
+
 						pResult = NvmInstanceToObjectListResult(*pInstances, "Namespace",
 								wbem::NAMESPACEID_KEY, attributes, filters);
 
@@ -1481,19 +1483,8 @@ void cli::nvmcli::NamespaceFeature::convertEnabledStateAttributes(wbem::framewor
 				break;
 		}
 
-		wbemInstance.setAttribute(wbem::ENABLED_KEY,
+		wbemInstance.setAttribute(wbem::ENABLEDSTATE_KEY,
 			wbem::framework::Attribute(enabled, false));
-	}
-}
-
-void cli::nvmcli::NamespaceFeature::addBlockCountAttribute(wbem::framework::Instance &wbemInstance)
-{
-	wbem::framework::Attribute blockCountAattr;
-	if (wbemInstance.getAttribute(wbem::NUMBEROFBLOCKS_KEY, blockCountAattr) ==
-		wbem::framework::SUCCESS)
-	{
-		wbemInstance.setAttribute(wbem::BLOCKCOUNT_KEY,
-			wbem::framework::Attribute(blockCountAattr.uint64Value(), true));
 	}
 }
 
@@ -1511,14 +1502,15 @@ void cli::nvmcli::NamespaceFeature::populateNamespaceAttributes(
 
 	// define all attributes
 	wbem::framework::attribute_names_t allAttributes(defaultAttributes);
+	allAttributes.push_back(wbem::ACTIONREQUIREDEVENTS_KEY);
 	allAttributes.push_back(wbem::NAME_KEY);
 	allAttributes.push_back(wbem::POOLID_KEY);
 	allAttributes.push_back(wbem::BLOCKSIZE_KEY);
+	allAttributes.push_back(wbem::BLOCKCOUNT_KEY);
+	allAttributes.push_back(wbem::ENABLED_KEY);
 	allAttributes.push_back(wbem::OPTIMIZE_KEY);
-	allAttributes.push_back(wbem::ENABLEDSTATE_KEY);
-	allAttributes.push_back(wbem::ACTIONREQUIREDEVENTS_KEY);
-	allAttributes.push_back(wbem::ENCRYPTIONENABLED_KEY);
 	allAttributes.push_back(wbem::ERASECAPABLE_KEY);
+	allAttributes.push_back(wbem::ENCRYPTIONENABLED_KEY);
 	allAttributes.push_back(wbem::APP_DIRECT_SETTINGS_KEY);
 	allAttributes.push_back(wbem::MEMORYPAGEALLOCATION_KEY);
 
@@ -1542,31 +1534,10 @@ void cli::nvmcli::NamespaceFeature::populateNamespaceAttributes(
 	{
 		attributes.push_back(wbem::REPLICATION_KEY);
 	}
-	if (!wbem::framework_interface::NvmInstanceFactory::containsAttribute(wbem::NUMBEROFBLOCKS_KEY,
-		attributes))
-	{
-		attributes.push_back(wbem::NUMBEROFBLOCKS_KEY);
-	}
-}
 
-void cli::nvmcli::NamespaceFeature::updateCliAttributes(wbem::framework::attribute_names_t &attributes,
-	const framework::ParsedCommand& parsedCommand)
-{
-	// not displayed in cli
-	RemoveAttributeName(attributes, wbem::REPLICATION_KEY);
-
-	// display NUMBEROFBLOCKS_KEY as BLOCKCOUNT_KEY
-	RemoveAttributeName(attributes, wbem::NUMBEROFBLOCKS_KEY);
-	if (framework::parsedCommandContains(parsedCommand, framework::OPTION_ALL))
-	{
-		attributes.push_back(wbem::BLOCKCOUNT_KEY);
-	}
-	// display ENABLEDSTATE_KEY as ENABLED_KEY
-	RemoveAttributeName(attributes, wbem::ENABLEDSTATE_KEY);
-	if (framework::parsedCommandContains(parsedCommand, framework::OPTION_ALL))
-	{
-		attributes.push_back(wbem::ENABLED_KEY);
-	}
+	// wbem attribute names are different than CLI
+	RenameAttributeKey(attributes, wbem::BLOCKCOUNT_KEY, wbem::NUMBEROFBLOCKS_KEY);
+	RenameAttributeKey(attributes, wbem::ENABLED_KEY, wbem::ENABLEDSTATE_KEY);
 }
 
 void cli::nvmcli::NamespaceFeature::convertActionRequiredEventsToNAIfEmpty(wbem::framework::Instance &wbemInstance)

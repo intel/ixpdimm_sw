@@ -45,12 +45,9 @@ ShowDeviceCommand::ShowDeviceCommand(core::device::DeviceService &service)
 {
 	m_props.addCustom("DimmID", getDimmId).setIsRequired();
 	m_props.addUint64("Capacity", &core::device::Device::getRawCapacity, &convertCapacity).setIsDefault();
-	m_props.addOther("LockState", &core::device::Device::getLockState, &convertLockState).setIsDefault();
 	m_props.addUint16("HealthState", &core::device::Device::getHealthState,
 			&convertHealthState).setIsDefault();
-	m_props.addStr("FWVersion", &core::device::Device::getFwRevision).setIsDefault();
 	m_props.addBool("ActionRequired", &core::device::Device::isActionRequired).setIsDefault();
-	m_props.addStr("FWAPIVersion", &core::device::Device::getFwApiVersion);
 	m_props.addUint16("InterfaceFormatCode", &core::device::Device::getInterfaceFormatCode);
 	m_props.addOther("ManageabilityState", &core::device::Device::getManageabilityState,
 			&convertManageabilityState);
@@ -62,14 +59,24 @@ ShowDeviceCommand::ShowDeviceCommand(core::device::DeviceService &service)
 	m_props.addUint32("ChannelID", &core::device::Device::getChannelId);
 	m_props.addUint32("ChannelPos", &core::device::Device::getChannelPosition);
 	m_props.addOther("MemoryType", &core::device::Device::getMemoryType, &convertMemoryType);
-	m_props.addStr("Manufacturer", &core::device::Device::getManufacturer);
-	m_props.addUint16("ManufacturerID", &core::device::Device::getManufacturerId);
-	m_props.addStr("Model", &core::device::Device::getModelNumber);
 	m_props.addUint16("VendorID", &core::device::Device::getVendorId, toHex);
 	m_props.addUint16("DeviceID", &core::device::Device::getDeviceId, toHex);
 	m_props.addUint16("RevisionID", &core::device::Device::getRevisionId);
+	// New NFIT attirbutes here
 	m_props.addStr("SerialNumber", &core::device::Device::getSerialNumber);
+	m_props.addStr("PartNumber", &core::device::Device::getPartNumber);
+	m_props.addStr("DeviceLocator", &core::device::Device::getDeviceLocator);
+	m_props.addStr("BankLabel", &core::device::Device::getBankLabel);
+	m_props.addUint64("DataWidth", &core::device::Device::getDataWidth);
+	m_props.addUint64("TotalWidth", &core::device::Device::getTotalWidth);
+	m_props.addUint64("Speed", &core::device::Device::getSpeed);
 	m_props.addList("ActionRequiredEvents", &core::device::Device::getActionRequiredEvents);
+	m_props.addOther("LockState", &core::device::Device::getLockState, &convertLockState).setIsDefault();
+	m_props.addStr("FWVersion", &core::device::Device::getFwRevision).setIsDefault();
+	m_props.addStr("FWAPIVersion", &core::device::Device::getFwApiVersion);
+	m_props.addStr("Manufacturer", &core::device::Device::getManufacturer);
+	m_props.addUint16("ManufacturerID", &core::device::Device::getManufacturerId);
+	m_props.addStr("Model", &core::device::Device::getModelNumber);
 	m_props.addBool("IsNew", &core::device::Device::isNew);
 	m_props.addOther("FormFactor", &core::device::Device::getFormFactor, &convertFormFactor);
 	m_props.addUint64("MemoryCapacity", &core::device::Device::getMemoryCapacity,
@@ -82,12 +89,6 @@ ShowDeviceCommand::ShowDeviceCommand(core::device::DeviceService &service)
 			convertCapacity);
 	m_props.addUint64("ReservedCapacity", &core::device::Device::getReservedCapacity,
 			convertCapacity);
-	m_props.addStr("PartNumber", &core::device::Device::getPartNumber);
-	m_props.addStr("DeviceLocator", &core::device::Device::getDeviceLocator);
-	m_props.addStr("BankLabel", &core::device::Device::getBankLabel);
-	m_props.addUint64("DataWidth", &core::device::Device::getDataWidth);
-	m_props.addUint64("TotalWidth", &core::device::Device::getTotalWidth);
-	m_props.addUint64("Speed", &core::device::Device::getSpeed);
 	m_props.addOther("FWLogLevel", &core::device::Device::getFwLogLevel, &convertFwLogLevel);
 	m_props.addBool("PowerManagementEnabled", &core::device::Device::isPowerManagementEnabled);
 	m_props.addUint8("PowerLimit", &core::device::Device::getPowerLimit);
