@@ -33,8 +33,8 @@
 #include <cr_i18n.h>
 #include "win_service.h"
 
-#define SERVICE_NAME "NvmMonitor"
-#define SERVICE_DISPLAY_NAME "Intel NvmMonitor"
+#define SERVICE_NAME "ixpdimm-monitor"
+#define SERVICE_DISPLAY_NAME "Intel ixpdimm-monitor"
 #define SUCCESS TR("Success")
 #define FAIL TR("Fail")
 
