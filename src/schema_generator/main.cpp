@@ -243,6 +243,7 @@ int main(int arg_count, char **args)
 	dimm_topology.addAttribute("manufacturing_location").isInt32().isUnsigned();
 	dimm_topology.addAttribute("manufacturing_date").isInt32().isUnsigned();
 	dimm_topology.addAttribute("type").isInt32().isUnsigned();
+	dimm_topology.addAttribute("interface_format_codes").isInt32().isUnsigned().isArray(9);
 	entities.push_back(dimm_topology);
 
 	Entity nvm_namespace("namespace", "Persistent memory namespaces.");

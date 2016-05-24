@@ -199,6 +199,258 @@ enum lock_state security_state_to_enum(unsigned char security_status)
 	return lock_state;
 }
 
+int add_security_state_to_device(struct device_discovery *p_device)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	struct pt_payload_get_security_state security_state;
+	rc = fw_get_security_state(p_device->device_handle.handle,
+			&security_state);
+	if (rc != NVM_SUCCESS)
+	{
+		COMMON_LOG_ERROR_F(
+			"Unable to get security state information for handle: [%d]",
+			p_device->device_handle);
+		p_device->lock_state = LOCK_STATE_UNKNOWN;
+	}
+	else // successfully got security state
+	{
+		p_device->lock_state =
+				security_state_to_enum(security_state.security_status);
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+void add_identify_dimm_properties_to_device(struct device_discovery *p_device,
+		struct pt_payload_identify_dimm *p_id_dimm)
+{
+	COMMON_LOG_ENTRY();
+
+	// set manageability of the dimm based on the FW rev
+	set_device_manageability_from_firmware(p_id_dimm, &p_device->manageability);
+
+	map_sku_security_capabilities(p_id_dimm->dimm_sku,
+		&(p_device->security_capabilities));
+	convert_sku_to_device_capabilities(p_id_dimm->dimm_sku,
+			&(p_device->device_capabilities));
+	p_device->dimm_sku = p_id_dimm->dimm_sku;
+
+	memmove(p_device->manufacturer, p_id_dimm->mf,
+			DEV_MFR_LEN);
+	// TODO US US14621 - get serial number from topology instead (NFIT/ACPI 6.1)
+	memmove(p_device->serial_number, p_id_dimm->sn,
+			DEV_SN_LEN);
+	memmove(p_device->model_number, p_id_dimm->mn,
+			DEV_MODELNUM_LEN);
+
+	// convert fw version to string
+	build_revision(p_device->fw_revision, NVM_VERSION_LEN,
+		((((p_id_dimm->fwr[4] >> 4) & 0xF) * 10) + (p_id_dimm->fwr[4] & 0xF)),
+		((((p_id_dimm->fwr[3] >> 4) & 0xF) * 10) + (p_id_dimm->fwr[3] & 0xF)),
+		((((p_id_dimm->fwr[2] >> 4) & 0xF) * 10) + (p_id_dimm->fwr[2] & 0xF)),
+		(((p_id_dimm->fwr[1] >> 4) & 0xF) * 1000) + (p_id_dimm->fwr[1] & 0xF) * 100 +
+		(((p_id_dimm->fwr[0] >> 4) & 0xF) * 10) + (p_id_dimm->fwr[0] & 0xF));
+
+	// convert fw api version to string
+	build_fw_revision(p_device->fw_api_version, NVM_VERSION_LEN,
+			((p_id_dimm->api_ver >> 4) & 0xF), (p_id_dimm->api_ver & 0xF));
+
+	p_device->capacity = MULTIPLES_TO_BYTES((NVM_UINT64)p_id_dimm->rc);
+
+	COMMON_LOG_EXIT();
+}
+
+int add_firmware_properties_to_device(struct device_discovery *p_device)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	if (can_communicate_with_device_firmware(p_device))
+	{
+		// send a pass through command to get the dimm identify info
+		struct pt_payload_identify_dimm id_dimm;
+		if ((rc = fw_get_identify_dimm(p_device->device_handle.handle,
+				&id_dimm)) != NVM_SUCCESS)
+		{
+			COMMON_LOG_ERROR_F(
+					"Unable to get identify dimm information for handle: [%d]",
+					p_device->device_handle.handle);
+		}
+		else
+		{
+			add_identify_dimm_properties_to_device(p_device, &id_dimm);
+
+			// only get security state if manageable
+			if (p_device->manageability == MANAGEMENT_VALIDCONFIG)
+			{
+				add_security_state_to_device(p_device);
+			}
+		}
+		s_memset(&id_dimm, sizeof (id_dimm));
+	}
+	else
+	{
+		COMMON_LOG_WARN_F("Device with handle %u has a controller or programming interface "
+				"that is not supported."
+				"SubsystemVendorID=%hu, SubsystemDeviceID=%hu, "
+				"first Interface Format Code=%hu",
+				p_device->device_handle.handle,
+				p_device->subsystem_vendor_id, p_device->subsystem_device_id,
+				p_device->interface_format_codes[0]);
+
+		p_device->manageability = MANAGEMENT_INVALIDCONFIG;
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+int add_firmware_properties_to_populated_devices(struct device_discovery *p_devices,
+		const NVM_UINT8 dev_count)
+{
+	COMMON_LOG_ENTRY();
+
+	int rc = NVM_SUCCESS;
+
+	for (NVM_UINT8 i = 0; i < dev_count; i++)
+	{
+		rc = add_firmware_properties_to_device(&(p_devices[i]));
+		if (rc != NVM_SUCCESS)
+		{
+			break;
+		}
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+void nvm_topology_to_device(struct nvm_topology *p_topology, struct device_discovery *p_device)
+{
+	COMMON_LOG_ENTRY();
+
+	p_device->device_handle = p_topology->device_handle;
+	p_device->physical_id = p_topology->id;
+	p_device->vendor_id = p_topology->vendor_id;
+	p_device->device_id = p_topology->device_id;
+	p_device->revision_id = p_topology->revision_id;
+	p_device->subsystem_vendor_id = p_topology->subsystem_vendor_id;
+	p_device->subsystem_device_id = p_topology->subsystem_device_id;
+	p_device->subsystem_revision_id = p_topology->subsystem_revision_id;
+	p_device->manufacturing_info_valid =
+			p_topology->manufacturing_info_valid;
+	p_device->manufacturing_location = p_topology->manufacturing_location;
+	p_device->manufacturing_date = p_topology->manufacturing_date;
+	p_device->memory_type = MEMORY_TYPE_NVMDIMM;
+	// TODO US US14621 - get serial number from topology (NFIT/ACPI 6.1)
+
+	// Could be multiple IFCs - copy them all
+	for (int i = 0; i < NVM_MAX_IFCS_PER_DIMM; i++)
+	{
+		p_device->interface_format_codes[i] = p_topology->fmt_interface_codes[i];
+	}
+
+	// Populate values derived from handle
+	p_device->socket_id =
+			(NVM_UINT16)p_device->device_handle.parts.socket_id;
+	p_device->memory_controller_id =
+			(NVM_UINT16)p_device->device_handle.parts.memory_controller_id;
+	p_device->node_controller_id =
+			(NVM_UINT16)p_device->device_handle.parts.node_controller_id;
+	p_device->channel_id =
+			(NVM_UINT16)p_device->device_handle.parts.mem_channel_id;
+	p_device->channel_pos =
+			(NVM_UINT16)p_device->device_handle.parts.mem_channel_dimm_num;
+
+	COMMON_LOG_EXIT();
+}
+
+int populate_devices_from_topologies(struct device_discovery *p_devices,
+		const NVM_UINT8 dev_count,
+		struct nvm_topology *p_topologies,
+		const NVM_UINT8 topo_count)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	int copy_count = 0;
+	for (int i = 0; i < topo_count; i++)
+	{
+		if (i >= dev_count)
+		{
+			COMMON_LOG_ERROR("p_devices buffer is too small for dimm list");
+			rc = NVM_ERR_ARRAYTOOSMALL;
+			break;
+		}
+
+		copy_count++;
+		nvm_topology_to_device(&(p_topologies[i]), &(p_devices[i]));
+	}
+
+	if (rc == NVM_SUCCESS)
+	{
+		rc = copy_count;
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+void calculate_uids_for_populated_devices(struct device_discovery *p_devices,
+		const NVM_UINT8 count)
+{
+	COMMON_LOG_ENTRY();
+
+	for (NVM_UINT8 i = 0; i < count; i++)
+	{
+		calculate_device_uid(&(p_devices[i]));
+	}
+
+	COMMON_LOG_EXIT();
+}
+
+int populate_devices(struct device_discovery *p_devices,
+		const NVM_UINT8 count)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_ERR_UNKNOWN;
+
+	int topo_count = get_topology_count();
+	if (topo_count <= 0)
+	{
+		rc = topo_count;
+	}
+	else
+	{
+		struct nvm_topology topologies[topo_count];
+		if ((rc = get_topology(topo_count, topologies)) > 0)
+		{
+			rc = populate_devices_from_topologies(p_devices, count,
+					topologies, topo_count);
+
+			int populated_count = (rc == NVM_ERR_ARRAYTOOSMALL) ?
+					count : rc;
+			if (populated_count > 0)
+			{
+				int fw_rc = add_firmware_properties_to_populated_devices(p_devices,
+						populated_count);
+				if (fw_rc != NVM_SUCCESS)
+				{
+					rc = fw_rc;
+				}
+
+				calculate_uids_for_populated_devices(p_devices, populated_count);
+			}
+		}
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
 /*
  * Retrieve discovery information about each CR device in the system whether it's
  * fully compatible with the current Management library version or not.
@@ -209,7 +461,6 @@ int nvm_get_devices(struct device_discovery *p_devices, const NVM_UINT8 count)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_ERR_UNKNOWN;
-	int topo_count;
 
 	if (check_caller_permissions() != NVM_SUCCESS)
 	{
@@ -232,137 +483,11 @@ int nvm_get_devices(struct device_discovery *p_devices, const NVM_UINT8 count)
 	else if ((rc = get_nvm_context_devices(p_devices, count)) < 0 &&
 			rc != NVM_ERR_ARRAYTOOSMALL)
 	{
-		topo_count = get_topology_count();
-		if (topo_count <= 0)
+		rc = populate_devices(p_devices, count);
+		if (rc > 0)
 		{
-			rc = topo_count;
-		}
-		else
-		{
-			struct nvm_topology dimm_list[topo_count];
-			if ((rc = get_topology(topo_count, dimm_list)) > NVM_SUCCESS)
-			{
-				int copy_count = 0;
-				for (int i = 0; i < topo_count; i++)
-				{
-					if (i > count)
-					{
-						COMMON_LOG_ERROR("p_devices buffer is too small for dimm list");
-						rc = NVM_ERR_ARRAYTOOSMALL;
-						break;
-					}
-
-					// send a pass through command to get the dimm identify info
-					struct pt_payload_identify_dimm id_dimm;
-					struct fw_cmd cmd;
-					memset(&cmd, 0, sizeof (struct fw_cmd));
-					cmd.device_handle = dimm_list[i].device_handle.handle;
-					cmd.opcode = PT_IDENTIFY_DIMM;
-					cmd.sub_opcode = 0;
-					cmd.output_payload_size = sizeof (id_dimm);
-					cmd.output_payload = &id_dimm;
-					if ((rc = ioctl_passthrough_cmd(&cmd)) != NVM_SUCCESS)
-					{
-						COMMON_LOG_ERROR_F(
-								"Unable to get identify dimm information for handle: [%d]",
-								dimm_list[i].device_handle.handle);
-						break;
-					}
-					else
-					{
-						copy_count++;
-
-						p_devices[i].device_handle = dimm_list[i].device_handle;
-						p_devices[i].physical_id = dimm_list[i].id;
-						p_devices[i].vendor_id = dimm_list[i].vendor_id;
-						p_devices[i].device_id = dimm_list[i].device_id;
-						p_devices[i].revision_id = dimm_list[i].revision_id;
-						p_devices[i].subsystem_vendor_id = dimm_list[i].subsystem_vendor_id;
-						p_devices[i].subsystem_device_id = dimm_list[i].subsystem_device_id;
-						p_devices[i].subsystem_revision_id = dimm_list[i].subsystem_revision_id;
-						p_devices[i].manufacturing_info_valid =
-							dimm_list[i].manufacturing_info_valid;
-						p_devices[i].manufacturing_location = dimm_list[i].manufacturing_location;
-						p_devices[i].manufacturing_date = dimm_list[i].manufacturing_date;
-						p_devices[i].socket_id =
-								p_devices[i].device_handle.parts.socket_id;
-						p_devices[i].memory_controller_id =
-								p_devices[i].device_handle.parts.memory_controller_id;
-						p_devices[i].node_controller_id =
-								p_devices[i].device_handle.parts.node_controller_id;
-						p_devices[i].channel_id =
-								p_devices[i].device_handle.parts.mem_channel_id;
-						p_devices[i].channel_pos =
-								p_devices[i].device_handle.parts.mem_channel_dimm_num;
-						// we only get NVMDIMMS from the driver
-						p_devices[i].memory_type = MEMORY_TYPE_NVMDIMM;
-
-						// set manageability of the dimm based on the FW and driver revisions
-						NVM_VERSION driver_revision;
-						s_strcpy(driver_revision, "0.0.0.0", NVM_VERSION_LEN); // default version
-						get_vendor_driver_revision(driver_revision, NVM_VERSION_LEN);
-						set_device_manageability(driver_revision,
-								&id_dimm, &p_devices[i].manageability);
-
-						map_sku_security_capabilities(id_dimm.dimm_sku,
-							&(p_devices[i].security_capabilities));
-						convert_sku_to_device_capabilities(id_dimm.dimm_sku,
-								&(p_devices[i].device_capabilities));
-						p_devices[i].dimm_sku = id_dimm.dimm_sku;
-
-						p_devices[i].interface_format_code = id_dimm.ifc;
-						memmove(p_devices[i].manufacturer, id_dimm.mf,
-								DEV_MFR_LEN);
-						memmove(p_devices[i].serial_number, id_dimm.sn,
-								DEV_SN_LEN);
-						memmove(p_devices[i].model_number, id_dimm.mn,
-								DEV_MODELNUM_LEN);
-
-						// convert fw version to string
-						build_revision(p_devices[i].fw_revision, NVM_VERSION_LEN,
-							((((id_dimm.fwr[4] >> 4) & 0xF) * 10) + (id_dimm.fwr[4] & 0xF)),
-							((((id_dimm.fwr[3] >> 4) & 0xF) * 10) + (id_dimm.fwr[3] & 0xF)),
-							((((id_dimm.fwr[2] >> 4) & 0xF) * 10) + (id_dimm.fwr[2] & 0xF)),
-							(((id_dimm.fwr[1] >> 4) & 0xF) * 1000) + (id_dimm.fwr[1] & 0xF) * 100 +
-							(((id_dimm.fwr[0] >> 4) & 0xF) * 10) + (id_dimm.fwr[0] & 0xF));
-
-						// convert fw api version to string
-						build_fw_revision(p_devices[i].fw_api_version, NVM_VERSION_LEN,
-								((id_dimm.api_ver >> 4) & 0xF), (id_dimm.api_ver & 0xF));
-
-						p_devices[i].capacity = MULTIPLES_TO_BYTES((NVM_UINT64)id_dimm.rc);
-
-						// only get security state if manageable
-						if (p_devices[i].manageability == MANAGEMENT_VALIDCONFIG)
-						{
-							struct pt_payload_get_security_state security_state;
-							if (fw_get_security_state(dimm_list[i].device_handle.handle,
-								&security_state) != NVM_SUCCESS)
-							{
-								COMMON_LOG_ERROR_F(
-									"Unable to get security state information for handle: [%d]",
-										dimm_list[i].device_handle);
-							}
-							else // successfully got security state
-							{
-								p_devices[i].lock_state =
-										security_state_to_enum(security_state.security_status);
-							}
-						}
-					}
-					calculate_device_uid(&(p_devices[i]));
-					s_memset(&id_dimm, sizeof (id_dimm));
-				}
-
-				if (rc == NVM_SUCCESS)
-				{
-					rc = copy_count;
-				}
-
-				// update the context
-				set_nvm_context_devices(p_devices, copy_count);
-
-			}
+			// Successfully populated devices, now update the context
+			set_nvm_context_devices(p_devices, rc);
 		}
 	}
 

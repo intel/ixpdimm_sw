@@ -55,6 +55,24 @@ NVM_BOOL is_fw_api_version_supported(const unsigned int major_version,
 	return is_supported;
 }
 
+int fw_get_identify_dimm(const NVM_UINT32 device_handle,
+		struct pt_payload_identify_dimm *p_id_dimm)
+{
+	COMMON_LOG_ENTRY();
+
+	struct fw_cmd cmd;
+	memset(&cmd, 0, sizeof (struct fw_cmd));
+	cmd.device_handle = device_handle;
+	cmd.opcode = PT_IDENTIFY_DIMM;
+	cmd.sub_opcode = 0;
+	cmd.output_payload_size = sizeof (struct pt_payload_identify_dimm);
+	cmd.output_payload = p_id_dimm;
+
+	int rc = ioctl_passthrough_cmd(&cmd);
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
 // send a pass-through command to get the current alarm thresholds
 int fw_get_alarm_thresholds(NVM_UINT32 const device_handle,
 		struct pt_payload_alarm_thresholds *p_thresholds)

@@ -432,7 +432,9 @@ int get_topology(const NVM_UINT8 count, struct nvm_topology *p_dimm_topo)
 								p_ioctl_data->OutputPayload.TopologiesList[i].ManufacturingLocation;
 						p_dimm_topo[i].manufacturing_date =
 								p_ioctl_data->OutputPayload.TopologiesList[i].ManufacturingDate;
-						p_dimm_topo[i].fmt_interface_code =
+
+						// TODO US14147 - Copy multiple IFCs from driver
+						p_dimm_topo[i].fmt_interface_codes[0] =
 							p_ioctl_data->OutputPayload.TopologiesList[i].FmtInterfaceCode;
 
 						int mem_type = get_device_memory_type_from_smbios_table(

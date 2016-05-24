@@ -333,7 +333,7 @@ NVM_UINT64 Device::getRawCapacity()
 NVM_UINT16 Device::getInterfaceFormatCode()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	return getDiscovery().interface_format_code;
+	return getDiscovery().interface_format_codes[0];
 }
 
 bool Device::isPassphraseCapable()

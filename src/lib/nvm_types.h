@@ -41,6 +41,8 @@
 #define	NVM_SYSLOG_SOURCE	"NVM_MGMT"
 #define	NVM_DEFAULT_NAMESPACE_NAME	"NvDimmVol"
 #define	NVM_SYSTEM	"Intel DIMM Gen 1"
+#define	NVM_INTEL_VENDOR_ID	0x8980
+#define	NVM_DIMM_GEN1_DEVICE_ID	0x0979
 
 #define	NVM_COMPUTERNAME_LEN 256 // Length of host string
 #define	NVM_OSNAME_LEN	256 // Length of host OS string
@@ -96,6 +98,7 @@
 #define	NVM_DIE_SPARES_MAX	4 // Maximum number of spare dies
 #define	NVM_COMMIT_ID_LEN	41
 #define	NVM_BUILD_CONFIGURATION_LEN 17
+#define	NVM_MAX_IFCS_PER_DIMM	9
 
 /*
  * Macros for controlling what is exported by the library

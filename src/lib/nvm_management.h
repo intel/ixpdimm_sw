@@ -400,8 +400,9 @@ enum app_direct_mode
 
 // Interface format code as reported by NFIT
 enum nvm_format {
-	NVM_NO_FORMAT = 0,
-	NVM_DIMM = 769,
+	FORMAT_NONE = 0,
+	FORMAT_BLOCK_STANDARD = 0x201,
+	FORMAT_BYTE_STANDARD = 0x301
 };
 
 /*
@@ -616,7 +617,7 @@ struct device_discovery
 	NVM_VERSION fw_revision; // The current active firmware revision.
 	NVM_VERSION fw_api_version; // API version of the currently running FW
 	NVM_UINT64 capacity; // Raw capacity in bytes.
-	NVM_UINT16 interface_format_code; // 1 = Intel NVM DIMM
+	NVM_UINT16 interface_format_codes[NVM_MAX_IFCS_PER_DIMM];
 	struct device_security_capabilities security_capabilities;
 	// Get Security State
 	enum lock_state lock_state;  // Indicates if the DIMM is in a locked security state

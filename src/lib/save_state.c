@@ -423,6 +423,14 @@ int support_store_dimm_topology(PersistentStore *p_store, int history_id,
 	db_dimm_topo.manufacturing_date = topol.manufacturing_date;
 	db_dimm_topo.type = topol.type;
 
+	// Copy all IFCs
+	int max_ifcs = (NVM_MAX_IFCS_PER_DIMM <= DIMM_TOPOLOGY_INTERFACE_FORMAT_CODES_COUNT) ?
+			NVM_MAX_IFCS_PER_DIMM : DIMM_TOPOLOGY_INTERFACE_FORMAT_CODES_COUNT;
+	for (int i = 0; i < max_ifcs; i++)
+	{
+		db_dimm_topo.interface_format_codes[i] = topol.fmt_interface_codes[i];
+	}
+
 	if (DB_SUCCESS != db_save_dimm_topology_state(p_store, history_id, &db_dimm_topo))
 	{
 		COMMON_LOG_ERROR("Failed storing topology history information");

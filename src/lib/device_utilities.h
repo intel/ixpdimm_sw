@@ -60,11 +60,26 @@ void free_dev_table(COMMON_BOOL obtain_lock);
 int init_dev_table(COMMON_BOOL obtain_lock, struct nvm_topology *p_dimm_topo, NVM_UINT8 count);
 
 /*
- * Derive DIMM manageability state from driver info
+ * Derive DIMM manageability state from firmware
  */
-void set_device_manageability(const char *driver_revision,
+void set_device_manageability_from_firmware(
 	struct pt_payload_identify_dimm *p_id_dimm,
 	enum manageability_state *p_manageability);
+
+/*
+ * Check device interface format code against those supported by mgmt sw
+ */
+NVM_BOOL is_device_interface_format_supported(struct device_discovery *p_device);
+
+/*
+ * Check device memory subsystem controller information against those supported by mgmt sw
+ */
+NVM_BOOL is_device_subsystem_controller_supported(struct device_discovery *p_device);
+
+/*
+ * Check whether the device is a type we can expect to respond to firmware commands
+ */
+NVM_BOOL can_communicate_with_device_firmware(struct device_discovery *p_device);
 
 /*
  * Compare the firmware api version to the supported versions to determine

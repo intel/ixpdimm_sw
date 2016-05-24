@@ -1872,6 +1872,9 @@ static inline int dsm_err_to_nvm_lib_err(unsigned int status)
 NVM_BOOL is_fw_api_version_supported(const unsigned int major_version,
 	const unsigned int minor_version);
 
+int fw_get_identify_dimm(const NVM_UINT32 device_handle,
+		struct pt_payload_identify_dimm *p_id_dimm);
+
 int fw_get_alarm_thresholds(NVM_UINT32 const device_handle,
 	struct pt_payload_alarm_thresholds *p_thresholds);
 

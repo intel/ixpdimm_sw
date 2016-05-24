@@ -235,14 +235,13 @@ int lookup_dev_manufacturer_serial_model(const unsigned char *manufacturer,
 
 /*
  * Helper function to set device manageability in the device discovery struct
- * based on the FW and driver versions
+ * based on the FW version
  */
-void set_device_manageability(const char *driver_revision,
+void set_device_manageability_from_firmware(
 	struct pt_payload_identify_dimm *p_id_dimm,
 	enum manageability_state *p_manageability)
 {
 	// limit tracing in this path to reduce overall log counts
-
 	*p_manageability = MANAGEMENT_VALIDCONFIG;
 
 	// check FW API version
@@ -250,14 +249,55 @@ void set_device_manageability(const char *driver_revision,
 	{
 		*p_manageability = MANAGEMENT_INVALIDCONFIG;
 	}
-	// check interface format code
-	else if (p_id_dimm->ifc != NVM_DIMM)
+}
+
+NVM_BOOL is_device_interface_format_supported(struct device_discovery *p_device)
+{
+	COMMON_LOG_ENTRY();
+	NVM_BOOL supported = 0;
+
+	for (int i = 0; i < NVM_MAX_IFCS_PER_DIMM; i++)
 	{
-		COMMON_LOG_ERROR_F(
-			"NVM DIMM interface format code %u is not supported by the host software",
-			p_id_dimm->ifc);
-		*p_manageability = MANAGEMENT_INVALIDCONFIG;
+		if (p_device->interface_format_codes[i] == FORMAT_BYTE_STANDARD ||
+				p_device->interface_format_codes[i] == FORMAT_BLOCK_STANDARD)
+		{
+			supported = 1;
+		}
 	}
+
+	COMMON_LOG_EXIT_RETURN_I(supported);
+	return supported;
+}
+
+NVM_BOOL is_device_subsystem_controller_supported(struct device_discovery *p_device)
+{
+	COMMON_LOG_ENTRY();
+	NVM_BOOL supported = 0;
+
+	// Only supporting Intel DIMMs with AEP controllers
+	if (p_device->subsystem_vendor_id == NVM_INTEL_VENDOR_ID &&
+			p_device->subsystem_device_id == NVM_DIMM_GEN1_DEVICE_ID)
+	{
+		supported = 1;
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(supported);
+	return supported;
+}
+
+NVM_BOOL can_communicate_with_device_firmware(struct device_discovery *p_device)
+{
+	COMMON_LOG_ENTRY();
+	NVM_BOOL supported = 0;
+
+	if (is_device_interface_format_supported(p_device) &&
+			is_device_subsystem_controller_supported(p_device))
+	{
+		supported = 1;
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(supported);
+	return supported;
 }
 
 /*
@@ -393,24 +433,15 @@ int get_dimm_manageability(const NVM_NFIT_DEVICE_HANDLE device_handle,
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
 
-	char driver_rev[NVM_DRIVER_REV_LEN];
-
 	struct pt_payload_identify_dimm id_dimm;
-	struct fw_cmd cmd;
-	memset(&cmd, 0, sizeof (struct fw_cmd));
-	cmd.device_handle = device_handle.handle;
-	cmd.opcode = PT_IDENTIFY_DIMM;
-	cmd.sub_opcode = 0;
-	cmd.output_payload_size = sizeof (id_dimm);
-	cmd.output_payload = &id_dimm;
-	if ((rc = ioctl_passthrough_cmd(&cmd)) != NVM_SUCCESS)
+	if ((rc = fw_get_identify_dimm(device_handle.handle, &id_dimm)) != NVM_SUCCESS)
 	{
 		COMMON_LOG_ERROR_F("Unable to get identify dimm information for handle: [%d]",
 				device_handle.handle);
 	}
-	else if ((rc = get_vendor_driver_revision(driver_rev, sizeof (driver_rev))) == NVM_SUCCESS)
+	else
 	{
-		set_device_manageability(driver_rev, &id_dimm, p_manageability);
+		set_device_manageability_from_firmware(&id_dimm, p_manageability);
 	}
 	s_memset(&id_dimm, sizeof (id_dimm));
 

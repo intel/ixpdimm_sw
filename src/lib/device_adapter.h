@@ -198,7 +198,7 @@ struct nvm_topology {
 										// only valid if manufacturing_info_valid=1
 
 	NVM_UINT8 type; /* From SMBIOS 7.18.2 Memory Device <97> Type */
-	NVM_UINT16 fmt_interface_code; /* The device type from NFIT */
+	NVM_UINT16 fmt_interface_codes[NVM_MAX_IFCS_PER_DIMM]; /* The device type(s) from NFIT */
 };
 
 /*
