@@ -184,7 +184,7 @@ ifeq ($(UNAME), Linux)
 		CIM_LIB_DIR = /usr/lib64/cmpi
 		INCLUDE_DIR ?= /usr/include
 		BIN_DIR ?= /usr/bin
-		DATADIR ?= /usr/share
+		DATADIR ?= /var/lib
 		LOCALSTATE_DIR ?= /var
 		PRODUCT_DATADIR = $(DATADIR)/$(LINUX_PRODUCT_NAME)
 		PEGASUS_MOFDIR = $(PRODUCT_DATADIR)/Pegasus/mof
