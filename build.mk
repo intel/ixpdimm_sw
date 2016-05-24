@@ -98,8 +98,8 @@ CFLAGS_EXTERNAL ?=
 CPPFLAGS_EXTERNAL ?=
 
 MARKETING_PRODUCT_NAME=ixpdimm_sw
-API_LIB_SONAME=libixpdimm-api
-API_LIB_NAME=ixpdimm-api
+API_LIB_SONAME=libixpdimm
+API_LIB_NAME=ixpdimm
 CORE_LIB_SONAME=libixpdimm-core
 CORE_LIB_NAME=ixpdimm-core
 CLI_LIB_SONAME=libixpdimm-cli

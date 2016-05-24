@@ -361,16 +361,16 @@ rpm :
 	#Make the Directories
 	$(MKDIR) $(RPMBUILD_DIR) $(RPMBUILD_DIR)/BUILD $(RPMBUILD_DIR)/SOURCES $(RPMBUILD_DIR)/RPMS \
 				$(RPMBUILD_DIR)/SRPMS $(RPMBUILD_DIR)/SPECS $(RPMBUILD_DIR)/BUILDROOT \
-				$(RPMBUILD_DIR)/BUILD/$(MARKETING_PRODUCT_NAME)
-	
+				$(RPMBUILD_DIR)/BUILD/$(MARKETING_PRODUCT_NAME)-$(BUILDNUM)
+
 	#Copy Spec File
 	$(COPY) install/linux/$(LINUX_DIST)-release/*.spec $(RPMBUILD_DIR)/SPECS/$(MARKETING_PRODUCT_NAME).spec
-	#Update the Spec file	
+	#Update the Spec file
 	$(SED) -i 's/^%define build_version .*/%define build_version $(BUILDNUM)/g' $(RPMBUILD_DIR)/SPECS/$(MARKETING_PRODUCT_NAME).spec
-	
+
 	#Archive the directory
-	git archive --format=tar --prefix="$(MARKETING_PRODUCT_NAME)/" HEAD | bzip2 -c > $(RPMBUILD_DIR)/SOURCES/$(MARKETING_PRODUCT_NAME).tar.bz2
-	#rpmbuild 
+	git archive --format=tar --prefix="$(MARKETING_PRODUCT_NAME)-$(BUILDNUM)/" HEAD | gzip -c > $(RPMBUILD_DIR)/SOURCES/v$(BUILDNUM).tar.gz
+	#rpmbuild
 	$(RPMBUILD) -ba $(RPMBUILD_DIR)/SPECS/$(MARKETING_PRODUCT_NAME).spec --define "_topdir $(RPMBUILD_DIR)" --define "cflag $(CFLAGS_EXTERNAL)"
-	
+
 .PHONY : all clean install rpm

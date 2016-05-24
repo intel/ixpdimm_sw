@@ -812,7 +812,7 @@ void get_locale_dir(COMMON_PATH locale_dir)
 void get_install_dir(COMMON_PATH install_dir)
 {
 	// GetModuleFileName puts full path to DLL into install_dir
-	// ex: C:\output\build\windows\debug\libixpdimm-api.dll
+	// ex: C:\output\build\windows\debug\libixpdimm.dll
 	if (GetModuleFileName((HINSTANCE)&__ImageBase, install_dir, COMMON_PATH_LEN) > 0)
 	{
 		// find last '/' or '\'

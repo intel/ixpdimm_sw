@@ -2,22 +2,21 @@
 %define product_base_name ixpdimm
 %define build_version 99.99.99.9999
 %define build_release 1
-%define apiname lib%{product_base_name}-api
 %define corename lib%{product_base_name}-core
 %define cliname %{product_base_name}-cli
 %define monitorname %{product_base_name}-monitor
 %define cimlibs lib%{product_base_name}-cim
-%define dname lib%{product_base_name}-api-devel
+%define dname %{product_name}-devel
 %define _unpackaged_files_terminate_build 0
 
-Name: %{apiname}
+Name: %{product_name}
 Version: %{build_version}
 Release: %{build_release}%{?dist}
-Summary: API for development of %{product_name} management utilities
+Summary: API for development of %{product_base_name} management utilities
 License: BSD
 Group: Applications/System
 URL: https://01.org/ixpdimm-sw
-Source: %{product_name}.tar.bz2
+Source: https://github.com/01org/IXPDIMMSW/archive/v%{version}.tar.gz
 Requires: ndctl-libs >= 51
 
 BuildRequires:pkgconfig(libctemplate)
@@ -36,7 +35,7 @@ BuildRequires:libintelnvm-cli-devel
 
 %description
 An application program interface (API) for configuring and managing
-%{product_name}. Including basic inventory, capacity provisioning,
+%{product_base_name}. Including basic inventory, capacity provisioning,
 health monitoring, and troubleshooting.
 
 %package -n %dname
@@ -46,8 +45,8 @@ Group:          Development/Libraries
 Requires:       %{name}%{?_isa} = %{version}-%{release}
 
 %description -n %dname
-The %{name}-devel package contains header files for
-developing applications that use %{name}.
+The %{dname} package contains header files for
+developing applications that use %{product_base_name}.
 
 %package -n %corename
 Summary:        Development files for %{name}
@@ -58,7 +57,6 @@ Requires:       %{name}%{?_isa} = %{version}-%{release}
 %description -n %corename
 The %{corename} package contains libraries that support
 other %{product_name} products.
-
 
 %package -n %cimlibs
 Summary:        CIM provider for %{name}
@@ -72,32 +70,32 @@ Requires(post): pywbem
 
 %description -n %cimlibs
 %{cimlibs} is a common information model (CIM) provider that exposes
-%{product_name} as standard CIM objects in order to plug-in to various
+%{product_base_name} as standard CIM objects in order to plug-in to various
 common information model object managers (CIMOMS).
 
 %package -n %monitorname
-Summary:        Daemon for monitoring the status of %{product_name}
+Summary:        Daemon for monitoring the status of %{product_base_name}
 License:        BSD
 Group:          System Environment/Daemons
 Requires:       %{cimlibs}%{?_isa} = %{version}-%{release}
 Requires:       systemd-units
 
 %description -n %monitorname
-A daemon for monitoring the health and status of %{product_name}
+A daemon for monitoring the health and status of %{product_base_name}
 
 %package -n %cliname
-Summary:        CLI for managment of %{product_name}
+Summary:        CLI for managment of %{product_base_name}
 License:        BSD
 Group:          Development/Tools
 Requires:       %{cimlibs}%{?_isa} = %{version}-%{release}
 
 %description -n %cliname
 A command line interface (CLI) application for configuring and
-managing %{product_name}. Including commands for basic inventory,
+managing %{product_base_name}. Including commands for basic inventory,
 capacity provisioning, health monitoring, and troubleshooting.
 
 %prep
-%setup -q -n %{product_name}
+%setup -q -n %{product_name}-%{version}
 
 %build
 make BUILDNUM=%{build_version} RELEASE=1 DATADIR=%{_sharedstatedir} LINUX_PRODUCT_NAME=%{product_name} CFLAGS_EXTERNAL="%{?cflag}"
@@ -105,8 +103,7 @@ make BUILDNUM=%{build_version} RELEASE=1 DATADIR=%{_sharedstatedir} LINUX_PRODUC
 %install
 make install RELEASE=1 RPM_ROOT=%{buildroot} LIB_DIR=%{_libdir} INCLUDE_DIR=%{_includedir} BIN_DIR=%{_bindir} DATADIR=%{_sharedstatedir} UNIT_DIR=%{_unitdir} LINUX_PRODUCT_NAME=%{product_name} SYSCONF_DIR=%{_sysconfdir} MANPAGE_DIR=%{_mandir}
 
-%post -n %corename
-/sbin/ldconfig
+%post -n %corename -p /sbin/ldconfig
 
 %post -n %cimlibs
 /sbin/ldconfig
@@ -164,11 +161,8 @@ fi
 %post
 /sbin/ldconfig
 
-%postun -n %corename
-/sbin/ldconfig
-
-%postun -n %cimlibs
-/sbin/ldconfig
+%postun -n %corename -p /sbin/ldconfig
+%postun -n %cimlibs -p /sbin/ldconfig
 
 %pre -n %cimlibs
 # If upgrading, deregister old version
@@ -243,7 +237,7 @@ fi
 
 %files
 %defattr(755,root,root,755)
-%{_libdir}/libixpdimm-api.so.*
+%{_libdir}/libixpdimm.so.*
 %dir %{_sharedstatedir}/%{product_name}
 %attr(640,root,root) %{_sharedstatedir}/%{product_name}/*.pem
 %attr(640,root,root) %config(noreplace) %{_sharedstatedir}/%{product_name}/*.dat*
@@ -251,7 +245,7 @@ fi
 
 %files -n %dname
 %defattr(755,root,root,755)
-%{_libdir}/libixpdimm-api.so
+%{_libdir}/libixpdimm.so
 %attr(644,root,root) %{_includedir}/nvm_types.h
 %attr(644,root,root) %{_includedir}/nvm_management.h
 %license LICENSE
