@@ -289,7 +289,7 @@ enum firmware_type
 {
 	FW_TYPE_PRODUCTION = 0x29,
 	FW_TYPE_DFX = 0x30,
-	FW_TYPE_DEBUG = 0x32,
+	FW_TYPE_DEBUG = 0x31,
 };
 
 /*
@@ -1373,7 +1373,7 @@ struct pt_payload_fw_image_info {
 	 * Contains value designating FW type:
 	 * 		0x29 - production
 	 * 		0x30 - dfx
-	 * 		0x32 - debug
+	 * 		0x31 - debug
 	 */
 	unsigned char fw_type;
 
