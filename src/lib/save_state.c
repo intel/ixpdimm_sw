@@ -41,17 +41,6 @@
 #include <uid/uid.h>
 #include "device_utilities.h"
 
-/*
- * Convert a FW version array to a string
- */
-#define	FW_VER_ARR_TO_STR(arr, str, len) \
-	build_revision(str, len, \
-			((((arr[4] >> 4) & 0xF) * 10) + (arr[4] & 0xF)), \
-			((((arr[3] >> 4) & 0xF) * 10) + (arr[3] & 0xF)), \
-			((((arr[2] >> 4) & 0xF) * 10) + (arr[2] & 0xF)), \
-			(((arr[1] >> 4) & 0xF) * 1000) + (arr[1] & 0xF) * 100 + \
-			(((arr[0] >> 4) & 0xF) * 10) + (arr[0] & 0xF));
-
 int support_store_host(PersistentStore *p_store, int history_id);
 int support_store_sockets(PersistentStore *p_store, int history_id);
 int support_store_platform_capabilities(PersistentStore *p_store, int history_id);

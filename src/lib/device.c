@@ -247,12 +247,8 @@ void add_identify_dimm_properties_to_device(struct device_discovery *p_device,
 			DEV_MODELNUM_LEN);
 
 	// convert fw version to string
-	build_revision(p_device->fw_revision, NVM_VERSION_LEN,
-		((((p_id_dimm->fwr[4] >> 4) & 0xF) * 10) + (p_id_dimm->fwr[4] & 0xF)),
-		((((p_id_dimm->fwr[3] >> 4) & 0xF) * 10) + (p_id_dimm->fwr[3] & 0xF)),
-		((((p_id_dimm->fwr[2] >> 4) & 0xF) * 10) + (p_id_dimm->fwr[2] & 0xF)),
-		(((p_id_dimm->fwr[1] >> 4) & 0xF) * 1000) + (p_id_dimm->fwr[1] & 0xF) * 100 +
-		(((p_id_dimm->fwr[0] >> 4) & 0xF) * 10) + (p_id_dimm->fwr[0] & 0xF));
+	FW_VER_ARR_TO_STR(p_id_dimm->fwr, p_device->fw_revision,
+			NVM_VERSION_LEN);
 
 	// convert fw api version to string
 	build_fw_revision(p_device->fw_api_version, NVM_VERSION_LEN,
@@ -1118,12 +1114,11 @@ int nvm_get_device_fw_image_info(const NVM_UID device_uid,
 		}
 		else
 		{
-			build_revision(p_fw_info->active_fw_revision,
-					NVM_VERSION_LEN,
-					fw_image_info.fw_rev[4],
-					fw_image_info.fw_rev[3],
-					fw_image_info.fw_rev[2],
-					((fw_image_info.fw_rev[1] * 100) + fw_image_info.fw_rev[0]));
+			FW_VER_ARR_TO_STR(fw_image_info.fw_rev, p_fw_info->active_fw_revision,
+					NVM_VERSION_LEN);
+			FW_VER_ARR_TO_STR(fw_image_info.staged_fw_rev, p_fw_info->staged_fw_revision,
+					NVM_VERSION_LEN);
+
 			p_fw_info->active_fw_type = firmware_type_to_enum(fw_image_info.fw_type);
 			memmove(p_fw_info->active_fw_commit_id, fw_image_info.commit_id, DEV_FW_COMMIT_ID_LEN);
 			memmove(p_fw_info->active_fw_build_configuration, fw_image_info.build_configuration,
@@ -1132,12 +1127,6 @@ int nvm_get_device_fw_image_info(const NVM_UID device_uid,
 			p_fw_info->active_fw_commit_id[NVM_COMMIT_ID_LEN-1] = 0;
 			p_fw_info->active_fw_build_configuration[NVM_BUILD_CONFIGURATION_LEN-1] = 0;
 			p_fw_info->staged_fw_pending = fw_image_info.staged_fw_status;
-			build_revision(p_fw_info->staged_fw_revision,
-					NVM_VERSION_LEN,
-					fw_image_info.staged_fw_rev[4],
-					fw_image_info.staged_fw_rev[3],
-					fw_image_info.staged_fw_rev[2],
-					((fw_image_info.staged_fw_rev[1] * 100) + fw_image_info.staged_fw_rev[0]));
 			p_fw_info->staged_fw_type = firmware_type_to_enum(fw_image_info.staged_fw_type);
 		}
 	}

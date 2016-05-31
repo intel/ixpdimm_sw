@@ -42,6 +42,17 @@ extern "C"
 {
 #endif
 
+/*
+ * Convert a FW version array to a string
+ */
+#define	FW_VER_ARR_TO_STR(arr, str, len) \
+	build_revision(str, len, \
+			((((arr[4] >> 4) & 0xF) * 10) + (arr[4] & 0xF)), \
+			((((arr[3] >> 4) & 0xF) * 10) + (arr[3] & 0xF)), \
+			((((arr[2] >> 4) & 0xF) * 10) + (arr[2] & 0xF)), \
+			(((arr[1] >> 4) & 0xF) * 1000) + (arr[1] & 0xF) * 100 + \
+			(((arr[0] >> 4) & 0xF) * 10) + (arr[0] & 0xF));
+
 int exists_and_manageable(const NVM_UID device_uid, struct device_discovery *p_dev,
 		NVM_BOOL check_manageability);
 
