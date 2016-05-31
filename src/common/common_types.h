@@ -404,6 +404,26 @@ static inline int cmp_bytes(const unsigned char *bytes1,
 };
 
 
+static inline unsigned char bcd_byte_to_dec(unsigned char num)
+{
+	unsigned char ret_val;
+
+	if (((num & 0xF0) >> 4) >= 10)
+	{
+		ret_val = 0xFF;
+	}
+	else if ((num & 0x0F) >= 10)
+	{
+		ret_val = 0xFF;
+	}
+	else
+	{
+		ret_val = (((num & 0xF0) >> 4) * 10 + (num & 0x0F));
+	}
+
+	return ret_val;
+}
+
 #ifdef __cplusplus
 }
 #endif

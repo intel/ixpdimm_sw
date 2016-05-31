@@ -26,6 +26,7 @@
  */
 
 #include "Device.h"
+#include <iomanip>
 
 namespace core
 {
@@ -765,6 +766,30 @@ const std::vector<std::string> &Device::getEvents()
 		}
 	}
 	return *m_pActionRequiredEvents;
+}
+
+std::string Device::getFormattedManufacturingDate(NVM_UINT16 manufacturingdate)
+{
+    LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+    NVM_UINT8 week_byte = (NVM_UINT8)(manufacturingdate >> 8);
+    NVM_UINT8 year_byte = (NVM_UINT8)(manufacturingdate & 0x00FF);
+
+    NVM_UINT8 week_dec_byte = bcd_byte_to_dec(week_byte);
+    NVM_UINT8 year_dec_byte = bcd_byte_to_dec(year_byte);
+
+    std::stringstream date_str;
+
+    if (week_dec_byte == 0xFF || year_dec_byte == 0xFF)
+    {
+        week_dec_byte = 0;
+        year_dec_byte = 0;
+    }
+
+    date_str << std::setfill('0');
+    date_str << std::setw(2) << (NVM_UINT32)week_dec_byte;
+    date_str << "-";
+    date_str << std::setw(2) << (NVM_UINT32)year_dec_byte;
+    return date_str.str();
 }
 
 }

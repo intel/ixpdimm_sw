@@ -29,6 +29,12 @@ class <NVM_WBEM_PREFIX>NVDIMM : CIM_PhysicalMemory
 	uint16 SocketID;
 	uint16 ProximityDomain;
 	uint16 MemoryControllerID;
+	uint32 SubsystemVendorID;
+	uint16 SubsystemDeviceID;
+	uint16 SubsystemRevisionID;
+	boolean ManufacturingInfoValid;
+	uint8 ManufacturingLocation;
+	string ManufacturingDate;
 	uint32 ChannelID;
 	uint32 ChannelPos;
 	uint16 InterleaveDataDepth;

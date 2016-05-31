@@ -48,6 +48,7 @@
 #include <persistence/lib_persistence.h>
 #include <core/exceptions/InvalidArgumentException.h>
 #include <core/device/DeviceHelper.h>
+#include <iomanip>
 
 namespace wbem
 {
@@ -92,6 +93,12 @@ void NVDIMMFactory::populateAttributeList(
 	attributes.push_back(MEMORYCONTROLLERID_KEY);
 	attributes.push_back(MEMORYTYPE_KEY);
 	attributes.push_back(SERIALNUMBER_KEY);
+	attributes.push_back(SUBSYSTEMVENDORID_KEY);
+	attributes.push_back(SUBSYSTEMDEVICEID_KEY);
+	attributes.push_back(SUBSYSTEMREVISIONID_KEY);
+	attributes.push_back(MANUFACTURINGINFOVALID_KEY);
+	attributes.push_back(MANUFACTURINGLOCATION_KEY);
+	attributes.push_back(MANUFACTURINGDATE_KEY);
 	attributes.push_back(LOCKSTATE_KEY);
 	attributes.push_back(MANAGEABILITYSTATE_KEY);
 	attributes.push_back(PHYSICALID_KEY);
@@ -427,7 +434,7 @@ int NVDIMMFactory::existsAndIsManageable(const std::string &dimmUid)
 
 wbem::framework::Instance *NVDIMMFactory::modifyInstance(
 		framework::ObjectPath &path,
-		framework::attributes_t &attributes) 
+		framework::attributes_t &attributes)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	framework::Instance *pInstance = NULL;
@@ -658,6 +665,18 @@ void NVDIMMFactory::toInstance(core::device::Device &device,
 			device.getMemoryControllerId());
 	ADD_ATTRIBUTE(instance, attributes, MEMORYTYPE_KEY, framework::UINT16, device.getMemoryType());
 	ADD_ATTRIBUTE(instance, attributes, SERIALNUMBER_KEY, framework::STR, device.getSerialNumber());
+	ADD_ATTRIBUTE(instance, attributes, SUBSYSTEMVENDORID_KEY, framework::UINT32,
+			device.getSubsystemVendor());
+	ADD_ATTRIBUTE(instance, attributes, SUBSYSTEMDEVICEID_KEY, framework::UINT16,
+			device.getSubsystemDevice());
+	ADD_ATTRIBUTE(instance, attributes, SUBSYSTEMREVISIONID_KEY, framework::UINT16,
+			device.getSubsystemRevision());
+	ADD_ATTRIBUTE(instance, attributes, MANUFACTURINGINFOVALID_KEY, framework::BOOLEAN,
+			device.isManufacturingInfoValid());
+	ADD_ATTRIBUTE(instance, attributes, MANUFACTURINGLOCATION_KEY, framework::UINT8,
+			device.getManufacturingLoc());
+	ADD_ATTRIBUTE(instance, attributes, MANUFACTURINGDATE_KEY,framework::STR,
+			core::device::Device::getFormattedManufacturingDate(device.getManufacturingDate()));
 	ADD_ATTRIBUTE(instance, attributes, LOCKSTATE_KEY, framework::UINT32, device.getLockState());
 	ADD_ATTRIBUTE(instance, attributes, MANAGEABILITYSTATE_KEY, framework::UINT32,
 			device.getManageabilityState());

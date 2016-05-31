@@ -161,6 +161,7 @@ public:
 	virtual std::vector<std::string> getActionRequiredEvents();
 	virtual bool isViralPolicyEnabled();
 	virtual bool getCurrentViralState();
+	static std::string getFormattedManufacturingDate(NVM_UINT16 manufacturingdate);
 
 private:
 	NvmLibrary &m_lib;
