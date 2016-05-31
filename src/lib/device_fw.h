@@ -1635,6 +1635,7 @@ struct pt_fw_media_log_entry {
 	 *		3h = Data Path Error
 	 *		4h = Locked/Illegal Access
 	 *		5h = User Spare BLock Alarm Trip
+	 *		6h = Smart Health Status Change
 	 *		All other values reserved
 	 */
 	unsigned char error_type;
