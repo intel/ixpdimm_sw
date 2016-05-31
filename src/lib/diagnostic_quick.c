@@ -59,6 +59,10 @@ enum major_status_code
 	INIT_MJ_INIT_COMPLETE = 0XF0, // FW initialization complete
 };
 
+void generate_event_for_bad_driver(NVM_UINT32 *p_results);
+int check_dimm_manageability(const NVM_UID device_uid,
+		struct device_discovery *p_discovery,
+		const struct diagnostic *p_diagnostic, NVM_UINT32* p_results);
 int check_dimm_identification(const NVM_UID device_uid,
 		const NVM_NFIT_DEVICE_HANDLE device_handle,
 		const struct diagnostic *p_diagnostic, NVM_UINT32 *p_results);
@@ -86,64 +90,120 @@ int diag_quick_health_check(const NVM_UID device_uid,
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
 
-	// clear previous results
-	diag_clear_results(EVENT_TYPE_DIAG_QUICK, 1, device_uid);
 	*p_results = 0;
 
-	if ((rc = IS_NVM_FEATURE_SUPPORTED(quick_diagnostic)) != NVM_SUCCESS)
-	{
-		COMMON_LOG_ERROR("The quick health diagnostic is not supported.");
-	}
-	else if (device_uid == NULL)
+	if (device_uid == NULL)
 	{
 		COMMON_LOG_ERROR("Invalid parameter, device_uid is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
 	else
 	{
-		struct device_discovery discovery;
-		if ((rc = exists_and_manageable(device_uid, &discovery, 1)) == NVM_SUCCESS)
+		// clear previous results for requested UID and specifically
+		// system-wide - leave results for other UIDs alone
+		diag_clear_results(EVENT_TYPE_DIAG_QUICK, 1, device_uid);
+		diag_clear_results(EVENT_TYPE_DIAG_QUICK, 1, "");
+
+		if (!is_supported_driver_available())
 		{
-			NVM_NFIT_DEVICE_HANDLE device_handle = discovery.device_handle;
-
-			int tmp_rc = check_dimm_bsr(device_uid, device_handle, p_diagnostic, p_results);
-			KEEP_ERROR(rc, tmp_rc);
-
-			if (((rc = check_dimm_identification(device_uid, device_handle,
-					p_diagnostic, p_results)) == NVM_SUCCESS) &&
-					((*p_results) == 0)) // abort test if DIMM is unrecognized
+			rc = NVM_ERR_BADDRIVER;
+			generate_event_for_bad_driver(p_results);
+		}
+		else if ((rc = IS_NVM_FEATURE_SUPPORTED(quick_diagnostic)) != NVM_SUCCESS)
+		{
+			COMMON_LOG_ERROR("The quick health diagnostic is not supported.");
+		}
+		else
+		{
+			struct device_discovery discovery;
+			if ((rc = lookup_dev_uid(device_uid, &discovery)) == NVM_SUCCESS &&
+					(rc = check_dimm_manageability(device_uid, &discovery,
+							p_diagnostic, p_results)) == NVM_SUCCESS)
 			{
-				tmp_rc = check_dimm_health(device_uid, device_handle, p_diagnostic, p_results);
+				NVM_NFIT_DEVICE_HANDLE device_handle = discovery.device_handle;
+
+				int tmp_rc = check_dimm_bsr(device_uid, device_handle, p_diagnostic, p_results);
 				KEEP_ERROR(rc, tmp_rc);
 
-				check_dimm_power_limitation(device_uid, device_handle, p_diagnostic,
-					p_results);
-
-				tmp_rc = check_dimm_media_errors(device_uid, device_handle, p_diagnostic,
-						p_results);
-				KEEP_ERROR(rc, tmp_rc);
-
-				int tmp_rc =
-					check_dimm_viral_state(device_uid, device_handle, p_diagnostic, p_results);
-				KEEP_ERROR(rc, tmp_rc);
-
-				if ((rc == NVM_SUCCESS) && (*p_results == 0)) // No errors/warnings
+				if (((rc = check_dimm_identification(device_uid, device_handle,
+						p_diagnostic, p_results)) == NVM_SUCCESS) &&
+						((*p_results) == 0)) // abort test if DIMM is unrecognized
 				{
-					// store success event
-					store_event_by_parts(
-						EVENT_TYPE_DIAG_QUICK,
-						EVENT_SEVERITY_INFO,
-						EVENT_CODE_DIAG_QUICK_SUCCESS,
-						device_uid,
-						0,
-						NULL,
-						NULL,
-						NULL,
-						DIAGNOSTIC_RESULT_OK);
-					(*p_results)++;
-				}
-			} // end unrecognized dimm
-		} // end dimm is unmanageable
+					tmp_rc = check_dimm_health(device_uid, device_handle, p_diagnostic, p_results);
+					KEEP_ERROR(rc, tmp_rc);
+
+					check_dimm_power_limitation(device_uid, device_handle, p_diagnostic,
+						p_results);
+
+					tmp_rc = check_dimm_media_errors(device_uid, device_handle, p_diagnostic,
+							p_results);
+					KEEP_ERROR(rc, tmp_rc);
+
+					int tmp_rc =
+						check_dimm_viral_state(device_uid, device_handle, p_diagnostic, p_results);
+					KEEP_ERROR(rc, tmp_rc);
+
+					if ((rc == NVM_SUCCESS) && (*p_results == 0)) // No errors/warnings
+					{
+						// store success event
+						store_event_by_parts(
+							EVENT_TYPE_DIAG_QUICK,
+							EVENT_SEVERITY_INFO,
+							EVENT_CODE_DIAG_QUICK_SUCCESS,
+							device_uid,
+							0,
+							NULL,
+							NULL,
+							NULL,
+							DIAGNOSTIC_RESULT_OK);
+						(*p_results)++;
+					}
+				} // end unrecognized dimm
+			} // DIMM does not exist or not manageable
+		}
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+void generate_event_for_bad_driver(NVM_UINT32 *p_results)
+{
+	COMMON_LOG_ENTRY();
+
+	store_event_by_parts(
+			EVENT_TYPE_DIAG_QUICK,
+			EVENT_SEVERITY_CRITICAL,
+			EVENT_CODE_DIAG_QUICK_BAD_DRIVER,
+			NULL,
+			1, // Action required
+			NULL, NULL, NULL,
+			DIAGNOSTIC_RESULT_FAILED);
+	(*p_results)++;
+
+	COMMON_LOG_EXIT();
+}
+
+int check_dimm_manageability(const NVM_UID device_uid,
+		struct device_discovery *p_discovery,
+		const struct diagnostic *p_diagnostic, NVM_UINT32* p_results)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	if (p_discovery->manageability == MANAGEMENT_INVALIDCONFIG)
+	{
+		rc = NVM_ERR_NOTMANAGEABLE;
+
+		store_event_by_parts(
+				EVENT_TYPE_DIAG_QUICK,
+				EVENT_SEVERITY_WARN,
+				EVENT_CODE_DIAG_QUICK_NOT_MANAGEABLE,
+				device_uid,
+				0, // Action required
+				device_uid, NULL, NULL,
+				DIAGNOSTIC_RESULT_FAILED);
+		(*p_results)++;
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);

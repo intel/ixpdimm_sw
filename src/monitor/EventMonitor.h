@@ -99,10 +99,14 @@ namespace monitor
 		 */
 		void startOfDay();
 
+		void checkDriver();
+
 		/*
 		 * Inspect the status for all devices and generate events.
 		 */
 		void processDeviceStartupStatus(DeviceMap &devices);
+
+		void checkDeviceManageability(const std::string &uidStr, const deviceInfo &device);
 
 		void checkConfigGoalStatus(const std::string &uidStr, const deviceInfo &device) const;
 

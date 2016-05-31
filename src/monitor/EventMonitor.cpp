@@ -108,6 +108,8 @@ void monitor::EventMonitor::startOfDay()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
+	checkDriver();
+
 	nvm_create_context();
 	int valid = 0;
 	get_config_value_int(SQL_KEY_TOPOLOGY_STATE_VALID, &valid);
@@ -923,6 +925,7 @@ void monitor::EventMonitor::processDeviceStartupStatus(monitor::DeviceMap &devMa
 		const std::string &uidStr = devIter->first;
 		struct deviceInfo &device = devIter->second;
 
+		checkDeviceManageability(uidStr, device);
 		if (device.discovered && device.discovery.manageability == MANAGEMENT_VALIDCONFIG)
 		{
 			checkShutdownStatus(uidStr, device);
@@ -931,6 +934,25 @@ void monitor::EventMonitor::processDeviceStartupStatus(monitor::DeviceMap &devMa
 
 			checkSkuViolation(uidStr, device);
 		}
+	}
+}
+
+void monitor::EventMonitor::checkDeviceManageability(const std::string &uidStr,
+		const deviceInfo& device)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	if (device.discovered && device.discovery.manageability == MANAGEMENT_INVALIDCONFIG)
+	{
+		store_event_by_parts(EVENT_TYPE_CONFIG,
+		                     EVENT_SEVERITY_WARN,
+		                     EVENT_CODE_CONFIG_NOT_MANAGEABLE,
+		                     uidStr.c_str(),
+		                     false,
+		                     uidStr.c_str(),
+		                     NULL,
+		                     NULL,
+		                     DIAGNOSTIC_RESULT_UNKNOWN);
 	}
 }
 
@@ -1431,3 +1453,26 @@ void monitor::EventMonitor::processMixedSkuSystem()
 		}
 	}
 }
+
+void monitor::EventMonitor::checkDriver()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	struct sw_inventory swInv;
+	if (nvm_get_sw_inventory(&swInv) == NVM_SUCCESS)
+	{
+		// Driver not installed or not compatible
+		if ((strlen(swInv.vendor_driver_revision) == 0) ||
+				!swInv.vendor_driver_compatible)
+		{
+			store_event_by_parts(EVENT_TYPE_CONFIG,
+					EVENT_SEVERITY_CRITICAL,
+					EVENT_CODE_CONFIG_BAD_DRIVER,
+					NULL,
+					true,
+					NULL, NULL, NULL,
+					DIAGNOSTIC_RESULT_UNKNOWN);
+		}
+	}
+}
+

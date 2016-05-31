@@ -62,10 +62,6 @@ int nvm_run_diagnostic(const NVM_UID device_uid,
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
 	}
-	else if (!is_supported_driver_available())
-	{
-		rc = NVM_ERR_BADDRIVER;
-	}
 	else
 	{
 		switch (p_diagnostic->test)

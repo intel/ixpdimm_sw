@@ -91,6 +91,12 @@ const char *EVENT_MESSAGES_CONFIG[EVENT_CODE_CONFIG_UNKNOWN -
 			"is unsupported due to a licensing issue."),
 	// EVENT_CODE_CONFIG_SKU_VIOLATION
 	N_TR("The configuration of "NVM_DIMM_NAME" %s is unsupported due to a licensing issue."),
+	// EVENT_CODE_CONFIG_BAD_DRIVER
+	N_TR("The underlying software is missing or incompatible with this version of the "
+			"management software."),
+	// EVENT_CODE_CONFIG_NOT_MANAGEABLE
+	N_TR(NVM_DIMM_NAME" %s is not manageable by this version of the management software."),
+
 	// EVENT_CODE_CONFIG_UNKNOWN
 	N_TR("A platform configuration change has logged an unknown event code %d.")
 };
@@ -278,9 +284,18 @@ const char *EVENT_MESSAGES_QUICK_DIAG[EVENT_CODE_DIAG_QUICK_UNKNOWN -
 	// EVENT_CODE_DIAG_QUICK_FW_HIT_ASSERT
 	N_TR("The quick health check detected that the firmware "
 			"on "NVM_DIMM_NAME" %s reported an assert."),
+	// EVENT_CODE_DIAG_QUICK_FW_STALLED
+	N_TR("The quick health check detected that the firmware on "NVM_DIMM_NAME
+			" %s has stalled the media interface engine."),
 	// EVENT_CODE_DIAG_QUICK_VIRAL_STATE
 	N_TR("The quick health check detected that "NVM_DIMM_NAME" %s "
 			"is reporting a viral state."),
+	// EVENT_CODE_DIAG_QUICK_BAD_DRIVER
+	N_TR("The quick health check detected that the underlying software is missing "
+			"or incompatible with this version of the management software."),
+	// EVENT_CODE_DIAG_QUICK_NOT_MANAGEABLE
+	N_TR("The quick health check detected that "NVM_DIMM_NAME" %s is not manageable by "
+			"this version of the management software."),
 	// EVENT_CODE_DIAG_QUICK_UNKNOWN
 	N_TR("The quick health check logged an unknown error code %d."),
 };
