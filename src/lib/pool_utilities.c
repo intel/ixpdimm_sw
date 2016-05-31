@@ -373,8 +373,7 @@ int get_mirrored_pools(struct nvm_pool *p_pools, const NVM_UINT32 count)
 		{
 			// can only have 1 mirrored per pool per socket. Going to build the pools in
 			// a locally scoped pools array, then will copy over if needed
-			struct nvm_pool mirrored_pools[NVM_MAX_SOCKETS];
-			memset(mirrored_pools, 0, sizeof (mirrored_pools));
+			struct nvm_pool *p_mirrored_pools = calloc(NVM_MAX_SOCKETS, sizeof (struct nvm_pool));
 			int mirrored_pools_count = 0; // count of mirrored pools
 
 			// loop through each interleave set
@@ -383,7 +382,7 @@ int get_mirrored_pools(struct nvm_pool *p_pools, const NVM_UINT32 count)
 			{
 				if (sets[i].mirrored)
 				{
-					rc = add_ilset_to_pools(mirrored_pools,
+					rc = add_ilset_to_pools(p_mirrored_pools,
 							&mirrored_pools_count, &sets[i],
 							POOL_TYPE_PERSISTENT_MIRROR, "mirrored");
 				}
@@ -394,19 +393,20 @@ int get_mirrored_pools(struct nvm_pool *p_pools, const NVM_UINT32 count)
 				// Calculate mirrored pool capacity based on ilset information
 				for (int i = 0; i < mirrored_pools_count; i++)
 				{
-					for (int j = 0; j < mirrored_pools[i].ilset_count; j++)
+					for (int j = 0; j < p_mirrored_pools[i].ilset_count; j++)
 					{
-						mirrored_pools[i].capacity += mirrored_pools[i].ilsets[j].size;
-						mirrored_pools[i].free_capacity +=
-							mirrored_pools[i].ilsets[j].available_size;
+						p_mirrored_pools[i].capacity += p_mirrored_pools[i].ilsets[j].size;
+						p_mirrored_pools[i].free_capacity +=
+							p_mirrored_pools[i].ilsets[j].available_size;
 					}
 				}
 				if (p_pools)
 				{
 					memset(p_pools, 0, count * sizeof (struct nvm_pool));
-					rc = copy_pools(p_pools, count, mirrored_pools, mirrored_pools_count);
+					rc = copy_pools(p_pools, count, p_mirrored_pools, mirrored_pools_count);
 				}
 			}
+			free(p_mirrored_pools);
 		}
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -591,9 +591,7 @@ int get_persistent_pools(struct nvm_pool *p_pools, const NVM_UINT32 count)
 {
 	COMMON_LOG_ENTRY();
 
-	const NVM_UINT32 max_pools = NVM_MAX_SOCKETS;
-	struct nvm_pool pm_pools[max_pools];
-	memset(pm_pools, 0, sizeof (pm_pools));
+	struct nvm_pool *p_pm_pools = calloc(NVM_MAX_SOCKETS, sizeof (struct nvm_pool));
 
 	int pm_pools_count = 0; // actual count of pm pools found
 
@@ -616,7 +614,7 @@ int get_persistent_pools(struct nvm_pool *p_pools, const NVM_UINT32 count)
 			{
 				if (!sets[i].mirrored)
 				{
-					rc = add_ilset_to_pools(pm_pools,
+					rc = add_ilset_to_pools(p_pm_pools,
 							&pm_pools_count, &sets[i],
 							POOL_TYPE_PERSISTENT, "persistent");
 				}
@@ -628,11 +626,11 @@ int get_persistent_pools(struct nvm_pool *p_pools, const NVM_UINT32 count)
 	{
 		// cycle through all storage regions, make sure the dimm is in a pool
 		// and calculate overall pool capacity
-		if ((rc = add_storage_regions_to_pools(pm_pools, &pm_pools_count)) == NVM_SUCCESS)
+		if ((rc = add_storage_regions_to_pools(p_pm_pools, &pm_pools_count)) == NVM_SUCCESS)
 		{
 			for (int j = 0; j < pm_pools_count && rc == NVM_SUCCESS; j++)
 			{
-				if ((rc = calculate_pm_capacities(&pm_pools[j]))
+				if ((rc = calculate_pm_capacities(&p_pm_pools[j]))
 					!= NVM_SUCCESS)
 				{
 					COMMON_LOG_ERROR("Failed to calculate storage only capacity");
@@ -645,11 +643,12 @@ int get_persistent_pools(struct nvm_pool *p_pools, const NVM_UINT32 count)
 				if (p_pools)
 				{
 					memset(p_pools, 0, count * sizeof (struct nvm_pool));
-					rc = copy_pools(p_pools, count, pm_pools, pm_pools_count);
+					rc = copy_pools(p_pools, count, p_pm_pools, pm_pools_count);
 				}
 			}
 		}
 	}
+	free(p_pm_pools);
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
