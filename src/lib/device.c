@@ -338,8 +338,18 @@ void nvm_topology_to_device(struct nvm_topology *p_topology, struct device_disco
 	p_device->subsystem_revision_id = p_topology->subsystem_revision_id;
 	p_device->manufacturing_info_valid =
 			p_topology->manufacturing_info_valid;
-	p_device->manufacturing_location = p_topology->manufacturing_location;
-	p_device->manufacturing_date = p_topology->manufacturing_date;
+
+	if (p_device->manufacturing_info_valid == 1)
+	{
+		p_device->manufacturing_location = p_topology->manufacturing_location;
+		p_device->manufacturing_date = p_topology->manufacturing_date;
+	}
+	else
+	{
+		p_device->manufacturing_location = 0;
+		p_device->manufacturing_date = 0;
+	}
+
 	p_device->memory_type = MEMORY_TYPE_NVMDIMM;
 	// TODO US US14621 - get serial number from topology (NFIT/ACPI 6.1)
 

@@ -54,7 +54,7 @@ static const std::string INTERFACEFORMATCODE = "InterfaceFormatCode";
 static const std::string MANAGEABILITYSTATE = "ManageabilityState";
 static const std::string PHYSICALID = "PhysicalID";
 static const std::string DIMMHANDLE = "DimmHandle";
-static const std::string dimmUid = "dimmUid";
+static const std::string DIMMUID = "dimmUid";
 static const std::string SOCKETID = "SocketID";
 static const std::string MEMCONTROLLERID = "MemControllerID";
 static const std::string CHANNELID = "ChannelID";
@@ -67,6 +67,12 @@ static const std::string VENDORID = "VendorID";
 static const std::string DEVICEID = "DeviceID";
 static const std::string REVISIONID = "RevisionID";
 static const std::string SERIALNUMBER = "SerialNumber";
+static const std::string SUBSYSTEMVENDORID = "SubsystemVendorID";
+static const std::string SUBSYSTEMDEVICEID = "SubsystemDeviceID";
+static const std::string SUBSYSTEMREVISIONID = "SubsystemRevisionID";
+static const std::string MANUFACTURINGINFOVALID = "ManufacturingInfoValid";
+static const std::string MANUFACTURINGLOCATION = "ManufacturingLocation";
+static const std::string MANUFACTURINGDATE = "ManufacturingDate";
 static const std::string ACTIONREQUIREDEVENTS = "ActionRequiredEvents";
 static const std::string ISNEW = "IsNew";
 static const std::string FORMFACTOR = "FormFactor";
@@ -93,10 +99,12 @@ static const std::string DIESPARESUSED = "DieSparesUsed";
 static const std::string LASTSHUTDOWNSTATUS = "LastShutdownStatus";
 static const std::string LASTSHUTDOWNTIME = "LastShutdownTime";
 static const std::string FIRSTFASTREFRESH = "FirstFastRefresh";
-static const std::string MEMORYMODESSUPPORTED = "MemoryModesSupported";
+static const std::string MEMORYMODESSUPPORTED = "ModesSupported";
 static const std::string SECURITYCAPABILITIES = "SecurityCapabilities";
 static const std::string CONFIGURATIONSTATUS = "ConfigurationStatus";
 static const std::string SKUVIOLATION = "SKUViolation";
+static const std::string VIRALPOLICY = "ViralPolicy";
+static const std::string VIRALSTATE = "ViralState";
 
 class NVM_API ShowDeviceCommand : framework::CommandBase
 {
@@ -134,6 +142,8 @@ private:
 	static std::string convertMemoryModes(NVM_UINT16 mode);
 	static std::string convertSecurityCapabilities(NVM_UINT16 capability);
 	static std::string convertCapacity(NVM_UINT64 capacity);
+	static std::string getManufacturingDate(core::device::Device &device);
+	static std::string getManufacturingLoc(core::device::Device &device);
 	static std::string toHex(NVM_UINT16 value);
 
 	framework::ResultBase *m_pResult;

@@ -32,7 +32,7 @@
 #include <persistence/config_settings.h>
 #include <persistence/lib_persistence.h>
 #include <cli/features/core/framework/CliHelper.h>
-
+#include <iomanip>
 #include "ShowDeviceCommand.h"
 
 namespace cli
@@ -64,6 +64,12 @@ ShowDeviceCommand::ShowDeviceCommand(core::device::DeviceService &service)
 	m_props.addUint16("RevisionID", &core::device::Device::getRevisionId);
 	// New NFIT attirbutes here
 	m_props.addStr("SerialNumber", &core::device::Device::getSerialNumber);
+	m_props.addUint16("SubsystemVendorID", &core::device::Device::getSubsystemVendor, toHex);
+	m_props.addUint16("SubsystemDeviceID", &core::device::Device::getSubsystemDevice, toHex);
+	m_props.addUint16("SubsystemRevisionID", &core::device::Device::getSubsystemRevision, toHex);
+	m_props.addBool("ManufacturingInfoValid", &core::device::Device::isManufacturingInfoValid);
+	m_props.addCustom("ManufacturingLocation", &getManufacturingLoc);
+	m_props.addCustom("ManufacturingDate", &getManufacturingDate);
 	m_props.addStr("PartNumber", &core::device::Device::getPartNumber);
 	m_props.addStr("DeviceLocator", &core::device::Device::getDeviceLocator);
 	m_props.addStr("BankLabel", &core::device::Device::getBankLabel);
@@ -302,6 +308,7 @@ bool ShowDeviceCommand::dimmIdsAreValid()
 
 	return m_pResult == NULL;
 }
+
 void ShowDeviceCommand::filterDevicesOnDimmIds()
 {
 	if (m_dimmIds.size() > 0)
@@ -477,6 +484,49 @@ std::string ShowDeviceCommand::getDimmId(core::device::Device &device)
 	}
 	return result.str();
 }
+
+std::string ShowDeviceCommand::getManufacturingDate(core::device::Device &device)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	std::string result;
+
+	bool isValid =  device.isManufacturingInfoValid();
+
+	if (isValid)
+	{
+		result = core::device::Device::getFormattedManufacturingDate(device.getManufacturingDate());
+	}
+	else
+	{
+		result = "N/A";
+	}
+
+	return result;
+
+}
+
+std::string ShowDeviceCommand::getManufacturingLoc(core::device::Device &device)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	std::stringstream result;
+
+	bool isValid =  device.isManufacturingInfoValid();
+
+	if (isValid)
+	{
+		result << std::hex << (unsigned int)device.getManufacturingLoc();
+	}
+	else
+	{
+		result << "N/A";
+
+	}
+
+	return result.str();
+}
+
 std::string ShowDeviceCommand::toHex(NVM_UINT16 value)
 {
 	std::stringstream result;
