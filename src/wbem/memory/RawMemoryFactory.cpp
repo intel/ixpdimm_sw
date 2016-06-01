@@ -136,7 +136,8 @@ wbem::framework::Instance* wbem::memory::RawMemoryFactory::getInstance(
 		if (containsAttribute(OPERATIONALSTATUS_KEY, attributes))
 		{
 			framework::UINT16_LIST operationalStatusList;
-			if (NVM_SUCCESS == getDeviceDetailsReturnCode)
+			if (NVM_SUCCESS == getDeviceDetailsReturnCode &&
+					dimmDiscovery.manageability == MANAGEMENT_VALIDCONFIG)
 			{
 				if (dimmDetails.status.is_missing)
 				{

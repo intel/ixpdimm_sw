@@ -324,6 +324,33 @@ int add_firmware_properties_to_populated_devices(struct device_discovery *p_devi
 	return rc;
 }
 
+void add_smbios_properties_to_populated_devices(struct device_discovery *p_devices,
+		const NVM_UINT8 dev_count)
+{
+	COMMON_LOG_ENTRY();
+
+	for (int i = 0; i < dev_count; i++)
+	{
+		struct nvm_details smbios_details;
+		memset(&smbios_details, 0, sizeof (smbios_details));
+		int rc = get_dimm_details(p_devices[i].device_handle, &smbios_details);
+		if (rc == NVM_SUCCESS)
+		{
+			p_devices[i].capacity = smbios_details.size;
+			p_devices[i].memory_type = get_memory_type_from_smbios_memory_type(
+					smbios_details.type,
+					smbios_details.type_detail_bits);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("SMBIOS details unavailable for device %u",
+					p_devices[i].device_handle.handle);
+		}
+	}
+
+	COMMON_LOG_EXIT();
+}
+
 void nvm_topology_to_device(struct nvm_topology *p_topology, struct device_discovery *p_device)
 {
 	COMMON_LOG_ENTRY();
@@ -338,7 +365,6 @@ void nvm_topology_to_device(struct nvm_topology *p_topology, struct device_disco
 	p_device->subsystem_revision_id = p_topology->subsystem_revision_id;
 	p_device->manufacturing_info_valid =
 			p_topology->manufacturing_info_valid;
-
 	if (p_device->manufacturing_info_valid == 1)
 	{
 		p_device->manufacturing_location = p_topology->manufacturing_location;
@@ -349,8 +375,6 @@ void nvm_topology_to_device(struct nvm_topology *p_topology, struct device_disco
 		p_device->manufacturing_location = 0;
 		p_device->manufacturing_date = 0;
 	}
-
-	p_device->memory_type = MEMORY_TYPE_NVMDIMM;
 	// TODO US US14621 - get serial number from topology (NFIT/ACPI 6.1)
 
 	// Could be multiple IFCs - copy them all
@@ -441,6 +465,8 @@ int populate_devices(struct device_discovery *p_devices,
 					count : rc;
 			if (populated_count > 0)
 			{
+				add_smbios_properties_to_populated_devices(p_devices, populated_count);
+
 				int fw_rc = add_firmware_properties_to_populated_devices(p_devices,
 						populated_count);
 				if (fw_rc != NVM_SUCCESS)
@@ -489,6 +515,7 @@ int nvm_get_devices(struct device_discovery *p_devices, const NVM_UINT8 count)
 	else if ((rc = get_nvm_context_devices(p_devices, count)) < 0 &&
 			rc != NVM_ERR_ARRAYTOOSMALL)
 	{
+		memset(p_devices, 0, count * sizeof (struct device_discovery));
 		rc = populate_devices(p_devices, count);
 		if (rc > 0)
 		{
@@ -748,9 +775,6 @@ int nvm_get_device_status(const NVM_UID device_uid,
 	return rc;
 }
 
-/*
- * Helper function to populate current values for the sensors using the smart log
- */
 int get_details(const NVM_UID device_uid,
 		struct device_discovery *p_discovery,
 		struct device_details *p_details)
@@ -905,6 +929,104 @@ int nvm_modify_device_settings(const NVM_UID device_uid,
 	return rc;
 }
 
+int populate_power_mgmt_policy_details(struct device_details *p_details)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	struct pt_payload_power_mgmt_policy power_payload;
+	memset(&power_payload, 0, sizeof (power_payload));
+	if ((rc = get_fw_power_mgmt_policy(p_details->discovery.device_handle,
+			&power_payload)) == NVM_SUCCESS)
+	{
+		p_details->power_management_enabled = power_payload.enabled;
+		p_details->power_limit = power_payload.tdp;
+		p_details->peak_power_budget = power_payload.peak_power_budget;
+		p_details->avg_power_budget
+				= power_payload.average_power_budget;
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+int populate_die_sparing_policy_details(struct device_details *p_details)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	struct pt_get_die_spare_policy spare_payload;
+	memset(&spare_payload, 0, sizeof (spare_payload));
+	if ((rc = get_fw_die_spare_policy(p_details->discovery.device_handle,
+			&spare_payload)) == NVM_SUCCESS)
+	{
+		p_details->die_sparing_enabled = spare_payload.enable;
+		p_details->die_sparing_level = spare_payload.aggressiveness;
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+int populate_manageable_device_details(const NVM_UID device_uid,
+		struct device_details *p_details, struct nvm_capabilities *p_capabilities)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	KEEP_ERROR(rc, nvm_get_device_status(device_uid, &(p_details->status)));
+
+	KEEP_ERROR(rc, nvm_get_device_performance(device_uid,
+			&(p_details->performance)));
+
+	KEEP_ERROR(rc, nvm_get_sensors(device_uid, p_details->sensors,
+			NVM_MAX_DEVICE_SENSORS));
+
+	KEEP_ERROR(rc, get_details(device_uid, &p_details->discovery, p_details));
+
+	if (p_capabilities->nvm_features.get_device_capacity)
+	{
+		KEEP_ERROR(rc, get_dimm_capacities(p_details->discovery.device_handle,
+				p_capabilities,
+				&p_details->capacities));
+	}
+
+	KEEP_ERROR(rc, nvm_get_device_settings(device_uid, &(p_details->settings)));
+
+	KEEP_ERROR(rc, populate_power_mgmt_policy_details(p_details));
+	KEEP_ERROR(rc, populate_die_sparing_policy_details(p_details));
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+int populate_device_details(const NVM_UID device_uid,
+		struct device_details *p_details, struct nvm_capabilities *p_capabilities)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	memset(p_details, 0, sizeof (*p_details));
+	if ((rc = lookup_dev_uid(device_uid, &p_details->discovery)) == NVM_SUCCESS)
+	{
+		// get details from SMBIOS - for any existing DIMM
+		KEEP_ERROR(rc, get_details(device_uid, &p_details->discovery, p_details));
+
+		if (p_details->discovery.manageability == MANAGEMENT_VALIDCONFIG)
+		{
+			KEEP_ERROR(rc, populate_manageable_device_details(device_uid,
+					p_details, p_capabilities));
+		}
+
+		// TODO: workaround for Simics - returns as much data as possible to wbem
+		// this doesn't seem to hurt the unit tests so skip errors for now
+		rc = NVM_SUCCESS;
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
 /*
  * Retrieve detailed information about the device specified
  */
@@ -913,6 +1035,7 @@ int nvm_get_device_details(const NVM_UID device_uid,
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
+	struct nvm_capabilities capabilities;
 
 	if (check_caller_permissions() != NVM_SUCCESS)
 	{
@@ -922,98 +1045,28 @@ int nvm_get_device_details(const NVM_UID device_uid,
 	{
 		rc = NVM_ERR_BADDRIVER;
 	}
-	else
+	else if ((rc = nvm_get_nvm_capabilities(&capabilities)) == NVM_SUCCESS)
 	{
-		struct nvm_capabilities capabilities;
-		rc = nvm_get_nvm_capabilities(&capabilities);
-		if (rc == NVM_SUCCESS)
+		if (!capabilities.nvm_features.get_devices)
 		{
-			if (!capabilities.nvm_features.get_devices)
+			rc = NVM_ERR_NOTSUPPORTED;
+		}
+		else if (device_uid == NULL)
+		{
+			COMMON_LOG_ERROR("Invalid parameter, device_uid is NULL");
+			rc = NVM_ERR_INVALIDPARAMETER;
+		}
+		else if (p_details == NULL)
+		{
+			COMMON_LOG_ERROR("Invalid parameter, p_details is NULL");
+			rc = NVM_ERR_INVALIDPARAMETER;
+		}
+		else if (get_nvm_context_device_details(device_uid, p_details) != NVM_SUCCESS)
+		{
+			rc = populate_device_details(device_uid, p_details, &capabilities);
+			if (rc == NVM_SUCCESS)
 			{
-				rc = NVM_ERR_NOTSUPPORTED;
-			}
-			else if (device_uid == NULL)
-			{
-				COMMON_LOG_ERROR("Invalid parameter, device_uid is NULL");
-				rc = NVM_ERR_INVALIDPARAMETER;
-			}
-			else if (p_details == NULL)
-			{
-				COMMON_LOG_ERROR("Invalid parameter, p_details is NULL");
-				rc = NVM_ERR_INVALIDPARAMETER;
-			}
-			else if (get_nvm_context_device_details(device_uid, p_details) != NVM_SUCCESS)
-			{
-				memset(p_details, 0, sizeof (*p_details));
-				if ((rc = exists_and_manageable(device_uid,
-						&p_details->discovery, 1)) == NVM_SUCCESS)
-				{
-					// get status
-					int temprc = nvm_get_device_status(device_uid, &(p_details->status));
-					KEEP_ERROR(rc, temprc);
-
-					// get performance
-					temprc = nvm_get_device_performance(device_uid, &(p_details->performance));
-					KEEP_ERROR(rc, temprc);
-
-					// get sensors
-					temprc = nvm_get_sensors(device_uid,
-							p_details->sensors, NVM_MAX_DEVICE_SENSORS);
-					KEEP_ERROR(rc, temprc);
-
-					// get details
-					temprc = get_details(device_uid, &p_details->discovery, p_details);
-					KEEP_ERROR(rc, temprc);
-
-					// get capacities
-					if (!capabilities.nvm_features.get_device_capacity)
-					{
-						KEEP_ERROR(rc, NVM_ERR_NOTSUPPORTED);
-					}
-					else
-					{
-						temprc = get_dimm_capacities(p_details->discovery.device_handle,
-								&capabilities,
-								&p_details->capacities);
-						KEEP_ERROR(rc, temprc);
-					}
-
-					struct pt_payload_power_mgmt_policy power_payload;
-					memset(&power_payload, 0, sizeof (power_payload));
-					if (NVM_SUCCESS == (temprc = get_fw_power_mgmt_policy(
-							p_details->discovery.device_handle, &power_payload)))
-					{
-						p_details->power_management_enabled = power_payload.enabled;
-						p_details->power_limit = power_payload.tdp;
-						p_details->peak_power_budget = power_payload.peak_power_budget;
-						p_details->avg_power_budget
-								= power_payload.average_power_budget;
-					}
-					KEEP_ERROR(rc, temprc);
-
-					struct pt_get_die_spare_policy spare_payload;
-					memset(&spare_payload, 0, sizeof (spare_payload));
-					if (NVM_SUCCESS == (temprc = get_fw_die_spare_policy(
-							p_details->discovery.device_handle, &spare_payload)))
-					{
-						p_details->die_sparing_enabled = spare_payload.enable;
-						p_details->die_sparing_level = spare_payload.aggressiveness;
-					}
-					KEEP_ERROR(rc, temprc);
-
-					// get device_settings
-					temprc = nvm_get_device_settings(device_uid, &(p_details->settings));
-					KEEP_ERROR(rc, temprc);
-
-					// TODO: workaround for Simics - returns as much data as possible to wbem
-					// this doesn't seem to hurt the unit tests so skip errors for now
-					rc = NVM_SUCCESS;
-					set_nvm_context_device_details(device_uid, p_details);
-				}
-				else
-				{
-					KEEP_ERROR(rc, NVM_ERR_NOTSUPPORTED);
-				}
+				set_nvm_context_device_details(device_uid, p_details);
 			}
 		}
 	}
