@@ -47,9 +47,10 @@
 #define	MEDIA_READY_STATUS(bits)	((bits >> 16) & 0b11) // bits 17:16
 #define	DDRT_IO_INIT_STATUS(bits)	((bits >> 18) & 0b11) // bits 19:18
 #define	MAILBOX_INTERFACE_READY_STATUS(bits)	((bits >> 20) & 0b01) // bit 20
-#define	MINOR_CHECKPOINT(bits)	((bits >> 8) & 0b11111111) // bits 15:8
-#define	MAJOR_CHECKPOINT(bits)	((bits) & 0b11111111) // bits 7:0
-#define	BSR_H_ASSERTION(bits)	((bits >> 32) & 0b01) // bit 32
+#define	MINOR_CHECKPOINT(bits)	((bits >> 8) & 0xff) // bits 15:8
+#define	MAJOR_CHECKPOINT(bits)	((bits) & 0xff) // bits 7:0
+#define	BSR_H_ASSERTION(bits)	((bits >> 32) & 0b1) // bit 32
+#define	BSR_H_MI_STALLED(bits)	((bits >> 33) & 0b1) // bit 33
 #define	STATUS_NOT_READY	0b00
 #define	STATUS_ERROR	0b10
 enum major_status_code
@@ -541,14 +542,12 @@ void check_ddrt_init_complete_status(const struct diagnostic *p_diagnostic,
 
 	if (code != EVENT_CODE_DIAG_QUICK_UNKNOWN)
 	{
-		NVM_UID uid_str;
-		uid_copy(device_uid, uid_str);
 		store_event_by_parts(EVENT_TYPE_DIAG_QUICK,
 				EVENT_SEVERITY_CRITICAL,
 				code,
 				device_uid,
 				1,
-				uid_str,
+				device_uid,
 				NULL,
 				NULL,
 				DIAGNOSTIC_RESULT_FAILED);
@@ -567,14 +566,12 @@ void check_mailbox_ready_status(const struct diagnostic *p_diagnostic,
 
 	if (MAILBOX_INTERFACE_READY_STATUS(bsr) == STATUS_NOT_READY)
 	{
-		NVM_UID uid_str;
-		uid_copy(device_uid, uid_str);
 		store_event_by_parts(EVENT_TYPE_DIAG_QUICK,
 				EVENT_SEVERITY_CRITICAL,
 				EVENT_CODE_DIAG_QUICK_MAILBOX_INTERFACE_NOT_READY,
 				device_uid,
 				1,
-				uid_str,
+				device_uid,
 				NULL,
 				NULL,
 				DIAGNOSTIC_RESULT_FAILED);
@@ -611,14 +608,12 @@ void check_fw_boot_status(const struct diagnostic *p_diagnostic,
 
 	if (code != EVENT_CODE_DIAG_QUICK_UNKNOWN)
 	{
-		NVM_UID uid_str;
-		uid_copy(device_uid, uid_str);
 		store_event_by_parts(EVENT_TYPE_DIAG_QUICK,
 				EVENT_SEVERITY_CRITICAL,
 				code,
 				device_uid,
 				1,
-				uid_str,
+				device_uid,
 				checkpoint_str,
 				NULL,
 				DIAGNOSTIC_RESULT_FAILED);
@@ -637,14 +632,36 @@ void check_fw_assert(const struct diagnostic *p_diagnostic,
 
 	if (BSR_H_ASSERTION(bsr))
 	{
-		NVM_UID uid_str;
-		uid_copy(device_uid, uid_str);
 		store_event_by_parts(EVENT_TYPE_DIAG_QUICK,
 				EVENT_SEVERITY_CRITICAL,
 				EVENT_CODE_DIAG_QUICK_FW_HIT_ASSERT,
 				device_uid,
 				1,
-				uid_str,
+				device_uid,
+				NULL,
+				NULL,
+				DIAGNOSTIC_RESULT_FAILED);
+		(*p_results)++;
+	}
+
+	COMMON_LOG_EXIT();
+}
+
+void check_fw_stalled(const struct diagnostic *p_diagnostic,
+		const unsigned long long bsr,
+		const NVM_UID device_uid,
+		NVM_UINT32 *p_results)
+{
+	COMMON_LOG_ENTRY();
+
+	if (BSR_H_MI_STALLED(bsr))
+	{
+		store_event_by_parts(EVENT_TYPE_DIAG_QUICK,
+				EVENT_SEVERITY_CRITICAL,
+				EVENT_CODE_DIAG_QUICK_FW_STALLED,
+				device_uid,
+				1,
+				device_uid,
 				NULL,
 				NULL,
 				DIAGNOSTIC_RESULT_FAILED);
@@ -711,6 +728,7 @@ int check_dimm_bsr(const NVM_UID device_uid,
 		check_mailbox_ready_status(p_diagnostic, bsr, device_uid, p_results);
 		check_fw_boot_status(p_diagnostic, bsr, device_uid, p_results);
 		check_fw_assert(p_diagnostic, bsr, device_uid, p_results);
+		check_fw_stalled(p_diagnostic, bsr, device_uid, p_results);
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -770,13 +788,10 @@ void check_given_errors(const struct diagnostic *p_diagnostic,
 	if (!diag_check(p_diagnostic, threshold_key,
 		media_errors, &error_threshold, EQUALITY_LESSTHANEQUAL))
 	{
-		NVM_UID uid_str;
-		uid_copy(device_uid, uid_str);
-
 		char actual_errors_str[10];
 		s_snprintf(actual_errors_str, 10, "%u", media_errors);
 		store_event_by_parts(EVENT_TYPE_DIAG_QUICK, EVENT_SEVERITY_WARN,
-			event_key, device_uid, 0, uid_str,
+			event_key, device_uid, 0, device_uid,
 			actual_errors_str, NULL, DIAGNOSTIC_RESULT_FAILED);
 		(*p_results)++;
 	}
