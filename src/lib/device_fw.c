@@ -33,6 +33,13 @@
 #include "device_adapter.h"
 #include "utility.h"
 
+// Intel DIMM Device IDs running FW we support
+const int NUM_SUPPORTED_DEVICE_IDS = 2;
+const NVM_UINT16 SUPPORTED_DEVICE_IDS[] = {
+		0x979,
+		0x97A
+};
+
 /*
  * Minimum supported version of FW API: 1.0
  */

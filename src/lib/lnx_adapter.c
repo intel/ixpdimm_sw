@@ -30,6 +30,7 @@
  */
 
 #include "device_adapter.h"
+#include "device_fw.h"
 #include "lnx_adapter.h"
 #include "smbios_utilities.h"
 #include "system.h"
@@ -306,9 +307,9 @@ int get_topology(const NVM_UINT8 count, struct nvm_topology *p_dimm_topo)
 						p_dimm_topo[dimm_index].revision_id = ndctl_dimm_get_revision(dimm);
 
 						// TODO US15228: get values from NDCTL when available
-						// For now assume all Intel Gen 1 DIMMs
+						// For now assume all supported Intel devices
 						p_dimm_topo[dimm_index].subsystem_vendor_id = NVM_INTEL_VENDOR_ID;
-						p_dimm_topo[dimm_index].subsystem_device_id = NVM_DIMM_GEN1_DEVICE_ID;
+						p_dimm_topo[dimm_index].subsystem_device_id = SUPPORTED_DEVICE_IDS[0];
 						p_dimm_topo[dimm_index].subsystem_revision_id = 0;
 
 						// TODO US14147 - Copy multiple IFCs from driver

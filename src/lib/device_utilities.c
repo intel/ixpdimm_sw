@@ -31,6 +31,7 @@
  */
 
 #include "device_utilities.h"
+#include "device_fw.h"
 #include <persistence/lib_persistence.h>
 #include <persistence/config_settings.h>
 #include <os/os_adapter.h>
@@ -275,10 +276,16 @@ NVM_BOOL is_device_subsystem_controller_supported(struct device_discovery *p_dev
 	NVM_BOOL supported = 0;
 
 	// Only supporting Intel DIMMs with AEP controllers
-	if (p_device->subsystem_vendor_id == NVM_INTEL_VENDOR_ID &&
-			p_device->subsystem_device_id == NVM_DIMM_GEN1_DEVICE_ID)
+	if (p_device->subsystem_vendor_id == NVM_INTEL_VENDOR_ID)
 	{
-		supported = 1;
+		for (int i = 0; i < NUM_SUPPORTED_DEVICE_IDS; i++)
+		{
+			if (p_device->subsystem_device_id == SUPPORTED_DEVICE_IDS[i])
+			{
+				supported = 1;
+				break;
+			}
+		}
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(supported);

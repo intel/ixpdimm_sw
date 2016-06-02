@@ -132,6 +132,10 @@
  */
 #define	MULTIPLES_TO_BYTES(val)	(4096llu * ((NVM_UINT64)(val)))
 
+// Intel DIMM Subsystem Device IDs supported by this software
+extern const int NUM_SUPPORTED_DEVICE_IDS;
+extern const NVM_UINT16 SUPPORTED_DEVICE_IDS[];
+
 /*
  * ****************************************************************************
  * ENUMS

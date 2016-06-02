@@ -42,7 +42,6 @@
 #define	NVM_DEFAULT_NAMESPACE_NAME	"NvDimmVol"
 #define	NVM_SYSTEM	"Intel DIMM Gen 1"
 #define	NVM_INTEL_VENDOR_ID	0x8980
-#define	NVM_DIMM_GEN1_DEVICE_ID	0x0979
 
 #define	NVM_COMPUTERNAME_LEN 256 // Length of host string
 #define	NVM_OSNAME_LEN	256 // Length of host OS string
