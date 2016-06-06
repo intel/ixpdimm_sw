@@ -358,6 +358,24 @@ int get_topology_count()
 	return rc;
 }
 
+void copy_interface_fmt_codes(struct nvm_topology *p_topo,
+		NVDIMM_TOPOLOGY *p_drv_topo)
+{
+	COMMON_LOG_ENTRY();
+
+	p_topo->fmt_interface_codes[0] = p_drv_topo->FmtInterfaceCode;
+	// Additional IFCs from driver - start after the first one
+	for (int i = 1, drv_i = 0;
+			(i < NVM_MAX_IFCS_PER_DIMM) && (drv_i < MAX_ADDITIONAL_FIC_COUNT);
+			i++, drv_i++)
+	{
+		p_topo->fmt_interface_codes[i] =
+				p_drv_topo->AdditionalFmtInterfaceCodes[drv_i];
+	}
+
+	COMMON_LOG_EXIT();
+}
+
 /*
  * Get the system's memory topology
  */
@@ -433,9 +451,8 @@ int get_topology(const NVM_UINT8 count, struct nvm_topology *p_dimm_topo)
 						p_dimm_topo[i].manufacturing_date =
 								p_ioctl_data->OutputPayload.TopologiesList[i].ManufacturingDate;
 
-						// TODO US14147 - Copy multiple IFCs from driver
-						p_dimm_topo[i].fmt_interface_codes[0] =
-							p_ioctl_data->OutputPayload.TopologiesList[i].FmtInterfaceCode;
+						copy_interface_fmt_codes(&(p_dimm_topo[i]),
+								&(p_ioctl_data->OutputPayload.TopologiesList[i]));
 
 						int mem_type = get_device_memory_type_from_smbios_table(
 								p_smbios_table, smbios_table_size,
