@@ -584,35 +584,43 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::deleteConfigGoal(
 			throw wbem::framework::Exception("MemoryConfigurationFactory.getInstances returned NULL");
 		}
 
-		// rename the Parent to UID to work with filterInstances
-		RenameAttributeKey(*pInstances, wbem::PARENT_KEY, wbem::DIMMUID_KEY);
-
-		cli::nvmcli::filters_t filters;
-
-		generateDimmFilter(parsedCommand, attributes, filters);
-		generateSocketFilter(parsedCommand, attributes, filters);
-		filterInstances(*pInstances, wbem::CONFIGGOALTABLENAME, filters, matchedInstances);
-
-		if (!validRequest(*pInstances, matchedInstances))
+		if (pInstances->size() == 0)
 		{
 			pResult = new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
-				"The configuration goals from all the " NVM_DIMM_NAME "s on the "
-				"socket must be deleted together.", basePrefix);
+				"The requested " NVM_DIMM_NAME "(s) are not configured.", basePrefix);
 		}
-		else if (matchedInstances.size() == 0)
+		else
 		{
-			// verify the user entered correct Dimm IDs
-			std::vector<std::string> dimmList;
-			pResult = getDimms(parsedCommand, dimmList);
-			if (pResult == NULL)
+			// rename the Parent to UID to work with filterInstances
+			RenameAttributeKey(*pInstances, wbem::PARENT_KEY, wbem::DIMMUID_KEY);
+
+			cli::nvmcli::filters_t filters;
+
+			generateDimmFilter(parsedCommand, attributes, filters);
+			generateSocketFilter(parsedCommand, attributes, filters);
+			filterInstances(*pInstances, wbem::CONFIGGOALTABLENAME, filters, matchedInstances);
+
+			if (!validRequest(*pInstances, matchedInstances))
 			{
-				// verify the user entered correct sockets
-				pResult = getDimmsFromSockets(parsedCommand, dimmList);
-				// requested dimms/sockets are valid but don't have goals
+				pResult = new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
+					"The configuration goals from all the " NVM_DIMM_NAME "s on the "
+					"socket must be deleted together.", basePrefix);
+			}
+			else if (matchedInstances.size() == 0)
+			{
+				// verify the user entered correct Dimm IDs
+				std::vector<std::string> dimmList;
+				pResult = getDimms(parsedCommand, dimmList);
 				if (pResult == NULL)
 				{
-					pResult = new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
-						"The requested " NVM_DIMM_NAME "(s) are not configured.", basePrefix);
+					// verify the user entered correct sockets
+					pResult = getDimmsFromSockets(parsedCommand, dimmList);
+					// requested dimms/sockets are valid but don't have goals
+					if (pResult == NULL)
+					{
+						pResult = new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
+							"The requested " NVM_DIMM_NAME "(s) are not configured.", basePrefix);
+					}
 				}
 			}
 		}
