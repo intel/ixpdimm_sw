@@ -367,6 +367,8 @@ enum mb_error {
 	MB_INVALID_ALIGNMENT = 0x10,
 	/* Command is not legally allowed in this mode of the dimm */
 	MB_INCOMPATIBLE_DIMM = 0x11,
+	/* FW timed out on HW components returning in a timely manner */
+	MB_TIMED_OUT = 0x12
 };
 
 /*
@@ -1796,6 +1798,9 @@ static inline int fw_mb_err_to_nvm_lib_err(int status)
 	COMMON_LOG_ERROR_F("firmware mail box error = %d", DSM_EXTENDED_ERROR(status));
 	switch (DSM_EXTENDED_ERROR(status))
 	{
+		case MB_SUCCESS:
+			ret = NVM_SUCCESS;
+			break;
 		case MB_INVALID_CMD_PARAM :
 			ret = NVM_ERR_INVALIDPARAMETER;
 			break;
@@ -1846,6 +1851,9 @@ static inline int fw_mb_err_to_nvm_lib_err(int status)
 			break;
 		case MB_INCOMPATIBLE_DIMM :
 			ret = NVM_ERR_NOTSUPPORTED;
+			break;
+		case MB_TIMED_OUT :
+			ret = NVM_ERR_DEVICEBUSY;
 			break;
 		default :
 			ret = NVM_ERR_DEVICEERROR;
