@@ -258,13 +258,11 @@ int current_volatile_mode_is_supported(enum volatile_mode volatile_mode)
 }
 
 int memory_capacity_is_requested_but_not_supported(NVM_UINT64 memory_size,
-	enum volatile_mode current_volatile_mode, NVM_BOOL memory_mode_capable)
+	NVM_BOOL memory_mode_capable)
 {
 	int result = 0;
 
-	if (memory_size > 0 &&
-		(!current_volatile_mode_is_supported(current_volatile_mode) ||
-			!memory_mode_capable))
+	if (memory_size > 0 && !memory_mode_capable)
 	{
 		result = 1;
 	}
@@ -272,13 +270,11 @@ int memory_capacity_is_requested_but_not_supported(NVM_UINT64 memory_size,
 }
 
 int app_direct_capacity_is_requested_but_not_supported(NVM_UINT16 app_direct_count,
-	enum app_direct_mode current_mode, NVM_BOOL app_direct_mode_capable)
+	NVM_BOOL app_direct_mode_capable)
 {
 	int result = 0;
 
-	if (app_direct_count > 0 &&
-		((current_mode != APP_DIRECT_MODE_ENABLED) ||
-			!app_direct_mode_capable))
+	if (app_direct_count > 0 && !app_direct_mode_capable)
 	{
 		result = 1;
 	}
@@ -297,14 +293,12 @@ int validate_config_goal_supported(const struct config_goal *p_goal,
 	int rc = NVM_SUCCESS;
 
 	if (memory_capacity_is_requested_but_not_supported(p_goal->memory_size,
-			p_capabilities->platform_capabilities.current_volatile_mode,
 			p_discovery->device_capabilities.memory_mode_capable))
 	{
 		COMMON_LOG_WARN("Memory capacity requested but is not supported.");
 		rc = NVM_ERR_CONFIGNOTSUPPORTED;
 	}
 	else if (app_direct_capacity_is_requested_but_not_supported(p_goal->app_direct_count,
-			p_capabilities->platform_capabilities.current_app_direct_mode,
 			p_discovery->device_capabilities.app_direct_mode_capable))
 	{
 		COMMON_LOG_WARN("App direct capacity requested but is not supported.");
