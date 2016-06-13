@@ -1390,7 +1390,7 @@ cli::framework::ErrorResult *cli::nvmcli::FieldSupportFeature::showEvents_inputT
 		if (severityExists)
 		{
 			std::string lower = cli::framework::toLower(severityString);
-			if (severityMap.find(severityString) == severityMap.end())
+			if (severityMap.find(lower) == severityMap.end())
 			{
 				pResult = new cli::framework::SyntaxErrorBadValueResult(
 						cli::framework::TOKENTYPE_PROPERTY, EVENT_PROPERTY_SEVERITY, severityString);
