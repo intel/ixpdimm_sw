@@ -503,6 +503,53 @@ NVM_BOOL device_is_erase_capable(struct device_security_capabilities security_ca
 	return is_erase_capable;
 }
 
+NVM_BOOL device_has_interface_format_code(struct device_discovery *p_dev, enum nvm_format ifc)
+{
+	COMMON_LOG_ENTRY();
+
+	NVM_BOOL found = 0;
+	for (int i = 0; i < NVM_MAX_IFCS_PER_DIMM; i++)
+	{
+		if (p_dev->interface_format_codes[i] == ifc)
+		{
+			found = 1;
+			break;
+		}
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(found);
+	return found;
+}
+
+void update_device_mode_capabilities_from_interface_format_codes(struct device_discovery *p_dev)
+{
+	COMMON_LOG_ENTRY();
+
+	if (p_dev->device_capabilities.app_direct_mode_capable &&
+			!device_has_interface_format_code(p_dev, FORMAT_BYTE_STANDARD))
+	{
+		p_dev->device_capabilities.app_direct_mode_capable = 0;
+	}
+
+	if (p_dev->device_capabilities.storage_mode_capable &&
+			!device_has_interface_format_code(p_dev, FORMAT_BLOCK_STANDARD))
+	{
+		p_dev->device_capabilities.storage_mode_capable = 0;
+	}
+
+	COMMON_LOG_EXIT();
+}
+
+void calculate_device_capabilities(struct device_discovery *p_dev)
+{
+	COMMON_LOG_ENTRY();
+
+	convert_sku_to_device_capabilities(p_dev->dimm_sku, &(p_dev->device_capabilities));
+	update_device_mode_capabilities_from_interface_format_codes(p_dev);
+
+	COMMON_LOG_EXIT();
+}
+
 void convert_sku_to_device_capabilities(
 		const int sku_bits, struct device_capabilities *p_capabilities)
 {
@@ -641,9 +688,6 @@ int update_capacities_based_on_sku(const NVM_NFIT_DEVICE_HANDLE device_handle,
 	struct device_discovery discovery;
 	if ((rc = lookup_dev_handle(device_handle, &discovery)) == NVM_SUCCESS)
 	{
-		struct device_capabilities device_capabilities;
-		convert_sku_to_device_capabilities(discovery.dimm_sku, &device_capabilities);
-
 		NVM_UINT64 raw_capacity = p_capacities->capacity;
 		NVM_UINT64 memory_capacity = p_capacities->memory_capacity;
 		NVM_UINT64 pm_capacity = p_capacities->app_direct_capacity +
@@ -653,9 +697,9 @@ int update_capacities_based_on_sku(const NVM_NFIT_DEVICE_HANDLE device_handle,
 		if ((!p_capabilities->nvm_features.memory_mode &&
 			!p_capabilities->nvm_features.app_direct_mode &&
 			!p_capabilities->nvm_features.storage_mode) ||
-			(!device_capabilities.memory_mode_capable &&
-			!device_capabilities.app_direct_mode_capable &&
-			!device_capabilities.storage_mode_capable))
+			(!discovery.device_capabilities.memory_mode_capable &&
+			!discovery.device_capabilities.app_direct_mode_capable &&
+			!discovery.device_capabilities.storage_mode_capable))
 		{
 			p_capacities->inaccessible_capacity += raw_capacity;
 			p_capacities->memory_capacity = 0;
@@ -666,7 +710,7 @@ int update_capacities_based_on_sku(const NVM_NFIT_DEVICE_HANDLE device_handle,
 		// check memory mode support
 		else if (memory_capacity > 0 &&
 				(!p_capabilities->nvm_features.memory_mode ||
-				!device_capabilities.memory_mode_capable))
+				!discovery.device_capabilities.memory_mode_capable))
 		{
 			p_capacities->inaccessible_capacity += memory_capacity;
 			p_capacities->memory_capacity = 0;
@@ -676,8 +720,8 @@ int update_capacities_based_on_sku(const NVM_NFIT_DEVICE_HANDLE device_handle,
 			// no PM support at all
 			if ((!p_capabilities->nvm_features.app_direct_mode &&
 				!p_capabilities->nvm_features.storage_mode) ||
-				(!device_capabilities.app_direct_mode_capable &&
-				!device_capabilities.storage_mode_capable))
+				(!discovery.device_capabilities.app_direct_mode_capable &&
+				!discovery.device_capabilities.storage_mode_capable))
 			{
 				p_capacities->inaccessible_capacity += pm_capacity;
 				p_capacities->app_direct_capacity = 0;
@@ -687,7 +731,7 @@ int update_capacities_based_on_sku(const NVM_NFIT_DEVICE_HANDLE device_handle,
 			// Storage but no App Direct
 			else if (p_capacities->app_direct_capacity > 0 &&
 					(!p_capabilities->nvm_features.app_direct_mode ||
-							!device_capabilities.app_direct_mode_capable))
+							!discovery.device_capabilities.app_direct_mode_capable))
 			{
 				p_capacities->inaccessible_capacity += p_capacities->app_direct_capacity;
 				p_capacities->app_direct_capacity = 0;
@@ -695,7 +739,7 @@ int update_capacities_based_on_sku(const NVM_NFIT_DEVICE_HANDLE device_handle,
 			// App direct but no Storage
 			else if (p_capacities->storage_capacity > 0 &&
 					(!p_capabilities->nvm_features.storage_mode ||
-					!device_capabilities.storage_mode_capable))
+					!discovery.device_capabilities.storage_mode_capable))
 			{
 				// Storage capacity is considered "un-configured", not inaccessible
 				p_capacities->storage_capacity = 0;

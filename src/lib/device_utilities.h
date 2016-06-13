@@ -141,6 +141,8 @@ NVM_BOOL device_is_erase_capable(struct device_security_capabilities security_ca
  */
 NVM_BOOL device_is_encryption_enabled(enum lock_state lock_state);
 
+void calculate_device_capabilities(struct device_discovery *p_dev);
+
 void convert_sku_to_device_capabilities(const int sku_bits,
 		struct device_capabilities *p_capabilities);
 

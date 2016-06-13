@@ -232,10 +232,6 @@ void add_identify_dimm_properties_to_device(struct device_discovery *p_device,
 	// set manageability of the dimm based on the FW rev
 	set_device_manageability_from_firmware(p_id_dimm, &p_device->manageability);
 
-	map_sku_security_capabilities(p_id_dimm->dimm_sku,
-		&(p_device->security_capabilities));
-	convert_sku_to_device_capabilities(p_id_dimm->dimm_sku,
-			&(p_device->device_capabilities));
 	p_device->dimm_sku = p_id_dimm->dimm_sku;
 
 	memmove(p_device->manufacturer, p_id_dimm->mf,
@@ -442,6 +438,21 @@ void calculate_uids_for_populated_devices(struct device_discovery *p_devices,
 	COMMON_LOG_EXIT();
 }
 
+void calculate_capabilities_for_populated_devices(struct device_discovery *p_devices,
+		const NVM_UINT8 count)
+{
+	COMMON_LOG_ENTRY();
+
+	for (NVM_UINT8 i = 0; i < count; i++)
+	{
+		calculate_device_capabilities(&(p_devices[i]));
+		map_sku_security_capabilities(p_devices[i].dimm_sku,
+				&(p_devices[i].security_capabilities));
+	}
+
+	COMMON_LOG_EXIT();
+}
+
 int populate_devices(struct device_discovery *p_devices,
 		const NVM_UINT8 count)
 {
@@ -474,6 +485,8 @@ int populate_devices(struct device_discovery *p_devices,
 					rc = fw_rc;
 				}
 
+				calculate_capabilities_for_populated_devices(p_devices,
+						populated_count);
 				calculate_uids_for_populated_devices(p_devices, populated_count);
 			}
 		}
