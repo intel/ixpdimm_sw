@@ -25,10 +25,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <libintelnvm-cim/Instance.h>
+#include <libinvm-cim/Instance.h>
 #include <LogEnterExit.h>
 #include <nvm_types.h>
-#include <libintelnvm-cim/ExceptionBadAttribute.h>
+#include <libinvm-cim/ExceptionBadAttribute.h>
 #include "FrameworkExtensions.h"
 
 namespace wbem

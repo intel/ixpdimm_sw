@@ -27,7 +27,7 @@
 #ifndef CR_MGMT_NVMPROVIDERFACTORY_H
 #define CR_MGMT_NVMPROVIDERFACTORY_H
 
-#include <libintelnvm-cim/ProviderFactory.h>
+#include <libinvm-cim/ProviderFactory.h>
 #include <nvm_types.h>
 
 namespace wbem

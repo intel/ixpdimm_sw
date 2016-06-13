@@ -34,8 +34,8 @@
 #define	_WBEM_INDICATION_NVDIMMEVENTFACTORY_H
 
 #include <string>
-#include <libintelnvm-cim/Types.h>
-#include <libintelnvm-cim/Instance.h>
+#include <libinvm-cim/Types.h>
+#include <libinvm-cim/Instance.h>
 #include <NvmStrings.h>
 #include "NvmIndicationFactory.h"
 

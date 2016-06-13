@@ -34,12 +34,12 @@
 #include "WbemToCli_utilities.h"
 #include "CommandParts.h"
 
-#include <libintelnvm-cli/SyntaxErrorResult.h>
-#include <libintelnvm-cli/SyntaxErrorBadValueResult.h>
-#include <libintelnvm-cli/SyntaxErrorMissingValueResult.h>
-#include <libintelnvm-cli/Parser.h>
+#include <libinvm-cli/SyntaxErrorResult.h>
+#include <libinvm-cli/SyntaxErrorBadValueResult.h>
+#include <libinvm-cli/SyntaxErrorMissingValueResult.h>
+#include <libinvm-cli/Parser.h>
 #include <server/BaseServerFactory.h>
-#include <libintelnvm-cli/CliFrameworkTypes.h>
+#include <libinvm-cli/CliFrameworkTypes.h>
 #include <LogEnterExit.h>
 #include <cr_i18n.h>
 

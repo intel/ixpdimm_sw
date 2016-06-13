@@ -27,8 +27,8 @@
 #ifndef CR_MGMT_COMMANDBASE_H
 #define CR_MGMT_COMMANDBASE_H
 
-#include <libintelnvm-cli/CliFrameworkTypes.h>
-#include <libintelnvm-cli/ResultBase.h>
+#include <libinvm-cli/CliFrameworkTypes.h>
+#include <libinvm-cli/ResultBase.h>
 #include "DisplayOptions.h"
 
 namespace cli

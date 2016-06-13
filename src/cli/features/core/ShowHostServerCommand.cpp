@@ -26,7 +26,7 @@
  */
 
 #include <LogEnterExit.h>
-#include <libintelnvm-cli/CliFrameworkTypes.h>
+#include <libinvm-cli/CliFrameworkTypes.h>
 #include <cli/features/core/WbemToCli_utilities.h>
 #include <cli/features/core/CommandParts.h>
 

@@ -35,10 +35,10 @@
 #include <nvm_management.h>
 #include <cr_i18n.h>
 
-#include <libintelnvm-cli/FeatureBase.h>
-#include <libintelnvm-cli/ObjectListResult.h>
-#include <libintelnvm-cli/SyntaxErrorBadValueResult.h>
-#include <libintelnvm-cim/Instance.h>
+#include <libinvm-cli/FeatureBase.h>
+#include <libinvm-cli/ObjectListResult.h>
+#include <libinvm-cli/SyntaxErrorBadValueResult.h>
+#include <libinvm-cim/Instance.h>
 #include <physical_asset/MemoryTopologyViewFactory.h>
 #include "WbemToCli_utilities.h"
 

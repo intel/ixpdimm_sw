@@ -118,7 +118,11 @@ all :
 	$(MAKE) doc
 	
 $(TARGET_NAME): $(FEATURES) $(OBJNAMES) 
+ifdef BUILD_ESX
 	$(CPP) -Wl,-rpath,$(ESX_SUPPORT_DIR) $(CPPFLAGS) $(OBJNAMES) $(LIBS) -o $@
+else
+	$(CPP) $(CPPFLAGS) $(OBJNAMES) $(LIBS) -o $@
+endif
 
 $(BUILD_DIR):
 	$(MKDIR) $@

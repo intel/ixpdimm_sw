@@ -156,8 +156,12 @@ $(OBJECT_MODULE_DIR) $(SUBMODULE_DIRS) :
 $(TARGETNAME) : $(OBJNAMES)
 ifdef BUILD_WINDOWS
 	$(CPP) $(CPPFLAGS) -shared $^ $(LIBS) -o $@ 
-else
+else ifdef BUILD_ESX
 	$(CPP) $(CPPFLAGS) -Wl,-rpath,$(ESX_SUPPORT_DIR) -shared $^ $(LIBS) -Wl,-soname,$(TARGETSO) -o $@
+	cd $(BUILD_DIR); $(RM) $(TARGETSO); $(SOFTLINK) $(TARGET) $(TARGETSO)
+	cd $(BUILD_DIR); $(RM) $(TARGETBASE); $(SOFTLINK) $(TARGET) $(TARGETBASE)
+else ifdef BUILD_LINUX
+	$(CPP) $(CPPFLAGS) -shared $^ $(LIBS) -Wl,-soname,$(TARGETSO) -o $@
 	cd $(BUILD_DIR); $(RM) $(TARGETSO); $(SOFTLINK) $(TARGET) $(TARGETSO)
 	cd $(BUILD_DIR); $(RM) $(TARGETBASE); $(SOFTLINK) $(TARGET) $(TARGETBASE)
 endif

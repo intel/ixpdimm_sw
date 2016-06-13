@@ -31,10 +31,10 @@
 
 #include <LogEnterExit.h>
 #include <nvm_management.h>
-#include <libintelnvm-cim/Attribute.h>
+#include <libinvm-cim/Attribute.h>
 #include <server/BaseServerFactory.h>
 #include <uid/uid.h>
-#include <libintelnvm-cim/ExceptionBadParameter.h>
+#include <libinvm-cim/ExceptionBadParameter.h>
 #include <sstream>
 #include "PersistentMemoryCapabilitiesFactory.h"
 #include <mem_config/PoolViewFactory.h>

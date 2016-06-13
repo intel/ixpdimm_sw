@@ -38,8 +38,8 @@
 #include <string/s_str.h>
 #include <nvm_management.h>
 #include <LogEnterExit.h>
-#include <libintelnvm-cim/Types.h>
-#include <libintelnvm-cim/ExceptionBadParameter.h>
+#include <libinvm-cim/Types.h>
+#include <libinvm-cim/ExceptionBadParameter.h>
 #include <framework_interface/NvmAssociationFactory.h>
 #include <physical_asset/NVDIMMFactory.h>
 #include <memory/SystemProcessorFactory.h>
@@ -50,7 +50,7 @@
 #include <mem_config/InterleaveSet.h>
 #include "MemoryAllocationSettingsFactory.h"
 #include <server/BaseServerFactory.h>
-#include <libintelnvm-cim/ExceptionNotSupported.h>
+#include <libinvm-cim/ExceptionNotSupported.h>
 #include <exception/NvmExceptionLibError.h>
 #include <lib_interface/NvmApi.h>
 #include <NvmStrings.h>

@@ -38,7 +38,7 @@
 #include <LogEnterExit.h>
 #include <server/BaseServerFactory.h>
 #include <physical_asset/NVDIMMFactory.h>
-#include <libintelnvm-cim/ExceptionBadParameter.h>
+#include <libinvm-cim/ExceptionBadParameter.h>
 #include <NvmStrings.h>
 
 wbem::support::DiagnosticCompletionRecordFactory::DiagnosticCompletionRecordFactory()

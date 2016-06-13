@@ -32,7 +32,7 @@
 #include <cli/features/core/framework/CommandBase.h>
 #include <core/system/SystemService.h>
 #include <core/system/SoftwareInfo.h>
-#include <libintelnvm-cli/ErrorResult.h>
+#include <libinvm-cli/ErrorResult.h>
 
 namespace cli
 {

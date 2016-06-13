@@ -39,11 +39,11 @@
 #include <mem_config/MemoryConfigurationFactory.h>
 #include <pmem_config/PersistentMemoryCapabilitiesFactory.h>
 #include <memory/SystemProcessorFactory.h>
-#include <libintelnvm-cim/ExceptionBadAttribute.h>
-#include <libintelnvm-cim/ExceptionNoMemory.h>
+#include <libinvm-cim/ExceptionBadAttribute.h>
+#include <libinvm-cim/ExceptionNoMemory.h>
 #include "CommandParts.h"
-#include <libintelnvm-cli/SimpleListResult.h>
-#include <libintelnvm-cli/CliFrameworkTypes.h>
+#include <libinvm-cli/SimpleListResult.h>
+#include <libinvm-cli/CliFrameworkTypes.h>
 #include <exception/NvmExceptionLibError.h>
 
 

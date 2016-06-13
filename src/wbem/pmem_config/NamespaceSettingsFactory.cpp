@@ -32,10 +32,10 @@
  */
 
 #include <LogEnterExit.h>
-#include <libintelnvm-cim/Attribute.h>
+#include <libinvm-cim/Attribute.h>
 #include <server/BaseServerFactory.h>
 #include <uid/uid.h>
-#include <libintelnvm-cim/ExceptionBadParameter.h>
+#include <libinvm-cim/ExceptionBadParameter.h>
 #include <mem_config/InterleaveSet.h>
 #include "NamespaceSettingsFactory.h"
 #include "NamespaceViewFactory.h"

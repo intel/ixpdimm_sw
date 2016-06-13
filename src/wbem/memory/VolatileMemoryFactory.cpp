@@ -35,8 +35,8 @@
 #include <LogEnterExit.h>
 #include <nvm_management.h>
 #include <uid/uid.h>
-#include <libintelnvm-cim/ExceptionNoMemory.h>
-#include <libintelnvm-cim/ExceptionBadParameter.h>
+#include <libinvm-cim/ExceptionNoMemory.h>
+#include <libinvm-cim/ExceptionBadParameter.h>
 #include <framework_interface/NvmAssociationFactory.h>
 #include <memory/RawMemoryFactory.h>
 #include <mem_config/MemoryAllocationSettingsFactory.h>

@@ -31,7 +31,7 @@
 
 
 #include "PersistentConfigurationCapabilitiesFactory.h"
-#include <libintelnvm-cim/ExceptionBadParameter.h>
+#include <libinvm-cim/ExceptionBadParameter.h>
 
 wbem::pmem_config::PersistentConfigurationCapabilitiesFactory::PersistentConfigurationCapabilitiesFactory()
 throw (framework::Exception)

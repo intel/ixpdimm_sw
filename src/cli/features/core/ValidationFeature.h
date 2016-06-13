@@ -32,7 +32,7 @@
 #ifndef _CLI_NVMCLI_VALIDATIONFEATURE_H_
 #define _CLI_NVMCLI_VALIDATIONFEATURE_H_
 
-#include <libintelnvm-cli/FeatureBase.h>
+#include <libinvm-cli/FeatureBase.h>
 #include <nvm_types.h>
 #include <physical_asset/NVDIMMFactory.h>
 

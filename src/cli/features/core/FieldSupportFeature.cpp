@@ -38,17 +38,17 @@
 
 #include <server/BaseServerFactory.h>
 #include <physical_asset/NVDIMMFactory.h>
-#include <libintelnvm-cim/ExceptionBadParameter.h>
+#include <libinvm-cim/ExceptionBadParameter.h>
 
-#include <libintelnvm-cli/FeatureBase.h>
-#include <libintelnvm-cli/SimpleResult.h>
-#include <libintelnvm-cli/CommandSpec.h>
-#include <libintelnvm-cli/PropertyListResult.h>
-#include <libintelnvm-cli/ObjectListResult.h>
-#include <libintelnvm-cli/SyntaxErrorResult.h>
-#include <libintelnvm-cli/SyntaxErrorBadValueResult.h>
-#include <libintelnvm-cli/SyntaxErrorMissingValueResult.h>
-#include <libintelnvm-cli/Parser.h>
+#include <libinvm-cli/FeatureBase.h>
+#include <libinvm-cli/SimpleResult.h>
+#include <libinvm-cli/CommandSpec.h>
+#include <libinvm-cli/PropertyListResult.h>
+#include <libinvm-cli/ObjectListResult.h>
+#include <libinvm-cli/SyntaxErrorResult.h>
+#include <libinvm-cli/SyntaxErrorBadValueResult.h>
+#include <libinvm-cli/SyntaxErrorMissingValueResult.h>
+#include <libinvm-cli/Parser.h>
 #include <uid/uid.h>
 
 #include <support/NVDIMMDiagnosticFactory.h>
@@ -72,7 +72,7 @@
 #include <exception/NvmExceptionLibError.h>
 #include <core/device/DeviceFirmwareService.h>
 #include <framework_interface/FrameworkExtensions.h>
-#include <libintelnvm-cim/ExceptionNoMemory.h>
+#include <libinvm-cim/ExceptionNoMemory.h>
 
 #include "ShowVersionCommand.h"
 

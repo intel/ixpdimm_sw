@@ -28,7 +28,7 @@
 #include "NvmIndicationService.h"
 
 #include <indication/NvmIndicationFactory.h>
-#include <libintelnvm-cim/Instance.h>
+#include <libinvm-cim/Instance.h>
 #include <LogEnterExit.h>
 #include <exception/NvmExceptionLibError.h>
 

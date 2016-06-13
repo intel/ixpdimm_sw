@@ -32,7 +32,7 @@
 #ifndef ELEMENTSOFTWAREIDENTITYFACTORY_H_
 #define ELEMENTSOFTWAREIDENTITYFACTORY_H_
 
-#include <libintelnvm-cim/AssociationFactory.h>
+#include <libinvm-cim/AssociationFactory.h>
 #include <lib_interface/NvmApi.h>
 #include <core/device/DeviceService.h>
 #include <core/device/DeviceFirmwareService.h>

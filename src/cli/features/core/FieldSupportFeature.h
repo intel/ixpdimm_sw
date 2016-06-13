@@ -31,13 +31,13 @@
 #ifndef _CLI_NVMCLI_FIELDSUPPORTFEATURE_H_
 #define _CLI_NVMCLI_FIELDSUPPORTFEATURE_H_
 
-#include <libintelnvm-cli/FeatureBase.h>
-#include <libintelnvm-cli/SimpleListResult.h>
-#include <libintelnvm-cli/PropertyListResult.h>
-#include <libintelnvm-cli/ObjectListResult.h>
+#include <libinvm-cli/FeatureBase.h>
+#include <libinvm-cli/SimpleListResult.h>
+#include <libinvm-cli/PropertyListResult.h>
+#include <libinvm-cli/ObjectListResult.h>
 #include <cr_i18n.h>
 #include <support/EventLogFilter.h>
-#include <libintelnvm-cim/Instance.h>
+#include <libinvm-cim/Instance.h>
 #include <nvm_types.h>
 
 namespace cli

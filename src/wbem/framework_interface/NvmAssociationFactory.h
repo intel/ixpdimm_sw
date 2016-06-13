@@ -27,7 +27,7 @@
 #ifndef CR_MGMT_NVMASSOCIATIONFACTORY_H
 #define CR_MGMT_NVMASSOCIATIONFACTORY_H
 
-#include <libintelnvm-cim/AssociationFactory.h>
+#include <libinvm-cim/AssociationFactory.h>
 #include <NvmStrings.h>
 #include <nvm_types.h>
 

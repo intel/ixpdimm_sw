@@ -39,8 +39,8 @@
 #include <physical_asset/NVDIMMFactory.h>
 #include <LogEnterExit.h>
 #include <server/BaseServerFactory.h>
-#include <libintelnvm-cim/ExceptionBadParameter.h>
-#include <libintelnvm-cim/ExceptionNotSupported.h>
+#include <libinvm-cim/ExceptionBadParameter.h>
+#include <libinvm-cim/ExceptionNotSupported.h>
 #include <exception/NvmExceptionLibError.h>
 #include <NvmStrings.h>
 #include <framework_interface/FrameworkExtensions.h>

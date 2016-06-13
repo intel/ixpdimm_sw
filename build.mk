@@ -110,12 +110,12 @@ CIM_LIB_NAME=ixpdimm-cim
 CLI_NAME=ixpdimm-cli
 MONITOR_NAME=ixpdimm-monitor
 
-CIM_FRAMEWORK_LIB_SONAME=libintelnvm-cim
-CIM_FRAMEWORK_LIB_NAME=intelnvm-cim
-I18N_LIB_SONAME=libintelnvm-i18n
-I18N_LIB_NAME=intelnvm-i18n
-CLI_FRAMEWORK_LIB_SONAME=libintelnvm-cli
-CLI_FRAMEWORK_LIB_NAME=intelnvm-cli
+CIM_FRAMEWORK_LIB_SONAME=libinvm-cim
+CIM_FRAMEWORK_LIB_NAME=invm-cim
+I18N_LIB_SONAME=libinvm-i18n
+I18N_LIB_NAME=invm-i18n
+CLI_FRAMEWORK_LIB_SONAME=libinvm-cli
+CLI_FRAMEWORK_LIB_NAME=invm-cli
 
 # OS specific settings
 UNAME := $(shell uname)

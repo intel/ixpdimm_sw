@@ -33,8 +33,8 @@
 #include <string.h>
 #include <nvm_management.h>
 #include <LogEnterExit.h>
-#include <libintelnvm-cim/ObjectPath.h>
-#include <libintelnvm-cim/ExceptionBadParameter.h>
+#include <libinvm-cim/ObjectPath.h>
+#include <libinvm-cim/ExceptionBadParameter.h>
 #include <server/BaseServerFactory.h>
 #include <uid/uid.h>
 #include "SanitizeJobFactory.h"

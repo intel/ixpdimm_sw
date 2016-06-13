@@ -32,12 +32,12 @@
 
 #include <algorithm>
 #include <LogEnterExit.h>
-#include <libintelnvm-cim/ExceptionBadParameter.h>
+#include <libinvm-cim/ExceptionBadParameter.h>
 #include <server/BaseServerFactory.h>
 #include "MemoryControllerFactory.h"
 #include "SystemProcessorFactory.h"
 #include <framework_interface/NvmAssociationFactory.h>
-#include <libintelnvm-cim/StringUtil.h>
+#include <libinvm-cim/StringUtil.h>
 #include <sstream>
 #include <exception/NvmExceptionLibError.h>
 

@@ -33,10 +33,10 @@
 #include <LogEnterExit.h>
 #include "NVDIMMSensorViewFactory.h"
 #include "NVDIMMSensorFactory.h"
-#include <libintelnvm-cim/Attribute.h>
+#include <libinvm-cim/Attribute.h>
 #include <uid/uid.h>
-#include <libintelnvm-cim/ObjectPath.h>
-#include <libintelnvm-cim/ExceptionBadParameter.h>
+#include <libinvm-cim/ObjectPath.h>
+#include <libinvm-cim/ExceptionBadParameter.h>
 #include <sstream>
 #include <iomanip>
 #include <exception/NvmExceptionLibError.h>

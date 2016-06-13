@@ -45,7 +45,7 @@
 #include <NvmStrings.h>
 #include <lib_interface/NvmApi.h>
 #include <sstream>
-#include <libintelnvm-cim/ExceptionBadParameter.h>
+#include <libinvm-cim/ExceptionBadParameter.h>
 #include <exception/NvmExceptionLibError.h>
 
 wbem::software::NVDIMMFWVersionFactory::NVDIMMFWVersionFactory()

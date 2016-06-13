@@ -28,7 +28,7 @@
 #ifndef SRC_WBEM_INDICATION_NVMINDICATIONSERVICE_H_
 #define SRC_WBEM_INDICATION_NVMINDICATIONSERVICE_H_
 
-#include <libintelnvm-cim/IndicationService.h>
+#include <libinvm-cim/IndicationService.h>
 #include <lib_interface/NvmApi.h>
 #include <nvm_types.h>
 

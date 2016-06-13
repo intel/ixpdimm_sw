@@ -27,7 +27,7 @@
 #ifndef CR_MGMT_DISPLAYOPTIONS_H
 #define CR_MGMT_DISPLAYOPTIONS_H
 
-#include <libintelnvm-cli/CliFrameworkTypes.h>
+#include <libinvm-cli/CliFrameworkTypes.h>
 #include <lib/nvm_types.h>
 
 namespace cli

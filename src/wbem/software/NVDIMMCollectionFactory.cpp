@@ -32,7 +32,7 @@
 
 #include <LogEnterExit.h>
 #include "NVDIMMCollectionFactory.h"
-#include <libintelnvm-cim/Attribute.h>
+#include <libinvm-cim/Attribute.h>
 #include <NvmStrings.h>
 
 

@@ -30,10 +30,10 @@
 
 #include <nvm_management.h>
 
-#include <libintelnvm-cli/PropertyListResult.h>
-#include <libintelnvm-cli/ObjectListResult.h>
-#include <libintelnvm-cim/Instance.h>
-#include <libintelnvm-cli/SyntaxErrorBadValueResult.h>
+#include <libinvm-cli/PropertyListResult.h>
+#include <libinvm-cli/ObjectListResult.h>
+#include <libinvm-cim/Instance.h>
+#include <libinvm-cli/SyntaxErrorBadValueResult.h>
 #include <framework_interface/NvmInstanceFactory.h>
 
 namespace cli

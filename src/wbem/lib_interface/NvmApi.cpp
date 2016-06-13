@@ -31,8 +31,8 @@
 
 #include "NvmApi.h"
 
-#include <libintelnvm-cim/ExceptionNoMemory.h>
-#include <libintelnvm-cim/ExceptionBadParameter.h>
+#include <libinvm-cim/ExceptionNoMemory.h>
+#include <libinvm-cim/ExceptionBadParameter.h>
 #include <uid/uid.h>
 #include <LogEnterExit.h>
 #include <os/os_adapter.h>

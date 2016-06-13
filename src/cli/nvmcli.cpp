@@ -36,7 +36,7 @@
 #include <os/os_adapter.h>
 #include <persistence/lib_persistence.h>
 
-#include <libintelnvm-cli/Framework.h>
+#include <libinvm-cli/Framework.h>
 #include <lib_interface/NvmContext.h>
 
 #ifdef _INTEL_I18N_

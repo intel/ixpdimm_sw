@@ -31,7 +31,7 @@
  */
 
 #include <LogEnterExit.h>
-#include <libintelnvm-cim/ExceptionBadParameter.h>
+#include <libinvm-cim/ExceptionBadParameter.h>
 #include "PerformanceMetricDefinitionFactory.h"
 #include <server/BaseServerFactory.h>
 #include <sstream>

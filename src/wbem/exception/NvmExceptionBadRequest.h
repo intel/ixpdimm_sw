@@ -32,7 +32,7 @@
 #ifndef _WBEM_EXCEPTION_NVMEXCEPTIONBADREQUEST_H_
 #define _WBEM_EXCEPTION_NVMEXCEPTIONBADREQUEST_H_
 
-#include <libintelnvm-cim/Exception.h>
+#include <libinvm-cim/Exception.h>
 #include <nvm_types.h>
 
 namespace wbem

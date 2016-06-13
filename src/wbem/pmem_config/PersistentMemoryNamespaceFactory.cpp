@@ -31,17 +31,17 @@
 
 #include <LogEnterExit.h>
 #include <nvm_management.h>
-#include <libintelnvm-cim/Attribute.h>
+#include <libinvm-cim/Attribute.h>
 #include <server/BaseServerFactory.h>
 #include <uid/uid.h>
-#include <libintelnvm-cim/ExceptionBadParameter.h>
+#include <libinvm-cim/ExceptionBadParameter.h>
 #include "PersistentMemoryNamespaceFactory.h"
 #include "NamespaceViewFactory.h"
 #include <memory/RawMemoryFactory.h>
 #include <pmem_config/PersistentMemoryPoolFactory.h>
 #include <string.h>
-#include <libintelnvm-cim/ExceptionNoMemory.h>
-#include <libintelnvm-cim/ExceptionNotSupported.h>
+#include <libinvm-cim/ExceptionNoMemory.h>
+#include <libinvm-cim/ExceptionNotSupported.h>
 #include <exception/NvmExceptionLibError.h>
 #include <framework_interface/NvmAssociationFactory.h>
 #include <NvmStrings.h>

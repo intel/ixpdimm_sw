@@ -32,7 +32,7 @@
 #include "HostSoftwareFactory.h"
 #include <LogEnterExit.h>
 #include <server/BaseServerFactory.h>
-#include <libintelnvm-cim/ExceptionBadParameter.h>
+#include <libinvm-cim/ExceptionBadParameter.h>
 #include <NvmStrings.h>
 
 wbem::software::HostSoftwareFactory::HostSoftwareFactory()

@@ -34,7 +34,7 @@
 #include <nvm_management.h>
 #include <string/revision.h>
 #include <uid/uid.h>
-#include <libintelnvm-cim/ExceptionBadParameter.h>
+#include <libinvm-cim/ExceptionBadParameter.h>
 #include <physical_asset/NVDIMMFactory.h>
 #include "NVDIMMSensorFactory.h"
 #include <server/BaseServerFactory.h>

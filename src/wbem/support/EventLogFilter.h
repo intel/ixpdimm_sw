@@ -32,8 +32,8 @@
 #ifndef EVENTLOGFILTER_H_
 #define EVENTLOGFILTER_H_
 
-#include <libintelnvm-cim/Exception.h>
-#include <libintelnvm-cim/Types.h>
+#include <libinvm-cim/Exception.h>
+#include <libinvm-cim/Types.h>
 #include <ctime>
 #include <common_types.h>
 #include <nvm_types.h>

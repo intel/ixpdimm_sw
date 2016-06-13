@@ -32,8 +32,8 @@
 #ifndef _CLI_NVMCLI_SIMULATORFEATURE_H
 #define _CLI_NVMCLI_SIMULATORFEATURE_H
 
-#include <libintelnvm-cli/FeatureBase.h>
-#include <libintelnvm-cli/FeatureRef.h>
+#include <libinvm-cli/FeatureBase.h>
+#include <libinvm-cli/FeatureRef.h>
 #include <nvm_types.h>
 
 namespace cli

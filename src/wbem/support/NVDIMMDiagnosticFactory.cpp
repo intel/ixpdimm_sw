@@ -33,9 +33,9 @@
 #include <string.h>
 #include <nvm_management.h>
 #include <LogEnterExit.h>
-#include <libintelnvm-cim/ExceptionBadParameter.h>
-#include <libintelnvm-cim/ObjectPathBuilder.h>
-#include <libintelnvm-cim/CimXml.h>
+#include <libinvm-cim/ExceptionBadParameter.h>
+#include <libinvm-cim/ObjectPathBuilder.h>
+#include <libinvm-cim/CimXml.h>
 #include <uid/uid.h>
 #include "NVDIMMDiagnosticFactory.h"
 #include "DiagnosticIdentityFactory.h"

@@ -37,7 +37,7 @@
 #include <objbase.h>
 #include <initguid.h>
 #include <windows.h>
-#include <libintelnvm-cim/IntelWmiProviderFactory.h>
+#include <libinvm-cim/IntelWmiProviderFactory.h>
 #include <string/s_str.h>
 #include <LogEnterExit.h>
 #include <nvm_types.h>

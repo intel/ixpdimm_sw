@@ -32,11 +32,11 @@
 #include "PersistentMemoryServiceFactory.h"
 #include "PersistentMemoryNamespaceFactory.h"
 #include <LogEnterExit.h>
-#include <libintelnvm-cim/ExceptionNoMemory.h>
-#include <libintelnvm-cim/ExceptionBadParameter.h>
+#include <libinvm-cim/ExceptionNoMemory.h>
+#include <libinvm-cim/ExceptionBadParameter.h>
 #include <uid/uid.h>
-#include <libintelnvm-cim/ExceptionNotSupported.h>
-#include <libintelnvm-cim/ObjectPathBuilder.h>
+#include <libinvm-cim/ExceptionNotSupported.h>
+#include <libinvm-cim/ObjectPathBuilder.h>
 #include "pmem_config/PersistentMemoryPoolFactory.h"
 #include "pmem_config/NamespaceViewFactory.h"
 #include <string/s_str.h>

@@ -131,7 +131,11 @@ $(OBJECT_MODULE_DIR) :
 	$(MKDIR) $@
 
 $(TARGETNAME) : $(OBJNAMES)
+ifdef BUILD_ESX
 	$(CPP) -Wl,-rpath,$(ESX_SUPPORT_DIR) $(CPPFLAGS) $(OBJNAMES) $(LIBS) -o $@
+else
+	$(CPP) $(CPPFLAGS) $(OBJNAMES) $(LIBS) -o $@
+endif
 ifdef BUILD_WINDOWS
 	# Set System account security for service
 	# (NOTE: QuickBuild fails with this command, so commenting out. It also appears that the files built by QB

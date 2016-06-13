@@ -30,7 +30,7 @@
  */
 
 #include <support/EventLogFilter.h>
-#include <libintelnvm-cim/ExceptionBadParameter.h>
+#include <libinvm-cim/ExceptionBadParameter.h>
 #include <persistence/logging.h>
 
 wbem::support::EventLogFilter::EventLogFilter() :

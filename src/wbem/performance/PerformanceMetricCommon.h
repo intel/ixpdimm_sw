@@ -33,9 +33,9 @@
 #define	_WBEM_PERFORMANCE_METRIC_COMMON_H
 
 #include <string>
-#include <libintelnvm-cim/Exception.h>
-#include <libintelnvm-cim/ExceptionBadParameter.h>
-#include <libintelnvm-cim/Types.h>
+#include <libinvm-cim/Exception.h>
+#include <libinvm-cim/ExceptionBadParameter.h>
+#include <libinvm-cim/Types.h>
 #include <exception/NvmExceptionLibError.h>
 #include <NvmStrings.h>
 

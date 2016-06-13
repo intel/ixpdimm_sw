@@ -39,12 +39,12 @@
 #include <mem_config/InterleaveSet.h>
 #include <pmem_config/NamespaceViewFactory.h>
 
-#include <libintelnvm-cli/FeatureBase.h>
-#include <libintelnvm-cli/SimpleResult.h>
-#include <libintelnvm-cli/SimpleListResult.h>
-#include <libintelnvm-cli/CommandSpec.h>
-#include <libintelnvm-cli/PropertyListResult.h>
-#include <libintelnvm-cli/NotImplementedErrorResult.h>
+#include <libinvm-cli/FeatureBase.h>
+#include <libinvm-cli/SimpleResult.h>
+#include <libinvm-cli/SimpleListResult.h>
+#include <libinvm-cli/CommandSpec.h>
+#include <libinvm-cli/PropertyListResult.h>
+#include <libinvm-cli/NotImplementedErrorResult.h>
 
 #include "CommandParts.h"
 #include "NamespaceFeature.h"

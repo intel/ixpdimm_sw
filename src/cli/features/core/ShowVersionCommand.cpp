@@ -27,7 +27,7 @@
 
 #include "ShowVersionCommand.h"
 #include <LogEnterExit.h>
-#include <libintelnvm-cli/ObjectListResult.h>
+#include <libinvm-cli/ObjectListResult.h>
 #include <core/Helper.h>
 
 cli::nvmcli::ShowVersionCommand::ShowVersionCommand(core::system::SystemService &service) :

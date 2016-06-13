@@ -34,13 +34,13 @@
 
 #include <LogEnterExit.h>
 #include <string/s_str.h>
-#include <libintelnvm-cli/SimpleListResult.h>
-#include <libintelnvm-cli/FeatureBase.h>
-#include <libintelnvm-cli/CommandSpec.h>
-#include <libintelnvm-cli/PropertyListResult.h>
-#include <libintelnvm-cli/Parser.h>
-#include <libintelnvm-cli/SyntaxErrorMissingValueResult.h>
-#include <libintelnvm-cli/SyntaxErrorBadValueResult.h>
+#include <libinvm-cli/SimpleListResult.h>
+#include <libinvm-cli/FeatureBase.h>
+#include <libinvm-cli/CommandSpec.h>
+#include <libinvm-cli/PropertyListResult.h>
+#include <libinvm-cli/Parser.h>
+#include <libinvm-cli/SyntaxErrorMissingValueResult.h>
+#include <libinvm-cli/SyntaxErrorBadValueResult.h>
 #include "CommandParts.h"
 #include "WbemToCli_utilities.h"
 #include "ValidationFeature.h"

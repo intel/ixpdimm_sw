@@ -33,7 +33,7 @@
 #ifndef	_WBEM_FRAMEWORK_NVMEXCEPTION_UNMANAGEABLEDIMM_H_
 #define	_WBEM_FRAMEWORK_NVMEXCEPTION_UNMANAGEABLEDIMM_H_
 
-#include <libintelnvm-cim/Exception.h>
+#include <libinvm-cim/Exception.h>
 #include <nvm_types.h>
 
 

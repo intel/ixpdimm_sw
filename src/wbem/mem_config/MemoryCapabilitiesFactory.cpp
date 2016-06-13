@@ -34,8 +34,8 @@
 #include <nvm_management.h>
 #include <LogEnterExit.h>
 
-#include <libintelnvm-cim/Types.h>
-#include <libintelnvm-cim/ExceptionBadParameter.h>
+#include <libinvm-cim/Types.h>
+#include <libinvm-cim/ExceptionBadParameter.h>
 #include "MemoryCapabilitiesFactory.h"
 #include <server/BaseServerFactory.h>
 #include <server/SystemCapabilitiesFactory.h>

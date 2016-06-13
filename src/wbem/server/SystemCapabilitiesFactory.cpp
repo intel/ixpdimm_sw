@@ -37,8 +37,8 @@
 
 #include <LogEnterExit.h>
 
-#include <libintelnvm-cim/Types.h>
-#include <libintelnvm-cim/ExceptionBadParameter.h>
+#include <libinvm-cim/Types.h>
+#include <libinvm-cim/ExceptionBadParameter.h>
 #include "SystemCapabilitiesFactory.h"
 #include <server/BaseServerFactory.h>
 #include <mem_config/InterleaveSet.h>

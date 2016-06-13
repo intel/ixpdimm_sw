@@ -35,10 +35,10 @@
 #include <nvm_management.h>
 #include <uid/uid.h>
 #include <file_ops/file_ops_adapter.h>
-#include <libintelnvm-cim/ObjectPathBuilder.h>
-#include <libintelnvm-cim/ExceptionBadParameter.h>
-#include <libintelnvm-cim/ExceptionNoMemory.h>
-#include <libintelnvm-cim/ExceptionNotSupported.h>
+#include <libinvm-cim/ObjectPathBuilder.h>
+#include <libinvm-cim/ExceptionBadParameter.h>
+#include <libinvm-cim/ExceptionNoMemory.h>
+#include <libinvm-cim/ExceptionNotSupported.h>
 #include <server/BaseServerFactory.h>
 #include <physical_asset/NVDIMMFactory.h>
 #include "NVDIMMSoftwareInstallationServiceFactory.h"

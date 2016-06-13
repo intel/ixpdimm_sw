@@ -38,8 +38,8 @@
 #include <memory/SystemProcessorFactory.h>
 #include <memory/RawMemoryFactory.h>
 #include <framework_interface/NvmAssociationFactory.h>
-#include <libintelnvm-cim/ExceptionNoMemory.h>
-#include <libintelnvm-cim/ExceptionBadAttribute.h>
+#include <libinvm-cim/ExceptionNoMemory.h>
+#include <libinvm-cim/ExceptionBadAttribute.h>
 #include <exception/NvmExceptionLibError.h>
 #include <LogEnterExit.h>
 #include <uid/uid.h>

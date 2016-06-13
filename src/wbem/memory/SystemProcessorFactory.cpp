@@ -35,7 +35,7 @@
 
 #include <LogEnterExit.h>
 
-#include <libintelnvm-cim/ExceptionBadParameter.h>
+#include <libinvm-cim/ExceptionBadParameter.h>
 #include <server/BaseServerFactory.h>
 #include "SystemProcessorFactory.h"
 #include <exception/NvmExceptionLibError.h>

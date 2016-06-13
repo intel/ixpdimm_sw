@@ -24,12 +24,12 @@ BuildRequires:pkgconfig(libkmod)
 BuildRequires:pkgconfig(sqlite3)
 BuildRequires:pkgconfig(libndctl)
 
-BuildRequires:libintelnvm-i18n
-BuildRequires:libintelnvm-i18n-devel
-BuildRequires:libintelnvm-cim
-BuildRequires:libintelnvm-cim-devel
-BuildRequires:libintelnvm-cli
-BuildRequires:libintelnvm-cli-devel
+BuildRequires:libinvm-i18n
+BuildRequires:libinvm-i18n-devel
+BuildRequires:libinvm-cim
+BuildRequires:libinvm-cim-devel
+BuildRequires:libinvm-cli
+BuildRequires:libinvm-cli-devel
 
 %define  debug_package %{nil}
 

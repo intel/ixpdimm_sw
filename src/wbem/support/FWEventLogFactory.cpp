@@ -34,7 +34,7 @@
 #include <uid/uid.h>
 #include <LogEnterExit.h>
 #include <physical_asset/NVDIMMFactory.h>
-#include <libintelnvm-cim/ExceptionBadParameter.h>
+#include <libinvm-cim/ExceptionBadParameter.h>
 #include "FWEventLogFactory.h"
 #include <server/BaseServerFactory.h>
 #include <exception/NvmExceptionLibError.h>

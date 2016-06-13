@@ -26,7 +26,7 @@
  */
 
 #include <server/BaseServerFactory.h>
-#include <libintelnvm-cim/ExceptionBadParameter.h>
+#include <libinvm-cim/ExceptionBadParameter.h>
 #include <LogEnterExit.h>
 #include "StaticFilterFactory.h"
 

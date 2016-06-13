@@ -33,7 +33,7 @@
 #define _CLI_NVMCLI_SENSORFEATURE_H_
 
 #include <cr_i18n.h>
-#include <libintelnvm-cli/FeatureBase.h>
+#include <libinvm-cli/FeatureBase.h>
 #include <support/NVDIMMSensorViewFactory.h>
 #include <nvm_types.h>
 

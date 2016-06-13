@@ -34,7 +34,7 @@
 #include <nvm_management.h>
 #include <LogEnterExit.h>
 #include <server/BaseServerFactory.h>
-#include <libintelnvm-cim/ExceptionBadAttribute.h>
+#include <libinvm-cim/ExceptionBadAttribute.h>
 #include <string/revision.h>
 #include <exception/NvmExceptionLibError.h>
 #include <NvmStrings.h>

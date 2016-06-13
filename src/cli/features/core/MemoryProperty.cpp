@@ -34,7 +34,7 @@
 #include "WbemToCli_utilities.h"
 #include <string/x_str.h>
 #include <string/s_str.h>
-#include <libintelnvm-cli/SyntaxErrorMissingValueResult.h>
+#include <libinvm-cli/SyntaxErrorMissingValueResult.h>
 #include <mem_config/MemoryCapabilitiesFactory.h>
 #include "MemoryProperty.h"
 #include <utility.h>

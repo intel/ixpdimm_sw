@@ -30,7 +30,7 @@
  */
 
 #include <LogEnterExit.h>
-#include <libintelnvm-cim/ExceptionBadParameter.h>
+#include <libinvm-cim/ExceptionBadParameter.h>
 #include "ErasureCapabilitiesFactory.h"
 #include <server/BaseServerFactory.h>
 #include <NvmStrings.h>
