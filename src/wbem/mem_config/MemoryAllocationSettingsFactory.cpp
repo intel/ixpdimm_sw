@@ -467,8 +467,8 @@ NVM_UINT64 wbem::mem_config::MemoryAllocationSettingsFactory::getStorageCapacity
 		if (pools[i].type == POOL_TYPE_PERSISTENT)
 		{
 			int index = getIndexOfDimmInPoolOrReturnNotFound(&(pools[i]), uid);
-
-			if ((index = getIndexOfDimmInPoolOrReturnNotFound(&(pools[i]), uid)) != framework::NOTFOUND)
+			if ((index != framework::NOTFOUND) &&
+					(index < NVM_MAX_DEVICES_PER_POOL))
 			{
 				storageCapacity = pools[i].storage_capacities[index];
 			}

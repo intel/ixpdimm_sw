@@ -930,7 +930,7 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseCreateNsMemoryPa
 		}
 	}
 
-	if (optimizePropertyExists() &&
+	if (!pResult && optimizePropertyExists() &&
 			m_memoryPageAllocation != wbem::pmem_config::PM_SERVICE_MEMORYPAGEALLOCATION_NONE)
 	{
 		COMMON_LOG_ERROR(

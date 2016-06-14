@@ -87,7 +87,7 @@ int calculate_device_uid(struct device_discovery *p_device)
 	}
 	else
 	{
-		sprintf(p_device->uid, "%04x-%02x%02x%02x%02x", p_device->vendor_id,
+		s_snprintf(p_device->uid, NVM_MAX_UID_LEN, "%04x-%02x%02x%02x%02x", p_device->vendor_id,
 			p_device->serial_number[0],
 			p_device->serial_number[1],
 			p_device->serial_number[2],

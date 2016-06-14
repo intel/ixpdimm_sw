@@ -440,7 +440,8 @@ static inline NVM_UINT32 get_lowest_common_multiple(
 static inline NVM_UINT64 round_up(const NVM_UINT64 num_to_round, const NVM_UINT64 multiple_of)
 {
 	NVM_UINT64 rounded = num_to_round;
-	if (num_to_round % multiple_of)
+	if (multiple_of != 0 &&
+			num_to_round % multiple_of)
 	{
 		NVM_UINT64 remainder = num_to_round % multiple_of;
 		NVM_UINT64 adjustment = multiple_of - remainder;
@@ -453,7 +454,8 @@ static inline NVM_UINT64 round_up(const NVM_UINT64 num_to_round, const NVM_UINT6
 static inline NVM_UINT64 round_down(const NVM_UINT64 num_to_round, const NVM_UINT64 multiple_of)
 {
 	NVM_UINT64 rounded = num_to_round;
-	if (num_to_round % multiple_of)
+	if (multiple_of != 0 &&
+			num_to_round % multiple_of)
 	{
 		NVM_UINT64 adjustment = num_to_round % multiple_of;
 		rounded -= adjustment;
