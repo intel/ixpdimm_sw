@@ -107,7 +107,7 @@ public:
 	virtual std::string getFwApiVersion();
 	virtual fw_log_level getFwLogLevel();
 	virtual NVM_UINT64 getRawCapacity();
-	virtual NVM_UINT16 getInterfaceFormatCode();
+	virtual std::vector<NVM_UINT16> getInterfaceFormatCodes();
 	virtual bool isPassphraseCapable();
 	virtual bool isUnlockDeviceCapable();
 	virtual bool isEraseCryptoCapable();

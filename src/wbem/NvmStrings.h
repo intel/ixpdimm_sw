@@ -141,7 +141,6 @@ static std::string FWAPIVERSION_KEY = "FWAPIVersion";
 static std::string FWVERSION_KEY = "FWVersion";
 static std::string INACCESSIBLE_APP_DIRECT_CAPACITY_KEY = "InaccessibleAppDirectCapacity";
 static std::string UNCONFIGUREDCAPACITY_KEY = "UnconfiguredCapacity";
-static std::string INTERFACEFORMATCODE_KEY = "InterfaceFormatCode";
 static std::string POWERMANAGEMENTENABLED_KEY = "PowerManagementEnabled";
 static std::string POWERLIMIT_KEY = "PowerLimit";
 static std::string PEAKPOWERBUDGET_KEY = "PeakPowerBudget";

@@ -216,8 +216,8 @@ NVM_UINT16 Device::getMemoryControllerId()
 }
 NVM_UINT16 Device::getNodeControllerId()
 {
-        LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-        return getDiscovery().node_controller_id;
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	return getDiscovery().node_controller_id;
 }
 
 std::string Device::getSerialNumber()
@@ -331,10 +331,19 @@ NVM_UINT64 Device::getRawCapacity()
 	return getDiscovery().capacity;
 }
 
-NVM_UINT16 Device::getInterfaceFormatCode()
+std::vector<NVM_UINT16> Device::getInterfaceFormatCodes()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	return getDiscovery().interface_format_codes[0];
+	std::vector<NVM_UINT16> interfaceFormatCodes;
+	for (int i = 0; i < NVM_MAX_IFCS_PER_DIMM; i++)
+	{
+		NVM_UINT16 ifc = getDiscovery().interface_format_codes[i];
+		if (ifc != FORMAT_NONE)
+		{
+			interfaceFormatCodes.push_back(ifc);
+		}
+	}
+	return interfaceFormatCodes;
 }
 
 bool Device::isPassphraseCapable()

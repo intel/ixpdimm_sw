@@ -48,7 +48,8 @@ ShowDeviceCommand::ShowDeviceCommand(core::device::DeviceService &service)
 	m_props.addUint16("HealthState", &core::device::Device::getHealthState,
 			&convertHealthState).setIsDefault();
 	m_props.addBool("ActionRequired", &core::device::Device::isActionRequired).setIsDefault();
-	m_props.addUint16("InterfaceFormatCode", &core::device::Device::getInterfaceFormatCode);
+	m_props.addList("InterfaceFormatCode", &core::device::Device::getInterfaceFormatCodes,
+			&convertInterfaceFormatCode);
 	m_props.addOther("ManageabilityState", &core::device::Device::getManageabilityState,
 			&convertManageabilityState);
 	m_props.addUint16("PhysicalID", &core::device::Device::getPhysicalId);
@@ -534,5 +535,43 @@ std::string ShowDeviceCommand::toHex(NVM_UINT16 value)
 
 	return result.str();
 }
+
+std::string ShowDeviceCommand::convertInterfaceFormatCode(const NVM_UINT16 ifc)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	std::stringstream result;
+
+	result << "0x" << std::hex << std::setw(4) << std::setfill('0') << ifc;
+	result << " (";
+
+	result << getJedecStringForInterfaceFormatCode(ifc);
+
+	result << ")";
+
+	return result.str();
+}
+
+std::string ShowDeviceCommand::getJedecStringForInterfaceFormatCode(const NVM_UINT16 ifc)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	std::string result;
+	if (ifc == FORMAT_BYTE_STANDARD)
+	{
+		result = TR("Non-Energy Backed Byte Addressable");
+	}
+	else if (ifc == FORMAT_BLOCK_STANDARD)
+	{
+		result = TR("Non-Energy Backed Block Addressable");
+	}
+	else
+	{
+		result = TR("Unknown");
+	}
+
+	return result;
+}
+
 }
 }

@@ -742,8 +742,6 @@ void NVDIMMFactory::toInstance(core::device::Device &device,
 			device.getInaccessibleCapacity());
 	ADD_ATTRIBUTE(instance, attributes, RESERVEDCAPACITY_KEY, framework::UINT64,
 			device.getReservedCapacity());
-	ADD_ATTRIBUTE(instance, attributes, INTERFACEFORMATCODE_KEY, framework::UINT16,
-			device.getInterfaceFormatCode());
 	ADD_ATTRIBUTE(instance, attributes, DEVICELOCATOR_KEY, framework::STR,
 			device.getDeviceLocator());
 	ADD_ATTRIBUTE(instance, attributes, ACTIONREQUIRED_KEY, framework::BOOLEAN,
