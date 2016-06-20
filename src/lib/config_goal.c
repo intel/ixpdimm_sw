@@ -653,15 +653,15 @@ int update_config_goal(const struct device_discovery *p_discovery,
 		// Create the platform config table and write it
 		if (rc == NVM_SUCCESS)
 		{
-			// Fetch current config and config output tables from existing data
+			// Fetch current config tables from existing data
 			// We won't be changing these, but we need to avoid clobbering them when we
 			// write our new input table.
+			// Note that the config output table is removed - BIOS requires this.
 			struct current_config_table *p_old_current_cfg = cast_current_config(p_old_cfg);
-			struct config_output_table *p_old_output = cast_config_output(p_old_cfg);
 
 			// build our new table
 			struct platform_config_data *p_cfg_data = NULL;
-			rc = build_platform_config_data(p_old_current_cfg, p_input_table, p_old_output,
+			rc = build_platform_config_data(p_old_current_cfg, p_input_table, NULL,
 					&p_cfg_data);
 			if (rc == NVM_SUCCESS)
 			{
