@@ -49,8 +49,11 @@ static const framework::UINT16 SENSOR_ENABLEDSTATE_ENABLED = 2; //!< Sensor alar
 static const framework::UINT16 SENSOR_ENABLEDSTATE_DISABLED = 3; //!< Sensor alarm is disabled
 static const framework::UINT16 SENSOR_ENABLEDSTATE_NA = 5; //!< Sensor alarm is not applicable
 
+static const framework::UINT16 SENSOR_LOWER_NONCRITICAL_THRESHOLD = 0; //!< lowest critical threshold
+static const framework::UINT16 SENSOR_UPPER_NONCRITICAL_THRESHOLD = 1; //!< lowest critical threshold
 static const framework::UINT16 SENSOR_LOWER_CRITICAL_THRESHOLD = 2; //!< lowest critical threshold
 static const framework::UINT16 SENSOR_UPPER_CRITICAL_THRESHOLD = 3; //!< highest critical threshold
+static const framework::UINT16 SENSOR_UPPER_FATAL_THRESHOLD = 5; //!< lowest critical threshold
 
 #define SENSOR_TYPE_UNKNOWN 0
 #define SENSOR_TYPE_OTHER   1
@@ -83,46 +86,20 @@ public:
 	static const int SENSORTYPE_MEDIAERRORS_NONHOST; //!< Number of ECC errors encountered by non-hosts requests only.
 	static const int SENSORTYPE_CONTROLLER_TEMPERATURE; //!< Device controller temperature in degrees Celsius
 
-	/*!
-	 * Initialize a new NVDIMMSensor.
-	 */
+	static const int SENSOR_TEMP_MODIFIER = 10000;
+	static const int SENSOR_TEMP_MODIFIER_POWER = 4;
+
 	NVDIMMSensorFactory() throw (framework::Exception);
 
-	/*!
-	 * Clean up the NVDIMMSensor
-	 */
 	~NVDIMMSensorFactory();
 
-	/*!
-	 * Implementation of the standard CIM method to retrieve a specific instance
-	 * @param[in] path
-	 * 		The object path of the instance to retrieve.
-	 * @param[in] attributes
-	 * 		The attributes to retrieve.
-	 * @throw Exception if unable to retrieve the host information.
-	 * @todo Should throw an exception if the object path doesn't match
-	 * the results of getHostName.
-	 * @return The instance.
-	 */
+	framework::instances_t *getInstances(framework::attribute_names_t &attributes);
+
 	framework::Instance* getInstance(framework::ObjectPath &path,
 			framework::attribute_names_t &attributes) throw (framework::Exception);
 
-	/*!
-	 * Implementation of the standard CIM method to retrieve a list of
-	 * object paths.
-	 * @return The object path.
-	 */
 	framework::instance_names_t* getInstanceNames() throw (framework::Exception);
 
-	/*!
-	 * Standard CIM method to modify an existing instance.
-	 * @param[in] path
-	 * 		The object path of the instance to modify.
-	 * @param[in] attributes
-	 * 		The attributes to modify.
-	 * @throw Exception if not implemented.
-	 * @return The updated instance.
-	 */
 	wbem::framework::Instance* modifyInstance(wbem::framework::ObjectPath &path, wbem::framework::attributes_t &attributes)
 		throw (wbem::framework::Exception);
 
@@ -194,6 +171,8 @@ public:
 	 * @return the vector of instance names
 	 */
 	static 	framework::instance_names_t* getNames() throw (framework::Exception);
+	static framework::SINT32 nvmTempToCimTemp(const NVM_UINT64 &value);
+	static framework::SINT32 realTempToCimTemp(const framework::REAL32 &temp);
 
 private:
 	static const std::string& getCIMSensorDeviceName(int nvm_type) throw (framework::Exception);
@@ -217,6 +196,13 @@ private:
 	 * get the string associated with the enabled state
 	 */
 	std::string getSensorEnabledString(const NVM_UINT16 enabledState);
+	void sensorToInstance(const wbem::framework::attribute_names_t &attributes,
+		const struct sensor &sensor, wbem::framework::Instance &instance);
+
+	framework::SINT32 decodeIfTemp(const sensor_type &type, const NVM_UINT64 &value);
+
+	static NVM_UINT32 tempAttributeToNvmValue(const framework::Attribute &attribute);
+	static bool isTempSensorType(const sensor_type &type);
 };
 
 } // software

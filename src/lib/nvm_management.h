@@ -84,7 +84,7 @@ extern "C"
 	arr[0] = (unsigned char)(val & 0xFF);
 
 /*
- * Encode the temperature as a NVM_UINT64
+ * Encode the temperature as a NVM_UINT32
  */
 static inline NVM_UINT32 nvm_encode_temperature(NVM_REAL32 value)
 {
@@ -94,7 +94,7 @@ static inline NVM_UINT32 nvm_encode_temperature(NVM_REAL32 value)
 }
 
 /*
- * Decode a NVM_UINT64 as a temperature
+ * Decode a NVM_UINT32 as a temperature
  */
 static inline NVM_REAL32 nvm_decode_temperature(NVM_UINT32 value)
 {
@@ -236,7 +236,9 @@ enum sensor_status
 {
 	SENSOR_UNKNOWN = 0, // Sensor status cannot be determined.
 	SENSOR_NORMAL = 1, // Current value of the sensor is in the normal range.
-	SENSOR_CRITICAL = 2, // Current value of the sensor is in the critical error range.
+	SENSOR_NONCRITICAL = 2, // Current value of the sensor is in non critical range.
+	SENSOR_CRITICAL = 3, // Current value of the sensor is in the critical error range.
+	SENSOR_FATAL = 4 // Current value of the sensor is in the fatal error range.
 };
 
 /*
@@ -681,6 +683,10 @@ struct sensor_settings
 	NVM_BOOL enabled; // If firmware notifications are enabled when sensor value is critical.
 	NVM_UINT64 upper_critical_threshold; // The upper critical threshold.
 	NVM_UINT64 lower_critical_threshold; // The lower critical threshold.
+	NVM_UINT64 upper_fatal_threshold; // The upper fatal threshold.
+	NVM_UINT64 lower_fatal_threshold; // The lower fatal threshold.
+	NVM_UINT64 upper_noncritical_threshold; // The upper noncritical threshold.
+	NVM_UINT64 lower_noncritical_threshold; // The lower noncritical threshold.
 };
 
 /*
@@ -698,6 +704,14 @@ struct sensor
 	NVM_BOOL upper_critical_settable; // If the upper_critical_threshold value is modifiable.
 	NVM_BOOL lower_critical_support; // If the lower_critical_threshold value is supported.
 	NVM_BOOL upper_critical_support; // If the upper_critical_threshold value is supported.
+	NVM_BOOL lower_fatal_settable; // If the lower_fatal_threshold value is modifiable.
+	NVM_BOOL upper_fatal_settable; // If the upper_fatal_threshold value is modifiable.
+	NVM_BOOL lower_fatal_support; // If the lower_fatal_threshold value is supported.
+	NVM_BOOL upper_fatal_support; // If the upper_fatal_threshold value is supported.
+	NVM_BOOL lower_noncritical_settable; // If the lower_noncritical_threshold value is modifiable.
+	NVM_BOOL upper_noncritical_settable; // If the upper_noncritical_threshold value is modifiable.
+	NVM_BOOL lower_noncritical_support; // If the lower_noncritical_threshold value is supported.
+	NVM_BOOL upper_noncritical_support; // If the upper_noncritical_threshold value is supported.
 };
 
 /*

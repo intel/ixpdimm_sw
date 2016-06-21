@@ -47,10 +47,8 @@
 #include <software/NVDIMMSoftwareInstallationServiceFactory.h>
 #include <software/NVDIMMCollectionFactory.h>
 #include <support/NVDIMMSensorFactory.h>
-#include <support/NVDIMMHealthSensorViewFactory.h>
 #include <performance/PerformanceMetricFactory.h>
 #include <performance/PerformanceMetricDefinitionFactory.h>
-#include <performance/NVDIMMPerformanceViewFactory.h>
 #include <erasure/ErasureServiceFactory.h>
 #include <erasure/ErasureCapabilitiesFactory.h>
 #include <pmem_config/PersistentMemoryPoolFactory.h>
@@ -171,10 +169,6 @@ wbem::framework::InstanceFactory *wbem::framework_interface::NvmProviderFactory:
 	{
 		pFactory = new wbem::support::NVDIMMSensorFactory();
 	}
-	else if (className == wbem::support::NVDIMMHEALTHSENSORVIEW_CREATIONCLASSNAME)
-	{
-		pFactory = new wbem::support::NVDIMMHealthSensorViewFactory();
-	}
 	else if (className == wbem::performance::PERFORMANCE_METRIC_CREATIONCLASSNAME)
 	{
 		pFactory = new wbem::performance::PerformanceMetricFactory();
@@ -274,10 +268,6 @@ wbem::framework::InstanceFactory *wbem::framework_interface::NvmProviderFactory:
 	else if (className == wbem::pegasus::PGREGISTEREDPROFILE_CLASSNAME)
 	{
 		pFactory = new wbem::pegasus::PegasusRegisteredProfileFactory();
-	}
-	else if (className == wbem::performance::NVDIMMPERFORMANCEVIEW_CREATIONCLASSNAME)
-	{
-		pFactory = new wbem::performance::NVDIMMPerformanceViewFactory();
 	}
 	else if (className == wbem::indication::STATICFILTER_CREATIONCLASSNAME)
 	{

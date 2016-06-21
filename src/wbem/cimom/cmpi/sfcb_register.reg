@@ -97,13 +97,6 @@
    group: intel
    namespace: root/intelwbem
 #
-[<NVM_WBEM_PREFIX>NVDIMMHealthSensorView]
-   provider: Intel_NVDIMMHealthSensorView_Provider
-   location: nvmwbem
-   type: instance
-   group: intel
-   namespace: root/intelwbem
-#
 [<NVM_WBEM_PREFIX>PerformanceMetricDefinition]
    provider: Intel_PerformanceMetricDefinition_Provider
    location: nvmwbem
@@ -113,13 +106,6 @@
 #
 [<NVM_WBEM_PREFIX>PerformanceMetric]
    provider: Intel_PerformanceMetric_Provider
-   location: nvmwbem
-   type: instance
-   group: intel
-   namespace: root/intelwbem
-#
-[<NVM_WBEM_PREFIX>NVDIMMPerformanceView]
-   provider: Intel_NVDIMMPerformanceView_Provider
    location: nvmwbem
    type: instance
    group: intel

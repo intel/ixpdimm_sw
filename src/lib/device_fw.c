@@ -46,6 +46,8 @@ const NVM_UINT16 SUPPORTED_DEVICE_IDS[] = {
 #define	DEV_FW_API_VERSION_MAJOR_MIN	1
 #define	DEV_FW_API_VERSION_MINOR_MIN	0
 
+int local_ioctl_passthrough_cmd(struct fw_cmd *p_cmd);
+
 NVM_BOOL is_fw_api_version_supported(const unsigned int major_version,
 		const unsigned int minor_version)
 {
@@ -80,6 +82,24 @@ int fw_get_identify_dimm(const NVM_UINT32 device_handle,
 	return rc;
 }
 
+int fw_get_id_dimm_device_characteristics(unsigned int device_handle,
+	struct pt_payload_device_characteristics *p_payload)
+{
+	COMMON_LOG_ENTRY();
+	memset(p_payload, 0, sizeof (*p_payload));
+	struct fw_cmd cmd;
+	memset(&cmd, 0, sizeof (struct fw_cmd));
+	cmd.device_handle = device_handle;
+	cmd.opcode = PT_IDENTIFY_DIMM;
+	cmd.sub_opcode = SUBOP_IDENTIFY_DIMM_CHARACTERISTICS;
+	cmd.output_payload = p_payload;
+	cmd.output_payload_size = sizeof (struct pt_payload_device_characteristics);
+
+	int rc = local_ioctl_passthrough_cmd(&cmd);
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
 // send a pass-through command to get the current alarm thresholds
 int fw_get_alarm_thresholds(NVM_UINT32 const device_handle,
 		struct pt_payload_alarm_thresholds *p_thresholds)
@@ -91,7 +111,7 @@ int fw_get_alarm_thresholds(NVM_UINT32 const device_handle,
 	cmd.device_handle = device_handle;
 	cmd.opcode = PT_GET_FEATURES;
 	cmd.sub_opcode = SUBOP_ALARM_THRESHOLDS;
-	cmd.output_payload_size = sizeof ((*p_thresholds));
+	cmd.output_payload_size = sizeof (*p_thresholds);
 	cmd.output_payload = p_thresholds;
 
 	int rc = ioctl_passthrough_cmd(&cmd);
@@ -408,4 +428,144 @@ unsigned short fw_convert_float_to_fw_celsius(float celsius)
 
 	COMMON_LOG_EXIT();
 	return fw_celsius;
+}
+
+int fw_mb_err_to_nvm_lib_err(int status)
+{
+	COMMON_LOG_ENTRY();
+	int ret = NVM_SUCCESS;
+
+	COMMON_LOG_ERROR_F("firmware mail box error = %d", DSM_EXTENDED_ERROR(status));
+	switch (DSM_EXTENDED_ERROR(status))
+	{
+		case MB_SUCCESS:
+			ret = NVM_SUCCESS;
+			break;
+		case MB_INVALID_CMD_PARAM :
+			ret = NVM_ERR_INVALIDPARAMETER;
+			break;
+		case MB_DATA_XFER_ERR :
+			ret = NVM_ERR_DATATRANSFERERROR;
+			break;
+		case MB_INTERNAL_DEV_ERR :
+			ret = NVM_ERR_DEVICEERROR;
+			break;
+		case MB_UNSUPPORTED_CMD :
+			ret = NVM_ERR_NOTSUPPORTED;
+			break;
+		case MB_DEVICE_BUSY :
+			ret = NVM_ERR_DEVICEBUSY;
+			break;
+		case MB_INVALID_CREDENTIAL :
+			ret = NVM_ERR_BADPASSPHRASE;
+			break;
+		case MB_SECURITY_CHK_FAIL :
+			ret = NVM_ERR_BADFIRMWARE;
+			break;
+		case MB_INVALID_SECURITY_STATE :
+			ret = NVM_ERR_BADSECURITYSTATE;
+			break;
+		case MB_SYSTEM_TIME_NOT_SET :
+			ret = NVM_ERR_DEVICEERROR;
+			break;
+		case MB_DATA_NOT_SET :
+			ret = NVM_ERR_DEVICEERROR;
+			break;
+		case MB_ABORTED :
+			ret = NVM_ERR_DEVICEERROR;
+			break;
+		case MB_NO_NEW_FW :
+			ret = NVM_ERR_BADFIRMWARE;
+			break;
+		case MB_REVISION_FAILURE :
+			ret = NVM_ERR_BADFIRMWARE;
+			break;
+		case MB_INJECTION_DISABLED :
+			ret = NVM_ERR_NOTSUPPORTED;
+			break;
+		case MB_CONFIG_LOCKED_COMMAND_INVALID :
+			ret = NVM_ERR_NOTSUPPORTED;
+			break;
+		case MB_INVALID_ALIGNMENT :
+			ret = NVM_ERR_DEVICEERROR;
+			break;
+		case MB_INCOMPATIBLE_DIMM :
+			ret = NVM_ERR_NOTSUPPORTED;
+			break;
+		case MB_TIMED_OUT :
+			ret = NVM_ERR_DEVICEBUSY;
+			break;
+		default :
+			ret = NVM_ERR_DEVICEERROR;
+	}
+	COMMON_LOG_EXIT_RETURN_I(ret);
+	return (ret);
+}
+
+int dsm_err_to_nvm_lib_err(unsigned int status)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	if (status)
+	{
+		COMMON_LOG_ERROR_F("DSM Vendor Error = %d", DSM_VENDOR_ERROR(status));
+		switch (DSM_VENDOR_ERROR(status))
+		{
+			case DSM_VENDOR_ERR_NOT_SUPPORTED:
+				rc = NVM_ERR_NOTSUPPORTED;
+				break;
+			case DSM_VENDOR_ERR_NONEXISTING:
+				rc = NVM_ERR_BADDEVICE;
+				break;
+			case DSM_VENDOR_INVALID_INPUT:
+				rc = NVM_ERR_UNKNOWN;
+				break;
+			case DSM_VENDOR_HW_ERR:
+				rc = NVM_ERR_DEVICEERROR;
+				break;
+			case DSM_VENDOR_RETRY_SUGGESTED:
+				rc = NVM_ERR_DEVICEERROR;
+				break;
+			case DSM_VENDOR_UNKNOWN:
+				rc = NVM_ERR_UNKNOWN;
+				break;
+			case DSM_VENDOR_SPECIFIC_ERR:
+				rc = fw_mb_err_to_nvm_lib_err(status);
+				break;
+			default:
+				rc = NVM_ERR_DRIVERFAILED;
+				break;
+		}
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+// function pointer, allowing callers to specify the actual passthrough function
+static int (*p_ioctl_passthrough_cmd)(struct fw_cmd *p_cmd) = NULL;
+void set_ioctl_passthrough_function(int (*f)(struct fw_cmd *p_cmd))
+{
+	p_ioctl_passthrough_cmd = f;
+}
+void unset_ioctl_passthrough_function()
+{
+	p_ioctl_passthrough_cmd = NULL;
+}
+
+int local_ioctl_passthrough_cmd(struct fw_cmd *p_cmd)
+{
+	COMMON_LOG_ENTRY();
+	int rc;
+	if (p_ioctl_passthrough_cmd)
+	{
+		rc = p_ioctl_passthrough_cmd(p_cmd);
+	}
+	else
+	{
+		rc = ioctl_passthrough_cmd(p_cmd);
+	}
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
 }

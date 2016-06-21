@@ -286,6 +286,14 @@ int main(int arg_count, char **args)
 	identify_dimm.addAttribute("model_num").isText(21);
 	entities.push_back(identify_dimm);
 
+	Entity device_characteristics("device_characteristics", "Vendor specific device characteristics");
+	device_characteristics.addAttribute("device_handle").isInt32().isUnsigned().isPk();
+	device_characteristics.addAttribute("ctst").isInt32().isUnsigned();
+	device_characteristics.addAttribute("mtst").isInt32().isUnsigned();
+	device_characteristics.addAttribute("tstt").isInt32().isUnsigned();
+	device_characteristics.addAttribute("tspt").isInt32().isUnsigned();
+	entities.push_back(device_characteristics);
+
 	Entity dimm_partition("dimm_partition", "Vendor Firmware: Get Admin Features - DIMM Partition Info");
 	dimm_partition.includesHistory();
 	dimm_partition.addAttribute("device_handle").isInt32().isUnsigned().isPk();

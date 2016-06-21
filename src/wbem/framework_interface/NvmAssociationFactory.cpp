@@ -45,10 +45,8 @@
 #include <support/SupportDataServiceFactory.h>
 #include <support/OpaqueSupportDataFactory.h>
 #include <support/NVDIMMSensorFactory.h>
-#include <support/NVDIMMHealthSensorViewFactory.h>
 #include <performance/PerformanceMetricFactory.h>
 #include <performance/PerformanceMetricDefinitionFactory.h>
-#include <performance/NVDIMMPerformanceViewFactory.h>
 #include <profile/RegisteredProfileFactory.h>
 #include <mem_config/MemoryAllocationSettingsFactory.h>
 #include <mem_config/MemoryCapabilitiesFactory.h>
@@ -283,16 +281,6 @@ void wbem::framework_interface::NvmAssociationFactory::initAssociationTable()
 		wbem::framework::ASSOCIATIONTYPE_BASIC,
 		wbem::physical_asset::NVDIMM_CREATIONCLASSNAME,
 		wbem::performance::PERFORMANCEMETRICDEFINITION_CREATIONCLASSNAME);
-	addAssociationToTable(wbem::framework_interface::ASSOCIATION_CLASS_ELEMENTVIEW,
-		wbem::framework::ASSOCIATIONTYPE_SIMPLEFK,
-		wbem::physical_asset::NVDIMM_CREATIONCLASSNAME,
-		wbem::support::NVDIMMHEALTHSENSORVIEW_CREATIONCLASSNAME,
-		wbem::TAG_KEY, wbem::INSTANCEID_KEY);
-	addAssociationToTable(wbem::framework_interface::ASSOCIATION_CLASS_ELEMENTVIEW,
-		wbem::framework::ASSOCIATIONTYPE_SIMPLEFK,
-		wbem::physical_asset::NVDIMM_CREATIONCLASSNAME,
-		wbem::performance::NVDIMMPERFORMANCEVIEW_CREATIONCLASSNAME,
-		wbem::TAG_KEY, wbem::INSTANCEID_KEY);
 	addAssociationToTable(wbem::framework_interface::ASSOCIATION_CLASS_MEMBEROFCOLLECTION,
 		wbem::framework::ASSOCIATIONTYPE_BASIC,
 		wbem::software::NVDIMMCOLLECTION_CREATIONCLASSNAME,

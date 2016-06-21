@@ -47,45 +47,57 @@
 #include <framework_interface/FrameworkExtensions.h>
 #include <core/device/DeviceHelper.h>
 
+namespace wbem
+{
+namespace support
+{
+
 /*
  * Sensor Types are the same as the library
  */
-const int wbem::support::NVDIMMSensorFactory::SENSORTYPE_MEDIATEMPERATURE = SENSOR_MEDIA_TEMPERATURE;
-const int wbem::support::NVDIMMSensorFactory::SENSORTYPE_SPARECAPACITY = SENSOR_SPARECAPACITY;
-const int wbem::support::NVDIMMSensorFactory::SENSORTYPE_WEARLEVEL = SENSOR_WEARLEVEL;
-const int wbem::support::NVDIMMSensorFactory::SENSORTYPE_POWERCYCLES = SENSOR_POWERCYCLES;
-const int wbem::support::NVDIMMSensorFactory::SENSORTYPE_POWERONTIME = SENSOR_POWERONTIME;
-const int wbem::support::NVDIMMSensorFactory::SENSORTYPE_UPTIME = SENSOR_UPTIME;
-const int wbem::support::NVDIMMSensorFactory::SENSORTYPE_UNSAFESHUTDOWNS = SENSOR_UNSAFESHUTDOWNS;
-const int wbem::support::NVDIMMSensorFactory::SENSORTYPE_FWERRORLOGCOUNT = SENSOR_FWERRORLOGCOUNT;
-const int wbem::support::NVDIMMSensorFactory::SENSORTYPE_POWERLIMITED = SENSOR_POWERLIMITED;
-const int wbem::support::NVDIMMSensorFactory::SENSORTYPE_MEDIAERRORS_UNCORRECTABLE = SENSOR_MEDIAERRORS_UNCORRECTABLE;
-const int wbem::support::NVDIMMSensorFactory::SENSORTYPE_MEDIAERRORS_CORRECTED = SENSOR_MEDIAERRORS_CORRECTED;
-const int wbem::support::NVDIMMSensorFactory::SENSORTYPE_MEDIAERRORS_ERASURECODED = SENSOR_MEDIAERRORS_ERASURECODED;
-const int wbem::support::NVDIMMSensorFactory::SENSORTYPE_WRITECOUNT_MAXIMUM = SENSOR_WRITECOUNT_MAXIMUM;
-const int wbem::support::NVDIMMSensorFactory::SENSORTYPE_WRITECOUNT_AVERAGE = SENSOR_WRITECOUNT_AVERAGE;
-const int wbem::support::NVDIMMSensorFactory::SENSORTYPE_MEDIAERRORS_HOST = SENSOR_MEDIAERRORS_HOST;
-const int wbem::support::NVDIMMSensorFactory::SENSORTYPE_MEDIAERRORS_NONHOST = SENSOR_MEDIAERRORS_NONHOST;
-const int wbem::support::NVDIMMSensorFactory::SENSORTYPE_CONTROLLER_TEMPERATURE = SENSOR_CONTROLLER_TEMPERATURE;
+const int NVDIMMSensorFactory::SENSORTYPE_MEDIATEMPERATURE = SENSOR_MEDIA_TEMPERATURE;
+const int NVDIMMSensorFactory::SENSORTYPE_SPARECAPACITY = SENSOR_SPARECAPACITY;
+const int NVDIMMSensorFactory::SENSORTYPE_WEARLEVEL = SENSOR_WEARLEVEL;
+const int NVDIMMSensorFactory::SENSORTYPE_POWERCYCLES = SENSOR_POWERCYCLES;
+const int NVDIMMSensorFactory::SENSORTYPE_POWERONTIME = SENSOR_POWERONTIME;
+const int NVDIMMSensorFactory::SENSORTYPE_UPTIME = SENSOR_UPTIME;
+const int NVDIMMSensorFactory::SENSORTYPE_UNSAFESHUTDOWNS = SENSOR_UNSAFESHUTDOWNS;
+const int NVDIMMSensorFactory::SENSORTYPE_FWERRORLOGCOUNT = SENSOR_FWERRORLOGCOUNT;
+const int NVDIMMSensorFactory::SENSORTYPE_POWERLIMITED = SENSOR_POWERLIMITED;
+const int NVDIMMSensorFactory::SENSORTYPE_MEDIAERRORS_UNCORRECTABLE = SENSOR_MEDIAERRORS_UNCORRECTABLE;
+const int NVDIMMSensorFactory::SENSORTYPE_MEDIAERRORS_CORRECTED = SENSOR_MEDIAERRORS_CORRECTED;
+const int NVDIMMSensorFactory::SENSORTYPE_MEDIAERRORS_ERASURECODED = SENSOR_MEDIAERRORS_ERASURECODED;
+const int NVDIMMSensorFactory::SENSORTYPE_WRITECOUNT_MAXIMUM = SENSOR_WRITECOUNT_MAXIMUM;
+const int NVDIMMSensorFactory::SENSORTYPE_WRITECOUNT_AVERAGE = SENSOR_WRITECOUNT_AVERAGE;
+const int NVDIMMSensorFactory::SENSORTYPE_MEDIAERRORS_HOST = SENSOR_MEDIAERRORS_HOST;
+const int NVDIMMSensorFactory::SENSORTYPE_MEDIAERRORS_NONHOST = SENSOR_MEDIAERRORS_NONHOST;
+const int NVDIMMSensorFactory::SENSORTYPE_CONTROLLER_TEMPERATURE = SENSOR_CONTROLLER_TEMPERATURE;
 
 /*
  * CIM list of possible sensor states.
  */
 
-const std::string wbem::support::NVDIMMSensorFactory::getSensorStateStr(enum sensor_status state)
+const std::string NVDIMMSensorFactory::getSensorStateStr(enum sensor_status state)
 {
 	std::string result;
-	if (state == SENSOR_NORMAL)
+	switch (state)
 	{
-		result = N_TR("Normal");
-	}
-	else if (state == SENSOR_CRITICAL)
-	{
-		result = N_TR("Critical");
-	}
-	else
-	{
-		result = N_TR("Unknown");
+		case SENSOR_NORMAL:
+			result = N_TR("Normal");
+			break;
+		case SENSOR_CRITICAL:
+			result = N_TR("Critical");
+			break;
+		case SENSOR_FATAL:
+			result = N_TR("Fatal");
+			break;
+		case SENSOR_NONCRITICAL:
+			result = N_TR("NonCritical");
+			break;
+		case SENSOR_UNKNOWN:
+		default:
+			result = N_TR("Unknown");
+			break;
 	}
 	return result;
 }
@@ -95,44 +107,45 @@ const std::string wbem::support::NVDIMMSensorFactory::getSensorStateStr(enum sen
  */
 typedef struct
 {
-	std::string deviceName;			//!< device path name as used in Device ID.
-	std::string elementName;			//!< Human readable name as used in ElementName
-	NVM_UINT16  sensorTypeCode;		//!< CIM Schema compatible type code.
-	std::string otherSensorTypeName;	//!< 'other' sensor type ID strings/descriptions for non-standard sensors.
+	std::string deviceName;            //!< device path name as used in Device ID.
+	std::string elementName;            //!< Human readable name as used in ElementName
+	NVM_UINT16 sensorTypeCode;        //!< CIM Schema compatible type code.
+	std::string otherSensorTypeName;    //!< 'other' sensor type ID strings/descriptions for non-standard sensors.
 } cimSensorDescription;
 
 /*
  * static map of nvm sensor type enums to wbem compatible descriptors and attributes.
  */
 typedef std::map<sensor_type, cimSensorDescription> cimSensorDescriptionsMap;
-const cimSensorDescriptionsMap& getSensorDescriptionMap()
+
+const cimSensorDescriptionsMap &getSensorDescriptionMap()
 {
 	static cimSensorDescriptionsMap result;
 	if (result.empty())
 	{
-		result[SENSOR_MEDIA_TEMPERATURE] = (cimSensorDescription) {"mediatemp", wbem::support::NVDIMMSENSOR_ELEMENTPREFIX + "Media Temp", SENSOR_TYPE_TEMP, ""};
-		result[SENSOR_SPARECAPACITY] = (cimSensorDescription) {"spare", wbem::support::NVDIMMSENSOR_ELEMENTPREFIX + "Spare", SENSOR_TYPE_OTHER, "SpareCapacity"};
-		result[SENSOR_WEARLEVEL] = (cimSensorDescription) {"wear", wbem::support::NVDIMMSENSOR_ELEMENTPREFIX + "Wear", SENSOR_TYPE_OTHER, "WearLevel"};
-		result[SENSOR_POWERCYCLES] = (cimSensorDescription) {"pc", wbem::support::NVDIMMSENSOR_ELEMENTPREFIX + "Power Cycles", SENSOR_TYPE_OTHER, "PowerCycles"};
-		result[SENSOR_POWERONTIME] = (cimSensorDescription) {"poh", wbem::support::NVDIMMSENSOR_ELEMENTPREFIX + "Power-on", SENSOR_TYPE_OTHER, "PowerOnTime"};
-		result[SENSOR_UPTIME] = (cimSensorDescription) {"ut", wbem::support::NVDIMMSENSOR_ELEMENTPREFIX + "Up", SENSOR_TYPE_OTHER, "UpTime"};
-		result[SENSOR_UNSAFESHUTDOWNS] =(cimSensorDescription) {"us", wbem::support::NVDIMMSENSOR_ELEMENTPREFIX + "Unsafe Shutdowns", SENSOR_TYPE_OTHER, "UnsafeShutdowns"};
-		result[SENSOR_FWERRORLOGCOUNT] = (cimSensorDescription) {"error", wbem::support::NVDIMMSENSOR_ELEMENTPREFIX + "FW Error Log Count", SENSOR_TYPE_OTHER, "FWError"};
-		result[SENSOR_POWERLIMITED] = (cimSensorDescription) {"pl", wbem::support::NVDIMMSENSOR_ELEMENTPREFIX + "Power Limited", SENSOR_TYPE_OTHER, "PowerLimited"};
-		result[SENSOR_MEDIAERRORS_UNCORRECTABLE] = (cimSensorDescription) {"meuc", wbem::support::NVDIMMSENSOR_ELEMENTPREFIX + "Media Errors Uncorrectable", SENSOR_TYPE_OTHER, "MediaErrorsUncorrectable"};
-		result[SENSOR_MEDIAERRORS_CORRECTED] = (cimSensorDescription) {"mece", wbem::support::NVDIMMSENSOR_ELEMENTPREFIX + "Media Errors Corrected", SENSOR_TYPE_OTHER, "MediaErrorsCorrected"};
-		result[SENSOR_MEDIAERRORS_ERASURECODED] = (cimSensorDescription) {"meecc", wbem::support::NVDIMMSENSOR_ELEMENTPREFIX + "Media Errors Erasure Coded", SENSOR_TYPE_OTHER, "MediaErrorsErasureCoded"};
-		result[SENSOR_WRITECOUNT_MAXIMUM] = (cimSensorDescription) {"wcmax", wbem::support::NVDIMMSENSOR_ELEMENTPREFIX + "Write Count Maximum", SENSOR_TYPE_OTHER, "WriteCountMaximum"};
-		result[SENSOR_WRITECOUNT_AVERAGE] = (cimSensorDescription) {"wcavg", wbem::support::NVDIMMSENSOR_ELEMENTPREFIX + "Write Count Average", SENSOR_TYPE_OTHER, "WriteCountAverage"};
-		result[SENSOR_MEDIAERRORS_HOST] = (cimSensorDescription) {"meh", wbem::support::NVDIMMSENSOR_ELEMENTPREFIX + "Media Errors Host", SENSOR_TYPE_OTHER, "MediaErrorsHost"};
-		result[SENSOR_MEDIAERRORS_NONHOST] = (cimSensorDescription) {"menh", wbem::support::NVDIMMSENSOR_ELEMENTPREFIX + "Media Errors Non-host", SENSOR_TYPE_OTHER, "MediaErrorsNonHost"};
-		result[SENSOR_CONTROLLER_TEMPERATURE] = (cimSensorDescription) {"controllertemp", wbem::support::NVDIMMSENSOR_ELEMENTPREFIX + "Controller Temp", SENSOR_TYPE_TEMP, ""};
+		result[SENSOR_MEDIA_TEMPERATURE] = (cimSensorDescription) {"mediatemp", NVDIMMSENSOR_ELEMENTPREFIX + "Media Temp", SENSOR_TYPE_TEMP, ""};
+		result[SENSOR_SPARECAPACITY] = (cimSensorDescription) {"spare", NVDIMMSENSOR_ELEMENTPREFIX + "Spare", SENSOR_TYPE_OTHER, "SpareCapacity"};
+		result[SENSOR_WEARLEVEL] = (cimSensorDescription) {"wear", NVDIMMSENSOR_ELEMENTPREFIX + "Wear", SENSOR_TYPE_OTHER, "WearLevel"};
+		result[SENSOR_POWERCYCLES] = (cimSensorDescription) {"pc", NVDIMMSENSOR_ELEMENTPREFIX + "Power Cycles", SENSOR_TYPE_OTHER, "PowerCycles"};
+		result[SENSOR_POWERONTIME] = (cimSensorDescription) {"poh", NVDIMMSENSOR_ELEMENTPREFIX + "Power-on", SENSOR_TYPE_OTHER, "PowerOnTime"};
+		result[SENSOR_UPTIME] = (cimSensorDescription) {"ut", NVDIMMSENSOR_ELEMENTPREFIX + "Up", SENSOR_TYPE_OTHER, "UpTime"};
+		result[SENSOR_UNSAFESHUTDOWNS] =(cimSensorDescription) {"us", NVDIMMSENSOR_ELEMENTPREFIX + "Unsafe Shutdowns", SENSOR_TYPE_OTHER, "UnsafeShutdowns"};
+		result[SENSOR_FWERRORLOGCOUNT] = (cimSensorDescription) {"error", NVDIMMSENSOR_ELEMENTPREFIX + "FW Error Log Count", SENSOR_TYPE_OTHER, "FWError"};
+		result[SENSOR_POWERLIMITED] = (cimSensorDescription) {"pl", NVDIMMSENSOR_ELEMENTPREFIX + "Power Limited", SENSOR_TYPE_OTHER, "PowerLimited"};
+		result[SENSOR_MEDIAERRORS_UNCORRECTABLE] = (cimSensorDescription) {"meuc", NVDIMMSENSOR_ELEMENTPREFIX + "Media Errors Uncorrectable", SENSOR_TYPE_OTHER, "MediaErrorsUncorrectable"};
+		result[SENSOR_MEDIAERRORS_CORRECTED] = (cimSensorDescription) {"mece", NVDIMMSENSOR_ELEMENTPREFIX + "Media Errors Corrected", SENSOR_TYPE_OTHER, "MediaErrorsCorrected"};
+		result[SENSOR_MEDIAERRORS_ERASURECODED] = (cimSensorDescription) {"meecc", NVDIMMSENSOR_ELEMENTPREFIX + "Media Errors Erasure Coded", SENSOR_TYPE_OTHER, "MediaErrorsErasureCoded"};
+		result[SENSOR_WRITECOUNT_MAXIMUM] = (cimSensorDescription) {"wcmax", NVDIMMSENSOR_ELEMENTPREFIX + "Write Count Maximum", SENSOR_TYPE_OTHER, "WriteCountMaximum"};
+		result[SENSOR_WRITECOUNT_AVERAGE] = (cimSensorDescription) {"wcavg", NVDIMMSENSOR_ELEMENTPREFIX + "Write Count Average", SENSOR_TYPE_OTHER, "WriteCountAverage"};
+		result[SENSOR_MEDIAERRORS_HOST] = (cimSensorDescription) {"meh", NVDIMMSENSOR_ELEMENTPREFIX + "Media Errors Host", SENSOR_TYPE_OTHER, "MediaErrorsHost"};
+		result[SENSOR_MEDIAERRORS_NONHOST] = (cimSensorDescription) {"menh", NVDIMMSENSOR_ELEMENTPREFIX + "Media Errors Non-host", SENSOR_TYPE_OTHER, "MediaErrorsNonHost"};
+		result[SENSOR_CONTROLLER_TEMPERATURE] = (cimSensorDescription) {"controllertemp", NVDIMMSENSOR_ELEMENTPREFIX + "Controller Temp", SENSOR_TYPE_TEMP, ""};
 	}
 
 	return result;
 }
-static const cimSensorDescriptionsMap cimSensorDescriptions = getSensorDescriptionMap();
 
+static const cimSensorDescriptionsMap cimSensorDescriptions = getSensorDescriptionMap();
 
 /*
  * Iterator typedefs for cimSensorDescriptionsMap
@@ -144,9 +157,9 @@ typedef std::map<sensor_type, cimSensorDescription>::const_iterator cimSensorCon
  * Helper function to convert an nvm sensor type code into a pointer to sensor description.
  */
 static const cimSensorConstDescriptionsIter getSensorDescriptionIter(int nvm_type)
-	throw (wbem::framework::Exception)
+throw(wbem::framework::Exception)
 {
-	cimSensorConstDescriptionsIter it = cimSensorDescriptions.find((enum sensor_type)nvm_type);
+	cimSensorConstDescriptionsIter it = cimSensorDescriptions.find((enum sensor_type) nvm_type);
 	if (it == cimSensorDescriptions.end())
 	{
 		throw wbem::framework::ExceptionBadParameter("Invalid NVM Sensor Type");
@@ -157,45 +170,45 @@ static const cimSensorConstDescriptionsIter getSensorDescriptionIter(int nvm_typ
 /*
  * convert an nvm sensor type code into a CIM sensor device name
  */
-const std::string& wbem::support::NVDIMMSensorFactory
-	::getCIMSensorDeviceName(int nvm_type) throw (wbem::framework::Exception)
+const std::string &NVDIMMSensorFactory::getCIMSensorDeviceName(
+	int nvm_type) throw(wbem::framework::Exception)
 {
-	return(getSensorDescriptionIter(nvm_type)->second.deviceName);
+	return (getSensorDescriptionIter(nvm_type)->second.deviceName);
 }
 
 /*
  * convert an nvm sensor type code into a CIM sensor element name
  */
-const std::string& wbem::support::NVDIMMSensorFactory
-	::getCIMSensorElementName(int nvm_type) throw (wbem::framework::Exception)
+const std::string &NVDIMMSensorFactory::getCIMSensorElementName(
+	int nvm_type) throw(wbem::framework::Exception)
 {
-	return(getSensorDescriptionIter(nvm_type)->second.elementName);
+	return (getSensorDescriptionIter(nvm_type)->second.elementName);
 }
 
 /*
  * convert an nvm sensor type code into a CIM sensor type code
  */
-const wbem::framework::UINT16& wbem::support::NVDIMMSensorFactory
-	::getCIMSensorTypeCode(int nvm_type) throw (wbem::framework::Exception)
+const wbem::framework::UINT16 &NVDIMMSensorFactory::getCIMSensorTypeCode(
+	int nvm_type) throw(wbem::framework::Exception)
 {
-	return(getSensorDescriptionIter(nvm_type)->second.sensorTypeCode);
+	return (getSensorDescriptionIter(nvm_type)->second.sensorTypeCode);
 }
 
 /*
  * convert an nvm sensor type code into a CIM sensor 'other' type name
  */
-const std::string& wbem::support::NVDIMMSensorFactory
-	::getCIMSensorOtherTypeName(int nvm_type) throw (wbem::framework::Exception)
+const std::string &NVDIMMSensorFactory::getCIMSensorOtherTypeName(
+	int nvm_type) throw(wbem::framework::Exception)
 {
-	return(getSensorDescriptionIter(nvm_type)->second.otherSensorTypeName);
+	return (getSensorDescriptionIter(nvm_type)->second.otherSensorTypeName);
 }
 
 /*
  * splits a DeviceID attribute and splits it into uid + decoded nvm sensor type.
  * sets deviceUid and 'type' and returns non-zero on success.
  */
-bool wbem::support::NVDIMMSensorFactory::splitDeviceIdAttribute(
-		const framework::Attribute& deviceIdAttribute, std::string &deviceUid, int& type)
+bool NVDIMMSensorFactory::splitDeviceIdAttribute(const framework::Attribute &deviceIdAttribute,
+	std::string &deviceUid, int &type)
 {
 	bool found = false;
 	const std::string devIdAttrStr = deviceIdAttribute.stringValue();
@@ -205,7 +218,7 @@ bool wbem::support::NVDIMMSensorFactory::splitDeviceIdAttribute(
 	{
 		const std::string sensorTypeName = devIdAttrStr.substr(uidIndex);
 		cimSensorConstDescriptionsIter it = cimSensorDescriptions.begin();
-		for (;it != cimSensorDescriptions.end() && !found; it++)
+		for (; it != cimSensorDescriptions.end() && !found; it++)
 		{
 			if (it->second.deviceName == sensorTypeName)
 			{
@@ -224,27 +237,25 @@ bool wbem::support::NVDIMMSensorFactory::splitDeviceIdAttribute(
  * values such that:
  * num = pscaled * (10 ^ pscaler)
  */
-void wbem::support::NVDIMMSensorFactory::
-scaleNumberBaseTen(COMMON_UINT64 num, COMMON_INT32* pscaled, COMMON_INT32* pscaler)
+void NVDIMMSensorFactory::scaleNumberBaseTen(COMMON_UINT64 num, COMMON_INT32 *pscaled,
+	COMMON_INT32 *pscaler)
 {
-    *pscaler = 0;
-    while(num > ((COMMON_UINT64)std::numeric_limits<int32_t>::max()))
-    {
-        num /= 10;
-        (*pscaler)++;
-    }
-    *pscaled = (int32_t)num;
+	*pscaler = 0;
+	while (num > ((COMMON_UINT64) std::numeric_limits<int32_t>::max()))
+	{
+		num /= 10;
+		(*pscaler)++;
+	}
+	*pscaled = (int32_t) num;
 }
 
-wbem::support::NVDIMMSensorFactory::NVDIMMSensorFactory()
-throw (wbem::framework::Exception)
-{ }
+NVDIMMSensorFactory::NVDIMMSensorFactory()
+throw(wbem::framework::Exception) { }
 
-wbem::support::NVDIMMSensorFactory::~NVDIMMSensorFactory()
-{ }
+NVDIMMSensorFactory::~NVDIMMSensorFactory() { }
 
-void wbem::support::NVDIMMSensorFactory::populateAttributeList(framework::attribute_names_t &attributes)
-throw (wbem::framework::Exception)
+void NVDIMMSensorFactory::populateAttributeList(framework::attribute_names_t &attributes)
+throw(wbem::framework::Exception)
 {
 	// add key attributes
 	attributes.push_back(SYSTEMCREATIONCLASSNAME_KEY);
@@ -259,8 +270,12 @@ throw (wbem::framework::Exception)
 	attributes.push_back(CURRENTREADING_KEY);
 	attributes.push_back(UNITMODIFIER_KEY);
 	attributes.push_back(OTHERSENSORTYPEDESCRIPTION_KEY);
+	attributes.push_back(LOWERTHRESHOLDNONCRITICAL_KEY);
+	attributes.push_back(UPPERTHRESHOLDNONCRITICAL_KEY);
 	attributes.push_back(LOWERTHRESHOLDCRITICAL_KEY);
 	attributes.push_back(UPPERTHRESHOLDCRITICAL_KEY);
+	attributes.push_back(LOWERTHRESHOLDFATAL_KEY);
+	attributes.push_back(UPPERTHRESHOLDFATAL_KEY);
 	attributes.push_back(SETTABLETHRESHOLDS_KEY);
 	attributes.push_back(SUPPORTEDTHRESHOLDS_KEY);
 	attributes.push_back(POSSIBLESTATES_KEY);
@@ -268,19 +283,52 @@ throw (wbem::framework::Exception)
 	attributes.push_back(ENABLEDSTATE_KEY);
 }
 
+framework::instances_t *NVDIMMSensorFactory::getInstances(framework::attribute_names_t &attributes)
+{
+	framework::instances_t *pResult = new framework::instances_t();
+
+	sensor sensors[NVM_MAX_DEVICE_SENSORS];
+
+	std::vector<std::string> manageableDevices = physical_asset::NVDIMMFactory::getManageableDeviceUids();
+	std::string hostName = server::getHostName();
+
+	for (size_t dimmIdx = 0; dimmIdx < manageableDevices.size(); dimmIdx++)
+	{
+		std::string uidStr = manageableDevices[dimmIdx];
+		NVM_UID uid;
+		uid_copy(uidStr.c_str(), uid);
+
+		int rc = nvm_get_sensors(uid, sensors, NVM_MAX_DEVICE_SENSORS);
+		if (rc != NVM_SUCCESS)
+		{
+			throw exception::NvmExceptionLibError(rc);
+		}
+		for (int i = 0; i < NVM_MAX_DEVICE_SENSORS; i++)
+		{
+			framework::ObjectPath path = getSensorPath(sensors[i].type, hostName,
+				manageableDevices[dimmIdx]);
+			framework::Instance sensorInstance(path);
+			sensorToInstance(attributes, sensors[i], sensorInstance);
+			pResult->push_back(sensorInstance);
+		}
+	}
+
+	return pResult;
+
+}
 
 /*
  * Retrieve a specific instance given an object path
  */
-wbem::framework::Instance* wbem::support::NVDIMMSensorFactory::getInstance(
-		framework::ObjectPath &path, framework::attribute_names_t &attributes)
-throw (wbem::framework::Exception)
+framework::Instance *NVDIMMSensorFactory::getInstance(framework::ObjectPath &path,
+	framework::attribute_names_t &attributes)
+throw(framework::Exception)
 {
 	// Verify attributes
 	checkAttributes(attributes);
 
 	// Verify ObjectPath ...
-	std::string hostName = wbem::server::getHostName();
+	std::string hostName = server::getHostName();
 
 	//	Verify SystemCreatonClassName
 	framework::Attribute attribute = path.getKeyValue(SYSTEMCREATIONCLASSNAME_KEY);
@@ -308,7 +356,7 @@ throw (wbem::framework::Exception)
 	// Device ID format: DIMM UUID + elementof("temp", "spare", "wear", "poh", "pc", "us", "me")
 	std::string str_uid;
 	enum sensor_type type;
-	if(!splitDeviceIdAttribute(attribute, str_uid, (int &)type))
+	if (!splitDeviceIdAttribute(attribute, str_uid, (int &) type))
 	{
 		throw framework::ExceptionBadParameter(DEVICEID_KEY.c_str());
 	}
@@ -323,128 +371,121 @@ throw (wbem::framework::Exception)
 		throw exception::NvmExceptionLibError(rc);
 	}
 
+	framework::Instance *pInstance = new framework::Instance(path);
+
+	sensorToInstance(attributes, sensor, *pInstance);
+	return pInstance;
+}
+
+void NVDIMMSensorFactory::sensorToInstance(const framework::attribute_names_t &a,
+	const struct sensor &sensor, framework::Instance &i)
+{
 	// convert the sensor current reading to CIM appropriate value and modifier
 	framework::SINT32 unit_modifier;
 	framework::SINT32 current_reading;
 
-	scaleNumberBaseTen((framework::SINT32)sensor.reading, &current_reading, &unit_modifier);
+	if (isTempSensorType(sensor.type))
+	{
+		unit_modifier = SENSOR_TEMP_MODIFIER_POWER;
+		current_reading = nvmTempToCimTemp(sensor.reading);
+	}
+	else
+	{
+		scaleNumberBaseTen((framework::SINT32) sensor.reading, &current_reading, &unit_modifier);
 
-	framework::Instance *pInstance = new framework::Instance(path);
+	}
+	enum sensor_type sensor_type = sensor.type;
 
-	// now populate the requested attribute(s)
-	if (containsAttribute(ELEMENTNAME_KEY, attributes))
+	ADD_ATTRIBUTE(i, a, ELEMENTNAME_KEY, framework::STR, getCIMSensorElementName(sensor_type));
+	ADD_ATTRIBUTE(i, a, SENSORTYPE_KEY, framework::UINT16, getCIMSensorTypeCode(sensor_type));
+	ADD_ATTRIBUTE(i, a, BASEUNITS_KEY, framework::UINT16, sensor.units);// assume that the library sensor_units values are same as what CIM expects
+	ADD_ATTRIBUTE(i, a, CURRENTREADING_KEY, framework::SINT32, current_reading);
+	ADD_ATTRIBUTE(i, a, UNITMODIFIER_KEY, framework::SINT32 , unit_modifier);
+	ADD_ATTRIBUTE(i, a, OTHERSENSORTYPEDESCRIPTION_KEY, framework::STR, getCIMSensorOtherTypeName(sensor_type));
+	ADD_ATTRIBUTE(i, a, LOWERTHRESHOLDNONCRITICAL_KEY, framework::SINT32 ,
+		decodeIfTemp(sensor.type, sensor.settings.lower_noncritical_threshold));
+	ADD_ATTRIBUTE(i, a, UPPERTHRESHOLDNONCRITICAL_KEY, framework::SINT32 ,
+		decodeIfTemp(sensor.type, sensor.settings.upper_noncritical_threshold));
+	ADD_ATTRIBUTE(i, a, LOWERTHRESHOLDCRITICAL_KEY, framework::SINT32 ,
+		decodeIfTemp(sensor.type, sensor.settings.lower_critical_threshold));
+	ADD_ATTRIBUTE(i, a, UPPERTHRESHOLDCRITICAL_KEY, framework::SINT32 ,
+		decodeIfTemp(sensor.type, sensor.settings.upper_critical_threshold));
+	ADD_ATTRIBUTE(i, a, LOWERTHRESHOLDFATAL_KEY, framework::SINT32 ,
+		decodeIfTemp(sensor.type, sensor.settings.lower_fatal_threshold));
+	ADD_ATTRIBUTE(i, a, UPPERTHRESHOLDFATAL_KEY, framework::SINT32 ,
+		decodeIfTemp(sensor.type, sensor.settings.upper_fatal_threshold));
+
+	framework::UINT16_LIST settableThresholds;
+	if (sensor.lower_noncritical_settable)
 	{
-		framework::Attribute a(getCIMSensorElementName(type), false);
-		pInstance->setAttribute(ELEMENTNAME_KEY, a, attributes);
+		settableThresholds.push_back(SENSOR_LOWER_NONCRITICAL_THRESHOLD);
 	}
-	if (containsAttribute(SENSORTYPE_KEY, attributes))
+	if (sensor.upper_noncritical_settable)
 	{
-		framework::Attribute a(getCIMSensorTypeCode(type), false);
-		pInstance->setAttribute(SENSORTYPE_KEY, a, attributes);
+		settableThresholds.push_back(SENSOR_UPPER_NONCRITICAL_THRESHOLD);
 	}
-	if (containsAttribute(BASEUNITS_KEY, attributes))
+	ADD_ATTRIBUTE(i, a, SETTABLETHRESHOLDS_KEY, framework::UINT16_LIST, settableThresholds);
+
+	framework::UINT16_LIST supportedThresholds;
+	if (sensor.lower_noncritical_support)
 	{
-		// assume that the library sensor_units values are same as what CIM expects
-		framework::Attribute a((framework::UINT16)sensor.units, false);
-		pInstance->setAttribute(BASEUNITS_KEY, a, attributes);
+		supportedThresholds.push_back(SENSOR_LOWER_NONCRITICAL_THRESHOLD);
 	}
-	if (containsAttribute(CURRENTREADING_KEY, attributes))
+	if (sensor.upper_noncritical_support)
 	{
-		framework::Attribute a(current_reading, false);
-		pInstance->setAttribute(CURRENTREADING_KEY, a, attributes);
+		supportedThresholds.push_back(SENSOR_UPPER_NONCRITICAL_THRESHOLD);
 	}
-	if (containsAttribute(UNITMODIFIER_KEY, attributes))
+	if (sensor.lower_critical_support)
 	{
-		framework::Attribute a(unit_modifier, false);
-		pInstance->setAttribute(UNITMODIFIER_KEY, a, attributes);
+		supportedThresholds.push_back(SENSOR_LOWER_CRITICAL_THRESHOLD);
 	}
-	if (containsAttribute(OTHERSENSORTYPEDESCRIPTION_KEY, attributes))
+	if (sensor.upper_critical_support)
 	{
-		framework::Attribute a(getCIMSensorOtherTypeName(type), false);
-		pInstance->setAttribute(OTHERSENSORTYPEDESCRIPTION_KEY, a, attributes);
+		supportedThresholds.push_back(SENSOR_UPPER_CRITICAL_THRESHOLD);
 	}
-	if (containsAttribute(LOWERTHRESHOLDCRITICAL_KEY, attributes))
+	if (sensor.upper_fatal_support)
 	{
-		framework::Attribute a((framework::SINT32)sensor.settings.lower_critical_threshold, false);
-		pInstance->setAttribute(LOWERTHRESHOLDCRITICAL_KEY, a, attributes);
+		supportedThresholds.push_back(SENSOR_UPPER_FATAL_THRESHOLD);
 	}
-	if (containsAttribute(UPPERTHRESHOLDCRITICAL_KEY, attributes))
+	ADD_ATTRIBUTE(i, a, SUPPORTEDTHRESHOLDS_KEY, framework::UINT16_LIST, supportedThresholds);
+	framework::STR_LIST sensorStates;
+	sensorStates.push_back(getSensorStateStr(SENSOR_UNKNOWN));
+	sensorStates.push_back(getSensorStateStr(SENSOR_NORMAL));
+	if (sensor.lower_noncritical_support || sensor.upper_noncritical_support)
 	{
-		framework::Attribute a((framework::SINT32)sensor.settings.upper_critical_threshold, false);
-		pInstance->setAttribute(UPPERTHRESHOLDCRITICAL_KEY, a, attributes);
+		sensorStates.push_back(getSensorStateStr(SENSOR_NONCRITICAL));
 	}
-	if (containsAttribute(SETTABLETHRESHOLDS_KEY, attributes))
+	if (sensor.lower_critical_support || sensor.upper_critical_support)
 	{
-		framework::UINT16_LIST settableThresholds;
-		if (sensor.lower_critical_settable)
-		{
-			settableThresholds.push_back(SENSOR_LOWER_CRITICAL_THRESHOLD);
-		}
-		if (sensor.upper_critical_settable)
-		{
-			settableThresholds.push_back(SENSOR_UPPER_CRITICAL_THRESHOLD);
-		}
-		framework::Attribute a(settableThresholds, false);
-		pInstance->setAttribute(SETTABLETHRESHOLDS_KEY, a, attributes);
+		sensorStates.push_back(getSensorStateStr(SENSOR_CRITICAL));
 	}
-	if (containsAttribute(SUPPORTEDTHRESHOLDS_KEY, attributes))
+	if (sensor.lower_fatal_support || sensor.upper_fatal_support)
 	{
-		framework::UINT16_LIST supportedThresholds;
-		if (sensor.lower_critical_support)
-		{
-			supportedThresholds.push_back(SENSOR_LOWER_CRITICAL_THRESHOLD);
-		}
-		if (sensor.upper_critical_support)
-		{
-			supportedThresholds.push_back(SENSOR_UPPER_CRITICAL_THRESHOLD);
-		}
-		framework::Attribute a(supportedThresholds, false);
-		pInstance->setAttribute(SUPPORTEDTHRESHOLDS_KEY, a, attributes);
+		sensorStates.push_back(getSensorStateStr(SENSOR_FATAL));
 	}
-	if (containsAttribute(POSSIBLESTATES_KEY, attributes))
+
+	ADD_ATTRIBUTE(i, a, POSSIBLESTATES_KEY, framework::STR_LIST, sensorStates);
+	ADD_ATTRIBUTE(i, a, CURRENTSTATE_KEY, framework::STR, getSensorStateStr(sensor.current_state));
+	framework::UINT16 enabledState = 0;
+	// EnabledState only applies to temp and spare capacity sensors
+	if (isTempSensorType (sensor_type) || sensor_type == SENSOR_SPARECAPACITY)
 	{
-		framework::STR_LIST sensorStates;
-		sensorStates.push_back(getSensorStateStr(SENSOR_UNKNOWN));
-		sensorStates.push_back(getSensorStateStr(SENSOR_NORMAL));
-		if (sensor.lower_critical_support ||
-				sensor.upper_critical_support)
-		{
-			sensorStates.push_back(getSensorStateStr(SENSOR_CRITICAL));
-		}
-		framework::Attribute a(sensorStates, false);
-		pInstance->setAttribute(POSSIBLESTATES_KEY, a, attributes);
+		enabledState = (sensor.settings.enabled) ?
+					   SENSOR_ENABLEDSTATE_ENABLED : SENSOR_ENABLEDSTATE_DISABLED;
 	}
-	if (containsAttribute(CURRENTSTATE_KEY, attributes))
+	else
 	{
-		std::string currentState = getSensorStateStr(sensor.current_state);
-		framework::Attribute a(currentState, false);
-		pInstance->setAttribute(CURRENTSTATE_KEY, a, attributes);
+		enabledState = SENSOR_ENABLEDSTATE_NA;
 	}
-	if (containsAttribute(ENABLEDSTATE_KEY, attributes))
-	{
-		framework::UINT16 enabledState = 0;
-		// EnabledState only applies to temp and spare capacity sensors
-		if ((sensor.type == SENSOR_MEDIA_TEMPERATURE) || (sensor.type == SENSOR_SPARECAPACITY)
-			|| (sensor.type == SENSOR_CONTROLLER_TEMPERATURE))
-		{
-			enabledState = (sensor.settings.enabled) ?
-				SENSOR_ENABLEDSTATE_ENABLED : SENSOR_ENABLEDSTATE_DISABLED;
-		}
-		else
-		{
-			enabledState = SENSOR_ENABLEDSTATE_NA;
-		}
-		framework::Attribute a(enabledState, getSensorEnabledString(enabledState), false);
-		pInstance->setAttribute(ENABLEDSTATE_KEY, a, attributes);
-	}
-	return pInstance;
+	framework::Attribute enumAttribute(enabledState, getSensorEnabledString(enabledState), false);
+	i.setAttribute(ENABLEDSTATE_KEY, enumAttribute, a);
 }
 
 /*
  * Return the object paths for the NVDIMMSensor class.
  */
-wbem::framework::instance_names_t* wbem::support::NVDIMMSensorFactory::getNames()
-throw (wbem::framework::Exception)
+framework::instance_names_t *NVDIMMSensorFactory::getNames()
+throw(framework::Exception)
 {
 
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -455,9 +496,9 @@ throw (wbem::framework::Exception)
 
 	try
 	{
-		std::string hostName = wbem::server::getHostName();
+		std::string hostName = server::getHostName();
 
-		std::vector<std::string> manageableDevices = wbem::physical_asset::NVDIMMFactory::getManageableDeviceUids();
+		std::vector<std::string> manageableDevices = physical_asset::NVDIMMFactory::getManageableDeviceUids();
 		for (size_t dimmIdx = 0; dimmIdx < manageableDevices.size(); dimmIdx++)
 		{
 			std::string uidStr = manageableDevices[dimmIdx];
@@ -472,13 +513,13 @@ throw (wbem::framework::Exception)
 			for (int sensorIdx = 0; sensorIdx < NVM_MAX_DEVICE_SENSORS; sensorIdx++)
 			{
 				framework::ObjectPath path = getSensorPath(sensors[sensorIdx].type, hostName,
-						uidStr);
+					uidStr);
 
 				pNames->push_back(path);
 			}
 		}
 	}
-	catch (framework::Exception&) // clean up and re-throw
+	catch (framework::Exception &) // clean up and re-throw
 	{
 		if (pNames != NULL)
 		{
@@ -489,18 +530,19 @@ throw (wbem::framework::Exception)
 	}
 	return pNames;
 }
+
 /*
  * Return the object paths for the NVDIMMSensor class.
  */
-wbem::framework::instance_names_t* wbem::support::NVDIMMSensorFactory::getInstanceNames()
-throw (wbem::framework::Exception)
+framework::instance_names_t *NVDIMMSensorFactory::getInstanceNames()
+throw(framework::Exception)
 {
 	return getNames();
 }
 
-wbem::framework::ObjectPath wbem::support::NVDIMMSensorFactory::getSensorPath(const int type,
-		const std::string &hostname, const std::string &dimmUid)
-	throw (framework::Exception)
+framework::ObjectPath NVDIMMSensorFactory::getSensorPath(const int type,
+	const std::string &hostname, const std::string &dimmUid)
+throw(framework::Exception)
 {
 	std::string sensorTypeName;
 	sensorTypeName = getCIMSensorDeviceName(type);
@@ -519,17 +561,16 @@ wbem::framework::ObjectPath wbem::support::NVDIMMSensorFactory::getSensorPath(co
 		framework::Attribute(dimmUid + sensorTypeName, true);
 
 	return framework::ObjectPath(hostname, NVM_NAMESPACE,
-			NVDIMMSENSOR_CREATIONCLASSNAME, keys);
+		NVDIMMSENSOR_CREATIONCLASSNAME, keys);
 }
 
 /*
  * Modify an NVMDIMMSensor instance.  Only the temp and spare capacities can change.  And on those
  * only the upper and lower thresholds respectively can change.
  */
-wbem::framework::Instance* wbem::support::NVDIMMSensorFactory::modifyInstance(
-		wbem::framework::ObjectPath& path,
-		wbem::framework::attributes_t& attributes)
-throw (wbem::framework::Exception)
+framework::Instance *NVDIMMSensorFactory::modifyInstance(framework::ObjectPath &path,
+	framework::attributes_t &attributes)
+throw(framework::Exception)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
@@ -539,7 +580,7 @@ throw (wbem::framework::Exception)
 	framework::Attribute deviceIdAttribute = path.getKeyValue(DEVICEID_KEY);
 	std::string uidStr;
 	int type = 0;
-	if(!splitDeviceIdAttribute(deviceIdAttribute, uidStr, type))
+	if (!splitDeviceIdAttribute(deviceIdAttribute, uidStr, type))
 	{
 		throw framework::ExceptionBadParameter(DEVICEID_KEY.c_str());
 	}
@@ -553,11 +594,11 @@ throw (wbem::framework::Exception)
 			modifyableAttributes.push_back(ENABLEDSTATE_KEY);
 			if (type == SENSORTYPE_MEDIATEMPERATURE || type == SENSORTYPE_CONTROLLER_TEMPERATURE)
 			{
-				modifyableAttributes.push_back(UPPERTHRESHOLDCRITICAL_KEY);
+				modifyableAttributes.push_back(UPPERTHRESHOLDNONCRITICAL_KEY);
 			}
 			else
 			{
-				modifyableAttributes.push_back(LOWERTHRESHOLDCRITICAL_KEY);
+				modifyableAttributes.push_back(LOWERTHRESHOLDNONCRITICAL_KEY);
 			}
 
 			framework::attribute_names_t attributeNames;
@@ -587,18 +628,18 @@ throw (wbem::framework::Exception)
 	return pInstance;
 }
 
-bool wbem::support::NVDIMMSensorFactory::getModifiableAttribute(const std::string &attributeName,
-		const framework::attributes_t& attributes,
-		const framework::Instance * const pInstance,
-		framework::Attribute &currentAttribute,
-		framework::Attribute &newAttribute)
-	throw (framework::Exception)
+bool NVDIMMSensorFactory::getModifiableAttribute(const std::string &attributeName,
+	const framework::attributes_t &attributes,
+	const framework::Instance *const pInstance,
+	framework::Attribute &currentAttribute,
+	framework::Attribute &newAttribute)
+throw(framework::Exception)
 {
 	if (pInstance && pInstance->getAttribute(attributeName, currentAttribute)
-			!= framework::SUCCESS)
+					 != framework::SUCCESS)
 	{
 		COMMON_LOG_ERROR_F("Failed to get attribute '%s' from NVDIMMSensor",
-				ENABLEDSTATE_KEY.c_str());
+			ENABLEDSTATE_KEY.c_str());
 		throw framework::Exception(TR("An internal error occurred."));
 	}
 
@@ -612,10 +653,10 @@ bool wbem::support::NVDIMMSensorFactory::getModifiableAttribute(const std::strin
 	return found;
 }
 
-void wbem::support::NVDIMMSensorFactory::updateSensor(const std::string &dimmUid,
-		const int type,
-		const framework::attributes_t &attributes,
-		framework::Instance *pInstance)
+void NVDIMMSensorFactory::updateSensor(const std::string &dimmUid,
+	const int type,
+	const framework::attributes_t &attributes,
+	framework::Instance *pInstance)
 {
 	if (!pInstance)
 	{
@@ -637,33 +678,34 @@ void wbem::support::NVDIMMSensorFactory::updateSensor(const std::string &dimmUid
 	memset(&sensor, 0, sizeof(sensor));
 
 	// EnabledState attribute may have changed
-	if (getModifiableAttribute(ENABLEDSTATE_KEY, attributes, pInstance, currentAttribute, newAttribute))
+	if (getModifiableAttribute(ENABLEDSTATE_KEY, attributes, pInstance, currentAttribute,
+		newAttribute))
 	{
 		modifiablePropFound = true;
 
 		// Changed the value
-		NVM_UINT16 oldEnabledState = currentAttribute.uintValue();
-		NVM_UINT16 enabledState = newAttribute.uintValue();
+		NVM_UINT16 oldEnabledState = (NVM_UINT16) currentAttribute.uintValue();
+		NVM_UINT16 enabledState = (NVM_UINT16) newAttribute.uintValue();
 
 		switch (enabledState)
 		{
-		case SENSOR_ENABLEDSTATE_ENABLED:
-			settings.enabled = 1;
-			break;
-		case SENSOR_ENABLEDSTATE_DISABLED:
-			settings.enabled = 0;
-			break;
-		default:
-			COMMON_LOG_ERROR_F("'%hu' is not a valid value for '%s'", enabledState,
+			case SENSOR_ENABLEDSTATE_ENABLED:
+				settings.enabled = 1;
+				break;
+			case SENSOR_ENABLEDSTATE_DISABLED:
+				settings.enabled = 0;
+				break;
+			default:
+				COMMON_LOG_ERROR_F("'%hu' is not a valid value for '%s'", enabledState,
 					ENABLEDSTATE_KEY.c_str());
 		}
 
 		if (oldEnabledState != enabledState)
 		{
 			COMMON_LOG_INFO_F("DeviceId %s - %s changing to %hu",
-					dimmUid.c_str(),
-					ENABLEDSTATE_KEY.c_str(),
-					enabledState);
+				dimmUid.c_str(),
+				ENABLEDSTATE_KEY.c_str(),
+				enabledState);
 
 			changed = true;
 			pInstance->setAttribute(ENABLEDSTATE_KEY, newAttribute);
@@ -671,37 +713,38 @@ void wbem::support::NVDIMMSensorFactory::updateSensor(const std::string &dimmUid
 	}
 	else // no new value - use the old one
 	{
-		settings.enabled = currentAttribute.boolValue() ? 1 : 0;
+		settings.enabled = (NVM_BOOL) (currentAttribute.boolValue() ? 1 : 0);
 	}
 
 	// Threshold may have changed
 	// set which threshold attribute is modifiable based on the sensor type
 	std::string thresholdAttribute =
 		(type == SENSORTYPE_MEDIATEMPERATURE || type == SENSORTYPE_CONTROLLER_TEMPERATURE) ?
-			UPPERTHRESHOLDCRITICAL_KEY : // temp
-			LOWERTHRESHOLDCRITICAL_KEY; // spare
-	if(getModifiableAttribute(thresholdAttribute, attributes, pInstance, currentAttribute, newAttribute))
+		UPPERTHRESHOLDNONCRITICAL_KEY : // temp
+		LOWERTHRESHOLDNONCRITICAL_KEY; // spare
+	if (getModifiableAttribute(thresholdAttribute, attributes, pInstance, currentAttribute,
+		newAttribute))
 	{
 		modifiablePropFound = true;
 		// only change if no old value or new value is different than old value
 		if (currentAttribute.intValue() != newAttribute.intValue())
 		{
 			COMMON_LOG_INFO_F("DeviceId %s - %s changing to %d",
-					dimmUid.c_str(),
-					thresholdAttribute.c_str(),
-					newAttribute.intValue());
+				dimmUid.c_str(),
+				thresholdAttribute.c_str(),
+				newAttribute.intValue());
 
 			// Threshold values come in as signed ints but must be converted to uint64
-			if (thresholdAttribute == UPPERTHRESHOLDCRITICAL_KEY)
+			if (thresholdAttribute == UPPERTHRESHOLDNONCRITICAL_KEY)
 			{
 				if (type == SENSOR_MEDIA_TEMPERATURE || type == SENSORTYPE_CONTROLLER_TEMPERATURE)
 				{
-					settings.upper_critical_threshold = newAttribute.uint64Value();
+					settings.upper_noncritical_threshold = tempAttributeToNvmValue(newAttribute);
 				}
 			}
 			else // it's the lower threshold
 			{
-				settings.lower_critical_threshold = newAttribute.uint64Value();
+				settings.lower_noncritical_threshold = newAttribute.uint64Value();
 			}
 
 			changed = true;
@@ -710,23 +753,23 @@ void wbem::support::NVDIMMSensorFactory::updateSensor(const std::string &dimmUid
 	}
 	else // no new value - use the old one
 	{
-		if (thresholdAttribute == UPPERTHRESHOLDCRITICAL_KEY)
+		if (thresholdAttribute == UPPERTHRESHOLDNONCRITICAL_KEY)
 		{
 			if (type == SENSOR_MEDIA_TEMPERATURE || type == SENSORTYPE_CONTROLLER_TEMPERATURE)
 			{
-				settings.upper_critical_threshold = currentAttribute.uint64Value();
+				settings.upper_noncritical_threshold = tempAttributeToNvmValue(currentAttribute);
 			}
 		}
 		else // it's the lower threshold
 		{
-			settings.lower_critical_threshold = currentAttribute.uint64Value();
+			settings.lower_noncritical_threshold = currentAttribute.uint64Value();
 		}
 	}
 
 	if (!modifiablePropFound)
 	{
 		COMMON_LOG_WARN_F("Tried to modify '%s' without a modifiable property",
-				dimmUid.c_str());
+			dimmUid.c_str());
 	}
 
 	// If any of the values were modified, update the settings
@@ -734,7 +777,7 @@ void wbem::support::NVDIMMSensorFactory::updateSensor(const std::string &dimmUid
 	{
 		NVM_UID uid;
 		uid_copy(dimmUid.c_str(), uid);
-		int rc = nvm_set_sensor_settings(uid, (enum sensor_type)type, &settings);
+		int rc = nvm_set_sensor_settings(uid, (enum sensor_type) type, &settings);
 		if (rc != NVM_SUCCESS)
 		{
 			throw exception::NvmExceptionLibError(rc);
@@ -742,35 +785,41 @@ void wbem::support::NVDIMMSensorFactory::updateSensor(const std::string &dimmUid
 	}
 }
 
-std::string wbem::support::NVDIMMSensorFactory::getSensorEnabledString(const NVM_UINT16 enabledState)
+NVM_UINT32 NVDIMMSensorFactory::tempAttributeToNvmValue(const framework::Attribute &attribute)
+{
+	return nvm_encode_temperature(((framework::REAL32)attribute.intValue() / SENSOR_TEMP_MODIFIER));
+}
+
+std::string NVDIMMSensorFactory::getSensorEnabledString(const NVM_UINT16 enabledState)
 {
 	std::string result;
 
 	switch (enabledState)
 	{
-	case SENSOR_ENABLEDSTATE_DISABLED:
-		result = TR("Disabled");
-		break;
-	case SENSOR_ENABLEDSTATE_ENABLED:
-		result = TR("Enabled");
-		break;
-	case SENSOR_ENABLEDSTATE_NA:
-		result = TR(wbem::NA.c_str());
-		break;
-	default:
-		result = TR("Unknown");
+		case SENSOR_ENABLEDSTATE_DISABLED:
+			result = TR("Disabled");
+			break;
+		case SENSOR_ENABLEDSTATE_ENABLED:
+			result = TR("Enabled");
+			break;
+		case SENSOR_ENABLEDSTATE_NA:
+			result = TR(NA.c_str());
+			break;
+		default:
+			result = TR("Unknown");
 	}
 
 	return result;
 }
+
 /*
  * Determine if the instances are associated based on the AssociatedSensor association class.
  * Because the Sensor deviceID Attribute has the sensor type appended to the Device UID,
  * this is a little more complex matching.
  */
-bool wbem::support::NVDIMMSensorFactory::isAssociated(const std::string &associationClass,
-		framework::Instance* pAntInstance,
-		framework::Instance* pDepInstance)
+bool NVDIMMSensorFactory::isAssociated(const std::string &associationClass,
+	framework::Instance *pAntInstance,
+	framework::Instance *pDepInstance)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	bool result = false;
@@ -778,21 +827,49 @@ bool wbem::support::NVDIMMSensorFactory::isAssociated(const std::string &associa
 	if (associationClass == framework_interface::ASSOCIATION_CLASS_ASSOCIATEDSENSOR)
 	{
 		std::vector<std::string> stringsToRemove;
-		for(cimSensorDescriptionsMap::const_iterator iter = cimSensorDescriptions.begin();
-				iter != cimSensorDescriptions.end(); iter++)
+		for (cimSensorDescriptionsMap::const_iterator iter = cimSensorDescriptions.begin();
+			 iter != cimSensorDescriptions.end(); iter++)
 		{
 			stringsToRemove.push_back(iter->second.deviceName);
 		}
 		result = framework_interface::NvmAssociationFactory::filteredFkMatch(
-				pAntInstance, DEVICEID_KEY, stringsToRemove,
-				pDepInstance, TAG_KEY, std::vector<std::string>());
+			pAntInstance, DEVICEID_KEY, stringsToRemove,
+			pDepInstance, TAG_KEY, std::vector<std::string>());
 	}
 	else
 	{
 		COMMON_LOG_WARN_F("Cannot calculate if instances are an association "
-				"based on association class: %s", associationClass.c_str());
+			"based on association class: %s", associationClass.c_str());
 	}
 
 	return result;
 }
 
+framework::SINT32 NVDIMMSensorFactory::decodeIfTemp(const sensor_type &type, const NVM_UINT64 &value)
+{
+	framework::SINT32 result = (framework::SINT32)value;
+	if (isTempSensorType(type))
+	{
+		result = nvmTempToCimTemp (value);
+	}
+
+	return result;
+}
+
+bool NVDIMMSensorFactory::isTempSensorType(const sensor_type &type)
+{
+	return type == SENSOR_CONTROLLER_TEMPERATURE || type == SENSOR_MEDIA_TEMPERATURE;
+}
+
+framework::SINT32 NVDIMMSensorFactory::nvmTempToCimTemp(const NVM_UINT64 &value)
+{
+	return realTempToCimTemp(nvm_decode_temperature((NVM_UINT32)value));
+}
+
+framework::SINT32 NVDIMMSensorFactory::realTempToCimTemp(const framework::REAL32 &temp)
+{
+	return (framework::SINT32)(temp * SENSOR_TEMP_MODIFIER);
+}
+
+}
+}

@@ -580,7 +580,7 @@ void NvmApi::getPools(std::vector<struct pool>& pools) const
 	else if (rc > 0)
 	{
 		int count  = rc;
-
+		pools.reserve(count);
 		// Note: due to the size of struct pool and limitations
 		// with OpenPegasus, pools has to be allocated from the heap
 		struct pool *pPoolArray = (struct pool *)calloc(rc, sizeof (struct pool));

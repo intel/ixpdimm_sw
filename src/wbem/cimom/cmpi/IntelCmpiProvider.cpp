@@ -67,7 +67,6 @@ CMInstanceMIStubName(Intel_NVDIMMSensor);
 CMInstanceMIStubName(Intel_ErasureService);
 CMInstanceMIStubName(Intel_PerformanceMetric);
 CMInstanceMIStubName(Intel_PerformanceMetricDefinition);
-CMInstanceMIStubName(Intel_NVDIMMPerformanceView);
 CMInstanceMIStubName(Intel_MemoryResources);
 CMInstanceMIStubName(Intel_PersistentMemoryPool);
 CMInstanceMIStubName(Intel_VolatileMemory);
@@ -93,7 +92,6 @@ CMInstanceMIStubName(Intel_PersistentMemoryService);
 CMInstanceMIStubName(Intel_PersistentConfigurationCapabilities);
 CMInstanceMIStubName(Intel_PersistentMemory);
 CMInstanceMIStubName(Intel_RegisteredProfile); // interop namespace only
-CMInstanceMIStubName(Intel_NVDIMMHealthSensorView);
 CMInstanceMIStubName(Intel_StaticFilter);
 
 // Association classes

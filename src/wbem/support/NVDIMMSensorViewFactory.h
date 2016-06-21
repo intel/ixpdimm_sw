@@ -48,8 +48,11 @@ static std::string CURRENTVALUE_KEY = "CurrentValue"; //!< current value key
 static std::string SENSORENABLEDSTATESTR_ENABLED = N_TR("Enabled");
 static std::string SENSORENABLEDSTATESTR_DISABLED = N_TR("Disabled");
 static std::string SENSORENABLEDSTATESTR_UNKNOWN = N_TR("Unknown");
+static std::string SENSORTHRESHOLDTYPE_LOWERNONCRITICAL = N_TR("LowerThresholdNonCritical");
+static std::string SENSORTHRESHOLDTYPE_UPPERNONCRITICAL = N_TR("UpperThresholdNonCritical");
 static std::string SENSORTHRESHOLDTYPE_LOWERCRITICAL = N_TR("LowerThresholdCritical");
 static std::string SENSORTHRESHOLDTYPE_UPPERCRITICAL = N_TR("UpperThresholdCritical");
+static std::string SENSORTHRESHOLDTYPE_UPPERFATAL = N_TR("UpperThresholdFatal");
 static std::string SENSORTHRESHOLDTYPE_UNKNOWN = N_TR("Unknown");
 
 // Sensor properties used by the CLI
@@ -136,6 +139,10 @@ private:
 	void populateAttributeList(framework::attribute_names_t &attributes)
 			throw (framework::Exception);
 
+	void sensorToInstance(NVM_UID uidStr, sensor sensor, framework::Instance *pInstance, framework::attribute_names_t attributes);
+
+	void addThresholdForType(framework::Instance *pInstance, framework::attribute_names_t vector,
+		std::string key, sensor_type type, NVM_UINT64 threshold);
 };
 }  // support
 }  // wbem

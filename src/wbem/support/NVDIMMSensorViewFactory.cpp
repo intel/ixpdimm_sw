@@ -41,16 +41,21 @@
 #include <iomanip>
 #include <exception/NvmExceptionLibError.h>
 #include <physical_asset/NVDIMMFactory.h>
+#include <framework_interface/FrameworkExtensions.h>
 
-wbem::support::NVDIMMSensorViewFactory::NVDIMMSensorViewFactory()
-throw (wbem::framework::Exception)
+namespace wbem
+{
+namespace support
+{
+NVDIMMSensorViewFactory::NVDIMMSensorViewFactory()
+throw (framework::Exception)
 { }
 
-wbem::support::NVDIMMSensorViewFactory::~NVDIMMSensorViewFactory()
+NVDIMMSensorViewFactory::~NVDIMMSensorViewFactory()
 { }
 
-void wbem::support::NVDIMMSensorViewFactory::populateAttributeList(framework::attribute_names_t &attributes)
-		throw (wbem::framework::Exception)
+void NVDIMMSensorViewFactory::populateAttributeList(framework::attribute_names_t &attributes)
+throw (framework::Exception)
 {
 	// add key attribute
 	attributes.push_back(DEVICEID_KEY);
@@ -62,33 +67,47 @@ void wbem::support::NVDIMMSensorViewFactory::populateAttributeList(framework::at
 	attributes.push_back(DIMMHANDLE_KEY); // Handle is for filtering
 	attributes.push_back(CURRENTVALUE_KEY);
 	attributes.push_back(CURRENTSTATE_KEY);
+	attributes.push_back(LOWERTHRESHOLDNONCRITICAL_KEY);
+	attributes.push_back(UPPERTHRESHOLDNONCRITICAL_KEY);
 	attributes.push_back(LOWERTHRESHOLDCRITICAL_KEY);
 	attributes.push_back(UPPERTHRESHOLDCRITICAL_KEY);
+	attributes.push_back(LOWERTHRESHOLDFATAL_KEY);
+	attributes.push_back(UPPERTHRESHOLDFATAL_KEY);
 	attributes.push_back(SETTABLETHRESHOLDS_KEY);
 	attributes.push_back(SUPPORTEDTHRESHOLDS_KEY);
 	attributes.push_back(ENABLEDSTATE_KEY);
 }
 
-std::string wbem::support::NVDIMMSensorViewFactory::getThresholdTypeStr(int threshold)
+std::string NVDIMMSensorViewFactory::getThresholdTypeStr(int threshold)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	std::string result;
-	if (threshold == SENSOR_LOWER_CRITICAL_THRESHOLD)
+	switch (threshold)
 	{
-		result = SENSORTHRESHOLDTYPE_LOWERCRITICAL;
+		case SENSOR_LOWER_NONCRITICAL_THRESHOLD:
+			result = SENSORTHRESHOLDTYPE_LOWERNONCRITICAL;
+			break;
+		case SENSOR_UPPER_NONCRITICAL_THRESHOLD:
+			result = SENSORTHRESHOLDTYPE_UPPERNONCRITICAL;
+			break;
+		case SENSOR_LOWER_CRITICAL_THRESHOLD:
+			result = SENSORTHRESHOLDTYPE_LOWERCRITICAL;
+			break;
+		case SENSOR_UPPER_CRITICAL_THRESHOLD:
+			result = SENSORTHRESHOLDTYPE_UPPERCRITICAL;
+			break;
+		case SENSOR_UPPER_FATAL_THRESHOLD:
+			result = SENSORTHRESHOLDTYPE_UPPERFATAL;
+			break;
+		default:
+			result = SENSORTHRESHOLDTYPE_UNKNOWN;
+			break;
 	}
-	else if (threshold == SENSOR_UPPER_CRITICAL_THRESHOLD)
-	{
-		result = SENSORTHRESHOLDTYPE_UPPERCRITICAL;
-	}
-	else
-	{
-		result = SENSORTHRESHOLDTYPE_UNKNOWN;
-	}
+
 	return result;
 }
 
-std::string wbem::support::NVDIMMSensorViewFactory::getEnabledStateStr(int state)
+std::string NVDIMMSensorViewFactory::getEnabledStateStr(int state)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	std::string result;
@@ -102,7 +121,7 @@ std::string wbem::support::NVDIMMSensorViewFactory::getEnabledStateStr(int state
 	}
 	else if (state == SENSOR_ENABLEDSTATE_NA)
 	{
-		result = wbem::NA;
+		result = NA;
 	}
 	else
 	{
@@ -113,78 +132,78 @@ std::string wbem::support::NVDIMMSensorViewFactory::getEnabledStateStr(int state
 /*
  * Based on the WBEM sensor type get the CLI appropriate name.
  */
-std::string wbem::support::NVDIMMSensorViewFactory::getSensorNameStr(int type)
+std::string NVDIMMSensorViewFactory::getSensorNameStr(int type)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	std::string result;
 	// can't use switch/case here because SENSORTYPE_... aren't constant expressions
-	if (type ==  wbem::support::NVDIMMSensorFactory::SENSORTYPE_MEDIATEMPERATURE)
+	if (type ==  NVDIMMSensorFactory::SENSORTYPE_MEDIATEMPERATURE)
 	{
-	   result = PROPERTY_SENSOR_TYPE_MEDIATEMP;
+		result = PROPERTY_SENSOR_TYPE_MEDIATEMP;
 	}
-	else if (type ==  wbem::support::NVDIMMSensorFactory::SENSORTYPE_SPARECAPACITY)
+	else if (type ==  NVDIMMSensorFactory::SENSORTYPE_SPARECAPACITY)
 	{
-	   result = PROPERTY_SENSOR_TYPE_SPARE;
+		result = PROPERTY_SENSOR_TYPE_SPARE;
 	}
-	else if (type ==  wbem::support::NVDIMMSensorFactory::SENSORTYPE_WEARLEVEL)
+	else if (type ==  NVDIMMSensorFactory::SENSORTYPE_WEARLEVEL)
 	{
-	   result = PROPERTY_SENSOR_TYPE_WEAR;
+		result = PROPERTY_SENSOR_TYPE_WEAR;
 	}
-	else if (type ==  wbem::support::NVDIMMSensorFactory::SENSORTYPE_POWERCYCLES)
+	else if (type ==  NVDIMMSensorFactory::SENSORTYPE_POWERCYCLES)
 	{
-	   result = PROPERTY_SENSOR_TYPE_POWERCYCLES;
+		result = PROPERTY_SENSOR_TYPE_POWERCYCLES;
 	}
-	else if (type ==  wbem::support::NVDIMMSensorFactory::SENSORTYPE_POWERONTIME)
+	else if (type ==  NVDIMMSensorFactory::SENSORTYPE_POWERONTIME)
 	{
-	   result = PROPERTY_SENSOR_TYPE_POWERON;
+		result = PROPERTY_SENSOR_TYPE_POWERON;
 	}
-	else if (type ==  wbem::support::NVDIMMSensorFactory::SENSORTYPE_UNSAFESHUTDOWNS)
+	else if (type ==  NVDIMMSensorFactory::SENSORTYPE_UNSAFESHUTDOWNS)
 	{
-	   result = PROPERTY_SENSOR_TYPE_UNSAFESHUTDOWNS;
+		result = PROPERTY_SENSOR_TYPE_UNSAFESHUTDOWNS;
 	}
-	else if (type == wbem::support::NVDIMMSensorFactory::SENSORTYPE_FWERRORLOGCOUNT)
+	else if (type == NVDIMMSensorFactory::SENSORTYPE_FWERRORLOGCOUNT)
 	{
 		result = PROPERTY_SENSOR_TYPE_FWERRORLOGCOUNT;
 	}
-	else if (type ==  wbem::support::NVDIMMSensorFactory::SENSORTYPE_UPTIME)
+	else if (type ==  NVDIMMSensorFactory::SENSORTYPE_UPTIME)
 	{
-	   result = PROPERTY_SENSOR_TYPE_UPTIME;
+		result = PROPERTY_SENSOR_TYPE_UPTIME;
 	}
-	else if (type == wbem::support::NVDIMMSensorFactory::SENSORTYPE_POWERLIMITED)
+	else if (type == NVDIMMSensorFactory::SENSORTYPE_POWERLIMITED)
 	{
 		result = PROPERTY_SENSOR_TYPE_POWERLIMITED;
 	}
-	else if (type == wbem::support::NVDIMMSensorFactory::SENSORTYPE_MEDIAERRORS_UNCORRECTABLE)
+	else if (type == NVDIMMSensorFactory::SENSORTYPE_MEDIAERRORS_UNCORRECTABLE)
 	{
-	   result = PROPERTY_SENSOR_TYPE_MEDIAERRORS_UNCORRECTABLE;
+		result = PROPERTY_SENSOR_TYPE_MEDIAERRORS_UNCORRECTABLE;
 	}
-	else if (type == wbem::support::NVDIMMSensorFactory::SENSORTYPE_MEDIAERRORS_CORRECTED)
+	else if (type == NVDIMMSensorFactory::SENSORTYPE_MEDIAERRORS_CORRECTED)
 	{
-	   result = PROPERTY_SENSOR_TYPE_MEDIAERRORS_CORRECTED;
+		result = PROPERTY_SENSOR_TYPE_MEDIAERRORS_CORRECTED;
 	}
-	else if (type == wbem::support::NVDIMMSensorFactory::SENSORTYPE_MEDIAERRORS_ERASURECODED)
+	else if (type == NVDIMMSensorFactory::SENSORTYPE_MEDIAERRORS_ERASURECODED)
 	{
-	   result = PROPERTY_SENSOR_TYPE_MEDIAERRORS_ERASURECODED;
+		result = PROPERTY_SENSOR_TYPE_MEDIAERRORS_ERASURECODED;
 	}
-	else if (type == wbem::support::NVDIMMSensorFactory::SENSORTYPE_WRITECOUNT_MAXIMUM)
+	else if (type == NVDIMMSensorFactory::SENSORTYPE_WRITECOUNT_MAXIMUM)
 	{
-	   result = PROPERTY_SENSOR_TYPE_WRITECOUNT_MAXIMUM;
+		result = PROPERTY_SENSOR_TYPE_WRITECOUNT_MAXIMUM;
 	}
-	else if (type == wbem::support::NVDIMMSensorFactory::SENSORTYPE_WRITECOUNT_AVERAGE)
+	else if (type == NVDIMMSensorFactory::SENSORTYPE_WRITECOUNT_AVERAGE)
 	{
-	   result = PROPERTY_SENSOR_TYPE_WRITECOUNT_AVERAGE;
+		result = PROPERTY_SENSOR_TYPE_WRITECOUNT_AVERAGE;
 	}
-	else if (type == wbem::support::NVDIMMSensorFactory::SENSORTYPE_MEDIAERRORS_HOST)
+	else if (type == NVDIMMSensorFactory::SENSORTYPE_MEDIAERRORS_HOST)
 	{
-	   result = PROPERTY_SENSOR_TYPE_MEDIAERRORS_HOST;
+		result = PROPERTY_SENSOR_TYPE_MEDIAERRORS_HOST;
 	}
-	else if (type == wbem::support::NVDIMMSensorFactory::SENSORTYPE_MEDIAERRORS_NONHOST)
+	else if (type == NVDIMMSensorFactory::SENSORTYPE_MEDIAERRORS_NONHOST)
 	{
-	   result = PROPERTY_SENSOR_TYPE_MEDIAERRORS_NONHOST;
+		result = PROPERTY_SENSOR_TYPE_MEDIAERRORS_NONHOST;
 	}
-	else if (type ==  wbem::support::NVDIMMSensorFactory::SENSORTYPE_CONTROLLER_TEMPERATURE)
+	else if (type ==  NVDIMMSensorFactory::SENSORTYPE_CONTROLLER_TEMPERATURE)
 	{
-	   result = PROPERTY_SENSOR_TYPE_CONTROLLERTEMP;
+		result = PROPERTY_SENSOR_TYPE_CONTROLLERTEMP;
 	}
 	else
 	{
@@ -193,7 +212,7 @@ std::string wbem::support::NVDIMMSensorViewFactory::getSensorNameStr(int type)
 	return result;
 }
 
-std::string wbem::support::NVDIMMSensorViewFactory::baseUnitToString(int baseUnit)
+std::string NVDIMMSensorViewFactory::baseUnitToString(int baseUnit)
 {
 	std::string value;
 	switch(baseUnit)
@@ -223,9 +242,9 @@ std::string wbem::support::NVDIMMSensorViewFactory::baseUnitToString(int baseUni
 /*
  * Retrieve a specific instance given an object path
  */
-wbem::framework::Instance* wbem::support::NVDIMMSensorViewFactory::getInstance(
-		framework::ObjectPath &path, framework::attribute_names_t &attributes)
-		throw (wbem::framework::Exception)
+framework::Instance* NVDIMMSensorViewFactory::getInstance(
+	framework::ObjectPath &path, framework::attribute_names_t &attributes)
+throw (framework::Exception)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
@@ -255,138 +274,9 @@ wbem::framework::Instance* wbem::support::NVDIMMSensorViewFactory::getInstance(
 			throw exception::NvmExceptionLibError(rc);
 		}
 
-		// DimmID = handle or uid depending on user selection
-		if (containsAttribute(DIMMID_KEY, attributes))
-		{
-				framework::Attribute attrDimmId = physical_asset::NVDIMMFactory::uidToDimmIdAttribute(uidStr);
-				pInstance->setAttribute(DIMMID_KEY, attrDimmId, attributes);
-		}
-		// dimmUid
-		if (containsAttribute(DIMMUID_KEY, attributes))
-		{
-			framework::Attribute attrDimmHandle(uidStr, false);
-			pInstance->setAttribute(DIMMUID_KEY, attrDimmHandle, attributes);
-		}
-		// DimmHandle = NFIT Handle
-		if (containsAttribute(DIMMHANDLE_KEY, attributes))
-		{
-			NVM_UINT32 handle;
-			physical_asset::NVDIMMFactory::uidToHandle(uidStr, handle);
-			framework::Attribute attrDimmHandle(handle, false);
-			pInstance->setAttribute(DIMMHANDLE_KEY, attrDimmHandle, attributes);
-		}
-		if (containsAttribute(TYPE_KEY, attributes))
-		{
-			framework::Attribute a(getSensorNameStr(type), false);
-			pInstance->setAttribute(TYPE_KEY, a, attributes);
-		}
-		if (containsAttribute(CURRENTVALUE_KEY, attributes))
-		{
-			std::stringstream currentValue;
-			if (sensor.units == UNIT_SECONDS)
-			{
-				// convert to HH:MM:SS, note HH can grow beyond 2 digits which is fine.
-				NVM_UINT64 hours, minutes, seconds, remainder = 0;
-				// 60 seconds in a minute, 60 minutes in an hour
-				hours = sensor.reading / (60*60);
-				remainder = sensor.reading % (60*60);
-				minutes = remainder / 60;
-				seconds = remainder % 60;
-				currentValue << std::setfill('0') << std::setw(2) << hours << ":";
-				currentValue << std::setfill('0') << std::setw(2) << minutes << ":";
-				currentValue << std::setfill('0') << std::setw(2) << seconds;
-			}
-			else if (sensor.type == SENSOR_MEDIA_TEMPERATURE || sensor.type == SENSOR_CONTROLLER_TEMPERATURE)
-			{
-				float celsius = nvm_decode_temperature(sensor.reading);
-				currentValue << celsius << baseUnitToString(sensor.units);
-			}
-			else
-			{
-				NVM_INT32 scaled = 0;
-				NVM_INT32 scaler = 0;
-				NVDIMMSensorFactory::scaleNumberBaseTen(sensor.reading, &scaled, &scaler);
-				currentValue << scaled << baseUnitToString(sensor.units);
-				if (scaler > 0)
-				{
-					currentValue << "* 10 ^" << scaler;
-				}
-			}
+		sensorToInstance(uid, sensor, pInstance, attributes);
 
-			framework::Attribute a(currentValue.str(), false);
-			pInstance->setAttribute(CURRENTVALUE_KEY, a, attributes);
-		}
-		if (containsAttribute(ENABLEDSTATE_KEY, attributes))
-		{
-			std::string enabledState;
-			if ((sensor.type == SENSOR_MEDIA_TEMPERATURE) || (sensor.type == SENSOR_SPARECAPACITY)
-				|| (sensor.type == SENSOR_CONTROLLER_TEMPERATURE))
-			{
-				enabledState = getEnabledStateStr(
-						sensor.settings.enabled ? SENSOR_ENABLEDSTATE_ENABLED : SENSOR_ENABLEDSTATE_DISABLED);
-			}
-			else
-			{
-				enabledState = getEnabledStateStr(SENSOR_ENABLEDSTATE_NA);
-			}
-			framework::Attribute a(enabledState, false);
-			pInstance->setAttribute(ENABLEDSTATE_KEY, a, attributes);
-		}
-		if (containsAttribute(LOWERTHRESHOLDCRITICAL_KEY, attributes))
-		{
-			framework::Attribute a(sensor.settings.lower_critical_threshold, false);
-			pInstance->setAttribute(LOWERTHRESHOLDCRITICAL_KEY, a, attributes);
-		}
-		if (containsAttribute(UPPERTHRESHOLDCRITICAL_KEY, attributes))
-		{
-			if (sensor.type == SENSOR_MEDIA_TEMPERATURE || sensor.type == SENSOR_CONTROLLER_TEMPERATURE)
-			{
-				float celsius = nvm_decode_temperature(sensor.settings.upper_critical_threshold);
-				pInstance->setAttribute(UPPERTHRESHOLDCRITICAL_KEY,
-						framework::Attribute (celsius, false),
-						attributes);
-			}
-			else
-			{
-				pInstance->setAttribute(UPPERTHRESHOLDCRITICAL_KEY,
-						framework::Attribute (sensor.settings.upper_critical_threshold, false),
-						attributes);
-			}
 
-		}
-		if (containsAttribute(CURRENTSTATE_KEY, attributes))
-		{
-			framework::Attribute a(NVDIMMSensorFactory::getSensorStateStr(sensor.current_state), false);
-			pInstance->setAttribute(CURRENTSTATE_KEY, a, attributes);
-		}
-		if (containsAttribute(SUPPORTEDTHRESHOLDS_KEY, attributes))
-		{
-			framework::STR_LIST supportedThresholds;
-			if (sensor.lower_critical_support)
-			{
-				supportedThresholds.push_back(getThresholdTypeStr(SENSOR_LOWER_CRITICAL_THRESHOLD));
-			}
-			if (sensor.upper_critical_support)
-			{
-				supportedThresholds.push_back(getThresholdTypeStr(SENSOR_UPPER_CRITICAL_THRESHOLD));
-			}
-			framework::Attribute a(supportedThresholds, false);
-			pInstance->setAttribute(SUPPORTEDTHRESHOLDS_KEY, a, attributes);
-		}
-		if (containsAttribute(SETTABLETHRESHOLDS_KEY, attributes))
-		{
-			framework::STR_LIST settableThresholds;
-			if (sensor.lower_critical_settable)
-			{
-				settableThresholds.push_back(getThresholdTypeStr(SENSOR_LOWER_CRITICAL_THRESHOLD));
-			}
-			if (sensor.upper_critical_settable)
-			{
-				settableThresholds.push_back(getThresholdTypeStr(SENSOR_UPPER_CRITICAL_THRESHOLD));
-			}
-			framework::Attribute a(settableThresholds, false);
-			pInstance->setAttribute(SETTABLETHRESHOLDS_KEY, a, attributes);
-		}
 	}
 	catch (framework::Exception &) // clean up and re-throw
 	{
@@ -400,8 +290,167 @@ wbem::framework::Instance* wbem::support::NVDIMMSensorViewFactory::getInstance(
 	return pInstance;
 }
 
-wbem::framework::instance_names_t* wbem::support::NVDIMMSensorViewFactory::getInstanceNames()
-		throw (framework::Exception)
+framework::instance_names_t* NVDIMMSensorViewFactory::getInstanceNames()
+throw (framework::Exception)
 {
 	return NVDIMMSensorFactory::getNames();
+}
+
+void NVDIMMSensorViewFactory::sensorToInstance(NVM_UID uidStr, sensor sensor,
+	framework::Instance *pInstance, framework::attribute_names_t attributes)
+{
+	// DimmID = handle or uid depending on user selection
+	if (containsAttribute(DIMMID_KEY, attributes))
+	{
+		framework::Attribute attrDimmId = physical_asset::NVDIMMFactory::uidToDimmIdAttribute(uidStr);
+		pInstance->setAttribute(DIMMID_KEY, attrDimmId, attributes);
+	}
+	// dimmUid
+	if (containsAttribute(DIMMUID_KEY, attributes))
+	{
+		framework::Attribute attrDimmHandle(uidStr, false);
+		pInstance->setAttribute(DIMMUID_KEY, attrDimmHandle, attributes);
+	}
+	// DimmHandle = NFIT Handle
+	if (containsAttribute(DIMMHANDLE_KEY, attributes))
+	{
+		NVM_UINT32 handle;
+		physical_asset::NVDIMMFactory::uidToHandle(uidStr, handle);
+		framework::Attribute attrDimmHandle(handle, false);
+		pInstance->setAttribute(DIMMHANDLE_KEY, attrDimmHandle, attributes);
+	}
+	if (containsAttribute(TYPE_KEY, attributes))
+	{
+		framework::Attribute a(getSensorNameStr(sensor.type), false);
+		pInstance->setAttribute(TYPE_KEY, a, attributes);
+	}
+	if (containsAttribute(CURRENTVALUE_KEY, attributes))
+	{
+		std::stringstream currentValue;
+		if (sensor.units == UNIT_SECONDS)
+		{
+			// convert to HH:MM:SS, note HH can grow beyond 2 digits which is fine.
+			NVM_UINT64 hours, minutes, seconds, remainder = 0;
+			// 60 seconds in a minute, 60 minutes in an hour
+			hours = sensor.reading / (60*60);
+			remainder = sensor.reading % (60*60);
+			minutes = remainder / 60;
+			seconds = remainder % 60;
+			currentValue << std::setfill('0') << std::setw(2) << hours << ":";
+			currentValue << std::setfill('0') << std::setw(2) << minutes << ":";
+			currentValue << std::setfill('0') << std::setw(2) << seconds;
+		}
+		else if (sensor.type == SENSOR_MEDIA_TEMPERATURE || sensor.type == SENSOR_CONTROLLER_TEMPERATURE)
+		{
+			float celsius = nvm_decode_temperature(sensor.reading);
+			currentValue << celsius << baseUnitToString(sensor.units);
+		}
+		else
+		{
+			NVM_INT32 scaled = 0;
+			NVM_INT32 scaler = 0;
+			NVDIMMSensorFactory::scaleNumberBaseTen(sensor.reading, &scaled, &scaler);
+			currentValue << scaled << baseUnitToString(sensor.units);
+			if (scaler > 0)
+			{
+				currentValue << "* 10 ^" << scaler;
+			}
+		}
+
+		framework::Attribute a(currentValue.str(), false);
+		pInstance->setAttribute(CURRENTVALUE_KEY, a, attributes);
+	}
+	if (containsAttribute(ENABLEDSTATE_KEY, attributes))
+	{
+		std::string enabledState;
+		if ((sensor.type == SENSOR_MEDIA_TEMPERATURE) || (sensor.type == SENSOR_SPARECAPACITY)
+			|| (sensor.type == SENSOR_CONTROLLER_TEMPERATURE))
+		{
+			enabledState = getEnabledStateStr(
+				sensor.settings.enabled ? SENSOR_ENABLEDSTATE_ENABLED : SENSOR_ENABLEDSTATE_DISABLED);
+		}
+		else
+		{
+			enabledState = getEnabledStateStr(SENSOR_ENABLEDSTATE_NA);
+		}
+		framework::Attribute a(enabledState, false);
+		pInstance->setAttribute(ENABLEDSTATE_KEY, a, attributes);
+	}
+
+	addThresholdForType(pInstance, attributes, LOWERTHRESHOLDCRITICAL_KEY,
+		sensor.type, sensor.settings.lower_critical_threshold);
+	addThresholdForType(pInstance, attributes, UPPERTHRESHOLDNONCRITICAL_KEY,
+		sensor.type, sensor.settings.upper_critical_threshold);
+	addThresholdForType(pInstance, attributes, UPPERTHRESHOLDCRITICAL_KEY,
+		sensor.type, sensor.settings.upper_fatal_threshold);
+	addThresholdForType(pInstance, attributes, UPPERTHRESHOLDFATAL_KEY,
+		sensor.type, sensor.settings.upper_critical_threshold);
+
+	if (containsAttribute(CURRENTSTATE_KEY, attributes))
+	{
+		framework::Attribute a(NVDIMMSensorFactory::getSensorStateStr(sensor.current_state), false);
+		pInstance->setAttribute(CURRENTSTATE_KEY, a, attributes);
+	}
+	if (containsAttribute(SUPPORTEDTHRESHOLDS_KEY, attributes))
+	{
+		framework::STR_LIST supportedThresholds;
+		if (sensor.lower_noncritical_support)
+		{
+			supportedThresholds.push_back(getThresholdTypeStr(SENSOR_LOWER_NONCRITICAL_THRESHOLD));
+		}
+		if (sensor.upper_noncritical_support)
+		{
+			supportedThresholds.push_back(getThresholdTypeStr(SENSOR_UPPER_NONCRITICAL_THRESHOLD));
+		}
+		if (sensor.lower_critical_support)
+		{
+			supportedThresholds.push_back(getThresholdTypeStr(SENSOR_LOWER_CRITICAL_THRESHOLD));
+		}
+		if (sensor.upper_critical_support)
+		{
+			supportedThresholds.push_back(getThresholdTypeStr(SENSOR_UPPER_CRITICAL_THRESHOLD));
+		}
+
+		if (sensor.upper_fatal_support)
+		{
+			supportedThresholds.push_back(getThresholdTypeStr(SENSOR_UPPER_FATAL_THRESHOLD));
+		}
+		framework::Attribute a(supportedThresholds, false);
+		pInstance->setAttribute(SUPPORTEDTHRESHOLDS_KEY, a, attributes);
+	}
+	if (containsAttribute(SETTABLETHRESHOLDS_KEY, attributes))
+	{
+		framework::STR_LIST settableThresholds;
+		if (sensor.lower_noncritical_settable)
+		{
+			settableThresholds.push_back(getThresholdTypeStr(SENSOR_LOWER_NONCRITICAL_THRESHOLD));
+		}
+		if (sensor.upper_noncritical_settable)
+		{
+			settableThresholds.push_back(getThresholdTypeStr(SENSOR_UPPER_NONCRITICAL_THRESHOLD));
+		}
+		framework::Attribute a(settableThresholds, false);
+		pInstance->setAttribute(SETTABLETHRESHOLDS_KEY, a, attributes);
+	}
+}
+
+void NVDIMMSensorViewFactory::addThresholdForType(framework::Instance *pInstance,
+	framework::attribute_names_t attributes, std::string key, sensor_type type, NVM_UINT64 threshold)
+{
+	if (containsAttribute(key, attributes))
+	{
+		if (type == SENSOR_MEDIA_TEMPERATURE || type == SENSOR_CONTROLLER_TEMPERATURE)
+		{
+			float celsius = nvm_decode_temperature(threshold);
+			pInstance->setAttribute(key, framework::Attribute ((framework::REAL32)celsius, false), attributes);
+		}
+		else
+		{
+			pInstance->setAttribute(key, framework::Attribute ((framework::UINT64)threshold, false), attributes);
+		}
+	}
+}
+
+}
+
 }

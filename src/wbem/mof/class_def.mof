@@ -400,58 +400,6 @@ class <NVM_WBEM_PREFIX>NVDIMMSensor : CIM_NumericSensor
 };
 
 [dynamic, provider("intelwbemprovider")]
-class <NVM_WBEM_PREFIX>NVDIMMHealthSensorView : CIM_View
-{
-	uint32 CurrentMediaTemperature;
-	uint16 MediaTemperatureUnits;
-	uint16 MediaTemperatureUnitModifier;
-	uint32 MediaTemperatureThreshold;
-	string MediaTemperatureState;
-	uint32 CurrentControllerTemperature;
-	uint16 ControllerTemperatureUnits;
-	uint16 ControllerTemperatureUnitModifier;
-	uint32 ControllerTemperatureThreshold;
-	string ControllerTemperatureState;
-	uint32 CurrentSpareLevel;
-	uint16 SpareUnits;
-	uint16 SpareUnitModifier;
-	uint32 SpareThreshold;
-	string SpareState;
-	uint32 CurrentWearLevel;
-	uint16 WearUnits;
-	uint16 WearUnitModifier;
-	string WearState;
-	uint32 PowerOnTime;
-	uint16 PowerOnUnits;
-	uint16 PowerOnModifier;
-	string PowerOnState;
-	uint32 UpTime;
-	uint16 UpTimeUnits;
-	uint16 UpTimeModifier;
-	string UpTimeState;
-	uint32 PowerCycleCount;
-	uint16 PowerCycleUnits;
-	uint16 PowerCycleModifier;
-	string PowerCycleState;
-	uint32 UnsafeShutdowns;
-	uint16 UnsafeShutdownUnits;
-	uint16 UnsafeShutdownModifier;
-	string UnsafeShutdownState;
-	uint32 MediaErrorsUncorrectable;
-	uint16 MediaErrorsUncorrectableUnits;
-	uint16 MediaErrorsUncorrectableModifier;
-	string MediaErrorsUncorrectableState;
-	uint32 PowerLimited;
-	uint16 PowerLimitedUnits;
-	uint16 PowerLimitedModifier;
-	string PowerLimitedState;
-	uint32 MediaErrorsCorrected;
-	uint16 MediaErrorsCorrectedUnits;
-	uint16 MediaErrorsCorrectedModifier;
-	string MediaErrorsCorrectedState;
-};
-
-[dynamic, provider("intelwbemprovider")]
 class <NVM_WBEM_PREFIX>PerformanceMetricDefinition : CIM_BaseMetricDefinition
 {
 };
@@ -459,15 +407,6 @@ class <NVM_WBEM_PREFIX>PerformanceMetricDefinition : CIM_BaseMetricDefinition
 [dynamic, provider("intelwbemprovider")]
 class <NVM_WBEM_PREFIX>PerformanceMetric: CIM_BaseMetricValue
 {
-};
-
-[dynamic, provider("intelwbemprovider")]
-class <NVM_WBEM_PREFIX>NVDIMMPerformanceView : CIM_View
-{
-	uint64 BytesRead;
-	uint64 BytesWritten;
-	uint64 HostWriteCommands;
-	uint64 HostReadRequests;
 };
 
 [dynamic, provider("intelwbemprovider")]

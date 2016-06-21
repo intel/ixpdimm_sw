@@ -266,11 +266,12 @@ int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 						if (!diag_check_real(p_diagnostic,
 							DIAG_THRESHOLD_FW_MEDIA_TEMP,
 							nvm_decode_temperature(
-							sensors[SENSOR_MEDIA_TEMPERATURE].settings.upper_critical_threshold),
+							sensors[SENSOR_MEDIA_TEMPERATURE].settings.upper_noncritical_threshold),
 							&max_temp_threshold_config, EQUALITY_LESSTHANEQUAL))
 						{
 							NVM_UINT64 actual_temp_threshold =
-								sensors[SENSOR_MEDIA_TEMPERATURE].settings.upper_critical_threshold;
+								sensors[SENSOR_MEDIA_TEMPERATURE].
+									settings.upper_noncritical_threshold;
 							char actual_temp_threshold_str[10];
 							s_snprintf(actual_temp_threshold_str, 10, "%.4f",
 									nvm_decode_temperature(actual_temp_threshold));
@@ -284,7 +285,7 @@ int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 					}
 
 					NVM_UINT64 actual_temp_threshold =
-						sensors[SENSOR_CONTROLLER_TEMPERATURE].settings.upper_critical_threshold;
+						sensors[SENSOR_CONTROLLER_TEMPERATURE].settings.upper_noncritical_threshold;
 					if (!diag_check_real(p_diagnostic,
 							DIAG_THRESHOLD_FW_CONTROLLER_TEMP,
 							nvm_decode_temperature(actual_temp_threshold),
@@ -304,12 +305,12 @@ int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 
 						if (!diag_check(p_diagnostic,
 								DIAG_THRESHOLD_FW_SPARE,
-								sensors[SENSOR_SPARECAPACITY].settings.lower_critical_threshold,
+								sensors[SENSOR_SPARECAPACITY].settings.lower_noncritical_threshold,
 								&min_spare_block_threshold, EQUALITY_GREATERTHANEQUAL))
 						{
 							char actual_spare_block_threshold_str[10];
 							s_snprintf(actual_spare_block_threshold_str, 10, "%u",
-								sensors[SENSOR_SPARECAPACITY].settings.lower_critical_threshold);
+								sensors[SENSOR_SPARECAPACITY].settings.lower_noncritical_threshold);
 							store_event_by_parts(EVENT_TYPE_DIAG_FW_CONSISTENCY,
 									EVENT_SEVERITY_WARN,
 									EVENT_CODE_DIAG_FW_BAD_SPARE_BLOCK,

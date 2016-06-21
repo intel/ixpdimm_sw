@@ -64,7 +64,7 @@ endif
 
 LIB_HEADER = nvm_management.h
 EXTERNAL_HEADERS = $(LIB_HEADER) nvm_types.h 
-IOCTL = device_fw.h
+IOCTL = device_fw.h fis_types.h
 STYLE_IGNORE = $(IOCTL) libIntelNvmMgmt.h
 SRC = $(filter-out $(SRC_EXCLUDE),$(wildcard *.c))
 HEADERS = $(filter-out $(SRC_EXCLUDE),$(wildcard *.h))

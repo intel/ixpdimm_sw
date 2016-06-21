@@ -477,7 +477,8 @@ cli::framework::ResultBase* cli::nvmcli::SensorFeature::addModifiedSensorThresho
 		{
 			std::string key;
 			wbem::framework::SINT32 thresholdValue = 0;
-			if (sensorType == wbem::support::NVDIMMSensorFactory::SENSORTYPE_MEDIATEMPERATURE)
+			if (sensorType == wbem::support::NVDIMMSensorFactory::SENSORTYPE_MEDIATEMPERATURE ||
+				sensorType == wbem::support::NVDIMMSensorFactory::SENSORTYPE_CONTROLLER_TEMPERATURE)
 			{
 				wbem::framework::REAL32 realThresholdValue = 0;
 				if (!stringToReal32(thresholdProperty, &realThresholdValue))
@@ -488,24 +489,8 @@ cli::framework::ResultBase* cli::nvmcli::SensorFeature::addModifiedSensorThresho
 				else
 				{
 					roundToNearestSixteenth(realThresholdValue);
-					thresholdValue = (wbem::framework::SINT32) nvm_encode_temperature(realThresholdValue);
-					key = wbem::UPPERTHRESHOLDCRITICAL_KEY;
-					attributes[key] = wbem::framework::Attribute(thresholdValue, false);
-				}
-			}
-			else if (sensorType == wbem::support::NVDIMMSensorFactory::SENSORTYPE_CONTROLLER_TEMPERATURE)
-			{
-				wbem::framework::REAL32 realThresholdValue = 0;
-				if (!stringToReal32(thresholdProperty, &realThresholdValue))
-				{
-					pResult = new framework::SyntaxErrorBadValueResult(framework::TOKENTYPE_PROPERTY,
-							PROPERTY_SENSOR_THRESHOLD, thresholdProperty);
-				}
-				else
-				{
-					roundToNearestSixteenth(realThresholdValue);
-					thresholdValue = (wbem::framework::SINT32) nvm_encode_temperature(realThresholdValue);
-					key = wbem::UPPERTHRESHOLDCRITICAL_KEY;
+					thresholdValue = wbem::support::NVDIMMSensorFactory::realTempToCimTemp(realThresholdValue);
+					key = wbem::UPPERTHRESHOLDNONCRITICAL_KEY;
 					attributes[key] = wbem::framework::Attribute(thresholdValue, false);
 				}
 			}
@@ -518,7 +503,7 @@ cli::framework::ResultBase* cli::nvmcli::SensorFeature::addModifiedSensorThresho
 				}
 				else
 				{
-					key = wbem::LOWERTHRESHOLDCRITICAL_KEY;
+					key = wbem::LOWERTHRESHOLDNONCRITICAL_KEY;
 					attributes[key] = wbem::framework::Attribute(thresholdValue, false);
 				}
 			}

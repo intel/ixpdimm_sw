@@ -226,24 +226,6 @@ instance of PG_ProviderCapabilities
 instance of PG_Provider
 {
   ProviderModuleName = "intelwbemprovider";
-  Name = "Intel_NVDIMMHealthSensorView_Provider";
-};
-
-instance of PG_ProviderCapabilities
-{
-  ProviderModuleName = "intelwbemprovider";
-  ProviderName = "Intel_NVDIMMHealthSensorView_Provider";
-  CapabilityID = "1";
-  ClassName = "<NVM_WBEM_PREFIX>NVDIMMHealthSensorView";
-  Namespaces = {"root/intelwbem"};
-  ProviderType = { 2 }; // Instance
-  SupportedProperties = NULL; // All properties
-  SupportedMethods = NULL; // All methods
-};
-
-instance of PG_Provider
-{
-  ProviderModuleName = "intelwbemprovider";
   Name = "Intel_StaticFilter_Provider";
 };
 
@@ -291,24 +273,6 @@ instance of PG_ProviderCapabilities
   ClassName = "<NVM_WBEM_PREFIX>PerformanceMetric";
   Namespaces = {"root/intelwbem"};
   ProviderType = { 2, 3 }; // Instance, Association
-  SupportedProperties = NULL; // All properties
-  SupportedMethods = NULL; // All methods
-};
-
-instance of PG_Provider
-{
-  ProviderModuleName = "intelwbemprovider";
-  Name = "Intel_NVDIMMPerformanceView_Provider";
-};
-
-instance of PG_ProviderCapabilities
-{
-  ProviderModuleName = "intelwbemprovider";
-  ProviderName = "Intel_NVDIMMPerformanceView_Provider";
-  CapabilityID = "1";
-  ClassName = "<NVM_WBEM_PREFIX>NVDIMMPerformanceView";
-  Namespaces = {"root/intelwbem"};
-  ProviderType = { 2 }; // Instance
   SupportedProperties = NULL; // All properties
   SupportedMethods = NULL; // All methods
 };
