@@ -46,7 +46,7 @@
 #define	DEV_PASSPHRASE_LEN	32  /* Length of a passphrase buffer */
 #define	DEV_BCD_DATE_LEN		4   /* Length of a BDC Formatted Date */
 #define	DEV_BCD_TIME_LEN		3   /* Length of a BDC Formatted Time */
-#define	DEV_BCD_ETC_TIME_LEN	5   /* Len of a BDC Formatted Time for longop */
+#define	DEV_COMM_SPECIFIC_DATA	119 /* Length of the specific long operation data */
 #define	DEV_FW_REV_LEN		5   /* Length of the Firmware Revision string */
 #define	DEV_FW_COMMIT_ID_LEN	40   /* Length of commit identifier of Firmware including null */
 #define	DEV_MFR_LEN		2  /* Length of manufacturer ID buffer */
@@ -135,6 +135,10 @@
 // Intel DIMM Subsystem Device IDs supported by this software
 extern const int NUM_SUPPORTED_DEVICE_IDS;
 extern const NVM_UINT16 SUPPORTED_DEVICE_IDS[];
+
+// Specefy that the ARS command has reached the limit+1 errors itcan report and has
+// ended prior to reaching the DPA end address
+#define	ARS_STATUS_ENDED_EARLY	0x01
 
 /*
  * ****************************************************************************
@@ -1571,23 +1575,45 @@ struct pt_payload_long_op_stat {
 	unsigned short percent_complete;
 
 	/*
-	 * Estimated Time to Completion.
-	 * The time in BCD format of how much longer the operation will take.
-	 * (colons are not encoded) @n
-	 * HH:MM:SS:mmm @n
-	 * HH = 2 digit hour (00-23) @n
-	 * MM = 2 digit minute (00-59) @n
-	 * SS = 3 digit second (00 - 59) @n
-	 * mmm = 3 digit milliseconds (000 - 9990
+	 * Estimated Time to Completion
 	 */
-	unsigned char etc[DEV_BCD_ETC_TIME_LEN];
+	unsigned int etc;
 
 	/*
 	 * The status code that would normally be found in
 	 * the mailbox status register*/
 	unsigned char status_code;
 
-	unsigned char command_specific_data[118];
+	unsigned char command_specific_data[DEV_COMM_SPECIFIC_DATA];
+} __attribute__((packed));
+
+/*
+ * return payload:
+ *		Opcode:		0x04h (Get Features)
+ *		Sub-Opcode:	0x04h (Address Range Scrub)
+ */
+struct pt_return_address_range_scrub {
+	/*
+	 * Indicates number of errors found during address range scrub
+	 */
+	unsigned char num_errors;
+
+	/*
+	 * State bits to describe other ARS information
+	 * 0x0 = Normal
+	 * 0x1 = Ended Early
+	 */
+	unsigned char ars_state;
+
+	/*
+	 * List of 14 DPA addresses (8 bytes each) encountered
+	 */
+	 unsigned long long dpa_error_address[14];
+
+	/*
+	 * Reserved
+	 */
+	unsigned char rsvd[5];
 } __attribute__((packed));
 
 /*
@@ -1947,6 +1973,9 @@ int fw_get_fw_image_info(const NVM_UINT32 device_handle,
 
 int fw_get_config_data_policy(unsigned int device_handle,
 	struct pt_payload_get_config_data_policy *payload);
+
+int fw_get_status_for_long_op(NVM_NFIT_DEVICE_HANDLE dimm_handle,
+        struct pt_payload_long_op_stat *payload);
 
 int fw_set_config_data_policy(unsigned int device_handle,
 	struct pt_payload_set_config_data_policy *p_config_data);

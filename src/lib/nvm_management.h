@@ -177,6 +177,17 @@ enum device_health
 };
 
 /*
+ * The address range scrub (ARS) operation status for the AEP DIMM
+ */
+enum device_ars_status
+{
+	DEVICE_ARS_STATUS_UNKNOWN,
+	DEVICE_ARS_STATUS_NOTSTARTED,
+	DEVICE_ARS_STATUS_INPROGRESS,
+	DEVICE_ARS_STATUS_COMPLETE
+};
+
+/*
  * The type of sensor.
  * @internal
  * These enums are also used as indexes in the device.sensors array.  It is important to
@@ -641,6 +652,7 @@ struct device_status
 	NVM_BOOL mixed_sku; // One or more AEP DIMMs have different SKUs.
 	NVM_BOOL sku_violation; // The AEP DIMM configuration is unsupported due to a license issue.
 	NVM_BOOL viral_state; // Current viral status of AEP DIMM.
+	enum device_ars_status ars_status; // Address range scrub operation status for the AEP DIMM
 };
 
 /*

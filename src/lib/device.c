@@ -687,6 +687,23 @@ int get_device_status_by_handle(NVM_NFIT_DEVICE_HANDLE dimm_handle,
 						- ((spare_payload.supported & 0x08) >> 3);
 	}
 
+	// get ars long operation status
+	struct pt_payload_long_op_stat long_op_payload;
+	memset(&long_op_payload, 0, sizeof (long_op_payload));
+	temprc = fw_get_status_for_long_op(dimm_handle, &long_op_payload);
+
+	if (temprc != NVM_SUCCESS)
+	{
+		COMMON_LOG_ERROR_F("Failed to retrieve the ARS long operation status with error %d",
+			temprc);
+		p_status->ars_status = DEVICE_ARS_STATUS_UNKNOWN;
+		KEEP_ERROR(rc, temprc);
+	}
+	else
+	{
+		p_status->ars_status = translate_to_ars_status(&long_op_payload);
+	}
+
 	struct pt_payload_smart_health dimm_smart;
 	temprc = fw_get_smart_health(dimm_handle.handle, &dimm_smart);
 	if (temprc != NVM_SUCCESS)
@@ -1295,7 +1312,7 @@ int nvm_update_device_fw(const NVM_UID device_uid, const NVM_PATH path,
 				NVM_UINT16 packet_number = 0;
 				unsigned int offset = 0;
 				printf("Transferring the firmware to DIMM %u...\n",
-						discovery.device_handle.handle);
+								discovery.device_handle.handle);
 				float num_packets = fw_size / TRANSFER_SIZE;
 				int old_percent_complete = 0; // print status
 				while (offset < fw_size)

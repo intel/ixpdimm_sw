@@ -455,14 +455,22 @@ int main(int arg_count, char **args)
 	dimm_memory_info_page2.addAttribute("media_errors_ecc").isInt64().isUnsigned();
 	entities.push_back(dimm_memory_info_page2);
 
-	Entity dimm_long_op_status("dimm_long_op_status", "Obsolete.");
+	Entity dimm_ars_command_specific_data("dimm_ars_command_specific_data", "ARS ops.");
+	dimm_ars_command_specific_data.includesHistory();
+	dimm_ars_command_specific_data.addAttribute("device_handle").isInt32().isUnsigned().isPk();
+	dimm_ars_command_specific_data.addAttribute("num_errors").isInt64();
+	dimm_ars_command_specific_data.addAttribute("ars_state").isInt64();
+	dimm_ars_command_specific_data.addAttribute("dpa_error_address").isInt64().isUnsigned().isArray(14);
+	entities.push_back(dimm_ars_command_specific_data);
+
+	Entity dimm_long_op_status("dimm_long_op_status", "Long ops.");
 	dimm_long_op_status.includesHistory();
 	dimm_long_op_status.addAttribute("device_handle").isInt32().isUnsigned().isPk();
-	dimm_long_op_status.addAttribute("command0").isInt64();
-	dimm_long_op_status.addAttribute("command1").isInt64();
-	dimm_long_op_status.addAttribute("percent_complete0").isInt64();
-	dimm_long_op_status.addAttribute("percent_complete1").isInt64();
-	dimm_long_op_status.addAttribute("etc").isText(13);
+	dimm_long_op_status.addAttribute("opcode").isInt64();
+	dimm_long_op_status.addAttribute("subopcode").isInt64();
+	dimm_long_op_status.addAttribute("percent_complete").isInt64();
+	dimm_long_op_status.addAttribute("etc").isInt64();
+	dimm_long_op_status.addAttribute("status_code").isInt64();
 	entities.push_back(dimm_long_op_status);
 
 	Entity dimm_details("dimm_details", "SMBIOS Type 17 Table.");

@@ -31,7 +31,6 @@
  */
 
 #include "device_utilities.h"
-#include "device_fw.h"
 #include <persistence/lib_persistence.h>
 #include <persistence/config_settings.h>
 #include <os/os_adapter.h>
@@ -250,6 +249,42 @@ void set_device_manageability_from_firmware(
 	{
 		*p_manageability = MANAGEMENT_INVALIDCONFIG;
 	}
+}
+
+/*
+ * Helper function to translate ars status
+ */
+enum device_ars_status translate_to_ars_status(struct pt_payload_long_op_stat *long_op_payload)
+{
+	int rc = 0;
+
+	struct pt_return_address_range_scrub *ars_command_return_data =
+		(struct pt_return_address_range_scrub *)(long_op_payload->command_specific_data);
+
+	if (((long_op_payload->command & 0x00FF) == PT_GET_LOG) &&
+			(((long_op_payload->command & 0xFF00) >> 8) == SUBOP_POLICY_ADDRESS_RANGE_SCRUB))
+	{
+		if ((ars_command_return_data->ars_state & (ARS_STATUS_ENDED_EARLY<<0)) == 0)
+		{
+			if (long_op_payload->percent_complete == 100)
+			{
+				rc = DEVICE_ARS_STATUS_COMPLETE;
+			}
+			else
+			{
+				rc = DEVICE_ARS_STATUS_INPROGRESS;
+			}
+		}
+		else
+		{
+			rc = DEVICE_ARS_STATUS_INPROGRESS;
+		}
+	}
+	else
+	{
+		rc = DEVICE_ARS_STATUS_NOTSTARTED;
+	}
+	return rc;
 }
 
 NVM_BOOL is_device_interface_format_supported(struct device_discovery *p_device)

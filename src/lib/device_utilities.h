@@ -71,6 +71,11 @@ void free_dev_table(COMMON_BOOL obtain_lock);
 int init_dev_table(COMMON_BOOL obtain_lock, struct nvm_topology *p_dimm_topo, NVM_UINT8 count);
 
 /*
+ * Helper function to translate ars status
+ */
+enum device_ars_status translate_to_ars_status(struct pt_payload_long_op_stat *long_op_payload);
+
+/*
  * Derive DIMM manageability state from firmware
  */
 void set_device_manageability_from_firmware(
