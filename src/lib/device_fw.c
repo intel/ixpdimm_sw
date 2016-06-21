@@ -263,6 +263,37 @@ int fw_get_fw_error_logs(const NVM_UINT32 device_handle,
 	return rc;
 }
 
+int fw_get_fw_error_log_info_data(const NVM_UINT32 device_handle,
+		const unsigned char log_level,
+		const unsigned char log_type,
+		struct pt_payload_fw_log_info_data *p_log_info_data)
+{
+	int rc = NVM_SUCCESS;
+	COMMON_LOG_ENTRY();
+
+	struct pt_input_payload_fw_error_log input;
+	memset(&input, 0, sizeof (input));
+	input.offset = 0;
+	input.params = log_level | log_type
+		| DEV_FW_ERR_LOG_RETRIEVE_INFO_DATA | DEV_FW_ERR_LOG_SMALL_PAYLOAD;
+	input.request_count = 0;
+
+	struct fw_cmd cmd;
+	memset(&cmd, 0, sizeof (struct fw_cmd));
+	cmd.device_handle = device_handle;
+	cmd.opcode = PT_GET_LOG;
+	cmd.sub_opcode = SUBOP_ERROR_LOG;
+	cmd.input_payload_size = sizeof (input);
+	cmd.input_payload = &input;
+	cmd.output_payload_size = sizeof (*p_log_info_data);
+	cmd.output_payload = p_log_info_data;
+
+	rc = ioctl_passthrough_cmd(&cmd);
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
 // get the security state using a pass through ioctl
 int fw_get_security_state(const NVM_UINT32 device_handle,
 	struct pt_payload_get_security_state *p_security_state)

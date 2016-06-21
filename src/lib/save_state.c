@@ -973,7 +973,7 @@ int get_high_priority_thermal_logs(PersistentStore *p_store, int history_id,
 
 	// get the total number of high priority thermal log entries
 	unsigned int error_count = fw_get_fw_error_log_count(device_handle.handle,
-		DEV_FW_ERR_LOG_HIGH, DEV_FW_ERR_LOG_MEDIA);
+		DEV_FW_ERR_LOG_HIGH, DEV_FW_ERR_LOG_THERMAL);
 	if (error_count <= 0)
 	{
 		rc = error_count;
@@ -1018,11 +1018,152 @@ int get_high_priority_thermal_logs(PersistentStore *p_store, int history_id,
 	return rc;
 }
 
+int get_high_priority_thermal_log_info(PersistentStore *p_store, int history_id,
+	NVM_NFIT_DEVICE_HANDLE device_handle)
+{
+	int rc = NVM_SUCCESS;
+	COMMON_LOG_ENTRY();
+
+	struct pt_payload_fw_log_info_data log_info_data;
+	memset(&log_info_data, 0, sizeof (log_info_data));
+	// get the total number of high priority thermal log entries
+	unsigned int temprc = fw_get_fw_error_log_info_data(device_handle.handle,
+		DEV_FW_ERR_LOG_HIGH, DEV_FW_ERR_LOG_THERMAL, &log_info_data);
+	if (temprc != NVM_SUCCESS)
+	{
+		COMMON_LOG_ERROR_F(
+		"Failed to get high priority firmware thermal error log info for dimm %d",
+		device_handle.handle);
+		KEEP_ERROR(rc, temprc);
+	}
+	else
+	{
+		struct db_fw_thermal_high_log_info db_log_info;
+		memset(&db_log_info, 0, sizeof (db_log_info));
+		db_log_info.device_handle = device_handle.handle;
+		db_log_info.max_log_entries = log_info_data.max_log_entries;
+		db_log_info.new_log_entries = log_info_data.new_log_entries;
+		db_log_info.oldest_log_entry_timestamp = log_info_data.oldest_log_entry_timestamp;
+		db_log_info.newest_log_entry_timestamp = log_info_data.newest_log_entry_timestamp;
+		db_save_fw_thermal_high_log_info_state(p_store, history_id, &db_log_info);
+	}
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+int get_low_priority_thermal_log_info(PersistentStore *p_store, int history_id,
+	NVM_NFIT_DEVICE_HANDLE device_handle)
+{
+	int rc = NVM_SUCCESS;
+	COMMON_LOG_ENTRY();
+
+	struct pt_payload_fw_log_info_data log_info_data;
+	memset(&log_info_data, 0, sizeof (log_info_data));
+	// get the total number of low priority thermal log entries
+	unsigned int temprc = fw_get_fw_error_log_info_data(device_handle.handle,
+		DEV_FW_ERR_LOG_LOW, DEV_FW_ERR_LOG_THERMAL, &log_info_data);
+	if (temprc != NVM_SUCCESS)
+	{
+		COMMON_LOG_ERROR_F(
+		"Failed to get high priority firmware thermal error log info for dimm %d",
+		device_handle.handle);
+		KEEP_ERROR(rc, temprc);
+	}
+	else
+	{
+		struct db_fw_thermal_low_log_info db_log_info;
+		memset(&db_log_info, 0, sizeof (db_log_info));
+		db_log_info.device_handle = device_handle.handle;
+		db_log_info.max_log_entries = log_info_data.max_log_entries;
+		db_log_info.new_log_entries = log_info_data.new_log_entries;
+		db_log_info.oldest_log_entry_timestamp = log_info_data.oldest_log_entry_timestamp;
+		db_log_info.newest_log_entry_timestamp = log_info_data.newest_log_entry_timestamp;
+		db_save_fw_thermal_low_log_info_state(p_store, history_id, &db_log_info);
+	}
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+int get_high_priority_media_log_info(PersistentStore *p_store, int history_id,
+	NVM_NFIT_DEVICE_HANDLE device_handle)
+{
+	int rc = NVM_SUCCESS;
+	COMMON_LOG_ENTRY();
+
+	struct pt_payload_fw_log_info_data log_info_data;
+	memset(&log_info_data, 0, sizeof (log_info_data));
+	// get the total number of high priority media log entries
+	unsigned int temprc = fw_get_fw_error_log_info_data(device_handle.handle,
+		DEV_FW_ERR_LOG_HIGH, DEV_FW_ERR_LOG_MEDIA, &log_info_data);
+	if (temprc != NVM_SUCCESS)
+	{
+		COMMON_LOG_ERROR_F(
+		"Failed to get high priority firmware thermal error log info for dimm %d",
+		device_handle.handle);
+		KEEP_ERROR(rc, temprc);
+	}
+	else
+	{
+		struct db_fw_media_high_log_info db_log_info;
+		memset(&db_log_info, 0, sizeof (db_log_info));
+		db_log_info.device_handle = device_handle.handle;
+		db_log_info.max_log_entries = log_info_data.max_log_entries;
+		db_log_info.new_log_entries = log_info_data.new_log_entries;
+		db_log_info.oldest_log_entry_timestamp = log_info_data.oldest_log_entry_timestamp;
+		db_log_info.newest_log_entry_timestamp = log_info_data.newest_log_entry_timestamp;
+		db_save_fw_media_high_log_info_state(p_store, history_id, &db_log_info);
+	}
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+int get_low_priority_media_log_info(PersistentStore *p_store, int history_id,
+	NVM_NFIT_DEVICE_HANDLE device_handle)
+{
+	int rc = NVM_SUCCESS;
+	COMMON_LOG_ENTRY();
+
+	struct pt_payload_fw_log_info_data log_info_data;
+	memset(&log_info_data, 0, sizeof (log_info_data));
+	// get the total number of low priority media log entries
+	unsigned int temprc = fw_get_fw_error_log_info_data(device_handle.handle,
+		DEV_FW_ERR_LOG_LOW, DEV_FW_ERR_LOG_MEDIA, &log_info_data);
+	if (temprc != NVM_SUCCESS)
+	{
+		COMMON_LOG_ERROR_F(
+		"Failed to get high priority firmware thermal error log info for dimm %d",
+		device_handle.handle);
+		KEEP_ERROR(rc, temprc);
+	}
+	else
+	{
+		struct db_fw_media_low_log_info db_log_info;
+		memset(&db_log_info, 0, sizeof (db_log_info));
+		db_log_info.device_handle = device_handle.handle;
+		db_log_info.max_log_entries = log_info_data.max_log_entries;
+		db_log_info.new_log_entries = log_info_data.new_log_entries;
+		db_log_info.oldest_log_entry_timestamp = log_info_data.oldest_log_entry_timestamp;
+		db_log_info.newest_log_entry_timestamp = log_info_data.newest_log_entry_timestamp;
+		db_save_fw_media_low_log_info_state(p_store, history_id, &db_log_info);
+	}
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
 int support_store_fw_error_logs(PersistentStore *p_store, int history_id,
 	NVM_NFIT_DEVICE_HANDLE device_handle)
 {
 	int rc = NVM_SUCCESS;
 	COMMON_LOG_ENTRY();
+
+	KEEP_ERROR(rc,
+		get_low_priority_media_log_info(p_store, history_id, device_handle));
+	KEEP_ERROR(rc,
+		get_high_priority_media_log_info(p_store, history_id, device_handle));
+	KEEP_ERROR(rc,
+		get_low_priority_thermal_log_info(p_store, history_id, device_handle));
+	KEEP_ERROR(rc,
+		get_high_priority_thermal_log_info(p_store, history_id, device_handle));
 
 	KEEP_ERROR(rc,
 		get_low_priority_media_logs(p_store, history_id, device_handle));

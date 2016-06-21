@@ -1811,6 +1811,37 @@ struct pt_output_payload_fw_error_log {
 	unsigned char rsvd[125];
 }__attribute__((packed));
 
+/*
+ * Passthrough Payload:
+ *              Opcode:         0x08h (Get Log Page)
+ *              Sub-Opcode:     0x05h (Get Error Log)
+ *      Note: If the System Time has not been set, the timestamps will be based on the current
+ *      boot time of the FW.
+ */
+struct pt_payload_fw_log_info_data {
+	/*
+	 * Specifies the total number of log entries that the FW has the ability to log for the
+	 * specified Log Type before an overrun condition occurs.
+	 */
+        unsigned short max_log_entries;
+	/*
+	 * Specifies the number of new log entries since the last time the log was read. It can
+	 * also be noted that this may exceed the Max Log Entries and thus indicate an overflow
+	 * condition.
+	 */
+        unsigned short new_log_entries;
+	/*
+	 * Unix Epoch Time of the oldest log entry for this Log
+	 */
+        unsigned long long oldest_log_entry_timestamp;
+	/*
+	 * Unix Epoch Time of the newest log entry for this Log
+	 */
+        unsigned long long newest_log_entry_timestamp;
+
+        unsigned char rsvd[108];
+}__attribute__((packed));
+
 struct pt_bios_get_size {
 	unsigned int large_input_payload_size;
 	unsigned int large_output_payload_size;

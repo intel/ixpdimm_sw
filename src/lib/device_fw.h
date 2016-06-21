@@ -78,6 +78,11 @@ int fw_get_fw_error_logs(const NVM_UINT32 device_handle,
 		const unsigned char log_level,
 		const unsigned char log_type);
 
+int fw_get_fw_error_log_info_data(const NVM_UINT32 device_handle,
+		const unsigned char log_level,
+		const unsigned char log_type,
+		struct pt_payload_fw_log_info_data *p_log_info_data);
+
 int fw_get_security_state(const NVM_UINT32 device_handle,
 	struct pt_payload_get_security_state *p_security_state);
 

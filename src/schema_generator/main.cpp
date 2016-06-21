@@ -512,8 +512,8 @@ int main(int arg_count, char **args)
 	entities.push_back(dimm_sanitize_info);
 
 	Entity fw_media_low_log_entry("fw_media_low_log_entry", "Vendor Firmware: Get Log - Error Log Low Media Log.");
-	fw_media_low_log_entry.includesHistory();
 	fw_media_low_log_entry.addAttribute("device_handle").isInt32().isUnsigned().isFk("dimm_topology", "device_handle");
+	fw_media_low_log_entry.includesHistory();
 	fw_media_low_log_entry.addAttribute("system_timestamp").isInt64().isUnsigned().isPk();
 	fw_media_low_log_entry.addAttribute("dpa").isInt64().isUnsigned();
 	fw_media_low_log_entry.addAttribute("pda").isInt64().isUnsigned();
@@ -536,8 +536,8 @@ int main(int arg_count, char **args)
 	entities.push_back(fw_media_high_log_entry);
 
 	Entity fw_thermal_low_log_entry("fw_thermal_low_log_entry", "Vendor Firmware: Get Log - Error Log Low Thermal Log.");
-	fw_thermal_low_log_entry.includesHistory();
 	fw_thermal_low_log_entry.addAttribute("device_handle").isInt32().isUnsigned().isFk("dimm_topology", "device_handle");
+	fw_thermal_low_log_entry.includesHistory();
 	fw_thermal_low_log_entry.addAttribute("system_timestamp").isInt64().isUnsigned().isPk();
 	fw_thermal_low_log_entry.addAttribute("host_reported_temp_data").isInt32().isUnsigned();
 	entities.push_back(fw_thermal_low_log_entry);
@@ -548,6 +548,42 @@ int main(int arg_count, char **args)
 	fw_thermal_high_log_entry.addAttribute("system_timestamp").isInt64().isUnsigned().isPk();
 	fw_thermal_high_log_entry.addAttribute("host_reported_temp_data").isInt32().isUnsigned();
 	entities.push_back(fw_thermal_high_log_entry);
+
+	Entity fw_media_low_log_info("fw_media_low_log_info", "Vendor Firmware: Get Log - Error Log Low Media Log Info.");
+	fw_media_low_log_info.addAttribute("device_handle").isInt32().isUnsigned().isPk();
+	fw_media_low_log_info.includesHistory();
+	fw_media_low_log_info.addAttribute("max_log_entries").isInt32().isUnsigned();
+	fw_media_low_log_info.addAttribute("new_log_entries").isInt32().isUnsigned();
+	fw_media_low_log_info.addAttribute("newest_log_entry_timestamp").isInt64().isUnsigned();
+	fw_media_low_log_info.addAttribute("oldest_log_entry_timestamp").isInt64().isUnsigned();
+	entities.push_back(fw_media_low_log_info);
+
+	Entity fw_media_high_log_info("fw_media_high_log_info", "Vendor Firmware: Get Log - Error Log High Media Log Info.");
+	fw_media_high_log_info.addAttribute("device_handle").isInt32().isUnsigned().isPk();
+	fw_media_high_log_info.includesHistory();
+	fw_media_high_log_info.addAttribute("max_log_entries").isInt32().isUnsigned();
+	fw_media_high_log_info.addAttribute("new_log_entries").isInt32().isUnsigned();
+	fw_media_high_log_info.addAttribute("newest_log_entry_timestamp").isInt64().isUnsigned();
+	fw_media_high_log_info.addAttribute("oldest_log_entry_timestamp").isInt64().isUnsigned();
+	entities.push_back(fw_media_high_log_info);
+
+	Entity fw_thermal_low_log_info("fw_thermal_low_log_info", "Vendor Firmware: Get Log - Error Log Low Thermal Log Info.");
+	fw_thermal_low_log_info.addAttribute("device_handle").isInt32().isUnsigned().isPk();
+	fw_thermal_low_log_info.includesHistory();
+	fw_thermal_low_log_info.addAttribute("max_log_entries").isInt32().isUnsigned();
+	fw_thermal_low_log_info.addAttribute("new_log_entries").isInt32().isUnsigned();
+	fw_thermal_low_log_info.addAttribute("newest_log_entry_timestamp").isInt64().isUnsigned();
+	fw_thermal_low_log_info.addAttribute("oldest_log_entry_timestamp").isInt64().isUnsigned();
+	entities.push_back(fw_thermal_low_log_info);
+
+	Entity fw_thermal_high_log_info("fw_thermal_high_log_info", "Vendor Firmware: Get Log - Error Log High Thermal Log Info.");
+	fw_thermal_high_log_info.addAttribute("device_handle").isInt32().isUnsigned().isPk();
+	fw_thermal_high_log_info.includesHistory();
+	fw_thermal_high_log_info.addAttribute("max_log_entries").isInt32().isUnsigned();
+	fw_thermal_high_log_info.addAttribute("new_log_entries").isInt32().isUnsigned();
+	fw_thermal_high_log_info.addAttribute("newest_log_entry_timestamp").isInt64().isUnsigned();
+	fw_thermal_high_log_info.addAttribute("oldest_log_entry_timestamp").isInt64().isUnsigned();
+	entities.push_back(fw_thermal_high_log_info);
 
 	Entity dimm_fw_log_level("dimm_fw_log_level", "Vendor Firmware: Get Admin Features - FW Debug Log Level.");
 	dimm_fw_log_level.includesHistory();

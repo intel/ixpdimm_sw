@@ -96,6 +96,7 @@ TARGETNAME = $(addprefix $(OBJECT_MODULE_DIR)/, $(TARGET))
 SCHEMA_GEN_ABS = $(abspath $(SCHEMA_GEN))
 TEMPLATE_DIR = $(realpath $(TOOLS_DIR))/db_schema_gen
 TEMPLATE_NAMES = $(addprefix $(TEMPLATE_DIR)/,$(addsuffix .template,$(SCHEMA)))
+NON_TEMPLATE_NAMES = $(addprefix $(TEMPLATE_DIR)/, schema_non_template.c)
 
 STYLE_IGNORE = persistence/schema.c persistence/schema.h
 CSTYLE_FILES = $(filter-out $(STYLE_IGNORE),$(HEADERS) $(SRC))
@@ -159,7 +160,7 @@ file_ops :
 os :
 	$(MAKE) -C $(OS) all
 	
-persistence/schema.c : $(SCHEMA_GEN_ABS) $(TEMPLATE_NAMES)
+persistence/schema.c : $(SCHEMA_GEN_ABS) $(TEMPLATE_NAMES) $(NON_TEMPLATE_NAMES)
 ifndef BUILD_ESX
 	cd $(BUILT_TOOLS_DIR); export LD_LIBRARY_PATH=.; $(SCHEMA_GEN_ABS) $(TEMPLATE_DIR) $(CURDIR)/persistence
 else
