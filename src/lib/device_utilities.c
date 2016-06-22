@@ -64,6 +64,30 @@ int exists_and_manageable(const NVM_UID device_uid, struct device_discovery *p_d
 	return rc;
 }
 
+void calculate_uid_without_manufacturing_info(NVM_UID uid,
+		NVM_UINT16 vendor_id, NVM_SERIAL_NUMBER serial_number)
+{
+	s_snprintf(uid, NVM_MAX_UID_LEN, "%04x-%02x%02x%02x%02x", vendor_id,
+		serial_number[0],
+		serial_number[1],
+		serial_number[2],
+		serial_number[3]);
+}
+
+void calculate_uid_with_valid_manufacturing_info(NVM_UID uid,
+		NVM_UINT16 vendor_id, NVM_SERIAL_NUMBER serial_number,
+		NVM_UINT8 manufacturing_loc, NVM_UINT16 manufacturing_date)
+{
+	s_snprintf(uid, NVM_MAX_UID_LEN, "%04x-%02x-%04x-%02x%02x%02x%02x",
+		vendor_id,
+		manufacturing_loc,
+		manufacturing_date,
+		serial_number[0],
+		serial_number[1],
+		serial_number[2],
+		serial_number[3]);
+}
+
 /*
  * Used to update the uid of a device_discovery struct.
  *
@@ -86,12 +110,23 @@ int calculate_device_uid(struct device_discovery *p_device)
 	}
 	else
 	{
-		s_snprintf(p_device->uid, NVM_MAX_UID_LEN, "%04x-%02x%02x%02x%02x", p_device->vendor_id,
-			p_device->serial_number[0],
-			p_device->serial_number[1],
-			p_device->serial_number[2],
-			p_device->serial_number[3]);
 		rc = NVM_SUCCESS;
+		if (p_device->manufacturing_info_valid)
+		{
+			calculate_uid_with_valid_manufacturing_info(
+					p_device->uid,
+					p_device->vendor_id,
+					p_device->serial_number,
+					p_device->manufacturing_location,
+					p_device->manufacturing_date);
+		}
+		else
+		{
+			calculate_uid_without_manufacturing_info(
+					p_device->uid,
+					p_device->vendor_id,
+					p_device->serial_number);
+		}
 	}
 
 	return rc;
