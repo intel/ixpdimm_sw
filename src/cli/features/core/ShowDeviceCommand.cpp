@@ -115,6 +115,7 @@ ShowDeviceCommand::ShowDeviceCommand(core::device::DeviceService &service)
 			&convertSecurityCapabilities);
 	m_props.addOther("ConfigurationStatus", &core::device::Device::getConfigStatus,
 			&convertConfigStatus);
+	m_props.addOther("ARSStatus", &core::device::Device::getArsStatus, &convertArsStatus);
 	m_props.addBool("SKUViolation", &core::device::Device::isSkuViolation);
 	m_props.addBool("ViralPolicy", &core::device::Device::isViralPolicyEnabled);
 	m_props.addBool("ViralState", &core::device::Device::getCurrentViralState);
@@ -245,6 +246,16 @@ std::string ShowDeviceCommand::convertConfigStatus(config_status status)
 	map[CONFIG_STATUS_ERR_BROKEN_INTERLEAVE] = TR("Failed - Broken interleave");
 	map[CONFIG_STATUS_ERR_REVERTED] = TR("Failed - Reverted");
 	map[CONFIG_STATUS_ERR_NOT_SUPPORTED] = TR("Failed - Unsupported");
+	return map[status];
+}
+
+std::string ShowDeviceCommand::convertArsStatus(device_ars_status status)
+{
+	std::map<device_ars_status, std::string> map;
+	map[DEVICE_ARS_STATUS_UNKNOWN] = TR("Unknown");
+	map[DEVICE_ARS_STATUS_NOTSTARTED] = TR("Not started");
+	map[DEVICE_ARS_STATUS_INPROGRESS] = TR("In progress");
+	map[DEVICE_ARS_STATUS_COMPLETE] = TR("Completed");
 	return map[status];
 }
 

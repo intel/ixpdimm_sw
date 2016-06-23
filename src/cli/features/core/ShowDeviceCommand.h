@@ -103,6 +103,7 @@ static const std::string MEMORYMODESSUPPORTED = "ModesSupported";
 static const std::string SECURITYCAPABILITIES = "SecurityCapabilities";
 static const std::string CONFIGURATIONSTATUS = "ConfigurationStatus";
 static const std::string SKUVIOLATION = "SKUViolation";
+static const std::string ARSSTATUS = "ARSStatus";
 static const std::string VIRALPOLICY = "ViralPolicy";
 static const std::string VIRALSTATE = "ViralState";
 
@@ -147,6 +148,7 @@ private:
 	static std::string toHex(NVM_UINT16 value);
 	static std::string convertInterfaceFormatCode(const NVM_UINT16 ifc);
 	static std::string getJedecStringForInterfaceFormatCode(const NVM_UINT16 ifc);
+	static std::string convertArsStatus(device_ars_status status);
 
 	framework::ResultBase *m_pResult;
 	framework::PropertyDefinitionList<core::device::Device> m_props;

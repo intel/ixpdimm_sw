@@ -167,6 +167,12 @@ enum config_status Device::getConfigStatus()
 	return getDetails().status.config_status;
 }
 
+enum device_ars_status Device::getArsStatus()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	return getDetails().status.ars_status;
+}
+
 NVM_UINT32 Device::getChannelId()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
