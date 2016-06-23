@@ -307,9 +307,11 @@ enum fw_log_level
  */
 enum error_type
 {
-	ERROR_TYPE_CLEAR_ALL = 0, // Clear all injected errors.
 	ERROR_TYPE_POISON = 1, // Inject a poison error.
-	ERROR_TYPE_TEMPERATURE = 2, // Inject a temperature error.
+	ERROR_TYPE_TEMPERATURE = 2, // Inject a media temperature error.
+	ERROR_TYPE_DIE_SPARING = 3, // Trigger or revert an artificial die sparing.
+	ERROR_TYPE_SPARE_ALARM = 4, // Trigger or clear a spare capacity threshold alarm.
+	ERROR_TYPE_MEDIA_FATAL_ERROR = 5, // Inject or clear a fake media fatal error.
 };
 
 enum interleave_size
@@ -873,6 +875,7 @@ struct nvm_features
 	NVM_BOOL memory_mode; // access AEP DIMM capacity as memory
 	NVM_BOOL app_direct_mode; // access AEP DIMM persistent memory in App Direct Mode
 	NVM_BOOL storage_mode; // access AEP DIMM persistent memory in Storage Mode
+	NVM_BOOL error_injection; // error injection on AEP DIMMs
 };
 
 /*
@@ -1160,11 +1163,8 @@ struct log
 struct device_error
 {
 	enum error_type type; // The type of error to inject.
-	union
-	{
-		NVM_UINT64 dpa; // only valid if injecting poison error
-		NVM_UINT64 temperature; // only valid if injecting temperature error
-	} error_injection_parameter;
+	NVM_UINT64 dpa; // only valid if injecting poison error
+	NVM_UINT64 temperature; // only valid if injecting temperature error
 };
 
 /*

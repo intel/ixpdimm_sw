@@ -34,31 +34,115 @@
 #include <persistence/lib_persistence.h>
 #include "device_utilities.h"
 #include "system.h"
+#include "capabilities.h"
 
-int inject_poison_error(struct device_discovery *p_discovery, NVM_UINT64 dpa);
-int clear_injected_poison_error(NVM_UINT32 device_handle, NVM_UINT64 dpa);
-int inject_temperature_error(NVM_UINT32 device_handle, NVM_UINT64 temperature);
+int inject_poison_error(struct device_discovery *p_discovery, NVM_UINT64 dpa,
+	NVM_BOOL set_poison);
+int inject_temperature_error(NVM_UINT32 device_handle, NVM_UINT64 temperature,
+	NVM_BOOL enable_injection);
+int inject_software_trigger(struct device_discovery *p_discovery, enum error_type type,
+	NVM_BOOL enable_trigger);
 
 /*
- * Helper function to inject/clear a particular artificial temperature into the part
+ * Helper function to enable error injection functionality.
+ * All other injection commands will fail until this is turned on.
  */
-int inject_temperature_error(NVM_UINT32 device_handle, NVM_UINT64 temperature)
+int enable_error_injection_functionality(NVM_INT32 device_handle)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
 
-	NVM_UINT16 fw_temperature = fw_convert_float_to_fw_celsius(
-		nvm_decode_temperature(temperature));
+	struct pt_payload_enable_injection input;
+	memset(&input, 0, sizeof (input));
+	input.enable = 1;
 
-
-	struct fw_cmd cmd = {0};
+	struct fw_cmd cmd;
+	memset(&cmd, 0, sizeof (cmd));
 	cmd.device_handle = device_handle;
 	cmd.opcode = PT_INJECT_ERROR;
+	cmd.sub_opcode = SUBOP_ENABLE_INJECTION;
+	cmd.input_payload = &input;
+	cmd.input_payload_size = sizeof (input);
+	rc = ioctl_passthrough_cmd(&cmd);
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+/*
+ * Helper function to enable/disable software trigger
+ */
+int inject_software_trigger(struct device_discovery *p_discovery,
+		enum error_type type, NVM_BOOL enable_trigger)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	// Set up input payload
+	struct pt_payload_sw_triggers input;
+	memset(&input, 0, sizeof (input));
+	switch (type)
+	{
+	case ERROR_TYPE_DIE_SPARING:
+		if (!p_discovery->device_capabilities.die_sparing_capable)
+		{
+			COMMON_LOG_ERROR_F("Die sparing is not supported on dimm %u",
+					p_discovery->device_handle.handle);
+			rc = NVM_ERR_NOTSUPPORTED;
+		}
+		input.die_sparing_trigger = enable_trigger;
+		break;
+	case ERROR_TYPE_SPARE_ALARM:
+		input.user_spare_block_alarm_trip_trigger = enable_trigger;
+		break;
+	case ERROR_TYPE_MEDIA_FATAL_ERROR:
+		input.fatal_error_trigger = enable_trigger;
+		break;
+	default:
+		break;
+	}
+
+	if (rc == NVM_SUCCESS)
+	{
+		struct fw_cmd cmd;
+		memset(&cmd, 0, sizeof (cmd));
+		cmd.device_handle = p_discovery->device_handle.handle;
+		cmd.opcode = PT_INJECT_ERROR;
+		cmd.sub_opcode = SUBOP_ERROR_SW_TRIGGERS;
+		cmd.input_payload = &input;
+		cmd.input_payload_size = sizeof (input);
+		rc = ioctl_passthrough_cmd(&cmd);
+		if (rc != NVM_SUCCESS)
+		{
+			COMMON_LOG_ERROR_F("Failed to trigger software alarm trip on dimm %u",
+					cmd.device_handle);
+		}
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+/*
+ * Helper function to inject/clear a particular artificial temperature into the part
+ */
+int inject_temperature_error(NVM_UINT32 device_handle, NVM_UINT64 temperature,
+	NVM_BOOL enable_injection)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
 	// Set up input
 	struct pt_payload_temp_err temp_err_input;
 	memset(&temp_err_input, 0, sizeof (temp_err_input));
-	temp_err_input.enable = 1;
-	temp_err_input.temperature = fw_temperature;
+	temp_err_input.enable = enable_injection;
+	temp_err_input.temperature = fw_convert_float_to_fw_celsius(
+		nvm_decode_temperature(temperature));
+
+	struct fw_cmd cmd;
+	memset(&cmd, 0, sizeof (cmd));
+	cmd.device_handle = device_handle;
+	cmd.opcode = PT_INJECT_ERROR;
 	cmd.sub_opcode = SUBOP_ERROR_TEMP;
 	cmd.input_payload = &temp_err_input;
 	cmd.input_payload_size = sizeof (temp_err_input);
@@ -126,68 +210,43 @@ int validate_poison_injection(struct device_discovery *p_discovery, NVM_UINT64 d
 }
 
 /*
- * Helper function to ioctl call to set/clear poison on a particular DPA
+ * Helper function to allow setting/clearing poison on a particular DPA
  */
-int call_poison_error_ioctl(NVM_INT32 device_handle, NVM_BOOL set_poison, NVM_UINT64 dpa)
-{
-	int rc = NVM_SUCCESS;
-
-	struct fw_cmd cmd = {0};
-	cmd.device_handle = device_handle;
-	cmd.opcode = PT_INJECT_ERROR;
-	// Set up input
-	struct pt_payload_poison_err poison_err_input;
-	memset(&poison_err_input, 0, sizeof (poison_err_input));
-	poison_err_input.enable = set_poison;
-	poison_err_input.dpa_address = dpa;
-	cmd.sub_opcode = SUBOP_ERROR_POISON;
-	cmd.input_payload = &poison_err_input;
-	cmd.input_payload_size = sizeof (poison_err_input);
-	rc = ioctl_passthrough_cmd(&cmd);
-
-	return rc;
-}
-
-
-/*
- * Helper function to allow setting poison on a particular DPA
- */
-int inject_poison_error(struct device_discovery *p_discovery, NVM_UINT64 dpa)
+int inject_poison_error(struct device_discovery *p_discovery, NVM_UINT64 dpa, NVM_BOOL set_poison)
 {
 	int rc = NVM_SUCCESS;
 	COMMON_LOG_ENTRY();
 
-	rc = validate_poison_injection(p_discovery, dpa);
-	if (rc == NVM_SUCCESS)
+	if (set_poison)
 	{
-		rc = call_poison_error_ioctl(p_discovery->device_handle.handle, 1, dpa);
-		if (rc != NVM_SUCCESS)
+		if ((rc = validate_poison_injection(p_discovery, dpa)) != NVM_SUCCESS)
 		{
-			COMMON_LOG_ERROR_F("Failed to set poison on dimm %u",
-				p_discovery->device_handle.handle);
+			COMMON_LOG_ERROR("Invalid parameter, DPA is invalid");
 		}
 	}
-	else
+
+	if (rc == NVM_SUCCESS)
 	{
-		COMMON_LOG_ERROR("Invalid parameter, DPA is invalid");
-	}
+		// Set up input
+		struct pt_payload_poison_err poison_err_input;
+		memset(&poison_err_input, 0, sizeof (poison_err_input));
+		poison_err_input.enable = set_poison;
+		poison_err_input.dpa_address = dpa;
 
-	COMMON_LOG_EXIT_RETURN_I(rc);
-	return rc;
-}
+		struct fw_cmd cmd;
+		memset(&cmd, 0, sizeof (cmd));
+		cmd.device_handle = p_discovery->device_handle.handle;
+		cmd.opcode = PT_INJECT_ERROR;
+		cmd.sub_opcode = SUBOP_ERROR_POISON;
+		cmd.input_payload = &poison_err_input;
+		cmd.input_payload_size = sizeof (poison_err_input);
+		rc = ioctl_passthrough_cmd(&cmd);
 
-/*
- * Helper function to clear poison on a particular DPA
- */
-int clear_injected_poison_error(NVM_UINT32 device_handle, NVM_UINT64 dpa)
-{
-	int rc = NVM_SUCCESS;
-	COMMON_LOG_ENTRY();
-
-	rc = call_poison_error_ioctl(device_handle, 0, dpa);
-	if (rc != NVM_SUCCESS)
-	{
-		COMMON_LOG_ERROR_F("Failed to clear poison on dimm %u", device_handle);
+		if (rc != NVM_SUCCESS)
+		{
+			COMMON_LOG_ERROR_F("Failed to set/clear poison on dimm %u",
+					p_discovery->device_handle.handle);
+		}
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -222,19 +281,32 @@ int nvm_inject_device_error(const NVM_UID device_uid,
 	{
 		rc = NVM_ERR_BADDRIVER;
 	}
+	else if ((rc = IS_NVM_FEATURE_SUPPORTED(error_injection)) != NVM_SUCCESS)
+	{
+			COMMON_LOG_ERROR("Error injection is not supported.");
+	}
 	else if ((rc = exists_and_manageable(device_uid, &discovery, 1)) == NVM_SUCCESS)
 	{
-		switch (p_error->type)
+		if ((rc = enable_error_injection_functionality(discovery.device_handle.handle)) ==
+				NVM_SUCCESS)
 		{
+			switch (p_error->type)
+			{
 			case ERROR_TYPE_TEMPERATURE:
 				rc = inject_temperature_error(discovery.device_handle.handle,
-						p_error->error_injection_parameter.temperature);
+						p_error->temperature, 1);
 				break;
 			case ERROR_TYPE_POISON:
-				rc = inject_poison_error(&discovery, p_error->error_injection_parameter.dpa);
+				rc = inject_poison_error(&discovery, p_error->dpa, 1);
+				break;
+			case ERROR_TYPE_DIE_SPARING:
+			case ERROR_TYPE_SPARE_ALARM:
+			case ERROR_TYPE_MEDIA_FATAL_ERROR:
+				rc = inject_software_trigger(&discovery, p_error->type, 1);
 				break;
 			default:
 				break;
+			}
 		}
 	}
 
@@ -270,19 +342,34 @@ int nvm_clear_injected_device_error(const NVM_UID device_uid,
 	{
 		rc = NVM_ERR_BADDRIVER;
 	}
+	else if ((rc = IS_NVM_FEATURE_SUPPORTED(error_injection)) != NVM_SUCCESS)
+	{
+		COMMON_LOG_ERROR("Error injection is not supported.");
+	}
 	else if ((rc = exists_and_manageable(device_uid, &discovery, 1)) == NVM_SUCCESS)
 	{
-		switch (p_error->type)
+		if ((rc = enable_error_injection_functionality(discovery.device_handle.handle)) ==
+				NVM_SUCCESS)
 		{
+			switch (p_error->type)
+			{
 			case ERROR_TYPE_TEMPERATURE:
-				rc = NVM_ERR_NOTSUPPORTED;
+				rc = inject_temperature_error(discovery.device_handle.handle,
+						0, 0);
 				break;
 			case ERROR_TYPE_POISON:
-				rc = clear_injected_poison_error(discovery.device_handle.handle,
-						p_error->error_injection_parameter.dpa);
+				rc = inject_poison_error(&discovery, p_error->dpa, 0);
+				break;
+			case ERROR_TYPE_DIE_SPARING:
+				rc = inject_software_trigger(&discovery, p_error->type, 0);
+				break;
+			case ERROR_TYPE_SPARE_ALARM:
+			case ERROR_TYPE_MEDIA_FATAL_ERROR:
+				rc = NVM_ERR_NOTSUPPORTED;
 				break;
 			default:
 				break;
+			}
 		}
 	}
 

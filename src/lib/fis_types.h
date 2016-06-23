@@ -482,8 +482,9 @@ enum get_set_dbg_feat_subop {
  */
 enum inject_error_subop {
 	SUBOP_ENABLE_INJECTION = 0x00, /* Allows for errors to be injected */
-		SUBOP_ERROR_POISON = 0x01, /* Sets poison bit on a DPA */
-		SUBOP_ERROR_TEMP = 0x02, /* Injects a particular temperature to cause temperature error */
+	SUBOP_ERROR_POISON = 0x01, /* Sets poison bit on a DPA */
+	SUBOP_ERROR_TEMP = 0x02, /* Injects a particular temperature to cause temperature error */
+	SUBOP_ERROR_SW_TRIGGERS = 0x03, /* SW override triggers to trip various SW alarms */
 };
 
 /*
@@ -1264,6 +1265,22 @@ struct pt_input_payload_write_csr {
 /*
  * Passthrough Payload:
  *		Opcode:		0x0Ah (Inject Error)
+ *		Sub-Opcode:	0x00h (Enable Injection)
+ *	Small Input Payload
+ */
+struct pt_payload_enable_injection {
+	/*
+	 * Used to turn off/on injection functionality
+	 * 0x00h - Off ( default)
+	 * 0x01h - On
+	 */
+	unsigned char enable;
+	unsigned char reserved[127];
+} __attribute__((packed));
+
+/*
+ * Passthrough Payload:
+ *		Opcode:		0x0Ah (Inject Error)
  *		Sub-Opcode:	0x01h (Poison Error)
  *	Small Input Payload
  */
@@ -1282,7 +1299,7 @@ struct pt_payload_poison_err {
 /*
  * Passthrough Payload:
  *		Opcode:		0x0Ah (Inject Error)
- *		Sub-Opcode:	0x02h (Temperature Error)
+ *		Sub-Opcode:	0x02h (Media Temperature Error)
  */
 struct pt_payload_temp_err {
 	/*
@@ -1298,6 +1315,39 @@ struct pt_payload_temp_err {
 	 */
 	unsigned short temperature;
 	unsigned char reserved[125];
+} __attribute__((packed));
+
+/*
+ * Passthrough Payload:
+ *		Opcode:		0x0Ah (Inject Error)
+ *		Sub-Opcode:	0x03h (Software Triggers)
+ */
+struct pt_payload_sw_triggers {
+	/*
+	 * Spoofs FW to initiate a Die Sparing.
+	 * Will trigger all ranks to spare.
+	 * 0x0h - Do Not/Disable Trigger
+	 * 0x1h - Enable Trigger
+	 */
+	unsigned char die_sparing_trigger;
+
+	unsigned char reserved;
+
+	/*
+	 * Spoofs FW to trigger a a spare block trip.
+	 * 0x0h - Do Not/Disable Trigger
+	 * 0x1h - Enable Trigger
+	 */
+	unsigned char user_spare_block_alarm_trip_trigger;
+
+	/*
+	 * Spoofs FW to trigger a fatal media error.
+	 * 0x0h - Do Not/Disable Trigger
+	 * 0x1h - Enable Trigger
+	 */
+	unsigned char fatal_error_trigger;
+
+	unsigned char reserved_1[124];
 } __attribute__((packed));
 
 /*

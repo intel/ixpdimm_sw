@@ -135,8 +135,16 @@ public:
 	void injectPoisonError(const std::string &dimmUid,
 			const NVM_UINT64 dpa);
 
+	void injectSoftwareTrigger(const std::string &dimmUid,
+			const NVM_UINT16 error);
+
 	void clearPoisonError(const std::string &dimmUid,
 			const NVM_UINT64 dpa);
+
+	void clearTemperatureError(const std::string &dimmUid);
+
+	void clearSoftwareTrigger(const std::string &dimmUid,
+				const NVM_UINT16 error);
 
 	// Helper functions
 	static void uidToHandle(const std::string &dimmUid, NVM_UINT32 &handle);

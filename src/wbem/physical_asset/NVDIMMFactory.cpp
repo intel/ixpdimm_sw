@@ -836,7 +836,6 @@ void NVDIMMFactory::uidToHandle(const std::string &dimmUid,
 	}
 }
 
-
 void NVDIMMFactory::injectPoisonError(const std::string &dimmUid,
 		const NVM_UINT64 dpa)
 {
@@ -845,7 +844,7 @@ void NVDIMMFactory::injectPoisonError(const std::string &dimmUid,
 	struct device_error error;
 	memset(&error, 0, sizeof(error));
 	error.type = ERROR_TYPE_POISON;
-	error.error_injection_parameter.dpa = dpa;
+	error.dpa = dpa;
 	injectError(dimmUid, &error);
 }
 
@@ -857,7 +856,29 @@ void NVDIMMFactory::clearPoisonError(const std::string &dimmUid,
 	struct device_error error;
 	memset(&error, 0, sizeof(error));
 	error.type = ERROR_TYPE_POISON;
-	error.error_injection_parameter.dpa = dpa;
+	error.dpa = dpa;
+	clearError(dimmUid, &error);
+}
+
+void NVDIMMFactory::clearTemperatureError(const std::string &dimmUid)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	struct device_error error;
+	memset(&error, 0, sizeof(error));
+	error.type = ERROR_TYPE_TEMPERATURE;
+	clearError(dimmUid, &error);
+}
+
+void NVDIMMFactory::clearSoftwareTrigger(
+		const std::string &dimmUid,
+		const NVM_UINT16 error_type)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	struct device_error error;
+	memset(&error, 0, sizeof(error));
+	error.type = (enum error_type)error_type;
 	clearError(dimmUid, &error);
 }
 
@@ -870,7 +891,19 @@ void NVDIMMFactory::injectTemperatureError(
 	struct device_error error;
 	memset(&error, 0, sizeof(error));
 	error.type = ERROR_TYPE_TEMPERATURE;
-	error.error_injection_parameter.temperature = nvm_encode_temperature(temperature);
+	error.temperature = nvm_encode_temperature(temperature);
+	injectError(dimmUid, &error);
+}
+
+void NVDIMMFactory::injectSoftwareTrigger(
+		const std::string &dimmUid,
+		const NVM_UINT16 error_type)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	struct device_error error;
+	memset(&error, 0, sizeof(error));
+	error.type = (enum error_type)error_type;
 	injectError(dimmUid, &error);
 }
 
@@ -886,10 +919,8 @@ void NVDIMMFactory::clearError(const std::string &dimmUid,
 		COMMON_LOG_ERROR("Invalid dimm uid");
 		throw wbem::framework::ExceptionBadParameter(wbem::DEVICEID_KEY.c_str());
 	}
-	NVM_UID uid;
-	uid_copy(dimmUid.c_str(), uid);
 
-	int rc = m_clearInjectedDeviceError(uid, p_error);
+	int rc = m_clearInjectedDeviceError(dimmUid.c_str(), p_error);
 	if (rc != NVM_SUCCESS)
 	{
 		throw wbem::exception::NvmExceptionLibError(rc);
@@ -908,10 +939,8 @@ void NVDIMMFactory::injectError(const std::string &dimmUid,
 		COMMON_LOG_ERROR("Invalid dimm uid");
 		throw wbem::framework::ExceptionBadParameter(wbem::DEVICEID_KEY.c_str());
 	}
-	NVM_UID uid;
-	uid_copy(dimmUid.c_str(), uid);
 
-	int rc = m_injectDeviceError(uid, p_error);
+	int rc = m_injectDeviceError(dimmUid.c_str(), p_error);
 	if (rc != NVM_SUCCESS)
 	{
 		throw wbem::exception::NvmExceptionLibError(rc);

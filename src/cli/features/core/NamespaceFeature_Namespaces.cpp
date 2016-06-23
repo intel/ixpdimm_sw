@@ -619,7 +619,7 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseCreateNsBlockSiz
 		std::string errorString = framework::ResultBase::stringFromArgList(
 				TR(BLOCKSIZE_NOT_SUPPORTED_STR.c_str()), m_blockSize);
 
-		return new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
+		pResult = new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
 				errorString);
 	}
 
@@ -649,12 +649,12 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseCreateNsCapacity
 			if (m_blockSizeExists)
 			{
 				COMMON_LOG_ERROR(
-					"Capacity cannot be used in conjunction with BlockSize and BlockCount properties.");
-				pResult = new framework::SyntaxErrorResult(
-						framework::ResultBase::stringFromArgList(
-								TR("'%s' and '%s' cannot be used together."),
-								CREATE_NS_PROP_CAPACITY.c_str(),
-								CREATE_NS_PROP_BLOCKSIZE.c_str()));
+						"Capacity cannot be used in conjunction with BlockSize and BlockCount properties.");
+				std::string errorString = framework::ResultBase::stringFromArgList(
+						TR(CANT_USE_TOGETHER_ERROR_STR.c_str()),
+						CREATE_NS_PROP_CAPACITY.c_str(),
+						CREATE_NS_PROP_BLOCKSIZE.c_str());
+				pResult = new framework::SyntaxErrorResult(errorString);
 			}
 		}
 	}
@@ -677,12 +677,12 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseCreateNsBlockCou
 		if (m_capacityExists)
 		{
 			COMMON_LOG_ERROR(
-				"Capacity and BlockCount properties are exclusive and cannot be used together.");
-			pResult = new framework::SyntaxErrorResult(
-					framework::ResultBase::stringFromArgList(
-							TR("'%s' and '%s' cannot be used together."),
-							CREATE_NS_PROP_CAPACITY.c_str(),
-							CREATE_NS_PROP_BLOCKCOUNT.c_str()));
+					"Capacity and BlockCount properties are exclusive and cannot be used together.");
+			std::string errorString = framework::ResultBase::stringFromArgList(
+					TR(CANT_USE_TOGETHER_ERROR_STR.c_str()),
+					CREATE_NS_PROP_CAPACITY.c_str(),
+					CREATE_NS_PROP_BLOCKCOUNT.c_str());
+			pResult = new framework::SyntaxErrorResult(errorString);
 		}
 		else if (!isStringValidNumber(value))
 		{
@@ -935,11 +935,11 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseCreateNsMemoryPa
 	{
 		COMMON_LOG_ERROR(
 				"Namespace can be claimed by either btt or pfn configurations.");
-		pResult = new framework::SyntaxErrorResult(
-				framework::ResultBase::stringFromArgList(
-						TR("'%s' and '%s' cannot be used together."),
-						CREATE_NS_PROP_OPTIMIZE.c_str(),
-						CREATE_NS_PROP_MEMORYPAGEALLOCATION.c_str()));
+		std::string errorString = framework::ResultBase::stringFromArgList(
+				TR(CANT_USE_TOGETHER_ERROR_STR.c_str()),
+				CREATE_NS_PROP_OPTIMIZE.c_str(),
+				CREATE_NS_PROP_MEMORYPAGEALLOCATION.c_str());
+		pResult = new framework::SyntaxErrorResult(errorString);
 	}
 
 	//@TODO: DE6230 Driver currently has issues with pfn. Remove this when they are fixed.
@@ -1227,11 +1227,11 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseModifyNsCapacity
 		{
 			COMMON_LOG_ERROR(
 					"Capacity and BlockCount are exclusive and cannot be used together.");
-			pResult = new framework::SyntaxErrorResult(
-					framework::ResultBase::stringFromArgList(
-							TR("'%s' and '%s' cannot be used together."),
-							CREATE_NS_PROP_CAPACITY.c_str(),
-							CREATE_NS_PROP_BLOCKCOUNT.c_str()));
+			std::string errorString = framework::ResultBase::stringFromArgList(
+					TR(CANT_USE_TOGETHER_ERROR_STR.c_str()),
+					CREATE_NS_PROP_CAPACITY.c_str(),
+					CREATE_NS_PROP_BLOCKCOUNT.c_str());
+			pResult = new framework::SyntaxErrorResult(errorString);
 		}
 		else if ((!stringToReal32(value, &m_capacityGB)) ||
 				(m_capacityGB == 0))

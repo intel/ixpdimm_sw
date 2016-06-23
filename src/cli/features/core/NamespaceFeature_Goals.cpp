@@ -921,11 +921,11 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parsedCreateGoalParam
 		// using AD and AD1 is redundant
 		else if (appDirect0Prop.getSizeExists() && appDirect1Prop.getSizeExists())
 		{
-			pResult = new framework::SyntaxErrorResult(
-					framework::ResultBase::stringFromArgList(
-							TR("'%s' and '%s' cannot be used together."),
-							APPDIRECTSIZE_PROPERTYNAME.c_str(),
-							APPDIRECT1SIZE_PROPERTYNAME.c_str()));
+			std::string errorString = framework::ResultBase::stringFromArgList(
+					TR(CANT_USE_TOGETHER_ERROR_STR.c_str()),
+					APPDIRECTSIZE_PROPERTYNAME.c_str(),
+					APPDIRECT1SIZE_PROPERTYNAME.c_str());
+			pResult = new framework::SyntaxErrorResult(errorString);
 		}
 		// AD2 without AD or AD1 is invalid
 		else if (appDirect2Prop.getSizeExists() && !appDirectProp.getSizeExists() && !appDirect1Prop.getSizeExists())

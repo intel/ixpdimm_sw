@@ -720,6 +720,13 @@ int main(int arg_count, char **args)
 	interleave_set_dimm_info.addAttribute("size").isInt64().isUnsigned();
 	entities.push_back(interleave_set_dimm_info);
 
+	// Enable error injection functionality table
+	Entity enable_error_injection_info("enable_error_injection_info", "Simulation only enable injection functionality.");
+	enable_error_injection_info.includesHistory();
+	enable_error_injection_info.addAttribute("device_handle").isInt32().isUnsigned().isPk();
+	enable_error_injection_info.addAttribute("enable").isInt32().isUnsigned();
+	entities.push_back(enable_error_injection_info);
+
 	// Temperature Error injection info table
 	Entity temperature_error_injection_info("temperature_error_injection_info", "Simulation only injected temperature errors.");
 	temperature_error_injection_info.includesHistory();
@@ -734,6 +741,15 @@ int main(int arg_count, char **args)
 	poison_error_injection_info.addAttribute("device_handle").isInt32().isUnsigned().isFk("dimm_topology", "device_handle");
 	poison_error_injection_info.addAttribute("dpa_address").isInt64().isUnsigned();
 	entities.push_back(poison_error_injection_info);
+
+	// Software Trigger info table
+	Entity software_trigger_info("software_trigger_info", "Software override triggers.");
+	software_trigger_info.includesHistory();
+	software_trigger_info.addAttribute("device_handle").isInt32().isUnsigned().isPk();
+	software_trigger_info.addAttribute("die_sparing_trigger").isInt32().isUnsigned();
+	software_trigger_info.addAttribute("user_spare_block_alarm_trip_trigger").isInt32().isUnsigned();
+	software_trigger_info.addAttribute("fatal_error_trigger").isInt32().isUnsigned();
+	entities.push_back(software_trigger_info);
 
 	// Dimm Performance
 	Entity performance("performance", "Monitor stored DIMM performance metrics.");

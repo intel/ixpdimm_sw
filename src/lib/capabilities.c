@@ -121,6 +121,8 @@ int driver_features_to_nvm_features(
 
 			// fw consistency diagnostic - Get Topology, Passthrough
 			p_nvm_features->fw_consistency_diagnostic = p_driver_features->passthrough;
+
+			p_nvm_features->error_injection = p_driver_features->passthrough;
 		}
 		else
 		{

@@ -35,20 +35,33 @@
 #include <libinvm-cli/FeatureBase.h>
 #include <nvm_types.h>
 #include <physical_asset/NVDIMMFactory.h>
+#include <libinvm-cli/SimpleListResult.h>
 
 namespace cli
 {
 namespace nvmcli
 {
 
-static const std::string SETTEMPERATURE_MSG_PREFIX = N_TR("Set temperature on " NVM_DIMM_NAME " %s");
 static const std::string SETPOISON_INVALIDPARAMETER_MSG = N_TR("The specified address is not in the persistent memory region.");
+
+static const std::string SETTEMPERATURE_MSG_PREFIX = N_TR("Set temperature on " NVM_DIMM_NAME " %s");
 static const std::string SETPOISON_MSG_PREFIX = N_TR("Poison address %llu on " NVM_DIMM_NAME " %s");
+static const std::string SETDIESPARING_MSG_PREFIX = N_TR("Trigger die sparing on " NVM_DIMM_NAME " %s");
+static const std::string SETSPARECAPACITYALARM_MSG_PREFIX = N_TR("Trigger a spare capacity on " NVM_DIMM_NAME " %s");
+static const std::string SETFATALERROR_MSG_PREFIX = N_TR("Create a media fatal error on " NVM_DIMM_NAME " %s");
+
 static const std::string CLEARPOISON_MSG_PREFIX = N_TR("Clear poison of address %llu on " NVM_DIMM_NAME " %s");
+static const std::string CLEARTEMPERATURE_MSG_PREFIX = N_TR("Clear injected temperature on " NVM_DIMM_NAME " %s");
+static const std::string CLEARDIESPARING_MSG_PREFIX = N_TR("Clear injected die sparing on " NVM_DIMM_NAME " %s");
+static const std::string CLEARSPARECAPACITYALARM_MSG_PREFIX = N_TR("Clear injected spare capacity alarm on " NVM_DIMM_NAME " %s");
+static const std::string CLEARFATALERROR_MSG_PREFIX = N_TR("Clear injected media fatal error on " NVM_DIMM_NAME " %s");
 
 static std::string CLEAR_PROPERTYNAME = "Clear";
 static std::string TEMPERATURE_PROPERTYNAME = "Temperature";
 static std::string POISON_PROPERTYNAME = "Poison";
+static std::string DIE_SPARING_PROPERTYNAME = "DieSparing";
+static std::string SPARE_ALARM_PROPERTYNAME = "SpareAlarm";
+static std::string FATAL_MEDIA_ERROR_PROPERTYNAME = "FatalMediaError";
 
 /*!
  * Implements for validation related commands
@@ -91,10 +104,12 @@ private:
 	std::string m_dimmUid;
 	NVM_UINT16 m_temperature;
 	NVM_UINT64 m_poison;
-	NVM_UINT16 m_errorType;
 	bool m_clearStateExists;
 	bool m_temperatureExists;
 	bool m_poisonExists;
+	bool m_dieSparingExists;
+	bool m_spareAlarmExists;
+	bool m_fatalMediaErrorExists;
 
 	/*
 	 * Helper for inject error.
@@ -107,28 +122,37 @@ private:
 		const framework::ParsedCommand& parsedCommand);
 
 	/*
-	 * Helper to fetch clear error injection property from the parsed command
+	 * Helper functions to fetch properties from the parsed command
 	 * @param parsedCommand
 	 * @return NULL if success, SyntaxErrorResult otherwise
 	 */
 	cli::framework::ResultBase* parseClearProperty(
 		const framework::ParsedCommand& parsedCommand);
 
-	/*
-	 * Helper to fetch poison error injection property from the parsed command
-	 * @param parsedCommand
-	 * @return NULL if success, SyntaxErrorResult otherwise
-	 */
 	cli::framework::ResultBase* parsePoisonProperty(
 		const framework::ParsedCommand& parsedCommand);
 
-	/*
-	 * Helper to fetch temperature error injection property from the parsed command
-	 * @param parsedCommand
-	 * @return NULL if success, SyntaxErrorResult otherwise
-	 */
 	cli::framework::ResultBase* parseTemperatureProperty(
 		const framework::ParsedCommand& parsedCommand);
+
+	cli::framework::ResultBase* parseDieSparingProperty(
+		const framework::ParsedCommand& parsedCommand);
+
+	cli::framework::ResultBase* parseSpareAlarmProperty(
+		const framework::ParsedCommand& parsedCommand);
+
+	cli::framework::ResultBase* parseFatalMediaErrorProperty(
+		const framework::ParsedCommand& parsedCommand);
+
+	cli::framework::ResultBase* verifyPropertyCount(
+		const framework::ParsedCommand& parsedCommand);
+
+	cli::framework::ResultBase* errorIfMoreThanOnePropertyIsModified();
+
+	cli::framework::ResultBase* checkClearState();
+
+	cli::framework::ResultBase* verifySWTriggerPropertyValue(
+		const std::string& propValue, std::string &propertyName);
 
 	/*
 	 * Error injection specific exception handling
@@ -137,6 +161,12 @@ private:
 				std::string prefix = "");
 
 	bool tryParseInt (const std::string& str, NVM_UINT64 *p_value) const;
+	void inject_error(std::string &prefixMsg,
+			std::vector<std::string>::iterator iUid,
+			framework::SimpleListResult &listResult);
+	void clear_injected_error(std::string &prefixMsg,
+			std::vector<std::string>::iterator iUid,
+			framework::SimpleListResult &listResult);
 };
 
 }
