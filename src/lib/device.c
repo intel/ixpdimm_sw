@@ -647,6 +647,50 @@ int fill_device_config_status(const NVM_NFIT_DEVICE_HANDLE device_handle,
 }
 
 /*
+ * Helper function to read fw error info for a single type and level
+ */
+int update_status_fw_error_log_info_by_type_and_level(const NVM_NFIT_DEVICE_HANDLE device_handle,
+		unsigned char log_type, unsigned char log_level, struct device_status *p_status)
+{
+	int rc = NVM_SUCCESS;
+	struct pt_payload_fw_log_info_data p_log_info_data;
+	memset(&p_log_info_data, 0, sizeof (p_log_info_data));
+	KEEP_ERROR(rc, fw_get_fw_error_log_info_data(
+		device_handle.handle, log_level, log_type, &p_log_info_data));
+	p_status->new_error_count += p_log_info_data.new_log_entries;
+	if (p_log_info_data.newest_log_entry_timestamp > p_status->newest_error_log_timestamp)
+	{
+		p_status->newest_error_log_timestamp = p_log_info_data.newest_log_entry_timestamp;
+	}
+	return rc;
+}
+
+/*
+ * Helper function to set fw error info in device_status struct
+ */
+int fill_fw_error_log_status(const NVM_NFIT_DEVICE_HANDLE device_handle,
+		struct device_status *p_status)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	p_status->new_error_count = 0;
+	p_status->newest_error_log_timestamp = 0;
+
+	KEEP_ERROR(rc, update_status_fw_error_log_info_by_type_and_level(device_handle,
+		DEV_FW_ERR_LOG_MEDIA, DEV_FW_ERR_LOG_LOW, p_status));
+	KEEP_ERROR(rc, update_status_fw_error_log_info_by_type_and_level(device_handle,
+		DEV_FW_ERR_LOG_MEDIA, DEV_FW_ERR_LOG_HIGH, p_status));
+	KEEP_ERROR(rc, update_status_fw_error_log_info_by_type_and_level(device_handle,
+		DEV_FW_ERR_LOG_THERMAL, DEV_FW_ERR_LOG_LOW, p_status));
+	KEEP_ERROR(rc, update_status_fw_error_log_info_by_type_and_level(device_handle,
+		DEV_FW_ERR_LOG_THERMAL, DEV_FW_ERR_LOG_HIGH, p_status));
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+/*
  * Retrieve the status of the device specified
  */
 int get_device_status_by_handle(NVM_NFIT_DEVICE_HANDLE dimm_handle,
@@ -753,6 +797,9 @@ int get_device_status_by_handle(NVM_NFIT_DEVICE_HANDLE dimm_handle,
 	{
 		p_status->viral_state = config_data.viral_status;
 	}
+
+	KEEP_ERROR(rc, fill_fw_error_log_status(dimm_handle,
+			p_status));
 
 	return rc;
 }

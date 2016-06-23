@@ -186,6 +186,25 @@ std::string monitor::EventMonitor::deviceHealthToStr(enum device_health health)
 }
 
 /*
+ * Helper to store new fw error log event
+ */
+void monitor::EventMonitor::storeFwErrorLogEvent(const NVM_UID &device_uid,
+		const std::string &uidStr, const NVM_UINT32 errorCount)
+{
+	std::stringstream newErrorCount;
+	newErrorCount << errorCount;
+	store_event_by_parts(EVENT_TYPE_HEALTH,
+			EVENT_SEVERITY_WARN,
+			EVENT_CODE_HEALTH_NEW_FWERRORS_FOUND,
+			device_uid,
+			false,
+			uidStr.c_str(),
+			newErrorCount.str().c_str(),
+			NULL,
+			DIAGNOSTIC_RESULT_UNKNOWN);
+}
+
+/*
  * Check for device health changes
  */
 void monitor::EventMonitor::monitorDimmStatus(const std::string &uidStr,
@@ -206,11 +225,18 @@ void monitor::EventMonitor::monitorDimmStatus(const std::string &uidStr,
 	else
 	{
 		// first pass, just store current values
+		// if there are errors that have not been seen in the fw error log
+		// create an event for those errors
 		if (firstState)
 		{
 			storedState.health_state = status.health;
 			storedState.die_spares_used = status.die_spares_used;
 			storedState.viral_state = status.viral_state;
+			storedState.newest_error_log_timestamp = status.newest_error_log_timestamp;
+			if (status.new_error_count > 0)
+			{
+				storeFwErrorLogEvent(discovery.uid, uidStr, status.new_error_count);
+			}
 		}
 		// check for changes
 		else
@@ -296,6 +322,14 @@ void monitor::EventMonitor::monitorDimmStatus(const std::string &uidStr,
 				// update stored state
 				storedState.viral_state = status.viral_state;
 				storedStateChanged = true;
+			}
+
+			if (status.newest_error_log_timestamp > storedState.newest_error_log_timestamp)
+			{
+				storeFwErrorLogEvent(discovery.uid, uidStr, status.new_error_count);
+				storedState.newest_error_log_timestamp = status.newest_error_log_timestamp;
+				storedStateChanged = true;
+
 			}
 		}
 	}

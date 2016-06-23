@@ -339,6 +339,7 @@ int main(int arg_count, char **args)
 	dimm_state.addAttribute("mediatemperature_state").isInt32();
 	dimm_state.addAttribute("controllertemperature_state").isInt32();
 	dimm_state.addAttribute("viral_state").isInt32();
+	dimm_state.addAttribute("newest_error_log_timestamp").isInt64().isUnsigned();
 	entities.push_back(dimm_state);
 
 	/*

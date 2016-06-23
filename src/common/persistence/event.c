@@ -179,7 +179,7 @@ const char *EVENT_MESSAGES_HEALTH[EVENT_CODE_HEALTH_UNKNOWN -
 	// EVENT_CODE_HEALTH_SPARE_DIE_CONSUMED
 	N_TR("The health monitor has detected that "NVM_DIMM_NAME" %s "
 			"is reporting that it has consumed %s spare die."),
-	// EVENT_CODE_HEALTH)_NAMESPACE_HEALTH_STATE_CHANGED
+	// EVENT_CODE_HEALTH_NAMESPACE_HEALTH_STATE_CHANGED
 	N_TR("The health monitor has detected that namespace %s "
 			"is reporting a change in health state from %s to %s."),
 	// EVENT_CODE_HEALTH_UNSAFE_SHUTDOWN
@@ -193,12 +193,22 @@ const char *EVENT_MESSAGES_HEALTH[EVENT_CODE_HEALTH_UNKNOWN -
 	N_TR("The health monitor has detected that "NVM_DIMM_NAME" %s "
 			"is reporting a controller temperature of %s C which is below the alarm "
 			"threshold of %s C."),
-	// EVENT_CODE_HEALTH_MIXED_SKU
-	N_TR("The health monitor has detected that one or more "NVM_DIMM_NAME"s "
-			"in the system have different SKUs."),
+	// EVENT_CODE_HEALTH_NEW_FWERRORS_FOUND
+	N_TR("The health monitor has detected that "NVM_DIMM_NAME" %s "
+			"firmware has reported %s new errors."),
 	// EVENT_CODE_HEALTH_VIRAL_STATE
 	N_TR("The health monitor has detected that "NVM_DIMM_NAME" %s "
 			"is reporting a viral state."),
+	// EVENT_CODE_HEALTH_MIXED_SKU
+	N_TR("The health monitor has detected that one or more "NVM_DIMM_NAME"s "
+			"in the system have different SKUs."),
+	// EVENT_CODE_HEALTH_SANITIZE_IN_PROGRESS
+	N_TR("The health monitor has detected that a sanitize operation is in progress "
+			"on "NVM_DIMM_NAME" %s. A reboot will be required when complete "
+			"to use the "NVM_DIMM_NAME"."),
+	// EVENT_CODE_HEALTH_SANITIZE_COMPLETE
+	N_TR("The health monitor has detected that a sanitize operation has completed "
+			"on "NVM_DIMM_NAME" %s. A reboot is required to use the "NVM_DIMM_NAME"."),
 	// EVENT_CODE_HEALTH_UNKNOWN
 	N_TR("The health monitor has logged an unknown error code %d."),
 };

@@ -228,6 +228,12 @@ namespace monitor
 		std::string deviceHealthToStr(enum device_health health);
 
 		/*
+		 * Helper to store new fw error log event
+		 */
+		void storeFwErrorLogEvent(const NVM_UID &device_uid, const std::string &uidStr,
+				const NVM_UINT32 errorCount);
+
+		/*
 		 * On start-up look for deleted namespaces and auto-acknowledge action required events
 		 */
 		void acknowledgeDeletedNamespaces();
