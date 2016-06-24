@@ -126,6 +126,7 @@ void NVDIMMFactory::populateAttributeList(
 	attributes.push_back(CHANNEL_KEY);
 	attributes.push_back(CHANNELPOS_KEY);
 	attributes.push_back(CONFIGURATIONSTATUS_KEY);
+	attributes.push_back(ARSSTATUS_KEY);
 	attributes.push_back(SECURITYCAPABILITIES_KEY);
 	attributes.push_back(LASTSHUTDOWNTIME_KEY);
 	attributes.push_back(MEMORYTYPECAPABILITIES_KEY);
@@ -724,6 +725,8 @@ void NVDIMMFactory::toInstance(core::device::Device &device,
 			device.getChannelPosition());
 	ADD_ATTRIBUTE(instance, attributes, CONFIGURATIONSTATUS_KEY, framework::UINT16,
 			device.getConfigStatus());
+	ADD_ATTRIBUTE(instance, attributes, ARSSTATUS_KEY, framework::UINT16,
+			device.getArsStatus());
 	ADD_ATTRIBUTE(instance, attributes, SECURITYCAPABILITIES_KEY, framework::UINT16_LIST,
 			device.getSecurityCapabilities());
 	ADD_DATETIME_ATTRIBUTE(instance, attributes, LASTSHUTDOWNTIME_KEY,

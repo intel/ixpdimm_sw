@@ -154,6 +154,7 @@ static std::string CHANNEL_KEY = "ChannelID";
 static std::string CHANNELPOS_KEY = "ChannelPos";
 static std::string NODECONTROLLERID_KEY = "NodeControllerID";
 static std::string CONFIGURATIONSTATUS_KEY = "ConfigurationStatus";
+static std::string ARSSTATUS_KEY = "ARSStatus";
 static std::string SECURITYCAPABILITIES_KEY = "SecurityCapabilities";
 static std::string LASTSHUTDOWNTIME_KEY = "LastShutdownTime";
 static std::string MEMORYTYPECAPABILITIES_KEY = "MemoryTypeCapabilities";
