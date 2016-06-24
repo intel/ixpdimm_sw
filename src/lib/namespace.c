@@ -620,34 +620,44 @@ int check_namespace_capacity_and_security(const struct pool *p_pool,
 	COMMON_LOG_ENTRY();
 	int rc = NVM_ERR_DRIVERFAILED;
 	struct device_discovery discovery;
+	NVM_BOOL are_all_dimms_locked = 1;
 
 	// find a dimm with the requested capacity and security features
 	for (int dimm_index = 0; dimm_index < p_pool->dimm_count; dimm_index++)
 	{
 		if (lookup_dev_uid(p_pool->dimms[dimm_index], &discovery) == NVM_SUCCESS)
 		{
-			NVM_UINT64 current_size;
-			// verify if the requested namespace capacity is available
-			rc = get_largest_storage_namespace_on_a_dimm(p_pool,
-					discovery.uid, &current_size);
-			if (rc == NVM_SUCCESS)
+			if (discovery.lock_state != LOCK_STATE_LOCKED)
 			{
-				rc = NVM_ERR_BADSIZE;
-				if (current_size >= namespace_capacity &&
-						namespace_capacity >= minimum_ns_size)
+				are_all_dimms_locked = 0;
+				NVM_UINT64 current_size;
+				// verify if the requested namespace capacity is available
+				rc = get_largest_storage_namespace_on_a_dimm(p_pool,
+						discovery.uid, &current_size);
+				if (rc == NVM_SUCCESS)
 				{
-					rc = NVM_ERR_BADSECURITYGOAL;
-					if (dimm_meets_security_criteria(p_pool->dimms[dimm_index],
-													 *p_security_features))
+					rc = NVM_ERR_BADSIZE;
+					if (current_size >= namespace_capacity &&
+							namespace_capacity >= minimum_ns_size)
 					{
-						*p_namespace_creation_id = discovery.device_handle.handle;
-						rc = NVM_SUCCESS;
-						break;
+						rc = NVM_ERR_BADSECURITYGOAL;
+						if (dimm_meets_security_criteria(p_pool->dimms[dimm_index],
+														 *p_security_features))
+						{
+							*p_namespace_creation_id = discovery.device_handle.handle;
+							rc = NVM_SUCCESS;
+							break;
+						}
 					}
 				}
 			}
 		}
 	} // end of for loop
+
+	if (are_all_dimms_locked)
+	{
+		rc = NVM_ERR_BADSECURITYSTATE;
+	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
@@ -764,6 +774,34 @@ NVM_BOOL interleave_set_has_namespace(const NVM_UINT32 interleave_set_driver_id)
 	return ns_exists;
 }
 
+
+NVM_BOOL interleave_set_has_locked_dimms(const struct interleave_set *p_ilset)
+{
+	COMMON_LOG_ENTRY();
+	NVM_BOOL result = 0;
+
+	struct device_discovery discovery;
+	for (int dimm_index = 0; dimm_index < p_ilset->dimm_count; dimm_index++)
+	{
+		if (nvm_get_device_discovery(p_ilset->dimms[dimm_index], &discovery) != NVM_SUCCESS)
+		{
+			COMMON_LOG_ERROR("Failed to get device discovery information.");
+		}
+		else
+		{
+			if (discovery.lock_state == LOCK_STATE_LOCKED)
+			{
+				result = 1;
+				break;
+			}
+		}
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(result);
+	return result;
+}
+
+
 int find_interleave_with_capacity(const struct pool *p_pool,
 		const struct nvm_capabilities *p_nvm_caps,
 		struct namespace_create_settings *p_settings,
@@ -780,83 +818,78 @@ int find_interleave_with_capacity(const struct pool *p_pool,
 	NVM_BOOL found_ilset = 0;
 	NVM_BOOL at_least_size_is_good = 0;
 	NVM_UINT64 new_block_count = 0;
-
+	NVM_BOOL atleast_one_ilset_have_unlocked_dimms = 0;
 	for (int ilset_index = 0; ilset_index < p_pool->ilset_count &&
 			found_ilset == 0; ilset_index++)
 	{
 		const struct interleave_set *p_interleave = &(p_pool->ilsets[ilset_index]);
-		// only look for space if the iset doesn't already have a namespace
-		if (!interleave_set_has_namespace(p_interleave->driver_id))
+		if (!interleave_set_has_locked_dimms(p_interleave))
 		{
-			NVM_UINT64 minimum_ns_size = get_minimum_ns_size(p_interleave->dimm_count,
-					p_nvm_caps->sw_capabilities.min_namespace_size);
-			new_block_count = p_settings->block_count;
-			adjust_namespace_block_count_if_allowed(&new_block_count, p_settings->block_size,
-					p_interleave->dimm_count, allow_adjustment);
-			NVM_UINT64 new_namespace_capacity = new_block_count * p_settings->block_size;
-
-			// verify if the requested namespace capacity is available
-			if (p_interleave->available_size >= new_namespace_capacity &&
-				new_namespace_capacity >= minimum_ns_size)
+			atleast_one_ilset_have_unlocked_dimms = 1;
+			// only look for space if the iset doesn't already have a namespace
+			if (!interleave_set_has_namespace(p_interleave->driver_id))
 			{
-				at_least_size_is_good = 1;
-				const NVM_BOOL is_security_met = interleave_meets_security_criteria(p_interleave,
-						&p_settings->security_features);
-				const NVM_BOOL is_interleave_format_met =
-						interleave_meets_app_direct_settings(p_interleave, p_format);
-				const NVM_BOOL namespace_alignment_is_good =
-						check_namespace_alignment(new_namespace_capacity,
-						p_settings->block_size, p_interleave->dimm_count);
-				at_least_one_security_met |= is_security_met;
-				at_least_one_interleave_format_met |= is_interleave_format_met;
-				at_least_one_alignment_met |= namespace_alignment_is_good;
+				NVM_UINT64 minimum_ns_size = get_minimum_ns_size(p_interleave->dimm_count,
+						p_nvm_caps->sw_capabilities.min_namespace_size);
+				new_block_count = p_settings->block_count;
+				adjust_namespace_block_count_if_allowed(&new_block_count, p_settings->block_size,
+					p_interleave->dimm_count, allow_adjustment);
+				NVM_UINT64 new_namespace_capacity = new_block_count * p_settings->block_size;
 
-				if (is_security_met && is_interleave_format_met && namespace_alignment_is_good)
+				// verify if the requested namespace capacity is available
+				if (p_interleave->available_size >= new_namespace_capacity &&
+						new_namespace_capacity >= minimum_ns_size)
 				{
-					*namespace_creation_id = p_pool->ilsets[ilset_index].driver_id;
-					found_ilset = 1;
+					at_least_size_is_good = 1;
+					const NVM_BOOL is_security_met = interleave_meets_security_criteria(
+							p_interleave, &p_settings->security_features);
+					const NVM_BOOL is_interleave_format_met =
+							interleave_meets_app_direct_settings(p_interleave, p_format);
+					const NVM_BOOL namespace_alignment_is_good =
+							check_namespace_alignment(new_namespace_capacity,
+							p_settings->block_size, p_interleave->dimm_count);
+					at_least_one_security_met |= is_security_met;
+					at_least_one_interleave_format_met |= is_interleave_format_met;
+					at_least_one_alignment_met |= namespace_alignment_is_good;
+
+					if (is_security_met && is_interleave_format_met && namespace_alignment_is_good)
+					{
+						*namespace_creation_id = p_pool->ilsets[ilset_index].driver_id;
+						found_ilset = 1;
+					}
 				}
 			}
 		}
 	}
-
 	// determine return code based on search results
 	if (found_ilset)
 	{
 		p_settings->block_count = new_block_count;
 		rc = NVM_SUCCESS;
 	}
-	else if (at_least_size_is_good && !at_least_one_alignment_met)
+	else if (!atleast_one_ilset_have_unlocked_dimms)
 	{
-		// the size was fine for at least one interleave set
-		// but we never met the alignment requirement
-		rc = NVM_ERR_BADALIGNMENT;
+		// all interleave sets have one/more locked dimms
+		rc = NVM_ERR_BADSECURITYSTATE;
 	}
-	else if (at_least_one_security_met && at_least_one_interleave_format_met)
-	{
-		// found an interleave set with both security goal and interleave format goal
-		// but not at the same time. No specific error code for this case, so just default to
-		// bad security goal
-		rc = NVM_ERR_BADSECURITYGOAL;
-	}
-	else if (at_least_one_interleave_format_met)
-	{
-		rc = NVM_ERR_BADSECURITYGOAL;
-	}
-	else if (at_least_one_security_met)
-	{
-		rc = NVM_ERR_BADNAMESPACESETTINGS;
-	}
-	else if (at_least_size_is_good)
-	{
-		// found an interleave set with enough space, but didn't match goal attributes.
-		// No specific error code for this case, so just default to bad security goal.
-		rc = NVM_ERR_BADSECURITYGOAL;
-	}
-	else
+	else if (!at_least_size_is_good)
 	{
 		// namespace request was either too big or too small
 		rc = NVM_ERR_BADSIZE;
+	}
+	else if (!at_least_one_security_met)
+	{
+		// never met security goals
+		rc = NVM_ERR_BADSECURITYGOAL;
+	}
+	else if (!at_least_one_alignment_met)
+	{
+		// never met the alignment requirement
+		rc = NVM_ERR_BADALIGNMENT;
+	}
+	else
+	{
+		rc = NVM_ERR_BADNAMESPACESETTINGS;
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
