@@ -304,8 +304,8 @@ int ioctl_passthrough_cmd(struct fw_cmd *p_cmd)
 		COMMON_LOG_ERROR("bad input/output payload(s)");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
-	// avoid any commands that require early HW or large payloads
-#if __EARLY_HW__ || (__LARGE_PAYLOAD__ == 0)
+	// avoid any commands that require large payloads
+#if __LARGE_PAYLOAD__ == 0
 	else if ((p_cmd->opcode == 0x08 && p_cmd->sub_opcode == 0x02) || // get fw debug log
 			(p_cmd->opcode == 0x08 && p_cmd->sub_opcode == 0x05) || // get error log
 			(p_cmd->opcode == 0x0A)) // inject error

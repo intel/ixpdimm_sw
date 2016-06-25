@@ -170,15 +170,9 @@ int apply_driver_capabilities(struct nvm_capabilities *p_capabilities)
 	}
 	else
 	{
-		// driver minimum may be different than Mgmt SW 1 GB minimum
-#if __EARLY_HW__
-		p_capabilities->sw_capabilities.min_namespace_size =
-				driver_caps.min_namespace_size;
-#else
 		p_capabilities->sw_capabilities.min_namespace_size =
 						(driver_caps.min_namespace_size < BYTES_PER_GB) ? BYTES_PER_GB :
 								driver_caps.min_namespace_size;
-#endif
 		NVM_UINT32 num_block_sizes = driver_caps.num_block_sizes;
 		if (num_block_sizes > NVM_MAX_BLOCK_SIZES)
 		{
@@ -211,14 +205,10 @@ void platform_capabilities_to_nvm_features(const struct platform_capabilities *p
 		struct nvm_features *p_features)
 {
 	// capacity provisioning feature needs BIOS support
-#if __EARLY_HW__ // ignore what the bios is telling us
-	p_features->modify_device_capacity = 1;
-#else
 	if (!p_pcat->bios_config_support)
 	{
 		p_features->modify_device_capacity = 0;
 	}
-#endif
 
 	// driver doesn't have concept of Memory Mode so set based on bios only
 	p_features->memory_mode = p_pcat->memory_mode.supported;

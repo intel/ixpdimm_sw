@@ -730,12 +730,9 @@ NVM_UINT64 get_minimum_ns_size(NVM_UINT8 ways, NVM_UINT64 driver_min_ns_size)
 	COMMON_LOG_ENTRY();
 
 	NVM_UINT64 nvm_min_ns_size = BYTES_PER_GB * ways;
-#if __EARLY_HW__
-	nvm_min_ns_size = driver_min_ns_size * ways;
-#else
 	nvm_min_ns_size = (nvm_min_ns_size > driver_min_ns_size) ?
 			nvm_min_ns_size : driver_min_ns_size;
-#endif
+
 	COMMON_LOG_EXIT();
 	return nvm_min_ns_size;
 }

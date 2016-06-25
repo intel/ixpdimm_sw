@@ -741,7 +741,10 @@ int get_device_status_by_handle(NVM_NFIT_DEVICE_HANDLE dimm_handle,
 		COMMON_LOG_ERROR_F("Failed to retrieve the ARS long operation status with error %d",
 			temprc);
 		p_status->ars_status = DEVICE_ARS_STATUS_UNKNOWN;
+
+#if !defined(__EARLY_HW__) || __EARLY_HW__ != 1  // ARS is not supported yet
 		KEEP_ERROR(rc, temprc);
+#endif
 	}
 	else
 	{

@@ -865,12 +865,6 @@ int get_dimm_capacities(const NVM_NFIT_DEVICE_HANDLE device_handle,
 			}
 		}
 		free(p_cfg_data);
-#if __EARLY_HW__ // ignore PCD failures
-		else
-		{
-			rc = NVM_SUCCESS;
-		}
-#endif
 
 		// update capacities based on DIMM SKU
 		KEEP_ERROR(rc, update_capacities_based_on_sku(device_handle,

@@ -340,7 +340,7 @@ int ioctl_passthrough_cmd(struct fw_cmd *p_fw_cmd)
 		COMMON_LOG_ERROR("Invalid input or output payloads specified");
 		rc = NVM_ERR_UNKNOWN;
 	}
-#if __EARLY_HW__ || (__LARGE_PAYLOAD__ == 0)
+#if __LARGE_PAYLOAD__ == 0
 	else if ((p_fw_cmd->opcode == 0x08 && p_fw_cmd->sub_opcode == 0x02) || // get fw debug log
 				(p_fw_cmd->opcode == 0x0A)) // inject error
 	{
