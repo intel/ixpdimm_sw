@@ -115,6 +115,15 @@ int security_change_prepare(struct device_discovery *p_discovery,
 				uid_str);
 		rc = NVM_ERR_SECURITYDISABLED;
 	}
+	// Do not proceed if user sends passphrase in disabled state
+	else if (passphrase_len > 0 && p_discovery->lock_state == LOCK_STATE_DISABLED)
+	{
+		uid_copy(p_discovery->uid, uid_str);
+		COMMON_LOG_ERROR_F("Failed to modify security on device %s \
+				because passphrase is provided when the security is disabled",
+				uid_str);
+		rc = NVM_ERR_SECURITYDISABLED;
+	}
 	// if locked, try to unlock
 	else if (p_discovery->lock_state == LOCK_STATE_LOCKED)
 	{
