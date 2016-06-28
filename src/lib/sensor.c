@@ -46,73 +46,116 @@
 // upper limits on valid threshold values - defined in FIS
 #define	LIMIT_SPARE_THRESHOLD_VALUE    100u
 
-NVM_UINT32 encode_fw_temp(unsigned short temp)
+struct sensor_thresholds
 {
-	return nvm_encode_temperature(fw_convert_fw_celsius_to_float(temp));
+	NVM_REAL32 controller_temp_shutdown;
+	NVM_REAL32 media_temp_shutdown;
+	NVM_REAL32 throttling_start;
+	NVM_REAL32 throttling_stop;
+	NVM_REAL32 alarm_media_temp_threshold;
+	NVM_REAL32 alarm_controller_temp_threshold;
+	NVM_UINT8 alarm_spare_block_threshold;
+	NVM_BOOL is_media_alarm_threshold_enabled;
+	NVM_BOOL is_controller_alarm_threshold_enabled;
+	NVM_BOOL is_spare_alarm_threshold_enabled;
+};
+
+int get_sensor_thresholds(int device_handle, struct sensor_thresholds *p_thresholds)
+{
+	memset(p_thresholds, 0, sizeof (*p_thresholds));
+	struct pt_payload_device_characteristics characteristics;
+	int rc = fw_get_id_dimm_device_characteristics(device_handle, &characteristics);
+
+	if (rc == NVM_SUCCESS)
+	{
+		p_thresholds->media_temp_shutdown =
+			fw_convert_fw_celsius_to_float(characteristics.media_temp_shutdown_threshold);
+		p_thresholds->controller_temp_shutdown =
+			fw_convert_fw_celsius_to_float(characteristics.controller_temp_shutdown_threshold);
+		p_thresholds->throttling_start =
+			fw_convert_fw_celsius_to_float(characteristics.throttling_start_threshold);
+		p_thresholds->throttling_stop =
+			fw_convert_fw_celsius_to_float(characteristics.throttling_stop_threshold);
+	}
+
+	struct pt_payload_alarm_thresholds alarm_thresholds;
+	memset(&alarm_thresholds, 0, sizeof (alarm_thresholds));
+	int threshold_rc = fw_get_alarm_thresholds(device_handle, &alarm_thresholds);
+	KEEP_ERROR(rc, threshold_rc);
+	if (threshold_rc == NVM_SUCCESS)
+	{
+		p_thresholds->alarm_media_temp_threshold =
+			fw_convert_fw_celsius_to_float(alarm_thresholds.media_temperature);
+		p_thresholds->alarm_controller_temp_threshold =
+			fw_convert_fw_celsius_to_float(alarm_thresholds.controller_temperature);
+		alarm_thresholds.enable = alarm_thresholds.enable;
+		p_thresholds->alarm_spare_block_threshold = alarm_thresholds.spare;
+		p_thresholds->is_media_alarm_threshold_enabled = (NVM_BOOL)
+			(alarm_thresholds.enable & THRESHOLD_ENABLED_MEDIA_TEMP ? 1 : 0);
+		p_thresholds->is_controller_alarm_threshold_enabled = (NVM_BOOL)
+			(alarm_thresholds.enable & THRESHOLD_ENABLED_CONTROLLER_TEMP ? 1 : 0);
+		p_thresholds->is_spare_alarm_threshold_enabled = (NVM_BOOL)
+			(alarm_thresholds.enable & THRESHOLD_ENABLED_SPARE ? 1 : 0);
+	}
+
+	return rc;
 }
 
 int get_smart_log_sensors(const NVM_UID device_uid,
 	const NVM_UINT32 dev_handle, struct sensor *p_sensors)
 {
 	COMMON_LOG_ENTRY();
-	int rc = NVM_SUCCESS;
-
-	/*
-	 * If unable to get threshold, there is still a lot of sensor info that can be set from
-	 * the smart health log ... if it's successful. So if alarm thresholds fails, just set
-	 * it to 0 and continue.
-	 */
-	struct pt_payload_alarm_thresholds thresholds;
-	memset(&thresholds, 0, sizeof (thresholds));
-	int threshold_rc = fw_get_alarm_thresholds(dev_handle, &thresholds);
-	KEEP_ERROR(rc, threshold_rc);
 
 	struct pt_payload_smart_health dimm_smart;
 	memset(&dimm_smart, 0, sizeof (dimm_smart));
-	int smart_health_rc = fw_get_smart_health(dev_handle, &dimm_smart);
-	KEEP_ERROR(rc, smart_health_rc);
+	int rc = fw_get_smart_health(dev_handle, &dimm_smart);
 
-	struct pt_payload_device_characteristics characteristics;
-	int characteristics_rc = fw_get_id_dimm_device_characteristics(dev_handle, &characteristics);
-	KEEP_ERROR(rc, characteristics_rc);
-
-	NVM_UINT64 throttle_start = 0;
-	NVM_UINT64 controller_temp_shutdown = 0;
-	NVM_UINT64 media_temp_shutdown = 0;
-	if (characteristics_rc == NVM_SUCCESS)
+	if (rc == NVM_SUCCESS)
 	{
-		throttle_start = encode_fw_temp(characteristics.tstt);
-		controller_temp_shutdown = encode_fw_temp(characteristics.ctst);
-		media_temp_shutdown = encode_fw_temp(characteristics.mtst);
-	}
+		/*
+		 * If unable to get threshold, there is still a lot of sensor info that can be set from
+		 * the smart health log ... if it's successful. So if thresholds fail, just continue.
+		 */
+		struct sensor_thresholds thresholds;
+		int threshold_rc = get_sensor_thresholds(dev_handle, &thresholds);
+		KEEP_ERROR(rc, threshold_rc);
 
-
-	if (smart_health_rc == NVM_SUCCESS)
-	{
 		struct sensor *p_sensor = NULL;
 		// Media Temperature
 		{
 			p_sensor = &p_sensors[SENSOR_MEDIA_TEMPERATURE];
+			NVM_REAL32 media_temp_celsius = 0;
 			if (dimm_smart.validation_flags.parts.media_temperature_field)
 			{
-				p_sensor->reading = encode_fw_temp(dimm_smart.media_temperature);
+				media_temp_celsius = fw_convert_fw_celsius_to_float(dimm_smart.media_temperature);
+				p_sensor->reading = nvm_encode_temperature(media_temp_celsius);
 			}
 			p_sensor->upper_noncritical_settable = 1;
 			p_sensor->upper_noncritical_support = 1;
 			p_sensor->upper_critical_support = 1;
 			p_sensor->upper_fatal_support = 1;
-			p_sensor->settings.enabled = (NVM_BOOL)
-				(thresholds.enable & THRESHOLD_ENABLED_MEDIA_TEMP ? 1 : 0);
+			p_sensor->settings.enabled = thresholds.is_media_alarm_threshold_enabled;
 			p_sensor->settings.upper_noncritical_threshold =
-				encode_fw_temp(thresholds.media_temperature);
+				nvm_encode_temperature(thresholds.alarm_media_temp_threshold);
+			p_sensor->settings.upper_critical_threshold =
+				nvm_encode_temperature(thresholds.throttling_start);
+			p_sensor->settings.lower_critical_threshold =
+				nvm_encode_temperature(thresholds.throttling_stop);
+			p_sensor->settings.upper_fatal_threshold =
+				nvm_encode_temperature(thresholds.media_temp_shutdown);
 
-			p_sensor->settings.upper_critical_threshold = throttle_start;
-			p_sensor->settings.upper_fatal_threshold = media_temp_shutdown;
-
-			if (dimm_smart.validation_flags.parts.alarm_trips_field &&
-				((dimm_smart.alarm_trips & MEDIA_TEMPERATURE_TRIP_BIT) != 0))
+			if (media_temp_celsius > thresholds.media_temp_shutdown)
+			{
+				p_sensor->current_state = SENSOR_FATAL;
+			}
+			else if (media_temp_celsius > thresholds.throttling_start)
 			{
 				p_sensor->current_state = SENSOR_CRITICAL;
+			}
+			else if (dimm_smart.validation_flags.parts.alarm_trips_field &&
+				((dimm_smart.alarm_trips & MEDIA_TEMPERATURE_TRIP_BIT) != 0))
+			{
+				p_sensor->current_state = SENSOR_NONCRITICAL;
 			}
 			else if (!dimm_smart.validation_flags.parts.alarm_trips_field ||
 					!dimm_smart.validation_flags.parts.media_temperature_field)
@@ -134,13 +177,12 @@ int get_smart_log_sensors(const NVM_UID device_uid,
 			}
 			p_sensor->lower_noncritical_settable = 1;
 			p_sensor->lower_noncritical_support = 1;
-			p_sensor->settings.enabled = (NVM_BOOL) ((thresholds.enable &
-				THRESHOLD_ENABLED_SPARE) ? 1 : 0);
-			p_sensor->settings.lower_noncritical_threshold = thresholds.spare;
+			p_sensor->settings.enabled = thresholds.is_spare_alarm_threshold_enabled;
+			p_sensor->settings.lower_noncritical_threshold = thresholds.alarm_spare_block_threshold;
 			if (dimm_smart.validation_flags.parts.alarm_trips_field &&
 				((dimm_smart.alarm_trips & SPARE_BLOCKS_TRIP_BIT) != 0))
 			{
-				p_sensor->current_state = SENSOR_CRITICAL;
+				p_sensor->current_state = SENSOR_NONCRITICAL;
 			}
 			else if (!dimm_smart.validation_flags.parts.alarm_trips_field ||
 				!dimm_smart.validation_flags.parts.spare_block_field)
@@ -218,27 +260,32 @@ int get_smart_log_sensors(const NVM_UID device_uid,
 
 		// Controller Temperature
 		{
+			NVM_REAL32 controller_temp_celsius = 0;
 			p_sensor = &p_sensors[SENSOR_CONTROLLER_TEMPERATURE];
 			if (dimm_smart.validation_flags.parts.sizeof_vendor_data_field)
 			{
-				p_sensor->reading = encode_fw_temp(dimm_smart.controller_temperature);
+				controller_temp_celsius =
+					fw_convert_fw_celsius_to_float(dimm_smart.controller_temperature);
+				p_sensor->reading = nvm_encode_temperature(controller_temp_celsius);
 			}
 			p_sensor->upper_noncritical_settable = 1;
 			p_sensor->upper_noncritical_support = 1;
 			p_sensor->upper_critical_support = 1;
 			p_sensor->upper_fatal_support = 1;
-			p_sensor->settings.enabled = (NVM_BOOL) ((thresholds.enable &
-				THRESHOLD_ENABLED_CONTROLLER_TEMP) ? 1 : 0);
+			p_sensor->settings.enabled = thresholds.is_controller_alarm_threshold_enabled;
 			p_sensor->settings.upper_noncritical_threshold =
-				encode_fw_temp(thresholds.controller_temperature);
+				nvm_encode_temperature(thresholds.alarm_controller_temp_threshold);
+			p_sensor->settings.upper_fatal_threshold =
+				nvm_encode_temperature(thresholds.controller_temp_shutdown);
 
-			p_sensor->settings.upper_critical_threshold = throttle_start;
-			p_sensor->settings.upper_fatal_threshold = controller_temp_shutdown;
-
-			if (dimm_smart.validation_flags.parts.alarm_trips_field &&
+			if (controller_temp_celsius > thresholds.controller_temp_shutdown)
+			{
+				p_sensor->current_state = SENSOR_FATAL;
+			}
+			else if (dimm_smart.validation_flags.parts.alarm_trips_field &&
 				((dimm_smart.alarm_trips & CONTROLLER_TEMP_TRIP_BIT) != 0))
 			{
-				p_sensor->current_state = SENSOR_CRITICAL;
+				p_sensor->current_state = SENSOR_NONCRITICAL;
 			}
 			else if (!dimm_smart.validation_flags.parts.alarm_trips_field ||
 				!dimm_smart.validation_flags.parts.sizeof_vendor_data_field)

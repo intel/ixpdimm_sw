@@ -43,7 +43,7 @@ namespace nvmcli
 {
 
 static const std::string MODIFYSENSOR_MSG_PREFIX = N_TR("Modify %s settings on " NVM_DIMM_NAME " %s");
-static std::string PROPERTY_SENSOR_THRESHOLD = "CriticalThreshold"; //!< Property threshold
+static std::string PROPERTY_SENSOR_THRESHOLD = "NonCriticalThreshold"; //!< Property threshold
 static std::string PROPERTY_SENSOR_ENABLED = "EnabledState"; //!< Property enabled
 static const std::string MODIFY_SENSOR_PROMPT = N_TR(
 		"Modify %s settings on " NVM_DIMM_NAME " %s?"); //!< prompt for user if not forced

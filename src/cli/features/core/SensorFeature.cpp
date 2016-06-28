@@ -181,8 +181,11 @@ cli::framework::ResultBase* cli::nvmcli::SensorFeature::showSensor(
 
 			// define all display attributes
 			wbem::framework::attribute_names_t allAttributes(defaultAttributes);
+			allAttributes.push_back(wbem::LOWERTHRESHOLDNONCRITICAL_KEY);
+			allAttributes.push_back(wbem::UPPERTHRESHOLDNONCRITICAL_KEY);
 			allAttributes.push_back(wbem::LOWERTHRESHOLDCRITICAL_KEY);
 			allAttributes.push_back(wbem::UPPERTHRESHOLDCRITICAL_KEY);
+			allAttributes.push_back(wbem::UPPERTHRESHOLDFATAL_KEY);
 			allAttributes.push_back(wbem::SETTABLETHRESHOLDS_KEY);
 			allAttributes.push_back(wbem::SUPPORTEDTHRESHOLDS_KEY);
 			allAttributes.push_back(wbem::ENABLEDSTATE_KEY);

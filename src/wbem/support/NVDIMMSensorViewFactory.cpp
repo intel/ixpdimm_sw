@@ -296,7 +296,7 @@ throw (framework::Exception)
 	return NVDIMMSensorFactory::getNames();
 }
 
-void NVDIMMSensorViewFactory::sensorToInstance(NVM_UID uidStr, sensor sensor,
+void NVDIMMSensorViewFactory::sensorToInstance(NVM_UID uidStr, const sensor &sensor,
 	framework::Instance *pInstance, framework::attribute_names_t attributes)
 {
 	// DimmID = handle or uid depending on user selection
@@ -342,7 +342,7 @@ void NVDIMMSensorViewFactory::sensorToInstance(NVM_UID uidStr, sensor sensor,
 		}
 		else if (sensor.type == SENSOR_MEDIA_TEMPERATURE || sensor.type == SENSOR_CONTROLLER_TEMPERATURE)
 		{
-			float celsius = nvm_decode_temperature(sensor.reading);
+			float celsius = nvm_decode_temperature((NVM_UINT32)sensor.reading);
 			currentValue << celsius << baseUnitToString(sensor.units);
 		}
 		else

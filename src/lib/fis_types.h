@@ -574,10 +574,10 @@ struct pt_payload_identify_dimm {
  * 	* Updated to FIS 1.2 *
  */
 struct pt_payload_device_characteristics {
-	unsigned short ctst; /* controller temperature shutdown threshold */
-	unsigned short mtst; /* media temperature shutdown threshold */
-	unsigned short tstt; /* throttling start threshold */
-	unsigned short tspt; /* throttling stop threshold */
+	unsigned short controller_temp_shutdown_threshold;
+	unsigned short media_temp_shutdown_threshold;
+	unsigned short throttling_start_threshold;
+	unsigned short throttling_stop_threshold;
 } __attribute__((packed));
 
 /*

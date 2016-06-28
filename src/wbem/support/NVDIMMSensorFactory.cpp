@@ -301,6 +301,7 @@ framework::instances_t *NVDIMMSensorFactory::getInstances(framework::attribute_n
 		int rc = nvm_get_sensors(uid, sensors, NVM_MAX_DEVICE_SENSORS);
 		if (rc != NVM_SUCCESS)
 		{
+			delete pResult;
 			throw exception::NvmExceptionLibError(rc);
 		}
 		for (int i = 0; i < NVM_MAX_DEVICE_SENSORS; i++)

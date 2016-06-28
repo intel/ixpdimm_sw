@@ -139,7 +139,7 @@ private:
 	void populateAttributeList(framework::attribute_names_t &attributes)
 			throw (framework::Exception);
 
-	void sensorToInstance(NVM_UID uidStr, sensor sensor, framework::Instance *pInstance, framework::attribute_names_t attributes);
+	void sensorToInstance(NVM_UID uidStr, const sensor &sensor, framework::Instance *pInstance, framework::attribute_names_t attributes);
 
 	void addThresholdForType(framework::Instance *pInstance, framework::attribute_names_t vector,
 		std::string key, sensor_type type, NVM_UINT64 threshold);

@@ -466,7 +466,7 @@ int fw_mb_err_to_nvm_lib_err(int status)
 	COMMON_LOG_ENTRY();
 	int ret = NVM_SUCCESS;
 
-	COMMON_LOG_ERROR_F("firmware mail box error = %d", DSM_EXTENDED_ERROR(status));
+	COMMON_LOG_ERROR_F("firmware mail box error = 0x%x", DSM_EXTENDED_ERROR(status));
 	switch (DSM_EXTENDED_ERROR(status))
 	{
 		case MB_SUCCESS:

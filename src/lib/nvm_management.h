@@ -89,7 +89,7 @@ extern "C"
 static inline NVM_UINT32 nvm_encode_temperature(NVM_REAL32 value)
 {
 	NVM_UINT32 result;
-	memmove(&result, &value, sizeof (NVM_UINT32));
+	result = (NVM_UINT32)(value * 10000);
 	return result;
 }
 
@@ -99,7 +99,7 @@ static inline NVM_UINT32 nvm_encode_temperature(NVM_REAL32 value)
 static inline NVM_REAL32 nvm_decode_temperature(NVM_UINT32 value)
 {
 	NVM_REAL32 result;
-	memmove(&result, &value, sizeof (NVM_REAL32));
+	result = (NVM_REAL32)(value / 10000.0);
 	return result;
 }
 

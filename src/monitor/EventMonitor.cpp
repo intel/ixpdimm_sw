@@ -353,7 +353,7 @@ void monitor::EventMonitor::monitorDimmMediaTemperature(const std::string &uidSt
 		enum event_code_health code = EVENT_CODE_HEALTH_MEDIA_TEMPERATURE_UNDER_THRESHOLD;
 		enum event_severity severity = EVENT_SEVERITY_INFO;
 		bool actionRequired = false;
-		if (sensor.current_state == SENSOR_CRITICAL)
+		if (sensor.current_state == SENSOR_NONCRITICAL)
 		{
 			code = EVENT_CODE_HEALTH_MEDIA_TEMPERATURE_OVER_THRESHOLD;
 			severity = EVENT_SEVERITY_WARN;
@@ -402,7 +402,7 @@ void monitor::EventMonitor::monitorDimmControllerTemperature(const std::string &
 		enum event_code_health code = EVENT_CODE_HEALTH_CONTROLLER_TEMPERATURE_UNDER_THRESHOLD;
 		enum event_severity severity = EVENT_SEVERITY_INFO;
 		bool actionRequired = false;
-		if (sensor.current_state == SENSOR_CRITICAL)
+		if (sensor.current_state == SENSOR_NONCRITICAL)
 		{
 			code = EVENT_CODE_HEALTH_CONTROLLER_TEMPERATURE_OVER_THRESHOLD;
 			severity = EVENT_SEVERITY_WARN;
@@ -447,7 +447,7 @@ void monitor::EventMonitor::monitorDimmSpare(const std::string &uidStr,
 	// spare capacity has changed state
 	if (sensor.current_state != storedState.spare_capacity_state)
 	{
-		if (sensor.current_state == SENSOR_CRITICAL)
+		if (sensor.current_state == SENSOR_NONCRITICAL)
 		{
 			// log an event
 			std::stringstream percentUsed, threshold;
