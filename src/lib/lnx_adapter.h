@@ -41,6 +41,13 @@
 
 int linux_err_to_nvm_lib_err(int);
 
+/*
+ * This function is to swap the bytes revieved from the NFIT
+ * this is in reference to https://bugzilla.kernel.org/show_bug.cgi?id=121161
+ * TODO: remove this function as soon as the above mentioned bug is resolved
+ */
+unsigned short swap_bytes(unsigned short nfit_val);
+
 int open_ioctl_target(int *p_target, const char *dev_name);
 int send_ioctl_command(int fd, unsigned long request, void* parg);
 

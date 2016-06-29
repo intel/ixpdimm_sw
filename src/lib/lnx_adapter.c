@@ -252,6 +252,25 @@ int get_topology_count()
 }
 
 /*
+ * This function is to swap the bytes revieved from the NFIT
+ * this is in reference to https://bugzilla.kernel.org/show_bug.cgi?id=121161
+ * TODO: DE6261 remove this function as soon as the above mentioned bug is resolved
+ */
+unsigned short swap_bytes(unsigned short nfit_val)
+{
+	unsigned short high_byte = 0;
+	unsigned short low_byte = 0;
+	unsigned short ret_val = 0;
+
+	high_byte = (nfit_val & 0xFF00) >> 8;
+	low_byte = (nfit_val & 0x00FF);
+
+	ret_val = (low_byte << 8) | high_byte;
+
+	return ret_val;
+}
+
+/*
  * Get the system's memory topology
  */
 int get_topology(const NVM_UINT8 count, struct nvm_topology *p_dimm_topo)
@@ -299,12 +318,15 @@ int get_topology(const NVM_UINT8 count, struct nvm_topology *p_dimm_topo)
 									"count is smaller than number of "NVM_DIMM_NAME"s");
 							break;
 						}
-
+						// TODO DE6261: revert to original values instead of swapped
 						p_dimm_topo[dimm_index].device_handle.handle = ndctl_dimm_get_handle(dimm);
 						p_dimm_topo[dimm_index].id = ndctl_dimm_get_phys_id(dimm);
-						p_dimm_topo[dimm_index].vendor_id = ndctl_dimm_get_vendor(dimm);
-						p_dimm_topo[dimm_index].device_id = ndctl_dimm_get_device(dimm);
-						p_dimm_topo[dimm_index].revision_id = ndctl_dimm_get_revision(dimm);
+						p_dimm_topo[dimm_index].vendor_id =
+							swap_bytes(ndctl_dimm_get_vendor(dimm));
+						p_dimm_topo[dimm_index].device_id =
+							swap_bytes(ndctl_dimm_get_device(dimm));
+						p_dimm_topo[dimm_index].revision_id =
+							swap_bytes(ndctl_dimm_get_revision(dimm));
 
 						// TODO US15228: get values from NDCTL when available
 						// For now assume all supported Intel devices
@@ -314,7 +336,7 @@ int get_topology(const NVM_UINT8 count, struct nvm_topology *p_dimm_topo)
 
 						// TODO US14147 - Copy multiple IFCs from driver
 						p_dimm_topo[dimm_index].fmt_interface_codes[0] =
-								ndctl_dimm_get_format(dimm);
+								swap_bytes(ndctl_dimm_get_format(dimm));
 
 						int mem_type = get_device_memory_type_from_smbios_table(
 								p_smbios_table, smbios_table_size,
