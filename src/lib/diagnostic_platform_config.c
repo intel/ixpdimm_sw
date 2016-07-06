@@ -42,8 +42,9 @@
 #include "capabilities.h"
 #include "pool_utilities.h"
 
-void verify_pcat(NVM_UINT32 *p_results);
+int get_nvm_capabilities_from_pcat(NVM_UINT32 *p_results, struct nvm_capabilities *nvm_caps);
 int verify_pcd(int dev_count, const struct diagnostic *p_diagnostic, NVM_UINT32 *p_results);
+void check_bios_config_support(NVM_UINT32 *p_results, struct platform_capabilities p_caps);
 #define	MEMORY_EVENT_ARG	"memory"
 #define	APP_DIRECT_EVENT_ARG	"App Direct"
 #define	MEMORY_CAP_STR		"Memory Mode"
@@ -69,6 +70,7 @@ int diag_platform_config_check(const struct diagnostic *p_diagnostic, NVM_UINT32
 	{
 		// verify existence and format of nfit table
 		int dev_count = 0;
+		struct nvm_capabilities nvm_caps;
 		if (!(p_diagnostic->excludes & DIAG_THRESHOLD_PCONFIG_NFIT))
 		{
 			KEEP_ERROR(rc, verify_nfit(&dev_count, p_results));
@@ -78,14 +80,17 @@ int diag_platform_config_check(const struct diagnostic *p_diagnostic, NVM_UINT32
 		{
 			if (!(p_diagnostic->excludes & DIAG_THRESHOLD_PCONFIG_PCAT))
 			{
-				//  verify contents of PCAT
-				verify_pcat(p_results);
+				//  verify contents of PCAT and get nvm capabilities
+				if (get_nvm_capabilities_from_pcat(p_results, &nvm_caps) == NVM_SUCCESS)
+				{
+					//	check if BIOS is set to provisioning using mgmt sw
+					check_bios_config_support(p_results, nvm_caps.platform_capabilities);
+				}
 			}
 
 			// verify the contents of PCD of all DIMM
 			if (!(p_diagnostic->excludes & DIAG_THRESHOLD_PCONFIG_PCD))
 			{
-				//  verify contents of PCAT
 				KEEP_ERROR(rc, verify_pcd(dev_count, p_diagnostic, p_results));
 			}
 
@@ -110,21 +115,39 @@ int diag_platform_config_check(const struct diagnostic *p_diagnostic, NVM_UINT32
 }
 
 /*
- * verify the CR platform capability table
+ * get nvm capabilities from the CR platform capability table
  */
-void verify_pcat(NVM_UINT32 *p_results)
+int get_nvm_capabilities_from_pcat(NVM_UINT32 *p_results, struct nvm_capabilities *p_nvm_caps)
 {
 	COMMON_LOG_ENTRY();
 
-	struct nvm_capabilities nvm_caps;
-	int temprc = nvm_get_nvm_capabilities(&nvm_caps);
-	if (temprc != NVM_SUCCESS)
+	int rc = nvm_get_nvm_capabilities(p_nvm_caps);
+	if (rc != NVM_SUCCESS)
 	{
 		// returns success only if the platform capability table is retrieved and
 		// if the signature, revision and table checksum are verified.
 		store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG,
 				EVENT_SEVERITY_WARN, EVENT_CODE_DIAG_PCONFIG_INVALID_PCAT, NULL, 0, NULL,
 				NULL, NULL, DIAGNOSTIC_RESULT_FAILED);
+		(*p_results)++;
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+/*
+ * check if BIOS is set up to provisioning using management software
+ */
+void check_bios_config_support(NVM_UINT32 *p_results, struct platform_capabilities platform_caps)
+{
+	COMMON_LOG_ENTRY();
+
+	if (!platform_caps.bios_config_support)
+	{
+		store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG, EVENT_SEVERITY_INFO,
+				EVENT_CODE_DIAG_PCONFIG_NO_BIOS_CONFIG_SUPPORT, NULL, 0, NULL,
+				NULL, NULL, DIAGNOSTIC_RESULT_WARNING);
 		(*p_results)++;
 	}
 
