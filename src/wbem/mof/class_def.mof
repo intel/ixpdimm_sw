@@ -23,50 +23,176 @@ class <NVM_WBEM_PREFIX>ServerChassis : CIM_PhysicalPackage
 [dynamic, provider("intelwbemprovider"), Description("Intel NVDIMM")]
 class <NVM_WBEM_PREFIX>NVDIMM : CIM_PhysicalMemory
 {
+	[Description (
+	"The vendor identifier."
+ 	)]
 	uint32 VendorID;
+	[Description (
+	"The device identifier."
+ 	)]
 	uint16 DeviceID;
+	[Description (
+	"The revision identifier."
+ 	)]
 	uint16 RevisionID;
+	[Description (
+	"The numa node or socket ID of the processor."
+ 	)]
 	uint16 SocketID;
 	uint16 ProximityDomain;
+	[Description (
+	"The ID of the associated memory controller."
+ 	)]
 	uint16 MemoryControllerID;
+	[Description (
+	"The vendor identifier of the DIMM non-volatile memory subsystem controller."
+ 	)]
 	uint32 SubsystemVendorID;
+	[Description (
+	"The device identifier of the DIMM non-volatile memory subsystem controller."
+ 	)]
 	uint16 SubsystemDeviceID;
+	[Description (
+	"The revision identifier of the DIMM non-volatile memory subsystem controller."
+ 	)]
 	uint16 SubsystemRevisionID;
+	[Description (
+	"If the manufacturing location and date are valid."
+ 	)]
 	boolean ManufacturingInfoValid;
+	uint16 SubsystemRevisionID;
+	[Description (
+	"The DIMM manufacturing location assigned by the vendor. Only valid if ManufacturingInfoValid is true."
+ 	)]
 	uint8 ManufacturingLocation;
 	string ManufacturingDate;
+	[Description (
+	"The ID of the associated channel."
+ 	)]
 	uint32 ChannelID;
+	[Description (
+	"The DIMM position in the channel."
+ 	)]
 	uint32 ChannelPos;
 	uint16 InterleaveDataDepth;
-	uint16 LockState;
-	uint32 ManageabilityState;
-	uint64 MemoryCapacity;
-	uint64 AppDirectCapacity;
-	uint16 PhysicalID;
-	boolean IsNew;
-	boolean PowerManagementEnabled;
-	uint8 PowerLimit;
-	uint32 PeakPowerBudget;
-	uint32 AvgPowerBudget;
-	boolean DieSparingEnabled;
-	uint16 DieSparingLevel;
-	uint16 LastShutdownStatus[];
-	uint8 DieSparesUsed;
-	uint16 ManufacturerID;
-	boolean FirstFastRefresh;
-	uint16 SecurityCapabilities[];
-	uint16 LastConfigurationStatus;
 	[Description (
+        "Current security state."
+        ),
+	ValueMap { "0", "1", "2", "3", "4", "5", "6" },
+	Values { "Unknown", "Disabled", "Unlocked", "Locked", "Frozen", "Exceeded", "Not Supported" }]
+	uint16 LockState;
+	[Description (
+        "Ability of the software to manage the DIMM."
+        ),
+	ValueMap { "0", "1", "2" },
+	Values { "Unknown", "Manageable", "Unmanageable" }]
+	uint32 ManageabilityState;
+	[Description (
+	"Capacity in bytes designated for use as memory in Memory Mode."
+ 	)]
+	uint64 MemoryCapacity;
+	[Description (
+	"Capacity in bytes designated forof use as App Direct."
+ 	)]
+	uint64 AppDirectCapacity;
+	[Description (
+	"The unique physical ID of the memory module."
+ 	)]
+	uint16 PhysicalID;
+	[Description (
+	"If the DIMM is unincorporated with the rest of the DIMMs."
+ 	)]
+	boolean IsNew;
+	[Description (
+	"If the DIMM firmware power management policy is enabled."
+ 	)]
+	boolean PowerManagementEnabled;
+	[Description (
+	"If the DIMM firmware power management policy is enabled, the power limit in watts (Default 18 W). "
+ 	)]
+	uint8 PowerLimit;
+	[Description (
+	"If the DIMM firmware power management policy is enabled, the power budget in mW used for instantaneous power (10000-20000 mW). "
+ 	)]
+	uint32 PeakPowerBudget;
+	[Description (
+	"If the DIMM firmware power management policy is enabled, the power budget in mW used for average power (10000-18000 mW). "
+ 	)]
+	uint32 AvgPowerBudget;
+	uint16 PhysicalID;
+	[Description (
+	"If the DIMM firmware die sparing policy is enabled. "
+ 	)]
+	boolean DieSparingEnabled;
+	[Description (
+	"If the DIMM firmware die sparing policy is enabled, the level of aggressiveness to use for die sparing (0-255). "
+ 	)]
+	uint16 DieSparingLevel;
+	[Description (
+	"The DIMM last shutdown status."
+ 	),
+	ValueMap { "0", "1", "2", "3", "4", "5", "6", "7", "8" },
+	Values { "Unknown", "FW Flush Complete", "PM ADR Command", "PM S3",
+		 "PM S5", "DDR Power Fail Command", "PMIC 12V Power Fail",
+		 "PM Warm Reset", "Thermal Shutdown" }]
+	uint16 LastShutdownStatus[];
+	[Description (
+        "The number of spare devices that have been consumed. "
+        )]
+	uint8 DieSparesUsed;
+	[Description (
+	"The manufacturer identifier."
+ 	)]
+	uint16 ManufacturerID;
+	[Description (
+	"Whether acceleration of the first refresh cycle is enabled. "
+ 	)]
+	boolean FirstFastRefresh;
+	[Description (
+	"The security capabilities of the DIMM."
+ 	),
+	ValueMap { "0", "1", "2" },
+	Values { "passphrase", "unlock", "erase" }]
+	uint16 SecurityCapabilities[];
+	[Description (
+	"The status of the last memory allocation request for the DIMM. "
+ 	),
+	ValueMap { "0", "1", "2", "3", "4", "5" },
+	Values { "Not configured", "Valid", "Failed - Bad configuration", "Failed - Broken interleave",
+		 "Failed - Reverted", "Failed - Not supported" }]
+	uint16 LastConfigurationStatus;
 	"The address range scrub operation status. Only returned if the Manageability is 'Manageable'."
 	),
 	ValueMap {"0", "1", "2", "3" },
 	Values { "Unknown", "Not Started", "In progress", "Complete" }]
 	uint16 ARSStatus;
+	[Description (
+	"The time the DIMM was last shut down. "
+ 	)]
 	datetime LastShutdownTime;
+	[Description (
+	"The memory types supported by the DIMM."
+ 	),
+	ValueMap { "0", "1", "2" },
+	Values { "MemoryModeEnabled", "StorageModeEnabled", "AppDirectModeEnabled" }]
 	uint16 MemoryTypeCapabilities[];
+	[Description (
+	"Whether the DIMM supports die sparing."
+ 	)]
 	boolean DieSparingCapable;
+	[Description (
+	"The firmware logging level."
+ 	),
+	ValueMap { "0", "1", "2", "3", "4" },
+	Values { "Disabled", "Error", "Warning", "Info", "Debug" }]
 	uint16 FWLogLevel;
+	[Description (
+	"Whether viral policies are enabled."
+ 	)]
 	boolean ViralPolicy;
+	[Description (
+	"Whether the DIMM is currently viral."
+ 	)]
 	boolean ViralState;
 
 	// methods
@@ -418,11 +544,28 @@ class <NVM_WBEM_PREFIX>PerformanceMetric: CIM_BaseMetricValue
 [dynamic, provider("intelwbemprovider")]
 class <NVM_WBEM_PREFIX>MemoryCapabilities : CIM_MemoryCapabilities
 {
+	[Description (
+	"Memory Mode alignment requirement in bytes as reported by BIOS. Given as an exponent (2^n).")]
 	uint16 MemoryModeAlignment;
+	[Description (
+	"App Direct alignment requirement in bytes as reported by BIOS. Given as an exponent (2^n).")]
 	uint16 AppDirectAlignment;
+	[Description (
+	"If true, the platform level configuration of DIMMs can be modified. "
+	"If false, any supported changes must be made through the BIOS setup.")]
 	boolean PlatformConfigSupported;
+	[Description (
+	"If true, the the platform supports a runtime interface for validating management configuration of DIMMs.")]
 	boolean PlatformRuntimeSupported;
+	[Description (
+	"The volatile memory mode currently selected by the BIOS."),
+	ValueMap { "0", "1", "2", "3" },
+	Values {"Unknown", "1LM", "Memory Mode", "Auto" }]
 	uint16 CurrentVolatileMode;
+	[Description (
+	"The App Direct mode currently selected by the BIOS."),
+	ValueMap { "0", "1", "2" },
+	Values {"Unknown", "Disabled", "App Direct" }]
 	uint16 CurrentAppDirectMode;
 };
 
@@ -434,6 +577,10 @@ class <NVM_WBEM_PREFIX>MemoryConfigurationCapabilities : CIM_MemoryConfiguration
 [dynamic, provider("intelwbemprovider")]
 class <NVM_WBEM_PREFIX>MemoryAllocationSettings : CIM_MemoryAllocationSettingData
 {
+	[Description (
+	"This value is used when submitting an embedded instance as a goal to a creation request."
+	"False if the setting applies to all of the RawMemory extents in the ResourcePool."
+	"True if the setting only applies to the unconfigured RawMemory extents.")]
 	boolean NewMemoryOnly;
 };
 
@@ -593,27 +740,52 @@ class <NVM_WBEM_PREFIX>PersistentMemoryNamespace : CIM_PersistentMemoryNamespace
 [dynamic, provider("intelwbemprovider")]
 class <NVM_WBEM_PREFIX>NamespaceSettings : CIM_NamespaceSettings
 {
+	[Description (
+	"Initial state to be used when specifying a transient instance."
+ 	),
+	ValueMap { "0", "1" },
+	Values { "Disabled", "Enabled" }]
 	uint16 InitialState;
-	[Description ( 
+	[Description (
 	"Used to define encryption capabilities."
- 	), 
-	ValueMap { "0", "1", "2" }, 
+ 	),
+	ValueMap { "0", "1", "2" },
 	Values { "Disabled", "Enabled", "Ignore" }]
 	uint16 EncryptionEnabled;
-	[Description ( 
+	[Description (
 	"Used to define erase capabilities."
- 	), 
-	ValueMap { "0", "1", "2" }, 
+ 	),
+	ValueMap { "0", "1", "2" },
 	Values { "Not Eraseable", "Crypto Erase", "Ignore" }]
 	uint16 EraseCapable;
+	[Description (
+	"This value indicates the number of bytes written/read before switching to the next channel. "
+	"The value is given as the exponent (2^n)."
+ 	)]
 	uint16 ChannelInterleaveSize;
+	[Description (
+	"Indicates the amount of data written by a given memory controller before switching "
+	"to the next controller when a memory controller interleave scheme is in use. "
+	"The value is given as the exponent (2^n)."
+ 	)]
 	uint16 ControllerInterleaveSize;
+	[Description (
+	"Where the capacity is allocated from for the underlying OS structures if access to the "
+	"App Direct namespace capacity is supported using legacy memory page protocols such as DMA/RDMA."
+ 	),
+	ValueMap { "0", "1", "2", "3" },
+	Values { "Unknown", "None", "DRAM", "App Direct" }]
 	uint16 MemoryPageAllocation;
 };
 
 [dynamic, provider("intelwbemprovider")]
 class <NVM_WBEM_PREFIX>PersistentMemoryCapabilities : CIM_PersistentMemoryCapabilities
 {
+	[Description (
+	"If the driver supports creating App Direct namespaces with the underlying OS "
+	"structures to support access to the namespace capacity using legacy memory page "
+	"protocols such as DMA/RDMA."
+ 	)]
 	boolean MemoryPageAllocationCapable;
 	uint64 MaxNamespaces;
 	// methods
