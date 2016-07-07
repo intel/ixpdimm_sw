@@ -369,7 +369,7 @@ rpm :
 	$(SED) -i 's/^%define build_version .*/%define build_version $(BUILDNUM)/g' $(RPMBUILD_DIR)/SPECS/$(MARKETING_PRODUCT_NAME).spec
 
 	#Archive the directory
-	git archive --format=tar --prefix="$(MARKETING_PRODUCT_NAME)-$(BUILDNUM)/" HEAD | gzip -c > $(RPMBUILD_DIR)/SOURCES/v$(BUILDNUM).tar.gz
+	git archive --format=tar --prefix="$(MARKETING_PRODUCT_NAME)-$(BUILDNUM)/" HEAD | gzip -c > $(RPMBUILD_DIR)/SOURCES/$(MARKETING_PRODUCT_NAME)-$(BUILDNUM).tar.gz
 	#rpmbuild
 	$(RPMBUILD) -ba $(RPMBUILD_DIR)/SPECS/$(MARKETING_PRODUCT_NAME).spec --define "_topdir $(RPMBUILD_DIR)" --define "cflag $(CFLAGS_EXTERNAL)"
 

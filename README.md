@@ -1,20 +1,18 @@
-#IXPDIMM_SW
+#ixpdimm_sw
 
-IXPDIMM_SW contains the following
+ixpdimm_sw contains the following interface components:
 
-A command line interface (CLI) application for configuring and 
-managing IXPDIMM. Including commands for basic inventory,
-capacity provisioning, health monitoring, and troubleshooting.
+An Application Program Interface (API) library which provides programatic access to 
+the IXPDIMM SW functionality.
 
-A daemon for monitoring the health and status of IXPDIMM
+A Command Line Interface (CLI) application for configuring and managing IXPDIMMs from the
+command line.
 
-A common information model (CIM) provider that exposes
-IXPDIMM_SW as standard CIM objects in order to plug-in to various
-common information model object managers (CIMOMS).
+A Common Information Model (CIM) provider library to expose the
+IXPDIMM SW functionality as standard CIM objects to plug-in to 
+common information model object managers (CIMOMs). 
 
-An application program interface (API) for configuring and managing
-IXPDIMM. Including basic inventory, capacity provisioning,
-health monitoring, and troubleshooting. 
+A monitor daemon/system service for monitoring the health and status of IXPDIMMs.
 
 #Documentation
 
@@ -70,17 +68,17 @@ and the source can be found at
 
 https://github.com/pmem/ndctl
 
-Intel NVM CIM library is required, the source can be found at
+libinvm-cim library is required, the source can be found at
 
-https://github.com/01org/intelnvmcimlibrary
+https://github.com/01org/libinvm-cim
 
-Intel NVM CLI library is required, the source can be found at
+libinvm-cli library is required, the source can be found at
 
-https://github.com/01org/intelnvmclilibrary
+https://github.com/01org/libinvm-cli
 
-Intel NVM I18N library is required, the source can be found at
+libinvm-i18n library is required, the source can be found at
 
-https://github.com/01org/intelnvmi18nlibrary
+https://github.com/01org/libinvm-i18n
 
 All other dependencies are widely available. This includes ctemplate openssl
 sqlite and zlib.

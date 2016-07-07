@@ -1,111 +1,94 @@
-%define product_name ixpdimm_sw
-%define product_base_name ixpdimm
 %define build_version 99.99.99.9999
-%define build_release 1
-%define corename lib%{product_base_name}-core
-%define cliname %{product_base_name}-cli
-%define monitorname %{product_base_name}-monitor
-%define cimlibs lib%{product_base_name}-cim
-%define dname %{product_name}-devel
 %define _unpackaged_files_terminate_build 0
 
-Name: %{product_name}
+Name: ixpdimm_sw
 Version: %{build_version}
-Release: %{build_release}%{?dist}
-Summary: API for development of %{product_base_name} management utilities
+Release: 1%{?dist}
+Summary: API for development of IXPDIMM management utilities
 License: BSD
 Group: Applications/System
 URL: https://01.org/ixpdimm-sw
-Source: https://github.com/01org/IXPDIMMSW/archive/v%{version}.tar.gz
+Source: https://github.com/01org/ixpdimm_sw/archive/v%{version}.tar.gz#/%{name}-%{version}.tar.gz
 Requires: ndctl-libs >= 51
 
-BuildRequires:pkgconfig(libctemplate)
-BuildRequires:pkgconfig(libkmod)
-BuildRequires:pkgconfig(sqlite3)
-BuildRequires:pkgconfig(libndctl)
-
-BuildRequires:libinvm-i18n
-BuildRequires:libinvm-i18n-devel
-BuildRequires:libinvm-cim
-BuildRequires:libinvm-cim-devel
-BuildRequires:libinvm-cli
-BuildRequires:libinvm-cli-devel
-
-%define  debug_package %{nil}
+BuildRequires: pkgconfig(libctemplate)
+BuildRequires: pkgconfig(libkmod)
+BuildRequires: pkgconfig(sqlite3)
+BuildRequires: pkgconfig(libndctl)
+BuildRequires: libinvm-i18n-devel
+BuildRequires: libinvm-cim-devel
+BuildRequires: libinvm-cli-devel
 
 %description
-An application program interface (API) for configuring and managing
-%{product_base_name}. Including basic inventory, capacity provisioning,
-health monitoring, and troubleshooting.
+An application program interface (API) which provides programmatic access to
+the IXPSIMM SW functionality.
 
-%package -n %dname
+%package -n %{name}-devel
 Summary:        Development files for %{name}
 License:        BSD
 Group:          Development/Libraries
 Requires:       %{name}%{?_isa} = %{version}-%{release}
 
-%description -n %dname
-The %{dname} package contains header files for
-developing applications that use %{product_base_name}.
+%description -n %{name}-devel
+The %{name}-devel package contains header files for
+developing applications that use IXPDIMM SW.
 
-%package -n %corename
+%package -n libixpdimm-core
 Summary:        Development files for %{name}
 License:        BSD
 Group:          Development/Libraries
 Requires:       %{name}%{?_isa} = %{version}-%{release}
 
-%description -n %corename
-The %{corename} package contains libraries that support
-other %{product_name} products.
+%description -n libixpdimm-core
+The libixpdimm-core package contains libraries that support
+other IXPDIMM SW products.
 
-%package -n %cimlibs
-Summary:        CIM provider for %{name}
-
+%package -n libixpdimm-cim
+Summary:        CIM provider library for IXPDIMM SW
 License:        BSD
 Group:          Development/Libraries
-Requires:       %{corename}%{?_isa} = %{version}-%{release}
+Requires:       libixpdimm-core%{?_isa} = %{version}-%{release}
 Requires:       pywbem
 Requires(pre):  pywbem
 Requires(post): pywbem
 
-%description -n %cimlibs
-%{cimlibs} is a common information model (CIM) provider that exposes
-%{product_base_name} as standard CIM objects in order to plug-in to various
-common information model object managers (CIMOMS).
+%description -n libixpdimm-cim
+A Common Information Model (CIM) provider library to expose the IXPDIMM SW 
+functionality as standard CIM objects to plug-in to common information
+model object managers (CIMOMs). 
 
-%package -n %monitorname
-Summary:        Daemon for monitoring the status of %{product_base_name}
+%package -n ixpdimm-monitor
+Summary:        Daemon for monitoring the status of IXPDIMM
 License:        BSD
 Group:          System Environment/Daemons
-Requires:       %{cimlibs}%{?_isa} = %{version}-%{release}
+Requires:       libixpdimm-cim%{?_isa} = %{version}-%{release}
 Requires:       systemd-units
 
-%description -n %monitorname
-A daemon for monitoring the health and status of %{product_base_name}
+%description -n ixpdimm-monitor
+A monitor daemon for monitoring the health and status of IXPDIMMs.
 
-%package -n %cliname
-Summary:        CLI for managment of %{product_base_name}
+%package -n ixpdimm-cli
+Summary:        CLI for managment of IXPDIMM
 License:        BSD
 Group:          Development/Tools
-Requires:       %{cimlibs}%{?_isa} = %{version}-%{release}
+Requires:       libixpdimm-cim%{?_isa} = %{version}-%{release}
 
-%description -n %cliname
-A command line interface (CLI) application for configuring and
-managing %{product_base_name}. Including commands for basic inventory,
-capacity provisioning, health monitoring, and troubleshooting.
+%description -n ixpdimm-cli
+A Command Line Interface (CLI) application for configuring and
+managing IXPDIMMs from the command line.
 
 %prep
-%setup -q -n %{product_name}-%{version}
+%setup -q -n %{name}-%{version}
 
 %build
-make BUILDNUM=%{build_version} RELEASE=1 DATADIR=%{_sharedstatedir} LINUX_PRODUCT_NAME=%{product_name} CFLAGS_EXTERNAL="%{?cflag}"
+make BUILDNUM=%{build_version} RELEASE=1 DATADIR=%{_sharedstatedir} LINUX_PRODUCT_NAME=%{name}
 
 %install
-make install RELEASE=1 RPM_ROOT=%{buildroot} LIB_DIR=%{_libdir} INCLUDE_DIR=%{_includedir} BIN_DIR=%{_bindir} DATADIR=%{_sharedstatedir} UNIT_DIR=%{_unitdir} LINUX_PRODUCT_NAME=%{product_name} SYSCONF_DIR=%{_sysconfdir} MANPAGE_DIR=%{_mandir}
+make install RELEASE=1 RPM_ROOT=%{buildroot} LIB_DIR=%{_libdir} INCLUDE_DIR=%{_includedir} BIN_DIR=%{_bindir} DATADIR=%{_sharedstatedir} UNIT_DIR=%{_unitdir} LINUX_PRODUCT_NAME=%{name} SYSCONF_DIR=%{_sysconfdir} MANPAGE_DIR=%{_mandir}
 
-%post -n %corename -p /sbin/ldconfig
+%post -n libixpdimm-core -p /sbin/ldconfig
 
-%post -n %cimlibs
+%post -n libixpdimm-cim
 /sbin/ldconfig
 if [ -x /usr/sbin/cimserver ]
 then
@@ -124,15 +107,15 @@ then
         fi
         for ns in interop root/interop root/PG_Interop;
         do
-           $CIMMOF -E -n$ns %{_sharedstatedir}/%{product_name}/Pegasus/mof/pegasus_register.mof &> /dev/null
+           $CIMMOF -E -n$ns %{_sharedstatedir}/%{name}/Pegasus/mof/pegasus_register.mof &> /dev/null
            if [ $? -eq 0 ]
            then
-                $CIMMOF -uc -n$ns %{_sharedstatedir}/%{product_name}/Pegasus/mof/pegasus_register.mof &> /dev/null
-                $CIMMOF -uc -n$ns %{_sharedstatedir}/%{product_name}/Pegasus/mof/profile_registration.mof &> /dev/null
+                $CIMMOF -uc -n$ns %{_sharedstatedir}/%{name}/Pegasus/mof/pegasus_register.mof &> /dev/null
+                $CIMMOF -uc -n$ns %{_sharedstatedir}/%{name}/Pegasus/mof/profile_registration.mof &> /dev/null
                 break
            fi 
        done
-       $CIMMOF -aE -uc -n root/intelwbem %{_sharedstatedir}/%{product_name}/Pegasus/mof/intelwbem.mof &> /dev/null
+       $CIMMOF -aE -uc -n root/intelwbem %{_sharedstatedir}/%{name}/Pegasus/mof/intelwbem.mof &> /dev/null
 fi
 if [ -x /usr/sbin/sfcbd ]
 then
@@ -144,7 +127,7 @@ then
         systemctl stop sblim-sfcb.service &> /dev/null
     fi
 
-    sfcbstage -n root/intelwbem -r %{_sharedstatedir}/%{product_name}/sfcb/INTEL_NVDIMM.reg %{_sharedstatedir}/%{product_name}/sfcb/sfcb_intelwbem.mof
+    sfcbstage -n root/intelwbem -r %{_sharedstatedir}/%{name}/sfcb/INTEL_NVDIMM.reg %{_sharedstatedir}/%{name}/sfcb/sfcb_intelwbem.mof
     sfcbrepos -f
 
     if [[ $RESTART -gt 0 ]]
@@ -153,18 +136,17 @@ then
     fi
 fi
 
-%post -n %monitorname
+%post -n ixpdimm-monitor
 %systemd_post ixpdimm-monitor.service
 /bin/systemctl --no-reload enable ixpdimm-monitor.service &> /dev/null || :
 /bin/systemctl start ixpdimm-monitor.service &> /dev/null || :
 
-%post
-/sbin/ldconfig
+%post -p /sbin/ldconfig
 
-%postun -n %corename -p /sbin/ldconfig
-%postun -n %cimlibs -p /sbin/ldconfig
+%postun -n libixpdimm-core -p /sbin/ldconfig
+%postun -n libixpdimm-cim -p /sbin/ldconfig
 
-%pre -n %cimlibs
+%pre -n libixpdimm-cim
 # If upgrading, deregister old version
 if [ "$1" -gt 1 ]; then
         RESTART=0
@@ -178,8 +160,8 @@ if [ "$1" -gt 1 ]; then
                 fi
                 cimprovider -d -m intelwbemprovider &> /dev/null
                 cimprovider -r -m intelwbemprovider &> /dev/null
-                mofcomp -v -r -n root/intelwbem %{_sharedstatedir}/%{product_name}/Pegasus/mof/intelwbem.mof &> /dev/null
-                mofcomp -v -r -n root/intelwbem %{_sharedstatedir}/%{product_name}/Pegasus/mof/profile_registration.mof &> /dev/null
+                mofcomp -v -r -n root/intelwbem %{_sharedstatedir}/%{name}/Pegasus/mof/intelwbem.mof &> /dev/null
+                mofcomp -v -r -n root/intelwbem %{_sharedstatedir}/%{name}/Pegasus/mof/profile_registration.mof &> /dev/null
                 if [[ $RESTART -gt 0 ]]
                 then
                     cimserver -s &> /dev/null
@@ -187,7 +169,7 @@ if [ "$1" -gt 1 ]; then
         fi
 fi
 
-%preun -n %cimlibs
+%preun -n libixpdimm-cim
 RESTART=0
 if [ -x /usr/sbin/cimserver ]
 then
@@ -199,8 +181,8 @@ then
         fi
         cimprovider -d -m intelwbemprovider &> /dev/null
         cimprovider -r -m intelwbemprovider &> /dev/null
-        mofcomp -r -n root/intelwbem %{_sharedstatedir}/%{product_name}/Pegasus/mof/intelwbem.mof &> /dev/null
-        mofcomp -v -r -n root/intelwbem %{_sharedstatedir}/%{product_name}/Pegasus/mof/profile_registration.mof &> /dev/null
+        mofcomp -r -n root/intelwbem %{_sharedstatedir}/%{name}/Pegasus/mof/intelwbem.mof &> /dev/null
+        mofcomp -v -r -n root/intelwbem %{_sharedstatedir}/%{name}/Pegasus/mof/profile_registration.mof &> /dev/null
         if [[ $RESTART -gt 0 ]]
         then
             cimserver -s &> /dev/null
@@ -226,61 +208,61 @@ then
     fi
 fi
 
-%preun -n %monitorname
+%preun -n ixpdimm-monitor
 %systemd_preun stop ixpdimm-monitor.service
 
-%postun -n %monitorname
+%postun -n ixpdimm-monitor
 %systemd_postun_with_restart ixpdimm-monitor.service
 
-%preun
-/sbin/ldconfig
+%post -n ixpdimm-cli -p /sbin/ldconfig
+%postun -n ixpdimm-cli -p /sbin/ldconfig
+
+%preun -p /sbin/ldconfig
 
 %files
-%defattr(755,root,root,755)
+%doc README.md
 %{_libdir}/libixpdimm.so.*
-%dir %{_sharedstatedir}/%{product_name}
-%attr(640,root,root) %{_sharedstatedir}/%{product_name}/*.pem
-%attr(640,root,root) %config(noreplace) %{_sharedstatedir}/%{product_name}/*.dat*
+%dir %{_sharedstatedir}/%{name}
+%{_sharedstatedir}/%{name}/*.pem
+%config(noreplace) %{_sharedstatedir}/%{name}/*.dat*
 %license LICENSE
 
-%files -n %dname
-%defattr(755,root,root,755)
+%files -n %{name}-devel
+%doc README.md
 %{_libdir}/libixpdimm.so
-%attr(644,root,root) %{_includedir}/nvm_types.h
-%attr(644,root,root) %{_includedir}/nvm_management.h
+%{_includedir}/nvm_types.h
+%{_includedir}/nvm_management.h
 %license LICENSE
 
-%files -n %corename
-%defattr(755,root,root,755)
+%files -n libixpdimm-core
+%doc README.md
 %{_libdir}/libixpdimm-core.so*
 %license LICENSE
 
-%files -n %cimlibs
-%defattr(755,root,root,755)
+%files -n libixpdimm-cim
+%doc README.md
 %{_libdir}/cmpi/libixpdimm-cim.so*
-%dir %{_sharedstatedir}/%{product_name}/Pegasus
-%dir %{_sharedstatedir}/%{product_name}/Pegasus/mof
-%dir %{_sharedstatedir}/%{product_name}/sfcb
-%attr(644,root,root) %{_sharedstatedir}/%{product_name}/sfcb/*.reg
-%attr(644,root,root) %{_sharedstatedir}/%{product_name}/sfcb/*.mof
-%attr(644,root,root) %{_sharedstatedir}/%{product_name}/Pegasus/mof/*.mof
-%attr(644,root,root) %{_sysconfdir}/ld.so.conf.d/%{product_name}-%{_arch}.conf
+%dir %{_sharedstatedir}/%{name}/Pegasus
+%dir %{_sharedstatedir}/%{name}/Pegasus/mof
+%dir %{_sharedstatedir}/%{name}/sfcb
+%{_sharedstatedir}/%{name}/sfcb/*.reg
+%{_sharedstatedir}/%{name}/sfcb/*.mof
+%{_sharedstatedir}/%{name}/Pegasus/mof/*.mof
+%config(noreplace) %{_sysconfdir}/ld.so.conf.d/%{name}-%{_arch}.conf
 %license LICENSE
 
-%files -n %monitorname
-%defattr(755,root,root,755)
+%files -n ixpdimm-monitor
 %{_bindir}/ixpdimm-monitor
 %{_unitdir}/ixpdimm-monitor.service
 %license LICENSE
-%attr(644,root,root) %{_mandir}/man8/ixpdimm-monitor*
+%{_mandir}/man8/ixpdimm-monitor*
 
-%files -n %cliname
-%defattr(755,root,root,755)
+%files -n ixpdimm-cli
 %{_bindir}/ixpdimm-cli
 %{_libdir}/libixpdimm-cli.so*
 %license LICENSE
-%attr(644,root,root) %{_mandir}/man8/ixpdimm-cli*
+%{_mandir}/man8/ixpdimm-cli*
 
 %changelog
-* Thu Dec 24 2015 Nicholas Moulin <nicholas.w.moulin@intel.com>
+* Thu Dec 24 2015 Nicholas Moulin <nicholas.w.moulin@intel.com> - 01.00.00.2094-1
 - Initial rpm release
