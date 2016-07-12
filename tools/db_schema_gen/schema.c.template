@@ -123,7 +123,7 @@ char* history_table_names[] = {
 	"history",
 	"\0"
 };
-	
+
 {{#TABLE}}
 /*
  * --- {{TABLE_NAME}} ----------------
@@ -136,47 +136,47 @@ void {{F_BIND_ENTITY_TO_STMT}}(sqlite3_stmt *p_stmt, {{STRUCT_NAME}} *{{STRUCT_P
 }
 
 void {{F_GET_ENTITY_RELATIONSHIPS}}(const PersistentStore *p_ps,
-	sqlite3_stmt *p_stmt, {{STRUCT_NAME}} *{{STRUCT_POINTER}}s, int index)
+	sqlite3_stmt *p_stmt, {{STRUCT_NAME}} *{{STRUCT_POINTER}})
 {
 {{#RELATIONSHIP}}
 	// get related data for {{ATTRIBUTE_NAME}}
 
 	{{F_GET_RELATION_COUNT}}(p_ps,
-			{{STRUCT_POINTER}}s[index].{{PK_ATTRIBUTE_NAME}},
-			&({{STRUCT_POINTER}}s[index].{{ATTRIBUTE_NAME}}_count));
+			{{STRUCT_POINTER}}->{{PK_ATTRIBUTE_NAME}},
+			&({{STRUCT_POINTER}}->{{ATTRIBUTE_NAME}}_count));
 	{{F_GET_RELATION}}(p_ps,
-		{{STRUCT_POINTER}}s[index].{{PK_ATTRIBUTE_NAME}},
-		{{STRUCT_POINTER}}s[index].{{ATTRIBUTE_NAME}},
-		{{STRUCT_POINTER}}s[index].{{ATTRIBUTE_NAME}}_count);
+		{{STRUCT_POINTER}}->{{PK_ATTRIBUTE_NAME}},
+		{{STRUCT_POINTER}}->{{ATTRIBUTE_NAME}},
+		{{STRUCT_POINTER}}->{{ATTRIBUTE_NAME}}_count);
 {{/RELATIONSHIP}}
 }
 
 {{HISTORY_START}}
 void {{F_GET_ENTITY_RELATIONSHIPS_HISTORY}}(const PersistentStore *p_ps,
-	sqlite3_stmt *p_stmt, {{STRUCT_NAME}} *{{STRUCT_POINTER}}s,
-	int index, int history_id)
+	sqlite3_stmt *p_stmt, {{STRUCT_NAME}} *{{STRUCT_POINTER}},
+	int history_id)
 {
 {{#RELATIONSHIP}}
 	// get related data for {{ATTRIBUTE_NAME}}
 
 	{{F_GET_RELATION_COUNT_HISTORY}}(p_ps,
-			{{STRUCT_POINTER}}s[index].{{PK_ATTRIBUTE_NAME}},
-			&({{STRUCT_POINTER}}s[index].{{ATTRIBUTE_NAME}}_count), history_id);
+			{{STRUCT_POINTER}}->{{PK_ATTRIBUTE_NAME}},
+			&({{STRUCT_POINTER}}->{{ATTRIBUTE_NAME}}_count), history_id);
 	{{F_GET_RELATION_HISTORY}}(p_ps,
-		{{STRUCT_POINTER}}s[index].{{PK_ATTRIBUTE_NAME}},
-		{{STRUCT_POINTER}}s[index].{{ATTRIBUTE_NAME}},
-		{{STRUCT_POINTER}}s[index].{{ATTRIBUTE_NAME}}_count, history_id);
+		{{STRUCT_POINTER}}->{{PK_ATTRIBUTE_NAME}},
+		{{STRUCT_POINTER}}->{{ATTRIBUTE_NAME}},
+		{{STRUCT_POINTER}}->{{ATTRIBUTE_NAME}}_count, history_id);
 {{/RELATIONSHIP}}
 }
 {{HISTORY_END}}
 
 void {{F_ROW_TO_ENTITY}}(const PersistentStore *p_ps,
-	sqlite3_stmt *p_stmt, {{STRUCT_NAME}} *{{STRUCT_POINTER}}s, int index)
+	sqlite3_stmt *p_stmt, {{STRUCT_NAME}} *{{STRUCT_POINTER}})
 {
 {{#ATTRIBUTE}}
 	{{ATTRIBUTE_TYPE}}_COLUMN(p_stmt,
 		{{ATTRIBUTE_INDEX}},
-		{{STRUCT_POINTER}}s[index].{{FIELD_INDEX_NAME}}{{#TXT_LEN}},
+		{{STRUCT_POINTER}}->{{FIELD_INDEX_NAME}}{{#TXT_LEN}},
 		{{TABLE_NAME:x-caps}}_{{ATTRIBUTE_NAME:x-caps}}_LEN{{/TXT_LEN}});
 {{/ATTRIBUTE}}
 }
@@ -251,8 +251,8 @@ int {{F_GET_ALL}}(const PersistentStore *p_ps,
 		int index = 0;
 		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < {{TABLE_NAME}}_count)
 		{
-			{{F_ROW_TO_ENTITY}}(p_ps, p_stmt, {{STRUCT_POINTER}},  index);
-			{{F_GET_ENTITY_RELATIONSHIPS}}(p_ps, p_stmt, {{STRUCT_POINTER}},  index);
+			{{F_ROW_TO_ENTITY}}(p_ps, p_stmt, &{{STRUCT_POINTER}}[index]);
+			{{F_GET_ENTITY_RELATIONSHIPS}}(p_ps, p_stmt, &{{STRUCT_POINTER}}[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
@@ -359,8 +359,8 @@ enum db_return_codes {{F_GET_BY_PK}}(const PersistentStore *p_ps,
 
 		if (sqlite3_step(p_stmt) == SQLITE_ROW)
 		{
-			{{F_ROW_TO_ENTITY}}(p_ps, p_stmt, {{STRUCT_POINTER}}, 0);
-			{{F_GET_ENTITY_RELATIONSHIPS}}(p_ps, p_stmt, {{STRUCT_POINTER}}, 0);
+			{{F_ROW_TO_ENTITY}}(p_ps, p_stmt, {{STRUCT_POINTER}});
+			{{F_GET_ENTITY_RELATIONSHIPS}}(p_ps, p_stmt, {{STRUCT_POINTER}});
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
@@ -473,7 +473,7 @@ int {{F_GET_ALL_BY_HISTORY_ID}}(const PersistentStore *p_ps,
 	int rc = DB_ERR_FAILURE;
 	memset({{STRUCT_POINTER}}, 0, sizeof ({{STRUCT_NAME}}) * {{TABLE_NAME}}_count);
 	sqlite3_stmt *p_stmt;
-	
+
 	char buffer[1024];
 	snprintf(buffer, 1024, "SELECT \
 		{{#ATTRIBUTE}}{{COLUMN_NAME}}{{#ATTRIBUTE_separator}}, {{/ATTRIBUTE_separator}} {{/ATTRIBUTE}} \
@@ -485,9 +485,9 @@ int {{F_GET_ALL_BY_HISTORY_ID}}(const PersistentStore *p_ps,
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
 		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < {{TABLE_NAME}}_count)
 		{
-		rc = DB_SUCCESS;	
-		{{F_ROW_TO_ENTITY}}(p_ps, p_stmt, {{STRUCT_POINTER}},  index);
-		{{F_GET_ENTITY_RELATIONSHIPS_HISTORY}}(p_ps, p_stmt, {{STRUCT_POINTER}},  index, history_id);
+		rc = DB_SUCCESS;
+		{{F_ROW_TO_ENTITY}}(p_ps, p_stmt, &{{STRUCT_POINTER}}[index]);
+		{{F_GET_ENTITY_RELATIONSHIPS_HISTORY}}(p_ps, p_stmt, &{{STRUCT_POINTER}}[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
@@ -573,8 +573,8 @@ enum db_return_codes {{F_GET_BY_FK}}(const PersistentStore *p_ps,
 		int index = 0;
 		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < {{TABLE_NAME}}_count)
 		{
-			{{F_ROW_TO_ENTITY}}(p_ps, p_stmt, {{STRUCT_POINTER}},  index);
-			{{F_GET_ENTITY_RELATIONSHIPS}}(p_ps, p_stmt, {{STRUCT_POINTER}},  index);
+			{{F_ROW_TO_ENTITY}}(p_ps, p_stmt, &{{STRUCT_POINTER}}[index]);
+			{{F_GET_ENTITY_RELATIONSHIPS}}(p_ps, p_stmt, &{{STRUCT_POINTER}}[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
@@ -600,8 +600,8 @@ enum db_return_codes {{F_GET_BY_FK_HISTORY}}(const PersistentStore *p_ps,
 		int index = 0;
 		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < {{TABLE_NAME}}_count)
 		{
-			{{F_ROW_TO_ENTITY}}(p_ps, p_stmt, {{STRUCT_POINTER}},  index);
-			{{F_GET_ENTITY_RELATIONSHIPS}}(p_ps, p_stmt, {{STRUCT_POINTER}},  index);
+			{{F_ROW_TO_ENTITY}}(p_ps, p_stmt, &{{STRUCT_POINTER}}[index]);
+			{{F_GET_ENTITY_RELATIONSHIPS}}(p_ps, p_stmt, &{{STRUCT_POINTER}}[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
