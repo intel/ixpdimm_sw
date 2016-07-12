@@ -161,6 +161,7 @@ class <NVM_WBEM_PREFIX>NVDIMM : CIM_PhysicalMemory
 	Values { "Not configured", "Valid", "Failed - Bad configuration", "Failed - Broken interleave",
 		 "Failed - Reverted", "Failed - Not supported" }]
 	uint16 LastConfigurationStatus;
+	[Description (
 	"The address range scrub operation status. Only returned if the Manageability is 'Manageable'."
 	),
 	ValueMap {"0", "1", "2", "3" },
