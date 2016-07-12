@@ -184,7 +184,7 @@ std::string ShowTopologyCommand::getFirstBadSocketId(core::device::TopologyColle
         for (size_t i = 0; i < m_socketIds.size() && badsocketId.empty(); i++)
         {
                 bool socketIdFound = false;
-                for (size_t j = 0; j < topologies.size() && ~socketIdFound; j++)
+                for (size_t j = 0; j < topologies.size() && !socketIdFound; j++)
                 {
                         if (m_socketIds[i] == uint64ToString(topologies[j].getSocketId()))
                         {
@@ -208,7 +208,7 @@ std::string ShowTopologyCommand::getFirstBadDimmId(core::device::TopologyCollect
         for (size_t i = 0; i < m_dimmIds.size() && badDimmId.empty(); i++)
         {
                 bool dimmIdFound = false;
-                for (size_t j = 0; j < topologies.size() && ~dimmIdFound; j++)
+                for (size_t j = 0; j < topologies.size() && !dimmIdFound; j++)
                 {
                         if (framework::stringsIEqual(m_dimmIds[i], topologies[j].getUid()) ||
                                 m_dimmIds[i] == uint64ToString(topologies[j].getDeviceHandle()))

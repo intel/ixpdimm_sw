@@ -376,7 +376,7 @@ std::string ShowDeviceCommand::getFirstBadSocketId(core::device::DeviceCollectio
 	for (size_t i = 0; i < m_socketIds.size() && badsocketId.empty(); i++)
 	{
 		bool socketIdFound = false;
-		for (size_t j = 0; j < devices.size() && ~socketIdFound; j++)
+		for (size_t j = 0; j < devices.size() && !socketIdFound; j++)
 		{
 			if (m_socketIds[i] == uint64ToString(devices[j].getSocketId()))
 			{
@@ -400,7 +400,7 @@ std::string ShowDeviceCommand::getFirstBadDimmId(core::device::DeviceCollection 
 	for (size_t i = 0; i < m_dimmIds.size() && badDimmId.empty(); i++)
 	{
 		bool dimmIdFound = false;
-		for (size_t j = 0; j < devices.size() && ~dimmIdFound; j++)
+		for (size_t j = 0; j < devices.size() && !dimmIdFound; j++)
 		{
 			if (framework::stringsIEqual(m_dimmIds[i], devices[j].getUid()) ||
 				m_dimmIds[i] == uint64ToString(devices[j].getDeviceHandle()))
