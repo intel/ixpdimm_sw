@@ -113,11 +113,11 @@ const char *EVENT_MESSAGES_MGMT[EVENT_CODE_MGMT_UNKNOWN -
 	// EVENT_CODE_MGMT_CONFIG_GOAL_DELETED
 	N_TR("A configuration goal has been deleted from "NVM_DIMM_NAME" %s."),
 	// EVENT_CODE_MGMT_NAMESPACE_CREATED
-	N_TR("A new namespace has been created. (Name: %s, uid: %s)"),
+	N_TR("A new namespace has been created. (Name: %s, UID: %s)"),
 	// EVENT_CODE_MGMT_NAMESPACE_DELETED
-	N_TR("A namespace has been deleted. (Name: %s, uid: %s)"),
+	N_TR("A namespace has been deleted. (Name: %s, UID: %s)"),
 	// EVENT_CODE_MGMT_NAMESPACE_MODIFIED
-	N_TR("A namespace's settings have been modified. (Name: %s, uid: %s)"),
+	N_TR("A namespace's settings have been modified. (Name: %s, UID: %s)"),
 	// EVENT_CODE_MGMT_SENSOR_SETTINGS_CHANGE
 	N_TR("The %s sensor settings have been changed on "NVM_DIMM_NAME" %s."),
 	// EVENT_CODE_MGMT_FIRMWARE_UPDATE
@@ -126,21 +126,6 @@ const char *EVENT_MESSAGES_MGMT[EVENT_CODE_MGMT_UNKNOWN -
 	N_TR("The security password has been set on "NVM_DIMM_NAME" %s."),
 	// EVENT_CODE_MGMT_SECURITY_PASSWORD_REMOVED
 	N_TR("The security password has been removed from "NVM_DIMM_NAME" %s."),
-	// EVENT_CODE_MGMT_SANITIZE_FREEZE_LOCK
-	N_TR("A sanitize freeze lock has been applied to "NVM_DIMM_NAME" %s."),
-	// EVENT_CODE_MGMT_SANITIZE_ANTIFREEZE_LOCK
-	N_TR("A sanitize anti-freeze lock has been applied to "NVM_DIMM_NAME" %s."),
-	// EVENT_CODE_MGMT_SOFTWARE_INSTALL
-	N_TR("A new version of "NVM_DIMM_NAME" management software "
-			"has been installed. (Version: %s)"),
-	// EVENT_CODE_MGMT_SOFTWARE_UNINSTALL
-	N_TR("The "NVM_DIMM_NAME" management software has been uninstalled."),
-	// EVENT_CODE_MGMT_DRIVER_INSTALL
-	N_TR("A new version of "NVM_DIMM_NAME" driver has been installed. (Version: %s)"),
-	// EVENT_CODE_MGMT_DRIVER_UNINSTALL
-	N_TR("The "NVM_DIMM_NAME" driver has been uninstalled."),
-	// EVENT_CODE_MGMT_PERMIT_APPLIED
-	N_TR("A permit has been applied."),
 	// EVENT_CODE_MGMT_SECURITY_SECURE_ERASE
 	N_TR("The persistent data on "NVM_DIMM_NAME" %s has been securely erased."),
 

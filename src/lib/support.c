@@ -37,7 +37,9 @@
 #include <persistence/config_settings.h>
 #include <persistence/event.h>
 #include <string/s_str.h>
+#include <uid/uid.h>
 #include "device_adapter.h"
+#include "cleanup_support_events.h"
 #include "support.h"
 
 #include "device_utilities.h"
@@ -382,28 +384,54 @@ int nvm_get_fw_log_level(const NVM_UID device_uid, enum fw_log_level *p_log_leve
 	return rc;
 }
 
+int update_db_table_property(PersistentStore *p_ps,
+		const char *table_name,
+		const char *prop_name, const char *prop_value)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	if (p_ps == NULL)
+	{
+		COMMON_LOG_ERROR("Database pointer is NULL");
+		rc = NVM_ERR_UNKNOWN;
+	}
+	else
+	{
+		char custom_update_sql[512];
+		s_snprintf(custom_update_sql, sizeof (custom_update_sql),
+				"UPDATE %s SET %s=%s",
+				table_name, prop_name, prop_value);
+		if (DB_SUCCESS !=
+				db_run_custom_sql(p_ps, custom_update_sql))
+		{
+			COMMON_LOG_ERROR_F("update %s failed.", table_name);
+			rc = NVM_ERR_DEVICEERROR;
+		}
+	}
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+int change_serial_num_in_db_table(PersistentStore *p_ps,
+		const char *table_name)
+{
+	COMMON_LOG_ENTRY();
+	int rc = update_db_table_property(p_ps, table_name,
+			"serial_num", "device_handle");
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
 /*
  * Returns DEVICEERROR if the database access fails otherwise return SUCCESS
  */
 int change_serial_num_in_identify_dimm(PersistentStore *p_ps)
 {
 	COMMON_LOG_ENTRY();
-	int rc = NVM_SUCCESS;
+	int rc = change_serial_num_in_db_table(p_ps, "identify_dimm");
 
-	if (p_ps != NULL)
-	{
-		if (DB_SUCCESS !=
-				db_run_custom_sql(p_ps, "UPDATE identify_dimm SET serial_num=device_handle"))
-		{
-			COMMON_LOG_ERROR("update identify_dimm failed.");
-			rc = NVM_ERR_DEVICEERROR;
-		}
-	}
-	else
-	{
-		COMMON_LOG_ERROR("Database is invalid");
-		rc = NVM_ERR_UNKNOWN;
-	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
@@ -414,24 +442,8 @@ int change_serial_num_in_identify_dimm(PersistentStore *p_ps)
 int change_serial_num_in_identify_dimm_history(PersistentStore *p_ps)
 {
 	COMMON_LOG_ENTRY();
-	int rc = NVM_SUCCESS;
+	int rc = change_serial_num_in_db_table(p_ps, "identify_dimm_history");
 
-	if (p_ps != NULL)
-	{
-
-		if (DB_SUCCESS !=
-				db_run_custom_sql(p_ps,
-				"UPDATE identify_dimm_history SET serial_num=device_handle"))
-		{
-			COMMON_LOG_ERROR("update identify_dimm_history failed.");
-			rc = NVM_ERR_DEVICEERROR;
-		}
-	}
-	else
-	{
-		COMMON_LOG_ERROR("Database is invalid");
-		rc = NVM_ERR_UNKNOWN;
-	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
@@ -442,23 +454,8 @@ int change_serial_num_in_identify_dimm_history(PersistentStore *p_ps)
 int change_serial_num_in_interleave_set_dimm_info(PersistentStore *p_ps)
 {
 	COMMON_LOG_ENTRY();
-	int rc = NVM_SUCCESS;
+	int rc = change_serial_num_in_db_table(p_ps, "interleave_set_dimm_info");
 
-	if (p_ps != NULL)
-	{
-		if (DB_SUCCESS !=
-				db_run_custom_sql(p_ps,
-				"UPDATE interleave_set_dimm_info SET serial_num=device_handle"))
-		{
-			COMMON_LOG_ERROR("update interleave_set_dimm_info failed.");
-			rc = NVM_ERR_DEVICEERROR;
-		}
-	}
-	else
-	{
-		COMMON_LOG_ERROR("Database is invalid");
-		rc = NVM_ERR_UNKNOWN;
-	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
@@ -469,23 +466,8 @@ int change_serial_num_in_interleave_set_dimm_info(PersistentStore *p_ps)
 int change_serial_num_in_interleave_set_dimm_info_history(PersistentStore *p_ps)
 {
 	COMMON_LOG_ENTRY();
-	int rc = NVM_SUCCESS;
+	int rc = change_serial_num_in_db_table(p_ps, "interleave_set_dimm_info_history");
 
-	if (p_ps != NULL)
-	{
-		if (DB_SUCCESS !=
-				db_run_custom_sql(p_ps,
-				"UPDATE interleave_set_dimm_info_history SET serial_num=device_handle"))
-		{
-			COMMON_LOG_ERROR("update interleave_set_dimm_info_history failed.");
-			rc = NVM_ERR_DEVICEERROR;
-		}
-	}
-	else
-	{
-		COMMON_LOG_ERROR("Database is invalid");
-		rc = NVM_ERR_UNKNOWN;
-	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
@@ -496,87 +478,19 @@ int change_serial_num_in_interleave_set_dimm_info_history(PersistentStore *p_ps)
 int change_serial_num_in_topology_state(PersistentStore *p_ps)
 {
 	COMMON_LOG_ENTRY();
-	int rc = NVM_SUCCESS;
+	int rc = change_serial_num_in_db_table(p_ps, "topology_state");
 
-	if (p_ps != NULL)
-	{
-		if (DB_SUCCESS !=
-				db_run_custom_sql(p_ps, "UPDATE topology_state SET serial_num=device_handle"))
-		{
-			COMMON_LOG_ERROR("update topology_state failed.");
-			rc = NVM_ERR_DEVICEERROR;
-		}
-	}
-	else
-	{
-		COMMON_LOG_ERROR("Database is invalid");
-		rc = NVM_ERR_UNKNOWN;
-	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
 
-/*
- * Returns DEVICEERROR if the database access fails otherwise return SUCCESS
- */
-int change_serial_num_in_events(PersistentStore *p_ps,
-		enum event_type event_type, unsigned int event_code)
+int change_host_name_in_db_table(PersistentStore *p_ps,
+		const char *table_name)
 {
 	COMMON_LOG_ENTRY();
-	int rc = NVM_SUCCESS;
+	int rc = update_db_table_property(p_ps,
+			table_name, "name", "'NVMDIMMHOST'");
 
-	if (p_ps != NULL)
-	{
-		int count = 0;
-		if (db_get_event_count_by_event_type_type(p_ps, event_type, &count) == DB_SUCCESS)
-		{
-			struct db_event diag_events[count];
-			if (db_get_events_by_event_type_type(p_ps, event_type, diag_events, count)
-					== DB_SUCCESS)
-			{
-				for (int i = 0; i < count; i ++)
-				{
-					if (diag_events[i].code == event_code)
-					{
-						struct db_event event;
-						if (db_get_event_by_id(p_ps, diag_events[i].id, &event) == DB_SUCCESS)
-						{
-							// clear args2 which is the serial number
-							s_strcpy(event.arg2, "MISSING", NVM_EVENT_ARG_LEN);
-							if (db_update_event_by_id(p_ps, diag_events[i].id, &event)
-									!= DB_SUCCESS)
-							{
-								COMMON_LOG_ERROR("failed to update event");
-								rc = NVM_ERR_DEVICEERROR;
-								break;
-							}
-						}
-						else
-						{
-							COMMON_LOG_ERROR("failed to retrieve specific event");
-							rc = NVM_ERR_DEVICEERROR;
-							break;
-						}
-					}
-				}
-			}
-			else
-			{
-				COMMON_LOG_ERROR("failed to retrieve events");
-				rc = NVM_ERR_DEVICEERROR;
-			}
-		}
-		else
-		{
-			COMMON_LOG_ERROR("Failed to retrieve event count");
-			rc = NVM_ERR_DEVICEERROR;
-		}
-	}
-	else
-	{
-		COMMON_LOG_ERROR("Database is invalid");
-		rc = NVM_ERR_UNKNOWN;
-	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
@@ -587,22 +501,7 @@ int change_serial_num_in_events(PersistentStore *p_ps,
 int change_hostname_in_host(PersistentStore *p_ps)
 {
 	COMMON_LOG_ENTRY();
-	int rc = NVM_SUCCESS;
-
-	if (p_ps != NULL)
-	{
-		if (DB_SUCCESS !=
-				db_run_custom_sql(p_ps, "UPDATE host SET name='NVMDIMMHOST'"))
-		{
-			COMMON_LOG_ERROR("update host failed.");
-			rc = NVM_ERR_DEVICEERROR;
-		}
-	}
-	else
-	{
-		COMMON_LOG_ERROR("Database is invalid");
-		rc = NVM_ERR_UNKNOWN;
-	}
+	int rc = change_host_name_in_db_table(p_ps, "host");
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
@@ -613,22 +512,8 @@ int change_hostname_in_host(PersistentStore *p_ps)
 int change_hostname_in_host_history(PersistentStore *p_ps)
 {
 	COMMON_LOG_ENTRY();
-	int rc = NVM_SUCCESS;
+	int rc = change_host_name_in_db_table(p_ps, "host_history");
 
-	if (p_ps != NULL)
-	{
-		if (DB_SUCCESS !=
-				db_run_custom_sql(p_ps, "UPDATE host_history SET name='NVMDIMMHOST'"))
-		{
-			COMMON_LOG_ERROR("update host_history failed.");
-			rc = NVM_ERR_DEVICEERROR;
-		}
-	}
-	else
-	{
-		COMMON_LOG_ERROR("Database is invalid");
-		rc = NVM_ERR_UNKNOWN;
-	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
@@ -639,22 +524,7 @@ int change_hostname_in_host_history(PersistentStore *p_ps)
 int change_hostname_in_sw_inventory(PersistentStore *p_ps)
 {
 	COMMON_LOG_ENTRY();
-	int rc = NVM_SUCCESS;
-
-	if (p_ps != NULL)
-	{
-		if (DB_SUCCESS !=
-				db_run_custom_sql(p_ps, "UPDATE sw_inventory SET name='NVMDIMMHOST'"))
-		{
-			COMMON_LOG_ERROR("update sw_inventory failed.");
-			rc = NVM_ERR_DEVICEERROR;
-		}
-	}
-	else
-	{
-		COMMON_LOG_ERROR("Database is invalid");
-		rc = NVM_ERR_UNKNOWN;
-	}
+	int rc = change_host_name_in_db_table(p_ps, "sw_inventory");
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
@@ -665,22 +535,7 @@ int change_hostname_in_sw_inventory(PersistentStore *p_ps)
 int change_hostname_in_sw_inventory_history(PersistentStore *p_ps)
 {
 	COMMON_LOG_ENTRY();
-	int rc = NVM_SUCCESS;
-
-	if (p_ps != NULL)
-	{
-		if (DB_SUCCESS !=
-				db_run_custom_sql(p_ps, "UPDATE sw_inventory_history SET name='NVMDIMMHOST'"))
-		{
-			COMMON_LOG_ERROR("update sw_inventory_history failed.");
-			rc = NVM_ERR_DEVICEERROR;
-		}
-	}
-	else
-	{
-		COMMON_LOG_ERROR("Database is invalid");
-		rc = NVM_ERR_UNKNOWN;
-	}
+	int rc = change_host_name_in_db_table(p_ps, "sw_inventory_history");
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
@@ -751,6 +606,9 @@ int support_filter_data(const NVM_PATH support_file, NVM_UINT16 filter_mask)
 			db_tbl_rc = change_serial_num_in_events(p_support,
 					EVENT_TYPE_DIAG_PLATFORM_CONFIG,
 					EVENT_CODE_DIAG_PCONFIG_BROKEN_ISET);
+			KEEP_ERROR(db_rc, db_tbl_rc);
+			// Device UIDs contain serial numbers
+			db_tbl_rc = change_dimm_uid_in_events(p_support);
 			KEEP_ERROR(db_rc, db_tbl_rc);
 		}
 

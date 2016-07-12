@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 2016, Intel Corporation
+ * Copyright (c) 2016, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,37 +26,47 @@
  */
 
 /*
- * This file defines the structures and functions specific to generating a support file.
+ * Get metadata about event string fields for event with a given type/code.
  */
 
-#ifndef	_SUPPORT_H_
-#define	_SUPPORT_H_
+#ifndef	EVENT_FIELD_METADATA_H_
+#define	EVENT_FIELD_METADATA_H_
 
-#ifdef __cplusplus
-extern "C"
+#include <nvm_management.h>
+
+enum event_arg_type
 {
-#endif
-
-int change_serial_num_in_topology_state(PersistentStore *p_ps);
-int change_serial_num_in_interleave_set_dimm_info(PersistentStore *p_ps);
-int change_serial_num_in_identify_dimm(PersistentStore *p_ps);
-int change_hostname_in_host(PersistentStore *p_ps);
-
-/*
- * Enum values must be a bitmask, unique, non-overlapping values correlating to
- * SQL_KEY_GATHER_SUPPORT_FILTER
- */
-enum gather_support_filters
-{
-	GSF_HOST_DATA =			(1 << 0),	// clear out host and host_history tables
-	GSF_NAMESPACE_DATA =		(1 << 1),	// clear out namespace & namespace_history tables
-	GSF_SYSTEM_LOG =		(1 << 2),	// clear out system log
-	GSF_SERIAL_NUMS =		(1 << 3)	// clear out all serial numbers
+	EVENT_ARG_TYPE_OTHER = 0,
+	EVENT_ARG_TYPE_DEVICE_UID,
+	EVENT_ARG_TYPE_DEVICE_UID_LIST,
+	EVENT_ARG_TYPE_SERIAL_NUM
 };
 
+enum event_uid_type
+{
+	EVENT_UID_TYPE_NONE = 0,
+	EVENT_UID_TYPE_DEVICE,
+	EVENT_UID_TYPE_NAMESPACE,
+	EVENT_UID_TYPE_POOL
+};
 
-#ifdef __cplusplus
-}
-#endif
+struct event_field_metadata
+{
+	enum event_type event_type;
+	NVM_UINT32 event_code;
+	enum event_uid_type uid_type;
+	enum event_arg_type arg1_type;
+	enum event_arg_type arg2_type;
+	enum event_arg_type arg3_type;
+};
 
-#endif /* _SUPPORT_H_ */
+#define	EVENT_METADATA_HAS_TYPE_IN_ARG(metadata, arg_type, which_arg) \
+	(metadata.arg## which_arg ##_type == arg_type)
+
+struct event_field_metadata get_event_field_metadata(const enum event_type type,
+		const NVM_UINT32 code);
+
+NVM_BOOL event_field_metadata_includes_arg_type(const struct event_field_metadata *p_metadata,
+		const enum event_arg_type arg_type);
+
+#endif /* EVENT_FIELD_METADATA_H_ */

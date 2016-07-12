@@ -423,17 +423,6 @@ int nvm_unlock_device(const NVM_UID device_uid,
 			// freeze security
 			rc = freeze_security(discovery.device_handle);
 		}
-		if (rc == NVM_SUCCESS)
-		{
-			// Log an event indicating we successfully unlocked
-			NVM_EVENT_ARG uid_arg;
-			uid_to_event_arg(device_uid, uid_arg);
-			log_mgmt_event(EVENT_SEVERITY_INFO,
-					EVENT_CODE_MGMT_SECURITY_UNLOCK,
-					device_uid,
-					0, // no action required
-					uid_arg, NULL, NULL);
-		}
 		s_memset(&input_payload, sizeof (input_payload));
 
 		// clear any device context - security state has likely changed
