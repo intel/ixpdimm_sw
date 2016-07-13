@@ -145,9 +145,11 @@ dependencies:
 $(TARGETNAME) : $(SUBMODULE_OBJS) $(OBJECT_MODULE_DIR)/encrypt/encrypt.o $(INDEPENDENT_SUBMODULE_OBJS)
 	$(AR) rcs $@ $^
 
-$(SUBMODULE_DIRS) :
+$(SUBMODULE_DIRS) : $(BUILD_DIR)/$(PUBLIC_KEY_NAME)
 	$(MKDIR) $@
 	$(MKDIR) $(OBJECT_MODULE_DIR)/encrypt
+
+$(BUILD_DIR)/$(PUBLIC_KEY_NAME) :
 	$(COPY) $(SRC_DIR)/common/encrypt/$(PUBLIC_KEY_NAME) $(BUILD_DIR)
 
 # suffix rule for .c -> .o

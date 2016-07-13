@@ -1,11 +1,9 @@
 
-." -------------------- N A M E --------------------
 NAME
 **cliName** - CLI to manage **fullProductName**s
 
-." -------------------- S Y N O P S I S --------------------
 SYNOPSIS
-.B **cliName** 
+.B **cliName**
 <verb> [<options>] [<targets>] [<properties>]
 
 .P
@@ -53,7 +51,6 @@ properties
 Finally, zero or more properties defined as a key/value pair can be used to modify the target.
 .RE
 
-." -------------------- D E S C R I P T I O N --------------------
 DESCRIPTION
 
 Command line access to **abbrProductName** Management functionality is available through the **cliName** component. The NVMCLI exposes all available management features of the underlying **abbrProductName**. The Command Line Interface is an end-user, manufacturing and validation utility.

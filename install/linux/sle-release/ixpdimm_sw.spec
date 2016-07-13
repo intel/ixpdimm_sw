@@ -12,19 +12,18 @@
 Name: %{product_name}
 Version: %{build_version}
 Release: %{build_release}%{?dist}
-Summary: API for development of %{product_base_name} management utilities
+Summary: API for development of IXPDIMM management utilities
 License: BSD
 Group: Applications/System
 URL: https://01.org/ixpdimm-sw
-Source: https://github.com/01org/IXPDIMMSW/archive/v%{version}.tar.gz
+Source: https://github.com/01org/ixpdimm_sw/archive/v%{version}.tar.gz#/%{name}-%{version}.tar.gz
 Requires: libndctl6 >= 51
 
 %define  debug_package %{nil}
 
 %description
-An application program interface (API) for configuring and managing
-%{product_base_name}. Including basic inventory, capacity provisioning,
-health monitoring, and troubleshooting.
+An application program interface (API) which provides programmatic access to
+the IXPSIMM SW functionality.
 
 %package -n %dname
 Summary:        Development files for %{name}
@@ -34,7 +33,7 @@ Requires:       %{name}%{?_isa} = %{version}-%{release}
 
 %description -n %dname
 The %{dname} package contains header files for
-developing applications that use %{product_base_name}.
+developing applications that use IXPDIMM SW.
 
 %package -n %corename
 Summary:        Development files for %{name}
@@ -44,10 +43,10 @@ Requires:       %{name}%{?_isa} = %{version}-%{release}
 
 %description -n %corename
 The %{corename} package contains libraries that support
-other %{product_name} products.
+other IXPDIMM SW products.
 
 %package -n %cimlibs
-Summary:        CIM provider for %{name}
+Summary:        CIM provider library for IXPDIMM SW
 
 License:        BSD
 Group:          Development/Libraries
@@ -57,12 +56,12 @@ Requires(pre):  pywbem
 Requires(post): pywbem
 
 %description -n %cimlibs
-%{cimlibs} is a common information model (CIM) provider that exposes
-%{product_base_name} as standard CIM objects in order to plug-in to various
-common information model object managers (CIMOMS).
+A Common Information Model (CIM) provider library to expose the IXPDIMM SW
+functionality as standard CIM objects to plug-in to common information
+model object managers (CIMOMs).
 
 %package -n %monitorname
-Summary:        Daemon for monitoring the status of %{product_base_name}
+Summary:        Daemon for monitoring the status of IXPDIMM
 License:        BSD
 Group:          System Environment/Daemons
 Requires:       %{cimlibs}%{?_isa} = %{version}-%{release}
@@ -70,18 +69,17 @@ BuildRequires:  systemd-rpm-macros
 %{?systemd_requires}
 
 %description -n %monitorname
-A daemon for monitoring the health and status of %{product_base_name}
+A monitor daemon for monitoring the health and status of IXPDIMMs.
 
 %package -n %cliname
-Summary:        CLI for managment of %{product_base_name}
+Summary:        CLI for managment of IXPDIMM
 License:        BSD
 Group:          Development/Tools
 Requires:       %{cimlibs}%{?_isa} = %{version}-%{release}
 
 %description -n %cliname
-A command line interface (CLI) application for configuring and
-managing %{product_base_name}. Including commands for basic inventory,
-capacity provisioning, health monitoring, and troubleshooting.
+A Command Line Interface (CLI) application for configuring and
+managing IXPDIMMs from the command line.
 
 %prep
 %setup -q -n %{product_name}-%{version}

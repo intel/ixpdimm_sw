@@ -1,5 +1,4 @@
 
-." -------------------- O P T I O N S --------------------
 OPTIONS
 .B -all|-a
 .br
@@ -27,11 +26,10 @@ Display help for the command.
 .RS
 Change the output format. One of: "text" (default) or "nvmxml".
 .RE
-	
 
-." -------------------- E X I T  C O D E S --------------------
+
 EXIT CODES
-.TP 
+.TP
 .B 0
 The operation succeeded.
 .TP
@@ -43,9 +41,7 @@ There was not enough memory to complete the requested operation.
 .TP
 .B 3
 The command is not supported in the current context.
-  
 
-." -------------------- E X A M P L E --------------------
 EXAMPLE
 .B **cliName** show -dimm
 .RS
@@ -106,17 +102,14 @@ Show all attributes for the specified namespace
 Create a 1 GB Storage namespace on pool 12345678-1234-1234-1234-123456789012 with a block size of 512
 .RE
 
-." -------------------- F I L E S --------------------
 FILES
 /usr/share/nvdimm-mgmt/apss.dat
 .br
 /usr/share/nvdimm-mgmt/public.rev0.pem
 
 
-." -------------------- S E E  A L S O --------------------
 SEE ALSO
 **serviceName** (8)
 
-." -------------------- A U T H O R --------------------
 AUTHOR
 Created by Intel Corporation.

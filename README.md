@@ -2,15 +2,15 @@
 
 ixpdimm_sw contains the following interface components:
 
-An Application Program Interface (API) library which provides programatic access to 
+An Application Program Interface (API) library which provides programatic access to
 the IXPDIMM SW functionality.
 
 A Command Line Interface (CLI) application for configuring and managing IXPDIMMs from the
 command line.
 
 A Common Information Model (CIM) provider library to expose the
-IXPDIMM SW functionality as standard CIM objects to plug-in to 
-common information model object managers (CIMOMs). 
+IXPDIMM SW functionality as standard CIM objects to plug-in to
+common information model object managers (CIMOMs).
 
 A monitor daemon/system service for monitoring the health and status of IXPDIMMs.
 
@@ -60,11 +60,11 @@ Kernel 4.3 or newer is suggested, a prebuilt fedora 4.3 kernel can be found at
 
 https://kojipkgs.fedoraproject.org/packages/kernel/4.3.0/1.fc24/x86_64/
 
-libndctl is required to build, an rpm can be found at. 
+libndctl is required to build, an rpm can be found at.
 
 https://copr.fedoraproject.org/coprs/djbw/ndctl/
 
-and the source can be found at 
+and the source can be found at
 
 https://github.com/pmem/ndctl
 

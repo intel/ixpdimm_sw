@@ -10,6 +10,9 @@ Group: Applications/System
 URL: https://01.org/ixpdimm-sw
 Source: https://github.com/01org/ixpdimm_sw/archive/v%{version}.tar.gz#/%{name}-%{version}.tar.gz
 Requires: ndctl-libs >= 51
+Requires: libinvm-i18n >= 1.0.0.1015
+Requires: libinvm-cli >= 1.0.0.1095
+Requires: libinvm-cim >= 1.0.0.1040
 
 BuildRequires: pkgconfig(libctemplate)
 BuildRequires: pkgconfig(libkmod)
@@ -53,9 +56,9 @@ Requires(pre):  pywbem
 Requires(post): pywbem
 
 %description -n libixpdimm-cim
-A Common Information Model (CIM) provider library to expose the IXPDIMM SW 
+A Common Information Model (CIM) provider library to expose the IXPDIMM SW
 functionality as standard CIM objects to plug-in to common information
-model object managers (CIMOMs). 
+model object managers (CIMOMs).
 
 %package -n ixpdimm-monitor
 Summary:        Daemon for monitoring the status of IXPDIMM
@@ -81,7 +84,7 @@ managing IXPDIMMs from the command line.
 %setup -q -n %{name}-%{version}
 
 %build
-make BUILDNUM=%{build_version} RELEASE=1 DATADIR=%{_sharedstatedir} LINUX_PRODUCT_NAME=%{name}
+make BUILDNUM=%{build_version} RELEASE=1 DATADIR=%{_sharedstatedir} LINUX_PRODUCT_NAME=%{name} CFLAGS_EXTERNAL="%{?optflags}" %{?_smp_mflags}
 
 %install
 make install RELEASE=1 RPM_ROOT=%{buildroot} LIB_DIR=%{_libdir} INCLUDE_DIR=%{_includedir} BIN_DIR=%{_bindir} DATADIR=%{_sharedstatedir} UNIT_DIR=%{_unitdir} LINUX_PRODUCT_NAME=%{name} SYSCONF_DIR=%{_sysconfdir} MANPAGE_DIR=%{_mandir}
@@ -113,7 +116,7 @@ then
                 $CIMMOF -uc -n$ns %{_sharedstatedir}/%{name}/Pegasus/mof/pegasus_register.mof &> /dev/null
                 $CIMMOF -uc -n$ns %{_sharedstatedir}/%{name}/Pegasus/mof/profile_registration.mof &> /dev/null
                 break
-           fi 
+           fi
        done
        $CIMMOF -aE -uc -n root/intelwbem %{_sharedstatedir}/%{name}/Pegasus/mof/intelwbem.mof &> /dev/null
 fi
@@ -141,7 +144,8 @@ fi
 /bin/systemctl --no-reload enable ixpdimm-monitor.service &> /dev/null || :
 /bin/systemctl start ixpdimm-monitor.service &> /dev/null || :
 
-%post -p /sbin/ldconfig
+%post -n ixpdimm_sw -p /sbin/ldconfig
+%postun -n ixpdimm_sw -p /sbin/ldconfig
 
 %postun -n libixpdimm-core -p /sbin/ldconfig
 %postun -n libixpdimm-cim -p /sbin/ldconfig
@@ -236,12 +240,14 @@ fi
 
 %files -n libixpdimm-core
 %doc README.md
-%{_libdir}/libixpdimm-core.so*
+%{_libdir}/libixpdimm-core.so.01
+%{_libdir}/libixpdimm-core.so.01.00.0
 %license LICENSE
 
 %files -n libixpdimm-cim
 %doc README.md
-%{_libdir}/cmpi/libixpdimm-cim.so*
+%{_libdir}/cmpi/libixpdimm-cim.so.01
+%{_libdir}/cmpi/libixpdimm-cim.so.01.00.0
 %dir %{_sharedstatedir}/%{name}/Pegasus
 %dir %{_sharedstatedir}/%{name}/Pegasus/mof
 %dir %{_sharedstatedir}/%{name}/sfcb
@@ -259,10 +265,11 @@ fi
 
 %files -n ixpdimm-cli
 %{_bindir}/ixpdimm-cli
-%{_libdir}/libixpdimm-cli.so*
+%{_libdir}/libixpdimm-cli.so.01
+%{_libdir}/libixpdimm-cli.so.01.00.0
 %license LICENSE
 %{_mandir}/man8/ixpdimm-cli*
 
 %changelog
-* Thu Dec 24 2015 Nicholas Moulin <nicholas.w.moulin@intel.com> - 01.00.00.2094-1
+* Thu Dec 24 2015 Nicholas Moulin <nicholas.w.moulin@intel.com> - 01.00.00.2095-1
 - Initial rpm release
