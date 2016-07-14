@@ -1351,10 +1351,7 @@ int nvm_update_device_fw(const NVM_UID device_uid, const NVM_PATH path,
 				cmd.large_input_payload_size = fw_size;
 				cmd.large_input_payload = p_fw;
 
-				printf("[%s:%d]RYON> sending ioctl\n", __FILE__, __LINE__);
-
 				rc = ioctl_passthrough_cmd(&cmd);
-				printf("[%s:%d]RYON> rc: %d\n", __FILE__, __LINE__, rc);
 #else
 				struct fw_cmd cmd;
 				memset(&cmd, 0, sizeof (cmd));
@@ -1535,26 +1532,7 @@ int nvm_examine_device_fw(const NVM_UID device_uid, const NVM_PATH path, const N
 			else
 			{
 				fwImageHeader *p_header = (fwImageHeader *)p_buf;
-				printf("[%s:%d]RYON> Buffer Length: %d\n", __FILE__, __LINE__, buf_len);
-printf("[%s:%d]RYON> Header ...\n", __FILE__, __LINE__);
-				printf("\tmoduleType: 0x%x\n", p_header->moduleType);
-				printf("\theaderLen: 0x%x\n", p_header->headerLen);
-				printf("\theaderVersion: 0x%x\n", p_header->headerVersion);
-				printf("\tmoduleID: 0x%x\n", p_header->moduleID);
-				printf("\tmoduleVendor: 0x%x\n", p_header->moduleVendor);
-				printf("\tdate: 0x%x\n", p_header->date);
-				printf("\tsize: 0x%x\n", p_header->size);
-				printf("\tImageType: 0x%x\n", p_header->ImageType);
-				printf("\tfwApiVersion: 0x%x\n", p_header->fwApiVersion);
 
-
-//				for (int i = 0; i < 128; i++)
-//				{
-//					if (p_buf[i] > 0)
-//					{
-//						printf("[%s:%d]RYON> %d: 0x%x\n", __FILE__, __LINE__, i, p_buf[i]);
-//					}
-//				}
 				// check some of the header values
 				if (p_header->moduleType != FW_HEADER_MODULETYPE ||
 						p_header->moduleVendor != FW_HEADER_MODULEVENDOR)

@@ -530,8 +530,6 @@ int get_pcat_from_db(PersistentStore *p_db,
 							PCAT_CHECKSUM_OFFSET);
 				}
 			}
-
-			rc = NVM_SUCCESS;
 		}
 	}
 

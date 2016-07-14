@@ -443,7 +443,7 @@ wbem::framework::UINT64 wbem::server::SystemCapabilitiesFactory::getAppDirectAli
 	NVM_UINT64 alignment = 0;
 	if (nvmCaps.nvm_features.app_direct_mode)
 	{
-		alignment = 1 << nvmCaps.platform_capabilities.app_direct_mode.interleave_alignment_size; // 2^n
+		alignment = (NVM_UINT64)1 << nvmCaps.platform_capabilities.app_direct_mode.interleave_alignment_size; // 2^n
 	}
 	return alignment;
 }

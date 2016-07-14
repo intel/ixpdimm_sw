@@ -676,6 +676,7 @@ void check_goal_sku_violations(NVM_UINT32 *p_results,
 	{
 		// convert config input table into config_goal
 		struct config_goal goal;
+		memset(&goal, 0, sizeof (goal));
 		// bad config goals are captured elsewhere in this diagnostic,
 		// just proceed with SKU violation check if valid
 		if (config_input_table_to_config_goal(p_device->uid,

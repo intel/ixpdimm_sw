@@ -88,7 +88,6 @@ int get_sensor_thresholds(int device_handle, struct sensor_thresholds *p_thresho
 			fw_convert_fw_celsius_to_float(alarm_thresholds.media_temperature);
 		p_thresholds->alarm_controller_temp_threshold =
 			fw_convert_fw_celsius_to_float(alarm_thresholds.controller_temperature);
-		alarm_thresholds.enable = alarm_thresholds.enable;
 		p_thresholds->alarm_spare_block_threshold = alarm_thresholds.spare;
 		p_thresholds->is_media_alarm_threshold_enabled = (NVM_BOOL)
 			(alarm_thresholds.enable & THRESHOLD_ENABLED_MEDIA_TEMP ? 1 : 0);

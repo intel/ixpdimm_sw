@@ -72,11 +72,6 @@ class NVM_API FWEventLogFactory  : public framework_interface::NvmInstanceFactor
 		framework::instance_names_t* getInstanceNames() throw (framework::Exception);
 
 		/*!
-		 * mgmt lib interface
-		 */
-		PersistentStore *(*libStoreProvider)();
-
-		/*!
 		 * Provider for nvm_get_fw_log_level
 		 * @param[in] device_uid
 		 * 		The device identifier. @n

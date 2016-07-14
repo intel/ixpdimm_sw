@@ -295,6 +295,7 @@ std::string wbem::mem_config::InterleaveSet::getInterleaveFormatString(
 		case INTERLEAVE_WAYS_16:
 		case INTERLEAVE_WAYS_24:
 			addSizes = true;
+			// fall through
 		case INTERLEAVE_WAYS_1:
 			// x1 doesn't add interleave sizes
 			formatStr << "x" << p_format->ways;

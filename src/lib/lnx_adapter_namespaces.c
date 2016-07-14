@@ -110,6 +110,7 @@ int get_namespaces(const NVM_UINT32 count,
 	}
 	else if ((rc = ndctl_new(&ctx)) >= 0)
 	{
+		rc = NVM_SUCCESS;
 		memset(p_namespaces, 0, sizeof (struct nvm_namespace_discovery) * count);
 
 		struct ndctl_bus *bus;
@@ -146,7 +147,10 @@ int get_namespaces(const NVM_UINT32 count,
 				}
 			}
 		}
-		rc = namespace_index;
+		if (rc == NVM_SUCCESS)
+		{
+			rc = namespace_index;
+		}
 		ndctl_unref(ctx);
 	}
 	else

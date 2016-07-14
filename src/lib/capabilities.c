@@ -392,16 +392,16 @@ int apply_bios_capabilities(struct nvm_capabilities *p_capabilities)
 						offset += p_header->length;
 					}
 				}
+
+				// translate BIOS supported capabilities into nvm features
+				platform_capabilities_to_nvm_features(
+						&p_capabilities->platform_capabilities,
+						&p_capabilities->nvm_features);
 			}
 			// clean up
 			free(p_pcat);
 		}
 	}
-
-	// translate BIOS supported capabilities into nvm features
-	platform_capabilities_to_nvm_features(
-			&p_capabilities->platform_capabilities,
-			&p_capabilities->nvm_features);
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;

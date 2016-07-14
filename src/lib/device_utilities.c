@@ -170,7 +170,7 @@ int lookup_dev_uid(const NVM_UID dev_uid, struct device_discovery *p_dev)
 	}
 	else
 	{
-		struct device_discovery *p_devices;
+		struct device_discovery *p_devices = NULL;
 		int dev_count = get_devices(&p_devices);
 		if (dev_count < 0)
 		{
@@ -190,6 +190,9 @@ int lookup_dev_uid(const NVM_UID dev_uid, struct device_discovery *p_dev)
 					break;
 				}
 			}
+		}
+		if (p_devices)
+		{
 			free(p_devices);
 		}
 	}
@@ -203,7 +206,7 @@ int lookup_dev_uid(const NVM_UID dev_uid, struct device_discovery *p_dev)
 int lookup_dev_handle(const NVM_NFIT_DEVICE_HANDLE device_handle, struct device_discovery *p_dev)
 {
 	int rc = NVM_ERR_BADDEVICE;
-	struct device_discovery *p_devices;
+	struct device_discovery *p_devices = NULL;
 	int dev_count = get_devices(&p_devices);
 	if (dev_count < 0)
 	{
@@ -223,6 +226,9 @@ int lookup_dev_handle(const NVM_NFIT_DEVICE_HANDLE device_handle, struct device_
 				break;
 			}
 		}
+	}
+	if (p_devices)
+	{
 		free(p_devices);
 	}
 	return rc;

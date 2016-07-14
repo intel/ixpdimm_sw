@@ -82,8 +82,8 @@ int validate_config_goal_alignment(const struct config_goal *p_goal,
 	if ((mem_alignment_exp < 64) && (ad_alignment_exp < 64))
 		// alignments will fit in 64 bits
 	{
-		NVM_UINT64 memory_alignment = (1 << mem_alignment_exp); // bytes
-		NVM_UINT64 app_direct_alignment = (1 << ad_alignment_exp); // bytes
+		NVM_UINT64 memory_alignment = ((NVM_UINT64)1 << mem_alignment_exp); // bytes
+		NVM_UINT64 app_direct_alignment = ((NVM_UINT64)1 << ad_alignment_exp); // bytes
 
 		// memory size is OK
 		rc = validate_size_alignment(p_goal->memory_size, memory_alignment);

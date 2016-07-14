@@ -62,7 +62,7 @@ int create_trunc_file(const COMMON_PATH path, const COMMON_SIZE path_len)
 	int oflag = O_RDWR | O_CREAT | O_EXCL | O_TRUNC;
 	mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
 	int file_des = open(file_path, oflag, mode);
-	if (file_des > 0)
+	if (file_des >= 0)
 	{
 		close(file_des);
 		rc = 1;
@@ -86,7 +86,7 @@ int create_file(const COMMON_PATH path, const COMMON_SIZE path_len)
 	int oflag = O_RDWR | O_CREAT | O_EXCL;
 	mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
 	int file_des = open(file_path, oflag, mode);
-	if (file_des > 0)
+	if (file_des >= 0)
 	{
 		close(file_des);
 		rc = 1;
@@ -167,11 +167,17 @@ int copy_file(const COMMON_PATH source, const COMMON_SIZE source_len,
 		rc = 0;
 	}
 
-	close(fd_in);
+	if (fd_in >= 0)
+	{
+		close(fd_in);
+	}
 
-	// set the permissions on the copy
-	fchmod(fd_out, S_IROTH | S_IRGRP | S_IWUSR | S_IRUSR);
-	close(fd_out);
+	if (fd_out >= 0)
+	{
+		// set the permissions on the copy
+		fchmod(fd_out, S_IROTH | S_IRGRP | S_IWUSR | S_IRUSR);
+		close(fd_out);
+	}
 
 	return rc;
 }

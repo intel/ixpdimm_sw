@@ -727,7 +727,7 @@ NVM_UINT64 wbem::memory::PersistentMemoryFactory::getAppDirectAlignment() throw 
 
 	// Alignment is provided as an exponent n - 2^n bytes
 	NVM_UINT16 alignmentExponent = systemCapabilities.platform_capabilities.app_direct_mode.interleave_alignment_size;
-	NVM_UINT64 alignment = 1 << alignmentExponent;
+	NVM_UINT64 alignment = (NVM_UINT64)1 << alignmentExponent;
 	if (alignment == 0) // something went wrong
 	{
 		COMMON_LOG_ERROR("App Direct alignment from capabilities was 0");
