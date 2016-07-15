@@ -254,7 +254,7 @@ int apply_bios_capabilities(struct nvm_capabilities *p_capabilities)
 	}
 	else
 	{
-		struct bios_capabilities *p_pcat = calloc(1, PCAT_MAX_LEN);
+		struct bios_capabilities *p_pcat = calloc(1, sizeof (struct bios_capabilities));
 		if (!p_pcat)
 		{
 			COMMON_LOG_ERROR("Unable to allocate memory for the PCAT structure");
@@ -271,7 +271,7 @@ int apply_bios_capabilities(struct nvm_capabilities *p_capabilities)
 				{
 					// iterate over all the extension tables
 					NVM_UINT32 offset = PCAT_TABLE_SIZE;
-					while (offset < p_pcat->length)
+					while (offset < p_pcat->header.length)
 					{
 						struct pcat_extension_table_header *p_header =
 								(struct pcat_extension_table_header *)
@@ -279,7 +279,7 @@ int apply_bios_capabilities(struct nvm_capabilities *p_capabilities)
 
 						// check the length for validity
 						if (p_header->length == 0 ||
-								(p_header->length + offset) > p_pcat->length)
+								(p_header->length + offset) > p_pcat->header.length)
 						{
 							COMMON_LOG_ERROR_F("Extension table length %d invalid",
 									p_header->length);

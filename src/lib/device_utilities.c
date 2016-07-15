@@ -191,10 +191,7 @@ int lookup_dev_uid(const NVM_UID dev_uid, struct device_discovery *p_dev)
 				}
 			}
 		}
-		if (p_devices)
-		{
-			free(p_devices);
-		}
+		free(p_devices);
 	}
 	return rc;
 }
@@ -227,10 +224,7 @@ int lookup_dev_handle(const NVM_NFIT_DEVICE_HANDLE device_handle, struct device_
 			}
 		}
 	}
-	if (p_devices)
-	{
-		free(p_devices);
-	}
+	free(p_devices);
 	return rc;
 }
 

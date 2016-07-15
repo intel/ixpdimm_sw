@@ -307,10 +307,10 @@ int get_platform_capabilities(struct bios_capabilities *p_capabilities,
 		rc = get_acpi_table(PCAT_TABLE_SIGNATURE, (NVM_UINT8 *)p_capabilities, cap_len);
 
 		COMMON_LOG_DEBUG_F("Capabilities: (expected length=%u)", cap_len);
-		COMMON_LOG_DEBUG_F("Signature: %.4s", p_capabilities->signature);
-		COMMON_LOG_DEBUG_F("Length: %u", p_capabilities->length);
-		COMMON_LOG_DEBUG_F("Revision: %hhu", p_capabilities->revision);
-		COMMON_LOG_DEBUG_F("Checksum: %hhu", p_capabilities->checksum);
+		COMMON_LOG_DEBUG_F("Signature: %.4s", p_capabilities->header.signature);
+		COMMON_LOG_DEBUG_F("Length: %u", p_capabilities->header.length);
+		COMMON_LOG_DEBUG_F("Revision: %hhu", p_capabilities->header.revision);
+		COMMON_LOG_DEBUG_F("Checksum: %hhu", p_capabilities->header.checksum);
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);

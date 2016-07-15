@@ -192,17 +192,17 @@ int get_platform_capabilities(struct bios_capabilities *p_capabilities,
 				rc = linux_err_to_nvm_lib_err(errno);
 				COMMON_LOG_ERROR("Error reading the PCAT Header");
 			}
-			else if (cap_len < p_capabilities->length)
+			else if (cap_len < p_capabilities->header.length)
 			{
 				COMMON_LOG_ERROR_F(
 						"cap_len=%u not large enough for capabilities table of size=%llu",
-						cap_len, p_capabilities->length);
+						cap_len, p_capabilities->header.length);
 				rc = NVM_ERR_BADSIZE;
 			}
 			else
 			{
 				int tbl_bytes_read = read(fd, (unsigned char *)p_capabilities + PCAT_TABLE_SIZE,
-					p_capabilities->length);
+					p_capabilities->header.length);
 				if (tbl_bytes_read < 0)
 				{
 					rc = linux_err_to_nvm_lib_err(errno);

@@ -305,7 +305,7 @@ int support_store_platform_capabilities(PersistentStore *p_store, int history_id
 	int rc = NVM_SUCCESS;
 
 	// retrieve current pcat table
-	struct bios_capabilities *p_pcat = calloc(1, PCAT_MAX_LEN);
+	struct bios_capabilities *p_pcat = calloc(1, sizeof (struct bios_capabilities));
 	if (!p_pcat)
 	{
 		COMMON_LOG_ERROR("Unable to allocate memory for the PCAT structure");

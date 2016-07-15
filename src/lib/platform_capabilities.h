@@ -48,7 +48,7 @@ extern "C"
 #define	PCAT_OEM_TABLE_ID_LEN	8
 #define	PCAT_CREATOR_ID_LEN	4
 #define	PCAT_TABLE_SIGNATURE	"PCAT"
-#define	PCAT_TABLE_SIZE	sizeof (struct bios_capabilities) // size without extension tables
+#define	PCAT_TABLE_SIZE	sizeof (struct bios_capabilities_header) // size without extension tables
 #define	PCAT_CHECKSUM_OFFSET	9 // checksum offset
 #define	PLATFORM_INFO_TABLE_SIZE	sizeof (struct platform_capabilities_ext_table)
 #define	MEMORY_INTERLEAVE_TABLE_SIZE	sizeof (struct memory_interleave_capabilities_ext_table)
@@ -424,11 +424,10 @@ struct mgmt_attributes_ext_table
 } __attribute__((packed));
 
 /*
- * BIOS PCAT Table
+ * BIOS PCAT Table Header
  */
-struct bios_capabilities
+struct bios_capabilities_header
 {
-	/* header */
 	char signature[PCAT_SIGNATURE_LEN]; /* 'PCAT' is Signature for this table */
 	NVM_UINT32 length; /* Length in bytes for entire table */
 	NVM_UINT8 revision; /* 1 */
@@ -439,9 +438,16 @@ struct bios_capabilities
 	NVM_UINT8 creator_id[PCAT_CREATOR_ID_LEN]; /* Vendor ID of utility that created the table */
 	NVM_UINT32 creator_revision; /* Revision of utility that created the table */
 	NVM_UINT8 reserved[4]; /* Reserved */
+}__attribute__((packed));
 
+/*
+ * BIOS PCAT Table
+ */
+struct bios_capabilities
+{
+	struct bios_capabilities_header header;
 	/* Variable extension Tables */
-	NVM_UINT8 p_ext_tables[0];
+	NVM_UINT8 p_ext_tables[PCAT_MAX_LEN - sizeof (struct bios_capabilities_header)];
 
 }__attribute__((packed));
 

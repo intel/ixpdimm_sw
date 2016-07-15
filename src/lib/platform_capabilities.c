@@ -107,19 +107,19 @@ int update_pcat_in_db(PersistentStore *p_db,
 			// write header
 			struct db_platform_capabilities db_cap;
 			memset(&db_cap, 0, sizeof (db_cap));
-			memmove(db_cap.signature, p_capabilities->signature,
+			memmove(db_cap.signature, p_capabilities->header.signature,
 					PLATFORM_CAPABILITIES_SIGNATURE_LEN);
-			db_cap.length = p_capabilities->length;
-			db_cap.revision = p_capabilities->revision;
-			db_cap.checksum = p_capabilities->checksum;
-			memmove(db_cap.oem_id, p_capabilities->oem_id,
+			db_cap.length = p_capabilities->header.length;
+			db_cap.revision = p_capabilities->header.revision;
+			db_cap.checksum = p_capabilities->header.checksum;
+			memmove(db_cap.oem_id, p_capabilities->header.oem_id,
 					PLATFORM_CAPABILITIES_OEM_ID_LEN);
-			memmove(db_cap.oem_table_id, p_capabilities->oem_table_id,
+			memmove(db_cap.oem_table_id, p_capabilities->header.oem_table_id,
 					PLATFORM_CAPABILITIES_OEM_TABLE_ID_LEN);
-			db_cap.oem_revision = p_capabilities->oem_revision;
-			memmove(db_cap.creator_id, p_capabilities->creator_id,
+			db_cap.oem_revision = p_capabilities->header.oem_revision;
+			memmove(db_cap.creator_id, p_capabilities->header.creator_id,
 					PLATFORM_CAPABILITIES_CREATOR_ID_COUNT);
-			db_cap.creator_revision = p_capabilities->creator_revision;
+			db_cap.creator_revision = p_capabilities->header.creator_revision;
 
 			int db_rc;
 			if (history_id)
@@ -141,7 +141,7 @@ int update_pcat_in_db(PersistentStore *p_db,
 			{
 				NVM_UINT32 offset = PCAT_TABLE_SIZE;
 				// write extension tables
-				while (offset < p_capabilities->length)
+				while (offset < p_capabilities->header.length)
 				{
 					struct pcat_extension_table_header *p_header =
 							(struct pcat_extension_table_header *)
@@ -149,7 +149,7 @@ int update_pcat_in_db(PersistentStore *p_db,
 
 					// check the length for validity
 					if (p_header->length == 0 ||
-							(p_header->length + offset) > p_capabilities->length)
+							(p_header->length + offset) > p_capabilities->header.length)
 					{
 						COMMON_LOG_ERROR_F("Extension table length %d invalid", p_header->length);
 						rc = NVM_ERR_BADPCAT;
@@ -493,18 +493,18 @@ int get_pcat_from_db(PersistentStore *p_db,
 		}
 		else
 		{
-			memmove(p_capabilities->signature, db_cap.signature,
+			memmove(p_capabilities->header.signature, db_cap.signature,
 					PLATFORM_CAPABILITIES_SIGNATURE_LEN);
-			p_capabilities->length = db_cap.length; // calculated
-			p_capabilities->revision = db_cap.revision;
-			p_capabilities->checksum = db_cap.checksum; // calculated
-			memmove(p_capabilities->oem_id, db_cap.oem_id, PLATFORM_CAPABILITIES_OEM_ID_LEN);
-			memmove(p_capabilities->oem_table_id, db_cap.oem_table_id,
+			p_capabilities->header.length = db_cap.length; // calculated
+			p_capabilities->header.revision = db_cap.revision;
+			p_capabilities->header.checksum = db_cap.checksum; // calculated
+			memmove(p_capabilities->header.oem_id, db_cap.oem_id, PLATFORM_CAPABILITIES_OEM_ID_LEN);
+			memmove(p_capabilities->header.oem_table_id, db_cap.oem_table_id,
 					PLATFORM_CAPABILITIES_OEM_TABLE_ID_LEN);
-			p_capabilities->oem_revision = db_cap.oem_revision;
-			memmove(p_capabilities->creator_id, db_cap.creator_id,
+			p_capabilities->header.oem_revision = db_cap.oem_revision;
+			memmove(p_capabilities->header.creator_id, db_cap.creator_id,
 					PLATFORM_CAPABILITIES_CREATOR_ID_COUNT);
-			p_capabilities->creator_revision = db_cap.creator_revision;
+			p_capabilities->header.creator_revision = db_cap.creator_revision;
 
 
 			// variable length extension tables
@@ -522,11 +522,11 @@ int get_pcat_from_db(PersistentStore *p_db,
 							p_capabilities, &offset, cap_len);
 
 					// set the length
-					p_capabilities->length = offset;
+					p_capabilities->header.length = offset;
 
 					// generate a valid checksum
 					generate_checksum((NVM_UINT8*)p_capabilities,
-							p_capabilities->length,
+							p_capabilities->header.length,
 							PCAT_CHECKSUM_OFFSET);
 				}
 			}
@@ -543,24 +543,24 @@ int check_pcat(const struct bios_capabilities *p_capabilities)
 	int rc = NVM_SUCCESS;
 
 	// check overall table checksum
-	rc = verify_checksum((NVM_UINT8*)p_capabilities, p_capabilities->length);
+	rc = verify_checksum((NVM_UINT8*)p_capabilities, p_capabilities->header.length);
 	if (rc != NVM_SUCCESS)
 	{
 		COMMON_LOG_ERROR("PCAT checksum failed");
 		rc = NVM_ERR_BADPCAT;
 	}
 	// check overall table length is at least as big as the header
-	else if (p_capabilities->length < PCAT_TABLE_SIZE)
+	else if (p_capabilities->header.length < PCAT_TABLE_SIZE)
 	{
 		COMMON_LOG_ERROR("PCAT size is too small");
 		rc = NVM_ERR_BADPCAT;
 	}
 	// check signature
 	else if (strncmp(PCAT_TABLE_SIGNATURE,
-					p_capabilities->signature, PCAT_SIGNATURE_LEN) != 0)
+					p_capabilities->header.signature, PCAT_SIGNATURE_LEN) != 0)
 	{
 		COMMON_LOG_ERROR_F("PCAT signature mismatch. Expected: %s, actual: %s",
-				PCAT_TABLE_SIGNATURE, p_capabilities->signature);
+				PCAT_TABLE_SIGNATURE, p_capabilities->header.signature);
 		rc = NVM_ERR_BADPCAT;
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -580,7 +580,7 @@ NVM_UINT32 get_offset_of_ext_table(const struct bios_capabilities *p_capabilitie
 	if (p_capabilities)
 	{
 		// write extension tables
-		while (offset < p_capabilities->length && !found)
+		while (offset < p_capabilities->header.length && !found)
 		{
 			struct pcat_extension_table_header *p_header =
 					(struct pcat_extension_table_header *)
@@ -588,7 +588,7 @@ NVM_UINT32 get_offset_of_ext_table(const struct bios_capabilities *p_capabilitie
 
 			// check the length for validity
 			if (p_header->length == 0 ||
-					(p_header->length + offset) > p_capabilities->length)
+					(p_header->length + offset) > p_capabilities->header.length)
 			{
 				COMMON_LOG_ERROR_F("Extension table length %d invalid", p_header->length);
 				rc = NVM_ERR_BADPCAT;
