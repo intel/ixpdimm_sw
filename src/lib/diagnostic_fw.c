@@ -205,17 +205,7 @@ int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 				char default_time_drift_str[10];
 				s_snprintf(default_time_drift_str, 10, "%u", default_time_drift);
 
-				// get default current TDP power, peak power budget, avg power budget min/max's
-				int default_tdp_power_min_config = 0;
-				int default_tdp_power_max_config = 0;
-				get_config_value_int(SQL_KEY_DEFAULT_TDP_POW_MIN, &default_tdp_power_min_config);
-				get_config_value_int(SQL_KEY_DEFAULT_TDP_POW_MAX, &default_tdp_power_max_config);
-				char expected_tdp_power_range_str[NVM_EVENT_ARG_LEN];
-				s_snprintf(expected_tdp_power_range_str, NVM_EVENT_ARG_LEN, "[%d - %d] W",
-						default_tdp_power_min_config, default_tdp_power_max_config);
-				NVM_UINT64 default_tdp_power_min = default_tdp_power_min_config;
-				NVM_UINT64 default_tdp_power_max = default_tdp_power_max_config;
-
+				// get default peak power budget, avg power budget min/max's
 				int default_peak_power_budget_min_config = 0;
 				int default_peak_power_budget_max_config = 0;
 				get_config_value_int(SQL_KEY_DEFAULT_PEAK_POW_BUDGET_MIN,
@@ -287,7 +277,7 @@ int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 					NVM_UINT64 actual_temp_threshold =
 						sensors[SENSOR_CONTROLLER_TEMPERATURE].settings.upper_noncritical_threshold;
 					if (!diag_check_real(p_diagnostic,
-							DIAG_THRESHOLD_FW_CONTROLLER_TEMP,
+							DIAG_THRESHOLD_FW_CORE_TEMP,
 							nvm_decode_temperature(actual_temp_threshold),
 							&max_temp_threshold_config, EQUALITY_LESSTHANEQUAL))
 					{
@@ -402,27 +392,6 @@ int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 							char field_str[NVM_EVENT_ARG_LEN];
 							if (power_payload.enabled)
 							{
-								if ((diag_check(p_diagnostic,
-										DIAG_THRESHOLD_FW_TDP_POW_MIN,
-										power_payload.tdp, &default_tdp_power_min,
-										EQUALITY_LESSTHAN)) ||
-										(diag_check(p_diagnostic,
-										DIAG_THRESHOLD_FW_TDP_POW_MAX,
-										power_payload.tdp, &default_tdp_power_max,
-										EQUALITY_GREATHERTHAN)))
-								{
-									s_snprintf(field_str, NVM_EVENT_ARG_LEN,
-											"%s: %hhu", "TDP power limit",
-											power_payload.tdp);
-									store_event_by_parts(
-											EVENT_TYPE_DIAG_FW_CONSISTENCY,
-											EVENT_SEVERITY_WARN,
-											EVENT_CODE_DIAG_FW_BAD_POWER_MGMT_POLICY,
-											dimms[current_dev].uid, 0, uid_str,
-											field_str, expected_tdp_power_range_str,
-											DIAGNOSTIC_RESULT_FAILED);
-									(*p_results)++;
-								}
 
 								if ((diag_check(p_diagnostic,
 										DIAG_THRESHOLD_FW_AVG_POW_BUDGET_MIN,

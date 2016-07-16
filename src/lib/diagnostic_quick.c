@@ -328,7 +328,7 @@ int check_dimm_alarm_thresholds(const NVM_UID device_uid,
 		// check media temperature to alarm threshold
 		NVM_UINT64 media_temp_threshold = thresholds.media_temperature;
 		if (p_dimm_smart->validation_flags.parts.media_temperature_field &&
-				!diag_check(p_diagnostic, DIAG_THRESHOLD_QUICK_TEMP,
+				!diag_check(p_diagnostic, DIAG_THRESHOLD_QUICK_MEDIA_TEMP,
 						p_dimm_smart->media_temperature,
 						&media_temp_threshold, EQUALITY_LESSTHAN))
 		{
@@ -354,7 +354,7 @@ int check_dimm_alarm_thresholds(const NVM_UID device_uid,
 		// check controller temperature to alarm threshold
 		NVM_UINT64 controller_temp_threshold = thresholds.controller_temperature;
 		if (p_dimm_smart->validation_flags.parts.sizeof_vendor_data_field &&
-				!diag_check(p_diagnostic, DIAG_THRESHOLD_QUICK_TEMP,
+				!diag_check(p_diagnostic, DIAG_THRESHOLD_QUICK_CONTROLLER_TEMP,
 						p_dimm_smart->controller_temperature,
 						&controller_temp_threshold, EQUALITY_LESSTHAN))
 		{
