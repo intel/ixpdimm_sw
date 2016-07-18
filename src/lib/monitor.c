@@ -416,7 +416,10 @@ static int get_nvm_event_id()
 	PersistentStore *p_store = get_lib_store();
 	if (p_store)
 	{
-		run_scalar_sql(p_store, "select max(id) from event", &event_id);
+		if (run_scalar_sql(p_store, "select max(id) from event", &event_id) != DB_SUCCESS)
+		{
+			event_id = 0;
+		}
 	}
 	COMMON_LOG_EXIT_RETURN_I(event_id);
 	return event_id;

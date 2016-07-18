@@ -109,8 +109,10 @@ int create_dir(const COMMON_PATH path, const COMMON_SIZE path_len)
 	struct stat st = {0};
 	if (stat(dir_path, &st) == -1)
 	{
-		mkdir(dir_path, 0700);
-		rc = 1;
+		if (mkdir(dir_path, 0700) == 0)
+		{
+			rc = 1;
+		}
 	}
 
 	return rc;
@@ -142,22 +144,28 @@ int copy_file(const COMMON_PATH source, const COMMON_SIZE source_len,
 	if ((fd_in != -1) && (fd_out != -1))
 	{
 		struct stat stat_buf;
-		fstat(fd_in, &stat_buf);
-		while (copied < stat_buf.st_size && rc != -1)
+		if (fstat(fd_in, &stat_buf) == 0)
 		{
-			bytestocopy = (stat_buf.st_size > 512) ? 512 : stat_buf.st_size;
-			rc = (read(fd_in, buf, bytestocopy) != -1);
-			if (rc)
+			while (copied < stat_buf.st_size && rc != -1)
 			{
-				rc = (write(fd_out, buf, bytestocopy) != -1);
+				bytestocopy = (stat_buf.st_size > 512) ? 512 : stat_buf.st_size;
+				rc = (read(fd_in, buf, bytestocopy) != -1);
+				if (rc)
+				{
+					rc = (write(fd_out, buf, bytestocopy) != -1);
+				}
+				if (rc)
+				{
+					copied += bytestocopy;
+				}
 			}
-			if (rc)
+
+			if (copied != stat_buf.st_size)
 			{
-				copied += bytestocopy;
+				rc = 0;
 			}
 		}
-
-		if (copied != stat_buf.st_size)
+		else
 		{
 			rc = 0;
 		}

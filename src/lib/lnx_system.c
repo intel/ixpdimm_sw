@@ -556,9 +556,11 @@ int get_smbios_entry_point_from_offset(int mem_fd, size_t entry_point_offset,
 		p_data = (NVM_UINT8 *)&(p_entry_point->data.entry_point_32_bit);
 	}
 
-	lseek(mem_fd, entry_point_offset, SEEK_SET);
-	ssize_t result = read(mem_fd, p_data, size_to_read);
-	if (result <= 0)
+	if (lseek(mem_fd, entry_point_offset, SEEK_SET) < 0)
+	{
+		rc = NVM_ERR_UNKNOWN;
+	}
+	else if (read(mem_fd, p_data, size_to_read) <= 0)
 	{
 		rc = NVM_ERR_UNKNOWN;
 	}
@@ -609,36 +611,37 @@ int get_smbios_entry_point(int mem_fd, struct smbios_entry_point *p_entry_point)
 	unsigned char tmpbuf[paragraph_size];
 
 	// SMBIOS entry point only appears within a specific physical memory range
-	lseek(mem_fd, SMBIOS_ADDR_RANGE_START, SEEK_SET);
-	size_t offset = SMBIOS_ADDR_RANGE_START;
-
-	ssize_t result = 1;
-	while ((result > 0) && (offset < SMBIOS_ADDR_RANGE_END))
+	if (lseek(mem_fd, SMBIOS_ADDR_RANGE_START, SEEK_SET) >= 0)
 	{
-		result = read(mem_fd, tmpbuf, paragraph_size);
+		size_t offset = SMBIOS_ADDR_RANGE_START;
 
-		if (memcmp(tmpbuf, SMBIOS_64BIT_ANCHOR_STR, sizeof (SMBIOS_64BIT_ANCHOR_STR)) == 0)
+		ssize_t result = 1;
+		while ((result > 0) && (offset < SMBIOS_ADDR_RANGE_END))
 		{
-			p_entry_point->type = SMBIOS_ENTRY_POINT_64BIT;
-			rc = get_smbios_entry_point_from_offset(mem_fd, offset, p_entry_point);
-			break;
+			result = read(mem_fd, tmpbuf, paragraph_size);
+
+			if (memcmp(tmpbuf, SMBIOS_64BIT_ANCHOR_STR, sizeof (SMBIOS_64BIT_ANCHOR_STR)) == 0)
+			{
+				p_entry_point->type = SMBIOS_ENTRY_POINT_64BIT;
+				rc = get_smbios_entry_point_from_offset(mem_fd, offset, p_entry_point);
+				break;
+			}
+			else if (memcmp(tmpbuf, SMBIOS_32BIT_ANCHOR_STR, sizeof (SMBIOS_32BIT_ANCHOR_STR)) == 0)
+			{
+				p_entry_point->type = SMBIOS_ENTRY_POINT_32BIT;
+				rc = get_smbios_entry_point_from_offset(mem_fd, offset, p_entry_point);
+				break;
+			}
+
+			offset += paragraph_size;
 		}
-		else if (memcmp(tmpbuf, SMBIOS_32BIT_ANCHOR_STR, sizeof (SMBIOS_32BIT_ANCHOR_STR)) == 0)
+
+		// Try getting offset from GPT if MBG didn't work
+		if (rc == NVM_ERR_UNKNOWN)
 		{
-			p_entry_point->type = SMBIOS_ENTRY_POINT_32BIT;
-			rc = get_smbios_entry_point_from_offset(mem_fd, offset, p_entry_point);
-			break;
+			rc = get_smbios_entry_point_from_efi(mem_fd, p_entry_point);
 		}
-
-		offset += paragraph_size;
 	}
-
-	// Try getting offset from GPT if MBG didn't work
-	if (rc == NVM_ERR_UNKNOWN)
-	{
-		rc = get_smbios_entry_point_from_efi(mem_fd, p_entry_point);
-	}
-
 	return rc;
 }
 
@@ -650,9 +653,8 @@ int copy_smbios_table_from_mem_alloc(int mem_fd, size_t address, size_t size_to_
 	NVM_UINT8* p_smbios_table = calloc(1, size_to_allocate);
 	if (p_smbios_table)
 	{
-		lseek(mem_fd, address, SEEK_SET);
-		ssize_t result = read(mem_fd, p_smbios_table, size_to_allocate);
-		if (result > 0)
+		if (lseek(mem_fd, address, SEEK_SET) < 0 &&
+			read(mem_fd, p_smbios_table, size_to_allocate) > 0)
 		{
 			*pp_smbios_table = p_smbios_table;
 			*p_allocated_size = size_to_allocate;

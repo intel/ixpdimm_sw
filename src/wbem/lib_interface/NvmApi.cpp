@@ -92,22 +92,21 @@ NvmApi* NvmApi::getApi()
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
 
-	mutex_lock(&g_nvmapi_lock);
-
 	if (!m_pSingleton)
 	{
-		m_pSingleton = new NvmApi();
-		if (!m_pSingleton)
+		if(mutex_lock(&g_nvmapi_lock))
 		{
+			m_pSingleton = new NvmApi();
+			if (!m_pSingleton)
+			{
+				mutex_unlock(&g_nvmapi_lock);
+				// Never return NULL
+				throw framework::ExceptionNoMemory(__FILE__, __FUNCTION__,
+						"couldn't allocate NvmApi singleton");
+			}
 			mutex_unlock(&g_nvmapi_lock);
-			// Never return NULL
-			throw framework::ExceptionNoMemory(__FILE__, __FUNCTION__,
-					"couldn't allocate NvmApi singleton");
 		}
 	}
-
-	mutex_unlock(&g_nvmapi_lock);
-
 	return m_pSingleton;
 }
 
