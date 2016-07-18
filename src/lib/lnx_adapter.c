@@ -324,9 +324,9 @@ int get_topology(const NVM_UINT8 count, struct nvm_topology *p_dimm_topo)
 						p_dimm_topo[dimm_index].vendor_id =
 							swap_bytes(ndctl_dimm_get_vendor(dimm));
 						p_dimm_topo[dimm_index].device_id =
-							swap_bytes(ndctl_dimm_get_device(dimm));
+							ndctl_dimm_get_device(dimm);
 						p_dimm_topo[dimm_index].revision_id =
-							swap_bytes(ndctl_dimm_get_revision(dimm));
+							ndctl_dimm_get_revision(dimm);
 
 						// TODO US15228: get values from NDCTL when available
 						// For now assume all supported Intel devices
@@ -336,7 +336,7 @@ int get_topology(const NVM_UINT8 count, struct nvm_topology *p_dimm_topo)
 
 						// TODO US14147 - Copy multiple IFCs from driver
 						p_dimm_topo[dimm_index].fmt_interface_codes[0] =
-								swap_bytes(ndctl_dimm_get_format(dimm));
+								ndctl_dimm_get_format(dimm);
 
 						int mem_type = get_device_memory_type_from_smbios_table(
 								p_smbios_table, smbios_table_size,
