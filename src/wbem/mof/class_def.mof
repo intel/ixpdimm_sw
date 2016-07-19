@@ -60,7 +60,6 @@ class <NVM_WBEM_PREFIX>NVDIMM : CIM_PhysicalMemory
 	"If the manufacturing location and date are valid."
  	)]
 	boolean ManufacturingInfoValid;
-	uint16 SubsystemRevisionID;
 	[Description (
 	"The DIMM manufacturing location assigned by the vendor. Only valid if ManufacturingInfoValid is true."
  	)]
@@ -119,7 +118,6 @@ class <NVM_WBEM_PREFIX>NVDIMM : CIM_PhysicalMemory
 	"If the DIMM firmware power management policy is enabled, the power budget in mW used for average power (10000-18000 mW). "
  	)]
 	uint32 AvgPowerBudget;
-	uint16 PhysicalID;
 	[Description (
 	"If the DIMM firmware die sparing policy is enabled. "
  	)]

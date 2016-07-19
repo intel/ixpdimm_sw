@@ -653,7 +653,7 @@ int copy_smbios_table_from_mem_alloc(int mem_fd, size_t address, size_t size_to_
 	NVM_UINT8* p_smbios_table = calloc(1, size_to_allocate);
 	if (p_smbios_table)
 	{
-		if (lseek(mem_fd, address, SEEK_SET) < 0 &&
+		if (lseek(mem_fd, address, SEEK_SET) >= 0 &&
 			read(mem_fd, p_smbios_table, size_to_allocate) > 0)
 		{
 			*pp_smbios_table = p_smbios_table;
