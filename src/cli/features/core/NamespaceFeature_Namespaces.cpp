@@ -942,8 +942,6 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseCreateNsMemoryPa
 		pResult = new framework::SyntaxErrorResult(errorString);
 	}
 
-	//@TODO: DE6230 Driver currently has issues with pfn. Remove this when they are fixed.
-	m_memoryPageAllocation = wbem::pmem_config::PM_SERVICE_MEMORYPAGEALLOCATION_NONE;
 	return pResult;
 }
 

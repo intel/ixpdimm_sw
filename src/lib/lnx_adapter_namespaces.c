@@ -40,8 +40,7 @@
 #include "utility.h"
 
 #define	DEFAULT_BTT_SECTOR_SIZE	4096
-#define	DEFAULT_PFN_NS_ALIGNMENT	0x08000000 // recommended data offset alignment
-// TODO: Change this to 2MB(0x00200000) instead of 128MB(0x04000000) for the next pmem build.
+#define	DEFAULT_PFN_NS_ALIGNMENT	0x00200000 // == 2MB recommended data offset alignment
 
 void get_namespace_guid(struct ndctl_namespace *p_namespace, COMMON_UID guid);
 
