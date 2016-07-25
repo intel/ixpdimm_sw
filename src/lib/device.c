@@ -699,7 +699,6 @@ int get_device_status_by_handle(NVM_NFIT_DEVICE_HANDLE dimm_handle,
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
 
-
 	memset(p_status, 0, sizeof (*p_status));
 
 	// TODO: implement these
@@ -732,23 +731,12 @@ int get_device_status_by_handle(NVM_NFIT_DEVICE_HANDLE dimm_handle,
 	}
 
 	// get ars long operation status
-	struct pt_payload_long_op_stat long_op_payload;
-	memset(&long_op_payload, 0, sizeof (long_op_payload));
-	temprc = fw_get_status_for_long_op(dimm_handle, &long_op_payload);
-
+	temprc = get_ars_status(dimm_handle, &p_status->ars_status);
 	if (temprc != NVM_SUCCESS)
 	{
-		COMMON_LOG_ERROR_F("Failed to retrieve the ARS long operation status with error %d",
-			temprc);
-		p_status->ars_status = DEVICE_ARS_STATUS_UNKNOWN;
-
 #if !defined(__EARLY_HW__) || __EARLY_HW__ != 1  // ARS is not supported yet
 		KEEP_ERROR(rc, temprc);
 #endif
-	}
-	else
-	{
-		p_status->ars_status = translate_to_ars_status(&long_op_payload);
 	}
 
 	struct pt_payload_smart_health dimm_smart;

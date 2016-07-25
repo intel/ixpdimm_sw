@@ -291,7 +291,8 @@ void set_device_manageability_from_firmware(
  */
 enum device_ars_status translate_to_ars_status(struct pt_payload_long_op_stat *long_op_payload)
 {
-	int rc = 0;
+	COMMON_LOG_ENTRY();
+	enum device_ars_status status = 0;
 
 	struct pt_return_address_range_scrub *ars_command_return_data =
 		(struct pt_return_address_range_scrub *)(long_op_payload->command_specific_data);
@@ -303,22 +304,47 @@ enum device_ars_status translate_to_ars_status(struct pt_payload_long_op_stat *l
 		{
 			if (long_op_payload->percent_complete == 100)
 			{
-				rc = DEVICE_ARS_STATUS_COMPLETE;
+				status = DEVICE_ARS_STATUS_COMPLETE;
 			}
 			else
 			{
-				rc = DEVICE_ARS_STATUS_INPROGRESS;
+				status = DEVICE_ARS_STATUS_INPROGRESS;
 			}
 		}
 		else
 		{
-			rc = DEVICE_ARS_STATUS_INPROGRESS;
+			status = DEVICE_ARS_STATUS_INPROGRESS;
 		}
 	}
 	else
 	{
-		rc = DEVICE_ARS_STATUS_NOTSTARTED;
+		status = DEVICE_ARS_STATUS_NOTSTARTED;
 	}
+
+	COMMON_LOG_EXIT_RETURN_I(status);
+	return status;
+}
+
+int get_ars_status(const NVM_NFIT_DEVICE_HANDLE dimm_handle, enum device_ars_status *p_ars_status)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	struct pt_payload_long_op_stat long_op_payload;
+	memset(&long_op_payload, 0, sizeof (long_op_payload));
+	rc = fw_get_status_for_long_op(dimm_handle, &long_op_payload);
+	if (rc != NVM_SUCCESS)
+	{
+		*p_ars_status = DEVICE_ARS_STATUS_UNKNOWN;
+		COMMON_LOG_ERROR_F("Failed to retrieve the ARS long operation status with error %d",
+			rc);
+	}
+	else
+	{
+		*p_ars_status = translate_to_ars_status(&long_op_payload);
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
 
@@ -400,7 +426,6 @@ int check_firmware_revision(unsigned char fw_api_version)
 
 	return rc;
 }
-
 
 /*
  * Helper function to get the health of a dimm. Used in get pools to roll up health info
@@ -744,8 +769,6 @@ int get_dimm_storage_capacity(NVM_UINT32 handle, NVM_UINT64 *p_storage_capacity)
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
-
-
 
 int update_capacities_based_on_sku(const NVM_NFIT_DEVICE_HANDLE device_handle,
 		const struct nvm_capabilities *p_capabilities,

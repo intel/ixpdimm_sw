@@ -109,7 +109,11 @@ int nvm_get_namespace_count()
 	}
 	else
 	{
-		rc = get_namespace_count();
+		rc = nvm_get_pool_count();
+		if (rc >= 0)
+		{
+			rc = get_namespace_count();
+		}
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -1619,27 +1623,33 @@ int nvm_modify_namespace_name(const NVM_UID namespace_uid,
 	}
 	else
 	{
-		rc = modify_namespace_name(namespace_uid, name);
+		struct namespace_details details;
+		memset(&details, 0, sizeof (details));
+		rc = nvm_get_namespace_details(namespace_uid, &details);
 		if (rc == NVM_SUCCESS)
 		{
-			// the namespace context is no longer valid
-			invalidate_namespaces();
+			rc = modify_namespace_name(namespace_uid, name);
+			if (rc == NVM_SUCCESS)
+			{
+				// the namespace context is no longer valid
+				invalidate_namespaces();
 
-			// Log an event indicating we successfully modified a namespace
-			NVM_EVENT_ARG ns_uid_arg;
-			uid_to_event_arg(namespace_uid, ns_uid_arg);
-			NVM_EVENT_ARG ns_name_arg;
-			s_strncpy(ns_name_arg, NVM_EVENT_ARG_LEN,
-					name, NVM_NAMESPACE_NAME_LEN);
-			log_mgmt_event(EVENT_SEVERITY_INFO,
-					EVENT_CODE_MGMT_NAMESPACE_MODIFIED,
-					namespace_uid,
-					0, // no action required
-					ns_name_arg, ns_uid_arg, NULL);
-		}
-		else
-		{
-			COMMON_LOG_ERROR("Could not modify namespace name");
+				// Log an event indicating we successfully modified a namespace
+				NVM_EVENT_ARG ns_uid_arg;
+				uid_to_event_arg(namespace_uid, ns_uid_arg);
+				NVM_EVENT_ARG ns_name_arg;
+				s_strncpy(ns_name_arg, NVM_EVENT_ARG_LEN,
+						name, NVM_NAMESPACE_NAME_LEN);
+				log_mgmt_event(EVENT_SEVERITY_INFO,
+						EVENT_CODE_MGMT_NAMESPACE_MODIFIED,
+						namespace_uid,
+						0, // no action required
+						ns_name_arg, ns_uid_arg, NULL);
+			}
+			else
+			{
+				COMMON_LOG_ERROR("Could not modify namespace name");
+			}
 		}
 	}
 

@@ -57,8 +57,6 @@ int get_pool_count()
 	int v_rc = 0;
 	int m_rc = 0;
 	int p_rc = 0;
-
-
 	if ((v_rc = has_memory_pool()) < 0)
 	{
 		rc = v_rc;
@@ -425,7 +423,6 @@ int get_persistent_pools_count()
 	return rc;
 }
 
-
 /*
  * Get the combined capacity of all the interleave sets on the dimm
  */
@@ -671,43 +668,57 @@ int add_dimm_to_pool(struct nvm_pool *p_pool, NVM_NFIT_DEVICE_HANDLE handle)
 
 	if (!found)
 	{
-		struct pt_payload_get_dimm_partition_info pi;
-		if ((rc = get_partition_info(handle, &pi)) == NVM_SUCCESS)
+		enum device_ars_status ars_status;
+		rc = get_ars_status(handle, &ars_status);
+		if (rc == NVM_SUCCESS)
 		{
-			p_pool->dimms[p_pool->dimm_count].handle = handle.handle;
-
-			get_dimm_memory_capacity(handle, &p_pool->memory_capacities[p_pool->dimm_count]);
-			p_pool->raw_capacities[p_pool->dimm_count] = pi.raw_capacity * BYTES_PER_4K_CHUNK;
-
-			p_pool->dimm_count++;
-
-			// calculate pool health based on dimm health
-			enum device_health dimm_health;
-
-			rc = get_dimm_health(handle, &dimm_health);
-			if (rc == NVM_SUCCESS)
+			if (ars_status == DEVICE_ARS_STATUS_INPROGRESS)
 			{
-				enum pool_health health;
-				switch (dimm_health)
+				rc = NVM_ERR_ARSINPROGRESS;
+			}
+			else
+			{
+				struct pt_payload_get_dimm_partition_info pi;
+				if ((rc = get_partition_info(handle, &pi)) == NVM_SUCCESS)
 				{
-				case DEVICE_HEALTH_NORMAL:
-					health = POOL_HEALTH_NORMAL;
-					break;
-				case DEVICE_HEALTH_NONCRITICAL:
-				case DEVICE_HEALTH_CRITICAL:
-					health = POOL_HEALTH_WARNING;
-					break;
-				case DEVICE_HEALTH_FATAL:
-					health = p_pool->type == POOL_TYPE_PERSISTENT_MIRROR ?
-							POOL_HEALTH_DEGRADED : POOL_HEALTH_FAILED;
-					break;
-				default:
-					health = POOL_HEALTH_UNKNOWN;
-					break;
-				}
+					p_pool->dimms[p_pool->dimm_count].handle = handle.handle;
 
-				// keep the greater (worse) health state
-				p_pool->health = p_pool->health < health ? health : p_pool->health;
+					get_dimm_memory_capacity(handle,
+							&p_pool->memory_capacities[p_pool->dimm_count]);
+					p_pool->raw_capacities[p_pool->dimm_count] =
+							pi.raw_capacity * BYTES_PER_4K_CHUNK;
+
+					p_pool->dimm_count++;
+
+					// calculate pool health based on dimm health
+					enum device_health dimm_health;
+
+					rc = get_dimm_health(handle, &dimm_health);
+					if (rc == NVM_SUCCESS)
+					{
+						enum pool_health health;
+						switch (dimm_health)
+						{
+						case DEVICE_HEALTH_NORMAL:
+							health = POOL_HEALTH_NORMAL;
+							break;
+						case DEVICE_HEALTH_NONCRITICAL:
+						case DEVICE_HEALTH_CRITICAL:
+							health = POOL_HEALTH_WARNING;
+							break;
+						case DEVICE_HEALTH_FATAL:
+							health = p_pool->type == POOL_TYPE_PERSISTENT_MIRROR ?
+									POOL_HEALTH_DEGRADED : POOL_HEALTH_FAILED;
+							break;
+						default:
+							health = POOL_HEALTH_UNKNOWN;
+							break;
+						}
+
+						// keep the greater (worse) health state
+						p_pool->health = p_pool->health < health ? health : p_pool->health;
+					}
+				}
 			}
 		}
 	}
@@ -744,8 +755,13 @@ int add_dimm_to_pools(struct nvm_pool *p_pools, int *p_pools_count, NVM_NFIT_DEV
 	}
 	else
 	{
+		if (dev_status.ars_status == DEVICE_ARS_STATUS_INPROGRESS)
+		{
+			COMMON_LOG_ERROR("Failed to retrieve the device status.");
+			rc = NVM_ERR_ARSINPROGRESS;
+		}
 		// ignore dimm if it's unconfigured
-		if (dev_status.config_status != CONFIG_STATUS_NOT_CONFIGURED)
+		else if (dev_status.config_status != CONFIG_STATUS_NOT_CONFIGURED)
 		{
 			// find the pool that represents the socket this set is on
 			int pool_idx = -1;
@@ -1108,6 +1124,10 @@ int get_pool_uid_from_namespace_details(
 			}
 			free(pools);
 		}
+	}
+	else if (pool_count < 0)
+	{
+		rc = pool_count;
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);

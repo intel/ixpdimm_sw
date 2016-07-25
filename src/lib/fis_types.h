@@ -133,7 +133,7 @@
 extern const int NUM_SUPPORTED_DEVICE_IDS;
 extern const NVM_UINT16 SUPPORTED_DEVICE_IDS[];
 
-// Specefy that the ARS command has reached the limit+1 errors itcan report and has
+// Specify that the ARS command has reached the limit+1 errors it can report and has
 // ended prior to reaching the DPA end address
 #define	ARS_STATUS_ENDED_EARLY	0x01
 
