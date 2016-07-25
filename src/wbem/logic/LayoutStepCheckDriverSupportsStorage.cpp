@@ -48,7 +48,7 @@ void wbem::logic::LayoutStepCheckDriverSupportsStorage::execute(const MemoryAllo
 		MemoryAllocationLayout& layout)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	if (request.storageRemaining > 0 && !m_driverFeatures.storage_mode)
+	if (request.storageRemaining && !m_driverFeatures.storage_mode)
 	{
 		layout.warnings.push_back(LAYOUT_WARNING_STORAGE_NOT_SUPPORTED_BY_DRIVER);
 	}

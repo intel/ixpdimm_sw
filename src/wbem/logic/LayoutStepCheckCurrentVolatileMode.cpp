@@ -49,9 +49,12 @@ void wbem::logic::LayoutStepCheckCurrentVolatileMode::execute(
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	if ((m_platformCapabilities.current_volatile_mode != VOLATILE_MODE_MEMORY) &&
-			(m_platformCapabilities.current_volatile_mode !=VOLATILE_MODE_AUTO))
+	if (request.memoryCapacity == REQUEST_REMAINING_CAPACITY || request.memoryCapacity > 0)
 	{
-		layout.warnings.push_back(LAYOUT_WARNING_REQUESTED_MEMORY_MODE_NOT_USABLE);
+		if (m_platformCapabilities.current_volatile_mode != VOLATILE_MODE_MEMORY &&
+			m_platformCapabilities.current_volatile_mode != VOLATILE_MODE_AUTO)
+		{
+			layout.warnings.push_back(LAYOUT_WARNING_REQUESTED_MEMORY_MODE_NOT_USABLE);
+		}
 	}
 }

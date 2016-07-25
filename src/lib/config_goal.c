@@ -119,29 +119,25 @@ int validate_config_goal_alignment(const struct config_goal *p_goal,
  * Helper function to derive the partition size (in GiB) from the capacity (in bytes) and whether
  * the interleave set will be mirrored.
  */
-NVM_UINT64 get_size_from_capacity(const NVM_UINT64 size_gb, NVM_UINT64 remaining_capacity,
+NVM_UINT64 get_size_from_capacity(const NVM_UINT64 requested_gib, NVM_UINT64 remaining_bytes,
 		NVM_BOOL mirrored)
 {
-	NVM_UINT64 size = 0;
+	NVM_UINT64 size_gib = requested_gib;
 
 	// Convert special size values
-	if (size_gb == (NVM_UINT64)-1) // flag value - use all remaining capacity
+	if (requested_gib == (NVM_UINT64)-1) // flag value - use all remaining capacity
 	{
-		size = (remaining_capacity / BYTES_PER_GB);
+		size_gib = (remaining_bytes / BYTES_PER_GB);
 
 		// Partition size in platform config data is capacity presented to user.
 		// For mirrored, this is half of actual capacity.
 		if (mirrored)
 		{
-			size /= 2llu;
+			size_gib /= 2llu;
 		}
 	}
-	else
-	{
-		size = size_gb;
-	}
 
-	return size;
+	return size_gib;
 }
 
 /*
@@ -196,10 +192,10 @@ int validate_config_goal_size(const struct config_goal *p_goal,
 		const struct device_discovery *p_discovery)
 {
 	int rc = NVM_SUCCESS;
-	NVM_UINT64 capacity = USABLE_CAPACITY_BYTES(p_discovery->capacity);
+	NVM_UINT64 usable_bytes = USABLE_CAPACITY_BYTES(p_discovery->capacity);
 
 	// Validate memory size
-	rc = validate_interleave_set_size(p_goal->memory_size, &capacity, 0);
+	rc = validate_interleave_set_size(p_goal->memory_size, &usable_bytes, 0);
 	if (rc == NVM_SUCCESS)
 	{
 		// Validate interleave set sizes
@@ -220,7 +216,7 @@ int validate_config_goal_size(const struct config_goal *p_goal,
 			}
 			else
 			{
-				rc = validate_interleave_set_size(sizes[i], &capacity, mirrored[i]);
+				rc = validate_interleave_set_size(sizes[i], &usable_bytes, mirrored[i]);
 			}
 		}
 	}
@@ -381,21 +377,26 @@ void config_goal_to_partition_ext_table(const struct config_goal *p_goal,
 	p_table->header.type = PARTITION_CHANGE_TABLE;
 	p_table->header.length = sizeof (struct partition_size_change_extension_table);
 
-	NVM_UINT64 overall_capacity = USABLE_CAPACITY_BYTES(p_discovery->capacity);
-	NVM_UINT64 pm_capacity = 0; // in bytes
+	NVM_UINT64 pm_bytes = 0;
 
-	// Goal entered for memory gets first dibs.
-	// In BIOS all space not designated PM is memory.
 	// -1 => all capacity used for memory
-	if (p_goal->memory_size != (NVM_UINT64)-1)
+	if (p_goal->memory_size == (NVM_UINT64)-1)
 	{
-		// Everything else is PM - either app direct or storage
-		NVM_UINT64 memory_size_gb = get_size_from_capacity(p_goal->memory_size,
-				overall_capacity, 0);
-		pm_capacity = overall_capacity - (memory_size_gb * BYTES_PER_GB);
+		pm_bytes = 0;
+	}
+	// no memory, use all for pm
+	else if (p_goal->memory_size == 0)
+	{
+		pm_bytes = p_discovery->capacity;
+	}
+	// memory mode eats GiB alignment
+	else
+	{
+		pm_bytes = USABLE_CAPACITY_BYTES(p_discovery->capacity) -
+				(p_goal->memory_size * BYTES_PER_GB);
 	}
 
-	p_table->partition_size = pm_capacity; // in bytes
+	p_table->partition_size = pm_bytes;
 }
 
 /*
@@ -495,17 +496,22 @@ int config_goal_to_config_input(const NVM_UID device_uid,
 	struct interleave_info_extension_table *p_ad1_interleave_table = NULL;
 	struct interleave_info_extension_table *p_ad2_interleave_table = NULL;
 
-	NVM_UINT64 capacity = USABLE_CAPACITY_BYTES(p_discovery->capacity);
-	capacity -= (p_goal->memory_size * BYTES_PER_GB); // subtract memory space
+	NVM_UINT64 remaining_bytes = p_discovery->capacity;
+	if (p_goal->memory_size)
+	{
+		remaining_bytes -= (p_goal->memory_size * BYTES_PER_GB);
+		// volatile eats GiB align
+		remaining_bytes -= RESERVED_CAPACITY_BYTES(p_discovery->capacity);
+	}
 
 	// interleave - app direct
 	if (p_goal->app_direct_count > 0)
 	{
 		// interleave - app direct
-		NVM_UINT64 ad1_size = get_size_from_capacity(p_goal->app_direct_1_size,
-				capacity, p_goal->app_direct_1_settings.mirrored);
+		NVM_UINT64 ad1_gib = get_size_from_capacity(p_goal->app_direct_1_size,
+				remaining_bytes, p_goal->app_direct_1_settings.mirrored);
 		rc = config_goal_to_interleave_ext_table(&p_goal->app_direct_1_settings,
-				ad1_size, // in GiB
+				ad1_gib, // in GiB
 				0, // offset - top of PM partition
 				p_goal->app_direct_1_set_id,
 				&p_ad1_interleave_table);
@@ -513,15 +519,15 @@ int config_goal_to_config_input(const NVM_UID device_uid,
 		{
 			p_ad1_interleave_table->memory_type = INTERLEAVE_MEMORY_TYPE_APP_DIRECT;
 			ext_table_length += p_ad1_interleave_table->header.length;
-			capacity -= (ad1_size * BYTES_PER_GB);
+			remaining_bytes -= (ad1_gib * BYTES_PER_GB);
 
 			// interleave - app direct
 			if (p_goal->app_direct_count > 1)
 			{
-				NVM_UINT64 ad2_size = get_size_from_capacity(p_goal->app_direct_2_size,
-						capacity, p_goal->app_direct_2_settings.mirrored);
+				NVM_UINT64 ad2_gib = get_size_from_capacity(p_goal->app_direct_2_size,
+						remaining_bytes, p_goal->app_direct_2_settings.mirrored);
 				rc = config_goal_to_interleave_ext_table(&p_goal->app_direct_2_settings,
-						ad2_size, // in GiB
+						ad2_gib, // in GiB
 						p_goal->app_direct_1_size, // offset - after first interleave set
 						p_goal->app_direct_2_set_id,
 						&p_ad2_interleave_table);
@@ -529,7 +535,7 @@ int config_goal_to_config_input(const NVM_UID device_uid,
 				{
 					p_ad2_interleave_table->memory_type = INTERLEAVE_MEMORY_TYPE_APP_DIRECT;
 					ext_table_length += p_ad2_interleave_table->header.length;
-					capacity -= (ad2_size * BYTES_PER_GB);
+					remaining_bytes -= (ad2_gib * BYTES_PER_GB);
 				}
 			}
 		}
@@ -867,13 +873,13 @@ int config_input_table_to_config_goal(const NVM_UID device_uid,
 				break;
 			}
 
-			// if no pm partition, all dimm capacity is memory
+			// report memory size GiB aligned
 			p_config_goal->memory_size = USABLE_CAPACITY_BYTES(discovery.capacity) / BYTES_PER_GB;
 			if (p_partition->partition_size != 0)
 			{
-				// else memory size is total dimm capacity - pm partition
 				p_config_goal->memory_size -= (p_partition->partition_size / BYTES_PER_GB);
 			}
+
 		}
 		// get app direct interleave sets from interleave table
 		else if (p_header->type == INTERLEAVE_TABLE)

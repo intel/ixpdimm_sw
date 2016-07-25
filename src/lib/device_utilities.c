@@ -861,8 +861,12 @@ int get_dimm_capacities(const NVM_NFIT_DEVICE_HANDLE device_handle,
 	if ((rc = get_partition_info(device_handle, &pi)) == NVM_SUCCESS)
 	{
 		p_capacities->capacity = MULTIPLES_TO_BYTES(pi.raw_capacity);
-		p_capacities->reserved_capacity = RESERVED_CAPACITY_BYTES(p_capacities->capacity);
 		p_capacities->memory_capacity = MULTIPLES_TO_BYTES(pi.volatile_capacity);
+		if (p_capacities->memory_capacity)
+		{
+			p_capacities->reserved_capacity = RESERVED_CAPACITY_BYTES(p_capacities->capacity);
+			p_capacities->memory_capacity -= p_capacities->reserved_capacity;
+		}
 		p_capacities->app_direct_capacity = MULTIPLES_TO_BYTES(pi.pmem_capacity);
 
 		// get BIOS mapped capacities from the platform config data
@@ -874,15 +878,13 @@ int get_dimm_capacities(const NVM_NFIT_DEVICE_HANDLE device_handle,
 					cast_current_config(p_cfg_data);
 			if (p_current_config)
 			{
-				p_capacities->memory_capacity =
-					p_current_config->mapped_memory_capacity;
 				p_capacities->app_direct_capacity =
 					p_current_config->mapped_app_direct_capacity;
 				get_dimm_storage_capacity(device_handle.handle,
 						&p_capacities->storage_capacity);
 				p_capacities->unconfigured_capacity =
 						p_capacities->capacity
-						- p_current_config->mapped_memory_capacity
+						- p_capacities->memory_capacity
 						- p_current_config->mapped_app_direct_capacity
 						- p_capacities->reserved_capacity;
 			}
