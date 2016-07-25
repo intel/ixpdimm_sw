@@ -50,6 +50,7 @@
 
 #define	NVM_IOCTL_TARGET_LEN	20
 #define	DATA_FORMAT_REVISION	1
+#define	MANUFACTURING_INFO_VALID_FLAG	0xFF
 
 #define	PCAT_LOCATION	"/sys/firmware/acpi/tables/PCAT"
 #define	NFIT_LOCATION	"/sys/firmware/acpi/tables/NFIT"
@@ -328,11 +329,31 @@ int get_topology(const NVM_UINT8 count, struct nvm_topology *p_dimm_topo)
 						p_dimm_topo[dimm_index].revision_id =
 							ndctl_dimm_get_revision(dimm);
 
-						// TODO US15228: get values from NDCTL when available
-						// For now assume all supported Intel devices
-						p_dimm_topo[dimm_index].subsystem_vendor_id = NVM_INTEL_VENDOR_ID;
-						p_dimm_topo[dimm_index].subsystem_device_id = SUPPORTED_DEVICE_IDS[0];
-						p_dimm_topo[dimm_index].subsystem_revision_id = 0;
+						// TODO DE6261: revert to original values when
+						// new windows driver is available
+						p_dimm_topo[dimm_index].subsystem_vendor_id =
+								swap_bytes(ndctl_dimm_get_subsystem_vendor(dimm));
+						p_dimm_topo[dimm_index].subsystem_device_id =
+								swap_bytes(ndctl_dimm_get_subsystem_device(dimm));
+						p_dimm_topo[dimm_index].subsystem_revision_id =
+								ndctl_dimm_get_subsystem_revision(dimm);
+						p_dimm_topo[dimm_index].manufacturing_date  =
+								ndctl_dimm_get_manufacturing_date(dimm);
+						p_dimm_topo[dimm_index].manufacturing_location =
+								ndctl_dimm_get_manufacturing_location(dimm);
+						if (p_dimm_topo[dimm_index].manufacturing_location !=
+								MANUFACTURING_INFO_VALID_FLAG &&
+								p_dimm_topo[dimm_index].manufacturing_date !=
+								MANUFACTURING_INFO_VALID_FLAG)
+						{
+							p_dimm_topo[dimm_index].manufacturing_info_valid = 1;
+
+						}
+						else
+						{
+							p_dimm_topo[dimm_index].manufacturing_info_valid = 0;
+						}
+
 
 						// TODO US14147 - Copy multiple IFCs from driver
 						p_dimm_topo[dimm_index].fmt_interface_codes[0] =
