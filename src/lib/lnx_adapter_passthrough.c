@@ -405,8 +405,8 @@ int ioctl_passthrough_cmd(struct fw_cmd *p_fw_cmd)
 						rc = bios_read_large_payload(p_dimm, p_fw_cmd);
 					}
 				}
+				ndctl_cmd_unref(p_vendor_cmd);
 			}
-			ndctl_cmd_unref(p_vendor_cmd);
 		}
 		ndctl_unref(ctx);
 	}
