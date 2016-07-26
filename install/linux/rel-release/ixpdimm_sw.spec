@@ -234,18 +234,23 @@ fi
 %files -n %{name}-devel
 %doc README.md
 %{_libdir}/libixpdimm.so
+%{_libdir}/libixpdimm-core.so
+%{_libdir}/cmpi/libixpdimm-cim.so
+%{_libdir}/libixpdimm-cli.so
 %{_includedir}/nvm_types.h
 %{_includedir}/nvm_management.h
 %license LICENSE
 
 %files -n libixpdimm-core
 %doc README.md
-%{_libdir}/libixpdimm-core.so*
+%{_libdir}/libixpdimm-core.so.01
+%{_libdir}/libixpdimm-core.so.01.00.0
 %license LICENSE
 
 %files -n libixpdimm-cim
 %doc README.md
-%{_libdir}/cmpi/libixpdimm-cim.so*
+%{_libdir}/cmpi/libixpdimm-cim.so.01
+%{_libdir}/cmpi/libixpdimm-cim.so.01.00.0
 %dir %{_sharedstatedir}/%{name}/Pegasus
 %dir %{_sharedstatedir}/%{name}/Pegasus/mof
 %dir %{_sharedstatedir}/%{name}/sfcb
@@ -263,10 +268,11 @@ fi
 
 %files -n ixpdimm-cli
 %{_bindir}/ixpdimm-cli
-%{_libdir}/libixpdimm-cli.so*
+%{_libdir}/libixpdimm-cli.so.01
+%{_libdir}/libixpdimm-cli.so.01.00.0
 %license LICENSE
 %{_mandir}/man8/ixpdimm-cli*
 
 %changelog
-* Thu Dec 24 2015 Nicholas Moulin <nicholas.w.moulin@intel.com> - 01.00.00.2103-1
+* Thu Dec 24 2015 Nicholas Moulin <nicholas.w.moulin@intel.com> - 01.00.00.2104-1
 - Initial rpm release
