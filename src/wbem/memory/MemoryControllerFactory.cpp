@@ -345,10 +345,7 @@ int wbem::memory::MemoryControllerFactory::getInstancesHelperLoop(
 
 						// add the instance to the instance list
 						pInstList->push_back(*pNewCurrentInstance);
-						if (pNewCurrentInstance)
-						{
-							delete pNewCurrentInstance;
-						}
+						delete pNewCurrentInstance;
 					}
 
 					// support getInstanceNames(..)

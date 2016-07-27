@@ -31,6 +31,7 @@
 #include <libinvm-cim/ExceptionBadAttribute.h>
 #include <libinvm-cim/ExceptionNoMemory.h>
 #include <exception/NvmExceptionLibError.h>
+#include <core/exceptions/NoMemoryException.h>
 #include <uid/uid.h>
 
 #include <software/NVDIMMFWVersionFactory.h>
@@ -398,6 +399,11 @@ framework::instance_names_t* ElementSoftwareIdentityFactory::getInstanceNames() 
 	{
 		delete pNames;
 		throw;
+	}
+	catch (core::NoMemoryException)
+	{
+		delete pNames;
+		throw framework::ExceptionNoMemory(__FILE__, __FUNCTION__, "Could not allocate memory");
 	}
 
 	return pNames;

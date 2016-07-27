@@ -43,6 +43,7 @@
 #include <mem_config/PoolViewFactory.h>
 #include <exception/NvmExceptionLibError.h>
 #include <core/exceptions/LibraryException.h>
+#include <core/exceptions/NoMemoryException.h>
 #include <NvmStrings.h>
 
 #include "framework_interface/FrameworkExtensions.h"
@@ -138,6 +139,11 @@ wbem::framework::Instance* wbem::mem_config::MemoryResourcesFactory::getInstance
 	{
 		delete pResult;
 		throw exception::NvmExceptionLibError(e.getErrorCode());
+	}
+	catch (core::NoMemoryException)
+	{
+		delete pResult;
+		throw framework::ExceptionNoMemory(__FILE__, __FUNCTION__, "Could not allocate memory");
 	}
 
 	return pResult;

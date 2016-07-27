@@ -37,9 +37,11 @@
 #include <persistence/lib_persistence.h>
 
 #include <libinvm-cim/ExceptionBadParameter.h>
+#include <libinvm-cim/ExceptionNoMemory.h>
 #include "BaseServerFactory.h"
 
 #include <exception/NvmExceptionLibError.h>
+#include <core/exceptions/NoMemoryException.h>
 #include <lib_interface/NvmApi.h>
 #include <NvmStrings.h>
 
@@ -138,6 +140,11 @@ throw (wbem::framework::Exception)
 	{
 		delete pResult;
 		throw;
+	}
+	catch (core::NoMemoryException)
+	{
+		delete pResult;
+		throw framework::ExceptionNoMemory(__FILE__, __FUNCTION__, "Could not allocate memory");
 	}
 
 	return pResult;

@@ -38,6 +38,8 @@
 #include <physical_asset/NVDIMMFactory.h>
 #include <LogEnterExit.h>
 #include <support/NVDIMMSensorFactory.h>
+#include <core/exceptions/NoMemoryException.h>
+#include <libinvm-cim/ExceptionNoMemory.h>
 
 #include "InstIndicationFactory.h"
 
@@ -55,17 +57,24 @@ throw(framework::Exception)
 	else
 	{
 		COMMON_LOG_DEBUG_F("Event Type: %d, Event Code: %d", (int)pEvent->type, (int)pEvent->code);
-		if (isNamespaceEvent(pEvent))
+		try
 		{
-			pResult = createNamespaceIndication(pEvent);
+			if (isNamespaceEvent(pEvent))
+			{
+				pResult = createNamespaceIndication(pEvent);
+			}
+			else if (isDeviceEvent(pEvent))
+			{
+				pResult = createDeviceIndication(pEvent);
+			}
+			else if (isSensorEvent(pEvent))
+			{
+				pResult = createSensorIndication(pEvent);
+			}
 		}
-		else if (isDeviceEvent(pEvent))
+		catch (core::NoMemoryException)
 		{
-			pResult = createDeviceIndication(pEvent);
-		}
-		else if (isSensorEvent(pEvent))
-		{
-			pResult = createSensorIndication(pEvent);
+			throw framework::ExceptionNoMemory(__FILE__, __FUNCTION__, "Could not allocate memory");
 		}
 	}
 
