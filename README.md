@@ -34,8 +34,6 @@ where the makefile is located in:
 	workspace/ixpdimm/makefile
 
 * MINGW_DIR - On Windows, the path to the MinGW 64-bit tools.
-* CTEMPLATE_INCLUDE_DIR - The path to the ctemplate headers.
-* CTEMPLATE_LIB_DIR - The path to the ctemplate libraries.  
 * OPENSSL_INCLUDE_DIR - The path to the openssl headers. 
 * OPENSSL_LIB_DIR - The path to openssl libraries.
 * SQLITE_INCLUDE_DIR - The path to the sqlite headers. 
@@ -80,7 +78,7 @@ libinvm-i18n library is required, the source can be found at
 
 https://github.com/01org/libinvm-i18n
 
-All other dependencies are widely available. This includes ctemplate openssl
+All other dependencies are widely available. This includes openssl
 sqlite and zlib.
 
 Once dependencies have been resolved execute 'make RELEASE=1'

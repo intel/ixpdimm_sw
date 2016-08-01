@@ -1,5 +1,4 @@
 output/
-src/common/persistence/schema.*
 src/common/os/win_msgs.h
 scripts/manpage_helper.pyc
 scripts/nvmcli.8.gz

@@ -44,8 +44,6 @@ endif
 
 #external dependencies
 CMPI_INCLUDE_DIR ?= ../external/cmpi/include
-CTEMPLATE_INCLUDE_DIR ?= ../external/ctemplate/include
-CTEMPLATE_LIB_DIR ?= ../external/ctemplate/lib
 FW_INCLUDE_DIR ?= ../external/fw/include
 OPENSSL_INCLUDE_DIR ?= ../external/openssl/include
 OPENSSL_LIB_DIR ?= ../external/openssl/lib
@@ -64,8 +62,6 @@ INTEL_I18N_DIR ?= ../external/intelnvmi18n
 
 #build targets
 all : extern libcopy 
-	$(MAKE) -C tools/db_schema_gen all $(FLAGS)
-	$(MAKE) -C src/schema_generator all $(FLAGS)
 	$(MAKE) -C src/common $(I18N_TARGET) all $(FLAGS)
 	$(MAKE) -C src/lib $(I18N_TARGET) all $(FLAGS)
 	$(MAKE) -C src/core $(I18N_TARGET) all $(FLAGS)
@@ -83,11 +79,6 @@ ifndef BUILD_WINDOWS
 	$(COPY) $(CMPI_INCLUDE_DIR)/* $(EXTERN_DIR)/cmpi/include/cmpi
 endif
 	
-	$(MKDIR) $(EXTERN_DIR)/ctemplate
-	$(COPY) $(CTEMPLATE_INCLUDE_DIR)/* $(EXTERN_DIR)/ctemplate/
-	$(MKDIR) $(EXTERN_LIB_DIR)/ctemplate
-	$(COPY) $(CTEMPLATE_LIB_DIR)/* $(EXTERN_LIB_DIR)/ctemplate/
-
 	$(MKDIR) $(EXTERN_DIR)/os_headers/$(OS_TYPE)
 	$(COPY) $(OS_INCLUDE_DIR)/* $(EXTERN_DIR)/os_headers/$(OS_TYPE)/
 	-$(COPY) $(OS_LIB_DIR)/* $(EXTERN_LIB_DIR)/
@@ -137,7 +128,6 @@ libcopy:
 	$(MKDIR) $(BUILD_DIR)
 	$(MKDIR) $(BUILT_TOOLS_DIR)
 ifndef BUILD_LINUX
-	$(COPY) $(EXTERN_LIB_DIR)/ctemplate/lib* $(BUILT_TOOLS_DIR)/
 	$(COPY) $(EXTERN_LIB_DIR)/sqlite/lib* $(BUILD_DIR)/
 	$(COPY) $(EXTERN_LIB_DIR)/openssl/openssl/lib* $(BUILD_DIR)/
 	$(COPY) $(EXTERN_LIB_DIR)/zlib/lib* $(BUILD_DIR)/
@@ -146,8 +136,6 @@ ifndef BUILD_LINUX
 	-$(COPY) $(EXTERN_LIB_DIR)/*.* $(BUILD_DIR)/
 endif
 ifdef BUILD_ESX #make soft links
-	cd $(BUILT_TOOLS_DIR); $(RM) libctemplate.so.2; $(SOFTLINK) libctemplate.so.2.0.1 libctemplate.so.2
-	cd $(BUILT_TOOLS_DIR); $(RM) libctemplate.so; $(SOFTLINK) libctemplate.so.2.0.1 libctemplate.so
 	cd $(BUILD_DIR); $(RM) libsqlite3.so.1; $(SOFTLINK) libsqlite3.so.1.0.0 libsqlite3.so.1
 	cd $(BUILD_DIR); $(RM) libsqlite3.so; $(SOFTLINK) libsqlite3.so.1.0.0  libsqlite3.so
 	cd $(BUILD_DIR); $(SOFTLINK) libssl.so.1.0.0 libssl.so

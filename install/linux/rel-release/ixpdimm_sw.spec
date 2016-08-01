@@ -14,7 +14,6 @@ Requires: libinvm-i18n >= 1.0.0.1015
 Requires: libinvm-cli >= 1.0.0.1095
 Requires: libinvm-cim >= 1.0.0.1040
 
-BuildRequires: pkgconfig(libctemplate)
 BuildRequires: pkgconfig(libkmod)
 BuildRequires: pkgconfig(sqlite3)
 BuildRequires: pkgconfig(libndctl)
