@@ -25,28 +25,31 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef NVMCONTEXT_H_
-#define NVMCONTEXT_H_
+#include "RuleMirroredAppDirectNotSupported.h"
 
-#include <nvm_context.h>
+#include <LogEnterExit.h>
+#include <core/exceptions/NvmExceptionBadRequest.h>
 
-namespace wbem
+core::memory_allocator::RuleMirroredAppDirectNotSupported::RuleMirroredAppDirectNotSupported()
 {
-namespace lib_interface
-{
-
-// pass through interface to library context
-static inline int createNvmContext()
-{
-	return nvm_create_context();
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
 
-static inline int freeNvmContext()
+core::memory_allocator::RuleMirroredAppDirectNotSupported::~RuleMirroredAppDirectNotSupported()
 {
-	return nvm_free_context();
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
 
+void core::memory_allocator::RuleMirroredAppDirectNotSupported::verify(
+		const MemoryAllocationRequest& request)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	for (std::vector<AppDirectExtent>::const_iterator iter = request.appDirectExtents.begin();
+			iter != request.appDirectExtents.end(); iter++)
+	{
+		if (iter->mirrored)
+		{
+			throw core::NvmExceptionRequestNotSupported();
+		}
+	}
 }
-}
-
-#endif /* NVMCONTEXT_H_ */

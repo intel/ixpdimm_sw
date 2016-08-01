@@ -45,7 +45,7 @@
 #include <pmem_config/PersistentMemoryCapabilitiesFactory.h>
 #include <pmem_config/PersistentMemoryNamespaceFactory.h>
 #include <pmem_config/NamespaceViewFactory.h>
-#include <logic/MemoryAllocationTypes.h>
+#include <core/memory_allocator/MemoryAllocationTypes.h>
 
 namespace cli
 {
@@ -346,28 +346,28 @@ class NVM_API NamespaceFeature : public cli::framework::FeatureBase
 		 */
 		cli::framework::ResultBase* parsedCreateGoalParamsToRequest(
 				const framework::ParsedCommand& parsedCommand,
-				wbem::logic::MemoryAllocationRequest &request);
+				core::memory_allocator::MemoryAllocationRequest &request);
 		cli::framework::ResultBase* validateSocketList(const std::vector<std::string> &socketList);
 		cli::framework::ResultBase* addDimmsToRequestFromSocketList(
 				const std::vector<std::string> &socketList,
-				wbem::logic::MemoryAllocationRequest &request);
-		wbem::logic::AppDirectExtent memoryPropToAppDirectExtent(
+				core::memory_allocator::MemoryAllocationRequest &request);
+		core::memory_allocator::AppDirectExtent memoryPropToAppDirectExtent(
 				const MemoryProperty &pmProp);
 		cli::framework::ResultBase* addParsedDimmListToRequest(
 				const framework::ParsedCommand& parsedCommand,
-				wbem::logic::MemoryAllocationRequest &request);
-		wbem::logic::Dimm nvdimmInstanceToDimm(const wbem::framework::Instance &instance);
+				core::memory_allocator::MemoryAllocationRequest &request);
+		core::memory_allocator::Dimm nvdimmInstanceToDimm(const wbem::framework::Instance &instance);
 		cli::framework::ResultBase* showConfigGoalForInstances(
 				const cli::nvmcli::filters_t &filters,
 				wbem::framework::attribute_names_t &displayAttributes,
 				wbem::framework::instances_t *pWbemInstances);
-		bool promptUserConfirmationForLayout(const wbem::logic::MemoryAllocationLayout &layout);
-		std::string getPromptStringForLayout(const wbem::logic::MemoryAllocationLayout &layout);
-		std::string getStringForLayoutWarning(enum wbem::logic::LayoutWarningCode warningCode);
+		bool promptUserConfirmationForLayout(const core::memory_allocator::MemoryAllocationLayout &layout);
+		std::string getPromptStringForLayout(const core::memory_allocator::MemoryAllocationLayout &layout);
+		std::string getStringForLayoutWarning(enum core::memory_allocator::LayoutWarningCode warningCode);
 
 		// May throw
 		void getDimmInfoForUids(const std::vector<std::string> &dimmUids,
-				std::vector<wbem::logic::Dimm> &dimmList);
+				std::vector<core::memory_allocator::Dimm> &dimmList);
 
 		framework::ResultBase* parseReserveDimmProperty(const framework::ParsedCommand& parsedCommand);
 

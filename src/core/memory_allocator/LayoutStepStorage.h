@@ -25,28 +25,34 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef NVMCONTEXT_H_
-#define NVMCONTEXT_H_
+/*
+ * Lay out the storage region in memory.
+ */
 
-#include <nvm_context.h>
+#ifndef _core_LOGIC_LAYOUTSTEPSTORAGE_H_
+#define _core_LOGIC_LAYOUTSTEPSTORAGE_H_
 
-namespace wbem
+#include <nvm_types.h>
+#include <core/memory_allocator/LayoutStep.h>
+
+namespace core
 {
-namespace lib_interface
+namespace memory_allocator
 {
 
-// pass through interface to library context
-static inline int createNvmContext()
+class NVM_API LayoutStepStorage: public LayoutStep
 {
-	return nvm_create_context();
-}
+	public:
+		LayoutStepStorage();
+		virtual ~LayoutStepStorage();
 
-static inline int freeNvmContext()
-{
-	return nvm_free_context();
-}
+		virtual void execute(const MemoryAllocationRequest &request,
+				MemoryAllocationLayout &layout);
 
-}
-}
+		virtual bool isRemainingStep(const MemoryAllocationRequest &request);
+};
 
-#endif /* NVMCONTEXT_H_ */
+} /* namespace memory_allocator */
+} /* namespace core */
+
+#endif /* _core_LOGIC_LAYOUTSTEPSTORAGE_H_ */

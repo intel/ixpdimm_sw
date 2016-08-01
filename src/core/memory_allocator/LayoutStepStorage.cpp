@@ -25,28 +25,44 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef NVMCONTEXT_H_
-#define NVMCONTEXT_H_
+/*
+ * Lay out the storage region in memory.
+ */
 
-#include <nvm_context.h>
+#include "LayoutStepStorage.h"
 
-namespace wbem
-{
-namespace lib_interface
-{
+#include <LogEnterExit.h>
+#include <utility.h>
+#include <core/exceptions/NvmExceptionBadRequest.h>
 
-// pass through interface to library context
-static inline int createNvmContext()
+core::memory_allocator::LayoutStepStorage::LayoutStepStorage()
 {
-	return nvm_create_context();
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
 
-static inline int freeNvmContext()
+core::memory_allocator::LayoutStepStorage::~LayoutStepStorage()
 {
-	return nvm_free_context();
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
 
-}
+bool core::memory_allocator::LayoutStepStorage::isRemainingStep(const MemoryAllocationRequest &request)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	return request.storageRemaining;
 }
 
-#endif /* NVMCONTEXT_H_ */
+void core::memory_allocator::LayoutStepStorage::execute(const MemoryAllocationRequest& request,
+		MemoryAllocationLayout& layout)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	NVM_UINT64 bytesToAllocate = getRemainingBytesFromRequestedDimms(request, layout);
+	NVM_UINT64 bytesRemaining = bytesToAllocate;
+	for (std::vector<struct Dimm>::const_iterator dimmIter = request.dimms.begin();
+			dimmIter != request.dimms.end(); dimmIter++)
+	{
+		bytesRemaining -= getDimmUnallocatedBytes(dimmIter->capacity, layout.goals[dimmIter->uid]);
+	}
+	layout.storageCapacity = bytesToConfigGoalSize(bytesToAllocate - bytesRemaining);
+}

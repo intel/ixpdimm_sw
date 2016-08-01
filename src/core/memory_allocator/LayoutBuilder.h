@@ -25,28 +25,46 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef NVMCONTEXT_H_
-#define NVMCONTEXT_H_
+/*
+ * Builds the memory allocation layout.
+ */
 
-#include <nvm_context.h>
+#ifndef _core_LOGIC_LAYOUTBUILDER_H_
+#define _core_LOGIC_LAYOUTBUILDER_H_
 
-namespace wbem
+#include <core/NvmLibrary.h>
+#include "MemoryAllocationTypes.h"
+#include "LayoutStep.h"
+
+namespace core
 {
-namespace lib_interface
+namespace memory_allocator
 {
 
-// pass through interface to library context
-static inline int createNvmContext()
+class NVM_API LayoutBuilder
 {
-	return nvm_create_context();
-}
+	public:
+		LayoutBuilder(
+				const struct nvm_capabilities &systemCapabilities,
+				core::NvmLibrary &nvmLib);
+		virtual ~LayoutBuilder();
 
-static inline int freeNvmContext()
-{
-	return nvm_free_context();
-}
+		MemoryAllocationLayout build(const MemoryAllocationRequest &request);
 
-}
-}
+	protected:
+		void initLayoutGoals(const MemoryAllocationRequest &request, MemoryAllocationLayout &layout);
 
-#endif /* NVMCONTEXT_H_ */
+		void populateAllLayoutStepsForRequest(const MemoryAllocationRequest& request);
+		void populateWarningGeneratingLayoutSteps();
+		void populateOrderedLayoutStepsForRequest(const MemoryAllocationRequest& request);
+		void deleteLayoutSteps();
+
+		std::vector<LayoutStep *> m_layoutSteps;
+		struct nvm_capabilities m_systemCapabilities;
+		core::NvmLibrary &m_nvmLib;
+};
+
+} /* namespace memory_allocator */
+} /* namespace core */
+
+#endif /* _core_LOGIC_LAYOUTBUILDER_H_ */

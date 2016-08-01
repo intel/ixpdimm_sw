@@ -25,28 +25,35 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef NVMCONTEXT_H_
-#define NVMCONTEXT_H_
+/*
+ * Rule that checks if ReserveDimm is a valid property.
+ * StorageCapacity is the only valid property that can be used in
+ * conjunction with ReserveDimm property.
+ */
 
-#include <nvm_context.h>
+#ifndef _core_LOGIC_RULERESERVEDIMMPROPERTYINVALID_H_
+#define _core_LOGIC_RULERESERVEDIMMPROPERTYINVALID_H_
 
-namespace wbem
+#include <nvm_types.h>
+#include "RequestRule.h"
+
+namespace core
 {
-namespace lib_interface
+namespace memory_allocator
 {
 
-// pass through interface to library context
-static inline int createNvmContext()
+class NVM_API RuleReserveDimmPropertyInvalid : public RequestRule
 {
-	return nvm_create_context();
-}
+	public:
+		RuleReserveDimmPropertyInvalid();
+		virtual ~RuleReserveDimmPropertyInvalid();
+		virtual void verify(const MemoryAllocationRequest &request);
+	protected:
+		bool reserveSingleDimm(const MemoryAllocationRequest &request);
+		bool memoryOrAppDirectIsRequested(const MemoryAllocationRequest &request);
+};
 
-static inline int freeNvmContext()
-{
-	return nvm_free_context();
-}
+} /* namespace memory_allocator */
+} /* namespace core */
 
-}
-}
-
-#endif /* NVMCONTEXT_H_ */
+#endif /* _core_LOGIC_RULERESERVEDIMMPROPERTYINVALID_H_ */

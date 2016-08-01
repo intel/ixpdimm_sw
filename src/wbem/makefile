@@ -51,7 +51,7 @@ ifdef BUILD_ESX
 endif
 
 SUBMODULES = . framework_interface lib_interface exception server memory physical_asset profile \
-	logic support software performance erasure mem_config pmem_config indication pegasus cimom/$(CIMOMBUILD)
+	support software performance erasure mem_config pmem_config indication pegasus cimom/$(CIMOMBUILD)
 
 UNITTEST = unittest
 FRAMEWORK = $(BUILD_DIR)/$(CIM_FRAMEWORK_LIB_SONAME).$(LIB_SUFFIX)

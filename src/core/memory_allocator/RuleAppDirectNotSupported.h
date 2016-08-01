@@ -25,28 +25,38 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef NVMCONTEXT_H_
-#define NVMCONTEXT_H_
+/*
+ * Rule to determine if app direct memory request is supported
+ */
 
-#include <nvm_context.h>
+#ifndef _core_LOGIC_RULEAPPDIRECTNOTSUPPORTED_H_
+#define _core_LOGIC_RULEAPPDIRECTNOTSUPPORTED_H_
 
-namespace wbem
+#include <nvm_types.h>
+#include "RequestRule.h"
+
+namespace core
 {
-namespace lib_interface
+namespace memory_allocator
 {
 
-// pass through interface to library context
-static inline int createNvmContext()
+class NVM_API RuleAppDirectNotSupported : public RequestRule
 {
-	return nvm_create_context();
-}
+	public:
+		RuleAppDirectNotSupported(const struct nvm_capabilities &cap);
+		virtual ~RuleAppDirectNotSupported();
 
-static inline int freeNvmContext()
-{
-	return nvm_free_context();
-}
+		virtual void verify(const MemoryAllocationRequest &request);
 
-}
-}
+	protected:
+		struct nvm_capabilities m_systemCap;
 
-#endif /* NVMCONTEXT_H_ */
+		void verifyAppDirectSupported();
+		void verifyAppDirectSettingsSupported(const MemoryAllocationRequest& request);
+		bool formatSupported(const struct AppDirectExtent &adRequest);
+};
+
+} /* namespace memory_allocator */
+} /* namespace core */
+
+#endif /* _core_LOGIC_RULEAPPDIRECTNOTSUPPORTED_H_ */

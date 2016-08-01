@@ -25,28 +25,49 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef NVMCONTEXT_H_
-#define NVMCONTEXT_H_
+/*
+ * Base class for memory allocation layout steps.
+ */
 
-#include <nvm_context.h>
+#ifndef _core_LOGIC_LAYOUTSTEP_H_
+#define _core_LOGIC_LAYOUTSTEP_H_
 
-namespace wbem
+#include "MemoryAllocationTypes.h"
+
+namespace core
 {
-namespace lib_interface
+namespace memory_allocator
 {
 
-// pass through interface to library context
-static inline int createNvmContext()
+class NVM_API LayoutStep
 {
-	return nvm_create_context();
-}
+	public:
+		virtual ~LayoutStep() {}
 
-static inline int freeNvmContext()
-{
-	return nvm_free_context();
-}
+		virtual void execute(const MemoryAllocationRequest &request, MemoryAllocationLayout &layout) = 0;
+		virtual bool isRemainingStep(const MemoryAllocationRequest &request);
 
-}
-}
+	protected:
+		NVM_UINT64 getDimmUnallocatedBytes(
+				const NVM_UINT64 &dimmCapacity,
+				const struct config_goal &dimmGoal);
+		NVM_UINT64 getDimmUnallocatedGiBAlignedBytes(
+				const NVM_UINT64 &dimmCapacity,
+				const struct config_goal &dimmGoal);
+		NVM_UINT64 getCountOfDimmsWithUnallocatedCapacity(
+				const std::vector<Dimm> &dimms,
+				std::map<std::string, struct config_goal> &goals);
+		NVM_UINT64 getLargestPerDimmSymmetricalBytes(
+				const std::vector<Dimm> &dimms,
+				std::map<std::string, struct config_goal> &goals,
+				const NVM_UINT64 &requestedCapacity,
+				std::vector<Dimm> &dimmsIncluded);
+		NVM_UINT64 getRemainingBytesFromRequestedDimms(
+				const struct MemoryAllocationRequest& request,
+				MemoryAllocationLayout& layout);
+};
 
-#endif /* NVMCONTEXT_H_ */
+} /* namespace memory_allocator */
+} /* namespace core */
+
+#endif /* _core_LOGIC_LAYOUTSTEP_H_ */

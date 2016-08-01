@@ -25,28 +25,50 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef NVMCONTEXT_H_
-#define NVMCONTEXT_H_
+/*
+ * Rule that checks a MemoryAllocationRequest to make sure it has all the DIMMs are
+ * valid and belong in the socket
+ */
 
-#include <nvm_context.h>
+#ifndef _core_LOGIC_RULERDIMMLISTINVALID_H_
+#define _core_LOGIC_RULERDIMMLISTINVALID_H_
 
-namespace wbem
+#include <nvm_types.h>
+#include <vector>
+#include "RequestRule.h"
+
+namespace core
 {
-namespace lib_interface
+namespace memory_allocator
 {
 
-// pass through interface to library context
-static inline int createNvmContext()
+class NVM_API RuleDimmListInvalid: public RequestRule
 {
-	return nvm_create_context();
-}
+	public:
+		RuleDimmListInvalid(const std::vector<struct device_discovery> manageableDevices);
+		virtual ~RuleDimmListInvalid();
+		virtual void verify(const MemoryAllocationRequest &request);
 
-static inline int freeNvmContext()
-{
-	return nvm_free_context();
-}
+	protected:
+		std::vector<struct device_discovery> m_manageableDimms;
 
-}
-}
+		void checkifDimmsInRequestAreUnique(const std::vector<Dimm> &dimms);
 
-#endif /* NVMCONTEXT_H_ */
+		void checkIfDimmListIsValid(const std::vector<Dimm> &dimms);
+		void checkIfSocketIdsMatch(std::vector<Dimm>::const_iterator requestIter,
+				std::vector<struct device_discovery>::const_iterator manageableDimmIter);
+		void checkIfMemControllersMatch(
+				std::vector<Dimm>::const_iterator requestIter,
+				std::vector<struct device_discovery>::const_iterator manageableDimmIter);
+		void checkIfDimmCapacitiesMatch(
+				std::vector<Dimm>::const_iterator requestIter,
+				std::vector<struct device_discovery>::const_iterator manageableDimmIter);
+		void checkIfMemChannelsMatch(
+				std::vector<Dimm>::const_iterator requestIter,
+				std::vector<struct device_discovery>::const_iterator manageableDimmIter);
+};
+
+} /* namespace memory_allocator */
+} /* namespace core */
+
+#endif /* _core_LOGIC_RULERDIMMLISTINVALID_H_ */

@@ -36,7 +36,7 @@ include $(ROOT_DIR)/build.mk
 OBJECT_MODULE_DIR = $(OBJECT_DIR)/core
 
 # ---- COMPONENTS ----------------------------------------------------------------------------------
-SUBMODULES = . device system exceptions
+SUBMODULES = . device system exceptions memory_allocator
 
 UNITTEST = unittest
 # ---- FILES ---------------------------------------------------------------------------------------

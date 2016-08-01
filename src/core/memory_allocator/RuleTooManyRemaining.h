@@ -25,28 +25,31 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef NVMCONTEXT_H_
-#define NVMCONTEXT_H_
+/*
+ * Rule that checks a MemoryAllocationRequest to make sure only one extent is
+ * set to remaining.
+ */
 
-#include <nvm_context.h>
+#ifndef _core_LOGIC_RULETOOMANYREMAINING_H_
+#define _core_LOGIC_RULETOOMANYREMAINING_H_
 
-namespace wbem
+#include <nvm_types.h>
+#include "RequestRule.h"
+
+namespace core
 {
-namespace lib_interface
+namespace memory_allocator
 {
 
-// pass through interface to library context
-static inline int createNvmContext()
+class NVM_API RuleTooManyRemaining: public RequestRule
 {
-	return nvm_create_context();
-}
+	public:
+		RuleTooManyRemaining();
+		virtual ~RuleTooManyRemaining();
+		virtual void verify(const MemoryAllocationRequest &request);
+};
 
-static inline int freeNvmContext()
-{
-	return nvm_free_context();
-}
+} /* namespace memory_allocator */
+} /* namespace core */
 
-}
-}
-
-#endif /* NVMCONTEXT_H_ */
+#endif /* _core_LOGIC_RULETOOMANYREMAINING_H_ */

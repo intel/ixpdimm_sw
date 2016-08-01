@@ -25,28 +25,46 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef NVMCONTEXT_H_
-#define NVMCONTEXT_H_
+/*
+ * Rule that checks that the user is not configuring only part of a socket
+ */
 
-#include <nvm_context.h>
+#ifndef _core_LOGIC_RULEPARTIALSOCKETCONFIGURED_H_
+#define _core_LOGIC_RULEPARTIALSOCKETCONFIGURED_H_
 
-namespace wbem
+#include <nvm_types.h>
+#include <set>
+#include <vector>
+#include <list>
+#include <core/NvmLibrary.h>
+#include "RequestRule.h"
+
+namespace core
 {
-namespace lib_interface
+namespace memory_allocator
 {
-
-// pass through interface to library context
-static inline int createNvmContext()
+class NVM_API RulePartialSocketConfigured : public RequestRule
 {
-	return nvm_create_context();
-}
+	public:
+		RulePartialSocketConfigured(const std::vector<struct device_discovery> manageableDevices,
+				core::NvmLibrary &nvmLib);
+		virtual ~RulePartialSocketConfigured();
+		virtual void verify(const MemoryAllocationRequest &request);
 
-static inline int freeNvmContext()
-{
-	return nvm_free_context();
-}
+	protected:
+		std::list<NVM_UINT16> getRequestedSockets(std::vector<Dimm> dimms);
+		std::set<std::string> getSetOfAllDimmsOnSocket(NVM_UINT16 socketId);
+		std::set<std::string> getSetOfRequestedDimmsOnSocket(
+				const std::vector<Dimm> &requestedDimms, NVM_UINT16 socketId);
+		std::set<std::string> getSetOfNewDimmsOnSocket(NVM_UINT16 socketId);
+		bool deviceIsNew(NVM_UID uid);
+		void validateRequestForSocket(const std::vector<Dimm> &requestDimms, NVM_UINT16 socketId);
 
-}
-}
+		std::vector<struct device_discovery> m_manageableDimms;
+		core::NvmLibrary &m_nvmLib;
+};
 
-#endif /* NVMCONTEXT_H_ */
+} /* namespace memory_allocator */
+} /* namespace core */
+
+#endif /* _core_LOGIC_RULEPARTIALSOCKETCONFIGURED_H_ */

@@ -34,8 +34,7 @@
 #include <LogEnterExit.h>
 #include <string/s_str.h>
 #include <uid/uid.h>
-#include <logic/MemoryAllocationTypes.h>
-#include <logic/MemoryAllocator.h>
+#include <core/memory_allocator/MemoryAllocator.h>
 #include <mem_config/MemoryConfigurationFactory.h>
 #include <pmem_config/PersistentMemoryCapabilitiesFactory.h>
 #include <memory/SystemProcessorFactory.h>
@@ -45,7 +44,6 @@
 #include <libinvm-cli/SimpleListResult.h>
 #include <libinvm-cli/CliFrameworkTypes.h>
 #include <exception/NvmExceptionLibError.h>
-
 
 /*
  * Helper function to convert a MemoryConfiguration config goal instance into a CLI config goal
@@ -690,16 +688,16 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::createGoal(
 	bool forceOption = parsedCommand.options.find(framework::OPTION_FORCE.name)
 			!= parsedCommand.options.end();
 
-	wbem::logic::MemoryAllocationRequest request;
+	core::memory_allocator::MemoryAllocationRequest request;
 	pResult = parsedCreateGoalParamsToRequest(parsedCommand, request);
 
 	if (!pResult)
 	{
-		wbem::logic::MemoryAllocator *pAllocator = NULL;
+		core::memory_allocator::MemoryAllocator *pAllocator = NULL;
 		try
 		{
-			pAllocator = wbem::logic::MemoryAllocator::getNewMemoryAllocator();
-			wbem::logic::MemoryAllocationLayout layout = pAllocator->layout(request);
+			pAllocator = core::memory_allocator::MemoryAllocator::getNewMemoryAllocator();
+			core::memory_allocator::MemoryAllocationLayout layout = pAllocator->layout(request);
 
 			if (forceOption || promptUserConfirmationForLayout(layout))
 			{
@@ -714,6 +712,10 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::createGoal(
 		catch (wbem::framework::Exception &e)
 		{
 			pResult = NvmExceptionToResult(e);
+		}
+		catch (std::exception &e)
+		{
+			pResult = CoreExceptionToResult(e);
 		}
 
 		if (pAllocator)
@@ -732,7 +734,7 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::createGoal(
 }
 
 bool cli::nvmcli::NamespaceFeature::promptUserConfirmationForLayout(
-		const wbem::logic::MemoryAllocationLayout &layout)
+		const core::memory_allocator::MemoryAllocationLayout &layout)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
@@ -741,7 +743,7 @@ bool cli::nvmcli::NamespaceFeature::promptUserConfirmationForLayout(
 }
 
 std::string cli::nvmcli::NamespaceFeature::getPromptStringForLayout(
-		const wbem::logic::MemoryAllocationLayout &layout)
+		const core::memory_allocator::MemoryAllocationLayout &layout)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
@@ -765,7 +767,7 @@ std::string cli::nvmcli::NamespaceFeature::getPromptStringForLayout(
 		promptStr << pDisplayGoal->output() << std::endl;
 
 		int warningsAdded = 0;
-		for (std::vector<enum wbem::logic::LayoutWarningCode>::const_iterator warningIter = layout.warnings.begin();
+		for (std::vector<enum core::memory_allocator::LayoutWarningCode>::const_iterator warningIter = layout.warnings.begin();
 				warningIter != layout.warnings.end(); warningIter++)
 		{
 			std::string warningStr = getStringForLayoutWarning(*warningIter);
@@ -803,7 +805,7 @@ std::string cli::nvmcli::NamespaceFeature::getPromptStringForLayout(
 }
 
 std::string cli::nvmcli::NamespaceFeature::getStringForLayoutWarning(
-		enum wbem::logic::LayoutWarningCode warningCode)
+		enum core::memory_allocator::LayoutWarningCode warningCode)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
@@ -811,19 +813,19 @@ std::string cli::nvmcli::NamespaceFeature::getStringForLayoutWarning(
 
 	switch (warningCode)
 	{
-	case wbem::logic::LAYOUT_WARNING_APP_DIRECT_NOT_SUPPORTED_BY_DRIVER:
+	case core::memory_allocator::LAYOUT_WARNING_APP_DIRECT_NOT_SUPPORTED_BY_DRIVER:
 		warningStr = CREATE_GOAL_APP_DIRECT_NOT_SUPPORTED_BY_DRIVER_WARNING;
 		break;
-	case wbem::logic::LAYOUT_WARNING_STORAGE_NOT_SUPPORTED_BY_DRIVER:
+	case core::memory_allocator::LAYOUT_WARNING_STORAGE_NOT_SUPPORTED_BY_DRIVER:
 		warningStr = CREATE_GOAL_STORAGE_ONLY_NOT_SUPPORTED_BY_DRIVER_WARNING;
 		break;
-	case wbem::logic::LAYOUT_WARNING_APP_DIRECT_SETTINGS_NOT_RECOMMENDED:
+	case core::memory_allocator::LAYOUT_WARNING_APP_DIRECT_SETTINGS_NOT_RECOMMENDED:
 		warningStr = CREATE_GOAL_APP_DIRECT_SETTINGS_NOT_RECOMMENDED_BY_BIOS_WARNING;
 		break;
-	case wbem::logic::LAYOUT_WARNING_NONOPTIMAL_POPULATION:
+	case core::memory_allocator::LAYOUT_WARNING_NONOPTIMAL_POPULATION:
 		warningStr = CREATE_GOAL_NON_OPTIMAL_DIMM_POPULATION_WARNING;
 		break;
-	case wbem::logic::LAYOUT_WARNING_REQUESTED_MEMORY_MODE_NOT_USABLE:
+	case core::memory_allocator::LAYOUT_WARNING_REQUESTED_MEMORY_MODE_NOT_USABLE:
 		warningStr = CREATE_GOAL_REQUESTED_MEMORY_MODE_NOT_USABLE_WARNING;
 		break;
 	default:
@@ -836,7 +838,7 @@ std::string cli::nvmcli::NamespaceFeature::getStringForLayoutWarning(
 
 cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parsedCreateGoalParamsToRequest(
 		const framework::ParsedCommand& parsedCommand,
-		wbem::logic::MemoryAllocationRequest &request)
+		core::memory_allocator::MemoryAllocationRequest &request)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
@@ -947,7 +949,7 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parsedCreateGoalParam
 		{
 			// Set memory size
 			request.memoryCapacity = memoryModeProp.getIsRemaining() ?
-					wbem::logic::REQUEST_REMAINING_CAPACITY :
+					core::memory_allocator::REQUEST_REMAINING_CAPACITY :
 					memoryModeProp.getSizeGiB();
 
 			request.storageRemaining = m_storageIsRemaining;
@@ -971,7 +973,7 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parsedCreateGoalParam
 
 cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::addParsedDimmListToRequest(
 		const framework::ParsedCommand& parsedCommand,
-		wbem::logic::MemoryAllocationRequest &request)
+		core::memory_allocator::MemoryAllocationRequest &request)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
@@ -1071,7 +1073,7 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::validateSocketList(
 }
 
 cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::addDimmsToRequestFromSocketList(
-		const std::vector<std::string> &socketList, wbem::logic::MemoryAllocationRequest &request)
+		const std::vector<std::string> &socketList, core::memory_allocator::MemoryAllocationRequest &request)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
@@ -1112,19 +1114,19 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::addDimmsToRequestFrom
 	return pResult;
 }
 
-wbem::logic::AppDirectExtent cli::nvmcli::NamespaceFeature::memoryPropToAppDirectExtent(
+core::memory_allocator::AppDirectExtent cli::nvmcli::NamespaceFeature::memoryPropToAppDirectExtent(
 		const MemoryProperty &appDirectProp)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	struct wbem::logic::AppDirectExtent appDirectExtent;
+	struct core::memory_allocator::AppDirectExtent appDirectExtent;
 
 	struct interleave_format format = appDirectProp.getFormatSizes();
 
 	appDirectExtent.imc = format.imc;
 	appDirectExtent.channel = format.channel;
 	appDirectExtent.capacity = appDirectProp.getIsRemaining() ?
-			wbem::logic::REQUEST_REMAINING_CAPACITY :
+			core::memory_allocator::REQUEST_REMAINING_CAPACITY :
 			appDirectProp.getSizeGiB();
 	appDirectExtent.byOne = appDirectProp.getIsByOne();
 	appDirectExtent.mirrored = appDirectProp.getIsMirrored();
@@ -1134,7 +1136,7 @@ wbem::logic::AppDirectExtent cli::nvmcli::NamespaceFeature::memoryPropToAppDirec
 
 void cli::nvmcli::NamespaceFeature::getDimmInfoForUids(
 		const std::vector<std::string> &dimmUids,
-		std::vector<wbem::logic::Dimm> &dimmList)
+		std::vector<core::memory_allocator::Dimm> &dimmList)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
@@ -1168,7 +1170,7 @@ void cli::nvmcli::NamespaceFeature::getDimmInfoForUids(
 	}
 }
 
-wbem::logic::Dimm cli::nvmcli::NamespaceFeature::nvdimmInstanceToDimm(const wbem::framework::Instance &instance)
+core::memory_allocator::Dimm cli::nvmcli::NamespaceFeature::nvdimmInstanceToDimm(const wbem::framework::Instance &instance)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
@@ -1183,7 +1185,7 @@ wbem::logic::Dimm cli::nvmcli::NamespaceFeature::nvdimmInstanceToDimm(const wbem
 	wbem::framework::Attribute channelAttr;
 	instance.getAttribute(wbem::CHANNEL_KEY, channelAttr);
 
-	wbem::logic::Dimm dimm;
+	core::memory_allocator::Dimm dimm;
 	dimm.uid = uidAttr.stringValue();
 	dimm.capacity = capacityAttr.uint64Value();
 	dimm.socket = socketAttr.uintValue();

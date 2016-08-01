@@ -25,28 +25,38 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef NVMCONTEXT_H_
-#define NVMCONTEXT_H_
+#ifndef _core_LOGIC_MEMORYALLOCATIONUTIL_H_
+#define _core_LOGIC_MEMORYALLOCATIONUTIL_H_
 
-#include <nvm_context.h>
+#include <core/NvmLibrary.h>
+#include <nvm_types.h>
+#include "MemoryAllocationTypes.h"
 
-namespace wbem
+namespace core
 {
-namespace lib_interface
+namespace memory_allocator
 {
 
-// pass through interface to library context
-static inline int createNvmContext()
+class NVM_API MemoryAllocationUtil
 {
-	return nvm_create_context();
-}
+	public:
+		MemoryAllocationUtil(core::NvmLibrary &nvmLib);
+		virtual ~MemoryAllocationUtil();
 
-static inline int freeNvmContext()
-{
-	return nvm_free_context();
-}
+		virtual NVM_UINT16 getNextAvailableInterleaveSetId(const MemoryAllocationLayout &layout);
 
-}
-}
+		static Dimm deviceDiscoveryToDimm(const struct device_discovery &deviceDiscovery);
 
-#endif /* NVMCONTEXT_H_ */
+	protected:
+		core::NvmLibrary &m_nvmLib;
+
+		void getLastInterleaveSetIdFromCurrentConfig(NVM_UINT16 &maxId);
+		void getLastInterleaveSetIdFromConfigGoals(NVM_UINT16 &maxId);
+		void getLastInterleaveSetIdFromLayout(const MemoryAllocationLayout &layout, NVM_UINT16 &maxId);
+		NVM_UINT16 getDimmInterleaveInfoMaxSetIndex(const std::string &dimmUid);
+};
+
+} /* namespace memory_allocator */
+} /* namespace core */
+
+#endif /* _core_LOGIC_MEMORYALLOCATIONUTIL_H_ */

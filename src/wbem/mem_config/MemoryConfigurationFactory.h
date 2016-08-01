@@ -36,7 +36,7 @@
 #include <string>
 #include <nvm_management.h>
 #include <framework_interface/NvmInstanceFactory.h>
-#include <logic/MemoryAllocationTypes.h>
+#include <core/memory_allocator/MemoryAllocationTypes.h>
 
 namespace wbem
 {
@@ -84,7 +84,8 @@ class NVM_API MemoryConfigurationFactory  : public framework_interface::NvmInsta
 			const bool onlyUnappliedGoals)
 			throw (framework::Exception);
 
-		wbem::framework::instances_t *getInstancesFromLayout(const wbem::logic::MemoryAllocationLayout &layout,
+		wbem::framework::instances_t *getInstancesFromLayout(
+				const core::memory_allocator::MemoryAllocationLayout &layout,
 				framework::attribute_names_t &attributes);
 
 		static bool isValidInstanceId(std::string instanceId);

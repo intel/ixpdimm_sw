@@ -25,28 +25,36 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef NVMCONTEXT_H_
-#define NVMCONTEXT_H_
+/*
+ * Rule that checks that no config goals exist on the dimms requested
+ */
 
-#include <nvm_context.h>
+#ifndef _core_LOGIC_RULEDIMMHASCONFIGGOAL_H_
+#define _core_LOGIC_RULEDIMMHASCONFIGGOAL_H_
 
-namespace wbem
+#include <nvm_types.h>
+#include <core/NvmLibrary.h>
+#include "RequestRule.h"
+
+namespace core
 {
-namespace lib_interface
+namespace memory_allocator
 {
 
-// pass through interface to library context
-static inline int createNvmContext()
+class NVM_API RuleDimmHasConfigGoal: public RequestRule
 {
-	return nvm_create_context();
-}
+	public:
+		RuleDimmHasConfigGoal(core::NvmLibrary &nvmLib);
+		virtual ~RuleDimmHasConfigGoal();
+		virtual void verify(const MemoryAllocationRequest &request);
 
-static inline int freeNvmContext()
-{
-	return nvm_free_context();
-}
+	protected:
+		core::NvmLibrary &m_nvmLib;
 
-}
-}
+		bool dimmHasUnappliedGoal(const std::string &dimmUid);
+};
 
-#endif /* NVMCONTEXT_H_ */
+} /* namespace memory_allocator */
+} /* namespace core */
+
+#endif /* _core_LOGIC_RULEDIMMHASCONFIGGOAL_H_ */

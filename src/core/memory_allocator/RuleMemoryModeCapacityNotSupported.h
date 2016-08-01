@@ -25,28 +25,34 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef NVMCONTEXT_H_
-#define NVMCONTEXT_H_
+/*
+ * Rule that checks that the platform supports memory mode
+ * if memory capacity is requested.
+ */
 
-#include <nvm_context.h>
+#ifndef _core_LOGIC_RULEMEMORYCAPACITYNOTSUPPORTED_H_
+#define _core_LOGIC_RULEMEMORYCAPACITYNOTSUPPORTED_H_
 
-namespace wbem
+#include <nvm_types.h>
+#include "RequestRule.h"
+
+namespace core
 {
-namespace lib_interface
+namespace memory_allocator
 {
 
-// pass through interface to library context
-static inline int createNvmContext()
+class NVM_API RuleMemoryModeCapacityNotSupported: public RequestRule
 {
-	return nvm_create_context();
-}
+	public:
+		RuleMemoryModeCapacityNotSupported(const struct nvm_capabilities &systemCapabilities);
+		virtual ~RuleMemoryModeCapacityNotSupported();
+		virtual void verify(const MemoryAllocationRequest &request);
 
-static inline int freeNvmContext()
-{
-	return nvm_free_context();
-}
+	protected:
+		struct nvm_capabilities m_systemCapabilities;
+};
 
-}
-}
+} /* namespace memory_allocator */
+} /* namespace core */
 
-#endif /* NVMCONTEXT_H_ */
+#endif /* _core_LOGIC_RULEMEMORYCAPACITYNOTSUPPORTED_H_ */

@@ -25,28 +25,35 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef NVMCONTEXT_H_
-#define NVMCONTEXT_H_
+/*
+ * Add a layout warning if the current volatile mode reported by BIOS does not match the requested mode.
+ */
 
-#include <nvm_context.h>
+#ifndef _core_LOGIC_LAYOUTSTEPCHECKCURRENTVOLATILEMODE_H_
+#define _core_LOGIC_LAYOUTSTEPCHECKCURRENTVOLATILEMODE_H_
 
-namespace wbem
+#include <nvm_types.h>
+#include <core/memory_allocator/LayoutStep.h>
+
+namespace core
 {
-namespace lib_interface
+namespace memory_allocator
 {
 
-// pass through interface to library context
-static inline int createNvmContext()
+class NVM_API LayoutStepCheckCurrentVolatileMode : public LayoutStep
 {
-	return nvm_create_context();
-}
+	public:
+		LayoutStepCheckCurrentVolatileMode(const struct platform_capabilities &platformCapabilities);
+		virtual ~LayoutStepCheckCurrentVolatileMode();
 
-static inline int freeNvmContext()
-{
-	return nvm_free_context();
-}
+		virtual void execute(const MemoryAllocationRequest &request, MemoryAllocationLayout &layout);
 
-}
-}
+	protected:
+		struct platform_capabilities m_platformCapabilities;
+};
 
-#endif /* NVMCONTEXT_H_ */
+} /* namespace memory_allocator */
+} /* namespace core */
+
+#endif /* _core_LOGIC_LAYOUTSTEPCHECKCURRENTVOLATILEMODE_H_ */
+

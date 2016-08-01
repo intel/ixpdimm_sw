@@ -25,28 +25,64 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef NVMCONTEXT_H_
-#define NVMCONTEXT_H_
+/*
+ * Rule that checks that no config goals exist on the dimms requested
+ */
 
-#include <nvm_context.h>
+#include "RuleDimmHasConfigGoal.h"
 
-namespace wbem
-{
-namespace lib_interface
-{
+#include <LogEnterExit.h>
+#include <uid/uid.h>
+#include <core/exceptions/LibraryException.h>
+#include <core/exceptions/NvmExceptionBadRequest.h>
 
-// pass through interface to library context
-static inline int createNvmContext()
+core::memory_allocator::RuleDimmHasConfigGoal::RuleDimmHasConfigGoal(core::NvmLibrary &nvmLib) :
+	m_nvmLib(nvmLib)
 {
-	return nvm_create_context();
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
 
-static inline int freeNvmContext()
+core::memory_allocator::RuleDimmHasConfigGoal::~RuleDimmHasConfigGoal()
 {
-	return nvm_free_context();
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
 
-}
+void core::memory_allocator::RuleDimmHasConfigGoal::verify(const MemoryAllocationRequest &request)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	for (std::vector<struct Dimm>::const_iterator dimmIter = request.dimms.begin();
+				dimmIter != request.dimms.end(); dimmIter++)
+	{
+		if (dimmHasUnappliedGoal(dimmIter->uid))
+		{
+			throw core::NvmExceptionDimmHasConfigGoal();
+		}
+	}
 }
 
-#endif /* NVMCONTEXT_H_ */
+bool core::memory_allocator::RuleDimmHasConfigGoal::dimmHasUnappliedGoal(const std::string& dimmUid)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	bool hasGoal = false;
+
+	try
+	{
+		struct config_goal goal = m_nvmLib.getConfigGoal(dimmUid);
+		if (goal.status != CONFIG_GOAL_STATUS_SUCCESS)
+		{
+			hasGoal = true;
+		}
+	}
+	catch (core::LibraryException &e)
+	{
+		// Goal not existing is OK
+		if (e.getErrorCode() != NVM_ERR_NOTFOUND)
+		{
+			throw;
+		}
+	}
+
+	return hasGoal;
+}

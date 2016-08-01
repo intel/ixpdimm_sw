@@ -25,28 +25,32 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef NVMCONTEXT_H_
-#define NVMCONTEXT_H_
+/*
+ * Base class for layout checks that verify the validity of a MemoryAllocationLayout.
+ * A failed check is expected to throw some kind of descriptive exception.
+ */
 
-#include <nvm_context.h>
+#ifndef _core_LOGIC_POSTLAYOUTCHECK_H_
+#define _core_LOGIC_POSTLAYOUTCHECK_H_
 
-namespace wbem
+#include <nvm_types.h>
+#include <core/memory_allocator/MemoryAllocationTypes.h>
+
+namespace core
 {
-namespace lib_interface
+namespace memory_allocator
 {
 
-// pass through interface to library context
-static inline int createNvmContext()
+class NVM_API PostLayoutCheck
 {
-	return nvm_create_context();
-}
+	public:
+		virtual ~PostLayoutCheck() {}
 
-static inline int freeNvmContext()
-{
-	return nvm_free_context();
-}
+		virtual void verify(
+				const struct MemoryAllocationRequest& request,
+				const MemoryAllocationLayout &layout) = 0;
+};
+} /* namespace memory_allocator */
+} /* namespace core */
 
-}
-}
-
-#endif /* NVMCONTEXT_H_ */
+#endif /* _core_LOGIC_POSTLAYOUTCHECK_H_ */

@@ -45,7 +45,6 @@
 #include <libinvm-cim/ExceptionNoMemory.h>
 #include <libinvm-cim/ExceptionNotSupported.h>
 #include <libinvm-cim/ObjectPathBuilder.h>
-#include <exception/NvmExceptionBadRequest.h>
 #include "MemoryConfigurationServiceFactory.h"
 #include "MemoryConfigurationFactory.h"
 #include "MemoryResourcesFactory.h"
@@ -55,15 +54,15 @@
 #include <memory/SystemProcessorFactory.h>
 #include <mem_config/PoolViewFactory.h>
 #include <exception/NvmExceptionLibError.h>
-#include <exception/NvmExceptionBadRequest.h>
 #include <framework_interface/NvmAssociationFactory.h>
 #include <framework_interface/NvmInstanceFactory.h>
 #include <lib_interface/NvmApi.h>
 #include <NvmStrings.h>
-#include <logic/MemoryAllocator.h>
-#include <logic/MemoryAllocationUtil.h>
-#include <logic/RulePartialSocketConfigured.h>
+#include <core/memory_allocator/MemoryAllocator.h>
+#include <core/memory_allocator/MemoryAllocationUtil.h>
+#include <core/memory_allocator/RulePartialSocketConfigured.h>
 #include <core/device/DeviceHelper.h>
+#include <core/exceptions/NvmExceptionBadRequest.h>
 
 wbem::mem_config::MemoryConfigurationServiceFactory::MemoryConfigurationServiceFactory()
 	throw (wbem::framework::Exception) :
@@ -280,7 +279,7 @@ void wbem::mem_config::MemoryConfigurationServiceFactory::removeSettingsWithSock
 }
 
 void wbem::mem_config::MemoryConfigurationServiceFactory::getDimmsForMemAllocSettings(
-		framework::STR_LIST settings, std::vector<logic::Dimm> &dimms)
+		framework::STR_LIST settings, std::vector<core::memory_allocator::Dimm> &dimms)
 {
 	// The list of settingsStrings will all be for the same socket and will all
 	// have the same newMemoryOnly attribute so we need only look at the first
@@ -305,7 +304,7 @@ void wbem::mem_config::MemoryConfigurationServiceFactory::getDimmsForMemAllocSet
 
 			if (status.is_new || !newMemoryOnly)
 			{
-				dimms.push_back(logic::MemoryAllocationUtil::deviceDiscoveryToDimm(devices[i]));
+				dimms.push_back(core::memory_allocator::MemoryAllocationUtil::deviceDiscoveryToDimm(devices[i]));
 			}
 		}
 	}
@@ -474,29 +473,33 @@ wbem::framework::UINT32 wbem::mem_config::MemoryConfigurationServiceFactory::exe
 			}
 		}
 	}
-	catch (exception::NvmExceptionPartialResultsCouldNotBeUndone &)
+	catch (core::NvmExceptionPartialResultsCouldNotBeUndone &)
 	{
 		wbemRc = MEMORYCONFIGURATIONSERVICE_ERR_DID_NOT_COMPLETE;
 	}
-	catch (framework::ExceptionNotSupported &)
+	catch (core::NvmExceptionProvisionCapacityNotSupported &)
 	{
 		wbemRc = MEMORYCONFIGURATIONSERVICE_ERR_FAILED;
+	}
+	catch (core::NvmExceptionUnacceptableLayoutDeviation &)
+	{
+		wbemRc = MEMORYCONFIGURATIONSERVICE_ERR_FAILED;
+	}
+	catch (core::NvmExceptionBadRequest &)
+	{
+		wbemRc = MEMORYCONFIGURATIONSERVICE_ERR_INVALID_PARAMETER;
 	}
 	catch (framework::ExceptionBadParameter &)
 	{
 		wbemRc = MEMORYCONFIGURATIONSERVICE_ERR_INVALID_PARAMETER;
 	}
-	catch (exception::NvmExceptionUnacceptableLayoutDeviation &)
-	{
-		wbemRc = MEMORYCONFIGURATIONSERVICE_ERR_FAILED;
-	}
 	catch (exception::NvmExceptionLibError &e)
 	{
 		wbemRc = getReturnCodeFromLibException(e);
 	}
-	catch (exception::NvmExceptionBadRequest &)
+	catch (core::LibraryException &e)
 	{
-		wbemRc = MEMORYCONFIGURATIONSERVICE_ERR_INVALID_PARAMETER;
+		wbemRc = MEMORYCONFIGURATIONSERVICE_ERR_FAILED;
 	}
 	catch (framework::Exception &)
 	{
@@ -540,7 +543,7 @@ void wbem::mem_config::MemoryConfigurationServiceFactory::removeGoalFromDimms(st
 			COMMON_LOG_ERROR_F("deleting config goal failed with rc = %d", rc);
 			if (atLeastOneRequestSucceeded)
 			{
-				throw exception::NvmExceptionPartialResultsCouldNotBeUndone();
+				throw core::NvmExceptionPartialResultsCouldNotBeUndone();
 			}
 			else
 			{
@@ -702,7 +705,7 @@ void wbem::mem_config::MemoryConfigurationServiceFactory::validatePool(std::stri
 void wbem::mem_config::MemoryConfigurationServiceFactory::settingsStringsToRequestedExtents(
 		const framework::STR_LIST &settingsStrings,
 		NVM_UINT64 &memoryCapacity,
-		std::vector<struct logic::AppDirectExtent> &appDirectCapacities)
+		std::vector<struct core::memory_allocator::AppDirectExtent> &appDirectCapacities)
 	throw (wbem::framework::Exception)
 {
 	memoryCapacity  = 0;
@@ -777,7 +780,7 @@ void wbem::mem_config::MemoryConfigurationServiceFactory::settingsStringsToReque
 		}
 		else if (resourceType == MEMORYALLOCATIONSETTINGS_RESOURCETYPE_NONVOLATILE)
 		{
-			struct logic::AppDirectExtent appDirectExtent;
+			struct core::memory_allocator::AppDirectExtent appDirectExtent;
 			appDirectExtent.capacity = reservationGiB;
 			appDirectExtent.channel = InterleaveSet::getInterleaveSizeFromExponent(channelInterleaveSize);
 			appDirectExtent.imc = InterleaveSet::getInterleaveSizeFromExponent(controllerInterleaveSize);
@@ -1007,7 +1010,7 @@ void wbem::mem_config::MemoryConfigurationServiceFactory::validateDimmList(
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	logic::MemoryAllocationRequest request;
+	core::memory_allocator::MemoryAllocationRequest request;
 
 	for (std::vector<std::string>::const_iterator uidIter = dimmUids.begin();
 			uidIter != dimmUids.end(); uidIter++)
@@ -1016,12 +1019,12 @@ void wbem::mem_config::MemoryConfigurationServiceFactory::validateDimmList(
 		memset(&discovery, 0, sizeof (discovery));
 		m_pApi->getDeviceDiscoveryForDimm(*uidIter, discovery);
 
-		request.dimms.push_back(logic::MemoryAllocationUtil::deviceDiscoveryToDimm(discovery));
+		request.dimms.push_back(core::memory_allocator::MemoryAllocationUtil::deviceDiscoveryToDimm(discovery));
 	}
 
 	std::vector<struct device_discovery> manageableDevices;
 	m_pApi->getManageableDimms(manageableDevices);
-	logic::RulePartialSocketConfigured dimmListValidationRule(manageableDevices);
+	core::memory_allocator::RulePartialSocketConfigured dimmListValidationRule(manageableDevices, core::NvmLibrary::getNvmLibrary());
 	dimmListValidationRule.verify(request);
 }
 
@@ -1046,12 +1049,13 @@ std::vector<std::string>
 	return dimmIDs;
 }
 
-wbem::logic::MemoryAllocationRequest wbem::mem_config::MemoryConfigurationServiceFactory::memAllocSettingsToRequest(
+core::memory_allocator::MemoryAllocationRequest
+wbem::mem_config::MemoryConfigurationServiceFactory::memAllocSettingsToRequest(
 		const framework::STR_LIST &memoryAllocationSettings)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	logic::MemoryAllocationRequest request;
+	core::memory_allocator::MemoryAllocationRequest request;
 
 	getDimmsForMemAllocSettings(memoryAllocationSettings, request.dimms);
 	settingsStringsToRequestedExtents(memoryAllocationSettings,
@@ -1098,12 +1102,13 @@ wbem::framework::UINT32 wbem::mem_config::MemoryConfigurationServiceFactory::exe
 			throw framework::ExceptionNotSupported(__FILE__, (char *) __func__);
 		}
 
-		wbem::logic::MemoryAllocationRequest request = memAllocSettingsToRequest(socketSettings);
-		wbem::logic::MemoryAllocator *pAllocator = NULL;
+		core::memory_allocator::MemoryAllocationRequest request = memAllocSettingsToRequest(socketSettings);
+		core::memory_allocator::MemoryAllocator *pAllocator = NULL;
 		try
 		{
-			wbem::logic::MemoryAllocator *pAllocator = wbem::logic::MemoryAllocator::getNewMemoryAllocator();
-			wbem::logic::MemoryAllocationLayout layout = pAllocator->layout(request);
+			core::memory_allocator::MemoryAllocator *pAllocator =
+					core::memory_allocator::MemoryAllocator::getNewMemoryAllocator();
+			core::memory_allocator::MemoryAllocationLayout layout = pAllocator->layout(request);
 			pAllocator->allocate(layout);
 
 			delete pAllocator;

@@ -25,28 +25,34 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef NVMCONTEXT_H_
-#define NVMCONTEXT_H_
+/*
+ * Check if the driver supports storage. If not, create a warning.
+ */
 
-#include <nvm_context.h>
+#ifndef _core_LOGIC_LAYOUTSTEPCHECKDRIVERSUPPORTSSTORAGE_H_
+#define _core_LOGIC_LAYOUTSTEPCHECKDRIVERSUPPORTSSTORAGE_H_
 
-namespace wbem
+#include <nvm_types.h>
+#include <core/memory_allocator/LayoutStep.h>
+
+namespace core
 {
-namespace lib_interface
+namespace memory_allocator
 {
 
-// pass through interface to library context
-static inline int createNvmContext()
+class NVM_API LayoutStepCheckDriverSupportsStorage : public LayoutStep
 {
-	return nvm_create_context();
-}
+	public:
+		LayoutStepCheckDriverSupportsStorage(const struct nvm_features &driverFeatures);
+		virtual ~LayoutStepCheckDriverSupportsStorage();
 
-static inline int freeNvmContext()
-{
-	return nvm_free_context();
-}
+		virtual void execute(const MemoryAllocationRequest &request, MemoryAllocationLayout &layout);
 
-}
-}
+	protected:
+		struct nvm_features m_driverFeatures;
+};
 
-#endif /* NVMCONTEXT_H_ */
+} /* namespace memory_allocator */
+} /* namespace core */
+
+#endif /* LAYOUTSTEPCHECKDRIVERSUPPORTSSTORAGE_H_ */

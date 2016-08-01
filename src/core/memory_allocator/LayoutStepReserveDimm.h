@@ -25,28 +25,47 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef NVMCONTEXT_H_
-#define NVMCONTEXT_H_
+/*
+ * Lay out the reserve dimm in memory.
+ */
 
-#include <nvm_context.h>
+#ifndef _core_LOGIC_LAYOUTSTEPRESERVEDIMM_H_
+#define _core_LOGIC_LAYOUTSTEPRESERVEDIMM_H_
 
-namespace wbem
+#include <core/memory_allocator/LayoutStep.h>
+
+namespace core
 {
-namespace lib_interface
+namespace memory_allocator
 {
 
-// pass through interface to library context
-static inline int createNvmContext()
+class NVM_API LayoutStepReserveDimm : public LayoutStep
 {
-	return nvm_create_context();
-}
+	public:
+		LayoutStepReserveDimm();
+		virtual ~LayoutStepReserveDimm();
 
-static inline int freeNvmContext()
-{
-	return nvm_free_context();
-}
+		virtual void execute(const MemoryAllocationRequest &request,
+				MemoryAllocationLayout &layout);
 
-}
-}
+	protected:
+		void setReserveDimmForStorage(struct Dimm reserveDimm,
+				MemoryAllocationLayout& layout);
 
-#endif /* NVMCONTEXT_H_ */
+		bool loneDimmOnIMCIsSelectedAsReserve(
+				const std::map<NVM_UINT16, std::vector<Dimm> > &socketDimmListMap,
+				MemoryAllocationLayout& layout);
+
+		bool unpartneredDimmIsSelectedAsReserve(
+				const std::map<NVM_UINT16, std::vector<Dimm> > &socketDimmListMap,
+				MemoryAllocationLayout& layout);
+
+		bool oddlySizedDimmIsSelectedAsReserve(
+				const std::map<NVM_UINT16, std::vector<Dimm> > &socketDimmListMap,
+				MemoryAllocationLayout& layout);
+};
+
+} /* namespace memory_allocator */
+} /* namespace core */
+
+#endif /* _core_LOGIC_LAYOUTSTEPRESERVEDIMM_H_ */

@@ -25,28 +25,38 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef NVMCONTEXT_H_
-#define NVMCONTEXT_H_
+/*
+ * Rule that checks that no namespaces exist on the dimms requested
+ */
 
-#include <nvm_context.h>
+#ifndef _core_LOGIC_RULENAMESPACESEXIST_H_
+#define _core_LOGIC_RULENAMESPACESEXIST_H_
 
-namespace wbem
+#include <nvm_types.h>
+#include <core/NvmLibrary.h>
+#include "RequestRule.h"
+
+namespace core
 {
-namespace lib_interface
+namespace memory_allocator
 {
 
-// pass through interface to library context
-static inline int createNvmContext()
+class NVM_API RuleNamespacesExist : public RequestRule
 {
-	return nvm_create_context();
-}
+	public:
+		RuleNamespacesExist(core::NvmLibrary &nvmLib);
+		virtual ~RuleNamespacesExist();
+		virtual void verify(const MemoryAllocationRequest &request);
 
-static inline int freeNvmContext()
-{
-	return nvm_free_context();
-}
+	protected:
+		core::NvmLibrary &m_nvmLib;
 
-}
-}
+		bool requestIsMemoryModeOnly(const MemoryAllocationRequest &request);
+		bool requestIsOkWithGetNamespaceErrorCode(const MemoryAllocationRequest &request,
+				const int errorCode);
+};
 
-#endif /* NVMCONTEXT_H_ */
+} /* namespace memory_allocator */
+} /* namespace core */
+
+#endif /* _core_LOGIC_RULENAMESPACESEXIST_H_ */

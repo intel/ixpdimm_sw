@@ -25,28 +25,44 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef NVMCONTEXT_H_
-#define NVMCONTEXT_H_
+/*
+ * Rule that checks that layout is within an acceptable deviation from the request
+ */
 
-#include <nvm_context.h>
+#ifndef _core_LOGIC_POSTLAYOUTREQUESTDEVIATIONCHECK_H_
+#define _core_LOGIC_POSTLAYOUTREQUESTDEVIATIONCHECK_H_
 
-namespace wbem
+#include "PostLayoutCheck.h"
+
+namespace core
 {
-namespace lib_interface
+namespace memory_allocator
 {
 
-// pass through interface to library context
-static inline int createNvmContext()
+class NVM_API PostLayoutRequestDeviationCheck: public PostLayoutCheck
 {
-	return nvm_create_context();
-}
+	public:
+		PostLayoutRequestDeviationCheck();
+		virtual ~PostLayoutRequestDeviationCheck();
+		virtual void verify(
+				const struct MemoryAllocationRequest &request,
+				const struct MemoryAllocationLayout &layout);
 
-static inline int freeNvmContext()
-{
-	return nvm_free_context();
-}
+	protected:
+		void checkIfMemoryCapacityLayoutIsAcceptable(
+				const struct MemoryAllocationRequest& request,
+				const MemoryAllocationLayout& layout);
 
-}
-}
+		void checkAppDirectCapacityLayoutIsAcceptable(
+				const struct MemoryAllocationRequest& request,
+				const MemoryAllocationLayout& layout);
 
-#endif /* NVMCONTEXT_H_ */
+		double findPercentDeviation(NVM_UINT64 expectedValue, NVM_UINT64 observedValue);
+
+		bool layoutDeviationIsWithinBounds(double percentDeviation);
+};
+
+} /* namespace memory_allocator */
+} /* namespace core */
+
+#endif /* _core_LOGIC_POSTLAYOUTREQUESTDEVIATIONCHECK_H_ */

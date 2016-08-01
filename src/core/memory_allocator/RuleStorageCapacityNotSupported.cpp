@@ -25,28 +25,35 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef NVMCONTEXT_H_
-#define NVMCONTEXT_H_
+/*
+ * Rule that checks that the platform supports storage mode
+ * if storage capacity is requested.
+ */
 
-#include <nvm_context.h>
+#include "RuleStorageCapacityNotSupported.h"
 
-namespace wbem
-{
-namespace lib_interface
-{
+#include <LogEnterExit.h>
+#include <core/exceptions/NvmExceptionBadRequest.h>
 
-// pass through interface to library context
-static inline int createNvmContext()
+core::memory_allocator::RuleStorageCapacityNotSupported::RuleStorageCapacityNotSupported(
+		const struct nvm_capabilities &systemCapabilities) :
+		m_systemCapabilities(systemCapabilities)
 {
-	return nvm_create_context();
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
 
-static inline int freeNvmContext()
+core::memory_allocator::RuleStorageCapacityNotSupported::~RuleStorageCapacityNotSupported()
 {
-	return nvm_free_context();
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
 
-}
-}
+void core::memory_allocator::RuleStorageCapacityNotSupported::verify(const MemoryAllocationRequest &request)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-#endif /* NVMCONTEXT_H_ */
+	if (request.storageRemaining &&
+		!m_systemCapabilities.platform_capabilities.storage_mode_supported)
+	{
+		throw core::NvmExceptionStorageNotSupported();
+	}
+}

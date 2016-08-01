@@ -467,7 +467,8 @@ void wbem::mem_config::MemoryConfigurationFactory::populateInstanceDimmInfoFromD
 }
 
 wbem::framework::instances_t *wbem::mem_config::MemoryConfigurationFactory::getInstancesFromLayout(
-		const wbem::logic::MemoryAllocationLayout &layout, framework::attribute_names_t &attributes)
+		const core::memory_allocator::MemoryAllocationLayout &layout,
+		framework::attribute_names_t &attributes)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 

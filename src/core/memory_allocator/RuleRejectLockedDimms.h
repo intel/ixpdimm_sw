@@ -25,28 +25,39 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef NVMCONTEXT_H_
-#define NVMCONTEXT_H_
+/*
+ * A rule that rejects the request if it contains any security-locked AEP DIMMs.
+ */
 
-#include <nvm_context.h>
+#ifndef RULEREJECTLOCKEDDIMMS_H_
+#define RULEREJECTLOCKEDDIMMS_H_
 
-namespace wbem
+#include <nvm_types.h>
+#include <vector>
+#include <nvm_management.h>
+#include "RequestRule.h"
+
+namespace core
 {
-namespace lib_interface
+namespace memory_allocator
 {
 
-// pass through interface to library context
-static inline int createNvmContext()
+class NVM_API RuleRejectLockedDimms : public RequestRule
 {
-	return nvm_create_context();
-}
+	public:
+		RuleRejectLockedDimms(const std::vector<struct device_discovery> &manageableDevices);
+		virtual ~RuleRejectLockedDimms();
 
-static inline int freeNvmContext()
-{
-	return nvm_free_context();
-}
+		virtual void verify(const MemoryAllocationRequest &request);
 
-}
-}
+	protected:
+		std::vector<struct device_discovery> m_manageableDevices;
 
-#endif /* NVMCONTEXT_H_ */
+		bool isDimmLocked(const core::memory_allocator::Dimm &dimm);
+		bool isSecurityStateLocked(const enum lock_state securityState);
+};
+
+} /* namespace memory_allocator */
+} /* namespace core */
+
+#endif /* RULEREJECTLOCKEDDIMMS_H_ */

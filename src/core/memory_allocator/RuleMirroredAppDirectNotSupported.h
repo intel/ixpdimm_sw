@@ -25,28 +25,27 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef NVMCONTEXT_H_
-#define NVMCONTEXT_H_
+#ifndef SRC_core_LOGIC_RULEMIRROREDAPPDIRECTNOTSUPPORTED_H_
+#define SRC_core_LOGIC_RULEMIRROREDAPPDIRECTNOTSUPPORTED_H_
 
-#include <nvm_context.h>
+#include <nvm_types.h>
+#include "RequestRule.h"
 
-namespace wbem
+namespace core
 {
-namespace lib_interface
+namespace memory_allocator
 {
 
-// pass through interface to library context
-static inline int createNvmContext()
+class NVM_API RuleMirroredAppDirectNotSupported: public RequestRule
 {
-	return nvm_create_context();
-}
+public:
+	RuleMirroredAppDirectNotSupported();
+	virtual ~RuleMirroredAppDirectNotSupported();
 
-static inline int freeNvmContext()
-{
-	return nvm_free_context();
-}
+	virtual void verify(const MemoryAllocationRequest &request);
+};
 
-}
-}
+} /* namespace memory_allocator */
+} /* namespace core */
 
-#endif /* NVMCONTEXT_H_ */
+#endif /* SRC_core_LOGIC_RULEMIRROREDAPPDIRECTNOTSUPPORTED_H_ */

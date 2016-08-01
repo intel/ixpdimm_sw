@@ -25,28 +25,53 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef NVMCONTEXT_H_
-#define NVMCONTEXT_H_
+/*
+ * Lay out the Memory Mode region.
+ */
 
-#include <nvm_context.h>
+#ifndef _core_LOGIC_LAYOUTSTEPMEMORY_H_
+#define _core_LOGIC_LAYOUTSTEPMEMORY_H_
 
-namespace wbem
+#include <nvm_management.h>
+#include "LayoutStep.h"
+
+namespace core
 {
-namespace lib_interface
+namespace memory_allocator
 {
 
-// pass through interface to library context
-static inline int createNvmContext()
+class NVM_API LayoutStepMemory : public LayoutStep
 {
-	return nvm_create_context();
-}
+	public:
+		LayoutStepMemory();
+		virtual ~LayoutStepMemory();
 
-static inline int freeNvmContext()
-{
-	return nvm_free_context();
-}
+		virtual void execute(const MemoryAllocationRequest &request,
+				MemoryAllocationLayout &layout);
 
-}
-}
+		virtual bool isRemainingStep(const MemoryAllocationRequest &request);
 
-#endif /* NVMCONTEXT_H_ */
+	protected:
+		NVM_UINT64 getRequestedCapacityBytes(
+				const struct MemoryAllocationRequest& request,
+				MemoryAllocationLayout &layout);
+		NVM_UINT64 getAlignedDimmBytes(const MemoryAllocationRequest& request, const Dimm &dimm,
+				MemoryAllocationLayout& layout, const NVM_UINT64 &requestedBytes);
+		NVM_UINT64 getTotalMemoryBytes(const NVM_UINT64 &requestedBytes,
+				const NVM_UINT64 &existingBytes);
+		NVM_UINT64 roundDownMemoryToPMAlignment(
+				const Dimm &dimm, MemoryAllocationLayout& layout,
+				const NVM_UINT64 &requestedBytes, const NVM_UINT64 dimmBytes);
+		NVM_UINT64 roundUpMemoryToPMAlignment(
+				const Dimm &dimm, MemoryAllocationLayout& layout,
+				const NVM_UINT64 &requestedBytes, const NVM_UINT64 dimmBytes);
+		NVM_UINT64 roundMemoryToNearestPMAlignment(
+				const Dimm &dimm, MemoryAllocationLayout& layout,
+				const NVM_UINT64 &requestedBytes, const NVM_UINT64 dimmBytes);
+
+};
+
+} /* namespace memory_allocator */
+} /* namespace core */
+
+#endif /* _core_LOGIC_LAYOUTSTEPMEMORY_H_ */

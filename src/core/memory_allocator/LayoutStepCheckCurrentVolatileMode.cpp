@@ -25,28 +25,37 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef NVMCONTEXT_H_
-#define NVMCONTEXT_H_
+/*
+ * Add a layout warning if the current volatile mode reported by BIOS does not match the requested mode.
+ */
 
-#include <nvm_context.h>
+#include "LayoutStepCheckCurrentVolatileMode.h"
 
-namespace wbem
-{
-namespace lib_interface
-{
+#include <LogEnterExit.h>
 
-// pass through interface to library context
-static inline int createNvmContext()
+core::memory_allocator::LayoutStepCheckCurrentVolatileMode::LayoutStepCheckCurrentVolatileMode(
+		const struct platform_capabilities &pcap) : m_platformCapabilities(pcap)
 {
-	return nvm_create_context();
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
 
-static inline int freeNvmContext()
+core::memory_allocator::LayoutStepCheckCurrentVolatileMode::~LayoutStepCheckCurrentVolatileMode()
 {
-	return nvm_free_context();
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
 
-}
-}
+void core::memory_allocator::LayoutStepCheckCurrentVolatileMode::execute(
+		const MemoryAllocationRequest& request,
+		MemoryAllocationLayout& layout)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-#endif /* NVMCONTEXT_H_ */
+	if (request.memoryCapacity == REQUEST_REMAINING_CAPACITY || request.memoryCapacity > 0)
+	{
+		if (m_platformCapabilities.current_volatile_mode != VOLATILE_MODE_MEMORY &&
+			m_platformCapabilities.current_volatile_mode != VOLATILE_MODE_AUTO)
+		{
+			layout.warnings.push_back(LAYOUT_WARNING_REQUESTED_MEMORY_MODE_NOT_USABLE);
+		}
+	}
+}

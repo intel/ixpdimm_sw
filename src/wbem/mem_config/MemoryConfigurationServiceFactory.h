@@ -40,7 +40,7 @@
 #include <nvm_management.h>
 
 #include <framework_interface/NvmInstanceFactory.h>
-#include <logic/MemoryAllocationTypes.h>
+#include <core/memory_allocator/MemoryAllocationTypes.h>
 
 namespace wbem
 {
@@ -255,12 +255,13 @@ class NVM_API MemoryConfigurationServiceFactory : public framework_interface::Nv
 		/*
 		 * For a given list of MemoryAllocationSettings, return a list of DIMMs for those settings
 		 */
-		void getDimmsForMemAllocSettings(framework::STR_LIST settings, std::vector<logic::Dimm> &dimms);
+		void getDimmsForMemAllocSettings(framework::STR_LIST settings,
+				std::vector<core::memory_allocator::Dimm> &dimms);
 
 		/*
 		 * Translate MemoryAllocationSettings strings into a MemoryAllocationRequest
 		 */
-		wbem::logic::MemoryAllocationRequest memAllocSettingsToRequest(
+		core::memory_allocator::MemoryAllocationRequest memAllocSettingsToRequest(
 				const framework::STR_LIST &memoryAllocationSettings);
 
 		/*
@@ -284,7 +285,7 @@ class NVM_API MemoryConfigurationServiceFactory : public framework_interface::Nv
 		 */
 		void settingsStringsToRequestedExtents(const framework::STR_LIST &settingsStrings,
 				NVM_UINT64 &memoryCapacity,
-				std::vector<struct logic::AppDirectExtent> &appDirectCapacities)
+				std::vector<struct core::memory_allocator::AppDirectExtent> &appDirectCapacities)
 			throw (wbem::framework::Exception);
 
 		/*

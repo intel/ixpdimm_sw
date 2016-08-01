@@ -25,28 +25,32 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef NVMCONTEXT_H_
-#define NVMCONTEXT_H_
+/*
+ * Check if the driver supports storage. If not, create a warning.
+ */
 
-#include <nvm_context.h>
+#include "LayoutStepCheckDriverSupportsStorage.h"
 
-namespace wbem
-{
-namespace lib_interface
-{
+#include <LogEnterExit.h>
 
-// pass through interface to library context
-static inline int createNvmContext()
+
+core::memory_allocator::LayoutStepCheckDriverSupportsStorage::LayoutStepCheckDriverSupportsStorage(
+		const struct nvm_features &driverFeatures) : m_driverFeatures(driverFeatures)
 {
-	return nvm_create_context();
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
 
-static inline int freeNvmContext()
+core::memory_allocator::LayoutStepCheckDriverSupportsStorage::~LayoutStepCheckDriverSupportsStorage()
 {
-	return nvm_free_context();
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
 
+void core::memory_allocator::LayoutStepCheckDriverSupportsStorage::execute(const MemoryAllocationRequest& request,
+		MemoryAllocationLayout& layout)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	if (request.storageRemaining && !m_driverFeatures.storage_mode)
+	{
+		layout.warnings.push_back(LAYOUT_WARNING_STORAGE_NOT_SUPPORTED_BY_DRIVER);
+	}
 }
-}
-
-#endif /* NVMCONTEXT_H_ */

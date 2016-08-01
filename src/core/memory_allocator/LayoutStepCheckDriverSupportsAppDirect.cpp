@@ -25,28 +25,31 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef NVMCONTEXT_H_
-#define NVMCONTEXT_H_
+/*
+ * Check if the driver supports app direct. If not, create a warning.
+ */
 
-#include <nvm_context.h>
+#include "LayoutStepCheckDriverSupportsAppDirect.h"
 
-namespace wbem
-{
-namespace lib_interface
-{
+#include <LogEnterExit.h>
 
-// pass through interface to library context
-static inline int createNvmContext()
+core::memory_allocator::LayoutStepCheckDriverSupportsAppDirect::LayoutStepCheckDriverSupportsAppDirect(
+		const struct nvm_features &driverFeatures) : m_driverFeatures(driverFeatures)
 {
-	return nvm_create_context();
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
 
-static inline int freeNvmContext()
+core::memory_allocator::LayoutStepCheckDriverSupportsAppDirect::~LayoutStepCheckDriverSupportsAppDirect()
 {
-	return nvm_free_context();
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
 
+void core::memory_allocator::LayoutStepCheckDriverSupportsAppDirect::execute(const MemoryAllocationRequest& request,
+		MemoryAllocationLayout& layout)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	if (request.appDirectExtents.size() > 0 && !m_driverFeatures.app_direct_mode)
+	{
+		layout.warnings.push_back(LAYOUT_WARNING_APP_DIRECT_NOT_SUPPORTED_BY_DRIVER);
+	}
 }
-}
-
-#endif /* NVMCONTEXT_H_ */

@@ -210,6 +210,8 @@ void FilterAttributeNames(wbem::framework::attribute_names_t &attributes, std::s
  */
 cli::framework::ErrorResult *NvmExceptionToResult(wbem::framework::Exception &e,
 		std::string prefix = "");
+cli::framework::ErrorResult *CoreExceptionToResult(std::exception &e,
+		std::string prefix = "");
 
 /*
  * Helper function to set an error code on a result

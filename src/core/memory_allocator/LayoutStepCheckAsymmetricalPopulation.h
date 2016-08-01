@@ -25,28 +25,36 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef NVMCONTEXT_H_
-#define NVMCONTEXT_H_
+/*
+ * Add a warning if DIMMs are not optimally populated across each socket
+ */
 
-#include <nvm_context.h>
+#ifndef _core_LOGIC_LAYOUTSTEPCHECKASYMMETRICALPOPULATION_H_
+#define _core_LOGIC_LAYOUTSTEPCHECKASYMMETRICALPOPULATION_H_
 
-namespace wbem
+#include <nvm_types.h>
+#include <core/memory_allocator/LayoutStep.h>
+
+namespace core
 {
-namespace lib_interface
+namespace memory_allocator
 {
 
-// pass through interface to library context
-static inline int createNvmContext()
+class NVM_API LayoutStepCheckAsymmetricalPopulation : public LayoutStep
 {
-	return nvm_create_context();
-}
+	public:
+		LayoutStepCheckAsymmetricalPopulation();
+		virtual ~LayoutStepCheckAsymmetricalPopulation();
 
-static inline int freeNvmContext()
-{
-	return nvm_free_context();
-}
+		virtual void execute(const MemoryAllocationRequest &request, MemoryAllocationLayout &layout);
 
-}
-}
+	protected:
+		bool socketHasAsymmetricalSizedDimms(const std::vector<Dimm> &dimms);
+		bool socketHasAsymmetricalDimmPopulation(const std::vector<Dimm> &dimms);
+		bool dimmHasMatch(const Dimm &dimm, const std::vector<Dimm> &dimms);
+};
 
-#endif /* NVMCONTEXT_H_ */
+} /* namespace memory_allocator */
+} /* namespace core */
+
+#endif /* _core_LOGIC_LAYOUTSTEPCHECKASYMMETRICALPOPULATION_H_ */

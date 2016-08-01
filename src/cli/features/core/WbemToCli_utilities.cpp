@@ -57,11 +57,10 @@
 #include <exception/NvmExceptionInvalidPoolConfig.h>
 #include <exception/NvmExceptionBadTarget.h>
 #include <exception/NvmExceptionNotManageable.h>
-#include <exception/NvmExceptionBadRequest.h>
-
 #include <framework_interface/NvmInstanceFactory.h>
 #include <core/StringList.h>
 #include <cli/features/core/framework/CliHelper.h>
+#include <core/exceptions/NvmExceptionBadRequest.h>
 
 cli::framework::PropertyListResult* cli::nvmcli::NvmInstanceToPropertyListResult(
 		const wbem::framework::Instance& instance,
@@ -731,81 +730,122 @@ cli::framework::ErrorResult *cli::nvmcli::NvmExceptionToResult(wbem::framework::
 		return new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN, e.what(), prefix);
 	}
 
+	// ExceptionInvalidWqlQuery is not used in the CLI
+	// ExceptionBadParameter returns unknown error
+	return new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN, UNKNOWN_ERROR_STR, prefix);
+}
+
+cli::framework::ErrorResult *cli::nvmcli::CoreExceptionToResult(std::exception &e, std::string prefix)
+{
+	// Try Library Exception
+	core::LibraryException *pLibError =
+			dynamic_cast<core::LibraryException *>(&e);
+	if (pLibError != NULL)
+	{
+		int libRc = pLibError->getErrorCode();
+		if (libRc == NVM_ERR_NOMEMORY)
+		{
+			return new framework::ErrorResult(framework::ErrorResult::ERRORCODE_OUTOFMEMORY, TRS(NOMEMORY_ERROR_STR), prefix);
+		}
+		if (libRc == NVM_ERR_NOTSUPPORTED)
+		{
+			return new framework::ErrorResult(framework::ErrorResult::ERRORCODE_NOTSUPPORTED, TRS(NOTSUPPORTED_ERROR_STR), prefix);
+		}
+		if (libRc == NVM_ERR_CONFIGNOTSUPPORTED || libRc == NVM_ERR_SKUVIOLATION)
+		{
+			return new framework::ErrorResult(framework::ErrorResult::ERRORCODE_NOTSUPPORTED, TR(e.what()), prefix);
+		}
+		if (libRc == NVM_ERR_BADSECURITYSTATE)
+		{
+			return new framework::ErrorResult(framework::ResultBase::ERRORCODE_UNKNOWN, TRS(BADSECURITY_ERROR_STR));
+		}
+		// return the library message
+		return new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN, TR(e.what()), prefix);
+	}
+
 	// try NvmExceptionBadRequest subclasses
-	wbem::exception::NvmExceptionBadRequestMemorySize *pBadRequestMemorySize =
-			dynamic_cast<wbem::exception::NvmExceptionBadRequestMemorySize *>(&e);
+	core::NvmExceptionProvisionCapacityNotSupported *pBadRequestNotSupported =
+			dynamic_cast<core::NvmExceptionProvisionCapacityNotSupported *>(&e);
+	if (pBadRequestNotSupported != NULL)
+	{
+		return new framework::ErrorResult(framework::ErrorResult::ERRORCODE_NOTSUPPORTED,
+				TRS(NOTSUPPORTED_ERROR_STR), prefix);
+	}
+
+	core::NvmExceptionBadRequestMemorySize *pBadRequestMemorySize =
+			dynamic_cast<core::NvmExceptionBadRequestMemorySize *>(&e);
 	if (pBadRequestMemorySize != NULL)
 	{
 		return new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
 				TRS(BAD_REQUEST_MEMORY_SIZE_STR), prefix);
 	}
 
-	wbem::exception::NvmExceptionBadRequestSize *pBadRequestAppDirectSize =
-			dynamic_cast<wbem::exception::NvmExceptionBadRequestSize *>(&e);
+	core::NvmExceptionBadRequestSize *pBadRequestAppDirectSize =
+			dynamic_cast<core::NvmExceptionBadRequestSize *>(&e);
 	if (pBadRequestAppDirectSize != NULL)
 	{
 		return new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
 				TRS(BAD_REQUEST_APP_DIRECT_SIZE_STR), prefix);
 	}
 
-	wbem::exception::NvmExceptionDimmHasConfigGoal *pBadRequestExistingGoal =
-			dynamic_cast<wbem::exception::NvmExceptionDimmHasConfigGoal *>(&e);
+	core::NvmExceptionDimmHasConfigGoal *pBadRequestExistingGoal =
+			dynamic_cast<core::NvmExceptionDimmHasConfigGoal *>(&e);
 	if (pBadRequestExistingGoal != NULL)
 	{
 		return new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
 				TRS(BAD_REQUEST_GOAL_ALREADY_EXISTS_STR), prefix);
 	}
 
-	wbem::exception::NvmExceptionNamespacesExist *pBadRequestNamespacesExist =
-			dynamic_cast<wbem::exception::NvmExceptionNamespacesExist *>(&e);
+	core::NvmExceptionNamespacesExist *pBadRequestNamespacesExist =
+			dynamic_cast<core::NvmExceptionNamespacesExist *>(&e);
 	if (pBadRequestNamespacesExist != NULL)
 	{
 		return new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
 				TRS(BAD_REQUEST_MUST_DELETE_NAMESPACES_STR), prefix);
 	}
 
-	wbem::exception::NvmExceptionBadRequestDoesntContainRequiredDimms *pBrokenConfig =
-			dynamic_cast<wbem::exception::NvmExceptionBadRequestDoesntContainRequiredDimms *>(&e);
+	core::NvmExceptionBadRequestDoesntContainRequiredDimms *pBrokenConfig =
+			dynamic_cast<core::NvmExceptionBadRequestDoesntContainRequiredDimms *>(&e);
 	if (pBrokenConfig != NULL)
 	{
 		return new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
 				TRS(BAD_REQUEST_GOAL_BREAKS_CONFIG_STR), prefix);
 	}
 
-	wbem::exception::NvmExceptionOverAddressDecoderLimit *pTooManyInterleaves =
-			dynamic_cast<wbem::exception::NvmExceptionOverAddressDecoderLimit *>(&e);
+	core::NvmExceptionOverAddressDecoderLimit *pTooManyInterleaves =
+			dynamic_cast<core::NvmExceptionOverAddressDecoderLimit *>(&e);
 	if (pTooManyInterleaves != NULL)
 	{
 		return new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
 				TRS(BAD_REQUEST_EXCEEDS_SYSTEM_RESOURCES_STR), prefix);
 	}
 
-	wbem::exception::NvmExceptionAppDirectSettingsNotSupported *pSettingsNotSupported =
-			dynamic_cast<wbem::exception::NvmExceptionAppDirectSettingsNotSupported *>(&e);
+	core::NvmExceptionAppDirectSettingsNotSupported *pSettingsNotSupported =
+			dynamic_cast<core::NvmExceptionAppDirectSettingsNotSupported *>(&e);
 	if (pSettingsNotSupported != NULL)
 	{
 		return new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
 				TRS(BAD_REQUEST_APP_DIRECT_SETTINGS_NOT_RECOMMENDED_STR), prefix);
 	}
 
-	wbem::exception::NvmExceptionRequestNotSupported *pRequestNotSupported =
-			dynamic_cast<wbem::exception::NvmExceptionRequestNotSupported *>(&e);
+	core::NvmExceptionRequestNotSupported *pRequestNotSupported =
+			dynamic_cast<core::NvmExceptionRequestNotSupported *>(&e);
 	if (pRequestNotSupported != NULL)
 	{
 		return new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
 				TRS(BAD_REQUEST_NOT_SUPPORTED_STR), prefix);
 	}
 
-	wbem::exception::NvmExceptionRequestedDimmLocked *pDimmLocked =
-			dynamic_cast<wbem::exception::NvmExceptionRequestedDimmLocked *>(&e);
+	core::NvmExceptionRequestedDimmLocked *pDimmLocked =
+			dynamic_cast<core::NvmExceptionRequestedDimmLocked *>(&e);
 	if (pDimmLocked != NULL)
 	{
 		return new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
 				TRS(BAD_REQUEST_DIMM_SECURITY_STATE), prefix);
 	}
 
-	wbem::exception::NvmExceptionBadRequestReserveDimm *pBadReserveDimmRequest =
-			dynamic_cast<wbem::exception::NvmExceptionBadRequestReserveDimm *>(&e);
+	core::NvmExceptionBadRequestReserveDimm *pBadReserveDimmRequest =
+			dynamic_cast<core::NvmExceptionBadRequestReserveDimm *>(&e);
 	if (pBadReserveDimmRequest!= NULL)
 	{
 		return new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
@@ -813,8 +853,8 @@ cli::framework::ErrorResult *cli::nvmcli::NvmExceptionToResult(wbem::framework::
 	}
 
 	// Generic bad request - all other bad request cases
-	wbem::exception::NvmExceptionBadRequest *pBadRequest =
-			dynamic_cast<wbem::exception::NvmExceptionBadRequest *>(&e);
+	core::NvmExceptionBadRequest *pBadRequest =
+			dynamic_cast<core::NvmExceptionBadRequest *>(&e);
 	if (pBadRequest != NULL)
 	{
 		return new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,

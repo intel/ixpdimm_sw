@@ -25,28 +25,57 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef NVMCONTEXT_H_
-#define NVMCONTEXT_H_
+/*
+ * Rule that checks if ReserveDimm is a valid property.
+ * StorageCapacity is the only valid property that can be used in
+ * conjunction with ReserveDimm property.
+ */
 
-#include <nvm_context.h>
+#include "RuleReserveDimmPropertyInvalid.h"
 
-namespace wbem
-{
-namespace lib_interface
-{
+#include <LogEnterExit.h>
+#include <core/exceptions/NvmExceptionBadRequest.h>
 
-// pass through interface to library context
-static inline int createNvmContext()
+core::memory_allocator::RuleReserveDimmPropertyInvalid::RuleReserveDimmPropertyInvalid()
 {
-	return nvm_create_context();
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
 
-static inline int freeNvmContext()
+core::memory_allocator::RuleReserveDimmPropertyInvalid::~RuleReserveDimmPropertyInvalid()
 {
-	return nvm_free_context();
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
 
-}
+void core::memory_allocator::RuleReserveDimmPropertyInvalid::verify(const MemoryAllocationRequest &request)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	if (reserveSingleDimm(request) &&
+			memoryOrAppDirectIsRequested(request))
+	{
+		throw core::NvmExceptionBadRequestReserveDimm();
+	}
 }
 
-#endif /* NVMCONTEXT_H_ */
+bool core::memory_allocator::RuleReserveDimmPropertyInvalid::reserveSingleDimm(
+		const MemoryAllocationRequest &request)
+{
+	bool result = false;
+	if ((request.reserveDimm) && (request.dimms.size() == 1))
+	{
+		result = true;
+	}
+	return result;
+}
+
+bool core::memory_allocator::RuleReserveDimmPropertyInvalid::memoryOrAppDirectIsRequested(
+		const MemoryAllocationRequest &request)
+{
+	bool result = false;
+	if ((request.memoryCapacity != 0) ||
+			(request.appDirectExtents.size() > 0))
+	{
+		result = true;
+	}
+	return result;
+}
