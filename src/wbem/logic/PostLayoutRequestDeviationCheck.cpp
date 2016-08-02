@@ -32,7 +32,6 @@
 #include "PostLayoutRequestDeviationCheck.h"
 #include <LogEnterExit.h>
 #include <exception/NvmExceptionBadRequest.h>
-#include <cmath>
 
 #define ACCEPTED_PERCENT_DEVIATION 10
 
@@ -50,7 +49,9 @@ double wbem::logic::PostLayoutRequestDeviationCheck::findPercentDeviation(
 		NVM_UINT64 expectedValue, NVM_UINT64 observedValue)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	return (double)100.0 * (abs(observedValue-expectedValue))/expectedValue;
+	int deviation =
+	(observedValue > expectedValue) ? (observedValue - expectedValue) : (expectedValue - observedValue);
+	return (double)100.0 * (deviation)/expectedValue;
 }
 
 bool wbem::logic::PostLayoutRequestDeviationCheck::layoutDeviationIsWithinBounds(
