@@ -17,6 +17,9 @@ Requires: libinvm-cim >= 1.0.0.1040
 BuildRequires: pkgconfig(libkmod)
 BuildRequires: pkgconfig(sqlite3)
 BuildRequires: pkgconfig(libndctl)
+BuildRequires: pkgconfig(openssl)
+BuildRequires: numactl-devel
+BuildRequires: sblim-cmpi-devel
 BuildRequires: libinvm-i18n-devel
 BuildRequires: libinvm-cim-devel
 BuildRequires: libinvm-cli-devel
