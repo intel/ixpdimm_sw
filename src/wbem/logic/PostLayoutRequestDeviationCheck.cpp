@@ -32,6 +32,7 @@
 #include "PostLayoutRequestDeviationCheck.h"
 #include <LogEnterExit.h>
 #include <exception/NvmExceptionBadRequest.h>
+#include <cmath>
 
 #define ACCEPTED_PERCENT_DEVIATION 10
 
