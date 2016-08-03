@@ -111,7 +111,7 @@ INCS =  -I. \
 LIBS =	-L$(OBJECT_DIR)/common -lcommon \
 		-L$(BUILD_DIR) -lsqlite3 \
 		-lz \
-		-lssl -lcrypto
+		-lcrypto
 
 ifdef BUILD_WINDOWS
 	INCS += -I$(EXTERN_DIR)/os_headers

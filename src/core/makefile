@@ -83,15 +83,12 @@ INCS = 	-I$(SRC_DIR) -I$(SRC_DIR)/core \
 LIBS = 	-L$(OBJECT_DIR)/common -lcommon \
 		-L$(BUILD_DIR) -l$(API_LIB_NAME) \
 			-lsqlite3 \
-			-lssl -lcrypto
+			-lcrypto
 
 ifdef BUILD_WINDOWS
 	LIBS += -lws2_32 -lmswsock -lShlwapi -L$(EXTERN_LIB_DIR)/openssl/openssl
 else ifdef BUILD_LINUX
 	LIBS += -ldl -lm -lpthread
-	ifndef BUILD_SIM
-		LIBS += -lndctl -lkmod
-	endif
 else ifdef BUILD_ESX
 	LIBS += -ldl -lm
 endif

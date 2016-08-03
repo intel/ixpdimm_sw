@@ -87,7 +87,7 @@ LIBS =	-L$(OBJECT_DIR)/common -lcommon \
 			-l$(CIM_LIB_NAME) \
 			-lsqlite3 \
 			-lz \
-			-lssl -lcrypto		
+			-lcrypto		
 		
 ifdef BUILD_WINDOWS
 	LIBS += -lws2_32 -lmswsock -ladvapi32 -lversion -lGdi32 -lShlwapi \

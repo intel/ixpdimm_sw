@@ -74,7 +74,7 @@ BuildRequires:  systemd
 A monitor daemon for monitoring the health and status of IXPDIMMs.
 
 %package -n ixpdimm-cli
-Summary:        CLI for managment of IXPDIMM
+Summary:        CLI for management of IXPDIMM
 License:        BSD
 Group:          Development/Tools
 Requires:       libixpdimm-cim%{?_isa} = %{version}-%{release}
