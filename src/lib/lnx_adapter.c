@@ -315,7 +315,7 @@ int get_topology(const NVM_UINT8 count, struct nvm_topology *p_dimm_topo)
 						{
 							rc = NVM_ERR_ARRAYTOOSMALL;
 							COMMON_LOG_ERROR("Invalid parameter, "
-									"count is smaller than number of "NVM_DIMM_NAME"s");
+									"count is smaller than number of " NVM_DIMM_NAME "s");
 							break;
 						}
 						// TODO DE6261: revert to original values instead of swapped
@@ -686,7 +686,7 @@ int open_ioctl_target(int *p_target, const char *dev_name)
 				rc = NVM_ERR_DRIVERFAILED;
 				break;
 		}
-		COMMON_LOG_ERROR_F("Unable to open the "NVM_DIMM_NAME" device %s. Error: %s",
+		COMMON_LOG_ERROR_F("Unable to open the " NVM_DIMM_NAME " device %s. Error: %s",
 				target, strerror(errno));
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -853,7 +853,7 @@ int get_dimm_power_limited(NVM_UINT16 socket_id)
 					rc = NVM_ERR_DRIVERFAILED;
 					break;
 			}
-			COMMON_LOG_ERROR_F("Unable to open the "NVM_DIMM_NAME" device %s. Error: %s",
+			COMMON_LOG_ERROR_F("Unable to open the " NVM_DIMM_NAME " device %s. Error: %s",
 					target, strerror(errno));
 		}
 		else

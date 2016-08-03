@@ -57,40 +57,40 @@ const char *EVENT_MESSAGES_CONFIG[EVENT_CODE_CONFIG_UNKNOWN -
 	EVENT_CODE_OFFSET_CONFIG + 1] =
 {
 	// EVENT_CODE_CONFIG_PLATFORM_CONFIG_INVALID
-	N_TR("The platform configuration data on "NVM_DIMM_NAME" %s is invalid."),
+	N_TR("The platform configuration data on " NVM_DIMM_NAME " %s is invalid."),
 	// EVENT_CODE_CONFIG_CONFIG_GOAL_APPLIED
-	N_TR("The BIOS has successfully applied the configuration goal on "NVM_DIMM_NAME" %s."),
+	N_TR("The BIOS has successfully applied the configuration goal on " NVM_DIMM_NAME " %s."),
 	// EVENT_CODE_CONFIG_CONFIG_GOAL_FAILED_CONFIG_ERROR
-	N_TR("The BIOS could not apply the configuration goal on "NVM_DIMM_NAME" %s because of "
+	N_TR("The BIOS could not apply the configuration goal on " NVM_DIMM_NAME " %s because of "
 			"errors in the goal data."),
 	// EVENT_CODE_CONFIG_CONFIG_GOAL_FAILED_INSUFFICIENT_RESOURCES
-	N_TR("The BIOS could not apply the configuration goal on "NVM_DIMM_NAME" %s "
+	N_TR("The BIOS could not apply the configuration goal on " NVM_DIMM_NAME " %s "
 			"because the system has insufficient resources."),
 	// EVENT_CODE_CONFIG_CONFIG_GOAL_FAILED_FW_ERROR
-	N_TR("The BIOS could not apply the configuration goal on "NVM_DIMM_NAME" %s because of a "
+	N_TR("The BIOS could not apply the configuration goal on " NVM_DIMM_NAME " %s because of a "
 			"firmware error."),
 	// EVENT_CODE_CONFIG_CONFIG_GOAL_FAILED_UNKNOWN
-	N_TR("The BIOS could not apply the configuration goal on "NVM_DIMM_NAME" %s "
+	N_TR("The BIOS could not apply the configuration goal on " NVM_DIMM_NAME " %s "
 			"for an unknown reason."),
 	// EVENT_CODE_CONFIG_DEVICE_ADDED_CONFIGURED
-	N_TR("The BIOS has detected and successfully configured "NVM_DIMM_NAME" %s."),
+	N_TR("The BIOS has detected and successfully configured " NVM_DIMM_NAME " %s."),
 	// EVENT_CODE_CONFIG_DEVICE_ADDED_NEW
-	N_TR("The BIOS has detected a new "NVM_DIMM_NAME" %s. The new "NVM_DIMM_NAME" must "
+	N_TR("The BIOS has detected a new " NVM_DIMM_NAME " %s. The new " NVM_DIMM_NAME " must "
 			"be configured in order to be used."),
 	// EVENT_CODE_CONFIG_DEVICE_MISSING
 	N_TR(NVM_DIMM_NAME" %s is missing."),
 	// EVENT_CODE_CONFIG_DEVICE_REPLACED_CONFIGURED
-	N_TR(NVM_DIMM_NAME" %s has been replaced with "NVM_DIMM_NAME" %s."),
+	N_TR(NVM_DIMM_NAME" %s has been replaced with " NVM_DIMM_NAME " %s."),
 	// EVENT_CODE_CONFIG_DEVICE_REPLACED_NEW
-	N_TR(NVM_DIMM_NAME" %s has been replaced with a new "NVM_DIMM_NAME" %s. "
-			"The new "NVM_DIMM_NAME" must be configured in order to be used."),
+	N_TR(NVM_DIMM_NAME" %s has been replaced with a new " NVM_DIMM_NAME " %s. "
+			"The new " NVM_DIMM_NAME " must be configured in order to be used."),
 	// EVENT_CODE_CONFIG_DEVICE_MOVED
 	N_TR(NVM_DIMM_NAME" %s has been moved to a different position."),
 	// EVENT_CODE_CONFIG_GOAL_SKU_VIOLATION
-	N_TR("A configuration was requested for "NVM_DIMM_NAME" %s that "
+	N_TR("A configuration was requested for " NVM_DIMM_NAME " %s that "
 			"is unsupported due to a licensing issue."),
 	// EVENT_CODE_CONFIG_SKU_VIOLATION
-	N_TR("The configuration of "NVM_DIMM_NAME" %s is unsupported due to a licensing issue."),
+	N_TR("The configuration of " NVM_DIMM_NAME " %s is unsupported due to a licensing issue."),
 	// EVENT_CODE_CONFIG_BAD_DRIVER
 	N_TR("The underlying software is missing or incompatible with this version of the "
 			"management software."),
@@ -109,9 +109,9 @@ const char *EVENT_MESSAGES_MGMT[EVENT_CODE_MGMT_UNKNOWN -
 	EVENT_CODE_OFFSET_MGMT + 1] =
 {
 	// EVENT_CODE_MGMT_CONFIG_GOAL_CREATED
-	N_TR("A new configuration goal has been saved on "NVM_DIMM_NAME" %s."),
+	N_TR("A new configuration goal has been saved on " NVM_DIMM_NAME " %s."),
 	// EVENT_CODE_MGMT_CONFIG_GOAL_DELETED
-	N_TR("A configuration goal has been deleted from "NVM_DIMM_NAME" %s."),
+	N_TR("A configuration goal has been deleted from " NVM_DIMM_NAME " %s."),
 	// EVENT_CODE_MGMT_NAMESPACE_CREATED
 	N_TR("A new namespace has been created. (Name: %s, UID: %s)"),
 	// EVENT_CODE_MGMT_NAMESPACE_DELETED
@@ -119,81 +119,81 @@ const char *EVENT_MESSAGES_MGMT[EVENT_CODE_MGMT_UNKNOWN -
 	// EVENT_CODE_MGMT_NAMESPACE_MODIFIED
 	N_TR("A namespace's settings have been modified. (Name: %s, UID: %s)"),
 	// EVENT_CODE_MGMT_SENSOR_SETTINGS_CHANGE
-	N_TR("The %s sensor settings have been changed on "NVM_DIMM_NAME" %s."),
+	N_TR("The %s sensor settings have been changed on " NVM_DIMM_NAME " %s."),
 	// EVENT_CODE_MGMT_FIRMWARE_UPDATE
-	N_TR("The firmware has been updated on "NVM_DIMM_NAME" %s. (New version: %s)"),
+	N_TR("The firmware has been updated on " NVM_DIMM_NAME " %s. (New version: %s)"),
 	// EVENT_CODE_MGMT_SECURITY_PASSWORD_SET
-	N_TR("The security password has been set on "NVM_DIMM_NAME" %s."),
+	N_TR("The security password has been set on " NVM_DIMM_NAME " %s."),
 	// EVENT_CODE_MGMT_SECURITY_PASSWORD_REMOVED
-	N_TR("The security password has been removed from "NVM_DIMM_NAME" %s."),
+	N_TR("The security password has been removed from " NVM_DIMM_NAME " %s."),
 	// EVENT_CODE_MGMT_SECURITY_SECURE_ERASE
-	N_TR("The persistent data on "NVM_DIMM_NAME" %s has been securely erased."),
+	N_TR("The persistent data on " NVM_DIMM_NAME " %s has been securely erased."),
 
 	// EVENT_CODE_DIAG_QUICK_UNKNOWN
 	N_TR("The management software logged an unknown event code %d.")
 };
 
 /*
- * "NVM_DIMM_NAME" event health messages
+ * " NVM_DIMM_NAME " event health messages
  * This array ordered by event_code_health enumeration for easy lookup
  */
 const char *EVENT_MESSAGES_HEALTH[EVENT_CODE_HEALTH_UNKNOWN -
 	EVENT_CODE_OFFSET_HEALTH + 1] =
 {
 	// EVENT_CODE_HEALTH_LOW_SPARE_CAPACITY
-	N_TR("The health monitor has detected that "NVM_DIMM_NAME" %s "
+	N_TR("The health monitor has detected that " NVM_DIMM_NAME " %s "
 			"is reporting percentage used at %s% which is above the alarm "
 			"threshold %s%%."),
 	// EVENT_CODE_HEALTH_MEDIA_TEMPERATURE_OVER_THRESHOLD
-	N_TR("The health monitor has detected that "NVM_DIMM_NAME" %s "
+	N_TR("The health monitor has detected that " NVM_DIMM_NAME " %s "
 			"is reporting a media temperature of %s C which is above the alarm "
 			"threshold of %s C."),
 	// EVENT_CODE_HEALTH_MEDIA_TEMPERATURE_UNDER_THRESHOLD
-	N_TR("The health monitor has detected that "NVM_DIMM_NAME" %s "
+	N_TR("The health monitor has detected that " NVM_DIMM_NAME " %s "
 			"is reporting a media temperature of %s C which is below the alarm "
 			"threshold of %s C."),
 	// EVENT_CODE_HEALTH_HIGH_WEARLEVEL
-	N_TR("The health monitor has detected that "NVM_DIMM_NAME" %s "
+	N_TR("The health monitor has detected that " NVM_DIMM_NAME " %s "
 			"is reporting a wear level of %s% which is above the alarm threshold %s%%."),
 	// EVENT_CODE_HEALTH_NEW_MEDIAERRORS_FOUND
-	N_TR("The health monitor has detected that "NVM_DIMM_NAME" %s "
+	N_TR("The health monitor has detected that " NVM_DIMM_NAME " %s "
 			"is reporting new %s media errors, total count is %s."),
 	// EVENT_CODE_HEALTH_HEALTH_STATE_CHANGED
-	N_TR("The health monitor has detected that "NVM_DIMM_NAME" %s "
+	N_TR("The health monitor has detected that " NVM_DIMM_NAME " %s "
 			"is reporting a change in health state from %s to %s."),
 	// EVENT_CODE_HEALTH_SPARE_DIE_CONSUMED
-	N_TR("The health monitor has detected that "NVM_DIMM_NAME" %s "
+	N_TR("The health monitor has detected that " NVM_DIMM_NAME " %s "
 			"is reporting that it has consumed %s spare die."),
 	// EVENT_CODE_HEALTH_NAMESPACE_HEALTH_STATE_CHANGED
 	N_TR("The health monitor has detected that namespace %s "
 			"is reporting a change in health state from %s to %s."),
 	// EVENT_CODE_HEALTH_UNSAFE_SHUTDOWN
-	N_TR("The firmware on "NVM_DIMM_NAME" %s experienced an unsafe shutdown "
+	N_TR("The firmware on " NVM_DIMM_NAME " %s experienced an unsafe shutdown "
 			"before its latest restart."),
 	// EVENT_CODE_HEALTH_CONTROLLER_TEMPERATURE_OVER_THRESHOLD
-	N_TR("The health monitor has detected that "NVM_DIMM_NAME" %s "
+	N_TR("The health monitor has detected that " NVM_DIMM_NAME " %s "
 			"is reporting a controller temperature of %s C which is above the alarm "
 			"threshold of %s C."),
 	// EVENT_CODE_HEALTH_CONTROLLER_TEMPERATURE_UNDER_THRESHOLD
-	N_TR("The health monitor has detected that "NVM_DIMM_NAME" %s "
+	N_TR("The health monitor has detected that " NVM_DIMM_NAME " %s "
 			"is reporting a controller temperature of %s C which is below the alarm "
 			"threshold of %s C."),
 	// EVENT_CODE_HEALTH_NEW_FWERRORS_FOUND
-	N_TR("The health monitor has detected that "NVM_DIMM_NAME" %s "
+	N_TR("The health monitor has detected that " NVM_DIMM_NAME " %s "
 			"firmware has reported %s new errors."),
 	// EVENT_CODE_HEALTH_VIRAL_STATE
-	N_TR("The health monitor has detected that "NVM_DIMM_NAME" %s "
+	N_TR("The health monitor has detected that " NVM_DIMM_NAME " %s "
 			"is reporting a viral state."),
 	// EVENT_CODE_HEALTH_MIXED_SKU
-	N_TR("The health monitor has detected that one or more "NVM_DIMM_NAME"s "
+	N_TR("The health monitor has detected that one or more " NVM_DIMM_NAME "s "
 			"in the system have different SKUs."),
 	// EVENT_CODE_HEALTH_SANITIZE_IN_PROGRESS
 	N_TR("The health monitor has detected that a sanitize operation is in progress "
-			"on "NVM_DIMM_NAME" %s. A reboot will be required when complete "
-			"to use the "NVM_DIMM_NAME"."),
+			"on " NVM_DIMM_NAME " %s. A reboot will be required when complete "
+			"to use the " NVM_DIMM_NAME "."),
 	// EVENT_CODE_HEALTH_SANITIZE_COMPLETE
 	N_TR("The health monitor has detected that a sanitize operation has completed "
-			"on "NVM_DIMM_NAME" %s. A reboot is required to use the "NVM_DIMM_NAME"."),
+			"on " NVM_DIMM_NAME " %s. A reboot is required to use the " NVM_DIMM_NAME "."),
 	// EVENT_CODE_HEALTH_UNKNOWN
 	N_TR("The health monitor has logged an unknown error code %d."),
 };
@@ -208,88 +208,88 @@ const char *EVENT_MESSAGES_QUICK_DIAG[EVENT_CODE_DIAG_QUICK_UNKNOWN -
 	// EVENT_CODE_DIAG_QUICK_SUCCESS
 	N_TR("The quick health check succeeded."),
 	// EVENT_CODE_DIAG_QUICK_INVALID_VENDORID
-	N_TR("The quick health check detected an unrecognized "NVM_DIMM_NAME" %s "
+	N_TR("The quick health check detected an unrecognized " NVM_DIMM_NAME " %s "
 			"due to an invalid vendor identifier %s, expected %s. "
-			"No further testing performed on this "NVM_DIMM_NAME"."),
+			"No further testing performed on this " NVM_DIMM_NAME "."),
 	// EVENT_CODE_DIAG_QUICK_INVALID_MANUFACTURER
-	N_TR("The quick health check detected an unrecognized "NVM_DIMM_NAME" %s "
+	N_TR("The quick health check detected an unrecognized " NVM_DIMM_NAME " %s "
 			"due to an invalid manufacturer %s, expected %s. "
-			"No further testing performed on this "NVM_DIMM_NAME"."),
+			"No further testing performed on this " NVM_DIMM_NAME "."),
 	// EVENT_CODE_DIAG_QUICK_INVALID_MODEL_NUMBER
-	N_TR("The quick health check detected an unrecognized "NVM_DIMM_NAME" %s "
+	N_TR("The quick health check detected an unrecognized " NVM_DIMM_NAME " %s "
 			"due to an invalid model number %s, expected %s. "
-			"No further testing performed on this "NVM_DIMM_NAME"."),
+			"No further testing performed on this " NVM_DIMM_NAME "."),
 	// EVENT_CODE_DIAG_QUICK_BAD_HEALTH
-	N_TR("The quick health check detected that "NVM_DIMM_NAME" %s "
+	N_TR("The quick health check detected that " NVM_DIMM_NAME " %s "
 			"is reporting a bad health state %s, expected %s."),
 	// EVENT_CODE_DIAG_QUICK_BAD_MEDIA_TEMP
-	N_TR("The quick health check detected that "NVM_DIMM_NAME" %s "
+	N_TR("The quick health check detected that " NVM_DIMM_NAME " %s "
 			"is reporting a media temperature of %s C which is above "
 			"the alarm threshold %s C."),
 	// EVENT_CODE_DIAG_QUICK_BAD_SPARE
-	N_TR("The quick health check detected that "NVM_DIMM_NAME" %s "
+	N_TR("The quick health check detected that " NVM_DIMM_NAME " %s "
 			"is reporting remaining spare capacity at %s% which is "
 			"less than the alarm threshold %s%."),
 	// EVENT_CODE_DIAG_QUICK_BAD_PERCENT_USED
-	N_TR("The quick health check detected that "NVM_DIMM_NAME" %s "
+	N_TR("The quick health check detected that " NVM_DIMM_NAME " %s "
 			"is reporting percentage used at %s% which is above "
 			"the alarm threshold %s%."),
 	// EVENT_CODE_DIAG_QUICK_BAD_UNCORRECTABLE_MEDIA_ERRORS
-	N_TR("The quick health check detected that "NVM_DIMM_NAME" %s "
+	N_TR("The quick health check detected that " NVM_DIMM_NAME " %s "
 			"is reporting %s uncorrectable media errors."),
 	// EVENT_CODE_DIAG_QUICK_BAD_CORRECTED_MEDIA_ERRORS
-	N_TR("The quick health check detected that "NVM_DIMM_NAME" %s "
+	N_TR("The quick health check detected that " NVM_DIMM_NAME " %s "
 			"is reporting %s corrected media errors."),
 	// EVENT_CODE_DIAG_QUICK_BAD_ERASURE_CODED_CORRECTED_MEDIA_ERRORS
-	N_TR("The quick health check detected that "NVM_DIMM_NAME" %s "
+	N_TR("The quick health check detected that " NVM_DIMM_NAME " %s "
 			"is reporting %s Erasure Coded Corrected media errors."),
 	// EVENT_CODE_DIAG_QUICK_BAD_CONTROLLER_TEMP
-	N_TR("The quick health check detected that "NVM_DIMM_NAME" %s "
+	N_TR("The quick health check detected that " NVM_DIMM_NAME " %s "
 			"is reporting a controller temperature of %s C which is above "
 			"the alarm threshold %s C."),
 	// EVENT_CODE_DIAG_QUICK_BAD_POWER_LIMITATION
 	N_TR("The quick health check detected that power is limited on socket %s."),
 	// EVENT_CODE_DIAG_QUICK_UNREADABLE_BSR
 	N_TR("The quick health check detected that the boot status register "
-			"of "NVM_DIMM_NAME" %s is not readable."),
+			"of " NVM_DIMM_NAME " %s is not readable."),
 	// EVENT_CODE_DIAG_QUICK_MEDIA_NOT_READY
 	N_TR("The quick health check detected that the firmware "
-			"on "NVM_DIMM_NAME" %s is reporting that the media is not ready."),
+			"on " NVM_DIMM_NAME " %s is reporting that the media is not ready."),
 	// EVENT_CODE_DIAG_QUICK_MEDIA_READY_ERROR
 	N_TR("The quick health check detected that the firmware "
-			"on "NVM_DIMM_NAME" %s is reporting an error in the media."),
+			"on " NVM_DIMM_NAME " %s is reporting an error in the media."),
 	// EVENT_CODE_DIAG_QUICK_DDRT_IO_INIT_NOT_READY
 	N_TR("The quick health check detected that the firmware "
-			"on "NVM_DIMM_NAME" %s is reporting that the DDRT "
+			"on " NVM_DIMM_NAME " %s is reporting that the DDRT "
 			"I/O Initialization has not completed."),
 	// EVENT_CODE_DIAG_QUICK_DDRT_IO_INIT_ERROR
 	N_TR("The quick health check detected that the firmware "
-			"on "NVM_DIMM_NAME" %s is reporting an error initializing DDRT I/O."),
+			"on " NVM_DIMM_NAME " %s is reporting an error initializing DDRT I/O."),
 	// EVENT_CODE_DIAG_QUICK_MAILBOX_INTERFACE_NOT_READY
 	N_TR("The quick health check detected that the firmware "
-			"on "NVM_DIMM_NAME" %s is reporting that "
+			"on " NVM_DIMM_NAME " %s is reporting that "
 			"the mailbox interface is not ready."),
 	// EVENT_CODE_DIAG_QUICK_NO_POST_CODE
-	N_TR("The quick health check detected that "NVM_DIMM_NAME" %s failed "
+	N_TR("The quick health check detected that " NVM_DIMM_NAME " %s failed "
 			"to initialize BIOS POST testing."),
 	// EVENT_CODE_DIAG_QUICK_FW_INITIALIZATION_INCOMPLETE
 	N_TR("The quick health check detected that the firmware "
-			"on "NVM_DIMM_NAME" %s has not initialized "
+			"on " NVM_DIMM_NAME " %s has not initialized "
 			"successfully, the last known Major:Minor Checkpoint is %s."),
 	// EVENT_CODE_DIAG_QUICK_FW_HIT_ASSERT
 	N_TR("The quick health check detected that the firmware "
-			"on "NVM_DIMM_NAME" %s reported an assert."),
+			"on " NVM_DIMM_NAME " %s reported an assert."),
 	// EVENT_CODE_DIAG_QUICK_FW_STALLED
 	N_TR("The quick health check detected that the firmware on "NVM_DIMM_NAME
 			" %s has stalled the media interface engine."),
 	// EVENT_CODE_DIAG_QUICK_VIRAL_STATE
-	N_TR("The quick health check detected that "NVM_DIMM_NAME" %s "
+	N_TR("The quick health check detected that " NVM_DIMM_NAME " %s "
 			"is reporting a viral state."),
 	// EVENT_CODE_DIAG_QUICK_BAD_DRIVER
 	N_TR("The quick health check detected that the underlying software is missing "
 			"or incompatible with this version of the management software."),
 	// EVENT_CODE_DIAG_QUICK_NOT_MANAGEABLE
-	N_TR("The quick health check detected that "NVM_DIMM_NAME" %s is not manageable by "
+	N_TR("The quick health check detected that " NVM_DIMM_NAME " %s is not manageable by "
 			"this version of the management software."),
 	// EVENT_CODE_DIAG_QUICK_UNKNOWN
 	N_TR("The quick health check logged an unknown error code %d."),
@@ -304,7 +304,7 @@ const char *EVENT_MESSAGES_SECURITY_DIAG[EVENT_CODE_DIAG_SECURITY_UNKNOWN -
 	// EVENT_CODE_DIAG_SECURITY_SUCCESS
 	N_TR("The security check succeeded."),
 	// EVENT_CODE_DIAG_SECURITY_NO_DIMMS
-	N_TR("The security check detected that there are no "NVM_DIMM_NAME"s."),
+	N_TR("The security check detected that there are no " NVM_DIMM_NAME "s."),
 	// EVENT_CODE_DIAG_SECURITY_INCONSISTENT
 	N_TR("The security check detected that security settings are inconsistent. "
 			"%s."),
@@ -332,32 +332,32 @@ const char *EVENT_MESSAGES_FW_DIAG[EVENT_CODE_DIAG_FW_UNKNOWN -
 			NVM_DIMM_NAME"s."),
 	// EVENT_CODE_DIAG_FW_INCONSISTENT
 	N_TR("The firmware consistency and settings check detected that firmware version "
-			"on "NVM_DIMM_NAME"s %s with model number %s "
+			"on " NVM_DIMM_NAME "s %s with model number %s "
 			"is non-optimal, preferred version is %s"),
 	// EVENT_CODE_DIAG_FW_BAD_TEMP_MEDIA_THRESHOLD
-	N_TR("The firmware consistency and settings check detected that "NVM_DIMM_NAME" %s is "
+	N_TR("The firmware consistency and settings check detected that " NVM_DIMM_NAME " %s is "
 			"reporting a media temperature threshold of %s C which is above the recommended "
 			"threshold %s C."),
 	// EVENT_CODE_DIAG_FW_BAD_TEMP_CONTROLLER_THRESHOLD
-	N_TR("The firmware consistency and settings check detected that "NVM_DIMM_NAME" %s is "
+	N_TR("The firmware consistency and settings check detected that " NVM_DIMM_NAME " %s is "
 			"reporting a controller temperature threshold of %s C which is above the recommended "
 			"threshold %s C."),
 	// EVENT_CODE_DIAG_FW_BAD_SPARE_BLOCK
-	N_TR("The firmware consistency and settings check detected that "NVM_DIMM_NAME" %s is "
+	N_TR("The firmware consistency and settings check detected that " NVM_DIMM_NAME " %s is "
 			"reporting a spare capacity threshold of %s%% which is below the recommended "
 			"threshold %s%%."),
 	// EVENT_CODE_DIAG_FW_BAD_FW_LOG_LEVEL
-	N_TR("The firmware consistency and settings check detected that "NVM_DIMM_NAME" %s is "
+	N_TR("The firmware consistency and settings check detected that " NVM_DIMM_NAME " %s is "
 			"reporting a firmware log level of %s, default log level is %s."),
 	// EVENT_CODE_DIAG_FW_SYSTEM_TIME_DRIFT
-	N_TR("The firmware consistency and settings check detected that "NVM_DIMM_NAME" %s is %s "
+	N_TR("The firmware consistency and settings check detected that " NVM_DIMM_NAME " %s is %s "
 			"the system time by %s seconds."),
 	// EVENT_CODE_DIAG_FW_BAD_POWER_MGMT_POLICY
-	N_TR("The firmware consistency and settings check detected that "NVM_DIMM_NAME" %s is "
+	N_TR("The firmware consistency and settings check detected that " NVM_DIMM_NAME " %s is "
 			"reporting that power management policy is not set in accordance with best "
 			"practice, due to field '%s'. Valid range is %s."),
 	// EVENT_CODE_DIAG_FW_BAD_DIE_SPARING_POLICY
-	N_TR("The firmware consistency and settings check detected that "NVM_DIMM_NAME" %s is "
+	N_TR("The firmware consistency and settings check detected that " NVM_DIMM_NAME " %s is "
 			"reporting that die sparing policy is not set in accordance with best practice, "
 			"due to field '%s'. Valid range is %s."),
 	// EVENT_CODE_DIAG_FW_UNKNOWN
@@ -374,7 +374,7 @@ const char *EVENT_MESSAGES_PCONFIG_DIAG[EVENT_CODE_DIAG_PCONFIG_UNKNOWN -
 	// EVENT_CODE_DIAG_PCONFIG_SUCCESS
 	N_TR("The platform configuration check succeeded."),
 	// EVENT_CODE_DIAG_PCONFIG_NO_DIMMS
-	N_TR("The platform configuration check detected that there are no "NVM_DIMM_NAME"s."),
+	N_TR("The platform configuration check detected that there are no " NVM_DIMM_NAME "s."),
 	// EVENT_CODE_DIAG_PCONFIG_INVALID_NFIT
 	N_TR("The platform configuration check detected that the NFIT table is invalid."),
 	// EVENT_CODE_DIAG_PCONFIG_INVALID_PCAT
@@ -382,16 +382,16 @@ const char *EVENT_MESSAGES_PCONFIG_DIAG[EVENT_CODE_DIAG_PCONFIG_UNKNOWN -
 			"invalid."),
 	// EVENT_CODE_DIAG_PCONFIG_INVALID_PCD
 	N_TR("The platform configuration check detected that the platform configuration data is "
-			"invalid for "NVM_DIMM_NAME" %s."),
+			"invalid for " NVM_DIMM_NAME " %s."),
 // EVENT_CODE_DIAG_PCONFIG_INVALID_CURRENT_PCD
 	N_TR("The platform configuration check detected that the current configuration table is "
-			"invalid for "NVM_DIMM_NAME" %s."),
+			"invalid for " NVM_DIMM_NAME " %s."),
 	// EVENT_CODE_DIAG_PCONFIG_UNCONFIGURED
-	N_TR("The platform configuration check detected that "NVM_DIMM_NAME" %s is unconfigured. "
+	N_TR("The platform configuration check detected that " NVM_DIMM_NAME " %s is unconfigured. "
 			"Note that the capacity is unmapped by the BIOS because it's unconfigured."),
 	// EVENT_CODE_DIAG_PCONFIG_BROKEN_ISET
 	N_TR("The platform configuration check detected that interleave set %s is broken, due to a "
-			"missing "NVM_DIMM_NAME" with serial number %s."),
+			"missing " NVM_DIMM_NAME " with serial number %s."),
 	// EVENT_CODE_DIAG_PCONFIG_MAPPED_CAPACITY_MISMATCH
 	N_TR("The platform configuration check detected that the BIOS reported mapped %s capacity "
 			"%s doesn't match the driver reported capacity %s."),
@@ -405,17 +405,17 @@ const char *EVENT_MESSAGES_PCONFIG_DIAG[EVENT_CODE_DIAG_PCONFIG_UNKNOWN -
 			"performance."),
 	// EVENT_CODE_DIAG_PCONFIG_RECOMMENDED_INTERLEAVE_WAYS
 	N_TR("The platform configuration check detected that interleave set %s is interleaved "
-			"across %s "NVM_DIMM_NAME"s, less than the recommended %s. Interleaving "
-			"across as many "NVM_DIMM_NAME"s as possible may improve performance."),
+			"across %s " NVM_DIMM_NAME "s, less than the recommended %s. Interleaving "
+			"across as many " NVM_DIMM_NAME "s as possible may improve performance."),
 	// EVENT_CODE_DIAG_PCONFIG_REBOOT_NEEDED_TO_APPLY_GOAL
-	N_TR("The platform configuration check detected that "NVM_DIMM_NAME" %s has "
+	N_TR("The platform configuration check detected that " NVM_DIMM_NAME " %s has "
 			"a goal configuration that has not yet been applied. A system reboot "
 			"is required for the new configuration to take effect."),
 	// EVENT_CODE_DIAG_PCONFIG_APP_DIRECT_NAMESPACE_TOO_SMALL
 	N_TR("The platform configuration check detected that the capacity of App Direct "
 			"namespace %s is smaller than the capacity of its containing extent. The remaining %s "
 			"of the extent cannot be accessed as App Direct. This capacity may "
-			"be included in Storage namespaces on each "NVM_DIMM_NAME"."),
+			"be included in Storage namespaces on each " NVM_DIMM_NAME "."),
 	// EVENT_CODE_DIAG_PCONFIG_POOL_NEEDS_APP_DIRECT_NAMESPACES
 	N_TR("The platform configuration check detected that pool %s contains empty App Direct "
 			"capacity. Create App Direct namespaces in the pool to access this "
@@ -424,34 +424,34 @@ const char *EVENT_MESSAGES_PCONFIG_DIAG[EVENT_CODE_DIAG_PCONFIG_UNKNOWN -
 	N_TR("The platform configuration check detected that pool %s contains empty Storage "
 			"capacity. Create Storage namespaces in the pool to access this capacity."),
 	// EVENT_CODE_DIAG_PCONFIG_DIMM_CONFIG_UNBALANCED
-	N_TR("The platform configuration check detected that "NVM_DIMM_NAME"s on "
+	N_TR("The platform configuration check detected that " NVM_DIMM_NAME "s on "
 			"socket %s are arranged in an unbalanced configuration. "
-			"These "NVM_DIMM_NAME"s may experience reduced performance."),
+			"These " NVM_DIMM_NAME "s may experience reduced performance."),
 	// EVENT_CODE_DIAG_PCONFIG_DIMMS_DIFFERENT_SIZES
-	N_TR("The platform configuration check detected that manageable "NVM_DIMM_NAME"s on "
+	N_TR("The platform configuration check detected that manageable " NVM_DIMM_NAME "s on "
 			"socket %s have different capacities. Memory allocations on "
 			"this socket may be non-optimal."),
 	// EVENT_CODE_DIAG_PCONFIG_DIMM_SECURITY_SKUS_MIXED
-	N_TR("The platform configuration check detected that the "NVM_DIMM_NAME" security "
+	N_TR("The platform configuration check detected that the " NVM_DIMM_NAME " security "
 			"capability SKUs are inconsistent within the system. Functionality will be "
 			"limited until the situation is corrected."),
 	// EVENT_CODE_DIAG_PCONFIG_DIMM_MODE_SKUS_MIXED
-	N_TR("The platform configuration check detected that the "NVM_DIMM_NAME" mode "
+	N_TR("The platform configuration check detected that the " NVM_DIMM_NAME " mode "
 			"capability SKUs are inconsistent within the system. Functionality will "
 			"be limited until the situation is corrected."),
 	// EVENT_CODE_DIAG_PCONFIG_DIMM_DIE_SPARING_SKUS_MIXED
-	N_TR("The platform configuration check detected that the "NVM_DIMM_NAME"s die "
+	N_TR("The platform configuration check detected that the " NVM_DIMM_NAME "s die "
 			"sparing capability SKUs are inconsistent within the system. Functionality "
 			"will be limited until the situation is corrected."),
 	// EVENT_CODE_DIAG_PCONFIG_DIMM_INIT_FAILED
-	N_TR("The platform configuration check detected that an "NVM_DIMM_NAME" with "
+	N_TR("The platform configuration check detected that an " NVM_DIMM_NAME " with "
 			"physical ID %s is present in the system but failed to initialize."),
 	// EVENT_CODE_DIAG_PCONFIG_DIMM_SKU_VIOLATION
-	N_TR("The platform configuration check detected that "NVM_DIMM_NAME" %s is "
+	N_TR("The platform configuration check detected that " NVM_DIMM_NAME " %s is "
 			"currently configured with %s capacity which is in violation "
 			"of the system supported capabilities."),
 	// EVENT_CODE_DIAG_PCONFIG_DIMM_GOAL_SKU_VIOLATION
-	N_TR("The platform configuration check detected that "NVM_DIMM_NAME" %s has a "
+	N_TR("The platform configuration check detected that " NVM_DIMM_NAME " %s has a "
 			"configuration goal request for %s capacity which will be in violation "
 			"of the system supported capabilities."),
 	// EVENT_CODE_DIAG_PCONFIG_POOLS_FAILED
@@ -492,13 +492,13 @@ const char *EVENT_MESSAGES_DIAG_PM_METADATA_CHECK[EVENT_CODE_DIAG_PM_META_UNKNOW
 	N_TR("The PM Metadata check detected no label area health issues."),
 	// EVENT_CODE_DIAG_PM_META_LABEL_MISSING_PCD - 8
 	N_TR("The PM Metadata check was unable to retrieve Platform Configuration Data "
-			"from the "NVM_DIMM_NAME"."),
+			"from the " NVM_DIMM_NAME "."),
 	// EVENT_CODE_DIAG_PM_META_LABEL_MISSING_VALID_INDEX_BLOCK - 9
 	N_TR("The PM Metadata check detected no valid Namespace Index Blocks or an uninitialized "
 			"label area in the Platform Configuration Data."),
 	// EVENT_CODE_DIAG_PM_META_LABEL_INSUFFICIENT_PM - 10
 	N_TR("The PM Metadata check detected a Storage Namespace described in the "
-			"Platform Configuration Data is bigger than the "NVM_DIMM_NAME"'s "
+			"Platform Configuration Data is bigger than the " NVM_DIMM_NAME "'s "
 			"available persistent memory."),
 	// EVENT_CODE_DIAG_PM_META_LABEL_LABELS_OVERLAP - 11
 	N_TR("The PM Metadata check detected Namespace Labels overlapping each other.")

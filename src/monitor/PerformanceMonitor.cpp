@@ -91,7 +91,7 @@ void monitor::PerformanceMonitor::monitor()
 		if (rc != NVM_SUCCESS)
 		{
 			COMMON_LOG_ERROR_F(
-				"Failed to retrieve the performance data for "NVM_DIMM_NAME" %s", dimmUidStr.c_str());
+				"Failed to retrieve the performance data for " NVM_DIMM_NAME " %s", dimmUidStr.c_str());
 		}
 		// store it in the db
 		else if (storeDimmPerformanceData(dimmUidStr, devPerformance))
@@ -172,7 +172,7 @@ bool monitor::PerformanceMonitor::storeDimmPerformanceData(const std::string &di
 	if (db_add_performance(m_pStore, &performanceRow) != DB_SUCCESS)
 	{
 		COMMON_LOG_ERROR_F(
-				"Failed to store performance metrics for "NVM_DIMM_NAME" %s", dimmUidStr.c_str());
+				"Failed to store performance metrics for " NVM_DIMM_NAME " %s", dimmUidStr.c_str());
 	}
 	else
 	{

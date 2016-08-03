@@ -52,40 +52,40 @@ int clear_dimm_platform_config_from_db(PersistentStore *p_db,
 	// clear out and existing platform config data in the db for this dimm
 	// clear existing header
 	DB_DIMM_ERROR(rc, db_delete_dimm_platform_config_by_device_handle(p_db, device_handle),
-		"Failed to remove the existing platform configuration data for "NVM_DIMM_NAME" %d",
+		"Failed to remove the existing platform configuration data for " NVM_DIMM_NAME " %d",
 		device_handle);
 
 	// clear existing input
 	DB_DIMM_ERROR(rc, db_delete_dimm_config_input_by_device_handle(p_db, device_handle),
-		"Failed to remove the existing configuration input data for "NVM_DIMM_NAME" %d",
+		"Failed to remove the existing configuration input data for " NVM_DIMM_NAME " %d",
 		device_handle);
 
 	// clear existing output
 	DB_DIMM_ERROR(rc, db_delete_dimm_config_output_by_device_handle(p_db, device_handle),
-		"Failed to remove the existing configuration output data for "NVM_DIMM_NAME" %d",
+		"Failed to remove the existing configuration output data for " NVM_DIMM_NAME " %d",
 		device_handle);
 
 	// clear existing current config
 	DB_DIMM_ERROR(rc, db_delete_dimm_current_config_by_device_handle(p_db, device_handle),
-		"Failed to remove the existing current configuration data for "NVM_DIMM_NAME" %d",
+		"Failed to remove the existing current configuration data for " NVM_DIMM_NAME " %d",
 		device_handle);
 
 	// clear interleave tables (current, input and output) for this dimm
 	DB_DIMM_ERROR(rc,
 		db_delete_dimm_interleave_set_by_dimm_topology_device_handle(p_db, device_handle),
-		"Failed to remove the existing interleave set data for "NVM_DIMM_NAME" %d",
+		"Failed to remove the existing interleave set data for " NVM_DIMM_NAME " %d",
 		device_handle);
 
 	// clear interleave set dimm info tables (current, input and output) for this dimm
 	DB_DIMM_ERROR(rc,
 		db_delete_interleave_set_dimm_info_by_dimm_topology_device_handle(p_db, device_handle),
-		"Failed to remove the existing interleave set dimm info data for "NVM_DIMM_NAME" %d",
+		"Failed to remove the existing interleave set dimm info data for " NVM_DIMM_NAME " %d",
 		device_handle);
 
 	// clear partition size change tables (input and output)
 	DB_DIMM_ERROR(rc,
 		db_delete_dimm_partition_change_by_dimm_topology_device_handle(p_db, device_handle),
-		"Failed to remove the existing partition size change data for "NVM_DIMM_NAME" %d",
+		"Failed to remove the existing partition size change data for " NVM_DIMM_NAME " %d",
 		device_handle);
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -266,7 +266,7 @@ int update_dimm_platform_config_in_db(PersistentStore *p_db,
 		db_config.config_output_size = p_config_data->config_output_size;
 		db_config.config_output_offset = p_config_data->config_output_offset;
 		DB_DIMM_ERROR(rc, db_add_dimm_platform_config(p_db, &db_config),
-			"Failed to add the platform configuration header data for "NVM_DIMM_NAME" %d",
+			"Failed to add the platform configuration header data for " NVM_DIMM_NAME " %d",
 			device_handle);
 
 		// write config input
@@ -292,7 +292,7 @@ int update_dimm_platform_config_in_db(PersistentStore *p_db,
 						p_config_input->header.creator_revision;
 				db_config_input.sequence_number = p_config_input->sequence_number;
 				DB_DIMM_ERROR(rc, db_add_dimm_config_input(p_db, &db_config_input),
-					"Failed to add the configuration input data for "NVM_DIMM_NAME" %d",
+					"Failed to add the configuration input data for " NVM_DIMM_NAME " %d",
 					device_handle);
 
 				// write the extension tables
@@ -330,7 +330,7 @@ int update_dimm_platform_config_in_db(PersistentStore *p_db,
 				db_config_output.sequence_number = p_config_output->sequence_number;
 				db_config_output.validation_status = p_config_output->validation_status;
 				DB_DIMM_ERROR(rc, db_add_dimm_config_output(p_db, &db_config_output),
-					"Failed to add the configuration output data for "NVM_DIMM_NAME" %d",
+					"Failed to add the configuration output data for " NVM_DIMM_NAME " %d",
 					device_handle);
 
 				// write the extension tables
@@ -372,7 +372,7 @@ int update_dimm_platform_config_in_db(PersistentStore *p_db,
 				db_current_config.mapped_app_direct_capacity =
 						p_current_config->mapped_app_direct_capacity;
 				DB_DIMM_ERROR(rc, db_add_dimm_current_config(p_db, &db_current_config),
-					"Failed to add the current configuration data for "NVM_DIMM_NAME" %d",
+					"Failed to add the current configuration data for " NVM_DIMM_NAME " %d",
 					device_handle);
 
 				// write the extension tables

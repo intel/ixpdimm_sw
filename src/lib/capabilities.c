@@ -616,7 +616,7 @@ int check_device_app_direct_namespaces_for_sku_violation(
 		}
 		else if (has_namespaces)
 		{
-			COMMON_LOG_ERROR_F("An unsupported App Direct namespace exists on "NVM_DIMM_NAME" %u",
+			COMMON_LOG_ERROR_F("An unsupported App Direct namespace exists on " NVM_DIMM_NAME " %u",
 					device_handle.handle);
 			*p_sku_violation = 1;
 		}
@@ -638,7 +638,7 @@ int check_device_storage_namespaces_for_sku_violation(
 		}
 		else if (has_namespaces)
 		{
-			COMMON_LOG_ERROR_F("An unsupported storage namespace exists on "NVM_DIMM_NAME" %u",
+			COMMON_LOG_ERROR_F("An unsupported storage namespace exists on " NVM_DIMM_NAME " %u",
 					device_handle.handle);
 			*p_sku_violation = 1;
 		}
@@ -732,7 +732,7 @@ int system_in_sku_violation(const struct nvm_capabilities *p_capabilities,
 					if (*p_sku_violation)
 					{
 						COMMON_LOG_ERROR(
-							"One more "NVM_DIMM_NAME"s are configured in "
+							"One more " NVM_DIMM_NAME "s are configured in "
 							"violation of the license.");
 						break;
 					}

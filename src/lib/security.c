@@ -204,7 +204,7 @@ int nvm_set_passphrase(const NVM_UID device_uid,
 	}
 	else if ((rc = IS_NVM_FEATURE_SUPPORTED(modify_device_security)) != NVM_SUCCESS)
 	{
-		COMMON_LOG_ERROR("Modifying "NVM_DIMM_NAME" security is not supported.");
+		COMMON_LOG_ERROR("Modifying " NVM_DIMM_NAME " security is not supported.");
 	}
 	else if (device_uid == NULL)
 	{
@@ -323,7 +323,7 @@ int nvm_remove_passphrase(const NVM_UID device_uid,
 	}
 	else if ((rc = IS_NVM_FEATURE_SUPPORTED(modify_device_security)) != NVM_SUCCESS)
 	{
-		COMMON_LOG_ERROR("Modifying "NVM_DIMM_NAME" security is not supported.");
+		COMMON_LOG_ERROR("Modifying " NVM_DIMM_NAME " security is not supported.");
 	}
 	else if (device_uid == NULL)
 	{
@@ -392,7 +392,7 @@ int nvm_unlock_device(const NVM_UID device_uid,
 	}
 	else if ((rc = IS_NVM_FEATURE_SUPPORTED(modify_device_security)) != NVM_SUCCESS)
 	{
-		COMMON_LOG_ERROR("Modifying "NVM_DIMM_NAME" security is not supported.");
+		COMMON_LOG_ERROR("Modifying " NVM_DIMM_NAME " security is not supported.");
 	}
 	else if (device_uid == NULL)
 	{
@@ -507,7 +507,7 @@ int nvm_erase_device(const NVM_UID device_uid,
 	}
 	else if ((rc = IS_NVM_FEATURE_SUPPORTED(modify_device_security)) != NVM_SUCCESS)
 	{
-		COMMON_LOG_ERROR("Modifying "NVM_DIMM_NAME" security is not supported.");
+		COMMON_LOG_ERROR("Modifying " NVM_DIMM_NAME " security is not supported.");
 	}
 	else if (device_uid == NULL)
 	{

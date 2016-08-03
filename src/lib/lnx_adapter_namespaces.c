@@ -132,7 +132,7 @@ int get_namespaces(const NVM_UINT32 count,
 							{
 								rc = NVM_ERR_ARRAYTOOSMALL;
 								COMMON_LOG_ERROR("Invalid parameter, "
-										"count is smaller than number of "NVM_DIMM_NAME"s");
+										"count is smaller than number of " NVM_DIMM_NAME "s");
 								break;
 							}
 

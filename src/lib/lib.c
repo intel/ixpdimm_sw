@@ -316,7 +316,7 @@ int nvm_get_error(const enum return_code code, NVM_ERROR_DESCRIPTION description
 				break;
 			case NVM_ERR_SKUVIOLATION:
 				s_strcpy(description,
-						TR("The method is not supported because one or more "NVM_DIMM_NAME"s "
+						TR("The method is not supported because one or more " NVM_DIMM_NAME "s "
 							"are configured in violation of the license."),
 						description_len);
 				break;

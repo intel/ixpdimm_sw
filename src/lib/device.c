@@ -1691,7 +1691,7 @@ int nvm_send_device_passthrough_cmd(const NVM_UID device_uid,
 	}
 	else if ((rc = IS_NVM_FEATURE_SUPPORTED(get_device_health)) != NVM_SUCCESS)
 	{ // also confirms pass through
-		COMMON_LOG_ERROR("Retrieving "NVM_DIMM_NAME" health is not supported.");
+		COMMON_LOG_ERROR("Retrieving " NVM_DIMM_NAME " health is not supported.");
 	}
 	else if (device_uid == NULL)
 	{
