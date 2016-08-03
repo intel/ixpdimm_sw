@@ -68,6 +68,7 @@ License:        BSD
 Group:          System Environment/Daemons
 Requires:       libixpdimm-cim%{?_isa} = %{version}-%{release}
 Requires:       systemd-units
+BuildRequires:  systemd
 
 %description -n ixpdimm-monitor
 A monitor daemon for monitoring the health and status of IXPDIMMs.
