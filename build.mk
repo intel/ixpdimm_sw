@@ -180,8 +180,14 @@ ifeq ($(UNAME), Linux)
 		CIM_NAMESPACE = intelwbem
 		
 		# Linux Install Directories
-		LIB_DIR ?= /usr/lib64
-		CIM_LIB_DIR = /usr/lib64/cmpi
+		uname_m = $(shell uname -m)
+		ifneq (,$(findstring i686,$(uname_m)))
+			LIB_DIR ?= /usr/lib
+			CIM_LIB_DIR = /usr/lib/cmpi
+		else
+			LIB_DIR ?= /usr/lib64
+			CIM_LIB_DIR = /usr/lib64/cmpi
+		endif
 		INCLUDE_DIR ?= /usr/include
 		BIN_DIR ?= /usr/bin
 		DATADIR ?= /var/lib
