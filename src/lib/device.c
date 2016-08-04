@@ -732,11 +732,10 @@ int get_device_status_by_handle(NVM_NFIT_DEVICE_HANDLE dimm_handle,
 
 	// get ars long operation status
 	temprc = get_ars_status(dimm_handle, &p_status->ars_status);
-	if (temprc != NVM_SUCCESS)
+	// ARS is expected to fail if no long operation has started
+	if (temprc != NVM_ERR_BADFIRMWARE)
 	{
-#if !defined(__EARLY_HW__) || __EARLY_HW__ != 1  // ARS is not supported yet
 		KEEP_ERROR(rc, temprc);
-#endif
 	}
 
 	struct pt_payload_smart_health dimm_smart;

@@ -379,12 +379,14 @@ void NVDIMMSensorViewFactory::sensorToInstance(NVM_UID uidStr, const sensor &sen
 
 	addThresholdForType(pInstance, attributes, LOWERTHRESHOLDCRITICAL_KEY,
 		sensor.type, sensor.settings.lower_critical_threshold);
+	addThresholdForType(pInstance, attributes, LOWERTHRESHOLDNONCRITICAL_KEY,
+		sensor.type, sensor.settings.lower_noncritical_threshold);
 	addThresholdForType(pInstance, attributes, UPPERTHRESHOLDNONCRITICAL_KEY,
-		sensor.type, sensor.settings.upper_critical_threshold);
+		sensor.type, sensor.settings.upper_noncritical_threshold);
 	addThresholdForType(pInstance, attributes, UPPERTHRESHOLDCRITICAL_KEY,
-		sensor.type, sensor.settings.upper_fatal_threshold);
-	addThresholdForType(pInstance, attributes, UPPERTHRESHOLDFATAL_KEY,
 		sensor.type, sensor.settings.upper_critical_threshold);
+	addThresholdForType(pInstance, attributes, UPPERTHRESHOLDFATAL_KEY,
+		sensor.type, sensor.settings.upper_fatal_threshold);
 
 	if (containsAttribute(CURRENTSTATE_KEY, attributes))
 	{
