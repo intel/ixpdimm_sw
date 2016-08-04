@@ -14,6 +14,8 @@ Requires: libinvm-i18n >= 1.0.0.1015
 Requires: libinvm-cli >= 1.0.0.1095
 Requires: libinvm-cim >= 1.0.0.1040
 
+ExcludeArch: s390 s390x %{arm} # RHBZ#1364265
+
 BuildRequires: pkgconfig(libkmod)
 BuildRequires: pkgconfig(sqlite3)
 BuildRequires: pkgconfig(libndctl)
@@ -277,5 +279,5 @@ fi
 %{_mandir}/man8/ixpdimm-cli*
 
 %changelog
-* Thu Dec 24 2015 Nicholas Moulin <nicholas.w.moulin@intel.com> - 01.00.00.2104-1
+* Thu Dec 24 2015 Nicholas Moulin <nicholas.w.moulin@intel.com> - 01.00.00.2106-1
 - Initial rpm release
