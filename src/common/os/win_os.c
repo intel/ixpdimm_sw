@@ -890,6 +890,19 @@ void *dlib_load(const char *lib_path)
 }
 
 /*
+ * close a dynamically loaded library
+ */
+int dlib_close(void *handle)
+{
+	int rc = 0;
+	if (handle)
+	{
+		rc = FreeLibrary(handle);
+	}
+	return rc;
+}
+
+/*
  * .dll for windows
  */
 char *dlib_suffix(char *buffer, COMMON_SIZE buffer_len)

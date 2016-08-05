@@ -1057,7 +1057,7 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::runDiagnostic(
 													dimmAttr) == wbem::framework::SUCCESS)
 											{
 												size_t dimmStrLen = dimmAttr.stringValue().length();
-												prefixStrLen = wbem::physical_asset::NVDIMM_ELEMENTNAME_prefix.length();
+												prefixStrLen = wbem::physical_asset::NVDIMM_ELEMENTNAME_PREFIX.length();
 												dimmStr = dimmAttr.stringValue().substr(prefixStrLen, dimmStrLen - prefixStrLen);
 											}
 

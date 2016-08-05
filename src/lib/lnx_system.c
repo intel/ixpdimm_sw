@@ -560,7 +560,7 @@ int get_smbios_entry_point_from_offset(int mem_fd, size_t entry_point_offset,
 	{
 		rc = NVM_ERR_UNKNOWN;
 	}
-	else if (read(mem_fd, p_data, size_to_read) <= 0)
+	else if (read(mem_fd, p_data, size_to_read) != size_to_read)
 	{
 		rc = NVM_ERR_UNKNOWN;
 	}
@@ -654,7 +654,7 @@ int copy_smbios_table_from_mem_alloc(int mem_fd, size_t address, size_t size_to_
 	if (p_smbios_table)
 	{
 		if (lseek(mem_fd, address, SEEK_SET) >= 0 &&
-			read(mem_fd, p_smbios_table, size_to_allocate) > 0)
+			read(mem_fd, p_smbios_table, size_to_allocate) == size_to_allocate)
 		{
 			*pp_smbios_table = p_smbios_table;
 			*p_allocated_size = size_to_allocate;

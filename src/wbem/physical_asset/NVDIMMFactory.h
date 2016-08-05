@@ -48,7 +48,7 @@ namespace physical_asset
 {
 static const std::string NVDIMM_CREATIONCLASSNAME =
 	std::string(NVM_WBEM_PREFIX) + "NVDIMM"; //!< Creation ClassName static
-static const std::string NVDIMM_ELEMENTNAME_prefix = "Intel NVDIMM "; //!< Element Name = prefix + UID
+static const std::string NVDIMM_ELEMENTNAME_PREFIX = "Intel NVDIMM "; //!< Element Name = prefix + UID
 static const int NVDIMM_COMMUNICATION_OK = 2; //!< Communication status value for OK
 static const int NVDIMM_COMMUNICATION_NOCONTACT = 4; //!< Communication status value for no contact
 static const std::string NVDIMM_SETPASSPHRASE = "SetPassphrase"; //!< extrinsic method name

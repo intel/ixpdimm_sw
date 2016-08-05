@@ -38,6 +38,7 @@
 #include <LogEnterExit.h>
 #include <server/BaseServerFactory.h>
 #include <physical_asset/NVDIMMFactory.h>
+#include <software/NVDIMMCollectionFactory.h>
 #include <libinvm-cim/ExceptionBadParameter.h>
 #include <NvmStrings.h>
 
@@ -78,6 +79,7 @@ throw (wbem::framework::Exception)
 	try
 	{
 		checkAttributes(attributes);
+		std::string hostName = wbem::server::getHostName();
 
 		// gather results
 		bool diagFound = false;
@@ -124,17 +126,18 @@ throw (wbem::framework::Exception)
 					pInstance->setAttribute(SERVICENAME_KEY, serviceNameAttr, attributes);
 				}
 
-				// ManagedElementName - Intel NVDIMM + UUID
+				// ManagedElementName - Intel NVDIMM + UUID or DIMM Collection for + hostname
 				if (containsAttribute(MANAGEDELEMENTNAME_KEY, attributes))
 				{
 					std::string elementName = "";
-					if (diag.device_uid)
+					if (strlen(diag.device_uid) > 0)
 					{
-						NVM_UID uid_str;
-						uid_copy(diag.device_uid, uid_str);
-						elementName = wbem::physical_asset::NVDIMM_ELEMENTNAME_prefix + uid_str;
+						elementName = wbem::physical_asset::NVDIMM_ELEMENTNAME_PREFIX + diag.device_uid;
 					}
-
+					else
+					{
+						elementName = wbem::software::NVDIMMCOLLECTION_ELEMENTNAME_PREFIX + hostName;
+					}
 					framework::Attribute dimmAttr(elementName, false);
 					pInstance->setAttribute(MANAGEDELEMENTNAME_KEY, dimmAttr, attributes);
 				}

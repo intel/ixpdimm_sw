@@ -652,7 +652,7 @@ void NVDIMMFactory::toInstance(core::device::Device &device,
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	ADD_ATTRIBUTE(instance, attributes, ELEMENTNAME_KEY, framework::STR,
-			NVDIMM_ELEMENTNAME_prefix + device.getUid());
+			NVDIMM_ELEMENTNAME_PREFIX + device.getUid());
 	ADD_ATTRIBUTE(instance, attributes, MANUFACTURER_KEY, framework::STR, device.getManufacturer());
 	ADD_ATTRIBUTE(instance, attributes, MANUFACTURERID_KEY, framework::UINT16,
 			device.getManufacturerId());

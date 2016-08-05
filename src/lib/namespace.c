@@ -189,8 +189,11 @@ int nvm_get_namespaces(struct namespace_discovery *p_namespaces, const NVM_UINT8
 					rc++; // return number of namespaces
 
 				} // end for each ns
-				// update the context
-				set_nvm_context_namespaces(p_namespaces, rc);
+				if (rc >= 0)
+				{
+					// update the context
+					set_nvm_context_namespaces(p_namespaces, rc);
+				}
 
 			} // end get_namespaces succeeded
 		} // end get namespace count succeeded

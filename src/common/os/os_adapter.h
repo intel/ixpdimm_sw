@@ -401,6 +401,13 @@ extern int common_pclose(FILE *p_fstream);
 extern void *dlib_load(const char *lib_path);
 
 /*!
+ * close a handle to a library loaded at run time
+ * @param handle
+ * 		handle to close
+ */
+extern int dlib_close(void *handle);
+
+/*!
  * Get the appropriate OS specific extension for a dynamic library
  * @param buffer
  * 		buffer to put the extension

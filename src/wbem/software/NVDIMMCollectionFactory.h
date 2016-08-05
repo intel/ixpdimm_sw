@@ -41,6 +41,7 @@ namespace wbem
 {
 namespace software
 {
+static const std::string NVDIMMCOLLECTION_ELEMENTNAME_PREFIX = "DIMM Collection for "; //!< Element Name = prefix + hostname
 static const std::string NVDIMMCOLLECTION_CREATIONCLASSNAME = std::string(NVM_WBEM_PREFIX) + "NVDIMMCollection"; //!< Creation Class Name static
 
 /*!

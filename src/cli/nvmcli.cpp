@@ -50,36 +50,51 @@
 // function pointer to register functions
 typedef void (*RegisterLibraryGetFeaturesFunction)();
 
-bool tryLoadLib(std::string name, bool load)
+void *tryLoadLib(std::string name)
 {
-	bool result = false;
-
 	char libSuffix[10]; // should be plenty
 	name += dlib_suffix(libSuffix, 10);
 
-	void *handle = dlib_load(name.c_str());
+	return dlib_load(name.c_str());
+}
 
-	if (handle != NULL)
+int callDynamicFunc(void *lib_handle, const std::string func)
+{
+	int rc = -1;
+	if (lib_handle)
 	{
 		RegisterLibraryGetFeaturesFunction regFnc;
-		if (load)
-		{
-			regFnc = (RegisterLibraryGetFeaturesFunction)
-					dlib_find_symbol(handle, "registerFeatures");
-		}
-		else
-		{
-			regFnc = (RegisterLibraryGetFeaturesFunction)
-								dlib_find_symbol(handle, "unRegisterFeatures");
-		}
-
+		regFnc = (RegisterLibraryGetFeaturesFunction)
+				dlib_find_symbol(lib_handle, func.c_str());
 		if (regFnc != NULL)
 		{
 			regFnc();
-			result = true;
+			rc = 0;
 		}
 	}
-	return result;
+	return rc;
+}
+
+void *registerLib()
+{
+	void *lib_handle = tryLoadLib("libixpdimm-cli");
+	if (lib_handle && callDynamicFunc(lib_handle, "registerFeatures"))
+	{
+		dlib_close(lib_handle);
+		lib_handle = NULL;
+	}
+	return lib_handle;
+}
+
+int unregisterLib(void *lib_handle)
+{
+	int rc = 0;
+	if (lib_handle)
+	{
+		rc = callDynamicFunc(lib_handle, "unRegisterFeatures");
+		dlib_close(lib_handle);
+	}
+	return rc;
 }
 
 /*
@@ -88,6 +103,7 @@ bool tryLoadLib(std::string name, bool load)
 int main(int argc, char * argv[])
 {
 	cli::framework::ResultBase *pResult = NULL;
+	void *handle = NULL;
 
 	/*
 	 * L10n
@@ -108,17 +124,18 @@ int main(int argc, char * argv[])
 	int rc = 0;
 
 	// use shared libraries to register feature sets
-    if (!tryLoadLib("libixpdimm-cli", true)) // ixpdimm-cli are required .. if they don't load fail
-    {
+	if (!(handle = registerLib())) // ixpdimm-cli are required .. if they don't load fail
+	{
 		std::cout << "Couldn't load features" << std::endl;
-    }
-    // make sure we can get a connection to the db
-    else if (!open_default_lib_store())
-    {
-    	std::cout << "Couldn't connect to configuration database" << std::endl;
-    }
-    else
-    {
+	}
+	// make sure we can get a connection to the db
+	else if (!open_default_lib_store())
+	{
+		std::cout << "Couldn't connect to configuration database" << std::endl;
+		unregisterLib(handle);
+	}
+	else
+	{
 		// Now that all features have been registered, we can attempt to execute the command
 		cli::framework::StringList argList;
 
@@ -161,10 +178,10 @@ int main(int argc, char * argv[])
 		wbem::lib_interface::freeNvmContext();
 
 		// unregister features
-		tryLoadLib("libixpdimm-cli", false);
+		unregisterLib(handle);
 
 		// close the connection to the db for this process
 		close_lib_store();
-    }
+	}
 	return rc;
 }
