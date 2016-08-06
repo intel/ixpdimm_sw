@@ -22,6 +22,7 @@ BuildRequires: pkgconfig(libndctl)
 BuildRequires: pkgconfig(openssl)
 BuildRequires: numactl-devel
 BuildRequires: sblim-cmpi-devel
+BuildRequires: python
 BuildRequires: libinvm-i18n-devel
 BuildRequires: libinvm-cim-devel
 BuildRequires: libinvm-cli-devel
@@ -279,5 +280,5 @@ fi
 %{_mandir}/man8/ixpdimm-cli*
 
 %changelog
-* Thu Dec 24 2015 Nicholas Moulin <nicholas.w.moulin@intel.com> - 01.00.00.2106-1
+* Thu Dec 24 2015 Nicholas Moulin <nicholas.w.moulin@intel.com> - 01.00.00.2107-1
 - Initial rpm release
