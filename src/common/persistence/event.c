@@ -128,6 +128,8 @@ const char *EVENT_MESSAGES_MGMT[EVENT_CODE_MGMT_UNKNOWN -
 	N_TR("The security password has been removed from " NVM_DIMM_NAME " %s."),
 	// EVENT_CODE_MGMT_SECURITY_SECURE_ERASE
 	N_TR("The persistent data on " NVM_DIMM_NAME " %s has been securely erased."),
+	// EVENT_CODE_MGMT_SECURITY_FROZEN
+	N_TR("The security lock state is frozen on " NVM_DIMM_NAME " %s."),
 
 	// EVENT_CODE_DIAG_QUICK_UNKNOWN
 	N_TR("The management software logged an unknown event code %d.")

@@ -1842,6 +1842,36 @@ extern NVM_API int nvm_unlock_device(const NVM_UID device_uid,
 		const NVM_PASSPHRASE passphrase, const NVM_SIZE passphrase_len);
 
 /*
+ * Prevent security lock state changes to the dimm until the next reboot
+ * @param[in] device_uid
+ * 		The device identifier.
+ * @pre The caller has administrative privileges.
+ * @pre The device is manageable.
+ * @pre The device supports unlocking a device.
+ * @pre Current dimm security state is unlocked
+ * @post dimm security state will be frozen
+ * @post Device security will be changed.
+ * @return Returns one of the following @link #return_code return_codes: @endlink @n
+ * 		#NVM_SUCCESS @n
+ * 		#NVM_ERR_NOTSUPPORTED @n
+ * 		#NVM_ERR_NOMEMORY @n
+ *		#NVM_ERR_BADDEVICE @n
+ * 		#NVM_ERR_INVALIDPARAMETER @n
+ * 		#NVM_ERR_INVALIDPERMISSIONS @n
+ * 		#NVM_ERR_NOTMANAGEABLE @n
+ * 		#NVM_ERR_DRIVERFAILED @n
+ * 		#NVM_ERR_SECURITYFROZEN @n
+ * 		#NVM_ERR_BADPASSPHRASE @n
+ * 		#NVM_ERR_DATATRANSFERERROR @n
+ * 		#NVM_ERR_DEVICEERROR @n
+ * 		#NVM_ERR_DEVICEBUSY @n
+ * 		#NVM_ERR_UNKNOWN @n
+ * 		#NVM_ERR_BADDRIVER @n
+ * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
+ */
+extern NVM_API int nvm_freezelock_device(const NVM_UID device_uid);
+
+/*
  * Erases data on the device specified by zeroing the device encryption key.
  * @param[in] device_uid
  * 		The device identifier.

@@ -44,8 +44,8 @@
 
 int get_nvm_capabilities_from_pcat(NVM_UINT32 *p_results, struct nvm_capabilities *nvm_caps);
 int verify_pcd(int dev_count, const struct diagnostic *p_diagnostic, NVM_UINT32 *p_results);
-void check_bios_config_support(NVM_UINT32 *p_results,
-	const struct platform_capabilities *p_platform_caps);
+void check_bios_config_support(NVM_UINT32 *p_results, const struct platform_capabilities *p_caps);
+
 #define	MEMORY_EVENT_ARG	"memory"
 #define	APP_DIRECT_EVENT_ARG	"App Direct"
 #define	MEMORY_CAP_STR		"Memory Mode"
@@ -140,12 +140,11 @@ int get_nvm_capabilities_from_pcat(NVM_UINT32 *p_results, struct nvm_capabilitie
 /*
  * check if BIOS is set up to provisioning using management software
  */
-void check_bios_config_support(NVM_UINT32 *p_results,
-		const struct platform_capabilities *platform_caps)
+void check_bios_config_support(NVM_UINT32 *p_results, const struct platform_capabilities *p_caps)
 {
 	COMMON_LOG_ENTRY();
 
-	if (!platform_caps->bios_config_support)
+	if (!p_caps->bios_config_support)
 	{
 		store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG, EVENT_SEVERITY_INFO,
 				EVENT_CODE_DIAG_PCONFIG_NO_BIOS_CONFIG_SUPPORT, NULL, 0, NULL,

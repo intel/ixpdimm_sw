@@ -53,19 +53,33 @@ int check_passphrase_capable(const NVM_UID device_uid);
 int check_unlock_device_capable(const NVM_UID device_uid);
 
 /*
- * Helper function to free lock a dimm
+ * Helper function to freeze lock a dimm
  */
-int freeze_security(NVM_NFIT_DEVICE_HANDLE device_handle)
+int freeze_security(const struct device_discovery *p_discovery)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
 
 	struct fw_cmd cmd;
 	memset(&cmd, 0, sizeof (struct fw_cmd));
-	cmd.device_handle = device_handle.handle;
+	cmd.device_handle = p_discovery->device_handle.handle;
 	cmd.opcode = PT_SET_SEC_INFO;
 	cmd.sub_opcode = SUBOP_SEC_FREEZE_LOCK;
 	rc = ioctl_passthrough_cmd(&cmd);
+
+	// log event if it succeeded
+	if (rc == NVM_SUCCESS)
+	{
+		store_event_by_parts(EVENT_TYPE_MGMT,
+				EVENT_SEVERITY_INFO,
+				EVENT_CODE_MGMT_SECURITY_FROZEN,
+				p_discovery->uid,
+				0, // no action required
+				p_discovery->uid,
+				NULL,
+				NULL,
+				DIAGNOSTIC_RESULT_UNKNOWN);
+	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
@@ -248,11 +262,6 @@ int nvm_set_passphrase(const NVM_UID device_uid,
 		cmd.input_payload = &input_payload;
 		if ((rc = ioctl_passthrough_cmd(&cmd)) == NVM_SUCCESS)
 		{
-			// freeze security
-			rc = freeze_security(discovery.device_handle);
-		}
-		if (rc == NVM_SUCCESS)
-		{
 			// Log an event indicating we successfully set a passphrase
 			NVM_EVENT_ARG uid_arg;
 			uid_to_event_arg(device_uid, uid_arg);
@@ -418,11 +427,7 @@ int nvm_unlock_device(const NVM_UID device_uid,
 		cmd.sub_opcode = SUBOP_UNLOCK_UNIT;
 		cmd.input_payload_size = sizeof (input_payload);
 		cmd.input_payload = &input_payload;
-		if ((rc = ioctl_passthrough_cmd(&cmd)) == NVM_SUCCESS)
-		{
-			// freeze security
-			rc = freeze_security(discovery.device_handle);
-		}
+		rc = ioctl_passthrough_cmd(&cmd);
 		s_memset(&input_payload, sizeof (input_payload));
 
 		// clear any device context - security state has likely changed
@@ -432,6 +437,42 @@ int nvm_unlock_device(const NVM_UID device_uid,
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 
+}
+
+/*
+ * Prevent security lock state changes to the dimm until the next reboot
+ */
+int nvm_freezelock_device(const NVM_UID device_uid)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+	struct device_discovery discovery;
+
+	// check user has permission to make changes
+	if (check_caller_permissions() != COMMON_SUCCESS)
+	{
+		rc = NVM_ERR_INVALIDPERMISSIONS;
+	}
+	else if (!is_supported_driver_available())
+	{
+		rc = NVM_ERR_BADDRIVER;
+	}
+	else if ((rc = IS_NVM_FEATURE_SUPPORTED(modify_device_security)) != NVM_SUCCESS)
+	{
+		COMMON_LOG_ERROR("Modifying "NVM_DIMM_NAME" security is not supported.");
+	}
+	else if (device_uid == NULL)
+	{
+		COMMON_LOG_ERROR("Invalid parameter, device_uid is NULL");
+		rc = NVM_ERR_INVALIDPARAMETER;
+	}
+	else if ((rc = exists_and_manageable(device_uid, &discovery, 1)) == NVM_SUCCESS)
+	{
+		rc = freeze_security(&discovery);
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
 }
 
 /*
@@ -468,16 +509,12 @@ int secure_erase(const NVM_PASSPHRASE passphrase,
 	// log event if it succeeded
 	if (rc == NVM_SUCCESS)
 	{
-		// arg 1: uid as string
-		NVM_UID uid_str;
-		uid_copy(p_discovery->uid, uid_str);
-
 		store_event_by_parts(EVENT_TYPE_MGMT,
 				EVENT_SEVERITY_INFO,
 				EVENT_CODE_MGMT_SECURITY_SECURE_ERASE,
 				p_discovery->uid,
 				0, // no action required
-				uid_str,
+				p_discovery->uid,
 				NULL,
 				NULL,
 				DIAGNOSTIC_RESULT_UNKNOWN);
