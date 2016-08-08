@@ -31,8 +31,7 @@
 #include <algorithm>
 
 #define ADD_KEY_ATTRIBUTE(keys, key, type, value) \
-    (keys)[(key)] = framework::Attribute ((type)(value), true)
-
+	(keys)[(key)] = framework::Attribute ((type)(value), true)
 
 #define ADD_ATTRIBUTE(i, a, key, type, value) \
     (i).setAttribute(key, framework::Attribute((type)value, false), a)

@@ -308,7 +308,7 @@ void wbem::support::NVDIMMLogEntryFactory::eventToInstance(framework::Instance *
 	// CreationTimeStamp
 	if (containsAttribute(CREATIONTIMESTAMP_KEY, attributes))
 	{
-		framework::Attribute timetAttr((NVM_UINT64) (pEvent->time),
+		framework::Attribute timetAttr((NVM_UINT64)(pEvent->time),
 				wbem::framework::DATETIME_SUBTYPE_DATETIME, false);
 		pInstance->setAttribute(CREATIONTIMESTAMP_KEY, timetAttr, attributes);
 	}

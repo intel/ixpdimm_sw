@@ -90,6 +90,7 @@ void NVDIMMFactory::populateAttributeList(
 	attributes.push_back(DEVICEID_KEY);
 	attributes.push_back(REVISIONID_KEY);
 	attributes.push_back(SOCKETID_KEY);
+	attributes.push_back(REMOVALCONDITIONS_KEY);
 	attributes.push_back(MEMORYCONTROLLERID_KEY);
 	attributes.push_back(MEMORYTYPE_KEY);
 	attributes.push_back(SERIALNUMBER_KEY);
@@ -140,9 +141,7 @@ wbem::framework::Instance *NVDIMMFactory::getInstance(
 		framework::ObjectPath &path, framework::attribute_names_t &attributes)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
 	framework::Instance *pInstance = new framework::Instance(path);
-
 	try
 	{
 		checkAttributes(attributes);
@@ -662,6 +661,7 @@ void NVDIMMFactory::toInstance(core::device::Device &device,
 	ADD_ATTRIBUTE(instance, attributes, DEVICEID_KEY, framework::UINT16, device.getDeviceId());
 	ADD_ATTRIBUTE(instance, attributes, REVISIONID_KEY, framework::UINT16, device.getRevisionId());
 	ADD_ATTRIBUTE(instance, attributes, SOCKETID_KEY, framework::UINT16, device.getSocketId());
+	ADD_ATTRIBUTE(instance, attributes, REMOVALCONDITIONS_KEY, framework::UINT16, NOT_APPLICABLE);
 	ADD_ATTRIBUTE(instance, attributes, MEMORYCONTROLLERID_KEY, framework::UINT16,
 			device.getMemoryControllerId());
 	ADD_ATTRIBUTE(instance, attributes, MEMORYTYPE_KEY, framework::UINT16, device.getMemoryType());

@@ -124,6 +124,7 @@ static std::string MANUFACTURINGLOCATION_KEY = "ManufacturingLocation";
 static std::string MANUFACTURINGDATE_KEY = "ManufacturingDate";
 static std::string MEMORYCONTROLLERID_KEY = "MemoryControllerID";
 static std::string MEMCONTROLLERID_KEY = "MemControllerID";
+static std::string REMOVALCONDITIONS_KEY = "RemovalConditions";
 static std::string MEMORYTYPE_KEY = "MemoryType";
 static std::string PHYSICALID_KEY = "PhysicalID";
 static std::string FORMFACTOR_KEY = "FormFactor";

@@ -90,6 +90,11 @@ static const NVM_UINT32 NVDIMM_ERR_NOT_ALLOWED = 3;
 static const NVM_UINT32 NVDIMM_ERR_NOT_SUPPORTED = 4;
 static const NVM_UINT32 NVDIMM_ERR_INVALID_PARAMETER = 5;
 
+static const framework::UINT16 UNKNOWN = 1;
+static const framework::UINT16 NOT_APPLICABLE = 2;
+static const framework::UINT16 REMOVABLE_WHEN_OFF = 3;
+static const framework::UINT16 REMOVABLE_WHEN_ON_OR_OFF = 4;
+
 typedef std::vector<struct device_discovery> devices_t;
 
 /*!
