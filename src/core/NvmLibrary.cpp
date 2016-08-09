@@ -600,21 +600,24 @@ std::vector<struct pool> NvmLibrary::getPools()
 	{
 		throw core::LibraryException(rc);
 	}
-	int count = rc;
-	result.reserve(count);
-	struct pool *fromLib = (struct pool *)malloc(sizeof (struct pool) * count);
-
-	rc = m_lib.getPools(fromLib, count);
-	if (rc < 0)
+	if (rc > 0)
 	{
-		throw core::LibraryException(rc);
-	}
+		int count = rc;
+		result.reserve(count);
+		struct pool *fromLib = (struct pool *)malloc(sizeof (struct pool) * count);
 
-	for (int i = 0; i < count; i++)
-	{
-		result.push_back(fromLib[i]);
+		rc = m_lib.getPools(fromLib, count);
+		if (rc < 0)
+		{
+			throw core::LibraryException(rc);
+		}
+
+		for (int i = 0; i < count; i++)
+		{
+			result.push_back(fromLib[i]);
+		}
+		free(fromLib);
 	}
-	free(fromLib);
 
 	return result;
 
