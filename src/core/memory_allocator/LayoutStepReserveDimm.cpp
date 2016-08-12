@@ -34,6 +34,7 @@
 #include <utility.h>
 #include <LogEnterExit.h>
 #include <core/exceptions/NvmExceptionBadRequest.h>
+#include "ReserveDimmSelector.h"
 
 core::memory_allocator::LayoutStepReserveDimm::LayoutStepReserveDimm()
 {
@@ -52,148 +53,46 @@ void core::memory_allocator::LayoutStepReserveDimm::execute(const MemoryAllocati
 
 	if (request.reserveDimm)
 	{
-		if (request.dimms.size() == 0)
+		try
+		{
+			Dimm reservedDimm = getReserveDimm(request.dimms);
+			setReserveDimmForStorage(reservedDimm, layout);
+		}
+		catch (ReserveDimmSelector::NoDimmsException &)
 		{
 			throw core::NvmExceptionBadRequestNoDimms();
 		}
-		else if (request.dimms.size() == 1)
-		{
-			setReserveDimmForStorage(request.dimms[0], layout);
-		}
-		else
-		{
-			std::map<NVM_UINT16, std::vector<Dimm> > socketDimmListMap;
-			for (std::vector<struct Dimm>::const_iterator dimmIter = request.dimms.begin();
-						dimmIter != request.dimms.end(); dimmIter++)
-			{
-				socketDimmListMap[dimmIter->socket].push_back(*dimmIter);
-			}
-
-			if (!loneDimmOnIMCIsSelectedAsReserve(socketDimmListMap, layout))
-			{
-				if (!unpartneredDimmIsSelectedAsReserve(socketDimmListMap, layout))
-				{
-					if (!oddlySizedDimmIsSelectedAsReserve(socketDimmListMap, layout))
-					{
-						setReserveDimmForStorage(request.dimms[0], layout);
-					}
-				}
-			}
-		}
 	}
 }
 
-// lone dimm on an iMC while other iMC(s) are fully populated
-bool core::memory_allocator::LayoutStepReserveDimm::loneDimmOnIMCIsSelectedAsReserve(
-		const std::map<NVM_UINT16, std::vector<Dimm> > &socketDimmListMap,
-		MemoryAllocationLayout& layout)
+core::memory_allocator::Dimm core::memory_allocator::LayoutStepReserveDimm::getReserveDimm(
+		const std::vector<Dimm>& dimms)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	bool found = false;
-	std::map<NVM_UINT16, std::vector<Dimm> >::const_iterator socketIter = socketDimmListMap.begin();
-	for (; socketIter != socketDimmListMap.end() && !found; socketIter++)
-	{
-		// Key, value = memoryControllerId, vector of dimms assoc' with the controllerId
-		std::map<NVM_UINT16, std::vector<Dimm> > iMCDimmListMap;
-		for (std::vector<struct Dimm>::const_iterator dimmIter = socketIter->second.begin();
-				dimmIter != socketIter->second.end(); dimmIter++)
-		{
-			iMCDimmListMap[dimmIter->memoryController].push_back(*dimmIter);
-		}
+	ReserveDimmSelector selector(dimms);
+	std::string reservedDimmUid = selector.getReservedDimm();
 
-		std::map<NVM_UINT16, std::vector<Dimm> >::const_iterator imcIter = iMCDimmListMap.begin();
-		for(; imcIter != iMCDimmListMap.end(); imcIter++)
+	Dimm reserveDimm = dimms.front();
+	for (std::vector<Dimm>::const_iterator dimmIter = dimms.begin(); dimmIter != dimms.end(); dimmIter++)
+	{
+		if (dimmIter->uid == reservedDimmUid)
 		{
-			if (imcIter->second.size() == 1)
-			{
-				found = true;
-				setReserveDimmForStorage(imcIter->second[0], layout);
-				break;
-			}
+			reserveDimm = *dimmIter;
+			break;
 		}
 	}
 
-	return found;
-}
-
-// dimm without a partner on the other iMC
-bool core::memory_allocator::LayoutStepReserveDimm::unpartneredDimmIsSelectedAsReserve(
-		const std::map<NVM_UINT16, std::vector<Dimm> > &socketDimmListMap,
-		MemoryAllocationLayout& layout)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	bool found = false;
-	std::map<NVM_UINT16, std::vector<Dimm> >::const_iterator socketIter = socketDimmListMap.begin();
-	for (; socketIter != socketDimmListMap.end() && !found; socketIter++)
-	{
-		// Key, value = memoryChannelId, vector of dimms assoc' with the channelId
-		std::map<NVM_UINT16, std::vector<Dimm> > channelDimmListMap;
-		for (std::vector<struct Dimm>::const_iterator dimmIter = socketIter->second.begin();
-				dimmIter != socketIter->second.end(); dimmIter++)
-		{
-			NVM_UINT16 channelId = dimmIter->channel % core::memory_allocator::CHANNELS_PER_IMC;
-			channelDimmListMap[channelId].push_back(*dimmIter);
-		}
-
-
-		std::map<NVM_UINT16, std::vector<Dimm> >::const_iterator iter = channelDimmListMap.begin();
-		for(; iter != channelDimmListMap.end(); iter++)
-		{
-			if (iter->second.size() == 1)
-			{
-				found = true;
-				setReserveDimmForStorage(iter->second[0], layout);
-				break;
-			}
-		}
-	}
-
-	return found;
-}
-
-
-bool core::memory_allocator::LayoutStepReserveDimm::oddlySizedDimmIsSelectedAsReserve(
-		const std::map<NVM_UINT16, std::vector<Dimm> > &socketDimmListMap,
-		MemoryAllocationLayout& layout)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	bool found = false;
-	std::map<NVM_UINT16, std::vector<Dimm> >::const_iterator socketIter = socketDimmListMap.begin();
-	for (; socketIter != socketDimmListMap.end() && !found; socketIter++)
-	{
-		// Key, value = capacity, vector of dimms that have the specific capacity
-		std::map<NVM_UINT64,  std::vector<Dimm> > capacityDimmListMap;
-		for (std::vector<struct Dimm>::const_iterator dimmIter = socketIter->second.begin();
-				dimmIter != socketIter->second.end(); dimmIter++)
-		{
-			NVM_UINT64 capacity = dimmIter->capacity;
-			capacityDimmListMap[capacity].push_back(*dimmIter);
-		}
-
-		std::map<NVM_UINT64, std::vector<Dimm> >::const_iterator iter = capacityDimmListMap.begin();
-		for(; iter != capacityDimmListMap.end(); iter++)
-		{
-			// pick the odd one out
-			if (iter->second.size() == 1)
-			{
-				found = true;
-				setReserveDimmForStorage(iter->second[0], layout);
-				break;
-			}
-		}
-	}
-
-	return found;
+	return reserveDimm;
 }
 
 void core::memory_allocator::LayoutStepReserveDimm::setReserveDimmForStorage(struct Dimm reserveDimm,
 		MemoryAllocationLayout& layout)
 {
-	layout.storageCapacity = reserveDimm.capacity / BYTES_PER_GB;
+	layout.storageCapacity += reserveDimm.capacity / BYTES_PER_GB;
 	layout.goals[reserveDimm.uid].memory_size = 0;
 	layout.goals[reserveDimm.uid].app_direct_count = 0;
 	layout.reservedimmUid = reserveDimm.uid;
 }
+
+

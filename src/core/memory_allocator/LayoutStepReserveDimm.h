@@ -51,18 +51,7 @@ class NVM_API LayoutStepReserveDimm : public LayoutStep
 	protected:
 		void setReserveDimmForStorage(struct Dimm reserveDimm,
 				MemoryAllocationLayout& layout);
-
-		bool loneDimmOnIMCIsSelectedAsReserve(
-				const std::map<NVM_UINT16, std::vector<Dimm> > &socketDimmListMap,
-				MemoryAllocationLayout& layout);
-
-		bool unpartneredDimmIsSelectedAsReserve(
-				const std::map<NVM_UINT16, std::vector<Dimm> > &socketDimmListMap,
-				MemoryAllocationLayout& layout);
-
-		bool oddlySizedDimmIsSelectedAsReserve(
-				const std::map<NVM_UINT16, std::vector<Dimm> > &socketDimmListMap,
-				MemoryAllocationLayout& layout);
+		Dimm getReserveDimm(const std::vector<Dimm> &dimms);
 };
 
 } /* namespace memory_allocator */
