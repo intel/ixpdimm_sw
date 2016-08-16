@@ -113,7 +113,7 @@ ShowDeviceCommand::ShowDeviceCommand(core::device::DeviceService &service)
 			&convertMemoryModes);
 	m_props.addList("SecurityCapabilities", &core::device::Device::getSecurityCapabilities,
 			&convertSecurityCapabilities);
-	m_props.addOther("ConfigurationStatus", &core::device::Device::getConfigStatus,
+	m_props.addOther("LastConfigurationStatus", &core::device::Device::getConfigStatus,
 			&convertConfigStatus);
 	m_props.addOther("ARSStatus", &core::device::Device::getArsStatus, &convertArsStatus);
 	m_props.addBool("SKUViolation", &core::device::Device::isSkuViolation);

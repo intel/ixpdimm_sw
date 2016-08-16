@@ -79,7 +79,7 @@ class <NVM_WBEM_PREFIX>NVDIMM : CIM_PhysicalMemory
         ),
 	ValueMap { "0", "1", "2", "3", "4", "5", "6" },
 	Values { "Unknown", "Disabled", "Unlocked", "Locked", "Frozen", "Exceeded", "Not Supported" }]
-	uint16 LockState;
+	uint32 LockState;
 	[Description (
         "Ability of the software to manage the DIMM."
         ),
