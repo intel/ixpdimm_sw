@@ -36,6 +36,9 @@
 
 #define ACCEPTED_PERCENT_DEVIATION 10
 
+// using macro to avoid ambiguous overload call to abs function
+#define ABSOLUTEDIFFERENCE(X, Y) (X > Y) ? (X - Y) : (Y - X)
+
 core::memory_allocator::PostLayoutRequestDeviationCheck::PostLayoutRequestDeviationCheck()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -50,7 +53,9 @@ double core::memory_allocator::PostLayoutRequestDeviationCheck::findPercentDevia
 		NVM_UINT64 expectedValue, NVM_UINT64 observedValue)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	return (double)100.0 * (abs(observedValue-expectedValue))/expectedValue;
+	int deviation = ABSOLUTEDIFFERENCE(observedValue, expectedValue);
+
+	return (double)100.0 * (deviation)/expectedValue;
 }
 
 bool core::memory_allocator::PostLayoutRequestDeviationCheck::layoutDeviationIsWithinBounds(
