@@ -242,8 +242,9 @@ NVM_UINT64 core::memory_allocator::MemoryAllocator::getTotalCapacitiesOfRequeste
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	NVM_UINT64 totalDimmCapacitiesInBytes = 0;
 
-	std::vector<Dimm>::const_iterator requestIter = request.dimms.begin();
-	for (; requestIter != request.dimms.end(); requestIter++)
+	std::vector<Dimm> dimms = request.getDimms();
+	std::vector<Dimm>::const_iterator requestIter = dimms.begin();
+	for (; requestIter != dimms.end(); requestIter++)
 	{
 		totalDimmCapacitiesInBytes += requestIter->capacity;
 	}

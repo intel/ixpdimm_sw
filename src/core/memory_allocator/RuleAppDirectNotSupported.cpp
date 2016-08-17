@@ -49,7 +49,7 @@ void core::memory_allocator::RuleAppDirectNotSupported::verify(const MemoryAlloc
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	if (request.appDirectExtents.size() > 0)
+	if (request.getNumberOfAppDirectExtents() > 0)
 	{
 		verifyAppDirectSupported();
 		verifyAppDirectSettingsSupported(request);
@@ -71,8 +71,9 @@ void core::memory_allocator::RuleAppDirectNotSupported::verifyAppDirectSettingsS
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	for (std::vector<AppDirectExtent>::const_iterator iter = request.appDirectExtents.begin();
-				iter != request.appDirectExtents.end(); iter++)
+	std::vector<AppDirectExtent> appDirectExtents = request.getAppDirectExtents();
+	for (std::vector<AppDirectExtent>::const_iterator iter = appDirectExtents.begin();
+				iter != appDirectExtents.end(); iter++)
 	{
 		// check way + iMC size + channel size
 		if (!formatSupported(*iter))

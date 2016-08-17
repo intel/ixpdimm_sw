@@ -48,7 +48,7 @@ void core::memory_allocator::LayoutStepCheckDriverSupportsAppDirect::execute(con
 		MemoryAllocationLayout& layout)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	if (request.appDirectExtents.size() > 0 && !m_driverFeatures.app_direct_mode)
+	if (request.getNumberOfAppDirectExtents() > 0 && !m_driverFeatures.app_direct_mode)
 	{
 		layout.warnings.push_back(LAYOUT_WARNING_APP_DIRECT_NOT_SUPPORTED_BY_DRIVER);
 	}

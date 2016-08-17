@@ -57,10 +57,11 @@ bool core::memory_allocator::LayoutStepAppDirect::isRemainingStep(const MemoryAl
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
+	std::vector<AppDirectExtent> extents = request.getAppDirectExtents();
 	bool isRemaining = false;
-	if (request.appDirectExtents.size() > m_adExtentIndex)
+	if (extents.size() > m_adExtentIndex)
 	{
-		isRemaining = request.appDirectExtents[m_adExtentIndex].capacity == REQUEST_REMAINING_CAPACITY;
+		isRemaining = extents[m_adExtentIndex].capacity == REQUEST_REMAINING_CAPACITY;
 	}
 	return isRemaining;
 }
@@ -70,13 +71,15 @@ void core::memory_allocator::LayoutStepAppDirect::execute(const MemoryAllocation
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	if (request.appDirectExtents.size() > m_adExtentIndex)
+	std::vector<AppDirectExtent> extents = request.getAppDirectExtents();
+	if (extents.size() > m_adExtentIndex)
 	{
+		std::vector<Dimm> requestDimms = request.getDimms();
 		std::vector<Dimm> dimmsToLayout;
-		for (std::vector<Dimm>::const_iterator dimmIter = request.dimms.begin();
-				dimmIter != request.dimms.end(); dimmIter++)
+		for (std::vector<Dimm>::const_iterator dimmIter = requestDimms.begin();
+				dimmIter != requestDimms.end(); dimmIter++)
 		{
-			if (layout.reservedimmUid != dimmIter->uid)
+			if (request.getReservedDimmUid() != dimmIter->uid)
 			{
 				dimmsToLayout.push_back(*dimmIter);
 				m_dimmExistingSets[dimmIter->uid] =
@@ -85,7 +88,7 @@ void core::memory_allocator::LayoutStepAppDirect::execute(const MemoryAllocation
 		}
 
 		NVM_UINT64 bytesToAllocate = getRequestedCapacityBytes(
-				request.appDirectExtents[m_adExtentIndex].capacity, request, layout);
+				extents[m_adExtentIndex].capacity, request, layout);
 		if (bytesToAllocate)
 		{
 			NVM_UINT64 bytesRemaining = bytesToAllocate;
@@ -93,7 +96,7 @@ void core::memory_allocator::LayoutStepAppDirect::execute(const MemoryAllocation
 			{
 				try
 				{
-					if (request.appDirectExtents[m_adExtentIndex].byOne)
+					if (extents[m_adExtentIndex].byOne)
 					{
 						bytesRemaining = layoutByOneAd(bytesRemaining, dimmsToLayout, request, layout);
 					}
@@ -426,8 +429,9 @@ NVM_UINT64 core::memory_allocator::LayoutStepAppDirect::getRemainingAppDirectByt
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	NVM_UINT64 bytes = 0;
-	for (std::vector<struct Dimm>::const_iterator dimmIter = request.dimms.begin();
-			dimmIter != request.dimms.end(); dimmIter++)
+	std::vector<struct Dimm> dimms = request.getDimms();
+	for (std::vector<struct Dimm>::const_iterator dimmIter = dimms.begin();
+			dimmIter != dimms.end(); dimmIter++)
 	{
 		if (layout.reservedimmUid != dimmIter->uid)
 		{
@@ -548,7 +552,7 @@ bool core::memory_allocator::LayoutStepAppDirect::canMapInterleavedCapacity(
 	// new set
 	struct app_direct_attributes newSet;
 	memset(&newSet, 0, sizeof (newSet));
-	newSet.interleave.ways = request.appDirectExtents[m_adExtentIndex].byOne ?
+	newSet.interleave.ways = request.getAppDirectExtents()[m_adExtentIndex].byOne ?
 			INTERLEAVE_WAYS_1 : getInterleaveWay(dimms.size());
 	newSet.interleave.channel = getInterleaveChannelSize(request, dimms.size());
 	newSet.interleave.imc = getInterleaveImcSize(request, dimms.size());
@@ -631,9 +635,10 @@ enum interleave_size core::memory_allocator::LayoutStepAppDirect::getInterleaveC
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
+	std::vector<AppDirectExtent> extents = request.getAppDirectExtents();
 	enum interleave_size channelSize =
-			(enum interleave_size)request.appDirectExtents[m_adExtentIndex].channel;
-	if (request.appDirectExtents[m_adExtentIndex].channel == REQUEST_DEFAULT_INTERLEAVE_FORMAT)
+			(enum interleave_size)extents[m_adExtentIndex].channel;
+	if (extents[m_adExtentIndex].channel == REQUEST_DEFAULT_INTERLEAVE_FORMAT)
 	{
 		// lookup recommended
 		for (int i = 0; i < m_systemCap.platform_capabilities.app_direct_mode.interleave_formats_count; i++)
@@ -658,9 +663,10 @@ enum interleave_size core::memory_allocator::LayoutStepAppDirect::getInterleaveI
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
+	std::vector<AppDirectExtent> extents = request.getAppDirectExtents();
 	enum interleave_size imcSize =
-			(enum interleave_size)request.appDirectExtents[m_adExtentIndex].imc;
-	if (request.appDirectExtents[m_adExtentIndex].imc == REQUEST_DEFAULT_INTERLEAVE_FORMAT)
+			(enum interleave_size)extents[m_adExtentIndex].imc;
+	if (extents[m_adExtentIndex].imc == REQUEST_DEFAULT_INTERLEAVE_FORMAT)
 	{
 		// lookup recommended
 		for (int i = 0; i < m_systemCap.platform_capabilities.app_direct_mode.interleave_formats_count; i++)

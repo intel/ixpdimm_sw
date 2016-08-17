@@ -51,8 +51,9 @@ void core::memory_allocator::RuleDimmHasConfigGoal::verify(const MemoryAllocatio
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	for (std::vector<struct Dimm>::const_iterator dimmIter = request.dimms.begin();
-				dimmIter != request.dimms.end(); dimmIter++)
+	std::vector<struct Dimm> dimms = request.getDimms();
+	for (std::vector<struct Dimm>::const_iterator dimmIter = dimms.begin();
+				dimmIter != dimms.end(); dimmIter++)
 	{
 		if (dimmHasUnappliedGoal(dimmIter->uid))
 		{

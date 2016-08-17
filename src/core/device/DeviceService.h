@@ -31,7 +31,6 @@
 #include <string>
 #include <nvm_types.h>
 #include <uid/uid.h>
-#include <nvm_types.h>
 #include <core/Result.h>
 #include "Device.h"
 #include <core/Collection.h>
@@ -48,6 +47,7 @@ public:
 	virtual ~DeviceService() { if (m_pSingleton == this) m_pSingleton = NULL; }
 	virtual std::vector<std::string> getAllUids();
 	virtual std::vector<std::string> getManageableUids();
+	virtual std::vector<std::string> getUidsForDeviceIds(const std::vector<std::string> &deviceIds);
 	virtual DeviceCollection getAllDevices();
 	virtual Result<Device> getDevice(std::string uid);
 
@@ -56,6 +56,9 @@ public:
 protected:
 	NvmLibrary &m_lib;
 	static DeviceService *m_pSingleton;
+
+	std::string getUidForDeviceIdFromCollection(const std::string &deviceId,
+			DeviceCollection &devices);
 };
 }
 }

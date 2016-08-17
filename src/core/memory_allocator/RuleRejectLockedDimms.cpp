@@ -47,7 +47,8 @@ void core::memory_allocator::RuleRejectLockedDimms::verify(const MemoryAllocatio
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	for (std::vector<Dimm>::const_iterator iter = request.dimms.begin(); iter != request.dimms.end(); iter++)
+	std::vector<Dimm> dimms = request.getDimms();
+	for (std::vector<Dimm>::const_iterator iter = dimms.begin(); iter != dimms.end(); iter++)
 	{
 		if (isDimmLocked(*iter))
 		{

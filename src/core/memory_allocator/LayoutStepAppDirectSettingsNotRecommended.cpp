@@ -50,8 +50,9 @@ void core::memory_allocator::LayoutStepAppDirectSettingsNotRecommended::execute(
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	for (std::vector<AppDirectExtent>::const_iterator appDirectIter = request.appDirectExtents.begin();
-			appDirectIter != request.appDirectExtents.end(); appDirectIter++)
+	std::vector<AppDirectExtent> appDirectExtents = request.getAppDirectExtents();
+	for (std::vector<AppDirectExtent>::const_iterator appDirectIter = appDirectExtents.begin();
+			appDirectIter != appDirectExtents.end(); appDirectIter++)
 	{
 		// check way + iMC size + channel size
 		if (appDirectIter->byOne ||

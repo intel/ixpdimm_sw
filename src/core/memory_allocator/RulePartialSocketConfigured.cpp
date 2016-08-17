@@ -160,10 +160,11 @@ void core::memory_allocator::RulePartialSocketConfigured::verify(const MemoryAll
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	std::list<NVM_UINT16> socketList = getRequestedSockets(request.dimms);
+	std::vector<Dimm> dimms = request.getDimms();
+	std::list<NVM_UINT16> socketList = getRequestedSockets(dimms);
 	for (std::list<NVM_UINT16>::iterator iter = socketList.begin();
 			iter != socketList.end(); iter++)
 	{
-		validateRequestForSocket(request.dimms, *iter);
+		validateRequestForSocket(dimms, *iter);
 	}
 }

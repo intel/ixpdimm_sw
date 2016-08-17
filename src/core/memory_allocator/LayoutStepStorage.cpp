@@ -49,7 +49,7 @@ bool core::memory_allocator::LayoutStepStorage::isRemainingStep(const MemoryAllo
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	return request.storageRemaining;
+	return request.isStorageRemaining();
 }
 
 void core::memory_allocator::LayoutStepStorage::execute(const MemoryAllocationRequest& request,
@@ -59,8 +59,9 @@ void core::memory_allocator::LayoutStepStorage::execute(const MemoryAllocationRe
 
 	NVM_UINT64 bytesToAllocate = getRemainingBytesFromRequestedDimms(request, layout);
 	NVM_UINT64 bytesRemaining = bytesToAllocate;
-	for (std::vector<struct Dimm>::const_iterator dimmIter = request.dimms.begin();
-			dimmIter != request.dimms.end(); dimmIter++)
+	std::vector<struct Dimm> dimms = request.getDimms();
+	for (std::vector<struct Dimm>::const_iterator dimmIter = dimms.begin();
+			dimmIter != dimms.end(); dimmIter++)
 	{
 		bytesRemaining -= getDimmUnallocatedBytes(dimmIter->capacity, layout.goals[dimmIter->uid]);
 	}

@@ -1019,7 +1019,7 @@ void wbem::mem_config::MemoryConfigurationServiceFactory::validateDimmList(
 		memset(&discovery, 0, sizeof (discovery));
 		m_pApi->getDeviceDiscoveryForDimm(*uidIter, discovery);
 
-		request.dimms.push_back(core::memory_allocator::MemoryAllocationUtil::deviceDiscoveryToDimm(discovery));
+		request.addDimm(core::memory_allocator::MemoryAllocationUtil::deviceDiscoveryToDimm(discovery));
 	}
 
 	std::vector<struct device_discovery> manageableDevices;
@@ -1057,11 +1057,18 @@ wbem::mem_config::MemoryConfigurationServiceFactory::memAllocSettingsToRequest(
 
 	core::memory_allocator::MemoryAllocationRequest request;
 
-	getDimmsForMemAllocSettings(memoryAllocationSettings, request.dimms);
+	std::vector<core::memory_allocator::Dimm> dimms;
+	getDimmsForMemAllocSettings(memoryAllocationSettings, dimms);
+	request.setDimms(dimms);
+
+	NVM_UINT64 memoryCapacity = 0;
+	std::vector<core::memory_allocator::AppDirectExtent> appDirectExtents;
 	settingsStringsToRequestedExtents(memoryAllocationSettings,
-			request.memoryCapacity, request.appDirectExtents);
-	request.reserveDimm = false;
-	request.storageRemaining = true;
+			memoryCapacity, appDirectExtents);
+	request.setMemoryModeCapacity(memoryCapacity);
+	request.setAppDirectExtents(appDirectExtents);
+
+	request.setStorageRemaining(true);
 
 	return request;
 }

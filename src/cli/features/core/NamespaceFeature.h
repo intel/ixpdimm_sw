@@ -356,6 +356,9 @@ class NVM_API NamespaceFeature : public cli::framework::FeatureBase
 		cli::framework::ResultBase* addParsedDimmListToRequest(
 				const framework::ParsedCommand& parsedCommand,
 				core::memory_allocator::MemoryAllocationRequest &request);
+		cli::framework::ResultBase* addParsedReserveDimmPropertyToRequest(
+				const framework::ParsedCommand& parsedCommand,
+				core::memory_allocator::MemoryAllocationRequest &request);
 		core::memory_allocator::Dimm nvdimmInstanceToDimm(const wbem::framework::Instance &instance);
 		cli::framework::ResultBase* showConfigGoalForInstances(
 				const cli::nvmcli::filters_t &filters,

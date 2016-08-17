@@ -35,6 +35,7 @@
 
 #include <nvm_types.h>
 #include <core/memory_allocator/MemoryAllocationTypes.h>
+#include <core/memory_allocator/MemoryAllocationRequest.h>
 
 namespace core
 {

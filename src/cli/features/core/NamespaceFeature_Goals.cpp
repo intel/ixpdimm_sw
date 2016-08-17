@@ -35,6 +35,7 @@
 #include <string/s_str.h>
 #include <uid/uid.h>
 #include <core/memory_allocator/MemoryAllocator.h>
+#include <core/memory_allocator/ReserveDimmSelector.h>
 #include <mem_config/MemoryConfigurationFactory.h>
 #include <pmem_config/PersistentMemoryCapabilitiesFactory.h>
 #include <memory/SystemProcessorFactory.h>
@@ -852,12 +853,11 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parsedCreateGoalParam
 	MemoryProperty appDirect2Prop(parsedCommand, APPDIRECT2SIZE_PROPERTYNAME,
 			APPDIRECT2SETTINGS_PROPERTYNAME);
 
-	pResult = parseReserveDimmProperty(parsedCommand);
-	request.reserveDimm = m_reserveDimm;
+	pResult = addParsedDimmListToRequest(parsedCommand, request);
 
 	if (!pResult)
 	{
-		pResult = addParsedDimmListToRequest(parsedCommand, request);
+		pResult = addParsedReserveDimmPropertyToRequest(parsedCommand, request);
 	}
 
 	if (!pResult)
@@ -894,7 +894,7 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parsedCreateGoalParam
 						STORAGECAPACITY_PROPERTYNAME.c_str(),
 						RESERVEDIMM_PROPERTYNAME.c_str()));
 			}
-			request.memoryCapacity = 0;
+			request.setMemoryModeCapacity(0);
 		}
 		// StorageCapacity can only be "Remaining" if it exists
 		else if (m_storageIsRemaining && !framework::stringsIEqual(storageCapacityValue, wbem::mem_config::SIZE_REMAINING))
@@ -948,23 +948,49 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parsedCreateGoalParam
 				(pResult = appDirect2Prop.validate()) == NULL)
 		{
 			// Set memory size
-			request.memoryCapacity = memoryModeProp.getIsRemaining() ?
+			request.setMemoryModeCapacity(memoryModeProp.getIsRemaining() ?
 					core::memory_allocator::REQUEST_REMAINING_CAPACITY :
-					memoryModeProp.getSizeGiB();
+					memoryModeProp.getSizeGiB());
 
-			request.storageRemaining = m_storageIsRemaining;
+			request.setStorageRemaining(m_storageIsRemaining);
 
 			// Set information for first interleave set
 			if (appDirectProp.getSizeExists())
 			{
-				request.appDirectExtents.push_back(memoryPropToAppDirectExtent(appDirectProp));
+				request.addAppDirectExtent(memoryPropToAppDirectExtent(appDirectProp));
 			}
 
 			// Set information for second interleave set
 			if (appDirect2Prop.getSizeExists())
 			{
-				request.appDirectExtents.push_back(memoryPropToAppDirectExtent(appDirect2Prop));
+				request.addAppDirectExtent(memoryPropToAppDirectExtent(appDirect2Prop));
 			}
+		}
+	}
+
+	return pResult;
+}
+
+cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::addParsedReserveDimmPropertyToRequest(
+		const framework::ParsedCommand& parsedCommand,
+		core::memory_allocator::MemoryAllocationRequest &request)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	cli::framework::ResultBase *pResult = parseReserveDimmProperty(parsedCommand);
+	if (m_reserveDimm)
+	{
+		try
+		{
+			core::memory_allocator::ReserveDimmSelector selector(request.getDimms());
+			request.setReservedDimmUid(selector.getReservedDimm());
+			request.setReservedDimmCapacityType(core::memory_allocator::RESERVE_DIMM_STORAGE);
+		}
+		catch (core::memory_allocator::ReserveDimmSelector::NoDimmsException &)
+		{
+			// Ignore if there are no DIMMs
+			request.setReservedDimmUid("");
+			request.setReservedDimmCapacityType(core::memory_allocator::RESERVE_DIMM_NONE);
 		}
 	}
 
@@ -998,7 +1024,9 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::addParsedDimmListToRe
 		{
 			try
 			{
-				getDimmInfoForUids(dimmList, request.dimms);
+				std::vector<core::memory_allocator::Dimm> dimms;
+				getDimmInfoForUids(dimmList, dimms);
+				request.setDimms(dimms);
 			}
 			catch (wbem::framework::Exception &e)
 			{
@@ -1104,7 +1132,7 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::addDimmsToRequestFrom
 								socketList.end();
 				if (socketInList)
 				{
-					request.dimms.push_back(nvdimmInstanceToDimm(dimmInstance));
+					request.addDimm(nvdimmInstanceToDimm(dimmInstance));
 				}
 			}
 		}

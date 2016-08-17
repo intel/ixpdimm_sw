@@ -49,7 +49,7 @@ void core::memory_allocator::LayoutStepCheckDriverSupportsStorage::execute(const
 		MemoryAllocationLayout& layout)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	if (request.storageRemaining && !m_driverFeatures.storage_mode)
+	if (request.isStorageRemaining() && !m_driverFeatures.storage_mode)
 	{
 		layout.warnings.push_back(LAYOUT_WARNING_STORAGE_NOT_SUPPORTED_BY_DRIVER);
 	}

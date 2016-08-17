@@ -128,8 +128,9 @@ NVM_UINT64 core::memory_allocator::LayoutStep::getRemainingBytesFromRequestedDim
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	NVM_UINT64 bytes = 0;
-	for (std::vector<struct Dimm>::const_iterator dimmIter = request.dimms.begin();
-			dimmIter != request.dimms.end(); dimmIter++)
+	std::vector<Dimm> dimms = request.getDimms();
+	for (std::vector<struct Dimm>::const_iterator dimmIter = dimms.begin();
+			dimmIter != dimms.end(); dimmIter++)
 	{
 		bytes += getDimmUnallocatedGiBAlignedBytes(dimmIter->capacity, layout.goals[dimmIter->uid]);
 	}

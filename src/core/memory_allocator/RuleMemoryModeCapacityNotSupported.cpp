@@ -51,7 +51,7 @@ void core::memory_allocator::RuleMemoryModeCapacityNotSupported::verify(const Me
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	if (request.memoryCapacity != 0 &&
+	if (request.getMemoryModeCapacity() != 0 &&
 		!m_systemCapabilities.nvm_features.memory_mode)
 	{
 		throw core::NvmExceptionMemoryModeNotSupported();

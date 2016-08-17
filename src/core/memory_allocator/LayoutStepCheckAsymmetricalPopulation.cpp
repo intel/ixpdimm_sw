@@ -48,11 +48,12 @@ void core::memory_allocator::LayoutStepCheckAsymmetricalPopulation::execute(cons
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	if (request.memoryCapacity != 0 || request.appDirectExtents.size() > 0)
+	if (request.getMemoryModeCapacity() != 0 || request.getNumberOfAppDirectExtents() > 0)
 	{
 		std::map<NVM_UINT16, std::vector<Dimm> > socketDimmsMap;
-		for (std::vector<Dimm>::const_iterator dimmIter = request.dimms.begin();
-				dimmIter != request.dimms.end(); dimmIter++)
+		std::vector<Dimm> dimms = request.getDimms();
+		for (std::vector<Dimm>::const_iterator dimmIter = dimms.begin();
+				dimmIter != dimms.end(); dimmIter++)
 		{
 			socketDimmsMap[dimmIter->socket].push_back(*dimmIter);
 		}

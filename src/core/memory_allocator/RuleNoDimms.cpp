@@ -48,7 +48,7 @@ void core::memory_allocator::RuleNoDimms::verify(const MemoryAllocationRequest &
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	if (request.dimms.size() == 0)
+	if (request.getNumberOfDimms() == 0)
 	{
 		throw core::NvmExceptionBadRequestNoDimms();
 	}

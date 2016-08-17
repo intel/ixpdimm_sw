@@ -44,8 +44,10 @@ void core::memory_allocator::RuleMirroredAppDirectNotSupported::verify(
 		const MemoryAllocationRequest& request)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	for (std::vector<AppDirectExtent>::const_iterator iter = request.appDirectExtents.begin();
-			iter != request.appDirectExtents.end(); iter++)
+
+	std::vector<AppDirectExtent> extents = request.getAppDirectExtents();
+	for (std::vector<AppDirectExtent>::const_iterator iter = extents.begin();
+			iter != extents.end(); iter++)
 	{
 		if (iter->mirrored)
 		{

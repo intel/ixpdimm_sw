@@ -71,10 +71,10 @@ void core::memory_allocator::PostLayoutRequestDeviationCheck::checkIfMemoryCapac
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	if (request.memoryCapacity)
+	if (request.getMemoryModeCapacity())
 	{
 		double percentDeviation =
-				findPercentDeviation(request.memoryCapacity, layout.memoryCapacity);
+				findPercentDeviation(request.getMemoryModeCapacity(), layout.memoryCapacity);
 		if ((layout.memoryCapacity == 0)  ||
 				(!layoutDeviationIsWithinBounds(percentDeviation)))
 		{
@@ -89,18 +89,16 @@ void core::memory_allocator::PostLayoutRequestDeviationCheck::checkAppDirectCapa
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	if (request.appDirectExtents.size())
+	std::vector<AppDirectExtent> extents = request.getAppDirectExtents();
+	for (size_t i = 0;  i < extents.size(); i++)
 	{
-		for (size_t i = 0;  i < request.appDirectExtents.size(); i++)
+		double percentDeviation =
+				findPercentDeviation(extents[i].capacity,
+						layout.appDirectCapacities[i]);
+		if ((layout.appDirectCapacities[i] == 0)  ||
+				(!layoutDeviationIsWithinBounds(percentDeviation)))
 		{
-			double percentDeviation =
-					findPercentDeviation(request.appDirectExtents[i].capacity,
-							layout.appDirectCapacities[i]);
-			if ((layout.appDirectCapacities[i] == 0)  ||
-					(!layoutDeviationIsWithinBounds(percentDeviation)))
-			{
-				throw core::NvmExceptionUnacceptableLayoutDeviation();
-			}
+			throw core::NvmExceptionUnacceptableLayoutDeviation();
 		}
 	}
 }

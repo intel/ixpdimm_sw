@@ -154,6 +154,6 @@ void core::memory_allocator::RuleDimmListInvalid::verify(const MemoryAllocationR
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	checkifDimmsInRequestAreUnique(request.dimms);
-	checkIfDimmListIsValid(request.dimms);
+	checkifDimmsInRequestAreUnique(request.getDimms());
+	checkIfDimmListIsValid(request.getDimms());
 }

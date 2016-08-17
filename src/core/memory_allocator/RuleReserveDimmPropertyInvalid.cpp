@@ -61,7 +61,7 @@ bool core::memory_allocator::RuleReserveDimmPropertyInvalid::reserveSingleDimm(
 		const MemoryAllocationRequest &request)
 {
 	bool result = false;
-	if ((request.reserveDimm) && (request.dimms.size() == 1))
+	if (request.hasReservedDimm() && (request.getNumberOfDimms() == 1))
 	{
 		result = true;
 	}
@@ -72,8 +72,8 @@ bool core::memory_allocator::RuleReserveDimmPropertyInvalid::memoryOrAppDirectIs
 		const MemoryAllocationRequest &request)
 {
 	bool result = false;
-	if ((request.memoryCapacity != 0) ||
-			(request.appDirectExtents.size() > 0))
+	if ((request.getMemoryModeCapacity() != 0) ||
+			(request.getNumberOfAppDirectExtents() > 0))
 	{
 		result = true;
 	}

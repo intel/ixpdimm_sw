@@ -50,7 +50,8 @@ void core::memory_allocator::LayoutStepCheckCurrentVolatileMode::execute(
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	if (request.memoryCapacity == REQUEST_REMAINING_CAPACITY || request.memoryCapacity > 0)
+	if (request.getMemoryModeCapacity() == REQUEST_REMAINING_CAPACITY ||
+			request.getMemoryModeCapacity() > 0)
 	{
 		if (m_platformCapabilities.current_volatile_mode != VOLATILE_MODE_MEMORY &&
 			m_platformCapabilities.current_volatile_mode != VOLATILE_MODE_AUTO)

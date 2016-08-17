@@ -33,6 +33,7 @@
 #define _core_LOGIC_LAYOUTSTEP_H_
 
 #include "MemoryAllocationTypes.h"
+#include "MemoryAllocationRequest.h"
 
 namespace core
 {

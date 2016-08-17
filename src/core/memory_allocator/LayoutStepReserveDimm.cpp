@@ -51,42 +51,19 @@ void core::memory_allocator::LayoutStepReserveDimm::execute(const MemoryAllocati
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	if (request.reserveDimm)
+	if (request.getNumberOfDimms() == 0)
 	{
-		try
-		{
-			Dimm reservedDimm = getReserveDimm(request.dimms);
-			setReserveDimmForStorage(reservedDimm, layout);
-		}
-		catch (ReserveDimmSelector::NoDimmsException &)
-		{
-			throw core::NvmExceptionBadRequestNoDimms();
-		}
+		throw NvmExceptionBadRequestNoDimms();
+	}
+
+	if (request.hasReservedDimm())
+	{
+		Dimm reservedDimm = request.getReservedDimm();
+		setReserveDimmForStorage(reservedDimm, layout);
 	}
 }
 
-core::memory_allocator::Dimm core::memory_allocator::LayoutStepReserveDimm::getReserveDimm(
-		const std::vector<Dimm>& dimms)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	ReserveDimmSelector selector(dimms);
-	std::string reservedDimmUid = selector.getReservedDimm();
-
-	Dimm reserveDimm = dimms.front();
-	for (std::vector<Dimm>::const_iterator dimmIter = dimms.begin(); dimmIter != dimms.end(); dimmIter++)
-	{
-		if (dimmIter->uid == reservedDimmUid)
-		{
-			reserveDimm = *dimmIter;
-			break;
-		}
-	}
-
-	return reserveDimm;
-}
-
-void core::memory_allocator::LayoutStepReserveDimm::setReserveDimmForStorage(struct Dimm reserveDimm,
+void core::memory_allocator::LayoutStepReserveDimm::setReserveDimmForStorage(const struct Dimm &reserveDimm,
 		MemoryAllocationLayout& layout)
 {
 	layout.storageCapacity += reserveDimm.capacity / BYTES_PER_GB;

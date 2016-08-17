@@ -99,3 +99,55 @@ core::Result<core::device::Device> core::device::DeviceService::getDevice(std::s
 
 	return Result<Device>(result);
 }
+
+std::vector<std::string> core::device::DeviceService::getUidsForDeviceIds(
+		const std::vector<std::string>& deviceIds)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	std::vector<std::string> uids;
+	if (deviceIds.size() > 0)
+	{
+		DeviceCollection devices = getAllDevices();
+		for (size_t i = 0; i < deviceIds.size(); i++)
+		{
+			std::string deviceUid = getUidForDeviceIdFromCollection(
+					deviceIds[i],
+					devices);
+			uids.push_back(deviceUid);
+		}
+	}
+
+	return uids;
+}
+
+std::string core::device::DeviceService::getUidForDeviceIdFromCollection(
+		const std::string &deviceId,
+		DeviceCollection &devices)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	std::string uid;
+
+	bool found = false;
+	for (size_t i = 0; i < devices.size(); i++)
+	{
+		Device &dev = devices[i];
+		std::stringstream handleStr;
+		handleStr << dev.getDeviceHandle();
+
+		if (deviceId == dev.getUid() || deviceId == handleStr.str())
+		{
+			uid = dev.getUid();
+			found = true;
+			break;
+		}
+	}
+
+	if (!found)
+	{
+		throw LibraryException(NVM_ERR_BADDEVICE);
+	}
+
+	return uid;
+}

@@ -36,6 +36,7 @@
 #include <core/NvmLibrary.h>
 #include "RequestRule.h"
 #include "PostLayoutCheck.h"
+#include "MemoryAllocationRequest.h"
 
 namespace core
 {

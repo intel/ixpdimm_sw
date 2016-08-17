@@ -127,7 +127,7 @@ void core::memory_allocator::LayoutBuilder::populateOrderedLayoutStepsForRequest
 		m_layoutSteps.push_back(pMemory);
 	}
 
-	for (size_t i = 0; i < request.appDirectExtents.size(); i++)
+	for (size_t i = 0; i < request.getAppDirectExtents().size(); i++)
 	{
 		LayoutStep *pAppDirect = new LayoutStepAppDirect(m_systemCapabilities, (int)i, m_nvmLib);
 		if (pAppDirect->isRemainingStep(request))
@@ -156,8 +156,9 @@ void core::memory_allocator::LayoutBuilder::initLayoutGoals(
 
 	struct config_goal goal;
 	memset(&goal, 0, sizeof (goal));
-	for (std::vector<struct Dimm>::const_iterator dimmIter = request.dimms.begin();
-			dimmIter != request.dimms.end(); dimmIter++)
+	std::vector<struct Dimm> dimms = request.getDimms();
+	for (std::vector<struct Dimm>::const_iterator dimmIter = dimms.begin();
+			dimmIter != dimms.end(); dimmIter++)
 	{
 		layout.goals[dimmIter->uid] = goal;
 	}

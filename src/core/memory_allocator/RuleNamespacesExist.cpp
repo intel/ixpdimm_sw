@@ -54,8 +54,9 @@ void core::memory_allocator::RuleNamespacesExist::verify(const MemoryAllocationR
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	// check each dimm in the request to every namespace
-	for (std::vector<struct Dimm>::const_iterator dimmIter = request.dimms.begin();
-			dimmIter != request.dimms.end(); dimmIter++)
+	std::vector<struct Dimm> dimms = request.getDimms();
+	for (std::vector<struct Dimm>::const_iterator dimmIter = dimms.begin();
+			dimmIter != dimms.end(); dimmIter++)
 	{
 		try
 		{
@@ -82,9 +83,9 @@ bool core::memory_allocator::RuleNamespacesExist::requestIsMemoryModeOnly(
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	return ((request.memoryCapacity > 0) &&
-			(request.appDirectExtents.size() == 0) &&
-			(!request.storageRemaining));
+	return ((request.getMemoryModeCapacity() > 0) &&
+			(request.getNumberOfAppDirectExtents() == 0) &&
+			(!request.isStorageRemaining()));
 }
 
 bool core::memory_allocator::RuleNamespacesExist::requestIsOkWithGetNamespaceErrorCode(

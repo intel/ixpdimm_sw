@@ -49,9 +49,8 @@ class NVM_API LayoutStepReserveDimm : public LayoutStep
 				MemoryAllocationLayout &layout);
 
 	protected:
-		void setReserveDimmForStorage(struct Dimm reserveDimm,
+		void setReserveDimmForStorage(const struct Dimm &reserveDimm,
 				MemoryAllocationLayout& layout);
-		Dimm getReserveDimm(const std::vector<Dimm> &dimms);
 };
 
 } /* namespace memory_allocator */

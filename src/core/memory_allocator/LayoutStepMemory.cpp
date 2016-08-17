@@ -48,7 +48,7 @@ core::memory_allocator::LayoutStepMemory::~LayoutStepMemory()
 bool core::memory_allocator::LayoutStepMemory::isRemainingStep(const MemoryAllocationRequest &request)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	return request.memoryCapacity == REQUEST_REMAINING_CAPACITY;
+	return request.getMemoryModeCapacity() == REQUEST_REMAINING_CAPACITY;
 }
 
 void core::memory_allocator::LayoutStepMemory::execute(const MemoryAllocationRequest& request,
@@ -60,8 +60,9 @@ void core::memory_allocator::LayoutStepMemory::execute(const MemoryAllocationReq
 	if (bytesToAllocate)
 	{
 		std::vector<Dimm> dimmsToLayout;
-		for (std::vector<Dimm>::const_iterator dimmIter = request.dimms.begin();
-				dimmIter != request.dimms.end(); dimmIter++)
+		std::vector<Dimm> allDimms = request.getDimms();
+		for (std::vector<Dimm>::const_iterator dimmIter = allDimms.begin();
+				dimmIter != allDimms.end(); dimmIter++)
 		{
 			if (layout.reservedimmUid != dimmIter->uid)
 			{
@@ -105,9 +106,9 @@ NVM_UINT64 core::memory_allocator::LayoutStepMemory::getRequestedCapacityBytes(
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	NVM_UINT64 bytes = 0;
-	if (request.memoryCapacity != REQUEST_REMAINING_CAPACITY)
+	if (request.getMemoryModeCapacity() != REQUEST_REMAINING_CAPACITY)
 	{
-		bytes = configGoalSizeToBytes(request.memoryCapacity);
+		bytes = configGoalSizeToBytes(request.getMemoryModeCapacity());
 	}
 	else
 	{
@@ -130,9 +131,9 @@ NVM_UINT64 core::memory_allocator::LayoutStepMemory::getAlignedDimmBytes(
 
 	NVM_UINT64 alignedTotalMemoryBytes = totalMemoryBytes;
 	// Memory Mode layout is last step
-	if (request.memoryCapacity == REQUEST_REMAINING_CAPACITY)
+	if (request.getMemoryModeCapacity() == REQUEST_REMAINING_CAPACITY)
 	{
-		if (request.appDirectExtents.size() > 0)
+		if (request.getNumberOfAppDirectExtents() > 0)
 		{
 			alignedTotalMemoryBytes = roundDownMemoryToPMAlignment(
 					dimm, layout, totalMemoryBytes, dimmBytes);

@@ -106,31 +106,6 @@ struct Dimm
 	NVM_UINT32 channel;
 };
 
-struct AppDirectExtent
-{
-	AppDirectExtent() : capacity(0), mirrored(false), byOne(false),
-			channel(REQUEST_DEFAULT_INTERLEAVE_FORMAT), imc(REQUEST_DEFAULT_INTERLEAVE_FORMAT) {}
-
-	NVM_UINT64 capacity; // total in GiB
-	bool mirrored;
-	bool byOne;
-	int channel; // channel interleave size
-	int imc; // memory controller interleave size
-};
-
-struct MemoryAllocationRequest
-{
-	MemoryAllocationRequest() :
-		memoryCapacity(0), appDirectExtents(), storageRemaining(false), reserveDimm(false), dimms() {}
-
-	NVM_UINT64 memoryCapacity; // total in GiB
-	std::vector<struct AppDirectExtent> appDirectExtents;
-	bool storageRemaining;
-	bool reserveDimm;
-
-	std::vector<Dimm> dimms;
-};
-
 enum LayoutWarningCode
 {
 	LAYOUT_WARNING_APP_DIRECT_NOT_SUPPORTED_BY_DRIVER,

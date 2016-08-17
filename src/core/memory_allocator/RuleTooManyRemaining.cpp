@@ -50,16 +50,18 @@ void core::memory_allocator::RuleTooManyRemaining::verify(const MemoryAllocation
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	int remainingCount = 0;
-	if (request.memoryCapacity == REQUEST_REMAINING_CAPACITY)
+	if (request.getMemoryModeCapacity() == REQUEST_REMAINING_CAPACITY)
 	{
 		remainingCount++;
 	}
-	if (request.storageRemaining)
+	if (request.isStorageRemaining())
 	{
 		remainingCount++;
 	}
-	for (std::vector<AppDirectExtent>::const_iterator adIter = request.appDirectExtents.begin();
-			adIter != request.appDirectExtents.end(); adIter++)
+
+	std::vector<AppDirectExtent> extents = request.getAppDirectExtents();
+	for (std::vector<AppDirectExtent>::const_iterator adIter = extents.begin();
+			adIter != extents.end(); adIter++)
 	{
 		if (adIter->capacity == REQUEST_REMAINING_CAPACITY)
 		{
