@@ -159,15 +159,9 @@ private:
 		framework::ResultBase *showMemoryResources(const framework::ParsedCommand &parsedCommand);
 		framework::ResultBase *showSystemCapabilities(const framework::ParsedCommand &parsedCommand);
 		framework::ResultBase *showTopology(const framework::ParsedCommand &parsedCommand);
-		void convertCapabilitiesInstance(const wbem::framework::Instance &wbemInstance,
-					wbem::framework::Instance &displayInstance,
-					const wbem::framework::attribute_names_t &displayAttributes);
+
 		void generateJobFilter(const cli::framework::ParsedCommand &parsedCommand,
 				wbem::framework::attribute_names_t &attributes, cli::nvmcli::filters_t &filters);
-		void updateLastShutDownStatus(wbem::framework::Instance &instance);
-		void convertSecurityCapabilities(wbem::framework::Instance &wbemInstance);
-		void updateLastShutDownTime(wbem::framework::Instance &instance);
-		void convertSystemOpStatusToSku(wbem::framework::Instance& instance);
 		void displayUnknownIfDriverReportsNoBlockSizes(wbem::framework::Instance &wbemInstance);
 
 		/*

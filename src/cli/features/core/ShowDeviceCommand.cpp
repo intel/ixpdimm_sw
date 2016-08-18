@@ -121,7 +121,6 @@ ShowDeviceCommand::ShowDeviceCommand(core::device::DeviceService &service)
 	m_props.addBool("ViralState", &core::device::Device::getCurrentViralState);
 }
 
-
 framework::ResultBase *ShowDeviceCommand::execute(const framework::ParsedCommand &parsedCommand)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -240,7 +239,7 @@ std::string ShowDeviceCommand::convertFwLogLevel(fw_log_level logLevel)
 std::string ShowDeviceCommand::convertConfigStatus(config_status status)
 {
 	std::map<config_status, std::string> map;
-	map[CONFIG_STATUS_NOT_CONFIGURED] = TR("Not configured");
+	map[CONFIG_STATUS_NOT_CONFIGURED] = TR("Not Configured");
 	map[CONFIG_STATUS_VALID] = TR("Valid");
 	map[CONFIG_STATUS_ERR_CORRUPT] = TR("Failed - Bad configuration");
 	map[CONFIG_STATUS_ERR_BROKEN_INTERLEAVE] = TR("Failed - Broken interleave");
@@ -297,9 +296,9 @@ std::string ShowDeviceCommand::convertMemoryModes(NVM_UINT16 mode)
 
 std::string ShowDeviceCommand::convertSecurityCapabilities(NVM_UINT16 capability)
 {
-	std::map<NVM_UINT32, std::string> map;
-	map[SECURITY_PASSPHRASE] = ENCRYPTION_STR;
-	map[SECURITY_ERASE] = ERASE_STR;
+	std::map<NVM_UINT16, std::string> map;
+	map[SECURITY_PASSPHRASE] = TR("Encryption");
+	map[SECURITY_ERASE] = TR("Erase");
 	return map[capability];
 }
 
@@ -307,7 +306,6 @@ std::string ShowDeviceCommand::convertCapacity(NVM_UINT64 value)
 {
 	return convertCapacityFormat(value);
 }
-
 
 bool ShowDeviceCommand::dimmIdsAreValid()
 {
@@ -337,8 +335,8 @@ void ShowDeviceCommand::filterDevicesOnDimmIds()
 			}
 		}
 	}
-
 }
+
 bool ShowDeviceCommand::socketIdsAreValid()
 {
 	std::string badSocketId = getFirstBadSocketId(m_devices);
@@ -350,6 +348,7 @@ bool ShowDeviceCommand::socketIdsAreValid()
 
 	return m_pResult == NULL;
 }
+
 void ShowDeviceCommand::filterDevicesOnSocketIds()
 {
 	if (m_socketIds.size() > 0)
@@ -442,6 +441,7 @@ void ShowDeviceCommand::createResults()
 		framework::ResultBase::OUTPUT_TEXTTABLE :
 		framework::ResultBase::OUTPUT_TEXT);
 }
+
 bool ShowDeviceCommand::displayOptionsAreValid()
 {
 	std::string invalidDisplay;
@@ -470,6 +470,7 @@ bool ShowDeviceCommand::isPropertyDisplayed(
 		   (p.isDefault() && m_displayOptions.isDefault()) ||
 		   m_displayOptions.contains(p.getName());
 }
+
 std::string ShowDeviceCommand::getDimmId(core::device::Device &device)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);

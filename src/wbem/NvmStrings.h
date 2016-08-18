@@ -281,6 +281,7 @@ static std::string REMAININGMANAGEDSPACE_KEY = "RemainingManagedSpace";
 
 // PoolView
 static std::string POOLTYPE_KEY = "PoolType";
+static std::string PERSISTENTMEMORYTYPE_KEY = "PersistentMemoryType";
 static std::string FREECAPACITY_KEY = "FreeCapacity";
 static std::string ENCRYPTIONCAPABLE_KEY = "EncryptionCapable";
 static std::string ENCRYPTIONENABLED_KEY = "EncryptionEnabled";

@@ -63,7 +63,7 @@ throw(wbem::framework::Exception)
 	attributes.push_back(POOLID_KEY);
 
 	// add non-key attributes
-	attributes.push_back(POOLTYPE_KEY);
+	attributes.push_back(PERSISTENTMEMORYTYPE_KEY);
 	attributes.push_back(CAPACITY_KEY);
 	attributes.push_back(FREECAPACITY_KEY);
 	attributes.push_back(ENCRYPTIONCAPABLE_KEY);
@@ -77,7 +77,6 @@ throw(wbem::framework::Exception)
 	attributes.push_back(STORAGENAMESPACE_MIN_SIZE_KEY);
 	attributes.push_back(STORAGENAMESPACE_COUNT_KEY);
 	attributes.push_back(HEALTHSTATE_KEY);
-	attributes.push_back(APP_DIRECT_SETTINGS_KEY);
 }
 
 /*
@@ -114,11 +113,11 @@ throw(wbem::framework::Exception)
 				throw exception::NvmExceptionLibError(rc);
 			}
 
-			// PoolType - The type of pool. One of:  Volatile, Persistent, Mirrored
-			if (containsAttribute(POOLTYPE_KEY, attributes))
+			// List of underlying types of PM- AppDirect,AppDirectNotInterleaved, Storage
+			if (containsAttribute(PERSISTENTMEMORYTYPE_KEY, attributes))
 			{
-				framework::Attribute a(getPoolType(pPool), false);
-				pInstance->setAttribute(POOLTYPE_KEY, a, attributes);
+				framework::Attribute a(getPersistentMemoryType(pPool), false);
+				pInstance->setAttribute(PERSISTENTMEMORYTYPE_KEY, a, attributes);
 			}
 
 			// Capacity - Total usable capacity, both allocated and unallocated in bytes.
@@ -210,12 +209,6 @@ throw(wbem::framework::Exception)
 				framework::Attribute a((NVM_UINT16)pPool->health,
 						poolHealthToStr(pPool->health), false);
 				pInstance->setAttribute(HEALTHSTATE_KEY, a, attributes);
-			}
-
-			if (containsAttribute(APP_DIRECT_SETTINGS_KEY, attributes))
-			{
-				framework::Attribute attr(getAppDirectSettings(pPool), false);
-				pInstance->setAttribute(APP_DIRECT_SETTINGS_KEY, attr, attributes);
 			}
 		}
 		delete pPool;
@@ -384,26 +377,44 @@ std::string wbem::mem_config::PoolViewFactory::getEncryptionEnabled(const struct
 	return result;
 }
 
-std::string wbem::mem_config::PoolViewFactory::getPoolType(struct pool *pPool)
+wbem::framework::STR_LIST wbem::mem_config::PoolViewFactory::getPersistentMemoryType(struct pool *pPool)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	std::string poolType;
-	switch (pPool->type)
+
+	framework::STR_LIST pmType;
+	if (pPool->type == POOL_TYPE_PERSISTENT)
 	{
-		case POOL_TYPE_PERSISTENT:
-			poolType = wbem::mem_config::POOLTYPE_APPDIRECT;
-			break;
-		case POOL_TYPE_VOLATILE:
-			poolType = wbem::mem_config::POOLTYPE_VOLATILE;
-			break;
-		case POOL_TYPE_PERSISTENT_MIRROR:
-			poolType = wbem::mem_config::POOLTYPE_MIRRORED;
-			break;
-		default:
-			poolType = wbem::mem_config::POOLTYPE_UNKNOWN;
-			break;
+		for (NVM_UINT16 i = 0; i < pPool->dimm_count; i++)
+		{
+			if (pPool->storage_capacities[i] > 0)
+			{
+				pmType.push_back(wbem::mem_config::PMTYPE_STORAGE);
+				break;
+			}
+		}
 	}
-	return poolType;
+	if ((pPool->type == POOL_TYPE_PERSISTENT_MIRROR) ||
+			(pPool->type == POOL_TYPE_PERSISTENT))
+	{
+		if (pPool->ilset_count > 0)
+		{
+			for (NVM_UINT16 i = 0; i < pPool->ilset_count; i++)
+			{
+				if (pPool->ilsets[i].settings.ways == INTERLEAVE_WAYS_1)
+				{
+					pmType.push_back(wbem::mem_config::PMTYPE_APPDIRECT_NOTINTERLEAVED);
+					break;
+				}
+				else
+				{
+					pmType.push_back(wbem::mem_config::PMTYPE_APPDIRECT);
+					break;
+				}
+			}
+		}
+	}
+
+	return pmType;
 }
 
 /*
@@ -529,26 +540,4 @@ std::string wbem::mem_config::PoolViewFactory::getInterleaveSetFormatStr(
 	formatStr << ")";
 
 	return formatStr.str();
-}
-
-wbem::framework::STR_LIST wbem::mem_config::PoolViewFactory::getAppDirectSettings(
-		const struct pool *pPool)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	framework::STR_LIST appDirectSettings;
-
-	if (pPool->ilset_count > 0)
-	{
-		for (NVM_UINT16 i = 0; i < pPool->ilset_count; i++)
-		{
-			server::SystemCapabilitiesFactory::addFormatStringIfNotInList(appDirectSettings,
-					pPool->ilsets[i].settings, false);
-		}
-	}
-	else
-	{ // storage-only capacity
-		appDirectSettings.push_back(wbem::NA);
-	}
-
-	return appDirectSettings;
 }

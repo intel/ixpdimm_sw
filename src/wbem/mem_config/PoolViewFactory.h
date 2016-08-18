@@ -44,10 +44,10 @@ namespace wbem
 	{
 		static const std::string INTEL_POOLVIEW_CREATIONCLASSNAME = "Intel_PoolView"; //!< Creation Class Name static
 
-		static const std::string POOLTYPE_VOLATILE = "Volatile";
-		static const std::string POOLTYPE_MIRRORED = "MirroredAppDirect";
-		static const std::string POOLTYPE_APPDIRECT = "AppDirect";
-		static const std::string POOLTYPE_UNKNOWN = "Unknown";
+		static const std::string PMTYPE_APPDIRECT = "AppDirect";
+		static const std::string PMTYPE_APPDIRECT_NOTINTERLEAVED = "AppDirectNotInterleaved";
+		static const std::string PMTYPE_STORAGE = "Storage";
+		static const std::string PMTYPE_UNKNOWN = "Unknown";
 
 		static const std::string POOLENCRYPTION_ENCRYPTED = "Encrypted";
 		static const std::string POOLENCRYPTION_NOTENCRYPTED = "NotEncrypted";
@@ -106,17 +106,15 @@ namespace wbem
 			 */
 			static struct pool *getPool(const std::string &poolUidStr) throw (wbem::framework::Exception);
 
-			static wbem::framework::STR_LIST getAppDirectSettings(const struct pool * pPool);
-
 		private:
 			std::vector<struct namespace_details> m_nsCache; // cache for namespace_details to avoid repeated library calls
 			void populateAttributeList(framework::attribute_names_t &attributes)
 					throw (framework::Exception);
 
 			/*
-			 * get the type string for a pool
+			 * get list of underlying types of PM capacity in the pool
 			 */
-			std::string getPoolType(struct pool *pPool);
+			wbem::framework::STR_LIST getPersistentMemoryType(struct pool *pPool);
 
 			/*
 			 * Get if the encryption of a pool is encrypted, not, or both

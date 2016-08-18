@@ -380,7 +380,7 @@ cli::framework::ResultBase *cli::nvmcli::NamespaceFeature::showPools(cli::framew
 		// define default display attributes
 		wbem::framework::attribute_names_t defaultAttributes;
 		defaultAttributes.push_back(wbem::POOLID_KEY);
-		defaultAttributes.push_back(wbem::POOLTYPE_KEY);
+		defaultAttributes.push_back(wbem::PERSISTENTMEMORYTYPE_KEY);
 		defaultAttributes.push_back(wbem::CAPACITY_KEY);
 		defaultAttributes.push_back(wbem::FREECAPACITY_KEY);
 
@@ -397,7 +397,6 @@ cli::framework::ResultBase *cli::nvmcli::NamespaceFeature::showPools(cli::framew
 		allAttributes.push_back(wbem::STORAGENAMESPACE_MIN_SIZE_KEY);
 		allAttributes.push_back(wbem::STORAGENAMESPACE_COUNT_KEY);
 		allAttributes.push_back(wbem::HEALTHSTATE_KEY);
-		allAttributes.push_back(wbem::APP_DIRECT_SETTINGS_KEY);
 
 		// get the desired attributes
 		wbem::framework::attribute_names_t attributes =

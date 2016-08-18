@@ -47,8 +47,6 @@ namespace cli
 namespace nvmcli
 {
 
-static const std::string ENCRYPTION_STR = "Encryption";
-static const std::string ERASE_STR = "Erase";
 static const std::string CAPACITY_UNITS_GB = "GB";
 
 // constants used in IDEMA formula for LBA count to Advertised Capacity conversion
