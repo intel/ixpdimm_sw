@@ -222,7 +222,8 @@ int get_dimm_free_storage_capacity(NVM_NFIT_DEVICE_HANDLE handle,
 		if ((rc = execute_ioctl(sizeof (ioctl_data), &ioctl_data, IOCTL_CR_GET_DIMM_DETAILS))
 			== NVM_SUCCESS && (rc = ind_err_to_nvm_lib_err(ioctl_data.ReturnCode)) == NVM_SUCCESS)
 		{
-			*free_storage_capacity = ioctl_data.OutputPayload.FreeBlockCapacity;
+			*free_storage_capacity = USABLE_CAPACITY_BYTES(
+				ioctl_data.OutputPayload.FreeBlockCapacity);
 		}
 	}
 
@@ -256,27 +257,19 @@ int get_dimm_storage_capacities(const NVM_UINT32 count, struct nvm_storage_capac
 					if (i >= count)
 					{
 						rc = NVM_ERR_UNKNOWN;
-						COMMON_LOG_ERROR_F("too many dimms for array, expected count = %u",
-								count);
+						COMMON_LOG_ERROR_F("too many dimms for array, expected count = %u", count);
 						break;
 					}
 
 					NVM_NFIT_DEVICE_HANDLE handle = topology[i].device_handle;
 					struct pt_payload_get_dimm_partition_info pi;
 
-					NVM_UINT64 memory_capacity = 0;
 					NVM_UINT64 ilset_capacity = 0; // unmirrored interleaves
 					NVM_UINT64 mirrored_capacity = 0; // mirrored interleaves
 
 					p_capacities[i].device_handle = handle;
 
-					if (get_dimm_memory_capacity(handle, &memory_capacity) != NVM_SUCCESS)
-					{
-						COMMON_LOG_ERROR("Failed to retrieve dimm memory capacity");
-						rc = NVM_ERR_DRIVERFAILED;
-						break; // don't continue on failure
-					}
-					else if (get_dimm_ilset_capacity(handle, &mirrored_capacity, &ilset_capacity)
+					if (get_dimm_ilset_capacity(handle, &mirrored_capacity, &ilset_capacity)
 							!= NVM_SUCCESS)
 					{
 						COMMON_LOG_ERROR("Failed to retrieve dimm interleave set capacity");
@@ -291,25 +284,14 @@ int get_dimm_storage_capacities(const NVM_UINT32 count, struct nvm_storage_capac
 					}
 					else
 					{
-						NVM_UINT64 usable_capacity = USABLE_CAPACITY_BYTES(
-								(NVM_UINT64)pi.raw_capacity * BYTES_PER_4K_CHUNK);
-						if ((memory_capacity + ilset_capacity + mirrored_capacity) <=
-								usable_capacity)
-						{
-							p_capacities[i].total_storage_capacity = usable_capacity -
-								memory_capacity - mirrored_capacity;
-							p_capacities[i].storage_only_capacity = usable_capacity -
-									memory_capacity - mirrored_capacity - ilset_capacity;
+						p_capacities[i].total_storage_capacity =
+							USABLE_CAPACITY_BYTES(pi.pmem_capacity * BYTES_PER_4K_CHUNK) -
+								mirrored_capacity;
+						p_capacities[i].storage_only_capacity =
+							p_capacities[i].total_storage_capacity - ilset_capacity;
 
-							rc = get_dimm_free_storage_capacity(handle,
-								&p_capacities[i].free_storage_capacity);
-						}
-						else
-						{
-							COMMON_LOG_ERROR("Memory and Ilset capacity greater than total "
-									"dimm capacity");
-							rc = NVM_ERR_UNKNOWN;
-						}
+						rc = get_dimm_free_storage_capacity(handle,
+							&p_capacities[i].free_storage_capacity);
 					}
 				}
 
@@ -327,5 +309,6 @@ int get_dimm_storage_capacities(const NVM_UINT32 count, struct nvm_storage_capac
 		}
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
+
 	return rc;
 }

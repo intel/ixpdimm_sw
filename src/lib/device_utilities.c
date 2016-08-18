@@ -67,25 +67,27 @@ int exists_and_manageable(const NVM_UID device_uid, struct device_discovery *p_d
 void calculate_uid_without_manufacturing_info(NVM_UID uid,
 		NVM_UINT16 vendor_id, NVM_SERIAL_NUMBER serial_number)
 {
+	// assuming little endian
 	s_snprintf(uid, NVM_MAX_UID_LEN, "%04x-%02x%02x%02x%02x", vendor_id,
-		serial_number[0],
-		serial_number[1],
+		serial_number[3],
 		serial_number[2],
-		serial_number[3]);
+		serial_number[1],
+		serial_number[0]);
 }
 
 void calculate_uid_with_valid_manufacturing_info(NVM_UID uid,
 		NVM_UINT16 vendor_id, NVM_SERIAL_NUMBER serial_number,
 		NVM_UINT8 manufacturing_loc, NVM_UINT16 manufacturing_date)
 {
+	// assuming little endian
 	s_snprintf(uid, NVM_MAX_UID_LEN, "%04x-%02x-%04x-%02x%02x%02x%02x",
 		vendor_id,
 		manufacturing_loc,
 		manufacturing_date,
-		serial_number[0],
-		serial_number[1],
+		serial_number[3],
 		serial_number[2],
-		serial_number[3]);
+		serial_number[1],
+		serial_number[0]);
 }
 
 /*

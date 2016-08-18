@@ -249,36 +249,31 @@ public:
 		{
 			for (size_t i = 0; i < value.size(); i++)
 			{
+				if (i > 0)
+				{
+					result += ", ";
+				}
 				R item = value[i];
+				std::string valueStr;
+
 				if (m_pConversionFunction)
 				{
-					std::string translatedString = m_pConversionFunction(item);
-					if (!translatedString.empty())
-					{
-						if (i > 0)
-						{
-							result += ", ";
-						}
-						result += translatedString;
-					}
+					valueStr = m_pConversionFunction(item);
 				}
 				else
 				{
-					if (i > 0)
-					{
-						result += ", ";
-					}
 					std::stringstream stream;
 					stream << item;
-					result += stream.str();
+					valueStr = stream.str();
 				}
+
+				result += valueStr;
 			}
 		}
 		else
 		{
 			result = "N/A";
 		}
-
 		return result;
 	}
 

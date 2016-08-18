@@ -63,6 +63,11 @@
  */
 #define	config_line_format	"%hu,%u,%llu,%llu,%llu,%u,%hhu,%hu,%llu,%u,%hhu,%hu\n"
 
+#define	DEBUG_PCD(fmt, ...) \
+	COMMON_LOG_DEBUG_F(fmt, __VA_ARGS__)
+	// Can use this instead ot print PCD to stdout
+	// printf(fmt "\n", __VA_ARGS__)
+
 /*
  * ****************************************************************************
  * Utility functions
@@ -112,15 +117,15 @@ int verify_checksum(
 
 void print_config_data_table_header(struct config_data_table_header header)
 {
-	COMMON_LOG_DEBUG_F("Config Data Table Header - Signature: %s", header.signature);
-	COMMON_LOG_DEBUG_F("Config Data Table Header - Length: %u", header.length);
-	COMMON_LOG_DEBUG_F("Config Data Table Header - Revision: %hhu", header.revision);
-	COMMON_LOG_DEBUG_F("Config Data Table Header - Checksum: %hhu", header.checksum);
-	COMMON_LOG_DEBUG_F("Config Data Table Header - OEM_ID: %s", header.oem_id);
-	COMMON_LOG_DEBUG_F("Config Data Table Header - OEM_TABLE_ID: %s", header.oem_table_id);
-	COMMON_LOG_DEBUG_F("Config Data Table Header - OEM_REVISION: %u", header.oem_revision);
-	COMMON_LOG_DEBUG_F("Config Data Table Header - Creator Id: %u", header.creator_id);
-	COMMON_LOG_DEBUG_F("Config Data Table Header - Creator Revision: %u", header.creator_revision);
+	DEBUG_PCD("Config Data Table Header - Signature: %s", header.signature);
+	DEBUG_PCD("Config Data Table Header - Length: %u", header.length);
+	DEBUG_PCD("Config Data Table Header - Revision: %hhu", header.revision);
+	DEBUG_PCD("Config Data Table Header - Checksum: %hhu", header.checksum);
+	DEBUG_PCD("Config Data Table Header - OEM_ID: %s", header.oem_id);
+	DEBUG_PCD("Config Data Table Header - OEM_TABLE_ID: %s", header.oem_table_id);
+	DEBUG_PCD("Config Data Table Header - OEM_REVISION: %u", header.oem_revision);
+	DEBUG_PCD("Config Data Table Header - Creator Id: %u", header.creator_id);
+	DEBUG_PCD("Config Data Table Header - Creator Revision: %u", header.creator_revision);
 }
 
 void print_extension_tables(void *p_ext_table, NVM_SIZE total_length)
@@ -135,16 +140,16 @@ void print_extension_tables(void *p_ext_table, NVM_SIZE total_length)
 		struct extension_table_header *p_header =
 			(struct extension_table_header *)((NVM_UINT8 *)p_ext_table + offset);
 
-		COMMON_LOG_DEBUG_F("Extension Table - Type: %hu", p_header->type);
-		COMMON_LOG_DEBUG_F("Extension Table - Length: %hu", p_header->length);
+		DEBUG_PCD("Extension Table - Type: %hu", p_header->type);
+		DEBUG_PCD("Extension Table - Length: %hu", p_header->length);
 
 		switch (p_header->type)
 		{
 		case PARTITION_CHANGE_TABLE:
 			p_part_size_tbl = (struct partition_size_change_extension_table *)p_header;
 
-			COMMON_LOG_DEBUG_F("Partition Change Table - Status: %hu", p_part_size_tbl->status);
-			COMMON_LOG_DEBUG_F("Partition Change Table - Size: %llu",
+			DEBUG_PCD("Partition Change Table - Status: %hu", p_part_size_tbl->status);
+			DEBUG_PCD("Partition Change Table - Size: %llu",
 				p_part_size_tbl->partition_size);
 
 			offset += p_part_size_tbl->header.length;
@@ -153,17 +158,17 @@ void print_extension_tables(void *p_ext_table, NVM_SIZE total_length)
 		case INTERLEAVE_TABLE:
 			p_interleave_info_tbl = (struct interleave_info_extension_table *)p_header;
 
-			COMMON_LOG_DEBUG_F("Interleave Info Extension Table - Index: %hu",
+			DEBUG_PCD("Interleave Info Extension Table - Index: %hu",
 				p_interleave_info_tbl->index);
-			COMMON_LOG_DEBUG_F("Interleave Info Extension Table - Dimm Count: %hhu",
+			DEBUG_PCD("Interleave Info Extension Table - Dimm Count: %hhu",
 				p_interleave_info_tbl->dimm_count);
-			COMMON_LOG_DEBUG_F("Interleave Info Extension Table - Memory Type: %hhu",
+			DEBUG_PCD("Interleave Info Extension Table - Memory Type: %hhu",
 				p_interleave_info_tbl->memory_type);
-			COMMON_LOG_DEBUG_F("Interleave Info Extension Table - Interleave Format: %u",
+			DEBUG_PCD("Interleave Info Extension Table - Interleave Format: %u",
 				p_interleave_info_tbl->interleave_format);
-			COMMON_LOG_DEBUG_F("Interleave Info Extension Table - Mirror Enable: %hhu",
+			DEBUG_PCD("Interleave Info Extension Table - Mirror Enable: %hhu",
 				p_interleave_info_tbl->mirror_enable);
-			COMMON_LOG_DEBUG_F("Interleave Info Extension Table - Status: %hhu",
+			DEBUG_PCD("Interleave Info Extension Table - Status: %hhu",
 				p_interleave_info_tbl->status);
 
 			offset += p_interleave_info_tbl->header.length;
@@ -172,19 +177,19 @@ void print_extension_tables(void *p_ext_table, NVM_SIZE total_length)
 
 			for (int i = 0; i < p_interleave_info_tbl->dimm_count; i++)
 			{
-				COMMON_LOG_DEBUG_F("DIMM Info Extension Table - Manufacturer: 0x%02x%02x",
+				DEBUG_PCD("DIMM Info Extension Table - Manufacturer: 0x%02x%02x",
 					p_dimms[i].manufacturer[1],
 					p_dimms[i].manufacturer[0]);
-				COMMON_LOG_DEBUG_F(
+				DEBUG_PCD(
 					"DIMM Info Extension Table - Serial Number: 0x%02x%02x%02x%02x",
 					p_dimms[i].serial_number[3],
 					p_dimms[i].serial_number[2],
 					p_dimms[i].serial_number[1],
 					p_dimms[i].serial_number[0]);
-				COMMON_LOG_DEBUG_F("DIMM Info Extension Table - Model Number: %s",
+				DEBUG_PCD("DIMM Info Extension Table - Model Number: %s",
 					p_dimms[i].model_number);
-				COMMON_LOG_DEBUG_F("DIMM Info Extension Table - Offset: %llu", p_dimms[i].offset);
-				COMMON_LOG_DEBUG_F("DIMM Info Extension Table - Size: %llu", p_dimms[i].size);
+				DEBUG_PCD("DIMM Info Extension Table - Offset: %llu", p_dimms[i].offset);
+				DEBUG_PCD("DIMM Info Extension Table - Size: %llu", p_dimms[i].size);
 			}
 			break;
 		default:
@@ -198,8 +203,8 @@ void print_extension_tables(void *p_ext_table, NVM_SIZE total_length)
 void print_pcd_output(struct config_output_table *p_output)
 {
 	print_config_data_table_header(p_output->header);
-	COMMON_LOG_DEBUG_F("Config Output Table - Sequence Number: %u", p_output->sequence_number);
-	COMMON_LOG_DEBUG_F("Config Output Table - Validation Status: %hhu",
+	DEBUG_PCD("Config Output Table - Sequence Number: %u", p_output->sequence_number);
+	DEBUG_PCD("Config Output Table - Validation Status: %hhu",
 		p_output->validation_status);
 
 	if (p_output->header.length > sizeof (struct config_output_table))
@@ -257,7 +262,7 @@ int check_config_output(struct platform_config_data *p_config)
 void print_pcd_input(struct config_input_table *p_input)
 {
 	print_config_data_table_header(p_input->header);
-	COMMON_LOG_DEBUG_F("Config Input Table - Sequence_number: %u", p_input->sequence_number);
+	DEBUG_PCD("Config Input Table - Sequence_number: %u", p_input->sequence_number);
 
 	if (p_input->header.length > sizeof (struct config_input_table))
 	{
@@ -316,10 +321,10 @@ int check_config_input(struct platform_config_data *p_config)
 void print_pcd_current(struct current_config_table *p_current)
 {
 	print_config_data_table_header(p_current->header);
-	COMMON_LOG_DEBUG_F("Current Config Table - Config Status: %hu", p_current->config_status);
-	COMMON_LOG_DEBUG_F("Current Config Table - Config Mapped Memory: %llu",
+	DEBUG_PCD("Current Config Table - Config Status: %hu", p_current->config_status);
+	DEBUG_PCD("Current Config Table - Config Mapped Memory: %llu",
 		p_current->mapped_memory_capacity);
-	COMMON_LOG_DEBUG_F("Current Config Table - Config Mapped App Direct: %llu",
+	DEBUG_PCD("Current Config Table - Config Mapped App Direct: %llu",
 		p_current->mapped_app_direct_capacity);
 
 	if (p_current->header.length > sizeof (struct current_config_table))
@@ -374,12 +379,12 @@ int check_current_config(struct platform_config_data *p_config)
 void print_pcd_header(struct platform_config_data *p_config)
 {
 	print_config_data_table_header(p_config->header);
-	COMMON_LOG_DEBUG_F("PCD Header - Current Config Size: %u", p_config->current_config_size);
-	COMMON_LOG_DEBUG_F("PCD Header - Current Config Offset: %u", p_config->current_config_offset);
-	COMMON_LOG_DEBUG_F("PCD Header - Input Config Size: %u", p_config->config_input_size);
-	COMMON_LOG_DEBUG_F("PCD Header - Input Config Offset: %u", p_config->config_input_offset);
-	COMMON_LOG_DEBUG_F("PCD Header - Output Config Size: %u", p_config->config_output_size);
-	COMMON_LOG_DEBUG_F("PCD Header - Output Config Offset: %u", p_config->config_output_offset);
+	DEBUG_PCD("PCD Header - Current Config Size: %u", p_config->current_config_size);
+	DEBUG_PCD("PCD Header - Current Config Offset: %u", p_config->current_config_offset);
+	DEBUG_PCD("PCD Header - Input Config Size: %u", p_config->config_input_size);
+	DEBUG_PCD("PCD Header - Input Config Offset: %u", p_config->config_input_offset);
+	DEBUG_PCD("PCD Header - Output Config Size: %u", p_config->config_output_size);
+	DEBUG_PCD("PCD Header - Output Config Offset: %u", p_config->config_output_offset);
 }
 
 int check_platform_config_header(struct platform_config_data *p_config)
