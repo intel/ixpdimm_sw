@@ -975,3 +975,14 @@ int dimm_has_namespaces_of_type(const NVM_NFIT_DEVICE_HANDLE dimm_handle,
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
+
+/*
+ * Helper function to convert unsigned integer to bytes
+ */
+void uint32_to_bytes(unsigned long val, unsigned char *arr, size_t len)
+{
+	for (unsigned int i = 0; i < len; i++)
+	{
+		arr[i] = (unsigned char)(((0x000000FF << (i * 8)) & val) >> (i * 8));
+	}
+}

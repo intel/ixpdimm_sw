@@ -412,6 +412,11 @@ int support_store_dimm_topology(PersistentStore *p_store, int history_id,
 	db_dimm_topo.manufacturing_date = topol.manufacturing_date;
 	db_dimm_topo.type = topol.type;
 
+	for (int i = 0; i < NVM_SERIAL_LEN; i++)
+	{
+		db_dimm_topo.serial_number[i] = topol.serial_number[i];
+	}
+
 	// Copy all IFCs
 	int max_ifcs = (NVM_MAX_IFCS_PER_DIMM <= DIMM_TOPOLOGY_INTERFACE_FORMAT_CODES_COUNT) ?
 			NVM_MAX_IFCS_PER_DIMM : DIMM_TOPOLOGY_INTERFACE_FORMAT_CODES_COUNT;

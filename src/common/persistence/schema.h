@@ -2531,6 +2531,7 @@ enum db_return_codes db_delete_driver_features_by_id(const PersistentStore *p_ps
  * @ingroup db_schema
  */
  // Lengths for strings and arrays
+#define	DIMM_TOPOLOGY_SERIAL_NUMBER_COUNT 4 //!< Max length for serial_number
 #define	DIMM_TOPOLOGY_INTERFACE_FORMAT_CODES_COUNT 9 //!< Max length for interface_format_codes
 /*!
  * struct representing the dimm_topology table
@@ -2550,6 +2551,7 @@ struct db_dimm_topology
 	unsigned int manufacturing_location;
 	unsigned int manufacturing_date;
 	unsigned int type;
+	unsigned int serial_number[DIMM_TOPOLOGY_SERIAL_NUMBER_COUNT];
 	unsigned int interface_format_codes[DIMM_TOPOLOGY_INTERFACE_FORMAT_CODES_COUNT];
 };
 /*!

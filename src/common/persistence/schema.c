@@ -862,6 +862,10 @@ tables[populate_index++] = ((struct table){"dimm_topology",
 					 manufacturing_location INTEGER  , \
 					 manufacturing_date INTEGER  , \
 					 type INTEGER  , \
+					 serial_number_0 INTEGER  , \
+					 serial_number_1 INTEGER  , \
+					 serial_number_2 INTEGER  , \
+					 serial_number_3 INTEGER  , \
 					 interface_format_codes_0 INTEGER  , \
 					 interface_format_codes_1 INTEGER  , \
 					 interface_format_codes_2 INTEGER  , \
@@ -887,6 +891,10 @@ tables[populate_index++] = ((struct table){"dimm_topology",
 					 manufacturing_location INTEGER , \
 					 manufacturing_date INTEGER , \
 					 type INTEGER , \
+					 serial_number_0 INTEGER , \
+					 serial_number_1 INTEGER , \
+					 serial_number_2 INTEGER , \
+					 serial_number_3 INTEGER , \
 					 interface_format_codes_0 INTEGER , \
 					 interface_format_codes_1 INTEGER , \
 					 interface_format_codes_2 INTEGER , \
@@ -7916,6 +7924,10 @@ void local_bind_dimm_topology(sqlite3_stmt *p_stmt, struct db_dimm_topology *p_d
 	BIND_INTEGER(p_stmt, "$manufacturing_location", (unsigned int)p_dimm_topology->manufacturing_location);
 	BIND_INTEGER(p_stmt, "$manufacturing_date", (unsigned int)p_dimm_topology->manufacturing_date);
 	BIND_INTEGER(p_stmt, "$type", (unsigned int)p_dimm_topology->type);
+	BIND_INTEGER(p_stmt, "$serial_number_0", (unsigned int)p_dimm_topology->serial_number[0]);
+	BIND_INTEGER(p_stmt, "$serial_number_1", (unsigned int)p_dimm_topology->serial_number[1]);
+	BIND_INTEGER(p_stmt, "$serial_number_2", (unsigned int)p_dimm_topology->serial_number[2]);
+	BIND_INTEGER(p_stmt, "$serial_number_3", (unsigned int)p_dimm_topology->serial_number[3]);
 	BIND_INTEGER(p_stmt, "$interface_format_codes_0", (unsigned int)p_dimm_topology->interface_format_codes[0]);
 	BIND_INTEGER(p_stmt, "$interface_format_codes_1", (unsigned int)p_dimm_topology->interface_format_codes[1]);
 	BIND_INTEGER(p_stmt, "$interface_format_codes_2", (unsigned int)p_dimm_topology->interface_format_codes[2]);
@@ -7978,30 +7990,42 @@ void local_row_to_dimm_topology(const PersistentStore *p_ps,
 		p_dimm_topology->type);
 	INTEGER_COLUMN(p_stmt,
 		12,
-		p_dimm_topology->interface_format_codes[0]);
+		p_dimm_topology->serial_number[0]);
 	INTEGER_COLUMN(p_stmt,
 		13,
-		p_dimm_topology->interface_format_codes[1]);
+		p_dimm_topology->serial_number[1]);
 	INTEGER_COLUMN(p_stmt,
 		14,
-		p_dimm_topology->interface_format_codes[2]);
+		p_dimm_topology->serial_number[2]);
 	INTEGER_COLUMN(p_stmt,
 		15,
-		p_dimm_topology->interface_format_codes[3]);
+		p_dimm_topology->serial_number[3]);
 	INTEGER_COLUMN(p_stmt,
 		16,
-		p_dimm_topology->interface_format_codes[4]);
+		p_dimm_topology->interface_format_codes[0]);
 	INTEGER_COLUMN(p_stmt,
 		17,
-		p_dimm_topology->interface_format_codes[5]);
+		p_dimm_topology->interface_format_codes[1]);
 	INTEGER_COLUMN(p_stmt,
 		18,
-		p_dimm_topology->interface_format_codes[6]);
+		p_dimm_topology->interface_format_codes[2]);
 	INTEGER_COLUMN(p_stmt,
 		19,
-		p_dimm_topology->interface_format_codes[7]);
+		p_dimm_topology->interface_format_codes[3]);
 	INTEGER_COLUMN(p_stmt,
 		20,
+		p_dimm_topology->interface_format_codes[4]);
+	INTEGER_COLUMN(p_stmt,
+		21,
+		p_dimm_topology->interface_format_codes[5]);
+	INTEGER_COLUMN(p_stmt,
+		22,
+		p_dimm_topology->interface_format_codes[6]);
+	INTEGER_COLUMN(p_stmt,
+		23,
+		p_dimm_topology->interface_format_codes[7]);
+	INTEGER_COLUMN(p_stmt,
+		24,
 		p_dimm_topology->interface_format_codes[8]);
 }
 void db_print_dimm_topology(struct db_dimm_topology *p_value)
@@ -8018,6 +8042,10 @@ void db_print_dimm_topology(struct db_dimm_topology *p_value)
 	printf("dimm_topology.manufacturing_location: unsigned %d\n", p_value->manufacturing_location);
 	printf("dimm_topology.manufacturing_date: unsigned %d\n", p_value->manufacturing_date);
 	printf("dimm_topology.type: unsigned %d\n", p_value->type);
+	printf("dimm_topology.serial_number: unsigned %d\n", p_value->serial_number[0]);
+	printf("dimm_topology.serial_number: unsigned %d\n", p_value->serial_number[1]);
+	printf("dimm_topology.serial_number: unsigned %d\n", p_value->serial_number[2]);
+	printf("dimm_topology.serial_number: unsigned %d\n", p_value->serial_number[3]);
 	printf("dimm_topology.interface_format_codes: unsigned %d\n", p_value->interface_format_codes[0]);
 	printf("dimm_topology.interface_format_codes: unsigned %d\n", p_value->interface_format_codes[1]);
 	printf("dimm_topology.interface_format_codes: unsigned %d\n", p_value->interface_format_codes[2]);
@@ -8034,7 +8062,7 @@ enum db_return_codes db_add_dimm_topology(const PersistentStore *p_ps,
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = 	"INSERT INTO dimm_topology \
-		(device_handle, id, vendor_id, device_id, revision_id, subsystem_vendor_id, subsystem_device_id, subsystem_revision_id, manufacturing_info_valid, manufacturing_location, manufacturing_date, type, interface_format_codes_0, interface_format_codes_1, interface_format_codes_2, interface_format_codes_3, interface_format_codes_4, interface_format_codes_5, interface_format_codes_6, interface_format_codes_7, interface_format_codes_8)  \
+		(device_handle, id, vendor_id, device_id, revision_id, subsystem_vendor_id, subsystem_device_id, subsystem_revision_id, manufacturing_info_valid, manufacturing_location, manufacturing_date, type, serial_number_0, serial_number_1, serial_number_2, serial_number_3, interface_format_codes_0, interface_format_codes_1, interface_format_codes_2, interface_format_codes_3, interface_format_codes_4, interface_format_codes_5, interface_format_codes_6, interface_format_codes_7, interface_format_codes_8)  \
 		VALUES 		\
 		($device_handle, \
 		$id, \
@@ -8048,6 +8076,10 @@ enum db_return_codes db_add_dimm_topology(const PersistentStore *p_ps,
 		$manufacturing_location, \
 		$manufacturing_date, \
 		$type, \
+		$serial_number_0, \
+		$serial_number_1, \
+		$serial_number_2, \
+		$serial_number_3, \
 		$interface_format_codes_0, \
 		$interface_format_codes_1, \
 		$interface_format_codes_2, \
@@ -8091,6 +8123,10 @@ int db_get_dimm_topologys(const PersistentStore *p_ps,
 		,  manufacturing_location \
 		,  manufacturing_date \
 		,  type \
+		,  serial_number_0 \
+		,  serial_number_1 \
+		,  serial_number_2 \
+		,  serial_number_3 \
 		,  interface_format_codes_0 \
 		,  interface_format_codes_1 \
 		,  interface_format_codes_2 \
@@ -8102,7 +8138,7 @@ int db_get_dimm_topologys(const PersistentStore *p_ps,
 		,  interface_format_codes_8 \
 		  \
 		FROM dimm_topology \
-		                      \
+		                          \
 		 \
 		";
 	sqlite3_stmt *p_stmt;
@@ -8144,7 +8180,7 @@ enum db_return_codes db_save_dimm_topology_state(const PersistentStore *p_ps,
 	{
 		sqlite3_stmt *p_stmt;
 		char *sql = 	"INSERT INTO dimm_topology \
-			( device_handle ,  id ,  vendor_id ,  device_id ,  revision_id ,  subsystem_vendor_id ,  subsystem_device_id ,  subsystem_revision_id ,  manufacturing_info_valid ,  manufacturing_location ,  manufacturing_date ,  type ,  interface_format_codes_0 ,  interface_format_codes_1 ,  interface_format_codes_2 ,  interface_format_codes_3 ,  interface_format_codes_4 ,  interface_format_codes_5 ,  interface_format_codes_6 ,  interface_format_codes_7 ,  interface_format_codes_8 )  \
+			( device_handle ,  id ,  vendor_id ,  device_id ,  revision_id ,  subsystem_vendor_id ,  subsystem_device_id ,  subsystem_revision_id ,  manufacturing_info_valid ,  manufacturing_location ,  manufacturing_date ,  type ,  serial_number_0 ,  serial_number_1 ,  serial_number_2 ,  serial_number_3 ,  interface_format_codes_0 ,  interface_format_codes_1 ,  interface_format_codes_2 ,  interface_format_codes_3 ,  interface_format_codes_4 ,  interface_format_codes_5 ,  interface_format_codes_6 ,  interface_format_codes_7 ,  interface_format_codes_8 )  \
 			VALUES 		\
 			($device_handle, \
 			$id, \
@@ -8158,6 +8194,10 @@ enum db_return_codes db_save_dimm_topology_state(const PersistentStore *p_ps,
 			$manufacturing_location, \
 			$manufacturing_date, \
 			$type, \
+			$serial_number_0, \
+			$serial_number_1, \
+			$serial_number_2, \
+			$serial_number_3, \
 			$interface_format_codes_0, \
 			$interface_format_codes_1, \
 			$interface_format_codes_2, \
@@ -8185,7 +8225,7 @@ enum db_return_codes db_save_dimm_topology_state(const PersistentStore *p_ps,
 		sqlite3_stmt *p_stmt;
 		char *sql = "INSERT INTO dimm_topology_history \
 			(history_id, \
-				 device_handle,  id,  vendor_id,  device_id,  revision_id,  subsystem_vendor_id,  subsystem_device_id,  subsystem_revision_id,  manufacturing_info_valid,  manufacturing_location,  manufacturing_date,  type,  interface_format_codes_0,  interface_format_codes_1,  interface_format_codes_2,  interface_format_codes_3,  interface_format_codes_4,  interface_format_codes_5,  interface_format_codes_6,  interface_format_codes_7,  interface_format_codes_8)  \
+				 device_handle,  id,  vendor_id,  device_id,  revision_id,  subsystem_vendor_id,  subsystem_device_id,  subsystem_revision_id,  manufacturing_info_valid,  manufacturing_location,  manufacturing_date,  type,  serial_number_0,  serial_number_1,  serial_number_2,  serial_number_3,  interface_format_codes_0,  interface_format_codes_1,  interface_format_codes_2,  interface_format_codes_3,  interface_format_codes_4,  interface_format_codes_5,  interface_format_codes_6,  interface_format_codes_7,  interface_format_codes_8)  \
 			VALUES 		($history_id, \
 				 $device_handle , \
 				 $id , \
@@ -8199,6 +8239,10 @@ enum db_return_codes db_save_dimm_topology_state(const PersistentStore *p_ps,
 				 $manufacturing_location , \
 				 $manufacturing_date , \
 				 $type , \
+				 $serial_number_0 , \
+				 $serial_number_1 , \
+				 $serial_number_2 , \
+				 $serial_number_3 , \
 				 $interface_format_codes_0 , \
 				 $interface_format_codes_1 , \
 				 $interface_format_codes_2 , \
@@ -8231,7 +8275,7 @@ enum db_return_codes db_get_dimm_topology_by_device_handle(const PersistentStore
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
-		device_handle,  id,  vendor_id,  device_id,  revision_id,  subsystem_vendor_id,  subsystem_device_id,  subsystem_revision_id,  manufacturing_info_valid,  manufacturing_location,  manufacturing_date,  type,  interface_format_codes_0,  interface_format_codes_1,  interface_format_codes_2,  interface_format_codes_3,  interface_format_codes_4,  interface_format_codes_5,  interface_format_codes_6,  interface_format_codes_7,  interface_format_codes_8  \
+		device_handle,  id,  vendor_id,  device_id,  revision_id,  subsystem_vendor_id,  subsystem_device_id,  subsystem_revision_id,  manufacturing_info_valid,  manufacturing_location,  manufacturing_date,  type,  serial_number_0,  serial_number_1,  serial_number_2,  serial_number_3,  interface_format_codes_0,  interface_format_codes_1,  interface_format_codes_2,  interface_format_codes_3,  interface_format_codes_4,  interface_format_codes_5,  interface_format_codes_6,  interface_format_codes_7,  interface_format_codes_8  \
 		FROM dimm_topology \
 		WHERE  device_handle = $device_handle";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -8268,6 +8312,10 @@ enum db_return_codes db_update_dimm_topology_by_device_handle(const PersistentSt
 		,  manufacturing_location=$manufacturing_location \
 		,  manufacturing_date=$manufacturing_date \
 		,  type=$type \
+		,  serial_number_0=$serial_number_0 \
+		,  serial_number_1=$serial_number_1 \
+		,  serial_number_2=$serial_number_2 \
+		,  serial_number_3=$serial_number_3 \
 		,  interface_format_codes_0=$interface_format_codes_0 \
 		,  interface_format_codes_1=$interface_format_codes_1 \
 		,  interface_format_codes_2=$interface_format_codes_2 \
@@ -8365,7 +8413,7 @@ int db_get_dimm_topology_history_by_history_id(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "SELECT \
-		device_handle,  id,  vendor_id,  device_id,  revision_id,  subsystem_vendor_id,  subsystem_device_id,  subsystem_revision_id,  manufacturing_info_valid,  manufacturing_location,  manufacturing_date,  type,  interface_format_codes_0,  interface_format_codes_1,  interface_format_codes_2,  interface_format_codes_3,  interface_format_codes_4,  interface_format_codes_5,  interface_format_codes_6,  interface_format_codes_7,  interface_format_codes_8  \
+		device_handle,  id,  vendor_id,  device_id,  revision_id,  subsystem_vendor_id,  subsystem_device_id,  subsystem_revision_id,  manufacturing_info_valid,  manufacturing_location,  manufacturing_date,  type,  serial_number_0,  serial_number_1,  serial_number_2,  serial_number_3,  interface_format_codes_0,  interface_format_codes_1,  interface_format_codes_2,  interface_format_codes_3,  interface_format_codes_4,  interface_format_codes_5,  interface_format_codes_6,  interface_format_codes_7,  interface_format_codes_8  \
 		FROM dimm_topology_history \
 		WHERE  history_id = '%d'", history_id);
 	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))

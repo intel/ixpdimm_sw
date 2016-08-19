@@ -189,6 +189,7 @@ struct nvm_topology {
 										// only valid if manufacturing_info_valid=1
 	NVM_UINT16 manufacturing_date;		// Date the AEP DIMM was manufactured, assigned by vendor
 										// only valid if manufacturing_info_valid=1
+	NVM_SERIAL_NUMBER serial_number;	// The serial number assigned by the vendor
 
 	NVM_UINT8 type; /* From SMBIOS 7.18.2 Memory Device <97> Type */
 	NVM_UINT16 fmt_interface_codes[NVM_MAX_IFCS_PER_DIMM]; /* The device type(s) from NFIT */

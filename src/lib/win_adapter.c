@@ -451,6 +451,9 @@ int get_topology(const NVM_UINT8 count, struct nvm_topology *p_dimm_topo)
 						p_dimm_topo[i].manufacturing_date =
 								p_ioctl_data->OutputPayload.TopologiesList[i].ManufacturingDate;
 
+						uint32_to_bytes(p_ioctl_data->OutputPayload.TopologiesList[i].SerialNumber,
+								p_dimm_topo[i].serial_number, NVM_SERIAL_LEN);
+
 						copy_interface_fmt_codes(&(p_dimm_topo[i]),
 								&(p_ioctl_data->OutputPayload.TopologiesList[i]));
 

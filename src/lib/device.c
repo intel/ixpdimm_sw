@@ -255,9 +255,7 @@ void add_identify_dimm_properties_to_device(struct device_discovery *p_device,
 
 	memmove(p_device->manufacturer, p_id_dimm->mf,
 			DEV_MFR_LEN);
-	// TODO US US14621 - get serial number from topology instead (NFIT/ACPI 6.1)
-	memmove(p_device->serial_number, p_id_dimm->sn,
-			DEV_SN_LEN);
+
 	memmove(p_device->model_number, p_id_dimm->mn,
 			DEV_MODELNUM_LEN);
 
@@ -391,7 +389,8 @@ void nvm_topology_to_device(struct nvm_topology *p_topology, struct device_disco
 		p_device->manufacturing_location = 0;
 		p_device->manufacturing_date = 0;
 	}
-	// TODO US US14621 - get serial number from topology (NFIT/ACPI 6.1)
+
+	memmove(p_device->serial_number, p_topology->serial_number, NVM_SERIAL_LEN);
 
 	// Could be multiple IFCs - copy them all
 	for (int i = 0; i < NVM_MAX_IFCS_PER_DIMM; i++)

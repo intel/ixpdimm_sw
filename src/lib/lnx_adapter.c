@@ -257,18 +257,12 @@ int get_topology_count()
  * this is in reference to https://bugzilla.kernel.org/show_bug.cgi?id=121161
  * TODO: DE6261 remove this function as soon as the above mentioned bug is resolved
  */
-unsigned short swap_bytes(unsigned short nfit_val)
+void swap_bytes(unsigned char *p_dest, unsigned char *p_src, size_t len)
 {
-	unsigned short high_byte = 0;
-	unsigned short low_byte = 0;
-	unsigned short ret_val = 0;
-
-	high_byte = (nfit_val & 0xFF00) >> 8;
-	low_byte = (nfit_val & 0x00FF);
-
-	ret_val = (low_byte << 8) | high_byte;
-
-	return ret_val;
+	for (unsigned int i = 0; i < len; i++)
+	{
+		p_dest[(len - 1) - i] = p_src[i];
+	}
 }
 
 /*
@@ -322,8 +316,11 @@ int get_topology(const NVM_UINT8 count, struct nvm_topology *p_dimm_topo)
 						// TODO DE6261: revert to original values instead of swapped
 						p_dimm_topo[dimm_index].device_handle.handle = ndctl_dimm_get_handle(dimm);
 						p_dimm_topo[dimm_index].id = ndctl_dimm_get_phys_id(dimm);
-						p_dimm_topo[dimm_index].vendor_id =
-							swap_bytes(ndctl_dimm_get_vendor(dimm));
+
+						unsigned short vendor_id = ndctl_dimm_get_vendor(dimm);
+						swap_bytes((unsigned char *)(&p_dimm_topo[dimm_index].vendor_id),
+								(unsigned char *)(&vendor_id), sizeof (vendor_id));
+
 						p_dimm_topo[dimm_index].device_id =
 							ndctl_dimm_get_device(dimm);
 						p_dimm_topo[dimm_index].revision_id =
@@ -331,10 +328,14 @@ int get_topology(const NVM_UINT8 count, struct nvm_topology *p_dimm_topo)
 
 						// TODO DE6261: revert to original values when
 						// new windows driver is available
-						p_dimm_topo[dimm_index].subsystem_vendor_id =
-								swap_bytes(ndctl_dimm_get_subsystem_vendor(dimm));
-						p_dimm_topo[dimm_index].subsystem_device_id =
-								swap_bytes(ndctl_dimm_get_subsystem_device(dimm));
+						unsigned short subsystem_vendor_id = ndctl_dimm_get_subsystem_vendor(dimm);
+						swap_bytes((unsigned char *)(&p_dimm_topo[dimm_index].subsystem_vendor_id),
+								(unsigned char *)(&subsystem_vendor_id),
+								sizeof (subsystem_vendor_id));
+						unsigned short subsystem_device_id = ndctl_dimm_get_subsystem_device(dimm);
+						swap_bytes((unsigned char *)(&p_dimm_topo[dimm_index].subsystem_device_id),
+								(unsigned char *)(&subsystem_device_id),
+								sizeof (subsystem_device_id));
 						p_dimm_topo[dimm_index].subsystem_revision_id =
 								ndctl_dimm_get_subsystem_revision(dimm);
 						p_dimm_topo[dimm_index].manufacturing_date  =
@@ -354,6 +355,14 @@ int get_topology(const NVM_UINT8 count, struct nvm_topology *p_dimm_topo)
 							p_dimm_topo[dimm_index].manufacturing_info_valid = 0;
 						}
 
+						// TODO DE6261: revert to original values when
+						// new windows driver is available. Use serial_number
+						unsigned int serial_number = ndctl_dimm_get_serial(dimm);
+						unsigned int swapped_serial;
+						swap_bytes((unsigned char *)(&swapped_serial),
+								(unsigned char *)(&serial_number), sizeof (serial_number));
+						uint32_to_bytes(swapped_serial, p_dimm_topo[dimm_index].serial_number,
+								NVM_SERIAL_LEN);
 
 						// TODO US14147 - Copy multiple IFCs from driver
 						p_dimm_topo[dimm_index].fmt_interface_codes[0] =

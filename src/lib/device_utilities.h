@@ -174,6 +174,11 @@ int get_dimm_capacities(const NVM_NFIT_DEVICE_HANDLE device_handle,
 int dimm_has_namespaces_of_type(const NVM_NFIT_DEVICE_HANDLE dimm_handle,
 		const enum namespace_type ns_type);
 
+/*
+ * Helper function to convert unsigned integer to bytes
+ */
+void uint32_to_bytes(unsigned long val, unsigned char *arr, size_t len);
+
 #ifdef __cplusplus
 }
 #endif
