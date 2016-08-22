@@ -65,7 +65,7 @@ EARLY_HW = 0 #Temporary compile option for PO HW with no media
 ifndef BUILDNUM
 	BUILDNUM= $(shell git describe --abbrev=0 | sed -e 's/\([a-zA-Z_-]*\)\(.*\)/\2/g')
 	ifeq ($(strip $(BUILDNUM)),)
-		BUILDNUM=99.99.99.9999
+		BUILDNUM= $(shell pwd | sed -nre 's/^[^0-9]*(([0-9]+\.)*[0-9]+).*/\1/p')
 	endif
 endif
 
@@ -221,6 +221,12 @@ ifeq ($(UNAME), Linux)
 			LINUX_DIST := sle
 		else
 			LINUX_DIST := $(warning Unrecognized Linux distribution)
+		endif
+
+		ifeq ("$(wildcard .git)","")
+			DIR_IS_NOT_GIT_REPO := "true"
+		else
+			DIR_IS_NOT_GIT_REPO := "false"
 		endif
 	endif
 	C_CPP_FLAGS_CMN += -fPIE -fPIC -D__PRODUCT_DATADIR__=\"$(PRODUCT_DATADIR)/\"		
