@@ -377,7 +377,8 @@ std::string wbem::mem_config::PoolViewFactory::getEncryptionEnabled(const struct
 	return result;
 }
 
-wbem::framework::STR_LIST wbem::mem_config::PoolViewFactory::getPersistentMemoryType(struct pool *pPool)
+wbem::framework::STR_LIST wbem::mem_config::PoolViewFactory::getPersistentMemoryType(
+		const struct pool *pPool)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 

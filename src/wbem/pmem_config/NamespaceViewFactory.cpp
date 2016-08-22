@@ -42,10 +42,11 @@
 #include <sstream>
 #include "NamespaceViewFactory.h"
 #include <string.h>
-#include <mem_config/InterleaveSet.h>
 #include <exception/NvmExceptionLibError.h>
 #include <NvmStrings.h>
 #include <core/Helper.h>
+#include <mem_config/InterleaveSet.h>
+#include <mem_config/PoolViewFactory.h>
 
 wbem::pmem_config::NamespaceViewFactory::NamespaceViewFactory()
 throw(wbem::framework::Exception)
@@ -76,7 +77,7 @@ throw(wbem::framework::Exception)
 	attributes.push_back(ACTIONREQUIREDEVENTS_KEY);
 	attributes.push_back(ENCRYPTIONENABLED_KEY);
 	attributes.push_back(ERASECAPABLE_KEY);
-	attributes.push_back(APP_DIRECT_SETTINGS_KEY);
+	attributes.push_back(PERSISTENTMEMORYTYPE_KEY);
 	attributes.push_back(REPLICATION_KEY);
 	attributes.push_back(MEMORYPAGEALLOCATION_KEY);
 }
@@ -257,13 +258,10 @@ throw(wbem::framework::Exception)
 				framework::Attribute((NVM_UINT16)ns.security_features.erase_capable, false));
 		}
 
-		if (containsAttribute(APP_DIRECT_SETTINGS_KEY, attributes))
+		if (containsAttribute(PERSISTENTMEMORYTYPE_KEY, attributes))
 		{
-			std::string format =
-					wbem::mem_config::InterleaveSet::getInterleaveFormatString(&ns.interleave_format);
-
-			pInstance->setAttribute(APP_DIRECT_SETTINGS_KEY,
-			framework::Attribute(format, false));
+			std::string type = getUnderlyingPMType(ns);
+			pInstance->setAttribute(PERSISTENTMEMORYTYPE_KEY, framework::Attribute(type, false));
 		}
 
 		if (containsAttribute(REPLICATION_KEY, attributes))
@@ -469,7 +467,6 @@ std::string wbem::pmem_config::NamespaceViewFactory::namespaceTypeToStr(const en
 	return typeStr;
 }
 
-
 /*
  * Helper function to convert namespace btt to an optimize string
  */
@@ -526,4 +523,24 @@ std::string wbem::pmem_config::NamespaceViewFactory::namespaceMemoryPageAllocati
 	}
 
 	return str;
+}
+
+std::string wbem::pmem_config::NamespaceViewFactory::getUnderlyingPMType(const struct namespace_details &ns)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	std::string pmTypeStr;
+
+	struct pool *pPool = NULL;
+	pPool = wbem::mem_config::PoolViewFactory::getPool(ns.pool_uid);
+	wbem::framework::STR_LIST poolTypeList =
+			wbem::mem_config::PoolViewFactory::getPersistentMemoryType(pPool);
+
+	for (std::vector<std::string>::const_iterator i = poolTypeList.begin(); i != poolTypeList.end(); ++i)
+	{
+		pmTypeStr += *i;
+		if (i+1 != poolTypeList.end())
+			pmTypeStr += ", ";
+	}
+
+	return pmTypeStr;
 }

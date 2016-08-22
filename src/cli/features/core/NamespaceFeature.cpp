@@ -177,6 +177,8 @@ void cli::nvmcli::NamespaceFeature::getPaths(cli::framework::CommandSpecList &li
 			.helpText(TR("The pool identifier on which to create the namespace."));
 	createNamespace.addProperty(CREATE_NS_PROP_TYPE, true, "AppDirect|Storage", true,
 			TR("The type of namespace to be created."));
+	createNamespace.addProperty(CREATE_NS_PM_TYPE, false, "AppDirect|AppDirectNotInterleaved|Storage",
+			true, TR("Create the namespace from persistent memory capacity in the pool that matches the type."));
 	createNamespace.addProperty(CREATE_NS_PROP_BLOCKSIZE, false, "size", true,
 			TR("The logical size in bytes for read/write operations. Must be one of the supported "
 					"block sizes retrieved using the Show System Capabilities command."));
@@ -194,10 +196,6 @@ void cli::nvmcli::NamespaceFeature::getPaths(cli::framework::CommandSpecList &li
 			TR("If the namespace has Encryption turned on after creation."));
 	createNamespace.addProperty(CREATE_NS_PROP_ERASECAPABLE, false, "0|1|False|True", true,
 			TR("If the namespace supports erase capability after creation."));
-	createNamespace.addProperty(APPDIRECTSETTINGS_PROPERTYNAME, false, "value", true,
-			TR("Create the namespace on persistent memory matching the "
-					"specified quality of service attributes. Only applicable if the "
-					"type is App Direct."));
 	createNamespace.addProperty(CREATE_NS_PROP_CAPACITY, false, "capacity", true,
 			TR("The size of the namespace in GB. Capacity and BlockCount are exclusive "
 					"and therefore cannot be used together. Note: Capacity can only be provided "

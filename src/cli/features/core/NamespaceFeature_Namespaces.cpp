@@ -40,6 +40,7 @@
 #include <pmem_config/PersistentMemoryCapabilitiesFactory.h>
 #include <pmem_config/PersistentMemoryPoolFactory.h>
 #include <pmem_config/PersistentMemoryNamespaceFactory.h>
+#include <mem_config/MemoryCapabilitiesFactory.h>
 #include <libinvm-cim/ExceptionNotSupported.h>
 #include <libinvm-cim/ExceptionBadParameter.h>
 #include <utility.h>
@@ -425,7 +426,7 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::createNamespace(
 
 	if (!pResult)
 	{
-		pResult = parseInterleaveSizes(parsedCommand);
+		pResult = parsePersistentMemoryType(parsedCommand);
 	}
 
 	if (!pResult)
@@ -520,11 +521,11 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseCreateNsType(
 	framework::ResultBase *pResult = NULL;
 	m_nsTypeStr = framework::Parser::getPropertyValue(parsedCommand, CREATE_NS_PROP_TYPE);
 
-	if (framework::stringsIEqual(m_nsTypeStr, CREATE_NS_PROP_TYPE_APPDIRECT))
+	if (framework::stringsIEqual(m_nsTypeStr, CREATE_NS_PROP_NS_TYPE_APPDIRECT))
 	{
 		m_nsType = wbem::pmem_config::PM_SERVICE_APP_DIRECT_TYPE;
 	}
-	else if (framework::stringsIEqual(m_nsTypeStr, CREATE_NS_PROP_TYPE_STORAGE))
+	else if (framework::stringsIEqual(m_nsTypeStr, CREATE_NS_PROP_NS_TYPE_STORAGE))
 	{
 		m_nsType = wbem::pmem_config::PM_SERVICE_STORAGE_TYPE;
 	}
@@ -1021,43 +1022,57 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseCreateNsEraseCap
 	return pResult;
 }
 
-cli::framework::ResultBase *cli::nvmcli::NamespaceFeature::parseInterleaveSizes(
+cli::framework::ResultBase *cli::nvmcli::NamespaceFeature::parsePersistentMemoryType(
 		const cli::framework::ParsedCommand &parsedCommand)
 {
 	cli::framework::ResultBase * pResult = NULL;
 
-	bool exists;
-	const std::string &value = cli::framework::Parser::getPropertyValue(parsedCommand,
-		APPDIRECTSETTINGS_PROPERTYNAME, &exists);
-
-	MemoryProperty interleaveSizes(parsedCommand, "", APPDIRECTSETTINGS_PROPERTYNAME);
-	if (exists)
+	bool hasProp;
+	const std::string value = cli::framework::Parser::getPropertyValue(parsedCommand,
+			CREATE_NS_PM_TYPE, &hasProp);
+	if (hasProp)
 	{
-		const bool isNotValidNsAppDirectSetting =
-			interleaveSizes.getIsMirrored() || !interleaveSizes.getIsSettingsValid();
-		if (isNotValidNsAppDirectSetting)
+		if (!(framework::stringsIEqual(value, CREATE_NS_PROP_PM_TYPE_APPDIRECT) ||
+			framework::stringsIEqual(value, CREATE_NS_PROP_PM_TYPE_APPDIRECT_NOTINTERLEAVED) ||
+			framework::stringsIEqual(value, CREATE_NS_PROP_PM_TYPE_STORAGE)))
 		{
-			pResult = new framework::SyntaxErrorBadValueResult(framework::TOKENTYPE_PROPERTY,
-				APPDIRECTSETTINGS_PROPERTYNAME, value);
+			pResult = new framework::SyntaxErrorBadValueResult(
+					framework::TOKENTYPE_PROPERTY, CREATE_NS_PM_TYPE, value);
 		}
-		else if (m_nsType != wbem::pmem_config::PM_SERVICE_APP_DIRECT_TYPE)
-		{
-			pResult = new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
-				TRS(INVALID_NS_APP_DIRECT_SETTINGS));
+		else if ((m_nsType == wbem::pmem_config::PM_SERVICE_APP_DIRECT_TYPE) &&
+				(framework::stringsIEqual(value, CREATE_NS_PROP_PM_TYPE_STORAGE)))
+		{ // NS type appDirect cannot be build atop of a storage pool
+			char errbuff[NVM_ERROR_LEN];
+			s_snprintf(errbuff, NVM_ERROR_LEN,
+					TR("The namespace type '%s' is not valid for the given pool."),
+					m_nsTypeStr.c_str());
+			pResult = new framework::ErrorResult(framework::ResultBase::ERRORCODE_UNKNOWN,
+					errbuff);
 		}
 		else
 		{
-			m_channelSize = wbem::mem_config::InterleaveSet::getExponentFromInterleaveSize(
-				interleaveSizes.getFormatSizes().channel);
-			m_controllerSize = wbem::mem_config::InterleaveSet::getExponentFromInterleaveSize(
-				interleaveSizes.getFormatSizes().imc);
-			m_byOne = interleaveSizes.getIsByOne();
+			if (framework::stringsIEqual(value, CREATE_NS_PROP_PM_TYPE_APPDIRECT_NOTINTERLEAVED))
+			{
+				m_byOne = true;
+			}
+			else if (framework::stringsIEqual(value, CREATE_NS_PROP_PM_TYPE_APPDIRECT))
+			{
+				bool result = false;
+				interleave_size channelSize = INTERLEAVE_SIZE_64B;
+				interleave_size imcSize = INTERLEAVE_SIZE_64B;
+				result = wbem::mem_config::MemoryCapabilitiesFactory::getRecommendedInterleaveSizes(
+						imcSize, channelSize);
+				if (result)
+				{
+					m_controllerSize = wbem::mem_config::InterleaveSet::getExponentFromInterleaveSize(imcSize);
+					m_channelSize = wbem::mem_config::InterleaveSet::getExponentFromInterleaveSize(channelSize);
+				}
+			}
 		}
 	}
 
 	return pResult;
 }
-
 
 cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::modifyNamespace(
 		const framework::ParsedCommand& parsedCommand)
@@ -1509,7 +1524,7 @@ void cli::nvmcli::NamespaceFeature::populateNamespaceAttributes(
 	allAttributes.push_back(wbem::OPTIMIZE_KEY);
 	allAttributes.push_back(wbem::ERASECAPABLE_KEY);
 	allAttributes.push_back(wbem::ENCRYPTIONENABLED_KEY);
-	allAttributes.push_back(wbem::APP_DIRECT_SETTINGS_KEY);
+	allAttributes.push_back(wbem::PERSISTENTMEMORYTYPE_KEY);
 	allAttributes.push_back(wbem::MEMORYPAGEALLOCATION_KEY);
 
 	// get the desired attributes

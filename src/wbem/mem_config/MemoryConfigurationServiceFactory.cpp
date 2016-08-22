@@ -497,7 +497,7 @@ wbem::framework::UINT32 wbem::mem_config::MemoryConfigurationServiceFactory::exe
 	{
 		wbemRc = getReturnCodeFromLibException(e);
 	}
-	catch (core::LibraryException &e)
+	catch (core::LibraryException &)
 	{
 		wbemRc = MEMORYCONFIGURATIONSERVICE_ERR_FAILED;
 	}

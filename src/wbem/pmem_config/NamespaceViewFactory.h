@@ -160,6 +160,8 @@ class NVM_API NamespaceViewFactory : public framework_interface::NvmInstanceFact
 		 */
 		static std::string namespaceMemoryPageAllocationToStr(const enum namespace_memory_page_allocation allocation);
 
+		std::string getUnderlyingPMType(const struct namespace_details &ns);
+
 	private:
 		void populateAttributeList(framework::attribute_names_t &attributes)
 		throw (framework::Exception);

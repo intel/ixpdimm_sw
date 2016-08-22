@@ -131,22 +131,29 @@ static const std::string LOAD_GOAL_PROMPT = TR(
  * Command spec parts for namespace feature
  */
 static const std::string CREATE_NS_PROP_TYPE = "Type";
-static const std::string CREATE_NS_PROP_TYPE_STORAGE = "Storage";
-static const std::string CREATE_NS_PROP_TYPE_APPDIRECT = "AppDirect";
+static const std::string CREATE_NS_PM_TYPE = "PersistentMemoryType";
 static const std::string CREATE_NS_PROP_BLOCKSIZE = "BlockSize";
 static const std::string CREATE_NS_PROP_BLOCKCOUNT = "BlockCount";
 static const std::string CREATE_NS_PROP_FRIENDLYNAME = "Name";
-static const size_t CREATE_NS_PROP_FRIENDLYNAME_MAX = 64u;
 static const std::string CREATE_NS_PROP_ENABLED = "Enabled";
-static const std::string CREATE_NS_PROP_READONLY = "ReadOnly";
+static const std::string CREATE_NS_PROP_CAPACITY = "Capacity";
 static const std::string CREATE_NS_PROP_OPTIMIZE = "Optimize";
-static const std::string CREATE_NS_PROP_OPTIMIZE_COPYONWRITE = "CopyOnWrite";
 static const std::string CREATE_NS_PROP_ENCRYPTION = "Encryption";
 static const std::string CREATE_NS_PROP_ERASECAPABLE = "EraseCapable";
-static const std::string CREATE_NS_PROP_CAPACITY = "Capacity";
 static const std::string CREATE_NS_PROP_MEMORYPAGEALLOCATION = "MemoryPageAllocation";
+
+static const std::string CREATE_NS_PROP_NS_TYPE_STORAGE = "Storage";
+static const std::string CREATE_NS_PROP_NS_TYPE_APPDIRECT = "AppDirect";
+static const std::string CREATE_NS_PROP_PM_TYPE_APPDIRECT_NOTINTERLEAVED = "AppDirectNotInterleaved";
+static const std::string CREATE_NS_PROP_PM_TYPE_STORAGE = "Storage";
+static const std::string CREATE_NS_PROP_PM_TYPE_APPDIRECT = "AppDirect";
+static const std::string CREATE_NS_PROP_READONLY = "ReadOnly";
+static const std::string CREATE_NS_PROP_OPTIMIZE_COPYONWRITE = "CopyOnWrite";
 static const std::string CREATE_NS_PROP_MEMORYPAGEALLOCATION_DRAM = "DRAM";
 static const std::string CREATE_NS_PROP_MEMORYPAGEALLOCATION_APPDIRECT = "AppDirect";
+
+static const size_t CREATE_NS_PROP_FRIENDLYNAME_MAX = 64u;
+
 static const std::string NS_UNITS_OPTION_DESC = "Change the units the namespace capacity is displayed in.";
 
 /*!
@@ -404,9 +411,9 @@ class NVM_API NamespaceFeature : public cli::framework::FeatureBase
 		framework::ResultBase * parseCreateNsOptimize(const framework::ParsedCommand& parsedCommand);
 		framework::ResultBase * parseCreateNsEncryption(const framework::ParsedCommand& parsedCommand);
 		framework::ResultBase * parseCreateNsEraseCapable(const framework::ParsedCommand& parsedCommand);
-		framework::ResultBase * parseInterleaveSizes(const framework::ParsedCommand &command);
 		framework::ResultBase * parseCreateNsCapacity(const framework::ParsedCommand& parsedCommand);
 		framework::ResultBase * parseCreateNsMemoryPageAllocation(const framework::ParsedCommand& parsedCommand);
+		framework::ResultBase * parsePersistentMemoryType(const framework::ParsedCommand &command);
 		/*
 		 * WBEM wrappers for modify namespace
 		 */
