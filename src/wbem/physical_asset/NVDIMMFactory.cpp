@@ -61,6 +61,7 @@ NVDIMMFactory::NVDIMMFactory(
 		m_SetPassphrase(nvm_set_passphrase),
 		m_RemovePassphrase(nvm_remove_passphrase),
 		m_UnlockDevice(nvm_unlock_device),
+		m_FreezeLock(nvm_freezelock_device),
 		m_GetFwLogLevel(nvm_get_fw_log_level),
 		m_injectDeviceError(nvm_inject_device_error),
 		m_clearInjectedDeviceError(nvm_clear_injected_device_error),
@@ -245,6 +246,11 @@ wbem::framework::UINT32 NVDIMMFactory::executeMethod(
 			unlock(deviceUid,
 					inParms[NVDIMM_SETPASSPHRASE_CURRENTPASSPHRASE].stringValue());
 		}
+		else if (method == NVDIMM_FREEZELOCK)
+		{
+			// unint32 FreezeLock();
+			freezeLock(deviceUid);
+		}
 		else
 		{
 			httpRc = framework::CIM_ERR_METHOD_NOT_AVAILABLE;
@@ -383,6 +389,25 @@ void NVDIMMFactory::unlock(std::string deviceUid,
 	uid_copy(deviceUid.c_str(), uid);
 
 	int rc = m_UnlockDevice(uid, currentPassphrase.c_str(), currentPassphrase.length());
+
+	if (rc != NVM_SUCCESS)
+	{
+		throw exception::NvmExceptionLibError(rc);
+	}
+}
+
+void NVDIMMFactory::freezeLock(std::string deviceUid)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	if (!core::device::isUidValid(deviceUid))
+	{
+		throw framework::ExceptionBadParameter("deviceUid");
+	}
+
+	NVM_UID uid;
+	uid_copy(deviceUid.c_str(), uid);
+
+	int rc = m_FreezeLock(uid);
 
 	if (rc != NVM_SUCCESS)
 	{

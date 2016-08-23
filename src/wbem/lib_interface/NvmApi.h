@@ -185,6 +185,11 @@ class NVM_API NvmApi
 				const NVM_SIZE passphraseLen);
 
 		/*
+		 * Freeze lock the specified NVM-DIMM
+		 */
+		virtual int freezeLockDevice(const NVM_UID deviceUid);
+
+		/*
 		 * Erase persistent data on the specified NVM-DIMM
 		 */
 		virtual int eraseDevice(const NVM_UID deviceUid, const NVM_PASSPHRASE passphrase,

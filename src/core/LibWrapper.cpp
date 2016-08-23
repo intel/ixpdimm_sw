@@ -205,6 +205,12 @@ int LibWrapper::unlockDevice(const NVM_UID deviceUid, const NVM_PASSPHRASE passp
 	return nvm_unlock_device(deviceUid, passphrase, passphraseLen);
 }
 
+int LibWrapper::freezeLockDevice(const NVM_UID deviceUid) const
+{
+	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
+	return nvm_freezelock_device(deviceUid);
+}
+
 int LibWrapper::eraseDevice(const NVM_UID deviceUid,
 	const NVM_PASSPHRASE passphrase,
 	const NVM_SIZE passphraseLen) const

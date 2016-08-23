@@ -213,6 +213,12 @@ class <NVM_WBEM_PREFIX>NVDIMM : CIM_PhysicalMemory
        "Not Supported", "Invalid Parameter" }]
 	uint32 RemovePassphrase(string CurrentPassphrase);
 
+	[implemented,
+		ValueMap { "0", "1", "2", "3", "4", "5" },
+		Values { "Success", "Failed", "Not Allowed",
+		"Not Supported", "Unknown"}]
+	uint32 FreezeLock();
+
 };
 
 [dynamic, provider("intelwbemprovider"), Description("Intel Raw Memory")]

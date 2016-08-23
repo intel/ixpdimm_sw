@@ -240,6 +240,11 @@ int NvmApi::unlockDevice(const NVM_UID deviceUid, const NVM_PASSPHRASE passphras
 	return nvm_unlock_device(deviceUid, passphrase, passphraseLen);
 }
 
+int NvmApi::freezeLockDevice(const NVM_UID deviceUid)
+{
+	return nvm_freezelock_device(deviceUid);
+}
+
 int NvmApi::eraseDevice(const NVM_UID deviceUid, const NVM_PASSPHRASE passphrase,
 				const NVM_SIZE passphraseLen)
 {

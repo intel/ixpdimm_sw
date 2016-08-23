@@ -73,6 +73,7 @@ public:
 		const std::string newPassphrase);
 	virtual void removePassphrase(const std::string &deviceUid, const std::string passphrase);
 	virtual void unlockDevice(const std::string &deviceUid, const std::string passphrase);
+	virtual void freezeLockDevice(const std::string &deviceUid);
 	virtual void eraseDevice(const std::string &deviceUid,
 		const std::string passphrase);
 	virtual int getJobCount();

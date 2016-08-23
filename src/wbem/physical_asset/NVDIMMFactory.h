@@ -54,6 +54,7 @@ static const int NVDIMM_COMMUNICATION_NOCONTACT = 4; //!< Communication status v
 static const std::string NVDIMM_SETPASSPHRASE = "SetPassphrase"; //!< extrinsic method name
 static const std::string NVDIMM_REMOVEPASSPHRASE = "RemovePassphrase"; //!< extrinsic method name
 static const std::string NVDIMM_UNLOCK = "Unlock"; //!< extrinsic method name
+static const std::string NVDIMM_FREEZELOCK = "FreezeLock"; //!< extrinsic method name
 static const std::string NVDIMM_SETPASSPHRASE_NEWPASSPHRASE = "NewPassphrase"; //!< method param
 static const std::string NVDIMM_SETPASSPHRASE_CURRENTPASSPHRASE = "CurrentPassphrase"; //!< method param
 static const NVM_UINT16 DEVICE_HEALTH_UNMANAGEABLE = 65534; //!< Additional health state for unmanageable dimms
@@ -134,6 +135,8 @@ public:
 
 	void unlock(std::string deviceUid, std::string currentPassphrase);
 
+	void freezeLock(const std::string deviceUid);
+
 	void injectTemperatureError(const std::string &dimmUid,
 			const NVM_REAL32 temperature);
 
@@ -187,6 +190,8 @@ public:
 
 	int (*m_UnlockDevice)(const NVM_UID device_uid,
 			const NVM_PASSPHRASE passphrase, const NVM_SIZE passphrase_len);
+
+	int (*m_FreezeLock)(const NVM_UID device_uid);
 
 	int (*m_GetFwLogLevel)(const NVM_UID device_uid, enum fw_log_level *p_log_level);
 

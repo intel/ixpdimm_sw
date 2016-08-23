@@ -513,6 +513,21 @@ void NvmLibrary::unlockDevice(const std::string &deviceUid, const std::string pa
 
 }
 
+void NvmLibrary::freezeLockDevice(const std::string &deviceUid)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	int rc;
+
+	NVM_UID lib_deviceUid;
+	core::Helper::stringToUid(deviceUid, lib_deviceUid);
+
+	rc = m_lib.freezeLockDevice(lib_deviceUid);
+	if (rc < 0)
+	{
+		throw core::LibraryException(rc);
+	}
+}
+
 void NvmLibrary::eraseDevice(const std::string &deviceUid,
 	const std::string passphrase)
 {

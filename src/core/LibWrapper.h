@@ -96,6 +96,8 @@ public:
 	virtual int unlockDevice(const NVM_UID deviceUid, const NVM_PASSPHRASE passphrase,
 		const NVM_SIZE passphraseLen) const;
 
+	virtual int freezeLockDevice(const NVM_UID deviceUid) const;
+
 	virtual int eraseDevice(const NVM_UID deviceUid,
 		const NVM_PASSPHRASE passphrase,
 		const NVM_SIZE passphraseLen) const;
