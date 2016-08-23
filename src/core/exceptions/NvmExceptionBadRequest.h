@@ -223,8 +223,17 @@ class NvmExceptionPartialResultsCouldNotBeUndone : public NvmExceptionBadRequest
 {
 	public:
 		NvmExceptionPartialResultsCouldNotBeUndone() :
-			NvmExceptionBadRequest("Request did not complete in its entirety and partial"
+			NvmExceptionBadRequest("Request did not complete in its entirety and partial "
 					"results could not be undone.")
+		{}
+};
+
+class NvmExceptionCombiningStorageAndAppDirect : public NvmExceptionBadRequest
+{
+	public:
+		NvmExceptionCombiningStorageAndAppDirect() :
+			NvmExceptionBadRequest("Storage and App Direct capacity may not be combined "
+					"within the same request.")
 		{}
 };
 

@@ -414,7 +414,7 @@ NVM_UINT64 core::memory_allocator::LayoutStepAppDirect::getDimmUnallocatedAppDir
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	NVM_UINT64 bytes = 0;
-	if (goal.app_direct_count < MAX_APPDIRECT_EXTENTS)
+	if (goal.app_direct_count < NVM_MAX_INTERLEAVE_SETS_PER_DIMM)
 	{
 		bytes = getDimmUnallocatedBytes(dimm.capacity, goal);
 	}
@@ -566,7 +566,7 @@ bool core::memory_allocator::LayoutStepAppDirect::canMapInterleavedCapacity(
 	for (std::vector<Dimm>::const_iterator dimmIter = dimms.begin();
 			dimmIter != dimms.end(); dimmIter++)
 	{
-		if (goals[dimmIter->uid].app_direct_count == MAX_APPDIRECT_EXTENTS)
+		if (goals[dimmIter->uid].app_direct_count == NVM_MAX_INTERLEAVE_SETS_PER_DIMM)
 		{
 			if (interleaveSetFromPreviousExtent(dimmIter->uid, goals[dimmIter->uid]))
 			{

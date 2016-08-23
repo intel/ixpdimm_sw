@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 2016, Intel Corporation
+ * Copyright (c) 2016, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -25,54 +25,28 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Rule that checks a MemoryAllocationRequest to make sure only one extent is
- * set to remaining
- */
 
-#include "RuleTooManyRemaining.h"
-
-#include <LogEnterExit.h>
+#include "RuleNoCombiningStorageAndAppDirect.h"
 #include <core/exceptions/NvmExceptionBadRequest.h>
+#include <LogEnterExit.h>
 
-core::memory_allocator::RuleTooManyRemaining::RuleTooManyRemaining()
+core::memory_allocator::RuleNoCombiningStorageAndAppDirect::RuleNoCombiningStorageAndAppDirect()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
 
-core::memory_allocator::RuleTooManyRemaining::~RuleTooManyRemaining()
+core::memory_allocator::RuleNoCombiningStorageAndAppDirect::~RuleNoCombiningStorageAndAppDirect()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
 
-void core::memory_allocator::RuleTooManyRemaining::verify(const MemoryAllocationRequest &request)
+void core::memory_allocator::RuleNoCombiningStorageAndAppDirect::verify(
+		const MemoryAllocationRequest& request)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	int remainingCount = 0;
-
-	if (request.isMemoryRemaining())
+	if (request.getNumberOfAppDirectExtents() > 0 && request.isStorageRemaining())
 	{
-		remainingCount++;
-	}
-
-	if (request.isStorageRemaining())
-	{
-		remainingCount++;
-	}
-
-	std::vector<AppDirectExtent> extents = request.getAppDirectExtents();
-	for (std::vector<AppDirectExtent>::const_iterator adIter = extents.begin();
-			adIter != extents.end(); adIter++)
-	{
-		if (adIter->capacity == REQUEST_REMAINING_CAPACITY)
-		{
-			remainingCount++;
-		}
-	}
-
-	if (remainingCount > 1)
-	{
-		throw core::NvmExceptionBadRequestRemaining();
+		throw core::NvmExceptionCombiningStorageAndAppDirect();
 	}
 }

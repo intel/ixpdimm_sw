@@ -42,6 +42,7 @@
 #include "RuleMemoryModeCapacityNotSupported.h"
 #include "RuleAppDirectNotSupported.h"
 #include "RuleMirroredAppDirectNotSupported.h"
+#include "RuleNoCombiningStorageAndAppDirect.h"
 #include "RuleTooManyAppDirectExtents.h"
 #include "RuleTooManyRemaining.h"
 #include "RuleDimmHasConfigGoal.h"
@@ -134,6 +135,7 @@ void core::memory_allocator::MemoryAllocator::populateRequestRules()
 	// Note that order matters
 	m_requestRules.push_back(new RuleProvisionCapacityNotSupported(m_systemCapabilities));
 	m_requestRules.push_back(new RuleNoDimms());
+	m_requestRules.push_back(new RuleNoCombiningStorageAndAppDirect());
 	m_requestRules.push_back(new RuleTooManyAppDirectExtents());
 	m_requestRules.push_back(new RuleTooManyRemaining());
 	m_requestRules.push_back(new RuleReserveDimmPropertyInvalid());

@@ -67,13 +67,19 @@ class NVM_API MemoryAllocationRequest
 
 		class NoReservedDimmException : public std::exception {};
 
+		/*
+		 * All requested capacity is in GiB.
+		 */
+
 		NVM_UINT64 getMemoryModeCapacity() const;
 		void setMemoryModeCapacity(const NVM_UINT64 capacity);
+		bool isMemoryRemaining() const;
 
 		std::vector<AppDirectExtent> getAppDirectExtents() const;
 		size_t getNumberOfAppDirectExtents() const;
 		void addAppDirectExtent(const AppDirectExtent &extent);
 		void setAppDirectExtents(const std::vector<AppDirectExtent> &extents);
+		bool isAppDirectRemaining() const;
 
 		bool isStorageRemaining() const;
 		void setStorageRemaining(const bool storageIsRemaining);
@@ -90,6 +96,9 @@ class NVM_API MemoryAllocationRequest
 		void addDimm(const Dimm &dimm);
 		void setDimms(const std::vector<Dimm> &dimmList);
 
+		NVM_UINT64 getMappableDimmCapacityInBytes() const;
+		NVM_UINT64 getRequestedMappedCapacityInBytes() const;
+
 	private:
 		NVM_UINT64 m_memoryCapacity; // total in GiB
 		std::vector<struct AppDirectExtent> m_appDirectExtents;
@@ -99,6 +108,8 @@ class NVM_API MemoryAllocationRequest
 		ReserveDimmType m_reserveDimmType;
 
 		std::vector<Dimm> m_dimms;
+
+		bool isReservedDimm(const Dimm &dimm) const;
 };
 
 } /* namespace memory_allocator */

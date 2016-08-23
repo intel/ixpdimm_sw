@@ -1068,9 +1068,30 @@ wbem::mem_config::MemoryConfigurationServiceFactory::memAllocSettingsToRequest(
 	request.setMemoryModeCapacity(memoryCapacity);
 	request.setAppDirectExtents(appDirectExtents);
 
-	request.setStorageRemaining(true);
+	if (requestLeavesSpaceForStorage(request))
+	{
+		request.setStorageRemaining(true);
+	}
 
 	return request;
+}
+
+bool wbem::mem_config::MemoryConfigurationServiceFactory::requestLeavesSpaceForStorage(
+		const core::memory_allocator::MemoryAllocationRequest &request)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	bool storageAvailable = false;
+
+	NVM_UINT64 usableDimmCapacity = request.getMappableDimmCapacityInBytes();
+	NVM_UINT64 totalRequestedCapacity = request.getRequestedMappedCapacityInBytes();
+
+	if (totalRequestedCapacity < usableDimmCapacity)
+	{
+		storageAvailable = true;
+	}
+
+	return storageAvailable;
 }
 
 wbem::framework::UINT32 wbem::mem_config::MemoryConfigurationServiceFactory::executeMethodAllocateFromPool(

@@ -288,6 +288,8 @@ class NVM_API MemoryConfigurationServiceFactory : public framework_interface::Nv
 				std::vector<struct core::memory_allocator::AppDirectExtent> &appDirectCapacities)
 			throw (wbem::framework::Exception);
 
+		bool requestLeavesSpaceForStorage(const core::memory_allocator::MemoryAllocationRequest &request);
+
 		/*
 		 * Return true if all the settings strings are for NewMemoryOnly or if all
 		 * the settings strings are not for NewMemoryOnly

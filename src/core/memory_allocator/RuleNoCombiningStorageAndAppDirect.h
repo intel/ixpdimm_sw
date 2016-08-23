@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 2016, Intel Corporation
+ * Copyright (c) 2016, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,53 +26,29 @@
  */
 
 /*
- * Rule that checks a MemoryAllocationRequest to make sure only one extent is
- * set to remaining
+ * Rule to prevent combining App Direct and Storage on the same DIMM
  */
 
-#include "RuleTooManyRemaining.h"
+#ifndef RULENOCOMBININGSTORAGEANDAPPDIRECT_H_
+#define RULENOCOMBININGSTORAGEANDAPPDIRECT_H_
 
-#include <LogEnterExit.h>
-#include <core/exceptions/NvmExceptionBadRequest.h>
+#include "RequestRule.h"
 
-core::memory_allocator::RuleTooManyRemaining::RuleTooManyRemaining()
+namespace core
 {
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-}
-
-core::memory_allocator::RuleTooManyRemaining::~RuleTooManyRemaining()
+namespace memory_allocator
 {
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-}
 
-void core::memory_allocator::RuleTooManyRemaining::verify(const MemoryAllocationRequest &request)
+class NVM_API RuleNoCombiningStorageAndAppDirect : public RequestRule
 {
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	public:
+		RuleNoCombiningStorageAndAppDirect();
+		virtual ~RuleNoCombiningStorageAndAppDirect();
 
-	int remainingCount = 0;
+		virtual void verify(const MemoryAllocationRequest &request);
+};
 
-	if (request.isMemoryRemaining())
-	{
-		remainingCount++;
-	}
+} /* namespace memory_allocator */
+} /* namespace core */
 
-	if (request.isStorageRemaining())
-	{
-		remainingCount++;
-	}
-
-	std::vector<AppDirectExtent> extents = request.getAppDirectExtents();
-	for (std::vector<AppDirectExtent>::const_iterator adIter = extents.begin();
-			adIter != extents.end(); adIter++)
-	{
-		if (adIter->capacity == REQUEST_REMAINING_CAPACITY)
-		{
-			remainingCount++;
-		}
-	}
-
-	if (remainingCount > 1)
-	{
-		throw core::NvmExceptionBadRequestRemaining();
-	}
-}
+#endif /* RULENOCOMBININGSTORAGEANDAPPDIRECT_H_ */

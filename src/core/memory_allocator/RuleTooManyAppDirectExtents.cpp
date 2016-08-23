@@ -49,7 +49,7 @@ void core::memory_allocator::RuleTooManyAppDirectExtents::verify(const MemoryAll
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	if (request.getNumberOfAppDirectExtents() > (size_t)MAX_APPDIRECT_EXTENTS)
+	if (request.getNumberOfAppDirectExtents() > MAX_APP_DIRECT_EXTENTS)
 	{
 		throw core::NvmExceptionTooManyAppDirectExtents();
 	}

@@ -48,7 +48,7 @@ core::memory_allocator::LayoutStepMemory::~LayoutStepMemory()
 bool core::memory_allocator::LayoutStepMemory::isRemainingStep(const MemoryAllocationRequest &request)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	return request.getMemoryModeCapacity() == REQUEST_REMAINING_CAPACITY;
+	return request.isMemoryRemaining();
 }
 
 void core::memory_allocator::LayoutStepMemory::execute(const MemoryAllocationRequest& request,
@@ -131,7 +131,7 @@ NVM_UINT64 core::memory_allocator::LayoutStepMemory::getAlignedDimmBytes(
 
 	NVM_UINT64 alignedTotalMemoryBytes = totalMemoryBytes;
 	// Memory Mode layout is last step
-	if (request.getMemoryModeCapacity() == REQUEST_REMAINING_CAPACITY)
+	if (request.isMemoryRemaining())
 	{
 		if (request.getNumberOfAppDirectExtents() > 0)
 		{
