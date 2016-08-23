@@ -647,8 +647,9 @@ int fill_device_config_status(const NVM_NFIT_DEVICE_HANDLE device_handle,
 			struct current_config_table *p_current_config = cast_current_config(p_cfg_data);
 			if (!p_current_config)
 			{
-				COMMON_LOG_ERROR("Failed to find current config table in platform config data");
-				rc = NVM_ERR_BADDEVICECONFIG;
+				COMMON_LOG_WARN("Failed to find current config table in platform config data. "
+					"Setting is_new to true");
+				p_status->is_new = 1;
 			}
 			else
 			{

@@ -740,16 +740,15 @@ int get_hw_dimm_platform_config_alloc(const unsigned int handle, NVM_SIZE *p_pcd
 		{
 			rc = NVM_ERR_NOMEMORY;
 		}
-
-		// validate the returned data
-		if (rc == NVM_SUCCESS)
-		{
-			rc = check_platform_config(*pp_config);
-		}
-		else
-		{
-			free(*pp_config);
-		}
+	}
+	// validate the returned data
+	if (rc == NVM_SUCCESS)
+	{
+		rc = check_platform_config(*pp_config);
+	}
+	else
+	{
+		free(*pp_config);
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
