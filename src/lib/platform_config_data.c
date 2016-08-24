@@ -980,7 +980,7 @@ int write_dimm_config(const struct device_discovery *p_discovery,
 			}
 
 			// DIMM capacity to GiB
-			NVM_UINT64 dimm_size_gb = (p_discovery->capacity / BYTES_PER_GB);
+			NVM_UINT64 dimm_size_gb = (p_discovery->capacity / BYTES_PER_GIB);
 
 			// convert interleave format structs to number
 			NVM_UINT32 p1_format = 0;

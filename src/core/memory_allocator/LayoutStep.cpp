@@ -69,7 +69,7 @@ NVM_UINT64 core::memory_allocator::LayoutStep::getDimmUnallocatedBytes(
 	if (dimmGoal.memory_size)
 	{
 		remaining -= configGoalSizeToBytes(dimmGoal.memory_size);
-		round_down(remaining, BYTES_PER_GB); // memory partition eats metadata
+		round_down(remaining, BYTES_PER_GIB); // memory partition eats metadata
 	}
 	if (dimmGoal.app_direct_count >= 2)
 	{
@@ -113,11 +113,11 @@ NVM_UINT64 core::memory_allocator::LayoutStep::getLargestPerDimmSymmetricalBytes
 	}
 
 	// has to be 1 GiB aligned
-	if (bytes < BYTES_PER_GB)
+	if (bytes < BYTES_PER_GIB)
 	{
 		throw core::NvmExceptionBadRequestSize();
 	}
-	bytes = round_down(bytes, BYTES_PER_GB);
+	bytes = round_down(bytes, BYTES_PER_GIB);
 	return bytes;
 }
 
@@ -150,5 +150,5 @@ NVM_UINT64 core::memory_allocator::LayoutStep::getDimmUnallocatedGiBAlignedBytes
 
 	NVM_UINT64 dimmRemainingBytes = getDimmUnallocatedBytes(dimmCapacity, dimmGoal);
 
-	return round_down(dimmRemainingBytes, BYTES_PER_GB);
+	return round_down(dimmRemainingBytes, BYTES_PER_GIB);
 }

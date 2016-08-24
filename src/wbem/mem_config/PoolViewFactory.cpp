@@ -519,15 +519,6 @@ std::string wbem::mem_config::PoolViewFactory::poolHealthToStr(
 	return healthStr;
 }
 
-/*
- * convert bytes to MB and append MB suffix string
- */
-std::string wbem::mem_config::PoolViewFactory::getMbString(const NVM_UINT64 bytes)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	return getString(bytes / BYTES_PER_MB) + wbem::MB_SUFFIX;
-}
-
 std::string wbem::mem_config::PoolViewFactory::getInterleaveSetFormatStr(
 	const struct interleave_format &format)
 {

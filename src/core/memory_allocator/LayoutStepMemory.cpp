@@ -127,7 +127,7 @@ NVM_UINT64 core::memory_allocator::LayoutStepMemory::getAlignedDimmBytes(
 
 	NVM_UINT64 existingMemoryBytes = bytesToConfigGoalSize(layout.goals[dimm.uid].memory_size);
 	NVM_UINT64 totalMemoryBytes = getTotalMemoryBytes(requestedBytes, existingMemoryBytes);
-	NVM_UINT64 dimmBytes = round_down(dimm.capacity, BYTES_PER_GB);
+	NVM_UINT64 dimmBytes = round_down(dimm.capacity, BYTES_PER_GIB);
 
 	NVM_UINT64 alignedTotalMemoryBytes = totalMemoryBytes;
 	// Memory Mode layout is last step
@@ -152,7 +152,7 @@ NVM_UINT64 core::memory_allocator::LayoutStepMemory::getAlignedDimmBytes(
 		throw core::NvmExceptionBadRequestSize();
 	}
 	NVM_UINT64 alignedBytes = alignedTotalMemoryBytes - existingMemoryBytes;
-	if (alignedBytes < BYTES_PER_GB)
+	if (alignedBytes < BYTES_PER_GIB)
 	{
 		throw core::NvmExceptionBadRequestSize();
 	}
@@ -165,12 +165,12 @@ NVM_UINT64 core::memory_allocator::LayoutStepMemory::getTotalMemoryBytes(
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	NVM_UINT64 bytes = 0;
-	if (requestedBytes < BYTES_PER_GB)
+	if (requestedBytes < BYTES_PER_GIB)
 	{
 		throw core::NvmExceptionBadRequestSize();
 	}
 	NVM_UINT64 totalMemoryBytes = existingBytes + requestedBytes;
-	bytes = round_down(totalMemoryBytes, BYTES_PER_GB); // always 1 GiB aligned
+	bytes = round_down(totalMemoryBytes, BYTES_PER_GIB); // always 1 GiB aligned
 	return bytes;
 }
 
@@ -184,14 +184,14 @@ NVM_UINT64 core::memory_allocator::LayoutStepMemory::roundDownMemoryToPMAlignmen
 	NVM_UINT64 pmAlignedBytes = pmBytes;
 	if (pmBytes > 0)
 	{
-		pmAlignedBytes = round_up(pmBytes, PM_ALIGNMENT_GIB * BYTES_PER_GB);
+		pmAlignedBytes = round_up(pmBytes, PM_ALIGNMENT_GIB * BYTES_PER_GIB);
 		if (pmAlignedBytes > dimmBytes)
 		{
 			throw core::NvmExceptionBadRequestSize();
 		}
 	}
 	NVM_UINT64 alignedMemoryBytes = dimmBytes - pmAlignedBytes;
-	if (alignedMemoryBytes < BYTES_PER_GB)
+	if (alignedMemoryBytes < BYTES_PER_GIB)
 	{
 		throw core::NvmExceptionBadRequestSize();
 	}
@@ -208,7 +208,7 @@ NVM_UINT64 core::memory_allocator::LayoutStepMemory::roundUpMemoryToPMAlignment(
 	NVM_UINT64 pmAlignedBytes = pmBytes;
 	if (pmBytes > 0)
 	{
-		pmAlignedBytes = round_down(pmBytes, PM_ALIGNMENT_GIB * BYTES_PER_GB);
+		pmAlignedBytes = round_down(pmBytes, PM_ALIGNMENT_GIB * BYTES_PER_GIB);
 		if (pmAlignedBytes == 0)
 		{
 			throw core::NvmExceptionBadRequestSize();
@@ -234,7 +234,7 @@ NVM_UINT64 core::memory_allocator::LayoutStepMemory::roundMemoryToNearestPMAlign
 	{
 		roundedUpBytes = roundUpMemoryToPMAlignment(dimm, layout, memoryBytes, dimmBytes);
 		roundedUpDiff = roundedUpBytes - memoryBytes;
-		if (roundedUpDiff < BYTES_PER_GB || roundedUpBytes > dimmBytes)
+		if (roundedUpDiff < BYTES_PER_GIB || roundedUpBytes > dimmBytes)
 		{
 			canRoundUp = false;
 		}
@@ -248,7 +248,7 @@ NVM_UINT64 core::memory_allocator::LayoutStepMemory::roundMemoryToNearestPMAlign
 	{
 		roundedDownBytes = roundDownMemoryToPMAlignment(dimm, layout, memoryBytes, dimmBytes);
 		roundedDownDiff = memoryBytes - roundedDownBytes;
-		if (roundedDownDiff < BYTES_PER_GB || roundedDownBytes > dimmBytes)
+		if (roundedDownDiff < BYTES_PER_GIB || roundedDownBytes > dimmBytes)
 		{
 			canRoundUp = false;
 		}

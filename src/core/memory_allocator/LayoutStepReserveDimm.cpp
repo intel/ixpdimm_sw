@@ -66,7 +66,7 @@ void core::memory_allocator::LayoutStepReserveDimm::execute(const MemoryAllocati
 void core::memory_allocator::LayoutStepReserveDimm::setReserveDimmForStorage(const struct Dimm &reserveDimm,
 		MemoryAllocationLayout& layout)
 {
-	layout.storageCapacity += reserveDimm.capacity / BYTES_PER_GB;
+	layout.storageCapacity += reserveDimm.capacity / BYTES_PER_GIB;
 	layout.goals[reserveDimm.uid].memory_size = 0;
 	layout.goals[reserveDimm.uid].app_direct_count = 0;
 	layout.reservedimmUid = reserveDimm.uid;

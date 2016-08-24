@@ -126,11 +126,6 @@ namespace wbem
 			 */
 			NVM_UINT32 countNamespaces(const struct pool *pPool, namespace_type const type);
 
-			/*
-			 * Helper function to get a MB string from bytes.
-			 */
-			std::string getMbString(const NVM_UINT64 bytes);
-
 			std::string getString(const NVM_UINT64 value);
 
 			/*

@@ -89,7 +89,7 @@ public:
 	 * Get the size
 	 */
 	NVM_UINT64 getSizeGiB() const { return m_size; }
-	NVM_UINT64 getSizeMiB() const { return GB_TO_MB(m_size); }
+	NVM_UINT64 getSizeMiB() const { return GIB_TO_MIB(m_size); }
 
 	/*
 	 * Did the user supply a size

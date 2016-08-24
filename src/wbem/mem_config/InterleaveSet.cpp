@@ -114,7 +114,7 @@ wbem::mem_config::InterleaveSet::InterleaveSet(const struct config_goal *goal, c
 	if (setNum == 1)
 	{
 		m_setIndex = goal->app_direct_1_set_id;
-		m_size = goal->app_direct_1_size * BYTES_PER_GB;
+		m_size = goal->app_direct_1_size * BYTES_PER_GIB;
 		m_replication = goal->app_direct_1_settings.mirrored ?
 				MEMORYALLOCATIONSETTINGS_REPLICATION_LOCAL : MEMORYALLOCATIONSETTINGS_REPLICATION_NONE;
 		m_channelCount = goal->app_direct_1_settings.interleave.ways;
@@ -128,7 +128,7 @@ wbem::mem_config::InterleaveSet::InterleaveSet(const struct config_goal *goal, c
 	else
 	{
 		m_setIndex = goal->app_direct_2_set_id;
-		m_size = goal->app_direct_2_size * BYTES_PER_GB;
+		m_size = goal->app_direct_2_size * BYTES_PER_GIB;
 		m_replication = goal->app_direct_2_settings.mirrored ?
 				MEMORYALLOCATIONSETTINGS_REPLICATION_LOCAL : MEMORYALLOCATIONSETTINGS_REPLICATION_NONE;
 		m_channelInterleaveSize = getExponentFromInterleaveSize(goal->app_direct_2_settings.interleave.channel);

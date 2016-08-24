@@ -95,10 +95,17 @@ const size_t MAX_EVENTS = 50;
 
 static const std::string PREFERENCE_DIMMID_HANDLE = "HANDLE";
 static const std::string PREFERENCE_DIMMID_UID = "UID";
+
 static const std::string PREFERENCE_SIZE_AUTO = "AUTO";
+static const std::string PREFERENCE_SIZE_AUTO_10 = "AUTO_10";
 static const std::string PREFERENCE_SIZE_B = "B";
 static const std::string PREFERENCE_SIZE_MIB = "MiB"; // Mebibytes
+static const std::string PREFERENCE_SIZE_MB = "MB"; // Megabytes
 static const std::string PREFERENCE_SIZE_GIB = "GiB"; // Gibibytes
+static const std::string PREFERENCE_SIZE_GB = "GB"; // Gigabytes
+static const std::string PREFERENCE_SIZE_TIB = "TiB"; // Tebibytes
+static const std::string PREFERENCE_SIZE_TB = "TB"; // Terabytes
+
 static const std::string PREFERENCE_ENABLED = "1";
 static const std::string PREFERENCE_DISABLED = "0";
 

@@ -171,7 +171,7 @@ int apply_driver_capabilities(struct nvm_capabilities *p_capabilities)
 	else
 	{
 		p_capabilities->sw_capabilities.min_namespace_size =
-						(driver_caps.min_namespace_size < BYTES_PER_GB) ? BYTES_PER_GB :
+						(driver_caps.min_namespace_size < BYTES_PER_GIB) ? BYTES_PER_GIB :
 								driver_caps.min_namespace_size;
 		NVM_UINT32 num_block_sizes = driver_caps.num_block_sizes;
 		if (num_block_sizes > NVM_MAX_BLOCK_SIZES)

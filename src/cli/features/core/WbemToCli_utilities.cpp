@@ -987,19 +987,43 @@ bool cli::nvmcli::isStringValidNumber(const std::string &value)
 	return result;
 }
 
-void cli::nvmcli::findBestCapacityFormat(NVM_UINT64 capacityInBytes, char *capacity_format)
+void cli::nvmcli::findBestCapacityFormatInBinaryMultiples(NVM_UINT64 capacityInBytes, std::string &units)
 {
-	if (capacityInBytes/BYTES_PER_GB != 0)
+	if (capacityInBytes/BYTES_PER_TIB != 0)
 	{
-		s_strcpy(capacity_format, PREFERENCE_SIZE_GIB.c_str(), CONFIG_VALUE_LEN);
+		units = PREFERENCE_SIZE_TIB;
 	}
-	else if  (capacityInBytes/BYTES_PER_MB != 0)
+	else if (capacityInBytes/BYTES_PER_GIB != 0)
 	{
-		s_strcpy(capacity_format, PREFERENCE_SIZE_MIB.c_str(), CONFIG_VALUE_LEN);
+		units = PREFERENCE_SIZE_GIB;
+	}
+	else if  (capacityInBytes/BYTES_PER_MIB != 0)
+	{
+		units = PREFERENCE_SIZE_MIB;
 	}
 	else
 	{
-		s_strcpy(capacity_format, PREFERENCE_SIZE_B.c_str(), CONFIG_VALUE_LEN);
+		units = PREFERENCE_SIZE_B;
+	}
+}
+
+void cli::nvmcli::findBestCapacityFormatInDecimalMultiples(NVM_UINT64 capacityInBytes, std::string &units)
+{
+	if (capacityInBytes/BYTES_PER_TB != 0)
+	{
+		units = PREFERENCE_SIZE_TB;
+	}
+	else if (capacityInBytes/BYTES_PER_GB != 0)
+	{
+		units = PREFERENCE_SIZE_GB;
+	}
+	else if  (capacityInBytes/BYTES_PER_MB != 0)
+	{
+		units = PREFERENCE_SIZE_MB;
+	}
+	else
+	{
+		units = PREFERENCE_SIZE_B;
 	}
 }
 
@@ -1089,73 +1113,106 @@ NVM_UINT64 cli::nvmcli::calculateBlockCountForNamespace(const NVM_REAL32 capacit
 	return blockCount;
 }
 
-// Note: desired capacity units requested via CLI command is preferred over capacity units
-// from configuration setting SQL_KEY_CLI_SIZE
-std::string cli::nvmcli::convertCapacityFormat(NVM_UINT64 capacityInBytes,
-	const std::string capacityUnits, const NVM_UINT64 blockCount, const NVM_UINT64 blockSize)
+std::string cli::nvmcli::translateCapacityToRequestedUnits(NVM_UINT64 capacityInBytes, std::string units)
 {
-	char capacity_format[CONFIG_VALUE_LEN] = "";
-	std::stringstream capacityInRequestedFormatStr;
-	NVM_REAL32 capacityInRequestedFormat = 1;
+	std::stringstream capacityStringInRequestedUnits;
+	NVM_REAL32 capacityInRequestedUnits = 1;
 
-	try
+	if (framework::stringsIEqual(units, PREFERENCE_SIZE_B))
 	{
-		if (framework::stringsIEqual(capacityUnits, PREFERENCE_SIZE_GIB))
-		{
-			s_strcpy(capacity_format, PREFERENCE_SIZE_GIB.c_str(), CONFIG_VALUE_LEN);
-		}
-		else
-		{
-			int rc = get_config_value(SQL_KEY_CLI_SIZE, capacity_format);
-			if (rc != NVM_SUCCESS)
-			{
-				COMMON_LOG_DEBUG_F("Failed to retrieve key %s. ", SQL_KEY_CLI_SIZE);
-				s_strcpy(capacity_format, PREFERENCE_SIZE_GIB.c_str(), CONFIG_VALUE_LEN);
-			}
-		}
-
-		// find the best format for each capacity
-		if (framework::stringsIEqual(capacity_format, PREFERENCE_SIZE_AUTO))
-		{
-			findBestCapacityFormat(capacityInBytes, capacity_format);
-		}
-
-		if (framework::stringsIEqual(capacity_format, PREFERENCE_SIZE_B))
-		{
-			capacityInRequestedFormatStr << capacityInBytes << " " << PREFERENCE_SIZE_B;
-		}
-		else if (framework::stringsIEqual(capacity_format, PREFERENCE_SIZE_GIB))
-		{
-			capacityInRequestedFormat = round((NVM_REAL32)capacityInBytes / BYTES_PER_GB, 1);
-			capacityInRequestedFormatStr << capacityInRequestedFormat << " " << PREFERENCE_SIZE_GIB;
-		}
-		else if (framework::stringsIEqual(capacity_format, PREFERENCE_SIZE_MIB))
-		{
-			capacityInRequestedFormat = round((NVM_REAL32)capacityInBytes / BYTES_PER_MB, 1);
-			capacityInRequestedFormatStr << capacityInRequestedFormat << " " << PREFERENCE_SIZE_MIB;
-		}
-		else
-		{
-			COMMON_LOG_ERROR_F("Invalid capacity format %s. ", capacity_format);
-			throw wbem::framework::Exception();
-		}
+		capacityStringInRequestedUnits << capacityInBytes << " " << PREFERENCE_SIZE_B;
 	}
-	catch (wbem::framework::Exception &)
+	else if (framework::stringsIEqual(units, PREFERENCE_SIZE_MIB))
 	{
-		capacityInRequestedFormat = round((NVM_REAL32)capacityInBytes / BYTES_PER_MB, 1);
-		capacityInRequestedFormatStr << capacityInRequestedFormat << " " << PREFERENCE_SIZE_MIB;
+		capacityInRequestedUnits = round((NVM_REAL32)capacityInBytes / BYTES_PER_MIB, 1);
+		capacityStringInRequestedUnits << capacityInRequestedUnits << " " << PREFERENCE_SIZE_MIB;
+	}
+	else if (framework::stringsIEqual(units, PREFERENCE_SIZE_GIB))
+	{
+		capacityInRequestedUnits = round((NVM_REAL32)capacityInBytes / BYTES_PER_GIB, 1);
+		capacityStringInRequestedUnits << capacityInRequestedUnits << " " << PREFERENCE_SIZE_GIB;
+	}
+	else if (framework::stringsIEqual(units, PREFERENCE_SIZE_TIB))
+	{
+		capacityInRequestedUnits = round((NVM_REAL32)capacityInBytes / BYTES_PER_TIB, 1);
+		capacityStringInRequestedUnits << capacityInRequestedUnits << " " << PREFERENCE_SIZE_TIB;
+	}
+	else if (framework::stringsIEqual(units, PREFERENCE_SIZE_MB))
+	{
+		capacityInRequestedUnits = round((NVM_REAL32)capacityInBytes / BYTES_PER_MB, 1);
+		capacityStringInRequestedUnits << capacityInRequestedUnits << " " << PREFERENCE_SIZE_MB;
+	}
+	else if (framework::stringsIEqual(units, PREFERENCE_SIZE_GB))
+	{
+		capacityInRequestedUnits = round((NVM_REAL32)capacityInBytes / BYTES_PER_GB, 1);
+		capacityStringInRequestedUnits << capacityInRequestedUnits << " " << PREFERENCE_SIZE_GB;
+	}
+	else if (framework::stringsIEqual(units, PREFERENCE_SIZE_TB))
+	{
+		capacityInRequestedUnits = round((NVM_REAL32)capacityInBytes / BYTES_PER_TB, 1);
+		capacityStringInRequestedUnits << capacityInRequestedUnits << " " << PREFERENCE_SIZE_TB;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Invalid capacity format %s. ", units.c_str());
+		throw wbem::framework::Exception();
 	}
 
 	// return capacity in bytes if the value in requested format cannot be rounded off
 	if ((capacityInBytes !=0) &&
-			(capacityInRequestedFormat == 0))
+		(capacityInRequestedUnits == 0))
 	{
-		capacityInRequestedFormatStr.str("");
-		capacityInRequestedFormatStr.clear();
-		capacityInRequestedFormatStr << capacityInBytes << " " << PREFERENCE_SIZE_B;
+		capacityStringInRequestedUnits.str("");
+		capacityStringInRequestedUnits.clear();
+		capacityStringInRequestedUnits << capacityInBytes << " " << PREFERENCE_SIZE_B;
 	}
 
-	return capacityInRequestedFormatStr.str();
+	return capacityStringInRequestedUnits.str();
+}
+
+// Note: desired capacity units requested via CLI command is preferred over capacity units
+// from configuration setting SQL_KEY_CLI_SIZE
+std::string cli::nvmcli::convertCapacityFormat(NVM_UINT64 capacityInBytes, std::string capacityUnits)
+{
+	std::string capacityStringInRequestedUnits;
+
+	try
+	{
+		if(capacityUnits.empty())
+		{
+			char cap[CONFIG_VALUE_LEN] = "";
+			int rc = get_config_value(SQL_KEY_CLI_SIZE, cap);
+			if (rc != NVM_SUCCESS)
+			{
+				COMMON_LOG_DEBUG_F("Failed to retrieve key %s. ", SQL_KEY_CLI_SIZE);
+				capacityUnits = PREFERENCE_SIZE_GIB;
+			}
+			else
+			{
+				capacityUnits = std::string(cap);
+			}
+		}
+
+		// translate AUTO and AUTO_10 to real capacity units
+		if (framework::stringsIEqual(capacityUnits, PREFERENCE_SIZE_AUTO))
+		{
+			findBestCapacityFormatInBinaryMultiples(capacityInBytes, capacityUnits);
+		}
+		else if (framework::stringsIEqual(capacityUnits, PREFERENCE_SIZE_AUTO_10))
+		{
+			findBestCapacityFormatInDecimalMultiples(capacityInBytes, capacityUnits);
+		}
+
+		capacityStringInRequestedUnits = translateCapacityToRequestedUnits(capacityInBytes, capacityUnits);
+	}
+	catch (wbem::framework::Exception &)
+	{
+		std::stringstream cap;
+		cap << round((NVM_REAL32)capacityInBytes / BYTES_PER_MIB, 1) << " " << PREFERENCE_SIZE_MIB;
+		capacityStringInRequestedUnits = cap.str();
+	}
+
+	return capacityStringInRequestedUnits;
 }
 
 void cli::nvmcli::convertCapacityAttributeToGB(wbem::framework::Instance &wbemInstance,
@@ -1221,7 +1278,6 @@ void cli::nvmcli::RemoveAttributeName(wbem::framework::attribute_names_t &attrib
 	{
 		attributes.erase(found);
 	}
-
 }
 
 void ::cli::nvmcli::generateFilterForAttributeWithTargetValues(

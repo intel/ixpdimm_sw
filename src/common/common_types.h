@@ -64,44 +64,64 @@ extern "C"
 #define	CONFIG_FILE	"apss.dat"
 
 /*!
- * Bytes per kilobyte for size conversions.
+ * Bytes per kibibyte for size conversions.
  */
-#define	BYTES_PER_KB	1024
+#define	BYTES_PER_KIB	1024
 
 /*!
  * Bytes per mebibyte for size conversions.
  */
-#define	BYTES_PER_MB	(COMMON_UINT64)(1 << 20) // 1024^2
+#define	BYTES_PER_MIB	(COMMON_UINT64)(1 << 20) // 1024^2
 
 /*!
  * Bytes per gibibyte for size conversions.
  */
-#define	BYTES_PER_GB	(1024 * BYTES_PER_MB)
+#define	BYTES_PER_GIB	(BYTES_PER_MIB * BYTES_PER_KIB) // 1024^3
+
+/*!
+ * Bytes per tebibyte for size conversions.
+ */
+#define	BYTES_PER_TIB	(BYTES_PER_GIB * BYTES_PER_KIB) // 1024^4
+
+/*!
+ * Bytes per kilobyte for size conversions.
+ */
+#define	BYTES_PER_KB	1000
+
+/*!
+ * Bytes per megabyte for size conversions.
+ */
+#define	BYTES_PER_MB	(COMMON_UINT64)(BYTES_PER_KB * BYTES_PER_KB) // 1000^2
+
+/*!
+ * Bytes per gigabyte for size conversions.
+ */
+#define	BYTES_PER_GB	(BYTES_PER_MB * BYTES_PER_KB) // 1000^3
+
+/*!
+ * Bytes per terabyte for size conversions.
+ */
+#define	BYTES_PER_TB	(BYTES_PER_GB * BYTES_PER_KB) // 1000^4
 
 /*!
  * Convert MiB to GiB
  */
-#define MB_TO_GB(x)		(x / 1024)
+#define MIB_TO_GIB(x)		(x / BYTES_PER_KIB)
 
 /*!
  * Convert GiB to MiB
  */
-#define GB_TO_MB(x)		(x * 1024)
+#define GIB_TO_MIB(x)		(x * BYTES_PER_KIB)
 
 /*!
  * Bytes per 4K chunk, for size conversions.
  */
-#define	BYTES_PER_4K_CHUNK	4096llu
-
-/*
- * Maximum number of MiB that can be converted to bytes in a UINT64
- */
-#define	MAX_UINT64_MB	((0xFFFFFFFFFFFFFFFFllu - 1) >> 20)
+#define	BYTES_PER_4K_CHUNK	(BYTES_PER_KIB * 4llu)
 
 /*
  * Maximum number of GiB that can be converted to bytes in a UINT64
  */
-#define	MAX_UINT64_GB	((0xFFFFFFFFFFFFFFFFllu - 1) >> 30)
+#define	MAX_UINT64_GIB	((0xFFFFFFFFFFFFFFFFllu - 1) >> 30)
 
 /*!
  * Helper macro.
@@ -132,11 +152,6 @@ extern "C"
 #define	COMMON_VALUE_LEN	1024
 
 /*!
- * @a ???
- */
-#define	COMMON_STRINGREPLACE_SIZE 2048
-
-/*!
  * Number of characters allowed allocated for revision string.
  */
 #define	COMMON_REVISION_LEN	25
@@ -165,8 +180,6 @@ extern "C"
  * Key name for unit tests to simulate unsupported DIMMs
  */
 #define	COMMON_TEST_NOTSUPPORTED	"TEST_NOTSUPPORTED"
-
-
 
 /*!
  * 8-bit Signed Integer.
@@ -378,7 +391,6 @@ enum logging_level_t
  */
 #define	KEEP_SUCCESS(rc, rc_new)	rc = (rc >= COMMON_SUCCESS) ? rc : rc_new;
 
-
 /*
  * *******************************************************************************************
  * 	Utility functions
@@ -402,7 +414,6 @@ static inline int cmp_bytes(const unsigned char *bytes1,
 
 	return 1;
 };
-
 
 static inline unsigned char bcd_byte_to_dec(unsigned char num)
 {

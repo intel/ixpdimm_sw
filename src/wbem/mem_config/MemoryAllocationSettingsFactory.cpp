@@ -340,7 +340,7 @@ NVM_UINT64 wbem::mem_config::MemoryAllocationSettingsFactory::getMemoryReservati
 
 			if (rc == NVM_SUCCESS)
 			{
-				reservation += goal.memory_size * BYTES_PER_GB;
+				reservation += goal.memory_size * BYTES_PER_GIB;
 			}
 			else if (rc != NVM_ERR_NOTFOUND)
 			{

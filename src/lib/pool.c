@@ -653,7 +653,7 @@ int nvm_dump_config(const NVM_UID device_uid,
 					// default memory size to the current in case there
 					// is no partition size change table
 					goal.memory_size =
-							(p_current_config->mapped_memory_capacity / BYTES_PER_GB);
+							(p_current_config->mapped_memory_capacity / BYTES_PER_GIB);
 					rc = config_input_table_to_config_goal(device_uid,
 							(unsigned char *)p_current_config, sizeof (struct current_config_table),
 							p_current_config->header.length, &goal);
@@ -980,7 +980,7 @@ int nvm_load_config(const NVM_UID device_uid,
 								== NVM_SUCCESS)
 						{
 							// make sure dimm is big enough for config
-							if ((discovery.capacity / BYTES_PER_GB) >= dimm_size_gb)
+							if ((discovery.capacity / BYTES_PER_GIB) >= dimm_size_gb)
 							{
 								// set App Direct count
 								if (goal.app_direct_1_size)

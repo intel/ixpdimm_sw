@@ -74,9 +74,9 @@ extern "C"
 	serial_number[0]
 
 /*
- * Get GB aligned usable capacity from overall DIMM capacity
+ * Get GiB aligned usable capacity from overall DIMM capacity
  */
-#define	RESERVED_CAPACITY_BYTES(cap)	(NVM_UINT64)(cap % BYTES_PER_GB)
+#define	RESERVED_CAPACITY_BYTES(cap)	(NVM_UINT64)(cap % BYTES_PER_GIB)
 #define	USABLE_CAPACITY_BYTES(cap)	(NVM_UINT64)(cap - RESERVED_CAPACITY_BYTES(cap))
 
 /*
@@ -529,13 +529,13 @@ static inline NVM_BOOL blockSizeIsPI(COMMON_UINT64 blockSize)
 
 static inline NVM_UINT64 bytesToConfigGoalSize(NVM_UINT64 bytes)
 {
-	NVM_UINT64 size = bytes / BYTES_PER_GB;
+	NVM_UINT64 size = bytes / BYTES_PER_GIB;
 	return size;
 }
 
 static inline NVM_UINT64 configGoalSizeToBytes(NVM_UINT64 size)
 {
-	NVM_UINT64 bytes = size * BYTES_PER_GB;
+	NVM_UINT64 bytes = size * BYTES_PER_GIB;
 	return bytes;
 }
 

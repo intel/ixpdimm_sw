@@ -265,7 +265,7 @@ void check_for_namespaces_smaller_than_containing_interleave_set(NVM_UINT32 *p_r
 				{
 					NVM_EVENT_ARG difference_mb_str;
 					s_snprintf(difference_mb_str, sizeof (difference_mb_str),
-							"%llu MB", difference_bytes / BYTES_PER_MB);
+							"%llu MB", difference_bytes / BYTES_PER_MIB);
 
 					store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG,
 							EVENT_SEVERITY_INFO,

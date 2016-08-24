@@ -262,7 +262,7 @@ NVM_UINT64 MemoryAllocationRequest::getRequestedMappedCapacityInBytes() const
 			mappedCapacityGiB += extent->capacity;
 		}
 
-		mappedCapacityBytes = mappedCapacityGiB * BYTES_PER_GB;
+		mappedCapacityBytes = mappedCapacityGiB * BYTES_PER_GIB;
 	}
 
 	return mappedCapacityBytes;

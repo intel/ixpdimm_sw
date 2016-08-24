@@ -246,8 +246,9 @@ std::string calculateAdvertisedCapacity(NVM_UINT64 capacityInBytes,
 NVM_UINT64 calculateBlockCountForNamespace(const NVM_REAL32 capacityInGB,
 	const NVM_UINT64 blockSize);
 
-std::string convertCapacityFormat(NVM_UINT64 capacityInBytes, const std::string capacityUnits = "",
-		const NVM_UINT64 blockCount = 0, const NVM_UINT64 blockSize = 0);
+std::string convertCapacityFormat(NVM_UINT64 capacityInBytes, std::string capacityUnits = "");
+
+std::string translateCapacityToRequestedUnits(NVM_UINT64 capacityInBytes, std::string units);
 
 void convertCapacityAttribute(wbem::framework::Instance &wbemInstance,
 	const std::string attributeName, const std::string capacityUnits = "");
@@ -255,7 +256,9 @@ void convertCapacityAttribute(wbem::framework::Instance &wbemInstance,
 void convertCapacityAttributeToGB(wbem::framework::Instance &wbemInstance,
 		const std::string attributeName);
 
-void findBestCapacityFormat(NVM_UINT64 capacityInBytes, char *capacity_format);
+void findBestCapacityFormatInBinaryMultiples(NVM_UINT64 capacityInBytes, std::string &units);
+
+void findBestCapacityFormatInDecimalMultiples(NVM_UINT64 capacityInBytes, std::string &units);
 
 std::string AttributeToString(const wbem::framework::Attribute &attr);
 

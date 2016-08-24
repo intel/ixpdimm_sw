@@ -380,7 +380,6 @@ struct namespace_details
 	uid_copy(nsUidStr.c_str(), nsUid);
 
 	struct namespace_details details;
-	memset(&details, 0, sizeof (details));
 	int rc = nvm_get_namespace_details(nsUid, &details);
 	if (rc < NVM_SUCCESS)
 	{
@@ -529,17 +528,25 @@ std::string wbem::pmem_config::NamespaceViewFactory::getUnderlyingPMType(const s
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	std::string pmTypeStr;
-
 	struct pool *pPool = NULL;
-	pPool = wbem::mem_config::PoolViewFactory::getPool(ns.pool_uid);
-	wbem::framework::STR_LIST poolTypeList =
-			wbem::mem_config::PoolViewFactory::getPersistentMemoryType(pPool);
 
-	for (std::vector<std::string>::const_iterator i = poolTypeList.begin(); i != poolTypeList.end(); ++i)
+	try
 	{
-		pmTypeStr += *i;
-		if (i+1 != poolTypeList.end())
-			pmTypeStr += ", ";
+		pPool = wbem::mem_config::PoolViewFactory::getPool(ns.pool_uid);
+		wbem::framework::STR_LIST poolTypeList =
+				wbem::mem_config::PoolViewFactory::getPersistentMemoryType(pPool);
+
+		for (std::vector<std::string>::const_iterator i = poolTypeList.begin(); i != poolTypeList.end(); ++i)
+		{
+			pmTypeStr += *i;
+			if (i+1 != poolTypeList.end())
+				pmTypeStr += ", ";
+		}
+	}
+	catch (framework::Exception &)
+	{
+		delete pPool;
+		throw;
 	}
 
 	return pmTypeStr;

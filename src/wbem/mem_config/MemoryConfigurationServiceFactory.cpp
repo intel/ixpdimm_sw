@@ -731,7 +731,7 @@ void wbem::mem_config::MemoryConfigurationServiceFactory::settingsStringsToReque
 		framework::attributes_t::iterator attrI = settingsAttrs.find(RESERVATION_KEY);
 		if (attrI != settingsAttrs.end())
 		{
-			reservationGiB = (attrI->second.uint64Value() / BYTES_PER_GB);
+			reservationGiB = (attrI->second.uint64Value() / BYTES_PER_GIB);
 		}
 
 		// ResourceType

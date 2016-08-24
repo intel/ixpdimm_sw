@@ -54,7 +54,7 @@ int validate_size_alignment(const NVM_UINT64 size_gb, const NVM_UINT64 alignment
 	if ((size_gb != (NVM_UINT64)-1) && (size_gb != 0))
 	{
 		// size not aligned
-		if ((size_gb * BYTES_PER_GB) % alignment_bytes)
+		if ((size_gb * BYTES_PER_GIB) % alignment_bytes)
 		{
 			rc = NVM_ERR_BADALIGNMENT;
 		}
@@ -127,7 +127,7 @@ NVM_UINT64 get_size_from_capacity(const NVM_UINT64 requested_gib, NVM_UINT64 rem
 	// Convert special size values
 	if (requested_gib == (NVM_UINT64)-1) // flag value - use all remaining capacity
 	{
-		size_gib = (remaining_bytes / BYTES_PER_GB);
+		size_gib = (remaining_bytes / BYTES_PER_GIB);
 
 		// Partition size in platform config data is capacity presented to user.
 		// For mirrored, this is half of actual capacity.
@@ -162,7 +162,7 @@ int validate_interleave_set_size(const NVM_UINT64 size_gb,
 	}
 
 	// too big to be stored in an NVM_UINT64
-	if (actual_size_gb > MAX_UINT64_GB)
+	if (actual_size_gb > MAX_UINT64_GIB)
 	{
 		COMMON_LOG_ERROR_F("Caller requested size in GiB %llu will overrun 64 bits",
 				actual_size_gb);
@@ -170,7 +170,7 @@ int validate_interleave_set_size(const NVM_UINT64 size_gb,
 	}
 	else
 	{
-		size = actual_size_gb * BYTES_PER_GB;
+		size = actual_size_gb * BYTES_PER_GIB;
 		if (size > remaining_capacity) // Won't fit
 		{
 			rc = NVM_ERR_BADSIZE;
@@ -393,7 +393,7 @@ void config_goal_to_partition_ext_table(const struct config_goal *p_goal,
 	else
 	{
 		pm_bytes = USABLE_CAPACITY_BYTES(p_discovery->capacity) -
-				(p_goal->memory_size * BYTES_PER_GB);
+				(p_goal->memory_size * BYTES_PER_GIB);
 	}
 
 	p_table->partition_size = pm_bytes;
@@ -447,8 +447,8 @@ int config_goal_to_interleave_ext_table(const struct app_direct_attributes *p_qo
 				}
 
 				// The DIMM is OK - put it in the list
-				p_dimms[i].size = interleave_set_size * BYTES_PER_GB;
-				p_dimms[i].offset = interleave_set_offset * BYTES_PER_GB;
+				p_dimms[i].size = interleave_set_size * BYTES_PER_GIB;
+				p_dimms[i].offset = interleave_set_offset * BYTES_PER_GIB;
 				memmove(p_dimms[i].serial_number, discovery.serial_number, NVM_SERIAL_LEN);
 				memmove(p_dimms[i].manufacturer, discovery.manufacturer, NVM_MANUFACTURER_LEN);
 				memmove(p_dimms[i].model_number, discovery.model_number, NVM_MODEL_LEN-1);
@@ -499,7 +499,7 @@ int config_goal_to_config_input(const NVM_UID device_uid,
 	NVM_UINT64 remaining_bytes = p_discovery->capacity;
 	if (p_goal->memory_size)
 	{
-		remaining_bytes -= (p_goal->memory_size * BYTES_PER_GB);
+		remaining_bytes -= (p_goal->memory_size * BYTES_PER_GIB);
 		// volatile eats GiB align
 		remaining_bytes -= RESERVED_CAPACITY_BYTES(p_discovery->capacity);
 	}
@@ -519,7 +519,7 @@ int config_goal_to_config_input(const NVM_UID device_uid,
 		{
 			p_ad1_interleave_table->memory_type = INTERLEAVE_MEMORY_TYPE_APP_DIRECT;
 			ext_table_length += p_ad1_interleave_table->header.length;
-			remaining_bytes -= (ad1_gib * BYTES_PER_GB);
+			remaining_bytes -= (ad1_gib * BYTES_PER_GIB);
 
 			// interleave - app direct
 			if (p_goal->app_direct_count > 1)
@@ -535,7 +535,7 @@ int config_goal_to_config_input(const NVM_UID device_uid,
 				{
 					p_ad2_interleave_table->memory_type = INTERLEAVE_MEMORY_TYPE_APP_DIRECT;
 					ext_table_length += p_ad2_interleave_table->header.length;
-					remaining_bytes -= (ad2_gib * BYTES_PER_GB);
+					remaining_bytes -= (ad2_gib * BYTES_PER_GIB);
 				}
 			}
 		}
@@ -874,10 +874,10 @@ int config_input_table_to_config_goal(const NVM_UID device_uid,
 			}
 
 			// report memory size GiB aligned
-			p_config_goal->memory_size = USABLE_CAPACITY_BYTES(discovery.capacity) / BYTES_PER_GB;
+			p_config_goal->memory_size = USABLE_CAPACITY_BYTES(discovery.capacity) / BYTES_PER_GIB;
 			if (p_partition->partition_size != 0)
 			{
-				p_config_goal->memory_size -= (p_partition->partition_size / BYTES_PER_GB);
+				p_config_goal->memory_size -= (p_partition->partition_size / BYTES_PER_GIB);
 			}
 
 		}
@@ -954,7 +954,7 @@ int config_input_table_to_config_goal(const NVM_UID device_uid,
 					// If this is the requested DIMM, get the size
 					if (uid_cmp(p_qos->dimms[i], device_uid))
 					{
-						*p_size = (p_dimm->size / BYTES_PER_GB);
+						*p_size = (p_dimm->size / BYTES_PER_GIB);
 					}
 					set_offset += sizeof (struct dimm_info_extension_table);
 				}

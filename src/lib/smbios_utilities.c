@@ -257,17 +257,17 @@ COMMON_UINT64 smbios_get_memory_device_size_in_bytes(
 	{
 		size_bytes = NVM_DETAILS_SIZE_UNKNOWN;
 	}
-	else if (p_smbios_dev->size == SMBIOS_SIZE_EXTENDED) // extended size - always MB
+	else if (p_smbios_dev->size == SMBIOS_SIZE_EXTENDED) // extended size - always MiB
 	{
 		COMMON_UINT32 size_mb = (p_smbios_dev->extended_size & SMBIOS_EXTENDED_SIZE_MASK);
-		size_bytes = (COMMON_UINT64)size_mb * BYTES_PER_MB;
+		size_bytes = (COMMON_UINT64)size_mb * BYTES_PER_MIB;
 	}
-	else // may be KB or MB
+	else // may be KiB or MiB
 	{
-		COMMON_UINT64 factor = BYTES_PER_MB;
+		COMMON_UINT64 factor = BYTES_PER_MIB;
 		if (p_smbios_dev->size & SMBIOS_SIZE_KB_GRANULARITY_MASK)
 		{
-			factor = BYTES_PER_KB;
+			factor = BYTES_PER_KIB;
 		}
 
 		COMMON_UINT16 size = (p_smbios_dev->size & SMBIOS_SIZE_MASK);

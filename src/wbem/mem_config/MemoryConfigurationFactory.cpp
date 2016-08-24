@@ -307,7 +307,7 @@ void wbem::mem_config::MemoryConfigurationFactory::configGoalToGoalInstance(
 	// MemorySize
 	if (containsAttribute(MEMORYSIZE_KEY, attributes))
 	{
-		NVM_UINT64 memorySizeBytes = goal.memory_size * BYTES_PER_GB;
+		NVM_UINT64 memorySizeBytes = goal.memory_size * BYTES_PER_GIB;
 		framework::Attribute a(memorySizeBytes, false);
 		pInstance->setAttribute(MEMORYSIZE_KEY, a, attributes);
 	}
@@ -319,7 +319,7 @@ void wbem::mem_config::MemoryConfigurationFactory::configGoalToGoalInstance(
 
 	if (goal.app_direct_count > 0)
 	{
-		interleaveSizes.push_back(goal.app_direct_1_size * BYTES_PER_GB);
+		interleaveSizes.push_back(goal.app_direct_1_size * BYTES_PER_GIB);
 		packageRedundancy.push_back(goal.app_direct_1_settings.mirrored);
 
 		NVM_UINT32 format1 = 0;
@@ -330,7 +330,7 @@ void wbem::mem_config::MemoryConfigurationFactory::configGoalToGoalInstance(
 
 	if (goal.app_direct_count > 1)
 	{
-		interleaveSizes.push_back(goal.app_direct_2_size * BYTES_PER_GB);
+		interleaveSizes.push_back(goal.app_direct_2_size * BYTES_PER_GIB);
 		packageRedundancy.push_back(goal.app_direct_2_settings.mirrored);
 
 		NVM_UINT32 format2 = 0;
@@ -756,27 +756,27 @@ NVM_UINT64 wbem::mem_config::MemoryConfigurationFactory::getDimmStorageCapacityF
 	(const struct device_discovery *pDiscovery, const struct config_goal &goal)
 {
 	NVM_UINT64 storageCapacity = USABLE_CAPACITY_BYTES(pDiscovery->capacity);
-	storageCapacity -= (goal.memory_size * BYTES_PER_GB);
+	storageCapacity -= (goal.memory_size * BYTES_PER_GIB);
 	if (goal.app_direct_count > 0)
 	{
 		if (goal.app_direct_1_settings.mirrored)
 		{
-			storageCapacity -= (goal.app_direct_1_size * BYTES_PER_GB * 2);
+			storageCapacity -= (goal.app_direct_1_size * BYTES_PER_GIB * 2);
 		}
 		else
 		{
-			storageCapacity -= (goal.app_direct_1_size * BYTES_PER_GB);
+			storageCapacity -= (goal.app_direct_1_size * BYTES_PER_GIB);
 		}
 	}
 	if (goal.app_direct_count > 1)
 	{
 		if (goal.app_direct_2_settings.mirrored)
 		{
-			storageCapacity -= (goal.app_direct_2_size * BYTES_PER_GB * 2);
+			storageCapacity -= (goal.app_direct_2_size * BYTES_PER_GIB * 2);
 		}
 		else
 		{
-			storageCapacity -= (goal.app_direct_2_size * BYTES_PER_GB);
+			storageCapacity -= (goal.app_direct_2_size * BYTES_PER_GIB);
 		}
 	}
 	return storageCapacity;

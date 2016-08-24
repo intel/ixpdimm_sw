@@ -252,21 +252,21 @@ void cli::nvmcli::FieldSupportFeature::getPaths(cli::framework::CommandSpecList 
 	changePreferences.addTarget(TARGET_PREFERENCES);
 	changePreferences.addProperty(SQL_KEY_CLI_DIMM_ID, false, "HANDLE|UID",
 			true, "The default display of " NVM_DIMM_NAME " identifiers.");
-	changePreferences.addProperty(SQL_KEY_CLI_SIZE, false, "Auto|B|MiB|GiB",
-			true, "The default display of capacities in the NVMCLI.");
+	changePreferences.addProperty(SQL_KEY_CLI_SIZE, false, "AUTO|AUTO_10|B|MiB|GiB|TiB|MB|GB|TB",
+			true, "The default display of capacities in the CLI.");
 	changePreferences.addProperty(SQL_KEY_PERFORMANCE_MONITOR_ENABLED, false, "0|1",
 			true, "Whether or not the monitor is periodically storing performance metrics "
 					"for the " NVM_DIMM_NAME "s in the host server.");
 	changePreferences.addProperty(SQL_KEY_PERFORMANCE_MONITOR_INTERVAL_MINUTES, false, "minutes",
 			true, "The interval in minutes that the monitor is "
 					"storing performance metrics (if enabled). "
-					"The default value is 180 minutes and must be > 0.");
+					"The default value is 180 minutes and must be >= 1.");
 	changePreferences.addProperty(SQL_KEY_EVENT_MONITOR_ENABLED, false, "0|1",
 			true, "Whether or not the monitor is periodically checking for " NVM_DIMM_NAME " events.");
 	changePreferences.addProperty(SQL_KEY_EVENT_MONITOR_INTERVAL_MINUTES, false, "minutes",
 			true, "The interval in minutes that the monitor is checking for "
 					"" NVM_DIMM_NAME " events (if enabled). "
-					"The default value is 1 minute and must be > 0.");
+					"The default value is 1 minute and must be >= 1.");
 	changePreferences.addProperty(SQL_KEY_EVENT_LOG_MAX, false, "count",
 			true, "The maximum number of events to keep in the management software. "
 					"The default value is 10000. The valid range is 0-100000.");
@@ -1703,11 +1703,16 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::changePreferences(
 			}
 			else if (framework::stringsIEqual(propIter->first, SQL_KEY_CLI_SIZE))
 			{
-				// Auto|B|MB|GB
+				// AUTO|AUTO_10|B|MiB|GiB|TiB|MB|GB|TB
 				if (!framework::stringsIEqual(propIter->second, PREFERENCE_SIZE_AUTO) &&
+					!framework::stringsIEqual(propIter->second, PREFERENCE_SIZE_AUTO_10) &&
 					!framework::stringsIEqual(propIter->second, PREFERENCE_SIZE_B) &&
 					!framework::stringsIEqual(propIter->second, PREFERENCE_SIZE_MIB) &&
-					!framework::stringsIEqual(propIter->second, PREFERENCE_SIZE_GIB))
+					!framework::stringsIEqual(propIter->second, PREFERENCE_SIZE_GIB) &&
+					!framework::stringsIEqual(propIter->second, PREFERENCE_SIZE_TIB) &&
+					!framework::stringsIEqual(propIter->second, PREFERENCE_SIZE_MB) &&
+					!framework::stringsIEqual(propIter->second, PREFERENCE_SIZE_GB) &&
+					!framework::stringsIEqual(propIter->second, PREFERENCE_SIZE_TB))
 				{
 					validValue = false;
 				}
