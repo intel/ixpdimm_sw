@@ -48,6 +48,7 @@
 #include "nvm_context.h"
 #include "system.h"
 #include <unistd.h>
+#include "utility.h"
 
 /*
  * Declare Internal Helper functions
@@ -620,4 +621,37 @@ int support_filter_data(const NVM_PATH support_file, NVM_UINT16 filter_mask)
 	}
 
 	return db_rc;
+}
+
+int nvm_set_user_preference(const NVM_PREFERENCE_KEY key,
+		const NVM_PREFERENCE_VALUE value)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	if (check_caller_permissions() != NVM_SUCCESS)
+	{
+		rc = NVM_ERR_INVALIDPERMISSIONS;
+	}
+	else if (key == NULL)
+	{
+		COMMON_LOG_ERROR("Invalid parameter, preference key is NULL");
+		rc = NVM_ERR_INVALIDPARAMETER;
+	}
+	else if (key == NULL)
+	{
+		COMMON_LOG_ERROR("Invalid parameter, preference value is NULL");
+		rc = NVM_ERR_INVALIDPARAMETER;
+	}
+	else
+	{
+		int tempRc = add_config_value(key, value);
+		if (tempRc != COMMON_SUCCESS)
+		{
+			rc = CommonErrorToLibError(tempRc);
+		}
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
 }

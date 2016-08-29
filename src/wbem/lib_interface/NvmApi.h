@@ -479,6 +479,11 @@ class NVM_API NvmApi
 		virtual void getManageableDimms(
 				std::vector<struct device_discovery>& manageableDevices) const;
 
+		/*
+		 * set the user preference
+		 */
+		virtual void setUserPreference(const NVM_PREFERENCE_KEY key, const NVM_PREFERENCE_VALUE value);
+
 	protected:
 		NvmApi();
 

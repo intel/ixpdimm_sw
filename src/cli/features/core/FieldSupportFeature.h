@@ -69,6 +69,8 @@ static const std::string SETFWRESULT_MSG = N_TR(
 		"Set FW log level to %d on " NVM_DIMM_NAME " %s"); //!< FW log level set message
 static const std::string RUNDIAGNOSTIC_MSG = N_TR(
 		"Run diagnostic"); //!< run diagnostic success message
+static const std::string CHANGEAPPDIRECTSETTINGS_ERROR_MSG = N_TR(
+		"Error: App Direct settings apply system-wide and capacity already exists."); //!< Unable to change app direct settings message
 
 // count and order should match wbem layer
 static const int NUMDIAGTESTTYPES = 5;
@@ -108,6 +110,7 @@ static const std::string PREFERENCE_SIZE_TB = "TB"; // Terabytes
 
 static const std::string PREFERENCE_ENABLED = "1";
 static const std::string PREFERENCE_DISABLED = "0";
+static const std::string PREFERENCE_APPDIRECT_SETTING_DEFAULT = "RECOMMENDED";
 
 /*!
  * Implements the CR Field Support Commands.
@@ -308,6 +311,22 @@ private:
 	 * Change user preferences
 	 */
 	framework::ResultBase *changePreferences(const framework::ParsedCommand &parsedCommand);
+
+	/*!
+	 * Helper function to update user preferences in Db
+	 */
+	void updatePreferenceInDb(const char* propKey, const char* propValue,
+			framework::SimpleListResult *pListResult, std::string prefix);
+
+	/*
+	 * Helper function to check if value is valid app direct setting
+	 */
+	bool appDirectSettingIsValid(const framework::ParsedCommand &parsedCommand);
+
+	/*!
+	 * Check if there are existing appdirect capacities
+	 */
+	cli::framework::ErrorResult *checkAppdirectCapacities(bool &appDirectIsAvailable);
 
 	bool stringIsNumberInRange(const std::string &str, const int min, const int max);
 

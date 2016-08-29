@@ -2887,6 +2887,22 @@ extern NVM_API int nvm_run_diagnostic(const NVM_UID device_uid,
 		const struct diagnostic *p_diagnostic, NVM_UINT32 *p_results);
 
 /*
+ * Set the user preference config value in AEP DIMM software.
+ * @param[in] key
+ * 		The property key.
+ * @param[in] value
+ * 		The property value.
+ * @return Returns one of the following @link #return_code return_codes: @endlink @n
+ * 		#NVM_SUCCESS @n
+ * 		#NVM_ERR_NOTSUPPORTED @n
+ * 		#NVM_ERR_INVALIDPARAMETER @n
+ * 		#NVM_ERR_INVALIDPERMISSIONS @n
+ * 		#NVM_ERR_UNKNOWN @n
+ */
+extern NVM_API int nvm_set_user_preference(const NVM_PREFERENCE_KEY key,
+		const NVM_PREFERENCE_VALUE value);
+
+/*
  * logging.c
  */
 

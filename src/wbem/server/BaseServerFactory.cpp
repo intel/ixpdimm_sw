@@ -274,3 +274,21 @@ wbem::framework::UINT16_LIST wbem::server::BaseServerFactory::hostToOpStatus(boo
 
 	return opStatus;
 }
+
+/*
+ * Set user preference
+ */
+ void wbem::server::BaseServerFactory::setUserPreference(const char* key, const char* value)
+ 	 throw (wbem::framework::Exception)
+ {
+	 LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	 lib_interface::NvmApi *pApi = lib_interface::NvmApi::getApi();
+	 try
+	 {
+		 pApi->setUserPreference(key, value);
+	 }
+	 catch (wbem::framework::Exception &e)
+	 {
+		throw e;
+	 }
+ }

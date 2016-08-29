@@ -539,6 +539,43 @@ static inline NVM_UINT64 configGoalSizeToBytes(NVM_UINT64 size)
 	return bytes;
 }
 
+/*!
+ * Convert common error code to a Native API library return_code.
+ */
+static inline int CommonErrorToLibError(int commonError)
+{
+	int libError = NVM_ERR_UNKNOWN;
+
+	switch (commonError)
+	{
+		case COMMON_ERR_NOMEMORY:
+			libError = NVM_ERR_NOMEMORY;
+			break;
+		case COMMON_ERR_NOTSUPPORTED:
+			libError = NVM_ERR_NOTSUPPORTED;
+			break;
+		case COMMON_ERR_BADFILE:
+			libError = NVM_ERR_BADFILE;
+			break;
+		case COMMON_ERR_INVALIDPERMISSIONS:
+			libError = NVM_ERR_INVALIDPERMISSIONS;
+			break;
+		case COMMON_ERR_INVALIDPARAMETER:
+			libError = NVM_ERR_INVALIDPARAMETER;
+			break;
+		case COMMON_ERR_NOSIMULATOR:
+			libError = NVM_ERR_NOSIMULATOR;
+			break;
+		case COMMON_ERR_FAILED:
+		case COMMON_ERR_BADPATH:
+		case COMMON_ERR_NO_SERVICE:
+		case COMMON_ERR_SERVICE_RUNNING:
+		default:
+			break;
+	}
+	return libError;
+}
+
 #ifdef __cplusplus
 }
 #endif

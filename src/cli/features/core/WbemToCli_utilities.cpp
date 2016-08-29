@@ -716,7 +716,7 @@ cli::framework::ErrorResult *cli::nvmcli::NvmExceptionToResult(wbem::framework::
 		{
 			return new framework::ErrorResult(framework::ErrorResult::ERRORCODE_NOTSUPPORTED, NOTSUPPORTED_ERROR_STR, prefix);
 		}
-		if (libRc == NVM_ERR_CONFIGNOTSUPPORTED || libRc == NVM_ERR_SKUVIOLATION)
+		if (libRc == NVM_ERR_CONFIGNOTSUPPORTED || libRc == NVM_ERR_SKUVIOLATION || libRc == NVM_ERR_INVALIDPERMISSIONS)
 		{
 			return new framework::ErrorResult(framework::ErrorResult::ERRORCODE_NOTSUPPORTED, e.what(), prefix);
 		}

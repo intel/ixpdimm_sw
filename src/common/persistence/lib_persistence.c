@@ -475,6 +475,7 @@ int set_default_config_settings(PersistentStore *p_ps)
 		// CLI default device identifier output - HANDLE (or uid)
 		add_config_value_to_pstore(p_ps, SQL_KEY_CLI_DIMM_ID, "HANDLE");
 		add_config_value_to_pstore(p_ps, SQL_KEY_CLI_SIZE, "AUTO");
+		add_config_value_to_pstore(p_ps, SQL_KEY_APPDIRECT_SETTINGS, "RECOMMENDED");
 		rc = COMMON_SUCCESS;
 	}
 	return rc;

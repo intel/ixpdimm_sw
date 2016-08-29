@@ -122,6 +122,12 @@ class NVM_API BaseServerFactory : public framework_interface::NvmInstanceFactory
 		 */
 		static wbem::framework::UINT16_LIST hostToOpStatus(bool mixedSku, bool skuViolation);
 
+		/*
+		 * Set user preference
+		 */
+		 void setUserPreference(const char* key, const char* value)
+		 	 throw (framework::Exception);
+
 	private:
 		void populateAttributeList(framework::attribute_names_t &attributes)
 			throw (framework::Exception);

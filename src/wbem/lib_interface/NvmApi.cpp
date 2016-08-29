@@ -659,5 +659,16 @@ void NvmApi::getManageableDimms(std::vector<struct device_discovery>& manageable
 	}
 }
 
+void NvmApi::setUserPreference(const NVM_PREFERENCE_KEY key, const NVM_PREFERENCE_VALUE value)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	int rc =  nvm_set_user_preference(key ,value);
+	if (rc != NVM_SUCCESS)
+	{
+		throw exception::NvmExceptionLibError(rc);
+	}
+}
+
 } /* namespace framework */
 } /* namespace wbem */

@@ -170,6 +170,9 @@ extern "C"
 //! SQL Key name for default CLI device identifier
 #define	SQL_KEY_CLI_SIZE	"CLI_DEFAULT_SIZE"
 
+//! SQL Key name for default AppDirect Setting
+#define SQL_KEY_APPDIRECT_SETTINGS "APPDIRECT_SETTINGS"
+
 // EVENT MONITOR KEYS
 //! SQL Key name for event monitor enabled
 #define	SQL_KEY_EVENT_MONITOR_ENABLED "EVENT_MONITOR_ENABLED"

@@ -73,6 +73,7 @@
 #include <core/device/DeviceFirmwareService.h>
 #include <framework_interface/FrameworkExtensions.h>
 #include <libinvm-cim/ExceptionNoMemory.h>
+#include <mem_config/PoolViewFactory.h>
 
 #include "ShowVersionCommand.h"
 
@@ -276,6 +277,8 @@ void cli::nvmcli::FieldSupportFeature::getPaths(cli::framework::CommandSpecList 
 	changePreferences.addProperty(SQL_KEY_SUPPORT_SNAPSHOT_MAX, false, "count",
 			true, "The maximum number of support snapshots to keep in the management software. "
 					"The default value is 100. The valid range is 0-100.");
+	changePreferences.addProperty(SQL_KEY_APPDIRECT_SETTINGS, false, "RECOMMENDED|(IMCSize)_(ChannelSize)",
+			true, "The interleave settings to use when creating App Direct capacity in the format: (IMCSize_ChannelSize)");
 
 	list.push_back(showDeviceFirmware);
 	list.push_back(updateFirmware);
@@ -1633,7 +1636,8 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::showPreferences(
 		if ((*prefIter == SQL_KEY_CLI_DIMM_ID) ||
 			(*prefIter == SQL_KEY_CLI_SIZE) ||
 			(*prefIter == SQL_KEY_PERFORMANCE_MONITOR_ENABLED) ||
-			(*prefIter == SQL_KEY_EVENT_MONITOR_ENABLED))
+			(*prefIter == SQL_KEY_EVENT_MONITOR_ENABLED) ||
+			(*prefIter == SQL_KEY_APPDIRECT_SETTINGS))
 		{
 			memset(currentSetting, 0, sizeof (currentSetting));
 			get_config_value((*prefIter).c_str(), currentSetting);
@@ -1661,6 +1665,7 @@ std::vector<std::string> cli::nvmcli::FieldSupportFeature::getSupportedPreferenc
 
 	preferences.push_back(SQL_KEY_CLI_DIMM_ID);
 	preferences.push_back(SQL_KEY_CLI_SIZE);
+	preferences.push_back(SQL_KEY_APPDIRECT_SETTINGS);
 	preferences.push_back(SQL_KEY_PERFORMANCE_MONITOR_ENABLED);
 	preferences.push_back(SQL_KEY_PERFORMANCE_MONITOR_INTERVAL_MINUTES);
 	preferences.push_back(SQL_KEY_EVENT_MONITOR_ENABLED);
@@ -1717,6 +1722,15 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::changePreferences(
 					validValue = false;
 				}
 			}
+			else if (framework::stringsIEqual(propIter->first, SQL_KEY_APPDIRECT_SETTINGS))
+			{
+				// Recommended|(IMCSize_ChannelSize)
+				if(!framework::stringsIEqual(propIter->second, PREFERENCE_APPDIRECT_SETTING_DEFAULT) &&
+				   !appDirectSettingIsValid(parsedCommand))
+				{
+					validValue = false;
+				}
+			}
 			else if (framework::stringsIEqual(propIter->first, SQL_KEY_PERFORMANCE_MONITOR_ENABLED) ||
 					framework::stringsIEqual(propIter->first, SQL_KEY_EVENT_MONITOR_ENABLED))
 			{
@@ -1756,25 +1770,42 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::changePreferences(
 			for (cli::framework::StringMap::const_iterator propIter = parsedCommand.properties.begin();
 					propIter != parsedCommand.properties.end(); propIter++)
 			{
-				std::stringstream setPreferenceOutput;
-				setPreferenceOutput << "Set " << propIter->first << "=" << propIter->second;
-				int tmpRc = add_config_value(propIter->first.c_str(), propIter->second.c_str());
-				if (tmpRc != COMMON_SUCCESS)
+				std::string prefix;
+				prefix = "Set " + propIter->first + "=" + propIter->second;
+
+				if (framework::stringsIEqual(propIter->first, SQL_KEY_APPDIRECT_SETTINGS))
 				{
-					COMMON_LOG_ERROR_F("Failed to change preference '%s' to '%s', error: %d",
-							propIter->first.c_str(), propIter->second.c_str(), tmpRc);
-					wbem::exception::NvmExceptionLibError err(tmpRc);
-					framework::ErrorResult *pError = NvmExceptionToResult(err, setPreferenceOutput.str());
-					if (!pListResult->getErrorCode())  // keep existing errors
+					// check if there are existing AD capacities
+					framework::SimpleResult *pADError = NULL;
+					bool appDirectIsAvailable = false;
+
+					if (!(pADError = checkAppdirectCapacities(appDirectIsAvailable)))
 					{
-						pListResult->setErrorCode(pError->getErrorCode());
+						if (appDirectIsAvailable)
+						{
+							pADError = new framework::SimpleResult(prefix + ": " + CHANGEAPPDIRECTSETTINGS_ERROR_MSG);
+							pListResult->insert(pADError->outputText());
+							COMMON_LOG_ERROR_F("%s", pADError->outputText().c_str());
+						}
+						else
+						{
+							updatePreferenceInDb(propIter->first.c_str(), propIter->second.c_str(),
+									pListResult, prefix);
+						}
 					}
-					pListResult->insert(pError);
+					else
+					{
+						if (!pListResult->getErrorCode())  // keep existing errors
+						{
+							pListResult->setErrorCode(pADError->getErrorCode());
+						}
+						pListResult->insert(prefix + ": " + pADError->outputText());
+					}
 				}
 				else
 				{
-					setPreferenceOutput << " : " << TRS(cli::framework::SUCCESS_MSG);
-					pListResult->insert(setPreferenceOutput.str());
+					updatePreferenceInDb(propIter->first.c_str(), propIter->second.c_str(),
+								pListResult, prefix);
 				}
 			}
 
@@ -1783,6 +1814,31 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::changePreferences(
 	}
 
 	return pResult;
+}
+
+void cli::nvmcli::FieldSupportFeature::updatePreferenceInDb(const char* propKey, const char* propValue,
+		framework::SimpleListResult *pListResult, std::string prefix)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	std::string SetPreferenceOutput;
+	wbem::server::BaseServerFactory serverFactory;
+	try
+	{
+		serverFactory.setUserPreference(propKey, propValue);
+		SetPreferenceOutput = prefix + ": " + TRS(cli::framework::SUCCESS_MSG);
+		pListResult->insert(SetPreferenceOutput);
+	}
+	catch (wbem::framework::Exception &e)
+	{
+		cli::framework::ErrorResult *pError = NvmExceptionToResult(e, prefix);
+		if (!pListResult->getErrorCode())  // keep existing errors
+		{
+			pListResult->setErrorCode(pError->getErrorCode());
+		}
+		pListResult->insert(pError->outputText());
+		COMMON_LOG_ERROR_F("Failed to change preference '%s' to '%s', error: %d",
+				propKey, propValue, pError->getErrorCode());
+	}
 }
 
 bool cli::nvmcli::FieldSupportFeature::stringIsNumberInRange(const std::string &str, const int min, const int max)
@@ -1812,6 +1868,44 @@ bool cli::nvmcli::FieldSupportFeature::valueIsValidNumberForKey(const std::strin
 	return isValid;
 }
 
+bool cli::nvmcli::FieldSupportFeature::appDirectSettingIsValid(
+		const framework::ParsedCommand &parsedCommand)
+{
+	bool isValid = false;
+	std::string EMPTY_SIZE_PROPERTY = "";
+	MemoryProperty appDirectsetting(parsedCommand ,EMPTY_SIZE_PROPERTY, SQL_KEY_APPDIRECT_SETTINGS);
+	if (appDirectsetting.getIsSettingsValid())
+	{
+		isValid = true;
+	}
+	return isValid;
+}
+
+cli::framework::ErrorResult *cli::nvmcli::FieldSupportFeature::checkAppdirectCapacities(bool &appDirectIsAvailable)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	cli::framework::ErrorResult *pResult = NULL;
+	try
+	{
+		std::vector<struct pool> allPools = wbem::mem_config::PoolViewFactory::getPoolList(true);
+		for (std::vector<struct pool>::iterator iter = allPools.begin();
+						iter != allPools.end(); )
+		{
+			// check if there is appdirect capacity in the pool
+			if (iter->ilset_count > 0)
+			{
+				appDirectIsAvailable = true;
+				break;
+			}
+		}
+	}
+	catch (wbem::framework::Exception &e)
+	{
+		pResult = cli::nvmcli::NvmExceptionToResult(e);
+	}
+	return pResult;
+}
 cli::framework::ErrorResult *cli::nvmcli::FieldSupportFeature::wbemToCliGetNamespaces(
 		const framework::ParsedCommand &parsedCommand, std::vector<std::string> &namespaces)
 {
