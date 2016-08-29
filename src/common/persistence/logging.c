@@ -44,7 +44,17 @@
 #include "config_settings.h"
 #include "lib_persistence.h"
 
+#ifdef __WINDOWS__
+#include <Windows.h>
+	HANDLE g_loglevel_lock;
+#else
+	pthread_mutex_t g_loglevel_lock;
+#endif
+
+
 #define	SYSLOG_SOURCE	"IntelNVM"
+
+static volatile int g_log_level = -1;
 
 void print_buffer_to_file(const char *filename, char *p_buf, size_t buf_size, char *p_prefix)
 {
@@ -242,8 +252,14 @@ void log_to_syslog(int level, const char *file_name, int line_number, const char
  */
 int get_current_log_level()
 {
-	int log_level = -1;
-	get_config_value_int(SQL_KEY_LOG_LEVEL, &log_level);
+	mutex_lock(&g_loglevel_lock);
+	int log_level = g_log_level;
+	if (log_level < 0)
+	{
+		get_config_value_int(SQL_KEY_LOG_LEVEL, &log_level);
+		g_log_level = log_level;
+	}
+	mutex_unlock(&g_loglevel_lock);
 	return log_level;
 }
 
@@ -257,6 +273,9 @@ COMMON_BOOL set_current_log_level(int level)
 	snprintf(level_str, CONFIG_VALUE_LEN, "%d", level);
 	if (add_config_value(SQL_KEY_LOG_LEVEL, level_str) == COMMON_SUCCESS)
 	{
+		mutex_lock(&g_loglevel_lock);
+		g_log_level = level;
+		mutex_unlock(&g_loglevel_lock);
 		set = 1;
 	}
 	return set;
