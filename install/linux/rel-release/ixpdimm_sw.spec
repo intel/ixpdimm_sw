@@ -9,10 +9,10 @@ License: BSD
 Group: Applications/System
 URL: https://01.org/ixpdimm-sw
 Source: https://github.com/01org/ixpdimm_sw/archive/v%{version}.tar.gz#/%{name}-%{version}.tar.gz
-Requires: ndctl-libs >= 53
-Requires: libinvm-i18n >= 1.0.0.1015
-Requires: libinvm-cli >= 1.0.0.1095
-Requires: libinvm-cim >= 1.0.0.1040
+Requires: ndctl-libs >= 54
+Requires: libinvm-i18n >= 1.0.0.1018
+Requires: libinvm-cli >= 1.0.0.1098
+Requires: libinvm-cim >= 1.0.0.1043
 ExclusiveArch: x86_64
 
 BuildRequires: pkgconfig(libkmod)
@@ -279,5 +279,8 @@ fi
 %{_mandir}/man8/ixpdimm-cli*
 
 %changelog
+* Mon Aug 29 2016 Namratha Kothapalli <namratha.n.kothapalli@intel.com> - 01.00.00.2113-1
+- Update lib version dependencies
+
 * Thu Dec 24 2015 Nicholas Moulin <nicholas.w.moulin@intel.com> - 01.00.00.2111-1
 - Initial rpm release
