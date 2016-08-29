@@ -619,7 +619,10 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseCreateNsBlockSiz
 	{
 		std::string errorString = framework::ResultBase::stringFromArgList(
 				TR(BLOCKSIZE_NOT_SUPPORTED_STR.c_str()), m_blockSize);
-
+		if (pResult)
+		{
+			delete pResult;
+		}
 		pResult = new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
 				errorString);
 	}

@@ -638,7 +638,7 @@ int nvm_set_user_preference(const NVM_PREFERENCE_KEY key,
 		COMMON_LOG_ERROR("Invalid parameter, preference key is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
-	else if (key == NULL)
+	else if (value == NULL)
 	{
 		COMMON_LOG_ERROR("Invalid parameter, preference value is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;

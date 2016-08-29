@@ -1801,6 +1801,10 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::changePreferences(
 						}
 						pListResult->insert(prefix + ": " + pADError->outputText());
 					}
+					if (pADError)
+					{
+						delete pADError;
+					}
 				}
 				else
 				{
@@ -1838,6 +1842,7 @@ void cli::nvmcli::FieldSupportFeature::updatePreferenceInDb(const char* propKey,
 		pListResult->insert(pError->outputText());
 		COMMON_LOG_ERROR_F("Failed to change preference '%s' to '%s', error: %d",
 				propKey, propValue, pError->getErrorCode());
+		delete pError;
 	}
 }
 
@@ -1906,6 +1911,7 @@ cli::framework::ErrorResult *cli::nvmcli::FieldSupportFeature::checkAppdirectCap
 	}
 	return pResult;
 }
+
 cli::framework::ErrorResult *cli::nvmcli::FieldSupportFeature::wbemToCliGetNamespaces(
 		const framework::ParsedCommand &parsedCommand, std::vector<std::string> &namespaces)
 {
