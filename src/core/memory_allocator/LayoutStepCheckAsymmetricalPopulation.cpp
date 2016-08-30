@@ -48,7 +48,7 @@ void core::memory_allocator::LayoutStepCheckAsymmetricalPopulation::execute(cons
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	if (request.getMemoryModeCapacity() != 0 || request.getNumberOfAppDirectExtents() > 0)
+	if (request.getMemoryModeCapacityGiB() != 0 || request.getNumberOfAppDirectExtents() > 0)
 	{
 		std::map<NVM_UINT16, std::vector<Dimm> > socketDimmsMap;
 		std::vector<Dimm> dimms = request.getDimms();
@@ -83,11 +83,11 @@ bool core::memory_allocator::LayoutStepCheckAsymmetricalPopulation::socketHasAsy
 	{
 		if (size == 0)
 		{
-			size = dimmIter->capacity;
+			size = dimmIter->capacityBytes;
 		}
 		else
 		{
-			if (dimmIter->capacity != size)
+			if (dimmIter->capacityBytes != size)
 			{
 				asymmetrical = true;
 				break;

@@ -47,7 +47,7 @@ public:
 
 	class InvalidPercentageException : public std::exception {};
 
-	MemoryAllocationRequest build();
+	virtual MemoryAllocationRequest build();
 
 	void setPersistentTypeStorage();
 	void setPersistentTypeAppDirectNonInterleaved();
@@ -62,7 +62,7 @@ public:
 	void reserveDimmForNonInterleavedAppDirect();
 	void noReservedDimm();
 
-private:
+protected:
 	enum PersistentType
 	{
 		AppDirect = 0,
@@ -77,14 +77,17 @@ private:
 		ReserveDimmAppDirectNonInterleaved
 	};
 
-	core::device::DeviceService &m_service;
-	MemoryAllocationRequest m_result;
-
 	std::vector<std::string> m_dimmIds;
 	std::vector<NVM_UINT16> m_sockets;
 	PersistentType m_pmType;
 	float m_memoryRatio;
 	ReserveDimmCapacityType m_reserveDimmType;
+
+private:
+	core::device::DeviceService &m_service;
+	MemoryAllocationRequest m_result;
+
+
 
 	void buildRequestedDimms();
 	void buildReservedDimm();
@@ -104,8 +107,8 @@ private:
 	std::string getReserveDimmUid();
 	ReserveDimmType getReserveDimmTypeForRequest();
 
-	NVM_UINT64 getTotalCapacityFromRequestDimms();
-	NVM_UINT64 getPersistentCapacityFromRequest();
+	NVM_UINT64 getTotalCapacityBytesFromRequestDimms();
+	NVM_UINT64 getPersistentCapacityGiBFromRequest();
 	std::vector<AppDirectExtent> getAppDirectExtents();
 };
 

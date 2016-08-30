@@ -713,9 +713,9 @@ void NVDIMMFactory::toInstance(core::device::Device &device,
 	ADD_ATTRIBUTE(instance, attributes, TOTALWIDTH_KEY, framework::UINT16, device.getTotalWidth());
 	ADD_ATTRIBUTE(instance, attributes, SPEED_KEY, framework::UINT32, device.getSpeed());
 	ADD_ATTRIBUTE(instance, attributes, MEMORYCAPACITY_KEY, framework::UINT64,
-			device.getMemoryCapacity());
+		device.getMemoryCapacityBytes());
 	ADD_ATTRIBUTE(instance, attributes, APP_DIRECT_CAPACITY_KEY, framework::UINT64,
-			device.getAppDirectCapacity());
+		device.getAppDirectCapacityBytes());
 	ADD_ATTRIBUTE(instance, attributes, PARTNUMBER_KEY, framework::STR, device.getPartNumber());
 	ADD_ATTRIBUTE(instance, attributes, BANKLABEL_KEY, framework::STR, device.getBankLabel());
 	ADD_ATTRIBUTE(instance, attributes, HEALTHSTATE_KEY, framework::UINT16,
@@ -765,11 +765,11 @@ void NVDIMMFactory::toInstance(core::device::Device &device,
 	ADD_ATTRIBUTE(instance, attributes, FWAPIVERSION_KEY, framework::STR, device.getFwApiVersion());
 	ADD_ATTRIBUTE(instance, attributes, FWVERSION_KEY, framework::STR, device.getFwRevision());
 	ADD_ATTRIBUTE(instance, attributes, UNCONFIGUREDCAPACITY_KEY, framework::UINT64,
-			device.getUnconfiguredCapacity());
+		device.getUnconfiguredCapacityBytes());
 	ADD_ATTRIBUTE(instance, attributes, INACCESSIBLECAPACITY_KEY, framework::UINT64,
-			device.getInaccessibleCapacity());
+		device.getInaccessibleCapacityBytes());
 	ADD_ATTRIBUTE(instance, attributes, RESERVEDCAPACITY_KEY, framework::UINT64,
-			device.getReservedCapacity());
+		device.getReservedCapacityBytes());
 	ADD_ATTRIBUTE(instance, attributes, DEVICELOCATOR_KEY, framework::STR,
 			device.getDeviceLocator());
 	ADD_ATTRIBUTE(instance, attributes, ACTIONREQUIRED_KEY, framework::BOOLEAN,

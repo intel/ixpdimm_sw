@@ -53,7 +53,7 @@ public:
 
 	~LibraryException() throw () {}
 
-	int getErrorCode()
+	int getErrorCode() const
 	{
 		LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 		return m_errorCode;

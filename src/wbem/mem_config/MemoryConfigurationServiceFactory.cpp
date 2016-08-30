@@ -781,7 +781,7 @@ void wbem::mem_config::MemoryConfigurationServiceFactory::settingsStringsToReque
 		else if (resourceType == MEMORYALLOCATIONSETTINGS_RESOURCETYPE_NONVOLATILE)
 		{
 			struct core::memory_allocator::AppDirectExtent appDirectExtent;
-			appDirectExtent.capacity = reservationGiB;
+			appDirectExtent.capacityGiB = reservationGiB;
 			appDirectExtent.channel = InterleaveSet::getInterleaveSizeFromExponent(channelInterleaveSize);
 			appDirectExtent.imc = InterleaveSet::getInterleaveSizeFromExponent(controllerInterleaveSize);
 			appDirectExtent.byOne = (channelCount == INTERLEAVE_WAYS_1);
@@ -1065,7 +1065,7 @@ wbem::mem_config::MemoryConfigurationServiceFactory::memAllocSettingsToRequest(
 	std::vector<core::memory_allocator::AppDirectExtent> appDirectExtents;
 	settingsStringsToRequestedExtents(memoryAllocationSettings,
 			memoryCapacity, appDirectExtents);
-	request.setMemoryModeCapacity(memoryCapacity);
+	request.setMemoryModeCapacityGiB(memoryCapacity);
 	request.setAppDirectExtents(appDirectExtents);
 
 	if (requestLeavesSpaceForStorage(request))

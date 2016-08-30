@@ -60,8 +60,8 @@ class NVM_API MemoryAllocator
 		 */
 		static MemoryAllocator *getNewMemoryAllocator();
 
-		MemoryAllocationLayout layout(const struct MemoryAllocationRequest &request);
-		void allocate(struct MemoryAllocationLayout &layout);
+		virtual MemoryAllocationLayout layout(const struct MemoryAllocationRequest &request);
+		virtual void allocate(struct MemoryAllocationLayout &layout);
 
 		static NVM_UINT64 getTotalCapacitiesOfRequestedDimmsinB(const MemoryAllocationRequest& request);
 

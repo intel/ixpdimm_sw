@@ -52,6 +52,7 @@
 #include <mem_config/PoolViewFactory.h>
 #include <exception/NvmExceptionLibError.h>
 #include "FieldSupportFeature.h"
+#include "CreateGoalCommand.h"
 
 const std::string cli::nvmcli::NamespaceFeature::Name = "Namespace";
 
@@ -272,13 +273,16 @@ void cli::nvmcli::NamespaceFeature::getPaths(cli::framework::CommandSpecList &li
 			"specific sockets by supplying the socket target and one or more comma-separated socket identifiers. "
 			"The default is to load the memory allocation goal onto all manageable " NVM_DIMM_NAME "s on all sockets."));
 
+
 	list.push_back(showNamespace);
 	list.push_back(createNamespace);
 	list.push_back(modifyNamespace);
 	list.push_back(deleteNamespace);
 	list.push_back(showConfigGoal);
 	list.push_back(deleteConfigGoal);
-	list.push_back(createGoal);
+	// TODO: Remove all previous createGoal command with US16523
+	// list.push_back(createGoal);
+	list.push_back(CreateGoalCommand::getCommandSpec(CREATE_GOAL2));
 	list.push_back(showPools);
 	list.push_back(dumpConfig);
 	list.push_back(loadGoal);
@@ -305,8 +309,7 @@ cli::nvmcli::NamespaceFeature::NamespaceFeature() : cli::framework::FeatureBase(
 	m_pPmPoolProvider(new wbem::pmem_config::PersistentMemoryPoolFactory()),
 	m_pCapProvider(new wbem::pmem_config::PersistentMemoryCapabilitiesFactory()),
 	m_pNsViewFactoryProvider(new wbem::pmem_config::NamespaceViewFactory()),
-	m_pWbemToCli(new cli::nvmcli::WbemToCli())
-{ }
+	m_pWbemToCli(new cli::nvmcli::WbemToCli()) { }
 
 cli::nvmcli::NamespaceFeature::~NamespaceFeature()
 {
@@ -338,6 +341,9 @@ cli::framework::ResultBase * cli::nvmcli::NamespaceFeature::run(
 		case CREATE_GOAL:
 			pResult = createGoal(parsedCommand);
 			break;
+		case CREATE_GOAL2:
+			pResult = createGoal2(parsedCommand);
+			break;
 		case SHOW_POOLS:
 			pResult = showPools(parsedCommand);
 			break;
@@ -364,7 +370,32 @@ cli::framework::ResultBase * cli::nvmcli::NamespaceFeature::run(
 			break;
 	}
 	return pResult;
+}
 
+cli::framework::ResultBase *cli::nvmcli::NamespaceFeature::createGoal2(
+	const cli::framework::ParsedCommand &parsedCommand)
+{
+	cli::framework::ResultBase *pResult;
+	try
+	{
+		core::memory_allocator::MemoryAllocator *pAllocator =
+			core::memory_allocator::MemoryAllocator::getNewMemoryAllocator();
+		core::memory_allocator::MemoryAllocationRequestBuilder builder;
+		framework::YesNoPrompt yesNoPrompt;
+		cli::nvmcli::CreateGoalCommand::UserPrompt prompt(yesNoPrompt);
+		CreateGoalCommand::ShowGoalAdapter showGoalAdapter;
+
+		cli::nvmcli::CreateGoalCommand cmd(*pAllocator, builder, prompt, showGoalAdapter);
+		pResult = cmd.execute(parsedCommand);
+		delete (pAllocator);
+	}
+	catch (std::exception &e)
+	{
+		pResult = CoreExceptionToResult(e);
+	}
+
+
+	return pResult;
 }
 
 cli::framework::ResultBase *cli::nvmcli::NamespaceFeature::showPools(cli::framework::ParsedCommand const &parsedCommand)

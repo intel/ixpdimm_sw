@@ -273,7 +273,7 @@ std::map<NVM_UINT64, std::vector<Dimm> > ReserveDimmSelector::getDimmsSortedByCa
 	for (std::vector<Dimm>::const_iterator dimmIter = dimms.begin();
 			dimmIter != dimms.end(); dimmIter++)
 	{
-		dimmsByCapacity[dimmIter->capacity].push_back(*dimmIter);
+		dimmsByCapacity[dimmIter->capacityBytes].push_back(*dimmIter);
 	}
 
 	return dimmsByCapacity;

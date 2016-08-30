@@ -61,7 +61,7 @@ bool core::memory_allocator::LayoutStepAppDirect::isRemainingStep(const MemoryAl
 	bool isRemaining = false;
 	if (extents.size() > m_adExtentIndex)
 	{
-		isRemaining = extents[m_adExtentIndex].capacity == REQUEST_REMAINING_CAPACITY;
+		isRemaining = extents[m_adExtentIndex].capacityGiB == REQUEST_REMAINING_CAPACITY;
 	}
 	return isRemaining;
 }
@@ -88,7 +88,7 @@ void core::memory_allocator::LayoutStepAppDirect::execute(const MemoryAllocation
 		}
 
 		NVM_UINT64 bytesToAllocate = getRequestedCapacityBytes(
-				extents[m_adExtentIndex].capacity, request, layout);
+				extents[m_adExtentIndex].capacityGiB, request, layout);
 		if (bytesToAllocate)
 		{
 			NVM_UINT64 bytesRemaining = bytesToAllocate;
@@ -305,7 +305,7 @@ std::vector<core::memory_allocator::Dimm> core::memory_allocator::LayoutStepAppD
 	for (std::vector<Dimm>::const_iterator dimmIter = dimms.begin();
 			dimmIter != dimms.end(); dimmIter++)
 	{
-		if (getDimmUnallocatedBytes(dimmIter->capacity, layout.goals[dimmIter->uid]) > 0)
+		if (getDimmUnallocatedBytes(dimmIter->capacityBytes, layout.goals[dimmIter->uid]) > 0)
 		{
 			dimmsWithCapacity.push_back(*dimmIter);
 		}
@@ -416,7 +416,7 @@ NVM_UINT64 core::memory_allocator::LayoutStepAppDirect::getDimmUnallocatedAppDir
 	NVM_UINT64 bytes = 0;
 	if (goal.app_direct_count < NVM_MAX_INTERLEAVE_SETS_PER_DIMM)
 	{
-		bytes = getDimmUnallocatedBytes(dimm.capacity, goal);
+		bytes = getDimmUnallocatedBytes(dimm.capacityBytes, goal);
 	}
 
 	return bytes;
@@ -456,7 +456,7 @@ int core::memory_allocator::LayoutStepAppDirect::getDimmPopulationMap(
 	for (std::vector<struct Dimm>::const_iterator dimmIter = requestedDimms.begin();
 				dimmIter != requestedDimms.end(); dimmIter++)
 	{
-		if (getDimmUnallocatedBytes(dimmIter->capacity, goals[dimmIter->uid]) > 0)
+		if (getDimmUnallocatedBytes(dimmIter->capacityBytes, goals[dimmIter->uid]) > 0)
 		{
 			int dimmLocation = DIMM_LOCATION(dimmIter->memoryController, dimmIter->channel);
 			map += (1 << dimmLocation);

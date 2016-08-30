@@ -35,7 +35,7 @@ namespace memory_allocator
 {
 
 MemoryAllocationRequest::MemoryAllocationRequest() :
-		m_memoryCapacity(0), m_appDirectExtents(), m_storageRemaining(false),
+		m_memoryCapacityGiB(0), m_appDirectExtents(), m_storageRemaining(false),
 		m_reserveDimmUid(""), m_reserveDimmType(RESERVE_DIMM_NONE),
 		m_dimms()
 {
@@ -47,25 +47,25 @@ MemoryAllocationRequest::~MemoryAllocationRequest()
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
 
-NVM_UINT64 core::memory_allocator::MemoryAllocationRequest::getMemoryModeCapacity() const
+NVM_UINT64 core::memory_allocator::MemoryAllocationRequest::getMemoryModeCapacityGiB() const
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	return m_memoryCapacity;
+	return m_memoryCapacityGiB;
 }
 
-void MemoryAllocationRequest::setMemoryModeCapacity(const NVM_UINT64 capacity)
+void MemoryAllocationRequest::setMemoryModeCapacityGiB(const NVM_UINT64 capacityGiB)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	m_memoryCapacity = capacity;
+	m_memoryCapacityGiB = capacityGiB;
 }
 
 bool MemoryAllocationRequest::isMemoryRemaining() const
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	return (getMemoryModeCapacity() == REQUEST_REMAINING_CAPACITY);
+	return (getMemoryModeCapacityGiB() == REQUEST_REMAINING_CAPACITY);
 }
 
 std::vector<AppDirectExtent> MemoryAllocationRequest::getAppDirectExtents() const
@@ -105,7 +105,7 @@ bool MemoryAllocationRequest::isAppDirectRemaining() const
 	for (std::vector<AppDirectExtent>::const_iterator extent = m_appDirectExtents.begin();
 			extent != m_appDirectExtents.end(); extent++)
 	{
-		if (extent->capacity == REQUEST_REMAINING_CAPACITY)
+		if (extent->capacityGiB == REQUEST_REMAINING_CAPACITY)
 		{
 			remaining = true;
 		}
@@ -235,7 +235,7 @@ NVM_UINT64 MemoryAllocationRequest::getMappableDimmCapacityInBytes() const
 	{
 		if (!isReservedDimm(*dimm))
 		{
-			usableCapacity += USABLE_CAPACITY_BYTES(dimm->capacity);
+			usableCapacity += USABLE_CAPACITY_BYTES(dimm->capacityBytes);
 		}
 	}
 
@@ -254,12 +254,12 @@ NVM_UINT64 MemoryAllocationRequest::getRequestedMappedCapacityInBytes() const
 	}
 	else
 	{
-		NVM_UINT64 mappedCapacityGiB = getMemoryModeCapacity();
+		NVM_UINT64 mappedCapacityGiB = getMemoryModeCapacityGiB();
 
 		for (std::vector<AppDirectExtent>::const_iterator extent = m_appDirectExtents.begin();
 				extent != m_appDirectExtents.end(); extent++)
 		{
-			mappedCapacityGiB += extent->capacity;
+			mappedCapacityGiB += extent->capacityGiB;
 		}
 
 		mappedCapacityBytes = mappedCapacityGiB * BYTES_PER_GIB;

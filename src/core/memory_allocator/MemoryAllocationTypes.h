@@ -97,10 +97,10 @@ static const int INTERLEAVE_SETS[] =
 
 struct Dimm
 {
-	Dimm() : uid(""), capacity(0), socket(0), memoryController(0), channel(0) {}
+	Dimm() : uid(""), capacityBytes(0), socket(0), memoryController(0), channel(0) {}
 
 	std::string uid;
-	NVM_UINT64 capacity; // bytes
+	NVM_UINT64 capacityBytes; // bytes
 	NVM_UINT16 socket;
 	NVM_UINT16 memoryController;
 	NVM_UINT32 channel;

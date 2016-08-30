@@ -104,6 +104,11 @@ extern "C"
 #define	BYTES_PER_TB	(BYTES_PER_GB * BYTES_PER_KB) // 1000^4
 
 /*!
+ * Convert Bytes to GiB
+ */
+#define B_TO_GiB(x)		((x) / BYTES_PER_GIB)
+
+/*!
  * Convert MiB to GiB
  */
 #define MIB_TO_GIB(x)		(x / BYTES_PER_KIB)
@@ -112,6 +117,11 @@ extern "C"
  * Convert GiB to MiB
  */
 #define GIB_TO_MIB(x)		(x * BYTES_PER_KIB)
+
+/*!
+ * Convert GiB to Bytes
+ */
+#define GiB_TO_B(x)		((x) * BYTES_PER_GIB)
 
 /*!
  * Bytes per 4K chunk, for size conversions.

@@ -37,10 +37,10 @@ namespace memory_allocator
 
 MemoryAllocationRequestBuilder::MemoryAllocationRequestBuilder(
 		core::device::DeviceService &service) :
-				m_service(service),
 				m_pmType(AppDirect),
 				m_memoryRatio(0.0),
-				m_reserveDimmType(NoReserveDimm)
+				m_reserveDimmType(NoReserveDimm),
+				m_service(service)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
@@ -81,8 +81,11 @@ std::vector<Dimm> MemoryAllocationRequestBuilder::getAllDimms()
 	device::DeviceCollection allDevices = m_service.getAllDevices();
 	for (size_t i = 0; i < allDevices.size(); i++)
 	{
-		Dimm d = getDimmFromDevice(allDevices[i]);
-		allDimms.push_back(d);
+		if (allDevices[i].isManageable())
+		{
+			Dimm d = getDimmFromDevice(allDevices[i]);
+			allDimms.push_back(d);
+		}
 	}
 
 	return allDimms;
@@ -95,7 +98,7 @@ Dimm MemoryAllocationRequestBuilder::getDimmFromDevice(core::device::Device &dev
 	Dimm d;
 	d.uid = device.getUid();
 	d.channel = device.getChannelId();
-	d.capacity = device.getTotalCapacity();
+	d.capacityBytes = device.getTotalCapacityBytes();
 	d.memoryController = device.getMemoryControllerId();
 	d.socket = device.getSocketId();
 
@@ -231,12 +234,12 @@ void MemoryAllocationRequestBuilder::buildMemoryCapacity()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	NVM_UINT64 totalCapacity = getTotalCapacityFromRequestDimms();
-	NVM_UINT64 memoryCapacity = (NVM_UINT64)(totalCapacity * m_memoryRatio);
-	m_result.setMemoryModeCapacity(memoryCapacity);
+	NVM_UINT64 totalCapacityBytes = getTotalCapacityBytesFromRequestDimms();
+	NVM_UINT64 memoryCapacityBytes = (NVM_UINT64)(totalCapacityBytes * m_memoryRatio);
+	m_result.setMemoryModeCapacityGiB(B_TO_GiB(memoryCapacityBytes));
 }
 
-NVM_UINT64 MemoryAllocationRequestBuilder::getTotalCapacityFromRequestDimms()
+NVM_UINT64 MemoryAllocationRequestBuilder::getTotalCapacityBytesFromRequestDimms()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
@@ -247,7 +250,7 @@ NVM_UINT64 MemoryAllocationRequestBuilder::getTotalCapacityFromRequestDimms()
 	{
 		if (dimms[i].uid != m_result.getReservedDimmUid())
 		{
-			totalCapacity += dimms[i].capacity;
+			totalCapacity += dimms[i].capacityBytes;
 		}
 	}
 
@@ -267,11 +270,11 @@ std::vector<AppDirectExtent> MemoryAllocationRequestBuilder::getAppDirectExtents
 
 	std::vector<AppDirectExtent> extents;
 
-	NVM_UINT64 pmCapacity = getPersistentCapacityFromRequest();
-	if (pmCapacity > 0 && m_pmType != Storage)
+	NVM_UINT64 pmCapacityGiB = getPersistentCapacityGiBFromRequest();
+	if (pmCapacityGiB > 0 && m_pmType != Storage)
 	{
 		AppDirectExtent extent;
-		extent.capacity = pmCapacity;
+		extent.capacityGiB = pmCapacityGiB;
 		if (m_pmType == AppDirectNoInterleave)
 		{
 			extent.byOne = true;
@@ -282,19 +285,19 @@ std::vector<AppDirectExtent> MemoryAllocationRequestBuilder::getAppDirectExtents
 	return extents;
 }
 
-NVM_UINT64 MemoryAllocationRequestBuilder::getPersistentCapacityFromRequest()
+NVM_UINT64 MemoryAllocationRequestBuilder::getPersistentCapacityGiBFromRequest()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	NVM_UINT64 totalCapacity = getTotalCapacityFromRequestDimms();
-	return totalCapacity - m_result.getMemoryModeCapacity();
+	NVM_UINT64 totalCapacityBytes = getTotalCapacityBytesFromRequestDimms();
+	return B_TO_GiB(totalCapacityBytes) - m_result.getMemoryModeCapacityGiB();
 }
 
 void MemoryAllocationRequestBuilder::buildStorage()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	if (m_pmType == Storage && getPersistentCapacityFromRequest() > 0)
+	if (m_pmType == Storage && getPersistentCapacityGiBFromRequest() > 0)
 	{
 		m_result.setStorageRemaining(true);
 	}

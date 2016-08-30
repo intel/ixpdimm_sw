@@ -160,7 +160,6 @@ private:
 	framework::ErrorResult *ieNvmExceptionToResult(wbem::framework::Exception &e,
 				std::string prefix = "");
 
-	bool tryParseInt (const std::string& str, NVM_UINT64 *p_value) const;
 	void inject_error(std::string &prefixMsg,
 			std::vector<std::string>::iterator iUid,
 			framework::SimpleListResult &listResult);

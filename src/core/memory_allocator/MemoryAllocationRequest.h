@@ -41,11 +41,11 @@ namespace memory_allocator
 
 struct AppDirectExtent
 {
-	AppDirectExtent() : capacity(0), mirrored(false), byOne(false),
+	AppDirectExtent() : capacityGiB(0), mirrored(false), byOne(false),
 			channel(REQUEST_DEFAULT_INTERLEAVE_FORMAT),
 			imc(REQUEST_DEFAULT_INTERLEAVE_FORMAT) {}
 
-	NVM_UINT64 capacity; // total in GiB
+	NVM_UINT64 capacityGiB; // total in GiB
 	bool mirrored;
 	bool byOne;
 	int channel; // channel interleave size
@@ -71,8 +71,8 @@ class NVM_API MemoryAllocationRequest
 		 * All requested capacity is in GiB.
 		 */
 
-		NVM_UINT64 getMemoryModeCapacity() const;
-		void setMemoryModeCapacity(const NVM_UINT64 capacity);
+		NVM_UINT64 getMemoryModeCapacityGiB() const;
+		void setMemoryModeCapacityGiB(const NVM_UINT64 capacity);
 		bool isMemoryRemaining() const;
 
 		std::vector<AppDirectExtent> getAppDirectExtents() const;
@@ -100,7 +100,7 @@ class NVM_API MemoryAllocationRequest
 		NVM_UINT64 getRequestedMappedCapacityInBytes() const;
 
 	private:
-		NVM_UINT64 m_memoryCapacity; // total in GiB
+		NVM_UINT64 m_memoryCapacityGiB;
 		std::vector<struct AppDirectExtent> m_appDirectExtents;
 		bool m_storageRemaining;
 

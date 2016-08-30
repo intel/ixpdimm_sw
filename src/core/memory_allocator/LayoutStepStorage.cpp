@@ -63,7 +63,7 @@ void core::memory_allocator::LayoutStepStorage::execute(const MemoryAllocationRe
 	for (std::vector<struct Dimm>::const_iterator dimmIter = dimms.begin();
 			dimmIter != dimms.end(); dimmIter++)
 	{
-		bytesRemaining -= getDimmUnallocatedBytes(dimmIter->capacity, layout.goals[dimmIter->uid]);
+		bytesRemaining -= getDimmUnallocatedBytes(dimmIter->capacityBytes, layout.goals[dimmIter->uid]);
 	}
 	layout.storageCapacity = bytesToConfigGoalSize(bytesToAllocate - bytesRemaining);
 }

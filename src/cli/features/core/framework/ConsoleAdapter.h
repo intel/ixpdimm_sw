@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 2016, Intel Corporation
+ * Copyright (c) 2016, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -24,36 +24,33 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#ifndef CR_MGMT_GETLINE_H
+#define CR_MGMT_GETLINE_H
 
+#include <string>
+#include <iostream>
+#include <nvm_types.h>
+
+namespace cli
+{
+namespace framework
+{
 /*
- * Rule that checks that the platform supports memory mode
- * if memory capacity is requested.
+ * NOTE: This is a humble object and will not have unit tests
  */
-
-#include "RuleMemoryModeCapacityNotSupported.h"
-
-#include <LogEnterExit.h>
-#include <core/exceptions/NvmExceptionBadRequest.h>
-
-core::memory_allocator::RuleMemoryModeCapacityNotSupported::RuleMemoryModeCapacityNotSupported(
-		const struct nvm_capabilities &systemCapabilities) :
-		m_systemCapabilities(systemCapabilities)
+class NVM_API ConsoleAdapter
 {
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+public:
+	virtual std::string getLine() const;
+	virtual void write(const std::string &str) const;
+	static ConsoleAdapter &getAdapter();
+
+private:
+	static ConsoleAdapter *m_pSingleton;
+};
+
+}
 }
 
-core::memory_allocator::RuleMemoryModeCapacityNotSupported::~RuleMemoryModeCapacityNotSupported()
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-}
 
-void core::memory_allocator::RuleMemoryModeCapacityNotSupported::verify(const MemoryAllocationRequest &request)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	if (request.getMemoryModeCapacityGiB() != 0 &&
-		!m_systemCapabilities.nvm_features.memory_mode)
-	{
-		throw core::NvmExceptionMemoryModeNotSupported();
-	}
-}
+#endif //CR_MGMT_GETLINE_H

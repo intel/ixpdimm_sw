@@ -65,7 +65,7 @@ void core::memory_allocator::RuleTooManyRemaining::verify(const MemoryAllocation
 	for (std::vector<AppDirectExtent>::const_iterator adIter = extents.begin();
 			adIter != extents.end(); adIter++)
 	{
-		if (adIter->capacity == REQUEST_REMAINING_CAPACITY)
+		if (adIter->capacityGiB == REQUEST_REMAINING_CAPACITY)
 		{
 			remainingCount++;
 		}

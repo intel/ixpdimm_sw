@@ -575,43 +575,43 @@ NVM_UINT64 Device::getBlockWrites()
 	return getDetails().performance.block_writes;
 }
 
-NVM_UINT64 Device::getTotalCapacity()
+NVM_UINT64 Device::getTotalCapacityBytes()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDetails().capacities.capacity;
 }
 
-NVM_UINT64 Device::getMemoryCapacity()
+NVM_UINT64 Device::getMemoryCapacityBytes()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDetails().capacities.memory_capacity;
 }
 
-NVM_UINT64 Device::getAppDirectCapacity()
+NVM_UINT64 Device::getAppDirectCapacityBytes()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDetails().capacities.app_direct_capacity;
 }
 
-NVM_UINT64 Device::getStorageCapacity()
+NVM_UINT64 Device::getStorageCapacityBytes()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDetails().capacities.storage_capacity;
 }
 
-NVM_UINT64 Device::getUnconfiguredCapacity()
+NVM_UINT64 Device::getUnconfiguredCapacityBytes()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDetails().capacities.unconfigured_capacity;
 }
 
-NVM_UINT64 Device::getInaccessibleCapacity()
+NVM_UINT64 Device::getInaccessibleCapacityBytes()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDetails().capacities.inaccessible_capacity;
 }
 
-NVM_UINT64 Device::getReservedCapacity()
+NVM_UINT64 Device::getReservedCapacityBytes()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDetails().capacities.reserved_capacity;

@@ -768,8 +768,8 @@ std::string cli::nvmcli::NamespaceFeature::getPromptStringForLayout(
 		promptStr << pDisplayGoal->output() << std::endl;
 
 		int warningsAdded = 0;
-		for (std::vector<enum core::memory_allocator::LayoutWarningCode>::const_iterator warningIter = layout.warnings.begin();
-				warningIter != layout.warnings.end(); warningIter++)
+		for (std::vector<enum core::memory_allocator::LayoutWarningCode>::const_iterator warningIter =
+			layout.warnings.begin(); warningIter != layout.warnings.end(); warningIter++)
 		{
 			std::string warningStr = getStringForLayoutWarning(*warningIter);
 			if (!warningStr.empty())
@@ -894,7 +894,7 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parsedCreateGoalParam
 						STORAGECAPACITY_PROPERTYNAME.c_str(),
 						RESERVEDIMM_PROPERTYNAME.c_str()));
 			}
-			request.setMemoryModeCapacity(0);
+			request.setMemoryModeCapacityGiB(0);
 		}
 		// StorageCapacity can only be "Remaining" if it exists
 		else if (m_storageIsRemaining && !framework::stringsIEqual(storageCapacityValue, wbem::mem_config::SIZE_REMAINING))
@@ -948,9 +948,9 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parsedCreateGoalParam
 				(pResult = appDirect2Prop.validate()) == NULL)
 		{
 			// Set memory size
-			request.setMemoryModeCapacity(memoryModeProp.getIsRemaining() ?
-					core::memory_allocator::REQUEST_REMAINING_CAPACITY :
-					memoryModeProp.getSizeGiB());
+			request.setMemoryModeCapacityGiB(memoryModeProp.getIsRemaining() ?
+											 core::memory_allocator::REQUEST_REMAINING_CAPACITY :
+											 memoryModeProp.getSizeGiB());
 
 			request.setStorageRemaining(m_storageIsRemaining);
 
@@ -1153,7 +1153,7 @@ core::memory_allocator::AppDirectExtent cli::nvmcli::NamespaceFeature::memoryPro
 
 	appDirectExtent.imc = format.imc;
 	appDirectExtent.channel = format.channel;
-	appDirectExtent.capacity = appDirectProp.getIsRemaining() ?
+	appDirectExtent.capacityGiB = appDirectProp.getIsRemaining() ?
 			core::memory_allocator::REQUEST_REMAINING_CAPACITY :
 			appDirectProp.getSizeGiB();
 	appDirectExtent.byOne = appDirectProp.getIsByOne();
@@ -1215,7 +1215,7 @@ core::memory_allocator::Dimm cli::nvmcli::NamespaceFeature::nvdimmInstanceToDimm
 
 	core::memory_allocator::Dimm dimm;
 	dimm.uid = uidAttr.stringValue();
-	dimm.capacity = capacityAttr.uint64Value();
+	dimm.capacityBytes = capacityAttr.uint64Value();
 	dimm.socket = socketAttr.uintValue();
 	dimm.memoryController = memControllerAttr.uintValue();
 	dimm.channel = channelAttr.uintValue();

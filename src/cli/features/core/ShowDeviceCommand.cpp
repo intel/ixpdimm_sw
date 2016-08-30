@@ -44,7 +44,7 @@ ShowDeviceCommand::ShowDeviceCommand(core::device::DeviceService &service)
 	: m_service(service), m_pResult(NULL)
 {
 	m_props.addCustom("DimmID", getDimmId).setIsRequired();
-	m_props.addUint64("Capacity", &core::device::Device::getRawCapacity, &convertCapacity).setIsDefault();
+	m_props.addUint64("Capacity", &core::device::Device::getRawCapacity, convertCapacity).setIsDefault();
 	m_props.addUint16("HealthState", &core::device::Device::getHealthState,
 			&convertHealthState).setIsDefault();
 	m_props.addBool("ActionRequired", &core::device::Device::isActionRequired).setIsDefault();
@@ -86,16 +86,16 @@ ShowDeviceCommand::ShowDeviceCommand(core::device::DeviceService &service)
 	m_props.addStr("Model", &core::device::Device::getModelNumber);
 	m_props.addBool("IsNew", &core::device::Device::isNew);
 	m_props.addOther("FormFactor", &core::device::Device::getFormFactor, &convertFormFactor);
-	m_props.addUint64("MemoryCapacity", &core::device::Device::getMemoryCapacity,
-			convertCapacity);
-	m_props.addUint64("AppDirectCapacity", &core::device::Device::getAppDirectCapacity,
-			convertCapacity);
-	m_props.addUint64("UnconfiguredCapacity", &core::device::Device::getUnconfiguredCapacity,
-			convertCapacity);
-	m_props.addUint64("InaccessibleCapacity", &core::device::Device::getInaccessibleCapacity,
-			convertCapacity);
-	m_props.addUint64("ReservedCapacity", &core::device::Device::getReservedCapacity,
-			convertCapacity);
+	m_props.addUint64("MemoryCapacity", &core::device::Device::getMemoryCapacityBytes,
+		convertCapacity);
+	m_props.addUint64("AppDirectCapacity", &core::device::Device::getAppDirectCapacityBytes,
+		convertCapacity);
+	m_props.addUint64("UnconfiguredCapacity", &core::device::Device::getUnconfiguredCapacityBytes,
+		convertCapacity);
+	m_props.addUint64("InaccessibleCapacity", &core::device::Device::getInaccessibleCapacityBytes,
+		convertCapacity);
+	m_props.addUint64("ReservedCapacity", &core::device::Device::getReservedCapacityBytes,
+		convertCapacity);
 	m_props.addOther("FWLogLevel", &core::device::Device::getFwLogLevel, &convertFwLogLevel);
 	m_props.addBool("PowerManagementEnabled", &core::device::Device::isPowerManagementEnabled);
 	m_props.addUint8("PowerLimit", &core::device::Device::getPowerLimit);
@@ -129,6 +129,7 @@ framework::ResultBase *ShowDeviceCommand::execute(const framework::ParsedCommand
 	m_dimmIds = framework::CliHelper::splitCommaSeperatedString(m_parsedCommand.targets[TARGET_DIMM.name]);
 	m_socketIds = framework::CliHelper::splitCommaSeperatedString(m_parsedCommand.targets[TARGET_SOCKET.name]);
 	m_displayOptions = framework::DisplayOptions(m_parsedCommand.options);
+	std::string units = "GB";
 
 	if (displayOptionsAreValid())
 	{

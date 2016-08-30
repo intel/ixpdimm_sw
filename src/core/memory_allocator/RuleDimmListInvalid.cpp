@@ -100,7 +100,7 @@ void core::memory_allocator::RuleDimmListInvalid::checkIfDimmCapacitiesMatch(
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	if (requestIter->capacity != manageableDimmIter->capacity)
+	if (requestIter->capacityBytes != manageableDimmIter->capacity)
 	{
 		throw core::NvmExceptionBadDimmList();
 	}

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 2016, Intel Corporation
+ * Copyright (c) 2016, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -25,75 +25,62 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Rule that checks that no namespaces exist on the dimms requested
- */
-
-#include "RuleNamespacesExist.h"
-
+#include <iostream>
+#include <libinvm-cli/ResultBase.h>
 #include <LogEnterExit.h>
-#include <uid/uid.h>
-#include <nvm_management.h>
-#include <core/exceptions/LibraryException.h>
-#include <core/exceptions/NvmExceptionBadRequest.h>
+#include "YesNoPrompt.h"
 
-core::memory_allocator::RuleNamespacesExist::RuleNamespacesExist(
-		core::NvmLibrary &nvmLib) :
-		m_nvmLib(nvmLib)
+cli::framework::YesNoPrompt::YesNoPrompt(const ConsoleAdapter &consoleAdapter) :
+	m_consoleAdapter(consoleAdapter)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
 
-core::memory_allocator::RuleNamespacesExist::~RuleNamespacesExist()
+bool cli::framework::YesNoPrompt::prompt(const std::string &message) const
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	std::string question = buildQuestion(message);
+	askQuestion(question);
+	std::string answer = getAnswer();
+	return isAnswerCorrect(answer);
 }
 
-void core::memory_allocator::RuleNamespacesExist::verify(const MemoryAllocationRequest &request)
+std::string cli::framework::YesNoPrompt::buildQuestion(const std::string &message) const
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	const std::string yesOrNo = TR("(y or [n])");
+	return framework::ResultBase::stringFromArgList(
+			(message + " " + yesOrNo + " ").c_str());
+}
 
-	// check each dimm in the request to every namespace
-	std::vector<struct Dimm> dimms = request.getDimms();
-	for (std::vector<struct Dimm>::const_iterator dimmIter = dimms.begin();
-			dimmIter != dimms.end(); dimmIter++)
+void cli::framework::YesNoPrompt::askQuestion(const std::string &question) const
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	m_consoleAdapter.write(question);
+}
+
+std::string cli::framework::YesNoPrompt::getAnswer() const
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	return m_consoleAdapter.getLine();
+}
+
+bool cli::framework::YesNoPrompt::isAnswerCorrect(const std::string &answer) const
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	const std::string correctAnswer = "y";
+
+	bool isCorrectAnswer = false;
+	std::string answerCopy = answer;
+	if (answerCopy.length() > 0)
 	{
-		try
-		{
-			int nsCount = m_nvmLib.getDeviceNamespaceCount(dimmIter->uid, NAMESPACE_TYPE_UNKNOWN);
-			if (nsCount > 0) // namespaces exist
-			{
-				COMMON_LOG_ERROR_F("%d namespaces exist on " NVM_DIMM_NAME " %s",
-						nsCount, dimmIter->uid.c_str());
-				throw core::NvmExceptionNamespacesExist();
-			}
-		}
-		catch (core::LibraryException &e)
-		{
-			if (!requestIsOkWithGetNamespaceErrorCode(request, e.getErrorCode()))
-			{
-				throw;
-			}
-		}
+		answerCopy[0] = (char)tolower(answerCopy[0]);
 	}
-}
-
-bool core::memory_allocator::RuleNamespacesExist::requestIsMemoryModeOnly(
-		const MemoryAllocationRequest &request)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	return ((request.getMemoryModeCapacityGiB() > 0) &&
-			(request.getNumberOfAppDirectExtents() == 0) &&
-			(!request.isStorageRemaining()));
-}
-
-bool core::memory_allocator::RuleNamespacesExist::requestIsOkWithGetNamespaceErrorCode(
-		const MemoryAllocationRequest& request, const int errorCode)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	// If namespaces are unsupported, we can still provision Memory Mode
-	return (errorCode == NVM_ERR_NOTSUPPORTED &&
-			requestIsMemoryModeOnly(request));
+	if ((answerCopy.length() == correctAnswer.length()) &&
+		(0 == answerCopy.compare(correctAnswer)))
+	{
+		isCorrectAnswer = true;
+	}
+	return isCorrectAnswer;
 }

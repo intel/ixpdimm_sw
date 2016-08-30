@@ -160,7 +160,7 @@ core::memory_allocator::Dimm core::memory_allocator::MemoryAllocationUtil::devic
 	uid_copy(deviceDiscovery.uid, uidStr);
 	dimm.uid = uidStr;
 
-	dimm.capacity = deviceDiscovery.capacity;
+	dimm.capacityBytes = deviceDiscovery.capacity;
 	dimm.socket = deviceDiscovery.socket_id;
 	dimm.memoryController = deviceDiscovery.memory_controller_id;
 	dimm.channel = deviceDiscovery.device_handle.parts.mem_channel_id;

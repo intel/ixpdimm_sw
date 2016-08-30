@@ -50,7 +50,7 @@ NVM_UINT64 core::memory_allocator::LayoutStep::getCountOfDimmsWithUnallocatedCap
 	for (std::vector<struct Dimm>::const_iterator dimmIter = dimms.begin();
 				dimmIter != dimms.end(); dimmIter++)
 	{
-		if (getDimmUnallocatedGiBAlignedBytes(dimmIter->capacity, goals[dimmIter->uid])
+		if (getDimmUnallocatedGiBAlignedBytes(dimmIter->capacityBytes, goals[dimmIter->uid])
 				> 0)
 		{
 			dimmCount++;
@@ -101,7 +101,7 @@ NVM_UINT64 core::memory_allocator::LayoutStep::getLargestPerDimmSymmetricalBytes
 				dimmIter != dimms.end(); dimmIter++)
 	{
 		NVM_UINT64 dimmMaxBytes = getDimmUnallocatedGiBAlignedBytes(
-				dimmIter->capacity, goals[dimmIter->uid]);
+				dimmIter->capacityBytes, goals[dimmIter->uid]);
 		if (dimmMaxBytes > 0)
 		{
 			dimmsIncluded.push_back(*dimmIter);
@@ -132,7 +132,7 @@ NVM_UINT64 core::memory_allocator::LayoutStep::getRemainingBytesFromRequestedDim
 	for (std::vector<struct Dimm>::const_iterator dimmIter = dimms.begin();
 			dimmIter != dimms.end(); dimmIter++)
 	{
-		bytes += getDimmUnallocatedGiBAlignedBytes(dimmIter->capacity, layout.goals[dimmIter->uid]);
+		bytes += getDimmUnallocatedGiBAlignedBytes(dimmIter->capacityBytes, layout.goals[dimmIter->uid]);
 	}
 
 	// no remaining capacity left on any dimms

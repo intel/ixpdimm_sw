@@ -106,9 +106,9 @@ NVM_UINT64 core::memory_allocator::LayoutStepMemory::getRequestedCapacityBytes(
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	NVM_UINT64 bytes = 0;
-	if (request.getMemoryModeCapacity() != REQUEST_REMAINING_CAPACITY)
+	if (request.getMemoryModeCapacityGiB() != REQUEST_REMAINING_CAPACITY)
 	{
-		bytes = configGoalSizeToBytes(request.getMemoryModeCapacity());
+		bytes = configGoalSizeToBytes(request.getMemoryModeCapacityGiB());
 	}
 	else
 	{
@@ -127,7 +127,7 @@ NVM_UINT64 core::memory_allocator::LayoutStepMemory::getAlignedDimmBytes(
 
 	NVM_UINT64 existingMemoryBytes = bytesToConfigGoalSize(layout.goals[dimm.uid].memory_size);
 	NVM_UINT64 totalMemoryBytes = getTotalMemoryBytes(requestedBytes, existingMemoryBytes);
-	NVM_UINT64 dimmBytes = round_down(dimm.capacity, BYTES_PER_GIB);
+	NVM_UINT64 dimmBytes = round_down(dimm.capacityBytes, BYTES_PER_GIB);
 
 	NVM_UINT64 alignedTotalMemoryBytes = totalMemoryBytes;
 	// Memory Mode layout is last step
