@@ -38,7 +38,7 @@
 #include <string.h>
 #include <string/s_str.h>
 #include "device_utilities.h"
-#include "platform_config_data.h"
+#include "config_goal.h"
 
 #define	MAX_PERSISTENT_POOLS_PER_SOCKET 2
 
@@ -712,34 +712,21 @@ int add_dimm_to_pool(struct nvm_pool *p_pool, NVM_NFIT_DEVICE_HANDLE handle)
 
 					p_pool->dimm_count++;
 
-					// calculate pool health based on dimm health
-					enum device_health dimm_health;
+					// calculate pool health based on platform config data
+					struct platform_config_data *p_cfg_data = NULL;
+					enum pool_health health = POOL_HEALTH_UNKNOWN;
+					int tmp_rc = get_dimm_platform_config(handle, &p_cfg_data);
 
-					rc = get_dimm_health(handle, &dimm_health);
-					if (rc == NVM_SUCCESS)
+					if (tmp_rc != NVM_SUCCESS)
 					{
-						enum pool_health health;
-						switch (dimm_health)
-						{
-						case DEVICE_HEALTH_NORMAL:
-							health = POOL_HEALTH_NORMAL;
-							break;
-						case DEVICE_HEALTH_NONCRITICAL:
-						case DEVICE_HEALTH_CRITICAL:
-							health = POOL_HEALTH_WARNING;
-							break;
-						case DEVICE_HEALTH_FATAL:
-							health = p_pool->type == POOL_TYPE_PERSISTENT_MIRROR ?
-									POOL_HEALTH_DEGRADED : POOL_HEALTH_FAILED;
-							break;
-						default:
-							health = POOL_HEALTH_UNKNOWN;
-							break;
-						}
-
-						// keep the greater (worse) health state
-						p_pool->health = p_pool->health < health ? health : p_pool->health;
+						rc = tmp_rc; // propagate the error
 					}
+					else
+					{
+						health = calculate_pool_health(handle, p_cfg_data);
+					}
+					// keep the greater (worse) health state
+					p_pool->health = p_pool->health < health ? health : p_pool->health;
 				}
 			}
 		}
@@ -747,6 +734,67 @@ int add_dimm_to_pool(struct nvm_pool *p_pool, NVM_NFIT_DEVICE_HANDLE handle)
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
+}
+
+enum pool_health calculate_pool_health(NVM_NFIT_DEVICE_HANDLE handle,
+		struct platform_config_data *p_cfg_data)
+{
+	COMMON_LOG_ENTRY();
+	enum pool_health health = POOL_HEALTH_UNKNOWN;
+
+	struct config_input_table *p_config_input =
+			cast_config_input(p_cfg_data);
+	// If there is a goal, consider its status in determining pool health
+	if (p_config_input)
+	{
+		enum config_goal_status goal_status;
+		goal_status = get_config_goal_status_from_platform_config_data(
+				p_cfg_data);
+		// If goal status is unknown, that means there is a goal in
+		// unknown state. Hence pool health is still pending
+		if (goal_status >= CONFIG_GOAL_STATUS_UNKNOWN &&
+				goal_status != CONFIG_GOAL_STATUS_SUCCESS)
+		{
+			health = POOL_HEALTH_PENDING;
+		}
+	}
+	if (health == POOL_HEALTH_UNKNOWN)
+	{
+		// If no goal/goal successfully applied, get health from
+		// device security state/current config
+		struct device_discovery discovery;
+		if ((lookup_dev_handle(handle, &discovery)) >= 0)
+		{
+			if	(discovery.lock_state == LOCK_STATE_LOCKED)
+			{
+				health = POOL_HEALTH_LOCKED;
+			}
+			else
+			{
+				struct current_config_table *p_current_config =
+						cast_current_config(p_cfg_data);
+				if (p_current_config->config_status ==
+							CURRENT_CONFIG_STATUS_SUCCESS ||
+						p_current_config->config_status ==
+								CURRENT_CONFIG_STATUS_UNCONFIGURED)
+				{
+					health = POOL_HEALTH_NORMAL;
+				}
+				else if (p_current_config->config_status ==
+						CURRENT_CONFIG_STATUS_DIMMS_NOT_FOUND ||
+						p_current_config->config_status ==
+								CURRENT_CONFIG_STATUS_INTERLEAVE_NOT_FOUND ||
+						p_current_config->config_status ==
+								CURRENT_CONFIG_STATUS_BAD_CURRENT_CHECKSUM)
+				{
+					health = POOL_HEALTH_ERROR;
+				}
+			}
+		}
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(health);
+	return health;
 }
 
 /*

@@ -55,8 +55,9 @@ namespace wbem
 
 		static const std::string POOL_HEALTH_STR_UNKNOWN = "Unknown";
 		static const std::string POOL_HEALTH_STR_NORMAL = "Healthy";
-		static const std::string POOL_HEALTH_STR_DEGRADED = "Degraded";
-		static const std::string POOL_HEALTH_STR_FAILED = "Failed";
+		static const std::string POOL_HEALTH_STR_PENDING = "Pending";
+		static const std::string POOL_HEALTH_STR_ERROR = "Error";
+		static const std::string POOL_HEALTH_STR_LOCKED = "Locked";
 
 /*!
  * Provider Factory for Intel_PoolView

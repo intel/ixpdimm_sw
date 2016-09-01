@@ -504,12 +504,14 @@ std::string wbem::mem_config::PoolViewFactory::poolHealthToStr(
 		case POOL_HEALTH_NORMAL:
 			healthStr = POOL_HEALTH_STR_NORMAL;
 			break;
-		case POOL_HEALTH_WARNING:
-		case POOL_HEALTH_DEGRADED:
-			healthStr = POOL_HEALTH_STR_DEGRADED;
+		case POOL_HEALTH_PENDING:
+			healthStr = POOL_HEALTH_STR_PENDING;
 			break;
-		case POOL_HEALTH_FAILED:
-			healthStr = POOL_HEALTH_STR_FAILED;
+		case POOL_HEALTH_ERROR:
+			healthStr = POOL_HEALTH_STR_ERROR;
+			break;
+		case POOL_HEALTH_LOCKED:
+			healthStr = POOL_HEALTH_STR_LOCKED;
 			break;
 		default:
 			healthStr = POOL_HEALTH_STR_UNKNOWN;

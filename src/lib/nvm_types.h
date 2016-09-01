@@ -231,11 +231,12 @@ enum pool_type
  */
 enum pool_health
 {
-	POOL_HEALTH_UNKNOWN	= 0, // Health cannot be determined.
-	POOL_HEALTH_NORMAL = 1,	// All underlying AEP DIMMs are available.
-	POOL_HEALTH_WARNING = 2, // An underlying AEP DIMM has a critical or non-critical health issue
-	POOL_HEALTH_DEGRADED = 3, // One or more AEP DIMMs are missing or failed. Pool is mirrored.
-	POOL_HEALTH_FAILED = 4 // One or more AEP DIMMs are missing or failed.
+	POOL_HEALTH_UNKNOWN = 0, // The pool health cannot be determined.
+	POOL_HEALTH_NORMAL = 1,	// All underlying AEP DIMM Persistent memory capacity is available.
+	POOL_HEALTH_PENDING = 2, // A new memory allocation goal has been created but not applied.
+	POOL_HEALTH_ERROR = 3, // There is an issue with some or all of the underlying
+							// AEP DIMM capacity.
+	POOL_HEALTH_LOCKED = 4 // One or more of the underlying AEP DIMMs are locked.
 };
 
 /*

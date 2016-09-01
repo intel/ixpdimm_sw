@@ -48,6 +48,7 @@ extern "C"
 
 #include "adapter_types.h"
 #include "nvm_types.h"
+#include "platform_config_data.h"
 
 /*
  * Describes the features pertaining to the unique construction and usage of a
@@ -221,6 +222,12 @@ int fill_interleave_set_settings_and_id_from_dimm(
  */
 NVM_BOOL dimm_is_in_interleave_set(const NVM_NFIT_DEVICE_HANDLE device_handle,
 		const struct nvm_interleave_set *p_ilset);
+
+/*
+ * Determines the pool health based on config data
+ */
+enum pool_health calculate_pool_health(NVM_NFIT_DEVICE_HANDLE handle,
+		struct platform_config_data *p_cfg_data);
 
 #ifdef __cplusplus
 }

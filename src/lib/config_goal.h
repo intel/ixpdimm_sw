@@ -37,6 +37,7 @@
 extern "C"
 {
 #endif
+#include "platform_config_data.h"
 
 /*
  * Convert a platform config data input table to a config goal structure.
@@ -46,6 +47,9 @@ int config_input_table_to_config_goal(const NVM_UID device_uid,
 		const NVM_UINT32 ext_table_offset,
 		const NVM_UINT32 table_length,
 		struct config_goal *p_config_goal);
+
+enum config_goal_status get_config_goal_status_from_platform_config_data(
+		struct platform_config_data *p_config);
 
 #ifdef __cplusplus
 }

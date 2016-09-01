@@ -34,7 +34,6 @@
 #include <common_types.h>
 #include <persistence/logging.h>
 #include <persistence/lib_persistence.h>
-#include "platform_config_data.h"
 #include "utility.h"
 #include "monitor.h"
 #include "device_utilities.h"
