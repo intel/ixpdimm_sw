@@ -33,6 +33,8 @@
 #include "device_adapter.h"
 #include "lnx_adapter.h"
 #include <os/os_adapter.h>
+#include <string.h>
+#include <stdlib.h>
 
 #define	BIOS_INPUT(NAME, IN_LEN)		\
 struct NAME {								\

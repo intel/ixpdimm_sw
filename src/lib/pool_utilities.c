@@ -33,11 +33,10 @@
 #include "pool_utilities.h"
 #include <persistence/logging.h>
 #include <uid/uid.h>
+#include <guid/guid.h>
 #include "system.h"
 #include <string.h>
 #include <string/s_str.h>
-#include <uid/uid.h>
-#include <guid/guid.h>
 #include "device_utilities.h"
 #include "platform_config_data.h"
 
@@ -423,6 +422,50 @@ int get_persistent_pools_count()
 	return rc;
 }
 
+void get_dimm_ilset_capacity_from_interleave_sets(NVM_NFIT_DEVICE_HANDLE handle,
+		NVM_UINT64 *p_mirrored_size,
+		NVM_UINT64 *p_unmirrored_size,
+		const struct nvm_interleave_set *p_interleaves, const NVM_UINT32 interleave_count)
+{
+	COMMON_LOG_ENTRY();
+
+	if (p_interleaves == NULL || interleave_count == 0)
+	{
+		*p_mirrored_size = 0;
+		*p_unmirrored_size = 0;
+	}
+	else
+	{
+		for (int i = 0; i < interleave_count; i++)
+		{
+			NVM_UINT8 dimm_count = p_interleaves[i].dimm_count;
+			NVM_UINT64 size_per_dimm = p_interleaves[i].size / (NVM_UINT64)dimm_count;
+			if (p_interleaves[i].mirrored) // mirrored takes up 2x raw capacity
+			{
+				size_per_dimm *= 2llu;
+			}
+			for (NVM_UINT8 j = 0; j < dimm_count; j++)
+			{
+				// Found our dimm
+				if (p_interleaves[i].dimms[j].handle == handle.handle)
+				{
+					if (p_interleaves[i].mirrored)
+					{
+						*p_mirrored_size += size_per_dimm;
+					}
+					else
+					{
+						*p_unmirrored_size += size_per_dimm;
+					}
+					break;
+				}
+			}
+		}
+	}
+
+	COMMON_LOG_EXIT();
+}
+
 /*
  * Get the combined capacity of all the interleave sets on the dimm
  */
@@ -448,31 +491,9 @@ int get_dimm_ilset_capacity(NVM_NFIT_DEVICE_HANDLE handle, NVM_UINT64 *p_mirrore
 			struct nvm_interleave_set interleaves[interleave_count];
 			if ((rc = get_interleave_sets(interleave_count, interleaves)) > 0)
 			{
-				for (int i = 0; i < interleave_count; i++)
-				{
-					NVM_UINT8 dimm_count = interleaves[i].dimm_count;
-					NVM_UINT64 size_per_dimm = interleaves[i].size / (NVM_UINT64)dimm_count;
-					if (interleaves[i].mirrored) // mirrored takes up 2x raw capacity
-					{
-						size_per_dimm *= 2llu;
-					}
-					for (NVM_UINT8 j = 0; j < dimm_count; j++)
-					{
-						// Found our dimm
-						if (interleaves[i].dimms[j].handle == handle.handle)
-						{
-							if (interleaves[i].mirrored)
-							{
-								*p_mirrored_size += size_per_dimm;
-							}
-							else
-							{
-								*p_unmirrored_size += size_per_dimm;
-							}
-							break;
-						}
-					}
-				}
+				get_dimm_ilset_capacity_from_interleave_sets(handle,
+						p_mirrored_size, p_unmirrored_size,
+						interleaves, interleave_count);
 
 				rc = NVM_SUCCESS;
 			}
@@ -1194,4 +1215,23 @@ int fill_interleave_set_settings_and_id_from_dimm(struct nvm_interleave_set *p_i
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
+}
+
+NVM_BOOL dimm_is_in_interleave_set(const NVM_NFIT_DEVICE_HANDLE device_handle,
+		const struct nvm_interleave_set *p_ilset)
+{
+	COMMON_LOG_ENTRY();
+	NVM_BOOL result = 0;
+
+	for (int dimm_index = 0; dimm_index < p_ilset->dimm_count; dimm_index++)
+	{
+		if (device_handle.handle == p_ilset->dimms[dimm_index].handle)
+		{
+			result = 1;
+			break;
+		}
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(result);
+	return result;
 }

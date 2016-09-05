@@ -268,28 +268,6 @@ int get_dimm_index_in_pool(const NVM_NFIT_DEVICE_HANDLE device_handle,
 }
 
 /*
- * return true/false depending on whether or not the dimm belongs to the interleave set
- */
-NVM_BOOL dimm_is_in_interleave_set(const NVM_NFIT_DEVICE_HANDLE device_handle,
-		const struct nvm_interleave_set *p_ilset)
-{
-	COMMON_LOG_ENTRY();
-	NVM_BOOL result = 0;
-
-	for (int dimm_index = 0; dimm_index < p_ilset->dimm_count; dimm_index++)
-	{
-		if (device_handle.handle == p_ilset->dimms[dimm_index].handle)
-		{
-			result = 1;
-			break;
-		}
-	}
-
-	COMMON_LOG_EXIT_RETURN_I(result);
-	return result;
-}
-
-/*
  * find mapped memory capacity of this dimm
  */
 void get_mapped_memory_capacity(const NVM_NFIT_DEVICE_HANDLE device_handle,

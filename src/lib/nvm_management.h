@@ -314,29 +314,6 @@ enum error_type
 	ERROR_TYPE_MEDIA_FATAL_ERROR = 5, // Inject or clear a fake media fatal error.
 };
 
-enum interleave_size
-{
-	INTERLEAVE_SIZE_64B  = 0,
-	INTERLEAVE_SIZE_128B = 1,
-	INTERLEAVE_SIZE_256B = 2,
-	INTERLEAVE_SIZE_4KB  = 3,
-	INTERLEAVE_SIZE_1GB  = 4
-};
-
-enum interleave_ways
-{
-	INTERLEAVE_WAYS_0 =  0,
-	INTERLEAVE_WAYS_1  = 1,
-	INTERLEAVE_WAYS_2  = 2,
-	INTERLEAVE_WAYS_3  = 3,
-	INTERLEAVE_WAYS_4  = 4,
-	INTERLEAVE_WAYS_6  = 6,
-	INTERLEAVE_WAYS_8  = 8,
-	INTERLEAVE_WAYS_12 = 12,
-	INTERLEAVE_WAYS_16 = 16,
-	INTERLEAVE_WAYS_24 = 24
-};
-
 /*
  * Diagnostic test type
  */
@@ -478,26 +455,6 @@ enum nvm_job_type
 {
 	NVM_JOB_TYPE_SANITIZE 	= 0,
 	NVM_JOB_TYPE_ARS 		= 1
-};
-
-/*
- * Security related definition of interleave set or namespace.
- */
-enum encryption_status
-{
-	NVM_ENCRYPTION_OFF = 0,
-	NVM_ENCRYPTION_ON = 1,
-	NVM_ENCRYPTION_IGNORE = 2
-};
-
-/*
- * Erase capable definition of interleave set or namespace.
- */
-enum erase_capable_status
-{
-	NVM_ERASE_CAPABLE_FALSE = 0,
-	NVM_ERASE_CAPABLE_TRUE = 1,
-	NVM_ERASE_CAPABLE_IGNORE = 2
 };
 
 /*
@@ -790,17 +747,6 @@ struct device_fw_info
 	NVM_BOOL staged_fw_pending; // set if new FW is staged for execution on the next reboot.
 	NVM_VERSION staged_fw_revision; //  BCD formatted revision of the staged FW.
 	enum device_fw_type staged_fw_type; // staged FW type.
-};
-
-/*
- * Details about a specific interleave format supported by memory
- */
-struct interleave_format
-{
-	NVM_BOOL recommended; // is this format a recommended format
-	enum interleave_size channel; // channel interleave of this format
-	enum interleave_size imc; // memory controller interleave of this format
-	enum interleave_ways ways; // number of ways for this format
 };
 
 /*

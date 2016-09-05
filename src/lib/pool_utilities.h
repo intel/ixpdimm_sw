@@ -46,9 +46,33 @@ extern "C"
 {
 #endif
 
-#include "device_adapter.h"
+#include "adapter_types.h"
 #include "nvm_types.h"
 
+/*
+ * Describes the features pertaining to the unique construction and usage of a
+ * pool of memory.
+ */
+struct nvm_pool
+{
+	NVM_UID pool_uid; // Unique identifier of the pool.
+	enum pool_type type; // The type of pool.
+	NVM_UINT64 capacity; // Size of the pool in bytes.
+	NVM_UINT64 free_capacity; // Available size of the pool in bytes.
+	NVM_INT16 socket_id; // The processor socket identifier.  -1 for system level pool.
+	NVM_UINT8 dimm_count; // number of dimms in pool
+	NVM_UINT8 ilset_count; // the number of interleave sets in the pool
+	// The memory capacities of the dimms in the pool
+	NVM_UINT64 memory_capacities[NVM_MAX_DEVICES_PER_POOL];
+	// The raw capacities of the dimms in the pool in bytes
+	NVM_UINT64 raw_capacities[NVM_MAX_DEVICES_PER_POOL];
+	// The storage ONLY capacities of the dimms in the pool in bytes
+	NVM_UINT64 storage_capacities[NVM_MAX_DEVICES_PER_POOL];
+	NVM_NFIT_DEVICE_HANDLE dimms[NVM_MAX_DEVICES_PER_POOL]; // Unique ID's of underlying NVM-DIMMs.
+	// The interleave sets in this pool
+	struct nvm_interleave_set ilsets[NVM_MAX_DEVICES_PER_SOCKET * 2];
+	enum pool_health health; // The overall health of the pool
+};
 
 /*
  * Retrieve the number of pools.
@@ -139,6 +163,10 @@ int add_ilset_to_pools(struct nvm_pool *p_pools, int *p_pools_count,
  */
 int get_dimm_ilset_capacity(NVM_NFIT_DEVICE_HANDLE handle, NVM_UINT64 *p_mirrored_size,
 		NVM_UINT64 *p_unmirrored_size);
+void get_dimm_ilset_capacity_from_interleave_sets(NVM_NFIT_DEVICE_HANDLE handle,
+		NVM_UINT64 *p_mirrored_size,
+		NVM_UINT64 *p_unmirrored_size,
+		const struct nvm_interleave_set *p_interleaves, const NVM_UINT32 interleave_count);
 
 /*
  * Get the Memory Mode capacity of a DIMM
@@ -187,6 +215,12 @@ int fill_interleave_set_settings_and_id_from_dimm(
 		struct nvm_interleave_set *p_interleave_set,
 		const NVM_NFIT_DEVICE_HANDLE handle,
 		const NVM_UINT64 interleave_dpa_offset);
+
+/*
+ * Determines if a DIMM with a given handle is in a given interleave set.
+ */
+NVM_BOOL dimm_is_in_interleave_set(const NVM_NFIT_DEVICE_HANDLE device_handle,
+		const struct nvm_interleave_set *p_ilset);
 
 #ifdef __cplusplus
 }

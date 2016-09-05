@@ -292,4 +292,58 @@ enum namespace_memory_page_allocation
 	NAMESPACE_MEMORY_PAGE_ALLOCATION_APP_DIRECT = 3 // Capacity is allocated from the NS itself
 };
 
+/*
+ * Security related definition of interleave set or namespace.
+ */
+enum encryption_status
+{
+	NVM_ENCRYPTION_OFF = 0,
+	NVM_ENCRYPTION_ON = 1,
+	NVM_ENCRYPTION_IGNORE = 2
+};
+
+/*
+ * Erase capable definition of interleave set or namespace.
+ */
+enum erase_capable_status
+{
+	NVM_ERASE_CAPABLE_FALSE = 0,
+	NVM_ERASE_CAPABLE_TRUE = 1,
+	NVM_ERASE_CAPABLE_IGNORE = 2
+};
+
+/*
+ * Details about a specific interleave format supported by memory
+ */
+enum interleave_size
+{
+	INTERLEAVE_SIZE_64B  = 0,
+	INTERLEAVE_SIZE_128B = 1,
+	INTERLEAVE_SIZE_256B = 2,
+	INTERLEAVE_SIZE_4KB  = 3,
+	INTERLEAVE_SIZE_1GB  = 4
+};
+
+enum interleave_ways
+{
+	INTERLEAVE_WAYS_0 =  0,
+	INTERLEAVE_WAYS_1  = 1,
+	INTERLEAVE_WAYS_2  = 2,
+	INTERLEAVE_WAYS_3  = 3,
+	INTERLEAVE_WAYS_4  = 4,
+	INTERLEAVE_WAYS_6  = 6,
+	INTERLEAVE_WAYS_8  = 8,
+	INTERLEAVE_WAYS_12 = 12,
+	INTERLEAVE_WAYS_16 = 16,
+	INTERLEAVE_WAYS_24 = 24
+};
+
+struct interleave_format
+{
+	NVM_BOOL recommended; // is this format a recommended format
+	enum interleave_size channel; // channel interleave of this format
+	enum interleave_size imc; // memory controller interleave of this format
+	enum interleave_ways ways; // number of ways for this format
+};
+
 #endif /* NVM_TYPES_H_ */
