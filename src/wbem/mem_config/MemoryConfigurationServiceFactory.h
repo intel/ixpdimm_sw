@@ -263,6 +263,8 @@ class NVM_API MemoryConfigurationServiceFactory : public framework_interface::Nv
 		 */
 		core::memory_allocator::MemoryAllocationRequest memAllocSettingsToRequest(
 				const framework::STR_LIST &memoryAllocationSettings);
+		bool isValidAppDirectExtentForRequest(
+				const std::vector<core::memory_allocator::AppDirectExtent> &appDirectExtents);
 
 		/*
 		 * Return a list of MemoryAllocationSettings tha belong to the given socket

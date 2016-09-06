@@ -45,7 +45,7 @@ void core::memory_allocator::RuleNoCombiningStorageAndAppDirect::verify(
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	if (request.getNumberOfAppDirectExtents() > 0 && request.isStorageRemaining())
+	if (request.getAppDirectCapacityGiB() > 0 && request.isStorageRemaining())
 	{
 		throw core::NvmExceptionCombiningStorageAndAppDirect();
 	}

@@ -48,8 +48,6 @@ class NVM_API LayoutStepStorage: public LayoutStep
 
 		virtual void execute(const MemoryAllocationRequest &request,
 				MemoryAllocationLayout &layout);
-
-		virtual bool isRemainingStep(const MemoryAllocationRequest &request);
 };
 
 } /* namespace memory_allocator */

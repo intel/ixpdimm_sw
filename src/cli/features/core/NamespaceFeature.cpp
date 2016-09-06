@@ -280,9 +280,7 @@ void cli::nvmcli::NamespaceFeature::getPaths(cli::framework::CommandSpecList &li
 	list.push_back(deleteNamespace);
 	list.push_back(showConfigGoal);
 	list.push_back(deleteConfigGoal);
-	// TODO: Remove all previous createGoal command with US16523
-	// list.push_back(createGoal);
-	list.push_back(CreateGoalCommand::getCommandSpec(CREATE_GOAL2));
+	list.push_back(CreateGoalCommand::getCommandSpec(CREATE_GOAL));
 	list.push_back(showPools);
 	list.push_back(dumpConfig);
 	list.push_back(loadGoal);
@@ -299,11 +297,11 @@ cli::nvmcli::NamespaceFeature::NamespaceFeature() : cli::framework::FeatureBase(
 	m_nsType(0), m_capacityExists(false), m_capacityGB(0),
 	m_friendlyName(""), m_friendlyNameExists(false),
 	m_enableState(0), m_enabledStateExists(false),
-	m_optimize(0), m_encryption(0), m_eraseCapable(0), m_reserveDimm(false),
+	m_optimize(0), m_encryption(0), m_eraseCapable(0),
 	m_channelSize(wbem::mem_config::MEMORYALLOCATIONSETTINGS_EXPONENT_UNKNOWN),
 	m_controllerSize(wbem::mem_config::MEMORYALLOCATIONSETTINGS_EXPONENT_UNKNOWN),
-	m_byOne(false), m_forceOption(false), m_appDirectIsRemaining(false),
-	m_storageIsRemaining(false), m_memoryPageAllocation(0), m_optimizeExists(false),
+	m_byOne(false), m_forceOption(false),
+	m_memoryPageAllocation(0), m_optimizeExists(false),
 	m_pPmNamespaceProvider(new wbem::pmem_config::PersistentMemoryNamespaceFactory()),
 	m_pPmServiceProvider(new wbem::pmem_config::PersistentMemoryServiceFactory()),
 	m_pPmPoolProvider(new wbem::pmem_config::PersistentMemoryPoolFactory()),
@@ -341,9 +339,6 @@ cli::framework::ResultBase * cli::nvmcli::NamespaceFeature::run(
 		case CREATE_GOAL:
 			pResult = createGoal(parsedCommand);
 			break;
-		case CREATE_GOAL2:
-			pResult = createGoal2(parsedCommand);
-			break;
 		case SHOW_POOLS:
 			pResult = showPools(parsedCommand);
 			break;
@@ -372,7 +367,7 @@ cli::framework::ResultBase * cli::nvmcli::NamespaceFeature::run(
 	return pResult;
 }
 
-cli::framework::ResultBase *cli::nvmcli::NamespaceFeature::createGoal2(
+cli::framework::ResultBase *cli::nvmcli::NamespaceFeature::createGoal(
 	const cli::framework::ParsedCommand &parsedCommand)
 {
 	cli::framework::ResultBase *pResult;

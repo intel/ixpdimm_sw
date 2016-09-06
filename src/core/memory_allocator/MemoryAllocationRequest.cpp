@@ -35,7 +35,7 @@ namespace memory_allocator
 {
 
 MemoryAllocationRequest::MemoryAllocationRequest() :
-		m_memoryCapacityGiB(0), m_appDirectExtents(), m_storageRemaining(false),
+		m_memoryCapacityGiB(0), m_appDirectExtent(), m_storageRemaining(false),
 		m_reserveDimmUid(""), m_reserveDimmType(RESERVE_DIMM_NONE),
 		m_dimms()
 {
@@ -61,57 +61,25 @@ void MemoryAllocationRequest::setMemoryModeCapacityGiB(const NVM_UINT64 capacity
 	m_memoryCapacityGiB = capacityGiB;
 }
 
-bool MemoryAllocationRequest::isMemoryRemaining() const
+NVM_UINT64 MemoryAllocationRequest::getAppDirectCapacityGiB() const
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	return (getMemoryModeCapacityGiB() == REQUEST_REMAINING_CAPACITY);
+	return m_appDirectExtent.capacityGiB;
 }
 
-std::vector<AppDirectExtent> MemoryAllocationRequest::getAppDirectExtents() const
+AppDirectExtent MemoryAllocationRequest::getAppDirectExtent() const
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	return m_appDirectExtents;
+	return m_appDirectExtent;
 }
 
-size_t MemoryAllocationRequest::getNumberOfAppDirectExtents() const
+void MemoryAllocationRequest::setAppDirectExtent(const AppDirectExtent& extent)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	return m_appDirectExtents.size();
-}
-
-void MemoryAllocationRequest::addAppDirectExtent(const AppDirectExtent& extent)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	m_appDirectExtents.push_back(extent);
-}
-
-void MemoryAllocationRequest::setAppDirectExtents(const std::vector<AppDirectExtent>& extents)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	m_appDirectExtents = extents;
-}
-
-bool MemoryAllocationRequest::isAppDirectRemaining() const
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	bool remaining = false;
-
-	for (std::vector<AppDirectExtent>::const_iterator extent = m_appDirectExtents.begin();
-			extent != m_appDirectExtents.end(); extent++)
-	{
-		if (extent->capacityGiB == REQUEST_REMAINING_CAPACITY)
-		{
-			remaining = true;
-		}
-	}
-
-	return remaining;
+	m_appDirectExtent = extent;
 }
 
 bool MemoryAllocationRequest::isStorageRemaining() const
@@ -225,6 +193,23 @@ void MemoryAllocationRequest::setDimms(const std::vector<Dimm>& dimmList)
 	m_dimms = dimmList;
 }
 
+std::vector<Dimm> MemoryAllocationRequest::getNonReservedDimms() const
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	std::vector<Dimm> nonReservedDimms;
+	for (std::vector<Dimm>::const_iterator dimm = m_dimms.begin();
+			dimm != m_dimms.end(); dimm++)
+	{
+		if (!isReservedDimm(*dimm))
+		{
+			nonReservedDimms.push_back(*dimm);
+		}
+	}
+
+	return nonReservedDimms;
+}
+
 NVM_UINT64 MemoryAllocationRequest::getMappableDimmCapacityInBytes() const
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -248,22 +233,10 @@ NVM_UINT64 MemoryAllocationRequest::getRequestedMappedCapacityInBytes() const
 
 	NVM_UINT64 mappedCapacityBytes = 0;
 
-	if (isMemoryRemaining() || isAppDirectRemaining())
-	{
-		mappedCapacityBytes = getMappableDimmCapacityInBytes();
-	}
-	else
-	{
-		NVM_UINT64 mappedCapacityGiB = getMemoryModeCapacityGiB();
+	NVM_UINT64 mappedCapacityGiB = getMemoryModeCapacityGiB();
+	mappedCapacityGiB += getAppDirectCapacityGiB();
 
-		for (std::vector<AppDirectExtent>::const_iterator extent = m_appDirectExtents.begin();
-				extent != m_appDirectExtents.end(); extent++)
-		{
-			mappedCapacityGiB += extent->capacityGiB;
-		}
-
-		mappedCapacityBytes = mappedCapacityGiB * BYTES_PER_GIB;
-	}
+	mappedCapacityBytes = mappedCapacityGiB * BYTES_PER_GIB;
 
 	return mappedCapacityBytes;
 }

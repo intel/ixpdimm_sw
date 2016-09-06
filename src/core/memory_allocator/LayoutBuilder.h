@@ -34,6 +34,7 @@
 
 #include <core/NvmLibrary.h>
 #include "MemoryAllocationTypes.h"
+#include "MemoryAllocationUtil.h"
 #include "LayoutStep.h"
 
 namespace core
@@ -62,6 +63,7 @@ class NVM_API LayoutBuilder
 		std::vector<LayoutStep *> m_layoutSteps;
 		struct nvm_capabilities m_systemCapabilities;
 		core::NvmLibrary &m_nvmLib;
+		MemoryAllocationUtil m_util;
 };
 
 } /* namespace memory_allocator */

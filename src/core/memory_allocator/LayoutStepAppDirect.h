@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 2016, Intel Corporation
+ * Copyright (c) 2016, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -32,9 +32,11 @@
 #ifndef _core_LOGIC_LAYOUTSTEPAPPDIRECT_H_
 #define _core_LOGIC_LAYOUTSTEPAPPDIRECT_H_
 
+#include <vector>
+#include <map>
 #include <nvm_types.h>
-#include <core/NvmLibrary.h>
 #include "LayoutStep.h"
+#include "MemoryAllocationUtil.h"
 
 namespace core
 {
@@ -44,87 +46,55 @@ namespace memory_allocator
 class NVM_API LayoutStepAppDirect: public LayoutStep
 {
 	public:
-		LayoutStepAppDirect(const struct nvm_capabilities &cap,
-				const int appDirectExtentIndex,
-				core::NvmLibrary &nvmLib);
+		LayoutStepAppDirect(MemoryAllocationUtil &util);
 		virtual ~LayoutStepAppDirect();
 
 		virtual void execute(const MemoryAllocationRequest &request,
 				MemoryAllocationLayout &layout);
 
-		virtual bool isRemainingStep(const MemoryAllocationRequest &request);
-
 	protected:
-		NVM_UINT64 getRequestedCapacityBytes(
-				const NVM_UINT64 &requestedCapacity,
-				const struct MemoryAllocationRequest& request,
-				MemoryAllocationLayout &layout);
-		NVM_UINT64 layoutByOneAd(
-				const NVM_UINT64 &bytesToAllocate,
-				const std::vector<Dimm> &dimms,
-				const MemoryAllocationRequest &request,
-				MemoryAllocationLayout &layout);
-		NVM_UINT64 layoutInterleavedAd(
-				const NVM_UINT64 &bytesToAllocate,
-				const std::vector<Dimm> &dimms,
-				const MemoryAllocationRequest &request,
-				MemoryAllocationLayout &layout);
-		NVM_UINT64 layoutInterleavedAdAcrossSocket(
-				const NVM_UINT64 &bytesPerSocket,
-				const std::vector<Dimm> &dimms,
-				const MemoryAllocationRequest& request,
-				MemoryAllocationLayout& layout);
-		NVM_UINT64 layoutInterleaveSet(
-				const NVM_UINT64 &bytesPerDimm,
-				const std::vector<Dimm> &dimms,
-				const MemoryAllocationRequest& request,
-				MemoryAllocationLayout& layout);
-		NVM_UINT64 getBestInterleaveBytesPerDimm(
-				const std::vector<Dimm> &requestedDimms,
-				std::map<std::string, struct config_goal> &goals,
-				const NVM_UINT64 &requestedBytes,
-				const MemoryAllocationRequest &request,
-				std::vector<Dimm> &dimmsIncluded);
-		bool canMapInterleavedCapacity(
-				const std::vector<Dimm> &dimms,
-				std::map<std::string, struct config_goal> &goals,
-				const MemoryAllocationRequest &request);
-		NVM_UINT64 getDimmUnallocatedAppDirectBytes(
-				const struct Dimm &dimm, const struct config_goal &goal);
-		NVM_UINT64 getRemainingAppDirectBytesFromDimms(
-				const MemoryAllocationRequest &request,
-				MemoryAllocationLayout &layout);
-		bool isValidWay(const size_t &numDimms);
-		enum interleave_ways getInterleaveWay(const size_t &numDimms);
-		enum interleave_size getInterleaveChannelSize(
-				const MemoryAllocationRequest &request, const size_t &numDimms);
-		enum interleave_size getInterleaveImcSize(
-				const MemoryAllocationRequest &request, const size_t &numDimms);
-		void addInterleaveSetToGoal(const std::string &dimmUid,
-				struct config_goal &goal, const NVM_UINT64 &sizeBytes,
-				const NVM_UINT16 &setId, const struct app_direct_attributes &settings);
-		bool interleaveSetFromPreviousExtent(
-				const std::string &dimmUid,
-				struct config_goal &goal);
-		bool interleaveSetsMatch(const struct app_direct_attributes &oldSet, const struct app_direct_attributes &newSet);
-		int getDimmPopulationMap(const std::vector<Dimm> &requestedDimms,
-						std::map<std::string, struct config_goal> &goals);
-		bool dimmPopulationMatchesInterleaveSet(const int &dimmMap, const int &interleaveSet);
-		std::vector<Dimm> getDimmsMatchingInterleaveSet(const int &interleaveSet,
-				const std::vector<Dimm> &requestedDimms);
-		NVM_UINT64 removeEmptySockets(std::map<NVM_UINT16, std::vector<Dimm> > &sockets,
-				const NVM_UINT64 &bytesToAllocate,
-				const MemoryAllocationRequest& request,
-				MemoryAllocationLayout& layout);
-		std::vector<Dimm> getDimmsWithCapacity(const std::vector<Dimm> &dimms,
-				MemoryAllocationLayout& layout);
-		std::vector<Dimm> getRemainingDimms(const std::vector<Dimm> &dimms,
-				const std::vector<Dimm> &dimmsIncluded);
+		void initNextInterleaveId(const MemoryAllocationLayout& layout);
+		bool requestExtentIsInterleaved(const MemoryAllocationRequest &request);
 
-		struct nvm_capabilities m_systemCap;
-		unsigned int m_adExtentIndex;
-		core::NvmLibrary &m_nvmLib;
-		std::map<std::string, int> m_dimmExistingSets; // dimm UID to App Direct count map
+		void layoutExtent(const MemoryAllocationRequest &request,
+				MemoryAllocationLayout &layout);
+
+		void layoutInterleavedExtentOnRequestedDimms(const std::vector<Dimm> &dimms,
+				MemoryAllocationLayout &layout);
+		std::map<NVM_UINT16, std::vector<Dimm> > getDimmsSortedBySocket(
+				const std::vector<Dimm> &dimms);
+		void layoutInterleavedExtentOnSocket(const std::vector<Dimm> &socketDimms,
+				MemoryAllocationLayout &layout);
+		std::vector<Dimm> getLargestSetOfInterleavableDimms(const std::vector<Dimm>& dimms);
+		void layoutInterleaveSet(const std::vector<Dimm> &interleavedDimms,
+				const NVM_UINT64 bytesPerDimm,
+				MemoryAllocationLayout &layout);
+		void removeDimmsFromList(const std::vector<Dimm> &dimmsToRemove,
+				std::vector<Dimm> &dimmList);
+
+		void layoutUnallocatedCapacityWithNonInterleaved(const std::vector<Dimm> &dimms,
+				MemoryAllocationLayout &layout);
+
+		void updateGoalWithInterleaveSet(config_goal &goal,
+				const NVM_UINT64 bytesPerDimm,
+				const std::vector<Dimm> &interleavedDimms);
+		void updateGoalParametersWithInterleaveSet(NVM_UINT64 &goalSize,
+				NVM_UINT16 &goalSetId,
+				app_direct_attributes &goalSettings,
+				const NVM_UINT64 bytesPerDimm,
+				const std::vector<Dimm> &interleavedDimms);
+		interleave_ways getInterleaveWaysFromNumDimms(const size_t numDimms);
+
+		void addExtentCapacityToLayout(MemoryAllocationLayout &layout);
+		NVM_UINT64 getExtentCapacityFromLayout(const MemoryAllocationLayout &layout);
+		void checkTotalExtentCapacityAllocated(const MemoryAllocationRequest &request,
+				MemoryAllocationLayout &layout);
+		bool allRequestedCapacityAllocated(const MemoryAllocationRequest &request,
+				MemoryAllocationLayout &layout);
+
+		MemoryAllocationUtil &m_memAllocUtil;
+		size_t m_extentIndex;
+		NVM_UINT16 m_nextInterleaveId;
 };
 
 } /* namespace memory_allocator */

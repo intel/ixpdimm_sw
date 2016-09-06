@@ -92,8 +92,8 @@ private:
 	void buildRequestedDimms();
 	void buildReservedDimm();
 	void buildMemoryCapacity();
-	void buildAppDirectExtents();
-	void buildStorage();
+	void buildAppDirectCapacity();
+	void buildStorageCapacity();
 
 	std::vector<Dimm> getAllDimms();
 	std::vector<Dimm> getRequestedDimms();
@@ -109,7 +109,7 @@ private:
 
 	NVM_UINT64 getTotalCapacityBytesFromRequestDimms();
 	NVM_UINT64 getPersistentCapacityGiBFromRequest();
-	std::vector<AppDirectExtent> getAppDirectExtents();
+	AppDirectExtent getAppDirectExtent();
 };
 
 }

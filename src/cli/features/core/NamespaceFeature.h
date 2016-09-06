@@ -187,7 +187,6 @@ class NVM_API NamespaceFeature : public cli::framework::FeatureBase
 			SHOW_CONFIG_GOAL,
 			DELETE_CONFIG_GOAL,
 			CREATE_GOAL,
-			CREATE_GOAL2,
 			SHOW_POOLS,
 			DUMP_CONFIG,
 			LOAD_CONFIG_GOAL
@@ -246,7 +245,6 @@ private:
 		framework::ResultBase *showConfigGoal(const framework::ParsedCommand &parsedCommand);
 		framework::ResultBase *deleteConfigGoal(const framework::ParsedCommand &parsedCommand);
 		framework::ResultBase *createGoal(const framework::ParsedCommand &parsedCommand);
-		framework::ResultBase *createGoal2(const framework::ParsedCommand &parsedCommand);
 		framework::ResultBase *showPools(const framework::ParsedCommand &parsedCommand);
 		framework::ResultBase *showNamespaces(const framework::ParsedCommand &parsedCommand);
 		framework::ResultBase *deleteNamespaces(const framework::ParsedCommand &parsedCommand);
@@ -274,14 +272,11 @@ private:
 		COMMON_UINT16 m_optimize;
 		COMMON_UINT16 m_encryption;
 		COMMON_UINT16 m_eraseCapable;
-		bool m_reserveDimm;
 		wbem::mem_config::MemoryAllocationSettingsInterleaveSizeExponent m_channelSize;
 		wbem::mem_config::MemoryAllocationSettingsInterleaveSizeExponent m_controllerSize;
 		bool m_byOne;
 		bool m_forceOption;
 		std::string m_prefix;
-		bool m_appDirectIsRemaining;
-		bool m_storageIsRemaining;
 		COMMON_UINT16 m_memoryPageAllocation;
 		bool m_optimizeExists;
 
@@ -357,34 +352,10 @@ private:
 		/*
 		 * Helpers for create goal
 		 */
-
-		cli::framework::ResultBase* parsedCreateGoalParamsToRequest(
-				const framework::ParsedCommand& parsedCommand,
-				core::memory_allocator::MemoryAllocationRequest &request);
-		cli::framework::ResultBase* validateSocketList(const std::vector<std::string> &socketList);
-		cli::framework::ResultBase* addDimmsToRequestFromSocketList(
-				const std::vector<std::string> &socketList,
-				core::memory_allocator::MemoryAllocationRequest &request);
-		core::memory_allocator::AppDirectExtent memoryPropToAppDirectExtent(
-				const MemoryProperty &pmProp);
-		cli::framework::ResultBase* addParsedDimmListToRequest(
-				const framework::ParsedCommand& parsedCommand,
-				core::memory_allocator::MemoryAllocationRequest &request);
-		cli::framework::ResultBase* addParsedReserveDimmPropertyToRequest(
-				const framework::ParsedCommand& parsedCommand,
-				core::memory_allocator::MemoryAllocationRequest &request);
-		core::memory_allocator::Dimm nvdimmInstanceToDimm(const wbem::framework::Instance &instance);
-		bool promptUserConfirmationForLayout(const core::memory_allocator::MemoryAllocationLayout &layout);
 		static std::string getStringForLayoutWarning(enum core::memory_allocator::LayoutWarningCode warningCode);
 		static void generateCliDisplayInstances(wbem::framework::instances_t *pWbemInstances,
 			wbem::framework::instances_t& displayInstances,
 			wbem::framework::attribute_names_t& displayAttributes);
-
-		// May throw
-		void getDimmInfoForUids(const std::vector<std::string> &dimmUids,
-				std::vector<core::memory_allocator::Dimm> &dimmList);
-
-		framework::ResultBase* parseReserveDimmProperty(const framework::ParsedCommand& parsedCommand);
 
 		/*
 		 * Helper function to check for valid deletion request

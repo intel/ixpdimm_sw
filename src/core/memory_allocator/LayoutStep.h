@@ -46,7 +46,6 @@ class NVM_API LayoutStep
 		virtual ~LayoutStep() {}
 
 		virtual void execute(const MemoryAllocationRequest &request, MemoryAllocationLayout &layout) = 0;
-		virtual bool isRemainingStep(const MemoryAllocationRequest &request);
 
 	protected:
 		NVM_UINT64 getDimmUnallocatedBytes(
@@ -65,6 +64,9 @@ class NVM_API LayoutStep
 				std::vector<Dimm> &dimmsIncluded);
 		NVM_UINT64 getRemainingBytesFromRequestedDimms(
 				const struct MemoryAllocationRequest& request,
+				MemoryAllocationLayout& layout);
+		NVM_UINT64 getRemainingBytesFromDimms(
+				const std::vector<Dimm> &dimms,
 				MemoryAllocationLayout& layout);
 };
 

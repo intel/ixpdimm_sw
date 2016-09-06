@@ -149,6 +149,29 @@ void core::memory_allocator::MemoryAllocationUtil::getLastInterleaveSetIdFromLay
 	}
 }
 
+interleave_format core::memory_allocator::MemoryAllocationUtil::getRecommendedInterleaveFormatForWays(
+		const interleave_ways ways)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	nvm_capabilities capabilities = m_nvmLib.getNvmCapabilities();
+
+	interleave_format recommended;
+	memset(&recommended, 0, sizeof (recommended));
+	NVM_UINT16 numFormats = capabilities.platform_capabilities.app_direct_mode.interleave_formats_count;
+	for (NVM_UINT16 i = 0; i < numFormats; i++)
+	{
+		interleave_format &format = capabilities.platform_capabilities.app_direct_mode.interleave_formats[i];
+		if (format.ways == ways && format.recommended)
+		{
+			recommended = format;
+			break;
+		}
+	}
+
+	return recommended;
+}
+
 core::memory_allocator::Dimm core::memory_allocator::MemoryAllocationUtil::deviceDiscoveryToDimm(
 		const struct device_discovery& deviceDiscovery)
 {

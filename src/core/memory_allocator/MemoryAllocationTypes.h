@@ -46,54 +46,12 @@ namespace core
 namespace memory_allocator
 {
 
-static const NVM_UINT64 REQUEST_REMAINING_CAPACITY = (NVM_UINT64)-1;
 static const int REQUEST_DEFAULT_INTERLEAVE_FORMAT = -1;
 static const size_t MAX_APP_DIRECT_EXTENTS = 1;
 static const NVM_UINT16 DIMMS_PER_SOCKET = 6;
 static const NVM_UINT16 IMCS_PER_SOCKET = 2;
 static const NVM_UINT16 CHANNELS_PER_IMC = 3;
 static const NVM_UINT64 PM_ALIGNMENT_GIB = 32;
-
-// 2 memory controllers, 3 channels
-// where bit placement represents the
-// DIMMs ordered as such:
-// ---------
-// | 0 | 1 |
-// | 2 | 3 |
-// | 4 | 5 |
-// ---------
-static const int INTERLEAVE_SETS[] =
-{
-		0b111111, // x6
-
-		0b001111, // x4
-		0b111100, // x4
-		0b110011, // x4
-
-		0b010101, // x3
-		0b101010, // x3
-
-		// favor across memory controller
-		0b000011, // x2
-		0b001100, // x2
-		0b110000, // x2
-
-		// before across channel
-		0b000101, // x2
-		0b001010, // x2
-		0b010100, // x2
-		0b101000, // x2
-		0b010001, // x2
-		0b100010, // x2
-
-		// lastly x1
-		0b000001, // x1
-		0b000010, // x1
-		0b000100, // x1
-		0b001000, // x1
-		0b010000, // x1
-		0b100000, // x1
-};
 
 struct Dimm
 {

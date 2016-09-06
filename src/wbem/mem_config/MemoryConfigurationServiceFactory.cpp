@@ -1065,8 +1065,13 @@ wbem::mem_config::MemoryConfigurationServiceFactory::memAllocSettingsToRequest(
 	std::vector<core::memory_allocator::AppDirectExtent> appDirectExtents;
 	settingsStringsToRequestedExtents(memoryAllocationSettings,
 			memoryCapacity, appDirectExtents);
+
 	request.setMemoryModeCapacityGiB(memoryCapacity);
-	request.setAppDirectExtents(appDirectExtents);
+
+	if (isValidAppDirectExtentForRequest(appDirectExtents))
+	{
+		request.setAppDirectExtent(appDirectExtents.front());
+	}
 
 	if (requestLeavesSpaceForStorage(request))
 	{
@@ -1074,6 +1079,28 @@ wbem::mem_config::MemoryConfigurationServiceFactory::memAllocSettingsToRequest(
 	}
 
 	return request;
+}
+
+bool wbem::mem_config::MemoryConfigurationServiceFactory::isValidAppDirectExtentForRequest(
+		const std::vector<core::memory_allocator::AppDirectExtent>& appDirectExtents)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	bool hasExtent = false;
+
+	if (appDirectExtents.size() > core::memory_allocator::MAX_APP_DIRECT_EXTENTS)
+	{
+		COMMON_LOG_ERROR_F("Invalid input - too many App Direct extents (%llu)",
+				appDirectExtents.size());
+		throw core::NvmExceptionTooManyAppDirectExtents();
+	}
+
+	if (appDirectExtents.size() > 0)
+	{
+		hasExtent = true;
+	}
+
+	return hasExtent;
 }
 
 bool wbem::mem_config::MemoryConfigurationServiceFactory::requestLeavesSpaceForStorage(

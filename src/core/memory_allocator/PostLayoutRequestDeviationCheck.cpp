@@ -89,15 +89,18 @@ void core::memory_allocator::PostLayoutRequestDeviationCheck::checkAppDirectCapa
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	std::vector<AppDirectExtent> extents = request.getAppDirectExtents();
-
-	for (size_t i = 0;  i < extents.size(); i++)
+	if (request.getAppDirectCapacityGiB() > 0)
 	{
-		double percentDeviation =
-				findPercentDeviation(extents[i].capacityGiB,
-						layout.appDirectCapacities[i]);
-		if ((layout.appDirectCapacities[i] == 0)  ||
-				(!layoutDeviationIsWithinBounds(percentDeviation)))
+		NVM_UINT64 layoutAppDirectCapacity = 0;
+		for (std::vector<NVM_UINT64>::const_iterator capacity = layout.appDirectCapacities.begin();
+				capacity != layout.appDirectCapacities.end(); capacity++)
+		{
+			layoutAppDirectCapacity += *capacity;
+		}
+
+		double percentDeviation = findPercentDeviation(request.getAppDirectCapacityGiB(),
+						layoutAppDirectCapacity);
+		if (!layoutDeviationIsWithinBounds(percentDeviation))
 		{
 			throw core::NvmExceptionUnacceptableLayoutDeviation();
 		}

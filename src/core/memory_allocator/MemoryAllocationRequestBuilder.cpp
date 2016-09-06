@@ -52,8 +52,8 @@ MemoryAllocationRequest MemoryAllocationRequestBuilder::build()
 	buildRequestedDimms();
 	buildReservedDimm();
 	buildMemoryCapacity();
-	buildAppDirectExtents();
-	buildStorage();
+	buildAppDirectCapacity();
+	buildStorageCapacity();
 
 	return m_result;
 }
@@ -257,32 +257,30 @@ NVM_UINT64 MemoryAllocationRequestBuilder::getTotalCapacityBytesFromRequestDimms
 	return totalCapacity;
 }
 
-void MemoryAllocationRequestBuilder::buildAppDirectExtents()
+void MemoryAllocationRequestBuilder::buildAppDirectCapacity()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	m_result.setAppDirectExtents(getAppDirectExtents());
+	m_result.setAppDirectExtent(getAppDirectExtent());
 }
 
-std::vector<AppDirectExtent> MemoryAllocationRequestBuilder::getAppDirectExtents()
+AppDirectExtent MemoryAllocationRequestBuilder::getAppDirectExtent()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	std::vector<AppDirectExtent> extents;
+	AppDirectExtent extent;
 
 	NVM_UINT64 pmCapacityGiB = getPersistentCapacityGiBFromRequest();
 	if (pmCapacityGiB > 0 && m_pmType != Storage)
 	{
-		AppDirectExtent extent;
 		extent.capacityGiB = pmCapacityGiB;
 		if (m_pmType == AppDirectNoInterleave)
 		{
 			extent.byOne = true;
 		}
-		extents.push_back(extent);
 	}
 
-	return extents;
+	return extent;
 }
 
 NVM_UINT64 MemoryAllocationRequestBuilder::getPersistentCapacityGiBFromRequest()
@@ -293,7 +291,7 @@ NVM_UINT64 MemoryAllocationRequestBuilder::getPersistentCapacityGiBFromRequest()
 	return B_TO_GiB(totalCapacityBytes) - m_result.getMemoryModeCapacityGiB();
 }
 
-void MemoryAllocationRequestBuilder::buildStorage()
+void MemoryAllocationRequestBuilder::buildStorageCapacity()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 

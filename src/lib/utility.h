@@ -539,6 +539,11 @@ static inline NVM_UINT64 configGoalSizeToBytes(NVM_UINT64 size)
 	return bytes;
 }
 
+static inline NVM_UINT64 configGoalSizeToGiB(NVM_UINT64 size)
+{
+	return size;
+}
+
 /*!
  * Convert common error code to a Native API library return_code.
  */

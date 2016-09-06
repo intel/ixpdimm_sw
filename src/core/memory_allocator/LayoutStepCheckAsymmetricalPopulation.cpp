@@ -48,7 +48,7 @@ void core::memory_allocator::LayoutStepCheckAsymmetricalPopulation::execute(cons
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	if (request.getMemoryModeCapacityGiB() != 0 || request.getNumberOfAppDirectExtents() > 0)
+	if (request.getMemoryModeCapacityGiB() != 0 || request.getAppDirectCapacityGiB() > 0)
 	{
 		std::map<NVM_UINT16, std::vector<Dimm> > socketDimmsMap;
 		std::vector<Dimm> dimms = request.getDimms();

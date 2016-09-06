@@ -35,11 +35,6 @@
 #include <LogEnterExit.h>
 #include <core/exceptions/NvmExceptionBadRequest.h>
 
-bool core::memory_allocator::LayoutStep::isRemainingStep(const MemoryAllocationRequest &request)
-{
-	return false;
-}
-
 NVM_UINT64 core::memory_allocator::LayoutStep::getCountOfDimmsWithUnallocatedCapacity(
 		const std::vector<core::memory_allocator::Dimm> &dimms,
 		std::map<std::string, struct config_goal> &goals)
@@ -96,7 +91,7 @@ NVM_UINT64 core::memory_allocator::LayoutStep::getLargestPerDimmSymmetricalBytes
 		throw core::NvmExceptionBadRequestSize();
 	}
 
-	NVM_UINT64 bytes = requestedBytes / dimmCount;
+	NVM_UINT64 bytes = dimms.front().capacityBytes;
 	for (std::vector<struct Dimm>::const_iterator dimmIter = dimms.begin();
 				dimmIter != dimms.end(); dimmIter++)
 	{
@@ -110,6 +105,12 @@ NVM_UINT64 core::memory_allocator::LayoutStep::getLargestPerDimmSymmetricalBytes
 				bytes = dimmMaxBytes;
 			}
 		}
+	}
+
+	NVM_UINT64 evenlyDividedBytes = requestedBytes / dimmsIncluded.size();
+	if (evenlyDividedBytes < bytes)
+	{
+		bytes = evenlyDividedBytes;
 	}
 
 	// has to be 1 GiB aligned
@@ -127,8 +128,16 @@ NVM_UINT64 core::memory_allocator::LayoutStep::getRemainingBytesFromRequestedDim
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
+	std::vector<Dimm> dimms = request.getNonReservedDimms();
+	return getRemainingBytesFromDimms(dimms, layout);
+}
+
+NVM_UINT64 core::memory_allocator::LayoutStep::getRemainingBytesFromDimms(
+		const std::vector<Dimm>& dimms, MemoryAllocationLayout& layout)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
 	NVM_UINT64 bytes = 0;
-	std::vector<Dimm> dimms = request.getDimms();
 	for (std::vector<struct Dimm>::const_iterator dimmIter = dimms.begin();
 			dimmIter != dimms.end(); dimmIter++)
 	{
@@ -152,3 +161,4 @@ NVM_UINT64 core::memory_allocator::LayoutStep::getDimmUnallocatedGiBAlignedBytes
 
 	return round_down(dimmRemainingBytes, BYTES_PER_GIB);
 }
+

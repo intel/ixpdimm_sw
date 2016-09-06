@@ -45,237 +45,124 @@ core::memory_allocator::LayoutStepMemory::~LayoutStepMemory()
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
 
-bool core::memory_allocator::LayoutStepMemory::isRemainingStep(const MemoryAllocationRequest &request)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	return request.isMemoryRemaining();
-}
-
 void core::memory_allocator::LayoutStepMemory::execute(const MemoryAllocationRequest& request,
 		MemoryAllocationLayout& layout)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	NVM_UINT64 bytesToAllocate = getRequestedCapacityBytes(request, layout);
-	if (bytesToAllocate)
+	if (request.getMemoryModeCapacityGiB() > 0)
 	{
-		std::vector<Dimm> dimmsToLayout;
-		std::vector<Dimm> allDimms = request.getDimms();
-		for (std::vector<Dimm>::const_iterator dimmIter = allDimms.begin();
-				dimmIter != allDimms.end(); dimmIter++)
+		try
 		{
-			if (layout.reservedimmUid != dimmIter->uid)
-			{
-				dimmsToLayout.push_back(*dimmIter);
-			}
+			layoutMemoryModeCapacity(request, layout);
+			alignPartitionBoundary(request, layout);
+			layout.memoryCapacity = B_TO_GiB(getBytesAllocatedFromLayout(layout));
 		}
-		NVM_UINT64 bytesAllocated = 0;
-		NVM_UINT64 alignedBytesAllocated = 0;
-		while (bytesAllocated < bytesToAllocate)
+		catch (core::NvmExceptionBadRequestSize &)
 		{
-			NVM_UINT64 bytesRemaining = bytesToAllocate - bytesAllocated;
-			try
-			{
-				std::vector<Dimm> dimmsIncluded;
-				NVM_UINT64 bytesPerDimm = getLargestPerDimmSymmetricalBytes(
-						dimmsToLayout, layout.goals, bytesRemaining, dimmsIncluded);
-				for (std::vector<Dimm>::const_iterator dimmIter = dimmsIncluded.begin();
-								dimmIter != dimmsIncluded.end(); dimmIter++)
-				{
-					NVM_UINT64 alignedBytes = getAlignedDimmBytes(request, *dimmIter, layout, bytesPerDimm);
-					layout.goals[dimmIter->uid].memory_size += bytesToConfigGoalSize(alignedBytes);
-					alignedBytesAllocated += alignedBytes;
-					bytesAllocated += bytesPerDimm;
-				}
-			}
-			catch (core::NvmExceptionBadRequestSize &)
-			{
-				// out of capacity, clean up and pass along the exception
-				layout.memoryCapacity = bytesToConfigGoalSize(alignedBytesAllocated);
-				throw core::NvmExceptionBadRequestMemorySize();
-			}
+			layout.memoryCapacity = B_TO_GiB(getBytesAllocatedFromLayout(layout));
+			throw core::NvmExceptionBadRequestMemorySize();
 		}
-		layout.memoryCapacity = bytesToConfigGoalSize(alignedBytesAllocated);
 	}
 }
 
-NVM_UINT64 core::memory_allocator::LayoutStepMemory::getRequestedCapacityBytes(
-		const struct MemoryAllocationRequest& request,
+void core::memory_allocator::LayoutStepMemory::layoutMemoryModeCapacity(
+		const MemoryAllocationRequest& request,
 		MemoryAllocationLayout& layout)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	NVM_UINT64 bytes = 0;
-	if (request.getMemoryModeCapacityGiB() != REQUEST_REMAINING_CAPACITY)
+	std::vector<Dimm> dimmsToLayout = request.getNonReservedDimms();
+	NVM_UINT64 bytesToAllocate = GiB_TO_B(request.getMemoryModeCapacityGiB());
+	NVM_UINT64 bytesAllocated = 0;
+
+	while (bytesAllocated < bytesToAllocate)
 	{
-		bytes = configGoalSizeToBytes(request.getMemoryModeCapacityGiB());
+		NVM_UINT64 remainingBytes = bytesToAllocate - bytesAllocated;
+		layoutMaximumSymmetricalBytesOnDimms(remainingBytes, dimmsToLayout, layout);
+
+		bytesAllocated = getBytesAllocatedFromLayout(layout);
+	}
+}
+
+NVM_UINT64 core::memory_allocator::LayoutStepMemory::getBytesAllocatedFromLayout(
+		const MemoryAllocationLayout& layout)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	NVM_UINT64 bytesAllocated = 0;
+	for (std::map<std::string, config_goal>::const_iterator goalPair = layout.goals.begin();
+			goalPair != layout.goals.end(); goalPair++)
+	{
+		bytesAllocated += configGoalSizeToBytes(goalPair->second.memory_size);
+	}
+
+	return bytesAllocated;
+}
+
+void core::memory_allocator::LayoutStepMemory::layoutMaximumSymmetricalBytesOnDimms(
+		const NVM_UINT64 bytesToLayout, const std::vector<Dimm>& dimmsToLayout,
+		MemoryAllocationLayout& layout)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	std::vector<Dimm> dimmsIncluded;
+	NVM_UINT64 bytesPerDimm = getLargestPerDimmSymmetricalBytes(
+			dimmsToLayout, layout.goals, bytesToLayout, dimmsIncluded);
+
+	for (std::vector<Dimm>::const_iterator dimmIter = dimmsIncluded.begin();
+					dimmIter != dimmsIncluded.end(); dimmIter++)
+	{
+		layout.goals[dimmIter->uid].memory_size += bytesToConfigGoalSize(bytesPerDimm);
+	}
+}
+
+void core::memory_allocator::LayoutStepMemory::alignPartitionBoundary(
+		const MemoryAllocationRequest& request, MemoryAllocationLayout& layout)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	std::vector<Dimm> dimms = request.getNonReservedDimms();
+	for (std::vector<Dimm>::const_iterator dimm = dimms.begin(); dimm != dimms.end(); dimm++)
+	{
+		config_goal &goal = layout.goals[dimm->uid];
+		goal.memory_size = getAlignedMemoryGoalSize(*dimm, goal);
+	}
+}
+
+NVM_UINT64 core::memory_allocator::LayoutStepMemory::getAlignedMemoryGoalSize(const Dimm& dimm,
+		const config_goal& goal)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	NVM_UINT64 memoryBytes = configGoalSizeToBytes(goal.memory_size);
+	NVM_UINT64 persistentGiB = B_TO_GiB(dimm.capacityBytes - memoryBytes);
+
+	NVM_UINT64 newPersistentGiB = getAlignedPersistentPartitionCapacityGiB(persistentGiB);
+	NVM_UINT64 newVolatilePartitionBytes = dimm.capacityBytes - GiB_TO_B(newPersistentGiB);
+
+	return bytesToConfigGoalSize(newVolatilePartitionBytes);
+}
+
+NVM_UINT64 core::memory_allocator::LayoutStepMemory::getAlignedPersistentPartitionCapacityGiB(
+		const NVM_UINT64 persistentPartitionGiB)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	NVM_UINT64 roundedUpPersistentGiB = round_up(persistentPartitionGiB, PM_ALIGNMENT_GIB);
+	NVM_UINT64 roundedUpDiff = roundedUpPersistentGiB - persistentPartitionGiB;
+	NVM_UINT64 roundedDownPersistentGiB = round_down(persistentPartitionGiB, PM_ALIGNMENT_GIB);
+	NVM_UINT64 roundedDownDiff = persistentPartitionGiB - roundedDownPersistentGiB;
+
+	NVM_UINT64 alignedPersistentPartitionGiB = 0;
+	if (roundedUpDiff <= roundedDownDiff)
+	{
+		alignedPersistentPartitionGiB = roundedUpPersistentGiB;
 	}
 	else
 	{
-		bytes = getRemainingBytesFromRequestedDimms(request, layout);
-	}
-	return bytes;
-}
-
-NVM_UINT64 core::memory_allocator::LayoutStepMemory::getAlignedDimmBytes(
-		const MemoryAllocationRequest& request,
-		const Dimm &dimm,
-		MemoryAllocationLayout& layout,
-		const NVM_UINT64 &requestedBytes)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	NVM_UINT64 existingMemoryBytes = bytesToConfigGoalSize(layout.goals[dimm.uid].memory_size);
-	NVM_UINT64 totalMemoryBytes = getTotalMemoryBytes(requestedBytes, existingMemoryBytes);
-	NVM_UINT64 dimmBytes = round_down(dimm.capacityBytes, BYTES_PER_GIB);
-
-	NVM_UINT64 alignedTotalMemoryBytes = totalMemoryBytes;
-	// Memory Mode layout is last step
-	if (request.isMemoryRemaining())
-	{
-		if (request.getNumberOfAppDirectExtents() > 0)
-		{
-			alignedTotalMemoryBytes = roundDownMemoryToPMAlignment(
-					dimm, layout, totalMemoryBytes, dimmBytes);
-		}
-	}
-	// Memory Mode is first step
-	else
-	{
-		// round up by consuming storage
-		alignedTotalMemoryBytes = roundMemoryToNearestPMAlignment(
-				dimm, layout, totalMemoryBytes, dimmBytes);
+		alignedPersistentPartitionGiB = roundedDownPersistentGiB;
 	}
 
-	if (alignedTotalMemoryBytes <= existingMemoryBytes)
-	{
-		throw core::NvmExceptionBadRequestSize();
-	}
-	NVM_UINT64 alignedBytes = alignedTotalMemoryBytes - existingMemoryBytes;
-	if (alignedBytes < BYTES_PER_GIB)
-	{
-		throw core::NvmExceptionBadRequestSize();
-	}
-	return alignedBytes;
-}
-
-NVM_UINT64 core::memory_allocator::LayoutStepMemory::getTotalMemoryBytes(
-		const NVM_UINT64 &requestedBytes, const NVM_UINT64 &existingBytes)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	NVM_UINT64 bytes = 0;
-	if (requestedBytes < BYTES_PER_GIB)
-	{
-		throw core::NvmExceptionBadRequestSize();
-	}
-	NVM_UINT64 totalMemoryBytes = existingBytes + requestedBytes;
-	bytes = round_down(totalMemoryBytes, BYTES_PER_GIB); // always 1 GiB aligned
-	return bytes;
-}
-
-NVM_UINT64 core::memory_allocator::LayoutStepMemory::roundDownMemoryToPMAlignment(
-		const Dimm &dimm, MemoryAllocationLayout& layout,
-		const NVM_UINT64 &memoryBytes, const NVM_UINT64 dimmBytes)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	NVM_UINT64 pmBytes = dimmBytes - memoryBytes;
-	NVM_UINT64 pmAlignedBytes = pmBytes;
-	if (pmBytes > 0)
-	{
-		pmAlignedBytes = round_up(pmBytes, PM_ALIGNMENT_GIB * BYTES_PER_GIB);
-		if (pmAlignedBytes > dimmBytes)
-		{
-			throw core::NvmExceptionBadRequestSize();
-		}
-	}
-	NVM_UINT64 alignedMemoryBytes = dimmBytes - pmAlignedBytes;
-	if (alignedMemoryBytes < BYTES_PER_GIB)
-	{
-		throw core::NvmExceptionBadRequestSize();
-	}
-	return alignedMemoryBytes;
-}
-
-NVM_UINT64 core::memory_allocator::LayoutStepMemory::roundUpMemoryToPMAlignment(
-		const Dimm &dimm, MemoryAllocationLayout& layout,
-		const NVM_UINT64 &memoryBytes, const NVM_UINT64 dimmBytes)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	NVM_UINT64 pmBytes = dimmBytes - memoryBytes;
-	NVM_UINT64 pmAlignedBytes = pmBytes;
-	if (pmBytes > 0)
-	{
-		pmAlignedBytes = round_down(pmBytes, PM_ALIGNMENT_GIB * BYTES_PER_GIB);
-		if (pmAlignedBytes == 0)
-		{
-			throw core::NvmExceptionBadRequestSize();
-		}
-	}
-	NVM_UINT64 alignedMemoryBytes = dimmBytes - pmAlignedBytes;
-	return alignedMemoryBytes;
-}
-
-NVM_UINT64 core::memory_allocator::LayoutStepMemory::roundMemoryToNearestPMAlignment(
-		const Dimm &dimm, MemoryAllocationLayout& layout,
-		const NVM_UINT64 &memoryBytes, const NVM_UINT64 dimmBytes)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	bool canRoundUp = true;
-	bool canRoundDown = true;
-	NVM_UINT64 roundedDownBytes = 0;
-	NVM_UINT64 roundedUpBytes = 0;
-	NVM_UINT64 roundedUpDiff = 0;
-	NVM_UINT64 roundedDownDiff = 0;
-	try
-	{
-		roundedUpBytes = roundUpMemoryToPMAlignment(dimm, layout, memoryBytes, dimmBytes);
-		roundedUpDiff = roundedUpBytes - memoryBytes;
-		if (roundedUpDiff < BYTES_PER_GIB || roundedUpBytes > dimmBytes)
-		{
-			canRoundUp = false;
-		}
-	}
-	catch (core::NvmExceptionBadRequestSize &)
-	{
-		canRoundUp = false;
-	}
-
-	try
-	{
-		roundedDownBytes = roundDownMemoryToPMAlignment(dimm, layout, memoryBytes, dimmBytes);
-		roundedDownDiff = memoryBytes - roundedDownBytes;
-		if (roundedDownDiff < BYTES_PER_GIB || roundedDownBytes > dimmBytes)
-		{
-			canRoundUp = false;
-		}
-	}
-	catch (core::NvmExceptionBadRequestSize &)
-	{
-		canRoundDown = false;
-	}
-
-
-	NVM_UINT64 alignedBytes = 0;
-	if (canRoundUp && canRoundDown)
-	{
-		alignedBytes = roundedUpDiff < roundedDownDiff ? roundedUpBytes : roundedDownBytes;
-	}
-	else if (canRoundUp)
-	{
-		alignedBytes = roundedUpBytes;
-	}
-	else if (canRoundDown)
-	{
-		alignedBytes = roundedDownBytes;
-	}
-	else
-	{
-		throw core::NvmExceptionBadRequestSize();
-	}
-
-	return alignedBytes;
+	return alignedPersistentPartitionGiB;
 }

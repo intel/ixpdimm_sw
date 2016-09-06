@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 2016, Intel Corporation
+ * Copyright (c) 2016, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -25,31 +25,47 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+
 /*
- * Rule that checks a MemoryAllocationRequest to make sure only one extent is
- * set to remaining.
+ * A mechanism to build the set of DIMMs whose capacity can be interleaved together
+ * from a list of DIMMs on the same socket.
  */
 
-#ifndef _core_LOGIC_RULETOOMANYREMAINING_H_
-#define _core_LOGIC_RULETOOMANYREMAINING_H_
+#ifndef INTERLEAVEABLEDIMMSETBUILDER_H_
+#define INTERLEAVEABLEDIMMSETBUILDER_H_
 
 #include <nvm_types.h>
-#include "RequestRule.h"
+#include <vector>
+#include <exception>
+#include "MemoryAllocationTypes.h"
 
 namespace core
 {
 namespace memory_allocator
 {
 
-class NVM_API RuleTooManyRemaining: public RequestRule
+class NVM_API InterleaveableDimmSetBuilder
 {
 	public:
-		RuleTooManyRemaining();
-		virtual ~RuleTooManyRemaining();
-		virtual void verify(const MemoryAllocationRequest &request);
+		InterleaveableDimmSetBuilder();
+		virtual ~InterleaveableDimmSetBuilder();
+
+		class InvalidDimmsException : public std::exception {};
+
+		virtual void setDimms(const std::vector<Dimm> &dimms);
+		virtual std::vector<Dimm> getLargestSetOfInterleavableDimms();
+
+	private:
+		std::vector<Dimm> m_dimms;
+
+		void validateDimmList();
+		bool dimmsAreOnMultipleSockets();
+		bool dimmsHaveValidChannelIds();
+
+		std::vector<Dimm> getDimmsFromListMatchingInterleaveSet(const int interleaveBitmap);
 };
 
 } /* namespace memory_allocator */
 } /* namespace core */
 
-#endif /* _core_LOGIC_RULETOOMANYREMAINING_H_ */
+#endif /* INTERLEAVEABLEDIMMSETBUILDER_H_ */

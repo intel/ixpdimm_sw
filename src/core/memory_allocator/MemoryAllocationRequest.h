@@ -73,13 +73,10 @@ class NVM_API MemoryAllocationRequest
 
 		NVM_UINT64 getMemoryModeCapacityGiB() const;
 		void setMemoryModeCapacityGiB(const NVM_UINT64 capacity);
-		bool isMemoryRemaining() const;
 
-		std::vector<AppDirectExtent> getAppDirectExtents() const;
-		size_t getNumberOfAppDirectExtents() const;
-		void addAppDirectExtent(const AppDirectExtent &extent);
-		void setAppDirectExtents(const std::vector<AppDirectExtent> &extents);
-		bool isAppDirectRemaining() const;
+		NVM_UINT64 getAppDirectCapacityGiB() const;
+		AppDirectExtent getAppDirectExtent() const;
+		void setAppDirectExtent(const AppDirectExtent &extent);
 
 		bool isStorageRemaining() const;
 		void setStorageRemaining(const bool storageIsRemaining);
@@ -95,13 +92,14 @@ class NVM_API MemoryAllocationRequest
 		size_t getNumberOfDimms() const;
 		void addDimm(const Dimm &dimm);
 		void setDimms(const std::vector<Dimm> &dimmList);
+		std::vector<Dimm> getNonReservedDimms() const;
 
 		NVM_UINT64 getMappableDimmCapacityInBytes() const;
 		NVM_UINT64 getRequestedMappedCapacityInBytes() const;
 
 	private:
 		NVM_UINT64 m_memoryCapacityGiB;
-		std::vector<struct AppDirectExtent> m_appDirectExtents;
+		AppDirectExtent m_appDirectExtent;
 		bool m_storageRemaining;
 
 		std::string m_reserveDimmUid;

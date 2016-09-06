@@ -49,7 +49,9 @@
 core::memory_allocator::LayoutBuilder::LayoutBuilder(
 		const struct nvm_capabilities &systemCapabilities,
 		core::NvmLibrary &nvmLib)
-	: m_systemCapabilities(systemCapabilities), m_nvmLib(nvmLib)
+	: m_systemCapabilities(systemCapabilities),
+	  m_nvmLib(nvmLib),
+	  m_util(nvmLib)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
@@ -114,36 +116,8 @@ void core::memory_allocator::LayoutBuilder::populateOrderedLayoutStepsForRequest
 	// Reserve a DIMM before we get started laying out other capacity
 	m_layoutSteps.push_back(new LayoutStepReserveDimm());
 
-	// Any capacity marked REMAINING must go last (but before storage)
-	LayoutStep *pRemainingStep = NULL;
-
-	LayoutStep *pMemory = new LayoutStepMemory();
-	if (pMemory->isRemainingStep(request))
-	{
-		pRemainingStep = pMemory;
-	}
-	else
-	{
-		m_layoutSteps.push_back(pMemory);
-	}
-
-	for (size_t i = 0; i < request.getAppDirectExtents().size(); i++)
-	{
-		LayoutStep *pAppDirect = new LayoutStepAppDirect(m_systemCapabilities, (int)i, m_nvmLib);
-		if (pAppDirect->isRemainingStep(request))
-		{
-			pRemainingStep = pAppDirect;
-		}
-		else
-		{
-			m_layoutSteps.push_back(pAppDirect);
-		}
-	}
-
-	if (pRemainingStep)
-	{
-		m_layoutSteps.push_back(pRemainingStep);
-	}
+	m_layoutSteps.push_back(new LayoutStepMemory());
+	m_layoutSteps.push_back(new LayoutStepAppDirect(m_util));
 
 	// Anything left after we are done laying out capacity is storage
 	m_layoutSteps.push_back(new LayoutStepStorage());

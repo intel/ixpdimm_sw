@@ -49,26 +49,17 @@ class NVM_API LayoutStepMemory : public LayoutStep
 		virtual void execute(const MemoryAllocationRequest &request,
 				MemoryAllocationLayout &layout);
 
-		virtual bool isRemainingStep(const MemoryAllocationRequest &request);
-
 	protected:
-		NVM_UINT64 getRequestedCapacityBytes(
-				const struct MemoryAllocationRequest& request,
+		void layoutMemoryModeCapacity(const MemoryAllocationRequest& request,
+				MemoryAllocationLayout& layout);
+		NVM_UINT64 getBytesAllocatedFromLayout(const MemoryAllocationLayout& layout);
+		void layoutMaximumSymmetricalBytesOnDimms(const NVM_UINT64 bytesToLayout,
+				const std::vector<Dimm> &dimmsToLayout,
 				MemoryAllocationLayout &layout);
-		NVM_UINT64 getAlignedDimmBytes(const MemoryAllocationRequest& request, const Dimm &dimm,
-				MemoryAllocationLayout& layout, const NVM_UINT64 &requestedBytes);
-		NVM_UINT64 getTotalMemoryBytes(const NVM_UINT64 &requestedBytes,
-				const NVM_UINT64 &existingBytes);
-		NVM_UINT64 roundDownMemoryToPMAlignment(
-				const Dimm &dimm, MemoryAllocationLayout& layout,
-				const NVM_UINT64 &requestedBytes, const NVM_UINT64 dimmBytes);
-		NVM_UINT64 roundUpMemoryToPMAlignment(
-				const Dimm &dimm, MemoryAllocationLayout& layout,
-				const NVM_UINT64 &requestedBytes, const NVM_UINT64 dimmBytes);
-		NVM_UINT64 roundMemoryToNearestPMAlignment(
-				const Dimm &dimm, MemoryAllocationLayout& layout,
-				const NVM_UINT64 &requestedBytes, const NVM_UINT64 dimmBytes);
-
+		void alignPartitionBoundary(const MemoryAllocationRequest& request,
+				MemoryAllocationLayout &layout);
+		NVM_UINT64 getAlignedMemoryGoalSize(const Dimm &dimm, const config_goal &goal);
+		NVM_UINT64 getAlignedPersistentPartitionCapacityGiB(const NVM_UINT64 persistentPartitionGiB);
 };
 
 } /* namespace memory_allocator */

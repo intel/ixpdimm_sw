@@ -73,7 +73,7 @@ bool core::memory_allocator::RuleReserveDimmPropertyInvalid::memoryOrAppDirectIs
 {
 	bool result = false;
 	if ((request.getMemoryModeCapacityGiB() > 0) ||
-			(request.getNumberOfAppDirectExtents() > 0))
+			(request.getAppDirectCapacityGiB() > 0))
 	{
 		result = true;
 	}

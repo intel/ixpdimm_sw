@@ -50,22 +50,18 @@ void core::memory_allocator::LayoutStepAppDirectSettingsNotRecommended::execute(
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	std::vector<AppDirectExtent> appDirectExtents = request.getAppDirectExtents();
-	for (std::vector<AppDirectExtent>::const_iterator appDirectIter = appDirectExtents.begin();
-			appDirectIter != appDirectExtents.end(); appDirectIter++)
+	AppDirectExtent appDirectExtent = request.getAppDirectExtent();
+
+	// check way + iMC size + channel size
+	if (appDirectExtent.byOne ||
+		(!appDirectExtent.byOne &&
+		!(appDirectExtent.channel == core::memory_allocator::REQUEST_DEFAULT_INTERLEAVE_FORMAT ||
+				appDirectExtent.imc == core::memory_allocator::REQUEST_DEFAULT_INTERLEAVE_FORMAT)))
 	{
-		// check way + iMC size + channel size
-		if (appDirectIter->byOne ||
-			(!appDirectIter->byOne &&
-			!(appDirectIter->channel == core::memory_allocator::REQUEST_DEFAULT_INTERLEAVE_FORMAT ||
-			  appDirectIter->imc == core::memory_allocator::REQUEST_DEFAULT_INTERLEAVE_FORMAT)))
+		if (!formatRecommended(appDirectExtent))
 		{
-			if (!formatRecommended(*appDirectIter))
-			{
-				// only add the warning once
-				layout.warnings.push_back(LAYOUT_WARNING_APP_DIRECT_SETTINGS_NOT_RECOMMENDED);
-				break;
-			}
+			// only add the warning once
+			layout.warnings.push_back(LAYOUT_WARNING_APP_DIRECT_SETTINGS_NOT_RECOMMENDED);
 		}
 	}
 }
