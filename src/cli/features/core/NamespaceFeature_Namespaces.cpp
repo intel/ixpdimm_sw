@@ -387,7 +387,7 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::createNamespace(
 		pResult = parseCreateNsBlockSize(parsedCommand);
 	}
 
-	// Advertised Capacity in GB
+	// Advertised Capacity in Bytes
 	if (!pResult)
 	{
 		pResult = parseCreateNsCapacity(parsedCommand);
@@ -638,27 +638,26 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseCreateNsCapacity
 
 	std::string value = framework::Parser::getPropertyValue(parsedCommand,
 			CREATE_NS_PROP_CAPACITY, &m_capacityExists);
-	m_capacityGB = 0;
+	m_capacityBytes = 0;
 
 	if (m_capacityExists)
 	{
-		if ((!stringToReal32(value, &m_capacityGB)) ||
-			(m_capacityGB == 0))
+		NVM_REAL32 capacity = 0;
+		if (cli::nvmcli::stringToReal32(value, &capacity))
 		{
-			pResult = new framework::SyntaxErrorBadValueResult(
-				framework::TOKENTYPE_PROPERTY, CREATE_NS_PROP_CAPACITY, value);
-		}
-		else if (m_nsType == wbem::pmem_config::PM_SERVICE_APP_DIRECT_TYPE)
-		{
-			if (m_blockSizeExists)
+			if (capacity == 0)
 			{
-				COMMON_LOG_ERROR(
-						"Capacity cannot be used in conjunction with BlockSize and BlockCount properties.");
-				std::string errorString = framework::ResultBase::stringFromArgList(
-						TR(CANT_USE_TOGETHER_ERROR_STR.c_str()),
-						CREATE_NS_PROP_CAPACITY.c_str(),
-						CREATE_NS_PROP_BLOCKSIZE.c_str());
-				pResult = new framework::SyntaxErrorResult(errorString);
+				pResult = new framework::SyntaxErrorBadValueResult(
+					framework::TOKENTYPE_PROPERTY, CREATE_NS_PROP_CAPACITY, value);
+			}
+			else
+			{
+				std::string capacityUnits;
+				pResult = getCapacityUnits(parsedCommand, &capacityUnits);
+				if (!pResult)
+				{
+					m_capacityBytes = convertCapacityToBytes(capacityUnits, capacity);
+				}
 			}
 		}
 	}
@@ -729,7 +728,7 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseCreateNsBlockCou
 			else
 			{
 				m_blockCount =
-					calculateBlockCountForNamespace(m_capacityGB, m_blockSize);
+					calculateBlockCountForNamespace(m_capacityBytes, m_blockSize);
 			}
 		}
 		catch (wbem::framework::Exception &e)
@@ -1235,7 +1234,7 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseModifyNsCapacity
 
 	std::string value = framework::Parser::getPropertyValue(parsedCommand,
 			CREATE_NS_PROP_CAPACITY, &m_capacityExists);
-	m_capacityGB = 0;
+	m_capacityBytes = 0;
 
 	if (m_capacityExists)
 	{
@@ -1249,11 +1248,27 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseModifyNsCapacity
 					CREATE_NS_PROP_BLOCKCOUNT.c_str());
 			pResult = new framework::SyntaxErrorResult(errorString);
 		}
-		else if ((!stringToReal32(value, &m_capacityGB)) ||
-				(m_capacityGB == 0))
+		else
 		{
-			pResult = new framework::SyntaxErrorBadValueResult(
-					framework::TOKENTYPE_PROPERTY, CREATE_NS_PROP_CAPACITY, value);
+			NVM_REAL32 capacity = 0;
+			if (cli::nvmcli::stringToReal32(value, &capacity))
+			{
+				if (capacity == 0)
+				{
+					pResult = new framework::SyntaxErrorBadValueResult(
+						framework::TOKENTYPE_PROPERTY, CREATE_NS_PROP_CAPACITY, value);
+				}
+				else
+				{
+					std::string capacityUnits;
+					pResult = getCapacityUnits(parsedCommand, &capacityUnits);
+					if (!pResult)
+					{
+						m_capacityBytes = convertCapacityToBytes(capacityUnits, capacity);
+
+					}
+				}
+			}
 		}
 	}
 
@@ -1327,7 +1342,7 @@ cli::framework::ErrorResult* cli::nvmcli::NamespaceFeature::nsNvmExceptionToResu
 bool cli::nvmcli::NamespaceFeature::namespaceCapacityModificationIsSupported(
 		const namespace_details &details)
 {
-	m_blockCount = calculateBlockCountForNamespace(m_capacityGB, m_blockSize);
+	m_blockCount = calculateBlockCountForNamespace(m_capacityBytes, m_blockSize);
 	return m_pPmServiceProvider->isModifyNamespaceBlockCountSupported(details, m_blockCount);
 }
 

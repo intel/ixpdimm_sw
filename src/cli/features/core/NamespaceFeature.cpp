@@ -208,6 +208,7 @@ void cli::nvmcli::NamespaceFeature::getPaths(cli::framework::CommandSpecList &li
 	cli::framework::CommandSpec modifyNamespace(MODIFY_NAMESPACE, TR("Modify Namespace"), framework::VERB_SET,
 			TR("Modify one or more existing namespaces."));
 	modifyNamespace.addOption(framework::OPTION_FORCE);
+	modifyNamespace.addOption(framework::OPTION_UNITS).helpText(TR(NS_UNITS_OPTION_DESC.c_str()));
 	modifyNamespace.addTarget(TARGET_NAMESPACE_R).helpText(TR("Modify the settings on specific namespaces by "
 			"providing comma separated list of one or more namespace identifiers. The default is to modify all namespaces."));
 	modifyNamespace.addProperty(CREATE_NS_PROP_FRIENDLYNAME, false, "string", true,
@@ -294,7 +295,7 @@ cli::nvmcli::NamespaceFeature::NamespaceFeature() : cli::framework::FeatureBase(
 	m_getSupportedSizeRange(wbemGetSupportedSizeRange),
 	m_poolUid(""), m_blockSize(0), m_blockSizeExists(false),
 	m_blockCount(0), m_blockCountExists(false), m_nsTypeStr(""),
-	m_nsType(0), m_capacityExists(false), m_capacityGB(0),
+	m_nsType(0), m_capacityExists(false), m_capacityBytes(0),
 	m_friendlyName(""), m_friendlyNameExists(false),
 	m_enableState(0), m_enabledStateExists(false),
 	m_optimize(0), m_encryption(0), m_eraseCapable(0),
@@ -577,8 +578,13 @@ cli::framework::SyntaxErrorResult *cli::nvmcli::NamespaceFeature::getCapacityUni
 	{
 		*pCapacityUnits = parsedCommand.options.at(framework::OPTION_UNITS.name);
 		if (!(*pCapacityUnits).empty() &&
-			(!framework::stringsIEqual(*pCapacityUnits, PREFERENCE_SIZE_GIB) &&
-			!framework::stringsIEqual(*pCapacityUnits, cli::nvmcli::CAPACITY_UNITS_GB)))
+			(!framework::stringsIEqual(*pCapacityUnits, PREFERENCE_SIZE_B) &&
+			!framework::stringsIEqual(*pCapacityUnits, cli::nvmcli::PREFERENCE_SIZE_MB) &&
+			!framework::stringsIEqual(*pCapacityUnits, cli::nvmcli::PREFERENCE_SIZE_GB) &&
+			!framework::stringsIEqual(*pCapacityUnits, cli::nvmcli::PREFERENCE_SIZE_TB) &&
+			!framework::stringsIEqual(*pCapacityUnits, cli::nvmcli::PREFERENCE_SIZE_MIB) &&
+			!framework::stringsIEqual(*pCapacityUnits, cli::nvmcli::PREFERENCE_SIZE_GIB) &&
+			!framework::stringsIEqual(*pCapacityUnits, cli::nvmcli::PREFERENCE_SIZE_TIB)))
 		{
 			pResult = new framework::SyntaxErrorBadValueResult(framework::TOKENTYPE_OPTION,
 					framework::OPTION_UNITS.name, *pCapacityUnits);

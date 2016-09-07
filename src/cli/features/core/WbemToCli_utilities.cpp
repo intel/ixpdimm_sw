@@ -987,7 +987,7 @@ bool cli::nvmcli::isStringValidNumber(const std::string &value)
 	return result;
 }
 
-void cli::nvmcli::findBestCapacityFormatInBinaryMultiples(NVM_UINT64 capacityInBytes, std::string &units)
+void cli::nvmcli::findBestCapacityFormatInBinaryMultiples(const NVM_UINT64 capacityInBytes, std::string &units)
 {
 	if (capacityInBytes/BYTES_PER_TIB != 0)
 	{
@@ -1007,7 +1007,7 @@ void cli::nvmcli::findBestCapacityFormatInBinaryMultiples(NVM_UINT64 capacityInB
 	}
 }
 
-void cli::nvmcli::findBestCapacityFormatInDecimalMultiples(NVM_UINT64 capacityInBytes, std::string &units)
+void cli::nvmcli::findBestCapacityFormatInDecimalMultiples(const NVM_UINT64 capacityInBytes, std::string &units)
 {
 	if (capacityInBytes/BYTES_PER_TB != 0)
 	{
@@ -1033,7 +1033,8 @@ NVM_REAL32 round(NVM_REAL32 number, int decimal_places)
 	return floor(number * pow(10, decimal_places) + 0.5) / pow(10, decimal_places);
 }
 
-std::string cli::nvmcli::calculateAdvertisedCapacity(NVM_UINT64 capacityInBytes,
+// IDEMA Standard may be used in the future for block count calculation
+/*std::string cli::nvmcli::calculateAdvertisedCapacity(NVM_UINT64 capacityInBytes,
 		const NVM_UINT64 blockCount, const NVM_UINT64 blockSize)
 {
 	std::stringstream capacityInRequestedFormatStr;
@@ -1074,8 +1075,7 @@ std::string cli::nvmcli::calculateAdvertisedCapacity(NVM_UINT64 capacityInBytes,
 	}
 
 	return capacityInRequestedFormatStr.str();
-}
-
+}*/
 /*
    helper function to calculate BlockCount/LBACount using formulae from IDEMA LBA1-03
    For logical block size of 512 bytes:
@@ -1086,7 +1086,7 @@ std::string cli::nvmcli::calculateAdvertisedCapacity(NVM_UINT64 capacityInBytes,
    Also, the lower three digits of the LBA count should be divisible by 8 with a remainder of
    0 (rounded up if necessary), to provide a even number of aligned sectors.
 */
-NVM_UINT64 cli::nvmcli::calculateBlockCountForNamespace(const NVM_REAL32 capacityInGB,
+/*NVM_UINT64 cli::nvmcli::calculateBlockCountForNamespace(const NVM_REAL32 capacityInGB,
 		const NVM_UINT64 blockSize)
 {
 	NVM_UINT64 blockCount = 0;
@@ -1110,6 +1110,15 @@ NVM_UINT64 cli::nvmcli::calculateBlockCountForNamespace(const NVM_REAL32 capacit
 			((IDEMA_CONVERSION_CONSTANT2 * 512) * (capacityInGB - IDEMA_CONVERSION_CONSTANT3)), 8);
 	}
 
+	return blockCount;
+}*/
+
+NVM_UINT64 cli::nvmcli::calculateBlockCountForNamespace(const NVM_UINT64 capacityInBytes,
+		const NVM_UINT64 blockSize)
+{
+	NVM_UINT64 blockCount = 0;
+
+	blockCount = ceil(capacityInBytes/blockSize);
 	return blockCount;
 }
 
@@ -1215,57 +1224,55 @@ std::string cli::nvmcli::convertCapacityFormat(NVM_UINT64 capacityInBytes, std::
 	return capacityStringInRequestedUnits;
 }
 
-void cli::nvmcli::convertCapacityAttributeToGB(wbem::framework::Instance &wbemInstance,
-		const std::string attributeName)
+NVM_UINT64 cli::nvmcli::convertCapacityToBytes(std::string capacityUnits,
+		const NVM_REAL32 capacity)
 {
-	NVM_UINT64 capacity = 0;
-	NVM_UINT64 blockSize = 0;
-	NVM_UINT64 blockCount = 0;
-	wbem::framework::Attribute attr;
-
-	if (wbemInstance.getAttribute(attributeName, attr) == wbem::framework::SUCCESS)
+	NVM_UINT64 CapacityInBytes = 0;
+	// if capacity units is empty, then capacity entered in GIB
+	if (capacityUnits.empty())
 	{
-		capacity = attr.uint64Value();
+		capacityUnits = PREFERENCE_SIZE_GIB;
 	}
-	// get blocksize and blockcount values - used to calculate advertised capacity
-	if (wbemInstance.getAttribute(wbem::BLOCKSIZE_KEY, attr) ==
-			wbem::framework::SUCCESS)
+	if (framework::stringsIEqual(capacityUnits, PREFERENCE_SIZE_B))
 	{
-		blockSize = attr.uint64Value();
+		CapacityInBytes = capacity;
 	}
-	if (wbemInstance.getAttribute(wbem::NUMBEROFBLOCKS_KEY, attr) ==
-			wbem::framework::SUCCESS)
+	else if (framework::stringsIEqual(capacityUnits, PREFERENCE_SIZE_MB))
 	{
-		blockCount = attr.uint64Value();
+		CapacityInBytes = capacity * BYTES_PER_MB;
 	}
-
-	std::string advertisedCapacity =
-		calculateAdvertisedCapacity(capacity, blockCount, blockSize);
-	if (advertisedCapacity == "")
-	{ // if capacity cannot be represented as GB
-		advertisedCapacity = convertCapacityFormat(capacity, PREFERENCE_SIZE_B);
+	else if (framework::stringsIEqual(capacityUnits, PREFERENCE_SIZE_GB))
+	{
+		CapacityInBytes = capacity * BYTES_PER_GB;
 	}
-
-	wbem::framework::Attribute attrStr(advertisedCapacity, false);
-	wbemInstance.setAttribute(attributeName, attrStr);
+	else if (framework::stringsIEqual(capacityUnits, PREFERENCE_SIZE_TB))
+	{
+		CapacityInBytes = capacity * BYTES_PER_TB;
+	}
+	else if (framework::stringsIEqual(capacityUnits, PREFERENCE_SIZE_MIB))
+	{
+		CapacityInBytes = capacity * BYTES_PER_MIB;
+	}
+	else if (framework::stringsIEqual(capacityUnits, PREFERENCE_SIZE_GIB))
+	{
+		CapacityInBytes = capacity * BYTES_PER_GIB;
+	}
+	else if (framework::stringsIEqual(capacityUnits, PREFERENCE_SIZE_TIB))
+	{
+		CapacityInBytes = capacity * BYTES_PER_TIB;
+	}
+	return CapacityInBytes;
 }
 
 void cli::nvmcli::convertCapacityAttribute(wbem::framework::Instance &wbemInstance,
 		const std::string attributeName, const std::string capacityUnits)
 {
-	if (framework::stringsIEqual(capacityUnits, CAPACITY_UNITS_GB))
+	wbem::framework::Attribute attr;
+	if (wbemInstance.getAttribute(attributeName, attr) == wbem::framework::SUCCESS)
 	{
-		convertCapacityAttributeToGB(wbemInstance, attributeName);
-	}
-	else
-	{
-		wbem::framework::Attribute attr;
-		if (wbemInstance.getAttribute(attributeName, attr) == wbem::framework::SUCCESS)
-		{
-			wbem::framework::Attribute attrStr(convertCapacityFormat(attr.uint64Value(),
-					capacityUnits), false);
-			wbemInstance.setAttribute(attributeName, attrStr);
-		}
+		wbem::framework::Attribute attrStr(convertCapacityFormat(attr.uint64Value(),
+				capacityUnits), false);
+		wbemInstance.setAttribute(attributeName, attrStr);
 	}
 }
 

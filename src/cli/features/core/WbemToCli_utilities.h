@@ -243,7 +243,7 @@ bool isStringHex(const std::string &value);
 std::string calculateAdvertisedCapacity(NVM_UINT64 capacityInBytes,
 	const NVM_UINT64 blockCount = 0, const NVM_UINT64 blockSize = 0);
 
-NVM_UINT64 calculateBlockCountForNamespace(const NVM_REAL32 capacityInGB,
+NVM_UINT64 calculateBlockCountForNamespace(const NVM_UINT64 capacityInGB,
 	const NVM_UINT64 blockSize);
 
 std::string convertCapacityFormat(NVM_UINT64 capacityInBytes, std::string capacityUnits = "");
@@ -256,9 +256,11 @@ void convertCapacityAttribute(wbem::framework::Instance &wbemInstance,
 void convertCapacityAttributeToGB(wbem::framework::Instance &wbemInstance,
 		const std::string attributeName);
 
-void findBestCapacityFormatInBinaryMultiples(NVM_UINT64 capacityInBytes, std::string &units);
+NVM_UINT64 convertCapacityToBytes(std::string capacityUnits, const NVM_REAL32 capacity);
 
-void findBestCapacityFormatInDecimalMultiples(NVM_UINT64 capacityInBytes, std::string &units);
+void findBestCapacityFormatInBinaryMultiples(const NVM_UINT64 capacityInBytes, std::string &units);
+
+void findBestCapacityFormatInDecimalMultiples(const NVM_UINT64 capacityInBytes, std::string &units);
 
 std::string AttributeToString(const wbem::framework::Attribute &attr);
 

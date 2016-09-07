@@ -154,7 +154,7 @@ static const std::string CREATE_NS_PROP_MEMORYPAGEALLOCATION_APPDIRECT = "AppDir
 
 static const size_t CREATE_NS_PROP_FRIENDLYNAME_MAX = 64u;
 
-static const std::string NS_UNITS_OPTION_DESC = "Change the units the namespace capacity is displayed in.";
+static const std::string NS_UNITS_OPTION_DESC = "Change the units that capacities are input and displayed in.";
 
 /*!
  * Implements namespace related commands
@@ -264,7 +264,7 @@ private:
 		std::string m_nsTypeStr;
 		COMMON_UINT16 m_nsType;
 		bool m_capacityExists;
-		NVM_REAL32 m_capacityGB; // Advertised capacity
+		NVM_UINT64 m_capacityBytes; // Advertised capacity
 		std::string m_friendlyName;
 		bool m_friendlyNameExists;
 		COMMON_UINT16 m_enableState;
