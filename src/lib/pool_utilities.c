@@ -644,8 +644,7 @@ int get_persistent_pools(struct nvm_pool *p_pools, const NVM_UINT32 count)
 	{
 		// cycle through all storage regions, make sure the dimm is in a pool
 		// and calculate overall pool capacity
-		if (pm_pools_count &&
-		    (rc = add_storage_regions_to_pools(p_pm_pools, &pm_pools_count)) == NVM_SUCCESS)
+		if ((rc = add_storage_regions_to_pools(p_pm_pools, &pm_pools_count)) == NVM_SUCCESS)
 		{
 			for (int j = 0; j < pm_pools_count && rc == NVM_SUCCESS; j++)
 			{
