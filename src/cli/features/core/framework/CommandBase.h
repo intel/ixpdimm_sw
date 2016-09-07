@@ -30,6 +30,7 @@
 #include <libinvm-cli/CliFrameworkTypes.h>
 #include <libinvm-cli/ResultBase.h>
 #include "DisplayOptions.h"
+#include "UnitsOption.h"
 
 namespace cli
 {
@@ -44,6 +45,7 @@ public:
 	framework::ResultBase *m_pResult;
 	framework::ParsedCommand m_parsedCommand;
 	framework::DisplayOptions m_displayOptions;
+	framework::UnitsOption m_unitsOption;
 };
 }
 }

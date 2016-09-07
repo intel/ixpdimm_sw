@@ -58,25 +58,26 @@ private:
 	framework::ParsedCommand m_parsedCommand;
 
 	bool dimmIdsAreValid();
-        void filterTopologiesOnDimmIds();
-        bool socketIdsAreValid();
-        void filterTopologiesOnSocketIds();
-        void createResults();
-        bool displayOptionsAreValid();
-        bool dimmIdIsFiltered(NVM_UINT8 device_id);
+	void filterTopologiesOnDimmIds();
+	bool socketIdsAreValid();
+	void filterTopologiesOnSocketIds();
+	void createResults();
+	bool displayOptionsAreValid();
+	bool unitsOptionIsValid();
+	bool dimmIdIsFiltered(NVM_UINT8 device_id);
 
 	NVM_UINT8 getMatchingDevice(core::device::Topology &topology);
 	std::string getFirstBadDimmId(core::device::TopologyCollection &topology) const;
 	std::string getFirstBadSocketId(core::device::TopologyCollection &topology) const;
 
-        static std::string getDimmId(core::device::Topology &);
-        static std::string getChannelId(core::device::Topology &);
-        static std::string getChannelPosition(core::device::Topology &);
-        static std::string getMemoryControllerId(core::device::Topology &);
-        static std::string getNodeControllerId(core::device::Topology &);
+	static std::string getDimmId(core::device::Topology &);
+	static std::string getChannelId(core::device::Topology &);
+	static std::string getChannelPosition(core::device::Topology &);
+	static std::string getMemoryControllerId(core::device::Topology &);
+	static std::string getNodeControllerId(core::device::Topology &);
+	static std::string m_capacityUnits;
 	static std::string convertCapacity(NVM_UINT64 capacity);
 	static std::string convertMemoryType(memory_type type);
-
 
 	framework::ResultBase *m_pResult;
 	framework::PropertyDefinitionList<core::device::Topology> m_props;

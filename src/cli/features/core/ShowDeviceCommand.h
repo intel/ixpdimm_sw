@@ -126,6 +126,7 @@ private:
 	void filterDevicesOnSocketIds();
 	void createResults();
 	bool displayOptionsAreValid();
+	bool unitsOptionIsValid();
 
 	std::string getFirstBadDimmId(core::device::DeviceCollection &devices) const;
 	std::string getFirstBadSocketId(core::device::DeviceCollection &devices) const;
@@ -156,6 +157,7 @@ private:
 	core::StringList m_socketIds;
 	framework::DisplayOptions m_displayOptions;
 	core::device::DeviceCollection m_devices;
+	static std::string m_capacityUnits;
 	bool isPropertyDisplayed(framework::IPropertyDefinition<core::device::Device> &p);
 };
 

@@ -39,13 +39,10 @@
 #include <libinvm-cli/ObjectListResult.h>
 #include <libinvm-cli/SyntaxErrorBadValueResult.h>
 #include <libinvm-cim/Instance.h>
-#include <physical_asset/MemoryTopologyViewFactory.h>
 #include "WbemToCli_utilities.h"
 
 #include "MemoryProperty.h"
 #include <nvm_types.h>
-
-
 
 namespace cli
 {
@@ -138,14 +135,6 @@ class NVM_API SystemFeature : public cli::framework::FeatureBase
 		};
 
 
-		/*
-		 * Update the WBEM providers.
-		 * The parameter must be a dynamically-allocated instance.
-		 * The Feature class takes over responsibility for cleaning up this memory.
-		 */
-
-		void setTopologyProvider(wbem::physical_asset::MemoryTopologyViewFactory *m_pTopologyProvider);
-
 private:
 		framework::ResultBase *showSystem(const framework::ParsedCommand &parsedCommand);
 		framework::ResultBase *showDimms(const framework::ParsedCommand &parsedCommand);
@@ -174,8 +163,6 @@ private:
 		 */
 		enum return_code readPassphrases(std::string passphraseFile,
 				std::string *pPassphrase, std::string *pNewPassphrase);
-
-		wbem::physical_asset::MemoryTopologyViewFactory *m_pTopologyProvider;
 
 		enum return_code setFirstPassphrase(std::string *pPassphrase,
 				std::string newValue);

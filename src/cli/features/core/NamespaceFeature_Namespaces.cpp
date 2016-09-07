@@ -176,35 +176,35 @@ cli::framework::ResultBase *cli::nvmcli::NamespaceFeature::showNamespaces(
 
 	framework::ResultBase *pResult = NULL;
 	wbem::framework::instances_t *pInstances = NULL;
-	try
-	{
-		wbem::framework::attribute_names_t attributes;
-		populateNamespaceAttributes(attributes, parsedCommand);
 
-		// create the display filters
-		cli::nvmcli::filters_t filters;
-		generateNamespaceFilter(parsedCommand, attributes, filters);
-		generatePoolFilter(parsedCommand, attributes, filters);
-		pResult = generateNamespaceTypeFilter(parsedCommand, attributes, filters);
-		if (pResult == NULL)
+	std::string capacityUnits;
+	pResult = GetRequestedCapacityUnits(parsedCommand, capacityUnits);
+	if (!pResult)
+	{
+		try
 		{
-			pResult = generateNamespaceHealthFilter(parsedCommand, attributes, filters);
+			wbem::framework::attribute_names_t attributes;
+			populateNamespaceAttributes(attributes, parsedCommand);
+
+			// create the display filters
+			cli::nvmcli::filters_t filters;
+			generateNamespaceFilter(parsedCommand, attributes, filters);
+			generatePoolFilter(parsedCommand, attributes, filters);
+			pResult = generateNamespaceTypeFilter(parsedCommand, attributes, filters);
 			if (pResult == NULL)
 			{
-				// get the instances from wbem
-				pInstances = m_pNsViewFactoryProvider->getInstances(attributes);
-				if (pInstances == NULL)
+				pResult = generateNamespaceHealthFilter(parsedCommand, attributes, filters);
+				if (pResult == NULL)
 				{
-					COMMON_LOG_ERROR("NamespaceViewFactory getInstances returned a NULL instances pointer");
-					pResult = new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
-						TRS(nvmcli::UNKNOWN_ERROR_STR));
-				}
-				else
-				{
-					// get the desired units of capacity
-					std::string capacityUnits;
-					pResult = getCapacityUnits(parsedCommand, &capacityUnits);
-					if (pResult == NULL)
+					// get the instances from wbem
+					pInstances = m_pNsViewFactoryProvider->getInstances(attributes);
+					if (pInstances == NULL)
+					{
+						COMMON_LOG_ERROR("NamespaceViewFactory getInstances returned a NULL instances pointer");
+						pResult = new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
+								TRS(nvmcli::UNKNOWN_ERROR_STR));
+					}
+					else
 					{
 						for (size_t i = 0; i < pInstances->size(); i++)
 						{
@@ -225,7 +225,7 @@ cli::framework::ResultBase *cli::nvmcli::NamespaceFeature::showNamespaces(
 
 						// Set layout to table unless the -all or -display option is present
 						if (!framework::parsedCommandContains(parsedCommand, framework::OPTION_DISPLAY) &&
-							!framework::parsedCommandContains(parsedCommand, framework::OPTION_ALL))
+								!framework::parsedCommandContains(parsedCommand, framework::OPTION_ALL))
 						{
 							pResult->setOutputType(framework::ResultBase::OUTPUT_TEXTTABLE);
 						}
@@ -233,17 +233,16 @@ cli::framework::ResultBase *cli::nvmcli::NamespaceFeature::showNamespaces(
 				}
 			}
 		}
-	}
-	catch (wbem::framework::Exception &e)
-	{
-		if (pResult)
+		catch (wbem::framework::Exception &e)
 		{
-			delete pResult;
-			pResult = NULL;
+			if (pResult)
+			{
+				delete pResult;
+				pResult = NULL;
+			}
+			pResult = NvmExceptionToResult(e);
 		}
-		pResult = NvmExceptionToResult(e);
 	}
-
 	if (pInstances)
 	{
 		delete pInstances;
@@ -375,6 +374,12 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::createNamespace(
 	m_forceOption = parsedCommand.options.find(framework::OPTION_FORCE.name)
 					!= parsedCommand.options.end();
 
+	std::string capacityUnits;
+	if (!pResult)
+	{
+		pResult = GetRequestedCapacityUnits(parsedCommand, capacityUnits);
+	}
+
 	// Type
 	if (!pResult)
 	{
@@ -470,13 +475,9 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::createNamespace(
 			framework::ParsedCommand showNamespaceCommand;
 			showNamespaceCommand.targets[TARGET_NAMESPACE.name] = namespaceUid;
 			showNamespaceCommand.options[framework::OPTION_ALL.name] = "";
-			std::string capacityUnits;
-			pResult = getCapacityUnits(parsedCommand, &capacityUnits);
-			if (pResult == NULL)
-			{
-				showNamespaceCommand.options[framework::OPTION_UNITS.name] = capacityUnits;
-				pResult = showNamespaces(showNamespaceCommand);
-			}
+			showNamespaceCommand.options[framework::OPTION_UNITS.name] = capacityUnits;
+
+			pResult = showNamespaces(showNamespaceCommand);
 		}
 		catch(wbem::framework::Exception &e)
 		{
@@ -653,7 +654,7 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseCreateNsCapacity
 			else
 			{
 				std::string capacityUnits;
-				pResult = getCapacityUnits(parsedCommand, &capacityUnits);
+				pResult = GetRequestedCapacityUnits(parsedCommand, capacityUnits);
 				if (!pResult)
 				{
 					m_capacityBytes = convertCapacityToBytes(capacityUnits, capacity);
@@ -1261,7 +1262,7 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseModifyNsCapacity
 				else
 				{
 					std::string capacityUnits;
-					pResult = getCapacityUnits(parsedCommand, &capacityUnits);
+					pResult = GetRequestedCapacityUnits(parsedCommand, capacityUnits);
 					if (!pResult)
 					{
 						m_capacityBytes = convertCapacityToBytes(capacityUnits, capacity);

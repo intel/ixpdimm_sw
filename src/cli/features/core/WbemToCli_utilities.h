@@ -136,6 +136,8 @@ wbem::framework::attribute_names_t GetAttributeNames(
 		const wbem::framework::attribute_names_t defaultNames,
 		const wbem::framework::attribute_names_t allNames);
 
+cli::framework::ErrorResult *GetRequestedCapacityUnits(const cli::framework::ParsedCommand& parsedCommand, std::string &units);
+
 bool handleToUid(const NVM_UINT32 &handle, std::string &dimmUid);
 
 /*!
@@ -240,9 +242,6 @@ bool isStringValidNumber(const std::string &value);
 
 bool isStringHex(const std::string &value);
 
-std::string calculateAdvertisedCapacity(NVM_UINT64 capacityInBytes,
-	const NVM_UINT64 blockCount = 0, const NVM_UINT64 blockSize = 0);
-
 NVM_UINT64 calculateBlockCountForNamespace(const NVM_UINT64 capacityInGB,
 	const NVM_UINT64 blockSize);
 
@@ -252,9 +251,6 @@ std::string translateCapacityToRequestedUnits(NVM_UINT64 capacityInBytes, std::s
 
 void convertCapacityAttribute(wbem::framework::Instance &wbemInstance,
 	const std::string attributeName, const std::string capacityUnits = "");
-
-void convertCapacityAttributeToGB(wbem::framework::Instance &wbemInstance,
-		const std::string attributeName);
 
 NVM_UINT64 convertCapacityToBytes(std::string capacityUnits, const NVM_REAL32 capacity);
 
@@ -277,6 +273,15 @@ std::string uint64ToHexString(const unsigned long long &value);
 		delete currentProvider; \
 		currentProvider = newProvider; \
 	}
+
+// Not using IDEMA capacity conversions for now, but we might revert to this in the future
+#if 0
+std::string calculateAdvertisedCapacity(NVM_UINT64 capacityInBytes,
+	const NVM_UINT64 blockCount = 0, const NVM_UINT64 blockSize = 0);
+
+void convertCapacityAttributeToGB(wbem::framework::Instance &wbemInstance,
+		const std::string attributeName);
+#endif
 
 }
 }

@@ -123,7 +123,8 @@ public:
 		virtual ~UserPrompt() { }
 
 		virtual bool promptUserConfirmationForLayout(
-			const core::memory_allocator::MemoryAllocationLayout &layout);
+			const core::memory_allocator::MemoryAllocationLayout &layout,
+			const std::string capacityUnits);
 
 	private:
 		const framework::YesNoPrompt &m_prompt;
@@ -149,7 +150,8 @@ private:
 	core::memory_allocator::MemoryAllocationRequestBuilder &m_requestBuilder;
 	UserPrompt &m_prompt;
 	const ShowGoalAdapter &m_showGoalAdapter;
-	bool userReallyLikesThisLayout(const core::memory_allocator::MemoryAllocationLayout &layout);
+	bool userReallyLikesThisLayout(const core::memory_allocator::MemoryAllocationLayout &layout,
+		const std::string capacityUnits);
 };
 
 }

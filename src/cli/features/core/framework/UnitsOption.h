@@ -24,45 +24,29 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef CR_MGMT_SHOWMEMORYRESOURCESCOMMAND_H
-#define CR_MGMT_SHOWMEMORYRESOURCESCOMMAND_H
+#ifndef CR_MGMT_UNITSOPTION_H
+#define CR_MGMT_UNITSOPTION_H
 
 #include <libinvm-cli/CliFrameworkTypes.h>
-#include <libinvm-cli/ResultBase.h>
-#include "framework/PropertyDefinitionList.h"
-#include <cli/features/core/framework/CommandBase.h>
-
-#include <core/system/SystemService.h>
+#include <lib/nvm_types.h>
 
 namespace cli
 {
-namespace nvmcli
+namespace framework
 {
-
-class NVM_API ShowMemoryResourcesCommand : framework::CommandBase
+class NVM_API UnitsOption
 {
 public:
-	ShowMemoryResourcesCommand(
-			core::system::SystemService &service = core::system::SystemService::getService());
-
-	framework::ResultBase *execute(const framework::ParsedCommand &parsedCommand);
+	UnitsOption(StringMap options = StringMap()) : m_options(options) { }
+	std::string getCapacityUnits() const;
+	UnitsOption& operator= (const UnitsOption &other);
+	bool isValid(std::string units) const;
+	bool isEmpty(std::string units) const;
 
 private:
-	core::system::SystemService &m_service;
-
-	framework::PropertyDefinitionList<core::system::SystemMemoryResources> m_props;
-
-	core::system::SystemMemoryResources m_memoryResourcesInfo;
-
-	void createResults();
-	bool displayOptionsAreValid();
-	bool unitsOptionIsValid();
-	bool isPropertyDisplayed(framework::IPropertyDefinition<core::system::SystemMemoryResources> &p);
-	static std::string m_capacityUnits;
-	static std::string convertCapacity(NVM_UINT64 capacity);
+	StringMap m_options;
 };
-
 }
 }
 
-#endif //CR_MGMT_SHOWMEMORYRESOURCESCOMMAND_H
+#endif //CR_MGMT_UNITSOPTION_H

@@ -32,6 +32,7 @@
 #include <persistence/config_settings.h>
 #include <persistence/lib_persistence.h>
 #include <cli/features/core/framework/CliHelper.h>
+#include <libinvm-cli/SyntaxErrorMissingValueResult.h>
 
 #include "ShowTopologyCommand.h"
 
@@ -39,8 +40,10 @@ namespace cli
 {
 namespace nvmcli
 {
+std::string ShowTopologyCommand::m_capacityUnits = "";
+
 ShowTopologyCommand::ShowTopologyCommand(core::device::TopologyService &service)
-	: m_service(service), m_pResult(NULL)
+: m_service(service), m_pResult(NULL)
 {
 	m_props.addOther("MemoryType", &core::device::Topology::getMemoryType, &convertMemoryType).setIsDefault();
 	m_props.addUint64("Capacity", &core::device::Topology::getRawCapacity, &convertCapacity).setIsDefault();
@@ -55,7 +58,6 @@ ShowTopologyCommand::ShowTopologyCommand(core::device::TopologyService &service)
 	m_props.addStr("BankLabel", &core::device::Topology::getBankLabel);
 }
 
-
 framework::ResultBase *ShowTopologyCommand::execute(const framework::ParsedCommand &parsedCommand)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -64,8 +66,11 @@ framework::ResultBase *ShowTopologyCommand::execute(const framework::ParsedComma
 	m_dimmIds = framework::CliHelper::splitCommaSeperatedString(m_parsedCommand.targets[TARGET_DIMM.name]);
 	m_socketIds = framework::CliHelper::splitCommaSeperatedString(m_parsedCommand.targets[TARGET_SOCKET.name]);
 	m_displayOptions = framework::DisplayOptions(m_parsedCommand.options);
+	m_unitsOption = framework::UnitsOption(m_parsedCommand.options);
+	m_capacityUnits = m_unitsOption.getCapacityUnits();
 
-	if (displayOptionsAreValid())
+	if (displayOptionsAreValid() &&
+		unitsOptionIsValid())
 	{
 		try
 		{
@@ -113,211 +118,228 @@ std::string ShowTopologyCommand::convertMemoryType(memory_type type)
 
 std::string ShowTopologyCommand::convertCapacity(NVM_UINT64 value)
 {
-        return convertCapacityFormat(value);
+	return convertCapacityFormat(value, m_capacityUnits);
 }
 
 void ShowTopologyCommand::filterTopologiesOnDimmIds()
 {
-        if (m_dimmIds.size() > 0)
-        {
-                for (size_t i = m_topologies.size(); i > 0; i--)
-                {
+	if (m_dimmIds.size() > 0)
+	{
+		for (size_t i = m_topologies.size(); i > 0; i--)
+		{
 			core::device::Topology &topology = m_topologies[i - 1];
 
-                        std::string deviceHandle = uint64ToString(topology.getDeviceHandle());
+			std::string deviceHandle = uint64ToString(topology.getDeviceHandle());
 
-                        if (!m_dimmIds.contains(topology.getUid()) &&
-				 !m_dimmIds.contains(deviceHandle))
-                        {
-                                m_topologies.removeAt(i - 1);
-                        }
-                }
-        }
+			if (!m_dimmIds.contains(topology.getUid()) &&
+					!m_dimmIds.contains(deviceHandle))
+			{
+				m_topologies.removeAt(i - 1);
+			}
+		}
+	}
 }
 
 void ShowTopologyCommand::filterTopologiesOnSocketIds()
 {
-        if (m_socketIds.size() > 0)
-        {
-                for (size_t i = m_topologies.size(); i > 0; i--)
-                {
+	if (m_socketIds.size() > 0)
+	{
+		for (size_t i = m_topologies.size(); i > 0; i--)
+		{
 			core::device::Topology &topology = m_topologies[i - 1];
 
-                        std::string socket_id = uint64ToString(topology.getSocketId());
+			std::string socket_id = uint64ToString(topology.getSocketId());
 
-                        if (!m_socketIds.contains(socket_id))
-                        {
-                                m_topologies.removeAt(i - 1);
-                        }
-                }
-        }
+			if (!m_socketIds.contains(socket_id))
+			{
+				m_topologies.removeAt(i - 1);
+			}
+		}
+	}
 }
 
 bool ShowTopologyCommand::dimmIdsAreValid()
 {
-        std::string badDimmId = getFirstBadDimmId(m_topologies);
-        if (!badDimmId.empty())
-        {
-                m_pResult = new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
-                        getInvalidDimmIdErrorString(badDimmId));
-        }
+	std::string badDimmId = getFirstBadDimmId(m_topologies);
+	if (!badDimmId.empty())
+	{
+		m_pResult = new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
+				getInvalidDimmIdErrorString(badDimmId));
+	}
 
-        return m_pResult == NULL;
+	return m_pResult == NULL;
 }
+
 bool ShowTopologyCommand::socketIdsAreValid()
 {
-        std::string badSocketId = getFirstBadSocketId(m_topologies);
-        if (!badSocketId.empty())
-        {
-                m_pResult = new framework::SyntaxErrorBadValueResult(framework::TOKENTYPE_TARGET,
-                        TARGET_SOCKET.name, badSocketId);
-        }
+	std::string badSocketId = getFirstBadSocketId(m_topologies);
+	if (!badSocketId.empty())
+	{
+		m_pResult = new framework::SyntaxErrorBadValueResult(framework::TOKENTYPE_TARGET,
+				TARGET_SOCKET.name, badSocketId);
+	}
 
-        return m_pResult == NULL;
+	return m_pResult == NULL;
 }
 
 std::string ShowTopologyCommand::getFirstBadSocketId(core::device::TopologyCollection &topologies) const
 {
-        LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-        std::string badsocketId = "";
-        for (size_t i = 0; i < m_socketIds.size() && badsocketId.empty(); i++)
-        {
-                bool socketIdFound = false;
-                for (size_t j = 0; j < topologies.size() && !socketIdFound; j++)
-                {
-                        if (m_socketIds[i] == uint64ToString(topologies[j].getSocketId()))
-                        {
-                                socketIdFound = true;
-                        }
-                }
-                if (!socketIdFound)
-                {
-                        badsocketId = m_socketIds[i];
-                }
-        }
-        return badsocketId;
+	std::string badsocketId = "";
+	for (size_t i = 0; i < m_socketIds.size() && badsocketId.empty(); i++)
+	{
+		bool socketIdFound = false;
+		for (size_t j = 0; j < topologies.size() && !socketIdFound; j++)
+		{
+			if (m_socketIds[i] == uint64ToString(topologies[j].getSocketId()))
+			{
+				socketIdFound = true;
+			}
+		}
+		if (!socketIdFound)
+		{
+			badsocketId = m_socketIds[i];
+		}
+	}
+	return badsocketId;
 }
 
 std::string ShowTopologyCommand::getFirstBadDimmId(core::device::TopologyCollection &topologies) const
 {
-        LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-        std::string badDimmId = "";
+	std::string badDimmId = "";
 
-        for (size_t i = 0; i < m_dimmIds.size() && badDimmId.empty(); i++)
-        {
-                bool dimmIdFound = false;
-                for (size_t j = 0; j < topologies.size() && !dimmIdFound; j++)
-                {
-                        if (framework::stringsIEqual(m_dimmIds[i], topologies[j].getUid()) ||
-                                m_dimmIds[i] == uint64ToString(topologies[j].getDeviceHandle()))
-                        {
-                                dimmIdFound = true;
-                        }
-                }
-                if (!dimmIdFound)
-                {
-                        badDimmId = m_dimmIds[i];
-                }
-        }
-        return badDimmId;
+	for (size_t i = 0; i < m_dimmIds.size() && badDimmId.empty(); i++)
+	{
+		bool dimmIdFound = false;
+		for (size_t j = 0; j < topologies.size() && !dimmIdFound; j++)
+		{
+			if (framework::stringsIEqual(m_dimmIds[i], topologies[j].getUid()) ||
+					m_dimmIds[i] == uint64ToString(topologies[j].getDeviceHandle()))
+			{
+				dimmIdFound = true;
+			}
+		}
+		if (!dimmIdFound)
+		{
+			badDimmId = m_dimmIds[i];
+		}
+	}
+	return badDimmId;
 }
 
 void ShowTopologyCommand::createResults()
 {
-        framework::ObjectListResult *pList = new framework::ObjectListResult();
-        pList->setRoot("DimmTopology");
-        m_pResult = pList;
+	framework::ObjectListResult *pList = new framework::ObjectListResult();
+	pList->setRoot("DimmTopology");
+	m_pResult = pList;
 
-        for (size_t i = 0; i < m_topologies.size(); i++)
-        {
+	for (size_t i = 0; i < m_topologies.size(); i++)
+	{
 		framework::PropertyListResult value;
 		for (size_t j = 0; j < m_props.size(); j++)
-	        {
-                        framework::IPropertyDefinition<core::device::Topology> &p = m_props[j];
+		{
+			framework::IPropertyDefinition<core::device::Topology> &p = m_props[j];
 			if (isPropertyDisplayed(p))
 			{
 				value.insert(p.getName(), p.getValue(m_topologies[i]));
 			}
 		}
 
-                pList->insert("DimmTopology", value);
+		pList->insert("DimmTopology", value);
 	}
 
-        m_pResult->setOutputType(
-                m_displayOptions.isDefault() ?
-                framework::ResultBase::OUTPUT_TEXTTABLE :
-                framework::ResultBase::OUTPUT_TEXT);
+	m_pResult->setOutputType(
+			m_displayOptions.isDefault() ?
+					framework::ResultBase::OUTPUT_TEXTTABLE :
+					framework::ResultBase::OUTPUT_TEXT);
 }
 
 bool ShowTopologyCommand::isPropertyDisplayed(
-        framework::IPropertyDefinition<core::device::Topology> &p)
+		framework::IPropertyDefinition<core::device::Topology> &p)
 {
-        return p.isRequired() ||
-                   m_displayOptions.isAll() ||
-                   (p.isDefault() && m_displayOptions.isDefault()) ||
-                   m_displayOptions.contains(p.getName());
+	return p.isRequired() ||
+			m_displayOptions.isAll() ||
+			(p.isDefault() && m_displayOptions.isDefault()) ||
+			m_displayOptions.contains(p.getName());
 }
 
 bool ShowTopologyCommand::displayOptionsAreValid()
 {
-        std::string invalidDisplay;
-        const std::vector<std::string> &display = m_displayOptions.getDisplay();
-        for (size_t i = 0; i < display.size() && invalidDisplay.empty(); i++)
-        {
-                if (!m_props.contains(display[i]))
-                {
-                        invalidDisplay = display[i];
-                }
-        }
+	std::string invalidDisplay;
+	const std::vector<std::string> &display = m_displayOptions.getDisplay();
+	for (size_t i = 0; i < display.size() && invalidDisplay.empty(); i++)
+	{
+		if (!m_props.contains(display[i]))
+		{
+			invalidDisplay = display[i];
+		}
+	}
 
-        if (!invalidDisplay.empty())
-        {
-                m_pResult = new framework::SyntaxErrorBadValueResult(framework::TOKENTYPE_OPTION,
-                        framework::OPTION_DISPLAY.name, invalidDisplay);
-        }
-        return m_pResult == NULL;
+	if (!invalidDisplay.empty())
+	{
+		m_pResult = new framework::SyntaxErrorBadValueResult(framework::TOKENTYPE_OPTION,
+				framework::OPTION_DISPLAY.name, invalidDisplay);
+	}
+	return m_pResult == NULL;
+}
+
+bool ShowTopologyCommand::unitsOptionIsValid()
+{
+	if (m_unitsOption.isEmpty(m_capacityUnits))
+	{
+		m_pResult =
+			new framework::SyntaxErrorMissingValueResult(framework::TOKENTYPE_OPTION, framework::OPTION_UNITS.name);
+	}
+	else if (!m_unitsOption.isValid(m_capacityUnits))
+	{
+		m_pResult =
+			new framework::SyntaxErrorBadValueResult(framework::TOKENTYPE_OPTION, framework::OPTION_UNITS.name, m_capacityUnits);
+	}
+
+	return m_pResult == NULL;
 }
 
 std::string ShowTopologyCommand::getDimmId(core::device::Topology &topology)
 {
-        LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-        std::stringstream result;
-        bool useHandle = true;
-        char value[CONFIG_VALUE_LEN];
-        if (get_config_value(SQL_KEY_CLI_DIMM_ID, value) == COMMON_SUCCESS)
-        {
+	std::stringstream result;
+	bool useHandle = true;
+	char value[CONFIG_VALUE_LEN];
+	if (get_config_value(SQL_KEY_CLI_DIMM_ID, value) == COMMON_SUCCESS)
+	{
 		// switch to uid
-                if (s_strncmpi("UID", value, strlen("UID")) == 0)
-                {
-                        useHandle = false;
-                }
-        }
+		if (s_strncmpi("UID", value, strlen("UID")) == 0)
+		{
+			useHandle = false;
+		}
+	}
 
 	if (topology.getMemoryType() == MEMORY_TYPE_NVMDIMM)
 	{
 		if (useHandle)
 		{
 			result << topology.getDeviceHandle();
-	        }
+		}
 		else
-	        {
+		{
 			result << topology.getUid();
-	        }
+		}
 	}
 	else if (topology.getMemoryType() == MEMORY_TYPE_DDR4)
 	{
 		result << "N/A";
 	}
 
-        return result.str();
+	return result.str();
 }
 
 std::string ShowTopologyCommand::getChannelId(core::device::Topology &topology)
 {
-        LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	std::stringstream result;
 
 	if (topology.getMemoryType() == MEMORY_TYPE_NVMDIMM)
@@ -333,51 +355,51 @@ std::string ShowTopologyCommand::getChannelId(core::device::Topology &topology)
 }
 std::string ShowTopologyCommand::getChannelPosition(core::device::Topology &topology)
 {
-        LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	std::stringstream result;
 
 	if (topology.getMemoryType() == MEMORY_TYPE_NVMDIMM)
-        {
-                result << topology.getChannelPosition();
-        }
-        else if (topology.getMemoryType() == MEMORY_TYPE_DDR4)
-        {
-                result << "N/A";
-        }
+	{
+		result << topology.getChannelPosition();
+	}
+	else if (topology.getMemoryType() == MEMORY_TYPE_DDR4)
+	{
+		result << "N/A";
+	}
 
-        return result.str();
+	return result.str();
 }
 std::string ShowTopologyCommand::getMemoryControllerId(core::device::Topology &topology)
 {
-        LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	std::stringstream result;
 
 	if (topology.getMemoryType() == MEMORY_TYPE_NVMDIMM)
-        {
-                result << topology.getMemoryControllerId();
-        }
-        else if (topology.getMemoryType() == MEMORY_TYPE_DDR4)
-        {
-                result << "N/A";
-        }
+	{
+		result << topology.getMemoryControllerId();
+	}
+	else if (topology.getMemoryType() == MEMORY_TYPE_DDR4)
+	{
+		result << "N/A";
+	}
 
-        return result.str();
+	return result.str();
 }
 std::string ShowTopologyCommand::getNodeControllerId(core::device::Topology &topology)
 {
-        LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	std::stringstream result;
 
 	if (topology.getMemoryType() == MEMORY_TYPE_NVMDIMM)
-        {
-                result << topology.getNodeControllerId();
-        }
-        else if (topology.getMemoryType() == MEMORY_TYPE_DDR4)
-        {
-                result << "N/A";
-        }
+	{
+		result << topology.getNodeControllerId();
+	}
+	else if (topology.getMemoryType() == MEMORY_TYPE_DDR4)
+	{
+		result << "N/A";
+	}
 
-        return result.str();
+	return result.str();
 }
 }
 }

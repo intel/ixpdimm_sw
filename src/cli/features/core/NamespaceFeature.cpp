@@ -57,7 +57,7 @@
 const std::string cli::nvmcli::NamespaceFeature::Name = "Namespace";
 
 /*
- * Command Specs the Example Feature supports
+ * Command Specs the Namespace Feature supports
  */
 void cli::nvmcli::NamespaceFeature::getPaths(cli::framework::CommandSpecList &list)
 {
@@ -80,6 +80,8 @@ void cli::nvmcli::NamespaceFeature::getPaths(cli::framework::CommandSpecList &li
 					"by the BIOS, it is no longer displayed."));
 	showConfigGoal.addOption(framework::OPTION_ALL);
 	showConfigGoal.addOption(framework::OPTION_DISPLAY);
+	showConfigGoal.addOption(framework::OPTION_UNITS)
+			.helpText(TR("Change the units that capacities are displayed in for this command."));
 	showConfigGoal.addTarget(TARGET_DIMM.name, false, DIMMIDS_STR, true,
 			TR("Restrict output to specific " NVM_DIMM_NAME "s by supplying one or more comma-separated " NVM_DIMM_NAME " "
 			"identifiers. The default is to display all manageable " NVM_DIMM_NAME "s with memory allocation goals."));
@@ -95,7 +97,9 @@ void cli::nvmcli::NamespaceFeature::getPaths(cli::framework::CommandSpecList &li
 				"read on the next reboot in order to map the " NVM_DIMM_NAME " capacity into the system "
 				"address space."));
 	createGoal.addOption(framework::OPTION_FORCE).helpText(TR("Reconfiguring " NVM_DIMM_NAME "s is a destructive operation "
-			"which requires confirmation from the user. This option suppresses the confirmation."));;
+			"which requires confirmation from the user. This option suppresses the confirmation."));
+	createGoal.addOption(framework::OPTION_UNITS)
+			.helpText(TR("Change the units that capacities are displayed in for this command."));
 	createGoal.addTarget(TARGET_DIMM)
 			.isValueRequired(true)
 			.helpText(TR("Create a memory allocation goal on specific " NVM_DIMM_NAME "s by "
@@ -230,7 +234,6 @@ void cli::nvmcli::NamespaceFeature::getPaths(cli::framework::CommandSpecList &li
 			"a comma separated list of one or more namespace identifiers. The default is to "
 			"delete all namespaces."));
 
-
 	framework::CommandSpec showPools(SHOW_POOLS, TR("Show Persistent Memory"), framework::VERB_SHOW,
 			TR("Retrieve a list of persistent memory pools of " NVM_DIMM_NAME " capacity."));
 	showPools.addOption(framework::OPTION_DISPLAY);
@@ -244,7 +247,6 @@ void cli::nvmcli::NamespaceFeature::getPaths(cli::framework::CommandSpecList &li
 			"pools on specific sockets by supplying the socket target and one or more "
 			"comma-separated socket identifiers. The default is to display all sockets."));
 
-
 	framework::CommandSpec dumpConfig(DUMP_CONFIG, TR("Dump Memory Allocation Settings"), framework::VERB_DUMP,
 			TR("Store the currently configured memory allocation settings for all " NVM_DIMM_NAME "s in the "
 					"system to a file in order to replicate the configuration elsewhere. Apply the stored "
@@ -257,13 +259,14 @@ void cli::nvmcli::NamespaceFeature::getPaths(cli::framework::CommandSpecList &li
 	dumpConfig.addTarget(TARGET_CONFIG_R).helpText(TR("The current " NVM_DIMM_NAME " memory allocation settings."))
 			.isValueAccepted(false);
 
-
 	framework::CommandSpec loadGoal(LOAD_CONFIG_GOAL, TR("Load Memory Allocation Goal"), framework::VERB_LOAD,
 			TR("Load a memory allocation goal from a file onto one or more " NVM_DIMM_NAME "s."));
 	loadGoal.addOption(framework::OPTION_FORCE).helpText(TR("Reconfiguring " NVM_DIMM_NAME "s is a destructive operation "
 			"which requires confirmation from the user. This option suppresses the confirmation."));
 	loadGoal.addOption(framework::OPTION_SOURCE_R).helpText(TR("File path of the stored configuration "
 			"settings to load as a memory allocation goal."));
+	loadGoal.addOption(framework::OPTION_UNITS)
+			.helpText(TR("Change the units that capacities are displayed in for this command."));
 	loadGoal.addTarget(TARGET_GOAL_R).isValueAccepted(false);
 	loadGoal.addTarget(TARGET_DIMM)
 			.helpText(TR("Load the memory allocation goal to specific " NVM_DIMM_NAME "s "
@@ -273,7 +276,6 @@ void cli::nvmcli::NamespaceFeature::getPaths(cli::framework::CommandSpecList &li
 	loadGoal.addTarget(TARGET_SOCKET).helpText(TR("Load the memory allocation goal onto all manageable " NVM_DIMM_NAME "s on "
 			"specific sockets by supplying the socket target and one or more comma-separated socket identifiers. "
 			"The default is to load the memory allocation goal onto all manageable " NVM_DIMM_NAME "s on all sockets."));
-
 
 	list.push_back(showNamespace);
 	list.push_back(createNamespace);
@@ -286,7 +288,6 @@ void cli::nvmcli::NamespaceFeature::getPaths(cli::framework::CommandSpecList &li
 	list.push_back(dumpConfig);
 	list.push_back(loadGoal);
  }
-
 
 // Constructor, just calls super class
 cli::nvmcli::NamespaceFeature::NamespaceFeature() : cli::framework::FeatureBase(),
@@ -319,7 +320,6 @@ cli::nvmcli::NamespaceFeature::~NamespaceFeature()
 	delete m_pWbemToCli;
 	delete m_pPmNamespaceProvider;
 }
-
 
 /*
  * Get all the BaseServer Instances from the wbem base server factory.
@@ -400,60 +400,61 @@ cli::framework::ResultBase *cli::nvmcli::NamespaceFeature::showPools(cli::framew
 	wbem::mem_config::PoolViewFactory poolViewFactory;
 	wbem::framework::attribute_names_t attributes;
 	wbem::framework::instances_t *pInstances = NULL;
-	try
+
+	// get the desired units of capacity
+	std::string capacityUnits;
+	pResult = GetRequestedCapacityUnits(parsedCommand, capacityUnits);
+	if (!pResult)
 	{
-		// define default display attributes
-		wbem::framework::attribute_names_t defaultAttributes;
-		defaultAttributes.push_back(wbem::POOLID_KEY);
-		defaultAttributes.push_back(wbem::PERSISTENTMEMORYTYPE_KEY);
-		defaultAttributes.push_back(wbem::CAPACITY_KEY);
-		defaultAttributes.push_back(wbem::FREECAPACITY_KEY);
-
-		// define all attributes
-		wbem::framework::attribute_names_t allAttributes(defaultAttributes);
-		allAttributes.push_back(wbem::ENCRYPTIONCAPABLE_KEY);
-		allAttributes.push_back(wbem::ENCRYPTIONENABLED_KEY);
-		allAttributes.push_back(wbem::ERASECAPABLE_KEY);
-		allAttributes.push_back(wbem::SOCKETID_KEY);
-		allAttributes.push_back(wbem::APPDIRECTNAMESPACE_MAX_SIZE_KEY);
-		allAttributes.push_back(wbem::APPDIRECTNAMESPACE_MIN_SIZE_KEY);
-		allAttributes.push_back(wbem::APPDIRECTNAMESPACE_COUNT_KEY);
-		allAttributes.push_back(wbem::STORAGENAMESPACE_MAX_SIZE_KEY);
-		allAttributes.push_back(wbem::STORAGENAMESPACE_MIN_SIZE_KEY);
-		allAttributes.push_back(wbem::STORAGENAMESPACE_COUNT_KEY);
-		allAttributes.push_back(wbem::HEALTHSTATE_KEY);
-
-		// get the desired attributes
-		wbem::framework::attribute_names_t attributes =
-				GetAttributeNames(parsedCommand.options, defaultAttributes, allAttributes);
-
-		// make sure we have the Pool  id in our display
-		// this would cover the case the user asks for specific display attributes, but they
-		// don't include the physical ID
-		if (!wbem::framework_interface::NvmInstanceFactory::containsAttribute(wbem::POOLID_KEY,
-				attributes))
+		try
 		{
-			attributes.insert(attributes.begin(), wbem::POOLID_KEY);
-		}
+			// define default display attributes
+			wbem::framework::attribute_names_t defaultAttributes;
+			defaultAttributes.push_back(wbem::POOLID_KEY);
+			defaultAttributes.push_back(wbem::PERSISTENTMEMORYTYPE_KEY);
+			defaultAttributes.push_back(wbem::CAPACITY_KEY);
+			defaultAttributes.push_back(wbem::FREECAPACITY_KEY);
 
-		// create the display filters
-		wbem::framework::attribute_names_t requestedAttributes = attributes;
-		cli::nvmcli::filters_t filters;
-		generateSocketFilter(parsedCommand, requestedAttributes, filters);
-		generatePoolFilter(parsedCommand, requestedAttributes, filters);
-		pInstances = poolViewFactory.getInstances(requestedAttributes);
-		if (pInstances == NULL)
-		{
-			COMMON_LOG_ERROR("PoolViewFactory getInstances returned a NULL instances pointer");
-			pResult = new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
-				TRS(nvmcli::UNKNOWN_ERROR_STR));
-		}
-		else
-		{
-			// get the desired units of capacity
-			std::string capacityUnits;
-			pResult = getCapacityUnits(parsedCommand, &capacityUnits);
-			if (pResult == NULL)
+			// define all attributes
+			wbem::framework::attribute_names_t allAttributes(defaultAttributes);
+			allAttributes.push_back(wbem::ENCRYPTIONCAPABLE_KEY);
+			allAttributes.push_back(wbem::ENCRYPTIONENABLED_KEY);
+			allAttributes.push_back(wbem::ERASECAPABLE_KEY);
+			allAttributes.push_back(wbem::SOCKETID_KEY);
+			allAttributes.push_back(wbem::APPDIRECTNAMESPACE_MAX_SIZE_KEY);
+			allAttributes.push_back(wbem::APPDIRECTNAMESPACE_MIN_SIZE_KEY);
+			allAttributes.push_back(wbem::APPDIRECTNAMESPACE_COUNT_KEY);
+			allAttributes.push_back(wbem::STORAGENAMESPACE_MAX_SIZE_KEY);
+			allAttributes.push_back(wbem::STORAGENAMESPACE_MIN_SIZE_KEY);
+			allAttributes.push_back(wbem::STORAGENAMESPACE_COUNT_KEY);
+			allAttributes.push_back(wbem::HEALTHSTATE_KEY);
+
+			// get the desired attributes
+			wbem::framework::attribute_names_t attributes =
+					GetAttributeNames(parsedCommand.options, defaultAttributes, allAttributes);
+
+			// make sure we have the Pool  id in our display
+			// this would cover the case the user asks for specific display attributes, but they
+			// don't include the physical ID
+			if (!wbem::framework_interface::NvmInstanceFactory::containsAttribute(wbem::POOLID_KEY,
+					attributes))
+			{
+				attributes.insert(attributes.begin(), wbem::POOLID_KEY);
+			}
+
+			// create the display filters
+			wbem::framework::attribute_names_t requestedAttributes = attributes;
+			cli::nvmcli::filters_t filters;
+			generateSocketFilter(parsedCommand, requestedAttributes, filters);
+			generatePoolFilter(parsedCommand, requestedAttributes, filters);
+			pInstances = poolViewFactory.getInstances(requestedAttributes);
+			if (pInstances == NULL)
+			{
+				COMMON_LOG_ERROR("PoolViewFactory getInstances returned a NULL instances pointer");
+				pResult = new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
+						TRS(nvmcli::UNKNOWN_ERROR_STR));
+			}
+			else
 			{
 				for (size_t i = 0; i < pInstances->size(); i++)
 				{
@@ -468,23 +469,22 @@ cli::framework::ResultBase *cli::nvmcli::NamespaceFeature::showPools(cli::framew
 						wbem::POOLID_KEY, attributes, filters);
 				// Set layout to table unless the -all or -display option is present
 				if (!framework::parsedCommandContains(parsedCommand, framework::OPTION_DISPLAY) &&
-					!framework::parsedCommandContains(parsedCommand, framework::OPTION_ALL))
+						!framework::parsedCommandContains(parsedCommand, framework::OPTION_ALL))
 				{
 					pResult->setOutputType(framework::ResultBase::OUTPUT_TEXTTABLE);
 				}
 			}
 		}
-	}
-	catch (wbem::framework::Exception &e)
-	{
-		if (pResult)
+		catch (wbem::framework::Exception &e)
 		{
-			delete pResult;
-			pResult = NULL;
+			if (pResult)
+			{
+				delete pResult;
+				pResult = NULL;
+			}
+			pResult = NvmExceptionToResult(e);
 		}
-		pResult = NvmExceptionToResult(e);
 	}
-
 	if (pInstances)
 	{
 		delete pInstances;
@@ -562,34 +562,4 @@ void cli::nvmcli::NamespaceFeature::setWbemToCli(
 		cli::nvmcli::WbemToCli *pInstance)
 {
 	SET_PROVIDER(m_pWbemToCli, pInstance);
-}
-
-// if units option is not specified in the cli command, capacity units from
-// configuration setting SQL_KEY_CLI_SIZE is chosen as display units
-cli::framework::SyntaxErrorResult *cli::nvmcli::NamespaceFeature::getCapacityUnits(
-		const cli::framework::ParsedCommand &parsedCommand, std::string *pCapacityUnits)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	framework::SyntaxErrorResult *pResult = NULL;
-
-	bool unitsOption = parsedCommand.options.find(framework::OPTION_UNITS.name)
-				!= parsedCommand.options.end();
-	if (unitsOption)
-	{
-		*pCapacityUnits = parsedCommand.options.at(framework::OPTION_UNITS.name);
-		if (!(*pCapacityUnits).empty() &&
-			(!framework::stringsIEqual(*pCapacityUnits, PREFERENCE_SIZE_B) &&
-			!framework::stringsIEqual(*pCapacityUnits, cli::nvmcli::PREFERENCE_SIZE_MB) &&
-			!framework::stringsIEqual(*pCapacityUnits, cli::nvmcli::PREFERENCE_SIZE_GB) &&
-			!framework::stringsIEqual(*pCapacityUnits, cli::nvmcli::PREFERENCE_SIZE_TB) &&
-			!framework::stringsIEqual(*pCapacityUnits, cli::nvmcli::PREFERENCE_SIZE_MIB) &&
-			!framework::stringsIEqual(*pCapacityUnits, cli::nvmcli::PREFERENCE_SIZE_GIB) &&
-			!framework::stringsIEqual(*pCapacityUnits, cli::nvmcli::PREFERENCE_SIZE_TIB)))
-		{
-			pResult = new framework::SyntaxErrorBadValueResult(framework::TOKENTYPE_OPTION,
-					framework::OPTION_UNITS.name, *pCapacityUnits);
-		}
-	}
-
-	return pResult;
 }

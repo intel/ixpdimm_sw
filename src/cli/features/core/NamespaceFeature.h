@@ -217,13 +217,11 @@ class NVM_API NamespaceFeature : public cli::framework::FeatureBase
 		// Setter for WbemToCli
 		void setWbemToCli(cli::nvmcli::WbemToCli *pInstance);
 
-		cli::framework::SyntaxErrorResult *getCapacityUnits(const cli::framework::ParsedCommand& parsedCommand,
-			std::string *pcapacityUnits);
-
 		static cli::framework::ResultBase* showConfigGoalForInstances(
 			const cli::nvmcli::filters_t &filters,
 			wbem::framework::attribute_names_t &displayAttributes,
-			wbem::framework::instances_t *pWbemInstances);
+			wbem::framework::instances_t *pWbemInstances,
+			const std::string capacityUnits);
 
 		// don't allow copies
 		NamespaceFeature(const NamespaceFeature &);
@@ -238,9 +236,11 @@ class NVM_API NamespaceFeature : public cli::framework::FeatureBase
 		throw (wbem::framework::Exception);
 		static bool convertConfigGoalInstance(const wbem::framework::Instance *pWbemInstance,
 				wbem::framework::Instance *pCliInstance,
-				const wbem::framework::attribute_names_t &displayAttributes);
+				const wbem::framework::attribute_names_t &displayAttributes,
+				const std::string capacityUnits);
 
-		static std::string getPromptStringForLayout(const core::memory_allocator::MemoryAllocationLayout &layout);
+		static std::string getPromptStringForLayout(const core::memory_allocator::MemoryAllocationLayout &layout,
+				const std::string capacityUnits);
 private:
 		framework::ResultBase *showConfigGoal(const framework::ParsedCommand &parsedCommand);
 		framework::ResultBase *deleteConfigGoal(const framework::ParsedCommand &parsedCommand);
@@ -355,7 +355,8 @@ private:
 		static std::string getStringForLayoutWarning(enum core::memory_allocator::LayoutWarningCode warningCode);
 		static void generateCliDisplayInstances(wbem::framework::instances_t *pWbemInstances,
 			wbem::framework::instances_t& displayInstances,
-			wbem::framework::attribute_names_t& displayAttributes);
+			wbem::framework::attribute_names_t& displayAttributes,
+			const std::string capacityUnits);
 
 		/*
 		 * Helper function to check for valid deletion request

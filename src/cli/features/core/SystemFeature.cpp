@@ -70,6 +70,7 @@
 #include <cli/features/core/ShowDeviceCommand.h>
 #include <cli/features/core/ShowHostServerCommand.h>
 #include <cli/features/core/ShowMemoryResourcesCommand.h>
+#include <cli/features/core/ShowTopologyCommand.h>
 
 const std::string cli::nvmcli::SystemFeature::Name = "System";
 
@@ -92,6 +93,8 @@ void cli::nvmcli::SystemFeature::getPaths(cli::framework::CommandSpecList &list)
 			.helpText(TR("Filter the returned attributes by explicitly specifying a comma separated "
 				"list of attributes."));
 	showDevices.addOption(framework::OPTION_ALL);
+	showDevices.addOption(framework::OPTION_UNITS)
+			.helpText(TR("Change the units that capacities are displayed in for this command."));
 	showDevices.addTarget(TARGET_DIMM_R)
 			.helpText(TR("Restrict output to specific " NVM_DIMM_NAME "s by supplying the dimm target and one "
 				"or more comma-separated " NVM_DIMM_NAME " identifiers. The default is to display "
@@ -196,11 +199,15 @@ void cli::nvmcli::SystemFeature::getPaths(cli::framework::CommandSpecList &list)
 	showMemoryResources.addTarget(TARGET_MEMORYRESOURCES_R)
 			.helpText(TR("The " NVM_DIMM_NAME " memory resources. No filtering is supported on this target."))
 			.isValueAccepted(false);
+	showMemoryResources.addOption(framework::OPTION_UNITS)
+			.helpText(TR("Change the units that capacities are displayed in for this command."));
 
 	framework::CommandSpec showSystemCap(SHOW_SYSTEM_CAPABILITIES, TR("Show System Capabilities"),
 			framework::VERB_SHOW, TR("Show the platform supported " NVM_DIMM_NAME " capabilities."));
 	showSystemCap.addOption(framework::OPTION_DISPLAY);
 	showSystemCap.addOption(framework::OPTION_ALL);
+	showSystemCap.addOption(framework::OPTION_UNITS)
+			.helpText(TR("Change the units that capacities are displayed in for this command."));
 	showSystemCap.addTarget(TARGET_SYSTEM_R)
 			.helpText(TR(NVM_DIMM_NAME" platform supported capabilities apply to the entire host server. "
 				"No filtering is supported on this target."))
@@ -215,6 +222,8 @@ void cli::nvmcli::SystemFeature::getPaths(cli::framework::CommandSpecList &list)
 					   "to view more detailed information about an " NVM_DIMM_NAME "."));
 	showTopology.addOption(framework::OPTION_DISPLAY);
 	showTopology.addOption(framework::OPTION_ALL);
+	showTopology.addOption(framework::OPTION_UNITS)
+			.helpText(TR("Change the units that capacities are displayed in for this command."));
 	showTopology.addTarget(TARGET_TOPOLOGY_R).isValueAccepted(false);
 	showTopology.addTarget(TARGET_DIMM.name, false, DIMMIDS_STR, true,
 			TR("Restrict output to specific DIMMs by supplying the dimm target and one or more "
@@ -238,30 +247,12 @@ void cli::nvmcli::SystemFeature::getPaths(cli::framework::CommandSpecList &list)
 }
 
 // Constructor, just calls super class
-cli::nvmcli::SystemFeature::SystemFeature() : cli::framework::FeatureBase(),
-	m_pTopologyProvider(NULL)
+cli::nvmcli::SystemFeature::SystemFeature() : cli::framework::FeatureBase()
 {
-	setTopologyProvider(new wbem::physical_asset::MemoryTopologyViewFactory());
 }
 
 cli::nvmcli::SystemFeature::~SystemFeature()
 {
-	// Clean up dynamically-allocated member providers
-
-	if (m_pTopologyProvider)
-	{
-		delete m_pTopologyProvider;
-		m_pTopologyProvider = NULL;
-	}
-}
-
-void cli::nvmcli::SystemFeature::setTopologyProvider(wbem::physical_asset::MemoryTopologyViewFactory *pTopologyProvider)
-{
-	if (m_pTopologyProvider)
-	{
-		delete m_pTopologyProvider;
-	}
-	m_pTopologyProvider = pTopologyProvider;
 }
 
 /*
@@ -1065,59 +1056,67 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::showSystemCapabilities(
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	framework::ResultBase *pResult = NULL;
-	wbem::server::SystemCapabilitiesFactory factory;
-	wbem::framework::attribute_names_t defaultAttributes;
-	defaultAttributes.push_back(wbem::PLATFORMCONFIGSUPPORTED_KEY);
-	defaultAttributes.push_back(wbem::ALIGNMENT_KEY);
-	defaultAttributes.push_back(wbem::CURRENTVOLATILEMODE_KEY);
-	defaultAttributes.push_back(wbem::CURRENTAPPDIRECTMODE_KEY);
 
-	wbem::framework::attribute_names_t allAttributes(defaultAttributes);
-	allAttributes.push_back(wbem::MEMORYMODESSUPPORTED_KEY);
-	allAttributes.push_back(wbem::SUPPORTEDAPP_DIRECT_SETTINGS_KEY);
-	allAttributes.push_back(wbem::RECOMMENDEDAPP_DIRECT_SETTINGS_KEY);
-	allAttributes.push_back(wbem::MINNAMESPACESIZE_KEY);
-	allAttributes.push_back(wbem::BLOCKSIZES_KEY);
-	allAttributes.push_back(wbem::APP_DIRECT_MEMORY_MIRROR_SUPPORT_KEY);
-	allAttributes.push_back(wbem::DIMMSPARESUPPORT_KEY);
-	allAttributes.push_back(wbem::APP_DIRECT_MEMORY_MIGRATION_SUPPORT_KEY);
-	allAttributes.push_back(wbem::RENAMENAMESPACESUPPORT_KEY);
-	allAttributes.push_back(wbem::ENABLENAMESPACESUPPORT_KEY);
-	allAttributes.push_back(wbem::DISABLENAMESPACESUPPORT_KEY);
-	allAttributes.push_back(wbem::GROWAPPDIRECTNAMESPACESUPPORT_KEY);
-	allAttributes.push_back(wbem::SHRINKAPPDIRECTNAMESPACESUPPORT_KEY);
-	allAttributes.push_back(wbem::GROWSTORAGENAMESPACESUPPORT_KEY);
-	allAttributes.push_back(wbem::SHRINKSTORAGENAMESPACESUPPORT_KEY);
-	allAttributes.push_back(wbem::INITIATESCRUBSUPPORT_KEY);
-	allAttributes.push_back(wbem::MEMORYPAGEALLOCATIONCAPABLE_KEY);
-
-	wbem::framework::attribute_names_t attributes =
-			GetAttributeNames(parsedCommand.options, defaultAttributes, allAttributes);
-
-	try
+	std::string capacityUnits;
+	pResult = GetRequestedCapacityUnits(parsedCommand, capacityUnits);
+	if (!pResult)
 	{
-		wbem::framework::instances_t *pInstances = factory.getInstances(attributes);
-		if (pInstances->size() != 1)
+		wbem::server::SystemCapabilitiesFactory factory;
+		wbem::framework::attribute_names_t defaultAttributes;
+		defaultAttributes.push_back(wbem::PLATFORMCONFIGSUPPORTED_KEY);
+		defaultAttributes.push_back(wbem::ALIGNMENT_KEY);
+		defaultAttributes.push_back(wbem::CURRENTVOLATILEMODE_KEY);
+		defaultAttributes.push_back(wbem::CURRENTAPPDIRECTMODE_KEY);
+
+		wbem::framework::attribute_names_t allAttributes(defaultAttributes);
+		allAttributes.push_back(wbem::MEMORYMODESSUPPORTED_KEY);
+		allAttributes.push_back(wbem::SUPPORTEDAPP_DIRECT_SETTINGS_KEY);
+		allAttributes.push_back(wbem::RECOMMENDEDAPP_DIRECT_SETTINGS_KEY);
+		allAttributes.push_back(wbem::MINNAMESPACESIZE_KEY);
+		allAttributes.push_back(wbem::BLOCKSIZES_KEY);
+		allAttributes.push_back(wbem::APP_DIRECT_MEMORY_MIRROR_SUPPORT_KEY);
+		allAttributes.push_back(wbem::DIMMSPARESUPPORT_KEY);
+		allAttributes.push_back(wbem::APP_DIRECT_MEMORY_MIGRATION_SUPPORT_KEY);
+		allAttributes.push_back(wbem::RENAMENAMESPACESUPPORT_KEY);
+		allAttributes.push_back(wbem::ENABLENAMESPACESUPPORT_KEY);
+		allAttributes.push_back(wbem::DISABLENAMESPACESUPPORT_KEY);
+		allAttributes.push_back(wbem::GROWAPPDIRECTNAMESPACESUPPORT_KEY);
+		allAttributes.push_back(wbem::SHRINKAPPDIRECTNAMESPACESUPPORT_KEY);
+		allAttributes.push_back(wbem::GROWSTORAGENAMESPACESUPPORT_KEY);
+		allAttributes.push_back(wbem::SHRINKSTORAGENAMESPACESUPPORT_KEY);
+		allAttributes.push_back(wbem::INITIATESCRUBSUPPORT_KEY);
+		allAttributes.push_back(wbem::MEMORYPAGEALLOCATIONCAPABLE_KEY);
+
+		wbem::framework::attribute_names_t attributes =
+				GetAttributeNames(parsedCommand.options, defaultAttributes, allAttributes);
+
+		try
 		{
-			pResult = new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
-					TRS(nvmcli::UNKNOWN_ERROR_STR));
+			wbem::framework::instances_t *pInstances = factory.getInstances(attributes);
+			if (pInstances->size() != 1)
+			{
+				pResult = new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
+						TRS(nvmcli::UNKNOWN_ERROR_STR));
+			}
+			else
+			{
+				// convert capacities to formatted sizes
+				cli::nvmcli::convertCapacityAttribute((*pInstances)[0],
+						wbem::ALIGNMENT_KEY, capacityUnits);
+				cli::nvmcli::convertCapacityAttribute((*pInstances)[0],
+						wbem::MINNAMESPACESIZE_KEY, capacityUnits);
+				displayUnknownIfDriverReportsNoBlockSizes((*pInstances)[0]);
+				pResult = NvmInstanceToPropertyListResult((*pInstances)[0], attributes, "SystemCapabilities");
+			}
 		}
-		else
+		catch (wbem::framework::Exception &e)
 		{
-			// convert capacities to formatted sizes
-			cli::nvmcli::convertCapacityAttribute((*pInstances)[0], wbem::ALIGNMENT_KEY);
-			cli::nvmcli::convertCapacityAttribute((*pInstances)[0], wbem::MINNAMESPACESIZE_KEY);
-			displayUnknownIfDriverReportsNoBlockSizes((*pInstances)[0]);
-			pResult = NvmInstanceToPropertyListResult((*pInstances)[0], attributes, "SystemCapabilities");
+			if (NULL != pResult)
+			{
+				delete pResult;
+			}
+			pResult = NvmExceptionToResult(e);
 		}
-	}
-	catch (wbem::framework::Exception &e)
-	{
-		if (NULL != pResult)
-		{
-			delete pResult;
-		}
-		pResult = NvmExceptionToResult(e);
 	}
 	return pResult;
 }
@@ -1161,90 +1160,9 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::showTopology(
 		const framework::ParsedCommand &parsedCommand)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	framework::ResultBase *pResult = NULL;
-	wbem::framework::instances_t *pInstances = NULL;
-	try
-	{
-		// define default display attributes
-		wbem::framework::attribute_names_t defaultAttributes;
-		defaultAttributes.push_back(wbem::MEMORYTYPE_KEY);
-		defaultAttributes.push_back(wbem::CAPACITY_KEY);
-		defaultAttributes.push_back(wbem::DIMMID_KEY);
-		defaultAttributes.push_back(wbem::PHYSICALID_KEY);
-		defaultAttributes.push_back(wbem::DEVICELOCATOR_KEY);
 
-		wbem::framework::attribute_names_t allAttributes = defaultAttributes;
-		allAttributes.push_back(wbem::SOCKETID_KEY);
-		allAttributes.push_back(wbem::MEMCONTROLLERID_KEY);
-		allAttributes.push_back(wbem::CHANNEL_KEY);
-		allAttributes.push_back(wbem::CHANNELPOS_KEY);
-		allAttributes.push_back(wbem::NODECONTROLLERID_KEY);
-		allAttributes.push_back(wbem::BANKLABEL_KEY);
-
-		// update the display attributes based on what the user passed in
-		wbem::framework::attribute_names_t displayAttributes =
-				GetAttributeNames(parsedCommand.options, defaultAttributes, allAttributes);
-
-		// include dimmid and physicalid in display when the user asks for specific display attributes
-		if (!wbem::framework_interface::NvmInstanceFactory::containsAttribute(
-				wbem::PHYSICALID_KEY, displayAttributes))
-		{
-			displayAttributes.insert(displayAttributes.begin(), wbem::PHYSICALID_KEY);
-		}
-		if (!wbem::framework_interface::NvmInstanceFactory::containsAttribute(
-				wbem::DIMMID_KEY, displayAttributes))
-		{
-			displayAttributes.insert(displayAttributes.begin(), wbem::DIMMID_KEY);
-		}
-
-		cli::nvmcli::filters_t filters;
-		generateFilterForAttributeWithTargetValues(parsedCommand, nvmcli::TARGET_DIMM.name,
-		                                           wbem::DIMMID_KEY, filters);
-		generateSocketFilter(parsedCommand, displayAttributes, filters);
-
-		// get all instances
-		pInstances = m_pTopologyProvider->getInstances(displayAttributes);
-		if (pInstances)
-		{
-			for (size_t i = 0; i < pInstances->size(); i++)
-			{
-				cli::nvmcli::convertCapacityAttribute((*pInstances)[i], wbem::CAPACITY_KEY);
-			}
-
-			// format the return data
-			pResult = NvmInstanceToObjectListResult(*pInstances, "DimmTopology",
-			                                        wbem::DIMMID_KEY, displayAttributes, filters);
-			delete pInstances;
-
-			// Set layout to table unless the -all or -display option is present
-			if (!framework::parsedCommandContains(parsedCommand, framework::OPTION_DISPLAY) &&
-			    !framework::parsedCommandContains(parsedCommand, framework::OPTION_ALL))
-			{
-				pResult->setOutputType(framework::ResultBase::OUTPUT_TEXTTABLE);
-			}
-		}
-		// failures will throw an exception, this would prevent a crash due to an unexpected error
-		else
-		{
-			pResult = new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
-				TRS(nvmcli::UNKNOWN_ERROR_STR));
-		}
-	}
-	catch (wbem::framework::Exception &e)
-	{
-		if (pInstances)
-		{
-			delete pInstances;
-		}
-
-		if (pResult)
-		{
-			delete pResult;
-		}
-		pResult = NvmExceptionToResult(e);
-	}
-
-	return pResult;
+	ShowTopologyCommand cmd;
+	return cmd.execute(parsedCommand);
 }
 
 enum fw_log_level cli::nvmcli::SystemFeature::logLevelStringToEnum(std::string logLevel)

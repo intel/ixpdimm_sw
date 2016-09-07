@@ -154,12 +154,13 @@ CreateGoalCommand::CreateGoalCommand(
 }
 
 bool CreateGoalCommand::UserPrompt::promptUserConfirmationForLayout(
-	const core::memory_allocator::MemoryAllocationLayout &layout)
+	const core::memory_allocator::MemoryAllocationLayout &layout,
+	const std::string capacityUnits)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	// TODO: Remove dependency on NamespaceFeature (Do as part of US16523)
-	std::string promptStr = NamespaceFeature::getPromptStringForLayout(layout);
+	std::string promptStr = NamespaceFeature::getPromptStringForLayout(layout, capacityUnits);
 
 	return m_prompt.prompt(promptStr);
 }
@@ -237,7 +238,7 @@ framework::ResultBase *CreateGoalCommand::execute(const framework::ParsedCommand
 			const core::memory_allocator::MemoryAllocationRequest &request = m_requestBuilder.build();
 			core::memory_allocator::MemoryAllocationLayout layout = m_allocator.layout(request);
 
-			if (userReallyLikesThisLayout(layout))
+			if (userReallyLikesThisLayout(layout, m_parser.getUnits()))
 			{
 				m_allocator.allocate(layout);
 				m_pResult = m_showGoalAdapter.showCurrentGoal(m_parser.getUnits());
@@ -261,10 +262,11 @@ framework::ResultBase *CreateGoalCommand::execute(const framework::ParsedCommand
 }
 
 bool CreateGoalCommand::userReallyLikesThisLayout(
-	const core::memory_allocator::MemoryAllocationLayout &layout)
+	const core::memory_allocator::MemoryAllocationLayout &layout,
+	const std::string capacityUnits)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	return m_parser.isForce() || m_prompt.promptUserConfirmationForLayout(layout);
+	return m_parser.isForce() || m_prompt.promptUserConfirmationForLayout(layout, capacityUnits);
 }
 
 void CreateGoalCommand::setupRequestBuilder()

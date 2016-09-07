@@ -318,6 +318,47 @@ wbem::framework::attribute_names_t cli::nvmcli::GetAttributeNames(
 	return result;
 }
 
+cli::framework::ErrorResult *cli::nvmcli::GetRequestedCapacityUnits(const cli::framework::ParsedCommand& parsedCommand, std::string &units)
+{
+	framework::ErrorResult *pResult = NULL;
+
+	bool hasUnits = false;
+	units =
+		cli::framework::Parser::getOptionValue(parsedCommand, framework::OPTION_UNITS.name, &hasUnits);
+	if (hasUnits)
+	{
+		std::vector<std::string> validUnits;
+		validUnits.push_back(PREFERENCE_SIZE_B);
+		validUnits.push_back(PREFERENCE_SIZE_MIB);
+		validUnits.push_back(PREFERENCE_SIZE_MB);
+		validUnits.push_back(PREFERENCE_SIZE_GIB);
+		validUnits.push_back(PREFERENCE_SIZE_GB);
+		validUnits.push_back(PREFERENCE_SIZE_TIB);
+		validUnits.push_back(PREFERENCE_SIZE_TB);
+		if (std::find(validUnits.begin(), validUnits.end(), units) == validUnits.end())
+		{
+			pResult = new framework::SyntaxErrorBadValueResult(framework::TOKENTYPE_OPTION,
+					framework::OPTION_UNITS.name, units);
+		}
+	}
+	else
+	{
+		char cap[CONFIG_VALUE_LEN] = "";
+		int rc = get_config_value(SQL_KEY_CLI_SIZE, cap);
+		if (rc != NVM_SUCCESS)
+		{
+			COMMON_LOG_DEBUG_F("Failed to retrieve key %s. ", SQL_KEY_CLI_SIZE);
+			units = PREFERENCE_SIZE_GIB;
+		}
+		else
+		{
+			units = std::string(cap);
+		}
+	}
+
+	return pResult;
+}
+
 void cli::nvmcli::generateDimmFilter(
 		const cli::framework::ParsedCommand& parsedCommand,
 		wbem::framework::attribute_names_t &attributes,
@@ -482,7 +523,6 @@ cli::framework::ErrorResult *cli::nvmcli::getDimms(
 	}
 	return pResult;
 }
-
 
 /*
  * For commands that support an optional -socket target,
@@ -1033,86 +1073,6 @@ NVM_REAL32 round(NVM_REAL32 number, int decimal_places)
 	return floor(number * pow(10, decimal_places) + 0.5) / pow(10, decimal_places);
 }
 
-// IDEMA Standard may be used in the future for block count calculation
-/*std::string cli::nvmcli::calculateAdvertisedCapacity(NVM_UINT64 capacityInBytes,
-		const NVM_UINT64 blockCount, const NVM_UINT64 blockSize)
-{
-	std::stringstream capacityInRequestedFormatStr;
-	NVM_REAL32 capacityInGB = 0;
-
-	if (blockSize == 1)
-	{ // appdirect namespace
-		capacityInGB = ((NVM_REAL32)
-				((NVM_INT64)(blockCount - (IDEMA_CONVERSION_CONSTANT1 * 512)))/(IDEMA_CONVERSION_CONSTANT2 * 512)) +
-						IDEMA_CONVERSION_CONSTANT3;
-	}
-	else if (blockSizeIsPI(blockSize))
-	{ // storage namespace with blocksize 5**
-		capacityInGB = ((NVM_REAL32)
-				((NVM_INT64)(blockCount - IDEMA_CONVERSION_CONSTANT1))/IDEMA_CONVERSION_CONSTANT2) +
-						IDEMA_CONVERSION_CONSTANT3;
-	}
-	else if (blockSizeIs4KVariant(blockSize))
-	{ // storage namespace with 4k variants of blocksize
-		capacityInGB = ((NVM_REAL32)
-				((NVM_INT64)(blockCount - (IDEMA_CONVERSION_CONSTANT1/8)))/(IDEMA_CONVERSION_CONSTANT2/8)) +
-						IDEMA_CONVERSION_CONSTANT3;
-	}
-	else
-	{ // pool
-		capacityInGB = ((NVM_REAL32)
-				((NVM_INT64)(capacityInBytes - (IDEMA_CONVERSION_CONSTANT1 * 512)))/(IDEMA_CONVERSION_CONSTANT2 * 512)) +
-						IDEMA_CONVERSION_CONSTANT3;
-	}
-
-	if (capacityInGB >= 0.1)
-	{ // more than one zero after the decimal point
-		capacityInRequestedFormatStr << round(capacityInGB, 1) << " " << CAPACITY_UNITS_GB;
-	}
-	else if (capacityInGB >= 0)
-	{ // display as bytes instead
-		capacityInRequestedFormatStr << capacityInBytes << " " << PREFERENCE_SIZE_B;
-	}
-
-	return capacityInRequestedFormatStr.str();
-}*/
-/*
-   helper function to calculate BlockCount/LBACount using formulae from IDEMA LBA1-03
-   For logical block size of 512 bytes:
-	LBA counts = (97,696,368) + (1,953,504 * (Advertised Capacity in GBytes – 50))
-   For logical block size of 4096 bytes:
-	LBA counts = (12,212,046) + (244,188 * (Advertised Capacity in GBytes – 50))
-	(The formula is scaled by dividing the first two constants by eight.)
-   Also, the lower three digits of the LBA count should be divisible by 8 with a remainder of
-   0 (rounded up if necessary), to provide a even number of aligned sectors.
-*/
-/*NVM_UINT64 cli::nvmcli::calculateBlockCountForNamespace(const NVM_REAL32 capacityInGB,
-		const NVM_UINT64 blockSize)
-{
-	NVM_UINT64 blockCount = 0;
-
-	// block sizes of 512, 520, 528 bytes
-	if (blockSizeIsPI(blockSize))
-	{
-		blockCount = round_up(IDEMA_CONVERSION_CONSTANT1 +
-			(IDEMA_CONVERSION_CONSTANT2 * (capacityInGB - IDEMA_CONVERSION_CONSTANT3)), 8);
-	}
-	// Scale down the constants by 8 for namespace with block size of 4K variants (4096, 4160, etc)
-	else if (blockSizeIs4KVariant(blockSize))
-	{
-		blockCount = round_up(IDEMA_CONVERSION_CONSTANT1/8 +
-			((IDEMA_CONVERSION_CONSTANT2/8) * (capacityInGB - IDEMA_CONVERSION_CONSTANT3)), 8);
-	}
-	// Scale up the constants by 512 for namespace with a 1 byte block size
-	else
-	{ // appdirect namespace
-		blockCount = round_up((IDEMA_CONVERSION_CONSTANT1 * 512) +
-			((IDEMA_CONVERSION_CONSTANT2 * 512) * (capacityInGB - IDEMA_CONVERSION_CONSTANT3)), 8);
-	}
-
-	return blockCount;
-}*/
-
 NVM_UINT64 cli::nvmcli::calculateBlockCountForNamespace(const NVM_UINT64 capacityInBytes,
 		const NVM_UINT64 blockSize)
 {
@@ -1167,15 +1127,6 @@ std::string cli::nvmcli::translateCapacityToRequestedUnits(NVM_UINT64 capacityIn
 		throw wbem::framework::Exception();
 	}
 
-	// return capacity in bytes if the value in requested format cannot be rounded off
-	if ((capacityInBytes !=0) &&
-		(capacityInRequestedUnits == 0))
-	{
-		capacityStringInRequestedUnits.str("");
-		capacityStringInRequestedUnits.clear();
-		capacityStringInRequestedUnits << capacityInBytes << " " << PREFERENCE_SIZE_B;
-	}
-
 	return capacityStringInRequestedUnits.str();
 }
 
@@ -1224,6 +1175,90 @@ std::string cli::nvmcli::convertCapacityFormat(NVM_UINT64 capacityInBytes, std::
 	return capacityStringInRequestedUnits;
 }
 
+// Not using IDEMA capacity conversions for now, but we might revert to this in the future
+#if 0
+
+std::string cli::nvmcli::calculateAdvertisedCapacity(NVM_UINT64 capacityInBytes,
+		const NVM_UINT64 blockCount, const NVM_UINT64 blockSize)
+{
+	std::stringstream capacityInRequestedFormatStr;
+	NVM_REAL32 capacityInGB = 0;
+
+	if (blockSize == 1)
+	{ // appdirect namespace
+		capacityInGB = ((NVM_REAL32)
+				((NVM_INT64)(blockCount - (IDEMA_CONVERSION_CONSTANT1 * 512)))/(IDEMA_CONVERSION_CONSTANT2 * 512)) +
+						IDEMA_CONVERSION_CONSTANT3;
+	}
+	else if (blockSizeIsPI(blockSize))
+	{ // storage namespace with blocksize 5**
+		capacityInGB = ((NVM_REAL32)
+				((NVM_INT64)(blockCount - IDEMA_CONVERSION_CONSTANT1))/IDEMA_CONVERSION_CONSTANT2) +
+						IDEMA_CONVERSION_CONSTANT3;
+	}
+	else if (blockSizeIs4KVariant(blockSize))
+	{ // storage namespace with 4k variants of blocksize
+		capacityInGB = ((NVM_REAL32)
+				((NVM_INT64)(blockCount - (IDEMA_CONVERSION_CONSTANT1/8)))/(IDEMA_CONVERSION_CONSTANT2/8)) +
+						IDEMA_CONVERSION_CONSTANT3;
+	}
+	else
+	{ // pool
+		capacityInGB = ((NVM_REAL32)
+				((NVM_INT64)(capacityInBytes - (IDEMA_CONVERSION_CONSTANT1 * 512)))/(IDEMA_CONVERSION_CONSTANT2 * 512)) +
+						IDEMA_CONVERSION_CONSTANT3;
+	}
+
+	if (capacityInGB >= 0.1)
+	{ // more than one zero after the decimal point
+		capacityInRequestedFormatStr << round(capacityInGB, 1) << " " << CAPACITY_UNITS_GB;
+	}
+	else if (capacityInGB >= 0)
+	{ // display as bytes instead
+		capacityInRequestedFormatStr << capacityInBytes << " " << PREFERENCE_SIZE_B;
+	}
+
+	return capacityInRequestedFormatStr.str();
+}
+
+/*
+   helper function to calculate BlockCount/LBACount using formulae from IDEMA LBA1-03
+   For logical block size of 512 bytes:
+	LBA counts = (97,696,368) + (1,953,504 * (Advertised Capacity in GBytes – 50))
+   For logical block size of 4096 bytes:
+	LBA counts = (12,212,046) + (244,188 * (Advertised Capacity in GBytes – 50))
+	(The formula is scaled by dividing the first two constants by eight.)
+   Also, the lower three digits of the LBA count should be divisible by 8 with a remainder of
+   0 (rounded up if necessary), to provide a even number of aligned sectors.
+*/
+NVM_UINT64 cli::nvmcli::calculateBlockCountForNamespace(const NVM_REAL32 capacityInGB,
+		const NVM_UINT64 blockSize)
+{
+	NVM_UINT64 blockCount = 0;
+
+	// block sizes of 512, 520, 528 bytes
+	if (blockSizeIsPI(blockSize))
+	{
+		blockCount = round_up(IDEMA_CONVERSION_CONSTANT1 +
+			(IDEMA_CONVERSION_CONSTANT2 * (capacityInGB - IDEMA_CONVERSION_CONSTANT3)), 8);
+	}
+	// Scale down the constants by 8 for namespace with block size of 4K variants (4096, 4160, etc)
+	else if (blockSizeIs4KVariant(blockSize))
+	{
+		blockCount = round_up(IDEMA_CONVERSION_CONSTANT1/8 +
+			((IDEMA_CONVERSION_CONSTANT2/8) * (capacityInGB - IDEMA_CONVERSION_CONSTANT3)), 8);
+	}
+	// Scale up the constants by 512 for namespace with a 1 byte block size
+	else
+	{ // appdirect namespace
+		blockCount = round_up((IDEMA_CONVERSION_CONSTANT1 * 512) +
+			((IDEMA_CONVERSION_CONSTANT2 * 512) * (capacityInGB - IDEMA_CONVERSION_CONSTANT3)), 8);
+	}
+
+	return blockCount;
+}
+#endif
+
 NVM_UINT64 cli::nvmcli::convertCapacityToBytes(std::string capacityUnits,
 		const NVM_REAL32 capacity)
 {
@@ -1261,6 +1296,7 @@ NVM_UINT64 cli::nvmcli::convertCapacityToBytes(std::string capacityUnits,
 	{
 		CapacityInBytes = capacity * BYTES_PER_TIB;
 	}
+
 	return CapacityInBytes;
 }
 

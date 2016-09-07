@@ -53,7 +53,8 @@
 bool cli::nvmcli::NamespaceFeature::convertConfigGoalInstance(
 		const wbem::framework::Instance *pWbemInstance,
 		wbem::framework::Instance *pCliInstance,
-		const wbem::framework::attribute_names_t &displayAttributes)
+		const wbem::framework::attribute_names_t &displayAttributes,
+		const std::string capacityUnits)
 {
 	bool rc = true;
 
@@ -97,7 +98,7 @@ bool cli::nvmcli::NamespaceFeature::convertConfigGoalInstance(
 		pCliInstance->setAttribute(wbem::MEMORYSIZE_KEY,
 				wbem::framework::Attribute(memorySizeAttr.uint64Value(), false),
 				displayAttributes);
-		cli::nvmcli::convertCapacityAttribute(*pCliInstance, wbem::MEMORYSIZE_KEY);
+		cli::nvmcli::convertCapacityAttribute(*pCliInstance, wbem::MEMORYSIZE_KEY, capacityUnits);
 
 		// AppDirect1Size, AppDirect1Settings, AppDirect2Size, AppDirect2Settings
 		// all come from the interleave format, size and redundancy vectors
@@ -171,7 +172,7 @@ bool cli::nvmcli::NamespaceFeature::convertConfigGoalInstance(
 		pCliInstance->setAttribute(wbem::APPDIRECT1SIZE_KEY,
 				wbem::framework::Attribute(appDirect1SizeB, false),
 				displayAttributes);
-		cli::nvmcli::convertCapacityAttribute(*pCliInstance, wbem::APPDIRECT1SIZE_KEY);
+		cli::nvmcli::convertCapacityAttribute(*pCliInstance, wbem::APPDIRECT1SIZE_KEY, capacityUnits);
 
 		// add mirror string
 		if (appDirect1Mirrored)
@@ -200,7 +201,7 @@ bool cli::nvmcli::NamespaceFeature::convertConfigGoalInstance(
 
 		pCliInstance->setAttribute(wbem::APPDIRECT2SIZE_KEY,
 				wbem::framework::Attribute(appDirect2SizeB, false), displayAttributes);
-		cli::nvmcli::convertCapacityAttribute(*pCliInstance, wbem::APPDIRECT2SIZE_KEY);
+		cli::nvmcli::convertCapacityAttribute(*pCliInstance, wbem::APPDIRECT2SIZE_KEY, capacityUnits);
 
 		// add mirror string
 		if (appDirect2Mirrored)
@@ -236,7 +237,7 @@ bool cli::nvmcli::NamespaceFeature::convertConfigGoalInstance(
 		pCliInstance->setAttribute(wbem::STORAGECAPACITY_KEY,
 				wbem::framework::Attribute(storageCapacityAttr.uint64Value(), false),
 				displayAttributes);
-		cli::nvmcli::convertCapacityAttribute(*pCliInstance, wbem::STORAGECAPACITY_KEY);
+		cli::nvmcli::convertCapacityAttribute(*pCliInstance, wbem::STORAGECAPACITY_KEY, capacityUnits);
 
 		// Status - already set to a translated string by the view class
 		wbem::framework::Attribute statusAttr;
@@ -405,18 +406,18 @@ void cli::nvmcli::NamespaceFeature::populateAllAttributes(
 void cli::nvmcli::NamespaceFeature::generateCliDisplayInstances(
 		wbem::framework::instances_t *pWbemInstances,
 		wbem::framework::instances_t& displayInstances,
-		wbem::framework::attribute_names_t& displayAttributes)
+		wbem::framework::attribute_names_t& displayAttributes,
+		const std::string capacityUnits)
 {
 	for (wbem::framework::instances_t::const_iterator iter = pWbemInstances->begin();
 			iter != pWbemInstances->end(); iter++)
 	{
 		wbem::framework::Instance displayInstance;
-		if (convertConfigGoalInstance(&(*iter), &displayInstance, displayAttributes))
+		if (convertConfigGoalInstance(&(*iter), &displayInstance, displayAttributes, capacityUnits))
 		{
 			displayInstances.push_back(displayInstance);
 		}
 	}
-
 }
 
 cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::showConfigGoal(
@@ -432,48 +433,49 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::showConfigGoal(
 
 		validateRequestedDisplayOptions(parsedCommand.options, allAttributes);
 
-		// get all attributes of the goal instances of only unapplied goals
-		wbem::mem_config::MemoryConfigurationFactory isetProvider;
-		wbem::framework::attribute_names_t attributes;
-		wbem::framework::instances_t *pWbemInstances = isetProvider.getGoalInstances(attributes, true);
-		if (!pWbemInstances)
+		std::string capUnits;
+		pResult = GetRequestedCapacityUnits(parsedCommand, capUnits);
+		if (pResult == NULL)
 		{
-			if (pResult)
+			// get all attributes of the goal instances of only unapplied goals
+			wbem::mem_config::MemoryConfigurationFactory isetProvider;
+			wbem::framework::attribute_names_t attributes;
+			wbem::framework::instances_t *pWbemInstances = isetProvider.getGoalInstances(attributes, true);
+			if (!pWbemInstances)
 			{
-				delete pResult;
+				pResult = new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
+						TRS(nvmcli::UNKNOWN_ERROR_STR));
 			}
-			pResult = new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
-					TRS(nvmcli::UNKNOWN_ERROR_STR));
-		}
-		else
-		{
-			// set up display attributes based on what the user passed in
-			wbem::framework::attribute_names_t defaultAttributes;
-			populateCurrentConfigGoalDefaultAttributes(defaultAttributes);
-			wbem::framework::attribute_names_t displayAttributes =
-					GetAttributeNames(parsedCommand.options, defaultAttributes, allAttributes);
-
-			// generate the display filters
-			cli::nvmcli::filters_t filters;
-			generateDimmFilter(parsedCommand, attributes, filters);
-			generateSocketFilter(parsedCommand, attributes, filters);
-
-			// include DimmID in our display for when specific display attributes are requested
-			if (!wbem::framework_interface::NvmInstanceFactory::containsAttribute(
-					wbem::DIMMID_KEY, displayAttributes))
+			else
 			{
-				displayAttributes.insert(displayAttributes.begin(), wbem::DIMMID_KEY);
-			}
+				// set up display attributes based on what the user passed in
+				wbem::framework::attribute_names_t defaultAttributes;
+				populateCurrentConfigGoalDefaultAttributes(defaultAttributes);
+				wbem::framework::attribute_names_t displayAttributes =
+						GetAttributeNames(parsedCommand.options, defaultAttributes, allAttributes);
 
-			pResult = showConfigGoalForInstances(filters, displayAttributes, pWbemInstances);
+				// generate the display filters
+				cli::nvmcli::filters_t filters;
+				generateDimmFilter(parsedCommand, attributes, filters);
+				generateSocketFilter(parsedCommand, attributes, filters);
 
-			// set layout to table unless the -all option is present
-			if (parsedCommand.options.find(framework::OPTION_ALL.name)
-					== parsedCommand.options.end())
-			{
-				pResult->setOutputType(framework::ResultBase::OUTPUT_TEXTTABLE);
+				// include DimmID in our display for when specific display attributes are requested
+				if (!wbem::framework_interface::NvmInstanceFactory::containsAttribute(
+						wbem::DIMMID_KEY, displayAttributes))
+				{
+					displayAttributes.insert(displayAttributes.begin(), wbem::DIMMID_KEY);
+				}
+
+				pResult = showConfigGoalForInstances(filters, displayAttributes, pWbemInstances, capUnits);
+
+				// set layout to table unless the -all option is present
+				if (parsedCommand.options.find(framework::OPTION_ALL.name)
+						== parsedCommand.options.end())
+				{
+					pResult->setOutputType(framework::ResultBase::OUTPUT_TEXTTABLE);
+				}
+				delete pWbemInstances;
 			}
-			delete pWbemInstances;
 		}
 	}
 	catch (wbem::framework::Exception &e)
@@ -490,12 +492,13 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::showConfigGoal(
 cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::showConfigGoalForInstances(
 		const cli::nvmcli::filters_t &filters,
 		wbem::framework::attribute_names_t &displayAttributes,
-		wbem::framework::instances_t *pWbemInstances)
+		wbem::framework::instances_t *pWbemInstances,
+		const std::string capacityUnits)
 {
 	framework::ResultBase *pResult = NULL;
 
 	wbem::framework::instances_t displayInstances;
-	generateCliDisplayInstances(pWbemInstances, displayInstances, displayAttributes);
+	generateCliDisplayInstances(pWbemInstances, displayInstances, displayAttributes, capacityUnits);
 
 	pResult = NvmInstanceToObjectListResult(displayInstances, wbem::CONFIGGOALTABLENAME,
 			wbem::DIMMID_KEY, displayAttributes, filters);
@@ -680,7 +683,8 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::deleteConfigGoal(
 }
 
 std::string cli::nvmcli::NamespaceFeature::getPromptStringForLayout(
-		const core::memory_allocator::MemoryAllocationLayout &layout)
+		const core::memory_allocator::MemoryAllocationLayout &layout,
+		const std::string capacityUnits)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
@@ -697,7 +701,7 @@ std::string cli::nvmcli::NamespaceFeature::getPromptStringForLayout(
 		filters_t noFilters;
 		wbem::framework::attribute_names_t defaultAttributes;
 		populateCreateConfigGoalPromptDefaultAttributes(defaultAttributes);
-		pDisplayGoal = showConfigGoalForInstances(noFilters, defaultAttributes, pGoalInstances);
+		pDisplayGoal = showConfigGoalForInstances(noFilters, defaultAttributes, pGoalInstances, capacityUnits);
 		pDisplayGoal->setOutputType(framework::ResultBase::OUTPUT_TEXTTABLE);
 
 		promptStr << CREATE_GOAL_CONFIRMATION_PREFIX << std::endl << std::endl;
@@ -840,69 +844,73 @@ cli::framework::ResultBase *cli::nvmcli::NamespaceFeature::loadGoal(const framew
 {
 	framework::ResultBase *pResult = NULL;
 
-	std::string path = framework::Parser::getOptionValue(parsedCommand, framework::OPTION_SOURCE_R.name, NULL);
-
-	// Validate socket and DIMM targets
-	bool dimmTargetExists = false;
-	bool socketTargetExists = false;
-	std::string dimmStr = framework::Parser::getTargetValue(parsedCommand, TARGET_DIMM.name, &dimmTargetExists);
-	std::string socketStr = framework::Parser::getTargetValue(parsedCommand, TARGET_SOCKET.name, &socketTargetExists);
-
-	// don't know what to do if -socket and -dimm are both provided
-	if (socketTargetExists && dimmTargetExists)
-	{
-		pResult = new framework::SyntaxErrorResult(framework::ResultBase::stringFromArgList(
-				TR("'%s' and '%s' targets cannot be used together."), TARGET_DIMM.name.c_str(),
-				TARGET_SOCKET.name.c_str()));
-	}
-	else
-	{
-		try
-		{
-			bool forceOption = parsedCommand.options.find(framework::OPTION_FORCE.name)
-					!= parsedCommand.options.end();
-
-			// if user didn't specify the force option, prompt them to continue
-			std::string prompt = framework::ResultBase::stringFromArgList(
-					LOAD_GOAL_PROMPT.c_str(), path.c_str());
-			if (!forceOption && !promptUserYesOrNo(prompt))
-			{
-				pResult = new framework::SimpleResult(LOAD_CONFIG_GOAL_MSG + cli::framework::UNCHANGED_MSG);
-			}
-			else
-			{
-				std::vector<std::string> dimms; // list of DIMM UIDs to be constructed from target list
-				if (socketTargetExists) // -socket target provided
-				{
-					pResult = getDimmsFromSockets(parsedCommand, dimms);
-				}
-				else // no -socket target, so use -dimm
-				{
-					pResult = getDimms(parsedCommand, dimms);
-				}
-
-				if (!pResult) // no error
-				{
-					wbem::mem_config::MemoryConfigurationServiceFactory provider;
-					provider.importDimmConfigsFromPath(path, dimms);
-				}
-			}
-		}
-		catch (wbem::framework::Exception &e)
-		{
-			if (pResult)
-			{
-				delete pResult;
-			}
-			pResult = NvmExceptionToResult(e);
-		}
-	}
-
-	// Success - show the config goal that was loaded
+	std::string capUnits;
+	pResult = GetRequestedCapacityUnits(parsedCommand, capUnits);
 	if (!pResult)
 	{
-		pResult = showConfigGoal(parsedCommand);
-	}
+		std::string path = framework::Parser::getOptionValue(parsedCommand, framework::OPTION_SOURCE_R.name, NULL);
 
+		// Validate socket and DIMM targets
+		bool dimmTargetExists = false;
+		bool socketTargetExists = false;
+		std::string dimmStr = framework::Parser::getTargetValue(parsedCommand, TARGET_DIMM.name, &dimmTargetExists);
+		std::string socketStr = framework::Parser::getTargetValue(parsedCommand, TARGET_SOCKET.name, &socketTargetExists);
+
+		// don't know what to do if -socket and -dimm are both provided
+		if (socketTargetExists && dimmTargetExists)
+		{
+			pResult = new framework::SyntaxErrorResult(framework::ResultBase::stringFromArgList(
+					TR("'%s' and '%s' targets cannot be used together."), TARGET_DIMM.name.c_str(),
+					TARGET_SOCKET.name.c_str()));
+		}
+		else
+		{
+			try
+			{
+				bool forceOption = parsedCommand.options.find(framework::OPTION_FORCE.name)
+							!= parsedCommand.options.end();
+
+				// if user didn't specify the force option, prompt them to continue
+				std::string prompt = framework::ResultBase::stringFromArgList(
+						LOAD_GOAL_PROMPT.c_str(), path.c_str());
+				if (!forceOption && !promptUserYesOrNo(prompt))
+				{
+					pResult = new framework::SimpleResult(LOAD_CONFIG_GOAL_MSG + cli::framework::UNCHANGED_MSG);
+				}
+				else
+				{
+					std::vector<std::string> dimms; // list of DIMM UIDs to be constructed from target list
+					if (socketTargetExists) // -socket target provided
+					{
+						pResult = getDimmsFromSockets(parsedCommand, dimms);
+					}
+					else // no -socket target, so use -dimm
+					{
+						pResult = getDimms(parsedCommand, dimms);
+					}
+
+					if (!pResult) // no error
+					{
+						wbem::mem_config::MemoryConfigurationServiceFactory provider;
+						provider.importDimmConfigsFromPath(path, dimms);
+					}
+				}
+			}
+			catch (wbem::framework::Exception &e)
+			{
+				if (pResult)
+				{
+					delete pResult;
+				}
+				pResult = NvmExceptionToResult(e);
+			}
+		}
+
+		// Success - show the config goal that was loaded
+		if (!pResult)
+		{
+			pResult = showConfigGoal(parsedCommand);
+		}
+	}
 	return pResult;
 }

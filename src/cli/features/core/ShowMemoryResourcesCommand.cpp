@@ -29,6 +29,7 @@
 #include <libinvm-cli/CliFrameworkTypes.h>
 #include <cli/features/core/WbemToCli_utilities.h>
 #include <cli/features/core/CommandParts.h>
+#include <libinvm-cli/SyntaxErrorMissingValueResult.h>
 
 #include "ShowMemoryResourcesCommand.h"
 
@@ -36,6 +37,7 @@ namespace cli
 {
 namespace nvmcli
 {
+std::string ShowMemoryResourcesCommand::m_capacityUnits = "";
 
 ShowMemoryResourcesCommand::ShowMemoryResourcesCommand(core::system::SystemService &service)
 : m_service(service)
@@ -56,8 +58,11 @@ framework::ResultBase *ShowMemoryResourcesCommand::execute(const framework::Pars
 
 	m_parsedCommand = parsedCommand;
 	m_displayOptions = framework::DisplayOptions(m_parsedCommand.options);
+	m_unitsOption = framework::UnitsOption(m_parsedCommand.options);
+	m_capacityUnits = m_unitsOption.getCapacityUnits();
 
-	if (displayOptionsAreValid())
+	if (displayOptionsAreValid() &&
+		unitsOptionIsValid())
 	{
 		try
 		{
@@ -104,6 +109,23 @@ bool ShowMemoryResourcesCommand::displayOptionsAreValid()
 		m_pResult = new framework::SyntaxErrorBadValueResult(framework::TOKENTYPE_OPTION,
 				framework::OPTION_DISPLAY.name, invalidDisplay);
 	}
+
+	return m_pResult == NULL;
+}
+
+bool ShowMemoryResourcesCommand::unitsOptionIsValid()
+{
+	if (m_unitsOption.isEmpty(m_capacityUnits))
+	{
+		m_pResult =
+			new framework::SyntaxErrorMissingValueResult(framework::TOKENTYPE_OPTION, framework::OPTION_UNITS.name);
+	}
+	else if (!m_unitsOption.isValid(m_capacityUnits))
+	{
+		m_pResult =
+			new framework::SyntaxErrorBadValueResult(framework::TOKENTYPE_OPTION, framework::OPTION_UNITS.name, m_capacityUnits);
+	}
+
 	return m_pResult == NULL;
 }
 
@@ -139,7 +161,7 @@ void ShowMemoryResourcesCommand::createResults()
 
 std::string ShowMemoryResourcesCommand::convertCapacity(NVM_UINT64 value)
 {
-	return convertCapacityFormat(value);
+	return convertCapacityFormat(value, m_capacityUnits);
 }
 
 }

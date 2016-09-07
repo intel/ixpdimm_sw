@@ -33,12 +33,16 @@
 #include <persistence/lib_persistence.h>
 #include <cli/features/core/framework/CliHelper.h>
 #include <iomanip>
+#include <libinvm-cli/SyntaxErrorMissingValueResult.h>
+
 #include "ShowDeviceCommand.h"
 
 namespace cli
 {
 namespace nvmcli
 {
+
+std::string ShowDeviceCommand::m_capacityUnits = "";
 
 ShowDeviceCommand::ShowDeviceCommand(core::device::DeviceService &service)
 	: m_service(service), m_pResult(NULL)
@@ -63,7 +67,7 @@ ShowDeviceCommand::ShowDeviceCommand(core::device::DeviceService &service)
 	m_props.addUint16("VendorID", &core::device::Device::getVendorId, toHex);
 	m_props.addUint16("DeviceID", &core::device::Device::getDeviceId, toHex);
 	m_props.addUint16("RevisionID", &core::device::Device::getRevisionId);
-	// New NFIT attirbutes here
+	// New NFIT attributes here
 	m_props.addStr("SerialNumber", &core::device::Device::getSerialNumber);
 	m_props.addUint16("SubsystemVendorID", &core::device::Device::getSubsystemVendor, toHex);
 	m_props.addUint16("SubsystemDeviceID", &core::device::Device::getSubsystemDevice, toHex);
@@ -129,9 +133,11 @@ framework::ResultBase *ShowDeviceCommand::execute(const framework::ParsedCommand
 	m_dimmIds = framework::CliHelper::splitCommaSeperatedString(m_parsedCommand.targets[TARGET_DIMM.name]);
 	m_socketIds = framework::CliHelper::splitCommaSeperatedString(m_parsedCommand.targets[TARGET_SOCKET.name]);
 	m_displayOptions = framework::DisplayOptions(m_parsedCommand.options);
-	std::string units = "GB";
+	m_unitsOption = framework::UnitsOption(m_parsedCommand.options);
+	m_capacityUnits = m_unitsOption.getCapacityUnits();
 
-	if (displayOptionsAreValid())
+	if (displayOptionsAreValid() &&
+		unitsOptionIsValid())
 	{
 		try
 		{
@@ -305,7 +311,7 @@ std::string ShowDeviceCommand::convertSecurityCapabilities(NVM_UINT16 capability
 
 std::string ShowDeviceCommand::convertCapacity(NVM_UINT64 value)
 {
-	return convertCapacityFormat(value);
+	return convertCapacityFormat(value, m_capacityUnits);
 }
 
 bool ShowDeviceCommand::dimmIdsAreValid()
@@ -460,6 +466,22 @@ bool ShowDeviceCommand::displayOptionsAreValid()
 		m_pResult = new framework::SyntaxErrorBadValueResult(framework::TOKENTYPE_OPTION,
 			framework::OPTION_DISPLAY.name, invalidDisplay);
 	}
+	return m_pResult == NULL;
+}
+
+bool ShowDeviceCommand::unitsOptionIsValid()
+{
+	if (m_unitsOption.isEmpty(m_capacityUnits))
+	{
+		m_pResult =
+			new framework::SyntaxErrorMissingValueResult(framework::TOKENTYPE_OPTION, framework::OPTION_UNITS.name);
+	}
+	else if (!m_unitsOption.isValid(m_capacityUnits))
+	{
+		m_pResult =
+			new framework::SyntaxErrorBadValueResult(framework::TOKENTYPE_OPTION, framework::OPTION_UNITS.name, m_capacityUnits);
+	}
+
 	return m_pResult == NULL;
 }
 

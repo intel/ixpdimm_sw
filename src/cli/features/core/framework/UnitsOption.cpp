@@ -24,45 +24,75 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef CR_MGMT_SHOWMEMORYRESOURCESCOMMAND_H
-#define CR_MGMT_SHOWMEMORYRESOURCESCOMMAND_H
 
-#include <libinvm-cli/CliFrameworkTypes.h>
-#include <libinvm-cli/ResultBase.h>
-#include "framework/PropertyDefinitionList.h"
-#include <cli/features/core/framework/CommandBase.h>
+#include "UnitsOption.h"
 
-#include <core/system/SystemService.h>
-
-namespace cli
+std::string cli::framework::UnitsOption::getCapacityUnits() const
 {
-namespace nvmcli
-{
+	std::string units = "";
+	if (m_options.find("-units") != m_options.end())
+	{
+		units = m_options.at("-units");
+	}
 
-class NVM_API ShowMemoryResourcesCommand : framework::CommandBase
-{
-public:
-	ShowMemoryResourcesCommand(
-			core::system::SystemService &service = core::system::SystemService::getService());
-
-	framework::ResultBase *execute(const framework::ParsedCommand &parsedCommand);
-
-private:
-	core::system::SystemService &m_service;
-
-	framework::PropertyDefinitionList<core::system::SystemMemoryResources> m_props;
-
-	core::system::SystemMemoryResources m_memoryResourcesInfo;
-
-	void createResults();
-	bool displayOptionsAreValid();
-	bool unitsOptionIsValid();
-	bool isPropertyDisplayed(framework::IPropertyDefinition<core::system::SystemMemoryResources> &p);
-	static std::string m_capacityUnits;
-	static std::string convertCapacity(NVM_UINT64 capacity);
-};
-
-}
+	return units;
 }
 
-#endif //CR_MGMT_SHOWMEMORYRESOURCESCOMMAND_H
+cli::framework::UnitsOption &cli::framework::UnitsOption::operator=(const cli::framework::UnitsOption &other)
+{
+	if (this == &other)
+		return *this;
+
+	m_options = other.m_options;
+
+	return *this;
+}
+
+bool cli::framework::UnitsOption::isValid(std::string units) const
+{
+	bool validType = false;
+
+	if (units.empty())
+	{
+		validType = true;
+	}
+	else if (m_options.find(OPTION_UNITS.name) != m_options.end())
+	{
+		std::vector<std::string> validUnits;
+		validUnits.push_back("B");
+		validUnits.push_back("MB");
+		validUnits.push_back("MiB");
+		validUnits.push_back("GB");
+		validUnits.push_back("GiB");
+		validUnits.push_back("TB");
+		validUnits.push_back("TiB");
+
+		for (std::vector<std::string>::const_iterator iter = validUnits.begin();
+				iter != validUnits.end(); iter++)
+		{
+			if (stringsIEqual(units, *iter))
+			{
+				validType = true;
+				break;
+			}
+		}
+	}
+
+	return validType;
+}
+
+bool cli::framework::UnitsOption::isEmpty(std::string units) const
+{
+	bool emptyUnits = false;
+
+	if (m_options.find("-units") != m_options.end())
+	{
+		units = m_options.at("-units");
+		if (units.empty())
+		{
+			emptyUnits = true;
+		}
+	}
+
+	return emptyUnits;
+}
