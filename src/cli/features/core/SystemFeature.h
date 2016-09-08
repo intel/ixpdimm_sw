@@ -51,6 +51,7 @@ namespace nvmcli
 
 static const std::string UNLOCKED_PROPERTYVALUE = "Unlocked"; //!< Unlock Property value
 static const std::string DISABLED_PROPERTYVALUE = "Disabled"; //!< Disabled Property value
+static const std::string FROZEN_PROPERTYVALUE = "Frozen"; //!< Disabled Property value
 static const std::string ZERO_PROPERTYVALUE = "0"; //!< Disable property value
 static const std::string ONE_PROPERTYVALUE = "1"; //!< Enable property value
 static const std::string ERROR_PROPERTYVALUE = "Error"; // !< Error property value
@@ -74,6 +75,7 @@ static const std::string CHANGEPASSPHRASE_MSG = "Change passphrase on " NVM_DIMM
 static const std::string SETPASSPHRASE_MSG = "Set passphrase on " NVM_DIMM_NAME; //!< Set passphrase message
 static const std::string ERRORMSG_SECURITY_PASSPHRASEMISSMATCH = N_TR("'NewPassphrase' and 'ConfirmPassphrase' must match."); //!< Confirm mismatch error message
 static const std::string REMOVEPASSPHRASE_MSG = N_TR("Remove passphrase from " NVM_DIMM_NAME); //!< Remove passphrase message
+static const std::string DIMM_FROZEN_MSG = N_TR("Freeze LockState on " NVM_DIMM_NAME); //!< Frozen lockstate message
 static const std::string REMOVEPASSPHRASE_ALREADYDISABLED_MSG = N_TR("Security is already disabled."); //!< Security already disabled message
 static const std::string UNLOCK_ALREADYDISABLED_MSG = N_TR("Security is disabled."); //!< Security already disabled message
 static const std::string ERASEDEVICEDATA_MSG = N_TR("Erase " NVM_DIMM_NAME); //!< Unlock passphrase success message
@@ -190,6 +192,9 @@ private:
 				enum return_code rc, std::string basePrefix, std::vector<std::string> dimms);
 		cli::framework::ResultBase *generateErrorResultFromString(
 				std::string errorMsg, std::string basePrefix, std::vector<std::string> dimms);
+		cli::framework::ResultBase * parsePassPhrase(const framework::ParsedCommand &parsedCommand,
+				std::vector<std::string> dimms,
+				std::string &passphrase);
 };
 
 }

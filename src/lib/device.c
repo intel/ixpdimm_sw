@@ -175,6 +175,10 @@ enum lock_state security_state_to_enum(unsigned char security_status)
 	{
 		lock_state = LOCK_STATE_NOT_SUPPORTED;
 	}
+	else if (security_status & SEC_FROZEN)
+	{
+		lock_state = LOCK_STATE_FROZEN;
+	}
 	else if (!(security_status & SEC_ENABLED))
 	{
 		lock_state = LOCK_STATE_DISABLED;
@@ -182,10 +186,6 @@ enum lock_state security_state_to_enum(unsigned char security_status)
 	else if (security_status & SEC_COUNT_EXP)
 	{
 		lock_state = LOCK_STATE_PASSPHRASE_LIMIT;
-	}
-	else if (security_status & SEC_FROZEN)
-	{
-		lock_state = LOCK_STATE_FROZEN;
 	}
 	else if (security_status & SEC_LOCKED)
 	{

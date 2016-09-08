@@ -85,14 +85,11 @@ int freeze_security(const struct device_discovery *p_discovery)
 	return rc;
 }
 
-int security_change_prepare(struct device_discovery *p_discovery,
-		const NVM_PASSPHRASE passphrase, const NVM_SIZE passphrase_len,
-		NVM_BOOL check_enabled)
+int check_lock_state(struct device_discovery *p_discovery)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
 	NVM_UID uid_str;
-
 	// Do not proceed if frozen
 	if (p_discovery->lock_state == LOCK_STATE_FROZEN)
 	{
@@ -118,16 +115,34 @@ int security_change_prepare(struct device_discovery *p_discovery,
 		COMMON_LOG_ERROR_F("Failed to modify security on device %s \
 					because security is unknown",
 					uid_str);
-		rc = NVM_ERR_NOTSUPPORTED;
+		rc = NVM_ERR_LIMITPASSPHRASE;
 	}
-	// Do not proceed if security is not enabled (only for certain commads)
-	else if (check_enabled && p_discovery->lock_state == LOCK_STATE_DISABLED)
+	// Do not proceed if not supported
+	else if (p_discovery->lock_state == LOCK_STATE_NOT_SUPPORTED)
 	{
 		uid_copy(p_discovery->uid, uid_str);
 		COMMON_LOG_ERROR_F("Failed to modify security on device %s \
-				because the security is disabled",
-				uid_str);
-		rc = NVM_ERR_SECURITYDISABLED;
+					because security is not supported",
+					uid_str);
+		rc = NVM_ERR_NOTSUPPORTED;
+	}
+	return rc;
+}
+
+int security_change_prepare(struct device_discovery *p_discovery,
+		const NVM_PASSPHRASE passphrase, const NVM_SIZE passphrase_len)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+	NVM_UID uid_str;
+
+	rc = check_lock_state(p_discovery);
+
+	if (rc != NVM_SUCCESS)
+	{
+		uid_copy(p_discovery->uid, uid_str);
+		COMMON_LOG_ERROR_F("device lock state was not correct for the "
+				"requested operation on the device %s", uid_str);
 	}
 	// Do not proceed if user sends passphrase in disabled state
 	else if (passphrase_len > 0 && p_discovery->lock_state == LOCK_STATE_DISABLED)
@@ -240,7 +255,7 @@ int nvm_set_passphrase(const NVM_UID device_uid,
 			((rc = exists_and_manageable(device_uid, &discovery, 1)) == NVM_SUCCESS) &&
 			((rc = check_passphrase_capable(device_uid)) == NVM_SUCCESS) &&
 			((rc = security_change_prepare(&discovery, old_passphrase,
-					old_passphrase_len, 0)) == NVM_SUCCESS))
+					old_passphrase_len)) == NVM_SUCCESS))
 	{
 		// send the pass through ioctl
 		struct pt_payload_set_passphrase input_payload;
@@ -342,7 +357,7 @@ int nvm_remove_passphrase(const NVM_UID device_uid,
 	else if (((rc = check_passphrase(passphrase, passphrase_len)) == NVM_SUCCESS) &&
 			((rc = exists_and_manageable(device_uid, &discovery, 1)) == NVM_SUCCESS) &&
 			((rc = check_passphrase_capable(device_uid)) == NVM_SUCCESS) &&
-			((rc = security_change_prepare(&discovery, passphrase, passphrase_len, 1))
+			((rc = security_change_prepare(&discovery, passphrase, passphrase_len))
 					== NVM_SUCCESS))
 	{
 		// send a pass through command to disable security
@@ -410,33 +425,34 @@ int nvm_unlock_device(const NVM_UID device_uid,
 	}
 	else if (((rc = check_passphrase(passphrase, passphrase_len)) == NVM_SUCCESS) &&
 			((rc = exists_and_manageable(device_uid, &discovery, 1)) == NVM_SUCCESS) &&
-			((rc = check_unlock_device_capable(device_uid)) == NVM_SUCCESS) &&
-			((rc = security_change_prepare(&discovery, passphrase, passphrase_len, 1))
-					== NVM_SUCCESS))
+			((rc = check_unlock_device_capable(device_uid)) == NVM_SUCCESS))
 	{
-		// send a pass through command to unlock the device
-		struct pt_payload_passphrase input_payload;
-		memset(&input_payload, 0, sizeof (input_payload));
-		s_strncpy(input_payload.passphrase_current, NVM_PASSPHRASE_LEN,
-				passphrase, passphrase_len);
+		if ((rc = security_change_prepare(&discovery, passphrase,
+				passphrase_len)) == NVM_SUCCESS)
+		{
+			// send a pass through command to unlock the device
+			struct pt_payload_passphrase input_payload;
+			memset(&input_payload, 0, sizeof (input_payload));
+			s_strncpy(input_payload.passphrase_current, NVM_PASSPHRASE_LEN,
+					passphrase, passphrase_len);
 
-		struct fw_cmd cmd;
-		memset(&cmd, 0, sizeof (struct fw_cmd));
-		cmd.device_handle = discovery.device_handle.handle;
-		cmd.opcode = PT_SET_SEC_INFO;
-		cmd.sub_opcode = SUBOP_UNLOCK_UNIT;
-		cmd.input_payload_size = sizeof (input_payload);
-		cmd.input_payload = &input_payload;
-		rc = ioctl_passthrough_cmd(&cmd);
-		s_memset(&input_payload, sizeof (input_payload));
+			struct fw_cmd cmd;
+			memset(&cmd, 0, sizeof (struct fw_cmd));
+			cmd.device_handle = discovery.device_handle.handle;
+			cmd.opcode = PT_SET_SEC_INFO;
+			cmd.sub_opcode = SUBOP_UNLOCK_UNIT;
+			cmd.input_payload_size = sizeof (input_payload);
+			cmd.input_payload = &input_payload;
+			rc = ioctl_passthrough_cmd(&cmd);
+			s_memset(&input_payload, sizeof (input_payload));
 
-		// clear any device context - security state has likely changed
-		invalidate_devices();
+			// clear any device context - security state has likely changed
+			invalidate_devices();
+		}
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
-
 }
 
 /*
@@ -468,7 +484,10 @@ int nvm_freezelock_device(const NVM_UID device_uid)
 	}
 	else if ((rc = exists_and_manageable(device_uid, &discovery, 1)) == NVM_SUCCESS)
 	{
-		rc = freeze_security(&discovery);
+		if ((rc = check_lock_state(&discovery)) == NVM_SUCCESS)
+		{
+			rc = freeze_security(&discovery);
+		}
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -562,7 +581,7 @@ int nvm_erase_device(const NVM_UID device_uid,
 			}
 			// verify device is in the right state to accept a secure erase
 			else if ((rc =
-					security_change_prepare(&discovery, passphrase, passphrase_len, 1))
+					security_change_prepare(&discovery, passphrase, passphrase_len))
 					== NVM_SUCCESS)
 			{
 				rc = secure_erase(passphrase, passphrase_len, &discovery);

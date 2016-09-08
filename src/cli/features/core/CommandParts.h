@@ -91,6 +91,7 @@ const std::string INVALID_NS_APP_DIRECT_SETTINGS = N_TR("Unable to create a name
 const std::string INVALID_DIMMID_ERROR_STR = N_TR("The device identifier %s is not valid.");
 const std::string INVALID_NAMESPACEID_ERROR_STR = N_TR("The namespace identifier %s is not valid.");
 const std::string CANT_USE_TOGETHER_ERROR_STR = N_TR("'%s' and '%s' cannot be used together.");
+const std::string MISSING_REQUIRED_TOKEN = N_TR("Missing required %s '%s'.");
 const std::string INVALID_COMMAND_ERROR_STR = N_TR("Invalid command.");
 
 const std::string BAD_REQUEST_STR =

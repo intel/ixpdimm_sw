@@ -162,8 +162,7 @@ void cli::nvmcli::SystemFeature::getPaths(cli::framework::CommandSpecList &list)
 			TR("Confirmation of the new passphrase (1-32 characters and must match NewPassphrase)."));
 
 	framework::CommandSpec changeDeviceSecurity(CHANGE_DEVICE_SECURITY, TR("Change Device Security"), framework::VERB_SET,
-			TR("Unlock or disable security on one or more " NVM_DIMM_NAME "s by supplying the passphrase "
-				"and the desired lock state."));
+			TR("Change the data-at-rest security lock state for the persistent memory on one or more " NVM_DIMM_NAME "s."));
 	changeDeviceSecurity.addOption(framework::OPTION_SOURCE)
 			.helpText(TR("File path to a local file containing the new passphrase (1-32 characters)."));
 	changeDeviceSecurity.addTarget(TARGET_DIMM.name, true,
@@ -172,10 +171,10 @@ void cli::nvmcli::SystemFeature::getPaths(cli::framework::CommandSpecList &list)
 				"comma-separated " NVM_DIMM_NAME " identifiers. However, this is not recommended as it "
 				"may put the system in an undesirable state. The default is to modify all "
 				"manageable " NVM_DIMM_NAME "s."));
-	changeDeviceSecurity.addProperty(LOCKSTATE_PROPERTYNAME, true, "Unlocked|Disabled", true,
+	changeDeviceSecurity.addProperty(LOCKSTATE_PROPERTYNAME, true, "Unlocked|Disabled|Frozen", true,
 			TR("The desired lock state."));
-	changeDeviceSecurity.addProperty(PASSPHRASE_PROPERTYNAME, true, STRING_PARAM, false,
-			TR("The current passphrase (1-32 characters)."));
+	changeDeviceSecurity.addProperty(PASSPHRASE_PROPERTYNAME, false, STRING_PARAM, false,
+			TR("The current passphrase (1-32 characters). The passphrase is not required to change the lock state to \"Frozen\""));
 
 
 	framework::CommandSpec eraseDeviceData(ERASE_DEVICE_DATA, TR("Erase Device Data"), framework::VERB_DELETE,
@@ -820,6 +819,47 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::changeDevicePassphrase(
 	return pResults;
 }
 
+cli::framework::ResultBase *cli::nvmcli::SystemFeature::parsePassPhrase(const framework::ParsedCommand &parsedCommand,
+		std::vector<std::string> dimms, std::string &passphrase)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	framework::ResultBase *pResults = NULL;
+	framework::StringMap::const_iterator passPhraseOption =
+		parsedCommand.properties.find(PASSPHRASE_PROPERTYNAME);
+	if (passPhraseOption == parsedCommand.properties.end())
+	{
+		std::string errorString = framework::ResultBase::stringFromArgList(
+				TRS(MISSING_REQUIRED_TOKEN), "property", "Passphrase");
+		framework::SyntaxErrorResult *pError =
+			new framework::SyntaxErrorResult(errorString);
+		pResults = pError;
+	}
+	else
+	{
+		framework::StringMap::const_iterator source = parsedCommand.options.find(framework::OPTION_SOURCE.name);
+		if (source != parsedCommand.options.end() && !source->second.empty())
+		{ // passphrase provided via passphrase file
+			std::string passphraseFile = source->second;
+			enum return_code rc = readPassphrases(passphraseFile.c_str(), &passphrase, NULL);
+			if ((rc != NVM_SUCCESS) ||
+					(passphrase.empty()))
+			{
+				std::string basePrefix = TRS(REMOVEPASSPHRASE_MSG);
+				pResults = generateErrorResult(NVM_ERR_INVALIDPASSPHRASEFILE, basePrefix, dimms);
+			}
+		}
+		else
+		{ // passphrase provided via command line
+			passphrase = framework::Parser::getPropertyValue(parsedCommand, PASSPHRASE_PROPERTYNAME);
+			if (passphrase.empty())
+			{
+				passphrase = promptUserHiddenString(TRS(PASSPHRASE_PROMPT));
+			}
+		}
+	}
+	return pResults;
+}
+
 /*
  * Unlock all devices in list
  */
@@ -836,7 +876,8 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::changeDeviceSecurity(
 		std::string basePrefix = TRS(UNLOCK_MSG);
 		std::string newLockState = framework::Parser::getPropertyValue(parsedCommand, LOCKSTATE_PROPERTYNAME);
 		if (!cli::framework::stringsIEqual(newLockState, UNLOCKED_PROPERTYVALUE) &&
-				!cli::framework::stringsIEqual(newLockState, DISABLED_PROPERTYVALUE))
+				!cli::framework::stringsIEqual(newLockState, DISABLED_PROPERTYVALUE) &&
+				!cli::framework::stringsIEqual(newLockState, FROZEN_PROPERTYVALUE))
 		{
 			pResults = new framework::SyntaxErrorBadValueResult(
 					framework::TOKENTYPE_PROPERTY,
@@ -845,58 +886,49 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::changeDeviceSecurity(
 		}
 
 		std::string passphrase;
-		if (!pResults)
+
+		if ((cli::framework::stringsIEqual(newLockState, UNLOCKED_PROPERTYVALUE) ||
+				cli::framework::stringsIEqual(newLockState, DISABLED_PROPERTYVALUE)) && (pResults == NULL))
 		{
-			framework::StringMap::const_iterator source = parsedCommand.options.find(framework::OPTION_SOURCE.name);
-			if (source != parsedCommand.options.end() && !source->second.empty())
-			{ // passphrase provided via passphrase file
-				std::string passphraseFile = source->second;
-				enum return_code rc = readPassphrases(passphraseFile.c_str(), &passphrase, NULL);
-				if ((rc != NVM_SUCCESS) ||
-						(passphrase.empty()))
-				{
-					basePrefix = TRS(REMOVEPASSPHRASE_MSG);
-					pResults = generateErrorResult(NVM_ERR_INVALIDPASSPHRASEFILE, basePrefix, dimms);
-				}
-			}
-			else
-			{ // passphrase provided via command line
-				passphrase = framework::Parser::getPropertyValue(parsedCommand, PASSPHRASE_PROPERTYNAME);
-				if (passphrase.empty())
-				{
-					passphrase = promptUserHiddenString(TRS(PASSPHRASE_PROMPT));
-				}
-			}
+			pResults = parsePassPhrase(parsedCommand, dimms,  passphrase);
 		}
+
 		if (pResults == NULL)
 		{
 			wbem::physical_asset::NVDIMMFactory dimmProvider;
 			framework::SimpleListResult *pListResults = new framework::SimpleListResult();
-			pResults = pListResults;
 			for (std::vector<std::string>::const_iterator dimmIter = dimms.begin();
 					dimmIter != dimms.end(); dimmIter++)
 			{
 				std::string prefix = "";
 				try
 				{
-					// Based on the logic above, if the newLockState is not unlocked then it must be disabled
 					if (cli::framework::stringsIEqual(newLockState, UNLOCKED_PROPERTYVALUE))
 					{
 						basePrefix = TRS(UNLOCK_MSG);
 						prefix += cli::framework::ResultBase::stringFromArgList((basePrefix + " %s").c_str(),
-								wbem::physical_asset::NVDIMMFactory::uidToDimmIdStr((*dimmIter)).c_str());
+								wbem::physical_asset::NVDIMMFactory::uidToDimmIdStr(*dimmIter).c_str());
 						prefix += ": ";
 
 						dimmProvider.unlock((*dimmIter), passphrase);
 					}
-					else
+					else if (cli::framework::stringsIEqual(newLockState, DISABLED_PROPERTYVALUE))
 					{
 						basePrefix = TRS(REMOVEPASSPHRASE_MSG);
 						prefix += cli::framework::ResultBase::stringFromArgList((basePrefix + " %s").c_str(),
-								wbem::physical_asset::NVDIMMFactory::uidToDimmIdStr((*dimmIter)).c_str());
+								wbem::physical_asset::NVDIMMFactory::uidToDimmIdStr(*dimmIter).c_str());
 						prefix += ": ";
 
 						dimmProvider.removePassphrase((*dimmIter), passphrase);
+					}
+					else
+					{
+						basePrefix = TRS(DIMM_FROZEN_MSG);
+						prefix += cli::framework::ResultBase::stringFromArgList((basePrefix + " %s").c_str(),
+								wbem::physical_asset::NVDIMMFactory::uidToDimmIdStr(*dimmIter).c_str());
+						prefix += ": ";
+
+						dimmProvider.freezeLock(*dimmIter);
 					}
 
 					pListResults->insert(prefix + TRS(cli::framework::SUCCESS_MSG));
@@ -928,6 +960,7 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::changeDeviceSecurity(
 					break; // don't continue on failure
 				}
 			}
+			pResults = pListResults;
 		}
 	}
 
