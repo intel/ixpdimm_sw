@@ -357,6 +357,16 @@ int ioctl_passthrough_cmd(struct fw_cmd *p_cmd)
 				(p_ioctl_data->InputPayload.Arg3OpCodeParameterDataBuffer
 					+ p_cmd->input_payload_size);
 
+			COMMON_LOG_HANDOFF_F("Passthrough IOCTL. Opcode: %x, SubOpcode: %x",
+						p_cmd->opcode, p_cmd->sub_opcode);
+			if (p_cmd->input_payload_size)
+			{
+				for (int i = 0; i < p_cmd->input_payload_size; i += 8)
+				{
+					COMMON_LOG_HANDOFF_F("Input[%d]: %x",
+						i, ((NVM_UINT64 *) (p_cmd->input_payload))[i]);
+				}
+			}
 			if ((rc = execute_ioctl(buf_size, p_ioctl_data, IOCTL_CR_PASS_THROUGH))
 				== NVM_SUCCESS &&
 				(rc = ind_err_to_nvm_lib_err(p_ioctl_data->ReturnCode)) == NVM_SUCCESS)

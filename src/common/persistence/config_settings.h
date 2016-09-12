@@ -89,6 +89,9 @@ extern "C"
 //! SQL Key name used to globally store system wide logging level
 #define	SQL_KEY_LOG_LEVEL	"LOG_LEVEL"
 
+//! SQL Key name used to globally store system wide print mask
+#define	SQL_KEY_PRINT_MASK	"PRINT_MASK"
+
 //! SQL Key name for the default simulator file location
 #define	SQL_KEY_DEFAULT_SIMULATOR	"DEFAULT_SIMULATOR"
 

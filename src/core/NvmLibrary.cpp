@@ -29,7 +29,6 @@
 #include <core/exceptions/LibraryException.h>
 #include <core/exceptions/NoMemoryException.h>
 #include "NvmLibrary.h"
-#include "NvmLibrary.h"
 #include "Helper.h"
 
 namespace core

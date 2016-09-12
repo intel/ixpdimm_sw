@@ -54,7 +54,7 @@ void deleteProviderFactory();
 #include <process.h>
 
 /*!
- * DLL Entry POint
+ * DLL Entry Point
  */
 extern "C" BOOL WINAPI NVM_API DllMain(HANDLE hModule, DWORD ulReason, LPVOID lpReserved)
 {

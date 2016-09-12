@@ -47,14 +47,17 @@
 #ifdef __WINDOWS__
 #include <Windows.h>
 	HANDLE g_loglevel_lock;
+	HANDLE g_printmask_lock;
 #else
 	pthread_mutex_t g_loglevel_lock;
+	pthread_mutex_t g_printmask_lock;
 #endif
 
 
 #define	SYSLOG_SOURCE	"IntelNVM"
 
 static volatile int g_log_level = -1;
+static volatile int g_print_mask = -1;
 
 void print_buffer_to_file(const char *filename, char *p_buf, size_t buf_size, char *p_prefix)
 {
@@ -140,11 +143,13 @@ void do_log(int level, const char *file_name, int line_number, const char *messa
 /*
  * If logging is turned on, write to the trace table
  */
-void log_trace(int level, const char *file_name, int line_number, const char *message)
+void log_trace(int level, int flags, const char *file_name, int line_number, const char *message)
 {
-	/* uncomment for quick debugging */
-	// printf("---file_name: %s, line_number: %d, message: %s---\n",
-	//	file_name, line_number, message);
+	if (flags & get_current_print_mask())
+	{
+		printf("---file_name: %s, line_number: %d, message: %s---\n",
+			file_name, line_number, message);
+	}
 
 	if (log_level_check(level))
 	{
@@ -155,8 +160,18 @@ void log_trace(int level, const char *file_name, int line_number, const char *me
 /*
  * If logging is turned on, write to log using format.
  */
-void log_trace_f(int level, const char *file_name, int line_number, const char *format, ...)
+void log_trace_f(int level, int flags, const char *file_name, int line_number,
+			const char *format, ...)
 {
+	va_list args;
+	if (flags & get_current_print_mask())
+	{
+		va_start(args, format);
+		vprintf(format, args);
+		printf("\n");
+		va_end(args);
+	}
+
 	if (log_level_check(level))
 	{
 		char *message = NULL;
@@ -165,15 +180,8 @@ void log_trace_f(int level, const char *file_name, int line_number, const char *
 		// if we can't allocate memory, just exit - no logging
 		if ((message = (char *)malloc(size)) != NULL)
 		{
-			va_list args;
 			char *temp;
 			int need = 0;
-
-			/* uncomment for quick debugging */
-//			va_start(args, format);
-//			vprintf(format, args);
-//			printf("\n");
-//			va_end(args);
 
 			while (1)
 			{
@@ -245,6 +253,40 @@ void log_to_syslog(int level, const char *file_name, int line_number, const char
 
 		log_system_event(SYSTEM_EVENT_TYPE_ERROR, SYSLOG_SOURCE, long_message);
 	}
+}
+
+int get_current_print_mask()
+{
+	mutex_lock(&g_printmask_lock);
+	int print_mask = g_print_mask;
+	if (print_mask == -1)
+	{
+		if (get_config_value_int(SQL_KEY_PRINT_MASK, &print_mask) == COMMON_SUCCESS)
+		{
+			g_print_mask = print_mask;
+		}
+		else
+		{
+			print_mask = 0;
+		}
+	}
+	mutex_unlock(&g_printmask_lock);
+	return print_mask;
+}
+
+COMMON_BOOL set_current_print_mask(int mask)
+{
+	COMMON_BOOL set = 0;
+	char mask_str[CONFIG_VALUE_LEN];
+	snprintf(mask_str, CONFIG_VALUE_LEN, "%d", mask);
+	if (add_config_value(SQL_KEY_PRINT_MASK, mask_str) == COMMON_SUCCESS)
+	{
+		mutex_lock(&g_printmask_lock);
+		g_print_mask = mask;
+		mutex_unlock(&g_printmask_lock);
+		set = 1;
+	}
+	return set;
 }
 
 /*

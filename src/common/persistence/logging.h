@@ -54,31 +54,39 @@ enum log_dest
  * Macros to facilitate logging
  */
 
+#define	FLAG_PRINT_DEBUG	1
+#define FLAG_PRINT_TRACE	1 << 1
+#define FLAG_PRINT_HANDOFF	1 << 2
+
 //! Log Macro: Log Level = Debug
 #define	COMMON_LOG_DEBUG(statement)  \
-	log_trace(LOGGING_LEVEL_DEBUG, __FILE__, __LINE__, statement)
+	log_trace(LOGGING_LEVEL_DEBUG, FLAG_PRINT_DEBUG, __FILE__, __LINE__, statement)
 
 //! Log Macro: Log Level = Info
 #define	COMMON_LOG_INFO(statement)  \
-	log_trace(LOGGING_LEVEL_INFO, __FILE__, __LINE__, statement)
+	log_trace(LOGGING_LEVEL_INFO, FLAG_PRINT_DEBUG, __FILE__, __LINE__, statement)
 
 //! Log Macro: Log Level = Warning
 #define	COMMON_LOG_WARN(statement)  \
-	log_trace(LOGGING_LEVEL_WARN,  __FILE__, __LINE__, statement)
+	log_trace(LOGGING_LEVEL_WARN, FLAG_PRINT_DEBUG, __FILE__, __LINE__, statement)
 
 //! Log Macro: Log Level = Error
 #define	COMMON_LOG_ERROR(statement)  \
-	log_trace(LOGGING_LEVEL_ERROR, __FILE__, __LINE__, statement)
+	log_trace(LOGGING_LEVEL_ERROR, FLAG_PRINT_DEBUG, __FILE__, __LINE__, statement)
 
 //! Function Entry Log Macro: Log Level = Info
 #define	COMMON_LOG_ENTRY()  log_trace_f \
-	(LOGGING_LEVEL_INFO, __FILE__, __LINE__, \
+	(LOGGING_LEVEL_INFO, FLAG_PRINT_TRACE, __FILE__, __LINE__, \
 	"Entering %s()", ((char *)__func__))
 
 //! Function Exit Log Macro: Log Level = Info
 #define	COMMON_LOG_EXIT()  \
-	log_trace_f(LOGGING_LEVEL_INFO, __FILE__, __LINE__, \
+	log_trace_f(LOGGING_LEVEL_INFO, FLAG_PRINT_TRACE, __FILE__, __LINE__, \
 	"Exiting %s", ((char *)__func__))
+
+//! Control Handoff Log Macro: Log Level = Debug
+#define	COMMON_LOG_HANDOFF(statement)	\
+	log_trace(LOGGING_LEVEL_DEBUG, FLAG_PRINT_HANDOFF, __FILE__, __LINE__, statement)
 
 /*
  * Macros to facilitate logging w/ formatted messages
@@ -86,19 +94,19 @@ enum log_dest
 
 //! Formatted Log Macro: Log Level = Debug
 #define	COMMON_LOG_DEBUG_F(format, ...)  \
-	log_trace_f(LOGGING_LEVEL_DEBUG, __FILE__, __LINE__, format, __VA_ARGS__)
+	log_trace_f(LOGGING_LEVEL_DEBUG, FLAG_PRINT_DEBUG, __FILE__, __LINE__, format, __VA_ARGS__)
 
 //! Formatted Log Macro: Log Level = Info
 #define	COMMON_LOG_INFO_F(format, ...)  \
-	log_trace_f(LOGGING_LEVEL_INFO, __FILE__, __LINE__, format, __VA_ARGS__)
+	log_trace_f(LOGGING_LEVEL_INFO, FLAG_PRINT_DEBUG, __FILE__, __LINE__, format, __VA_ARGS__)
 
 //! Formatted Log Macro: Log Level = Warning
 #define	COMMON_LOG_WARN_F(format, ...)  \
-	log_trace_f(LOGGING_LEVEL_WARN, __FILE__, __LINE__, format, __VA_ARGS__)
+	log_trace_f(LOGGING_LEVEL_WARN, FLAG_PRINT_DEBUG, __FILE__, __LINE__, format, __VA_ARGS__)
 
 //! Formatted Log Macro: Log Level = Error
 #define	COMMON_LOG_ERROR_F(format, ...)  \
-	log_trace_f(LOGGING_LEVEL_ERROR, __FILE__, __LINE__, format, __VA_ARGS__)
+	log_trace_f(LOGGING_LEVEL_ERROR, FLAG_PRINT_DEBUG, __FILE__, __LINE__, format, __VA_ARGS__)
 
 //! Error message for when get_* != get_*_count - in most cases they should return the same count
 #define	COMMON_LOG_ERROR_BAD_COUNT(base, count, base_rc) \
@@ -107,17 +115,22 @@ enum log_dest
 
 //! Formatted Function Entry Log Macro: Log Level = Info
 #define	COMMON_LOG_ENTRY_PARAMS(param_format, ...)  \
-	log_trace_f(LOGGING_LEVEL_INFO, __FILE__, __LINE__, \
+	log_trace_f(LOGGING_LEVEL_INFO, FLAG_PRINT_TRACE, __FILE__, __LINE__, \
 	"Entering %s(" param_format ")", ((char *)__func__), __VA_ARGS__)
 
 //! Formatted Function Exit Log Macro: Log Level = Info
 #define	COMMON_LOG_EXIT_RETURN(return_format, ...)  \
-	log_trace_f(LOGGING_LEVEL_INFO, __FILE__, __LINE__, \
+	log_trace_f(LOGGING_LEVEL_INFO, FLAG_PRINT_TRACE, __FILE__, __LINE__, \
 	"Exiting %s(): " return_format, ((char *)__func__), __VA_ARGS__)
 
 //! Formatted Function Exit w/ Return Value Log Macro: Log Level = Info
 #define	COMMON_LOG_EXIT_RETURN_I(return_value) \
 	COMMON_LOG_EXIT_RETURN("%d", return_value)
+
+//! Formatted Control Handoff Log Macro: Log Level = Debug
+#define	COMMON_LOG_HANDOFF_F(format, ...)	\
+	log_trace_f(LOGGING_LEVEL_DEBUG, FLAG_PRINT_HANDOFF, __FILE__, __LINE__, \
+	format, __VA_ARGS__)
 
 void print_buffer_to_file(const char *filename, char *p_buf, size_t buf_size, char *p_prefix);
 
@@ -137,7 +150,7 @@ extern int trace_rows;
  * @param[in] message
  * 		The message to be logged
  */
-void log_trace(int level, const char *file_name, int line_number, const char *message);
+void log_trace(int level, int flags, const char *file_name, int line_number, const char *message);
 
 /*!
  * If logging is turned on, write to log using format.
@@ -152,7 +165,7 @@ void log_trace(int level, const char *file_name, int line_number, const char *me
  * @param[in] ...
  * 		Parameters need to match the format passed
  */
-void log_trace_f(int level, const char *file_name, int line_number, const char *format, ...);
+void log_trace_f(int level, int flags, const char *file_name, int line_number, const char *format, ...);
 
 /*!
  * Checks if the given log level is enabled
@@ -181,6 +194,9 @@ void log_close();
  * 		COMMON_ERR_UNKNOWN
  */
 int log_gather();
+
+int get_current_print_mask();
+COMMON_BOOL set_current_print_mask();
 
 /*
  * Retrieve the current log level

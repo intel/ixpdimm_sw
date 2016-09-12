@@ -58,12 +58,14 @@ class LogEnterExit
 		LogEnterExit(const char *funcName, const char *srcFile, const int lineNum) :
 			m_FuncName(funcName), m_SrcFile(srcFile), m_LineNum(lineNum)
 		{
-			log_trace_f(LOGGING_LEVEL_INFO, m_SrcFile, m_LineNum, "Entering: %s", m_FuncName);
+			log_trace_f(LOGGING_LEVEL_INFO, FLAG_PRINT_TRACE, m_SrcFile, m_LineNum, "Entering: %s",
+					m_FuncName);
 		}
 
 		virtual ~LogEnterExit()
 		{
-			log_trace_f(LOGGING_LEVEL_INFO, m_SrcFile, m_LineNum, "Exiting: %s", m_FuncName);
+			log_trace_f(LOGGING_LEVEL_INFO, FLAG_PRINT_TRACE, m_SrcFile, m_LineNum, "Exiting: %s",
+					m_FuncName);
 		}
 
 	private:
