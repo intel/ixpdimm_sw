@@ -973,6 +973,32 @@ int allocatedPageStructsAreInDramOrPmem(struct namespace_create_settings *p_sett
 	(p_settings->memory_page_allocation == NAMESPACE_MEMORY_PAGE_ALLOCATION_APP_DIRECT));
 }
 
+int translate_pool_health_to_nvm_error(struct pool *p_pool)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	switch (p_pool->health)
+	{
+	case POOL_HEALTH_NORMAL:
+		break;
+	case POOL_HEALTH_PENDING:
+		rc = NVM_ERR_GOALPENDING;
+		break;
+	case POOL_HEALTH_LOCKED:
+		rc = NVM_ERR_BADSECURITYSTATE;
+		break;
+	case POOL_HEALTH_UNKNOWN:
+	case POOL_HEALTH_ERROR:
+	default:
+		rc = NVM_ERR_BADPOOLHEALTH;
+		break;
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
 /*
  * Helper function to validate namespace settings
  * Also determines namespace_creation_id to be used by the driver
@@ -1126,9 +1152,12 @@ int nvm_adjust_create_namespace_block_count(const NVM_UID pool_uid,
 		{
 			if ((rc = nvm_get_pool(pool_uid, p_pool)) == NVM_SUCCESS)
 			{
-				NVM_UINT32 namespace_creation_id;
-				rc = validate_namespace_create_settings(p_pool, p_settings,
-						p_format, &namespace_creation_id, 1);
+				if ((rc = translate_pool_health_to_nvm_error(p_pool)) == NVM_SUCCESS)
+				{
+					NVM_UINT32 namespace_creation_id;
+					rc = validate_namespace_create_settings(p_pool, p_settings,
+							p_format, &namespace_creation_id, 1);
+				}
 			}
 			else
 			{
@@ -1180,20 +1209,26 @@ int nvm_adjust_modify_namespace_block_count(
 	}
 	else if ((rc = nvm_get_namespace_details(namespace_uid, &details)) == NVM_SUCCESS)
 	{
-		if (details.block_count < *p_block_count &&
-			(rc = IS_NVM_FEATURE_LICENSED(grow_namespace)) != NVM_SUCCESS)
+		struct pool *p_pool = (struct pool *)calloc(1, sizeof (struct pool));
+		if ((p_pool) && ((rc = nvm_get_pool(details.pool_uid, p_pool)) == NVM_SUCCESS) &&
+			((rc = translate_pool_health_to_nvm_error(p_pool)) == NVM_SUCCESS))
 		{
-			COMMON_LOG_ERROR("Increasing namespace size not supported.");
+			if (details.block_count < *p_block_count &&
+					(rc = IS_NVM_FEATURE_LICENSED(grow_namespace)) != NVM_SUCCESS)
+			{
+				COMMON_LOG_ERROR("Increasing namespace size not supported.");
+			}
+			else if (details.block_count > *p_block_count &&
+					(rc = IS_NVM_FEATURE_LICENSED(shrink_namespace)) != NVM_SUCCESS)
+			{
+				COMMON_LOG_ERROR("Decreasing namespace size not supported.");
+			}
+			else
+			{
+				rc = validate_namespace_block_count(namespace_uid, p_block_count, 1);
+			}
 		}
-		else if (details.block_count > *p_block_count &&
-				(rc = IS_NVM_FEATURE_LICENSED(shrink_namespace)) != NVM_SUCCESS)
-		{
-			COMMON_LOG_ERROR("Decreasing namespace size not supported.");
-		}
-		else
-		{
-			rc = validate_namespace_block_count(namespace_uid, p_block_count, 1);
-		}
+		free(p_pool);
 	}
 	else
 	{
@@ -1253,7 +1288,8 @@ int nvm_create_namespace(NVM_UID *p_namespace_uid, const NVM_UID pool_uid,
 		{
 			if ((rc = nvm_get_pool(pool_uid, p_pool)) == NVM_SUCCESS)
 			{
-				if ((rc = validate_namespace_create_settings(p_pool, p_settings, p_format,
+				if (((rc = translate_pool_health_to_nvm_error(p_pool)) == NVM_SUCCESS) &&
+						(rc = validate_namespace_create_settings(p_pool, p_settings, p_format,
 							&namespace_creation_id, allow_adjustment)) == NVM_SUCCESS)
 				{
 					struct nvm_namespace_create_settings nvm_settings;
@@ -1706,37 +1742,43 @@ int nvm_modify_namespace_block_count(const NVM_UID namespace_uid,
 			}
 			else
 			{
-				rc = validate_namespace_block_count(namespace_uid,
-						&block_count, allow_adjustment);
-				if (rc == NVM_SUCCESS)
+				struct pool *p_pool = (struct pool *)calloc(1, sizeof (struct pool));
+				if ((p_pool) && ((rc = nvm_get_pool(details.pool_uid, p_pool)) == NVM_SUCCESS) &&
+						((rc = translate_pool_health_to_nvm_error(p_pool)) == NVM_SUCCESS))
 				{
-					rc = modify_namespace_block_count(namespace_uid, block_count);
+					rc = validate_namespace_block_count(namespace_uid,
+							&block_count, allow_adjustment);
 					if (rc == NVM_SUCCESS)
 					{
-						// the namespace context is no longer valid
-						invalidate_namespaces();
+						rc = modify_namespace_block_count(namespace_uid, block_count);
+						if (rc == NVM_SUCCESS)
+						{
+							// the namespace context is no longer valid
+							invalidate_namespaces();
 
-						// Log an event indicating we successfully modified a namespace
-						NVM_EVENT_ARG ns_uid_arg;
-						uid_to_event_arg(namespace_uid, ns_uid_arg);
-						NVM_EVENT_ARG ns_name_arg;
-						s_strncpy(ns_name_arg, NVM_EVENT_ARG_LEN,
-								details.discovery.friendly_name, NVM_NAMESPACE_NAME_LEN);
-						log_mgmt_event(EVENT_SEVERITY_INFO,
-								EVENT_CODE_MGMT_NAMESPACE_MODIFIED,
-								namespace_uid,
-								0, // no action required
-								ns_name_arg, ns_uid_arg, NULL);
+							// Log an event indicating we successfully modified a namespace
+							NVM_EVENT_ARG ns_uid_arg;
+							uid_to_event_arg(namespace_uid, ns_uid_arg);
+							NVM_EVENT_ARG ns_name_arg;
+							s_strncpy(ns_name_arg, NVM_EVENT_ARG_LEN,
+									details.discovery.friendly_name, NVM_NAMESPACE_NAME_LEN);
+							log_mgmt_event(EVENT_SEVERITY_INFO,
+									EVENT_CODE_MGMT_NAMESPACE_MODIFIED,
+									namespace_uid,
+									0, // no action required
+									ns_name_arg, ns_uid_arg, NULL);
+						}
+						else
+						{
+							COMMON_LOG_ERROR("Could not modify namespace block count");
+						}
 					}
 					else
 					{
-						COMMON_LOG_ERROR("Could not modify namespace block count");
+						COMMON_LOG_ERROR("Bad block count for nvm_modify_namespace");
 					}
 				}
-				else
-				{
-					COMMON_LOG_ERROR("Bad block count for nvm_modify_namespace");
-				}
+				free(p_pool);
 			}
 		}
 		else

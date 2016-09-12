@@ -213,6 +213,8 @@ enum return_code
 	NVM_ERR_ARSINPROGRESS = -47, // Address range scrub in progress.
 	NVM_ERR_BADSECURITYGOAL = -48, // No dimm found with matching security goal to create a NS.
 	NVM_ERR_INVALIDPASSPHRASEFILE = -49, // The passphrase file is invalid.
+	NVM_ERR_GOALPENDING = -50, // Memory allocation goal is pending reboot.
+	NVM_ERR_BADPOOLHEALTH = -51, // Underlying persistent memory is unavailable.
 };
 
 /*
