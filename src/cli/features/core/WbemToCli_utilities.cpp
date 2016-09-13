@@ -353,6 +353,15 @@ cli::framework::ErrorResult *cli::nvmcli::GetRequestedCapacityUnits(const cli::f
 		else
 		{
 			units = std::string(cap);
+			// AUTO and AUTO_10 are not real units of capacity
+			if (units == PREFERENCE_SIZE_AUTO)
+			{
+				units = PREFERENCE_SIZE_GIB;
+			}
+			else if (units == PREFERENCE_SIZE_AUTO_10)
+			{
+				units = PREFERENCE_SIZE_GB;
+			}
 		}
 	}
 
