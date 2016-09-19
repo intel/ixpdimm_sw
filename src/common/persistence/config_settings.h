@@ -65,7 +65,7 @@ extern "C"
 #define EVENT_LOG_TRIM_PERCENT_BOUND 10
 
 //! Maximum event log entries
-#define EVENT_LOG_MAX_BOUND 10000
+#define EVENT_LOG_MAX_BOUND 100000
 
 //! The maximum length of a config setting SQL key
 #define CONFIG_SETTINGS_KEY_MAX_LEN 256

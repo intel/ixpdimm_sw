@@ -42,6 +42,23 @@
 
 namespace wbem
 {
+/*
+ * Given an attribute name, gets the current (from pInstance) value.
+ * @throw Exception if the attribute is found in attributes but not pInstance
+ */
+void getCurrentAttribute(const std::string &attributeName,
+	const framework::Instance *pInstance,
+	framework::Attribute &currentAttribute)
+throw(framework::Exception);
+
+/*
+ * Given an attribute name, gets the new
+ * (from attributes) value.
+ * @return true if the named attribute is found in attributes.
+ */
+bool getNewModifiableAttribute(const std::string &attributeName,
+	const framework::attributes_t &attributes,
+	framework::Attribute &newAttribute);
 
 void checkAttributesAreModifiable(framework::Instance *pInstance,
 	framework::attributes_t &attributes,
@@ -52,7 +69,5 @@ inline bool isNameInAttributeNameList(wbem::framework::attribute_names_t names, 
 	return (std::find(names.begin(), names.end(), toFind) != names.end());
 }
 }
-
-
 
 #endif //CR_MGMT_FRAMEWORKEXTENSIONS_H

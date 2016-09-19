@@ -89,6 +89,7 @@ static std::string ENABLEDSTATE_KEY = "EnabledState";
 static std::string CURRENTSTATE_KEY = "CurrentState";
 static std::string HEALTHSTATE_KEY = "HealthState";
 static std::string COUNT_KEY = "Count";
+static std::string INTERVAL_KEY = "Interval";
 
 // Associations
 static std::string ANTECEDENT_KEY = "Antecedent";

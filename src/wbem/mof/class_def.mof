@@ -648,6 +648,8 @@ class <NVM_WBEM_PREFIX>DiagnosticCompletionRecord : CIM_DiagnosticCompletionReco
 [dynamic, provider("intelwbemprovider")]
 class <NVM_WBEM_PREFIX>NVDIMMEventLog : CIM_RecordLog
 {
+	uint16 Interval;
+
 	// methods
 	[implemented,
 		ValueMap {"0", "2", "4" },
@@ -666,7 +668,9 @@ class <NVM_WBEM_PREFIX>NVDIMMEventLog : CIM_RecordLog
 	     	" MessageID = <stringvalue>\n"
 	     	" CreationTimestamp > <datetimevalue>\n"
 	     	" CreationTimestamp < <datetimevalue>\n"
-	     	" ActionRequired = <booleanvalue>" )]
+	     	" ActionRequired = <booleanvalue>\n"
+	     	" EnabledState = <uint16value>\n"
+	     	" Interval = <uint16value>\n" )]
       string Filter,
          [OUT, Description ( "Returns a list of 0 or more CIM_LogEntry instances that match the specified filter." )]
       CIM_LogEntry REF LogEntries[]);

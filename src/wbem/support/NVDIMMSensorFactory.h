@@ -181,18 +181,6 @@ private:
 	void populateAttributeList(framework::attribute_names_t &attributes) throw (framework::Exception);
 
 	/*
-	 * Helper method. Given an attribute name, gets the current (from pInstance) and new
-	 * (from attributes) values.
-	 * @return true if the named attribute is found in attributes.
-	 * @throw Exception if the attribute is found in attributes but not pInstance
-	 */
-	bool getModifiableAttribute(const std::string &attributeName,
-			const framework::attributes_t &attributes,
-			const framework::Instance * const pInstance,
-			framework::Attribute &currentAttribute,
-			framework::Attribute &newAttribute) throw (framework::Exception);
-
-	/*
 	 * get the string associated with the enabled state
 	 */
 	std::string getSensorEnabledString(const NVM_UINT16 enabledState);

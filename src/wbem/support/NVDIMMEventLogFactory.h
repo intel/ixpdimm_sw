@@ -78,6 +78,10 @@ namespace support
 	static const NVM_UINT32 NVDIMMEVENTLOG_ERR_FAILED = 4;
 	static const NVM_UINT32 NVDIMMEVENTLOG_ERR_INVALID_PARAMETER = 5;
 	static const NVM_UINT32 NVDIMMEVENTLOG_ERR_INSUFFICIENT_RESOURCES = 4097;
+	static const NVM_UINT32 NVDIMMEVENTLOG_ENABLEDSTATE_UNKNOWN = 0;
+	static const NVM_UINT32 NVDIMMEVENTLOG_ENABLEDSTATE_ENABLED = 2;
+	static const NVM_UINT32 NVDIMMEVENTLOG_ENABLEDSTATE_DISABLED = 3;
+
 /*!
  * Provider Factory for NVDIMMEventLogFactory
  * There is a single instance of this class.  It serves as an aggregation point
@@ -151,6 +155,14 @@ class NVM_API NVDIMMEventLogFactory : public framework_interface::NvmInstanceFac
 		 */
 		wbem::framework::instances_t * getFilteredEvents(EventLogFilter *pEventLogFilter)
 			throw (framework::Exception);
+
+		wbem::framework::Instance* modifyInstance(wbem::framework::ObjectPath &path, wbem::framework::attributes_t &attributes)
+			throw (wbem::framework::Exception);
+
+		void updateNVDIMMEventLogInstance(const framework::attributes_t &attributes,
+			framework::Instance *pInstance);
+
+		void updateConfigTable(const char *key, NVM_UINT64 value);
 
 	private:
 		void populateAttributeList(framework::attribute_names_t &attributes)

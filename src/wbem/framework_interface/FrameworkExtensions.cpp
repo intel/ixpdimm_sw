@@ -57,5 +57,40 @@ void checkAttributesAreModifiable(
 		}
 	}
 }
+
+void getCurrentAttribute(const std::string &attributeName,
+	const framework::Instance *const pInstance,
+	framework::Attribute &currentAttribute)
+throw(framework::Exception)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	if (pInstance)
+	{
+		if(pInstance->getAttribute(attributeName, currentAttribute)
+					 != framework::SUCCESS)
+		{
+			COMMON_LOG_ERROR_F("Failed to get attribute '%s'",
+					attributeName.c_str());
+			throw framework::Exception("An internal error occurred.");
+		}
+	}
+}
+
+bool getNewModifiableAttribute(const std::string &attributeName,
+	const framework::attributes_t &attributes,
+	framework::Attribute &newAttribute)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	bool found = false;
+	if (attributes.find(attributeName) != attributes.end())
+	{
+		found = true;
+		newAttribute = attributes.at(attributeName);
+	}
+
+	return found;
+}
 }
 

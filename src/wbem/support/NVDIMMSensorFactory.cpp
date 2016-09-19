@@ -629,31 +629,6 @@ throw(framework::Exception)
 	return pInstance;
 }
 
-bool NVDIMMSensorFactory::getModifiableAttribute(const std::string &attributeName,
-	const framework::attributes_t &attributes,
-	const framework::Instance *const pInstance,
-	framework::Attribute &currentAttribute,
-	framework::Attribute &newAttribute)
-throw(framework::Exception)
-{
-	if (pInstance && pInstance->getAttribute(attributeName, currentAttribute)
-					 != framework::SUCCESS)
-	{
-		COMMON_LOG_ERROR_F("Failed to get attribute '%s' from NVDIMMSensor",
-			ENABLEDSTATE_KEY.c_str());
-		throw framework::Exception(TR("An internal error occurred."));
-	}
-
-	bool found = false;
-	if (attributes.find(attributeName) != attributes.end())
-	{
-		found = true;
-		newAttribute = attributes.at(attributeName);
-	}
-
-	return found;
-}
-
 void NVDIMMSensorFactory::updateSensor(const std::string &dimmUid,
 	const int type,
 	const framework::attributes_t &attributes,
@@ -679,8 +654,8 @@ void NVDIMMSensorFactory::updateSensor(const std::string &dimmUid,
 	memset(&sensor, 0, sizeof(sensor));
 
 	// EnabledState attribute may have changed
-	if (getModifiableAttribute(ENABLEDSTATE_KEY, attributes, pInstance, currentAttribute,
-		newAttribute))
+	getCurrentAttribute(ENABLEDSTATE_KEY, pInstance, currentAttribute);
+	if (getNewModifiableAttribute(ENABLEDSTATE_KEY, attributes, newAttribute))
 	{
 		modifiablePropFound = true;
 
@@ -723,8 +698,8 @@ void NVDIMMSensorFactory::updateSensor(const std::string &dimmUid,
 		(type == SENSORTYPE_MEDIATEMPERATURE || type == SENSORTYPE_CONTROLLER_TEMPERATURE) ?
 		UPPERTHRESHOLDNONCRITICAL_KEY : // temp
 		LOWERTHRESHOLDNONCRITICAL_KEY; // spare
-	if (getModifiableAttribute(thresholdAttribute, attributes, pInstance, currentAttribute,
-		newAttribute))
+	getCurrentAttribute(thresholdAttribute, pInstance, currentAttribute);
+	if (getNewModifiableAttribute(thresholdAttribute, attributes, newAttribute))
 	{
 		modifiablePropFound = true;
 		// only change if no old value or new value is different than old value
