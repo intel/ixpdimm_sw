@@ -772,21 +772,24 @@ enum pool_health calculate_pool_health(NVM_NFIT_DEVICE_HANDLE handle,
 			{
 				struct current_config_table *p_current_config =
 						cast_current_config(p_cfg_data);
-				if (p_current_config->config_status ==
-							CURRENT_CONFIG_STATUS_SUCCESS ||
-						p_current_config->config_status ==
-								CURRENT_CONFIG_STATUS_UNCONFIGURED)
+				if (p_current_config)
 				{
-					health = POOL_HEALTH_NORMAL;
-				}
-				else if (p_current_config->config_status ==
-						CURRENT_CONFIG_STATUS_DIMMS_NOT_FOUND ||
-						p_current_config->config_status ==
-								CURRENT_CONFIG_STATUS_INTERLEAVE_NOT_FOUND ||
-						p_current_config->config_status ==
-								CURRENT_CONFIG_STATUS_BAD_CURRENT_CHECKSUM)
-				{
-					health = POOL_HEALTH_ERROR;
+					if (p_current_config->config_status ==
+								CURRENT_CONFIG_STATUS_SUCCESS ||
+							p_current_config->config_status ==
+									CURRENT_CONFIG_STATUS_UNCONFIGURED)
+					{
+						health = POOL_HEALTH_NORMAL;
+					}
+					else if (p_current_config->config_status ==
+							CURRENT_CONFIG_STATUS_DIMMS_NOT_FOUND ||
+							p_current_config->config_status ==
+									CURRENT_CONFIG_STATUS_INTERLEAVE_NOT_FOUND ||
+							p_current_config->config_status ==
+									CURRENT_CONFIG_STATUS_BAD_CURRENT_CHECKSUM)
+					{
+						health = POOL_HEALTH_ERROR;
+					}
 				}
 			}
 		}
