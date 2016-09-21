@@ -277,6 +277,41 @@ instance of PG_ProviderCapabilities
   SupportedMethods = NULL; // All methods
 };
 
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_PerformanceMetricService_Provider";
+};
+
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_PerformanceMetricService_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>PerformanceMetricService";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2, 3, 5 }; // Instance, Association, Method
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
+
+instance of PG_Provider
+{
+  ProviderModuleName = "intelwbemprovider";
+  Name = "Intel_PerformanceMetricServiceCapabilities_Provider";
+};
+
+instance of PG_ProviderCapabilities
+{
+  ProviderModuleName = "intelwbemprovider";
+  ProviderName = "Intel_PerformanceMetricServiceCapabilities_Provider";
+  CapabilityID = "1";
+  ClassName = "<NVM_WBEM_PREFIX>PerformanceMetricServiceCapabilities";
+  Namespaces = {"root/intelwbem"};
+  ProviderType = { 2, 3 }; // Instance, Association
+  SupportedProperties = NULL; // All properties
+  SupportedMethods = NULL; // All methods
+};
 
 instance of PG_Provider
 {

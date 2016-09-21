@@ -67,6 +67,8 @@ CMInstanceMIStubName(Intel_NVDIMMSensor);
 CMInstanceMIStubName(Intel_ErasureService);
 CMInstanceMIStubName(Intel_PerformanceMetric);
 CMInstanceMIStubName(Intel_PerformanceMetricDefinition);
+CMInstanceMIStubName(Intel_PerformanceMetricService);
+CMInstanceMIStubName(Intel_PerformanceMetricServiceCapabilities);
 CMInstanceMIStubName(Intel_MemoryResources);
 CMInstanceMIStubName(Intel_PersistentMemoryPool);
 CMInstanceMIStubName(Intel_VolatileMemory);
@@ -155,6 +157,8 @@ CMAssociationMIStubName(Intel_AvailableDiagnosticService);
 CMAssociationMIStubName(Intel_ElementView);
 CMAssociationMIStubName(Intel_ElementConformsToProfile);
 CMAssociationMIStubName(Intel_MetricInstance);
+CMAssociationMIStubName(Intel_PerformanceMetricService);
+CMAssociationMIStubName(Intel_PerformanceMetricServiceCapabilities);
 
 // Method Provider Entry Points
 CMMethodMIStubName(Intel_NVDIMM);

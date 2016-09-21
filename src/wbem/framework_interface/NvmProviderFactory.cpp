@@ -49,6 +49,8 @@
 #include <support/NVDIMMSensorFactory.h>
 #include <performance/PerformanceMetricFactory.h>
 #include <performance/PerformanceMetricDefinitionFactory.h>
+#include <performance/PerformanceMetricServiceFactory.h>
+#include <performance/PerformanceMetricServiceCapabilitiesFactory.h>
 #include <erasure/ErasureServiceFactory.h>
 #include <erasure/ErasureCapabilitiesFactory.h>
 #include <pmem_config/PersistentMemoryPoolFactory.h>
@@ -176,6 +178,14 @@ wbem::framework::InstanceFactory *wbem::framework_interface::NvmProviderFactory:
 	else if (className == wbem::performance::PERFORMANCEMETRICDEFINITION_CREATIONCLASSNAME)
 	{
 		pFactory = new wbem::performance::PerformanceMetricDefinitionFactory();
+	}
+	else if (className == wbem::performance::PERFORMANCEMETRICSERVICE_CREATIONCLASSNAME)
+	{
+		pFactory = new wbem::performance::PerformanceMetricServiceFactory();
+	}
+	else if (className == wbem::performance::PERFORMANCEMETRICSERVICECAPABILITIES_CREATIONCLASSNAME)
+	{
+		pFactory = new wbem::performance::PerformanceMetricServiceCapabilitiesFactory();
 	}
 	else if (className == wbem::mem_config::MEMORYRESOURCES_CREATIONCLASSNAME)
 	{

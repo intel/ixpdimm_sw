@@ -109,7 +109,7 @@ wbem::framework::Instance* wbem::memory::RawMemoryFactory::getInstance(
 			NVM_UID uidStr;
 			uid_copy(dimmDiscovery.uid, uidStr);
 			framework::Attribute attrElementName(
-					RAWMEMORY_ELEMENTNAME_prefix + std::string(uidStr), false);
+					RAWMEMORY_ELEMENTNAME_PREFIX + std::string(uidStr), false);
 			pInstance->setAttribute(ELEMENTNAME_KEY, attrElementName, attributes);
 		}
 

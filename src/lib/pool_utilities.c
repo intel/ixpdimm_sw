@@ -726,6 +726,8 @@ int add_dimm_to_pool(struct nvm_pool *p_pool, NVM_NFIT_DEVICE_HANDLE handle)
 					}
 					// keep the greater (worse) health state
 					p_pool->health = p_pool->health < health ? health : p_pool->health;
+
+					free(p_cfg_data);
 				}
 			}
 		}

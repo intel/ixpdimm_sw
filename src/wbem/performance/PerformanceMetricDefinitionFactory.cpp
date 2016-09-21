@@ -101,41 +101,27 @@ throw (wbem::framework::Exception)
 		checkAttributes(attributes);
 		metric_type metric = metricTypeFromObjectPath(path);
 		pInstance = new framework::Instance(path);
-		if (containsAttribute(wbem::ID_KEY, attributes))
-		{
-			framework::Attribute a(getMetricId(metric), true);
-			pInstance->setAttribute(wbem::ID_KEY, a, attributes);
-		}
-		if (containsAttribute(wbem::ELEMENTNAME_KEY, attributes))
-		{
-			framework::Attribute a(getMetricElementName(metric), false);
-			pInstance->setAttribute(wbem::ELEMENTNAME_KEY, a, attributes);
-		}
-		if (containsAttribute(wbem::NAME_KEY, attributes))
-		{
-			framework::Attribute a(getMetricName(metric), false);
-			pInstance->setAttribute(wbem::NAME_KEY, a, attributes);
-		}
-		if (containsAttribute(wbem::DATATYPE_KEY, attributes))
-		{
-			framework::Attribute a(getMetricDataType(metric), false);
-			pInstance->setAttribute(wbem::DATATYPE_KEY, a, attributes);
-		}
-		if (containsAttribute(wbem::UNITS_KEY, attributes))
-		{
-			framework::Attribute a(getMetricUnits(metric), false);
-			pInstance->setAttribute(wbem::UNITS_KEY, a, attributes);
-		}
-		if (containsAttribute(wbem::ISCONTINUOUS_KEY, attributes))
-		{
-			framework::Attribute a(getMetricIsContinuous(metric), false);
-			pInstance->setAttribute(wbem::ISCONTINUOUS_KEY, a, attributes);
-		}
-		if (containsAttribute(wbem::TIMESCOPE_KEY, attributes))
-		{
-			framework::Attribute a(getMetricTimeScope(metric), false);
-			pInstance->setAttribute(wbem::TIMESCOPE_KEY, a, attributes);
-		}
+
+		framework::Attribute idAttr(getMetricId(metric), true);
+		pInstance->setAttribute(wbem::ID_KEY, idAttr, attributes);
+
+		framework::Attribute elementNameAttr(getMetricElementName(metric), false);
+		pInstance->setAttribute(wbem::ELEMENTNAME_KEY, elementNameAttr, attributes);
+
+		framework::Attribute nameAttr(getMetricName(metric), false);
+		pInstance->setAttribute(wbem::NAME_KEY, nameAttr, attributes);
+
+		framework::Attribute dateTypeAttr(getMetricDataType(metric), false);
+		pInstance->setAttribute(wbem::DATATYPE_KEY, dateTypeAttr, attributes);
+
+		framework::Attribute unitsAttr(getMetricUnits(metric), false);
+		pInstance->setAttribute(wbem::UNITS_KEY, unitsAttr, attributes);
+
+		framework::Attribute isContinuousAttr(getMetricIsContinuous(metric), false);
+		pInstance->setAttribute(wbem::ISCONTINUOUS_KEY, isContinuousAttr, attributes);
+
+		framework::Attribute timeScopeAttr(getMetricTimeScope(metric), false);
+		pInstance->setAttribute(wbem::TIMESCOPE_KEY, timeScopeAttr, attributes);
 	}
 	catch (framework::Exception) // clean up and re-throw
 	{

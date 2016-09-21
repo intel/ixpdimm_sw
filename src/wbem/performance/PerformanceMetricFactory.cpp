@@ -129,37 +129,24 @@ throw (wbem::framework::Exception)
 		// serialNumberStr is used in more than 1 attribute so getting here.
 		std::string serialNumberStr = getDeviceSerialNumber(nvmUid);
 
-		if (containsAttribute(wbem::ELEMENTNAME_KEY, attributes))
-		{
-			std::string metricName = getMetricElementNameFromType(metric);
-			std::string str = metricName + " " + serialNumberStr;
-			framework::Attribute a(str, false);
-			(*pInstance).setAttribute(wbem::ELEMENTNAME_KEY, a, attributes);
-		}
+		std::string metricName = getMetricElementNameFromType(metric) + " " + serialNumberStr;
+		framework::Attribute elementNameAttr(metricName, false);
+		(*pInstance).setAttribute(wbem::ELEMENTNAME_KEY, elementNameAttr, attributes);
 
-		if (containsAttribute(wbem::METRICDEFINITION_ID_KEY, attributes))
-		{
-			const std::string metricDefId
-				= PerformanceMetricDefinitionFactory::getMetricId(metric);
-			framework::Attribute a(metricDefId, false);
-			(*pInstance).setAttribute(wbem::METRICDEFINITION_ID_KEY, a, attributes);
-		}
+		const std::string metricDefId
+			= PerformanceMetricDefinitionFactory::getMetricId(metric);
+		framework::Attribute metricDefinitionAttr(metricDefId, false);
+		(*pInstance).setAttribute(wbem::METRICDEFINITION_ID_KEY, metricDefinitionAttr, attributes);
 
-		if (containsAttribute(wbem::MEASUREDELEMENTNAME_KEY, attributes))
-		{
-			std::string str = METRIC_DIMM_STR + serialNumberStr;
-			framework::Attribute a(str, false);
-			(*pInstance).setAttribute(wbem::MEASUREDELEMENTNAME_KEY, a, attributes);
-		}
+		std::string metricDimm = METRIC_DIMM_STR + serialNumberStr;
+		framework::Attribute measuredElementNameAttr(metricDimm, false);
+		(*pInstance).setAttribute(wbem::MEASUREDELEMENTNAME_KEY, measuredElementNameAttr, attributes);
 
-		if (containsAttribute(wbem::METRICVALUE_KEY, attributes))
-		{
-			NVM_UINT64 metricValue = getValueForDeviceMetric(nvmUid, metric);
-			std::ostringstream stream;
-			stream << metricValue;
-			framework::Attribute a(stream.str(), false);
-			(*pInstance).setAttribute(wbem::METRICVALUE_KEY, a, attributes);
-		}
+		NVM_UINT64 metricValue = getValueForDeviceMetric(nvmUid, metric);
+		std::ostringstream stream;
+		stream << metricValue;
+		framework::Attribute metricValueAttr(stream.str(), false);
+		(*pInstance).setAttribute(wbem::METRICVALUE_KEY, metricValueAttr, attributes);
 	}
 	catch (framework::Exception) // clean up and re-throw
 	{

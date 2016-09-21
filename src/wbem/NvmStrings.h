@@ -479,5 +479,12 @@ static std::string STAGEDFWTYPE_KEY = "StagedFWType";
 // ElementSoftwareIdentity
 static std::string ELEMENTSOFTWARESTATUS_KEY = "ElementSoftwareStatus";
 
+// PerformanceMetricServiceCapabilities
+static std::string SUPPORTEDMETHODS_KEY = "SupportedMethods";
+static std::string CONTROLLEDMETRICS_KEY = "ControlledMetrics";
+static std::string METRICSCONTROLTYPES_KEY = "MetricsControlTypes";
+static std::string CONTROLLABLEMANAGEDELEMENTS_KEY = "ControllableManagedElements";
+static std::string MANAGEDELEMENTCONTROLTYPES_KEY = "ManagedElementControlTypes";
+
 } // wbem
 #endif // _WBEM_FRAMEWORK_NVM_STRINGS_H_

@@ -392,7 +392,7 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::createNamespace(
 		pResult = parseCreateNsBlockSize(parsedCommand);
 	}
 
-	// Advertised Capacity in Bytes
+	// Capacity in Bytes
 	if (!pResult)
 	{
 		pResult = parseCreateNsCapacity(parsedCommand);

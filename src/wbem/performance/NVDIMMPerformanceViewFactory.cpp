@@ -91,60 +91,38 @@ throw (wbem::framework::Exception)
 		checkAttributes(attributes);
 
 		// DimmID = handle or uid depending on user selection
-		if (containsAttribute(DIMMID_KEY, attributes))
-		{
-			framework::Attribute attrDimmId = physical_asset::NVDIMMFactory::uidToDimmIdAttribute(uidStr);
-			pInstance->setAttribute(DIMMID_KEY, attrDimmId, attributes);
-		}
+		framework::Attribute attrDimmId = physical_asset::NVDIMMFactory::uidToDimmIdAttribute(uidStr);
+		pInstance->setAttribute(DIMMID_KEY, attrDimmId, attributes);
+
 		// DimmHandle
-		if (containsAttribute(DIMMHANDLE_KEY, attributes))
-		{
-			NVM_UINT32 dimmHandle;
-			physical_asset::NVDIMMFactory::uidToHandle(uidStr, dimmHandle);
-			framework::Attribute attrDimmHandle(dimmHandle, false);
-			pInstance->setAttribute(DIMMHANDLE_KEY, attrDimmHandle, attributes);
-		}
+		NVM_UINT32 dimmHandle;
+		physical_asset::NVDIMMFactory::uidToHandle(uidStr, dimmHandle);
+		framework::Attribute attrDimmHandle(dimmHandle, false);
+		pInstance->setAttribute(DIMMHANDLE_KEY, attrDimmHandle, attributes);
+
 		// BytesRead - Identical to the PerformanceMetric.MetricValue for the bytesread PerformanceMetric instance (but reported here as an unsigned int).
-		if (containsAttribute(BYTESREAD_KEY, attributes))
-		{
-			framework::Attribute a(performance.bytes_read, false);
-			pInstance->setAttribute(BYTESREAD_KEY, a, attributes);
-		}
+		framework::Attribute bytesReadAttr(performance.bytes_read, false);
+		pInstance->setAttribute(BYTESREAD_KEY, bytesReadAttr, attributes);
 
 		// BytesWritten - Identical to the PerformanceMetric.MetricValue for the byteswritten PerformanceMetric instance (but reported here as an unsigned int).
-		if (containsAttribute(BYTESWRITTEN_KEY, attributes))
-		{
-			framework::Attribute a(performance.bytes_written, false);
-			pInstance->setAttribute(BYTESWRITTEN_KEY, a, attributes);
-		}
+		framework::Attribute bytesWrittenAttr(performance.bytes_written, false);
+		pInstance->setAttribute(BYTESWRITTEN_KEY, bytesWrittenAttr, attributes);
 
 		// HostWriteCommands - Identical to the PerformanceMetric.MetricValue for the by host writes PerformanceMetric instance (but reported here as an unsigned int).
-		if (containsAttribute(HOSTWRITECOMMANDS_KEY, attributes))
-		{
-			framework::Attribute a(performance.host_writes, false);
-			pInstance->setAttribute(HOSTWRITECOMMANDS_KEY, a, attributes);
-		}
+		framework::Attribute hostWritesAttr(performance.host_writes, false);
+		pInstance->setAttribute(HOSTWRITECOMMANDS_KEY, hostWritesAttr, attributes);
 
 		// HostReadRequests - Identical to the PerformanceMetric.MetricValue for the by host reads PerformanceMetric instance (but reported here as an unsigned int).
-		if (containsAttribute(HOSTREADREQUESTS_KEY, attributes))
-		{
-			framework::Attribute a(performance.host_reads, false);
-			pInstance->setAttribute(HOSTREADREQUESTS_KEY, a, attributes);
-		}
+		framework::Attribute hostReadsAttr(performance.host_reads, false);
+		pInstance->setAttribute(HOSTREADREQUESTS_KEY, hostReadsAttr, attributes);
 
 		// BlockWriteCommands - Identical to the PerformanceMetric.MetricValue for the by host writes PerformanceMetric instance (but reported here as an unsigned int).
-		if (containsAttribute(BLOCKWRITECOMMANDS_KEY, attributes))
-		{
-			framework::Attribute a(performance.block_writes, false);
-			pInstance->setAttribute(BLOCKWRITECOMMANDS_KEY, a, attributes);
-		}
+		framework::Attribute blockWritesAttr(performance.block_writes, false);
+		pInstance->setAttribute(BLOCKWRITECOMMANDS_KEY, blockWritesAttr, attributes);
 
 		// BlockReadRequests - Identical to the PerformanceMetric.MetricValue for the by BLOCK reads PerformanceMetric instance (but reported here as an unsigned int).
-		if (containsAttribute(BLOCKREADREQUESTS_KEY, attributes))
-		{
-			framework::Attribute a(performance.block_reads, false);
-			pInstance->setAttribute(BLOCKREADREQUESTS_KEY, a, attributes);
-		}
+		framework::Attribute blockReadsAttr(performance.block_reads, false);
+		pInstance->setAttribute(BLOCKREADREQUESTS_KEY, blockReadsAttr, attributes);
 	}
 	catch (framework::Exception &) // clean up and re-throw
 	{

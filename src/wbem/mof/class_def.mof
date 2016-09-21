@@ -547,6 +547,20 @@ class <NVM_WBEM_PREFIX>PerformanceMetric: CIM_BaseMetricValue
 };
 
 [dynamic, provider("intelwbemprovider")]
+class <NVM_WBEM_PREFIX>PerformanceMetricService: CIM_MetricService
+{
+	[Description (
+	"The interval in minutes that the monitor service is storing performance metrics(if enabled)."
+	"The default value is 180 minutes and must be >=1.")]
+	uint16 Interval;
+};
+
+[dynamic, provider("intelwbemprovider")]
+class <NVM_WBEM_PREFIX>PerformanceMetricServiceCapabilities: CIM_MetricServiceCapabilities
+{
+};
+
+[dynamic, provider("intelwbemprovider")]
 class <NVM_WBEM_PREFIX>MemoryCapabilities : CIM_MemoryCapabilities
 {
 	[Description (
