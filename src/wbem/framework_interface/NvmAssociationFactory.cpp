@@ -47,6 +47,8 @@
 #include <support/NVDIMMSensorFactory.h>
 #include <performance/PerformanceMetricFactory.h>
 #include <performance/PerformanceMetricDefinitionFactory.h>
+#include <performance/PerformanceMetricServiceFactory.h>
+#include <performance/PerformanceMetricServiceCapabilitiesFactory.h>
 #include <profile/RegisteredProfileFactory.h>
 #include <mem_config/MemoryAllocationSettingsFactory.h>
 #include <mem_config/MemoryCapabilitiesFactory.h>
@@ -206,6 +208,11 @@ void wbem::framework_interface::NvmAssociationFactory::initAssociationTable()
 		wbem::server::BASESERVER_CREATIONCLASSNAME,
 		wbem::mem_config::MEMORYCONFIGURATIONSERVICE_CREATIONCLASSNAME,
 		wbem::NAME_KEY, wbem::SYSTEMNAME_KEY);
+	addAssociationToTable(wbem::framework_interface::ASSOCIATION_CLASS_HOSTEDSERVICE,
+		wbem::framework::ASSOCIATIONTYPE_SIMPLEFK,
+		wbem::server::BASESERVER_CREATIONCLASSNAME,
+		wbem::performance::PERFORMANCEMETRICSERVICE_CREATIONCLASSNAME,
+		wbem::NAME_KEY, wbem::SYSTEMNAME_KEY);
 
 	addAssociationToTable(wbem::framework_interface::ASSOCIATION_CLASS_HOSTEDCOLLECTION,
 		wbem::framework::ASSOCIATIONTYPE_BASIC,
@@ -323,6 +330,14 @@ void wbem::framework_interface::NvmAssociationFactory::initAssociationTable()
 		wbem::performance::PERFORMANCEMETRICDEFINITION_CREATIONCLASSNAME,
 		wbem::performance::PERFORMANCE_METRIC_CREATIONCLASSNAME,
 		wbem::ID_KEY, wbem::METRICDEFINITION_ID_KEY);
+	addAssociationToTable(wbem::framework_interface::ASSOCIATION_CLASS_SERVICEAFFECTSELEMENT,
+		wbem::framework::ASSOCIATIONTYPE_BASIC,
+		wbem::performance::PERFORMANCEMETRICDEFINITION_CREATIONCLASSNAME,
+		wbem::performance::PERFORMANCEMETRICSERVICE_CREATIONCLASSNAME);
+	addAssociationToTable(wbem::framework_interface::ASSOCIATION_CLASS_ELEMENTCAPABILITIES,
+		wbem::framework::ASSOCIATIONTYPE_BASIC,
+		wbem::performance::PERFORMANCEMETRICSERVICE_CREATIONCLASSNAME,
+		wbem::performance::PERFORMANCEMETRICSERVICECAPABILITIES_CREATIONCLASSNAME);
 
 	// Resource Profile
 	addAssociationToTable(wbem::framework_interface::ASSOCIATION_CLASS_HOSTEDRESOURCEPOOL,
