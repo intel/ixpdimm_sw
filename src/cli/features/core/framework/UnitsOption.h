@@ -40,8 +40,8 @@ public:
 	UnitsOption(StringMap options = StringMap()) : m_options(options) { }
 	std::string getCapacityUnits() const;
 	UnitsOption& operator= (const UnitsOption &other);
-	bool isValid(std::string units) const;
-	bool isEmpty(std::string units) const;
+	bool isValid() const;
+	bool isEmpty() const;
 
 private:
 	StringMap m_options;

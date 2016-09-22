@@ -27,8 +27,9 @@
 
 #include <libinvm-cli/CliFrameworkTypes.h>
 #include "CreateGoalCommand.h"
-#include "NamespaceFeature.h"
+#include "ShowGoalCommand.h"
 #include "FieldSupportFeature.h"
+#include "ShowCommandUtilities.h"
 
 namespace cli
 {
@@ -133,9 +134,76 @@ framework::ResultBase *CreateGoalCommand::ShowGoalAdapter::showCurrentGoal(
 	{
 		showGoal.options[framework::OPTION_UNITS.name] = units;
 	}
-	// TODO: Remove dependency on NamespaceFeature (Do as part of US16523)
-	NamespaceFeature showGoalCmd;
-	return showGoalCmd.run(NamespaceFeature::SHOW_CONFIG_GOAL, showGoal);
+	ShowGoalCommand showGoalCmd;
+	return showGoalCmd.execute(showGoal);
+}
+
+framework::ResultBase* CreateGoalCommand::ShowGoalAdapter::showGoalForLayout(
+		const core::memory_allocator::MemoryAllocationLayout& layout,
+		const std::string& units) const
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	cli::framework::ResultBase *pDisplayGoal = NULL;
+	try
+	{
+		ShowGoalCommand::ResultBuilder showLayoutBuilder;
+		showLayoutBuilder.setOutputTypeTable();
+		showLayoutBuilder.setDisplayOptions(getLayoutGoalDisplayOptions());
+		showLayoutBuilder.setCapacityUnits(units);
+
+		core::configuration::MemoryAllocationGoalService &goalService =
+				core::configuration::MemoryAllocationGoalService::getService();
+		core::configuration::MemoryAllocationGoalCollection layoutGoals =
+				goalService.getGoalsFromMemoryAllocationLayout(layout);
+		showLayoutBuilder.setGoals(layoutGoals);
+
+		pDisplayGoal = showLayoutBuilder.buildResult();
+	}
+	catch (std::exception &)
+	{
+		delete pDisplayGoal;
+		throw;
+	}
+
+	return pDisplayGoal;
+}
+
+framework::DisplayOptions CreateGoalCommand::ShowGoalAdapter::getLayoutGoalDisplayOptions() const
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	core::StringList displayProperties = getLayoutGoalDisplayProperties();
+	std::stringstream displayStr;
+	for (core::StringList::const_iterator prop = displayProperties.begin();
+			prop != displayProperties.end(); prop++)
+	{
+		if (prop != displayProperties.begin())
+		{
+			displayStr << ",";
+		}
+		displayStr << *prop;
+	}
+	framework::StringMap optionMap;
+	optionMap[framework::OPTION_DISPLAY.name] = displayStr.str();
+
+	framework::DisplayOptions options(optionMap);
+	return options;
+}
+
+core::StringList CreateGoalCommand::ShowGoalAdapter::getLayoutGoalDisplayProperties() const
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	core::StringList displayProperties;
+	displayProperties.push_back(ShowGoalCommand::SOCKETID);
+	displayProperties.push_back(ShowGoalCommand::DIMMID);
+	displayProperties.push_back(ShowGoalCommand::MEMORYSIZE);
+	displayProperties.push_back(ShowGoalCommand::APPDIRECT1SIZE);
+	displayProperties.push_back(ShowGoalCommand::APPDIRECT2SIZE);
+	displayProperties.push_back(ShowGoalCommand::STORAGESIZE);
+
+	return displayProperties;
 }
 
 CreateGoalCommand::NoChangeResult::NoChangeResult()
@@ -159,14 +227,100 @@ bool CreateGoalCommand::UserPrompt::promptUserConfirmationForLayout(
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	// TODO: Remove dependency on NamespaceFeature (Do as part of US16523)
-	std::string promptStr = NamespaceFeature::getPromptStringForLayout(layout, capacityUnits);
+	std::string promptStr = getPromptStringForLayout(layout, capacityUnits);
 
 	return m_prompt.prompt(promptStr);
 }
 
-CreateGoalCommand::UserPrompt::UserPrompt(const framework::YesNoPrompt &prompt)
-	: m_prompt(prompt)
+std::string CreateGoalCommand::UserPrompt::getPromptStringForLayout(
+		const core::memory_allocator::MemoryAllocationLayout& layout,
+		const std::string capacityUnits)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	std::stringstream promptStr;
+
+	promptStr << CREATE_GOAL_CONFIRMATION_PREFIX << std::endl << std::endl;
+	promptStr << getLayoutGoalForConfirmation(layout, capacityUnits) << std::endl << std::endl;
+	promptStr << getLayoutWarningsForConfirmation(layout);
+	promptStr << CREATE_GOAL_CONFIRMATION_SUFFIX;
+
+	return promptStr.str();
+}
+
+std::string CreateGoalCommand::UserPrompt::getLayoutGoalForConfirmation(
+		const core::memory_allocator::MemoryAllocationLayout& layout,
+		const std::string capacityUnits)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	std::string layoutGoalString;
+
+	framework::ResultBase *pGoalResult = m_showGoalAdapter.showGoalForLayout(layout, capacityUnits);
+	layoutGoalString = pGoalResult->output();
+	delete pGoalResult;
+
+	return layoutGoalString;
+}
+
+std::string CreateGoalCommand::UserPrompt::getLayoutWarningsForConfirmation(
+		const core::memory_allocator::MemoryAllocationLayout& layout)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	std::stringstream layoutWarnings;
+	int warningsAdded = 0;
+	for (std::vector<enum core::memory_allocator::LayoutWarningCode>::const_iterator warningIter =
+		layout.warnings.begin(); warningIter != layout.warnings.end(); warningIter++)
+	{
+		std::string warningStr = getStringForLayoutWarning(*warningIter);
+		if (!warningStr.empty())
+		{
+			warningsAdded++;
+			layoutWarnings << warningStr << std::endl;
+		}
+	}
+
+	if (warningsAdded > 0)
+	{
+		layoutWarnings << std::endl;
+	}
+
+	return layoutWarnings.str();
+}
+
+std::string CreateGoalCommand::UserPrompt::getStringForLayoutWarning(
+		enum core::memory_allocator::LayoutWarningCode warningCode)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	std::string warningStr;
+
+	switch (warningCode)
+	{
+	case core::memory_allocator::LAYOUT_WARNING_APP_DIRECT_NOT_SUPPORTED_BY_DRIVER:
+		warningStr = CREATE_GOAL_APP_DIRECT_NOT_SUPPORTED_BY_DRIVER_WARNING;
+		break;
+	case core::memory_allocator::LAYOUT_WARNING_STORAGE_NOT_SUPPORTED_BY_DRIVER:
+		warningStr = CREATE_GOAL_STORAGE_ONLY_NOT_SUPPORTED_BY_DRIVER_WARNING;
+		break;
+	case core::memory_allocator::LAYOUT_WARNING_NONOPTIMAL_POPULATION:
+		warningStr = CREATE_GOAL_NON_OPTIMAL_DIMM_POPULATION_WARNING;
+		break;
+	case core::memory_allocator::LAYOUT_WARNING_REQUESTED_MEMORY_MODE_NOT_USABLE:
+		warningStr = CREATE_GOAL_REQUESTED_MEMORY_MODE_NOT_USABLE_WARNING;
+		break;
+	default:
+		COMMON_LOG_ERROR_F("Unrecognized layout warning code: %d", warningCode);
+		warningStr = "";
+	}
+
+	return warningStr;
+}
+
+CreateGoalCommand::UserPrompt::UserPrompt(const framework::YesNoPrompt &prompt,
+		const ShowGoalAdapter &showGoalAdapter)
+	: m_prompt(prompt), m_showGoalAdapter(showGoalAdapter)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }

@@ -85,7 +85,7 @@ void Device::copy(const Device &other)
 
 	if (other.m_pActionRequiredEvents)
 	{
-		this->m_pActionRequiredEvents = new std::vector<std::string>();
+		this->m_pActionRequiredEvents = new std::vector<event>();
 		for (size_t i = 0; i < other.m_pActionRequiredEvents->size(); i++)
 		{
 			(*this->m_pActionRequiredEvents).push_back((*other.m_pActionRequiredEvents)[i]);
@@ -106,7 +106,7 @@ Device::~Device()
 	}
 }
 
-Device *Device::clone()
+Device *Device::clone() const
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return new Device(*this);
@@ -711,7 +711,7 @@ bool Device::isActionRequired()
 	return getEvents().size() > 0;
 }
 
-std::vector<std::string> Device::getActionRequiredEvents()
+std::vector<event> Device::getActionRequiredEvents()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getEvents();
@@ -746,12 +746,12 @@ const device_details &Device::getDetails()
 	return *m_pDetails;
 }
 
-const std::vector<std::string> &Device::getEvents()
+const std::vector<event> &Device::getEvents()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	if (m_pActionRequiredEvents == NULL)
 	{
-		m_pActionRequiredEvents = new std::vector<std::string>();
+		m_pActionRequiredEvents = new std::vector<event>();
 		event_filter filter;
 		memset(&filter, 0, sizeof(filter));
 		filter.filter_mask = NVM_FILTER_ON_AR | NVM_FILTER_ON_UID;
@@ -760,20 +760,7 @@ const std::vector<std::string> &Device::getEvents()
 
 		try
 		{
-			const std::vector<event> &events = m_lib.getEvents(filter);
-			for (size_t i = 0; i < events.size(); i++)
-			{
-				std::stringstream eventMsg;
-				eventMsg << "Event " << events[i].event_id;
-				char msg[NVM_EVENT_MSG_LEN + (3 * NVM_EVENT_ARG_LEN)];
-				s_snprintf(msg, (NVM_EVENT_MSG_LEN + (3 * NVM_EVENT_ARG_LEN)),
-					events[i].message,
-					events[i].args[0],
-					events[i].args[1],
-					events[i].args[2]);
-				eventMsg << " - " << msg;
-				m_pActionRequiredEvents->push_back(eventMsg.str());
-			}
+			*m_pActionRequiredEvents = m_lib.getEvents(filter);
 		}
 		catch (core::LibraryException &)
 		{

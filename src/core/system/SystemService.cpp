@@ -29,8 +29,6 @@
 #include <LogEnterExit.h>
 #include "SystemService.h"
 
-core::system::SystemService *core::system::SystemService::m_pSingleton = new core::system::SystemService();
-
 core::system::SystemService::SystemService(NvmLibrary &lib) : m_lib(lib)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -38,20 +36,17 @@ core::system::SystemService::SystemService(NvmLibrary &lib) : m_lib(lib)
 
 core::system::SystemService::~SystemService()
 {
-	if (this == m_pSingleton)
-	{
-		m_pSingleton = NULL;
-	}
 }
 
 core::system::SystemService &core::system::SystemService::getService()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	if (m_pSingleton == NULL)
-	{
-		throw NoMemoryException();
-	}
-	return *m_pSingleton;
+
+	// Creating the singleton on class init as a static class member
+	// can lead to static initialization order issues.
+	// This is a thread-safe form of lazy initialization.
+	static SystemService *pSingleton = new SystemService();
+	return *pSingleton;
 }
 
 std::string core::system::SystemService::getHostName()

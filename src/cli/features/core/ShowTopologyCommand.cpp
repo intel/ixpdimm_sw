@@ -33,6 +33,7 @@
 #include <persistence/lib_persistence.h>
 #include <cli/features/core/framework/CliHelper.h>
 #include <libinvm-cli/SyntaxErrorMissingValueResult.h>
+#include "ShowCommandUtilities.h"
 
 #include "ShowTopologyCommand.h"
 
@@ -288,16 +289,9 @@ bool ShowTopologyCommand::displayOptionsAreValid()
 
 bool ShowTopologyCommand::unitsOptionIsValid()
 {
-	if (m_unitsOption.isEmpty(m_capacityUnits))
-	{
-		m_pResult =
-			new framework::SyntaxErrorMissingValueResult(framework::TOKENTYPE_OPTION, framework::OPTION_UNITS.name);
-	}
-	else if (!m_unitsOption.isValid(m_capacityUnits))
-	{
-		m_pResult =
-			new framework::SyntaxErrorBadValueResult(framework::TOKENTYPE_OPTION, framework::OPTION_UNITS.name, m_capacityUnits);
-	}
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	m_pResult = ShowCommandUtilities::getInvalidUnitsOptionResult(m_unitsOption);
 
 	return m_pResult == NULL;
 }

@@ -37,6 +37,10 @@ namespace core
 NvmLibrary &NvmLibrary::getNvmLibrary()
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
+
+	// Creating the singleton on class init as a static class member
+	// can lead to static initialization order issues.
+	// This is a thread-safe form of lazy initialization.
 	static NvmLibrary *result = new NvmLibrary();
 	return *result;
 }

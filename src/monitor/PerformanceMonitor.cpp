@@ -46,21 +46,11 @@ monitor::PerformanceMonitor::PerformanceMonitor()
 
 	// open a connection to the db
 	m_pStore = get_lib_store();
-	if (!m_pStore)
-	{
-		m_pStore = open_default_lib_store();
-	}
 }
 
 monitor::PerformanceMonitor::~PerformanceMonitor()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	// close the db connection
-	if (m_pStore)
-	{
-		close_lib_store();
-	}
 }
 
 /*

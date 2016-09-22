@@ -48,10 +48,11 @@ cli::framework::UnitsOption &cli::framework::UnitsOption::operator=(const cli::f
 	return *this;
 }
 
-bool cli::framework::UnitsOption::isValid(std::string units) const
+bool cli::framework::UnitsOption::isValid() const
 {
 	bool validType = false;
 
+	std::string units = getCapacityUnits();
 	if (units.empty())
 	{
 		validType = true;
@@ -81,13 +82,13 @@ bool cli::framework::UnitsOption::isValid(std::string units) const
 	return validType;
 }
 
-bool cli::framework::UnitsOption::isEmpty(std::string units) const
+bool cli::framework::UnitsOption::isEmpty() const
 {
 	bool emptyUnits = false;
 
 	if (m_options.find("-units") != m_options.end())
 	{
-		units = m_options.at("-units");
+		std::string units = getCapacityUnits();
 		if (units.empty())
 		{
 			emptyUnits = true;

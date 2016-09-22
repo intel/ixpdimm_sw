@@ -53,6 +53,7 @@
 #include <exception/NvmExceptionLibError.h>
 #include "FieldSupportFeature.h"
 #include "CreateGoalCommand.h"
+#include "ShowGoalCommand.h"
 
 const std::string cli::nvmcli::NamespaceFeature::Name = "Namespace";
 
@@ -73,76 +74,6 @@ void cli::nvmcli::NamespaceFeature::getPaths(cli::framework::CommandSpecList &li
 			TR("Delete the memory allocation goal from the " NVM_DIMM_NAME "s on specific sockets "
 			"by supplying the socket target and one or more comma-separated socket identifiers. "
 			"The default is to delete the memory allocation goals from all manageable " NVM_DIMM_NAME "s on all sockets."));
-
-	cli::framework::CommandSpec showConfigGoal(SHOW_CONFIG_GOAL,
-			TR("Show Memory Allocation Goal"), framework::VERB_SHOW,
-			TR("Show the memory allocation goal on one or more " NVM_DIMM_NAME "s. Once the goal is successfully applied "
-					"by the BIOS, it is no longer displayed."));
-	showConfigGoal.addOption(framework::OPTION_ALL);
-	showConfigGoal.addOption(framework::OPTION_DISPLAY);
-	showConfigGoal.addOption(framework::OPTION_UNITS)
-			.helpText(TR("Change the units that capacities are displayed in for this command."));
-	showConfigGoal.addTarget(TARGET_DIMM.name, false, DIMMIDS_STR, true,
-			TR("Restrict output to specific " NVM_DIMM_NAME "s by supplying one or more comma-separated " NVM_DIMM_NAME " "
-			"identifiers. The default is to display all manageable " NVM_DIMM_NAME "s with memory allocation goals."));
-	showConfigGoal.addTarget(TARGET_GOAL_R).isValueAccepted(false);
-	showConfigGoal.addTarget(TARGET_SOCKET.name, false, SOCKETIDS_STR, true,
-			TR("Restrict output to the " NVM_DIMM_NAME "s on specific sockets by supplying the socket target and "
-				"one or more comma-separated socket identifiers. The default is to display all "
-				"manageable " NVM_DIMM_NAME "s on all sockets with memory allocation goals."));
-
-	framework::CommandSpec createGoal(CREATE_GOAL, TR("Create Memory Allocation Goal"),
-			framework::VERB_CREATE, TR("Create a memory allocation goal on one or more " NVM_DIMM_NAME "s. "
-				"This operation stores the specified goal on the " NVM_DIMM_NAME "(s) for the BIOS to "
-				"read on the next reboot in order to map the " NVM_DIMM_NAME " capacity into the system "
-				"address space."));
-	createGoal.addOption(framework::OPTION_FORCE).helpText(TR("Reconfiguring " NVM_DIMM_NAME "s is a destructive operation "
-			"which requires confirmation from the user. This option suppresses the confirmation."));
-	createGoal.addOption(framework::OPTION_UNITS)
-			.helpText(TR("Change the units that capacities are displayed in for this command."));
-	createGoal.addTarget(TARGET_DIMM)
-			.isValueRequired(true)
-			.helpText(TR("Create a memory allocation goal on specific " NVM_DIMM_NAME "s by "
-				"supplying one or more comma-separated " NVM_DIMM_NAME " identifiers. "
-				"This list must include all unconfigured " NVM_DIMM_NAME "s on the affected socket(s). "
-				"The default is to configure all manageable " NVM_DIMM_NAME "s on all sockets."));
-	createGoal.addTarget(TARGET_SOCKET)
-			.isValueRequired(true)
-			.helpText(TR("Create a memory allocation goal on the " NVM_DIMM_NAME "s on specific sockets by supplying the "
-					"socket target and one or more comma-separated socket identifiers. The default is "
-					"to configure all manageable " NVM_DIMM_NAME "s on all sockets."));
-	createGoal.addTarget(TARGET_GOAL_R);
-	createGoal.addProperty(MEMORYSIZE_PROPERTYNAME).isValueRequired(true)
-		.valueText("GiB")
-		.helpText(TR("Gibibytes of the requested " NVM_DIMM_NAME "s' capacity to use in Memory Mode or \"Remaining\" "
-				"if all remaining unconfigured space is desired. Must be a multiple of the memory alignment "
-				"size defined in Show System Capabilities."));
-	createGoal.addProperty(APPDIRECTSIZE_PROPERTYNAME).isValueRequired(true)
-		.valueText("GiB")
-		.helpText(TR(APPDIRECT1SIZE_PROPERTYDESC.c_str()));
-	createGoal.addProperty(APPDIRECTSETTINGS_PROPERTYNAME).isValueRequired(true)
-		.valueText("value")
-		.helpText(TR(APPDIRECT1SETTING_PROPERTYDESC.c_str()));
-	createGoal.addProperty(APPDIRECT1SIZE_PROPERTYNAME).isValueRequired(true)
-		.valueText("GiB")
-		.helpText(TR(APPDIRECT1SIZE_PROPERTYDESC.c_str()));
-	createGoal.addProperty(APPDIRECT1SETTINGS_PROPERTYNAME).isValueRequired(true)
-		.valueText("value")
-		.helpText(TR(APPDIRECT1SETTING_PROPERTYDESC.c_str()));
-	createGoal.addProperty(APPDIRECT2SIZE_PROPERTYNAME).isValueRequired(true)
-		.valueText("GiB")
-		.helpText(TR(APPDIRECT2SIZE_PROPERTYDESC.c_str()));
-	createGoal.addProperty(APPDIRECT2SETTINGS_PROPERTYNAME).isValueRequired(true)
-		.valueText("value")
-		.helpText(TR(APPDIRECT2SETTING_PROPERTYDESC.c_str()));
-	createGoal.addProperty(RESERVEDIMM_PROPERTYNAME)
-		.isValueRequired(true)
-		.valueText("0|1")
-		.helpText(TRS(RESERVEDIMM_PROPERTYDESC));
-	createGoal.addProperty(STORAGECAPACITY_PROPERTYNAME)
-		.isValueRequired(true)
-		.valueText("Remaining")
-		.helpText(TRS(STORAGECAPACITY_PROPERTYDESC));
 
 	cli::framework::CommandSpec showNamespace(SHOW_NAMESPACE, TR("Show Namespace"), framework::VERB_SHOW,
 			TR("Show information about one or more namespaces."));
@@ -281,7 +212,7 @@ void cli::nvmcli::NamespaceFeature::getPaths(cli::framework::CommandSpecList &li
 	list.push_back(createNamespace);
 	list.push_back(modifyNamespace);
 	list.push_back(deleteNamespace);
-	list.push_back(showConfigGoal);
+	list.push_back(ShowGoalCommand::getCommandSpec(SHOW_CONFIG_GOAL));
 	list.push_back(deleteConfigGoal);
 	list.push_back(CreateGoalCommand::getCommandSpec(CREATE_GOAL));
 	list.push_back(showPools);
@@ -368,6 +299,15 @@ cli::framework::ResultBase * cli::nvmcli::NamespaceFeature::run(
 	return pResult;
 }
 
+cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::showConfigGoal(
+		const framework::ParsedCommand& parsedCommand)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	ShowGoalCommand command;
+	return command.execute(parsedCommand);
+}
+
 cli::framework::ResultBase *cli::nvmcli::NamespaceFeature::createGoal(
 	const cli::framework::ParsedCommand &parsedCommand)
 {
@@ -377,9 +317,9 @@ cli::framework::ResultBase *cli::nvmcli::NamespaceFeature::createGoal(
 		core::memory_allocator::MemoryAllocator *pAllocator =
 			core::memory_allocator::MemoryAllocator::getNewMemoryAllocator();
 		core::memory_allocator::MemoryAllocationRequestBuilder builder;
-		framework::YesNoPrompt yesNoPrompt;
-		cli::nvmcli::CreateGoalCommand::UserPrompt prompt(yesNoPrompt);
 		CreateGoalCommand::ShowGoalAdapter showGoalAdapter;
+		framework::YesNoPrompt yesNoPrompt;
+		cli::nvmcli::CreateGoalCommand::UserPrompt prompt(yesNoPrompt, showGoalAdapter);
 
 		cli::nvmcli::CreateGoalCommand cmd(*pAllocator, builder, prompt, showGoalAdapter);
 		pResult = cmd.execute(parsedCommand);

@@ -47,7 +47,6 @@ public:
 
 protected:
 	NvmLibrary &m_lib;
-	static DeviceFirmwareService *m_pSingleton;
 };
 
 }

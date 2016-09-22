@@ -44,7 +44,6 @@ public:
 	static TopologyService &getService();
 private:
 	NvmLibrary &m_lib;
-	static TopologyService *m_pSingleton;
 };
 }
 }

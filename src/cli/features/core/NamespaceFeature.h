@@ -99,20 +99,6 @@ static const std::string DELETE_NS_PROMPT = TR(
 static const std::string MODIFY_CONFIG_GOAL_MSG = TR("Modify configuration goal: ");
 static const std::string MODIFY_NS_PROMPT = TR(
 		"Modify namespace %s?"); //!< prompt for user if not forced
-static const std::string CREATE_CONFIG_GOAL_MSG = TR("Create configuration goal: ");
-static const std::string CREATE_GOAL_CONFIRMATION_PREFIX = TR("The following configuration will be applied:");
-static const std::string CREATE_GOAL_CONFIRMATION_SUFFIX = TR("Do you want to continue?");
-static const std::string CREATE_GOAL_NON_OPTIMAL_DIMM_POPULATION_WARNING = TR(
-		"The requested goal may result in a non-optimal configuration due to the population "
-		"of " NVM_DIMM_NAME "s in the system.");
-static const std::string CREATE_GOAL_STORAGE_ONLY_NOT_SUPPORTED_BY_DRIVER_WARNING = TR("The requested goal will result in "
-		"Storage Mode capacity which is not supported by the host software.");
-static const std::string CREATE_GOAL_APP_DIRECT_NOT_SUPPORTED_BY_DRIVER_WARNING = TR("The requested goal will result in "
-		"App Direct capacity which is not supported by the host software.");
-static const std::string CREATE_GOAL_APP_DIRECT_SETTINGS_NOT_RECOMMENDED_BY_BIOS_WARNING = TR("The selected App Direct settings "
-		"are not recommended by the platform BIOS.");
-static const std::string CREATE_GOAL_REQUESTED_MEMORY_MODE_NOT_USABLE_WARNING = TR("The requested goal will result in Memory "
-		"Mode capacity that is unusable with the currently selected platform BIOS volatile mode.");
 
 static const std::string NS_ALIGNMENT_PROMPT = TR(
 		"The requested namespace capacity %llu will be changed to %llu to align properly. Do you want to continue?");
@@ -217,30 +203,10 @@ class NVM_API NamespaceFeature : public cli::framework::FeatureBase
 		// Setter for WbemToCli
 		void setWbemToCli(cli::nvmcli::WbemToCli *pInstance);
 
-		static cli::framework::ResultBase* showConfigGoalForInstances(
-			const cli::nvmcli::filters_t &filters,
-			wbem::framework::attribute_names_t &displayAttributes,
-			wbem::framework::instances_t *pWbemInstances,
-			const std::string capacityUnits);
-
 		// don't allow copies
 		NamespaceFeature(const NamespaceFeature &);
 		NamespaceFeature& operator=(const NamespaceFeature&);
 
-		// helper functions for show config goal
-		static void populateAllAttributes(wbem::framework::attribute_names_t &allAttributes);
-		static void populateCreateConfigGoalPromptDefaultAttributes(wbem::framework::attribute_names_t &defaultAttributes);
-		static void populateCurrentConfigGoalDefaultAttributes(wbem::framework::attribute_names_t &defaultAttributes);
-		static void validateRequestedDisplayOptions(const std::map<std::string, std::string> options,
-				wbem::framework::attribute_names_t allAttributes)
-		throw (wbem::framework::Exception);
-		static bool convertConfigGoalInstance(const wbem::framework::Instance *pWbemInstance,
-				wbem::framework::Instance *pCliInstance,
-				const wbem::framework::attribute_names_t &displayAttributes,
-				const std::string capacityUnits);
-
-		static std::string getPromptStringForLayout(const core::memory_allocator::MemoryAllocationLayout &layout,
-				const std::string capacityUnits);
 private:
 		framework::ResultBase *showConfigGoal(const framework::ParsedCommand &parsedCommand);
 		framework::ResultBase *deleteConfigGoal(const framework::ParsedCommand &parsedCommand);
@@ -348,15 +314,6 @@ private:
 				const cli::framework::ParsedCommand &parsedCommand,
 				wbem::framework::attribute_names_t &attributes,
 				cli::nvmcli::filters_t &filters);
-
-		/*
-		 * Helpers for create goal
-		 */
-		static std::string getStringForLayoutWarning(enum core::memory_allocator::LayoutWarningCode warningCode);
-		static void generateCliDisplayInstances(wbem::framework::instances_t *pWbemInstances,
-			wbem::framework::instances_t& displayInstances,
-			wbem::framework::attribute_names_t& displayAttributes,
-			const std::string capacityUnits);
 
 		/*
 		 * Helper function to check for valid deletion request

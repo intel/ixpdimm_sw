@@ -772,10 +772,6 @@ void NVDIMMFactory::toInstance(core::device::Device &device,
 		device.getReservedCapacityBytes());
 	ADD_ATTRIBUTE(instance, attributes, DEVICELOCATOR_KEY, framework::STR,
 			device.getDeviceLocator());
-	ADD_ATTRIBUTE(instance, attributes, ACTIONREQUIRED_KEY, framework::BOOLEAN,
-			device.isActionRequired());
-	ADD_ATTRIBUTE(instance, attributes, ACTIONREQUIREDEVENTS_KEY, framework::STR_LIST,
-			device.getActionRequiredEvents());
 	ADD_ATTRIBUTE(instance, attributes, MEMORYMODESSUPPORTED_KEY, framework::STR,
 			getMemoryModeString(device));
 	ADD_ATTRIBUTE(instance, attributes, MIXEDSKU_KEY, framework::BOOLEAN, device.isMixedSku());

@@ -34,8 +34,9 @@
 #include <cli/features/core/framework/CliHelper.h>
 #include <iomanip>
 #include <libinvm-cli/SyntaxErrorMissingValueResult.h>
-
 #include "ShowDeviceCommand.h"
+#include "ShowCommandPropertyUtilities.h"
+#include "ShowCommandUtilities.h"
 
 namespace cli
 {
@@ -47,7 +48,7 @@ std::string ShowDeviceCommand::m_capacityUnits = "";
 ShowDeviceCommand::ShowDeviceCommand(core::device::DeviceService &service)
 	: m_service(service), m_pResult(NULL)
 {
-	m_props.addCustom("DimmID", getDimmId).setIsRequired();
+	m_props.addCustom("DimmID", ShowCommandUtilities::getDimmId).setIsRequired();
 	m_props.addUint64("Capacity", &core::device::Device::getRawCapacity, convertCapacity).setIsDefault();
 	m_props.addUint16("HealthState", &core::device::Device::getHealthState,
 			&convertHealthState).setIsDefault();
@@ -81,7 +82,7 @@ ShowDeviceCommand::ShowDeviceCommand(core::device::DeviceService &service)
 	m_props.addUint64("DataWidth", &core::device::Device::getDataWidth);
 	m_props.addUint64("TotalWidth", &core::device::Device::getTotalWidth);
 	m_props.addUint64("Speed", &core::device::Device::getSpeed);
-	m_props.addList("ActionRequiredEvents", &core::device::Device::getActionRequiredEvents);
+	m_props.addCustom("ActionRequiredEvents", getActionRequiredEvents);
 	m_props.addOther("LockState", &core::device::Device::getLockState, &convertLockState).setIsDefault();
 	m_props.addStr("FWVersion", &core::device::Device::getFwRevision).setIsDefault();
 	m_props.addStr("FWAPIVersion", &core::device::Device::getFwApiVersion);
@@ -316,110 +317,27 @@ std::string ShowDeviceCommand::convertCapacity(NVM_UINT64 value)
 
 bool ShowDeviceCommand::dimmIdsAreValid()
 {
-	std::string badDimmId = getFirstBadDimmId(m_devices);
-	if (!badDimmId.empty())
-	{
-		m_pResult = new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
-			getInvalidDimmIdErrorString(badDimmId));
-	}
+	m_pResult = ShowCommandUtilities::getInvalidDimmIdResult(
+			m_dimmIds, m_devices);
 
 	return m_pResult == NULL;
 }
 
 void ShowDeviceCommand::filterDevicesOnDimmIds()
 {
-	if (m_dimmIds.size() > 0)
-	{
-		for (size_t i = m_devices.size(); i > 0; i--)
-		{
-			core::device::Device &device = m_devices[i - 1];
-
-			std::string deviceHandle = uint64ToString(device.getDeviceHandle());
-
-			if (!m_dimmIds.contains(device.getUid()) && !m_dimmIds.contains(deviceHandle))
-			{
-				m_devices.removeAt(i - 1);
-			}
-		}
-	}
+	ShowCommandUtilities::filterDevicesOnDimmIds(m_devices, m_dimmIds);
 }
 
 bool ShowDeviceCommand::socketIdsAreValid()
 {
-	std::string badSocketId = getFirstBadSocketId(m_devices);
-	if (!badSocketId.empty())
-	{
-		m_pResult = new framework::SyntaxErrorBadValueResult(framework::TOKENTYPE_TARGET,
-			TARGET_SOCKET.name, badSocketId);
-	}
+	m_pResult = ShowCommandUtilities::getInvalidSocketIdResult(m_socketIds, m_devices);
 
 	return m_pResult == NULL;
 }
 
 void ShowDeviceCommand::filterDevicesOnSocketIds()
 {
-	if (m_socketIds.size() > 0)
-	{
-		for (size_t i = m_devices.size(); i > 0; i--)
-		{
-			core::device::Device &device = m_devices[i - 1];
-
-			std::string socketId = uint64ToString(device.getSocketId());
-
-			if (!m_socketIds.contains(socketId))
-			{
-				m_devices.removeAt(i - 1);
-			}
-		}
-	}
-}
-
-std::string ShowDeviceCommand::getFirstBadSocketId(core::device::DeviceCollection &devices) const
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	std::string badsocketId = "";
-	for (size_t i = 0; i < m_socketIds.size() && badsocketId.empty(); i++)
-	{
-		bool socketIdFound = false;
-		for (size_t j = 0; j < devices.size() && !socketIdFound; j++)
-		{
-			if (m_socketIds[i] == uint64ToString(devices[j].getSocketId()))
-			{
-				socketIdFound = true;
-			}
-		}
-		if (!socketIdFound)
-		{
-			badsocketId = m_socketIds[i];
-		}
-	}
-	return badsocketId;
-}
-
-std::string ShowDeviceCommand::getFirstBadDimmId(core::device::DeviceCollection &devices) const
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	std::string badDimmId = "";
-
-	for (size_t i = 0; i < m_dimmIds.size() && badDimmId.empty(); i++)
-	{
-		bool dimmIdFound = false;
-		for (size_t j = 0; j < devices.size() && !dimmIdFound; j++)
-		{
-			if (framework::stringsIEqual(m_dimmIds[i], devices[j].getUid()) ||
-				m_dimmIds[i] == uint64ToString(devices[j].getDeviceHandle()))
-			{
-				dimmIdFound = true;
-			}
-		}
-		if (!dimmIdFound)
-		{
-			badDimmId = m_dimmIds[i];
-		}
-	}
-	return badDimmId;
+	ShowCommandUtilities::filterDevicesOnSocketIds(m_devices, m_socketIds);
 }
 
 void ShowDeviceCommand::createResults()
@@ -451,36 +369,15 @@ void ShowDeviceCommand::createResults()
 
 bool ShowDeviceCommand::displayOptionsAreValid()
 {
-	std::string invalidDisplay;
-	const std::vector<std::string> &display = m_displayOptions.getDisplay();
-	for (size_t i = 0; i < display.size() && invalidDisplay.empty(); i++)
-	{
-		if (!m_props.contains(display[i]))
-		{
-			invalidDisplay = display[i];
-		}
-	}
+	m_pResult = ShowCommandPropertyUtilities<core::device::Device>::getInvalidDisplayOptionResult(
+			m_displayOptions, m_props);
 
-	if (!invalidDisplay.empty())
-	{
-		m_pResult = new framework::SyntaxErrorBadValueResult(framework::TOKENTYPE_OPTION,
-			framework::OPTION_DISPLAY.name, invalidDisplay);
-	}
 	return m_pResult == NULL;
 }
 
 bool ShowDeviceCommand::unitsOptionIsValid()
 {
-	if (m_unitsOption.isEmpty(m_capacityUnits))
-	{
-		m_pResult =
-			new framework::SyntaxErrorMissingValueResult(framework::TOKENTYPE_OPTION, framework::OPTION_UNITS.name);
-	}
-	else if (!m_unitsOption.isValid(m_capacityUnits))
-	{
-		m_pResult =
-			new framework::SyntaxErrorBadValueResult(framework::TOKENTYPE_OPTION, framework::OPTION_UNITS.name, m_capacityUnits);
-	}
+	m_pResult = ShowCommandUtilities::getInvalidUnitsOptionResult(m_unitsOption);
 
 	return m_pResult == NULL;
 }
@@ -488,37 +385,7 @@ bool ShowDeviceCommand::unitsOptionIsValid()
 bool ShowDeviceCommand::isPropertyDisplayed(
 	framework::IPropertyDefinition<core::device::Device> &p)
 {
-	return p.isRequired() ||
-		   m_displayOptions.isAll() ||
-		   (p.isDefault() && m_displayOptions.isDefault()) ||
-		   m_displayOptions.contains(p.getName());
-}
-
-std::string ShowDeviceCommand::getDimmId(core::device::Device &device)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	std::stringstream result;
-	bool useHandle = true;
-	char value[CONFIG_VALUE_LEN];
-	if (get_config_value(SQL_KEY_CLI_DIMM_ID, value) == COMMON_SUCCESS)
-	{
-		// switch to uid
-		if (s_strncmpi("UID", value, strlen("UID")) == 0)
-		{
-			useHandle = false;
-		}
-	}
-
-	if (useHandle)
-	{
-		result << device.getDeviceHandle();
-	}
-	else
-	{
-		result << device.getUid();
-	}
-	return result.str();
+	return ShowCommandPropertyUtilities<core::device::Device>::isPropertyDisplayed(p, m_displayOptions);
 }
 
 std::string ShowDeviceCommand::getManufacturingDate(core::device::Device &device)
@@ -606,6 +473,21 @@ std::string ShowDeviceCommand::getJedecStringForInterfaceFormatCode(const NVM_UI
 	}
 
 	return result;
+}
+
+std::string ShowDeviceCommand::getActionRequiredEvents(core::device::Device& device)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	std::string formattedEventList = "N/A";
+
+	std::vector<event> events = device.getActionRequiredEvents();
+	if (!events.empty())
+	{
+		formattedEventList = ShowCommandUtilities::getFormattedEventList(events);
+	}
+
+	return formattedEventList;
 }
 
 }

@@ -284,6 +284,8 @@ void WINAPI ServiceMain(DWORD argc, LPTSTR *argv)
 
 			if (SetCurrentDirectory(szPath))
 			{
+				open_default_lib_store();
+
 				std::vector<monitor::NvmMonitorBase *> monitors;
 				monitor::NvmMonitorBase::getMonitors(monitors);
 
@@ -311,6 +313,7 @@ void WINAPI ServiceMain(DWORD argc, LPTSTR *argv)
 					CloseHandle(handles[i]);
 				}
 				monitor::NvmMonitorBase::deleteMonitors(monitors);
+				close_lib_store();
 
 				setServiceStatus(SERVICE_STOPPED, FALSE, NO_ERROR, 0);
 			}

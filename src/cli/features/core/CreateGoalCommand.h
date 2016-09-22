@@ -53,6 +53,20 @@ static const std::string PMTYPE_VALUE_APPDIRECTNOTINTERLEAVED = "AppDirectNotInt
 static const std::string PMTYPE_VALUE_NONE = "None";
 static const std::string PMTYPE_VALUE_STORAGE = "Storage";
 
+static const std::string CREATE_CONFIG_GOAL_MSG = TR("Create configuration goal: ");
+
+static const std::string CREATE_GOAL_CONFIRMATION_PREFIX = TR("The following configuration will be applied:");
+static const std::string CREATE_GOAL_CONFIRMATION_SUFFIX = TR("Do you want to continue?");
+static const std::string CREATE_GOAL_NON_OPTIMAL_DIMM_POPULATION_WARNING = TR(
+		"The requested goal may result in a non-optimal configuration due to the population "
+		"of DIMMs in the system.");
+static const std::string CREATE_GOAL_STORAGE_ONLY_NOT_SUPPORTED_BY_DRIVER_WARNING = TR("The requested goal will result in "
+		"Storage Mode capacity which is not supported by the host software.");
+static const std::string CREATE_GOAL_APP_DIRECT_NOT_SUPPORTED_BY_DRIVER_WARNING = TR("The requested goal will result in "
+		"App Direct capacity which is not supported by the host software.");
+static const std::string CREATE_GOAL_REQUESTED_MEMORY_MODE_NOT_USABLE_WARNING = TR("The requested goal will result in Memory "
+		"Mode capacity that is unusable with the currently selected platform BIOS volatile mode.");
+
 class NVM_API CreateGoalCommand : public framework::CommandBase
 {
 public:
@@ -107,6 +121,12 @@ public:
 	{
 	public:
 		virtual framework::ResultBase *showCurrentGoal(const std::string &units) const;
+		virtual framework::ResultBase *showGoalForLayout(const core::memory_allocator::MemoryAllocationLayout &layout,
+				const std::string &units) const;
+
+	protected:
+		virtual framework::DisplayOptions getLayoutGoalDisplayOptions() const;
+		virtual core::StringList getLayoutGoalDisplayProperties() const;
 	};
 
 	class NVM_API NoChangeResult : public framework::SimpleResult
@@ -118,7 +138,7 @@ public:
 	class NVM_API UserPrompt
 	{
 	public:
-		UserPrompt(const framework::YesNoPrompt &prompt);
+		UserPrompt(const framework::YesNoPrompt &prompt, const ShowGoalAdapter &showGoalAdapter);
 
 		virtual ~UserPrompt() { }
 
@@ -126,8 +146,23 @@ public:
 			const core::memory_allocator::MemoryAllocationLayout &layout,
 			const std::string capacityUnits);
 
+	protected:
+		virtual std::string getPromptStringForLayout(
+				const core::memory_allocator::MemoryAllocationLayout &layout,
+				const std::string capacityUnits);
+
+		virtual std::string getLayoutGoalForConfirmation(
+				const core::memory_allocator::MemoryAllocationLayout &layout,
+				const std::string capacityUnits);
+
+		virtual std::string getLayoutWarningsForConfirmation(
+				const core::memory_allocator::MemoryAllocationLayout &layout);
+		virtual std::string getStringForLayoutWarning(
+				enum core::memory_allocator::LayoutWarningCode warningCode);
+
 	private:
 		const framework::YesNoPrompt &m_prompt;
+		const ShowGoalAdapter &m_showGoalAdapter;
 	};
 
 	CreateGoalCommand(
@@ -150,6 +185,7 @@ private:
 	core::memory_allocator::MemoryAllocationRequestBuilder &m_requestBuilder;
 	UserPrompt &m_prompt;
 	const ShowGoalAdapter &m_showGoalAdapter;
+
 	bool userReallyLikesThisLayout(const core::memory_allocator::MemoryAllocationLayout &layout,
 		const std::string capacityUnits);
 };

@@ -28,19 +28,15 @@
 #include "TopologyService.h"
 #include <core/exceptions/NoMemoryException.h>
 
-
-core::device::TopologyService *core::device::TopologyService::m_pSingleton =
-		new core::device::TopologyService();
-
 core::device::TopologyService &core::device::TopologyService::getService()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	if (!m_pSingleton)
-	{
-		throw NoMemoryException();
-	}
 
-	return *m_pSingleton;
+	// Creating the singleton on class init as a static class member
+	// can lead to static initialization order issues.
+	// This is a thread-safe form of lazy initialization.
+	static TopologyService *pSingleton = new TopologyService();
+	return *pSingleton;
 }
 
 core::device::TopologyCollection core::device::TopologyService::getAllTopologies()

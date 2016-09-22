@@ -24,41 +24,53 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef CR_MGMT_GETDEVICE_H
-#define CR_MGMT_GETDEVICE_H
 
-#include <vector>
-#include <string>
+#ifndef SHOWCOMMANDUTILITIES_H_
+#define SHOWCOMMANDUTILITIES_H_
+
 #include <nvm_types.h>
-#include <uid/uid.h>
-#include <core/Result.h>
-#include "Device.h"
-#include <core/Collection.h>
 
-namespace core
+#include <libinvm-cli/ResultBase.h>
+#include <libinvm-cli/ErrorResult.h>
+#include <core/device/Device.h>
+#include <core/StringList.h>
+#include "framework/UnitsOption.h"
+
+namespace cli
 {
-namespace device
+namespace nvmcli
 {
 
-class NVM_API DeviceService
+class NVM_API ShowCommandUtilities
 {
-public:
-	DeviceService(NvmLibrary &api = NvmLibrary::getNvmLibrary()) : m_lib(api) { }
-	virtual ~DeviceService() {}
-	virtual std::vector<std::string> getAllUids();
-	virtual std::vector<std::string> getManageableUids();
-	virtual std::vector<std::string> getUidsForDeviceIds(const std::vector<std::string> &deviceIds);
-	virtual DeviceCollection getAllDevices();
-	virtual Result<Device> getDevice(std::string uid);
+	public:
+		ShowCommandUtilities() {}
+		virtual ~ShowCommandUtilities() {}
 
-	static DeviceService &getService();
+		static framework::ResultBase *getInvalidDimmIdResult(const core::StringList &dimmIds,
+				core::device::DeviceCollection &devices);
+		static framework::ResultBase *getInvalidSocketIdResult(const core::StringList &socketIds,
+				core::device::DeviceCollection &devices);
+		static void filterDevicesOnDimmIds(core::device::DeviceCollection &devices,
+				core::StringList &dimmIds);
+		static void filterDevicesOnSocketIds(core::device::DeviceCollection &devices,
+				core::StringList &socketIds);
+		static framework::ResultBase *getInvalidUnitsOptionResult(const framework::UnitsOption &unitsOption);
 
-protected:
-	NvmLibrary &m_lib;
+		static std::string getDimmId(core::device::Device &device);
+		static std::string getDimmIdFromDeviceUidAndHandle(const std::string &uid, const NVM_UINT32 handle);
 
-	std::string getUidForDeviceIdFromCollection(const std::string &deviceId,
-			DeviceCollection &devices);
+		static std::string getFormattedEvent(const event &event);
+		static std::string getFormattedEventList(const std::vector<event> &events);
+
+	protected:
+		static std::string getFirstBadDimmId(const core::StringList &dimmIds,
+				core::device::DeviceCollection &devices);
+		static std::string getFirstBadSocketId(const core::StringList &socketIds,
+				core::device::DeviceCollection &devices);
 };
+
 }
 }
-#endif //CR_MGMT_GETDEVICE_H
+
+#endif /* SHOWCOMMANDUTILITIES_H_ */

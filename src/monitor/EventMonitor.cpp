@@ -74,18 +74,10 @@
 
 monitor::EventMonitor::EventMonitor() : NvmMonitorBase("EVENT"), m_nsMgmtCallbackId(-1)
 {
-	if (!get_lib_store())
-	{
-		open_default_lib_store();
-	}
 }
 
 monitor::EventMonitor::~EventMonitor()
 {
-	if (get_lib_store())
-	{
-		close_lib_store();
-	}
 }
 
 void monitor::EventMonitor::init()

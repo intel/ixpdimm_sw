@@ -36,7 +36,7 @@ include $(ROOT_DIR)/build.mk
 OBJECT_MODULE_DIR = $(OBJECT_DIR)/core
 
 # ---- COMPONENTS ----------------------------------------------------------------------------------
-SUBMODULES = . device system exceptions memory_allocator
+SUBMODULES = . device system exceptions memory_allocator configuration
 
 UNITTEST = unittest
 # ---- FILES ---------------------------------------------------------------------------------------
@@ -86,7 +86,7 @@ LIBS = 	-L$(OBJECT_DIR)/common -lcommon \
 			-lcrypto
 
 ifdef BUILD_WINDOWS
-	LIBS += -lws2_32 -lmswsock -lShlwapi -L$(EXTERN_LIB_DIR)/openssl/openssl
+	LIBS += -lws2_32 -lmswsock -lShlwapi -L$(BUILD_DIR) -llibintl -L$(EXTERN_LIB_DIR)/openssl/openssl
 else ifdef BUILD_LINUX
 	LIBS += -ldl -lm -lpthread
 else ifdef BUILD_ESX

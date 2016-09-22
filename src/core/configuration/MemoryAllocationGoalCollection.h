@@ -25,30 +25,45 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "DeviceFirmwareService.h"
-#include <core/exceptions/NoMemoryException.h>
-#include <LogEnterExit.h>
+#ifndef MEMORYALLOCATIONGOALCOLLECTION_H_
+#define MEMORYALLOCATIONGOALCOLLECTION_H_
 
-core::device::DeviceFirmwareService &core::device::DeviceFirmwareService::getService()
+#include <nvm_types.h>
+#include <map>
+#include <string>
+#include <core/configuration/MemoryAllocationGoal.h>
+
+namespace core
 {
-	// Creating the singleton on class init as a static class member
-	// can lead to static initialization order issues.
-	// This is a thread-safe form of lazy initialization.
-	static DeviceFirmwareService *pSingleton = new DeviceFirmwareService();
-	return *pSingleton;
-}
-
-core::Result<core::device::DeviceFirmwareInfo> core::device::DeviceFirmwareService::getFirmwareInfo(
-		const std::string &deviceUid)
+namespace configuration
 {
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	device_fw_info fwInfo =  m_lib.getDeviceFwInfo(deviceUid);
 
-	DeviceFirmwareInfo firmwareInfo(deviceUid, fwInfo);
-	core::Result<DeviceFirmwareInfo> result(firmwareInfo);
-	return result;
-}
-
-core::device::DeviceFirmwareService::~DeviceFirmwareService()
+class NVM_API MemoryAllocationGoalCollection
 {
-}
+	public:
+		class GoalNotFound : public std::exception {};
+
+		MemoryAllocationGoalCollection();
+		MemoryAllocationGoalCollection(const MemoryAllocationGoalCollection &other);
+		virtual ~MemoryAllocationGoalCollection();
+
+		MemoryAllocationGoalCollection &operator=(const MemoryAllocationGoalCollection &other);
+
+		virtual MemoryAllocationGoal &operator[](const std::string &deviceUid);
+		virtual size_t size() const;
+		virtual void push_back(MemoryAllocationGoal &goal);
+		virtual void clear();
+
+		virtual std::vector<std::string> getDeviceUidsForGoals() const;
+
+	protected:
+		std::map<std::string, MemoryAllocationGoal *> m_goals;
+
+		void safeDelete(MemoryAllocationGoal **ppGoal);
+		bool hasGoalForDevice(const std::string &deviceUid) const;
+};
+
+} /* namespace configuration */
+} /* namespace core */
+
+#endif /* MEMORYALLOCATIONGOALCOLLECTION_H_ */

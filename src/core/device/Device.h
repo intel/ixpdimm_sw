@@ -77,7 +77,7 @@ public:
 	Device &operator=(const Device &other);
 	Device(const Device &other);
 
-	virtual Device *clone();
+	virtual Device *clone() const;
 
 	virtual std::string getUid();
 	virtual enum manageability_state getManageabilityState();
@@ -159,7 +159,7 @@ public:
 	virtual std::string getBankLabel();
 	virtual bool isFirstFastRefresh();
 	virtual bool isActionRequired();
-	virtual std::vector<std::string> getActionRequiredEvents();
+	virtual std::vector<event> getActionRequiredEvents();
 	virtual bool isViralPolicyEnabled();
 	virtual bool getCurrentViralState();
 	static std::string getFormattedManufacturingDate(NVM_UINT16 manufacturingdate);
@@ -168,12 +168,12 @@ private:
 	NvmLibrary &m_lib;
 	device_discovery m_discovery;
 	device_details *m_pDetails;
-	std::vector<std::string> *m_pActionRequiredEvents;
+	std::vector<event> *m_pActionRequiredEvents;
 	std::string m_deviceUid;
 
 	const device_discovery &getDiscovery();
 	const device_details &getDetails();
-	const std::vector<std::string> &getEvents();
+	const std::vector<event> &getEvents();
 	void copy(const Device &other);
 };
 

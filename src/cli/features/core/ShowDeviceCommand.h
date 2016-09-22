@@ -128,10 +128,6 @@ private:
 	bool displayOptionsAreValid();
 	bool unitsOptionIsValid();
 
-	std::string getFirstBadDimmId(core::device::DeviceCollection &devices) const;
-	std::string getFirstBadSocketId(core::device::DeviceCollection &devices) const;
-
-	static std::string getDimmId(core::device::Device &);
 	static std::string convertLockState(lock_state lockState);
 	static std::string convertHealthState(NVM_UINT16 healthState);
 	static std::string convertManageabilityState(manageability_state state);
@@ -150,6 +146,8 @@ private:
 	static std::string convertInterfaceFormatCode(const NVM_UINT16 ifc);
 	static std::string getJedecStringForInterfaceFormatCode(const NVM_UINT16 ifc);
 	static std::string convertArsStatus(device_ars_status status);
+
+	static std::string getActionRequiredEvents(core::device::Device &device);
 
 	framework::ResultBase *m_pResult;
 	framework::PropertyDefinitionList<core::device::Device> m_props;

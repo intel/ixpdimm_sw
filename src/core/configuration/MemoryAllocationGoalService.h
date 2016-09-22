@@ -25,30 +25,50 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "DeviceFirmwareService.h"
-#include <core/exceptions/NoMemoryException.h>
-#include <LogEnterExit.h>
+#ifndef MEMORYALLOCATIONGOALSERVICE_H_
+#define MEMORYALLOCATIONGOALSERVICE_H_
 
-core::device::DeviceFirmwareService &core::device::DeviceFirmwareService::getService()
+#include <nvm_types.h>
+#include <core/NvmLibrary.h>
+#include <core/device/DeviceService.h>
+#include <core/configuration/MemoryAllocationGoalCollection.h>
+#include <core/Result.h>
+#include <exception>
+#include <core/memory_allocator/MemoryAllocationTypes.h>
+
+namespace core
 {
-	// Creating the singleton on class init as a static class member
-	// can lead to static initialization order issues.
-	// This is a thread-safe form of lazy initialization.
-	static DeviceFirmwareService *pSingleton = new DeviceFirmwareService();
-	return *pSingleton;
-}
-
-core::Result<core::device::DeviceFirmwareInfo> core::device::DeviceFirmwareService::getFirmwareInfo(
-		const std::string &deviceUid)
+namespace configuration
 {
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	device_fw_info fwInfo =  m_lib.getDeviceFwInfo(deviceUid);
 
-	DeviceFirmwareInfo firmwareInfo(deviceUid, fwInfo);
-	core::Result<DeviceFirmwareInfo> result(firmwareInfo);
-	return result;
-}
-
-core::device::DeviceFirmwareService::~DeviceFirmwareService()
+class NVM_API MemoryAllocationGoalService
 {
-}
+	public:
+		class NoGoalOnDevice : public std::exception {};
+
+		MemoryAllocationGoalService(
+				device::DeviceService &deviceService = device::DeviceService::getService(),
+				NvmLibrary &lib = NvmLibrary::getNvmLibrary());
+		virtual ~MemoryAllocationGoalService();
+
+		static MemoryAllocationGoalService &getService();
+
+		virtual MemoryAllocationGoalCollection getAllGoals();
+		virtual Result<MemoryAllocationGoal> getGoalForDevice(const std::string &deviceUid);
+
+		virtual MemoryAllocationGoalCollection getGoalsFromMemoryAllocationLayout(
+				const memory_allocator::MemoryAllocationLayout &layout);
+
+	protected:
+		device::DeviceService &m_deviceService;
+		NvmLibrary &m_lib;
+
+		config_goal getConfigGoalForDeviceFromLibrary(const std::string &deviceUid);
+		void addGoalForDeviceToCollection(const std::string &deviceUid,
+				MemoryAllocationGoalCollection &collection);
+};
+
+} /* namespace configuration */
+} /* namespace core */
+
+#endif /* MEMORYALLOCATIONGOALSERVICE_H_ */

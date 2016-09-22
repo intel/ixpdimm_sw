@@ -54,7 +54,6 @@ public:
 
 protected:
 	NvmLibrary &m_lib;
-	static SystemService *m_pSingleton;
 };
 
 }

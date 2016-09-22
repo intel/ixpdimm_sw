@@ -1076,12 +1076,6 @@ void cli::nvmcli::findBestCapacityFormatInDecimalMultiples(const NVM_UINT64 capa
 	}
 }
 
-// helper function to round number to decimal_places
-NVM_REAL32 round(NVM_REAL32 number, int decimal_places)
-{
-	return floor(number * pow(10, decimal_places) + 0.5) / pow(10, decimal_places);
-}
-
 NVM_UINT64 cli::nvmcli::calculateBlockCountForNamespace(const NVM_UINT64 capacityInBytes,
 		const NVM_UINT64 blockSize)
 {
@@ -1102,32 +1096,32 @@ std::string cli::nvmcli::translateCapacityToRequestedUnits(NVM_UINT64 capacityIn
 	}
 	else if (framework::stringsIEqual(units, PREFERENCE_SIZE_MIB))
 	{
-		capacityInRequestedUnits = round((NVM_REAL32)capacityInBytes / BYTES_PER_MIB, 1);
+		capacityInRequestedUnits = round_to_decimal_places((NVM_REAL32)capacityInBytes / BYTES_PER_MIB, 1);
 		capacityStringInRequestedUnits << capacityInRequestedUnits << " " << PREFERENCE_SIZE_MIB;
 	}
 	else if (framework::stringsIEqual(units, PREFERENCE_SIZE_GIB))
 	{
-		capacityInRequestedUnits = round((NVM_REAL32)capacityInBytes / BYTES_PER_GIB, 1);
+		capacityInRequestedUnits = round_to_decimal_places((NVM_REAL32)capacityInBytes / BYTES_PER_GIB, 1);
 		capacityStringInRequestedUnits << capacityInRequestedUnits << " " << PREFERENCE_SIZE_GIB;
 	}
 	else if (framework::stringsIEqual(units, PREFERENCE_SIZE_TIB))
 	{
-		capacityInRequestedUnits = round((NVM_REAL32)capacityInBytes / BYTES_PER_TIB, 1);
+		capacityInRequestedUnits = round_to_decimal_places((NVM_REAL32)capacityInBytes / BYTES_PER_TIB, 1);
 		capacityStringInRequestedUnits << capacityInRequestedUnits << " " << PREFERENCE_SIZE_TIB;
 	}
 	else if (framework::stringsIEqual(units, PREFERENCE_SIZE_MB))
 	{
-		capacityInRequestedUnits = round((NVM_REAL32)capacityInBytes / BYTES_PER_MB, 1);
+		capacityInRequestedUnits = round_to_decimal_places((NVM_REAL32)capacityInBytes / BYTES_PER_MB, 1);
 		capacityStringInRequestedUnits << capacityInRequestedUnits << " " << PREFERENCE_SIZE_MB;
 	}
 	else if (framework::stringsIEqual(units, PREFERENCE_SIZE_GB))
 	{
-		capacityInRequestedUnits = round((NVM_REAL32)capacityInBytes / BYTES_PER_GB, 1);
+		capacityInRequestedUnits = round_to_decimal_places((NVM_REAL32)capacityInBytes / BYTES_PER_GB, 1);
 		capacityStringInRequestedUnits << capacityInRequestedUnits << " " << PREFERENCE_SIZE_GB;
 	}
 	else if (framework::stringsIEqual(units, PREFERENCE_SIZE_TB))
 	{
-		capacityInRequestedUnits = round((NVM_REAL32)capacityInBytes / BYTES_PER_TB, 1);
+		capacityInRequestedUnits = round_to_decimal_places((NVM_REAL32)capacityInBytes / BYTES_PER_TB, 1);
 		capacityStringInRequestedUnits << capacityInRequestedUnits << " " << PREFERENCE_SIZE_TB;
 	}
 	else
@@ -1176,9 +1170,7 @@ std::string cli::nvmcli::convertCapacityFormat(NVM_UINT64 capacityInBytes, std::
 	}
 	catch (wbem::framework::Exception &)
 	{
-		std::stringstream cap;
-		cap << round((NVM_REAL32)capacityInBytes / BYTES_PER_MIB, 1) << " " << PREFERENCE_SIZE_MIB;
-		capacityStringInRequestedUnits = cap.str();
+		capacityStringInRequestedUnits = translateCapacityToRequestedUnits(capacityInBytes, PREFERENCE_SIZE_MIB);
 	}
 
 	return capacityStringInRequestedUnits;

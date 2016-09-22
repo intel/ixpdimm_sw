@@ -32,18 +32,15 @@
 #include <core/exceptions/LibraryException.h>
 #include <LogEnterExit.h>
 
-core::device::DeviceService *core::device::DeviceService::m_pSingleton = new core::device::DeviceService();
-
 core::device::DeviceService &core::device::DeviceService::getService()
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
 
-	if (m_pSingleton == NULL)
-	{
-		throw NoMemoryException();
-	}
-
-	return *m_pSingleton;
+	// Creating the singleton on class init as a static class member
+	// can lead to static initialization order issues.
+	// This is a thread-safe form of lazy initialization.
+	static DeviceService *pSingleton = new DeviceService();
+	return *pSingleton;
 }
 
 std::vector<std::string> core::device::DeviceService::getAllUids()

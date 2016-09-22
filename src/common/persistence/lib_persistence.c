@@ -412,6 +412,8 @@ void add_config_value_to_pstore(const PersistentStore *p_ps, const char *key, co
 {
 	if (p_ps)
 	{
+		db_delete_config_by_key(p_ps, key);
+
 		struct db_config config;
 		s_strcpy(config.key, key, CONFIG_KEY_LEN);
 		s_strcpy(config.value, value, CONFIG_VALUE_LEN);

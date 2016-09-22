@@ -70,6 +70,8 @@ int main(int argc, char **argv)
 
 	if (rc == EXIT_SUCCESS)
 	{
+		open_default_lib_store();
+
 		std::vector<monitor::NvmMonitorBase *> monitors;
 		monitor::NvmMonitorBase::getMonitors(monitors);
 
@@ -96,6 +98,7 @@ int main(int argc, char **argv)
 
 		// clean up
 		monitor::NvmMonitorBase::deleteMonitors(monitors);
+		close_lib_store();
 	}
 
 	return rc;
