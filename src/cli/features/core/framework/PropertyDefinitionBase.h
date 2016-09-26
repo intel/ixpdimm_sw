@@ -247,12 +247,9 @@ public:
 
 		if (value.size() > 0)
 		{
+			int addedResults = 0;
 			for (size_t i = 0; i < value.size(); i++)
 			{
-				if (i > 0)
-				{
-					result += ", ";
-				}
 				R item = value[i];
 				std::string valueStr;
 
@@ -267,7 +264,14 @@ public:
 					valueStr = stream.str();
 				}
 
-				result += valueStr;
+				if (!valueStr.empty())
+				{
+					if (addedResults++ > 0)
+					{
+						result += ", ";
+					}
+					result += valueStr;
+				}
 			}
 		}
 		else
