@@ -8,420 +8,420 @@
 #
 [<NVM_WBEM_PREFIX>NVDIMM]
    provider: Intel_NVDIMM_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type: instance method
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>RawMemory]
    provider: Intel_RawMemory_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type: instance
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>VolatileMemory]
    provider: Intel_VolatileMemory_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type: instance
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>PersistentMemory]
    provider: Intel_PersistentMemory_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type: instance
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>MemoryController]
    provider: Intel_MemoryController_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type: instance
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>SystemProcessor]
    provider: Intel_SystemProcessor_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type: instance
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>ServerChassis]
    provider: Intel_ServerChassis_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type: instance
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>NVDIMMFWVersion]
    provider: Intel_NVDIMMFWVersion_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type: instance
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>AvailableFW]
    provider: Intel_AvailableFW_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type: instance
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>NVDIMMCollection]
    provider: Intel_NVDIMMCollection_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type: instance
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>NVDIMMSoftwareInstallationService]
    provider: Intel_NVDIMMSoftwareInstallationService_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type: instance method
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>ErasureCapabilities]
    provider: Intel_ErasureCapabilities_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type: instance
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>NVDIMMSensor]
    provider: Intel_NVDIMMSensor_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type: instance
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>PerformanceMetricDefinition]
    provider: Intel_PerformanceMetricDefinition_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type: instance
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>PerformanceMetric]
    provider: Intel_PerformanceMetric_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type: instance
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>ErasureService]
    provider: Intel_ErasureService_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type: instance method
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>SystemDevice]
    provider: Intel_SystemDevice_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type:   association
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>ControlledBy]
    provider: Intel_ControlledBy_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type:   association
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>ConcreteComponent]
    provider: Intel_ConcreteComponent_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type:   association
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>ConcreteDependency]
    provider: Intel_ConcreteDependency_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type:   association
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>ComputerSystemPackage]
    provider: Intel_ComputerSystemPackage_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type:   association
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>Realizes]
    provider: Intel_Realizes_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type:   association
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>AssociatedMemory]
    provider: Intel_AssociatedMemory_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type:   association
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>MemberOfCollection]
    provider: Intel_MemberOfCollection_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type:   association
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>InstalledSoftwareIdentity]
    provider: Intel_InstalledSoftwareIdentity_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type:   association
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>HostedCollection]
    provider: Intel_HostedCollection_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type:   association
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>ServiceAffectsElement]
    provider: Intel_ServiceAffectsElement_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type:   association
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>AssociatedSensor]
    provider: Intel_AssociatedSensor_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type:   association
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>HostedService]
    provider: Intel_HostedService_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type:   association
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>MetricDefForME]
    provider: Intel_MetricDefForME_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type:   association
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>MetricForME]
    provider: Intel_MetricForME_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type:   association
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>MetricInstance]
    provider: Intel_MetricInstance_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type:   association
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>HostedResourcePool]
    provider: Intel_HostedResourcePool_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type:   association
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>HostedStoragePool]
    provider: Intel_HostedStoragePool_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type:   association
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>BasedOn]
    provider: Intel_BasedOn_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type:   association
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>SupportDataService]
    provider: Intel_SupportDataService_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type: instance method
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>OpaqueSupportData]
    provider: Intel_OpaqueSupportData_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type: instance
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>NVDIMMDiagnostic]
    provider: Intel_NVDIMMDiagnostic_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type: instance
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>DiagnostiIdentity]
    provider: Intel_DiagnostiIdentity_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type: instance
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>MemoryResources]
    provider: Intel_MemoryResources_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type: instance
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>PersistentMemoryPool]
    provider: Intel_PersistentMemoryPool_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type: instance method
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>MemoryCapabilities]
    provider: Intel_MemoryCapabilities_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type: instance
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>MemoryConfigurationService]
    provider: Intel_MemoryConfigurationService_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type: instance
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>MemoryConfigurationCapabilities]
    provider: Intel_MemoryConfigurationCapabilities_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type: instance
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>MemoryAllocationSettings]
    provider: Intel_MemoryAllocationSettings_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type: instance
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>FWEventLog]
    provider: Intel_FWEventLog_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type: instance
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>Hostsoftware]
    provider: Intel_Hostsoftware_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type: instance
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>NVDIMMDriverIdentity]
    provider: Intel_NVDIMMDriverIdentity_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type: instance
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>ManagementSoftwareIdentity]
    provider: Intel_ManagementSoftwareIdentity_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type: instance
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>DiagnosticLog]
    provider: Intel_DiagnosticLog_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type: instance
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>DiagnosticCompletionRecord]
    provider: Intel_DiagnosticCompletionRecord_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type: instance
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>NVDIMMEventLog]
    provider: Intel_NVDIMMEventLog_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type: instance
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>NVDIMMLogEntry]
    provider: Intel_NVDIMMLogEntry_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type: instance
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>PersistentMemoryNamespace]
    provider: Intel_PersistentMemoryNamespace_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type: instance
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>NamespaceSettings]
    provider: Intel_NamespaceSettings_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type: instance
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>PersistentMemoryCapabilities]
    provider: Intel_PersistentMemoryCapabilities_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type: instance method
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>PersistentMemoryService]
 		   provider: Intel_PersistentMemoryService_Provider
-		   location: nvmwbem
+		   location: ixpdimm-cim
 		   type: instance method
 		   group: intel
 		   namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>PersistentConfigurationCapabilities]
 		   provider: Intel_PersistentConfigurationCapabilities_Provider
-		   location: nvmwbem
+		   location: ixpdimm-cim
 		   type: instance
 		   group: intel
 		   namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>RegisteredProfile]
    provider: Intel_RegisteredProfile_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type: instance
    group: intel
    namespace: root/interop
 #
 [<NVM_WBEM_PREFIX>StaticFilter]
    provider: Intel_StaticFilter_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type: instance
    group: intel
    namespace: root/intelwbem
@@ -429,77 +429,77 @@
 # Association Providers
 [Intel_AssociatedSensor]
    provider: Intel_AssociatedSensor_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type: association
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>ElementSoftwareIdentity]
    provider: Intel_ElementSoftwareIdentity_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type:   association
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>ElementSettingsData]
    provider: Intel_ElementSettingsData_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type:   association
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>ElementAllocatedFromPool]
    provider: Intel_ElementAllocatedFromPool_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type:   association
    group: intel
    namespace: root/intelwbem
  #
 [<NVM_WBEM_PREFIX>AvailableDiagnosticService]
    provider: Intel_AvailableDiagnosticService_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type:   association
    group: intel
    namespace: root/intelwbem
  #
 [<NVM_WBEM_PREFIX>ElementView]
    provider: Intel_ElementView_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type:   association
    group: intel
-   namespace: root/intelwbem   
+   namespace: root/intelwbem
  #
 [<NVM_WBEM_PREFIX>ElementConformsToProfile]
    provider: Intel_ElementConformsToProfile_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type:   association
    group: intel
    namespace: root/interop root/intelwbem
  #
 [<NVM_WBEM_PREFIX>NVDIMMEvent]
    provider: Intel_NVDIMMEvent_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type:   indication
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>InstCreation]
    provider: Intel_InstCreation_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type:   indication
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>InstDeletion]
    provider: Intel_InstDeletion_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type:   indication
    group: intel
    namespace: root/intelwbem
 #
 [<NVM_WBEM_PREFIX>InstModification]
    provider: Intel_InstModification_Provider
-   location: nvmwbem
+   location: ixpdimm-cim
    type:   indication
    group: intel
    namespace: root/intelwbem
