@@ -1693,7 +1693,7 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::changePreferences(
 	}
 	else
 	{
-		// check for valid property valud
+		// check for valid property value
 		for (cli::framework::StringMap::const_iterator propIter = parsedCommand.properties.begin();
 				propIter != parsedCommand.properties.end(); propIter++)
 		{
@@ -1876,14 +1876,9 @@ bool cli::nvmcli::FieldSupportFeature::valueIsValidNumberForKey(const std::strin
 bool cli::nvmcli::FieldSupportFeature::appDirectSettingIsValid(
 		const framework::ParsedCommand &parsedCommand)
 {
-	bool isValid = false;
 	std::string EMPTY_SIZE_PROPERTY = "";
-	MemoryProperty appDirectsetting(parsedCommand ,EMPTY_SIZE_PROPERTY, SQL_KEY_APPDIRECT_SETTINGS);
-	if (appDirectsetting.getIsSettingsValid())
-	{
-		isValid = true;
-	}
-	return isValid;
+	MemoryProperty appDirectsetting(parsedCommand, EMPTY_SIZE_PROPERTY, SQL_KEY_APPDIRECT_SETTINGS);
+	return appDirectsetting.getIsSettingsValid();
 }
 
 cli::framework::ErrorResult *cli::nvmcli::FieldSupportFeature::checkAppdirectCapacities(bool &appDirectIsAvailable)

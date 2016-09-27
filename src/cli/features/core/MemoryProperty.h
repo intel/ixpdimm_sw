@@ -124,7 +124,6 @@ private:
 			const std::string &settingsPropertyName = "");
 	bool getIsFirstSettingPart(const std::string &value) const;
 	bool getIsSizePart(const std::string &value) const;
-	bool isValidInterleaveSetting(const std::string &token);
 
 	/*
 	 * Breaks settings into tokens on separators.

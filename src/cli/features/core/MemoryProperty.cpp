@@ -117,24 +117,13 @@ bool cli::nvmcli::MemoryProperty::validateSettings()
 	bool channelFound = false;
 	if (m_settingsPropertyExists && (result = tokenizeSettings()))
 	{
-		const size_t MAX_TOKENS = 3;
+		const size_t MAX_TOKENS = 2;
 		size_t numTokens = m_settingsTokens.size();
 		size_t tokenIdx = 0;
 		// expect tokens in the format:
-		//  SETTING_IMC_CHANNEL
+		//  IMC_CHANNEL
 		if (numTokens > 0 && numTokens <= MAX_TOKENS)
 		{
-			// first token is a setting - see if others are IMC/channel
-			if (isValidInterleaveSetting(m_settingsTokens[tokenIdx]))
-			{
-				tokenIdx++;
-			}
-			else if (numTokens == MAX_TOKENS)
-				// not a setting, but there are too many tokens for a valid IMC/channel
-			{
-				result = false;
-			}
-
 			// Check IMC/channel sizes
 			for (; result && (tokenIdx < numTokens); tokenIdx++)
 			{
@@ -284,26 +273,6 @@ bool cli::nvmcli::MemoryProperty::tokenizeSettings()
 			m_settingsTokens.push_back(std::string(pToken));
 
 			pToken = x_strtok(&pRemainder, wbem::mem_config::MEMORYPROP_TOKENSEP.c_str());
-		}
-	}
-
-	return result;
-}
-
-bool cli::nvmcli::MemoryProperty::isValidInterleaveSetting(const std::string &token)
-{
-	bool result = false;
-
-	static const size_t numSettings = 2;
-	static const std::string validSettings[] = {
-			wbem::mem_config::APP_DIRECT_SETTING_MIRROR,
-			wbem::mem_config::APP_DIRECT_SETTING_BYONE };
-
-	for (size_t i = 0; i < numSettings; i++)
-	{
-		if (framework::stringsIEqual(token, validSettings[i]))
-		{
-			result = true;
 		}
 	}
 
