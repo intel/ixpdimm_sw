@@ -57,6 +57,11 @@ class NVM_API PostLayoutRequestDeviationCheck: public PostLayoutCheck
 				const struct MemoryAllocationRequest& request,
 				const MemoryAllocationLayout& layout);
 
+		NVM_UINT64 getNonReservedAppDirectCapacityGiBFromLayout(const struct MemoryAllocationRequest& request,
+				const MemoryAllocationLayout& layout);
+		bool reservedDimmIsAppDirect(const struct MemoryAllocationRequest& request);
+		NVM_UINT64 getReservedAppDirectCapacityGiB(const struct MemoryAllocationRequest& request);
+
 		double findPercentDeviation(NVM_UINT64 expectedValue, NVM_UINT64 observedValue);
 
 		bool layoutDeviationIsWithinBounds(double percentDeviation);

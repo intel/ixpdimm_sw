@@ -33,6 +33,7 @@
 
 #include <LogEnterExit.h>
 #include <core/exceptions/NvmExceptionBadRequest.h>
+#include <utility.h>
 
 #define ACCEPTED_PERCENT_DEVIATION 10
 
@@ -91,13 +92,7 @@ void core::memory_allocator::PostLayoutRequestDeviationCheck::checkAppDirectCapa
 
 	if (request.getAppDirectCapacityGiB() > 0)
 	{
-		NVM_UINT64 layoutAppDirectCapacity = 0;
-		for (std::vector<NVM_UINT64>::const_iterator capacity = layout.appDirectCapacities.begin();
-				capacity != layout.appDirectCapacities.end(); capacity++)
-		{
-			layoutAppDirectCapacity += *capacity;
-		}
-
+		NVM_UINT64 layoutAppDirectCapacity = getNonReservedAppDirectCapacityGiBFromLayout(request, layout);
 		double percentDeviation = findPercentDeviation(request.getAppDirectCapacityGiB(),
 						layoutAppDirectCapacity);
 		if (!layoutDeviationIsWithinBounds(percentDeviation))
@@ -105,6 +100,40 @@ void core::memory_allocator::PostLayoutRequestDeviationCheck::checkAppDirectCapa
 			throw core::NvmExceptionUnacceptableLayoutDeviation();
 		}
 	}
+}
+
+NVM_UINT64 core::memory_allocator::PostLayoutRequestDeviationCheck::getReservedAppDirectCapacityGiB(
+		const struct MemoryAllocationRequest& request)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	NVM_UINT64 reservedAppDirectCapacity = 0;
+	if (reservedDimmIsAppDirect(request))
+	{
+		Dimm reservedDimm = request.getReservedDimm();
+		reservedAppDirectCapacity = B_TO_GiB(reservedDimm.capacityBytes);
+	}
+
+	return reservedAppDirectCapacity;
+}
+
+bool core::memory_allocator::PostLayoutRequestDeviationCheck::reservedDimmIsAppDirect(
+		const struct MemoryAllocationRequest& request)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	return (request.hasReservedDimm() &&
+			request.getReservedDimmCapacityType() == RESERVE_DIMM_APP_DIRECT_X1);
+}
+
+NVM_UINT64 core::memory_allocator::PostLayoutRequestDeviationCheck::getNonReservedAppDirectCapacityGiBFromLayout(
+		const struct MemoryAllocationRequest& request, const MemoryAllocationLayout& layout)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	NVM_UINT64 reservedAppDirectCapacity = getReservedAppDirectCapacityGiB(request);
+
+	return layout.appDirectCapacity - reservedAppDirectCapacity;
 }
 
 void core::memory_allocator::PostLayoutRequestDeviationCheck::verify(

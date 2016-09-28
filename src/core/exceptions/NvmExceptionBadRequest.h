@@ -190,7 +190,7 @@ class NvmExceptionBadRequestReserveDimm : public NvmExceptionBadRequest
 	public:
 		NvmExceptionBadRequestReserveDimm() :
 			NvmExceptionBadRequest("The request was unable to reserve a " NVM_DIMM_NAME
-				" for storage with requested settings.")
+				" with requested settings.")
 		{}
 };
 

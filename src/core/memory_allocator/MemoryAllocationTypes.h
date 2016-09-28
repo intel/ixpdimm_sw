@@ -76,10 +76,10 @@ enum LayoutWarningCode
 struct MemoryAllocationLayout
 {
 	MemoryAllocationLayout() :
-		memoryCapacity(0), appDirectCapacities(), storageCapacity(0), goals() {}
+		memoryCapacity(0), appDirectCapacity(0), storageCapacity(0), goals() {}
 
 	NVM_UINT64 memoryCapacity; // total in GiB
-	std::vector<NVM_UINT64> appDirectCapacities; // in GiB
+	NVM_UINT64 appDirectCapacity; // in GiB
 	NVM_UINT64 storageCapacity; // in GiB
 
 	// the string is a DIMM UID

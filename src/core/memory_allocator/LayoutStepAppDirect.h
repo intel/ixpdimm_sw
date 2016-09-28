@@ -93,7 +93,6 @@ class NVM_API LayoutStepAppDirect: public LayoutStep
 				MemoryAllocationLayout &layout);
 
 		MemoryAllocationUtil &m_memAllocUtil;
-		size_t m_extentIndex;
 		NVM_UINT16 m_nextInterleaveId;
 };
 

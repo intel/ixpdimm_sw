@@ -34,9 +34,11 @@
 #include <utility.h>
 #include <LogEnterExit.h>
 #include <core/exceptions/NvmExceptionBadRequest.h>
-#include "ReserveDimmSelector.h"
+#include <core/memory_allocator/LayoutStepAppDirect.h>
+#include <core/memory_allocator/LayoutStepStorage.h>
 
-core::memory_allocator::LayoutStepReserveDimm::LayoutStepReserveDimm()
+core::memory_allocator::LayoutStepReserveDimm::LayoutStepReserveDimm(MemoryAllocationUtil &util) :
+	m_memAllocUtil(util)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
@@ -51,25 +53,118 @@ void core::memory_allocator::LayoutStepReserveDimm::execute(const MemoryAllocati
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
+	if (request.hasReservedDimm())
+	{
+		verifyEnoughDimmsInRequest(request);
+
+		layoutReservedDimm(request, layout);
+	}
+}
+
+void core::memory_allocator::LayoutStepReserveDimm::verifyEnoughDimmsInRequest(
+		const MemoryAllocationRequest& request)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
 	if (request.getNumberOfDimms() == 0)
 	{
 		throw NvmExceptionBadRequestNoDimms();
 	}
-
-	if (request.hasReservedDimm())
+	else if (request.getNumberOfDimms() == 1)
 	{
-		Dimm reservedDimm = request.getReservedDimm();
-		setReserveDimmForStorage(reservedDimm, layout);
+		// Makes no sense to "reserve" a DIMM out of the request if there's only one
+		throw NvmExceptionBadRequestReserveDimm();
 	}
 }
 
-void core::memory_allocator::LayoutStepReserveDimm::setReserveDimmForStorage(const struct Dimm &reserveDimm,
-		MemoryAllocationLayout& layout)
+void core::memory_allocator::LayoutStepReserveDimm::layoutReservedDimm(
+		const MemoryAllocationRequest& request, MemoryAllocationLayout& layout)
 {
-	layout.storageCapacity += reserveDimm.capacityBytes / BYTES_PER_GIB;
-	layout.goals[reserveDimm.uid].memory_size = 0;
-	layout.goals[reserveDimm.uid].app_direct_count = 0;
-	layout.reservedimmUid = reserveDimm.uid;
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	Dimm reservedDimm = getReservedDimmFromRequest(request);
+
+	if (request.getReservedDimmCapacityType() == RESERVE_DIMM_STORAGE)
+	{
+		layoutReservedDimmForStorage(reservedDimm, layout);
+	}
+	else
+	{
+		layoutReservedDimmForAppDirect(reservedDimm, layout);
+	}
+
+	layout.reservedimmUid = reservedDimm.uid;
 }
 
+core::memory_allocator::Dimm
+core::memory_allocator::LayoutStepReserveDimm::getReservedDimmFromRequest(
+		const MemoryAllocationRequest& request)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
+	Dimm reservedDimm;
+	try
+	{
+		reservedDimm = request.getReservedDimm();
+	}
+	catch (MemoryAllocationRequest::NoReservedDimmException &)
+	{
+		throw NvmExceptionBadRequestReserveDimm();
+	}
+
+	return reservedDimm;
+}
+
+void core::memory_allocator::LayoutStepReserveDimm::layoutReservedDimmForStorage(const Dimm &reserveDimm,
+		MemoryAllocationLayout& layout)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	MemoryAllocationRequest reserveDimmRequest = getRequestForStorageReservedDimm(reserveDimm);
+
+	LayoutStepStorage storageReserveDimmStep;
+	storageReserveDimmStep.execute(reserveDimmRequest, layout);
+}
+
+core::memory_allocator::MemoryAllocationRequest
+core::memory_allocator::LayoutStepReserveDimm::getRequestForStorageReservedDimm(
+		const Dimm& reserveDimm)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	MemoryAllocationRequest reserveDimmRequest;
+
+	reserveDimmRequest.addDimm(reserveDimm);
+	reserveDimmRequest.setStorageRemaining(true);
+
+	return reserveDimmRequest;
+}
+
+void core::memory_allocator::LayoutStepReserveDimm::layoutReservedDimmForAppDirect(
+		const Dimm& reserveDimm, MemoryAllocationLayout& layout)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	MemoryAllocationRequest reserveDimmRequest = getRequestForAppDirectReservedDimm(reserveDimm);
+
+	LayoutStepAppDirect appDirectReserveDimmStep(m_memAllocUtil);
+	appDirectReserveDimmStep.execute(reserveDimmRequest, layout);
+}
+
+core::memory_allocator::MemoryAllocationRequest
+core::memory_allocator::LayoutStepReserveDimm::getRequestForAppDirectReservedDimm(
+		const Dimm& reserveDimm)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	MemoryAllocationRequest reserveDimmRequest;
+
+	reserveDimmRequest.addDimm(reserveDimm);
+
+	AppDirectExtent nonInterleavedExtent;
+	nonInterleavedExtent.byOne = true;
+	nonInterleavedExtent.capacityGiB = B_TO_GiB(reserveDimm.capacityBytes);
+	reserveDimmRequest.setAppDirectExtent(nonInterleavedExtent);
+
+	return reserveDimmRequest;
+}

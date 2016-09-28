@@ -41,7 +41,6 @@
 core::memory_allocator::LayoutStepAppDirect::LayoutStepAppDirect(
 		MemoryAllocationUtil &util) :
 		m_memAllocUtil(util),
-		m_extentIndex(0), // Only one extent is valid
 		m_nextInterleaveId(0)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -275,7 +274,7 @@ void core::memory_allocator::LayoutStepAppDirect::addExtentCapacityToLayout(
 	NVM_UINT64 capacityLaidOut = getExtentCapacityFromLayout(layout);
 	if (capacityLaidOut > 0)
 	{
-		layout.appDirectCapacities.push_back(capacityLaidOut);
+		layout.appDirectCapacity += capacityLaidOut;
 	}
 }
 
@@ -289,10 +288,13 @@ NVM_UINT64 core::memory_allocator::LayoutStepAppDirect::getExtentCapacityFromLay
 	for (std::map<std::string, config_goal>::const_iterator goalPair = layout.goals.begin();
 			goalPair != layout.goals.end(); goalPair++)
 	{
-		const config_goal &goal = goalPair->second;
+		if (goalPair->first != layout.reservedimmUid)
+		{
+			const config_goal &goal = goalPair->second;
 
-		extentCapacityGiB += configGoalSizeToGiB(goal.app_direct_1_size);
-		extentCapacityGiB += configGoalSizeToGiB(goal.app_direct_2_size);
+			extentCapacityGiB += configGoalSizeToGiB(goal.app_direct_1_size);
+			extentCapacityGiB += configGoalSizeToGiB(goal.app_direct_2_size);
+		}
 	}
 
 	return extentCapacityGiB;
@@ -315,11 +317,7 @@ bool core::memory_allocator::LayoutStepAppDirect::allRequestedCapacityAllocated(
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	NVM_UINT64 requestedCapacity = request.getAppDirectCapacityGiB();
-	NVM_UINT64 allocatedCapacity = 0;
-	if (m_extentIndex < layout.appDirectCapacities.size())
-	{
-		allocatedCapacity = layout.appDirectCapacities[m_extentIndex];
-	}
+	NVM_UINT64 allocatedCapacity = getExtentCapacityFromLayout(layout);
 
 	return (allocatedCapacity >= requestedCapacity);
 }

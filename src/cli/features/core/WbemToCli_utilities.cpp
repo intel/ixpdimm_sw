@@ -874,7 +874,7 @@ cli::framework::ErrorResult *cli::nvmcli::CoreExceptionToResult(std::exception &
 	if (pSettingsNotSupported != NULL)
 	{
 		return new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
-				TRS(BAD_REQUEST_APP_DIRECT_SETTINGS_NOT_RECOMMENDED_STR), prefix);
+				TRS(BAD_REQUEST_NOT_SUPPORTED_STR), prefix);
 	}
 
 	core::NvmExceptionRequestNotSupported *pRequestNotSupported =
@@ -891,14 +891,6 @@ cli::framework::ErrorResult *cli::nvmcli::CoreExceptionToResult(std::exception &
 	{
 		return new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
 				TRS(BAD_REQUEST_DIMM_SECURITY_STATE), prefix);
-	}
-
-	core::NvmExceptionBadRequestReserveDimm *pBadReserveDimmRequest =
-			dynamic_cast<core::NvmExceptionBadRequestReserveDimm *>(&e);
-	if (pBadReserveDimmRequest!= NULL)
-	{
-		return new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
-				TRS(BAD_REQUEST_RESERVE_DIMM_STR), prefix);
 	}
 
 	core::NvmExceptionTooManyAppDirectExtents *pTooManyAppDirect =

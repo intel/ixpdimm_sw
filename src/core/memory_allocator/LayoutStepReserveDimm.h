@@ -33,6 +33,7 @@
 #define _core_LOGIC_LAYOUTSTEPRESERVEDIMM_H_
 
 #include <core/memory_allocator/LayoutStep.h>
+#include "MemoryAllocationUtil.h"
 
 namespace core
 {
@@ -42,15 +43,28 @@ namespace memory_allocator
 class NVM_API LayoutStepReserveDimm : public LayoutStep
 {
 	public:
-		LayoutStepReserveDimm();
+		LayoutStepReserveDimm(MemoryAllocationUtil &util);
 		virtual ~LayoutStepReserveDimm();
 
 		virtual void execute(const MemoryAllocationRequest &request,
 				MemoryAllocationLayout &layout);
 
 	protected:
-		void setReserveDimmForStorage(const struct Dimm &reserveDimm,
+		MemoryAllocationUtil &m_memAllocUtil;
+
+		void verifyEnoughDimmsInRequest(const MemoryAllocationRequest &request);
+
+		void layoutReservedDimm(const MemoryAllocationRequest &request,
+				MemoryAllocationLayout &layout);
+		Dimm getReservedDimmFromRequest(const MemoryAllocationRequest &request);
+
+		void layoutReservedDimmForStorage(const Dimm &reserveDimm,
 				MemoryAllocationLayout& layout);
+		MemoryAllocationRequest getRequestForStorageReservedDimm(const Dimm &reserveDimm);
+
+		void layoutReservedDimmForAppDirect(const Dimm &reserveDimm,
+				MemoryAllocationLayout& layout);
+		MemoryAllocationRequest getRequestForAppDirectReservedDimm(const Dimm &reserveDimm);
 };
 
 } /* namespace memory_allocator */

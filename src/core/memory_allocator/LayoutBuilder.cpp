@@ -114,7 +114,7 @@ void core::memory_allocator::LayoutBuilder::populateOrderedLayoutStepsForRequest
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	// Reserve a DIMM before we get started laying out other capacity
-	m_layoutSteps.push_back(new LayoutStepReserveDimm());
+	m_layoutSteps.push_back(new LayoutStepReserveDimm(m_util));
 
 	m_layoutSteps.push_back(new LayoutStepMemory());
 	m_layoutSteps.push_back(new LayoutStepAppDirect(m_util));
