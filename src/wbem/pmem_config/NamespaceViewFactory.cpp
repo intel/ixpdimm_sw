@@ -527,26 +527,23 @@ std::string wbem::pmem_config::NamespaceViewFactory::namespaceMemoryPageAllocati
 std::string wbem::pmem_config::NamespaceViewFactory::getUnderlyingPMType(const struct namespace_details &ns)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	std::string pmTypeStr;
-	struct pool *pPool = NULL;
 
-	try
+	std::string pmTypeStr = TRS(mem_config::PMTYPE_UNKNOWN);
+
+	if (ns.type == NAMESPACE_TYPE_STORAGE)
 	{
-		pPool = wbem::mem_config::PoolViewFactory::getPool(ns.pool_uid);
-		wbem::framework::STR_LIST poolTypeList =
-				wbem::mem_config::PoolViewFactory::getPersistentMemoryType(pPool);
-
-		for (std::vector<std::string>::const_iterator i = poolTypeList.begin(); i != poolTypeList.end(); ++i)
-		{
-			pmTypeStr += *i;
-			if (i+1 != poolTypeList.end())
-				pmTypeStr += ", ";
-		}
+		pmTypeStr = TRS(mem_config::PMTYPE_STORAGE);
 	}
-	catch (framework::Exception &)
+	else if (ns.type == NAMESPACE_TYPE_APP_DIRECT)
 	{
-		delete pPool;
-		throw;
+		if (ns.interleave_format.ways == INTERLEAVE_WAYS_1)
+		{
+			pmTypeStr = mem_config::PMTYPE_APPDIRECT_NOTINTERLEAVED;
+		}
+		else if (ns.interleave_format.ways != INTERLEAVE_WAYS_0) // 0-way interleave is impossible
+		{
+			pmTypeStr = mem_config::PMTYPE_APPDIRECT;
+		}
 	}
 
 	return pmTypeStr;

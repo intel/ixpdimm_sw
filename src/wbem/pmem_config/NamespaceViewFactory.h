@@ -151,11 +151,6 @@ class NVM_API NamespaceViewFactory : public framework_interface::NvmInstanceFact
 		static NVM_UINT16 namespaceOptimizeToValue(const NVM_BOOL &btt);
 
 		/*
- 		 * Helper function to convert namespace security attributes to a security value
-		 */
-		static framework::UINT16_LIST namespaceSecurityToValue(struct namespace_security_features security);
-
-		/*
 		 * Helper function to convert namespace memory page allocation attribute to a memory page allocation string
 		 */
 		static std::string namespaceMemoryPageAllocationToStr(const enum namespace_memory_page_allocation allocation);
