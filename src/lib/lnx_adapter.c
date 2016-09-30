@@ -33,6 +33,7 @@
 #include "device_fw.h"
 #include "lnx_adapter.h"
 #include "smbios_utilities.h"
+#include "system_utilities.h"
 #include "system.h"
 #include <errno.h>
 #include <fcntl.h>
@@ -799,58 +800,6 @@ int send_ioctl_command(int fd, unsigned long request, void* parg)
 }
 
 /*
- * Find the core_id number of a given socket_id
- */
-unsigned int get_first_core_id(NVM_UINT16 socket_id)
-{
-	COMMON_LOG_ENTRY();
-	int rc = NVM_SUCCESS;
-
-	unsigned int socket_count;
-
-	if ((socket_count = get_socket_count()) > 0)
-	{
-		struct socket sockets[socket_count];
-		if (socket_count != get_sockets(sockets, socket_count))
-		{
-			rc = NVM_ERR_UNKNOWN;
-		}
-		else
-		{
-			int core_id = 0;
-			int found = 0;
-
-			for (int i = 0; i < socket_count && !found; i++)
-			{
-				if (sockets[i].id == socket_id)
-				{
-					found = 1;
-				}
-				else
-				{
-					core_id += sockets[i].logical_processor_count;
-				}
-			}
-
-			if (!found)
-			{
-				rc = NVM_ERR_BADSOCKET;
-			}
-			else
-			{
-				rc = core_id;
-			}
-		}
-	}
-	else
-	{
-		rc = NVM_ERR_UNKNOWN;
-	}
-	COMMON_LOG_EXIT_RETURN_I(rc);
-	return rc;
-}
-
-/*
  * Determine if power is limited
  * Return error code or whether or not power is limited
  */
@@ -859,10 +808,7 @@ int get_dimm_power_limited(NVM_UINT16 socket_id)
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
 
-	const unsigned short MSR_DRAM_POWER_LIMIT = 0x618;
-	const unsigned long long MSR_DRAM_POWER_LIMIT_ENABLE = 0x8000;
 	int core_id;
-
 	if ((core_id = get_first_core_id(socket_id)) >= 0)
 	{
 		int fd;

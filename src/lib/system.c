@@ -42,7 +42,6 @@
 #include "system.h"
 #include "device_utilities.h"
 #include "capabilities.h"
-#include "system.h"
 
 int fill_host_sku_status(struct host *p_host)
 {
