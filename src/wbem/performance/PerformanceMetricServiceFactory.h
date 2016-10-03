@@ -44,8 +44,6 @@ static const std::string PERFORMANCEMETRICSERVICE_CREATIONCLASSNAME = std::strin
 
 static const std::string PERFORMANCEMETRICSERVICE_NAME = "NVDIMM Performance Metric Service for ";
 
-static const wbem::framework::UINT16 PERFORMANCEMETRICSERVICE_DEFAULT_INTERVAL = 180;
-
 /*!
  * Provider Factory for PerformanceMetricService
  */
@@ -61,6 +59,9 @@ public:
 
 	framework::Instance* getInstance(framework::ObjectPath &path,
 		framework::attribute_names_t &attributes) throw (framework::Exception);
+
+	framework::Instance* modifyInstance(framework::ObjectPath &path, framework::attributes_t &attributes)
+		throw (framework::Exception);
 
 private:
 

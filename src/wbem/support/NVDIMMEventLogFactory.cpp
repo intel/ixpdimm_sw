@@ -39,7 +39,6 @@
 #include <LogEnterExit.h>
 #include <server/BaseServerFactory.h>
 #include <libinvm-cim/ExceptionBadParameter.h>
-#include <libinvm-cim/ExceptionBadAttribute.h>
 #include <libinvm-cim/ExceptionNoMemory.h>
 #include <libinvm-cim/ExceptionInvalidWqlQuery.h>
 #include <support/NVDIMMLogEntryFactory.h>
@@ -527,81 +526,91 @@ throw (wbem::framework::Exception)
 	return pInstance;
 }
 
-void wbem::support::NVDIMMEventLogFactory::updateNVDIMMEventLogInstance(const framework::attributes_t &attributes,
-		framework::Instance *pInstance)
+bool wbem::support::NVDIMMEventLogFactory::verifyEnabledState(
+		const framework::attributes_t& attributes,
+		framework::Instance* pInstance,
+		framework::Attribute& newEnabledAttribute)
 {
-	NVM_UINT16 oldEnabledState = 0;
 	NVM_UINT16 enabledState = 0;
-	NVM_UINT16 oldInterval = 0;
-	NVM_UINT16 newInterval = 0;
-	NVM_UINT64 oldMaxRecords = 0;
-	NVM_UINT64 maxRecords = 0;
-	bool isEnabled = 1;
-
-	framework::Attribute currentAttribute;
-	framework::Attribute newEnabledAttribute;
-	framework::Attribute newIntervalAttribute;
-	framework::Attribute newMaxRecordsAttribute;
-
-	// EnabledState attribute may have changed
-	getCurrentAttribute(ENABLEDSTATE_KEY, pInstance, currentAttribute);
-	if (getNewModifiableAttribute(ENABLEDSTATE_KEY, attributes, newEnabledAttribute))
+	bool isEnabled = false;
+	if (getNewModifiableAttribute(ENABLEDSTATE_KEY, attributes,	newEnabledAttribute))
 	{
-		oldEnabledState = (NVM_UINT16) currentAttribute.uintValue();
-		enabledState = (NVM_UINT16) newEnabledAttribute.uintValue();
-
-		switch(enabledState)
+		enabledState = (NVM_UINT16) (newEnabledAttribute.uintValue());
+		switch (enabledState)
 		{
 		case wbem::support::NVDIMMEVENTLOG_ENABLEDSTATE_ENABLED:
 			isEnabled = true;
 			break;
 		case wbem::support::NVDIMMEVENTLOG_ENABLEDSTATE_DISABLED:
-			isEnabled = false;
 			break;
 		default:
-			throw wbem::framework::ExceptionBadAttribute(wbem::ENABLEDSTATE_KEY.c_str());
+			throw wbem::framework::ExceptionBadParameter(
+					wbem::ENABLEDSTATE_KEY.c_str());
 		}
 	}
 
-	// Interval may have changed
-	getCurrentAttribute(INTERVAL_KEY, pInstance, currentAttribute);
+	return isEnabled;
+}
+
+NVM_UINT16 wbem::support::NVDIMMEventLogFactory::verifyInterval(
+		const framework::attributes_t& attributes,
+		framework::Instance* pInstance,
+		framework::Attribute& newIntervalAttribute)
+{
+	NVM_UINT16 newInterval = 0;
 	if (getNewModifiableAttribute(INTERVAL_KEY, attributes, newIntervalAttribute))
 	{
-		oldInterval = (NVM_UINT16) currentAttribute.uintValue();
 		newInterval = (NVM_UINT16) newIntervalAttribute.uintValue();
 		if (newInterval < 1)
 		{
-			throw framework::ExceptionBadAttribute(wbem::INTERVAL_KEY.c_str());
+			throw framework::ExceptionBadParameter(wbem::INTERVAL_KEY.c_str());
 		}
 	}
 
-	// MaxNumberOfRecords may have changed
-	getCurrentAttribute(MAXNUMBEROFRECORDS_KEY, pInstance, currentAttribute);
+	return newInterval;
+}
+
+NVM_UINT64 wbem::support::NVDIMMEventLogFactory::verifyMaxRecords(
+		const framework::attributes_t& attributes,
+		framework::Instance* pInstance,
+		framework::Attribute& newMaxRecordsAttribute)
+{
+	NVM_UINT64 maxRecords = 0;
 	if (getNewModifiableAttribute(MAXNUMBEROFRECORDS_KEY, attributes, newMaxRecordsAttribute))
 	{
-		oldMaxRecords = currentAttribute.uint64Value();
 		maxRecords = newMaxRecordsAttribute.uint64Value();
 		if (maxRecords > EVENT_LOG_MAX_BOUND)
 		{
-			throw framework::ExceptionBadAttribute(wbem::MAXNUMBEROFRECORDS_KEY.c_str());
+			throw framework::ExceptionBadParameter(wbem::MAXNUMBEROFRECORDS_KEY.c_str());
 		}
 	}
 
-	if (oldEnabledState != enabledState)
-	{
-		updateConfigTable(SQL_KEY_EVENT_MONITOR_ENABLED, (NVM_UINT64)isEnabled);
-		pInstance->setAttribute(ENABLEDSTATE_KEY, newEnabledAttribute);
-	}
-	if (oldInterval != newInterval)
-	{
-		updateConfigTable(SQL_KEY_EVENT_MONITOR_INTERVAL_MINUTES, (NVM_UINT64)newInterval);
-		pInstance->setAttribute(INTERVAL_KEY, newIntervalAttribute);
-	}
-	if (oldMaxRecords != maxRecords)
-	{
-		updateConfigTable(SQL_KEY_EVENT_LOG_MAX, maxRecords);
-		pInstance->setAttribute(MAXNUMBEROFRECORDS_KEY, newMaxRecordsAttribute);
-	}
+	return maxRecords;
+}
+
+void wbem::support::NVDIMMEventLogFactory::updateNVDIMMEventLogInstance(const framework::attributes_t &attributes,
+		framework::Instance *pInstance)
+{
+	framework::Attribute newEnabledAttribute;
+	bool isEnabled = verifyEnabledState(attributes, pInstance,
+			newEnabledAttribute);
+
+	framework::Attribute newIntervalAttribute;
+	NVM_UINT16 newInterval = verifyInterval(attributes, pInstance,
+		newIntervalAttribute);
+
+	framework::Attribute newMaxRecordsAttribute;
+	NVM_UINT64 maxRecords = verifyMaxRecords(attributes, pInstance,
+		newMaxRecordsAttribute);
+
+	updateConfigTable(SQL_KEY_EVENT_MONITOR_ENABLED, (NVM_UINT64)isEnabled);
+	pInstance->setAttribute(ENABLEDSTATE_KEY, newEnabledAttribute);
+
+	updateConfigTable(SQL_KEY_EVENT_MONITOR_INTERVAL_MINUTES, (NVM_UINT64)newInterval);
+	pInstance->setAttribute(INTERVAL_KEY, newIntervalAttribute);
+
+	updateConfigTable(SQL_KEY_EVENT_LOG_MAX, maxRecords);
+	pInstance->setAttribute(MAXNUMBEROFRECORDS_KEY, newMaxRecordsAttribute);
 }
 
 void wbem::support::NVDIMMEventLogFactory::updateConfigTable(const char *key, NVM_UINT64 value)

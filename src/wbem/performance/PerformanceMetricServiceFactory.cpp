@@ -32,6 +32,10 @@
 
 #include <server/BaseServerFactory.h>
 #include <libinvm-cim/ExceptionBadParameter.h>
+#include <persistence/config_settings.h>
+#include <persistence/lib_persistence.h>
+#include <framework_interface/FrameworkExtensions.h>
+#include <support/NVDIMMEventLogFactory.h>
 #include <performance/PerformanceMetricServiceFactory.h>
 
 wbem::performance::PerformanceMetricServiceFactory
@@ -117,10 +121,19 @@ throw (wbem::framework::Exception)
 		framework::Attribute elementNameAttr(PERFORMANCEMETRICSERVICE_NAME + hostName, false);
 		pInstance->setAttribute(wbem::ELEMENTNAME_KEY, elementNameAttr, attributes);
 
-		framework::Attribute enabledStateAttr((wbem::framework::UINT16)1, false);
+		int isEnabled;
+		framework::UINT16 enabled_state = wbem::support::NVDIMMEVENTLOG_ENABLEDSTATE_UNKNOWN;
+		if (get_config_value_int(SQL_KEY_EVENT_MONITOR_ENABLED, &isEnabled) == COMMON_SUCCESS)
+		{
+			enabled_state =
+				isEnabled ? wbem::support::NVDIMMEVENTLOG_ENABLEDSTATE_ENABLED : wbem::support::NVDIMMEVENTLOG_ENABLEDSTATE_DISABLED;
+		}
+		framework::Attribute enabledStateAttr(enabled_state, false);
 		pInstance->setAttribute(wbem::ENABLEDSTATE_KEY, enabledStateAttr, attributes);
 
-		framework::Attribute IntervalAttr(PERFORMANCEMETRICSERVICE_DEFAULT_INTERVAL, false);
+		int intervalMinutes = 0;
+		get_config_value_int(SQL_KEY_PERFORMANCE_MONITOR_INTERVAL_MINUTES, &intervalMinutes);
+		framework::Attribute IntervalAttr((wbem::framework::UINT16)intervalMinutes, false);
 		pInstance->setAttribute(wbem::INTERVAL_KEY, IntervalAttr, attributes);
 	}
 	catch (framework::Exception) // clean up and re-throw
@@ -175,4 +188,50 @@ wbem::framework::instance_names_t* wbem::performance::PerformanceMetricServiceFa
 	}
 
 	return pNames;
+}
+
+wbem::framework::Instance* wbem::performance::PerformanceMetricServiceFactory::modifyInstance(
+		framework::ObjectPath &path, framework::attributes_t &attributes)
+throw(framework::Exception)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	framework::Instance *pInstance = NULL;
+	try
+	{
+		framework::attribute_names_t modifiableAttributes;
+		modifiableAttributes.push_back(ENABLEDSTATE_KEY);
+		modifiableAttributes.push_back(INTERVAL_KEY);
+
+		framework::attribute_names_t attributeNames;
+		pInstance = getInstance(path, attributeNames);
+		if (pInstance)
+		{
+			checkAttributesAreModifiable(pInstance, attributes, modifiableAttributes);
+
+			framework::Attribute newEnabledAttribute;
+			bool isEnabled = support::NVDIMMEventLogFactory::verifyEnabledState(attributes, pInstance,
+					newEnabledAttribute);
+
+			framework::Attribute newIntervalAttribute;
+			NVM_UINT16 newInterval = support::NVDIMMEventLogFactory::verifyInterval(attributes, pInstance,
+					newIntervalAttribute);
+
+			support::NVDIMMEventLogFactory::updateConfigTable(SQL_KEY_EVENT_MONITOR_ENABLED, (NVM_UINT64)isEnabled);
+			pInstance->setAttribute(ENABLEDSTATE_KEY, newEnabledAttribute);
+
+			support::NVDIMMEventLogFactory::updateConfigTable(SQL_KEY_PERFORMANCE_MONITOR_INTERVAL_MINUTES, (NVM_UINT64)newInterval);
+			pInstance->setAttribute(INTERVAL_KEY, newIntervalAttribute);
+		}
+	}
+	catch (framework::Exception &)
+	{
+		if (pInstance)
+		{
+			delete pInstance;
+		}
+		throw;
+	}
+
+	return pInstance;
 }

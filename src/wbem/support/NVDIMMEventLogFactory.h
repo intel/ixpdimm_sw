@@ -162,8 +162,13 @@ class NVM_API NVDIMMEventLogFactory : public framework_interface::NvmInstanceFac
 		void updateNVDIMMEventLogInstance(const framework::attributes_t &attributes,
 			framework::Instance *pInstance);
 
-		void updateConfigTable(const char *key, NVM_UINT64 value);
+		static void updateConfigTable(const char *key, NVM_UINT64 value);
 
+		static bool verifyEnabledState(const framework::attributes_t& attributes,
+			framework::Instance* pInstance,framework::Attribute& newEnabledAttribute);
+
+		static NVM_UINT16 verifyInterval(const framework::attributes_t& attributes,
+			framework::Instance* pInstance,framework::Attribute& newIntervalAttribute);
 	private:
 		void populateAttributeList(framework::attribute_names_t &attributes)
 			throw (framework::Exception);
@@ -189,6 +194,8 @@ class NVM_API NVDIMMEventLogFactory : public framework_interface::NvmInstanceFac
 		EventLogFilter getEventFilterFromConditional(const framework::WqlConditional &conditional)
 			throw (framework::Exception);
 
+		NVM_UINT64 verifyMaxRecords(const framework::attributes_t& attributes,
+			framework::Instance* pInstance,framework::Attribute& newMaxRecordsAttribute);
 };
 
 } // support
