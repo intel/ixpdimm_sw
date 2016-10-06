@@ -48,8 +48,8 @@ namespace support
 	static const std::string SUPPORTDATASERVICE_NAME = "NVDIMM Support Service"; //!< Name static
 
 	static const std::string SUPPORTDATASERVICE_CREATE = "Create"; //!< extrinsic method name
-	static const std::string SUPPORTDATASERVICE_EXPORTTOURI = "ExportToUri"; //!< extrinsic method name
-	static const std::string SUPPORTDATASERVICE_EXPORTURI = "ExportUri"; //!< method param
+	static const std::string SUPPORTDATASERVICE_EXPORTTOURI = "ExportToURI"; //!< extrinsic method name
+	static const std::string SUPPORTDATASERVICE_EXPORTURI = "ExportURI"; //!< method param
 	static const std::string SUPPORTDATASERVICE_OMD_OBJPATH = "OpaqueManagementData"; //!< method param
 	static const std::string SUPPORTDATASERVICE_ELEMNAME = "ElementName"; //!< method param
 

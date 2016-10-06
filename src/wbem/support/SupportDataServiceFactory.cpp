@@ -149,7 +149,7 @@ wbem::framework::UINT32 wbem::support::SupportDataServiceFactory::executeMethod(
 			else
 			{
 				// call ExportToUri
-				exportToUri(inParms[SUPPORTDATASERVICE_EXPORTTOURI].stringValue());
+				exportToUri(inParms[SUPPORTDATASERVICE_EXPORTURI].stringValue());
 			}
 		}
 		else if (method == SUPPORTDATASERVICE_CREATE)
