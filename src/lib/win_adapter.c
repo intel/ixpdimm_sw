@@ -434,32 +434,33 @@ int get_topology(const NVM_UINT8 count, struct nvm_topology *p_dimm_topo)
 						p_dimm_topo[i].vendor_id =
 							p_ioctl_data->OutputPayload.TopologiesList[i].VendorId;
 						p_dimm_topo[i].device_id =
-							p_ioctl_data->OutputPayload.TopologiesList[i].DeviceId;
+							SWAP_SHORT(p_ioctl_data->OutputPayload.TopologiesList[i].DeviceId);
 						p_dimm_topo[i].revision_id =
 							p_ioctl_data->OutputPayload.TopologiesList[i].RevisionId;
 						p_dimm_topo[i].subsystem_vendor_id =
-								p_ioctl_data->OutputPayload.TopologiesList[i].SubsystemVendorId;
+							p_ioctl_data->OutputPayload.TopologiesList[i].SubsystemVendorId;
 						p_dimm_topo[i].subsystem_device_id =
-								p_ioctl_data->OutputPayload.TopologiesList[i].SubsystemDeviceId;
+							SWAP_SHORT(p_ioctl_data->OutputPayload.TopologiesList[i].
+								SubsystemDeviceId);
 						p_dimm_topo[i].subsystem_revision_id =
-								p_ioctl_data->OutputPayload.TopologiesList[i].SubsystemRevisionId;
+							p_ioctl_data->OutputPayload.TopologiesList[i].SubsystemRevisionId;
 						p_dimm_topo[i].manufacturing_info_valid =
-								p_ioctl_data->OutputPayload.TopologiesList[i].
-									ManufacturingInfoValid;
+							p_ioctl_data->OutputPayload.TopologiesList[i].
+								ManufacturingInfoValid;
 						p_dimm_topo[i].manufacturing_location =
-								p_ioctl_data->OutputPayload.TopologiesList[i].ManufacturingLocation;
+							p_ioctl_data->OutputPayload.TopologiesList[i].ManufacturingLocation;
 						p_dimm_topo[i].manufacturing_date =
-								p_ioctl_data->OutputPayload.TopologiesList[i].ManufacturingDate;
+							p_ioctl_data->OutputPayload.TopologiesList[i].ManufacturingDate;
 
 						uint32_to_bytes(p_ioctl_data->OutputPayload.TopologiesList[i].SerialNumber,
 								p_dimm_topo[i].serial_number, NVM_SERIAL_LEN);
 
 						copy_interface_fmt_codes(&(p_dimm_topo[i]),
-								&(p_ioctl_data->OutputPayload.TopologiesList[i]));
+							&(p_ioctl_data->OutputPayload.TopologiesList[i]));
 
 						int mem_type = get_device_memory_type_from_smbios_table(
-								p_smbios_table, smbios_table_size,
-								p_dimm_topo[i].id);
+							p_smbios_table, smbios_table_size,
+							p_dimm_topo[i].id);
 						if (mem_type < 0)
 						{
 							KEEP_ERROR(rc, mem_type);

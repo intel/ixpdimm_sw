@@ -53,6 +53,9 @@ extern "C"
 			(((arr[1] >> 4) & 0xF) * 1000) + (arr[1] & 0xF) * 100 + \
 			(((arr[0] >> 4) & 0xF) * 10) + (arr[0] & 0xF));
 
+#define	SWAP_SHORT(x) \
+	(((x & 0xFF) << 8) + ((x & 0xFF00) >> 8))
+
 int exists_and_manageable(const NVM_UID device_uid, struct device_discovery *p_dev,
 		NVM_BOOL check_manageability);
 
