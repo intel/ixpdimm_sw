@@ -36,6 +36,7 @@
 #include <persistence/config_settings.h>
 #include <persistence/lib_persistence.h>
 
+#include <libinvm-cim/ExceptionBadAttribute.h>
 #include <libinvm-cim/ExceptionBadParameter.h>
 #include <libinvm-cim/ExceptionNoMemory.h>
 #include "BaseServerFactory.h"
@@ -196,6 +197,60 @@ wbem::framework::instance_names_t* wbem::server::BaseServerFactory::getInstanceN
 }
 
 /*
+ * Modify a BaseServer instance. Only Loglevel can be modified
+ */
+wbem::framework::Instance *wbem::server::BaseServerFactory::modifyInstance(wbem::framework::ObjectPath &path,
+				wbem::framework::attributes_t &attributes)throw (framework::Exception)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	framework::Instance *pInstance = NULL;
+	try
+	{
+		framework::attribute_names_t modifiableAttributes;
+		modifiableAttributes.push_back(LOGLEVEL_KEY);
+
+		framework::attribute_names_t attributeNames;
+		pInstance = getInstance(path, attributeNames);
+
+		checkAttributesAreModifiable(pInstance, attributes, modifiableAttributes);
+
+		framework::Attribute currentAttribute;
+		framework::Attribute newAttribute;
+		NVM_UINT16 oldLogLevel;
+		NVM_UINT16 newLogLevel;
+
+		getCurrentAttribute(LOGLEVEL_KEY, pInstance, currentAttribute);
+		if (getNewModifiableAttribute(LOGLEVEL_KEY, attributes, newAttribute))
+		{
+			oldLogLevel = (NVM_UINT16) currentAttribute.uintValue();
+			newLogLevel = (NVM_UINT16) newAttribute.uintValue();
+
+			if (newLogLevel == BASESERVER_LOGLEVEL_ERROR || newLogLevel == BASESERVER_LOGLEVEL_DEBUG_ENABLED)
+			{
+				if (oldLogLevel != newLogLevel)
+				{
+					COMMON_LOG_INFO_F("LogLevel changing to %d",
+							newLogLevel);
+					setDebugLogging(newLogLevel);
+					pInstance->setAttribute(LOGLEVEL_KEY, newAttribute);
+				}
+			}
+			else
+			{
+				throw wbem::framework::ExceptionBadAttribute(LOGLEVEL_KEY.c_str());
+			}
+		}
+	}
+	catch (framework::Exception &)
+	{
+		delete pInstance;
+		throw;
+	}
+	return pInstance;
+}
+
+/*
  * Add a default simulator to be loaded when the nvm library is loaded
  */
 void wbem::server::BaseServerFactory::addDefaultSimulator(std::string fileName)
@@ -235,6 +290,17 @@ void wbem::server::BaseServerFactory::setDebugLogging(int logSetting)
 	int rc = nvm_toggle_debug_logging(logSetting);
 	if (rc != NVM_SUCCESS)
 	{
+		throw exception::NvmExceptionLibError(rc);
+	}
+	// Sync the lib loglevel to wbem copy of loglevel
+	int level = LOGGING_LEVEL_ERROR; // errors only
+	if (logSetting)
+	{
+		level = LOGGING_LEVEL_DEBUG; // all on
+	}
+	if (!set_current_log_level(level))
+	{
+		rc = NVM_ERR_UNKNOWN;
 		throw exception::NvmExceptionLibError(rc);
 	}
 }

@@ -48,7 +48,8 @@ namespace server
 	static const NVM_UINT16 BASESERVER_OPSTATUS_OK = 2;
 	static const NVM_UINT16 BASESERVER_OPSTATUS_MIXEDSKU = 32768;
 	static const NVM_UINT16 BASESERVER_OPSTATUS_SKUVIOLATION = 32769;
-
+	static const NVM_UINT16 BASESERVER_LOGLEVEL_ERROR = 0;
+	static const NVM_UINT16 BASESERVER_LOGLEVEL_DEBUG_ENABLED = 1;
 	/*!
 	 * Utility function to retrieve the host name as a standard string.
 	 * @return - std::string version of the network name of the host.
@@ -94,6 +95,8 @@ class NVM_API BaseServerFactory : public framework_interface::NvmInstanceFactory
 		 */
 		framework::instance_names_t* getInstanceNames() throw (framework::Exception);
 
+		wbem::framework::Instance* modifyInstance(wbem::framework::ObjectPath &path,
+				wbem::framework::attributes_t &attributes)throw (framework::Exception);
 		/*
 		 * Internal extrinsic methods
 		 */
