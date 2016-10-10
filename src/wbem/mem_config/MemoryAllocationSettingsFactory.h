@@ -116,16 +116,6 @@ public:
 	 */
 	static bool isADeviceUid(const NVM_UID uid);
 
-	/*
-	 * Return true if the instance is a memory mode, goal config instance
-	 */
-	bool isMemoryModeGoalConfigInstance(const framework::Instance* pInstance);
-
-	/*
-	 * Return true if the instance is a app direct, goal config instance
-	 */
-	bool isAppDirectGoalConfigInstance(const framework::Instance* pInstance);
-
 private:
 	/*
 	 * Return the uid generated from the settings instance
@@ -306,6 +296,11 @@ private:
 	 */
 	InterleaveSet getInterleaveSetFromGoals
 		(const physical_asset::devices_t &devices, std::string instanceIdStr);
+
+	void getUnmappedInstanceFromGoals(framework::Instance *pInstance,
+			const std::string instanceIdStr,
+			const framework::attribute_names_t attributes,
+			const physical_asset::devices_t &devices);
 
 	/*
 	 * Add the ilsets from the goal struct to the vector of ilsets

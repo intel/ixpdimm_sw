@@ -192,10 +192,14 @@ void wbem::mem_config::MemoryAllocationSettingsFactory::finishGoalInstance(
 		NVM_UINT64 reservation = getMemoryReservationFromGoals(devices, instanceIdStr);
 		finishMemoryOrStorageInstance(pInstance, reservation, attributes);
 	}
-	else // app direct
+	else if (isAppDirectMemory(instanceIdStr))
 	{
 		InterleaveSet ilset = getInterleaveSetFromGoals(devices, instanceIdStr);
 		finishAppDirectInstance(pInstance, ilset, attributes);
+	}
+	else // unmapped
+	{
+		getUnmappedInstanceFromGoals(pInstance, instanceIdStr, attributes, devices);
 	}
 }
 
@@ -271,7 +275,7 @@ void wbem::mem_config::MemoryAllocationSettingsFactory::finishAppDirectInstance(
 		pInstance->setAttribute(CONTROLLERINTERLEAVESIZE_KEY, a, attributes);
 	}
 
-	// Replication - "Local replication" for mirrored interleave set, otherswise "Not Replicated"
+	// Replication - "Local replication" for mirrored interleave set, otherwise "Not Replicated"
 	if (containsAttribute(REPLICATION_KEY, attributes))
 	{
 		NVM_UINT16 replication = ilset.getReplication();
@@ -424,6 +428,43 @@ wbem::mem_config::InterleaveSet
 	}
 
 	return ilsets[interleaveSetIndex];
+}
+
+void wbem::mem_config::MemoryAllocationSettingsFactory::getUnmappedInstanceFromGoals
+(framework::Instance *pInstance, const std::string instanceIdStr,
+		const framework::attribute_names_t attributes,
+		const physical_asset::devices_t &devices)
+{
+	NVM_UINT16 socketId = getSocketId(instanceIdStr);
+
+	for (size_t i = 0; i < devices.size(); i++)
+	{
+		if (devices[i].socket_id == socketId)
+		{
+			NVM_UINT64 reservation = 0;
+			struct config_goal goal;
+			memset(&goal, 0, sizeof(struct config_goal));
+			int rc = nvm_get_config_goal(devices[i].uid, &goal);
+			if (rc == NVM_SUCCESS)
+			{
+				reservation += devices[i].capacity -
+						(goal.memory_size * BYTES_PER_GIB +
+								goal.app_direct_1_size * BYTES_PER_GIB +
+								goal.app_direct_2_size * BYTES_PER_GIB);
+			}
+			else if (rc != NVM_ERR_NOTFOUND)
+			{
+				COMMON_LOG_ERROR("Could not retrieve config_goal");
+				throw exception::NvmExceptionLibError(rc);
+			}
+
+			if (reservation)
+			{
+				finishMemoryOrStorageInstance(pInstance, reservation, attributes);
+			}
+		}
+	}
+
 }
 
 NVM_UINT64 wbem::mem_config::MemoryAllocationSettingsFactory::getUnmappedReservationFromPools
@@ -852,44 +893,6 @@ bool wbem::mem_config::MemoryAllocationSettingsFactory::isMemoryModeCurrentConfi
 	return isMemory;
 }
 
-bool wbem::mem_config::MemoryAllocationSettingsFactory::isMemoryModeGoalConfigInstance
-	(const framework::Instance* pInstance)
-{
-	bool isMemory = false;
-	wbem::framework::Attribute attr;
-
-	pInstance->getAttribute(wbem::INSTANCEID_KEY, attr);
-
-	char instanceType = getInstanceType(attr.stringValue());
-	char regionType = getRegionType(attr.stringValue());
-
-	if (instanceType == GOAL_CONFIG &&
-		regionType == MEMORY_MODE_PREFIX)
-	{
-		isMemory = true;
-	}
-	return isMemory;
-}
-
-bool wbem::mem_config::MemoryAllocationSettingsFactory::isAppDirectGoalConfigInstance
-	(const framework::Instance* pInstance)
-{
-	bool isAppDirect = false;
-	wbem::framework::Attribute attr;
-
-	pInstance->getAttribute(wbem::INSTANCEID_KEY, attr);
-
-	char instanceType = getInstanceType(attr.stringValue());
-	char regionType = getRegionType(attr.stringValue());
-
-	if (instanceType == GOAL_CONFIG &&
-		regionType == APP_DIRECT_PREFIX)
-	{
-		isAppDirect = true;
-	}
-	return isAppDirect;
-}
-
 /*
  * This section of code implements getInstanceNames
  */
@@ -1060,6 +1063,19 @@ wbem::mem_config::StringListType wbem::mem_config::MemoryAllocationSettingsFacto
 							"%02u.%c.%04u.%c", (*devIter).socket_id, APP_DIRECT_PREFIX,
 							appDirectIds[goal.app_direct_1_set_id], GOAL_CONFIG);
 					names.push_back(appDirectName);
+				}
+
+				NVM_UINT64 unmappedPerDimm = ((*devIter).capacity/ BYTES_PER_GIB) -
+						(goal.app_direct_1_size + goal.app_direct_2_size + goal.memory_size);
+				if (unmappedPerDimm > 0)
+				{
+					char unmappedName[MEMORYALLOCATIONSETTINGS_INSTANCEID_LEN + 1];
+					s_snprintf(unmappedName, MEMORYALLOCATIONSETTINGS_INSTANCEID_LEN + 1,
+							"%02u.%c.%02u%02u.%c", (*devIter).socket_id, STORAGE_PREFIX,
+							(*devIter).memory_controller_id,
+							(*devIter).channel_id,
+							GOAL_CONFIG);
+					names.push_back(unmappedName);
 				}
 			}
 			else if (rc != NVM_ERR_NOTFOUND)
