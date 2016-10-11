@@ -375,8 +375,8 @@ class <NVM_WBEM_PREFIX>NVDIMMDiagnostic : CIM_DiagnosticTest
           "cannot be invoked \"at this time\". It is not an error "
           "condition, but signals that the provider is doing "
           "something else and cannot respond." ),
-       ValueMap { "0", "1", "4", "5" },
-       Values { "Success", "Not Supported", "Failed", "Invalid Parameter" }]
+       ValueMap { "0", "1", "4", "5", "32769" },
+       Values { "Success", "Not Supported", "Failed", "Invalid Parameter", "Diagnostic completed with error" }]
    uint32 RunDiagnosticService(
          [IN, Description (
              "Specifies the element upon which the "

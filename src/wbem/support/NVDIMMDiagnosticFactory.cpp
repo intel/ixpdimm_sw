@@ -41,6 +41,7 @@
 #include "DiagnosticIdentityFactory.h"
 #include <server/BaseServerFactory.h>
 #include <exception/NvmExceptionLibError.h>
+#include <exception/NvmExceptionDiagnosticError.h>
 #include <framework_interface/NvmAssociationFactory.h>
 #include <physical_asset/NVDIMMFactory.h>
 #include <software/ElementSoftwareIdentityFactory.h>
@@ -98,7 +99,7 @@ wbem::framework::Instance* wbem::support::NVDIMMDiagnosticFactory::getInstance(
 	std::string name = path.getKeyValue(NAME_KEY).stringValue();
 	if (!testTypeValid(name))
 	{
-			throw framework::ExceptionBadParameter(NAME_KEY.c_str());
+		throw framework::ExceptionBadParameter(NAME_KEY.c_str());
 	}
 
 	// create the instance, initialize with attributes from the path
@@ -227,6 +228,10 @@ wbem::framework::UINT32 wbem::support::NVDIMMDiagnosticFactory::executeMethod(
 			wbemRc = NVDIMMDIAGNOSTIC_ERR_FAILED;
 		}
 	}
+	catch(exception::NvmExceptionDiagnosticError &e)
+	{
+		wbemRc = NVDIMMDIAGNOSTIC_ERR_FAILED_WITH_ERRORS;
+	}
 	catch(framework::Exception &)
 	{
 		wbemRc = NVDIMMDIAGNOSTIC_ERR_FAILED;
@@ -255,7 +260,14 @@ void wbem::support::NVDIMMDiagnosticFactory::RunDiagnosticService(NVM_UID device
 	if ((rc = m_RunDiagProvider(device_uid,
 			&diags, &results)) != NVM_SUCCESS)
 	{
-		throw exception::NvmExceptionLibError(rc);
+		if (results > 0)
+		{
+			throw exception::NvmExceptionDiagnosticError(rc);
+		}
+		else
+		{
+			throw exception::NvmExceptionLibError(rc);
+		}
 	}
 }
 
