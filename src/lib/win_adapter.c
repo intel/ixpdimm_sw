@@ -452,7 +452,12 @@ int get_topology(const NVM_UINT8 count, struct nvm_topology *p_dimm_topo)
 						p_dimm_topo[i].manufacturing_date =
 							p_ioctl_data->OutputPayload.TopologiesList[i].ManufacturingDate;
 
-						uint32_to_bytes(p_ioctl_data->OutputPayload.TopologiesList[i].SerialNumber,
+						unsigned int serial_number =
+								p_ioctl_data->OutputPayload.TopologiesList[i].SerialNumber;
+						unsigned int swapped_serial;
+						swap_bytes((unsigned char *)(&swapped_serial),
+								(unsigned char *)(&serial_number), sizeof (serial_number));
+						uint32_to_bytes(swapped_serial,
 								p_dimm_topo[i].serial_number, NVM_SERIAL_LEN);
 
 						copy_interface_fmt_codes(&(p_dimm_topo[i]),

@@ -181,6 +181,10 @@ int dimm_has_namespaces_of_type(const NVM_NFIT_DEVICE_HANDLE dimm_handle,
  * Helper function to convert unsigned integer to bytes
  */
 void uint32_to_bytes(unsigned long val, unsigned char *arr, size_t len);
+/*
+ * Helper to swap bytes
+ */
+void swap_bytes(unsigned char *p_dest, unsigned char *p_src, size_t len);
 
 #ifdef __cplusplus
 }

@@ -335,7 +335,10 @@ int get_topology(const NVM_UINT8 count, struct nvm_topology *p_dimm_topo)
 						}
 
 						unsigned int serial_number = ndctl_dimm_get_serial(dimm);
-						uint32_to_bytes(serial_number, p_dimm_topo[dimm_index].serial_number,
+						unsigned int swapped_serial;
+						swap_bytes((unsigned char *)(&swapped_serial),
+								(unsigned char *)(&serial_number), sizeof (serial_number));
+						uint32_to_bytes(swapped_serial, p_dimm_topo[dimm_index].serial_number,
 								NVM_SERIAL_LEN);
 
 						// TODO US14147 - Copy multiple IFCs from driver

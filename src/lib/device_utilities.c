@@ -986,3 +986,11 @@ void uint32_to_bytes(unsigned long val, unsigned char *arr, size_t len)
 		arr[i] = (unsigned char)(((0x000000FF << (i * 8)) & val) >> (i * 8));
 	}
 }
+
+void swap_bytes(unsigned char *p_dest, unsigned char *p_src, size_t len)
+{
+	for (unsigned int i = 0; i < len; i++)
+	{
+		p_dest[(len - 1) - i] = p_src[i];
+	}
+}
