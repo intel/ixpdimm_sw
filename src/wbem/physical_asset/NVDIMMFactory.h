@@ -77,6 +77,10 @@ static const NVM_UINT16 NVDIMM_MEMORYTYPECAPABILITIES_MEMORYMODE = 0;
 static const NVM_UINT16 NVDIMM_MEMORYTYPECAPABILITIES_STORAGEMODE = 1;
 static const NVM_UINT16 NVDIMM_MEMORYTYPECAPABILITIES_APPDIRECTMODE = 2;
 
+static const NVM_UINT16 NVDIMM_MEMORYTYPE_UNKNOWN = 0;
+static const NVM_UINT16 NVDIMM_MEMORYTYPE_DDR4 = 20;
+static const NVM_UINT16 NVDIMM_MEMORYTYPE_AEP_DIMM = 21;
+
 static const NVM_UINT16 NVDIMM_OPSTATUS_UNKNOWN = 0;
 static const NVM_UINT16 NVDIMM_OPSTATUS_OK = 2;
 static const NVM_UINT16 NVDIMM_OPSTATUS_DEGRADED = 3;
@@ -176,6 +180,7 @@ public:
 
 	static wbem::framework::UINT16_LIST deviceStatusToOpStatus(
 			core::device::Device &device);
+	static wbem::framework::UINT16 getNvdimmMemoryType(core::device::Device &device);
 
 	static void toInstance(core::device::Device &nvdimm, framework::Instance &instance,
 			wbem::framework::attribute_names_t attributes);

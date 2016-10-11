@@ -670,6 +670,29 @@ wbem::framework::UINT16_LIST NVDIMMFactory::deviceStatusToOpStatus(
 	return opStatus;
 }
 
+wbem::framework::UINT16 NVDIMMFactory::getNvdimmMemoryType(
+		core::device::Device &device)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	wbem::framework::UINT16 nvdimmMemoryType = NVDIMM_MEMORYTYPE_UNKNOWN;
+
+	switch (device.getMemoryType())
+	{
+	case MEMORY_TYPE_DDR4:
+		nvdimmMemoryType = NVDIMM_MEMORYTYPE_DDR4;
+		break;
+	case MEMORY_TYPE_NVMDIMM:
+		nvdimmMemoryType = NVDIMM_MEMORYTYPE_AEP_DIMM;
+		break;
+	case MEMORY_TYPE_UNKNOWN:
+	default:
+		COMMON_LOG_WARN_F("Unrecognized memory type: %d", device.getMemoryType());
+	}
+
+	return nvdimmMemoryType;
+}
+
 void NVDIMMFactory::toInstance(core::device::Device &device,
 		wbem::framework::Instance &instance, wbem::framework::attribute_names_t attributes)
 {
@@ -689,7 +712,8 @@ void NVDIMMFactory::toInstance(core::device::Device &device,
 	ADD_ATTRIBUTE(instance, attributes, REMOVALCONDITIONS_KEY, framework::UINT16, NOT_APPLICABLE);
 	ADD_ATTRIBUTE(instance, attributes, MEMORYCONTROLLERID_KEY, framework::UINT16,
 			device.getMemoryControllerId());
-	ADD_ATTRIBUTE(instance, attributes, MEMORYTYPE_KEY, framework::UINT16, device.getMemoryType());
+	ADD_ATTRIBUTE(instance, attributes, MEMORYTYPE_KEY, framework::UINT16,
+			getNvdimmMemoryType(device));
 	ADD_ATTRIBUTE(instance, attributes, SERIALNUMBER_KEY, framework::STR, device.getSerialNumber());
 	ADD_ATTRIBUTE(instance, attributes, SUBSYSTEMVENDORID_KEY, framework::UINT32,
 			device.getSubsystemVendor());
