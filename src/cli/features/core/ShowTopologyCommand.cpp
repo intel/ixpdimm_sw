@@ -48,7 +48,7 @@ ShowTopologyCommand::ShowTopologyCommand(core::device::TopologyService &service)
 {
 	m_props.addOther("MemoryType", &core::device::Topology::getMemoryType, &convertMemoryType).setIsDefault();
 	m_props.addUint64("Capacity", &core::device::Topology::getRawCapacity, &convertCapacity).setIsDefault();
-	m_props.addCustom("DimmId", getDimmId).setIsRequired();
+	m_props.addCustom("DimmID", getDimmId).setIsRequired();
 	m_props.addUint16("PhysicalID", &core::device::Topology::getPhysicalID).setIsDefault();
 	m_props.addStr("DeviceLocator", &core::device::Topology::getDeviceLocator).setIsDefault();
 	m_props.addUint16("SocketID", &core::device::Topology::getSocketId);
