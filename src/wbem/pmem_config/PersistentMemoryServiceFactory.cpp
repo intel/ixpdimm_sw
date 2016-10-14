@@ -43,6 +43,7 @@
 #include <exception/NvmExceptionLibError.h>
 #include <lib_interface/NvmApi.h>
 #include <core/Helper.h>
+#include <math.h>
 
 wbem::pmem_config::PersistentMemoryServiceFactory::PersistentMemoryServiceFactory()
 throw (framework::Exception)
@@ -457,12 +458,17 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::allocateFromPool(
 				COMMON_LOG_ERROR_F("Invalid block size in object path: %s", blockSizeStr.c_str());
 				throw framework::ExceptionBadParameter(PM_SERVICE_GOAL.c_str());
 			}
+			// calulate blocksize from blocksize str
+			NVM_UINT64 blockSize = blocksizestr_to_int(blockSizeStr);
 
 			// get block count from goal
 			wbem::framework::Attribute reservationAttribute;
 			pGoalInstance->getAttribute(wbem::RESERVATION_KEY, reservationAttribute);
-			NVM_UINT64 blockCount = reservationAttribute.uint64Value();
-
+			NVM_UINT64 blockCount = 0;
+			if (blockSize)
+			{
+				blockCount = ceil(reservationAttribute.uint64Value()/blockSize);
+			}
 			if (blockCount == 0)
 			{
 				COMMON_LOG_ERROR_F("Invalid block count in object path: %llu", blockCount);
@@ -534,7 +540,7 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::allocateFromPool(
 
 				wbem::pmem_config::PersistentMemoryServiceFactory::createNamespace(namespaceUidStr,
 					poolUidStr, initialState,
-					friendlyNameStr, blocksizestr_to_int(blockSizeStr), blockCount, type, optimize,
+					friendlyNameStr, blockSize, blockCount, type, optimize,
 					encryption, eraseCapable,
 					channelSize, controllerSize, false, memoryPageAllocation);
 			}
@@ -542,7 +548,7 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::allocateFromPool(
 			{
 				wbem::pmem_config::PersistentMemoryServiceFactory::createNamespace(namespaceUidStr,
 					poolUidStr, initialState,
-					friendlyNameStr, blocksizestr_to_int(blockSizeStr), blockCount, type, optimize,
+					friendlyNameStr, blockSize, blockCount, type, optimize,
 					encryption, eraseCapable,
 					wbem::mem_config::MEMORYALLOCATIONSETTINGS_EXPONENT_UNKNOWN,
 					wbem::mem_config::MEMORYALLOCATIONSETTINGS_EXPONENT_UNKNOWN, false,
