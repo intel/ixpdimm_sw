@@ -1488,14 +1488,6 @@ struct pt_payload_fw_image_info {
 	unsigned char rsvd1[10];
 
 	/*
-	 * Contains info regarding updated/downloaded/staged FW via update FW cmd:
-	 * 		0x00 - no new fw staged
-	 * 		0x01 - new fw has been staged for execution
-	 * 		0xFF-0x02 - reserved
-	 */
-	unsigned char staged_fw_status;
-
-	/*
 	 * Contains BCD formatted revision of the FW in aa.bb.cc.dddd format
 	 */
 	unsigned char staged_fw_rev[DEV_FW_REV_LEN];
@@ -1505,7 +1497,7 @@ struct pt_payload_fw_image_info {
 	 */
 	unsigned char staged_fw_type;
 
-	unsigned char rsvd2[9];
+	unsigned char rsvd2[10];
 
 	/*
 	 * Contains commit identifier of the active FW for debug/troubleshooting purposes

@@ -371,7 +371,6 @@ Attributes:
 	unsigned int device_handle(PK)
 	char * fw_rev
 	unsigned int fw_type
-	unsigned int staged_fw_status
 	char * staged_fw_rev
 	unsigned int staged_fw_type
 	char * commit_id
