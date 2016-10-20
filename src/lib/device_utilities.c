@@ -335,11 +335,14 @@ int get_ars_status(const NVM_NFIT_DEVICE_HANDLE dimm_handle, enum device_ars_sta
 	struct pt_payload_long_op_stat long_op_payload;
 	memset(&long_op_payload, 0, sizeof (long_op_payload));
 	rc = fw_get_status_for_long_op(dimm_handle, &long_op_payload);
-	if (rc != NVM_SUCCESS)
+	if (rc == NVM_ERR_DEVICEERROR)
+	{
+		*p_ars_status = DEVICE_ARS_STATUS_NOTSTARTED;
+		rc = NVM_SUCCESS;
+	}
+	else if (rc != NVM_SUCCESS)
 	{
 		*p_ars_status = DEVICE_ARS_STATUS_UNKNOWN;
-		COMMON_LOG_ERROR_F("Failed to retrieve the ARS long operation status with error %d",
-			rc);
 	}
 	else
 	{
