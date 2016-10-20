@@ -276,14 +276,17 @@ enum namespace_memory_page_allocation wbem::pmem_config::PersistentMemoryService
 /*
  * Helper function to convert block size string to block size int
  */
-NVM_UINT64 blocksizestr_to_int(std::string blockSizeStr)
+NVM_UINT64 wbem::pmem_config::PersistentMemoryServiceFactory::getBlockSizeInBytes(
+		const std::string &blockSizeWithPrefix)
 {
-	NVM_UINT16 size;
-	std::string s = "bytes*";
-	std::string::size_type i = blockSizeStr.find(s);
+	NVM_UINT64 size = 0;
+	std::string prefix = "bytes*";
+	size_t i = blockSizeWithPrefix.find(prefix);
 	if (i != std::string::npos)
-		blockSizeStr.erase(i, s.length());
-	size = (NVM_UINT64)atoi(blockSizeStr.c_str());
+	{
+		std::string blockSizeBytesStr = blockSizeWithPrefix.substr(i + prefix.length());
+		size = strtoull(blockSizeBytesStr.c_str(), NULL, 10);
+	}
 	return size;
 }
 
@@ -439,36 +442,51 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::allocateFromPool(
 		try
 		{
 			// get InitialState from goal
+			NVM_UINT16 initialState = PM_SERVICE_NAMESPACE_ENABLE_STATE_ENABLED;
 			wbem::framework::Attribute initialStateAttribute;
-			pGoalInstance->getAttribute(wbem::INITIALSTATE_KEY, initialStateAttribute);
-			NVM_UINT16 initialState = initialStateAttribute.uintValue();
+			if (pGoalInstance->getAttribute(wbem::INITIALSTATE_KEY, initialStateAttribute) ==
+					wbem::framework::SUCCESS)
+			{
+				initialState = initialStateAttribute.uintValue();
+			}
 
 			// get friendly name from goal
+			std::string friendlyNameStr;
 			wbem::framework::Attribute elementAttribute;
-			pGoalInstance->getAttribute(wbem::ELEMENTNAME_KEY, elementAttribute);
-			std::string friendlyNameStr = elementAttribute.stringValue();
+			if (pGoalInstance->getAttribute(wbem::ELEMENTNAME_KEY, elementAttribute) ==
+					wbem::framework::SUCCESS)
+			{
+				friendlyNameStr = elementAttribute.stringValue();
+			}
 
 			// get block size from goal
+			std::string blockSizeStr;
 			wbem::framework::Attribute allocationAttribute;
-			pGoalInstance->getAttribute(wbem::ALLOCATIONUNITS_KEY, allocationAttribute);
-			std::string blockSizeStr = allocationAttribute.stringValue();
+			if (pGoalInstance->getAttribute(wbem::ALLOCATIONUNITS_KEY, allocationAttribute) ==
+					wbem::framework::SUCCESS)
+			{
+				blockSizeStr = allocationAttribute.stringValue();
+			}
 
 			if (blockSizeStr.empty())
 			{
 				COMMON_LOG_ERROR_F("Invalid block size in object path: %s", blockSizeStr.c_str());
 				throw framework::ExceptionBadParameter(PM_SERVICE_GOAL.c_str());
 			}
-			// calulate blocksize from blocksize str
-			NVM_UINT64 blockSize = blocksizestr_to_int(blockSizeStr);
+			NVM_UINT64 blockSize = getBlockSizeInBytes(blockSizeStr);
 
 			// get block count from goal
-			wbem::framework::Attribute reservationAttribute;
-			pGoalInstance->getAttribute(wbem::RESERVATION_KEY, reservationAttribute);
 			NVM_UINT64 blockCount = 0;
-			if (blockSize)
+			wbem::framework::Attribute reservationAttribute;
+			if (pGoalInstance->getAttribute(wbem::RESERVATION_KEY, reservationAttribute) ==
+					wbem::framework::SUCCESS)
 			{
-				blockCount = ceil(reservationAttribute.uint64Value()/blockSize);
+				if (blockSize)
+				{
+					blockCount = ceil(reservationAttribute.uint64Value()/blockSize);
+				}
 			}
+
 			if (blockCount == 0)
 			{
 				COMMON_LOG_ERROR_F("Invalid block count in object path: %llu", blockCount);
@@ -476,9 +494,13 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::allocateFromPool(
 			}
 
 			// get namespace type from goal
+			NVM_UINT16 type = 0;
 			wbem::framework::Attribute namespaceTypeAttribute;
-			pGoalInstance->getAttribute(wbem::RESOURCETYPE_KEY, namespaceTypeAttribute);
-			NVM_UINT16 type = namespaceTypeAttribute.uintValue();
+			if (pGoalInstance->getAttribute(wbem::RESOURCETYPE_KEY, namespaceTypeAttribute) ==
+					wbem::framework::SUCCESS)
+			{
+				type = namespaceTypeAttribute.uintValue();
+			}
 
 			if ((type != wbem::pmem_config::PM_SERVICE_APP_DIRECT_TYPE) &&
 				(type != wbem::pmem_config::PM_SERVICE_STORAGE_TYPE))
@@ -488,42 +510,57 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::allocateFromPool(
 			}
 
 			// get optimize type from goal
+			NVM_UINT16 optimize = wbem::pmem_config::PM_SERVICE_OPTIMIZE_COPYONWRITE;
 			wbem::framework::Attribute optimizeAttribute;
-			pGoalInstance->getAttribute(wbem::OPTIMIZE_KEY, optimizeAttribute);
-			NVM_UINT16 optimize = optimizeAttribute.uintValue();
-			if ((optimize != PM_SERVICE_OPTIMIZE_SMALLEST_SIZE) &&
-				(optimize != PM_SERVICE_OPTIMIZE_NONE) &&
-				(optimize != PM_SERVICE_OPTIMIZE_BEST_PERFORMANCE))
+			if (pGoalInstance->getAttribute(wbem::OPTIMIZE_KEY, optimizeAttribute) ==
+					wbem::framework::SUCCESS)
 			{
-				optimize = wbem::pmem_config::PM_SERVICE_OPTIMIZE_COPYONWRITE;
+				optimize = optimizeAttribute.uintValue();
+				if ((optimize != PM_SERVICE_OPTIMIZE_SMALLEST_SIZE) &&
+					(optimize != PM_SERVICE_OPTIMIZE_NONE) &&
+					(optimize != PM_SERVICE_OPTIMIZE_BEST_PERFORMANCE))
+				{
+					optimize = wbem::pmem_config::PM_SERVICE_OPTIMIZE_COPYONWRITE;
+				}
 			}
 
 			// get encryption from goal
+			NVM_UINT16 encryption = wbem::pmem_config::PM_SERVICE_SECURITY_ENCRYPTION_IGNORE;
 			wbem::framework::Attribute encryptionAttribute;
-			pGoalInstance->getAttribute(wbem::ENCRYPTIONENABLED_KEY, encryptionAttribute);
-			NVM_UINT16 encryption = pGoalInstance->getAttribute(wbem::ENCRYPTIONENABLED_KEY, encryptionAttribute) ?
-				wbem::pmem_config::PM_SERVICE_SECURITY_ENCRYPTION_IGNORE : encryptionAttribute.uintValue();
+			if (pGoalInstance->getAttribute(wbem::ENCRYPTIONENABLED_KEY, encryptionAttribute) ==
+					wbem::framework::SUCCESS)
+			{
+				encryption = encryptionAttribute.uintValue();
+			}
+
 			if (encryption > wbem::pmem_config::PM_SERVICE_SECURITY_ENCRYPTION_IGNORE)
 			{
 				COMMON_LOG_ERROR_F("Invalid value for Encryption Enabled: %d", encryption);
-                                throw framework::ExceptionBadParameter(PM_SERVICE_GOAL.c_str());
+				throw framework::ExceptionBadParameter(PM_SERVICE_GOAL.c_str());
 			}
 
 			// get erase capability from goal
+			NVM_UINT16 eraseCapable = wbem::pmem_config::PM_SERVICE_SECURITY_ERASE_CAPABLE_IGNORE;
 			wbem::framework::Attribute eraseCapableAttribute;
-			pGoalInstance->getAttribute(wbem::ERASECAPABLE_KEY, eraseCapableAttribute);
-			NVM_UINT16 eraseCapable = pGoalInstance->getAttribute(wbem::ERASECAPABLE_KEY, eraseCapableAttribute) ?
-				wbem::pmem_config::PM_SERVICE_SECURITY_ERASE_CAPABLE_IGNORE : eraseCapableAttribute.uintValue();
+			if (pGoalInstance->getAttribute(wbem::ERASECAPABLE_KEY, eraseCapableAttribute) ==
+					wbem::framework::SUCCESS)
+			{
+				eraseCapable = eraseCapableAttribute.uintValue();
+			}
+
 			if (eraseCapable > wbem::pmem_config::PM_SERVICE_SECURITY_ERASE_CAPABLE_IGNORE)
 			{
 				COMMON_LOG_ERROR_F("Invalid value for Erase Capable: %d", eraseCapable);
-                                throw framework::ExceptionBadParameter(PM_SERVICE_GOAL.c_str());
+				throw framework::ExceptionBadParameter(PM_SERVICE_GOAL.c_str());
 			}
 
 			NVM_UINT16 memoryPageAllocation = 0;
 			wbem::framework::Attribute memoryPageAllocationAttribute;
-			pGoalInstance->getAttribute(wbem::MEMORYPAGEALLOCATION_KEY, memoryPageAllocationAttribute);
-			memoryPageAllocation = memoryPageAllocationAttribute.uintValue();
+			if (pGoalInstance->getAttribute(wbem::MEMORYPAGEALLOCATION_KEY, memoryPageAllocationAttribute) ==
+					wbem::framework::SUCCESS)
+			{
+				memoryPageAllocation = memoryPageAllocationAttribute.uintValue();
+			}
 
 			std::string namespaceUidStr;
 

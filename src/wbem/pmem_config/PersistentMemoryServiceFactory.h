@@ -275,6 +275,8 @@ private:
 	 * convert NvmExceptionLibError to extrinsic return code
 	 */
 	wbem::framework::UINT32 getReturnCodeFromLibException(const exception::NvmExceptionLibError &e);
+
+	NVM_UINT64 getBlockSizeInBytes(const std::string &blockSizeStr);
 };
 }
 
