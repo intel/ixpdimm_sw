@@ -315,9 +315,10 @@ void wbem::mem_config::MemoryConfigurationServiceFactory::validateSettingsString
 {
 
 	framework::STR_LIST::iterator iter = settingsStrings.begin();
+	NVM_UINT16 memoryMode = MEMORYALLOCATIONSETTINGS_RESOURCETYPE_UNKNOWN;
+
 	for (; iter != settingsStrings.end(); iter++)
 	{
-
 		framework::CimXml settingsInstance(*iter);
 
 		if (settingsInstance.getClass() != MEMORYALLOCATIONSETTINGS_CREATIONCLASSNAME)
@@ -375,38 +376,7 @@ void wbem::mem_config::MemoryConfigurationServiceFactory::validateSettingsString
 					RESOURCETYPE_KEY.c_str());
 			throw framework::ExceptionBadParameter(RESOURCETYPE_KEY.c_str());
 		}
-
-		attrI = attrs.find(CHANNELINTERLEAVESIZE_KEY);
-		if (attrI == attrs.end())
-		{
-			COMMON_LOG_ERROR_F("expected property %s wasn't in MemoryAllocationSettings XML",
-					CHANNELINTERLEAVESIZE_KEY.c_str());
-			throw framework::ExceptionBadParameter(CHANNELINTERLEAVESIZE_KEY.c_str());
-		}
-
-		attrI = attrs.find(CHANNELCOUNT_KEY);
-		if (attrI == attrs.end())
-		{
-			COMMON_LOG_ERROR_F("expected property %s wasn't in MemoryAllocationSettings XML",
-					CHANNELCOUNT_KEY.c_str());
-			throw framework::ExceptionBadParameter(CHANNELCOUNT_KEY.c_str());
-		}
-
-		attrI = attrs.find(CONTROLLERINTERLEAVESIZE_KEY);
-		if (attrI == attrs.end())
-		{
-			COMMON_LOG_ERROR_F("expected property %s wasn't in MemoryAllocationSettings XML",
-					CONTROLLERINTERLEAVESIZE_KEY.c_str());
-			throw framework::ExceptionBadParameter(CONTROLLERINTERLEAVESIZE_KEY.c_str());
-		}
-
-		attrI = attrs.find(REPLICATION_KEY);
-		if (attrI == attrs.end())
-		{
-			COMMON_LOG_ERROR_F("expected property %s wasn't in MemoryAllocationSettings XML",
-					REPLICATION_KEY.c_str());
-			throw framework::ExceptionBadParameter(REPLICATION_KEY.c_str());
-		}
+		memoryMode = attrI->second.intValue();
 
 		attrI = attrs.find(NEWMEMORYONLY_KEY);
 		if (attrI == attrs.end())
@@ -414,6 +384,41 @@ void wbem::mem_config::MemoryConfigurationServiceFactory::validateSettingsString
 			COMMON_LOG_ERROR_F("expected property %s wasn't in MemoryAllocationSettings XML",
 					NEWMEMORYONLY_KEY.c_str());
 			throw framework::ExceptionBadParameter(NEWMEMORYONLY_KEY.c_str());
+		}
+
+		if (memoryMode == MEMORYALLOCATIONSETTINGS_RESOURCETYPE_NONVOLATILE)
+		{
+			attrI = attrs.find(CHANNELINTERLEAVESIZE_KEY);
+			if (attrI == attrs.end())
+			{
+				COMMON_LOG_ERROR_F("expected property %s wasn't in MemoryAllocationSettings XML",
+						CHANNELINTERLEAVESIZE_KEY.c_str());
+				throw framework::ExceptionBadParameter(CHANNELINTERLEAVESIZE_KEY.c_str());
+			}
+
+			attrI = attrs.find(CHANNELCOUNT_KEY);
+			if (attrI == attrs.end())
+			{
+				COMMON_LOG_ERROR_F("expected property %s wasn't in MemoryAllocationSettings XML",
+						CHANNELCOUNT_KEY.c_str());
+				throw framework::ExceptionBadParameter(CHANNELCOUNT_KEY.c_str());
+			}
+
+			attrI = attrs.find(CONTROLLERINTERLEAVESIZE_KEY);
+			if (attrI == attrs.end())
+			{
+				COMMON_LOG_ERROR_F("expected property %s wasn't in MemoryAllocationSettings XML",
+						CONTROLLERINTERLEAVESIZE_KEY.c_str());
+				throw framework::ExceptionBadParameter(CONTROLLERINTERLEAVESIZE_KEY.c_str());
+			}
+
+			attrI = attrs.find(REPLICATION_KEY);
+			if (attrI == attrs.end())
+			{
+				COMMON_LOG_ERROR_F("expected property %s wasn't in MemoryAllocationSettings XML",
+						REPLICATION_KEY.c_str());
+				throw framework::ExceptionBadParameter(REPLICATION_KEY.c_str());
+			}
 		}
 	}
 }
