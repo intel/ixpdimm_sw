@@ -54,7 +54,7 @@ static const char hextable[] =
  * Helper function for guid_to_str to convert an integer
  * to a 2 char hex string
  */
-void int_to_hex_str(unsigned char value, char *destination)
+void int_to_hex_digits(unsigned char value, char *destination)
 {
 	if (destination != NULL)
 	{
@@ -84,26 +84,26 @@ void guid_to_str(const COMMON_GUID guid, COMMON_GUID_STR guid_str)
 		guid_str[0] = '\0'; // make empty string first
 		if (guid != NULL)
 		{
-			int_to_hex_str(guid[0], &guid_str[0]);
-			int_to_hex_str(guid[1], &guid_str[2]);
-			int_to_hex_str(guid[2], &guid_str[4]);
-			int_to_hex_str(guid[3], &guid_str[6]);
+			int_to_hex_digits(guid[0], &guid_str[0]);
+			int_to_hex_digits(guid[1], &guid_str[2]);
+			int_to_hex_digits(guid[2], &guid_str[4]);
+			int_to_hex_digits(guid[3], &guid_str[6]);
 			guid_str[8] = '-';
-			int_to_hex_str(guid[4], &guid_str[9]);
-			int_to_hex_str(guid[5], &guid_str[11]);
+			int_to_hex_digits(guid[4], &guid_str[9]);
+			int_to_hex_digits(guid[5], &guid_str[11]);
 			guid_str[13] = '-';
-			int_to_hex_str(guid[6], &guid_str[14]);
-			int_to_hex_str(guid[7], &guid_str[16]);
+			int_to_hex_digits(guid[6], &guid_str[14]);
+			int_to_hex_digits(guid[7], &guid_str[16]);
 			guid_str[18] = '-';
-			int_to_hex_str(guid[8], &guid_str[19]);
-			int_to_hex_str(guid[9], &guid_str[21]);
+			int_to_hex_digits(guid[8], &guid_str[19]);
+			int_to_hex_digits(guid[9], &guid_str[21]);
 			guid_str[23] = '-';
-			int_to_hex_str(guid[10], &guid_str[24]);
-			int_to_hex_str(guid[11], &guid_str[26]);
-			int_to_hex_str(guid[12], &guid_str[28]);
-			int_to_hex_str(guid[13], &guid_str[30]);
-			int_to_hex_str(guid[14], &guid_str[32]);
-			int_to_hex_str(guid[15], &guid_str[34]);
+			int_to_hex_digits(guid[10], &guid_str[24]);
+			int_to_hex_digits(guid[11], &guid_str[26]);
+			int_to_hex_digits(guid[12], &guid_str[28]);
+			int_to_hex_digits(guid[13], &guid_str[30]);
+			int_to_hex_digits(guid[14], &guid_str[32]);
+			int_to_hex_digits(guid[15], &guid_str[34]);
 			guid_str[36] = '\0';
 		}
 	}

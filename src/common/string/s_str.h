@@ -41,6 +41,8 @@ extern "C"
 #include <stdlib.h>
 #include <stdarg.h>
 
+#define	HEX_STR_LEN	20
+
 /*!
  * A macro to remove trailing spaces
  * @todo
@@ -408,6 +410,23 @@ char *s_strrchr(char *str, char ch, int max_len);
  * 		If an error occurs, -1 will be returned and errno set
  */
 int s_snprintf(char *str, size_t size, const char *format, ...);
+
+/*!
+ * @brief Safe version of get_hex_string
+ * This function writes at most "len" characters "destStr"
+ * by formatting "val" to a hex string prefixed with 0x
+ *
+ * @param[in] val
+ *		The integer value to format.
+ * @param[out] destStr
+ *		The destination buffer for the formatted string.
+ * @param[in] len
+ *		Number of bytes (chars) available for use in destStr.
+ * @return
+ *		This function upon success returns the number of bytes
+ *		(characters) placed in the string
+ */
+int get_hex_string(unsigned long long val, char *destStr, size_t len);
 
 #ifdef __cplusplus
 }

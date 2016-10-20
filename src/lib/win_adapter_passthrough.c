@@ -357,13 +357,13 @@ int ioctl_passthrough_cmd(struct fw_cmd *p_cmd)
 				(p_ioctl_data->InputPayload.Arg3OpCodeParameterDataBuffer
 					+ p_cmd->input_payload_size);
 
-			COMMON_LOG_HANDOFF_F("Passthrough IOCTL. Opcode: %x, SubOpcode: %x",
+			COMMON_LOG_HANDOFF_F("Passthrough IOCTL. Opcode: 0x%x, SubOpcode: 0x%x",
 						p_cmd->opcode, p_cmd->sub_opcode);
 			if (p_cmd->input_payload_size)
 			{
 				for (int i = 0; i < p_cmd->input_payload_size; i += 8)
 				{
-					COMMON_LOG_HANDOFF_F("Input[%d]: %x",
+					COMMON_LOG_HANDOFF_F("Input[%d]: 0x%x",
 						i, ((NVM_UINT64 *) (p_cmd->input_payload))[i]);
 				}
 			}

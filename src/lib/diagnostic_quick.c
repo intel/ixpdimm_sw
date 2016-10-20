@@ -591,7 +591,7 @@ void check_fw_boot_status(const struct diagnostic *p_diagnostic,
 	NVM_UINT8 major_status_code = MAJOR_CHECKPOINT(bsr);
 	NVM_UINT8 minor_status_code = MINOR_CHECKPOINT(bsr);
 	NVM_EVENT_ARG checkpoint_str;
-	s_snprintf(checkpoint_str, NVM_EVENT_ARG_LEN, "ox%x:ox%x",
+	s_snprintf(checkpoint_str, NVM_EVENT_ARG_LEN, "0x%x:0x%x",
 			major_status_code, minor_status_code);
 
 	NVM_UINT16 code = EVENT_CODE_DIAG_QUICK_UNKNOWN;

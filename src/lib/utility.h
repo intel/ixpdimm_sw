@@ -114,11 +114,13 @@ static inline void SERIAL_NUMBER_TO_STRING(const unsigned char *serial_number,
 		serial_number_str[0] = '\0'; // make empty string first
 		if (serial_number != NULL)
 		{
-			int_to_hex_str(serial_number[3], &serial_number_str[0]);
-			int_to_hex_str(serial_number[2], &serial_number_str[2]);
-			int_to_hex_str(serial_number[1], &serial_number_str[4]);
-			int_to_hex_str(serial_number[0], &serial_number_str[6]);
-			serial_number_str[8] = '\0';
+			serial_number_str[0] = '0';
+			serial_number_str[1] = 'x';
+			int_to_hex_digits(serial_number[3], &serial_number_str[2]);
+			int_to_hex_digits(serial_number[2], &serial_number_str[4]);
+			int_to_hex_digits(serial_number[1], &serial_number_str[6]);
+			int_to_hex_digits(serial_number[0], &serial_number_str[8]);
+			serial_number_str[10] = '\0';
 		}
 	}
 }

@@ -390,13 +390,13 @@ int ioctl_passthrough_cmd(struct fw_cmd *p_fw_cmd)
 					rc = bios_write_large_payload(p_dimm, p_fw_cmd);
 				}
 
-				COMMON_LOG_HANDOFF_F("Passthrough IOCTL. Opcode: %x, SubOpcode: %x",
+				COMMON_LOG_HANDOFF_F("Passthrough IOCTL. Opcode: 0x%x, SubOpcode: 0x%x",
 					p_fw_cmd->opcode, p_fw_cmd->sub_opcode);
 				if (p_fw_cmd->input_payload_size)
 				{
 					for (int i = 0; i < p_fw_cmd->input_payload_size; i += 8)
 					{
-						COMMON_LOG_HANDOFF_F("Input[%d]: %x",
+						COMMON_LOG_HANDOFF_F("Input[%d]: 0x%x",
 							i, ((NVM_UINT64 *) (p_fw_cmd->input_payload))[i]);
 					}
 				}

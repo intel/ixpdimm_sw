@@ -37,6 +37,7 @@
 #include "ShowDeviceCommand.h"
 #include "ShowCommandPropertyUtilities.h"
 #include "ShowCommandUtilities.h"
+#include <common/string/s_str.h>
 
 namespace cli
 {
@@ -67,7 +68,7 @@ ShowDeviceCommand::ShowDeviceCommand(core::device::DeviceService &service)
 	m_props.addOther("MemoryType", &core::device::Device::getMemoryType, &convertMemoryType);
 	m_props.addUint16("VendorID", &core::device::Device::getVendorId, toHex);
 	m_props.addUint16("DeviceID", &core::device::Device::getDeviceId, toHex);
-	m_props.addUint16("RevisionID", &core::device::Device::getRevisionId);
+	m_props.addUint16("RevisionID", &core::device::Device::getRevisionId, toHex);
 	// New NFIT attributes here
 	m_props.addStr("SerialNumber", &core::device::Device::getSerialNumber);
 	m_props.addUint16("SubsystemVendorID", &core::device::Device::getSubsystemVendor, toHex);
@@ -87,7 +88,7 @@ ShowDeviceCommand::ShowDeviceCommand(core::device::DeviceService &service)
 	m_props.addStr("FWVersion", &core::device::Device::getFwRevision).setIsDefault();
 	m_props.addStr("FWAPIVersion", &core::device::Device::getFwApiVersion);
 	m_props.addStr("Manufacturer", &core::device::Device::getManufacturer);
-	m_props.addUint16("ManufacturerID", &core::device::Device::getManufacturerId);
+	m_props.addUint16("ManufacturerID", &core::device::Device::getManufacturerId, toHex);
 	m_props.addStr("Model", &core::device::Device::getModelNumber);
 	m_props.addBool("IsNew", &core::device::Device::isNew);
 	m_props.addOther("FormFactor", &core::device::Device::getFormFactor, &convertFormFactor);
@@ -419,7 +420,11 @@ std::string ShowDeviceCommand::getManufacturingLoc(core::device::Device &device)
 
 	if (isValid)
 	{
-		result << std::hex << (unsigned int)device.getManufacturingLoc();
+		char location[HEX_STR_LEN];
+
+		get_hex_string(device.getManufacturingLoc(), location, sizeof (location));
+
+		result << location;
 	}
 	else
 	{
@@ -432,10 +437,11 @@ std::string ShowDeviceCommand::getManufacturingLoc(core::device::Device &device)
 
 std::string ShowDeviceCommand::toHex(NVM_UINT16 value)
 {
-	std::stringstream result;
-	result << std::hex << value;
+	char value_str[HEX_STR_LEN];
 
-	return result.str();
+	get_hex_string(value, value_str, sizeof (value_str));
+
+	return std::string(value_str);
 }
 
 std::string ShowDeviceCommand::convertInterfaceFormatCode(const NVM_UINT16 ifc)

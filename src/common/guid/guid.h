@@ -43,13 +43,13 @@ extern "C"
 
 /*!
  * A helper function for guid_to_str to convert an integer
- * to a 2 char hex string.
+ * to a 2 char hex digits.
  * @param[in] value
  * 		The unsigned @b char to be converted.
  * @param[out] destination
  * 		The character array indicating the equivalent hex value.
  */
-void int_to_hex_str(unsigned char value, char *destination);
+void int_to_hex_digits(unsigned char value, char *destination);
 
 /*!
  * Convert a GUID to a string

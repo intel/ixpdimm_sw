@@ -738,3 +738,17 @@ int s_snprintf(char *str, size_t size, const char *format, ...)
 	}
 	return (formatted_len);
 }
+
+/*
+ * Format an unsigned int (4 bytes) to a hex string with 0x prefixed
+ */
+int get_hex_string(unsigned long long val, char *destStr, size_t len)
+{
+	int bytes = -1;
+	if (destStr != NULL)
+	{
+		bytes = s_snprintf(destStr, len, "0x%llx", val);
+	}
+
+	return bytes;
+}

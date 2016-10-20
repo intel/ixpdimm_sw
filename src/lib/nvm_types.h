@@ -55,7 +55,7 @@
 #define	NVM_MANUFACTURER_LEN	2 // Number of bytes in the manufacturer ID
 #define	NVM_MANUFACTURERSTR_LEN	256 // Manufacturer string length
 #define	NVM_SERIAL_LEN	4 // Number of bytes in the serial number
-#define	NVM_SERIALSTR_LEN	9 // Serial number string length
+#define	NVM_SERIALSTR_LEN	11 // Serial number string length including '\0' and prefix "0x"
 #define	NVM_PASSPHRASE_LEN	32 // Length of security passphrase
 #define	NVM_MAX_DEVICE_SENSORS	17 // Maximum number of sensors
 #define	NVM_EVENT_MSG_LEN	1024 // Length of event message string
