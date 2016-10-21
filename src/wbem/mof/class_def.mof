@@ -632,11 +632,19 @@ class <NVM_WBEM_PREFIX>PersistentMemoryPool : CIM_ResourcePool
 [dynamic, provider("intelwbemprovider")]
 class <NVM_WBEM_PREFIX>VolatileMemory : CIM_VisibleMemory
 {
+	[Description (
+	"Associated socket identifier."
+	)]
+	string ProcessorAffinity;
 };
 
 [dynamic, provider("intelwbemprovider")]
 class <NVM_WBEM_PREFIX>PersistentMemory : CIM_VisibleMemory
 {
+	[Description (
+	"Associated socket identifier."
+	)]
+	string ProcessorAffinity;
 };
 
 [dynamic, provider("intelwbemprovider")]
