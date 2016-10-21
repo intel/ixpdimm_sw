@@ -56,7 +56,7 @@ extern "C"
 #define PERFORMANCE_LOG_TRIM_PERCENT_BOUND 10
 
 //! Maximum number of log entries
-#define LOG_MAX_BOUND 10000
+#define LOG_MAX_BOUND 100000
 
 //! Minimum allowed interval for event monitor
 #define EVENT_MONITOR_INTERVAL_MINUTES_BOUND 1
