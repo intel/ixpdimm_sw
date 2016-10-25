@@ -235,7 +235,7 @@ const char *EVENT_MESSAGES_QUICK_DIAG[EVENT_CODE_DIAG_QUICK_UNKNOWN -
 	// EVENT_CODE_DIAG_QUICK_BAD_PERCENT_USED
 	N_TR("The quick health check detected that " NVM_DIMM_NAME " %s "
 			"is reporting percentage used at %s% which is above "
-			"the alarm threshold %s%."),
+			"the recommended threshold %s%."),
 	// EVENT_CODE_DIAG_QUICK_BAD_UNCORRECTABLE_MEDIA_ERRORS
 	N_TR("The quick health check detected that " NVM_DIMM_NAME " %s "
 			"is reporting %s uncorrectable media errors."),
@@ -245,9 +245,9 @@ const char *EVENT_MESSAGES_QUICK_DIAG[EVENT_CODE_DIAG_QUICK_UNKNOWN -
 	// EVENT_CODE_DIAG_QUICK_BAD_ERASURE_CODED_CORRECTED_MEDIA_ERRORS
 	N_TR("The quick health check detected that " NVM_DIMM_NAME " %s "
 			"is reporting %s Erasure Coded Corrected media errors."),
-	// EVENT_CODE_DIAG_QUICK_BAD_CONTROLLER_TEMP
+	// EVENT_CODE_DIAG_QUICK_BAD_CORE_TEMP
 	N_TR("The quick health check detected that " NVM_DIMM_NAME " %s "
-			"is reporting a controller temperature of %s C which is above "
+			"is reporting a core temperature of %s C which is above "
 			"the alarm threshold %s C."),
 	// EVENT_CODE_DIAG_QUICK_BAD_POWER_LIMITATION
 	N_TR("The quick health check detected that power is limited on socket %s."),
@@ -263,7 +263,7 @@ const char *EVENT_MESSAGES_QUICK_DIAG[EVENT_CODE_DIAG_QUICK_UNKNOWN -
 	// EVENT_CODE_DIAG_QUICK_DDRT_IO_INIT_NOT_READY
 	N_TR("The quick health check detected that the firmware "
 			"on " NVM_DIMM_NAME " %s is reporting that the DDRT "
-			"I/O Initialization has not completed."),
+			"I/O initialization has not completed."),
 	// EVENT_CODE_DIAG_QUICK_DDRT_IO_INIT_ERROR
 	N_TR("The quick health check detected that the firmware "
 			"on " NVM_DIMM_NAME " %s is reporting an error initializing DDRT I/O."),
@@ -277,7 +277,7 @@ const char *EVENT_MESSAGES_QUICK_DIAG[EVENT_CODE_DIAG_QUICK_UNKNOWN -
 	// EVENT_CODE_DIAG_QUICK_FW_INITIALIZATION_INCOMPLETE
 	N_TR("The quick health check detected that the firmware "
 			"on " NVM_DIMM_NAME " %s has not initialized "
-			"successfully, the last known Major:Minor Checkpoint is %s."),
+			"successfully, last known Major:Minor Checkpoint is %s."),
 	// EVENT_CODE_DIAG_QUICK_FW_HIT_ASSERT
 	N_TR("The quick health check detected that the firmware "
 			"on " NVM_DIMM_NAME " %s reported an assert."),
@@ -293,6 +293,35 @@ const char *EVENT_MESSAGES_QUICK_DIAG[EVENT_CODE_DIAG_QUICK_UNKNOWN -
 	// EVENT_CODE_DIAG_QUICK_NOT_MANAGEABLE
 	N_TR("The quick health check detected that " NVM_DIMM_NAME " %s is not manageable by "
 			"this version of the management software."),
+	// EVENT_CODE_DIAG_QUICK_BAD_MEDIA_TEMP_THROTTLING
+	N_TR("The quick health check detected that " NVM_DIMM_NAME " %s is reporting a media "
+			"temperature of %s C which is above the throttling threshold %s C."),
+	// EVENT_CODE_DIAG_QUICK_BAD_MEDIA_TEMP_SHUTDOWN
+	N_TR("The quick health check detected that " NVM_DIMM_NAME " %s is reporting a media "
+			"temperature of %s C which is above the shutdown threshold %s C."),
+	// EVENT_CODE_DIAG_QUICK_BAD_CORE_TEMP_SHUTDOWN
+	N_TR("The quick health check detected that " NVM_DIMM_NAME " %s is reporting a core "
+			"temperature of %s C which is above the shutdown threshold %s C."),
+	// EVENT_CODE_DIAG_QUICK_SPARE_DIE_CONSUMED
+	N_TR("The quick health check detected that " NVM_DIMM_NAME " %s is reporting that it "
+			"has consumed %s spare die."),
+	// EVENT_CODE_DIAG_QUICK_UNSAFE_SHUTDOWN
+	N_TR("The quick health check detected that the firmware on " NVM_DIMM_NAME " %s "
+			"experienced an unsafe shutdown before its latest restart."),
+	// EVENT_CODE_DIAG_QUICK_SANITIZE_IN_PROGRESS
+	N_TR("The quick health check detected that a sanitize operation is in progress on "
+			NVM_DIMM_NAME " %s. A reboot will be required when complete to use the "
+			NVM_DIMM_NAME "."),
+	// EVENT_CODE_DIAG_QUICK_SANITIZE_COMPLETE
+	N_TR("The quick health check detected that a sanitize operation has completed on "
+			NVM_DIMM_NAME " %s. A reboot is required to use the " NVM_DIMM_NAME "."),
+	// EVENT_CODE_DIAG_QUICK_AIT_DRAM_NOT_READY
+	N_TR("The quick health check detected that the firmware on " NVM_DIMM_NAME " %s "
+			"is reporting that the AIT Dram is not ready."),
+	// EVENT_CODE_DIAG_QUICK_MEDIA_DISABLED
+	N_TR("The quick health check detected that the firmware on " NVM_DIMM_NAME " %s "
+			"is reporting that the media is disabled."),
+
 	// EVENT_CODE_DIAG_QUICK_UNKNOWN
 	N_TR("The quick health check logged an unknown error code %d."),
 };
@@ -389,42 +418,28 @@ const char *EVENT_MESSAGES_PCONFIG_DIAG[EVENT_CODE_DIAG_PCONFIG_UNKNOWN -
 	N_TR("The platform configuration check detected that the current configuration table is "
 			"invalid for " NVM_DIMM_NAME " %s."),
 	// EVENT_CODE_DIAG_PCONFIG_UNCONFIGURED
-	N_TR("The platform configuration check detected that " NVM_DIMM_NAME " %s is unconfigured. "
-			"Note that the capacity is unmapped by the BIOS because it's unconfigured."),
+	N_TR("The platform configuration check detected that " NVM_DIMM_NAME " %s is not configured."),
 	// EVENT_CODE_DIAG_PCONFIG_BROKEN_ISET
-	N_TR("The platform configuration check detected that interleave set %s is broken, due to a "
-			"missing " NVM_DIMM_NAME " with serial number %s."),
+	N_TR("The platform configuration check detected that interleave set %s is broken due to "
+			"missing " NVM_DIMM_NAME "(s): %s."),
 	// EVENT_CODE_DIAG_PCONFIG_MAPPED_CAPACITY_MISMATCH
 	N_TR("The platform configuration check detected that the BIOS reported mapped %s capacity "
 			"%s doesn't match the driver reported capacity %s."),
-	// EVENT_CODE_DIAG_PCONFIG_RECOMMENDED_INTERLEAVE_SIZE_IMC
-	N_TR("The platform configuration check detected interleave set %s has an inter-memory "
-			"controller interleave size of %s. Interleave sizes of 4KB and greater may improve "
-			"performance."),
-	// EVENT_CODE_DIAG_PCONFIG_RECOMMENDED_INTERLEAVE_SIZE_CHANNEL
-	N_TR("The platform configuration check detected interleave set %s has an inter-channel "
-			"interleave size of %s. Interleave sizes of 4KB and greater may improve "
-			"performance."),
-	// EVENT_CODE_DIAG_PCONFIG_RECOMMENDED_INTERLEAVE_WAYS
-	N_TR("The platform configuration check detected that interleave set %s is interleaved "
-			"across %s " NVM_DIMM_NAME "s, less than the recommended %s. Interleaving "
-			"across as many " NVM_DIMM_NAME "s as possible may improve performance."),
 	// EVENT_CODE_DIAG_PCONFIG_REBOOT_NEEDED_TO_APPLY_GOAL
 	N_TR("The platform configuration check detected that " NVM_DIMM_NAME " %s has "
 			"a goal configuration that has not yet been applied. A system reboot "
 			"is required for the new configuration to take effect."),
 	// EVENT_CODE_DIAG_PCONFIG_APP_DIRECT_NAMESPACE_TOO_SMALL
 	N_TR("The platform configuration check detected that the capacity of App Direct "
-			"namespace %s is smaller than the capacity of its containing extent. The remaining %s "
-			"of the extent cannot be accessed as App Direct. This capacity may "
-			"be included in Storage namespaces on each " NVM_DIMM_NAME "."),
+			"namespace %s is smaller than its containing interleave set. The remaining %s "
+			"of the interleave set cannot be accessed as App Direct, but may "
+			"be used as a Storage Mode namespace on each " NVM_DIMM_NAME "."),
 	// EVENT_CODE_DIAG_PCONFIG_POOL_NEEDS_APP_DIRECT_NAMESPACES
 	N_TR("The platform configuration check detected that pool %s contains empty App Direct "
-			"capacity. Create App Direct namespaces in the pool to access this "
-			"capacity."),
+			"capacity. Create App Direct namespaces to access this capacity."),
 	// EVENT_CODE_DIAG_PCONFIG_POOL_NEEDS_STORAGE_NAMESPACES
 	N_TR("The platform configuration check detected that pool %s contains empty Storage "
-			"capacity. Create Storage namespaces in the pool to access this capacity."),
+			"capacity. Create Storage namespaces to access this capacity."),
 	// EVENT_CODE_DIAG_PCONFIG_DIMM_CONFIG_UNBALANCED
 	N_TR("The platform configuration check detected that " NVM_DIMM_NAME "s on "
 			"socket %s are arranged in an unbalanced configuration. "
@@ -450,8 +465,8 @@ const char *EVENT_MESSAGES_PCONFIG_DIAG[EVENT_CODE_DIAG_PCONFIG_UNKNOWN -
 			"physical ID %s is present in the system but failed to initialize."),
 	// EVENT_CODE_DIAG_PCONFIG_DIMM_SKU_VIOLATION
 	N_TR("The platform configuration check detected that " NVM_DIMM_NAME " %s is "
-			"currently configured with %s capacity which is in violation "
-			"of the system supported capabilities."),
+			"configured with %s capacity which is in violation of the system supported "
+			"capabilities."),
 	// EVENT_CODE_DIAG_PCONFIG_DIMM_GOAL_SKU_VIOLATION
 	N_TR("The platform configuration check detected that " NVM_DIMM_NAME " %s has a "
 			"configuration goal request for %s capacity which will be in violation "
@@ -460,6 +475,28 @@ const char *EVENT_MESSAGES_PCONFIG_DIAG[EVENT_CODE_DIAG_PCONFIG_UNKNOWN -
 	N_TR("The platform configuration check was unable to retrieve the pool information."),
 	// EVENT_CODE_DIAG_PCONFIG_NAMESPACES_FAILED
 	N_TR("The platform configuration check was unable to retrieve the namespace information."),
+	// EVENT_CODE_DIAG_PCONFIG_NO_BIOS_SUPPORT
+	N_TR("The platform configuration check detected that the BIOS settings do not currently "
+			"allow memory provisioning from this software."),
+	// EVENT_CODE_DIAG_PCONFIG_GOAL_FAILED_CONFIG_ERROR
+	N_TR("The platform configuration check detected that the BIOS could not apply the "
+			"configuration goal on " NVM_DIMM_NAME " %s because of errors in the goal data. "
+			"The detailed status is %s."),
+	// EVENT_CODE_DIAG_PCONFIG_GOAL_FAILED_INSUFFICIENT_RESOURCES
+	N_TR("The platform configuration check detected that the BIOS could not apply the "
+			"configuration goal on " NVM_DIMM_NAME " %s because the system has insufficient "
+			"resources. The detailed status is %s."),
+	// EVENT_CODE_DIAG_PCONFIG_GOAL_FAILED_FW_ERROR
+	N_TR("The platform configuration check detected that the BIOS could not apply the "
+			"configuration goal on " NVM_DIMM_NAME " %s because of a firmware error. "
+			"The detailed status is %s."),
+	// EVENT_CODE_DIAG_PCONFIG_GOAL_FAILED_UNKNOWN
+	N_TR("The platform configuration check detected that the BIOS could not apply the "
+			"configuration goal on " NVM_DIMM_NAME " %s for an unknown reason. "
+			"The detailed status is %s."),
+	// EVENT_CODE_DIAG_PCONFIG_BROKEN_ISET_MOVED
+	N_TR("The platform configuration check detected that interleave set %s is broken "
+			"because the " NVM_DIMM_NAME "(s) were moved."),
 
 	// EVENT_CODE_DIAG_PCONFIG_UNKNOWN
 	N_TR("The platform configuration check logged an unknown error code %d."),

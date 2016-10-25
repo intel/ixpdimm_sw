@@ -451,25 +451,6 @@ void check_interleave_size(NVM_UINT32 *p_results,
 }
 
 /*
- * Checks the interleave iMC and channel size recommendations and generates an event.
- */
-void check_interleave_imc_and_channel_sizes(NVM_UINT32 *p_results,
-		const struct nvm_interleave_set *p_interleave_set)
-{
-	COMMON_LOG_ENTRY();
-
-	check_interleave_size(p_results, p_interleave_set->settings.imc,
-			p_interleave_set->set_index,
-			EVENT_CODE_DIAG_PCONFIG_RECOMMENDED_INTERLEAVE_SIZE_IMC);
-
-	check_interleave_size(p_results, p_interleave_set->settings.channel,
-			p_interleave_set->set_index,
-			EVENT_CODE_DIAG_PCONFIG_RECOMMENDED_INTERLEAVE_SIZE_CHANNEL);
-
-	COMMON_LOG_EXIT();
-}
-
-/*
  * Get the number of manageable DIMMs assigned to a specific memory controller on a socket.
  */
 NVM_UINT32 get_num_manageable_dimms_on_socket_mem_controller(const NVM_UINT8 socket_id,
@@ -698,101 +679,6 @@ NVM_UINT32 get_minimum_recommended_interleave_ways(
 
 	COMMON_LOG_EXIT_RETURN_I(recommended_interleave_ways);
 	return recommended_interleave_ways;
-}
-
-void check_interleave_ways(NVM_UINT32 *p_results,
-		const struct nvm_interleave_set *p_interleave_set,
-		const struct device_discovery *p_devices,
-		const NVM_UINT8 device_count)
-{
-	COMMON_LOG_ENTRY();
-
-	NVM_UINT32 interleave_ways = p_interleave_set->dimm_count;
-	NVM_UINT32 recommended_interleave_ways = get_minimum_recommended_interleave_ways(
-			p_interleave_set,
-			p_devices, device_count);
-	if (interleave_ways < recommended_interleave_ways)
-	{
-		// These are "best practices" issues - not errors
-		enum diagnostic_result result = DIAGNOSTIC_RESULT_WARNING;
-
-		// Set up string arguments for the event
-		NVM_EVENT_ARG interleave_set_index_str;
-		s_snprintf(interleave_set_index_str, sizeof (interleave_set_index_str),
-				"%u", p_interleave_set->set_index);
-		NVM_EVENT_ARG interleave_ways_str;
-		s_snprintf(interleave_ways_str, sizeof (interleave_ways_str),
-				"%u", interleave_ways);
-		NVM_EVENT_ARG recommended_interleave_ways_str;
-		s_snprintf(recommended_interleave_ways_str, sizeof (recommended_interleave_ways_str),
-				"%u", recommended_interleave_ways);
-
-		store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG,
-				EVENT_SEVERITY_INFO,
-				EVENT_CODE_DIAG_PCONFIG_RECOMMENDED_INTERLEAVE_WAYS,
-				NULL, // no uid
-				0, // no action required
-				interleave_set_index_str, // arg1
-				interleave_ways_str, // arg2
-				recommended_interleave_ways_str, // arg3
-				result);
-
-		(*p_results)++;
-	}
-
-	COMMON_LOG_EXIT();
-}
-
-void check_all_interleave_set_best_practices_against_device_list(NVM_UINT32 *p_results,
-		const struct nvm_interleave_set *p_interleave_sets,
-		const NVM_UINT32 interleave_set_count,
-		const struct device_discovery *p_devices,
-		const NVM_UINT8 device_count)
-{
-	COMMON_LOG_ENTRY();
-
-	for (NVM_UINT32 i = 0; i < interleave_set_count; i++)
-	{
-		check_interleave_imc_and_channel_sizes(p_results,
-				&(p_interleave_sets[i]));
-		check_interleave_ways(p_results,
-				&(p_interleave_sets[i]),
-				p_devices, device_count);
-	}
-
-	COMMON_LOG_EXIT();
-}
-
-/*
- * Verify existing interleave set configuration matches with best practices
- * guidelines.
- */
-int check_all_interleave_set_best_practices(NVM_UINT32 *p_results,
-		const struct device_discovery *p_devices, const NVM_UINT32 device_count)
-{
-	COMMON_LOG_ENTRY();
-
-	int rc = get_interleave_set_count();
-	if (rc > 0)
-	{
-		NVM_UINT32 interleave_set_count = rc;
-		struct nvm_interleave_set interleave_sets[interleave_set_count];
-		if ((rc = get_interleave_sets(interleave_set_count, interleave_sets)) > 0)
-		{
-			check_all_interleave_set_best_practices_against_device_list(p_results,
-					interleave_sets, interleave_set_count,
-					p_devices, device_count);
-			rc = NVM_SUCCESS;
-		}
-		else
-		{
-			COMMON_LOG_ERROR_F("get_interleave_sets errored after get_interleave_set_count passed, "
-					"rc=%d", rc);
-		}
-	}
-
-	COMMON_LOG_EXIT_RETURN_I(rc);
-	return rc;
 }
 
 NVM_BOOL dimms_on_socket_are_different_sizes(const NVM_UINT16 socket_id,
@@ -1127,9 +1013,6 @@ int check_platform_config_best_practices(NVM_UINT32 *p_results)
 		memset(devices, 0, sizeof (devices));
 		if ((rc = nvm_get_devices(devices, num_devices)) > 0)
 		{
-			KEEP_ERROR(rc, check_all_interleave_set_best_practices(p_results,
-					devices, num_devices));
-
 			KEEP_ERROR(rc, check_dimm_socket_layout_best_practices(p_results,
 					devices, num_devices));
 

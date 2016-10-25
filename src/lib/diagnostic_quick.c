@@ -370,7 +370,7 @@ int check_dimm_alarm_thresholds(const NVM_UID device_uid,
 			s_snprintf(expected_temp_str, 10, "%.4f", controller_threshold);
 			store_event_by_parts(EVENT_TYPE_DIAG_QUICK,
 					EVENT_SEVERITY_WARN,
-					EVENT_CODE_DIAG_QUICK_BAD_CONTROLLER_TEMP,
+					EVENT_CODE_DIAG_QUICK_BAD_CORE_TEMP,
 					device_uid,
 					0,
 					device_uid,
