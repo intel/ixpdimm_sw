@@ -430,21 +430,7 @@ int nvm_unlock_device(const NVM_UID device_uid,
 		if ((rc = security_change_prepare(&discovery, passphrase,
 				passphrase_len)) == NVM_SUCCESS)
 		{
-			// send a pass through command to unlock the device
-			struct pt_payload_passphrase input_payload;
-			memset(&input_payload, 0, sizeof (input_payload));
-			s_strncpy(input_payload.passphrase_current, NVM_PASSPHRASE_LEN,
-					passphrase, passphrase_len);
-
-			struct fw_cmd cmd;
-			memset(&cmd, 0, sizeof (struct fw_cmd));
-			cmd.device_handle = discovery.device_handle.handle;
-			cmd.opcode = PT_SET_SEC_INFO;
-			cmd.sub_opcode = SUBOP_UNLOCK_UNIT;
-			cmd.input_payload_size = sizeof (input_payload);
-			cmd.input_payload = &input_payload;
-			rc = ioctl_passthrough_cmd(&cmd);
-			s_memset(&input_payload, sizeof (input_payload));
+			// security change prepare also unlocks the DIMM so don't need to do it again
 
 			// clear any device context - security state has likely changed
 			invalidate_devices();
