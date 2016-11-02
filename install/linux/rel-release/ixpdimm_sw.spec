@@ -147,7 +147,6 @@ fi
 %post -n ixpdimm-monitor
 %systemd_post ixpdimm-monitor.service
 /bin/systemctl --no-reload enable ixpdimm-monitor.service &> /dev/null || :
-/bin/systemctl start ixpdimm-monitor.service &> /dev/null || :
 
 %post -n ixpdimm_sw -p /sbin/ldconfig
 %postun -n ixpdimm_sw -p /sbin/ldconfig

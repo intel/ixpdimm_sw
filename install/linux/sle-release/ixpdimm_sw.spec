@@ -143,7 +143,6 @@ fi
 %post -n %monitorname
 %service_add_post ixpdimm-monitor.service
 /bin/systemctl --no-reload enable ixpdimm-monitor.service &> /dev/null || :
-/bin/systemctl start ixpdimm-monitor.service &> /dev/null || :
 exit 0
 
 %post
