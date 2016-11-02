@@ -33,6 +33,7 @@
 #include <nvm_types.h>
 #include <nvm_management.h>
 #include <mem_config/InterleaveSet.h>
+#include <mem_config/MemoryCapabilitiesFactory.h>
 #include <framework_interface/NvmInstanceFactory.h>
 #include "NamespaceSettingsFactory.h"
 #include <exception/NvmExceptionLibError.h>
@@ -75,12 +76,12 @@ static const NVM_UINT32 PM_SERVICE_OPTIMIZE_NONE = 2; // best performance
 static const NVM_UINT32 PM_SERVICE_OPTIMIZE_BEST_PERFORMANCE = 3; // best performance
 static const NVM_UINT32 PM_SERVICE_OPTIMIZE_SMALLEST_SIZE = 4; // smallest size
 static const NVM_UINT32 PM_SERVICE_OPTIMIZE_COPYONWRITE = 5; // best performance
-static const NVM_UINT16 PM_SERVICE_SECURITY_ENCRYPTION_OFF = 0; 
-static const NVM_UINT16 PM_SERVICE_SECURITY_ENCRYPTION_ON = 1; 
-static const NVM_UINT16 PM_SERVICE_SECURITY_ENCRYPTION_IGNORE = 2; 
-static const NVM_UINT16 PM_SERVICE_SECURITY_ERASE_CAPABLE_FALSE = 0; 
-static const NVM_UINT16 PM_SERVICE_SECURITY_ERASE_CAPABLE_TRUE = 1; 
-static const NVM_UINT16 PM_SERVICE_SECURITY_ERASE_CAPABLE_IGNORE = 2; 
+static const NVM_UINT16 PM_SERVICE_SECURITY_ENCRYPTION_OFF = 0;
+static const NVM_UINT16 PM_SERVICE_SECURITY_ENCRYPTION_ON = 1;
+static const NVM_UINT16 PM_SERVICE_SECURITY_ENCRYPTION_IGNORE = 2;
+static const NVM_UINT16 PM_SERVICE_SECURITY_ERASE_CAPABLE_FALSE = 0;
+static const NVM_UINT16 PM_SERVICE_SECURITY_ERASE_CAPABLE_TRUE = 1;
+static const NVM_UINT16 PM_SERVICE_SECURITY_ERASE_CAPABLE_IGNORE = 2;
 static const NVM_UINT32 PM_SERVICE_OPTIMIZE_CRYPTO_ERASE = 3; // crypto erase
 static const NVM_UINT32 PM_SERVICE_NAMESPACE_ENABLE_STATE_ENABLED = 2; // enabled
 static const NVM_UINT32 PM_SERVICE_NAMESPACE_ENABLE_STATE_DISABLED = 3; // disabled
@@ -275,6 +276,19 @@ private:
 	 * convert NvmExceptionLibError to extrinsic return code
 	 */
 	wbem::framework::UINT32 getReturnCodeFromLibException(const exception::NvmExceptionLibError &e);
+
+	/*
+	 * helpers to set the namespace interleave settings
+	 */
+	void validate_pmtype_with_type(NVM_UINT16 pmtype, NVM_UINT16 type);
+	void get_recommended_interleave_size_exps(
+	        	mem_config::MemoryAllocationSettingsInterleaveSizeExponent &channelSizeExp,
+	        	mem_config::MemoryAllocationSettingsInterleaveSizeExponent &controllerSizeExp);
+	NVM_BOOL get_settings_by_pmem_type(
+		        NVM_UINT16 pmtype,
+		        mem_config::MemoryAllocationSettingsInterleaveSizeExponent &channelSizeExp,
+		        mem_config::MemoryAllocationSettingsInterleaveSizeExponent &controllerSizeExp,
+		        bool &byone);
 
 	NVM_UINT64 getBlockSizeInBytes(const std::string &blockSizeStr);
 };

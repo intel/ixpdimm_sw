@@ -900,6 +900,26 @@ int find_interleave_with_capacity(const struct pool *p_pool,
 	return rc;
 }
 
+NVM_BOOL interleave_ways_match(const struct interleave_set *p_interleave,
+		const struct interleave_format *p_format)
+{
+	NVM_BOOL format_is_x1 = p_format->ways == INTERLEAVE_WAYS_1 ? 1 : 0;
+	NVM_BOOL ilset_is_x1 = p_interleave->settings.ways == INTERLEAVE_WAYS_1 ? 1 : 0;
+	return format_is_x1 == ilset_is_x1 ? 1 : 0;
+}
+
+NVM_BOOL interleave_sizes_match(const struct interleave_set *p_interleave,
+		const struct interleave_format *p_format)
+{
+	NVM_BOOL ret = 0;
+	if (p_format->imc == p_interleave->settings.imc &&
+		p_format->channel == p_interleave->settings.channel)
+	{
+		ret = 1;
+	}
+	return ret;
+}
+
 NVM_BOOL interleave_meets_app_direct_settings(const struct interleave_set *p_interleave,
 		const struct interleave_format *p_format)
 {
@@ -912,25 +932,16 @@ NVM_BOOL interleave_meets_app_direct_settings(const struct interleave_set *p_int
 	}
 	else
 	{
-		enum interleave_size settings_imc_size = p_format->imc;
-		enum interleave_size settings_channel_size = p_format->channel;
-
-		enum interleave_size interleave_imc_size = p_interleave->settings.imc;
-		enum interleave_size interleave_channel_size = p_interleave->settings.channel;
-
-		// by 1 is the only interleave way that can be specified for creating a namespace.
-		NVM_BOOL format_ways_match = 0;
-		if (p_format->ways != INTERLEAVE_WAYS_1 ||
-			(p_format->ways == p_interleave->settings.ways))
+		if (interleave_ways_match(p_interleave, p_format))
 		{
-			format_ways_match = 1;
-		}
-
-		if (settings_channel_size == interleave_channel_size &&
-			settings_imc_size == interleave_imc_size &&
-			format_ways_match)
-		{
-			result = 1;
+			if (p_format->ways == INTERLEAVE_WAYS_1)
+			{
+				result = 1;
+			}
+			else if (interleave_sizes_match(p_interleave, p_format))
+			{
+				result = 1;
+			}
 		}
 	}
 

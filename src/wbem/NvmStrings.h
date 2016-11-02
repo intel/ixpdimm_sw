@@ -245,6 +245,7 @@ const static std::string BLOCKREADREQUESTS_KEY = "BlockReads";
 // MemoryConfigurationCapabilities
 static std::string SUPPORTEDSYNCHRONOUSOPERATIONS_KEY = "SupportedSynchronousOperations";
 static std::string SUPPORTEDASYNCHRONOUSOPERATIONS_KEY = "SupportedAsynchronousOperations";
+static std::string SUPPORTEDPERSISTENTMEMORYTYPES_KEY = "SupportedPersistentMemoryTypes";
 
 // MemoryCapabilities
 static std::string MEMORYMODES_KEY = "MemoryModes";

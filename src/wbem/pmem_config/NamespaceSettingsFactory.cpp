@@ -68,9 +68,8 @@ throw(wbem::framework::Exception)
 	attributes.push_back(OPTIMIZE_KEY);
 	attributes.push_back(ENCRYPTIONENABLED_KEY);
 	attributes.push_back(ERASECAPABLE_KEY);
-	attributes.push_back(CHANNELINTERLEAVESIZE_KEY);
-	attributes.push_back(CONTROLLERINTERLEAVESIZE_KEY);
 	attributes.push_back(MEMORYPAGEALLOCATION_KEY);
+	attributes.push_back(PERSISTENTMEMORYTYPE_KEY);
 
 	// NOTE: No need to populate InitialState - only for create
 }
@@ -160,7 +159,7 @@ throw(wbem::framework::Exception)
 			framework::Attribute a(NSSETTINGS_CHANGEABLETYPE_NOTCHANGEABLETRANSIENT, false);
 			pInstance->setAttribute(CHANGEABLETYPE_KEY, a, attributes);
 		}
-	
+
 		// SecurityFeatures
                 if (containsAttribute(ENCRYPTIONENABLED_KEY, attributes))
                 {
@@ -174,28 +173,6 @@ throw(wbem::framework::Exception)
                                 framework::Attribute((NVM_UINT16)ns.security_features.erase_capable, false));
                 }
 
-		// ChannelInterleaveSize
-		if (containsAttribute(CHANNELINTERLEAVESIZE_KEY, attributes))
-		{
-			NVM_UINT16 channelSize =
-					(NVM_UINT16)mem_config::InterleaveSet::getExponentFromInterleaveSize(
-								ns.interleave_format.channel);
-
-			framework::Attribute a(channelSize, false);
-			pInstance->setAttribute(CHANNELINTERLEAVESIZE_KEY, a, attributes);
-		}
-
-		// ControllerInterleaveSize
-		if (containsAttribute(CONTROLLERINTERLEAVESIZE_KEY, attributes))
-		{
-			NVM_UINT16 channelSize =
-					(NVM_UINT16)mem_config::InterleaveSet::getExponentFromInterleaveSize(
-								ns.interleave_format.imc);
-
-			framework::Attribute a(channelSize, false);
-			pInstance->setAttribute(CONTROLLERINTERLEAVESIZE_KEY, a, attributes);
-		}
-
 		if (containsAttribute(MEMORYPAGEALLOCATION_KEY, attributes))
 		{
 			framework::Attribute a((NVM_UINT16)ns.memory_page_allocation,
@@ -203,6 +180,12 @@ throw(wbem::framework::Exception)
 			pInstance->setAttribute(MEMORYPAGEALLOCATION_KEY, a, attributes);
 		}
 
+		if (containsAttribute(PERSISTENTMEMORYTYPE_KEY, attributes))
+		{
+			framework::UINT16_LIST pmTypes;
+			pmTypes.push_back(getNamespacePMType(ns));
+			pInstance->setAttribute(PERSISTENTMEMORYTYPE_KEY, framework::Attribute(pmTypes, false));
+		}
 		// NOTE: No need to populate Parent, or InitialState - only for create
 	}
 	catch (framework::Exception &)
@@ -297,5 +280,30 @@ NVM_UINT16 wbem::pmem_config::NamespaceSettingsFactory::namespaceResourceTypeToV
 			break;
 	}
 	return typeVal;
+}
+
+NVM_UINT16 wbem::pmem_config::NamespaceSettingsFactory::getNamespacePMType(const namespace_details &details)
+{
+        LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+        NVM_UINT16 pmType = NSSETTINGS_PMTYPE_UNKNOWN;
+
+        if (details.type == NAMESPACE_TYPE_STORAGE)
+        {
+                pmType = NSSETTINGS_PMTYPE_STORAGE;
+        }
+        else if (details.type == NAMESPACE_TYPE_APP_DIRECT)
+        {
+                if (details.interleave_format.ways == INTERLEAVE_WAYS_1)
+                {
+                        pmType = NSSETTINGS_PMTYPE_APPDIRECT_NOTINTERLEAVED;
+                }
+                else if (details.interleave_format.ways != INTERLEAVE_WAYS_0) // 0-way interleave is impossible
+                {
+                        pmType = NSSETTINGS_PMTYPE_APPDIRECT;
+                }
+        }
+
+        return pmType;
 }
 

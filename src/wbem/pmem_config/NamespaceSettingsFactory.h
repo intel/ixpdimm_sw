@@ -49,6 +49,10 @@ namespace pmem_config
 	static const NVM_UINT16 NS_RESOURCETYPE_BLOCK_ADDRESSABLE = 36;
 	static const NVM_UINT16 NS_RESOURCETYPE_BYTE_ADDRESSABLE = 35;
 	static const NVM_UINT16 NSSETTINGS_CHANGEABLETYPE_NOTCHANGEABLETRANSIENT = 3;
+	static const NVM_UINT16 NSSETTINGS_PMTYPE_UNKNOWN = 0;
+	static const NVM_UINT16 NSSETTINGS_PMTYPE_STORAGE = 1;
+	static const NVM_UINT16 NSSETTINGS_PMTYPE_APPDIRECT = 2;
+	static const NVM_UINT16 NSSETTINGS_PMTYPE_APPDIRECT_NOTINTERLEAVED = 3;
 
 /*!
  * Provider Factory for Intel_PersistentMemoryNamespace
@@ -101,6 +105,7 @@ class NVM_API NamespaceSettingsFactory : public framework_interface::NvmInstance
 	private:
 		void populateAttributeList(framework::attribute_names_t &attributes)
 				throw (framework::Exception);
+		NVM_UINT16 getNamespacePMType(const namespace_details &details);
 }; // class
 
 } // pmem_config

@@ -790,23 +790,18 @@ class <NVM_WBEM_PREFIX>NamespaceSettings : CIM_NamespaceSettings
 	Values { "Not Eraseable", "Crypto Erase", "Ignore" }]
 	uint16 EraseCapable;
 	[Description (
-	"This value indicates the number of bytes written/read before switching to the next channel. "
-	"The value is given as the exponent (2^n)."
- 	)]
-	uint16 ChannelInterleaveSize;
-	[Description (
-	"Indicates the amount of data written by a given memory controller before switching "
-	"to the next controller when a memory controller interleave scheme is in use. "
-	"The value is given as the exponent (2^n)."
- 	)]
-	uint16 ControllerInterleaveSize;
-	[Description (
 	"Where the capacity is allocated from for the underlying OS structures if access to the "
 	"App Direct namespace capacity is supported using legacy memory page protocols such as DMA/RDMA."
  	),
 	ValueMap { "0", "1", "2", "3" },
 	Values { "Unknown", "None", "DRAM", "App Direct" }]
 	uint16 MemoryPageAllocation;
+	[Description (
+	"The underlying type(s) of persistent memory capacity."
+ 	),
+	ValueMap { "0", "1", "2", "3" },
+	Values { "Unknown", "Storage", "AppDirect", "AppDirectNotInterleaved" }]
+	uint16 PersistentMemoryType[];
 };
 
 [dynamic, provider("intelwbemprovider")]
@@ -887,6 +882,12 @@ class <NVM_WBEM_PREFIX>PersistentMemoryService : CIM_PersistentMemoryService
 [dynamic, provider("intelwbemprovider")]
 class <NVM_WBEM_PREFIX>PersistentConfigurationCapabilities : CIM_PersistentConfigurationCapabilities
 {
+	[Description (
+	"The supported underlying type(s) of persistent memory capacity."
+ 	),
+	ValueMap { "1", "2", "3" },
+	Values { "Storage", "AppDirect", "AppDirectNotInterleaved" }]
+	uint16 SupportedPersistentMemoryTypes[];
 };
 
 // *************************************************************************************************

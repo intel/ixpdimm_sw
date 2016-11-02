@@ -31,6 +31,7 @@
 
 
 #include "PersistentConfigurationCapabilitiesFactory.h"
+#include "PersistentMemoryServiceFactory.h"
 #include <libinvm-cim/ExceptionBadParameter.h>
 
 wbem::pmem_config::PersistentConfigurationCapabilitiesFactory::PersistentConfigurationCapabilitiesFactory()
@@ -55,6 +56,7 @@ throw (framework::Exception)
 	attributes.push_back(ELEMENTNAME_KEY);
 	attributes.push_back(SUPPORTEDASYNCHRONOUSOPERATIONS_KEY);
 	attributes.push_back(SUPPORTEDSYNCHRONOUSOPERATIONS_KEY);
+	attributes.push_back(SUPPORTEDPERSISTENTMEMORYTYPES_KEY);
 }
 
 wbem::framework::Instance *wbem::pmem_config::PersistentConfigurationCapabilitiesFactory::getInstance(
@@ -80,6 +82,10 @@ throw (framework::Exception)
 		syncActions.push_back(2); // AllocateFromPool
 		syncActions.push_back(3); // ReturnToPool
 		syncActions.push_back(4); // ModifyNamespace
+		framework::UINT16_LIST pmemTypes;
+		pmemTypes.push_back(NSSETTINGS_PMTYPE_STORAGE);
+		pmemTypes.push_back(NSSETTINGS_PMTYPE_APPDIRECT);
+		pmemTypes.push_back(NSSETTINGS_PMTYPE_APPDIRECT_NOTINTERLEAVED);
 
 		pInstance->setAttribute(ELEMENTNAME_KEY,
 				framework::Attribute(PM_CAP_ELEMENTNAME, false), attributes);
@@ -87,6 +93,8 @@ throw (framework::Exception)
 			framework::Attribute(asyncActions, false), attributes);
 		pInstance->setAttribute(SUPPORTEDSYNCHRONOUSOPERATIONS_KEY,
 			framework::Attribute(syncActions, false), attributes);
+		pInstance->setAttribute(SUPPORTEDPERSISTENTMEMORYTYPES_KEY,
+			framework::Attribute(pmemTypes, false), attributes);
 	}
 	catch(framework::Exception &)
 	{
