@@ -193,6 +193,10 @@ class <NVM_WBEM_PREFIX>NVDIMM : CIM_PhysicalMemory
 	"Whether the DIMM is currently viral."
  	)]
 	boolean ViralState;
+	[Description (
+	"The JEDEC standard interface format code(s) for the DIMM."
+ 	)]	
+	uint16 InterfaceFormatCode[];
 
 	// methods
 	[implemented,
