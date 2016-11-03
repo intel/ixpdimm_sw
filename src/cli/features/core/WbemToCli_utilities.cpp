@@ -323,7 +323,7 @@ cli::framework::ErrorResult *cli::nvmcli::GetRequestedCapacityUnits(const cli::f
 	framework::ErrorResult *pResult = NULL;
 
 	bool hasUnits = false;
-	units =
+	std::string unitsArg =
 		cli::framework::Parser::getOptionValue(parsedCommand, framework::OPTION_UNITS.name, &hasUnits);
 	if (hasUnits)
 	{
@@ -335,10 +335,21 @@ cli::framework::ErrorResult *cli::nvmcli::GetRequestedCapacityUnits(const cli::f
 		validUnits.push_back(PREFERENCE_SIZE_GB);
 		validUnits.push_back(PREFERENCE_SIZE_TIB);
 		validUnits.push_back(PREFERENCE_SIZE_TB);
-		if (std::find(validUnits.begin(), validUnits.end(), units) == validUnits.end())
+		bool valid = false;
+		for (std::vector<std::string>::const_iterator iter = validUnits.begin();
+			iter != validUnits.end(); iter++)
+		{
+			if (framework::stringsIEqual(unitsArg, *iter))
+			{
+				units = *iter;
+				valid = true;
+				break;
+			}
+		}
+		if (!valid)
 		{
 			pResult = new framework::SyntaxErrorBadValueResult(framework::TOKENTYPE_OPTION,
-					framework::OPTION_UNITS.name, units);
+					framework::OPTION_UNITS.name, unitsArg);
 		}
 	}
 	else
