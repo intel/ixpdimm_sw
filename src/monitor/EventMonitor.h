@@ -36,6 +36,7 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <core/NvmLibrary.h>
 
 #ifndef _MONITOR_EVENTMONITOR_H_
 #define _MONITOR_EVENTMONITOR_H_
@@ -68,7 +69,7 @@ namespace monitor
 		/*!
 		 * Constructor
 		 */
-		EventMonitor();
+		EventMonitor(core::NvmLibrary &lib = core::NvmLibrary::getNvmLibrary());
 
 		virtual ~EventMonitor();
 
@@ -90,58 +91,49 @@ namespace monitor
 		/*
 		 * Find and acknowledge an event of the specified code
 		 */
-		static void acknowledgeEvent(const int eventCode, const NVM_UID deviceUid);
+		static void acknowledgeEventCodeForDevice(const int eventCode, const NVM_UID deviceUid);
 
 
 	private:
+		int m_nsMgmtCallbackId; // callback identifer for delete namespace events
+		core::NvmLibrary &m_lib;
+
 		/*
 		 * Process "start of day" events - conditions to be detected on process start-up.
 		 */
 		void startOfDay();
+		void runPlatformConfigDiagnostic();
+		void checkDeviceStartUpStatus();
 
-		void checkDriver();
+		DeviceMap getCurrentDeviceMapWithSavedTopology();
+		DeviceMap getCurrentDeviceMap();
+		void addCurrentDevicesToDeviceMap(DeviceMap& map);
+		deviceInfo getTopologyInfoForDevice(const struct device_discovery &device);
+		bool isSavedTopologyStateValid();
+		void addSavedTopologyStateToDeviceMap(DeviceMap& map);
+		std::vector<struct db_topology_state> getSavedTopologyState();
 
-		/*
-		 * Inspect the status for all devices and generate events.
-		 */
-		void processDeviceStartupStatus(DeviceMap &devices);
-
-		void checkDeviceManageability(const std::string &uidStr, const deviceInfo &device);
-
-		void checkConfigGoalStatus(const std::string &uidStr, const deviceInfo &device) const;
-
-		void checkShutdownStatus(const std::string &uidStr, const deviceInfo &device) const;
-
-		void checkSkuViolation(const std::string &uidStr, const deviceInfo &device) const;
-
-		/*
-		 * Helper to determine if the given dimm handle is a replacement of a missing dimm
-		 * If it is, return the dimm uid, if not return empty string.
-		 */
-		std::string getReplacedDimmUid(const DeviceMap &devices, const NVM_UINT32 &handle);
-
-		/*
-		 * Helper function to look at previous topology state and detect newly-added/replaced DIMMS.
-		 * @param[in] devices - current DIMM list as a hash map
-		 * @param[out] replacedHandles - returns the list of handles whose previous DIMM has been replaced
-		 */
+		void checkDeviceTopologyForChanges(const DeviceMap &devices);
 		void processTopologyNewDimms(const DeviceMap &devices,
 				std::vector<std::string> &replacedHandles);
-
-		/*
-		 * Helper function to look at previous topology state and detect DIMMs moved or removed.
-		 * @param[in] devices - current DIMM list as a hash map
-		 * @param[in] replacedHandles - returns the list of handles whose previous DIMM has been replaced
-		 * @remark replacedHandles is to ensure we don't report a replaced DIMM as missing
-		 */
+		std::string getReplacedDimmUid(const DeviceMap &devices, const NVM_UINT32 &handle);
 		void processTopologyModifiedDimms(const DeviceMap &devices,
 				const std::vector<std::string> &replacedHandles);
+		void saveCurrentTopologyState(const DeviceMap &devices);
+
+		void checkConfigStatusForAllDevices(DeviceMap &devices);
+		void checkConfigGoalStatus(const std::string &uidStr, const deviceInfo &device);
+		config_goal_status getConfigGoalStatusForDevice(const std::string &uid);
+		void createEventForConfigGoalAppliedOnDevice(const std::string &uid);
+		void acknowledgePlatformConfigEventsForDevice(const std::string &uid);
+		void acknowledgeEventTypeForDevice(const event_type type, const std::string &uid);
 
 		/*
-		 * Preserve the current topology state for future comparison.
-		 * @param devices - current devices
+		 * Look for deleted namespaces and auto-acknowledge action required events
 		 */
-		void saveCurrentTopologyState(const DeviceMap &devices);
+		void acknowledgeDeletedNamespaces();
+		bool namespaceDeleted(const NVM_UID nsUid,
+				const std::vector<std::string> &nsUids);
 
 		/*
 		 * Monitor dimm health status transitions
@@ -218,11 +210,6 @@ namespace monitor
 		void monitorNamespaces(PersistentStore *p_Store);
 
 		/*
-		 * Build a map of uids to discovery information for all NVM-DIMM in the system
-		 */
-		void buildDeviceMap(monitor::DeviceMap& map, bool addStoredTopology = false);
-
-		/*
 		 * Device health to string helper
 		 */
 		std::string deviceHealthToStr(enum device_health health);
@@ -232,25 +219,6 @@ namespace monitor
 		 */
 		void storeFwErrorLogEvent(const NVM_UID &device_uid, const std::string &uidStr,
 				const NVM_UINT32 errorCount);
-
-		/*
-		 * On start-up look for deleted namespaces and auto-acknowledge action required events
-		 */
-		void acknowledgeDeletedNamespaces();
-
-		/*
-		 * Helper to determine if a namespace has been deleted
-		 */
-		bool namespaceDeleted(const NVM_UID nsUid,
-				const std::vector<std::string> &nsUids);
-
-		/*
-		 * On start-up log an event for mixed SKUs.
-		 */
-		void processMixedSkuSystem();
-
-		// callback identifer for delete namespace events
-		int m_nsMgmtCallbackId;
 	};
 }
 #endif /* _MONITOR_EVENTMONITOR_H_ */

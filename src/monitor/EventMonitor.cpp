@@ -31,7 +31,6 @@
  */
 
 #include <string.h>
-#include <nvm_management.h>
 #include <uid/uid.h>
 #include <persistence/config_settings.h>
 #include <algorithm>
@@ -42,6 +41,8 @@
 #include <cr_i18n.h>
 #include <utility.h>
 #include <nvm_context.h>
+#include <core/exceptions/LibraryException.h>
+#include <core/Helper.h>
 
 /*
  * Macro to log a "platform config invalid" event.
@@ -72,7 +73,10 @@
 				NULL, \
 				DIAGNOSTIC_RESULT_UNKNOWN)
 
-monitor::EventMonitor::EventMonitor() : NvmMonitorBase("EVENT"), m_nsMgmtCallbackId(-1)
+monitor::EventMonitor::EventMonitor(core::NvmLibrary &lib) :
+	NvmMonitorBase("EVENT"),
+	m_nsMgmtCallbackId(-1),
+	m_lib(lib)
 {
 }
 
@@ -100,46 +104,507 @@ void monitor::EventMonitor::startOfDay()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	checkDriver();
-
 	nvm_create_context();
+
+	checkDeviceStartUpStatus();
+	runPlatformConfigDiagnostic();
+
+	// auto-acknowledge action required events for namespaces
+	// that no longer exist
+	acknowledgeDeletedNamespaces();
+
+	nvm_free_context();
+}
+
+void monitor::EventMonitor::runPlatformConfigDiagnostic()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	diagnostic platformConfigDiag;
+	memset(&platformConfigDiag, 0, sizeof (platformConfigDiag));
+	platformConfigDiag.test = DIAG_TYPE_PLATFORM_CONFIG;
+
+	try
+	{
+		NVM_UINT32 results = 0;
+		m_lib.runDiagnostic("", platformConfigDiag, results);
+	}
+	catch (core::LibraryException &e)
+	{
+		COMMON_LOG_ERROR_F("Platform config diagnostic returned error %d",
+				e.getErrorCode());
+	}
+}
+
+void monitor::EventMonitor::checkDeviceStartUpStatus()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	DeviceMap devMap = getCurrentDeviceMapWithSavedTopology();
+
+	checkDeviceTopologyForChanges(devMap);
+	checkConfigStatusForAllDevices(devMap);
+
+	saveCurrentTopologyState(devMap);
+}
+
+monitor::DeviceMap monitor::EventMonitor::getCurrentDeviceMapWithSavedTopology()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	DeviceMap map = getCurrentDeviceMap();
+	if (isSavedTopologyStateValid())
+	{
+		addSavedTopologyStateToDeviceMap(map);
+	}
+
+	return map;
+}
+
+monitor::DeviceMap monitor::EventMonitor::getCurrentDeviceMap()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	DeviceMap map;
+	addCurrentDevicesToDeviceMap(map);
+	return map;
+}
+
+void monitor::EventMonitor::addCurrentDevicesToDeviceMap(monitor::DeviceMap& map)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	try
+	{
+		std::vector<device_discovery> devList = m_lib.getDevices();
+
+		for (size_t i = 0; i < devList.size(); i++)
+		{
+			std::string uid = core::Helper::uidToString(devList[i].uid);
+			map[uid] = getTopologyInfoForDevice(devList[i]);
+		}
+	}
+	catch (core::LibraryException &e)
+	{
+		COMMON_LOG_ERROR_F("Couldn't get devices - error: %d", e.getErrorCode());
+	}
+}
+
+monitor::deviceInfo monitor::EventMonitor::getTopologyInfoForDevice(const struct device_discovery& device)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	struct deviceInfo devInfo;
+	memset(&devInfo, 0, sizeof (deviceInfo));
+	devInfo.discovered = true;
+	devInfo.discovery = device;
+
+	if (device.manageability == MANAGEMENT_VALIDCONFIG)
+	{
+		std::string uid = core::Helper::uidToString(device.uid);
+		try
+		{
+			devInfo.status = m_lib.getDeviceStatus(uid);
+		}
+		catch (core::LibraryException &e)
+		{
+			COMMON_LOG_ERROR_F("Couldn't get status for dimm %s, error = %d",
+					uid.c_str(), e.getErrorCode());
+		}
+	}
+
+	return devInfo;
+}
+
+bool monitor::EventMonitor::isSavedTopologyStateValid()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
 	int valid = 0;
 	get_config_value_int(SQL_KEY_TOPOLOGY_STATE_VALID, &valid);
 
-	DeviceMap devMap;
-	buildDeviceMap(devMap, (bool) valid);
+	return (bool)valid;
+}
+
+void monitor::EventMonitor::addSavedTopologyStateToDeviceMap(monitor::DeviceMap& map)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	std::vector<struct db_topology_state> topologyState = getSavedTopologyState();
+
+	for (size_t i = 0; i < topologyState.size(); i++)
+	{
+		std::string uidStr = topologyState[i].uid;
+		if (map.find(uidStr) == map.end()) // doesn't exist - missing dimm
+		{
+			struct deviceInfo devInfo;
+			memset(&devInfo, 0, sizeof (deviceInfo));
+			devInfo.discovered = false;
+			devInfo.stored = true;
+			devInfo.storedState = topologyState[i];
+			map[uidStr] = devInfo;
+		}
+		else
+		{
+			map[uidStr].stored = true;
+			map[uidStr].storedState = topologyState[i];
+		}
+	}
+}
+
+std::vector<struct db_topology_state> monitor::EventMonitor::getSavedTopologyState()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	std::vector<struct db_topology_state> topologyState;
+	PersistentStore *pStore = get_lib_store();
+	if (pStore && isSavedTopologyStateValid())
+	{
+		int topoStateCount = 0;
+		if (db_get_topology_state_count(pStore, &topoStateCount) == DB_SUCCESS &&
+				topoStateCount > 0)
+		{
+			// Populate the previous topology state map
+			struct db_topology_state dbTopoState[topoStateCount];
+			if (db_get_topology_states(pStore, dbTopoState, topoStateCount)
+					== topoStateCount)
+			{
+				for (int i = 0; i < topoStateCount; i++)
+				{
+					topologyState.push_back(dbTopoState[i]);
+				}
+			}
+		}
+	}
+
+	return topologyState;
+}
+
+void monitor::EventMonitor::checkDeviceTopologyForChanges(const DeviceMap &devMap)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	// Detect topology changes if topo is saved
-	if (valid)
+	if (isSavedTopologyStateValid())
 	{
 		std::vector<std::string> replacedUids;
 		processTopologyNewDimms(devMap, replacedUids);
 		processTopologyModifiedDimms(devMap, replacedUids);
 	}
-
-	// Detect other issues that only change on reboot
-	processDeviceStartupStatus(devMap);
-
-	// TODO DE4781: Detect address range scrub errors
-
-	// Update the saved topology state
-	saveCurrentTopologyState(devMap);
-
-	// On start-up look for deleted namespaces and auto-acknowledge action required events
-	acknowledgeDeletedNamespaces();
-
-	// On start-up look for mixed sku system
-	processMixedSkuSystem();
-
-	// clean up
-	devMap.clear();
-	nvm_free_context();
 }
 
-/*
- * Find and acknowledge an event of the specified code
- */
-void monitor::EventMonitor::acknowledgeEvent(const int eventCode, const NVM_UID uid)
+void monitor::EventMonitor::processTopologyNewDimms(const DeviceMap &devices,
+		std::vector<std::string> &replacedUids)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	for (DeviceMap::const_iterator iter = devices.begin();
+			iter != devices.end(); iter++)
+	{
+		const std::string &uidStr = iter->first;
+		const struct deviceInfo &device = iter->second;
+
+		// device is new if it's discovered, but not stored
+		if (device.discovered && !device.stored)
+		{
+			std::string replacedUid =
+					getReplacedDimmUid(devices, device.discovery.device_handle.handle);
+
+			// new dimm
+			if (replacedUid.empty())
+			{
+				if (device.status.is_new)
+				{
+					// user needs to configure the DIMM
+					LOG_NEW_DIMM_EVENT(EVENT_CODE_CONFIG_TOPOLOGY_ADDED_NEW_DEVICE,
+							device.discovery.uid,
+							uidStr.c_str(),
+							NULL,
+							true);
+				}
+				else
+				{
+					// configured DIMM found
+					LOG_NEW_DIMM_EVENT(EVENT_CODE_CONFIG_TOPOLOGY_ADDED_CONFIGURED_DEVICE,
+							device.discovery.uid,
+							uidStr.c_str(),
+							NULL,
+							false);
+				}
+			}
+			// replaced dimm
+			else
+			{
+				replacedUids.push_back(replacedUid);
+				if (device.status.is_new)
+				{
+					// user needs to configure the DIMM
+					LOG_NEW_DIMM_EVENT(EVENT_CODE_CONFIG_TOPOLOGY_REPLACED_NEW_DEVICE,
+							device.discovery.uid,
+							replacedUid.c_str(),
+							uidStr.c_str(),
+							true);
+				}
+				else
+				{
+					// configured DIMM found
+					LOG_NEW_DIMM_EVENT(EVENT_CODE_CONFIG_TOPOLOGY_REPLACED_CONFIGURED_DEVICE,
+							device.discovery.uid,
+							replacedUid.c_str(),
+							uidStr.c_str(),
+							false);
+				}
+
+				// acknowledge any action required events on the replaced dimm
+				NVM_UID uid;
+				uid_copy(replacedUid.c_str(), uid);
+				acknowledgeEventCodeForDevice(-1, uid);
+			}
+		}
+	}
+}
+
+std::string monitor::EventMonitor::getReplacedDimmUid(
+		const DeviceMap &devices, const NVM_UINT32 &handle)
+{
+	std::string replacedUid = "";
+
+	// find a stored device with the same handle that is no longer discovered
+	// this would indicated a new dimm replaced an old dimm
+	for (DeviceMap::const_iterator iter = devices.begin();
+				iter != devices.end(); iter++)
+	{
+		const struct deviceInfo &device = iter->second;
+		if (!device.discovered &&
+			device.stored &&
+			device.storedState.device_handle == handle)
+		{
+			replacedUid = device.storedState.uid;
+			break;
+		}
+	}
+	return replacedUid;
+}
+
+void monitor::EventMonitor::processTopologyModifiedDimms(const DeviceMap &devices,
+		const std::vector<std::string> &replacedUids)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	for (DeviceMap::const_iterator iter = devices.begin();
+				iter != devices.end(); iter++)
+	{
+		const std::string &uidStr = iter->first;
+		const struct deviceInfo &device = iter->second;
+
+		// device has moved (handle has changed)
+		if (device.discovered && device.stored &&
+				(device.discovery.device_handle.handle !=
+				device.storedState.device_handle))
+		{
+			store_event_by_parts(EVENT_TYPE_CONFIG,
+					EVENT_SEVERITY_INFO,
+					EVENT_CODE_CONFIG_TOPOLOGY_MOVED_DEVICE,
+					device.discovery.uid,
+					false,
+					uidStr.c_str(),
+					NULL,
+					NULL,
+					DIAGNOSTIC_RESULT_UNKNOWN);
+		}
+		// old device not discovered
+		else if (device.stored && !device.discovered)
+		{
+			// Make sure it's not in the replaced UIDs list
+			// if so it's already been covered by replacement events
+			if (std::find(replacedUids.begin(), replacedUids.end(),
+					uidStr) == replacedUids.end())
+			{
+				NVM_UID uid;
+				uid_copy(uidStr.c_str(), uid);
+				store_event_by_parts(EVENT_TYPE_CONFIG,
+							EVENT_SEVERITY_CRITICAL,
+							EVENT_CODE_CONFIG_TOPOLOGY_MISSING_DEVICE,
+							uid,
+							false,
+							uidStr.c_str(),
+							NULL,
+							NULL,
+							DIAGNOSTIC_RESULT_UNKNOWN);
+
+				// since the dimm is missing,
+				// automatically acknowledge any action required events for this dimm
+				acknowledgeEventCodeForDevice(-1, uid);
+			}
+		}
+	}
+}
+
+void monitor::EventMonitor::saveCurrentTopologyState(const DeviceMap &devices)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	bool saved = true;
+
+	PersistentStore *pStore = get_lib_store();
+	if (pStore)
+	{
+		// Only keep the latest topology
+		if (db_delete_all_topology_states(pStore) != DB_SUCCESS)
+		{
+			COMMON_LOG_ERROR("couldn't delete old topology_state");
+			saved = false;
+		}
+		else
+		{
+			// Preserve topology state in config DB
+			for (DeviceMap::const_iterator iter = devices.begin();
+					iter != devices.end(); iter++)
+			{
+				const std::string &uidStr = iter->first;
+				const struct deviceInfo &device = iter->second;
+
+				// only store current devices
+				if (device.discovered)
+				{
+					struct db_topology_state topoState;
+					memset(&topoState, 0, sizeof(topoState));
+					s_strcpy(topoState.uid, uidStr.c_str(), NVM_MAX_UID_LEN);
+					topoState.device_handle = device.discovery.device_handle.handle;
+					topoState.manufacturer = MANUFACTURER_TO_UINT(device.discovery.manufacturer);
+					topoState.serial_num = SERIAL_NUMBER_TO_UINT(device.discovery.serial_number);
+					memmove(topoState.model_num, device.discovery.model_number, NVM_MODEL_LEN);
+
+					topoState.current_config_status = device.status.config_status;
+					if (device.discovery.manageability == MANAGEMENT_VALIDCONFIG)
+					{
+						topoState.config_goal_status = getConfigGoalStatusForDevice(uidStr);
+					}
+					else
+					{
+						topoState.config_goal_status = CONFIG_GOAL_STATUS_UNKNOWN;
+					}
+
+					if (db_add_topology_state(pStore, &topoState) != DB_SUCCESS)
+					{
+						COMMON_LOG_ERROR_F("couldn't add topology_state for DIMM %s",
+								topoState.uid);
+						saved = false;
+						break;
+					}
+				}
+			}
+		}
+
+		// everything succeeded
+		if (saved)
+		{
+			add_config_value(SQL_KEY_TOPOLOGY_STATE_VALID, "1");
+		}
+	}
+}
+
+void monitor::EventMonitor::checkConfigStatusForAllDevices(monitor::DeviceMap &devMap)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	for (monitor::DeviceMap::iterator devIter = devMap.begin(); devIter != devMap.end(); devIter++)
+	{
+		const std::string &uidStr = devIter->first;
+		struct deviceInfo &device = devIter->second;
+
+		if (device.discovered && device.discovery.manageability == MANAGEMENT_VALIDCONFIG)
+		{
+			checkConfigGoalStatus(uidStr, device);
+		}
+	}
+}
+
+void monitor::EventMonitor::checkConfigGoalStatus(const std::string &uidStr, const deviceInfo &device)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	enum config_goal_status configGoalStatus = getConfigGoalStatusForDevice(uidStr);
+	// ensure this is a new event
+	if (!device.stored ||
+		configGoalStatus != device.storedState.config_goal_status)
+	{
+		if (configGoalStatus == CONFIG_GOAL_STATUS_SUCCESS)
+		{
+			createEventForConfigGoalAppliedOnDevice(uidStr);
+
+			// Action Required config events for this DIMM are resolved
+			acknowledgePlatformConfigEventsForDevice(uidStr);
+		}
+	}
+}
+
+config_goal_status monitor::EventMonitor::getConfigGoalStatusForDevice(const std::string& uid)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	config_goal_status status = CONFIG_GOAL_STATUS_UNKNOWN;
+	try
+	{
+		struct config_goal goal = m_lib.getConfigGoal(uid);
+		status = goal.status;
+	}
+	catch (core::LibraryException &e)
+	{
+		status = CONFIG_GOAL_STATUS_UNKNOWN;
+
+		if (e.getErrorCode() == NVM_ERR_NOTFOUND)
+		{
+			COMMON_LOG_DEBUG_F("No goal for DIMM %s", uid.c_str());
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Error fetching config goal for DIMM %s: %d",
+					uid.c_str(),
+					e.getErrorCode());
+		}
+	}
+
+	return status;
+}
+
+void monitor::EventMonitor::createEventForConfigGoalAppliedOnDevice(const std::string& uid)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	store_event_by_parts(EVENT_TYPE_CONFIG,
+						 EVENT_SEVERITY_INFO,
+						 EVENT_CODE_CONFIG_GOAL_APPLIED,
+						 uid.c_str(),
+						 false,
+						 uid.c_str(),
+						 NULL,
+						 NULL,
+						 DIAGNOSTIC_RESULT_UNKNOWN);
+}
+
+void monitor::EventMonitor::acknowledgePlatformConfigEventsForDevice(const std::string& uid)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	acknowledgeEventTypeForDevice(EVENT_TYPE_CONFIG, uid);
+	acknowledgeEventTypeForDevice(EVENT_TYPE_DIAG_PLATFORM_CONFIG, uid);
+}
+
+void monitor::EventMonitor::acknowledgeEventTypeForDevice(const event_type type,
+		const std::string& uid)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	struct event_filter filter;
+	memset(&filter, 0, sizeof (filter));
+	filter.filter_mask = NVM_FILTER_ON_UID | NVM_FILTER_ON_TYPE;
+	s_strcpy(filter.uid, uid.c_str(), NVM_MAX_UID_LEN);
+	filter.type = type;
+	acknowledge_events(&filter);
+}
+
+void monitor::EventMonitor::acknowledgeEventCodeForDevice(const int eventCode, const NVM_UID uid)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
@@ -164,6 +629,75 @@ void monitor::EventMonitor::acknowledgeEvent(const int eventCode, const NVM_UID 
 	}
 
 	acknowledge_events(&filter);
+}
+
+void monitor::EventMonitor::acknowledgeDeletedNamespaces()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	try
+	{
+		// find action required events for all namespaces
+		struct event_filter filter;
+		memset(&filter, 0, sizeof(filter));
+		filter.filter_mask = NVM_FILTER_ON_AR | NVM_FILTER_ON_CODE;
+		filter.action_required = true;
+		filter.code = EVENT_CODE_HEALTH_NAMESPACE_HEALTH_STATE_CHANGED;
+		std::vector<event> events = m_lib.getEvents(filter);
+		if (events.size() > 0)
+		{
+			std::vector<std::string> nsUids;
+			bool ackAll = false;
+			// get namespace list
+
+			std::vector<namespace_discovery> namespaces = m_lib.getNamespaces();
+			if (namespaces.size() == 0)
+			{
+				ackAll = true; // no namespaces, acknowledge them all
+			}
+			else // at least one namespace
+			{
+				for (size_t i = 0; i < namespaces.size(); i++)
+				{
+					nsUids.push_back(core::Helper::uidToString(namespaces[i].namespace_uid));
+				}
+			}
+
+			// don't auto-acknowledge on failure to get namespaces
+			if (namespaces.size() > 0 || ackAll)
+			{
+				for (size_t i = 0; i < events.size(); i++)
+				{
+					if (ackAll || namespaceDeleted(events[i].uid, nsUids))
+					{
+						acknowledgeEventCodeForDevice(EVENT_CODE_HEALTH_NAMESPACE_HEALTH_STATE_CHANGED,
+								events[i].uid);
+					}
+				}
+			}
+		}
+	}
+	catch (core::LibraryException &e)
+	{
+		COMMON_LOG_ERROR_F("Unable to acknowledge events for namespaces - error %d", e.getErrorCode());
+	}
+}
+
+bool monitor::EventMonitor::namespaceDeleted(const NVM_UID nsUid,
+		const std::vector<std::string> &nsUids)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	bool deleted = false;
+
+	// look for the uid in the list
+	std::string uidStr = core::Helper::uidToString(nsUid);
+	if (std::find(nsUids.begin(), nsUids.end(), uidStr) == nsUids.end())
+	{
+		// if not found, then deleted
+		deleted = true;
+	}
+
+	return deleted;
 }
 
 /*
@@ -207,15 +741,10 @@ void monitor::EventMonitor::monitorDimmStatus(const std::string &uidStr,
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	struct device_status status;
-	int rc = nvm_get_device_status(discovery.uid, &status);
-	if (rc != NVM_SUCCESS)
+	try
 	{
-		COMMON_LOG_ERROR_F("nvm_get_device_status for dimm %s failed with error %d\n",
-				uidStr.c_str(), rc);
-	}
-	else
-	{
+		struct device_status status = m_lib.getDeviceStatus(uidStr);
+
 		// first pass, just store current values
 		// if there are errors that have not been seen in the fw error log
 		// create an event for those errors
@@ -308,7 +837,7 @@ void monitor::EventMonitor::monitorDimmStatus(const std::string &uidStr,
 				}
 				else
 				{
-					acknowledgeEvent(code, discovery.uid);
+					acknowledgeEventCodeForDevice(code, discovery.uid);
 				}
 
 				// update stored state
@@ -321,9 +850,13 @@ void monitor::EventMonitor::monitorDimmStatus(const std::string &uidStr,
 				storeFwErrorLogEvent(discovery.uid, uidStr, status.new_error_count);
 				storedState.newest_error_log_timestamp = status.newest_error_log_timestamp;
 				storedStateChanged = true;
-
 			}
 		}
+	}
+	catch (core::LibraryException &e)
+	{
+		COMMON_LOG_ERROR_F("Unable to get device status for dimm %s - error %d\n",
+				uidStr.c_str(), e.getErrorCode());
 	}
 }
 
@@ -354,7 +887,7 @@ void monitor::EventMonitor::monitorDimmMediaTemperature(const std::string &uidSt
 		// auto-acknowledge any existing temperature over threshold events
 		else if (sensor.current_state == SENSOR_NORMAL)
 		{
-			acknowledgeEvent(EVENT_CODE_HEALTH_MEDIA_TEMPERATURE_OVER_THRESHOLD, discovery.uid);
+			acknowledgeEventCodeForDevice(EVENT_CODE_HEALTH_MEDIA_TEMPERATURE_OVER_THRESHOLD, discovery.uid);
 		}
 
 		std::stringstream threshold, temperature;
@@ -403,7 +936,7 @@ void monitor::EventMonitor::monitorDimmControllerTemperature(const std::string &
 		// auto-acknowledge any existing temperature over threshold events
 		else if (sensor.current_state == SENSOR_NORMAL)
 		{
-			acknowledgeEvent(EVENT_CODE_HEALTH_CONTROLLER_TEMPERATURE_OVER_THRESHOLD, discovery.uid);
+			acknowledgeEventCodeForDevice(EVENT_CODE_HEALTH_CONTROLLER_TEMPERATURE_OVER_THRESHOLD, discovery.uid);
 		}
 
 		std::stringstream threshold, temperature;
@@ -459,7 +992,7 @@ void monitor::EventMonitor::monitorDimmSpare(const std::string &uidStr,
 		// auto-acknowledge any existing spare below threshold events
 		else if (sensor.current_state == SENSOR_NORMAL)
 		{
-			acknowledgeEvent(EVENT_CODE_HEALTH_LOW_SPARE_CAPACITY, discovery.uid);
+			acknowledgeEventCodeForDevice(EVENT_CODE_HEALTH_LOW_SPARE_CAPACITY, discovery.uid);
 		}
 
 		// update stored state
@@ -557,16 +1090,10 @@ void monitor::EventMonitor::monitorDimmSensors(const std::string &uidStr,
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	struct sensor sensors[NVM_MAX_DEVICE_SENSORS];
-	memset(sensors, 0, sizeof(sensors));
-	int rc = nvm_get_sensors(discovery.uid, sensors, NVM_MAX_DEVICE_SENSORS);
-		if (rc != NVM_SUCCESS)
+	try
 	{
-		COMMON_LOG_ERROR_F("nvm_get_sensors for dimm %s failed with error %d\n",
-				uidStr.c_str(), rc);
-	}
-	else
-	{
+		std::vector<struct sensor> sensors = m_lib.getSensors(uidStr);
+
 		// first pass, just store current values
 		if (firstState)
 		{
@@ -621,6 +1148,11 @@ void monitor::EventMonitor::monitorDimmSensors(const std::string &uidStr,
 					ERASURE_CODED, storedStateChanged);
 		}
 	}
+	catch (core::LibraryException &e)
+	{
+		COMMON_LOG_ERROR_F("Unable to get sensors for dimm %s - error %d\n",
+				uidStr.c_str(), e.getErrorCode());
+	}
 }
 
 /*
@@ -659,110 +1191,98 @@ void monitor::EventMonitor::monitorNamespaces(PersistentStore *pStore)
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	if (pStore)
 	{
-		// get namespaces
-		int nsCount = nvm_get_namespace_count();
-		if (nsCount < 0)
+		try
 		{
-			COMMON_LOG_ERROR_F("nvm_get_namespace_count failed with error %d", nsCount);
-		}
-		else if (nsCount > 0)
-		{
-			struct namespace_discovery namespaces[nsCount];
-			memset(namespaces, 0, sizeof (struct namespace_discovery) * nsCount);
-			nsCount = nvm_get_namespaces(namespaces, nsCount);
-			if (nsCount < 0)
+			std::vector<namespace_discovery> namespaces = m_lib.getNamespaces();
+
+			// for each namespace
+			for (size_t i = 0; i < namespaces.size(); i++)
 			{
-				COMMON_LOG_ERROR_F("nvm_get_namespaces failed with error %d", nsCount);
-			}
-			else if (nsCount > 0)
-			{
-				// for each namespace
-				for (int i = 0; i < nsCount; i++)
+				std::string uidStr = core::Helper::uidToString(namespaces[i].namespace_uid);
+				try
 				{
-					struct namespace_details details;
-					memset(&details, 0, sizeof (details));
-					NVM_UID uidStr;
-					uid_copy(namespaces[i].namespace_uid, uidStr);
-					int rc = nvm_get_namespace_details(namespaces[i].namespace_uid, &details);
-					if (rc != NVM_SUCCESS)
+					struct namespace_details details = m_lib.getNamespaceDetails(uidStr);
+
+					// get the stored state for this namespace
+					bool storedStateChanged = false;
+
+					struct db_namespace_state storedState;
+					memset(&storedState, 0, sizeof (storedState));
+					if (db_get_namespace_state_by_namespace_uid(pStore,
+							uidStr.c_str(), &storedState) != DB_SUCCESS)
 					{
-						COMMON_LOG_ERROR_F("nvm_get_namespace_details for namespace %s failed with error %d",
-								uidStr, rc);
+						// initial state, just store current state
+						s_strcpy(storedState.namespace_uid, uidStr.c_str(),
+								NAMESPACE_STATE_NAMESPACE_UID_LEN);
+						storedState.health_state = details.health;
+						storedStateChanged = true;
 					}
-					else
+					// log health transition event
+					else if (details.health != storedState.health_state)
 					{
-						// get the stored state for this namespace
-						bool storedStateChanged = false;
-
-						struct db_namespace_state storedState;
-						memset(&storedState, 0, sizeof (storedState));
-						if (db_get_namespace_state_by_namespace_uid(pStore,
-								uidStr, &storedState) != DB_SUCCESS)
+						enum event_severity severity = EVENT_SEVERITY_INFO;
+						bool actionRequired = false;
+						// namespace is failed
+						if (details.health == NAMESPACE_HEALTH_CRITICAL ||
+							details.health == NAMESPACE_HEALTH_BROKENMIRROR)
 						{
-							// initial state, just store current state
-							s_strcpy(storedState.namespace_uid, uidStr,
-									NAMESPACE_STATE_NAMESPACE_UID_LEN);
-							storedState.health_state = details.health;
-							storedStateChanged = true;
+							severity = EVENT_SEVERITY_CRITICAL;
+							actionRequired = true;
 						}
-						// log health transition event
-						else if (details.health != storedState.health_state)
+						// namespace is not failed
+						else
 						{
-							enum event_severity severity = EVENT_SEVERITY_INFO;
-							bool actionRequired = false;
-							// namespace is failed
-							if (details.health == NAMESPACE_HEALTH_CRITICAL ||
-								details.health == NAMESPACE_HEALTH_BROKENMIRROR)
-							{
-								severity = EVENT_SEVERITY_CRITICAL;
-								actionRequired = true;
-							}
-							// namespace is not failed
-							else
-							{
-								// auto-acknowledge any old namespace health failed events
-								acknowledgeEvent(EVENT_CODE_HEALTH_NAMESPACE_HEALTH_STATE_CHANGED,
-										namespaces[i].namespace_uid);
-							}
-
-							std::string oldState = namespaceHealthToStr(
-									(enum namespace_health)storedState.health_state);
-							std::string newState = namespaceHealthToStr(details.health);
-							store_event_by_parts(
-									EVENT_TYPE_HEALTH,
-									severity,
-									EVENT_CODE_HEALTH_NAMESPACE_HEALTH_STATE_CHANGED,
-									namespaces[i].namespace_uid,
-									actionRequired,
-									uidStr,
-									oldState.c_str(),
-									newState.c_str(),
-									DIAGNOSTIC_RESULT_UNKNOWN);
-
-							storedStateChanged = true;
-							storedState.health_state = details.health;
-							if (db_delete_namespace_state_by_namespace_uid(pStore,
-									uidStr) != DB_SUCCESS)
-							{
-								COMMON_LOG_ERROR_F(
-									"Failed to clean up the stored health state for namespace %s",
-									uidStr);
-							}
+							// auto-acknowledge any old namespace health failed events
+							acknowledgeEventCodeForDevice(EVENT_CODE_HEALTH_NAMESPACE_HEALTH_STATE_CHANGED,
+									namespaces[i].namespace_uid);
 						}
 
-						if (storedStateChanged)
+						std::string oldState = namespaceHealthToStr(
+								(enum namespace_health)storedState.health_state);
+						std::string newState = namespaceHealthToStr(details.health);
+						store_event_by_parts(
+								EVENT_TYPE_HEALTH,
+								severity,
+								EVENT_CODE_HEALTH_NAMESPACE_HEALTH_STATE_CHANGED,
+								namespaces[i].namespace_uid,
+								actionRequired,
+								uidStr.c_str(),
+								oldState.c_str(),
+								newState.c_str(),
+								DIAGNOSTIC_RESULT_UNKNOWN);
+
+						storedStateChanged = true;
+						storedState.health_state = details.health;
+						if (db_delete_namespace_state_by_namespace_uid(pStore,
+								uidStr.c_str()) != DB_SUCCESS)
 						{
-							if (db_add_namespace_state(pStore, &storedState) != DB_SUCCESS)
-							{
-								COMMON_LOG_ERROR_F(
-									"Failed to update the stored health state for namespace %s",
-									uidStr);
-							}
+							COMMON_LOG_ERROR_F(
+								"Failed to clean up the stored health state for namespace %s",
+								uidStr.c_str());
 						}
-					} // end nvm_get_namespace_details
-				} // end for each namespace
-			} // end nvm_get_namespaces
-		} // end nvm_get_namespace_count
+					}
+
+					if (storedStateChanged)
+					{
+						if (db_add_namespace_state(pStore, &storedState) != DB_SUCCESS)
+						{
+							COMMON_LOG_ERROR_F(
+								"Failed to update the stored health state for namespace %s",
+								uidStr.c_str());
+						}
+					}
+				} // end nvm_get_namespace_details
+				catch (core::LibraryException &e)
+				{
+					COMMON_LOG_ERROR_F("Unable to get details for namespace %s - error %d",
+							uidStr.c_str(), e.getErrorCode());
+				}
+			}
+		}
+		catch (core::LibraryException &e)
+		{
+			COMMON_LOG_ERROR_F("Unable to get namespaces - error %d", e.getErrorCode());
+		}
 	} // end get peristent store
 }
 
@@ -776,8 +1296,7 @@ void monitor::EventMonitor::monitor()
 		// clean up any context
 		nvm_create_context();
 
-		DeviceMap devMap;
-		buildDeviceMap(devMap);
+		DeviceMap devMap = getCurrentDeviceMap();
 		for (DeviceMap::const_iterator devIter = devMap.begin();
 				devIter != devMap.end(); devIter++)
 		{
@@ -840,665 +1359,3 @@ void monitor::EventMonitor::monitor()
 	}
 
 }
-
-bool monitor::EventMonitor::namespaceDeleted(const NVM_UID nsUid,
-		const std::vector<std::string> &nsUids)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	bool deleted = false;
-
-	// look for the uid in the list
-	NVM_UID uidStr;
-	uid_copy(nsUid, uidStr);
-	if (std::find(nsUids.begin(), nsUids.end(), uidStr) == nsUids.end())
-	{
-		// if not found, then deleted
-		deleted = true;
-	}
-
-
-	return deleted;
-}
-
-
-/*
- * On start-up look for deleted namespaces and auto-acknowledge action required events
- */
-void monitor::EventMonitor::acknowledgeDeletedNamespaces()
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	// find action required events for all namespaces
-	struct event_filter filter;
-	memset(&filter, 0, sizeof(filter));
-	filter.filter_mask = NVM_FILTER_ON_AR | NVM_FILTER_ON_CODE;
-	filter.action_required = true;
-	filter.code = EVENT_CODE_HEALTH_NAMESPACE_HEALTH_STATE_CHANGED;
-	int eventCount = nvm_get_event_count(&filter);
-	if (eventCount < 0)
-	{
-		COMMON_LOG_ERROR_F("nvm_get_event_count failed with error %d", eventCount);
-	}
-	else if (eventCount > 0)
-	{
-		struct event events[eventCount];
-		memset(events, 0, sizeof (struct event) * eventCount);
-		eventCount = nvm_get_events(&filter, events, eventCount);
-		if (eventCount < 0)
-		{
-			COMMON_LOG_ERROR_F("nvm_get_events failed with error %d", eventCount);
-		}
-		else if (eventCount > 0)
-		{
-			std::vector<std::string> nsUids;
-			bool ackAll = false;
-			// get namespace list
-			int nsCount = nvm_get_namespace_count();
-			if (nsCount < 0)
-			{
-				COMMON_LOG_ERROR_F("nvm_get_namespace_count failed with error %d", nsCount);
-			}
-			else if (nsCount == 0)
-			{
-				ackAll = true; // no namespaces, acknowledge them all
-			}
-			else // at least one namespace
-			{
-				struct namespace_discovery namespaces[nsCount];
-				nsCount = nvm_get_namespaces(namespaces, nsCount);
-				if (nsCount < 0) // error retrieving namespace list
-				{
-					COMMON_LOG_ERROR_F("nvm_get_namespaces failed with error %d", nsCount);
-				}
-				else if (nsCount == 0) // no namespaces, acknowledge them all
-				{
-					ackAll = true;
-				}
-				else // at least one namespace
-				{
-					for (int i = 0; i < nsCount; i++)
-					{
-						NVM_UID uidStr;
-						uid_copy(namespaces[i].namespace_uid, uidStr);
-						nsUids.push_back(uidStr);
-					}
-				}
-			}
-
-			// don't auto-acknowledge on failure to get namespaces
-			if (nsCount || ackAll)
-			{
-				for (int i = 0; i < eventCount; i++)
-				{
-					if (ackAll || namespaceDeleted(events[i].uid, nsUids))
-					{
-						acknowledgeEvent(EVENT_CODE_HEALTH_NAMESPACE_HEALTH_STATE_CHANGED,
-								events[i].uid);
-					}
-				}
-			}
-		}
-	}
-}
-
-
-void monitor::EventMonitor::processDeviceStartupStatus(monitor::DeviceMap &devMap)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	for (monitor::DeviceMap::iterator devIter = devMap.begin(); devIter != devMap.end(); devIter++)
-	{
-		const std::string &uidStr = devIter->first;
-		struct deviceInfo &device = devIter->second;
-
-		checkDeviceManageability(uidStr, device);
-		if (device.discovered && device.discovery.manageability == MANAGEMENT_VALIDCONFIG)
-		{
-			checkShutdownStatus(uidStr, device);
-
-			checkConfigGoalStatus(uidStr, device);
-
-			checkSkuViolation(uidStr, device);
-		}
-	}
-}
-
-void monitor::EventMonitor::checkDeviceManageability(const std::string &uidStr,
-		const deviceInfo& device)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	if (device.discovered && device.discovery.manageability == MANAGEMENT_INVALIDCONFIG)
-	{
-		store_event_by_parts(EVENT_TYPE_CONFIG,
-		                     EVENT_SEVERITY_WARN,
-		                     EVENT_CODE_CONFIG_NOT_MANAGEABLE,
-		                     uidStr.c_str(),
-		                     false,
-		                     uidStr.c_str(),
-		                     NULL,
-		                     NULL,
-		                     DIAGNOSTIC_RESULT_UNKNOWN);
-	}
-}
-
-void monitor::EventMonitor::checkConfigGoalStatus(const std::string &uidStr, const deviceInfo &device) const
-{
-	// check platform config errors
-	struct event_filter filter;
-	memset(&filter, 0, sizeof (filter));
-	filter.filter_mask = NVM_FILTER_ON_UID | NVM_FILTER_ON_TYPE;
-	memmove(filter.uid, device.discovery.uid, NVM_MAX_UID_LEN);
-	filter.type = EVENT_TYPE_CONFIG;
-
-	struct config_goal goal;
-	memset(&goal, 0, sizeof (goal));
-	int rc = nvm_get_config_goal(device.discovery.uid, &goal);
-	if (rc == NVM_SUCCESS)
-	{
-		enum config_goal_status configGoalStatus = goal.status;
-		// ensure this is a new event
-		if (!device.stored ||
-		    configGoalStatus != device.storedState.config_goal_status)
-		{
-			// configuration processed successfully
-			if (configGoalStatus == CONFIG_GOAL_STATUS_SUCCESS)
-			{
-				store_event_by_parts(EVENT_TYPE_CONFIG,
-				                     EVENT_SEVERITY_INFO,
-				                     EVENT_CODE_CONFIG_GOAL_APPLIED,
-				                     device.discovery.uid,
-				                     false,
-				                     uidStr.c_str(),
-				                     NULL,
-				                     NULL,
-				                     DIAGNOSTIC_RESULT_UNKNOWN);
-
-				// acknowledge any old config events for this dimm
-				acknowledge_events(&filter);
-			}
-			else if (configGoalStatus == CONFIG_GOAL_STATUS_ERR_BADREQUEST)
-			{
-				store_event_by_parts(EVENT_TYPE_CONFIG,
-				                     EVENT_SEVERITY_WARN,
-				                     EVENT_CODE_CONFIG_GOAL_FAILED_CONFIG_ERROR,
-				                     device.discovery.uid,
-				                     true,
-				                     uidStr.c_str(),
-				                     NULL,
-				                     NULL,
-				                     DIAGNOSTIC_RESULT_UNKNOWN);
-			}
-			else if (configGoalStatus == CONFIG_GOAL_STATUS_ERR_FW)
-			{
-				store_event_by_parts(EVENT_TYPE_CONFIG,
-				                     EVENT_SEVERITY_WARN,
-				                     EVENT_CODE_CONFIG_GOAL_FAILED_FW_ERROR,
-				                     device.discovery.uid,
-				                     true,
-				                     uidStr.c_str(),
-				                     NULL,
-				                     NULL,
-				                     DIAGNOSTIC_RESULT_UNKNOWN);
-			}
-			else if (configGoalStatus == CONFIG_GOAL_STATUS_ERR_INSUFFICIENTRESOURCES)
-			{
-				store_event_by_parts(EVENT_TYPE_CONFIG,
-				                     EVENT_SEVERITY_WARN,
-				                     EVENT_CODE_CONFIG_GOAL_FAILED_INSUFFICIENT_RESOURCES,
-				                     device.discovery.uid,
-				                     true,
-				                     uidStr.c_str(),
-				                     NULL,
-				                     NULL,
-				                     DIAGNOSTIC_RESULT_UNKNOWN);
-			}
-			else if (configGoalStatus == CONFIG_GOAL_STATUS_ERR_UNKNOWN)
-			{
-				store_event_by_parts(EVENT_TYPE_CONFIG,
-				                     EVENT_SEVERITY_WARN,
-				                     EVENT_CODE_CONFIG_GOAL_FAILED_UNKNOWN,
-				                     device.discovery.uid,
-				                     true,
-				                     uidStr.c_str(),
-				                     NULL,
-				                     NULL,
-				                     DIAGNOSTIC_RESULT_UNKNOWN);
-			}
-			else if (configGoalStatus == CONFIG_GOAL_STATUS_UNKNOWN)
-			{
-				store_event_by_parts(EVENT_TYPE_CONFIG,
-				                     EVENT_SEVERITY_CRITICAL,
-				                     EVENT_CODE_CONFIG_DATA_INVALID,
-				                     device.discovery.uid,
-				                     true,
-				                     uidStr.c_str(),
-				                     NULL,
-				                     NULL,
-				                     DIAGNOSTIC_RESULT_UNKNOWN);
-			}
-		} // end new config status
-	}
-	else if (rc == NVM_ERR_BADDEVICECONFIG)
-	{
-		store_event_by_parts(EVENT_TYPE_CONFIG,
-		                     EVENT_SEVERITY_CRITICAL,
-		                     EVENT_CODE_CONFIG_DATA_INVALID,
-		                     device.discovery.uid,
-		                     true,
-		                     uidStr.c_str(),
-		                     NULL,
-		                     NULL,
-		                     DIAGNOSTIC_RESULT_UNKNOWN);
-	}
-	else if (rc == NVM_ERR_NOTFOUND)
-	{
-		COMMON_LOG_DEBUG_F("No config goal found for DIMM %s", uidStr.c_str());
-	}
-	else
-	{
-		COMMON_LOG_ERROR_F("Error fetching config goal for DIMM %s, rc=%d", uidStr.c_str(), rc);
-	}
-}
-
-void monitor::EventMonitor::checkSkuViolation(const std::string &uidStr, const deviceInfo &device) const
-{
-	if (device.status.sku_violation)
-	{
-		store_event_by_parts(EVENT_TYPE_CONFIG,
-			EVENT_SEVERITY_CRITICAL,
-			EVENT_CODE_CONFIG_SKU_VIOLATION,
-			device.discovery.uid,
-			true,
-			uidStr.c_str(),
-			NULL,
-			NULL,
-			DIAGNOSTIC_RESULT_UNKNOWN);
-	}
-	// auto-acknowledge event
-	else
-	{
-		monitor::EventMonitor::acknowledgeEvent(EVENT_CODE_CONFIG_SKU_VIOLATION, device.discovery.uid);
-	}
-}
-
-void monitor::EventMonitor::checkShutdownStatus(const std::string &uidStr, const deviceInfo &device) const
-{
-	// FW had an abnormal shutdown - nothing the user can do about this
-	if (!(device.status.last_shutdown_status & SHUTDOWN_STATUS_CLEAN))
-	{
-		store_event_by_parts(EVENT_TYPE_HEALTH,
-				EVENT_SEVERITY_INFO,
-				EVENT_CODE_HEALTH_UNSAFE_SHUTDOWN,
-				device.discovery.uid,
-				false,
-				uidStr.c_str(),
-				NULL,
-				NULL,
-				DIAGNOSTIC_RESULT_UNKNOWN);
-	}
-}
-
-std::string monitor::EventMonitor::getReplacedDimmUid(
-		const DeviceMap &devices, const NVM_UINT32 &handle)
-{
-	std::string replacedUid = "";
-
-	// find a stored device with the same handle that is no longer discovered
-	// this would indicated a new dimm replaced an old dimm
-	for (DeviceMap::const_iterator iter = devices.begin();
-				iter != devices.end(); iter++)
-	{
-		const struct deviceInfo &device = iter->second;
-		if (!device.discovered &&
-			device.stored &&
-			device.storedState.device_handle == handle)
-		{
-			replacedUid = device.storedState.uid;
-			break;
-		}
-	}
-	return replacedUid;
-}
-
-void monitor::EventMonitor::processTopologyNewDimms(const DeviceMap &devices,
-		std::vector<std::string> &replacedUids)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	for (DeviceMap::const_iterator iter = devices.begin();
-			iter != devices.end(); iter++)
-	{
-		const std::string &uidStr = iter->first;
-		const struct deviceInfo &device = iter->second;
-
-		// device is new if it's discovered, but not stored
-		if (device.discovered && !device.stored)
-		{
-			std::string replacedUid =
-					getReplacedDimmUid(devices, device.discovery.device_handle.handle);
-
-			// new dimm
-			if (replacedUid.empty())
-			{
-				if (device.status.is_new)
-				{
-					// user needs to configure the DIMM
-					LOG_NEW_DIMM_EVENT(EVENT_CODE_CONFIG_TOPOLOGY_ADDED_NEW_DEVICE,
-							device.discovery.uid,
-							uidStr.c_str(),
-							NULL,
-							true);
-				}
-				else
-				{
-					// configured DIMM found
-					LOG_NEW_DIMM_EVENT(EVENT_CODE_CONFIG_TOPOLOGY_ADDED_CONFIGURED_DEVICE,
-							device.discovery.uid,
-							uidStr.c_str(),
-							NULL,
-							false);
-				}
-			}
-			// replaced dimm
-			else
-			{
-				replacedUids.push_back(replacedUid);
-				if (device.status.is_new)
-				{
-					// user needs to configure the DIMM
-					LOG_NEW_DIMM_EVENT(EVENT_CODE_CONFIG_TOPOLOGY_REPLACED_NEW_DEVICE,
-							device.discovery.uid,
-							replacedUid.c_str(),
-							uidStr.c_str(),
-							true);
-				}
-				else
-				{
-					// configured DIMM found
-					LOG_NEW_DIMM_EVENT(EVENT_CODE_CONFIG_TOPOLOGY_REPLACED_CONFIGURED_DEVICE,
-							device.discovery.uid,
-							replacedUid.c_str(),
-							uidStr.c_str(),
-							false);
-				}
-
-				// acknowledge any action required events on the replaced dimm
-				NVM_UID uid;
-				uid_copy(replacedUid.c_str(), uid);
-				acknowledgeEvent(-1, uid);
-			}
-		}
-	}
-}
-
-void monitor::EventMonitor::processTopologyModifiedDimms(const DeviceMap &devices,
-		const std::vector<std::string> &replacedUids)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	for (DeviceMap::const_iterator iter = devices.begin();
-				iter != devices.end(); iter++)
-	{
-		const std::string &uidStr = iter->first;
-		const struct deviceInfo &device = iter->second;
-
-		// device has moved (handle has changed)
-		if (device.discovered && device.stored &&
-				(device.discovery.device_handle.handle !=
-				device.storedState.device_handle))
-		{
-			store_event_by_parts(EVENT_TYPE_CONFIG,
-					EVENT_SEVERITY_INFO,
-					EVENT_CODE_CONFIG_TOPOLOGY_MOVED_DEVICE,
-					device.discovery.uid,
-					false,
-					uidStr.c_str(),
-					NULL,
-					NULL,
-					DIAGNOSTIC_RESULT_UNKNOWN);
-		}
-		// old device not discovered
-		else if (device.stored && !device.discovered)
-		{
-			// Make sure it's not in the replaced UIDs list
-			// if so it's already been covered by replacement events
-			if (std::find(replacedUids.begin(), replacedUids.end(),
-					uidStr) == replacedUids.end())
-			{
-				NVM_UID uid;
-				uid_copy(uidStr.c_str(), uid);
-				store_event_by_parts(EVENT_TYPE_CONFIG,
-							EVENT_SEVERITY_CRITICAL,
-							EVENT_CODE_CONFIG_TOPOLOGY_MISSING_DEVICE,
-							uid,
-							false,
-							uidStr.c_str(),
-							NULL,
-							NULL,
-							DIAGNOSTIC_RESULT_UNKNOWN);
-
-				// since the dimm is missing,
-				// automatically acknowledge any action required events for this dimm
-				acknowledgeEvent(-1, uid);
-			}
-		}
-	}
-}
-
-void monitor::EventMonitor::saveCurrentTopologyState(const DeviceMap &devices)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	bool saved = true;
-
-	PersistentStore *pStore = get_lib_store();
-	if (pStore)
-	{
-		// Only keep the latest topology
-		if (db_delete_all_topology_states(pStore) != DB_SUCCESS)
-		{
-			COMMON_LOG_ERROR("couldn't delete old topology_state");
-			saved = false;
-		}
-		else
-		{
-			// Preserve topology state in config DB
-			for (DeviceMap::const_iterator iter = devices.begin();
-					iter != devices.end(); iter++)
-			{
-				const std::string &uidStr = iter->first;
-				const struct deviceInfo &device = iter->second;
-
-				// only store current devices
-				if (device.discovered)
-				{
-					struct db_topology_state topoState;
-					memset(&topoState, 0, sizeof(topoState));
-					s_strcpy(topoState.uid, uidStr.c_str(), NVM_MAX_UID_LEN);
-					topoState.device_handle = device.discovery.device_handle.handle;
-					topoState.manufacturer = MANUFACTURER_TO_UINT(device.discovery.manufacturer);
-					topoState.serial_num = SERIAL_NUMBER_TO_UINT(device.discovery.serial_number);
-					memmove(topoState.model_num, device.discovery.model_number, NVM_MODEL_LEN);
-
-					topoState.current_config_status = device.status.config_status;
-					topoState.config_goal_status = CONFIG_GOAL_STATUS_UNKNOWN;
-
-					struct config_goal goal;
-					memset(&goal, 0, sizeof (goal));
-					int rc = nvm_get_config_goal(device.discovery.uid, &goal);
-					if (rc == NVM_SUCCESS)
-					{
-						topoState.config_goal_status = goal.status;
-					}
-					else if (rc == NVM_ERR_NOTFOUND)
-					{
-						COMMON_LOG_DEBUG_F("No goal for DIMM %s", uidStr.c_str());
-					}
-					else
-					{
-						COMMON_LOG_ERROR_F("Error fetching config goalfor DIMM %s: %d",
-						                   uidStr.c_str(),
-						                   rc);
-					}
-
-					if (db_add_topology_state(pStore, &topoState) != DB_SUCCESS)
-					{
-						COMMON_LOG_ERROR_F("couldn't add topology_state for DIMM %s",
-								topoState.uid);
-						saved = false;
-						break;
-					}
-				}
-			}
-		}
-
-		// everything succeeded
-		if (saved)
-		{
-			add_config_value(SQL_KEY_TOPOLOGY_STATE_VALID, "1");
-		}
-	}
-}
-
-/*
- * Build a map of uids to discovery information for all NVM-DIMM in the system
- */
-void monitor::EventMonitor::buildDeviceMap(DeviceMap& map, bool addStoredTopology)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	// build a map of the current devices
-	int devCount = nvm_get_device_count();
-	if (devCount < 0) // error getting dimm count
-	{
-		COMMON_LOG_ERROR_F("nvm_get_device_count failed with error %d", devCount);
-	}
-	else if (devCount > 0) // at least one dimm
-	{
-		struct device_discovery devList[devCount];
-		devCount = nvm_get_devices(devList, devCount);
-		if (devCount < 0) // error get dimm discovery
-		{
-			COMMON_LOG_ERROR_F("nvm_get_devices failed with error %d", devCount);
-		}
-		else if (devCount > 0) // at least one dimm
-		{
-			for (int i = 0; i < devCount; i++)
-			{
-				NVM_UID uidStr;
-				uid_copy(devList[i].uid, uidStr);
-				struct deviceInfo devInfo;
-				memset(&devInfo, 0, sizeof (deviceInfo));
-				devInfo.discovered = true;
-				devInfo.discovery = devList[i];
-				if (devList[i].manageability == MANAGEMENT_VALIDCONFIG)
-				{
-					// Fetch the device status
-					int rc = nvm_get_device_status(devList[i].uid, &devInfo.status);
-					if (rc != NVM_SUCCESS)
-					{
-						COMMON_LOG_ERROR_F("nvm_get_device_status failed for dimm %s, error = %d",
-								uidStr, rc);
-					}
-				}
-				map[uidStr] = devInfo;
-			}
-		}
-	}
-
-	// add stored db info
-	if (addStoredTopology)
-	{
-		int valid = 0;
-		PersistentStore *pStore = get_lib_store();
-		if (pStore)
-		{
-			if ((get_config_value_int(SQL_KEY_TOPOLOGY_STATE_VALID, &valid) == COMMON_SUCCESS) &&
-					(valid))
-			{
-				int topoStateCount = 0;
-				if (db_get_topology_state_count(pStore, &topoStateCount) == DB_SUCCESS &&
-						topoStateCount > 0)
-				{
-					// Populate the previous topology state map
-					struct db_topology_state topologyState[topoStateCount];
-					if (db_get_topology_states(pStore, topologyState, topoStateCount) == topoStateCount)
-					{
-						for (int i = 0; i < topoStateCount; i++)
-						{
-							std::string uidStr = topologyState[i].uid;
-							if (map.find(uidStr) == map.end()) // doesn't exist - missing dimm
-							{
-								struct deviceInfo devInfo;
-								memset(&devInfo, 0, sizeof (deviceInfo));
-								devInfo.discovered = false;
-								devInfo.stored = true;
-								devInfo.storedState = topologyState[i];
-								map[uidStr] = devInfo;
-							}
-							else
-							{
-								map[uidStr].stored = true;
-								map[uidStr].storedState = topologyState[i];
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-}
-
-/*
- * On start-up log and event for mixed SKUs.
- */
-void monitor::EventMonitor::processMixedSkuSystem()
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	struct host host;
-	int rc = nvm_get_host(&host);
-	if (rc == NVM_SUCCESS)
-	{
-		if (host.mixed_sku)
-		{
-				store_event_by_parts(EVENT_TYPE_HEALTH,
-					EVENT_SEVERITY_CRITICAL,
-					EVENT_CODE_HEALTH_MIXED_SKU,
-					NULL,
-					true,
-					NULL,
-					NULL,
-					NULL,
-					DIAGNOSTIC_RESULT_UNKNOWN);
-		}
-		// auto-acknowledge event any old mixed SKU events
-		else
-		{
-			acknowledgeEvent(EVENT_CODE_HEALTH_MIXED_SKU, NULL);
-		}
-	}
-}
-
-void monitor::EventMonitor::checkDriver()
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	struct sw_inventory swInv;
-	if (nvm_get_sw_inventory(&swInv) == NVM_SUCCESS)
-	{
-		// Driver not installed or not compatible
-		if ((strlen(swInv.vendor_driver_revision) == 0) ||
-				!swInv.vendor_driver_compatible)
-		{
-			store_event_by_parts(EVENT_TYPE_CONFIG,
-					EVENT_SEVERITY_CRITICAL,
-					EVENT_CODE_CONFIG_BAD_DRIVER,
-					NULL,
-					true,
-					NULL, NULL, NULL,
-					DIAGNOSTIC_RESULT_UNKNOWN);
-		}
-	}
-}
-

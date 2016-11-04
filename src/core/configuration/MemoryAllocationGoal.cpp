@@ -319,7 +319,7 @@ event_filter MemoryAllocationGoal::getActionRequiredEventFilter()
 	Helper::stringToUid(getDeviceUid(), configEventFilter.uid);
 
 	configEventFilter.filter_mask |= NVM_FILTER_ON_TYPE;
-	configEventFilter.type = EVENT_TYPE_CONFIG;
+	configEventFilter.type = EVENT_TYPE_DIAG_PLATFORM_CONFIG;
 
 	return configEventFilter;
 }

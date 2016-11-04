@@ -316,23 +316,6 @@ int validate_config_goal_supported(const struct config_goal *p_goal,
 		}
 	}
 
-	// log an event
-	if (rc == NVM_ERR_CONFIGNOTSUPPORTED)
-	{
-		NVM_UID uid_str;
-		uid_copy(p_discovery->uid, uid_str);
-		store_event_by_parts(
-				EVENT_TYPE_HEALTH,
-				EVENT_SEVERITY_CRITICAL,
-				EVENT_CODE_CONFIG_GOAL_SKU_VIOLATION,
-				p_discovery->uid,
-				0,
-				uid_str,
-				NULL,
-				NULL,
-				DIAGNOSTIC_RESULT_UNKNOWN);
-	}
-
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }

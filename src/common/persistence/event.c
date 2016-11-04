@@ -56,46 +56,22 @@
 const char *EVENT_MESSAGES_CONFIG[EVENT_CODE_CONFIG_UNKNOWN -
 	EVENT_CODE_OFFSET_CONFIG + 1] =
 {
-	// EVENT_CODE_CONFIG_PLATFORM_CONFIG_INVALID
-	N_TR("The platform configuration data on " NVM_DIMM_NAME " %s is invalid."),
 	// EVENT_CODE_CONFIG_CONFIG_GOAL_APPLIED
 	N_TR("The BIOS has successfully applied the configuration goal on " NVM_DIMM_NAME " %s."),
-	// EVENT_CODE_CONFIG_CONFIG_GOAL_FAILED_CONFIG_ERROR
-	N_TR("The BIOS could not apply the configuration goal on " NVM_DIMM_NAME " %s because of "
-			"errors in the goal data."),
-	// EVENT_CODE_CONFIG_CONFIG_GOAL_FAILED_INSUFFICIENT_RESOURCES
-	N_TR("The BIOS could not apply the configuration goal on " NVM_DIMM_NAME " %s "
-			"because the system has insufficient resources."),
-	// EVENT_CODE_CONFIG_CONFIG_GOAL_FAILED_FW_ERROR
-	N_TR("The BIOS could not apply the configuration goal on " NVM_DIMM_NAME " %s because of a "
-			"firmware error."),
-	// EVENT_CODE_CONFIG_CONFIG_GOAL_FAILED_UNKNOWN
-	N_TR("The BIOS could not apply the configuration goal on " NVM_DIMM_NAME " %s "
-			"for an unknown reason."),
-	// EVENT_CODE_CONFIG_DEVICE_ADDED_CONFIGURED
+	// EVENT_CODE_CONFIG_TOPOLOGY_ADDED_CONFIGURED_DEVICE
 	N_TR("The BIOS has detected and successfully configured " NVM_DIMM_NAME " %s."),
-	// EVENT_CODE_CONFIG_DEVICE_ADDED_NEW
+	// EVENT_CODE_CONFIG_TOPOLOGY_ADDED_NEW_DEVICE
 	N_TR("The BIOS has detected a new " NVM_DIMM_NAME " %s. The new " NVM_DIMM_NAME " must "
 			"be configured in order to be used."),
-	// EVENT_CODE_CONFIG_DEVICE_MISSING
+	// EVENT_CODE_CONFIG_TOPOLOGY_MISSING_DEVICE
 	N_TR(NVM_DIMM_NAME" %s is missing."),
-	// EVENT_CODE_CONFIG_DEVICE_REPLACED_CONFIGURED
+	// EVENT_CODE_CONFIG_TOPOLOGY_REPLACED_CONFIGURED_DEVICE
 	N_TR(NVM_DIMM_NAME" %s has been replaced with " NVM_DIMM_NAME " %s."),
-	// EVENT_CODE_CONFIG_DEVICE_REPLACED_NEW
+	// EVENT_CODE_CONFIG_TOPOLOGY_REPLACED_NEW_DEVICE
 	N_TR(NVM_DIMM_NAME" %s has been replaced with a new " NVM_DIMM_NAME " %s. "
 			"The new " NVM_DIMM_NAME " must be configured in order to be used."),
-	// EVENT_CODE_CONFIG_DEVICE_MOVED
-	N_TR(NVM_DIMM_NAME" %s has been moved to a different position."),
-	// EVENT_CODE_CONFIG_GOAL_SKU_VIOLATION
-	N_TR("A configuration was requested for " NVM_DIMM_NAME " %s that "
-			"is unsupported due to a licensing issue."),
-	// EVENT_CODE_CONFIG_SKU_VIOLATION
-	N_TR("The configuration of " NVM_DIMM_NAME " %s is unsupported due to a licensing issue."),
-	// EVENT_CODE_CONFIG_BAD_DRIVER
-	N_TR("The underlying software is missing or incompatible with this version of the "
-			"management software."),
-	// EVENT_CODE_CONFIG_NOT_MANAGEABLE
-	N_TR(NVM_DIMM_NAME" %s is not manageable by this version of the management software."),
+	// EVENT_CODE_CONFIG_TOPOLOGY_MOVED_DEVICE
+	N_TR(NVM_DIMM_NAME" %s has been moved to a new position."),
 
 	// EVENT_CODE_CONFIG_UNKNOWN
 	N_TR("A platform configuration change has logged an unknown event code %d.")

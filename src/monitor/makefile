@@ -89,10 +89,11 @@ CPPFLAGS += $(BUILD_DLL_FLAG)
 
 # ---- COMPILER PARAMETERS -------------------------------------------------------------------------
 INCS = 	-I$(SRC_DIR)/common \
-		-I$(SRC_DIR)/lib
+		-I$(SRC_DIR)/lib \
+		-I$(SRC_DIR)
 
 LIBS = 	-L$(OBJECT_DIR)/common -lcommon \
-		-L$(BUILD_DIR) -l$(API_LIB_NAME) \
+		-L$(BUILD_DIR) -l$(API_LIB_NAME) -l$(CORE_LIB_NAME) \
 			-lsqlite3 -lssl -lcrypto -lz
 
 ifdef BUILD_WINDOWS
