@@ -157,7 +157,7 @@ class NVM_API NvmApi
 		 * Update the firmware on the specified NVM-DIMM
 		 */
 		virtual int updateDeviceFw(const NVM_UID deviceUid, const NVM_PATH path,
-				const NVM_SIZE path_len, const NVM_BOOL activate, const NVM_BOOL force);
+				const NVM_SIZE path_len, const NVM_BOOL force);
 
 		/*
 		 * Examine a firmware image against a specified NVM-DIMM to determine if it is valid

@@ -1547,11 +1547,6 @@ extern NVM_API int nvm_get_device_fw_image_info(const NVM_UID device_uid,
  * 		Absolute file path to the new firmware image.
  * @param[in] path_len
  * 		String length of path, should be < #NVM_PATH_LEN.
- * @param[in] activate
- * 		If activate is 1 the firmware will be activated on-the-fly. If 0 a reboot is required.
- * 		It's critical to note that someone outside management software is responsible for quiescing
- * 		I/O activity and otherwise making sure the AEP DIMM and its associated capacity can be
- * 		offline for a period of time while the new FW image boots.
  * @param[in] force
  * 		If attempting to downgrade the minor version, force must be true.
  * @pre The caller has administrative privileges.
@@ -1578,8 +1573,7 @@ extern NVM_API int nvm_get_device_fw_image_info(const NVM_UID device_uid,
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
 extern NVM_API int nvm_update_device_fw(const NVM_UID device_uid,
-		const NVM_PATH path, const NVM_SIZE path_len, const NVM_BOOL activate,
-		const NVM_BOOL force);
+		const NVM_PATH path, const NVM_SIZE path_len, const NVM_BOOL force);
 
 /*
  * Examine the FW image to determine if it is valid for the device specified.

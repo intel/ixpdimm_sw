@@ -164,9 +164,7 @@ wbem::framework::UINT32 wbem::software::NVDIMMSoftwareInstallationServiceFactory
 	wbem::framework::UINT32 httpRc = framework::MOF_ERR_SUCCESS;
 	wbemRc = framework::MOF_ERR_SUCCESS;
 	// valid InstallOptions for InstallFromURI
-	const NVM_UINT16 DEFER = 2; 
 	const NVM_UINT16 FORCE = 3;
-	const NVM_UINT16 REBOOT = 7;
 	const NVM_UINT16 EXAMINE = 32768;
 
 	if (method == NVDIMMSOFTWAREINSTALLATIONSERVICE_INSTALLFROMURI)
@@ -192,10 +190,6 @@ wbem::framework::UINT32 wbem::software::NVDIMMSoftwareInstallationServiceFactory
 		std::string target = inParms[NVDIMMSOFTWAREINSTALLATIONSERVICE_INSTALLFROMURI_PARAM_TARGET].stringValue();
 		framework::UINT16_LIST installOptions = inParms[NVDIMMSOFTWAREINSTALLATIONSERVICE_INSTALLFROMURI_INSTALLOPTIONS].uint16ListValue();
 		// get valid install options
-		bool rebootOption =
-				std::find(installOptions.begin(), installOptions.end(), REBOOT) != installOptions.end();
-		bool deferOption =
-				std::find(installOptions.begin(), installOptions.end(), DEFER) != installOptions.end();
 		bool forceOption =
 				std::find(installOptions.begin(), installOptions.end(), FORCE) != installOptions.end();
 		bool examineOption =
@@ -205,9 +199,7 @@ wbem::framework::UINT32 wbem::software::NVDIMMSoftwareInstallationServiceFactory
 		int invalidOptions = 0;
 		for (size_t i = 0; i < installOptions.size(); i++)
 		{
-			if (!(installOptions[i] == DEFER ||
-					installOptions[i] == REBOOT ||
-					installOptions[i] == FORCE ||
+			if (!(installOptions[i] == FORCE ||
 					installOptions[i] == EXAMINE))
 			{
 				invalidOptions++;
@@ -234,14 +226,8 @@ wbem::framework::UINT32 wbem::software::NVDIMMSoftwareInstallationServiceFactory
 			else if (invalidOptions > 0)
 			{
 				httpRc = framework::CIM_ERR_INVALID_PARAMETER;
-				COMMON_LOG_ERROR_F("Only %d, %d, %d and/or %d are valid InstallOptions",
-						DEFER, REBOOT, FORCE, EXAMINE);
-			}
-			else if (rebootOption && deferOption)
-			{
-				httpRc = framework::CIM_ERR_INVALID_PARAMETER;
-				COMMON_LOG_ERROR_F("%d and %d cannot be used together as InstallOptions",
-						DEFER, REBOOT);
+				COMMON_LOG_ERROR_F("Only %d and/or %d are valid InstallOptions",
+						FORCE, EXAMINE);
 			}
 			else
 			{
@@ -268,7 +254,7 @@ wbem::framework::UINT32 wbem::software::NVDIMMSoftwareInstallationServiceFactory
 					}
 					else
 					{
-						installFromPath(absPath, rebootOption, forceOption);
+						installFromPath(absPath, forceOption);
 					}
 				}
 				else if (targetObject.getClass() == physical_asset::NVDIMM_CREATIONCLASSNAME)
@@ -292,7 +278,7 @@ wbem::framework::UINT32 wbem::software::NVDIMMSoftwareInstallationServiceFactory
 					else
 					{
 						installFromPath(targetObject.getKeyValue(TAG_KEY).stringValue(),
-								absPath, rebootOption, forceOption);
+								absPath, forceOption);
 					}
 				}
 				else
@@ -373,7 +359,7 @@ wbem::software::NVDIMMSoftwareInstallationServiceFactory::getReturnCodeFromLibEx
  */
 void wbem::software::NVDIMMSoftwareInstallationServiceFactory::installFromPath(
 		const std::string& deviceUid,
-		const std::string& path, bool activate, bool force) const
+		const std::string& path, bool force) const
 throw (framework::Exception)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -393,14 +379,14 @@ throw (framework::Exception)
 	uid_copy(deviceUid.c_str(), uid);
 	// library will check if device is manageable and can update the FW ... if not it will return an error
 	if (NVM_SUCCESS !=
-			(rc = m_UpdateDeviceFw(uid, path.c_str(), path.length(), activate, force)))
+			(rc = m_UpdateDeviceFw(uid, path.c_str(), path.length(), force)))
 	{
 		throw exception::NvmExceptionLibError(rc);
 	}
 }
 
 void wbem::software::NVDIMMSoftwareInstallationServiceFactory::installFromPath(
-		const std::string& path, bool activate, bool force) const
+		const std::string& path, bool force) const
 throw (framework::Exception)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -410,7 +396,7 @@ throw (framework::Exception)
 
 	for (size_t i = 0; i < devices.size(); i++)
 	{
-		installFromPath(devices[i], path, activate, force);
+		installFromPath(devices[i], path, force);
 	}
 }
 

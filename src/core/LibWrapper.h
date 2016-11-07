@@ -81,7 +81,7 @@ public:
 		struct device_performance *pPerformance) const;
 
 	virtual int updateDeviceFw(const NVM_UID deviceUid, const NVM_PATH path,
-		const NVM_SIZE path_len, const NVM_BOOL activate, const NVM_BOOL force) const;
+		const NVM_SIZE path_len, const NVM_BOOL force) const;
 
 	virtual int examineDeviceFw(const NVM_UID deviceUid, const NVM_PATH path,
 		const NVM_SIZE pathLen, NVM_VERSION imageVersion, const NVM_SIZE imageVersionSize) const;

@@ -411,7 +411,7 @@ struct device_performance NvmLibrary::getDevicePerformance(const std::string &de
 }
 
 void NvmLibrary::updateDeviceFw(const std::string &deviceUid, const std::string path,
-	const bool activate, const bool force)
+	const bool force)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	int rc;
@@ -422,7 +422,7 @@ void NvmLibrary::updateDeviceFw(const std::string &deviceUid, const std::string 
 	char lib_path[path.size()];
 	s_strcpy(lib_path, path.c_str(), path.size());
 
-	rc = m_lib.updateDeviceFw(lib_deviceUid, lib_path, path.size(), activate, force);
+	rc = m_lib.updateDeviceFw(lib_deviceUid, lib_path, path.size(), force);
 	if (rc < 0)
 	{
 		throw core::LibraryException(rc);

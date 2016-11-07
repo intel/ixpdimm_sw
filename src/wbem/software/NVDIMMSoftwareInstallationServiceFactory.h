@@ -110,26 +110,22 @@ class NVM_API NVDIMMSoftwareInstallationServiceFactory : public framework_interf
 		 * 		List of uids to install the firmware onto
 		 * @param path
 		 * 		path to where the firmware file is.
-		 * @param activate
-		 * 		If true, the firmware will become active without a reboot
 		 * @param force
 		 * 		If true, the firmware will be loaded even if the minor version is less then
 		 * 		the current FW version.
 		 */
 		void installFromPath(const std::string &deviceUid, const std::string &path,
-				bool activate = false, bool force = false) const throw (framework::Exception);
+				bool force = false) const throw (framework::Exception);
 
 		/*!
 		 * install firmware onto all devices within the system
 		 * @param path
 		 * 		path to where the firmware file is.
-		 * @param activate
-		 * 		If true, the firmware will become active without a reboot
 		 * @param force
 		 * 		If true, the firmware will be loaded even if the minor version is less then
 		 * 		the current FW version.
 		 */
-		void installFromPath(const std::string &path, bool activate = false,
+		void installFromPath(const std::string &path,
 				bool force = false) const throw (framework::Exception);
 
 		/*!
@@ -166,12 +162,11 @@ class NVM_API NVDIMMSoftwareInstallationServiceFactory : public framework_interf
 		 * @param device_uid
 		 * @param path
 		 * @param path_len
-		 * @param activate
 		 * @param force
 		 * @return
 		 */
 		int (*m_UpdateDeviceFw)(const NVM_UID device_uid, const NVM_PATH path,
-				const NVM_SIZE path_len, NVM_BOOL activate, NVM_BOOL force);
+				const NVM_SIZE path_len, NVM_BOOL force);
 
 		/*!
 		 * API for examine FW image

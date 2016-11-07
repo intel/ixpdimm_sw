@@ -168,10 +168,10 @@ int LibWrapper::getDevicePerformance(const NVM_UID deviceUid,
 }
 
 int LibWrapper::updateDeviceFw(const NVM_UID deviceUid, const NVM_PATH path,
-	const NVM_SIZE path_len, const NVM_BOOL activate, const NVM_BOOL force) const
+	const NVM_SIZE path_len, const NVM_BOOL force) const
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
-	return nvm_update_device_fw(deviceUid, path, path_len, activate, force);
+	return nvm_update_device_fw(deviceUid, path, path_len, force);
 }
 
 int LibWrapper::examineDeviceFw(const NVM_UID deviceUid, const NVM_PATH path,

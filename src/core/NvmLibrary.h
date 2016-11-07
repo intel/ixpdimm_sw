@@ -66,7 +66,7 @@ public:
 	virtual struct device_details getDeviceDetails(const std::string &deviceUid);
 	virtual struct device_performance getDevicePerformance(const std::string &deviceUid);
 	virtual void updateDeviceFw(const std::string &deviceUid, const std::string path,
-		const bool activate, const bool force);
+		const bool force);
 	virtual void examineDeviceFw(const std::string &deviceUid, const std::string path,
 		std::string imageVersion);
 	virtual void setPassphrase(const std::string &deviceUid, const std::string oldPassphrase,

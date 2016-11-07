@@ -604,7 +604,7 @@ void cli::nvmcli::FieldSupportFeature::wbemInstallFromPath(const std::string &de
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	wbem::software::NVDIMMSoftwareInstallationServiceFactory provider;
-	provider.installFromPath(deviceUid, uri, false, force);
+	provider.installFromPath(deviceUid, uri, force);
 }
 
 int cli::nvmcli::FieldSupportFeature::wbemExamineFwImage(const std::string &deviceUid,

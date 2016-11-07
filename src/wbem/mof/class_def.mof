@@ -445,11 +445,10 @@ class <NVM_WBEM_PREFIX>NVDIMMSoftwareInstallationService : CIM_SoftwareInstallat
              "See the InstallOptions parameter of the "
              "SoftwareInstallationService.InstallFromSoftwareIdentity "
              "method for the description of these values." ),
-          ValueMap { "2", "3", "4", "5", "6", "7", "8", "9",
+          ValueMap {"3", "4", "5", "6", "8", "9",
              "10", "11", "12", "13", "..", "32768..65535" },
-          Values { "Defer target/system reset",
-             "Force installation", "Install", "Update", "Repair",
-             "Reboot", "Password", "Uninstall", "Log",
+          Values { "Force installation", "Install", "Update", "Repair",
+             "Password", "Uninstall", "Log",
              "SilentMode", "AdministrativeMode",
              "ScheduleInstallAt", "DMTF Reserved",
              "Vendor Specific" },

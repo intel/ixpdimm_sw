@@ -1292,7 +1292,7 @@ int nvm_get_device_fw_image_info(const NVM_UID device_uid,
  * Push a new FW image to the device specified.
  */
 int nvm_update_device_fw(const NVM_UID device_uid, const NVM_PATH path,
-		const NVM_SIZE path_len, const NVM_BOOL activate, const NVM_BOOL force)
+		const NVM_SIZE path_len, const NVM_BOOL force)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
@@ -1440,16 +1440,6 @@ int nvm_update_device_fw(const NVM_UID device_uid, const NVM_PATH path,
 							0, // no action required
 							uid_arg, version_arg, NULL);
 
-					if (activate == 1)
-					{
-						// activate the firmware
-						struct fw_cmd activate_cmd;
-						memset(&activate_cmd, 0, sizeof (activate_cmd));
-						activate_cmd.device_handle = discovery.device_handle.handle;
-						activate_cmd.opcode = PT_UPDATE_FW;
-						activate_cmd.sub_opcode = SUBOP_EXECUTE_FW;
-						rc = ioctl_passthrough_cmd(&activate_cmd);
-					}
 				}
 			}
 
