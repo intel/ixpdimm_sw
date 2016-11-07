@@ -44,32 +44,6 @@ int inject_software_trigger(struct device_discovery *p_discovery, enum error_typ
 	NVM_BOOL enable_trigger);
 
 /*
- * Helper function to enable error injection functionality.
- * All other injection commands will fail until this is turned on.
- */
-int enable_error_injection_functionality(NVM_INT32 device_handle)
-{
-	COMMON_LOG_ENTRY();
-	int rc = NVM_SUCCESS;
-
-	struct pt_payload_enable_injection input;
-	memset(&input, 0, sizeof (input));
-	input.enable = 1;
-
-	struct fw_cmd cmd;
-	memset(&cmd, 0, sizeof (cmd));
-	cmd.device_handle = device_handle;
-	cmd.opcode = PT_INJECT_ERROR;
-	cmd.sub_opcode = SUBOP_ENABLE_INJECTION;
-	cmd.input_payload = &input;
-	cmd.input_payload_size = sizeof (input);
-	rc = ioctl_passthrough_cmd(&cmd);
-
-	COMMON_LOG_EXIT_RETURN_I(rc);
-	return rc;
-}
-
-/*
  * Helper function to enable/disable software trigger
  */
 int inject_software_trigger(struct device_discovery *p_discovery,
@@ -287,26 +261,22 @@ int nvm_inject_device_error(const NVM_UID device_uid,
 	}
 	else if ((rc = exists_and_manageable(device_uid, &discovery, 1)) == NVM_SUCCESS)
 	{
-		if ((rc = enable_error_injection_functionality(discovery.device_handle.handle)) ==
-				NVM_SUCCESS)
+		switch (p_error->type)
 		{
-			switch (p_error->type)
-			{
-			case ERROR_TYPE_TEMPERATURE:
-				rc = inject_temperature_error(discovery.device_handle.handle,
-						p_error->temperature, 1);
-				break;
-			case ERROR_TYPE_POISON:
-				rc = inject_poison_error(&discovery, p_error->dpa, 1);
-				break;
-			case ERROR_TYPE_DIE_SPARING:
-			case ERROR_TYPE_SPARE_ALARM:
-			case ERROR_TYPE_MEDIA_FATAL_ERROR:
-				rc = inject_software_trigger(&discovery, p_error->type, 1);
-				break;
-			default:
-				break;
-			}
+		case ERROR_TYPE_TEMPERATURE:
+			rc = inject_temperature_error(discovery.device_handle.handle,
+					p_error->temperature, 1);
+			break;
+		case ERROR_TYPE_POISON:
+			rc = inject_poison_error(&discovery, p_error->dpa, 1);
+			break;
+		case ERROR_TYPE_DIE_SPARING:
+		case ERROR_TYPE_SPARE_ALARM:
+		case ERROR_TYPE_MEDIA_FATAL_ERROR:
+			rc = inject_software_trigger(&discovery, p_error->type, 1);
+			break;
+		default:
+			break;
 		}
 	}
 
@@ -348,28 +318,24 @@ int nvm_clear_injected_device_error(const NVM_UID device_uid,
 	}
 	else if ((rc = exists_and_manageable(device_uid, &discovery, 1)) == NVM_SUCCESS)
 	{
-		if ((rc = enable_error_injection_functionality(discovery.device_handle.handle)) ==
-				NVM_SUCCESS)
+		switch (p_error->type)
 		{
-			switch (p_error->type)
-			{
-			case ERROR_TYPE_TEMPERATURE:
-				rc = inject_temperature_error(discovery.device_handle.handle,
-						0, 0);
-				break;
-			case ERROR_TYPE_POISON:
-				rc = inject_poison_error(&discovery, p_error->dpa, 0);
-				break;
-			case ERROR_TYPE_DIE_SPARING:
-				rc = inject_software_trigger(&discovery, p_error->type, 0);
-				break;
-			case ERROR_TYPE_SPARE_ALARM:
-			case ERROR_TYPE_MEDIA_FATAL_ERROR:
-				rc = NVM_ERR_NOTSUPPORTED;
-				break;
-			default:
-				break;
-			}
+		case ERROR_TYPE_TEMPERATURE:
+			rc = inject_temperature_error(discovery.device_handle.handle,
+					0, 0);
+			break;
+		case ERROR_TYPE_POISON:
+			rc = inject_poison_error(&discovery, p_error->dpa, 0);
+			break;
+		case ERROR_TYPE_DIE_SPARING:
+			rc = inject_software_trigger(&discovery, p_error->type, 0);
+			break;
+		case ERROR_TYPE_SPARE_ALARM:
+		case ERROR_TYPE_MEDIA_FATAL_ERROR:
+			rc = NVM_ERR_NOTSUPPORTED;
+			break;
+		default:
+			break;
 		}
 	}
 
