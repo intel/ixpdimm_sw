@@ -159,6 +159,8 @@ ifeq ($(UNAME), Linux)
 		C_CPP_FLAGS_SRC += -D__ESX__
 		
 		PRODUCT_DATADIR = $(ESX_SUPPORT_DIR)
+		
+		CMAKE = /opt/mgmt_env/cmake-3.6.2/bin/cmake
 	else
 		BUILD_LINUX = 1
 		OS_TYPE = linux
@@ -174,6 +176,8 @@ ifeq ($(UNAME), Linux)
 		CC = gcc
 		CPP = g++
 		AR = ar
+
+		CMAKE = cmake
 
 		#Linux Product Names
 		LINUX_PRODUCT_NAME = $(MARKETING_PRODUCT_NAME)
@@ -245,6 +249,8 @@ else
 	# MinGW_w64 toolchain
 	MINGW_DIR ?= $(MGMT_ENV_DIR)/mingw_w64
 	include $(MINGW_DIR)/mingw.mk
+
+	CMAKE = $(MGMT_ENV_DIR)/cmake-3.6.2-win64-x64/bin/cmake.exe
 
 	# note: -mno-ms-bitfields is a workaround for a gcc (4.7.0)+ byte-packing bug
 	#		This may cause GCC packed structs to present differences with MSVC packed structs

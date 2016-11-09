@@ -74,47 +74,6 @@
  * ****************************************************************************
  */
 
-void generate_checksum(
-		NVM_UINT8 *p_raw_data,
-		const NVM_UINT32 length,
-		const NVM_UINT32 checksum_offset)
-{
-	COMMON_LOG_ENTRY();
-
-	NVM_UINT8 checksum = 0;
-	for (int i = 0; i < length; i++)
-	{
-		if (i != checksum_offset) // skip the checksums
-		{
-			checksum += p_raw_data[i];
-		}
-	}
-	p_raw_data[checksum_offset] = ((0xFF - checksum) + 1);
-	COMMON_LOG_EXIT();
-}
-
-int verify_checksum(
-		const NVM_UINT8 *p_raw_data,
-		const NVM_UINT32 length)
-{
-	COMMON_LOG_ENTRY();
-	int rc = NVM_SUCCESS;
-
-	NVM_UINT8 sum = 0;
-	for (int i = 0; i < length; i++)
-	{
-		sum += p_raw_data[i];
-	}
-	if (sum != 0)
-	{
-		COMMON_LOG_ERROR_F("Table checksum failed, sum = %hhu", sum);
-		rc = NVM_ERR_BADDEVICECONFIG;
-	}
-
-	COMMON_LOG_EXIT_RETURN_I(rc);
-	return rc;
-}
-
 void print_config_data_table_header(struct config_data_table_header header)
 {
 	DEBUG_PCD("Config Data Table Header - Signature: %s", header.signature);
@@ -239,9 +198,13 @@ int check_config_output(struct platform_config_data *p_config)
 
 			print_pcd_output(p_output);
 			// check the checksum
-			rc = verify_checksum((NVM_UINT8*)p_config + p_config->config_output_offset,
-					p_output->header.length);
-			if (rc == NVM_SUCCESS)
+			if (!verify_checksum((NVM_UINT8*)p_config + p_config->config_output_offset,
+					p_output->header.length))
+			{
+				COMMON_LOG_ERROR("Config output checksum failed");
+				rc = NVM_ERR_BADDEVICECONFIG;
+			}
+			else
 			{
 				// check the table signature
 				if (strncmp(CONFIG_OUTPUT_TABLE_SIGNATURE,
@@ -299,8 +262,13 @@ int check_config_input(struct platform_config_data *p_config)
 					"Config input length doesn't match header length");
 				rc = NVM_ERR_BADDEVICECONFIG;
 			}
-			else if ((rc = verify_checksum((NVM_UINT8*)p_config + p_config->config_input_offset,
-				p_input->header.length)) == NVM_SUCCESS)
+			else if (!verify_checksum((NVM_UINT8*)p_config + p_config->config_input_offset,
+				p_input->header.length))
+			{
+				COMMON_LOG_ERROR("Config input table checksum failed");
+				rc = NVM_ERR_BADDEVICECONFIG;
+			}
+			else
 			{
 				// check the table signature
 				if (strncmp(CONFIG_INPUT_TABLE_SIGNATURE,
@@ -356,9 +324,13 @@ int check_current_config(struct platform_config_data *p_config)
 
 			print_pcd_current(p_current);
 			// check the checksum
-			rc = verify_checksum((NVM_UINT8*)p_config + p_config->current_config_offset,
-					p_current->header.length);
-			if (rc == NVM_SUCCESS)
+			if (!verify_checksum((NVM_UINT8*)p_config + p_config->current_config_offset,
+					p_current->header.length))
+			{
+				COMMON_LOG_ERROR("Current config checksum failed");
+				rc = NVM_ERR_BADDEVICECONFIG;
+			}
+			else
 			{
 				// check the table signature
 				if (strncmp(CURRENT_CONFIG_TABLE_SIGNATURE,
@@ -405,8 +377,12 @@ int check_platform_config_header(struct platform_config_data *p_config)
 		// TODO: US8549 BIOS Currently does not implement this checksum correctly.
 		generate_checksum((NVM_UINT8*)p_config, p_config->header.length, CHECKSUM_OFFSET);
 		// check overall table checksum
-		rc = verify_checksum((NVM_UINT8*)p_config, p_config->header.length);
-		if (rc == NVM_SUCCESS)
+		if (!verify_checksum((NVM_UINT8*)p_config, p_config->header.length))
+		{
+			COMMON_LOG_ERROR("Platform config header checksum failed");
+			rc = NVM_ERR_BADDEVICECONFIG;
+		}
+		else
 		{
 			// check the table signature
 			if (strncmp(PLATFORM_CONFIG_TABLE_SIGNATURE,
@@ -417,10 +393,6 @@ int check_platform_config_header(struct platform_config_data *p_config)
 						PLATFORM_CONFIG_TABLE_SIGNATURE, p_config->header.signature);
 				rc = NVM_ERR_BADDEVICECONFIG;
 			}
-		}
-		else
-		{
-			COMMON_LOG_ERROR("Checksum failure for DMHD");
 		}
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);

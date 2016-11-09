@@ -313,7 +313,7 @@ int support_store_platform_capabilities(PersistentStore *p_store, int history_id
 	}
 	else
 	{
-		rc = get_platform_capabilities(p_pcat, PCAT_MAX_LEN);
+		rc = get_platform_capabilities(p_pcat);
 		if (rc == NVM_SUCCESS)
 		{
 			rc = update_pcat_in_db(p_store, p_pcat, history_id);

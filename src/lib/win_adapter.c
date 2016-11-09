@@ -181,140 +181,11 @@ int get_vendor_driver_revision(NVM_VERSION version_str, const NVM_SIZE str_len)
 }
 
 /*
- * Helper function - assumes string length >= 4
- */
-DWORD string_to_dword(const char *str)
-{
-	union
-	{
-		DWORD dword;
-		char string[4];
-	} fw_table_signature;
-
-	memmove(fw_table_signature.string, str, sizeof (fw_table_signature.string));
-
-	return fw_table_signature.dword;
-}
-
-/*
- * Get the DWORD-formatted Windows signature for fetching the ACPI tables
- */
-DWORD get_acpi_provider_signature()
-{
-	// Endian-flipped "ACPI"
-	static const char *ACPI_PROVIDER_SIGNATURE = "IPCA";
-	return string_to_dword(ACPI_PROVIDER_SIGNATURE);
-}
-
-/*
- * Gets the data size of an ACPI table with a given signature.
- * Assumes inputs are non-NULL.
- */
-int get_acpi_table_size(const char *table_signature, NVM_UINT64 *p_size)
-{
-	COMMON_LOG_ENTRY();
-	int rc = NVM_SUCCESS;
-
-	DWORD acpi_table_sig = string_to_dword(table_signature);
-	UINT buf_size = GetSystemFirmwareTable(get_acpi_provider_signature(), acpi_table_sig, NULL, 0);
-	if (buf_size > 0)
-	{
-		*p_size = buf_size;
-	}
-	else
-	{
-		COMMON_LOG_ERROR_F("Windows reported no ACPI with sig '%.4s' table (size = 0)",
-				table_signature);
-		rc = NVM_ERR_UNKNOWN;
-	}
-
-	COMMON_LOG_EXIT_RETURN_I(rc);
-	return rc;
-}
-
-int get_acpi_table(const char *table_signature, NVM_UINT8 *p_acpi_table,
-		const NVM_UINT64 table_size)
-{
-	COMMON_LOG_ENTRY();
-	int rc = NVM_SUCCESS;
-
-	DWORD acpi_table_sig = string_to_dword(table_signature);
-	UINT size_fetched = GetSystemFirmwareTable(get_acpi_provider_signature(), acpi_table_sig,
-			p_acpi_table, table_size);
-	if (size_fetched == 0)
-	{
-		COMMON_LOG_ERROR_F("Windows reported no ACPI '%.4s' table",
-				table_signature);
-		rc = NVM_ERR_UNKNOWN;
-	}
-
-	COMMON_LOG_EXIT_RETURN_I(rc);
-	return rc;
-}
-
-/*
- * Get the actual size of the platform capabilities table
- */
-int get_platform_capabilities_size(NVM_UINT64 *p_size)
-{
-	COMMON_LOG_ENTRY();
-	int rc = NVM_ERR_UNKNOWN;
-
-	if (p_size == NULL)
-	{
-		COMMON_LOG_ERROR("Invalid parameter, size is NULL");
-		rc = NVM_ERR_INVALIDPARAMETER;
-	}
-	else
-	{
-		rc = get_acpi_table_size(PCAT_TABLE_SIGNATURE, p_size);
-	}
-
-	COMMON_LOG_EXIT_RETURN_I(rc);
-	return rc;
-}
-
-/*
  * Get the capabilities of the host platform
  */
-int get_platform_capabilities(struct bios_capabilities *p_capabilities,
-		const NVM_UINT32 cap_len)
+int get_platform_capabilities(struct bios_capabilities *p_capabilities)
 {
-	COMMON_LOG_ENTRY();
-	int rc = NVM_ERR_UNKNOWN;
-
-	NVM_UINT64 size = 0; // Actual PCAT table size
-
-	if (p_capabilities == NULL)
-	{
-		COMMON_LOG_ERROR("Invalid parameter, capabilities is NULL");
-		rc = NVM_ERR_INVALIDPARAMETER;
-	}
-	else if ((rc = get_platform_capabilities_size(&size)) != NVM_SUCCESS)
-	{
-		// hold onto the return code
-	}
-	else if (size > cap_len)
-	{
-		COMMON_LOG_ERROR_F("cap_len=%u not large enough for capabilities table of size=%llu",
-				cap_len, size);
-		rc = NVM_ERR_BADSIZE;
-	}
-	else
-	{
-		memset(p_capabilities, 0, cap_len);
-
-		rc = get_acpi_table(PCAT_TABLE_SIGNATURE, (NVM_UINT8 *)p_capabilities, cap_len);
-
-		COMMON_LOG_DEBUG_F("Capabilities: (expected length=%u)", cap_len);
-		COMMON_LOG_DEBUG_F("Signature: %.4s", p_capabilities->header.signature);
-		COMMON_LOG_DEBUG_F("Length: %u", p_capabilities->header.length);
-		COMMON_LOG_DEBUG_F("Revision: %hhu", p_capabilities->header.revision);
-		COMMON_LOG_DEBUG_F("Checksum: %hhu", p_capabilities->header.checksum);
-	}
-
-	COMMON_LOG_EXIT_RETURN_I(rc);
-	return rc;
+	return get_pcat(p_capabilities);
 }
 
 /*
@@ -1110,6 +981,7 @@ int execute_ioctl(size_t bufSize, void *p_ioctl_data, unsigned long io_controlco
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
+
 	return rc;
 }
 

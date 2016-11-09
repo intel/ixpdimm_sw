@@ -410,5 +410,6 @@ int ioctl_passthrough_cmd(struct fw_cmd *p_cmd)
 
 	s_memset(&p_cmd, sizeof (p_cmd));
 	COMMON_LOG_EXIT_RETURN_I(rc);
+
 	return rc;
 }

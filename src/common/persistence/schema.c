@@ -710,10 +710,7 @@ tables[populate_index++] = ((struct table){"platform_capabilities",
 					 oem_id TEXT  , \
 					 oem_table_id TEXT  , \
 					 oem_revision INTEGER  , \
-					 creator_id_0 INTEGER  , \
-					 creator_id_1 INTEGER  , \
-					 creator_id_2 INTEGER  , \
-					 creator_id_3 INTEGER  , \
+					 creator_id INTEGER  , \
 					 creator_revision INTEGER   \
 					);"});
 			tables[populate_index++] = ((struct table){"platform_capabilities_history",
@@ -726,10 +723,7 @@ tables[populate_index++] = ((struct table){"platform_capabilities",
 					 oem_id TEXT , \
 					 oem_table_id TEXT , \
 					 oem_revision INTEGER , \
-					 creator_id_0 INTEGER , \
-					 creator_id_1 INTEGER , \
-					 creator_id_2 INTEGER , \
-					 creator_id_3 INTEGER , \
+					 creator_id INTEGER , \
 					 creator_revision INTEGER  \
 					);"});
 tables[populate_index++] = ((struct table){"driver_capabilities",
@@ -6435,10 +6429,7 @@ void local_bind_platform_capabilities(sqlite3_stmt *p_stmt, struct db_platform_c
 	BIND_TEXT(p_stmt, "$oem_id", (char *)p_platform_capabilities->oem_id);
 	BIND_TEXT(p_stmt, "$oem_table_id", (char *)p_platform_capabilities->oem_table_id);
 	BIND_INTEGER(p_stmt, "$oem_revision", (unsigned int)p_platform_capabilities->oem_revision);
-	BIND_INTEGER(p_stmt, "$creator_id_0", (unsigned int)p_platform_capabilities->creator_id[0]);
-	BIND_INTEGER(p_stmt, "$creator_id_1", (unsigned int)p_platform_capabilities->creator_id[1]);
-	BIND_INTEGER(p_stmt, "$creator_id_2", (unsigned int)p_platform_capabilities->creator_id[2]);
-	BIND_INTEGER(p_stmt, "$creator_id_3", (unsigned int)p_platform_capabilities->creator_id[3]);
+	BIND_INTEGER(p_stmt, "$creator_id", (unsigned int)p_platform_capabilities->creator_id);
 	BIND_INTEGER(p_stmt, "$creator_revision", (unsigned int)p_platform_capabilities->creator_revision);
 }
 void local_get_platform_capabilities_relationships(const PersistentStore *p_ps,
@@ -6481,18 +6472,9 @@ void local_row_to_platform_capabilities(const PersistentStore *p_ps,
 		p_platform_capabilities->oem_revision);
 	INTEGER_COLUMN(p_stmt,
 		7,
-		p_platform_capabilities->creator_id[0]);
+		p_platform_capabilities->creator_id);
 	INTEGER_COLUMN(p_stmt,
 		8,
-		p_platform_capabilities->creator_id[1]);
-	INTEGER_COLUMN(p_stmt,
-		9,
-		p_platform_capabilities->creator_id[2]);
-	INTEGER_COLUMN(p_stmt,
-		10,
-		p_platform_capabilities->creator_id[3]);
-	INTEGER_COLUMN(p_stmt,
-		11,
 		p_platform_capabilities->creator_revision);
 }
 void db_print_platform_capabilities(struct db_platform_capabilities *p_value)
@@ -6504,10 +6486,7 @@ void db_print_platform_capabilities(struct db_platform_capabilities *p_value)
 	printf("platform_capabilities.oem_id: %s\n", p_value->oem_id);
 	printf("platform_capabilities.oem_table_id: %s\n", p_value->oem_table_id);
 	printf("platform_capabilities.oem_revision: unsigned %d\n", p_value->oem_revision);
-	printf("platform_capabilities.creator_id: unsigned %d\n", p_value->creator_id[0]);
-	printf("platform_capabilities.creator_id: unsigned %d\n", p_value->creator_id[1]);
-	printf("platform_capabilities.creator_id: unsigned %d\n", p_value->creator_id[2]);
-	printf("platform_capabilities.creator_id: unsigned %d\n", p_value->creator_id[3]);
+	printf("platform_capabilities.creator_id: unsigned %d\n", p_value->creator_id);
 	printf("platform_capabilities.creator_revision: unsigned %d\n", p_value->creator_revision);
 }
 enum db_return_codes db_add_platform_capabilities(const PersistentStore *p_ps,
@@ -6516,7 +6495,7 @@ enum db_return_codes db_add_platform_capabilities(const PersistentStore *p_ps,
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = 	"INSERT INTO platform_capabilities \
-		(signature, length, revision, checksum, oem_id, oem_table_id, oem_revision, creator_id_0, creator_id_1, creator_id_2, creator_id_3, creator_revision)  \
+		(signature, length, revision, checksum, oem_id, oem_table_id, oem_revision, creator_id, creator_revision)  \
 		VALUES 		\
 		($signature, \
 		$length, \
@@ -6525,10 +6504,7 @@ enum db_return_codes db_add_platform_capabilities(const PersistentStore *p_ps,
 		$oem_id, \
 		$oem_table_id, \
 		$oem_revision, \
-		$creator_id_0, \
-		$creator_id_1, \
-		$creator_id_2, \
-		$creator_id_3, \
+		$creator_id, \
 		$creator_revision) ";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
@@ -6559,14 +6535,11 @@ int db_get_platform_capabilitiess(const PersistentStore *p_ps,
 		,  oem_id \
 		,  oem_table_id \
 		,  oem_revision \
-		,  creator_id_0 \
-		,  creator_id_1 \
-		,  creator_id_2 \
-		,  creator_id_3 \
+		,  creator_id \
 		,  creator_revision \
 		  \
 		FROM platform_capabilities \
-		             \
+		          \
 		 \
 		";
 	sqlite3_stmt *p_stmt;
@@ -6608,7 +6581,7 @@ enum db_return_codes db_save_platform_capabilities_state(const PersistentStore *
 	{
 		sqlite3_stmt *p_stmt;
 		char *sql = 	"INSERT INTO platform_capabilities \
-			( signature ,  length ,  revision ,  checksum ,  oem_id ,  oem_table_id ,  oem_revision ,  creator_id_0 ,  creator_id_1 ,  creator_id_2 ,  creator_id_3 ,  creator_revision )  \
+			( signature ,  length ,  revision ,  checksum ,  oem_id ,  oem_table_id ,  oem_revision ,  creator_id ,  creator_revision )  \
 			VALUES 		\
 			($signature, \
 			$length, \
@@ -6617,10 +6590,7 @@ enum db_return_codes db_save_platform_capabilities_state(const PersistentStore *
 			$oem_id, \
 			$oem_table_id, \
 			$oem_revision, \
-			$creator_id_0, \
-			$creator_id_1, \
-			$creator_id_2, \
-			$creator_id_3, \
+			$creator_id, \
 			$creator_revision) ";
 		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 		{
@@ -6640,7 +6610,7 @@ enum db_return_codes db_save_platform_capabilities_state(const PersistentStore *
 		sqlite3_stmt *p_stmt;
 		char *sql = "INSERT INTO platform_capabilities_history \
 			(history_id, \
-				 signature,  length,  revision,  checksum,  oem_id,  oem_table_id,  oem_revision,  creator_id_0,  creator_id_1,  creator_id_2,  creator_id_3,  creator_revision)  \
+				 signature,  length,  revision,  checksum,  oem_id,  oem_table_id,  oem_revision,  creator_id,  creator_revision)  \
 			VALUES 		($history_id, \
 				 $signature , \
 				 $length , \
@@ -6649,10 +6619,7 @@ enum db_return_codes db_save_platform_capabilities_state(const PersistentStore *
 				 $oem_id , \
 				 $oem_table_id , \
 				 $oem_revision , \
-				 $creator_id_0 , \
-				 $creator_id_1 , \
-				 $creator_id_2 , \
-				 $creator_id_3 , \
+				 $creator_id , \
 				 $creator_revision )";
 		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 		{
@@ -6677,7 +6644,7 @@ enum db_return_codes db_get_platform_capabilities_by_signature(const PersistentS
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
-		signature,  length,  revision,  checksum,  oem_id,  oem_table_id,  oem_revision,  creator_id_0,  creator_id_1,  creator_id_2,  creator_id_3,  creator_revision  \
+		signature,  length,  revision,  checksum,  oem_id,  oem_table_id,  oem_revision,  creator_id,  creator_revision  \
 		FROM platform_capabilities \
 		WHERE  signature = $signature";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -6709,10 +6676,7 @@ enum db_return_codes db_update_platform_capabilities_by_signature(const Persiste
 		,  oem_id=$oem_id \
 		,  oem_table_id=$oem_table_id \
 		,  oem_revision=$oem_revision \
-		,  creator_id_0=$creator_id_0 \
-		,  creator_id_1=$creator_id_1 \
-		,  creator_id_2=$creator_id_2 \
-		,  creator_id_3=$creator_id_3 \
+		,  creator_id=$creator_id \
 		,  creator_revision=$creator_revision \
 		  \
 	WHERE signature=$signature ";
@@ -6802,7 +6766,7 @@ int db_get_platform_capabilities_history_by_history_id(const PersistentStore *p_
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "SELECT \
-		signature,  length,  revision,  checksum,  oem_id,  oem_table_id,  oem_revision,  creator_id_0,  creator_id_1,  creator_id_2,  creator_id_3,  creator_revision  \
+		signature,  length,  revision,  checksum,  oem_id,  oem_table_id,  oem_revision,  creator_id,  creator_revision  \
 		FROM platform_capabilities_history \
 		WHERE  history_id = '%d'", history_id);
 	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))

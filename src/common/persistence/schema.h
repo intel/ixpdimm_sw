@@ -1992,7 +1992,6 @@ enum db_return_codes db_get_next_platform_info_capability_id(const PersistentSto
 #define	PLATFORM_CAPABILITIES_SIGNATURE_LEN 4 //!< Max length for signature
 #define	PLATFORM_CAPABILITIES_OEM_ID_LEN 6 //!< Max length for oem_id
 #define	PLATFORM_CAPABILITIES_OEM_TABLE_ID_LEN 8 //!< Max length for oem_table_id
-#define	PLATFORM_CAPABILITIES_CREATOR_ID_COUNT 4 //!< Max length for creator_id
 /*!
  * struct representing the platform_capabilities table
  * @ingroup platform_capabilities
@@ -2006,7 +2005,7 @@ struct db_platform_capabilities
 	char   oem_id[PLATFORM_CAPABILITIES_OEM_ID_LEN];
 	char   oem_table_id[PLATFORM_CAPABILITIES_OEM_TABLE_ID_LEN];
 	unsigned int oem_revision;
-	unsigned int creator_id[PLATFORM_CAPABILITIES_CREATOR_ID_COUNT];
+	unsigned int creator_id;
 	unsigned int creator_revision;
 };
 /*!

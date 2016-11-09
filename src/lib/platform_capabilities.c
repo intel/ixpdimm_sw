@@ -38,6 +38,7 @@
 #include "platform_capabilities.h"
 #include "platform_config_data.h"
 #include <persistence/logging.h>
+#include <acpi/acpi.h>
 
 // Helper macro for database functions to update
 // the platform configuration data.
@@ -96,8 +97,7 @@ int update_pcat_in_db(PersistentStore *p_db,
 		COMMON_LOG_ERROR("p_capabilities is invalid");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
-	// make sure we have good data
-	else if ((rc = check_pcat(p_capabilities)) == NVM_SUCCESS)
+	else
 	{
 		// clear existing platform config data for this dimm
 		rc = clear_pcat_from_db(p_db);
@@ -117,8 +117,7 @@ int update_pcat_in_db(PersistentStore *p_db,
 			memmove(db_cap.oem_table_id, p_capabilities->header.oem_table_id,
 					PLATFORM_CAPABILITIES_OEM_TABLE_ID_LEN);
 			db_cap.oem_revision = p_capabilities->header.oem_revision;
-			memmove(db_cap.creator_id, p_capabilities->header.creator_id,
-					PLATFORM_CAPABILITIES_CREATOR_ID_COUNT);
+			db_cap.creator_id = p_capabilities->header.creator_id;
 			db_cap.creator_revision = p_capabilities->header.creator_revision;
 
 			int db_rc;
@@ -502,8 +501,7 @@ int get_pcat_from_db(PersistentStore *p_db,
 			memmove(p_capabilities->header.oem_table_id, db_cap.oem_table_id,
 					PLATFORM_CAPABILITIES_OEM_TABLE_ID_LEN);
 			p_capabilities->header.oem_revision = db_cap.oem_revision;
-			memmove(p_capabilities->header.creator_id, db_cap.creator_id,
-					PLATFORM_CAPABILITIES_CREATOR_ID_COUNT);
+			p_capabilities->header.creator_id = db_cap.creator_id;
 			p_capabilities->header.creator_revision = db_cap.creator_revision;
 
 
@@ -527,42 +525,12 @@ int get_pcat_from_db(PersistentStore *p_db,
 					// generate a valid checksum
 					generate_checksum((NVM_UINT8*)p_capabilities,
 							p_capabilities->header.length,
-							PCAT_CHECKSUM_OFFSET);
+							ACPI_CHECKSUM_OFFSET);
 				}
 			}
 		}
 	}
 
-	COMMON_LOG_EXIT_RETURN_I(rc);
-	return rc;
-}
-
-int check_pcat(const struct bios_capabilities *p_capabilities)
-{
-	COMMON_LOG_ENTRY();
-	int rc = NVM_SUCCESS;
-
-	// check overall table checksum
-	rc = verify_checksum((NVM_UINT8*)p_capabilities, p_capabilities->header.length);
-	if (rc != NVM_SUCCESS)
-	{
-		COMMON_LOG_ERROR("PCAT checksum failed");
-		rc = NVM_ERR_BADPCAT;
-	}
-	// check overall table length is at least as big as the header
-	else if (p_capabilities->header.length < PCAT_TABLE_SIZE)
-	{
-		COMMON_LOG_ERROR("PCAT size is too small");
-		rc = NVM_ERR_BADPCAT;
-	}
-	// check signature
-	else if (strncmp(PCAT_TABLE_SIGNATURE,
-					p_capabilities->header.signature, PCAT_SIGNATURE_LEN) != 0)
-	{
-		COMMON_LOG_ERROR_F("PCAT signature mismatch. Expected: %s, actual: %s",
-				PCAT_TABLE_SIGNATURE, p_capabilities->header.signature);
-		rc = NVM_ERR_BADPCAT;
-	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
@@ -610,6 +578,33 @@ NVM_UINT32 get_offset_of_ext_table(const struct bios_capabilities *p_capabilitie
 		rc = -1;
 	}
 
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+/*
+ * Get the capabilities of the host platform
+ */
+int get_pcat(struct bios_capabilities *p_pcat)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	if (p_pcat == NULL)
+	{
+		COMMON_LOG_ERROR("PCAT structure is NULL");
+		rc = NVM_ERR_INVALIDPARAMETER;
+	}
+	else
+	{
+		memset(p_pcat, 0, sizeof (*p_pcat));
+		int size = get_acpi_table(PCAT_TABLE_SIGNATURE, (struct acpi_table *)p_pcat,
+			sizeof (*p_pcat));
+		if (size < 0)
+		{
+			rc = size;
+		}
+	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }

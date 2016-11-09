@@ -53,9 +53,6 @@
 #define	DATA_FORMAT_REVISION	1
 #define	MANUFACTURING_INFO_VALID_FLAG	0xFF
 
-#define	PCAT_LOCATION	"/sys/firmware/acpi/tables/PCAT"
-#define	NFIT_LOCATION	"/sys/firmware/acpi/tables/NFIT"
-
 NVM_BOOL is_driver_module_installed()
 {
 	COMMON_LOG_ENTRY();
@@ -164,58 +161,9 @@ NVM_UINT32 get_capabilities_format(NVM_UINT8 channel, NVM_UINT8 imc, NVM_UINT8 w
 /*
  * Get the capabilities of the host platform
  */
-int get_platform_capabilities(struct bios_capabilities *p_capabilities,
-		const NVM_UINT32 cap_len)
+int get_platform_capabilities(struct bios_capabilities *p_capabilities)
 {
-	COMMON_LOG_ENTRY();
-	int rc = NVM_SUCCESS;
-
-	if (!p_capabilities)
-	{
-		COMMON_LOG_ERROR("Invalid parameter, p_cabilities is NULL");
-		rc = NVM_ERR_INVALIDPARAMETER;
-	}
-	else
-	{
-		memset(p_capabilities, 0, cap_len);
-
-		int fd = open(PCAT_LOCATION, O_RDONLY|O_CLOEXEC);
-
-		if (fd < 0)
-		{
-			rc = linux_err_to_nvm_lib_err(errno);
-			COMMON_LOG_ERROR("Unable to open sysfs PCAT entry");
-		}
-		else
-		{
-			int hdr_bytes_read = read(fd, p_capabilities, PCAT_TABLE_SIZE);
-			if (hdr_bytes_read != PCAT_TABLE_SIZE)
-			{
-				rc = linux_err_to_nvm_lib_err(errno);
-				COMMON_LOG_ERROR("Error reading the PCAT Header");
-			}
-			else if (cap_len < p_capabilities->header.length)
-			{
-				COMMON_LOG_ERROR_F(
-						"cap_len=%u not large enough for capabilities table of size=%llu",
-						cap_len, p_capabilities->header.length);
-				rc = NVM_ERR_BADSIZE;
-			}
-			else
-			{
-				int tbl_bytes_read = read(fd, (unsigned char *)p_capabilities + PCAT_TABLE_SIZE,
-					p_capabilities->header.length);
-				if (tbl_bytes_read < 0)
-				{
-					rc = linux_err_to_nvm_lib_err(errno);
-					COMMON_LOG_ERROR("Error reading the PCAT Table");
-				}
-			}
-			close(fd);
-		}
-	}
-	COMMON_LOG_EXIT_RETURN_I(rc);
-	return rc;
+	return get_pcat(p_capabilities);
 }
 
 /*

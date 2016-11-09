@@ -444,19 +444,6 @@ int set_dimm_platform_config(const NVM_NFIT_DEVICE_HANDLE handle,
  * Verify the data is good
  */
 int check_platform_config(struct platform_config_data *p_config);
-
-/*
- * Generate a byte checksum on a table and store the checksum at the
- * specified offset.
- */
-void generate_checksum(NVM_UINT8 *p_raw_data,
-		const NVM_UINT32 length, const NVM_UINT32 checksum_offset);
-
-/*
- * Verify a table sums to 0.
- */
-int verify_checksum(const NVM_UINT8 *p_raw_data, const NVM_UINT32 length);
-
 /*
  * Returns the sequence number from the config output table.
  * I.e. last BIOS response.

@@ -445,6 +445,41 @@ static inline unsigned char bcd_byte_to_dec(unsigned char num)
 	return ret_val;
 }
 
+static inline void generate_checksum(
+		COMMON_UINT8 *p_raw_data,
+		const COMMON_UINT32 length,
+		const COMMON_UINT32 checksum_offset)
+{
+	COMMON_UINT8 checksum = 0;
+	for (COMMON_UINT32 i = 0; i < length; i++)
+	{
+		if (i != checksum_offset) // skip the checksums
+		{
+			checksum += p_raw_data[i];
+		}
+	}
+	p_raw_data[checksum_offset] = ((0xFF - checksum) + 1);
+}
+
+static inline COMMON_BOOL verify_checksum(
+		const COMMON_UINT8 *p_raw_data,
+		const COMMON_UINT32 length)
+{
+	COMMON_BOOL valid = 1;
+
+	COMMON_UINT8 sum = 0;
+	for (COMMON_UINT32 i = 0; i < length; i++)
+	{
+		sum += p_raw_data[i];
+	}
+	if (sum != 0)
+	{
+		valid = 0;
+	}
+
+	return valid;
+}
+
 #ifdef __cplusplus
 }
 #endif

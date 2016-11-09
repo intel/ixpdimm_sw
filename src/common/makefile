@@ -39,13 +39,14 @@ OBJECT_MODULE_DIR = $(OBJECT_DIR)/common
 # ---- COMPONENTS ----------------------------------------------------------------------------------
 FILEOPS = file_ops
 OS = os
+ACPI = acpi
 UNITTEST = unittest
 
 # defines the submodules compiled via this makefile (note encrypt not included intentionally)
 SUBMODULES = string time guid uid system persistence smbios
 
 # defines the submodules compiled independent of this makefile
-INDEPENDENT_SUBMODULES = file_ops os
+INDEPENDENT_SUBMODULES = file_ops os acpi
 
 SUBDIRS = . encrypt $(SUBMODULES) $(INDEPENDENT_SUBMODULES) 
 
@@ -92,6 +93,11 @@ TARGET = libcommon.a
 # Target archive 'real name', prefixed with its output location
 # This archive is packaged into other libraries, therefore output to object directory 
 TARGETNAME = $(addprefix $(OBJECT_MODULE_DIR)/, $(TARGET))
+
+SCHEMA_GEN_ABS = $(abspath $(SCHEMA_GEN))
+TEMPLATE_DIR = $(realpath $(TOOLS_DIR))/db_schema_gen
+TEMPLATE_NAMES = $(addprefix $(TEMPLATE_DIR)/,$(addsuffix .template,$(SCHEMA)))
+NON_TEMPLATE_NAMES = $(addprefix $(TEMPLATE_DIR)/, schema_non_template.c)
 
 STYLE_IGNORE = persistence/schema.c persistence/schema.h
 CSTYLE_FILES = $(filter-out $(STYLE_IGNORE),$(HEADERS) $(SRC))
@@ -156,6 +162,9 @@ file_ops :
 
 os :
 	$(MAKE) -C $(OS) all
+
+acpi :
+	$(MAKE) -C $(ACPI) all
 	
 # this is separate because I need to turn off warnings on ESX
 encryptdir:
@@ -173,6 +182,7 @@ cstyle :
 	$(CSTYLE) $(CSTYLE_FILES)
 	$(MAKE) -C $(OS) cstyle
 	$(MAKE) -C $(FILEOPS) cstyle
+	$(MAKE) -C $(ACPI) cstyle
 
 i18n:
 	$(GETTEXT) persistence/event.c #translate event messages
@@ -185,6 +195,7 @@ clean :
 	$(RM) $(BUILD_DIR)/$(PUBLIC_KEY_NAME)
 	$(MAKE) -C $(OS) clean
 	$(MAKE) -C $(FILEOPS) clean
+	$(MAKE) -C $(ACPI) clean
 	$(MAKE) -C $(UNITTEST) clean
 
 clobber :
@@ -202,4 +213,4 @@ sourcedrop:
 		done \
 	done 
 
-.PHONY : all file_ops os dependencies unittest test cstyle clean clobber sourcedrop
+.PHONY : all file_ops os acpi dependencies unittest test cstyle clean clobber sourcedrop

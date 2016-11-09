@@ -262,135 +262,130 @@ int apply_bios_capabilities(struct nvm_capabilities *p_capabilities)
 		}
 		else
 		{
-			rc = get_platform_capabilities(p_pcat, PCAT_MAX_LEN);
+			rc = get_platform_capabilities(p_pcat);
 			if (rc == NVM_SUCCESS)
 			{
-				// check the table
-				rc = check_pcat(p_pcat);
-				if (rc == NVM_SUCCESS)
+				// iterate over all the extension tables
+				NVM_UINT32 offset = PCAT_TABLE_SIZE;
+				while (offset < p_pcat->header.length)
 				{
-					// iterate over all the extension tables
-					NVM_UINT32 offset = PCAT_TABLE_SIZE;
-					while (offset < p_pcat->header.length)
-					{
-						struct pcat_extension_table_header *p_header =
-								(struct pcat_extension_table_header *)
-								((NVM_UINT8 *)p_pcat + offset);
+					struct pcat_extension_table_header *p_header =
+							(struct pcat_extension_table_header *)
+							((NVM_UINT8 *)p_pcat + offset);
 
-						// check the length for validity
-						if (p_header->length == 0 ||
-								(p_header->length + offset) > p_pcat->header.length)
+					// check the length for validity
+					if (p_header->length == 0 ||
+							(p_header->length + offset) > p_pcat->header.length)
+					{
+						COMMON_LOG_ERROR_F("Extension table length %d invalid",
+								p_header->length);
+						rc = NVM_ERR_BADPCAT;
+						break;
+					}
+
+					// platform capability info table
+					if (p_header->type == PCAT_TABLE_PLATFORM_INFO)
+					{
+						struct platform_capabilities_ext_table *p_plat_info =
+								(struct platform_capabilities_ext_table *)p_header;
+
+						p_capabilities->platform_capabilities.bios_config_support =
+								MGMT_SW_CONFIG_SUPPORTED(p_plat_info->mgmt_sw_config_support);
+						p_capabilities->platform_capabilities.bios_runtime_support =
+								RUNTIME_CONFIG_SUPPORTED(p_plat_info->mgmt_sw_config_support);
+						p_capabilities->platform_capabilities.current_volatile_mode =
+								CURRENT_VOLATILE_MODE(p_plat_info->current_mem_mode);
+						p_capabilities->platform_capabilities.current_app_direct_mode =
+								get_current_app_direct_mode(p_plat_info->current_mem_mode);
+						p_capabilities->platform_capabilities.memory_mirror_supported =
+								PMEM_MIRROR_SUPPORTED(p_plat_info->pmem_ras_capabilities);
+						p_capabilities->platform_capabilities.memory_spare_supported =
+								PMEM_SPARE_SUPPORTED(p_plat_info->pmem_ras_capabilities);
+						p_capabilities->platform_capabilities.memory_migration_supported =
+								PMEM_MIGRATION_SUPPORTED(p_plat_info->pmem_ras_capabilities);
+
+						if (p_plat_info->mem_mode_capabilities & MEM_MODE_1LM)
 						{
-							COMMON_LOG_ERROR_F("Extension table length %d invalid",
-									p_header->length);
-							rc = NVM_ERR_BADPCAT;
+							p_capabilities->platform_capabilities.one_lm_mode.supported = 1;
+						}
+						if (p_plat_info->mem_mode_capabilities & MEM_MODE_MEMORY)
+						{
+							p_capabilities->platform_capabilities.memory_mode.supported = 1;
+						}
+						if (p_plat_info->mem_mode_capabilities & MEM_MODE_APP_DIRECT)
+						{
+							p_capabilities->platform_capabilities.app_direct_mode.supported = 1;
+						}
+						if (p_plat_info->mem_mode_capabilities & MEM_MODE_STORAGE)
+						{
+							p_capabilities->platform_capabilities.storage_mode_supported = 1;
+						}
+					}
+					// memory interleave capability table
+					else if (p_header->type == PCAT_TABLE_MEMORY_INTERLEAVE_INFO)
+					{
+						struct memory_interleave_capabilities_ext_table *p_mic =
+								(struct memory_interleave_capabilities_ext_table *)p_header;
+						struct memory_capabilities *p_cap = NULL;
+						switch (p_mic->memory_mode)
+						{
+							case INTERLEAVE_MEM_MODE_1LM:
+								p_cap = &(p_capabilities->platform_capabilities.one_lm_mode);
+								break;
+							case INTERLEAVE_MEM_MODE_2LM:
+								p_cap = &(p_capabilities->platform_capabilities.memory_mode);
+								break;
+							case INTERLEAVE_MEM_MODE_APP_DIRECT:
+								p_cap = &(p_capabilities->platform_capabilities.
+										app_direct_mode);
+								break;
+						}
+						if (p_cap == NULL)
+						{
+							COMMON_LOG_ERROR_F("memory_mode %d not supported",
+									p_mic->memory_mode);
 							break;
 						}
-
-						// platform capability info table
-						if (p_header->type == PCAT_TABLE_PLATFORM_INFO)
+						else
 						{
-							struct platform_capabilities_ext_table *p_plat_info =
-									(struct platform_capabilities_ext_table *)p_header;
-
-							p_capabilities->platform_capabilities.bios_config_support =
-									MGMT_SW_CONFIG_SUPPORTED(p_plat_info->mgmt_sw_config_support);
-							p_capabilities->platform_capabilities.bios_runtime_support =
-									RUNTIME_CONFIG_SUPPORTED(p_plat_info->mgmt_sw_config_support);
-							p_capabilities->platform_capabilities.current_volatile_mode =
-									CURRENT_VOLATILE_MODE(p_plat_info->current_mem_mode);
-							p_capabilities->platform_capabilities.current_app_direct_mode =
-									get_current_app_direct_mode(p_plat_info->current_mem_mode);
-							p_capabilities->platform_capabilities.memory_mirror_supported =
-									PMEM_MIRROR_SUPPORTED(p_plat_info->pmem_ras_capabilities);
-							p_capabilities->platform_capabilities.memory_spare_supported =
-									PMEM_SPARE_SUPPORTED(p_plat_info->pmem_ras_capabilities);
-							p_capabilities->platform_capabilities.memory_migration_supported =
-									PMEM_MIGRATION_SUPPORTED(p_plat_info->pmem_ras_capabilities);
-
-							if (p_plat_info->mem_mode_capabilities & MEM_MODE_1LM)
+							if (!(p_cap->supported))
 							{
-								p_capabilities->platform_capabilities.one_lm_mode.supported = 1;
+								COMMON_LOG_WARN_F(
+									"memory capability for mode %d is not supported, "
+									"but capability structure still provided",
+									p_mic->memory_mode);
 							}
-							if (p_plat_info->mem_mode_capabilities & MEM_MODE_MEMORY)
+							p_cap->interleave_formats_count = 0;
+							p_cap->interleave_alignment_size =
+									p_mic->interleave_alignment_size;
+							for (int j = 0; j < p_mic->supported_interleave_count; j++)
 							{
-								p_capabilities->platform_capabilities.memory_mode.supported = 1;
-							}
-							if (p_plat_info->mem_mode_capabilities & MEM_MODE_APP_DIRECT)
-							{
-								p_capabilities->platform_capabilities.app_direct_mode.supported = 1;
-							}
-							if (p_plat_info->mem_mode_capabilities & MEM_MODE_STORAGE)
-							{
-								p_capabilities->platform_capabilities.storage_mode_supported = 1;
-							}
-						}
-						// memory interleave capability table
-						else if (p_header->type == PCAT_TABLE_MEMORY_INTERLEAVE_INFO)
-						{
-							struct memory_interleave_capabilities_ext_table *p_mic =
-									(struct memory_interleave_capabilities_ext_table *)p_header;
-							struct memory_capabilities *p_cap = NULL;
-							switch (p_mic->memory_mode)
-							{
-								case INTERLEAVE_MEM_MODE_1LM:
-									p_cap = &(p_capabilities->platform_capabilities.one_lm_mode);
-									break;
-								case INTERLEAVE_MEM_MODE_2LM:
-									p_cap = &(p_capabilities->platform_capabilities.memory_mode);
-									break;
-								case INTERLEAVE_MEM_MODE_APP_DIRECT:
-									p_cap = &(p_capabilities->platform_capabilities.
-											app_direct_mode);
-									break;
-							}
-							if (p_cap == NULL)
-							{
-								COMMON_LOG_ERROR_F("memory_mode %d not supported",
-										p_mic->memory_mode);
-								break;
-							}
-							else
-							{
-								if (!(p_cap->supported))
+								// BIOS does not differentiate channel ways as
+								// separate formats, this code does that.
+								int cr_channel_ways = ((p_mic->interleave_format_list[j] >>
+										PCAT_FORMAT_WAYS_SHIFT) & PCAT_FORMAT_WAYS_MASK);
+								// see enum bitmap_interleave_ways, 8 is max bit position
+								for (int way_bit = 0; way_bit <= 8; way_bit++)
 								{
-									COMMON_LOG_WARN_F(
-										"memory capability for mode %d is not supported, "
-										"but capability structure still provided",
-										p_mic->memory_mode);
-								}
-								p_cap->interleave_formats_count = 0;
-								p_cap->interleave_alignment_size =
-										p_mic->interleave_alignment_size;
-								for (int j = 0; j < p_mic->supported_interleave_count; j++)
-								{
-									// BIOS does not differentiate channel ways as
-									// separate formats, this code does that.
-									int cr_channel_ways = ((p_mic->interleave_format_list[j] >>
-											PCAT_FORMAT_WAYS_SHIFT) & PCAT_FORMAT_WAYS_MASK);
-									// see enum bitmap_interleave_ways, 8 is max bit position
-									for (int way_bit = 0; way_bit <= 8; way_bit++)
+									if ((cr_channel_ways >> way_bit) & 1) // is way supported?
 									{
-										if ((cr_channel_ways >> way_bit) & 1) // is way supported?
-										{
-											interleave_format_to_struct(
-													p_mic->interleave_format_list[j],
-													&(p_cap->interleave_formats
-														[p_cap->interleave_formats_count]));
-											// reset the way to the correct value
-											p_cap->interleave_formats
-												[p_cap->interleave_formats_count].ways =
-												interleave_way_to_enum(
-														cr_channel_ways & (1 << way_bit));
-											p_cap->interleave_formats_count++;
-										}
+										interleave_format_to_struct(
+												p_mic->interleave_format_list[j],
+												&(p_cap->interleave_formats
+													[p_cap->interleave_formats_count]));
+										// reset the way to the correct value
+										p_cap->interleave_formats
+											[p_cap->interleave_formats_count].ways =
+											interleave_way_to_enum(
+													cr_channel_ways & (1 << way_bit));
+										p_cap->interleave_formats_count++;
 									}
 								}
 							}
 						}
-						// else, just ignore it other table types
-						offset += p_header->length;
 					}
+					// else, just ignore it other table types
+					offset += p_header->length;
 				}
 
 				// translate BIOS supported capabilities into nvm features

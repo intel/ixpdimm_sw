@@ -71,11 +71,9 @@ int get_vendor_driver_revision(NVM_VERSION version_str, const NVM_SIZE str_len);
  * Get the capabilities of the host platform
  * @param[out] p_capabilities
  * 		A pointer to a target buffer where the system's platform capabilities will be output
- * @param[in] cap_len
- *		Size of the buffer
  * @return
  */
-int get_platform_capabilities(struct bios_capabilities *p_capabilities, const NVM_UINT32 cap_len);
+int get_platform_capabilities(struct bios_capabilities *p_capabilities);
 
 /*
  * Get the number of DIMMs in the system's memory topology
