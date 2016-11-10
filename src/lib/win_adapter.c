@@ -321,7 +321,8 @@ int get_topology(const NVM_UINT8 count, struct nvm_topology *p_dimm_topo)
 						p_dimm_topo[i].manufacturing_location =
 							p_ioctl_data->OutputPayload.TopologiesList[i].ManufacturingLocation;
 						p_dimm_topo[i].manufacturing_date =
-							p_ioctl_data->OutputPayload.TopologiesList[i].ManufacturingDate;
+							SWAP_SHORT(p_ioctl_data->OutputPayload.TopologiesList[i].
+								ManufacturingDate);
 
 						unsigned int serial_number =
 								p_ioctl_data->OutputPayload.TopologiesList[i].SerialNumber;

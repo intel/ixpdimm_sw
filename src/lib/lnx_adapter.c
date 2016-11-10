@@ -264,11 +264,11 @@ int get_topology(const NVM_UINT8 count, struct nvm_topology *p_dimm_topo)
 						p_dimm_topo[dimm_index].subsystem_device_id =
 							SWAP_SHORT(ndctl_dimm_get_subsystem_device(dimm));
 						p_dimm_topo[dimm_index].subsystem_revision_id =
-								ndctl_dimm_get_subsystem_revision(dimm);
+							ndctl_dimm_get_subsystem_revision(dimm);
 						p_dimm_topo[dimm_index].manufacturing_date  =
-								ndctl_dimm_get_manufacturing_date(dimm);
+							SWAP_SHORT(ndctl_dimm_get_manufacturing_date(dimm));
 						p_dimm_topo[dimm_index].manufacturing_location =
-								ndctl_dimm_get_manufacturing_location(dimm);
+							ndctl_dimm_get_manufacturing_location(dimm);
 						if (p_dimm_topo[dimm_index].manufacturing_location !=
 								MANUFACTURING_INFO_VALID_FLAG &&
 								p_dimm_topo[dimm_index].manufacturing_date !=

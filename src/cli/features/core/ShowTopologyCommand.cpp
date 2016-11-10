@@ -113,7 +113,7 @@ std::string ShowTopologyCommand::convertMemoryType(memory_type type)
 	std::map<NVM_UINT64, std::string> map;
 	map[MEMORY_TYPE_UNKNOWN] = TR("Unknown");
 	map[MEMORY_TYPE_DDR4] = TR("DDR4");
-	map[MEMORY_TYPE_NVMDIMM] = TR("NVM-DIMM");
+	map[MEMORY_TYPE_NVMDIMM] = TR("AEP DIMM");
 	return map[type];
 }
 
