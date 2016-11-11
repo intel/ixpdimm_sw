@@ -137,6 +137,8 @@ void NVDIMMFactory::populateAttributeList(
 	attributes.push_back(VIRALPOLICY_KEY);
 	attributes.push_back(VIRALSTATE_KEY);
 	attributes.push_back(INTERFACEFORMATCODE_KEY);
+	attributes.push_back(FWVERSION_KEY);
+	attributes.push_back(FWAPIVERSION_KEY);
 }
 
 wbem::framework::Instance *NVDIMMFactory::getInstance(

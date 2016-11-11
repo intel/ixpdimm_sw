@@ -197,6 +197,14 @@ class <NVM_WBEM_PREFIX>NVDIMM : CIM_PhysicalMemory
 	"The JEDEC standard interface format code(s) for the DIMM."
  	)]	
 	uint16 InterfaceFormatCode[];
+	[Description (
+	"The current active firmware version."
+ 	)]	
+	string FWVersion;
+	[Description (
+	"The current active firmware interface version."
+ 	)]	
+	string FWAPIVersion;
 
 	// methods
 	[implemented,
