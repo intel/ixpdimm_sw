@@ -280,7 +280,7 @@ NVM_UINT16 Device::getManufacturingDate()
 std::string Device::getManufacturer()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	std::string result;
+	std::string result = "Undefined";
 	char manufacturerStr[NVM_MANUFACTURERSTR_LEN];
 	if (lookup_jedec_jep106_manufacturer(
 		getDiscovery().manufacturer, NVM_MANUFACTURER_LEN,

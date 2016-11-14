@@ -115,8 +115,8 @@ int get_acpi_table(
 					}
 				}
 			}
-			close(fd);
 		}
+		close(fd);
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);

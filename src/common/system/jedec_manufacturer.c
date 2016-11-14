@@ -1185,25 +1185,17 @@ int lookup_jedec_jep106_manufacturer(
 {
 	int rc = COMMON_ERR_INVALIDPARAMETER;
 
-	if (manufacturer_id && manufacturer_id_len > 1 &&
-		manufacturer_id_len <= MAX_MANUFACTURER_BANKS &&
+	if (manufacturer_id && manufacturer_id_len == 2 &&
 		manufacturer && manufacturer_len > 0)
 	{
-		unsigned char id = 0;
-		int index = 0;
-		int byte = manufacturer_id_len;
+		unsigned char id = manufacturer_id[1];
+		int index = manufacturer_id[0];
 
-		// find the correct bank
-		do
+		if (parity(id) == 1 &&
+			parity(index) == 1 &&
+			(index & 0x7f) < MAX_MANUFACTURER_BANKS)
 		{
-			index++;
-		}
-		while ((--byte && (*manufacturer_id++ == 0x7f)));
-		id = *--manufacturer_id;
-
-		if (parity(id) == 1)
-		{
-			s_strcpy(manufacturer, (char *)manufacturers[index - 1][(id & 0x7f) - 1],
+			s_strcpy(manufacturer, (char *)manufacturers[index & 0x7f][(id & 0x7f) - 1],
 					manufacturer_len);
 			rc = COMMON_SUCCESS;
 		}
