@@ -120,19 +120,27 @@ void monitor::EventMonitor::runPlatformConfigDiagnostic()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	diagnostic platformConfigDiag;
-	memset(&platformConfigDiag, 0, sizeof (platformConfigDiag));
-	platformConfigDiag.test = DIAG_TYPE_PLATFORM_CONFIG;
+	runDiagnostic(DIAG_TYPE_PLATFORM_CONFIG);
+
+}
+
+void monitor::EventMonitor::runDiagnostic(const diagnostic_test diagType, const std::string& uid)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	diagnostic diag;
+	memset(&diag, 0, sizeof (diag));
+	diag.test = diagType;
 
 	try
 	{
 		NVM_UINT32 results = 0;
-		m_lib.runDiagnostic("", platformConfigDiag, results);
+		m_lib.runDiagnostic(uid, diag, results);
 	}
 	catch (core::LibraryException &e)
 	{
-		COMMON_LOG_ERROR_F("Platform config diagnostic returned error %d",
-				e.getErrorCode());
+		COMMON_LOG_ERROR_F("Diagnostic type %d returned error %d",
+				diagType, e.getErrorCode());
 	}
 }
 
@@ -701,461 +709,6 @@ bool monitor::EventMonitor::namespaceDeleted(const NVM_UID nsUid,
 }
 
 /*
- * Helper to convert device health to translated string
- */
-std::string monitor::EventMonitor::deviceHealthToStr(enum device_health health)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	std::string healthStateStr =
-			TR(get_string_for_device_health_status(health));
-	return healthStateStr;
-}
-
-/*
- * Helper to store new fw error log event
- */
-void monitor::EventMonitor::storeFwErrorLogEvent(const NVM_UID &device_uid,
-		const std::string &uidStr, const NVM_UINT32 errorCount)
-{
-	std::stringstream newErrorCount;
-	newErrorCount << errorCount;
-	store_event_by_parts(EVENT_TYPE_HEALTH,
-			EVENT_SEVERITY_WARN,
-			EVENT_CODE_HEALTH_NEW_FWERRORS_FOUND,
-			device_uid,
-			false,
-			uidStr.c_str(),
-			newErrorCount.str().c_str(),
-			NULL,
-			DIAGNOSTIC_RESULT_UNKNOWN);
-}
-
-/*
- * Check for device health changes
- */
-void monitor::EventMonitor::monitorDimmStatus(const std::string &uidStr,
-		const struct device_discovery &discovery,
-		struct db_dimm_state &storedState,
-		bool &storedStateChanged,
-		bool firstState)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	try
-	{
-		struct device_status status = m_lib.getDeviceStatus(uidStr);
-
-		// first pass, just store current values
-		// if there are errors that have not been seen in the fw error log
-		// create an event for those errors
-		if (firstState)
-		{
-			storedState.health_state = status.health;
-			storedState.die_spares_used = status.die_spares_used;
-			storedState.viral_state = status.viral_state;
-			storedState.newest_error_log_timestamp = status.newest_error_log_timestamp;
-			if (status.new_error_count > 0)
-			{
-				storeFwErrorLogEvent(discovery.uid, uidStr, status.new_error_count);
-			}
-		}
-		// check for changes
-		else
-		{
-			// check dimm health
-			if (status.health != storedState.health_state)
-			{
-				// log transition event
-				enum event_severity severity = EVENT_SEVERITY_INFO;
-				bool actionRequired = false;
-				if (status.health == DEVICE_HEALTH_NONCRITICAL)
-				{
-					severity = EVENT_SEVERITY_WARN;
-				}
-				else if (status.health == DEVICE_HEALTH_CRITICAL)
-				{
-					severity = EVENT_SEVERITY_CRITICAL;
-					actionRequired = true;
-				}
-				else if (status.health >= DEVICE_HEALTH_FATAL)
-				{
-					severity = EVENT_SEVERITY_FATAL;
-					actionRequired = true;
-				}
-
-				std::string oldState = deviceHealthToStr(
-						(enum device_health)storedState.health_state);
-				std::string newState = deviceHealthToStr(status.health);
-				store_event_by_parts(
-						EVENT_TYPE_HEALTH,
-						severity,
-						EVENT_CODE_HEALTH_HEALTH_STATE_CHANGED,
-						discovery.uid,
-						actionRequired,
-						uidStr.c_str(),
-						oldState.c_str(),
-						newState.c_str(),
-						DIAGNOSTIC_RESULT_UNKNOWN);
-
-				storedState.health_state = status.health;
-				storedStateChanged = true;
-			}
-
-			// check additional die consumed
-			if (status.die_spares_used > storedState.die_spares_used)
-			{
-				std::stringstream numDieConsumed;
-				numDieConsumed << status.die_spares_used;
-				store_event_by_parts(EVENT_TYPE_HEALTH,
-						EVENT_SEVERITY_WARN,
-						EVENT_CODE_HEALTH_SPARE_DIE_CONSUMED,
-						discovery.uid,
-						false,
-						uidStr.c_str(),
-						numDieConsumed.str().c_str(),
-						NULL,
-						DIAGNOSTIC_RESULT_UNKNOWN);
-
-				storedState.die_spares_used = status.die_spares_used;
-				storedStateChanged = true;
-			}
-
-			if (status.viral_state != storedState.viral_state)
-			{
-				enum event_code_health code = EVENT_CODE_HEALTH_VIRAL_STATE;
-				if (status.viral_state)
-				{
-					store_event_by_parts(EVENT_TYPE_HEALTH,
-							EVENT_SEVERITY_CRITICAL,
-							code,
-							discovery.uid,
-							true,
-							uidStr.c_str(),
-							NULL,
-							NULL,
-							DIAGNOSTIC_RESULT_UNKNOWN);
-				}
-				else
-				{
-					acknowledgeEventCodeForDevice(code, discovery.uid);
-				}
-
-				// update stored state
-				storedState.viral_state = status.viral_state;
-				storedStateChanged = true;
-			}
-
-			if (status.newest_error_log_timestamp > storedState.newest_error_log_timestamp)
-			{
-				storeFwErrorLogEvent(discovery.uid, uidStr, status.new_error_count);
-				storedState.newest_error_log_timestamp = status.newest_error_log_timestamp;
-				storedStateChanged = true;
-			}
-		}
-	}
-	catch (core::LibraryException &e)
-	{
-		COMMON_LOG_ERROR_F("Unable to get device status for dimm %s - error %d\n",
-				uidStr.c_str(), e.getErrorCode());
-	}
-}
-
-/*
- * Check for device media temperature changes
- */
-void monitor::EventMonitor::monitorDimmMediaTemperature(const std::string &uidStr,
-		const struct device_discovery &discovery,
-		struct db_dimm_state &storedState,
-		bool &storedStateChanged,
-		struct sensor &sensor)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	// temp has changed state
-	if (sensor.current_state != storedState.mediatemperature_state)
-	{
-		// log an event
-		enum event_code_health code = EVENT_CODE_HEALTH_MEDIA_TEMPERATURE_UNDER_THRESHOLD;
-		enum event_severity severity = EVENT_SEVERITY_INFO;
-		bool actionRequired = false;
-		if (sensor.current_state == SENSOR_NONCRITICAL)
-		{
-			code = EVENT_CODE_HEALTH_MEDIA_TEMPERATURE_OVER_THRESHOLD;
-			severity = EVENT_SEVERITY_WARN;
-			actionRequired = true;
-		}
-		// auto-acknowledge any existing temperature over threshold events
-		else if (sensor.current_state == SENSOR_NORMAL)
-		{
-			acknowledgeEventCodeForDevice(EVENT_CODE_HEALTH_MEDIA_TEMPERATURE_OVER_THRESHOLD, discovery.uid);
-		}
-
-		std::stringstream threshold, temperature;
-		temperature << nvm_decode_temperature(sensor.reading);
-		threshold << nvm_decode_temperature(sensor.settings.upper_critical_threshold);
-		store_event_by_parts(EVENT_TYPE_HEALTH,
-				severity,
-				code,
-				discovery.uid,
-				actionRequired,
-				uidStr.c_str(),
-				temperature.str().c_str(),
-				threshold.str().c_str(),
-				DIAGNOSTIC_RESULT_UNKNOWN);
-
-		// update stored state
-		storedStateChanged = true;
-		storedState.mediatemperature_state = sensor.current_state;
-	}
-}
-
-/*
- * Check for device media temperature changes
- */
-void monitor::EventMonitor::monitorDimmControllerTemperature(const std::string &uidStr,
-		const struct device_discovery &discovery,
-		struct db_dimm_state &storedState,
-		bool &storedStateChanged,
-		struct sensor &sensor)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	// temp has changed state
-	if (sensor.current_state != storedState.controllertemperature_state)
-	{
-		// log an event
-		enum event_code_health code = EVENT_CODE_HEALTH_CONTROLLER_TEMPERATURE_UNDER_THRESHOLD;
-		enum event_severity severity = EVENT_SEVERITY_INFO;
-		bool actionRequired = false;
-		if (sensor.current_state == SENSOR_NONCRITICAL)
-		{
-			code = EVENT_CODE_HEALTH_CONTROLLER_TEMPERATURE_OVER_THRESHOLD;
-			severity = EVENT_SEVERITY_WARN;
-			actionRequired = true;
-		}
-		// auto-acknowledge any existing temperature over threshold events
-		else if (sensor.current_state == SENSOR_NORMAL)
-		{
-			acknowledgeEventCodeForDevice(EVENT_CODE_HEALTH_CONTROLLER_TEMPERATURE_OVER_THRESHOLD, discovery.uid);
-		}
-
-		std::stringstream threshold, temperature;
-		temperature << nvm_decode_temperature(sensor.reading);
-		threshold << nvm_decode_temperature(sensor.settings.upper_critical_threshold);
-		store_event_by_parts(EVENT_TYPE_HEALTH,
-				severity,
-				code,
-				discovery.uid,
-				actionRequired,
-				uidStr.c_str(),
-				temperature.str().c_str(),
-				threshold.str().c_str(),
-				DIAGNOSTIC_RESULT_UNKNOWN);
-
-		// update stored state
-		storedStateChanged = true;
-		storedState.controllertemperature_state = sensor.current_state;
-	}
-}
-
-/*
- * Check for device spare capacity changes
- */
-void monitor::EventMonitor::monitorDimmSpare(const std::string &uidStr,
-		const struct device_discovery &discovery,
-		struct db_dimm_state &storedState,
-		bool &storedStateChanged,
-		struct sensor &sensor)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	// spare capacity has changed state
-	if (sensor.current_state != storedState.spare_capacity_state)
-	{
-		if (sensor.current_state == SENSOR_NONCRITICAL)
-		{
-			// log an event
-			std::stringstream percentUsed, threshold;
-			percentUsed << sensor.reading;
-			threshold << sensor.settings.lower_critical_threshold;
-
-			store_event_by_parts(EVENT_TYPE_HEALTH,
-					EVENT_SEVERITY_WARN,
-					EVENT_CODE_HEALTH_LOW_SPARE_CAPACITY,
-					discovery.uid,
-					true,
-					uidStr.c_str(),
-					percentUsed.str().c_str(),
-					threshold.str().c_str(),
-					DIAGNOSTIC_RESULT_UNKNOWN);
-		}
-		// auto-acknowledge any existing spare below threshold events
-		else if (sensor.current_state == SENSOR_NORMAL)
-		{
-			acknowledgeEventCodeForDevice(EVENT_CODE_HEALTH_LOW_SPARE_CAPACITY, discovery.uid);
-		}
-
-		// update stored state
-		storedStateChanged = true;
-		storedState.spare_capacity_state = sensor.current_state;
-	}
-}
-
-/*
- * Check for device wear level changes changes
- */
-void monitor::EventMonitor::monitorDimmWearLevel(const std::string &uidStr,
-		const struct device_discovery &discovery,
-		struct db_dimm_state &storedState,
-		bool &storedStateChanged,
-		struct sensor &sensor)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	// spare capacity has changed state
-	if (sensor.current_state != storedState.wearlevel_state)
-	{
-		if (sensor.current_state == SENSOR_CRITICAL)
-		{
-			// log an event
-			std::stringstream wearLevel, wearLevelThreshold;
-			wearLevel << sensor.reading;
-			int percent_used_threshold = 0;
-			get_config_value_int(SQL_KEY_PERCENT_USED_THRESHOLD, &percent_used_threshold);
-			wearLevelThreshold << percent_used_threshold;
-
-			store_event_by_parts(EVENT_TYPE_HEALTH,
-					EVENT_SEVERITY_WARN,
-					EVENT_CODE_HEALTH_HIGH_WEARLEVEL,
-					discovery.uid,
-					true,
-					uidStr.c_str(),
-					wearLevel.str().c_str(),
-					wearLevelThreshold.str().c_str(),
-					DIAGNOSTIC_RESULT_UNKNOWN);
-		}
-		// NOTE: wear level will never go from critical to normal so
-		// no need to auto-acknowledge these events on monitor.
-
-		// update stored state
-		storedStateChanged = true;
-		storedState.wearlevel_state = sensor.current_state;
-	}
-}
-
-/*
- * Check for dimm errors
- */
-void monitor::EventMonitor::monitorDimmErrors(const std::string &uidStr,
-		const struct device_discovery &discovery,
-		NVM_UINT64 &stored,
-		const NVM_UINT64 &current,
-		const std::string &errorType,
-		bool &storedStateChanged)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	// new errors
-	if (current > stored)
-	{
-		// log an event
-		std::stringstream errors;
-		errors << current;
-
-		store_event_by_parts(EVENT_TYPE_HEALTH,
-				EVENT_SEVERITY_WARN,
-				EVENT_CODE_HEALTH_NEW_MEDIAERRORS_FOUND,
-				discovery.uid,
-				false,
-				uidStr.c_str(),
-				errorType.c_str(),
-				errors.str().c_str(),
-				DIAGNOSTIC_RESULT_UNKNOWN);
-
-		// update stored state
-		storedStateChanged = true;
-		stored = current;
-	}
-}
-
-
-/*
- * Check for device sensor changes
- */
-void monitor::EventMonitor::monitorDimmSensors(const std::string &uidStr,
-		const struct device_discovery &discovery,
-		struct db_dimm_state &storedState,
-		bool &storedStateChanged,
-		bool firstState)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	try
-	{
-		std::vector<struct sensor> sensors = m_lib.getSensors(uidStr);
-
-		// first pass, just store current values
-		if (firstState)
-		{
-			storedState.mediaerrors_corrected =
-					sensors[SENSOR_MEDIAERRORS_CORRECTED].reading;
-			storedState.mediaerrors_erasurecoded =
-					sensors[SENSOR_MEDIAERRORS_ERASURECODED].reading;
-			storedState.mediaerrors_uncorrectable =
-					sensors[SENSOR_MEDIAERRORS_UNCORRECTABLE].reading;
-			storedState.wearlevel_state =
-					sensors[SENSOR_WEARLEVEL].current_state;
-			storedState.mediatemperature_state =
-					sensors[SENSOR_MEDIA_TEMPERATURE].current_state;
-			storedState.controllertemperature_state =
-					sensors[SENSOR_CONTROLLER_TEMPERATURE].current_state;
-			storedState.spare_capacity_state =
-					sensors[SENSOR_SPARECAPACITY].current_state;
-
-		}
-		// check for changes
-		else
-		{
-			// monitor media temperature
-			monitorDimmMediaTemperature(uidStr, discovery, storedState,
-					storedStateChanged, sensors[SENSOR_MEDIA_TEMPERATURE]);
-
-			// monitor controller temperature
-			monitorDimmControllerTemperature(uidStr, discovery, storedState,
-					storedStateChanged, sensors[SENSOR_CONTROLLER_TEMPERATURE]);
-
-			// monitor spare capacity
-			monitorDimmSpare(uidStr, discovery, storedState,
-					storedStateChanged, sensors[SENSOR_SPARECAPACITY]);
-
-			// monitor wear level
-			monitorDimmWearLevel(uidStr, discovery, storedState,
-					storedStateChanged, sensors[SENSOR_WEARLEVEL]);
-
-			// monitor errors - uncorrectable
-			monitorDimmErrors(uidStr, discovery, storedState.mediaerrors_uncorrectable,
-					sensors[SENSOR_MEDIAERRORS_UNCORRECTABLE].reading,
-					UNCORRECTABLE, storedStateChanged);
-
-			// monitor errors - corrected
-			monitorDimmErrors(uidStr, discovery, storedState.mediaerrors_corrected,
-					sensors[SENSOR_MEDIAERRORS_CORRECTED].reading,
-					CORRECTED, storedStateChanged);
-
-			// monitor errors - erasure coded
-			monitorDimmErrors(uidStr, discovery, storedState.mediaerrors_erasurecoded,
-					sensors[SENSOR_MEDIAERRORS_ERASURECODED].reading,
-					ERASURE_CODED, storedStateChanged);
-		}
-	}
-	catch (core::LibraryException &e)
-	{
-		COMMON_LOG_ERROR_F("Unable to get sensors for dimm %s - error %d\n",
-				uidStr.c_str(), e.getErrorCode());
-	}
-}
-
-/*
  * Helper to convert device health to string
  */
 std::string monitor::EventMonitor::namespaceHealthToStr(enum namespace_health health)
@@ -1288,74 +841,358 @@ void monitor::EventMonitor::monitorNamespaces(PersistentStore *pStore)
 
 void monitor::EventMonitor::monitor()
 {
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	nvm_create_context();
+
+	monitorDevices();
+
 	PersistentStore *pStore = get_lib_store();
 	if (pStore)
 	{
-		LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-		// clean up any context
-		nvm_create_context();
-
-		DeviceMap devMap = getCurrentDeviceMap();
-		for (DeviceMap::const_iterator devIter = devMap.begin();
-				devIter != devMap.end(); devIter++)
-		{
-			const std::string &uidStr = devIter->first;
-			const struct device_discovery &discovery = devIter->second.discovery;
-
-			// ignore unmanageable dimms
-			if (discovery.manageability == MANAGEMENT_VALIDCONFIG)
-			{
-				bool storedStateChanged = false;
-				bool firstState = false;
-
-				// get stored device state
-				struct db_dimm_state storedState;
-				memset(&storedState, 0, sizeof (storedState));
-				if (db_get_dimm_state_by_device_handle(pStore,
-						discovery.device_handle.handle, &storedState) != DB_SUCCESS)
-				{
-					// initial state, just store current
-					firstState = true;
-					COMMON_LOG_INFO_F("Failed to retrieve the stored health state of dimm %u",
-							discovery.device_handle.handle);
-					storedState.device_handle = discovery.device_handle.handle;
-					storedStateChanged = true;
-				}
-
-				// check for dimm health state transition
-				monitorDimmStatus(uidStr, discovery, storedState,
-						storedStateChanged, firstState);
-
-				// check for dimm sensor transitions
-				monitorDimmSensors(uidStr, discovery, storedState,
-						storedStateChanged, firstState);
-
-				// update stored dimm state
-				if (storedStateChanged)
-				{
-					// clear existing dimm state
-					if (!firstState)
-					{
-						db_delete_dimm_state_by_device_handle(pStore,
-								discovery.device_handle.handle);
-					}
-					// add current state
-					if (db_add_dimm_state(pStore, &storedState) != DB_SUCCESS)
-					{
-						COMMON_LOG_ERROR_F("Failed to store the health state of dimm %u",
-								discovery.device_handle.handle);
-					}
-				}
-			}
-		}
-
 		// Monitor namespace health transitions
 		monitorNamespaces(pStore);
-
-		// clean up
-		devMap.clear();
-		nvm_free_context();
 	}
 
+	nvm_free_context();
+}
+
+void monitor::EventMonitor::monitorDevices()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	DeviceMap devices = getCurrentDeviceMap();
+	for (DeviceMap::const_iterator dev = devices.begin(); dev != devices.end(); dev++)
+	{
+		runQuickHealthDiagnosticForDevice(dev->first);
+		monitorChangesForDevice(dev->second);
+	}
+}
+
+void monitor::EventMonitor::runQuickHealthDiagnosticForDevice(const std::string& uid)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	runDiagnostic(DIAG_TYPE_QUICK, uid);
+}
+
+void monitor::EventMonitor::monitorChangesForDevice(const deviceInfo& device)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	if (device.discovery.manageability == MANAGEMENT_VALIDCONFIG)
+	{
+		struct db_dimm_state updatedDeviceState;
+		memset(&updatedDeviceState, 0, sizeof (updatedDeviceState));
+
+		try
+		{
+			updatedDeviceState = getSavedStateForDevice(device);
+
+			processSensorStateChangesForDevice(device, updatedDeviceState);
+			processHealthChangesForDevice(device, updatedDeviceState);
+		}
+		catch (NoDeviceSavedState &)
+		{
+			initializeDimmState(updatedDeviceState, device);
+		}
+
+		saveStateForDevice(updatedDeviceState);
+	}
+}
+
+struct db_dimm_state monitor::EventMonitor::getSavedStateForDevice(const deviceInfo& device)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	struct db_dimm_state savedState;
+	memset(&savedState, 0, sizeof (savedState));
+
+	if (db_get_dimm_state_by_device_handle(get_lib_store(),
+			device.discovery.device_handle.handle,
+			&savedState) != DB_SUCCESS)
+	{
+		throw NoDeviceSavedState();
+	}
+
+	return savedState;
+}
+
+void monitor::EventMonitor::saveStateForDevice(struct db_dimm_state& newState)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	if (db_delete_dimm_state_by_device_handle(get_lib_store(), newState.device_handle)
+			!= DB_SUCCESS)
+	{
+		COMMON_LOG_INFO_F("Unable to delete old dimm_state for %d",
+				newState.device_handle);
+	}
+
+	if (db_add_dimm_state(get_lib_store(), &newState) != DB_SUCCESS)
+	{
+		COMMON_LOG_ERROR_F("Unable to save dimm_state for %d",
+				newState.device_handle);
+	}
+}
+
+void monitor::EventMonitor::processSensorStateChangesForDevice(const deviceInfo& device,
+		struct db_dimm_state &dimmState)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	std::vector<sensor> sensors = getSensorsForDevice(device);
+
+	detectMediaErrorSensorChanges(sensors, device.discovery.uid, dimmState);
+	detectFwErrorSensorChanges(sensors, device.discovery.uid, dimmState);
+
+	updateStateForMediaErrorSensors(dimmState, sensors);
+	updateStateForFwErrorSensors(dimmState, sensors);
+}
+
+/*
+ * Returns an empty list if there was an error getting the sensors
+ */
+std::vector<sensor> monitor::EventMonitor::getSensorsForDevice(const deviceInfo& device)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	std::vector<sensor> sensors;
+	std::string uid = core::Helper::uidToString(device.discovery.uid);
+	try
+	{
+		sensors = m_lib.getSensors(uid);
+	}
+	catch (core::LibraryException &e)
+	{
+		COMMON_LOG_ERROR_F("Unable to get sensors for device %s, rc = %d",
+				uid.c_str(), e.getErrorCode());
+	}
+
+	return sensors;
+}
+
+
+void monitor::EventMonitor::detectMediaErrorSensorChanges(const std::vector<sensor>& sensors,
+		const NVM_UID deviceUid, const struct db_dimm_state& savedState)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	if (sensorReadingHasIncreased(sensors, SENSOR_MEDIAERRORS_CORRECTED,
+			savedState.mediaerrors_corrected))
+	{
+		createMediaErrorEvent(deviceUid, TR("corrected"));
+	}
+
+	if (sensorReadingHasIncreased(sensors, SENSOR_MEDIAERRORS_UNCORRECTABLE,
+			savedState.mediaerrors_uncorrectable))
+	{
+		createMediaErrorEvent(deviceUid, TR("uncorrectable"));
+	}
+
+	if (sensorReadingHasIncreased(sensors, SENSOR_MEDIAERRORS_ERASURECODED,
+			savedState.mediaerrors_erasurecoded))
+	{
+		createMediaErrorEvent(deviceUid, TR("erasure coded"));
+	}
+}
+
+bool monitor::EventMonitor::sensorReadingHasIncreased(const std::vector<sensor>& sensors,
+		const sensor_type sensorType, const NVM_UINT64 oldReading)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	return (sensorsIncludeType(sensors, sensorType) &&
+			(sensors[sensorType].reading > oldReading));
+}
+
+bool monitor::EventMonitor::sensorsIncludeType(const std::vector<sensor>& sensors,
+		const sensor_type type)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	return (sensors.size() > type);
+}
+
+void monitor::EventMonitor::createMediaErrorEvent(const NVM_UID uid,
+		const std::string& errorType)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	store_event_by_parts(EVENT_TYPE_HEALTH,
+			EVENT_SEVERITY_WARN,
+			EVENT_CODE_HEALTH_NEW_MEDIAERRORS_FOUND,
+			uid,
+			false,
+			core::Helper::uidToString(uid).c_str(),
+			errorType.c_str(),
+			NULL,
+			DIAGNOSTIC_RESULT_UNKNOWN);
+}
+
+void monitor::EventMonitor::detectFwErrorSensorChanges(const std::vector<sensor>& sensors,
+		const NVM_UID deviceUid, const struct db_dimm_state& savedState)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	if (sensorReadingHasIncreased(sensors, SENSOR_FWERRORLOGCOUNT, savedState.fw_log_errors))
+	{
+		NVM_UINT64 newErrors = sensors[SENSOR_FWERRORLOGCOUNT].reading - savedState.fw_log_errors;
+		createFwErrorLogEvent(deviceUid, newErrors);
+	}
+}
+
+void monitor::EventMonitor::createFwErrorLogEvent(const NVM_UID deviceUid,
+		const NVM_UINT64 errorCount)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	std::stringstream newErrorCount;
+	newErrorCount << errorCount;
+
+	store_event_by_parts(EVENT_TYPE_HEALTH,
+			EVENT_SEVERITY_WARN,
+			EVENT_CODE_HEALTH_NEW_FWERRORS_FOUND,
+			deviceUid,
+			false,
+			core::Helper::uidToString(deviceUid).c_str(),
+			newErrorCount.str().c_str(),
+			NULL,
+			DIAGNOSTIC_RESULT_UNKNOWN);
+}
+
+void monitor::EventMonitor::updateStateForMediaErrorSensors(struct db_dimm_state& dimmState,
+		const std::vector<sensor>& sensors)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	dimmState.mediaerrors_corrected = getLatestSensorReading(sensors, SENSOR_MEDIAERRORS_CORRECTED,
+			dimmState.mediaerrors_corrected);
+	dimmState.mediaerrors_uncorrectable = getLatestSensorReading(sensors, SENSOR_MEDIAERRORS_UNCORRECTABLE,
+			dimmState.mediaerrors_uncorrectable);
+	dimmState.mediaerrors_erasurecoded = getLatestSensorReading(sensors, SENSOR_MEDIAERRORS_ERASURECODED,
+			dimmState.mediaerrors_erasurecoded);
+}
+
+
+void monitor::EventMonitor::updateStateForFwErrorSensors(struct db_dimm_state& dimmState,
+		const std::vector<sensor>& sensors)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	dimmState.fw_log_errors = getLatestSensorReading(sensors, SENSOR_FWERRORLOGCOUNT,
+			dimmState.fw_log_errors);
+}
+
+void monitor::EventMonitor::initializeDimmState(struct db_dimm_state& dimmState, const deviceInfo& device)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	dimmState.device_handle = device.discovery.device_handle.handle;
+	dimmState.health_state = device.status.health;
+
+	initializeSensorStateForDevice(dimmState, device);
+}
+
+void monitor::EventMonitor::initializeSensorStateForDevice(struct db_dimm_state& dimmState,
+		const deviceInfo& device)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	std::vector<sensor> sensors = getSensorsForDevice(device);
+
+	dimmState.mediaerrors_corrected = getLatestSensorReading(sensors, SENSOR_MEDIAERRORS_CORRECTED, 0);
+	dimmState.mediaerrors_uncorrectable = getLatestSensorReading(sensors, SENSOR_MEDIAERRORS_UNCORRECTABLE, 0);
+	dimmState.mediaerrors_erasurecoded = getLatestSensorReading(sensors, SENSOR_MEDIAERRORS_ERASURECODED, 0);
+
+	dimmState.fw_log_errors = getLatestSensorReading(sensors, SENSOR_FWERRORLOGCOUNT, 0);
+}
+
+NVM_UINT64 monitor::EventMonitor::getLatestSensorReading(const std::vector<sensor>& sensors,
+		const sensor_type sensorType, const NVM_UINT64 oldReading)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	NVM_UINT64 reading = oldReading;
+	if (sensorsIncludeType(sensors, sensorType))
+	{
+		reading = sensors[sensorType].reading;
+	}
+
+	return reading;
+}
+
+void monitor::EventMonitor::processHealthChangesForDevice(const deviceInfo& device,
+		struct db_dimm_state& dimmState)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	device_health oldHealth = (device_health)dimmState.health_state;
+	device_health newHealth = device.status.health;
+	if (newHealth != oldHealth)
+	{
+		createDeviceHealthEvent(device.discovery.uid, oldHealth, newHealth);
+		dimmState.health_state = newHealth;
+	}
+}
+
+void monitor::EventMonitor::createDeviceHealthEvent(const NVM_UID uid,
+		const device_health oldHealth, const device_health newHealth)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	std::string oldHealthStr = deviceHealthToStr(oldHealth);
+	std::string newHealthStr = deviceHealthToStr(newHealth);
+
+	store_event_by_parts(EVENT_TYPE_HEALTH,
+			getEventSeverityForDeviceHealth(newHealth),
+			EVENT_CODE_HEALTH_HEALTH_STATE_CHANGED,
+			uid,
+			isActionRequiredForDeviceHealth(newHealth),
+			core::Helper::uidToString(uid).c_str(),
+			oldHealthStr.c_str(),
+			newHealthStr.c_str(),
+			DIAGNOSTIC_RESULT_UNKNOWN);
+}
+
+bool monitor::EventMonitor::isActionRequiredForDeviceHealth(enum device_health health)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	return (health == DEVICE_HEALTH_CRITICAL) || (health == DEVICE_HEALTH_FATAL);
+}
+
+event_severity monitor::EventMonitor::getEventSeverityForDeviceHealth(enum device_health health)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	event_severity severity = EVENT_SEVERITY_INFO;
+	switch (health)
+	{
+	case DEVICE_HEALTH_FATAL:
+		severity = EVENT_SEVERITY_FATAL;
+		break;
+	case DEVICE_HEALTH_CRITICAL:
+		severity = EVENT_SEVERITY_CRITICAL;
+		break;
+	case DEVICE_HEALTH_NORMAL:
+		severity = EVENT_SEVERITY_INFO;
+		break;
+	case DEVICE_HEALTH_NONCRITICAL:
+	case DEVICE_HEALTH_UNKNOWN:
+	default:
+		severity = EVENT_SEVERITY_WARN;
+		break;
+	}
+
+	return severity;
+}
+
+std::string monitor::EventMonitor::deviceHealthToStr(enum device_health health)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	std::string healthStateStr =
+			TR(get_string_for_device_health_status(health));
+	return healthStateStr;
 }

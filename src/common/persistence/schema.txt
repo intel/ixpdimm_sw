@@ -278,17 +278,11 @@ Table(s): db_dimm_state
 Description: Monitor stored DIMM state for detecting changes. 
 Attributes: 
 	unsigned int device_handle(PK)
-	int spare_capacity_state
-	int wearlevel_state
 	unsigned long long mediaerrors_corrected
 	unsigned long long mediaerrors_uncorrectable
 	unsigned long long mediaerrors_erasurecoded
 	int health_state
-	unsigned int die_spares_used
-	int mediatemperature_state
-	int controllertemperature_state
-	int viral_state
-	unsigned long long newest_error_log_timestamp
+	unsigned long long fw_log_errors
 
 Table(s): db_namespace_state 
 Description: Monitor stored namespace state for detecting changes. 

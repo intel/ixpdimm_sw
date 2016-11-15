@@ -66,6 +66,9 @@ namespace monitor
 	class EventMonitor : public NvmMonitorBase
 	{
 	public:
+		class NoDeviceSavedState : public std::exception
+		{};
+
 		/*!
 		 * Constructor
 		 */
@@ -93,7 +96,6 @@ namespace monitor
 		 */
 		static void acknowledgeEventCodeForDevice(const int eventCode, const NVM_UID deviceUid);
 
-
 	private:
 		int m_nsMgmtCallbackId; // callback identifer for delete namespace events
 		core::NvmLibrary &m_lib;
@@ -103,6 +105,7 @@ namespace monitor
 		 */
 		void startOfDay();
 		void runPlatformConfigDiagnostic();
+		void runDiagnostic(const diagnostic_test diagType, const std::string& uid = "");
 		void checkDeviceStartUpStatus();
 
 		DeviceMap getCurrentDeviceMapWithSavedTopology();
@@ -128,97 +131,50 @@ namespace monitor
 		void acknowledgePlatformConfigEventsForDevice(const std::string &uid);
 		void acknowledgeEventTypeForDevice(const event_type type, const std::string &uid);
 
-		/*
-		 * Look for deleted namespaces and auto-acknowledge action required events
-		 */
 		void acknowledgeDeletedNamespaces();
 		bool namespaceDeleted(const NVM_UID nsUid,
 				const std::vector<std::string> &nsUids);
 
 		/*
-		 * Monitor dimm health status transitions
+		 * Process conditions to be detected on each monitor cycle.
 		 */
-		void monitorDimmStatus(const std::string &uidStr,
-				const struct device_discovery &discovery,
-				struct db_dimm_state &storedState,
-				bool &storedStateChanged,
-				bool firstState);
+		void monitorDevices();
+		void runQuickHealthDiagnosticForDevice(const std::string &uid);
+		void monitorChangesForDevice(const deviceInfo &device);
+		struct db_dimm_state getSavedStateForDevice(const deviceInfo &device);
+		void saveStateForDevice(struct db_dimm_state &newState);
 
-		/*
-		 * Monitor dimm sensors
-		 */
-		void monitorDimmSensors(const std::string &uidStr,
-				const struct device_discovery &discovery,
-				struct db_dimm_state &storedState,
-				bool &storedStateChanged,
-				bool firstState);
+		void processSensorStateChangesForDevice(const deviceInfo &device, struct db_dimm_state &dimmState);
+		std::vector<sensor> getSensorsForDevice(const deviceInfo &device);
+		void detectMediaErrorSensorChanges(const std::vector<sensor> &sensors, const NVM_UID deviceUid,
+				const struct db_dimm_state &savedState);
+		bool sensorReadingHasIncreased(const std::vector<sensor>& sensors,
+				const sensor_type sensorType, const NVM_UINT64 oldReading);
+		bool sensorsIncludeType(const std::vector<sensor> &sensors, const sensor_type type);
+		void createMediaErrorEvent(const NVM_UID uid, const std::string &errorType);
+		void updateStateForMediaErrorSensors(struct db_dimm_state &dimmState,
+				const std::vector<sensor> &sensors);
 
-		/*
-		 * Monitor Dimm Media Temperature
-		 */
-		void monitorDimmMediaTemperature(const std::string &uidStr,
-				const struct device_discovery &discovery,
-				struct db_dimm_state &storedState,
-				bool &storedStateChanged,
-				struct sensor &sensor);
+		void detectFwErrorSensorChanges(const std::vector<sensor> &sensors, const NVM_UID deviceUid,
+				const struct db_dimm_state &savedState);
+		void createFwErrorLogEvent(const NVM_UID deviceUid, const NVM_UINT64 errorCount);
+		void updateStateForFwErrorSensors(struct db_dimm_state &dimmState,
+				const std::vector<sensor> &sensors);
 
-		/*
-		 * Monitor Dimm Controller Temperature
-		 */
-		void monitorDimmControllerTemperature(const std::string &uidStr,
-				const struct device_discovery &discovery,
-				struct db_dimm_state &storedState,
-				bool &storedStateChanged,
-				struct sensor &sensor);
-
-		/*
-		 * Monitor Dimm Spare Capacity
-		 */
-		void monitorDimmSpare(const std::string &uidStr,
-				const struct device_discovery &discovery,
-				struct db_dimm_state &storedState,
-				bool &storedStateChanged,
-				struct sensor &sensor);
-
-		/*
-		 * Monitor Dimm Wear Level
-		 */
-		void monitorDimmWearLevel(const std::string &uidStr,
-				const struct device_discovery &discovery,
-				struct db_dimm_state &storedState,
-				bool &storedStateChanged,
-				struct sensor &sensor);
-
-		/*
-		 * Monitor Dimm Error Counts
-		 */
-		void monitorDimmErrors(const std::string &uidStr,
-				const struct device_discovery &discovery,
-				NVM_UINT64 &stored,
-				const NVM_UINT64 &current,
-				const std::string &errorType,
-				bool &storedStateChanged);
-
-		/*
-		 * Convert namespace health to string
-		 */
-		std::string namespaceHealthToStr(enum namespace_health health);
-
-		/*
-		 * Monitor Namespace health events
-		 */
-		void monitorNamespaces(PersistentStore *p_Store);
-
-		/*
-		 * Device health to string helper
-		 */
+		void processHealthChangesForDevice(const deviceInfo &device, struct db_dimm_state &dimmState);
+		void createDeviceHealthEvent(const NVM_UID uid, const device_health oldHealth, const device_health newHealth);
+		bool isActionRequiredForDeviceHealth(enum device_health health);
+		event_severity getEventSeverityForDeviceHealth(enum device_health health);
 		std::string deviceHealthToStr(enum device_health health);
 
-		/*
-		 * Helper to store new fw error log event
-		 */
-		void storeFwErrorLogEvent(const NVM_UID &device_uid, const std::string &uidStr,
-				const NVM_UINT32 errorCount);
+		void initializeDimmState(struct db_dimm_state &dimmState, const deviceInfo& device);
+		void initializeSensorStateForDevice(struct db_dimm_state &dimmState, const deviceInfo& device);
+		NVM_UINT64 getLatestSensorReading(const std::vector<sensor> &sensors,
+				const sensor_type sensorType,
+				const NVM_UINT64 oldReading);
+
+		void monitorNamespaces(PersistentStore *p_Store);
+		std::string namespaceHealthToStr(enum namespace_health health);
 	};
 }
 #endif /* _MONITOR_EVENTMONITOR_H_ */

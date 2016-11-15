@@ -1052,17 +1052,11 @@ tables[populate_index++] = ((struct table){"dimm_smart",
 tables[populate_index++] = ((struct table){"dimm_state",
 				"CREATE TABLE dimm_state (       \
 					 device_handle INTEGER  PRIMARY KEY  NOT NULL UNIQUE  , \
-					 spare_capacity_state INTEGER  , \
-					 wearlevel_state INTEGER  , \
 					 mediaerrors_corrected INTEGER  , \
 					 mediaerrors_uncorrectable INTEGER  , \
 					 mediaerrors_erasurecoded INTEGER  , \
 					 health_state INTEGER  , \
-					 die_spares_used INTEGER  , \
-					 mediatemperature_state INTEGER  , \
-					 controllertemperature_state INTEGER  , \
-					 viral_state INTEGER  , \
-					 newest_error_log_timestamp INTEGER   \
+					 fw_log_errors INTEGER   \
 					);"}
 #if 0
 //NON-HISTORY TABLE
@@ -1071,17 +1065,11 @@ tables[populate_index++] = ((struct table){"dimm_state",
 				"CREATE TABLE dimm_state_history (       \
 					history_id INTEGER NOT NULL, \
 					 device_handle INTEGER , \
-					 spare_capacity_state INTEGER , \
-					 wearlevel_state INTEGER , \
 					 mediaerrors_corrected INTEGER , \
 					 mediaerrors_uncorrectable INTEGER , \
 					 mediaerrors_erasurecoded INTEGER , \
 					 health_state INTEGER , \
-					 die_spares_used INTEGER , \
-					 mediatemperature_state INTEGER , \
-					 controllertemperature_state INTEGER , \
-					 viral_state INTEGER , \
-					 newest_error_log_timestamp INTEGER  \
+					 fw_log_errors INTEGER  \
 					);"}
 #endif
 );
@@ -10639,17 +10627,11 @@ enum db_return_codes db_delete_dimm_smart_history(const PersistentStore *p_ps)
 void local_bind_dimm_state(sqlite3_stmt *p_stmt, struct db_dimm_state *p_dimm_state)
 {
 	BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)p_dimm_state->device_handle);
-	BIND_INTEGER(p_stmt, "$spare_capacity_state", (int)p_dimm_state->spare_capacity_state);
-	BIND_INTEGER(p_stmt, "$wearlevel_state", (int)p_dimm_state->wearlevel_state);
 	BIND_INTEGER(p_stmt, "$mediaerrors_corrected", (unsigned long long)p_dimm_state->mediaerrors_corrected);
 	BIND_INTEGER(p_stmt, "$mediaerrors_uncorrectable", (unsigned long long)p_dimm_state->mediaerrors_uncorrectable);
 	BIND_INTEGER(p_stmt, "$mediaerrors_erasurecoded", (unsigned long long)p_dimm_state->mediaerrors_erasurecoded);
 	BIND_INTEGER(p_stmt, "$health_state", (int)p_dimm_state->health_state);
-	BIND_INTEGER(p_stmt, "$die_spares_used", (unsigned int)p_dimm_state->die_spares_used);
-	BIND_INTEGER(p_stmt, "$mediatemperature_state", (int)p_dimm_state->mediatemperature_state);
-	BIND_INTEGER(p_stmt, "$controllertemperature_state", (int)p_dimm_state->controllertemperature_state);
-	BIND_INTEGER(p_stmt, "$viral_state", (int)p_dimm_state->viral_state);
-	BIND_INTEGER(p_stmt, "$newest_error_log_timestamp", (unsigned long long)p_dimm_state->newest_error_log_timestamp);
+	BIND_INTEGER(p_stmt, "$fw_log_errors", (unsigned long long)p_dimm_state->fw_log_errors);
 }
 void local_get_dimm_state_relationships(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt, struct db_dimm_state *p_dimm_state)
@@ -10675,52 +10657,28 @@ void local_row_to_dimm_state(const PersistentStore *p_ps,
 		p_dimm_state->device_handle);
 	INTEGER_COLUMN(p_stmt,
 		1,
-		p_dimm_state->spare_capacity_state);
-	INTEGER_COLUMN(p_stmt,
-		2,
-		p_dimm_state->wearlevel_state);
-	INTEGER_COLUMN(p_stmt,
-		3,
 		p_dimm_state->mediaerrors_corrected);
 	INTEGER_COLUMN(p_stmt,
-		4,
+		2,
 		p_dimm_state->mediaerrors_uncorrectable);
 	INTEGER_COLUMN(p_stmt,
-		5,
+		3,
 		p_dimm_state->mediaerrors_erasurecoded);
 	INTEGER_COLUMN(p_stmt,
-		6,
+		4,
 		p_dimm_state->health_state);
 	INTEGER_COLUMN(p_stmt,
-		7,
-		p_dimm_state->die_spares_used);
-	INTEGER_COLUMN(p_stmt,
-		8,
-		p_dimm_state->mediatemperature_state);
-	INTEGER_COLUMN(p_stmt,
-		9,
-		p_dimm_state->controllertemperature_state);
-	INTEGER_COLUMN(p_stmt,
-		10,
-		p_dimm_state->viral_state);
-	INTEGER_COLUMN(p_stmt,
-		11,
-		p_dimm_state->newest_error_log_timestamp);
+		5,
+		p_dimm_state->fw_log_errors);
 }
 void db_print_dimm_state(struct db_dimm_state *p_value)
 {
 	printf("dimm_state.device_handle: unsigned %d\n", p_value->device_handle);
-	printf("dimm_state.spare_capacity_state: %d\n", p_value->spare_capacity_state);
-	printf("dimm_state.wearlevel_state: %d\n", p_value->wearlevel_state);
 	printf("dimm_state.mediaerrors_corrected: unsigned %lld\n", p_value->mediaerrors_corrected);
 	printf("dimm_state.mediaerrors_uncorrectable: unsigned %lld\n", p_value->mediaerrors_uncorrectable);
 	printf("dimm_state.mediaerrors_erasurecoded: unsigned %lld\n", p_value->mediaerrors_erasurecoded);
 	printf("dimm_state.health_state: %d\n", p_value->health_state);
-	printf("dimm_state.die_spares_used: unsigned %d\n", p_value->die_spares_used);
-	printf("dimm_state.mediatemperature_state: %d\n", p_value->mediatemperature_state);
-	printf("dimm_state.controllertemperature_state: %d\n", p_value->controllertemperature_state);
-	printf("dimm_state.viral_state: %d\n", p_value->viral_state);
-	printf("dimm_state.newest_error_log_timestamp: unsigned %lld\n", p_value->newest_error_log_timestamp);
+	printf("dimm_state.fw_log_errors: unsigned %lld\n", p_value->fw_log_errors);
 }
 enum db_return_codes db_add_dimm_state(const PersistentStore *p_ps,
 	struct db_dimm_state *p_dimm_state)
@@ -10728,20 +10686,14 @@ enum db_return_codes db_add_dimm_state(const PersistentStore *p_ps,
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = 	"INSERT INTO dimm_state \
-		(device_handle, spare_capacity_state, wearlevel_state, mediaerrors_corrected, mediaerrors_uncorrectable, mediaerrors_erasurecoded, health_state, die_spares_used, mediatemperature_state, controllertemperature_state, viral_state, newest_error_log_timestamp)  \
+		(device_handle, mediaerrors_corrected, mediaerrors_uncorrectable, mediaerrors_erasurecoded, health_state, fw_log_errors)  \
 		VALUES 		\
 		($device_handle, \
-		$spare_capacity_state, \
-		$wearlevel_state, \
 		$mediaerrors_corrected, \
 		$mediaerrors_uncorrectable, \
 		$mediaerrors_erasurecoded, \
 		$health_state, \
-		$die_spares_used, \
-		$mediatemperature_state, \
-		$controllertemperature_state, \
-		$viral_state, \
-		$newest_error_log_timestamp) ";
+		$fw_log_errors) ";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		local_bind_dimm_state(p_stmt, p_dimm_state);
@@ -10765,20 +10717,14 @@ int db_get_dimm_states(const PersistentStore *p_ps,
 	memset(p_dimm_state, 0, sizeof (struct db_dimm_state) * dimm_state_count);
 	char *sql = "SELECT \
 		device_handle \
-		,  spare_capacity_state \
-		,  wearlevel_state \
 		,  mediaerrors_corrected \
 		,  mediaerrors_uncorrectable \
 		,  mediaerrors_erasurecoded \
 		,  health_state \
-		,  die_spares_used \
-		,  mediatemperature_state \
-		,  controllertemperature_state \
-		,  viral_state \
-		,  newest_error_log_timestamp \
+		,  fw_log_errors \
 		  \
 		FROM dimm_state \
-		             \
+		       \
 		 \
 		";
 	sqlite3_stmt *p_stmt;
@@ -10823,20 +10769,14 @@ enum db_return_codes db_save_dimm_state_state(const PersistentStore *p_ps,
 	{
 		sqlite3_stmt *p_stmt;
 		char *sql = 	"INSERT INTO dimm_state \
-			( device_handle ,  spare_capacity_state ,  wearlevel_state ,  mediaerrors_corrected ,  mediaerrors_uncorrectable ,  mediaerrors_erasurecoded ,  health_state ,  die_spares_used ,  mediatemperature_state ,  controllertemperature_state ,  viral_state ,  newest_error_log_timestamp )  \
+			( device_handle ,  mediaerrors_corrected ,  mediaerrors_uncorrectable ,  mediaerrors_erasurecoded ,  health_state ,  fw_log_errors )  \
 			VALUES 		\
 			($device_handle, \
-			$spare_capacity_state, \
-			$wearlevel_state, \
 			$mediaerrors_corrected, \
 			$mediaerrors_uncorrectable, \
 			$mediaerrors_erasurecoded, \
 			$health_state, \
-			$die_spares_used, \
-			$mediatemperature_state, \
-			$controllertemperature_state, \
-			$viral_state, \
-			$newest_error_log_timestamp) ";
+			$fw_log_errors) ";
 		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 		{
 			local_bind_dimm_state(p_stmt, p_dimm_state);
@@ -10855,20 +10795,14 @@ enum db_return_codes db_save_dimm_state_state(const PersistentStore *p_ps,
 		sqlite3_stmt *p_stmt;
 		char *sql = "INSERT INTO dimm_state_history \
 			(history_id, \
-				 device_handle,  spare_capacity_state,  wearlevel_state,  mediaerrors_corrected,  mediaerrors_uncorrectable,  mediaerrors_erasurecoded,  health_state,  die_spares_used,  mediatemperature_state,  controllertemperature_state,  viral_state,  newest_error_log_timestamp)  \
+				 device_handle,  mediaerrors_corrected,  mediaerrors_uncorrectable,  mediaerrors_erasurecoded,  health_state,  fw_log_errors)  \
 			VALUES 		($history_id, \
 				 $device_handle , \
-				 $spare_capacity_state , \
-				 $wearlevel_state , \
 				 $mediaerrors_corrected , \
 				 $mediaerrors_uncorrectable , \
 				 $mediaerrors_erasurecoded , \
 				 $health_state , \
-				 $die_spares_used , \
-				 $mediatemperature_state , \
-				 $controllertemperature_state , \
-				 $viral_state , \
-				 $newest_error_log_timestamp )";
+				 $fw_log_errors )";
 		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
@@ -10894,7 +10828,7 @@ enum db_return_codes db_get_dimm_state_by_device_handle(const PersistentStore *p
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
-		device_handle,  spare_capacity_state,  wearlevel_state,  mediaerrors_corrected,  mediaerrors_uncorrectable,  mediaerrors_erasurecoded,  health_state,  die_spares_used,  mediatemperature_state,  controllertemperature_state,  viral_state,  newest_error_log_timestamp  \
+		device_handle,  mediaerrors_corrected,  mediaerrors_uncorrectable,  mediaerrors_erasurecoded,  health_state,  fw_log_errors  \
 		FROM dimm_state \
 		WHERE  device_handle = $device_handle";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -10920,17 +10854,11 @@ enum db_return_codes db_update_dimm_state_by_device_handle(const PersistentStore
 	char *sql = "UPDATE dimm_state \
 	SET \
 	device_handle=$device_handle \
-		,  spare_capacity_state=$spare_capacity_state \
-		,  wearlevel_state=$wearlevel_state \
 		,  mediaerrors_corrected=$mediaerrors_corrected \
 		,  mediaerrors_uncorrectable=$mediaerrors_uncorrectable \
 		,  mediaerrors_erasurecoded=$mediaerrors_erasurecoded \
 		,  health_state=$health_state \
-		,  die_spares_used=$die_spares_used \
-		,  mediatemperature_state=$mediatemperature_state \
-		,  controllertemperature_state=$controllertemperature_state \
-		,  viral_state=$viral_state \
-		,  newest_error_log_timestamp=$newest_error_log_timestamp \
+		,  fw_log_errors=$fw_log_errors \
 		  \
 	WHERE device_handle=$device_handle ";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -11022,7 +10950,7 @@ int db_get_dimm_state_history_by_history_id(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "SELECT \
-		device_handle,  spare_capacity_state,  wearlevel_state,  mediaerrors_corrected,  mediaerrors_uncorrectable,  mediaerrors_erasurecoded,  health_state,  die_spares_used,  mediatemperature_state,  controllertemperature_state,  viral_state,  newest_error_log_timestamp  \
+		device_handle,  mediaerrors_corrected,  mediaerrors_uncorrectable,  mediaerrors_erasurecoded,  health_state,  fw_log_errors  \
 		FROM dimm_state_history \
 		WHERE  history_id = '%d'", history_id);
 	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))

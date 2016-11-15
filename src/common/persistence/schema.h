@@ -3691,17 +3691,11 @@ enum db_return_codes db_delete_dimm_smart_by_device_handle(const PersistentStore
 struct db_dimm_state
 {
 	unsigned int device_handle;
-	int spare_capacity_state;
-	int wearlevel_state;
 	unsigned long long mediaerrors_corrected;
 	unsigned long long mediaerrors_uncorrectable;
 	unsigned long long mediaerrors_erasurecoded;
 	int health_state;
-	unsigned int die_spares_used;
-	int mediatemperature_state;
-	int controllertemperature_state;
-	int viral_state;
-	unsigned long long newest_error_log_timestamp;
+	unsigned long long fw_log_errors;
 };
 /*!
  * Helper function to print a db_dimm_state to the screen.
