@@ -779,6 +779,7 @@ int get_dimm_config_output_from_db(PersistentStore *p_db,
 		p_data->config_output_offset = sizeof (struct platform_config_data) +
 				p_data->current_config_size;
 		p_data->config_output_size = sizeof (struct config_output_table);
+
 		struct config_output_table *p_config_output =
 				(struct config_output_table *)((NVM_UINT8 *)p_data + p_data->config_output_offset);
 

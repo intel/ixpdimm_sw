@@ -344,7 +344,15 @@ NVM_UINT64 wbem::mem_config::MemoryAllocationSettingsFactory::getMemoryReservati
 
 			if (rc == NVM_SUCCESS)
 			{
-				reservation += goal.memory_size * BYTES_PER_GIB;
+				if (goal.status != CONFIG_GOAL_STATUS_SUCCESS)
+				{
+					reservation += goal.memory_size * BYTES_PER_GIB;
+				}
+				else
+				{
+					COMMON_LOG_ERROR("Goal already applied");
+					throw framework::ExceptionBadParameter(instanceIdStr.c_str());
+				}
 			}
 			else if (rc != NVM_ERR_NOTFOUND)
 			{
@@ -406,7 +414,15 @@ wbem::mem_config::InterleaveSet
 			rc = nvm_get_config_goal(devices[i].uid, &goal);
 			if (rc  == NVM_SUCCESS)
 			{
-				addIlsetsFromGoal(ilsets, &goal);
+				if (goal.status != CONFIG_GOAL_STATUS_SUCCESS)
+				{
+					addIlsetsFromGoal(ilsets, &goal);
+				}
+				else
+				{
+					COMMON_LOG_ERROR("Goal already applied");
+					throw framework::ExceptionBadParameter(instanceIdStr.c_str());
+				}
 			}
 			else if (rc != NVM_ERR_NOTFOUND)
 			{
@@ -447,10 +463,18 @@ void wbem::mem_config::MemoryAllocationSettingsFactory::getUnmappedInstanceFromG
 			int rc = nvm_get_config_goal(devices[i].uid, &goal);
 			if (rc == NVM_SUCCESS)
 			{
-				reservation += devices[i].capacity -
-						(goal.memory_size * BYTES_PER_GIB +
-								goal.app_direct_1_size * BYTES_PER_GIB +
-								goal.app_direct_2_size * BYTES_PER_GIB);
+				if (goal.status != CONFIG_GOAL_STATUS_SUCCESS)
+				{
+					reservation += devices[i].capacity -
+							(goal.memory_size * BYTES_PER_GIB +
+									goal.app_direct_1_size * BYTES_PER_GIB +
+									goal.app_direct_2_size * BYTES_PER_GIB);
+				}
+				else
+				{
+					COMMON_LOG_ERROR("Goal already applied");
+					throw framework::ExceptionBadParameter(instanceIdStr.c_str());
+				}
 			}
 			else if (rc != NVM_ERR_NOTFOUND)
 			{
@@ -1019,7 +1043,9 @@ wbem::mem_config::StringListType wbem::mem_config::MemoryAllocationSettingsFacto
 	StringListType names;
 	std::map<NVM_UINT16, int> appDirectIds;
 	int appDirectRegionId = 0;
+
 	physical_asset::devices_t::const_iterator devIter = devices.begin();
+
 	for (;devIter != devices.end(); devIter++)
 	{
 		if ((*devIter).socket_id == socketId)
@@ -1029,53 +1055,56 @@ wbem::mem_config::StringListType wbem::mem_config::MemoryAllocationSettingsFacto
 			int rc = nvm_get_config_goal((*devIter).uid, &goal);
 			if (rc == NVM_SUCCESS)
 			{
-				if (goal.memory_size > 0)
+				if (goal.status != CONFIG_GOAL_STATUS_SUCCESS)
 				{
-					char memoryName[MEMORYALLOCATIONSETTINGS_INSTANCEID_LEN + 1];
-					s_snprintf(memoryName, MEMORYALLOCATIONSETTINGS_INSTANCEID_LEN + 1,
-							"%02u.%c.0000.%c", (*devIter).socket_id, MEMORY_MODE_PREFIX, GOAL_CONFIG);
-					names.push_back(memoryName);
-				}
-
-				if (goal.app_direct_count > 1)
-				{
-					char appDirectName[MEMORYALLOCATIONSETTINGS_INSTANCEID_LEN + 1];
-					if (appDirectIds.find(goal.app_direct_2_set_id) == appDirectIds.end())
+					if (goal.memory_size > 0)
 					{
-						appDirectIds[goal.app_direct_2_set_id] = appDirectRegionId;
-						appDirectRegionId++;
+						char memoryName[MEMORYALLOCATIONSETTINGS_INSTANCEID_LEN + 1];
+						s_snprintf(memoryName, MEMORYALLOCATIONSETTINGS_INSTANCEID_LEN + 1,
+								"%02u.%c.0000.%c", (*devIter).socket_id, MEMORY_MODE_PREFIX, GOAL_CONFIG);
+						names.push_back(memoryName);
 					}
-					s_snprintf(appDirectName, MEMORYALLOCATIONSETTINGS_INSTANCEID_LEN + 1,
-							"%02u.%c.%04u.%c", (*devIter).socket_id, APP_DIRECT_PREFIX,
-							appDirectIds[goal.app_direct_2_set_id], GOAL_CONFIG);
-					names.push_back(appDirectName);
-				}
 
-				if (goal.app_direct_count > 0)
-				{
-					char appDirectName[MEMORYALLOCATIONSETTINGS_INSTANCEID_LEN + 1];
-					if (appDirectIds.find(goal.app_direct_1_set_id) == appDirectIds.end())
+					if (goal.app_direct_count > 1)
 					{
-						appDirectIds[goal.app_direct_1_set_id] = appDirectRegionId;
-						appDirectRegionId++;
+						char appDirectName[MEMORYALLOCATIONSETTINGS_INSTANCEID_LEN + 1];
+						if (appDirectIds.find(goal.app_direct_2_set_id) == appDirectIds.end())
+						{
+							appDirectIds[goal.app_direct_2_set_id] = appDirectRegionId;
+							appDirectRegionId++;
+						}
+						s_snprintf(appDirectName, MEMORYALLOCATIONSETTINGS_INSTANCEID_LEN + 1,
+								"%02u.%c.%04u.%c", (*devIter).socket_id, APP_DIRECT_PREFIX,
+								appDirectIds[goal.app_direct_2_set_id], GOAL_CONFIG);
+						names.push_back(appDirectName);
 					}
-					s_snprintf(appDirectName, MEMORYALLOCATIONSETTINGS_INSTANCEID_LEN + 1,
-							"%02u.%c.%04u.%c", (*devIter).socket_id, APP_DIRECT_PREFIX,
-							appDirectIds[goal.app_direct_1_set_id], GOAL_CONFIG);
-					names.push_back(appDirectName);
-				}
 
-				NVM_UINT64 unmappedPerDimm = ((*devIter).capacity/ BYTES_PER_GIB) -
-						(goal.app_direct_1_size + goal.app_direct_2_size + goal.memory_size);
-				if (unmappedPerDimm > 0)
-				{
-					char unmappedName[MEMORYALLOCATIONSETTINGS_INSTANCEID_LEN + 1];
-					s_snprintf(unmappedName, MEMORYALLOCATIONSETTINGS_INSTANCEID_LEN + 1,
-							"%02u.%c.%02u%02u.%c", (*devIter).socket_id, STORAGE_PREFIX,
-							(*devIter).memory_controller_id,
-							(*devIter).channel_id,
-							GOAL_CONFIG);
-					names.push_back(unmappedName);
+					if (goal.app_direct_count > 0)
+					{
+						char appDirectName[MEMORYALLOCATIONSETTINGS_INSTANCEID_LEN + 1];
+						if (appDirectIds.find(goal.app_direct_1_set_id) == appDirectIds.end())
+						{
+							appDirectIds[goal.app_direct_1_set_id] = appDirectRegionId;
+							appDirectRegionId++;
+						}
+						s_snprintf(appDirectName, MEMORYALLOCATIONSETTINGS_INSTANCEID_LEN + 1,
+								"%02u.%c.%04u.%c", (*devIter).socket_id, APP_DIRECT_PREFIX,
+								appDirectIds[goal.app_direct_1_set_id], GOAL_CONFIG);
+						names.push_back(appDirectName);
+					}
+
+					NVM_UINT64 unmappedPerDimm = ((*devIter).capacity/ BYTES_PER_GIB) -
+							(goal.app_direct_1_size + goal.app_direct_2_size + goal.memory_size);
+					if (unmappedPerDimm > 0)
+					{
+						char unmappedName[MEMORYALLOCATIONSETTINGS_INSTANCEID_LEN + 1];
+						s_snprintf(unmappedName, MEMORYALLOCATIONSETTINGS_INSTANCEID_LEN + 1,
+								"%02u.%c.%02u%02u.%c", (*devIter).socket_id, STORAGE_PREFIX,
+								(*devIter).memory_controller_id,
+								(*devIter).channel_id,
+								GOAL_CONFIG);
+						names.push_back(unmappedName);
+					}
 				}
 			}
 			else if (rc != NVM_ERR_NOTFOUND)
