@@ -47,13 +47,12 @@ wbem::framework::Instance *wbem::indication::NVDIMMEventFactory::createIndicatio
 	framework::Instance *pResult = NULL;
 	// NVDIMMEvent: Instances are generated for: over-temperature, nvm device failure,
 	// spare capacity low, remaining life low and media errors.
-	if (pEvent->type == EVENT_TYPE_HEALTH && (
-			pEvent->code == EVENT_CODE_HEALTH_HEALTH_STATE_CHANGED ||
-			pEvent->code == EVENT_CODE_HEALTH_LOW_SPARE_CAPACITY ||
-			pEvent->code == EVENT_CODE_HEALTH_MEDIA_TEMPERATURE_OVER_THRESHOLD ||
-			pEvent->code == EVENT_CODE_HEALTH_CONTROLLER_TEMPERATURE_OVER_THRESHOLD ||
+	if (pEvent->code == EVENT_CODE_HEALTH_HEALTH_STATE_CHANGED ||
+			pEvent->code == EVENT_CODE_DIAG_QUICK_BAD_SPARE ||
+			pEvent->code == EVENT_CODE_DIAG_QUICK_BAD_MEDIA_TEMP ||
+			pEvent->code == EVENT_CODE_DIAG_QUICK_BAD_CORE_TEMP ||
 			pEvent->code == EVENT_CODE_HEALTH_NEW_MEDIAERRORS_FOUND ||
-			pEvent->code == EVENT_CODE_HEALTH_HIGH_WEARLEVEL))
+			pEvent->code == EVENT_CODE_DIAG_QUICK_BAD_PERCENT_USED)
 	{
 		COMMON_LOG_DEBUG_F("Type: %d, Code: %d is an NVDIMMEvent Indication",
 				(int)pEvent->type, (int)pEvent->code);

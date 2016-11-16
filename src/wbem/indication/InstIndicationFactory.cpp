@@ -72,7 +72,7 @@ throw(framework::Exception)
 				pResult = createSensorIndication(pEvent);
 			}
 		}
-		catch (core::NoMemoryException)
+		catch (core::NoMemoryException &)
 		{
 			throw framework::ExceptionNoMemory(__FILE__, __FUNCTION__, "Could not allocate memory");
 		}
@@ -259,7 +259,7 @@ bool wbem::indication::InstIndicationFactory::isDeviceMissing(event *pEvent)
 
 bool wbem::indication::InstIndicationFactory::isSensorEvent(event *pEvent)
 {
-	return (pEvent->type == EVENT_TYPE_HEALTH) && (canGetEventSensorType(pEvent, NULL));
+	return canGetEventSensorType(pEvent, NULL);
 }
 
 wbem::framework::Instance *wbem::indication::InstIndicationFactory::createSensorIndication(
@@ -305,16 +305,19 @@ bool wbem::indication::InstIndicationFactory::canGetEventSensorType(const struct
 	enum sensor_type sensorType = (enum sensor_type)0;
 	switch(pEvent->code)
 	{
-	case EVENT_CODE_HEALTH_LOW_SPARE_CAPACITY:
+	case EVENT_CODE_DIAG_QUICK_BAD_SPARE:
 		sensorType = SENSOR_SPARECAPACITY;
 		break;
-	case EVENT_CODE_HEALTH_MEDIA_TEMPERATURE_OVER_THRESHOLD:
+	case EVENT_CODE_DIAG_QUICK_BAD_MEDIA_TEMP:
+	case EVENT_CODE_DIAG_QUICK_BAD_MEDIA_TEMP_THROTTLING:
+	case EVENT_CODE_DIAG_QUICK_BAD_MEDIA_TEMP_SHUTDOWN:
 		sensorType = SENSOR_MEDIA_TEMPERATURE;
 		break;
-	case EVENT_CODE_HEALTH_MEDIA_TEMPERATURE_UNDER_THRESHOLD:
-		sensorType = SENSOR_MEDIA_TEMPERATURE;
+	case EVENT_CODE_DIAG_QUICK_BAD_CORE_TEMP:
+	case EVENT_CODE_DIAG_QUICK_BAD_CORE_TEMP_SHUTDOWN:
+		sensorType = SENSOR_CONTROLLER_TEMPERATURE;
 		break;
-	case EVENT_CODE_HEALTH_HIGH_WEARLEVEL:
+	case EVENT_CODE_DIAG_QUICK_BAD_PERCENT_USED:
 		sensorType = SENSOR_WEARLEVEL;
 		break;
 	case EVENT_CODE_HEALTH_NEW_MEDIAERRORS_FOUND:
@@ -337,14 +340,8 @@ bool wbem::indication::InstIndicationFactory::canGetEventSensorType(const struct
 		}
 
 		break;
-	case EVENT_CODE_HEALTH_UNSAFE_SHUTDOWN:
+	case EVENT_CODE_DIAG_QUICK_UNSAFE_SHUTDOWN:
 		sensorType = SENSOR_UNSAFESHUTDOWNS;
-		break;
-	case EVENT_CODE_HEALTH_CONTROLLER_TEMPERATURE_OVER_THRESHOLD:
-		sensorType = SENSOR_CONTROLLER_TEMPERATURE;
-		break;
-	case EVENT_CODE_HEALTH_CONTROLLER_TEMPERATURE_UNDER_THRESHOLD:
-		sensorType = SENSOR_CONTROLLER_TEMPERATURE;
 		break;
 	default:
 		eventCodeIsSensor = false;
