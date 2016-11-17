@@ -526,6 +526,9 @@ int fw_mb_err_to_nvm_lib_err(int status)
 		case MB_TIMED_OUT :
 			ret = NVM_ERR_DEVICEBUSY;
 			break;
+		case MB_MEDIA_DISABLED :
+			ret = NVM_ERR_DEVICEERROR;
+			break;
 		default :
 			ret = NVM_ERR_DEVICEERROR;
 	}

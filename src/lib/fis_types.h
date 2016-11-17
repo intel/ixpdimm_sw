@@ -369,7 +369,9 @@ enum mb_error {
 	/* Command is not legally allowed in this mode of the dimm */
 		MB_INCOMPATIBLE_DIMM = 0x11,
 	/* FW timed out on HW components returning in a timely manner */
-		MB_TIMED_OUT = 0x12
+		MB_TIMED_OUT = 0x12,
+	/* The media on the dimm has been disabled due to critical or other failure */
+		MB_MEDIA_DISABLED = 0x14
 };
 
 /*
