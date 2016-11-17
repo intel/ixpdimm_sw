@@ -1262,15 +1262,8 @@ int nvm_get_device_fw_image_info(const NVM_UID device_uid,
 		{
 			FW_VER_ARR_TO_STR(fw_image_info.fw_rev, p_fw_info->active_fw_revision,
 					NVM_VERSION_LEN);
-
-			// TODO HSD-ES 1405285803: Remove workaround for non-BCD staged FW version
-			// FW_VER_ARR_TO_STR(fw_image_info.staged_fw_rev, p_fw_info->staged_fw_revision,
-			// 		NVM_VERSION_LEN);
-			build_revision(p_fw_info->staged_fw_revision, NVM_VERSION_LEN,
-					fw_image_info.staged_fw_rev[4],
-					fw_image_info.staged_fw_rev[3],
-					fw_image_info.staged_fw_rev[2],
-					(fw_image_info.staged_fw_rev[1] << 8) + fw_image_info.staged_fw_rev[0]);
+			FW_VER_ARR_TO_STR(fw_image_info.staged_fw_rev, p_fw_info->staged_fw_revision,
+					NVM_VERSION_LEN);
 
 			p_fw_info->active_fw_type = firmware_type_to_enum(fw_image_info.fw_type);
 			memmove(p_fw_info->active_fw_commit_id, fw_image_info.commit_id, DEV_FW_COMMIT_ID_LEN);
