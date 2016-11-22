@@ -78,6 +78,10 @@ void cli::nvmcli::ValidationFeature::getPaths(cli::framework::CommandSpecList &l
 			"triggered on a subsequent read of the poisoned address. The caller is responsible "
 			"for keeping a list of injected poison errors in order to properly clear them after "
 			"testing is complete."));
+	injectError.addProperty(POISON_MEMORY_TYPE_PROPERTYNAME, false, "memory type", true,
+			TR("The type of memory to poison. One of PatrolScrub(Default), MemoryMode, AppDirect, Storage."
+			"If the address to poison is not currently allocated as the specified "
+			"memory type, an error is occured"));
 	injectError.addProperty(DIE_SPARING_PROPERTYNAME, false, "1", true,
 			TR("Trigger an artificial die sparing. If die sparing is enabled and " NVM_DIMM_NAME " still "
 			"has spares remaining, this will cause the firmware to report that there are no spares "
@@ -94,8 +98,8 @@ void cli::nvmcli::ValidationFeature::getPaths(cli::framework::CommandSpecList &l
 
 // Constructor, just calls super class 
 cli::nvmcli::ValidationFeature::ValidationFeature() : cli::framework::FeatureBase(),
-	m_dimmUid(""), m_temperature(0), m_poison(0), m_clearStateExists(false),
-	m_temperatureExists(false), m_poisonExists(false), m_dieSparingExists(false),
+	m_dimmUid(""), m_poisontype(""), m_temperature(0), m_poison(0), m_clearStateExists(false),
+	m_temperatureExists(false), m_poisonExists(false), m_poisonTypeExists(false), m_dieSparingExists(false),
 	m_spareAlarmExists(false), m_fatalMediaErrorExists(false)
 { }
 
@@ -123,10 +127,12 @@ void cli::nvmcli::ValidationFeature::inject_error(std::string &prefixMsg,
 {
 	if (m_poisonExists)
 	{
+		enum poison_memory_type type;
 		prefixMsg = framework::ResultBase::stringFromArgList(
 				SETPOISON_MSG_PREFIX.c_str(), m_poison, m_dimmUid.c_str());
 		prefixMsg += ": ";
-		m_DimmProvider.injectPoisonError(*iUid, m_poison);
+		type = get_poison_type_from_string(m_poisontype);
+		m_DimmProvider.injectPoisonError(*iUid, m_poison, type);
 		listResult.insert(prefixMsg + cli::framework::SUCCESS_MSG);
 	}
 	else if (m_temperatureExists)
@@ -168,10 +174,12 @@ void cli::nvmcli::ValidationFeature::clear_injected_error(std::string &prefixMsg
 {
 	if (m_poisonExists)
 	{
+		enum poison_memory_type type;
 		prefixMsg = framework::ResultBase::stringFromArgList(
 				CLEARPOISON_MSG_PREFIX.c_str(), m_poison, m_dimmUid.c_str());
 		prefixMsg += ": ";
-		m_DimmProvider.clearPoisonError(*iUid, m_poison);
+		type = get_poison_type_from_string(m_poisontype);
+		m_DimmProvider.clearPoisonError(*iUid, m_poison, type);
 		listResult.insert(prefixMsg + cli::framework::SUCCESS_MSG);
 	}
 	else if (m_temperatureExists)
@@ -342,6 +350,22 @@ cli::framework::ResultBase* cli::nvmcli::ValidationFeature::parsePoisonProperty(
 	return pResult;
 }
 
+cli::framework::ResultBase* cli::nvmcli::ValidationFeature::parsePoisonTypeProperty(
+		const framework::ParsedCommand& parsedCommand)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	framework::ResultBase *pResult = NULL;
+
+	m_poisontype = framework::Parser::getPropertyValue(parsedCommand,
+			POISON_MEMORY_TYPE_PROPERTYNAME, &m_poisonTypeExists);
+	if (m_poisonExists && !m_poisonTypeExists)
+	{
+		m_poisontype = MEMORY_TYPE_STR_PATROLSCRUB;
+	}
+
+	return pResult;
+}
+
 cli::framework::ResultBase* cli::nvmcli::ValidationFeature::parseDieSparingProperty(
 		const framework::ParsedCommand& parsedCommand)
 {
@@ -412,6 +436,10 @@ cli::framework::ResultBase* cli::nvmcli::ValidationFeature::getInjectErrorAttrib
 	if (!pResult)
 	{
 		pResult = parsePoisonProperty(parsedCommand);
+	}
+	if (!pResult)
+	{
+		pResult = parsePoisonTypeProperty(parsedCommand);
 	}
 	if (!pResult)
 	{
@@ -511,9 +539,9 @@ cli::framework::ResultBase* cli::nvmcli::ValidationFeature::verifyPropertyCount(
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	framework::ResultBase *pResult = NULL;
 
-	if ((m_clearStateExists && parsedCommand.properties.size() > 2) ||
+	if ((m_clearStateExists && m_poisonExists && parsedCommand.properties.size() > 2) ||
 			(m_clearStateExists && parsedCommand.properties.size() == 1) ||
-			(!m_clearStateExists && parsedCommand.properties.size() > 1) ||
+			(!m_clearStateExists && !m_poisonExists && parsedCommand.properties.size() > 1) ||
 			parsedCommand.properties.empty())
 	{
 		pResult = new framework::SyntaxErrorResult(TRS(INVALID_COMMAND_ERROR_STR));
@@ -558,3 +586,29 @@ cli::framework::ResultBase* cli::nvmcli::ValidationFeature::verifySWTriggerPrope
 
 	return pResult;
 }
+
+enum poison_memory_type cli::nvmcli::ValidationFeature::get_poison_type_from_string(
+		const std::string poisonmemorytype)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	poison_memory_type type;
+
+	if (framework::stringsIEqual(poisonmemorytype, MEMORY_TYPE_STR_MEMORYMODE))
+	{
+		type = MEMORY_TYPE_MEMORYMODE;
+	}
+	else if (framework::stringsIEqual(poisonmemorytype, MEMORY_TYPE_STR_APPDIRECT))
+	{
+		type = MEMORY_TYPE_APPDIRECT;
+	}
+	else if (framework::stringsIEqual(poisonmemorytype, MEMORY_TYPE_STR_STORAGE))
+	{
+		type = MEMORY_TYPE_STORAGE;
+	}
+	else
+	{
+		type = MEMORY_TYPE_PATROLSCRUB;
+	}
+	return type;
+}
+

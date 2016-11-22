@@ -145,13 +145,13 @@ public:
 			const NVM_REAL32 temperature);
 
 	void injectPoisonError(const std::string &dimmUid,
-			const NVM_UINT64 dpa);
+			const NVM_UINT64 dpa, const enum poison_memory_type poisonType);
 
 	void injectSoftwareTrigger(const std::string &dimmUid,
 			const NVM_UINT16 error);
 
 	void clearPoisonError(const std::string &dimmUid,
-			const NVM_UINT64 dpa);
+			const NVM_UINT64 dpa,const enum poison_memory_type poison_type);
 
 	void clearTemperatureError(const std::string &dimmUid);
 

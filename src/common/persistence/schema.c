@@ -1500,7 +1500,8 @@ tables[populate_index++] = ((struct table){"fw_media_low_log_info",
 				"CREATE TABLE fw_media_low_log_info (       \
 					 device_handle INTEGER  PRIMARY KEY  NOT NULL UNIQUE  , \
 					 max_log_entries INTEGER  , \
-					 new_log_entries INTEGER  , \
+					 current_sequence_number INTEGER  , \
+					 oldest_sequence_number INTEGER  , \
 					 newest_log_entry_timestamp INTEGER  , \
 					 oldest_log_entry_timestamp INTEGER   \
 					);"});
@@ -1509,7 +1510,8 @@ tables[populate_index++] = ((struct table){"fw_media_low_log_info",
 					history_id INTEGER NOT NULL, \
 					 device_handle INTEGER , \
 					 max_log_entries INTEGER , \
-					 new_log_entries INTEGER , \
+					 current_sequence_number INTEGER , \
+					 oldest_sequence_number INTEGER , \
 					 newest_log_entry_timestamp INTEGER , \
 					 oldest_log_entry_timestamp INTEGER  \
 					);"});
@@ -1517,7 +1519,8 @@ tables[populate_index++] = ((struct table){"fw_media_high_log_info",
 				"CREATE TABLE fw_media_high_log_info (       \
 					 device_handle INTEGER  PRIMARY KEY  NOT NULL UNIQUE  , \
 					 max_log_entries INTEGER  , \
-					 new_log_entries INTEGER  , \
+					 current_sequence_number INTEGER  , \
+					 oldest_sequence_number INTEGER  , \
 					 newest_log_entry_timestamp INTEGER  , \
 					 oldest_log_entry_timestamp INTEGER   \
 					);"});
@@ -1526,7 +1529,8 @@ tables[populate_index++] = ((struct table){"fw_media_high_log_info",
 					history_id INTEGER NOT NULL, \
 					 device_handle INTEGER , \
 					 max_log_entries INTEGER , \
-					 new_log_entries INTEGER , \
+					 current_sequence_number INTEGER , \
+					 oldest_sequence_number INTEGER , \
 					 newest_log_entry_timestamp INTEGER , \
 					 oldest_log_entry_timestamp INTEGER  \
 					);"});
@@ -1534,7 +1538,8 @@ tables[populate_index++] = ((struct table){"fw_thermal_low_log_info",
 				"CREATE TABLE fw_thermal_low_log_info (       \
 					 device_handle INTEGER  PRIMARY KEY  NOT NULL UNIQUE  , \
 					 max_log_entries INTEGER  , \
-					 new_log_entries INTEGER  , \
+					 current_sequence_number INTEGER  , \
+					 oldest_sequence_number INTEGER  , \
 					 newest_log_entry_timestamp INTEGER  , \
 					 oldest_log_entry_timestamp INTEGER   \
 					);"});
@@ -1543,7 +1548,8 @@ tables[populate_index++] = ((struct table){"fw_thermal_low_log_info",
 					history_id INTEGER NOT NULL, \
 					 device_handle INTEGER , \
 					 max_log_entries INTEGER , \
-					 new_log_entries INTEGER , \
+					 current_sequence_number INTEGER , \
+					 oldest_sequence_number INTEGER , \
 					 newest_log_entry_timestamp INTEGER , \
 					 oldest_log_entry_timestamp INTEGER  \
 					);"});
@@ -1551,7 +1557,8 @@ tables[populate_index++] = ((struct table){"fw_thermal_high_log_info",
 				"CREATE TABLE fw_thermal_high_log_info (       \
 					 device_handle INTEGER  PRIMARY KEY  NOT NULL UNIQUE  , \
 					 max_log_entries INTEGER  , \
-					 new_log_entries INTEGER  , \
+					 current_sequence_number INTEGER  , \
+					 oldest_sequence_number INTEGER  , \
 					 newest_log_entry_timestamp INTEGER  , \
 					 oldest_log_entry_timestamp INTEGER   \
 					);"});
@@ -1560,7 +1567,8 @@ tables[populate_index++] = ((struct table){"fw_thermal_high_log_info",
 					history_id INTEGER NOT NULL, \
 					 device_handle INTEGER , \
 					 max_log_entries INTEGER , \
-					 new_log_entries INTEGER , \
+					 current_sequence_number INTEGER , \
+					 oldest_sequence_number INTEGER , \
 					 newest_log_entry_timestamp INTEGER , \
 					 oldest_log_entry_timestamp INTEGER  \
 					);"});
@@ -1819,14 +1827,16 @@ tables[populate_index++] = ((struct table){"poison_error_injection_info",
 				"CREATE TABLE poison_error_injection_info (       \
 					 id INTEGER  PRIMARY KEY  AUTOINCREMENT  NOT NULL UNIQUE  , \
 					 device_handle INTEGER  , \
-					 dpa_address INTEGER   \
+					 dpa_address INTEGER  , \
+					 memory INTEGER   \
 					);"});
 			tables[populate_index++] = ((struct table){"poison_error_injection_info_history",
 				"CREATE TABLE poison_error_injection_info_history (       \
 					history_id INTEGER NOT NULL, \
 					 id INTEGER , \
 					 device_handle INTEGER , \
-					 dpa_address INTEGER  \
+					 dpa_address INTEGER , \
+					 memory INTEGER  \
 					);"});
 tables[populate_index++] = ((struct table){"software_trigger_info",
 				"CREATE TABLE software_trigger_info (       \
@@ -19137,7 +19147,8 @@ void local_bind_fw_media_low_log_info(sqlite3_stmt *p_stmt, struct db_fw_media_l
 {
 	BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)p_fw_media_low_log_info->device_handle);
 	BIND_INTEGER(p_stmt, "$max_log_entries", (unsigned int)p_fw_media_low_log_info->max_log_entries);
-	BIND_INTEGER(p_stmt, "$new_log_entries", (unsigned int)p_fw_media_low_log_info->new_log_entries);
+	BIND_INTEGER(p_stmt, "$current_sequence_number", (unsigned int)p_fw_media_low_log_info->current_sequence_number);
+	BIND_INTEGER(p_stmt, "$oldest_sequence_number", (unsigned int)p_fw_media_low_log_info->oldest_sequence_number);
 	BIND_INTEGER(p_stmt, "$newest_log_entry_timestamp", (unsigned long long)p_fw_media_low_log_info->newest_log_entry_timestamp);
 	BIND_INTEGER(p_stmt, "$oldest_log_entry_timestamp", (unsigned long long)p_fw_media_low_log_info->oldest_log_entry_timestamp);
 }
@@ -19163,19 +19174,23 @@ void local_row_to_fw_media_low_log_info(const PersistentStore *p_ps,
 		p_fw_media_low_log_info->max_log_entries);
 	INTEGER_COLUMN(p_stmt,
 		2,
-		p_fw_media_low_log_info->new_log_entries);
+		p_fw_media_low_log_info->current_sequence_number);
 	INTEGER_COLUMN(p_stmt,
 		3,
-		p_fw_media_low_log_info->newest_log_entry_timestamp);
+		p_fw_media_low_log_info->oldest_sequence_number);
 	INTEGER_COLUMN(p_stmt,
 		4,
+		p_fw_media_low_log_info->newest_log_entry_timestamp);
+	INTEGER_COLUMN(p_stmt,
+		5,
 		p_fw_media_low_log_info->oldest_log_entry_timestamp);
 }
 void db_print_fw_media_low_log_info(struct db_fw_media_low_log_info *p_value)
 {
 	printf("fw_media_low_log_info.device_handle: unsigned %d\n", p_value->device_handle);
 	printf("fw_media_low_log_info.max_log_entries: unsigned %d\n", p_value->max_log_entries);
-	printf("fw_media_low_log_info.new_log_entries: unsigned %d\n", p_value->new_log_entries);
+	printf("fw_media_low_log_info.current_sequence_number: unsigned %d\n", p_value->current_sequence_number);
+	printf("fw_media_low_log_info.oldest_sequence_number: unsigned %d\n", p_value->oldest_sequence_number);
 	printf("fw_media_low_log_info.newest_log_entry_timestamp: unsigned %lld\n", p_value->newest_log_entry_timestamp);
 	printf("fw_media_low_log_info.oldest_log_entry_timestamp: unsigned %lld\n", p_value->oldest_log_entry_timestamp);
 }
@@ -19185,11 +19200,12 @@ enum db_return_codes db_add_fw_media_low_log_info(const PersistentStore *p_ps,
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = 	"INSERT INTO fw_media_low_log_info \
-		(device_handle, max_log_entries, new_log_entries, newest_log_entry_timestamp, oldest_log_entry_timestamp)  \
+		(device_handle, max_log_entries, current_sequence_number, oldest_sequence_number, newest_log_entry_timestamp, oldest_log_entry_timestamp)  \
 		VALUES 		\
 		($device_handle, \
 		$max_log_entries, \
-		$new_log_entries, \
+		$current_sequence_number, \
+		$oldest_sequence_number, \
 		$newest_log_entry_timestamp, \
 		$oldest_log_entry_timestamp) ";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -19216,12 +19232,13 @@ int db_get_fw_media_low_log_infos(const PersistentStore *p_ps,
 	char *sql = "SELECT \
 		device_handle \
 		,  max_log_entries \
-		,  new_log_entries \
+		,  current_sequence_number \
+		,  oldest_sequence_number \
 		,  newest_log_entry_timestamp \
 		,  oldest_log_entry_timestamp \
 		  \
 		FROM fw_media_low_log_info \
-		      \
+		       \
 		 \
 		";
 	sqlite3_stmt *p_stmt;
@@ -19263,11 +19280,12 @@ enum db_return_codes db_save_fw_media_low_log_info_state(const PersistentStore *
 	{
 		sqlite3_stmt *p_stmt;
 		char *sql = 	"INSERT INTO fw_media_low_log_info \
-			( device_handle ,  max_log_entries ,  new_log_entries ,  newest_log_entry_timestamp ,  oldest_log_entry_timestamp )  \
+			( device_handle ,  max_log_entries ,  current_sequence_number ,  oldest_sequence_number ,  newest_log_entry_timestamp ,  oldest_log_entry_timestamp )  \
 			VALUES 		\
 			($device_handle, \
 			$max_log_entries, \
-			$new_log_entries, \
+			$current_sequence_number, \
+			$oldest_sequence_number, \
 			$newest_log_entry_timestamp, \
 			$oldest_log_entry_timestamp) ";
 		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -19288,11 +19306,12 @@ enum db_return_codes db_save_fw_media_low_log_info_state(const PersistentStore *
 		sqlite3_stmt *p_stmt;
 		char *sql = "INSERT INTO fw_media_low_log_info_history \
 			(history_id, \
-				 device_handle,  max_log_entries,  new_log_entries,  newest_log_entry_timestamp,  oldest_log_entry_timestamp)  \
+				 device_handle,  max_log_entries,  current_sequence_number,  oldest_sequence_number,  newest_log_entry_timestamp,  oldest_log_entry_timestamp)  \
 			VALUES 		($history_id, \
 				 $device_handle , \
 				 $max_log_entries , \
-				 $new_log_entries , \
+				 $current_sequence_number , \
+				 $oldest_sequence_number , \
 				 $newest_log_entry_timestamp , \
 				 $oldest_log_entry_timestamp )";
 		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -19318,7 +19337,7 @@ enum db_return_codes db_get_fw_media_low_log_info_by_device_handle(const Persist
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
-		device_handle,  max_log_entries,  new_log_entries,  newest_log_entry_timestamp,  oldest_log_entry_timestamp  \
+		device_handle,  max_log_entries,  current_sequence_number,  oldest_sequence_number,  newest_log_entry_timestamp,  oldest_log_entry_timestamp  \
 		FROM fw_media_low_log_info \
 		WHERE  device_handle = $device_handle";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -19345,7 +19364,8 @@ enum db_return_codes db_update_fw_media_low_log_info_by_device_handle(const Pers
 	SET \
 	device_handle=$device_handle \
 		,  max_log_entries=$max_log_entries \
-		,  new_log_entries=$new_log_entries \
+		,  current_sequence_number=$current_sequence_number \
+		,  oldest_sequence_number=$oldest_sequence_number \
 		,  newest_log_entry_timestamp=$newest_log_entry_timestamp \
 		,  oldest_log_entry_timestamp=$oldest_log_entry_timestamp \
 		  \
@@ -19436,7 +19456,7 @@ int db_get_fw_media_low_log_info_history_by_history_id(const PersistentStore *p_
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "SELECT \
-		device_handle,  max_log_entries,  new_log_entries,  newest_log_entry_timestamp,  oldest_log_entry_timestamp  \
+		device_handle,  max_log_entries,  current_sequence_number,  oldest_sequence_number,  newest_log_entry_timestamp,  oldest_log_entry_timestamp  \
 		FROM fw_media_low_log_info_history \
 		WHERE  history_id = '%d'", history_id);
 	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
@@ -19470,7 +19490,8 @@ void local_bind_fw_media_high_log_info(sqlite3_stmt *p_stmt, struct db_fw_media_
 {
 	BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)p_fw_media_high_log_info->device_handle);
 	BIND_INTEGER(p_stmt, "$max_log_entries", (unsigned int)p_fw_media_high_log_info->max_log_entries);
-	BIND_INTEGER(p_stmt, "$new_log_entries", (unsigned int)p_fw_media_high_log_info->new_log_entries);
+	BIND_INTEGER(p_stmt, "$current_sequence_number", (unsigned int)p_fw_media_high_log_info->current_sequence_number);
+	BIND_INTEGER(p_stmt, "$oldest_sequence_number", (unsigned int)p_fw_media_high_log_info->oldest_sequence_number);
 	BIND_INTEGER(p_stmt, "$newest_log_entry_timestamp", (unsigned long long)p_fw_media_high_log_info->newest_log_entry_timestamp);
 	BIND_INTEGER(p_stmt, "$oldest_log_entry_timestamp", (unsigned long long)p_fw_media_high_log_info->oldest_log_entry_timestamp);
 }
@@ -19496,19 +19517,23 @@ void local_row_to_fw_media_high_log_info(const PersistentStore *p_ps,
 		p_fw_media_high_log_info->max_log_entries);
 	INTEGER_COLUMN(p_stmt,
 		2,
-		p_fw_media_high_log_info->new_log_entries);
+		p_fw_media_high_log_info->current_sequence_number);
 	INTEGER_COLUMN(p_stmt,
 		3,
-		p_fw_media_high_log_info->newest_log_entry_timestamp);
+		p_fw_media_high_log_info->oldest_sequence_number);
 	INTEGER_COLUMN(p_stmt,
 		4,
+		p_fw_media_high_log_info->newest_log_entry_timestamp);
+	INTEGER_COLUMN(p_stmt,
+		5,
 		p_fw_media_high_log_info->oldest_log_entry_timestamp);
 }
 void db_print_fw_media_high_log_info(struct db_fw_media_high_log_info *p_value)
 {
 	printf("fw_media_high_log_info.device_handle: unsigned %d\n", p_value->device_handle);
 	printf("fw_media_high_log_info.max_log_entries: unsigned %d\n", p_value->max_log_entries);
-	printf("fw_media_high_log_info.new_log_entries: unsigned %d\n", p_value->new_log_entries);
+	printf("fw_media_high_log_info.current_sequence_number: unsigned %d\n", p_value->current_sequence_number);
+	printf("fw_media_high_log_info.oldest_sequence_number: unsigned %d\n", p_value->oldest_sequence_number);
 	printf("fw_media_high_log_info.newest_log_entry_timestamp: unsigned %lld\n", p_value->newest_log_entry_timestamp);
 	printf("fw_media_high_log_info.oldest_log_entry_timestamp: unsigned %lld\n", p_value->oldest_log_entry_timestamp);
 }
@@ -19518,11 +19543,12 @@ enum db_return_codes db_add_fw_media_high_log_info(const PersistentStore *p_ps,
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = 	"INSERT INTO fw_media_high_log_info \
-		(device_handle, max_log_entries, new_log_entries, newest_log_entry_timestamp, oldest_log_entry_timestamp)  \
+		(device_handle, max_log_entries, current_sequence_number, oldest_sequence_number, newest_log_entry_timestamp, oldest_log_entry_timestamp)  \
 		VALUES 		\
 		($device_handle, \
 		$max_log_entries, \
-		$new_log_entries, \
+		$current_sequence_number, \
+		$oldest_sequence_number, \
 		$newest_log_entry_timestamp, \
 		$oldest_log_entry_timestamp) ";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -19549,12 +19575,13 @@ int db_get_fw_media_high_log_infos(const PersistentStore *p_ps,
 	char *sql = "SELECT \
 		device_handle \
 		,  max_log_entries \
-		,  new_log_entries \
+		,  current_sequence_number \
+		,  oldest_sequence_number \
 		,  newest_log_entry_timestamp \
 		,  oldest_log_entry_timestamp \
 		  \
 		FROM fw_media_high_log_info \
-		      \
+		       \
 		 \
 		";
 	sqlite3_stmt *p_stmt;
@@ -19596,11 +19623,12 @@ enum db_return_codes db_save_fw_media_high_log_info_state(const PersistentStore 
 	{
 		sqlite3_stmt *p_stmt;
 		char *sql = 	"INSERT INTO fw_media_high_log_info \
-			( device_handle ,  max_log_entries ,  new_log_entries ,  newest_log_entry_timestamp ,  oldest_log_entry_timestamp )  \
+			( device_handle ,  max_log_entries ,  current_sequence_number ,  oldest_sequence_number ,  newest_log_entry_timestamp ,  oldest_log_entry_timestamp )  \
 			VALUES 		\
 			($device_handle, \
 			$max_log_entries, \
-			$new_log_entries, \
+			$current_sequence_number, \
+			$oldest_sequence_number, \
 			$newest_log_entry_timestamp, \
 			$oldest_log_entry_timestamp) ";
 		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -19621,11 +19649,12 @@ enum db_return_codes db_save_fw_media_high_log_info_state(const PersistentStore 
 		sqlite3_stmt *p_stmt;
 		char *sql = "INSERT INTO fw_media_high_log_info_history \
 			(history_id, \
-				 device_handle,  max_log_entries,  new_log_entries,  newest_log_entry_timestamp,  oldest_log_entry_timestamp)  \
+				 device_handle,  max_log_entries,  current_sequence_number,  oldest_sequence_number,  newest_log_entry_timestamp,  oldest_log_entry_timestamp)  \
 			VALUES 		($history_id, \
 				 $device_handle , \
 				 $max_log_entries , \
-				 $new_log_entries , \
+				 $current_sequence_number , \
+				 $oldest_sequence_number , \
 				 $newest_log_entry_timestamp , \
 				 $oldest_log_entry_timestamp )";
 		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -19651,7 +19680,7 @@ enum db_return_codes db_get_fw_media_high_log_info_by_device_handle(const Persis
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
-		device_handle,  max_log_entries,  new_log_entries,  newest_log_entry_timestamp,  oldest_log_entry_timestamp  \
+		device_handle,  max_log_entries,  current_sequence_number,  oldest_sequence_number,  newest_log_entry_timestamp,  oldest_log_entry_timestamp  \
 		FROM fw_media_high_log_info \
 		WHERE  device_handle = $device_handle";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -19678,7 +19707,8 @@ enum db_return_codes db_update_fw_media_high_log_info_by_device_handle(const Per
 	SET \
 	device_handle=$device_handle \
 		,  max_log_entries=$max_log_entries \
-		,  new_log_entries=$new_log_entries \
+		,  current_sequence_number=$current_sequence_number \
+		,  oldest_sequence_number=$oldest_sequence_number \
 		,  newest_log_entry_timestamp=$newest_log_entry_timestamp \
 		,  oldest_log_entry_timestamp=$oldest_log_entry_timestamp \
 		  \
@@ -19769,7 +19799,7 @@ int db_get_fw_media_high_log_info_history_by_history_id(const PersistentStore *p
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "SELECT \
-		device_handle,  max_log_entries,  new_log_entries,  newest_log_entry_timestamp,  oldest_log_entry_timestamp  \
+		device_handle,  max_log_entries,  current_sequence_number,  oldest_sequence_number,  newest_log_entry_timestamp,  oldest_log_entry_timestamp  \
 		FROM fw_media_high_log_info_history \
 		WHERE  history_id = '%d'", history_id);
 	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
@@ -19803,7 +19833,8 @@ void local_bind_fw_thermal_low_log_info(sqlite3_stmt *p_stmt, struct db_fw_therm
 {
 	BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)p_fw_thermal_low_log_info->device_handle);
 	BIND_INTEGER(p_stmt, "$max_log_entries", (unsigned int)p_fw_thermal_low_log_info->max_log_entries);
-	BIND_INTEGER(p_stmt, "$new_log_entries", (unsigned int)p_fw_thermal_low_log_info->new_log_entries);
+	BIND_INTEGER(p_stmt, "$current_sequence_number", (unsigned int)p_fw_thermal_low_log_info->current_sequence_number);
+	BIND_INTEGER(p_stmt, "$oldest_sequence_number", (unsigned int)p_fw_thermal_low_log_info->oldest_sequence_number);
 	BIND_INTEGER(p_stmt, "$newest_log_entry_timestamp", (unsigned long long)p_fw_thermal_low_log_info->newest_log_entry_timestamp);
 	BIND_INTEGER(p_stmt, "$oldest_log_entry_timestamp", (unsigned long long)p_fw_thermal_low_log_info->oldest_log_entry_timestamp);
 }
@@ -19829,19 +19860,23 @@ void local_row_to_fw_thermal_low_log_info(const PersistentStore *p_ps,
 		p_fw_thermal_low_log_info->max_log_entries);
 	INTEGER_COLUMN(p_stmt,
 		2,
-		p_fw_thermal_low_log_info->new_log_entries);
+		p_fw_thermal_low_log_info->current_sequence_number);
 	INTEGER_COLUMN(p_stmt,
 		3,
-		p_fw_thermal_low_log_info->newest_log_entry_timestamp);
+		p_fw_thermal_low_log_info->oldest_sequence_number);
 	INTEGER_COLUMN(p_stmt,
 		4,
+		p_fw_thermal_low_log_info->newest_log_entry_timestamp);
+	INTEGER_COLUMN(p_stmt,
+		5,
 		p_fw_thermal_low_log_info->oldest_log_entry_timestamp);
 }
 void db_print_fw_thermal_low_log_info(struct db_fw_thermal_low_log_info *p_value)
 {
 	printf("fw_thermal_low_log_info.device_handle: unsigned %d\n", p_value->device_handle);
 	printf("fw_thermal_low_log_info.max_log_entries: unsigned %d\n", p_value->max_log_entries);
-	printf("fw_thermal_low_log_info.new_log_entries: unsigned %d\n", p_value->new_log_entries);
+	printf("fw_thermal_low_log_info.current_sequence_number: unsigned %d\n", p_value->current_sequence_number);
+	printf("fw_thermal_low_log_info.oldest_sequence_number: unsigned %d\n", p_value->oldest_sequence_number);
 	printf("fw_thermal_low_log_info.newest_log_entry_timestamp: unsigned %lld\n", p_value->newest_log_entry_timestamp);
 	printf("fw_thermal_low_log_info.oldest_log_entry_timestamp: unsigned %lld\n", p_value->oldest_log_entry_timestamp);
 }
@@ -19851,11 +19886,12 @@ enum db_return_codes db_add_fw_thermal_low_log_info(const PersistentStore *p_ps,
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = 	"INSERT INTO fw_thermal_low_log_info \
-		(device_handle, max_log_entries, new_log_entries, newest_log_entry_timestamp, oldest_log_entry_timestamp)  \
+		(device_handle, max_log_entries, current_sequence_number, oldest_sequence_number, newest_log_entry_timestamp, oldest_log_entry_timestamp)  \
 		VALUES 		\
 		($device_handle, \
 		$max_log_entries, \
-		$new_log_entries, \
+		$current_sequence_number, \
+		$oldest_sequence_number, \
 		$newest_log_entry_timestamp, \
 		$oldest_log_entry_timestamp) ";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -19882,12 +19918,13 @@ int db_get_fw_thermal_low_log_infos(const PersistentStore *p_ps,
 	char *sql = "SELECT \
 		device_handle \
 		,  max_log_entries \
-		,  new_log_entries \
+		,  current_sequence_number \
+		,  oldest_sequence_number \
 		,  newest_log_entry_timestamp \
 		,  oldest_log_entry_timestamp \
 		  \
 		FROM fw_thermal_low_log_info \
-		      \
+		       \
 		 \
 		";
 	sqlite3_stmt *p_stmt;
@@ -19929,11 +19966,12 @@ enum db_return_codes db_save_fw_thermal_low_log_info_state(const PersistentStore
 	{
 		sqlite3_stmt *p_stmt;
 		char *sql = 	"INSERT INTO fw_thermal_low_log_info \
-			( device_handle ,  max_log_entries ,  new_log_entries ,  newest_log_entry_timestamp ,  oldest_log_entry_timestamp )  \
+			( device_handle ,  max_log_entries ,  current_sequence_number ,  oldest_sequence_number ,  newest_log_entry_timestamp ,  oldest_log_entry_timestamp )  \
 			VALUES 		\
 			($device_handle, \
 			$max_log_entries, \
-			$new_log_entries, \
+			$current_sequence_number, \
+			$oldest_sequence_number, \
 			$newest_log_entry_timestamp, \
 			$oldest_log_entry_timestamp) ";
 		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -19954,11 +19992,12 @@ enum db_return_codes db_save_fw_thermal_low_log_info_state(const PersistentStore
 		sqlite3_stmt *p_stmt;
 		char *sql = "INSERT INTO fw_thermal_low_log_info_history \
 			(history_id, \
-				 device_handle,  max_log_entries,  new_log_entries,  newest_log_entry_timestamp,  oldest_log_entry_timestamp)  \
+				 device_handle,  max_log_entries,  current_sequence_number,  oldest_sequence_number,  newest_log_entry_timestamp,  oldest_log_entry_timestamp)  \
 			VALUES 		($history_id, \
 				 $device_handle , \
 				 $max_log_entries , \
-				 $new_log_entries , \
+				 $current_sequence_number , \
+				 $oldest_sequence_number , \
 				 $newest_log_entry_timestamp , \
 				 $oldest_log_entry_timestamp )";
 		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -19984,7 +20023,7 @@ enum db_return_codes db_get_fw_thermal_low_log_info_by_device_handle(const Persi
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
-		device_handle,  max_log_entries,  new_log_entries,  newest_log_entry_timestamp,  oldest_log_entry_timestamp  \
+		device_handle,  max_log_entries,  current_sequence_number,  oldest_sequence_number,  newest_log_entry_timestamp,  oldest_log_entry_timestamp  \
 		FROM fw_thermal_low_log_info \
 		WHERE  device_handle = $device_handle";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -20011,7 +20050,8 @@ enum db_return_codes db_update_fw_thermal_low_log_info_by_device_handle(const Pe
 	SET \
 	device_handle=$device_handle \
 		,  max_log_entries=$max_log_entries \
-		,  new_log_entries=$new_log_entries \
+		,  current_sequence_number=$current_sequence_number \
+		,  oldest_sequence_number=$oldest_sequence_number \
 		,  newest_log_entry_timestamp=$newest_log_entry_timestamp \
 		,  oldest_log_entry_timestamp=$oldest_log_entry_timestamp \
 		  \
@@ -20102,7 +20142,7 @@ int db_get_fw_thermal_low_log_info_history_by_history_id(const PersistentStore *
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "SELECT \
-		device_handle,  max_log_entries,  new_log_entries,  newest_log_entry_timestamp,  oldest_log_entry_timestamp  \
+		device_handle,  max_log_entries,  current_sequence_number,  oldest_sequence_number,  newest_log_entry_timestamp,  oldest_log_entry_timestamp  \
 		FROM fw_thermal_low_log_info_history \
 		WHERE  history_id = '%d'", history_id);
 	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
@@ -20136,7 +20176,8 @@ void local_bind_fw_thermal_high_log_info(sqlite3_stmt *p_stmt, struct db_fw_ther
 {
 	BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)p_fw_thermal_high_log_info->device_handle);
 	BIND_INTEGER(p_stmt, "$max_log_entries", (unsigned int)p_fw_thermal_high_log_info->max_log_entries);
-	BIND_INTEGER(p_stmt, "$new_log_entries", (unsigned int)p_fw_thermal_high_log_info->new_log_entries);
+	BIND_INTEGER(p_stmt, "$current_sequence_number", (unsigned int)p_fw_thermal_high_log_info->current_sequence_number);
+	BIND_INTEGER(p_stmt, "$oldest_sequence_number", (unsigned int)p_fw_thermal_high_log_info->oldest_sequence_number);
 	BIND_INTEGER(p_stmt, "$newest_log_entry_timestamp", (unsigned long long)p_fw_thermal_high_log_info->newest_log_entry_timestamp);
 	BIND_INTEGER(p_stmt, "$oldest_log_entry_timestamp", (unsigned long long)p_fw_thermal_high_log_info->oldest_log_entry_timestamp);
 }
@@ -20162,19 +20203,23 @@ void local_row_to_fw_thermal_high_log_info(const PersistentStore *p_ps,
 		p_fw_thermal_high_log_info->max_log_entries);
 	INTEGER_COLUMN(p_stmt,
 		2,
-		p_fw_thermal_high_log_info->new_log_entries);
+		p_fw_thermal_high_log_info->current_sequence_number);
 	INTEGER_COLUMN(p_stmt,
 		3,
-		p_fw_thermal_high_log_info->newest_log_entry_timestamp);
+		p_fw_thermal_high_log_info->oldest_sequence_number);
 	INTEGER_COLUMN(p_stmt,
 		4,
+		p_fw_thermal_high_log_info->newest_log_entry_timestamp);
+	INTEGER_COLUMN(p_stmt,
+		5,
 		p_fw_thermal_high_log_info->oldest_log_entry_timestamp);
 }
 void db_print_fw_thermal_high_log_info(struct db_fw_thermal_high_log_info *p_value)
 {
 	printf("fw_thermal_high_log_info.device_handle: unsigned %d\n", p_value->device_handle);
 	printf("fw_thermal_high_log_info.max_log_entries: unsigned %d\n", p_value->max_log_entries);
-	printf("fw_thermal_high_log_info.new_log_entries: unsigned %d\n", p_value->new_log_entries);
+	printf("fw_thermal_high_log_info.current_sequence_number: unsigned %d\n", p_value->current_sequence_number);
+	printf("fw_thermal_high_log_info.oldest_sequence_number: unsigned %d\n", p_value->oldest_sequence_number);
 	printf("fw_thermal_high_log_info.newest_log_entry_timestamp: unsigned %lld\n", p_value->newest_log_entry_timestamp);
 	printf("fw_thermal_high_log_info.oldest_log_entry_timestamp: unsigned %lld\n", p_value->oldest_log_entry_timestamp);
 }
@@ -20184,11 +20229,12 @@ enum db_return_codes db_add_fw_thermal_high_log_info(const PersistentStore *p_ps
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = 	"INSERT INTO fw_thermal_high_log_info \
-		(device_handle, max_log_entries, new_log_entries, newest_log_entry_timestamp, oldest_log_entry_timestamp)  \
+		(device_handle, max_log_entries, current_sequence_number, oldest_sequence_number, newest_log_entry_timestamp, oldest_log_entry_timestamp)  \
 		VALUES 		\
 		($device_handle, \
 		$max_log_entries, \
-		$new_log_entries, \
+		$current_sequence_number, \
+		$oldest_sequence_number, \
 		$newest_log_entry_timestamp, \
 		$oldest_log_entry_timestamp) ";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -20215,12 +20261,13 @@ int db_get_fw_thermal_high_log_infos(const PersistentStore *p_ps,
 	char *sql = "SELECT \
 		device_handle \
 		,  max_log_entries \
-		,  new_log_entries \
+		,  current_sequence_number \
+		,  oldest_sequence_number \
 		,  newest_log_entry_timestamp \
 		,  oldest_log_entry_timestamp \
 		  \
 		FROM fw_thermal_high_log_info \
-		      \
+		       \
 		 \
 		";
 	sqlite3_stmt *p_stmt;
@@ -20262,11 +20309,12 @@ enum db_return_codes db_save_fw_thermal_high_log_info_state(const PersistentStor
 	{
 		sqlite3_stmt *p_stmt;
 		char *sql = 	"INSERT INTO fw_thermal_high_log_info \
-			( device_handle ,  max_log_entries ,  new_log_entries ,  newest_log_entry_timestamp ,  oldest_log_entry_timestamp )  \
+			( device_handle ,  max_log_entries ,  current_sequence_number ,  oldest_sequence_number ,  newest_log_entry_timestamp ,  oldest_log_entry_timestamp )  \
 			VALUES 		\
 			($device_handle, \
 			$max_log_entries, \
-			$new_log_entries, \
+			$current_sequence_number, \
+			$oldest_sequence_number, \
 			$newest_log_entry_timestamp, \
 			$oldest_log_entry_timestamp) ";
 		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -20287,11 +20335,12 @@ enum db_return_codes db_save_fw_thermal_high_log_info_state(const PersistentStor
 		sqlite3_stmt *p_stmt;
 		char *sql = "INSERT INTO fw_thermal_high_log_info_history \
 			(history_id, \
-				 device_handle,  max_log_entries,  new_log_entries,  newest_log_entry_timestamp,  oldest_log_entry_timestamp)  \
+				 device_handle,  max_log_entries,  current_sequence_number,  oldest_sequence_number,  newest_log_entry_timestamp,  oldest_log_entry_timestamp)  \
 			VALUES 		($history_id, \
 				 $device_handle , \
 				 $max_log_entries , \
-				 $new_log_entries , \
+				 $current_sequence_number , \
+				 $oldest_sequence_number , \
 				 $newest_log_entry_timestamp , \
 				 $oldest_log_entry_timestamp )";
 		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -20317,7 +20366,7 @@ enum db_return_codes db_get_fw_thermal_high_log_info_by_device_handle(const Pers
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
-		device_handle,  max_log_entries,  new_log_entries,  newest_log_entry_timestamp,  oldest_log_entry_timestamp  \
+		device_handle,  max_log_entries,  current_sequence_number,  oldest_sequence_number,  newest_log_entry_timestamp,  oldest_log_entry_timestamp  \
 		FROM fw_thermal_high_log_info \
 		WHERE  device_handle = $device_handle";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -20344,7 +20393,8 @@ enum db_return_codes db_update_fw_thermal_high_log_info_by_device_handle(const P
 	SET \
 	device_handle=$device_handle \
 		,  max_log_entries=$max_log_entries \
-		,  new_log_entries=$new_log_entries \
+		,  current_sequence_number=$current_sequence_number \
+		,  oldest_sequence_number=$oldest_sequence_number \
 		,  newest_log_entry_timestamp=$newest_log_entry_timestamp \
 		,  oldest_log_entry_timestamp=$oldest_log_entry_timestamp \
 		  \
@@ -20435,7 +20485,7 @@ int db_get_fw_thermal_high_log_info_history_by_history_id(const PersistentStore 
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "SELECT \
-		device_handle,  max_log_entries,  new_log_entries,  newest_log_entry_timestamp,  oldest_log_entry_timestamp  \
+		device_handle,  max_log_entries,  current_sequence_number,  oldest_sequence_number,  newest_log_entry_timestamp,  oldest_log_entry_timestamp  \
 		FROM fw_thermal_high_log_info_history \
 		WHERE  history_id = '%d'", history_id);
 	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
@@ -25074,6 +25124,7 @@ void local_bind_poison_error_injection_info(sqlite3_stmt *p_stmt, struct db_pois
 	BIND_INTEGER(p_stmt, "$id", (int)p_poison_error_injection_info->id);
 	BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)p_poison_error_injection_info->device_handle);
 	BIND_INTEGER(p_stmt, "$dpa_address", (unsigned long long)p_poison_error_injection_info->dpa_address);
+	BIND_INTEGER(p_stmt, "$memory", (unsigned int)p_poison_error_injection_info->memory);
 }
 void local_get_poison_error_injection_info_relationships(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt, struct db_poison_error_injection_info *p_poison_error_injection_info)
@@ -25098,12 +25149,16 @@ void local_row_to_poison_error_injection_info(const PersistentStore *p_ps,
 	INTEGER_COLUMN(p_stmt,
 		2,
 		p_poison_error_injection_info->dpa_address);
+	INTEGER_COLUMN(p_stmt,
+		3,
+		p_poison_error_injection_info->memory);
 }
 void db_print_poison_error_injection_info(struct db_poison_error_injection_info *p_value)
 {
 	printf("poison_error_injection_info.id: %d\n", p_value->id);
 	printf("poison_error_injection_info.device_handle: unsigned %d\n", p_value->device_handle);
 	printf("poison_error_injection_info.dpa_address: unsigned %lld\n", p_value->dpa_address);
+	printf("poison_error_injection_info.memory: unsigned %d\n", p_value->memory);
 }
 enum db_return_codes db_add_poison_error_injection_info(const PersistentStore *p_ps,
 	struct db_poison_error_injection_info *p_poison_error_injection_info)
@@ -25111,11 +25166,12 @@ enum db_return_codes db_add_poison_error_injection_info(const PersistentStore *p
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = 	"INSERT INTO poison_error_injection_info \
-		(device_handle, dpa_address)  \
+		(device_handle, dpa_address, memory)  \
 		VALUES 		\
 		(\
 		$device_handle, \
-		$dpa_address) ";
+		$dpa_address, \
+		$memory) ";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		local_bind_poison_error_injection_info(p_stmt, p_poison_error_injection_info);
@@ -25141,9 +25197,10 @@ int db_get_poison_error_injection_infos(const PersistentStore *p_ps,
 		id \
 		,  device_handle \
 		,  dpa_address \
+		,  memory \
 		  \
 		FROM poison_error_injection_info \
-		    \
+		     \
 		 ORDER BY id DESC  \
 		";
 	sqlite3_stmt *p_stmt;
@@ -25185,11 +25242,12 @@ enum db_return_codes db_save_poison_error_injection_info_state(const PersistentS
 	{
 		sqlite3_stmt *p_stmt;
 		char *sql = 	"INSERT INTO poison_error_injection_info \
-			( id ,  device_handle ,  dpa_address )  \
+			( id ,  device_handle ,  dpa_address ,  memory )  \
 			VALUES 		\
 			($id, \
 			$device_handle, \
-			$dpa_address) ";
+			$dpa_address, \
+			$memory) ";
 		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 		{
 			local_bind_poison_error_injection_info(p_stmt, p_poison_error_injection_info);
@@ -25208,11 +25266,12 @@ enum db_return_codes db_save_poison_error_injection_info_state(const PersistentS
 		sqlite3_stmt *p_stmt;
 		char *sql = "INSERT INTO poison_error_injection_info_history \
 			(history_id, \
-				 id,  device_handle,  dpa_address)  \
+				 id,  device_handle,  dpa_address,  memory)  \
 			VALUES 		($history_id, \
 				 $id , \
 				 $device_handle , \
-				 $dpa_address )";
+				 $dpa_address , \
+				 $memory )";
 		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
@@ -25236,7 +25295,7 @@ enum db_return_codes db_get_poison_error_injection_info_by_id(const PersistentSt
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
-		id,  device_handle,  dpa_address  \
+		id,  device_handle,  dpa_address,  memory  \
 		FROM poison_error_injection_info \
 		WHERE  id = $id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -25264,6 +25323,7 @@ enum db_return_codes db_update_poison_error_injection_info_by_id(const Persisten
 	id=$id \
 		,  device_handle=$device_handle \
 		,  dpa_address=$dpa_address \
+		,  memory=$memory \
 		  \
 	WHERE id=$id ";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -25352,7 +25412,7 @@ int db_get_poison_error_injection_info_history_by_history_id(const PersistentSto
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "SELECT \
-		id,  device_handle,  dpa_address  \
+		id,  device_handle,  dpa_address,  memory  \
 		FROM poison_error_injection_info_history \
 		WHERE  history_id = '%d'", history_id);
 	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
@@ -25429,7 +25489,7 @@ enum db_return_codes db_get_poison_error_injection_infos_by_dimm_topology_device
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
-		 id ,  device_handle ,  dpa_address  \
+		 id ,  device_handle ,  dpa_address ,  memory  \
 		FROM poison_error_injection_info \
 		WHERE  device_handle = $device_handle";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -25455,7 +25515,7 @@ enum db_return_codes db_get_poison_error_injection_infos_by_dimm_topology_device
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
-		 id ,  device_handle ,  dpa_address  \
+		 id ,  device_handle ,  dpa_address ,  memory  \
 		FROM poison_error_injection_info_history \
 		WHERE  device_handle = $device_handle AND history_id=$history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))

@@ -743,12 +743,12 @@ struct pt_payload_power_mgmt_policy {
 	 *	0x01 - Enabled (Default)
 	 */
 	unsigned char enabled;
-	/* Shows the current TDP DIMM power limit in W (watts) */
-	unsigned char tdp;
 	/* Power budget in mW used in instantaneous power. */
 	unsigned short peak_power_budget;
 	/* Power budget in mW used for averaged power */
 	unsigned short average_power_budget;
+	/* Shows the current TDP DIMM power limit in W (watts) */
+	unsigned char tdp;
 	unsigned char rsvd[122];
 } __attribute__((packed));
 /*
@@ -1293,9 +1293,20 @@ struct pt_payload_poison_err {
 	 * 0x01h - Set
 	 */
 	unsigned char enable;
-	unsigned char reserved_a[3];
+	unsigned char reserved1;
+
+	/*
+	 * 0x00 - Intel_Reserved
+	 * 0x01 - 2LM
+	 * 0x02 - App Direct
+	 * 0x03 - Storage
+	 * 0x04 - Patrol scrub (Memory Transaction type)
+	 * 0xFF - 0x05 - Intel Reserved
+	 */
+	unsigned char memory;
+	unsigned char reserved2;
 	unsigned long long dpa_address; /* Address to set the poison bit for */
-	unsigned char reserved_b[116];
+	unsigned char reserved3[116];
 } __attribute__((packed));
 
 /*
@@ -1708,18 +1719,18 @@ struct pt_input_payload_fw_error_log {
 	 */
 	unsigned char params;
 	/*
-	 * Offset in into log to retrieve.
-	 * Reads log from specified entry offset.
+	 * Only log entries with sequence number equal or higher than the provided will be returned.
+	 * If value 0 is passed, it will be overwritten with the oldest currently stored log.
 	 */
-	unsigned char offset;
+	unsigned short sequence_number;
 	/*
 	 *  Request Count: Max number of log entries requested for this access.
-	 *  ‘0’ can be used to request the count fields without reading the
-	 *  log entries.
+	 *  If requesting entries, minimum valid value for this field is 1.
+	 *  Maximum value for this field is Max Log Entries (from the Log Info Data)
 	 */
-	unsigned char request_count;
+	unsigned short request_count;
 
-	unsigned char rsvd[124];
+	unsigned char rsvd[123];
 } __attribute__((packed));
 
 /*
@@ -1770,7 +1781,7 @@ struct pt_fw_media_log_entry {
 	 * 0 - PDA VALID: Indicates the PDA address is VALID
 	 * 1 - DPA VALID: Indicates the DPA address is VALID
 	 * 2 - INTERRUPT: Indicates this error generated an interrupt packet
-	 * 3 - INJECT: Indicates this was an injected error entry
+	 * 3 - Reserved
 	 * 4 - VIRAL: Indicates Viral was signaled this error
 	 * 7:5 Reserved
 	 */
@@ -1868,12 +1879,14 @@ struct pt_payload_fw_log_info_data {
 	 * specified Log Type before an overrun condition occurs.
 	 */
         unsigned short max_log_entries;
+     /*
+      * Specifies the last assigned(currently highest) Sequence Number
+      */
+        unsigned short current_sequence_number;
 	/*
-	 * Specifies the number of new log entries since the last time the log was read. It can
-	 * also be noted that this may exceed the Max Log Entries and thus indicate an overflow
-	 * condition.
+	 * Specifies the lowest(oldest) Sequence Number currently stored in the Log
 	 */
-        unsigned short new_log_entries;
+        unsigned short oldest_sequence_number;
 	/*
 	 * Unix Epoch Time of the oldest log entry for this Log
 	 */
@@ -1883,7 +1896,7 @@ struct pt_payload_fw_log_info_data {
 	 */
         unsigned long long newest_log_entry_timestamp;
 
-        unsigned char rsvd[108];
+        unsigned char rsvd[106];
 }__attribute__((packed));
 
 struct pt_bios_get_size {

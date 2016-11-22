@@ -677,7 +677,8 @@ int update_status_fw_error_log_info_by_type_and_level(const NVM_NFIT_DEVICE_HAND
 	memset(&p_log_info_data, 0, sizeof (p_log_info_data));
 	KEEP_ERROR(rc, fw_get_fw_error_log_info_data(
 		device_handle.handle, log_level, log_type, &p_log_info_data));
-	p_status->new_error_count += p_log_info_data.new_log_entries;
+	p_status->new_error_count +=
+			(p_log_info_data.current_sequence_number - p_log_info_data.oldest_sequence_number);
 	if (p_log_info_data.newest_log_entry_timestamp > p_status->newest_error_log_timestamp)
 	{
 		p_status->newest_error_log_timestamp = p_log_info_data.newest_log_entry_timestamp;

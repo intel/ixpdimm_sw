@@ -215,6 +215,7 @@ enum return_code
 	NVM_ERR_INVALIDPASSPHRASEFILE = -49, // The passphrase file is invalid.
 	NVM_ERR_GOALPENDING = -50, // Memory allocation goal is pending reboot.
 	NVM_ERR_BADPOOLHEALTH = -51, // Underlying persistent memory is unavailable.
+	NVM_ERR_INVALIDMEMORYTYPE = -52, // The address does not match the specified memory type.
 };
 
 /*

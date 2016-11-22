@@ -889,7 +889,7 @@ void NVDIMMFactory::uidToHandle(const std::string &dimmUid,
 }
 
 void NVDIMMFactory::injectPoisonError(const std::string &dimmUid,
-		const NVM_UINT64 dpa)
+		const NVM_UINT64 dpa, const enum poison_memory_type poison_type)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
@@ -897,11 +897,12 @@ void NVDIMMFactory::injectPoisonError(const std::string &dimmUid,
 	memset(&error, 0, sizeof(error));
 	error.type = ERROR_TYPE_POISON;
 	error.dpa = dpa;
+	error.memory_type = poison_type;
 	injectError(dimmUid, &error);
 }
 
 void NVDIMMFactory::clearPoisonError(const std::string &dimmUid,
-		const NVM_UINT64 dpa)
+		const NVM_UINT64 dpa, const enum poison_memory_type poison_type)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
@@ -909,6 +910,7 @@ void NVDIMMFactory::clearPoisonError(const std::string &dimmUid,
 	memset(&error, 0, sizeof(error));
 	error.type = ERROR_TYPE_POISON;
 	error.dpa = dpa;
+	error.memory_type = poison_type;
 	clearError(dimmUid, &error);
 }
 

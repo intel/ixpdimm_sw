@@ -37,7 +37,7 @@
 #include "capabilities.h"
 
 int inject_poison_error(struct device_discovery *p_discovery, NVM_UINT64 dpa,
-	NVM_BOOL set_poison);
+		NVM_UINT8 memory, NVM_BOOL set_poison);
 int inject_temperature_error(NVM_UINT32 device_handle, NVM_UINT64 temperature,
 	NVM_BOOL enable_injection);
 int inject_software_trigger(struct device_discovery *p_discovery, enum error_type type,
@@ -141,39 +141,7 @@ int validate_poison_injection(struct device_discovery *p_discovery, NVM_UINT64 d
 	COMMON_LOG_ENTRY();
 
 	// check if dimm is locked
-	if (p_discovery->lock_state != LOCK_STATE_LOCKED)
-	{
-		// get the DPA start address of PMEM region from the dimm partition info
-		struct pt_payload_get_dimm_partition_info partition_info;
-		memset(&partition_info, 0, sizeof (partition_info));
-		struct fw_cmd partition_cmd;
-		memset(&partition_cmd, 0, sizeof (partition_cmd));
-		partition_cmd.device_handle = p_discovery->device_handle.handle;
-		partition_cmd.opcode = PT_GET_ADMIN_FEATURES;
-		partition_cmd.sub_opcode = SUBOP_DIMM_PARTITION_INFO;
-		partition_cmd.output_payload_size = sizeof (partition_info);
-		partition_cmd.output_payload = &partition_info;
-		if ((rc = ioctl_passthrough_cmd(&partition_cmd)) != NVM_SUCCESS)
-		{
-			COMMON_LOG_ERROR_F("Failed getting dimm %u partition information",
-					p_discovery->device_handle.handle);
-		}
-		else
-		{
-			// DPA is in PM range
-			if ((dpa >= partition_info.start_pmem) &&
-					(dpa < partition_info.start_pmem + partition_info.pmem_capacity))
-			{
-				rc = NVM_SUCCESS;
-			}
-			else
-			{
-				rc = NVM_ERR_INVALIDPARAMETER;
-				COMMON_LOG_ERROR("Setting poison is only possible in PM range.");
-			}
-		}
-	}
-	else
+	if (p_discovery->lock_state == LOCK_STATE_LOCKED)
 	{
 		rc = NVM_ERR_BADSECURITYSTATE;
 		COMMON_LOG_ERROR("Setting poison is not possible when dimm is locked.");
@@ -186,7 +154,8 @@ int validate_poison_injection(struct device_discovery *p_discovery, NVM_UINT64 d
 /*
  * Helper function to allow setting/clearing poison on a particular DPA
  */
-int inject_poison_error(struct device_discovery *p_discovery, NVM_UINT64 dpa, NVM_BOOL set_poison)
+int inject_poison_error(struct device_discovery *p_discovery, NVM_UINT64 dpa, NVM_UINT8 memory,
+		NVM_BOOL set_poison)
 {
 	int rc = NVM_SUCCESS;
 	COMMON_LOG_ENTRY();
@@ -206,6 +175,7 @@ int inject_poison_error(struct device_discovery *p_discovery, NVM_UINT64 dpa, NV
 		memset(&poison_err_input, 0, sizeof (poison_err_input));
 		poison_err_input.enable = set_poison;
 		poison_err_input.dpa_address = dpa;
+		poison_err_input.memory = memory;
 
 		struct fw_cmd cmd;
 		memset(&cmd, 0, sizeof (cmd));
@@ -218,6 +188,10 @@ int inject_poison_error(struct device_discovery *p_discovery, NVM_UINT64 dpa, NV
 
 		if (rc != NVM_SUCCESS)
 		{
+			if (rc == NVM_ERR_INVALIDPARAMETER)
+			{
+				rc = NVM_ERR_INVALIDMEMORYTYPE;
+			}
 			COMMON_LOG_ERROR_F("Failed to set/clear poison on dimm %u",
 					p_discovery->device_handle.handle);
 		}
@@ -268,7 +242,7 @@ int nvm_inject_device_error(const NVM_UID device_uid,
 					p_error->temperature, 1);
 			break;
 		case ERROR_TYPE_POISON:
-			rc = inject_poison_error(&discovery, p_error->dpa, 1);
+			rc = inject_poison_error(&discovery, p_error->dpa, p_error->memory_type, 1);
 			break;
 		case ERROR_TYPE_DIE_SPARING:
 		case ERROR_TYPE_SPARE_ALARM:
@@ -325,7 +299,7 @@ int nvm_clear_injected_device_error(const NVM_UID device_uid,
 					0, 0);
 			break;
 		case ERROR_TYPE_POISON:
-			rc = inject_poison_error(&discovery, p_error->dpa, 0);
+			rc = inject_poison_error(&discovery, p_error->dpa, p_error->memory_type, 0);
 			break;
 		case ERROR_TYPE_DIE_SPARING:
 			rc = inject_software_trigger(&discovery, p_error->type, 0);

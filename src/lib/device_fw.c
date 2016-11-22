@@ -231,34 +231,47 @@ int fw_get_fw_error_logs(const NVM_UINT32 device_handle,
 	int rc = NVM_SUCCESS;
 	COMMON_LOG_ENTRY();
 
-	struct pt_input_payload_fw_error_log input;
-	memset(&input, 0, sizeof (input));
-	input.offset = 0;
-	struct pt_output_payload_fw_error_log fw_error_log;
-	memset(&fw_error_log, 0, sizeof (fw_error_log));
-
-	struct fw_cmd cmd;
-	memset(&cmd, 0, sizeof (struct fw_cmd));
-	cmd.device_handle = device_handle;
-	cmd.opcode = PT_GET_LOG;
-	cmd.sub_opcode = SUBOP_ERROR_LOG;
-	cmd.input_payload_size = sizeof (input);
-	cmd.input_payload = &input;
-
-	input.params = log_level | log_type
-			| DEV_FW_ERR_LOG_RETRIEVE_ENTRIES | DEV_FW_ERR_LOG_LARGE_PAYLOAD;
-	input.request_count = error_count;
-	if (log_type == DEV_FW_ERR_LOG_MEDIA)
+	if (error_count)
 	{
-		cmd.large_output_payload_size = error_count * sizeof (struct pt_fw_media_log_entry);
+		struct pt_input_payload_fw_error_log input;
+		memset(&input, 0, sizeof (input));
+		input.sequence_number = 0;
+		struct pt_output_payload_fw_error_log fw_error_log;
+		memset(&fw_error_log, 0, sizeof (fw_error_log));
+
+		struct fw_cmd cmd;
+		memset(&cmd, 0, sizeof (struct fw_cmd));
+		cmd.device_handle = device_handle;
+		cmd.opcode = PT_GET_LOG;
+		cmd.sub_opcode = SUBOP_ERROR_LOG;
+		cmd.input_payload_size = sizeof (input);
+		cmd.input_payload = &input;
+
+		input.params = log_level | log_type
+				| DEV_FW_ERR_LOG_RETRIEVE_ENTRIES | DEV_FW_ERR_LOG_LARGE_PAYLOAD;
+
+
+		struct pt_payload_fw_log_info_data log_info_data;
+		memset(&log_info_data, 0, sizeof (log_info_data));
+
+		input.request_count = error_count;
+		if (log_type == DEV_FW_ERR_LOG_MEDIA)
+		{
+			cmd.large_output_payload_size = error_count *
+					sizeof (struct pt_fw_media_log_entry);
+		}
+		else
+		{
+			cmd.large_output_payload_size = error_count *
+					sizeof (struct pt_fw_thermal_log_entry);
+		}
+		cmd.large_output_payload = p_large_buffer;
+		rc = ioctl_passthrough_cmd(&cmd);
 	}
 	else
 	{
-		cmd.large_output_payload_size = error_count * sizeof (struct pt_fw_thermal_log_entry);
+		rc = NVM_ERR_INVALIDPARAMETER;
 	}
-	cmd.large_output_payload = p_large_buffer;
-	rc = ioctl_passthrough_cmd(&cmd);
-
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
@@ -273,7 +286,7 @@ int fw_get_fw_error_log_info_data(const NVM_UINT32 device_handle,
 
 	struct pt_input_payload_fw_error_log input;
 	memset(&input, 0, sizeof (input));
-	input.offset = 0;
+	input.sequence_number = 0;
 	input.params = log_level | log_type
 		| DEV_FW_ERR_LOG_RETRIEVE_INFO_DATA | DEV_FW_ERR_LOG_SMALL_PAYLOAD;
 	input.request_count = 0;

@@ -59,9 +59,16 @@ static const std::string CLEARFATALERROR_MSG_PREFIX = N_TR("Clear injected media
 static std::string CLEAR_PROPERTYNAME = "Clear";
 static std::string TEMPERATURE_PROPERTYNAME = "Temperature";
 static std::string POISON_PROPERTYNAME = "Poison";
+static std::string POISON_MEMORY_TYPE_PROPERTYNAME = "PoisonType";
 static std::string DIE_SPARING_PROPERTYNAME = "DieSparing";
 static std::string SPARE_ALARM_PROPERTYNAME = "SpareAlarm";
 static std::string FATAL_MEDIA_ERROR_PROPERTYNAME = "FatalMediaError";
+
+// memory type to poison strings
+static std::string MEMORY_TYPE_STR_MEMORYMODE = "MemoryMode";
+static std::string MEMORY_TYPE_STR_APPDIRECT = "AppDirect";
+static std::string MEMORY_TYPE_STR_STORAGE = "Storage";
+static std::string MEMORY_TYPE_STR_PATROLSCRUB = "PatrolScrub";
 
 /*!
  * Implements for validation related commands
@@ -102,11 +109,13 @@ private:
 	 * member variables for storing parsed information
 	 */
 	std::string m_dimmUid;
+	std::string m_poisontype;
 	NVM_UINT16 m_temperature;
 	NVM_UINT64 m_poison;
 	bool m_clearStateExists;
 	bool m_temperatureExists;
 	bool m_poisonExists;
+	bool m_poisonTypeExists;
 	bool m_dieSparingExists;
 	bool m_spareAlarmExists;
 	bool m_fatalMediaErrorExists;
@@ -131,6 +140,9 @@ private:
 
 	cli::framework::ResultBase* parsePoisonProperty(
 		const framework::ParsedCommand& parsedCommand);
+
+	cli::framework::ResultBase* parsePoisonTypeProperty(
+			const framework::ParsedCommand& parsedCommand);
 
 	cli::framework::ResultBase* parseTemperatureProperty(
 		const framework::ParsedCommand& parsedCommand);
@@ -166,6 +178,7 @@ private:
 	void clear_injected_error(std::string &prefixMsg,
 			std::vector<std::string>::iterator iUid,
 			framework::SimpleListResult &listResult);
+	enum poison_memory_type get_poison_type_from_string(const std::string poisonmemorytype);
 };
 
 }

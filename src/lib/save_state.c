@@ -1046,7 +1046,8 @@ int get_high_priority_thermal_log_info(PersistentStore *p_store, int history_id,
 		memset(&db_log_info, 0, sizeof (db_log_info));
 		db_log_info.device_handle = device_handle.handle;
 		db_log_info.max_log_entries = log_info_data.max_log_entries;
-		db_log_info.new_log_entries = log_info_data.new_log_entries;
+		db_log_info.current_sequence_number = log_info_data.current_sequence_number;
+		db_log_info.oldest_sequence_number = log_info_data.oldest_sequence_number;
 		db_log_info.oldest_log_entry_timestamp = log_info_data.oldest_log_entry_timestamp;
 		db_log_info.newest_log_entry_timestamp = log_info_data.newest_log_entry_timestamp;
 		db_save_fw_thermal_high_log_info_state(p_store, history_id, &db_log_info);
@@ -1079,7 +1080,8 @@ int get_low_priority_thermal_log_info(PersistentStore *p_store, int history_id,
 		memset(&db_log_info, 0, sizeof (db_log_info));
 		db_log_info.device_handle = device_handle.handle;
 		db_log_info.max_log_entries = log_info_data.max_log_entries;
-		db_log_info.new_log_entries = log_info_data.new_log_entries;
+		db_log_info.current_sequence_number = log_info_data.current_sequence_number;
+		db_log_info.oldest_sequence_number = log_info_data.oldest_sequence_number;
 		db_log_info.oldest_log_entry_timestamp = log_info_data.oldest_log_entry_timestamp;
 		db_log_info.newest_log_entry_timestamp = log_info_data.newest_log_entry_timestamp;
 		db_save_fw_thermal_low_log_info_state(p_store, history_id, &db_log_info);
@@ -1112,7 +1114,8 @@ int get_high_priority_media_log_info(PersistentStore *p_store, int history_id,
 		memset(&db_log_info, 0, sizeof (db_log_info));
 		db_log_info.device_handle = device_handle.handle;
 		db_log_info.max_log_entries = log_info_data.max_log_entries;
-		db_log_info.new_log_entries = log_info_data.new_log_entries;
+		db_log_info.current_sequence_number = log_info_data.current_sequence_number;
+		db_log_info.oldest_sequence_number = log_info_data.oldest_sequence_number;
 		db_log_info.oldest_log_entry_timestamp = log_info_data.oldest_log_entry_timestamp;
 		db_log_info.newest_log_entry_timestamp = log_info_data.newest_log_entry_timestamp;
 		db_save_fw_media_high_log_info_state(p_store, history_id, &db_log_info);
@@ -1145,7 +1148,8 @@ int get_low_priority_media_log_info(PersistentStore *p_store, int history_id,
 		memset(&db_log_info, 0, sizeof (db_log_info));
 		db_log_info.device_handle = device_handle.handle;
 		db_log_info.max_log_entries = log_info_data.max_log_entries;
-		db_log_info.new_log_entries = log_info_data.new_log_entries;
+		db_log_info.current_sequence_number = log_info_data.current_sequence_number;
+		db_log_info.oldest_sequence_number = log_info_data.oldest_sequence_number;
 		db_log_info.oldest_log_entry_timestamp = log_info_data.oldest_log_entry_timestamp;
 		db_log_info.newest_log_entry_timestamp = log_info_data.newest_log_entry_timestamp;
 		db_save_fw_media_low_log_info_state(p_store, history_id, &db_log_info);

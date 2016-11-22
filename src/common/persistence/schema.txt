@@ -515,7 +515,8 @@ Description: Vendor Firmware: Get Log - Error Log Low Media Log Info.
 Attributes: 
 	unsigned int device_handle(PK)
 	unsigned int max_log_entries
-	unsigned int new_log_entries
+	unsigned int current_sequence_number
+	unsigned int oldest_sequence_number
 	unsigned long long newest_log_entry_timestamp
 	unsigned long long oldest_log_entry_timestamp
 
@@ -525,7 +526,8 @@ Description: Vendor Firmware: Get Log - Error Log High Media Log Info.
 Attributes: 
 	unsigned int device_handle(PK)
 	unsigned int max_log_entries
-	unsigned int new_log_entries
+	unsigned int current_sequence_number
+	unsigned int oldest_sequence_number
 	unsigned long long newest_log_entry_timestamp
 	unsigned long long oldest_log_entry_timestamp
 
@@ -535,7 +537,8 @@ Description: Vendor Firmware: Get Log - Error Log Low Thermal Log Info.
 Attributes: 
 	unsigned int device_handle(PK)
 	unsigned int max_log_entries
-	unsigned int new_log_entries
+	unsigned int current_sequence_number
+	unsigned int oldest_sequence_number
 	unsigned long long newest_log_entry_timestamp
 	unsigned long long oldest_log_entry_timestamp
 
@@ -545,7 +548,8 @@ Description: Vendor Firmware: Get Log - Error Log High Thermal Log Info.
 Attributes: 
 	unsigned int device_handle(PK)
 	unsigned int max_log_entries
-	unsigned int new_log_entries
+	unsigned int current_sequence_number
+	unsigned int oldest_sequence_number
 	unsigned long long newest_log_entry_timestamp
 	unsigned long long oldest_log_entry_timestamp
 
@@ -698,6 +702,7 @@ Attributes:
 	int id(PK)
 	unsigned int device_handle(FK)
 	unsigned long long dpa_address
+	unsigned int memory
 
 Table(s): db_software_trigger_info 
  	  db_software_trigger_info_history 

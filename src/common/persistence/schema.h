@@ -7813,7 +7813,8 @@ struct db_fw_media_low_log_info
 {
 	unsigned int device_handle;
 	unsigned int max_log_entries;
-	unsigned int new_log_entries;
+	unsigned int current_sequence_number;
+	unsigned int oldest_sequence_number;
 	unsigned long long newest_log_entry_timestamp;
 	unsigned long long oldest_log_entry_timestamp;
 };
@@ -7982,7 +7983,8 @@ struct db_fw_media_high_log_info
 {
 	unsigned int device_handle;
 	unsigned int max_log_entries;
-	unsigned int new_log_entries;
+	unsigned int current_sequence_number;
+	unsigned int oldest_sequence_number;
 	unsigned long long newest_log_entry_timestamp;
 	unsigned long long oldest_log_entry_timestamp;
 };
@@ -8151,7 +8153,8 @@ struct db_fw_thermal_low_log_info
 {
 	unsigned int device_handle;
 	unsigned int max_log_entries;
-	unsigned int new_log_entries;
+	unsigned int current_sequence_number;
+	unsigned int oldest_sequence_number;
 	unsigned long long newest_log_entry_timestamp;
 	unsigned long long oldest_log_entry_timestamp;
 };
@@ -8320,7 +8323,8 @@ struct db_fw_thermal_high_log_info
 {
 	unsigned int device_handle;
 	unsigned int max_log_entries;
-	unsigned int new_log_entries;
+	unsigned int current_sequence_number;
+	unsigned int oldest_sequence_number;
 	unsigned long long newest_log_entry_timestamp;
 	unsigned long long oldest_log_entry_timestamp;
 };
@@ -10626,6 +10630,7 @@ struct db_poison_error_injection_info
 	int id;
 	unsigned int device_handle;
 	unsigned long long dpa_address;
+	unsigned int memory;
 };
 /*!
  * Helper function to print a db_poison_error_injection_info to the screen.

@@ -354,6 +354,11 @@ int nvm_get_error(const enum return_code code, NVM_ERROR_DESCRIPTION description
 							"persistent memory is unavailable."),
 						description_len);
 				break;
+			case NVM_ERR_INVALIDMEMORYTYPE:
+				s_strcpy(description,
+						TR("The address does not match the specified memory type."),
+						description_len);
+				break;
 			default:
 				s_strcpy(description, TR("The return code is not valid."),
 						description_len);

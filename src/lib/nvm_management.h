@@ -315,6 +315,18 @@ enum error_type
 };
 
 /*
+ * Inject a poison error at specific dpa
+ */
+enum poison_memory_type
+{
+	MEMORY_TYPE_MEMORYMODE = 0, // currently allocated in Memory mode
+	MEMORY_TYPE_APPDIRECT = 1, // currently allocated in AppDirect
+	MEMORY_TYPE_STORAGE = 2, // currently allocated in Storage mode
+	MEMORY_TYPE_PATROLSCRUB = 3, // simulating an error found during a patrol scrub operation
+								// indifferent to how the memory is currently allocated
+};
+
+/*
  * Diagnostic test type
  */
 enum diagnostic_test
@@ -1106,6 +1118,7 @@ struct log
 struct device_error
 {
 	enum error_type type; // The type of error to inject.
+	enum poison_memory_type memory_type; // Poison type
 	NVM_UINT64 dpa; // only valid if injecting poison error
 	NVM_UINT64 temperature; // only valid if injecting temperature error
 };
