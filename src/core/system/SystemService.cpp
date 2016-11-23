@@ -28,6 +28,8 @@
 #include <core/exceptions/NoMemoryException.h>
 #include <LogEnterExit.h>
 #include "SystemService.h"
+#include <persistence/config_settings.h>
+#include <persistence/lib_persistence.h>
 
 core::system::SystemService::SystemService(NvmLibrary &lib) : m_lib(lib)
 {
@@ -64,7 +66,10 @@ core::Result<core::system::SystemInfo> core::system::SystemService::getHostInfo(
 
 	bool logLevel = m_lib.isDebugLoggingEnabled();
 
-	SystemInfo result(host, logLevel);
+	int logMax = 0;
+	get_config_value_int(SQL_KEY_LOG_MAX, &logMax);
+
+	SystemInfo result(host, logLevel, logMax);
 	return Result<SystemInfo>(result);
 }
 

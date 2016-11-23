@@ -100,6 +100,7 @@ static std::string OSNAME_KEY = "OsName";
 static std::string OSVERSION_KEY = "OsVersion";
 static std::string LOGLEVEL_KEY = "LogLevel";
 static std::string DEDICATED_KEY = "Dedicated";
+static std::string LOGMAX_KEY = "LogMax";
 
 // NVDIMM attribute keys
 static std::string TAG_KEY = "Tag";

@@ -40,7 +40,7 @@ class NVM_API SystemInfo
 {
 public:
 	SystemInfo();
-	SystemInfo(struct host& host, int logLevel);
+	SystemInfo(struct host& host, int logLevel, int logMax);
 	virtual ~SystemInfo();
 	SystemInfo & operator=(const SystemInfo &other);
 	SystemInfo(const SystemInfo &other);
@@ -52,12 +52,13 @@ public:
 	bool getMixedSku();
 	bool getSkuViolation();
 	NVM_UINT16 getLogLevel();
-
+	NVM_UINT32 getLogMax();
 	SystemInfo * clone();
 
 private:
 	host m_info;
 	int m_logLevel;
+	int m_logMax;
 
 	void copy(const SystemInfo &other);
 };

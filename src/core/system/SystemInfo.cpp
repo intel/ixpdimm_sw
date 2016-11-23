@@ -35,21 +35,24 @@ namespace system
 
 SystemInfo::SystemInfo() :
 		m_info(),
-		m_logLevel(0)
+		m_logLevel(0),
+		m_logMax(0)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
 
-SystemInfo::SystemInfo(struct host& host, int logLevel) :
+SystemInfo::SystemInfo(struct host& host, int logLevel, int logMax) :
 		m_info(host),
-		m_logLevel(logLevel)
+		m_logLevel(logLevel),
+		m_logMax(logMax)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
 
 SystemInfo::SystemInfo(const SystemInfo &other) :
 		m_info(other.m_info),
-		m_logLevel(other.m_logLevel)
+		m_logLevel(other.m_logLevel),
+		m_logMax(other.m_logMax)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	copy(other);
@@ -71,6 +74,7 @@ void SystemInfo::copy(const SystemInfo &other)
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	this->m_info = other.m_info;
 	this->m_logLevel = other.m_logLevel;
+	this->m_logMax = other.m_logMax;
 }
 
 SystemInfo::~SystemInfo()
@@ -125,6 +129,13 @@ NVM_UINT16 SystemInfo::getLogLevel()
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return (NVM_UINT16)m_logLevel;
 }
+
+NVM_UINT32 SystemInfo::getLogMax()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	return (NVM_UINT32)m_logMax;
+}
+
 
 }
 }

@@ -12,6 +12,7 @@ class <NVM_WBEM_PREFIX>BaseServer : CIM_ComputerSystem
   string OsName;
   string OsVersion;
   uint16 LogLevel;
+  uint32 LogMax;
 };
 
 [dynamic, provider("intelwbemprovider"), Description("Intel Server Chassis")]

@@ -69,6 +69,7 @@ void wbem::server::BaseServerFactory::populateAttributeList(
 	attributes.push_back(OSNAME_KEY);
 	attributes.push_back(OSVERSION_KEY);
 	attributes.push_back(LOGLEVEL_KEY);
+	attributes.push_back(LOGMAX_KEY);
 	attributes.push_back(DEDICATED_KEY);
 	attributes.push_back(OPERATIONALSTATUS_KEY);
 }
@@ -105,6 +106,8 @@ void wbem::server::BaseServerFactory::toInstance(core::system::SystemInfo &hostI
 	ADD_ATTRIBUTE(instance, attributes, OSVERSION_KEY, framework::STR, hostInfo.getOsVersion());
 
 	ADD_ATTRIBUTE(instance, attributes, LOGLEVEL_KEY, framework::UINT16, hostInfo.getLogLevel());
+
+	ADD_ATTRIBUTE(instance, attributes, LOGMAX_KEY, framework::UINT32, hostInfo.getLogMax());
 
 	framework::UINT16_LIST dedicatedValue;
 	dedicatedValue.push_back(1u); // "unknown"
@@ -209,38 +212,29 @@ wbem::framework::Instance *wbem::server::BaseServerFactory::modifyInstance(wbem:
 	{
 		framework::attribute_names_t modifiableAttributes;
 		modifiableAttributes.push_back(LOGLEVEL_KEY);
+		modifiableAttributes.push_back(LOGMAX_KEY);
 
 		framework::attribute_names_t attributeNames;
 		pInstance = getInstance(path, attributeNames);
 
 		checkAttributesAreModifiable(pInstance, attributes, modifiableAttributes);
 
-		framework::Attribute currentAttribute;
-		framework::Attribute newAttribute;
-		NVM_UINT16 oldLogLevel;
-		NVM_UINT16 newLogLevel;
+		framework::Attribute newLogLevelAttribute;
+		NVM_UINT32 newLogLevel = 0;
 
-		getCurrentAttribute(LOGLEVEL_KEY, pInstance, currentAttribute);
-		if (getNewModifiableAttribute(LOGLEVEL_KEY, attributes, newAttribute))
-		{
-			oldLogLevel = (NVM_UINT16) currentAttribute.uintValue();
-			newLogLevel = (NVM_UINT16) newAttribute.uintValue();
+		newLogLevel = getNewValueAndAttribute(attributes, newLogLevelAttribute,
+				LOGLEVEL_KEY);
 
-			if (newLogLevel == BASESERVER_LOGLEVEL_ERROR || newLogLevel == BASESERVER_LOGLEVEL_DEBUG_ENABLED)
-			{
-				if (oldLogLevel != newLogLevel)
-				{
-					COMMON_LOG_INFO_F("LogLevel changing to %d",
-							newLogLevel);
-					setDebugLogging(newLogLevel);
-					pInstance->setAttribute(LOGLEVEL_KEY, newAttribute);
-				}
-			}
-			else
-			{
-				throw wbem::framework::ExceptionBadAttribute(LOGLEVEL_KEY.c_str());
-			}
-		}
+		framework::Attribute newLogMaxAttribute;
+		NVM_UINT32 newLogMax = 0;
+		newLogMax = getNewValueAndAttribute(attributes, newLogMaxAttribute,
+				LOGMAX_KEY);
+
+		updateConfigDb(newLogLevel, SQL_KEY_LOG_LEVEL);
+		pInstance->setAttribute(LOGLEVEL_KEY, newLogLevelAttribute);
+
+		updateConfigDb(newLogMax, SQL_KEY_LOG_MAX);
+		pInstance->setAttribute(LOGMAX_KEY, newLogMaxAttribute);
 	}
 	catch (framework::Exception &)
 	{
@@ -250,6 +244,49 @@ wbem::framework::Instance *wbem::server::BaseServerFactory::modifyInstance(wbem:
 	return pInstance;
 }
 
+NVM_UINT32 wbem::server::BaseServerFactory::getNewValueAndAttribute(
+		wbem::framework::attributes_t &attributes, framework::Attribute &newAttribute,
+		std::string key)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	NVM_UINT32 newValue = 0;
+
+	if (getNewModifiableAttribute(key, attributes, newAttribute))
+	{
+		newValue = (NVM_UINT32) newAttribute.uintValue();
+		if (key == LOGLEVEL_KEY &&  (newValue != BASESERVER_LOGLEVEL_ERROR &&
+				newValue != BASESERVER_LOGLEVEL_DEBUG_ENABLED))
+		{
+			throw wbem::framework::ExceptionBadAttribute(LOGLEVEL_KEY.c_str());
+		}
+		else if (key == LOGMAX_KEY && newValue > LOG_MAX_BOUND)
+		{
+			throw wbem::framework::ExceptionBadAttribute(LOGMAX_KEY.c_str());
+		}
+	}
+	else
+	{
+		COMMON_LOG_INFO_F("Unable to find attibute %s",
+				key.c_str());
+	}
+	return newValue;
+}
+
+/*
+ * Helper function to update the db
+ */
+
+void wbem::server::BaseServerFactory::updateConfigDb(NVM_UINT32 newValue, std::string key)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	COMMON_LOG_INFO_F("%s changing to %d", key.c_str(),
+			newValue);
+	char newValueStr[CONFIG_VALUE_LEN];
+	snprintf(newValueStr, CONFIG_VALUE_LEN, "%d", newValue);
+	setUserPreference(key.c_str(), newValueStr);
+}
 /*
  * Add a default simulator to be loaded when the nvm library is loaded
  */
@@ -290,17 +327,6 @@ void wbem::server::BaseServerFactory::setDebugLogging(int logSetting)
 	int rc = nvm_toggle_debug_logging(logSetting);
 	if (rc != NVM_SUCCESS)
 	{
-		throw exception::NvmExceptionLibError(rc);
-	}
-	// Sync the lib loglevel to wbem copy of loglevel
-	int level = LOGGING_LEVEL_ERROR; // errors only
-	if (logSetting)
-	{
-		level = LOGGING_LEVEL_DEBUG; // all on
-	}
-	if (!set_current_log_level(level))
-	{
-		rc = NVM_ERR_UNKNOWN;
 		throw exception::NvmExceptionLibError(rc);
 	}
 }
@@ -357,4 +383,4 @@ wbem::framework::UINT16_LIST wbem::server::BaseServerFactory::hostToOpStatus(boo
 	 {
 		throw e;
 	 }
- }
+}

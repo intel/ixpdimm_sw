@@ -138,7 +138,9 @@ class NVM_API BaseServerFactory : public framework_interface::NvmInstanceFactory
 			throw (wbem::framework::Exception);
 		void toInstance(core::system::SystemInfo &hostInfo,
 				framework::Instance &instance, wbem::framework::attribute_names_t attributes);
-
+		NVM_UINT32 getNewValueAndAttribute(wbem::framework::attributes_t &attributes,
+				framework::Attribute &newAttribute, std::string key);
+		void updateConfigDb(NVM_UINT32 newValue, std::string key);
 };
 
 } // server

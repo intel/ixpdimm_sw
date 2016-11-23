@@ -55,7 +55,7 @@ extern "C"
 //! Minimum performance log trim percent
 #define PERFORMANCE_LOG_TRIM_PERCENT_BOUND 10
 
-//! Maximum number of log entries
+//! Maximum number of debug log entries
 #define LOG_MAX_BOUND 100000
 
 //! Minimum allowed interval for event monitor
@@ -64,7 +64,7 @@ extern "C"
 //! Minimum event log trim percent
 #define EVENT_LOG_TRIM_PERCENT_BOUND 10
 
-//! Maximum event log entries
+//! Maximum debug log entries
 #define EVENT_LOG_MAX_BOUND 100000
 
 //! The maximum length of a config setting SQL key
