@@ -73,11 +73,29 @@ int fw_get_identify_dimm(const NVM_UINT32 device_handle,
 	memset(&cmd, 0, sizeof (struct fw_cmd));
 	cmd.device_handle = device_handle;
 	cmd.opcode = PT_IDENTIFY_DIMM;
-	cmd.sub_opcode = 0;
+	cmd.sub_opcode = SUBOP_IDENTIFY_DIMM_IDENTIFY;
 	cmd.output_payload_size = sizeof (struct pt_payload_identify_dimm);
 	cmd.output_payload = p_id_dimm;
 
 	int rc = ioctl_passthrough_cmd(&cmd);
+	if (rc == NVM_SUCCESS)
+	{
+		// ensure backwards compatibility with FIS 1.2
+		if (p_id_dimm->api_ver == 0)
+		{
+			p_id_dimm->api_ver = p_id_dimm->rsrvd_a;
+
+			// appdirect IFC workaround - fixed in FIS 1.3
+			if (p_id_dimm->ifc == FORMAT_BLOCK_STANDARD)
+			{
+				p_id_dimm->ifce = FORMAT_BYTE_STANDARD;
+			}
+			else if (p_id_dimm->ifc == FORMAT_BYTE_STANDARD)
+			{
+				p_id_dimm->ifce = FORMAT_BLOCK_STANDARD;
+			}
+		}
+	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }

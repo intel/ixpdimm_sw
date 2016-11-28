@@ -296,7 +296,7 @@ int check_dimm_identification(const NVM_UID device_uid,
 	memset(&id_cmd, 0, sizeof (struct fw_cmd));
 	id_cmd.device_handle = device_handle.handle;
 	id_cmd.opcode = PT_IDENTIFY_DIMM;
-	id_cmd.sub_opcode = 0;
+	id_cmd.sub_opcode = SUBOP_IDENTIFY_DIMM_IDENTIFY;
 	id_cmd.output_payload_size = sizeof (id_dimm);
 	id_cmd.output_payload = &id_dimm;
 

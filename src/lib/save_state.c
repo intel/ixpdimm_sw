@@ -441,17 +441,8 @@ int support_store_identify_dimm(PersistentStore *p_store, int history_id,
 	int rc = NVM_SUCCESS;
 	COMMON_LOG_ENTRY();
 
-	// add identify dimm table
 	struct pt_payload_identify_dimm id_dimm;
-
-	struct fw_cmd cmd;
-	memset(&cmd, 0, sizeof (struct fw_cmd));
-	cmd.device_handle = device_handle.handle;
-	cmd.opcode = PT_IDENTIFY_DIMM;
-	cmd.sub_opcode = 0;
-	cmd.output_payload_size = sizeof (id_dimm);
-	cmd.output_payload = &id_dimm;
-	int temprc = ioctl_passthrough_cmd(&cmd);
+	int temprc = fw_get_identify_dimm(device_handle.handle, &id_dimm);
 	if (NVM_SUCCESS != temprc)
 	{
 		COMMON_LOG_ERROR("Failed getting identify dimm information");
@@ -473,6 +464,7 @@ int support_store_identify_dimm(PersistentStore *p_store, int history_id,
 		db_idimm.fw_api_version = id_dimm.api_ver;
 		db_idimm.fw_sw_mask = id_dimm.fswr;
 		db_idimm.interface_format_code = id_dimm.ifc;
+		db_idimm.interface_format_code_extra = id_dimm.ifce;
 		db_idimm.raw_cap = MULTIPLES_TO_BYTES(id_dimm.rc);
 		db_idimm.write_flush_addresses = id_dimm.nwfa;
 		db_idimm.write_flush_address_start = id_dimm.wfas;

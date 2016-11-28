@@ -546,7 +546,7 @@ struct fw_cmd {
  * Passthrough Payload:
  *		Opcode: 0x01h (Identify DIMM)
  *	Small Output Payload
- * * Updated to FIS 0.81*
+ * * Updated to FIS 1.3 *
  */
 struct pt_payload_identify_dimm {
 	unsigned short vendor_id;
@@ -554,9 +554,9 @@ struct pt_payload_identify_dimm {
 	unsigned short revision_id;
 	unsigned short ifc; /* Interface format code */
 	unsigned char fwr[DEV_FW_REV_LEN]; /* BCD formated firmware revision */
-	unsigned char api_ver; /* BCD formated api version */
-	unsigned char fswr; /* Feature SW Required Mask */
 	unsigned char rsrvd_a;
+	unsigned char fswr; /* Feature SW Required Mask */
+	unsigned char rsrvd_b;
 	unsigned short nbw; /* Number of block windows */
 	unsigned short nwfa; /* Number write flush addresses */
 	unsigned long long wfas; /* Start address of the write flush addresses */
@@ -566,7 +566,9 @@ struct pt_payload_identify_dimm {
 	unsigned char sn[DEV_SN_LEN]; /* ASCII Serial Number */
 	char mn[DEV_MODELNUM_LEN]; /* ASCII Model Number */
 	unsigned int dimm_sku;
-	unsigned char resrvd[62]; /* Reserved */
+	unsigned short ifce; /* Interface format code extra*/
+	unsigned char api_ver; /* BCD formated api version */
+	unsigned char rsrvd_c[58]; /* Reserved */
 } __attribute__((packed));
 
 /*

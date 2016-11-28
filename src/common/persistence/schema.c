@@ -935,6 +935,7 @@ tables[populate_index++] = ((struct table){"identify_dimm",
 					 device_id INTEGER  , \
 					 revision_id INTEGER  , \
 					 interface_format_code INTEGER  , \
+					 interface_format_code_extra INTEGER  , \
 					 fw_revision TEXT  , \
 					 fw_api_version INTEGER  , \
 					 fw_sw_mask INTEGER  , \
@@ -956,6 +957,7 @@ tables[populate_index++] = ((struct table){"identify_dimm",
 					 device_id INTEGER , \
 					 revision_id INTEGER , \
 					 interface_format_code INTEGER , \
+					 interface_format_code_extra INTEGER , \
 					 fw_revision TEXT , \
 					 fw_api_version INTEGER , \
 					 fw_sw_mask INTEGER , \
@@ -9037,6 +9039,7 @@ void local_bind_identify_dimm(sqlite3_stmt *p_stmt, struct db_identify_dimm *p_i
 	BIND_INTEGER(p_stmt, "$device_id", (unsigned int)p_identify_dimm->device_id);
 	BIND_INTEGER(p_stmt, "$revision_id", (unsigned int)p_identify_dimm->revision_id);
 	BIND_INTEGER(p_stmt, "$interface_format_code", (unsigned int)p_identify_dimm->interface_format_code);
+	BIND_INTEGER(p_stmt, "$interface_format_code_extra", (unsigned int)p_identify_dimm->interface_format_code_extra);
 	BIND_TEXT(p_stmt, "$fw_revision", (char *)p_identify_dimm->fw_revision);
 	BIND_INTEGER(p_stmt, "$fw_api_version", (unsigned int)p_identify_dimm->fw_api_version);
 	BIND_INTEGER(p_stmt, "$fw_sw_mask", (unsigned int)p_identify_dimm->fw_sw_mask);
@@ -9079,42 +9082,45 @@ void local_row_to_identify_dimm(const PersistentStore *p_ps,
 	INTEGER_COLUMN(p_stmt,
 		4,
 		p_identify_dimm->interface_format_code);
-	TEXT_COLUMN(p_stmt,
+	INTEGER_COLUMN(p_stmt,
 		5,
+		p_identify_dimm->interface_format_code_extra);
+	TEXT_COLUMN(p_stmt,
+		6,
 		p_identify_dimm->fw_revision,
 		IDENTIFY_DIMM_FW_REVISION_LEN);
 	INTEGER_COLUMN(p_stmt,
-		6,
+		7,
 		p_identify_dimm->fw_api_version);
 	INTEGER_COLUMN(p_stmt,
-		7,
+		8,
 		p_identify_dimm->fw_sw_mask);
 	INTEGER_COLUMN(p_stmt,
-		8,
+		9,
 		p_identify_dimm->dimm_sku);
 	INTEGER_COLUMN(p_stmt,
-		9,
+		10,
 		p_identify_dimm->block_windows);
 	INTEGER_COLUMN(p_stmt,
-		10,
+		11,
 		p_identify_dimm->write_flush_addresses);
 	INTEGER_COLUMN(p_stmt,
-		11,
+		12,
 		p_identify_dimm->write_flush_address_start);
 	INTEGER_COLUMN(p_stmt,
-		12,
+		13,
 		p_identify_dimm->block_control_region_offset);
 	INTEGER_COLUMN(p_stmt,
-		13,
+		14,
 		p_identify_dimm->raw_cap);
 	INTEGER_COLUMN(p_stmt,
-		14,
+		15,
 		p_identify_dimm->manufacturer);
 	INTEGER_COLUMN(p_stmt,
-		15,
+		16,
 		p_identify_dimm->serial_num);
 	TEXT_COLUMN(p_stmt,
-		16,
+		17,
 		p_identify_dimm->model_num,
 		IDENTIFY_DIMM_MODEL_NUM_LEN);
 }
@@ -9125,6 +9131,7 @@ void db_print_identify_dimm(struct db_identify_dimm *p_value)
 	printf("identify_dimm.device_id: unsigned %d\n", p_value->device_id);
 	printf("identify_dimm.revision_id: unsigned %d\n", p_value->revision_id);
 	printf("identify_dimm.interface_format_code: unsigned %d\n", p_value->interface_format_code);
+	printf("identify_dimm.interface_format_code_extra: unsigned %d\n", p_value->interface_format_code_extra);
 	printf("identify_dimm.fw_revision: %s\n", p_value->fw_revision);
 	printf("identify_dimm.fw_api_version: unsigned %d\n", p_value->fw_api_version);
 	printf("identify_dimm.fw_sw_mask: unsigned %d\n", p_value->fw_sw_mask);
@@ -9144,13 +9151,14 @@ enum db_return_codes db_add_identify_dimm(const PersistentStore *p_ps,
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = 	"INSERT INTO identify_dimm \
-		(device_handle, vendor_id, device_id, revision_id, interface_format_code, fw_revision, fw_api_version, fw_sw_mask, dimm_sku, block_windows, write_flush_addresses, write_flush_address_start, block_control_region_offset, raw_cap, manufacturer, serial_num, model_num)  \
+		(device_handle, vendor_id, device_id, revision_id, interface_format_code, interface_format_code_extra, fw_revision, fw_api_version, fw_sw_mask, dimm_sku, block_windows, write_flush_addresses, write_flush_address_start, block_control_region_offset, raw_cap, manufacturer, serial_num, model_num)  \
 		VALUES 		\
 		($device_handle, \
 		$vendor_id, \
 		$device_id, \
 		$revision_id, \
 		$interface_format_code, \
+		$interface_format_code_extra, \
 		$fw_revision, \
 		$fw_api_version, \
 		$fw_sw_mask, \
@@ -9190,6 +9198,7 @@ int db_get_identify_dimms(const PersistentStore *p_ps,
 		,  device_id \
 		,  revision_id \
 		,  interface_format_code \
+		,  interface_format_code_extra \
 		,  fw_revision \
 		,  fw_api_version \
 		,  fw_sw_mask \
@@ -9204,7 +9213,7 @@ int db_get_identify_dimms(const PersistentStore *p_ps,
 		,  model_num \
 		  \
 		FROM identify_dimm \
-		                  \
+		                   \
 		 \
 		";
 	sqlite3_stmt *p_stmt;
@@ -9246,13 +9255,14 @@ enum db_return_codes db_save_identify_dimm_state(const PersistentStore *p_ps,
 	{
 		sqlite3_stmt *p_stmt;
 		char *sql = 	"INSERT INTO identify_dimm \
-			( device_handle ,  vendor_id ,  device_id ,  revision_id ,  interface_format_code ,  fw_revision ,  fw_api_version ,  fw_sw_mask ,  dimm_sku ,  block_windows ,  write_flush_addresses ,  write_flush_address_start ,  block_control_region_offset ,  raw_cap ,  manufacturer ,  serial_num ,  model_num )  \
+			( device_handle ,  vendor_id ,  device_id ,  revision_id ,  interface_format_code ,  interface_format_code_extra ,  fw_revision ,  fw_api_version ,  fw_sw_mask ,  dimm_sku ,  block_windows ,  write_flush_addresses ,  write_flush_address_start ,  block_control_region_offset ,  raw_cap ,  manufacturer ,  serial_num ,  model_num )  \
 			VALUES 		\
 			($device_handle, \
 			$vendor_id, \
 			$device_id, \
 			$revision_id, \
 			$interface_format_code, \
+			$interface_format_code_extra, \
 			$fw_revision, \
 			$fw_api_version, \
 			$fw_sw_mask, \
@@ -9283,13 +9293,14 @@ enum db_return_codes db_save_identify_dimm_state(const PersistentStore *p_ps,
 		sqlite3_stmt *p_stmt;
 		char *sql = "INSERT INTO identify_dimm_history \
 			(history_id, \
-				 device_handle,  vendor_id,  device_id,  revision_id,  interface_format_code,  fw_revision,  fw_api_version,  fw_sw_mask,  dimm_sku,  block_windows,  write_flush_addresses,  write_flush_address_start,  block_control_region_offset,  raw_cap,  manufacturer,  serial_num,  model_num)  \
+				 device_handle,  vendor_id,  device_id,  revision_id,  interface_format_code,  interface_format_code_extra,  fw_revision,  fw_api_version,  fw_sw_mask,  dimm_sku,  block_windows,  write_flush_addresses,  write_flush_address_start,  block_control_region_offset,  raw_cap,  manufacturer,  serial_num,  model_num)  \
 			VALUES 		($history_id, \
 				 $device_handle , \
 				 $vendor_id , \
 				 $device_id , \
 				 $revision_id , \
 				 $interface_format_code , \
+				 $interface_format_code_extra , \
 				 $fw_revision , \
 				 $fw_api_version , \
 				 $fw_sw_mask , \
@@ -9325,7 +9336,7 @@ enum db_return_codes db_get_identify_dimm_by_device_handle(const PersistentStore
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
-		device_handle,  vendor_id,  device_id,  revision_id,  interface_format_code,  fw_revision,  fw_api_version,  fw_sw_mask,  dimm_sku,  block_windows,  write_flush_addresses,  write_flush_address_start,  block_control_region_offset,  raw_cap,  manufacturer,  serial_num,  model_num  \
+		device_handle,  vendor_id,  device_id,  revision_id,  interface_format_code,  interface_format_code_extra,  fw_revision,  fw_api_version,  fw_sw_mask,  dimm_sku,  block_windows,  write_flush_addresses,  write_flush_address_start,  block_control_region_offset,  raw_cap,  manufacturer,  serial_num,  model_num  \
 		FROM identify_dimm \
 		WHERE  device_handle = $device_handle";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -9355,6 +9366,7 @@ enum db_return_codes db_update_identify_dimm_by_device_handle(const PersistentSt
 		,  device_id=$device_id \
 		,  revision_id=$revision_id \
 		,  interface_format_code=$interface_format_code \
+		,  interface_format_code_extra=$interface_format_code_extra \
 		,  fw_revision=$fw_revision \
 		,  fw_api_version=$fw_api_version \
 		,  fw_sw_mask=$fw_sw_mask \
@@ -9455,7 +9467,7 @@ int db_get_identify_dimm_history_by_history_id(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "SELECT \
-		device_handle,  vendor_id,  device_id,  revision_id,  interface_format_code,  fw_revision,  fw_api_version,  fw_sw_mask,  dimm_sku,  block_windows,  write_flush_addresses,  write_flush_address_start,  block_control_region_offset,  raw_cap,  manufacturer,  serial_num,  model_num  \
+		device_handle,  vendor_id,  device_id,  revision_id,  interface_format_code,  interface_format_code_extra,  fw_revision,  fw_api_version,  fw_sw_mask,  dimm_sku,  block_windows,  write_flush_addresses,  write_flush_address_start,  block_control_region_offset,  raw_cap,  manufacturer,  serial_num,  model_num  \
 		FROM identify_dimm_history \
 		WHERE  history_id = '%d'", history_id);
 	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))

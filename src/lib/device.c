@@ -224,25 +224,6 @@ int add_security_state_to_device(struct device_discovery *p_device)
 	return rc;
 }
 
-// @TODO: Remove with implementation of US15977
-void add_app_direct_ifc_workaround(struct device_discovery *p_device)
-{
-	enum nvm_format ifc = 0;
-	for (int i = 0; i < NVM_MAX_IFCS_PER_DIMM; i++)
-	{
-		ifc = p_device->interface_format_codes[i];
-		if (ifc == FORMAT_BYTE_STANDARD)
-		{
-			break;
-		}
-		else if (ifc != FORMAT_BLOCK_STANDARD)
-		{
-			p_device->interface_format_codes[i] = FORMAT_BYTE_STANDARD;
-			break;
-		}
-	}
-}
-
 void add_identify_dimm_properties_to_device(struct device_discovery *p_device,
 		struct pt_payload_identify_dimm *p_id_dimm)
 {
@@ -266,9 +247,10 @@ void add_identify_dimm_properties_to_device(struct device_discovery *p_device,
 	// convert fw api version to string
 	build_fw_revision(p_device->fw_api_version, NVM_VERSION_LEN,
 			((p_id_dimm->api_ver >> 4) & 0xF), (p_id_dimm->api_ver & 0xF));
+	p_device->interface_format_codes[0] = p_id_dimm->ifc;
+	p_device->interface_format_codes[1] = p_id_dimm->ifce;
 
 	p_device->capacity = MULTIPLES_TO_BYTES((NVM_UINT64)p_id_dimm->rc);
-	add_app_direct_ifc_workaround(p_device);
 
 	COMMON_LOG_EXIT();
 }

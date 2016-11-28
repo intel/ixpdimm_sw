@@ -2982,6 +2982,7 @@ struct db_identify_dimm
 	unsigned int device_id;
 	unsigned int revision_id;
 	unsigned int interface_format_code;
+	unsigned int interface_format_code_extra;
 	char   fw_revision[IDENTIFY_DIMM_FW_REVISION_LEN];
 	unsigned int fw_api_version;
 	unsigned int fw_sw_mask;
