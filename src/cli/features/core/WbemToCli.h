@@ -40,7 +40,7 @@ namespace cli
 {
 namespace nvmcli
 {
-class WbemToCli
+class NVM_API WbemToCli
 {
 public:
 	/*

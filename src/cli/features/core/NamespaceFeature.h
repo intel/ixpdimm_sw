@@ -207,15 +207,15 @@ class NVM_API NamespaceFeature : public cli::framework::FeatureBase
 		NamespaceFeature(const NamespaceFeature &);
 		NamespaceFeature& operator=(const NamespaceFeature&);
 
-private:
-		framework::ResultBase *showConfigGoal(const framework::ParsedCommand &parsedCommand);
-		framework::ResultBase *deleteConfigGoal(const framework::ParsedCommand &parsedCommand);
-		framework::ResultBase *createGoal(const framework::ParsedCommand &parsedCommand);
-		framework::ResultBase *showPools(const framework::ParsedCommand &parsedCommand);
-		framework::ResultBase *showNamespaces(const framework::ParsedCommand &parsedCommand);
-		framework::ResultBase *deleteNamespaces(const framework::ParsedCommand &parsedCommand);
-		framework::ResultBase *createNamespace(const framework::ParsedCommand &parsedCommand);
-		framework::ResultBase *modifyNamespace(const framework::ParsedCommand &parsedCommand);
+protected:
+		virtual framework::ResultBase *showConfigGoal(const framework::ParsedCommand &parsedCommand);
+		virtual framework::ResultBase *deleteConfigGoal(const framework::ParsedCommand &parsedCommand);
+		virtual framework::ResultBase *createGoal(const framework::ParsedCommand &parsedCommand);
+		virtual framework::ResultBase *showPools(const framework::ParsedCommand &parsedCommand);
+		virtual framework::ResultBase *showNamespaces(const framework::ParsedCommand &parsedCommand);
+		virtual framework::ResultBase *deleteNamespaces(const framework::ParsedCommand &parsedCommand);
+		virtual framework::ResultBase *createNamespace(const framework::ParsedCommand &parsedCommand);
+		virtual framework::ResultBase *modifyNamespace(const framework::ParsedCommand &parsedCommand);
 
 		// Namespace specific exception handling
 		framework::ErrorResult *nsNvmExceptionToResult(wbem::framework::Exception &e,
