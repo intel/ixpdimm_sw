@@ -418,8 +418,8 @@ int check_firmware_revision(unsigned char fw_api_version)
 	int rc = 0;
 
 	// parse the firmware API revision into major and minor
-	unsigned int major = (fw_api_version > 4) & 0xF;
-	unsigned int minor = fw_api_version & 0xF;
+	unsigned int major = get_fw_api_major_version(fw_api_version);
+	unsigned int minor = get_fw_api_minor_version(fw_api_version);
 
 	rc = is_fw_api_version_supported(major, minor);
 	if (rc == 0)

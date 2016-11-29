@@ -42,6 +42,10 @@ int dsm_err_to_nvm_lib_err(unsigned int status);
 
 void set_ioctl_passthrough_function(int (*f)(struct fw_cmd *p_cmd));
 void unset_ioctl_passthrough_function();
+
+unsigned int get_fw_api_major_version(const unsigned char fw_api_version);
+unsigned int get_fw_api_minor_version(const unsigned char fw_api_version);
+
 /*
  * Compare the firmware API version to the supported version.
  * Because the firmware is backwards compatible need to make sure API version

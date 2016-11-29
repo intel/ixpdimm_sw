@@ -246,7 +246,8 @@ void add_identify_dimm_properties_to_device(struct device_discovery *p_device,
 
 	// convert fw api version to string
 	build_fw_revision(p_device->fw_api_version, NVM_VERSION_LEN,
-			((p_id_dimm->api_ver >> 4) & 0xF), (p_id_dimm->api_ver & 0xF));
+			get_fw_api_major_version(p_id_dimm->api_ver),
+			get_fw_api_minor_version(p_id_dimm->api_ver));
 	p_device->interface_format_codes[0] = p_id_dimm->ifc;
 	p_device->interface_format_codes[1] = p_id_dimm->ifce;
 
