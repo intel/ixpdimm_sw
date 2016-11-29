@@ -60,7 +60,8 @@ void monitor::PerformanceMonitor::monitor()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	// clear any existing context
+	// create context
+	nvm_free_context(1);
 	nvm_create_context();
 
 	bool performanceDataAdded = false;
@@ -98,7 +99,7 @@ void monitor::PerformanceMonitor::monitor()
 
 	// clean up
 	dimmList.clear();
-	nvm_free_context();
+	nvm_free_context(1);
 }
 
 std::vector<std::string> monitor::PerformanceMonitor::getDimmList()

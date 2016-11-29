@@ -44,6 +44,8 @@ extern pthread_mutex_t g_context_lock;
 
 // Current context pointer - one per process
 struct nvm_context *p_context = NULL;
+// context ref counter
+int g_ctx_count = 0;
 
 /*
  * Initialize the context. This is a lazy context meaning
@@ -53,15 +55,18 @@ struct nvm_context *p_context = NULL;
 int nvm_create_context()
 {
 	COMMON_LOG_ENTRY();
-	// clean up existing
-	int rc = nvm_free_context();
-	if (rc == NVM_SUCCESS)
+	int rc = NVM_SUCCESS;
+	// lock
+	if (!mutex_lock(&g_context_lock))
 	{
-		// lock
-		if (!mutex_lock(&g_context_lock))
+		COMMON_LOG_ERROR("Could not obtain the context lock");
+		rc = NVM_ERR_UNKNOWN;
+	}
+	else
+	{
+		if (p_context)
 		{
-			COMMON_LOG_ERROR("Could not obtain the context lock");
-			rc = NVM_ERR_UNKNOWN;
+			g_ctx_count++;
 		}
 		else
 		{
@@ -74,6 +79,7 @@ int nvm_create_context()
 			}
 			else
 			{
+				g_ctx_count = 1;
 				// initialize everything
 				p_context->p_capabilities = NULL;
 				p_context->device_count = -1;
@@ -83,13 +89,13 @@ int nvm_create_context()
 				p_context->namespace_count = -1;
 				p_context->p_namespaces = NULL;
 			}
+		}
 
-			// unlock
-			if (!mutex_unlock(&g_context_lock))
-			{
-				COMMON_LOG_ERROR("Could not release the context lock.");
-				rc = NVM_ERR_UNKNOWN;
-			}
+		// unlock
+		if (!mutex_unlock(&g_context_lock))
+		{
+			COMMON_LOG_ERROR("Could not release the context lock.");
+			rc = NVM_ERR_UNKNOWN;
 		}
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -180,8 +186,9 @@ void free_namespace_list()
 }
 /*
  * Clean up the resources allocated by nvm_create_context
+ * Use the force flag to clear the context regardless of the count
  */
-int nvm_free_context()
+int nvm_free_context(const NVM_BOOL force)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
@@ -196,20 +203,26 @@ int nvm_free_context()
 	{
 		if (p_context)
 		{
-			// clean up capabilities
-			if (p_context->p_capabilities)
+			// force free the context if force flag is passed
+			force ? g_ctx_count = 0 : g_ctx_count--;
+			if (g_ctx_count <= 0)
 			{
-				free(p_context->p_capabilities);
-				p_context->p_capabilities = NULL;
+				g_ctx_count = 0;
+				// clean up capabilities
+				if (p_context->p_capabilities)
+				{
+					free(p_context->p_capabilities);
+					p_context->p_capabilities = NULL;
+				}
+
+				free_device_list();
+				free_pool_list();
+				free_namespace_list();
+
+				// clean up pointer
+				free(p_context);
+				p_context = NULL;
 			}
-
-			free_device_list();
-			free_pool_list();
-			free_namespace_list();
-
-			// clean up pointer
-			free(p_context);
-			p_context = NULL;
 		}
 
 		// unlock

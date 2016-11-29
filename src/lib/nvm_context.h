@@ -83,7 +83,7 @@ extern NVM_API int nvm_create_context();
 /*
  * Clean up the current context
  */
-extern NVM_API int nvm_free_context();
+extern NVM_API int nvm_free_context(const NVM_BOOL force);
 
 // capabilities
 int get_nvm_context_capabilities(struct nvm_capabilities *p_capabilities);

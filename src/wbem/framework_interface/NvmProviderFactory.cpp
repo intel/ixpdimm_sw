@@ -83,13 +83,30 @@
 #include <framework_interface/NvmInstanceFactory.h>
 #include "NvmIndicationService.h"
 
-
+#include <persistence/logging.h>
+#include <nvm_context.h>
 
 wbem::framework_interface::NvmProviderFactory::NvmProviderFactory() //: ProviderFactory()
 {
 	setDefaultCimNamespace(NVM_NAMESPACE_CSTR);
 }
 
+/*
+ * Perform any provider initialization that needs to be done for each action
+ */
+void wbem::framework_interface::NvmProviderFactory::InitializeProvider()
+{
+	nvm_create_context();
+}
+
+/*
+ * Clean up provider after each action
+ */
+void wbem::framework_interface::NvmProviderFactory::CleanUpProvider()
+{
+	nvm_free_context(0);
+	log_gather();
+}
 
 wbem::framework::InstanceFactory *wbem::framework_interface::NvmProviderFactory::getInstanceFactory(
 	const std::string &className)

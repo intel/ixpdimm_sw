@@ -40,6 +40,11 @@
 #include "framework_interface/NvmProviderFactory.h"
 #include "lib_interface/NvmApi.h"
 
+#include <libinvm-cim/Logger.h>
+#include <fstream>
+
+static std::fstream *pLogFile = NULL;
+
 #ifdef __ESX__
 #include "cimom/cmpi/cmpiMonitor.h"
 #endif
@@ -48,6 +53,9 @@ int nvm_open_lib();
 int nvm_close_lib();
 void initProviderFactory();
 void deleteProviderFactory();
+void initLogger();
+void destroyLogger();
+
 
 #ifdef __WINDOWS__
 #include <Windows.h>
@@ -166,7 +174,6 @@ int nvm_close_lib()
 void initProviderFactory()
 {
 	wbem::framework::ProviderFactory::setSingleton(new wbem::framework_interface::NvmProviderFactory());
-
 #ifdef __ESX__
 	// TODO: fix ESX endless loop
 	// cmpiMonitor::Init();
@@ -180,4 +187,35 @@ void deleteProviderFactory()
 	// TODO: fix ESX endless loop
 	// cmpiMonitor::Cleanup();
 #endif
+}
+
+void initLogger()
+{
+	if (!pLogFile)
+	{
+		pLogFile = new std::fstream("apss.cim.log",
+				std::fstream::out | std::fstream::app);
+	}
+
+	wbem::framework::gLogger.setChannel(new wbem::framework::StreamChannel(pLogFile));
+	wbem::framework::gLogger.setLevel(wbem::framework::LogMessage::PRIORITY_ERROR);
+}
+
+void destroyLogger()
+{
+	wbem::framework::gLogger.flush();
+
+	wbem::framework::LogChannelBase *pChannel = wbem::framework::gLogger.getChannel();
+	if (pChannel)
+	{
+		delete pChannel;
+		wbem::framework::gLogger.setChannel(NULL);
+	}
+
+	if (pLogFile)
+	{
+		pLogFile->close();
+		delete pLogFile;
+		pLogFile = NULL;
+	}
 }

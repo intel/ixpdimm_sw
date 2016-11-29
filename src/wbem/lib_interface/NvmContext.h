@@ -43,7 +43,7 @@ static inline int createNvmContext()
 
 static inline int freeNvmContext()
 {
-	return nvm_free_context();
+	return nvm_free_context(1);
 }
 
 }

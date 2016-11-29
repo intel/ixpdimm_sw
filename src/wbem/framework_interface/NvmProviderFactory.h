@@ -48,6 +48,16 @@ public:
 			const std::string &roleName = "", const std::string &resultRoleName = "");
 
 	virtual framework::IndicationService *getIndicationService();
+
+	/*
+	 * Perform any provider initialization that needs to be done for each action
+	 */
+	virtual void InitializeProvider();
+
+	/*
+	 * Clean up provider after each action
+	 */
+	virtual void CleanUpProvider();
 };
 }
 }

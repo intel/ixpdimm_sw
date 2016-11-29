@@ -35,8 +35,7 @@
 #include <os/os_adapter.h>
 #include <system/system.h>
 #include <windows.h>
-
-const char *SMBIOS_TABLE_SIGNATURE = "BMSR";
+#include <acpi/acpi.h>
 
 int find_numa_nodes(NVM_UINT16 *p_node_id, NVM_UINT16 count);
 int set_affinity_numa_node(NVM_UINT16 node_id);
@@ -45,6 +44,8 @@ int get_numa_nodes_logical_processor_count(NVM_UINT16 *p_lpcount, NVM_UINT16 *p_
 int get_cpu_data_from_numa_nodes(NVM_UINT16 *p_node_ids, struct socket *p_sockets,
 		NVM_UINT16 count);
 int numa_node_id_exists(NVM_UINT16 node_id);
+
+extern DWORD string_to_dword(const char *str);
 
 /*
  * Standard Windows structure for SMBIOS data.
@@ -547,6 +548,16 @@ int numa_node_id_exists(NVM_UINT16 node_id)
 	return rc;
 }
 
+/*
+ * Get the DWORD-formatted Windows signature for fetching the SMBIOS table
+ */
+DWORD get_smbios_table_signature()
+{
+	// Endian-flipped "RSMB"
+	static const char *SMBIOS_TABLE_SIGNATURE = "BMSR";
+	return string_to_dword(SMBIOS_TABLE_SIGNATURE);
+}
+
 size_t allocate_smbios_table_from_raw_data(const struct RawSMBIOSData *p_data,
 		NVM_UINT8 **pp_smbios_table)
 {
@@ -579,7 +590,7 @@ int get_smbios_table_alloc(NVM_UINT8 **pp_smbios_table, size_t *p_allocated_size
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
 
-	DWORD smbios_sig = atoi(SMBIOS_TABLE_SIGNATURE);
+	DWORD smbios_sig = get_smbios_table_signature();
 	UINT buf_size = GetSystemFirmwareTable(smbios_sig, 0, NULL, 0);
 	if (buf_size > 0)
 	{

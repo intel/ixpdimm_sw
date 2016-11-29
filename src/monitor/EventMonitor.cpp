@@ -113,7 +113,7 @@ void monitor::EventMonitor::startOfDay()
 	// that no longer exist
 	acknowledgeDeletedNamespaces();
 
-	nvm_free_context();
+	nvm_free_context(1);
 }
 
 void monitor::EventMonitor::runPlatformConfigDiagnostic()
@@ -843,6 +843,7 @@ void monitor::EventMonitor::monitor()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
+	nvm_free_context(1);
 	nvm_create_context();
 
 	monitorDevices();
@@ -854,7 +855,7 @@ void monitor::EventMonitor::monitor()
 		monitorNamespaces(pStore);
 	}
 
-	nvm_free_context();
+	nvm_free_context(1);
 }
 
 void monitor::EventMonitor::monitorDevices()
