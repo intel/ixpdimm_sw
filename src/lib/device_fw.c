@@ -34,10 +34,11 @@
 #include "utility.h"
 
 // Intel DIMM Device IDs running FW we support
-const int NUM_SUPPORTED_DEVICE_IDS = 2;
+const int NUM_SUPPORTED_DEVICE_IDS = 3;
 const NVM_UINT16 SUPPORTED_DEVICE_IDS[] = {
 		0x979,
-		0x97A
+		0x97A,
+		0x97B
 };
 
 /*
