@@ -235,6 +235,7 @@ Attributes:
 	char * model_num
 
 Table(s): db_device_characteristics 
+ 	  db_device_characteristics_history 
 Description: Vendor specific device characteristics 
 Attributes: 
 	unsigned int device_handle(PK)

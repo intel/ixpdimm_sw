@@ -358,7 +358,7 @@ int db_get_history_ids(const PersistentStore *p_ps,
 	return rc;
 }
 // Table count is calculated in CrudSchemaGenerator
-#define	TABLE_COUNT (115)
+#define	TABLE_COUNT (116)
 /*
  * Create a PersistentStore object
  */
@@ -978,10 +978,7 @@ tables[populate_index++] = ((struct table){"device_characteristics",
 					 media_temp_shutdown_threshold INTEGER  , \
 					 throttling_start_threshold INTEGER  , \
 					 throttling_stop_threshold INTEGER   \
-					);"}
-#if 0
-//NON-HISTORY TABLE
-);
+					);"});
 			tables[populate_index++] = ((struct table){"device_characteristics_history",
 				"CREATE TABLE device_characteristics_history (       \
 					history_id INTEGER NOT NULL, \
@@ -990,9 +987,7 @@ tables[populate_index++] = ((struct table){"device_characteristics",
 					 media_temp_shutdown_threshold INTEGER , \
 					 throttling_start_threshold INTEGER , \
 					 throttling_stop_threshold INTEGER  \
-					);"}
-#endif
-);
+					);"});
 tables[populate_index++] = ((struct table){"dimm_partition",
 				"CREATE TABLE dimm_partition (       \
 					 device_handle INTEGER  PRIMARY KEY  NOT NULL UNIQUE  , \
@@ -2000,12 +1995,7 @@ char* history_table_names[] = {
 
 	"identify_dimm_history",
 
-#if 0
-//NON-HISTORY TABLE
-
 	"device_characteristics_history",
-
-#endif
 
 	"dimm_partition_history",
 
@@ -9525,16 +9515,11 @@ void local_get_device_characteristics_relationships(const PersistentStore *p_ps,
 {
 }
 
-#if 0
-//NON-HISTORY TABLE
-
 void local_get_device_characteristics_relationships_history(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt, struct db_device_characteristics *p_device_characteristics,
 	int history_id)
 {
 }
-
-#endif
 
 void local_row_to_device_characteristics(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt, struct db_device_characteristics *p_device_characteristics)
@@ -9628,9 +9613,6 @@ enum db_return_codes db_delete_all_device_characteristicss(const PersistentStore
 	return run_sql_no_results(p_ps->db, "DELETE FROM device_characteristics");
 }
 
-#if 0
-//NON-HISTORY TABLE
-
 enum db_return_codes db_save_device_characteristics_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_device_characteristics *p_device_characteristics)
@@ -9696,8 +9678,6 @@ enum db_return_codes db_save_device_characteristics_state(const PersistentStore 
 	}
 	return rc;
 }
-
-#endif
 
 enum db_return_codes db_get_device_characteristics_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
@@ -9775,9 +9755,6 @@ enum db_return_codes db_delete_device_characteristics_by_device_handle(const Per
 	return rc;
 }
 
-#if 0
-//NON-HISTORY TABLE
-
 enum db_return_codes db_get_device_characteristics_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count)
@@ -9851,8 +9828,6 @@ enum db_return_codes db_delete_device_characteristics_history(const PersistentSt
 {
 	return run_sql_no_results(p_ps->db, "DELETE FROM device_characteristics_history");
 }
-
-#endif
 
 /*
  * --- END device_characteristics ----------------
@@ -27005,13 +26980,8 @@ enum db_return_codes db_clear_history(PersistentStore *p_ps)
 	
 	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM identify_dimm_history"));
 	
-#if 0
-//NON-HISTORY TABLE
-
 	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM device_characteristics_history"));
 	
-#endif
-
 	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM dimm_partition_history"));
 	
 	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM dimm_smart_history"));
@@ -27205,14 +27175,9 @@ enum db_return_codes db_clear_state(PersistentStore *p_ps)
 	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM identify_dimm_history"));
 	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM identify_dimm"));
 	
-#if 0
-//NON-HISTORY TABLE
-
 	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM device_characteristics_history"));
 	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM device_characteristics"));
 	
-#endif
-
 	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM dimm_partition_history"));
 	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM dimm_partition"));
 	
@@ -27501,17 +27466,12 @@ enum db_return_codes db_roll_history(PersistentStore *p_ps, int max)
 				"(SELECT history_id FROM history ORDER BY ROWID DESC LIMIT %d)", max); 
 	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, sql));
 	
-#if 0
-//NON-HISTORY TABLE
-
 	snprintf(sql, 1024,
 				"DELETE FROM device_characteristics_history "
 				"WHERE history_id NOT IN "
 				"(SELECT history_id FROM history ORDER BY ROWID DESC LIMIT %d)", max); 
 	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, sql));
 	
-#endif
-
 	snprintf(sql, 1024,
 				"DELETE FROM dimm_partition_history "
 				"WHERE history_id NOT IN "

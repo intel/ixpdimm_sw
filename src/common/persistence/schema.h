@@ -3225,9 +3225,6 @@ int db_get_device_characteristicss(const PersistentStore *p_ps,
  */	
 enum db_return_codes db_delete_all_device_characteristicss(const PersistentStore *p_ps);
 
-#if 0
-//NON-HISTORY TABLE
-
 /*!
  * delete all entries from device_characteristics history
  * @ingroup device_characteristics
@@ -3237,8 +3234,6 @@ enum db_return_codes db_delete_all_device_characteristicss(const PersistentStore
  */
  enum db_return_codes db_delete_device_characteristics_history(const PersistentStore *p_ps);
  
-#endif
-
 /*!
  * save device_characteristics state
  * @ingroup device_characteristics

@@ -48,6 +48,8 @@ int support_store_dimm_topology(PersistentStore *p_store,
 		int history_id, struct nvm_topology topol);
 int support_store_identify_dimm(PersistentStore *p_store,
 		int history_id, NVM_NFIT_DEVICE_HANDLE device_handle);
+int support_store_device_characteristics(PersistentStore *p_store,
+		int history_id, NVM_NFIT_DEVICE_HANDLE device_handle);
 int support_store_smart(PersistentStore *p_store, int history_id,
 		NVM_NFIT_DEVICE_HANDLE device_handle);
 int support_store_memory(PersistentStore *p_store, int history_id,
@@ -69,11 +71,19 @@ int support_store_fw_debug_logs(PersistentStore *p_store, int history_id,
 int support_store_driver_capabilities(PersistentStore *p_store, int history_id);
 extern int get_fw_die_spare_policy(NVM_NFIT_DEVICE_HANDLE dimm_handle,
 		struct pt_get_die_spare_policy *payload);
+extern int get_fw_power_mgmt_policy(NVM_NFIT_DEVICE_HANDLE dimm_handle,
+		struct pt_payload_power_mgmt_policy *payload);
 int support_store_optional_config_data(PersistentStore *p_store, int history_id,
 		NVM_NFIT_DEVICE_HANDLE device_handle);
 int support_store_die_sparing(PersistentStore *p_store, int history_id,
 		NVM_NFIT_DEVICE_HANDLE device_handle);
+int support_store_power_management(PersistentStore *p_store, int history_id,
+		NVM_NFIT_DEVICE_HANDLE device_handle);
+int support_store_alarm_thresholds(PersistentStore *p_store, int history_id,
+		NVM_NFIT_DEVICE_HANDLE device_handle);
 int support_store_platform_config_data(PersistentStore *p_store, int history_id,
+		NVM_NFIT_DEVICE_HANDLE device_handle);
+int support_store_dimm_long_operation_status(PersistentStore *p_store, int history_id,
 		NVM_NFIT_DEVICE_HANDLE device_handle);
 
 int db_get_history_count(const PersistentStore *p_ps, int *p_count)
@@ -166,6 +176,9 @@ int nvm_save_state(const char *name, const NVM_SIZE name_len)
 						KEEP_ERROR(rc, support_store_identify_dimm(p_store,
 								history_id,
 								topol[i].device_handle));
+						KEEP_ERROR(rc, support_store_device_characteristics(p_store,
+								history_id,
+								topol[i].device_handle));
 						KEEP_ERROR(rc, support_store_smart(p_store,
 								history_id, topol[i].device_handle));
 						KEEP_ERROR(rc, support_store_memory(p_store,
@@ -191,10 +204,19 @@ int nvm_save_state(const char *name, const NVM_SIZE name_len)
 							support_store_die_sparing(p_store,
 							history_id, topol[i].device_handle));
 						KEEP_ERROR(rc,
+							support_store_power_management(p_store,
+							history_id, topol[i].device_handle));
+						KEEP_ERROR(rc,
+							support_store_alarm_thresholds(p_store,
+							history_id, topol[i].device_handle));
+						KEEP_ERROR(rc,
 							support_store_optional_config_data(p_store,
 							history_id, topol[i].device_handle));
 						KEEP_ERROR(rc,
 							support_store_platform_config_data(p_store,
+							history_id, topol[i].device_handle));
+						KEEP_ERROR(rc,
+							support_store_dimm_long_operation_status(p_store,
 							history_id, topol[i].device_handle));
 					} // for each device
 				} // get topology success
@@ -487,6 +509,65 @@ int support_store_identify_dimm(PersistentStore *p_store, int history_id,
 		}
 	}
 
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+int support_store_device_characteristics(PersistentStore *p_store, int history_id,
+		NVM_NFIT_DEVICE_HANDLE device_handle)
+{
+	int rc = NVM_SUCCESS;
+	COMMON_LOG_ENTRY();
+
+	struct pt_payload_device_characteristics *p_dev_characteristics =
+		calloc(1, sizeof (struct pt_payload_device_characteristics));
+	if (!p_dev_characteristics)
+	{
+		COMMON_LOG_ERROR("Unable to allocate memory for device characteristics payload");
+		rc = NVM_ERR_NOMEMORY;
+	}
+	else
+	{
+		int temprc = fw_get_id_dimm_device_characteristics(
+			device_handle.handle, p_dev_characteristics);
+		if (NVM_SUCCESS != temprc)
+		{
+			COMMON_LOG_ERROR("Failed getting device characteristics information");
+			rc = temprc;
+		}
+		else
+		{
+			struct db_device_characteristics *p_db_device_characteristics =
+				calloc(1, sizeof (struct db_device_characteristics));
+
+			if (p_db_device_characteristics)
+			{
+				p_db_device_characteristics->device_handle = device_handle.handle;
+				p_db_device_characteristics->controller_temp_shutdown_threshold =
+					(unsigned int)p_dev_characteristics->controller_temp_shutdown_threshold;
+				p_db_device_characteristics->media_temp_shutdown_threshold =
+					(unsigned int)p_dev_characteristics->media_temp_shutdown_threshold;
+				p_db_device_characteristics->throttling_start_threshold =
+					(unsigned int)p_dev_characteristics->throttling_start_threshold;
+				p_db_device_characteristics->throttling_stop_threshold =
+					(unsigned int)p_dev_characteristics->throttling_stop_threshold;
+				if (DB_SUCCESS != db_save_device_characteristics_state(p_store,
+					history_id, p_db_device_characteristics))
+				{
+					COMMON_LOG_ERROR("Failed storing device characteristics");
+					rc = NVM_ERR_UNKNOWN;
+				}
+			}
+			else
+			{
+				COMMON_LOG_ERROR(
+					"Unable to allocate memory for device characteristic database info");
+				rc = NVM_ERR_NOMEMORY;
+			}
+			free(p_db_device_characteristics);
+		}
+	}
+	free(p_dev_characteristics);
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
@@ -1316,6 +1397,74 @@ int support_store_driver_capabilities(PersistentStore *p_store, int history_id)
 	return rc;
 }
 
+// add power management
+int support_store_power_management(PersistentStore *p_store, int history_id,
+		NVM_NFIT_DEVICE_HANDLE device_handle)
+{
+	int rc = NVM_SUCCESS;
+	COMMON_LOG_ENTRY();
+
+	struct db_dimm_power_management db_power_management;
+	memset(&db_power_management, 0, sizeof (db_power_management));
+
+	struct pt_payload_power_mgmt_policy power_management;
+	memset(&power_management, 0, sizeof (power_management));
+
+	rc = get_fw_power_mgmt_policy(device_handle, &power_management);
+	if (NVM_SUCCESS != rc)
+	{
+		COMMON_LOG_ERROR_F("Unable to get the device die sparing policy \
+				for handle: [%d]", device_handle.handle);
+	}
+	else
+	{
+		db_power_management.device_handle = device_handle.handle;
+		db_power_management.enable = power_management.enabled;
+		db_power_management.tdp_power_limit = power_management.tdp;
+		db_power_management.peak_power_budget = power_management.peak_power_budget;
+		db_power_management.avg_power_budget = power_management.average_power_budget;
+
+		db_save_dimm_power_management_state(p_store, history_id, &db_power_management);
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+// add alarm thresholds
+int support_store_alarm_thresholds(PersistentStore *p_store, int history_id,
+		NVM_NFIT_DEVICE_HANDLE device_handle)
+{
+	int rc = NVM_SUCCESS;
+	COMMON_LOG_ENTRY();
+
+	struct db_dimm_alarm_thresholds db_alarm_thresholds;
+	memset(&db_alarm_thresholds, 0, sizeof (db_alarm_thresholds));
+
+	struct pt_payload_alarm_thresholds alarm_thresholds;
+	memset(&alarm_thresholds, 0, sizeof (alarm_thresholds));
+
+	rc = fw_get_alarm_thresholds(device_handle.handle, &alarm_thresholds);
+	if (NVM_SUCCESS != rc)
+	{
+		COMMON_LOG_ERROR_F("Unable to get the device alarm thresholds \
+				for handle: [%d]", device_handle.handle);
+	}
+	else
+	{
+		db_alarm_thresholds.device_handle = device_handle.handle;
+		db_alarm_thresholds.enable = alarm_thresholds.enable;
+		db_alarm_thresholds.spare = alarm_thresholds.spare;
+		db_alarm_thresholds.media_temperature = alarm_thresholds.media_temperature;
+		db_alarm_thresholds.controller_temperature =
+			alarm_thresholds.controller_temperature;
+		db_save_dimm_alarm_thresholds_state(p_store, history_id, &db_alarm_thresholds);
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
 // add die sparing
 int support_store_die_sparing(PersistentStore *p_store, int history_id,
 		NVM_NFIT_DEVICE_HANDLE device_handle)
@@ -1394,7 +1543,7 @@ int support_store_partition_change_table(PersistentStore *p_store,
 	int rc = NVM_SUCCESS;
 
 	struct db_dimm_partition_change db_partition;
-db_get_next_dimm_partition_change_id(p_store, &db_partition.id);
+	db_get_next_dimm_partition_change_id(p_store, &db_partition.id);
 	db_partition.device_handle = device_handle.handle;
 	db_partition.config_table_type = table_type;
 	db_partition.extension_table_type = PARTITION_CHANGE_TABLE;
@@ -1686,5 +1835,60 @@ int support_store_platform_config_data(PersistentStore *p_store, int history_id,
 	free(p_config);
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+int support_store_dimm_long_operation_status(PersistentStore *p_store, int history_id,
+		NVM_NFIT_DEVICE_HANDLE device_handle)
+{
+	int rc = NVM_SUCCESS;
+	struct pt_payload_long_op_stat *p_payload = calloc(1, sizeof (struct pt_payload_long_op_stat));
+	if (!p_payload)
+	{
+		COMMON_LOG_ERROR("Unable to allocate memory for long operation payload");
+		rc = NVM_ERR_NOMEMORY;
+	}
+	else
+	{
+		rc = fw_get_status_for_long_op(device_handle, p_payload);
+		if (rc == NVM_SUCCESS)
+		{
+			struct pt_return_address_range_scrub *p_ars_command_return_data =
+				(struct pt_return_address_range_scrub *)(p_payload->command_specific_data);
+			struct db_dimm_long_op_status *p_db_lop_status =
+				calloc(1, sizeof (struct db_dimm_long_op_status));
+			struct db_dimm_ars_command_specific_data *p_db_ars_info =
+				calloc(1, sizeof (struct db_dimm_ars_command_specific_data));
+			if (p_db_lop_status && p_db_ars_info)
+			{
+				p_db_lop_status->device_handle = device_handle.handle;
+				p_db_lop_status->opcode = p_payload->command & 0xFF;
+				p_db_lop_status->subopcode = p_payload->command >> 8;
+				p_db_lop_status->percent_complete = p_payload->percent_complete;
+				p_db_lop_status->etc = p_payload->etc;
+				p_db_lop_status->status_code = p_payload->status_code;
+				KEEP_ERROR(rc, db_save_dimm_long_op_status_state(
+					p_store, history_id, p_db_lop_status));
+
+				p_db_ars_info->device_handle = device_handle.handle;
+				p_db_ars_info->num_errors = p_ars_command_return_data->num_errors;
+				p_db_ars_info->ars_state = p_ars_command_return_data->ars_state;
+				memmove(p_db_ars_info->dpa_error_address,
+					p_ars_command_return_data->dpa_error_address,
+					14*(sizeof (unsigned long long)));
+				KEEP_ERROR(rc, db_save_dimm_ars_command_specific_data_state(
+					p_store, history_id, p_db_ars_info));
+			}
+			else
+			{
+				COMMON_LOG_ERROR("Unable to allocate memory for long operation database info");
+				rc = NVM_ERR_NOMEMORY;
+			}
+			free(p_db_ars_info);
+			free(p_db_lop_status);
+		}
+
+	}
+	free(p_payload);
 	return rc;
 }
