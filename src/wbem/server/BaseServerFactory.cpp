@@ -200,7 +200,7 @@ wbem::framework::instance_names_t* wbem::server::BaseServerFactory::getInstanceN
 }
 
 /*
- * Modify a BaseServer instance. Only Loglevel can be modified
+ * Modify a BaseServer instance. Only Loglevel and LogMax can be modified
  */
 wbem::framework::Instance *wbem::server::BaseServerFactory::modifyInstance(wbem::framework::ObjectPath &path,
 				wbem::framework::attributes_t &attributes)throw (framework::Exception)
@@ -220,21 +220,27 @@ wbem::framework::Instance *wbem::server::BaseServerFactory::modifyInstance(wbem:
 		checkAttributesAreModifiable(pInstance, attributes, modifiableAttributes);
 
 		framework::Attribute newLogLevelAttribute;
-		NVM_UINT32 newLogLevel = 0;
+		bool newLogLevelFound = false;
 
-		newLogLevel = getNewValueAndAttribute(attributes, newLogLevelAttribute,
+		newLogLevelFound = getNewAttributeIfFound(attributes, newLogLevelAttribute,
 				LOGLEVEL_KEY);
 
 		framework::Attribute newLogMaxAttribute;
-		NVM_UINT32 newLogMax = 0;
-		newLogMax = getNewValueAndAttribute(attributes, newLogMaxAttribute,
+		bool newLogMaxFound = false;
+		newLogMaxFound = getNewAttributeIfFound(attributes, newLogMaxAttribute,
 				LOGMAX_KEY);
 
-		updateConfigDb(newLogLevel, SQL_KEY_LOG_LEVEL);
-		pInstance->setAttribute(LOGLEVEL_KEY, newLogLevelAttribute);
+		if (newLogLevelFound)
+		{
+			updateConfigDb(newLogLevelAttribute.uintValue(), SQL_KEY_LOG_LEVEL);
+			pInstance->setAttribute(LOGLEVEL_KEY, newLogLevelAttribute);
+		}
 
-		updateConfigDb(newLogMax, SQL_KEY_LOG_MAX);
-		pInstance->setAttribute(LOGMAX_KEY, newLogMaxAttribute);
+		if (newLogMaxFound)
+		{
+			updateConfigDb(newLogMaxAttribute.uintValue(), SQL_KEY_LOG_MAX);
+			pInstance->setAttribute(LOGMAX_KEY, newLogMaxAttribute);
+		}
 	}
 	catch (framework::Exception &)
 	{
@@ -244,16 +250,18 @@ wbem::framework::Instance *wbem::server::BaseServerFactory::modifyInstance(wbem:
 	return pInstance;
 }
 
-NVM_UINT32 wbem::server::BaseServerFactory::getNewValueAndAttribute(
+bool wbem::server::BaseServerFactory::getNewAttributeIfFound(
 		wbem::framework::attributes_t &attributes, framework::Attribute &newAttribute,
 		std::string key)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
+	bool isFound = false;
 	NVM_UINT32 newValue = 0;
 
 	if (getNewModifiableAttribute(key, attributes, newAttribute))
 	{
+		isFound = true;
 		newValue = (NVM_UINT32) newAttribute.uintValue();
 		if (key == LOGLEVEL_KEY &&  (newValue != BASESERVER_LOGLEVEL_ERROR &&
 				newValue != BASESERVER_LOGLEVEL_DEBUG_ENABLED))
@@ -270,7 +278,7 @@ NVM_UINT32 wbem::server::BaseServerFactory::getNewValueAndAttribute(
 		COMMON_LOG_INFO_F("Unable to find attibute %s",
 				key.c_str());
 	}
-	return newValue;
+	return isFound;
 }
 
 /*
@@ -283,9 +291,16 @@ void wbem::server::BaseServerFactory::updateConfigDb(NVM_UINT32 newValue, std::s
 
 	COMMON_LOG_INFO_F("%s changing to %d", key.c_str(),
 			newValue);
-	char newValueStr[CONFIG_VALUE_LEN];
-	snprintf(newValueStr, CONFIG_VALUE_LEN, "%d", newValue);
-	setUserPreference(key.c_str(), newValueStr);
+	if (key == SQL_KEY_LOG_LEVEL)
+	{
+		setDebugLogging(newValue);
+	}
+	else
+	{
+		char newValueStr[CONFIG_VALUE_LEN];
+		snprintf(newValueStr, CONFIG_VALUE_LEN, "%d", newValue);
+		setUserPreference(key.c_str(), newValueStr);
+	}
 }
 /*
  * Add a default simulator to be loaded when the nvm library is loaded

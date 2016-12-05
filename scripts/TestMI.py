@@ -39,9 +39,10 @@ def start():
     processes = tester.connection.EnumerateInstances('Intel_BaseServer')
     process = processes[0]
     print("Value: ", process.items())
-    process['LogMax'] = pywbem.Uint32(1000)
+    process['LogLevel'] = pywbem.Uint16(0)
+    process['LogMax'] = pywbem.Uint32(800)
     print("Process: ", process.items())
-    tester.connection.ModifyInstance(process, PropertyList=['LogMax'])
+    tester.connection.ModifyInstance(process, PropertyList=['LogLevel','LogMax'])
     print("Modifying done")
     processes1 = tester.connection.EnumerateInstances('Intel_BaseServer')
     process1 = processes1[0]
