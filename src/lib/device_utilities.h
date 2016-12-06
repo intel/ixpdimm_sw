@@ -111,7 +111,7 @@ NVM_BOOL can_communicate_with_device_firmware(struct device_discovery *p_device)
  * Compare the firmware api version to the supported versions to determine
  * if the device is manageable.
  */
-int check_firmware_revision(unsigned char fw_api_version);
+int check_firmware_revision(unsigned short fw_api_version);
 
 /*
  * Helper function to get the health of a dimm. Used in get pools to roll up health info

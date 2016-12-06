@@ -413,7 +413,7 @@ NVM_BOOL can_communicate_with_device_firmware(struct device_discovery *p_device)
  * to determine if the device is manageable. Because the firmware is backwards
  * compatible need to make sure API version is >= supported API.
  */
-int check_firmware_revision(unsigned char fw_api_version)
+int check_firmware_revision(unsigned short fw_api_version)
 {
 	int rc = 0;
 

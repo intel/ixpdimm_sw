@@ -49,14 +49,27 @@ const NVM_UINT16 SUPPORTED_DEVICE_IDS[] = {
 
 int local_ioctl_passthrough_cmd(struct fw_cmd *p_cmd);
 
-unsigned int get_fw_api_major_version(const unsigned char fw_api_version)
+unsigned int get_fw_api_major_version(const unsigned short fw_api_version)
 {
-	return (fw_api_version >> 4) & 0xF;
+	unsigned int major_version = (fw_api_version >> 8) & 0xFF;
+	if (major_version == 0)
+	{
+		major_version = (fw_api_version >> 4) & 0xF;
+	}
+
+	return major_version;
 }
 
-unsigned int get_fw_api_minor_version(const unsigned char fw_api_version)
+unsigned int get_fw_api_minor_version(const unsigned short fw_api_version)
 {
-	return fw_api_version & 0xF;
+	unsigned int minor_version = fw_api_version & 0xFF;
+
+	if (((fw_api_version >> 8) & 0xFF) == 0)
+	{
+		minor_version = fw_api_version & 0xF;
+	}
+
+	return minor_version;
 }
 
 NVM_BOOL is_fw_api_version_supported(const unsigned int major_version,
