@@ -567,7 +567,7 @@ struct pt_payload_identify_dimm {
 	char mn[DEV_MODELNUM_LEN]; /* ASCII Model Number */
 	unsigned int dimm_sku;
 	unsigned short ifce; /* Interface format code extra*/
-	unsigned char api_ver; /* BCD formated api version */
+	unsigned short api_ver; /* BCD formated api version */
 	unsigned char rsrvd_c[58]; /* Reserved */
 } __attribute__((packed));
 
