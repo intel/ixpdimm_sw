@@ -41,9 +41,9 @@
 
 namespace monitor
 {
-	static const std::string MONITOR_INTERVAL_SUFFIX_KEY = "_MONITOR_INTERVAL_SECONDS";
+	static const std::string MONITOR_INTERVAL_SUFFIX_KEY = "_MONITOR_INTERVAL_MINUTES";
 	static const std::string MONITOR_ENABLED_SUFFIX_KEY = "_MONITOR_ENABLED";
-	static const size_t DEFAULT_INTERVAL_SECONDS = 60;
+	static const size_t DEFAULT_INTERVAL_SECONDS = 60; // 1 minute
 	static const bool DEFAULT_MONITOR_ENABLED = true;
 
 	/*
