@@ -111,7 +111,7 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::deleteConfigGoal(
 		wbem::mem_config::MemoryConfigurationFactory provider;
 		wbem::framework::attribute_names_t attributes;
 		// get applied and unapplied goals
-		pInstances = provider.getGoalInstances(attributes, false);
+		pInstances = provider.getGoalInstances(attributes, true);
 		if (!pInstances)
 		{
 			throw wbem::framework::Exception("MemoryConfigurationFactory.getInstances returned NULL");
