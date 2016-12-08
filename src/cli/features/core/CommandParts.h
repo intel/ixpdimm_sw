@@ -84,7 +84,7 @@ const std::string NOMEMORY_ERROR_STR = N_TR("There is not enough memory to compl
 const std::string TARGETS_ERROR_STR = N_TR("Invalid target(s): ");
 const std::string NOMODIFIABLEPROPERTY_ERROR_STR = N_TR("At least one modifiable property is required.");
 const std::string BADTARGETERROR_STR = wbem::EXCEPTION_BADTARGET_MSG;
-const std::string BADSECURITY_ERROR_STR = N_TR("The command is not supported by the device in its current security state.");
+const std::string BADSECURITY_ERROR_STR = N_TR("This method is not supported by the device in its current security state.");
 const std::string NONINTEROPERABLEDIMM_ERROR_STR = N_TR("The command is not supported because some " NVM_DIMM_NAME "s in the "
 		"system are not compatible with each other.");
 const std::string INVALID_NS_APP_DIRECT_SETTINGS = N_TR("Unable to create a namespace with the specified AppDirectSetting.");
