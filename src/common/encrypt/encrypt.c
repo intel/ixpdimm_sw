@@ -54,29 +54,37 @@
  */
 int raw_compression(int ofd, z_stream *zvar)
 {
-	ssize_t num_done;
 	int rc = COMMON_SUCCESS;
-	COMMON_UINT8 output[COMPRESSION_PROCESS_BYTES];
-	int flush = (zvar->avail_in == 0) ? Z_FINISH : Z_NO_FLUSH;
 
-	do
+	COMMON_UINT8 *p_output = calloc(1, COMPRESSION_PROCESS_BYTES);
+	if(!p_output)
 	{
-		zvar->avail_out = COMPRESSION_PROCESS_BYTES;
-		zvar->next_out = output;
-		if (deflate(zvar, flush) == Z_STREAM_ERROR)
-		{
-			rc = COMMON_ERR_BADFILE;
-			break;
-		}
-
-		num_done = (COMPRESSION_PROCESS_BYTES - zvar->avail_out);
-		if (write(ofd, output, num_done) != num_done)
-		{
-			rc = COMMON_ERR_BADFILE;
-			break;
-		}
+		rc = COMMON_ERR_NOMEMORY;
 	}
-	while (zvar->avail_out == 0);
+	else
+	{
+		ssize_t num_done;
+		int flush = (zvar->avail_in == 0) ? Z_FINISH : Z_NO_FLUSH;
+		do
+		{
+			zvar->avail_out = COMPRESSION_PROCESS_BYTES;
+			zvar->next_out = p_output;
+			if (deflate(zvar, flush) == Z_STREAM_ERROR)
+			{
+				rc = COMMON_ERR_BADFILE;
+				break;
+			}
+
+			num_done = (COMPRESSION_PROCESS_BYTES - zvar->avail_out);
+			if (write(ofd, p_output, num_done) != num_done)
+			{
+				rc = COMMON_ERR_BADFILE;
+				break;
+			}
+		}
+		while (zvar->avail_out == 0);
+		free(p_output);
+	}
 
 	return rc;
 }
@@ -133,20 +141,27 @@ int compress_file(const COMMON_PATH src_file, COMMON_PATH out_file)
 		}
 		else
 		{
-			ssize_t num_read;
-			COMMON_UINT8 input[COMPRESSION_PROCESS_BYTES];
-
-			while ((num_read = read(sfd, input, COMPRESSION_PROCESS_BYTES)) != 0)
+			COMMON_UINT8 *p_input = calloc(1, COMPRESSION_PROCESS_BYTES);
+			if(!p_input)
 			{
-				// Assert checks in case someone accidentally and incorrectly decided to
-				// change the size of COMPRESSION_PROCESS_BYTES to something larger than uInt
-				assert(num_read <= (1ull << (sizeof (uInt) * 8)));
-				zvar.avail_in = (uInt)num_read;
-				zvar.next_in = input;
-				if ((rc = raw_compression(ofd, &zvar)) != COMMON_SUCCESS)
+				rc = COMMON_ERR_NOMEMORY;
+			}
+			else
+			{
+				ssize_t num_read;
+				while ((num_read = read(sfd, p_input, COMPRESSION_PROCESS_BYTES)) != 0)
 				{
-					break;
+					// Assert checks in case someone accidentally and incorrectly decided to
+					// change the size of COMPRESSION_PROCESS_BYTES to something larger than uInt
+					assert(num_read <= (1ull << (sizeof (uInt) * 8)));
+					zvar.avail_in = (uInt)num_read;
+					zvar.next_in = p_input;
+					if ((rc = raw_compression(ofd, &zvar)) != COMMON_SUCCESS)
+					{
+						break;
+					}
 				}
+				free(p_input);
 			}
 
 			// One more time to finalize and flush to output file

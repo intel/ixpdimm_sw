@@ -141,16 +141,7 @@ wbem::framework::UINT32 wbem::support::SupportDataServiceFactory::executeMethod(
 				httpRc = framework::CIM_ERR_FAILED;
 			}
 
-			if (std::string::npos == inParms[SUPPORTDATASERVICE_OMD_OBJPATH].stringValue().find(hostName))
-			{
-				// not looking for this host
-				httpRc = framework::CIM_ERR_INVALID_PARAMETER;
-			}
-			else
-			{
-				// call ExportToUri
-				exportToUri(inParms[SUPPORTDATASERVICE_EXPORTURI].stringValue());
-			}
+			exportToUri(inParms[SUPPORTDATASERVICE_EXPORTURI].stringValue());
 		}
 		else if (method == SUPPORTDATASERVICE_CREATE)
 		{
