@@ -892,6 +892,7 @@ void monitor::EventMonitor::monitorChangesForDevice(const deviceInfo& device)
 
 			processSensorStateChangesForDevice(device, updatedDeviceState);
 			processHealthChangesForDevice(device, updatedDeviceState);
+			processSanitizeChangesForDevice(device, updatedDeviceState);
 		}
 		catch (NoDeviceSavedState &)
 		{
@@ -1091,6 +1092,7 @@ void monitor::EventMonitor::initializeDimmState(struct db_dimm_state& dimmState,
 
 	dimmState.device_handle = device.discovery.device_handle.handle;
 	dimmState.health_state = device.status.health;
+	dimmState.sanitize_status = device.status.sanitize_status;
 
 	initializeSensorStateForDevice(dimmState, device);
 }
@@ -1154,6 +1156,54 @@ void monitor::EventMonitor::createDeviceHealthEvent(const NVM_UID uid,
 			oldHealthStr.c_str(),
 			newHealthStr.c_str(),
 			DIAGNOSTIC_RESULT_UNKNOWN);
+}
+
+void monitor::EventMonitor::processSanitizeChangesForDevice(const deviceInfo& device,
+		struct db_dimm_state& dimmState)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	device_sanitize_status oldSanitizeStatus = (device_sanitize_status)dimmState.sanitize_status;
+	device_sanitize_status newSanitizeStatus = device.status.sanitize_status;
+	if ((newSanitizeStatus == DEVICE_SANITIZE_STATUS_INPROGRESS || newSanitizeStatus == DEVICE_SANITIZE_STATUS_COMPLETE) &&
+		(newSanitizeStatus != oldSanitizeStatus))
+	{
+		createSanitizeOperationEvent(device.discovery.uid, oldSanitizeStatus, newSanitizeStatus);
+		dimmState.sanitize_status = newSanitizeStatus;
+	}
+}
+
+void monitor::EventMonitor::createSanitizeOperationEvent(const NVM_UID uid,
+	const device_sanitize_status oldSanitizeStatus, const device_sanitize_status newSanitizeStatus)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	if (newSanitizeStatus == DEVICE_SANITIZE_STATUS_INPROGRESS)
+	{
+		store_event_by_parts(EVENT_TYPE_HEALTH,
+				EVENT_SEVERITY_CRITICAL,
+				EVENT_CODE_HEALTH_SANITIZE_INPROGRESS,
+				uid,
+				true,
+				core::Helper::uidToString(uid).c_str(),
+				NULL,
+				NULL,
+				DIAGNOSTIC_RESULT_UNKNOWN);
+	}
+	else if (newSanitizeStatus == DEVICE_SANITIZE_STATUS_COMPLETE)
+	{
+		acknowledgeEventCodeForDevice(EVENT_CODE_HEALTH_SANITIZE_INPROGRESS, uid);
+
+		store_event_by_parts(EVENT_TYPE_HEALTH,
+				EVENT_SEVERITY_CRITICAL,
+				EVENT_CODE_HEALTH_SANITIZE_COMPLETE,
+				uid,
+				true,
+				core::Helper::uidToString(uid).c_str(),
+				NULL,
+				NULL,
+				DIAGNOSTIC_RESULT_UNKNOWN);
+	}
 }
 
 bool monitor::EventMonitor::isActionRequiredForDeviceHealth(enum device_health health)

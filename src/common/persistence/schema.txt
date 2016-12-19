@@ -284,6 +284,7 @@ Attributes:
 	unsigned long long mediaerrors_uncorrectable
 	unsigned long long mediaerrors_erasurecoded
 	int health_state
+	int sanitize_status
 	unsigned long long fw_log_errors
 
 Table(s): db_namespace_state 

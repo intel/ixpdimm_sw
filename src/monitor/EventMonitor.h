@@ -163,6 +163,9 @@ namespace monitor
 
 		void processHealthChangesForDevice(const deviceInfo &device, struct db_dimm_state &dimmState);
 		void createDeviceHealthEvent(const NVM_UID uid, const device_health oldHealth, const device_health newHealth);
+		void processSanitizeChangesForDevice(const deviceInfo &device, struct db_dimm_state &dimmState);
+		void createSanitizeOperationEvent(const NVM_UID uid, const device_sanitize_status oldSanitizeStatus,
+				const device_sanitize_status newSanitizeStatus);
 		bool isActionRequiredForDeviceHealth(enum device_health health);
 		event_severity getEventSeverityForDeviceHealth(enum device_health health);
 		std::string deviceHealthToStr(enum device_health health);

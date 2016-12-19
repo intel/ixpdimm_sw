@@ -1053,6 +1053,7 @@ tables[populate_index++] = ((struct table){"dimm_state",
 					 mediaerrors_uncorrectable INTEGER  , \
 					 mediaerrors_erasurecoded INTEGER  , \
 					 health_state INTEGER  , \
+					 sanitize_status INTEGER  , \
 					 fw_log_errors INTEGER   \
 					);"}
 #if 0
@@ -1066,6 +1067,7 @@ tables[populate_index++] = ((struct table){"dimm_state",
 					 mediaerrors_uncorrectable INTEGER , \
 					 mediaerrors_erasurecoded INTEGER , \
 					 health_state INTEGER , \
+					 sanitize_status INTEGER , \
 					 fw_log_errors INTEGER  \
 					);"}
 #endif
@@ -10628,6 +10630,7 @@ void local_bind_dimm_state(sqlite3_stmt *p_stmt, struct db_dimm_state *p_dimm_st
 	BIND_INTEGER(p_stmt, "$mediaerrors_uncorrectable", (unsigned long long)p_dimm_state->mediaerrors_uncorrectable);
 	BIND_INTEGER(p_stmt, "$mediaerrors_erasurecoded", (unsigned long long)p_dimm_state->mediaerrors_erasurecoded);
 	BIND_INTEGER(p_stmt, "$health_state", (int)p_dimm_state->health_state);
+	BIND_INTEGER(p_stmt, "$sanitize_status", (int)p_dimm_state->sanitize_status);
 	BIND_INTEGER(p_stmt, "$fw_log_errors", (unsigned long long)p_dimm_state->fw_log_errors);
 }
 void local_get_dimm_state_relationships(const PersistentStore *p_ps,
@@ -10666,6 +10669,9 @@ void local_row_to_dimm_state(const PersistentStore *p_ps,
 		p_dimm_state->health_state);
 	INTEGER_COLUMN(p_stmt,
 		5,
+		p_dimm_state->sanitize_status);
+	INTEGER_COLUMN(p_stmt,
+		6,
 		p_dimm_state->fw_log_errors);
 }
 void db_print_dimm_state(struct db_dimm_state *p_value)
@@ -10675,6 +10681,7 @@ void db_print_dimm_state(struct db_dimm_state *p_value)
 	printf("dimm_state.mediaerrors_uncorrectable: unsigned %lld\n", p_value->mediaerrors_uncorrectable);
 	printf("dimm_state.mediaerrors_erasurecoded: unsigned %lld\n", p_value->mediaerrors_erasurecoded);
 	printf("dimm_state.health_state: %d\n", p_value->health_state);
+	printf("dimm_state.sanitize_status: %d\n", p_value->sanitize_status);
 	printf("dimm_state.fw_log_errors: unsigned %lld\n", p_value->fw_log_errors);
 }
 enum db_return_codes db_add_dimm_state(const PersistentStore *p_ps,
@@ -10683,13 +10690,14 @@ enum db_return_codes db_add_dimm_state(const PersistentStore *p_ps,
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = 	"INSERT INTO dimm_state \
-		(device_handle, mediaerrors_corrected, mediaerrors_uncorrectable, mediaerrors_erasurecoded, health_state, fw_log_errors)  \
+		(device_handle, mediaerrors_corrected, mediaerrors_uncorrectable, mediaerrors_erasurecoded, health_state, sanitize_status, fw_log_errors)  \
 		VALUES 		\
 		($device_handle, \
 		$mediaerrors_corrected, \
 		$mediaerrors_uncorrectable, \
 		$mediaerrors_erasurecoded, \
 		$health_state, \
+		$sanitize_status, \
 		$fw_log_errors) ";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
@@ -10718,10 +10726,11 @@ int db_get_dimm_states(const PersistentStore *p_ps,
 		,  mediaerrors_uncorrectable \
 		,  mediaerrors_erasurecoded \
 		,  health_state \
+		,  sanitize_status \
 		,  fw_log_errors \
 		  \
 		FROM dimm_state \
-		       \
+		        \
 		 \
 		";
 	sqlite3_stmt *p_stmt;
@@ -10766,13 +10775,14 @@ enum db_return_codes db_save_dimm_state_state(const PersistentStore *p_ps,
 	{
 		sqlite3_stmt *p_stmt;
 		char *sql = 	"INSERT INTO dimm_state \
-			( device_handle ,  mediaerrors_corrected ,  mediaerrors_uncorrectable ,  mediaerrors_erasurecoded ,  health_state ,  fw_log_errors )  \
+			( device_handle ,  mediaerrors_corrected ,  mediaerrors_uncorrectable ,  mediaerrors_erasurecoded ,  health_state ,  sanitize_status ,  fw_log_errors )  \
 			VALUES 		\
 			($device_handle, \
 			$mediaerrors_corrected, \
 			$mediaerrors_uncorrectable, \
 			$mediaerrors_erasurecoded, \
 			$health_state, \
+			$sanitize_status, \
 			$fw_log_errors) ";
 		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 		{
@@ -10792,13 +10802,14 @@ enum db_return_codes db_save_dimm_state_state(const PersistentStore *p_ps,
 		sqlite3_stmt *p_stmt;
 		char *sql = "INSERT INTO dimm_state_history \
 			(history_id, \
-				 device_handle,  mediaerrors_corrected,  mediaerrors_uncorrectable,  mediaerrors_erasurecoded,  health_state,  fw_log_errors)  \
+				 device_handle,  mediaerrors_corrected,  mediaerrors_uncorrectable,  mediaerrors_erasurecoded,  health_state,  sanitize_status,  fw_log_errors)  \
 			VALUES 		($history_id, \
 				 $device_handle , \
 				 $mediaerrors_corrected , \
 				 $mediaerrors_uncorrectable , \
 				 $mediaerrors_erasurecoded , \
 				 $health_state , \
+				 $sanitize_status , \
 				 $fw_log_errors )";
 		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 		{
@@ -10825,7 +10836,7 @@ enum db_return_codes db_get_dimm_state_by_device_handle(const PersistentStore *p
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
-		device_handle,  mediaerrors_corrected,  mediaerrors_uncorrectable,  mediaerrors_erasurecoded,  health_state,  fw_log_errors  \
+		device_handle,  mediaerrors_corrected,  mediaerrors_uncorrectable,  mediaerrors_erasurecoded,  health_state,  sanitize_status,  fw_log_errors  \
 		FROM dimm_state \
 		WHERE  device_handle = $device_handle";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -10855,6 +10866,7 @@ enum db_return_codes db_update_dimm_state_by_device_handle(const PersistentStore
 		,  mediaerrors_uncorrectable=$mediaerrors_uncorrectable \
 		,  mediaerrors_erasurecoded=$mediaerrors_erasurecoded \
 		,  health_state=$health_state \
+		,  sanitize_status=$sanitize_status \
 		,  fw_log_errors=$fw_log_errors \
 		  \
 	WHERE device_handle=$device_handle ";
@@ -10947,7 +10959,7 @@ int db_get_dimm_state_history_by_history_id(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "SELECT \
-		device_handle,  mediaerrors_corrected,  mediaerrors_uncorrectable,  mediaerrors_erasurecoded,  health_state,  fw_log_errors  \
+		device_handle,  mediaerrors_corrected,  mediaerrors_uncorrectable,  mediaerrors_erasurecoded,  health_state,  sanitize_status,  fw_log_errors  \
 		FROM dimm_state_history \
 		WHERE  history_id = '%d'", history_id);
 	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))

@@ -3691,6 +3691,7 @@ struct db_dimm_state
 	unsigned long long mediaerrors_uncorrectable;
 	unsigned long long mediaerrors_erasurecoded;
 	int health_state;
+	int sanitize_status;
 	unsigned long long fw_log_errors;
 };
 /*!

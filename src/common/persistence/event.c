@@ -130,6 +130,14 @@ const char *EVENT_MESSAGES_HEALTH[EVENT_CODE_HEALTH_UNKNOWN -
 	// EVENT_CODE_HEALTH_NEW_FWERRORS_FOUND
 	N_TR("The health monitor has detected that " NVM_DIMM_NAME " %s "
 			"firmware has reported %s new errors."),
+	// EVENT_CODE_HEALTH_SANITIZE_INPROGRESS
+	N_TR("The health monitor has detected that a sanitize operation "
+			"is in progress on " NVM_DIMM_NAME " %s. A reboot will be "
+			"required when complete to use the " NVM_DIMM_NAME "."),
+	// EVENT_CODE_HEALTH_SANITIZE_COMPLETE
+	N_TR("The health monitor has detected that a sanitize operation "
+			"has completed on " NVM_DIMM_NAME " %s. A reboot will be "
+			"required to use the " NVM_DIMM_NAME "."),
 	// EVENT_CODE_HEALTH_UNKNOWN
 	N_TR("The health monitor has logged an unknown error code %d."),
 };
