@@ -928,10 +928,11 @@ int config_input_table_to_config_goal(const NVM_UID device_uid,
 						SERIAL_NUMBER_TO_STRING(p_dimm->serial_number, serial_str);
 						COMMON_LOG_ERROR_F("Interleave set dimm serial # %s not found",
 								serial_str);
-						rc = NVM_ERR_BADDEVICECONFIG; // bad data unrecognized device
-						break;
 					}
-					memmove(p_qos->dimms[i], discovery.uid, NVM_MAX_UID_LEN);
+					else
+					{
+						uid_copy(discovery.uid, p_qos->dimms[i]);
+					}
 
 					// If this is the requested DIMM, get the size
 					if (uid_cmp(p_qos->dimms[i], device_uid))
