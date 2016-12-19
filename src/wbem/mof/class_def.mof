@@ -167,6 +167,12 @@ class <NVM_WBEM_PREFIX>NVDIMM : CIM_PhysicalMemory
 	Values { "Unknown", "Not Started", "In progress", "Complete" }]
 	uint16 ARSStatus;
 	[Description (
+	"The sanitize operation status. Only returned if the Manageability is 'Manageable'."
+	),
+	ValueMap {"0", "1", "2", "3" },
+	Values { "Unknown", "Not Started", "In progress", "Complete" }]
+	uint16 SanitizeStatus;
+	[Description (
 	"The time the DIMM was last shut down. "
  	)]
 	datetime LastShutdownTime;
