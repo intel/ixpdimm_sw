@@ -127,6 +127,7 @@ public:
 	virtual std::vector<NVM_UINT16> getLastShutdownStatus();
 	virtual enum config_status getConfigStatus();
 	virtual enum device_ars_status getArsStatus();
+	virtual enum device_sanitize_status getSanitizeStatus();
 	virtual NVM_UINT64 getLastShutdownTime();
 	virtual bool isMixedSku();
 	virtual bool isSkuViolation();

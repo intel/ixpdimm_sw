@@ -734,8 +734,8 @@ int get_device_status_by_handle(NVM_NFIT_DEVICE_HANDLE dimm_handle,
 						- ((spare_payload.supported & 0x08) >> 3);
 	}
 
-	// get ars long operation status
-	temprc = get_ars_status(dimm_handle, &p_status->ars_status);
+	// get ARS and sanitize status
+	temprc = get_long_status(dimm_handle, &p_status->ars_status, &p_status->sanitize_status);
 	KEEP_ERROR(rc, temprc);
 
 	struct pt_payload_smart_health dimm_smart;

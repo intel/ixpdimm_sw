@@ -291,20 +291,20 @@ void set_device_manageability_from_firmware(
 /*
  * Helper function to translate ars status
  */
-enum device_ars_status translate_to_ars_status(struct pt_payload_long_op_stat *long_op_payload)
+enum device_ars_status translate_to_ars_status(struct pt_payload_long_op_stat *p_long_op_payload)
 {
 	COMMON_LOG_ENTRY();
 	enum device_ars_status status = 0;
 
 	struct pt_return_address_range_scrub *ars_command_return_data =
-		(struct pt_return_address_range_scrub *)(long_op_payload->command_specific_data);
+		(struct pt_return_address_range_scrub *)(p_long_op_payload->command_specific_data);
 
-	if (((long_op_payload->command & 0x00FF) == PT_GET_LOG) &&
-			(((long_op_payload->command & 0xFF00) >> 8) == SUBOP_POLICY_ADDRESS_RANGE_SCRUB))
+	if (((p_long_op_payload->command & 0x00FF) == PT_GET_LOG) &&
+			(((p_long_op_payload->command & 0xFF00) >> 8) == SUBOP_POLICY_ADDRESS_RANGE_SCRUB))
 	{
 		if ((ars_command_return_data->ars_state & (ARS_STATUS_ENDED_EARLY<<0)) == 0)
 		{
-			if (long_op_payload->percent_complete == 100)
+			if (p_long_op_payload->percent_complete == 100)
 			{
 				status = DEVICE_ARS_STATUS_COMPLETE;
 			}
@@ -327,7 +327,38 @@ enum device_ars_status translate_to_ars_status(struct pt_payload_long_op_stat *l
 	return status;
 }
 
-int get_ars_status(const NVM_NFIT_DEVICE_HANDLE dimm_handle, enum device_ars_status *p_ars_status)
+/*
+ * Helper function to translate sanitize status
+ */
+enum device_sanitize_status translate_to_sanitize_status(
+		struct pt_payload_long_op_stat *p_long_op_payload)
+{
+	COMMON_LOG_ENTRY();
+	enum device_sanitize_status sanitize_status = DEVICE_SANITIZE_STATUS_UNKNOWN;
+
+	if (((p_long_op_payload->command & 0x00FF) == PT_SET_SEC_INFO) &&
+		(((p_long_op_payload->command & 0xFF00) >> 8) == SUBOP_OVERWRITE_DIMM))
+	{
+		if (p_long_op_payload->status_code == MB_DEVICE_BUSY)
+		{
+			sanitize_status = DEVICE_SANITIZE_STATUS_INPROGRESS;
+		}
+		else if (p_long_op_payload->status_code == MB_SUCCESS)
+		{
+			sanitize_status = DEVICE_SANITIZE_STATUS_COMPLETE;
+		}
+	}
+	else
+	{
+		sanitize_status = DEVICE_SANITIZE_STATUS_NOTSTARTED;
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(sanitize_status);
+	return sanitize_status;
+}
+
+int get_long_status(const NVM_NFIT_DEVICE_HANDLE dimm_handle, enum device_ars_status *p_ars_status,
+		enum device_sanitize_status *p_sanitize_status)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
@@ -343,10 +374,13 @@ int get_ars_status(const NVM_NFIT_DEVICE_HANDLE dimm_handle, enum device_ars_sta
 	else if (rc != NVM_SUCCESS)
 	{
 		*p_ars_status = DEVICE_ARS_STATUS_UNKNOWN;
+		*p_sanitize_status = DEVICE_SANITIZE_STATUS_UNKNOWN;
 	}
 	else
 	{
 		*p_ars_status = translate_to_ars_status(&long_op_payload);
+
+		*p_sanitize_status = translate_to_sanitize_status(&long_op_payload);
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);

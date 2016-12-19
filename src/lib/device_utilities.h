@@ -79,11 +79,15 @@ void free_dev_table(COMMON_BOOL obtain_lock);
 int init_dev_table(COMMON_BOOL obtain_lock, struct nvm_topology *p_dimm_topo, NVM_UINT8 count);
 
 /*
- * Helper functions to get ars status
+ * Helper functions to get ARS and sanitize status
  */
-int get_ars_status(const NVM_NFIT_DEVICE_HANDLE dimm_handle, enum device_ars_status *p_ars_status);
+int get_long_status(const NVM_NFIT_DEVICE_HANDLE dimm_handle, enum device_ars_status *p_ars_status,
+		enum device_sanitize_status *p_sanitize_status);
 
-enum device_ars_status translate_to_ars_status(struct pt_payload_long_op_stat *long_op_payload);
+enum device_ars_status translate_to_ars_status(struct pt_payload_long_op_stat *p_long_op_payload);
+
+enum device_sanitize_status translate_to_sanitize_status(
+		struct pt_payload_long_op_stat *p_long_op_payload);
 
 /*
  * Derive DIMM manageability state from firmware

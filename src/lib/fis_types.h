@@ -389,17 +389,21 @@ enum passthrough_opcode {
 		PT_SET_SEC_INFO = 0x03,
 	/* Retrieve modifiable settings for a DIMM */
 		PT_GET_FEATURES = 0x04,
-	PT_SET_FEATURES = 0x05, /* Modify settings for DIMM */
-		PT_GET_ADMIN_FEATURES = 0x06, /* Get admin features */
-		PT_SET_ADMIN_FEATURES = 0x07, /* Change admin features */
+	/* Modify settings for DIMM */
+		PT_SET_FEATURES = 0x05,
+	/* Get admin features */
+		PT_GET_ADMIN_FEATURES = 0x06,
+	/* Change admin features */
+		PT_SET_ADMIN_FEATURES = 0x07,
 	/* Retrieve administrative data, error info, other FW data */
 		PT_GET_LOG = 0x08,
-	PT_UPDATE_FW = 0x09, /* Move an image to the DIMM */
+	/* Move an image to the DIMM */
+		PT_UPDATE_FW = 0x09,
 	/* Debug only CMD to trigger error conditions */
 		PT_INJECT_ERROR = 0x0A,
-	PT_RESERVED_1 = 0x0B,
-	PT_RESERVED_2 = 0x0C,
-	PT_RESERVED_3 = 0x0D,
+		PT_RESERVED_1 = 0x0B,
+		PT_RESERVED_2 = 0x0C,
+		PT_RESERVED_3 = 0x0D,
 	/* Debug only command to get debug features */
 		PT_GET_DBG_FEATURES = 0xE2,
 	/* Debug only command to set debug features */
@@ -420,13 +424,15 @@ enum identify_dimm_subop {
  */
 enum get_sec_info_subop {
 	SUBOP_GET_SEC_STATE = 0x00, /* Returns the DIMM security state */
-		SUBOP_GET_SAN_STATE = 0x01 /* Returns the DIMM sanitize status */
+	SUBOP_GET_SAN_STATE = 0x01 /* Returns the DIMM sanitize status */
 };
 
 /*
  * Defines the Sub-Opcodes for PT_SET_SEC_INFO
  */
 enum set_sec_info_subop {
+	/* Performs sanitize operation by writing entire PM with 0 pattern */
+		SUBOP_OVERWRITE_DIMM = 0x01,
 	/* Changes the security administrator passphrase */
 		SUBOP_SET_PASS = 0xF1,
 	/* Disables the current password on a drive*/
@@ -444,12 +450,12 @@ enum set_sec_info_subop {
  */
 enum get_set_feat_subop {
 	SUBOP_ALARM_THRESHOLDS = 0x01, /* TODO Get Alarm Thresholds. */
-		SUBOP_POLICY_POW_MGMT = 0x02, /* TODO Power management & throttling. */
+	SUBOP_POLICY_POW_MGMT = 0x02, /* TODO Power management & throttling. */
 	/* TODO Action policy to extend DIMM life. */
-		SUBOP_POLICY_DIE_SPARING = 0x03,
+	SUBOP_POLICY_DIE_SPARING = 0x03,
 	SUBOP_POLICY_ADDRESS_RANGE_SCRUB = 0x04,
 	SUBOP_DDRT_ALERTS = 0x05, /*Alerts to notify user*/
-		SUBOP_OPT_CONFIG_DATA_POLICY = 0x06,
+	SUBOP_OPT_CONFIG_DATA_POLICY = 0x06,
 };
 
 /*
@@ -459,14 +465,14 @@ enum get_set_feat_subop {
 enum get_set_admin_feat_subop {
 	SUBOP_SYSTEM_TIME = 0x00, /* TODO Get/Set System Time */
 	/* Get/Set Platform Config Data (PCD) */
-		SUBOP_PLATFORM_DATA_INFO = 0x01,
+	SUBOP_PLATFORM_DATA_INFO = 0x01,
 	/* Set/Get DIMM Partition Config */
-		SUBOP_DIMM_PARTITION_INFO = 0x02,
+	SUBOP_DIMM_PARTITION_INFO = 0x02,
 	/* Get/Set log level of FW */
-		SUBOP_FW_DBG_LOG_LEVEL = 0x03,
+	SUBOP_FW_DBG_LOG_LEVEL = 0x03,
 	SUBOP_PERSISTENT_PARTITION = 0x04, /* Get/Set info about persistent partition */
-		SUBOP_DDRT_IO_INIT_INFO = 0x06, /* Get/Set DDRT Initialization info */
-		SUBOP_FW_LOAD_FLAG = 0x07, /* Get/Set the FW Load Flag value */
+	SUBOP_DDRT_IO_INIT_INFO = 0x06, /* Get/Set DDRT Initialization info */
+	SUBOP_FW_LOAD_FLAG = 0x07, /* Get/Set the FW Load Flag value */
 };
 
 /*
@@ -474,7 +480,7 @@ enum get_set_admin_feat_subop {
  */
 enum get_set_dbg_feat_subop {
 	SUBOP_CSR = 0x00, /* TODO */
-		SUBOP_ERR_POLICY = 0x01,
+	SUBOP_ERR_POLICY = 0x01,
 	SUBOP_THERMAL_POLICY = 0x02,
 	SUBOP_MEDIA_TRAIN_DATA = 0x03,
 };
@@ -494,12 +500,12 @@ enum inject_error_subop {
  */
 enum get_log_subop {
 	/* Retrieves various SMART & Health information. */
-		SUBOP_SMART_HEALTH = 0x00,
+	SUBOP_SMART_HEALTH = 0x00,
 	SUBOP_FW_IMAGE_INFO = 0x01, /* Retrieves firmware image information. */
-		SUBOP_FW_DBG_LOG = 0x02, /* TODO Retrieves the binary firmware log. */
-		SUBOP_MEM_INFO = 0x03, /* TODO*/
-	/* TODO Status of any pending long operations. */
-		SUBOP_LONG_OPERATION_STAT = 0x04,
+	SUBOP_FW_DBG_LOG = 0x02, /* TODO Retrieves the binary firmware log. */
+	SUBOP_MEM_INFO = 0x03, /* TODO*/
+	/* Status of any pending long operations. */
+	SUBOP_LONG_OPERATION_STATUS = 0x04,
 	SUBOP_ERROR_LOG = 0x05, /* Retrieves firmware error log */
 };
 
@@ -509,7 +515,7 @@ enum get_log_subop {
 enum update_fw_subop {
 	SUBOP_UPDATE_FW = 0x00, /* Update the running FW */
 	/* Force the execution of a newly updated FW image. */
-		SUBOP_EXECUTE_FW = 0x01
+	SUBOP_EXECUTE_FW = 0x01
 };
 
 /*

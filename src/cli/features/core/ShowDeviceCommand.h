@@ -146,6 +146,7 @@ private:
 	static std::string convertInterfaceFormatCode(const NVM_UINT16 ifc);
 	static std::string getJedecStringForInterfaceFormatCode(const NVM_UINT16 ifc);
 	static std::string convertArsStatus(device_ars_status status);
+	static std::string convertSanitizeStatus(device_sanitize_status status);
 
 	static std::string getActionRequiredEvents(core::device::Device &device);
 

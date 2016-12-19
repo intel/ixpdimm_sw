@@ -690,7 +690,8 @@ int add_dimm_to_pool(struct nvm_pool *p_pool, NVM_NFIT_DEVICE_HANDLE handle)
 	if (!found)
 	{
 		enum device_ars_status ars_status;
-		rc = get_ars_status(handle, &ars_status);
+		enum device_sanitize_status sanitize_status;
+		rc = get_long_status(handle, &ars_status, &sanitize_status);
 		if (rc == NVM_SUCCESS)
 		{
 			if (ars_status == DEVICE_ARS_STATUS_INPROGRESS)

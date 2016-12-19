@@ -173,6 +173,12 @@ enum device_ars_status Device::getArsStatus()
 	return getDetails().status.ars_status;
 }
 
+enum device_sanitize_status Device::getSanitizeStatus()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	return getDetails().status.sanitize_status;
+}
+
 NVM_UINT32 Device::getChannelId()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);

@@ -421,7 +421,7 @@ int fw_get_status_for_long_op(NVM_NFIT_DEVICE_HANDLE dimm_handle,
 	memset(&fw_cmd, 0, sizeof (fw_cmd));
 	fw_cmd.device_handle = dimm_handle.handle;
 	fw_cmd.opcode = PT_GET_LOG;
-	fw_cmd.sub_opcode = SUBOP_LONG_OPERATION_STAT;
+	fw_cmd.sub_opcode = SUBOP_LONG_OPERATION_STATUS;
 	fw_cmd.output_payload_size = sizeof (*payload);
 	fw_cmd.output_payload = payload;
 	rc = ioctl_passthrough_cmd(&fw_cmd);

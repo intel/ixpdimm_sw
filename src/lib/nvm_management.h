@@ -188,6 +188,17 @@ enum device_ars_status
 };
 
 /*
+ * The sanitize operation status for the AEP DIMM
+ */
+enum device_sanitize_status
+{
+	DEVICE_SANITIZE_STATUS_UNKNOWN,
+	DEVICE_SANITIZE_STATUS_NOTSTARTED,
+	DEVICE_SANITIZE_STATUS_INPROGRESS,
+	DEVICE_SANITIZE_STATUS_COMPLETE
+};
+
+/*
  * The type of sensor.
  * @internal
  * These enums are also used as indexes in the device.sensors array.  It is important to
@@ -623,6 +634,7 @@ struct device_status
 	NVM_BOOL sku_violation; // The AEP DIMM configuration is unsupported due to a license issue.
 	NVM_BOOL viral_state; // Current viral status of AEP DIMM.
 	enum device_ars_status ars_status; // Address range scrub operation status for the AEP DIMM
+	enum device_sanitize_status sanitize_status; // Sanitize operation status for the AEP DIMM
 	NVM_UINT32 new_error_count; // Count of new fw errors from the AEP DIMM
 	NVM_UINT64 newest_error_log_timestamp; // Timestamp of the newest log entry in the fw error log
 };
