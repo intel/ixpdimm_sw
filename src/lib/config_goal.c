@@ -682,6 +682,7 @@ int nvm_create_config_goal(const NVM_UID device_uid,
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
+	struct nvm_capabilities capabilities;
 	struct device_discovery discovery;
 
 	if (check_caller_permissions() != COMMON_SUCCESS)
@@ -692,55 +693,50 @@ int nvm_create_config_goal(const NVM_UID device_uid,
 	{
 		rc = NVM_ERR_BADDRIVER;
 	}
-	else
+	else if ((rc = nvm_get_nvm_capabilities(&capabilities)) != NVM_SUCCESS)
 	{
-		// Get system capabilities so we can validate
-		struct nvm_capabilities capabilities;
-		rc = nvm_get_nvm_capabilities(&capabilities);
-		if (rc == NVM_SUCCESS)
+		COMMON_LOG_ERROR_F("Unable to get capabilities, rc=%d", rc);
+	}
+	else if (!capabilities.nvm_features.modify_device_capacity)
+	{
+		COMMON_LOG_WARN("Modifying device capacity is not supported.");
+		rc = NVM_ERR_NOTSUPPORTED;
+	}
+	else if (device_uid == NULL)
+	{
+		COMMON_LOG_ERROR("Invalid parameter, device_uid is NULL");
+		rc = NVM_ERR_INVALIDPARAMETER;
+	}
+	else if (p_goal == NULL)
+	{
+		COMMON_LOG_ERROR("Invalid parameter, p_goal is NULL");
+		rc = NVM_ERR_INVALIDPARAMETER;
+	}
+	else if ((rc = exists_and_manageable(device_uid, &discovery, 1)) == NVM_SUCCESS)
+	{
+		// Check that no namespaces exist on this DIMM
+		if ((rc = dimm_has_namespaces_of_type(discovery.device_handle,
+				NAMESPACE_TYPE_UNKNOWN)) != 0)
 		{
-			if (!capabilities.nvm_features.modify_device_capacity)
+			if (rc > 0)
 			{
-				COMMON_LOG_WARN("Modifying device capacity is not supported.");
-				rc = NVM_ERR_NOTSUPPORTED;
+				rc = NVM_ERR_NAMESPACESEXIST;
 			}
-			else if (device_uid == NULL)
+		}
+		else if ((rc = validate_config_goal(p_goal, &capabilities, &discovery))
+				== NVM_SUCCESS)
+		{
+			rc = update_config_goal(&discovery, p_goal, &capabilities);
+			if (rc == NVM_SUCCESS)
 			{
-				COMMON_LOG_ERROR("Invalid parameter, device_uid is NULL");
-				rc = NVM_ERR_INVALIDPARAMETER;
-			}
-			else if (p_goal == NULL)
-			{
-				COMMON_LOG_ERROR("Invalid parameter, p_goal is NULL");
-				rc = NVM_ERR_INVALIDPARAMETER;
-			}
-			else if ((rc = exists_and_manageable(device_uid, &discovery, 1)) == NVM_SUCCESS)
-			{
-				// Check that no namespaces exist on this DIMM
-				if ((rc = dimm_has_namespaces_of_type(discovery.device_handle,
-						NAMESPACE_TYPE_UNKNOWN)) != 0)
-				{
-					if (rc > 0)
-					{
-						rc = NVM_ERR_NAMESPACESEXIST;
-					}
-				}
-				else if ((rc = validate_config_goal(p_goal, &capabilities, &discovery))
-						== NVM_SUCCESS)
-				{
-					rc = update_config_goal(&discovery, p_goal, &capabilities);
-					if (rc == NVM_SUCCESS)
-					{
-						// Log an event indicating we successfully applied the goal
-						NVM_EVENT_ARG uid_arg;
-						uid_to_event_arg(device_uid, uid_arg);
-						log_mgmt_event(EVENT_SEVERITY_INFO,
-								EVENT_CODE_MGMT_CONFIG_GOAL_CREATED,
-								device_uid,
-								0, // no action required
-								uid_arg, NULL, NULL);
-					}
-				}
+				// Log an event indicating we successfully applied the goal
+				NVM_EVENT_ARG uid_arg;
+				uid_to_event_arg(device_uid, uid_arg);
+				log_mgmt_event(EVENT_SEVERITY_INFO,
+						EVENT_CODE_MGMT_CONFIG_GOAL_CREATED,
+						device_uid,
+						0, // no action required
+						uid_arg, NULL, NULL);
 			}
 		}
 	}

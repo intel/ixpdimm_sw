@@ -159,133 +159,6 @@ void print_extension_tables(void *p_ext_table, NVM_SIZE total_length)
 	}
 }
 
-void print_pcd_output(struct config_output_table *p_output)
-{
-	print_config_data_table_header(p_output->header);
-	DEBUG_PCD("Config Output Table - Sequence Number: %u", p_output->sequence_number);
-	DEBUG_PCD("Config Output Table - Validation Status: %hhu",
-		p_output->validation_status);
-
-	if (p_output->header.length > sizeof (struct config_output_table))
-	{
-		print_extension_tables(&p_output->p_ext_tables,
-			(p_output->header.length - sizeof (struct config_output_table)));
-	}
-}
-
-/*
- * Write the data in the structure back to the specified database.
- */
-int check_config_output(struct platform_config_data *p_config)
-{
-	COMMON_LOG_ENTRY();
-	int rc = NVM_SUCCESS;
-
-	// config output table may not be present
-	if (p_config->config_output_size > 0)
-	{
-		// check the minimum size
-		if (p_config->config_output_size < sizeof (struct config_output_table))
-		{
-			COMMON_LOG_ERROR(
-					"Config output table size is too small");
-			rc = NVM_ERR_BADDEVICECONFIG;
-		}
-		else
-		{
-			struct config_output_table *p_output = (struct config_output_table *)
-					((NVM_UINT8 *)p_config + p_config->config_output_offset);
-
-			print_pcd_output(p_output);
-			// check the checksum
-			if (!verify_checksum((NVM_UINT8*)p_config + p_config->config_output_offset,
-					p_output->header.length))
-			{
-				COMMON_LOG_ERROR("Config output checksum failed");
-				rc = NVM_ERR_BADDEVICECONFIG;
-			}
-			else
-			{
-				// check the table signature
-				if (strncmp(CONFIG_OUTPUT_TABLE_SIGNATURE,
-						p_output->header.signature, SIGNATURE_LEN) != 0)
-				{
-					COMMON_LOG_ERROR_F(
-							"Config output header signature mismatch. Expected: %s, actual: %s",
-							CONFIG_OUTPUT_TABLE_SIGNATURE, p_output->header.signature);
-					rc = NVM_ERR_BADDEVICECONFIG;
-				}
-			}
-		}
-	}
-	COMMON_LOG_EXIT_RETURN_I(rc);
-	return rc;
-}
-
-void print_pcd_input(struct config_input_table *p_input)
-{
-	print_config_data_table_header(p_input->header);
-	DEBUG_PCD("Config Input Table - Sequence_number: %u", p_input->sequence_number);
-
-	if (p_input->header.length > sizeof (struct config_input_table))
-	{
-		print_extension_tables(&p_input->p_ext_tables,
-			(p_input->header.length - sizeof (struct config_input_table)));
-	}
-}
-
-int check_config_input(struct platform_config_data *p_config)
-{
-	COMMON_LOG_ENTRY();
-	int rc = NVM_SUCCESS;
-
-	// current config table may not be present
-	if (p_config->config_input_size > 0)
-	{
-		// check the minimum size
-		if (p_config->config_input_size < sizeof (struct config_input_table))
-		{
-			COMMON_LOG_ERROR(
-					"Config input table size is too small");
-			rc = NVM_ERR_BADDEVICECONFIG;
-		}
-		else
-		{
-			struct config_input_table *p_input = (struct config_input_table *)
-					((NVM_UINT8 *)p_config + p_config->config_input_offset);
-
-			print_pcd_input(p_input);
-			// length should match header
-			if (p_config->config_input_size != p_input->header.length)
-			{
-				COMMON_LOG_ERROR(
-					"Config input length doesn't match header length");
-				rc = NVM_ERR_BADDEVICECONFIG;
-			}
-			else if (!verify_checksum((NVM_UINT8*)p_config + p_config->config_input_offset,
-				p_input->header.length))
-			{
-				COMMON_LOG_ERROR("Config input table checksum failed");
-				rc = NVM_ERR_BADDEVICECONFIG;
-			}
-			else
-			{
-				// check the table signature
-				if (strncmp(CONFIG_INPUT_TABLE_SIGNATURE,
-						p_input->header.signature, SIGNATURE_LEN) != 0)
-				{
-					COMMON_LOG_ERROR_F(
-							"Config input header signature mismatch. Expected: %s, actual: %s",
-							CONFIG_INPUT_TABLE_SIGNATURE, p_input->header.signature);
-					rc = NVM_ERR_BADDEVICECONFIG;
-				}
-			}
-		}
-	}
-	COMMON_LOG_EXIT_RETURN_I(rc);
-	return rc;
-}
-
 void print_pcd_current(struct current_config_table *p_current)
 {
 	print_config_data_table_header(p_current->header);
@@ -302,50 +175,30 @@ void print_pcd_current(struct current_config_table *p_current)
 	}
 }
 
-int check_current_config(struct platform_config_data *p_config)
+void print_pcd_output(struct config_output_table *p_output)
 {
-	COMMON_LOG_ENTRY();
-	int rc = NVM_SUCCESS;
+	print_config_data_table_header(p_output->header);
+	DEBUG_PCD("Config Output Table - Sequence Number: %u", p_output->sequence_number);
+	DEBUG_PCD("Config Output Table - Validation Status: %hhu",
+		p_output->validation_status);
 
-	// current config table may not be present
-	if (p_config->current_config_size > 0)
+	if (p_output->header.length > sizeof (struct config_output_table))
 	{
-		// check the minimum size
-		if (p_config->current_config_size < sizeof (struct current_config_table))
-		{
-			COMMON_LOG_ERROR(
-					"Current config table size is too small");
-			rc = NVM_ERR_BADDEVICECONFIG;
-		}
-		else
-		{
-			struct current_config_table *p_current = (struct current_config_table *)
-					((NVM_UINT8 *)p_config + p_config->current_config_offset);
-
-			print_pcd_current(p_current);
-			// check the checksum
-			if (!verify_checksum((NVM_UINT8*)p_config + p_config->current_config_offset,
-					p_current->header.length))
-			{
-				COMMON_LOG_ERROR("Current config checksum failed");
-				rc = NVM_ERR_BADDEVICECONFIG;
-			}
-			else
-			{
-				// check the table signature
-				if (strncmp(CURRENT_CONFIG_TABLE_SIGNATURE,
-						p_current->header.signature, SIGNATURE_LEN) != 0)
-				{
-					COMMON_LOG_ERROR_F(
-							"Current config signature mismatch. Expected: %s, actual: %s",
-							CURRENT_CONFIG_TABLE_SIGNATURE, p_current->header.signature);
-					rc = NVM_ERR_BADDEVICECONFIG;
-				}
-			}
-		}
+		print_extension_tables(&p_output->p_ext_tables,
+			(p_output->header.length - sizeof (struct config_output_table)));
 	}
-	COMMON_LOG_EXIT_RETURN_I(rc);
-	return rc;
+}
+
+void print_pcd_input(struct config_input_table *p_input)
+{
+	print_config_data_table_header(p_input->header);
+	DEBUG_PCD("Config Input Table - Sequence_number: %u", p_input->sequence_number);
+
+	if (p_input->header.length > sizeof (struct config_input_table))
+	{
+		print_extension_tables(&p_input->p_ext_tables,
+			(p_input->header.length - sizeof (struct config_input_table)));
+	}
 }
 
 void print_pcd_header(struct platform_config_data *p_config)
@@ -359,42 +212,74 @@ void print_pcd_header(struct platform_config_data *p_config)
 	DEBUG_PCD("PCD Header - Output Config Offset: %u", p_config->config_output_offset);
 }
 
+/*
+ * Write the data in the structure back to the specified database.
+ */
+int check_config_output(struct platform_config_data *p_config)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	// If it's not present, it's not invalid
+	if (p_config->config_output_size > 0)
+	{
+		struct config_output_table *p_output = cast_config_output(p_config);
+		if (!is_config_output_table_valid(p_output, p_config->config_output_size))
+		{
+			return NVM_ERR_BADDEVICECONFIG;
+		}
+	}
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+int check_config_input(struct platform_config_data *p_config)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	// If it's not present, it's not invalid
+	if (p_config->config_input_size > 0)
+	{
+		struct config_input_table *p_input = cast_config_input(p_config);
+		if (!is_config_input_table_valid(p_input, p_config->config_input_size))
+		{
+			rc = NVM_ERR_BADDEVICECONFIG;
+		}
+	}
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+int check_current_config(struct platform_config_data *p_config)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	// If it's not present, it's not invalid
+	if (p_config->current_config_size > 0)
+	{
+		struct current_config_table *p_current = cast_current_config(p_config);
+		if (!is_current_config_table_valid(p_current, p_config->current_config_size))
+		{
+			rc = NVM_ERR_BADDEVICECONFIG;
+		}
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
 int check_platform_config_header(struct platform_config_data *p_config)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
 
-	// check overall table length is at least as big as the header
-	if (p_config->header.length < sizeof (struct platform_config_data))
+	if (!is_platform_config_header_valid(p_config))
 	{
-		COMMON_LOG_ERROR(
-				"Platform config data size is too small");
 		rc = NVM_ERR_BADDEVICECONFIG;
 	}
-	else
-	{
-		print_pcd_header(p_config);
-		// TODO: US8549 BIOS Currently does not implement this checksum correctly.
-		generate_checksum((NVM_UINT8*)p_config, p_config->header.length, CHECKSUM_OFFSET);
-		// check overall table checksum
-		if (!verify_checksum((NVM_UINT8*)p_config, p_config->header.length))
-		{
-			COMMON_LOG_ERROR("Platform config header checksum failed");
-			rc = NVM_ERR_BADDEVICECONFIG;
-		}
-		else
-		{
-			// check the table signature
-			if (strncmp(PLATFORM_CONFIG_TABLE_SIGNATURE,
-					p_config->header.signature, SIGNATURE_LEN) != 0)
-			{
-				COMMON_LOG_ERROR_F(
-						"Platform config header signature mismatch. Expected: %s, actual: %s",
-						PLATFORM_CONFIG_TABLE_SIGNATURE, p_config->header.signature);
-				rc = NVM_ERR_BADDEVICECONFIG;
-			}
-		}
-	}
+
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
@@ -425,6 +310,253 @@ int check_platform_config(struct platform_config_data *p_config)
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
+}
+
+NVM_BOOL is_config_data_table_header_valid(struct config_data_table_header *p_header,
+		NVM_UINT32 table_length, const char *table_signature)
+{
+	COMMON_LOG_ENTRY();
+	NVM_BOOL is_valid = 0;
+
+	if (p_header->length != table_length)
+	{
+		COMMON_LOG_ERROR_F("PCD Table '%.4s' - Header length %u does not match expected "
+				"length %u", table_signature, p_header->length, table_length);
+	}
+	else if (!verify_checksum((NVM_UINT8*)p_header, table_length))
+	{
+		COMMON_LOG_ERROR_F("PCD Table '%.4s' - Header checksum invalid", table_signature);
+	}
+	else if (strncmp(p_header->signature, table_signature, SIGNATURE_LEN) != 0)
+	{
+		COMMON_LOG_ERROR_F("Signature mismatch. Expected: '%.4s', actual: '%.4s'",
+				table_signature, p_header->signature);
+	}
+	else
+	{
+		is_valid = 1;
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(is_valid);
+	return is_valid;
+}
+
+NVM_BOOL are_pcd_header_table_size_and_offset_valid(const NVM_UINT32 table_size,
+		const NVM_UINT32 table_offset)
+{
+	COMMON_LOG_ENTRY();
+
+	NVM_BOOL is_empty = (table_size == 0 && table_offset == 0);
+	NVM_BOOL is_offset_valid = (table_size > 0 &&
+			table_offset >= sizeof (struct platform_config_data));
+	NVM_BOOL is_valid = is_empty || is_offset_valid;
+
+	COMMON_LOG_EXIT_RETURN_I(is_valid);
+	return is_valid;
+}
+
+NVM_BOOL is_pcd_header_current_config_info_valid(struct platform_config_data *p_config)
+{
+	COMMON_LOG_ENTRY();
+	NVM_BOOL is_valid = are_pcd_header_table_size_and_offset_valid(
+			p_config->current_config_size,
+			p_config->current_config_offset);
+
+	COMMON_LOG_EXIT_RETURN_I(is_valid);
+	return is_valid;
+}
+
+NVM_BOOL is_pcd_header_config_input_info_valid(struct platform_config_data *p_config)
+{
+	COMMON_LOG_ENTRY();
+	NVM_BOOL is_valid = are_pcd_header_table_size_and_offset_valid(
+			p_config->config_input_size,
+			p_config->config_input_offset);
+
+	COMMON_LOG_EXIT_RETURN_I(is_valid);
+	return is_valid;
+}
+
+NVM_BOOL is_pcd_header_config_output_info_valid(struct platform_config_data *p_config)
+{
+	COMMON_LOG_ENTRY();
+	NVM_BOOL is_valid = are_pcd_header_table_size_and_offset_valid(
+			p_config->config_output_size,
+			p_config->config_output_offset);
+
+	COMMON_LOG_EXIT_RETURN_I(is_valid);
+	return is_valid;
+}
+
+NVM_BOOL is_pcd_header_table_info_valid(struct platform_config_data *p_config)
+{
+	COMMON_LOG_ENTRY();
+	NVM_BOOL is_valid = 0;
+
+	if (is_pcd_header_current_config_info_valid(p_config) &&
+			is_pcd_header_config_input_info_valid(p_config) &&
+			is_pcd_header_config_output_info_valid(p_config))
+	{
+		is_valid = 1;
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(is_valid);
+	return is_valid;
+}
+
+NVM_BOOL is_platform_config_header_valid(struct platform_config_data *p_config)
+{
+	COMMON_LOG_ENTRY();
+	NVM_BOOL is_valid = 0;
+
+	if (p_config)
+	{
+		if (p_config->header.length < sizeof (struct platform_config_data))
+		{
+			COMMON_LOG_ERROR_F("PCD header length %u is too short",
+					p_config->header.length, sizeof (struct platform_config_data));
+		}
+		else
+		{
+			print_pcd_header(p_config);
+
+			if (is_config_data_table_header_valid(&(p_config->header),
+					p_config->header.length, PLATFORM_CONFIG_TABLE_SIGNATURE) &&
+				is_pcd_header_table_info_valid(p_config))
+			{
+				is_valid = 1;
+			}
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR("Platform config data is NULL");
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(is_valid);
+	return is_valid;
+}
+
+NVM_BOOL is_current_config_table_valid(struct current_config_table *p_current_config,
+		const NVM_UINT32 table_length)
+{
+	COMMON_LOG_ENTRY();
+	NVM_BOOL is_valid = 0;
+
+	if (p_current_config && table_length >= sizeof (struct current_config_table))
+	{
+		print_pcd_current(p_current_config);
+
+		if (is_config_data_table_header_valid(&(p_current_config->header),
+				table_length, CURRENT_CONFIG_TABLE_SIGNATURE))
+		{
+			is_valid = is_extension_table_list_valid(p_current_config->p_ext_tables,
+					table_length - sizeof (struct current_config_table));
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Current config table bad or doesn't exist, "
+				"addr=%p, length=%u",
+				p_current_config, table_length);
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(is_valid);
+	return is_valid;
+}
+
+NVM_BOOL is_config_input_table_valid(struct config_input_table *p_config_input,
+		const NVM_UINT32 table_length)
+{
+	COMMON_LOG_ENTRY();
+	NVM_BOOL is_valid = 0;
+
+	if (p_config_input && table_length >= sizeof (struct config_input_table))
+	{
+		print_pcd_input(p_config_input);
+
+		if (is_config_data_table_header_valid(&(p_config_input->header),
+				table_length, CONFIG_INPUT_TABLE_SIGNATURE))
+		{
+			is_valid = is_extension_table_list_valid(p_config_input->p_ext_tables,
+					table_length - sizeof (struct config_input_table));
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Config input table is bad or doesn't exist, "
+				"addr=%p, length=%u",
+				p_config_input, table_length);
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(is_valid);
+	return is_valid;
+}
+
+NVM_BOOL is_config_output_table_valid(struct config_output_table *p_config_output,
+		const NVM_UINT32 table_length)
+{
+	COMMON_LOG_ENTRY();
+	NVM_BOOL is_valid = 0;
+
+	if (p_config_output && table_length >= sizeof (struct config_output_table))
+	{
+		print_pcd_output(p_config_output);
+
+		if (is_config_data_table_header_valid(&(p_config_output->header),
+				table_length, CONFIG_OUTPUT_TABLE_SIGNATURE))
+		{
+			is_valid = is_extension_table_list_valid(p_config_output->p_ext_tables,
+					table_length - sizeof (struct config_output_table));
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Config output table is bad or doesn't exist, "
+				"addr=%p, length=%u",
+				p_config_output, table_length);
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(is_valid);
+	return is_valid;
+}
+
+NVM_BOOL is_extension_table_list_valid(NVM_UINT8 *p_ext_table_start,
+		const NVM_UINT32 ext_table_length)
+{
+	COMMON_LOG_ENTRY();
+	NVM_BOOL is_valid = 1;
+
+	// An empty list is always fine
+	if (ext_table_length > 0)
+	{
+		NVM_UINT32 offset = 0;
+		while (offset < ext_table_length)
+		{
+			struct extension_table_header *p_table =
+					(struct extension_table_header *)(p_ext_table_start + offset);
+			if (p_table->length < sizeof (struct extension_table_header))
+			{
+				COMMON_LOG_ERROR_F("Length %hu too short on extension table type %hu",
+						p_table->length, p_table->type);
+				is_valid = 0;
+				break;
+			}
+			else if ((offset + p_table->length) > ext_table_length)
+			{
+				COMMON_LOG_ERROR_F("Extension table type %hu would overrun - "
+						"length = %hu, offset = %u, total length = %u",
+						p_table->type, p_table->length, offset, ext_table_length);
+				is_valid = 0;
+				break;
+			}
+
+			offset += p_table->length;
+		}
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(is_valid);
+	return is_valid;
 }
 
 /*

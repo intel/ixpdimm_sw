@@ -444,6 +444,16 @@ int set_dimm_platform_config(const NVM_NFIT_DEVICE_HANDLE handle,
  * Verify the data is good
  */
 int check_platform_config(struct platform_config_data *p_config);
+NVM_BOOL is_platform_config_header_valid(struct platform_config_data *p_config);
+NVM_BOOL is_current_config_table_valid(struct current_config_table *p_current_config,
+		const NVM_UINT32 table_length);
+NVM_BOOL is_config_input_table_valid(struct config_input_table *p_config_input,
+		const NVM_UINT32 table_length);
+NVM_BOOL is_config_output_table_valid(struct config_output_table *p_config_output,
+		const NVM_UINT32 table_length);
+NVM_BOOL is_extension_table_list_valid(NVM_UINT8 *p_ext_table_start,
+		const NVM_UINT32 ext_table_length);
+
 /*
  * Returns the sequence number from the config output table.
  * I.e. last BIOS response.
