@@ -1640,6 +1640,65 @@ int validate_namespace_block_count(const NVM_UID namespace_uid,
 	return rc;
 }
 
+int dimms_are_locked(const struct namespace_details *details, NVM_BOOL *p_locked)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	if (details->type == NAMESPACE_TYPE_APP_DIRECT)
+	{
+		NVM_UINT32 interleaveset_id = details->creation_id.interleave_setid;
+		NVM_UID pool_uid;
+		s_strcpy(pool_uid, details->pool_uid, NVM_MAX_UID_LEN);
+		struct interleave_set interleave;
+		memset(&interleave, 0, sizeof (struct interleave_set));
+
+		struct pool *p_pool = (struct pool *)calloc(1, sizeof (struct pool));
+		if (p_pool)
+		{
+			if ((rc = nvm_get_pool(pool_uid, p_pool)) == NVM_SUCCESS)
+			{
+				for (int i = 0; i < p_pool->ilset_count; i++)
+				{
+					if (p_pool->ilsets[i].set_index == interleaveset_id)
+					{
+						memmove(&interleave, &(p_pool->ilsets[i]),
+								sizeof (struct interleave_set));
+						if (!interleave_set_has_locked_dimms(&interleave))
+						{
+							*p_locked = 0;
+						}
+						break;
+					}
+				}
+			}
+			free(p_pool);
+		}
+		else
+		{
+			rc = NVM_ERR_NOMEMORY;
+		}
+	}
+	else if (details->type == NAMESPACE_TYPE_STORAGE)
+	{
+		NVM_UID device_uid;
+		s_strcpy(device_uid, details->creation_id.device_uid, NVM_MAX_UID_LEN);
+
+		struct device_discovery discovery;
+
+		if ((rc = lookup_dev_uid(device_uid, &discovery)) == NVM_SUCCESS)
+		{
+			if (discovery.lock_state != LOCK_STATE_LOCKED)
+			{
+				*p_locked = 0;
+			}
+		}
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
 /*
  * Modify the namespace specified.
  */
@@ -1676,29 +1735,43 @@ int nvm_modify_namespace_name(const NVM_UID namespace_uid,
 		struct namespace_details details;
 		memset(&details, 0, sizeof (details));
 		rc = nvm_get_namespace_details(namespace_uid, &details);
+
 		if (rc == NVM_SUCCESS)
 		{
-			rc = modify_namespace_name(namespace_uid, name);
+			NVM_BOOL locked = 1;
+			rc = dimms_are_locked(&details, &locked);
+
 			if (rc == NVM_SUCCESS)
 			{
-				// the namespace context is no longer valid
-				invalidate_namespaces();
+				if (locked)
+				{
+					rc = NVM_ERR_BADSECURITYSTATE;
+				}
+				else
+				{
+					rc = modify_namespace_name(namespace_uid, name);
+					if (rc == NVM_SUCCESS)
+					{
+						// the namespace context is no longer valid
+						invalidate_namespaces();
 
-				// Log an event indicating we successfully modified a namespace
-				NVM_EVENT_ARG ns_uid_arg;
-				uid_to_event_arg(namespace_uid, ns_uid_arg);
-				NVM_EVENT_ARG ns_name_arg;
-				s_strncpy(ns_name_arg, NVM_EVENT_ARG_LEN,
-						name, NVM_NAMESPACE_NAME_LEN);
-				log_mgmt_event(EVENT_SEVERITY_INFO,
-						EVENT_CODE_MGMT_NAMESPACE_MODIFIED,
-						namespace_uid,
-						0, // no action required
-						ns_name_arg, ns_uid_arg, NULL);
-			}
-			else
-			{
-				COMMON_LOG_ERROR("Could not modify namespace name");
+						// Log an event indicating we successfully modified a namespace
+						NVM_EVENT_ARG ns_uid_arg;
+						uid_to_event_arg(namespace_uid, ns_uid_arg);
+						NVM_EVENT_ARG ns_name_arg;
+						s_strncpy(ns_name_arg, NVM_EVENT_ARG_LEN,
+								name, NVM_NAMESPACE_NAME_LEN);
+						log_mgmt_event(EVENT_SEVERITY_INFO,
+								EVENT_CODE_MGMT_NAMESPACE_MODIFIED,
+								namespace_uid,
+								0, // no action required
+								ns_name_arg, ns_uid_arg, NULL);
+					}
+					else
+					{
+						COMMON_LOG_ERROR("Could not modify namespace name");
+					}
+				}
 			}
 		}
 	}
@@ -1742,7 +1815,7 @@ int nvm_modify_namespace_block_count(const NVM_UID namespace_uid,
 		if (rc == NVM_SUCCESS)
 		{
 			if (details.block_count < block_count &&
-				(rc = IS_NVM_FEATURE_LICENSED(grow_namespace)) != NVM_SUCCESS)
+					(rc = IS_NVM_FEATURE_LICENSED(grow_namespace)) != NVM_SUCCESS)
 			{
 				COMMON_LOG_ERROR("Increasing namespace size not supported.");
 			}
@@ -1754,34 +1827,50 @@ int nvm_modify_namespace_block_count(const NVM_UID namespace_uid,
 			else
 			{
 				struct pool *p_pool = (struct pool *)calloc(1, sizeof (struct pool));
-				if ((p_pool) && ((rc = nvm_get_pool(details.pool_uid, p_pool)) == NVM_SUCCESS) &&
+				if ((p_pool) &&
+						((rc = nvm_get_pool(details.pool_uid, p_pool)) == NVM_SUCCESS) &&
 						((rc = translate_pool_health_to_nvm_error(p_pool)) == NVM_SUCCESS))
 				{
 					rc = validate_namespace_block_count(namespace_uid,
 							&block_count, allow_adjustment);
 					if (rc == NVM_SUCCESS)
 					{
-						rc = modify_namespace_block_count(namespace_uid, block_count);
-						if (rc == NVM_SUCCESS)
-						{
-							// the namespace context is no longer valid
-							invalidate_namespaces();
+						NVM_BOOL locked = 1;
+						rc = dimms_are_locked(&details, &locked);
 
-							// Log an event indicating we successfully modified a namespace
-							NVM_EVENT_ARG ns_uid_arg;
-							uid_to_event_arg(namespace_uid, ns_uid_arg);
-							NVM_EVENT_ARG ns_name_arg;
-							s_strncpy(ns_name_arg, NVM_EVENT_ARG_LEN,
-									details.discovery.friendly_name, NVM_NAMESPACE_NAME_LEN);
-							log_mgmt_event(EVENT_SEVERITY_INFO,
-									EVENT_CODE_MGMT_NAMESPACE_MODIFIED,
-									namespace_uid,
-									0, // no action required
-									ns_name_arg, ns_uid_arg, NULL);
+						if (rc == NVM_SUCCESS && !locked)
+						{
+							rc = modify_namespace_block_count(namespace_uid, block_count);
+							if (rc == NVM_SUCCESS)
+							{
+								// the namespace context is no longer valid
+								invalidate_namespaces();
+
+								// Log an event indicating we successfully modified a namespace
+								NVM_EVENT_ARG ns_uid_arg;
+								uid_to_event_arg(namespace_uid, ns_uid_arg);
+								NVM_EVENT_ARG ns_name_arg;
+								s_strncpy(ns_name_arg, NVM_EVENT_ARG_LEN,
+										details.discovery.friendly_name,
+										NVM_NAMESPACE_NAME_LEN);
+								log_mgmt_event(EVENT_SEVERITY_INFO,
+										EVENT_CODE_MGMT_NAMESPACE_MODIFIED,
+										namespace_uid,
+										0, // no action required
+										ns_name_arg, ns_uid_arg, NULL);
+							}
+							else
+							{
+								COMMON_LOG_ERROR("Could not modify namespace block count");
+							}
+						}
+						else if (rc == NVM_SUCCESS && locked)
+						{
+							rc = NVM_ERR_BADSECURITYSTATE;
 						}
 						else
 						{
-							COMMON_LOG_ERROR("Could not modify namespace block count");
+							COMMON_LOG_ERROR("Could not verify lock state of dimms.");
 						}
 					}
 					else
@@ -1844,27 +1933,40 @@ int nvm_modify_namespace_enabled(const NVM_UID namespace_uid,
 			rc = nvm_get_namespace_details(namespace_uid, &details);
 			if (rc == NVM_SUCCESS && details.enabled != enabled)
 			{
-				rc = modify_namespace_enabled(namespace_uid, enabled);
+				NVM_BOOL locked = 1;
+				rc = dimms_are_locked(&details, &locked);
+
 				if (rc == NVM_SUCCESS)
 				{
-					// the namespace context is no longer valid
-					invalidate_namespaces();
+					if (locked)
+					{
+						rc = NVM_ERR_BADSECURITYSTATE;
+					}
+					else
+					{
+						rc = modify_namespace_enabled(namespace_uid, enabled);
+						if (rc == NVM_SUCCESS)
+						{
+							// the namespace context is no longer valid
+							invalidate_namespaces();
 
-					// Log an event indicating we successfully modified a namespace
-					NVM_EVENT_ARG ns_uid_arg;
-					uid_to_event_arg(namespace_uid, ns_uid_arg);
-					NVM_EVENT_ARG ns_name_arg;
-					s_strncpy(ns_name_arg, NVM_EVENT_ARG_LEN,
-							details.discovery.friendly_name, NVM_NAMESPACE_NAME_LEN);
-					log_mgmt_event(EVENT_SEVERITY_INFO,
-							EVENT_CODE_MGMT_NAMESPACE_MODIFIED,
-							namespace_uid,
-							0, // no action required
-							ns_name_arg, ns_uid_arg, NULL);
-				}
-				else
-				{
-					COMMON_LOG_ERROR("Could not modify namespace block count");
+							// Log an event indicating we successfully modified a namespace
+							NVM_EVENT_ARG ns_uid_arg;
+							uid_to_event_arg(namespace_uid, ns_uid_arg);
+							NVM_EVENT_ARG ns_name_arg;
+							s_strncpy(ns_name_arg, NVM_EVENT_ARG_LEN,
+									details.discovery.friendly_name, NVM_NAMESPACE_NAME_LEN);
+							log_mgmt_event(EVENT_SEVERITY_INFO,
+									EVENT_CODE_MGMT_NAMESPACE_MODIFIED,
+									namespace_uid,
+									0, // no action required
+									ns_name_arg, ns_uid_arg, NULL);
+						}
+						else
+						{
+							COMMON_LOG_ERROR("Could not modify namespace block count");
+						}
+					}
 				}
 			}
 		}
