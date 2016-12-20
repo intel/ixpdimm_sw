@@ -100,12 +100,13 @@
 
 #define DEV_FW_BSR_WDB_FLUSHED (0x01 << 23)
 
+#define DEV_FW_BSR_MD_DISABLED (0x01 << 24)
+
 #define DEV_FW_BSR_ASSERTION ((long long) 0x01 << 32)
 
 #define DEV_FW_BSR_STALLED ((long long) 0x01 << 33)
 
 #define DEV_FW_BSR_AIT_DRAM_READY ((long long) 0x01 << 34)
-
 
 #define DSM_VENDOR_ERROR_SHIFT (0)
 #define DSM_MAILBOX_ERROR_SHIFT (16)

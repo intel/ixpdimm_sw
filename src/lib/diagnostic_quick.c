@@ -44,16 +44,19 @@
 #include "capabilities.h"
 
 // firmware checkpoint codes and boot status register
+#define	MAJOR_CHECKPOINT(bits)	((bits) & 0xff) // bits 7:0
+#define	MINOR_CHECKPOINT(bits)	((bits >> 8) & 0xff) // bits 15:8
 #define	MEDIA_READY_STATUS(bits)	((bits >> 16) & 0b11) // bits 17:16
 #define	DDRT_IO_INIT_STATUS(bits)	((bits >> 18) & 0b11) // bits 19:18
 #define	MAILBOX_INTERFACE_READY_STATUS(bits)	((bits >> 20) & 0b01) // bit 20
-#define	MINOR_CHECKPOINT(bits)	((bits >> 8) & 0xff) // bits 15:8
-#define	MAJOR_CHECKPOINT(bits)	((bits) & 0xff) // bits 7:0
+#define	MEDIA_DISABLED_STATUS(bits)	((bits >> 24) & 0b01) // bit 24
 #define	BSR_H_ASSERTION(bits)	((bits >> 32) & 0b1) // bit 32
 #define	BSR_H_MI_STALLED(bits)	((bits >> 33) & 0b1) // bit 33
-#define	BSR_H_AIT_DRAM_READY(bits)	(bits & DEV_FW_BSR_AIT_DRAM_READY)
+#define	BSR_H_AIT_DRAM_READY(bits)	(bits & DEV_FW_BSR_AIT_DRAM_READY) // bit 34
+
 #define	STATUS_NOT_READY	0b00
 #define	STATUS_ERROR	0b10
+
 enum major_status_code
 {
 	NO_POST_CODE = 0x00,
@@ -490,6 +493,30 @@ int get_bsr(const NVM_NFIT_DEVICE_HANDLE device_handle, unsigned long long *p_bs
 	return rc;
 }
 
+void check_media_disabled_status(const struct diagnostic *p_diagnostic,
+		const unsigned long long bsr,
+		const NVM_UID device_uid,
+		NVM_UINT32 *p_results)
+{
+	COMMON_LOG_ENTRY();
+
+	if (MEDIA_DISABLED_STATUS(bsr))
+	{
+		store_event_by_parts(EVENT_TYPE_DIAG_QUICK,
+				EVENT_SEVERITY_CRITICAL,
+				EVENT_CODE_DIAG_QUICK_MEDIA_DISABLED,
+				device_uid,
+				1,
+				device_uid,
+				NULL,
+				NULL,
+				DIAGNOSTIC_RESULT_FAILED);
+		(*p_results)++;
+	}
+
+	COMMON_LOG_EXIT();
+}
+
 void check_media_ready_status(const struct diagnostic *p_diagnostic,
 		const unsigned long long bsr,
 		const NVM_UID device_uid,
@@ -747,6 +774,7 @@ int check_dimm_bsr(const NVM_UID device_uid,
 	}
 	else
 	{
+		check_media_disabled_status(p_diagnostic, bsr, device_uid, p_results);
 		check_media_ready_status(p_diagnostic, bsr, device_uid, p_results);
 		check_ddrt_init_complete_status(p_diagnostic, bsr, device_uid, p_results);
 		check_mailbox_ready_status(p_diagnostic, bsr, device_uid, p_results);
