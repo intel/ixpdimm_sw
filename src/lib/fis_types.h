@@ -104,6 +104,8 @@
 
 #define DEV_FW_BSR_STALLED ((long long) 0x01 << 33)
 
+#define DEV_FW_BSR_AIT_DRAM_READY ((long long) 0x01 << 34)
+
 
 #define DSM_VENDOR_ERROR_SHIFT (0)
 #define DSM_MAILBOX_ERROR_SHIFT (16)

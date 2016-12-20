@@ -51,6 +51,7 @@
 #define	MAJOR_CHECKPOINT(bits)	((bits) & 0xff) // bits 7:0
 #define	BSR_H_ASSERTION(bits)	((bits >> 32) & 0b1) // bit 32
 #define	BSR_H_MI_STALLED(bits)	((bits >> 33) & 0b1) // bit 33
+#define	BSR_H_AIT_DRAM_READY(bits)	(bits & DEV_FW_BSR_AIT_DRAM_READY)
 #define	STATUS_NOT_READY	0b00
 #define	STATUS_ERROR	0b10
 enum major_status_code
@@ -699,6 +700,29 @@ int check_dimm_viral_state(const NVM_UID device_uid,
 	return rc;
 }
 
+void check_ait_dram_not_ready(const unsigned long long bsr,
+		const NVM_UID device_uid,
+		NVM_UINT32 *p_results)
+{
+	COMMON_LOG_ENTRY();
+
+	if (!BSR_H_AIT_DRAM_READY(bsr))
+	{
+		store_event_by_parts(EVENT_TYPE_DIAG_QUICK,
+				EVENT_SEVERITY_CRITICAL,
+				EVENT_CODE_DIAG_QUICK_AIT_DRAM_NOT_READY,
+				device_uid,
+				1,
+				device_uid,
+				NULL,
+				NULL,
+				DIAGNOSTIC_RESULT_FAILED);
+		(*p_results)++;
+	}
+
+	COMMON_LOG_EXIT();
+}
+
 int check_dimm_bsr(const NVM_UID device_uid,
 		const NVM_NFIT_DEVICE_HANDLE device_handle,
 		const struct diagnostic *p_diagnostic, NVM_UINT32 *p_results)
@@ -729,6 +753,7 @@ int check_dimm_bsr(const NVM_UID device_uid,
 		check_fw_boot_status(p_diagnostic, bsr, device_uid, p_results);
 		check_fw_assert(p_diagnostic, bsr, device_uid, p_results);
 		check_fw_stalled(p_diagnostic, bsr, device_uid, p_results);
+		check_ait_dram_not_ready(bsr, device_uid, p_results);
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
