@@ -377,42 +377,84 @@ std::string wbem::mem_config::PoolViewFactory::getEncryptionEnabled(const struct
 	return result;
 }
 
-wbem::framework::STR_LIST wbem::mem_config::PoolViewFactory::getPersistentMemoryType(
-		const struct pool *pPool)
+bool wbem::mem_config::PoolViewFactory::PoolHasStorage(const struct pool *pPool)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	framework::STR_LIST pmType;
+	bool result = false;
 	if (pPool->type == POOL_TYPE_PERSISTENT)
 	{
 		for (NVM_UINT16 i = 0; i < pPool->dimm_count; i++)
 		{
 			if (pPool->storage_capacities[i] > 0)
 			{
-				pmType.push_back(wbem::mem_config::PMTYPE_STORAGE);
+				result = true;
+			}
+		}
+	}
+
+	return result;
+}
+
+bool wbem::mem_config::PoolViewFactory::PoolHasAppDirectInterleaved(const struct pool *pPool)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	bool result = false;
+
+	if ((pPool->type == POOL_TYPE_PERSISTENT_MIRROR) ||
+			(pPool->type == POOL_TYPE_PERSISTENT))
+	{
+		for (NVM_UINT16 i = 0; i < pPool->ilset_count; i++)
+		{
+			if (pPool->ilsets[i].settings.ways != INTERLEAVE_WAYS_1)
+			{
+				result = true;
 				break;
 			}
 		}
 	}
-	if ((pPool->type == POOL_TYPE_PERSISTENT_MIRROR) ||
-			(pPool->type == POOL_TYPE_PERSISTENT))
+
+	return result;
+}
+
+bool wbem::mem_config::PoolViewFactory::PoolHasAppDirectByOne(const struct pool *pPool)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	bool result = false;
+
+	if (pPool->type == POOL_TYPE_PERSISTENT)
 	{
-		if (pPool->ilset_count > 0)
+		for (NVM_UINT16 i = 0; i < pPool->ilset_count; i++)
 		{
-			for (NVM_UINT16 i = 0; i < pPool->ilset_count; i++)
+			if (pPool->ilsets[i].settings.ways == INTERLEAVE_WAYS_1)
 			{
-				if (pPool->ilsets[i].settings.ways == INTERLEAVE_WAYS_1)
-				{
-					pmType.push_back(wbem::mem_config::PMTYPE_APPDIRECT_NOTINTERLEAVED);
-					break;
-				}
-				else
-				{
-					pmType.push_back(wbem::mem_config::PMTYPE_APPDIRECT);
-					break;
-				}
+				result = true;
+				break;
 			}
 		}
+	}
+
+	return result;
+}
+
+wbem::framework::STR_LIST wbem::mem_config::PoolViewFactory::getPersistentMemoryType(
+		const struct pool *pPool)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	framework::STR_LIST pmType;
+	if (PoolHasStorage(pPool))
+	{
+		pmType.push_back(wbem::mem_config::PMTYPE_STORAGE);
+	}
+
+	if (PoolHasAppDirectByOne(pPool))
+	{
+		pmType.push_back(wbem::mem_config::PMTYPE_APPDIRECT_NOTINTERLEAVED);
+	}
+
+	if (PoolHasAppDirectInterleaved(pPool))
+	{
+		pmType.push_back(wbem::mem_config::PMTYPE_APPDIRECT);
 	}
 
 	return pmType;

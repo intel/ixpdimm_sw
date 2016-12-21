@@ -111,6 +111,9 @@ namespace wbem
 			 * get list of underlying types of PM capacity in the pool
 			 */
 			static wbem::framework::STR_LIST getPersistentMemoryType(const struct pool *pPool);
+			static bool PoolHasStorage(const struct pool *pPool);
+			static bool PoolHasAppDirectInterleaved(const struct pool *pPool);
+			static bool PoolHasAppDirectByOne(const struct pool *pPool);
 
 		private:
 			std::vector<struct namespace_details> m_nsCache; // cache for namespace_details to avoid repeated library calls
