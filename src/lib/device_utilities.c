@@ -563,6 +563,13 @@ int get_partition_info(const NVM_NFIT_DEVICE_HANDLE device_handle,
 	partition_cmd.output_payload_size = sizeof (struct pt_payload_get_dimm_partition_info);
 	partition_cmd.output_payload = p_pi;
 	rc = ioctl_passthrough_cmd(&partition_cmd);
+	if (rc == NVM_SUCCESS)
+	{
+		COMMON_LOG_DEBUG_F(
+		"Partition info for handle [%d] - Pmem Capacity:[%llu]B, "
+		"Volatile memory capacity:[%llu]B, Raw capacity:[%llu]B",
+		p_pi->pmem_capacity, p_pi->volatile_capacity, p_pi->raw_capacity);
+	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;

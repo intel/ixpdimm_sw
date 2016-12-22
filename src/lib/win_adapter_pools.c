@@ -285,8 +285,7 @@ int get_dimm_storage_capacities(const NVM_UINT32 count, struct nvm_storage_capac
 					else
 					{
 						p_capacities[i].total_storage_capacity =
-							USABLE_CAPACITY_BYTES(pi.pmem_capacity * BYTES_PER_4K_CHUNK) -
-								mirrored_capacity;
+							(pi.pmem_capacity * BYTES_PER_4K_CHUNK) - mirrored_capacity;
 						p_capacities[i].storage_only_capacity =
 							p_capacities[i].total_storage_capacity - ilset_capacity;
 
