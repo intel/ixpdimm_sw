@@ -219,6 +219,7 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::deleteConfigGoal(
 cli::framework::ResultBase *cli::nvmcli::NamespaceFeature::dumpConfig(
 		const framework::ParsedCommand &parsedCommand)
 {
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	framework::ResultBase *pResult = NULL;
 
 	// Fetch the destination file path
@@ -278,6 +279,7 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::dumpConfigNvmExceptio
  */
 cli::framework::ResultBase *cli::nvmcli::NamespaceFeature::loadGoal(const framework::ParsedCommand &parsedCommand)
 {
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	framework::ResultBase *pResult = NULL;
 
 	std::string capUnits;

@@ -311,6 +311,7 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::showConfigGoal(
 cli::framework::ResultBase *cli::nvmcli::NamespaceFeature::createGoal(
 	const cli::framework::ParsedCommand &parsedCommand)
 {
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	cli::framework::ResultBase *pResult;
 	try
 	{
@@ -330,12 +331,13 @@ cli::framework::ResultBase *cli::nvmcli::NamespaceFeature::createGoal(
 		pResult = CoreExceptionToResult(e);
 	}
 
-
 	return pResult;
 }
 
 cli::framework::ResultBase *cli::nvmcli::NamespaceFeature::showPools(cli::framework::ParsedCommand const &parsedCommand)
 {
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
 	framework::ResultBase *pResult = NULL;
 	wbem::mem_config::PoolViewFactory poolViewFactory;
 	wbem::framework::attribute_names_t attributes;

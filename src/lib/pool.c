@@ -997,6 +997,12 @@ int nvm_load_config(const NVM_UID device_uid,
 									rc = nvm_create_config_goal(discovery.uid, &goal);
 								}
 							} // end dimm big enough
+							else
+							{
+								COMMON_LOG_ERROR_F("The requested goal DIMM size in file %s is too"
+									" big to fit on the DIMM in the system", path);
+								rc = NVM_ERR_BADDEVICECONFIG;
+							}
 						} // end get discovery
 						break;
 					} // end match dimm/socket
