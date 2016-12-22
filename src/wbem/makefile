@@ -114,7 +114,7 @@ LIBS = 	-L$(OBJECT_DIR)/common -lcommon \
 		-l$(CIM_FRAMEWORK_LIB_NAME)
 
 ifdef BUILD_WINDOWS
-	LIBS += -lws2_32 -lmswsock -lShlwapi
+	LIBS += -lws2_32 -lmswsock -ladvapi32 -lversion -lGdi32 -lShlwapi
 	# these are needed to build the WMI COM stuff
 	LIBS += -lkernel32 -luser32 -lgdi32 -lwinspool \
 		-lcomdlg32 -ladvapi32 -lshell32 -lole32 -loleaut32 -luuid \

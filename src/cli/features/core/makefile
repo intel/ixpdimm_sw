@@ -88,7 +88,7 @@ LIBS = 	-L$(OBJECT_DIR)/common -lcommon \
 			-lcrypto 
 
 ifdef BUILD_WINDOWS
-	LIBS += -lws2_32 -lmswsock -lShlwapi \
+	LIBS += -lws2_32 -lmswsock -ladvapi32 -lversion -lGdi32 -lShlwapi \
 			-L$(BUILD_DIR) -llibintl \
 			-L$(EXTERN_LIB_DIR)/openssl/openssl 
 else
