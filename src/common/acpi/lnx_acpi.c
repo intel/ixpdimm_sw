@@ -101,10 +101,18 @@ int get_acpi_table(
 				}
 				else
 				{
-					ssize_t tbl_bytes_read = read(fd, p_table->p_ext_tables,
-						total_table_size - header_size);
+					size_t requested_bytes = total_table_size - header_size;
+					unsigned char *p_buff = p_table->p_ext_tables;
+					ssize_t total_read = 0;
 
-					if (tbl_bytes_read + header_size != total_table_size)
+					while (total_read < requested_bytes)
+					{
+						ssize_t bytes_read = read(fd, p_buff, requested_bytes);
+						p_buff += bytes_read;
+						total_read += bytes_read;
+					}
+
+					if (total_read != requested_bytes)
 					{
 						COMMON_LOG_ERROR_F("Failed to read ACPI table '%.4s'", signature);
 						rc = COMMON_ERR_FAILED;
