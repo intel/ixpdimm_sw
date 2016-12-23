@@ -81,6 +81,10 @@ void core::memory_allocator::LayoutStepMemory::layoutMemoryModeCapacity(
 		NVM_UINT64 remainingBytes = bytesToAllocate - bytesAllocated;
 		layoutMaximumSymmetricalBytesOnDimms(remainingBytes, dimmsToLayout, layout);
 
+		if (!newBytesWereAllocated(layout, bytesAllocated))
+		{
+			break;
+		}
 		bytesAllocated = getBytesAllocatedFromLayout(layout);
 	}
 }
@@ -117,6 +121,16 @@ void core::memory_allocator::LayoutStepMemory::layoutMaximumSymmetricalBytesOnDi
 	}
 }
 
+bool core::memory_allocator::LayoutStepMemory::newBytesWereAllocated(
+		const MemoryAllocationLayout& updatedLayout,
+		const NVM_UINT64 previousBytesAllocated)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	NVM_UINT64 updatedBytesAllocated = getBytesAllocatedFromLayout(updatedLayout);
+	return (previousBytesAllocated != updatedBytesAllocated);
+}
+
 void core::memory_allocator::LayoutStepMemory::alignPartitionBoundary(
 		const MemoryAllocationRequest& request, MemoryAllocationLayout& layout)
 {
@@ -137,15 +151,17 @@ NVM_UINT64 core::memory_allocator::LayoutStepMemory::getAlignedMemoryGoalSize(co
 
 	NVM_UINT64 memoryBytes = configGoalSizeToBytes(goal.memory_size);
 	NVM_UINT64 persistentGiB = B_TO_GiB(dimm.capacityBytes - memoryBytes);
+	NVM_UINT64 dimmGiB = B_TO_GiB(dimm.capacityBytes);
 
-	NVM_UINT64 newPersistentGiB = getAlignedPersistentPartitionCapacityGiB(persistentGiB);
+	NVM_UINT64 newPersistentGiB = getAlignedPersistentPartitionCapacityGiB(persistentGiB, dimmGiB);
 	NVM_UINT64 newVolatilePartitionBytes = dimm.capacityBytes - GiB_TO_B(newPersistentGiB);
 
 	return bytesToConfigGoalSize(newVolatilePartitionBytes);
 }
 
 NVM_UINT64 core::memory_allocator::LayoutStepMemory::getAlignedPersistentPartitionCapacityGiB(
-		const NVM_UINT64 persistentPartitionGiB)
+		const NVM_UINT64 persistentPartitionGiB,
+		const NVM_UINT64 totalDimmGiB)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
@@ -155,7 +171,7 @@ NVM_UINT64 core::memory_allocator::LayoutStepMemory::getAlignedPersistentPartiti
 	NVM_UINT64 roundedDownDiff = persistentPartitionGiB - roundedDownPersistentGiB;
 
 	NVM_UINT64 alignedPersistentPartitionGiB = 0;
-	if (roundedUpDiff <= roundedDownDiff)
+	if ((roundedUpPersistentGiB <= totalDimmGiB) && (roundedUpDiff <= roundedDownDiff))
 	{
 		alignedPersistentPartitionGiB = roundedUpPersistentGiB;
 	}
@@ -166,3 +182,5 @@ NVM_UINT64 core::memory_allocator::LayoutStepMemory::getAlignedPersistentPartiti
 
 	return alignedPersistentPartitionGiB;
 }
+
+

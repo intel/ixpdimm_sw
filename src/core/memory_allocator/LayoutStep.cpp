@@ -113,11 +113,6 @@ NVM_UINT64 core::memory_allocator::LayoutStep::getLargestPerDimmSymmetricalBytes
 		bytes = evenlyDividedBytes;
 	}
 
-	// has to be 1 GiB aligned
-	if (bytes < BYTES_PER_GIB)
-	{
-		throw core::NvmExceptionBadRequestSize();
-	}
 	bytes = round_down(bytes, BYTES_PER_GIB);
 	return bytes;
 }

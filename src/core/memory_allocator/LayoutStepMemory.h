@@ -59,7 +59,10 @@ class NVM_API LayoutStepMemory : public LayoutStep
 		void alignPartitionBoundary(const MemoryAllocationRequest& request,
 				MemoryAllocationLayout &layout);
 		NVM_UINT64 getAlignedMemoryGoalSize(const Dimm &dimm, const config_goal &goal);
-		NVM_UINT64 getAlignedPersistentPartitionCapacityGiB(const NVM_UINT64 persistentPartitionGiB);
+		NVM_UINT64 getAlignedPersistentPartitionCapacityGiB(const NVM_UINT64 persistentPartitionGiB,
+				const NVM_UINT64 totalDimmGiB);
+		bool newBytesWereAllocated(const MemoryAllocationLayout& updatedLayout,
+				const NVM_UINT64 previousBytesAllocated);
 };
 
 } /* namespace memory_allocator */
