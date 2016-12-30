@@ -702,6 +702,16 @@ int read_dimm_config(FILE *p_file, struct config_goal *p_goal,
 			const char *p_end;
 			char *pLine = line;
 
+			// removing carriage return to make Windows created
+			// file Unix compatible
+			for (int i = 0, j = 0; pLine[i] != '\0'; i++)
+			{
+				if (pLine[i] != '\r')
+				{
+					pLine[j++] = pLine[i];
+				}
+			}
+
 			str = x_strtok(&pLine, delim);
 			if (s_strtous(str, strlen(str),
 					&p_end, p_socket) != strlen(str))
