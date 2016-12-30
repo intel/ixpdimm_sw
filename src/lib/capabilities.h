@@ -114,6 +114,8 @@ int system_in_sku_violation(const struct nvm_capabilities *p_capabilities,
 
 int get_devices_is_supported();
 
+NVM_BOOL sku_value_is_different(NVM_UINT32 dimm_sku1, NVM_UINT32 dimm_sku2);
+
 #ifdef __cplusplus
 }
 #endif

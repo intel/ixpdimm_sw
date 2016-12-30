@@ -39,6 +39,9 @@
 #include "nvm_context.h"
 #include "system.h"
 
+#define	COMPARE_BIT(dimm_sku1, dimm_sku2, bit)	\
+((dimm_sku1 & (1 << bit)) ^ (dimm_sku2 & (1 << bit)))
+
 /*
  * Capabilities are determined based on the combination of
  * driver, platform and NVM-DIMM SKU support. This functions
@@ -449,6 +452,37 @@ void dimm_sku_capabilities_to_nvm_features(
 }
 
 /*
+ * Helper function to determine mixedsku
+ */
+NVM_BOOL sku_value_is_different(NVM_UINT32 dimm_sku1, NVM_UINT32 dimm_sku2)
+{
+	NVM_BOOL mixed_sku = 0;
+
+	if (COMPARE_BIT(dimm_sku1, dimm_sku2, 0))
+	{
+		mixed_sku = 1;
+	}
+	else if (COMPARE_BIT(dimm_sku1, dimm_sku2, 1))
+	{
+		mixed_sku = 1;
+	}
+	else if (COMPARE_BIT(dimm_sku1, dimm_sku2, 2))
+	{
+		mixed_sku = 1;
+	}
+	else if (COMPARE_BIT(dimm_sku1, dimm_sku2, 3))
+	{
+		mixed_sku = 1;
+	}
+	else if (COMPARE_BIT(dimm_sku1, dimm_sku2, 17))
+	{
+		mixed_sku = 1;
+	}
+
+	return mixed_sku;
+}
+
+/*
  * Retrieve the NVM-DIMM SKU capabilities and update the nvm_capabilities structure.
  */
 int apply_dimm_sku_capabilities(struct nvm_capabilities *p_capabilities)
@@ -477,7 +511,7 @@ int apply_dimm_sku_capabilities(struct nvm_capabilities *p_capabilities)
 					dimm_sku = devices[i].dimm_sku;
 					sku_set = 1;
 				}
-				else if (devices[i].dimm_sku != dimm_sku)
+				else if (sku_value_is_different(dimm_sku, devices[i].dimm_sku))
 				{
 					p_capabilities->sku_capabilities.mixed_sku = 1;
 				}
