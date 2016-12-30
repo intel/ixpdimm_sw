@@ -131,23 +131,17 @@ int inject_temperature_error(NVM_UINT32 device_handle, NVM_UINT64 temperature,
 	return rc;
 }
 
-/*
- * Helper function to validate setting poison on a particular DPA
- * Poison is only possible for addresses in the PM range but not while the PM region is locked
- */
-int validate_poison_injection(struct device_discovery *p_discovery, NVM_UINT64 dpa)
+int verify_dimm_lock_state(enum lock_state  lock_state)
 {
 	int rc = NVM_SUCCESS;
 	COMMON_LOG_ENTRY();
 
-	// check if dimm is locked
-	if (p_discovery->lock_state == LOCK_STATE_LOCKED)
+	if (lock_state == LOCK_STATE_LOCKED)
 	{
 		rc = NVM_ERR_BADSECURITYSTATE;
 		COMMON_LOG_ERROR("Setting poison is not possible when dimm is locked.");
 	}
 
-	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
 
@@ -162,10 +156,7 @@ int inject_poison_error(struct device_discovery *p_discovery, NVM_UINT64 dpa, NV
 
 	if (set_poison)
 	{
-		if ((rc = validate_poison_injection(p_discovery, dpa)) != NVM_SUCCESS)
-		{
-			COMMON_LOG_ERROR("Invalid parameter, DPA is invalid");
-		}
+		rc = verify_dimm_lock_state(p_discovery->lock_state);
 	}
 
 	if (rc == NVM_SUCCESS)

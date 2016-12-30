@@ -42,8 +42,6 @@ namespace cli
 namespace nvmcli
 {
 
-static const std::string SETPOISON_INVALIDPARAMETER_MSG = N_TR("The specified address is not in the persistent memory region.");
-
 static const std::string SETTEMPERATURE_MSG_PREFIX = N_TR("Set temperature on " NVM_DIMM_NAME " %s");
 static const std::string SETPOISON_MSG_PREFIX = N_TR("Poison address %llu on " NVM_DIMM_NAME " %s");
 static const std::string SETDIESPARING_MSG_PREFIX = N_TR("Trigger die sparing on " NVM_DIMM_NAME " %s");
@@ -165,12 +163,6 @@ private:
 
 	cli::framework::ResultBase* verifySWTriggerPropertyValue(
 		const std::string& propValue, std::string &propertyName);
-
-	/*
-	 * Error injection specific exception handling
-	 */
-	framework::ErrorResult *ieNvmExceptionToResult(wbem::framework::Exception &e,
-				std::string prefix = "");
 
 	void inject_error(std::string &prefixMsg,
 			std::vector<std::string>::iterator iUid,

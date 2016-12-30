@@ -239,7 +239,7 @@ cli::framework::ResultBase* cli::nvmcli::ValidationFeature::injectError(
 				}
 				catch (wbem::framework::Exception &e)
 				{
-					framework::ErrorResult *pError = ieNvmExceptionToResult(e);
+					framework::ErrorResult *pError = NvmExceptionToResult(e, "");
 					if (pError)
 					{
 						pListResult->insert(prefixMsg + pError->outputText());
@@ -459,39 +459,6 @@ cli::framework::ResultBase* cli::nvmcli::ValidationFeature::getInjectErrorAttrib
 		pResult = verifyPropertyCount(parsedCommand);
 	}
 
-	return pResult;
-}
-
-cli::framework::ErrorResult* cli::nvmcli::ValidationFeature::ieNvmExceptionToResult(
-		wbem::framework::Exception& e, std::string prefix)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	wbem::exception::NvmExceptionLibError * pLibError =
-			dynamic_cast<wbem::exception::NvmExceptionLibError *>(&e);
-	framework::ErrorResult *pResult = NULL;
-
-	if (pLibError)
-	{
-		switch (pLibError->getLibError())
-		{
-			case NVM_ERR_INVALIDPARAMETER:
-			{
-				char errbuff[NVM_ERROR_LEN];
-				s_snprintf(errbuff, NVM_ERROR_LEN,
-						TRS(SETPOISON_INVALIDPARAMETER_MSG), 
-						m_poison, m_dimmUid.c_str());
-				pResult = new framework::ErrorResult(framework::ResultBase::ERRORCODE_UNKNOWN,
-						errbuff);
-				break;
-			}
-			default: 
-			{
-				pResult = NvmExceptionToResult(e, prefix);
-				break;
-			}		
-		} // end switch
-	}
-	
 	return pResult;
 }
 
