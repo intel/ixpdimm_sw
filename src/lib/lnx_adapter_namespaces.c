@@ -333,6 +333,72 @@ struct ndctl_namespace *get_ndctl_namespace_from_guid(struct ndctl_ctx *p_ctx,
 }
 
 /*
+ * Helper function to populate the enabled field
+ */
+int get_enable_namespace(struct ndctl_namespace *p_namespace)
+{
+	int enabled = 0;
+
+	struct ndctl_btt *p_btt = ndctl_namespace_get_btt(p_namespace);
+	struct ndctl_pfn *p_pfn = ndctl_namespace_get_pfn(p_namespace);
+
+	if (p_pfn)
+	{
+		enabled = ndctl_pfn_is_enabled(p_pfn);
+	}
+	else if (p_btt)
+	{
+		enabled = ndctl_btt_is_enabled(p_btt);
+	}
+	else
+	{
+		enabled = ndctl_namespace_is_enabled(p_namespace);
+	}
+
+	return enabled;
+}
+
+/*
+ * Helper function to get the memory page allocation information
+ */
+enum namespace_memory_page_allocation get_mem_page_allocation(struct ndctl_namespace *p_namespace)
+{
+	struct ndctl_pfn *p_pfn = ndctl_namespace_get_pfn(p_namespace);
+
+	enum namespace_memory_page_allocation memory_page_allocation =
+		NAMESPACE_MEMORY_PAGE_ALLOCATION_UNKNOWN;
+
+	if (p_pfn)
+	{
+		enum ndctl_pfn_loc loc = ndctl_pfn_get_location(p_pfn);
+
+		if (loc == NDCTL_PFN_LOC_PMEM)
+		{
+			memory_page_allocation =
+					NAMESPACE_MEMORY_PAGE_ALLOCATION_APP_DIRECT;
+		}
+		else if (loc == NDCTL_PFN_LOC_RAM)
+		{
+			memory_page_allocation =
+					NAMESPACE_MEMORY_PAGE_ALLOCATION_DRAM;
+		}
+		else
+		{
+			memory_page_allocation =
+					NAMESPACE_MEMORY_PAGE_ALLOCATION_NONE;
+		}
+
+	}
+	else
+	{
+		memory_page_allocation =
+				NAMESPACE_MEMORY_PAGE_ALLOCATION_NONE;
+	}
+
+	return memory_page_allocation;
+}
+
+/*
  * Get the details for a specific namespace
  */
 int get_namespace_details(
@@ -403,55 +469,16 @@ int get_namespace_details(
 				ndctl_namespace_get_alt_name(p_namespace),
 				NVM_NAMESPACE_NAME_LEN);
 
-			struct ndctl_btt *p_btt = ndctl_namespace_get_btt(p_namespace);
-			if (!p_btt)
-			{
-				p_details->enabled = ndctl_namespace_is_enabled(p_namespace) ?
+			p_details->enabled = get_enable_namespace(p_namespace) ?
 					NAMESPACE_ENABLE_STATE_ENABLED :
 					NAMESPACE_ENABLE_STATE_DISABLED;
-			}
-			else
+
+			if (ndctl_namespace_get_btt(p_namespace))
 			{
 				p_details->btt = 1;
-				p_details->enabled = ndctl_btt_is_enabled(p_btt) ?
-					NAMESPACE_ENABLE_STATE_ENABLED :
-					NAMESPACE_ENABLE_STATE_DISABLED;
 			}
 
-			p_details->memory_page_allocation = NAMESPACE_MEMORY_PAGE_ALLOCATION_UNKNOWN;
-			struct ndctl_pfn *p_pfn = ndctl_namespace_get_pfn(p_namespace);
-			if (p_pfn)
-			{
-				enum ndctl_pfn_loc loc = ndctl_pfn_get_location(p_pfn);
-				if (loc == NDCTL_PFN_LOC_PMEM)
-				{
-					p_details->memory_page_allocation =
-							NAMESPACE_MEMORY_PAGE_ALLOCATION_APP_DIRECT;
-				}
-				else if (loc == NDCTL_PFN_LOC_RAM)
-				{
-					p_details->memory_page_allocation =
-							NAMESPACE_MEMORY_PAGE_ALLOCATION_DRAM;
-				}
-				else
-				{
-					p_details->memory_page_allocation =
-							NAMESPACE_MEMORY_PAGE_ALLOCATION_NONE;
-				}
-
-				p_details->enabled = ndctl_pfn_is_enabled(p_pfn) ?
-						NAMESPACE_ENABLE_STATE_ENABLED :
-						NAMESPACE_ENABLE_STATE_DISABLED;
-			}
-			else
-			{
-				p_details->memory_page_allocation =
-						NAMESPACE_MEMORY_PAGE_ALLOCATION_NONE;
-				p_details->enabled = ndctl_namespace_is_enabled(p_namespace) ?
-						NAMESPACE_ENABLE_STATE_ENABLED :
-						NAMESPACE_ENABLE_STATE_DISABLED;
-			}
-
+			p_details->memory_page_allocation = get_mem_page_allocation(p_namespace);
 			p_details->health = NAMESPACE_HEALTH_NORMAL;
 
 			p_details->block_count =
