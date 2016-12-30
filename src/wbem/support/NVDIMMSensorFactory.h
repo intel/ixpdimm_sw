@@ -87,7 +87,7 @@ public:
 	static const int SENSORTYPE_CONTROLLER_TEMPERATURE; //!< Device controller temperature in degrees Celsius
 
 	static const int SENSOR_TEMP_MODIFIER = 10000;
-	static const int SENSOR_TEMP_MODIFIER_POWER = 4;
+	static const int SENSOR_TEMP_MODIFIER_POWER = -4;
 
 	NVDIMMSensorFactory() throw (framework::Exception);
 

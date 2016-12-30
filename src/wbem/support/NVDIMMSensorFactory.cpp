@@ -128,17 +128,17 @@ const cimSensorDescriptionsMap &getSensorDescriptionMap()
 		result[SENSOR_WEARLEVEL] = (cimSensorDescription) {"wear", NVDIMMSENSOR_ELEMENTPREFIX + "Wear", SENSOR_TYPE_OTHER, "WearLevel"};
 		result[SENSOR_POWERCYCLES] = (cimSensorDescription) {"pc", NVDIMMSENSOR_ELEMENTPREFIX + "Power Cycles", SENSOR_TYPE_OTHER, "PowerCycles"};
 		result[SENSOR_POWERONTIME] = (cimSensorDescription) {"poh", NVDIMMSENSOR_ELEMENTPREFIX + "Power-on", SENSOR_TYPE_OTHER, "PowerOnTime"};
-		result[SENSOR_UPTIME] = (cimSensorDescription) {"ut", NVDIMMSENSOR_ELEMENTPREFIX + "Up", SENSOR_TYPE_OTHER, "UpTime"};
+		result[SENSOR_UPTIME] = (cimSensorDescription) {"upt", NVDIMMSENSOR_ELEMENTPREFIX + "Up", SENSOR_TYPE_OTHER, "UpTime"};
 		result[SENSOR_UNSAFESHUTDOWNS] =(cimSensorDescription) {"us", NVDIMMSENSOR_ELEMENTPREFIX + "Unsafe Shutdowns", SENSOR_TYPE_OTHER, "UnsafeShutdowns"};
 		result[SENSOR_FWERRORLOGCOUNT] = (cimSensorDescription) {"error", NVDIMMSENSOR_ELEMENTPREFIX + "FW Error Log Count", SENSOR_TYPE_OTHER, "FWError"};
 		result[SENSOR_POWERLIMITED] = (cimSensorDescription) {"pl", NVDIMMSENSOR_ELEMENTPREFIX + "Power Limited", SENSOR_TYPE_OTHER, "PowerLimited"};
 		result[SENSOR_MEDIAERRORS_UNCORRECTABLE] = (cimSensorDescription) {"meuc", NVDIMMSENSOR_ELEMENTPREFIX + "Media Errors Uncorrectable", SENSOR_TYPE_OTHER, "MediaErrorsUncorrectable"};
-		result[SENSOR_MEDIAERRORS_CORRECTED] = (cimSensorDescription) {"mece", NVDIMMSENSOR_ELEMENTPREFIX + "Media Errors Corrected", SENSOR_TYPE_OTHER, "MediaErrorsCorrected"};
-		result[SENSOR_MEDIAERRORS_ERASURECODED] = (cimSensorDescription) {"meecc", NVDIMMSENSOR_ELEMENTPREFIX + "Media Errors Erasure Coded", SENSOR_TYPE_OTHER, "MediaErrorsErasureCoded"};
-		result[SENSOR_WRITECOUNT_MAXIMUM] = (cimSensorDescription) {"wcmax", NVDIMMSENSOR_ELEMENTPREFIX + "Write Count Maximum", SENSOR_TYPE_OTHER, "WriteCountMaximum"};
-		result[SENSOR_WRITECOUNT_AVERAGE] = (cimSensorDescription) {"wcavg", NVDIMMSENSOR_ELEMENTPREFIX + "Write Count Average", SENSOR_TYPE_OTHER, "WriteCountAverage"};
+		result[SENSOR_MEDIAERRORS_CORRECTED] = (cimSensorDescription) {"mec", NVDIMMSENSOR_ELEMENTPREFIX + "Media Errors Corrected", SENSOR_TYPE_OTHER, "MediaErrorsCorrected"};
+		result[SENSOR_MEDIAERRORS_ERASURECODED] = (cimSensorDescription) {"meec", NVDIMMSENSOR_ELEMENTPREFIX + "Media Errors Erasure Coded", SENSOR_TYPE_OTHER, "MediaErrorsErasureCoded"};
+		result[SENSOR_WRITECOUNT_MAXIMUM] = (cimSensorDescription) {"wcmax", NVDIMMSENSOR_ELEMENTPREFIX + "Write Count Maximum", SENSOR_TYPE_OTHER, "WriteCountMax"};
+		result[SENSOR_WRITECOUNT_AVERAGE] = (cimSensorDescription) {"wcavg", NVDIMMSENSOR_ELEMENTPREFIX + "Write Count Average", SENSOR_TYPE_OTHER, "WriteCountAvg"};
 		result[SENSOR_MEDIAERRORS_HOST] = (cimSensorDescription) {"meh", NVDIMMSENSOR_ELEMENTPREFIX + "Media Errors Host", SENSOR_TYPE_OTHER, "MediaErrorsHost"};
-		result[SENSOR_MEDIAERRORS_NONHOST] = (cimSensorDescription) {"menh", NVDIMMSENSOR_ELEMENTPREFIX + "Media Errors Non-host", SENSOR_TYPE_OTHER, "MediaErrorsNonHost"};
+		result[SENSOR_MEDIAERRORS_NONHOST] = (cimSensorDescription) {"menh", NVDIMMSENSOR_ELEMENTPREFIX + "Media Errors Non-hosts", SENSOR_TYPE_OTHER, "MediaErrorsNonHost"};
 		result[SENSOR_CONTROLLER_TEMPERATURE] = (cimSensorDescription) {"controllertemp", NVDIMMSENSOR_ELEMENTPREFIX + "Controller Temp", SENSOR_TYPE_TEMP, ""};
 	}
 
