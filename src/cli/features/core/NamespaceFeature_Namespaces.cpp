@@ -828,7 +828,7 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseCreateNsOptimize
 		else
 		{
 			pResult = new framework::SyntaxErrorBadValueResult(
-					framework::TOKENTYPE_PROPERTY, CREATE_NS_PROP_ENABLED, value);
+					framework::TOKENTYPE_PROPERTY, CREATE_NS_PROP_OPTIMIZE, value);
 		}
 	}
 	else
