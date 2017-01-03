@@ -1063,8 +1063,7 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::showMemoryResources(
 	return cmd.execute(parsedCommand);
 }
 
-// Display Unknown when the driver doesn't report any recommended namespace blocksizes
-void cli::nvmcli::SystemFeature::displayUnknownIfDriverReportsNoBlockSizes(wbem::framework::Instance &wbemInstance)
+void cli::nvmcli::SystemFeature::generateBlockSizeAttributeValue(wbem::framework::Instance &wbemInstance)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
@@ -1074,10 +1073,29 @@ void cli::nvmcli::SystemFeature::displayUnknownIfDriverReportsNoBlockSizes(wbem:
 	{
 		std::string blockSizesStr;
 		wbem::framework::UINT32_LIST blockSizesList = blockSizesAttr.uint32ListValue();
+		// display Unknown when the driver doesn't report any recommended namespace blocksizes
 		if (blockSizesList.empty())
 		{
 			blockSizesStr = wbem::UNKNOWN;
 			wbem::framework::Attribute newBlockSizesAttr(blockSizesStr, false);
+			wbemInstance.setAttribute(wbem::BLOCKSIZES_KEY, newBlockSizesAttr);
+		}
+		else
+		{
+			// append units to block size output
+			std::stringstream bsStr;
+			for (size_t i = 0; i < blockSizesList.size(); i++)
+			{
+				if (i == blockSizesList.size() -1)
+				{
+					bsStr << blockSizesList[i] << " B";
+				}
+				else
+				{
+					bsStr << blockSizesList[i] << " B, ";
+				}
+			}
+			wbem::framework::Attribute newBlockSizesAttr(bsStr.str(), false);
 			wbemInstance.setAttribute(wbem::BLOCKSIZES_KEY, newBlockSizesAttr);
 		}
 	}
@@ -1138,7 +1156,7 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::showSystemCapabilities(
 						wbem::ALIGNMENT_KEY, capacityUnits);
 				cli::nvmcli::convertCapacityAttribute((*pInstances)[0],
 						wbem::MINNAMESPACESIZE_KEY, capacityUnits);
-				displayUnknownIfDriverReportsNoBlockSizes((*pInstances)[0]);
+				generateBlockSizeAttributeValue((*pInstances)[0]);
 				pResult = NvmInstanceToPropertyListResult((*pInstances)[0], attributes, "SystemCapabilities");
 			}
 		}

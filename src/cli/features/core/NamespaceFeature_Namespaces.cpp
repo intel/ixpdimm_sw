@@ -254,21 +254,20 @@ cli::framework::ResultBase *cli::nvmcli::NamespaceFeature::showNamespaces(
 void cli::nvmcli::NamespaceFeature::generateBlockSizeAttributeValue(wbem::framework::Instance &instance)
 {
 	wbem::framework::Attribute bsAttr;
-	NVM_UINT64 blockSizeInt = 0;
 
 	if (instance.getAttribute(wbem::BLOCKSIZE_KEY, bsAttr) ==
 		wbem::framework::SUCCESS)
 	{
-		blockSizeInt = bsAttr.uint64Value();
+		std::stringstream bsStr;
+		bsStr << bsAttr.asStr() << " B";
+		NVM_UINT64 blockSizeInt = bsAttr.uint64Value();
 		NVM_UINT64 alignedBlockSize = get_real_block_size(blockSizeInt);
 		if (blockSizeInt != alignedBlockSize)
 		{ // report the selected block size and the actual size used
-			std::stringstream bsStr;
-			bsStr << bsAttr.asStr();
 			bsStr << " (" << alignedBlockSize << " B aligned)";
-			instance.setAttribute(wbem::BLOCKSIZE_KEY,
-				wbem::framework::Attribute(bsStr.str(), false));
 		}
+		instance.setAttribute(wbem::BLOCKSIZE_KEY,
+			wbem::framework::Attribute(bsStr.str(), false));
 	}
 }
 
