@@ -951,7 +951,7 @@ int get_dimm_capacities(const NVM_NFIT_DEVICE_HANDLE device_handle,
 			p_capacities->reserved_capacity = RESERVED_CAPACITY_BYTES(p_capacities->capacity);
 			p_capacities->memory_capacity -= p_capacities->reserved_capacity;
 		}
-		p_capacities->app_direct_capacity = MULTIPLES_TO_BYTES(pi.pmem_capacity);
+		p_capacities->unconfigured_capacity = MULTIPLES_TO_BYTES(pi.pmem_capacity);
 
 		// get BIOS mapped capacities from the platform config data
 		struct platform_config_data *p_cfg_data = NULL;
