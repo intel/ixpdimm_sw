@@ -66,6 +66,7 @@ void calculate_uid_with_valid_manufacturing_info(NVM_UID uid,
 		NVM_UINT16 vendor_id, NVM_SERIAL_NUMBER serial_number,
 		NVM_UINT8 manufacturing_loc, NVM_UINT16 manufacturing_date);
 
+int lookup_dev_uids(const NVM_UID *uids, NVM_UINT16 uid_count, struct device_discovery *p_devs);
 int lookup_dev_uid(const NVM_UID dev_uid, struct device_discovery *p_dev);
 
 int lookup_dev_handle(const NVM_NFIT_DEVICE_HANDLE dev_handle, struct device_discovery *p_dev);

@@ -41,6 +41,10 @@ extern void uid_copy(const char *src, COMMON_UID dst);
 extern void guid_to_uid(const COMMON_GUID guid, COMMON_UID uid);
 
 extern int uid_cmp(const COMMON_UID uid1, const COMMON_UID uid2);
+extern int get_uid_index(const COMMON_UID uid, const COMMON_UID *uid_list,
+		const COMMON_UINT16 uid_list_len);
+extern COMMON_BOOL is_uid_in_list(const COMMON_UID uid, const COMMON_UID *uid_list,
+		const COMMON_UINT16 uid_list_len);
 
 #ifdef __cplusplus
 }

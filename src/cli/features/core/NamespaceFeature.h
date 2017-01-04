@@ -241,6 +241,7 @@ protected:
 		wbem::mem_config::MemoryAllocationSettingsInterleaveSizeExponent m_channelSize;
 		wbem::mem_config::MemoryAllocationSettingsInterleaveSizeExponent m_controllerSize;
 		bool m_byOne;
+		bool m_storageOnly;
 		bool m_forceOption;
 		std::string m_prefix;
 		COMMON_UINT16 m_memoryPageAllocation;

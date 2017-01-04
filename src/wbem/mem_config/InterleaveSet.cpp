@@ -246,6 +246,8 @@ NVM_UINT32 wbem::mem_config::InterleaveSet::getInterleaveSizeValue(
 	NVM_UINT32 result = 0;
 	switch (size)
 	{
+		case INTERLEAVE_SIZE_NONE:
+			break;
 		case INTERLEAVE_SIZE_64B:
 			result = 64;
 			break;

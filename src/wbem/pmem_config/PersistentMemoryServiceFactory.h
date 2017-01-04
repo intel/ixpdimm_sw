@@ -168,6 +168,7 @@ public:
 		enum mem_config::MemoryAllocationSettingsInterleaveSizeExponent interleaveChannelSize;
 		enum mem_config::MemoryAllocationSettingsInterleaveSizeExponent interleaveControllerSize;
 		bool byOne;
+		bool storageOnly;
 		NVM_UINT16 memoryPageAllocation;
 	} createNamespaceParams;
 
@@ -183,7 +184,7 @@ public:
 			const NVM_UINT16 encryption, const NVM_UINT16 eraseCapable,
 			const mem_config::MemoryAllocationSettingsInterleaveSizeExponent channelSize,
 			const mem_config::MemoryAllocationSettingsInterleaveSizeExponent controllerSize,
-			const bool byOne, const NVM_UINT16 memoryPageAllocation);
+			const bool byOne, const bool storageOnly, const NVM_UINT16 memoryPageAllocation);
 
 	/*!
 	 * Interface to the library API nvm_modify_namespace_name function.
@@ -244,10 +245,7 @@ public:
 	/*
 	 * Retrieve the adjusted block count for a namespace creation request
 	 */
-	virtual NVM_UINT64 getAdjustedCreateNamespaceBlockCount(std::string poolUidStr,
-			const NVM_UINT16 type, const NVM_UINT32 blockSize, const NVM_UINT64 blockCount,
-			const NVM_UINT16 eraseCapable, const NVM_UINT16 encryption,
-			const NVM_UINT16 enableState);
+	virtual NVM_UINT64 getAdjustedCreateNamespaceBlockCount(const createNamespaceParams &settings);
 
 	/*
  	* Retrieve the adjusted block count for a namespace modification request
@@ -288,7 +286,11 @@ private:
 		        NVM_UINT16 pmtype,
 		        mem_config::MemoryAllocationSettingsInterleaveSizeExponent &channelSizeExp,
 		        mem_config::MemoryAllocationSettingsInterleaveSizeExponent &controllerSizeExp,
-		        bool &byone);
+		        bool &byone, bool &storageOnly);
+	NVM_BOOL populateInterleaveFormat(const bool byone, const bool storageOnly,
+			const mem_config::MemoryAllocationSettingsInterleaveSizeExponent &channelSize,
+			const mem_config::MemoryAllocationSettingsInterleaveSizeExponent &controllerSize,
+			struct interleave_format &format);
 
 	NVM_UINT64 getBlockSizeInBytes(const std::string &blockSizeStr);
 };

@@ -444,15 +444,6 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::createNamespace(
 		{
 			std::string namespaceUid;
 
-			NVM_UINT64 adjustedBlockCount = m_pPmServiceProvider->getAdjustedCreateNamespaceBlockCount(
-					m_poolUid, m_nsType, m_blockSize, m_blockCount,
-					m_eraseCapable, m_encryption, m_enableState);
-
-			if (!adjustNamespaceBlockCount(adjustedBlockCount) || !confirmNamespaceBlockSizeUsage())
-			{
-				throw wbem::exception::NvmExceptionLibError(NVM_ERR_BADALIGNMENT);
-			}
-
 			// So far so good. Now try to create the namespace ...
 			wbem::pmem_config::PersistentMemoryServiceFactory::createNamespaceParams parms;
 			parms.type = m_nsType;
@@ -467,7 +458,16 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::createNamespace(
 			parms.interleaveChannelSize = m_channelSize;
 			parms.interleaveControllerSize = m_controllerSize;
 			parms.byOne = m_byOne;
+			parms.storageOnly = m_storageOnly;
 			parms.memoryPageAllocation = m_memoryPageAllocation;
+			NVM_UINT64 adjustedBlockCount = m_pPmServiceProvider->getAdjustedCreateNamespaceBlockCount(parms);
+
+			if (!adjustNamespaceBlockCount(adjustedBlockCount) || !confirmNamespaceBlockSizeUsage())
+			{
+				throw wbem::exception::NvmExceptionLibError(NVM_ERR_BADALIGNMENT);
+			}
+			parms.blockCount = m_blockCount;
+
 			m_pPmServiceProvider->createNamespace(parms, namespaceUid);
 
 			// display output from showNamespace
@@ -721,8 +721,7 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseCreateNsBlockCou
 				}
 				else if (m_nsType == wbem::pmem_config::PM_SERVICE_STORAGE_TYPE)
 				{
-					NVM_UINT32 realBlockSize = get_real_block_size(m_blockSize);
-					m_blockCount = maxStorageNamespaceSize / realBlockSize;
+					m_blockCount = NVM_REQUEST_MAX_AVAILABLE_BLOCK_COUNT; // The library will figure out the best size based on pmem type
 				}
 			}
 			else
@@ -1056,6 +1055,10 @@ cli::framework::ResultBase *cli::nvmcli::NamespaceFeature::parsePersistentMemory
 			if (framework::stringsIEqual(value, CREATE_NS_PROP_PM_TYPE_APPDIRECT_NOTINTERLEAVED))
 			{
 				m_byOne = true;
+			}
+			else if (framework::stringsIEqual(value, CREATE_NS_PROP_PM_TYPE_STORAGE))
+			{
+				m_storageOnly = true;
 			}
 			else if (framework::stringsIEqual(value, CREATE_NS_PROP_PM_TYPE_APPDIRECT))
 			{

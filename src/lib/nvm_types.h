@@ -98,6 +98,7 @@
 #define	NVM_COMMIT_ID_LEN	41
 #define	NVM_BUILD_CONFIGURATION_LEN 17
 #define	NVM_MAX_IFCS_PER_DIMM	9
+#define	NVM_REQUEST_MAX_AVAILABLE_BLOCK_COUNT	0
 
 /*
  * Macros for controlling what is exported by the library
@@ -325,11 +326,12 @@ enum erase_capable_status
  */
 enum interleave_size
 {
-	INTERLEAVE_SIZE_64B  = 0,
-	INTERLEAVE_SIZE_128B = 1,
-	INTERLEAVE_SIZE_256B = 2,
-	INTERLEAVE_SIZE_4KB  = 3,
-	INTERLEAVE_SIZE_1GB  = 4
+	INTERLEAVE_SIZE_NONE = 0,
+	INTERLEAVE_SIZE_64B  = 1,
+	INTERLEAVE_SIZE_128B = 2,
+	INTERLEAVE_SIZE_256B = 3,
+	INTERLEAVE_SIZE_4KB  = 4,
+	INTERLEAVE_SIZE_1GB  = 5
 };
 
 enum interleave_ways

@@ -324,6 +324,8 @@ static inline void interleave_struct_to_format(const struct interleave_format *p
 			case INTERLEAVE_SIZE_1GB:
 				channel = BITMAP_INTERLEAVE_SIZE_1GB;
 				break;
+			case INTERLEAVE_SIZE_NONE:
+				break;
 		}
 		format |= (channel & PCAT_FORMAT_CHANNEL_MASK);
 
@@ -345,6 +347,8 @@ static inline void interleave_struct_to_format(const struct interleave_format *p
 				break;
 			case INTERLEAVE_SIZE_1GB:
 				imc = BITMAP_INTERLEAVE_SIZE_1GB;
+				break;
+			case INTERLEAVE_SIZE_NONE:
 				break;
 		}
 		format |= (imc & PCAT_FORMAT_IMC_MASK) << PCAT_FORMAT_IMC_SHIFT;

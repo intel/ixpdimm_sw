@@ -60,3 +60,24 @@ int uid_cmp(const COMMON_UID guid1, const COMMON_UID guid2)
 	else
 		return 0;
 }
+
+int get_uid_index(const COMMON_UID uid, const COMMON_UID *uid_list,
+		const COMMON_UINT16 uid_list_len)
+{
+	int rc = -1;
+	for (int i = 0; i < uid_list_len; i++)
+	{
+		if (uid_cmp(uid, uid_list[i]))
+		{
+			rc = i;
+			break;
+		}
+	}
+	return rc;
+}
+
+COMMON_BOOL is_uid_in_list(const COMMON_UID uid, const COMMON_UID *uid_list,
+		const COMMON_UINT16 uid_list_len)
+{
+	return (get_uid_index(uid, uid_list, uid_list_len) >= 0);
+}

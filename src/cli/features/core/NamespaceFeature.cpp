@@ -233,7 +233,7 @@ cli::nvmcli::NamespaceFeature::NamespaceFeature() : cli::framework::FeatureBase(
 	m_optimize(0), m_encryption(0), m_eraseCapable(0),
 	m_channelSize(wbem::mem_config::MEMORYALLOCATIONSETTINGS_EXPONENT_UNKNOWN),
 	m_controllerSize(wbem::mem_config::MEMORYALLOCATIONSETTINGS_EXPONENT_UNKNOWN),
-	m_byOne(false), m_forceOption(false),
+	m_byOne(false), m_storageOnly(false), m_forceOption(false),
 	m_memoryPageAllocation(0), m_optimizeExists(false),
 	m_pPmNamespaceProvider(new wbem::pmem_config::PersistentMemoryNamespaceFactory()),
 	m_pPmServiceProvider(new wbem::pmem_config::PersistentMemoryServiceFactory()),

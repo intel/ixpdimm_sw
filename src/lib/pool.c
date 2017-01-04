@@ -77,12 +77,12 @@ int fill_in_device_uids(struct pool *p_pool, struct nvm_pool *p_nvm_pool)
 		for (int j = 0; j < p_pool->ilsets[i].dimm_count; j++)
 		{
 			struct device_discovery discovery;
-			tmp_rc = lookup_dev_handle(p_nvm_pool->dimms[j], &discovery);
+			tmp_rc = lookup_dev_handle(p_nvm_pool->ilsets[i].dimms[j], &discovery);
 			if (tmp_rc != NVM_SUCCESS)
 			{
 				COMMON_LOG_ERROR_F(
 					"Failed to find the device from the device handle %u",
-					p_nvm_pool->dimms[j].handle);
+					p_nvm_pool->ilsets[i].dimms[j].handle);
 				rc = tmp_rc;
 				break; // don't continue on error
 			}

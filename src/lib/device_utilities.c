@@ -157,6 +157,44 @@ int get_devices(struct device_discovery **pp_devices)
 	return rc;
 }
 
+int lookup_dev_uids(const NVM_UID *uids, NVM_UINT16 uid_count,
+		struct device_discovery *p_devs)
+{
+	int rc = NVM_SUCCESS;
+	if (uids == NULL)
+	{
+		COMMON_LOG_ERROR("Invalid parameter, device uid is NULL");
+		rc = NVM_ERR_INVALIDPARAMETER;
+	}
+	else
+	{
+		struct device_discovery *p_devices = NULL;
+		int devices_count = get_devices(&p_devices);
+		NVM_UINT16 matched_uids = 0;
+		if (devices_count < 0)
+		{
+			rc = devices_count;
+		}
+		else
+		{
+			for (int i = 0; i < devices_count; i++)
+			{
+				if (is_uid_in_list(p_devices[i].uid, uids, uid_count))
+				{
+					memmove(&p_devs[matched_uids++], &p_devices[i],
+						sizeof (struct device_discovery));
+				}
+			}
+			if (matched_uids != uid_count)
+			{
+				rc = NVM_ERR_BADDEVICE;
+			}
+		}
+		free(p_devices);
+	}
+	return rc;
+}
+
 /*
  * Lookup a device from the uid
  */

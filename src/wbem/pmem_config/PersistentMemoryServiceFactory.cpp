@@ -327,7 +327,7 @@ NVM_BOOL wbem::pmem_config::PersistentMemoryServiceFactory::get_settings_by_pmem
 		NVM_UINT16 pmtype,
 		mem_config::MemoryAllocationSettingsInterleaveSizeExponent &channelSizeExp,
 		mem_config::MemoryAllocationSettingsInterleaveSizeExponent &controllerSizeExp,
-		bool &byOne)
+		bool &byOne, bool &storageOnly)
 {
 	NVM_BOOL ret = 0;
 	byOne = false;
@@ -335,6 +335,7 @@ NVM_BOOL wbem::pmem_config::PersistentMemoryServiceFactory::get_settings_by_pmem
 	controllerSizeExp = mem_config::MEMORYALLOCATIONSETTINGS_EXPONENT_UNKNOWN;
 	if (pmtype == wbem::pmem_config::NSSETTINGS_PMTYPE_STORAGE)
 	{
+		storageOnly = true;
 		ret = true;
 	}
 	else if (pmtype == wbem::pmem_config::NSSETTINGS_PMTYPE_APPDIRECT_NOTINTERLEAVED)
@@ -346,6 +347,31 @@ NVM_BOOL wbem::pmem_config::PersistentMemoryServiceFactory::get_settings_by_pmem
 	{
 		get_recommended_interleave_size_exps(channelSizeExp, controllerSizeExp);
 		ret = true;
+	}
+	return ret;
+}
+
+NVM_BOOL wbem::pmem_config::PersistentMemoryServiceFactory::populateInterleaveFormat(
+		const bool byOne, const bool storageOnly,
+		const mem_config::MemoryAllocationSettingsInterleaveSizeExponent &channelSize,
+		const mem_config::MemoryAllocationSettingsInterleaveSizeExponent &controllerSize,
+		struct interleave_format &format)
+{
+	NVM_BOOL ret = 1;
+	if (byOne)
+	{
+		format.ways = INTERLEAVE_WAYS_1;
+	}
+	else if (channelSize != mem_config::MEMORYALLOCATIONSETTINGS_EXPONENT_UNKNOWN &&
+			controllerSize != mem_config::MEMORYALLOCATIONSETTINGS_EXPONENT_UNKNOWN)
+	{
+		format.channel = mem_config::InterleaveSet::getInterleaveSizeFromExponent(channelSize);
+		format.imc = mem_config::InterleaveSet::getInterleaveSizeFromExponent(controllerSize);
+		format.ways = INTERLEAVE_WAYS_0; // 0 indicates that byOne wasn't specified
+	}
+	else if (!storageOnly)
+	{
+		ret = 0;
 	}
 	return ret;
 }
@@ -630,11 +656,13 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::allocateFromPool(
 			mem_config::MemoryAllocationSettingsInterleaveSizeExponent controllerSizeExp =
 				mem_config::MEMORYALLOCATIONSETTINGS_EXPONENT_UNKNOWN;
 			bool byOne = false;
+			bool storageOnly = false;
 			if (pGoalInstance->getAttribute(PERSISTENTMEMORYTYPE_KEY, pmemTypeAttr) == framework::SUCCESS)
 			{
 				NVM_UINT16 pmemType = pmemTypeAttr.uintValue();
 				validate_pmtype_with_type(pmemType, type);
-				if (!get_settings_by_pmem_type(pmemType, channelSizeExp, controllerSizeExp, byOne))
+				if (!get_settings_by_pmem_type(pmemType, channelSizeExp, controllerSizeExp,
+								byOne, storageOnly))
 				{
 					COMMON_LOG_ERROR_F("Invalid value for Persistent Memory Type: %d", pmemType);
 					throw framework::ExceptionBadParameter(PM_SERVICE_GOAL.c_str());
@@ -644,7 +672,7 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::allocateFromPool(
 				poolUidStr, initialState,
 				friendlyNameStr, blockSize, blockCount, type, optimize,
 				encryption, eraseCapable,
-				channelSizeExp, controllerSizeExp, byOne, memoryPageAllocation);
+				channelSizeExp, controllerSizeExp, byOne, storageOnly, memoryPageAllocation);
 
 			delete pGoalInstance;
 
@@ -789,7 +817,7 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::createNamespace(std::str
 		const NVM_UINT16 encryption, const NVM_UINT16 eraseCapable,
 		const mem_config::MemoryAllocationSettingsInterleaveSizeExponent channelSize,
 		const mem_config::MemoryAllocationSettingsInterleaveSizeExponent controllerSize,
-		const bool byOne,
+		const bool byOne, const bool storageOnly,
 		const NVM_UINT16 memoryPageAllocation)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -827,22 +855,11 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::createNamespace(std::str
 			friendlyNameStr.c_str(), NVM_NAMESPACE_NAME_LEN);
 
 	struct interleave_format format;
-	struct interleave_format *p_format = &format;
 	memset(&format, 0, sizeof (format));
-	if (byOne)
+	struct interleave_format *p_format = NULL;
+	if (populateInterleaveFormat(byOne, storageOnly, channelSize, controllerSize, format))
 	{
-		format.ways = INTERLEAVE_WAYS_1;
-	}
-	else if (channelSize != mem_config::MEMORYALLOCATIONSETTINGS_EXPONENT_UNKNOWN &&
-			controllerSize != mem_config::MEMORYALLOCATIONSETTINGS_EXPONENT_UNKNOWN)
-	{
-		format.channel = mem_config::InterleaveSet::getInterleaveSizeFromExponent(channelSize);
-		format.imc = mem_config::InterleaveSet::getInterleaveSizeFromExponent(controllerSize);
-		format.ways = INTERLEAVE_WAYS_0; // 0 indicates that byOne wasn't specified
-	}
-	else
-	{
-		p_format = NULL;
+		p_format = &format;
 	}
 
 	int rc = m_createNamespace(&namespaceUid, poolUid, &namespace_settings, p_format, 0);
@@ -1028,13 +1045,11 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::createNamespace(
 		settings.friendlyName, settings.blockSize, settings.blockCount, settings.type,
 		settings.optimize, settings.encryption, settings.eraseCapable,
 		settings.interleaveChannelSize, settings.interleaveControllerSize, settings.byOne,
-		settings.memoryPageAllocation);
+		settings.storageOnly, settings.memoryPageAllocation);
 }
 
 NVM_UINT64 wbem::pmem_config::PersistentMemoryServiceFactory::getAdjustedCreateNamespaceBlockCount(
-		std::string poolUidStr,  const NVM_UINT16 type, const NVM_UINT32 blockSize,
-		const NVM_UINT64 blockCount, const NVM_UINT16 eraseCapable,
-		const NVM_UINT16 encryption, const NVM_UINT16 enableState)
+		const createNamespaceParams &params)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	int rc = NVM_SUCCESS;
@@ -1042,17 +1057,26 @@ NVM_UINT64 wbem::pmem_config::PersistentMemoryServiceFactory::getAdjustedCreateN
 	struct namespace_create_settings settings;
 	memset(&settings, 0, sizeof (settings));
 
-	settings.type = namespaceTypeToEnum(type);
-	settings.block_size = blockSize;
-	settings.block_count = blockCount;
-	settings.security_features.erase_capable = eraseCapableToEnum(eraseCapable);
-	settings.security_features.encryption = encryptionTypeToEnum(encryption);
-	settings.enabled = (enum namespace_enable_state) enableState;
+	settings.type = namespaceTypeToEnum(params.type);
+	settings.block_size = params.blockSize;
+	settings.block_count = params.blockCount;
+	settings.security_features.erase_capable = eraseCapableToEnum(params.eraseCapable);
+	settings.security_features.encryption = encryptionTypeToEnum(params.encryption);
+	settings.enabled = (enum namespace_enable_state) params.enabled;
 
 	NVM_UID poolUid;
-	uid_copy(poolUidStr.c_str(), poolUid);
+	uid_copy(params.poolId.c_str(), poolUid);
 
-	if ((rc = nvm_adjust_create_namespace_block_count(poolUid, &settings, NULL)) != NVM_SUCCESS)
+	struct interleave_format format;
+	memset(&format, 0, sizeof (format));
+	struct interleave_format *p_format = NULL;
+	if (populateInterleaveFormat(params.byOne, params.storageOnly,
+			params.interleaveChannelSize, params.interleaveControllerSize, format))
+	{
+		p_format = &format;
+	}
+
+	if ((rc = nvm_adjust_create_namespace_block_count(poolUid, &settings, p_format)) != NVM_SUCCESS)
 	{
 		COMMON_LOG_ERROR("Could not adjust namespace block count");
 		throw exception::NvmExceptionLibError(rc);
