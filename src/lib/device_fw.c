@@ -32,6 +32,7 @@
 #include "device_fw.h"
 #include "device_adapter.h"
 #include "utility.h"
+#include <common_types.h>
 
 // Intel DIMM Device IDs running FW we support
 const int NUM_SUPPORTED_DEVICE_IDS = 3;
@@ -45,29 +46,24 @@ const NVM_UINT16 SUPPORTED_DEVICE_IDS[] = {
  * Minimum supported version of FW API: 1.0
  */
 #define	DEV_FW_API_VERSION_MAJOR_MIN	1
-#define	DEV_FW_API_VERSION_MINOR_MIN	0
+#define	DEV_FW_API_VERSION_MINOR_MIN	2
 
 int local_ioctl_passthrough_cmd(struct fw_cmd *p_cmd);
 
 unsigned int get_fw_api_major_version(const unsigned short fw_api_version)
 {
-	unsigned int major_version = (fw_api_version >> 8) & 0xFF;
-	if (major_version == 0)
-	{
-		major_version = (fw_api_version >> 4) & 0xF;
-	}
+	unsigned char major_version_bcd = (fw_api_version >> 8) & 0xFF;
+
+	unsigned char major_version = bcd_byte_to_dec(major_version_bcd);
 
 	return major_version;
 }
 
 unsigned int get_fw_api_minor_version(const unsigned short fw_api_version)
 {
-	unsigned int minor_version = fw_api_version & 0xFF;
+	unsigned char minor_version_bcd = fw_api_version & 0xFF;
 
-	if (((fw_api_version >> 8) & 0xFF) == 0)
-	{
-		minor_version = fw_api_version & 0xF;
-	}
+	unsigned char minor_version = bcd_byte_to_dec(minor_version_bcd);
 
 	return minor_version;
 }
@@ -86,6 +82,43 @@ NVM_BOOL is_fw_api_version_supported(const unsigned int major_version,
 
 	COMMON_LOG_EXIT_RETURN_I(is_supported);
 	return is_supported;
+}
+
+NVM_BOOL is_fw_api_version_downgraded(const unsigned int current_major_version,
+		const unsigned int current_minor_version, const unsigned int img_major_version,
+		const unsigned int img_minor_version)
+{
+	NVM_BOOL is_downgraded = 0;
+
+	if (img_major_version < current_major_version)
+	{
+		is_downgraded = 1;
+	}
+	else if (img_major_version == current_major_version &&
+					img_minor_version < current_minor_version)
+	{
+		is_downgraded = 1;
+	}
+
+	return is_downgraded;
+}
+
+int fw_get_bsr(const NVM_NFIT_DEVICE_HANDLE device_handle, unsigned long long *p_bsr)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	struct fw_cmd cmd;
+	memset(&cmd, 0, sizeof (struct fw_cmd));
+	cmd.device_handle = device_handle.handle;
+	cmd.opcode = BIOS_EMULATED_COMMAND;
+	cmd.sub_opcode = SUBOP_GET_BOOT_STATUS;
+	cmd.output_payload_size = sizeof (unsigned long long);
+	cmd.output_payload = p_bsr;
+	rc = ioctl_passthrough_cmd(&cmd);
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
 }
 
 int fw_get_identify_dimm(const NVM_UINT32 device_handle,

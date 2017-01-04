@@ -36,7 +36,11 @@
 #include "nvm_types.h"
 #include "fis_types.h"
 
+#define OPT_IN_BIT	25
+#define	BSR_OPTIN_ENABLED(bsr)	(bsr & (1 << OPT_IN_BIT))
 int fw_mb_err_to_nvm_lib_err(int status);
+
+int fw_get_bsr(const NVM_NFIT_DEVICE_HANDLE device_handle, unsigned long long *p_bsr);
 
 int dsm_err_to_nvm_lib_err(unsigned int status);
 
@@ -53,6 +57,13 @@ unsigned int get_fw_api_minor_version(const unsigned short fw_api_version);
  */
 NVM_BOOL is_fw_api_version_supported(const unsigned int major_version,
 	const unsigned int minor_version);
+
+/*
+ * Check if the fw api is downgraded
+ */
+NVM_BOOL is_fw_api_version_downgraded(const unsigned int current_major_version,
+		const unsigned int current_minor_version, const unsigned int img_major_version,
+		const unsigned int img_minor_version);
 
 int fw_get_identify_dimm(const NVM_UINT32 device_handle,
 		struct pt_payload_identify_dimm *p_id_dimm);

@@ -564,7 +564,9 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::updateFirmware(
 						// if user didn't specify the force option, and it's required, prompt them to continue
 						std::string prompt = framework::ResultBase::stringFromArgList(
 								DOWNGRADE_FW_PROMPT.c_str(), m_uidToDimmIdStr(uids[i]).c_str());
-						if (!forceOption && wbem::framework::REQUIRES_FORCE == m_ExamineFwImage(uids[i], path, fwVersion) && !promptUserYesOrNo(prompt))
+
+						if (!forceOption && wbem::framework::REQUIRES_FORCE == m_ExamineFwImage(uids[i], path, fwVersion)
+								&& !promptUserYesOrNo(prompt))
 						{
 							pSimpleList->insert(prefix + TRS(cli::framework::UNCHANGED_MSG));
 						}

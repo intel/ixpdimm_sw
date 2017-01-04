@@ -1524,26 +1524,78 @@ int nvm_examine_device_fw(const NVM_UID device_uid, const NVM_PATH path, const N
 					unsigned short int current_minor;
 					unsigned short int current_hotfix;
 					unsigned short int current_build;
+					unsigned short int current_fwAPI_major;
+					unsigned short int current_fwAPI_minor;
 					int image_major = p_header->imageVersion.majorVer.version;
 					int image_minor = p_header->imageVersion.minorVer.version;
 					int image_hotfix = p_header->imageVersion.hotfixVer.version;
 					int image_build = p_header->imageVersion.buildVer.build;
+					unsigned int image_fwAPI_major =
+							get_fw_api_major_version(p_header->fwApiVersion);
+					unsigned int image_fwAPI_minor =
+							get_fw_api_minor_version(p_header->fwApiVersion);
+
+					unsigned long long bsr = 0;
+
 					build_revision(image_version, image_version_len, image_major,
 							image_minor, image_hotfix, image_build);
 
 					parse_main_revision(&current_major, &current_minor, &current_hotfix,
 							&current_build, discovery.fw_revision, NVM_VERSION_LEN);
 
-					if (image_major < current_major)
+					parse_fw_revision(&current_fwAPI_major, &current_fwAPI_minor,
+							discovery.fw_api_version, NVM_VERSION_LEN);
+
+					if (image_major != current_major)
 					{
 						COMMON_LOG_ERROR("The FW image file is not valid. "
-								"Cannot downgrade major versions.");
+								"Product number cannot be changed.");
 						rc = NVM_ERR_BADFIRMWARE;
 					}
 					else if (image_major == current_major && image_minor < current_minor)
 					{
 						COMMON_LOG_ERROR("The FW image file is not valid. "
-								"Cannot downgrade minor versions.");
+								"Revision number cannot be downgraded.");
+						rc = NVM_ERR_BADFIRMWARE;
+					}
+					else if (is_fw_api_version_downgraded(current_fwAPI_major, current_fwAPI_minor,
+									image_fwAPI_major, image_fwAPI_minor))
+					{
+						if (!is_fw_api_version_supported(image_fwAPI_major, image_fwAPI_minor))
+						{
+							COMMON_LOG_ERROR("The firmware image is not compatible with this "
+									"version of software.");
+							rc = NVM_ERR_INCOMPATIBLEFW;
+						}
+						else
+						{
+							rc = NVM_ERR_REQUIRESFORCE;
+						}
+					}
+					else if (image_hotfix < current_hotfix)
+					{
+						rc = fw_get_bsr(discovery.device_handle, &bsr);
+						if (rc == NVM_SUCCESS)
+						{
+							if (!BSR_OPTIN_ENABLED(bsr))
+							{
+								COMMON_LOG_ERROR("The FW image file is not valid. "
+										"Svn Downgrade Opt-In is disabled.");
+								rc = NVM_ERR_BADFIRMWARE;
+							}
+							else
+							{
+								rc = NVM_ERR_REQUIRESFORCE;
+							}
+						}
+						else
+						{
+							COMMON_LOG_ERROR("Could not get the BSR. "
+									"Couldnot determine the Opt-In value");
+						}
+					}
+					else if (image_build < current_build)
+					{
 						rc = NVM_ERR_REQUIRESFORCE;
 					}
 				}

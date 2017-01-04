@@ -42,6 +42,7 @@
 #include <cr_i18n.h>
 #include "device_utilities.h"
 #include "capabilities.h"
+#include "device_fw.h"
 
 // firmware checkpoint codes and boot status register
 #define	MAJOR_CHECKPOINT(bits)	((bits) & 0xff) // bits 7:0
@@ -475,24 +476,6 @@ void check_dimm_smart_health_status(const struct diagnostic *p_diagnostic,
 	}
 }
 
-int get_bsr(const NVM_NFIT_DEVICE_HANDLE device_handle, unsigned long long *p_bsr)
-{
-	COMMON_LOG_ENTRY();
-	int rc = NVM_SUCCESS;
-
-	struct fw_cmd cmd;
-	memset(&cmd, 0, sizeof (struct fw_cmd));
-	cmd.device_handle = device_handle.handle;
-	cmd.opcode = BIOS_EMULATED_COMMAND;
-	cmd.sub_opcode = SUBOP_GET_BOOT_STATUS;
-	cmd.output_payload_size = sizeof (unsigned long long);
-	cmd.output_payload = p_bsr;
-	rc = ioctl_passthrough_cmd(&cmd);
-
-	COMMON_LOG_EXIT_RETURN_I(rc);
-	return rc;
-}
-
 void check_media_disabled_status(const struct diagnostic *p_diagnostic,
 		const unsigned long long bsr,
 		const NVM_UID device_uid,
@@ -758,7 +741,7 @@ int check_dimm_bsr(const NVM_UID device_uid,
 	int rc = NVM_SUCCESS;
 
 	unsigned long long bsr = 0;
-	rc = get_bsr(device_handle, &bsr);
+	rc = fw_get_bsr(device_handle, &bsr);
 	if (rc != NVM_SUCCESS)
 	{
 		store_event_by_parts(EVENT_TYPE_DIAG_QUICK,

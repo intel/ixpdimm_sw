@@ -95,9 +95,9 @@ typedef struct
 
 			u8 reserved1[12];
 
-			u8 fwApiVersion; // Same API as in ID DIMM
+			u16 fwApiVersion; // Same API as in ID DIMM
 
-			u8 reserved[69];
+			u8 reserved[68];
 		} __attribute__((packed)) fwImageHeader;
 
 
