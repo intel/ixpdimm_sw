@@ -1091,46 +1091,59 @@ NVM_UINT64 cli::nvmcli::calculateBlockCountForNamespace(const NVM_UINT64 capacit
 std::string cli::nvmcli::translateCapacityToRequestedUnits(NVM_UINT64 capacityInBytes, std::string units)
 {
 	std::stringstream capacityStringInRequestedUnits;
-	NVM_REAL32 capacityInRequestedUnits = 1;
+
+	NVM_REAL32 capacityInRequestedUnits = 1.0;
 
 	if (framework::stringsIEqual(units, PREFERENCE_SIZE_B))
 	{
 		capacityStringInRequestedUnits << capacityInBytes << " " << PREFERENCE_SIZE_B;
 	}
-	else if (framework::stringsIEqual(units, PREFERENCE_SIZE_MIB))
-	{
-		capacityInRequestedUnits = round_to_decimal_places((NVM_REAL32)capacityInBytes / BYTES_PER_MIB, 1);
-		capacityStringInRequestedUnits << capacityInRequestedUnits << " " << PREFERENCE_SIZE_MIB;
-	}
-	else if (framework::stringsIEqual(units, PREFERENCE_SIZE_GIB))
-	{
-		capacityInRequestedUnits = round_to_decimal_places((NVM_REAL32)capacityInBytes / BYTES_PER_GIB, 1);
-		capacityStringInRequestedUnits << capacityInRequestedUnits << " " << PREFERENCE_SIZE_GIB;
-	}
-	else if (framework::stringsIEqual(units, PREFERENCE_SIZE_TIB))
-	{
-		capacityInRequestedUnits = round_to_decimal_places((NVM_REAL32)capacityInBytes / BYTES_PER_TIB, 1);
-		capacityStringInRequestedUnits << capacityInRequestedUnits << " " << PREFERENCE_SIZE_TIB;
-	}
-	else if (framework::stringsIEqual(units, PREFERENCE_SIZE_MB))
-	{
-		capacityInRequestedUnits = round_to_decimal_places((NVM_REAL32)capacityInBytes / BYTES_PER_MB, 1);
-		capacityStringInRequestedUnits << capacityInRequestedUnits << " " << PREFERENCE_SIZE_MB;
-	}
-	else if (framework::stringsIEqual(units, PREFERENCE_SIZE_GB))
-	{
-		capacityInRequestedUnits = round_to_decimal_places((NVM_REAL32)capacityInBytes / BYTES_PER_GB, 1);
-		capacityStringInRequestedUnits << capacityInRequestedUnits << " " << PREFERENCE_SIZE_GB;
-	}
-	else if (framework::stringsIEqual(units, PREFERENCE_SIZE_TB))
-	{
-		capacityInRequestedUnits = round_to_decimal_places((NVM_REAL32)capacityInBytes / BYTES_PER_TB, 1);
-		capacityStringInRequestedUnits << capacityInRequestedUnits << " " << PREFERENCE_SIZE_TB;
-	}
 	else
 	{
-		COMMON_LOG_ERROR_F("Invalid capacity format %s. ", units.c_str());
-		throw wbem::framework::Exception();
+		capacityStringInRequestedUnits.precision(1);
+		capacityStringInRequestedUnits << std::fixed;
+
+		if (framework::stringsIEqual(units, PREFERENCE_SIZE_MIB))
+		{
+			capacityInRequestedUnits = round_to_decimal_places((NVM_REAL32)capacityInBytes / BYTES_PER_MIB, 1);
+
+			capacityStringInRequestedUnits << capacityInRequestedUnits << " " << PREFERENCE_SIZE_MIB;
+		}
+		else if (framework::stringsIEqual(units, PREFERENCE_SIZE_GIB))
+		{
+			capacityInRequestedUnits = round_to_decimal_places((NVM_REAL32)capacityInBytes / BYTES_PER_GIB, 1);
+
+			capacityStringInRequestedUnits << capacityInRequestedUnits << " " << PREFERENCE_SIZE_GIB;
+		}
+		else if (framework::stringsIEqual(units, PREFERENCE_SIZE_TIB))
+		{
+			capacityInRequestedUnits = round_to_decimal_places((NVM_REAL32)capacityInBytes / BYTES_PER_TIB, 1);
+
+			capacityStringInRequestedUnits << capacityInRequestedUnits << " " << PREFERENCE_SIZE_TIB;
+		}
+		else if (framework::stringsIEqual(units, PREFERENCE_SIZE_MB))
+		{
+			capacityInRequestedUnits = round_to_decimal_places((NVM_REAL32)capacityInBytes / BYTES_PER_MB, 1);
+
+			capacityStringInRequestedUnits << capacityInRequestedUnits << " " << PREFERENCE_SIZE_MB;
+		}
+		else if (framework::stringsIEqual(units, PREFERENCE_SIZE_GB))
+		{
+			capacityInRequestedUnits = round_to_decimal_places((NVM_REAL32)capacityInBytes / BYTES_PER_GB, 1);
+
+			capacityStringInRequestedUnits << capacityInRequestedUnits << " " << PREFERENCE_SIZE_GB;
+		}
+		else if (framework::stringsIEqual(units, PREFERENCE_SIZE_TB))
+		{
+			capacityInRequestedUnits = round_to_decimal_places((NVM_REAL32)capacityInBytes / BYTES_PER_TB, 1);
+
+			capacityStringInRequestedUnits << capacityInRequestedUnits << " " << PREFERENCE_SIZE_TB;
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Invalid capacity format %s. ", units.c_str());
+			throw wbem::framework::Exception();
+		}
 	}
 
 	return capacityStringInRequestedUnits.str();
