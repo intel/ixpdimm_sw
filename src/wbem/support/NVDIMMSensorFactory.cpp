@@ -382,20 +382,19 @@ void NVDIMMSensorFactory::sensorToInstance(const framework::attribute_names_t &a
 	const struct sensor &sensor, framework::Instance &i)
 {
 	// convert the sensor current reading to CIM appropriate value and modifier
-	framework::SINT32 unit_modifier;
-	framework::SINT32 current_reading;
+	framework::SINT32 unit_modifier = 0;
+	framework::SINT32 current_reading = 0;
+	enum sensor_type sensor_type = sensor.type;
 
-	if (isTempSensorType(sensor.type))
+	if (isTempSensorType(sensor_type))
 	{
 		unit_modifier = SENSOR_TEMP_MODIFIER_POWER;
 		current_reading = nvmTempToCimTemp(sensor.reading);
 	}
 	else
 	{
-		scaleNumberBaseTen((framework::SINT32) sensor.reading, &current_reading, &unit_modifier);
-
+		scaleNumberBaseTen(sensor.reading, &current_reading, &unit_modifier);
 	}
-	enum sensor_type sensor_type = sensor.type;
 
 	ADD_ATTRIBUTE(i, a, ELEMENTNAME_KEY, framework::STR, getCIMSensorElementName(sensor_type));
 	ADD_ATTRIBUTE(i, a, SENSORTYPE_KEY, framework::UINT16, getCIMSensorTypeCode(sensor_type));
