@@ -170,25 +170,25 @@ class NVM_API MemoryConfigurationServiceFactory : public framework_interface::Nv
 					wbem::framework::attributes_t &inParms,
 					wbem::framework::attributes_t &outParms);
 
-		wbem::framework::UINT32 executeMethodAllocateFromPool(
+		virtual wbem::framework::UINT32 executeMethodAllocateFromPool(
 					wbem::framework::UINT32 &wbemRc,
 					wbem::framework::ObjectPath &object,
 					wbem::framework::attributes_t &inParms,
 					wbem::framework::attributes_t &outParms);
 
-		wbem::framework::UINT32 executeMethodExportUri(
+		virtual wbem::framework::UINT32 executeMethodExportUri(
 					wbem::framework::UINT32 &wbemRc,
 					wbem::framework::ObjectPath &object,
 					wbem::framework::attributes_t &inParms,
 					wbem::framework::attributes_t &outParms);
 
-		wbem::framework::UINT32 executeMethodImportFromUri(
+		virtual wbem::framework::UINT32 executeMethodImportFromUri(
 					wbem::framework::UINT32 &wbemRc,
 					wbem::framework::ObjectPath &object,
 					wbem::framework::attributes_t &inParms,
 					wbem::framework::attributes_t &outParms);
-	
-		wbem::framework::UINT32 executeMethodRemoveGoal(
+
+		virtual wbem::framework::UINT32 executeMethodRemoveGoal(
 					wbem::framework::UINT32 &wbemRc,
 					wbem::framework::ObjectPath &object,
 					wbem::framework::attributes_t &inParms,

@@ -490,6 +490,14 @@ wbem::framework::UINT32 wbem::mem_config::MemoryConfigurationServiceFactory::exe
 	{
 		wbemRc = MEMORYCONFIGURATIONSERVICE_ERR_FAILED;
 	}
+	catch (core::NvmExceptionNamespacesExist &)
+	{
+		wbemRc = MEMORYCONFIGURATIONSERVICE_ERR_FAILED;
+	}
+	catch (core::NvmExceptionDimmHasConfigGoal &)
+	{
+		wbemRc = MEMORYCONFIGURATIONSERVICE_ERR_FAILED;
+	}
 	catch (core::NvmExceptionBadRequest &)
 	{
 		wbemRc = MEMORYCONFIGURATIONSERVICE_ERR_INVALID_PARAMETER;
@@ -1173,7 +1181,7 @@ wbem::framework::UINT32 wbem::mem_config::MemoryConfigurationServiceFactory::exe
 
 			delete pAllocator;
 		}
-		catch (framework::Exception &)
+		catch (std::exception &)
 		{
 			if (pAllocator)
 			{
