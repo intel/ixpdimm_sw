@@ -140,7 +140,7 @@ int fw_get_identify_dimm(const NVM_UINT32 device_handle,
 		// ensure backwards compatibility with FIS 1.2
 		if (p_id_dimm->api_ver == 0)
 		{
-			p_id_dimm->api_ver = p_id_dimm->rsrvd_a;
+			p_id_dimm->api_ver = single_byte_bcd_to_two_byte_bcd(p_id_dimm->rsrvd_a);
 
 			// appdirect IFC workaround - fixed in FIS 1.3
 			if (p_id_dimm->ifc == FORMAT_BLOCK_STANDARD)

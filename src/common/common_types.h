@@ -445,6 +445,26 @@ static inline unsigned char bcd_byte_to_dec(unsigned char num)
 	return ret_val;
 }
 
+static inline unsigned short int single_byte_bcd_to_two_byte_bcd(unsigned char num)
+{
+	unsigned short int bcd_value;
+
+	if (((num & 0xF0) >> 4) >= 0xA)
+	{
+		bcd_value = 0xFF;
+	}
+	else if ((num & 0x0F) >= 0xA)
+	{
+		bcd_value = 0xFF;
+	}
+	else
+	{
+		bcd_value = ((num & 0xF0) << 4) | (num & 0x0F);
+	}
+
+	return bcd_value;
+}
+
 static inline void generate_checksum(
 		COMMON_UINT8 *p_raw_data,
 		const COMMON_UINT32 length,
