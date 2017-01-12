@@ -79,6 +79,23 @@ extern "C"
 #define	RESERVED_CAPACITY_BYTES(cap)	(NVM_UINT64)(cap % BYTES_PER_GIB)
 #define	USABLE_CAPACITY_BYTES(cap)	(NVM_UINT64)(cap - RESERVED_CAPACITY_BYTES(cap))
 
+#define	GET_GCD(gcd, a, b)	\
+	for (;;) \
+	{ \
+		if (a == 0) \
+		{ \
+			gcd = b; \
+			break; \
+		} \
+		b %= a; \
+		if (b == 0) \
+		{ \
+			gcd = a; \
+			break; \
+		} \
+		a %= b; \
+	}
+
 /*
  * Convert number to manufacturer ID array
  */
@@ -413,34 +430,18 @@ static inline const char *get_string_for_device_health_status(enum device_health
 /*
  * this function finds the greatest common divisor using the Euclidean algorithm
  */
-static inline NVM_UINT32 get_greatest_common_divisor(NVM_UINT32 block_size, NVM_UINT32 page_size)
+static inline NVM_UINT32 get_greatest_common_divisor(NVM_UINT32 a, NVM_UINT32 b)
 {
 	NVM_UINT32 gcd = 0;
-	for (;;)
-	{
-		if (block_size == 0)
-		{
-			gcd = page_size;
-			break;
-		}
-		page_size %= block_size;
-
-		if (page_size == 0)
-		{
-			gcd = block_size;
-			break;
-		}
-		block_size %= page_size;
-	}
-
+	GET_GCD(gcd, a, b);
 	return gcd;
 }
 
 static inline NVM_UINT32 get_lowest_common_multiple(
-		NVM_UINT32 block_size, NVM_UINT32 page_size_alignment)
+		NVM_UINT32 a, NVM_UINT32 b)
 {
-	int gcd = get_greatest_common_divisor(block_size, page_size_alignment);
-	return block_size / gcd * page_size_alignment;
+	int gcd = get_greatest_common_divisor(a, b);
+	return a / gcd * b;
 }
 
 static inline NVM_REAL32 round_to_decimal_places(NVM_REAL32 number, int decimal_places)

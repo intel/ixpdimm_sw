@@ -924,7 +924,9 @@ int find_interleave_with_capacity(const struct pool *p_pool,
 			if (!interleave_set_has_namespace(p_interleave->driver_id))
 			{
 				NVM_UINT64 minimum_ns_size = get_minimum_ns_size(p_interleave->dimm_count,
-						p_nvm_caps->sw_capabilities.min_namespace_size);
+						p_interleave->dimm_count *
+						p_nvm_caps->platform_capabilities.app_direct_mode.
+							interleave_alignment_size);
 				new_block_count = p_settings->block_count;
 				adjust_namespace_block_count_if_allowed(&new_block_count, p_settings->block_size,
 					p_interleave->dimm_count, allow_adjustment);
@@ -1485,7 +1487,9 @@ int validate_app_direct_namespace_size_for_modification(
 		if (p_pool->ilsets[i].driver_id == p_nvm_details->namespace_creation_id.interleave_setid)
 		{
 			NVM_UINT64 minimum_ns_size = get_minimum_ns_size(p_pool->ilsets[i].dimm_count,
-					p_nvm_caps->sw_capabilities.min_namespace_size);
+					p_pool->ilsets[i].dimm_count *
+					p_nvm_caps->platform_capabilities.app_direct_mode.
+						interleave_alignment_size);
 			NVM_UINT64 old_namespace_capacity =
 					p_nvm_details->block_count * (NVM_UINT64)p_nvm_details->block_size;
 			NVM_UINT64 new_block_count = *p_block_count;
@@ -2146,7 +2150,7 @@ void get_smallest_app_direct_namespace(const struct pool *p_pool,
 	}
 
 	// smallest = interleave_alignment_size * way
-	*p_size = interleave_alignment_size * min_way;
+	*p_size = get_minimum_ns_size(min_way, min_way * interleave_alignment_size);
 	COMMON_LOG_EXIT();
 }
 
@@ -2197,7 +2201,7 @@ NVM_UINT64 get_smallest_block_size(const struct nvm_capabilities *p_caps)
 		{
 			if (p_caps->sw_capabilities.block_sizes[i] < smallest_block_size)
 			{
-				smallest_block_size = p_caps->sw_capabilities.block_sizes[0];
+				smallest_block_size = p_caps->sw_capabilities.block_sizes[i];
 			}
 		}
 	}
@@ -2225,9 +2229,9 @@ int get_pool_supported_size_ranges(const struct pool *p_pool,
 	rc = get_largest_storage_namespace(p_pool, &(p_range->largest_possible_storage_ns));
 	if (p_range->largest_possible_storage_ns > 0)
 	{
+		p_range->storage_increment = get_smallest_block_size(p_caps);
 		p_range->smallest_possible_storage_ns =
 				get_minimum_ns_size(1, p_caps->sw_capabilities.min_namespace_size);
-		p_range->storage_increment = get_smallest_block_size(p_caps);
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
