@@ -109,7 +109,38 @@ bool cli::nvmcli::MemoryProperty::getIsSizeValidNumber() const
 	return result;
 }
 
-bool cli::nvmcli::MemoryProperty::validateSettings()
+bool cli::nvmcli::MemoryProperty::convertSettingStringToInterleaveSize(
+		const std::string& setting, enum interleave_size &size)
+{
+	bool result = true;
+	if (framework::stringsIEqual(setting, APP_DIRECTSETTING_64B))
+	{
+		size = INTERLEAVE_SIZE_64B;
+	}
+	else if (framework::stringsIEqual(setting, APP_DIRECTSETTING_128B))
+	{
+		size = INTERLEAVE_SIZE_128B;
+	}
+	else if (framework::stringsIEqual(setting, APP_DIRECTSETTING_256B))
+	{
+		size = INTERLEAVE_SIZE_256B;
+	}
+	else if (framework::stringsIEqual(setting, APP_DIRECTSETTING_4KB))
+	{
+		size = INTERLEAVE_SIZE_4KB;
+	}
+	else if (framework::stringsIEqual(setting, APP_DIRECTSETTING_1GB))
+	{
+		size = INTERLEAVE_SIZE_1GB;
+	}
+	else // invalid interleave size
+	{
+		result = false;
+	}
+	return result;
+}
+
+bool cli::nvmcli::MemoryProperty::parseSettings()
 {
 	bool result = true;
 
@@ -130,107 +161,20 @@ bool cli::nvmcli::MemoryProperty::validateSettings()
 				if (imcFound) // IMC was previously found, this is the channel setting
 				{
 					channelFound = true;
-					if (framework::stringsIEqual(m_settingsTokens[tokenIdx], APP_DIRECTSETTING_64B))
-					{
-						m_format.channel = INTERLEAVE_SIZE_64B;
-					}
-					else if (framework::stringsIEqual(m_settingsTokens[tokenIdx], APP_DIRECTSETTING_128B))
-					{
-						m_format.channel = INTERLEAVE_SIZE_128B;
-
-						// IMC value must be >= than channel value
-						if (m_format.imc < INTERLEAVE_SIZE_128B)
-						{
-							result = false;
-						}
-					}
-					else if (framework::stringsIEqual(m_settingsTokens[tokenIdx], APP_DIRECTSETTING_256B))
-					{
-						m_format.channel = INTERLEAVE_SIZE_256B;
-
-						// IMC value must be >= than channel value
-						if (m_format.imc < INTERLEAVE_SIZE_256B)
-						{
-							result = false;
-						}
-					}
-					else if (framework::stringsIEqual(m_settingsTokens[tokenIdx], APP_DIRECTSETTING_4KB))
-					{
-						m_format.channel = INTERLEAVE_SIZE_4KB;
-
-						// IMC value must be >= than channel value
-						if (m_format.imc < INTERLEAVE_SIZE_4KB)
-						{
-							result = false;
-						}
-					}
-					else if (framework::stringsIEqual(m_settingsTokens[tokenIdx], APP_DIRECTSETTING_1GB))
-					{
-						m_format.channel = INTERLEAVE_SIZE_1GB;
-
-						// IMC value must be >= than channel value
-						if (m_format.imc < INTERLEAVE_SIZE_1GB)
-						{
-							result = false;
-						}
-					}
-					else // invalid size for channel
-					{
-						result = false;
-					}
+					result = convertSettingStringToInterleaveSize(
+							m_settingsTokens[tokenIdx], m_format.channel);
 				}
 				else // This is the first size token - IMC setting
 				{
 					imcFound = true;
-					if (framework::stringsIEqual(m_settingsTokens[tokenIdx], APP_DIRECTSETTING_64B))
-					{
-						m_format.imc = INTERLEAVE_SIZE_64B;
-					}
-					else if (framework::stringsIEqual(m_settingsTokens[tokenIdx], APP_DIRECTSETTING_128B))
-					{
-						m_format.imc = INTERLEAVE_SIZE_128B;
-					}
-					else if (framework::stringsIEqual(m_settingsTokens[tokenIdx], APP_DIRECTSETTING_256B))
-					{
-						m_format.imc = INTERLEAVE_SIZE_256B;
-					}
-					else if (framework::stringsIEqual(m_settingsTokens[tokenIdx], APP_DIRECTSETTING_4KB))
-					{
-						m_format.imc = INTERLEAVE_SIZE_4KB;
-					}
-					else if (framework::stringsIEqual(m_settingsTokens[tokenIdx], APP_DIRECTSETTING_1GB))
-					{
-						m_format.imc = INTERLEAVE_SIZE_1GB;
-					}
-					else // invalid size for IMC
-					{
-						result = false;
-					}
+					result = convertSettingStringToInterleaveSize(
+							m_settingsTokens[tokenIdx], m_format.imc);
 				}
 			}
 
 			if (imcFound && !channelFound) // only IMC size was specified - channel should be same
 			{
-				switch (m_format.imc)
-				{
-				case INTERLEAVE_SIZE_64B:
-					m_format.channel = INTERLEAVE_SIZE_64B;
-					break;
-				case INTERLEAVE_SIZE_128B:
-					m_format.channel = INTERLEAVE_SIZE_128B;
-					break;
-				case INTERLEAVE_SIZE_256B:
-					m_format.channel = INTERLEAVE_SIZE_256B;
-					break;
-				case INTERLEAVE_SIZE_4KB:
-					m_format.channel = INTERLEAVE_SIZE_4KB;
-					break;
-				case INTERLEAVE_SIZE_1GB: 
-					m_format.channel = INTERLEAVE_SIZE_1GB;
-					break;
-				default:
-					result = false;
-				}
+				m_format.channel = m_format.imc;
 			}
 		}
 		else // wrong number of tokens - invalid
@@ -238,7 +182,6 @@ bool cli::nvmcli::MemoryProperty::validateSettings()
 			result = false;
 		}
 	}
-
 	// either no settings provided at all, or no interleave sizes specified - use defaults (if possible)
 	if (result && !imcFound && !channelFound)
 	{
@@ -246,6 +189,18 @@ bool cli::nvmcli::MemoryProperty::validateSettings()
 		result = wbem::mem_config::MemoryCapabilitiesFactory::getRecommendedInterleaveSizes(
 				m_format.imc, m_format.channel);
 	}
+	return result;
+}
+
+bool cli::nvmcli::MemoryProperty::validateSettings()
+{
+	bool result = parseSettings();
+
+	if (result && m_format.imc < m_format.channel)
+	{
+		result = false;
+	}
+
 	return result;
 }
 

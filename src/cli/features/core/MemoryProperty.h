@@ -132,6 +132,19 @@ private:
 	bool tokenizeSettings();
 
 	/*
+	 * Converts an AppDirect Setting string into an enum value
+	 * @return true if the string was converted successfully
+	 */
+	bool convertSettingStringToInterleaveSize(
+			const std::string& setting, enum interleave_size &size);
+
+	/*
+	 * Parses the settings string into member variables
+	 * @return true if parsing successful
+	 */
+	bool parseSettings();
+
+	/*
 	 * Helper method to see if settings are valid.
 	 * @return true if the settings property was valid
 	 */
