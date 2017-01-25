@@ -114,12 +114,13 @@ cli::framework::ErrorResult *cli::nvmcli::WbemToCli::checkPoolUid(
 {
     LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-    cli::framework::ErrorResult *pResult = NULL;
+	wbem::mem_config::PoolViewFactory poolViewFactory;
+	cli::framework::ErrorResult *pResult = NULL;
     std::string poolTarget =
     		cli::framework::Parser::getTargetValue(parsedCommand, cli::nvmcli::TARGET_POOL.name);
     try
     {
-    	std::vector<struct pool> allPools = wbem::mem_config::PoolViewFactory::getPoolList(true);
+    	std::vector<struct pool> allPools = poolViewFactory.getPoolList(true);
     	// validity of the pool target is verified in the API layer
         if (!poolTarget.empty())
         {
@@ -148,5 +149,6 @@ cli::framework::ErrorResult *cli::nvmcli::WbemToCli::checkPoolUid(
     {
         pResult = cli::nvmcli::NvmExceptionToResult(e);
     }
+
     return pResult;
 }

@@ -47,8 +47,8 @@
 #include <core/Helper.h>
 #include "InterleaveSet.h"
 
-wbem::mem_config::PoolViewFactory::PoolViewFactory()
-throw(wbem::framework::Exception)
+wbem::mem_config::PoolViewFactory::PoolViewFactory(core::NvmLibrary &lib)
+throw(wbem::framework::Exception) : m_nvmLib(lib)
 {
 }
 
@@ -77,6 +77,8 @@ throw(wbem::framework::Exception)
 	attributes.push_back(STORAGENAMESPACE_MIN_SIZE_KEY);
 	attributes.push_back(STORAGENAMESPACE_COUNT_KEY);
 	attributes.push_back(HEALTHSTATE_KEY);
+	attributes.push_back(ACTIONREQUIRED_KEY);
+	attributes.push_back(ACTIONREQUIREDEVENTS_KEY);
 }
 
 /*
@@ -90,12 +92,14 @@ throw(wbem::framework::Exception)
 
 	// create the instance, initialize with attributes from the path
 	framework::Instance *pInstance = new framework::Instance(path);
+
 	struct pool *pPool = NULL;
 	try
 	{
 		checkAttributes(attributes);
 
 		std::string poolUidStr = path.getKeyValue(POOLID_KEY).stringValue();
+
 		if (!core::Helper::isValidPoolUid(poolUidStr))
 		{
 			throw framework::ExceptionBadParameter(POOLID_KEY.c_str());
@@ -106,12 +110,7 @@ throw(wbem::framework::Exception)
 
 		if (!isVolatilePool)
 		{
-			possible_namespace_ranges ranges;
-			int rc;
-			if ((rc = nvm_get_available_persistent_size_range(pPool->pool_uid, &ranges)) != NVM_SUCCESS)
-			{
-				throw exception::NvmExceptionLibError(rc);
-			}
+			possible_namespace_ranges ranges = m_nvmLib.getAvailablePersistentSizeRange(pPool->pool_uid);
 
 			// List of underlying types of PM- AppDirect,AppDirectNotInterleaved, Storage
 			if (containsAttribute(PERSISTENTMEMORYTYPE_KEY, attributes))
@@ -210,6 +209,19 @@ throw(wbem::framework::Exception)
 						poolHealthToStr(pPool->health), false);
 				pInstance->setAttribute(HEALTHSTATE_KEY, a, attributes);
 			}
+
+			// ActionRequired = true if any unacknowledged action required events for this pool
+			if (containsAttribute(ACTIONREQUIRED_KEY, attributes))
+			{
+				framework::Attribute a(isActionRequiredForPool(pPool), false);
+				pInstance->setAttribute(ACTIONREQUIRED_KEY, a, attributes);
+			}
+			// ActionRequiredEvents = list of action required events ids and messages
+			if (containsAttribute(ACTIONREQUIREDEVENTS_KEY, attributes))
+			{
+				framework::Attribute a(getActionRequiredEvents(pPool), false);
+				pInstance->setAttribute(ACTIONREQUIREDEVENTS_KEY, a, attributes);
+			}
 		}
 		delete pPool;
 	}
@@ -225,8 +237,77 @@ throw(wbem::framework::Exception)
 		}
 		throw;
 	}
-
 	return pInstance;
+}
+
+struct event_filter wbem::mem_config::PoolViewFactory::getPoolActionRequiredFilterForDimm(
+		NVM_UID dimm_uid)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	event_filter poolEventFilter;
+	memset(&poolEventFilter, 0, sizeof (poolEventFilter));
+
+	poolEventFilter.filter_mask = NVM_FILTER_ON_AR | NVM_FILTER_ON_UID;
+	poolEventFilter.action_required = true;
+	memmove(poolEventFilter.uid, dimm_uid, NVM_MAX_UID_LEN);
+
+	return poolEventFilter;
+}
+
+bool wbem::mem_config::PoolViewFactory::isActionRequiredForPool(pool *pPool)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	int eventCount = 0;
+	try
+	{
+		for (int i = 0; i < pPool->dimm_count; i++)
+		{
+			event_filter filter = getPoolActionRequiredFilterForDimm(pPool->dimms[i]);
+			eventCount += m_nvmLib.getEventCount(filter);
+		}
+	}
+	catch (core::LibraryException &e)
+	{
+		throw exception::NvmExceptionLibError(e.getErrorCode());
+	}
+
+	return eventCount > 0;
+}
+
+std::string wbem::mem_config::PoolViewFactory::getActionRequiredEvents(pool *pPool)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	std::vector<event> actionRequiredEvents;
+	std::string formattedEventStr = POOL_ACTIONREQUIRED_EVENTS_NA;
+	event_filter filter;
+	try{
+		for (int i = 0; i < pPool->dimm_count; i++)
+		{
+			filter = getPoolActionRequiredFilterForDimm(pPool->dimms[i]);
+			actionRequiredEvents = m_nvmLib.getEvents(filter);
+			if (!(actionRequiredEvents.empty()))
+			{
+				if(formattedEventStr == POOL_ACTIONREQUIRED_EVENTS_NA)
+				{
+					formattedEventStr = core::Helper::getFormattedEventList(actionRequiredEvents);
+				}
+				else
+				{
+					formattedEventStr.append(", ");
+					formattedEventStr.append(core::Helper::getFormattedEventList(
+							actionRequiredEvents));
+				}
+			}
+		}
+	}
+	catch (core::LibraryException &e)
+	{
+		throw exception::NvmExceptionLibError(e.getErrorCode());
+	}
+	return formattedEventStr;
 }
 
 /*
@@ -240,6 +321,7 @@ wbem::framework::instance_names_t *wbem::mem_config::PoolViewFactory::getInstanc
 	framework::instance_names_t *pNames = new framework::instance_names_t();
 	try
 	{
+		std::string hostName = m_nvmLib.getHostName();
 		std::vector<struct pool> pools = getPoolList(true);
 		for (std::vector<struct pool>::const_iterator iter = pools.begin();
 				iter != pools.end(); iter++)
@@ -250,7 +332,7 @@ wbem::framework::instance_names_t *wbem::mem_config::PoolViewFactory::getInstanc
 			uid_copy((*iter).pool_uid, poolUid);
 			keys[POOLID_KEY] = framework::Attribute(std::string(poolUid), true);
 
-			framework::ObjectPath path(server::getHostName(), NVM_NAMESPACE,
+			framework::ObjectPath path(hostName, NVM_NAMESPACE,
 					INTEL_POOLVIEW_CREATIONCLASSNAME, keys);
 			pNames->push_back(path);
 		}
@@ -260,6 +342,11 @@ wbem::framework::instance_names_t *wbem::mem_config::PoolViewFactory::getInstanc
 		delete pNames;
 		throw;
 	}
+	catch (core::LibraryException &e)
+	{
+		delete pNames;
+		throw exception::NvmExceptionLibError(e.getErrorCode());
+	}
 	return pNames;
 }
 
@@ -267,32 +354,36 @@ wbem::framework::instance_names_t *wbem::mem_config::PoolViewFactory::getInstanc
  * Helper function to retrieve a list of pools
  */
 std::vector<struct pool> wbem::mem_config::PoolViewFactory::getPoolList(bool pmOnly)
-	throw (wbem::framework::Exception)
+	throw (framework::Exception)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	std::vector<struct pool> poolList;
 
-	lib_interface::NvmApi *pApi = lib_interface::NvmApi::getApi();
-	pApi->getPools(poolList);
-
-	// remove non-persistent pools if necessary
-	if (pmOnly)
+	try
 	{
-		for (std::vector<struct pool>::iterator iter = poolList.begin();
-				iter != poolList.end(); )
+		poolList = m_nvmLib.getPools();
+		// remove non-persistent pools if necessary
+		if (pmOnly)
 		{
-			if (iter->type != POOL_TYPE_PERSISTENT && iter->type != POOL_TYPE_PERSISTENT_MIRROR)
+			for (std::vector<struct pool>::iterator iter = poolList.begin();
+					iter != poolList.end(); )
 			{
-				// returns iterator to the next item - no need to increment
-				iter = poolList.erase(iter);
-			}
-			else
-			{
-				iter++;
+				if (iter->type != POOL_TYPE_PERSISTENT && iter->type != POOL_TYPE_PERSISTENT_MIRROR)
+				{
+					// returns iterator to the next item - no need to increment
+					iter = poolList.erase(iter);
+				}
+				else
+				{
+					iter++;
+				}
 			}
 		}
 	}
-
+	catch (core::LibraryException &e)
+	{
+		throw exception::NvmExceptionLibError(e.getErrorCode());
+	}
 	// return the vector
 	return poolList;
 }
@@ -301,22 +392,21 @@ std::vector<struct pool> wbem::mem_config::PoolViewFactory::getPoolList(bool pmO
  * Helper function to retrieve a specific pool.
  */
 struct pool *wbem::mem_config::PoolViewFactory::getPool(const std::string &poolUidStr)
-	throw (wbem::framework::Exception)
+	throw (framework::Exception)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	NVM_UID poolUid;
+	struct pool *pPool = NULL;
 	uid_copy(poolUidStr.c_str(), poolUid);
-
-	struct pool *pPool = new struct pool;
-	int rc = nvm_get_pool(poolUid, pPool);
-	if (rc != NVM_SUCCESS)
+	try
 	{
-		if (pPool)
-		{
-			delete pPool;
-		}
-		throw exception::NvmExceptionLibError(rc);
+		pPool = m_nvmLib.getPool(poolUid);
+	}
+	catch (core::LibraryException &e)
+	{
+		delete pPool;
+		throw exception::NvmExceptionLibError(e.getErrorCode());
 	}
 
 	return pPool;
@@ -350,17 +440,15 @@ std::string wbem::mem_config::PoolViewFactory::getEncryptionEnabled(const struct
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	std::string result = NO;
-	for (NVM_UINT16 i = 0; i < pPool->dimm_count && result == NO; i++)
-	{
-		struct device_discovery device;
-		int rc = nvm_get_device_discovery(pPool->dimms[i], &device);
-		if (rc != NVM_SUCCESS)
-		{
-			throw exception::NvmExceptionLibError(rc);
-		}
 
-		switch (device.lock_state)
+	try
+	{
+		for (NVM_UINT16 i = 0; i < pPool->dimm_count && result == NO; i++)
 		{
+			struct device_discovery device = m_nvmLib.getDeviceDiscovery(pPool->dimms[i]);
+
+			switch (device.lock_state)
+			{
 			case LOCK_STATE_UNLOCKED:
 			case LOCK_STATE_LOCKED:
 			case LOCK_STATE_FROZEN:
@@ -371,7 +459,12 @@ std::string wbem::mem_config::PoolViewFactory::getEncryptionEnabled(const struct
 			case LOCK_STATE_UNKNOWN:
 			default:
 				break;
+			}
 		}
+	}
+	catch (core::LibraryException &e)
+	{
+		throw exception::NvmExceptionLibError(e.getErrorCode());
 	}
 
 	return result;
@@ -490,34 +583,30 @@ NVM_UINT32 wbem::mem_config::PoolViewFactory::countNamespaces(const struct pool 
 void wbem::mem_config::PoolViewFactory::lazyInitNs()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	if (m_nsCache.size() == 0)
+
+	try
 	{
-		int rc = nvm_get_namespace_count();
-		if (rc < NVM_SUCCESS)
+		if (m_nsCache.size() == 0)
 		{
-			throw exception::NvmExceptionLibError(rc);
-		}
-		int nsCount = rc;
-		if (nsCount > 0)
-		{
-			struct namespace_discovery namespaces[nsCount];
-			rc = nvm_get_namespaces(namespaces, nsCount);
-			if (rc < NVM_SUCCESS)
+			int rc = m_nvmLib.getNamespaceCount();
+
+			if (rc > 0)
 			{
-				throw exception::NvmExceptionLibError(rc);
-			}
-			nsCount = rc;
-			for (int n = 0; n < nsCount; n++)
-			{
-				struct namespace_details nsDetails;
-				rc = nvm_get_namespace_details(namespaces[n].namespace_uid, &nsDetails);
-				if (rc != NVM_SUCCESS)
+				std::vector<struct namespace_discovery> namespaces;
+				namespaces = m_nvmLib.getNamespaces();
+
+				for (std::vector<struct namespace_discovery>::const_iterator iter = namespaces.begin();
+						iter != namespaces.end(); iter++)
 				{
-					throw exception::NvmExceptionLibError(rc);
+					struct namespace_details nsDetails = m_nvmLib.getNamespaceDetails((*iter).namespace_uid);
+					m_nsCache.push_back(nsDetails);
 				}
-				m_nsCache.push_back(nsDetails);
 			}
 		}
+	}
+	catch (core::LibraryException &e)
+	{
+		throw exception::NvmExceptionLibError(e.getErrorCode());
 	}
 }
 

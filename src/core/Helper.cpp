@@ -28,7 +28,10 @@
 #include <common/uid/uid.h>
 #include <core/exceptions/InvalidArgumentException.h>
 #include <core/NvmLibrary.h>
+#include <sstream>
 #include "Helper.h"
+#include <common/cr_i18n.h>
+#include <common/string/s_str.h>
 
 std::string core::Helper::uidToString(const NVM_UID uid)
 {
@@ -64,4 +67,42 @@ std::string core::Helper::getErrorMessage(const int errorCode)
 
 	NvmLibrary &lib = NvmLibrary::getNvmLibrary();
 	return lib.getErrorMessage(errorCode);
+}
+
+std::string core::Helper::getFormattedEvent(const event &event)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	std::stringstream eventMsg;
+	eventMsg << "Event" << " " << event.event_id;
+
+	size_t msgLen = NVM_EVENT_MSG_LEN + (3 * NVM_EVENT_ARG_LEN);
+	char msg[msgLen];
+	s_snprintf(msg, msgLen,
+		event.message,
+		event.args[0],
+		event.args[1],
+		event.args[2]);
+	eventMsg << " - " << msg;
+
+	return eventMsg.str();
+}
+
+std::string core::Helper::getFormattedEventList(const std::vector<event> &events)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	std::stringstream eventList;
+	for (std::vector<event>::const_iterator eventIter = events.begin();
+			eventIter != events.end(); eventIter++)
+	{
+		// Not the first item
+		if (eventIter != events.begin())
+		{
+			eventList << ", ";
+		}
+		eventList << getFormattedEvent(*eventIter);
+	}
+
+	return eventList.str();
 }

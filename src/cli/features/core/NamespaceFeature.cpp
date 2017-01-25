@@ -49,7 +49,6 @@
 #include "CommandParts.h"
 #include "NamespaceFeature.h"
 #include <cr_i18n.h>
-#include <mem_config/PoolViewFactory.h>
 #include <exception/NvmExceptionLibError.h>
 #include "FieldSupportFeature.h"
 #include "CreateGoalCommand.h"
@@ -240,7 +239,10 @@ cli::nvmcli::NamespaceFeature::NamespaceFeature() : cli::framework::FeatureBase(
 	m_pPmPoolProvider(new wbem::pmem_config::PersistentMemoryPoolFactory()),
 	m_pCapProvider(new wbem::pmem_config::PersistentMemoryCapabilitiesFactory()),
 	m_pNsViewFactoryProvider(new wbem::pmem_config::NamespaceViewFactory()),
-	m_pWbemToCli(new cli::nvmcli::WbemToCli()) { }
+	m_pPoolViewProvider(new wbem::mem_config::PoolViewFactory()),
+	m_pWbemToCli(new cli::nvmcli::WbemToCli())
+{
+}
 
 cli::nvmcli::NamespaceFeature::~NamespaceFeature()
 {
@@ -250,6 +252,7 @@ cli::nvmcli::NamespaceFeature::~NamespaceFeature()
 	delete m_pNsViewFactoryProvider;
 	delete m_pWbemToCli;
 	delete m_pPmNamespaceProvider;
+	delete m_pPoolViewProvider;
 }
 
 /*
@@ -259,6 +262,7 @@ cli::framework::ResultBase * cli::nvmcli::NamespaceFeature::run(
 		const int &commandSpecId, const framework::ParsedCommand& parsedCommand)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
 	framework::ResultBase *pResult = NULL;
 	switch (commandSpecId)
 	{
@@ -339,7 +343,7 @@ cli::framework::ResultBase *cli::nvmcli::NamespaceFeature::showPools(cli::framew
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	framework::ResultBase *pResult = NULL;
-	wbem::mem_config::PoolViewFactory poolViewFactory;
+
 	wbem::framework::attribute_names_t attributes;
 	wbem::framework::instances_t *pInstances = NULL;
 
@@ -370,6 +374,8 @@ cli::framework::ResultBase *cli::nvmcli::NamespaceFeature::showPools(cli::framew
 			allAttributes.push_back(wbem::STORAGENAMESPACE_MIN_SIZE_KEY);
 			allAttributes.push_back(wbem::STORAGENAMESPACE_COUNT_KEY);
 			allAttributes.push_back(wbem::HEALTHSTATE_KEY);
+			allAttributes.push_back(wbem::ACTIONREQUIRED_KEY);
+			allAttributes.push_back(wbem::ACTIONREQUIREDEVENTS_KEY);
 
 			// get the desired attributes
 			wbem::framework::attribute_names_t attributes =
@@ -389,7 +395,7 @@ cli::framework::ResultBase *cli::nvmcli::NamespaceFeature::showPools(cli::framew
 			cli::nvmcli::filters_t filters;
 			generateSocketFilter(parsedCommand, requestedAttributes, filters);
 			generatePoolFilter(parsedCommand, requestedAttributes, filters);
-			pInstances = poolViewFactory.getInstances(requestedAttributes);
+			pInstances = m_pPoolViewProvider->getInstances(requestedAttributes);
 			if (pInstances == NULL)
 			{
 				COMMON_LOG_ERROR("PoolViewFactory getInstances returned a NULL instances pointer");
@@ -498,6 +504,12 @@ void cli::nvmcli::NamespaceFeature::setNsViewProvider(
 		wbem::pmem_config::NamespaceViewFactory *pProvider)
 {
 	SET_PROVIDER(m_pNsViewFactoryProvider, pProvider);
+}
+
+void cli::nvmcli::NamespaceFeature::setPoolViewProvider(
+		wbem::mem_config::PoolViewFactory *pProvider)
+{
+	SET_PROVIDER(m_pPoolViewProvider, pProvider);
 }
 
 void cli::nvmcli::NamespaceFeature::setWbemToCli(

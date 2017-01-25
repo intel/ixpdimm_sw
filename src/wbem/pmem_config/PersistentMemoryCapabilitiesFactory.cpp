@@ -184,11 +184,12 @@ wbem::framework::instance_names_t *wbem::pmem_config::PersistentMemoryCapabiliti
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
+	wbem::mem_config::PoolViewFactory poolViewFactory;
 	framework::instance_names_t *pNames = new framework::instance_names_t();
 	try
 	{
 		// get PM pools
-		std::vector<struct pool> pools = wbem::mem_config::PoolViewFactory::getPoolList(true);
+		std::vector<struct pool> pools = poolViewFactory.getPoolList(true);
 		for (std::vector<struct pool>::const_iterator iter = pools.begin();
 				iter != pools.end(); iter++)
 		{
@@ -209,6 +210,7 @@ wbem::framework::instance_names_t *wbem::pmem_config::PersistentMemoryCapabiliti
 		delete pNames;
 		throw;
 	}
+
 	return pNames;
 }
 
@@ -402,13 +404,16 @@ struct pool *wbem::pmem_config::PersistentMemoryCapabilitiesFactory::getPool(
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	std::string poolUidStr = object.getKeyValue(INSTANCEID_KEY).stringValue();
+	mem_config::PoolViewFactory poolViewFactory;
+
 	if (!core::Helper::isValidPoolUid(poolUidStr))
 	{
 		COMMON_LOG_ERROR_F("PersistentMemoryCapabilitiesFactory InstanceID is not a valid pool uid %s",
 				poolUidStr.c_str());
 		throw framework::ExceptionBadParameter(INSTANCEID_KEY.c_str());
 	}
-	return mem_config::PoolViewFactory::getPool(poolUidStr);
+
+	return poolViewFactory.getPool(poolUidStr);
 }
 
 void wbem::pmem_config::PersistentMemoryCapabilitiesFactory::getSupportedBlockSizes(

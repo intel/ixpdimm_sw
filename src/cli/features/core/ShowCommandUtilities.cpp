@@ -100,6 +100,23 @@ framework::ResultBase* ShowCommandUtilities::getInvalidSocketIdResult(
 	return pResult;
 }
 
+// TODO: Temporarily moved the functionality to core to support PoolViewFactory
+std::string ShowCommandUtilities::getFormattedEvent(const event& event)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	return core::Helper::getFormattedEvent(event);
+}
+
+// TODO: Temporarily moved the functionality to core to support PoolViewFactory
+std::string ShowCommandUtilities::getFormattedEventList(
+		const std::vector<event>& events)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	return core::Helper::getFormattedEventList(events);
+}
+
 std::string ShowCommandUtilities::getFirstBadSocketId(const core::StringList &socketIds,
 		core::device::DeviceCollection &devices)
 {
@@ -219,44 +236,6 @@ std::string ShowCommandUtilities::getDimmIdFromDeviceUidAndHandle(const std::str
 		result << uid;
 	}
 	return result.str();
-}
-
-std::string ShowCommandUtilities::getFormattedEvent(const event &event)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	std::stringstream eventMsg;
-	eventMsg << TR("Event") << " " << event.event_id;
-
-	size_t msgLen = NVM_EVENT_MSG_LEN + (3 * NVM_EVENT_ARG_LEN);
-	char msg[msgLen];
-	s_snprintf(msg, msgLen,
-		event.message,
-		event.args[0],
-		event.args[1],
-		event.args[2]);
-	eventMsg << " - " << msg;
-
-	return eventMsg.str();
-}
-
-std::string ShowCommandUtilities::getFormattedEventList(const std::vector<event> &events)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	std::stringstream eventList;
-	for (std::vector<event>::const_iterator eventIter = events.begin();
-			eventIter != events.end(); eventIter++)
-	{
-		// Not the first item
-		if (eventIter != events.begin())
-		{
-			eventList << ", ";
-		}
-		eventList << getFormattedEvent(*eventIter);
-	}
-
-	return eventList.str();
 }
 
 }

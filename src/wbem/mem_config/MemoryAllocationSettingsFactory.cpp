@@ -172,6 +172,7 @@ wbem::framework::Instance* wbem::mem_config::MemoryAllocationSettingsFactory::ge
 		}
 		throw;
 	}
+
 	return pInstance;
 }
 
@@ -216,8 +217,8 @@ void wbem::mem_config::MemoryAllocationSettingsFactory::finishCurrentConfigInsta
 	// alone is not sufficient to identify a specific region. So we
 	// will adopt the convention that App Direct regions are ordered by
 	// interleave_set index and numbered accordingly.
-
-	std::vector<struct pool> pools = wbem::mem_config::PoolViewFactory::getPoolList();
+	wbem::mem_config::PoolViewFactory poolViewFactory;
+	std::vector<struct pool> pools = poolViewFactory.getPoolList();
 
 	if (isMemory(instanceIdStr))
 	{
@@ -733,6 +734,11 @@ bool wbem::mem_config::MemoryAllocationSettingsFactory::isAssociated(
 			COMMON_LOG_WARN_F("Cannot calculate if instances are an association "
 					"based on association class: %s", associationClass.c_str());
     	}
+    	catch (core::LibraryException &)
+    	{
+    		COMMON_LOG_WARN_F("Cannot calculate if instances are an association "
+    				"based on association class: %s", associationClass.c_str());
+    	}
     }
     else
 	{
@@ -781,14 +787,15 @@ void
 	wbem::mem_config::MemoryAllocationSettingsFactory::getIlsetUidFromSettingInstance
 		(const framework::Instance* pSettingInstance, NVM_UID ilsetUid)
 {
-	std::vector<struct pool> pools = wbem::mem_config::PoolViewFactory::getPoolList(false);
-
+	wbem::mem_config::PoolViewFactory poolViewFactory;
 	wbem::framework::Attribute attr;
+
 	pSettingInstance->getAttribute(wbem::INSTANCEID_KEY, attr);
 	std::string instanceIdStr = attr.stringValue();
 
 	NVM_UINT16 socketId = getSocketId(instanceIdStr);
 
+	std::vector<struct pool> pools = poolViewFactory.getPoolList();
 	InterleaveSet ilset = getInterleaveSetFromPools(pools, instanceIdStr);
 
 	std::string ilsetUidStr = memory::PersistentMemoryFactory::getInterleaveSetUuid(
@@ -968,7 +975,9 @@ wbem::mem_config::StringListType wbem::mem_config::MemoryAllocationSettingsFacto
 	(const physical_asset::devices_t &devices)
 {
 	StringListType names;
-	std::vector<struct pool> pools = wbem::mem_config::PoolViewFactory::getPoolList(false);
+	wbem::mem_config::PoolViewFactory poolViewFactory;
+
+	std::vector<struct pool> pools = poolViewFactory.getPoolList();
 	std::vector<struct pool>::const_iterator poolIter = pools.begin();
 	for (; poolIter != pools.end(); poolIter++)
 	{

@@ -191,7 +191,8 @@ NVM_UINT64 wbem::mem_config::MemoryResourcesFactory::getCapacityAllocatedFromPoo
 {
 	NVM_UINT64 reservedCapacity = 0;
 
-	std::vector<struct pool> pools = PoolViewFactory::getPoolList(false);
+	wbem::mem_config::PoolViewFactory poolViewFactory;
+	std::vector<struct pool> pools = poolViewFactory.getPoolList(false);
 	for (std::vector<struct pool>::const_iterator iter = pools.begin();
 			iter != pools.end(); iter++)
 	{

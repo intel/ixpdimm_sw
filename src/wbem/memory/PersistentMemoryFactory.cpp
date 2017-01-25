@@ -84,7 +84,8 @@ wbem::framework::instance_names_t* wbem::memory::PersistentMemoryFactory::getIns
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	std::vector<struct pool> pools = mem_config::PoolViewFactory::getPoolList(true);
+	wbem::mem_config::PoolViewFactory poolViewFactory;
+	std::vector<struct pool> pools = poolViewFactory.getPoolList(true);
 	framework::instance_names_t *pNames = NULL;
 	try
 	{
@@ -176,13 +177,14 @@ wbem::framework::Instance* wbem::memory::PersistentMemoryFactory::getInstance(
 	validatePath(path);
 
 	framework::Instance *pInstance = new framework::Instance(path);
+	wbem::mem_config::PoolViewFactory poolViewFactory;
 
 	try
 	{
 		// Find the appropriate App Direct region
 		std::string deviceId = path.getKeyValue(DEVICEID_KEY).stringValue();
 
-		std::vector<struct pool> pools = mem_config::PoolViewFactory::getPoolList(true);
+		std::vector<struct pool> pools = poolViewFactory.getPoolList(true);
 		bool found = false;
 		for (size_t i = 0; !found && (i < pools.size()); i++)
 		{
@@ -677,7 +679,7 @@ bool wbem::memory::PersistentMemoryFactory::isPersistentMemoryUsingDimm(const st
 		const std::string& dimmUid) throw (framework::Exception)
 {
 	bool result = false;
-
+	wbem::mem_config::PoolViewFactory poolViewFactory;
 
 	// Storage region UUID is the same as the corresponding DIMM UID
 	if (pmUuid == dimmUid)
@@ -686,7 +688,7 @@ bool wbem::memory::PersistentMemoryFactory::isPersistentMemoryUsingDimm(const st
 	}
 	else // Might be an interleave set - see if it's using the DIMM
 	{
-		std::vector<struct pool> pools = mem_config::PoolViewFactory::getPoolList(true);
+		std::vector<struct pool> pools = poolViewFactory.getPoolList(true);
 		for (size_t i = 0; i < pools.size(); i++)
 		{
 			struct pool &pool = pools[i];

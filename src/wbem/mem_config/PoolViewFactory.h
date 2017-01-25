@@ -58,7 +58,7 @@ namespace wbem
 		static const std::string POOL_HEALTH_STR_PENDING = "Pending";
 		static const std::string POOL_HEALTH_STR_ERROR = "Error";
 		static const std::string POOL_HEALTH_STR_LOCKED = "Locked";
-
+		static const std::string POOL_ACTIONREQUIRED_EVENTS_NA = "N/A";
 /*!
  * Provider Factory for Intel_PoolView
  */
@@ -69,8 +69,8 @@ namespace wbem
 			/*!
 			 * Initialize a new Intel_PoolView.
 			 */
-			PoolViewFactory() throw (framework::Exception);
-
+			PoolViewFactory(core::NvmLibrary &lib = core::NvmLibrary::getNvmLibrary())
+				throw (framework::Exception);
 			/*!
 			 * Clean up the PoolViewFactory
 			 */
@@ -98,14 +98,29 @@ namespace wbem
 			framework::instance_names_t* getInstanceNames() throw (framework::Exception);
 
 			/*
+			 * Helper function to generate pool AR filter
+			 */
+			struct event_filter getPoolActionRequiredFilterForDimm(NVM_UID dimm_uid);
+
+			/*
+			 * Helper function to check if there are any action required events
+			 */
+			bool isActionRequiredForPool(pool *pPool);
+			/*
+			 * Helper function to retrieve action required events
+			 */
+			std::string getActionRequiredEvents(pool *pPool);
+			/*
 			 * Helper function to retrieve a list of pools
 			 */
-			static std::vector<struct pool> getPoolList(bool pmOnly=false) throw (framework::Exception);
+			std::vector<struct pool> getPoolList(bool pmOnly=false)
+					throw (framework::Exception);
 
 			/*
 			 * Helper function to retrieve a specific pool.
 			 */
-			static struct pool *getPool(const std::string &poolUidStr) throw (wbem::framework::Exception);
+			struct pool *getPool(const std::string &poolUidStr)
+					throw (framework::Exception);
 
 			/*
 			 * get list of underlying types of PM capacity in the pool
@@ -116,6 +131,7 @@ namespace wbem
 			static bool PoolHasAppDirectByOne(const struct pool *pPool);
 
 		private:
+			core::NvmLibrary &m_nvmLib;
 			std::vector<struct namespace_details> m_nsCache; // cache for namespace_details to avoid repeated library calls
 			void populateAttributeList(framework::attribute_names_t &attributes)
 					throw (framework::Exception);

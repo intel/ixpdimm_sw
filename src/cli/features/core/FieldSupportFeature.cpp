@@ -1938,10 +1938,13 @@ cli::framework::ErrorResult *cli::nvmcli::FieldSupportFeature::checkAppdirectCap
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
+	wbem::mem_config::PoolViewFactory poolViewFactory;
 	cli::framework::ErrorResult *pResult = NULL;
+
 	try
 	{
-		std::vector<struct pool> allPools = wbem::mem_config::PoolViewFactory::getPoolList(true);
+		std::vector<struct pool> allPools = poolViewFactory.getPoolList(true);
+
 		for (std::vector<struct pool>::iterator iter = allPools.begin();
 						iter != allPools.end(); iter++)
 		{
@@ -1953,7 +1956,7 @@ cli::framework::ErrorResult *cli::nvmcli::FieldSupportFeature::checkAppdirectCap
 			}
 		}
 	}
-	catch (wbem::framework::Exception &e)
+	catch (wbem::exception::NvmExceptionLibError &e)
 	{
 		pResult = cli::nvmcli::NvmExceptionToResult(e);
 	}

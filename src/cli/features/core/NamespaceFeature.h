@@ -46,6 +46,7 @@
 #include <pmem_config/PersistentMemoryNamespaceFactory.h>
 #include <pmem_config/NamespaceViewFactory.h>
 #include <core/memory_allocator/MemoryAllocationTypes.h>
+#include <mem_config/PoolViewFactory.h>
 
 namespace cli
 {
@@ -163,7 +164,6 @@ class NVM_API NamespaceFeature : public cli::framework::FeatureBase
 		// Every feature must have this static members for registration
 		void getPaths(cli::framework::CommandSpecList &list); //!< Required for Feature registration
 		static const std::string Name; //!< Required for Feature registration
-
 		enum
 		{
 			SHOW_NAMESPACE,
@@ -199,6 +199,7 @@ class NVM_API NamespaceFeature : public cli::framework::FeatureBase
 		void setCapabilitiesProvider(wbem::pmem_config::PersistentMemoryCapabilitiesFactory *pProvider);
 		void setNsViewProvider(wbem::pmem_config::NamespaceViewFactory *pProvider);
 		void setPersistentMemoryNamespaceProvider(wbem::pmem_config::PersistentMemoryNamespaceFactory *pProvider);
+		void setPoolViewProvider(wbem::mem_config::PoolViewFactory *pProvider);
 
 		// Setter for WbemToCli
 		void setWbemToCli(cli::nvmcli::WbemToCli *pInstance);
@@ -404,7 +405,7 @@ protected:
 		wbem::pmem_config::PersistentMemoryPoolFactory *m_pPmPoolProvider;
 		wbem::pmem_config::PersistentMemoryCapabilitiesFactory *m_pCapProvider;
 		wbem::pmem_config::NamespaceViewFactory *m_pNsViewFactoryProvider;
-
+		wbem::mem_config::PoolViewFactory *m_pPoolViewProvider;
 		// WbemToCli dependency
 		cli::nvmcli::WbemToCli *m_pWbemToCli;
 };

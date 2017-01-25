@@ -59,7 +59,6 @@ class NVM_API ShowCommandUtilities
 
 		static std::string getDimmId(core::device::Device &device);
 		static std::string getDimmIdFromDeviceUidAndHandle(const std::string &uid, const NVM_UINT32 handle);
-
 		static std::string getFormattedEvent(const event &event);
 		static std::string getFormattedEventList(const std::vector<event> &events);
 

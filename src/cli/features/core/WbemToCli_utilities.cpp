@@ -800,6 +800,7 @@ cli::framework::ErrorResult *cli::nvmcli::CoreExceptionToResult(std::exception &
 	// Try Library Exception
 	core::LibraryException *pLibError =
 			dynamic_cast<core::LibraryException *>(&e);
+
 	if (pLibError != NULL)
 	{
 		int libRc = pLibError->getErrorCode();

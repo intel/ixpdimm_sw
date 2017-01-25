@@ -86,6 +86,7 @@ wbem::framework::Instance* wbem::pmem_config::PersistentMemoryPoolFactory::getIn
 	// create the instance, initialize with attributes from the path
 	framework::Instance *pInstance = new framework::Instance(path);
 	struct pool *pPool = NULL;
+	mem_config::PoolViewFactory poolViewFactory;
 
 	if (pInstance != NULL)
 	{
@@ -101,7 +102,7 @@ wbem::framework::Instance* wbem::pmem_config::PersistentMemoryPoolFactory::getIn
 				throw framework::ExceptionBadParameter(INSTANCEID_KEY.c_str());
 			}
 
-			pPool = wbem::mem_config::PoolViewFactory::getPool(uidStr);
+			pPool = poolViewFactory.getPool(uidStr);
 
 			// Element Name = "NVMDIMM Available Capacity Pool"
 			if (containsAttribute(ELEMENTNAME_KEY, attributes))
@@ -178,6 +179,7 @@ wbem::framework::instance_names_t* wbem::pmem_config::PersistentMemoryPoolFactor
 	throw (wbem::framework::Exception)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	mem_config::PoolViewFactory poolViewFactory;
 	framework::instance_names_t *pNames = new framework::instance_names_t();
 	if (pNames == NULL)
 	{
@@ -186,7 +188,7 @@ wbem::framework::instance_names_t* wbem::pmem_config::PersistentMemoryPoolFactor
 	}
 	try
 	{
-		std::vector<struct pool> pools = mem_config::PoolViewFactory::getPoolList(true);
+		std::vector<struct pool> pools = poolViewFactory.getPoolList(true);
 		for (std::vector<struct pool>::const_iterator iter = pools.begin();
 				iter != pools.end(); iter++)
 		{
