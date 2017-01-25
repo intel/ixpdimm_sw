@@ -48,7 +48,7 @@ namespace nvmcli
 /*
  * Helper class to wrap a Memory Mode or App Direct Property
  */
-class MemoryProperty
+class NVM_API MemoryProperty
 {
 public:
 	MemoryProperty(const framework::ParsedCommand& parsedCommand,
@@ -79,6 +79,11 @@ public:
 	 * Is the settings passed in a valid settings
 	 */
 	bool getIsSettingsValid() const { return m_settingsValid; }
+
+	/*
+ 	 * Is the settings passed in a supported settings
+ 	 */
+	bool getIsSettingsSupported(const struct nvm_capabilities &nvmCaps) const;
 
 	/*
 	 * Helper function to get an interleave_format with the appropriate sizes set based on user input

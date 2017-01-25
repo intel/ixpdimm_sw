@@ -109,9 +109,29 @@ bool cli::nvmcli::MemoryProperty::getIsSizeValidNumber() const
 	return result;
 }
 
+bool cli::nvmcli::MemoryProperty::getIsSettingsSupported(const struct nvm_capabilities &nvmCaps) const
+{
+	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
+	bool result = false;
+	if (nvmCaps.nvm_features.app_direct_mode)
+	{
+		for (int i = 0; i < nvmCaps.platform_capabilities.app_direct_mode.interleave_formats_count; i++)
+		{
+			if (nvmCaps.platform_capabilities.app_direct_mode.interleave_formats[i].channel == m_format.channel &&
+				nvmCaps.platform_capabilities.app_direct_mode.interleave_formats[i].imc == m_format.imc)
+			{
+				result = true;
+				break;
+			}
+		}
+	}
+	return result;
+}
+
 bool cli::nvmcli::MemoryProperty::convertSettingStringToInterleaveSize(
 		const std::string& setting, enum interleave_size &size)
 {
+	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
 	bool result = true;
 	if (framework::stringsIEqual(setting, APP_DIRECTSETTING_64B))
 	{
@@ -142,6 +162,7 @@ bool cli::nvmcli::MemoryProperty::convertSettingStringToInterleaveSize(
 
 bool cli::nvmcli::MemoryProperty::parseSettings()
 {
+	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
 	bool result = true;
 
 	bool imcFound = false;
@@ -194,6 +215,7 @@ bool cli::nvmcli::MemoryProperty::parseSettings()
 
 bool cli::nvmcli::MemoryProperty::validateSettings()
 {
+	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
 	bool result = parseSettings();
 
 	if (result && m_format.imc < m_format.channel)
@@ -206,6 +228,7 @@ bool cli::nvmcli::MemoryProperty::validateSettings()
 
 bool cli::nvmcli::MemoryProperty::tokenizeSettings()
 {
+	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
 	bool result = true;
 
 	if (m_settingsPropertyExists)

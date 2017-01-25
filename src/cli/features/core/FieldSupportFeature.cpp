@@ -71,6 +71,7 @@
 #include <persistence/lib_persistence.h>
 #include <exception/NvmExceptionLibError.h>
 #include <core/device/DeviceFirmwareService.h>
+#include <core/NvmLibrary.h>
 #include <framework_interface/FrameworkExtensions.h>
 #include <libinvm-cim/ExceptionNoMemory.h>
 #include <mem_config/PoolViewFactory.h>
@@ -1789,6 +1790,14 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::changePreferences(
 							pListResult->insert(pADError->outputText());
 							COMMON_LOG_ERROR_F("%s", pADError->outputText().c_str());
 						}
+						else if (!appDirectSettingIsSupported(parsedCommand))
+						{
+							pADError = new framework::SyntaxErrorBadValueResult(
+									framework::TOKENTYPE_PROPERTY,
+									propIter->first, propIter->second);
+							pListResult->insert(pADError->outputText());
+							COMMON_LOG_ERROR_F("%s", pADError->outputText().c_str());
+						}
 						else
 						{
 							updatePreferenceInDb(propIter->first.c_str(), propIter->second.c_str(),
@@ -1878,9 +1887,30 @@ bool cli::nvmcli::FieldSupportFeature::valueIsValidNumberForKey(const std::strin
 bool cli::nvmcli::FieldSupportFeature::appDirectSettingIsValid(
 		const framework::ParsedCommand &parsedCommand)
 {
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	std::string EMPTY_SIZE_PROPERTY = "";
-	MemoryProperty appDirectsetting(parsedCommand, EMPTY_SIZE_PROPERTY, SQL_KEY_APPDIRECT_SETTINGS);
-	return appDirectsetting.getIsSettingsValid();
+	MemoryProperty appDirectSetting(parsedCommand, EMPTY_SIZE_PROPERTY, SQL_KEY_APPDIRECT_SETTINGS);
+	return appDirectSetting.getIsSettingsValid();
+}
+
+bool cli::nvmcli::FieldSupportFeature::appDirectSettingIsSupported(
+		const framework::ParsedCommand &parsedCommand)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	bool result = false;
+	try
+	{
+		core::NvmLibrary lib = core::NvmLibrary::getNvmLibrary();
+		std::string EMPTY_SIZE_PROPERTY = "";
+		MemoryProperty appDirectSetting(parsedCommand, EMPTY_SIZE_PROPERTY, SQL_KEY_APPDIRECT_SETTINGS);
+		result = appDirectSetting.getIsSettingsSupported(lib.getNvmCapabilities());
+	}
+	catch (core::LibraryException &)
+	{
+		COMMON_LOG_ERROR("Unable to get platform capabilities");
+		result = false;
+	}
+	return result;
 }
 
 cli::framework::ErrorResult *cli::nvmcli::FieldSupportFeature::checkAppdirectCapacities(bool &appDirectIsAvailable)
@@ -1892,7 +1922,7 @@ cli::framework::ErrorResult *cli::nvmcli::FieldSupportFeature::checkAppdirectCap
 	{
 		std::vector<struct pool> allPools = wbem::mem_config::PoolViewFactory::getPoolList(true);
 		for (std::vector<struct pool>::iterator iter = allPools.begin();
-						iter != allPools.end(); )
+						iter != allPools.end(); iter++)
 		{
 			// check if there is appdirect capacity in the pool
 			if (iter->ilset_count > 0)

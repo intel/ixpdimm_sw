@@ -322,6 +322,7 @@ private:
 	 * Helper function to check if value is valid app direct setting
 	 */
 	bool appDirectSettingIsValid(const framework::ParsedCommand &parsedCommand);
+	bool appDirectSettingIsSupported(const framework::ParsedCommand &parsedCommand);
 
 	/*!
 	 * Check if there are existing appdirect capacities
