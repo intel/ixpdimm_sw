@@ -613,7 +613,7 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::allocateFromPool(
 			// get encryption from goal
 			NVM_UINT16 encryption = wbem::pmem_config::PM_SERVICE_SECURITY_ENCRYPTION_IGNORE;
 			wbem::framework::Attribute encryptionAttribute;
-			if (pGoalInstance->getAttribute(wbem::ENCRYPTIONENABLED_KEY, encryptionAttribute) ==
+			if (pGoalInstance->getAttribute(wbem::ENCRYPTION_KEY, encryptionAttribute) ==
 					wbem::framework::SUCCESS)
 			{
 				encryption = encryptionAttribute.uintValue();

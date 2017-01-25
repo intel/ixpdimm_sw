@@ -75,7 +75,7 @@ throw(wbem::framework::Exception)
 	attributes.push_back(OPTIMIZE_KEY);
 	attributes.push_back(ACTIONREQUIRED_KEY);
 	attributes.push_back(ACTIONREQUIREDEVENTS_KEY);
-	attributes.push_back(ENCRYPTIONENABLED_KEY);
+	attributes.push_back(ENCRYPTION_KEY);
 	attributes.push_back(ERASECAPABLE_KEY);
 	attributes.push_back(PERSISTENTMEMORYTYPE_KEY);
 	attributes.push_back(REPLICATION_KEY);
@@ -246,9 +246,9 @@ throw(wbem::framework::Exception)
 			}
 		}
 
-		if (containsAttribute(ENCRYPTIONENABLED_KEY, attributes))
+		if (containsAttribute(ENCRYPTION_KEY, attributes))
 		{
-			pInstance->setAttribute(ENCRYPTIONENABLED_KEY,
+			pInstance->setAttribute(ENCRYPTION_KEY,
 				framework::Attribute((NVM_UINT16)ns.security_features.encryption, false));
 		}
 

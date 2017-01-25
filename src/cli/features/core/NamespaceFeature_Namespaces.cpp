@@ -1544,7 +1544,7 @@ void cli::nvmcli::NamespaceFeature::populateNamespaceAttributes(
 	allAttributes.push_back(wbem::ENABLED_KEY);
 	allAttributes.push_back(wbem::OPTIMIZE_KEY);
 	allAttributes.push_back(wbem::ERASECAPABLE_KEY);
-	allAttributes.push_back(wbem::ENCRYPTIONENABLED_KEY);
+	allAttributes.push_back(wbem::ENCRYPTION_KEY);
 	allAttributes.push_back(wbem::PERSISTENTMEMORYTYPE_KEY);
 	allAttributes.push_back(wbem::MEMORYPAGEALLOCATION_KEY);
 
