@@ -38,6 +38,7 @@
 #include <nvm_management.h>
 #include <framework_interface/NvmInstanceFactory.h>
 #include <exception/NvmExceptionLibError.h>
+#include <exception/NvmExceptionBadTarget.h>
 #include <core/device/DeviceService.h>
 #include <core/system/SystemService.h>
 
@@ -132,30 +133,30 @@ public:
 
 
 	// Extrinsic Methods
-	void setPassphrase(std::string deviceUid, std::string newPassphrase,
+	virtual void setPassphrase(std::string deviceUid, std::string newPassphrase,
 		std::string currentPassphrase);
 
-	void removePassphrase(std::string deviceUid, std::string currentPassphrase);
+	virtual void removePassphrase(std::string deviceUid, std::string currentPassphrase);
 
-	void unlock(std::string deviceUid, std::string currentPassphrase);
+	virtual void unlock(std::string deviceUid, std::string currentPassphrase);
 
-	void freezeLock(const std::string deviceUid);
+	virtual void freezeLock(const std::string deviceUid);
 
-	void injectTemperatureError(const std::string &dimmUid,
+	virtual void injectTemperatureError(const std::string &dimmUid,
 			const NVM_REAL32 temperature);
 
 	void injectPoisonError(const std::string &dimmUid,
 			const NVM_UINT64 dpa, const enum poison_memory_type poisonType);
 
-	void injectSoftwareTrigger(const std::string &dimmUid,
+	virtual void injectSoftwareTrigger(const std::string &dimmUid,
 			const NVM_UINT16 error);
 
 	void clearPoisonError(const std::string &dimmUid,
 			const NVM_UINT64 dpa,const enum poison_memory_type poison_type);
 
-	void clearTemperatureError(const std::string &dimmUid);
+	virtual void clearTemperatureError(const std::string &dimmUid);
 
-	void clearSoftwareTrigger(const std::string &dimmUid,
+	virtual void clearSoftwareTrigger(const std::string &dimmUid,
 				const NVM_UINT16 error);
 
 	// Helper functions

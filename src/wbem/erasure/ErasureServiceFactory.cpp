@@ -278,7 +278,6 @@ wbem::erasure::eraseType wbem::erasure::ErasureServiceFactory::getEraseType(std:
 
 void wbem::erasure::ErasureServiceFactory::eraseDevice(std::string deviceUid,
 		std::string password)
-throw (wbem::framework::Exception)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	if (!core::device::isUidValid(deviceUid))
@@ -297,7 +296,6 @@ throw (wbem::framework::Exception)
 }
 
 void wbem::erasure::ErasureServiceFactory::eraseDevice(std::string password)
-throw (framework::Exception)
 {
 	std::vector<std::string> devices = m_GetManageabledeviceUids();
 	for (size_t i = 0; i < devices.size(); i++)

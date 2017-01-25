@@ -118,16 +118,14 @@ class NVM_API ErasureServiceFactory : public framework_interface::NvmInstanceFac
 		 * @param password
 		 * 		Password to the device
 		 */
-		void eraseDevice(std::string deviceUid, std::string password)
-				throw (framework::Exception);
+		virtual void eraseDevice(std::string deviceUid, std::string password);
 
 		/*!
 		 * Secure erase all devices on system
 		 * @param password
 		 * 		Password to the device
 		 */
-		void eraseDevice(std::string password)
-				throw (framework::Exception);
+		virtual void eraseDevice(std::string password);
 
 		/*!
 		 * API indirection

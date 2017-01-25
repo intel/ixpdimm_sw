@@ -38,7 +38,7 @@
 #include <LogEnterExit.h>
 
 #include <server/BaseServerFactory.h>
-#include <erasure/ErasureServiceFactory.h>
+#include "SystemFeature.h"
 #include <mem_config/MemoryResourcesFactory.h>
 #include <server/SystemCapabilitiesFactory.h>
 #include <libinvm-cim/Types.h>
@@ -55,7 +55,6 @@
 #include <physical_asset/MemoryTopologyViewFactory.h>
 #include "CommandParts.h"
 #include "WbemToCli_utilities.h"
-#include "SystemFeature.h"
 #include <exception/NvmExceptionBadTarget.h>
 #include <exception/NvmExceptionLibError.h>
 
@@ -64,9 +63,8 @@
 #else
 #include <termios.h>
 #include <unistd.h>
-
 #endif
-#include <physical_asset/NVDIMMFactory.h>
+
 #include <cli/features/core/ShowDeviceCommand.h>
 #include <cli/features/core/ShowHostServerCommand.h>
 #include <cli/features/core/ShowMemoryResourcesCommand.h>
@@ -246,12 +244,37 @@ void cli::nvmcli::SystemFeature::getPaths(cli::framework::CommandSpecList &list)
 }
 
 // Constructor, just calls super class
-cli::nvmcli::SystemFeature::SystemFeature() : cli::framework::FeatureBase()
+cli::nvmcli::SystemFeature::SystemFeature() : cli::framework::FeatureBase(),
+		m_uidToDimmIdStr(wbem::physical_asset::NVDIMMFactory::uidToDimmIdStr),
+		m_pDimmProvider(new wbem::physical_asset::NVDIMMFactory()),
+		m_pErasureProvider(new wbem::erasure::ErasureServiceFactory()),
+		m_pDimmProviderAdapter(new cli::nvmcli::DimmProviderAdapter())
 {
 }
 
 cli::nvmcli::SystemFeature::~SystemFeature()
 {
+}
+
+/*
+ * ToDo: Free old provider
+ */
+void cli::nvmcli::SystemFeature::setDimmProvider(
+		wbem::physical_asset::NVDIMMFactory *pDimmProvider)
+{
+	m_pDimmProvider = pDimmProvider;
+}
+
+void cli::nvmcli::SystemFeature::setDimmErasureProvider(
+		wbem::erasure::ErasureServiceFactory *pErasureProvider)
+{
+	m_pErasureProvider = pErasureProvider;
+}
+
+void cli::nvmcli::SystemFeature::setDimmProviderAdapter(
+		cli::nvmcli::DimmProviderAdapter *pDimmProviderAdapter)
+{
+	m_pDimmProviderAdapter = pDimmProviderAdapter;
 }
 
 /*
@@ -365,7 +388,7 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::modifyDevice(
 		else if (!pResults)
 		{
 			basePrefix = TRS(MODIFYDEVICE_MSG);
-			pResults = cli::nvmcli::getDimms(parsedCommand, dimms);
+			pResults = m_pDimmProviderAdapter->getDimms(parsedCommand, dimms);
 		}
 
 		if (!pResults)
@@ -383,7 +406,7 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::modifyDevice(
 			std::vector<std::string>::iterator iter = dimms.begin();
 			for (; iter != dimms.end(); iter++)
 			{
-				std::string dimmStr = wbem::physical_asset::NVDIMMFactory::uidToDimmIdStr((*iter));
+				std::string dimmStr = m_uidToDimmIdStr((*iter));
 				std::string prefix = cli::framework::ResultBase::stringFromArgList((basePrefix + " %s").c_str(),
 						dimmStr.c_str());
 				prefix += ": ";
@@ -447,7 +470,7 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::setFwLogging(
 	else
 	{
 		basePrefix = TRS(SETFWLOGGING_MSG);
-		pResults = cli::nvmcli::getDimms(parsedCommand, dimms);
+		pResults = m_pDimmProviderAdapter->getDimms(parsedCommand, dimms);
 	}
 
 	if (pResults == NULL)
@@ -465,7 +488,7 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::setFwLogging(
 		std::vector<std::string>::iterator iter = dimms.begin();
 		for (; iter != dimms.end(); iter++)
 		{
-			std::string dimmStr = wbem::physical_asset::NVDIMMFactory::uidToDimmIdStr((*iter));
+			std::string dimmStr = m_uidToDimmIdStr((*iter));
 			std::string prefix = cli::framework::ResultBase::stringFromArgList((basePrefix + " %s").c_str(),
 					dimmStr.c_str());
 			prefix += ": ";
@@ -506,6 +529,7 @@ enum return_code cli::nvmcli::SystemFeature::setFirstPassphrase(std::string *pPa
 			*pPassphrase = newValue;
 		}
 	}
+
 
 	return rc;
 }
@@ -601,7 +625,7 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::generateErrorResultFromS
 	framework::ResultBase *pResults = NULL;
 
 	std::string prefix = cli::framework::ResultBase::stringFromArgList((basePrefix + " %s").c_str(),
-			wbem::physical_asset::NVDIMMFactory::uidToDimmIdStr((dimms[0])).c_str());
+			m_uidToDimmIdStr((dimms[0])).c_str());
 
 	pResults = new framework::ErrorResult(framework::ResultBase::ERRORCODE_UNKNOWN, errorMsg, prefix);
 	return pResults;
@@ -613,8 +637,9 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::enableDeviceSecurity(
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	framework::ResultBase *pResults = NULL;
+
 	std::vector<std::string> dimms;
-	pResults = cli::nvmcli::getDimms(parsedCommand, dimms);
+	pResults = m_pDimmProviderAdapter->getDimms(parsedCommand, dimms);
 	if (!pResults)
 	{
 		std::string basePrefix = TRS(SETPASSPHRASE_MSG);
@@ -632,22 +657,20 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::enableDeviceSecurity(
 					TRS(ERRORMSG_SECURITY_PASSPHRASEMISSMATCH),
 					basePrefix);
 		}
-
 		if (pResults == NULL)
 		{
 			framework::SimpleListResult *pListResults = new framework::SimpleListResult();
 			pResults = pListResults;
-			wbem::physical_asset::NVDIMMFactory dimmProvider;
 
 			for (std::vector<std::string>::const_iterator dimmIter = dimms.begin();
 					dimmIter != dimms.end(); dimmIter++)
 			{
 				std::string prefix = cli::framework::ResultBase::stringFromArgList((basePrefix + " %s").c_str(),
-						wbem::physical_asset::NVDIMMFactory::uidToDimmIdStr((*dimmIter)).c_str());
+						m_uidToDimmIdStr((*dimmIter)).c_str());
 				prefix += ": ";
 				try
 				{
-					dimmProvider.setPassphrase((*dimmIter), newPassphrase, "");
+					m_pDimmProvider->setPassphrase((*dimmIter), newPassphrase, "");
 					pListResults->insert(prefix + TRS(cli::framework::SUCCESS_MSG));
 				}
 				catch (wbem::framework::Exception &e)
@@ -760,7 +783,7 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::changeDevicePassphrase(
 
 	cli::framework::ResultBase *pResults = NULL;
 	std::vector<std::string> dimms;
-	pResults = cli::nvmcli::getDimms(parsedCommand, dimms);
+	pResults = m_pDimmProviderAdapter->getDimms(parsedCommand, dimms);
 	if (!pResults)
 	{
 		std::string passphrase;
@@ -786,18 +809,17 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::changeDevicePassphrase(
 			{
 				framework::SimpleListResult *pListResults = new framework::SimpleListResult();
 				pResults = pListResults;
-				wbem::physical_asset::NVDIMMFactory dimmProvider;
 
 				for (std::vector<std::string>::const_iterator dimmIter = dimms.begin();
 						dimmIter != dimms.end(); dimmIter++)
 				{
 					std::string prefix = cli::framework::ResultBase::stringFromArgList((basePrefix + " %s").c_str(),
-							wbem::physical_asset::NVDIMMFactory::uidToDimmIdStr((*dimmIter)).c_str());
+							m_uidToDimmIdStr((*dimmIter)).c_str());
 					prefix += ": ";
 
 					try
 					{
-						dimmProvider.setPassphrase((*dimmIter), newPassphrase, passphrase);
+						m_pDimmProvider->setPassphrase((*dimmIter), newPassphrase, passphrase);
 						pListResults->insert(prefix + TRS(cli::framework::SUCCESS_MSG));
 					}
 					catch (wbem::framework::Exception &e)
@@ -869,22 +891,21 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::changeDeviceSecurity(
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	framework::ResultBase *pResults = NULL;
-	std::vector<std::string> dimms;
-	pResults = cli::nvmcli::getDimms(parsedCommand, dimms);
+	std::string newLockState = framework::Parser::getPropertyValue(parsedCommand, LOCKSTATE_PROPERTYNAME);
+	if (!cli::framework::stringsIEqual(newLockState, UNLOCKED_PROPERTYVALUE) &&
+			!cli::framework::stringsIEqual(newLockState, DISABLED_PROPERTYVALUE) &&
+			!cli::framework::stringsIEqual(newLockState, FROZEN_PROPERTYVALUE))
+	{
+		pResults = new framework::SyntaxErrorBadValueResult(
+				framework::TOKENTYPE_PROPERTY,
+				LOCKSTATE_PROPERTYNAME.c_str(),
+				newLockState);
+	}
 	if (!pResults)
 	{
+		std::vector<std::string> dimms;
+		pResults = m_pDimmProviderAdapter->getDimms(parsedCommand, dimms);
 		std::string basePrefix = TRS(UNLOCK_MSG);
-		std::string newLockState = framework::Parser::getPropertyValue(parsedCommand, LOCKSTATE_PROPERTYNAME);
-		if (!cli::framework::stringsIEqual(newLockState, UNLOCKED_PROPERTYVALUE) &&
-				!cli::framework::stringsIEqual(newLockState, DISABLED_PROPERTYVALUE) &&
-				!cli::framework::stringsIEqual(newLockState, FROZEN_PROPERTYVALUE))
-		{
-			pResults = new framework::SyntaxErrorBadValueResult(
-					framework::TOKENTYPE_PROPERTY,
-					LOCKSTATE_PROPERTYNAME.c_str(),
-					newLockState);
-		}
-
 		std::string passphrase;
 
 		if ((cli::framework::stringsIEqual(newLockState, UNLOCKED_PROPERTYVALUE) ||
@@ -895,7 +916,6 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::changeDeviceSecurity(
 
 		if (pResults == NULL)
 		{
-			wbem::physical_asset::NVDIMMFactory dimmProvider;
 			framework::SimpleListResult *pListResults = new framework::SimpleListResult();
 			for (std::vector<std::string>::const_iterator dimmIter = dimms.begin();
 					dimmIter != dimms.end(); dimmIter++)
@@ -907,28 +927,28 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::changeDeviceSecurity(
 					{
 						basePrefix = TRS(UNLOCK_MSG);
 						prefix += cli::framework::ResultBase::stringFromArgList((basePrefix + " %s").c_str(),
-								wbem::physical_asset::NVDIMMFactory::uidToDimmIdStr(*dimmIter).c_str());
+								m_uidToDimmIdStr(*dimmIter).c_str());
 						prefix += ": ";
 
-						dimmProvider.unlock((*dimmIter), passphrase);
+						m_pDimmProvider->unlock((*dimmIter), passphrase);
 					}
 					else if (cli::framework::stringsIEqual(newLockState, DISABLED_PROPERTYVALUE))
 					{
 						basePrefix = TRS(REMOVEPASSPHRASE_MSG);
 						prefix += cli::framework::ResultBase::stringFromArgList((basePrefix + " %s").c_str(),
-								wbem::physical_asset::NVDIMMFactory::uidToDimmIdStr(*dimmIter).c_str());
+								m_uidToDimmIdStr(*dimmIter).c_str());
 						prefix += ": ";
 
-						dimmProvider.removePassphrase((*dimmIter), passphrase);
+						m_pDimmProvider->removePassphrase((*dimmIter), passphrase);
 					}
 					else
 					{
 						basePrefix = TRS(DIMM_FROZEN_MSG);
 						prefix += cli::framework::ResultBase::stringFromArgList((basePrefix + " %s").c_str(),
-								wbem::physical_asset::NVDIMMFactory::uidToDimmIdStr(*dimmIter).c_str());
+								m_uidToDimmIdStr(*dimmIter).c_str());
 						prefix += ": ";
 
-						dimmProvider.freezeLock(*dimmIter);
+						m_pDimmProvider->freezeLock(*dimmIter);
 					}
 
 					pListResults->insert(prefix + TRS(cli::framework::SUCCESS_MSG));
@@ -977,7 +997,7 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::eraseDeviceData(
 
 	std::vector<std::string> dimms;
 	framework::ResultBase *pResults = NULL;
-	pResults = cli::nvmcli::getDimms(parsedCommand, dimms);
+	pResults = m_pDimmProviderAdapter->getDimms(parsedCommand, dimms);
 	if (!pResults)
 	{
 		std::string passphrase;
@@ -1006,14 +1026,13 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::eraseDeviceData(
 		if (!pResults)
 		{
 
-			wbem::erasure::ErasureServiceFactory erasureProvider;
 			framework::SimpleListResult *pListResults = new framework::SimpleListResult();
 			pResults = pListResults;
 
 			for (std::vector<std::string>::const_iterator dimmIter = dimms.begin();
 					dimmIter != dimms.end(); dimmIter++)
 			{
-				std::string dimmStr = wbem::physical_asset::NVDIMMFactory::uidToDimmIdStr((*dimmIter));
+				std::string dimmStr = m_uidToDimmIdStr((*dimmIter));
 				std::string prefix = cli::framework::ResultBase::stringFromArgList((basePrefix + " %s").c_str(),
 						dimmStr.c_str());
 				prefix += ": ";
@@ -1031,7 +1050,7 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::eraseDeviceData(
 					}
 					else
 					{
-						erasureProvider.eraseDevice((*dimmIter), passphrase);
+						m_pErasureProvider->eraseDevice((*dimmIter), passphrase);
 
 						pListResults->insert(prefix + TRS(cli::framework::SUCCESS_MSG));
 					}

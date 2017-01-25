@@ -35,12 +35,16 @@
 #include <nvm_management.h>
 #include <cr_i18n.h>
 
+
+#include <erasure/ErasureServiceFactory.h>
 #include <libinvm-cli/FeatureBase.h>
 #include <libinvm-cli/ObjectListResult.h>
 #include <libinvm-cli/SyntaxErrorBadValueResult.h>
 #include <libinvm-cim/Instance.h>
 #include "WbemToCli_utilities.h"
+#include <physical_asset/NVDIMMFactory.h>
 
+#include "DimmProviderAdapter.h"
 #include "MemoryProperty.h"
 #include <nvm_types.h>
 
@@ -136,6 +140,12 @@ class NVM_API SystemFeature : public cli::framework::FeatureBase
 			SHOW_TOPOLOGY
 		};
 
+		std::string (* m_uidToDimmIdStr)(const std::string &dimmUid)
+				throw (wbem::framework::Exception);
+
+		void setDimmProvider(wbem::physical_asset::NVDIMMFactory *pDimmProvider);
+		void setDimmErasureProvider(wbem::erasure::ErasureServiceFactory *pErasureProvider);
+		void setDimmProviderAdapter(cli::nvmcli::DimmProviderAdapter *pDimmProviderAdapter);
 
 private:
 		framework::ResultBase *showSystem(const framework::ParsedCommand &parsedCommand);
@@ -195,6 +205,9 @@ private:
 		cli::framework::ResultBase * parsePassPhrase(const framework::ParsedCommand &parsedCommand,
 				std::vector<std::string> dimms,
 				std::string &passphrase);
+		wbem::physical_asset::NVDIMMFactory *m_pDimmProvider;
+		wbem::erasure::ErasureServiceFactory *m_pErasureProvider;
+		cli::nvmcli::DimmProviderAdapter *m_pDimmProviderAdapter;
 };
 
 }
