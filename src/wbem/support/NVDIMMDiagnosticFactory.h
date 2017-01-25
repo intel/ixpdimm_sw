@@ -39,6 +39,8 @@
 #include <nvm_management.h>
 #include <framework_interface/NvmInstanceFactory.h>
 
+#define	NVDIMMDIAGNOSTIC_TEST_NOT_FOUND	-1
+
 namespace wbem
 {
 namespace support
@@ -135,7 +137,7 @@ namespace support
 	static const NVM_UINT32 NVDIMMDIAGNOSTIC_ERR_NOT_SUPPORTED = 1;
 	static const NVM_UINT32 NVDIMMDIAGNOSTIC_ERR_FAILED = 4;
 	static const NVM_UINT32 NVDIMMDIAGNOSTIC_ERR_INVALID_PARAMETER = 5;
-	static const NVM_UINT32 NVDIMMDIAGNOSTIC_ERR_FAILED_WITH_ERRORS = 32769;
+	static const NVM_UINT32 NVDIMMDIAGNOSTIC_ERR_FAILED_WITH_ERRORS = 32768;
 
 /*!
  * Models the physical aspects of an Intel NVDIMM
@@ -216,8 +218,12 @@ class NVM_API NVDIMMDiagnosticFactory : public framework_interface::NvmInstanceF
 				wbem::framework::attributes_t &inParms,
 				wbem::framework::attributes_t &outParms);
 
-	bool  isAssociated(const std::string &associationClass, framework::Instance *pAntInstance,
-			framework::Instance *pDepInstance);
+		bool  isAssociated(const std::string &associationClass, framework::Instance *pAntInstance,
+				framework::Instance *pDepInstance);
+
+		int getSuccessEventCodeForTest(enum diagnostic_test test);
+
+		bool testHasSuccessEvent(enum diagnostic_test test);
 
 	private:
 		void populateAttributeList(framework::attribute_names_t &attributes)

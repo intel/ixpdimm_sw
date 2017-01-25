@@ -70,6 +70,7 @@
 #include <persistence/config_settings.h>
 #include <persistence/lib_persistence.h>
 #include <exception/NvmExceptionLibError.h>
+#include <exception/NvmExceptionDiagnosticError.h>
 #include <core/device/DeviceFirmwareService.h>
 #include <core/NvmLibrary.h>
 #include <framework_interface/FrameworkExtensions.h>
@@ -905,6 +906,28 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::ackEvent(
 }
 
 /*
+ * RunDiagnosticService helper method
+ */
+void callRunDiagnosticService(NVM_UID device_uid,
+		wbem::framework::UINT16_LIST ignoreList, std::string testType)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	try
+	{
+		wbem::support::NVDIMMDiagnosticFactory provider;
+		provider.RunDiagnosticService(device_uid, ignoreList, testType);
+	}
+	catch(wbem::exception::NvmExceptionDiagnosticError &e)
+	{
+	}
+	catch(wbem::framework::Exception &e)
+	{
+		throw e;
+	}
+}
+
+/*
  * Run a diagnostic test
  */
 cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::runDiagnostic(
@@ -912,11 +935,8 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::runDiagnostic(
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	framework::ResultBase *pResult = NULL;
-	wbem::support::NVDIMMDiagnosticFactory provider;
 
 	// set up as multiple property lists (key/value pairs), one per test attempt
-
-
 	std::vector<std::string> dimmTargets;
 
 	// set up list of tests to run - all false for now
@@ -1027,10 +1047,11 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::runDiagnostic(
 								try
 								{
 									// run diagnostic test
-									provider.RunDiagnosticService(uid, ignoreResults, wbem::support::validTestTypes[i]);
+									callRunDiagnosticService(uid, ignoreResults, wbem::support::validTestTypes[i]);
 									// if we got this far, pull the results out of the event table for this test
 									// there should only be one event table entry per test,
 									// and per uid if it's uid specific
+
 
 									// get results
 									wbem::framework::attribute_names_t attributes;

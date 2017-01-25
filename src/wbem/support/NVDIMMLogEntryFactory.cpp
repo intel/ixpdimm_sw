@@ -54,7 +54,6 @@ throw (wbem::framework::Exception)
 wbem::support::NVDIMMLogEntryFactory::~NVDIMMLogEntryFactory()
 { }
 
-
 void wbem::support::NVDIMMLogEntryFactory::populateAttributeList(framework::attribute_names_t &attributes)
 throw (wbem::framework::Exception)
 {
@@ -174,7 +173,7 @@ throw (wbem::framework::Exception)
 		memset(&filter, 0, sizeof(struct event_filter));
 		filter.filter_mask = NVM_FILTER_ON_EVENT;
 		filter.event_id = instanceId;
-		int count = nvm_get_event_count(&filter);
+		int count = m_pApi->getEventCount(&filter);
 		if (count != 1)
 		{
 			throw framework::ExceptionBadParameter(INSTANCEID_KEY.c_str());
@@ -183,7 +182,7 @@ throw (wbem::framework::Exception)
 		{
 			struct event event_item;
 			memset(&event_item, 0, sizeof(struct event));
-			count = nvm_get_events(&filter, &event_item, 1);
+			count = m_pApi->getEvents(&filter, &event_item, 1);
 			if (count == 1)
 			{
 				eventToInstance(pInstance, &event_item, attributes);

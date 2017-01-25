@@ -45,6 +45,7 @@
 #include <framework_interface/NvmAssociationFactory.h>
 #include <physical_asset/NVDIMMFactory.h>
 #include <software/ElementSoftwareIdentityFactory.h>
+#include <persistence/event.h>
 
 wbem::support::NVDIMMDiagnosticFactory::NVDIMMDiagnosticFactory()
 	throw (wbem::framework::Exception)
@@ -269,6 +270,73 @@ void wbem::support::NVDIMMDiagnosticFactory::RunDiagnosticService(NVM_UID device
 			throw exception::NvmExceptionLibError(rc);
 		}
 	}
+	else
+	{
+		if (!testHasSuccessEvent(diags.test))
+		{
+			throw exception::NvmExceptionDiagnosticError(rc);
+		}
+	}
+}
+
+int wbem::support::NVDIMMDiagnosticFactory::getSuccessEventCodeForTest(enum diagnostic_test test)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	int code = NVDIMMDIAGNOSTIC_TEST_NOT_FOUND;
+
+	switch (test)
+	{
+		case DIAG_TYPE_QUICK:
+			code = EVENT_CODE_DIAG_QUICK_SUCCESS;
+			break;
+
+		case DIAG_TYPE_PLATFORM_CONFIG:
+			code = EVENT_CODE_DIAG_PCONFIG_SUCCESS;
+			break;
+
+		case DIAG_TYPE_FW_CONSISTENCY:
+			code = EVENT_CODE_DIAG_FW_SUCCESS;
+			break;
+
+		case DIAG_TYPE_SECURITY:
+			code = EVENT_CODE_DIAG_SECURITY_SUCCESS;
+			break;
+
+		default:
+			COMMON_LOG_ERROR_F("Invalid test: %d", test);
+	}
+
+	return code;
+}
+
+bool wbem::support::NVDIMMDiagnosticFactory::testHasSuccessEvent(enum diagnostic_test test)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	bool hasSuccessEvent = false;
+	int event_count = 0;
+	struct event_filter event_filter;
+	event_filter.filter_mask = NVM_FILTER_ON_CODE;
+
+	int code = getSuccessEventCodeForTest(test);
+
+	if (code != NVDIMMDIAGNOSTIC_TEST_NOT_FOUND)
+	{
+		event_filter.code = code;
+		event_count = m_pApi->getEventCount(&event_filter);
+
+		if (event_count > 0)
+		{
+			hasSuccessEvent = true;
+		}
+	}
+	else
+	{
+		hasSuccessEvent = true;
+	}
+
+	return hasSuccessEvent;
 }
 
 bool wbem::support::NVDIMMDiagnosticFactory::testTypeValid(std::string testType)
