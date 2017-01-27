@@ -264,9 +264,8 @@ enum event_type
 	EVENT_TYPE_DIAG = 4, // Subscribe or filter on all diagnostic event types
 	EVENT_TYPE_DIAG_QUICK = 5, // Quick diagnostic test event.
 	EVENT_TYPE_DIAG_PLATFORM_CONFIG = 6, // Platform config diagnostic test event.
-	EVENT_TYPE_DIAG_PM_META = 7, // PM metadata diagnostic test event.
-	EVENT_TYPE_DIAG_SECURITY = 8, // Security diagnostic test event.
-	EVENT_TYPE_DIAG_FW_CONSISTENCY = 9 // FW consistency diagnostic test event.
+	EVENT_TYPE_DIAG_SECURITY = 7, // Security diagnostic test event.
+	EVENT_TYPE_DIAG_FW_CONSISTENCY = 8 // FW consistency diagnostic test event.
 };
 
 /*
@@ -344,9 +343,8 @@ enum diagnostic_test
 {
 	DIAG_TYPE_QUICK = 0, // verifies manageable DIMM host mailbox is accessible and basic health
 	DIAG_TYPE_PLATFORM_CONFIG = 1, // verifies BIOS config matches installed HW
-	DIAG_TYPE_PM_META = 2, // verifies consistent and correct PM metadata
-	DIAG_TYPE_SECURITY = 3, // verifies all manageable DIMMS have consistent security state
-	DIAG_TYPE_FW_CONSISTENCY = 4 // verifies all DIMMS have consistent FW and attributes
+	DIAG_TYPE_SECURITY = 2, // verifies all manageable DIMMS have consistent security state
+	DIAG_TYPE_FW_CONSISTENCY = 3 // verifies all DIMMS have consistent FW and attributes
 };
 
 /*

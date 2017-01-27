@@ -64,7 +64,6 @@ namespace support
 	const std::string NVDIMMLOGENTRY_TYPE_DIAG = "AllDiagCheck";
 	const std::string NVDIMMLOGENTRY_TYPE_QUICKDIAG = "QuickCheck";
 	const std::string NVDIMMLOGENTRY_TYPE_PLATFORMCONFIGDIAG = "PlatformCheck";
-	const std::string NVDIMMLOGENTRY_TYPE_PMDIAG = "StorageCheck";
 	const std::string NVDIMMLOGENTRY_TYPE_SECURITYDIAG = "SecurityCheck";
 	const std::string NVDIMMLOGENTRY_TYPE_FWCONSISTENCYDIAG = "SettingCheck";
 	const std::string NVDIMMLOGENTRY_TYPE_CONFIG = "Config";

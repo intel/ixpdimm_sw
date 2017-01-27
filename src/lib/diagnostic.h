@@ -84,7 +84,6 @@ int diag_quick_health_check(const NVM_UID device_uid,
 int diag_security_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_results);
 int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_results);
 int diag_platform_config_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_results);
-int diag_pm_metadata_check(NVM_UINT32 *p_results);
 
 /*
  * Sub-diagnostics for Platform Config Diagnostic

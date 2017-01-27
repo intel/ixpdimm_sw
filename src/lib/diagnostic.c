@@ -72,9 +72,6 @@ int nvm_run_diagnostic(const NVM_UID device_uid,
 			case DIAG_TYPE_PLATFORM_CONFIG:
 				rc = diag_platform_config_check(p_diagnostic, p_results);
 				break;
-			case DIAG_TYPE_PM_META:
-				rc = diag_pm_metadata_check(p_results);
-				break;
 			case DIAG_TYPE_FW_CONSISTENCY:
 				rc = diag_firmware_check(p_diagnostic, p_results);
 				break;

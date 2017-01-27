@@ -83,9 +83,6 @@ std::string wbem::support::NVDIMMLogEntryFactory::eventTypeToString(int eventTyp
 		case EVENT_TYPE_DIAG_PLATFORM_CONFIG:
 			eventTypeName = NVDIMMLOGENTRY_TYPE_PLATFORMCONFIGDIAG;
 			break;
-		case EVENT_TYPE_DIAG_PM_META:
-			eventTypeName = NVDIMMLOGENTRY_TYPE_PMDIAG;
-			break;
 		case EVENT_TYPE_DIAG_SECURITY:
 			eventTypeName = NVDIMMLOGENTRY_TYPE_SECURITYDIAG;
 			break;
@@ -129,10 +126,6 @@ int wbem::support::NVDIMMLogEntryFactory::eventTypeStringToType(const std::strin
 	else if (s_strncmpi(NVDIMMLOGENTRY_TYPE_PLATFORMCONFIGDIAG.c_str(), typeStr.c_str(), typeStr.size() + 1) == 0)
 	{
 		type = EVENT_TYPE_DIAG_PLATFORM_CONFIG;
-	}
-	else if (s_strncmpi(NVDIMMLOGENTRY_TYPE_PMDIAG.c_str(), typeStr.c_str(), typeStr.size() + 1) == 0)
-	{
-		type = EVENT_TYPE_DIAG_PM_META;
 	}
 	else if (s_strncmpi(NVDIMMLOGENTRY_TYPE_SECURITYDIAG.c_str(), typeStr.c_str(), typeStr.size() + 1) == 0)
 	{

@@ -444,48 +444,6 @@ const char *EVENT_MESSAGES_PCONFIG_DIAG[EVENT_CODE_DIAG_PCONFIG_UNKNOWN -
 	N_TR("The platform configuration check logged an unknown error code %d."),
 };
 
-/*
- * Driver metadata check diagnostic event message strings.
- */
-const char *EVENT_MESSAGES_DIAG_PM_METADATA_CHECK[EVENT_CODE_DIAG_PM_META_UNKNOWN -
-	EVENT_CODE_OFFSET_DIAG_PM_META] =
-{
-	// EVENT_CODE_DIAG_PM_META_NS_OK - 0
-	N_TR("The PM Metadata check detected no namespace health issues."),
-	// EVENT_CODE_DIAG_PM_META_NS_MISSING - 1
-	N_TR("The PM Metadata check detected that a namespace is missing."),
-	// EVENT_CODE_DIAG_PM_META_NS_MISSING_LABEL - 2
-	N_TR("The PM Metadata check detected that the number of labels for the namespace "
-			"from the label area of the Platform Configuration Data does not match "
-			"the nlabel count in the first label."),
-	// EVENT_CODE_DIAG_PM_META_NS_CORRUPT_INTERLEAVE_SET - 3
-	N_TR("The PM Metadata check detected more than one App Direct namespace "
-			"for a given interleave set."),
-	// EVENT_CODE_DIAG_PM_META_NS_INCONSISTENT_LABELS - 4
-	N_TR("The PM Metadata check detected that the nlabel or lbasize fields "
-			"in the Namespace Labels do not all have the same values."),
-	// EVENT_CODE_DIAG_PM_META_NS_INVALID_BLOCK_SIZE - 5
-	N_TR("The PM Metadata check detected the namespace contains an unsupported "
-			"logical block size."),
-	// EVENT_CODE_DIAG_PM_META_NS_CORRUPT_BTT_METADATA - 6
-	N_TR("The PM Metadata check detected that the BTT metadata checks fail.")
-	// EVENT_CODE_DIAG_PM_META_LABEL_OK - 7
-	N_TR("The PM Metadata check detected no label area health issues."),
-	// EVENT_CODE_DIAG_PM_META_LABEL_MISSING_PCD - 8
-	N_TR("The PM Metadata check was unable to retrieve Platform Configuration Data "
-			"from the " NVM_DIMM_NAME "."),
-	// EVENT_CODE_DIAG_PM_META_LABEL_MISSING_VALID_INDEX_BLOCK - 9
-	N_TR("The PM Metadata check detected no valid Namespace Index Blocks or an uninitialized "
-			"label area in the Platform Configuration Data."),
-	// EVENT_CODE_DIAG_PM_META_LABEL_INSUFFICIENT_PM - 10
-	N_TR("The PM Metadata check detected a Storage Namespace described in the "
-			"Platform Configuration Data is bigger than the " NVM_DIMM_NAME "'s "
-			"available persistent memory."),
-	// EVENT_CODE_DIAG_PM_META_LABEL_LABELS_OVERLAP - 11
-	N_TR("The PM Metadata check detected Namespace Labels overlapping each other.")
-	// EVENT_CODE_DIAG_PM_META_UNKNOWN
-	N_TR("The PM Metadata check logged an unknown error code %d."),
-};
 
 /*
  * Set mgmt library event messages
@@ -617,9 +575,6 @@ void populate_event_message(struct event *p_event)
 						p_event->code);
 			}
 			break;
-
-		// TODO: Not yet supported
-		case EVENT_TYPE_DIAG_PM_META:
 
 		// invalid type, leave empty
 		case EVENT_TYPE_DIAG:

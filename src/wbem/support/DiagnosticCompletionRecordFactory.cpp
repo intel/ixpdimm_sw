@@ -109,9 +109,6 @@ throw (wbem::framework::Exception)
 						case EVENT_TYPE_DIAG_PLATFORM_CONFIG:
 							testName = NVDIMMDIAGNOSTIC_TEST_PLATFORM;
 							break;
-						case EVENT_TYPE_DIAG_PM_META:
-							testName = NVDIMMDIAGNOSTIC_TEST_STORAGE;
-							break;
 						case EVENT_TYPE_DIAG_SECURITY:
 							testName = NVDIMMDIAGNOSTIC_TEST_SECURITY;
 							break;

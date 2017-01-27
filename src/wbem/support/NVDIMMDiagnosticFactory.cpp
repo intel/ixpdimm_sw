@@ -122,8 +122,7 @@ wbem::framework::instance_names_t* wbem::support::NVDIMMDiagnosticFactory::getIn
 	// get the host server name
 	const std::string& hostName = wbem::server::getHostName();
 
-	int numTests = 5;
-	for (int i = 0; i < numTests; i++)
+	for (int i = 0; i < NVDIMMDIAGNOSTIC_NUMTESTTYPES; i++)
 	{
 		framework::attributes_t keys;
 
@@ -149,16 +148,11 @@ wbem::framework::instance_names_t* wbem::support::NVDIMMDiagnosticFactory::getIn
 					framework::Attribute(NVDIMMDIAGNOSTIC_TEST_PLATFORM, true);
 			break;
 		case 2:
-			// add storage test
-			keys[NAME_KEY] =
-					framework::Attribute(NVDIMMDIAGNOSTIC_TEST_STORAGE, true);
-			break;
-		case 3:
 			// add security test
 			keys[NAME_KEY] =
 					framework::Attribute(NVDIMMDIAGNOSTIC_TEST_SECURITY, true);
 			break;
-		case 4:
+		case 3:
 			// add settings test
 			keys[NAME_KEY] =
 					framework::Attribute(NVDIMMDIAGNOSTIC_TEST_SETTING, true);
@@ -345,7 +339,6 @@ bool wbem::support::NVDIMMDiagnosticFactory::testTypeValid(std::string testType)
 
 	if ((testType.compare(NVDIMMDIAGNOSTIC_TEST_QUICK) != 0) &&
 		(testType.compare(NVDIMMDIAGNOSTIC_TEST_PLATFORM) != 0) &&
-		(testType.compare(NVDIMMDIAGNOSTIC_TEST_STORAGE) != 0) &&
 		(testType.compare(NVDIMMDIAGNOSTIC_TEST_SECURITY) != 0) &&
 		(testType.compare(NVDIMMDIAGNOSTIC_TEST_SETTING) != 0))
 	{
@@ -541,10 +534,6 @@ struct diagnostic wbem::support::NVDIMMDiagnosticFactory::getDiagnosticStructure
 						ignoreList[i], NVDIMMDIAGNOSTIC_TEST_PLATFORM.c_str());
 			}
 		}
-	}
-	else if	(testType.compare(NVDIMMDIAGNOSTIC_TEST_STORAGE) == 0)
-	{
-		diags.test = DIAG_TYPE_PM_META;
 	}
 	else
 	{

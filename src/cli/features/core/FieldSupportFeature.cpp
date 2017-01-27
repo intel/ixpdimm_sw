@@ -143,7 +143,7 @@ void cli::nvmcli::FieldSupportFeature::getPaths(cli::framework::CommandSpecList 
 
 	cli::framework::CommandSpec runDiag(RUN_DIAGNOSTIC, TR("Run Diagnostic"), framework::VERB_START,
 			TR("Run a diagnostic test on one or more " NVM_DIMM_NAME "s."));
-	runDiag.addTarget(DIAGNOSTIC_TARGET, true, "Quick|Config|PM|Security|FW", false,
+	runDiag.addTarget(DIAGNOSTIC_TARGET, true, "Quick|Config|Security|FW", false,
 			TR("Run a specific test by supplying its name. By default "
 					"all tests are run. "));
 	runDiag.addTarget(TARGET_DIMM.name, false, DIMMIDS_STR, true,
@@ -1365,7 +1365,6 @@ cli::framework::ErrorResult *cli::nvmcli::FieldSupportFeature::showEvents_inputT
 	categoryMap["diag"] = wbem::support::EVENT_TYPE_DIAG;
 	categoryMap["fw"] = wbem::support::EVENT_TYPE_DIAG_FW_CONSISTENCY;
 	categoryMap["platformconfig"] = wbem::support::EVENT_TYPE_DIAG_PLATFORM_CONFIG;
-	categoryMap["pm"] = wbem::support::EVENT_TYPE_DIAG_PM_META;
 	categoryMap["quick"] = wbem::support::EVENT_TYPE_DIAG_QUICK;
 	categoryMap["security"] = wbem::support::EVENT_TYPE_DIAG_SECURITY;
 	categoryMap["health"] = wbem::support::EVENT_TYPE_HEALTH;

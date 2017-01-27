@@ -73,11 +73,10 @@ static const std::string CHANGEAPPDIRECTSETTINGS_ERROR_MSG = N_TR(
 		"Error: App Direct settings apply system-wide and capacity already exists."); //!< Unable to change app direct settings message
 
 // count and order should match wbem layer
-static const int NUMDIAGTESTTYPES = 5;
+static const int NUMDIAGTESTTYPES = 4;
 // diagnostic test type CLI input strings
 static const std::string CLIDIAGNOSTIC_TEST_QUICK = "Quick"; //!< method parameter for quick health check
 static const std::string CLIDIAGNOSTIC_TEST_PLATFORM = "Config"; //!< method parameter for platform config check
-static const std::string CLIDIAGNOSTIC_TEST_PM = "PM"; //!< method parameter for PM metadata check
 static const std::string CLIDIAGNOSTIC_TEST_SECURITY = "Security"; //!< method parameter for security check
 static const std::string CLIDIAGNOSTIC_TEST_SETTING = "FW"; //!< method parameter for settings check
 
@@ -89,7 +88,6 @@ static const std::string CLIDIAGNOSTIC_COMPLETIONMESSAGE = "Message"; //!< diagn
 static const std::string diagTestTypes[NUMDIAGTESTTYPES] = {
 				CLIDIAGNOSTIC_TEST_QUICK,
 				CLIDIAGNOSTIC_TEST_PLATFORM,
-				CLIDIAGNOSTIC_TEST_PM,
 				CLIDIAGNOSTIC_TEST_SECURITY,
 				CLIDIAGNOSTIC_TEST_SETTING};
 

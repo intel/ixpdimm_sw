@@ -61,9 +61,8 @@ const COMMON_UINT32 EVENT_TYPE_MGMT	= 3; //!< Management software generated even
 const COMMON_UINT32 EVENT_TYPE_DIAG = 4; //!< Subscribe or filter on all diagnostic event types
 const COMMON_UINT32 EVENT_TYPE_DIAG_QUICK = 5; //!< Quick diagnostic test event.
 const COMMON_UINT32 EVENT_TYPE_DIAG_PLATFORM_CONFIG = 6; //!< Platform config diagnostic test event.
-const COMMON_UINT32 EVENT_TYPE_DIAG_PM_META = 7; //!< PM metadata diagnostic test event.
-const COMMON_UINT32 EVENT_TYPE_DIAG_SECURITY = 8; //!< Security diagnostic test event.
-const COMMON_UINT32 EVENT_TYPE_DIAG_FW_CONSISTENCY = 9; //!< FW consistency diagnostic test event.
+const COMMON_UINT32 EVENT_TYPE_DIAG_SECURITY = 7; //!< Security diagnostic test event.
+const COMMON_UINT32 EVENT_TYPE_DIAG_FW_CONSISTENCY = 8; //!< FW consistency diagnostic test event.
 
 
 class NVM_API EventLogFilter

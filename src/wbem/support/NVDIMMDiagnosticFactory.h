@@ -50,7 +50,6 @@ namespace support
 	// diagnostic test types
 	static const std::string NVDIMMDIAGNOSTIC_TEST_QUICK = "HealthCheck"; //!< method parameter for quick health check
 	static const std::string NVDIMMDIAGNOSTIC_TEST_PLATFORM = "PlatformCheck"; //!< method parameter for platform config check
-	static const std::string NVDIMMDIAGNOSTIC_TEST_STORAGE = "StorageCheck"; //!< method parameter for PM metadata check
 	static const std::string NVDIMMDIAGNOSTIC_TEST_SECURITY = "SecurityCheck"; //!< method parameter for security check
 	static const std::string NVDIMMDIAGNOSTIC_TEST_SETTING = "SettingCheck"; //!< method parameter for settings check
 
@@ -63,11 +62,10 @@ namespace support
 
 	static const std::string NVDIMMDIAGNOSTICINPUT_CREATIONCLASSNAME = std::string(NVM_WBEM_PREFIX) + "NVDIMMDiagnosticInput"; //!< Creation ClassName static
 
-	static const int NVDIMMDIAGNOSTIC_NUMTESTTYPES = 5;
+	static const int NVDIMMDIAGNOSTIC_NUMTESTTYPES = 4;
 	static const std::string validTestTypes[NVDIMMDIAGNOSTIC_NUMTESTTYPES] =
 			{NVDIMMDIAGNOSTIC_TEST_QUICK,
 			NVDIMMDIAGNOSTIC_TEST_PLATFORM,
-			NVDIMMDIAGNOSTIC_TEST_STORAGE,
 			NVDIMMDIAGNOSTIC_TEST_SECURITY,
 			NVDIMMDIAGNOSTIC_TEST_SETTING};
 
@@ -104,14 +102,6 @@ namespace support
 		PF_IGNORE_POPULATIONRULES,
 #endif
 
-	};
-
-	// test names for ignoring storage diag results
-	enum storage_ignore
-	{
-		ST_IGNORE_DIMMSPRESENT = 200,
-		ST_IGNORE_LABELSCOMPLETE = 201,
-		ST_IGNORE_VOLUMECONSISTENCY = 203
 	};
 
 	// test names for ignoring security diag results
