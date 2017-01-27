@@ -1302,7 +1302,7 @@ int nvm_get_device_fw_image_info(const NVM_UID device_uid,
 			// make sure cstring is null terminated
 			p_fw_info->active_fw_commit_id[NVM_COMMIT_ID_LEN-1] = 0;
 			p_fw_info->active_fw_build_configuration[NVM_BUILD_CONFIGURATION_LEN-1] = 0;
-			p_fw_info->staged_fw_pending = strlen(p_fw_info->staged_fw_revision) == 0 ? 0 : 1;
+			p_fw_info->staged_fw_pending = is_fw_staged(&fw_image_info);
 			p_fw_info->staged_fw_type = firmware_type_to_enum(fw_image_info.staged_fw_type);
 		}
 	}

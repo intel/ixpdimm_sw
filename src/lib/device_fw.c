@@ -691,3 +691,24 @@ int local_ioctl_passthrough_cmd(struct fw_cmd *p_cmd)
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
+
+NVM_BOOL is_fw_staged(const struct pt_payload_fw_image_info *p_fw_info)
+{
+	COMMON_LOG_ENTRY();
+
+	NVM_BOOL is_staged = 0;
+	if (p_fw_info)
+	{
+		for (int i = 0; i < DEV_FW_REV_LEN; i++)
+		{
+			// Any nonzero digits indicate some version is staged
+			if (p_fw_info->staged_fw_rev[i] != 0)
+			{
+				is_staged = 1;
+			}
+		}
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(is_staged);
+	return is_staged;
+}
