@@ -42,6 +42,11 @@
 #define	COMPARE_BIT(dimm_sku1, dimm_sku2, bit)	\
 ((dimm_sku1 & (1 << bit)) ^ (dimm_sku2 & (1 << bit)))
 
+#define	TRI_MODE_ENABLED(dimmsku)	\
+((dimmsku & SKU_MEMORY_MODE_ENABLED) && \
+(dimmsku & SKU_STORAGE_MODE_ENABLED) && \
+(dimmsku & SKU_APP_DIRECT_MODE_ENABLED))
+
 /*
  * Capabilities are determined based on the combination of
  * driver, platform and NVM-DIMM SKU support. This functions
@@ -631,14 +636,15 @@ int nvm_get_nvm_capabilities(struct nvm_capabilities *p_capabilities)
 	return rc;
 }
 
-int check_device_app_direct_namespaces_for_sku_violation(
-		const struct nvm_capabilities *p_capabilities,
-		const NVM_NFIT_DEVICE_HANDLE device_handle, NVM_BOOL *p_sku_violation)
+int check_device_app_direct_namespaces_for_sku_violation(struct device_discovery *p_discovery,
+		NVM_BOOL *p_sku_violation)
 {
 	int rc = NVM_SUCCESS;
-	if (!p_capabilities->nvm_features.app_direct_mode)
+
+	if (!p_discovery->device_capabilities.app_direct_mode_capable)
 	{
-		int has_namespaces = dimm_has_namespaces_of_type(device_handle, NAMESPACE_TYPE_APP_DIRECT);
+		int has_namespaces = dimm_has_namespaces_of_type(p_discovery->device_handle,
+				NAMESPACE_TYPE_APP_DIRECT);
 		if (has_namespaces < 0)
 		{
 			KEEP_ERROR(rc, has_namespaces);
@@ -646,21 +652,22 @@ int check_device_app_direct_namespaces_for_sku_violation(
 		else if (has_namespaces)
 		{
 			COMMON_LOG_ERROR_F("An unsupported App Direct namespace exists on " NVM_DIMM_NAME " %u",
-					device_handle.handle);
+					p_discovery->device_handle.handle);
 			*p_sku_violation = 1;
 		}
 	}
 	return rc;
 }
 
-int check_device_storage_namespaces_for_sku_violation(
-		const struct nvm_capabilities *p_capabilities,
-		const NVM_NFIT_DEVICE_HANDLE device_handle, NVM_BOOL *p_sku_violation)
+int check_device_storage_namespaces_for_sku_violation(struct device_discovery *p_discovery,
+		NVM_BOOL *p_sku_violation)
 {
 	int rc = NVM_SUCCESS;
-	if (!p_capabilities->nvm_features.storage_mode)
+
+	if (!p_discovery->device_capabilities.storage_mode_capable)
 	{
-		int has_namespaces = dimm_has_namespaces_of_type(device_handle, NAMESPACE_TYPE_STORAGE);
+		int has_namespaces = dimm_has_namespaces_of_type(p_discovery->device_handle,
+				NAMESPACE_TYPE_STORAGE);
 		if (has_namespaces < 0)
 		{
 			KEEP_ERROR(rc, has_namespaces);
@@ -668,7 +675,7 @@ int check_device_storage_namespaces_for_sku_violation(
 		else if (has_namespaces)
 		{
 			COMMON_LOG_ERROR_F("An unsupported storage namespace exists on " NVM_DIMM_NAME " %u",
-					device_handle.handle);
+					p_discovery->device_handle.handle);
 			*p_sku_violation = 1;
 		}
 	}
@@ -679,33 +686,30 @@ int check_device_storage_namespaces_for_sku_violation(
 /*
  * Helper function to determine if an NVM-DIMM is in violation of it's supported license.
  */
-int device_in_sku_violation(const NVM_NFIT_DEVICE_HANDLE device_handle,
-		const struct nvm_capabilities *p_capabilities,
+int device_in_sku_violation(struct device_discovery *p_discovery,
 		NVM_BOOL *p_sku_violation)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
 
 	*p_sku_violation = 0;
-	if (!p_capabilities->nvm_features.get_device_capacity)
+
+	if (!TRI_MODE_ENABLED(p_discovery->dimm_sku))
 	{
-		rc = NVM_ERR_NOTSUPPORTED;
-	}
-	else
-	{
-		struct device_capacities capacities;
-		memset(&capacities, 0, sizeof (capacities));
-		int rc = get_dimm_capacities(device_handle, p_capabilities, &capacities);
-		if (rc == NVM_SUCCESS && capacities.inaccessible_capacity > 0)
+		// check for memory capacity when mode is not supported
+		rc = check_sku_violation_for_memory_mode(p_discovery, p_sku_violation);
+
+		// check for appdirect capacity when mode is not supported
+		if (!(*p_sku_violation))
 		{
-			*p_sku_violation = 1;
+			rc = check_sku_violation_for_appdirect_mode(p_discovery, p_sku_violation);
 		}
 
 		// check for storage namespaces when storage mode is not supported
 		if (!(*p_sku_violation))
 		{
-			int tmprc = check_device_storage_namespaces_for_sku_violation(p_capabilities,
-					device_handle, p_sku_violation);
+			int tmprc = check_device_storage_namespaces_for_sku_violation(p_discovery,
+					p_sku_violation);
 			if (tmprc != NVM_ERR_NOTSUPPORTED) // ignore not supported errors
 			{
 				KEEP_ERROR(rc, tmprc);
@@ -715,8 +719,8 @@ int device_in_sku_violation(const NVM_NFIT_DEVICE_HANDLE device_handle,
 		// check for app direct namespaces when app direct mode is not supported
 		if (!(*p_sku_violation))
 		{
-			int tmprc = check_device_app_direct_namespaces_for_sku_violation(p_capabilities,
-					device_handle, p_sku_violation);
+			int tmprc = check_device_app_direct_namespaces_for_sku_violation(p_discovery,
+					p_sku_violation);
 			if (tmprc != NVM_ERR_NOTSUPPORTED) // ignore not supported
 			{
 				KEEP_ERROR(rc, tmprc);
@@ -741,31 +745,39 @@ int system_in_sku_violation(const struct nvm_capabilities *p_capabilities,
 	if (p_capabilities->nvm_features.get_devices)
 	{
 		rc = nvm_get_device_count();
+
 		if (rc > 0)
 		{
-			int device_count = rc;
-			struct device_discovery devices[device_count];
-			rc = nvm_get_devices(devices, device_count);
-			if (rc > 0)
+			if (p_capabilities->nvm_features.get_device_capacity)
 			{
-				device_count = rc;
-				rc = NVM_SUCCESS;
-				for (int i = 0; i < device_count; i++)
+				int device_count = rc;
+				struct device_discovery devices[device_count];
+				rc = nvm_get_devices(devices, device_count);
+				if (rc > 0)
 				{
-					if (devices[i].manageability == MANAGEMENT_VALIDCONFIG)
+					device_count = rc;
+					rc = NVM_SUCCESS;
+					for (int i = 0; i < device_count; i++)
 					{
-						KEEP_ERROR(rc, device_in_sku_violation(devices[i].device_handle,
-								p_capabilities, p_sku_violation));
-					}
-					// stop if sku violation detected
-					if (*p_sku_violation)
-					{
-						COMMON_LOG_ERROR(
-							"One more " NVM_DIMM_NAME "s are configured in "
-							"violation of the license.");
-						break;
+						if (devices[i].manageability == MANAGEMENT_VALIDCONFIG)
+						{
+							rc = device_in_sku_violation(&devices[i],
+									p_sku_violation);
+						}
+						// stop if sku violation detected
+						if (*p_sku_violation)
+						{
+							COMMON_LOG_ERROR(
+								"One more " NVM_DIMM_NAME "s are configured in "
+								"violation of the license.");
+							break;
+						}
 					}
 				}
+			}
+			else
+			{
+				rc = NVM_ERR_NOTSUPPORTED;
 			}
 		}
 	}

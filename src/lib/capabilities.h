@@ -97,16 +97,13 @@ extern "C" {
 } \
 )
 
-int check_device_app_direct_namespaces_for_sku_violation(
-		const struct nvm_capabilities *p_capabilities,
-		const NVM_NFIT_DEVICE_HANDLE device_handle, NVM_BOOL *p_sku_violation);
+int check_device_app_direct_namespaces_for_sku_violation(struct device_discovery *p_discovery,
+		NVM_BOOL *p_sku_violation);
 
-int check_device_storage_namespaces_for_sku_violation(
-		const struct nvm_capabilities *p_capabilities,
-		const NVM_NFIT_DEVICE_HANDLE device_handle, NVM_BOOL *p_sku_violation);
+int check_device_storage_namespaces_for_sku_violation(struct device_discovery *p_discovery,
+		NVM_BOOL *p_sku_violation);
 
-int device_in_sku_violation(const NVM_NFIT_DEVICE_HANDLE device_handle,
-		const struct nvm_capabilities *p_capabilities,
+int device_in_sku_violation(struct device_discovery *p_discovery,
 		NVM_BOOL *p_sku_violation);
 
 int system_in_sku_violation(const struct nvm_capabilities *p_capabilities,

@@ -695,6 +695,50 @@ int fill_fw_error_log_status(const NVM_NFIT_DEVICE_HANDLE device_handle,
 }
 
 /*
+ * Helper to get the device sku violation status
+ */
+int get_sku_violation_state_for_device(NVM_NFIT_DEVICE_HANDLE dimm_handle,
+		NVM_BOOL *p_sku_violation)
+{
+	COMMON_LOG_ENTRY();
+
+	int rc = NVM_SUCCESS;
+
+	rc = nvm_get_device_count();
+
+	if (rc > 0)
+	{
+		int dev_count = rc;
+		struct device_discovery devices[dev_count];
+		rc = nvm_get_devices(devices, dev_count);
+		if (rc == dev_count)
+		{
+			rc = NVM_SUCCESS;
+
+			for (int dimmIdx = 0; dimmIdx < dev_count; dimmIdx++)
+			{
+				if (devices[dimmIdx].device_handle.handle == dimm_handle.handle)
+				{
+					KEEP_ERROR(rc, device_in_sku_violation(&devices[dimmIdx],
+							p_sku_violation));
+				}
+			}
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F(
+				"Failed to get the correct number of devices with error %d", rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F(
+			"Failed to get the correct number of devices with error %d", rc);
+	}
+	return rc;
+}
+
+/*
  * Retrieve the status of the device specified
  */
 int get_device_status_by_handle(NVM_NFIT_DEVICE_HANDLE dimm_handle,
@@ -772,11 +816,13 @@ int get_device_status_by_handle(NVM_NFIT_DEVICE_HANDLE dimm_handle,
 	p_status->mixed_sku = p_capabilities->sku_capabilities.mixed_sku;
 
 	// determine if the dimm is in violation of it's supported sku
-	KEEP_ERROR(rc, device_in_sku_violation(dimm_handle,
-			p_capabilities, &p_status->sku_violation));
+
+	KEEP_ERROR(rc,
+			get_sku_violation_state_for_device(dimm_handle, &p_status->sku_violation));
 
 	struct pt_payload_get_config_data_policy config_data;
 	temprc = fw_get_config_data_policy(dimm_handle.handle, &config_data);
+
 	if (temprc != NVM_SUCCESS)
 	{
 		COMMON_LOG_ERROR_F(

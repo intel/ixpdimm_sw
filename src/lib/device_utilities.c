@@ -854,6 +854,95 @@ int get_dimm_storage_capacity(NVM_UINT32 handle, NVM_UINT64 *p_storage_capacity)
 	return rc;
 }
 
+/*
+ * helper to check memory mode sku violation
+ */
+int check_sku_violation_for_memory_mode(struct device_discovery *p_discovery,
+		NVM_BOOL *p_sku_violation)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+	struct pt_payload_get_dimm_partition_info pi;
+
+	if ((rc = get_partition_info(p_discovery->device_handle, &pi)) == NVM_SUCCESS)
+	{
+		if ((!p_discovery->device_capabilities.memory_mode_capable) &&
+				(pi.volatile_capacity > 0))
+		{
+			*p_sku_violation = 1;
+		}
+	}
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+/*
+ * helper to check AppDirect mode sku violation
+ */
+int check_sku_violation_for_appdirect_mode(struct device_discovery *p_discovery,
+		NVM_BOOL *p_sku_violation)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+	NVM_UINT64 app_direct_capacity_on_dimm = 0;
+
+	if (!p_discovery->device_capabilities.app_direct_mode_capable)
+	{
+		rc = get_app_direct_capacity_on_device(p_discovery->device_handle,
+					&app_direct_capacity_on_dimm);
+
+		if (app_direct_capacity_on_dimm != 0)
+		{
+			*p_sku_violation = 1;
+		}
+	}
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+/*
+ * Check if dimm contains appdirect capacity
+ */
+int get_app_direct_capacity_on_device(const NVM_NFIT_DEVICE_HANDLE device_handle,
+		NVM_UINT64 *p_app_direct_capacity_on_dimm)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+	int set_count = 0;
+	*p_app_direct_capacity_on_dimm = 0;
+
+	if ((set_count = get_interleave_set_count()) > 0)
+	{
+		struct nvm_interleave_set sets[set_count];
+
+		if ((rc = get_interleave_sets(set_count, sets)) != set_count)
+		{
+			COMMON_LOG_ERROR_F("get_interleave_sets failed with error: %d", rc);
+		}
+		else
+		{
+			rc = NVM_SUCCESS;
+			for (int i = 0; i < set_count; i++)
+			{
+				for (int dimmIdx = 0; dimmIdx < sets[i].dimm_count; dimmIdx++)
+				{
+					if (sets[i].dimms[dimmIdx].handle == device_handle.handle)
+					{
+						*p_app_direct_capacity_on_dimm += (sets[i].size/sets[i].dimm_count);
+					}
+				}
+			}
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("get_interleave_set_count failed with error: %d", set_count);
+		rc = set_count;
+	}
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
 int update_capacities_based_on_sku(const NVM_NFIT_DEVICE_HANDLE device_handle,
 		const struct nvm_capabilities *p_capabilities,
 		struct device_capacities *p_capacities)
@@ -874,6 +963,7 @@ int update_capacities_based_on_sku(const NVM_NFIT_DEVICE_HANDLE device_handle,
 		if ((!p_capabilities->nvm_features.memory_mode &&
 			!p_capabilities->nvm_features.app_direct_mode &&
 			!p_capabilities->nvm_features.storage_mode) ||
+			(p_capabilities->sku_capabilities.mixed_sku) ||
 			(!discovery.device_capabilities.memory_mode_capable &&
 			!discovery.device_capabilities.app_direct_mode_capable &&
 			!discovery.device_capabilities.storage_mode_capable))

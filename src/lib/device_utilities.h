@@ -91,6 +91,18 @@ enum device_sanitize_status translate_to_sanitize_status(
 		struct pt_payload_long_op_stat *p_long_op_payload);
 
 /*
+ * Helper functions to determine sku violation
+ */
+
+int check_sku_violation_for_memory_mode(struct device_discovery *p_discovery,
+		NVM_BOOL *p_sku_violation);
+
+int check_sku_violation_for_appdirect_mode(struct device_discovery *p_discovery,
+		NVM_BOOL *p_sku_violation);
+
+int get_app_direct_capacity_on_device(const NVM_NFIT_DEVICE_HANDLE device_handle,
+		NVM_UINT64 *app_direct_capacity_on_dimm);
+/*
  * Derive DIMM manageability state from firmware
  */
 void set_device_manageability_from_firmware(
