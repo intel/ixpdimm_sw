@@ -69,9 +69,6 @@ void generate_event_for_bad_driver(NVM_UINT32 *p_results);
 int check_dimm_manageability(const NVM_UID device_uid,
 		struct device_discovery *p_discovery,
 		const struct diagnostic *p_diagnostic, NVM_UINT32* p_results);
-int check_dimm_identification(const NVM_UID device_uid,
-		const NVM_NFIT_DEVICE_HANDLE device_handle,
-		const struct diagnostic *p_diagnostic, NVM_UINT32 *p_results);
 int check_dimm_health(const NVM_UID device_uid, const NVM_NFIT_DEVICE_HANDLE device_handle,
 		const struct diagnostic *p_diagnostic, NVM_UINT32 *p_results);
 int check_dimm_media_errors(const NVM_UID device_uid,
@@ -131,9 +128,7 @@ int diag_quick_health_check(const NVM_UID device_uid,
 				int tmp_rc = check_dimm_bsr(device_uid, device_handle, p_diagnostic, p_results);
 				KEEP_ERROR(rc, tmp_rc);
 
-				if (((rc = check_dimm_identification(device_uid, device_handle,
-						p_diagnostic, p_results)) == NVM_SUCCESS) &&
-						((*p_results) == 0)) // abort test if DIMM is unrecognized
+				if (*p_results == 0)
 				{
 					tmp_rc = check_dimm_health(device_uid, device_handle, p_diagnostic, p_results);
 					KEEP_ERROR(rc, tmp_rc);
@@ -164,7 +159,7 @@ int diag_quick_health_check(const NVM_UID device_uid,
 							DIAGNOSTIC_RESULT_OK);
 						(*p_results)++;
 					}
-				} // end unrecognized dimm
+				}
 			} // DIMM does not exist or not manageable
 		}
 	}
@@ -211,107 +206,6 @@ int check_dimm_manageability(const NVM_UID device_uid,
 				DIAGNOSTIC_RESULT_FAILED);
 		(*p_results)++;
 	}
-
-	COMMON_LOG_EXIT_RETURN_I(rc);
-	return rc;
-}
-
-void check_valid_dimm_manufacturer(const struct diagnostic *p_diagnostic,
-		const struct pt_payload_identify_dimm *p_id_dimm, const NVM_UID device_uid,
-		NVM_UINT32 *p_results)
-{
-	int config_manufacturer = 0;
-	get_config_value_int(SQL_KEY_VALID_MANUFACTURER, &config_manufacturer);
-	NVM_UINT64 valid_manufacturer = config_manufacturer;
-	NVM_UINT64 actual_manufacturer = 0;
-	actual_manufacturer = MANUFACTURER_TO_UINT(p_id_dimm->mf);
-	if (!diag_check(p_diagnostic, DIAG_THRESHOLD_QUICK_VALID_MANUFACTURER, actual_manufacturer,
-			&valid_manufacturer, EQUALITY_EQUAL))
-	{
-		char actual_manufacturer_str[10];
-		s_snprintf(actual_manufacturer_str, 10, "0x%02llx", actual_manufacturer);
-		char valid_manufacturer_str[10];
-		s_snprintf(valid_manufacturer_str, 10, "0x%02llx", valid_manufacturer);
-		store_event_by_parts(EVENT_TYPE_DIAG_QUICK,
-				EVENT_SEVERITY_WARN,
-				EVENT_CODE_DIAG_QUICK_INVALID_MANUFACTURER,
-				device_uid,
-				0,
-				device_uid,
-				actual_manufacturer_str,
-				valid_manufacturer_str, DIAGNOSTIC_RESULT_ABORTED);
-		(*p_results)++;
-	}
-}
-
-void check_valid_dimm_model_number(const struct diagnostic *p_diagnostic,
-		const struct pt_payload_identify_dimm *p_id_dimm, const NVM_UID device_uid,
-		NVM_UINT32 *p_results)
-{
-	char valid_model[CONFIG_VALUE_LEN] = "";
-	get_config_value(SQL_KEY_VALID_MODEL_NUM, valid_model);
-	if (!diag_check_str(p_diagnostic, DIAG_THRESHOLD_QUICK_VALID_MODEL_NUMBER, p_id_dimm->mn,
-			valid_model))
-	{
-		store_event_by_parts(EVENT_TYPE_DIAG_QUICK,
-				EVENT_SEVERITY_WARN,
-				EVENT_CODE_DIAG_QUICK_INVALID_MODEL_NUMBER,
-				device_uid,
-				0,
-				device_uid,
-				p_id_dimm->mn,
-				valid_model, DIAGNOSTIC_RESULT_ABORTED);
-		(*p_results)++;
-	}
-}
-
-void check_valid_dimm_vendor_id(const struct diagnostic *p_diagnostic,
-		const struct pt_payload_identify_dimm *p_id_dimm,
-		const NVM_UID device_uid, NVM_UINT32 *p_results)
-{
-	int vendor_config = 0;
-	get_config_value_int(SQL_KEY_VALID_VENDOR_ID, &vendor_config);
-	NVM_UINT64 valid_vendor = vendor_config;
-	if (!diag_check(p_diagnostic, DIAG_THRESHOLD_QUICK_VALID_VENDOR_ID,
-			(NVM_UINT64) p_id_dimm->vendor_id, &valid_vendor, EQUALITY_EQUAL))
-	{
-		char actual_vendor_str[10];
-		s_snprintf(actual_vendor_str, 10, "0x%04x", p_id_dimm->vendor_id);
-		char expected_vendor_str[10];
-		s_snprintf(expected_vendor_str, 10, "0x%04x", valid_vendor);
-		store_event_by_parts(EVENT_TYPE_DIAG_QUICK, EVENT_SEVERITY_WARN,
-				EVENT_CODE_DIAG_QUICK_INVALID_VENDORID, device_uid,
-				0, device_uid, actual_vendor_str,
-				expected_vendor_str, DIAGNOSTIC_RESULT_ABORTED);
-		(*p_results)++;
-	}
-}
-
-int check_dimm_identification(const NVM_UID device_uid,
-		const NVM_NFIT_DEVICE_HANDLE device_handle,
-		const struct diagnostic *p_diagnostic, NVM_UINT32 *p_results)
-{
-	COMMON_LOG_ENTRY();
-	int rc = NVM_SUCCESS;
-
-	// setup ioctl payloads and commands
-	struct pt_payload_identify_dimm id_dimm;
-	memset(&id_dimm, 0, sizeof (struct pt_payload_identify_dimm));
-	struct fw_cmd id_cmd;
-	memset(&id_cmd, 0, sizeof (struct fw_cmd));
-	id_cmd.device_handle = device_handle.handle;
-	id_cmd.opcode = PT_IDENTIFY_DIMM;
-	id_cmd.sub_opcode = SUBOP_IDENTIFY_DIMM_IDENTIFY;
-	id_cmd.output_payload_size = sizeof (id_dimm);
-	id_cmd.output_payload = &id_dimm;
-
-	if ((rc = ioctl_passthrough_cmd(&id_cmd)) == NVM_SUCCESS)
-	{
-		check_valid_dimm_manufacturer(p_diagnostic, &id_dimm, device_uid, p_results);
-		check_valid_dimm_model_number(p_diagnostic, &id_dimm, device_uid, p_results);
-		check_valid_dimm_vendor_id(p_diagnostic, &id_dimm, device_uid, p_results);
-	}
-	s_memset(&id_dimm, sizeof (id_dimm));
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;

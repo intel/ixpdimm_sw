@@ -152,17 +152,11 @@ const char *EVENT_MESSAGES_QUICK_DIAG[EVENT_CODE_DIAG_QUICK_UNKNOWN -
 	// EVENT_CODE_DIAG_QUICK_SUCCESS
 	N_TR("The quick health check succeeded."),
 	// EVENT_CODE_DIAG_QUICK_INVALID_VENDORID
-	N_TR("The quick health check detected an unrecognized " NVM_DIMM_NAME " %s "
-			"due to an invalid vendor identifier %s, expected %s. "
-			"No further testing performed on this " NVM_DIMM_NAME "."),
+	N_TR("Placeholder"),
 	// EVENT_CODE_DIAG_QUICK_INVALID_MANUFACTURER
-	N_TR("The quick health check detected an unrecognized " NVM_DIMM_NAME " %s "
-			"due to an invalid manufacturer %s, expected %s. "
-			"No further testing performed on this " NVM_DIMM_NAME "."),
+	N_TR("Placeholder"),
 	// EVENT_CODE_DIAG_QUICK_INVALID_MODEL_NUMBER
-	N_TR("The quick health check detected an unrecognized " NVM_DIMM_NAME " %s "
-			"due to an invalid model number %s, expected %s. "
-			"No further testing performed on this " NVM_DIMM_NAME "."),
+	N_TR("Placeholder"),
 	// EVENT_CODE_DIAG_QUICK_BAD_HEALTH
 	N_TR("The quick health check detected that " NVM_DIMM_NAME " %s "
 			"is reporting a bad health state %s, expected %s."),
