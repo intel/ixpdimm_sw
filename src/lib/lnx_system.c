@@ -568,7 +568,8 @@ int get_smbios_entry_point_from_offset(int mem_fd, size_t entry_point_offset,
 	return rc;
 }
 
-int get_smbios_entry_point_from_efi(int mem_fd, struct smbios_entry_point *p_entry_point)
+int get_smbios_entry_point_from_efi(int mem_fd, struct smbios_entry_point *p_entry_point,
+		const char *smbios_guid_str)
 {
 	int rc = NVM_ERR_UNKNOWN;
 
@@ -583,7 +584,7 @@ int get_smbios_entry_point_from_efi(int mem_fd, struct smbios_entry_point *p_ent
 		char str_buff[128];
 		while (fgets(str_buff, 128, fp) != NULL)
 		{
-			char *smbios_str = strstr(str_buff, "SMBIOS");
+			char *smbios_str = strstr(str_buff, smbios_guid_str);
 
 			if (smbios_str != NULL)
 			{
@@ -636,10 +637,16 @@ int get_smbios_entry_point(int mem_fd, struct smbios_entry_point *p_entry_point)
 			offset += paragraph_size;
 		}
 
-		// Try getting offset from GPT if MBG didn't work
+		// Smbios3.0 forces the 64bit entry point
 		if (rc == NVM_ERR_UNKNOWN)
 		{
-			rc = get_smbios_entry_point_from_efi(mem_fd, p_entry_point);
+			p_entry_point->type = SMBIOS_ENTRY_POINT_64BIT;
+			rc = get_smbios_entry_point_from_efi(mem_fd, p_entry_point, "SMBIOS3");
+		}
+		// Try getting offset from SMBIOS_TABLE_GUID
+		if (rc == NVM_ERR_UNKNOWN)
+		{
+			rc = get_smbios_entry_point_from_efi(mem_fd, p_entry_point, "SMBIOS");
 		}
 	}
 	return rc;
