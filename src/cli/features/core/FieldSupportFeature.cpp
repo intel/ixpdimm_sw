@@ -165,7 +165,7 @@ void cli::nvmcli::FieldSupportFeature::getPaths(cli::framework::CommandSpecList 
 			TR("Optional user defined name to help identify the snapshot."));
 
 	cli::framework::CommandSpec dumpSupport(DUMP_SUPPORT, TR("Dump Support Data"), framework::VERB_DUMP,
-			TR("Dump support data to a file for offline analysis by support personnel. Support "
+			TR("Create a support snapshot and dump support data to a file for off-line analysis by support personnel. Support "
 					"data is encrypted and compressed and includes system log(s), error log(s), trace log(s), captured "
 					"support snapshots, sensor information, and diagnostic results."));
 	dumpSupport.addOption(framework::OPTION_DESTINATION.name, true, "path", true,
