@@ -240,7 +240,7 @@ const char *EVENT_MESSAGES_QUICK_DIAG[EVENT_CODE_DIAG_QUICK_UNKNOWN -
 			"temperature of %s C which is above the shutdown threshold %s C."),
 	// EVENT_CODE_DIAG_QUICK_SPARE_DIE_CONSUMED
 	N_TR("The quick health check detected that " NVM_DIMM_NAME " %s is reporting that it "
-			"has consumed %s spare die."),
+			"has 0 spare die available."),
 	// EVENT_CODE_DIAG_QUICK_UNSAFE_SHUTDOWN
 	N_TR("The quick health check detected that the firmware on " NVM_DIMM_NAME " %s "
 			"experienced an unsafe shutdown before its latest restart."),
@@ -257,6 +257,10 @@ const char *EVENT_MESSAGES_QUICK_DIAG[EVENT_CODE_DIAG_QUICK_UNKNOWN -
 	// EVENT_CODE_DIAG_QUICK_MEDIA_DISABLED
 	N_TR("The quick health check detected that the firmware on " NVM_DIMM_NAME " %s "
 			"is reporting that the media is disabled."),
+	N_TR("The quick health check detected that the firmware on " NVM_DIMM_NAME " %s "
+			"is reporting that the AIT Dram is disabled."),
+	N_TR("The quick health check detected that the firmware on " NVM_DIMM_NAME " %s "
+			"failed to load successfully."),
 
 	// EVENT_CODE_DIAG_QUICK_UNKNOWN
 	N_TR("The quick health check logged an unknown error code %d."),

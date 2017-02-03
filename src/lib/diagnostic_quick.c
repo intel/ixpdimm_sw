@@ -119,49 +119,53 @@ int diag_quick_health_check(const NVM_UID device_uid,
 		else
 		{
 			struct device_discovery discovery;
-			if ((rc = lookup_dev_uid(device_uid, &discovery)) == NVM_SUCCESS &&
-					(rc = check_dimm_manageability(device_uid, &discovery,
-							p_diagnostic, p_results)) == NVM_SUCCESS)
+			if ((rc = lookup_dev_uid(device_uid, &discovery)) == NVM_SUCCESS)
 			{
-				NVM_NFIT_DEVICE_HANDLE device_handle = discovery.device_handle;
+				rc = check_dimm_manageability(device_uid, &discovery,
+									p_diagnostic, p_results);
 
-				int tmp_rc = check_dimm_bsr(device_uid, device_handle, p_diagnostic, p_results);
-				KEEP_ERROR(rc, tmp_rc);
-
-				if (*p_results == 0)
+				if (can_communicate_with_device_firmware(&discovery))
 				{
-					tmp_rc = check_dimm_health(device_uid, device_handle, p_diagnostic, p_results);
+					int tmp_rc = 0;
+					NVM_NFIT_DEVICE_HANDLE device_handle =
+					discovery.device_handle;
+
+					tmp_rc = check_dimm_bsr(device_uid, device_handle,
+						p_diagnostic, p_results);
+					KEEP_ERROR(rc, tmp_rc);
+					tmp_rc = check_dimm_health(device_uid,
+						device_handle, p_diagnostic, p_results);
 					KEEP_ERROR(rc, tmp_rc);
 
-					check_dimm_power_limitation(device_uid, device_handle, p_diagnostic,
-						p_results);
+					check_dimm_power_limitation(device_uid,
+						device_handle, p_diagnostic, p_results);
 
-					tmp_rc = check_dimm_media_errors(device_uid, device_handle, p_diagnostic,
-							p_results);
+					tmp_rc = check_dimm_media_errors(device_uid,
+						device_handle, p_diagnostic, p_results);
 					KEEP_ERROR(rc, tmp_rc);
 
-					int tmp_rc =
-						check_dimm_viral_state(device_uid, device_handle, p_diagnostic, p_results);
+					tmp_rc = check_dimm_viral_state(device_uid,
+						device_handle, p_diagnostic, p_results);
 					KEEP_ERROR(rc, tmp_rc);
-
-					if ((rc == NVM_SUCCESS) && (*p_results == 0)) // No errors/warnings
-					{
-						// store success event
-						store_event_by_parts(
-							EVENT_TYPE_DIAG_QUICK,
-							EVENT_SEVERITY_INFO,
-							EVENT_CODE_DIAG_QUICK_SUCCESS,
-							device_uid,
-							0,
-							NULL,
-							NULL,
-							NULL,
-							DIAGNOSTIC_RESULT_OK);
-						(*p_results)++;
-					}
 				}
-			} // DIMM does not exist or not manageable
+			} // DIMM does not exist
 		}
+	}
+
+	if ((rc == NVM_SUCCESS) && (*p_results == 0)) // No errors/warnings
+	{
+		// store success event
+		store_event_by_parts(
+			EVENT_TYPE_DIAG_QUICK,
+			EVENT_SEVERITY_INFO,
+			EVENT_CODE_DIAG_QUICK_SUCCESS,
+			device_uid,
+			0,
+			NULL,
+			NULL,
+			NULL,
+			DIAGNOSTIC_RESULT_OK);
+		(*p_results)++;
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
