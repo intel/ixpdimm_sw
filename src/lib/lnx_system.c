@@ -646,6 +646,7 @@ int get_smbios_entry_point(int mem_fd, struct smbios_entry_point *p_entry_point)
 		// Try getting offset from SMBIOS_TABLE_GUID
 		if (rc == NVM_ERR_UNKNOWN)
 		{
+			p_entry_point->type = SMBIOS_ENTRY_POINT_32BIT;
 			rc = get_smbios_entry_point_from_efi(mem_fd, p_entry_point, "SMBIOS");
 		}
 	}
