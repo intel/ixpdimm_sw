@@ -34,24 +34,19 @@
 #include <LogEnterExit.h>
 #include <libinvm-cim/ExceptionNoMemory.h>
 #include <libinvm-cim/ExceptionBadParameter.h>
-#include <uid/uid.h>
 #include <libinvm-cim/ExceptionNotSupported.h>
 #include <libinvm-cim/ObjectPathBuilder.h>
 #include "pmem_config/PersistentMemoryPoolFactory.h"
 #include "pmem_config/NamespaceViewFactory.h"
 #include <string/s_str.h>
+#include <uid/uid.h>
 #include <exception/NvmExceptionLibError.h>
-#include <lib_interface/NvmApi.h>
 #include <core/Helper.h>
 #include <math.h>
 
-wbem::pmem_config::PersistentMemoryServiceFactory::PersistentMemoryServiceFactory()
-throw (framework::Exception)
+wbem::pmem_config::PersistentMemoryServiceFactory::PersistentMemoryServiceFactory(
+		core::NvmLibrary &nvmLib) : m_nvmLib(nvmLib)
 {
-	m_deleteNamespace = nvm_delete_namespace;
-	m_createNamespace = nvm_create_namespace;
-	m_modifyNamespaceName = nvm_modify_namespace_name;
-	m_modifyNamespaceBlockCount = nvm_modify_namespace_block_count;
 }
 
 wbem::pmem_config::PersistentMemoryServiceFactory::~PersistentMemoryServiceFactory()
@@ -68,39 +63,58 @@ throw (framework::Exception)
 	attributes.push_back(NAME_KEY);
 }
 
+std::string wbem::pmem_config::PersistentMemoryServiceFactory::getHostName()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	std::string hostName;
+
+	try
+	{
+		hostName = m_nvmLib.getHostName();
+	}
+	catch (core::LibraryException &e)
+	{
+		throw exception::NvmExceptionLibError(e.getErrorCode());
+	}
+
+	return hostName;
+}
+
 wbem::framework::Instance *wbem::pmem_config::PersistentMemoryServiceFactory::getInstance(
 		framework::ObjectPath &path, framework::attribute_names_t &attributes)
 throw (framework::Exception)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	// Inspect key attributes from object path
-	// SystemCreationClassName -Intel_ BaseServer
-	if (path.getKeyValue(SYSTEMCREATIONCLASSNAME_KEY).stringValue()
-			!= PM_SERVICE_SYSTEMCREATIONCLASSNAME)
-	{
-		throw framework::ExceptionBadParameter(SYSTEMCREATIONCLASSNAME_KEY.c_str());
-	}
-	// SystemName - host name
-	if (path.getKeyValue(SYSTEMNAME_KEY).stringValue() != wbem::server::getHostName())
-	{
-		throw framework::ExceptionBadParameter(SYSTEMNAME_KEY.c_str());
-	}
-	// CreationClassName - Intel_PersistentMemoryService
-	if(path.getKeyValue(CREATIONCLASSNAME_KEY).stringValue() !=
-			PM_SERVICE_CLASSNAME)
-	{
-		throw framework::ExceptionBadParameter(CREATIONCLASSNAME_KEY.c_str());
-	}
-	// Name
-	if (path.getKeyValue(NAME_KEY).stringValue() != PM_SERVICE_NAME)
-	{
-		throw framework::ExceptionBadParameter(NAME_KEY.c_str());
-	}
 
 	framework::Instance *pInstance = new framework::Instance(path);
 
 	try
 	{
+		// Inspect key attributes from object path
+		// SystemCreationClassName -Intel_ BaseServer
+		if (path.getKeyValue(SYSTEMCREATIONCLASSNAME_KEY).stringValue()
+				!= PM_SERVICE_SYSTEMCREATIONCLASSNAME)
+		{
+			throw framework::ExceptionBadParameter(SYSTEMCREATIONCLASSNAME_KEY.c_str());
+		}
+		// SystemName - host name
+		if (path.getKeyValue(SYSTEMNAME_KEY).stringValue() != getHostName())
+		{
+			throw framework::ExceptionBadParameter(SYSTEMNAME_KEY.c_str());
+		}
+		// CreationClassName - Intel_PersistentMemoryService
+		if(path.getKeyValue(CREATIONCLASSNAME_KEY).stringValue() !=
+				PM_SERVICE_CLASSNAME)
+		{
+			throw framework::ExceptionBadParameter(CREATIONCLASSNAME_KEY.c_str());
+		}
+		// Name
+		if (path.getKeyValue(NAME_KEY).stringValue() != PM_SERVICE_NAME)
+		{
+			throw framework::ExceptionBadParameter(NAME_KEY.c_str());
+		}
+
 		checkAttributes(attributes);
 
 		// All attributes are key attributes added from the path
@@ -123,9 +137,12 @@ wbem::framework::instance_names_t *wbem::pmem_config::PersistentMemoryServiceFac
 throw (framework::Exception)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	std::string hostName = lib_interface::NvmApi::getApi()->getHostName();
 
-	wbem::framework::instance_names_t *pNames = new wbem::framework::instance_names_t ();
+	wbem::framework::instance_names_t *pNames = NULL;
+
+	std::string hostName = getHostName();
+
+	pNames = new wbem::framework::instance_names_t ();
 	framework::attributes_t keys;
 	keys[SYSTEMCREATIONCLASSNAME_KEY] =
 			framework::Attribute(server::BASESERVER_CREATIONCLASSNAME, true);
@@ -402,7 +419,7 @@ wbem::framework::UINT32 wbem::pmem_config::PersistentMemoryServiceFactory::execu
 			pathBuilder.Build(&path);
 
 			std::string namespaceUid;
-			httpRc = getNamespaceFromPath(path, namespaceUid);
+			httpRc = getNamespaceFromPath(path, getHostName(), namespaceUid);
 
 			if (httpRc == framework::MOF_ERR_SUCCESS)
 			{
@@ -468,6 +485,7 @@ wbem::pmem_config::PersistentMemoryServiceFactory::getReturnCodeFromLibException
 			rc = PM_SERVICE_ERR_INVALIDPARAMETER;
 			break;
 		case NVM_ERR_DEVICEBUSY:
+		case NVM_ERR_NAMESPACEBUSY:
 			rc = PM_SERVICE_ERR_IN_USE;
 			break;
 		case NVM_ERR_BADNAMESPACETYPE:
@@ -499,8 +517,8 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::allocateFromPool(
 	httpRc = wbem::framework::MOF_ERR_SUCCESS;
 
 	// Validate Pool attribute
-	std::string poolRef = inParms[wbem::pmem_config::PM_SERVICE_RESOURCE_POOL].stringValue();
-	wbem::pmem_config::PersistentMemoryServiceFactory::validatePool(poolRef);
+	std::string poolRef = inParms[PM_SERVICE_RESOURCE_POOL].stringValue();
+	validatePool(poolRef);
 
 	// get pool id from pool ref
 	framework::ObjectPathBuilder builder(poolRef);
@@ -668,7 +686,7 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::allocateFromPool(
 					throw framework::ExceptionBadParameter(PM_SERVICE_GOAL.c_str());
 				}
 			}
-			wbem::pmem_config::PersistentMemoryServiceFactory::createNamespace(namespaceUidStr,
+			createNamespace(namespaceUidStr,
 				poolUidStr, initialState,
 				friendlyNameStr, blockSize, blockCount, type, optimize,
 				encryption, eraseCapable,
@@ -729,7 +747,7 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::modifyNamespace(
 		else
 		{
 			std::string namespaceUidStr;
-			httpRc = getNamespaceFromPath(namespacePath, namespaceUidStr);
+			httpRc = getNamespaceFromPath(namespacePath, getHostName(), namespaceUidStr);
 			if (httpRc == framework::MOF_ERR_SUCCESS)
 			{
 				wbem::framework::Instance goalInstance(goalString);
@@ -760,7 +778,8 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::modifyNamespace(
 }
 
 wbem::framework::UINT32 wbem::pmem_config::PersistentMemoryServiceFactory::getNamespaceFromPath(
-		const wbem::framework::ObjectPath &path, std::string &namespaceUid)
+		const wbem::framework::ObjectPath &path, const std::string &expectedHostName,
+		std::string &namespaceUid)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	framework::UINT32 httpRc = framework::MOF_ERR_SUCCESS;
@@ -771,9 +790,10 @@ wbem::framework::UINT32 wbem::pmem_config::PersistentMemoryServiceFactory::getNa
 		if (path.getKeyValue(CREATIONCLASSNAME_KEY).stringValue()
 				!= PMNS_CREATIONCLASSNAME
 			|| path.getKeyValue(SYSTEMNAME_KEY).stringValue()
-				!=  server::getHostName()
+				!=  expectedHostName
 			|| path.getKeyValue(SYSTEMCREATIONCLASSNAME_KEY).stringValue()
-				!=  server::BASESERVER_CREATIONCLASSNAME)
+				!=  server::BASESERVER_CREATIONCLASSNAME
+			|| path.getKeyValue(wbem::DEVICEID_KEY).stringValue().empty())
 		{
 			httpRc = framework::CIM_ERR_INVALID_PARAMETER;
 		}
@@ -783,7 +803,7 @@ wbem::framework::UINT32 wbem::pmem_config::PersistentMemoryServiceFactory::getNa
 			httpRc = framework::MOF_ERR_SUCCESS;
 		}
 	}
-	catch (wbem::framework::ExceptionBadParameter &)
+	catch (framework::Exception &e)
 	{
 		httpRc = framework::CIM_ERR_INVALID_PARAMETER;
 	}
@@ -799,13 +819,13 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::deleteNamespace(const st
 		throw framework::ExceptionBadParameter(PM_SERVICE_NAMESPACE.c_str());
 	}
 
-	NVM_UID uid;
-	uid_copy(namespaceUid.c_str(), uid);
-
-	int rc = m_deleteNamespace(uid);
-	if (rc != NVM_SUCCESS)
+	try
 	{
-		throw exception::NvmExceptionLibError(rc);
+		m_nvmLib.deleteNamespace(namespaceUid);
+	}
+	catch (core::LibraryException &e)
+	{
+		throw exception::NvmExceptionLibError(e.getErrorCode());
 	}
 }
 
@@ -826,11 +846,6 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::createNamespace(std::str
 	{
 		throw framework::ExceptionBadParameter(PM_SERVICE_RESOURCE_POOL.c_str());
 	}
-
-	NVM_UID poolUid;
-	uid_copy(poolUidStr.c_str(), poolUid);
-	NVM_UID namespaceUid;
-	NVM_UID namespace_uid_str;
 
 	// populate the struct
 	struct namespace_create_settings namespace_settings;
@@ -862,32 +877,32 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::createNamespace(std::str
 		p_format = &format;
 	}
 
-	int rc = m_createNamespace(&namespaceUid, poolUid, &namespace_settings, p_format, 0);
-	if (rc != NVM_SUCCESS)
+	try
 	{
-		throw exception::NvmExceptionLibError(rc);
+		namespaceUidStr = m_nvmLib.createNamespace(poolUidStr, namespace_settings, p_format, false);
 	}
-	uid_copy(namespaceUid, namespace_uid_str);
-	namespaceUidStr = std::string(namespace_uid_str);
+	catch (core::LibraryException &e)
+	{
+		throw exception::NvmExceptionLibError(e.getErrorCode());
+	}
 }
 
 bool wbem::pmem_config::PersistentMemoryServiceFactory::isModifyNamespaceNameSupported()
 {
 	bool isSupported = true;
 
-	struct nvm_capabilities capabilities;
-	memset(&capabilities, 0, sizeof (capabilities));
-	int rc = nvm_get_nvm_capabilities(&capabilities);
-
-	if (rc != NVM_SUCCESS)
+	try
 	{
-		COMMON_LOG_ERROR("Failed to retrieve driver capabilities");
-		throw exception::NvmExceptionLibError(rc);
+		struct nvm_capabilities capabilities = m_nvmLib.getNvmCapabilities();
+
+		if (!capabilities.nvm_features.rename_namespace)
+		{
+			isSupported = false;
+		}
 	}
-
-	if (!capabilities.nvm_features.rename_namespace)
+	catch (core::LibraryException &e)
 	{
-		isSupported = false;
+		throw exception::NvmExceptionLibError(e.getErrorCode());
 	}
 
 	return isSupported;
@@ -898,24 +913,23 @@ bool wbem::pmem_config::PersistentMemoryServiceFactory::isModifyNamespaceBlockCo
 {
 	bool isSupported = true;
 
-	struct nvm_capabilities capabilities;
-	memset(&capabilities, 0, sizeof (capabilities));
-	int rc = nvm_get_nvm_capabilities(&capabilities);
-
-	if (rc != NVM_SUCCESS)
+	try
 	{
-		COMMON_LOG_ERROR("Failed to retrieve driver capabilities");
-		throw exception::NvmExceptionLibError(rc);
+		struct nvm_capabilities capabilities = m_nvmLib.getNvmCapabilities();
+
+		if (details.block_count < blockCount && !capabilities.nvm_features.grow_namespace)
+		{
+			isSupported = false;
+		}
+
+		if (details.block_count > blockCount && !capabilities.nvm_features.shrink_namespace)
+		{
+			isSupported = false;
+		}
 	}
-
-	if (details.block_count < blockCount && !capabilities.nvm_features.grow_namespace)
+	catch (core::LibraryException &e)
 	{
-		isSupported = false;
-	}
-
-	if (details.block_count > blockCount && !capabilities.nvm_features.shrink_namespace)
-	{
-		isSupported = false;;
+		throw exception::NvmExceptionLibError(e.getErrorCode());
 	}
 
 	return isSupported;
@@ -924,17 +938,10 @@ bool wbem::pmem_config::PersistentMemoryServiceFactory::isModifyNamespaceBlockCo
 void wbem::pmem_config::PersistentMemoryServiceFactory::performAtomicModification(
 		std::string namespaceUidStr, NVM_UINT64 reservation, std::string friendlyNameStr)
 {
-	NVM_UID namespaceUid;
-	uid_copy(namespaceUidStr.c_str(), namespaceUid);
-	struct namespace_details details;
-	memset(&details, 0, sizeof (details));
-	int rc = nvm_get_namespace_details(namespaceUid, &details);
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	if (rc != NVM_SUCCESS)
-	{
-		COMMON_LOG_ERROR("Failed to retrieve namespace details");
-		throw exception::NvmExceptionLibError(rc);
-	}
+	struct namespace_details details;
+	getNamespaceDetails(namespaceUidStr, details);
 
 	NVM_UINT64 blockCount = getBlockCountFromReservation(details, reservation);
 
@@ -986,13 +993,13 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::modifyNamespaceName(
 		throw framework::ExceptionBadParameter(PM_SERVICE_NAMESPACE.c_str());
 	}
 
-	NVM_UID namespaceUid;
-	uid_copy(namespaceUidStr.c_str(), namespaceUid);
-
-	int rc = m_modifyNamespaceName(namespaceUid, friendlyNameStr.c_str());
-	if (rc != NVM_SUCCESS)
+	try
 	{
-		throw exception::NvmExceptionLibError(rc);
+		m_nvmLib.modifyNamespaceName(namespaceUidStr, friendlyNameStr);
+	}
+	catch (core::LibraryException &e)
+	{
+		throw exception::NvmExceptionLibError(e.getErrorCode());
 	}
 }
 
@@ -1005,13 +1012,13 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::modifyNamespaceBlockCoun
 		throw framework::ExceptionBadParameter(PM_SERVICE_NAMESPACE.c_str());
 	}
 
-	NVM_UID namespaceUid;
-	uid_copy(namespaceUidStr.c_str(), namespaceUid);
-
-	int rc = m_modifyNamespaceBlockCount(namespaceUid, blockCount, 1);
-	if (rc != NVM_SUCCESS)
+	try
 	{
-		throw exception::NvmExceptionLibError(rc);
+		m_nvmLib.modifyNamespaceBlockCount(namespaceUidStr, blockCount, 1);
+	}
+	catch (core::LibraryException &e)
+	{
+		throw exception::NvmExceptionLibError(e.getErrorCode());
 	}
 }
 
@@ -1024,15 +1031,13 @@ NVM_UINT64 wbem::pmem_config::PersistentMemoryServiceFactory::getBlockCountFromR
 void wbem::pmem_config::PersistentMemoryServiceFactory::getNamespaceDetails(
 		const std::string namespaceUidStr, struct namespace_details &details)
 {
-	NVM_UID namespaceUid;
-	uid_copy(namespaceUidStr.c_str(), namespaceUid);
-	memset(&details, 0, sizeof (struct namespace_details));
-	int rc = nvm_get_namespace_details(namespaceUid, &details);
-
-	if (rc != NVM_SUCCESS)
+	try
 	{
-		COMMON_LOG_ERROR("Could not retrieve namespace details");
-		throw exception::NvmExceptionLibError(rc);
+		details = m_nvmLib.getNamespaceDetails(namespaceUidStr);
+	}
+	catch (core::LibraryException &e)
+	{
+		throw exception::NvmExceptionLibError(e.getErrorCode());
 	}
 }
 
@@ -1052,7 +1057,6 @@ NVM_UINT64 wbem::pmem_config::PersistentMemoryServiceFactory::getAdjustedCreateN
 		const createNamespaceParams &params)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	int rc = NVM_SUCCESS;
 
 	struct namespace_create_settings settings;
 	memset(&settings, 0, sizeof (settings));
@@ -1064,9 +1068,6 @@ NVM_UINT64 wbem::pmem_config::PersistentMemoryServiceFactory::getAdjustedCreateN
 	settings.security_features.encryption = encryptionTypeToEnum(params.encryption);
 	settings.enabled = (enum namespace_enable_state) params.enabled;
 
-	NVM_UID poolUid;
-	uid_copy(params.poolId.c_str(), poolUid);
-
 	struct interleave_format format;
 	memset(&format, 0, sizeof (format));
 	struct interleave_format *p_format = NULL;
@@ -1076,27 +1077,34 @@ NVM_UINT64 wbem::pmem_config::PersistentMemoryServiceFactory::getAdjustedCreateN
 		p_format = &format;
 	}
 
-	if ((rc = nvm_adjust_create_namespace_block_count(poolUid, &settings, p_format)) != NVM_SUCCESS)
+	try
 	{
-		COMMON_LOG_ERROR("Could not adjust namespace block count");
-		throw exception::NvmExceptionLibError(rc);
+		m_nvmLib.adjustCreateNamespaceBlockCount(params.poolId, settings, p_format);
 	}
+	catch (core::LibraryException &e)
+	{
+		throw exception::NvmExceptionLibError(e.getErrorCode());
+	}
+
 	return settings.block_count;
 }
 
 NVM_UINT64 wbem::pmem_config::PersistentMemoryServiceFactory::getAdjustedModifyNamespaceBlockCount(
 		std::string namespaceUidStr, const NVM_UINT64 blockCount)
 {
-	int rc = NVM_SUCCESS;
-	NVM_UID namespaceUid;
-	NVM_UINT64 newBlockCount = blockCount;
-	uid_copy(namespaceUidStr.c_str(), namespaceUid);
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	if ((rc = nvm_adjust_modify_namespace_block_count(namespaceUid, &newBlockCount)) != NVM_SUCCESS)
+	NVM_UINT64 newBlockCount = blockCount;
+
+	try
 	{
-		COMMON_LOG_ERROR("Could not adjust namespace block count");
-		throw exception::NvmExceptionLibError(rc);
+		m_nvmLib.adjustModifyNamespaceBlockCount(namespaceUidStr, newBlockCount);
 	}
+	catch (core::LibraryException &e)
+	{
+		throw exception::NvmExceptionLibError(e.getErrorCode());
+	}
+
 	return newBlockCount;
 }
 

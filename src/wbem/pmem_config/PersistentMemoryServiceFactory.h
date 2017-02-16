@@ -37,6 +37,7 @@
 #include <framework_interface/NvmInstanceFactory.h>
 #include "NamespaceSettingsFactory.h"
 #include <exception/NvmExceptionLibError.h>
+#include <core/NvmLibrary.h>
 
 #ifndef	_WBEM_PMEMCONFIG_PERSISTENTMEMORYSERVICEFACTORY_H_
 #define	_WBEM_PMEMCONFIG_PERSISTENTMEMORYSERVICEFACTORY_H_
@@ -95,7 +96,7 @@ public:
 	/*!
 		 * Initialize a new PersistentMemoryServiceFactory.
 		 */
-	PersistentMemoryServiceFactory() throw (framework::Exception);
+	PersistentMemoryServiceFactory(core::NvmLibrary &nvmLib = core::NvmLibrary::getNvmLibrary());
 
 	/*!
 	 * Clean up the PersistentMemoryServiceFactory
@@ -134,24 +135,9 @@ public:
 			wbem::framework::attributes_t &outParms);
 
 	/*!
-	 * Interface to the library API nvm_delete_namespace function.
-	 * This pointer allows for dependency injection and decouples the dependency on the API
-	 */
-	int (*m_deleteNamespace)(const NVM_UID namespace_uid);
-
-	/*!
 	 * delete a namespace
 	 */
 	void deleteNamespace(const std::string &namespaceUid);
-
-	/*!
-	 * Interface to the library API nvm_create_namespace function.
-	 * This pointer allows for dependency injection and decouples the dependency on the API
-	 */
-	int (*m_createNamespace)(NVM_UID *p_namespace_uid,
-			const NVM_UID pool_uid,
-			struct namespace_create_settings *p_create_settings,
-			const struct interleave_format *p_format, NVM_BOOL allow_adjustment);
 
 	// structure to hold the information for creating a namespace
 	typedef struct
@@ -185,19 +171,6 @@ public:
 			const mem_config::MemoryAllocationSettingsInterleaveSizeExponent channelSize,
 			const mem_config::MemoryAllocationSettingsInterleaveSizeExponent controllerSize,
 			const bool byOne, const bool storageOnly, const NVM_UINT16 memoryPageAllocation);
-
-	/*!
-	 * Interface to the library API nvm_modify_namespace_name function.
-	 * This pointer allows for dependency injection and decouples the dependency on the API
-	 */
-	int (*m_modifyNamespaceName)(const NVM_UID namespace_uid, const NVM_NAMESPACE_NAME name);
-
-	/*!
-	 * Interface to the library API nvm_modify_namespace_name_block_count function.
-	 * This pointer allows for dependency injection and decouples the dependency on the API
-	 */
-	int (*m_modifyNamespaceBlockCount)(
-			const NVM_UID namespace_uid, NVM_UINT64 block_count, NVM_BOOL allow_adjustment);
 
 	/*!
 	 *  Check if the modifyNamespaceName operation is supported
@@ -240,7 +213,7 @@ public:
 	 * Retrieve the namespace uid from a persistent memory namespace path
 	 */
 	static framework::UINT32 getNamespaceFromPath(
-			const wbem::framework::ObjectPath &path, std::string &namespaceUid);
+			const wbem::framework::ObjectPath &path, const std::string &expectedHostName, std::string &namespaceUid);
 
 	/*
 	 * Retrieve the adjusted block count for a namespace creation request
@@ -251,9 +224,15 @@ public:
  	* Retrieve the adjusted block count for a namespace modification request
  	*/
 	virtual NVM_UINT64 getAdjustedModifyNamespaceBlockCount(std::string namespaceUidStr, const NVM_UINT64 blockCount);
+
 private:
+
+	core::NvmLibrary &m_nvmLib;
+
 	void populateAttributeList(framework::attribute_names_t &attributes)
 			throw (framework::Exception);
+
+	std::string getHostName();
 
 	/*
 	 * Return the number of blocks in the reservation for a namespace

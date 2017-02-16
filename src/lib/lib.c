@@ -364,6 +364,11 @@ int nvm_get_error(const enum return_code code, NVM_ERROR_DESCRIPTION description
 						TR("The firmware image is not compatible with this version "
 						"of the software."), description_len);
 				break;
+			case NVM_ERR_NAMESPACEBUSY:
+				s_strcpy(description,
+						TR("The namespace cannot be changed because it is in use by a file "
+								"system."), description_len);
+				break;
 			default:
 				s_strcpy(description, TR("The return code is not valid."),
 						description_len);

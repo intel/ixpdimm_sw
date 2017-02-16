@@ -879,6 +879,59 @@ int create_namespace(
 }
 
 /*
+ * Fetches the device ID for the namespace in /dev/.
+ * Returns NULL if namespace is disabled.
+ */
+const char *get_enabled_namespace_dev_id(struct ndctl_namespace *p_namespace)
+{
+	COMMON_LOG_ENTRY();
+
+	const char *dev_id = NULL;
+	struct ndctl_pfn *pfn = ndctl_namespace_get_pfn(p_namespace);
+	struct ndctl_btt *btt = ndctl_namespace_get_btt(p_namespace);
+
+	if (pfn && ndctl_pfn_is_enabled(pfn))
+	{
+		dev_id = ndctl_pfn_get_block_device(pfn);
+	}
+	else if (btt && ndctl_btt_is_enabled(btt))
+	{
+		dev_id = ndctl_btt_get_block_device(btt);
+	}
+	else if (ndctl_namespace_is_enabled(p_namespace))
+	{
+		dev_id = ndctl_namespace_get_block_device(p_namespace);
+	}
+
+	COMMON_LOG_EXIT();
+	return dev_id;
+}
+
+NVM_BOOL is_namespace_fs_mounted(struct ndctl_namespace *p_namespace)
+{
+	COMMON_LOG_ENTRY();
+	NVM_BOOL is_busy = 0;
+
+	// Disabled namespace can't be mounted
+	const char *dev_id = get_enabled_namespace_dev_id(p_namespace);
+	if (dev_id)
+	{
+		NVM_PATH ns_path;
+		s_snprintf(ns_path, NVM_PATH_LEN, "/dev/%s", dev_id);
+
+		int fd = open(ns_path, O_RDWR | O_EXCL);
+		if (fd < 0) // couldn't exclusively open
+		{
+			COMMON_LOG_INFO_F("Device %s is mounted", ns_path);
+			is_busy = 1;
+		}
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(is_busy);
+	return is_busy;
+}
+
+/*
  * Delete an existing namespace
  */
 int delete_namespace(const NVM_UID namespace_guid)
@@ -900,6 +953,12 @@ int delete_namespace(const NVM_UID namespace_guid)
 		{
 			COMMON_LOG_ERROR("Specified namespace not found");
 			rc = NVM_ERR_BADNAMESPACE;
+		}
+		else if (is_namespace_fs_mounted(p_namespace))
+		{
+			COMMON_LOG_ERROR_F("Can't delete namespace %s, filesystem is mounted",
+					namespace_guid);
+			rc = NVM_ERR_NAMESPACEBUSY;
 		}
 		else
 		{
@@ -945,6 +1004,12 @@ int modify_namespace_name(
 		{
 			COMMON_LOG_ERROR("Specified namespace not found");
 			rc = NVM_ERR_BADNAMESPACE;
+		}
+		else if (is_namespace_fs_mounted(p_namespace))
+		{
+			COMMON_LOG_ERROR_F("Can't modify namespace %s name, filesystem is mounted",
+					namespace_guid);
+			rc = NVM_ERR_NAMESPACEBUSY;
 		}
 		else
 		{
@@ -1030,6 +1095,12 @@ int modify_namespace_enabled(
 		{
 			COMMON_LOG_ERROR("Specified namespace not found");
 			rc = NVM_ERR_BADNAMESPACE;
+		}
+		else if (is_namespace_fs_mounted(p_namespace))
+		{
+			COMMON_LOG_ERROR_F("Can't modify namespace %s state, filesystem is mounted",
+					namespace_guid);
+			rc = NVM_ERR_NAMESPACEBUSY;
 		}
 		else
 		{

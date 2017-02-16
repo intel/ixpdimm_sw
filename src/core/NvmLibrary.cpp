@@ -854,18 +854,18 @@ struct namespace_details NvmLibrary::getNamespaceDetails(const std::string &name
 
 }
 
-std::string NvmLibrary::createNamespace(const std::string &pool_uid,
-	struct namespace_create_settings &p_settings, const struct interleave_format &p_format,
-	const bool allow_adjustment)
+std::string NvmLibrary::createNamespace(const std::string &poolUid,
+	struct namespace_create_settings &settings, const struct interleave_format *pFormat,
+	const bool allowAdjustment)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	int rc;
 	NVM_UID lib_pool_uid;
-	core::Helper::stringToUid(pool_uid, lib_pool_uid);
+	core::Helper::stringToUid(poolUid, lib_pool_uid);
 
 	NVM_UID fromLibNamespaceUid;
-	rc = m_lib.createNamespace(&fromLibNamespaceUid, lib_pool_uid, &p_settings, &p_format,
-		allow_adjustment);
+	rc = m_lib.createNamespace(&fromLibNamespaceUid, lib_pool_uid, &settings, pFormat,
+		allowAdjustment);
 	if (rc < 0)
 	{
 		throw core::LibraryException(rc);
@@ -943,7 +943,7 @@ void NvmLibrary::deleteNamespace(const std::string &namespaceUid)
 }
 
 void NvmLibrary::adjustCreateNamespaceBlockCount(const std::string &poolUid,
-	struct namespace_create_settings &pSettings, const struct interleave_format &pFormat)
+	struct namespace_create_settings &pSettings, const struct interleave_format *pFormat)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	int rc;
@@ -951,7 +951,7 @@ void NvmLibrary::adjustCreateNamespaceBlockCount(const std::string &poolUid,
 	NVM_UID lib_poolUid;
 	core::Helper::stringToUid(poolUid, lib_poolUid);
 
-	rc = m_lib.adjustCreateNamespaceBlockCount(lib_poolUid, &pSettings, &pFormat);
+	rc = m_lib.adjustCreateNamespaceBlockCount(lib_poolUid, &pSettings, pFormat);
 	if (rc < 0)
 	{
 		throw core::LibraryException(rc);

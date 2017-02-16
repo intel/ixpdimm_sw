@@ -48,10 +48,9 @@
 #include <core/Helper.h>
 #include "PersistentMemoryServiceFactory.h"
 
-wbem::pmem_config::PersistentMemoryNamespaceFactory::PersistentMemoryNamespaceFactory()
-throw(wbem::framework::Exception)
+wbem::pmem_config::PersistentMemoryNamespaceFactory::PersistentMemoryNamespaceFactory(core::NvmLibrary &nvmLib) :
+	m_nvmLib(nvmLib)
 {
-	m_modifyNamespaceEnabled = nvm_modify_namespace_enabled;
 }
 
 wbem::pmem_config::PersistentMemoryNamespaceFactory::~PersistentMemoryNamespaceFactory()
@@ -368,7 +367,7 @@ wbem::framework::UINT32 wbem::pmem_config::PersistentMemoryNamespaceFactory::exe
 		if (PM_NAMESPACE_REQUESTSTATECHANGE == method)
 		{
 			std::string namespaceUidStr;
-			httpRc = PersistentMemoryServiceFactory::getNamespaceFromPath(object, namespaceUidStr);
+			httpRc = PersistentMemoryServiceFactory::getNamespaceFromPath(object, m_nvmLib.getHostName(), namespaceUidStr);
 			if (httpRc == framework::MOF_ERR_SUCCESS)
 			{
 				NVM_UINT16 stateValue = inParms[PM_NAMESPACE_STATE].uintValue();
@@ -429,6 +428,7 @@ wbem::pmem_config::PersistentMemoryNamespaceFactory::getReturnCodeFromLibExcepti
 			rc = PM_NAMESPACE_INVALID_PARAMETER;
 			break;
 		case NVM_ERR_DEVICEBUSY:
+		case NVM_ERR_NAMESPACEBUSY:
 			rc = PM_NAMESPACE_IN_USE;
 			break;
 		default:
@@ -444,25 +444,24 @@ bool wbem::pmem_config::PersistentMemoryNamespaceFactory::isModifyNamespaceEnabl
 {
 	bool isSupported = true;
 
-	struct nvm_capabilities capabilities;
-	memset(&capabilities, 0, sizeof (capabilities));
-	int rc = nvm_get_nvm_capabilities(&capabilities);
+	try
+	{
+		struct nvm_capabilities capabilities = m_nvmLib.getNvmCapabilities();
 
-	if (rc != NVM_SUCCESS)
-	{
-		COMMON_LOG_ERROR("Failed to retrieve driver capabilities");
-		throw exception::NvmExceptionLibError(rc);
+		if (enabled  == NAMESPACE_ENABLE_STATE_DISABLED &&
+			!capabilities.nvm_features.disable_namespace)
+		{
+			isSupported = false;
+		}
+		else if (enabled  == NAMESPACE_ENABLE_STATE_ENABLED &&
+				!capabilities.nvm_features.enable_namespace)
+		{
+			isSupported = false;
+		}
 	}
-
-	if (enabled  == NAMESPACE_ENABLE_STATE_DISABLED &&
-		!capabilities.nvm_features.disable_namespace)
+	catch (core::LibraryException &e)
 	{
-		isSupported = false;
-	}
-	else if (enabled  == NAMESPACE_ENABLE_STATE_ENABLED &&
-			!capabilities.nvm_features.enable_namespace)
-	{
-		isSupported = false;
+		throw exception::NvmExceptionLibError(e.getErrorCode());
 	}
 
 	return isSupported;
@@ -488,13 +487,15 @@ void wbem::pmem_config::PersistentMemoryNamespaceFactory::modifyNamespace(
 		COMMON_LOG_ERROR("Invalid namespace uid");
 		throw framework::ExceptionBadParameter(wbem::DEVICEID_KEY.c_str());
 	}
-	NVM_UID namespaceUid;
-	uid_copy(namespaceUidStr.c_str(), namespaceUid);
 
-	enum namespace_enable_state enabled = PersistentMemoryServiceFactory::namespaceEnabledToEnum(stateValue);
-	int rc = m_modifyNamespaceEnabled(namespaceUid, enabled);
-	if (rc != NVM_SUCCESS)
+	try
 	{
-		throw exception::NvmExceptionLibError(rc);
+		enum namespace_enable_state enabled =
+				PersistentMemoryServiceFactory::namespaceEnabledToEnum(stateValue);
+		m_nvmLib.modifyNamespaceEnabled(namespaceUidStr, enabled);
+	}
+	catch (core::LibraryException &e)
+	{
+		throw exception::NvmExceptionLibError(e.getErrorCode());
 	}
 }

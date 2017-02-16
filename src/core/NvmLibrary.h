@@ -93,9 +93,9 @@ public:
 		const enum namespace_type type);
 	virtual std::vector<struct namespace_discovery> getNamespaces();
 	virtual struct namespace_details getNamespaceDetails(const std::string &namespaceUid);
-	virtual std::string createNamespace(const std::string &pool_uid,
-		struct namespace_create_settings &p_settings, const struct interleave_format &p_format,
-		const bool allow_adjustment);
+	virtual std::string createNamespace(const std::string &poolUid,
+		struct namespace_create_settings &settings, const struct interleave_format *pFormat,
+		const bool allowAdjustment);
 	virtual void modifyNamespaceName(const std::string &namespaceUid,
 		const std::string &name);
 	virtual int modifyNamespaceBlockCount(const std::string &namespaceUid,
@@ -104,7 +104,7 @@ public:
 		const enum namespace_enable_state enabled);
 	virtual void deleteNamespace(const std::string &namespaceUid);
 	virtual void adjustCreateNamespaceBlockCount(const std::string &poolUid,
-		struct namespace_create_settings &pSettings, const struct interleave_format &pFormat);
+		struct namespace_create_settings &pSettings, const struct interleave_format *pFormat);
 	virtual void adjustModifyNamespaceBlockCount(const std::string &namespaceUid, NVM_UINT64 &pBlockCount);
 	virtual std::vector<struct sensor> getSensors(const std::string &deviceUid);
 	virtual struct sensor getSensor(const std::string &deviceUid, const enum sensor_type type);

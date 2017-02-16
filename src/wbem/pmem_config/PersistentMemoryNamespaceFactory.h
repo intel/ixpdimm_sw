@@ -36,6 +36,7 @@
 
 #include <framework_interface/NvmInstanceFactory.h>
 #include <exception/NvmExceptionLibError.h>
+#include <core/NvmLibrary.h>
 
 
 namespace wbem
@@ -80,7 +81,7 @@ class NVM_API PersistentMemoryNamespaceFactory : public framework_interface::Nvm
 		/*!
 		 * Initialize a new PersistentMemoryNamespaceFactory.
 		 */
-		PersistentMemoryNamespaceFactory() throw (framework::Exception);
+		PersistentMemoryNamespaceFactory(core::NvmLibrary &nvmLib = core::NvmLibrary::getNvmLibrary());
 
 		/*!
 		 * Clean up the PersistentMemoryNamespaceFactory
@@ -132,12 +133,6 @@ class NVM_API PersistentMemoryNamespaceFactory : public framework_interface::Nvm
 				wbem::framework::attributes_t &outParms);
 
 		/*!
-		 * Interface to the library API nvm_modify_namespace function.
-		 * This pointer allows for dependency injection and decouples the dependency on the API
-		 */
-		int (*m_modifyNamespaceEnabled)(const NVM_UID namespace_uid, const enum namespace_enable_state enabled);
-
-		/*!
 		 * modify a namespace
 		 */
 		virtual void modifyNamespace(std::string namespaceUidStr, const NVM_UINT16 stateValue);
@@ -156,6 +151,8 @@ class NVM_API PersistentMemoryNamespaceFactory : public framework_interface::Nvm
 		virtual bool isModifyNamespaceEnabledSupported(const enum namespace_enable_state enabled);
 
 	private:
+		core::NvmLibrary &m_nvmLib;
+
 		void populateAttributeList(framework::attribute_names_t &attributes)
 				throw (framework::Exception);
 

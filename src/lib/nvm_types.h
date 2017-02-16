@@ -217,8 +217,10 @@ enum return_code
 	NVM_ERR_GOALPENDING = -50, // Memory allocation goal is pending reboot.
 	NVM_ERR_BADPOOLHEALTH = -51, // Underlying persistent memory is unavailable.
 	NVM_ERR_INVALIDMEMORYTYPE = -52, // The address does not match the specified memory type.
-	NVM_ERR_INCOMPATIBLEFW = -54, // The firmware image is not compatible with this
+	NVM_ERR_INCOMPATIBLEFW = -53, // The firmware image is not compatible with this
 									//	version of software.
+	NVM_ERR_NAMESPACEBUSY = -54, // The namespace cannot be changed because it is in use by
+									// a file system.
 };
 
 /*
