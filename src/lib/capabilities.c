@@ -507,23 +507,24 @@ int apply_dimm_sku_capabilities(struct nvm_capabilities *p_capabilities)
 			rc = NVM_SUCCESS;
 			NVM_BOOL sku_set = 0;
 			NVM_UINT32 dimm_sku = 0;
+
 			for (int i = 0; i < dev_count; i++)
 			{
-				// set the SKU to check on the first NVM-DIMM
-				// then check all others against it
-				if (!sku_set)
-				{
-					dimm_sku = devices[i].dimm_sku;
-					sku_set = 1;
-				}
-				else if (sku_value_is_different(dimm_sku, devices[i].dimm_sku))
-				{
-					p_capabilities->sku_capabilities.mixed_sku = 1;
-				}
-
 				// only check manageable dimms for supported modes
 				if (devices[i].manageability == MANAGEMENT_VALIDCONFIG)
 				{
+					// set the SKU to check on the first NVM-DIMM
+					// then check all others against it
+					if (!sku_set)
+					{
+						dimm_sku = devices[i].dimm_sku;
+						sku_set = 1;
+					}
+					else if (sku_value_is_different(dimm_sku, devices[i].dimm_sku))
+					{
+						p_capabilities->sku_capabilities.mixed_sku = 1;
+					}
+
 					// at least one manageable dimm supports memory mode
 					if (devices[i].dimm_sku & SKU_MEMORY_MODE_ENABLED)
 					{
