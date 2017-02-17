@@ -1719,7 +1719,7 @@ int dimms_are_locked(const struct namespace_details *details, NVM_BOOL *p_locked
 			{
 				for (int i = 0; i < p_pool->ilset_count; i++)
 				{
-					if (p_pool->ilsets[i].set_index == interleaveset_id)
+					if (p_pool->ilsets[i].driver_id == interleaveset_id)
 					{
 						memmove(&interleave, &(p_pool->ilsets[i]),
 								sizeof (struct interleave_set));
