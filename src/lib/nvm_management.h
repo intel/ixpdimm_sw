@@ -635,6 +635,8 @@ struct device_status
 	enum device_sanitize_status sanitize_status; // Sanitize operation status for the AEP DIMM
 	NVM_UINT32 new_error_count; // Count of new fw errors from the AEP DIMM
 	NVM_UINT64 newest_error_log_timestamp; // Timestamp of the newest log entry in the fw error log
+	NVM_BOOL ait_dram_enabled; // Whether or not the AIT DRAM is enabled.
+	NVM_UINT64 boot_status; // The status of the AEP DIMM as reported by the firmware in the BSR
 };
 
 /*

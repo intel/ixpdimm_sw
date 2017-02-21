@@ -3522,6 +3522,7 @@ struct db_dimm_smart
 	unsigned int lss_details;
 	unsigned long long last_shutdown_time;
 	unsigned int controller_temperature;
+	unsigned int ait_dram_status;
 };
 /*!
  * Helper function to print a db_dimm_smart to the screen.

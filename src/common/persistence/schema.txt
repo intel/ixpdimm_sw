@@ -275,6 +275,7 @@ Attributes:
 	unsigned int lss_details
 	unsigned long long last_shutdown_time
 	unsigned int controller_temperature
+	unsigned int ait_dram_status
 
 Table(s): db_dimm_state 
 Description: Monitor stored DIMM state for detecting changes. 

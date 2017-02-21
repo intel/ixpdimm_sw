@@ -288,6 +288,8 @@ enum validation_flags
 	SMART_VALIDATION_FLAG_PERCENT_USED = 1 << 2,
 	SMART_VALIDATION_FLAG_MEDIA_TEMPERATURE = 1 << 3,
 	SMART_VALIDATION_FLAG_CONTROLLER_TEMPERATURE = 1 << 4,
+	SMART_VALIDATION_FLAG_UNSAFE_SHUTDOWN_COUNT = 1 << 5,
+	SMART_VALIDATION_FLAG_AIT_DRAM_STATUS = 1 << 6,
 	SMART_VALIDATION_FLAG_ALARM_TRIPS = 1 << 9,
 	SMART_VALIDATION_FLAG_LSS = 1 << 10,
 	SMART_VALIDATION_FLAG_VENDOR_DATA = 1 << 11,
@@ -1387,7 +1389,9 @@ typedef union
 		unsigned int percentage_used_field:1;
 		unsigned int media_temperature_field:1;
 		unsigned int controller_temperature_field:1;
-		unsigned int rsvd_a:4;
+		unsigned int unsafe_shutdown_count_field:1;
+		unsigned int ait_dram_status_field:1;
+		unsigned int rsvd_a:2;
 		unsigned int alarm_trips_field:1;
 		unsigned int last_shutdown_status_field:1;
 		unsigned int sizeof_vendor_data_field:1;
@@ -1469,7 +1473,11 @@ struct pt_payload_smart_health {
 	 */
 	unsigned short controller_temperature;
 
-	unsigned char rsvd_b[15];
+	unsigned char unsafe_shutdown_count[8];
+
+	unsigned char ait_dram_status;
+
+	unsigned char rsvd_b[6];
 
 	/*
 	 * Last Shutdown Status: Displays the last shutdown that occured

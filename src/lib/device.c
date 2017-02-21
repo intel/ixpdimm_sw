@@ -650,6 +650,51 @@ int fill_device_config_status(const NVM_NFIT_DEVICE_HANDLE device_handle,
 }
 
 /*
+ *  Helper function to set health,last_shutdown_status, last_shutdown_time and
+ *  ait_dram_enabled in device_status struct
+ */
+int fill_device_status_from_smart_health(unsigned int device_handle,
+		struct device_status *p_status)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	struct pt_payload_smart_health dimm_smart;
+	rc = fw_get_smart_health(device_handle, &dimm_smart);
+	if (rc != NVM_SUCCESS)
+	{
+		COMMON_LOG_ERROR_F("Failed to retrieve the DIMM smart data with error %d", rc);
+	}
+	else
+	{
+		if (dimm_smart.validation_flags.parts.health_status_field)
+		{
+			p_status->health = smart_health_status_to_device_health(dimm_smart.health_status);
+		}
+		else
+		{
+			p_status->health = DEVICE_HEALTH_UNKNOWN;
+		}
+
+		// convert last shutdown status to enumeration value
+		if (dimm_smart.validation_flags.parts.sizeof_vendor_data_field)
+		{
+			p_status->last_shutdown_status = dimm_smart.vendor_data.lss_details;
+			p_status->last_shutdown_time = dimm_smart.vendor_data.last_shutdown_time;
+		}
+
+		if (dimm_smart.validation_flags.parts.ait_dram_status_field)
+		{
+			p_status->ait_dram_enabled = dimm_smart.ait_dram_status;
+		}
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+
+/*
  * Helper function to read fw error info for a single type and level
  */
 int update_status_fw_error_log_info_by_type_and_level(const NVM_NFIT_DEVICE_HANDLE device_handle,
@@ -782,31 +827,7 @@ int get_device_status_by_handle(NVM_NFIT_DEVICE_HANDLE dimm_handle,
 	temprc = get_long_status(dimm_handle, &p_status->ars_status, &p_status->sanitize_status);
 	KEEP_ERROR(rc, temprc);
 
-	struct pt_payload_smart_health dimm_smart;
-	temprc = fw_get_smart_health(dimm_handle.handle, &dimm_smart);
-	if (temprc != NVM_SUCCESS)
-	{
-		COMMON_LOG_ERROR_F("Failed to retrieve the DIMM smart data with error %d", temprc);
-		KEEP_ERROR(rc, temprc);
-	}
-	else
-	{
-		if (dimm_smart.validation_flags.parts.health_status_field)
-		{
-			p_status->health = smart_health_status_to_device_health(dimm_smart.health_status);
-		}
-		else
-		{
-			p_status->health = DEVICE_HEALTH_UNKNOWN;
-		}
-
-		// convert last shutdown status to enumeration value
-		if (dimm_smart.validation_flags.parts.sizeof_vendor_data_field)
-		{
-			p_status->last_shutdown_status = dimm_smart.vendor_data.lss_details;
-			p_status->last_shutdown_time = dimm_smart.vendor_data.last_shutdown_time;
-		}
-	}
+	KEEP_ERROR(rc, fill_device_status_from_smart_health(dimm_handle.handle, p_status));
 
 	// fill the last config status and is new flag
 	KEEP_ERROR(rc, fill_device_config_status(dimm_handle,
@@ -834,8 +855,9 @@ int get_device_status_by_handle(NVM_NFIT_DEVICE_HANDLE dimm_handle,
 		p_status->viral_state = config_data.viral_status;
 	}
 
-	KEEP_ERROR(rc, fill_fw_error_log_status(dimm_handle,
-			p_status));
+	KEEP_ERROR(rc, fill_fw_error_log_status(dimm_handle, p_status));
+
+	KEEP_ERROR(rc, fw_get_bsr(dimm_handle, &(p_status->boot_status)));
 
 	return rc;
 }

@@ -1024,7 +1024,8 @@ tables[populate_index++] = ((struct table){"dimm_smart",
 					 unsafe_shutdowns INTEGER  , \
 					 lss_details INTEGER  , \
 					 last_shutdown_time INTEGER  , \
-					 controller_temperature INTEGER   \
+					 controller_temperature INTEGER  , \
+					 ait_dram_status INTEGER   \
 					);"});
 			tables[populate_index++] = ((struct table){"dimm_smart_history",
 				"CREATE TABLE dimm_smart_history (       \
@@ -1044,7 +1045,8 @@ tables[populate_index++] = ((struct table){"dimm_smart",
 					 unsafe_shutdowns INTEGER , \
 					 lss_details INTEGER , \
 					 last_shutdown_time INTEGER , \
-					 controller_temperature INTEGER  \
+					 controller_temperature INTEGER , \
+					 ait_dram_status INTEGER  \
 					);"});
 tables[populate_index++] = ((struct table){"dimm_state",
 				"CREATE TABLE dimm_state (       \
@@ -10198,6 +10200,7 @@ void local_bind_dimm_smart(sqlite3_stmt *p_stmt, struct db_dimm_smart *p_dimm_sm
 	BIND_INTEGER(p_stmt, "$lss_details", (unsigned int)p_dimm_smart->lss_details);
 	BIND_INTEGER(p_stmt, "$last_shutdown_time", (unsigned long long)p_dimm_smart->last_shutdown_time);
 	BIND_INTEGER(p_stmt, "$controller_temperature", (unsigned int)p_dimm_smart->controller_temperature);
+	BIND_INTEGER(p_stmt, "$ait_dram_status", (unsigned int)p_dimm_smart->ait_dram_status);
 }
 void local_get_dimm_smart_relationships(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt, struct db_dimm_smart *p_dimm_smart)
@@ -10261,6 +10264,9 @@ void local_row_to_dimm_smart(const PersistentStore *p_ps,
 	INTEGER_COLUMN(p_stmt,
 		15,
 		p_dimm_smart->controller_temperature);
+	INTEGER_COLUMN(p_stmt,
+		16,
+		p_dimm_smart->ait_dram_status);
 }
 void db_print_dimm_smart(struct db_dimm_smart *p_value)
 {
@@ -10280,6 +10286,7 @@ void db_print_dimm_smart(struct db_dimm_smart *p_value)
 	printf("dimm_smart.lss_details: unsigned %d\n", p_value->lss_details);
 	printf("dimm_smart.last_shutdown_time: unsigned %lld\n", p_value->last_shutdown_time);
 	printf("dimm_smart.controller_temperature: unsigned %d\n", p_value->controller_temperature);
+	printf("dimm_smart.ait_dram_status: unsigned %d\n", p_value->ait_dram_status);
 }
 enum db_return_codes db_add_dimm_smart(const PersistentStore *p_ps,
 	struct db_dimm_smart *p_dimm_smart)
@@ -10287,7 +10294,7 @@ enum db_return_codes db_add_dimm_smart(const PersistentStore *p_ps,
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = 	"INSERT INTO dimm_smart \
-		(device_handle, validation_flags, health_status, media_temperature, spare, alarm_trips, percentage_used, lss, vendor_specific_data_size, power_cycles, power_on_seconds, uptime, unsafe_shutdowns, lss_details, last_shutdown_time, controller_temperature)  \
+		(device_handle, validation_flags, health_status, media_temperature, spare, alarm_trips, percentage_used, lss, vendor_specific_data_size, power_cycles, power_on_seconds, uptime, unsafe_shutdowns, lss_details, last_shutdown_time, controller_temperature, ait_dram_status)  \
 		VALUES 		\
 		($device_handle, \
 		$validation_flags, \
@@ -10304,7 +10311,8 @@ enum db_return_codes db_add_dimm_smart(const PersistentStore *p_ps,
 		$unsafe_shutdowns, \
 		$lss_details, \
 		$last_shutdown_time, \
-		$controller_temperature) ";
+		$controller_temperature, \
+		$ait_dram_status) ";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		local_bind_dimm_smart(p_stmt, p_dimm_smart);
@@ -10343,9 +10351,10 @@ int db_get_dimm_smarts(const PersistentStore *p_ps,
 		,  lss_details \
 		,  last_shutdown_time \
 		,  controller_temperature \
+		,  ait_dram_status \
 		  \
 		FROM dimm_smart \
-		                 \
+		                  \
 		 \
 		";
 	sqlite3_stmt *p_stmt;
@@ -10387,7 +10396,7 @@ enum db_return_codes db_save_dimm_smart_state(const PersistentStore *p_ps,
 	{
 		sqlite3_stmt *p_stmt;
 		char *sql = 	"INSERT INTO dimm_smart \
-			( device_handle ,  validation_flags ,  health_status ,  media_temperature ,  spare ,  alarm_trips ,  percentage_used ,  lss ,  vendor_specific_data_size ,  power_cycles ,  power_on_seconds ,  uptime ,  unsafe_shutdowns ,  lss_details ,  last_shutdown_time ,  controller_temperature )  \
+			( device_handle ,  validation_flags ,  health_status ,  media_temperature ,  spare ,  alarm_trips ,  percentage_used ,  lss ,  vendor_specific_data_size ,  power_cycles ,  power_on_seconds ,  uptime ,  unsafe_shutdowns ,  lss_details ,  last_shutdown_time ,  controller_temperature ,  ait_dram_status )  \
 			VALUES 		\
 			($device_handle, \
 			$validation_flags, \
@@ -10404,7 +10413,8 @@ enum db_return_codes db_save_dimm_smart_state(const PersistentStore *p_ps,
 			$unsafe_shutdowns, \
 			$lss_details, \
 			$last_shutdown_time, \
-			$controller_temperature) ";
+			$controller_temperature, \
+			$ait_dram_status) ";
 		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 		{
 			local_bind_dimm_smart(p_stmt, p_dimm_smart);
@@ -10423,7 +10433,7 @@ enum db_return_codes db_save_dimm_smart_state(const PersistentStore *p_ps,
 		sqlite3_stmt *p_stmt;
 		char *sql = "INSERT INTO dimm_smart_history \
 			(history_id, \
-				 device_handle,  validation_flags,  health_status,  media_temperature,  spare,  alarm_trips,  percentage_used,  lss,  vendor_specific_data_size,  power_cycles,  power_on_seconds,  uptime,  unsafe_shutdowns,  lss_details,  last_shutdown_time,  controller_temperature)  \
+				 device_handle,  validation_flags,  health_status,  media_temperature,  spare,  alarm_trips,  percentage_used,  lss,  vendor_specific_data_size,  power_cycles,  power_on_seconds,  uptime,  unsafe_shutdowns,  lss_details,  last_shutdown_time,  controller_temperature,  ait_dram_status)  \
 			VALUES 		($history_id, \
 				 $device_handle , \
 				 $validation_flags , \
@@ -10440,7 +10450,8 @@ enum db_return_codes db_save_dimm_smart_state(const PersistentStore *p_ps,
 				 $unsafe_shutdowns , \
 				 $lss_details , \
 				 $last_shutdown_time , \
-				 $controller_temperature )";
+				 $controller_temperature , \
+				 $ait_dram_status )";
 		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
@@ -10464,7 +10475,7 @@ enum db_return_codes db_get_dimm_smart_by_device_handle(const PersistentStore *p
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
-		device_handle,  validation_flags,  health_status,  media_temperature,  spare,  alarm_trips,  percentage_used,  lss,  vendor_specific_data_size,  power_cycles,  power_on_seconds,  uptime,  unsafe_shutdowns,  lss_details,  last_shutdown_time,  controller_temperature  \
+		device_handle,  validation_flags,  health_status,  media_temperature,  spare,  alarm_trips,  percentage_used,  lss,  vendor_specific_data_size,  power_cycles,  power_on_seconds,  uptime,  unsafe_shutdowns,  lss_details,  last_shutdown_time,  controller_temperature,  ait_dram_status  \
 		FROM dimm_smart \
 		WHERE  device_handle = $device_handle";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -10505,6 +10516,7 @@ enum db_return_codes db_update_dimm_smart_by_device_handle(const PersistentStore
 		,  lss_details=$lss_details \
 		,  last_shutdown_time=$last_shutdown_time \
 		,  controller_temperature=$controller_temperature \
+		,  ait_dram_status=$ait_dram_status \
 		  \
 	WHERE device_handle=$device_handle ";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -10593,7 +10605,7 @@ int db_get_dimm_smart_history_by_history_id(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "SELECT \
-		device_handle,  validation_flags,  health_status,  media_temperature,  spare,  alarm_trips,  percentage_used,  lss,  vendor_specific_data_size,  power_cycles,  power_on_seconds,  uptime,  unsafe_shutdowns,  lss_details,  last_shutdown_time,  controller_temperature  \
+		device_handle,  validation_flags,  health_status,  media_temperature,  spare,  alarm_trips,  percentage_used,  lss,  vendor_specific_data_size,  power_cycles,  power_on_seconds,  uptime,  unsafe_shutdowns,  lss_details,  last_shutdown_time,  controller_temperature,  ait_dram_status  \
 		FROM dimm_smart_history \
 		WHERE  history_id = '%d'", history_id);
 	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))

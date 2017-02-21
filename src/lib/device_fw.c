@@ -230,6 +230,7 @@ int fw_get_smart_health(const NVM_UINT32 device_handle, struct pt_payload_smart_
 	cmd.output_payload = p_dimm_smart;
 
 	int rc = ioctl_passthrough_cmd(&cmd);
+
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
