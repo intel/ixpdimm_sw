@@ -38,6 +38,7 @@
 #include <uid/uid.h>
 #include <guid/guid.h>
 #include "utility.h"
+#include <errno.h>
 
 #define	DEFAULT_BTT_SECTOR_SIZE	4096
 #define	DEFAULT_PFN_NS_ALIGNMENT	0x00200000 // == 2MB recommended data offset alignment
@@ -907,28 +908,81 @@ const char *get_enabled_namespace_dev_id(struct ndctl_namespace *p_namespace)
 	return dev_id;
 }
 
-NVM_BOOL is_namespace_fs_mounted(struct ndctl_namespace *p_namespace)
+NVM_BOOL is_namespace_enabled(struct ndctl_namespace *p_namespace)
 {
 	COMMON_LOG_ENTRY();
-	NVM_BOOL is_busy = 0;
+	NVM_BOOL enabled = 0;
 
-	// Disabled namespace can't be mounted
+	struct ndctl_pfn *pfn = ndctl_namespace_get_pfn(p_namespace);
+	struct ndctl_btt *btt = ndctl_namespace_get_btt(p_namespace);
+
+	enabled = (pfn && ndctl_pfn_is_enabled(pfn)) ||
+			(btt && ndctl_btt_is_enabled(btt)) ||
+			ndctl_namespace_is_enabled(p_namespace);
+
+	COMMON_LOG_EXIT_RETURN_I(enabled);
+	return enabled;
+}
+
+/*
+ * Returns file descriptor, or -1 if couldn't open/lock namespace device
+ */
+int get_exclusive_namespace_fd(struct ndctl_namespace *p_namespace)
+{
+	COMMON_LOG_ENTRY();
+	int fd = -1;
+
+	// Disabled namespace has no dev ID
 	const char *dev_id = get_enabled_namespace_dev_id(p_namespace);
 	if (dev_id)
 	{
 		NVM_PATH ns_path;
 		s_snprintf(ns_path, NVM_PATH_LEN, "/dev/%s", dev_id);
 
-		int fd = open(ns_path, O_RDWR | O_EXCL);
+		// Linux keeps others from mounting with exclusive open
+		fd = open(ns_path, O_RDWR | O_EXCL);
 		if (fd < 0) // couldn't exclusively open
 		{
 			COMMON_LOG_INFO_F("Device %s is mounted", ns_path);
-			is_busy = 1;
 		}
 	}
 
-	COMMON_LOG_EXIT_RETURN_I(is_busy);
-	return is_busy;
+	COMMON_LOG_EXIT_RETURN_I(fd);
+	return fd;
+}
+
+NVM_BOOL file_descriptor_valid(const int fd)
+{
+	return (fd >= 0);
+}
+
+void release_namespace_fd(int fd)
+{
+	COMMON_LOG_ENTRY();
+
+	if (file_descriptor_valid(fd))
+	{
+		if (close(fd) < 0)
+		{
+			COMMON_LOG_WARN_F("Couldn't close fd %d, errno=%d", fd, errno);
+		}
+	}
+
+	COMMON_LOG_EXIT();
+}
+
+int check_namespace_filesystem_mounted(const NVM_BOOL namespace_enabled, const int namespace_fd)
+{
+	COMMON_LOG_ENTRY();
+
+	int rc = NVM_SUCCESS;
+	if (namespace_enabled && !file_descriptor_valid(namespace_fd))
+	{
+		rc = NVM_ERR_NAMESPACEBUSY;
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
 }
 
 /*
@@ -954,21 +1008,28 @@ int delete_namespace(const NVM_UID namespace_guid)
 			COMMON_LOG_ERROR("Specified namespace not found");
 			rc = NVM_ERR_BADNAMESPACE;
 		}
-		else if (is_namespace_fs_mounted(p_namespace))
-		{
-			COMMON_LOG_ERROR_F("Can't delete namespace %s, filesystem is mounted",
-					namespace_guid);
-			rc = NVM_ERR_NAMESPACEBUSY;
-		}
 		else
 		{
-			// disable it
-			if ((rc = disable_namespace(p_namespace)) == NVM_SUCCESS)
+			int fd = get_exclusive_namespace_fd(p_namespace);
+			if ((rc = check_namespace_filesystem_mounted(
+					is_namespace_enabled(p_namespace), fd)) != NVM_SUCCESS)
 			{
-				// delete it
-				rc = linux_err_to_nvm_lib_err(ndctl_namespace_delete(p_namespace));
+				COMMON_LOG_ERROR_F("Can't delete namespace %s, filesystem is mounted",
+						namespace_guid);
 			}
+			else
+			{
+				// disable it
+				if ((rc = disable_namespace(p_namespace)) == NVM_SUCCESS)
+				{
+					// delete it
+					rc = linux_err_to_nvm_lib_err(ndctl_namespace_delete(p_namespace));
+				}
+			}
+
+			release_namespace_fd(fd);
 		}
+
 		ndctl_unref(p_ctx);
 	}
 	else
@@ -1005,49 +1066,37 @@ int modify_namespace_name(
 			COMMON_LOG_ERROR("Specified namespace not found");
 			rc = NVM_ERR_BADNAMESPACE;
 		}
-		else if (is_namespace_fs_mounted(p_namespace))
-		{
-			COMMON_LOG_ERROR_F("Can't modify namespace %s name, filesystem is mounted",
-					namespace_guid);
-			rc = NVM_ERR_NAMESPACEBUSY;
-		}
 		else
 		{
-			NVM_BOOL ns_enabled = 0;
-			struct ndctl_btt *p_btt = ndctl_namespace_get_btt(p_namespace);
-			if (!p_btt)
+			NVM_BOOL ns_enabled = is_namespace_enabled(p_namespace);
+			int fd = get_exclusive_namespace_fd(p_namespace);
+			if ((rc = check_namespace_filesystem_mounted(
+					ns_enabled, fd)) != NVM_SUCCESS)
 			{
-				struct ndctl_pfn *p_pfn = ndctl_namespace_get_pfn(p_namespace);
-				if (!p_pfn)
-				{
-					ns_enabled = ndctl_namespace_is_enabled(p_namespace);
-				}
-				else
-				{
-					ns_enabled = ndctl_pfn_is_enabled(p_pfn);
-				}
+				COMMON_LOG_ERROR_F("Can't modify namespace %s name, filesystem is mounted",
+						namespace_guid);
 			}
 			else
 			{
-				ns_enabled = ndctl_btt_is_enabled(p_btt);
+				// disable it
+				if (ns_enabled && ((rc = disable_namespace(p_namespace)) != NVM_SUCCESS))
+				{
+					COMMON_LOG_ERROR("Failed to disable the namespace");
+				}
+				// change the name
+				else if ((rc = linux_err_to_nvm_lib_err(
+					ndctl_namespace_set_alt_name(p_namespace, name))) != NVM_SUCCESS)
+				{
+					COMMON_LOG_ERROR("Failed to set new friendly name");
+				}
+				// re-enable it
+				else if (ns_enabled && ((rc = enable_namespace(p_namespace)) != NVM_SUCCESS))
+				{
+					COMMON_LOG_ERROR("Failed to re-enable namespace ");
+				}
 			}
 
-			// disable it
-			if (ns_enabled && ((rc = disable_namespace(p_namespace)) != NVM_SUCCESS))
-			{
-				COMMON_LOG_ERROR("Failed to disable the namespace");
-			}
-			// change the name
-			else if ((rc = linux_err_to_nvm_lib_err(
-				ndctl_namespace_set_alt_name(p_namespace, name))) != NVM_SUCCESS)
-			{
-				COMMON_LOG_ERROR("Failed to set new friendly name");
-			}
-			// re-enable it
-			else if (ns_enabled && ((rc = enable_namespace(p_namespace)) != NVM_SUCCESS))
-			{
-				COMMON_LOG_ERROR("Failed to re-enable namespace ");
-			}
+			release_namespace_fd(fd);
 		}
 		ndctl_unref(p_ctx);
 	}
@@ -1096,15 +1145,16 @@ int modify_namespace_enabled(
 			COMMON_LOG_ERROR("Specified namespace not found");
 			rc = NVM_ERR_BADNAMESPACE;
 		}
-		else if (is_namespace_fs_mounted(p_namespace))
-		{
-			COMMON_LOG_ERROR_F("Can't modify namespace %s state, filesystem is mounted",
-					namespace_guid);
-			rc = NVM_ERR_NAMESPACEBUSY;
-		}
 		else
 		{
-			if (enabled == NAMESPACE_ENABLE_STATE_DISABLED)
+			int fd = get_exclusive_namespace_fd(p_namespace);
+			if ((rc = check_namespace_filesystem_mounted(
+					is_namespace_enabled(p_namespace), fd)) != NVM_SUCCESS)
+			{
+				COMMON_LOG_ERROR_F("Can't modify namespace %s state, filesystem is mounted",
+						namespace_guid);
+			}
+			else if (enabled == NAMESPACE_ENABLE_STATE_DISABLED)
 			{
 				rc = disable_namespace(p_namespace);
 			}
@@ -1112,6 +1162,8 @@ int modify_namespace_enabled(
 			{
 				rc = enable_namespace(p_namespace);
 			}
+
+			release_namespace_fd(fd);
 		}
 		ndctl_unref(p_ctx);
 	}
