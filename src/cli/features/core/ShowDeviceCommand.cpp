@@ -126,6 +126,8 @@ ShowDeviceCommand::ShowDeviceCommand(core::device::DeviceService &service)
 	m_props.addBool("SKUViolation", &core::device::Device::isSkuViolation);
 	m_props.addBool("ViralPolicy", &core::device::Device::isViralPolicyEnabled);
 	m_props.addBool("ViralState", &core::device::Device::getCurrentViralState);
+	m_props.addBool("AitDramEnabled", &core::device::Device::isAitDramEnabled);
+	m_props.addList("BootStatus", &core::device::Device::getBootStatus, &convertBootStatus);
 }
 
 framework::ResultBase *ShowDeviceCommand::execute(const framework::ParsedCommand &parsedCommand)
@@ -290,6 +292,18 @@ std::string ShowDeviceCommand::convertLastShutdownStatus(NVM_UINT16 status)
 	map[DEVICE_LAST_SHUTDOWN_STATUS_PMIC_12V_POWER_FAIL] = TR("PMIC 12V Power Fail");
 	map[DEVICE_LAST_SHUTDOWN_STATUS_PM_WARM_RESET] = TR("PM Warm Reset");
 	map[DEVICE_LAST_SHUTDOWN_STATUS_THERMAL_SHUTDOWN] = TR("Thermal Shutdown");
+	return map[status];
+}
+
+std::string ShowDeviceCommand::convertBootStatus(NVM_UINT16 status)
+{
+	std::map<NVM_UINT16, std::string> map;
+	map[DEVICE_BOOT_STATUS_UNKNOWN] = TR("Unknown");
+	map[DEVICE_BOOT_STATUS_SUCCESS] = TR("Success");
+	map[DEVICE_BOOT_STATUS_MEDIA_NOT_READY] = TR("Media Not Ready");
+	map[DEVICE_BOOT_STATUS_MEDIA_ERROR] = TR("Media Error");
+	map[DEVICE_BOOT_STATUS_MEDIA_DISABLED] = TR("Media Disabled");
+	map[DEVICE_BOOT_STATUS_FW_ASSERT] = TR("FW Assert");
 	return map[status];
 }
 

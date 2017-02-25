@@ -63,6 +63,13 @@ static const NVM_UINT16 DEVICE_LAST_SHUTDOWN_STATUS_PMIC_12V_POWER_FAIL = 6;
 static const NVM_UINT16 DEVICE_LAST_SHUTDOWN_STATUS_PM_WARM_RESET = 7;
 static const NVM_UINT16 DEVICE_LAST_SHUTDOWN_STATUS_THERMAL_SHUTDOWN = 8;
 
+static const NVM_UINT16 DEVICE_BOOT_STATUS_UNKNOWN = 0;
+static const NVM_UINT16 DEVICE_BOOT_STATUS_SUCCESS = 1;
+static const NVM_UINT16 DEVICE_BOOT_STATUS_MEDIA_NOT_READY = 2;
+static const NVM_UINT16 DEVICE_BOOT_STATUS_MEDIA_ERROR = 3;
+static const NVM_UINT16 DEVICE_BOOT_STATUS_MEDIA_DISABLED = 4;
+static const NVM_UINT16 DEVICE_BOOT_STATUS_FW_ASSERT = 5;
+
 namespace core
 {
 namespace device
@@ -164,6 +171,8 @@ public:
 	virtual bool isViralPolicyEnabled();
 	virtual bool getCurrentViralState();
 	static std::string getFormattedManufacturingDate(NVM_UINT16 manufacturingdate);
+	virtual bool isAitDramEnabled();
+	virtual std::vector<NVM_UINT16> getBootStatus();
 
 private:
 	NvmLibrary &m_lib;

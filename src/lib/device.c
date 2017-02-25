@@ -676,7 +676,6 @@ int fill_device_status_from_smart_health(unsigned int device_handle,
 			p_status->health = DEVICE_HEALTH_UNKNOWN;
 		}
 
-		// convert last shutdown status to enumeration value
 		if (dimm_smart.validation_flags.parts.sizeof_vendor_data_field)
 		{
 			p_status->last_shutdown_status = dimm_smart.vendor_data.lss_details;

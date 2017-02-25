@@ -44,20 +44,6 @@
 #include "capabilities.h"
 #include "device_fw.h"
 
-// firmware checkpoint codes and boot status register
-#define	MAJOR_CHECKPOINT(bits)	((bits) & 0xff) // bits 7:0
-#define	MINOR_CHECKPOINT(bits)	((bits >> 8) & 0xff) // bits 15:8
-#define	MEDIA_READY_STATUS(bits)	((bits >> 16) & 0b11) // bits 17:16
-#define	DDRT_IO_INIT_STATUS(bits)	((bits >> 18) & 0b11) // bits 19:18
-#define	MAILBOX_INTERFACE_READY_STATUS(bits)	((bits >> 20) & 0b01) // bit 20
-#define	MEDIA_DISABLED_STATUS(bits)	((bits >> 24) & 0b01) // bit 24
-#define	BSR_H_ASSERTION(bits)	((bits >> 32) & 0b1) // bit 32
-#define	BSR_H_MI_STALLED(bits)	((bits >> 33) & 0b1) // bit 33
-#define	BSR_H_AIT_DRAM_READY(bits)	(bits & DEV_FW_BSR_AIT_DRAM_READY) // bit 34
-
-#define	STATUS_NOT_READY	0b00
-#define	STATUS_ERROR	0b10
-
 enum major_status_code
 {
 	NO_POST_CODE = 0x00,
@@ -381,7 +367,7 @@ void check_media_disabled_status(const struct diagnostic *p_diagnostic,
 {
 	COMMON_LOG_ENTRY();
 
-	if (MEDIA_DISABLED_STATUS(bsr))
+	if (BSR_MEDIA_DISABLED(bsr))
 	{
 		store_event_by_parts(EVENT_TYPE_DIAG_QUICK,
 				EVENT_SEVERITY_CRITICAL,
@@ -406,11 +392,11 @@ void check_media_ready_status(const struct diagnostic *p_diagnostic,
 	COMMON_LOG_ENTRY();
 
 	NVM_UINT16 code = EVENT_CODE_DIAG_QUICK_UNKNOWN;
-	if (MEDIA_READY_STATUS(bsr) == STATUS_NOT_READY)
+	if (!BSR_MEDIA_READY_STATUS(bsr))
 	{
 		code = EVENT_CODE_DIAG_QUICK_MEDIA_NOT_READY;
 	}
-	else if (MEDIA_READY_STATUS(bsr) == STATUS_ERROR)
+	else if (BSR_MEDIA_ERROR(bsr))
 	{
 		code = EVENT_CODE_DIAG_QUICK_MEDIA_READY_ERROR;
 	}
@@ -440,11 +426,11 @@ void check_ddrt_init_complete_status(const struct diagnostic *p_diagnostic,
 	COMMON_LOG_ENTRY();
 
 	NVM_UINT16 code = EVENT_CODE_DIAG_QUICK_UNKNOWN;
-	if (DDRT_IO_INIT_STATUS(bsr) == STATUS_NOT_READY)
+	if (!BSR_DDRT_IO_INIT_STATUS(bsr))
 	{
 		code = EVENT_CODE_DIAG_QUICK_DDRT_IO_INIT_NOT_READY;
 	}
-	else if (DDRT_IO_INIT_STATUS(bsr) == STATUS_ERROR)
+	else if (BSR_DDRT_IO_INIT_ERROR(bsr))
 	{
 		code = EVENT_CODE_DIAG_QUICK_DDRT_IO_INIT_ERROR;
 	}
@@ -473,7 +459,7 @@ void check_mailbox_ready_status(const struct diagnostic *p_diagnostic,
 {
 	COMMON_LOG_ENTRY();
 
-	if (MAILBOX_INTERFACE_READY_STATUS(bsr) == STATUS_NOT_READY)
+	if (!BSR_MAILBOX_INTERFACE_READY(bsr))
 	{
 		store_event_by_parts(EVENT_TYPE_DIAG_QUICK,
 				EVENT_SEVERITY_CRITICAL,
@@ -497,8 +483,8 @@ void check_fw_boot_status(const struct diagnostic *p_diagnostic,
 {
 	COMMON_LOG_ENTRY();
 
-	NVM_UINT8 major_status_code = MAJOR_CHECKPOINT(bsr);
-	NVM_UINT8 minor_status_code = MINOR_CHECKPOINT(bsr);
+	NVM_UINT8 major_status_code = BSR_MAJOR_CHECKPOINT(bsr);
+	NVM_UINT8 minor_status_code = BSR_MINOR_CHECKPOINT(bsr);
 	NVM_EVENT_ARG checkpoint_str;
 	s_snprintf(checkpoint_str, NVM_EVENT_ARG_LEN, "0x%x:0x%x",
 			major_status_code, minor_status_code);

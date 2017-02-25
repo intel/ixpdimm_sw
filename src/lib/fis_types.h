@@ -102,11 +102,34 @@
 
 #define DEV_FW_BSR_MD_DISABLED (0x01 << 24)
 
+#define DEV_FW_BSR_OPT_IN_BIT	(0x01 << 25)
+
 #define DEV_FW_BSR_ASSERTION ((long long) 0x01 << 32)
 
 #define DEV_FW_BSR_STALLED ((long long) 0x01 << 33)
 
 #define DEV_FW_BSR_AIT_DRAM_READY ((long long) 0x01 << 34)
+
+// firmware checkpoint codes and boot status register
+#define	BSR_IS_INVALID(bits) ((bits == ULLONG_MAX) || (bits == 0))
+
+#define	BSR_MAJOR_CHECKPOINT(bits)	(bits & DEV_FW_BSR_MAJOR_CHECKPOINT_BITS)
+#define	BSR_MINOR_CHECKPOINT(bits)	(bits & DEV_FW_BSR_MINOR_CHECKPOINT_BITS)
+
+#define	BSR_MEDIA_READY_STATUS(bits)	(bits & DEV_FW_BSR_MEDIA_READY_BITS)
+#define	BSR_MEDIA_READY(bits)	(bits & DEV_FW_BSR_MEDIA_READY_READY)
+#define	BSR_MEDIA_ERROR(bits)	(bits & DEV_FW_BSR_MEDIA_READY_ERROR)
+
+#define	BSR_DDRT_IO_INIT_STATUS(bits)	(bits & DEV_FW_BSR_DDRT_IO_INIT_BITS)
+#define	BSR_DDRT_IO_INIT_READY(bits)	(bits & DEV_FW_BSR_DDRT_IO_INIT_READY)
+#define	BSR_DDRT_IO_INIT_ERROR(bits)	(bits & DEV_FW_BSR_DDRT_IO_INIT_ERROR)
+
+#define	BSR_MAILBOX_INTERFACE_READY(bits)	(bits & DEV_FW_BSR_MBR_READY)
+#define	BSR_MEDIA_DISABLED(bits)	(bits & DEV_FW_BSR_MD_DISABLED)
+#define	BSR_OPTIN_ENABLED(bits)	(bits & DEV_FW_BSR_OPT_IN_BIT)
+#define	BSR_H_ASSERTION(bits)	(bits & DEV_FW_BSR_ASSERTION)
+#define	BSR_H_MI_STALLED(bits)	(bits & DEV_FW_BSR_STALLED)
+#define	BSR_H_AIT_DRAM_READY(bits)	(bits & DEV_FW_BSR_AIT_DRAM_READY)
 
 #define DSM_VENDOR_ERROR_SHIFT (0)
 #define DSM_MAILBOX_ERROR_SHIFT (16)

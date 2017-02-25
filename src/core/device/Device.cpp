@@ -27,6 +27,7 @@
 
 #include "Device.h"
 #include <iomanip>
+#include <fis_types.h>
 
 namespace core
 {
@@ -721,6 +722,55 @@ std::vector<event> Device::getActionRequiredEvents()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getEvents();
+}
+
+bool Device::isAitDramEnabled()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	return getDetails().status.ait_dram_enabled;
+}
+
+std::vector<NVM_UINT16> Device::getBootStatus()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	std::vector<NVM_UINT16> result;
+	NVM_UINT64 bootStatus = getDetails().status.boot_status;
+
+
+	if (BSR_IS_INVALID(bootStatus))
+	{
+		result.push_back(DEVICE_BOOT_STATUS_UNKNOWN);
+	}
+	else
+	{
+		if (!BSR_MEDIA_READY_STATUS(bootStatus))
+		{
+			result.push_back(DEVICE_BOOT_STATUS_MEDIA_NOT_READY);
+		}
+
+		if (BSR_MEDIA_ERROR(bootStatus))
+		{
+			result.push_back(DEVICE_BOOT_STATUS_MEDIA_ERROR);
+		}
+
+		if (BSR_MEDIA_DISABLED(bootStatus))
+		{
+			result.push_back(DEVICE_BOOT_STATUS_MEDIA_DISABLED);
+		}
+
+		if (BSR_H_ASSERTION(bootStatus))
+		{
+			result.push_back(DEVICE_BOOT_STATUS_FW_ASSERT);
+		}
+
+		if (result.empty())
+		{
+			result.push_back(DEVICE_BOOT_STATUS_SUCCESS);
+		}
+	}
+
+	return result;
 }
 
 const device_discovery &Device::getDiscovery()

@@ -36,8 +36,6 @@
 #include "nvm_types.h"
 #include "fis_types.h"
 
-#define OPT_IN_BIT	25
-#define	BSR_OPTIN_ENABLED(bsr)	(bsr & (1 << OPT_IN_BIT))
 int fw_mb_err_to_nvm_lib_err(int status);
 
 int fw_get_bsr(const NVM_NFIT_DEVICE_HANDLE device_handle, unsigned long long *p_bsr);
