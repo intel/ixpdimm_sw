@@ -201,16 +201,22 @@ class <NVM_WBEM_PREFIX>NVDIMM : CIM_PhysicalMemory
  	)]
 	boolean ViralState;
 	[Description (
+	"The initialization status of Intel DIMM as reported by the firmware in the boot status register."
+ 	),
+	ValueMap { "0", "1", "2", "3", "4", "5" },
+	Values { "Unknown", "Success", "Media Not Ready", "Media Error", "Media Disabled", "FW Assert" }]
+	uint16 BootStatus[];
+	[Description (
 	"The JEDEC standard interface format code(s) for the DIMM."
- 	)]	
+ 	)]
 	uint16 InterfaceFormatCode[];
 	[Description (
 	"The current active firmware version."
- 	)]	
+ 	)]
 	string FWVersion;
 	[Description (
 	"The current active firmware interface version."
- 	)]	
+ 	)]
 	string FWAPIVersion;
 
 	// methods
@@ -440,7 +446,7 @@ class <NVM_WBEM_PREFIX>AvailableFW : CIM_SystemSpecificCollection
 [dynamic, provider("intelwbemprovider")]
 class <NVM_WBEM_PREFIX>NVDIMMSoftwareInstallationService : CIM_SoftwareInstallationService
 {
-      [implemented, Description ( 
+      [implemented, Description (
           "Start a job to install software from a specific URI in a "
           "ManagedElement. \n"
           "Note that this method is provided to support existing, "
@@ -451,52 +457,52 @@ class <NVM_WBEM_PREFIX>NVDIMMSoftwareInstallationService : CIM_SoftwareInstallat
           "and no ConcreteJob instance was required. If 4096/0x1000 "
           "is returned, a ConcreteJob will be started to to perform "
           "the install. The Job\'s reference will be returned in "
-          "the output parameter Job." ), 
-       ValueMap { "0", "1", "2", "3", "4", "5", "6", "..", "4096", 
-          "4097", "4098", "4099", "4100", "4101", "4102", "4103", 
-          "4104", "4105", "4106", "4107", "4108..32767", 
-          "32768..65535" }, 
-       Values { "Job Completed with No Error", "Not Supported", 
-          "Unspecified Error", "Timeout", "Failed", 
-          "Invalid Parameter", "Target In Use", "DMTF Reserved", 
-          "Method Parameters Checked - Job Started", 
-          "Unsupported TargetType", 
-          "Unattended/silent installation not supported", 
-          "Downgrade/reinstall not supported", "Not enough memory", 
-          "Not enough swap-space", "Unsupported version transition", 
-          "Not enough disk space", 
-          "Software and target operating system mismatch", 
-          "Missing dependencies", "Not applicable to target", 
+          "the output parameter Job." ),
+       ValueMap { "0", "1", "2", "3", "4", "5", "6", "..", "4096",
+          "4097", "4098", "4099", "4100", "4101", "4102", "4103",
+          "4104", "4105", "4106", "4107", "4108..32767",
+          "32768..65535" },
+       Values { "Job Completed with No Error", "Not Supported",
+          "Unspecified Error", "Timeout", "Failed",
+          "Invalid Parameter", "Target In Use", "DMTF Reserved",
+          "Method Parameters Checked - Job Started",
+          "Unsupported TargetType",
+          "Unattended/silent installation not supported",
+          "Downgrade/reinstall not supported", "Not enough memory",
+          "Not enough swap-space", "Unsupported version transition",
+          "Not enough disk space",
+          "Software and target operating system mismatch",
+          "Missing dependencies", "Not applicable to target",
           "URI not accessible", "Method Reserved", "Vendor Specific" }]
    uint32 InstallFromURI(
-         [IN ( false ), OUT, Description ( 
+         [IN ( false ), OUT, Description (
              "Reference to the job (may be null if job completed)."
               )]
-      CIM_ConcreteJob REF Job, 
-         [IN, Description ( 
+      CIM_ConcreteJob REF Job,
+         [IN, Description (
              "A URI for the software based on RFC 2079." )]
-      string URI, 
+      string URI,
          [IN, Description ( "The installation target." )]
-      CIM_ManagedElement REF Target, 
-         [IN, Description ( 
+      CIM_ManagedElement REF Target,
+         [IN, Description (
              "Options to control the install process. \n"
              "See the InstallOptions parameter of the "
              "SoftwareInstallationService.InstallFromSoftwareIdentity "
-             "method for the description of these values." ), 
-          ValueMap { "2", "3", "4", "5", "6", "7", "8", "9", 
-             "10", "11", "12", "13", "..", "32768..65535" }, 
-          Values { "Defer target/system reset", 
-             "Force installation", "Install", "Update", "Repair", 
-             "Reboot", "Password", "Uninstall", "Log", 
-             "SilentMode", "AdministrativeMode", 
-             "ScheduleInstallAt", "DMTF Reserved", 
-             "Vendor Specific" }, 
-          ArrayType ( "Indexed" ), 
-          ModelCorrespondence { 
-             "CIM_SoftwareInstallationService.InstallFromURI.InstallOptionsValues[]", 
+             "method for the description of these values." ),
+          ValueMap { "2", "3", "4", "5", "6", "7", "8", "9",
+             "10", "11", "12", "13", "..", "32768..65535" },
+          Values { "Defer target/system reset",
+             "Force installation", "Install", "Update", "Repair",
+             "Reboot", "Password", "Uninstall", "Log",
+             "SilentMode", "AdministrativeMode",
+             "ScheduleInstallAt", "DMTF Reserved",
+             "Vendor Specific" },
+          ArrayType ( "Indexed" ),
+          ModelCorrespondence {
+             "CIM_SoftwareInstallationService.InstallFromURI.InstallOptionsValues[]",
              "CIM_SoftwareInstallationServiceCapabilities.SupportedInstallOptions[]" }]
-      uint16 InstallOptions[], 
-         [IN, Description ( 
+      uint16 InstallOptions[],
+         [IN, Description (
              "InstallOptionsValues is an array of strings "
              "providing additionalinformation to InstallOptions "
              "for the method to install the software. Each entry "
@@ -509,9 +515,9 @@ class <NVM_WBEM_PREFIX>NVDIMMSoftwareInstallationService : CIM_SoftwareInstallat
              "description of the InstallOptionsValues parameter "
              "of the "
              "SoftwareInstallationService.InstallFromSoftwareIdentity "
-             "method." ), 
-          ArrayType ( "Indexed" ), 
-          ModelCorrespondence { 
+             "method." ),
+          ArrayType ( "Indexed" ),
+          ModelCorrespondence {
              "CIM_SoftwareInstallationService.InstallFromByteStream.InstallOptions[]" }]
       string InstallOptionsValues[]);
 };

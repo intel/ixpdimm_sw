@@ -137,6 +137,7 @@ void NVDIMMFactory::populateAttributeList(
 	attributes.push_back(FWLOGLEVEL_KEY);
 	attributes.push_back(VIRALPOLICY_KEY);
 	attributes.push_back(VIRALSTATE_KEY);
+	attributes.push_back(BOOTSTATUS_KEY);
 	attributes.push_back(INTERFACEFORMATCODE_KEY);
 	attributes.push_back(FWVERSION_KEY);
 	attributes.push_back(FWAPIVERSION_KEY);
@@ -809,6 +810,7 @@ void NVDIMMFactory::toInstance(core::device::Device &device,
 			device.isSkuViolation());
 	ADD_ATTRIBUTE(instance, attributes, VIRALPOLICY_KEY, framework::BOOLEAN, device.isViralPolicyEnabled());
 	ADD_ATTRIBUTE(instance, attributes, VIRALSTATE_KEY, framework::BOOLEAN, device.getCurrentViralState());
+	ADD_ATTRIBUTE(instance, attributes, BOOTSTATUS_KEY, framework::UINT16_LIST, device.getBootStatus());
 	ADD_ATTRIBUTE(instance, attributes, INTERFACEFORMATCODE_KEY, framework::UINT16_LIST, device.getInterfaceFormatCodes());
 }
 
