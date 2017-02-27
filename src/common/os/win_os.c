@@ -663,12 +663,19 @@ int get_file_version_info_for_system(LPVOID *pp_version_info)
 	if (version_data_size > 0)
 	{
 		*pp_version_info = calloc(1, version_data_size);
-		if (!GetFileVersionInfo(system_filename, 0, version_data_size, *pp_version_info))
+		if (!pp_version_info)
 		{
-			free(*pp_version_info);
-			*pp_version_info = NULL;
+			rc = COMMON_ERR_NOMEMORY;
+		}
+		else
+		{
+			if (!GetFileVersionInfo(system_filename, 0, version_data_size, *pp_version_info))
+			{
+				free(*pp_version_info);
+				*pp_version_info = NULL;
 
-			rc = COMMON_ERR_UNKNOWN;
+				rc = COMMON_ERR_UNKNOWN;
+			}
 		}
 	}
 	else
