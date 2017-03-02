@@ -270,12 +270,12 @@ int check_current_config(struct platform_config_data *p_config)
 	return rc;
 }
 
-int check_platform_config_header(struct platform_config_data *p_config)
+int check_platform_config_header(struct platform_config_data *p_config, NVM_SIZE pcd_size)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
 
-	if (!is_platform_config_header_valid(p_config))
+	if (!is_platform_config_header_valid(p_config, pcd_size))
 	{
 		rc = NVM_ERR_BADDEVICECONFIG;
 	}
@@ -284,7 +284,7 @@ int check_platform_config_header(struct platform_config_data *p_config)
 	return rc;
 }
 
-int check_platform_config(struct platform_config_data *p_config)
+int check_platform_config(struct platform_config_data *p_config, NVM_SIZE pcd_size)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
@@ -294,7 +294,7 @@ int check_platform_config(struct platform_config_data *p_config)
 		COMMON_LOG_ERROR("p_config is NULL");
 		rc = NVM_ERR_BADDEVICECONFIG;
 	}
-	else if ((rc = check_platform_config_header(p_config)) == NVM_SUCCESS)
+	else if ((rc = check_platform_config_header(p_config, pcd_size)) == NVM_SUCCESS)
 	{
 		// check current config table
 		if ((rc = check_current_config(p_config)) == NVM_SUCCESS)
@@ -318,7 +318,8 @@ NVM_BOOL is_config_data_table_header_valid(struct config_data_table_header *p_he
 	COMMON_LOG_ENTRY();
 	NVM_BOOL is_valid = 0;
 
-	if (p_header->length != table_length)
+	// Check for length exceeding the PCD table
+	if (p_header->length > table_length)
 	{
 		COMMON_LOG_ERROR_F("PCD Table '%.4s' - Header length %u does not match expected "
 				"length %u", table_signature, p_header->length, table_length);
@@ -404,16 +405,17 @@ NVM_BOOL is_pcd_header_table_info_valid(struct platform_config_data *p_config)
 	return is_valid;
 }
 
-NVM_BOOL is_platform_config_header_valid(struct platform_config_data *p_config)
+NVM_BOOL is_platform_config_header_valid(struct platform_config_data *p_config, NVM_SIZE pcd_size)
 {
 	COMMON_LOG_ENTRY();
 	NVM_BOOL is_valid = 0;
 
 	if (p_config)
 	{
+		// Check for minimum table length
 		if (p_config->header.length < sizeof (struct platform_config_data))
 		{
-			COMMON_LOG_ERROR_F("PCD header length %u is too short",
+			COMMON_LOG_ERROR_F("PCD header length %u is shorter than %llu",
 					p_config->header.length, sizeof (struct platform_config_data));
 		}
 		else
@@ -421,7 +423,7 @@ NVM_BOOL is_platform_config_header_valid(struct platform_config_data *p_config)
 			print_pcd_header(p_config);
 
 			if (is_config_data_table_header_valid(&(p_config->header),
-					p_config->header.length, PLATFORM_CONFIG_TABLE_SIGNATURE) &&
+					pcd_size, PLATFORM_CONFIG_TABLE_SIGNATURE) &&
 				is_pcd_header_table_info_valid(p_config))
 			{
 				is_valid = 1;
@@ -443,7 +445,8 @@ NVM_BOOL is_current_config_table_valid(struct current_config_table *p_current_co
 	COMMON_LOG_ENTRY();
 	NVM_BOOL is_valid = 0;
 
-	if (p_current_config && table_length >= sizeof (struct current_config_table))
+	if (p_current_config && table_length >= sizeof (struct current_config_table) &&
+			p_current_config->header.length == table_length)
 	{
 		print_pcd_current(p_current_config);
 
@@ -471,7 +474,8 @@ NVM_BOOL is_config_input_table_valid(struct config_input_table *p_config_input,
 	COMMON_LOG_ENTRY();
 	NVM_BOOL is_valid = 0;
 
-	if (p_config_input && table_length >= sizeof (struct config_input_table))
+	if (p_config_input && table_length >= sizeof (struct config_input_table) &&
+			p_config_input->header.length == table_length)
 	{
 		print_pcd_input(p_config_input);
 
@@ -499,7 +503,8 @@ NVM_BOOL is_config_output_table_valid(struct config_output_table *p_config_outpu
 	COMMON_LOG_ENTRY();
 	NVM_BOOL is_valid = 0;
 
-	if (p_config_output && table_length >= sizeof (struct config_output_table))
+	if (p_config_output && table_length >= sizeof (struct config_output_table) &&
+			p_config_output->header.length == table_length)
 	{
 		print_pcd_output(p_config_output);
 
@@ -848,7 +853,7 @@ int get_hw_dimm_platform_config_alloc(const unsigned int handle, NVM_SIZE *p_pcd
 	// validate the returned data
 	if (rc == NVM_SUCCESS)
 	{
-		rc = check_platform_config(*pp_config);
+		rc = check_platform_config(*pp_config, *p_pcd_size);
 	}
 	else
 	{

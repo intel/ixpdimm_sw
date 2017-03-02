@@ -2410,7 +2410,7 @@ int db_get_config_history_by_history_id(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		key,  value  \
-		FROM config_history WHERE  history_id = $history_id";
+		FROM config_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -2778,7 +2778,7 @@ int db_get_log_history_by_history_id(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		id,  thread_id,  time,  level,  file_name,  line_number,  message  \
-		FROM log_history WHERE  history_id = $history_id";
+		FROM log_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -3188,7 +3188,7 @@ int db_get_event_history_by_history_id(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		id,  type,  severity,  code,  action_required,  uid,  time,  arg1,  arg2,  arg3,  diag_result  \
-		FROM event_history WHERE  history_id = $history_id";
+		FROM event_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -3672,7 +3672,7 @@ int db_get_topology_state_history_by_history_id(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		device_handle,  uid,  manufacturer,  serial_num,  model_num,  current_config_status,  config_goal_status  \
-		FROM topology_state_history WHERE  history_id = $history_id";
+		FROM topology_state_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -3998,7 +3998,7 @@ int db_get_host_history_by_history_id(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		name,  os_type,  os_name,  os_version  \
-		FROM host_history WHERE  history_id = $history_id";
+		FROM host_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -4322,7 +4322,7 @@ int db_get_sw_inventory_history_by_history_id(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		name,  mgmt_sw_rev,  vendor_driver_rev,  supported_driver_available  \
-		FROM sw_inventory_history WHERE  history_id = $history_id";
+		FROM sw_inventory_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -4694,7 +4694,7 @@ int db_get_socket_history_by_history_id(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		socket_id,  type,  model,  brand,  family,  stepping,  manufacturer,  logical_processor_count,  rapl_limited  \
-		FROM socket_history WHERE  history_id = $history_id";
+		FROM socket_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -5225,7 +5225,7 @@ int db_get_runtime_config_validation_history_by_history_id(const PersistentStore
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		id,  type,  length,  address_space_id,  bit_width,  bit_offset,  access_size,  address,  operation_type_1,  value,  mask_1,  gas_structure_0,  gas_structure_1,  gas_structure_2,  gas_structure_3,  gas_structure_4,  gas_structure_5,  gas_structure_6,  gas_structure_7,  gas_structure_8,  gas_structure_9,  gas_structure_10,  gas_structure_11,  operation_type_2,  mask_2  \
-		FROM runtime_config_validation_history WHERE  history_id = $history_id";
+		FROM runtime_config_validation_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -5929,7 +5929,7 @@ int db_get_interleave_capability_history_by_history_id(const PersistentStore *p_
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		id,  type,  length,  memory_mode,  interleave_alignment_size,  supported_interleave_count,  interleave_format_list_0,  interleave_format_list_1,  interleave_format_list_2,  interleave_format_list_3,  interleave_format_list_4,  interleave_format_list_5,  interleave_format_list_6,  interleave_format_list_7,  interleave_format_list_8,  interleave_format_list_9,  interleave_format_list_10,  interleave_format_list_11,  interleave_format_list_12,  interleave_format_list_13,  interleave_format_list_14,  interleave_format_list_15,  interleave_format_list_16,  interleave_format_list_17,  interleave_format_list_18,  interleave_format_list_19,  interleave_format_list_20,  interleave_format_list_21,  interleave_format_list_22,  interleave_format_list_23,  interleave_format_list_24,  interleave_format_list_25,  interleave_format_list_26,  interleave_format_list_27,  interleave_format_list_28,  interleave_format_list_29,  interleave_format_list_30,  interleave_format_list_31  \
-		FROM interleave_capability_history WHERE  history_id = $history_id";
+		FROM interleave_capability_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -6323,7 +6323,7 @@ int db_get_platform_info_capability_history_by_history_id(const PersistentStore 
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		id,  type,  length,  mgmt_sw_config_support,  mem_mode_capabilities,  current_mem_mode,  pmem_ras_capabilities  \
-		FROM platform_info_capability_history WHERE  history_id = $history_id";
+		FROM platform_info_capability_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -6740,7 +6740,7 @@ int db_get_platform_capabilities_history_by_history_id(const PersistentStore *p_
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		signature,  length,  revision,  checksum,  oem_id,  oem_table_id,  oem_revision,  creator_id,  creator_revision  \
-		FROM platform_capabilities_history WHERE  history_id = $history_id";
+		FROM platform_capabilities_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -7231,7 +7231,7 @@ int db_get_driver_capabilities_history_by_history_id(const PersistentStore *p_ps
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		id,  min_namespace_size,  max_non_continguous_namespaces,  block_sizes_0,  block_sizes_1,  block_sizes_2,  block_sizes_3,  block_sizes_4,  block_sizes_5,  block_sizes_6,  block_sizes_7,  block_sizes_8,  block_sizes_9,  block_sizes_10,  block_sizes_11,  block_sizes_12,  block_sizes_13,  block_sizes_14,  block_sizes_15,  num_block_sizes,  namespace_memory_page_allocation_capable  \
-		FROM driver_capabilities_history WHERE  history_id = $history_id";
+		FROM driver_capabilities_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -7812,7 +7812,7 @@ int db_get_driver_features_history_by_history_id(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		id,  get_platform_capabilities,  get_topology,  get_interleave,  get_dimm_detail,  get_namespaces,  get_namespace_detail,  get_address_scrub_data,  get_platform_config_data,  get_boot_status,  get_power_data,  get_security_state,  get_log_page,  get_features,  set_features,  create_namespace,  rename_namespace,  grow_namespace,  shrink_namespace,  delete_namespace,  enable_namespace,  disable_namespace,  set_security_state,  enable_logging,  run_diagnostic,  set_platform_config,  passthrough,  start_address_scrub,  app_direct_mode,  storage_mode  \
-		FROM driver_features_history WHERE  history_id = $history_id";
+		FROM driver_features_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -8343,7 +8343,7 @@ int db_get_dimm_topology_history_by_history_id(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		device_handle,  id,  vendor_id,  device_id,  revision_id,  subsystem_vendor_id,  subsystem_device_id,  subsystem_revision_id,  manufacturing_info_valid,  manufacturing_location,  manufacturing_date,  type,  serial_number_0,  serial_number_1,  serial_number_2,  serial_number_3,  interface_format_codes_0,  interface_format_codes_1,  interface_format_codes_2,  interface_format_codes_3,  interface_format_codes_4,  interface_format_codes_5,  interface_format_codes_6,  interface_format_codes_7,  interface_format_codes_8  \
-		FROM dimm_topology_history WHERE  history_id = $history_id";
+		FROM dimm_topology_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -8736,7 +8736,7 @@ int db_get_namespace_history_by_history_id(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		namespace_uid,  friendly_name,  block_size,  block_count,  type,  health,  enabled,  btt,  device_handle,  interleave_set_index,  memory_page_allocation  \
-		FROM namespace_history WHERE  history_id = $history_id";
+		FROM namespace_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -9431,7 +9431,7 @@ int db_get_identify_dimm_history_by_history_id(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		device_handle,  vendor_id,  device_id,  revision_id,  interface_format_code,  interface_format_code_extra,  fw_revision,  fw_api_version,  fw_sw_mask,  dimm_sku,  block_windows,  write_flush_addresses,  write_flush_address_start,  block_control_region_offset,  raw_cap,  manufacturer,  serial_num,  model_num  \
-		FROM identify_dimm_history WHERE  history_id = $history_id";
+		FROM identify_dimm_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -9777,7 +9777,7 @@ int db_get_device_characteristics_history_by_history_id(const PersistentStore *p
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		device_handle,  controller_temp_shutdown_threshold,  media_temp_shutdown_threshold,  throttling_start_threshold,  throttling_stop_threshold  \
-		FROM device_characteristics_history WHERE  history_id = $history_id";
+		FROM device_characteristics_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -10118,7 +10118,7 @@ int db_get_dimm_partition_history_by_history_id(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		device_handle,  volatile_capacity,  volatile_start,  pmem_capacity,  pm_start,  raw_capacity  \
-		FROM dimm_partition_history WHERE  history_id = $history_id";
+		FROM dimm_partition_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -10569,7 +10569,7 @@ int db_get_dimm_smart_history_by_history_id(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		device_handle,  validation_flags,  health_status,  media_temperature,  spare,  alarm_trips,  percentage_used,  lss,  vendor_specific_data_size,  power_cycles,  power_on_seconds,  uptime,  unsafe_shutdowns,  lss_details,  last_shutdown_time,  controller_temperature,  ait_dram_status  \
-		FROM dimm_smart_history WHERE  history_id = $history_id";
+		FROM dimm_smart_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -10933,7 +10933,7 @@ int db_get_dimm_state_history_by_history_id(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		device_handle,  mediaerrors_corrected,  mediaerrors_uncorrectable,  mediaerrors_erasurecoded,  health_state,  sanitize_status,  fw_log_errors  \
-		FROM dimm_state_history WHERE  history_id = $history_id";
+		FROM dimm_state_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -11250,7 +11250,7 @@ int db_get_namespace_state_history_by_history_id(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		namespace_uid,  health_state  \
-		FROM namespace_state_history WHERE  history_id = $history_id";
+		FROM namespace_state_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -11583,7 +11583,7 @@ int db_get_dimm_alarm_thresholds_history_by_history_id(const PersistentStore *p_
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		device_handle,  enable,  media_temperature,  controller_temperature,  spare  \
-		FROM dimm_alarm_thresholds_history WHERE  history_id = $history_id";
+		FROM dimm_alarm_thresholds_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -11914,7 +11914,7 @@ int db_get_dimm_power_management_history_by_history_id(const PersistentStore *p_
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		device_handle,  enable,  tdp_power_limit,  peak_power_budget,  avg_power_budget  \
-		FROM dimm_power_management_history WHERE  history_id = $history_id";
+		FROM dimm_power_management_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -12265,7 +12265,7 @@ int db_get_dimm_die_sparing_history_by_history_id(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		device_handle,  enable,  aggressiveness,  supported_by_rank_0,  supported_by_rank_1,  supported_by_rank_2,  supported_by_rank_3  \
-		FROM dimm_die_sparing_history WHERE  history_id = $history_id";
+		FROM dimm_die_sparing_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -12586,7 +12586,7 @@ int db_get_dimm_optional_config_data_history_by_history_id(const PersistentStore
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		device_handle,  first_fast_refresh_enable,  viral_policy_enable,  viral_status  \
-		FROM dimm_optional_config_data_history WHERE  history_id = $history_id";
+		FROM dimm_optional_config_data_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -12917,7 +12917,7 @@ int db_get_dimm_err_correction_history_by_history_id(const PersistentStore *p_ps
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		device_handle,  unrefreshed_enable,  refreshed_enable,  unrefreshed_force_write,  refreshed_force_write  \
-		FROM dimm_err_correction_history WHERE  history_id = $history_id";
+		FROM dimm_err_correction_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -13258,7 +13258,7 @@ int db_get_dimm_erasure_coding_history_by_history_id(const PersistentStore *p_ps
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		device_handle,  verify_erc,  unrefreshed_enable,  refreshed_enable,  unrefreshed_force_write,  refreshed_force_write  \
-		FROM dimm_erasure_coding_history WHERE  history_id = $history_id";
+		FROM dimm_erasure_coding_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -13579,7 +13579,7 @@ int db_get_dimm_thermal_history_by_history_id(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		device_handle,  throttling_enable,  alerting_enable,  critical_shutdown_enable  \
-		FROM dimm_thermal_history WHERE  history_id = $history_id";
+		FROM dimm_thermal_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -13934,7 +13934,7 @@ int db_get_dimm_fw_image_history_by_history_id(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		device_handle,  fw_rev,  fw_type,  staged_fw_rev,  staged_fw_type,  commit_id,  build_configuration  \
-		FROM dimm_fw_image_history WHERE  history_id = $history_id";
+		FROM dimm_fw_image_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -14236,7 +14236,7 @@ int db_get_dimm_fw_debug_log_history_by_history_id(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		device_handle,  fw_log  \
-		FROM dimm_fw_debug_log_history WHERE  history_id = $history_id";
+		FROM dimm_fw_debug_log_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -14703,7 +14703,7 @@ int db_get_dimm_memory_info_page0_history_by_history_id(const PersistentStore *p
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		device_handle,  bytes_read,  bytes_written,  read_reqs,  write_reqs,  block_read_reqs,  block_write_reqs  \
-		FROM dimm_memory_info_page0_history WHERE  history_id = $history_id";
+		FROM dimm_memory_info_page0_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -15054,7 +15054,7 @@ int db_get_dimm_memory_info_page1_history_by_history_id(const PersistentStore *p
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		device_handle,  total_bytes_read,  total_bytes_written,  total_read_reqs,  total_write_reqs,  total_block_read_reqs,  total_block_write_reqs  \
-		FROM dimm_memory_info_page1_history WHERE  history_id = $history_id";
+		FROM dimm_memory_info_page1_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -15415,7 +15415,7 @@ int db_get_dimm_memory_info_page2_history_by_history_id(const PersistentStore *p
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		device_handle,  write_count_max,  write_count_average,  uncorrectable_host,  uncorrectable_non_host,  media_errors_uc,  media_errors_ce,  media_errors_ecc  \
-		FROM dimm_memory_info_page2_history WHERE  history_id = $history_id";
+		FROM dimm_memory_info_page2_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -15866,7 +15866,7 @@ int db_get_dimm_ars_command_specific_data_history_by_history_id(const Persistent
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		device_handle,  num_errors,  ars_state,  dpa_error_address_0,  dpa_error_address_1,  dpa_error_address_2,  dpa_error_address_3,  dpa_error_address_4,  dpa_error_address_5,  dpa_error_address_6,  dpa_error_address_7,  dpa_error_address_8,  dpa_error_address_9,  dpa_error_address_10,  dpa_error_address_11,  dpa_error_address_12,  dpa_error_address_13  \
-		FROM dimm_ars_command_specific_data_history WHERE  history_id = $history_id";
+		FROM dimm_ars_command_specific_data_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -16207,7 +16207,7 @@ int db_get_dimm_long_op_status_history_by_history_id(const PersistentStore *p_ps
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		device_handle,  opcode,  subopcode,  percent_complete,  etc,  status_code  \
-		FROM dimm_long_op_status_history WHERE  history_id = $history_id";
+		FROM dimm_long_op_status_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -16622,7 +16622,7 @@ int db_get_dimm_details_history_by_history_id(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		device_handle,  form_factor,  data_width,  total_width,  size,  speed,  part_number,  device_locator,  bank_label,  manufacturer,  type,  type_detail,  id  \
-		FROM dimm_details_history WHERE  history_id = $history_id";
+		FROM dimm_details_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -16923,7 +16923,7 @@ int db_get_dimm_security_info_history_by_history_id(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		device_handle,  security_state  \
-		FROM dimm_security_info_history WHERE  history_id = $history_id";
+		FROM dimm_security_info_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -17234,7 +17234,7 @@ int db_get_dimm_sanitize_info_history_by_history_id(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		device_handle,  sanitize_state,  sanitize_progress  \
-		FROM dimm_sanitize_info_history WHERE  history_id = $history_id";
+		FROM dimm_sanitize_info_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -17595,7 +17595,7 @@ int db_get_fw_media_low_log_entry_history_by_history_id(const PersistentStore *p
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		device_handle,  system_timestamp,  dpa,  pda,  range,  error_type,  error_flags,  transaction_type  \
-		FROM fw_media_low_log_entry_history WHERE  history_id = $history_id";
+		FROM fw_media_low_log_entry_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -18072,7 +18072,7 @@ int db_get_fw_media_high_log_entry_history_by_history_id(const PersistentStore *
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		device_handle,  system_timestamp,  dpa,  pda,  range,  error_type,  error_flags,  transaction_type  \
-		FROM fw_media_high_log_entry_history WHERE  history_id = $history_id";
+		FROM fw_media_high_log_entry_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -18499,7 +18499,7 @@ int db_get_fw_thermal_low_log_entry_history_by_history_id(const PersistentStore 
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		device_handle,  system_timestamp,  host_reported_temp_data  \
-		FROM fw_thermal_low_log_entry_history WHERE  history_id = $history_id";
+		FROM fw_thermal_low_log_entry_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -18926,7 +18926,7 @@ int db_get_fw_thermal_high_log_entry_history_by_history_id(const PersistentStore
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		device_handle,  system_timestamp,  host_reported_temp_data  \
-		FROM fw_thermal_high_log_entry_history WHERE  history_id = $history_id";
+		FROM fw_thermal_high_log_entry_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -19383,7 +19383,7 @@ int db_get_fw_media_low_log_info_history_by_history_id(const PersistentStore *p_
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		device_handle,  max_log_entries,  current_sequence_number,  oldest_sequence_number,  newest_log_entry_timestamp,  oldest_log_entry_timestamp  \
-		FROM fw_media_low_log_info_history WHERE  history_id = $history_id";
+		FROM fw_media_low_log_info_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -19724,7 +19724,7 @@ int db_get_fw_media_high_log_info_history_by_history_id(const PersistentStore *p
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		device_handle,  max_log_entries,  current_sequence_number,  oldest_sequence_number,  newest_log_entry_timestamp,  oldest_log_entry_timestamp  \
-		FROM fw_media_high_log_info_history WHERE  history_id = $history_id";
+		FROM fw_media_high_log_info_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -20065,7 +20065,7 @@ int db_get_fw_thermal_low_log_info_history_by_history_id(const PersistentStore *
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		device_handle,  max_log_entries,  current_sequence_number,  oldest_sequence_number,  newest_log_entry_timestamp,  oldest_log_entry_timestamp  \
-		FROM fw_thermal_low_log_info_history WHERE  history_id = $history_id";
+		FROM fw_thermal_low_log_info_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -20406,7 +20406,7 @@ int db_get_fw_thermal_high_log_info_history_by_history_id(const PersistentStore 
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		device_handle,  max_log_entries,  current_sequence_number,  oldest_sequence_number,  newest_log_entry_timestamp,  oldest_log_entry_timestamp  \
-		FROM fw_thermal_high_log_info_history WHERE  history_id = $history_id";
+		FROM fw_thermal_high_log_info_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -20707,7 +20707,7 @@ int db_get_dimm_fw_log_level_history_by_history_id(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		device_handle,  log_level  \
-		FROM dimm_fw_log_level_history WHERE  history_id = $history_id";
+		FROM dimm_fw_log_level_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -21008,7 +21008,7 @@ int db_get_dimm_fw_time_history_by_history_id(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		device_handle,  time  \
-		FROM dimm_fw_time_history WHERE  history_id = $history_id";
+		FROM dimm_fw_time_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -21452,7 +21452,7 @@ int db_get_dimm_platform_config_history_by_history_id(const PersistentStore *p_p
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		device_handle,  signature,  length,  revision,  checksum,  oem_id,  oem_table_id,  oem_revision,  creator_id,  creator_revision,  current_config_size,  current_config_offset,  config_input_size,  config_input_offset,  config_output_size,  config_output_offset  \
-		FROM dimm_platform_config_history WHERE  history_id = $history_id";
+		FROM dimm_platform_config_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -21866,7 +21866,7 @@ int db_get_dimm_current_config_history_by_history_id(const PersistentStore *p_ps
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		device_handle,  signature,  length,  revision,  checksum,  oem_id,  oem_table_id,  oem_revision,  creator_id,  creator_revision,  config_status,  mapped_memory_capacity,  mapped_app_direct_capacity  \
-		FROM dimm_current_config_history WHERE  history_id = $history_id";
+		FROM dimm_current_config_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -22260,7 +22260,7 @@ int db_get_dimm_config_input_history_by_history_id(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		device_handle,  signature,  length,  revision,  checksum,  oem_id,  oem_table_id,  oem_revision,  creator_id,  creator_revision,  sequence_number  \
-		FROM dimm_config_input_history WHERE  history_id = $history_id";
+		FROM dimm_config_input_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -22664,7 +22664,7 @@ int db_get_dimm_config_output_history_by_history_id(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		device_handle,  signature,  length,  revision,  checksum,  oem_id,  oem_table_id,  oem_revision,  creator_id,  creator_revision,  sequence_number,  validation_status  \
-		FROM dimm_config_output_history WHERE  history_id = $history_id";
+		FROM dimm_config_output_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -23015,7 +23015,7 @@ int db_get_dimm_partition_change_history_by_history_id(const PersistentStore *p_
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		device_handle,  id,  config_table_type,  extension_table_type,  length,  partition_size,  status  \
-		FROM dimm_partition_change_history WHERE  history_id = $history_id";
+		FROM dimm_partition_change_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -23565,7 +23565,7 @@ int db_get_dimm_interleave_set_history_by_history_id(const PersistentStore *p_ps
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		id,  device_handle,  config_table_type,  extension_table_type,  length,  index_id,  dimm_count,  memory_type,  interleave_format,  mirror_enable,  status  \
-		FROM dimm_interleave_set_history WHERE  history_id = $history_id";
+		FROM dimm_interleave_set_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -24096,7 +24096,7 @@ int db_get_interleave_set_dimm_info_history_by_history_id(const PersistentStore 
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		id,  config_table_type,  index_id,  device_handle,  manufacturer,  serial_num,  model_num,  offset,  size  \
-		FROM interleave_set_dimm_info_history WHERE  history_id = $history_id";
+		FROM interleave_set_dimm_info_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -24687,7 +24687,7 @@ int db_get_enable_error_injection_info_history_by_history_id(const PersistentSto
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		device_handle,  enable  \
-		FROM enable_error_injection_info_history WHERE  history_id = $history_id";
+		FROM enable_error_injection_info_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -24988,7 +24988,7 @@ int db_get_temperature_error_injection_info_history_by_history_id(const Persiste
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		device_handle,  temperature  \
-		FROM temperature_error_injection_info_history WHERE  history_id = $history_id";
+		FROM temperature_error_injection_info_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -25309,7 +25309,7 @@ int db_get_poison_error_injection_info_history_by_history_id(const PersistentSto
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		id,  device_handle,  dpa_address,  memory  \
-		FROM poison_error_injection_info_history WHERE  history_id = $history_id";
+		FROM poison_error_injection_info_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -25746,7 +25746,7 @@ int db_get_software_trigger_info_history_by_history_id(const PersistentStore *p_
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		device_handle,  die_sparing_trigger,  user_spare_block_alarm_trip_trigger,  fatal_error_trigger  \
-		FROM software_trigger_info_history WHERE  history_id = $history_id";
+		FROM software_trigger_info_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -26131,7 +26131,7 @@ int db_get_performance_history_by_history_id(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		id,  dimm_uid,  time,  bytes_read,  bytes_written,  read_reqs,  host_write_cmds,  block_reads,  block_writes  \
-		FROM performance_history WHERE  history_id = $history_id";
+		FROM performance_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -26478,7 +26478,7 @@ int db_get_driver_metadata_check_diag_result_history_by_history_id(const Persist
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		id,  result_type,  ns_uid,  device_handle,  health_flag  \
-		FROM driver_metadata_check_diag_result_history WHERE  history_id = $history_id";
+		FROM driver_metadata_check_diag_result_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;
@@ -26794,7 +26794,7 @@ int db_get_boot_status_register_history_by_history_id(const PersistentStore *p_p
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		device_handle,  bsr  \
-		FROM boot_status_register_history WHERE  history_id = $history_id";
+		FROM boot_status_register_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		int index = 0;

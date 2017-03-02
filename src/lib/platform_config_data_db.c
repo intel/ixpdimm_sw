@@ -238,7 +238,8 @@ int update_dimm_platform_config_in_db(PersistentStore *p_db,
 		rc = NVM_ERR_UNKNOWN;
 	}
 	// make sure we have good data
-	else if ((rc = check_platform_config(p_config_data)) == NVM_SUCCESS)
+	else if ((rc = check_platform_config(p_config_data,
+			p_config_data->header.length)) == NVM_SUCCESS)
 	{
 		// make this function more efficient by doing it as one transaction
 		db_begin_transaction(p_db);
