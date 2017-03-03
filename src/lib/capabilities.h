@@ -113,6 +113,8 @@ int get_devices_is_supported();
 
 NVM_BOOL sku_value_is_different(NVM_UINT32 dimm_sku1, NVM_UINT32 dimm_sku2);
 
+int get_pcat_revision(NVM_UINT8 *p_pcat_revision);
+
 #ifdef __cplusplus
 }
 #endif

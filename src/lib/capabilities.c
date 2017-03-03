@@ -814,3 +814,31 @@ int get_devices_is_supported()
 	}
 	return rc;
 }
+
+int get_pcat_revision(NVM_UINT8 *p_pcat_revision)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	if (p_pcat_revision == NULL)
+	{
+		COMMON_LOG_ERROR("PCAT revision is NULL");
+		rc = NVM_ERR_INVALIDPARAMETER;
+	}
+	else
+	{
+		struct bios_capabilities *p_pcat = calloc(1, sizeof (struct bios_capabilities));
+		if (!p_pcat)
+		{
+			COMMON_LOG_ERROR("Unable to allocate memory for the PCAT structure");
+			rc = NVM_ERR_NOMEMORY;
+		}
+		else if ((rc = get_platform_capabilities(p_pcat)) == NVM_SUCCESS)
+		{
+			*p_pcat_revision = (NVM_UINT8)p_pcat->header.revision;
+			free(p_pcat);
+		}
+	}
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}

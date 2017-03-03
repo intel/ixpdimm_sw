@@ -37,9 +37,11 @@
 #include "utility.h"
 #include "monitor.h"
 #include "device_utilities.h"
+#include "platform_capabilities.h"
 #include "pool_utilities.h"
 #include "capabilities.h"
 #include "system.h"
+#include "config_goal_utilities.h"
 
 /*
  * Helper function to verify the config goal size (in GiB) is valid with the given alignment
@@ -397,48 +399,38 @@ int config_goal_to_interleave_ext_table(const struct app_direct_attributes *p_qo
 
 	if (pp_table && (*pp_table == NULL))
 	{
-		NVM_UINT32 num_dimms = p_qos->interleave.ways;
-		NVM_UINT32 table_size = sizeof (struct interleave_info_extension_table) +
-				(num_dimms * sizeof (struct dimm_info_extension_table));
-		*pp_table = malloc(table_size);
-		struct interleave_info_extension_table *p_table = *pp_table;
-		if (p_table)
+		// based on pcat version need to populate the interleave set
+		COMMON_UINT8 pcat_revision = 0;
+		if ((rc = get_pcat_revision(&pcat_revision)) == NVM_SUCCESS)
 		{
-			memset(p_table, 0, table_size);
-			p_table->header.type = INTERLEAVE_TABLE;
-			p_table->header.length = table_size;
-
-			p_table->mirror_enable = p_qos->mirrored;
-
-			p_table->index = interleave_set_id;
-			interleave_struct_to_format(&p_qos->interleave, &p_table->interleave_format);
-			p_table->dimm_count = num_dimms;
-
-			// Add dimm_info_extension_tables
-			struct dimm_info_extension_table *p_dimms =
-					(struct dimm_info_extension_table *)&p_table->p_dimms;
-			for (NVM_UINT32 i = 0; i < num_dimms; i++)
+			NVM_UINT32 num_dimms = p_qos->interleave.ways;
+			NVM_UINT32 table_size = sizeof (struct interleave_info_extension_table) +
+					(num_dimms * sizeof (struct dimm_info_extension_table));
+			*pp_table = malloc(table_size);
+			struct interleave_info_extension_table *p_table = *pp_table;
+			if (p_table)
 			{
-				struct device_discovery discovery;
+				memset(p_table, 0, table_size);
+				p_table->header.type = INTERLEAVE_TABLE;
+				p_table->header.length = table_size;
 
-				// Look up the DIMM
-				rc = exists_and_manageable(p_qos->dimms[i], &discovery, 1);
-				if (rc != NVM_SUCCESS) // invalid dimm
-				{
-					break;
-				}
+				p_table->mirror_enable = p_qos->mirrored;
 
-				// The DIMM is OK - put it in the list
-				p_dimms[i].size = interleave_set_size * BYTES_PER_GIB;
-				p_dimms[i].offset = interleave_set_offset * BYTES_PER_GIB;
-				memmove(p_dimms[i].serial_number, discovery.serial_number, NVM_SERIAL_LEN);
-				memmove(p_dimms[i].manufacturer, discovery.manufacturer, NVM_MANUFACTURER_LEN);
-				memmove(p_dimms[i].model_number, discovery.model_number, NVM_MODEL_LEN-1);
+				p_table->index = interleave_set_id;
+				interleave_struct_to_format(&p_qos->interleave, &p_table->interleave_format);
+				p_table->dimm_count = num_dimms;
+
+				// Add dimm_info_extension_tables
+				struct dimm_info_extension_table *p_dimms_ext =
+						(struct dimm_info_extension_table *)&p_table->p_dimms;
+
+				rc = populate_dimm_info_extension_tables(p_dimms_ext, p_qos, pcat_revision,
+						interleave_set_size, interleave_set_offset);
 			}
-		}
-		else
-		{
-			rc = NVM_ERR_NOMEMORY;
+			else
+			{
+				rc = NVM_ERR_NOMEMORY;
+			}
 		}
 	}
 	else // caller passed a weird pointer
@@ -455,12 +447,10 @@ int config_goal_to_interleave_ext_table(const struct app_direct_attributes *p_qo
  * Expect expect pp_input_table to point to a NULL pointer.
  * Caller must free *pp_input_table.
  */
-int config_goal_to_config_input(const NVM_UID device_uid,
-		const struct config_goal *p_goal,
+int config_goal_to_config_input(const struct config_goal *p_goal,
 		struct config_input_table **pp_input_table,
-		const struct nvm_capabilities *p_capabilities,
 		const struct device_discovery *p_discovery,
-		NVM_UINT32 seq_num) // must be one the BIOS hasn't seen before
+		NVM_UINT32 seq_num)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
@@ -627,8 +617,7 @@ int update_config_goal(const struct device_discovery *p_discovery,
 			NVM_UINT32 seq_num = 0;
 			seq_num = get_last_config_output_sequence_number(p_old_cfg) + 1;
 
-			rc = config_goal_to_config_input(p_discovery->uid, p_goal, &p_input_table,
-					p_capabilities, p_discovery, seq_num);
+			rc = config_goal_to_config_input(p_goal, &p_input_table, p_discovery, seq_num);
 			if (rc == NVM_SUCCESS)
 			{
 				// Generate a checksum for our newly-generated input table
