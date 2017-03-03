@@ -123,6 +123,11 @@ namespace wbem
 					throw (framework::Exception);
 
 			/*
+			 * Helper function to retrieve AvailablePersistentSizeRange.
+			 */
+			struct possible_namespace_ranges getAvailablePersistentSizeRange(NVM_UID pool_uid);
+
+			/*
 			 * get list of underlying types of PM capacity in the pool
 			 */
 			static wbem::framework::STR_LIST getPersistentMemoryType(const struct pool *pPool);

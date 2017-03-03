@@ -110,7 +110,7 @@ throw(wbem::framework::Exception)
 
 		if (!isVolatilePool)
 		{
-			possible_namespace_ranges ranges = m_nvmLib.getAvailablePersistentSizeRange(pPool->pool_uid);
+			possible_namespace_ranges ranges = getAvailablePersistentSizeRange(pPool->pool_uid);
 
 			// List of underlying types of PM- AppDirect,AppDirectNotInterleaved, Storage
 			if (containsAttribute(PERSISTENTMEMORYTYPE_KEY, attributes))
@@ -665,4 +665,23 @@ std::string wbem::mem_config::PoolViewFactory::getInterleaveSetFormatStr(
 	formatStr << ")";
 
 	return formatStr.str();
+}
+
+struct possible_namespace_ranges wbem::mem_config::PoolViewFactory::getAvailablePersistentSizeRange(NVM_UID pool_uid)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	struct possible_namespace_ranges ranges ;
+	memset(&ranges, 0, sizeof (possible_namespace_ranges));
+
+	try
+	{
+		ranges = m_nvmLib.getAvailablePersistentSizeRange(pool_uid);
+	}
+	catch (core::LibraryException &e)
+	{
+		throw exception::NvmExceptionLibError(e.getErrorCode());
+	}
+
+	return ranges;
 }

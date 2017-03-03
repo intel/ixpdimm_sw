@@ -270,8 +270,7 @@ int get_dimm_storage_capacities(const NVM_UINT32 count, struct nvm_storage_capac
 			ndctl_region_foreach(bus, region)
 			{
 				// Only count regions that can create a storage namespace
-				if (ndctl_region_is_enabled(region) &&
-					ndctl_region_get_type(region) == ND_DEVICE_REGION_BLK &&
+				if (ndctl_region_get_type(region) == ND_DEVICE_REGION_BLK &&
 					ndctl_region_get_mappings(region) > 0)
 				{
 					struct ndctl_dimm *dimm = ndctl_region_get_first_dimm(region);
@@ -321,25 +320,34 @@ int get_dimm_storage_capacities(const NVM_UINT32 count, struct nvm_storage_capac
 						NVM_UINT64 ilset_capacity = 0;
 						NVM_UINT64 mirrored_capacity = 0;
 						if ((rc = get_dimm_ilset_capacity(handle, &mirrored_capacity,
-								&ilset_capacity)) != NVM_SUCCESS)
+							&ilset_capacity)) != NVM_SUCCESS)
 						{
 							COMMON_LOG_ERROR("Failed to retrieve dimm interleave set capacity");
 							break;
 						}
 
-						p_capacities[cap_idx].total_storage_capacity =
-								ndctl_region_get_size(region);
-						p_capacities[cap_idx].free_storage_capacity =
-								ndctl_region_get_available_size(region);
-						if (p_capacities[cap_idx].total_storage_capacity > ilset_capacity)
+						if (ndctl_region_is_enabled(region))
 						{
-							p_capacities[cap_idx].storage_only_capacity =
+							p_capacities[cap_idx].total_storage_capacity =
+									ndctl_region_get_size(region);
+							p_capacities[cap_idx].free_storage_capacity =
+									ndctl_region_get_available_size(region);
+							if (p_capacities[cap_idx].total_storage_capacity > ilset_capacity)
+							{
+								p_capacities[cap_idx].storage_only_capacity =
 									p_capacities[cap_idx].total_storage_capacity - ilset_capacity;
+							}
 						}
 						else
 						{
+							NVM_UINT64  cap_diff = ndctl_region_get_size(region) - ilset_capacity;
+							p_capacities[cap_idx].total_storage_capacity = ilset_capacity;
+							p_capacities[cap_idx].free_storage_capacity =
+								ndctl_region_get_available_size(region) - cap_diff;
+
 							p_capacities[cap_idx].storage_only_capacity = 0;
 						}
+
 						p_capacities[cap_idx].device_handle = handle;
 						cap_count++;
 					}

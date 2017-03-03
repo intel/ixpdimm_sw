@@ -380,23 +380,18 @@ int get_largest_storage_namespace_on_a_dimm(const struct pool *p_pool,
 		const NVM_UID device_uid, NVM_UINT64 *p_size)
 {
 	COMMON_LOG_ENTRY();
-	int rc = NVM_ERR_DRIVERFAILED;
+	int rc = NVM_SUCCESS;
 	int num_dimms = 0;
+	*p_size = 0;
 
 	struct device_discovery discovery;
-	if (lookup_dev_uid(device_uid, &discovery) != NVM_SUCCESS)
+	if ((rc = lookup_dev_uid(device_uid, &discovery)) != NVM_SUCCESS)
 	{
 		COMMON_LOG_ERROR("Failed to find the device in the lookup table");
 	}
-	else if (p_pool->type == POOL_TYPE_PERSISTENT_MIRROR ||
-		p_pool->type == POOL_TYPE_VOLATILE)
+	else if ((rc = (num_dimms = get_topology_count())) > 0)
 	{
-		*p_size = 0;
-	}
-	else if ((num_dimms = get_topology_count()) > 0)
-	{
-		*p_size = 0;
-
+		rc = NVM_SUCCESS;
 		struct nvm_storage_capacities capacities[num_dimms];
 		memset(capacities, 0, sizeof (capacities));
 		int num_caps = 0;
@@ -408,7 +403,6 @@ int get_largest_storage_namespace_on_a_dimm(const struct pool *p_pool,
 						== capacities[j].device_handle.handle)
 				{
 					*p_size = capacities[j].free_storage_capacity;
-					rc = NVM_SUCCESS;
 					break;
 				}
 			}
