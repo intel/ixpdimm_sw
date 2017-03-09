@@ -65,6 +65,8 @@ class NVM_API LayoutStepAppDirect: public LayoutStep
 				const std::vector<Dimm> &dimms);
 		void layoutInterleavedExtentOnSocket(const std::vector<Dimm> &socketDimms,
 				MemoryAllocationLayout &layout);
+		void removeUnavailableDimmsFromList(MemoryAllocationLayout &layout,
+				std::vector<Dimm> &dimmList);
 		std::vector<Dimm> getLargestSetOfInterleavableDimms(const std::vector<Dimm>& dimms);
 		void layoutInterleaveSet(const std::vector<Dimm> &interleavedDimms,
 				const NVM_UINT64 bytesPerDimm,

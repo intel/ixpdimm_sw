@@ -155,6 +155,7 @@ void core::memory_allocator::LayoutStepAppDirect::layoutInterleavedExtentOnSocke
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	std::vector<Dimm> remainingDimms = socketDimms;
+	removeUnavailableDimmsFromList(layout, remainingDimms);
 	while (!remainingDimms.empty())
 	{
 		std::vector<Dimm> interleaveDimms = getLargestSetOfInterleavableDimms(
@@ -166,6 +167,27 @@ void core::memory_allocator::LayoutStepAppDirect::layoutInterleavedExtentOnSocke
 		layoutInterleaveSet(interleaveDimms, bytesPerDimm, layout);
 
 		removeDimmsFromList(interleaveDimms, remainingDimms);
+	}
+}
+
+
+void core::memory_allocator::LayoutStepAppDirect::removeUnavailableDimmsFromList(
+		MemoryAllocationLayout& layout, std::vector<Dimm>& dimmList)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	std::vector<Dimm>::iterator dimm = dimmList.begin();
+	while (dimm != dimmList.end())
+	{
+		if (getDimmUnallocatedGiBAlignedBytes(dimm->capacityBytes,
+				layout.goals[dimm->uid]) == 0)
+		{
+			dimm = dimmList.erase(dimm);
+		}
+		else
+		{
+			dimm++;
+		}
 	}
 }
 
