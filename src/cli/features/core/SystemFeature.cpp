@@ -254,6 +254,9 @@ cli::nvmcli::SystemFeature::SystemFeature() : cli::framework::FeatureBase(),
 
 cli::nvmcli::SystemFeature::~SystemFeature()
 {
+	free(m_pDimmProviderAdapter);
+	free(m_pDimmProvider);
+	free(m_pErasureProvider);
 }
 
 /*

@@ -147,8 +147,7 @@ class NVM_API MemoryConfigurationServiceFactory : public framework_interface::Nv
 		 * @param dimms
 		 * 		One or more NVM-DIMMs to apply the settings to.
 		 */
-		void importDimmConfigsFromURI(const std::string &importUri, framework::STR_LIST dimms)
-			throw (framework::Exception);
+		void importDimmConfigsFromURI(const std::string &importUri, framework::STR_LIST dimms);
 
 		/*!
 		 * Import memory allocation settings from a file and use them to modify the configuration goal.
@@ -157,8 +156,7 @@ class NVM_API MemoryConfigurationServiceFactory : public framework_interface::Nv
 		 * @param dimms
 		 * 		One or more NVM-DIMMs to apply the settings to.
 		 */
-		void importDimmConfigsFromPath(const std::string &path, std::vector<std::string> dimms)
-			throw (wbem::framework::Exception);
+		void importDimmConfigsFromPath(const std::string &path, std::vector<std::string> dimms);
 
 		/*!
 		 * Hook for extrinsic methods.

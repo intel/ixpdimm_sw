@@ -1832,7 +1832,10 @@ int support_store_platform_config_data(PersistentStore *p_store, int history_id,
 			}
 		}
 	}
-	free(p_config);
+	if (p_config)
+	{
+		free(p_config);
+	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;

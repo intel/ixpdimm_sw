@@ -667,36 +667,52 @@ int select_best_dimm_for_settings(const struct pool *p_pool,
 	struct device_free_capacities *p_free_capacities = NULL;
 	int num_dimms = get_topology_count();
 
-	p_capacities = calloc(candidate_dimm_count, sizeof (struct nvm_storage_capacities));
-	p_free_capacities = calloc(candidate_dimm_count, sizeof (struct device_free_capacities));
-	if (!p_capacities || !p_free_capacities)
+	if (num_dimms > 0)
 	{
-		rc = NVM_ERR_NOMEMORY;
+		p_capacities = calloc(candidate_dimm_count, sizeof (struct nvm_storage_capacities));
+		p_free_capacities = calloc(candidate_dimm_count, sizeof (struct device_free_capacities));
+		if (!p_capacities || !p_free_capacities)
+		{
+			rc = NVM_ERR_NOMEMORY;
+		}
+		else
+		{
+			rc = get_capacities_for_devices(p_discoveries, candidate_dimm_count, p_capacities,
+							num_dimms);
+			if (rc == NVM_SUCCESS)
+			{
+				get_free_capacities_for_devices(p_pool, p_discoveries, p_capacities,
+					candidate_dimm_count, p_free_capacities);
+				if (p_settings->block_count == NVM_REQUEST_MAX_AVAILABLE_BLOCK_COUNT)
+				{
+					rc = fit_namespace_to_largest_matching_region(p_pool,
+						p_free_capacities, candidate_dimm_count, p_settings,
+						p_format, minimum_ns_size, p_namespace_creation_id);
+				}
+				else
+				{
+					rc = select_smallest_matching_region(p_pool, p_free_capacities,
+						candidate_dimm_count, p_settings, p_format,
+						minimum_ns_size, p_namespace_creation_id, allow_adj);
+				}
+			}
+		}
+		if (p_free_capacities)
+		{
+			free(p_free_capacities);
+		}
+		if (p_capacities)
+		{
+			free(p_capacities);
+		}
 	}
 	else
 	{
-		rc = get_capacities_for_devices(p_discoveries, candidate_dimm_count, p_capacities,
-						num_dimms);
-		if (rc == NVM_SUCCESS)
-		{
-			get_free_capacities_for_devices(p_pool, p_discoveries, p_capacities,
-				candidate_dimm_count, p_free_capacities);
-			if (p_settings->block_count == NVM_REQUEST_MAX_AVAILABLE_BLOCK_COUNT)
-			{
-				rc = fit_namespace_to_largest_matching_region(p_pool,
-					p_free_capacities, candidate_dimm_count, p_settings,
-					p_format, minimum_ns_size, p_namespace_creation_id);
-			}
-			else
-			{
-				rc = select_smallest_matching_region(p_pool, p_free_capacities,
-					candidate_dimm_count, p_settings, p_format,
-					minimum_ns_size, p_namespace_creation_id, allow_adj);
-			}
-		}
+		KEEP_ERROR(rc, num_dimms);
+		COMMON_LOG_ERROR_F(
+				"Failed to get the correct number of devices with error %d", rc);
 	}
-	free(p_free_capacities);
-	free(p_capacities);
+
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }

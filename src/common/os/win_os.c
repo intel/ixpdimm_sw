@@ -663,7 +663,7 @@ int get_file_version_info_for_system(LPVOID *pp_version_info)
 	if (version_data_size > 0)
 	{
 		*pp_version_info = calloc(1, version_data_size);
-		if (!pp_version_info)
+		if (*pp_version_info == NULL)
 		{
 			rc = COMMON_ERR_NOMEMORY;
 		}

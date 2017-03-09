@@ -982,7 +982,6 @@ void wbem::mem_config::MemoryConfigurationServiceFactory::exportSystemConfigToPa
  */
 void wbem::mem_config::MemoryConfigurationServiceFactory::importDimmConfigsFromURI(
 		const std::string &importUri, std::vector<std::string> dimms)
-	throw (wbem::framework::Exception)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	std::string path;
@@ -996,7 +995,6 @@ void wbem::mem_config::MemoryConfigurationServiceFactory::importDimmConfigsFromU
  */
 void wbem::mem_config::MemoryConfigurationServiceFactory::importDimmConfigsFromPath(
 		const std::string &path, std::vector<std::string> dimms)
-	throw (wbem::framework::Exception)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 

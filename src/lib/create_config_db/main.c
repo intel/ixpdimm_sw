@@ -32,6 +32,8 @@
 
 #include <stdio.h>
 #include <common_types.h>
+#include <sys/stat.h>
+#include <string.h>
 #include <persistence/lib_persistence.h>
 
 /*
@@ -47,11 +49,20 @@ int main(int arg_count, char **args)
 {
 	int rc = 1;
 	char path[COMMON_PATH_LEN];
+	struct stat sb;
 
+	memset(path, 0, COMMON_PATH_LEN);
 	// if the caller passed in a path, prepend it to the CONFIG_FILE
 	if (arg_count >= 2)
 	{
-		snprintf(path, COMMON_PATH_LEN, "%s/%s", args[1], CONFIG_FILE);
+		if (stat(args[1],&sb) == 0 && S_ISDIR(sb.st_mode))
+		{
+			snprintf(path, COMMON_PATH_LEN, "%s/%s", args[1], CONFIG_FILE);
+		}
+		else
+		{
+			snprintf(path, COMMON_PATH_LEN, "%s", CONFIG_FILE);
+		}
 	}
 	else
 	{

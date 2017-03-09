@@ -836,6 +836,9 @@ int get_pcat_revision(NVM_UINT8 *p_pcat_revision)
 		else if ((rc = get_platform_capabilities(p_pcat)) == NVM_SUCCESS)
 		{
 			*p_pcat_revision = (NVM_UINT8)p_pcat->header.revision;
+		}
+		if (p_pcat)
+		{
 			free(p_pcat);
 		}
 	}

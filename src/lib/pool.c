@@ -670,7 +670,10 @@ int nvm_dump_config(const NVM_UID device_uid,
 				}
 			}
 		}
-		free(p_cfg_data);
+		if (p_cfg_data)
+		{
+			free(p_cfg_data);
+		}
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;

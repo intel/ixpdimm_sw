@@ -658,7 +658,11 @@ int update_config_goal(const struct device_discovery *p_discovery,
 			free(p_input_table);
 		}
 	}
-	free(p_old_cfg);
+	if (p_old_cfg)
+	{
+		free(p_old_cfg);
+	}
+
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
