@@ -755,6 +755,7 @@ int get_hw_dimm_platform_config_alloc(const unsigned int handle, NVM_SIZE *p_pcd
 	{
 		rc = build_platform_config_data(NULL, NULL, NULL,
 				(struct platform_config_data **)pp_config);
+		*p_pcd_size = sizeof (struct platform_config_data);
 	}
 	else if (tmp_pcd_size < sizeof (struct platform_config_data) ||
 			tmp_pcd_size > DEV_PLT_CFG_PART_SIZE)

@@ -958,9 +958,10 @@ int get_dimm_platform_config_data_from_db(PersistentStore *p_db,
 		if (db_get_dimm_platform_config_by_device_handle(p_db,
 				(unsigned int)device_handle, &db_config_header) != DB_SUCCESS)
 		{
-			COMMON_LOG_ERROR_F("Failed to get simulated platform config for id: %i.",
+			COMMON_LOG_ERROR_F("No simulated platform config for id: %i.",
 				device_handle);
-			rc = NVM_ERR_BADDEVICECONFIG;
+			// Return all zeroes for simulation - this is what real HW does
+			memset(p_data, 0, size);
 		}
 		else
 		{
@@ -1150,9 +1151,9 @@ int get_dimm_platform_config_size_from_db(PersistentStore *p_db, const unsigned 
 		if (db_get_dimm_platform_config_by_device_handle(p_db,
 				(unsigned int)device_handle, &db_config_header) != DB_SUCCESS)
 		{
-			COMMON_LOG_ERROR_F("Failed to get simulated platform config for id: %i.",
+			COMMON_LOG_ERROR_F("No simulated platform config for id: %i.",
 				device_handle);
-			rc = NVM_ERR_BADDEVICECONFIG;
+			rc = 0;
 		}
 		else
 		{
