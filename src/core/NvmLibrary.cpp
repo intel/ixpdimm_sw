@@ -1366,7 +1366,7 @@ std::vector<struct log> NvmLibrary::getDebugLogs()
 		throw core::LibraryException(rc);
 	}
 	int count = rc;
-	struct log fromLib[count];
+	struct log *fromLib = (struct log *)malloc(sizeof (struct log) * count);
 
 	rc = m_lib.getDebugLogs(fromLib, count);
 	if (rc < 0)
@@ -1378,6 +1378,8 @@ std::vector<struct log> NvmLibrary::getDebugLogs()
 	{
 		result.push_back(fromLib[i]);
 	}
+	free(fromLib);
+
 	return result;
 
 }

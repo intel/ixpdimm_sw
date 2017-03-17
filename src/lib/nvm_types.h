@@ -146,6 +146,7 @@ typedef unsigned char NVM_SERIAL_NUMBER[NVM_SERIAL_LEN]; // Serial Number
 typedef char NVM_NAMESPACE_NAME[NVM_NAMESPACE_NAME_LEN]; // Namespace name
 typedef char NVM_PREFERENCE_KEY[NVM_THRESHOLD_STR_LEN];	// Config value property name
 typedef char NVM_PREFERENCE_VALUE[NVM_THRESHOLD_STR_LEN]; // Config value property value
+typedef char NVM_LOG_MSG[NVM_LOG_MESSAGE_LEN]; // Event message string
 
 typedef union
 {

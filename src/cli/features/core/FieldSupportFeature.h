@@ -110,6 +110,8 @@ static const std::string PREFERENCE_ENABLED = "1";
 static const std::string PREFERENCE_DISABLED = "0";
 static const std::string PREFERENCE_APPDIRECT_SETTING_DEFAULT = "RECOMMENDED";
 
+static const std::string SHOWLOGS_COUNT = "Count";
+
 /*!
  * Implements the CR Field Support Commands.
  */
@@ -151,6 +153,7 @@ public:
 		SHOW_PREFERENCES,
 		CHANGE_PREFERENCES,
 		SHOW_DEVICE_FIRMWARE,
+		SHOW_LOGS
 	};
 
 	/*!
@@ -239,6 +242,7 @@ private:
 	framework::ResultBase *deleteSupport(const framework::ParsedCommand &parsedCommand);
 	framework::ResultBase *showPerformance(const framework::ParsedCommand &parsedCommand);
 	framework::ResultBase *showEvents(const framework::ParsedCommand &parsedCommand);
+	framework::ResultBase *showLogs(const framework::ParsedCommand &parsedCommand);
 
 	/*!
 	 * Acknowledge an event

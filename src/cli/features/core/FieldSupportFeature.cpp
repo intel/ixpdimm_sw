@@ -76,6 +76,7 @@
 #include <framework_interface/FrameworkExtensions.h>
 #include <libinvm-cim/ExceptionNoMemory.h>
 #include <mem_config/PoolViewFactory.h>
+#include "ShowLogCommand.h"
 
 #include "ShowVersionCommand.h"
 
@@ -282,6 +283,13 @@ void cli::nvmcli::FieldSupportFeature::getPaths(cli::framework::CommandSpecList 
 	changePreferences.addProperty(SQL_KEY_APPDIRECT_SETTINGS, false, "RECOMMENDED|(IMCSize)_(ChannelSize)",
 			true, "The interleave settings to use when creating App Direct capacity in the format: (IMCSize_ChannelSize)");
 
+	cli::framework::CommandSpec showLogs(SHOW_LOGS, TR("Show Logs"), framework::VERB_SHOW,
+			TR("Show " NVM_DIMM_NAME " related debug messages."));
+	showLogs.addTarget(TARGET_LOG);
+	showLogs.addProperty(SHOWLOGS_COUNT, false, "count", true,
+			TR("The maximum number of debug messages to display 0-10000. If not provided, "
+					"the default is to display a maximum of the most recent 50 debug log messages."));
+
 	list.push_back(showDeviceFirmware);
 	list.push_back(updateFirmware);
 	list.push_back(showPerformance);
@@ -295,6 +303,7 @@ void cli::nvmcli::FieldSupportFeature::getPaths(cli::framework::CommandSpecList 
 	list.push_back(showEvents);
 	list.push_back(showPreferences);
 	list.push_back(changePreferences);
+	list.push_back(showLogs);
 }
 
 // Constructor, just calls super class and initializes member variables
@@ -360,6 +369,9 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::run(
 			break;
 		case SHOW_DEVICE_FIRMWARE:
 			pResult = showDeviceFirmware(parsedCommand);
+			break;
+		case SHOW_LOGS:
+			pResult = showLogs(parsedCommand);
 			break;
 	}
 	return pResult;
@@ -1226,6 +1238,15 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::showEvents(
 	}
 
 	return pResult;
+}
+
+cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::showLogs(
+		cli::framework::ParsedCommand const &parsedCommand)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	ShowLogCommand cmd;
+	return cmd.execute(parsedCommand);
 }
 
 /*

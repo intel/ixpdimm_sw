@@ -188,22 +188,33 @@ int nvm_get_debug_logs(struct log *p_logs, const NVM_UINT32 count)
 			log_gather();
 
 			memset(p_logs, 0, (sizeof (struct log) * count));
-			struct db_log db_logs[count];
-			if ((rc = db_get_logs(p_store, db_logs, count)) != DB_ERR_FAILURE)
+			struct db_log *p_db_logs = (struct db_log *)malloc(sizeof (struct db_log) * count);
+
+			if (p_db_logs != NULL)
 			{
-				for (int i = 0; i < rc; i++)
+				if ((rc = db_get_logs(p_store, p_db_logs, count)) != DB_ERR_FAILURE)
 				{
-					p_logs[i].level = db_logs[i].level;
-					p_logs[i].line_number = db_logs[i].line_number;
-					s_strcpy(p_logs[i].file_name, db_logs[i].file_name, NVM_PATH_LEN);
-					s_strcpy(p_logs[i].message, db_logs[i].message, NVM_LOG_MESSAGE_LEN);
-					p_logs[i].time = db_logs[i].time;
+					for (int i = 0; i < rc; i++)
+					{
+						p_logs[i].level = p_db_logs[i].level;
+						p_logs[i].line_number = p_db_logs[i].line_number;
+						s_strcpy(p_logs[i].file_name, p_db_logs[i].file_name, NVM_PATH_LEN);
+						s_strcpy(p_logs[i].message, p_db_logs[i].message, NVM_LOG_MESSAGE_LEN);
+						p_logs[i].time = p_db_logs[i].time;
+					}
 				}
+				else
+				{
+					COMMON_LOG_ERROR("Failed to retrieve the logs from the database");
+					rc = NVM_ERR_UNKNOWN;
+				}
+
+				free(p_db_logs);
 			}
 			else
 			{
-				COMMON_LOG_ERROR("Failed to retrieve the logs from the database");
-				rc = NVM_ERR_UNKNOWN;
+				COMMON_LOG_ERROR("Unable to allocate memory for the database logs");
+				rc = NVM_ERR_NOMEMORY;
 			}
 		}
 	}
