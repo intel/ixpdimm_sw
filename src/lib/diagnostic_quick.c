@@ -69,6 +69,9 @@ int check_dimm_bsr(const NVM_UID device_uid,
 int check_dimm_viral_state(const NVM_UID device_uid,
 		const NVM_NFIT_DEVICE_HANDLE device_handle,
 		const struct diagnostic *p_diagnostic, NVM_UINT32* p_results);
+int check_dimm_fw_update_status(const NVM_UID device_uid,
+		const NVM_NFIT_DEVICE_HANDLE device_handle,
+		const struct diagnostic *p_diagnostic, NVM_UINT32* p_results);
 
 /*
  * Run the quick health check diagnostic algorithm
@@ -131,6 +134,10 @@ int diag_quick_health_check(const NVM_UID device_uid,
 					KEEP_ERROR(rc, tmp_rc);
 
 					tmp_rc = check_dimm_viral_state(device_uid,
+						device_handle, p_diagnostic, p_results);
+					KEEP_ERROR(rc, tmp_rc);
+
+					tmp_rc = check_dimm_fw_update_status(device_uid,
 						device_handle, p_diagnostic, p_results);
 					KEEP_ERROR(rc, tmp_rc);
 				}
@@ -748,6 +755,34 @@ int check_dimm_media_errors(const NVM_UID device_uid,
 			SQL_KEY_ERASURE_CODED_CORRECTED_THRESHOLD,
 			DIAG_THRESHOLD_QUICK_ERASURE_CODED_CORRECTED_ERRORS,
 			EVENT_CODE_DIAG_QUICK_BAD_ERASURE_CODED_CORRECTED_MEDIA_ERRORS);
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+int check_dimm_fw_update_status(const NVM_UID device_uid,
+		const NVM_NFIT_DEVICE_HANDLE device_handle,
+		const struct diagnostic *p_diagnostic, NVM_UINT32 *p_results)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	struct pt_payload_fw_image_info fw_image_info;
+	rc = fw_get_fw_image_info(device_handle.handle, &fw_image_info);
+	if ((rc == NVM_SUCCESS) &&
+			(fw_image_info.last_fw_update_status == LAST_FW_UPDATE_LOAD_FAILED))
+	{
+		store_event_by_parts(EVENT_TYPE_DIAG_QUICK,
+				EVENT_SEVERITY_CRITICAL,
+				EVENT_CODE_DIAG_QUICK_FW_LOAD_FAILED,
+				device_uid,
+				1,
+				device_uid,
+				NULL,
+				NULL,
+				DIAGNOSTIC_RESULT_FAILED);
+		(*p_results)++;
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);

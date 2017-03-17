@@ -357,8 +357,8 @@ enum firmware_type
 /* Status after the last FW update operation */
 enum last_fw_update_status {
 	LAST_FW_UPDATE_STAGED_SUCCESS = 1,
-	LAST_FW_UPDATE_LOADED_SUCCESS	= 2,
-	LAST_FW_UPDATE_LOADED_FAILED	= 3
+	LAST_FW_UPDATE_LOAD_SUCCESS	= 2,
+	LAST_FW_UPDATE_LOAD_FAILED	= 3
 };
 
 /*

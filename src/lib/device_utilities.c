@@ -595,11 +595,11 @@ enum fw_update_status firmware_update_status_to_enum(unsigned char last_fw_updat
 	{
 		fw_update_status = FW_UPDATE_STAGED;
 	}
-	else if (last_fw_update_status == LAST_FW_UPDATE_LOADED_SUCCESS)
+	else if (last_fw_update_status == LAST_FW_UPDATE_LOAD_SUCCESS)
 	{
 		fw_update_status = FW_UPDATE_SUCCESS;
 	}
-	else if (last_fw_update_status == LAST_FW_UPDATE_LOADED_FAILED)
+	else if (last_fw_update_status == LAST_FW_UPDATE_LOAD_FAILED)
 	{
 		fw_update_status = FW_UPDATE_FAILED;
 	}
