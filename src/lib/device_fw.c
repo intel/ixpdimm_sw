@@ -618,6 +618,9 @@ int fw_mb_err_to_nvm_lib_err(int status)
 		case MB_MEDIA_DISABLED :
 			ret = NVM_ERR_DEVICEERROR;
 			break;
+		case MB_FW_UPDATE_ALREADY_OCCURED :
+			ret = NVM_ERR_FWALREADYSTAGED;
+			break;
 		default :
 			ret = NVM_ERR_DEVICEERROR;
 	}

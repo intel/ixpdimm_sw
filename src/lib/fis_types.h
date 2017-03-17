@@ -406,7 +406,9 @@ enum mb_error {
 	/* FW timed out on HW components returning in a timely manner */
 		MB_TIMED_OUT = 0x12,
 	/* The media on the dimm has been disabled due to critical or other failure */
-		MB_MEDIA_DISABLED = 0x14
+		MB_MEDIA_DISABLED = 0x14,
+	/* After a successfull FW Update, another FW update is being made */
+		MB_FW_UPDATE_ALREADY_OCCURED = 0x15,
 };
 
 /*

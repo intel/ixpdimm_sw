@@ -337,6 +337,7 @@ wbem::software::NVDIMMSoftwareInstallationServiceFactory::getReturnCodeFromLibEx
 	case NVM_ERR_BADFILE:
 		rc = SWINSTALLSERVICE_ERR_URI_NOT_ACCESSIBLE;
 		break;
+	case NVM_ERR_FWALREADYSTAGED:
 	case NVM_ERR_REQUIRESFORCE:
 		rc = SWINSTALLSERVICE_ERR_DOWNGRADE_NOT_SUPPORTED;
 		break;

@@ -46,7 +46,7 @@ namespace nvmcli
 {
 
 static const std::string UPDATEFIRMWARE_MSG = N_TR("Load FW on " NVM_DIMM_NAME " %s"); //!< update firmware success message
-static const std::string UPDATEFIRMWARE_RESET_MSG = N_TR(", a reboot is required to activate the FW.");
+static const std::string UPDATEFIRMWARE_RESET_MSG = N_TR(", a power cycle is required to activate the FW.");
 static const std::string UPDATEFIRMWARE_EXAMINE_VALID_MSG = N_TR(
 		"Valid"); //!< examine FW valid message
 static const std::string UPDATEFIRMWARE_EXAMINE_VALID_WITH_FORCE_MSG = N_TR(
