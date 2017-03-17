@@ -147,6 +147,11 @@ enum device_health smart_health_status_to_device_health(enum smart_health_status
 enum device_fw_type firmware_type_to_enum(unsigned char fw_type);
 
 /*
+ * Helper function to convert last firmware update status into firmware update status enumeration
+ */
+enum fw_update_status firmware_update_status_to_enum(unsigned char last_fw_update_status);
+
+/*
  * Helper function to get the partition info for a DIMM.
  */
 int get_partition_info(const NVM_NFIT_DEVICE_HANDLE device_handle,

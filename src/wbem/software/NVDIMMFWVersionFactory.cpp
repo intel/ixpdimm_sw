@@ -322,7 +322,7 @@ wbem::framework::ObjectPath wbem::software::NVDIMMFWVersionFactory::getStagedFir
 
 	std::string instanceIDStr = getInstanceId(fwInfo.getStagedRevision(),
 			device.getFwApiVersion(),
-			fwInfo.getStagedType());
+			DEVICE_FW_TYPE_PRODUCTION);
 
 	return getInstanceName(hostName, instanceIDStr);
 }

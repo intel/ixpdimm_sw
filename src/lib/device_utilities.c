@@ -584,6 +584,35 @@ enum device_fw_type firmware_type_to_enum(unsigned char fw_type)
 }
 
 /*
+ * Convert last firmware update status into firmware update status enumeration
+ */
+enum fw_update_status firmware_update_status_to_enum(unsigned char last_fw_update_status)
+{
+	COMMON_LOG_ENTRY();
+
+	enum fw_update_status fw_update_status;
+	if (last_fw_update_status == LAST_FW_UPDATE_STAGED_SUCCESS)
+	{
+		fw_update_status = FW_UPDATE_STAGED;
+	}
+	else if (last_fw_update_status == LAST_FW_UPDATE_LOADED_SUCCESS)
+	{
+		fw_update_status = FW_UPDATE_SUCCESS;
+	}
+	else if (last_fw_update_status == LAST_FW_UPDATE_LOADED_FAILED)
+	{
+		fw_update_status = FW_UPDATE_FAILED;
+	}
+	else
+	{
+		fw_update_status = FW_UPDATE_UNKNOWN;
+	}
+
+	COMMON_LOG_EXIT();
+	return fw_update_status;
+}
+
+/*
  * Helper function to fetch partition info from the DIMM
  */
 int get_partition_info(const NVM_NFIT_DEVICE_HANDLE device_handle,

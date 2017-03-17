@@ -48,10 +48,10 @@ std::string core::device::DeviceFirmwareInfo::getActiveBuildConfiguration() cons
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return std::string(m_info.active_fw_build_configuration);
 }
-enum device_fw_type core::device::DeviceFirmwareInfo::getStagedType() const
+enum fw_update_status core::device::DeviceFirmwareInfo::getLastFWUpdateStatus() const
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	return m_info.staged_fw_type;
+	return m_info.fw_update_status;
 }
 std::string core::device::DeviceFirmwareInfo::getStagedRevision() const
 {
@@ -61,7 +61,7 @@ std::string core::device::DeviceFirmwareInfo::getStagedRevision() const
 bool core::device::DeviceFirmwareInfo::isStagedPending() const
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	return m_info.staged_fw_pending == 1;
+	return m_info.fw_update_status == FW_UPDATE_STAGED;
 }
 core::device::DeviceFirmwareInfo *core::device::DeviceFirmwareInfo::clone() const
 {

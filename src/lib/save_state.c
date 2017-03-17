@@ -722,7 +722,7 @@ int support_store_fw_image(PersistentStore *p_store, int history_id,
 		FW_VER_ARR_TO_STR(
 			fw_image_info.staged_fw_rev, db_dimm_fw.staged_fw_rev, DIMM_FW_IMAGE_FW_REV_LEN);
 		db_dimm_fw.fw_type = fw_image_info.fw_type;
-		db_dimm_fw.staged_fw_type = fw_image_info.staged_fw_type;
+		db_dimm_fw.fw_update_status = fw_image_info.last_fw_update_status;
 		memmove(db_dimm_fw.commit_id, fw_image_info.commit_id, DEV_FW_COMMIT_ID_LEN);
 		memmove(db_dimm_fw.build_configuration, fw_image_info.build_configuration,
 			DEV_FW_BUILD_CONFIGURATION_LEN);

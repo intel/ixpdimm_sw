@@ -1974,15 +1974,11 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::getDeviceFirmwareI
 		const framework::ParsedCommand& parsedCommand,
 		wbem::framework::instances_t &instances)
 {
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
 	cli::framework::ResultBase *pResult = NULL;
 
 	std::vector<std::string> uids;
-
-	std::map<device_fw_type, std::string> fwTypeMap;
-	fwTypeMap[DEVICE_FW_TYPE_UNKNOWN] = TR("Unknown");
-	fwTypeMap[DEVICE_FW_TYPE_PRODUCTION] = TR("Production");
-	fwTypeMap[DEVICE_FW_TYPE_DFX] = TR("DFx");
-	fwTypeMap[DEVICE_FW_TYPE_DEBUG] = TR("Debug");
 
 	wbem::framework::Instance instance;
 
@@ -2002,7 +1998,7 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::getDeviceFirmwareI
 			instance.setAttribute(wbem::ACTIVEFWVERSION_KEY, fwRevAttr);
 
 			instance.setAttribute(wbem::ACTIVEFWTYPE_KEY,
-					wbem::framework::Attribute(fwTypeMap[fwInfoResult.getValue().getActiveType()], false));
+				wbem::framework::Attribute(convertFwTypeToStr(fwInfoResult.getValue().getActiveType()), false));
 
 			// commit ID is displayed as N/A if it's not available
 			std::string commitIdStr = fwInfoResult.getValue().getActiveCommitId();
@@ -2019,22 +2015,47 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::getDeviceFirmwareI
 			}
 			instance.setAttribute(wbem::ACTIVEBUILDCONFIGURATION_KEY, wbem::framework::Attribute (buildConfiguration, false));
 
-			std::string stagedFwTypeStr = wbem::NA;
 			std::string stagedFwRevStr = wbem::NA;
 			if (fwInfoResult.getValue().isStagedPending())
 			{
-				stagedFwTypeStr =  fwTypeMap[fwInfoResult.getValue().getStagedType()];
 				stagedFwRevStr = fwInfoResult.getValue().getStagedRevision();
 			}
-
 			instance.setAttribute(wbem::STAGEDFWVERSION_KEY, wbem::framework::Attribute (stagedFwRevStr, false));
-			instance.setAttribute(wbem::STAGEDFWTYPE_KEY, wbem::framework::Attribute (stagedFwTypeStr, false));
+
+			instance.setAttribute(wbem::FWUPDATESTATUS_KEY,
+				wbem::framework::Attribute(convertFWUpdateStatusToStr(fwInfoResult.getValue().getLastFWUpdateStatus()), false));
 
 			instances.push_back(instance);
 		}
 	}
 
 	return pResult;
+}
+
+std::string cli::nvmcli::FieldSupportFeature::convertFWUpdateStatusToStr(enum fw_update_status status)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	std::map<fw_update_status, std::string> fwUpdateStatusMap;
+	fwUpdateStatusMap[FW_UPDATE_UNKNOWN] = TR("Unknown");
+	fwUpdateStatusMap[FW_UPDATE_STAGED] = TR("Staged successfully");
+	fwUpdateStatusMap[FW_UPDATE_SUCCESS] = TR("Upload loaded successfully");
+	fwUpdateStatusMap[FW_UPDATE_FAILED] = TR("Update failed to load, fell back to previous firmware");
+
+	return fwUpdateStatusMap[status];
+}
+
+std::string cli::nvmcli::FieldSupportFeature::convertFwTypeToStr(enum device_fw_type type)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	std::map<device_fw_type, std::string> fwTypeMap;
+	fwTypeMap[DEVICE_FW_TYPE_UNKNOWN] = TR("Unknown");
+	fwTypeMap[DEVICE_FW_TYPE_PRODUCTION] = TR("Production");
+	fwTypeMap[DEVICE_FW_TYPE_DFX] = TR("DFx");
+	fwTypeMap[DEVICE_FW_TYPE_DEBUG] = TR("Debug");
+
+	return fwTypeMap[type];
 }
 
 /*!
@@ -2061,7 +2082,7 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::showDeviceFirmware
 			allAttributes.push_back(wbem::ACTIVEFWTYPE_KEY);
 			allAttributes.push_back(wbem::ACTIVEFWCOMMITID_KEY);
 			allAttributes.push_back(wbem::ACTIVEBUILDCONFIGURATION_KEY);
-			allAttributes.push_back(wbem::STAGEDFWTYPE_KEY);
+			allAttributes.push_back(wbem::FWUPDATESTATUS_KEY);
 
 			wbem::framework::attribute_names_t displayAttributes =
 					GetAttributeNames(parsedCommand.options, defaultAttributes, allAttributes);

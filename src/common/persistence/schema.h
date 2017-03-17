@@ -5225,7 +5225,7 @@ struct db_dimm_fw_image
 	char   fw_rev[DIMM_FW_IMAGE_FW_REV_LEN];
 	unsigned int fw_type;
 	char   staged_fw_rev[DIMM_FW_IMAGE_STAGED_FW_REV_LEN];
-	unsigned int staged_fw_type;
+	unsigned int fw_update_status;
 	char   commit_id[DIMM_FW_IMAGE_COMMIT_ID_LEN];
 	char   build_configuration[DIMM_FW_IMAGE_BUILD_CONFIGURATION_LEN];
 };

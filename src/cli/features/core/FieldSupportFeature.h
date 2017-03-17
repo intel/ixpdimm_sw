@@ -217,6 +217,10 @@ protected:
 			const framework::ParsedCommand& parsedCommand,
 			wbem::framework::instances_t &Instances);
 
+	std::string convertFWUpdateStatusToStr(enum fw_update_status status);
+
+	std::string convertFwTypeToStr(enum device_fw_type type);
+
 private:
 
 	/*!

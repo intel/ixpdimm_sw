@@ -49,7 +49,7 @@ public:
 	std::string getActiveBuildConfiguration() const;
 
 	std::string getStagedRevision() const;
-	enum device_fw_type getStagedType() const;
+	enum fw_update_status getLastFWUpdateStatus() const;
 	bool isStagedPending() const;
 
 	DeviceFirmwareInfo * clone() const;

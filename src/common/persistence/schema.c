@@ -1217,7 +1217,7 @@ tables[populate_index++] = ((struct table){"dimm_fw_image",
 					 fw_rev TEXT  , \
 					 fw_type INTEGER  , \
 					 staged_fw_rev TEXT  , \
-					 staged_fw_type INTEGER  , \
+					 fw_update_status INTEGER  , \
 					 commit_id TEXT  , \
 					 build_configuration TEXT   \
 					);"});
@@ -1228,7 +1228,7 @@ tables[populate_index++] = ((struct table){"dimm_fw_image",
 					 fw_rev TEXT , \
 					 fw_type INTEGER , \
 					 staged_fw_rev TEXT , \
-					 staged_fw_type INTEGER , \
+					 fw_update_status INTEGER , \
 					 commit_id TEXT , \
 					 build_configuration TEXT  \
 					);"});
@@ -13613,7 +13613,7 @@ void local_bind_dimm_fw_image(sqlite3_stmt *p_stmt, struct db_dimm_fw_image *p_d
 	BIND_TEXT(p_stmt, "$fw_rev", (char *)p_dimm_fw_image->fw_rev);
 	BIND_INTEGER(p_stmt, "$fw_type", (unsigned int)p_dimm_fw_image->fw_type);
 	BIND_TEXT(p_stmt, "$staged_fw_rev", (char *)p_dimm_fw_image->staged_fw_rev);
-	BIND_INTEGER(p_stmt, "$staged_fw_type", (unsigned int)p_dimm_fw_image->staged_fw_type);
+	BIND_INTEGER(p_stmt, "$fw_update_status", (unsigned int)p_dimm_fw_image->fw_update_status);
 	BIND_TEXT(p_stmt, "$commit_id", (char *)p_dimm_fw_image->commit_id);
 	BIND_TEXT(p_stmt, "$build_configuration", (char *)p_dimm_fw_image->build_configuration);
 }
@@ -13647,7 +13647,7 @@ void local_row_to_dimm_fw_image(const PersistentStore *p_ps,
 		DIMM_FW_IMAGE_STAGED_FW_REV_LEN);
 	INTEGER_COLUMN(p_stmt,
 		4,
-		p_dimm_fw_image->staged_fw_type);
+		p_dimm_fw_image->fw_update_status);
 	TEXT_COLUMN(p_stmt,
 		5,
 		p_dimm_fw_image->commit_id,
@@ -13663,7 +13663,7 @@ void db_print_dimm_fw_image(struct db_dimm_fw_image *p_value)
 	printf("dimm_fw_image.fw_rev: %s\n", p_value->fw_rev);
 	printf("dimm_fw_image.fw_type: unsigned %d\n", p_value->fw_type);
 	printf("dimm_fw_image.staged_fw_rev: %s\n", p_value->staged_fw_rev);
-	printf("dimm_fw_image.staged_fw_type: unsigned %d\n", p_value->staged_fw_type);
+	printf("dimm_fw_image.fw_update_status: unsigned %d\n", p_value->fw_update_status);
 	printf("dimm_fw_image.commit_id: %s\n", p_value->commit_id);
 	printf("dimm_fw_image.build_configuration: %s\n", p_value->build_configuration);
 }
@@ -13673,13 +13673,13 @@ enum db_return_codes db_add_dimm_fw_image(const PersistentStore *p_ps,
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = 	"INSERT INTO dimm_fw_image \
-		(device_handle, fw_rev, fw_type, staged_fw_rev, staged_fw_type, commit_id, build_configuration)  \
+		(device_handle, fw_rev, fw_type, staged_fw_rev, fw_update_status, commit_id, build_configuration)  \
 		VALUES 		\
 		($device_handle, \
 		$fw_rev, \
 		$fw_type, \
 		$staged_fw_rev, \
-		$staged_fw_type, \
+		$fw_update_status, \
 		$commit_id, \
 		$build_configuration) ";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -13708,7 +13708,7 @@ int db_get_dimm_fw_images(const PersistentStore *p_ps,
 		,  fw_rev \
 		,  fw_type \
 		,  staged_fw_rev \
-		,  staged_fw_type \
+		,  fw_update_status \
 		,  commit_id \
 		,  build_configuration \
 		  \
@@ -13755,13 +13755,13 @@ enum db_return_codes db_save_dimm_fw_image_state(const PersistentStore *p_ps,
 	{
 		sqlite3_stmt *p_stmt;
 		char *sql = 	"INSERT INTO dimm_fw_image \
-			( device_handle ,  fw_rev ,  fw_type ,  staged_fw_rev ,  staged_fw_type ,  commit_id ,  build_configuration )  \
+			( device_handle ,  fw_rev ,  fw_type ,  staged_fw_rev ,  fw_update_status ,  commit_id ,  build_configuration )  \
 			VALUES 		\
 			($device_handle, \
 			$fw_rev, \
 			$fw_type, \
 			$staged_fw_rev, \
-			$staged_fw_type, \
+			$fw_update_status, \
 			$commit_id, \
 			$build_configuration) ";
 		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -13782,13 +13782,13 @@ enum db_return_codes db_save_dimm_fw_image_state(const PersistentStore *p_ps,
 		sqlite3_stmt *p_stmt;
 		char *sql = "INSERT INTO dimm_fw_image_history \
 			(history_id, \
-				 device_handle,  fw_rev,  fw_type,  staged_fw_rev,  staged_fw_type,  commit_id,  build_configuration)  \
+				 device_handle,  fw_rev,  fw_type,  staged_fw_rev,  fw_update_status,  commit_id,  build_configuration)  \
 			VALUES 		($history_id, \
 				 $device_handle , \
 				 $fw_rev , \
 				 $fw_type , \
 				 $staged_fw_rev , \
-				 $staged_fw_type , \
+				 $fw_update_status , \
 				 $commit_id , \
 				 $build_configuration )";
 		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -13814,7 +13814,7 @@ enum db_return_codes db_get_dimm_fw_image_by_device_handle(const PersistentStore
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
-		device_handle,  fw_rev,  fw_type,  staged_fw_rev,  staged_fw_type,  commit_id,  build_configuration  \
+		device_handle,  fw_rev,  fw_type,  staged_fw_rev,  fw_update_status,  commit_id,  build_configuration  \
 		FROM dimm_fw_image \
 		WHERE  device_handle = $device_handle";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -13843,7 +13843,7 @@ enum db_return_codes db_update_dimm_fw_image_by_device_handle(const PersistentSt
 		,  fw_rev=$fw_rev \
 		,  fw_type=$fw_type \
 		,  staged_fw_rev=$staged_fw_rev \
-		,  staged_fw_type=$staged_fw_type \
+		,  fw_update_status=$fw_update_status \
 		,  commit_id=$commit_id \
 		,  build_configuration=$build_configuration \
 		  \
@@ -13933,7 +13933,7 @@ int db_get_dimm_fw_image_history_by_history_id(const PersistentStore *p_ps,
 	memset(p_dimm_fw_image, 0, sizeof (struct db_dimm_fw_image) * dimm_fw_image_count);
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
-		device_handle,  fw_rev,  fw_type,  staged_fw_rev,  staged_fw_type,  commit_id,  build_configuration  \
+		device_handle,  fw_rev,  fw_type,  staged_fw_rev,  fw_update_status,  commit_id,  build_configuration  \
 		FROM dimm_fw_image_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{

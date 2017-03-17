@@ -302,7 +302,7 @@ bool ElementSoftwareIdentityFactory::isStagedFwVersion(
 	bool match = false;
 
 	std::string stagedInstanceId = NVDIMMFWVersionFactory::getInstanceId(
-			fwInfo.getStagedRevision(), device.getFwApiVersion(), fwInfo.getStagedType());
+			fwInfo.getStagedRevision(), device.getFwApiVersion(), DEVICE_FW_TYPE_PRODUCTION);
 	if (fwVersionInstanceId == stagedInstanceId)
 	{
 		match = true;

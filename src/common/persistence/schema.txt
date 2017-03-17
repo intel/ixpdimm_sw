@@ -370,7 +370,7 @@ Attributes:
 	char * fw_rev
 	unsigned int fw_type
 	char * staged_fw_rev
-	unsigned int staged_fw_type
+	unsigned int fw_update_status
 	char * commit_id
 	char * build_configuration
 

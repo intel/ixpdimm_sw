@@ -480,7 +480,7 @@ static std::string ACTIVEFWTYPE_KEY = "ActiveFWType";
 static std::string ACTIVEFWCOMMITID_KEY = "ActiveFWCommitID";
 static std::string ACTIVEBUILDCONFIGURATION_KEY = "ActiveFWBuildConfiguration";
 static std::string STAGEDFWVERSION_KEY = "StagedFWVersion";
-static std::string STAGEDFWTYPE_KEY = "StagedFWType";
+static std::string FWUPDATESTATUS_KEY = "FWUpdateStatus";
 
 // ElementSoftwareIdentity
 static std::string ELEMENTSOFTWARESTATUS_KEY = "ElementSoftwareStatus";

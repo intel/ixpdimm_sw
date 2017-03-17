@@ -490,6 +490,17 @@ enum device_fw_type
 };
 
 /*
+ * status of last firmware update operation
+ */
+enum fw_update_status
+{
+	FW_UPDATE_UNKNOWN = 0, // status of the last FW update cannot be retrieved
+	FW_UPDATE_STAGED = 1,
+	FW_UPDATE_SUCCESS = 2,
+	FW_UPDATE_FAILED = 3
+};
+
+/*
  * ****************************************************************************
  * STRUCTURES
  * ****************************************************************************
@@ -768,9 +779,8 @@ struct device_fw_info
 	// build configuration of active FW for debug/troubleshooting
 	char active_fw_build_configuration[NVM_BUILD_CONFIGURATION_LEN];
 
-	NVM_BOOL staged_fw_pending; // set if new FW is staged for execution on the next reboot.
 	NVM_VERSION staged_fw_revision; //  BCD formatted revision of the staged FW.
-	enum device_fw_type staged_fw_type; // staged FW type.
+	enum fw_update_status fw_update_status; // status of last FW update operation.
 };
 
 /*

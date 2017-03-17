@@ -354,6 +354,13 @@ enum firmware_type
 	FW_TYPE_DEBUG = 0x32,
 };
 
+/* Status after the last FW update operation */
+enum last_fw_update_status {
+	LAST_FW_UPDATE_STAGED_SUCCESS = 1,
+	LAST_FW_UPDATE_LOADED_SUCCESS	= 2,
+	LAST_FW_UPDATE_LOADED_FAILED	= 3
+};
+
 /*
  * Mail Box error codes
  *
@@ -1547,12 +1554,18 @@ struct pt_payload_fw_image_info {
 	 */
 	unsigned char staged_fw_rev[DEV_FW_REV_LEN];
 
-	/*
-	 * Contains value designating the staged FW type
-	 */
-	unsigned char staged_fw_type;
+	unsigned char rsvd2;
 
-	unsigned char rsvd2[10];
+	/*
+	* Contains status after the last FW update operation
+	*
+	* 1 - FW image successfully staged but not yet run
+	* 2 - Last updated FW loaded successfully
+	* 3 - Last updated FW failed to load - fallback to prior FW image
+	*/
+	unsigned char last_fw_update_status;
+
+	unsigned char rsvd3[9];
 
 	/*
 	 * Contains commit identifier of the active FW for debug/troubleshooting purposes
@@ -1564,7 +1577,7 @@ struct pt_payload_fw_image_info {
 	 */
 	char build_configuration[DEV_FW_BUILD_CONFIGURATION_LEN];
 
-	unsigned char rsvd3[40];
+	unsigned char rsvd4[40];
 } __attribute__((packed));
 
 /*

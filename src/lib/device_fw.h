@@ -114,6 +114,4 @@ int fw_set_config_data_policy(unsigned int device_handle,
 float fw_convert_fw_celsius_to_float(unsigned short fw_celsius);
 unsigned short fw_convert_float_to_fw_celsius(float celsius);
 
-NVM_BOOL is_fw_staged(const struct pt_payload_fw_image_info *p_fw_info);
-
 #endif // device_fw.h
