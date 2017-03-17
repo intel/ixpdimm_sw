@@ -1587,12 +1587,8 @@ struct pt_payload_input_get_fw_dbg_log {
 	 * ( Not used when retrieving the log size) ( 0 based offset)
 	 */
 	unsigned char log_page_offset[2];
-	/*
-	 * This is the ID(0 to 255) for the log from which to retrieve the log
-	 * level. If no log ID is sent then log ID 0 will be assumed.
-	 */
-	unsigned char log_id;
-	unsigned char rsvd[122];
+
+	unsigned char rsvd[123];
 } __attribute__((packed));
 
 /*
