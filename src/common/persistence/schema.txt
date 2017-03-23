@@ -37,7 +37,7 @@ Attributes:
 	char * uid
 	unsigned int manufacturer
 	unsigned int serial_num
-	char * model_num
+	char * part_num
 	int current_config_status
 	int config_goal_status
 
@@ -232,7 +232,7 @@ Attributes:
 	unsigned long long raw_cap
 	unsigned int manufacturer
 	unsigned int serial_num
-	char * model_num
+	char * part_num
 
 Table(s): db_device_characteristics 
  	  db_device_characteristics_history 
@@ -681,7 +681,7 @@ Attributes:
 	unsigned int device_handle(FK)
 	unsigned int manufacturer
 	unsigned int serial_num
-	char * model_num
+	char * part_num
 	unsigned long long offset
 	unsigned long long size
 

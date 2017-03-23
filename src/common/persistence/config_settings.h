@@ -98,8 +98,8 @@ extern "C"
 //! SQL Key name for the valid manufacturer value
 #define	SQL_KEY_VALID_MANUFACTURER "VALID_MANUFACTURER"
 
-//! SQL Key name for the valid model number value
-#define	SQL_KEY_VALID_MODEL_NUM "VALID_MODEL_NUM"
+//! SQL Key name for the valid part number value
+#define	SQL_KEY_VALID_PART_NUM "VALID_PART_NUM"
 
 //! SQL Key name for the valid vendor id value
 #define	SQL_KEY_VALID_VENDOR_ID "VALID_VENDOR_ID"

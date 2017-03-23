@@ -426,7 +426,7 @@ struct diagnostic wbem::support::NVDIMMDiagnosticFactory::getDiagnosticStructure
 				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_QUICK_VALID_MANUFACTURER;
 				break;
 			case HC_IGNORE_MODELNUMBER:
-				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_QUICK_VALID_MODEL_NUMBER;
+				diags.excludes |= (NVM_UINT64)DIAG_THRESHOLD_QUICK_VALID_PART_NUMBER;
 				break;
 			default:
 				COMMON_LOG_ERROR_F("Settings Ignore value %d is invalid for test %s",

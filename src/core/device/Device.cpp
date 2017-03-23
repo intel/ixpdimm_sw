@@ -304,10 +304,10 @@ NVM_UINT16 Device::getManufacturerId()
 	return MANUFACTURER_TO_UINT(getDiscovery().manufacturer);
 }
 
-std::string Device::getModelNumber()
+std::string Device::getPartNumber()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	return getDiscovery().model_number;
+	return getDiscovery().part_number;
 }
 
 std::string Device::getFwRevision()
@@ -670,12 +670,6 @@ bool Device::isDieSparingEnabled()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return getDetails().die_sparing_enabled;
-}
-
-std::string Device::getPartNumber()
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	return std::string(getDetails().part_number);
 }
 
 NVM_UINT8 Device::getDieSparingLevel()

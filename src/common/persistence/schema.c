@@ -465,7 +465,7 @@ tables[populate_index++] = ((struct table){"topology_state",
 					 uid TEXT  , \
 					 manufacturer INTEGER  , \
 					 serial_num INTEGER  , \
-					 model_num TEXT  , \
+					 part_num TEXT  , \
 					 current_config_status INTEGER  , \
 					 config_goal_status INTEGER   \
 					);"}
@@ -479,7 +479,7 @@ tables[populate_index++] = ((struct table){"topology_state",
 					 uid TEXT , \
 					 manufacturer INTEGER , \
 					 serial_num INTEGER , \
-					 model_num TEXT , \
+					 part_num TEXT , \
 					 current_config_status INTEGER , \
 					 config_goal_status INTEGER  \
 					);"}
@@ -947,7 +947,7 @@ tables[populate_index++] = ((struct table){"identify_dimm",
 					 raw_cap INTEGER  , \
 					 manufacturer INTEGER  , \
 					 serial_num INTEGER  , \
-					 model_num TEXT   \
+					 part_num TEXT   \
 					);"});
 			tables[populate_index++] = ((struct table){"identify_dimm_history",
 				"CREATE TABLE identify_dimm_history (       \
@@ -969,7 +969,7 @@ tables[populate_index++] = ((struct table){"identify_dimm",
 					 raw_cap INTEGER , \
 					 manufacturer INTEGER , \
 					 serial_num INTEGER , \
-					 model_num TEXT  \
+					 part_num TEXT  \
 					);"});
 tables[populate_index++] = ((struct table){"device_characteristics",
 				"CREATE TABLE device_characteristics (       \
@@ -1785,7 +1785,7 @@ tables[populate_index++] = ((struct table){"interleave_set_dimm_info",
 					 device_handle INTEGER  , \
 					 manufacturer INTEGER  , \
 					 serial_num INTEGER  , \
-					 model_num TEXT  , \
+					 part_num TEXT  , \
 					 offset INTEGER  , \
 					 size INTEGER   \
 					);"});
@@ -1798,7 +1798,7 @@ tables[populate_index++] = ((struct table){"interleave_set_dimm_info",
 					 device_handle INTEGER , \
 					 manufacturer INTEGER , \
 					 serial_num INTEGER , \
-					 model_num TEXT , \
+					 part_num TEXT , \
 					 offset INTEGER , \
 					 size INTEGER  \
 					);"});
@@ -3340,7 +3340,7 @@ void local_bind_topology_state(sqlite3_stmt *p_stmt, struct db_topology_state *p
 	BIND_TEXT(p_stmt, "$uid", (char *)p_topology_state->uid);
 	BIND_INTEGER(p_stmt, "$manufacturer", (unsigned int)p_topology_state->manufacturer);
 	BIND_INTEGER(p_stmt, "$serial_num", (unsigned int)p_topology_state->serial_num);
-	BIND_TEXT(p_stmt, "$model_num", (char *)p_topology_state->model_num);
+	BIND_TEXT(p_stmt, "$part_num", (char *)p_topology_state->part_num);
 	BIND_INTEGER(p_stmt, "$current_config_status", (int)p_topology_state->current_config_status);
 	BIND_INTEGER(p_stmt, "$config_goal_status", (int)p_topology_state->config_goal_status);
 }
@@ -3378,8 +3378,8 @@ void local_row_to_topology_state(const PersistentStore *p_ps,
 		p_topology_state->serial_num);
 	TEXT_COLUMN(p_stmt,
 		4,
-		p_topology_state->model_num,
-		TOPOLOGY_STATE_MODEL_NUM_LEN);
+		p_topology_state->part_num,
+		TOPOLOGY_STATE_PART_NUM_LEN);
 	INTEGER_COLUMN(p_stmt,
 		5,
 		p_topology_state->current_config_status);
@@ -3393,7 +3393,7 @@ void db_print_topology_state(struct db_topology_state *p_value)
 	printf("topology_state.uid: %s\n", p_value->uid);
 	printf("topology_state.manufacturer: unsigned %d\n", p_value->manufacturer);
 	printf("topology_state.serial_num: unsigned %d\n", p_value->serial_num);
-	printf("topology_state.model_num: %s\n", p_value->model_num);
+	printf("topology_state.part_num: %s\n", p_value->part_num);
 	printf("topology_state.current_config_status: %d\n", p_value->current_config_status);
 	printf("topology_state.config_goal_status: %d\n", p_value->config_goal_status);
 }
@@ -3403,13 +3403,13 @@ enum db_return_codes db_add_topology_state(const PersistentStore *p_ps,
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = 	"INSERT INTO topology_state \
-		(device_handle, uid, manufacturer, serial_num, model_num, current_config_status, config_goal_status)  \
+		(device_handle, uid, manufacturer, serial_num, part_num, current_config_status, config_goal_status)  \
 		VALUES 		\
 		($device_handle, \
 		$uid, \
 		$manufacturer, \
 		$serial_num, \
-		$model_num, \
+		$part_num, \
 		$current_config_status, \
 		$config_goal_status) ";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -3438,7 +3438,7 @@ int db_get_topology_states(const PersistentStore *p_ps,
 		,  uid \
 		,  manufacturer \
 		,  serial_num \
-		,  model_num \
+		,  part_num \
 		,  current_config_status \
 		,  config_goal_status \
 		  \
@@ -3488,13 +3488,13 @@ enum db_return_codes db_save_topology_state_state(const PersistentStore *p_ps,
 	{
 		sqlite3_stmt *p_stmt;
 		char *sql = 	"INSERT INTO topology_state \
-			( device_handle ,  uid ,  manufacturer ,  serial_num ,  model_num ,  current_config_status ,  config_goal_status )  \
+			( device_handle ,  uid ,  manufacturer ,  serial_num ,  part_num ,  current_config_status ,  config_goal_status )  \
 			VALUES 		\
 			($device_handle, \
 			$uid, \
 			$manufacturer, \
 			$serial_num, \
-			$model_num, \
+			$part_num, \
 			$current_config_status, \
 			$config_goal_status) ";
 		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -3515,13 +3515,13 @@ enum db_return_codes db_save_topology_state_state(const PersistentStore *p_ps,
 		sqlite3_stmt *p_stmt;
 		char *sql = "INSERT INTO topology_state_history \
 			(history_id, \
-				 device_handle,  uid,  manufacturer,  serial_num,  model_num,  current_config_status,  config_goal_status)  \
+				 device_handle,  uid,  manufacturer,  serial_num,  part_num,  current_config_status,  config_goal_status)  \
 			VALUES 		($history_id, \
 				 $device_handle , \
 				 $uid , \
 				 $manufacturer , \
 				 $serial_num , \
-				 $model_num , \
+				 $part_num , \
 				 $current_config_status , \
 				 $config_goal_status )";
 		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -3549,7 +3549,7 @@ enum db_return_codes db_get_topology_state_by_device_handle(const PersistentStor
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
-		device_handle,  uid,  manufacturer,  serial_num,  model_num,  current_config_status,  config_goal_status  \
+		device_handle,  uid,  manufacturer,  serial_num,  part_num,  current_config_status,  config_goal_status  \
 		FROM topology_state \
 		WHERE  device_handle = $device_handle";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -3578,7 +3578,7 @@ enum db_return_codes db_update_topology_state_by_device_handle(const PersistentS
 		,  uid=$uid \
 		,  manufacturer=$manufacturer \
 		,  serial_num=$serial_num \
-		,  model_num=$model_num \
+		,  part_num=$part_num \
 		,  current_config_status=$current_config_status \
 		,  config_goal_status=$config_goal_status \
 		  \
@@ -3671,7 +3671,7 @@ int db_get_topology_state_history_by_history_id(const PersistentStore *p_ps,
 	memset(p_topology_state, 0, sizeof (struct db_topology_state) * topology_state_count);
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
-		device_handle,  uid,  manufacturer,  serial_num,  model_num,  current_config_status,  config_goal_status  \
+		device_handle,  uid,  manufacturer,  serial_num,  part_num,  current_config_status,  config_goal_status  \
 		FROM topology_state_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
@@ -9015,7 +9015,7 @@ void local_bind_identify_dimm(sqlite3_stmt *p_stmt, struct db_identify_dimm *p_i
 	BIND_INTEGER(p_stmt, "$raw_cap", (unsigned long long)p_identify_dimm->raw_cap);
 	BIND_INTEGER(p_stmt, "$manufacturer", (unsigned int)p_identify_dimm->manufacturer);
 	BIND_INTEGER(p_stmt, "$serial_num", (unsigned int)p_identify_dimm->serial_num);
-	BIND_TEXT(p_stmt, "$model_num", (char *)p_identify_dimm->model_num);
+	BIND_TEXT(p_stmt, "$part_num", (char *)p_identify_dimm->part_num);
 }
 void local_get_identify_dimm_relationships(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt, struct db_identify_dimm *p_identify_dimm)
@@ -9085,8 +9085,8 @@ void local_row_to_identify_dimm(const PersistentStore *p_ps,
 		p_identify_dimm->serial_num);
 	TEXT_COLUMN(p_stmt,
 		17,
-		p_identify_dimm->model_num,
-		IDENTIFY_DIMM_MODEL_NUM_LEN);
+		p_identify_dimm->part_num,
+		IDENTIFY_DIMM_PART_NUM_LEN);
 }
 void db_print_identify_dimm(struct db_identify_dimm *p_value)
 {
@@ -9107,7 +9107,7 @@ void db_print_identify_dimm(struct db_identify_dimm *p_value)
 	printf("identify_dimm.raw_cap: unsigned %lld\n", p_value->raw_cap);
 	printf("identify_dimm.manufacturer: unsigned %d\n", p_value->manufacturer);
 	printf("identify_dimm.serial_num: unsigned %d\n", p_value->serial_num);
-	printf("identify_dimm.model_num: %s\n", p_value->model_num);
+	printf("identify_dimm.part_num: %s\n", p_value->part_num);
 }
 enum db_return_codes db_add_identify_dimm(const PersistentStore *p_ps,
 	struct db_identify_dimm *p_identify_dimm)
@@ -9115,7 +9115,7 @@ enum db_return_codes db_add_identify_dimm(const PersistentStore *p_ps,
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = 	"INSERT INTO identify_dimm \
-		(device_handle, vendor_id, device_id, revision_id, interface_format_code, interface_format_code_extra, fw_revision, fw_api_version, fw_sw_mask, dimm_sku, block_windows, write_flush_addresses, write_flush_address_start, block_control_region_offset, raw_cap, manufacturer, serial_num, model_num)  \
+		(device_handle, vendor_id, device_id, revision_id, interface_format_code, interface_format_code_extra, fw_revision, fw_api_version, fw_sw_mask, dimm_sku, block_windows, write_flush_addresses, write_flush_address_start, block_control_region_offset, raw_cap, manufacturer, serial_num, part_num)  \
 		VALUES 		\
 		($device_handle, \
 		$vendor_id, \
@@ -9134,7 +9134,7 @@ enum db_return_codes db_add_identify_dimm(const PersistentStore *p_ps,
 		$raw_cap, \
 		$manufacturer, \
 		$serial_num, \
-		$model_num) ";
+		$part_num) ";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		local_bind_identify_dimm(p_stmt, p_identify_dimm);
@@ -9174,7 +9174,7 @@ int db_get_identify_dimms(const PersistentStore *p_ps,
 		,  raw_cap \
 		,  manufacturer \
 		,  serial_num \
-		,  model_num \
+		,  part_num \
 		  \
 		FROM identify_dimm \
 		                   \
@@ -9219,7 +9219,7 @@ enum db_return_codes db_save_identify_dimm_state(const PersistentStore *p_ps,
 	{
 		sqlite3_stmt *p_stmt;
 		char *sql = 	"INSERT INTO identify_dimm \
-			( device_handle ,  vendor_id ,  device_id ,  revision_id ,  interface_format_code ,  interface_format_code_extra ,  fw_revision ,  fw_api_version ,  fw_sw_mask ,  dimm_sku ,  block_windows ,  write_flush_addresses ,  write_flush_address_start ,  block_control_region_offset ,  raw_cap ,  manufacturer ,  serial_num ,  model_num )  \
+			( device_handle ,  vendor_id ,  device_id ,  revision_id ,  interface_format_code ,  interface_format_code_extra ,  fw_revision ,  fw_api_version ,  fw_sw_mask ,  dimm_sku ,  block_windows ,  write_flush_addresses ,  write_flush_address_start ,  block_control_region_offset ,  raw_cap ,  manufacturer ,  serial_num ,  part_num )  \
 			VALUES 		\
 			($device_handle, \
 			$vendor_id, \
@@ -9238,7 +9238,7 @@ enum db_return_codes db_save_identify_dimm_state(const PersistentStore *p_ps,
 			$raw_cap, \
 			$manufacturer, \
 			$serial_num, \
-			$model_num) ";
+			$part_num) ";
 		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 		{
 			local_bind_identify_dimm(p_stmt, p_identify_dimm);
@@ -9257,7 +9257,7 @@ enum db_return_codes db_save_identify_dimm_state(const PersistentStore *p_ps,
 		sqlite3_stmt *p_stmt;
 		char *sql = "INSERT INTO identify_dimm_history \
 			(history_id, \
-				 device_handle,  vendor_id,  device_id,  revision_id,  interface_format_code,  interface_format_code_extra,  fw_revision,  fw_api_version,  fw_sw_mask,  dimm_sku,  block_windows,  write_flush_addresses,  write_flush_address_start,  block_control_region_offset,  raw_cap,  manufacturer,  serial_num,  model_num)  \
+				 device_handle,  vendor_id,  device_id,  revision_id,  interface_format_code,  interface_format_code_extra,  fw_revision,  fw_api_version,  fw_sw_mask,  dimm_sku,  block_windows,  write_flush_addresses,  write_flush_address_start,  block_control_region_offset,  raw_cap,  manufacturer,  serial_num,  part_num)  \
 			VALUES 		($history_id, \
 				 $device_handle , \
 				 $vendor_id , \
@@ -9276,7 +9276,7 @@ enum db_return_codes db_save_identify_dimm_state(const PersistentStore *p_ps,
 				 $raw_cap , \
 				 $manufacturer , \
 				 $serial_num , \
-				 $model_num )";
+				 $part_num )";
 		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
@@ -9300,7 +9300,7 @@ enum db_return_codes db_get_identify_dimm_by_device_handle(const PersistentStore
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
-		device_handle,  vendor_id,  device_id,  revision_id,  interface_format_code,  interface_format_code_extra,  fw_revision,  fw_api_version,  fw_sw_mask,  dimm_sku,  block_windows,  write_flush_addresses,  write_flush_address_start,  block_control_region_offset,  raw_cap,  manufacturer,  serial_num,  model_num  \
+		device_handle,  vendor_id,  device_id,  revision_id,  interface_format_code,  interface_format_code_extra,  fw_revision,  fw_api_version,  fw_sw_mask,  dimm_sku,  block_windows,  write_flush_addresses,  write_flush_address_start,  block_control_region_offset,  raw_cap,  manufacturer,  serial_num,  part_num  \
 		FROM identify_dimm \
 		WHERE  device_handle = $device_handle";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -9342,7 +9342,7 @@ enum db_return_codes db_update_identify_dimm_by_device_handle(const PersistentSt
 		,  raw_cap=$raw_cap \
 		,  manufacturer=$manufacturer \
 		,  serial_num=$serial_num \
-		,  model_num=$model_num \
+		,  part_num=$part_num \
 		  \
 	WHERE device_handle=$device_handle ";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -9430,7 +9430,7 @@ int db_get_identify_dimm_history_by_history_id(const PersistentStore *p_ps,
 	memset(p_identify_dimm, 0, sizeof (struct db_identify_dimm) * identify_dimm_count);
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
-		device_handle,  vendor_id,  device_id,  revision_id,  interface_format_code,  interface_format_code_extra,  fw_revision,  fw_api_version,  fw_sw_mask,  dimm_sku,  block_windows,  write_flush_addresses,  write_flush_address_start,  block_control_region_offset,  raw_cap,  manufacturer,  serial_num,  model_num  \
+		device_handle,  vendor_id,  device_id,  revision_id,  interface_format_code,  interface_format_code_extra,  fw_revision,  fw_api_version,  fw_sw_mask,  dimm_sku,  block_windows,  write_flush_addresses,  write_flush_address_start,  block_control_region_offset,  raw_cap,  manufacturer,  serial_num,  part_num  \
 		FROM identify_dimm_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
@@ -23760,7 +23760,7 @@ void local_bind_interleave_set_dimm_info(sqlite3_stmt *p_stmt, struct db_interle
 	BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)p_interleave_set_dimm_info->device_handle);
 	BIND_INTEGER(p_stmt, "$manufacturer", (unsigned int)p_interleave_set_dimm_info->manufacturer);
 	BIND_INTEGER(p_stmt, "$serial_num", (unsigned int)p_interleave_set_dimm_info->serial_num);
-	BIND_TEXT(p_stmt, "$model_num", (char *)p_interleave_set_dimm_info->model_num);
+	BIND_TEXT(p_stmt, "$part_num", (char *)p_interleave_set_dimm_info->part_num);
 	BIND_INTEGER(p_stmt, "$offset", (unsigned long long)p_interleave_set_dimm_info->offset);
 	BIND_INTEGER(p_stmt, "$size", (unsigned long long)p_interleave_set_dimm_info->size);
 }
@@ -23798,8 +23798,8 @@ void local_row_to_interleave_set_dimm_info(const PersistentStore *p_ps,
 		p_interleave_set_dimm_info->serial_num);
 	TEXT_COLUMN(p_stmt,
 		6,
-		p_interleave_set_dimm_info->model_num,
-		INTERLEAVE_SET_DIMM_INFO_MODEL_NUM_LEN);
+		p_interleave_set_dimm_info->part_num,
+		INTERLEAVE_SET_DIMM_INFO_PART_NUM_LEN);
 	INTEGER_COLUMN(p_stmt,
 		7,
 		p_interleave_set_dimm_info->offset);
@@ -23815,7 +23815,7 @@ void db_print_interleave_set_dimm_info(struct db_interleave_set_dimm_info *p_val
 	printf("interleave_set_dimm_info.device_handle: unsigned %d\n", p_value->device_handle);
 	printf("interleave_set_dimm_info.manufacturer: unsigned %d\n", p_value->manufacturer);
 	printf("interleave_set_dimm_info.serial_num: unsigned %d\n", p_value->serial_num);
-	printf("interleave_set_dimm_info.model_num: %s\n", p_value->model_num);
+	printf("interleave_set_dimm_info.part_num: %s\n", p_value->part_num);
 	printf("interleave_set_dimm_info.offset: unsigned %lld\n", p_value->offset);
 	printf("interleave_set_dimm_info.size: unsigned %lld\n", p_value->size);
 }
@@ -23825,7 +23825,7 @@ enum db_return_codes db_add_interleave_set_dimm_info(const PersistentStore *p_ps
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = 	"INSERT INTO interleave_set_dimm_info \
-		(id, config_table_type, index_id, device_handle, manufacturer, serial_num, model_num, offset, size)  \
+		(id, config_table_type, index_id, device_handle, manufacturer, serial_num, part_num, offset, size)  \
 		VALUES 		\
 		($id, \
 		$config_table_type, \
@@ -23833,7 +23833,7 @@ enum db_return_codes db_add_interleave_set_dimm_info(const PersistentStore *p_ps
 		$device_handle, \
 		$manufacturer, \
 		$serial_num, \
-		$model_num, \
+		$part_num, \
 		$offset, \
 		$size) ";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -23864,7 +23864,7 @@ int db_get_interleave_set_dimm_infos(const PersistentStore *p_ps,
 		,  device_handle \
 		,  manufacturer \
 		,  serial_num \
-		,  model_num \
+		,  part_num \
 		,  offset \
 		,  size \
 		  \
@@ -23911,7 +23911,7 @@ enum db_return_codes db_save_interleave_set_dimm_info_state(const PersistentStor
 	{
 		sqlite3_stmt *p_stmt;
 		char *sql = 	"INSERT INTO interleave_set_dimm_info \
-			( id ,  config_table_type ,  index_id ,  device_handle ,  manufacturer ,  serial_num ,  model_num ,  offset ,  size )  \
+			( id ,  config_table_type ,  index_id ,  device_handle ,  manufacturer ,  serial_num ,  part_num ,  offset ,  size )  \
 			VALUES 		\
 			($id, \
 			$config_table_type, \
@@ -23919,7 +23919,7 @@ enum db_return_codes db_save_interleave_set_dimm_info_state(const PersistentStor
 			$device_handle, \
 			$manufacturer, \
 			$serial_num, \
-			$model_num, \
+			$part_num, \
 			$offset, \
 			$size) ";
 		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -23940,7 +23940,7 @@ enum db_return_codes db_save_interleave_set_dimm_info_state(const PersistentStor
 		sqlite3_stmt *p_stmt;
 		char *sql = "INSERT INTO interleave_set_dimm_info_history \
 			(history_id, \
-				 id,  config_table_type,  index_id,  device_handle,  manufacturer,  serial_num,  model_num,  offset,  size)  \
+				 id,  config_table_type,  index_id,  device_handle,  manufacturer,  serial_num,  part_num,  offset,  size)  \
 			VALUES 		($history_id, \
 				 $id , \
 				 $config_table_type , \
@@ -23948,7 +23948,7 @@ enum db_return_codes db_save_interleave_set_dimm_info_state(const PersistentStor
 				 $device_handle , \
 				 $manufacturer , \
 				 $serial_num , \
-				 $model_num , \
+				 $part_num , \
 				 $offset , \
 				 $size )";
 		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -23974,7 +23974,7 @@ enum db_return_codes db_get_interleave_set_dimm_info_by_id(const PersistentStore
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
-		id,  config_table_type,  index_id,  device_handle,  manufacturer,  serial_num,  model_num,  offset,  size  \
+		id,  config_table_type,  index_id,  device_handle,  manufacturer,  serial_num,  part_num,  offset,  size  \
 		FROM interleave_set_dimm_info \
 		WHERE  id = $id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -24005,7 +24005,7 @@ enum db_return_codes db_update_interleave_set_dimm_info_by_id(const PersistentSt
 		,  device_handle=$device_handle \
 		,  manufacturer=$manufacturer \
 		,  serial_num=$serial_num \
-		,  model_num=$model_num \
+		,  part_num=$part_num \
 		,  offset=$offset \
 		,  size=$size \
 		  \
@@ -24095,7 +24095,7 @@ int db_get_interleave_set_dimm_info_history_by_history_id(const PersistentStore 
 	memset(p_interleave_set_dimm_info, 0, sizeof (struct db_interleave_set_dimm_info) * interleave_set_dimm_info_count);
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
-		id,  config_table_type,  index_id,  device_handle,  manufacturer,  serial_num,  model_num,  offset,  size  \
+		id,  config_table_type,  index_id,  device_handle,  manufacturer,  serial_num,  part_num,  offset,  size  \
 		FROM interleave_set_dimm_info_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
@@ -24214,7 +24214,7 @@ enum db_return_codes db_get_interleave_set_dimm_infos_by_dimm_interleave_set_ind
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
-		 id ,  config_table_type ,  index_id ,  device_handle ,  manufacturer ,  serial_num ,  model_num ,  offset ,  size  \
+		 id ,  config_table_type ,  index_id ,  device_handle ,  manufacturer ,  serial_num ,  part_num ,  offset ,  size  \
 		FROM interleave_set_dimm_info \
 		WHERE  index_id = $index_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -24240,7 +24240,7 @@ enum db_return_codes db_get_interleave_set_dimm_infos_by_dimm_interleave_set_ind
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
-		 id ,  config_table_type ,  index_id ,  device_handle ,  manufacturer ,  serial_num ,  model_num ,  offset ,  size  \
+		 id ,  config_table_type ,  index_id ,  device_handle ,  manufacturer ,  serial_num ,  part_num ,  offset ,  size  \
 		FROM interleave_set_dimm_info_history \
 		WHERE  index_id = $index_id AND history_id=$history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -24330,7 +24330,7 @@ enum db_return_codes db_get_interleave_set_dimm_infos_by_dimm_topology_device_ha
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
-		 id ,  config_table_type ,  index_id ,  device_handle ,  manufacturer ,  serial_num ,  model_num ,  offset ,  size  \
+		 id ,  config_table_type ,  index_id ,  device_handle ,  manufacturer ,  serial_num ,  part_num ,  offset ,  size  \
 		FROM interleave_set_dimm_info \
 		WHERE  device_handle = $device_handle";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -24356,7 +24356,7 @@ enum db_return_codes db_get_interleave_set_dimm_infos_by_dimm_topology_device_ha
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
-		 id ,  config_table_type ,  index_id ,  device_handle ,  manufacturer ,  serial_num ,  model_num ,  offset ,  size  \
+		 id ,  config_table_type ,  index_id ,  device_handle ,  manufacturer ,  serial_num ,  part_num ,  offset ,  size  \
 		FROM interleave_set_dimm_info_history \
 		WHERE  device_handle = $device_handle AND history_id=$history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))

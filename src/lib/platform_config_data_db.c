@@ -161,7 +161,7 @@ int update_dimm_interleave_set_in_db(PersistentStore *p_db,
 		db_dimm.manufacturer = MANUFACTURER_TO_UINT(p_dimm_info->manufacturer);
 		// convert serial number to uint32
 		db_dimm.serial_num = SERIAL_NUMBER_TO_UINT(p_dimm_info->serial_number);
-		s_strcpy(db_dimm.model_num, p_dimm_info->model_number, NVM_MODEL_LEN);
+		s_strcpy(db_dimm.part_num, p_dimm_info->part_number, NVM_PART_NUM_LEN);
 		db_dimm.offset = p_dimm_info->offset;
 		db_dimm.size = p_dimm_info->size;
 		rc = db_add_interleave_set_dimm_info(p_db, &db_dimm);
@@ -458,7 +458,7 @@ int get_dimm_interleave_dimms_from_db(PersistentStore *p_db,
 						// convert db storage to unsigned char array
 						UINT_TO_MANUFACTURER(db_dimms[i].manufacturer, p_dimm->manufacturer);
 						UINT_TO_SERIAL_NUMBER(db_dimms[i].serial_num, p_dimm->serial_number);
-						memmove(p_dimm->model_number, db_dimms[i].model_num, NVM_MODEL_LEN - 1);
+						memmove(p_dimm->part_number, db_dimms[i].part_num, NVM_PART_NUM_LEN - 1);
 					}
 					rc += sizeof (struct dimm_info_extension_table);
 				}

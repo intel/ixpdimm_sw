@@ -62,7 +62,6 @@ static const std::string CHANNELPOS = "ChannelPos";
 static const std::string MEMORYTYPE = "MemoryType";
 static const std::string MANUFACTURER = "Manufacturer";
 static const std::string MANUFACTURERID = "ManufacturerID";
-static const std::string MODEL = "Model";
 static const std::string VENDORID = "VendorID";
 static const std::string DEVICEID = "DeviceID";
 static const std::string REVISIONID = "RevisionID";

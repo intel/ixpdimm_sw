@@ -440,7 +440,7 @@ int set_default_config_settings(PersistentStore *p_ps)
 				max_snapshots);
 		// TODO: These values need to be confirmed with real HW
 		add_config_value_to_pstore(p_ps, SQL_KEY_VALID_MANUFACTURER, "0x8980");
-		add_config_value_to_pstore(p_ps, SQL_KEY_VALID_MODEL_NUM, "MN: 0123456789");
+		add_config_value_to_pstore(p_ps, SQL_KEY_VALID_PART_NUM, "PN: 0123456789");
 		add_config_value_to_pstore(p_ps, SQL_KEY_VALID_VENDOR_ID, "0x8086");
 		add_config_value_to_pstore(p_ps, SQL_KEY_UNCORRECTABLE_THRESHOLD, "10");
 		add_config_value_to_pstore(p_ps, SQL_KEY_CORRECTED_THRESHOLD, "10");

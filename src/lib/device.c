@@ -237,8 +237,8 @@ void add_identify_dimm_properties_to_device(struct device_discovery *p_device,
 	memmove(p_device->manufacturer, p_id_dimm->mf,
 			DEV_MFR_LEN);
 
-	memmove(p_device->model_number, p_id_dimm->mn,
-			DEV_MODELNUM_LEN);
+	memmove(p_device->part_number, p_id_dimm->pn,
+			DEV_PARTNUM_LEN);
 
 	// convert fw version to string
 	FW_VER_ARR_TO_STR(p_id_dimm->fwr, p_device->fw_revision,
@@ -925,7 +925,6 @@ int get_details(const NVM_UID device_uid,
 		p_details->data_width = dimm_details.data_width;
 		p_details->total_width = dimm_details.total_width;
 		p_details->speed = dimm_details.speed;
-		s_strcpy((p_details->part_number), dimm_details.part_number, NVM_PART_NUM_LEN);
 		s_strcpy((p_details->device_locator), dimm_details.device_locator, NVM_DEVICE_LOCATOR_LEN);
 		s_strcpy((p_details->bank_label), dimm_details.bank_label, NVM_BANK_LABEL_LEN);
 	}

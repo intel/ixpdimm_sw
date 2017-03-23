@@ -138,7 +138,7 @@ struct dimm_info_extension_table
 {
 	NVM_UINT8 manufacturer[2]; // NVM-DIMM manufacturer
 	NVM_UINT8 serial_number[4]; // NVM-DIMM serial number
-	char model_number[20]; // NVM-DIMM serial number
+	char part_number[20]; // NVM-DIMM serial number
 	NVM_UINT8 reserved[6];
 	NVM_UINT64 offset; // Logical offset from the base of the partition
 	NVM_UINT64 size; // Size in bytes to add to interleave set
@@ -211,7 +211,7 @@ struct config_data_table_header
 	NVM_UINT8 revision; // Table definition revision
 	NVM_UINT8 checksum; // Entire Table must sum to zero
 	char oem_id[OEM_ID_LEN]; // OEM ID
-	char oem_table_id[OEM_TABLE_ID_LEN]; // The manufacturer model ID
+	char oem_table_id[OEM_TABLE_ID_LEN]; // The manufacturer part ID
 	NVM_UINT32 oem_revision; // OEM revision of table
 	NVM_UINT32 creator_id; // Vendor ID of utility that created table
 	NVM_UINT32 creator_revision; // Revision of utility that created table

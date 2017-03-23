@@ -46,7 +46,7 @@
 #define	DEV_FW_REV_LEN		5   /* Length of the Firmware Revision string */
 #define	DEV_FW_COMMIT_ID_LEN	40   /* Length of commit identifier of Firmware including null */
 #define	DEV_MFR_LEN		2  /* Length of manufacturer ID buffer */
-#define	DEV_MODELNUM_LEN		20  /* Length of DIMM Model Number buffer */
+#define	DEV_PARTNUM_LEN		20  /* Length of DIMM Part Number buffer */
 #define	DEV_OS_PARTITION		1   /* get platform config OS partition num */
 #define DEV_PLT_CFG_OPTIONS	((0 << 1) + 0) /* get platform config options */
 #define	DEV_PLT_CFG_LARGE_PAY	0 /* get/set platform config large payload type */
@@ -607,7 +607,7 @@ struct pt_payload_identify_dimm {
 	unsigned int rc; /* raw capacity in 4KB multiples*/
 	unsigned char mf[DEV_MFR_LEN]; /* ASCII Manufacturer */
 	unsigned char sn[DEV_SN_LEN]; /* ASCII Serial Number */
-	char mn[DEV_MODELNUM_LEN]; /* ASCII Model Number */
+	char pn[DEV_PARTNUM_LEN]; /* ASCII Model Number */
 	unsigned int dimm_sku;
 	unsigned short ifce; /* Interface format code extra*/
 	unsigned short api_ver; /* BCD formated api version */
@@ -1509,7 +1509,7 @@ struct pt_payload_smart_health {
 
 	unsigned char ait_dram_status;
 
-	unsigned char rsvd_b[6];
+	unsigned char rsvd_b[10];
 
 	/*
 	 * Last Shutdown Status: Displays the last shutdown that occured

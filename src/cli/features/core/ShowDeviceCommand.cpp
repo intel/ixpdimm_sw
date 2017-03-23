@@ -77,7 +77,6 @@ ShowDeviceCommand::ShowDeviceCommand(core::device::DeviceService &service)
 	m_props.addBool("ManufacturingInfoValid", &core::device::Device::isManufacturingInfoValid);
 	m_props.addCustom("ManufacturingLocation", &getManufacturingLoc);
 	m_props.addCustom("ManufacturingDate", &getManufacturingDate);
-	m_props.addStr("PartNumber", &core::device::Device::getPartNumber);
 	m_props.addStr("DeviceLocator", &core::device::Device::getDeviceLocator);
 	m_props.addStr("BankLabel", &core::device::Device::getBankLabel);
 	m_props.addUint64("DataWidth", &core::device::Device::getDataWidth);
@@ -89,7 +88,7 @@ ShowDeviceCommand::ShowDeviceCommand(core::device::DeviceService &service)
 	m_props.addStr("FWAPIVersion", &core::device::Device::getFwApiVersion);
 	m_props.addStr("Manufacturer", &core::device::Device::getManufacturer);
 	m_props.addUint16("ManufacturerID", &core::device::Device::getManufacturerId, toHex);
-	m_props.addStr("Model", &core::device::Device::getModelNumber);
+	m_props.addStr("PartNumber", &core::device::Device::getPartNumber);
 	m_props.addBool("IsNew", &core::device::Device::isNew);
 	m_props.addOther("FormFactor", &core::device::Device::getFormFactor, &convertFormFactor);
 	m_props.addUint64("MemoryCapacity", &core::device::Device::getMemoryCapacityBytes,

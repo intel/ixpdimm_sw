@@ -369,7 +369,7 @@ void populate_dimm_info_extension_table(struct dimm_info_extension_table *p_dimm
 		p_dimms_ext[i].offset = interleave_set_offset * BYTES_PER_GIB;
 		memmove(p_dimms_ext[i].serial_number, p_devices[i].serial_number, NVM_SERIAL_LEN);
 		memmove(p_dimms_ext[i].manufacturer, p_devices[i].manufacturer, NVM_MANUFACTURER_LEN);
-		memmove(p_dimms_ext[i].model_number, p_devices[i].model_number, NVM_MODEL_LEN-1);
+		memmove(p_dimms_ext[i].part_number, p_devices[i].part_number, NVM_PART_NUM_LEN-1);
 	}
 }
 

@@ -908,9 +908,9 @@ int config_input_table_to_config_goal(const NVM_UID device_uid,
 						(struct dimm_info_extension_table *)(p_table + set_offset);
 					// dimm info to dimm uid
 					struct device_discovery discovery;
-					if (lookup_dev_manufacturer_serial_model(p_dimm->manufacturer,
+					if (lookup_dev_manufacturer_serial_part(p_dimm->manufacturer,
 							p_dimm->serial_number,
-							p_dimm->model_number,
+							p_dimm->part_number,
 							&discovery) != NVM_SUCCESS)
 					{
 						char serial_str[NVM_SERIALSTR_LEN];

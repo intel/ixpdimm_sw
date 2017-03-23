@@ -49,7 +49,6 @@
 #define	NVM_PROCESSOR_LEN	256 // Length of host processor string
 #define	NVM_VERSION_LEN	25  // Length of version string
 #define	NVM_ERROR_LEN	256 // Length of return code description
-#define	NVM_MODEL_LEN	21 // Length of device model number
 #define	NVM_MAX_UID_LEN	37 // Max Length of Unique ID
 #define	NVM_SOCKET_MANUFACTURER_LEN	32 // Socket manufacturer string length
 #define	NVM_MANUFACTURER_LEN	2 // Number of bytes in the manufacturer ID
@@ -79,7 +78,7 @@
 #define	NVM_MEMORY_CONTROLLER_CHANNEL_COUNT	3 // expected number of channels per iMC
 #define	NVM_MAX_INTERLEAVE_SETS_PER_DIMM	2 // Max number of App Direct interleave sets per DIMM
 #define	NVM_MAX_POOLS_PER_NAMESPACE	128 // Maximum number of pools for a namespace
-#define	NVM_PART_NUM_LEN	32 // Length of device part number string : TBD, guessing at 32
+#define	NVM_PART_NUM_LEN	21 // Length of device part number string
 // TODO -guessing and interleave formats size. HSD-20363 should address this.
 #define	NVM_INTERLEAVE_FORMATS	32 // Maximum number of memory interleave formats
 #define	NVM_MAX_DEVICES_PER_POOL	128 // Maximum number of DIMMs that can be used in a pool

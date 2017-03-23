@@ -499,8 +499,8 @@ int support_store_identify_dimm(PersistentStore *p_store, int history_id,
 		db_idimm.manufacturer = MANUFACTURER_TO_UINT(id_dimm.mf);
 		db_idimm.serial_num = SERIAL_NUMBER_TO_UINT(id_dimm.sn);
 
-		s_strncpy(db_idimm.model_num, IDENTIFY_DIMM_MODEL_NUM_LEN,
-				(char *)id_dimm.mn, DEV_MODELNUM_LEN);
+		s_strncpy(db_idimm.part_num, IDENTIFY_DIMM_PART_NUM_LEN,
+				(char *)id_dimm.pn, DEV_PARTNUM_LEN);
 
 		if (DB_SUCCESS != db_save_identify_dimm_state(p_store, history_id, &db_idimm))
 		{
@@ -769,8 +769,6 @@ int support_store_dimm_details(PersistentStore *p_store, int history_id,
 		db_details.type = dimm_details.type;
 		db_details.type_detail = dimm_details.type_detail_bits;
 		db_details.id = dimm_details.id;
-		s_strncpy(db_details.part_number, DIMM_DETAILS_PART_NUMBER_LEN,
-				dimm_details.part_number, NVM_PART_NUM_LEN);
 		s_strncpy(db_details.device_locator, DIMM_DETAILS_DEVICE_LOCATOR_LEN,
 						dimm_details.device_locator, NVM_DEVICE_LOCATOR_LEN);
 		s_strncpy(db_details.bank_label, DIMM_DETAILS_BANK_LABEL_LEN,
@@ -1605,7 +1603,7 @@ int support_store_interleave_set(PersistentStore *p_store,
 		db_dimm.manufacturer = MANUFACTURER_TO_UINT(p_dimm_info->manufacturer);
 		// convert serial number to uint32
 		db_dimm.serial_num = SERIAL_NUMBER_TO_UINT(p_dimm_info->serial_number);
-		s_strcpy(db_dimm.model_num, p_dimm_info->model_number, NVM_MODEL_LEN);
+		s_strcpy(db_dimm.part_num, p_dimm_info->part_number, NVM_PART_NUM_LEN);
 		db_dimm.offset = p_dimm_info->offset;
 		db_dimm.size = p_dimm_info->size;
 

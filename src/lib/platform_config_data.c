@@ -145,8 +145,8 @@ void print_extension_tables(void *p_ext_table, NVM_SIZE total_length)
 					p_dimms[i].serial_number[2],
 					p_dimms[i].serial_number[1],
 					p_dimms[i].serial_number[0]);
-				DEBUG_PCD("DIMM Info Extension Table - Model Number: %s",
-					p_dimms[i].model_number);
+				DEBUG_PCD("DIMM Info Extension Table - Part Number: %s",
+					p_dimms[i].part_number);
 				DEBUG_PCD("DIMM Info Extension Table - Offset: %llu", p_dimms[i].offset);
 				DEBUG_PCD("DIMM Info Extension Table - Size: %llu", p_dimms[i].size);
 			}

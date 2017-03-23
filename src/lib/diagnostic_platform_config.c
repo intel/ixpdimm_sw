@@ -210,10 +210,10 @@ void check_interleave_sets(struct current_config_table *p_current_config,
 					< p_interleave_info_tbl->dimm_count; i++)
 					{
 						struct device_discovery discovery;
-						if (lookup_dev_manufacturer_serial_model(
+						if (lookup_dev_manufacturer_serial_part(
 								p_dimms[i].manufacturer,
 								p_dimms[i].serial_number,
-								p_dimms[i].model_number,
+								p_dimms[i].part_number,
 								&discovery) != NVM_SUCCESS)
 						{
 							char serial_str[NVM_SERIALSTR_LEN];

@@ -71,8 +71,8 @@ int lookup_dev_uid(const NVM_UID dev_uid, struct device_discovery *p_dev);
 
 int lookup_dev_handle(const NVM_NFIT_DEVICE_HANDLE dev_handle, struct device_discovery *p_dev);
 
-int lookup_dev_manufacturer_serial_model(const unsigned char *manufacturer,
-		const unsigned char *serial_number, const char *model_number,
+int lookup_dev_manufacturer_serial_part(const unsigned char *manufacturer,
+		const unsigned char *serial_number, const char *part_number,
 		struct device_discovery *p_dev);
 
 void free_dev_table(COMMON_BOOL obtain_lock);

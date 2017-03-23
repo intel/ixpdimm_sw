@@ -363,7 +363,7 @@ enum diagnostic_threshold_type
 	DIAG_THRESHOLD_QUICK_ERASURE_CODED_CORRECTED_ERRORS = 1 << 8,
 	DIAG_THRESHOLD_QUICK_VALID_VENDOR_ID = 1 << 9,
 	DIAG_THRESHOLD_QUICK_VALID_MANUFACTURER = 1 << 10,
-	DIAG_THRESHOLD_QUICK_VALID_MODEL_NUMBER = 1 << 11,
+	DIAG_THRESHOLD_QUICK_VALID_PART_NUMBER = 1 << 11,
 	DIAG_THRESHOLD_QUICK_VIRAL = 1 << 12,
 	DIAG_THRESHOLD_SECURITY_CONSISTENT = 1 << 13,
 	DIAG_THRESHOLD_SECURITY_ALL_DISABLED = 1 << 14,
@@ -614,7 +614,7 @@ struct device_discovery
 	NVM_UINT16 manufacturing_date;		// Date the AEP DIMM was manufactured, assigned by vendor
 										// only valid if manufacturing_info_valid=1
 
-	char model_number[NVM_MODEL_LEN]; 	// Model number assigned by the vendor.
+	char part_number[NVM_PART_NUM_LEN]; 	// The manufacturer's model part number
 	NVM_VERSION fw_revision; // The current active firmware revision.
 	NVM_VERSION fw_api_version; // API version of the currently running FW
 	NVM_UINT64 capacity; // Raw capacity in bytes.
@@ -747,7 +747,6 @@ struct device_details
 	NVM_UINT64 data_width;	// The width in bits used to store user data.
 	NVM_UINT64 total_width;	// The width in bits for data and ECC and/or redundancy.
 	NVM_UINT64 speed; // The speed in nanoseconds.
-	char part_number[NVM_PART_NUM_LEN]; // The part number
 	char device_locator[NVM_DEVICE_LOCATOR_LEN]; // The socket or board position label
 	char bank_label[NVM_BANK_LABEL_LEN]; // The bank label
 

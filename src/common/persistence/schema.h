@@ -714,7 +714,7 @@ enum db_return_codes db_delete_event_by_event_type_type(const PersistentStore *p
  */
  // Lengths for strings and arrays
 #define	TOPOLOGY_STATE_UID_LEN 37 //!< Max length for uid
-#define	TOPOLOGY_STATE_MODEL_NUM_LEN 21 //!< Max length for model_num
+#define	TOPOLOGY_STATE_PART_NUM_LEN 21 //!< Max length for part_num
 /*!
  * struct representing the topology_state table
  * @ingroup topology_state
@@ -725,7 +725,7 @@ struct db_topology_state
 	char   uid[TOPOLOGY_STATE_UID_LEN];
 	unsigned int manufacturer;
 	unsigned int serial_num;
-	char   model_num[TOPOLOGY_STATE_MODEL_NUM_LEN];
+	char   part_num[TOPOLOGY_STATE_PART_NUM_LEN];
 	int current_config_status;
 	int config_goal_status;
 };
@@ -2970,7 +2970,7 @@ enum db_return_codes db_delete_namespace_by_interleave_set_dimm_info_index_id(co
  */
  // Lengths for strings and arrays
 #define	IDENTIFY_DIMM_FW_REVISION_LEN 14 //!< Max length for fw_revision
-#define	IDENTIFY_DIMM_MODEL_NUM_LEN 21 //!< Max length for model_num
+#define	IDENTIFY_DIMM_PART_NUM_LEN 21 //!< Max length for part_num
 /*!
  * struct representing the identify_dimm table
  * @ingroup identify_dimm
@@ -2994,7 +2994,7 @@ struct db_identify_dimm
 	unsigned long long raw_cap;
 	unsigned int manufacturer;
 	unsigned int serial_num;
-	char   model_num[IDENTIFY_DIMM_MODEL_NUM_LEN];
+	char   part_num[IDENTIFY_DIMM_PART_NUM_LEN];
 };
 /*!
  * Helper function to print a db_identify_dimm to the screen.
@@ -10003,7 +10003,7 @@ enum db_return_codes db_delete_dimm_interleave_set_by_dimm_topology_device_handl
  * @ingroup db_schema
  */
  // Lengths for strings and arrays
-#define	INTERLEAVE_SET_DIMM_INFO_MODEL_NUM_LEN 21 //!< Max length for model_num
+#define	INTERLEAVE_SET_DIMM_INFO_PART_NUM_LEN 21 //!< Max length for part_num
 /*!
  * struct representing the interleave_set_dimm_info table
  * @ingroup interleave_set_dimm_info
@@ -10016,7 +10016,7 @@ struct db_interleave_set_dimm_info
 	unsigned int device_handle;
 	unsigned int manufacturer;
 	unsigned int serial_num;
-	char   model_num[INTERLEAVE_SET_DIMM_INFO_MODEL_NUM_LEN];
+	char   part_num[INTERLEAVE_SET_DIMM_INFO_PART_NUM_LEN];
 	unsigned long long offset;
 	unsigned long long size;
 };

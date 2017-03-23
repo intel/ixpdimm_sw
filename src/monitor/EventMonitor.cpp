@@ -481,7 +481,7 @@ void monitor::EventMonitor::saveCurrentTopologyState(const DeviceMap &devices)
 					topoState.device_handle = device.discovery.device_handle.handle;
 					topoState.manufacturer = MANUFACTURER_TO_UINT(device.discovery.manufacturer);
 					topoState.serial_num = SERIAL_NUMBER_TO_UINT(device.discovery.serial_number);
-					memmove(topoState.model_num, device.discovery.model_number, NVM_MODEL_LEN);
+					memmove(topoState.part_num, device.discovery.part_number, NVM_PART_NUM_LEN);
 
 					topoState.current_config_status = device.status.config_status;
 					if (device.discovery.manageability == MANAGEMENT_VALIDCONFIG)

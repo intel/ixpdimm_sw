@@ -272,8 +272,8 @@ int lookup_dev_handle(const NVM_NFIT_DEVICE_HANDLE device_handle, struct device_
  * Look up a device from the manufacturer and serial number
  */
 
-int lookup_dev_manufacturer_serial_model(const unsigned char *manufacturer,
-		const unsigned char *serial_number, const char *model_number,
+int lookup_dev_manufacturer_serial_part(const unsigned char *manufacturer,
+		const unsigned char *serial_number, const char *part_number,
 		struct device_discovery *p_dev)
 {
 	int rc = NVM_ERR_BADDEVICE;
@@ -287,13 +287,13 @@ int lookup_dev_manufacturer_serial_model(const unsigned char *manufacturer,
 	{
 		for (int i = 0; i < dev_count; i++)
 		{
-			// do the manufacturer and serial and model numbers match?
+			// do the manufacturer and serial and part numbers match?
 			if ((cmp_bytes(p_devices[i].manufacturer,
 					manufacturer, NVM_MANUFACTURER_LEN) == 1) &&
 				(cmp_bytes(p_devices[i].serial_number,
 					serial_number, NVM_SERIAL_LEN) == 1) &&
-				(cmp_bytes((unsigned char *)p_devices[i].model_number,
-					(unsigned char *)model_number, NVM_MODEL_LEN-1) == 1))
+				(cmp_bytes((unsigned char *)p_devices[i].part_number,
+					(unsigned char *)part_number, NVM_PART_NUM_LEN-1) == 1))
 			{
 				rc = NVM_SUCCESS;
 				if (p_dev)

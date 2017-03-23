@@ -109,7 +109,7 @@ public:
 	virtual bool isManufacturingInfoValid();
 	virtual NVM_UINT8 getManufacturingLoc();
 	virtual NVM_UINT16 getManufacturingDate();
-	virtual std::string getModelNumber();
+	virtual std::string getPartNumber();
 	virtual std::string getFwRevision();
 	virtual std::string getFwApiVersion();
 	virtual fw_log_level getFwLogLevel();
@@ -162,7 +162,6 @@ public:
 	virtual NVM_UINT16 getAvgPowerBudget();
 	virtual bool isDieSparingEnabled();
 	virtual NVM_UINT8 getDieSparingLevel();
-	virtual std::string getPartNumber();
 	virtual std::string getDeviceLocator();
 	virtual std::string getBankLabel();
 	virtual bool isFirstFastRefresh();

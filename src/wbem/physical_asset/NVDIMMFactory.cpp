@@ -85,7 +85,6 @@ void NVDIMMFactory::populateAttributeList(
 	attributes.push_back(ELEMENTNAME_KEY);
 	attributes.push_back(MANUFACTURER_KEY);
 	attributes.push_back(MANUFACTURERID_KEY);
-	attributes.push_back(MODEL_KEY);
 	attributes.push_back(CAPACITY_KEY);
 	attributes.push_back(VENDORID_KEY);
 	attributes.push_back(DEVICEID_KEY);
@@ -708,7 +707,7 @@ void NVDIMMFactory::toInstance(core::device::Device &device,
 	ADD_ATTRIBUTE(instance, attributes, MANUFACTURER_KEY, framework::STR, device.getManufacturer());
 	ADD_ATTRIBUTE(instance, attributes, MANUFACTURERID_KEY, framework::UINT16,
 			device.getManufacturerId());
-	ADD_ATTRIBUTE(instance, attributes, MODEL_KEY, framework::STR, device.getModelNumber());
+	ADD_ATTRIBUTE(instance, attributes, PARTNUMBER_KEY, framework::STR, device.getPartNumber());
 	ADD_ATTRIBUTE(instance, attributes, CAPACITY_KEY, framework::UINT64, device.getRawCapacity());
 	ADD_ATTRIBUTE(instance, attributes, VENDORID_KEY, framework::UINT32, device.getVendorId());
 	ADD_ATTRIBUTE(instance, attributes, DEVICEID_KEY, framework::UINT16, device.getDeviceId());
@@ -745,7 +744,6 @@ void NVDIMMFactory::toInstance(core::device::Device &device,
 		device.getMemoryCapacityBytes());
 	ADD_ATTRIBUTE(instance, attributes, APP_DIRECT_CAPACITY_KEY, framework::UINT64,
 		device.getAppDirectCapacityBytes());
-	ADD_ATTRIBUTE(instance, attributes, PARTNUMBER_KEY, framework::STR, device.getPartNumber());
 	ADD_ATTRIBUTE(instance, attributes, BANKLABEL_KEY, framework::STR, device.getBankLabel());
 	ADD_ATTRIBUTE(instance, attributes, HEALTHSTATE_KEY, framework::UINT16,
 			device.getHealthState());

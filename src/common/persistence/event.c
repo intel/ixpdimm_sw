@@ -155,7 +155,7 @@ const char *EVENT_MESSAGES_QUICK_DIAG[EVENT_CODE_DIAG_QUICK_UNKNOWN -
 	N_TR("Placeholder"),
 	// EVENT_CODE_DIAG_QUICK_INVALID_MANUFACTURER
 	N_TR("Placeholder"),
-	// EVENT_CODE_DIAG_QUICK_INVALID_MODEL_NUMBER
+	// EVENT_CODE_DIAG_QUICK_INVALID_PART_NUMBER
 	N_TR("Placeholder"),
 	// EVENT_CODE_DIAG_QUICK_BAD_HEALTH
 	N_TR("The quick health check detected that " NVM_DIMM_NAME " %s "
@@ -303,7 +303,7 @@ const char *EVENT_MESSAGES_FW_DIAG[EVENT_CODE_DIAG_FW_UNKNOWN -
 			NVM_DIMM_NAME"s."),
 	// EVENT_CODE_DIAG_FW_INCONSISTENT
 	N_TR("The firmware consistency and settings check detected that firmware version "
-			"on " NVM_DIMM_NAME "s %s with model number %s "
+			"on " NVM_DIMM_NAME "s %s with part number %s "
 			"is non-optimal, preferred version is %s"),
 	// EVENT_CODE_DIAG_FW_BAD_TEMP_MEDIA_THRESHOLD
 	N_TR("The firmware consistency and settings check detected that " NVM_DIMM_NAME " %s is "
