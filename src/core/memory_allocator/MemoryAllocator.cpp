@@ -42,7 +42,6 @@
 #include "RuleMemoryModeCapacityNotSupported.h"
 #include "RuleAppDirectNotSupported.h"
 #include "RuleMirroredAppDirectNotSupported.h"
-#include "RuleNoCombiningStorageAndAppDirect.h"
 #include "RuleDimmHasConfigGoal.h"
 #include "RuleNamespacesExist.h"
 #include "RulePartialSocketConfigured.h"
@@ -50,7 +49,6 @@
 #include "RuleDimmListInvalid.h"
 #include "RuleRejectLockedDimms.h"
 #include "PostLayoutAddressDecoderLimitCheck.h"
-#include "PostLayoutRequestDeviationCheck.h"
 
 core::memory_allocator::MemoryAllocator::MemoryAllocator(const struct nvm_capabilities &systemCapabilities,
 		const std::vector<struct device_discovery> &manageableDevices,
@@ -133,7 +131,6 @@ void core::memory_allocator::MemoryAllocator::populateRequestRules()
 	// Note that order matters
 	m_requestRules.push_back(new RuleProvisionCapacityNotSupported(m_systemCapabilities));
 	m_requestRules.push_back(new RuleNoDimms());
-	m_requestRules.push_back(new RuleNoCombiningStorageAndAppDirect());
 	m_requestRules.push_back(new RuleReserveDimmPropertyInvalid());
 	m_requestRules.push_back(new RuleDimmListInvalid(m_manageableDevices));
 	m_requestRules.push_back(new RuleMemoryModeCapacityNotSupported(m_systemCapabilities));
@@ -154,7 +151,6 @@ void core::memory_allocator::MemoryAllocator::populatePostLayoutChecks()
 			m_manageableDevices,
 			m_pools,
 			m_socketCount));
-	m_postLayoutChecks.push_back(new PostLayoutRequestDeviationCheck());
 }
 
 void core::memory_allocator::MemoryAllocator::validateLayout(

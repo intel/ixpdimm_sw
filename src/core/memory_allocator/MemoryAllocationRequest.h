@@ -94,8 +94,13 @@ class NVM_API MemoryAllocationRequest
 		void setDimms(const std::vector<Dimm> &dimmList);
 		std::vector<Dimm> getNonReservedDimms() const;
 
-		NVM_UINT64 getMappableDimmCapacityInBytes() const;
+		NVM_UINT64 getAllMappableNonReservedCapacity() const;
+		NVM_UINT64 getAllMappableDimmCapacityInGiB() const;
 		NVM_UINT64 getRequestedMappedCapacityInBytes() const;
+
+		// TODO: Update this function and move it to utils when nvm_get_socket
+		// is updated to get mapped memory limit (US20271)
+		virtual NVM_UINT64 getSocketLimit() const;
 
 	private:
 		NVM_UINT64 m_memoryCapacityGiB;
@@ -108,6 +113,7 @@ class NVM_API MemoryAllocationRequest
 		std::vector<Dimm> m_dimms;
 
 		bool isReservedDimm(const Dimm &dimm) const;
+		bool isReservedAppDirectByOneDimm(const Dimm &dimm) const;
 };
 
 } /* namespace memory_allocator */

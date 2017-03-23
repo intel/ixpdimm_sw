@@ -45,6 +45,8 @@
 #include "LayoutStepMemory.h"
 #include "LayoutStepStorage.h"
 #include "LayoutStepReserveDimm.h"
+#include "LayoutStepLimitTotalMappedMemory.h"
+#include "LayoutStepCheckRequestLayoutDeviation.h"
 
 core::memory_allocator::LayoutBuilder::LayoutBuilder(
 		const struct nvm_capabilities &systemCapabilities,
@@ -117,10 +119,16 @@ void core::memory_allocator::LayoutBuilder::populateOrderedLayoutStepsForRequest
 	m_layoutSteps.push_back(new LayoutStepReserveDimm(m_util));
 
 	m_layoutSteps.push_back(new LayoutStepMemory());
+
 	m_layoutSteps.push_back(new LayoutStepAppDirect(m_util));
 
-	// Anything left after we are done laying out capacity is storage
+	// Shrink Memory and AppDirect based on SKU mapped memory limit
+	m_layoutSteps.push_back(new LayoutStepLimitTotalMappedMemory());
+
 	m_layoutSteps.push_back(new LayoutStepStorage());
+
+	// Post layout check that adds a warning to layout object
+	m_layoutSteps.push_back(new LayoutStepCheckRequestLayoutDeviation());
 }
 
 void core::memory_allocator::LayoutBuilder::initLayoutGoals(

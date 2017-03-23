@@ -913,14 +913,6 @@ cli::framework::ErrorResult *cli::nvmcli::CoreExceptionToResult(std::exception &
 				TRS(BAD_REQUEST_NOT_SUPPORTED_STR), prefix);
 	}
 
-	core::NvmExceptionCombiningStorageAndAppDirect *pBadCombination =
-			dynamic_cast<core::NvmExceptionCombiningStorageAndAppDirect *>(&e);
-	if (pBadCombination != NULL)
-	{
-		return new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
-				TRS(BAD_REQUEST_NOT_SUPPORTED_STR), prefix);
-	}
-
 	// Generic bad request - all other bad request cases
 	core::NvmExceptionBadRequest *pBadRequest =
 			dynamic_cast<core::NvmExceptionBadRequest *>(&e);

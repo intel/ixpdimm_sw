@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 2016, Intel Corporation
+ * Copyright (c) 2017 Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,31 +26,38 @@
  */
 
 /*
- * Rule that checks that layout is within acceptable deviation from the request
+ * Add a layout warning if layout is not within acceptable deviation from the request
  */
 
-#include "PostLayoutRequestDeviationCheck.h"
+#include "LayoutStepCheckRequestLayoutDeviation.h"
 
 #include <LogEnterExit.h>
-#include <core/exceptions/NvmExceptionBadRequest.h>
-#include <utility.h>
 
 #define ACCEPTED_PERCENT_DEVIATION 10
 
 // using macro to avoid ambiguous overload call to abs function
 #define ABSOLUTEDIFFERENCE(X, Y) (X > Y) ? (X - Y) : (Y - X)
 
-core::memory_allocator::PostLayoutRequestDeviationCheck::PostLayoutRequestDeviationCheck()
+core::memory_allocator::LayoutStepCheckRequestLayoutDeviation::LayoutStepCheckRequestLayoutDeviation()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
 
-core::memory_allocator::PostLayoutRequestDeviationCheck::~PostLayoutRequestDeviationCheck()
+core::memory_allocator::LayoutStepCheckRequestLayoutDeviation::~LayoutStepCheckRequestLayoutDeviation()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
 
-double core::memory_allocator::PostLayoutRequestDeviationCheck::findPercentDeviation(
+void core::memory_allocator::LayoutStepCheckRequestLayoutDeviation::execute(const MemoryAllocationRequest& request,
+		MemoryAllocationLayout& layout)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	checkIfMemoryCapacityLayoutIsAcceptable(request, layout);
+	checkAppDirectCapacityLayoutIsAcceptable(request, layout);
+}
+
+double core::memory_allocator::LayoutStepCheckRequestLayoutDeviation::findPercentDeviation(
 		NVM_UINT64 expectedValue, NVM_UINT64 observedValue)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -59,16 +66,16 @@ double core::memory_allocator::PostLayoutRequestDeviationCheck::findPercentDevia
 	return (double)100.0 * (deviation)/expectedValue;
 }
 
-bool core::memory_allocator::PostLayoutRequestDeviationCheck::layoutDeviationIsWithinBounds(
+bool core::memory_allocator::LayoutStepCheckRequestLayoutDeviation::layoutDeviationIsWithinBounds(
 		double percentDeviation)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return (percentDeviation <= ACCEPTED_PERCENT_DEVIATION);
 }
 
-void core::memory_allocator::PostLayoutRequestDeviationCheck::checkIfMemoryCapacityLayoutIsAcceptable(
+void core::memory_allocator::LayoutStepCheckRequestLayoutDeviation::checkIfMemoryCapacityLayoutIsAcceptable(
 		const struct MemoryAllocationRequest& request,
-		const MemoryAllocationLayout& layout)
+		MemoryAllocationLayout& layout)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
@@ -79,14 +86,14 @@ void core::memory_allocator::PostLayoutRequestDeviationCheck::checkIfMemoryCapac
 		if ((layout.memoryCapacity == 0)  ||
 				(!layoutDeviationIsWithinBounds(percentDeviation)))
 		{
-			throw core::NvmExceptionUnacceptableLayoutDeviation();
+			layout.warnings.push_back(LAYOUT_WARNING_GOAL_ADJUSTED_MORE_THAN_10PERCENT);
 		}
 	}
 }
 
-void core::memory_allocator::PostLayoutRequestDeviationCheck::checkAppDirectCapacityLayoutIsAcceptable(
+void core::memory_allocator::LayoutStepCheckRequestLayoutDeviation::checkAppDirectCapacityLayoutIsAcceptable(
 		const struct MemoryAllocationRequest& request,
-		const MemoryAllocationLayout& layout)
+		MemoryAllocationLayout& layout)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
@@ -97,12 +104,12 @@ void core::memory_allocator::PostLayoutRequestDeviationCheck::checkAppDirectCapa
 						layoutAppDirectCapacity);
 		if (!layoutDeviationIsWithinBounds(percentDeviation))
 		{
-			throw core::NvmExceptionUnacceptableLayoutDeviation();
+			layout.warnings.push_back(LAYOUT_WARNING_GOAL_ADJUSTED_MORE_THAN_10PERCENT);
 		}
 	}
 }
 
-NVM_UINT64 core::memory_allocator::PostLayoutRequestDeviationCheck::getReservedAppDirectCapacityGiB(
+NVM_UINT64 core::memory_allocator::LayoutStepCheckRequestLayoutDeviation::getReservedAppDirectCapacityGiB(
 		const struct MemoryAllocationRequest& request)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -117,7 +124,7 @@ NVM_UINT64 core::memory_allocator::PostLayoutRequestDeviationCheck::getReservedA
 	return reservedAppDirectCapacity;
 }
 
-bool core::memory_allocator::PostLayoutRequestDeviationCheck::reservedDimmIsAppDirect(
+bool core::memory_allocator::LayoutStepCheckRequestLayoutDeviation::reservedDimmIsAppDirect(
 		const struct MemoryAllocationRequest& request)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -126,7 +133,7 @@ bool core::memory_allocator::PostLayoutRequestDeviationCheck::reservedDimmIsAppD
 			request.getReservedDimmCapacityType() == RESERVE_DIMM_APP_DIRECT_X1);
 }
 
-NVM_UINT64 core::memory_allocator::PostLayoutRequestDeviationCheck::getNonReservedAppDirectCapacityGiBFromLayout(
+NVM_UINT64 core::memory_allocator::LayoutStepCheckRequestLayoutDeviation::getNonReservedAppDirectCapacityGiBFromLayout(
 		const struct MemoryAllocationRequest& request, const MemoryAllocationLayout& layout)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -134,14 +141,4 @@ NVM_UINT64 core::memory_allocator::PostLayoutRequestDeviationCheck::getNonReserv
 	NVM_UINT64 reservedAppDirectCapacity = getReservedAppDirectCapacityGiB(request);
 
 	return layout.appDirectCapacity - reservedAppDirectCapacity;
-}
-
-void core::memory_allocator::PostLayoutRequestDeviationCheck::verify(
-		const struct MemoryAllocationRequest& request,
-		const struct MemoryAllocationLayout &layout)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	checkIfMemoryCapacityLayoutIsAcceptable(request, layout);
-	checkAppDirectCapacityLayoutIsAcceptable(request, layout);
 }

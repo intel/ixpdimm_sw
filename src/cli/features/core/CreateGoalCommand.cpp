@@ -310,6 +310,12 @@ std::string CreateGoalCommand::UserPrompt::getStringForLayoutWarning(
 	case core::memory_allocator::LAYOUT_WARNING_REQUESTED_MEMORY_MODE_NOT_USABLE:
 		warningStr = CREATE_GOAL_REQUESTED_MEMORY_MODE_NOT_USABLE_WARNING;
 		break;
+	case core::memory_allocator::LAYOUT_WARNING_GOAL_ADJUSTED_MORE_THAN_10PERCENT:
+		warningStr = CREATE_GOAL_ADJUSTED_MORE_THAN_10PERCENT_WARNING;
+		break;
+	case core::memory_allocator::LAYOUT_WARNING_SKU_MAPPED_MEMORY_LIMITED:
+		warningStr = CREATE_GOAL_SKU_MAPPED_MEMORY_LIMITED_WARNING;
+		break;
 	default:
 		COMMON_LOG_ERROR_F("Unrecognized layout warning code: %d", warningCode);
 		warningStr = "";
@@ -360,6 +366,7 @@ framework::CommandSpec CreateGoalCommand::getCommandSpec(int id)
 	result.addProperty(MEMORYMODE_NAME)
 		.isRequired(false)
 		.isValueRequired(true)
+		.valueText("0|%")
 		.helpText(TR("Percentage of the total capacity to use in Memory Mode (0-100)."));
 
 	result.addProperty("PersistentMemoryType")
@@ -426,6 +433,7 @@ bool CreateGoalCommand::userReallyLikesThisLayout(
 void CreateGoalCommand::setupRequestBuilder()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
 	m_requestBuilder.setMemoryModePercentage(m_parser.getMemoryMode());
 
 	if (m_parser.isReserveDimmStorage())
@@ -444,7 +452,6 @@ void CreateGoalCommand::setupRequestBuilder()
 	if (m_parser.isPmTypeAppDirect())
 	{
 		m_requestBuilder.setPersistentTypeAppDirectInterleaved();
-
 	}
 	else if (m_parser.isPmTypeAppDirectNotInterleaved())
 	{

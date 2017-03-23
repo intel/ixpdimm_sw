@@ -112,15 +112,6 @@ class NvmExceptionRequestNotSupported : public NvmExceptionBadRequest
 		{}
 };
 
-class NvmExceptionBadRequestRemaining : public NvmExceptionBadRequest
-{
-	public:
-		NvmExceptionBadRequestRemaining() :
-			NvmExceptionBadRequest("The request contained more than one request for "
-					"remaining capacity.")
-		{}
-};
-
 class NvmExceptionProvisionCapacityNotSupported : public NvmExceptionBadRequest
 {
 	public:
@@ -194,15 +185,6 @@ class NvmExceptionBadRequestReserveDimm : public NvmExceptionBadRequest
 		{}
 };
 
-class NvmExceptionUnacceptableLayoutDeviation : public NvmExceptionBadRequest
-{
-	public:
-		NvmExceptionUnacceptableLayoutDeviation() :
-			NvmExceptionBadRequest("Requested capacities were adjusted beyond the maximum "
-					"acceptable layout deviation.")
-		{}
-};
-
 class NvmExceptionTooManyAppDirectExtents : public NvmExceptionBadRequest
 {
 	public:
@@ -225,15 +207,6 @@ class NvmExceptionPartialResultsCouldNotBeUndone : public NvmExceptionBadRequest
 		NvmExceptionPartialResultsCouldNotBeUndone() :
 			NvmExceptionBadRequest("Request did not complete in its entirety and partial "
 					"results could not be undone.")
-		{}
-};
-
-class NvmExceptionCombiningStorageAndAppDirect : public NvmExceptionBadRequest
-{
-	public:
-		NvmExceptionCombiningStorageAndAppDirect() :
-			NvmExceptionBadRequest("Storage and App Direct capacity may not be combined "
-					"within the same request.")
 		{}
 };
 

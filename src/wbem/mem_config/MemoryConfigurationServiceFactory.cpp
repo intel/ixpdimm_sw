@@ -486,10 +486,6 @@ wbem::framework::UINT32 wbem::mem_config::MemoryConfigurationServiceFactory::exe
 	{
 		wbemRc = MEMORYCONFIGURATIONSERVICE_ERR_FAILED;
 	}
-	catch (core::NvmExceptionUnacceptableLayoutDeviation &)
-	{
-		wbemRc = MEMORYCONFIGURATIONSERVICE_ERR_FAILED;
-	}
 	catch (core::NvmExceptionNamespacesExist &)
 	{
 		wbemRc = MEMORYCONFIGURATIONSERVICE_ERR_FAILED;
@@ -1121,7 +1117,7 @@ bool wbem::mem_config::MemoryConfigurationServiceFactory::requestLeavesSpaceForS
 
 	bool storageAvailable = false;
 
-	NVM_UINT64 usableDimmCapacity = request.getMappableDimmCapacityInBytes();
+	NVM_UINT64 usableDimmCapacity = request.getAllMappableNonReservedCapacity();
 	NVM_UINT64 totalRequestedCapacity = request.getRequestedMappedCapacityInBytes();
 
 	if (totalRequestedCapacity < usableDimmCapacity)

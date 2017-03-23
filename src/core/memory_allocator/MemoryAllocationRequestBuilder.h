@@ -87,8 +87,6 @@ private:
 	core::device::DeviceService &m_service;
 	MemoryAllocationRequest m_result;
 
-
-
 	void buildRequestedDimms();
 	void buildReservedDimm();
 	void buildMemoryCapacity();

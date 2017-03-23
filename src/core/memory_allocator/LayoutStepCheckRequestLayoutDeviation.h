@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 2016, Intel Corporation
+ * Copyright (c) 2017 Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,36 +26,36 @@
  */
 
 /*
- * Rule that checks that layout is within an acceptable deviation from the request
+ * Add a layout warning if layout is not within acceptable deviation from the request
  */
 
-#ifndef _core_LOGIC_POSTLAYOUTREQUESTDEVIATIONCHECK_H_
-#define _core_LOGIC_POSTLAYOUTREQUESTDEVIATIONCHECK_H_
+#ifndef _core_LOGIC_LAYOUTSTEPCHECKREQUESTLAYOUTDEVIATION_H_
+#define _core_LOGIC_LAYOUTSTEPCHECKREQUESTLAYOUTDEVIATION_H_
 
-#include "PostLayoutCheck.h"
+#include <nvm_types.h>
+#include <core/memory_allocator/LayoutStep.h>
 
 namespace core
 {
 namespace memory_allocator
 {
 
-class NVM_API PostLayoutRequestDeviationCheck: public PostLayoutCheck
+class NVM_API LayoutStepCheckRequestLayoutDeviation : public LayoutStep
 {
 	public:
-		PostLayoutRequestDeviationCheck();
-		virtual ~PostLayoutRequestDeviationCheck();
-		virtual void verify(
-				const struct MemoryAllocationRequest &request,
-				const struct MemoryAllocationLayout &layout);
+		LayoutStepCheckRequestLayoutDeviation();
+		virtual ~LayoutStepCheckRequestLayoutDeviation();
+
+		virtual void execute(const MemoryAllocationRequest &request, MemoryAllocationLayout &layout);
 
 	protected:
 		void checkIfMemoryCapacityLayoutIsAcceptable(
 				const struct MemoryAllocationRequest& request,
-				const MemoryAllocationLayout& layout);
+				MemoryAllocationLayout& layout);
 
 		void checkAppDirectCapacityLayoutIsAcceptable(
 				const struct MemoryAllocationRequest& request,
-				const MemoryAllocationLayout& layout);
+				MemoryAllocationLayout& layout);
 
 		NVM_UINT64 getNonReservedAppDirectCapacityGiBFromLayout(const struct MemoryAllocationRequest& request,
 				const MemoryAllocationLayout& layout);
@@ -70,4 +70,4 @@ class NVM_API PostLayoutRequestDeviationCheck: public PostLayoutCheck
 } /* namespace memory_allocator */
 } /* namespace core */
 
-#endif /* _core_LOGIC_POSTLAYOUTREQUESTDEVIATIONCHECK_H_ */
+#endif /* _core_LOGIC_LAYOUTSTEPCHECKREQUESTLAYOUTDEVIATION_H_ */

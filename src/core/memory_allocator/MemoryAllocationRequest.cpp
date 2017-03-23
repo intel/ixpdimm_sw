@@ -165,6 +165,13 @@ bool MemoryAllocationRequest::isReservedDimm(const Dimm& dimm) const
 	return hasReservedDimm() && (dimm.uid == getReservedDimmUid());
 }
 
+bool MemoryAllocationRequest::isReservedAppDirectByOneDimm(const Dimm& dimm) const
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	return isReservedDimm(dimm) && getReservedDimmCapacityType() == RESERVE_DIMM_APP_DIRECT_X1;
+}
+
 std::vector<Dimm> MemoryAllocationRequest::getDimms() const
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -210,7 +217,7 @@ std::vector<Dimm> MemoryAllocationRequest::getNonReservedDimms() const
 	return nonReservedDimms;
 }
 
-NVM_UINT64 MemoryAllocationRequest::getMappableDimmCapacityInBytes() const
+NVM_UINT64 MemoryAllocationRequest::getAllMappableNonReservedCapacity() const
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
@@ -227,6 +234,23 @@ NVM_UINT64 MemoryAllocationRequest::getMappableDimmCapacityInBytes() const
 	return usableCapacity;
 }
 
+NVM_UINT64 MemoryAllocationRequest::getAllMappableDimmCapacityInGiB() const
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	NVM_UINT64 capacity = 0;
+	for (std::vector<Dimm>::const_iterator dimm = m_dimms.begin();
+			dimm != m_dimms.end(); dimm++)
+	{
+		if (!isReservedDimm(*dimm) || isReservedAppDirectByOneDimm(*dimm))
+		{
+			capacity += USABLE_CAPACITY_BYTES(dimm->capacityBytes);
+		}
+	}
+
+	return B_TO_GiB(capacity);
+}
+
 NVM_UINT64 MemoryAllocationRequest::getRequestedMappedCapacityInBytes() const
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -239,6 +263,15 @@ NVM_UINT64 MemoryAllocationRequest::getRequestedMappedCapacityInBytes() const
 	mappedCapacityBytes = mappedCapacityGiB * BYTES_PER_GIB;
 
 	return mappedCapacityBytes;
+}
+
+// TODO: Update this function and move it to utils when nvm_get_socket is updated
+// to get mapped memory limit (US20271)
+NVM_UINT64 MemoryAllocationRequest::getSocketLimit() const
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	return getAllMappableDimmCapacityInGiB();
 }
 
 } /* namespace memory_allocator */
