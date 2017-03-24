@@ -69,6 +69,7 @@ TARGET_NAME = $(addprefix $(BUILD_DIR)/, $(TARGET))
 
 # ---- COMPILER PARAMETERS -------------------------------------------------------------------------
 INCS = 	-I$(SRC_DIR)/common \
+		-I$(SRC_DIR)/acpi \
 		-I$(EXTERN_DIR)/sqlite \
 		-I$(EXTERN_DIR)/openssl/include \
 		-I$(EXTERN_DIR)/zlib \

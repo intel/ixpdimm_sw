@@ -97,7 +97,7 @@ wbem::framework::Instance* wbem::memory::MemoryControllerFactory::getInstance(
 		else if (rc == 0)
 		{
 			throw framework::Exception(
-					"Could not find any NVDIMMs connected to Memory Controller");
+					"Could not find any NVDIMMs connected to Memory Controller.");
 		}
 
 		// get the device_discovery information for all of the dimms
@@ -109,7 +109,7 @@ wbem::framework::Instance* wbem::memory::MemoryControllerFactory::getInstance(
 		else if (rc == 0)
 		{
 			throw framework::Exception(
-					"Could not find any NVDIMMs connected to Memory Controller");
+					"Could not find any NVDIMMs connected to Memory Controller.");
 		}
 
 		// initialize indicator

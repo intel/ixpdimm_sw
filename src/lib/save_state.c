@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 2016, Intel Corporation
+ * Copyright (c) 2015 2017, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -432,7 +432,6 @@ int support_store_dimm_topology(PersistentStore *p_store, int history_id,
 	db_dimm_topo.manufacturing_info_valid = topol.manufacturing_info_valid;
 	db_dimm_topo.manufacturing_location = topol.manufacturing_location;
 	db_dimm_topo.manufacturing_date = topol.manufacturing_date;
-	db_dimm_topo.type = topol.type;
 
 	for (int i = 0; i < NVM_SERIAL_LEN; i++)
 	{

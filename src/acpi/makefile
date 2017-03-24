@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2015 2016, Intel Corporation
+# Copyright (c) 2015 2017, Intel Corporation
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -25,16 +25,16 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #
-# Makefile for the common ACPI library code. 
+# Makefile for the ACPI library code. 
 #
 
 # ---- BUILD ENVIRONMENT ---------------------------------------------------------------------------
-ROOT_DIR = ../../..
+ROOT_DIR = ../..
 # sets up standard build variables
 include $(ROOT_DIR)/build.mk
 
 # defines the location of this module's compiled objects
-OBJECT_MODULE_DIR = $(OBJECT_DIR)/common/acpi
+OBJECT_MODULE_DIR = $(OBJECT_DIR)/acpi
 
 # ---- FILES ---------------------------------------------------------------------------------------
 # defines list of objects to create from source
@@ -48,6 +48,9 @@ endif
 
 SRC = $(filter-out $(SRC_EXCLUDE),$(wildcard *.c))
 OBJS = $(patsubst %.c,%.o,$(SRC))
+COMMON_OBJS += $(wildcard $(OBJECT_DIR)/common/string/s_str.o)
+COMMON_OBJS += $(wildcard $(OBJECT_DIR)/common/guid/guid.o)
+
 # defines the location of the object files
 OBJNAMES = $(addprefix $(OBJECT_MODULE_DIR)/, $(OBJS))
 
@@ -55,31 +58,55 @@ OBJNAMES = $(addprefix $(OBJECT_MODULE_DIR)/, $(OBJS))
 # (hyphen preceeding the "include" keyword allows MAKE to continue if a .d file is not found)
 -include $(addprefix $(OBJECT_MODULE_DIR)/, $(patsubst %.c,%.d,$(SRC)))
 
-# compiled objects not archived into static library for this module.
-# they will be compiled into libcommon.a, a level above this
+# Target archive 'linker name'
+TARGET = libacpi.a
+# Target archive 'real name', prefixed with its output location
+# This archive is packaged into other libraries, therefore output to object directory 
+TARGETNAME = $(addprefix $(OBJECT_MODULE_DIR)/, $(TARGET))
  
 # ---- COMPILER PARAMETERS -------------------------------------------------------------------------
-INCS = -I$(SRC_DIR)/common 
+INCS = -I$(SRC_DIR)/acpi \
+	   -I$(SRC_DIR)/common
 LIBS = 
 
 ifdef BUILD_LINUX
 	CFLAGS += -D_GNU_SOURCE
 else ifdef BUILD_ESX
 	CFLAGS += -D_GNU_SOURCE
-	INCS += -I$(EXTERN_DIR)/os_headers/esx
+	INCS += -I$(EXTERN_DIR)/os_headers
+	LIBS += -lpthread -ldl -lm
+ifndef BUILD_SIM
+	INCS += -I/opt/vmware/$(ESX_DEVKIT_PREFIX)-$(DEVKIT_BUILD_NUM)/samples/include
+	LIBS += -L/opt/vmware/$(ESX_DEVKIT_PREFIX)-$(DEVKIT_BUILD_NUM)/samples/lib -lvmkuserlib
+endif
+	CFLAGS += -DVMK_DEVKIT_HAS_API_VMKAPI_BASE \
+		-DVMK_DEVKIT_USES_PUBLIC_APIS \
+		-DVMK_DEVKIT_USES_BINARY_COMPATIBLE_APIS \
+		-D_DEVKIT_SRC_
 endif 
 
 # ---- RECIPES -------------------------------------------------------------------------------------
 all :
 	$(MAKE) $(JOBCOUNT) $(OBJECT_MODULE_DIR) 
-	$(MAKE) $(JOBCOUNT) $(OBJNAMES)
+	$(MAKE) $(JOBCOUNT) $(TARGETNAME)
+ifndef SKIP_UNITTESTS	
+	$(MAKE) -C unittest all
+endif
 	
 $(OBJECT_MODULE_DIR) :
 	$(MKDIR) $@
 
+$(TARGETNAME) : $(OBJNAMES) $(COMMON_OBJS)
+	$(AR) rcs $@ $^ 
+	
 # suffix rule for .c -> .o
 $(OBJECT_MODULE_DIR)/%.o : %.c
 	$(CC) $(CFLAGS) $(INCS) -c $< -o $@ $(LDFLAGS)
+
+test:
+ifndef ESX_BUILD # can't run ESX tests on build system
+	$(MAKE) -C unittest test
+endif
 
 cstyle :
 	$(CSTYLE) $(SRC)
@@ -89,4 +116,10 @@ clean :
 
 clobber : clean
 
-.PHONY : all cstyle clean clobber
+sourcedrop: 
+	$(MKDIR) $(SOURCEDROP_DIR)/src/acpi
+	$(COPY) *.h $(SOURCEDROP_DIR)/src/acpi
+	$(COPY) *.c $(SOURCEDROP_DIR)/src/acpi
+	$(COPY) makefile $(SOURCEDROP_DIR)/src/acpi
+
+.PHONY : all clean test cstyle clobber sourcedrop

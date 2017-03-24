@@ -35,7 +35,7 @@
 #include <os/os_adapter.h>
 #include <system/system.h>
 #include <windows.h>
-#include <acpi/acpi.h>
+#include <acpi.h>
 
 int find_numa_nodes(NVM_UINT16 *p_node_id, NVM_UINT16 count);
 int set_affinity_numa_node(NVM_UINT16 node_id);

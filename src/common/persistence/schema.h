@@ -2549,7 +2549,6 @@ struct db_dimm_topology
 	unsigned int manufacturing_info_valid;
 	unsigned int manufacturing_location;
 	unsigned int manufacturing_date;
-	unsigned int type;
 	unsigned int serial_number[DIMM_TOPOLOGY_SERIAL_NUMBER_COUNT];
 	unsigned int interface_format_codes[DIMM_TOPOLOGY_INTERFACE_FORMAT_CODES_COUNT];
 };

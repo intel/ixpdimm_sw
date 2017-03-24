@@ -72,6 +72,7 @@ TARGETNAME = $(addprefix $(BUILD_DIR)/, $(TARGET))
 INCS = 	-I$(SRC_DIR)/cli \
 		-I$(SRC_DIR)/lib \
 		-I$(SRC_DIR)/common \
+		-I$(SRC_DIR)/acpi \
 		-I$(SRC_DIR)/wbem \
 		-I$(SRC_DIR)/ \
 		-I$(CLI_FRAMEWORK_DIR)/include \

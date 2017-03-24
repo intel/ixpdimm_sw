@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 2016, Intel Corporation
+ * Copyright (c) 2015 2017, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -48,6 +48,7 @@
 #include <windows/PrivateIoctlDefinitions.h>
 #include <windows/DiagnosticExport.h>
 #include "device_utilities.h"
+#include "nfit_utilities.h"
 
 #define	WIN_DRIVER_VERSION_MAJOR_MIN	1
 #define	WIN_DRIVER_VERSION_MAJOR_MAX	1
@@ -193,58 +194,7 @@ int get_platform_capabilities(struct bios_capabilities *p_capabilities)
  */
 int get_topology_count()
 {
-	COMMON_LOG_ENTRY();
-	int rc = NVM_ERR_UNKNOWN;
-
-	CR_GET_TOPOLOGY_IOCTL ioctl_data;
-	memset(&ioctl_data, 0, sizeof (ioctl_data));
-
-	// Windows expects an output payload that is exactly the size of count
-	// If Count 0 is entered and the implict payload 1 is not removed bufferoverrun will
-	// be returned as error.
-	size_t buf_size = sizeof (CR_GET_TOPOLOGY_IOCTL)
-		- sizeof (CR_GET_TOPOLOGY_OUTPUT_PAYLOAD);
-
-	// If NvmdimmCount is not equal to the number of NVDIMMS found internally by the driver
-	// during device enumeration, this var is set to the exact value expected by the driver
-	ioctl_data.InputPayload.TopologiesCount = 0;
-
-	if ((rc = execute_ioctl(buf_size, &ioctl_data, IOCTL_CR_GET_TOPOLOGY)) == NVM_SUCCESS)
-	{
-		// For windows driver if the buffer provided is less than the
-		// amount of space the driver would expect underrun is returned
-		// and the count variable is set to the expected number of elements
-		if (ioctl_data.ReturnCode == CR_RETURN_CODE_BUFFER_OVERRUN ||
-				ioctl_data.ReturnCode == CR_RETURN_CODE_BUFFER_UNDERRUN ||
-				ioctl_data.ReturnCode == CR_RETURN_CODE_SUCCESS)
-		{
-			rc = (int)ioctl_data.InputPayload.TopologiesCount;
-		}
-		else
-		{
-			rc = ind_err_to_nvm_lib_err(ioctl_data.ReturnCode);
-		}
-	}
-
-	return rc;
-}
-
-void copy_interface_fmt_codes(struct nvm_topology *p_topo,
-		NVDIMM_TOPOLOGY *p_drv_topo)
-{
-	COMMON_LOG_ENTRY();
-
-	p_topo->fmt_interface_codes[0] = p_drv_topo->FmtInterfaceCode;
-	// Additional IFCs from driver - start after the first one
-	for (int i = 1, drv_i = 0;
-			(i < NVM_MAX_IFCS_PER_DIMM) && (drv_i < MAX_ADDITIONAL_FIC_COUNT);
-			i++, drv_i++)
-	{
-		p_topo->fmt_interface_codes[i] =
-				p_drv_topo->AdditionalFmtInterfaceCodes[drv_i];
-	}
-
-	COMMON_LOG_EXIT();
+	return get_topology_count_from_nfit();
 }
 
 /*
@@ -252,120 +202,7 @@ void copy_interface_fmt_codes(struct nvm_topology *p_topo,
  */
 int get_topology(const NVM_UINT8 count, struct nvm_topology *p_dimm_topo)
 {
-	COMMON_LOG_ENTRY();
-	int rc = NVM_ERR_UNKNOWN;
-
-	if (p_dimm_topo == NULL)
-	{
-		COMMON_LOG_ERROR("p_dimm_topo is NULL");
-		rc = NVM_ERR_INVALIDPARAMETER;
-	}
-	else if ((rc = get_topology_count()) > 0)
-	{
-		memset(p_dimm_topo, 0, sizeof (struct nvm_topology) * count);
-
-		int actual_count = rc;
-
-		size_t buf_size = sizeof (CR_GET_TOPOLOGY_IOCTL) +
-				(actual_count - 1) * sizeof (NVDIMM_TOPOLOGY);
-		CR_GET_TOPOLOGY_IOCTL *p_ioctl_data = calloc(1, buf_size);
-
-		if (p_ioctl_data)
-		{
-			p_ioctl_data->InputPayload.TopologiesCount = actual_count;
-
-			if ((rc = execute_ioctl(buf_size, p_ioctl_data, IOCTL_CR_GET_TOPOLOGY))
-				== NVM_SUCCESS &&
-				(rc = ind_err_to_nvm_lib_err(p_ioctl_data->ReturnCode)) == NVM_SUCCESS)
-			{
-				NVM_UINT8 *p_smbios_table = NULL;
-				size_t smbios_table_size = 0;
-				rc = get_smbios_table_alloc(&p_smbios_table, &smbios_table_size);
-				if (rc == NVM_SUCCESS)
-				{
-					int return_count = 0;
-					if (count < actual_count)
-					{
-						return_count = count;
-						COMMON_LOG_ERROR("array too small to hold entire topology");
-						KEEP_ERROR(rc, NVM_ERR_ARRAYTOOSMALL);
-					}
-					else
-					{
-						return_count = actual_count;
-						KEEP_ERROR(rc, actual_count);
-					}
-
-					for (int i = 0; i < return_count; i++)
-					{
-						p_dimm_topo[i].device_handle.handle =
-							p_ioctl_data->OutputPayload.TopologiesList[i].
-								NfitDeviceHandle.DeviceHandle;
-						p_dimm_topo[i].id = p_ioctl_data->OutputPayload.TopologiesList[i].Id;
-						p_dimm_topo[i].vendor_id =
-							p_ioctl_data->OutputPayload.TopologiesList[i].VendorId;
-						p_dimm_topo[i].device_id =
-							SWAP_SHORT(p_ioctl_data->OutputPayload.TopologiesList[i].DeviceId);
-						p_dimm_topo[i].revision_id =
-							p_ioctl_data->OutputPayload.TopologiesList[i].RevisionId;
-						p_dimm_topo[i].subsystem_vendor_id =
-							p_ioctl_data->OutputPayload.TopologiesList[i].SubsystemVendorId;
-						p_dimm_topo[i].subsystem_device_id =
-							SWAP_SHORT(p_ioctl_data->OutputPayload.TopologiesList[i].
-								SubsystemDeviceId);
-						p_dimm_topo[i].subsystem_revision_id =
-							p_ioctl_data->OutputPayload.TopologiesList[i].SubsystemRevisionId;
-						p_dimm_topo[i].manufacturing_info_valid =
-							p_ioctl_data->OutputPayload.TopologiesList[i].
-								ManufacturingInfoValid;
-						p_dimm_topo[i].manufacturing_location =
-							p_ioctl_data->OutputPayload.TopologiesList[i].ManufacturingLocation;
-						p_dimm_topo[i].manufacturing_date =
-							SWAP_SHORT(p_ioctl_data->OutputPayload.TopologiesList[i].
-								ManufacturingDate);
-
-						unsigned int serial_number =
-								p_ioctl_data->OutputPayload.TopologiesList[i].SerialNumber;
-						unsigned int swapped_serial;
-						swap_bytes((unsigned char *)(&swapped_serial),
-								(unsigned char *)(&serial_number), sizeof (serial_number));
-						uint32_to_bytes(swapped_serial,
-								p_dimm_topo[i].serial_number, NVM_SERIAL_LEN);
-
-						copy_interface_fmt_codes(&(p_dimm_topo[i]),
-							&(p_ioctl_data->OutputPayload.TopologiesList[i]));
-
-						int mem_type = get_device_memory_type_from_smbios_table(
-							p_smbios_table, smbios_table_size,
-							p_dimm_topo[i].id);
-						if (mem_type < 0)
-						{
-							KEEP_ERROR(rc, mem_type);
-						}
-						else
-						{
-							p_dimm_topo[i].type = mem_type;
-						}
-					}
-				}
-
-				if (p_smbios_table)
-				{
-					free(p_smbios_table);
-				}
-			}
-
-			free(p_ioctl_data);
-		}
-		else
-		{
-			COMMON_LOG_ERROR("failed to dynamically allocate output payload");
-			rc = NVM_ERR_NOMEMORY;
-		}
-	}
-
-	COMMON_LOG_EXIT_RETURN_I(rc);
-	return rc;
+	return get_topology_from_nfit(count, p_dimm_topo);
 }
 
 /*

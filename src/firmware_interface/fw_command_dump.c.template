@@ -1,0 +1,231 @@
+/*
+ * Copyright (c) 2017, Intel Corporation
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *   * Redistributions of source code must retain the above copyright notice,
+ *     this list of conditions and the following disclaimer.
+ *   * Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *   * Neither the name of Intel Corporation nor the names of its contributors
+ *     may be used to endorse or promote products derived from this software
+ *     without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#include "fis_commands.h"
+#include "fis_parser.h"
+#include "fw_command_dump.h"
+#include "fw_command_printer.h"
+
+#include <common/string/s_str.h>
+#include <stdio.h>
+
+
+#define	COMMAND_NAME_BUFFER_SIZE 256
+
+int fwcmd_dump(const char *command_name, unsigned int handle, const char *filename)
+{
+	int rc = FWCMD_DUMP_RESULT_SUCCESS;
+	//- for cmd in commands
+	//- 	if cmd.has_output
+	//- 		if not loop.first
+	//- 			set else_str="else "
+	//- 		endif
+	{{else_str}}if (s_strncmpi(command_name, "{{cmd.name}}",
+		sizeof ("{{cmd.name}}")) == 0)
+	{
+		rc = {{cmd.name|fw_cmd_dump}}(handle,
+			//- if cmd.has_input
+			//- for f in cmd.input_payload.fields
+			//- if not f.ignore
+			{{f.default_value}},
+			//- endif
+			//- endfor
+			//- endif
+			filename);
+	}
+	//- 	endif
+	//- endfor
+	//- if commands
+	else
+	{
+		printf("Command \"%s\" not recognized. Available commands: \n", command_name);
+		//- for cmd in commands
+		//- if cmd.has_output
+		printf("\t{{cmd.name}}\n");
+		//- endif
+		//- endfor
+		rc = FWCMD_DUMP_RESULT_ERR;
+	}
+	//- endif
+
+	return rc;
+}
+
+
+void fwcmd_read_and_print(const char *filename)
+{
+
+	FILE *pFile = fopen(filename, "rb");
+	if (pFile)
+	{
+		fseek(pFile, 0, SEEK_END);
+		long fsize = ftell(pFile);
+		rewind(pFile);
+		unsigned char buffer[fsize];
+		size_t bytes_read = fread(buffer, 1, fsize, pFile);
+		fclose(pFile);
+		pFile = NULL;
+
+		if (bytes_read == fsize)
+		{
+			char command_name[COMMAND_NAME_BUFFER_SIZE];
+			s_strcpy(command_name, (char *)buffer, COMMAND_NAME_BUFFER_SIZE);
+            unsigned char *p_payload = buffer + COMMAND_NAME_BUFFER_SIZE;
+
+//- for cmd in commands
+//- 	if cmd.has_output
+//- 		if not loop.first
+//- 			set else_str="else "
+//- 		endif
+            {{else_str}}if (s_strncmpi(command_name, "{{cmd.name}}",
+            		sizeof ("{{cmd.name}}")) == 0)
+            {
+            	struct {{cmd.name|fw_cmd_data}} data;
+
+				{{cmd.name|fw_cmd_parser}}((struct {{cmd.name|output_payload}} *)p_payload, &data);
+				{{cmd.name|fw_cmd_printer}}(&data, 0);
+            }
+//-		endif
+//- endfor
+		}
+		else
+		{
+			printf("Issue reading file.\n");
+		}
+	}
+	else
+	{
+		printf("Issue opening file.\n");
+	}
+
+}
+
+//- for cmd in commands
+//- 	if cmd.has_output
+int {{cmd.name|fw_cmd_dump}}(const int handle,
+	//- if cmd.has_input
+	//- for f in cmd.input_payload.fields
+	//- if not f.ignore
+	const {{f.c_definition}},
+	//- endif
+	//- endfor
+	//- endif
+	const char * filename)
+{
+	FILE *pFile = fopen(filename, "wb");
+	int rc = 0;
+	if (pFile)
+	{
+		struct {{cmd.name|output_payload}} output_payload;
+
+		//- if cmd.has_input
+		struct {{cmd.name|input_payload}} input_payload;
+		//- for f in cmd.input_payload.fields
+		//- if not f.ignore
+		//- if f.is_primitive
+		input_payload.{{f.name}} = {{f.name}};
+		//- else
+		memmove(input_payload.{{f.name}}, {{f.name}}, {{f.byte_count}});
+		//- endif
+		//- endif
+		//- endfor
+		//- endif
+
+		rc = {{cmd.name|fis}}(handle,
+			//- if cmd.has_input
+			&input_payload,
+			//- endif
+			&output_payload);
+		if (rc == 0)
+		{
+			size_t bytes_written = 0;
+			char name[COMMAND_NAME_BUFFER_SIZE] = {0};
+			s_strcpy(name, "{{cmd.name}}", COMMAND_NAME_BUFFER_SIZE);
+			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
+			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
+			{
+				rc = FWCMD_DUMP_RESULT_ERR;
+			}
+			else
+			{
+				unsigned char *p_buffer = (unsigned char *) (&output_payload);
+				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
+				if (bytes_written != sizeof(output_payload))
+				{
+					rc = FWCMD_DUMP_RESULT_ERR;
+				}
+			}
+			fclose(pFile);
+		}
+	}
+	else
+	{
+		rc = FWCMD_DUMP_RESULT_ERR;
+	}
+
+	return rc;
+}
+
+struct {{cmd.name|fw_cmd_result}} {{cmd.name|fw_cmd_read}}(const char *filename)
+{
+	struct {{cmd.name|fw_cmd_result}} result = {0,};
+	FILE *pFile = fopen(filename, "rb");
+	if (pFile)
+	{
+		fseek(pFile, 0, SEEK_END);
+		long fsize = ftell(pFile);
+		rewind(pFile);
+		unsigned char buffer[fsize];
+		size_t bytes_read = fread(buffer, 1, fsize, pFile);
+		fclose(pFile);
+
+		if (bytes_read == fsize)
+		{
+			result.p_data = (struct {{cmd.name|fw_cmd_data}} *)malloc(sizeof(*result.p_data));
+			if ({{cmd.name|fw_cmd_parser}}((const struct {{cmd.name|output_payload}}*) buffer, result.p_data) == FIS_PARSER_CODES_SUCCESS)
+			{
+				result.success = 1;
+			}
+			else
+			{
+				result.error_code = FWCMD_DUMP_RESULT_ERR;
+			}
+		}
+		else
+		{
+			result.error_code = FWCMD_DUMP_RESULT_ERR; // error reading file
+		}
+	}
+	else
+	{
+		result.error_code = FWCMD_DUMP_RESULT_ERR; // error opening file
+	}
+
+	return result;
+}
+//- 	endif
+//- endfor

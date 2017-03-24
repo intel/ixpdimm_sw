@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 2016, Intel Corporation
+ * Copyright (c) 2015 2017, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -39,16 +39,6 @@
 
 #define	SYSFS_ACPI_PATH	"/sys/firmware/acpi/tables/"
 
-#define	COMMON_LOG_ENTRY()
-#define	COMMON_LOG_ERROR(error)
-#define	COMMON_LOG_EXIT_RETURN_I(rc)
-#define	COMMON_LOG_DEBUG_F(fmt, ...) \
-	printf(fmt "\n", __VA_ARGS__)
-
-#define	COMMON_LOG_ERROR_F(fmt, ...)
-#define	COMMON_LOG_DEBUG(str)
-#define	COMMON_LOG_EXIT()
-
 /*!
  * Return the specified ACPI table or the size
  * required
@@ -56,33 +46,29 @@
 int get_acpi_table(
 		const char *signature,
 		struct acpi_table *p_table,
-		const COMMON_UINT32 size)
+		const unsigned int size)
 {
-	COMMON_LOG_ENTRY();
-	int rc = 0; // table size
+	int rc = 0;
 
-	COMMON_PATH table_path;
-	s_strncpy(table_path, COMMON_PATH_LEN, SYSFS_ACPI_PATH,
-		strnlen(SYSFS_ACPI_PATH, COMMON_PATH_LEN));
-	s_strncat(table_path, COMMON_PATH_LEN, signature, strnlen(signature, COMMON_PATH_LEN));
+	char table_path[PATH_MAX];
+	s_strncpy(table_path, PATH_MAX, SYSFS_ACPI_PATH,
+		strnlen(SYSFS_ACPI_PATH, PATH_MAX));
+	s_strncat(table_path, PATH_MAX, signature, strnlen(signature, PATH_MAX));
 
 	int fd = open(table_path, O_RDONLY|O_CLOEXEC);
 	if (fd < 0)
 	{
-		COMMON_LOG_ERROR_F("ACPI table '%.4s' not found", signature);
-		rc = COMMON_ERR_FAILED;
+		rc = ACPI_ERR_TABLENOTFOUND;
 	}
 	else
 	{
 		struct acpi_table_header header;
 		size_t header_size = sizeof (header);
 
-
 		ssize_t hdr_bytes_read = read(fd, &header, header_size);
 		if (hdr_bytes_read != header_size)
 		{
-			COMMON_LOG_ERROR_F("ACPI table '%.4s' is invalid", signature);
-			rc = COMMON_ERR_FAILED;
+			rc = ACPI_ERR_BADTABLE;
 		}
 		else
 		{
@@ -94,10 +80,7 @@ int get_acpi_table(
 				memcpy(&(p_table->header), &header, header_size);
 				if (size < total_table_size)
 				{
-					COMMON_LOG_ERROR_F(
-							"buffer length of %u is not large enough for ACPI table of size %u",
-							size, total_table_size);
-					rc = COMMON_ERR_FAILED;
+					rc = ACPI_ERR_BADTABLE;
 				}
 				else
 				{
@@ -114,8 +97,7 @@ int get_acpi_table(
 
 					if (total_read != requested_bytes)
 					{
-						COMMON_LOG_ERROR_F("Failed to read ACPI table '%.4s'", signature);
-						rc = COMMON_ERR_FAILED;
+						rc = ACPI_ERR_BADTABLE;
 					}
 					else
 					{
@@ -127,6 +109,5 @@ int get_acpi_table(
 		close(fd);
 	}
 
-	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }

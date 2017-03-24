@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 2016, Intel Corporation
+ * Copyright (c) 2015 2017, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -59,84 +59,66 @@ int driver_features_to_nvm_features(
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
 
-	p_nvm_features->get_platform_capabilities = p_driver_features->get_platform_capabilities;
-	p_nvm_features->get_devices = p_driver_features->get_topology;
+	// get device health - Get Topology, Passthrough
+	p_nvm_features->get_device_health = p_driver_features->passthrough;
 
-	// Features that require Get Topology
-	if (p_driver_features->get_topology)
-	{
-		if (get_topology_count() > 0)
-		{
-			// get SMBIOS - Get Topology, Get Dimm Detail
-			p_nvm_features->get_device_smbios = p_driver_features->get_dimm_detail;
+	// get device settings - Get Topology, Passthrough
+	p_nvm_features->get_device_settings = p_driver_features->passthrough;
 
-			// get device health - Get Topology, Passthrough
-			p_nvm_features->get_device_health = p_driver_features->passthrough;
+	// modify device settings - Get Topology, Passthrough
+	p_nvm_features->modify_device_settings = p_driver_features->passthrough;
 
-			// get device settings - Get Topology, Passthrough
-			p_nvm_features->get_device_settings = p_driver_features->passthrough;
+	// get device security - Get Topology, Passthrough
+	p_nvm_features->get_device_security = p_driver_features->passthrough;
 
-			// modify device settings - Get Topology, Passthrough
-			p_nvm_features->modify_device_settings = p_driver_features->passthrough;
+	// modify device security - Get Topology, Passthrough
+	p_nvm_features->modify_device_security = p_driver_features->passthrough;
 
-			// get device security - Get Topology, Passthrough
-			p_nvm_features->get_device_security = p_driver_features->passthrough;
+	// get device performance - Get Topology, Passthrough
+	p_nvm_features->get_device_performance = p_driver_features->passthrough;
 
-			// modify device security - Get Topology, Passthrough
-			p_nvm_features->modify_device_security = p_driver_features->passthrough;
+	// get device firmware - Get Topology, Passthrough
+	p_nvm_features->get_device_firmware = p_driver_features->passthrough;
 
-			// get device performance - Get Topology, Passthrough
-			p_nvm_features->get_device_performance = p_driver_features->passthrough;
+	// update device firmware - Get Topology, Passthrough
+	p_nvm_features->update_device_firmware = p_driver_features->passthrough;
 
-			// get device firmware - Get Topology, Passthrough
-			p_nvm_features->get_device_firmware = p_driver_features->passthrough;
+	// get sensors - Get Topology, Passthrough
+	p_nvm_features->get_sensors = p_driver_features->passthrough;
 
-			// update device firmware - Get Topology, Passthrough
-			p_nvm_features->update_device_firmware = p_driver_features->passthrough;
+	// modify sensors - Get Topology, Set Features
+	p_nvm_features->modify_sensors = p_driver_features->passthrough;
 
-			// get sensors - Get Topology, Passthrough
-			p_nvm_features->get_sensors = p_driver_features->passthrough;
+	// get device capacity - Get Topology, Passthrough
+	p_nvm_features->get_device_capacity = p_driver_features->passthrough;
 
-			// modify sensors - Get Topology, Set Features
-			p_nvm_features->modify_sensors = p_driver_features->passthrough;
+	// modify device capacity - Get Topology, Get Platform Capabilities, Passthrough
+	p_nvm_features->modify_device_capacity = p_driver_features->passthrough;
 
-			// get device capacity - Get Topology, Passthrough
-			p_nvm_features->get_device_capacity = p_driver_features->passthrough;
+	// get pools
+	p_nvm_features->get_pools = (p_driver_features->passthrough &
+			p_driver_features->get_interleave);
 
-			// modify device capacity - Get Topology, Get Platform Capabilities, Passthrough
-			p_nvm_features->modify_device_capacity = (p_driver_features->get_platform_capabilities &
-					p_driver_features->passthrough);
+	// get address scrub data - Get Topology, Get Address Scrub
+	p_nvm_features->get_address_scrub_data = p_driver_features->get_address_scrub_data;
 
-			// get pools
-			p_nvm_features->get_pools = (p_driver_features->passthrough &
-					p_driver_features->get_interleave);
+	// start address scrub - Get Topology, Passthrough
+	p_nvm_features->start_address_scrub = p_driver_features->passthrough;
 
-			// get address scrub data - Get Topology, Get Address Scrub
-			p_nvm_features->get_address_scrub_data = p_driver_features->get_address_scrub_data;
+	// quick diagnostic - Get Topology, Passthrough
+	p_nvm_features->quick_diagnostic = p_driver_features->passthrough;
 
-			// start address scrub - Get Topology, Passthrough
-			p_nvm_features->start_address_scrub = p_driver_features->passthrough;
+	// security diagnostic - Get Topology, Passthrough
+	p_nvm_features->security_diagnostic = p_driver_features->passthrough;
 
-			// quick diagnostic - Get Topology, Passthrough
-			p_nvm_features->quick_diagnostic = p_driver_features->passthrough;
+	// platform config diagnostic - Get Topology, Get Platform Capabilities
+	p_nvm_features->platform_config_diagnostic =
+			p_driver_features->get_platform_capabilities && p_driver_features->passthrough;
 
-			// security diagnostic - Get Topology, Passthrough
-			p_nvm_features->security_diagnostic = p_driver_features->passthrough;
+	// fw consistency diagnostic - Get Topology, Passthrough
+	p_nvm_features->fw_consistency_diagnostic = p_driver_features->passthrough;
 
-			// platform config diagnostic - Get Topology, Get Platform Capabilities
-			p_nvm_features->platform_config_diagnostic =
-					p_driver_features->get_platform_capabilities;
-
-			// fw consistency diagnostic - Get Topology, Passthrough
-			p_nvm_features->fw_consistency_diagnostic = p_driver_features->passthrough;
-
-			p_nvm_features->error_injection = p_driver_features->passthrough;
-		}
-		else
-		{
-			COMMON_LOG_DEBUG("There are no devices in the system");
-		}
-	}
+	p_nvm_features->error_injection = p_driver_features->passthrough;
 
 	// Namespace features correlate directly to driver features
 	p_nvm_features->get_namespaces = p_driver_features->get_namespaces;
@@ -543,12 +525,12 @@ int apply_dimm_sku_capabilities(struct nvm_capabilities *p_capabilities)
 				}
 			}
 		}
-	}
 
-	// apply dimm SKU capabilities to host SW supported features
-	dimm_sku_capabilities_to_nvm_features(
-			&p_capabilities->sku_capabilities,
-			&p_capabilities->nvm_features);
+		// apply dimm SKU capabilities to host SW supported features
+		dimm_sku_capabilities_to_nvm_features(
+				&p_capabilities->sku_capabilities,
+				&p_capabilities->nvm_features);
+	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
@@ -580,6 +562,9 @@ int nvm_get_nvm_capabilities(struct nvm_capabilities *p_capabilities)
 	{
 		// all capabilities are disabled by default
 		memset(p_capabilities, 0, sizeof (struct nvm_capabilities));
+		p_capabilities->nvm_features.get_devices = 1;
+		p_capabilities->nvm_features.get_platform_capabilities = 1;
+		p_capabilities->nvm_features.get_device_smbios = 1;
 
 		// Start by retrieving and set the capabilities based
 		// on what the driver supports.
@@ -597,18 +582,10 @@ int nvm_get_nvm_capabilities(struct nvm_capabilities *p_capabilities)
 		else
 		{
 			// Then retrieve and apply the platform BIOS supported capabilities
-			// (if the driver supports the IOCTL)
-			if (p_capabilities->nvm_features.get_platform_capabilities)
-			{
-				rc = apply_bios_capabilities(p_capabilities);
-			}
+			rc = apply_bios_capabilities(p_capabilities);
 
 			// Finally retrieve and apply the NVM-DIMM SKU capabilities
-			// (if the driver supports the IOCTL)
-			if (p_capabilities->nvm_features.get_devices)
-			{
-				KEEP_ERROR(rc, apply_dimm_sku_capabilities(p_capabilities));
-			}
+			KEEP_ERROR(rc, apply_dimm_sku_capabilities(p_capabilities));
 		}
 
 		// Second most common configuration is memory mode only.
@@ -743,75 +720,36 @@ int system_in_sku_violation(const struct nvm_capabilities *p_capabilities,
 	int rc = NVM_SUCCESS;
 
 	*p_sku_violation = 0;
-	if (p_capabilities->nvm_features.get_devices)
+	rc = nvm_get_device_count();
+	if (rc > 0)
 	{
-		rc = nvm_get_device_count();
-
+		int device_count = rc;
+		struct device_discovery devices[device_count];
+		rc = nvm_get_devices(devices, device_count);
 		if (rc > 0)
 		{
-			if (p_capabilities->nvm_features.get_device_capacity)
+			device_count = rc;
+			rc = NVM_SUCCESS;
+			for (int i = 0; i < device_count; i++)
 			{
-				int device_count = rc;
-				struct device_discovery devices[device_count];
-				rc = nvm_get_devices(devices, device_count);
-				if (rc > 0)
+				if (devices[i].manageability == MANAGEMENT_VALIDCONFIG)
 				{
-					device_count = rc;
-					rc = NVM_SUCCESS;
-					for (int i = 0; i < device_count; i++)
-					{
-						if (devices[i].manageability == MANAGEMENT_VALIDCONFIG)
-						{
-							rc = device_in_sku_violation(&devices[i],
-									p_sku_violation);
-						}
-						// stop if sku violation detected
-						if (*p_sku_violation)
-						{
-							COMMON_LOG_ERROR(
-								"One more " NVM_DIMM_NAME "s are configured in "
-								"violation of the license.");
-							break;
-						}
-					}
+					KEEP_ERROR(rc, device_in_sku_violation(&devices[i],
+							p_sku_violation));
 				}
-			}
-			else
-			{
-				rc = NVM_ERR_NOTSUPPORTED;
+				// stop if sku violation detected
+				if (*p_sku_violation)
+				{
+					COMMON_LOG_ERROR(
+						"One more " NVM_DIMM_NAME "s are configured in "
+						"violation of the license.");
+					break;
+				}
 			}
 		}
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
-	return rc;
-}
-
-int get_devices_is_supported()
-{
-	int rc = NVM_ERR_NOTSUPPORTED;
-
-	// if capabilities are already in context, use them
-	// rather than making another round trip to the driver
-	struct nvm_capabilities capabilities;
-	if (get_nvm_context_capabilities(&capabilities) == NVM_SUCCESS &&
-			capabilities.nvm_features.get_devices)
-	{
-		rc = NVM_SUCCESS;
-	}
-	else
-	{
-		// directly calling get_driver_capabilities instead of
-		// nvm_get_nvm_capabilities to avoid recursive looping
-		// between nvm_get_devices and nvm_get_nvm_capabilitiies
-		struct nvm_driver_capabilities driver_caps;
-		memset(&driver_caps, 0, sizeof (driver_caps));
-		if ((get_driver_capabilities(&driver_caps) == NVM_SUCCESS) &&
-				driver_caps.features.get_topology)
-		{
-			rc = NVM_SUCCESS;
-		}
-	}
 	return rc;
 }
 

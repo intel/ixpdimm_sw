@@ -39,14 +39,13 @@ OBJECT_MODULE_DIR = $(OBJECT_DIR)/common
 # ---- COMPONENTS ----------------------------------------------------------------------------------
 FILEOPS = file_ops
 OS = os
-ACPI = acpi
 UNITTEST = unittest
 
 # defines the submodules compiled via this makefile (note encrypt not included intentionally)
 SUBMODULES = string time guid uid system persistence smbios
 
 # defines the submodules compiled independent of this makefile
-INDEPENDENT_SUBMODULES = file_ops os acpi
+INDEPENDENT_SUBMODULES = file_ops os
 
 SUBDIRS = . encrypt $(SUBMODULES) $(INDEPENDENT_SUBMODULES) 
 
@@ -163,9 +162,6 @@ file_ops :
 os :
 	$(MAKE) -C $(OS) all
 
-acpi :
-	$(MAKE) -C $(ACPI) all
-	
 # this is separate because I need to turn off warnings on ESX
 encryptdir:
 	$(CC) $(ENCRYPT_CFLAGS) $(INCS) -c encrypt/encrypt.c -o $(OBJECT_MODULE_DIR)/encrypt/encrypt.o $(LDFLAGS)
@@ -182,7 +178,6 @@ cstyle :
 	$(CSTYLE) $(CSTYLE_FILES)
 	$(MAKE) -C $(OS) cstyle
 	$(MAKE) -C $(FILEOPS) cstyle
-	$(MAKE) -C $(ACPI) cstyle
 
 i18n:
 	$(GETTEXT) persistence/event.c #translate event messages
@@ -195,7 +190,6 @@ clean :
 	$(RM) $(BUILD_DIR)/$(PUBLIC_KEY_NAME)
 	$(MAKE) -C $(OS) clean
 	$(MAKE) -C $(FILEOPS) clean
-	$(MAKE) -C $(ACPI) clean
 	$(MAKE) -C $(UNITTEST) clean
 
 clobber :
@@ -213,4 +207,4 @@ sourcedrop:
 		done \
 	done 
 
-.PHONY : all file_ops os acpi dependencies unittest test cstyle clean clobber sourcedrop
+.PHONY : all file_ops os dependencies unittest test cstyle clean clobber sourcedrop

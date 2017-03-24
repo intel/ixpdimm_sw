@@ -89,6 +89,7 @@ CPPFLAGS += $(BUILD_DLL_FLAG)
 
 # ---- COMPILER PARAMETERS -------------------------------------------------------------------------
 INCS = 	-I$(SRC_DIR)/common \
+		-I$(SRC_DIR)/acpi \
 		-I$(SRC_DIR)/lib \
 		-I$(SRC_DIR)
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 2016, Intel Corporation
+ * Copyright (c) 2015 2017, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -220,9 +220,12 @@ enum return_code
 	NVM_ERR_INCOMPATIBLEFW = -53, // The firmware image is not compatible with this
 									//	version of software.
 	NVM_ERR_NAMESPACEBUSY = -54, // The namespace cannot be changed because it is in use by
-									// a file system.
-	NVM_ERR_FWALREADYSTAGED = -55, // A firmware image is already staged for execution.
+								// a file system.
+	NVM_ERR_FWALREADYSTAGED = -55, 	// A firmware image is already staged for execution.
 									// A power cycle is required before another can be staged.
+	NVM_ERR_BADNFIT = -56 // The NFIT table is invalid.
+
+
 };
 
 /*

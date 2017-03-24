@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 2016, Intel Corporation
+ * Copyright (c) 2015 2017, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -108,8 +108,6 @@ int device_in_sku_violation(struct device_discovery *p_discovery,
 
 int system_in_sku_violation(const struct nvm_capabilities *p_capabilities,
 		NVM_BOOL *p_sku_violation);
-
-int get_devices_is_supported();
 
 NVM_BOOL sku_value_is_different(NVM_UINT32 dimm_sku1, NVM_UINT32 dimm_sku2);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 2016, Intel Corporation
+ * Copyright (c) 2017, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -25,26 +25,37 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Implementations of ACPI helper functions for ESX
- */
+#include "fis_commands.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <driver_interface/passthrough.h>
 
-#include "acpi.h"
-
-
-/*!
- * Return the specified ACPI table or the size
- * required
- */
-int get_acpi_table(
-		const char *signature,
-		struct acpi_table *p_table,
-		const COMMON_UINT32 size)
+//- for cmd in commands
+int {{cmd.name|fis}}(const unsigned int device_handle
+	{%- if cmd.has_input %}, struct {{cmd.name|input_payload}} *p_input_payload{% endif -%}
+	{%- if cmd.has_output %}, struct {{cmd.name|output_payload}} *p_output_payload{% endif -%}
+)
 {
-	int rc = 0; // table size
-
-	// No Op - On ESX getting the ACPI table requires the ESX driver VMware has developed
-	// specifically for MGMT SW. Keeping the ACPI table retrieval in the non-common esx adapter.
-
-	return rc;
+	struct fw_cmd cmd;
+	memset(&cmd, 0, sizeof (struct fw_cmd));
+	cmd.device_handle = device_handle;
+	cmd.opcode = {{cmd.op_code}};
+	cmd.sub_opcode = {{cmd.sub_op_code}};
+//- 	if cmd.has_output
+//- 		if cmd.output_is_large
+	cmd.large_output_payload_size = sizeof (struct {{cmd.name|output_payload}});
+	cmd.large_output_payload = p_output_payload;
+//- 		else
+	cmd.output_payload_size = sizeof (struct {{cmd.name|output_payload}});
+	cmd.output_payload = p_output_payload;
+//- 		endif
+//- 	endif
+//- 	if cmd.has_input
+	cmd.input_payload = p_input_payload;
+	cmd.input_payload_size = sizeof (struct {{cmd.name|input_payload}});
+//- 	endif
+	return ioctl_passthrough_cmd(&cmd);
 }
+
+//- endfor

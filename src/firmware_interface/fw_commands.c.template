@@ -1,0 +1,170 @@
+/*
+ * Copyright (c) 2017, Intel Corporation
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *   * Redistributions of source code must retain the above copyright notice,
+ *     this list of conditions and the following disclaimer.
+ *   * Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *   * Neither the name of Intel Corporation nor the names of its contributors
+ *     may be used to endorse or promote products derived from this software
+ *     without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#include "fis_commands.h"
+#include "fis_parser.h"
+#include "fw_commands.h"
+
+#include <common/string/s_str.h>
+
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+//- macro free_multiple(name, payload)
+	for (int i = 0; i < p_data->{{name}}_count; i++)
+	{
+		{{name|fw_cmd_free_data}}(&p_data->{{name}}[i]);
+	}
+	free(p_data->{{name}});
+//- endmacro
+
+
+//- macro free_data(name, payload)
+void {{name|fw_cmd_free_data}}(struct {{name|fw_cmd_data}} *p_data)
+{
+//- for r in payload.payload_refs
+//- 	if r.is_type_based
+//- 		for t in r.types
+//- 			set name=r.types[t]
+//- 			if r.is_multiple
+{{free_multiple(name)}}
+//-				else
+	{{name|fw_cmd_free_data}}(&p_data->{{name}});
+//- 			endif
+//- 		endfor
+//- 	elif r.is_multiple
+{{free_multiple(r.name)}}
+//- 	else
+	{{r.name|fw_cmd_free_data}}(&p_data->{{r.name}});
+//- 	endif
+//- endfor
+}
+//- endmacro
+
+
+
+//- for cmd in commands
+
+/* BEGIN {{cmd.name}} */
+struct {{cmd.name|fw_cmd_result}} {{cmd|fw_cmd_name}}(unsigned int handle
+{%- 	for f in cmd.input_fields_not_ignored -%}
+	,
+	const {{f.c_definition}}
+{%- 	endfor -%}
+	)
+{
+	struct {{cmd.name|fw_cmd_result}} result;
+	memset(&result, 0, sizeof (struct {{cmd.name|fw_cmd_result}}));
+
+	//- if cmd.has_input
+	struct {{cmd.name|input_payload}} input_payload;
+		//- for f in cmd.input_fields_not_ignored
+			//- if f.is_primitive
+	input_payload.{{f.name}} = {{f.name}};
+			//- else
+	memmove(input_payload.{{f.name}}, {{f.name}}, {{f.byte_count}});
+			//- endif
+		//- endfor
+	//- endif
+
+	//- if cmd.has_output
+	struct {{cmd.name|output_payload}} output_payload;
+	//- endif
+
+	int rc = {{cmd.name|fis}}(handle
+ 	{%- if cmd.has_input -%}
+		,
+		&input_payload
+	{%- endif -%}
+	{%- if cmd.has_output -%}
+		,
+		&output_payload
+	{%- endif -%}
+		);
+
+	if (rc == 0)
+	{
+		//- if cmd.has_output
+		result.p_data = (struct {{cmd.name|fw_cmd_data}} *)malloc(sizeof(*result.p_data));
+		{{cmd.name|fw_cmd_parser}}(&output_payload, result.p_data);
+		//- endif
+		result.success = 1;
+	}
+	else
+	{
+		result.error_code = rc;
+	}
+	return result;
+}
+//- 	if cmd.has_output
+//- 		for s in cmd.sub_payloads
+{{free_data(s.name, s.payload)}}
+//- 		endfor
+{{free_data(cmd.name, cmd.output_payload)}}
+void {{cmd.name|fw_cmd_free}}(struct {{cmd.name|fw_cmd_result}} *p_result)
+{
+	{{cmd.name|fw_cmd_free_data}}(p_result->p_data);
+	free(p_result->p_data);
+}
+//- 	endif
+/* END {{cmd.name}} */
+
+//- endfor
+
+/*
+ * helper functions
+ */
+int fwcmd_is_command_name(const char * cmd_name)
+{
+	int exists = 0;
+
+//- for cmd in commands
+	if (s_strncmpi(cmd_name, "{{cmd.name}}", sizeof ("{{cmd.name}}")) == 0)
+	{
+		exists = 1;
+	}
+//- endfor
+
+	return exists;
+}
+
+int fwcmd_is_output_command_name(const char * cmd_name)
+{
+	int exists = 0;
+
+//- for cmd in commands
+//- 	if cmd.has_output
+	if (s_strncmpi(cmd_name, "{{cmd.name}}", sizeof ("{{cmd.name}}")) == 0)
+	{
+		exists = 1;
+	}
+//-		endif
+//- endfor
+
+	return exists;
+}

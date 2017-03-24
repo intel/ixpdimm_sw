@@ -1,0 +1,83 @@
+/*
+ * Copyright (c) 2017, Intel Corporation
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *   * Redistributions of source code must retain the above copyright notice,
+ *     this list of conditions and the following disclaimer.
+ *   * Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *   * Neither the name of Intel Corporation nor the names of its contributors
+ *     may be used to endorse or promote products derived from this software
+ *     without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+//- macro payload_fields(fields)
+//- for f in fields
+//- 	if f.is_primitive
+	{{f.c_type}} {{f.name}};
+//- 	else
+	unsigned char {{f.name}}[{{f.byte_count}}];
+//- 	endif
+//- endfor
+//- endmacro
+
+#ifndef CR_MGMT_FIS_COMMANDS_H
+#define CR_MGMT_FIS_COMMANDS_H
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+/*
+ * Payloads Structures
+ */
+//- for cmd in commands
+//- 	if cmd.has_output
+struct {{cmd.name|output_payload}}
+{
+{{ payload_fields(cmd.output_payload.fields) }}
+} __attribute__((packed));
+//- 	endif
+
+//- 	if cmd.has_input
+struct {{cmd.name|input_payload}}
+{
+{{ payload_fields(cmd.input_payload.fields) }}
+} __attribute__((packed));
+//- 	endif
+
+//- 	for s in cmd.sub_payloads
+struct {{s.name|output_payload}}
+{
+{{ payload_fields(s.payload.fields) }}
+} __attribute__((packed));
+//- 	endfor
+//- endfor
+
+/*
+ * FIS Commands
+ */
+//- for cmd in commands
+int {{cmd.name|fis}}(const unsigned int device_handle
+	{%- if cmd.has_input %}, struct {{cmd.name|input_payload}} *p_input_payload{% endif -%}
+{%- if cmd.has_output %}, struct {{cmd.name|output_payload}} *p_output_payload{% endif -%}
+);
+//- endfor
+
+#ifdef __cplusplus
+}
+#endif
+#endif //CR_MGMT_FIS_COMMANDS_H

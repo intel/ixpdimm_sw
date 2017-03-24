@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 2016, Intel Corporation
+ * Copyright (c) 2015 2017, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -150,10 +150,6 @@ int nvm_get_device_count()
 	else if (!is_supported_driver_available())
 	{
 		rc = NVM_ERR_BADDRIVER;
-	}
-	else if ((rc = get_devices_is_supported()) != NVM_SUCCESS)
-	{
-		COMMON_LOG_ERROR("Retrieving devices is not supported.");
 	}
 	else if ((rc = get_nvm_context_device_count()) < 0)
 	{
@@ -517,10 +513,6 @@ int nvm_get_devices(struct device_discovery *p_devices, const NVM_UINT8 count)
 	{
 		rc = NVM_ERR_BADDRIVER;
 	}
-	else if ((rc = get_devices_is_supported()) != NVM_SUCCESS)
-	{
-		COMMON_LOG_ERROR("Retrieving devices is not supported.");
-	}
 	else if (p_devices == NULL)
 	{
 		COMMON_LOG_ERROR("Invalid parameter, p_devices is NULL");
@@ -559,10 +551,6 @@ int nvm_get_device_discovery(const NVM_UID device_uid,
 	else if (!is_supported_driver_available())
 	{
 		rc = NVM_ERR_BADDRIVER;
-	}
-	else if ((rc = get_devices_is_supported()) != NVM_SUCCESS)
-	{
-		COMMON_LOG_ERROR("Retrieving devices is not supported.");
 	}
 	else if (device_uid == NULL)
 	{

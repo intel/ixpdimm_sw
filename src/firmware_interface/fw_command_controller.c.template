@@ -1,0 +1,142 @@
+/*
+ * Copyright (c) 2017, Intel Corporation
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *   * Redistributions of source code must retain the above copyright notice,
+ *     this list of conditions and the following disclaimer.
+ *   * Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *   * Neither the name of Intel Corporation nor the names of its contributors
+ *     may be used to endorse or promote products derived from this software
+ *     without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#include <stdio.h>
+#include <common/string/s_str.h>
+
+#include "fw_command_controller.h"
+#include "fw_commands.h"
+#include "fw_command_printer.h"
+
+int to_int(char * value)
+{
+	return atoi(value);
+}
+
+char *to_str(char *value)
+{
+	return value;
+}
+
+void fwcmd_print_all(unsigned int handle)
+{
+	//- for cmd in commands
+	//- if cmd.has_output
+	printf("Printing {{cmd.name}} ... \n");
+	{{cmd.name|fw_cmd_print_controller}}(handle
+	//- if cmd.has_input
+		//- for f in cmd.input_payload.fields
+		//- if not f.ignore
+		, {{f.default_value}}
+		//- endif
+		//- endfor
+	//- endif
+		);
+	printf("--------------------------------------------\n");
+	//- endif
+	//- endfor
+}
+
+void fwcmd_run(const char *command_name,
+	unsigned int handle,
+	fwcmd_args *p_args)
+{
+	//- for cmd in commands
+	//- 	if not loop.first
+	//- 		set else_str="else "
+	//- 	endif
+	{{else_str}}if (s_strncmpi(command_name, "{{cmd.name}}",
+		sizeof ("{{cmd.name}}")) == 0)
+	{
+//-	for f in cmd.input_fields_not_ignored
+		char * {{f.name}}_value = find_arg(p_args, "{{f.name}}");
+		//- if f.default_value
+		if (!{{f.name}}_value)
+		{
+			{{f.name}}_value = "{{f.default_value}}";
+		}
+		//- else
+		if (!{{f.name}}_value)
+		{
+			printf("Required argument '{{f.name}}' not found\n");
+			return;
+		}
+		//- endif
+//- endfor
+		{{cmd.name|fw_cmd_print_controller}}(handle
+			//- for f in cmd.input_fields_not_ignored
+			//- 	if not f.is_string
+			, to_int({{f.name}}_value)
+			//-		else
+			, {{f.name}}_value
+			//- 	endif
+			//- endfor
+
+		);
+
+	}
+		//- endfor
+	else
+	{
+		printf("Command \"%s\" not recognized. Available commands: \n", command_name);
+		//- for cmd in commands
+		printf("\t{{cmd.name}}\n");
+		//- endfor
+	}
+}
+
+//- for cmd in commands
+void {{cmd.name|fw_cmd_print_controller}}(unsigned int handle
+{%- 	for f in cmd.input_fields_not_ignored -%}
+	, const {{f.c_definition}}
+{%- 	endfor -%}
+	)
+{
+	struct {{cmd.name|fw_cmd_result}} result = {{cmd|fw_cmd_name}}(handle
+{%-for f in cmd.input_fields_not_ignored-%}
+		, {{f.name}}
+{%-endfor-%}
+		);
+
+	if (result.success)
+	{
+		printf("0x%x: Success!\n", handle);
+//- if cmd.has_output
+		{{cmd.name|fw_cmd_printer}}(result.p_data, 0);
+//- endif
+	}
+	else
+	{
+		printf("There was an issue executing {{cmd.name}}. Error: %d\n",
+			result.error_code);
+	}
+//- if cmd.has_output
+	{{cmd.name|fw_cmd_free}}(&result);
+//- endif
+}
+
+//- endfor

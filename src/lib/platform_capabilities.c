@@ -38,7 +38,6 @@
 #include "platform_capabilities.h"
 #include "platform_config_data.h"
 #include <persistence/logging.h>
-#include <acpi/acpi.h>
 
 // Helper macro for database functions to update
 // the platform configuration data.

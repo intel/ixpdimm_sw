@@ -77,6 +77,7 @@ TARGETNAME = $(addprefix $(BUILD_DIR)/, $(TARGET))
 # ---- COMPILER PARAMETERS -------------------------------------------------------------------------
 INCS = 	-I$(SRC_DIR) -I$(SRC_DIR)/core \
 		-I$(SRC_DIR)/common \
+		-I$(SRC_DIR)/acpi \
 		-I$(SRC_DIR)/lib \
 		-I$(EXTERN_DIR)/intel_i18n/include
 

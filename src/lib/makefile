@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2015 2016, Intel Corporation
+# Copyright (c) 2015 2017, Intel Corporation
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -27,7 +27,6 @@
 #
 # Makefile for Native Management Library
 #
-
 
 # ---- BUILD ENVIRONMENT ---------------------------------------------------------------------------
 ROOT_DIR = ../..
@@ -101,7 +100,9 @@ ALL_TARGETS = $(OBJECT_MODULE_DIR) $(TARGETNAME) create_config_db $(UNITTEST)
 
 # ---- COMPILER PARAMETERS -------------------------------------------------------------------------
 INCS =  -I. \
+		-I$(SRC_DIR)/ \
 		-I$(SRC_DIR)/common \
+		-I$(SRC_DIR)/acpi \
 		-I$(EXTERN_DIR)/sqlite \
 		-I$(EXTERN_DIR)/openssl/include \
 		-I$(EXTERN_LIB_DIR)/openssl \
@@ -109,6 +110,7 @@ INCS =  -I. \
 		-I$(EXTERN_DIR)/fw_headers
 
 LIBS =	-L$(OBJECT_DIR)/common -lcommon \
+		-L$(OBJECT_DIR)/acpi -lacpi \
 		-L$(BUILD_DIR) -lsqlite3 \
 		-lz \
 		-lcrypto
@@ -165,7 +167,7 @@ ifndef SKIP_UNITTESTS
 	$(MAKE) $(UNITTEST)
 endif
 
-$(TARGETNAME) : $(OBJNAMES) $(OBJECT_DIR)/common/libcommon.a
+$(TARGETNAME) : $(OBJNAMES) $(OBJECT_DIR)/common/libcommon.a $(OBJECT_DIR)/acpi/libacpi.a
 ifdef BUILD_WINDOWS
 	$(CC) $(CFLAGS) -shared $^ $(LIBS) -o $@
 else

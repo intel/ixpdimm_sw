@@ -224,11 +224,11 @@ cli::framework::ResultBase* cli::nvmcli::ValidationFeature::injectError(
 						iUid != uids.end(); iUid ++)
 			{
 				std::string prefixMsg;
-				try 
+				try
 				{
 					m_dimmUid = wbem::physical_asset::NVDIMMFactory::uidToDimmIdStr(*iUid);
 
-					if (m_clearStateExists) 
+					if (m_clearStateExists)
 					{
 						clear_injected_error(prefixMsg, iUid, *pListResult);
 					}

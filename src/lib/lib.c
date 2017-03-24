@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 2016, Intel Corporation
+ * Copyright (c) 2015 2017, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -372,7 +372,12 @@ int nvm_get_error(const enum return_code code, NVM_ERROR_DESCRIPTION description
 			case NVM_ERR_FWALREADYSTAGED:
 				s_strcpy(description,
 						TR("A firmware image is already staged for execution. "
-								"A power cycle is required before another can be staged."),
+						"A power cycle is required before another can be staged."),
+						description_len);
+				break;
+			case NVM_ERR_BADNFIT:
+				s_strcpy(description,
+						TR("The NVDIMM firmware interface table is not found or invalid."),
 								description_len);
 				break;
 			default:

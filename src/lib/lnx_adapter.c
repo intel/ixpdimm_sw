@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 2016, Intel Corporation
+ * Copyright (c) 2015 2017, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -48,6 +48,7 @@
 
 #include <persistence/logging.h>
 #include "device_utilities.h"
+#include "nfit_utilities.h"
 
 #define	NVM_IOCTL_TARGET_LEN	20
 #define	DATA_FORMAT_REVISION	1
@@ -171,34 +172,7 @@ int get_platform_capabilities(struct bios_capabilities *p_capabilities)
  */
 int get_topology_count()
 {
-	COMMON_LOG_ENTRY();
-	int rc = 0; // returns the dimm count
-
-	int num_dimms = 0;
-	struct ndctl_ctx *ctx;
-
-	if ((rc = ndctl_new(&ctx)) >= 0)
-	{
-		struct ndctl_bus *bus;
-		ndctl_bus_foreach(ctx, bus)
-		{
-			struct ndctl_dimm *dimm;
-			ndctl_dimm_foreach(bus, dimm)
-			{
-				num_dimms++;
-			}
-		}
-		rc = num_dimms;
-		ndctl_unref(ctx);
-	}
-	else
-	{
-		rc = linux_err_to_nvm_lib_err(rc);
-	}
-
-
-	COMMON_LOG_EXIT_RETURN_I(rc);
-	return rc;
+	return get_topology_count_from_nfit();
 }
 
 /*
@@ -206,129 +180,7 @@ int get_topology_count()
  */
 int get_topology(const NVM_UINT8 count, struct nvm_topology *p_dimm_topo)
 {
-	COMMON_LOG_ENTRY();
-	int rc = NVM_SUCCESS;
-
-	// check input parameters
-	if (count <= 0)
-	{
-		COMMON_LOG_ERROR_F("Invalid parameter, count = %d", count);
-		rc = NVM_ERR_UNKNOWN;
-	}
-	else if (p_dimm_topo == NULL)
-	{
-		COMMON_LOG_ERROR("Invalid parameter, nvm_topology array is null");
-		rc = NVM_ERR_UNKNOWN;
-	}
-	else
-	{
-		struct ndctl_ctx *ctx;
-
-		if ((rc = ndctl_new(&ctx)) >= 0)
-		{
-			struct ndctl_bus *bus;
-			int dimm_index = 0;
-
-			memset(p_dimm_topo, 0, count * sizeof (struct nvm_topology));
-
-			// Used to harvest DIMM memory type - only get it once
-			NVM_UINT8 *p_smbios_table = NULL;
-			size_t smbios_table_size = 0;
-			rc = get_smbios_table_alloc(&p_smbios_table, &smbios_table_size);
-			if (rc == NVM_SUCCESS)
-			{
-				ndctl_bus_foreach(ctx, bus)
-				{
-					struct ndctl_dimm *dimm;
-					ndctl_dimm_foreach(bus, dimm)
-					{
-						if (dimm_index >= count)
-						{
-							rc = NVM_ERR_ARRAYTOOSMALL;
-							COMMON_LOG_ERROR("Invalid parameter, "
-									"count is smaller than number of " NVM_DIMM_NAME "s");
-							break;
-						}
-
-						p_dimm_topo[dimm_index].device_handle.handle = ndctl_dimm_get_handle(dimm);
-						p_dimm_topo[dimm_index].id = ndctl_dimm_get_phys_id(dimm);
-						p_dimm_topo[dimm_index].vendor_id = ndctl_dimm_get_vendor(dimm);
-
-						p_dimm_topo[dimm_index].device_id =
-							SWAP_SHORT(ndctl_dimm_get_device(dimm));
-						p_dimm_topo[dimm_index].revision_id =
-							ndctl_dimm_get_revision(dimm);
-
-						p_dimm_topo[dimm_index].subsystem_vendor_id =
-							ndctl_dimm_get_subsystem_vendor(dimm);
-						p_dimm_topo[dimm_index].subsystem_device_id =
-							SWAP_SHORT(ndctl_dimm_get_subsystem_device(dimm));
-						p_dimm_topo[dimm_index].subsystem_revision_id =
-							ndctl_dimm_get_subsystem_revision(dimm);
-						p_dimm_topo[dimm_index].manufacturing_date  =
-							SWAP_SHORT(ndctl_dimm_get_manufacturing_date(dimm));
-						p_dimm_topo[dimm_index].manufacturing_location =
-							ndctl_dimm_get_manufacturing_location(dimm);
-						if (p_dimm_topo[dimm_index].manufacturing_location !=
-								MANUFACTURING_INFO_VALID_FLAG &&
-								p_dimm_topo[dimm_index].manufacturing_date !=
-								MANUFACTURING_INFO_VALID_FLAG)
-						{
-							p_dimm_topo[dimm_index].manufacturing_info_valid = 1;
-
-						}
-						else
-						{
-							p_dimm_topo[dimm_index].manufacturing_info_valid = 0;
-						}
-
-						unsigned int serial_number = ndctl_dimm_get_serial(dimm);
-						unsigned int swapped_serial;
-						swap_bytes((unsigned char *)(&swapped_serial),
-								(unsigned char *)(&serial_number), sizeof (serial_number));
-						uint32_to_bytes(swapped_serial, p_dimm_topo[dimm_index].serial_number,
-								NVM_SERIAL_LEN);
-
-						// TODO US14147 - Copy multiple IFCs from driver
-						p_dimm_topo[dimm_index].fmt_interface_codes[0] =
-								ndctl_dimm_get_format(dimm);
-
-						int mem_type = get_device_memory_type_from_smbios_table(
-								p_smbios_table, smbios_table_size,
-								p_dimm_topo[dimm_index].id);
-						if (mem_type < 0)
-						{
-							KEEP_ERROR(rc, mem_type);
-						}
-						else
-						{
-							p_dimm_topo[dimm_index].type = mem_type;
-						}
-
-						dimm_index++;
-					}
-				}
-			}
-
-			ndctl_unref(ctx);
-			if (rc == NVM_SUCCESS)
-			{
-				rc = dimm_index;
-			}
-
-			if (p_smbios_table)
-			{
-				free(p_smbios_table);
-			}
-		}
-		else
-		{
-			rc = linux_err_to_nvm_lib_err(rc);
-		}
-	}
-
-	COMMON_LOG_EXIT_RETURN_I(rc);
-	return rc;
+	return get_topology_from_nfit(count, p_dimm_topo);
 }
 
 /*

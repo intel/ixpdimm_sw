@@ -161,6 +161,7 @@ ifeq ($(UNAME), Linux)
 		PRODUCT_DATADIR = $(ESX_SUPPORT_DIR)
 		
 		CMAKE = /opt/mgmt_env/cmake-3.6.2/bin/cmake
+		CMAKE_OPTIONS = -DCMAKE_CXX_COMPILER=$(MGMT_SYSROOT)/usr/bin/g++ -DCMAKE_C_COMPILER=/build/toolchain/lin32/gcc-4.6.3-1/bin/i686-linux5.0-gcc
 	else
 		BUILD_LINUX = 1
 		OS_TYPE = linux
@@ -251,6 +252,7 @@ else
 	include $(MINGW_DIR)/mingw.mk
 
 	CMAKE = $(MGMT_ENV_DIR)/cmake-3.6.2-win64-x64/bin/cmake.exe
+	CMAKE_OPTIONS = -DCMAKE_C_COMPILER=$(CC)
 
 	# note: -mno-ms-bitfields is a workaround for a gcc (4.7.0)+ byte-packing bug
 	#		This may cause GCC packed structs to present differences with MSVC packed structs
@@ -336,6 +338,8 @@ CORE_TEST_DIR = $(BUILD_DIR)/core_test
 WBEM_TEST_DIR = $(BUILD_DIR)/wbem_test
 CLI_TEST_DIR = $(BUILD_DIR)/cli_test
 MONITOR_TEST_DIR = $(BUILD_DIR)/monitor_test
+ACPI_TEST_DIR = $(BUILD_DIR)/acpi_test
+CONVERT_TEST_DIR = $(BUILD_DIR)/convert_test
 
 # Tools
 CSTYLE = $(TOOLS_DIR)/cstyle/cstyle -o doxygen -pP

@@ -1,0 +1,98 @@
+/*
+ * Copyright (c) 2017, Intel Corporation
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *   * Redistributions of source code must retain the above copyright notice,
+ *     this list of conditions and the following disclaimer.
+ *   * Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *   * Neither the name of Intel Corporation nor the names of its contributors
+ *     may be used to endorse or promote products derived from this software
+ *     without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#include "nfit_printer.h"
+#include <guid/guid.h>
+#include <string.h>
+#include <stdio.h>
+
+/*
+ * Print a parsed_nfit structure
+ */
+void nfit_print_parsed_nfit(const struct parsed_nfit *p_nfit)
+{
+	if (p_nfit)
+	{
+		print_{{root_table.name}}_table(p_nfit->{{root_table.name}}, 0);
+//- for t in sub_tables
+		for (size_t i = 0; i < p_nfit->{{t.name}}_count; i++)
+		{
+			print_{{t.name}}_table(p_nfit->{{t.name}}_list[i], 1);
+		}
+//- endfor
+	}
+	else
+	{
+		printf("NFIT is NULL\n");
+	}
+}
+
+//- for t in all_tables
+/*
+ * Print an NFIT {{t.name}} extension table
+ */
+void print_{{t.name}}_table(
+	const struct {{t.name}} table,
+	const int indent_count)
+{
+	// print the table name
+	for (int i = 0; i < indent_count; i++)
+	{
+		printf("\t");
+	}
+	printf("{{t.name}}:\n");
+
+	// print the values
+	//- for f in t.included_fields
+	for (int i = 0; i < indent_count+1; i++)
+	{
+		printf("\t");
+	}
+	//- if f.is_string
+	
+	char {{f.name}}_str[{{f.byte_count}}+1]; // add a null terminator
+	memmove({{f.name}}_str, table.{{f.name}}, {{f.byte_count}});
+	{{f.name}}_str[{{f.byte_count}}] = '\0';
+	printf("{{f.name}}: %s\n", {{f.name}}_str);
+	//- elif f.is_guid
+	
+	COMMON_GUID_STR {{f.name}}_guid_str;
+	guid_to_str(table.{{f.name}}, {{f.name}}_guid_str);
+	printf("{{f.name}}: %s\n",
+		{{f.name}}_guid_str);
+	//- elif f.byte_count==8
+	
+	printf("{{f.name}}: 0x%llx\n",
+		table.{{f.name}});
+	//- else
+	
+	printf("{{f.name}}: 0x%x\n",
+		table.{{f.name}});
+	//- endif
+	//- endfor
+}
+//- endfor

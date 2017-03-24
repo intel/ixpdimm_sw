@@ -191,7 +191,6 @@ Attributes:
 	unsigned int manufacturing_info_valid
 	unsigned int manufacturing_location
 	unsigned int manufacturing_date
-	unsigned int type
 	unsigned int serial_number
 	unsigned int interface_format_codes
 

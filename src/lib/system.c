@@ -117,6 +117,7 @@ int nvm_get_host(struct host *p_host)
 	else
 	{
 		// call the system adapter
+		memset(p_host, 0, sizeof (struct host));
 		rc = get_host(p_host);
 		KEEP_ERROR(rc, fill_host_sku_status(p_host));
 	}

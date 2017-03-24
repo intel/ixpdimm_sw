@@ -1,0 +1,147 @@
+/*
+ * Copyright (c) 2017, Intel Corporation
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *   * Redistributions of source code must retain the above copyright notice,
+ *     this list of conditions and the following disclaimer.
+ *   * Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *   * Neither the name of Intel Corporation nor the names of its contributors
+ *     may be used to endorse or promote products derived from this software
+ *     without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#include "nfit.h"
+#include <stdlib.h>
+#include <string.h>
+#include <stdlib.h>
+
+//- for t in sub_tables
+/*
+ * Allocate space for and copy the {{t.name}} table
+ * to the parsed_nfit structure.
+ */
+int add_{{t.name}}_to_parsed_nfit(
+	struct parsed_nfit *p_nfit,
+	const struct {{t.name}} *p_{{t.name}}_table)
+{
+	int result = NFIT_SUCCESS;
+
+	// allocate space for the extension table
+	p_nfit->{{t.name}}_list =
+		(struct {{t.name}} *)
+		realloc(p_nfit->{{t.name}}_list,
+		sizeof (struct {{t.name}}) *
+		(p_nfit->{{t.name}}_count + 1));
+	if (!p_nfit->{{t.name}}_list)
+	{
+		result = NFIT_ERR_NOMEMORY;
+	}
+	else
+	{
+		// copy the extension table
+		memmove(&p_nfit->{{t.name}}_list[p_nfit->{{t.name}}_count],
+			p_{{t.name}}_table,
+			sizeof (struct {{t.name}}));
+		p_nfit->{{t.name}}_count++;
+	}
+
+	return result;
+}
+//- endfor
+
+/*
+ * Parse raw NFIT data into a parsed_nfit structure.
+ * The caller is responsible for freeing the parsed_nfit structure.
+ */
+int nfit_parse_raw_nfit(unsigned char *buffer, size_t buffer_size,
+	struct parsed_nfit ** pp_parsed_nfit)
+{
+	int result = NFIT_SUCCESS;
+
+	if (buffer_size == 0 || buffer == NULL)
+	{
+		return NFIT_ERR_BADINPUT;
+	}
+
+	*pp_parsed_nfit = calloc(1, sizeof (struct parsed_nfit));
+	if (!(*pp_parsed_nfit))
+	{
+		return NFIT_ERR_NOMEMORY;
+	}
+
+	// copy the NFIT header
+	memmove(&(*pp_parsed_nfit)->nfit, buffer, sizeof (struct {{root_table.name}}));
+	size_t offset = sizeof (struct {{root_table.name}});
+
+	// copy the NFIT extension tables
+	while (offset < buffer_size && result == NFIT_SUCCESS)
+	{
+		unsigned short type = *(buffer + offset);
+		unsigned short length = *(buffer + offset + 2);
+
+		// check the length for validity
+		if (length == 0 || (length + offset) > buffer_size)
+		{
+			result = NFIT_ERR_BADNFIT;
+			break;
+		}
+
+		// create the extension table
+		switch (type)
+		{
+		//- for t in sub_tables
+			case {{t.type}}: // {{t.name}} extension table
+			{
+				result = add_{{t.name}}_to_parsed_nfit(
+					*pp_parsed_nfit, (struct {{t.name}} *)(buffer + offset));
+				break;
+			}
+		//- endfor
+
+			default:
+				break;
+		}
+		offset += length;
+	} // end while extension tables
+
+	// on error, free the parsed_nfit struct
+	if (result != NFIT_SUCCESS && *pp_parsed_nfit)
+	{
+		free_parsed_nfit(*pp_parsed_nfit);
+	}
+
+	return result;
+}
+
+/*
+ * Clean up a parsed nfit structure
+ */
+void free_parsed_nfit(struct parsed_nfit *p_parsed_nfit)
+{
+	if (p_parsed_nfit)
+	{
+//- for t in sub_tables
+		if (p_parsed_nfit->{{t.name}}_count &&
+			p_parsed_nfit->{{t.name}}_list)
+		{
+			free(p_parsed_nfit->{{t.name}}_list);
+		}
+//- endfor
+	}
+	free(p_parsed_nfit);
+}

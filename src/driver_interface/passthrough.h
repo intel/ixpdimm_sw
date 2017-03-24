@@ -24,71 +24,64 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
-/*
- * Implementations of ACPI helper functions for Windows
- */
-
-#include "acpi.h"
-#include <windows.h>
-#include <stdio.h>
+#ifndef BPS_PROTOTYPE_PASSTHROUGH_H
+#define BPS_PROTOTYPE_PASSTHROUGH_H
 
 #define	COMMON_LOG_ENTRY()
 #define	COMMON_LOG_ERROR(error)
 #define	COMMON_LOG_EXIT_RETURN_I(rc)
-#define	COMMON_LOG_DEBUG_F(fmt, ...) \
-	printf(fmt "\n", __VA_ARGS__)
-
+#define	COMMON_LOG_DEBUG_F(fmt, ...)
 #define	COMMON_LOG_ERROR_F(fmt, ...)
 #define	COMMON_LOG_DEBUG(str)
 #define	COMMON_LOG_EXIT()
 
-
-DWORD string_to_dword(const char *str)
+#ifdef __cplusplus
+extern "C"
 {
-	union
-	{
-		DWORD dword;
-		char string[4];
-	} fw_table_signature;
-
-	memmove(fw_table_signature.string, str, sizeof (fw_table_signature.string));
-
-	return fw_table_signature.dword;
-}
-
-DWORD get_acpi_provider_signature()
+#endif
+struct fw_cmd
 {
-	// Endian-flipped "ACPI"
-	static const char *ACPI_PROVIDER_SIGNATURE = "IPCA";
-	return string_to_dword(ACPI_PROVIDER_SIGNATURE);
-}
+	unsigned int device_handle; // as reported by NFIT
+	unsigned char opcode;
+	unsigned char sub_opcode;
+	unsigned int input_payload_size;
+	void *input_payload;
+	unsigned int output_payload_size;
+	void *output_payload;
+	unsigned int large_input_payload_size;
+	void *large_input_payload;
+	unsigned int large_output_payload_size;
+	void *large_output_payload;
+};
 
-/*!
- * Return the specified ACPI table or the size
- * required
- */
-int get_acpi_table(const char *table_signature, struct acpi_table *p_table,
-	const unsigned int table_size)
+enum IOCTL_PASSTHROUGH_RESULT
 {
-	COMMON_LOG_ENTRY();
-	int rc = 0;
+	PT_SUCCESS = 0,
+	PT_ERR_UNKNOWN = -1,
+	PT_ERR_BADDEVICEHANDLE = -2,
+	PT_ERR_NOMEMORY = -3,
+	PT_ERR_DRIVERFAILED = -4,
+};
 
-	DWORD acpi_table_sig = string_to_dword(table_signature);
-	UINT size_fetched = GetSystemFirmwareTable(get_acpi_provider_signature(), acpi_table_sig,
-		p_table, table_size);
+int ioctl_passthrough_cmd(struct fw_cmd *p_fw_cmd);
 
-	if (size_fetched == 0)
-	{
-		COMMON_LOG_ERROR_F("Windows reported no ACPI '%.4s' table",
-			table_signature);
-		rc = -1;
-	}
-	else
-	{
-		rc = size_fetched;
-	}
+#define DEV_SMALL_PAYLOAD_SIZE	128 /* 128B - Size for a passthrough command small payload */
+#define BUILD_DSM_OPCODE(opcode, subop_code) (unsigned int)(subop_code << 8 | opcode)
 
-	COMMON_LOG_EXIT_RETURN_I(rc);
-	return rc;
+#define	BIOS_EMULATED_COMMAND 0xFD
+#define	SUBOP_GET_PAYLOAD_SIZE 0x00
+#define	SUBOP_WRITE_LARGE_PAYLOAD_INPUT 0x01
+#define	SUBOP_READ_LARGE_PAYLOAD_OUTPUT 0x02
+#define	SUBOP_GET_BOOT_STATUS 0x03
+
+struct pt_bios_get_size {
+	unsigned int large_input_payload_size;
+	unsigned int large_output_payload_size;
+	unsigned int rw_size;
+}__attribute__((packed));
+
+#ifdef __cplusplus
 }
+#endif
+
+#endif //BPS_PROTOTYPE_PASSTHROUGH_H

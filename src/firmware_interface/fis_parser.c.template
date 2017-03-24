@@ -1,0 +1,145 @@
+/*
+ * Copyright (c) 2017, Intel Corporation
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *   * Redistributions of source code must retain the above copyright notice,
+ *     this list of conditions and the following disclaimer.
+ *   * Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *   * Neither the name of Intel Corporation nor the names of its contributors
+ *     may be used to endorse or promote products derived from this software
+ *     without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#define PARSING_SUCCESS(rc) (rc == FIS_PARSER_CODES_SUCCESS)
+
+//- macro func_createFromPayload(name, payload)
+
+int {{name|fw_cmd_parser}}(
+	const struct {{name|output_payload}} *p_output_payload,
+	struct {{name|fw_cmd_data}} *p_data)
+{
+	memset(p_data, 0, sizeof (*p_data));
+	int rc = FIS_PARSER_CODES_SUCCESS;
+//- for f in payload.fields_not_ignored:
+//- 	if f.conversion_fn
+	p_data->{{f.name}} = {{f.conversion_fn}}(p_output_payload->{{f.name}});
+//- 	elif f.is_primitive
+	p_data->{{f.name}} = p_output_payload->{{f.name}};
+//- 	elif f.is_string
+	memmove(p_data->{{f.name}}, p_output_payload->{{f.name}}, {{f.byte_count}});
+	p_data->{{f.name}}[{{f.byte_count}}] = '\0';
+//- 	else
+	memmove(p_data->{{f.name}}, p_output_payload->{{f.name}}, {{f.byte_count}});
+//- 	endif
+//- 	for b in f.bits
+	p_data->{{f.name}}_{{b.name}} = (unsigned char)((p_data->{{f.name}} >> {{ b.bit }}) & 0x01);
+//- 	endfor
+//- endfor
+
+//- for r in payload.payload_refs
+//- 	if r.is_offset
+	// Is Offset
+	if (PARSING_SUCCESS(rc))
+	{
+		if (p_output_payload->{{r.offset_field}} < sizeof(*p_output_payload))
+    	{
+    		struct {{r.name|output_payload}} *p_{{r.name}}  =
+    			((struct {{r.name|output_payload}} *)
+    				((unsigned char *) p_output_payload + p_data->{{r.offset_field}}));
+    		rc = {{r.name|fw_cmd_parser}}(p_{{r.name}}, &(p_data->{{r.name}}));
+    	}
+    	else
+    	{
+    		rc = FIS_PARSER_CODES_PARSING_WRONG_OFFSET;
+    	}
+	}
+
+//- 	elif r.is_type_based
+	// Is Type Based
+	unsigned char *base = (unsigned char *) p_output_payload;
+	const int type_offset = {{r.type_offset}};
+	int current_offset = sizeof(*p_output_payload); // start at end of parent payload
+
+	while (current_offset < (int)p_data->{{r.total_length_field}})
+	{
+		int type_id = *(base + current_offset + type_offset);
+	//- for t in r.types
+		//- set name = r.types[t]
+		//- set type = t
+		//- if not loop.first
+			//- set else_str = "else "
+		//- endif
+		{{else_str}}if (type_id == {{type}}) // {{type}} = {{name}}
+		{
+			p_data->{{name}} = realloc(p_data->{{name}},
+				sizeof(struct {{name|fw_cmd_data}}) * (p_data->{{name}}_count + 1));
+
+			struct {{name|output_payload}} *p_sub_payloads =
+				((struct {{name|output_payload}} *) (base + current_offset));
+			struct {{name|fw_cmd_data}} *p_converted = &p_data->{{name}}[p_data->{{name}}_count];
+			{{name|fw_cmd_parser}}(p_sub_payloads, p_converted);
+			p_data->{{name}}_count++;
+			current_offset += p_converted->{{r.sub_length_field}};
+		}
+	//- endfor
+		else
+		{
+			rc = FIS_PARSER_CODES_PARSING_TYPE_NOT_FOUND;
+			break;
+		}
+	}
+//- elif r.is_count_based
+// Count Based
+	p_data->{{r.name}} = realloc(p_data->{{r.name}},
+				sizeof(struct {{r.name|fw_cmd_data}}) * (p_data->{{r.name}}_count + 1));
+	unsigned char *base = (unsigned char *) p_output_payload;
+	int current_offset = sizeof(*p_output_payload); // start at end of parent payload
+	for (int i = 0; i < (int)p_data->{{r.count_field}}; i++)
+	{
+		struct {{r.name|output_payload}} *p_sub_payloads =
+			((struct {{r.name|output_payload}} *) (base + current_offset));
+		{{r.name|fw_cmd_parser}}(p_sub_payloads, &p_data->{{r.name}}[p_data->{{r.name}}_count]);
+		p_data->{{r.name}}_count++;
+		current_offset += (i + 1) * sizeof(struct {{r.name|output_payload}});
+	}
+//- endif
+//- endfor
+	return rc;
+}
+//- endmacro
+
+#include "fis_commands.h"
+#include "fis_parser.h"
+#include "fw_commands.h"
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+
+//- for cmd in commands
+//- 	if cmd.has_output
+//- 		for s in cmd.sub_payloads
+{{func_createFromPayload(s.name, s.payload)}}
+//- 		endfor
+
+{{func_createFromPayload(cmd.name, cmd.output_payload)}}
+
+//- 	endif
+//- endfor
