@@ -122,7 +122,7 @@ int diag_security_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 					// check if all manageable dimms have the same security state
 					if (!(p_diagnostic->excludes & DIAG_THRESHOLD_SECURITY_CONSISTENT))
 					{
-						char inconsistent_security_state_event_arg_str[NVM_EVENT_ARG_LEN];
+						char inconsistent_security_state_event_arg_str[NVM_EVENT_ARG_LEN] = {'\0'};
 						NVM_BOOL inconsistent_flag = 0;
 						for (int j = 0; j < security_state_count; j++)
 						{
@@ -135,7 +135,7 @@ int diag_security_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 									s_strcat(inconsistent_security_state_event_arg_str,
 											NVM_EVENT_ARG_LEN, ", ");
 								}
-								char arg_str_security_state[NVM_EVENT_ARG_LEN];
+								char arg_str_security_state[NVM_EVENT_ARG_LEN] = {'\0'};
 								s_snprintf(arg_str_security_state, NVM_EVENT_ARG_LEN,
 										"%d %s", count[j], lock_state_strings[j]);
 								s_strcat(inconsistent_security_state_event_arg_str,

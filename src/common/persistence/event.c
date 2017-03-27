@@ -283,8 +283,8 @@ const char *EVENT_MESSAGES_SECURITY_DIAG[EVENT_CODE_DIAG_SECURITY_UNKNOWN -
 	N_TR("The security check detected that security is disabled on all "
 			NVM_DIMM_NAME"s."),
 	// EVENT_CODE_DIAG_SECURITY_ALL_NOTSUPPORTED
-		N_TR("The security check detected that security is not supported on all "
-				NVM_DIMM_NAME"s."),
+	N_TR("The security check detected that security is not supported on all "
+			NVM_DIMM_NAME"s."),
 	// EVENT_CODE_DIAG_SECURITY_UNKNOWN
 	N_TR("The security check logged an unknown error code %d."),
 };
