@@ -409,6 +409,8 @@ enum mb_error {
 		MB_MEDIA_DISABLED = 0x14,
 	/* After a successfull FW Update, another FW update is being made */
 		MB_FW_UPDATE_ALREADY_OCCURED = 0x15,
+	/* The FW could not acquire resources required for the particular command */
+		MB_NO_RESOURCES_AVAILABLE = 0x16,
 };
 
 /*
@@ -1505,7 +1507,7 @@ struct pt_payload_smart_health {
 	 */
 	unsigned short controller_temperature;
 
-	unsigned char unsafe_shutdown_count[8];
+	unsigned int unsafe_shutdown_count;
 
 	unsigned char ait_dram_status;
 

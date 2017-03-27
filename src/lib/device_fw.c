@@ -621,6 +621,9 @@ int fw_mb_err_to_nvm_lib_err(int status)
 		case MB_FW_UPDATE_ALREADY_OCCURED :
 			ret = NVM_ERR_FWALREADYSTAGED;
 			break;
+		case MB_NO_RESOURCES_AVAILABLE :
+			ret = NVM_ERR_DEVICEERROR;
+			break;
 		default :
 			ret = NVM_ERR_DEVICEERROR;
 	}
