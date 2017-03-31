@@ -45,8 +45,7 @@ struct pt_output_identify_dimm
 	unsigned char feature_sw_required_mask;
 	unsigned char reserved1;
 	unsigned short number_of_block_windows;
-	unsigned short number_of_write_flush_addresses;
-	unsigned long long write_flush_address_start;
+	unsigned char reserved2[10];
 	unsigned int offset_of_block_mode_control_region;
 	unsigned int raw_capacity;
 	unsigned short manufacturer;
@@ -55,7 +54,7 @@ struct pt_output_identify_dimm
 	unsigned int dimm_sku;
 	unsigned short interface_format_code_extra;
 	unsigned short api_ver;
-	unsigned char reserved2[58];
+	unsigned char reserved3[58];
 
 } __attribute__((packed));
 struct pt_output_identify_dimm_characteristics
@@ -392,11 +391,12 @@ struct pt_output_firmware_image_info
 	unsigned char firmware_type;
 	unsigned char reserved0[10];
 	unsigned char staged_fw_revision[5];
-	unsigned char staged_firmware_type;
-	unsigned char reserved1[10];
+	unsigned char reserved1;
+	unsigned char last_fw_update_status;
+	unsigned char reserved2[9];
 	unsigned char commit_id[40];
 	unsigned char build_configuration[16];
-	unsigned char reserved2[40];
+	unsigned char reserved3[40];
 
 } __attribute__((packed));
 struct pt_output_firmware_debug_log

@@ -53,8 +53,6 @@ int fwcmd_parse_identify_dimm(
 	p_data->feature_sw_required_mask_invalidate_before_block_read = (unsigned char)((p_data->feature_sw_required_mask >> 0) & 0x01);
 	p_data->feature_sw_required_mask_readback_of_bw_address_register_required_before_use = (unsigned char)((p_data->feature_sw_required_mask >> 1) & 0x01);
 	p_data->number_of_block_windows = p_output_payload->number_of_block_windows;
-	p_data->number_of_write_flush_addresses = p_output_payload->number_of_write_flush_addresses;
-	p_data->write_flush_address_start = p_output_payload->write_flush_address_start;
 	p_data->offset_of_block_mode_control_region = p_output_payload->offset_of_block_mode_control_region;
 	p_data->raw_capacity = p_output_payload->raw_capacity;
 	p_data->manufacturer = p_output_payload->manufacturer;
@@ -635,10 +633,9 @@ int fwcmd_parse_smart_health_info(
 	p_data->validation_flags_last_shutdown_status = (unsigned char)((p_data->validation_flags >> 10) & 0x01);
 	p_data->validation_flags_vendor_specific_data_size = (unsigned char)((p_data->validation_flags >> 11) & 0x01);
 	p_data->health_status = p_output_payload->health_status;
-	p_data->health_status_normal = (unsigned char)((p_data->health_status >> 0) & 0x01);
-	p_data->health_status_noncritical = (unsigned char)((p_data->health_status >> 1) & 0x01);
-	p_data->health_status_critical = (unsigned char)((p_data->health_status >> 2) & 0x01);
-	p_data->health_status_fatal = (unsigned char)((p_data->health_status >> 3) & 0x01);
+	p_data->health_status_noncritical = (unsigned char)((p_data->health_status >> 0) & 0x01);
+	p_data->health_status_critical = (unsigned char)((p_data->health_status >> 1) & 0x01);
+	p_data->health_status_fatal = (unsigned char)((p_data->health_status >> 2) & 0x01);
 	p_data->spare_blocks = p_output_payload->spare_blocks;
 	p_data->percent_used = p_output_payload->percent_used;
 	p_data->alarm_trips = p_output_payload->alarm_trips;
@@ -678,7 +675,7 @@ int fwcmd_parse_firmware_image_info(
 	memmove(p_data->firmware_revision, p_output_payload->firmware_revision, 5);
 	p_data->firmware_type = p_output_payload->firmware_type;
 	memmove(p_data->staged_fw_revision, p_output_payload->staged_fw_revision, 5);
-	p_data->staged_firmware_type = p_output_payload->staged_firmware_type;
+	p_data->last_fw_update_status = p_output_payload->last_fw_update_status;
 	memmove(p_data->commit_id, p_output_payload->commit_id, 40);
 	p_data->commit_id[40] = '\0';
 	memmove(p_data->build_configuration, p_output_payload->build_configuration, 16);

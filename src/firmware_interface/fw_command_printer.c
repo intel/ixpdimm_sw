@@ -126,10 +126,6 @@ void fwcmd_identify_dimm_printer(const struct fwcmd_identify_dimm_data *p_value,
 	print_tabs(indent_count + 1);
 	printf("NumberOfBlockWindows: 0x%x\n", p_value->number_of_block_windows);
 	print_tabs(indent_count + 1);
-	printf("NumberOfWriteFlushAddresses: 0x%x\n", p_value->number_of_write_flush_addresses);
-	print_tabs(indent_count + 1);
-	printf("WriteFlushAddressStart: 0x%llx\n", p_value->write_flush_address_start);
-	print_tabs(indent_count + 1);
 	printf("OffsetOfBlockModeControlRegion: 0x%x\n", p_value->offset_of_block_mode_control_region);
 	print_tabs(indent_count + 1);
 	printf("RawCapacity: 0x%x\n", p_value->raw_capacity);
@@ -640,8 +636,6 @@ void fwcmd_smart_health_info_printer(const struct fwcmd_smart_health_info_data *
 	print_tabs(indent_count + 1);
 	printf("HealthStatus: 0x%x\n", p_value->health_status);
 	print_tabs(indent_count + 2);
-	printf("Normal: %d\n", p_value->health_status_normal);
-	print_tabs(indent_count + 2);
 	printf("Noncritical: %d\n", p_value->health_status_noncritical);
 	print_tabs(indent_count + 2);
 	printf("Critical: %d\n", p_value->health_status_critical);
@@ -712,7 +706,7 @@ void fwcmd_firmware_image_info_printer(const struct fwcmd_firmware_image_info_da
 	print_tabs(indent_count + 1);
 	printf("StagedFwRevision: %.5s\n", p_value->staged_fw_revision);
 	print_tabs(indent_count + 1);
-	printf("StagedFirmwareType: 0x%x\n", p_value->staged_firmware_type);
+	printf("LastFwUpdateStatus: 0x%x\n", p_value->last_fw_update_status);
 	print_tabs(indent_count + 1);
 	printf("CommitId: %s\n", p_value->commit_id);
 	print_tabs(indent_count + 1);

@@ -47,8 +47,6 @@ struct fwcmd_identify_dimm_data
 	unsigned char feature_sw_required_mask_invalidate_before_block_read;
 	unsigned char feature_sw_required_mask_readback_of_bw_address_register_required_before_use;
 	unsigned short number_of_block_windows;
-	unsigned short number_of_write_flush_addresses;
-	unsigned long long write_flush_address_start;
 	unsigned int offset_of_block_mode_control_region;
 	unsigned int raw_capacity;
 	unsigned short manufacturer;
@@ -720,7 +718,6 @@ struct fwcmd_smart_health_info_data
 	unsigned char validation_flags_last_shutdown_status;
 	unsigned char validation_flags_vendor_specific_data_size;
 	unsigned char health_status;
-	unsigned char health_status_normal;
 	unsigned char health_status_noncritical;
 	unsigned char health_status_critical;
 	unsigned char health_status_fatal;
@@ -773,7 +770,7 @@ struct fwcmd_firmware_image_info_data
 	char firmware_revision[5];
 	unsigned char firmware_type;
 	char staged_fw_revision[5];
-	unsigned char staged_firmware_type;
+	unsigned char last_fw_update_status;
 	char commit_id[41];
 	char build_configuration[17];
 
