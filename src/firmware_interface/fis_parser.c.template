@@ -29,12 +29,12 @@
 
 //- macro func_createFromPayload(name, payload)
 
-int {{name|fw_cmd_parser}}(
+unsigned int {{name|fw_cmd_parser}}(
 	const struct {{name|output_payload}} *p_output_payload,
 	struct {{name|fw_cmd_data}} *p_data)
 {
 	memset(p_data, 0, sizeof (*p_data));
-	int rc = FIS_PARSER_CODES_SUCCESS;
+	unsigned int rc = FIS_PARSER_CODES_SUCCESS;
 //- for f in payload.fields_not_ignored:
 //- 	if f.conversion_fn
 	p_data->{{f.name}} = {{f.conversion_fn}}(p_output_payload->{{f.name}});

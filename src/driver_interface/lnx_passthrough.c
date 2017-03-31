@@ -33,8 +33,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ndctl/libndctl.h>
-#include <asm/errno.h>
-#include <stdio.h>
 
 #define    BIOS_INPUT(NAME, IN_LEN)     \
 struct NAME {                           \
@@ -48,7 +46,7 @@ struct NAME {                           \
  */
 int bios_get_payload_size(struct ndctl_dimm *p_dimm, struct pt_bios_get_size *p_bios_mb_size)
 {
-	int rc;
+	int rc = 0;
 
 	memset(p_bios_mb_size, 0, sizeof(*p_bios_mb_size));
 	struct ndctl_cmd *p_vendor_cmd = NULL;
@@ -277,7 +275,7 @@ int get_dimm_by_handle(struct ndctl_ctx *ctx, unsigned int handle, struct ndctl_
  */
 int ioctl_passthrough_cmd(struct fw_cmd *p_fw_cmd)
 {
-	int rc;
+	int rc = 0;
 	struct ndctl_ctx *ctx;
 	if ((rc = ndctl_new(&ctx)) >= 0)
 	{
@@ -289,37 +287,42 @@ int ioctl_passthrough_cmd(struct fw_cmd *p_fw_cmd)
 			if ((p_vendor_cmd = ndctl_dimm_cmd_new_vendor_specific(p_dimm, opcode,
 				DEV_SMALL_PAYLOAD_SIZE, DEV_SMALL_PAYLOAD_SIZE)) == NULL)
 			{
-				rc = PT_ERR_DRIVERFAILED;
+				SET_FUNC_RC(rc, PT_ERR_DRIVERFAILED);
 			}
 			else
 			{
 				if (p_fw_cmd->input_payload_size > 0)
 				{
-					size_t bytes_written = (size_t) ndctl_cmd_vendor_set_input(p_vendor_cmd,
+					ssize_t bytes_written = ndctl_cmd_vendor_set_input(p_vendor_cmd,
 						p_fw_cmd->input_payload, p_fw_cmd->input_payload_size);
 
 					if (bytes_written != p_fw_cmd->input_payload_size)
 					{
-						rc = PT_ERR_DRIVERFAILED;
+						SET_FUNC_RC(rc, PT_ERR_DRIVERFAILED);
 					}
 				}
 
-				if (rc == PT_SUCCESS && p_fw_cmd->large_input_payload_size > 0)
+				if (PT_RC_IS_SUCCESS(rc) && p_fw_cmd->large_input_payload_size > 0)
 				{
 					rc = bios_write_large_payload(p_dimm, p_fw_cmd);
 				}
 
-				if (rc == PT_SUCCESS)
+				if (PT_RC_IS_SUCCESS(rc))
 				{
-					if ((rc = ndctl_cmd_submit(p_vendor_cmd)) < 0)
+					int submit_rc = ndctl_cmd_submit(p_vendor_cmd);
+					if (submit_rc < 0)
 					{
-											}
+						SET_DRIVER_RC(rc, -submit_rc);
+					}
 					else
 					{
-						if ((rc = ndctl_cmd_get_firmware_status(p_vendor_cmd)) != PT_SUCCESS)
-						{
-													}
-						else
+						SET_PT_RC(rc, submit_rc);
+
+						int fw_status = ndctl_cmd_get_firmware_status(p_vendor_cmd);
+						SET_FW_STATUS(rc, fw_status & 0xFF);
+						SET_FW_EXT_STATUS(rc, (fw_status >> 16) & 0xFF);
+
+						if (PT_RC_IS_SUCCESS(rc))
 						{
 							if (p_fw_cmd->output_payload_size > 0)
 							{
@@ -334,14 +337,13 @@ int ioctl_passthrough_cmd(struct fw_cmd *p_fw_cmd)
 							}
 						}
 					}
-
 				}
 				ndctl_cmd_unref(p_vendor_cmd);
 			}
 		}
 		else
 		{
-			rc = PT_ERR_BADDEVICEHANDLE;
+			SET_FUNC_RC(rc, PT_ERR_BADDEVICEHANDLE);
 		}
 		ndctl_unref(ctx);
 	}

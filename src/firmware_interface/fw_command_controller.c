@@ -503,8 +503,8 @@ void fwcmd_run_identify_dimm(unsigned int handle)
 	}
 	else
 	{
-		printf("There was an issue executing identify_dimm. Error: %d\n",
-			result.error_code);
+		printf("There was an issue executing identify_dimm. \n");
+		fwcmd_print_error(result.error_code);
 	}
 	fwcmd_free_identify_dimm(&result);
 }
@@ -520,8 +520,8 @@ void fwcmd_run_identify_dimm_characteristics(unsigned int handle)
 	}
 	else
 	{
-		printf("There was an issue executing identify_dimm_characteristics. Error: %d\n",
-			result.error_code);
+		printf("There was an issue executing identify_dimm_characteristics. \n");
+		fwcmd_print_error(result.error_code);
 	}
 	fwcmd_free_identify_dimm_characteristics(&result);
 }
@@ -537,8 +537,8 @@ void fwcmd_run_get_security_state(unsigned int handle)
 	}
 	else
 	{
-		printf("There was an issue executing get_security_state. Error: %d\n",
-			result.error_code);
+		printf("There was an issue executing get_security_state. \n");
+		fwcmd_print_error(result.error_code);
 	}
 	fwcmd_free_get_security_state(&result);
 }
@@ -553,8 +553,8 @@ void fwcmd_run_set_passphrase(unsigned int handle, const char current_passphrase
 	}
 	else
 	{
-		printf("There was an issue executing set_passphrase. Error: %d\n",
-			result.error_code);
+		printf("There was an issue executing set_passphrase. \n");
+		fwcmd_print_error(result.error_code);
 	}
 }
 
@@ -568,8 +568,8 @@ void fwcmd_run_disable_passphrase(unsigned int handle, const char current_passph
 	}
 	else
 	{
-		printf("There was an issue executing disable_passphrase. Error: %d\n",
-			result.error_code);
+		printf("There was an issue executing disable_passphrase. \n");
+		fwcmd_print_error(result.error_code);
 	}
 }
 
@@ -583,8 +583,8 @@ void fwcmd_run_unlock_unit(unsigned int handle, const char current_passphrase[33
 	}
 	else
 	{
-		printf("There was an issue executing unlock_unit. Error: %d\n",
-			result.error_code);
+		printf("There was an issue executing unlock_unit. \n");
+		fwcmd_print_error(result.error_code);
 	}
 }
 
@@ -598,8 +598,8 @@ void fwcmd_run_secure_erase(unsigned int handle, const char current_passphrase[3
 	}
 	else
 	{
-		printf("There was an issue executing secure_erase. Error: %d\n",
-			result.error_code);
+		printf("There was an issue executing secure_erase. \n");
+		fwcmd_print_error(result.error_code);
 	}
 }
 
@@ -613,8 +613,8 @@ void fwcmd_run_freeze_lock(unsigned int handle)
 	}
 	else
 	{
-		printf("There was an issue executing freeze_lock. Error: %d\n",
-			result.error_code);
+		printf("There was an issue executing freeze_lock. \n");
+		fwcmd_print_error(result.error_code);
 	}
 }
 
@@ -629,8 +629,8 @@ void fwcmd_run_get_alarm_threshold(unsigned int handle)
 	}
 	else
 	{
-		printf("There was an issue executing get_alarm_threshold. Error: %d\n",
-			result.error_code);
+		printf("There was an issue executing get_alarm_threshold. \n");
+		fwcmd_print_error(result.error_code);
 	}
 	fwcmd_free_get_alarm_threshold(&result);
 }
@@ -646,8 +646,8 @@ void fwcmd_run_power_management_policy(unsigned int handle)
 	}
 	else
 	{
-		printf("There was an issue executing power_management_policy. Error: %d\n",
-			result.error_code);
+		printf("There was an issue executing power_management_policy. \n");
+		fwcmd_print_error(result.error_code);
 	}
 	fwcmd_free_power_management_policy(&result);
 }
@@ -663,8 +663,8 @@ void fwcmd_run_die_sparing_policy(unsigned int handle)
 	}
 	else
 	{
-		printf("There was an issue executing die_sparing_policy. Error: %d\n",
-			result.error_code);
+		printf("There was an issue executing die_sparing_policy. \n");
+		fwcmd_print_error(result.error_code);
 	}
 	fwcmd_free_die_sparing_policy(&result);
 }
@@ -680,8 +680,8 @@ void fwcmd_run_address_range_scrub(unsigned int handle)
 	}
 	else
 	{
-		printf("There was an issue executing address_range_scrub. Error: %d\n",
-			result.error_code);
+		printf("There was an issue executing address_range_scrub. \n");
+		fwcmd_print_error(result.error_code);
 	}
 	fwcmd_free_address_range_scrub(&result);
 }
@@ -697,8 +697,8 @@ void fwcmd_run_optional_configuration_data_policy(unsigned int handle)
 	}
 	else
 	{
-		printf("There was an issue executing optional_configuration_data_policy. Error: %d\n",
-			result.error_code);
+		printf("There was an issue executing optional_configuration_data_policy. \n");
+		fwcmd_print_error(result.error_code);
 	}
 	fwcmd_free_optional_configuration_data_policy(&result);
 }
@@ -714,8 +714,8 @@ void fwcmd_run_pmon_registers(unsigned int handle, const unsigned short pmon_ret
 	}
 	else
 	{
-		printf("There was an issue executing pmon_registers. Error: %d\n",
-			result.error_code);
+		printf("There was an issue executing pmon_registers. \n");
+		fwcmd_print_error(result.error_code);
 	}
 	fwcmd_free_pmon_registers(&result);
 }
@@ -730,8 +730,8 @@ void fwcmd_run_set_alarm_threshold(unsigned int handle, const unsigned char enab
 	}
 	else
 	{
-		printf("There was an issue executing set_alarm_threshold. Error: %d\n",
-			result.error_code);
+		printf("There was an issue executing set_alarm_threshold. \n");
+		fwcmd_print_error(result.error_code);
 	}
 }
 
@@ -746,8 +746,8 @@ void fwcmd_run_system_time(unsigned int handle)
 	}
 	else
 	{
-		printf("There was an issue executing system_time. Error: %d\n",
-			result.error_code);
+		printf("There was an issue executing system_time. \n");
+		fwcmd_print_error(result.error_code);
 	}
 	fwcmd_free_system_time(&result);
 }
@@ -763,8 +763,8 @@ void fwcmd_run_platform_config_data(unsigned int handle, const unsigned char par
 	}
 	else
 	{
-		printf("There was an issue executing platform_config_data. Error: %d\n",
-			result.error_code);
+		printf("There was an issue executing platform_config_data. \n");
+		fwcmd_print_error(result.error_code);
 	}
 	fwcmd_free_platform_config_data(&result);
 }
@@ -780,8 +780,8 @@ void fwcmd_run_dimm_partition_info(unsigned int handle)
 	}
 	else
 	{
-		printf("There was an issue executing dimm_partition_info. Error: %d\n",
-			result.error_code);
+		printf("There was an issue executing dimm_partition_info. \n");
+		fwcmd_print_error(result.error_code);
 	}
 	fwcmd_free_dimm_partition_info(&result);
 }
@@ -797,8 +797,8 @@ void fwcmd_run_fw_debug_log_level(unsigned int handle, const unsigned char log_i
 	}
 	else
 	{
-		printf("There was an issue executing fw_debug_log_level. Error: %d\n",
-			result.error_code);
+		printf("There was an issue executing fw_debug_log_level. \n");
+		fwcmd_print_error(result.error_code);
 	}
 	fwcmd_free_fw_debug_log_level(&result);
 }
@@ -814,8 +814,8 @@ void fwcmd_run_fw_load_flag(unsigned int handle)
 	}
 	else
 	{
-		printf("There was an issue executing fw_load_flag. Error: %d\n",
-			result.error_code);
+		printf("There was an issue executing fw_load_flag. \n");
+		fwcmd_print_error(result.error_code);
 	}
 	fwcmd_free_fw_load_flag(&result);
 }
@@ -831,8 +831,8 @@ void fwcmd_run_config_lockdown(unsigned int handle)
 	}
 	else
 	{
-		printf("There was an issue executing config_lockdown. Error: %d\n",
-			result.error_code);
+		printf("There was an issue executing config_lockdown. \n");
+		fwcmd_print_error(result.error_code);
 	}
 	fwcmd_free_config_lockdown(&result);
 }
@@ -848,8 +848,8 @@ void fwcmd_run_ddrt_io_init_info(unsigned int handle)
 	}
 	else
 	{
-		printf("There was an issue executing ddrt_io_init_info. Error: %d\n",
-			result.error_code);
+		printf("There was an issue executing ddrt_io_init_info. \n");
+		fwcmd_print_error(result.error_code);
 	}
 	fwcmd_free_ddrt_io_init_info(&result);
 }
@@ -865,8 +865,8 @@ void fwcmd_run_get_supported_sku_features(unsigned int handle)
 	}
 	else
 	{
-		printf("There was an issue executing get_supported_sku_features. Error: %d\n",
-			result.error_code);
+		printf("There was an issue executing get_supported_sku_features. \n");
+		fwcmd_print_error(result.error_code);
 	}
 	fwcmd_free_get_supported_sku_features(&result);
 }
@@ -882,8 +882,8 @@ void fwcmd_run_enable_dimm(unsigned int handle)
 	}
 	else
 	{
-		printf("There was an issue executing enable_dimm. Error: %d\n",
-			result.error_code);
+		printf("There was an issue executing enable_dimm. \n");
+		fwcmd_print_error(result.error_code);
 	}
 	fwcmd_free_enable_dimm(&result);
 }
@@ -899,8 +899,8 @@ void fwcmd_run_smart_health_info(unsigned int handle)
 	}
 	else
 	{
-		printf("There was an issue executing smart_health_info. Error: %d\n",
-			result.error_code);
+		printf("There was an issue executing smart_health_info. \n");
+		fwcmd_print_error(result.error_code);
 	}
 	fwcmd_free_smart_health_info(&result);
 }
@@ -916,8 +916,8 @@ void fwcmd_run_firmware_image_info(unsigned int handle)
 	}
 	else
 	{
-		printf("There was an issue executing firmware_image_info. Error: %d\n",
-			result.error_code);
+		printf("There was an issue executing firmware_image_info. \n");
+		fwcmd_print_error(result.error_code);
 	}
 	fwcmd_free_firmware_image_info(&result);
 }
@@ -933,8 +933,8 @@ void fwcmd_run_firmware_debug_log(unsigned int handle, const unsigned char log_a
 	}
 	else
 	{
-		printf("There was an issue executing firmware_debug_log. Error: %d\n",
-			result.error_code);
+		printf("There was an issue executing firmware_debug_log. \n");
+		fwcmd_print_error(result.error_code);
 	}
 	fwcmd_free_firmware_debug_log(&result);
 }
@@ -950,8 +950,8 @@ void fwcmd_run_long_operation_status(unsigned int handle)
 	}
 	else
 	{
-		printf("There was an issue executing long_operation_status. Error: %d\n",
-			result.error_code);
+		printf("There was an issue executing long_operation_status. \n");
+		fwcmd_print_error(result.error_code);
 	}
 	fwcmd_free_long_operation_status(&result);
 }
@@ -967,8 +967,8 @@ void fwcmd_run_bsr(unsigned int handle)
 	}
 	else
 	{
-		printf("There was an issue executing bsr. Error: %d\n",
-			result.error_code);
+		printf("There was an issue executing bsr. \n");
+		fwcmd_print_error(result.error_code);
 	}
 	fwcmd_free_bsr(&result);
 }

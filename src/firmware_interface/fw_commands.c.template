@@ -36,17 +36,19 @@
 #include <stdlib.h>
 
 //- macro free_multiple(name, payload)
-	for (int i = 0; i < p_data->{{name}}_count; i++)
-	{
-		{{name|fw_cmd_free_data}}(&p_data->{{name}}[i]);
-	}
-	free(p_data->{{name}});
+		for (int i = 0; i < p_data->{{name}}_count; i++)
+		{
+			{{name|fw_cmd_free_data}}(&p_data->{{name}}[i]);
+		}
+		free(p_data->{{name}});
 //- endmacro
 
 
 //- macro free_data(name, payload)
 void {{name|fw_cmd_free_data}}(struct {{name|fw_cmd_data}} *p_data)
 {
+	if (p_data)
+	{
 //- for r in payload.payload_refs
 //- 	if r.is_type_based
 //- 		for t in r.types
@@ -54,15 +56,16 @@ void {{name|fw_cmd_free_data}}(struct {{name|fw_cmd_data}} *p_data)
 //- 			if r.is_multiple
 {{free_multiple(name)}}
 //-				else
-	{{name|fw_cmd_free_data}}(&p_data->{{name}});
+		{{name|fw_cmd_free_data}}(&p_data->{{name}});
 //- 			endif
 //- 		endfor
 //- 	elif r.is_multiple
 {{free_multiple(r.name)}}
 //- 	else
-	{{r.name|fw_cmd_free_data}}(&p_data->{{r.name}});
+		{{r.name|fw_cmd_free_data}}(&p_data->{{r.name}});
 //- 	endif
 //- endfor
+	}
 }
 //- endmacro
 
@@ -96,7 +99,7 @@ struct {{cmd.name|fw_cmd_result}} {{cmd|fw_cmd_name}}(unsigned int handle
 	struct {{cmd.name|output_payload}} output_payload;
 	//- endif
 
-	int rc = {{cmd.name|fis}}(handle
+	unsigned int rc = {{cmd.name|fis}}(handle
  	{%- if cmd.has_input -%}
 		,
 		&input_payload
@@ -107,17 +110,28 @@ struct {{cmd.name|fw_cmd_result}} {{cmd|fw_cmd_name}}(unsigned int handle
 	{%- endif -%}
 		);
 
-	if (rc == 0)
+	if (PT_RC_IS_SUCCESS(rc))
 	{
 		//- if cmd.has_output
 		result.p_data = (struct {{cmd.name|fw_cmd_data}} *)malloc(sizeof(*result.p_data));
-		{{cmd.name|fw_cmd_parser}}(&output_payload, result.p_data);
-		//- endif
+		rc = {{cmd.name|fw_cmd_parser}}(&output_payload, result.p_data);
+		if (FWCMD_PARSE_SUCCESS(rc))
+		{
+			result.success = 1;
+		}
+		else
+		{
+			result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+			result.error_code.code = rc;
+		}
+		//- else
 		result.success = 1;
+		//- endif
 	}
 	else
 	{
-		result.error_code = rc;
+		result.error_code.type = FWCMD_ERROR_TYPE_PT;
+		result.error_code.code = rc;
 	}
 	return result;
 }

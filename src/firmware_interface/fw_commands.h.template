@@ -66,6 +66,19 @@ extern "C"
 //- endfor
 //- endmacro
 
+enum fwcmd_error_type
+{
+	FWCMD_ERROR_TYPE_DRIVER = 1,
+	FWCMD_ERROR_TYPE_PT = 2,
+	FWCMD_ERROR_TYPE_PARSE = 3,
+	FWCMD_ERROR_TYPE_DUMP = 4,
+};
+
+struct fwcmd_error_code
+{
+	enum fwcmd_error_type type;
+	unsigned int code;
+};
 
 //- for cmd in commands
 /*
@@ -86,8 +99,8 @@ struct {{cmd.name|fw_cmd_data}}
 //- 	endif
 struct {{cmd.name|fw_cmd_result}}
 {
-	int success;
-	int error_code;
+	int success:1;
+	struct fwcmd_error_code error_code;
 //- 	if cmd.has_output
 	struct {{cmd.name|fw_cmd_data}} *p_data;
 //- 	endif

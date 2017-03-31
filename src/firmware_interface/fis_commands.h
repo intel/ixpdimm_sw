@@ -31,6 +31,9 @@
 extern "C"
 {
 #endif
+
+#include <driver_interface/passthrough.h>
+
 /*
  * Payloads Structures
  */
@@ -433,35 +436,35 @@ struct pt_output_bsr
 /*
  * FIS Commands
  */
-int fis_identify_dimm(const unsigned int device_handle, struct pt_output_identify_dimm *p_output_payload);
-int fis_identify_dimm_characteristics(const unsigned int device_handle, struct pt_output_identify_dimm_characteristics *p_output_payload);
-int fis_get_security_state(const unsigned int device_handle, struct pt_output_get_security_state *p_output_payload);
-int fis_set_passphrase(const unsigned int device_handle, struct pt_input_set_passphrase *p_input_payload);
-int fis_disable_passphrase(const unsigned int device_handle, struct pt_input_disable_passphrase *p_input_payload);
-int fis_unlock_unit(const unsigned int device_handle, struct pt_input_unlock_unit *p_input_payload);
-int fis_secure_erase(const unsigned int device_handle, struct pt_input_secure_erase *p_input_payload);
-int fis_freeze_lock(const unsigned int device_handle);
-int fis_get_alarm_threshold(const unsigned int device_handle, struct pt_output_get_alarm_threshold *p_output_payload);
-int fis_power_management_policy(const unsigned int device_handle, struct pt_output_power_management_policy *p_output_payload);
-int fis_die_sparing_policy(const unsigned int device_handle, struct pt_output_die_sparing_policy *p_output_payload);
-int fis_address_range_scrub(const unsigned int device_handle, struct pt_output_address_range_scrub *p_output_payload);
-int fis_optional_configuration_data_policy(const unsigned int device_handle, struct pt_output_optional_configuration_data_policy *p_output_payload);
-int fis_pmon_registers(const unsigned int device_handle, struct pt_input_pmon_registers *p_input_payload, struct pt_output_pmon_registers *p_output_payload);
-int fis_set_alarm_threshold(const unsigned int device_handle, struct pt_input_set_alarm_threshold *p_input_payload);
-int fis_system_time(const unsigned int device_handle, struct pt_output_system_time *p_output_payload);
-int fis_platform_config_data(const unsigned int device_handle, struct pt_input_platform_config_data *p_input_payload, struct pt_output_platform_config_data *p_output_payload);
-int fis_dimm_partition_info(const unsigned int device_handle, struct pt_output_dimm_partition_info *p_output_payload);
-int fis_fw_debug_log_level(const unsigned int device_handle, struct pt_input_fw_debug_log_level *p_input_payload, struct pt_output_fw_debug_log_level *p_output_payload);
-int fis_fw_load_flag(const unsigned int device_handle, struct pt_output_fw_load_flag *p_output_payload);
-int fis_config_lockdown(const unsigned int device_handle, struct pt_output_config_lockdown *p_output_payload);
-int fis_ddrt_io_init_info(const unsigned int device_handle, struct pt_output_ddrt_io_init_info *p_output_payload);
-int fis_get_supported_sku_features(const unsigned int device_handle, struct pt_output_get_supported_sku_features *p_output_payload);
-int fis_enable_dimm(const unsigned int device_handle, struct pt_output_enable_dimm *p_output_payload);
-int fis_smart_health_info(const unsigned int device_handle, struct pt_output_smart_health_info *p_output_payload);
-int fis_firmware_image_info(const unsigned int device_handle, struct pt_output_firmware_image_info *p_output_payload);
-int fis_firmware_debug_log(const unsigned int device_handle, struct pt_input_firmware_debug_log *p_input_payload, struct pt_output_firmware_debug_log *p_output_payload);
-int fis_long_operation_status(const unsigned int device_handle, struct pt_output_long_operation_status *p_output_payload);
-int fis_bsr(const unsigned int device_handle, struct pt_output_bsr *p_output_payload);
+unsigned int fis_identify_dimm(const unsigned int device_handle, struct pt_output_identify_dimm *p_output_payload);
+unsigned int fis_identify_dimm_characteristics(const unsigned int device_handle, struct pt_output_identify_dimm_characteristics *p_output_payload);
+unsigned int fis_get_security_state(const unsigned int device_handle, struct pt_output_get_security_state *p_output_payload);
+unsigned int fis_set_passphrase(const unsigned int device_handle, struct pt_input_set_passphrase *p_input_payload);
+unsigned int fis_disable_passphrase(const unsigned int device_handle, struct pt_input_disable_passphrase *p_input_payload);
+unsigned int fis_unlock_unit(const unsigned int device_handle, struct pt_input_unlock_unit *p_input_payload);
+unsigned int fis_secure_erase(const unsigned int device_handle, struct pt_input_secure_erase *p_input_payload);
+unsigned int fis_freeze_lock(const unsigned int device_handle);
+unsigned int fis_get_alarm_threshold(const unsigned int device_handle, struct pt_output_get_alarm_threshold *p_output_payload);
+unsigned int fis_power_management_policy(const unsigned int device_handle, struct pt_output_power_management_policy *p_output_payload);
+unsigned int fis_die_sparing_policy(const unsigned int device_handle, struct pt_output_die_sparing_policy *p_output_payload);
+unsigned int fis_address_range_scrub(const unsigned int device_handle, struct pt_output_address_range_scrub *p_output_payload);
+unsigned int fis_optional_configuration_data_policy(const unsigned int device_handle, struct pt_output_optional_configuration_data_policy *p_output_payload);
+unsigned int fis_pmon_registers(const unsigned int device_handle, struct pt_input_pmon_registers *p_input_payload, struct pt_output_pmon_registers *p_output_payload);
+unsigned int fis_set_alarm_threshold(const unsigned int device_handle, struct pt_input_set_alarm_threshold *p_input_payload);
+unsigned int fis_system_time(const unsigned int device_handle, struct pt_output_system_time *p_output_payload);
+unsigned int fis_platform_config_data(const unsigned int device_handle, struct pt_input_platform_config_data *p_input_payload, struct pt_output_platform_config_data *p_output_payload);
+unsigned int fis_dimm_partition_info(const unsigned int device_handle, struct pt_output_dimm_partition_info *p_output_payload);
+unsigned int fis_fw_debug_log_level(const unsigned int device_handle, struct pt_input_fw_debug_log_level *p_input_payload, struct pt_output_fw_debug_log_level *p_output_payload);
+unsigned int fis_fw_load_flag(const unsigned int device_handle, struct pt_output_fw_load_flag *p_output_payload);
+unsigned int fis_config_lockdown(const unsigned int device_handle, struct pt_output_config_lockdown *p_output_payload);
+unsigned int fis_ddrt_io_init_info(const unsigned int device_handle, struct pt_output_ddrt_io_init_info *p_output_payload);
+unsigned int fis_get_supported_sku_features(const unsigned int device_handle, struct pt_output_get_supported_sku_features *p_output_payload);
+unsigned int fis_enable_dimm(const unsigned int device_handle, struct pt_output_enable_dimm *p_output_payload);
+unsigned int fis_smart_health_info(const unsigned int device_handle, struct pt_output_smart_health_info *p_output_payload);
+unsigned int fis_firmware_image_info(const unsigned int device_handle, struct pt_output_firmware_image_info *p_output_payload);
+unsigned int fis_firmware_debug_log(const unsigned int device_handle, struct pt_input_firmware_debug_log *p_input_payload, struct pt_output_firmware_debug_log *p_output_payload);
+unsigned int fis_long_operation_status(const unsigned int device_handle, struct pt_output_long_operation_status *p_output_payload);
+unsigned int fis_bsr(const unsigned int device_handle, struct pt_output_bsr *p_output_payload);
 #ifdef __cplusplus
 }
 #endif

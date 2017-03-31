@@ -36,6 +36,10 @@ enum FWCMD_DUMP_RESULT
 {
 	FWCMD_DUMP_RESULT_SUCCESS = 0,
 	FWCMD_DUMP_RESULT_ERR = 1,
+	FWCMD_DUMP_RESULT_ERR_FILE_OPEN = 2,
+	FWCMD_DUMP_RESULT_ERR_FILE_READ = 3,
+	FWCMD_DUMP_RESULT_ERR_FILE_WRITE = 4,
+
 };
 
 int fwcmd_dump(const char *command_name, unsigned int handle, const char *filename);

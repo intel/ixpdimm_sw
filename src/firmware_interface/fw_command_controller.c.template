@@ -131,8 +131,8 @@ void {{cmd.name|fw_cmd_print_controller}}(unsigned int handle
 	}
 	else
 	{
-		printf("There was an issue executing {{cmd.name}}. Error: %d\n",
-			result.error_code);
+		printf("There was an issue executing {{cmd.name}}. \n");
+		fwcmd_print_error(result.error_code);
 	}
 //- if cmd.has_output
 	{{cmd.name|fw_cmd_free}}(&result);

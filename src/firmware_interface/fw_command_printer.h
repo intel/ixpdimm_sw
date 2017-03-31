@@ -36,6 +36,7 @@ extern "C"
 
 void fwcmd_print_command_names();
 void fwcmd_print_output_command_names();
+void fwcmd_print_error(struct fwcmd_error_code error);
 
 
 void fwcmd_identify_dimm_printer(const struct fwcmd_identify_dimm_data *p_value,

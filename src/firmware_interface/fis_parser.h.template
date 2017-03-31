@@ -44,7 +44,7 @@ enum FIS_PARSER_CODES
 
 //- for cmd in commands
 //- 	if cmd.has_output
-int {{cmd.name|fw_cmd_parser}}(
+unsigned int {{cmd.name|fw_cmd_parser}}(
 	const struct {{cmd.name|output_payload}} *p_output_payload,
 	struct {{cmd.name|fw_cmd_data}} *p_data);
 

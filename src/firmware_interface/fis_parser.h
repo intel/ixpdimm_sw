@@ -42,95 +42,95 @@ enum FIS_PARSER_CODES
 	FIS_PARSER_CODES_PARSING_TYPE_NOT_FOUND = 2,
 };
 
-int fwcmd_parse_identify_dimm(
+unsigned int fwcmd_parse_identify_dimm(
 	const struct pt_output_identify_dimm *p_output_payload,
 	struct fwcmd_identify_dimm_data *p_data);
 
-int fwcmd_parse_identify_dimm_characteristics(
+unsigned int fwcmd_parse_identify_dimm_characteristics(
 	const struct pt_output_identify_dimm_characteristics *p_output_payload,
 	struct fwcmd_identify_dimm_characteristics_data *p_data);
 
-int fwcmd_parse_get_security_state(
+unsigned int fwcmd_parse_get_security_state(
 	const struct pt_output_get_security_state *p_output_payload,
 	struct fwcmd_get_security_state_data *p_data);
 
-int fwcmd_parse_get_alarm_threshold(
+unsigned int fwcmd_parse_get_alarm_threshold(
 	const struct pt_output_get_alarm_threshold *p_output_payload,
 	struct fwcmd_get_alarm_threshold_data *p_data);
 
-int fwcmd_parse_power_management_policy(
+unsigned int fwcmd_parse_power_management_policy(
 	const struct pt_output_power_management_policy *p_output_payload,
 	struct fwcmd_power_management_policy_data *p_data);
 
-int fwcmd_parse_die_sparing_policy(
+unsigned int fwcmd_parse_die_sparing_policy(
 	const struct pt_output_die_sparing_policy *p_output_payload,
 	struct fwcmd_die_sparing_policy_data *p_data);
 
-int fwcmd_parse_address_range_scrub(
+unsigned int fwcmd_parse_address_range_scrub(
 	const struct pt_output_address_range_scrub *p_output_payload,
 	struct fwcmd_address_range_scrub_data *p_data);
 
-int fwcmd_parse_optional_configuration_data_policy(
+unsigned int fwcmd_parse_optional_configuration_data_policy(
 	const struct pt_output_optional_configuration_data_policy *p_output_payload,
 	struct fwcmd_optional_configuration_data_policy_data *p_data);
 
-int fwcmd_parse_pmon_registers(
+unsigned int fwcmd_parse_pmon_registers(
 	const struct pt_output_pmon_registers *p_output_payload,
 	struct fwcmd_pmon_registers_data *p_data);
 
-int fwcmd_parse_system_time(
+unsigned int fwcmd_parse_system_time(
 	const struct pt_output_system_time *p_output_payload,
 	struct fwcmd_system_time_data *p_data);
 
-int fwcmd_parse_platform_config_data(
+unsigned int fwcmd_parse_platform_config_data(
 	const struct pt_output_platform_config_data *p_output_payload,
 	struct fwcmd_platform_config_data_data *p_data);
 
-int fwcmd_parse_dimm_partition_info(
+unsigned int fwcmd_parse_dimm_partition_info(
 	const struct pt_output_dimm_partition_info *p_output_payload,
 	struct fwcmd_dimm_partition_info_data *p_data);
 
-int fwcmd_parse_fw_debug_log_level(
+unsigned int fwcmd_parse_fw_debug_log_level(
 	const struct pt_output_fw_debug_log_level *p_output_payload,
 	struct fwcmd_fw_debug_log_level_data *p_data);
 
-int fwcmd_parse_fw_load_flag(
+unsigned int fwcmd_parse_fw_load_flag(
 	const struct pt_output_fw_load_flag *p_output_payload,
 	struct fwcmd_fw_load_flag_data *p_data);
 
-int fwcmd_parse_config_lockdown(
+unsigned int fwcmd_parse_config_lockdown(
 	const struct pt_output_config_lockdown *p_output_payload,
 	struct fwcmd_config_lockdown_data *p_data);
 
-int fwcmd_parse_ddrt_io_init_info(
+unsigned int fwcmd_parse_ddrt_io_init_info(
 	const struct pt_output_ddrt_io_init_info *p_output_payload,
 	struct fwcmd_ddrt_io_init_info_data *p_data);
 
-int fwcmd_parse_get_supported_sku_features(
+unsigned int fwcmd_parse_get_supported_sku_features(
 	const struct pt_output_get_supported_sku_features *p_output_payload,
 	struct fwcmd_get_supported_sku_features_data *p_data);
 
-int fwcmd_parse_enable_dimm(
+unsigned int fwcmd_parse_enable_dimm(
 	const struct pt_output_enable_dimm *p_output_payload,
 	struct fwcmd_enable_dimm_data *p_data);
 
-int fwcmd_parse_smart_health_info(
+unsigned int fwcmd_parse_smart_health_info(
 	const struct pt_output_smart_health_info *p_output_payload,
 	struct fwcmd_smart_health_info_data *p_data);
 
-int fwcmd_parse_firmware_image_info(
+unsigned int fwcmd_parse_firmware_image_info(
 	const struct pt_output_firmware_image_info *p_output_payload,
 	struct fwcmd_firmware_image_info_data *p_data);
 
-int fwcmd_parse_firmware_debug_log(
+unsigned int fwcmd_parse_firmware_debug_log(
 	const struct pt_output_firmware_debug_log *p_output_payload,
 	struct fwcmd_firmware_debug_log_data *p_data);
 
-int fwcmd_parse_long_operation_status(
+unsigned int fwcmd_parse_long_operation_status(
 	const struct pt_output_long_operation_status *p_output_payload,
 	struct fwcmd_long_operation_status_data *p_data);
 
-int fwcmd_parse_bsr(
+unsigned int fwcmd_parse_bsr(
 	const struct pt_output_bsr *p_output_payload,
 	struct fwcmd_bsr_data *p_data);
 

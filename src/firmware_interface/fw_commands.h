@@ -32,6 +32,20 @@ extern "C"
 {
 #endif
 
+enum fwcmd_error_type
+{
+	FWCMD_ERROR_TYPE_DRIVER = 1,
+	FWCMD_ERROR_TYPE_PT = 2,
+	FWCMD_ERROR_TYPE_PARSE = 3,
+	FWCMD_ERROR_TYPE_DUMP = 4,
+};
+
+struct fwcmd_error_code
+{
+	enum fwcmd_error_type type;
+	unsigned int code;
+};
+
 /*
  * Data Structures for identify_dimm
  */
@@ -65,8 +79,8 @@ struct fwcmd_identify_dimm_data
 };
 struct fwcmd_identify_dimm_result
 {
-	int success;
-	int error_code;
+	int success:1;
+	struct fwcmd_error_code error_code;
 	struct fwcmd_identify_dimm_data *p_data;
 };
 
@@ -89,8 +103,8 @@ struct fwcmd_identify_dimm_characteristics_data
 };
 struct fwcmd_identify_dimm_characteristics_result
 {
-	int success;
-	int error_code;
+	int success:1;
+	struct fwcmd_error_code error_code;
 	struct fwcmd_identify_dimm_characteristics_data *p_data;
 };
 
@@ -115,8 +129,8 @@ struct fwcmd_get_security_state_data
 };
 struct fwcmd_get_security_state_result
 {
-	int success;
-	int error_code;
+	int success:1;
+	struct fwcmd_error_code error_code;
 	struct fwcmd_get_security_state_data *p_data;
 };
 
@@ -131,8 +145,8 @@ void fwcmd_free_get_security_state(struct fwcmd_get_security_state_result *p_res
  */
 struct fwcmd_set_passphrase_result
 {
-	int success;
-	int error_code;
+	int success:1;
+	struct fwcmd_error_code error_code;
 };
 
 /*
@@ -147,8 +161,8 @@ struct fwcmd_set_passphrase_result fwcmd_call_set_passphrase(unsigned int handle
  */
 struct fwcmd_disable_passphrase_result
 {
-	int success;
-	int error_code;
+	int success:1;
+	struct fwcmd_error_code error_code;
 };
 
 /*
@@ -162,8 +176,8 @@ struct fwcmd_disable_passphrase_result fwcmd_call_disable_passphrase(unsigned in
  */
 struct fwcmd_unlock_unit_result
 {
-	int success;
-	int error_code;
+	int success:1;
+	struct fwcmd_error_code error_code;
 };
 
 /*
@@ -177,8 +191,8 @@ struct fwcmd_unlock_unit_result fwcmd_call_unlock_unit(unsigned int handle,
  */
 struct fwcmd_secure_erase_result
 {
-	int success;
-	int error_code;
+	int success:1;
+	struct fwcmd_error_code error_code;
 };
 
 /*
@@ -192,8 +206,8 @@ struct fwcmd_secure_erase_result fwcmd_call_secure_erase(unsigned int handle,
  */
 struct fwcmd_freeze_lock_result
 {
-	int success;
-	int error_code;
+	int success:1;
+	struct fwcmd_error_code error_code;
 };
 
 /*
@@ -217,8 +231,8 @@ struct fwcmd_get_alarm_threshold_data
 };
 struct fwcmd_get_alarm_threshold_result
 {
-	int success;
-	int error_code;
+	int success:1;
+	struct fwcmd_error_code error_code;
 	struct fwcmd_get_alarm_threshold_data *p_data;
 };
 
@@ -241,8 +255,8 @@ struct fwcmd_power_management_policy_data
 };
 struct fwcmd_power_management_policy_result
 {
-	int success;
-	int error_code;
+	int success:1;
+	struct fwcmd_error_code error_code;
 	struct fwcmd_power_management_policy_data *p_data;
 };
 
@@ -268,8 +282,8 @@ struct fwcmd_die_sparing_policy_data
 };
 struct fwcmd_die_sparing_policy_result
 {
-	int success;
-	int error_code;
+	int success:1;
+	struct fwcmd_error_code error_code;
 	struct fwcmd_die_sparing_policy_data *p_data;
 };
 
@@ -292,8 +306,8 @@ struct fwcmd_address_range_scrub_data
 };
 struct fwcmd_address_range_scrub_result
 {
-	int success;
-	int error_code;
+	int success:1;
+	struct fwcmd_error_code error_code;
 	struct fwcmd_address_range_scrub_data *p_data;
 };
 
@@ -315,8 +329,8 @@ struct fwcmd_optional_configuration_data_policy_data
 };
 struct fwcmd_optional_configuration_data_policy_result
 {
-	int success;
-	int error_code;
+	int success:1;
+	struct fwcmd_error_code error_code;
 	struct fwcmd_optional_configuration_data_policy_data *p_data;
 };
 
@@ -362,8 +376,8 @@ struct fwcmd_pmon_registers_data
 };
 struct fwcmd_pmon_registers_result
 {
-	int success;
-	int error_code;
+	int success:1;
+	struct fwcmd_error_code error_code;
 	struct fwcmd_pmon_registers_data *p_data;
 };
 
@@ -379,8 +393,8 @@ void fwcmd_free_pmon_registers(struct fwcmd_pmon_registers_result *p_result);
  */
 struct fwcmd_set_alarm_threshold_result
 {
-	int success;
-	int error_code;
+	int success:1;
+	struct fwcmd_error_code error_code;
 };
 
 /*
@@ -401,8 +415,8 @@ struct fwcmd_system_time_data
 };
 struct fwcmd_system_time_result
 {
-	int success;
-	int error_code;
+	int success:1;
+	struct fwcmd_error_code error_code;
 	struct fwcmd_system_time_data *p_data;
 };
 
@@ -532,8 +546,8 @@ struct fwcmd_platform_config_data_data
 };
 struct fwcmd_platform_config_data_result
 {
-	int success;
-	int error_code;
+	int success:1;
+	struct fwcmd_error_code error_code;
 	struct fwcmd_platform_config_data_data *p_data;
 };
 
@@ -561,8 +575,8 @@ struct fwcmd_dimm_partition_info_data
 };
 struct fwcmd_dimm_partition_info_result
 {
-	int success;
-	int error_code;
+	int success:1;
+	struct fwcmd_error_code error_code;
 	struct fwcmd_dimm_partition_info_data *p_data;
 };
 
@@ -583,8 +597,8 @@ struct fwcmd_fw_debug_log_level_data
 };
 struct fwcmd_fw_debug_log_level_result
 {
-	int success;
-	int error_code;
+	int success:1;
+	struct fwcmd_error_code error_code;
 	struct fwcmd_fw_debug_log_level_data *p_data;
 };
 
@@ -605,8 +619,8 @@ struct fwcmd_fw_load_flag_data
 };
 struct fwcmd_fw_load_flag_result
 {
-	int success;
-	int error_code;
+	int success:1;
+	struct fwcmd_error_code error_code;
 	struct fwcmd_fw_load_flag_data *p_data;
 };
 
@@ -626,8 +640,8 @@ struct fwcmd_config_lockdown_data
 };
 struct fwcmd_config_lockdown_result
 {
-	int success;
-	int error_code;
+	int success:1;
+	struct fwcmd_error_code error_code;
 	struct fwcmd_config_lockdown_data *p_data;
 };
 
@@ -648,8 +662,8 @@ struct fwcmd_ddrt_io_init_info_data
 };
 struct fwcmd_ddrt_io_init_info_result
 {
-	int success;
-	int error_code;
+	int success:1;
+	struct fwcmd_error_code error_code;
 	struct fwcmd_ddrt_io_init_info_data *p_data;
 };
 
@@ -669,8 +683,8 @@ struct fwcmd_get_supported_sku_features_data
 };
 struct fwcmd_get_supported_sku_features_result
 {
-	int success;
-	int error_code;
+	int success:1;
+	struct fwcmd_error_code error_code;
 	struct fwcmd_get_supported_sku_features_data *p_data;
 };
 
@@ -690,8 +704,8 @@ struct fwcmd_enable_dimm_data
 };
 struct fwcmd_enable_dimm_result
 {
-	int success;
-	int error_code;
+	int success:1;
+	struct fwcmd_error_code error_code;
 	struct fwcmd_enable_dimm_data *p_data;
 };
 
@@ -751,8 +765,8 @@ struct fwcmd_smart_health_info_data
 };
 struct fwcmd_smart_health_info_result
 {
-	int success;
-	int error_code;
+	int success:1;
+	struct fwcmd_error_code error_code;
 	struct fwcmd_smart_health_info_data *p_data;
 };
 
@@ -777,8 +791,8 @@ struct fwcmd_firmware_image_info_data
 };
 struct fwcmd_firmware_image_info_result
 {
-	int success;
-	int error_code;
+	int success:1;
+	struct fwcmd_error_code error_code;
 	struct fwcmd_firmware_image_info_data *p_data;
 };
 
@@ -798,8 +812,8 @@ struct fwcmd_firmware_debug_log_data
 };
 struct fwcmd_firmware_debug_log_result
 {
-	int success;
-	int error_code;
+	int success:1;
+	struct fwcmd_error_code error_code;
 	struct fwcmd_firmware_debug_log_data *p_data;
 };
 
@@ -826,8 +840,8 @@ struct fwcmd_long_operation_status_data
 };
 struct fwcmd_long_operation_status_result
 {
-	int success;
-	int error_code;
+	int success:1;
+	struct fwcmd_error_code error_code;
 	struct fwcmd_long_operation_status_data *p_data;
 };
 
@@ -864,8 +878,8 @@ struct fwcmd_bsr_data
 };
 struct fwcmd_bsr_result
 {
-	int success;
-	int error_code;
+	int success:1;
+	struct fwcmd_error_code error_code;
 	struct fwcmd_bsr_data *p_data;
 };
 

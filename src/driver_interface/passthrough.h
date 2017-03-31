@@ -39,6 +39,9 @@
 extern "C"
 {
 #endif
+
+#include <stdlib.h>
+
 struct fw_cmd
 {
 	unsigned int device_handle; // as reported by NFIT
@@ -57,13 +60,18 @@ struct fw_cmd
 enum IOCTL_PASSTHROUGH_RESULT
 {
 	PT_SUCCESS = 0,
-	PT_ERR_UNKNOWN = -1,
-	PT_ERR_BADDEVICEHANDLE = -2,
-	PT_ERR_NOMEMORY = -3,
-	PT_ERR_DRIVERFAILED = -4,
+	PT_ERR_UNKNOWN = 1,
+	PT_ERR_BADDEVICEHANDLE = 2,
+	PT_ERR_NOMEMORY = 3,
+	PT_ERR_DRIVERFAILED = 4,
 };
 
-int ioctl_passthrough_cmd(struct fw_cmd *p_fw_cmd);
+#define	PT_RC_IS_SUCCESS(rc) ((rc) == 0)
+#define SET_FUNC_RC(rc, code) rc |= ((code) << 0)
+#define SET_DRIVER_RC(rc, code) rc |= ((code) << 4)
+#define SET_PT_RC(rc, code) rc |= ((code) << 8)
+#define SET_FW_STATUS(rc, code) rc |= ((code) << 16)
+#define SET_FW_EXT_STATUS(rc, code) rc |= ((code) << 24)
 
 #define DEV_SMALL_PAYLOAD_SIZE	128 /* 128B - Size for a passthrough command small payload */
 #define BUILD_DSM_OPCODE(opcode, subop_code) (unsigned int)(subop_code << 8 | opcode)
@@ -74,11 +82,29 @@ int ioctl_passthrough_cmd(struct fw_cmd *p_fw_cmd);
 #define	SUBOP_READ_LARGE_PAYLOAD_OUTPUT 0x02
 #define	SUBOP_GET_BOOT_STATUS 0x03
 
-struct pt_bios_get_size {
+struct pt_bios_get_size
+{
 	unsigned int large_input_payload_size;
 	unsigned int large_output_payload_size;
 	unsigned int rw_size;
 }__attribute__((packed));
+
+union pt_error
+{
+	unsigned int code;
+	struct
+	{
+		unsigned char func: 4;
+		unsigned char driver: 4;
+		unsigned char ioctl:8;
+		unsigned char fw_status;
+		unsigned char fw_ext_status;
+	} parts;
+};
+
+void pt_get_error_message(unsigned int code, char message[1024], size_t message_len);
+
+int ioctl_passthrough_cmd(struct fw_cmd *p_fw_cmd);
 
 #ifdef __cplusplus
 }

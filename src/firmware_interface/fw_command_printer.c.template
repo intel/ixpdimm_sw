@@ -69,6 +69,7 @@ void {{name|fw_cmd_printer}}(const struct {{name|fw_cmd_data}} *p_value, int {{t
 //- endmacro
 
 #include "fw_command_printer.h"
+#include <driver_interface/passthrough.h>
 #include <stdio.h>
 
 
@@ -77,6 +78,33 @@ void print_tabs(int tab_count)
 	for(int i = 0; i < tab_count; i++)
 	{
 		printf("\t");
+	}
+}
+
+void fwcmd_print_error(struct fwcmd_error_code error)
+{
+	switch (error.type)
+	{
+		case FWCMD_ERROR_TYPE_DRIVER:
+    		printf("Driver error: 0x%x\n", error.code);
+			break;
+    	case FWCMD_ERROR_TYPE_PT:
+			{
+				printf("Passthrough Error: 0x%x\n", error.code);
+				char error_message[1024];
+				pt_get_error_message(error.code, error_message, 1024);
+				printf("%s", error_message);
+
+            	break;
+			}
+    	case FWCMD_ERROR_TYPE_PARSE:
+    		printf("Parsing error: 0x%x\n", error.code);
+			break;
+    	case FWCMD_ERROR_TYPE_DUMP:
+    		printf("Error: 0x%x\n", error.code);
+			break;
+		default:
+			printf("Unknown error type: %d\n", error.type);
 	}
 }
 

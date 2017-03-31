@@ -75,10 +75,8 @@ int fwcmd_dump(const char *command_name, unsigned int handle, const char *filena
 	return rc;
 }
 
-
 void fwcmd_read_and_print(const char *filename)
 {
-
 	FILE *pFile = fopen(filename, "rb");
 	if (pFile)
 	{
@@ -168,7 +166,7 @@ int {{cmd.name|fw_cmd_dump}}(const int handle,
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
-				rc = FWCMD_DUMP_RESULT_ERR;
+                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 			}
 			else
 			{
@@ -176,7 +174,7 @@ int {{cmd.name|fw_cmd_dump}}(const int handle,
 				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
 				if (bytes_written != sizeof(output_payload))
 				{
-					rc = FWCMD_DUMP_RESULT_ERR;
+                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 				}
 			}
 			fclose(pFile);
@@ -184,7 +182,7 @@ int {{cmd.name|fw_cmd_dump}}(const int handle,
 	}
 	else
 	{
-		rc = FWCMD_DUMP_RESULT_ERR;
+		rc = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
 	}
 
 	return rc;
@@ -206,23 +204,27 @@ struct {{cmd.name|fw_cmd_result}} {{cmd.name|fw_cmd_read}}(const char *filename)
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct {{cmd.name|fw_cmd_data}} *)malloc(sizeof(*result.p_data));
-			if ({{cmd.name|fw_cmd_parser}}((const struct {{cmd.name|output_payload}}*) buffer, result.p_data) == FIS_PARSER_CODES_SUCCESS)
+			int parse_result = {{cmd.name|fw_cmd_parser}}((const struct {{cmd.name|output_payload}}*) buffer, result.p_data);
+			if (parse_result == FIS_PARSER_CODES_SUCCESS)
 			{
 				result.success = 1;
 			}
 			else
 			{
-				result.error_code = FWCMD_DUMP_RESULT_ERR;
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = parse_result;
 			}
 		}
 		else
 		{
-			result.error_code = FWCMD_DUMP_RESULT_ERR; // error reading file
+			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
 	}
 	else
 	{
-		result.error_code = FWCMD_DUMP_RESULT_ERR; // error opening file
+		result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+		result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
 	}
 
 	return result;

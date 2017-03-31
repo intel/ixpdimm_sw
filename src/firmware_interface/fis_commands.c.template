@@ -32,7 +32,7 @@
 #include <driver_interface/passthrough.h>
 
 //- for cmd in commands
-int {{cmd.name|fis}}(const unsigned int device_handle
+unsigned int {{cmd.name|fis}}(const unsigned int device_handle
 	{%- if cmd.has_input %}, struct {{cmd.name|input_payload}} *p_input_payload{% endif -%}
 	{%- if cmd.has_output %}, struct {{cmd.name|output_payload}} *p_output_payload{% endif -%}
 )
@@ -55,7 +55,7 @@ int {{cmd.name|fis}}(const unsigned int device_handle
 	cmd.input_payload = p_input_payload;
 	cmd.input_payload_size = sizeof (struct {{cmd.name|input_payload}});
 //- 	endif
-	return ioctl_passthrough_cmd(&cmd);
+	return (unsigned int)ioctl_passthrough_cmd(&cmd);
 }
 
 //- endfor

@@ -216,10 +216,8 @@ int fwcmd_dump(const char *command_name, unsigned int handle, const char *filena
 	return rc;
 }
 
-
 void fwcmd_read_and_print(const char *filename)
 {
-
 	FILE *pFile = fopen(filename, "rb");
 	if (pFile)
 	{
@@ -453,7 +451,7 @@ int fwcmd_dump_identify_dimm(const int handle,
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
-				rc = FWCMD_DUMP_RESULT_ERR;
+                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 			}
 			else
 			{
@@ -461,7 +459,7 @@ int fwcmd_dump_identify_dimm(const int handle,
 				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
 				if (bytes_written != sizeof(output_payload))
 				{
-					rc = FWCMD_DUMP_RESULT_ERR;
+                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 				}
 			}
 			fclose(pFile);
@@ -469,7 +467,7 @@ int fwcmd_dump_identify_dimm(const int handle,
 	}
 	else
 	{
-		rc = FWCMD_DUMP_RESULT_ERR;
+		rc = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
 	}
 
 	return rc;
@@ -491,23 +489,27 @@ struct fwcmd_identify_dimm_result fwcmd_read_identify_dimm(const char *filename)
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct fwcmd_identify_dimm_data *)malloc(sizeof(*result.p_data));
-			if (fwcmd_parse_identify_dimm((const struct pt_output_identify_dimm*) buffer, result.p_data) == FIS_PARSER_CODES_SUCCESS)
+			int parse_result = fwcmd_parse_identify_dimm((const struct pt_output_identify_dimm*) buffer, result.p_data);
+			if (parse_result == FIS_PARSER_CODES_SUCCESS)
 			{
 				result.success = 1;
 			}
 			else
 			{
-				result.error_code = FWCMD_DUMP_RESULT_ERR;
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = parse_result;
 			}
 		}
 		else
 		{
-			result.error_code = FWCMD_DUMP_RESULT_ERR; // error reading file
+			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
 	}
 	else
 	{
-		result.error_code = FWCMD_DUMP_RESULT_ERR; // error opening file
+		result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+		result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
 	}
 
 	return result;
@@ -531,7 +533,7 @@ int fwcmd_dump_identify_dimm_characteristics(const int handle,
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
-				rc = FWCMD_DUMP_RESULT_ERR;
+                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 			}
 			else
 			{
@@ -539,7 +541,7 @@ int fwcmd_dump_identify_dimm_characteristics(const int handle,
 				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
 				if (bytes_written != sizeof(output_payload))
 				{
-					rc = FWCMD_DUMP_RESULT_ERR;
+                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 				}
 			}
 			fclose(pFile);
@@ -547,7 +549,7 @@ int fwcmd_dump_identify_dimm_characteristics(const int handle,
 	}
 	else
 	{
-		rc = FWCMD_DUMP_RESULT_ERR;
+		rc = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
 	}
 
 	return rc;
@@ -569,23 +571,27 @@ struct fwcmd_identify_dimm_characteristics_result fwcmd_read_identify_dimm_chara
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct fwcmd_identify_dimm_characteristics_data *)malloc(sizeof(*result.p_data));
-			if (fwcmd_parse_identify_dimm_characteristics((const struct pt_output_identify_dimm_characteristics*) buffer, result.p_data) == FIS_PARSER_CODES_SUCCESS)
+			int parse_result = fwcmd_parse_identify_dimm_characteristics((const struct pt_output_identify_dimm_characteristics*) buffer, result.p_data);
+			if (parse_result == FIS_PARSER_CODES_SUCCESS)
 			{
 				result.success = 1;
 			}
 			else
 			{
-				result.error_code = FWCMD_DUMP_RESULT_ERR;
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = parse_result;
 			}
 		}
 		else
 		{
-			result.error_code = FWCMD_DUMP_RESULT_ERR; // error reading file
+			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
 	}
 	else
 	{
-		result.error_code = FWCMD_DUMP_RESULT_ERR; // error opening file
+		result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+		result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
 	}
 
 	return result;
@@ -609,7 +615,7 @@ int fwcmd_dump_get_security_state(const int handle,
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
-				rc = FWCMD_DUMP_RESULT_ERR;
+                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 			}
 			else
 			{
@@ -617,7 +623,7 @@ int fwcmd_dump_get_security_state(const int handle,
 				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
 				if (bytes_written != sizeof(output_payload))
 				{
-					rc = FWCMD_DUMP_RESULT_ERR;
+                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 				}
 			}
 			fclose(pFile);
@@ -625,7 +631,7 @@ int fwcmd_dump_get_security_state(const int handle,
 	}
 	else
 	{
-		rc = FWCMD_DUMP_RESULT_ERR;
+		rc = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
 	}
 
 	return rc;
@@ -647,23 +653,27 @@ struct fwcmd_get_security_state_result fwcmd_read_get_security_state(const char 
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct fwcmd_get_security_state_data *)malloc(sizeof(*result.p_data));
-			if (fwcmd_parse_get_security_state((const struct pt_output_get_security_state*) buffer, result.p_data) == FIS_PARSER_CODES_SUCCESS)
+			int parse_result = fwcmd_parse_get_security_state((const struct pt_output_get_security_state*) buffer, result.p_data);
+			if (parse_result == FIS_PARSER_CODES_SUCCESS)
 			{
 				result.success = 1;
 			}
 			else
 			{
-				result.error_code = FWCMD_DUMP_RESULT_ERR;
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = parse_result;
 			}
 		}
 		else
 		{
-			result.error_code = FWCMD_DUMP_RESULT_ERR; // error reading file
+			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
 	}
 	else
 	{
-		result.error_code = FWCMD_DUMP_RESULT_ERR; // error opening file
+		result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+		result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
 	}
 
 	return result;
@@ -687,7 +697,7 @@ int fwcmd_dump_get_alarm_threshold(const int handle,
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
-				rc = FWCMD_DUMP_RESULT_ERR;
+                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 			}
 			else
 			{
@@ -695,7 +705,7 @@ int fwcmd_dump_get_alarm_threshold(const int handle,
 				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
 				if (bytes_written != sizeof(output_payload))
 				{
-					rc = FWCMD_DUMP_RESULT_ERR;
+                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 				}
 			}
 			fclose(pFile);
@@ -703,7 +713,7 @@ int fwcmd_dump_get_alarm_threshold(const int handle,
 	}
 	else
 	{
-		rc = FWCMD_DUMP_RESULT_ERR;
+		rc = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
 	}
 
 	return rc;
@@ -725,23 +735,27 @@ struct fwcmd_get_alarm_threshold_result fwcmd_read_get_alarm_threshold(const cha
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct fwcmd_get_alarm_threshold_data *)malloc(sizeof(*result.p_data));
-			if (fwcmd_parse_get_alarm_threshold((const struct pt_output_get_alarm_threshold*) buffer, result.p_data) == FIS_PARSER_CODES_SUCCESS)
+			int parse_result = fwcmd_parse_get_alarm_threshold((const struct pt_output_get_alarm_threshold*) buffer, result.p_data);
+			if (parse_result == FIS_PARSER_CODES_SUCCESS)
 			{
 				result.success = 1;
 			}
 			else
 			{
-				result.error_code = FWCMD_DUMP_RESULT_ERR;
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = parse_result;
 			}
 		}
 		else
 		{
-			result.error_code = FWCMD_DUMP_RESULT_ERR; // error reading file
+			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
 	}
 	else
 	{
-		result.error_code = FWCMD_DUMP_RESULT_ERR; // error opening file
+		result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+		result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
 	}
 
 	return result;
@@ -765,7 +779,7 @@ int fwcmd_dump_power_management_policy(const int handle,
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
-				rc = FWCMD_DUMP_RESULT_ERR;
+                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 			}
 			else
 			{
@@ -773,7 +787,7 @@ int fwcmd_dump_power_management_policy(const int handle,
 				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
 				if (bytes_written != sizeof(output_payload))
 				{
-					rc = FWCMD_DUMP_RESULT_ERR;
+                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 				}
 			}
 			fclose(pFile);
@@ -781,7 +795,7 @@ int fwcmd_dump_power_management_policy(const int handle,
 	}
 	else
 	{
-		rc = FWCMD_DUMP_RESULT_ERR;
+		rc = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
 	}
 
 	return rc;
@@ -803,23 +817,27 @@ struct fwcmd_power_management_policy_result fwcmd_read_power_management_policy(c
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct fwcmd_power_management_policy_data *)malloc(sizeof(*result.p_data));
-			if (fwcmd_parse_power_management_policy((const struct pt_output_power_management_policy*) buffer, result.p_data) == FIS_PARSER_CODES_SUCCESS)
+			int parse_result = fwcmd_parse_power_management_policy((const struct pt_output_power_management_policy*) buffer, result.p_data);
+			if (parse_result == FIS_PARSER_CODES_SUCCESS)
 			{
 				result.success = 1;
 			}
 			else
 			{
-				result.error_code = FWCMD_DUMP_RESULT_ERR;
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = parse_result;
 			}
 		}
 		else
 		{
-			result.error_code = FWCMD_DUMP_RESULT_ERR; // error reading file
+			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
 	}
 	else
 	{
-		result.error_code = FWCMD_DUMP_RESULT_ERR; // error opening file
+		result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+		result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
 	}
 
 	return result;
@@ -843,7 +861,7 @@ int fwcmd_dump_die_sparing_policy(const int handle,
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
-				rc = FWCMD_DUMP_RESULT_ERR;
+                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 			}
 			else
 			{
@@ -851,7 +869,7 @@ int fwcmd_dump_die_sparing_policy(const int handle,
 				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
 				if (bytes_written != sizeof(output_payload))
 				{
-					rc = FWCMD_DUMP_RESULT_ERR;
+                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 				}
 			}
 			fclose(pFile);
@@ -859,7 +877,7 @@ int fwcmd_dump_die_sparing_policy(const int handle,
 	}
 	else
 	{
-		rc = FWCMD_DUMP_RESULT_ERR;
+		rc = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
 	}
 
 	return rc;
@@ -881,23 +899,27 @@ struct fwcmd_die_sparing_policy_result fwcmd_read_die_sparing_policy(const char 
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct fwcmd_die_sparing_policy_data *)malloc(sizeof(*result.p_data));
-			if (fwcmd_parse_die_sparing_policy((const struct pt_output_die_sparing_policy*) buffer, result.p_data) == FIS_PARSER_CODES_SUCCESS)
+			int parse_result = fwcmd_parse_die_sparing_policy((const struct pt_output_die_sparing_policy*) buffer, result.p_data);
+			if (parse_result == FIS_PARSER_CODES_SUCCESS)
 			{
 				result.success = 1;
 			}
 			else
 			{
-				result.error_code = FWCMD_DUMP_RESULT_ERR;
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = parse_result;
 			}
 		}
 		else
 		{
-			result.error_code = FWCMD_DUMP_RESULT_ERR; // error reading file
+			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
 	}
 	else
 	{
-		result.error_code = FWCMD_DUMP_RESULT_ERR; // error opening file
+		result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+		result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
 	}
 
 	return result;
@@ -921,7 +943,7 @@ int fwcmd_dump_address_range_scrub(const int handle,
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
-				rc = FWCMD_DUMP_RESULT_ERR;
+                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 			}
 			else
 			{
@@ -929,7 +951,7 @@ int fwcmd_dump_address_range_scrub(const int handle,
 				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
 				if (bytes_written != sizeof(output_payload))
 				{
-					rc = FWCMD_DUMP_RESULT_ERR;
+                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 				}
 			}
 			fclose(pFile);
@@ -937,7 +959,7 @@ int fwcmd_dump_address_range_scrub(const int handle,
 	}
 	else
 	{
-		rc = FWCMD_DUMP_RESULT_ERR;
+		rc = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
 	}
 
 	return rc;
@@ -959,23 +981,27 @@ struct fwcmd_address_range_scrub_result fwcmd_read_address_range_scrub(const cha
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct fwcmd_address_range_scrub_data *)malloc(sizeof(*result.p_data));
-			if (fwcmd_parse_address_range_scrub((const struct pt_output_address_range_scrub*) buffer, result.p_data) == FIS_PARSER_CODES_SUCCESS)
+			int parse_result = fwcmd_parse_address_range_scrub((const struct pt_output_address_range_scrub*) buffer, result.p_data);
+			if (parse_result == FIS_PARSER_CODES_SUCCESS)
 			{
 				result.success = 1;
 			}
 			else
 			{
-				result.error_code = FWCMD_DUMP_RESULT_ERR;
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = parse_result;
 			}
 		}
 		else
 		{
-			result.error_code = FWCMD_DUMP_RESULT_ERR; // error reading file
+			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
 	}
 	else
 	{
-		result.error_code = FWCMD_DUMP_RESULT_ERR; // error opening file
+		result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+		result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
 	}
 
 	return result;
@@ -999,7 +1025,7 @@ int fwcmd_dump_optional_configuration_data_policy(const int handle,
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
-				rc = FWCMD_DUMP_RESULT_ERR;
+                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 			}
 			else
 			{
@@ -1007,7 +1033,7 @@ int fwcmd_dump_optional_configuration_data_policy(const int handle,
 				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
 				if (bytes_written != sizeof(output_payload))
 				{
-					rc = FWCMD_DUMP_RESULT_ERR;
+                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 				}
 			}
 			fclose(pFile);
@@ -1015,7 +1041,7 @@ int fwcmd_dump_optional_configuration_data_policy(const int handle,
 	}
 	else
 	{
-		rc = FWCMD_DUMP_RESULT_ERR;
+		rc = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
 	}
 
 	return rc;
@@ -1037,23 +1063,27 @@ struct fwcmd_optional_configuration_data_policy_result fwcmd_read_optional_confi
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct fwcmd_optional_configuration_data_policy_data *)malloc(sizeof(*result.p_data));
-			if (fwcmd_parse_optional_configuration_data_policy((const struct pt_output_optional_configuration_data_policy*) buffer, result.p_data) == FIS_PARSER_CODES_SUCCESS)
+			int parse_result = fwcmd_parse_optional_configuration_data_policy((const struct pt_output_optional_configuration_data_policy*) buffer, result.p_data);
+			if (parse_result == FIS_PARSER_CODES_SUCCESS)
 			{
 				result.success = 1;
 			}
 			else
 			{
-				result.error_code = FWCMD_DUMP_RESULT_ERR;
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = parse_result;
 			}
 		}
 		else
 		{
-			result.error_code = FWCMD_DUMP_RESULT_ERR; // error reading file
+			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
 	}
 	else
 	{
-		result.error_code = FWCMD_DUMP_RESULT_ERR; // error opening file
+		result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+		result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
 	}
 
 	return result;
@@ -1081,7 +1111,7 @@ int fwcmd_dump_pmon_registers(const int handle,
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
-				rc = FWCMD_DUMP_RESULT_ERR;
+                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 			}
 			else
 			{
@@ -1089,7 +1119,7 @@ int fwcmd_dump_pmon_registers(const int handle,
 				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
 				if (bytes_written != sizeof(output_payload))
 				{
-					rc = FWCMD_DUMP_RESULT_ERR;
+                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 				}
 			}
 			fclose(pFile);
@@ -1097,7 +1127,7 @@ int fwcmd_dump_pmon_registers(const int handle,
 	}
 	else
 	{
-		rc = FWCMD_DUMP_RESULT_ERR;
+		rc = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
 	}
 
 	return rc;
@@ -1119,23 +1149,27 @@ struct fwcmd_pmon_registers_result fwcmd_read_pmon_registers(const char *filenam
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct fwcmd_pmon_registers_data *)malloc(sizeof(*result.p_data));
-			if (fwcmd_parse_pmon_registers((const struct pt_output_pmon_registers*) buffer, result.p_data) == FIS_PARSER_CODES_SUCCESS)
+			int parse_result = fwcmd_parse_pmon_registers((const struct pt_output_pmon_registers*) buffer, result.p_data);
+			if (parse_result == FIS_PARSER_CODES_SUCCESS)
 			{
 				result.success = 1;
 			}
 			else
 			{
-				result.error_code = FWCMD_DUMP_RESULT_ERR;
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = parse_result;
 			}
 		}
 		else
 		{
-			result.error_code = FWCMD_DUMP_RESULT_ERR; // error reading file
+			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
 	}
 	else
 	{
-		result.error_code = FWCMD_DUMP_RESULT_ERR; // error opening file
+		result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+		result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
 	}
 
 	return result;
@@ -1159,7 +1193,7 @@ int fwcmd_dump_system_time(const int handle,
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
-				rc = FWCMD_DUMP_RESULT_ERR;
+                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 			}
 			else
 			{
@@ -1167,7 +1201,7 @@ int fwcmd_dump_system_time(const int handle,
 				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
 				if (bytes_written != sizeof(output_payload))
 				{
-					rc = FWCMD_DUMP_RESULT_ERR;
+                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 				}
 			}
 			fclose(pFile);
@@ -1175,7 +1209,7 @@ int fwcmd_dump_system_time(const int handle,
 	}
 	else
 	{
-		rc = FWCMD_DUMP_RESULT_ERR;
+		rc = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
 	}
 
 	return rc;
@@ -1197,23 +1231,27 @@ struct fwcmd_system_time_result fwcmd_read_system_time(const char *filename)
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct fwcmd_system_time_data *)malloc(sizeof(*result.p_data));
-			if (fwcmd_parse_system_time((const struct pt_output_system_time*) buffer, result.p_data) == FIS_PARSER_CODES_SUCCESS)
+			int parse_result = fwcmd_parse_system_time((const struct pt_output_system_time*) buffer, result.p_data);
+			if (parse_result == FIS_PARSER_CODES_SUCCESS)
 			{
 				result.success = 1;
 			}
 			else
 			{
-				result.error_code = FWCMD_DUMP_RESULT_ERR;
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = parse_result;
 			}
 		}
 		else
 		{
-			result.error_code = FWCMD_DUMP_RESULT_ERR; // error reading file
+			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
 	}
 	else
 	{
-		result.error_code = FWCMD_DUMP_RESULT_ERR; // error opening file
+		result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+		result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
 	}
 
 	return result;
@@ -1245,7 +1283,7 @@ int fwcmd_dump_platform_config_data(const int handle,
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
-				rc = FWCMD_DUMP_RESULT_ERR;
+                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 			}
 			else
 			{
@@ -1253,7 +1291,7 @@ int fwcmd_dump_platform_config_data(const int handle,
 				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
 				if (bytes_written != sizeof(output_payload))
 				{
-					rc = FWCMD_DUMP_RESULT_ERR;
+                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 				}
 			}
 			fclose(pFile);
@@ -1261,7 +1299,7 @@ int fwcmd_dump_platform_config_data(const int handle,
 	}
 	else
 	{
-		rc = FWCMD_DUMP_RESULT_ERR;
+		rc = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
 	}
 
 	return rc;
@@ -1283,23 +1321,27 @@ struct fwcmd_platform_config_data_result fwcmd_read_platform_config_data(const c
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct fwcmd_platform_config_data_data *)malloc(sizeof(*result.p_data));
-			if (fwcmd_parse_platform_config_data((const struct pt_output_platform_config_data*) buffer, result.p_data) == FIS_PARSER_CODES_SUCCESS)
+			int parse_result = fwcmd_parse_platform_config_data((const struct pt_output_platform_config_data*) buffer, result.p_data);
+			if (parse_result == FIS_PARSER_CODES_SUCCESS)
 			{
 				result.success = 1;
 			}
 			else
 			{
-				result.error_code = FWCMD_DUMP_RESULT_ERR;
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = parse_result;
 			}
 		}
 		else
 		{
-			result.error_code = FWCMD_DUMP_RESULT_ERR; // error reading file
+			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
 	}
 	else
 	{
-		result.error_code = FWCMD_DUMP_RESULT_ERR; // error opening file
+		result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+		result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
 	}
 
 	return result;
@@ -1323,7 +1365,7 @@ int fwcmd_dump_dimm_partition_info(const int handle,
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
-				rc = FWCMD_DUMP_RESULT_ERR;
+                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 			}
 			else
 			{
@@ -1331,7 +1373,7 @@ int fwcmd_dump_dimm_partition_info(const int handle,
 				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
 				if (bytes_written != sizeof(output_payload))
 				{
-					rc = FWCMD_DUMP_RESULT_ERR;
+                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 				}
 			}
 			fclose(pFile);
@@ -1339,7 +1381,7 @@ int fwcmd_dump_dimm_partition_info(const int handle,
 	}
 	else
 	{
-		rc = FWCMD_DUMP_RESULT_ERR;
+		rc = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
 	}
 
 	return rc;
@@ -1361,23 +1403,27 @@ struct fwcmd_dimm_partition_info_result fwcmd_read_dimm_partition_info(const cha
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct fwcmd_dimm_partition_info_data *)malloc(sizeof(*result.p_data));
-			if (fwcmd_parse_dimm_partition_info((const struct pt_output_dimm_partition_info*) buffer, result.p_data) == FIS_PARSER_CODES_SUCCESS)
+			int parse_result = fwcmd_parse_dimm_partition_info((const struct pt_output_dimm_partition_info*) buffer, result.p_data);
+			if (parse_result == FIS_PARSER_CODES_SUCCESS)
 			{
 				result.success = 1;
 			}
 			else
 			{
-				result.error_code = FWCMD_DUMP_RESULT_ERR;
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = parse_result;
 			}
 		}
 		else
 		{
-			result.error_code = FWCMD_DUMP_RESULT_ERR; // error reading file
+			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
 	}
 	else
 	{
-		result.error_code = FWCMD_DUMP_RESULT_ERR; // error opening file
+		result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+		result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
 	}
 
 	return result;
@@ -1405,7 +1451,7 @@ int fwcmd_dump_fw_debug_log_level(const int handle,
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
-				rc = FWCMD_DUMP_RESULT_ERR;
+                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 			}
 			else
 			{
@@ -1413,7 +1459,7 @@ int fwcmd_dump_fw_debug_log_level(const int handle,
 				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
 				if (bytes_written != sizeof(output_payload))
 				{
-					rc = FWCMD_DUMP_RESULT_ERR;
+                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 				}
 			}
 			fclose(pFile);
@@ -1421,7 +1467,7 @@ int fwcmd_dump_fw_debug_log_level(const int handle,
 	}
 	else
 	{
-		rc = FWCMD_DUMP_RESULT_ERR;
+		rc = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
 	}
 
 	return rc;
@@ -1443,23 +1489,27 @@ struct fwcmd_fw_debug_log_level_result fwcmd_read_fw_debug_log_level(const char 
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct fwcmd_fw_debug_log_level_data *)malloc(sizeof(*result.p_data));
-			if (fwcmd_parse_fw_debug_log_level((const struct pt_output_fw_debug_log_level*) buffer, result.p_data) == FIS_PARSER_CODES_SUCCESS)
+			int parse_result = fwcmd_parse_fw_debug_log_level((const struct pt_output_fw_debug_log_level*) buffer, result.p_data);
+			if (parse_result == FIS_PARSER_CODES_SUCCESS)
 			{
 				result.success = 1;
 			}
 			else
 			{
-				result.error_code = FWCMD_DUMP_RESULT_ERR;
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = parse_result;
 			}
 		}
 		else
 		{
-			result.error_code = FWCMD_DUMP_RESULT_ERR; // error reading file
+			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
 	}
 	else
 	{
-		result.error_code = FWCMD_DUMP_RESULT_ERR; // error opening file
+		result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+		result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
 	}
 
 	return result;
@@ -1483,7 +1533,7 @@ int fwcmd_dump_fw_load_flag(const int handle,
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
-				rc = FWCMD_DUMP_RESULT_ERR;
+                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 			}
 			else
 			{
@@ -1491,7 +1541,7 @@ int fwcmd_dump_fw_load_flag(const int handle,
 				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
 				if (bytes_written != sizeof(output_payload))
 				{
-					rc = FWCMD_DUMP_RESULT_ERR;
+                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 				}
 			}
 			fclose(pFile);
@@ -1499,7 +1549,7 @@ int fwcmd_dump_fw_load_flag(const int handle,
 	}
 	else
 	{
-		rc = FWCMD_DUMP_RESULT_ERR;
+		rc = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
 	}
 
 	return rc;
@@ -1521,23 +1571,27 @@ struct fwcmd_fw_load_flag_result fwcmd_read_fw_load_flag(const char *filename)
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct fwcmd_fw_load_flag_data *)malloc(sizeof(*result.p_data));
-			if (fwcmd_parse_fw_load_flag((const struct pt_output_fw_load_flag*) buffer, result.p_data) == FIS_PARSER_CODES_SUCCESS)
+			int parse_result = fwcmd_parse_fw_load_flag((const struct pt_output_fw_load_flag*) buffer, result.p_data);
+			if (parse_result == FIS_PARSER_CODES_SUCCESS)
 			{
 				result.success = 1;
 			}
 			else
 			{
-				result.error_code = FWCMD_DUMP_RESULT_ERR;
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = parse_result;
 			}
 		}
 		else
 		{
-			result.error_code = FWCMD_DUMP_RESULT_ERR; // error reading file
+			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
 	}
 	else
 	{
-		result.error_code = FWCMD_DUMP_RESULT_ERR; // error opening file
+		result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+		result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
 	}
 
 	return result;
@@ -1561,7 +1615,7 @@ int fwcmd_dump_config_lockdown(const int handle,
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
-				rc = FWCMD_DUMP_RESULT_ERR;
+                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 			}
 			else
 			{
@@ -1569,7 +1623,7 @@ int fwcmd_dump_config_lockdown(const int handle,
 				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
 				if (bytes_written != sizeof(output_payload))
 				{
-					rc = FWCMD_DUMP_RESULT_ERR;
+                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 				}
 			}
 			fclose(pFile);
@@ -1577,7 +1631,7 @@ int fwcmd_dump_config_lockdown(const int handle,
 	}
 	else
 	{
-		rc = FWCMD_DUMP_RESULT_ERR;
+		rc = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
 	}
 
 	return rc;
@@ -1599,23 +1653,27 @@ struct fwcmd_config_lockdown_result fwcmd_read_config_lockdown(const char *filen
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct fwcmd_config_lockdown_data *)malloc(sizeof(*result.p_data));
-			if (fwcmd_parse_config_lockdown((const struct pt_output_config_lockdown*) buffer, result.p_data) == FIS_PARSER_CODES_SUCCESS)
+			int parse_result = fwcmd_parse_config_lockdown((const struct pt_output_config_lockdown*) buffer, result.p_data);
+			if (parse_result == FIS_PARSER_CODES_SUCCESS)
 			{
 				result.success = 1;
 			}
 			else
 			{
-				result.error_code = FWCMD_DUMP_RESULT_ERR;
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = parse_result;
 			}
 		}
 		else
 		{
-			result.error_code = FWCMD_DUMP_RESULT_ERR; // error reading file
+			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
 	}
 	else
 	{
-		result.error_code = FWCMD_DUMP_RESULT_ERR; // error opening file
+		result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+		result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
 	}
 
 	return result;
@@ -1639,7 +1697,7 @@ int fwcmd_dump_ddrt_io_init_info(const int handle,
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
-				rc = FWCMD_DUMP_RESULT_ERR;
+                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 			}
 			else
 			{
@@ -1647,7 +1705,7 @@ int fwcmd_dump_ddrt_io_init_info(const int handle,
 				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
 				if (bytes_written != sizeof(output_payload))
 				{
-					rc = FWCMD_DUMP_RESULT_ERR;
+                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 				}
 			}
 			fclose(pFile);
@@ -1655,7 +1713,7 @@ int fwcmd_dump_ddrt_io_init_info(const int handle,
 	}
 	else
 	{
-		rc = FWCMD_DUMP_RESULT_ERR;
+		rc = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
 	}
 
 	return rc;
@@ -1677,23 +1735,27 @@ struct fwcmd_ddrt_io_init_info_result fwcmd_read_ddrt_io_init_info(const char *f
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct fwcmd_ddrt_io_init_info_data *)malloc(sizeof(*result.p_data));
-			if (fwcmd_parse_ddrt_io_init_info((const struct pt_output_ddrt_io_init_info*) buffer, result.p_data) == FIS_PARSER_CODES_SUCCESS)
+			int parse_result = fwcmd_parse_ddrt_io_init_info((const struct pt_output_ddrt_io_init_info*) buffer, result.p_data);
+			if (parse_result == FIS_PARSER_CODES_SUCCESS)
 			{
 				result.success = 1;
 			}
 			else
 			{
-				result.error_code = FWCMD_DUMP_RESULT_ERR;
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = parse_result;
 			}
 		}
 		else
 		{
-			result.error_code = FWCMD_DUMP_RESULT_ERR; // error reading file
+			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
 	}
 	else
 	{
-		result.error_code = FWCMD_DUMP_RESULT_ERR; // error opening file
+		result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+		result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
 	}
 
 	return result;
@@ -1717,7 +1779,7 @@ int fwcmd_dump_get_supported_sku_features(const int handle,
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
-				rc = FWCMD_DUMP_RESULT_ERR;
+                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 			}
 			else
 			{
@@ -1725,7 +1787,7 @@ int fwcmd_dump_get_supported_sku_features(const int handle,
 				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
 				if (bytes_written != sizeof(output_payload))
 				{
-					rc = FWCMD_DUMP_RESULT_ERR;
+                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 				}
 			}
 			fclose(pFile);
@@ -1733,7 +1795,7 @@ int fwcmd_dump_get_supported_sku_features(const int handle,
 	}
 	else
 	{
-		rc = FWCMD_DUMP_RESULT_ERR;
+		rc = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
 	}
 
 	return rc;
@@ -1755,23 +1817,27 @@ struct fwcmd_get_supported_sku_features_result fwcmd_read_get_supported_sku_feat
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct fwcmd_get_supported_sku_features_data *)malloc(sizeof(*result.p_data));
-			if (fwcmd_parse_get_supported_sku_features((const struct pt_output_get_supported_sku_features*) buffer, result.p_data) == FIS_PARSER_CODES_SUCCESS)
+			int parse_result = fwcmd_parse_get_supported_sku_features((const struct pt_output_get_supported_sku_features*) buffer, result.p_data);
+			if (parse_result == FIS_PARSER_CODES_SUCCESS)
 			{
 				result.success = 1;
 			}
 			else
 			{
-				result.error_code = FWCMD_DUMP_RESULT_ERR;
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = parse_result;
 			}
 		}
 		else
 		{
-			result.error_code = FWCMD_DUMP_RESULT_ERR; // error reading file
+			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
 	}
 	else
 	{
-		result.error_code = FWCMD_DUMP_RESULT_ERR; // error opening file
+		result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+		result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
 	}
 
 	return result;
@@ -1795,7 +1861,7 @@ int fwcmd_dump_enable_dimm(const int handle,
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
-				rc = FWCMD_DUMP_RESULT_ERR;
+                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 			}
 			else
 			{
@@ -1803,7 +1869,7 @@ int fwcmd_dump_enable_dimm(const int handle,
 				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
 				if (bytes_written != sizeof(output_payload))
 				{
-					rc = FWCMD_DUMP_RESULT_ERR;
+                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 				}
 			}
 			fclose(pFile);
@@ -1811,7 +1877,7 @@ int fwcmd_dump_enable_dimm(const int handle,
 	}
 	else
 	{
-		rc = FWCMD_DUMP_RESULT_ERR;
+		rc = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
 	}
 
 	return rc;
@@ -1833,23 +1899,27 @@ struct fwcmd_enable_dimm_result fwcmd_read_enable_dimm(const char *filename)
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct fwcmd_enable_dimm_data *)malloc(sizeof(*result.p_data));
-			if (fwcmd_parse_enable_dimm((const struct pt_output_enable_dimm*) buffer, result.p_data) == FIS_PARSER_CODES_SUCCESS)
+			int parse_result = fwcmd_parse_enable_dimm((const struct pt_output_enable_dimm*) buffer, result.p_data);
+			if (parse_result == FIS_PARSER_CODES_SUCCESS)
 			{
 				result.success = 1;
 			}
 			else
 			{
-				result.error_code = FWCMD_DUMP_RESULT_ERR;
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = parse_result;
 			}
 		}
 		else
 		{
-			result.error_code = FWCMD_DUMP_RESULT_ERR; // error reading file
+			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
 	}
 	else
 	{
-		result.error_code = FWCMD_DUMP_RESULT_ERR; // error opening file
+		result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+		result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
 	}
 
 	return result;
@@ -1873,7 +1943,7 @@ int fwcmd_dump_smart_health_info(const int handle,
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
-				rc = FWCMD_DUMP_RESULT_ERR;
+                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 			}
 			else
 			{
@@ -1881,7 +1951,7 @@ int fwcmd_dump_smart_health_info(const int handle,
 				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
 				if (bytes_written != sizeof(output_payload))
 				{
-					rc = FWCMD_DUMP_RESULT_ERR;
+                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 				}
 			}
 			fclose(pFile);
@@ -1889,7 +1959,7 @@ int fwcmd_dump_smart_health_info(const int handle,
 	}
 	else
 	{
-		rc = FWCMD_DUMP_RESULT_ERR;
+		rc = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
 	}
 
 	return rc;
@@ -1911,23 +1981,27 @@ struct fwcmd_smart_health_info_result fwcmd_read_smart_health_info(const char *f
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct fwcmd_smart_health_info_data *)malloc(sizeof(*result.p_data));
-			if (fwcmd_parse_smart_health_info((const struct pt_output_smart_health_info*) buffer, result.p_data) == FIS_PARSER_CODES_SUCCESS)
+			int parse_result = fwcmd_parse_smart_health_info((const struct pt_output_smart_health_info*) buffer, result.p_data);
+			if (parse_result == FIS_PARSER_CODES_SUCCESS)
 			{
 				result.success = 1;
 			}
 			else
 			{
-				result.error_code = FWCMD_DUMP_RESULT_ERR;
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = parse_result;
 			}
 		}
 		else
 		{
-			result.error_code = FWCMD_DUMP_RESULT_ERR; // error reading file
+			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
 	}
 	else
 	{
-		result.error_code = FWCMD_DUMP_RESULT_ERR; // error opening file
+		result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+		result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
 	}
 
 	return result;
@@ -1951,7 +2025,7 @@ int fwcmd_dump_firmware_image_info(const int handle,
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
-				rc = FWCMD_DUMP_RESULT_ERR;
+                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 			}
 			else
 			{
@@ -1959,7 +2033,7 @@ int fwcmd_dump_firmware_image_info(const int handle,
 				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
 				if (bytes_written != sizeof(output_payload))
 				{
-					rc = FWCMD_DUMP_RESULT_ERR;
+                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 				}
 			}
 			fclose(pFile);
@@ -1967,7 +2041,7 @@ int fwcmd_dump_firmware_image_info(const int handle,
 	}
 	else
 	{
-		rc = FWCMD_DUMP_RESULT_ERR;
+		rc = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
 	}
 
 	return rc;
@@ -1989,23 +2063,27 @@ struct fwcmd_firmware_image_info_result fwcmd_read_firmware_image_info(const cha
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct fwcmd_firmware_image_info_data *)malloc(sizeof(*result.p_data));
-			if (fwcmd_parse_firmware_image_info((const struct pt_output_firmware_image_info*) buffer, result.p_data) == FIS_PARSER_CODES_SUCCESS)
+			int parse_result = fwcmd_parse_firmware_image_info((const struct pt_output_firmware_image_info*) buffer, result.p_data);
+			if (parse_result == FIS_PARSER_CODES_SUCCESS)
 			{
 				result.success = 1;
 			}
 			else
 			{
-				result.error_code = FWCMD_DUMP_RESULT_ERR;
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = parse_result;
 			}
 		}
 		else
 		{
-			result.error_code = FWCMD_DUMP_RESULT_ERR; // error reading file
+			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
 	}
 	else
 	{
-		result.error_code = FWCMD_DUMP_RESULT_ERR; // error opening file
+		result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+		result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
 	}
 
 	return result;
@@ -2037,7 +2115,7 @@ int fwcmd_dump_firmware_debug_log(const int handle,
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
-				rc = FWCMD_DUMP_RESULT_ERR;
+                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 			}
 			else
 			{
@@ -2045,7 +2123,7 @@ int fwcmd_dump_firmware_debug_log(const int handle,
 				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
 				if (bytes_written != sizeof(output_payload))
 				{
-					rc = FWCMD_DUMP_RESULT_ERR;
+                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 				}
 			}
 			fclose(pFile);
@@ -2053,7 +2131,7 @@ int fwcmd_dump_firmware_debug_log(const int handle,
 	}
 	else
 	{
-		rc = FWCMD_DUMP_RESULT_ERR;
+		rc = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
 	}
 
 	return rc;
@@ -2075,23 +2153,27 @@ struct fwcmd_firmware_debug_log_result fwcmd_read_firmware_debug_log(const char 
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct fwcmd_firmware_debug_log_data *)malloc(sizeof(*result.p_data));
-			if (fwcmd_parse_firmware_debug_log((const struct pt_output_firmware_debug_log*) buffer, result.p_data) == FIS_PARSER_CODES_SUCCESS)
+			int parse_result = fwcmd_parse_firmware_debug_log((const struct pt_output_firmware_debug_log*) buffer, result.p_data);
+			if (parse_result == FIS_PARSER_CODES_SUCCESS)
 			{
 				result.success = 1;
 			}
 			else
 			{
-				result.error_code = FWCMD_DUMP_RESULT_ERR;
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = parse_result;
 			}
 		}
 		else
 		{
-			result.error_code = FWCMD_DUMP_RESULT_ERR; // error reading file
+			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
 	}
 	else
 	{
-		result.error_code = FWCMD_DUMP_RESULT_ERR; // error opening file
+		result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+		result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
 	}
 
 	return result;
@@ -2115,7 +2197,7 @@ int fwcmd_dump_long_operation_status(const int handle,
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
-				rc = FWCMD_DUMP_RESULT_ERR;
+                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 			}
 			else
 			{
@@ -2123,7 +2205,7 @@ int fwcmd_dump_long_operation_status(const int handle,
 				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
 				if (bytes_written != sizeof(output_payload))
 				{
-					rc = FWCMD_DUMP_RESULT_ERR;
+                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 				}
 			}
 			fclose(pFile);
@@ -2131,7 +2213,7 @@ int fwcmd_dump_long_operation_status(const int handle,
 	}
 	else
 	{
-		rc = FWCMD_DUMP_RESULT_ERR;
+		rc = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
 	}
 
 	return rc;
@@ -2153,23 +2235,27 @@ struct fwcmd_long_operation_status_result fwcmd_read_long_operation_status(const
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct fwcmd_long_operation_status_data *)malloc(sizeof(*result.p_data));
-			if (fwcmd_parse_long_operation_status((const struct pt_output_long_operation_status*) buffer, result.p_data) == FIS_PARSER_CODES_SUCCESS)
+			int parse_result = fwcmd_parse_long_operation_status((const struct pt_output_long_operation_status*) buffer, result.p_data);
+			if (parse_result == FIS_PARSER_CODES_SUCCESS)
 			{
 				result.success = 1;
 			}
 			else
 			{
-				result.error_code = FWCMD_DUMP_RESULT_ERR;
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = parse_result;
 			}
 		}
 		else
 		{
-			result.error_code = FWCMD_DUMP_RESULT_ERR; // error reading file
+			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
 	}
 	else
 	{
-		result.error_code = FWCMD_DUMP_RESULT_ERR; // error opening file
+		result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+		result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
 	}
 
 	return result;
@@ -2193,7 +2279,7 @@ int fwcmd_dump_bsr(const int handle,
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
-				rc = FWCMD_DUMP_RESULT_ERR;
+                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 			}
 			else
 			{
@@ -2201,7 +2287,7 @@ int fwcmd_dump_bsr(const int handle,
 				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
 				if (bytes_written != sizeof(output_payload))
 				{
-					rc = FWCMD_DUMP_RESULT_ERR;
+                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 				}
 			}
 			fclose(pFile);
@@ -2209,7 +2295,7 @@ int fwcmd_dump_bsr(const int handle,
 	}
 	else
 	{
-		rc = FWCMD_DUMP_RESULT_ERR;
+		rc = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
 	}
 
 	return rc;
@@ -2231,23 +2317,27 @@ struct fwcmd_bsr_result fwcmd_read_bsr(const char *filename)
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct fwcmd_bsr_data *)malloc(sizeof(*result.p_data));
-			if (fwcmd_parse_bsr((const struct pt_output_bsr*) buffer, result.p_data) == FIS_PARSER_CODES_SUCCESS)
+			int parse_result = fwcmd_parse_bsr((const struct pt_output_bsr*) buffer, result.p_data);
+			if (parse_result == FIS_PARSER_CODES_SUCCESS)
 			{
 				result.success = 1;
 			}
 			else
 			{
-				result.error_code = FWCMD_DUMP_RESULT_ERR;
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = parse_result;
 			}
 		}
 		else
 		{
-			result.error_code = FWCMD_DUMP_RESULT_ERR; // error reading file
+			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
 	}
 	else
 	{
-		result.error_code = FWCMD_DUMP_RESULT_ERR; // error opening file
+		result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+		result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
 	}
 
 	return result;

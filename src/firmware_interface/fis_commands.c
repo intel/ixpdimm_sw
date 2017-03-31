@@ -31,7 +31,7 @@
 #include <string.h>
 #include <driver_interface/passthrough.h>
 
-int fis_identify_dimm(const unsigned int device_handle, struct pt_output_identify_dimm *p_output_payload)
+unsigned int fis_identify_dimm(const unsigned int device_handle, struct pt_output_identify_dimm *p_output_payload)
 {
 	struct fw_cmd cmd;
 	memset(&cmd, 0, sizeof (struct fw_cmd));
@@ -40,10 +40,10 @@ int fis_identify_dimm(const unsigned int device_handle, struct pt_output_identif
 	cmd.sub_opcode = 0x00;
 	cmd.output_payload_size = sizeof (struct pt_output_identify_dimm);
 	cmd.output_payload = p_output_payload;
-	return ioctl_passthrough_cmd(&cmd);
+	return (unsigned int)ioctl_passthrough_cmd(&cmd);
 }
 
-int fis_identify_dimm_characteristics(const unsigned int device_handle, struct pt_output_identify_dimm_characteristics *p_output_payload)
+unsigned int fis_identify_dimm_characteristics(const unsigned int device_handle, struct pt_output_identify_dimm_characteristics *p_output_payload)
 {
 	struct fw_cmd cmd;
 	memset(&cmd, 0, sizeof (struct fw_cmd));
@@ -52,10 +52,10 @@ int fis_identify_dimm_characteristics(const unsigned int device_handle, struct p
 	cmd.sub_opcode = 0x01;
 	cmd.output_payload_size = sizeof (struct pt_output_identify_dimm_characteristics);
 	cmd.output_payload = p_output_payload;
-	return ioctl_passthrough_cmd(&cmd);
+	return (unsigned int)ioctl_passthrough_cmd(&cmd);
 }
 
-int fis_get_security_state(const unsigned int device_handle, struct pt_output_get_security_state *p_output_payload)
+unsigned int fis_get_security_state(const unsigned int device_handle, struct pt_output_get_security_state *p_output_payload)
 {
 	struct fw_cmd cmd;
 	memset(&cmd, 0, sizeof (struct fw_cmd));
@@ -64,10 +64,10 @@ int fis_get_security_state(const unsigned int device_handle, struct pt_output_ge
 	cmd.sub_opcode = 0x00;
 	cmd.output_payload_size = sizeof (struct pt_output_get_security_state);
 	cmd.output_payload = p_output_payload;
-	return ioctl_passthrough_cmd(&cmd);
+	return (unsigned int)ioctl_passthrough_cmd(&cmd);
 }
 
-int fis_set_passphrase(const unsigned int device_handle, struct pt_input_set_passphrase *p_input_payload)
+unsigned int fis_set_passphrase(const unsigned int device_handle, struct pt_input_set_passphrase *p_input_payload)
 {
 	struct fw_cmd cmd;
 	memset(&cmd, 0, sizeof (struct fw_cmd));
@@ -76,10 +76,10 @@ int fis_set_passphrase(const unsigned int device_handle, struct pt_input_set_pas
 	cmd.sub_opcode = 0xF1;
 	cmd.input_payload = p_input_payload;
 	cmd.input_payload_size = sizeof (struct pt_input_set_passphrase);
-	return ioctl_passthrough_cmd(&cmd);
+	return (unsigned int)ioctl_passthrough_cmd(&cmd);
 }
 
-int fis_disable_passphrase(const unsigned int device_handle, struct pt_input_disable_passphrase *p_input_payload)
+unsigned int fis_disable_passphrase(const unsigned int device_handle, struct pt_input_disable_passphrase *p_input_payload)
 {
 	struct fw_cmd cmd;
 	memset(&cmd, 0, sizeof (struct fw_cmd));
@@ -88,10 +88,10 @@ int fis_disable_passphrase(const unsigned int device_handle, struct pt_input_dis
 	cmd.sub_opcode = 0xF2;
 	cmd.input_payload = p_input_payload;
 	cmd.input_payload_size = sizeof (struct pt_input_disable_passphrase);
-	return ioctl_passthrough_cmd(&cmd);
+	return (unsigned int)ioctl_passthrough_cmd(&cmd);
 }
 
-int fis_unlock_unit(const unsigned int device_handle, struct pt_input_unlock_unit *p_input_payload)
+unsigned int fis_unlock_unit(const unsigned int device_handle, struct pt_input_unlock_unit *p_input_payload)
 {
 	struct fw_cmd cmd;
 	memset(&cmd, 0, sizeof (struct fw_cmd));
@@ -100,10 +100,10 @@ int fis_unlock_unit(const unsigned int device_handle, struct pt_input_unlock_uni
 	cmd.sub_opcode = 0xF3;
 	cmd.input_payload = p_input_payload;
 	cmd.input_payload_size = sizeof (struct pt_input_unlock_unit);
-	return ioctl_passthrough_cmd(&cmd);
+	return (unsigned int)ioctl_passthrough_cmd(&cmd);
 }
 
-int fis_secure_erase(const unsigned int device_handle, struct pt_input_secure_erase *p_input_payload)
+unsigned int fis_secure_erase(const unsigned int device_handle, struct pt_input_secure_erase *p_input_payload)
 {
 	struct fw_cmd cmd;
 	memset(&cmd, 0, sizeof (struct fw_cmd));
@@ -112,20 +112,20 @@ int fis_secure_erase(const unsigned int device_handle, struct pt_input_secure_er
 	cmd.sub_opcode = 0xF5;
 	cmd.input_payload = p_input_payload;
 	cmd.input_payload_size = sizeof (struct pt_input_secure_erase);
-	return ioctl_passthrough_cmd(&cmd);
+	return (unsigned int)ioctl_passthrough_cmd(&cmd);
 }
 
-int fis_freeze_lock(const unsigned int device_handle)
+unsigned int fis_freeze_lock(const unsigned int device_handle)
 {
 	struct fw_cmd cmd;
 	memset(&cmd, 0, sizeof (struct fw_cmd));
 	cmd.device_handle = device_handle;
 	cmd.opcode = 0x03;
 	cmd.sub_opcode = 0xF6;
-	return ioctl_passthrough_cmd(&cmd);
+	return (unsigned int)ioctl_passthrough_cmd(&cmd);
 }
 
-int fis_get_alarm_threshold(const unsigned int device_handle, struct pt_output_get_alarm_threshold *p_output_payload)
+unsigned int fis_get_alarm_threshold(const unsigned int device_handle, struct pt_output_get_alarm_threshold *p_output_payload)
 {
 	struct fw_cmd cmd;
 	memset(&cmd, 0, sizeof (struct fw_cmd));
@@ -134,10 +134,10 @@ int fis_get_alarm_threshold(const unsigned int device_handle, struct pt_output_g
 	cmd.sub_opcode = 0x01;
 	cmd.output_payload_size = sizeof (struct pt_output_get_alarm_threshold);
 	cmd.output_payload = p_output_payload;
-	return ioctl_passthrough_cmd(&cmd);
+	return (unsigned int)ioctl_passthrough_cmd(&cmd);
 }
 
-int fis_power_management_policy(const unsigned int device_handle, struct pt_output_power_management_policy *p_output_payload)
+unsigned int fis_power_management_policy(const unsigned int device_handle, struct pt_output_power_management_policy *p_output_payload)
 {
 	struct fw_cmd cmd;
 	memset(&cmd, 0, sizeof (struct fw_cmd));
@@ -146,10 +146,10 @@ int fis_power_management_policy(const unsigned int device_handle, struct pt_outp
 	cmd.sub_opcode = 0x02;
 	cmd.output_payload_size = sizeof (struct pt_output_power_management_policy);
 	cmd.output_payload = p_output_payload;
-	return ioctl_passthrough_cmd(&cmd);
+	return (unsigned int)ioctl_passthrough_cmd(&cmd);
 }
 
-int fis_die_sparing_policy(const unsigned int device_handle, struct pt_output_die_sparing_policy *p_output_payload)
+unsigned int fis_die_sparing_policy(const unsigned int device_handle, struct pt_output_die_sparing_policy *p_output_payload)
 {
 	struct fw_cmd cmd;
 	memset(&cmd, 0, sizeof (struct fw_cmd));
@@ -158,10 +158,10 @@ int fis_die_sparing_policy(const unsigned int device_handle, struct pt_output_di
 	cmd.sub_opcode = 0x03;
 	cmd.output_payload_size = sizeof (struct pt_output_die_sparing_policy);
 	cmd.output_payload = p_output_payload;
-	return ioctl_passthrough_cmd(&cmd);
+	return (unsigned int)ioctl_passthrough_cmd(&cmd);
 }
 
-int fis_address_range_scrub(const unsigned int device_handle, struct pt_output_address_range_scrub *p_output_payload)
+unsigned int fis_address_range_scrub(const unsigned int device_handle, struct pt_output_address_range_scrub *p_output_payload)
 {
 	struct fw_cmd cmd;
 	memset(&cmd, 0, sizeof (struct fw_cmd));
@@ -170,10 +170,10 @@ int fis_address_range_scrub(const unsigned int device_handle, struct pt_output_a
 	cmd.sub_opcode = 0x04;
 	cmd.output_payload_size = sizeof (struct pt_output_address_range_scrub);
 	cmd.output_payload = p_output_payload;
-	return ioctl_passthrough_cmd(&cmd);
+	return (unsigned int)ioctl_passthrough_cmd(&cmd);
 }
 
-int fis_optional_configuration_data_policy(const unsigned int device_handle, struct pt_output_optional_configuration_data_policy *p_output_payload)
+unsigned int fis_optional_configuration_data_policy(const unsigned int device_handle, struct pt_output_optional_configuration_data_policy *p_output_payload)
 {
 	struct fw_cmd cmd;
 	memset(&cmd, 0, sizeof (struct fw_cmd));
@@ -182,10 +182,10 @@ int fis_optional_configuration_data_policy(const unsigned int device_handle, str
 	cmd.sub_opcode = 0x06;
 	cmd.output_payload_size = sizeof (struct pt_output_optional_configuration_data_policy);
 	cmd.output_payload = p_output_payload;
-	return ioctl_passthrough_cmd(&cmd);
+	return (unsigned int)ioctl_passthrough_cmd(&cmd);
 }
 
-int fis_pmon_registers(const unsigned int device_handle, struct pt_input_pmon_registers *p_input_payload, struct pt_output_pmon_registers *p_output_payload)
+unsigned int fis_pmon_registers(const unsigned int device_handle, struct pt_input_pmon_registers *p_input_payload, struct pt_output_pmon_registers *p_output_payload)
 {
 	struct fw_cmd cmd;
 	memset(&cmd, 0, sizeof (struct fw_cmd));
@@ -196,10 +196,10 @@ int fis_pmon_registers(const unsigned int device_handle, struct pt_input_pmon_re
 	cmd.output_payload = p_output_payload;
 	cmd.input_payload = p_input_payload;
 	cmd.input_payload_size = sizeof (struct pt_input_pmon_registers);
-	return ioctl_passthrough_cmd(&cmd);
+	return (unsigned int)ioctl_passthrough_cmd(&cmd);
 }
 
-int fis_set_alarm_threshold(const unsigned int device_handle, struct pt_input_set_alarm_threshold *p_input_payload)
+unsigned int fis_set_alarm_threshold(const unsigned int device_handle, struct pt_input_set_alarm_threshold *p_input_payload)
 {
 	struct fw_cmd cmd;
 	memset(&cmd, 0, sizeof (struct fw_cmd));
@@ -208,10 +208,10 @@ int fis_set_alarm_threshold(const unsigned int device_handle, struct pt_input_se
 	cmd.sub_opcode = 0x01;
 	cmd.input_payload = p_input_payload;
 	cmd.input_payload_size = sizeof (struct pt_input_set_alarm_threshold);
-	return ioctl_passthrough_cmd(&cmd);
+	return (unsigned int)ioctl_passthrough_cmd(&cmd);
 }
 
-int fis_system_time(const unsigned int device_handle, struct pt_output_system_time *p_output_payload)
+unsigned int fis_system_time(const unsigned int device_handle, struct pt_output_system_time *p_output_payload)
 {
 	struct fw_cmd cmd;
 	memset(&cmd, 0, sizeof (struct fw_cmd));
@@ -220,10 +220,10 @@ int fis_system_time(const unsigned int device_handle, struct pt_output_system_ti
 	cmd.sub_opcode = 0x00;
 	cmd.output_payload_size = sizeof (struct pt_output_system_time);
 	cmd.output_payload = p_output_payload;
-	return ioctl_passthrough_cmd(&cmd);
+	return (unsigned int)ioctl_passthrough_cmd(&cmd);
 }
 
-int fis_platform_config_data(const unsigned int device_handle, struct pt_input_platform_config_data *p_input_payload, struct pt_output_platform_config_data *p_output_payload)
+unsigned int fis_platform_config_data(const unsigned int device_handle, struct pt_input_platform_config_data *p_input_payload, struct pt_output_platform_config_data *p_output_payload)
 {
 	struct fw_cmd cmd;
 	memset(&cmd, 0, sizeof (struct fw_cmd));
@@ -234,10 +234,10 @@ int fis_platform_config_data(const unsigned int device_handle, struct pt_input_p
 	cmd.large_output_payload = p_output_payload;
 	cmd.input_payload = p_input_payload;
 	cmd.input_payload_size = sizeof (struct pt_input_platform_config_data);
-	return ioctl_passthrough_cmd(&cmd);
+	return (unsigned int)ioctl_passthrough_cmd(&cmd);
 }
 
-int fis_dimm_partition_info(const unsigned int device_handle, struct pt_output_dimm_partition_info *p_output_payload)
+unsigned int fis_dimm_partition_info(const unsigned int device_handle, struct pt_output_dimm_partition_info *p_output_payload)
 {
 	struct fw_cmd cmd;
 	memset(&cmd, 0, sizeof (struct fw_cmd));
@@ -246,10 +246,10 @@ int fis_dimm_partition_info(const unsigned int device_handle, struct pt_output_d
 	cmd.sub_opcode = 0x02;
 	cmd.output_payload_size = sizeof (struct pt_output_dimm_partition_info);
 	cmd.output_payload = p_output_payload;
-	return ioctl_passthrough_cmd(&cmd);
+	return (unsigned int)ioctl_passthrough_cmd(&cmd);
 }
 
-int fis_fw_debug_log_level(const unsigned int device_handle, struct pt_input_fw_debug_log_level *p_input_payload, struct pt_output_fw_debug_log_level *p_output_payload)
+unsigned int fis_fw_debug_log_level(const unsigned int device_handle, struct pt_input_fw_debug_log_level *p_input_payload, struct pt_output_fw_debug_log_level *p_output_payload)
 {
 	struct fw_cmd cmd;
 	memset(&cmd, 0, sizeof (struct fw_cmd));
@@ -260,10 +260,10 @@ int fis_fw_debug_log_level(const unsigned int device_handle, struct pt_input_fw_
 	cmd.output_payload = p_output_payload;
 	cmd.input_payload = p_input_payload;
 	cmd.input_payload_size = sizeof (struct pt_input_fw_debug_log_level);
-	return ioctl_passthrough_cmd(&cmd);
+	return (unsigned int)ioctl_passthrough_cmd(&cmd);
 }
 
-int fis_fw_load_flag(const unsigned int device_handle, struct pt_output_fw_load_flag *p_output_payload)
+unsigned int fis_fw_load_flag(const unsigned int device_handle, struct pt_output_fw_load_flag *p_output_payload)
 {
 	struct fw_cmd cmd;
 	memset(&cmd, 0, sizeof (struct fw_cmd));
@@ -272,10 +272,10 @@ int fis_fw_load_flag(const unsigned int device_handle, struct pt_output_fw_load_
 	cmd.sub_opcode = 0x04;
 	cmd.output_payload_size = sizeof (struct pt_output_fw_load_flag);
 	cmd.output_payload = p_output_payload;
-	return ioctl_passthrough_cmd(&cmd);
+	return (unsigned int)ioctl_passthrough_cmd(&cmd);
 }
 
-int fis_config_lockdown(const unsigned int device_handle, struct pt_output_config_lockdown *p_output_payload)
+unsigned int fis_config_lockdown(const unsigned int device_handle, struct pt_output_config_lockdown *p_output_payload)
 {
 	struct fw_cmd cmd;
 	memset(&cmd, 0, sizeof (struct fw_cmd));
@@ -284,10 +284,10 @@ int fis_config_lockdown(const unsigned int device_handle, struct pt_output_confi
 	cmd.sub_opcode = 0x05;
 	cmd.output_payload_size = sizeof (struct pt_output_config_lockdown);
 	cmd.output_payload = p_output_payload;
-	return ioctl_passthrough_cmd(&cmd);
+	return (unsigned int)ioctl_passthrough_cmd(&cmd);
 }
 
-int fis_ddrt_io_init_info(const unsigned int device_handle, struct pt_output_ddrt_io_init_info *p_output_payload)
+unsigned int fis_ddrt_io_init_info(const unsigned int device_handle, struct pt_output_ddrt_io_init_info *p_output_payload)
 {
 	struct fw_cmd cmd;
 	memset(&cmd, 0, sizeof (struct fw_cmd));
@@ -296,10 +296,10 @@ int fis_ddrt_io_init_info(const unsigned int device_handle, struct pt_output_ddr
 	cmd.sub_opcode = 0x06;
 	cmd.output_payload_size = sizeof (struct pt_output_ddrt_io_init_info);
 	cmd.output_payload = p_output_payload;
-	return ioctl_passthrough_cmd(&cmd);
+	return (unsigned int)ioctl_passthrough_cmd(&cmd);
 }
 
-int fis_get_supported_sku_features(const unsigned int device_handle, struct pt_output_get_supported_sku_features *p_output_payload)
+unsigned int fis_get_supported_sku_features(const unsigned int device_handle, struct pt_output_get_supported_sku_features *p_output_payload)
 {
 	struct fw_cmd cmd;
 	memset(&cmd, 0, sizeof (struct fw_cmd));
@@ -308,10 +308,10 @@ int fis_get_supported_sku_features(const unsigned int device_handle, struct pt_o
 	cmd.sub_opcode = 0x07;
 	cmd.output_payload_size = sizeof (struct pt_output_get_supported_sku_features);
 	cmd.output_payload = p_output_payload;
-	return ioctl_passthrough_cmd(&cmd);
+	return (unsigned int)ioctl_passthrough_cmd(&cmd);
 }
 
-int fis_enable_dimm(const unsigned int device_handle, struct pt_output_enable_dimm *p_output_payload)
+unsigned int fis_enable_dimm(const unsigned int device_handle, struct pt_output_enable_dimm *p_output_payload)
 {
 	struct fw_cmd cmd;
 	memset(&cmd, 0, sizeof (struct fw_cmd));
@@ -320,10 +320,10 @@ int fis_enable_dimm(const unsigned int device_handle, struct pt_output_enable_di
 	cmd.sub_opcode = 0x08;
 	cmd.output_payload_size = sizeof (struct pt_output_enable_dimm);
 	cmd.output_payload = p_output_payload;
-	return ioctl_passthrough_cmd(&cmd);
+	return (unsigned int)ioctl_passthrough_cmd(&cmd);
 }
 
-int fis_smart_health_info(const unsigned int device_handle, struct pt_output_smart_health_info *p_output_payload)
+unsigned int fis_smart_health_info(const unsigned int device_handle, struct pt_output_smart_health_info *p_output_payload)
 {
 	struct fw_cmd cmd;
 	memset(&cmd, 0, sizeof (struct fw_cmd));
@@ -332,10 +332,10 @@ int fis_smart_health_info(const unsigned int device_handle, struct pt_output_sma
 	cmd.sub_opcode = 0x00;
 	cmd.output_payload_size = sizeof (struct pt_output_smart_health_info);
 	cmd.output_payload = p_output_payload;
-	return ioctl_passthrough_cmd(&cmd);
+	return (unsigned int)ioctl_passthrough_cmd(&cmd);
 }
 
-int fis_firmware_image_info(const unsigned int device_handle, struct pt_output_firmware_image_info *p_output_payload)
+unsigned int fis_firmware_image_info(const unsigned int device_handle, struct pt_output_firmware_image_info *p_output_payload)
 {
 	struct fw_cmd cmd;
 	memset(&cmd, 0, sizeof (struct fw_cmd));
@@ -344,10 +344,10 @@ int fis_firmware_image_info(const unsigned int device_handle, struct pt_output_f
 	cmd.sub_opcode = 0x01;
 	cmd.output_payload_size = sizeof (struct pt_output_firmware_image_info);
 	cmd.output_payload = p_output_payload;
-	return ioctl_passthrough_cmd(&cmd);
+	return (unsigned int)ioctl_passthrough_cmd(&cmd);
 }
 
-int fis_firmware_debug_log(const unsigned int device_handle, struct pt_input_firmware_debug_log *p_input_payload, struct pt_output_firmware_debug_log *p_output_payload)
+unsigned int fis_firmware_debug_log(const unsigned int device_handle, struct pt_input_firmware_debug_log *p_input_payload, struct pt_output_firmware_debug_log *p_output_payload)
 {
 	struct fw_cmd cmd;
 	memset(&cmd, 0, sizeof (struct fw_cmd));
@@ -358,10 +358,10 @@ int fis_firmware_debug_log(const unsigned int device_handle, struct pt_input_fir
 	cmd.output_payload = p_output_payload;
 	cmd.input_payload = p_input_payload;
 	cmd.input_payload_size = sizeof (struct pt_input_firmware_debug_log);
-	return ioctl_passthrough_cmd(&cmd);
+	return (unsigned int)ioctl_passthrough_cmd(&cmd);
 }
 
-int fis_long_operation_status(const unsigned int device_handle, struct pt_output_long_operation_status *p_output_payload)
+unsigned int fis_long_operation_status(const unsigned int device_handle, struct pt_output_long_operation_status *p_output_payload)
 {
 	struct fw_cmd cmd;
 	memset(&cmd, 0, sizeof (struct fw_cmd));
@@ -370,10 +370,10 @@ int fis_long_operation_status(const unsigned int device_handle, struct pt_output
 	cmd.sub_opcode = 0x04;
 	cmd.output_payload_size = sizeof (struct pt_output_long_operation_status);
 	cmd.output_payload = p_output_payload;
-	return ioctl_passthrough_cmd(&cmd);
+	return (unsigned int)ioctl_passthrough_cmd(&cmd);
 }
 
-int fis_bsr(const unsigned int device_handle, struct pt_output_bsr *p_output_payload)
+unsigned int fis_bsr(const unsigned int device_handle, struct pt_output_bsr *p_output_payload)
 {
 	struct fw_cmd cmd;
 	memset(&cmd, 0, sizeof (struct fw_cmd));
@@ -382,6 +382,6 @@ int fis_bsr(const unsigned int device_handle, struct pt_output_bsr *p_output_pay
 	cmd.sub_opcode = 0x03;
 	cmd.output_payload_size = sizeof (struct pt_output_bsr);
 	cmd.output_payload = p_output_payload;
-	return ioctl_passthrough_cmd(&cmd);
+	return (unsigned int)ioctl_passthrough_cmd(&cmd);
 }
 

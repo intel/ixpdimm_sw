@@ -41,6 +41,9 @@
 extern "C"
 {
 #endif
+
+#include <driver_interface/passthrough.h>
+
 /*
  * Payloads Structures
  */
@@ -71,7 +74,7 @@ struct {{s.name|output_payload}}
  * FIS Commands
  */
 //- for cmd in commands
-int {{cmd.name|fis}}(const unsigned int device_handle
+unsigned int {{cmd.name|fis}}(const unsigned int device_handle
 	{%- if cmd.has_input %}, struct {{cmd.name|input_payload}} *p_input_payload{% endif -%}
 {%- if cmd.has_output %}, struct {{cmd.name|output_payload}} *p_output_payload{% endif -%}
 );

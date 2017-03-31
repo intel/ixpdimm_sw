@@ -46,7 +46,7 @@ else ifdef BUILD_ESX
 	SRC_EXCLUDE = $(wildcard win_*.c lnx_*.c)
 endif
 
-SRC = $(filter-out $(SRC_EXCLUDE),$(wildcard *.c))
+SRC = $(filter-out $(SRC_EXCLUDE),$(wildcard *.c)) ../common/string/s_str.c
 OBJS = $(patsubst %.c,%.o,$(SRC))
 
 # defines the location of the object files
@@ -63,7 +63,7 @@ TARGET = libdriver_interface.a
 TARGETNAME = $(addprefix $(OBJECT_MODULE_DIR)/, $(TARGET))
 
 # ---- COMPILER PARAMETERS -------------------------------------------------------------------------
-INCS = -I$(EXTERN_DIR)/os_headers
+INCS = -I$(EXTERN_DIR)/os_headers -I$(ROOT_DIR)/src
 LIBS =
 
 ifdef BUILD_LINUX

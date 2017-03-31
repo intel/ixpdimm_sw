@@ -121,7 +121,7 @@ CLI_FRAMEWORK_LIB_NAME=invm-cli
 UNAME := $(shell uname)
 ifeq ($(UNAME), Linux)
 	CORE_COUNT = $(shell nproc)
-		
+
 	# ESX builds occur on Linux but the environment will include this variable
 	ifdef ESXBUILD
 		# ESX path for CIM libraries - needs to be defined here so can be used as rpath in other makefiles
@@ -161,6 +161,7 @@ ifeq ($(UNAME), Linux)
 		PRODUCT_DATADIR = $(ESX_SUPPORT_DIR)
 		
 		CMAKE = /opt/mgmt_env/cmake-3.6.2/bin/cmake
+		CTEST = /opt/mgmt_env/cmake-3.6.2/bin/ctest
 		CMAKE_OPTIONS = -DCMAKE_CXX_COMPILER=$(MGMT_SYSROOT)/usr/bin/g++ -DCMAKE_C_COMPILER=/build/toolchain/lin32/gcc-4.6.3-1/bin/i686-linux5.0-gcc
 	else
 		BUILD_LINUX = 1
@@ -179,6 +180,7 @@ ifeq ($(UNAME), Linux)
 		AR = ar
 
 		CMAKE = cmake
+		CTEST = ctest
 
 		#Linux Product Names
 		LINUX_PRODUCT_NAME = $(MARKETING_PRODUCT_NAME)
@@ -252,6 +254,7 @@ else
 	include $(MINGW_DIR)/mingw.mk
 
 	CMAKE = $(MGMT_ENV_DIR)/cmake-3.6.2-win64-x64/bin/cmake.exe
+	CTEST = $(MGMT_ENV_DIR)/cmake-3.6.2-win64-x64/bin/ctest.exe
 	CMAKE_OPTIONS = -DCMAKE_C_COMPILER=$(CC)
 
 	# note: -mno-ms-bitfields is a workaround for a gcc (4.7.0)+ byte-packing bug
@@ -338,6 +341,7 @@ CORE_TEST_DIR = $(BUILD_DIR)/core_test
 WBEM_TEST_DIR = $(BUILD_DIR)/wbem_test
 CLI_TEST_DIR = $(BUILD_DIR)/cli_test
 MONITOR_TEST_DIR = $(BUILD_DIR)/monitor_test
+NFIT_TEST_DIR = $(BUILD_DIR)/nfit_test
 ACPI_TEST_DIR = $(BUILD_DIR)/acpi_test
 CONVERT_TEST_DIR = $(BUILD_DIR)/convert_test
 
