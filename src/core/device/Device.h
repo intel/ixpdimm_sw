@@ -172,6 +172,7 @@ public:
 	static std::string getFormattedManufacturingDate(NVM_UINT16 manufacturingdate);
 	virtual bool isAitDramEnabled();
 	virtual std::vector<NVM_UINT16> getBootStatus();
+	virtual enum fw_update_status getFwUpdateStatus();
 
 private:
 	NvmLibrary &m_lib;

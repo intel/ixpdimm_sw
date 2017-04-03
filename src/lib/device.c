@@ -1097,6 +1097,8 @@ int populate_manageable_device_details(const NVM_UID device_uid,
 
 	KEEP_ERROR(rc, nvm_get_device_status(device_uid, &(p_details->status)));
 
+	KEEP_ERROR(rc, nvm_get_device_fw_image_info(device_uid, &(p_details->fw_info)));
+
 	KEEP_ERROR(rc, nvm_get_device_performance(device_uid,
 			&(p_details->performance)));
 

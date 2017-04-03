@@ -718,6 +718,12 @@ std::vector<event> Device::getActionRequiredEvents()
 	return getEvents();
 }
 
+enum fw_update_status Device::getFwUpdateStatus()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	return getDetails().fw_info.fw_update_status;
+}
+
 bool Device::isAitDramEnabled()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);

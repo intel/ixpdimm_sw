@@ -218,6 +218,13 @@ class <NVM_WBEM_PREFIX>NVDIMM : CIM_PhysicalMemory
 	"The current active firmware interface version."
  	)]
 	string FWAPIVersion;
+	[Description (
+	"The status of last firmware update operation."
+	),
+	ValueMap { "0", "1", "2", "3" },
+	Values { "Unknown", "Staged successfully", "Update loaded successfully", 
+			"Update failed to load, fell back to previous firmware" }]
+	uint16 FWUpdateStatus;
 
 	// methods
 	[implemented,

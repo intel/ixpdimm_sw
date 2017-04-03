@@ -731,35 +731,6 @@ struct device_settings
 };
 
 /*
- * Detailed information about a device.
- */
-struct device_details
-{
-	struct device_discovery discovery;	// Basic device identifying information.
-	struct device_status status; // Device health and status.
-	NVM_UINT8 padding[2]; // struct alignment
-	struct device_performance performance; // A snapshot of the performance metrics.
-	struct sensor sensors[NVM_MAX_DEVICE_SENSORS]; // Device sensors.
-	struct device_capacities capacities; // Partition information
-
-	// from SMBIOS Type 17 Table
-	enum device_form_factor form_factor; // The type of DIMM.
-	NVM_UINT64 data_width;	// The width in bits used to store user data.
-	NVM_UINT64 total_width;	// The width in bits for data and ECC and/or redundancy.
-	NVM_UINT64 speed; // The speed in nanoseconds.
-	char device_locator[NVM_DEVICE_LOCATOR_LEN]; // The socket or board position label
-	char bank_label[NVM_BANK_LABEL_LEN]; // The bank label
-
-	NVM_BOOL power_management_enabled; // Enable or disable power management.
-	NVM_UINT8 power_limit; // dimm power limit in watts (10-18W).
-	NVM_UINT16 peak_power_budget; // instantaneous power budget in mW (100-20000 mW).
-	NVM_UINT16 avg_power_budget; // average power budget in mW (100-18000 mW).
-	NVM_BOOL die_sparing_enabled; // Enable or disable die sparing.
-	NVM_UINT8 die_sparing_level; // How aggressive to be in die sparing (0-255).
-	struct device_settings settings; // Modifiable features of the device.
-};
-
-/*
  * Detailed information about firmware image log information of a device.
  */
 struct device_fw_info
@@ -780,6 +751,36 @@ struct device_fw_info
 
 	NVM_VERSION staged_fw_revision; //  BCD formatted revision of the staged FW.
 	enum fw_update_status fw_update_status; // status of last FW update operation.
+};
+
+/*
+ * Detailed information about a device.
+ */
+struct device_details
+{
+	struct device_discovery discovery;	// Basic device identifying information.
+	struct device_status status; // Device health and status.
+	struct device_fw_info fw_info; // The firmware image information for the Apache Pass DIMM.
+	NVM_UINT8 padding[2]; // struct alignment
+	struct device_performance performance; // A snapshot of the performance metrics.
+	struct sensor sensors[NVM_MAX_DEVICE_SENSORS]; // Device sensors.
+	struct device_capacities capacities; // Partition information
+
+	// from SMBIOS Type 17 Table
+	enum device_form_factor form_factor; // The type of DIMM.
+	NVM_UINT64 data_width;	// The width in bits used to store user data.
+	NVM_UINT64 total_width;	// The width in bits for data and ECC and/or redundancy.
+	NVM_UINT64 speed; // The speed in nanoseconds.
+	char device_locator[NVM_DEVICE_LOCATOR_LEN]; // The socket or board position label
+	char bank_label[NVM_BANK_LABEL_LEN]; // The bank label
+
+	NVM_BOOL power_management_enabled; // Enable or disable power management.
+	NVM_UINT8 power_limit; // dimm power limit in watts (10-18W).
+	NVM_UINT16 peak_power_budget; // instantaneous power budget in mW (100-20000 mW).
+	NVM_UINT16 avg_power_budget; // average power budget in mW (100-18000 mW).
+	NVM_BOOL die_sparing_enabled; // Enable or disable die sparing.
+	NVM_UINT8 die_sparing_level; // How aggressive to be in die sparing (0-255).
+	struct device_settings settings; // Modifiable features of the device.
 };
 
 /*
