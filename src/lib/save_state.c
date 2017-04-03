@@ -487,8 +487,6 @@ int support_store_identify_dimm(PersistentStore *p_store, int history_id,
 		db_idimm.interface_format_code = id_dimm.ifc;
 		db_idimm.interface_format_code_extra = id_dimm.ifce;
 		db_idimm.raw_cap = MULTIPLES_TO_BYTES(id_dimm.rc);
-		db_idimm.write_flush_addresses = id_dimm.nwfa;
-		db_idimm.write_flush_address_start = id_dimm.wfas;
 		// convert fw version to string
 		build_revision(db_idimm.fw_revision, IDENTIFY_DIMM_FW_REVISION_LEN,
 				id_dimm.fwr[4], id_dimm.fwr[3], id_dimm.fwr[2],

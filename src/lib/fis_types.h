@@ -603,8 +603,7 @@ struct pt_payload_identify_dimm {
 	unsigned char fswr; /* Feature SW Required Mask */
 	unsigned char rsrvd_b;
 	unsigned short nbw; /* Number of block windows */
-	unsigned short nwfa; /* Number write flush addresses */
-	unsigned long long wfas; /* Start address of the write flush addresses */
+	unsigned char rsrvd_c[10];
 	unsigned int obmcr; /* Offset of block mode control region */
 	unsigned int rc; /* raw capacity in 4KB multiples*/
 	unsigned char mf[DEV_MFR_LEN]; /* ASCII Manufacturer */
@@ -613,7 +612,7 @@ struct pt_payload_identify_dimm {
 	unsigned int dimm_sku;
 	unsigned short ifce; /* Interface format code extra*/
 	unsigned short api_ver; /* BCD formated api version */
-	unsigned char rsrvd_c[58]; /* Reserved */
+	unsigned char rsrvd_d[58]; /* Reserved */
 } __attribute__((packed));
 
 /*

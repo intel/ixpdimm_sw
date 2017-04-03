@@ -225,8 +225,6 @@ Attributes:
 	unsigned int fw_sw_mask
 	unsigned int dimm_sku
 	unsigned int block_windows
-	unsigned int write_flush_addresses
-	unsigned long long write_flush_address_start
 	unsigned int block_control_region_offset
 	unsigned long long raw_cap
 	unsigned int manufacturer
