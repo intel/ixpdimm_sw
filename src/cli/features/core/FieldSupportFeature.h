@@ -70,7 +70,7 @@ static const std::string SETFWRESULT_MSG = N_TR(
 static const std::string RUNDIAGNOSTIC_MSG = N_TR(
 		"Run diagnostic"); //!< run diagnostic success message
 static const std::string CHANGEAPPDIRECTSETTINGS_ERROR_MSG = N_TR(
-		"Error: App Direct settings apply system-wide and capacity already exists."); //!< Unable to change app direct settings message
+		"App Direct settings apply system-wide and capacity already exists."); //!< Unable to change app direct settings message
 
 // count and order should match wbem layer
 static const int NUMDIAGTESTTYPES = 4;

@@ -1827,16 +1827,20 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::changePreferences(
 					{
 						if (appDirectIsAvailable)
 						{
-							pADError = new framework::SimpleResult(prefix + ": " + CHANGEAPPDIRECTSETTINGS_ERROR_MSG);
+							pADError = new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
+								CHANGEAPPDIRECTSETTINGS_ERROR_MSG, prefix);
 							pListResult->insert(pADError->outputText());
+							pListResult->setErrorCode(pADError->getErrorCode());
 							COMMON_LOG_ERROR_F("%s", pADError->outputText().c_str());
 						}
-						else if (!appDirectSettingIsSupported(parsedCommand))
+						else if (!framework::stringsIEqual(propIter->second, PREFERENCE_APPDIRECT_SETTING_DEFAULT) &&
+							 !appDirectSettingIsSupported(parsedCommand))
 						{
 							pADError = new framework::SyntaxErrorBadValueResult(
 									framework::TOKENTYPE_PROPERTY,
 									propIter->first, propIter->second);
 							pListResult->insert(pADError->outputText());
+							pListResult->setErrorCode(pADError->getErrorCode());
 							COMMON_LOG_ERROR_F("%s", pADError->outputText().c_str());
 						}
 						else
