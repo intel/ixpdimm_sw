@@ -50,6 +50,7 @@ public:
 	virtual std::vector<std::string> getUidsForDeviceIds(const std::vector<std::string> &deviceIds);
 	virtual DeviceCollection getAllDevices();
 	virtual Result<Device> getDevice(std::string uid);
+	virtual std::string getFirmwareApiVersionByUid(const std::string &deviceUid);
 
 	static DeviceService &getService();
 

@@ -94,7 +94,7 @@ static const std::string EVENT_PROPERTY_SEVERITY = "Severity";
 static const std::string EVENT_PROPERTY_CATEGORY = "Category";
 static const std::string EVENT_OPTION_STARTTIME = "-starttime";
 static const std::string EVENT_OPTION_ENDTIME = "-endtime";
-
+static const float FW_API_WITH_LAST_FW_UPDATE_STATUS = 1.4;
 /*
  * Command Specs the Example Feature supports
  */
@@ -2013,8 +2013,11 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::getDeviceFirmwareI
 		for (size_t i = 0; i < uids.size(); i++)
 		{
 			core::device::DeviceFirmwareService &service = core::device::DeviceFirmwareService::getService();
+			core::device::DeviceService &deviceService = core::device::DeviceService::getService();
 
 			core::Result<core::device::DeviceFirmwareInfo> fwInfoResult = service.getFirmwareInfo(uids[i]);
+
+			std::string fwApiVersion = deviceService.getFirmwareApiVersionByUid(uids[i]);
 
 			wbem::framework::Attribute dimmId = wbem::physical_asset::NVDIMMFactory::uidToDimmIdAttribute(uids[i]);
 			instance.setAttribute(wbem::DIMMID_KEY, dimmId);
@@ -2041,7 +2044,7 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::getDeviceFirmwareI
 			instance.setAttribute(wbem::ACTIVEBUILDCONFIGURATION_KEY, wbem::framework::Attribute (buildConfiguration, false));
 
 			std::string stagedFwRevStr = wbem::NA;
-			if (fwInfoResult.getValue().isStagedPending())
+			if (firmwareIsStaged(fwInfoResult, fwApiVersion))
 			{
 				stagedFwRevStr = fwInfoResult.getValue().getStagedRevision();
 			}
@@ -2055,6 +2058,30 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::getDeviceFirmwareI
 	}
 
 	return pResult;
+}
+
+bool cli::nvmcli::FieldSupportFeature::fwHasLastFwUpdateStatusField(const std::string &fwApiVersion)
+{
+	float fwApiVersionFloat = strtof(fwApiVersion.c_str(), NULL);
+
+	return (fwApiVersionFloat >= FW_API_WITH_LAST_FW_UPDATE_STATUS);
+}
+
+bool cli::nvmcli::FieldSupportFeature::firmwareIsStaged(core::Result<core::device::DeviceFirmwareInfo> &fwInfoResult, const std::string &fwApiVersion)
+{
+	bool isFwStaged = false;
+
+	if (fwHasLastFwUpdateStatusField(fwApiVersion))
+	{
+		isFwStaged = fwInfoResult.getValue().isStagedPending();
+	}
+	else
+	{
+		isFwStaged = !cli::framework::stringsIEqual(ZERO_FIRMWARE_REV,
+				fwInfoResult.getValue().getStagedRevision());
+	}
+
+	return isFwStaged;
 }
 
 std::string cli::nvmcli::FieldSupportFeature::convertFWUpdateStatusToStr(enum fw_update_status status)

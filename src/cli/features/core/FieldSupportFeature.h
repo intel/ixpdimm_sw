@@ -38,6 +38,8 @@
 #include <cr_i18n.h>
 #include <support/EventLogFilter.h>
 #include <libinvm-cim/Instance.h>
+#include <core/Result.h>
+#include <core/device/DeviceFirmwareInfo.h>
 #include <nvm_types.h>
 
 namespace cli
@@ -71,6 +73,8 @@ static const std::string RUNDIAGNOSTIC_MSG = N_TR(
 		"Run diagnostic"); //!< run diagnostic success message
 static const std::string CHANGEAPPDIRECTSETTINGS_ERROR_MSG = N_TR(
 		"App Direct settings apply system-wide and capacity already exists."); //!< Unable to change app direct settings message
+
+static const std::string ZERO_FIRMWARE_REV = N_TR("00.00.00.0000");
 
 // count and order should match wbem layer
 static const int NUMDIAGTESTTYPES = 4;
@@ -349,6 +353,11 @@ private:
 	 * Show Device Firmware
 	 */
 	cli::framework::ResultBase *showDeviceFirmware(const framework::ParsedCommand &parsedCommand);
+
+	bool firmwareIsStaged(core::Result<core::device::DeviceFirmwareInfo> &fwInfoResult, const std::string &fwApiVersion);
+
+	bool fwHasLastFwUpdateStatusField(const std::string &fwApiVersion);
+
 };
 
 };

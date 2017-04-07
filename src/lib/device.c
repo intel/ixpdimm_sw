@@ -1302,6 +1302,7 @@ int nvm_get_device_fw_image_info(const NVM_UID device_uid,
 		{
 			FW_VER_ARR_TO_STR(fw_image_info.fw_rev, p_fw_info->active_fw_revision,
 					NVM_VERSION_LEN);
+
 			FW_VER_ARR_TO_STR(fw_image_info.staged_fw_rev, p_fw_info->staged_fw_revision,
 					NVM_VERSION_LEN);
 

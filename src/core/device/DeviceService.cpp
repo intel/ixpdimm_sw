@@ -148,3 +148,9 @@ std::string core::device::DeviceService::getUidForDeviceIdFromCollection(
 
 	return uid;
 }
+
+std::string core::device::DeviceService::getFirmwareApiVersionByUid(const std::string &deviceUid)
+{
+	return m_lib.getDeviceDiscovery(deviceUid).fw_api_version;
+}
+
