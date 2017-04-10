@@ -144,9 +144,7 @@ void cli::nvmcli::FieldSupportFeature::getPaths(cli::framework::CommandSpecList 
 
 	cli::framework::CommandSpec runDiag(RUN_DIAGNOSTIC, TR("Run Diagnostic"), framework::VERB_START,
 			TR("Run a diagnostic test on one or more " NVM_DIMM_NAME "s."));
-	runDiag.addTarget(DIAGNOSTIC_TARGET, true, "Quick|Config|Security|FW", false,
-			TR("Run a specific test by supplying its name. By default "
-					"all tests are run. "));
+	runDiag.addTarget(TARGET_DIAGNOSTIC_R);
 	runDiag.addTarget(TARGET_DIMM.name, false, DIMMIDS_STR, true,
 			TR("Run a diagnostic on specific " NVM_DIMM_NAME "s by supplying one or more comma-separated "
 					"" NVM_DIMM_NAME " identifiers. The default is to run the specified tests on all manageable "
@@ -963,8 +961,10 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::runDiagnostic(
 
 	try
 	{
-		// pull dimms from command, if no dimms specified, get all manageable dimms
-		pResult = cli::nvmcli::getDimms(parsedCommand, dimmTargets);
+		// pull dimms from command, if no dimms specified, get all dimms
+		// getDimms method retrieves the dimm only if it is manageable.
+		// Use getDiagnosticDimms instead to retrieve all the dimms.
+		pResult = getDiagnosticDimms(parsedCommand, dimmTargets);
 
 		// if no error from getting Dimms, keep going
 		if (NULL == pResult)
@@ -1178,6 +1178,47 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::runDiagnostic(
 		pResult = NvmExceptionToResult(e);
 	}
 
+	return pResult;
+}
+
+cli::framework::ErrorResult *cli::nvmcli::FieldSupportFeature::getDiagnosticDimms(
+		const framework::ParsedCommand &parsedCommand,
+		std::vector<std::string> &dimms)
+{
+	framework::ErrorResult *pResult = NULL;
+	std::vector<std::string> dimmTargets =
+			cli::framework::Parser::getTargetValues(parsedCommand,
+					cli::nvmcli::TARGET_DIMM.name);
+	try
+	{
+		// a target value was specified
+		if (!dimmTargets.empty())
+		{
+			// iterate through all the targets and convert any handles to uids
+			for (std::vector<std::string>::const_iterator dimmIter = dimmTargets.begin();
+					dimmIter != dimmTargets.end(); dimmIter++)
+			{
+				std::string target = (*dimmIter);
+				std::string uid = getUidFromTarget(target);
+
+				if (wbem::physical_asset::NVDIMMFactory::existsAndIsManageable(uid)
+						== NVM_ERR_BADDEVICE)
+				{
+					throw wbem::exception::NvmExceptionBadTarget(TARGET_DIMM.name.c_str(), target.c_str());
+				}
+				dimms.push_back(uid);
+			}
+		}
+		// If a dimm target value was not specified so get all device uids
+		else
+		{
+			dimms = wbem::physical_asset::NVDIMMFactory::getAllDeviceUids();
+		}
+	}
+	catch (wbem::framework::Exception &e)
+	{
+		pResult = NvmExceptionToResult(e);
+	}
 	return pResult;
 }
 

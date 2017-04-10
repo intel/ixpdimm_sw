@@ -54,6 +54,8 @@ const std::string POOLIDS_STR = "PoolIDs";
  * These are some common targets.  Required and non-required versions are included where it has been
  * found that they are needed within the current command specs
  */
+const framework::CommandSpecPart TARGET_DIAGNOSTIC_R= {"-diagnostic", true, "Quick|Config|Security|FW", false,
+		N_TR("Run a specific test by supplying its name. By default all tests are run. ")};
 const framework::CommandSpecPart TARGET_SYSTEM = {"-system", false, "", false, N_TR("System target")};
 const framework::CommandSpecPart TARGET_SYSTEM_R = {"-system", true, "", false, N_TR("System target is required.")};
 const framework::CommandSpecPart TARGET_DIMM = {"-dimm", false, DIMMIDS_STR, false, N_TR("NVDIMM target")};

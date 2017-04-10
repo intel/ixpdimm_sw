@@ -495,21 +495,9 @@ cli::framework::ErrorResult *cli::nvmcli::getDimms(
 			for (std::vector<std::string>::const_iterator dimmIter = dimmTargets.begin();
 					dimmIter != dimmTargets.end(); dimmIter++)
 			{
-				// assume handle if number, otherwise uid
 				std::string target = (*dimmIter);
-				std::string uid;
-				if (isStringValidNumber(target))
-				{
-					NVM_UINT32 handle = strtoul(target.c_str(), NULL, 0);
-					if (!handleToUid(handle, uid))
-					{
-						throw wbem::exception::NvmExceptionBadTarget(TARGET_DIMM.name.c_str(), target.c_str());
-					}
-				}
-				else
-				{
-					uid = target;
-				}
+				std::string uid = getUidFromTarget(target);
+
 				// make sure it exists and is manageable
 				int rc;
 				if ((rc = wbem::physical_asset::NVDIMMFactory::existsAndIsManageable(uid))
@@ -1504,4 +1492,24 @@ bool cli::nvmcli::handleToUid(const NVM_UINT32 &handle, std::string &dimmUid)
 	}
 
 	return validHandle;
+}
+
+std::string cli::nvmcli::getUidFromTarget(std::string target)
+{
+	// assume handle if number, otherwise uid
+	std::string uid;
+	if (isStringValidNumber(target))
+	{
+		NVM_UINT32 handle = strtoul(target.c_str(), NULL, 0);
+		if (!handleToUid(handle, uid))
+		{
+			throw wbem::exception::NvmExceptionBadTarget(TARGET_DIMM.name.c_str(), target.c_str());
+		}
+	}
+	else
+	{
+		uid = target;
+	}
+
+	return uid;
 }

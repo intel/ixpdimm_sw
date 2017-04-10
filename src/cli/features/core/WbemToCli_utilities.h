@@ -140,6 +140,8 @@ cli::framework::ErrorResult *GetRequestedCapacityUnits(const cli::framework::Par
 
 bool handleToUid(const NVM_UINT32 &handle, std::string &dimmUid);
 
+std::string getUidFromTarget(std::string dimmUid);
+
 /*!
  * Generate a dimm filter based on the parsed target
  */

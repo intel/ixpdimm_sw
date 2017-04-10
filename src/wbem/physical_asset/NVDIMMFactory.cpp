@@ -438,6 +438,25 @@ std::vector<std::string>  wbem::physical_asset::NVDIMMFactory::getManageableDevi
 	return result;
 }
 
+std::vector<std::string>  wbem::physical_asset::NVDIMMFactory::getAllDeviceUids()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	std::vector<std::string> result;
+
+	wbem::physical_asset::devices_t devices = wbem::physical_asset::NVDIMMFactory::getAllDevices();
+
+	wbem::physical_asset::devices_t::const_iterator iter = devices.begin();
+	for (; iter != devices.end(); iter++)
+	{
+		NVM_UID uidStr;
+		uid_copy(iter->uid, uidStr);
+		result.push_back(std::string(uidStr));
+	}
+
+	return result;
+}
+
+
 /*
  * Attempt to get the device discovery and check for manageability.
  * If can get it and discovery and is manageable return NVM_SUCCESS.

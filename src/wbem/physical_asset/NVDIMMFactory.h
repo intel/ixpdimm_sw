@@ -164,6 +164,8 @@ public:
 
 	static std::vector<std::string> getManageableDeviceUids();
 
+	static std::vector<std::string> getAllDeviceUids();
+
 	static int existsAndIsManageable(const std::string &dimmUid);
 
 	static devices_t getAllDevices();

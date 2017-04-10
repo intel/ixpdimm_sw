@@ -354,6 +354,10 @@ private:
 	 */
 	cli::framework::ResultBase *showDeviceFirmware(const framework::ParsedCommand &parsedCommand);
 
+	cli::framework::ErrorResult *getDiagnosticDimms(
+				const framework::ParsedCommand &parsedCommand,
+				std::vector<std::string> &dimms);
+
 	bool firmwareIsStaged(core::Result<core::device::DeviceFirmwareInfo> &fwInfoResult, const std::string &fwApiVersion);
 
 	bool fwHasLastFwUpdateStatusField(const std::string &fwApiVersion);
