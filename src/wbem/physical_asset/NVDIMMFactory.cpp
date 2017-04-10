@@ -141,6 +141,7 @@ void NVDIMMFactory::populateAttributeList(
 	attributes.push_back(FWVERSION_KEY);
 	attributes.push_back(FWAPIVERSION_KEY);
 	attributes.push_back(FWUPDATESTATUS_KEY);
+	attributes.push_back(AITDRAMENABLED_KEY);
 }
 
 wbem::framework::Instance *NVDIMMFactory::getInstance(
@@ -831,6 +832,7 @@ void NVDIMMFactory::toInstance(core::device::Device &device,
 	ADD_ATTRIBUTE(instance, attributes, FWUPDATESTATUS_KEY, framework::UINT16, device.getFwUpdateStatus());
 	ADD_ATTRIBUTE(instance, attributes, BOOTSTATUS_KEY, framework::UINT16_LIST, device.getBootStatus());
 	ADD_ATTRIBUTE(instance, attributes, INTERFACEFORMATCODE_KEY, framework::UINT16_LIST, device.getInterfaceFormatCodes());
+	ADD_ATTRIBUTE(instance, attributes, AITDRAMENABLED_KEY, framework::BOOLEAN, device.isAitDramEnabled());
 }
 
 std::string NVDIMMFactory::getMemoryModeString(core::device::Device &device)

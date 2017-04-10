@@ -219,6 +219,10 @@ class <NVM_WBEM_PREFIX>NVDIMM : CIM_PhysicalMemory
  	)]
 	string FWAPIVersion;
 	[Description (
+	"True if the Apache Pass DIMM AIT DRAM is enabled."
+ 	)]
+	boolean AitDramEnabled;
+	[Description (
 	"The status of last firmware update operation."
 	),
 	ValueMap { "0", "1", "2", "3" },
