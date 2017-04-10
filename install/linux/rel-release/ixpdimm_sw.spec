@@ -247,14 +247,12 @@ fi
 
 %files -n libixpdimm-core
 %doc README.md
-%{_libdir}/libixpdimm-core.so.01
-%{_libdir}/libixpdimm-core.so.01.00.0
+%{_libdir}/libixpdimm-core.so*
 %license LICENSE
 
 %files -n libixpdimm-cim
 %doc README.md
-%{_libdir}/cmpi/libixpdimm-cim.so.01
-%{_libdir}/cmpi/libixpdimm-cim.so.01.00.0
+%{_libdir}/cmpi/libixpdimm-cim.so*
 %dir %{_sharedstatedir}/%{name}/Pegasus
 %dir %{_sharedstatedir}/%{name}/Pegasus/mof
 %dir %{_sharedstatedir}/%{name}/sfcb
@@ -272,8 +270,7 @@ fi
 
 %files -n ixpdimm-cli
 %{_bindir}/ixpdimm-cli
-%{_libdir}/libixpdimm-cli.so.01
-%{_libdir}/libixpdimm-cli.so.01.00.0
+%{_libdir}/libixpdimm-cli.so*
 %license LICENSE
 %{_mandir}/man8/ixpdimm-cli*
 
