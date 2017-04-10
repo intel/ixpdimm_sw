@@ -51,7 +51,7 @@ void core::memory_allocator::RuleStorageCapacityNotSupported::verify(const Memor
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	if (request.isStorageRemaining() &&
+	if (request.hasStorage() &&
 		!m_systemCapabilities.platform_capabilities.storage_mode_supported)
 	{
 		throw core::NvmExceptionStorageNotSupported();

@@ -39,12 +39,6 @@ namespace core
 namespace memory_allocator
 {
 
-// variables defined only for the purpose of this layout step
-static const NVM_UINT16 TYPE_APPDIRECT1 = 0;
-static const NVM_UINT16 TYPE_APPDIRECT2 = 1;
-static const NVM_UINT16 TYPE_2LM = 3;
-static const NVM_UINT16 TYPE_RESERVED_APPDIRECT_BYONE = 4;
-
 class NVM_API LayoutStepLimitTotalMappedMemory : public LayoutStep
 {
 	public:
@@ -58,6 +52,9 @@ class NVM_API LayoutStepLimitTotalMappedMemory : public LayoutStep
 
 	private:
 
+		std::map<NVM_UINT16, std::vector<core::memory_allocator::Dimm> >
+		getDimmsSortedBySocket(const MemoryAllocationRequest& request);
+
 		void initializeExceedsLimit();
 
 		void initializeDimmsSortedBySocket(const MemoryAllocationRequest& request);
@@ -70,58 +67,25 @@ class NVM_API LayoutStepLimitTotalMappedMemory : public LayoutStep
 		void shrinkLayoutCapacities(const MemoryAllocationRequest& request,
 			MemoryAllocationLayout& layout);
 
-		void shrinkLayoutGoals(const MemoryAllocationRequest& request, MemoryAllocationLayout& layout);
+		void shrinkLayoutGoals(MemoryAllocationLayout& layout);
 
-		void shrinkAppDirect2(const MemoryAllocationRequest& request, MemoryAllocationLayout& layout);
+		void shrinkAppDirect2(MemoryAllocationLayout& layout);
 
-		void shrinkAppDirect1(const MemoryAllocationRequest& request, MemoryAllocationLayout& layout);
+		void shrinkAppDirect1(MemoryAllocationLayout& layout);
 
-		void shrinkReservedDimm(const MemoryAllocationRequest& request, MemoryAllocationLayout& layout);
+		void shrinkReservedDimm(MemoryAllocationLayout& layout);
 
-		void shrinkMemory(const MemoryAllocationRequest& request, MemoryAllocationLayout& layout);
+		void shrinkMemory(MemoryAllocationLayout& layout);
 
 		void shrinkSizePerDimm(NVM_UINT64 reduceBy, NVM_UINT64 &size);
 
-		NVM_UINT64 reduceEachDimmBy(NVM_UINT64 mappedMemoryCapacityExceedsLimit, int numDimms);
-
-		std::vector<core::memory_allocator::Dimm> getDimmsByType(
-			MemoryAllocationLayout& layout, NVM_UINT16 capacityType);
-
-		bool dimmHasAppDirect1(
-			std::vector<core::memory_allocator::Dimm>::const_iterator dimm,
-			MemoryAllocationLayout& layout);
-
-		bool dimmHasAppDirect2(
-			std::vector<core::memory_allocator::Dimm>::const_iterator dimm,
-			MemoryAllocationLayout& layout);
-
-		bool dimmHas2LM(
-			std::vector<core::memory_allocator::Dimm>::const_iterator dimm,
-			MemoryAllocationLayout& layout);
-
-		bool dimmisReservedAppDirectByOne(
-			std::vector<core::memory_allocator::Dimm>::const_iterator dimm,
-			MemoryAllocationLayout& layout);
-
-		void killADIfSizeIsZero(config_goal& goal, NVM_UINT16 type);
-
-		void killAllCapacityByType(std::vector<core::memory_allocator::Dimm> dimms,
-			MemoryAllocationLayout& layout, NVM_UINT16 type);
-
-		NVM_UINT64 getTotalAD2Capacity(std::vector<core::memory_allocator::Dimm> ad2Dimms,
-			MemoryAllocationLayout& layout);
-
-		NVM_UINT64 getTotalAD1Capacity(std::vector<core::memory_allocator::Dimm> ad1Dimms,
-			MemoryAllocationLayout& layout);
-
-		NVM_UINT64 getTotal2LMCapacity(std::vector<core::memory_allocator::Dimm> ad1Dimms,
+		NVM_UINT64 getTotal2LMCapacity(
+			const std::vector<core::memory_allocator::Dimm>& memoryDimms,
 			MemoryAllocationLayout& layout);
 
 		NVM_UINT64 m_limit;
-
 		NVM_UINT64 m_totalMappedSize;
 		NVM_UINT64 m_mappedCapacityExceedsLimit;
-
 		std::vector<core::memory_allocator::Dimm> m_socketDimms;
 		std::map<NVM_UINT16, std::vector<Dimm> > m_dimmsSortedBySocket;
 };

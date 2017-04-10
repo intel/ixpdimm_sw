@@ -84,8 +84,8 @@ bool core::memory_allocator::RuleNamespacesExist::requestIsMemoryModeOnly(
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	return ((request.getMemoryModeCapacityGiB() > 0) &&
-			(request.getAppDirectCapacityGiB() == 0) &&
-			(!request.isStorageRemaining()));
+		(request.getAppDirectCapacityGiB() == 0) &&
+		(!request.hasStorage()));
 }
 
 bool core::memory_allocator::RuleNamespacesExist::requestIsOkWithGetNamespaceErrorCode(

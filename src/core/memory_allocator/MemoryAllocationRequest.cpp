@@ -36,7 +36,7 @@ namespace memory_allocator
 
 MemoryAllocationRequest::MemoryAllocationRequest() :
 		m_memoryCapacityGiB(0), m_appDirectExtent(), m_storageRemaining(false),
-		m_reserveDimmUid(""), m_reserveDimmType(RESERVE_DIMM_NONE),
+		m_reserveStorageCapacityGiB(0), m_reserveDimmUid(""), m_reserveDimmType(RESERVE_DIMM_NONE),
 		m_dimms()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -59,6 +59,20 @@ void MemoryAllocationRequest::setMemoryModeCapacityGiB(const NVM_UINT64 capacity
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	m_memoryCapacityGiB = capacityGiB;
+}
+
+NVM_UINT64 core::memory_allocator::MemoryAllocationRequest::getReserveStorageCapacityGiB() const
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	return m_reserveStorageCapacityGiB;
+}
+
+void MemoryAllocationRequest::setReserveStorageCapacityGiB(const NVM_UINT64 capacityGiB)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	m_reserveStorageCapacityGiB = capacityGiB;
 }
 
 NVM_UINT64 MemoryAllocationRequest::getAppDirectCapacityGiB() const
@@ -94,6 +108,13 @@ void MemoryAllocationRequest::setStorageRemaining(const bool storageIsRemaining)
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	m_storageRemaining = storageIsRemaining;
+}
+
+bool MemoryAllocationRequest::hasStorage() const
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	return (m_storageRemaining > 0 || m_reserveStorageCapacityGiB > 0);
 }
 
 std::string MemoryAllocationRequest::getReservedDimmUid() const

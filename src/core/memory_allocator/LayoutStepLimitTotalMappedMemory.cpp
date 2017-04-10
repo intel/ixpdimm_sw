@@ -64,7 +64,7 @@ void core::memory_allocator::LayoutStepLimitTotalMappedMemory::execute(
 		{
 			needLayoutChange = true;
 			initializeExceedsLimit();
-			shrinkLayoutGoals(request, layout);
+			shrinkLayoutGoals(layout);
 		}
 	}
 
@@ -76,121 +76,57 @@ void core::memory_allocator::LayoutStepLimitTotalMappedMemory::execute(
 }
 
 void core::memory_allocator::LayoutStepLimitTotalMappedMemory::shrinkLayoutGoals(
-		const MemoryAllocationRequest& request,	MemoryAllocationLayout& layout)
+		MemoryAllocationLayout& layout)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	shrinkAppDirect2(request, layout);
+	shrinkAppDirect2(layout);
 
-	shrinkAppDirect1(request, layout);
+	shrinkAppDirect1(layout);
 
-	shrinkMemory(request, layout);
+	shrinkMemory(layout);
 
-	shrinkReservedDimm(request, layout);
+	shrinkReservedDimm(layout);
 }
 
 void core::memory_allocator::LayoutStepLimitTotalMappedMemory::shrinkAppDirect2(
-		const MemoryAllocationRequest& request,	MemoryAllocationLayout& layout)
+		MemoryAllocationLayout& layout)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	if (m_mappedCapacityExceedsLimit > 0)
-	{
-		std::vector<core::memory_allocator::Dimm> ad2Dimms = getDimmsByType(layout, TYPE_APPDIRECT2);
-		if (!ad2Dimms.empty())
-		{
-			// If limit exceeds AD2, eliminate all AD2, else shrink evenly on all AD2 DIMMs
-			NVM_UINT64 totalAD2Capacity = getTotalAD2Capacity(ad2Dimms, layout);
-			if (m_mappedCapacityExceedsLimit >= totalAD2Capacity)
-			{
-				killAllCapacityByType(ad2Dimms, layout, TYPE_APPDIRECT2);
-
-				m_mappedCapacityExceedsLimit =
-					m_mappedCapacityExceedsLimit - totalAD2Capacity;
-			}
-			else
-			{
-				NVM_UINT64 reduceBy = reduceEachDimmBy(m_mappedCapacityExceedsLimit, ad2Dimms.size());
-
-				for (std::vector<core::memory_allocator::Dimm>::const_iterator dimm =
-						ad2Dimms.begin(); dimm != ad2Dimms.end(); dimm++)
-				{
-					if (m_mappedCapacityExceedsLimit > 0)
-					{
-						config_goal& goal = layout.goals[dimm->uid];
-
-						shrinkSizePerDimm(reduceBy, goal.app_direct_2_size);
-
-						killADIfSizeIsZero(goal, TYPE_APPDIRECT2);
-					}
-				}
-			}
-		}
-	}
+	shrinkAD2(m_socketDimms, m_mappedCapacityExceedsLimit, layout);
 }
 
 void core::memory_allocator::LayoutStepLimitTotalMappedMemory::shrinkAppDirect1(
-		const MemoryAllocationRequest& request,	MemoryAllocationLayout& layout)
+		MemoryAllocationLayout& layout)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	if (m_mappedCapacityExceedsLimit > 0)
-	{
-		std::vector<core::memory_allocator::Dimm> ad1Dimms = getDimmsByType(layout, TYPE_APPDIRECT1);
-		if (!ad1Dimms.empty())
-		{
-			// If limit exceeds AD1, eliminate all AD1, else shrink evenly on all AD1 DIMMs
-			NVM_UINT64 totalAD1Capacity = getTotalAD1Capacity(ad1Dimms, layout);
-			if (m_mappedCapacityExceedsLimit >= totalAD1Capacity)
-			{
-				killAllCapacityByType(ad1Dimms, layout, TYPE_APPDIRECT1);
-
-				m_mappedCapacityExceedsLimit =
-					m_mappedCapacityExceedsLimit - totalAD1Capacity;
-			}
-			else
-			{
-				NVM_UINT64 reduceBy = reduceEachDimmBy(m_mappedCapacityExceedsLimit, ad1Dimms.size());
-
-				for (std::vector<core::memory_allocator::Dimm>::const_iterator dimm =
-						ad1Dimms.begin(); dimm != ad1Dimms.end(); dimm++)
-				{
-					if (m_mappedCapacityExceedsLimit > 0)
-					{
-						config_goal& goal = layout.goals[dimm->uid];
-
-						shrinkSizePerDimm(reduceBy, goal.app_direct_1_size);
-
-						killADIfSizeIsZero(goal, TYPE_APPDIRECT1);
-					}
-				}
-			}
-		}
-	}
+	shrinkAD1(m_socketDimms, m_mappedCapacityExceedsLimit, layout);
 }
 
 void core::memory_allocator::LayoutStepLimitTotalMappedMemory::shrinkMemory(
-		const MemoryAllocationRequest& request,	MemoryAllocationLayout& layout)
+		MemoryAllocationLayout& layout)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	if (m_mappedCapacityExceedsLimit > 0)
 	{
-		std::vector<core::memory_allocator::Dimm> memDimms = getDimmsByType(layout, TYPE_2LM);
+		std::vector<core::memory_allocator::Dimm> memDimms = get2LMDimms(m_socketDimms, layout);
 		if (!memDimms.empty())
 		{
 			// If limit exceeds 2LM, eliminate all 2LM, else shrink evenly on all 2LM DIMMs
 			NVM_UINT64 total2LMapacity = getTotal2LMCapacity(memDimms, layout);
 			if (m_mappedCapacityExceedsLimit >= total2LMapacity)
 			{
-				killAllCapacityByType(memDimms, layout, TYPE_2LM);
+				killAllCapacityByType(memDimms, layout, CAPACITY_TYPE_2LM);
 
 				m_mappedCapacityExceedsLimit =
 					m_mappedCapacityExceedsLimit - total2LMapacity;
 			}
 			else
 			{
-				NVM_UINT64 reduceBy = reduceEachDimmBy(m_mappedCapacityExceedsLimit, memDimms.size());
+				NVM_UINT64 reduceBy = calculateCapacityToShrinkPerDimm(m_mappedCapacityExceedsLimit, memDimms.size());
 
 				for (std::vector<core::memory_allocator::Dimm>::const_iterator dimm =
 						memDimms.begin(); dimm != memDimms.end(); dimm++)
@@ -211,7 +147,7 @@ void core::memory_allocator::LayoutStepLimitTotalMappedMemory::shrinkMemory(
 }
 
 void core::memory_allocator::LayoutStepLimitTotalMappedMemory::shrinkReservedDimm(
-		const MemoryAllocationRequest& request,	MemoryAllocationLayout& layout)
+		MemoryAllocationLayout& layout)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
@@ -219,7 +155,7 @@ void core::memory_allocator::LayoutStepLimitTotalMappedMemory::shrinkReservedDim
 	{
 		// we'll only have one reserved DIMM per socket
 		std::vector<core::memory_allocator::Dimm> reservedDimms =
-				getDimmsByType(layout, TYPE_RESERVED_APPDIRECT_BYONE);
+				getReservedADByOneDimms(m_socketDimms, layout);
 
 		for (std::vector<core::memory_allocator::Dimm>::const_iterator dimm =
 				reservedDimms.begin(); dimm != reservedDimms.end(); dimm++)
@@ -230,7 +166,7 @@ void core::memory_allocator::LayoutStepLimitTotalMappedMemory::shrinkReservedDim
 				goal.app_direct_1_size -= m_mappedCapacityExceedsLimit;
 				m_mappedCapacityExceedsLimit = 0;
 
-				killADIfSizeIsZero(goal, TYPE_RESERVED_APPDIRECT_BYONE);
+				killADIfSizeIsZero(goal, CAPACITY_TYPE_RESERVED_APPDIRECT_BYONE);
 			}
 		}
 	}
@@ -239,16 +175,22 @@ void core::memory_allocator::LayoutStepLimitTotalMappedMemory::shrinkReservedDim
 // TODO: Get from PCAT for each socket (US20271)
 NVM_UINT64 core::memory_allocator::LayoutStepLimitTotalMappedMemory::getLimit(const MemoryAllocationRequest& request)
 {
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
 	return request.getSocketLimit();
 }
 
 bool core::memory_allocator::LayoutStepLimitTotalMappedMemory::mappedSizeExceedsLimit()
 {
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
 	return m_totalMappedSize > m_limit;
 }
 
 void core::memory_allocator::LayoutStepLimitTotalMappedMemory::initializeExceedsLimit()
 {
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
 	m_mappedCapacityExceedsLimit = m_totalMappedSize - m_limit;
 }
 
@@ -257,12 +199,7 @@ void core::memory_allocator::LayoutStepLimitTotalMappedMemory::initializeDimmsSo
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	std::vector<Dimm> dimms = request.getDimms();
-
-	for (std::vector<Dimm>::const_iterator dimm = dimms.begin(); dimm != dimms.end(); dimm++)
-	{
-		m_dimmsSortedBySocket[dimm->socket].push_back(*dimm);
-	}
+	m_dimmsSortedBySocket =	getDimmsSortedBySocket(request);
 }
 
 // TODO: need to get m_totalMappedSize for all dimms on socket, not just on requested dimms
@@ -310,41 +247,12 @@ void core::memory_allocator::LayoutStepLimitTotalMappedMemory::shrinkLayoutCapac
 	layout.appDirectCapacity = appDirectCapacity;
 }
 
-
-NVM_UINT64 core::memory_allocator::LayoutStepLimitTotalMappedMemory::getTotalAD2Capacity(
-		std::vector<core::memory_allocator::Dimm> dimms,
-		MemoryAllocationLayout& layout)
-{
-	NVM_UINT64 totalAD2Capacity = 0;
-
-	for (std::vector<core::memory_allocator::Dimm>::const_iterator dimm =
-			dimms.begin(); dimm != dimms.end(); dimm++)
-	{
-		totalAD2Capacity += layout.goals[dimm->uid].app_direct_2_size;
-	}
-
-	return totalAD2Capacity;
-}
-
-NVM_UINT64 core::memory_allocator::LayoutStepLimitTotalMappedMemory::getTotalAD1Capacity(
-		std::vector<core::memory_allocator::Dimm> dimms,
-		MemoryAllocationLayout& layout)
-{
-	NVM_UINT64 totalAD1Capacity = 0;
-
-	for (std::vector<core::memory_allocator::Dimm>::const_iterator dimm =
-			dimms.begin(); dimm != dimms.end(); dimm++)
-	{
-		totalAD1Capacity += layout.goals[dimm->uid].app_direct_1_size;
-	}
-
-	return totalAD1Capacity;
-}
-
 NVM_UINT64 core::memory_allocator::LayoutStepLimitTotalMappedMemory::getTotal2LMCapacity(
-		std::vector<core::memory_allocator::Dimm> dimms,
+		const std::vector<core::memory_allocator::Dimm>& dimms,
 		MemoryAllocationLayout& layout)
 {
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
 	NVM_UINT64 total2LMCapacity = 0;
 
 	for (std::vector<core::memory_allocator::Dimm>::const_iterator dimm =
@@ -356,172 +264,28 @@ NVM_UINT64 core::memory_allocator::LayoutStepLimitTotalMappedMemory::getTotal2LM
 	return total2LMCapacity;
 }
 
-std::vector<core::memory_allocator::Dimm> core::memory_allocator::LayoutStepLimitTotalMappedMemory::getDimmsByType(
-		MemoryAllocationLayout& layout, NVM_UINT16 capacityType)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	std::vector<core::memory_allocator::Dimm> dimms;
-
-	for (std::vector<core::memory_allocator::Dimm>::const_iterator dimm =
-			m_socketDimms.begin(); dimm != m_socketDimms.end(); dimm++)
-	{
-		switch(capacityType)
-		{
-		case TYPE_APPDIRECT1:
-			if (dimmHasAppDirect1(dimm, layout))
-			{
-				dimms.push_back(*dimm);
-			}
-			break;
-		case TYPE_APPDIRECT2:
-			if (dimmHasAppDirect2(dimm, layout))
-			{
-				dimms.push_back(*dimm);
-			}
-			break;
-		case TYPE_2LM:
-			if (dimmHas2LM(dimm, layout))
-			{
-				dimms.push_back(*dimm);
-			}
-			break;
-		case TYPE_RESERVED_APPDIRECT_BYONE:
-			if (dimmisReservedAppDirectByOne(dimm, layout))
-			{
-				dimms.push_back(*dimm);
-			}
-			break;
-		default:
-			break;
-		}
-	}
-
-	return dimms;
-}
-
-bool core::memory_allocator::LayoutStepLimitTotalMappedMemory::dimmHasAppDirect1(
-		std::vector<core::memory_allocator::Dimm>::const_iterator dimm,
-		MemoryAllocationLayout& layout)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	return layout.reservedimmUid != dimm->uid &&
-			layout.goals[dimm->uid].app_direct_1_size > 0;
-}
-
-bool core::memory_allocator::LayoutStepLimitTotalMappedMemory::dimmHasAppDirect2(
-		std::vector<core::memory_allocator::Dimm>::const_iterator dimm,
-		MemoryAllocationLayout& layout)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	return layout.reservedimmUid != dimm->uid &&
-			layout.goals[dimm->uid].app_direct_2_settings.interleave.ways == INTERLEAVE_WAYS_1 &&
-			layout.goals[dimm->uid].app_direct_2_size > 0;
-}
-
-bool core::memory_allocator::LayoutStepLimitTotalMappedMemory::dimmHas2LM(
-		std::vector<core::memory_allocator::Dimm>::const_iterator dimm,
-		MemoryAllocationLayout& layout)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	return layout.goals[dimm->uid].memory_size > 0;
-}
-
-bool core::memory_allocator::LayoutStepLimitTotalMappedMemory::dimmisReservedAppDirectByOne(
-		std::vector<core::memory_allocator::Dimm>::const_iterator dimm,
-		MemoryAllocationLayout& layout)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	return layout.reservedimmUid == dimm->uid &&
-			layout.goals[dimm->uid].app_direct_1_settings.interleave.ways == INTERLEAVE_WAYS_1 &&
-			layout.goals[dimm->uid].app_direct_1_size > 0;
-}
-
-NVM_UINT64 core::memory_allocator::LayoutStepLimitTotalMappedMemory::reduceEachDimmBy(
-		NVM_UINT64 mappedMemoryCapacityExceedsLimit, int numDimms)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	return (NVM_UINT64) (ceil((double) (mappedMemoryCapacityExceedsLimit) / (double) (numDimms)));
-}
-
-void core::memory_allocator::LayoutStepLimitTotalMappedMemory::killADIfSizeIsZero(
-		config_goal& goal, NVM_UINT16 type)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	if ((type == TYPE_APPDIRECT1 || type == TYPE_RESERVED_APPDIRECT_BYONE ) &&
-		goal.app_direct_1_size == 0)
-	{
-		struct app_direct_attributes empty_settings;
-		memset(&empty_settings, 0, sizeof(struct app_direct_attributes));
-		goal.app_direct_1_settings = empty_settings;
-		goal.app_direct_count--;
-	}
-
-	if (type == TYPE_APPDIRECT2 && goal.app_direct_2_size == 0)
-	{
-		struct app_direct_attributes empty_settings;
-		memset(&empty_settings, 0, sizeof(struct app_direct_attributes));
-		goal.app_direct_2_settings = empty_settings;
-		goal.app_direct_count--;
-	}
-}
-
-void core::memory_allocator::LayoutStepLimitTotalMappedMemory::killAllCapacityByType(
-		std::vector<core::memory_allocator::Dimm> dimms,
-		MemoryAllocationLayout& layout,
-		NVM_UINT16 type)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	for (std::vector<core::memory_allocator::Dimm>::const_iterator dimm =
-			dimms.begin(); dimm != dimms.end(); dimm++)
-	{
-		config_goal& goal = layout.goals[dimm->uid];
-
-		if (type == TYPE_APPDIRECT1 || type == TYPE_RESERVED_APPDIRECT_BYONE)
-		{
-			goal.app_direct_1_size = 0;
-			killADIfSizeIsZero(goal, type);
-		}
-		else if (type == TYPE_APPDIRECT2)
-		{
-			goal.app_direct_2_size = 0;
-			killADIfSizeIsZero(goal, type);
-		}
-		else if (type == TYPE_2LM)
-		{
-			goal.memory_size = 0;
-		}
-	}
-}
-
 void core::memory_allocator::LayoutStepLimitTotalMappedMemory::shrinkSizePerDimm(
 		NVM_UINT64 reduceBy, NVM_UINT64 &size)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	// reduce each DIMM evenly if possible
-	if (size >= reduceBy && m_mappedCapacityExceedsLimit >= reduceBy)
+	shrinkSize(m_mappedCapacityExceedsLimit, reduceBy, size);
+}
+
+std::map<NVM_UINT16, std::vector<core::memory_allocator::Dimm> >
+core::memory_allocator::LayoutStepLimitTotalMappedMemory::getDimmsSortedBySocket(
+		const MemoryAllocationRequest& request)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	std::map<NVM_UINT16, std::vector<Dimm> > dimmsSortedBySocket;
+
+	std::vector<Dimm> dimms = request.getDimms();
+
+	for (std::vector<Dimm>::const_iterator dimm = dimms.begin(); dimm != dimms.end(); dimm++)
 	{
-		size -=reduceBy;
-		m_mappedCapacityExceedsLimit -= reduceBy;
+		dimmsSortedBySocket[dimm->socket].push_back(*dimm);
 	}
-	// reduce little more than needed
-	else if (size >= reduceBy && m_mappedCapacityExceedsLimit < reduceBy)
-	{
-		size -=reduceBy;
-		m_mappedCapacityExceedsLimit = 0;
-	}
-	// reduce more than what's available per DIMM
-	else
-	{
-		m_mappedCapacityExceedsLimit -= size;
-		size = 0;
-	}
+
+	return dimmsSortedBySocket;
 }

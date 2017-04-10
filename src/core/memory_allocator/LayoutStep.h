@@ -48,6 +48,15 @@ class NVM_API LayoutStep
 		virtual void execute(const MemoryAllocationRequest &request, MemoryAllocationLayout &layout) = 0;
 
 	protected:
+
+		enum capacity_type
+		{
+			CAPACITY_TYPE_APPDIRECT1 = 0,
+			CAPACITY_TYPE_APPDIRECT2 = 1,
+			CAPACITY_TYPE_2LM = 3,
+			CAPACITY_TYPE_RESERVED_APPDIRECT_BYONE = 4
+		};
+
 		NVM_UINT64 getDimmUnallocatedBytes(
 				const NVM_UINT64 &dimmCapacity,
 				const struct config_goal &dimmGoal);
@@ -68,6 +77,59 @@ class NVM_API LayoutStep
 		NVM_UINT64 getRemainingBytesFromDimms(
 				const std::vector<Dimm> &dimms,
 				MemoryAllocationLayout& layout);
+
+		std::vector<core::memory_allocator::Dimm> getAD2Dimms(
+				const std::vector<core::memory_allocator::Dimm>& requestedDimms,
+				MemoryAllocationLayout& layout);
+
+		std::vector<core::memory_allocator::Dimm> getAD1Dimms(
+				const std::vector<core::memory_allocator::Dimm>& requestedDimms,
+				MemoryAllocationLayout& layout);
+
+		std::vector<core::memory_allocator::Dimm> get2LMDimms(
+				const std::vector<core::memory_allocator::Dimm>& requestedDimms,
+				MemoryAllocationLayout& layout);
+
+		std::vector<core::memory_allocator::Dimm> getReservedADByOneDimms(
+				const std::vector<core::memory_allocator::Dimm>& requestedDimms,
+				MemoryAllocationLayout& layout);
+
+		bool dimmHasAppDirect1(std::vector<core::memory_allocator::Dimm>::const_iterator dimm,
+				MemoryAllocationLayout& layout);
+
+		bool dimmHasAppDirect2(std::vector<core::memory_allocator::Dimm>::const_iterator dimm,
+				MemoryAllocationLayout& layout);
+
+		bool dimmHas2LM(std::vector<core::memory_allocator::Dimm>::const_iterator dimm,
+				MemoryAllocationLayout& layout);
+
+		bool dimmIsReservedAppDirectByOne(
+				std::vector<core::memory_allocator::Dimm>::const_iterator dimm,
+				MemoryAllocationLayout& layout);
+
+		bool isReserveDimm(std::vector<core::memory_allocator::Dimm>::const_iterator dimm,
+					MemoryAllocationLayout& layout);
+
+		NVM_UINT64 getTotalAD2Capacity(const std::vector<core::memory_allocator::Dimm>& ad2Dimms,
+				MemoryAllocationLayout& layout);
+
+		NVM_UINT64 getTotalAD1Capacity(const std::vector<core::memory_allocator::Dimm>& ad1Dimms,
+				MemoryAllocationLayout& layout);
+
+		void killAllCapacityByType(const std::vector<core::memory_allocator::Dimm>& dimms,
+				MemoryAllocationLayout& layout, enum capacity_type type);
+
+		void killADIfSizeIsZero(config_goal& goal, enum capacity_type type);
+
+		NVM_UINT64 calculateCapacityToShrinkPerDimm(NVM_UINT64 capacityToShrink, int numDimms);
+
+		void shrinkSize(NVM_UINT64 &shrinkSizeBy,NVM_UINT64 reduceBy, NVM_UINT64 &size);
+
+		void shrinkAD2(const std::vector<core::memory_allocator::Dimm>& dimms,
+				NVM_UINT64 &shrinkAD2By, MemoryAllocationLayout& layout);
+
+		void shrinkAD1(const std::vector<core::memory_allocator::Dimm>& dimms,
+				NVM_UINT64 &shrinkAD1By, MemoryAllocationLayout& layout);
 };
 
 } /* namespace memory_allocator */

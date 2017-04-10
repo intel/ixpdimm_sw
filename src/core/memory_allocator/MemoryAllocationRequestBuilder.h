@@ -55,6 +55,8 @@ public:
 
 	void setMemoryModePercentage(const NVM_UINT32 percentage);
 
+	void setReserveStoragePercentage(const NVM_UINT32 percentage);
+
 	void addDimmIds(const std::vector<std::string> &dimmIds);
 	void addSocketIds(const std::vector<NVM_UINT16> &socketIds);
 
@@ -81,6 +83,7 @@ protected:
 	std::vector<NVM_UINT16> m_sockets;
 	PersistentType m_pmType;
 	float m_memoryRatio;
+	float m_storageRatio;
 	ReserveDimmCapacityType m_reserveDimmType;
 
 private:

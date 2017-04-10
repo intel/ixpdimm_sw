@@ -50,13 +50,44 @@ void core::memory_allocator::LayoutStepStorage::execute(const MemoryAllocationRe
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	NVM_UINT64 bytesToAllocate = getRemainingBytesFromRequestedDimms(request, layout);
-	NVM_UINT64 bytesRemaining = bytesToAllocate;
-	std::vector<struct Dimm> dimms = request.getNonReservedDimms();
-	for (std::vector<struct Dimm>::const_iterator dimmIter = dimms.begin();
-			dimmIter != dimms.end(); dimmIter++)
+	NVM_UINT64 requestedStorage = request.getReserveStorageCapacityGiB();
+	if (requestedStorage > 0)
 	{
-		bytesRemaining -= getDimmUnallocatedBytes(dimmIter->capacityBytes, layout.goals[dimmIter->uid]);
+		shrinkAppDirectPerRequestedStorage(request, requestedStorage, layout);
+
+		layout.appDirectCapacity = getTotalADCapacity(request, layout);
 	}
-	layout.storageCapacity = bytesToConfigGoalSize(bytesToAllocate - bytesRemaining);
+
+	layout.storageCapacity = B_TO_GiB(getRemainingBytesFromRequestedDimms(request, layout));
+}
+
+void core::memory_allocator::LayoutStepStorage::shrinkAppDirectPerRequestedStorage(
+		const MemoryAllocationRequest& request, NVM_UINT64 requestedStorage,
+		MemoryAllocationLayout& layout)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	std::vector<core::memory_allocator::Dimm> dimms = request.getNonReservedDimms();
+
+	shrinkAD2(dimms, requestedStorage, layout);
+	shrinkAD1(dimms, requestedStorage, layout);
+}
+
+NVM_UINT64 core::memory_allocator::LayoutStepStorage::getTotalADCapacity(
+		const MemoryAllocationRequest& request, MemoryAllocationLayout& layout)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	NVM_UINT64 totalADCapacity = 0;
+
+	std::vector<core::memory_allocator::Dimm> dimms = request.getDimms();
+	for (std::vector<core::memory_allocator::Dimm>::const_iterator dimm =
+			dimms.begin(); dimm != dimms.end(); dimm++)
+	{
+		totalADCapacity +=
+				layout.goals[dimm->uid].app_direct_1_size +
+				layout.goals[dimm->uid].app_direct_2_size;
+	}
+
+	return totalADCapacity;
 }

@@ -87,6 +87,14 @@ class NvmExceptionBadRequestMemorySize : public NvmExceptionBadRequestSize
 		}
 };
 
+class NvmExceptionBadRequestReserveStorageSize : public NvmExceptionBadRequest
+{
+	public:
+	NvmExceptionBadRequestReserveStorageSize() :
+		NvmExceptionBadRequest("The requested Reserve Storage capacity was invalid.")
+		{}
+};
+
 class NvmExceptionInvalidDimm : public NvmExceptionBadRequest
 {
 	public:

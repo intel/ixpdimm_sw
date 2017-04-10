@@ -47,6 +47,7 @@ framework::ResultBase *CreateGoalCommand::Parser::parse(
 	parsePropertyMemoryMode();
 	parsePropertyReserveDimm();
 	parsePropertyPmType();
+	parsePropertyReserveStorage();
 	parseOptionForce();
 	parseOptionUnits();
 
@@ -57,6 +58,12 @@ int CreateGoalCommand::Parser::getMemoryMode()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return m_memoryModeValue;
+}
+
+NVM_UINT64 CreateGoalCommand::Parser::getReserveStorage()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	return m_reserveStorageValue;
 }
 
 bool CreateGoalCommand::Parser::isPmTypeAppDirect()
@@ -121,6 +128,7 @@ std::vector<NVM_UINT16> CreateGoalCommand::Parser::getSockets()
 
 CreateGoalCommand::Parser::Parser() : m_pResult(NULL),
 	m_memoryModeValue(0),
+	m_reserveStorageValue(0),
 	m_pmType(PMTYPE_VALUE_APPDIRECT),
 	m_reserveDimmType(PMTYPE_VALUE_NONE),
 	m_isForce(false) { }
@@ -383,6 +391,15 @@ framework::CommandSpec CreateGoalCommand::getCommandSpec(int id)
 			NVM_DIMM_NAME
 			" across the specified target "
 			"for a different purpose"));
+
+	result.addProperty(RESERVESTORAGE_NAME)
+		.isRequired(false)
+		.isValueRequired(true)
+		.valueText("0|%")
+		.helpText(TR("Reserve a percentage (0-100) of the requested AEP DIMM capacity to use"
+			" as Storage mode only capacity that is not mapped into the system physical address"
+			" space and therefore can only be used for Storage namespaces."));
+
 	return result;
 }
 
@@ -435,6 +452,8 @@ void CreateGoalCommand::setupRequestBuilder()
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	m_requestBuilder.setMemoryModePercentage(m_parser.getMemoryMode());
+
+	m_requestBuilder.setReserveStoragePercentage(m_parser.getReserveStorage());
 
 	if (m_parser.isReserveDimmStorage())
 	{
@@ -609,6 +628,36 @@ void CreateGoalCommand::Parser::parsePropertyReserveDimm()
 			{
 				m_pResult = new framework::SyntaxErrorBadValueResult(
 					framework::TOKENTYPE_PROPERTY, RESERVEDIMM_NAME, reserveDimm);
+			}
+		}
+	}
+}
+
+void CreateGoalCommand::Parser::parsePropertyReserveStorage()
+{
+	if (!hasError())
+	{
+		bool reserveStorageExists = false;
+		std::string reserveStorageString =
+				framework::Parser::getPropertyValue(m_parsedCommand, RESERVESTORAGE_NAME,
+						&reserveStorageExists);
+
+		if (reserveStorageExists)
+		{
+			if (!stringToInt(reserveStorageString, &m_reserveStorageValue)
+					|| m_reserveStorageValue > 100
+					|| m_reserveStorageValue < 0
+					|| m_reserveStorageValue + m_memoryModeValue > 100)
+			{
+				m_pResult = new framework::SyntaxErrorBadValueResult(
+						framework::TOKENTYPE_PROPERTY, RESERVESTORAGE_NAME, reserveStorageString);
+				m_reserveStorageValue = 0;
+			}
+
+			// if type is storage, ignore reserve storage property
+			if (isPmTypeAppDirectStorage())
+			{
+				m_reserveStorageValue = 0;
 			}
 		}
 	}

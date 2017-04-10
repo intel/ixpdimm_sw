@@ -157,3 +157,329 @@ NVM_UINT64 core::memory_allocator::LayoutStep::getDimmUnallocatedGiBAlignedBytes
 	return round_down(dimmRemainingBytes, BYTES_PER_GIB);
 }
 
+std::vector<core::memory_allocator::Dimm> core::memory_allocator::LayoutStep::getAD2Dimms(
+		const std::vector<core::memory_allocator::Dimm>& requestedDimms,
+		MemoryAllocationLayout& layout)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	std::vector<core::memory_allocator::Dimm> dimms;
+
+	for (std::vector<core::memory_allocator::Dimm>::const_iterator dimm =
+			requestedDimms.begin(); dimm != requestedDimms.end(); dimm++)
+	{
+		if (dimmHasAppDirect2(dimm, layout))
+		{
+			dimms.push_back(*dimm);
+		}
+	}
+
+	return dimms;
+}
+
+std::vector<core::memory_allocator::Dimm> core::memory_allocator::LayoutStep::getAD1Dimms(
+		const std::vector<core::memory_allocator::Dimm>& requestedDimms,
+		MemoryAllocationLayout& layout)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	std::vector<core::memory_allocator::Dimm> dimms;
+
+	for (std::vector<core::memory_allocator::Dimm>::const_iterator dimm =
+			requestedDimms.begin(); dimm != requestedDimms.end(); dimm++)
+	{
+		if (dimmHasAppDirect1(dimm, layout))
+		{
+			dimms.push_back(*dimm);
+		}
+	}
+
+	return dimms;
+}
+
+std::vector<core::memory_allocator::Dimm> core::memory_allocator::LayoutStep::get2LMDimms(
+		const std::vector<core::memory_allocator::Dimm>& requestedDimms,
+		MemoryAllocationLayout& layout)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	std::vector<core::memory_allocator::Dimm> dimms;
+
+	for (std::vector<core::memory_allocator::Dimm>::const_iterator dimm =
+			requestedDimms.begin(); dimm != requestedDimms.end(); dimm++)
+	{
+		if (dimmHas2LM(dimm, layout))
+		{
+			dimms.push_back(*dimm);
+		}
+	}
+
+	return dimms;
+}
+
+std::vector<core::memory_allocator::Dimm> core::memory_allocator::LayoutStep::getReservedADByOneDimms(
+		const std::vector<core::memory_allocator::Dimm>& requestedDimms,
+		MemoryAllocationLayout& layout)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	std::vector<core::memory_allocator::Dimm> dimms;
+
+	for (std::vector<core::memory_allocator::Dimm>::const_iterator dimm =
+			requestedDimms.begin(); dimm != requestedDimms.end(); dimm++)
+	{
+		if (dimmIsReservedAppDirectByOne(dimm, layout))
+		{
+			dimms.push_back(*dimm);
+		}
+	}
+
+	return dimms;
+}
+
+bool core::memory_allocator::LayoutStep::isReserveDimm(
+		std::vector<core::memory_allocator::Dimm>::const_iterator dimm,
+		MemoryAllocationLayout& layout)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	return layout.reservedimmUid == dimm->uid;
+}
+
+bool core::memory_allocator::LayoutStep::dimmHasAppDirect1(
+		std::vector<core::memory_allocator::Dimm>::const_iterator dimm,
+		MemoryAllocationLayout& layout)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	return !isReserveDimm(dimm, layout) &&
+			layout.goals[dimm->uid].app_direct_1_size > 0;
+}
+
+bool core::memory_allocator::LayoutStep::dimmHasAppDirect2(
+		std::vector<core::memory_allocator::Dimm>::const_iterator dimm,
+		MemoryAllocationLayout& layout)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	return !isReserveDimm(dimm, layout) &&
+			layout.goals[dimm->uid].app_direct_2_size > 0;
+}
+
+bool core::memory_allocator::LayoutStep::dimmHas2LM(
+		std::vector<core::memory_allocator::Dimm>::const_iterator dimm,
+		MemoryAllocationLayout& layout)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	return layout.goals[dimm->uid].memory_size > 0;
+}
+
+bool core::memory_allocator::LayoutStep::dimmIsReservedAppDirectByOne(
+		std::vector<core::memory_allocator::Dimm>::const_iterator dimm,
+		MemoryAllocationLayout& layout)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	return isReserveDimm(dimm, layout) &&
+			layout.goals[dimm->uid].app_direct_1_settings.interleave.ways == INTERLEAVE_WAYS_1 &&
+			layout.goals[dimm->uid].app_direct_1_size > 0;
+}
+
+NVM_UINT64 core::memory_allocator::LayoutStep::getTotalAD2Capacity(
+		const std::vector<core::memory_allocator::Dimm>& dimms,
+		MemoryAllocationLayout& layout)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	NVM_UINT64 totalAD2Capacity = 0;
+	for (std::vector<core::memory_allocator::Dimm>::const_iterator dimm =
+			dimms.begin(); dimm != dimms.end(); dimm++)
+	{
+		totalAD2Capacity += layout.goals[dimm->uid].app_direct_2_size;
+	}
+
+	return totalAD2Capacity;
+}
+
+NVM_UINT64 core::memory_allocator::LayoutStep::getTotalAD1Capacity(
+		const std::vector<core::memory_allocator::Dimm>& dimms,
+		MemoryAllocationLayout& layout)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	NVM_UINT64 totalAD1Capacity = 0;
+	for (std::vector<core::memory_allocator::Dimm>::const_iterator dimm =
+			dimms.begin(); dimm != dimms.end(); dimm++)
+	{
+		totalAD1Capacity += layout.goals[dimm->uid].app_direct_1_size;
+	}
+
+	return totalAD1Capacity;
+}
+
+void core::memory_allocator::LayoutStep::killAllCapacityByType(
+		const std::vector<core::memory_allocator::Dimm>& dimms,
+		MemoryAllocationLayout& layout,
+		enum capacity_type type)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	for (std::vector<core::memory_allocator::Dimm>::const_iterator dimm =
+			dimms.begin(); dimm != dimms.end(); dimm++)
+	{
+		config_goal& goal = layout.goals[dimm->uid];
+
+		if (type == CAPACITY_TYPE_APPDIRECT1 || type == CAPACITY_TYPE_RESERVED_APPDIRECT_BYONE)
+		{
+			goal.app_direct_1_size = 0;
+			killADIfSizeIsZero(goal, type);
+		}
+		else if (type == CAPACITY_TYPE_APPDIRECT2)
+		{
+			goal.app_direct_2_size = 0;
+			killADIfSizeIsZero(goal, type);
+		}
+		else if (type == CAPACITY_TYPE_2LM)
+		{
+			goal.memory_size = 0;
+		}
+	}
+}
+
+void core::memory_allocator::LayoutStep::killADIfSizeIsZero(
+		config_goal& goal, enum capacity_type type)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	if ((type == CAPACITY_TYPE_APPDIRECT1 || type == CAPACITY_TYPE_RESERVED_APPDIRECT_BYONE ) &&
+		goal.app_direct_1_size == 0)
+	{
+		struct app_direct_attributes empty_settings;
+		memset(&empty_settings, 0, sizeof(struct app_direct_attributes));
+		goal.app_direct_1_settings = empty_settings;
+		goal.app_direct_count--;
+	}
+
+	if (type == CAPACITY_TYPE_APPDIRECT2 && goal.app_direct_2_size == 0)
+	{
+		struct app_direct_attributes empty_settings;
+		memset(&empty_settings, 0, sizeof(struct app_direct_attributes));
+		goal.app_direct_2_settings = empty_settings;
+		goal.app_direct_count--;
+	}
+}
+
+NVM_UINT64 core::memory_allocator::LayoutStep::calculateCapacityToShrinkPerDimm(
+		NVM_UINT64 capacityToShrink, int numDimms)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	return (NVM_UINT64) (ceil((double) (capacityToShrink) / (double) (numDimms)));
+}
+
+void core::memory_allocator::LayoutStep::shrinkSize(
+		NVM_UINT64 &shrinkSizeBy, NVM_UINT64 reduceBy, NVM_UINT64 &size)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	// reduce each DIMM evenly if possible
+	if (size >= reduceBy && shrinkSizeBy >= reduceBy)
+	{
+		size -= reduceBy;
+		shrinkSizeBy -= reduceBy;
+	}
+	// reduce little more than needed (because of ceil/rounding up)
+	else if (size >= reduceBy && shrinkSizeBy < reduceBy)
+	{
+		size -= reduceBy;
+		shrinkSizeBy = 0;
+	}
+	// reduce more than what's available per DIMM
+	else
+	{
+		shrinkSizeBy -= size;
+		size = 0;
+	}
+}
+
+void core::memory_allocator::LayoutStep::shrinkAD2(
+		const std::vector<core::memory_allocator::Dimm>& dimms,
+		NVM_UINT64 &shrinkAD2By, MemoryAllocationLayout& layout)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	if (shrinkAD2By > 0)
+	{
+		std::vector<core::memory_allocator::Dimm> ad2Dimms = getAD2Dimms(dimms, layout);
+		if (!ad2Dimms.empty())
+		{
+			// If capacityToShrink exceeds AD2, eliminate all AD2, else shrink evenly on all AD2 DIMMs
+			NVM_UINT64 totalAD2Capacity = getTotalAD2Capacity(ad2Dimms, layout);
+			if (shrinkAD2By >= totalAD2Capacity)
+			{
+				killAllCapacityByType(ad2Dimms, layout, CAPACITY_TYPE_APPDIRECT2);
+
+				shrinkAD2By -= totalAD2Capacity;
+			}
+			else
+			{
+				NVM_UINT64 reduceBy = calculateCapacityToShrinkPerDimm(shrinkAD2By, ad2Dimms.size());
+
+				for (std::vector<core::memory_allocator::Dimm>::const_iterator dimm =
+						ad2Dimms.begin(); dimm != ad2Dimms.end(); dimm++)
+				{
+					if (shrinkAD2By > 0)
+					{
+						config_goal& goal = layout.goals[dimm->uid];
+
+						shrinkSize(shrinkAD2By, reduceBy, goal.app_direct_2_size);
+
+						killADIfSizeIsZero(goal, CAPACITY_TYPE_APPDIRECT2);
+					}
+				}
+			}
+		}
+	}
+}
+
+void core::memory_allocator::LayoutStep::shrinkAD1(
+		const std::vector<core::memory_allocator::Dimm>& dimms,
+		NVM_UINT64 &shrinkAD1By,
+		MemoryAllocationLayout& layout)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	if (shrinkAD1By > 0)
+	{
+		std::vector<core::memory_allocator::Dimm> ad1Dimms = getAD1Dimms(dimms, layout);
+		if (!ad1Dimms.empty())
+		{
+			// If capacityToShrink exceeds AD1, eliminate all AD1, else shrink evenly on all AD1 DIMMs
+			NVM_UINT64 totalAD1Capacity = getTotalAD1Capacity(ad1Dimms, layout);
+			if (shrinkAD1By >= totalAD1Capacity)
+			{
+				killAllCapacityByType(ad1Dimms, layout, CAPACITY_TYPE_APPDIRECT1);
+
+				shrinkAD1By -= totalAD1Capacity;
+			}
+			else
+			{
+				NVM_UINT64 reduceBy = calculateCapacityToShrinkPerDimm(shrinkAD1By, ad1Dimms.size());
+
+				for (std::vector<core::memory_allocator::Dimm>::const_iterator dimm =
+						ad1Dimms.begin(); dimm != ad1Dimms.end(); dimm++)
+				{
+					if (shrinkAD1By > 0)
+					{
+						config_goal& goal = layout.goals[dimm->uid];
+
+						shrinkSize(shrinkAD1By, reduceBy, goal.app_direct_1_size);
+
+						killADIfSizeIsZero(goal, CAPACITY_TYPE_APPDIRECT1);
+					}
+				}
+			}
+		}
+	}
+}

@@ -47,6 +47,14 @@ class NVM_API LayoutStepStorage: public LayoutStep
 		virtual ~LayoutStepStorage();
 
 		virtual void execute(const MemoryAllocationRequest &request,
+			MemoryAllocationLayout &layout);
+
+private:
+	void shrinkAppDirectPerRequestedStorage(
+			const MemoryAllocationRequest& request, NVM_UINT64 requestedStorage,
+			MemoryAllocationLayout& layout);
+
+	NVM_UINT64 getTotalADCapacity(const MemoryAllocationRequest& request,
 				MemoryAllocationLayout &layout);
 };
 

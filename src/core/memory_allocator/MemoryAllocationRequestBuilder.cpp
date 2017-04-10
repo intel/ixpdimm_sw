@@ -39,6 +39,7 @@ MemoryAllocationRequestBuilder::MemoryAllocationRequestBuilder(
 		core::device::DeviceService &service) :
 				m_pmType(AppDirect),
 				m_memoryRatio(0.0),
+				m_storageRatio(0.0),
 				m_reserveDimmType(NoReserveDimm),
 				m_service(service)
 {
@@ -52,8 +53,8 @@ MemoryAllocationRequest MemoryAllocationRequestBuilder::build()
 	buildRequestedDimms();
 	buildReservedDimm();
 	buildMemoryCapacity();
-	buildAppDirectCapacity();
 	buildStorageCapacity();
+	buildAppDirectCapacity();
 
 	return m_result;
 }
@@ -287,8 +288,18 @@ NVM_UINT64 MemoryAllocationRequestBuilder::getPersistentCapacityGiBFromRequest()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	NVM_UINT64 totalCapacityBytes = getTotalCapacityBytesFromRequestDimms();
-	return B_TO_GiB(totalCapacityBytes) - m_result.getMemoryModeCapacityGiB();
+	NVM_UINT64 persistentCapacityGiB = 0;
+
+	NVM_UINT64 totalCapacityGiB = B_TO_GiB(getTotalCapacityBytesFromRequestDimms());
+
+	if (totalCapacityGiB >=
+			(m_result.getMemoryModeCapacityGiB() + m_result.getReserveStorageCapacityGiB()))
+	{
+		persistentCapacityGiB = totalCapacityGiB -
+			m_result.getMemoryModeCapacityGiB() - m_result.getReserveStorageCapacityGiB();
+	}
+
+	return  persistentCapacityGiB;
 }
 
 void MemoryAllocationRequestBuilder::buildStorageCapacity()
@@ -302,6 +313,12 @@ void MemoryAllocationRequestBuilder::buildStorageCapacity()
 	else
 	{
 		m_result.setStorageRemaining(false);
+
+		NVM_UINT64 totalCapacityBytes = getTotalCapacityBytesFromRequestDimms();
+		NVM_UINT64 reserveStorageGiB =
+			B_TO_GiB((NVM_UINT64)(totalCapacityBytes * m_storageRatio));
+
+		m_result.setReserveStorageCapacityGiB(reserveStorageGiB);
 	}
 }
 
@@ -351,6 +368,19 @@ void MemoryAllocationRequestBuilder::setMemoryModePercentage(const NVM_UINT32 pe
 	}
 
 	m_memoryRatio = percentage / 100.0;
+}
+
+void MemoryAllocationRequestBuilder::setReserveStoragePercentage(const NVM_UINT32 percentage)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	if (percentage > 100)
+	{
+		COMMON_LOG_ERROR_F("Invalid percentage: %u", percentage);
+		throw InvalidPercentageException();
+	}
+
+	m_storageRatio = percentage / 100.0;
 }
 
 void MemoryAllocationRequestBuilder::reserveDimmForStorage()

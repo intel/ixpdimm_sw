@@ -80,6 +80,10 @@ class NVM_API MemoryAllocationRequest
 
 		bool isStorageRemaining() const;
 		void setStorageRemaining(const bool storageIsRemaining);
+		bool hasStorage() const;
+
+		NVM_UINT64 getReserveStorageCapacityGiB() const;
+		void setReserveStorageCapacityGiB(const NVM_UINT64 capacity);
 
 		std::string getReservedDimmUid() const;
 		void setReservedDimmUid(const std::string &uid);
@@ -106,6 +110,7 @@ class NVM_API MemoryAllocationRequest
 		NVM_UINT64 m_memoryCapacityGiB;
 		AppDirectExtent m_appDirectExtent;
 		bool m_storageRemaining;
+		NVM_UINT64 m_reserveStorageCapacityGiB;
 
 		std::string m_reserveDimmUid;
 		ReserveDimmType m_reserveDimmType;
