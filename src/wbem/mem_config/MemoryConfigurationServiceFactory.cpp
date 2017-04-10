@@ -1290,7 +1290,6 @@ wbem::framework::UINT32 wbem::mem_config::MemoryConfigurationServiceFactory::exe
 	wbem::framework::attributes_t &inParms, wbem::framework::attributes_t &outParms)
 {
 	framework::UINT32 httpRc = framework::MOF_ERR_SUCCESS;
-	wbem::framework::attributes_t::iterator iter = inParms.begin();
 
 	std::string ref = inParms[MEMORYCONFIGURATIONSERVICE_SYSTEMPROCESSOR].stringValue();
 
