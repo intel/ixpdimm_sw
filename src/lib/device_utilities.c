@@ -1176,6 +1176,42 @@ int dimm_has_namespaces_of_type(const NVM_NFIT_DEVICE_HANDLE dimm_handle,
 	return rc;
 }
 
+void add_ifc_to_device(const NVM_UINT16 ifc, struct device_discovery *p_device)
+{
+	COMMON_LOG_ENTRY();
+
+	if (ifc != 0)
+	{
+		for (int i = 0; i < NVM_MAX_IFCS_PER_DIMM; i++)
+		{
+			// Already in the array
+			if (ifc == p_device->interface_format_codes[i])
+			{
+				break;
+			}
+
+			if (p_device->interface_format_codes[i] == 0)
+			{
+				p_device->interface_format_codes[i] = ifc;
+				break;
+			}
+		}
+	}
+
+	COMMON_LOG_EXIT();
+}
+
+void add_ifcs_from_identify_dimm_to_device(struct device_discovery *p_device,
+		struct pt_payload_identify_dimm *p_id_dimm)
+{
+	COMMON_LOG_ENTRY();
+
+	add_ifc_to_device(p_id_dimm->ifc, p_device);
+	add_ifc_to_device(p_id_dimm->ifce, p_device);
+
+	COMMON_LOG_EXIT();
+}
+
 /*
  * Helper function to convert unsigned integer to bytes
  */

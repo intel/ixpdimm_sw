@@ -33,16 +33,26 @@
 #include "passthrough.h"
 #include <common/string/s_str.h>
 
+extern int adapter_pt_ioctl_cmd(struct pt_fw_cmd *p_fw_cmd);
+
+unsigned int pt_ioctl_cmd(struct pt_fw_cmd *p_fw_cmd)
+{
+	return (unsigned int)adapter_pt_ioctl_cmd(p_fw_cmd);
+}
+
 void pt_get_error_message(unsigned int code, char message[1024], size_t message_len)
 {
 	memset(message, 0, message_len);
 	size_t len = 0;
-	union pt_error error;
-	error.code = code;
-	if (error.parts.func != PT_SUCCESS)
+	pt_result result;
+	PT_RESULT_DECODE(code, result);
+	if (result.func != PT_SUCCESS)
 	{
-		switch((enum IOCTL_PASSTHROUGH_RESULT)error.parts.func)
+		switch((enum pt_ioctl_result)result.func)
 		{
+			case PT_SUCCESS:
+				len += s_snprintf(message, message_len, "Unknown");
+				break;
 			case PT_ERR_UNKNOWN:
 				len += s_snprintf(message, message_len, "Unknown");
 				break;
@@ -55,27 +65,42 @@ void pt_get_error_message(unsigned int code, char message[1024], size_t message_
 			case PT_ERR_DRIVERFAILED:
 				len += s_snprintf(message, message_len, "Driver failed for an unknown reason");
 				break;
-			case PT_SUCCESS:break;
+			case PT_ERR_BADDEVICE:
+				len += s_snprintf(message, message_len, "Bad Device");
+				break;
+			case PT_ERR_BADSECURITY:
+				len += s_snprintf(message, message_len, "Bad Security");
+				break;
+			case PT_ERR_DEVICEBUSY:
+				len += s_snprintf(message, message_len, "Device Busy");
+				break;
+			case PT_ERR_INVALIDPERMISSIONS:
+				len += s_snprintf(message, message_len, "Invalid Permissions");
+				break;
 		}
 		s_strcat(message, message_len, "\n");
 	}
 
-	if (error.parts.driver != 0)
+	if (result.driver != 0)
 	{
-		len += s_snprintf(message + len, message_len - len, "\tDriver failed with error: 0x%x\n",
-			error.parts.driver);
+		len += s_snprintf(message + len, message_len - len,
+			"\tDriver failed with error: 0x%x\n",
+			result.driver);
 	}
-	if (error.parts.ioctl != 0)
+	if (result.pt != 0)
 	{
-		len += s_snprintf(message + len, message_len - len, "\tPassthrough IOCTL failed with error: 0x%x\n",
-			error.parts.ioctl);
+		len += s_snprintf(message + len, message_len - len,
+			"\tPassthrough IOCTL failed with error: 0x%x\n",
+			result.pt);
 	}
-	if (error.parts.fw_status != 0)
+	if (result.fw_status != 0)
 	{
-		len += s_snprintf(message + len, message_len - len, "\tFW Status: 0x%x\n", error.parts.fw_status);
+		len += s_snprintf(message + len, message_len - len,
+			"\tFW Status: 0x%x\n", result.fw_status);
 	}
-	if (error.parts.fw_ext_status != 0)
+	if (result.fw_ext_status != 0)
 	{
-		s_snprintf(message + len, message_len - len, "\tFW Extended Status: 0x%x\n", error.parts.fw_ext_status);
+		s_snprintf(message + len, message_len - len,
+			"\tFW Extended Status: 0x%x\n", result.fw_ext_status);
 	}
 }

@@ -240,7 +240,7 @@ void fwcmd_read_and_print(const char *filename)
             {
             	struct fwcmd_identify_dimm_data data;
 
-				fwcmd_parse_identify_dimm((struct pt_output_identify_dimm *)p_payload, &data);
+				fis_parse_identify_dimm((struct pt_output_identify_dimm *)p_payload, &data);
 				fwcmd_identify_dimm_printer(&data, 0);
             }
             else if (s_strncmpi(command_name, "identify_dimm_characteristics",
@@ -248,7 +248,7 @@ void fwcmd_read_and_print(const char *filename)
             {
             	struct fwcmd_identify_dimm_characteristics_data data;
 
-				fwcmd_parse_identify_dimm_characteristics((struct pt_output_identify_dimm_characteristics *)p_payload, &data);
+				fis_parse_identify_dimm_characteristics((struct pt_output_identify_dimm_characteristics *)p_payload, &data);
 				fwcmd_identify_dimm_characteristics_printer(&data, 0);
             }
             else if (s_strncmpi(command_name, "get_security_state",
@@ -256,7 +256,7 @@ void fwcmd_read_and_print(const char *filename)
             {
             	struct fwcmd_get_security_state_data data;
 
-				fwcmd_parse_get_security_state((struct pt_output_get_security_state *)p_payload, &data);
+				fis_parse_get_security_state((struct pt_output_get_security_state *)p_payload, &data);
 				fwcmd_get_security_state_printer(&data, 0);
             }
             else if (s_strncmpi(command_name, "get_alarm_threshold",
@@ -264,7 +264,7 @@ void fwcmd_read_and_print(const char *filename)
             {
             	struct fwcmd_get_alarm_threshold_data data;
 
-				fwcmd_parse_get_alarm_threshold((struct pt_output_get_alarm_threshold *)p_payload, &data);
+				fis_parse_get_alarm_threshold((struct pt_output_get_alarm_threshold *)p_payload, &data);
 				fwcmd_get_alarm_threshold_printer(&data, 0);
             }
             else if (s_strncmpi(command_name, "power_management_policy",
@@ -272,7 +272,7 @@ void fwcmd_read_and_print(const char *filename)
             {
             	struct fwcmd_power_management_policy_data data;
 
-				fwcmd_parse_power_management_policy((struct pt_output_power_management_policy *)p_payload, &data);
+				fis_parse_power_management_policy((struct pt_output_power_management_policy *)p_payload, &data);
 				fwcmd_power_management_policy_printer(&data, 0);
             }
             else if (s_strncmpi(command_name, "die_sparing_policy",
@@ -280,7 +280,7 @@ void fwcmd_read_and_print(const char *filename)
             {
             	struct fwcmd_die_sparing_policy_data data;
 
-				fwcmd_parse_die_sparing_policy((struct pt_output_die_sparing_policy *)p_payload, &data);
+				fis_parse_die_sparing_policy((struct pt_output_die_sparing_policy *)p_payload, &data);
 				fwcmd_die_sparing_policy_printer(&data, 0);
             }
             else if (s_strncmpi(command_name, "address_range_scrub",
@@ -288,7 +288,7 @@ void fwcmd_read_and_print(const char *filename)
             {
             	struct fwcmd_address_range_scrub_data data;
 
-				fwcmd_parse_address_range_scrub((struct pt_output_address_range_scrub *)p_payload, &data);
+				fis_parse_address_range_scrub((struct pt_output_address_range_scrub *)p_payload, &data);
 				fwcmd_address_range_scrub_printer(&data, 0);
             }
             else if (s_strncmpi(command_name, "optional_configuration_data_policy",
@@ -296,7 +296,7 @@ void fwcmd_read_and_print(const char *filename)
             {
             	struct fwcmd_optional_configuration_data_policy_data data;
 
-				fwcmd_parse_optional_configuration_data_policy((struct pt_output_optional_configuration_data_policy *)p_payload, &data);
+				fis_parse_optional_configuration_data_policy((struct pt_output_optional_configuration_data_policy *)p_payload, &data);
 				fwcmd_optional_configuration_data_policy_printer(&data, 0);
             }
             else if (s_strncmpi(command_name, "pmon_registers",
@@ -304,7 +304,7 @@ void fwcmd_read_and_print(const char *filename)
             {
             	struct fwcmd_pmon_registers_data data;
 
-				fwcmd_parse_pmon_registers((struct pt_output_pmon_registers *)p_payload, &data);
+				fis_parse_pmon_registers((struct pt_output_pmon_registers *)p_payload, &data);
 				fwcmd_pmon_registers_printer(&data, 0);
             }
             else if (s_strncmpi(command_name, "system_time",
@@ -312,7 +312,7 @@ void fwcmd_read_and_print(const char *filename)
             {
             	struct fwcmd_system_time_data data;
 
-				fwcmd_parse_system_time((struct pt_output_system_time *)p_payload, &data);
+				fis_parse_system_time((struct pt_output_system_time *)p_payload, &data);
 				fwcmd_system_time_printer(&data, 0);
             }
             else if (s_strncmpi(command_name, "platform_config_data",
@@ -320,7 +320,7 @@ void fwcmd_read_and_print(const char *filename)
             {
             	struct fwcmd_platform_config_data_data data;
 
-				fwcmd_parse_platform_config_data((struct pt_output_platform_config_data *)p_payload, &data);
+				fis_parse_platform_config_data((struct pt_output_platform_config_data *)p_payload, &data);
 				fwcmd_platform_config_data_printer(&data, 0);
             }
             else if (s_strncmpi(command_name, "dimm_partition_info",
@@ -328,7 +328,7 @@ void fwcmd_read_and_print(const char *filename)
             {
             	struct fwcmd_dimm_partition_info_data data;
 
-				fwcmd_parse_dimm_partition_info((struct pt_output_dimm_partition_info *)p_payload, &data);
+				fis_parse_dimm_partition_info((struct pt_output_dimm_partition_info *)p_payload, &data);
 				fwcmd_dimm_partition_info_printer(&data, 0);
             }
             else if (s_strncmpi(command_name, "fw_debug_log_level",
@@ -336,7 +336,7 @@ void fwcmd_read_and_print(const char *filename)
             {
             	struct fwcmd_fw_debug_log_level_data data;
 
-				fwcmd_parse_fw_debug_log_level((struct pt_output_fw_debug_log_level *)p_payload, &data);
+				fis_parse_fw_debug_log_level((struct pt_output_fw_debug_log_level *)p_payload, &data);
 				fwcmd_fw_debug_log_level_printer(&data, 0);
             }
             else if (s_strncmpi(command_name, "fw_load_flag",
@@ -344,7 +344,7 @@ void fwcmd_read_and_print(const char *filename)
             {
             	struct fwcmd_fw_load_flag_data data;
 
-				fwcmd_parse_fw_load_flag((struct pt_output_fw_load_flag *)p_payload, &data);
+				fis_parse_fw_load_flag((struct pt_output_fw_load_flag *)p_payload, &data);
 				fwcmd_fw_load_flag_printer(&data, 0);
             }
             else if (s_strncmpi(command_name, "config_lockdown",
@@ -352,7 +352,7 @@ void fwcmd_read_and_print(const char *filename)
             {
             	struct fwcmd_config_lockdown_data data;
 
-				fwcmd_parse_config_lockdown((struct pt_output_config_lockdown *)p_payload, &data);
+				fis_parse_config_lockdown((struct pt_output_config_lockdown *)p_payload, &data);
 				fwcmd_config_lockdown_printer(&data, 0);
             }
             else if (s_strncmpi(command_name, "ddrt_io_init_info",
@@ -360,7 +360,7 @@ void fwcmd_read_and_print(const char *filename)
             {
             	struct fwcmd_ddrt_io_init_info_data data;
 
-				fwcmd_parse_ddrt_io_init_info((struct pt_output_ddrt_io_init_info *)p_payload, &data);
+				fis_parse_ddrt_io_init_info((struct pt_output_ddrt_io_init_info *)p_payload, &data);
 				fwcmd_ddrt_io_init_info_printer(&data, 0);
             }
             else if (s_strncmpi(command_name, "get_supported_sku_features",
@@ -368,7 +368,7 @@ void fwcmd_read_and_print(const char *filename)
             {
             	struct fwcmd_get_supported_sku_features_data data;
 
-				fwcmd_parse_get_supported_sku_features((struct pt_output_get_supported_sku_features *)p_payload, &data);
+				fis_parse_get_supported_sku_features((struct pt_output_get_supported_sku_features *)p_payload, &data);
 				fwcmd_get_supported_sku_features_printer(&data, 0);
             }
             else if (s_strncmpi(command_name, "enable_dimm",
@@ -376,7 +376,7 @@ void fwcmd_read_and_print(const char *filename)
             {
             	struct fwcmd_enable_dimm_data data;
 
-				fwcmd_parse_enable_dimm((struct pt_output_enable_dimm *)p_payload, &data);
+				fis_parse_enable_dimm((struct pt_output_enable_dimm *)p_payload, &data);
 				fwcmd_enable_dimm_printer(&data, 0);
             }
             else if (s_strncmpi(command_name, "smart_health_info",
@@ -384,7 +384,7 @@ void fwcmd_read_and_print(const char *filename)
             {
             	struct fwcmd_smart_health_info_data data;
 
-				fwcmd_parse_smart_health_info((struct pt_output_smart_health_info *)p_payload, &data);
+				fis_parse_smart_health_info((struct pt_output_smart_health_info *)p_payload, &data);
 				fwcmd_smart_health_info_printer(&data, 0);
             }
             else if (s_strncmpi(command_name, "firmware_image_info",
@@ -392,7 +392,7 @@ void fwcmd_read_and_print(const char *filename)
             {
             	struct fwcmd_firmware_image_info_data data;
 
-				fwcmd_parse_firmware_image_info((struct pt_output_firmware_image_info *)p_payload, &data);
+				fis_parse_firmware_image_info((struct pt_output_firmware_image_info *)p_payload, &data);
 				fwcmd_firmware_image_info_printer(&data, 0);
             }
             else if (s_strncmpi(command_name, "firmware_debug_log",
@@ -400,7 +400,7 @@ void fwcmd_read_and_print(const char *filename)
             {
             	struct fwcmd_firmware_debug_log_data data;
 
-				fwcmd_parse_firmware_debug_log((struct pt_output_firmware_debug_log *)p_payload, &data);
+				fis_parse_firmware_debug_log((struct pt_output_firmware_debug_log *)p_payload, &data);
 				fwcmd_firmware_debug_log_printer(&data, 0);
             }
             else if (s_strncmpi(command_name, "long_operation_status",
@@ -408,7 +408,7 @@ void fwcmd_read_and_print(const char *filename)
             {
             	struct fwcmd_long_operation_status_data data;
 
-				fwcmd_parse_long_operation_status((struct pt_output_long_operation_status *)p_payload, &data);
+				fis_parse_long_operation_status((struct pt_output_long_operation_status *)p_payload, &data);
 				fwcmd_long_operation_status_printer(&data, 0);
             }
             else if (s_strncmpi(command_name, "bsr",
@@ -416,7 +416,7 @@ void fwcmd_read_and_print(const char *filename)
             {
             	struct fwcmd_bsr_data data;
 
-				fwcmd_parse_bsr((struct pt_output_bsr *)p_payload, &data);
+				fis_parse_bsr((struct pt_output_bsr *)p_payload, &data);
 				fwcmd_bsr_printer(&data, 0);
             }
 		}
@@ -489,8 +489,8 @@ struct fwcmd_identify_dimm_result fwcmd_read_identify_dimm(const char *filename)
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct fwcmd_identify_dimm_data *)malloc(sizeof(*result.p_data));
-			int parse_result = fwcmd_parse_identify_dimm((const struct pt_output_identify_dimm*) buffer, result.p_data);
-			if (parse_result == FIS_PARSER_CODES_SUCCESS)
+			int parse_result = fis_parse_identify_dimm((const struct pt_output_identify_dimm*) buffer, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;
 			}
@@ -571,8 +571,8 @@ struct fwcmd_identify_dimm_characteristics_result fwcmd_read_identify_dimm_chara
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct fwcmd_identify_dimm_characteristics_data *)malloc(sizeof(*result.p_data));
-			int parse_result = fwcmd_parse_identify_dimm_characteristics((const struct pt_output_identify_dimm_characteristics*) buffer, result.p_data);
-			if (parse_result == FIS_PARSER_CODES_SUCCESS)
+			int parse_result = fis_parse_identify_dimm_characteristics((const struct pt_output_identify_dimm_characteristics*) buffer, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;
 			}
@@ -653,8 +653,8 @@ struct fwcmd_get_security_state_result fwcmd_read_get_security_state(const char 
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct fwcmd_get_security_state_data *)malloc(sizeof(*result.p_data));
-			int parse_result = fwcmd_parse_get_security_state((const struct pt_output_get_security_state*) buffer, result.p_data);
-			if (parse_result == FIS_PARSER_CODES_SUCCESS)
+			int parse_result = fis_parse_get_security_state((const struct pt_output_get_security_state*) buffer, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;
 			}
@@ -735,8 +735,8 @@ struct fwcmd_get_alarm_threshold_result fwcmd_read_get_alarm_threshold(const cha
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct fwcmd_get_alarm_threshold_data *)malloc(sizeof(*result.p_data));
-			int parse_result = fwcmd_parse_get_alarm_threshold((const struct pt_output_get_alarm_threshold*) buffer, result.p_data);
-			if (parse_result == FIS_PARSER_CODES_SUCCESS)
+			int parse_result = fis_parse_get_alarm_threshold((const struct pt_output_get_alarm_threshold*) buffer, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;
 			}
@@ -817,8 +817,8 @@ struct fwcmd_power_management_policy_result fwcmd_read_power_management_policy(c
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct fwcmd_power_management_policy_data *)malloc(sizeof(*result.p_data));
-			int parse_result = fwcmd_parse_power_management_policy((const struct pt_output_power_management_policy*) buffer, result.p_data);
-			if (parse_result == FIS_PARSER_CODES_SUCCESS)
+			int parse_result = fis_parse_power_management_policy((const struct pt_output_power_management_policy*) buffer, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;
 			}
@@ -899,8 +899,8 @@ struct fwcmd_die_sparing_policy_result fwcmd_read_die_sparing_policy(const char 
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct fwcmd_die_sparing_policy_data *)malloc(sizeof(*result.p_data));
-			int parse_result = fwcmd_parse_die_sparing_policy((const struct pt_output_die_sparing_policy*) buffer, result.p_data);
-			if (parse_result == FIS_PARSER_CODES_SUCCESS)
+			int parse_result = fis_parse_die_sparing_policy((const struct pt_output_die_sparing_policy*) buffer, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;
 			}
@@ -981,8 +981,8 @@ struct fwcmd_address_range_scrub_result fwcmd_read_address_range_scrub(const cha
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct fwcmd_address_range_scrub_data *)malloc(sizeof(*result.p_data));
-			int parse_result = fwcmd_parse_address_range_scrub((const struct pt_output_address_range_scrub*) buffer, result.p_data);
-			if (parse_result == FIS_PARSER_CODES_SUCCESS)
+			int parse_result = fis_parse_address_range_scrub((const struct pt_output_address_range_scrub*) buffer, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;
 			}
@@ -1063,8 +1063,8 @@ struct fwcmd_optional_configuration_data_policy_result fwcmd_read_optional_confi
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct fwcmd_optional_configuration_data_policy_data *)malloc(sizeof(*result.p_data));
-			int parse_result = fwcmd_parse_optional_configuration_data_policy((const struct pt_output_optional_configuration_data_policy*) buffer, result.p_data);
-			if (parse_result == FIS_PARSER_CODES_SUCCESS)
+			int parse_result = fis_parse_optional_configuration_data_policy((const struct pt_output_optional_configuration_data_policy*) buffer, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;
 			}
@@ -1149,8 +1149,8 @@ struct fwcmd_pmon_registers_result fwcmd_read_pmon_registers(const char *filenam
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct fwcmd_pmon_registers_data *)malloc(sizeof(*result.p_data));
-			int parse_result = fwcmd_parse_pmon_registers((const struct pt_output_pmon_registers*) buffer, result.p_data);
-			if (parse_result == FIS_PARSER_CODES_SUCCESS)
+			int parse_result = fis_parse_pmon_registers((const struct pt_output_pmon_registers*) buffer, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;
 			}
@@ -1231,8 +1231,8 @@ struct fwcmd_system_time_result fwcmd_read_system_time(const char *filename)
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct fwcmd_system_time_data *)malloc(sizeof(*result.p_data));
-			int parse_result = fwcmd_parse_system_time((const struct pt_output_system_time*) buffer, result.p_data);
-			if (parse_result == FIS_PARSER_CODES_SUCCESS)
+			int parse_result = fis_parse_system_time((const struct pt_output_system_time*) buffer, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;
 			}
@@ -1321,8 +1321,8 @@ struct fwcmd_platform_config_data_result fwcmd_read_platform_config_data(const c
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct fwcmd_platform_config_data_data *)malloc(sizeof(*result.p_data));
-			int parse_result = fwcmd_parse_platform_config_data((const struct pt_output_platform_config_data*) buffer, result.p_data);
-			if (parse_result == FIS_PARSER_CODES_SUCCESS)
+			int parse_result = fis_parse_platform_config_data((const struct pt_output_platform_config_data*) buffer, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;
 			}
@@ -1403,8 +1403,8 @@ struct fwcmd_dimm_partition_info_result fwcmd_read_dimm_partition_info(const cha
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct fwcmd_dimm_partition_info_data *)malloc(sizeof(*result.p_data));
-			int parse_result = fwcmd_parse_dimm_partition_info((const struct pt_output_dimm_partition_info*) buffer, result.p_data);
-			if (parse_result == FIS_PARSER_CODES_SUCCESS)
+			int parse_result = fis_parse_dimm_partition_info((const struct pt_output_dimm_partition_info*) buffer, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;
 			}
@@ -1489,8 +1489,8 @@ struct fwcmd_fw_debug_log_level_result fwcmd_read_fw_debug_log_level(const char 
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct fwcmd_fw_debug_log_level_data *)malloc(sizeof(*result.p_data));
-			int parse_result = fwcmd_parse_fw_debug_log_level((const struct pt_output_fw_debug_log_level*) buffer, result.p_data);
-			if (parse_result == FIS_PARSER_CODES_SUCCESS)
+			int parse_result = fis_parse_fw_debug_log_level((const struct pt_output_fw_debug_log_level*) buffer, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;
 			}
@@ -1571,8 +1571,8 @@ struct fwcmd_fw_load_flag_result fwcmd_read_fw_load_flag(const char *filename)
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct fwcmd_fw_load_flag_data *)malloc(sizeof(*result.p_data));
-			int parse_result = fwcmd_parse_fw_load_flag((const struct pt_output_fw_load_flag*) buffer, result.p_data);
-			if (parse_result == FIS_PARSER_CODES_SUCCESS)
+			int parse_result = fis_parse_fw_load_flag((const struct pt_output_fw_load_flag*) buffer, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;
 			}
@@ -1653,8 +1653,8 @@ struct fwcmd_config_lockdown_result fwcmd_read_config_lockdown(const char *filen
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct fwcmd_config_lockdown_data *)malloc(sizeof(*result.p_data));
-			int parse_result = fwcmd_parse_config_lockdown((const struct pt_output_config_lockdown*) buffer, result.p_data);
-			if (parse_result == FIS_PARSER_CODES_SUCCESS)
+			int parse_result = fis_parse_config_lockdown((const struct pt_output_config_lockdown*) buffer, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;
 			}
@@ -1735,8 +1735,8 @@ struct fwcmd_ddrt_io_init_info_result fwcmd_read_ddrt_io_init_info(const char *f
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct fwcmd_ddrt_io_init_info_data *)malloc(sizeof(*result.p_data));
-			int parse_result = fwcmd_parse_ddrt_io_init_info((const struct pt_output_ddrt_io_init_info*) buffer, result.p_data);
-			if (parse_result == FIS_PARSER_CODES_SUCCESS)
+			int parse_result = fis_parse_ddrt_io_init_info((const struct pt_output_ddrt_io_init_info*) buffer, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;
 			}
@@ -1817,8 +1817,8 @@ struct fwcmd_get_supported_sku_features_result fwcmd_read_get_supported_sku_feat
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct fwcmd_get_supported_sku_features_data *)malloc(sizeof(*result.p_data));
-			int parse_result = fwcmd_parse_get_supported_sku_features((const struct pt_output_get_supported_sku_features*) buffer, result.p_data);
-			if (parse_result == FIS_PARSER_CODES_SUCCESS)
+			int parse_result = fis_parse_get_supported_sku_features((const struct pt_output_get_supported_sku_features*) buffer, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;
 			}
@@ -1899,8 +1899,8 @@ struct fwcmd_enable_dimm_result fwcmd_read_enable_dimm(const char *filename)
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct fwcmd_enable_dimm_data *)malloc(sizeof(*result.p_data));
-			int parse_result = fwcmd_parse_enable_dimm((const struct pt_output_enable_dimm*) buffer, result.p_data);
-			if (parse_result == FIS_PARSER_CODES_SUCCESS)
+			int parse_result = fis_parse_enable_dimm((const struct pt_output_enable_dimm*) buffer, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;
 			}
@@ -1981,8 +1981,8 @@ struct fwcmd_smart_health_info_result fwcmd_read_smart_health_info(const char *f
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct fwcmd_smart_health_info_data *)malloc(sizeof(*result.p_data));
-			int parse_result = fwcmd_parse_smart_health_info((const struct pt_output_smart_health_info*) buffer, result.p_data);
-			if (parse_result == FIS_PARSER_CODES_SUCCESS)
+			int parse_result = fis_parse_smart_health_info((const struct pt_output_smart_health_info*) buffer, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;
 			}
@@ -2063,8 +2063,8 @@ struct fwcmd_firmware_image_info_result fwcmd_read_firmware_image_info(const cha
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct fwcmd_firmware_image_info_data *)malloc(sizeof(*result.p_data));
-			int parse_result = fwcmd_parse_firmware_image_info((const struct pt_output_firmware_image_info*) buffer, result.p_data);
-			if (parse_result == FIS_PARSER_CODES_SUCCESS)
+			int parse_result = fis_parse_firmware_image_info((const struct pt_output_firmware_image_info*) buffer, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;
 			}
@@ -2153,8 +2153,8 @@ struct fwcmd_firmware_debug_log_result fwcmd_read_firmware_debug_log(const char 
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct fwcmd_firmware_debug_log_data *)malloc(sizeof(*result.p_data));
-			int parse_result = fwcmd_parse_firmware_debug_log((const struct pt_output_firmware_debug_log*) buffer, result.p_data);
-			if (parse_result == FIS_PARSER_CODES_SUCCESS)
+			int parse_result = fis_parse_firmware_debug_log((const struct pt_output_firmware_debug_log*) buffer, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;
 			}
@@ -2235,8 +2235,8 @@ struct fwcmd_long_operation_status_result fwcmd_read_long_operation_status(const
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct fwcmd_long_operation_status_data *)malloc(sizeof(*result.p_data));
-			int parse_result = fwcmd_parse_long_operation_status((const struct pt_output_long_operation_status*) buffer, result.p_data);
-			if (parse_result == FIS_PARSER_CODES_SUCCESS)
+			int parse_result = fis_parse_long_operation_status((const struct pt_output_long_operation_status*) buffer, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;
 			}
@@ -2317,8 +2317,8 @@ struct fwcmd_bsr_result fwcmd_read_bsr(const char *filename)
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct fwcmd_bsr_data *)malloc(sizeof(*result.p_data));
-			int parse_result = fwcmd_parse_bsr((const struct pt_output_bsr*) buffer, result.p_data);
-			if (parse_result == FIS_PARSER_CODES_SUCCESS)
+			int parse_result = fis_parse_bsr((const struct pt_output_bsr*) buffer, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;
 			}

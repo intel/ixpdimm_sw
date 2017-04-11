@@ -27,6 +27,8 @@
 #ifndef CR_MGMT_FW_COMMANDS_H
 #define CR_MGMT_FW_COMMANDS_H
 
+#include "fis_commands.h"
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -34,10 +36,18 @@ extern "C"
 
 enum fwcmd_error_type
 {
-	FWCMD_ERROR_TYPE_DRIVER = 1,
-	FWCMD_ERROR_TYPE_PT = 2,
+	FWCMD_ERROR_TYPE_UNKNOWN = 0,
+	FWCMD_ERROR_TYPE_PT = 1,
+	FWCMD_ERROR_TYPE_FW = 2,
 	FWCMD_ERROR_TYPE_PARSE = 3,
 	FWCMD_ERROR_TYPE_DUMP = 4,
+	FWCMD_ERROR_TYPE_DRIVER = 5
+};
+
+enum fwcmd_error
+{
+	FWCMD_ERR_UNKNOWN = 1,
+	FWCMD_ERR_NOMEMORY = 2
 };
 
 struct fwcmd_error_code

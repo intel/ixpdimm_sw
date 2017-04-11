@@ -110,6 +110,8 @@ INCS =  -I. \
 		-I$(EXTERN_DIR)/fw_headers
 
 LIBS =	-L$(OBJECT_DIR)/common -lcommon \
+ 		-L$(OBJECT_DIR)/firmware_interface -lfirmware_interface \
+		-L$(OBJECT_DIR)/driver_interface -ldriver_interface \
 		-L$(OBJECT_DIR)/acpi -lacpi \
 		-L$(BUILD_DIR) -lsqlite3 \
 		-lz \

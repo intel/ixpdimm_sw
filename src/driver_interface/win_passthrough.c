@@ -30,11 +30,36 @@
  * passthrough commands.
  */
 #include "passthrough.h"
-#include "win_adapter.h"
 
 #include <windows.h>
 #include <windows/PrivateIoctlDefinitions.h>
+#include <windows/DiagnosticExport.h>
 #include <stdio.h>
+
+// SCSI port used as IOCTL target
+extern short g_scsi_port;
+#define DSM_MAILBOX_ERROR_SHIFT (16)
+#define DSM_BACKGROUND_OP_STATE_SHIFT (24)
+#define DSM_VENDOR_ERROR_SHIFT (0)
+
+int ind_err_to_nvm_lib_err(CR_RETURN_CODES ind_err);
+
+int init_scsi_port();
+int open_ioctl_target(PHANDLE p_handle, short scsi_port);
+int send_ioctl_command(HANDLE handle,
+	unsigned long io_controlcode,
+	void *p_in_buffer,
+	size_t in_size,
+	void *p_out_buffer,
+	size_t out_size);
+int execute_ioctl(size_t bufSize, void *p_ioctl_data, unsigned long io_controlcode);
+
+unsigned int win_dsm_status_to_int(DSM_STATUS win_dsm_status)
+{
+	return win_dsm_status.BackgroundOperationState << DSM_BACKGROUND_OP_STATE_SHIFT
+		   | win_dsm_status.MailboxStatusCode << DSM_MAILBOX_ERROR_SHIFT
+		   | win_dsm_status.DsmStatus << DSM_VENDOR_ERROR_SHIFT;
+}
 
 /*
  * Execute an emulated BIOS ioctl to retrieve information about the bios large mailboxes
@@ -57,8 +82,8 @@ int bios_get_large_payload_size(unsigned int device_handle,
 	{
 		p_ioctl_data->NfitDeviceHandle.DeviceHandle = device_handle;
 
-		p_ioctl_data->InputPayload.Arg3OpCode = BUILD_DSM_OPCODE(BIOS_EMULATED_COMMAND,
-			SUBOP_GET_PAYLOAD_SIZE);
+		p_ioctl_data->InputPayload.Arg3OpCode = PT_BUILD_DSM_OPCODE(PT_BIOS_EMULATED_COMMAND,
+			PT_SUBOP_GET_PAYLOAD_SIZE);
 		p_ioctl_data->InputPayload.Arg3OpCodeParameterDataLength = 0;
 
 		PDSM_VENDOR_SPECIFIC_COMMAND_OUTPUT_PAYLOAD p_DsmOutputPayload =
@@ -90,9 +115,9 @@ int bios_get_large_payload_size(unsigned int device_handle,
 /*
  * Populate the emulated bios large input mailbox
  */
-int bios_write_large_payload(struct fw_cmd *p_fw_cmd)
+int bios_write_large_payload(struct pt_fw_cmd *p_fw_cmd)
 {
-		int rc = PT_SUCCESS;
+	int rc = PT_SUCCESS;
 
 	GET_LARGE_PAYLOAD_SIZE_OUTPUT_PAYLOAD large_payload_size;
 	if ((rc = bios_get_large_payload_size(p_fw_cmd->device_handle,
@@ -130,8 +155,8 @@ int bios_write_large_payload(struct fw_cmd *p_fw_cmd)
 					p_ioctl_data->NfitDeviceHandle.DeviceHandle
 						= p_fw_cmd->device_handle;
 
-					p_ioctl_data->InputPayload.Arg3OpCode = BUILD_DSM_OPCODE(BIOS_EMULATED_COMMAND,
-						SUBOP_WRITE_LARGE_PAYLOAD_INPUT);
+					p_ioctl_data->InputPayload.Arg3OpCode = PT_BUILD_DSM_OPCODE(PT_BIOS_EMULATED_COMMAND,
+						PT_SUBOP_WRITE_LARGE_PAYLOAD_INPUT);
 					p_ioctl_data->InputPayload.Arg3OpCodeParameterDataLength =
 						sizeof(WRITE_LARGE_PAYLOAD_INPUT_PAYLOAD)
 						- WRITE_LARGE_PAYLOAD_PLACEHOLDERS + write_size;
@@ -183,7 +208,7 @@ int bios_write_large_payload(struct fw_cmd *p_fw_cmd)
 /*
  * Read the emulated bios large input mailbox
  */
-int bios_read_large_payload(struct fw_cmd *p_fw_cmd)
+int bios_read_large_payload(struct pt_fw_cmd *p_fw_cmd)
 {
 		int rc = PT_SUCCESS;
 
@@ -225,8 +250,8 @@ int bios_read_large_payload(struct fw_cmd *p_fw_cmd)
 				{
 					p_ioctl_data->NfitDeviceHandle.DeviceHandle = p_fw_cmd->device_handle;
 
-					p_ioctl_data->InputPayload.Arg3OpCode = BUILD_DSM_OPCODE(BIOS_EMULATED_COMMAND,
-						SUBOP_READ_LARGE_PAYLOAD_OUTPUT);
+					p_ioctl_data->InputPayload.Arg3OpCode = PT_BUILD_DSM_OPCODE(PT_BIOS_EMULATED_COMMAND,
+						PT_SUBOP_READ_LARGE_PAYLOAD_OUTPUT);
 					p_ioctl_data->InputPayload.Arg3OpCodeParameterDataLength =
 						sizeof(READ_LARGE_PAYLOAD_INPUT_PAYLOAD);
 
@@ -276,7 +301,7 @@ int bios_read_large_payload(struct fw_cmd *p_fw_cmd)
 /*
  * Execute a passthrough IOCTL
  */
-int ioctl_passthrough_cmd(struct fw_cmd *p_cmd)
+int adapter_pt_ioctl_cmd(struct pt_fw_cmd *p_cmd)
 {
 		int rc = PT_ERR_UNKNOWN;
 
@@ -287,7 +312,7 @@ int ioctl_passthrough_cmd(struct fw_cmd *p_cmd)
 
 	size_t output_buf_size = sizeof(DSM_VENDOR_SPECIFIC_COMMAND_OUTPUT_PAYLOAD)
 							 - DSM_VENDOR_SPECIFIC_COMMAND_OUTPUT_PAYLOAD_PLACEHOLDERS
-							 + DEV_SMALL_PAYLOAD_SIZE;
+							 + PT_DEV_SMALL_PAYLOAD_SIZE;
 
 	size_t arg3_size = input_buf_size + output_buf_size;
 	size_t buf_size = sizeof(ULONG) + sizeof(NFIT_DEVICE_HANDLE) + arg3_size;
@@ -297,7 +322,7 @@ int ioctl_passthrough_cmd(struct fw_cmd *p_cmd)
 	{
 		p_ioctl_data->NfitDeviceHandle.DeviceHandle = p_cmd->device_handle;
 		p_ioctl_data->InputPayload.Arg3OpCodeParameterDataLength = p_cmd->input_payload_size;
-		p_ioctl_data->InputPayload.Arg3OpCode = BUILD_DSM_OPCODE(p_cmd->opcode, p_cmd->sub_opcode);
+		p_ioctl_data->InputPayload.Arg3OpCode = PT_BUILD_DSM_OPCODE(p_cmd->opcode, p_cmd->sub_opcode);
 
 		if (p_cmd->input_payload_size > 0)
 		{
@@ -354,4 +379,171 @@ int ioctl_passthrough_cmd(struct fw_cmd *p_cmd)
 	}
 
 		return rc;
+}
+
+
+
+#define	WIN_DRIVER_VERSION_MAJOR_MIN	1
+#define	WIN_DRIVER_VERSION_MAJOR_MAX	1
+#define	SCSI_PORT_MAX 32
+/*
+ * Bit selection as defined for the MSR_DRAM_POWER_LIMIT register,
+ * 618h from the IA64/32 Software Developers Manual
+ */
+#define	POWER_LIMIT_ENABLE_BIT	0x80
+
+short g_scsi_port = -1;
+
+// Helper function declarations
+//enum label_area_health_result convert_label_health_result(LABEL_AREA_HEALTH_EVENT event);
+//enum ns_health_result convert_ns_health_status(NAMESPACE_HEALTH_EVENT event);
+//DIAGNOSTIC_TEST convert_diagnostic_test(enum driver_diagnostic diagnostic);
+
+/*
+ * Support is determined by driver version
+ */
+
+int ind_err_to_nvm_lib_err(CR_RETURN_CODES ind_err)
+{
+	return (ind_err);
+}
+
+static int __get_driver_revision(short scsi_port)
+{
+	int rc = 0;
+
+	HANDLE handle = INVALID_HANDLE_VALUE;
+
+	// Open the Drivers IOCTL File Handle
+	if ((rc = open_ioctl_target(&handle, scsi_port)) == 0)
+	{
+		CR_GET_DRIVER_REVISION_IOCTL payload_in;
+		CR_GET_DRIVER_REVISION_IOCTL payload_out;
+
+		memset(&payload_in, 0, sizeof (CR_GET_DRIVER_REVISION_IOCTL));
+
+		// Verify IOCTL is sent successfully and that the driver had no errors
+		if ((rc = send_ioctl_command(handle,
+			IOCTL_CR_GET_VENDOR_DRIVER_REVISION,
+			&payload_in,
+			sizeof (CR_GET_DRIVER_REVISION_IOCTL),
+			&payload_out,
+			sizeof (CR_GET_DRIVER_REVISION_IOCTL))) == 0)
+		{
+			rc = ind_err_to_nvm_lib_err(payload_out.ReturnCode);
+		}
+
+		CloseHandle(handle);
+	}
+
+
+	return rc;
+}
+
+int init_scsi_port()
+{
+	int rc = 0;
+	int i = 0;
+
+	while (g_scsi_port < 0 && i < SCSI_PORT_MAX)
+	{
+		int temp_rc = -1;
+
+		if ((temp_rc = __get_driver_revision(i)) == 0)
+		{
+			g_scsi_port = i;
+		}
+
+		i++;
+	}
+
+	if (g_scsi_port < 0)
+	{
+		rc = -1;
+	}
+
+	return rc;
+}
+
+
+
+int open_ioctl_target(PHANDLE p_handle, short scsi_port)
+{
+
+	int rc = 0;
+
+	char ioctl_target[256];
+
+	sprintf_s(ioctl_target, 256, "\\\\.\\Scsi%d:", scsi_port);
+
+	*p_handle = CreateFile(ioctl_target,
+		GENERIC_READ | GENERIC_WRITE,
+		FILE_SHARE_READ | FILE_SHARE_WRITE,
+		NULL,
+		OPEN_EXISTING,
+		0,
+		NULL);
+
+	if (*p_handle == INVALID_HANDLE_VALUE)
+	{
+		rc = -1;
+	}
+
+	return rc;
+}
+
+int send_ioctl_command(HANDLE handle,
+	unsigned long io_controlcode,
+	void *p_in_buffer,
+	size_t in_size,
+	void *p_out_buffer,
+	size_t out_size)
+{
+
+	int rc = 0;
+	unsigned char io_result;
+	DWORD bytes_returned = 0;
+
+	io_result = (unsigned char)DeviceIoControl(handle,
+		io_controlcode,
+		p_in_buffer,
+		in_size,
+		p_out_buffer,
+		out_size,
+		&bytes_returned,
+		NULL);
+
+	if (!io_result)
+	{
+		rc = -1;
+	}
+	else if (out_size != bytes_returned)
+	{
+		rc = -1;
+	}
+
+	return rc;
+}
+
+/*
+ * Send an IOCTL payload to the driver
+ */
+int execute_ioctl(size_t bufSize, void *p_ioctl_data, unsigned long io_controlcode)
+{
+	int rc;
+	HANDLE handle;
+	if ((rc = init_scsi_port()) != 0)
+	{
+	}
+	else
+	{
+		if ((rc = open_ioctl_target(&handle, g_scsi_port)) == 0)
+		{
+			rc = send_ioctl_command(handle, io_controlcode, p_ioctl_data, bufSize, p_ioctl_data,
+				bufSize);
+			CloseHandle(handle);
+		}
+	}
+
+	return rc;
 }

@@ -35,7 +35,7 @@ extern "C"
 
 #define FWCMD_PARSE_SUCCESS(rc) (rc == FIS_PARSER_CODES_SUCCESS)
 
-enum FIS_PARSER_CODES
+enum fis_parser_codes
 {
 	FIS_PARSER_CODES_SUCCESS = 0,
 	FIS_PARSER_CODES_PARSING_WRONG_OFFSET = 1,
@@ -44,7 +44,7 @@ enum FIS_PARSER_CODES
 
 //- for cmd in commands
 //- 	if cmd.has_output
-unsigned int {{cmd.name|fw_cmd_parser}}(
+enum fis_parser_codes {{cmd.name|fw_cmd_parser}}(
 	const struct {{cmd.name|output_payload}} *p_output_payload,
 	struct {{cmd.name|fw_cmd_data}} *p_data);
 

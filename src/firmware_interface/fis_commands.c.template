@@ -26,10 +26,13 @@
  */
 
 #include "fis_commands.h"
+
+#include <common/string/s_str.h>
+#include <driver_interface/passthrough.h>
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <driver_interface/passthrough.h>
 
 //- for cmd in commands
 unsigned int {{cmd.name|fis}}(const unsigned int device_handle
@@ -37,8 +40,8 @@ unsigned int {{cmd.name|fis}}(const unsigned int device_handle
 	{%- if cmd.has_output %}, struct {{cmd.name|output_payload}} *p_output_payload{% endif -%}
 )
 {
-	struct fw_cmd cmd;
-	memset(&cmd, 0, sizeof (struct fw_cmd));
+	struct pt_fw_cmd cmd;
+	memset(&cmd, 0, sizeof (struct pt_fw_cmd));
 	cmd.device_handle = device_handle;
 	cmd.opcode = {{cmd.op_code}};
 	cmd.sub_opcode = {{cmd.sub_op_code}};
@@ -55,7 +58,21 @@ unsigned int {{cmd.name|fis}}(const unsigned int device_handle
 	cmd.input_payload = p_input_payload;
 	cmd.input_payload_size = sizeof (struct {{cmd.name|input_payload}});
 //- 	endif
-	return (unsigned int)ioctl_passthrough_cmd(&cmd);
+	return pt_ioctl_cmd(&cmd);
 }
 
 //- endfor
+
+void fis_get_error_message(unsigned int code, char *message, size_t message_size)
+{
+	switch (code)
+	{
+	//- for e in error_codes
+	case FIS_ERR_{{e.short|enum}}:
+		s_strcpy(message, "{{e.short}}", message_size);
+		break;
+//- endfor
+	default:
+		s_strcpy(message, "Unknown error code", message_size);
+	}
+}

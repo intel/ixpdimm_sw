@@ -431,44 +431,9 @@ struct bios_capabilities
 }__attribute__((packed));
 
 /*
- * Helper function to retrieve pcat from db
- */
-int get_pcat_from_db(PersistentStore *p_db,
-		struct bios_capabilities *p_capabilities,
-		const NVM_UINT32 cap_len);
-
-/*
- * Helper function to get the PCAT memory interleave extension tables
- * from the database and copy the data to the bios_capabilities structure
- */
-int get_pcat_interleave_tables_from_db(PersistentStore *p_db,
-		struct bios_capabilities *p_capabilities,
-		NVM_UINT32 *p_offset, const NVM_UINT32 cap_len);
-
-/*
- * Helper function to get the PCAT platform capabilities extension table
- * from the database and copy the data to the bios_capabilities struct
- */
-int get_pcat_platform_info_from_db(PersistentStore *p_db,
-		struct bios_capabilities *p_capabilities,
-		NVM_UINT32 *p_offset, const NVM_UINT32 cap_len);
-
-/*
- * Helper function to get the PCAT runtime configuration extension table
- * from the database and copy the data to the bios_capabilities struct
- */
-int get_pcat_runtime_validation_table_from_db(PersistentStore *p_db,
-		struct bios_capabilities *p_capabilities,
-		NVM_UINT32 *p_offset, const NVM_UINT32 cap_len);
-
-/*
  * Update the platform capabilities data stored in the db
  * Tries to store as much data as possible while propagating any errors.
  */
-int update_pcat_in_db(PersistentStore *p_db,
-		const struct bios_capabilities *p_capabilities,
-		const int history_id);
-
 /*
  * Given a starting offset of the extension tables, get the offset of the specfied table
  */

@@ -205,7 +205,7 @@ struct {{cmd.name|fw_cmd_result}} {{cmd.name|fw_cmd_read}}(const char *filename)
 		{
 			result.p_data = (struct {{cmd.name|fw_cmd_data}} *)malloc(sizeof(*result.p_data));
 			int parse_result = {{cmd.name|fw_cmd_parser}}((const struct {{cmd.name|output_payload}}*) buffer, result.p_data);
-			if (parse_result == FIS_PARSER_CODES_SUCCESS)
+			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;
 			}

@@ -73,12 +73,10 @@ ifdef BUILD_LINUX
 	CFLAGS += -D_GNU_SOURCE
 else ifdef BUILD_ESX
 	CFLAGS += -D_GNU_SOURCE
-	INCS += -I$(EXTERN_DIR)/os_headers
 	LIBS += -lpthread -ldl -lm
-ifndef BUILD_SIM
+	INCS += -I$(EXTERN_DIR)/os_headers/esx
 	INCS += -I/opt/vmware/$(ESX_DEVKIT_PREFIX)-$(DEVKIT_BUILD_NUM)/samples/include
-	LIBS += -L/opt/vmware/$(ESX_DEVKIT_PREFIX)-$(DEVKIT_BUILD_NUM)/samples/lib -lvmkuserlib
-endif
+	LIBS += -L/opt/vmware/$(ESX_DEVKIT_PREFIX)-$(DEVKIT_BUILD_NUM)/samples/lib -lvmkuser
 	CFLAGS += -DVMK_DEVKIT_HAS_API_VMKAPI_BASE \
 		-DVMK_DEVKIT_USES_PUBLIC_APIS \
 		-DVMK_DEVKIT_USES_BINARY_COMPATIBLE_APIS \

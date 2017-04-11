@@ -56,6 +56,7 @@ enum nfit_error
 /*
  * NFIT NVDIMM
  */
+#define NFIT_MAX_IFC_COUNT	9
 struct nfit_dimm
 {
 	unsigned int handle;
@@ -70,7 +71,7 @@ struct nfit_dimm
 	unsigned char valid_fields;
 	unsigned char manufacturing_location;
 	unsigned short manufacturing_date;
-	unsigned short ifc;
+	unsigned short ifc[NFIT_MAX_IFC_COUNT];
 };
 
 /*

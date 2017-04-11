@@ -199,6 +199,9 @@ int get_dimm_capacities(const NVM_NFIT_DEVICE_HANDLE device_handle,
 int dimm_has_namespaces_of_type(const NVM_NFIT_DEVICE_HANDLE dimm_handle,
 		const enum namespace_type ns_type);
 
+void add_ifcs_from_identify_dimm_to_device(struct device_discovery *p_device,
+		struct pt_payload_identify_dimm *p_id_dimm);
+
 /*
  * Helper function to convert unsigned integer to bytes
  */

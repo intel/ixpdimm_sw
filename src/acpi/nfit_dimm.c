@@ -34,6 +34,36 @@
 #include <string.h>
 #include <stdio.h>
 
+void add_ifc_to_list(const unsigned short ifc, unsigned short *p_ifc_list,
+		const size_t ifc_list_length)
+{
+	for (size_t i = 0; i < ifc_list_length; i++)
+	{
+		if (p_ifc_list[i] == ifc) // already in list
+		{
+			break;
+		}
+		else if (p_ifc_list[i] == 0)
+		{
+			p_ifc_list[i] = ifc;
+			break;
+		}
+	}
+}
+
+void add_all_dimm_format_codes_from_nfit(const struct parsed_nfit *p_parsed_nfit,
+		struct nfit_dimm *p_dimm)
+{
+	for (int i = 0; i < p_parsed_nfit->control_region_count; i++)
+	{
+		if (p_parsed_nfit->control_region_list[i].serial_number == p_dimm->serial_number)
+		{
+			add_ifc_to_list(p_parsed_nfit->control_region_list[i].ifc,
+					p_dimm->ifc, NFIT_MAX_IFC_COUNT);
+		}
+	}
+}
+
 int add_dimm_control_region_info_from_index(const struct parsed_nfit *p_parsed_nfit,
 		const unsigned short index, struct nfit_dimm *p_dimm)
 {
@@ -57,12 +87,10 @@ int add_dimm_control_region_info_from_index(const struct parsed_nfit *p_parsed_n
 				p_parsed_nfit->control_region_list[i].manufacturing_location;
 			p_dimm->manufacturing_date =
 				p_parsed_nfit->control_region_list[i].manufacturing_date;
-			p_dimm->serial_number =
-				p_parsed_nfit->control_region_list[i].serial_number;
-			p_dimm->ifc =
-				p_parsed_nfit->control_region_list[i].ifc;
+
+			add_all_dimm_format_codes_from_nfit(p_parsed_nfit, p_dimm);
+
 			result = NFIT_SUCCESS;
-			break;
 		}
 	}
 	return result;
@@ -155,6 +183,7 @@ int nfit_get_dimms_from_parsed_nfit(const int count,
 			}
 			else
 			{
+				memset(p_nfit_dimms, 0, sizeof (struct nfit_dimm) * count);
 				for (int i = 0; i < result; i++)
 				{
 					int add_result = add_dimm_info_from_handle(p_parsed_nfit,
@@ -203,7 +232,10 @@ void nfit_print_dimm(const struct nfit_dimm *p_dimm)
 		printf("valid_fields: 0x%x\n", p_dimm->valid_fields);
 		printf("manufacturing_date: 0x%x\n", p_dimm->manufacturing_date);
 		printf("manufacturing_location: 0x%x\n", p_dimm->manufacturing_location);
-		printf("ifc: 0x%x\n", p_dimm->ifc);
+		for (int i = 0; i < NFIT_MAX_IFC_COUNT; i++)
+		{
+			printf("ifc[%d]: 0x%x\n", i, p_dimm->ifc[i]);
+		}
 		printf("\n");
 	}
 }

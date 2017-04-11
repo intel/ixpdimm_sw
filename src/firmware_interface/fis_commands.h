@@ -34,6 +34,33 @@ extern "C"
 
 #include <driver_interface/passthrough.h>
 
+enum fis_error_codes
+{
+	FIS_ERR_SUCCESS = 0x0,
+	FIS_ERR_INVALID_COMMAND_PARAMETER = 0x01,
+	FIS_ERR_DATA_TRANSFER_ERROR = 0x02,
+	FIS_ERR_INTERNAL_DEVICE_ERROR = 0x03,
+	FIS_ERR_UNSUPPORTED_COMMAND = 0x04,
+	FIS_ERR_DEVICE_BUSY = 0x05,
+	FIS_ERR_INCORRECT_SECURITY_NONCE = 0x06,
+	FIS_ERR_FW_AUTHENTICATION_FAILED = 0x07,
+	FIS_ERR_INVALID_SECURITY_STATE = 0x08,
+	FIS_ERR_SYSTEM_TIME_NOT_SET = 0x09,
+	FIS_ERR_DATA_NOT_SET = 0x0A,
+	FIS_ERR_ABORTED = 0x0B,
+	FIS_ERR_NO_NEW_FW_TO_EXECUTE = 0x0C,
+	FIS_ERR_REVISION_FAILURE = 0x0D,
+	FIS_ERR_INJECTION_NOT_ENABLED = 0x0E,
+	FIS_ERR_CONFIG_LOCKED = 0x0F,
+	FIS_ERR_INVALID_ALIGNMENT = 0x10,
+	FIS_ERR_INCOMPATIBLE_DIMM_TYPE = 0x11,
+	FIS_ERR_TIMEOUT_OCCURRED = 0x12,
+	FIS_ERR_RESERVED = 0x13,
+	FIS_ERR_MEDIA_DISABLED = 0x14,
+	FIS_ERR_FW_UPDATE_ALREADY_OCCURED = 0x15,
+	FIS_ERR_NO_RESOURCES_AVAILABLE = 0x16,
+};
+
 /*
  * Payloads Structures
  */
@@ -218,7 +245,7 @@ struct pt_output_platform_config_data
 	unsigned int input_config_offset;
 	unsigned int output_config_size;
 	unsigned int output_config_offset;
-	unsigned char body[131013];
+	unsigned char body[131012];
 
 } __attribute__((packed));
 struct pt_input_platform_config_data
@@ -465,6 +492,8 @@ unsigned int fis_firmware_image_info(const unsigned int device_handle, struct pt
 unsigned int fis_firmware_debug_log(const unsigned int device_handle, struct pt_input_firmware_debug_log *p_input_payload, struct pt_output_firmware_debug_log *p_output_payload);
 unsigned int fis_long_operation_status(const unsigned int device_handle, struct pt_output_long_operation_status *p_output_payload);
 unsigned int fis_bsr(const unsigned int device_handle, struct pt_output_bsr *p_output_payload);
+void fis_get_error_message(unsigned int code, char *message, size_t message_size);
+
 #ifdef __cplusplus
 }
 #endif

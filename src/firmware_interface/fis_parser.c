@@ -37,12 +37,12 @@
 #include <stdlib.h>
 
 
-unsigned int fwcmd_parse_identify_dimm(
+enum fis_parser_codes fis_parse_identify_dimm(
 	const struct pt_output_identify_dimm *p_output_payload,
 	struct fwcmd_identify_dimm_data *p_data)
 {
 	memset(p_data, 0, sizeof (*p_data));
-	unsigned int rc = FIS_PARSER_CODES_SUCCESS;
+	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
 	p_data->vendor_id = p_output_payload->vendor_id;
 	p_data->device_id = p_output_payload->device_id;
 	p_data->revision_id = p_output_payload->revision_id;
@@ -72,12 +72,12 @@ unsigned int fwcmd_parse_identify_dimm(
 }
 
 
-unsigned int fwcmd_parse_identify_dimm_characteristics(
+enum fis_parser_codes fis_parse_identify_dimm_characteristics(
 	const struct pt_output_identify_dimm_characteristics *p_output_payload,
 	struct fwcmd_identify_dimm_characteristics_data *p_data)
 {
 	memset(p_data, 0, sizeof (*p_data));
-	unsigned int rc = FIS_PARSER_CODES_SUCCESS;
+	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
 	p_data->controller_temp_shutdown_threshold = p_output_payload->controller_temp_shutdown_threshold;
 	p_data->media_temp_shutdown_threshold = p_output_payload->media_temp_shutdown_threshold;
 	p_data->throttling_start_threshold = p_output_payload->throttling_start_threshold;
@@ -86,12 +86,12 @@ unsigned int fwcmd_parse_identify_dimm_characteristics(
 }
 
 
-unsigned int fwcmd_parse_get_security_state(
+enum fis_parser_codes fis_parse_get_security_state(
 	const struct pt_output_get_security_state *p_output_payload,
 	struct fwcmd_get_security_state_data *p_data)
 {
 	memset(p_data, 0, sizeof (*p_data));
-	unsigned int rc = FIS_PARSER_CODES_SUCCESS;
+	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
 	p_data->security_state = p_output_payload->security_state;
 	p_data->security_state_enabled = (unsigned char)((p_data->security_state >> 1) & 0x01);
 	p_data->security_state_locked = (unsigned char)((p_data->security_state >> 2) & 0x01);
@@ -102,12 +102,12 @@ unsigned int fwcmd_parse_get_security_state(
 }
 
 
-unsigned int fwcmd_parse_get_alarm_threshold(
+enum fis_parser_codes fis_parse_get_alarm_threshold(
 	const struct pt_output_get_alarm_threshold *p_output_payload,
 	struct fwcmd_get_alarm_threshold_data *p_data)
 {
 	memset(p_data, 0, sizeof (*p_data));
-	unsigned int rc = FIS_PARSER_CODES_SUCCESS;
+	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
 	p_data->enable = p_output_payload->enable;
 	p_data->enable_spare_block = (unsigned char)((p_data->enable >> 0) & 0x01);
 	p_data->enable_media_temp = (unsigned char)((p_data->enable >> 1) & 0x01);
@@ -119,12 +119,12 @@ unsigned int fwcmd_parse_get_alarm_threshold(
 }
 
 
-unsigned int fwcmd_parse_power_management_policy(
+enum fis_parser_codes fis_parse_power_management_policy(
 	const struct pt_output_power_management_policy *p_output_payload,
 	struct fwcmd_power_management_policy_data *p_data)
 {
 	memset(p_data, 0, sizeof (*p_data));
-	unsigned int rc = FIS_PARSER_CODES_SUCCESS;
+	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
 	p_data->enable = p_output_payload->enable;
 	p_data->peak_power_budget = p_output_payload->peak_power_budget;
 	p_data->average_power_budget = p_output_payload->average_power_budget;
@@ -133,12 +133,12 @@ unsigned int fwcmd_parse_power_management_policy(
 }
 
 
-unsigned int fwcmd_parse_die_sparing_policy(
+enum fis_parser_codes fis_parse_die_sparing_policy(
 	const struct pt_output_die_sparing_policy *p_output_payload,
 	struct fwcmd_die_sparing_policy_data *p_data)
 {
 	memset(p_data, 0, sizeof (*p_data));
-	unsigned int rc = FIS_PARSER_CODES_SUCCESS;
+	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
 	p_data->enable = p_output_payload->enable;
 	p_data->aggressiveness = p_output_payload->aggressiveness;
 	p_data->supported = p_output_payload->supported;
@@ -150,12 +150,12 @@ unsigned int fwcmd_parse_die_sparing_policy(
 }
 
 
-unsigned int fwcmd_parse_address_range_scrub(
+enum fis_parser_codes fis_parse_address_range_scrub(
 	const struct pt_output_address_range_scrub *p_output_payload,
 	struct fwcmd_address_range_scrub_data *p_data)
 {
 	memset(p_data, 0, sizeof (*p_data));
-	unsigned int rc = FIS_PARSER_CODES_SUCCESS;
+	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
 	p_data->enable = p_output_payload->enable;
 	p_data->dpa_start_address = p_output_payload->dpa_start_address;
 	p_data->dpa_end_address = p_output_payload->dpa_end_address;
@@ -164,12 +164,12 @@ unsigned int fwcmd_parse_address_range_scrub(
 }
 
 
-unsigned int fwcmd_parse_optional_configuration_data_policy(
+enum fis_parser_codes fis_parse_optional_configuration_data_policy(
 	const struct pt_output_optional_configuration_data_policy *p_output_payload,
 	struct fwcmd_optional_configuration_data_policy_data *p_data)
 {
 	memset(p_data, 0, sizeof (*p_data));
-	unsigned int rc = FIS_PARSER_CODES_SUCCESS;
+	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
 	p_data->first_fast_refresh = p_output_payload->first_fast_refresh;
 	p_data->viral_policy_enabled = p_output_payload->viral_policy_enabled;
 	p_data->viral_status = p_output_payload->viral_status;
@@ -177,12 +177,12 @@ unsigned int fwcmd_parse_optional_configuration_data_policy(
 }
 
 
-unsigned int fwcmd_parse_pmon_registers(
+enum fis_parser_codes fis_parse_pmon_registers(
 	const struct pt_output_pmon_registers *p_output_payload,
 	struct fwcmd_pmon_registers_data *p_data)
 {
 	memset(p_data, 0, sizeof (*p_data));
-	unsigned int rc = FIS_PARSER_CODES_SUCCESS;
+	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
 	p_data->pmon_retreive_mask = p_output_payload->pmon_retreive_mask;
 	p_data->pmon_0_counter = p_output_payload->pmon_0_counter;
 	p_data->pmon_0_control = p_output_payload->pmon_0_control;
@@ -214,23 +214,23 @@ unsigned int fwcmd_parse_pmon_registers(
 }
 
 
-unsigned int fwcmd_parse_system_time(
+enum fis_parser_codes fis_parse_system_time(
 	const struct pt_output_system_time *p_output_payload,
 	struct fwcmd_system_time_data *p_data)
 {
 	memset(p_data, 0, sizeof (*p_data));
-	unsigned int rc = FIS_PARSER_CODES_SUCCESS;
+	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
 	p_data->unix_time = p_output_payload->unix_time;
 	return rc;
 }
 
 
-unsigned int fwcmd_parse_dimm_info_for_interleave_set(
+enum fis_parser_codes fis_parse_dimm_info_for_interleave_set(
 	const struct pt_output_dimm_info_for_interleave_set *p_output_payload,
 	struct fwcmd_dimm_info_for_interleave_set_data *p_data)
 {
 	memset(p_data, 0, sizeof (*p_data));
-	unsigned int rc = FIS_PARSER_CODES_SUCCESS;
+	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
 	p_data->manufacturer_id = p_output_payload->manufacturer_id;
 	p_data->serial_number = p_output_payload->serial_number;
 	memmove(p_data->model_number, p_output_payload->model_number, 20);
@@ -240,12 +240,12 @@ unsigned int fwcmd_parse_dimm_info_for_interleave_set(
 	return rc;
 }
 
-unsigned int fwcmd_parse_dimm_interleave_information(
+enum fis_parser_codes fis_parse_dimm_interleave_information(
 	const struct pt_output_dimm_interleave_information *p_output_payload,
 	struct fwcmd_dimm_interleave_information_data *p_data)
 {
 	memset(p_data, 0, sizeof (*p_data));
-	unsigned int rc = FIS_PARSER_CODES_SUCCESS;
+	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
 	p_data->type = p_output_payload->type;
 	p_data->length = p_output_payload->length;
 	p_data->index = p_output_payload->index;
@@ -256,27 +256,28 @@ unsigned int fwcmd_parse_dimm_interleave_information(
 	p_data->change_status = p_output_payload->change_status;
 	p_data->memory_spare = p_output_payload->memory_spare;
 // Count Based
-	p_data->dimm_info_for_interleave_set = realloc(p_data->dimm_info_for_interleave_set,
-				sizeof(struct fwcmd_dimm_info_for_interleave_set_data) * (p_data->dimm_info_for_interleave_set_count + 1));
+
 	unsigned char *base = (unsigned char *) p_output_payload;
 	int current_offset = sizeof(*p_output_payload); // start at end of parent payload
-	for (int i = 0; i < (int)p_data->number_of_dimms; i++)
+	for (int i = 0; i < (int)p_data->number_of_dimms && FWCMD_PARSE_SUCCESS(rc); i++)
 	{
+		p_data->dimm_info_for_interleave_set = realloc(p_data->dimm_info_for_interleave_set,
+    		sizeof(struct fwcmd_dimm_info_for_interleave_set_data) * (p_data->dimm_info_for_interleave_set_count + 1));
 		struct pt_output_dimm_info_for_interleave_set *p_sub_payloads =
 			((struct pt_output_dimm_info_for_interleave_set *) (base + current_offset));
-		fwcmd_parse_dimm_info_for_interleave_set(p_sub_payloads, &p_data->dimm_info_for_interleave_set[p_data->dimm_info_for_interleave_set_count]);
+		rc = fis_parse_dimm_info_for_interleave_set(p_sub_payloads, &p_data->dimm_info_for_interleave_set[p_data->dimm_info_for_interleave_set_count]);
 		p_data->dimm_info_for_interleave_set_count++;
 		current_offset += (i + 1) * sizeof(struct pt_output_dimm_info_for_interleave_set);
 	}
 	return rc;
 }
 
-unsigned int fwcmd_parse_dimm_partition_size_change(
+enum fis_parser_codes fis_parse_dimm_partition_size_change(
 	const struct pt_output_dimm_partition_size_change *p_output_payload,
 	struct fwcmd_dimm_partition_size_change_data *p_data)
 {
 	memset(p_data, 0, sizeof (*p_data));
-	unsigned int rc = FIS_PARSER_CODES_SUCCESS;
+	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
 	p_data->type = p_output_payload->type;
 	p_data->length = p_output_payload->length;
 	p_data->partition_size_change_status = p_output_payload->partition_size_change_status;
@@ -284,12 +285,12 @@ unsigned int fwcmd_parse_dimm_partition_size_change(
 	return rc;
 }
 
-unsigned int fwcmd_parse_current_config(
+enum fis_parser_codes fis_parse_current_config(
 	const struct pt_output_current_config *p_output_payload,
 	struct fwcmd_current_config_data *p_data)
 {
 	memset(p_data, 0, sizeof (*p_data));
-	unsigned int rc = FIS_PARSER_CODES_SUCCESS;
+	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
 	memmove(p_data->signature, p_output_payload->signature, 4);
 	p_data->signature[4] = '\0';
 	p_data->length = p_output_payload->length;
@@ -310,7 +311,7 @@ unsigned int fwcmd_parse_current_config(
 	const int type_offset = 0;
 	int current_offset = sizeof(*p_output_payload); // start at end of parent payload
 
-	while (current_offset < (int)p_data->length)
+	while (current_offset < (int)p_data->length && FWCMD_PARSE_SUCCESS(rc))
 	{
 		int type_id = *(base + current_offset + type_offset);
 		if (type_id == 5) // 5 = dimm_interleave_information
@@ -321,25 +322,24 @@ unsigned int fwcmd_parse_current_config(
 			struct pt_output_dimm_interleave_information *p_sub_payloads =
 				((struct pt_output_dimm_interleave_information *) (base + current_offset));
 			struct fwcmd_dimm_interleave_information_data *p_converted = &p_data->dimm_interleave_information[p_data->dimm_interleave_information_count];
-			fwcmd_parse_dimm_interleave_information(p_sub_payloads, p_converted);
+			rc = fis_parse_dimm_interleave_information(p_sub_payloads, p_converted);
 			p_data->dimm_interleave_information_count++;
 			current_offset += p_converted->length;
 		}
 		else
 		{
 			rc = FIS_PARSER_CODES_PARSING_TYPE_NOT_FOUND;
-			break;
 		}
 	}
 	return rc;
 }
 
-unsigned int fwcmd_parse_input_config(
+enum fis_parser_codes fis_parse_input_config(
 	const struct pt_output_input_config *p_output_payload,
 	struct fwcmd_input_config_data *p_data)
 {
 	memset(p_data, 0, sizeof (*p_data));
-	unsigned int rc = FIS_PARSER_CODES_SUCCESS;
+	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
 	memmove(p_data->signature, p_output_payload->signature, 4);
 	p_data->signature[4] = '\0';
 	p_data->length = p_output_payload->length;
@@ -358,7 +358,7 @@ unsigned int fwcmd_parse_input_config(
 	const int type_offset = 0;
 	int current_offset = sizeof(*p_output_payload); // start at end of parent payload
 
-	while (current_offset < (int)p_data->length)
+	while (current_offset < (int)p_data->length && FWCMD_PARSE_SUCCESS(rc))
 	{
 		int type_id = *(base + current_offset + type_offset);
 		if (type_id == 5) // 5 = dimm_interleave_information
@@ -369,7 +369,7 @@ unsigned int fwcmd_parse_input_config(
 			struct pt_output_dimm_interleave_information *p_sub_payloads =
 				((struct pt_output_dimm_interleave_information *) (base + current_offset));
 			struct fwcmd_dimm_interleave_information_data *p_converted = &p_data->dimm_interleave_information[p_data->dimm_interleave_information_count];
-			fwcmd_parse_dimm_interleave_information(p_sub_payloads, p_converted);
+			rc = fis_parse_dimm_interleave_information(p_sub_payloads, p_converted);
 			p_data->dimm_interleave_information_count++;
 			current_offset += p_converted->length;
 		}
@@ -381,25 +381,24 @@ unsigned int fwcmd_parse_input_config(
 			struct pt_output_dimm_partition_size_change *p_sub_payloads =
 				((struct pt_output_dimm_partition_size_change *) (base + current_offset));
 			struct fwcmd_dimm_partition_size_change_data *p_converted = &p_data->dimm_partition_size_change[p_data->dimm_partition_size_change_count];
-			fwcmd_parse_dimm_partition_size_change(p_sub_payloads, p_converted);
+			rc = fis_parse_dimm_partition_size_change(p_sub_payloads, p_converted);
 			p_data->dimm_partition_size_change_count++;
 			current_offset += p_converted->length;
 		}
 		else
 		{
 			rc = FIS_PARSER_CODES_PARSING_TYPE_NOT_FOUND;
-			break;
 		}
 	}
 	return rc;
 }
 
-unsigned int fwcmd_parse_output_config(
+enum fis_parser_codes fis_parse_output_config(
 	const struct pt_output_output_config *p_output_payload,
 	struct fwcmd_output_config_data *p_data)
 {
 	memset(p_data, 0, sizeof (*p_data));
-	unsigned int rc = FIS_PARSER_CODES_SUCCESS;
+	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
 	memmove(p_data->signature, p_output_payload->signature, 4);
 	p_data->signature[4] = '\0';
 	p_data->length = p_output_payload->length;
@@ -419,7 +418,7 @@ unsigned int fwcmd_parse_output_config(
 	const int type_offset = 0;
 	int current_offset = sizeof(*p_output_payload); // start at end of parent payload
 
-	while (current_offset < (int)p_data->length)
+	while (current_offset < (int)p_data->length && FWCMD_PARSE_SUCCESS(rc))
 	{
 		int type_id = *(base + current_offset + type_offset);
 		if (type_id == 5) // 5 = dimm_interleave_information
@@ -430,7 +429,7 @@ unsigned int fwcmd_parse_output_config(
 			struct pt_output_dimm_interleave_information *p_sub_payloads =
 				((struct pt_output_dimm_interleave_information *) (base + current_offset));
 			struct fwcmd_dimm_interleave_information_data *p_converted = &p_data->dimm_interleave_information[p_data->dimm_interleave_information_count];
-			fwcmd_parse_dimm_interleave_information(p_sub_payloads, p_converted);
+			rc = fis_parse_dimm_interleave_information(p_sub_payloads, p_converted);
 			p_data->dimm_interleave_information_count++;
 			current_offset += p_converted->length;
 		}
@@ -442,25 +441,24 @@ unsigned int fwcmd_parse_output_config(
 			struct pt_output_dimm_partition_size_change *p_sub_payloads =
 				((struct pt_output_dimm_partition_size_change *) (base + current_offset));
 			struct fwcmd_dimm_partition_size_change_data *p_converted = &p_data->dimm_partition_size_change[p_data->dimm_partition_size_change_count];
-			fwcmd_parse_dimm_partition_size_change(p_sub_payloads, p_converted);
+			rc = fis_parse_dimm_partition_size_change(p_sub_payloads, p_converted);
 			p_data->dimm_partition_size_change_count++;
 			current_offset += p_converted->length;
 		}
 		else
 		{
 			rc = FIS_PARSER_CODES_PARSING_TYPE_NOT_FOUND;
-			break;
 		}
 	}
 	return rc;
 }
 
-unsigned int fwcmd_parse_platform_config_data(
+enum fis_parser_codes fis_parse_platform_config_data(
 	const struct pt_output_platform_config_data *p_output_payload,
 	struct fwcmd_platform_config_data_data *p_data)
 {
 	memset(p_data, 0, sizeof (*p_data));
-	unsigned int rc = FIS_PARSER_CODES_SUCCESS;
+	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
 	memmove(p_data->signature, p_output_payload->signature, 4);
 	p_data->signature[4] = '\0';
 	p_data->length = p_output_payload->length;
@@ -484,10 +482,13 @@ unsigned int fwcmd_parse_platform_config_data(
 	{
 		if (p_output_payload->current_config_offset < sizeof(*p_output_payload))
     	{
-    		struct pt_output_current_config *p_current_config  =
-    			((struct pt_output_current_config *)
-    				((unsigned char *) p_output_payload + p_data->current_config_offset));
-    		rc = fwcmd_parse_current_config(p_current_config, &(p_data->current_config));
+    	 	if (p_data->current_config_offset > 0)
+    	 	{
+				struct pt_output_current_config *p_current_config  =
+					((struct pt_output_current_config *)
+						((unsigned char *) p_output_payload + p_data->current_config_offset));
+				rc = fis_parse_current_config(p_current_config, &(p_data->current_config));
+    		}
     	}
     	else
     	{
@@ -500,10 +501,13 @@ unsigned int fwcmd_parse_platform_config_data(
 	{
 		if (p_output_payload->input_config_offset < sizeof(*p_output_payload))
     	{
-    		struct pt_output_input_config *p_input_config  =
-    			((struct pt_output_input_config *)
-    				((unsigned char *) p_output_payload + p_data->input_config_offset));
-    		rc = fwcmd_parse_input_config(p_input_config, &(p_data->input_config));
+    	 	if (p_data->input_config_offset > 0)
+    	 	{
+				struct pt_output_input_config *p_input_config  =
+					((struct pt_output_input_config *)
+						((unsigned char *) p_output_payload + p_data->input_config_offset));
+				rc = fis_parse_input_config(p_input_config, &(p_data->input_config));
+    		}
     	}
     	else
     	{
@@ -516,10 +520,13 @@ unsigned int fwcmd_parse_platform_config_data(
 	{
 		if (p_output_payload->output_config_offset < sizeof(*p_output_payload))
     	{
-    		struct pt_output_output_config *p_output_config  =
-    			((struct pt_output_output_config *)
-    				((unsigned char *) p_output_payload + p_data->output_config_offset));
-    		rc = fwcmd_parse_output_config(p_output_config, &(p_data->output_config));
+    	 	if (p_data->output_config_offset > 0)
+    	 	{
+				struct pt_output_output_config *p_output_config  =
+					((struct pt_output_output_config *)
+						((unsigned char *) p_output_payload + p_data->output_config_offset));
+				rc = fis_parse_output_config(p_output_config, &(p_data->output_config));
+    		}
     	}
     	else
     	{
@@ -531,12 +538,12 @@ unsigned int fwcmd_parse_platform_config_data(
 }
 
 
-unsigned int fwcmd_parse_dimm_partition_info(
+enum fis_parser_codes fis_parse_dimm_partition_info(
 	const struct pt_output_dimm_partition_info *p_output_payload,
 	struct fwcmd_dimm_partition_info_data *p_data)
 {
 	memset(p_data, 0, sizeof (*p_data));
-	unsigned int rc = FIS_PARSER_CODES_SUCCESS;
+	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
 	p_data->volatile_capacity = p_output_payload->volatile_capacity;
 	p_data->volatile_start = p_output_payload->volatile_start;
 	p_data->pm_capacity = p_output_payload->pm_capacity;
@@ -547,80 +554,80 @@ unsigned int fwcmd_parse_dimm_partition_info(
 }
 
 
-unsigned int fwcmd_parse_fw_debug_log_level(
+enum fis_parser_codes fis_parse_fw_debug_log_level(
 	const struct pt_output_fw_debug_log_level *p_output_payload,
 	struct fwcmd_fw_debug_log_level_data *p_data)
 {
 	memset(p_data, 0, sizeof (*p_data));
-	unsigned int rc = FIS_PARSER_CODES_SUCCESS;
+	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
 	p_data->log_level = p_output_payload->log_level;
 	p_data->logs = p_output_payload->logs;
 	return rc;
 }
 
 
-unsigned int fwcmd_parse_fw_load_flag(
+enum fis_parser_codes fis_parse_fw_load_flag(
 	const struct pt_output_fw_load_flag *p_output_payload,
 	struct fwcmd_fw_load_flag_data *p_data)
 {
 	memset(p_data, 0, sizeof (*p_data));
-	unsigned int rc = FIS_PARSER_CODES_SUCCESS;
+	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
 	p_data->load_flag = p_output_payload->load_flag;
 	return rc;
 }
 
 
-unsigned int fwcmd_parse_config_lockdown(
+enum fis_parser_codes fis_parse_config_lockdown(
 	const struct pt_output_config_lockdown *p_output_payload,
 	struct fwcmd_config_lockdown_data *p_data)
 {
 	memset(p_data, 0, sizeof (*p_data));
-	unsigned int rc = FIS_PARSER_CODES_SUCCESS;
+	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
 	p_data->locked = p_output_payload->locked;
 	return rc;
 }
 
 
-unsigned int fwcmd_parse_ddrt_io_init_info(
+enum fis_parser_codes fis_parse_ddrt_io_init_info(
 	const struct pt_output_ddrt_io_init_info *p_output_payload,
 	struct fwcmd_ddrt_io_init_info_data *p_data)
 {
 	memset(p_data, 0, sizeof (*p_data));
-	unsigned int rc = FIS_PARSER_CODES_SUCCESS;
+	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
 	p_data->ddrt_io_info = p_output_payload->ddrt_io_info;
 	p_data->ddrt_training_complete = p_output_payload->ddrt_training_complete;
 	return rc;
 }
 
 
-unsigned int fwcmd_parse_get_supported_sku_features(
+enum fis_parser_codes fis_parse_get_supported_sku_features(
 	const struct pt_output_get_supported_sku_features *p_output_payload,
 	struct fwcmd_get_supported_sku_features_data *p_data)
 {
 	memset(p_data, 0, sizeof (*p_data));
-	unsigned int rc = FIS_PARSER_CODES_SUCCESS;
+	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
 	p_data->dimm_sku = p_output_payload->dimm_sku;
 	return rc;
 }
 
 
-unsigned int fwcmd_parse_enable_dimm(
+enum fis_parser_codes fis_parse_enable_dimm(
 	const struct pt_output_enable_dimm *p_output_payload,
 	struct fwcmd_enable_dimm_data *p_data)
 {
 	memset(p_data, 0, sizeof (*p_data));
-	unsigned int rc = FIS_PARSER_CODES_SUCCESS;
+	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
 	p_data->enable = p_output_payload->enable;
 	return rc;
 }
 
 
-unsigned int fwcmd_parse_smart_health_info(
+enum fis_parser_codes fis_parse_smart_health_info(
 	const struct pt_output_smart_health_info *p_output_payload,
 	struct fwcmd_smart_health_info_data *p_data)
 {
 	memset(p_data, 0, sizeof (*p_data));
-	unsigned int rc = FIS_PARSER_CODES_SUCCESS;
+	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
 	p_data->validation_flags = p_output_payload->validation_flags;
 	p_data->validation_flags_health_status = (unsigned char)((p_data->validation_flags >> 0) & 0x01);
 	p_data->validation_flags_spare_blocks = (unsigned char)((p_data->validation_flags >> 1) & 0x01);
@@ -666,12 +673,12 @@ unsigned int fwcmd_parse_smart_health_info(
 }
 
 
-unsigned int fwcmd_parse_firmware_image_info(
+enum fis_parser_codes fis_parse_firmware_image_info(
 	const struct pt_output_firmware_image_info *p_output_payload,
 	struct fwcmd_firmware_image_info_data *p_data)
 {
 	memset(p_data, 0, sizeof (*p_data));
-	unsigned int rc = FIS_PARSER_CODES_SUCCESS;
+	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
 	memmove(p_data->firmware_revision, p_output_payload->firmware_revision, 5);
 	p_data->firmware_type = p_output_payload->firmware_type;
 	memmove(p_data->staged_fw_revision, p_output_payload->staged_fw_revision, 5);
@@ -684,23 +691,23 @@ unsigned int fwcmd_parse_firmware_image_info(
 }
 
 
-unsigned int fwcmd_parse_firmware_debug_log(
+enum fis_parser_codes fis_parse_firmware_debug_log(
 	const struct pt_output_firmware_debug_log *p_output_payload,
 	struct fwcmd_firmware_debug_log_data *p_data)
 {
 	memset(p_data, 0, sizeof (*p_data));
-	unsigned int rc = FIS_PARSER_CODES_SUCCESS;
+	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
 	p_data->log_size = p_output_payload->log_size;
 	return rc;
 }
 
 
-unsigned int fwcmd_parse_long_operation_status(
+enum fis_parser_codes fis_parse_long_operation_status(
 	const struct pt_output_long_operation_status *p_output_payload,
 	struct fwcmd_long_operation_status_data *p_data)
 {
 	memset(p_data, 0, sizeof (*p_data));
-	unsigned int rc = FIS_PARSER_CODES_SUCCESS;
+	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
 	p_data->command = p_output_payload->command;
 	p_data->percent_complete = p_output_payload->percent_complete;
 	p_data->estimate_time_to_completion = p_output_payload->estimate_time_to_completion;
@@ -710,12 +717,12 @@ unsigned int fwcmd_parse_long_operation_status(
 }
 
 
-unsigned int fwcmd_parse_bsr(
+enum fis_parser_codes fis_parse_bsr(
 	const struct pt_output_bsr *p_output_payload,
 	struct fwcmd_bsr_data *p_data)
 {
 	memset(p_data, 0, sizeof (*p_data));
-	unsigned int rc = FIS_PARSER_CODES_SUCCESS;
+	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
 	p_data->major_checkpoint = p_output_payload->major_checkpoint;
 	p_data->minor_checkpoint = p_output_payload->minor_checkpoint;
 	p_data->rest1 = p_output_payload->rest1;

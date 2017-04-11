@@ -40,6 +40,7 @@
 #include <string/revision.h>
 #include <uid/uid.h>
 #include "device_utilities.h"
+#include "platform_capabilities_db.h"
 
 int support_store_host(PersistentStore *p_store, int history_id);
 int support_store_sockets(PersistentStore *p_store, int history_id);

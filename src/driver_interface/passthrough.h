@@ -27,14 +27,6 @@
 #ifndef BPS_PROTOTYPE_PASSTHROUGH_H
 #define BPS_PROTOTYPE_PASSTHROUGH_H
 
-#define	COMMON_LOG_ENTRY()
-#define	COMMON_LOG_ERROR(error)
-#define	COMMON_LOG_EXIT_RETURN_I(rc)
-#define	COMMON_LOG_DEBUG_F(fmt, ...)
-#define	COMMON_LOG_ERROR_F(fmt, ...)
-#define	COMMON_LOG_DEBUG(str)
-#define	COMMON_LOG_EXIT()
-
 #ifdef __cplusplus
 extern "C"
 {
@@ -42,7 +34,7 @@ extern "C"
 
 #include <stdlib.h>
 
-struct fw_cmd
+struct pt_fw_cmd
 {
 	unsigned int device_handle; // as reported by NFIT
 	unsigned char opcode;
@@ -57,54 +49,56 @@ struct fw_cmd
 	void *large_output_payload;
 };
 
-enum IOCTL_PASSTHROUGH_RESULT
+#define PT_IOCTL_SUCCESS(code) (code == PT_SUCCESS)
+
+enum pt_ioctl_result
 {
 	PT_SUCCESS = 0,
 	PT_ERR_UNKNOWN = 1,
-	PT_ERR_BADDEVICEHANDLE = 2,
-	PT_ERR_NOMEMORY = 3,
-	PT_ERR_DRIVERFAILED = 4,
+	PT_ERR_BADDEVICE = 2,
+	PT_ERR_BADSIZE = 2,
+	PT_ERR_BADDEVICEHANDLE = 3,
+	PT_ERR_BADSECURITY = 4,
+	PT_ERR_DRIVERFAILED = 5,
+	PT_ERR_DEVICEBUSY = 6,
+	PT_ERR_INVALIDPERMISSIONS = 7,
+	PT_ERR_NOMEMORY = 8,
 };
 
-#define	PT_RC_IS_SUCCESS(rc) ((rc) == 0)
-#define SET_FUNC_RC(rc, code) rc |= ((code) << 0)
-#define SET_DRIVER_RC(rc, code) rc |= ((code) << 4)
-#define SET_PT_RC(rc, code) rc |= ((code) << 8)
-#define SET_FW_STATUS(rc, code) rc |= ((code) << 16)
-#define SET_FW_EXT_STATUS(rc, code) rc |= ((code) << 24)
+#define	PT_IS_SUCCESS(result) (*((int*)&result) == 0)
 
-#define DEV_SMALL_PAYLOAD_SIZE	128 /* 128B - Size for a passthrough command small payload */
-#define BUILD_DSM_OPCODE(opcode, subop_code) (unsigned int)(subop_code << 8 | opcode)
+#define PT_RESULT_ENCODE(result, code) memmove(&(code), &(result), sizeof(code))
+#define PT_RESULT_DECODE(code, result) memmove(&(result), &(code), sizeof(code))
 
-#define	BIOS_EMULATED_COMMAND 0xFD
-#define	SUBOP_GET_PAYLOAD_SIZE 0x00
-#define	SUBOP_WRITE_LARGE_PAYLOAD_INPUT 0x01
-#define	SUBOP_READ_LARGE_PAYLOAD_OUTPUT 0x02
-#define	SUBOP_GET_BOOT_STATUS 0x03
+#define PT_DEV_SMALL_PAYLOAD_SIZE	128 /* 128B - Size for a passthrough command small payload */
+#define PT_BUILD_DSM_OPCODE(opcode, subop_code) (unsigned int)(subop_code << 8 | opcode)
 
-struct pt_bios_get_size
+#define	PT_BIOS_EMULATED_COMMAND 0xFD
+#define	PT_SUBOP_GET_PAYLOAD_SIZE 0x00
+#define	PT_SUBOP_WRITE_LARGE_PAYLOAD_INPUT 0x01
+#define	PT_SUBOP_READ_LARGE_PAYLOAD_OUTPUT 0x02
+#define	PT_SUBOP_GET_BOOT_STATUS 0x03
+
+struct pt_pt_bios_get_size
 {
 	unsigned int large_input_payload_size;
 	unsigned int large_output_payload_size;
 	unsigned int rw_size;
 }__attribute__((packed));
 
-union pt_error
+
+typedef struct
 {
-	unsigned int code;
-	struct
-	{
-		unsigned char func: 4;
-		unsigned char driver: 4;
-		unsigned char ioctl:8;
-		unsigned char fw_status;
-		unsigned char fw_ext_status;
-	} parts;
-};
+	unsigned char func: 4;
+	unsigned char driver: 4;
+	unsigned char pt;
+	unsigned char fw_status;
+	unsigned char fw_ext_status;
+} pt_result;
 
 void pt_get_error_message(unsigned int code, char message[1024], size_t message_len);
 
-int ioctl_passthrough_cmd(struct fw_cmd *p_fw_cmd);
+unsigned int pt_ioctl_cmd(struct pt_fw_cmd *p_fw_cmd);
 
 #ifdef __cplusplus
 }

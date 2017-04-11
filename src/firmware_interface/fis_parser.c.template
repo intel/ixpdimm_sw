@@ -29,12 +29,12 @@
 
 //- macro func_createFromPayload(name, payload)
 
-unsigned int {{name|fw_cmd_parser}}(
+enum fis_parser_codes {{name|fw_cmd_parser}}(
 	const struct {{name|output_payload}} *p_output_payload,
 	struct {{name|fw_cmd_data}} *p_data)
 {
 	memset(p_data, 0, sizeof (*p_data));
-	unsigned int rc = FIS_PARSER_CODES_SUCCESS;
+	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
 //- for f in payload.fields_not_ignored:
 //- 	if f.conversion_fn
 	p_data->{{f.name}} = {{f.conversion_fn}}(p_output_payload->{{f.name}});
@@ -58,10 +58,13 @@ unsigned int {{name|fw_cmd_parser}}(
 	{
 		if (p_output_payload->{{r.offset_field}} < sizeof(*p_output_payload))
     	{
-    		struct {{r.name|output_payload}} *p_{{r.name}}  =
-    			((struct {{r.name|output_payload}} *)
-    				((unsigned char *) p_output_payload + p_data->{{r.offset_field}}));
-    		rc = {{r.name|fw_cmd_parser}}(p_{{r.name}}, &(p_data->{{r.name}}));
+    	 	if (p_data->{{r.offset_field}} > 0)
+    	 	{
+				struct {{r.name|output_payload}} *p_{{r.name}}  =
+					((struct {{r.name|output_payload}} *)
+						((unsigned char *) p_output_payload + p_data->{{r.offset_field}}));
+				rc = {{r.name|fw_cmd_parser}}(p_{{r.name}}, &(p_data->{{r.name}}));
+    		}
     	}
     	else
     	{
@@ -75,7 +78,7 @@ unsigned int {{name|fw_cmd_parser}}(
 	const int type_offset = {{r.type_offset}};
 	int current_offset = sizeof(*p_output_payload); // start at end of parent payload
 
-	while (current_offset < (int)p_data->{{r.total_length_field}})
+	while (current_offset < (int)p_data->{{r.total_length_field}} && FWCMD_PARSE_SUCCESS(rc))
 	{
 		int type_id = *(base + current_offset + type_offset);
 	//- for t in r.types
@@ -92,7 +95,7 @@ unsigned int {{name|fw_cmd_parser}}(
 			struct {{name|output_payload}} *p_sub_payloads =
 				((struct {{name|output_payload}} *) (base + current_offset));
 			struct {{name|fw_cmd_data}} *p_converted = &p_data->{{name}}[p_data->{{name}}_count];
-			{{name|fw_cmd_parser}}(p_sub_payloads, p_converted);
+			rc = {{name|fw_cmd_parser}}(p_sub_payloads, p_converted);
 			p_data->{{name}}_count++;
 			current_offset += p_converted->{{r.sub_length_field}};
 		}
@@ -100,20 +103,20 @@ unsigned int {{name|fw_cmd_parser}}(
 		else
 		{
 			rc = FIS_PARSER_CODES_PARSING_TYPE_NOT_FOUND;
-			break;
 		}
 	}
 //- elif r.is_count_based
 // Count Based
-	p_data->{{r.name}} = realloc(p_data->{{r.name}},
-				sizeof(struct {{r.name|fw_cmd_data}}) * (p_data->{{r.name}}_count + 1));
+
 	unsigned char *base = (unsigned char *) p_output_payload;
 	int current_offset = sizeof(*p_output_payload); // start at end of parent payload
-	for (int i = 0; i < (int)p_data->{{r.count_field}}; i++)
+	for (int i = 0; i < (int)p_data->{{r.count_field}} && FWCMD_PARSE_SUCCESS(rc); i++)
 	{
+		p_data->{{r.name}} = realloc(p_data->{{r.name}},
+    		sizeof(struct {{r.name|fw_cmd_data}}) * (p_data->{{r.name}}_count + 1));
 		struct {{r.name|output_payload}} *p_sub_payloads =
 			((struct {{r.name|output_payload}} *) (base + current_offset));
-		{{r.name|fw_cmd_parser}}(p_sub_payloads, &p_data->{{r.name}}[p_data->{{r.name}}_count]);
+		rc = {{r.name|fw_cmd_parser}}(p_sub_payloads, &p_data->{{r.name}}[p_data->{{r.name}}_count]);
 		p_data->{{r.name}}_count++;
 		current_offset += (i + 1) * sizeof(struct {{r.name|output_payload}});
 	}

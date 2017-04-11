@@ -44,6 +44,13 @@ extern "C"
 
 #include <driver_interface/passthrough.h>
 
+enum fis_error_codes
+{
+//- for e in error_codes
+	FIS_ERR_{{e.short|enum}} = {{e.code}},
+//- endfor
+};
+
 /*
  * Payloads Structures
  */
@@ -79,6 +86,8 @@ unsigned int {{cmd.name|fis}}(const unsigned int device_handle
 {%- if cmd.has_output %}, struct {{cmd.name|output_payload}} *p_output_payload{% endif -%}
 );
 //- endfor
+
+void fis_get_error_message(unsigned int code, char *message, size_t message_size);
 
 #ifdef __cplusplus
 }

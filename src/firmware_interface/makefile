@@ -38,15 +38,7 @@ OBJECT_MODULE_DIR = $(OBJECT_DIR)/firmware_interface
 
 # ---- FILES ---------------------------------------------------------------------------------------
 # defines list of objects to create from source
-ifdef BUILD_WINDOWS
-	SRC_EXCLUDE = $(wildcard lnx_*.c esx_*.c)
-else ifdef BUILD_LINUX
-	SRC_EXCLUDE = $(wildcard win_*.c esx_*.c)
-else ifdef BUILD_ESX
-	SRC_EXCLUDE = $(wildcard win_*.c lnx_*.c)
-endif
-
-SRC = $(filter-out $(SRC_EXCLUDE),$(wildcard *.c))
+SRC = $(wildcard *.c)
 OBJS = $(patsubst %.c,%.o,$(SRC))
 
 # defines the location of the object files
@@ -86,6 +78,9 @@ endif
 all :
 	$(MAKE) $(JOBCOUNT) $(OBJECT_MODULE_DIR)
 	$(MAKE) $(JOBCOUNT) $(TARGETNAME)
+ifndef SKIP_UNITTESTS
+	$(MAKE) unittest
+endif
 
 $(OBJECT_MODULE_DIR) :
 	$(MKDIR) $@
@@ -97,10 +92,13 @@ $(TARGETNAME) : $(OBJNAMES)
 $(OBJECT_MODULE_DIR)/%.o : %.c
 	$(CC) $(CFLAGS) $(INCS) -c $< -o $@ $(LDFLAGS)
 
-test:
+unittest:
+	$(MAKE) -C unittest all
 
-cstyle :
-	$(CSTYLE) $(SRC)
+test:
+ifndef ESX_BUILD # can't run ESX tests on build system
+	$(MAKE) -C unittest test
+endif
 
 clean :
 	$(RM) $(OBJNAMES)
@@ -113,4 +111,4 @@ sourcedrop:
 	$(COPY) *.c $(SOURCEDROP_DIR)/src/firmware_interface
 	$(COPY) makefile $(SOURCEDROP_DIR)/src/firmware_interface
 
-.PHONY : all clean test cstyle clobber sourcedrop
+.PHONY : all clean test cstyle clobber sourcedrop unittest

@@ -41,6 +41,7 @@
 #include <persistence/logging.h>
 #include <persistence/lib_persistence.h>
 #include <persistence/config_settings.h>
+#include <firmware_interface/fw_commands.h>
 #include "platform_config_data.h"
 #include "device_utilities.h"
 #include "monitor.h"
@@ -48,6 +49,7 @@
 #include "capabilities.h"
 #include "nvm_context.h"
 #include "system.h"
+#include "nvm_types.h"
 
 const unsigned int NUM_RANKS = 4;
 
@@ -244,10 +246,10 @@ void add_identify_dimm_properties_to_device(struct device_discovery *p_device,
 	build_fw_revision(p_device->fw_api_version, NVM_VERSION_LEN,
 			get_fw_api_major_version(p_id_dimm->api_ver),
 			get_fw_api_minor_version(p_id_dimm->api_ver));
-	p_device->interface_format_codes[0] = p_id_dimm->ifc;
-	p_device->interface_format_codes[1] = p_id_dimm->ifce;
 
 	p_device->capacity = MULTIPLES_TO_BYTES((NVM_UINT64)p_id_dimm->rc);
+
+	add_ifcs_from_identify_dimm_to_device(p_device, p_id_dimm);
 
 	COMMON_LOG_EXIT();
 }
@@ -564,6 +566,7 @@ int nvm_get_device_discovery(const NVM_UID device_uid,
 	}
 	else
 	{
+		memset(p_discovery, 0, sizeof (struct device_discovery));
 		rc = lookup_dev_uid(device_uid, p_discovery);
 	}
 

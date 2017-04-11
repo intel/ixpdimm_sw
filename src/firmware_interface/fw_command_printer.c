@@ -28,6 +28,7 @@
 #include "fw_command_printer.h"
 #include <driver_interface/passthrough.h>
 #include <stdio.h>
+#include <string.h>
 
 
 void print_tabs(int tab_count)
@@ -46,14 +47,25 @@ void fwcmd_print_error(struct fwcmd_error_code error)
     		printf("Driver error: 0x%x\n", error.code);
 			break;
     	case FWCMD_ERROR_TYPE_PT:
+		{
+			pt_result result;
+			PT_RESULT_DECODE(error.code, result);
+			if(result.fw_ext_status)
+			{
+				char fis_message[1024];
+				fis_get_error_message(result.fw_ext_status, fis_message, 1024);
+				printf("FW Error: 0x%x - '%s'\n", result.fw_ext_status, fis_message);
+			}
+			else
 			{
 				printf("Passthrough Error: 0x%x\n", error.code);
 				char error_message[1024];
 				pt_get_error_message(error.code, error_message, 1024);
 				printf("%s", error_message);
-
-            	break;
 			}
+
+			break;
+		}
     	case FWCMD_ERROR_TYPE_PARSE:
     		printf("Parsing error: 0x%x\n", error.code);
 			break;

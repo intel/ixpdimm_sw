@@ -45,24 +45,31 @@ struct fwcmd_identify_dimm_result fwcmd_alloc_identify_dimm(unsigned int handle)
 	unsigned int rc = fis_identify_dimm(handle,
 		&output_payload);
 
-	if (PT_RC_IS_SUCCESS(rc))
+	if (PT_IS_SUCCESS(rc))
 	{
 		result.p_data = (struct fwcmd_identify_dimm_data *)malloc(sizeof(*result.p_data));
-		rc = fwcmd_parse_identify_dimm(&output_payload, result.p_data);
-		if (FWCMD_PARSE_SUCCESS(rc))
+		if (result.p_data)
 		{
-			result.success = 1;
+			rc = fis_parse_identify_dimm(&output_payload, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(rc))
+			{
+				result.success = 1;
+			}
+			else
+			{
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = rc;
+			}
 		}
 		else
 		{
-			result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
-			result.error_code.code = rc;
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
 		}
 	}
 	else
 	{
 		result.error_code.type = FWCMD_ERROR_TYPE_PT;
-		result.error_code.code = rc;
+        result.error_code.code = rc;
 	}
 	return result;
 }
@@ -90,24 +97,31 @@ struct fwcmd_identify_dimm_characteristics_result fwcmd_alloc_identify_dimm_char
 	unsigned int rc = fis_identify_dimm_characteristics(handle,
 		&output_payload);
 
-	if (PT_RC_IS_SUCCESS(rc))
+	if (PT_IS_SUCCESS(rc))
 	{
 		result.p_data = (struct fwcmd_identify_dimm_characteristics_data *)malloc(sizeof(*result.p_data));
-		rc = fwcmd_parse_identify_dimm_characteristics(&output_payload, result.p_data);
-		if (FWCMD_PARSE_SUCCESS(rc))
+		if (result.p_data)
 		{
-			result.success = 1;
+			rc = fis_parse_identify_dimm_characteristics(&output_payload, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(rc))
+			{
+				result.success = 1;
+			}
+			else
+			{
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = rc;
+			}
 		}
 		else
 		{
-			result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
-			result.error_code.code = rc;
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
 		}
 	}
 	else
 	{
 		result.error_code.type = FWCMD_ERROR_TYPE_PT;
-		result.error_code.code = rc;
+        result.error_code.code = rc;
 	}
 	return result;
 }
@@ -135,24 +149,31 @@ struct fwcmd_get_security_state_result fwcmd_alloc_get_security_state(unsigned i
 	unsigned int rc = fis_get_security_state(handle,
 		&output_payload);
 
-	if (PT_RC_IS_SUCCESS(rc))
+	if (PT_IS_SUCCESS(rc))
 	{
 		result.p_data = (struct fwcmd_get_security_state_data *)malloc(sizeof(*result.p_data));
-		rc = fwcmd_parse_get_security_state(&output_payload, result.p_data);
-		if (FWCMD_PARSE_SUCCESS(rc))
+		if (result.p_data)
 		{
-			result.success = 1;
+			rc = fis_parse_get_security_state(&output_payload, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(rc))
+			{
+				result.success = 1;
+			}
+			else
+			{
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = rc;
+			}
 		}
 		else
 		{
-			result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
-			result.error_code.code = rc;
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
 		}
 	}
 	else
 	{
 		result.error_code.type = FWCMD_ERROR_TYPE_PT;
-		result.error_code.code = rc;
+        result.error_code.code = rc;
 	}
 	return result;
 }
@@ -184,14 +205,14 @@ struct fwcmd_set_passphrase_result fwcmd_call_set_passphrase(unsigned int handle
 	unsigned int rc = fis_set_passphrase(handle,
 		&input_payload);
 
-	if (PT_RC_IS_SUCCESS(rc))
+	if (PT_IS_SUCCESS(rc))
 	{
 		result.success = 1;
 	}
 	else
 	{
 		result.error_code.type = FWCMD_ERROR_TYPE_PT;
-		result.error_code.code = rc;
+        result.error_code.code = rc;
 	}
 	return result;
 }
@@ -209,14 +230,14 @@ struct fwcmd_disable_passphrase_result fwcmd_call_disable_passphrase(unsigned in
 	unsigned int rc = fis_disable_passphrase(handle,
 		&input_payload);
 
-	if (PT_RC_IS_SUCCESS(rc))
+	if (PT_IS_SUCCESS(rc))
 	{
 		result.success = 1;
 	}
 	else
 	{
 		result.error_code.type = FWCMD_ERROR_TYPE_PT;
-		result.error_code.code = rc;
+        result.error_code.code = rc;
 	}
 	return result;
 }
@@ -234,14 +255,14 @@ struct fwcmd_unlock_unit_result fwcmd_call_unlock_unit(unsigned int handle,
 	unsigned int rc = fis_unlock_unit(handle,
 		&input_payload);
 
-	if (PT_RC_IS_SUCCESS(rc))
+	if (PT_IS_SUCCESS(rc))
 	{
 		result.success = 1;
 	}
 	else
 	{
 		result.error_code.type = FWCMD_ERROR_TYPE_PT;
-		result.error_code.code = rc;
+        result.error_code.code = rc;
 	}
 	return result;
 }
@@ -259,14 +280,14 @@ struct fwcmd_secure_erase_result fwcmd_call_secure_erase(unsigned int handle,
 	unsigned int rc = fis_secure_erase(handle,
 		&input_payload);
 
-	if (PT_RC_IS_SUCCESS(rc))
+	if (PT_IS_SUCCESS(rc))
 	{
 		result.success = 1;
 	}
 	else
 	{
 		result.error_code.type = FWCMD_ERROR_TYPE_PT;
-		result.error_code.code = rc;
+        result.error_code.code = rc;
 	}
 	return result;
 }
@@ -280,14 +301,14 @@ struct fwcmd_freeze_lock_result fwcmd_call_freeze_lock(unsigned int handle)
 
 	unsigned int rc = fis_freeze_lock(handle);
 
-	if (PT_RC_IS_SUCCESS(rc))
+	if (PT_IS_SUCCESS(rc))
 	{
 		result.success = 1;
 	}
 	else
 	{
 		result.error_code.type = FWCMD_ERROR_TYPE_PT;
-		result.error_code.code = rc;
+        result.error_code.code = rc;
 	}
 	return result;
 }
@@ -303,24 +324,31 @@ struct fwcmd_get_alarm_threshold_result fwcmd_alloc_get_alarm_threshold(unsigned
 	unsigned int rc = fis_get_alarm_threshold(handle,
 		&output_payload);
 
-	if (PT_RC_IS_SUCCESS(rc))
+	if (PT_IS_SUCCESS(rc))
 	{
 		result.p_data = (struct fwcmd_get_alarm_threshold_data *)malloc(sizeof(*result.p_data));
-		rc = fwcmd_parse_get_alarm_threshold(&output_payload, result.p_data);
-		if (FWCMD_PARSE_SUCCESS(rc))
+		if (result.p_data)
 		{
-			result.success = 1;
+			rc = fis_parse_get_alarm_threshold(&output_payload, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(rc))
+			{
+				result.success = 1;
+			}
+			else
+			{
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = rc;
+			}
 		}
 		else
 		{
-			result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
-			result.error_code.code = rc;
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
 		}
 	}
 	else
 	{
 		result.error_code.type = FWCMD_ERROR_TYPE_PT;
-		result.error_code.code = rc;
+        result.error_code.code = rc;
 	}
 	return result;
 }
@@ -348,24 +376,31 @@ struct fwcmd_power_management_policy_result fwcmd_alloc_power_management_policy(
 	unsigned int rc = fis_power_management_policy(handle,
 		&output_payload);
 
-	if (PT_RC_IS_SUCCESS(rc))
+	if (PT_IS_SUCCESS(rc))
 	{
 		result.p_data = (struct fwcmd_power_management_policy_data *)malloc(sizeof(*result.p_data));
-		rc = fwcmd_parse_power_management_policy(&output_payload, result.p_data);
-		if (FWCMD_PARSE_SUCCESS(rc))
+		if (result.p_data)
 		{
-			result.success = 1;
+			rc = fis_parse_power_management_policy(&output_payload, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(rc))
+			{
+				result.success = 1;
+			}
+			else
+			{
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = rc;
+			}
 		}
 		else
 		{
-			result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
-			result.error_code.code = rc;
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
 		}
 	}
 	else
 	{
 		result.error_code.type = FWCMD_ERROR_TYPE_PT;
-		result.error_code.code = rc;
+        result.error_code.code = rc;
 	}
 	return result;
 }
@@ -393,24 +428,31 @@ struct fwcmd_die_sparing_policy_result fwcmd_alloc_die_sparing_policy(unsigned i
 	unsigned int rc = fis_die_sparing_policy(handle,
 		&output_payload);
 
-	if (PT_RC_IS_SUCCESS(rc))
+	if (PT_IS_SUCCESS(rc))
 	{
 		result.p_data = (struct fwcmd_die_sparing_policy_data *)malloc(sizeof(*result.p_data));
-		rc = fwcmd_parse_die_sparing_policy(&output_payload, result.p_data);
-		if (FWCMD_PARSE_SUCCESS(rc))
+		if (result.p_data)
 		{
-			result.success = 1;
+			rc = fis_parse_die_sparing_policy(&output_payload, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(rc))
+			{
+				result.success = 1;
+			}
+			else
+			{
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = rc;
+			}
 		}
 		else
 		{
-			result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
-			result.error_code.code = rc;
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
 		}
 	}
 	else
 	{
 		result.error_code.type = FWCMD_ERROR_TYPE_PT;
-		result.error_code.code = rc;
+        result.error_code.code = rc;
 	}
 	return result;
 }
@@ -438,24 +480,31 @@ struct fwcmd_address_range_scrub_result fwcmd_alloc_address_range_scrub(unsigned
 	unsigned int rc = fis_address_range_scrub(handle,
 		&output_payload);
 
-	if (PT_RC_IS_SUCCESS(rc))
+	if (PT_IS_SUCCESS(rc))
 	{
 		result.p_data = (struct fwcmd_address_range_scrub_data *)malloc(sizeof(*result.p_data));
-		rc = fwcmd_parse_address_range_scrub(&output_payload, result.p_data);
-		if (FWCMD_PARSE_SUCCESS(rc))
+		if (result.p_data)
 		{
-			result.success = 1;
+			rc = fis_parse_address_range_scrub(&output_payload, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(rc))
+			{
+				result.success = 1;
+			}
+			else
+			{
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = rc;
+			}
 		}
 		else
 		{
-			result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
-			result.error_code.code = rc;
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
 		}
 	}
 	else
 	{
 		result.error_code.type = FWCMD_ERROR_TYPE_PT;
-		result.error_code.code = rc;
+        result.error_code.code = rc;
 	}
 	return result;
 }
@@ -483,24 +532,31 @@ struct fwcmd_optional_configuration_data_policy_result fwcmd_alloc_optional_conf
 	unsigned int rc = fis_optional_configuration_data_policy(handle,
 		&output_payload);
 
-	if (PT_RC_IS_SUCCESS(rc))
+	if (PT_IS_SUCCESS(rc))
 	{
 		result.p_data = (struct fwcmd_optional_configuration_data_policy_data *)malloc(sizeof(*result.p_data));
-		rc = fwcmd_parse_optional_configuration_data_policy(&output_payload, result.p_data);
-		if (FWCMD_PARSE_SUCCESS(rc))
+		if (result.p_data)
 		{
-			result.success = 1;
+			rc = fis_parse_optional_configuration_data_policy(&output_payload, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(rc))
+			{
+				result.success = 1;
+			}
+			else
+			{
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = rc;
+			}
 		}
 		else
 		{
-			result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
-			result.error_code.code = rc;
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
 		}
 	}
 	else
 	{
 		result.error_code.type = FWCMD_ERROR_TYPE_PT;
-		result.error_code.code = rc;
+        result.error_code.code = rc;
 	}
 	return result;
 }
@@ -532,24 +588,31 @@ struct fwcmd_pmon_registers_result fwcmd_alloc_pmon_registers(unsigned int handl
 		&input_payload,
 		&output_payload);
 
-	if (PT_RC_IS_SUCCESS(rc))
+	if (PT_IS_SUCCESS(rc))
 	{
 		result.p_data = (struct fwcmd_pmon_registers_data *)malloc(sizeof(*result.p_data));
-		rc = fwcmd_parse_pmon_registers(&output_payload, result.p_data);
-		if (FWCMD_PARSE_SUCCESS(rc))
+		if (result.p_data)
 		{
-			result.success = 1;
+			rc = fis_parse_pmon_registers(&output_payload, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(rc))
+			{
+				result.success = 1;
+			}
+			else
+			{
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = rc;
+			}
 		}
 		else
 		{
-			result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
-			result.error_code.code = rc;
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
 		}
 	}
 	else
 	{
 		result.error_code.type = FWCMD_ERROR_TYPE_PT;
-		result.error_code.code = rc;
+        result.error_code.code = rc;
 	}
 	return result;
 }
@@ -583,14 +646,14 @@ struct fwcmd_set_alarm_threshold_result fwcmd_call_set_alarm_threshold(unsigned 
 	unsigned int rc = fis_set_alarm_threshold(handle,
 		&input_payload);
 
-	if (PT_RC_IS_SUCCESS(rc))
+	if (PT_IS_SUCCESS(rc))
 	{
 		result.success = 1;
 	}
 	else
 	{
 		result.error_code.type = FWCMD_ERROR_TYPE_PT;
-		result.error_code.code = rc;
+        result.error_code.code = rc;
 	}
 	return result;
 }
@@ -606,24 +669,31 @@ struct fwcmd_system_time_result fwcmd_alloc_system_time(unsigned int handle)
 	unsigned int rc = fis_system_time(handle,
 		&output_payload);
 
-	if (PT_RC_IS_SUCCESS(rc))
+	if (PT_IS_SUCCESS(rc))
 	{
 		result.p_data = (struct fwcmd_system_time_data *)malloc(sizeof(*result.p_data));
-		rc = fwcmd_parse_system_time(&output_payload, result.p_data);
-		if (FWCMD_PARSE_SUCCESS(rc))
+		if (result.p_data)
 		{
-			result.success = 1;
+			rc = fis_parse_system_time(&output_payload, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(rc))
+			{
+				result.success = 1;
+			}
+			else
+			{
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = rc;
+			}
 		}
 		else
 		{
-			result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
-			result.error_code.code = rc;
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
 		}
 	}
 	else
 	{
 		result.error_code.type = FWCMD_ERROR_TYPE_PT;
-		result.error_code.code = rc;
+        result.error_code.code = rc;
 	}
 	return result;
 }
@@ -659,24 +729,31 @@ struct fwcmd_platform_config_data_result fwcmd_alloc_platform_config_data(unsign
 		&input_payload,
 		&output_payload);
 
-	if (PT_RC_IS_SUCCESS(rc))
+	if (PT_IS_SUCCESS(rc))
 	{
 		result.p_data = (struct fwcmd_platform_config_data_data *)malloc(sizeof(*result.p_data));
-		rc = fwcmd_parse_platform_config_data(&output_payload, result.p_data);
-		if (FWCMD_PARSE_SUCCESS(rc))
+		if (result.p_data)
 		{
-			result.success = 1;
+			rc = fis_parse_platform_config_data(&output_payload, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(rc))
+			{
+				result.success = 1;
+			}
+			else
+			{
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = rc;
+			}
 		}
 		else
 		{
-			result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
-			result.error_code.code = rc;
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
 		}
 	}
 	else
 	{
 		result.error_code.type = FWCMD_ERROR_TYPE_PT;
-		result.error_code.code = rc;
+        result.error_code.code = rc;
 	}
 	return result;
 }
@@ -785,24 +862,31 @@ struct fwcmd_dimm_partition_info_result fwcmd_alloc_dimm_partition_info(unsigned
 	unsigned int rc = fis_dimm_partition_info(handle,
 		&output_payload);
 
-	if (PT_RC_IS_SUCCESS(rc))
+	if (PT_IS_SUCCESS(rc))
 	{
 		result.p_data = (struct fwcmd_dimm_partition_info_data *)malloc(sizeof(*result.p_data));
-		rc = fwcmd_parse_dimm_partition_info(&output_payload, result.p_data);
-		if (FWCMD_PARSE_SUCCESS(rc))
+		if (result.p_data)
 		{
-			result.success = 1;
+			rc = fis_parse_dimm_partition_info(&output_payload, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(rc))
+			{
+				result.success = 1;
+			}
+			else
+			{
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = rc;
+			}
 		}
 		else
 		{
-			result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
-			result.error_code.code = rc;
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
 		}
 	}
 	else
 	{
 		result.error_code.type = FWCMD_ERROR_TYPE_PT;
-		result.error_code.code = rc;
+        result.error_code.code = rc;
 	}
 	return result;
 }
@@ -834,24 +918,31 @@ struct fwcmd_fw_debug_log_level_result fwcmd_alloc_fw_debug_log_level(unsigned i
 		&input_payload,
 		&output_payload);
 
-	if (PT_RC_IS_SUCCESS(rc))
+	if (PT_IS_SUCCESS(rc))
 	{
 		result.p_data = (struct fwcmd_fw_debug_log_level_data *)malloc(sizeof(*result.p_data));
-		rc = fwcmd_parse_fw_debug_log_level(&output_payload, result.p_data);
-		if (FWCMD_PARSE_SUCCESS(rc))
+		if (result.p_data)
 		{
-			result.success = 1;
+			rc = fis_parse_fw_debug_log_level(&output_payload, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(rc))
+			{
+				result.success = 1;
+			}
+			else
+			{
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = rc;
+			}
 		}
 		else
 		{
-			result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
-			result.error_code.code = rc;
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
 		}
 	}
 	else
 	{
 		result.error_code.type = FWCMD_ERROR_TYPE_PT;
-		result.error_code.code = rc;
+        result.error_code.code = rc;
 	}
 	return result;
 }
@@ -879,24 +970,31 @@ struct fwcmd_fw_load_flag_result fwcmd_alloc_fw_load_flag(unsigned int handle)
 	unsigned int rc = fis_fw_load_flag(handle,
 		&output_payload);
 
-	if (PT_RC_IS_SUCCESS(rc))
+	if (PT_IS_SUCCESS(rc))
 	{
 		result.p_data = (struct fwcmd_fw_load_flag_data *)malloc(sizeof(*result.p_data));
-		rc = fwcmd_parse_fw_load_flag(&output_payload, result.p_data);
-		if (FWCMD_PARSE_SUCCESS(rc))
+		if (result.p_data)
 		{
-			result.success = 1;
+			rc = fis_parse_fw_load_flag(&output_payload, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(rc))
+			{
+				result.success = 1;
+			}
+			else
+			{
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = rc;
+			}
 		}
 		else
 		{
-			result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
-			result.error_code.code = rc;
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
 		}
 	}
 	else
 	{
 		result.error_code.type = FWCMD_ERROR_TYPE_PT;
-		result.error_code.code = rc;
+        result.error_code.code = rc;
 	}
 	return result;
 }
@@ -924,24 +1022,31 @@ struct fwcmd_config_lockdown_result fwcmd_alloc_config_lockdown(unsigned int han
 	unsigned int rc = fis_config_lockdown(handle,
 		&output_payload);
 
-	if (PT_RC_IS_SUCCESS(rc))
+	if (PT_IS_SUCCESS(rc))
 	{
 		result.p_data = (struct fwcmd_config_lockdown_data *)malloc(sizeof(*result.p_data));
-		rc = fwcmd_parse_config_lockdown(&output_payload, result.p_data);
-		if (FWCMD_PARSE_SUCCESS(rc))
+		if (result.p_data)
 		{
-			result.success = 1;
+			rc = fis_parse_config_lockdown(&output_payload, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(rc))
+			{
+				result.success = 1;
+			}
+			else
+			{
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = rc;
+			}
 		}
 		else
 		{
-			result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
-			result.error_code.code = rc;
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
 		}
 	}
 	else
 	{
 		result.error_code.type = FWCMD_ERROR_TYPE_PT;
-		result.error_code.code = rc;
+        result.error_code.code = rc;
 	}
 	return result;
 }
@@ -969,24 +1074,31 @@ struct fwcmd_ddrt_io_init_info_result fwcmd_alloc_ddrt_io_init_info(unsigned int
 	unsigned int rc = fis_ddrt_io_init_info(handle,
 		&output_payload);
 
-	if (PT_RC_IS_SUCCESS(rc))
+	if (PT_IS_SUCCESS(rc))
 	{
 		result.p_data = (struct fwcmd_ddrt_io_init_info_data *)malloc(sizeof(*result.p_data));
-		rc = fwcmd_parse_ddrt_io_init_info(&output_payload, result.p_data);
-		if (FWCMD_PARSE_SUCCESS(rc))
+		if (result.p_data)
 		{
-			result.success = 1;
+			rc = fis_parse_ddrt_io_init_info(&output_payload, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(rc))
+			{
+				result.success = 1;
+			}
+			else
+			{
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = rc;
+			}
 		}
 		else
 		{
-			result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
-			result.error_code.code = rc;
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
 		}
 	}
 	else
 	{
 		result.error_code.type = FWCMD_ERROR_TYPE_PT;
-		result.error_code.code = rc;
+        result.error_code.code = rc;
 	}
 	return result;
 }
@@ -1014,24 +1126,31 @@ struct fwcmd_get_supported_sku_features_result fwcmd_alloc_get_supported_sku_fea
 	unsigned int rc = fis_get_supported_sku_features(handle,
 		&output_payload);
 
-	if (PT_RC_IS_SUCCESS(rc))
+	if (PT_IS_SUCCESS(rc))
 	{
 		result.p_data = (struct fwcmd_get_supported_sku_features_data *)malloc(sizeof(*result.p_data));
-		rc = fwcmd_parse_get_supported_sku_features(&output_payload, result.p_data);
-		if (FWCMD_PARSE_SUCCESS(rc))
+		if (result.p_data)
 		{
-			result.success = 1;
+			rc = fis_parse_get_supported_sku_features(&output_payload, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(rc))
+			{
+				result.success = 1;
+			}
+			else
+			{
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = rc;
+			}
 		}
 		else
 		{
-			result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
-			result.error_code.code = rc;
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
 		}
 	}
 	else
 	{
 		result.error_code.type = FWCMD_ERROR_TYPE_PT;
-		result.error_code.code = rc;
+        result.error_code.code = rc;
 	}
 	return result;
 }
@@ -1059,24 +1178,31 @@ struct fwcmd_enable_dimm_result fwcmd_alloc_enable_dimm(unsigned int handle)
 	unsigned int rc = fis_enable_dimm(handle,
 		&output_payload);
 
-	if (PT_RC_IS_SUCCESS(rc))
+	if (PT_IS_SUCCESS(rc))
 	{
 		result.p_data = (struct fwcmd_enable_dimm_data *)malloc(sizeof(*result.p_data));
-		rc = fwcmd_parse_enable_dimm(&output_payload, result.p_data);
-		if (FWCMD_PARSE_SUCCESS(rc))
+		if (result.p_data)
 		{
-			result.success = 1;
+			rc = fis_parse_enable_dimm(&output_payload, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(rc))
+			{
+				result.success = 1;
+			}
+			else
+			{
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = rc;
+			}
 		}
 		else
 		{
-			result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
-			result.error_code.code = rc;
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
 		}
 	}
 	else
 	{
 		result.error_code.type = FWCMD_ERROR_TYPE_PT;
-		result.error_code.code = rc;
+        result.error_code.code = rc;
 	}
 	return result;
 }
@@ -1104,24 +1230,31 @@ struct fwcmd_smart_health_info_result fwcmd_alloc_smart_health_info(unsigned int
 	unsigned int rc = fis_smart_health_info(handle,
 		&output_payload);
 
-	if (PT_RC_IS_SUCCESS(rc))
+	if (PT_IS_SUCCESS(rc))
 	{
 		result.p_data = (struct fwcmd_smart_health_info_data *)malloc(sizeof(*result.p_data));
-		rc = fwcmd_parse_smart_health_info(&output_payload, result.p_data);
-		if (FWCMD_PARSE_SUCCESS(rc))
+		if (result.p_data)
 		{
-			result.success = 1;
+			rc = fis_parse_smart_health_info(&output_payload, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(rc))
+			{
+				result.success = 1;
+			}
+			else
+			{
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = rc;
+			}
 		}
 		else
 		{
-			result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
-			result.error_code.code = rc;
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
 		}
 	}
 	else
 	{
 		result.error_code.type = FWCMD_ERROR_TYPE_PT;
-		result.error_code.code = rc;
+        result.error_code.code = rc;
 	}
 	return result;
 }
@@ -1149,24 +1282,31 @@ struct fwcmd_firmware_image_info_result fwcmd_alloc_firmware_image_info(unsigned
 	unsigned int rc = fis_firmware_image_info(handle,
 		&output_payload);
 
-	if (PT_RC_IS_SUCCESS(rc))
+	if (PT_IS_SUCCESS(rc))
 	{
 		result.p_data = (struct fwcmd_firmware_image_info_data *)malloc(sizeof(*result.p_data));
-		rc = fwcmd_parse_firmware_image_info(&output_payload, result.p_data);
-		if (FWCMD_PARSE_SUCCESS(rc))
+		if (result.p_data)
 		{
-			result.success = 1;
+			rc = fis_parse_firmware_image_info(&output_payload, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(rc))
+			{
+				result.success = 1;
+			}
+			else
+			{
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = rc;
+			}
 		}
 		else
 		{
-			result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
-			result.error_code.code = rc;
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
 		}
 	}
 	else
 	{
 		result.error_code.type = FWCMD_ERROR_TYPE_PT;
-		result.error_code.code = rc;
+        result.error_code.code = rc;
 	}
 	return result;
 }
@@ -1202,24 +1342,31 @@ struct fwcmd_firmware_debug_log_result fwcmd_alloc_firmware_debug_log(unsigned i
 		&input_payload,
 		&output_payload);
 
-	if (PT_RC_IS_SUCCESS(rc))
+	if (PT_IS_SUCCESS(rc))
 	{
 		result.p_data = (struct fwcmd_firmware_debug_log_data *)malloc(sizeof(*result.p_data));
-		rc = fwcmd_parse_firmware_debug_log(&output_payload, result.p_data);
-		if (FWCMD_PARSE_SUCCESS(rc))
+		if (result.p_data)
 		{
-			result.success = 1;
+			rc = fis_parse_firmware_debug_log(&output_payload, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(rc))
+			{
+				result.success = 1;
+			}
+			else
+			{
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = rc;
+			}
 		}
 		else
 		{
-			result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
-			result.error_code.code = rc;
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
 		}
 	}
 	else
 	{
 		result.error_code.type = FWCMD_ERROR_TYPE_PT;
-		result.error_code.code = rc;
+        result.error_code.code = rc;
 	}
 	return result;
 }
@@ -1247,24 +1394,31 @@ struct fwcmd_long_operation_status_result fwcmd_alloc_long_operation_status(unsi
 	unsigned int rc = fis_long_operation_status(handle,
 		&output_payload);
 
-	if (PT_RC_IS_SUCCESS(rc))
+	if (PT_IS_SUCCESS(rc))
 	{
 		result.p_data = (struct fwcmd_long_operation_status_data *)malloc(sizeof(*result.p_data));
-		rc = fwcmd_parse_long_operation_status(&output_payload, result.p_data);
-		if (FWCMD_PARSE_SUCCESS(rc))
+		if (result.p_data)
 		{
-			result.success = 1;
+			rc = fis_parse_long_operation_status(&output_payload, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(rc))
+			{
+				result.success = 1;
+			}
+			else
+			{
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = rc;
+			}
 		}
 		else
 		{
-			result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
-			result.error_code.code = rc;
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
 		}
 	}
 	else
 	{
 		result.error_code.type = FWCMD_ERROR_TYPE_PT;
-		result.error_code.code = rc;
+        result.error_code.code = rc;
 	}
 	return result;
 }
@@ -1292,24 +1446,31 @@ struct fwcmd_bsr_result fwcmd_alloc_bsr(unsigned int handle)
 	unsigned int rc = fis_bsr(handle,
 		&output_payload);
 
-	if (PT_RC_IS_SUCCESS(rc))
+	if (PT_IS_SUCCESS(rc))
 	{
 		result.p_data = (struct fwcmd_bsr_data *)malloc(sizeof(*result.p_data));
-		rc = fwcmd_parse_bsr(&output_payload, result.p_data);
-		if (FWCMD_PARSE_SUCCESS(rc))
+		if (result.p_data)
 		{
-			result.success = 1;
+			rc = fis_parse_bsr(&output_payload, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(rc))
+			{
+				result.success = 1;
+			}
+			else
+			{
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = rc;
+			}
 		}
 		else
 		{
-			result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
-			result.error_code.code = rc;
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
 		}
 	}
 	else
 	{
 		result.error_code.type = FWCMD_ERROR_TYPE_PT;
-		result.error_code.code = rc;
+        result.error_code.code = rc;
 	}
 	return result;
 }

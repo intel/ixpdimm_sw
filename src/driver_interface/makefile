@@ -38,15 +38,21 @@ OBJECT_MODULE_DIR = $(OBJECT_DIR)/driver_interface
 
 # ---- FILES ---------------------------------------------------------------------------------------
 # defines list of objects to create from source
-ifdef BUILD_WINDOWS
+ifdef BUILD_SIM
+	ADAPTER_PREFIX = sim
+else ifdef BUILD_WINDOWS
+	ADAPTER_PREFIX = win
 	SRC_EXCLUDE = $(wildcard lnx_*.c esx_*.c)
 else ifdef BUILD_LINUX
+	ADAPTER_PREFIX = lnx
 	SRC_EXCLUDE = $(wildcard win_*.c esx_*.c)
 else ifdef BUILD_ESX
+	ADAPTER_PREFIX = esx
 	SRC_EXCLUDE = $(wildcard win_*.c lnx_*.c)
 endif
 
-SRC = $(filter-out $(SRC_EXCLUDE),$(wildcard *.c)) ../common/string/s_str.c
+SRC = passthrough.c $(ADAPTER_PREFIX)_passthrough.c ../common/string/s_str.c
+
 OBJS = $(patsubst %.c,%.o,$(SRC))
 
 # defines the location of the object files
@@ -63,7 +69,10 @@ TARGET = libdriver_interface.a
 TARGETNAME = $(addprefix $(OBJECT_MODULE_DIR)/, $(TARGET))
 
 # ---- COMPILER PARAMETERS -------------------------------------------------------------------------
-INCS = -I$(EXTERN_DIR)/os_headers -I$(ROOT_DIR)/src
+INCS = \
+	-I$(EXTERN_DIR)/os_headers \
+	-I$(ROOT_DIR)/src \
+	-I$(ROOT_DIR)/src/common
 LIBS =
 
 ifdef BUILD_LINUX
