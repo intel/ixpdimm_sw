@@ -1070,20 +1070,6 @@ struct pt_payload_get_dimm_partition_info {
  * Passthrough Payload:
  *		Opcode:		0x06h (Get Admin Features)
  *		Sub-Opcode:	0x03h (FW Debug Log Level)
- *	Small Input Payload
- */
-struct pt_payload_input_get_fw_dbg_log_level {
-	/*
-	 * This is the ID(0 to 255) for the log from which to retrieve the log
-	 * level. If no log ID is sent then log ID 0 will be assumed.
-	 */
-	unsigned char log_id;
-} __attribute__((packed));
-
-/*
- * Passthrough Payload:
- *		Opcode:		0x06h (Get Admin Features)
- *		Sub-Opcode:	0x03h (FW Debug Log Level)
  *	Small Output Payload
  */
 struct pt_payload_output_get_fw_dbg_log_level {
@@ -1097,10 +1083,6 @@ struct pt_payload_output_get_fw_dbg_log_level {
 	 * 4 = Debug
 	 */
 	unsigned char log_level;
-	/*
-	 * The number of logs available for which to change the level(0 to 255).
-	 */
-	unsigned char logs;
 } __attribute__((packed));
 
 /*
@@ -1221,8 +1203,6 @@ struct pt_payload_set_fw_dbg_log_level {
 	 * 4 = Debug
 	 */
 	unsigned char log_level;
-	/*ID of the log you are changing the level for(0-255)*/
-	unsigned char log_id;
 } __attribute__((packed));
 
 /*
