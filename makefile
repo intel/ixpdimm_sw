@@ -64,6 +64,8 @@ INTEL_I18N_DIR ?= ../external/intelnvmi18n
 all : extern libcopy 
 	$(MAKE) -C src/common $(I18N_TARGET) all $(FLAGS)
 	$(MAKE) -C src/acpi all $(FLAGS)
+	$(MAKE) -C src/driver_interface all $(FLAGS)
+	$(MAKE) -C src/firmware_interface all $(FLAGS)
 	$(MAKE) -C src/lib $(I18N_TARGET) all $(FLAGS)
 	$(MAKE) -C src/core $(I18N_TARGET) all $(FLAGS)
 	$(MAKE) -C src/wbem $(I18N_TARGET) all $(FLAGS)
