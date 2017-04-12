@@ -42,7 +42,7 @@
 
 #define	MAX_PERSISTENT_POOLS_PER_SOCKET 2
 
-extern int get_device_status_by_handle(NVM_NFIT_DEVICE_HANDLE dimm_handle,
+extern void get_device_status_by_handle(NVM_NFIT_DEVICE_HANDLE dimm_handle,
 		struct device_status *p_status, struct nvm_capabilities *p_capabilities);
 
 /*
@@ -824,12 +824,10 @@ int add_dimm_to_pools(struct nvm_pool *p_pools, int *p_pools_count, NVM_NFIT_DEV
 		COMMON_LOG_ERROR("Retrieving device status is not supported.");
 		rc = NVM_ERR_NOTSUPPORTED;
 	}
-	else if ((rc = get_device_status_by_handle(handle, &dev_status, &capabilities)) != NVM_SUCCESS)
-	{
-		COMMON_LOG_ERROR("Failed to retrieve the device status.");
-	}
 	else
 	{
+		get_device_status_by_handle(handle, &dev_status, &capabilities);
+
 		if (dev_status.ars_status == DEVICE_ARS_STATUS_INPROGRESS)
 		{
 			COMMON_LOG_ERROR("Failed to retrieve the device status.");

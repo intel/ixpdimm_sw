@@ -776,7 +776,7 @@ int get_sku_violation_state_for_device(NVM_NFIT_DEVICE_HANDLE dimm_handle,
 /*
  * Retrieve the status of the device specified
  */
-int get_device_status_by_handle(NVM_NFIT_DEVICE_HANDLE dimm_handle,
+void get_device_status_by_handle(NVM_NFIT_DEVICE_HANDLE dimm_handle,
 		struct device_status *p_status, struct nvm_capabilities *p_capabilities)
 {
 	COMMON_LOG_ENTRY();
@@ -795,12 +795,10 @@ int get_device_status_by_handle(NVM_NFIT_DEVICE_HANDLE dimm_handle,
 	p_status->die_spares_used = 0;
 	struct pt_get_die_spare_policy spare_payload;
 	memset(&spare_payload, 0, sizeof (spare_payload));
-	int temprc = get_fw_die_spare_policy(dimm_handle, &spare_payload);
-	if (temprc != NVM_SUCCESS)
+	if ((rc = get_fw_die_spare_policy(dimm_handle, &spare_payload)) != NVM_SUCCESS)
 	{
 		COMMON_LOG_ERROR_F("Failed to retrieve the DIMM die spare status with error %d",
-				temprc);
-		KEEP_ERROR(rc, temprc);
+				rc);
 	}
 	else
 	{
@@ -814,42 +812,54 @@ int get_device_status_by_handle(NVM_NFIT_DEVICE_HANDLE dimm_handle,
 	}
 
 	// get ARS and sanitize status
-	temprc = get_long_status(dimm_handle, &p_status->ars_status, &p_status->sanitize_status);
-	KEEP_ERROR(rc, temprc);
+	if ((rc = get_long_status(dimm_handle, &p_status->ars_status, &p_status->sanitize_status))
+			!= NVM_SUCCESS)
+	{
+		COMMON_LOG_ERROR_F("Failed to get the DIMM ARS and sanitize status, rc=%d", rc);
+	}
 
-	KEEP_ERROR(rc, fill_device_status_from_smart_health(dimm_handle.handle, p_status));
+	if ((rc = fill_device_status_from_smart_health(dimm_handle.handle, p_status)) != NVM_SUCCESS)
+	{
+		COMMON_LOG_ERROR_F("Failed to get the DIMM SMART health status, rc=%d", rc);
+	}
 
 	// fill the last config status and is new flag
-	KEEP_ERROR(rc, fill_device_config_status(dimm_handle,
-			p_capabilities, p_status));
+	if ((rc = fill_device_config_status(dimm_handle, p_capabilities, p_status)) != NVM_SUCCESS)
+	{
+		COMMON_LOG_ERROR_F("Failed to get the DIMM config status, rc=%d", rc);
+	}
 
-	// determine if the system has mixed dimm SKUs
+	// System-level mixed SKU
 	p_status->mixed_sku = p_capabilities->sku_capabilities.mixed_sku;
 
-	// determine if the dimm is in violation of it's supported sku
-
-	KEEP_ERROR(rc,
-			get_sku_violation_state_for_device(dimm_handle, &p_status->sku_violation));
+	if ((rc = get_sku_violation_state_for_device(dimm_handle, &p_status->sku_violation))
+			!= NVM_SUCCESS)
+	{
+		COMMON_LOG_ERROR_F("Failed to get the DIMM SKU violation state, rc=%d", rc);
+	}
 
 	struct pt_payload_get_config_data_policy config_data;
-	temprc = fw_get_config_data_policy(dimm_handle.handle, &config_data);
-
-	if (temprc != NVM_SUCCESS)
+	if ((rc = fw_get_config_data_policy(dimm_handle.handle, &config_data)) != NVM_SUCCESS)
 	{
-		COMMON_LOG_ERROR_F(
-			"Failed to retrieve DIMM optional configuration data policy with error %d", temprc);
-		KEEP_ERROR(rc, temprc);
+		COMMON_LOG_ERROR_F("Failed to retrieve DIMM optional configuration data policy with "
+				"error %d", rc);
 	}
 	else
 	{
 		p_status->viral_state = config_data.viral_status;
 	}
 
-	KEEP_ERROR(rc, fill_fw_error_log_status(dimm_handle, p_status));
+	if ((rc = fill_fw_error_log_status(dimm_handle, p_status)) != NVM_SUCCESS)
+	{
+		COMMON_LOG_ERROR_F("Failed to retrieve DIMM FW error log status, error %d",
+				rc);
+	}
 
-	KEEP_ERROR(rc, fw_get_bsr(dimm_handle, &(p_status->boot_status)));
-
-	return rc;
+	if ((rc = fw_get_bsr(dimm_handle, &(p_status->boot_status))) != NVM_SUCCESS)
+	{
+		COMMON_LOG_ERROR_F("Failed to retrieve DIMM BSR with error %d",
+				rc);
+	}
 }
 
 /*
@@ -892,9 +902,8 @@ int nvm_get_device_status(const NVM_UID device_uid,
 	}
 	else if ((rc = exists_and_manageable(device_uid, &discovery, 1)) == NVM_SUCCESS)
 	{
-		rc = get_device_status_by_handle(discovery.device_handle, p_status, &capabilities);
-
-	} // dimm manageable
+		get_device_status_by_handle(discovery.device_handle, p_status, &capabilities);
+	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
