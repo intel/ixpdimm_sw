@@ -94,27 +94,36 @@ int get_topology_from_nfit(const NVM_UINT8 count, struct nvm_topology *p_dimm_to
 			{
 				p_dimm_topo[i].device_handle.handle = nfit_dimms[i].handle;
 				p_dimm_topo[i].id = nfit_dimms[i].physical_id;
-				memmove(&p_dimm_topo[i].serial_number, &nfit_dimms[i].serial_number,
-						sizeof (NVM_SERIAL_NUMBER));
 				// swap bytes for JEDEC compatibility
+				swap_bytes((unsigned char *)p_dimm_topo[i].serial_number,
+						(unsigned char *)&nfit_dimms[i].serial_number,
+						sizeof (nfit_dimms[i].serial_number));
 				swap_bytes((unsigned char *)&p_dimm_topo[i].vendor_id,
 						(unsigned char *)&nfit_dimms[i].vendor_id,
 						sizeof (p_dimm_topo[i].vendor_id));
-				p_dimm_topo[i].device_id = nfit_dimms[i].device_id;
-				p_dimm_topo[i].revision_id = nfit_dimms[i].revision_id;
+				swap_bytes((unsigned char *)&p_dimm_topo[i].device_id,
+						(unsigned char *)&nfit_dimms[i].device_id,
+						sizeof (nfit_dimms[i].device_id));
 				swap_bytes((unsigned char *)&p_dimm_topo[i].subsystem_vendor_id,
 						(unsigned char *)&nfit_dimms[i].subsystem_vendor_id,
 						sizeof (p_dimm_topo[i].subsystem_vendor_id));
-				p_dimm_topo[i].subsystem_device_id = nfit_dimms[i].subsystem_device_id;
-				p_dimm_topo[i].subsystem_revision_id = nfit_dimms[i].subsystem_revision_id;
-				p_dimm_topo[i].manufacturing_info_valid = nfit_dimms[i].valid_fields;
+				swap_bytes((unsigned char *)&p_dimm_topo[i].subsystem_device_id,
+						(unsigned char *)&nfit_dimms[i].subsystem_device_id,
+						sizeof (p_dimm_topo[i].subsystem_device_id));
 				swap_bytes((unsigned char *)&p_dimm_topo[i].manufacturing_location,
 						(unsigned char *)&nfit_dimms[i].manufacturing_location,
 					sizeof (p_dimm_topo[i].manufacturing_location));
 				swap_bytes((unsigned char *)&p_dimm_topo[i].manufacturing_date,
 						(unsigned char *)&nfit_dimms[i].manufacturing_date,
 						sizeof (p_dimm_topo[i].manufacturing_date));
-				p_dimm_topo[i].fmt_interface_codes[0] = nfit_dimms[i].ifc;
+				p_dimm_topo[i].revision_id = nfit_dimms[i].revision_id;
+				p_dimm_topo[i].subsystem_revision_id = nfit_dimms[i].subsystem_revision_id;
+				p_dimm_topo[i].manufacturing_info_valid = nfit_dimms[i].valid_fields;
+
+				for (int j = 0; j < NFIT_MAX_IFC_COUNT && j < NVM_MAX_IFCS_PER_DIMM; j++)
+				{
+					p_dimm_topo[i].fmt_interface_codes[j] = nfit_dimms[i].ifc[j];
+				}
 			}
 		}
 	}

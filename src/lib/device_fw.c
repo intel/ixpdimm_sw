@@ -37,9 +37,9 @@
 // Intel DIMM Device IDs running FW we support
 const int NUM_SUPPORTED_DEVICE_IDS = 3;
 const NVM_UINT16 SUPPORTED_DEVICE_IDS[] = {
-		0x979,
-		0x97A,
-		0x97B
+		0x7909,
+		0x7A09,
+		0x7B09
 };
 
 /*

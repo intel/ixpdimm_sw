@@ -11547,4 +11547,3 @@ void update_sqlite3_hook(PersistentStore *p_ps, void (*xCallback)(void*,int,char
 }
 #endif
 #endif /* _SCHEMA_H_ */
-
