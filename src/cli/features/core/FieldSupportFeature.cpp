@@ -589,6 +589,15 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::updateFirmware(
 									std::string(TRS(cli::framework::SUCCESS_MSG)) + TRS(UPDATEFIRMWARE_RESET_MSG));
 						}
 					}
+					catch (wbem::framework::ExceptionSystemError &e)
+					{
+						pSimpleList->insert(prefix + "Error: " + e.what());
+						pSimpleList->setErrorCode(e.getErrorCode());
+						if (NVM_ERR_FWALREADYSTAGED != e.getErrorCode())
+						{
+							break;
+						}
+					}
 					catch (wbem::framework::Exception &e)
 					{
 						cli::framework::ErrorResult *eResult = NvmExceptionToResult(e);
