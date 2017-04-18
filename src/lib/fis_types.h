@@ -136,7 +136,7 @@
 #define DSM_BACKGROUND_OP_STATE_SHIFT (24)
 
 #define DSM_VENDOR_ERROR(status) ((status & 0xFFFF) >> DSM_VENDOR_ERROR_SHIFT)
-#define DSM_EXTENDED_ERROR(status) ((status & 0xFF0000) >> DSM_MAILBOX_ERROR_SHIFT)
+#define DSM_EXTENDED_ERROR(status) ((status & 0xFFFF0000) >> DSM_MAILBOX_ERROR_SHIFT)
 #define DSM_BACKGROUND_OP_STATE(status) ((status & 0x1000000) >> DSM_BACKGROUND_OP_STATE_SHIFT)
 
 // Bit masks for identify_dimm.dimm_sku
