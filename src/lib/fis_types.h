@@ -1363,8 +1363,16 @@ struct pt_payload_temp_err {
  */
 struct pt_payload_sw_triggers {
 	/*
+	 * Contains a bit field of the triggers
+	 * Bit 0: Die Spare Trigger
+	 * Bit 1: Used Spare Block Alarm Trip Trigger
+	 * Bit 2: Fatal Error Trigger
+	 * Bit 63-3: Reserved
+	 */
+	unsigned long long triggers_to_modify;
+
+	/*
 	 * Spoofs FW to initiate a Die Sparing.
-	 * Will trigger all ranks to spare.
 	 * 0x0h - Do Not/Disable Trigger
 	 * 0x1h - Enable Trigger
 	 */
@@ -1386,7 +1394,7 @@ struct pt_payload_sw_triggers {
 	 */
 	unsigned char fatal_error_trigger;
 
-	unsigned char reserved_1[124];
+	unsigned char reserved_1[116];
 } __attribute__((packed));
 
 /*
