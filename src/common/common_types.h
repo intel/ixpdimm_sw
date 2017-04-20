@@ -500,6 +500,14 @@ static inline COMMON_BOOL verify_checksum(
 	return valid;
 }
 
+static inline void swap_bytes(unsigned char *p_dest, unsigned char *p_src, size_t len)
+{
+	for (unsigned int i = 0; i < len; i++)
+	{
+		p_dest[(len - 1) - i] = p_src[i];
+	}
+}
+
 #ifdef __cplusplus
 }
 #endif

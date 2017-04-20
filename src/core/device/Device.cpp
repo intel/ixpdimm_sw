@@ -237,7 +237,12 @@ std::string Device::getSerialNumber()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	char serialNumStr[NVM_SERIALSTR_LEN];
-	SERIAL_NUMBER_TO_STRING(getDiscovery().serial_number, serialNumStr);
+	unsigned char displaySerialNumber[NVM_SERIAL_LEN];
+
+	swap_bytes(displaySerialNumber, (unsigned char *)getDiscovery().serial_number,
+			NVM_SERIAL_LEN);
+
+	SERIAL_NUMBER_TO_STRING(displaySerialNumber, serialNumStr);
 	return std::string(serialNumStr);
 }
 

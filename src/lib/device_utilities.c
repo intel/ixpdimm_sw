@@ -113,12 +113,16 @@ int calculate_device_uid(struct device_discovery *p_device)
 	else
 	{
 		rc = NVM_SUCCESS;
+		unsigned char display_serial_number[NVM_SERIAL_LEN];
+
+		swap_bytes(display_serial_number, p_device->serial_number, NVM_SERIAL_LEN);
+
 		if (p_device->manufacturing_info_valid)
 		{
 			calculate_uid_with_valid_manufacturing_info(
 					p_device->uid,
 					p_device->vendor_id,
-					p_device->serial_number,
+					display_serial_number,
 					p_device->manufacturing_location,
 					p_device->manufacturing_date);
 		}
@@ -127,7 +131,7 @@ int calculate_device_uid(struct device_discovery *p_device)
 			calculate_uid_without_manufacturing_info(
 					p_device->uid,
 					p_device->vendor_id,
-					p_device->serial_number);
+					display_serial_number);
 		}
 	}
 

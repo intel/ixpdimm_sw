@@ -34,14 +34,6 @@
 #include <persistence/logging.h>
 #include <string.h>
 
-void swap_bytes(unsigned char *p_dest, unsigned char *p_src, size_t len)
-{
-	for (unsigned int i = 0; i < len; i++)
-	{
-		p_dest[(len - 1) - i] = p_src[i];
-	}
-}
-
 /*
  * Get the number of DIMMs in the system's memory topology
  * directly from the NFIT table
@@ -94,10 +86,9 @@ int get_topology_from_nfit(const NVM_UINT8 count, struct nvm_topology *p_dimm_to
 			{
 				p_dimm_topo[i].device_handle.handle = nfit_dimms[i].handle;
 				p_dimm_topo[i].id = nfit_dimms[i].physical_id;
+				memmove(&p_dimm_topo[i].serial_number, &nfit_dimms[i].serial_number,
+						sizeof (NVM_SERIAL_NUMBER));
 				// swap bytes for JEDEC compatibility
-				swap_bytes((unsigned char *)p_dimm_topo[i].serial_number,
-						(unsigned char *)&nfit_dimms[i].serial_number,
-						sizeof (nfit_dimms[i].serial_number));
 				swap_bytes((unsigned char *)&p_dimm_topo[i].vendor_id,
 						(unsigned char *)&nfit_dimms[i].vendor_id,
 						sizeof (p_dimm_topo[i].vendor_id));
