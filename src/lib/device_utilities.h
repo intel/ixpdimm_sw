@@ -56,6 +56,13 @@ extern "C"
 #define	SWAP_SHORT(x) \
 	(((x & 0xFF) << 8) + ((x & 0xFF00) >> 8))
 
+
+/*
+ * Check whether the device manageability state is valid
+ */
+#define	IS_DEVICE_MANAGEABLE(p_device) \
+	(NVM_BOOL)((p_device)->manageability == MANAGEMENT_VALIDCONFIG)
+
 int exists_and_manageable(const NVM_UID device_uid, struct device_discovery *p_dev,
 		NVM_BOOL check_manageability);
 
@@ -112,17 +119,12 @@ void set_device_manageability_from_firmware(
 /*
  * Check device interface format code against those supported by mgmt sw
  */
-NVM_BOOL is_device_interface_format_supported(struct device_discovery *p_device);
+NVM_BOOL is_device_interface_format_supported(struct nvm_topology *p_topology);
 
 /*
  * Check device memory subsystem controller information against those supported by mgmt sw
  */
-NVM_BOOL is_device_subsystem_controller_supported(struct device_discovery *p_device);
-
-/*
- * Check whether the device is a type we can expect to respond to firmware commands
- */
-NVM_BOOL can_communicate_with_device_firmware(struct device_discovery *p_device);
+NVM_BOOL is_device_subsystem_controller_supported(struct nvm_topology *p_topology);
 
 /*
  * Compare the firmware api version to the supported versions to determine
@@ -156,12 +158,6 @@ enum fw_update_status firmware_update_status_to_enum(unsigned char last_fw_updat
  */
 int get_partition_info(const NVM_NFIT_DEVICE_HANDLE device_handle,
 	struct pt_payload_get_dimm_partition_info *p_pi);
-
-/*
- * Utility function to get DIMM manageability
- */
-int get_dimm_manageability(const NVM_NFIT_DEVICE_HANDLE device_handle,
-		enum manageability_state *p_manageability);
 
 /*
  * Utility function to determine if a device is manageable

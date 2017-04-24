@@ -2551,6 +2551,7 @@ struct db_dimm_topology
 	unsigned int manufacturing_date;
 	unsigned int serial_number[DIMM_TOPOLOGY_SERIAL_NUMBER_COUNT];
 	unsigned int interface_format_codes[DIMM_TOPOLOGY_INTERFACE_FORMAT_CODES_COUNT];
+	unsigned int state_flags;
 };
 /*!
  * Helper function to print a db_dimm_topology to the screen.

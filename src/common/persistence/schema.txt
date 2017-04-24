@@ -193,6 +193,7 @@ Attributes:
 	unsigned int manufacturing_date
 	unsigned int serial_number
 	unsigned int interface_format_codes
+	unsigned int state_flags
 
 Table(s): db_namespace 
  	  db_namespace_history 

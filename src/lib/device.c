@@ -57,6 +57,8 @@ const unsigned int NUM_RANKS = 4;
 int read_file_bytes(const NVM_PATH path, const NVM_SIZE path_len,
 		unsigned char **pp_buf, unsigned int *p_buf_len);
 
+#define	NFIT_DIMM_STATE_IS_DISABLED(flag) ((flag >> 6) & 1)
+
 /*
  * **************************************************************************
  * API Functions
@@ -259,7 +261,8 @@ int add_firmware_properties_to_device(struct device_discovery *p_device)
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
 
-	if (can_communicate_with_device_firmware(p_device))
+	// So far manageability is based on topology data
+	if (IS_DEVICE_MANAGEABLE(p_device))
 	{
 		// send a pass through command to get the dimm identify info
 		struct pt_payload_identify_dimm id_dimm;
@@ -274,8 +277,8 @@ int add_firmware_properties_to_device(struct device_discovery *p_device)
 		{
 			add_identify_dimm_properties_to_device(p_device, &id_dimm);
 
-			// only get security state if manageable
-			if (p_device->manageability == MANAGEMENT_VALIDCONFIG)
+			// only get security state if still manageable
+			if (IS_DEVICE_MANAGEABLE(p_device))
 			{
 				add_security_state_to_device(p_device);
 			}
@@ -291,8 +294,6 @@ int add_firmware_properties_to_device(struct device_discovery *p_device)
 				p_device->device_handle.handle,
 				p_device->subsystem_vendor_id, p_device->subsystem_device_id,
 				p_device->interface_format_codes[0]);
-
-		p_device->manageability = MANAGEMENT_INVALIDCONFIG;
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -346,6 +347,21 @@ void add_smbios_properties_to_populated_devices(struct device_discovery *p_devic
 	COMMON_LOG_EXIT();
 }
 
+enum manageability_state get_manageability_from_topology(struct nvm_topology *p_topology)
+{
+	COMMON_LOG_ENTRY();
+	enum manageability_state result = MANAGEMENT_INVALIDCONFIG;
+	if (!NFIT_DIMM_STATE_IS_DISABLED(p_topology->state_flags) &&
+		is_device_interface_format_supported(p_topology) &&
+		is_device_subsystem_controller_supported(p_topology))
+	{
+		result = MANAGEMENT_VALIDCONFIG;
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(result);
+	return result;
+}
+
 void nvm_topology_to_device(struct nvm_topology *p_topology, struct device_discovery *p_device)
 {
 	COMMON_LOG_ENTRY();
@@ -378,6 +394,8 @@ void nvm_topology_to_device(struct nvm_topology *p_topology, struct device_disco
 	{
 		p_device->interface_format_codes[i] = p_topology->fmt_interface_codes[i];
 	}
+
+	p_device->manageability = get_manageability_from_topology(p_topology);
 
 	// Populate values derived from handle
 	p_device->socket_id =

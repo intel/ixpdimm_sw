@@ -113,7 +113,7 @@ int diag_quick_health_check(const NVM_UID device_uid,
 				rc = check_dimm_manageability(device_uid, &discovery,
 									p_diagnostic, p_results);
 
-				if (can_communicate_with_device_firmware(&discovery))
+				if (IS_DEVICE_MANAGEABLE(&discovery))
 				{
 					int tmp_rc = 0;
 					NVM_NFIT_DEVICE_HANDLE device_handle =

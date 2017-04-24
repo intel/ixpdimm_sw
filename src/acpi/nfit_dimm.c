@@ -107,6 +107,7 @@ int add_dimm_info_from_handle(const struct parsed_nfit *p_parsed_nfit,
 		{
 			p_dimm->handle = handle;
 			p_dimm->physical_id = p_parsed_nfit->region_mapping_list[i].physical_id;
+			p_dimm->state_flags = p_parsed_nfit->region_mapping_list[i].state_flag;
 			result = add_dimm_control_region_info_from_index(p_parsed_nfit,
 					p_parsed_nfit->region_mapping_list[i].control_region_index,
 					p_dimm);

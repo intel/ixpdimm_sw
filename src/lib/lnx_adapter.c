@@ -307,12 +307,10 @@ int get_driver_feature_flags(struct driver_feature_flags *features)
 		{
 			ndctl_dimm_foreach(p_bus, p_dimm)
 			{
-				enum manageability_state dimm_state;
 				NVM_NFIT_DEVICE_HANDLE dimm_handle;
 				dimm_handle.handle = ndctl_dimm_get_handle(p_dimm);
-				get_dimm_manageability(dimm_handle, &dimm_state);
 
-				if (dimm_state == MANAGEMENT_VALIDCONFIG)
+				if (is_device_manageable(dimm_handle))
 				{
 					valid_config = 1;
 					rc = NVM_SUCCESS;

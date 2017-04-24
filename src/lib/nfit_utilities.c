@@ -110,6 +110,7 @@ int get_topology_from_nfit(const NVM_UINT8 count, struct nvm_topology *p_dimm_to
 				p_dimm_topo[i].revision_id = nfit_dimms[i].revision_id;
 				p_dimm_topo[i].subsystem_revision_id = nfit_dimms[i].subsystem_revision_id;
 				p_dimm_topo[i].manufacturing_info_valid = nfit_dimms[i].valid_fields;
+				p_dimm_topo[i].state_flags = nfit_dimms[i].state_flags;
 
 				for (int j = 0; j < NFIT_MAX_IFC_COUNT && j < NVM_MAX_IFCS_PER_DIMM; j++)
 				{

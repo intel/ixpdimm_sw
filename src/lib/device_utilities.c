@@ -54,8 +54,7 @@ int exists_and_manageable(const NVM_UID device_uid, struct device_discovery *p_d
 	int rc = lookup_dev_uid(device_uid, p_dev);
 	if (rc == NVM_SUCCESS)
 	{
-		if (check_manageability &&
-			p_dev->manageability != MANAGEMENT_VALIDCONFIG)
+		if (check_manageability && !IS_DEVICE_MANAGEABLE(p_dev))
 		{
 			COMMON_LOG_DEBUG("Device is not manageable");
 			rc = NVM_ERR_NOTMANAGEABLE;
@@ -321,7 +320,6 @@ void set_device_manageability_from_firmware(
 	enum manageability_state *p_manageability)
 {
 	// limit tracing in this path to reduce overall log counts
-	*p_manageability = MANAGEMENT_VALIDCONFIG;
 
 	// check FW API version
 	if (!check_firmware_revision(p_id_dimm->api_ver))
@@ -429,15 +427,15 @@ int get_long_status(const NVM_NFIT_DEVICE_HANDLE dimm_handle, enum device_ars_st
 	return rc;
 }
 
-NVM_BOOL is_device_interface_format_supported(struct device_discovery *p_device)
+NVM_BOOL is_device_interface_format_supported(struct nvm_topology *p_topology)
 {
 	COMMON_LOG_ENTRY();
 	NVM_BOOL supported = 0;
 
 	for (int i = 0; i < NVM_MAX_IFCS_PER_DIMM; i++)
 	{
-		if (p_device->interface_format_codes[i] == FORMAT_BYTE_STANDARD ||
-				p_device->interface_format_codes[i] == FORMAT_BLOCK_STANDARD)
+		if (p_topology->fmt_interface_codes[i] == FORMAT_BYTE_STANDARD ||
+			p_topology->fmt_interface_codes[i] == FORMAT_BLOCK_STANDARD)
 		{
 			supported = 1;
 		}
@@ -447,37 +445,22 @@ NVM_BOOL is_device_interface_format_supported(struct device_discovery *p_device)
 	return supported;
 }
 
-NVM_BOOL is_device_subsystem_controller_supported(struct device_discovery *p_device)
+NVM_BOOL is_device_subsystem_controller_supported(struct nvm_topology *p_topology)
 {
 	COMMON_LOG_ENTRY();
 	NVM_BOOL supported = 0;
 
 	// Only supporting Intel DIMMs with AEP controllers
-	if (p_device->subsystem_vendor_id == NVM_INTEL_VENDOR_ID)
+	if (p_topology->subsystem_vendor_id == NVM_INTEL_VENDOR_ID)
 	{
 		for (int i = 0; i < NUM_SUPPORTED_DEVICE_IDS; i++)
 		{
-			if (p_device->subsystem_device_id == SUPPORTED_DEVICE_IDS[i])
+			if (p_topology->subsystem_device_id == SUPPORTED_DEVICE_IDS[i])
 			{
 				supported = 1;
 				break;
 			}
 		}
-	}
-
-	COMMON_LOG_EXIT_RETURN_I(supported);
-	return supported;
-}
-
-NVM_BOOL can_communicate_with_device_firmware(struct device_discovery *p_device)
-{
-	COMMON_LOG_ENTRY();
-	NVM_BOOL supported = 0;
-
-	if (is_device_interface_format_supported(p_device) &&
-			is_device_subsystem_controller_supported(p_device))
-	{
-		supported = 1;
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(supported);
@@ -646,45 +629,19 @@ int get_partition_info(const NVM_NFIT_DEVICE_HANDLE device_handle,
 	return rc;
 }
 
-int get_dimm_manageability(const NVM_NFIT_DEVICE_HANDLE device_handle,
-		enum manageability_state *p_manageability)
-{
-	COMMON_LOG_ENTRY();
-	int rc = NVM_SUCCESS;
-
-	struct pt_payload_identify_dimm id_dimm;
-	if ((rc = fw_get_identify_dimm(device_handle.handle, &id_dimm)) != NVM_SUCCESS)
-	{
-		COMMON_LOG_ERROR_F("Unable to get identify dimm information for handle: [%d]",
-				device_handle.handle);
-	}
-	else
-	{
-		set_device_manageability_from_firmware(&id_dimm, p_manageability);
-	}
-
-	COMMON_LOG_EXIT_RETURN_I(rc);
-	return rc;
-}
-
 /*
  * Quick comparison to determine if a device is manageable
  */
 int is_device_manageable(const NVM_NFIT_DEVICE_HANDLE handle)
 {
 	COMMON_LOG_ENTRY();
-	enum manageability_state manageability = MANAGEMENT_UNKNOWN;
-	int rc = get_dimm_manageability(handle, &manageability);
+
+	struct device_discovery dev;
+	int rc = lookup_dev_handle(handle, &dev);
+
 	if (rc == NVM_SUCCESS)
 	{
-		if (manageability == MANAGEMENT_VALIDCONFIG)
-		{
-			rc = 1;
-		}
-		else
-		{
-			rc = 0;
-		}
+		rc = IS_DEVICE_MANAGEABLE(&dev);
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);

@@ -191,6 +191,8 @@ struct nvm_topology {
 										// only valid if manufacturing_info_valid=1
 	NVM_SERIAL_NUMBER serial_number;	// The serial number assigned by the vendor
 
+	NVM_UINT16 state_flags;				// Device flags from the NFIT
+
 	NVM_UINT16 fmt_interface_codes[NVM_MAX_IFCS_PER_DIMM]; /* The device type(s) from NFIT */
 };
 

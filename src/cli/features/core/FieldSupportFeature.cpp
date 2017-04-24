@@ -942,7 +942,7 @@ void callRunDiagnosticService(NVM_UID device_uid,
 	}
 	catch(wbem::framework::Exception &e)
 	{
-		throw e;
+		throw;
 	}
 }
 
