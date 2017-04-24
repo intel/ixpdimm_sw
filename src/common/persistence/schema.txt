@@ -319,7 +319,7 @@ Attributes:
 	unsigned int device_handle(PK)
 	unsigned int enable
 	unsigned int aggressiveness
-	unsigned int supported_by_rank
+	unsigned int supported
 
 Table(s): db_dimm_optional_config_data 
  	  db_dimm_optional_config_data_history 

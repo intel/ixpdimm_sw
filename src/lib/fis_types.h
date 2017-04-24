@@ -814,16 +814,9 @@ struct pt_get_die_spare_policy {
 	unsigned char aggressiveness;
 
 	/*
-	 * Bit:
-	 * 0 - Rank 0 Spare
-	 * 1 - Rank 1 Spare
-	 * 2 - Rank 2 Spare
-	 * 3 - Rank 3 Spare
-	 * 7:4 - RSVD
-	 *
-	 * Designates whether or not each rank of the DIMM still supports die sparing.
-	 * 0x00 - No longer available - die sparing has most likely occurred
-	 * 0x01 - Still available - the dimm's corresponding rank has not had to take action yet
+	 * Designates whether or not the DIMM still supports die sparing.
+	 * 0x00 - No longer available - die sparing has most likely occurred or is not supported by the SKU
+	 * 0x01 - Still available - the DIMM still has a space die available and has not had to take action yet
 	 */
 	unsigned char supported;
 	unsigned char rsvd[125];

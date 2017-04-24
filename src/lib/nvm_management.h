@@ -635,7 +635,7 @@ struct device_status
 	enum device_health health; // Overall device health.
 	NVM_BOOL is_new; // Unincorporated with the rest of the devices.
 	NVM_BOOL is_missing; // If the device is missing.
-	NVM_UINT8 die_spares_used; // Number of spare devices on the AEP DIMM that are consumed.
+	NVM_UINT8 die_spares_available; // Number of spare devices on the AEP DIMM that are available.
 	NVM_UINT8 last_shutdown_status; // State of last AEP DIMM shutdown.
 	enum config_status config_status; // Status of last configuration request.
 	NVM_UINT64 last_shutdown_time; // Time of the last shutdown - seconds since 1 January 1970

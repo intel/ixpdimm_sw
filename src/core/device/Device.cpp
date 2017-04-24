@@ -479,10 +479,10 @@ bool Device::getIsMissing()
 	return getDetails().status.is_missing;
 }
 
-NVM_UINT8 Device::getDieSparesUsed()
+NVM_UINT8 Device::getDieSparesAvailable()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	return getDetails().status.die_spares_used;
+	return getDetails().status.die_spares_available;
 }
 
 std::vector<NVM_UINT16> Device::getLastShutdownStatus()

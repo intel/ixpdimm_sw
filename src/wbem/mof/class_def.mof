@@ -138,7 +138,7 @@ class <NVM_WBEM_PREFIX>NVDIMM : CIM_PhysicalMemory
 	[Description (
         "The number of spare devices that have been consumed. "
         )]
-	uint8 DieSparesUsed;
+	uint8 DieSparesAvailable;
 	[Description (
 	"The manufacturer identifier."
  	)]

@@ -51,8 +51,6 @@
 #include "system.h"
 #include "nvm_types.h"
 
-const unsigned int NUM_RANKS = 4;
-
 // define prototypes for helper functions
 int read_file_bytes(const NVM_PATH path, const NVM_SIZE path_len,
 		unsigned char **pp_buf, unsigned int *p_buf_len);
@@ -791,6 +789,21 @@ int get_sku_violation_state_for_device(NVM_NFIT_DEVICE_HANDLE dimm_handle,
 	return rc;
 }
 
+NVM_BOOL is_fw_version_greater_than_1_3(NVM_NFIT_DEVICE_HANDLE dimm_handle)
+{
+	COMMON_LOG_ENTRY();
+
+	NVM_BOOL result = 0;
+	struct device_discovery discovery;
+
+	if ((lookup_dev_handle(dimm_handle, &discovery) == NVM_SUCCESS) &&
+			atof(discovery.fw_api_version) > 1.3)
+	{
+		result = 1;
+	}
+	return result;
+}
+
 /*
  * Retrieve the status of the device specified
  */
@@ -810,7 +823,7 @@ void get_device_status_by_handle(NVM_NFIT_DEVICE_HANDLE dimm_handle,
 	p_status->last_shutdown_status = SHUTDOWN_STATUS_UNKNOWN;
 
 	// get die sparing information
-	p_status->die_spares_used = 0;
+	p_status->die_spares_available = 0;
 	struct pt_get_die_spare_policy spare_payload;
 	memset(&spare_payload, 0, sizeof (spare_payload));
 	if ((rc = get_fw_die_spare_policy(dimm_handle, &spare_payload)) != NVM_SUCCESS)
@@ -820,13 +833,19 @@ void get_device_status_by_handle(NVM_NFIT_DEVICE_HANDLE dimm_handle,
 	}
 	else
 	{
-		// supported rank of 1 means die is still available, so not used.  Total of 4
-		// possible die spares, so start with NUM_RANKS, and subtract each remaining unused to
-		// get the number of die spares used.
-		p_status->die_spares_used = NUM_RANKS - (spare_payload.supported & 0x01)
-						- ((spare_payload.supported & 0x02) >> 1)
-						- ((spare_payload.supported & 0x04) >> 2)
-						- ((spare_payload.supported & 0x08) >> 3);
+		// ensures backward compatibility with FIS 1.3
+		if (is_fw_version_greater_than_1_3(dimm_handle))
+		{
+			p_status->die_spares_available = spare_payload.supported;
+		}
+		else
+		{
+			// supported rank of 1 means die is still available, so not used.
+			p_status->die_spares_available = (spare_payload.supported & 0x01)
+													+ ((spare_payload.supported & 0x02) >> 1)
+													+ ((spare_payload.supported & 0x04) >> 2)
+													+ ((spare_payload.supported & 0x08) >> 3);
+		}
 	}
 
 	// get ARS and sanitize status

@@ -1485,10 +1485,7 @@ int support_store_die_sparing(PersistentStore *p_store, int history_id,
 		db_die_sparing.aggressiveness = spare_policy.aggressiveness;
 		db_die_sparing.device_handle = device_handle.handle;
 		db_die_sparing.enable = spare_policy.enable;
-		db_die_sparing.supported_by_rank[0] = (spare_policy.supported & 0x01) ? 1 : 0;
-		db_die_sparing.supported_by_rank[1] = (spare_policy.supported & 0x02) ? 1 : 0;
-		db_die_sparing.supported_by_rank[2] = (spare_policy.supported & 0x04) ? 1 : 0;
-		db_die_sparing.supported_by_rank[3] = (spare_policy.supported & 0x08) ? 1 : 0;
+		db_die_sparing.supported = spare_policy.supported;
 
 		db_save_dimm_die_sparing_state(p_store, history_id, &db_die_sparing);
 	}

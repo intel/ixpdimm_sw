@@ -122,7 +122,7 @@ void NVDIMMFactory::populateAttributeList(
 	attributes.push_back(DIESPARINGENABLED_KEY);
 	attributes.push_back(DIESPARINGLEVEL_KEY);
 	attributes.push_back(LASTSHUTDOWNSTATUS_KEY);
-	attributes.push_back(DIESPARESUSED_KEY);
+	attributes.push_back(DIESPARESAVAILABLE_KEY);
 	attributes.push_back(FIRSTFASTREFRESH_KEY);
 	attributes.push_back(CHANNEL_KEY);
 	attributes.push_back(CHANNELPOS_KEY);
@@ -789,8 +789,8 @@ void NVDIMMFactory::toInstance(core::device::Device &device,
 			device.getDieSparingLevel());
 	ADD_ATTRIBUTE(instance, attributes, LASTSHUTDOWNSTATUS_KEY, framework::UINT16_LIST,
 			device.getLastShutdownStatus());
-	ADD_ATTRIBUTE(instance, attributes, DIESPARESUSED_KEY, framework::UINT8,
-			device.getDieSparesUsed());
+	ADD_ATTRIBUTE(instance, attributes, DIESPARESAVAILABLE_KEY, framework::UINT8,
+			device.getDieSparesAvailable());
 	ADD_ATTRIBUTE(instance, attributes, FIRSTFASTREFRESH_KEY, framework::BOOLEAN,
 			device.isFirstFastRefresh());
 	ADD_ATTRIBUTE(instance, attributes, CHANNEL_KEY, framework::UINT32, device.getChannelId());

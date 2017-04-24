@@ -109,7 +109,7 @@ ShowDeviceCommand::ShowDeviceCommand(core::device::DeviceService &service)
 	m_props.addBool("DieSparingCapable", &core::device::Device::isDieSparingCapable);
 	m_props.addBool("DieSparingEnabled", &core::device::Device::isDieSparingEnabled);
 	m_props.addUint8("DieSparingLevel", &core::device::Device::getDieSparingLevel);
-	m_props.addUint8("DieSparesUsed", &core::device::Device::getDieSparesUsed);
+	m_props.addUint8("DieSparesAvailable", &core::device::Device::getDieSparesAvailable);
 	m_props.addList("LastShutdownStatus", &core::device::Device::getLastShutdownStatus,
 			&convertLastShutdownStatus);
 	m_props.addUint64("LastShutdownTime", &core::device::Device::getLastShutdownTime, &convertToDate);

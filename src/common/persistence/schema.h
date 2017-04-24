@@ -4365,7 +4365,6 @@ enum db_return_codes db_delete_dimm_power_management_by_device_handle(const Pers
  * @ingroup db_schema
  */
  // Lengths for strings and arrays
-#define	DIMM_DIE_SPARING_SUPPORTED_BY_RANK_COUNT 4 //!< Max length for supported_by_rank
 /*!
  * struct representing the dimm_die_sparing table
  * @ingroup dimm_die_sparing
@@ -4375,7 +4374,7 @@ struct db_dimm_die_sparing
 	unsigned int device_handle;
 	unsigned int enable;
 	unsigned int aggressiveness;
-	unsigned int supported_by_rank[DIMM_DIE_SPARING_SUPPORTED_BY_RANK_COUNT];
+	unsigned int supported;
 };
 /*!
  * Helper function to print a db_dimm_die_sparing to the screen.

@@ -130,7 +130,7 @@ public:
 	virtual NVM_UINT16 getHealthState();
 	virtual bool isNew();
 	virtual bool getIsMissing();
-	virtual NVM_UINT8 getDieSparesUsed();
+	virtual NVM_UINT8 getDieSparesAvailable();
 	virtual std::vector<NVM_UINT16> getLastShutdownStatus();
 	virtual enum config_status getConfigStatus();
 	virtual enum device_ars_status getArsStatus();
