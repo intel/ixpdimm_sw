@@ -294,6 +294,7 @@ std::string Device::getManufacturer()
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	std::string result = "Undefined";
 	char manufacturerStr[NVM_MANUFACTURERSTR_LEN];
+
 	if (lookup_jedec_jep106_manufacturer(
 		getDiscovery().manufacturer, NVM_MANUFACTURER_LEN,
 		manufacturerStr, NVM_MANUFACTURERSTR_LEN) == COMMON_SUCCESS)
@@ -306,7 +307,13 @@ std::string Device::getManufacturer()
 NVM_UINT16 Device::getManufacturerId()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	return MANUFACTURER_TO_UINT(getDiscovery().manufacturer);
+
+	unsigned char manufacturer[NVM_MANUFACTURER_LEN];
+
+	swap_bytes((unsigned char *)manufacturer, (unsigned char *)getDiscovery().manufacturer,
+			NVM_MANUFACTURER_LEN);
+
+	return MANUFACTURER_TO_UINT(manufacturer);
 }
 
 std::string Device::getPartNumber()
