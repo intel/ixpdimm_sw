@@ -249,7 +249,7 @@ int check_dimm_alarm_thresholds(const NVM_UID device_uid,
 
 		// check controller temperature to alarm threshold
 		NVM_UINT64 controller_temp_threshold = thresholds.controller_temperature;
-		if (p_dimm_smart->validation_flags.parts.sizeof_vendor_data_field &&
+		if (p_dimm_smart->validation_flags.parts.controller_temperature_field &&
 				!diag_check(p_diagnostic, DIAG_THRESHOLD_QUICK_CONTROLLER_TEMP,
 						p_dimm_smart->controller_temperature,
 						&controller_temp_threshold, EQUALITY_LESSTHAN))
@@ -662,6 +662,26 @@ int check_dimm_bsr(const NVM_UID device_uid,
 	return rc;
 }
 
+void check_dimm_ait_dram_status(struct pt_payload_smart_health *p_dimm_smart,
+		const NVM_UID device_uid, NVM_UINT32 *p_results)
+{
+	COMMON_LOG_ENTRY();
+	if (p_dimm_smart->validation_flags.parts.ait_dram_status_field &&
+		p_dimm_smart->ait_dram_status == AIT_DRAM_DISABLED)
+	{
+		store_event_by_parts(EVENT_TYPE_DIAG_QUICK,
+				EVENT_SEVERITY_CRITICAL,
+				EVENT_CODE_DIAG_QUICK_AIT_DRAM_DISABLED,
+				device_uid,
+				1,
+				device_uid,
+				NULL,
+				NULL, DIAGNOSTIC_RESULT_FAILED);
+		(*p_results)++;
+	}
+	COMMON_LOG_EXIT();
+}
+
 int check_dimm_health(const NVM_UID device_uid,
 		const NVM_NFIT_DEVICE_HANDLE device_handle,
 		const struct diagnostic *p_diagnostic, NVM_UINT32 *p_results)
@@ -674,6 +694,7 @@ int check_dimm_health(const NVM_UID device_uid,
 			fw_get_smart_health(device_handle.handle, &dimm_smart)))
 	{
 		check_dimm_smart_health_status(p_diagnostic, &dimm_smart, device_uid, p_results);
+		check_dimm_ait_dram_status(&dimm_smart, device_uid, p_results);
 
 		rc = check_dimm_alarm_thresholds(device_uid, device_handle, &dimm_smart,
 				p_diagnostic, p_results);

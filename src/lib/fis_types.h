@@ -361,6 +361,11 @@ enum last_fw_update_status {
 	LAST_FW_UPDATE_LOAD_FAILED	= 3
 };
 
+enum ait_dram_status {
+	AIT_DRAM_DISABLED = 0,
+	AIT_DRAM_ENABLED = 1
+};
+
 /*
  * Mail Box error codes
  *
