@@ -67,6 +67,7 @@ static std::vector<std::string> getWbemSensors()
 	result.push_back(wbem::support::PROPERTY_SENSOR_TYPE_MEDIAERRORS_UNCORRECTABLE);
 	result.push_back(wbem::support::PROPERTY_SENSOR_TYPE_MEDIAERRORS_CORRECTED);
 	result.push_back(wbem::support::PROPERTY_SENSOR_TYPE_MEDIAERRORS_ERASURECODED);
+	result.push_back(wbem::support::PROPERTY_SENSOR_TYPE_DRAMERRORS_CORRECTED);
 	result.push_back(wbem::support::PROPERTY_SENSOR_TYPE_WRITECOUNT_MAXIMUM);
 	result.push_back(wbem::support::PROPERTY_SENSOR_TYPE_WRITECOUNT_AVERAGE);
 	result.push_back(wbem::support::PROPERTY_SENSOR_TYPE_MEDIAERRORS_HOST);
@@ -94,7 +95,7 @@ void cli::nvmcli::SensorFeature::getPaths(cli::framework::CommandSpecList &list)
 	showSensor.addTarget(TARGET_SENSOR_R)
 			.valueText("MediaTemperature|ControllerTemperature|SpareCapacity|WearLevel|UnsafeShutdowns|"
 					"PowerOnTime|UpTime|PowerCycles|FWErrorCount|PowerLimited|"
-					"MediaErrorsUncorrectable|MediaErrorsCorrected|MediaErrorsErasureCoded|"
+					"MediaErrorsUncorrectable|MediaErrorsCorrected|MediaErrorsErasureCoded|DramErrorsCorrected"
 					"WriteCountMax|WriteCountAvg|MediaErrorsHost|MediaErrorsNonHost")
 			.helpText(TR("Restrict output to a specific sensor type by supplying the name. "
 					"The default is to display all sensors."));
@@ -126,7 +127,7 @@ void cli::nvmcli::SensorFeature::getPaths(cli::framework::CommandSpecList &list)
 	list.push_back(modifySensor);
 }
 
-// Constructor, just calls super class 
+// Constructor, just calls super class
 cli::nvmcli::SensorFeature::SensorFeature() : cli::framework::FeatureBase()
 { }
 
@@ -156,7 +157,7 @@ cli::framework::ResultBase * cli::nvmcli::SensorFeature::run(
 
 
 /*
- * Show sensors provided by the NVDIMMSensorFactory::getInstances function.  If 
+ * Show sensors provided by the NVDIMMSensorFactory::getInstances function.  If
  * a device UID or a sensor type is provided, then filter the results.
  */
 cli::framework::ResultBase* cli::nvmcli::SensorFeature::showSensor(

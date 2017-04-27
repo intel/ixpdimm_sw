@@ -69,6 +69,7 @@ static std::string PROPERTY_SENSOR_TYPE_POWERLIMITED = N_TR("PowerLimited"); //!
 static std::string PROPERTY_SENSOR_TYPE_MEDIAERRORS_UNCORRECTABLE = N_TR("MediaErrorsUncorrectable"); //!< type value
 static std::string PROPERTY_SENSOR_TYPE_MEDIAERRORS_CORRECTED = N_TR("MediaErrorsCorrected"); //!< type value
 static std::string PROPERTY_SENSOR_TYPE_MEDIAERRORS_ERASURECODED = N_TR("MediaErrorsErasureCoded"); //!< type value
+static std::string PROPERTY_SENSOR_TYPE_DRAMERRORS_CORRECTED = N_TR("DramErrorsCorrected"); //!< type value
 static std::string PROPERTY_SENSOR_TYPE_WRITECOUNT_MAXIMUM = N_TR("WriteCountMax"); //!< type value
 static std::string PROPERTY_SENSOR_TYPE_WRITECOUNT_AVERAGE = N_TR("WriteCountAvg"); //!< type value
 static std::string PROPERTY_SENSOR_TYPE_MEDIAERRORS_HOST = N_TR("MediaErrorsHost"); //!< type value

@@ -464,6 +464,7 @@ static std::string MEDIAERRORSCORRECTED_KEY = "MediaErrorsCorrected";
 static std::string MEDIAERRORSCORRECTEDUNITS_KEY = "MediaErrorsCorrectedUnits";
 static std::string MEDIAERRORSCORRECTEDMODIFIER_KEY = "MediaErrorsCorrectedModifier";
 static std::string MEDIAERRORSCORRECTEDSTATE_KEY = "MediaErrorsCorrectedState";
+static std::string DRAMERRORSCORRECTED_KEY = "DramErrorsCorrected";
 static std::string CONTROLLERCURRENTTEMPERATURE_KEY = "CurrentControllerTemperature";
 static std::string CONTROLLERTEMPERATUREUNITS_KEY = "ControllerTemperatureUnits";
 static std::string CONTROLLERTEMPERATUREUNITMODIFIER_KEY = "ControllerTemperatureUnitModifier";

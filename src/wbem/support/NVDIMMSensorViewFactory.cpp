@@ -185,6 +185,10 @@ std::string NVDIMMSensorViewFactory::getSensorNameStr(int type)
 	{
 		result = PROPERTY_SENSOR_TYPE_MEDIAERRORS_ERASURECODED;
 	}
+	else if (type == NVDIMMSensorFactory::SENSORTYPE_DRAMERRORS_CORRECTED)
+	{
+		result = PROPERTY_SENSOR_TYPE_DRAMERRORS_CORRECTED;
+	}
 	else if (type == NVDIMMSensorFactory::SENSORTYPE_WRITECOUNT_MAXIMUM)
 	{
 		result = PROPERTY_SENSOR_TYPE_WRITECOUNT_MAXIMUM;
