@@ -56,7 +56,7 @@
 #define	NVM_SERIAL_LEN	4 // Number of bytes in the serial number
 #define	NVM_SERIALSTR_LEN	11 // Serial number string length including '\0' and prefix "0x"
 #define	NVM_PASSPHRASE_LEN	32 // Length of security passphrase
-#define	NVM_MAX_DEVICE_SENSORS	17 // Maximum number of sensors
+#define	NVM_MAX_DEVICE_SENSORS	18 // Maximum number of sensors
 #define	NVM_EVENT_MSG_LEN	1024 // Length of event message string
 #define	NVM_EVENT_ARG_LEN	1024 // Length of event argument string
 #define	NVM_MAX_EVENT_ARGS	3 // Maximum number of event arguments

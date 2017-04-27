@@ -687,6 +687,8 @@ int support_store_memory(PersistentStore *p_store, int history_id,
 				db_page.media_errors_ce);
 			NVM_8_BYTE_ARRAY_TO_64_BIT_VALUE(page.media_errors_ecc,
 				db_page.media_errors_ecc);
+			NVM_8_BYTE_ARRAY_TO_64_BIT_VALUE(page.dram_errors_ce,
+				db_page.dram_errors_ce);
 
 			db_save_dimm_memory_info_page2_state(p_store, history_id, &db_page);
 		}

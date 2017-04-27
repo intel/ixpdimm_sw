@@ -415,6 +415,7 @@ Attributes:
 	unsigned int media_errors_uc
 	unsigned long long media_errors_ce
 	unsigned long long media_errors_ecc
+	unsigned long long dram_errors_ce
 
 Table(s): db_dimm_ars_command_specific_data 
  	  db_dimm_ars_command_specific_data_history 

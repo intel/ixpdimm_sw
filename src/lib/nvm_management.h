@@ -202,7 +202,7 @@ enum device_sanitize_status
  * The type of sensor.
  * @internal
  * These enums are also used as indexes in the device.sensors array.  It is important to
- * keep them in order and with valid values (0 - 12)
+ * keep them in order and with valid values (0 - 17)
  * @endinternal
  */
 enum sensor_type
@@ -224,6 +224,7 @@ enum sensor_type
 	SENSOR_MEDIAERRORS_HOST = 14, // Num of ECC errors encountered by hosts requests only.
 	SENSOR_MEDIAERRORS_NONHOST = 15, // Num of ECC errors encountered by non-host requests only.
 	SENSOR_CONTROLLER_TEMPERATURE = 16, // Device media temperature in degrees Celsius.
+	SENSOR_DRAM_ERRORS_CORRECTED = 17 // The number of ECC corrected errors in the DRAM.
 };
 
 /*

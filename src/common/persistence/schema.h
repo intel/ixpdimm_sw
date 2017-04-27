@@ -5947,6 +5947,7 @@ struct db_dimm_memory_info_page2
 	unsigned int media_errors_uc;
 	unsigned long long media_errors_ce;
 	unsigned long long media_errors_ecc;
+	unsigned long long dram_errors_ce;
 };
 /*!
  * Helper function to print a db_dimm_memory_info_page2 to the screen.

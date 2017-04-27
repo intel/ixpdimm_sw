@@ -340,6 +340,11 @@ int get_media_page2_sensors(const NVM_UID device_uid,
 		// Media Errors - Non Host
 		p_sensors[SENSOR_MEDIAERRORS_NONHOST].reading = meminfo2.uncorrectable_non_host;
 		p_sensors[SENSOR_MEDIAERRORS_NONHOST].current_state = SENSOR_NORMAL;
+
+		// DRAM errors - Corrected
+		NVM_8_BYTE_ARRAY_TO_64_BIT_VALUE(meminfo2.dram_errors_ce,
+			p_sensors[SENSOR_DRAM_ERRORS_CORRECTED].reading);
+		p_sensors[SENSOR_DRAM_ERRORS_CORRECTED].current_state = SENSOR_NORMAL;
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -429,6 +434,7 @@ void initialize_sensors(const NVM_UID device_uid,
 	sensors[SENSOR_FWERRORLOGCOUNT].units = UNIT_COUNT;
 	sensors[SENSOR_POWERLIMITED].units = UNIT_COUNT;
 	sensors[SENSOR_CONTROLLER_TEMPERATURE].units = UNIT_CELSIUS;
+	sensors[SENSOR_DRAM_ERRORS_CORRECTED].units = UNIT_COUNT;
 }
 
 int get_all_sensors(const NVM_UID device_uid,
@@ -574,6 +580,8 @@ static const char *SENSOR_STRINGS[NVM_MAX_DEVICE_SENSORS] =
 		N_TR("Non-host Media Errors"),
 		// SENSOR_CONTROLLER_TEMPERATURE
 		N_TR("Controller Temperature"),
+		// SENSOR_DRAM_ERRORS_CORRECTED
+		N_TR("Corrected DRAM Errors"),
 	};
 
 void sensor_type_to_string(const enum sensor_type type, char *p_dst, size_t dst_size)

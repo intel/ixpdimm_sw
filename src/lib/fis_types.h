@@ -1664,8 +1664,10 @@ struct pt_payload_memory_info_page2 {
 	unsigned int media_errors_uc; /* ECC uncorrectable errors. */
 	unsigned char media_errors_ce[16]; /* ECC corrected errors */
 	unsigned char media_errors_ecc[16]; /* Erasure Code Corrected Errors */
+	unsigned char dram_errors_uc[16]; /* ECC uncorrectable errors */
+	unsigned char dram_errors_ce[16]; /* ECC corrected errors */
 
-	unsigned char rsvd[68];
+	unsigned char rsvd[36];
 } __attribute__((packed));
 
 /*

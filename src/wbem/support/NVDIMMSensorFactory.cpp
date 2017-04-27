@@ -135,6 +135,7 @@ const cimSensorDescriptionsMap &getSensorDescriptionMap()
 		result[SENSOR_MEDIAERRORS_UNCORRECTABLE] = (cimSensorDescription) {"meuc", NVDIMMSENSOR_ELEMENTPREFIX + "Media Errors Uncorrectable", SENSOR_TYPE_OTHER, "MediaErrorsUncorrectable"};
 		result[SENSOR_MEDIAERRORS_CORRECTED] = (cimSensorDescription) {"mec", NVDIMMSENSOR_ELEMENTPREFIX + "Media Errors Corrected", SENSOR_TYPE_OTHER, "MediaErrorsCorrected"};
 		result[SENSOR_MEDIAERRORS_ERASURECODED] = (cimSensorDescription) {"meec", NVDIMMSENSOR_ELEMENTPREFIX + "Media Errors Erasure Coded", SENSOR_TYPE_OTHER, "MediaErrorsErasureCoded"};
+		result[SENSOR_DRAM_ERRORS_CORRECTED] = (cimSensorDescription) {"dec", NVDIMMSENSOR_ELEMENTPREFIX + "DRAM Errors Corrected", SENSOR_TYPE_OTHER, "DramErrorsCorrected"};
 		result[SENSOR_WRITECOUNT_MAXIMUM] = (cimSensorDescription) {"wcmax", NVDIMMSENSOR_ELEMENTPREFIX + "Write Count Maximum", SENSOR_TYPE_OTHER, "WriteCountMax"};
 		result[SENSOR_WRITECOUNT_AVERAGE] = (cimSensorDescription) {"wcavg", NVDIMMSENSOR_ELEMENTPREFIX + "Write Count Average", SENSOR_TYPE_OTHER, "WriteCountAvg"};
 		result[SENSOR_MEDIAERRORS_HOST] = (cimSensorDescription) {"meh", NVDIMMSENSOR_ELEMENTPREFIX + "Media Errors Host", SENSOR_TYPE_OTHER, "MediaErrorsHost"};
