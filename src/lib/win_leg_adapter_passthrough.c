@@ -31,7 +31,7 @@
  */
 
 #include "device_adapter.h"
-#include "win_adapter.h"
+#include "win_leg_adapter_shared.h"
 #include <os/os_adapter.h>
 
 /*
@@ -282,7 +282,7 @@ int bios_read_large_payload(struct fw_cmd *p_fw_cmd)
 /*
  * Execute a passthrough IOCTL
  */
-int ioctl_passthrough_cmd(struct fw_cmd *p_cmd)
+int win_leg_adp_ioctl_passthrough_cmd(struct fw_cmd *p_cmd)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_ERR_UNKNOWN;

@@ -32,13 +32,13 @@
 #include "device_adapter.h"
 #include <string/s_str.h>
 #include <initguid.h>
-#include "win_adapter.h"
+#include "win_leg_adapter_shared.h"
 #include "utility.h"
 
 /*
  * Get the number of existing namespaces
  */
-int get_namespace_count()
+int win_leg_adp_get_namespace_count()
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
@@ -78,8 +78,7 @@ int get_namespace_count()
 /*
  * Get the discovery information for a given number of namespaces
  */
-int get_namespaces(const NVM_UINT32 count,
-		struct nvm_namespace_discovery *p_namespaces)
+int win_leg_adp_get_namespaces(const NVM_UINT32 count, struct nvm_namespace_discovery *p_namespaces)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
@@ -146,7 +145,7 @@ int get_namespaces(const NVM_UINT32 count,
 /*
  * Get the details for a specific namespace
  */
-int get_namespace_details(
+int win_leg_adp_get_namespace_details(
 		const NVM_UID namespace_uid,
 		struct nvm_namespace_details *p_details)
 {
@@ -234,7 +233,7 @@ int get_namespace_details(
 /*
  * Create a new namespace
  */
-int create_namespace(
+int win_leg_adp_create_namespace(
 		NVM_UID *p_namespace_uid,
 		const struct nvm_namespace_create_settings *p_settings)
 {
@@ -291,7 +290,7 @@ int create_namespace(
 /*
  * Delete an existing namespace
  */
-int delete_namespace(const NVM_UID namespace_uid)
+int win_leg_adp_delete_namespace(const NVM_UID namespace_uid)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
@@ -322,7 +321,7 @@ int delete_namespace(const NVM_UID namespace_uid)
 /*
  * Modify an existing namespace name
  */
-int modify_namespace_name(
+int win_leg_adp_modify_namespace_name(
 		const NVM_UID namespace_uid,
 		const NVM_NAMESPACE_NAME name)
 {
@@ -370,7 +369,7 @@ int modify_namespace_name(
 /*
  * Modify an existing namespace size
  */
-int modify_namespace_block_count(
+int win_leg_adp_modify_namespace_block_count(
 		const NVM_UID namespace_uid,
 		const NVM_UINT64 block_count)
 {
@@ -381,7 +380,7 @@ int modify_namespace_block_count(
 /*
  * Modify an existing namespace enable
  */
-int modify_namespace_enabled(
+int win_leg_adp_modify_namespace_enabled(
 		const NVM_UID namespace_uid,
 		const enum namespace_enable_state enabled)
 {

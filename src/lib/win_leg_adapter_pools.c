@@ -34,13 +34,13 @@
 #include "pool_utilities.h"
 #include "platform_config_data.h"
 #include "device_utilities.h"
-#include "win_adapter.h"
+#include "win_leg_adapter_shared.h"
 #include "utility.h"
 
 /*
  * Fetch the interleave set count
  */
-int get_interleave_set_count()
+int win_leg_adp_get_interleave_set_count()
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_ERR_UNKNOWN;
@@ -130,7 +130,8 @@ int interleave_set_ioctl_to_nvm(NVM_INTERLEAVE_SET *p_ioctl_interleave_set,
 /*
  * Fetch the list of interleave sets
  */
-int get_interleave_sets(const NVM_UINT32 count, struct nvm_interleave_set *p_interleaves)
+int win_leg_adp_get_interleave_sets(const NVM_UINT32 count,
+									struct nvm_interleave_set *p_interleaves)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_ERR_UNKNOWN;
@@ -233,7 +234,8 @@ int get_dimm_free_storage_capacity(NVM_NFIT_DEVICE_HANDLE handle,
 /*
  * Retrieve the storage capacities of all DIMMs
  */
-int get_dimm_storage_capacities(const NVM_UINT32 count, struct nvm_storage_capacities *p_capacities)
+int win_leg_adp_get_dimm_storage_capacities(const NVM_UINT32 count,
+											struct nvm_storage_capacities *p_capacities)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
