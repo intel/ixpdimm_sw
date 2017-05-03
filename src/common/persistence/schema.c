@@ -867,7 +867,8 @@ tables[populate_index++] = ((struct table){"dimm_topology",
 					 interface_format_codes_5 INTEGER  , \
 					 interface_format_codes_6 INTEGER  , \
 					 interface_format_codes_7 INTEGER  , \
-					 interface_format_codes_8 INTEGER   \
+					 interface_format_codes_8 INTEGER  , \
+					 state_flags INTEGER   \
 					);"});
 			tables[populate_index++] = ((struct table){"dimm_topology_history",
 				"CREATE TABLE dimm_topology_history (       \
@@ -895,7 +896,8 @@ tables[populate_index++] = ((struct table){"dimm_topology",
 					 interface_format_codes_5 INTEGER , \
 					 interface_format_codes_6 INTEGER , \
 					 interface_format_codes_7 INTEGER , \
-					 interface_format_codes_8 INTEGER  \
+					 interface_format_codes_8 INTEGER , \
+					 state_flags INTEGER  \
 					);"});
 tables[populate_index++] = ((struct table){"namespace",
 				"CREATE TABLE namespace (       \
@@ -1123,10 +1125,7 @@ tables[populate_index++] = ((struct table){"dimm_die_sparing",
 					 device_handle INTEGER  PRIMARY KEY  NOT NULL UNIQUE  , \
 					 enable INTEGER  , \
 					 aggressiveness INTEGER  , \
-					 supported_by_rank_0 INTEGER  , \
-					 supported_by_rank_1 INTEGER  , \
-					 supported_by_rank_2 INTEGER  , \
-					 supported_by_rank_3 INTEGER   \
+					 supported INTEGER   \
 					);"});
 			tables[populate_index++] = ((struct table){"dimm_die_sparing_history",
 				"CREATE TABLE dimm_die_sparing_history (       \
@@ -1134,10 +1133,7 @@ tables[populate_index++] = ((struct table){"dimm_die_sparing",
 					 device_handle INTEGER , \
 					 enable INTEGER , \
 					 aggressiveness INTEGER , \
-					 supported_by_rank_0 INTEGER , \
-					 supported_by_rank_1 INTEGER , \
-					 supported_by_rank_2 INTEGER , \
-					 supported_by_rank_3 INTEGER  \
+					 supported INTEGER  \
 					);"});
 tables[populate_index++] = ((struct table){"dimm_optional_config_data",
 				"CREATE TABLE dimm_optional_config_data (       \
@@ -1288,7 +1284,8 @@ tables[populate_index++] = ((struct table){"dimm_memory_info_page2",
 					 uncorrectable_non_host INTEGER  , \
 					 media_errors_uc INTEGER  , \
 					 media_errors_ce INTEGER  , \
-					 media_errors_ecc INTEGER   \
+					 media_errors_ecc INTEGER  , \
+					 dram_errors_ce INTEGER   \
 					);"});
 			tables[populate_index++] = ((struct table){"dimm_memory_info_page2_history",
 				"CREATE TABLE dimm_memory_info_page2_history (       \
@@ -1300,7 +1297,8 @@ tables[populate_index++] = ((struct table){"dimm_memory_info_page2",
 					 uncorrectable_non_host INTEGER , \
 					 media_errors_uc INTEGER , \
 					 media_errors_ce INTEGER , \
-					 media_errors_ecc INTEGER  \
+					 media_errors_ecc INTEGER , \
+					 dram_errors_ce INTEGER  \
 					);"});
 tables[populate_index++] = ((struct table){"dimm_ars_command_specific_data",
 				"CREATE TABLE dimm_ars_command_specific_data (       \
@@ -7860,6 +7858,7 @@ void local_bind_dimm_topology(sqlite3_stmt *p_stmt, struct db_dimm_topology *p_d
 	BIND_INTEGER(p_stmt, "$interface_format_codes_6", (unsigned int)p_dimm_topology->interface_format_codes[6]);
 	BIND_INTEGER(p_stmt, "$interface_format_codes_7", (unsigned int)p_dimm_topology->interface_format_codes[7]);
 	BIND_INTEGER(p_stmt, "$interface_format_codes_8", (unsigned int)p_dimm_topology->interface_format_codes[8]);
+	BIND_INTEGER(p_stmt, "$state_flags", (unsigned int)p_dimm_topology->state_flags);
 }
 void local_get_dimm_topology_relationships(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt, struct db_dimm_topology *p_dimm_topology)
@@ -7947,6 +7946,9 @@ void local_row_to_dimm_topology(const PersistentStore *p_ps,
 	INTEGER_COLUMN(p_stmt,
 		23,
 		p_dimm_topology->interface_format_codes[8]);
+	INTEGER_COLUMN(p_stmt,
+		24,
+		p_dimm_topology->state_flags);
 }
 void db_print_dimm_topology(struct db_dimm_topology *p_value)
 {
@@ -7974,6 +7976,7 @@ void db_print_dimm_topology(struct db_dimm_topology *p_value)
 	printf("dimm_topology.interface_format_codes: unsigned %d\n", p_value->interface_format_codes[6]);
 	printf("dimm_topology.interface_format_codes: unsigned %d\n", p_value->interface_format_codes[7]);
 	printf("dimm_topology.interface_format_codes: unsigned %d\n", p_value->interface_format_codes[8]);
+	printf("dimm_topology.state_flags: unsigned %d\n", p_value->state_flags);
 }
 enum db_return_codes db_add_dimm_topology(const PersistentStore *p_ps,
 	struct db_dimm_topology *p_dimm_topology)
@@ -7981,7 +7984,7 @@ enum db_return_codes db_add_dimm_topology(const PersistentStore *p_ps,
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = 	"INSERT INTO dimm_topology \
-		(device_handle, id, vendor_id, device_id, revision_id, subsystem_vendor_id, subsystem_device_id, subsystem_revision_id, manufacturing_info_valid, manufacturing_location, manufacturing_date, serial_number_0, serial_number_1, serial_number_2, serial_number_3, interface_format_codes_0, interface_format_codes_1, interface_format_codes_2, interface_format_codes_3, interface_format_codes_4, interface_format_codes_5, interface_format_codes_6, interface_format_codes_7, interface_format_codes_8)  \
+		(device_handle, id, vendor_id, device_id, revision_id, subsystem_vendor_id, subsystem_device_id, subsystem_revision_id, manufacturing_info_valid, manufacturing_location, manufacturing_date, serial_number_0, serial_number_1, serial_number_2, serial_number_3, interface_format_codes_0, interface_format_codes_1, interface_format_codes_2, interface_format_codes_3, interface_format_codes_4, interface_format_codes_5, interface_format_codes_6, interface_format_codes_7, interface_format_codes_8, state_flags)  \
 		VALUES 		\
 		($device_handle, \
 		$id, \
@@ -8006,7 +8009,8 @@ enum db_return_codes db_add_dimm_topology(const PersistentStore *p_ps,
 		$interface_format_codes_5, \
 		$interface_format_codes_6, \
 		$interface_format_codes_7, \
-		$interface_format_codes_8) ";
+		$interface_format_codes_8, \
+		$state_flags) ";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		local_bind_dimm_topology(p_stmt, p_dimm_topology);
@@ -8053,9 +8057,10 @@ int db_get_dimm_topologys(const PersistentStore *p_ps,
 		,  interface_format_codes_6 \
 		,  interface_format_codes_7 \
 		,  interface_format_codes_8 \
+		,  state_flags \
 		  \
 		FROM dimm_topology \
-		                         \
+		                          \
 		 \
 		";
 	sqlite3_stmt *p_stmt;
@@ -8097,7 +8102,7 @@ enum db_return_codes db_save_dimm_topology_state(const PersistentStore *p_ps,
 	{
 		sqlite3_stmt *p_stmt;
 		char *sql = 	"INSERT INTO dimm_topology \
-			( device_handle ,  id ,  vendor_id ,  device_id ,  revision_id ,  subsystem_vendor_id ,  subsystem_device_id ,  subsystem_revision_id ,  manufacturing_info_valid ,  manufacturing_location ,  manufacturing_date ,  serial_number_0 ,  serial_number_1 ,  serial_number_2 ,  serial_number_3 ,  interface_format_codes_0 ,  interface_format_codes_1 ,  interface_format_codes_2 ,  interface_format_codes_3 ,  interface_format_codes_4 ,  interface_format_codes_5 ,  interface_format_codes_6 ,  interface_format_codes_7 ,  interface_format_codes_8 )  \
+			( device_handle ,  id ,  vendor_id ,  device_id ,  revision_id ,  subsystem_vendor_id ,  subsystem_device_id ,  subsystem_revision_id ,  manufacturing_info_valid ,  manufacturing_location ,  manufacturing_date ,  serial_number_0 ,  serial_number_1 ,  serial_number_2 ,  serial_number_3 ,  interface_format_codes_0 ,  interface_format_codes_1 ,  interface_format_codes_2 ,  interface_format_codes_3 ,  interface_format_codes_4 ,  interface_format_codes_5 ,  interface_format_codes_6 ,  interface_format_codes_7 ,  interface_format_codes_8 ,  state_flags )  \
 			VALUES 		\
 			($device_handle, \
 			$id, \
@@ -8122,7 +8127,8 @@ enum db_return_codes db_save_dimm_topology_state(const PersistentStore *p_ps,
 			$interface_format_codes_5, \
 			$interface_format_codes_6, \
 			$interface_format_codes_7, \
-			$interface_format_codes_8) ";
+			$interface_format_codes_8, \
+			$state_flags) ";
 		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 		{
 			local_bind_dimm_topology(p_stmt, p_dimm_topology);
@@ -8141,7 +8147,7 @@ enum db_return_codes db_save_dimm_topology_state(const PersistentStore *p_ps,
 		sqlite3_stmt *p_stmt;
 		char *sql = "INSERT INTO dimm_topology_history \
 			(history_id, \
-				 device_handle,  id,  vendor_id,  device_id,  revision_id,  subsystem_vendor_id,  subsystem_device_id,  subsystem_revision_id,  manufacturing_info_valid,  manufacturing_location,  manufacturing_date,  serial_number_0,  serial_number_1,  serial_number_2,  serial_number_3,  interface_format_codes_0,  interface_format_codes_1,  interface_format_codes_2,  interface_format_codes_3,  interface_format_codes_4,  interface_format_codes_5,  interface_format_codes_6,  interface_format_codes_7,  interface_format_codes_8)  \
+				 device_handle,  id,  vendor_id,  device_id,  revision_id,  subsystem_vendor_id,  subsystem_device_id,  subsystem_revision_id,  manufacturing_info_valid,  manufacturing_location,  manufacturing_date,  serial_number_0,  serial_number_1,  serial_number_2,  serial_number_3,  interface_format_codes_0,  interface_format_codes_1,  interface_format_codes_2,  interface_format_codes_3,  interface_format_codes_4,  interface_format_codes_5,  interface_format_codes_6,  interface_format_codes_7,  interface_format_codes_8,  state_flags)  \
 			VALUES 		($history_id, \
 				 $device_handle , \
 				 $id , \
@@ -8166,7 +8172,8 @@ enum db_return_codes db_save_dimm_topology_state(const PersistentStore *p_ps,
 				 $interface_format_codes_5 , \
 				 $interface_format_codes_6 , \
 				 $interface_format_codes_7 , \
-				 $interface_format_codes_8 )";
+				 $interface_format_codes_8 , \
+				 $state_flags )";
 		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
@@ -8190,7 +8197,7 @@ enum db_return_codes db_get_dimm_topology_by_device_handle(const PersistentStore
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
-		device_handle,  id,  vendor_id,  device_id,  revision_id,  subsystem_vendor_id,  subsystem_device_id,  subsystem_revision_id,  manufacturing_info_valid,  manufacturing_location,  manufacturing_date,  serial_number_0,  serial_number_1,  serial_number_2,  serial_number_3,  interface_format_codes_0,  interface_format_codes_1,  interface_format_codes_2,  interface_format_codes_3,  interface_format_codes_4,  interface_format_codes_5,  interface_format_codes_6,  interface_format_codes_7,  interface_format_codes_8  \
+		device_handle,  id,  vendor_id,  device_id,  revision_id,  subsystem_vendor_id,  subsystem_device_id,  subsystem_revision_id,  manufacturing_info_valid,  manufacturing_location,  manufacturing_date,  serial_number_0,  serial_number_1,  serial_number_2,  serial_number_3,  interface_format_codes_0,  interface_format_codes_1,  interface_format_codes_2,  interface_format_codes_3,  interface_format_codes_4,  interface_format_codes_5,  interface_format_codes_6,  interface_format_codes_7,  interface_format_codes_8,  state_flags  \
 		FROM dimm_topology \
 		WHERE  device_handle = $device_handle";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -8239,6 +8246,7 @@ enum db_return_codes db_update_dimm_topology_by_device_handle(const PersistentSt
 		,  interface_format_codes_6=$interface_format_codes_6 \
 		,  interface_format_codes_7=$interface_format_codes_7 \
 		,  interface_format_codes_8=$interface_format_codes_8 \
+		,  state_flags=$state_flags \
 		  \
 	WHERE device_handle=$device_handle ";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -8326,7 +8334,7 @@ int db_get_dimm_topology_history_by_history_id(const PersistentStore *p_ps,
 	memset(p_dimm_topology, 0, sizeof (struct db_dimm_topology) * dimm_topology_count);
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
-		device_handle,  id,  vendor_id,  device_id,  revision_id,  subsystem_vendor_id,  subsystem_device_id,  subsystem_revision_id,  manufacturing_info_valid,  manufacturing_location,  manufacturing_date,  serial_number_0,  serial_number_1,  serial_number_2,  serial_number_3,  interface_format_codes_0,  interface_format_codes_1,  interface_format_codes_2,  interface_format_codes_3,  interface_format_codes_4,  interface_format_codes_5,  interface_format_codes_6,  interface_format_codes_7,  interface_format_codes_8  \
+		device_handle,  id,  vendor_id,  device_id,  revision_id,  subsystem_vendor_id,  subsystem_device_id,  subsystem_revision_id,  manufacturing_info_valid,  manufacturing_location,  manufacturing_date,  serial_number_0,  serial_number_1,  serial_number_2,  serial_number_3,  interface_format_codes_0,  interface_format_codes_1,  interface_format_codes_2,  interface_format_codes_3,  interface_format_codes_4,  interface_format_codes_5,  interface_format_codes_6,  interface_format_codes_7,  interface_format_codes_8,  state_flags  \
 		FROM dimm_topology_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
@@ -11911,10 +11919,7 @@ void local_bind_dimm_die_sparing(sqlite3_stmt *p_stmt, struct db_dimm_die_sparin
 	BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)p_dimm_die_sparing->device_handle);
 	BIND_INTEGER(p_stmt, "$enable", (unsigned int)p_dimm_die_sparing->enable);
 	BIND_INTEGER(p_stmt, "$aggressiveness", (unsigned int)p_dimm_die_sparing->aggressiveness);
-	BIND_INTEGER(p_stmt, "$supported_by_rank_0", (unsigned int)p_dimm_die_sparing->supported_by_rank[0]);
-	BIND_INTEGER(p_stmt, "$supported_by_rank_1", (unsigned int)p_dimm_die_sparing->supported_by_rank[1]);
-	BIND_INTEGER(p_stmt, "$supported_by_rank_2", (unsigned int)p_dimm_die_sparing->supported_by_rank[2]);
-	BIND_INTEGER(p_stmt, "$supported_by_rank_3", (unsigned int)p_dimm_die_sparing->supported_by_rank[3]);
+	BIND_INTEGER(p_stmt, "$supported", (unsigned int)p_dimm_die_sparing->supported);
 }
 void local_get_dimm_die_sparing_relationships(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt, struct db_dimm_die_sparing *p_dimm_die_sparing)
@@ -11941,26 +11946,14 @@ void local_row_to_dimm_die_sparing(const PersistentStore *p_ps,
 		p_dimm_die_sparing->aggressiveness);
 	INTEGER_COLUMN(p_stmt,
 		3,
-		p_dimm_die_sparing->supported_by_rank[0]);
-	INTEGER_COLUMN(p_stmt,
-		4,
-		p_dimm_die_sparing->supported_by_rank[1]);
-	INTEGER_COLUMN(p_stmt,
-		5,
-		p_dimm_die_sparing->supported_by_rank[2]);
-	INTEGER_COLUMN(p_stmt,
-		6,
-		p_dimm_die_sparing->supported_by_rank[3]);
+		p_dimm_die_sparing->supported);
 }
 void db_print_dimm_die_sparing(struct db_dimm_die_sparing *p_value)
 {
 	printf("dimm_die_sparing.device_handle: unsigned %d\n", p_value->device_handle);
 	printf("dimm_die_sparing.enable: unsigned %d\n", p_value->enable);
 	printf("dimm_die_sparing.aggressiveness: unsigned %d\n", p_value->aggressiveness);
-	printf("dimm_die_sparing.supported_by_rank: unsigned %d\n", p_value->supported_by_rank[0]);
-	printf("dimm_die_sparing.supported_by_rank: unsigned %d\n", p_value->supported_by_rank[1]);
-	printf("dimm_die_sparing.supported_by_rank: unsigned %d\n", p_value->supported_by_rank[2]);
-	printf("dimm_die_sparing.supported_by_rank: unsigned %d\n", p_value->supported_by_rank[3]);
+	printf("dimm_die_sparing.supported: unsigned %d\n", p_value->supported);
 }
 enum db_return_codes db_add_dimm_die_sparing(const PersistentStore *p_ps,
 	struct db_dimm_die_sparing *p_dimm_die_sparing)
@@ -11968,15 +11961,12 @@ enum db_return_codes db_add_dimm_die_sparing(const PersistentStore *p_ps,
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = 	"INSERT INTO dimm_die_sparing \
-		(device_handle, enable, aggressiveness, supported_by_rank_0, supported_by_rank_1, supported_by_rank_2, supported_by_rank_3)  \
+		(device_handle, enable, aggressiveness, supported)  \
 		VALUES 		\
 		($device_handle, \
 		$enable, \
 		$aggressiveness, \
-		$supported_by_rank_0, \
-		$supported_by_rank_1, \
-		$supported_by_rank_2, \
-		$supported_by_rank_3) ";
+		$supported) ";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		local_bind_dimm_die_sparing(p_stmt, p_dimm_die_sparing);
@@ -12002,13 +11992,10 @@ int db_get_dimm_die_sparings(const PersistentStore *p_ps,
 		device_handle \
 		,  enable \
 		,  aggressiveness \
-		,  supported_by_rank_0 \
-		,  supported_by_rank_1 \
-		,  supported_by_rank_2 \
-		,  supported_by_rank_3 \
+		,  supported \
 		  \
 		FROM dimm_die_sparing \
-		        \
+		     \
 		 \
 		";
 	sqlite3_stmt *p_stmt;
@@ -12050,15 +12037,12 @@ enum db_return_codes db_save_dimm_die_sparing_state(const PersistentStore *p_ps,
 	{
 		sqlite3_stmt *p_stmt;
 		char *sql = 	"INSERT INTO dimm_die_sparing \
-			( device_handle ,  enable ,  aggressiveness ,  supported_by_rank_0 ,  supported_by_rank_1 ,  supported_by_rank_2 ,  supported_by_rank_3 )  \
+			( device_handle ,  enable ,  aggressiveness ,  supported )  \
 			VALUES 		\
 			($device_handle, \
 			$enable, \
 			$aggressiveness, \
-			$supported_by_rank_0, \
-			$supported_by_rank_1, \
-			$supported_by_rank_2, \
-			$supported_by_rank_3) ";
+			$supported) ";
 		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 		{
 			local_bind_dimm_die_sparing(p_stmt, p_dimm_die_sparing);
@@ -12077,15 +12061,12 @@ enum db_return_codes db_save_dimm_die_sparing_state(const PersistentStore *p_ps,
 		sqlite3_stmt *p_stmt;
 		char *sql = "INSERT INTO dimm_die_sparing_history \
 			(history_id, \
-				 device_handle,  enable,  aggressiveness,  supported_by_rank_0,  supported_by_rank_1,  supported_by_rank_2,  supported_by_rank_3)  \
+				 device_handle,  enable,  aggressiveness,  supported)  \
 			VALUES 		($history_id, \
 				 $device_handle , \
 				 $enable , \
 				 $aggressiveness , \
-				 $supported_by_rank_0 , \
-				 $supported_by_rank_1 , \
-				 $supported_by_rank_2 , \
-				 $supported_by_rank_3 )";
+				 $supported )";
 		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
@@ -12109,7 +12090,7 @@ enum db_return_codes db_get_dimm_die_sparing_by_device_handle(const PersistentSt
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
-		device_handle,  enable,  aggressiveness,  supported_by_rank_0,  supported_by_rank_1,  supported_by_rank_2,  supported_by_rank_3  \
+		device_handle,  enable,  aggressiveness,  supported  \
 		FROM dimm_die_sparing \
 		WHERE  device_handle = $device_handle";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -12137,10 +12118,7 @@ enum db_return_codes db_update_dimm_die_sparing_by_device_handle(const Persisten
 	device_handle=$device_handle \
 		,  enable=$enable \
 		,  aggressiveness=$aggressiveness \
-		,  supported_by_rank_0=$supported_by_rank_0 \
-		,  supported_by_rank_1=$supported_by_rank_1 \
-		,  supported_by_rank_2=$supported_by_rank_2 \
-		,  supported_by_rank_3=$supported_by_rank_3 \
+		,  supported=$supported \
 		  \
 	WHERE device_handle=$device_handle ";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -12228,7 +12206,7 @@ int db_get_dimm_die_sparing_history_by_history_id(const PersistentStore *p_ps,
 	memset(p_dimm_die_sparing, 0, sizeof (struct db_dimm_die_sparing) * dimm_die_sparing_count);
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
-		device_handle,  enable,  aggressiveness,  supported_by_rank_0,  supported_by_rank_1,  supported_by_rank_2,  supported_by_rank_3  \
+		device_handle,  enable,  aggressiveness,  supported  \
 		FROM dimm_die_sparing_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
@@ -15056,6 +15034,7 @@ void local_bind_dimm_memory_info_page2(sqlite3_stmt *p_stmt, struct db_dimm_memo
 	BIND_INTEGER(p_stmt, "$media_errors_uc", (unsigned int)p_dimm_memory_info_page2->media_errors_uc);
 	BIND_INTEGER(p_stmt, "$media_errors_ce", (unsigned long long)p_dimm_memory_info_page2->media_errors_ce);
 	BIND_INTEGER(p_stmt, "$media_errors_ecc", (unsigned long long)p_dimm_memory_info_page2->media_errors_ecc);
+	BIND_INTEGER(p_stmt, "$dram_errors_ce", (unsigned long long)p_dimm_memory_info_page2->dram_errors_ce);
 }
 void local_get_dimm_memory_info_page2_relationships(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt, struct db_dimm_memory_info_page2 *p_dimm_memory_info_page2)
@@ -15095,6 +15074,9 @@ void local_row_to_dimm_memory_info_page2(const PersistentStore *p_ps,
 	INTEGER_COLUMN(p_stmt,
 		7,
 		p_dimm_memory_info_page2->media_errors_ecc);
+	INTEGER_COLUMN(p_stmt,
+		8,
+		p_dimm_memory_info_page2->dram_errors_ce);
 }
 void db_print_dimm_memory_info_page2(struct db_dimm_memory_info_page2 *p_value)
 {
@@ -15106,6 +15088,7 @@ void db_print_dimm_memory_info_page2(struct db_dimm_memory_info_page2 *p_value)
 	printf("dimm_memory_info_page2.media_errors_uc: unsigned %d\n", p_value->media_errors_uc);
 	printf("dimm_memory_info_page2.media_errors_ce: unsigned %lld\n", p_value->media_errors_ce);
 	printf("dimm_memory_info_page2.media_errors_ecc: unsigned %lld\n", p_value->media_errors_ecc);
+	printf("dimm_memory_info_page2.dram_errors_ce: unsigned %lld\n", p_value->dram_errors_ce);
 }
 enum db_return_codes db_add_dimm_memory_info_page2(const PersistentStore *p_ps,
 	struct db_dimm_memory_info_page2 *p_dimm_memory_info_page2)
@@ -15113,7 +15096,7 @@ enum db_return_codes db_add_dimm_memory_info_page2(const PersistentStore *p_ps,
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = 	"INSERT INTO dimm_memory_info_page2 \
-		(device_handle, write_count_max, write_count_average, uncorrectable_host, uncorrectable_non_host, media_errors_uc, media_errors_ce, media_errors_ecc)  \
+		(device_handle, write_count_max, write_count_average, uncorrectable_host, uncorrectable_non_host, media_errors_uc, media_errors_ce, media_errors_ecc, dram_errors_ce)  \
 		VALUES 		\
 		($device_handle, \
 		$write_count_max, \
@@ -15122,7 +15105,8 @@ enum db_return_codes db_add_dimm_memory_info_page2(const PersistentStore *p_ps,
 		$uncorrectable_non_host, \
 		$media_errors_uc, \
 		$media_errors_ce, \
-		$media_errors_ecc) ";
+		$media_errors_ecc, \
+		$dram_errors_ce) ";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
 		local_bind_dimm_memory_info_page2(p_stmt, p_dimm_memory_info_page2);
@@ -15153,9 +15137,10 @@ int db_get_dimm_memory_info_page2s(const PersistentStore *p_ps,
 		,  media_errors_uc \
 		,  media_errors_ce \
 		,  media_errors_ecc \
+		,  dram_errors_ce \
 		  \
 		FROM dimm_memory_info_page2 \
-		         \
+		          \
 		 \
 		";
 	sqlite3_stmt *p_stmt;
@@ -15197,7 +15182,7 @@ enum db_return_codes db_save_dimm_memory_info_page2_state(const PersistentStore 
 	{
 		sqlite3_stmt *p_stmt;
 		char *sql = 	"INSERT INTO dimm_memory_info_page2 \
-			( device_handle ,  write_count_max ,  write_count_average ,  uncorrectable_host ,  uncorrectable_non_host ,  media_errors_uc ,  media_errors_ce ,  media_errors_ecc )  \
+			( device_handle ,  write_count_max ,  write_count_average ,  uncorrectable_host ,  uncorrectable_non_host ,  media_errors_uc ,  media_errors_ce ,  media_errors_ecc ,  dram_errors_ce )  \
 			VALUES 		\
 			($device_handle, \
 			$write_count_max, \
@@ -15206,7 +15191,8 @@ enum db_return_codes db_save_dimm_memory_info_page2_state(const PersistentStore 
 			$uncorrectable_non_host, \
 			$media_errors_uc, \
 			$media_errors_ce, \
-			$media_errors_ecc) ";
+			$media_errors_ecc, \
+			$dram_errors_ce) ";
 		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 		{
 			local_bind_dimm_memory_info_page2(p_stmt, p_dimm_memory_info_page2);
@@ -15225,7 +15211,7 @@ enum db_return_codes db_save_dimm_memory_info_page2_state(const PersistentStore 
 		sqlite3_stmt *p_stmt;
 		char *sql = "INSERT INTO dimm_memory_info_page2_history \
 			(history_id, \
-				 device_handle,  write_count_max,  write_count_average,  uncorrectable_host,  uncorrectable_non_host,  media_errors_uc,  media_errors_ce,  media_errors_ecc)  \
+				 device_handle,  write_count_max,  write_count_average,  uncorrectable_host,  uncorrectable_non_host,  media_errors_uc,  media_errors_ce,  media_errors_ecc,  dram_errors_ce)  \
 			VALUES 		($history_id, \
 				 $device_handle , \
 				 $write_count_max , \
@@ -15234,7 +15220,8 @@ enum db_return_codes db_save_dimm_memory_info_page2_state(const PersistentStore 
 				 $uncorrectable_non_host , \
 				 $media_errors_uc , \
 				 $media_errors_ce , \
-				 $media_errors_ecc )";
+				 $media_errors_ecc , \
+				 $dram_errors_ce )";
 		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
@@ -15258,7 +15245,7 @@ enum db_return_codes db_get_dimm_memory_info_page2_by_device_handle(const Persis
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
-		device_handle,  write_count_max,  write_count_average,  uncorrectable_host,  uncorrectable_non_host,  media_errors_uc,  media_errors_ce,  media_errors_ecc  \
+		device_handle,  write_count_max,  write_count_average,  uncorrectable_host,  uncorrectable_non_host,  media_errors_uc,  media_errors_ce,  media_errors_ecc,  dram_errors_ce  \
 		FROM dimm_memory_info_page2 \
 		WHERE  device_handle = $device_handle";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -15291,6 +15278,7 @@ enum db_return_codes db_update_dimm_memory_info_page2_by_device_handle(const Per
 		,  media_errors_uc=$media_errors_uc \
 		,  media_errors_ce=$media_errors_ce \
 		,  media_errors_ecc=$media_errors_ecc \
+		,  dram_errors_ce=$dram_errors_ce \
 		  \
 	WHERE device_handle=$device_handle ";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
@@ -15378,7 +15366,7 @@ int db_get_dimm_memory_info_page2_history_by_history_id(const PersistentStore *p
 	memset(p_dimm_memory_info_page2, 0, sizeof (struct db_dimm_memory_info_page2) * dimm_memory_info_page2_count);
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
-		device_handle,  write_count_max,  write_count_average,  uncorrectable_host,  uncorrectable_non_host,  media_errors_uc,  media_errors_ce,  media_errors_ecc  \
+		device_handle,  write_count_max,  write_count_average,  uncorrectable_host,  uncorrectable_non_host,  media_errors_uc,  media_errors_ce,  media_errors_ecc,  dram_errors_ce  \
 		FROM dimm_memory_info_page2_history WHERE history_id = $history_id";
 	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
 	{
