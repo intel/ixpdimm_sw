@@ -157,7 +157,8 @@ public:
 		SHOW_PREFERENCES,
 		CHANGE_PREFERENCES,
 		SHOW_DEVICE_FIRMWARE,
-		SHOW_LOGS
+		SHOW_LOGS,
+		SHOW_DEVICE_PCD,
 	};
 
 	/*!
@@ -362,6 +363,7 @@ private:
 
 	bool fwHasLastFwUpdateStatusField(const std::string &fwApiVersion);
 
+	virtual cli::framework::ResultBase *showDevicePcd(const framework::ParsedCommand& parsedCommand);
 };
 
 };

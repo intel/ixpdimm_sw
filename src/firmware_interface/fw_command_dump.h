@@ -98,13 +98,13 @@ int fwcmd_dump_system_time(const int handle,
 
 struct fwcmd_system_time_result fwcmd_read_system_time(const char *filename);
 
-int fwcmd_dump_platform_config_data(const int handle,
+int fwcmd_dump_platform_config_data_configuration_header_table(const int handle,
 	const unsigned char partition_id,
 	const unsigned char command_option,
 	const unsigned int offset,
 	const char * filename);
 
-struct fwcmd_platform_config_data_result fwcmd_read_platform_config_data(const char *filename);
+struct fwcmd_platform_config_data_configuration_header_table_result fwcmd_read_platform_config_data_configuration_header_table(const char *filename);
 
 int fwcmd_dump_dimm_partition_info(const int handle,
 	const char * filename);

@@ -50,7 +50,7 @@ void {{name|fw_cmd_printer}}(const struct {{name|fw_cmd_data}} *p_value, int {{t
 		{{name|fw_cmd_printer}}(&p_value->{{name}}[i], {{tab_counter}} + 1);
 	}
 //- 					else
-	{{name|fw_cmd_printer}}(&p_value->{{name}}, {{tab_count}} + 1);
+	{{name|fw_cmd_printer}}(&p_value->{{name}}, {{tab_counter}} + 1);
 //- 					endif
 //- 				endfor
 //- 			else

@@ -100,10 +100,10 @@ int fwcmd_dump(const char *command_name, unsigned int handle, const char *filena
 		rc = fwcmd_dump_system_time(handle,
 			filename);
 	}
-	else if (s_strncmpi(command_name, "platform_config_data",
-		sizeof ("platform_config_data")) == 0)
+	else if (s_strncmpi(command_name, "platform_config_data_configuration_header_table",
+		sizeof ("platform_config_data_configuration_header_table")) == 0)
 	{
-		rc = fwcmd_dump_platform_config_data(handle,
+		rc = fwcmd_dump_platform_config_data_configuration_header_table(handle,
 			1,
 			0,
 			0,
@@ -198,7 +198,7 @@ int fwcmd_dump(const char *command_name, unsigned int handle, const char *filena
 		printf("\toptional_configuration_data_policy\n");
 		printf("\tpmon_registers\n");
 		printf("\tsystem_time\n");
-		printf("\tplatform_config_data\n");
+		printf("\tplatform_config_data_configuration_header_table\n");
 		printf("\tdimm_partition_info\n");
 		printf("\tfw_debug_log_level\n");
 		printf("\tfw_load_flag\n");
@@ -315,13 +315,13 @@ void fwcmd_read_and_print(const char *filename)
 				fis_parse_system_time((struct pt_output_system_time *)p_payload, &data);
 				fwcmd_system_time_printer(&data, 0);
             }
-            else if (s_strncmpi(command_name, "platform_config_data",
-            		sizeof ("platform_config_data")) == 0)
+            else if (s_strncmpi(command_name, "platform_config_data_configuration_header_table",
+            		sizeof ("platform_config_data_configuration_header_table")) == 0)
             {
-            	struct fwcmd_platform_config_data_data data;
+            	struct fwcmd_platform_config_data_configuration_header_table_data data;
 
-				fis_parse_platform_config_data((struct pt_output_platform_config_data *)p_payload, &data);
-				fwcmd_platform_config_data_printer(&data, 0);
+				fis_parse_platform_config_data_configuration_header_table((struct pt_output_platform_config_data_configuration_header_table *)p_payload, &data);
+				fwcmd_platform_config_data_configuration_header_table_printer(&data, 0);
             }
             else if (s_strncmpi(command_name, "dimm_partition_info",
             		sizeof ("dimm_partition_info")) == 0)
@@ -1256,7 +1256,7 @@ struct fwcmd_system_time_result fwcmd_read_system_time(const char *filename)
 
 	return result;
 }
-int fwcmd_dump_platform_config_data(const int handle,
+int fwcmd_dump_platform_config_data_configuration_header_table(const int handle,
 	const unsigned char partition_id,
 	const unsigned char command_option,
 	const unsigned int offset,
@@ -1266,20 +1266,20 @@ int fwcmd_dump_platform_config_data(const int handle,
 	int rc = 0;
 	if (pFile)
 	{
-		struct pt_output_platform_config_data output_payload;
+		struct pt_output_platform_config_data_configuration_header_table output_payload;
 
-		struct pt_input_platform_config_data input_payload;
+		struct pt_input_platform_config_data_configuration_header_table input_payload;
 		input_payload.partition_id = partition_id;
 		input_payload.command_option = command_option;
 		input_payload.offset = offset;
-		rc = fis_platform_config_data(handle,
+		rc = fis_platform_config_data_configuration_header_table(handle,
 			&input_payload,
 			&output_payload);
 		if (rc == 0)
 		{
 			size_t bytes_written = 0;
 			char name[COMMAND_NAME_BUFFER_SIZE] = {0};
-			s_strcpy(name, "platform_config_data", COMMAND_NAME_BUFFER_SIZE);
+			s_strcpy(name, "platform_config_data_configuration_header_table", COMMAND_NAME_BUFFER_SIZE);
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
@@ -1305,9 +1305,9 @@ int fwcmd_dump_platform_config_data(const int handle,
 	return rc;
 }
 
-struct fwcmd_platform_config_data_result fwcmd_read_platform_config_data(const char *filename)
+struct fwcmd_platform_config_data_configuration_header_table_result fwcmd_read_platform_config_data_configuration_header_table(const char *filename)
 {
-	struct fwcmd_platform_config_data_result result = {0,};
+	struct fwcmd_platform_config_data_configuration_header_table_result result = {0,};
 	FILE *pFile = fopen(filename, "rb");
 	if (pFile)
 	{
@@ -1320,8 +1320,8 @@ struct fwcmd_platform_config_data_result fwcmd_read_platform_config_data(const c
 
 		if (bytes_read == fsize)
 		{
-			result.p_data = (struct fwcmd_platform_config_data_data *)malloc(sizeof(*result.p_data));
-			int parse_result = fis_parse_platform_config_data((const struct pt_output_platform_config_data*) buffer, result.p_data);
+			result.p_data = (struct fwcmd_platform_config_data_configuration_header_table_data *)malloc(sizeof(*result.p_data));
+			int parse_result = fis_parse_platform_config_data_configuration_header_table((const struct pt_output_platform_config_data_configuration_header_table*) buffer, result.p_data);
 			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;

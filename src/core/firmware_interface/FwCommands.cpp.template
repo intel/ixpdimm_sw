@@ -1,0 +1,353 @@
+/*
+ * Copyright (c) 2017 Intel Corporation
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *   * Redistributions of source code must retain the above copyright notice,
+ *     this list of conditions and the following disclaimer.
+ *   * Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *   * Neither the name of Intel Corporation nor the names of its contributors
+ *     may be used to endorse or promote products derived from this software
+ *     without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#include "FwCommands.h"
+#include "firmware_interface/fis_commands.h"
+#include "firmware_interface/fw_command_printer.h"
+#include "fis_types.h"
+#include "sstream"
+#include <cstring>
+#include <cstdlib>
+#include <stdio.h>
+#include <iomanip>
+#include <LogEnterExit.h>
+
+namespace core
+{
+namespace firmware_interface
+{
+
+FwCommands &FwCommands::getFwCommands()
+{
+	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
+
+	// Creating the singleton on class init as a static class member
+	// can lead to static initialization order issues.
+	// This is a thread-safe form of lazy initialization.
+	static FwCommands *result = new FwCommands();
+	return *result;
+}
+
+FwCommands::FwCommands(const FwCommandsWrapper &wrapper) : m_wrapper(wrapper)
+{
+	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
+}
+
+FwCommands::FwCommands(const FwCommands &other) : m_wrapper(other.m_wrapper)
+{
+	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
+}
+
+FwCommands &FwCommands::operator=(const FwCommands &other)
+{
+	return *this;
+}
+
+FwCommands::~FwCommands()
+{
+	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
+}
+
+//- for cmd in commands
+enum return_code FwCommands::{{cmd.name|fw_get_payload}}(unsigned int handle
+{%- 	for f in cmd.input_fields_not_ignored -%}
+	, const {{f.c_definition}}
+{%- 	endfor -%}
+	, std::string &resultString)
+{
+	enum return_code rc = NVM_SUCCESS;
+
+	struct {{cmd.name|fw_cmd_result}} result = m_wrapper.{{cmd|fw_cmd_name|camel}}(handle
+{%-for f in cmd.input_fields_not_ignored-%}
+		, {{f.name}}
+{%-endfor-%}
+		);
+
+	if (result.success)
+	{
+	//- if cmd.has_output
+		resultString += {{cmd.name|fw_payload_to_string}}(result.p_data);
+	//- endif
+	}
+	else
+	{
+		rc = convertFwcmdErrorCodeToNvmErrorCode(result.error_code);
+	}
+
+//- if cmd.has_output
+	m_wrapper.{{cmd.name|fw_cmd_free|camel}}(&result);
+//- endif
+
+	return rc;
+}
+
+//- endfor
+
+//- macro payloadToString(name, payload)
+std::string FwCommands::{{name|fw_payload_to_string}}(const struct {{name|fw_cmd_data}} *p_data)
+{
+	std::stringstream result;
+	result << "\n{{name|space}}:" << "\n";
+//- 		for f in payload.fields
+//- 			if not f.ignore
+//- 			if f.unsigned_char_needs_typecast_to_int
+	result << "{{f.name|camel}}: " << (int) p_data->{{f.name}} << "\n";
+//-			else
+	result << "{{f.name|camel}}: " << p_data->{{f.name}} << "\n";
+//- 			endif
+//-					for b in f.bits
+	result << "{{b.name|camel}}: " << p_data->{{f.name}}_{{b.name}} << "\n";
+//-					endfor
+//- 			endif
+//- 		endfor
+//- 		for r in payload.payload_refs:
+//- 			if r.is_type_based
+//- 				for t in r.types
+//- 					set name=r.types[t]
+//-						if r.is_multiple
+	for (int i = 0; i < p_data->{{name}}_count; i++)
+	{
+		result << {{name|fw_payload_to_string}}(&p_data->{{name}}[i]);
+	}
+//- 					else
+	result << {{name|fw_payload_to_string}}(&p_data->{{name}});
+//- 					endif
+//- 				endfor
+//- 			else
+//-					if r.is_multiple
+	for (int i = 0; i < p_data->{{r.name}}_count; i++)
+	{
+		result << {{r.name|fw_payload_to_string}}(&p_data->{{r.name}}[i]);
+	}
+
+//- 				else
+	result << {{r.name|fw_payload_to_string}}(&p_data->{{r.name}});
+//- 				endif
+//- 			endif
+//- 		endfor
+
+	return result.str();
+}
+//- endmacro
+
+//- for cmd in commands
+//- 	if cmd.has_output
+//- 		for s in cmd.sub_payloads
+{{payloadToString(s.name, s.payload)}}
+//- 		endfor
+{{payloadToString(cmd.name, cmd.output_payload)}}
+//- 	endif
+//- endfor
+
+enum return_code FwCommands::dsm_err_to_nvm_lib_err(pt_result result)
+{
+	enum return_code rc = NVM_SUCCESS;
+
+	if (result.fw_status)
+	{
+		switch (result.fw_status)
+		{
+		case DSM_VENDOR_ERR_NOT_SUPPORTED:
+			rc = NVM_ERR_NOTSUPPORTED;
+			break;
+		case DSM_VENDOR_ERR_NONEXISTING:
+			rc = NVM_ERR_BADDEVICE;
+			break;
+		case DSM_VENDOR_INVALID_INPUT:
+			rc = NVM_ERR_UNKNOWN;
+			break;
+		case DSM_VENDOR_HW_ERR:
+			rc = NVM_ERR_DEVICEERROR;
+			break;
+		case DSM_VENDOR_RETRY_SUGGESTED:
+			rc = NVM_ERR_DEVICEERROR;
+			break;
+		case DSM_VENDOR_UNKNOWN:
+			rc = NVM_ERR_UNKNOWN;
+			break;
+		case DSM_VENDOR_SPECIFIC_ERR:
+			rc = fw_mb_err_to_nvm_lib_err(result.fw_ext_status);
+			break;
+		default:
+			rc = NVM_ERR_DRIVERFAILED;
+			break;
+		}
+	}
+	else if (result.fw_ext_status)
+	{
+		rc = fw_mb_err_to_nvm_lib_err(result.fw_ext_status);
+	}
+
+	return rc;
+}
+
+enum return_code FwCommands::fw_mb_err_to_nvm_lib_err(int extended_status)
+{
+	enum return_code rc = NVM_SUCCESS;
+
+	switch (extended_status)
+	{
+		case MB_SUCCESS:
+			rc = NVM_SUCCESS;
+			break;
+		case MB_INVALID_CMD_PARAM :
+			rc = NVM_ERR_INVALIDPARAMETER;
+			break;
+		case MB_DATA_XFER_ERR :
+			rc = NVM_ERR_DATATRANSFERERROR;
+			break;
+		case MB_INTERNAL_DEV_ERR :
+			rc = NVM_ERR_DEVICEERROR;
+			break;
+		case MB_UNSUPPORTED_CMD :
+			rc = NVM_ERR_NOTSUPPORTED;
+			break;
+		case MB_DEVICE_BUSY :
+			rc = NVM_ERR_DEVICEBUSY;
+			break;
+		case MB_INVALID_CREDENTIAL :
+			rc = NVM_ERR_BADPASSPHRASE;
+			break;
+		case MB_SECURITY_CHK_FAIL :
+			rc = NVM_ERR_BADFIRMWARE;
+			break;
+		case MB_INVALID_SECURITY_STATE :
+			rc = NVM_ERR_BADSECURITYSTATE;
+			break;
+		case MB_SYSTEM_TIME_NOT_SET :
+			rc = NVM_ERR_DEVICEERROR;
+			break;
+		case MB_DATA_NOT_SET :
+			rc = NVM_ERR_DEVICEERROR;
+			break;
+		case MB_ABORTED :
+			rc = NVM_ERR_DEVICEERROR;
+			break;
+		case MB_NO_NEW_FW :
+			rc = NVM_ERR_BADFIRMWARE;
+			break;
+		case MB_REVISION_FAILURE :
+			rc = NVM_ERR_BADFIRMWARE;
+			break;
+		case MB_INJECTION_DISABLED :
+			rc = NVM_ERR_NOTSUPPORTED;
+			break;
+		case MB_CONFIG_LOCKED_COMMAND_INVALID :
+			rc = NVM_ERR_NOTSUPPORTED;
+			break;
+		case MB_INVALID_ALIGNMENT :
+			rc = NVM_ERR_DEVICEERROR;
+			break;
+		case MB_INCOMPATIBLE_DIMM :
+			rc = NVM_ERR_NOTSUPPORTED;
+			break;
+		case MB_TIMED_OUT :
+			rc = NVM_ERR_DEVICEBUSY;
+			break;
+		case MB_MEDIA_DISABLED :
+			rc = NVM_ERR_DEVICEERROR;
+			break;
+		case MB_FW_UPDATE_ALREADY_OCCURED :
+			rc = NVM_ERR_FWALREADYSTAGED;
+			break;
+		case MB_NO_RESOURCES_AVAILABLE :
+			rc = NVM_ERR_DEVICEERROR;
+			break;
+		default :
+			rc = NVM_ERR_DEVICEERROR;
+			break;
+	}
+
+	return rc;
+}
+
+enum return_code FwCommands::convertFwcmdErrorCodeToNvmErrorCode(struct fwcmd_error_code error)
+{
+	enum return_code rc = NVM_SUCCESS;
+
+	switch (error.type)
+	{
+	case FWCMD_ERROR_TYPE_DRIVER:
+		rc = NVM_ERR_DRIVERFAILED;
+		break;
+	case FWCMD_ERROR_TYPE_PT:
+	{
+		pt_result result;
+		PT_RESULT_DECODE(error.code, result);
+
+		if ((enum pt_ioctl_result)result.func != PT_SUCCESS)
+		{
+			switch((enum pt_ioctl_result)result.func)
+			{
+			case PT_SUCCESS:
+			case PT_ERR_UNKNOWN:
+				rc = NVM_ERR_UNKNOWN;
+				break;
+			case PT_ERR_BADDEVICEHANDLE:
+			case PT_ERR_BADDEVICE:
+				rc = NVM_ERR_BADDEVICE;
+				break;
+			case PT_ERR_NOMEMORY:
+				rc = NVM_ERR_NOMEMORY;
+				break;
+			case PT_ERR_DRIVERFAILED:
+				rc = NVM_ERR_DRIVERFAILED;
+				break;
+			case PT_ERR_BADSECURITY:
+				rc = NVM_ERR_BADSECURITYSTATE;
+				break;
+			case PT_ERR_DEVICEBUSY:
+				rc = NVM_ERR_DEVICEBUSY;
+				break;
+			case PT_ERR_INVALIDPERMISSIONS:
+				rc = NVM_ERR_INVALIDPERMISSIONS;
+				break;
+			default:
+				rc = NVM_ERR_UNKNOWN;
+				break;
+			}
+		}
+		else
+		{
+			rc = dsm_err_to_nvm_lib_err(result);
+			break;
+		}
+		break;
+	}
+	case FWCMD_ERROR_TYPE_PARSE:
+		rc = (enum return_code) error.code;
+		break;
+	default:
+		rc = NVM_ERR_UNKNOWN;
+		break;
+	}
+
+	return rc;
+}
+
+} /* namespace firmware_interface */
+} /* namespace core */

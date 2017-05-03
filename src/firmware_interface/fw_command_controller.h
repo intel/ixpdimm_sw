@@ -73,7 +73,7 @@ void fwcmd_run_set_alarm_threshold(unsigned int handle, const unsigned char enab
 
 void fwcmd_run_system_time(unsigned int handle);
 
-void fwcmd_run_platform_config_data(unsigned int handle, const unsigned char partition_id, const unsigned char command_option, const unsigned int offset);
+void fwcmd_run_platform_config_data_configuration_header_table(unsigned int handle, const unsigned char partition_id, const unsigned char command_option, const unsigned int offset);
 
 void fwcmd_run_dimm_partition_info(unsigned int handle);
 

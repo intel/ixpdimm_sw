@@ -711,30 +711,30 @@ void fwcmd_free_system_time(struct fwcmd_system_time_result *p_result)
 }
 /* END system_time */
 
-/* BEGIN platform_config_data */
-struct fwcmd_platform_config_data_result fwcmd_alloc_platform_config_data(unsigned int handle,
+/* BEGIN platform_config_data_configuration_header_table */
+struct fwcmd_platform_config_data_configuration_header_table_result fwcmd_alloc_platform_config_data_configuration_header_table(unsigned int handle,
 	const unsigned char partition_id,
 	const unsigned char command_option,
 	const unsigned int offset)
 {
-	struct fwcmd_platform_config_data_result result;
-	memset(&result, 0, sizeof (struct fwcmd_platform_config_data_result));
+	struct fwcmd_platform_config_data_configuration_header_table_result result;
+	memset(&result, 0, sizeof (struct fwcmd_platform_config_data_configuration_header_table_result));
 
-	struct pt_input_platform_config_data input_payload;
+	struct pt_input_platform_config_data_configuration_header_table input_payload;
 	input_payload.partition_id = partition_id;
 	input_payload.command_option = command_option;
 	input_payload.offset = offset;
-	struct pt_output_platform_config_data output_payload;
-	unsigned int rc = fis_platform_config_data(handle,
+	struct pt_output_platform_config_data_configuration_header_table output_payload;
+	unsigned int rc = fis_platform_config_data_configuration_header_table(handle,
 		&input_payload,
 		&output_payload);
 
 	if (PT_IS_SUCCESS(rc))
 	{
-		result.p_data = (struct fwcmd_platform_config_data_data *)malloc(sizeof(*result.p_data));
+		result.p_data = (struct fwcmd_platform_config_data_configuration_header_table_data *)malloc(sizeof(*result.p_data));
 		if (result.p_data)
 		{
-			rc = fis_parse_platform_config_data(&output_payload, result.p_data);
+			rc = fis_parse_platform_config_data_configuration_header_table(&output_payload, result.p_data);
 			if (FWCMD_PARSE_SUCCESS(rc))
 			{
 				result.success = 1;
@@ -757,100 +757,100 @@ struct fwcmd_platform_config_data_result fwcmd_alloc_platform_config_data(unsign
 	}
 	return result;
 }
-void fwcmd_free_dimm_info_for_interleave_set_data(struct fwcmd_dimm_info_for_interleave_set_data *p_data)
+void fwcmd_free_platform_config_data_identification_information_table_data(struct fwcmd_platform_config_data_identification_information_table_data *p_data)
 {
 	if (p_data)
 	{
 	}
 }
 
-void fwcmd_free_dimm_interleave_information_data(struct fwcmd_dimm_interleave_information_data *p_data)
+void fwcmd_free_platform_config_data_interleave_information_table_data(struct fwcmd_platform_config_data_interleave_information_table_data *p_data)
 {
 	if (p_data)
 	{
-		for (int i = 0; i < p_data->dimm_info_for_interleave_set_count; i++)
+		for (int i = 0; i < p_data->platform_config_data_identification_information_table_count; i++)
 		{
-			fwcmd_free_dimm_info_for_interleave_set_data(&p_data->dimm_info_for_interleave_set[i]);
+			fwcmd_free_platform_config_data_identification_information_table_data(&p_data->platform_config_data_identification_information_table[i]);
 		}
-		free(p_data->dimm_info_for_interleave_set);
+		free(p_data->platform_config_data_identification_information_table);
 
 	}
 }
 
-void fwcmd_free_dimm_partition_size_change_data(struct fwcmd_dimm_partition_size_change_data *p_data)
+void fwcmd_free_platform_config_data_partition_size_change_table_data(struct fwcmd_platform_config_data_partition_size_change_table_data *p_data)
 {
 	if (p_data)
 	{
 	}
 }
 
-void fwcmd_free_current_config_data(struct fwcmd_current_config_data *p_data)
+void fwcmd_free_platform_config_data_current_config_table_data(struct fwcmd_platform_config_data_current_config_table_data *p_data)
 {
 	if (p_data)
 	{
-		for (int i = 0; i < p_data->dimm_interleave_information_count; i++)
+		for (int i = 0; i < p_data->platform_config_data_interleave_information_table_count; i++)
 		{
-			fwcmd_free_dimm_interleave_information_data(&p_data->dimm_interleave_information[i]);
+			fwcmd_free_platform_config_data_interleave_information_table_data(&p_data->platform_config_data_interleave_information_table[i]);
 		}
-		free(p_data->dimm_interleave_information);
+		free(p_data->platform_config_data_interleave_information_table);
 
 	}
 }
 
-void fwcmd_free_input_config_data(struct fwcmd_input_config_data *p_data)
+void fwcmd_free_platform_config_data_config_input_table_data(struct fwcmd_platform_config_data_config_input_table_data *p_data)
 {
 	if (p_data)
 	{
-		for (int i = 0; i < p_data->dimm_interleave_information_count; i++)
+		for (int i = 0; i < p_data->platform_config_data_interleave_information_table_count; i++)
 		{
-			fwcmd_free_dimm_interleave_information_data(&p_data->dimm_interleave_information[i]);
+			fwcmd_free_platform_config_data_interleave_information_table_data(&p_data->platform_config_data_interleave_information_table[i]);
 		}
-		free(p_data->dimm_interleave_information);
+		free(p_data->platform_config_data_interleave_information_table);
 
-		for (int i = 0; i < p_data->dimm_partition_size_change_count; i++)
+		for (int i = 0; i < p_data->platform_config_data_partition_size_change_table_count; i++)
 		{
-			fwcmd_free_dimm_partition_size_change_data(&p_data->dimm_partition_size_change[i]);
+			fwcmd_free_platform_config_data_partition_size_change_table_data(&p_data->platform_config_data_partition_size_change_table[i]);
 		}
-		free(p_data->dimm_partition_size_change);
+		free(p_data->platform_config_data_partition_size_change_table);
 
 	}
 }
 
-void fwcmd_free_output_config_data(struct fwcmd_output_config_data *p_data)
+void fwcmd_free_platform_config_data_config_output_table_data(struct fwcmd_platform_config_data_config_output_table_data *p_data)
 {
 	if (p_data)
 	{
-		for (int i = 0; i < p_data->dimm_interleave_information_count; i++)
+		for (int i = 0; i < p_data->platform_config_data_interleave_information_table_count; i++)
 		{
-			fwcmd_free_dimm_interleave_information_data(&p_data->dimm_interleave_information[i]);
+			fwcmd_free_platform_config_data_interleave_information_table_data(&p_data->platform_config_data_interleave_information_table[i]);
 		}
-		free(p_data->dimm_interleave_information);
+		free(p_data->platform_config_data_interleave_information_table);
 
-		for (int i = 0; i < p_data->dimm_partition_size_change_count; i++)
+		for (int i = 0; i < p_data->platform_config_data_partition_size_change_table_count; i++)
 		{
-			fwcmd_free_dimm_partition_size_change_data(&p_data->dimm_partition_size_change[i]);
+			fwcmd_free_platform_config_data_partition_size_change_table_data(&p_data->platform_config_data_partition_size_change_table[i]);
 		}
-		free(p_data->dimm_partition_size_change);
+		free(p_data->platform_config_data_partition_size_change_table);
 
 	}
 }
 
-void fwcmd_free_platform_config_data_data(struct fwcmd_platform_config_data_data *p_data)
+void fwcmd_free_platform_config_data_configuration_header_table_data(struct fwcmd_platform_config_data_configuration_header_table_data *p_data)
 {
 	if (p_data)
 	{
-		fwcmd_free_current_config_data(&p_data->current_config);
-		fwcmd_free_input_config_data(&p_data->input_config);
-		fwcmd_free_output_config_data(&p_data->output_config);
+		fwcmd_free_platform_config_data_current_config_table_data(&p_data->platform_config_data_current_config_table);
+		fwcmd_free_platform_config_data_config_input_table_data(&p_data->platform_config_data_config_input_table);
+		fwcmd_free_platform_config_data_config_output_table_data(&p_data->platform_config_data_config_output_table);
 	}
 }
 
-void fwcmd_free_platform_config_data(struct fwcmd_platform_config_data_result *p_result)
+void fwcmd_free_platform_config_data_configuration_header_table(struct fwcmd_platform_config_data_configuration_header_table_result *p_result)
 {
-	fwcmd_free_platform_config_data_data(p_result->p_data);
+	fwcmd_free_platform_config_data_configuration_header_table_data(p_result->p_data);
 	free(p_result->p_data);
 }
-/* END platform_config_data */
+/* END platform_config_data_configuration_header_table */
 
 /* BEGIN dimm_partition_info */
 struct fwcmd_dimm_partition_info_result fwcmd_alloc_dimm_partition_info(unsigned int handle)
@@ -1559,7 +1559,7 @@ int fwcmd_is_command_name(const char * cmd_name)
 	{
 		exists = 1;
 	}
-	if (s_strncmpi(cmd_name, "platform_config_data", sizeof ("platform_config_data")) == 0)
+	if (s_strncmpi(cmd_name, "platform_config_data_configuration_header_table", sizeof ("platform_config_data_configuration_header_table")) == 0)
 	{
 		exists = 1;
 	}
@@ -1658,7 +1658,7 @@ int fwcmd_is_output_command_name(const char * cmd_name)
 	{
 		exists = 1;
 	}
-	if (s_strncmpi(cmd_name, "platform_config_data", sizeof ("platform_config_data")) == 0)
+	if (s_strncmpi(cmd_name, "platform_config_data_configuration_header_table", sizeof ("platform_config_data_configuration_header_table")) == 0)
 	{
 		exists = 1;
 	}

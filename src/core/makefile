@@ -36,7 +36,7 @@ include $(ROOT_DIR)/build.mk
 OBJECT_MODULE_DIR = $(OBJECT_DIR)/core
 
 # ---- COMPONENTS ----------------------------------------------------------------------------------
-SUBMODULES = . device system exceptions memory_allocator configuration logs
+SUBMODULES = . device system exceptions memory_allocator configuration logs firmware_interface
 
 UNITTEST = unittest
 # ---- FILES ---------------------------------------------------------------------------------------
@@ -77,11 +77,15 @@ TARGETNAME = $(addprefix $(BUILD_DIR)/, $(TARGET))
 # ---- COMPILER PARAMETERS -------------------------------------------------------------------------
 INCS = 	-I$(SRC_DIR) -I$(SRC_DIR)/core \
 		-I$(SRC_DIR)/common \
+		-I$(SRC_DIR)/firmware_interface \
+		-I$(SRC_DIR)/driver_interface \
 		-I$(SRC_DIR)/acpi \
 		-I$(SRC_DIR)/lib \
 		-I$(EXTERN_DIR)/intel_i18n/include
 
 LIBS = 	-L$(OBJECT_DIR)/common -lcommon \
+		-L$(OBJECT_DIR)/firmware_interface -lfirmware_interface \
+		-L$(OBJECT_DIR)/driver_interface -ldriver_interface \
 		-L$(BUILD_DIR) -l$(API_LIB_NAME) \
 			-lsqlite3 \
 			-lcrypto

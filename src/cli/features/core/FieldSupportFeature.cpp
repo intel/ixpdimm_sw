@@ -79,6 +79,7 @@
 #include "ShowLogCommand.h"
 
 #include "ShowVersionCommand.h"
+#include "ShowDevicePcdCommand.h"
 
 const std::string cli::nvmcli::FieldSupportFeature::Name = "Field Support";
 const std::string LOG_PROPERTY_NAME = "LogLevel";
@@ -302,6 +303,7 @@ void cli::nvmcli::FieldSupportFeature::getPaths(cli::framework::CommandSpecList 
 	list.push_back(showPreferences);
 	list.push_back(changePreferences);
 	list.push_back(showLogs);
+	list.push_back(ShowDevicePcdCommand::getCommandSpec(SHOW_DEVICE_PCD));
 }
 
 // Constructor, just calls super class and initializes member variables
@@ -367,6 +369,9 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::run(
 			break;
 		case SHOW_DEVICE_FIRMWARE:
 			pResult = showDeviceFirmware(parsedCommand);
+			break;
+		case SHOW_DEVICE_PCD:
+			pResult = showDevicePcd(parsedCommand);
 			break;
 		case SHOW_LOGS:
 			pResult = showLogs(parsedCommand);
@@ -2218,4 +2223,13 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::showDeviceFirmware
 		pResult = NvmExceptionToResult(e);
 	}
 	return pResult;
+}
+
+cli::framework::ResultBase* cli::nvmcli::FieldSupportFeature::showDevicePcd(
+		const framework::ParsedCommand& parsedCommand)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	ShowDevicePcdCommand command;
+	return command.execute(parsedCommand);
 }

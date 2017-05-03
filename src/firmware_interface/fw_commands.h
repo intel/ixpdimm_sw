@@ -437,9 +437,9 @@ struct fwcmd_system_time_result fwcmd_alloc_system_time(unsigned int handle);
 
 void fwcmd_free_system_time(struct fwcmd_system_time_result *p_result);
 /*
- * Data Structures for platform_config_data
+ * Data Structures for platform_config_data_configuration_header_table
  */
-struct fwcmd_dimm_info_for_interleave_set_data
+struct fwcmd_platform_config_data_identification_information_table_data
 {
 	unsigned short manufacturer_id;
 	unsigned int serial_number;
@@ -448,7 +448,7 @@ struct fwcmd_dimm_info_for_interleave_set_data
 	unsigned long long partition_size;
 
 };
-struct fwcmd_dimm_interleave_information_data
+struct fwcmd_platform_config_data_interleave_information_table_data
 {
 	unsigned short type;
 	unsigned short length;
@@ -459,20 +459,20 @@ struct fwcmd_dimm_interleave_information_data
 	unsigned char mirror_enabled;
 	unsigned char change_status;
 	unsigned char memory_spare;
-	int dimm_info_for_interleave_set_count;
-	struct fwcmd_dimm_info_for_interleave_set_data *dimm_info_for_interleave_set;
+	int platform_config_data_identification_information_table_count;
+	struct fwcmd_platform_config_data_identification_information_table_data *platform_config_data_identification_information_table;
 
 
 };
-struct fwcmd_dimm_partition_size_change_data
+struct fwcmd_platform_config_data_partition_size_change_table_data
 {
 	unsigned short type;
 	unsigned short length;
-	unsigned int partition_size_change_status;
+	unsigned int platform_config_data_partition_size_change_table;
 	unsigned long long persistent_memory_partition_size;
 
 };
-struct fwcmd_current_config_data
+struct fwcmd_platform_config_data_current_config_table_data
 {
 	char signature[5];
 	unsigned int length;
@@ -486,12 +486,12 @@ struct fwcmd_current_config_data
 	unsigned short config_status;
 	unsigned long long volatile_memory_size;
 	unsigned long long persistent_memory_size;
-	int dimm_interleave_information_count;
-	struct fwcmd_dimm_interleave_information_data *dimm_interleave_information;
+	int platform_config_data_interleave_information_table_count;
+	struct fwcmd_platform_config_data_interleave_information_table_data *platform_config_data_interleave_information_table;
 
 
 };
-struct fwcmd_input_config_data
+struct fwcmd_platform_config_data_config_input_table_data
 {
 	char signature[5];
 	unsigned int length;
@@ -503,15 +503,15 @@ struct fwcmd_input_config_data
 	unsigned int creator_id;
 	unsigned int creator_revision;
 	unsigned int sequence_number;
-	int dimm_interleave_information_count;
-	struct fwcmd_dimm_interleave_information_data *dimm_interleave_information;
+	int platform_config_data_interleave_information_table_count;
+	struct fwcmd_platform_config_data_interleave_information_table_data *platform_config_data_interleave_information_table;
 
-	int dimm_partition_size_change_count;
-	struct fwcmd_dimm_partition_size_change_data *dimm_partition_size_change;
+	int platform_config_data_partition_size_change_table_count;
+	struct fwcmd_platform_config_data_partition_size_change_table_data *platform_config_data_partition_size_change_table;
 
 
 };
-struct fwcmd_output_config_data
+struct fwcmd_platform_config_data_config_output_table_data
 {
 	char signature[5];
 	unsigned int length;
@@ -524,15 +524,15 @@ struct fwcmd_output_config_data
 	unsigned int creator_revision;
 	unsigned int sequence_number;
 	unsigned char validation_status;
-	int dimm_interleave_information_count;
-	struct fwcmd_dimm_interleave_information_data *dimm_interleave_information;
+	int platform_config_data_interleave_information_table_count;
+	struct fwcmd_platform_config_data_interleave_information_table_data *platform_config_data_interleave_information_table;
 
-	int dimm_partition_size_change_count;
-	struct fwcmd_dimm_partition_size_change_data *dimm_partition_size_change;
+	int platform_config_data_partition_size_change_table_count;
+	struct fwcmd_platform_config_data_partition_size_change_table_data *platform_config_data_partition_size_change_table;
 
 
 };
-struct fwcmd_platform_config_data_data
+struct fwcmd_platform_config_data_configuration_header_table_data
 {
 	char signature[5];
 	unsigned int length;
@@ -549,27 +549,27 @@ struct fwcmd_platform_config_data_data
 	unsigned int input_config_offset;
 	unsigned int output_config_size;
 	unsigned int output_config_offset;
-	struct fwcmd_current_config_data current_config;
-	struct fwcmd_input_config_data input_config;
-	struct fwcmd_output_config_data output_config;
+	struct fwcmd_platform_config_data_current_config_table_data platform_config_data_current_config_table;
+	struct fwcmd_platform_config_data_config_input_table_data platform_config_data_config_input_table;
+	struct fwcmd_platform_config_data_config_output_table_data platform_config_data_config_output_table;
 
 };
-struct fwcmd_platform_config_data_result
+struct fwcmd_platform_config_data_configuration_header_table_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
-	struct fwcmd_platform_config_data_data *p_data;
+	struct fwcmd_platform_config_data_configuration_header_table_data *p_data;
 };
 
 /*
- * Firmware Command Function platform_config_data
+ * Firmware Command Function platform_config_data_configuration_header_table
  */
-struct fwcmd_platform_config_data_result fwcmd_alloc_platform_config_data(unsigned int handle,
+struct fwcmd_platform_config_data_configuration_header_table_result fwcmd_alloc_platform_config_data_configuration_header_table(unsigned int handle,
 	const unsigned char partition_id,
 	const unsigned char command_option,
 	const unsigned int offset);
 
-void fwcmd_free_platform_config_data(struct fwcmd_platform_config_data_result *p_result);
+void fwcmd_free_platform_config_data_configuration_header_table(struct fwcmd_platform_config_data_configuration_header_table_result *p_result);
 /*
  * Data Structures for dimm_partition_info
  */

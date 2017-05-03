@@ -1,0 +1,106 @@
+/*
+ * Copyright (c) 2017 Intel Corporation
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *   * Redistributions of source code must retain the above copyright notice,
+ *     this list of conditions and the following disclaimer.
+ *   * Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *   * Neither the name of Intel Corporation nor the names of its contributors
+ *     may be used to endorse or promote products derived from this software
+ *     without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#ifndef FWCOMMANDS_H_
+#define FWCOMMANDS_H_
+
+#include "FwCommandsWrapper.h"
+#include "string"
+#include <nvm_types.h>
+#include "firmware_interface/fw_commands.h"
+
+namespace core
+{
+namespace firmware_interface
+{
+
+class NVM_API FwCommands
+{
+
+public:
+
+FwCommands(const FwCommandsWrapper &m_wrapper = core::firmware_interface::FwCommandsWrapper::getFwWrapper());
+FwCommands(const FwCommands &other);
+virtual ~FwCommands();
+
+FwCommands &operator=(const FwCommands &other);
+static FwCommands &getFwCommands();
+
+//- for cmd in commands
+
+virtual enum return_code {{cmd.name|fw_get_payload}}(unsigned int handle
+	{%- for f in cmd.input_fields_not_ignored -%}
+	,
+	const {{f.c_definition}}
+	{%- endfor -%}
+	,
+    std::string &resultString);
+
+//- endfor
+
+//- macro payloadToString(name, payload)
+virtual std::string {{name|fw_payload_to_string}}(
+    const struct {{name|fw_cmd_data}} *p_data);
+//-         for r in payload.payload_refs:
+//-             if r.is_type_based
+//-                 for t in r.types
+//-                     set name=r.types[t]
+//-                         if r.is_multiple
+
+//-                     endif
+//-                 endfor
+//-             endif
+//-         endfor
+		
+//- endmacro
+
+//- for cmd in commands
+//- 	if cmd.has_output
+//- 		for s in cmd.sub_payloads
+{{payloadToString(s.name, s.payload)}}
+//- 		endfor
+{{payloadToString(cmd.name, cmd.output_payload)}}
+//- 	endif
+//- endfor
+
+virtual enum return_code dsm_err_to_nvm_lib_err(pt_result result);
+
+virtual enum return_code fw_mb_err_to_nvm_lib_err(int extended_status);
+
+virtual enum return_code convertFwcmdErrorCodeToNvmErrorCode(struct fwcmd_error_code error);
+
+private:
+	const FwCommandsWrapper &m_wrapper;
+
+
+};
+
+} /* namespace firmware_interface */
+} /* namespace core */
+
+
+#endif /* FWCOMMANDS_H_ */
