@@ -39,12 +39,12 @@
 #include <mem_config/InterleaveSet.h>
 #include <pmem_config/NamespaceViewFactory.h>
 
-#include <libinvm-cli/FeatureBase.h>
 #include <libinvm-cli/SimpleResult.h>
 #include <libinvm-cli/SimpleListResult.h>
 #include <libinvm-cli/CommandSpec.h>
 #include <libinvm-cli/PropertyListResult.h>
 #include <libinvm-cli/NotImplementedErrorResult.h>
+#include <libinvm-cli/OutputOptions.h>
 
 #include "CommandParts.h"
 #include "NamespaceFeature.h"
@@ -220,7 +220,7 @@ void cli::nvmcli::NamespaceFeature::getPaths(cli::framework::CommandSpecList &li
  }
 
 // Constructor, just calls super class
-cli::nvmcli::NamespaceFeature::NamespaceFeature() : cli::framework::FeatureBase(),
+cli::nvmcli::NamespaceFeature::NamespaceFeature() : cli::nvmcli::VerboseFeatureBase(),
 	m_deleteNamespace(wbemDeleteNamespace),
 	m_getSupportedBlockSizes(wbemGetSupportedBlockSizes),
 	m_getSupportedSizeRange(wbemGetSupportedSizeRange),
@@ -264,6 +264,9 @@ cli::framework::ResultBase * cli::nvmcli::NamespaceFeature::run(
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	framework::ResultBase *pResult = NULL;
+
+	enableVerbose(parsedCommand);
+
 	switch (commandSpecId)
 	{
 		case SHOW_CONFIG_GOAL:
@@ -300,6 +303,9 @@ cli::framework::ResultBase * cli::nvmcli::NamespaceFeature::run(
 			pResult = new framework::NotImplementedErrorResult(commandSpecId, Name);
 			break;
 	}
+
+	disableVerbose(parsedCommand);
+
 	return pResult;
 }
 

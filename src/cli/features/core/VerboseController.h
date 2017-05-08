@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 2016, Intel Corporation
+ * Copyright (c) 2017, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,53 +26,34 @@
  */
 
 /*
- * This file contains the NVMCLI sensor related commands.
+ * This file contains the functionality to turn on verbose.
  */
 
-#ifndef _CLI_NVMCLI_SIMULATORFEATURE_H
-#define _CLI_NVMCLI_SIMULATORFEATURE_H
+#ifndef _CLI_NVMCLI_VERBOSECONTROLLER_H_
+#define _CLI_NVMCLI_VERBOSECONTROLLER_H_
 
-#include "VerboseFeatureBase.h"
-#include <libinvm-cli/FeatureRef.h>
 #include <nvm_types.h>
 
 namespace cli
 {
 namespace nvmcli
 {
-/*!
- * Simulator Feature contains the add / remove simulator commands
- */
-class NVM_API SimulatorFeature : public cli::nvmcli::VerboseFeatureBase
+
+class NVM_API VerboseController
 {
-public:
+	public:
+		VerboseController();
+		virtual ~VerboseController();
+		virtual void enableVerbose();
+		virtual void disableVerbose();
+		virtual bool getVerbose();
+		virtual bool set_print_mask(int mask);
+		virtual int get_print_mask();
 
-	enum
-	{
-		ADDSIMULATOR = 0
-	};
-
-	/*!
-	 * constructor
-	 */
-	SimulatorFeature();
-
-	/*!
-	 *
-	 * @param commandSpecId
-	 * @param parsedCommand
-	 * @return
-	 */
-	framework::ResultBase* run(const int &commandSpecId,
-			const framework::ParsedCommand &parsedCommand);
-
-	// Every feature must have this static members for registration
-	void getPaths(cli::framework::CommandSpecList &list); //!< Required for Feature registration
-
-	static const std::string Name;//!< Required for Feature registration
-
-private:
-
+	protected:
+		virtual void setVerbose(bool value);
+		bool m_verbose;
+		int m_printMask;
 };
 }
 }

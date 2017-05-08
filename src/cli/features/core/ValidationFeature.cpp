@@ -41,6 +41,7 @@
 #include <libinvm-cli/Parser.h>
 #include <libinvm-cli/SyntaxErrorMissingValueResult.h>
 #include <libinvm-cli/SyntaxErrorBadValueResult.h>
+#include <libinvm-cli/OutputOptions.h>
 #include "CommandParts.h"
 #include "WbemToCli_utilities.h"
 #include "ValidationFeature.h"
@@ -96,8 +97,8 @@ void cli::nvmcli::ValidationFeature::getPaths(cli::framework::CommandSpecList &l
 	list.push_back(injectError);
 }
 
-// Constructor, just calls super class 
-cli::nvmcli::ValidationFeature::ValidationFeature() : cli::framework::FeatureBase(),
+// Constructor, just calls super class
+cli::nvmcli::ValidationFeature::ValidationFeature() : cli::nvmcli::VerboseFeatureBase(),
 	m_dimmUid(""), m_poisontype(""), m_temperature(0), m_poison(0), m_clearStateExists(false),
 	m_temperatureExists(false), m_poisonExists(false), m_poisonTypeExists(false), m_dieSparingExists(false),
 	m_spareAlarmExists(false), m_fatalMediaErrorExists(false)
@@ -112,12 +113,16 @@ cli::framework::ResultBase * cli::nvmcli::ValidationFeature::run(
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	framework::ResultBase *pResult = NULL;
 
+	enableVerbose(parsedCommand);
+
 	switch(commandSpecId)
 	{
 		case INJECT_ERROR:
 			pResult = injectError(parsedCommand);
 			break;
 	}
+
+	disableVerbose(parsedCommand);
 
 	return pResult;
 }

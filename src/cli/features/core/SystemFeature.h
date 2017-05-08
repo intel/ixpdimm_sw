@@ -35,7 +35,7 @@
 #include <nvm_management.h>
 #include <cr_i18n.h>
 
-
+#include "VerboseFeatureBase.h"
 #include <erasure/ErasureServiceFactory.h>
 #include <libinvm-cli/FeatureBase.h>
 #include <libinvm-cli/ObjectListResult.h>
@@ -101,7 +101,7 @@ static const int ERRORCODE_SECURITY_PASSPHRASEMISSMATCH = -1000;   //!< New and 
 /*!
  * Implements the CR show -host command to display host server information.
  */
-class NVM_API SystemFeature : public cli::framework::FeatureBase
+class NVM_API SystemFeature : public cli::nvmcli::VerboseFeatureBase
 {
 	public:
 

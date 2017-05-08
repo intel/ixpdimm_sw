@@ -31,7 +31,7 @@
 #ifndef _CLI_NVMCLI_FIELDSUPPORTFEATURE_H_
 #define _CLI_NVMCLI_FIELDSUPPORTFEATURE_H_
 
-#include <libinvm-cli/FeatureBase.h>
+#include "VerboseFeatureBase.h"
 #include <libinvm-cli/SimpleListResult.h>
 #include <libinvm-cli/PropertyListResult.h>
 #include <libinvm-cli/ObjectListResult.h>
@@ -119,7 +119,7 @@ static const std::string SHOWLOGS_COUNT = "Count";
 /*!
  * Implements the CR Field Support Commands.
  */
-class NVM_API FieldSupportFeature : public cli::framework::FeatureBase
+class NVM_API FieldSupportFeature : public cli::nvmcli::VerboseFeatureBase
 {
 
 public:
