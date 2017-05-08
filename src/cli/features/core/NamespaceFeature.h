@@ -32,11 +32,10 @@
 #ifndef _CLI_NVMCLI_NAMESPACEFEATURE_H_
 #define _CLI_NVMCLI_NAMESPACEFEATURE_H_
 
-#include <libinvm-cli/FeatureBase.h>
 #include "WbemToCli.h"
 #include "WbemToCli_utilities.h"
 #include "MemoryProperty.h"
-
+#include "VerboseFeatureBase.h"
 #include <mem_config/MemoryConfigurationServiceFactory.h>
 #include <mem_config/InterleaveSet.h>
 #include <nvm_types.h>
@@ -146,7 +145,7 @@ static const std::string NS_UNITS_OPTION_DESC = "Change the units that capacitie
 /*!
  * Implements namespace related commands
  */
-class NVM_API NamespaceFeature : public cli::framework::FeatureBase
+class NVM_API NamespaceFeature : public cli::nvmcli::VerboseFeatureBase
 {
 	public:
 		NamespaceFeature();

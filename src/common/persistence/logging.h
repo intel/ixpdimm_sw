@@ -54,6 +54,7 @@ enum log_dest
  * Macros to facilitate logging
  */
 
+#define	FLAG_PRINT_DISABLED	0
 #define	FLAG_PRINT_DEBUG	1
 #define FLAG_PRINT_TRACE	1 << 1
 #define FLAG_PRINT_HANDOFF	1 << 2
@@ -195,8 +196,10 @@ void log_close();
  */
 int log_gather();
 
+void print_mask_to_g_print_mask(int *print_mask);
+
 int get_current_print_mask();
-COMMON_BOOL set_current_print_mask();
+COMMON_BOOL set_current_print_mask(int mask);
 
 /*
  * Retrieve the current log level

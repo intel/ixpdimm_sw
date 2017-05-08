@@ -44,7 +44,7 @@
 #include <libinvm-cim/Types.h>
 
 #include <libinvm-cli/CliFrameworkTypes.h>
-#include <libinvm-cli/FeatureBase.h>
+
 #include <libinvm-cli/CommandSpec.h>
 #include <libinvm-cli/SimpleListResult.h>
 #include <libinvm-cli/PropertyListResult.h>
@@ -52,6 +52,7 @@
 #include <libinvm-cli/SyntaxErrorBadValueResult.h>
 #include <libinvm-cli/NotImplementedErrorResult.h>
 #include <libinvm-cli/Parser.h>
+#include <libinvm-cli/OutputOptions.h>
 #include <physical_asset/MemoryTopologyViewFactory.h>
 #include "CommandParts.h"
 #include "WbemToCli_utilities.h"
@@ -244,7 +245,7 @@ void cli::nvmcli::SystemFeature::getPaths(cli::framework::CommandSpecList &list)
 }
 
 // Constructor, just calls super class
-cli::nvmcli::SystemFeature::SystemFeature() : cli::framework::FeatureBase(),
+cli::nvmcli::SystemFeature::SystemFeature() : cli::nvmcli::VerboseFeatureBase(),
 		m_uidToDimmIdStr(wbem::physical_asset::NVDIMMFactory::uidToDimmIdStr),
 		m_pDimmProvider(new wbem::physical_asset::NVDIMMFactory()),
 		m_pErasureProvider(new wbem::erasure::ErasureServiceFactory()),
@@ -289,6 +290,8 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::run(
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	framework::ResultBase *pResult = NULL;
 
+	enableVerbose(parsedCommand);
+
 	switch (commandId)
 	{
 	case SHOW_SYSTEM:
@@ -328,6 +331,8 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::run(
 		pResult = new framework::NotImplementedErrorResult(commandId, Name);
 		break;
 	}
+
+	disableVerbose(parsedCommand);
 
 	return pResult;
 }

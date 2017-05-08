@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 2016, Intel Corporation
+ * Copyright (c) 2017, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -25,55 +25,33 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * This file contains the NVMCLI sensor related commands.
- */
+#ifndef _CLI_NVMCLI_VERBOSEFEATUREBASE_H_
+#define _CLI_NVMCLI_VERBOSEFEATUREBASE_H_
 
-#ifndef _CLI_NVMCLI_SIMULATORFEATURE_H
-#define _CLI_NVMCLI_SIMULATORFEATURE_H
 
-#include "VerboseFeatureBase.h"
-#include <libinvm-cli/FeatureRef.h>
+#include <libinvm-cli/FeatureBase.h>
+#include <libinvm-cli/OutputOptions.h>
 #include <nvm_types.h>
+#include "VerboseController.h"
 
 namespace cli
 {
 namespace nvmcli
 {
-/*!
- * Simulator Feature contains the add / remove simulator commands
- */
-class NVM_API SimulatorFeature : public cli::nvmcli::VerboseFeatureBase
+
+class NVM_API VerboseFeatureBase : public cli::framework::FeatureBase
 {
-public:
+	public:
+		VerboseFeatureBase();
+		virtual ~VerboseFeatureBase();
+		virtual void setVerboseController(VerboseController *pVerboseController);
+		virtual void enableVerbose(const framework::ParsedCommand &cmd);
+		virtual void disableVerbose(const framework::ParsedCommand &cmd);
 
-	enum
-	{
-		ADDSIMULATOR = 0
-	};
-
-	/*!
-	 * constructor
-	 */
-	SimulatorFeature();
-
-	/*!
-	 *
-	 * @param commandSpecId
-	 * @param parsedCommand
-	 * @return
-	 */
-	framework::ResultBase* run(const int &commandSpecId,
-			const framework::ParsedCommand &parsedCommand);
-
-	// Every feature must have this static members for registration
-	void getPaths(cli::framework::CommandSpecList &list); //!< Required for Feature registration
-
-	static const std::string Name;//!< Required for Feature registration
-
-private:
-
+	private:
+		VerboseController *m_pVerboseController;
 };
+
 }
 }
 

@@ -32,7 +32,7 @@
 #ifndef _CLI_NVMCLI_VALIDATIONFEATURE_H_
 #define _CLI_NVMCLI_VALIDATIONFEATURE_H_
 
-#include <libinvm-cli/FeatureBase.h>
+#include "VerboseFeatureBase.h"
 #include <nvm_types.h>
 #include <physical_asset/NVDIMMFactory.h>
 #include <libinvm-cli/SimpleListResult.h>
@@ -71,7 +71,7 @@ static std::string MEMORY_TYPE_STR_PATROLSCRUB = "PatrolScrub";
 /*!
  * Implements for validation related commands
  */
-class NVM_API ValidationFeature : public cli::framework::FeatureBase
+class NVM_API ValidationFeature : public cli::nvmcli::VerboseFeatureBase
 {
 public:
 
@@ -102,7 +102,7 @@ public:
 private:
 	wbem::physical_asset::NVDIMMFactory m_DimmProvider;
 	framework::ResultBase *injectError(const framework::ParsedCommand &parsedCommand);
-	
+
 	/*
 	 * member variables for storing parsed information
 	 */

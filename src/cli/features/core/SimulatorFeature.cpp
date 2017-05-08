@@ -40,6 +40,7 @@
 #include <libinvm-cli/Parser.h>
 #include <server/BaseServerFactory.h>
 #include <libinvm-cli/CliFrameworkTypes.h>
+#include <libinvm-cli/OutputOptions.h>
 #include <LogEnterExit.h>
 #include <cr_i18n.h>
 
@@ -50,7 +51,7 @@ static const std::string UNLOAD_PREFIX = "Clear default simulator: ";
 
 void cli::nvmcli::SimulatorFeature::getPaths(cli::framework::CommandSpecList &list)
 {
- 
+
 	cli::framework::CommandSpec addSim(ADDSIMULATOR, TR("Load Simulator"), framework::VERB_LOAD,
 			TR("Set or clear the default simulator file to be used when the " NVM_DIMM_NAME " host software loads."));
 	addSim.addOption(framework::OPTION_SOURCE)
@@ -64,7 +65,7 @@ void cli::nvmcli::SimulatorFeature::getPaths(cli::framework::CommandSpecList &li
 }
 
 cli::nvmcli::SimulatorFeature::SimulatorFeature() :
-		framework::FeatureBase()
+		cli::nvmcli::VerboseFeatureBase()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
@@ -76,6 +77,8 @@ cli::framework::ResultBase* cli::nvmcli::SimulatorFeature::run(
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	framework::ResultBase *pResult = NULL;
+
+	enableVerbose(parsedCommand);
 
 	switch (commandSpecId)
 	{
@@ -144,6 +147,9 @@ cli::framework::ResultBase* cli::nvmcli::SimulatorFeature::run(
 			break;
 		}
 	}
+
+	disableVerbose(parsedCommand);
+
 	return pResult;
 }
 

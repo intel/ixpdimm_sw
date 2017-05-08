@@ -40,7 +40,6 @@
 #include <physical_asset/NVDIMMFactory.h>
 #include <libinvm-cim/ExceptionBadParameter.h>
 
-#include <libinvm-cli/FeatureBase.h>
 #include <libinvm-cli/SimpleResult.h>
 #include <libinvm-cli/CommandSpec.h>
 #include <libinvm-cli/PropertyListResult.h>
@@ -49,6 +48,7 @@
 #include <libinvm-cli/SyntaxErrorBadValueResult.h>
 #include <libinvm-cli/SyntaxErrorMissingValueResult.h>
 #include <libinvm-cli/Parser.h>
+#include <libinvm-cli/OutputOptions.h>
 #include <uid/uid.h>
 
 #include <support/NVDIMMDiagnosticFactory.h>
@@ -308,7 +308,7 @@ void cli::nvmcli::FieldSupportFeature::getPaths(cli::framework::CommandSpecList 
 
 // Constructor, just calls super class and initializes member variables
 cli::nvmcli::FieldSupportFeature::FieldSupportFeature() :
-		cli::framework::FeatureBase(),
+		cli::nvmcli::VerboseFeatureBase(),
 		m_InstallFromPath(wbemInstallFromPath),
 		m_ExamineFwImage(wbemExamineFwImage),
 		m_getDimms(getDimms),
@@ -328,6 +328,8 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::run(
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	framework::ResultBase *pResult = NULL;
+
+	enableVerbose(parsedCommand);
 
 	switch (commandSpecId)
 	{
@@ -377,6 +379,9 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::run(
 			pResult = showLogs(parsedCommand);
 			break;
 	}
+
+	disableVerbose(parsedCommand);
+
 	return pResult;
 }
 

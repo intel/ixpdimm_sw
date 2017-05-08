@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 2016, Intel Corporation
+ * Copyright (c) 2017, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,55 +26,70 @@
  */
 
 /*
- * This file contains the NVMCLI sensor related commands.
+ * This file contains the functionality to turn on verbose.
  */
 
-#ifndef _CLI_NVMCLI_SIMULATORFEATURE_H
-#define _CLI_NVMCLI_SIMULATORFEATURE_H
+#include "VerboseController.h"
+#include <LogEnterExit.h>
+#include <persistence/logging.h>
 
-#include "VerboseFeatureBase.h"
-#include <libinvm-cli/FeatureRef.h>
-#include <nvm_types.h>
+cli::nvmcli::VerboseController::VerboseController() : m_verbose(false)
+{
+	m_printMask = get_print_mask();
+}
 
-namespace cli
-{
-namespace nvmcli
-{
-/*!
- * Simulator Feature contains the add / remove simulator commands
- */
-class NVM_API SimulatorFeature : public cli::nvmcli::VerboseFeatureBase
-{
-public:
+cli::nvmcli::VerboseController::~VerboseController()
+{}
 
-	enum
+void cli::nvmcli::VerboseController::setVerbose(bool value)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	m_verbose = value;
+}
+
+bool cli::nvmcli::VerboseController::getVerbose()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	return m_verbose;
+}
+
+bool cli::nvmcli::VerboseController::set_print_mask(int mask)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	COMMON_BOOL isSet = set_current_print_mask(mask);
+	return isSet;
+}
+
+int cli::nvmcli::VerboseController::get_print_mask()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	return get_current_print_mask();
+}
+
+void cli::nvmcli::VerboseController::enableVerbose()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	int debug_trace = FLAG_PRINT_DEBUG;
+
+	m_printMask = get_print_mask();
+
+	if (!getVerbose())
 	{
-		ADDSIMULATOR = 0
-	};
-
-	/*!
-	 * constructor
-	 */
-	SimulatorFeature();
-
-	/*!
-	 *
-	 * @param commandSpecId
-	 * @param parsedCommand
-	 * @return
-	 */
-	framework::ResultBase* run(const int &commandSpecId,
-			const framework::ParsedCommand &parsedCommand);
-
-	// Every feature must have this static members for registration
-	void getPaths(cli::framework::CommandSpecList &list); //!< Required for Feature registration
-
-	static const std::string Name;//!< Required for Feature registration
-
-private:
-
-};
-}
+		if (set_print_mask(debug_trace | m_printMask))
+		{
+			setVerbose(true);
+		}
+	}
 }
 
-#endif
+void cli::nvmcli::VerboseController::disableVerbose()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	if (getVerbose())
+	{
+		if (set_print_mask(m_printMask))
+		{
+			setVerbose(false);
+		}
+	}
+}

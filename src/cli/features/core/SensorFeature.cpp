@@ -37,7 +37,6 @@
 
 #include <server/BaseServerFactory.h>
 
-#include <libinvm-cli/FeatureBase.h>
 #include <libinvm-cli/CommandSpec.h>
 #include <libinvm-cli/SimpleListResult.h>
 #include <libinvm-cli/PropertyListResult.h>
@@ -45,6 +44,7 @@
 #include <libinvm-cli/Parser.h>
 #include <libinvm-cli/SyntaxErrorBadValueResult.h>
 #include <libinvm-cli/SyntaxErrorMissingValueResult.h>
+#include <libinvm-cli/OutputOptions.h>
 #include <physical_asset/NVDIMMFactory.h>
 
 #include "CommandParts.h"
@@ -128,7 +128,7 @@ void cli::nvmcli::SensorFeature::getPaths(cli::framework::CommandSpecList &list)
 }
 
 // Constructor, just calls super class
-cli::nvmcli::SensorFeature::SensorFeature() : cli::framework::FeatureBase()
+cli::nvmcli::SensorFeature::SensorFeature() : cli::nvmcli::VerboseFeatureBase()
 { }
 
 /*
@@ -140,6 +140,8 @@ cli::framework::ResultBase * cli::nvmcli::SensorFeature::run(
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	framework::ResultBase *pResult = NULL;
 
+	enableVerbose(parsedCommand);
+
 	switch(commandSpecId)
 	{
 	case SHOW_SENSOR:
@@ -150,8 +152,9 @@ cli::framework::ResultBase * cli::nvmcli::SensorFeature::run(
 		break;
 	}
 
-	return pResult;
+	disableVerbose(parsedCommand);
 
+	return pResult;
 }
 
 

@@ -33,7 +33,7 @@
 #define _CLI_NVMCLI_SENSORFEATURE_H_
 
 #include <cr_i18n.h>
-#include <libinvm-cli/FeatureBase.h>
+#include "VerboseFeatureBase.h"
 #include <support/NVDIMMSensorViewFactory.h>
 #include <nvm_types.h>
 
@@ -51,7 +51,7 @@ static const std::string MODIFY_SENSOR_PROMPT = N_TR(
 /*!
  * Implements the CR sensor commands
  */
-class NVM_API SensorFeature : public cli::framework::FeatureBase
+class NVM_API SensorFeature : public cli::nvmcli::VerboseFeatureBase
 {
 public:
 
