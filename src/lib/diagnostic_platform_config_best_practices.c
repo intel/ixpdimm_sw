@@ -118,16 +118,13 @@ void check_if_pool_interleave_sets_need_namespace(NVM_UINT32 *p_results,
 {
 	if (pool_interleave_sets_need_namespace(p_namespaces, namespace_count, p_pool))
 	{
-		NVM_UID pool_uid_str;
-		uid_copy(p_pool->pool_uid, pool_uid_str);
-
 		store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG,
 				EVENT_SEVERITY_INFO,
 				EVENT_CODE_DIAG_PCONFIG_POOL_NEEDS_APP_DIRECT_NAMESPACES,
 				p_pool->pool_uid,
 				0,
-				pool_uid_str, NULL, NULL,
-				DIAGNOSTIC_RESULT_WARNING);
+				p_pool->pool_uid, NULL, NULL,
+				DIAGNOSTIC_RESULT_OK);
 
 		(*p_results)++;
 	}
@@ -140,16 +137,13 @@ void check_if_pool_storage_regions_need_namespace(NVM_UINT32 *p_results,
 {
 	if (pool_storage_regions_need_namespace(p_namespaces, namespace_count, p_pool))
 	{
-		NVM_UID pool_uid_str;
-		uid_copy(p_pool->pool_uid, pool_uid_str);
-
 		store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG,
 				EVENT_SEVERITY_INFO,
 				EVENT_CODE_DIAG_PCONFIG_POOL_NEEDS_STORAGE_NAMESPACES,
 				p_pool->pool_uid,
 				0,
-				pool_uid_str, NULL, NULL,
-				DIAGNOSTIC_RESULT_WARNING);
+				p_pool->pool_uid, NULL, NULL,
+				DIAGNOSTIC_RESULT_OK);
 
 		(*p_results)++;
 	}
@@ -273,7 +267,7 @@ void check_for_namespaces_smaller_than_containing_interleave_set(NVM_UINT32 *p_r
 							p_namespaces[i].discovery.namespace_uid,
 							0,
 							namespace_uid_str, difference_mb_str, NULL,
-							DIAGNOSTIC_RESULT_WARNING);
+							DIAGNOSTIC_RESULT_OK);
 
 					(*p_results)++;
 				}
@@ -348,7 +342,7 @@ void check_namespace_best_practices_with_pools(NVM_UINT32 *p_results,
 	{
 		COMMON_LOG_ERROR_F("Error fetching namespaces, rc = %d", rc);
 		store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG,
-				EVENT_SEVERITY_WARN,
+				EVENT_SEVERITY_CRITICAL,
 				EVENT_CODE_DIAG_PCONFIG_NAMESPACES_FAILED,
 				NULL,
 				0,
@@ -394,7 +388,7 @@ int check_namespace_best_practices(NVM_UINT32 *p_results)
 			pool_count);
 
 		store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG,
-				EVENT_SEVERITY_WARN,
+				EVENT_SEVERITY_CRITICAL,
 				EVENT_CODE_DIAG_PCONFIG_POOLS_FAILED,
 				NULL,
 				0,
@@ -402,6 +396,7 @@ int check_namespace_best_practices(NVM_UINT32 *p_results)
 				NULL,
 				NULL,
 				DIAGNOSTIC_RESULT_FAILED);
+		(*p_results)++;
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);

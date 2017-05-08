@@ -125,6 +125,9 @@ NVM_BOOL is_device_interface_format_supported(struct nvm_topology *p_topology);
  * Check device memory subsystem controller information against those supported by mgmt sw
  */
 NVM_BOOL is_device_subsystem_controller_supported(struct nvm_topology *p_topology);
+NVM_BOOL is_subsystem_vendor_id_supported(NVM_UINT16 vendor_id);
+NVM_BOOL is_subsystem_device_id_supported(NVM_UINT16 device_id);
+
 
 /*
  * Compare the firmware api version to the supported versions to determine

@@ -451,15 +451,32 @@ NVM_BOOL is_device_subsystem_controller_supported(struct nvm_topology *p_topolog
 	NVM_BOOL supported = 0;
 
 	// Only supporting Intel DIMMs with AEP controllers
-	if (p_topology->subsystem_vendor_id == NVM_INTEL_VENDOR_ID)
+	if (is_subsystem_vendor_id_supported(p_topology->subsystem_vendor_id))
 	{
-		for (int i = 0; i < NUM_SUPPORTED_DEVICE_IDS; i++)
+		supported = is_subsystem_device_id_supported(p_topology->subsystem_device_id);
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(supported);
+	return supported;
+}
+
+NVM_BOOL is_subsystem_vendor_id_supported(NVM_UINT16 vendor_id)
+{
+	return (vendor_id == NVM_INTEL_VENDOR_ID);
+}
+
+NVM_BOOL is_subsystem_device_id_supported(NVM_UINT16 device_id)
+{
+	COMMON_LOG_ENTRY();
+	NVM_BOOL supported = 0;
+
+	for (int i = 0; i < NUM_SUPPORTED_DEVICE_IDS; i++)
+	{
+
+		if (device_id == SUPPORTED_DEVICE_IDS[i])
 		{
-			if (p_topology->subsystem_device_id == SUPPORTED_DEVICE_IDS[i])
-			{
-				supported = 1;
-				break;
-			}
+			supported = 1;
+			break;
 		}
 	}
 

@@ -151,12 +151,18 @@ const char *EVENT_MESSAGES_QUICK_DIAG[EVENT_CODE_DIAG_QUICK_UNKNOWN -
 {
 	// EVENT_CODE_DIAG_QUICK_SUCCESS
 	N_TR("The quick health check succeeded."),
-	// EVENT_CODE_DIAG_QUICK_INVALID_VENDORID
-	N_TR("Placeholder"),
-	// EVENT_CODE_DIAG_QUICK_INVALID_MANUFACTURER
-	N_TR("Placeholder"),
-	// EVENT_CODE_DIAG_QUICK_INVALID_PART_NUMBER
-	N_TR("Placeholder"),
+	// EVENT_CODE_DIAG_QUICK_NOT_MANAGEABLE_VENDOR_ID
+	N_TR("The quick health check detected that " NVM_DIMM_NAME " %s "
+			"is not manageable because subsystem vendor ID %s is not "
+			"supported."),
+	// EVENT_CODE_DIAG_QUICK_NOT_MANAGEABLE_DEVICE_ID
+	N_TR("The quick health check detected that " NVM_DIMM_NAME " %s "
+			"is not manageable because subsystem device ID %s is not "
+			"supported."),
+	// EVENT_CODE_DIAG_QUICK_NOT_MANAGEABLE_FW_API
+	N_TR("The quick health check detected that " NVM_DIMM_NAME " %s "
+			"is not manageable because firmware API version %s is not "
+			"supported."),
 	// EVENT_CODE_DIAG_QUICK_BAD_HEALTH
 	N_TR("The quick health check detected that " NVM_DIMM_NAME " %s "
 			"is reporting a bad health state %s, expected %s."),
@@ -196,17 +202,12 @@ const char *EVENT_MESSAGES_QUICK_DIAG[EVENT_CODE_DIAG_QUICK_UNKNOWN -
 	// EVENT_CODE_DIAG_QUICK_MEDIA_READY_ERROR
 	N_TR("The quick health check detected that the firmware "
 			"on " NVM_DIMM_NAME " %s is reporting an error in the media."),
-	// EVENT_CODE_DIAG_QUICK_DDRT_IO_INIT_NOT_READY
-	N_TR("The quick health check detected that the firmware "
-			"on " NVM_DIMM_NAME " %s is reporting that the DDRT "
-			"I/O initialization has not completed."),
-	// EVENT_CODE_DIAG_QUICK_DDRT_IO_INIT_ERROR
-	N_TR("The quick health check detected that the firmware "
-			"on " NVM_DIMM_NAME " %s is reporting an error initializing DDRT I/O."),
-	// EVENT_CODE_DIAG_QUICK_MAILBOX_INTERFACE_NOT_READY
-	N_TR("The quick health check detected that the firmware "
-			"on " NVM_DIMM_NAME " %s is reporting that "
-			"the mailbox interface is not ready."),
+	// Available event 516
+	N_TR("Placeholder"),
+	// Available event 517
+	N_TR("Placeholder"),
+	// Available event 518
+	N_TR("Placeholder"),
 	// EVENT_CODE_DIAG_QUICK_NO_POST_CODE
 	N_TR("The quick health check detected that " NVM_DIMM_NAME " %s failed "
 			"to initialize BIOS POST testing."),
@@ -222,13 +223,12 @@ const char *EVENT_MESSAGES_QUICK_DIAG[EVENT_CODE_DIAG_QUICK_UNKNOWN -
 			" %s has stalled the media interface engine."),
 	// EVENT_CODE_DIAG_QUICK_VIRAL_STATE
 	N_TR("The quick health check detected that " NVM_DIMM_NAME " %s "
-			"is reporting a viral state."),
+			"is reporting a viral state. The " NVM_DIMM_NAME " is now read-only."),
 	// EVENT_CODE_DIAG_QUICK_BAD_DRIVER
 	N_TR("The quick health check detected that the underlying software is missing "
 			"or incompatible with this version of the management software."),
-	// EVENT_CODE_DIAG_QUICK_NOT_MANAGEABLE
-	N_TR("The quick health check detected that " NVM_DIMM_NAME " %s is not manageable by "
-			"this version of the management software."),
+	// Available event 525
+	N_TR("Placeholder"),
 	// EVENT_CODE_DIAG_QUICK_BAD_MEDIA_TEMP_THROTTLING
 	N_TR("The quick health check detected that " NVM_DIMM_NAME " %s is reporting a media "
 			"temperature of %s C which is above the throttling threshold %s C."),
@@ -354,7 +354,7 @@ const char *EVENT_MESSAGES_PCONFIG_DIAG[EVENT_CODE_DIAG_PCONFIG_UNKNOWN -
 	// EVENT_CODE_DIAG_PCONFIG_INVALID_PCD
 	N_TR("The platform configuration check detected that the platform configuration data is "
 			"invalid for " NVM_DIMM_NAME " %s."),
-// EVENT_CODE_DIAG_PCONFIG_INVALID_CURRENT_PCD
+	// EVENT_CODE_DIAG_PCONFIG_INVALID_CURRENT_PCD
 	N_TR("The platform configuration check detected that the current configuration table is "
 			"invalid for " NVM_DIMM_NAME " %s."),
 	// EVENT_CODE_DIAG_PCONFIG_UNCONFIGURED
@@ -362,9 +362,8 @@ const char *EVENT_MESSAGES_PCONFIG_DIAG[EVENT_CODE_DIAG_PCONFIG_UNKNOWN -
 	// EVENT_CODE_DIAG_PCONFIG_BROKEN_ISET
 	N_TR("The platform configuration check detected that interleave set %s is broken due to "
 			"missing " NVM_DIMM_NAME "(s): %s."),
-	// EVENT_CODE_DIAG_PCONFIG_MAPPED_CAPACITY_MISMATCH
-	N_TR("The platform configuration check detected that the BIOS reported mapped %s capacity "
-			"%s doesn't match the driver reported capacity %s."),
+	// Reserved event 608
+	N_TR("Placeholder"),
 	// EVENT_CODE_DIAG_PCONFIG_REBOOT_NEEDED_TO_APPLY_GOAL
 	N_TR("The platform configuration check detected that " NVM_DIMM_NAME " %s has "
 			"a goal configuration that has not yet been applied. A system reboot "

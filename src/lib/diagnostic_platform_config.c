@@ -146,9 +146,13 @@ void check_bios_config_support(NVM_UINT32 *p_results, const struct platform_capa
 
 	if (!p_caps->bios_config_support)
 	{
-		store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG, EVENT_SEVERITY_INFO,
-				EVENT_CODE_DIAG_PCONFIG_NO_BIOS_CONFIG_SUPPORT, NULL, 0, NULL,
-				NULL, NULL, DIAGNOSTIC_RESULT_WARNING);
+		store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG,
+				EVENT_SEVERITY_WARN,
+				EVENT_CODE_DIAG_PCONFIG_NO_BIOS_CONFIG_SUPPORT,
+				NULL,
+				0,
+				NULL, NULL, NULL,
+				DIAGNOSTIC_RESULT_WARNING);
 		(*p_results)++;
 	}
 
@@ -333,133 +337,6 @@ void get_mapped_app_direct_capacity(const NVM_NFIT_DEVICE_HANDLE device_handle,
 	COMMON_LOG_EXIT();
 }
 
-void check_device_mapped_memory_capacity(NVM_UINT32 *p_results,
-		const struct device_discovery *p_device,
-		const struct current_config_table *p_current_config,
-		const struct nvm_pool *p_pools, const NVM_UINT32 pool_count)
-{
-	COMMON_LOG_ENTRY();
-
-	NVM_UINT64 memory_capacity = 0;
-	get_mapped_memory_capacity(p_device->device_handle, p_pools, pool_count, &memory_capacity);
-
-	// compare mapped memory capacity reported by
-	// the bios to that by the driver
-	if (p_current_config->mapped_memory_capacity != memory_capacity)
-	{
-		char mapped_vcap_str[NVM_EVENT_ARG_LEN];
-		char vcap_str[NVM_EVENT_ARG_LEN];
-		s_snprintf(mapped_vcap_str,
-				NVM_EVENT_ARG_LEN, "%llu", p_current_config->mapped_memory_capacity);
-		s_snprintf(vcap_str,
-		NVM_EVENT_ARG_LEN, "%llu", memory_capacity);
-
-		store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG,
-				EVENT_SEVERITY_WARN,
-				EVENT_CODE_DIAG_PCONFIG_MAPPED_CAPACITY,
-				p_device->uid,
-				0,
-				MEMORY_CAP_STR,
-				mapped_vcap_str,
-				vcap_str,
-				DIAGNOSTIC_RESULT_FAILED);
-		(*p_results)++;
-	}
-
-	COMMON_LOG_EXIT();
-}
-
-void check_device_mapped_app_direct_capacity(NVM_UINT32 *p_results,
-		const struct device_discovery *p_device,
-		const struct current_config_table *p_current_config,
-		const struct nvm_pool *p_pools, const NVM_UINT32 pool_count)
-{
-	COMMON_LOG_ENTRY();
-
-	NVM_UINT64 app_direct_capacity = 0;
-	get_mapped_app_direct_capacity(p_device->device_handle, p_pools, pool_count,
-			&app_direct_capacity);
-
-	// compare mapped app direct capacity reported
-	// by the bios to that by the driver
-	if (p_current_config->mapped_app_direct_capacity != app_direct_capacity)
-	{
-		char mapped_app_direct_str[NVM_EVENT_ARG_LEN];
-		char app_direct_str[NVM_EVENT_ARG_LEN];
-		s_snprintf(mapped_app_direct_str,
-				NVM_EVENT_ARG_LEN, "%llu", p_current_config->mapped_app_direct_capacity);
-		s_snprintf(app_direct_str,
-				NVM_EVENT_ARG_LEN, "%llu", app_direct_capacity);
-
-
-		store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG,
-				EVENT_SEVERITY_WARN,
-				EVENT_CODE_DIAG_PCONFIG_MAPPED_CAPACITY,
-				p_device->uid,
-				0,
-				APP_DIRECT_CAP_STR,
-				mapped_app_direct_str,
-				app_direct_str,
-				DIAGNOSTIC_RESULT_FAILED);
-		(*p_results)++;
-	}
-
-	COMMON_LOG_EXIT();
-}
-
-int check_mapped_capacities_for_device(NVM_UINT32 *p_results,
-		const struct device_discovery *p_device,
-		const struct current_config_table *p_current_config)
-{
-	COMMON_LOG_ENTRY();
-
-	int rc = NVM_SUCCESS;
-	int pool_count = get_pool_count();
-	if (pool_count > 0)
-	{
-		struct nvm_pool *pools = (struct nvm_pool *)calloc(pool_count, sizeof (struct nvm_pool));
-		if (pools == NULL)
-		{
-			COMMON_LOG_ERROR("Could not allocate memory for pools.");
-			rc = NVM_ERR_NOMEMORY;
-		}
-		else
-		{
-			pool_count = get_pools(pool_count, pools);
-			if (pool_count > 0)
-			{
-				check_device_mapped_memory_capacity(p_results, p_device,
-						p_current_config, pools, pool_count);
-
-				check_device_mapped_app_direct_capacity(p_results, p_device,
-						p_current_config, pools, pool_count);
-			}
-
-			free(pools);
-		}
-	}
-
-	if (pool_count < 0)
-	{
-		COMMON_LOG_ERROR_F(
-			"Failed to retrieve the pool information, error %d",
-			pool_count);
-
-		store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG,
-				EVENT_SEVERITY_WARN,
-				EVENT_CODE_DIAG_PCONFIG_POOLS_FAILED,
-				NULL,
-				0,
-				NULL,
-				NULL,
-				NULL,
-				DIAGNOSTIC_RESULT_FAILED);
-	}
-
-	COMMON_LOG_EXIT_RETURN_I(rc);
-	return rc;
-}
-
 void check_unmapped_device_config(NVM_UINT32 *p_results,
 		const NVM_UID uid, const struct current_config_table *p_current_config)
 {
@@ -472,12 +349,12 @@ void check_unmapped_device_config(NVM_UINT32 *p_results,
 			(p_current_config->config_status == CURRENT_CONFIG_STATUS_ERROR_UNMAPPED))
 	{
 		store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG,
-				EVENT_SEVERITY_WARN,
+				EVENT_SEVERITY_INFO,
 				EVENT_CODE_DIAG_PCONFIG_UNCONFIGURED,
 				uid,
-				0,
+				1,
 				uid_str, NULL, NULL,
-				DIAGNOSTIC_RESULT_FAILED);
+				DIAGNOSTIC_RESULT_OK);
 		(*p_results)++;
 	}
 
@@ -501,13 +378,6 @@ int check_pcd_current_config_for_device(NVM_UINT32 *p_results,
 			if (!(p_diagnostic->excludes & DIAG_THRESHOLD_PCONFIG_UNCONFIGURED))
 			{
 				check_unmapped_device_config(p_results, p_device->uid, p_current_config);
-			}
-		}
-		else
-		{
-			if (!(p_diagnostic->excludes & DIAG_THRESHOLD_PCONFIG_MAPPED_CAPACITY))
-			{
-				rc = check_mapped_capacities_for_device(p_results, p_device, p_current_config);
 			}
 		}
 
@@ -570,11 +440,11 @@ void check_for_unapplied_config_goal(NVM_UINT32 *p_results,
 				EVENT_SEVERITY_INFO,
 				EVENT_CODE_DIAG_PCONFIG_REBOOT_NEEDED_TO_APPLY_GOAL,
 				p_device->uid,
-				0,
+				1,
 				uid_str,
 				NULL,
 				NULL,
-				DIAGNOSTIC_RESULT_WARNING);
+				DIAGNOSTIC_RESULT_OK);
 		(*p_results)++;
 	}
 
@@ -727,10 +597,10 @@ int check_platform_config_data_for_device(NVM_UINT32* p_results,
 			// fails if platform config data can't be retrieved or if any of platform
 			// config header, current config , config input & output tables are invalid
 			store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG,
-					EVENT_SEVERITY_WARN,
+					EVENT_SEVERITY_CRITICAL,
 					EVENT_CODE_DIAG_PCONFIG_INVALID_PCD,
 					p_device->uid,
-					0,
+					1,
 					uid_str,
 					NULL,
 					NULL, DIAGNOSTIC_RESULT_FAILED);

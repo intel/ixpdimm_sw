@@ -83,7 +83,7 @@ int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 		if (dev_count == 0)
 		{
 			store_event_by_parts(EVENT_TYPE_DIAG_FW_CONSISTENCY,
-					EVENT_SEVERITY_WARN, EVENT_CODE_DIAG_FW_NO_DIMMS, NULL, 0, NULL,
+					EVENT_SEVERITY_INFO, EVENT_CODE_DIAG_FW_NO_DIMMS, NULL, 0, NULL,
 					NULL, NULL, DIAGNOSTIC_RESULT_ABORTED);
 			(*p_results)++;
 		}
@@ -159,7 +159,7 @@ int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 									EVENT_CODE_DIAG_FW_INCONSISTENT, NULL, 0,
 									inconsistent_uids_event_str,
 									part_num_list[part_num], optimal_fw_rev[part_num],
-									DIAGNOSTIC_RESULT_FAILED);
+									DIAGNOSTIC_RESULT_WARNING);
 							(*p_results)++;
 						}
 						inconsistency_flag = 0;
@@ -267,10 +267,10 @@ int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 									nvm_decode_temperature(actual_temp_threshold));
 							store_event_by_parts(EVENT_TYPE_DIAG_FW_CONSISTENCY,
 									EVENT_SEVERITY_WARN,
-								EVENT_CODE_DIAG_FW_BAD_TEMP_MEDIA_THRESHOLD,
-								dimms[current_dev].uid, 0, uid_str, actual_temp_threshold_str,
-								expected_temp_threshold_str,
-								DIAGNOSTIC_RESULT_FAILED);
+									EVENT_CODE_DIAG_FW_BAD_TEMP_MEDIA_THRESHOLD,
+									dimms[current_dev].uid, 0, uid_str, actual_temp_threshold_str,
+									expected_temp_threshold_str,
+									DIAGNOSTIC_RESULT_WARNING);
 						(*p_results)++;
 					}
 
@@ -287,9 +287,9 @@ int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 						store_event_by_parts(EVENT_TYPE_DIAG_FW_CONSISTENCY,
 								EVENT_SEVERITY_WARN,
 								EVENT_CODE_DIAG_FW_BAD_TEMP_CONTROLLER_THRESHOLD,
-									dimms[current_dev].uid, 0, uid_str, actual_temp_threshold_str,
-									expected_temp_threshold_str,
-									DIAGNOSTIC_RESULT_FAILED);
+								dimms[current_dev].uid, 0, uid_str, actual_temp_threshold_str,
+								expected_temp_threshold_str,
+								DIAGNOSTIC_RESULT_WARNING);
 							(*p_results)++;
 						}
 
@@ -307,7 +307,7 @@ int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 									dimms[current_dev].uid, 0, uid_str,
 									expected_spare_block_threshold_str,
 									actual_spare_block_threshold_str,
-									DIAGNOSTIC_RESULT_FAILED);
+									DIAGNOSTIC_RESULT_WARNING);
 							(*p_results)++;
 						}
 
@@ -327,7 +327,7 @@ int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 										EVENT_CODE_DIAG_FW_BAD_FW_LOG_LEVEL,
 										dimms[current_dev].uid, 0, uid_str, current_log_level_str,
 										default_log_level_str,
-										DIAGNOSTIC_RESULT_FAILED);
+										DIAGNOSTIC_RESULT_WARNING);
 								(*p_results)++;
 							}
 						}
@@ -358,7 +358,7 @@ int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 											EVENT_CODE_DIAG_FW_SYSTEM_TIME_DRIFT,
 											dimms[current_dev].uid, 0, uid_str,
 											time_drift_lag_str, current_time_drift_str,
-											DIAGNOSTIC_RESULT_FAILED);
+											DIAGNOSTIC_RESULT_WARNING);
 									(*p_results)++;
 								}
 								else if ((current_time_drift < 0) &&
@@ -375,7 +375,7 @@ int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 											EVENT_CODE_DIAG_FW_SYSTEM_TIME_DRIFT,
 											dimms[current_dev].uid, 0, uid_str,
 											time_drift_lag_str, current_time_drift_str,
-											DIAGNOSTIC_RESULT_FAILED);
+											DIAGNOSTIC_RESULT_WARNING);
 									(*p_results)++;
 								}
 							}
@@ -414,7 +414,7 @@ int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 											dimms[current_dev].uid, 0, uid_str,
 											field_str,
 											expected_avg_power_budget_range_str,
-											DIAGNOSTIC_RESULT_FAILED);
+											DIAGNOSTIC_RESULT_WARNING);
 									(*p_results)++;
 								}
 
@@ -439,7 +439,7 @@ int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 											dimms[current_dev].uid, 0, uid_str,
 											field_str,
 											expected_peak_power_budget_range_str,
-											DIAGNOSTIC_RESULT_FAILED);
+											DIAGNOSTIC_RESULT_WARNING);
 									(*p_results)++;
 								}
 							}
@@ -456,7 +456,7 @@ int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 										EVENT_CODE_DIAG_FW_BAD_POWER_MGMT_POLICY,
 										dimms[current_dev].uid, 0, uid_str, field_str,
 										expected_power_mgmt_enabled_str,
-										DIAGNOSTIC_RESULT_FAILED);
+										DIAGNOSTIC_RESULT_WARNING);
 								(*p_results)++;
 							}
 						}
@@ -485,7 +485,7 @@ int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 											EVENT_CODE_DIAG_FW_BAD_DIE_SPARING_POLICY,
 											dimms[current_dev].uid, 0, uid_str, field_str,
 											expected_die_sparing_aggressiveness_str,
-											DIAGNOSTIC_RESULT_FAILED);
+											DIAGNOSTIC_RESULT_WARNING);
 									(*p_results)++;
 								}
 							}
@@ -502,7 +502,7 @@ int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 										EVENT_CODE_DIAG_FW_BAD_DIE_SPARING_POLICY,
 										dimms[current_dev].uid, 0, uid_str, field_str,
 										expected_die_sparing_enabled_str,
-										DIAGNOSTIC_RESULT_FAILED);
+										DIAGNOSTIC_RESULT_WARNING);
 								(*p_results)++;
 							}
 						}

@@ -153,7 +153,7 @@ int verify_nfit(int *p_dev_count, NVM_UINT32 *p_results)
 	else if (*p_dev_count == 0)
 	{
 		store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG,
-				EVENT_SEVERITY_WARN, EVENT_CODE_DIAG_PCONFIG_NO_DIMMS, NULL, 0, NULL,
+				EVENT_SEVERITY_INFO, EVENT_CODE_DIAG_PCONFIG_NO_DIMMS, NULL, 0, NULL,
 				NULL, NULL, DIAGNOSTIC_RESULT_ABORTED);
 		(*p_results)++;
 	}

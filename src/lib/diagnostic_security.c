@@ -66,7 +66,7 @@ int diag_security_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 		dev_count = nvm_get_device_count();
 		if (dev_count == 0)
 		{
-			store_event_by_parts(EVENT_TYPE_DIAG_SECURITY, EVENT_SEVERITY_WARN,
+			store_event_by_parts(EVENT_TYPE_DIAG_SECURITY, EVENT_SEVERITY_INFO,
 					EVENT_CODE_DIAG_SECURITY_NO_DIMMS, NULL, 0, NULL, NULL, NULL,
 					DIAGNOSTIC_RESULT_ABORTED);
 			(*p_results)++;
@@ -101,9 +101,9 @@ int diag_security_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 								DIAG_THRESHOLD_SECURITY_ALL_NOTSUPPORTED)))
 				{
 					store_event_by_parts(EVENT_TYPE_DIAG_SECURITY,
-							EVENT_SEVERITY_WARN,
+							EVENT_SEVERITY_INFO,
 							EVENT_CODE_DIAG_SECURITY_ALL_NOTSUPPORTED, NULL, 0, NULL,
-							NULL, NULL, DIAGNOSTIC_RESULT_FAILED);
+							NULL, NULL, DIAGNOSTIC_RESULT_OK);
 					(*p_results)++;
 				}
 				// check if all manageable dimms are disabled
@@ -111,9 +111,9 @@ int diag_security_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 					(!(p_diagnostic->excludes & DIAG_THRESHOLD_SECURITY_ALL_DISABLED)))
 				{
 					store_event_by_parts(EVENT_TYPE_DIAG_SECURITY,
-							EVENT_SEVERITY_WARN,
+							EVENT_SEVERITY_INFO,
 							EVENT_CODE_DIAG_SECURITY_ALL_DISABLED, NULL, 0, NULL,
-							NULL, NULL, DIAGNOSTIC_RESULT_FAILED);
+							NULL, NULL, DIAGNOSTIC_RESULT_OK);
 					(*p_results)++;
 				}
 
@@ -150,7 +150,7 @@ int diag_security_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 									EVENT_SEVERITY_WARN,
 									EVENT_CODE_DIAG_SECURITY_INCONSISTENT, NULL, 0,
 									inconsistent_security_state_event_arg_str, NULL,
-									NULL, DIAGNOSTIC_RESULT_FAILED);
+									NULL, DIAGNOSTIC_RESULT_WARNING);
 							(*p_results)++;
 						}
 					}
