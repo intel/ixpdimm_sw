@@ -125,8 +125,11 @@ extern "C"
 //! SQL Key name for the maximum number of logs to keep
 #define	SQL_KEY_LOG_MAX "LOG_MAX"
 
-//! SQL Key name for the default temperature threshold in Celsius
-#define	SQL_KEY_DEFAULT_TEMPERATURE_THRESHOLD "DEFAULT_TEMPERATURE_THRESHOLD"
+//! SQL Key name for the default media temperature threshold in Celsius
+#define	SQL_KEY_DEFAULT_MEDIA_TEMPERATURE_THRESHOLD "DEFAULT_MEDIA_TEMPERATURE_THRESHOLD"
+
+//! SQL Key name for the default media temperature threshold in Celsius
+#define	SQL_KEY_DEFAULT_CONTROLLER_TEMPERATURE_THRESHOLD "DEFAULT_CONTROLLER_TEMPERATURE_THRESHOLD"
 
 //! SQL Key name for the default spare block threshold
 #define	SQL_KEY_DEFAULT_SPARE_BLOCK_THRESHOLD "DEFAULT_SPARE_BLOCK_THRESHOLD"
