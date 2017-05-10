@@ -450,7 +450,8 @@ int set_default_config_settings(PersistentStore *p_ps)
 		add_config_value_to_pstore(p_ps, SQL_KEY_MAX_HEALTH_STATUS, "0"); // 0 means normal
 		add_config_value_to_pstore(p_ps, SQL_KEY_LOG_DESTINATION, log_destination);
 		add_config_value_to_pstore(p_ps, SQL_KEY_LOG_MAX, "10000");
-		add_config_value_to_pstore(p_ps, SQL_KEY_DEFAULT_TEMPERATURE_THRESHOLD, "81.5");
+		add_config_value_to_pstore(p_ps, SQL_KEY_DEFAULT_MEDIA_TEMPERATURE_THRESHOLD, "84.0");
+		add_config_value_to_pstore(p_ps, SQL_KEY_DEFAULT_CONTROLLER_TEMPERATURE_THRESHOLD, "104.0");
 		add_config_value_to_pstore(p_ps, SQL_KEY_DEFAULT_SPARE_BLOCK_THRESHOLD, "50");
 		add_config_value_to_pstore(p_ps, SQL_KEY_FW_LOG_LEVEL, "1");
 		add_config_value_to_pstore(p_ps, SQL_KEY_DEFAULT_TIME_DRIFT, "120"); // 2 minutes

@@ -168,12 +168,12 @@ int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 
 				// get default temperature and spare capacity thresholds
 				char max_threshold_str[CONFIG_VALUE_LEN];
-				get_config_value(SQL_KEY_DEFAULT_TEMPERATURE_THRESHOLD, max_threshold_str);
-				float max_temp_threshold_config = strtof(max_threshold_str, NULL);
-
-				char expected_temp_threshold_str[NVM_EVENT_ARG_LEN];
-				s_snprintf(expected_temp_threshold_str, NVM_EVENT_ARG_LEN, "%.4f",
-						max_temp_threshold_config);
+				get_config_value(SQL_KEY_DEFAULT_MEDIA_TEMPERATURE_THRESHOLD,
+					max_threshold_str);
+				float max_media_temp_threshold_config = strtof(max_threshold_str, NULL);
+				get_config_value(SQL_KEY_DEFAULT_CONTROLLER_TEMPERATURE_THRESHOLD,
+					max_threshold_str);
+				float max_controller_temp_threshold_config = strtof(max_threshold_str, NULL);
 
 				int min_spare_block_threshold_config = 0;
 				get_config_value_int(SQL_KEY_DEFAULT_SPARE_BLOCK_THRESHOLD,
@@ -257,7 +257,7 @@ int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 							DIAG_THRESHOLD_FW_MEDIA_TEMP,
 							nvm_decode_temperature(
 							sensors[SENSOR_MEDIA_TEMPERATURE].settings.upper_noncritical_threshold),
-							&max_temp_threshold_config, EQUALITY_LESSTHANEQUAL))
+							&max_media_temp_threshold_config, EQUALITY_LESSTHANEQUAL))
 						{
 							NVM_UINT64 actual_temp_threshold =
 								sensors[SENSOR_MEDIA_TEMPERATURE].
@@ -265,6 +265,10 @@ int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 							char actual_temp_threshold_str[10];
 							s_snprintf(actual_temp_threshold_str, 10, "%.4f",
 									nvm_decode_temperature(actual_temp_threshold));
+							char expected_temp_threshold_str[NVM_EVENT_ARG_LEN];
+							s_snprintf(expected_temp_threshold_str, NVM_EVENT_ARG_LEN, "%.4f",
+									max_media_temp_threshold_config);
+
 							store_event_by_parts(EVENT_TYPE_DIAG_FW_CONSISTENCY,
 									EVENT_SEVERITY_WARN,
 									EVENT_CODE_DIAG_FW_BAD_TEMP_MEDIA_THRESHOLD,
@@ -279,11 +283,14 @@ int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 					if (!diag_check_real(p_diagnostic,
 							DIAG_THRESHOLD_FW_CORE_TEMP,
 							nvm_decode_temperature(actual_temp_threshold),
-							&max_temp_threshold_config, EQUALITY_LESSTHANEQUAL))
+							&max_controller_temp_threshold_config, EQUALITY_LESSTHANEQUAL))
 					{
 						char actual_temp_threshold_str[10];
 						s_snprintf(actual_temp_threshold_str, 10, "%.4f",
 								nvm_decode_temperature(actual_temp_threshold));
+						char expected_temp_threshold_str[NVM_EVENT_ARG_LEN];
+						s_snprintf(expected_temp_threshold_str, NVM_EVENT_ARG_LEN, "%.4f",
+								max_controller_temp_threshold_config);
 						store_event_by_parts(EVENT_TYPE_DIAG_FW_CONSISTENCY,
 								EVENT_SEVERITY_WARN,
 								EVENT_CODE_DIAG_FW_BAD_TEMP_CONTROLLER_THRESHOLD,
