@@ -362,8 +362,9 @@ const char *EVENT_MESSAGES_PCONFIG_DIAG[EVENT_CODE_DIAG_PCONFIG_UNKNOWN -
 	// EVENT_CODE_DIAG_PCONFIG_BROKEN_ISET
 	N_TR("The platform configuration check detected that interleave set %s is broken due to "
 			"missing " NVM_DIMM_NAME "(s): %s."),
-	// Reserved event 608
-	N_TR("Placeholder"),
+	// EVENT_CODE_DIAG_PCONFIG_DUPLICATE_SERIAL_NUMBERS
+	N_TR("The platform configuration check detected %s DIMMs installed on the platform with "
+			"the same serial number %s."),
 	// EVENT_CODE_DIAG_PCONFIG_REBOOT_NEEDED_TO_APPLY_GOAL
 	N_TR("The platform configuration check detected that " NVM_DIMM_NAME " %s has "
 			"a goal configuration that has not yet been applied. A system reboot "
