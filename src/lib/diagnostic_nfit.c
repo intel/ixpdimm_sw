@@ -34,6 +34,15 @@
 #include "device_adapter.h"
 #include <string/s_str.h>
 #include <persistence/event.h>
+#include <utility.h>
+
+// Used when checking for duplicate serial numbers
+struct serial_number_count_list_item
+{
+	NVM_SERIAL_NUMBER serial_number;
+	size_t count;
+	struct serial_number_count_list_item *p_next;
+};
 
 /*
  * SMBIOS includes all memory devices in the system - not just NVM-DIMMs
@@ -134,6 +143,143 @@ int check_smbios_table_for_uninitialized_dimms(NVM_UINT32 *p_results,
 	return rc;
 }
 
+void generate_event_for_duplicate_serial_numbers(const size_t duplicate_count,
+		const NVM_SERIAL_NUMBER duplicate_serial)
+{
+	COMMON_LOG_ENTRY();
+
+	char duplicate_count_str[NVM_EVENT_ARG_LEN];
+	s_snprintf(duplicate_count_str, sizeof (duplicate_count_str),
+			"%llu", duplicate_count);
+
+	char duplicate_serial_str[NVM_SERIALSTR_LEN];
+	SERIAL_NUMBER_TO_STRING(duplicate_serial, duplicate_serial_str);
+
+	store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG,
+			EVENT_SEVERITY_CRITICAL,
+			EVENT_CODE_DIAG_PCONFIG_DUPLICATE_SERIAL_NUMBERS,
+			"",
+			0,
+			duplicate_count_str,
+			duplicate_serial_str,
+			"",
+			DIAGNOSTIC_RESULT_FAILED);
+
+	COMMON_LOG_EXIT();
+}
+
+NVM_UINT32 add_events_for_all_duplicate_serial_numbers_in_list(
+		struct serial_number_count_list_item *p_list)
+{
+	COMMON_LOG_ENTRY();
+
+	NVM_UINT32 events_added = 0;
+	struct serial_number_count_list_item *p_item = p_list;
+	while (p_item)
+	{
+		if (p_item->count > 1)
+		{
+			generate_event_for_duplicate_serial_numbers(p_item->count,
+					p_item->serial_number);
+			events_added++;
+		}
+
+		p_item = p_item->p_next;
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(events_added);
+	return events_added;
+}
+
+struct serial_number_count_list_item *get_serial_number_item_from_list(
+		const NVM_SERIAL_NUMBER serial_number,
+		struct serial_number_count_list_item *p_list)
+{
+	COMMON_LOG_ENTRY();
+
+	struct serial_number_count_list_item *p_item = p_list;
+	while (p_item != NULL)
+	{
+		if (memcmp(serial_number, p_item->serial_number,
+				sizeof (NVM_SERIAL_NUMBER)) == 0)
+		{
+			break;
+		}
+		p_item = p_item->p_next;
+	}
+
+	COMMON_LOG_EXIT();
+	return p_item;
+}
+
+void add_serial_number_to_list(const NVM_SERIAL_NUMBER serial_number,
+		struct serial_number_count_list_item **pp_list)
+{
+	COMMON_LOG_ENTRY();
+
+	struct serial_number_count_list_item *p_item =
+			get_serial_number_item_from_list(serial_number, *pp_list);
+	if (p_item)
+	{
+		p_item->count++;
+	}
+	else
+	{
+		p_item = calloc(1, sizeof (struct serial_number_count_list_item));
+		memmove(p_item->serial_number, serial_number, NVM_SERIAL_LEN);
+		p_item->count = 1;
+
+		// Inject at the beginning
+		p_item->p_next = *pp_list;
+		*pp_list = p_item;
+	}
+
+	COMMON_LOG_EXIT();
+}
+
+void add_device_serial_numbers_to_list(struct serial_number_count_list_item **pp_list,
+		const struct nvm_topology *devices, const NVM_UINT32 device_count)
+{
+	COMMON_LOG_ENTRY();
+
+	for (NVM_UINT32 i = 0; i < device_count; i++)
+	{
+		add_serial_number_to_list(devices[i].serial_number, pp_list);
+	}
+
+	COMMON_LOG_EXIT();
+}
+
+// Deletes all items and sets *pp_list to NULL
+void delete_serial_number_count_list(struct serial_number_count_list_item **pp_list)
+{
+	COMMON_LOG_ENTRY();
+
+	while (*pp_list)
+	{
+		struct serial_number_count_list_item *p_item = *pp_list;
+		*pp_list = p_item->p_next;
+		free(p_item);
+	}
+
+	COMMON_LOG_EXIT();
+}
+
+void check_for_duplicate_serial_numbers(NVM_UINT32 *p_results,
+		const struct nvm_topology *devices, const NVM_UINT32 device_count)
+{
+	COMMON_LOG_ENTRY();
+
+	struct serial_number_count_list_item *p_list = NULL;
+	add_device_serial_numbers_to_list(&p_list, devices, device_count);
+
+	(*p_results) += add_events_for_all_duplicate_serial_numbers_in_list(p_list);
+
+	delete_serial_number_count_list(&p_list);
+
+	COMMON_LOG_EXIT();
+}
+
 /*
  * verify the existence and format of NFIT table
  */
@@ -181,6 +327,7 @@ int verify_nfit(int *p_dev_count, NVM_UINT32 *p_results)
 			}
 
 			rc = check_smbios_table_for_uninitialized_dimms(p_results, topol, *p_dev_count);
+			check_for_duplicate_serial_numbers(p_results, topol, *p_dev_count);
 		}
 	}
 
