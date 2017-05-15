@@ -291,7 +291,7 @@ int get_dimm_storage_capacities(const NVM_UINT32 count, struct nvm_storage_capac
 						int cap_idx = cap_count;
 						for (int i = 0; i < cap_count; i++)
 						{
-							if (p_capacities[cap_count].device_handle.handle ==
+							if (p_capacities[i].device_handle.handle ==
 									handle.handle)
 							{
 								cap_idx = i;
