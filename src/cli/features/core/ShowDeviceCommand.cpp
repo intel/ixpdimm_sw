@@ -79,9 +79,9 @@ ShowDeviceCommand::ShowDeviceCommand(core::device::DeviceService &service)
 	m_props.addCustom("ManufacturingDate", &getManufacturingDate);
 	m_props.addStr("DeviceLocator", &core::device::Device::getDeviceLocator);
 	m_props.addStr("BankLabel", &core::device::Device::getBankLabel);
-	m_props.addUint64("DataWidth", &core::device::Device::getDataWidth);
-	m_props.addUint64("TotalWidth", &core::device::Device::getTotalWidth);
-	m_props.addUint64("Speed", &core::device::Device::getSpeed);
+	m_props.addUint64("DataWidth", &core::device::Device::getDataWidth, &convertWidth);
+	m_props.addUint64("TotalWidth", &core::device::Device::getTotalWidth, &convertWidth);
+	m_props.addUint64("Speed", &core::device::Device::getSpeed, &convertSpeed);
 	m_props.addCustom("ActionRequiredEvents", getActionRequiredEvents);
 	m_props.addOther("LockState", &core::device::Device::getLockState, &convertLockState).setIsDefault();
 	m_props.addStr("FWVersion", &core::device::Device::getFwRevision).setIsDefault();
@@ -103,9 +103,9 @@ ShowDeviceCommand::ShowDeviceCommand(core::device::DeviceService &service)
 		convertCapacity);
 	m_props.addOther("FWLogLevel", &core::device::Device::getFwLogLevel, &convertFwLogLevel);
 	m_props.addBool("PowerManagementEnabled", &core::device::Device::isPowerManagementEnabled);
-	m_props.addUint8("PowerLimit", &core::device::Device::getPowerLimit);
-	m_props.addUint16("PeakPowerBudget", &core::device::Device::getPeakPowerBudget);
-	m_props.addUint16("AvgPowerBudget", &core::device::Device::getAvgPowerBudget);
+	m_props.addUint8("PowerLimit", &core::device::Device::getPowerLimit, &convertPowerLimit);
+	m_props.addUint16("PeakPowerBudget", &core::device::Device::getPeakPowerBudget, &convertPowerBudget);
+	m_props.addUint16("AvgPowerBudget", &core::device::Device::getAvgPowerBudget, &convertPowerBudget);
 	m_props.addBool("DieSparingCapable", &core::device::Device::isDieSparingCapable);
 	m_props.addBool("DieSparingEnabled", &core::device::Device::isDieSparingEnabled);
 	m_props.addUint8("DieSparingLevel", &core::device::Device::getDieSparingLevel);
@@ -520,5 +520,32 @@ std::string ShowDeviceCommand::getActionRequiredEvents(core::device::Device& dev
 	return formattedEventList;
 }
 
+std::string ShowDeviceCommand::convertWidth(NVM_UINT64 width)
+{
+	std::stringstream widthWithUnits;
+	widthWithUnits << width << " b";
+	return widthWithUnits.str();
+}
+
+std::string ShowDeviceCommand::convertSpeed(NVM_UINT64 speed)
+{
+	std::stringstream speedWithUnits;
+	speedWithUnits << speed << " MHz";
+	return speedWithUnits.str();
+}
+
+std::string ShowDeviceCommand::convertPowerLimit(NVM_UINT8 powerLimit)
+{
+	std::stringstream powerLimitWithUnits;
+	powerLimitWithUnits << unsigned(powerLimit) << " W"; //casting otherwise treated as ascii
+	return powerLimitWithUnits.str();
+}
+
+std::string ShowDeviceCommand::convertPowerBudget(NVM_UINT16 powerBudget)
+{
+	std::stringstream powerBudgetWithUnits;
+	powerBudgetWithUnits << powerBudget << " mW";
+	return powerBudgetWithUnits.str();
+}
 }
 }

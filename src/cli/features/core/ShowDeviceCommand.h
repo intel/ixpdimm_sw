@@ -147,8 +147,11 @@ private:
 	static std::string getJedecStringForInterfaceFormatCode(const NVM_UINT16 ifc);
 	static std::string convertArsStatus(device_ars_status status);
 	static std::string convertSanitizeStatus(device_sanitize_status status);
-
 	static std::string getActionRequiredEvents(core::device::Device &device);
+	static std::string convertWidth(NVM_UINT64 width);
+	static std::string convertSpeed(NVM_UINT64 speed);
+	static std::string convertPowerLimit(NVM_UINT8 powerLimit);
+	static std::string convertPowerBudget(NVM_UINT16 powerBudget);
 
 	framework::ResultBase *m_pResult;
 	framework::PropertyDefinitionList<core::device::Device> m_props;
