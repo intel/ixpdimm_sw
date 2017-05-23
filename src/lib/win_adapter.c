@@ -32,20 +32,59 @@
 
 #include <common/persistence/logging.h>
 #include "nvm_types.h"
-#include "win_leg_adapter.h"
 #include "nfit_utilities.h"
 #include "smbios_utilities.h"
 #include "system.h"
+#include "win_leg_adapter.h"
+#include "win_scm2_adapter.h"
 
+enum DRIVER_TYPE
+{
+	DRIVER_TYPE_UNKNOWN = 0,
+	DRIVER_TYPE_LEGACY = 1,
+	DRIVER_TYPE_SCM2 = 2
+};
+
+enum DRIVER_TYPE get_driver_type()
+{
+	enum DRIVER_TYPE result = DRIVER_TYPE_UNKNOWN;
+
+	if (win_leg_adp_is_supported_driver_available())
+	{
+		result = DRIVER_TYPE_LEGACY;
+	}
+	else if (win_scm_adp_is_supported_driver_available())
+	{
+		result = DRIVER_TYPE_SCM2;
+	}
+
+	return result;
+}
 
 NVM_BOOL is_supported_driver_available()
 {
-	return win_leg_adp_is_supported_driver_available();
+	NVM_BOOL result = (NVM_BOOL) (win_leg_adp_is_supported_driver_available() ||
+			win_scm_adp_is_supported_driver_available());
+	return result;
 }
 
 int get_vendor_driver_revision(NVM_VERSION version_str, const NVM_SIZE str_len)
 {
-	return win_leg_adp_get_vendor_driver_revision(version_str, str_len);
+	int rc = NVM_ERR_UNKNOWN;
+	switch (get_driver_type())
+	{
+		case DRIVER_TYPE_UNKNOWN:
+			rc = NVM_ERR_BADDRIVER;
+			break;
+		case DRIVER_TYPE_LEGACY:
+			rc = win_leg_adp_get_vendor_driver_revision(version_str, str_len);
+			break;
+		case DRIVER_TYPE_SCM2:
+			rc = win_scm_adp_get_vendor_driver_revision(version_str, str_len);
+			break;
+	}
+
+	return rc;
 }
 
 int get_platform_capabilities(struct bios_capabilities *p_capabilities)
@@ -78,7 +117,7 @@ int get_dimm_details(NVM_NFIT_DEVICE_HANDLE device_handle, struct nvm_details *p
 		rc = get_dimm_physical_id_from_handle(device_handle);
 		if (rc >= 0)
 		{
-			NVM_UINT16 physical_id = (NVM_UINT16)rc;
+			NVM_UINT16 physical_id = (NVM_UINT16) rc;
 			rc = get_dimm_details_for_physical_id(physical_id, p_dimm_details);
 		}
 	}
@@ -144,83 +183,291 @@ int get_smbios_inventory(const NVM_UINT8 count, struct nvm_details *p_smbios_inv
 
 int get_interleave_set_count()
 {
-	return win_leg_adp_get_interleave_set_count();
+	int rc = NVM_ERR_UNKNOWN;
+	switch (get_driver_type())
+	{
+		case DRIVER_TYPE_UNKNOWN:
+			rc = NVM_ERR_BADDRIVER;
+			break;
+		case DRIVER_TYPE_LEGACY:
+			rc = win_leg_adp_get_interleave_set_count();
+			break;
+		case DRIVER_TYPE_SCM2:
+			COMMON_LOG_WARN_F("%s() not supported", __FUNCTION__);
+			rc = NVM_ERR_NOTSUPPORTED;
+			break;
+	}
+
+	return rc;
 }
 
 int get_interleave_sets(const NVM_UINT32 count, struct nvm_interleave_set *p_interleaves)
 {
-	return win_leg_adp_get_interleave_sets(count, p_interleaves);
+	int rc = NVM_ERR_UNKNOWN;
+	switch (get_driver_type())
+	{
+		case DRIVER_TYPE_UNKNOWN:
+			rc = NVM_ERR_BADDRIVER;
+			break;
+		case DRIVER_TYPE_LEGACY:
+			rc = win_leg_adp_get_interleave_sets(count, p_interleaves);
+			break;
+		case DRIVER_TYPE_SCM2:
+			COMMON_LOG_WARN_F("%s() not supported", __FUNCTION__);
+			rc = NVM_ERR_NOTSUPPORTED;
+			break;
+	}
+
+	return rc;
 }
 
 int get_namespace_count()
 {
-	return win_leg_adp_get_namespace_count();
+	int rc = NVM_ERR_UNKNOWN;
+	switch (get_driver_type())
+	{
+		case DRIVER_TYPE_UNKNOWN:
+			rc = NVM_ERR_BADDRIVER;
+			break;
+		case DRIVER_TYPE_LEGACY:
+			rc = win_leg_adp_get_namespace_count();
+			break;
+		case DRIVER_TYPE_SCM2:
+			COMMON_LOG_WARN_F("%s() not supported", __FUNCTION__);
+			rc = NVM_ERR_NOTSUPPORTED;
+			break;
+	}
+
+	return rc;
 }
 
 int get_namespaces(const NVM_UINT32 count,
-	struct nvm_namespace_discovery *p_namespaces)
+		struct nvm_namespace_discovery *p_namespaces)
 {
-	return win_leg_adp_get_namespaces(count, p_namespaces);
+	int rc = NVM_ERR_UNKNOWN;
+	switch (get_driver_type())
+	{
+		case DRIVER_TYPE_UNKNOWN:
+			rc = NVM_ERR_BADDRIVER;
+			break;
+		case DRIVER_TYPE_LEGACY:
+			rc = win_leg_adp_get_namespaces(count, p_namespaces);
+			break;
+		case DRIVER_TYPE_SCM2:
+			COMMON_LOG_WARN_F("%s() not supported", __FUNCTION__);
+			rc = NVM_ERR_NOTSUPPORTED;
+			break;
+	}
+
+	return rc;
 }
 
 int get_namespace_details(
 		const NVM_UID namespace_uid,
 		struct nvm_namespace_details *p_details)
 {
-	return win_leg_adp_get_namespace_details(namespace_uid, p_details);
+	int rc = NVM_ERR_UNKNOWN;
+	switch (get_driver_type())
+	{
+		case DRIVER_TYPE_UNKNOWN:
+			rc = NVM_ERR_BADDRIVER;
+			break;
+		case DRIVER_TYPE_LEGACY:
+			rc = win_leg_adp_get_namespace_details(namespace_uid, p_details);
+			break;
+		case DRIVER_TYPE_SCM2:
+			COMMON_LOG_WARN_F("%s() not supported", __FUNCTION__);
+			rc = NVM_ERR_NOTSUPPORTED;
+			break;
+	}
+
+	return rc;
 }
 
 int create_namespace(
 		NVM_UID *p_namespace_uid,
 		const struct nvm_namespace_create_settings *p_settings)
 {
-	return win_leg_adp_create_namespace(p_namespace_uid, p_settings);
+	int rc = NVM_ERR_UNKNOWN;
+	switch (get_driver_type())
+	{
+		case DRIVER_TYPE_UNKNOWN:
+			rc = NVM_ERR_BADDRIVER;
+			break;
+		case DRIVER_TYPE_LEGACY:
+			rc = win_leg_adp_create_namespace(p_namespace_uid, p_settings);
+			break;
+		case DRIVER_TYPE_SCM2:
+			COMMON_LOG_WARN_F("%s() not supported", __FUNCTION__);
+			rc = NVM_ERR_NOTSUPPORTED;
+			break;
+	}
+
+	return rc;
 }
 
 int delete_namespace(const NVM_UID namespace_uid)
 {
-	return win_leg_adp_delete_namespace(namespace_uid);
+	int rc = NVM_ERR_UNKNOWN;
+	switch (get_driver_type())
+	{
+		case DRIVER_TYPE_UNKNOWN:
+			rc = NVM_ERR_BADDRIVER;
+			break;
+		case DRIVER_TYPE_LEGACY:
+			rc = win_leg_adp_delete_namespace(namespace_uid);
+			break;
+		case DRIVER_TYPE_SCM2:
+			COMMON_LOG_WARN_F("%s() not supported", __FUNCTION__);
+			rc = NVM_ERR_NOTSUPPORTED;
+			break;
+	}
+
+	return rc;
 }
 
 int modify_namespace_name(
 		const NVM_UID namespace_uid,
 		const NVM_NAMESPACE_NAME name)
 {
-	return win_leg_adp_modify_namespace_name(namespace_uid, name);
+	int rc = NVM_ERR_UNKNOWN;
+	switch (get_driver_type())
+	{
+		case DRIVER_TYPE_UNKNOWN:
+			rc = NVM_ERR_BADDRIVER;
+			break;
+		case DRIVER_TYPE_LEGACY:
+			rc = win_leg_adp_modify_namespace_name(namespace_uid, name);
+			break;
+		case DRIVER_TYPE_SCM2:
+			COMMON_LOG_WARN_F("%s() not supported", __FUNCTION__);
+			rc = NVM_ERR_NOTSUPPORTED;
+			break;
+	}
+
+	return rc;
 }
 
 int modify_namespace_block_count(
 		const NVM_UID namespace_uid,
 		const NVM_UINT64 block_count)
 {
-	return win_leg_adp_modify_namespace_block_count(namespace_uid, block_count);
+	int rc = NVM_ERR_UNKNOWN;
+	switch (get_driver_type())
+	{
+		case DRIVER_TYPE_UNKNOWN:
+			rc = NVM_ERR_BADDRIVER;
+			break;
+		case DRIVER_TYPE_LEGACY:
+			rc = win_leg_adp_modify_namespace_block_count(namespace_uid, block_count);
+			break;
+		case DRIVER_TYPE_SCM2:
+			COMMON_LOG_WARN_F("%s() not supported", __FUNCTION__);
+			rc = NVM_ERR_NOTSUPPORTED;
+			break;
+	}
+
+	return rc;
 }
 
 int modify_namespace_enabled(const NVM_UID namespace_uid,
-	const enum namespace_enable_state enabled)
+		const enum namespace_enable_state enabled)
 {
-	return win_leg_adp_modify_namespace_enabled(namespace_uid, enabled);
+	int rc = NVM_ERR_UNKNOWN;
+	switch (get_driver_type())
+	{
+		case DRIVER_TYPE_UNKNOWN:
+			rc = NVM_ERR_BADDRIVER;
+			break;
+		case DRIVER_TYPE_LEGACY:
+			rc = win_leg_adp_modify_namespace_enabled(namespace_uid, enabled);
+			break;
+		case DRIVER_TYPE_SCM2:
+			COMMON_LOG_WARN_F("%s() not supported", __FUNCTION__);
+			rc = NVM_ERR_NOTSUPPORTED;
+			break;
+	}
+
+	return rc;
 }
 
 int get_dimm_storage_capacities(const NVM_UINT32 count,
-								struct nvm_storage_capacities *p_capacities)
+		struct nvm_storage_capacities *p_capacities)
 {
-	return win_leg_adp_get_dimm_storage_capacities(count, p_capacities);
+	int rc = NVM_ERR_UNKNOWN;
+	switch (get_driver_type())
+	{
+		case DRIVER_TYPE_UNKNOWN:
+			rc = NVM_ERR_BADDRIVER;
+			break;
+		case DRIVER_TYPE_LEGACY:
+			rc = win_leg_adp_get_dimm_storage_capacities(count, p_capacities);
+			break;
+		case DRIVER_TYPE_SCM2:
+			COMMON_LOG_WARN_F("%s() not supported", __FUNCTION__);
+			rc = NVM_ERR_NOTSUPPORTED;
+			break;
+	}
+
+	return rc;
 }
 
 int get_driver_capabilities(struct nvm_driver_capabilities *p_capabilities)
 {
-	return win_leg_adp_get_driver_capabilities(p_capabilities);
+	int rc = NVM_ERR_UNKNOWN;
+	switch (get_driver_type())
+	{
+		case DRIVER_TYPE_UNKNOWN:
+			rc = NVM_ERR_BADDRIVER;
+			break;
+		case DRIVER_TYPE_LEGACY:
+			rc = win_leg_adp_get_driver_capabilities(p_capabilities);
+			break;
+		case DRIVER_TYPE_SCM2:
+			rc = win_scm_adp_get_driver_capabilities(p_capabilities);
+			break;
+	}
+
+	return rc;
 }
 
 int ioctl_passthrough_cmd(struct fw_cmd *p_cmd)
 {
-	return win_leg_adp_ioctl_passthrough_cmd(p_cmd);
+	int rc = NVM_ERR_UNKNOWN;
+	switch (get_driver_type())
+	{
+		case DRIVER_TYPE_UNKNOWN:
+			rc = NVM_ERR_BADDRIVER;
+			break;
+		case DRIVER_TYPE_LEGACY:
+			rc = win_leg_adp_ioctl_passthrough_cmd(p_cmd);
+			break;
+		case DRIVER_TYPE_SCM2:
+			rc = win_scm_adp_ioctl_passthrough_cmd(p_cmd);
+			break;
+	}
+
+	return rc;
 }
 
 int get_dimm_power_limited(NVM_UINT16 socket_id)
 {
-	return win_leg_adp_get_dimm_power_limited(socket_id);
+	int rc = NVM_ERR_UNKNOWN;
+	switch (get_driver_type())
+	{
+		case DRIVER_TYPE_UNKNOWN:
+			rc = NVM_ERR_BADDRIVER;
+			break;
+		case DRIVER_TYPE_LEGACY:
+			rc = win_leg_adp_get_dimm_power_limited(socket_id);
+			break;
+		case DRIVER_TYPE_SCM2:
+			COMMON_LOG_WARN_F("%s() not supported", __FUNCTION__);
+			rc = NVM_ERR_NOTSUPPORTED;
+			break;
+	}
+
+	return rc;
 }
 
 int get_job_count()
@@ -231,11 +478,41 @@ int get_job_count()
 
 int get_test_result_count(enum driver_diagnostic diagnostic)
 {
-	return win_leg_adp_get_test_result_count(diagnostic);
+	int rc = NVM_ERR_UNKNOWN;
+	switch (get_driver_type())
+	{
+		case DRIVER_TYPE_UNKNOWN:
+			rc = NVM_ERR_BADDRIVER;
+			break;
+		case DRIVER_TYPE_LEGACY:
+			rc = win_leg_adp_get_test_result_count(diagnostic);
+			break;
+		case DRIVER_TYPE_SCM2:
+			COMMON_LOG_WARN_F("%s() not supported", __FUNCTION__);
+			rc = NVM_ERR_NOTSUPPORTED;
+			break;
+	}
+
+	return rc;
 }
 
 int run_test(enum driver_diagnostic diagnostic, const NVM_UINT32 count,
-	struct health_event results[])
+		struct health_event results[])
 {
-	return win_leg_adp_run_test(diagnostic, count, results);
+	int rc = NVM_ERR_UNKNOWN;
+	switch (get_driver_type())
+	{
+		case DRIVER_TYPE_UNKNOWN:
+			rc = NVM_ERR_BADDRIVER;
+			break;
+		case DRIVER_TYPE_LEGACY:
+			rc = win_leg_adp_run_test(diagnostic, count, results);
+			break;
+		case DRIVER_TYPE_SCM2:
+			COMMON_LOG_WARN_F("%s() not supported", __FUNCTION__);
+			rc = NVM_ERR_NOTSUPPORTED;
+			break;
+	}
+
+	return rc;
 }
