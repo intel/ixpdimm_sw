@@ -85,8 +85,8 @@ struct pt_output_identify_dimm
 	unsigned short interface_format_code_extra;
 	unsigned short api_ver;
 	unsigned char reserved3[58];
-} __attribute__((packed));
 
+} __attribute__((packed));
 struct pt_output_identify_dimm_characteristics
 {
 	unsigned short controller_temp_shutdown_threshold;

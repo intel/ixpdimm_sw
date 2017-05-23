@@ -223,9 +223,8 @@ enum return_code
 								// a file system.
 	NVM_ERR_FWALREADYSTAGED = -55, 	// A firmware image is already staged for execution.
 									// A power cycle is required before another can be staged.
-	NVM_ERR_BADNFIT = -56 // The NFIT table is invalid.
-
-
+	NVM_ERR_BADNFIT = -56, // The NFIT table is invalid.
+	NVM_ERR_TIMEOUT = -57 // The operation timed out.
 };
 
 /*
