@@ -223,8 +223,7 @@ int get_dimm_free_storage_capacity(NVM_NFIT_DEVICE_HANDLE handle,
 		if ((rc = execute_ioctl(sizeof (ioctl_data), &ioctl_data, IOCTL_CR_GET_DIMM_DETAILS))
 			== NVM_SUCCESS && (rc = ind_err_to_nvm_lib_err(ioctl_data.ReturnCode)) == NVM_SUCCESS)
 		{
-			*free_storage_capacity = USABLE_CAPACITY_BYTES(
-				ioctl_data.OutputPayload.FreeBlockCapacity);
+			*free_storage_capacity = ioctl_data.OutputPayload.FreeBlockCapacity;
 		}
 	}
 
