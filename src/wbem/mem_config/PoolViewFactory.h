@@ -144,7 +144,7 @@ namespace wbem
 			/*
 			 * Get if the encryption of a pool is encrypted, not, or both
 			 */
-			std::string getEncryptionCapable(pool *pPool);
+			bool getEncryptionCapable(pool *pPool);
 
 			/*
 			 * Count number of namespaces on a pool
@@ -158,7 +158,7 @@ namespace wbem
 			 */
 			void lazyInitNs();
 
-			std::string getEncryptionEnabled(const struct pool * pPool);
+			bool getEncryptionEnabled(const struct pool * pPool);
 
 			std::string getInterleaveSetFormatStr(const struct interleave_format &format);
 
