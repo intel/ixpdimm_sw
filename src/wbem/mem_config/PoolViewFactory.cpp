@@ -135,15 +135,15 @@ throw(wbem::framework::Exception)
 
 			if (containsAttribute(ENCRYPTIONCAPABLE_KEY, attributes))
 			{
-				std::string encryption = getEncryptionCapable(pPool);
-				framework::Attribute a(encryption, false);
+				bool encryptionCapable = getEncryptionCapable(pPool);
+				framework::Attribute a(encryptionCapable, false);
 				pInstance->setAttribute(ENCRYPTIONCAPABLE_KEY, a, attributes);
 			}
 
 			if (containsAttribute(ENCRYPTIONENABLED_KEY, attributes))
 			{
-				std::string encryption = getEncryptionEnabled(pPool);
-				framework::Attribute a(encryption, false);
+				bool encryptionEnabled = getEncryptionEnabled(pPool);
+				framework::Attribute a(encryptionEnabled, false);
 				pInstance->setAttribute(ENCRYPTIONENABLED_KEY, a, attributes);
 			}
 
@@ -424,26 +424,20 @@ std::string wbem::mem_config::PoolViewFactory::getEraseCapable(pool *pPool)
 	return result;
 }
 
-std::string wbem::mem_config::PoolViewFactory::getEncryptionCapable(pool *pPool)
+bool wbem::mem_config::PoolViewFactory::getEncryptionCapable(pool *pPool)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	std::string result = NO;
-	if (pPool->encryption_capable)
-	{
-		result = YES;
-	}
-
-	return result;
+	return pPool->encryption_capable;
 }
 
-std::string wbem::mem_config::PoolViewFactory::getEncryptionEnabled(const struct pool *pPool)
+bool wbem::mem_config::PoolViewFactory::getEncryptionEnabled(const struct pool *pPool)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	std::string result = NO;
+	bool result = false;
 
 	try
 	{
-		for (NVM_UINT16 i = 0; i < pPool->dimm_count && result == NO; i++)
+		for (NVM_UINT16 i = 0; i < pPool->dimm_count && result == false; i++)
 		{
 			struct device_discovery device = m_nvmLib.getDeviceDiscovery(pPool->dimms[i]);
 
@@ -453,7 +447,7 @@ std::string wbem::mem_config::PoolViewFactory::getEncryptionEnabled(const struct
 			case LOCK_STATE_LOCKED:
 			case LOCK_STATE_FROZEN:
 			case LOCK_STATE_PASSPHRASE_LIMIT:
-				result = YES;
+				result = true;
 				break;
 			case LOCK_STATE_DISABLED:
 			case LOCK_STATE_UNKNOWN:
