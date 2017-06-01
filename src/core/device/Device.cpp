@@ -430,7 +430,7 @@ bool Device::isMemoryModeCapable()
 bool Device::isStorageModeCapable()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	return getDiscovery().device_capabilities.storage_mode_capable;
+	return false;
 }
 
 std::vector<NVM_UINT16> Device::getMemoryCapabilities()

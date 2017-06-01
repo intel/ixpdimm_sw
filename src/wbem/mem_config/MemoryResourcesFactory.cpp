@@ -74,7 +74,6 @@ void wbem::mem_config::MemoryResourcesFactory::populateAttributeList(
 	attributes.push_back(wbem::RESERVED_KEY);
 	attributes.push_back(wbem::MEMORYCAPACITY_KEY);
 	attributes.push_back(wbem::APP_DIRECT_CAPACITY_KEY);
-	attributes.push_back(wbem::STORAGECAPACITY_KEY);
 	attributes.push_back(wbem::UNCONFIGUREDCAPACITY_KEY);
 	attributes.push_back(wbem::INACCESSIBLECAPACITY_KEY);
 	attributes.push_back(wbem::RESERVEDCAPACITY_KEY);
@@ -94,7 +93,6 @@ void wbem::mem_config::MemoryResourcesFactory::toInstance(core::system::SystemMe
 	ADD_ATTRIBUTE(instance, attributes, CAPACITY_KEY, framework::UINT64, memoryResourcesInfo.getTotalCapacity());
 	ADD_ATTRIBUTE(instance, attributes, MEMORYCAPACITY_KEY, framework::UINT64, memoryResourcesInfo.getTotalMemoryCapacity());
 	ADD_ATTRIBUTE(instance, attributes, APP_DIRECT_CAPACITY_KEY, framework::UINT64, memoryResourcesInfo.getTotalAppDirectCapacity());
-	ADD_ATTRIBUTE(instance, attributes, STORAGECAPACITY_KEY, framework::UINT64, memoryResourcesInfo.getTotalStorageCapacity());
 	ADD_ATTRIBUTE(instance, attributes, UNCONFIGUREDCAPACITY_KEY, framework::UINT64, memoryResourcesInfo.getTotalUnconfiguredCapacity());
 	ADD_ATTRIBUTE(instance, attributes, INACCESSIBLECAPACITY_KEY, framework::UINT64, memoryResourcesInfo.getTotalInaccessibleCapacity());
 	ADD_ATTRIBUTE(instance, attributes, RESERVEDCAPACITY_KEY, framework::UINT64, memoryResourcesInfo.getTotalReservedCapacity());
