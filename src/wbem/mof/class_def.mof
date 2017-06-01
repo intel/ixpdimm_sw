@@ -179,8 +179,8 @@ class <NVM_WBEM_PREFIX>NVDIMM : CIM_PhysicalMemory
 	[Description (
 	"The memory types supported by the DIMM."
  	),
-	ValueMap { "0", "1", "2" },
-	Values { "MemoryModeEnabled", "StorageModeEnabled", "AppDirectModeEnabled" }]
+	ValueMap { "0", "2" },
+	Values { "MemoryModeEnabled", "AppDirectModeEnabled" }]
 	uint16 MemoryTypeCapabilities[];
 	[Description (
 	"Whether the DIMM supports die sparing."
@@ -667,7 +667,6 @@ class <NVM_WBEM_PREFIX>MemoryResources : CIM_ResourcePool
 {
 	uint64 MemoryCapacity;
 	uint64 AppDirectCapacity;
-	uint64 StorageCapacity;
 	uint64 UnconfiguredCapacity;
 	uint64 InaccessibleCapacity;
 	uint64 ReservedCapacity;
@@ -858,8 +857,8 @@ class <NVM_WBEM_PREFIX>NamespaceSettings : CIM_NamespaceSettings
 	[Description (
 	"The underlying type(s) of persistent memory capacity."
  	),
-	ValueMap { "0", "1", "2", "3" },
-	Values { "Unknown", "Storage", "AppDirect", "AppDirectNotInterleaved" }]
+	ValueMap { "0", "2", "3" },
+	Values { "Unknown", "AppDirect", "AppDirectNotInterleaved" }]
 	uint16 PersistentMemoryType[];
 };
 
@@ -944,8 +943,8 @@ class <NVM_WBEM_PREFIX>PersistentConfigurationCapabilities : CIM_PersistentConfi
 	[Description (
 	"The supported underlying type(s) of persistent memory capacity."
  	),
-	ValueMap { "1", "2", "3" },
-	Values { "Storage", "AppDirect", "AppDirectNotInterleaved" }]
+	ValueMap { "2", "3" },
+	Values { "AppDirect", "AppDirectNotInterleaved" }]
 	uint16 SupportedPersistentMemoryTypes[];
 };
 

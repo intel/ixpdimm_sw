@@ -269,12 +269,10 @@ NVM_UINT16 wbem::pmem_config::NamespaceSettingsFactory::namespaceResourceTypeToV
 	NVM_UINT16 typeVal;
 	switch (type)
 	{
-		case NAMESPACE_TYPE_STORAGE:
-			typeVal = NS_RESOURCETYPE_BLOCK_ADDRESSABLE;
-			break;
 		case NAMESPACE_TYPE_APP_DIRECT:
 			typeVal = NS_RESOURCETYPE_BYTE_ADDRESSABLE;
 			break;
+		case NAMESPACE_TYPE_STORAGE:
 		default:
 			typeVal = 0;
 			break;
@@ -284,26 +282,26 @@ NVM_UINT16 wbem::pmem_config::NamespaceSettingsFactory::namespaceResourceTypeToV
 
 NVM_UINT16 wbem::pmem_config::NamespaceSettingsFactory::getNamespacePMType(const namespace_details &details)
 {
-        LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+		LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-        NVM_UINT16 pmType = NSSETTINGS_PMTYPE_UNKNOWN;
+		NVM_UINT16 pmType = NSSETTINGS_PMTYPE_UNKNOWN;
 
-        if (details.type == NAMESPACE_TYPE_STORAGE)
-        {
-                pmType = NSSETTINGS_PMTYPE_STORAGE;
-        }
-        else if (details.type == NAMESPACE_TYPE_APP_DIRECT)
-        {
-                if (details.interleave_format.ways == INTERLEAVE_WAYS_1)
-                {
-                        pmType = NSSETTINGS_PMTYPE_APPDIRECT_NOTINTERLEAVED;
-                }
-                else if (details.interleave_format.ways != INTERLEAVE_WAYS_0) // 0-way interleave is impossible
-                {
-                        pmType = NSSETTINGS_PMTYPE_APPDIRECT;
-                }
-        }
+		if (details.type == NAMESPACE_TYPE_STORAGE)
+		{
+			pmType = NSSETTINGS_PMTYPE_STORAGE;
+		}
+		else if (details.type == NAMESPACE_TYPE_APP_DIRECT)
+		{
+			if (details.interleave_format.ways == INTERLEAVE_WAYS_1)
+			{
+				pmType = NSSETTINGS_PMTYPE_APPDIRECT_NOTINTERLEAVED;
+			}
+			else if (details.interleave_format.ways != INTERLEAVE_WAYS_0) // 0-way interleave is impossible
+			{
+				pmType = NSSETTINGS_PMTYPE_APPDIRECT;
+			}
+		}
 
-        return pmType;
+		return pmType;
 }
 

@@ -83,7 +83,6 @@ throw (framework::Exception)
 		syncActions.push_back(3); // ReturnToPool
 		syncActions.push_back(4); // ModifyNamespace
 		framework::UINT16_LIST pmemTypes;
-		pmemTypes.push_back(NSSETTINGS_PMTYPE_STORAGE);
 		pmemTypes.push_back(NSSETTINGS_PMTYPE_APPDIRECT);
 		pmemTypes.push_back(NSSETTINGS_PMTYPE_APPDIRECT_NOTINTERLEAVED);
 
