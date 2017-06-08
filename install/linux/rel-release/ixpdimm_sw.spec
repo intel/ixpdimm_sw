@@ -218,6 +218,7 @@ fi
 
 %preun -n ixpdimm-monitor
 %systemd_preun stop ixpdimm-monitor.service
+rm %{_sharedstatedir}/%{name}/*.dat.log
 
 %postun -n ixpdimm-monitor
 %systemd_postun_with_restart ixpdimm-monitor.service
