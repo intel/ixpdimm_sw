@@ -731,21 +731,26 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::getPassphraseProperties(
 	}
 	else
 	{ // passphrase values provided via command line
-		if (pPassphrase)
+		pResult = validateCommandLinePropertiesPassphraseFormat(parsedCommand, (pPassphrase != NULL));
+		if (!pResult)
 		{
-			*pPassphrase = getPassphrasePropertyValueFromCommandLine(PASSPHRASE_PROPERTYNAME,
+			if (pPassphrase)
+			{
+				*pPassphrase = getPassphrasePropertyValueFromCommandLine(PASSPHRASE_PROPERTYNAME,
 					parsedCommand, PASSPHRASE_PROMPT);
-		}
+			}
 
-		newPassphrase = getPassphrasePropertyValueFromCommandLine(NEWPASSPHRASE_PROPERTYNAME,
+			newPassphrase = getPassphrasePropertyValueFromCommandLine(NEWPASSPHRASE_PROPERTYNAME,
 				parsedCommand, NEW_PASSPHRASE_PROMPT);
 
-		confirmPassphrase = getPassphrasePropertyValueFromCommandLine(CONFIRMPASSPHRASE_PROPERTYNAME,
+			confirmPassphrase = getPassphrasePropertyValueFromCommandLine(CONFIRMPASSPHRASE_PROPERTYNAME,
 				parsedCommand, CONFIRM_NEW_PASSPHRASE_PROMPT);
+		}
 	}
 
 	return pResult;
 }
+
 
 std::string cli::nvmcli::SystemFeature::getPassphrasePropertyValueFromCommandLine(
 		const std::string &propertyName,
@@ -781,6 +786,35 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::validateCommandLinePrope
 	return pResult;
 }
 
+cli::framework::ResultBase *cli::nvmcli::SystemFeature::validateCommandLinePropertiesPassphraseFormat(
+	const framework::ParsedCommand &parsedCommand,
+	bool checkPassphrase)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	std::string newPassphrase = framework::Parser::getPropertyValue(parsedCommand, NEWPASSPHRASE_PROPERTYNAME);
+	std::string confirmPassphrase = framework::Parser::getPropertyValue(parsedCommand, CONFIRMPASSPHRASE_PROPERTYNAME);
+
+	if (checkPassphrase)
+	{
+		std::string passphrase = framework::Parser::getPropertyValue(parsedCommand, PASSPHRASE_PROPERTYNAME);
+
+		if ((!newPassphrase.empty() && !confirmPassphrase.empty() && !passphrase.empty()) ||
+			(newPassphrase.empty()  && confirmPassphrase.empty()  && passphrase.empty()))
+		{
+			return NULL;
+		}
+	}
+	else
+	{
+		if (newPassphrase.empty() == confirmPassphrase.empty())
+		{
+			return NULL;
+		}
+	}
+
+	return new cli::framework::SyntaxErrorResult(TRS(INVALID_NEW_OR_CONFIRM_PASSPHRASE_FORMAT_MSG));
+}
 /*
  * Change passphrase on one or more dimms
  */
