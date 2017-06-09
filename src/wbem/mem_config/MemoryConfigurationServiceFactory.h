@@ -297,11 +297,16 @@ class NVM_API MemoryConfigurationServiceFactory : public framework_interface::Nv
 		bool areNewMemoryOnlySettingsAllTheSame
 				(framework::STR_LIST settingsStrings);
 
+		void updateRequestForDimm(const struct config_goal &goal, const NVM_UINT16 socket, const NVM_UINT32 handle,
+					const NVM_UINT64 dimm_size, core::memory_allocator::MemoryAllocationRequest &request);
+		void populateRequestFromPath(const std::string &path, const std::vector<NVM_UINT32> &handles,
+					core::memory_allocator::MemoryAllocationRequest &request);
+
 		/*
 		 * Verifies that the DIMM list won't break an existing config or leave
 		 * a socket partially unconfigured.
 		 */
-		void validateDimmList(const std::vector<std::string> dimmUids);
+		void validateDimmList(const std::string &path, const std::vector<std::string> dimmUids);
 
 		/*
 		 * Extract the socketId from the SystemProcessorRef

@@ -470,13 +470,6 @@ int get_next_config_input_sequence_number(const struct device_discovery *p_dev_e
 		NVM_UINT32 *p_seq_num);
 
 /*
- * Write the dimm configuration to the file specified
- */
-int write_dimm_config(const struct device_discovery *p_discovery,
-		const struct config_goal *p_goal,
-		const NVM_PATH path, const NVM_SIZE path_len, const NVM_BOOL append);
-
-/*
  * Get the next interleave index
  */
 int get_dimm_interleave_info_max_set_index(const NVM_UID device_uid,
