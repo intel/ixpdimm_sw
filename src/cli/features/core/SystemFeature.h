@@ -89,6 +89,8 @@ static const std::string MODIFY_DEV_PROMPT = N_TR(
 		"Change settings for " NVM_DIMM_NAME " %s?"); //!< prompt for user if not forced
 static const std::string PASSPHRASE_FILE_AND_COMMAND_LINE_PARAMS_MSG =
 		N_TR("An empty string is expected for the passphrase properties when using the source option.");
+static const std::string INVALID_NEW_OR_CONFIRM_PASSPHRASE_FORMAT_MSG =
+N_TR("The same passphrase input mechanism must be used for all passphrases in the command.");
 
 static const std::string STRING_PARAM = "string";
 
@@ -192,6 +194,10 @@ private:
 
 		cli::framework::ResultBase *validateCommandLinePropertiesEmptyWhenUsingPassphraseFile(
 				const framework::ParsedCommand &parsedCommand);
+
+		cli::framework::ResultBase *validateCommandLinePropertiesPassphraseFormat(
+				const framework::ParsedCommand &parsedCommand,
+				bool checkPassphrase);
 
 		std::string getPassphrasePropertyValueFromCommandLine(
 				const std::string &propertyName,
