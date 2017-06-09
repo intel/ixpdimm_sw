@@ -64,12 +64,12 @@ class NVM_API MemoryAllocator
 		virtual void allocate(struct MemoryAllocationLayout &layout);
 
 		static NVM_UINT64 getTotalCapacitiesOfRequestedDimmsinB(const MemoryAllocationRequest& request);
+		void validateRequest(const struct MemoryAllocationRequest &request);
 
 	protected:
 		void validateLayout(
 				const struct MemoryAllocationRequest &request,
 				const MemoryAllocationLayout layout);
-		void validateRequest(const struct MemoryAllocationRequest &request);
 		void populateRequestRules();
 		void populatePostLayoutChecks();
 		void deleteRequestRules();

@@ -63,6 +63,8 @@
 #include <core/memory_allocator/RulePartialSocketConfigured.h>
 #include <core/device/DeviceHelper.h>
 #include <core/exceptions/NvmExceptionBadRequest.h>
+#include <string/x_str.h>
+#include <string/s_str.h>
 
 wbem::mem_config::MemoryConfigurationServiceFactory::MemoryConfigurationServiceFactory()
 	throw (wbem::framework::Exception) :
@@ -994,7 +996,7 @@ void wbem::mem_config::MemoryConfigurationServiceFactory::importDimmConfigsFromP
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	validateDimmList(dimms);
+	validateDimmList(path, dimms);
 
 	// for each dimm, load the goal
 	for (std::vector<std::string>::const_iterator dimmIter = dimms.begin();
@@ -1012,12 +1014,70 @@ void wbem::mem_config::MemoryConfigurationServiceFactory::importDimmConfigsFromP
 	}
 }
 
+void wbem::mem_config::MemoryConfigurationServiceFactory::updateRequestForDimm(
+	const struct config_goal &goal, const NVM_UINT16 socket, const NVM_UINT32 handle,
+	const NVM_UINT64 dimm_size, core::memory_allocator::MemoryAllocationRequest &request)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	request.setMemoryModeCapacityGiB(goal.memory_size + request.getMemoryModeCapacityGiB());
+	core::memory_allocator::AppDirectExtent newExtent = request.getAppDirectExtent();
+	newExtent.capacityGiB += goal.app_direct_1_size;
+	newExtent.mirrored = newExtent.mirrored || goal.app_direct_1_settings.mirrored;
+	newExtent.channel = goal.app_direct_1_settings.interleave.channel;
+	newExtent.imc = goal.app_direct_1_settings.interleave.imc;
+	request.setAppDirectExtent(newExtent);
+	if (dimm_size - goal.memory_size - goal.app_direct_1_size > 0)
+	{
+		request.setStorageRemaining(true);
+	}
+}
+
+void wbem::mem_config::MemoryConfigurationServiceFactory::populateRequestFromPath(
+		const std::string &path, const std::vector<NVM_UINT32> &handles,
+		core::memory_allocator::MemoryAllocationRequest &request)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	FILE *p_file = NULL;
+	p_file = open_file(path.c_str(), path.length()  + 1, "r");
+	if (!p_file)
+	{
+		throw exception::NvmExceptionLibError(NVM_ERR_BADFILE);
+	}
+	if (lock_file(p_file, FILE_LOCK_MODE_READ) != COMMON_SUCCESS)
+	{
+		fclose(p_file);
+		throw exception::NvmExceptionLibError(NVM_ERR_BADFILE);
+	}
+	NVM_UINT16 socket = 0;
+	NVM_UINT32 handle = 0;
+	NVM_UINT64 dimm_size = 0;
+	struct config_goal goal;
+	memset(&goal, 0, sizeof (goal));
+	while(read_dimm_config(p_file, &goal, &socket, &handle, &dimm_size) > 0)
+	{
+		for (std::vector<NVM_UINT32>::const_iterator iter = handles.begin();
+			iter != handles.end(); iter++)
+		{
+			if (handle == *iter)
+			{
+				updateRequestForDimm(goal, socket, handle, dimm_size, request);
+				break;
+			}
+		}
+
+	}
+	fclose(p_file);
+}
+
 void wbem::mem_config::MemoryConfigurationServiceFactory::validateDimmList(
-		const std::vector<std::string> dimmUids)
+		const std::string &path, const std::vector<std::string> dimmUids)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	core::memory_allocator::MemoryAllocationRequest request;
+	std::vector<NVM_UINT32> handles;
 
 	for (std::vector<std::string>::const_iterator uidIter = dimmUids.begin();
 			uidIter != dimmUids.end(); uidIter++)
@@ -1025,14 +1085,14 @@ void wbem::mem_config::MemoryConfigurationServiceFactory::validateDimmList(
 		struct device_discovery discovery;
 		memset(&discovery, 0, sizeof (discovery));
 		m_pApi->getDeviceDiscoveryForDimm(*uidIter, discovery);
-
+		handles.push_back(discovery.device_handle.handle);
 		request.addDimm(core::memory_allocator::MemoryAllocationUtil::deviceDiscoveryToDimm(discovery));
 	}
 
-	std::vector<struct device_discovery> manageableDevices;
-	m_pApi->getManageableDimms(manageableDevices);
-	core::memory_allocator::RulePartialSocketConfigured dimmListValidationRule(manageableDevices, core::NvmLibrary::getNvmLibrary());
-	dimmListValidationRule.verify(request);
+	populateRequestFromPath(path, handles, request);
+	core::memory_allocator::MemoryAllocator *pAllocator = core::memory_allocator::MemoryAllocator::getNewMemoryAllocator();
+	pAllocator->validateRequest(request);
+	delete (pAllocator);
 }
 
 std::vector<std::string>

@@ -42,6 +42,9 @@
 #include <cr_i18n.h>
 #include <os/os_adapter.h>
 #include <math.h>
+#include <string/s_str.h>
+#include <string/x_str.h>
+#include <file_ops/file_ops_adapter.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -95,6 +98,32 @@ extern "C"
 		} \
 		a %= b; \
 	}
+
+/*
+ * Line format for a single dimm's configuration in a file.
+ * SocketID
+ * DeviceHandle
+ * Capacity (GiB)
+ * MemorySize (GiB)
+ * AppDirect1Size (GiB)
+ * AppDirect1Format
+ * AppDirect1Mirrored
+ * AppDirect1Index
+ * AppDirect2Size (GiB)
+ * AppDirect2Format
+ * AppDirect2Mirrored
+ * AppDirect2Index
+ */
+#define	config_line_format	"%hu,%u,%llu,%llu,%llu,%u,%hhu,%hu,%llu,%u,%hhu,%hu\n"
+
+#define	READ_CONFIG_TOK(pLine, delim, trans, pDest, bad) { \
+	char *str = x_strtok(&pLine, delim); \
+	const char *pEnd; \
+	if (str == NULL || trans(str, strlen(str), &pEnd, pDest) != strlen(str)) \
+	{ \
+		bad = 1; \
+	} \
+}
 
 /*
  * Convert number to manufacturer ID array
@@ -591,6 +620,179 @@ static inline int CommonErrorToLibError(int commonError)
 			break;
 	}
 	return libError;
+}
+
+static inline size_t str_to_interleave_format_struct(const char *const str, size_t str_len,
+		const char **pp_end, struct interleave_format *p_interleave)
+{
+	COMMON_LOG_ENTRY();
+	NVM_UINT32 format = 0;
+	size_t rc = s_strtoui(str, str_len, pp_end, &format);
+	if (rc == strlen(str))
+	{
+		interleave_format_to_struct(format, p_interleave);
+	}
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+static inline int read_dimm_config(FILE *p_file, struct config_goal *p_goal,
+		NVM_UINT16 *p_socket, NVM_UINT32 *p_dimm_handle,
+		NVM_UINT64 *p_dimm_size_gb)
+{
+	COMMON_LOG_ENTRY();
+	int rc = 0; // end of file
+
+	char line[NVM_MAX_CONFIG_LINE_LEN];
+	while (fgets(line, NVM_MAX_CONFIG_LINE_LEN, p_file) != NULL)
+	{
+		// trim any leading white space
+		s_strtrim_left(line, NVM_MAX_CONFIG_LINE_LEN);
+		if (line[0] != '#')
+		{
+			NVM_BOOL bad_format = 0;
+			const char *delim = ",\n";
+			char *pLine = line;
+
+			// removing carriage return to make Windows created
+			// file Unix compatible
+			for (int i = 0, j = 0; pLine[i] != '\0'; i++)
+			{
+				if (pLine[i] != '\r')
+				{
+					pLine[j++] = pLine[i];
+				}
+			}
+
+
+			READ_CONFIG_TOK(pLine, delim, s_strtous, p_socket, bad_format);
+			READ_CONFIG_TOK(pLine, delim, s_strtoui, p_dimm_handle, bad_format);
+			READ_CONFIG_TOK(pLine, delim, s_strtoull, p_dimm_size_gb, bad_format);
+			READ_CONFIG_TOK(pLine, delim, s_strtoull, &p_goal->memory_size, bad_format);
+			READ_CONFIG_TOK(pLine, delim, s_strtoull, &p_goal->app_direct_1_size, bad_format);
+			READ_CONFIG_TOK(pLine, delim, str_to_interleave_format_struct,
+				&p_goal->app_direct_1_settings.interleave, bad_format);
+			READ_CONFIG_TOK(pLine, delim, s_digitstrtouc,
+				&p_goal->app_direct_1_settings.mirrored, bad_format);
+			READ_CONFIG_TOK(pLine, delim, s_strtous, &p_goal->app_direct_1_set_id, bad_format);
+			READ_CONFIG_TOK(pLine, delim, s_strtoull, &p_goal->app_direct_2_size, bad_format);
+			READ_CONFIG_TOK(pLine, delim, str_to_interleave_format_struct,
+				&p_goal->app_direct_2_settings.interleave, bad_format);
+			READ_CONFIG_TOK(pLine, delim, s_digitstrtouc,
+				&p_goal->app_direct_2_settings.mirrored, bad_format);
+			READ_CONFIG_TOK(pLine, delim, s_strtous, &p_goal->app_direct_2_set_id, bad_format);
+
+			// make the load command compatible with future file formats that include extra data
+			// in the csv list by ignoring extra data at the end of line if encountered
+			if (pLine != NULL && strlen(pLine) != 0)
+			{
+				COMMON_LOG_INFO("Config file has extra data that will be ignored.");
+			}
+
+			if (bad_format)
+			{
+				COMMON_LOG_ERROR_F("Found a badly formatted line in the config file '%s'",
+					line);
+				rc = NVM_ERR_BADFILE;
+			}
+			else
+			{
+				rc = 1;
+			}
+			break;
+		}
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+/*
+ * Write the dimm config to the specified file
+ */
+static inline int write_dimm_config(const struct device_discovery *p_discovery,
+		const struct config_goal *p_goal,
+		const NVM_PATH path, const NVM_SIZE path_len, const NVM_BOOL append)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	FILE *p_file;
+	// set the mode
+	char mode[2];
+	if (append)
+	{
+		s_strcpy(mode, "a", sizeof (mode));
+	}
+	else
+	{
+		s_strcpy(mode, "w", sizeof (mode));
+	}
+
+	if ((p_file = open_file(path, path_len, mode)) == NULL)
+	{
+		COMMON_LOG_ERROR_F("Failed to open file %s", path);
+		rc = NVM_ERR_BADFILE;
+	}
+	else
+	{
+		if (lock_file(p_file, FILE_LOCK_MODE_WRITE) != COMMON_SUCCESS)
+		{
+			COMMON_LOG_ERROR_F("Failed to lock file %s for writing", path);
+			rc = NVM_ERR_BADFILE;
+		}
+		else
+		{
+			// write the header
+			if (!append)
+			{
+				fprintf(p_file,
+						"#SocketID,"
+						"DimmHandle,"
+						"Capacity,"
+						"MemorySize,"
+						"AppDirect1Size,"
+						"AppDirect1Format,"
+						"AppDirect1Mirrored,"
+						"AppDirect1Index,"
+						"AppDirect2Size,"
+						"AppDirect2Format,"
+						"AppDirect2Mirrored,"
+						"AppDirect2Index\n");
+			}
+
+			// DIMM capacity to GiB
+			NVM_UINT64 dimm_size_gb = (p_discovery->capacity / BYTES_PER_GIB);
+
+			// convert interleave format structs to number
+			NVM_UINT32 p1_format = 0;
+			NVM_UINT32 p2_format = 0;
+			interleave_struct_to_format(&p_goal->app_direct_1_settings.interleave,
+					&p1_format);
+			interleave_struct_to_format(&p_goal->app_direct_2_settings.interleave,
+					&p2_format);
+
+			// write to the file
+			fprintf(p_file, config_line_format,
+					p_discovery->socket_id,
+					p_discovery->device_handle.handle,
+					dimm_size_gb,
+					p_goal->memory_size,
+					p_goal->app_direct_1_size,
+					p1_format,
+					p_goal->app_direct_1_settings.mirrored,
+					p_goal->app_direct_1_set_id,
+					p_goal->app_direct_2_size,
+					p2_format,
+					p_goal->app_direct_2_settings.mirrored,
+					p_goal->app_direct_2_set_id);
+
+			lock_file(p_file, FILE_LOCK_MODE_UNLOCK);
+		}
+		fclose(p_file);
+	}
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
 }
 
 #ifdef __cplusplus

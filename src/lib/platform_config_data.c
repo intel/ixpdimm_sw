@@ -46,23 +46,6 @@
 #include "device_utilities.h"
 #include "nvm_context.h"
 
-/*
- * Line format for a single dimm's configuration in a file.
- * SocketID
- * DeviceHandle
- * Capacity (GiB)
- * MemorySize (GiB)
- * AppDirect1Size (GiB)
- * AppDirect1Format
- * AppDirect1Mirrored
- * AppDirect1Index
- * AppDirect2Size (GiB)
- * AppDirect2Format
- * AppDirect2Mirrored
- * AppDirect2Index
- */
-#define	config_line_format	"%hu,%u,%llu,%llu,%llu,%u,%hhu,%hu,%llu,%u,%hhu,%hu\n"
-
 #define	DEBUG_PCD(fmt, ...) \
 	COMMON_LOG_DEBUG_F(fmt, __VA_ARGS__)
 	// Can use this instead ot print PCD to stdout
@@ -1034,94 +1017,6 @@ int get_next_config_input_sequence_number(const struct device_discovery *p_disco
 
 	return rc;
 }
-
-
-/*
- * Write the dimm config to the specified file
- */
-int write_dimm_config(const struct device_discovery *p_discovery,
-		const struct config_goal *p_goal,
-		const NVM_PATH path, const NVM_SIZE path_len, const NVM_BOOL append)
-{
-	int rc = NVM_SUCCESS;
-
-	FILE *p_file;
-	// set the mode
-	char mode[2];
-	if (append)
-	{
-		s_strcpy(mode, "a", sizeof (mode));
-	}
-	else
-	{
-		s_strcpy(mode, "w", sizeof (mode));
-	}
-
-	if ((p_file = open_file(path, path_len, mode)) == NULL)
-	{
-		COMMON_LOG_ERROR_F("Failed to open file %s", path);
-		rc = NVM_ERR_BADFILE;
-	}
-	else
-	{
-		if (lock_file(p_file, FILE_LOCK_MODE_WRITE) != COMMON_SUCCESS)
-		{
-			COMMON_LOG_ERROR_F("Failed to lock file %s for writing", path);
-			rc = NVM_ERR_BADFILE;
-		}
-		else
-		{
-			// write the header
-			if (!append)
-			{
-				fprintf(p_file,
-						"#SocketID,"
-						"DimmHandle,"
-						"Capacity,"
-						"MemorySize,"
-						"AppDirect1Size,"
-						"AppDirect1Format,"
-						"AppDirect1Mirrored,"
-						"AppDirect1Index,"
-						"AppDirect2Size,"
-						"AppDirect2Format,"
-						"AppDirect2Mirrored,"
-						"AppDirect2Index\n");
-			}
-
-			// DIMM capacity to GiB
-			NVM_UINT64 dimm_size_gb = (p_discovery->capacity / BYTES_PER_GIB);
-
-			// convert interleave format structs to number
-			NVM_UINT32 p1_format = 0;
-			NVM_UINT32 p2_format = 0;
-			interleave_struct_to_format(&p_goal->app_direct_1_settings.interleave,
-					&p1_format);
-			interleave_struct_to_format(&p_goal->app_direct_2_settings.interleave,
-					&p2_format);
-
-			// write to the file
-			fprintf(p_file, config_line_format,
-					p_discovery->socket_id,
-					p_discovery->device_handle.handle,
-					dimm_size_gb,
-					p_goal->memory_size,
-					p_goal->app_direct_1_size,
-					p1_format,
-					p_goal->app_direct_1_settings.mirrored,
-					p_goal->app_direct_1_set_id,
-					p_goal->app_direct_2_size,
-					p2_format,
-					p_goal->app_direct_2_settings.mirrored,
-					p_goal->app_direct_2_set_id);
-
-			lock_file(p_file, FILE_LOCK_MODE_UNLOCK);
-		}
-		fclose(p_file);
-	}
-	return rc;
-}
-
 
 /*
  * Fetch the highest-numbered interleave set index from the current config and any existing

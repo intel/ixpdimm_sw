@@ -342,6 +342,14 @@ cli::framework::ResultBase *cli::nvmcli::NamespaceFeature::loadGoal(const framew
 				}
 				pResult = NvmExceptionToResult(e);
 			}
+			catch (std::exception &e)
+			{
+				if (pResult)
+				{
+					delete pResult;
+				}
+				pResult = CoreExceptionToResult(e);
+			}
 		}
 
 		// Success - show the config goal that was loaded
