@@ -233,7 +233,7 @@ rm %{_sharedstatedir}/%{name}/*.dat.log
 %{_libdir}/libixpdimm.so.*
 %dir %{_sharedstatedir}/%{name}
 %{_sharedstatedir}/%{name}/*.pem
-%config(noreplace) %{_sharedstatedir}/%{name}/*.dat*
+%config %{_sharedstatedir}/%{name}/*.dat*
 %license LICENSE
 
 %files -n %{name}-devel
