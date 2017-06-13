@@ -100,6 +100,7 @@ void monitor::PerformanceMonitor::monitor()
 	// clean up
 	dimmList.clear();
 	nvm_free_context(1);
+	log_gather();
 }
 
 std::vector<std::string> monitor::PerformanceMonitor::getDimmList()

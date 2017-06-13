@@ -35,6 +35,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include "logging.h"
 #include <sqlite3.h>
 #ifdef __cplusplus
 extern "C" {
@@ -47,7 +48,7 @@ extern int delete_file(const char *path);
  * and therefore it does not contain the copyright header.
  */
 #define	SQLITE_PREPARE(db, sql, p_stmt) \
-		(sqlite3_prepare_v2((db), (sql), strlen(sql) + 1, (&p_stmt), NULL) == SQLITE_OK)
+		sqlite3_prepare_v2((db), (sql), strlen(sql) + 1, (&p_stmt), NULL)
 /*!
  * copy a sqlite int64 column into the destination
  */
@@ -146,15 +147,25 @@ enum db_return_codes table_row_count(const PersistentStore *p_ps, const char *ta
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) from %s", table_name);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			COMMON_LOG_ERROR_F("SQL step for '%s' failed, error code %d",
+					table_name, sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("SQL get row count from table '%s' failed, error code %d",
+				table_name, sql_rc);
 	}
 	return rc;
 }
@@ -165,9 +176,12 @@ enum db_return_codes  run_sql_no_results(sqlite3 *p_db, const char *sql)
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_ERR_FAILURE;
-	if (SQLITE_PREPARE(p_db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_db, sql, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		sqlite3_finalize(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
@@ -175,13 +189,16 @@ enum db_return_codes  run_sql_no_results(sqlite3 *p_db, const char *sql)
 		{
 			// uncomment for debugging
 			// printf("Error running SQL: \n%s\n", sql);
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc, sql);
 		}
-		sqlite3_finalize(p_stmt);
 	}
 	else
 	{
 		// uncomment for debugging
 		// printf("Error preparing SQL: \n%s\n", sql);
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d",
+				sql_rc, sql);
 	}
 	return rc;
 }
@@ -192,14 +209,26 @@ enum db_return_codes run_scalar_sql(const PersistentStore *p_ps, const char *sql
 {
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			*p_scalar = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc, sql);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d",
+				sql_rc, sql);
 	}
 	return rc;
 }
@@ -210,14 +239,26 @@ enum db_return_codes run_text_scalar_sql(const PersistentStore *p_ps, const char
 {
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			TEXT_COLUMN(p_stmt, 0, p_value, len);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d",
+				sql_rc);
 	}
 	return rc;
 }
@@ -231,13 +272,19 @@ int table_exists(sqlite3 *p_db, const char *table)
 	char buf[1024];
 	snprintf(buf, 1024,
 			"SELECT name FROM sqlite_master WHERE name = '%s'", table);
-	if (SQLITE_PREPARE(p_db, buf, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_db, buf, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			exists = 1; // table exists (true)
 		}
 		sqlite3_finalize(p_stmt);
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d",
+				sql_rc);
 	}
 	return exists;
 }
@@ -246,10 +293,13 @@ PersistentStore *open_PersistentStore(const char *path)
 	PersistentStore *result = (PersistentStore *)malloc(sizeof (PersistentStore));
 	if (result != NULL)
 	{
-		if (sqlite3_open_v2(path, &(result->db),
-			SQLITE_OPEN_READWRITE|SQLITE_OPEN_CREATE|SQLITE_OPEN_FULLMUTEX, NULL) != SQLITE_OK)
+		int sql_rc;
+		if ((sql_rc = sqlite3_open_v2(path, &(result->db),
+			SQLITE_OPEN_READWRITE|SQLITE_OPEN_CREATE|SQLITE_OPEN_FULLMUTEX, NULL)) != SQLITE_OK)
 		{
 			free_PersistentStore(&result);
+			COMMON_LOG_ERROR_F("Failed to open PersistentStore with path '%s', error code %d",
+					path, sql_rc);
 		}
 		else
 		{
@@ -267,9 +317,12 @@ int free_PersistentStore(PersistentStore **pp_persistentStore)
 	int rc = DB_SUCCESS;
 	if (*pp_persistentStore != NULL && (*pp_persistentStore)->db != NULL)
 	{
-		if (sqlite3_close((*pp_persistentStore)->db) != SQLITE_OK)
+		int sql_rc;
+		if ((sql_rc = sqlite3_close((*pp_persistentStore)->db)) != SQLITE_OK)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Failed to close PersistentStore, error code %d",
+					sql_rc);
 		}
 	}
 	if (*pp_persistentStore != NULL)
@@ -295,15 +348,27 @@ enum db_return_codes db_add_history(PersistentStore *p_ps,
 		char *sql = "INSERT INTO history \
 			( history_id,  timestamp,  history_name) VALUES \
 			($history_id, datetime('now'), $history_name);";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", *p_history_id);
 			BIND_TEXT(p_stmt, "$history_name", history_name);
-			if (sqlite3_step(p_stmt) == SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc == SQLITE_DONE)
 			{
 				rc = DB_SUCCESS;
 			}
-			sqlite3_finalize(p_stmt);
+			else
+			{
+				COMMON_LOG_ERROR_F("Running SQL failed for history '%s', error code %d",
+						history_name, sql_rc);
+			}
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed for history '%s', error code %d",
+					history_name, sql_rc);
 		}
 	}
 	return rc;
@@ -342,10 +407,11 @@ int db_get_history_ids(const PersistentStore *p_ps,
 		FROM history \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < count)
 		{
 			INTEGER_COLUMN(p_stmt,
 					0,
@@ -354,6 +420,16 @@ int db_get_history_ids(const PersistentStore *p_ps,
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d",
+				sql_rc);
 	}
 	return rc;
 }
@@ -1914,8 +1990,9 @@ tables[populate_index++] = ((struct table){"boot_status_register",
 					);"}
 #endif
 );
-			if (sqlite3_open_v2(path, &(result->db),
-				SQLITE_OPEN_READWRITE|SQLITE_OPEN_CREATE|SQLITE_OPEN_FULLMUTEX, NULL) == SQLITE_OK)
+			int sql_rc;
+			if ((sql_rc = sqlite3_open_v2(path, &(result->db),
+				SQLITE_OPEN_READWRITE|SQLITE_OPEN_CREATE|SQLITE_OPEN_FULLMUTEX, NULL)) == SQLITE_OK)
 			{
 				for (int i = 0; i < TABLE_COUNT; i++)
 				{
@@ -1928,6 +2005,7 @@ tables[populate_index++] = ((struct table){"boot_status_register",
 			else
 			{
 				free_PersistentStore(&result);
+				COMMON_LOG_ERROR_F("SQL open path '%s' failed, error code %d", path, sql_rc);
 			}
 			free(tables);
 		}
@@ -2162,14 +2240,25 @@ enum db_return_codes db_add_config(const PersistentStore *p_ps,
 		VALUES 		\
 		($key, \
 		$value) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_config(p_stmt, p_config);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -2192,17 +2281,27 @@ int db_get_configs(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < config_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < config_count)
 		{
 			local_row_to_config(p_ps, p_stmt, &p_config[index]);
 			local_get_config_relationships(p_ps, p_stmt, &p_config[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -2237,14 +2336,22 @@ enum db_return_codes db_save_config_state(const PersistentStore *p_ps,
 			VALUES 		\
 			($key, \
 			$value) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_config(p_stmt, p_config);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -2259,16 +2366,28 @@ enum db_return_codes db_save_config_state(const PersistentStore *p_ps,
 			VALUES 		($history_id, \
 				 $key , \
 				 $value )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_config(p_stmt, p_config);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -2287,16 +2406,29 @@ enum db_return_codes db_get_config_by_key(const PersistentStore *p_ps,
 		key,  value  \
 		FROM config \
 		WHERE  key = $key";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_TEXT(p_stmt, "$key", (char *)key);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_config(p_ps, p_stmt, p_config);
 			local_get_config_relationships(p_ps, p_stmt, p_config);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -2306,27 +2438,29 @@ enum db_return_codes db_update_config_by_key(const PersistentStore *p_ps,
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE config \
 	SET \
 	key=$key \
 		,  value=$value \
 		  \
 	WHERE key=$key ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_TEXT(p_stmt, "$key", (char *)key);
 		local_bind_config(p_stmt, p_config);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -2337,14 +2471,26 @@ enum db_return_codes db_delete_config_by_key(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM config \
 				 WHERE key = $key";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_TEXT(p_stmt, "$key", (char *)key);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -2361,15 +2507,26 @@ enum db_return_codes db_get_config_history_by_history_id_count(const PersistentS
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM config_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -2380,15 +2537,26 @@ enum db_return_codes db_get_config_history_count(const PersistentStore *p_ps, in
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM config_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -2403,19 +2571,29 @@ int db_get_config_history_by_history_id(const PersistentStore *p_ps,
 	char *sql = "SELECT \
 		key,  value  \
 		FROM config_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < config_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < config_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_config(p_ps, p_stmt, &p_config[index]);
-		local_get_config_relationships_history(p_ps, p_stmt, &p_config[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_config(p_ps, p_stmt, &p_config[index]);
+			local_get_config_relationships_history(p_ps, p_stmt, &p_config[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -2510,14 +2688,25 @@ enum db_return_codes db_add_log(const PersistentStore *p_ps,
 		$file_name, \
 		$line_number, \
 		$message) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_log(p_stmt, p_log);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -2545,17 +2734,27 @@ int db_get_logs(const PersistentStore *p_ps,
 		 ORDER BY id DESC  \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < log_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < log_count)
 		{
 			local_row_to_log(p_ps, p_stmt, &p_log[index]);
 			local_get_log_relationships(p_ps, p_stmt, &p_log[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -2595,14 +2794,22 @@ enum db_return_codes db_save_log_state(const PersistentStore *p_ps,
 			$file_name, \
 			$line_number, \
 			$message) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_log(p_stmt, p_log);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -2622,16 +2829,28 @@ enum db_return_codes db_save_log_state(const PersistentStore *p_ps,
 				 $file_name , \
 				 $line_number , \
 				 $message )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_log(p_stmt, p_log);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -2650,16 +2869,29 @@ enum db_return_codes db_get_log_by_id(const PersistentStore *p_ps,
 		id,  thread_id,  time,  level,  file_name,  line_number,  message  \
 		FROM log \
 		WHERE  id = $id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$id", (int)id);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_log(p_ps, p_stmt, p_log);
 			local_get_log_relationships(p_ps, p_stmt, p_log);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -2669,7 +2901,6 @@ enum db_return_codes db_update_log_by_id(const PersistentStore *p_ps,
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE log \
 	SET \
 	id=$id \
@@ -2681,20 +2912,23 @@ enum db_return_codes db_update_log_by_id(const PersistentStore *p_ps,
 		,  message=$message \
 		  \
 	WHERE id=$id ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$id", (int)id);
 		local_bind_log(p_stmt, p_log);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -2705,14 +2939,26 @@ enum db_return_codes db_delete_log_by_id(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM log \
 				 WHERE id = $id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$id", (int)id);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -2729,15 +2975,26 @@ enum db_return_codes db_get_log_history_by_history_id_count(const PersistentStor
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM log_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -2748,15 +3005,26 @@ enum db_return_codes db_get_log_history_count(const PersistentStore *p_ps, int *
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM log_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -2771,19 +3039,29 @@ int db_get_log_history_by_history_id(const PersistentStore *p_ps,
 	char *sql = "SELECT \
 		id,  thread_id,  time,  level,  file_name,  line_number,  message  \
 		FROM log_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < log_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < log_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_log(p_ps, p_stmt, &p_log[index]);
-		local_get_log_relationships_history(p_ps, p_stmt, &p_log[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_log(p_ps, p_stmt, &p_log[index]);
+			local_get_log_relationships_history(p_ps, p_stmt, &p_log[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -2904,14 +3182,25 @@ enum db_return_codes db_add_event(const PersistentStore *p_ps,
 		$arg2, \
 		$arg3, \
 		$diag_result) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_event(p_stmt, p_event);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -2943,17 +3232,27 @@ int db_get_events(const PersistentStore *p_ps,
 		 ORDER BY id DESC  \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < event_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < event_count)
 		{
 			local_row_to_event(p_ps, p_stmt, &p_event[index]);
 			local_get_event_relationships(p_ps, p_stmt, &p_event[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -2997,14 +3296,22 @@ enum db_return_codes db_save_event_state(const PersistentStore *p_ps,
 			$arg2, \
 			$arg3, \
 			$diag_result) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_event(p_stmt, p_event);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -3028,16 +3335,28 @@ enum db_return_codes db_save_event_state(const PersistentStore *p_ps,
 				 $arg2 , \
 				 $arg3 , \
 				 $diag_result )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_event(p_stmt, p_event);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -3056,16 +3375,29 @@ enum db_return_codes db_get_event_by_id(const PersistentStore *p_ps,
 		id,  type,  severity,  code,  action_required,  uid,  time,  arg1,  arg2,  arg3,  diag_result  \
 		FROM event \
 		WHERE  id = $id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$id", (int)id);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_event(p_ps, p_stmt, p_event);
 			local_get_event_relationships(p_ps, p_stmt, p_event);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -3075,7 +3407,6 @@ enum db_return_codes db_update_event_by_id(const PersistentStore *p_ps,
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE event \
 	SET \
 	id=$id \
@@ -3091,20 +3422,23 @@ enum db_return_codes db_update_event_by_id(const PersistentStore *p_ps,
 		,  diag_result=$diag_result \
 		  \
 	WHERE id=$id ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$id", (int)id);
 		local_bind_event(p_stmt, p_event);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -3115,14 +3449,26 @@ enum db_return_codes db_delete_event_by_id(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM event \
 				 WHERE id = $id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$id", (int)id);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -3139,15 +3485,26 @@ enum db_return_codes db_get_event_history_by_history_id_count(const PersistentSt
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM event_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -3158,15 +3515,26 @@ enum db_return_codes db_get_event_history_count(const PersistentStore *p_ps, int
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM event_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -3181,19 +3549,29 @@ int db_get_event_history_by_history_id(const PersistentStore *p_ps,
 	char *sql = "SELECT \
 		id,  type,  severity,  code,  action_required,  uid,  time,  arg1,  arg2,  arg3,  diag_result  \
 		FROM event_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < event_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < event_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_event(p_ps, p_stmt, &p_event[index]);
-		local_get_event_relationships_history(p_ps, p_stmt, &p_event[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_event(p_ps, p_stmt, &p_event[index]);
+			local_get_event_relationships_history(p_ps, p_stmt, &p_event[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -3213,15 +3591,27 @@ enum db_return_codes db_get_event_count_by_event_type_type(
 	*p_count = 0;
 	const char *sql = "SELECT COUNT (*) FROM event WHERE type = $type";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$type", (unsigned int)type);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -3236,16 +3626,28 @@ enum db_return_codes db_get_event_count_by_event_type_type_history(
 		"WHERE type = $type "
 			"AND history_id=$history_id";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$type", (unsigned int)type);
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -3260,18 +3662,28 @@ enum db_return_codes db_get_events_by_event_type_type(const PersistentStore *p_p
 		 id ,  type ,  severity ,  code ,  action_required ,  uid ,  time ,  arg1 ,  arg2 ,  arg3 ,  diag_result  \
 		FROM event \
 		WHERE  type = $type";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		rc = DB_SUCCESS;
 		BIND_INTEGER(p_stmt, "$type", (unsigned int)type);
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < event_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < event_count)
 		{
 			local_row_to_event(p_ps, p_stmt, &p_event[index]);
 			local_get_event_relationships(p_ps, p_stmt, &p_event[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -3286,19 +3698,29 @@ enum db_return_codes db_get_events_by_event_type_type_history(const PersistentSt
 		 id ,  type ,  severity ,  code ,  action_required ,  uid ,  time ,  arg1 ,  arg2 ,  arg3 ,  diag_result  \
 		FROM event_history \
 		WHERE  type = $type AND history_id=$history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		rc = DB_SUCCESS;
 		BIND_INTEGER(p_stmt, "$type", (unsigned int)type);
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < event_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < event_count)
 		{
 			local_row_to_event(p_ps, p_stmt, &p_event[index]);
 			local_get_event_relationships(p_ps, p_stmt, &p_event[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -3309,14 +3731,24 @@ enum db_return_codes db_delete_event_by_event_type_type(const PersistentStore *p
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM event \
 				 WHERE type = $type";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$type", (unsigned int)type);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -3404,14 +3836,25 @@ enum db_return_codes db_add_topology_state(const PersistentStore *p_ps,
 		$part_num, \
 		$current_config_status, \
 		$config_goal_status) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_topology_state(p_stmt, p_topology_state);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -3439,17 +3882,27 @@ int db_get_topology_states(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < topology_state_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < topology_state_count)
 		{
 			local_row_to_topology_state(p_ps, p_stmt, &p_topology_state[index]);
 			local_get_topology_state_relationships(p_ps, p_stmt, &p_topology_state[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -3489,14 +3942,22 @@ enum db_return_codes db_save_topology_state_state(const PersistentStore *p_ps,
 			$part_num, \
 			$current_config_status, \
 			$config_goal_status) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_topology_state(p_stmt, p_topology_state);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -3516,16 +3977,28 @@ enum db_return_codes db_save_topology_state_state(const PersistentStore *p_ps,
 				 $part_num , \
 				 $current_config_status , \
 				 $config_goal_status )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_topology_state(p_stmt, p_topology_state);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -3544,16 +4017,29 @@ enum db_return_codes db_get_topology_state_by_device_handle(const PersistentStor
 		device_handle,  uid,  manufacturer,  serial_num,  part_num,  current_config_status,  config_goal_status  \
 		FROM topology_state \
 		WHERE  device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_topology_state(p_ps, p_stmt, p_topology_state);
 			local_get_topology_state_relationships(p_ps, p_stmt, p_topology_state);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -3563,7 +4049,6 @@ enum db_return_codes db_update_topology_state_by_device_handle(const PersistentS
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE topology_state \
 	SET \
 	device_handle=$device_handle \
@@ -3575,20 +4060,23 @@ enum db_return_codes db_update_topology_state_by_device_handle(const PersistentS
 		,  config_goal_status=$config_goal_status \
 		  \
 	WHERE device_handle=$device_handle ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		local_bind_topology_state(p_stmt, p_topology_state);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -3599,14 +4087,26 @@ enum db_return_codes db_delete_topology_state_by_device_handle(const PersistentS
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM topology_state \
 				 WHERE device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -3623,15 +4123,26 @@ enum db_return_codes db_get_topology_state_history_by_history_id_count(const Per
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM topology_state_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -3642,15 +4153,26 @@ enum db_return_codes db_get_topology_state_history_count(const PersistentStore *
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM topology_state_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -3665,19 +4187,29 @@ int db_get_topology_state_history_by_history_id(const PersistentStore *p_ps,
 	char *sql = "SELECT \
 		device_handle,  uid,  manufacturer,  serial_num,  part_num,  current_config_status,  config_goal_status  \
 		FROM topology_state_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < topology_state_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < topology_state_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_topology_state(p_ps, p_stmt, &p_topology_state[index]);
-		local_get_topology_state_relationships_history(p_ps, p_stmt, &p_topology_state[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_topology_state(p_ps, p_stmt, &p_topology_state[index]);
+			local_get_topology_state_relationships_history(p_ps, p_stmt, &p_topology_state[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -3750,14 +4282,25 @@ enum db_return_codes db_add_host(const PersistentStore *p_ps,
 		$os_type, \
 		$os_name, \
 		$os_version) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_host(p_stmt, p_host);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -3782,17 +4325,27 @@ int db_get_hosts(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < host_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < host_count)
 		{
 			local_row_to_host(p_ps, p_stmt, &p_host[index]);
 			local_get_host_relationships(p_ps, p_stmt, &p_host[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -3826,14 +4379,22 @@ enum db_return_codes db_save_host_state(const PersistentStore *p_ps,
 			$os_type, \
 			$os_name, \
 			$os_version) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_host(p_stmt, p_host);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -3850,16 +4411,28 @@ enum db_return_codes db_save_host_state(const PersistentStore *p_ps,
 				 $os_type , \
 				 $os_name , \
 				 $os_version )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_host(p_stmt, p_host);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -3876,16 +4449,29 @@ enum db_return_codes db_get_host_by_name(const PersistentStore *p_ps,
 		name,  os_type,  os_name,  os_version  \
 		FROM host \
 		WHERE  name = $name";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_TEXT(p_stmt, "$name", (char *)name);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_host(p_ps, p_stmt, p_host);
 			local_get_host_relationships(p_ps, p_stmt, p_host);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -3895,7 +4481,6 @@ enum db_return_codes db_update_host_by_name(const PersistentStore *p_ps,
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE host \
 	SET \
 	name=$name \
@@ -3904,20 +4489,23 @@ enum db_return_codes db_update_host_by_name(const PersistentStore *p_ps,
 		,  os_version=$os_version \
 		  \
 	WHERE name=$name ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_TEXT(p_stmt, "$name", (char *)name);
 		local_bind_host(p_stmt, p_host);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -3928,14 +4516,26 @@ enum db_return_codes db_delete_host_by_name(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM host \
 				 WHERE name = $name";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_TEXT(p_stmt, "$name", (char *)name);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -3949,15 +4549,26 @@ enum db_return_codes db_get_host_history_by_history_id_count(const PersistentSto
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM host_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -3968,15 +4579,26 @@ enum db_return_codes db_get_host_history_count(const PersistentStore *p_ps, int 
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM host_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -3991,19 +4613,29 @@ int db_get_host_history_by_history_id(const PersistentStore *p_ps,
 	char *sql = "SELECT \
 		name,  os_type,  os_name,  os_version  \
 		FROM host_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < host_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < host_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_host(p_ps, p_stmt, &p_host[index]);
-		local_get_host_relationships_history(p_ps, p_stmt, &p_host[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_host(p_ps, p_stmt, &p_host[index]);
+			local_get_host_relationships_history(p_ps, p_stmt, &p_host[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -4074,14 +4706,25 @@ enum db_return_codes db_add_sw_inventory(const PersistentStore *p_ps,
 		$mgmt_sw_rev, \
 		$vendor_driver_rev, \
 		$supported_driver_available) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_sw_inventory(p_stmt, p_sw_inventory);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -4106,17 +4749,27 @@ int db_get_sw_inventorys(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < sw_inventory_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < sw_inventory_count)
 		{
 			local_row_to_sw_inventory(p_ps, p_stmt, &p_sw_inventory[index]);
 			local_get_sw_inventory_relationships(p_ps, p_stmt, &p_sw_inventory[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -4150,14 +4803,22 @@ enum db_return_codes db_save_sw_inventory_state(const PersistentStore *p_ps,
 			$mgmt_sw_rev, \
 			$vendor_driver_rev, \
 			$supported_driver_available) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_sw_inventory(p_stmt, p_sw_inventory);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -4174,16 +4835,28 @@ enum db_return_codes db_save_sw_inventory_state(const PersistentStore *p_ps,
 				 $mgmt_sw_rev , \
 				 $vendor_driver_rev , \
 				 $supported_driver_available )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_sw_inventory(p_stmt, p_sw_inventory);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -4200,16 +4873,29 @@ enum db_return_codes db_get_sw_inventory_by_name(const PersistentStore *p_ps,
 		name,  mgmt_sw_rev,  vendor_driver_rev,  supported_driver_available  \
 		FROM sw_inventory \
 		WHERE  name = $name";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_TEXT(p_stmt, "$name", (char *)name);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_sw_inventory(p_ps, p_stmt, p_sw_inventory);
 			local_get_sw_inventory_relationships(p_ps, p_stmt, p_sw_inventory);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -4219,7 +4905,6 @@ enum db_return_codes db_update_sw_inventory_by_name(const PersistentStore *p_ps,
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE sw_inventory \
 	SET \
 	name=$name \
@@ -4228,20 +4913,23 @@ enum db_return_codes db_update_sw_inventory_by_name(const PersistentStore *p_ps,
 		,  supported_driver_available=$supported_driver_available \
 		  \
 	WHERE name=$name ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_TEXT(p_stmt, "$name", (char *)name);
 		local_bind_sw_inventory(p_stmt, p_sw_inventory);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -4252,14 +4940,26 @@ enum db_return_codes db_delete_sw_inventory_by_name(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM sw_inventory \
 				 WHERE name = $name";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_TEXT(p_stmt, "$name", (char *)name);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -4273,15 +4973,26 @@ enum db_return_codes db_get_sw_inventory_history_by_history_id_count(const Persi
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM sw_inventory_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -4292,15 +5003,26 @@ enum db_return_codes db_get_sw_inventory_history_count(const PersistentStore *p_
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM sw_inventory_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -4315,19 +5037,29 @@ int db_get_sw_inventory_history_by_history_id(const PersistentStore *p_ps,
 	char *sql = "SELECT \
 		name,  mgmt_sw_rev,  vendor_driver_rev,  supported_driver_available  \
 		FROM sw_inventory_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < sw_inventory_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < sw_inventory_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_sw_inventory(p_ps, p_stmt, &p_sw_inventory[index]);
-		local_get_sw_inventory_relationships_history(p_ps, p_stmt, &p_sw_inventory[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_sw_inventory(p_ps, p_stmt, &p_sw_inventory[index]);
+			local_get_sw_inventory_relationships_history(p_ps, p_stmt, &p_sw_inventory[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -4426,14 +5158,25 @@ enum db_return_codes db_add_socket(const PersistentStore *p_ps,
 		$manufacturer, \
 		$logical_processor_count, \
 		$rapl_limited) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_socket(p_stmt, p_socket);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -4463,17 +5206,27 @@ int db_get_sockets(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < socket_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < socket_count)
 		{
 			local_row_to_socket(p_ps, p_stmt, &p_socket[index]);
 			local_get_socket_relationships(p_ps, p_stmt, &p_socket[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -4512,14 +5265,22 @@ enum db_return_codes db_save_socket_state(const PersistentStore *p_ps,
 			$manufacturer, \
 			$logical_processor_count, \
 			$rapl_limited) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_socket(p_stmt, p_socket);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -4541,16 +5302,28 @@ enum db_return_codes db_save_socket_state(const PersistentStore *p_ps,
 				 $manufacturer , \
 				 $logical_processor_count , \
 				 $rapl_limited )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_socket(p_stmt, p_socket);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -4567,16 +5340,29 @@ enum db_return_codes db_get_socket_by_socket_id(const PersistentStore *p_ps,
 		socket_id,  type,  model,  brand,  family,  stepping,  manufacturer,  logical_processor_count,  rapl_limited  \
 		FROM socket \
 		WHERE  socket_id = $socket_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$socket_id", (unsigned int)socket_id);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_socket(p_ps, p_stmt, p_socket);
 			local_get_socket_relationships(p_ps, p_stmt, p_socket);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -4586,7 +5372,6 @@ enum db_return_codes db_update_socket_by_socket_id(const PersistentStore *p_ps,
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE socket \
 	SET \
 	socket_id=$socket_id \
@@ -4600,20 +5385,23 @@ enum db_return_codes db_update_socket_by_socket_id(const PersistentStore *p_ps,
 		,  rapl_limited=$rapl_limited \
 		  \
 	WHERE socket_id=$socket_id ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$socket_id", (unsigned int)socket_id);
 		local_bind_socket(p_stmt, p_socket);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -4624,14 +5412,26 @@ enum db_return_codes db_delete_socket_by_socket_id(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM socket \
 				 WHERE socket_id = $socket_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$socket_id", (unsigned int)socket_id);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -4645,15 +5445,26 @@ enum db_return_codes db_get_socket_history_by_history_id_count(const PersistentS
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM socket_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -4664,15 +5475,26 @@ enum db_return_codes db_get_socket_history_count(const PersistentStore *p_ps, in
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM socket_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -4687,19 +5509,29 @@ int db_get_socket_history_by_history_id(const PersistentStore *p_ps,
 	char *sql = "SELECT \
 		socket_id,  type,  model,  brand,  family,  stepping,  manufacturer,  logical_processor_count,  rapl_limited  \
 		FROM socket_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < socket_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < socket_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_socket(p_ps, p_stmt, &p_socket[index]);
-		local_get_socket_relationships_history(p_ps, p_stmt, &p_socket[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_socket(p_ps, p_stmt, &p_socket[index]);
+			local_get_socket_relationships_history(p_ps, p_stmt, &p_socket[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -4893,14 +5725,25 @@ enum db_return_codes db_add_runtime_config_validation(const PersistentStore *p_p
 		$gas_structure_11, \
 		$operation_type_2, \
 		$mask_2) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_runtime_config_validation(p_stmt, p_runtime_config_validation);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -4946,17 +5789,27 @@ int db_get_runtime_config_validations(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < runtime_config_validation_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < runtime_config_validation_count)
 		{
 			local_row_to_runtime_config_validation(p_ps, p_stmt, &p_runtime_config_validation[index]);
 			local_get_runtime_config_validation_relationships(p_ps, p_stmt, &p_runtime_config_validation[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -5011,14 +5864,22 @@ enum db_return_codes db_save_runtime_config_validation_state(const PersistentSto
 			$gas_structure_11, \
 			$operation_type_2, \
 			$mask_2) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_runtime_config_validation(p_stmt, p_runtime_config_validation);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -5056,16 +5917,28 @@ enum db_return_codes db_save_runtime_config_validation_state(const PersistentSto
 				 $gas_structure_11 , \
 				 $operation_type_2 , \
 				 $mask_2 )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_runtime_config_validation(p_stmt, p_runtime_config_validation);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -5082,16 +5955,29 @@ enum db_return_codes db_get_runtime_config_validation_by_id(const PersistentStor
 		id,  type,  length,  address_space_id,  bit_width,  bit_offset,  access_size,  address,  operation_type_1,  value,  mask_1,  gas_structure_0,  gas_structure_1,  gas_structure_2,  gas_structure_3,  gas_structure_4,  gas_structure_5,  gas_structure_6,  gas_structure_7,  gas_structure_8,  gas_structure_9,  gas_structure_10,  gas_structure_11,  operation_type_2,  mask_2  \
 		FROM runtime_config_validation \
 		WHERE  id = $id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$id", (int)id);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_runtime_config_validation(p_ps, p_stmt, p_runtime_config_validation);
 			local_get_runtime_config_validation_relationships(p_ps, p_stmt, p_runtime_config_validation);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -5101,7 +5987,6 @@ enum db_return_codes db_update_runtime_config_validation_by_id(const PersistentS
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE runtime_config_validation \
 	SET \
 	id=$id \
@@ -5131,20 +6016,23 @@ enum db_return_codes db_update_runtime_config_validation_by_id(const PersistentS
 		,  mask_2=$mask_2 \
 		  \
 	WHERE id=$id ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$id", (int)id);
 		local_bind_runtime_config_validation(p_stmt, p_runtime_config_validation);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -5155,14 +6043,26 @@ enum db_return_codes db_delete_runtime_config_validation_by_id(const PersistentS
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM runtime_config_validation \
 				 WHERE id = $id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$id", (int)id);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -5176,15 +6076,26 @@ enum db_return_codes db_get_runtime_config_validation_history_by_history_id_coun
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM runtime_config_validation_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -5195,15 +6106,26 @@ enum db_return_codes db_get_runtime_config_validation_history_count(const Persis
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM runtime_config_validation_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -5218,19 +6140,29 @@ int db_get_runtime_config_validation_history_by_history_id(const PersistentStore
 	char *sql = "SELECT \
 		id,  type,  length,  address_space_id,  bit_width,  bit_offset,  access_size,  address,  operation_type_1,  value,  mask_1,  gas_structure_0,  gas_structure_1,  gas_structure_2,  gas_structure_3,  gas_structure_4,  gas_structure_5,  gas_structure_6,  gas_structure_7,  gas_structure_8,  gas_structure_9,  gas_structure_10,  gas_structure_11,  operation_type_2,  mask_2  \
 		FROM runtime_config_validation_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < runtime_config_validation_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < runtime_config_validation_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_runtime_config_validation(p_ps, p_stmt, &p_runtime_config_validation[index]);
-		local_get_runtime_config_validation_relationships_history(p_ps, p_stmt, &p_runtime_config_validation[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_runtime_config_validation(p_ps, p_stmt, &p_runtime_config_validation[index]);
+			local_get_runtime_config_validation_relationships_history(p_ps, p_stmt, &p_runtime_config_validation[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -5255,13 +6187,23 @@ enum db_return_codes db_roll_runtime_config_validations_by_id(const PersistentSt
 				"FROM runtime_config_validation "
 				"ORDER BY id DESC "
 				"LIMIT %d)", max_rows); 
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -5545,14 +6487,25 @@ enum db_return_codes db_add_interleave_capability(const PersistentStore *p_ps,
 		$interleave_format_list_29, \
 		$interleave_format_list_30, \
 		$interleave_format_list_31) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_interleave_capability(p_stmt, p_interleave_capability);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -5611,17 +6564,27 @@ int db_get_interleave_capabilitys(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < interleave_capability_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < interleave_capability_count)
 		{
 			local_row_to_interleave_capability(p_ps, p_stmt, &p_interleave_capability[index]);
 			local_get_interleave_capability_relationships(p_ps, p_stmt, &p_interleave_capability[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -5689,14 +6652,22 @@ enum db_return_codes db_save_interleave_capability_state(const PersistentStore *
 			$interleave_format_list_29, \
 			$interleave_format_list_30, \
 			$interleave_format_list_31) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_interleave_capability(p_stmt, p_interleave_capability);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -5747,16 +6718,28 @@ enum db_return_codes db_save_interleave_capability_state(const PersistentStore *
 				 $interleave_format_list_29 , \
 				 $interleave_format_list_30 , \
 				 $interleave_format_list_31 )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_interleave_capability(p_stmt, p_interleave_capability);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -5773,16 +6756,29 @@ enum db_return_codes db_get_interleave_capability_by_id(const PersistentStore *p
 		id,  type,  length,  memory_mode,  interleave_alignment_size,  supported_interleave_count,  interleave_format_list_0,  interleave_format_list_1,  interleave_format_list_2,  interleave_format_list_3,  interleave_format_list_4,  interleave_format_list_5,  interleave_format_list_6,  interleave_format_list_7,  interleave_format_list_8,  interleave_format_list_9,  interleave_format_list_10,  interleave_format_list_11,  interleave_format_list_12,  interleave_format_list_13,  interleave_format_list_14,  interleave_format_list_15,  interleave_format_list_16,  interleave_format_list_17,  interleave_format_list_18,  interleave_format_list_19,  interleave_format_list_20,  interleave_format_list_21,  interleave_format_list_22,  interleave_format_list_23,  interleave_format_list_24,  interleave_format_list_25,  interleave_format_list_26,  interleave_format_list_27,  interleave_format_list_28,  interleave_format_list_29,  interleave_format_list_30,  interleave_format_list_31  \
 		FROM interleave_capability \
 		WHERE  id = $id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$id", (int)id);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_interleave_capability(p_ps, p_stmt, p_interleave_capability);
 			local_get_interleave_capability_relationships(p_ps, p_stmt, p_interleave_capability);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -5792,7 +6788,6 @@ enum db_return_codes db_update_interleave_capability_by_id(const PersistentStore
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE interleave_capability \
 	SET \
 	id=$id \
@@ -5835,20 +6830,23 @@ enum db_return_codes db_update_interleave_capability_by_id(const PersistentStore
 		,  interleave_format_list_31=$interleave_format_list_31 \
 		  \
 	WHERE id=$id ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$id", (int)id);
 		local_bind_interleave_capability(p_stmt, p_interleave_capability);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -5859,14 +6857,26 @@ enum db_return_codes db_delete_interleave_capability_by_id(const PersistentStore
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM interleave_capability \
 				 WHERE id = $id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$id", (int)id);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -5880,15 +6890,26 @@ enum db_return_codes db_get_interleave_capability_history_by_history_id_count(co
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM interleave_capability_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -5899,15 +6920,26 @@ enum db_return_codes db_get_interleave_capability_history_count(const Persistent
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM interleave_capability_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -5922,19 +6954,29 @@ int db_get_interleave_capability_history_by_history_id(const PersistentStore *p_
 	char *sql = "SELECT \
 		id,  type,  length,  memory_mode,  interleave_alignment_size,  supported_interleave_count,  interleave_format_list_0,  interleave_format_list_1,  interleave_format_list_2,  interleave_format_list_3,  interleave_format_list_4,  interleave_format_list_5,  interleave_format_list_6,  interleave_format_list_7,  interleave_format_list_8,  interleave_format_list_9,  interleave_format_list_10,  interleave_format_list_11,  interleave_format_list_12,  interleave_format_list_13,  interleave_format_list_14,  interleave_format_list_15,  interleave_format_list_16,  interleave_format_list_17,  interleave_format_list_18,  interleave_format_list_19,  interleave_format_list_20,  interleave_format_list_21,  interleave_format_list_22,  interleave_format_list_23,  interleave_format_list_24,  interleave_format_list_25,  interleave_format_list_26,  interleave_format_list_27,  interleave_format_list_28,  interleave_format_list_29,  interleave_format_list_30,  interleave_format_list_31  \
 		FROM interleave_capability_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < interleave_capability_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < interleave_capability_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_interleave_capability(p_ps, p_stmt, &p_interleave_capability[index]);
-		local_get_interleave_capability_relationships_history(p_ps, p_stmt, &p_interleave_capability[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_interleave_capability(p_ps, p_stmt, &p_interleave_capability[index]);
+			local_get_interleave_capability_relationships_history(p_ps, p_stmt, &p_interleave_capability[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -5959,13 +7001,23 @@ enum db_return_codes db_roll_interleave_capabilitys_by_id(const PersistentStore 
 				"FROM interleave_capability "
 				"ORDER BY id DESC "
 				"LIMIT %d)", max_rows); 
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -6063,14 +7115,25 @@ enum db_return_codes db_add_platform_info_capability(const PersistentStore *p_ps
 		$mem_mode_capabilities, \
 		$current_mem_mode, \
 		$pmem_ras_capabilities) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_platform_info_capability(p_stmt, p_platform_info_capability);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -6098,17 +7161,27 @@ int db_get_platform_info_capabilitys(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < platform_info_capability_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < platform_info_capability_count)
 		{
 			local_row_to_platform_info_capability(p_ps, p_stmt, &p_platform_info_capability[index]);
 			local_get_platform_info_capability_relationships(p_ps, p_stmt, &p_platform_info_capability[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -6145,14 +7218,22 @@ enum db_return_codes db_save_platform_info_capability_state(const PersistentStor
 			$mem_mode_capabilities, \
 			$current_mem_mode, \
 			$pmem_ras_capabilities) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_platform_info_capability(p_stmt, p_platform_info_capability);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -6172,16 +7253,28 @@ enum db_return_codes db_save_platform_info_capability_state(const PersistentStor
 				 $mem_mode_capabilities , \
 				 $current_mem_mode , \
 				 $pmem_ras_capabilities )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_platform_info_capability(p_stmt, p_platform_info_capability);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -6198,16 +7291,29 @@ enum db_return_codes db_get_platform_info_capability_by_id(const PersistentStore
 		id,  type,  length,  mgmt_sw_config_support,  mem_mode_capabilities,  current_mem_mode,  pmem_ras_capabilities  \
 		FROM platform_info_capability \
 		WHERE  id = $id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$id", (int)id);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_platform_info_capability(p_ps, p_stmt, p_platform_info_capability);
 			local_get_platform_info_capability_relationships(p_ps, p_stmt, p_platform_info_capability);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -6217,7 +7323,6 @@ enum db_return_codes db_update_platform_info_capability_by_id(const PersistentSt
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE platform_info_capability \
 	SET \
 	id=$id \
@@ -6229,20 +7334,23 @@ enum db_return_codes db_update_platform_info_capability_by_id(const PersistentSt
 		,  pmem_ras_capabilities=$pmem_ras_capabilities \
 		  \
 	WHERE id=$id ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$id", (int)id);
 		local_bind_platform_info_capability(p_stmt, p_platform_info_capability);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -6253,14 +7361,26 @@ enum db_return_codes db_delete_platform_info_capability_by_id(const PersistentSt
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM platform_info_capability \
 				 WHERE id = $id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$id", (int)id);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -6274,15 +7394,26 @@ enum db_return_codes db_get_platform_info_capability_history_by_history_id_count
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM platform_info_capability_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -6293,15 +7424,26 @@ enum db_return_codes db_get_platform_info_capability_history_count(const Persist
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM platform_info_capability_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -6316,19 +7458,29 @@ int db_get_platform_info_capability_history_by_history_id(const PersistentStore 
 	char *sql = "SELECT \
 		id,  type,  length,  mgmt_sw_config_support,  mem_mode_capabilities,  current_mem_mode,  pmem_ras_capabilities  \
 		FROM platform_info_capability_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < platform_info_capability_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < platform_info_capability_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_platform_info_capability(p_ps, p_stmt, &p_platform_info_capability[index]);
-		local_get_platform_info_capability_relationships_history(p_ps, p_stmt, &p_platform_info_capability[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_platform_info_capability(p_ps, p_stmt, &p_platform_info_capability[index]);
+			local_get_platform_info_capability_relationships_history(p_ps, p_stmt, &p_platform_info_capability[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -6353,13 +7505,23 @@ enum db_return_codes db_roll_platform_info_capabilitys_by_id(const PersistentSto
 				"FROM platform_info_capability "
 				"ORDER BY id DESC "
 				"LIMIT %d)", max_rows); 
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -6472,14 +7634,25 @@ enum db_return_codes db_add_platform_capabilities(const PersistentStore *p_ps,
 		$oem_revision, \
 		$creator_id, \
 		$creator_revision) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_platform_capabilities(p_stmt, p_platform_capabilities);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -6509,17 +7682,27 @@ int db_get_platform_capabilitiess(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < platform_capabilities_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < platform_capabilities_count)
 		{
 			local_row_to_platform_capabilities(p_ps, p_stmt, &p_platform_capabilities[index]);
 			local_get_platform_capabilities_relationships(p_ps, p_stmt, &p_platform_capabilities[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -6558,14 +7741,22 @@ enum db_return_codes db_save_platform_capabilities_state(const PersistentStore *
 			$oem_revision, \
 			$creator_id, \
 			$creator_revision) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_platform_capabilities(p_stmt, p_platform_capabilities);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -6587,16 +7778,28 @@ enum db_return_codes db_save_platform_capabilities_state(const PersistentStore *
 				 $oem_revision , \
 				 $creator_id , \
 				 $creator_revision )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_platform_capabilities(p_stmt, p_platform_capabilities);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -6613,16 +7816,29 @@ enum db_return_codes db_get_platform_capabilities_by_signature(const PersistentS
 		signature,  length,  revision,  checksum,  oem_id,  oem_table_id,  oem_revision,  creator_id,  creator_revision  \
 		FROM platform_capabilities \
 		WHERE  signature = $signature";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_TEXT(p_stmt, "$signature", (char *)signature);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_platform_capabilities(p_ps, p_stmt, p_platform_capabilities);
 			local_get_platform_capabilities_relationships(p_ps, p_stmt, p_platform_capabilities);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -6632,7 +7848,6 @@ enum db_return_codes db_update_platform_capabilities_by_signature(const Persiste
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE platform_capabilities \
 	SET \
 	signature=$signature \
@@ -6646,20 +7861,23 @@ enum db_return_codes db_update_platform_capabilities_by_signature(const Persiste
 		,  creator_revision=$creator_revision \
 		  \
 	WHERE signature=$signature ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_TEXT(p_stmt, "$signature", (char *)signature);
 		local_bind_platform_capabilities(p_stmt, p_platform_capabilities);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -6670,14 +7888,26 @@ enum db_return_codes db_delete_platform_capabilities_by_signature(const Persiste
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM platform_capabilities \
 				 WHERE signature = $signature";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_TEXT(p_stmt, "$signature", (char *)signature);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -6691,15 +7921,26 @@ enum db_return_codes db_get_platform_capabilities_history_by_history_id_count(co
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM platform_capabilities_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -6710,15 +7951,26 @@ enum db_return_codes db_get_platform_capabilities_history_count(const Persistent
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM platform_capabilities_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -6733,19 +7985,29 @@ int db_get_platform_capabilities_history_by_history_id(const PersistentStore *p_
 	char *sql = "SELECT \
 		signature,  length,  revision,  checksum,  oem_id,  oem_table_id,  oem_revision,  creator_id,  creator_revision  \
 		FROM platform_capabilities_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < platform_capabilities_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < platform_capabilities_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_platform_capabilities(p_ps, p_stmt, &p_platform_capabilities[index]);
-		local_get_platform_capabilities_relationships_history(p_ps, p_stmt, &p_platform_capabilities[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_platform_capabilities(p_ps, p_stmt, &p_platform_capabilities[index]);
+			local_get_platform_capabilities_relationships_history(p_ps, p_stmt, &p_platform_capabilities[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -6915,14 +8177,25 @@ enum db_return_codes db_add_driver_capabilities(const PersistentStore *p_ps,
 		$block_sizes_15, \
 		$num_block_sizes, \
 		$namespace_memory_page_allocation_capable) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_driver_capabilities(p_stmt, p_driver_capabilities);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -6964,17 +8237,27 @@ int db_get_driver_capabilitiess(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < driver_capabilities_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < driver_capabilities_count)
 		{
 			local_row_to_driver_capabilities(p_ps, p_stmt, &p_driver_capabilities[index]);
 			local_get_driver_capabilities_relationships(p_ps, p_stmt, &p_driver_capabilities[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -7025,14 +8308,22 @@ enum db_return_codes db_save_driver_capabilities_state(const PersistentStore *p_
 			$block_sizes_15, \
 			$num_block_sizes, \
 			$namespace_memory_page_allocation_capable) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_driver_capabilities(p_stmt, p_driver_capabilities);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -7066,16 +8357,28 @@ enum db_return_codes db_save_driver_capabilities_state(const PersistentStore *p_
 				 $block_sizes_15 , \
 				 $num_block_sizes , \
 				 $namespace_memory_page_allocation_capable )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_driver_capabilities(p_stmt, p_driver_capabilities);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -7092,16 +8395,29 @@ enum db_return_codes db_get_driver_capabilities_by_id(const PersistentStore *p_p
 		id,  min_namespace_size,  max_non_continguous_namespaces,  block_sizes_0,  block_sizes_1,  block_sizes_2,  block_sizes_3,  block_sizes_4,  block_sizes_5,  block_sizes_6,  block_sizes_7,  block_sizes_8,  block_sizes_9,  block_sizes_10,  block_sizes_11,  block_sizes_12,  block_sizes_13,  block_sizes_14,  block_sizes_15,  num_block_sizes,  namespace_memory_page_allocation_capable  \
 		FROM driver_capabilities \
 		WHERE  id = $id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$id", (int)id);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_driver_capabilities(p_ps, p_stmt, p_driver_capabilities);
 			local_get_driver_capabilities_relationships(p_ps, p_stmt, p_driver_capabilities);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -7111,7 +8427,6 @@ enum db_return_codes db_update_driver_capabilities_by_id(const PersistentStore *
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE driver_capabilities \
 	SET \
 	id=$id \
@@ -7137,20 +8452,23 @@ enum db_return_codes db_update_driver_capabilities_by_id(const PersistentStore *
 		,  namespace_memory_page_allocation_capable=$namespace_memory_page_allocation_capable \
 		  \
 	WHERE id=$id ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$id", (int)id);
 		local_bind_driver_capabilities(p_stmt, p_driver_capabilities);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -7161,14 +8479,26 @@ enum db_return_codes db_delete_driver_capabilities_by_id(const PersistentStore *
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM driver_capabilities \
 				 WHERE id = $id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$id", (int)id);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -7182,15 +8512,26 @@ enum db_return_codes db_get_driver_capabilities_history_by_history_id_count(cons
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM driver_capabilities_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -7201,15 +8542,26 @@ enum db_return_codes db_get_driver_capabilities_history_count(const PersistentSt
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM driver_capabilities_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -7224,19 +8576,29 @@ int db_get_driver_capabilities_history_by_history_id(const PersistentStore *p_ps
 	char *sql = "SELECT \
 		id,  min_namespace_size,  max_non_continguous_namespaces,  block_sizes_0,  block_sizes_1,  block_sizes_2,  block_sizes_3,  block_sizes_4,  block_sizes_5,  block_sizes_6,  block_sizes_7,  block_sizes_8,  block_sizes_9,  block_sizes_10,  block_sizes_11,  block_sizes_12,  block_sizes_13,  block_sizes_14,  block_sizes_15,  num_block_sizes,  namespace_memory_page_allocation_capable  \
 		FROM driver_capabilities_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < driver_capabilities_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < driver_capabilities_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_driver_capabilities(p_ps, p_stmt, &p_driver_capabilities[index]);
-		local_get_driver_capabilities_relationships_history(p_ps, p_stmt, &p_driver_capabilities[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_driver_capabilities(p_ps, p_stmt, &p_driver_capabilities[index]);
+			local_get_driver_capabilities_relationships_history(p_ps, p_stmt, &p_driver_capabilities[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -7460,14 +8822,25 @@ enum db_return_codes db_add_driver_features(const PersistentStore *p_ps,
 		$start_address_scrub, \
 		$app_direct_mode, \
 		$storage_mode) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_driver_features(p_stmt, p_driver_features);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -7518,17 +8891,27 @@ int db_get_driver_featuress(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < driver_features_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < driver_features_count)
 		{
 			local_row_to_driver_features(p_ps, p_stmt, &p_driver_features[index]);
 			local_get_driver_features_relationships(p_ps, p_stmt, &p_driver_features[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -7588,14 +8971,22 @@ enum db_return_codes db_save_driver_features_state(const PersistentStore *p_ps,
 			$start_address_scrub, \
 			$app_direct_mode, \
 			$storage_mode) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_driver_features(p_stmt, p_driver_features);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -7638,16 +9029,28 @@ enum db_return_codes db_save_driver_features_state(const PersistentStore *p_ps,
 				 $start_address_scrub , \
 				 $app_direct_mode , \
 				 $storage_mode )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_driver_features(p_stmt, p_driver_features);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -7664,16 +9067,29 @@ enum db_return_codes db_get_driver_features_by_id(const PersistentStore *p_ps,
 		id,  get_platform_capabilities,  get_topology,  get_interleave,  get_dimm_detail,  get_namespaces,  get_namespace_detail,  get_address_scrub_data,  get_platform_config_data,  get_boot_status,  get_power_data,  get_security_state,  get_log_page,  get_features,  set_features,  create_namespace,  rename_namespace,  grow_namespace,  shrink_namespace,  delete_namespace,  enable_namespace,  disable_namespace,  set_security_state,  enable_logging,  run_diagnostic,  set_platform_config,  passthrough,  start_address_scrub,  app_direct_mode,  storage_mode  \
 		FROM driver_features \
 		WHERE  id = $id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$id", (int)id);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_driver_features(p_ps, p_stmt, p_driver_features);
 			local_get_driver_features_relationships(p_ps, p_stmt, p_driver_features);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -7683,7 +9099,6 @@ enum db_return_codes db_update_driver_features_by_id(const PersistentStore *p_ps
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE driver_features \
 	SET \
 	id=$id \
@@ -7718,20 +9133,23 @@ enum db_return_codes db_update_driver_features_by_id(const PersistentStore *p_ps
 		,  storage_mode=$storage_mode \
 		  \
 	WHERE id=$id ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$id", (int)id);
 		local_bind_driver_features(p_stmt, p_driver_features);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -7742,14 +9160,26 @@ enum db_return_codes db_delete_driver_features_by_id(const PersistentStore *p_ps
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM driver_features \
 				 WHERE id = $id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$id", (int)id);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -7763,15 +9193,26 @@ enum db_return_codes db_get_driver_features_history_by_history_id_count(const Pe
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM driver_features_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -7782,15 +9223,26 @@ enum db_return_codes db_get_driver_features_history_count(const PersistentStore 
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM driver_features_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -7805,19 +9257,29 @@ int db_get_driver_features_history_by_history_id(const PersistentStore *p_ps,
 	char *sql = "SELECT \
 		id,  get_platform_capabilities,  get_topology,  get_interleave,  get_dimm_detail,  get_namespaces,  get_namespace_detail,  get_address_scrub_data,  get_platform_config_data,  get_boot_status,  get_power_data,  get_security_state,  get_log_page,  get_features,  set_features,  create_namespace,  rename_namespace,  grow_namespace,  shrink_namespace,  delete_namespace,  enable_namespace,  disable_namespace,  set_security_state,  enable_logging,  run_diagnostic,  set_platform_config,  passthrough,  start_address_scrub,  app_direct_mode,  storage_mode  \
 		FROM driver_features_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < driver_features_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < driver_features_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_driver_features(p_ps, p_stmt, &p_driver_features[index]);
-		local_get_driver_features_relationships_history(p_ps, p_stmt, &p_driver_features[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_driver_features(p_ps, p_stmt, &p_driver_features[index]);
+			local_get_driver_features_relationships_history(p_ps, p_stmt, &p_driver_features[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -8011,14 +9473,25 @@ enum db_return_codes db_add_dimm_topology(const PersistentStore *p_ps,
 		$interface_format_codes_7, \
 		$interface_format_codes_8, \
 		$state_flags) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_dimm_topology(p_stmt, p_dimm_topology);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -8064,17 +9537,27 @@ int db_get_dimm_topologys(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_topology_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_topology_count)
 		{
 			local_row_to_dimm_topology(p_ps, p_stmt, &p_dimm_topology[index]);
 			local_get_dimm_topology_relationships(p_ps, p_stmt, &p_dimm_topology[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -8129,14 +9612,22 @@ enum db_return_codes db_save_dimm_topology_state(const PersistentStore *p_ps,
 			$interface_format_codes_7, \
 			$interface_format_codes_8, \
 			$state_flags) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_dimm_topology(p_stmt, p_dimm_topology);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -8174,16 +9665,28 @@ enum db_return_codes db_save_dimm_topology_state(const PersistentStore *p_ps,
 				 $interface_format_codes_7 , \
 				 $interface_format_codes_8 , \
 				 $state_flags )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_dimm_topology(p_stmt, p_dimm_topology);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -8200,16 +9703,29 @@ enum db_return_codes db_get_dimm_topology_by_device_handle(const PersistentStore
 		device_handle,  id,  vendor_id,  device_id,  revision_id,  subsystem_vendor_id,  subsystem_device_id,  subsystem_revision_id,  manufacturing_info_valid,  manufacturing_location,  manufacturing_date,  serial_number_0,  serial_number_1,  serial_number_2,  serial_number_3,  interface_format_codes_0,  interface_format_codes_1,  interface_format_codes_2,  interface_format_codes_3,  interface_format_codes_4,  interface_format_codes_5,  interface_format_codes_6,  interface_format_codes_7,  interface_format_codes_8,  state_flags  \
 		FROM dimm_topology \
 		WHERE  device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_dimm_topology(p_ps, p_stmt, p_dimm_topology);
 			local_get_dimm_topology_relationships(p_ps, p_stmt, p_dimm_topology);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -8219,7 +9735,6 @@ enum db_return_codes db_update_dimm_topology_by_device_handle(const PersistentSt
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE dimm_topology \
 	SET \
 	device_handle=$device_handle \
@@ -8249,20 +9764,23 @@ enum db_return_codes db_update_dimm_topology_by_device_handle(const PersistentSt
 		,  state_flags=$state_flags \
 		  \
 	WHERE device_handle=$device_handle ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		local_bind_dimm_topology(p_stmt, p_dimm_topology);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -8273,14 +9791,26 @@ enum db_return_codes db_delete_dimm_topology_by_device_handle(const PersistentSt
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM dimm_topology \
 				 WHERE device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -8294,15 +9824,26 @@ enum db_return_codes db_get_dimm_topology_history_by_history_id_count(const Pers
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_topology_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -8313,15 +9854,26 @@ enum db_return_codes db_get_dimm_topology_history_count(const PersistentStore *p
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_topology_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -8336,19 +9888,29 @@ int db_get_dimm_topology_history_by_history_id(const PersistentStore *p_ps,
 	char *sql = "SELECT \
 		device_handle,  id,  vendor_id,  device_id,  revision_id,  subsystem_vendor_id,  subsystem_device_id,  subsystem_revision_id,  manufacturing_info_valid,  manufacturing_location,  manufacturing_date,  serial_number_0,  serial_number_1,  serial_number_2,  serial_number_3,  interface_format_codes_0,  interface_format_codes_1,  interface_format_codes_2,  interface_format_codes_3,  interface_format_codes_4,  interface_format_codes_5,  interface_format_codes_6,  interface_format_codes_7,  interface_format_codes_8,  state_flags  \
 		FROM dimm_topology_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_topology_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_topology_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_dimm_topology(p_ps, p_stmt, &p_dimm_topology[index]);
-		local_get_dimm_topology_relationships_history(p_ps, p_stmt, &p_dimm_topology[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_dimm_topology(p_ps, p_stmt, &p_dimm_topology[index]);
+			local_get_dimm_topology_relationships_history(p_ps, p_stmt, &p_dimm_topology[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -8460,14 +10022,25 @@ enum db_return_codes db_add_namespace(const PersistentStore *p_ps,
 		$device_handle, \
 		$interleave_set_index, \
 		$memory_page_allocation) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_namespace(p_stmt, p_namespace);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -8499,17 +10072,27 @@ int db_get_namespaces(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < namespace_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < namespace_count)
 		{
 			local_row_to_namespace(p_ps, p_stmt, &p_namespace[index]);
 			local_get_namespace_relationships(p_ps, p_stmt, &p_namespace[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -8550,14 +10133,22 @@ enum db_return_codes db_save_namespace_state(const PersistentStore *p_ps,
 			$device_handle, \
 			$interleave_set_index, \
 			$memory_page_allocation) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_namespace(p_stmt, p_namespace);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -8581,16 +10172,28 @@ enum db_return_codes db_save_namespace_state(const PersistentStore *p_ps,
 				 $device_handle , \
 				 $interleave_set_index , \
 				 $memory_page_allocation )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_namespace(p_stmt, p_namespace);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -8607,16 +10210,29 @@ enum db_return_codes db_get_namespace_by_namespace_uid(const PersistentStore *p_
 		namespace_uid,  friendly_name,  block_size,  block_count,  type,  health,  enabled,  btt,  device_handle,  interleave_set_index,  memory_page_allocation  \
 		FROM namespace \
 		WHERE  namespace_uid = $namespace_uid";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_TEXT(p_stmt, "$namespace_uid", (char *)namespace_uid);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_namespace(p_ps, p_stmt, p_namespace);
 			local_get_namespace_relationships(p_ps, p_stmt, p_namespace);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -8626,7 +10242,6 @@ enum db_return_codes db_update_namespace_by_namespace_uid(const PersistentStore 
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE namespace \
 	SET \
 	namespace_uid=$namespace_uid \
@@ -8642,20 +10257,23 @@ enum db_return_codes db_update_namespace_by_namespace_uid(const PersistentStore 
 		,  memory_page_allocation=$memory_page_allocation \
 		  \
 	WHERE namespace_uid=$namespace_uid ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_TEXT(p_stmt, "$namespace_uid", (char *)namespace_uid);
 		local_bind_namespace(p_stmt, p_namespace);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -8666,14 +10284,26 @@ enum db_return_codes db_delete_namespace_by_namespace_uid(const PersistentStore 
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM namespace \
 				 WHERE namespace_uid = $namespace_uid";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_TEXT(p_stmt, "$namespace_uid", (char *)namespace_uid);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -8687,15 +10317,26 @@ enum db_return_codes db_get_namespace_history_by_history_id_count(const Persiste
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM namespace_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -8706,15 +10347,26 @@ enum db_return_codes db_get_namespace_history_count(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM namespace_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -8729,19 +10381,29 @@ int db_get_namespace_history_by_history_id(const PersistentStore *p_ps,
 	char *sql = "SELECT \
 		namespace_uid,  friendly_name,  block_size,  block_count,  type,  health,  enabled,  btt,  device_handle,  interleave_set_index,  memory_page_allocation  \
 		FROM namespace_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < namespace_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < namespace_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_namespace(p_ps, p_stmt, &p_namespace[index]);
-		local_get_namespace_relationships_history(p_ps, p_stmt, &p_namespace[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_namespace(p_ps, p_stmt, &p_namespace[index]);
+			local_get_namespace_relationships_history(p_ps, p_stmt, &p_namespace[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -8759,15 +10421,27 @@ enum db_return_codes db_get_namespace_count_by_dimm_topology_device_handle(
 	*p_count = 0;
 	const char *sql = "SELECT COUNT (*) FROM namespace WHERE device_handle = $device_handle";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -8782,16 +10456,28 @@ enum db_return_codes db_get_namespace_count_by_dimm_topology_device_handle_histo
 		"WHERE device_handle = $device_handle "
 			"AND history_id=$history_id";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -8806,18 +10492,28 @@ enum db_return_codes db_get_namespaces_by_dimm_topology_device_handle(const Pers
 		 namespace_uid ,  friendly_name ,  block_size ,  block_count ,  type ,  health ,  enabled ,  btt ,  device_handle ,  interleave_set_index ,  memory_page_allocation  \
 		FROM namespace \
 		WHERE  device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		rc = DB_SUCCESS;
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < namespace_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < namespace_count)
 		{
 			local_row_to_namespace(p_ps, p_stmt, &p_namespace[index]);
 			local_get_namespace_relationships(p_ps, p_stmt, &p_namespace[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -8832,19 +10528,29 @@ enum db_return_codes db_get_namespaces_by_dimm_topology_device_handle_history(co
 		 namespace_uid ,  friendly_name ,  block_size ,  block_count ,  type ,  health ,  enabled ,  btt ,  device_handle ,  interleave_set_index ,  memory_page_allocation  \
 		FROM namespace_history \
 		WHERE  device_handle = $device_handle AND history_id=$history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		rc = DB_SUCCESS;
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < namespace_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < namespace_count)
 		{
 			local_row_to_namespace(p_ps, p_stmt, &p_namespace[index]);
 			local_get_namespace_relationships(p_ps, p_stmt, &p_namespace[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -8855,14 +10561,24 @@ enum db_return_codes db_delete_namespace_by_dimm_topology_device_handle(const Pe
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM namespace \
 				 WHERE device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -8875,15 +10591,27 @@ enum db_return_codes db_get_namespace_count_by_interleave_set_dimm_info_index_id
 	*p_count = 0;
 	const char *sql = "SELECT COUNT (*) FROM namespace WHERE interleave_set_index = $interleave_set_index";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$interleave_set_index", (unsigned int)interleave_set_index);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -8898,16 +10626,28 @@ enum db_return_codes db_get_namespace_count_by_interleave_set_dimm_info_index_id
 		"WHERE interleave_set_index = $interleave_set_index "
 			"AND history_id=$history_id";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$interleave_set_index", (unsigned int)interleave_set_index);
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -8922,18 +10662,28 @@ enum db_return_codes db_get_namespaces_by_interleave_set_dimm_info_index_id(cons
 		 namespace_uid ,  friendly_name ,  block_size ,  block_count ,  type ,  health ,  enabled ,  btt ,  device_handle ,  interleave_set_index ,  memory_page_allocation  \
 		FROM namespace \
 		WHERE  interleave_set_index = $interleave_set_index";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		rc = DB_SUCCESS;
 		BIND_INTEGER(p_stmt, "$interleave_set_index", (unsigned int)interleave_set_index);
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < namespace_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < namespace_count)
 		{
 			local_row_to_namespace(p_ps, p_stmt, &p_namespace[index]);
 			local_get_namespace_relationships(p_ps, p_stmt, &p_namespace[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -8948,19 +10698,29 @@ enum db_return_codes db_get_namespaces_by_interleave_set_dimm_info_index_id_hist
 		 namespace_uid ,  friendly_name ,  block_size ,  block_count ,  type ,  health ,  enabled ,  btt ,  device_handle ,  interleave_set_index ,  memory_page_allocation  \
 		FROM namespace_history \
 		WHERE  interleave_set_index = $interleave_set_index AND history_id=$history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		rc = DB_SUCCESS;
 		BIND_INTEGER(p_stmt, "$interleave_set_index", (unsigned int)interleave_set_index);
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < namespace_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < namespace_count)
 		{
 			local_row_to_namespace(p_ps, p_stmt, &p_namespace[index]);
 			local_get_namespace_relationships(p_ps, p_stmt, &p_namespace[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -8971,14 +10731,24 @@ enum db_return_codes db_delete_namespace_by_interleave_set_dimm_info_index_id(co
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM namespace \
 				 WHERE interleave_set_index = $interleave_set_index";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$interleave_set_index", (unsigned int)interleave_set_index);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -9115,14 +10885,25 @@ enum db_return_codes db_add_identify_dimm(const PersistentStore *p_ps,
 		$manufacturer, \
 		$serial_num, \
 		$part_num) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_identify_dimm(p_stmt, p_identify_dimm);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -9159,17 +10940,27 @@ int db_get_identify_dimms(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < identify_dimm_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < identify_dimm_count)
 		{
 			local_row_to_identify_dimm(p_ps, p_stmt, &p_identify_dimm[index]);
 			local_get_identify_dimm_relationships(p_ps, p_stmt, &p_identify_dimm[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -9215,14 +11006,22 @@ enum db_return_codes db_save_identify_dimm_state(const PersistentStore *p_ps,
 			$manufacturer, \
 			$serial_num, \
 			$part_num) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_identify_dimm(p_stmt, p_identify_dimm);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -9251,16 +11050,28 @@ enum db_return_codes db_save_identify_dimm_state(const PersistentStore *p_ps,
 				 $manufacturer , \
 				 $serial_num , \
 				 $part_num )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_identify_dimm(p_stmt, p_identify_dimm);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -9277,16 +11088,29 @@ enum db_return_codes db_get_identify_dimm_by_device_handle(const PersistentStore
 		device_handle,  vendor_id,  device_id,  revision_id,  interface_format_code,  interface_format_code_extra,  fw_revision,  fw_api_version,  fw_sw_mask,  dimm_sku,  block_windows,  block_control_region_offset,  raw_cap,  manufacturer,  serial_num,  part_num  \
 		FROM identify_dimm \
 		WHERE  device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_identify_dimm(p_ps, p_stmt, p_identify_dimm);
 			local_get_identify_dimm_relationships(p_ps, p_stmt, p_identify_dimm);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -9296,7 +11120,6 @@ enum db_return_codes db_update_identify_dimm_by_device_handle(const PersistentSt
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE identify_dimm \
 	SET \
 	device_handle=$device_handle \
@@ -9317,20 +11140,23 @@ enum db_return_codes db_update_identify_dimm_by_device_handle(const PersistentSt
 		,  part_num=$part_num \
 		  \
 	WHERE device_handle=$device_handle ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		local_bind_identify_dimm(p_stmt, p_identify_dimm);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -9341,14 +11167,26 @@ enum db_return_codes db_delete_identify_dimm_by_device_handle(const PersistentSt
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM identify_dimm \
 				 WHERE device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -9362,15 +11200,26 @@ enum db_return_codes db_get_identify_dimm_history_by_history_id_count(const Pers
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM identify_dimm_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -9381,15 +11230,26 @@ enum db_return_codes db_get_identify_dimm_history_count(const PersistentStore *p
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM identify_dimm_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -9404,19 +11264,29 @@ int db_get_identify_dimm_history_by_history_id(const PersistentStore *p_ps,
 	char *sql = "SELECT \
 		device_handle,  vendor_id,  device_id,  revision_id,  interface_format_code,  interface_format_code_extra,  fw_revision,  fw_api_version,  fw_sw_mask,  dimm_sku,  block_windows,  block_control_region_offset,  raw_cap,  manufacturer,  serial_num,  part_num  \
 		FROM identify_dimm_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < identify_dimm_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < identify_dimm_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_identify_dimm(p_ps, p_stmt, &p_identify_dimm[index]);
-		local_get_identify_dimm_relationships_history(p_ps, p_stmt, &p_identify_dimm[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_identify_dimm(p_ps, p_stmt, &p_identify_dimm[index]);
+			local_get_identify_dimm_relationships_history(p_ps, p_stmt, &p_identify_dimm[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -9505,14 +11375,25 @@ enum db_return_codes db_add_device_characteristics(const PersistentStore *p_ps,
 		$media_temp_shutdown_threshold, \
 		$throttling_start_threshold, \
 		$throttling_stop_threshold) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_device_characteristics(p_stmt, p_device_characteristics);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -9538,17 +11419,27 @@ int db_get_device_characteristicss(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < device_characteristics_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < device_characteristics_count)
 		{
 			local_row_to_device_characteristics(p_ps, p_stmt, &p_device_characteristics[index]);
 			local_get_device_characteristics_relationships(p_ps, p_stmt, &p_device_characteristics[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -9583,14 +11474,22 @@ enum db_return_codes db_save_device_characteristics_state(const PersistentStore 
 			$media_temp_shutdown_threshold, \
 			$throttling_start_threshold, \
 			$throttling_stop_threshold) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_device_characteristics(p_stmt, p_device_characteristics);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -9608,16 +11507,28 @@ enum db_return_codes db_save_device_characteristics_state(const PersistentStore 
 				 $media_temp_shutdown_threshold , \
 				 $throttling_start_threshold , \
 				 $throttling_stop_threshold )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_device_characteristics(p_stmt, p_device_characteristics);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -9634,16 +11545,29 @@ enum db_return_codes db_get_device_characteristics_by_device_handle(const Persis
 		device_handle,  controller_temp_shutdown_threshold,  media_temp_shutdown_threshold,  throttling_start_threshold,  throttling_stop_threshold  \
 		FROM device_characteristics \
 		WHERE  device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_device_characteristics(p_ps, p_stmt, p_device_characteristics);
 			local_get_device_characteristics_relationships(p_ps, p_stmt, p_device_characteristics);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -9653,7 +11577,6 @@ enum db_return_codes db_update_device_characteristics_by_device_handle(const Per
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE device_characteristics \
 	SET \
 	device_handle=$device_handle \
@@ -9663,20 +11586,23 @@ enum db_return_codes db_update_device_characteristics_by_device_handle(const Per
 		,  throttling_stop_threshold=$throttling_stop_threshold \
 		  \
 	WHERE device_handle=$device_handle ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		local_bind_device_characteristics(p_stmt, p_device_characteristics);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -9687,14 +11613,26 @@ enum db_return_codes db_delete_device_characteristics_by_device_handle(const Per
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM device_characteristics \
 				 WHERE device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -9708,15 +11646,26 @@ enum db_return_codes db_get_device_characteristics_history_by_history_id_count(c
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM device_characteristics_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -9727,15 +11676,26 @@ enum db_return_codes db_get_device_characteristics_history_count(const Persisten
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM device_characteristics_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -9750,19 +11710,29 @@ int db_get_device_characteristics_history_by_history_id(const PersistentStore *p
 	char *sql = "SELECT \
 		device_handle,  controller_temp_shutdown_threshold,  media_temp_shutdown_threshold,  throttling_start_threshold,  throttling_stop_threshold  \
 		FROM device_characteristics_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < device_characteristics_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < device_characteristics_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_device_characteristics(p_ps, p_stmt, &p_device_characteristics[index]);
-		local_get_device_characteristics_relationships_history(p_ps, p_stmt, &p_device_characteristics[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_device_characteristics(p_ps, p_stmt, &p_device_characteristics[index]);
+			local_get_device_characteristics_relationships_history(p_ps, p_stmt, &p_device_characteristics[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -9842,14 +11812,25 @@ enum db_return_codes db_add_dimm_partition(const PersistentStore *p_ps,
 		$pmem_capacity, \
 		$pm_start, \
 		$raw_capacity) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_dimm_partition(p_stmt, p_dimm_partition);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -9876,17 +11857,27 @@ int db_get_dimm_partitions(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_partition_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_partition_count)
 		{
 			local_row_to_dimm_partition(p_ps, p_stmt, &p_dimm_partition[index]);
 			local_get_dimm_partition_relationships(p_ps, p_stmt, &p_dimm_partition[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -9922,14 +11913,22 @@ enum db_return_codes db_save_dimm_partition_state(const PersistentStore *p_ps,
 			$pmem_capacity, \
 			$pm_start, \
 			$raw_capacity) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_dimm_partition(p_stmt, p_dimm_partition);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -9948,16 +11947,28 @@ enum db_return_codes db_save_dimm_partition_state(const PersistentStore *p_ps,
 				 $pmem_capacity , \
 				 $pm_start , \
 				 $raw_capacity )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_dimm_partition(p_stmt, p_dimm_partition);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -9974,16 +11985,29 @@ enum db_return_codes db_get_dimm_partition_by_device_handle(const PersistentStor
 		device_handle,  volatile_capacity,  volatile_start,  pmem_capacity,  pm_start,  raw_capacity  \
 		FROM dimm_partition \
 		WHERE  device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_dimm_partition(p_ps, p_stmt, p_dimm_partition);
 			local_get_dimm_partition_relationships(p_ps, p_stmt, p_dimm_partition);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -9993,7 +12017,6 @@ enum db_return_codes db_update_dimm_partition_by_device_handle(const PersistentS
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE dimm_partition \
 	SET \
 	device_handle=$device_handle \
@@ -10004,20 +12027,23 @@ enum db_return_codes db_update_dimm_partition_by_device_handle(const PersistentS
 		,  raw_capacity=$raw_capacity \
 		  \
 	WHERE device_handle=$device_handle ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		local_bind_dimm_partition(p_stmt, p_dimm_partition);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -10028,14 +12054,26 @@ enum db_return_codes db_delete_dimm_partition_by_device_handle(const PersistentS
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM dimm_partition \
 				 WHERE device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -10049,15 +12087,26 @@ enum db_return_codes db_get_dimm_partition_history_by_history_id_count(const Per
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_partition_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -10068,15 +12117,26 @@ enum db_return_codes db_get_dimm_partition_history_count(const PersistentStore *
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_partition_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -10091,19 +12151,29 @@ int db_get_dimm_partition_history_by_history_id(const PersistentStore *p_ps,
 	char *sql = "SELECT \
 		device_handle,  volatile_capacity,  volatile_start,  pmem_capacity,  pm_start,  raw_capacity  \
 		FROM dimm_partition_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_partition_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_partition_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_dimm_partition(p_ps, p_stmt, &p_dimm_partition[index]);
-		local_get_dimm_partition_relationships_history(p_ps, p_stmt, &p_dimm_partition[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_dimm_partition(p_ps, p_stmt, &p_dimm_partition[index]);
+			local_get_dimm_partition_relationships_history(p_ps, p_stmt, &p_dimm_partition[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -10249,14 +12319,25 @@ enum db_return_codes db_add_dimm_smart(const PersistentStore *p_ps,
 		$last_shutdown_time, \
 		$controller_temperature, \
 		$ait_dram_status) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_dimm_smart(p_stmt, p_dimm_smart);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -10294,17 +12375,27 @@ int db_get_dimm_smarts(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_smart_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_smart_count)
 		{
 			local_row_to_dimm_smart(p_ps, p_stmt, &p_dimm_smart[index]);
 			local_get_dimm_smart_relationships(p_ps, p_stmt, &p_dimm_smart[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -10351,14 +12442,22 @@ enum db_return_codes db_save_dimm_smart_state(const PersistentStore *p_ps,
 			$last_shutdown_time, \
 			$controller_temperature, \
 			$ait_dram_status) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_dimm_smart(p_stmt, p_dimm_smart);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -10388,16 +12487,28 @@ enum db_return_codes db_save_dimm_smart_state(const PersistentStore *p_ps,
 				 $last_shutdown_time , \
 				 $controller_temperature , \
 				 $ait_dram_status )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_dimm_smart(p_stmt, p_dimm_smart);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -10414,16 +12525,29 @@ enum db_return_codes db_get_dimm_smart_by_device_handle(const PersistentStore *p
 		device_handle,  validation_flags,  health_status,  media_temperature,  spare,  alarm_trips,  percentage_used,  lss,  vendor_specific_data_size,  power_cycles,  power_on_seconds,  uptime,  unsafe_shutdowns,  lss_details,  last_shutdown_time,  controller_temperature,  ait_dram_status  \
 		FROM dimm_smart \
 		WHERE  device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_dimm_smart(p_ps, p_stmt, p_dimm_smart);
 			local_get_dimm_smart_relationships(p_ps, p_stmt, p_dimm_smart);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -10433,7 +12557,6 @@ enum db_return_codes db_update_dimm_smart_by_device_handle(const PersistentStore
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE dimm_smart \
 	SET \
 	device_handle=$device_handle \
@@ -10455,20 +12578,23 @@ enum db_return_codes db_update_dimm_smart_by_device_handle(const PersistentStore
 		,  ait_dram_status=$ait_dram_status \
 		  \
 	WHERE device_handle=$device_handle ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		local_bind_dimm_smart(p_stmt, p_dimm_smart);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -10479,14 +12605,26 @@ enum db_return_codes db_delete_dimm_smart_by_device_handle(const PersistentStore
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM dimm_smart \
 				 WHERE device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -10500,15 +12638,26 @@ enum db_return_codes db_get_dimm_smart_history_by_history_id_count(const Persist
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_smart_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -10519,15 +12668,26 @@ enum db_return_codes db_get_dimm_smart_history_count(const PersistentStore *p_ps
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_smart_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -10542,19 +12702,29 @@ int db_get_dimm_smart_history_by_history_id(const PersistentStore *p_ps,
 	char *sql = "SELECT \
 		device_handle,  validation_flags,  health_status,  media_temperature,  spare,  alarm_trips,  percentage_used,  lss,  vendor_specific_data_size,  power_cycles,  power_on_seconds,  uptime,  unsafe_shutdowns,  lss_details,  last_shutdown_time,  controller_temperature,  ait_dram_status  \
 		FROM dimm_smart_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_smart_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_smart_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_dimm_smart(p_ps, p_stmt, &p_dimm_smart[index]);
-		local_get_dimm_smart_relationships_history(p_ps, p_stmt, &p_dimm_smart[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_dimm_smart(p_ps, p_stmt, &p_dimm_smart[index]);
+			local_get_dimm_smart_relationships_history(p_ps, p_stmt, &p_dimm_smart[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -10645,14 +12815,25 @@ enum db_return_codes db_add_dimm_state(const PersistentStore *p_ps,
 		$health_state, \
 		$sanitize_status, \
 		$fw_log_errors) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_dimm_state(p_stmt, p_dimm_state);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -10680,17 +12861,27 @@ int db_get_dimm_states(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_state_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_state_count)
 		{
 			local_row_to_dimm_state(p_ps, p_stmt, &p_dimm_state[index]);
 			local_get_dimm_state_relationships(p_ps, p_stmt, &p_dimm_state[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -10730,14 +12921,22 @@ enum db_return_codes db_save_dimm_state_state(const PersistentStore *p_ps,
 			$health_state, \
 			$sanitize_status, \
 			$fw_log_errors) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_dimm_state(p_stmt, p_dimm_state);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -10757,16 +12956,28 @@ enum db_return_codes db_save_dimm_state_state(const PersistentStore *p_ps,
 				 $health_state , \
 				 $sanitize_status , \
 				 $fw_log_errors )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_dimm_state(p_stmt, p_dimm_state);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -10785,16 +12996,29 @@ enum db_return_codes db_get_dimm_state_by_device_handle(const PersistentStore *p
 		device_handle,  mediaerrors_corrected,  mediaerrors_uncorrectable,  mediaerrors_erasurecoded,  health_state,  sanitize_status,  fw_log_errors  \
 		FROM dimm_state \
 		WHERE  device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_dimm_state(p_ps, p_stmt, p_dimm_state);
 			local_get_dimm_state_relationships(p_ps, p_stmt, p_dimm_state);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -10804,7 +13028,6 @@ enum db_return_codes db_update_dimm_state_by_device_handle(const PersistentStore
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE dimm_state \
 	SET \
 	device_handle=$device_handle \
@@ -10816,20 +13039,23 @@ enum db_return_codes db_update_dimm_state_by_device_handle(const PersistentStore
 		,  fw_log_errors=$fw_log_errors \
 		  \
 	WHERE device_handle=$device_handle ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		local_bind_dimm_state(p_stmt, p_dimm_state);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -10840,14 +13066,26 @@ enum db_return_codes db_delete_dimm_state_by_device_handle(const PersistentStore
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM dimm_state \
 				 WHERE device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -10864,15 +13102,26 @@ enum db_return_codes db_get_dimm_state_history_by_history_id_count(const Persist
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_state_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -10883,15 +13132,26 @@ enum db_return_codes db_get_dimm_state_history_count(const PersistentStore *p_ps
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_state_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -10906,19 +13166,29 @@ int db_get_dimm_state_history_by_history_id(const PersistentStore *p_ps,
 	char *sql = "SELECT \
 		device_handle,  mediaerrors_corrected,  mediaerrors_uncorrectable,  mediaerrors_erasurecoded,  health_state,  sanitize_status,  fw_log_errors  \
 		FROM dimm_state_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_state_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_state_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_dimm_state(p_ps, p_stmt, &p_dimm_state[index]);
-		local_get_dimm_state_relationships_history(p_ps, p_stmt, &p_dimm_state[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_dimm_state(p_ps, p_stmt, &p_dimm_state[index]);
+			local_get_dimm_state_relationships_history(p_ps, p_stmt, &p_dimm_state[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -10982,14 +13252,25 @@ enum db_return_codes db_add_namespace_state(const PersistentStore *p_ps,
 		VALUES 		\
 		($namespace_uid, \
 		$health_state) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_namespace_state(p_stmt, p_namespace_state);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -11012,17 +13293,27 @@ int db_get_namespace_states(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < namespace_state_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < namespace_state_count)
 		{
 			local_row_to_namespace_state(p_ps, p_stmt, &p_namespace_state[index]);
 			local_get_namespace_state_relationships(p_ps, p_stmt, &p_namespace_state[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -11057,14 +13348,22 @@ enum db_return_codes db_save_namespace_state_state(const PersistentStore *p_ps,
 			VALUES 		\
 			($namespace_uid, \
 			$health_state) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_namespace_state(p_stmt, p_namespace_state);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -11079,16 +13378,28 @@ enum db_return_codes db_save_namespace_state_state(const PersistentStore *p_ps,
 			VALUES 		($history_id, \
 				 $namespace_uid , \
 				 $health_state )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_namespace_state(p_stmt, p_namespace_state);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -11107,16 +13418,29 @@ enum db_return_codes db_get_namespace_state_by_namespace_uid(const PersistentSto
 		namespace_uid,  health_state  \
 		FROM namespace_state \
 		WHERE  namespace_uid = $namespace_uid";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_TEXT(p_stmt, "$namespace_uid", (char *)namespace_uid);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_namespace_state(p_ps, p_stmt, p_namespace_state);
 			local_get_namespace_state_relationships(p_ps, p_stmt, p_namespace_state);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -11126,27 +13450,29 @@ enum db_return_codes db_update_namespace_state_by_namespace_uid(const Persistent
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE namespace_state \
 	SET \
 	namespace_uid=$namespace_uid \
 		,  health_state=$health_state \
 		  \
 	WHERE namespace_uid=$namespace_uid ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_TEXT(p_stmt, "$namespace_uid", (char *)namespace_uid);
 		local_bind_namespace_state(p_stmt, p_namespace_state);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -11157,14 +13483,26 @@ enum db_return_codes db_delete_namespace_state_by_namespace_uid(const Persistent
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM namespace_state \
 				 WHERE namespace_uid = $namespace_uid";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_TEXT(p_stmt, "$namespace_uid", (char *)namespace_uid);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -11181,15 +13519,26 @@ enum db_return_codes db_get_namespace_state_history_by_history_id_count(const Pe
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM namespace_state_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -11200,15 +13549,26 @@ enum db_return_codes db_get_namespace_state_history_count(const PersistentStore 
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM namespace_state_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -11223,19 +13583,29 @@ int db_get_namespace_state_history_by_history_id(const PersistentStore *p_ps,
 	char *sql = "SELECT \
 		namespace_uid,  health_state  \
 		FROM namespace_state_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < namespace_state_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < namespace_state_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_namespace_state(p_ps, p_stmt, &p_namespace_state[index]);
-		local_get_namespace_state_relationships_history(p_ps, p_stmt, &p_namespace_state[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_namespace_state(p_ps, p_stmt, &p_namespace_state[index]);
+			local_get_namespace_state_relationships_history(p_ps, p_stmt, &p_namespace_state[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -11311,14 +13681,25 @@ enum db_return_codes db_add_dimm_alarm_thresholds(const PersistentStore *p_ps,
 		$media_temperature, \
 		$controller_temperature, \
 		$spare) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_dimm_alarm_thresholds(p_stmt, p_dimm_alarm_thresholds);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -11344,17 +13725,27 @@ int db_get_dimm_alarm_thresholdss(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_alarm_thresholds_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_alarm_thresholds_count)
 		{
 			local_row_to_dimm_alarm_thresholds(p_ps, p_stmt, &p_dimm_alarm_thresholds[index]);
 			local_get_dimm_alarm_thresholds_relationships(p_ps, p_stmt, &p_dimm_alarm_thresholds[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -11389,14 +13780,22 @@ enum db_return_codes db_save_dimm_alarm_thresholds_state(const PersistentStore *
 			$media_temperature, \
 			$controller_temperature, \
 			$spare) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_dimm_alarm_thresholds(p_stmt, p_dimm_alarm_thresholds);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -11414,16 +13813,28 @@ enum db_return_codes db_save_dimm_alarm_thresholds_state(const PersistentStore *
 				 $media_temperature , \
 				 $controller_temperature , \
 				 $spare )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_dimm_alarm_thresholds(p_stmt, p_dimm_alarm_thresholds);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -11440,16 +13851,29 @@ enum db_return_codes db_get_dimm_alarm_thresholds_by_device_handle(const Persist
 		device_handle,  enable,  media_temperature,  controller_temperature,  spare  \
 		FROM dimm_alarm_thresholds \
 		WHERE  device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_dimm_alarm_thresholds(p_ps, p_stmt, p_dimm_alarm_thresholds);
 			local_get_dimm_alarm_thresholds_relationships(p_ps, p_stmt, p_dimm_alarm_thresholds);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -11459,7 +13883,6 @@ enum db_return_codes db_update_dimm_alarm_thresholds_by_device_handle(const Pers
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE dimm_alarm_thresholds \
 	SET \
 	device_handle=$device_handle \
@@ -11469,20 +13892,23 @@ enum db_return_codes db_update_dimm_alarm_thresholds_by_device_handle(const Pers
 		,  spare=$spare \
 		  \
 	WHERE device_handle=$device_handle ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		local_bind_dimm_alarm_thresholds(p_stmt, p_dimm_alarm_thresholds);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -11493,14 +13919,26 @@ enum db_return_codes db_delete_dimm_alarm_thresholds_by_device_handle(const Pers
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM dimm_alarm_thresholds \
 				 WHERE device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -11514,15 +13952,26 @@ enum db_return_codes db_get_dimm_alarm_thresholds_history_by_history_id_count(co
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_alarm_thresholds_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -11533,15 +13982,26 @@ enum db_return_codes db_get_dimm_alarm_thresholds_history_count(const Persistent
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_alarm_thresholds_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -11556,19 +14016,29 @@ int db_get_dimm_alarm_thresholds_history_by_history_id(const PersistentStore *p_
 	char *sql = "SELECT \
 		device_handle,  enable,  media_temperature,  controller_temperature,  spare  \
 		FROM dimm_alarm_thresholds_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_alarm_thresholds_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_alarm_thresholds_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_dimm_alarm_thresholds(p_ps, p_stmt, &p_dimm_alarm_thresholds[index]);
-		local_get_dimm_alarm_thresholds_relationships_history(p_ps, p_stmt, &p_dimm_alarm_thresholds[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_dimm_alarm_thresholds(p_ps, p_stmt, &p_dimm_alarm_thresholds[index]);
+			local_get_dimm_alarm_thresholds_relationships_history(p_ps, p_stmt, &p_dimm_alarm_thresholds[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -11642,14 +14112,25 @@ enum db_return_codes db_add_dimm_power_management(const PersistentStore *p_ps,
 		$tdp_power_limit, \
 		$peak_power_budget, \
 		$avg_power_budget) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_dimm_power_management(p_stmt, p_dimm_power_management);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -11675,17 +14156,27 @@ int db_get_dimm_power_managements(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_power_management_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_power_management_count)
 		{
 			local_row_to_dimm_power_management(p_ps, p_stmt, &p_dimm_power_management[index]);
 			local_get_dimm_power_management_relationships(p_ps, p_stmt, &p_dimm_power_management[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -11720,14 +14211,22 @@ enum db_return_codes db_save_dimm_power_management_state(const PersistentStore *
 			$tdp_power_limit, \
 			$peak_power_budget, \
 			$avg_power_budget) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_dimm_power_management(p_stmt, p_dimm_power_management);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -11745,16 +14244,28 @@ enum db_return_codes db_save_dimm_power_management_state(const PersistentStore *
 				 $tdp_power_limit , \
 				 $peak_power_budget , \
 				 $avg_power_budget )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_dimm_power_management(p_stmt, p_dimm_power_management);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -11771,16 +14282,29 @@ enum db_return_codes db_get_dimm_power_management_by_device_handle(const Persist
 		device_handle,  enable,  tdp_power_limit,  peak_power_budget,  avg_power_budget  \
 		FROM dimm_power_management \
 		WHERE  device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_dimm_power_management(p_ps, p_stmt, p_dimm_power_management);
 			local_get_dimm_power_management_relationships(p_ps, p_stmt, p_dimm_power_management);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -11790,7 +14314,6 @@ enum db_return_codes db_update_dimm_power_management_by_device_handle(const Pers
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE dimm_power_management \
 	SET \
 	device_handle=$device_handle \
@@ -11800,20 +14323,23 @@ enum db_return_codes db_update_dimm_power_management_by_device_handle(const Pers
 		,  avg_power_budget=$avg_power_budget \
 		  \
 	WHERE device_handle=$device_handle ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		local_bind_dimm_power_management(p_stmt, p_dimm_power_management);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -11824,14 +14350,26 @@ enum db_return_codes db_delete_dimm_power_management_by_device_handle(const Pers
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM dimm_power_management \
 				 WHERE device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -11845,15 +14383,26 @@ enum db_return_codes db_get_dimm_power_management_history_by_history_id_count(co
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_power_management_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -11864,15 +14413,26 @@ enum db_return_codes db_get_dimm_power_management_history_count(const Persistent
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_power_management_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -11887,19 +14447,29 @@ int db_get_dimm_power_management_history_by_history_id(const PersistentStore *p_
 	char *sql = "SELECT \
 		device_handle,  enable,  tdp_power_limit,  peak_power_budget,  avg_power_budget  \
 		FROM dimm_power_management_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_power_management_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_power_management_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_dimm_power_management(p_ps, p_stmt, &p_dimm_power_management[index]);
-		local_get_dimm_power_management_relationships_history(p_ps, p_stmt, &p_dimm_power_management[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_dimm_power_management(p_ps, p_stmt, &p_dimm_power_management[index]);
+			local_get_dimm_power_management_relationships_history(p_ps, p_stmt, &p_dimm_power_management[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -11967,14 +14537,25 @@ enum db_return_codes db_add_dimm_die_sparing(const PersistentStore *p_ps,
 		$enable, \
 		$aggressiveness, \
 		$supported) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_dimm_die_sparing(p_stmt, p_dimm_die_sparing);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -11999,17 +14580,27 @@ int db_get_dimm_die_sparings(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_die_sparing_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_die_sparing_count)
 		{
 			local_row_to_dimm_die_sparing(p_ps, p_stmt, &p_dimm_die_sparing[index]);
 			local_get_dimm_die_sparing_relationships(p_ps, p_stmt, &p_dimm_die_sparing[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -12043,14 +14634,22 @@ enum db_return_codes db_save_dimm_die_sparing_state(const PersistentStore *p_ps,
 			$enable, \
 			$aggressiveness, \
 			$supported) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_dimm_die_sparing(p_stmt, p_dimm_die_sparing);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -12067,16 +14666,28 @@ enum db_return_codes db_save_dimm_die_sparing_state(const PersistentStore *p_ps,
 				 $enable , \
 				 $aggressiveness , \
 				 $supported )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_dimm_die_sparing(p_stmt, p_dimm_die_sparing);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -12093,16 +14704,29 @@ enum db_return_codes db_get_dimm_die_sparing_by_device_handle(const PersistentSt
 		device_handle,  enable,  aggressiveness,  supported  \
 		FROM dimm_die_sparing \
 		WHERE  device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_dimm_die_sparing(p_ps, p_stmt, p_dimm_die_sparing);
 			local_get_dimm_die_sparing_relationships(p_ps, p_stmt, p_dimm_die_sparing);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -12112,7 +14736,6 @@ enum db_return_codes db_update_dimm_die_sparing_by_device_handle(const Persisten
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE dimm_die_sparing \
 	SET \
 	device_handle=$device_handle \
@@ -12121,20 +14744,23 @@ enum db_return_codes db_update_dimm_die_sparing_by_device_handle(const Persisten
 		,  supported=$supported \
 		  \
 	WHERE device_handle=$device_handle ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		local_bind_dimm_die_sparing(p_stmt, p_dimm_die_sparing);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -12145,14 +14771,26 @@ enum db_return_codes db_delete_dimm_die_sparing_by_device_handle(const Persisten
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM dimm_die_sparing \
 				 WHERE device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -12166,15 +14804,26 @@ enum db_return_codes db_get_dimm_die_sparing_history_by_history_id_count(const P
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_die_sparing_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -12185,15 +14834,26 @@ enum db_return_codes db_get_dimm_die_sparing_history_count(const PersistentStore
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_die_sparing_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -12208,19 +14868,29 @@ int db_get_dimm_die_sparing_history_by_history_id(const PersistentStore *p_ps,
 	char *sql = "SELECT \
 		device_handle,  enable,  aggressiveness,  supported  \
 		FROM dimm_die_sparing_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_die_sparing_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_die_sparing_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_dimm_die_sparing(p_ps, p_stmt, &p_dimm_die_sparing[index]);
-		local_get_dimm_die_sparing_relationships_history(p_ps, p_stmt, &p_dimm_die_sparing[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_dimm_die_sparing(p_ps, p_stmt, &p_dimm_die_sparing[index]);
+			local_get_dimm_die_sparing_relationships_history(p_ps, p_stmt, &p_dimm_die_sparing[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -12288,14 +14958,25 @@ enum db_return_codes db_add_dimm_optional_config_data(const PersistentStore *p_p
 		$first_fast_refresh_enable, \
 		$viral_policy_enable, \
 		$viral_status) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_dimm_optional_config_data(p_stmt, p_dimm_optional_config_data);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -12320,17 +15001,27 @@ int db_get_dimm_optional_config_datas(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_optional_config_data_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_optional_config_data_count)
 		{
 			local_row_to_dimm_optional_config_data(p_ps, p_stmt, &p_dimm_optional_config_data[index]);
 			local_get_dimm_optional_config_data_relationships(p_ps, p_stmt, &p_dimm_optional_config_data[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -12364,14 +15055,22 @@ enum db_return_codes db_save_dimm_optional_config_data_state(const PersistentSto
 			$first_fast_refresh_enable, \
 			$viral_policy_enable, \
 			$viral_status) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_dimm_optional_config_data(p_stmt, p_dimm_optional_config_data);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -12388,16 +15087,28 @@ enum db_return_codes db_save_dimm_optional_config_data_state(const PersistentSto
 				 $first_fast_refresh_enable , \
 				 $viral_policy_enable , \
 				 $viral_status )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_dimm_optional_config_data(p_stmt, p_dimm_optional_config_data);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -12414,16 +15125,29 @@ enum db_return_codes db_get_dimm_optional_config_data_by_device_handle(const Per
 		device_handle,  first_fast_refresh_enable,  viral_policy_enable,  viral_status  \
 		FROM dimm_optional_config_data \
 		WHERE  device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_dimm_optional_config_data(p_ps, p_stmt, p_dimm_optional_config_data);
 			local_get_dimm_optional_config_data_relationships(p_ps, p_stmt, p_dimm_optional_config_data);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -12433,7 +15157,6 @@ enum db_return_codes db_update_dimm_optional_config_data_by_device_handle(const 
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE dimm_optional_config_data \
 	SET \
 	device_handle=$device_handle \
@@ -12442,20 +15165,23 @@ enum db_return_codes db_update_dimm_optional_config_data_by_device_handle(const 
 		,  viral_status=$viral_status \
 		  \
 	WHERE device_handle=$device_handle ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		local_bind_dimm_optional_config_data(p_stmt, p_dimm_optional_config_data);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -12466,14 +15192,26 @@ enum db_return_codes db_delete_dimm_optional_config_data_by_device_handle(const 
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM dimm_optional_config_data \
 				 WHERE device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -12487,15 +15225,26 @@ enum db_return_codes db_get_dimm_optional_config_data_history_by_history_id_coun
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_optional_config_data_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -12506,15 +15255,26 @@ enum db_return_codes db_get_dimm_optional_config_data_history_count(const Persis
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_optional_config_data_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -12529,19 +15289,29 @@ int db_get_dimm_optional_config_data_history_by_history_id(const PersistentStore
 	char *sql = "SELECT \
 		device_handle,  first_fast_refresh_enable,  viral_policy_enable,  viral_status  \
 		FROM dimm_optional_config_data_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_optional_config_data_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_optional_config_data_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_dimm_optional_config_data(p_ps, p_stmt, &p_dimm_optional_config_data[index]);
-		local_get_dimm_optional_config_data_relationships_history(p_ps, p_stmt, &p_dimm_optional_config_data[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_dimm_optional_config_data(p_ps, p_stmt, &p_dimm_optional_config_data[index]);
+			local_get_dimm_optional_config_data_relationships_history(p_ps, p_stmt, &p_dimm_optional_config_data[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -12615,14 +15385,25 @@ enum db_return_codes db_add_dimm_err_correction(const PersistentStore *p_ps,
 		$refreshed_enable, \
 		$unrefreshed_force_write, \
 		$refreshed_force_write) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_dimm_err_correction(p_stmt, p_dimm_err_correction);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -12648,17 +15429,27 @@ int db_get_dimm_err_corrections(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_err_correction_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_err_correction_count)
 		{
 			local_row_to_dimm_err_correction(p_ps, p_stmt, &p_dimm_err_correction[index]);
 			local_get_dimm_err_correction_relationships(p_ps, p_stmt, &p_dimm_err_correction[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -12693,14 +15484,22 @@ enum db_return_codes db_save_dimm_err_correction_state(const PersistentStore *p_
 			$refreshed_enable, \
 			$unrefreshed_force_write, \
 			$refreshed_force_write) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_dimm_err_correction(p_stmt, p_dimm_err_correction);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -12718,16 +15517,28 @@ enum db_return_codes db_save_dimm_err_correction_state(const PersistentStore *p_
 				 $refreshed_enable , \
 				 $unrefreshed_force_write , \
 				 $refreshed_force_write )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_dimm_err_correction(p_stmt, p_dimm_err_correction);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -12744,16 +15555,29 @@ enum db_return_codes db_get_dimm_err_correction_by_device_handle(const Persisten
 		device_handle,  unrefreshed_enable,  refreshed_enable,  unrefreshed_force_write,  refreshed_force_write  \
 		FROM dimm_err_correction \
 		WHERE  device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_dimm_err_correction(p_ps, p_stmt, p_dimm_err_correction);
 			local_get_dimm_err_correction_relationships(p_ps, p_stmt, p_dimm_err_correction);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -12763,7 +15587,6 @@ enum db_return_codes db_update_dimm_err_correction_by_device_handle(const Persis
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE dimm_err_correction \
 	SET \
 	device_handle=$device_handle \
@@ -12773,20 +15596,23 @@ enum db_return_codes db_update_dimm_err_correction_by_device_handle(const Persis
 		,  refreshed_force_write=$refreshed_force_write \
 		  \
 	WHERE device_handle=$device_handle ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		local_bind_dimm_err_correction(p_stmt, p_dimm_err_correction);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -12797,14 +15623,26 @@ enum db_return_codes db_delete_dimm_err_correction_by_device_handle(const Persis
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM dimm_err_correction \
 				 WHERE device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -12818,15 +15656,26 @@ enum db_return_codes db_get_dimm_err_correction_history_by_history_id_count(cons
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_err_correction_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -12837,15 +15686,26 @@ enum db_return_codes db_get_dimm_err_correction_history_count(const PersistentSt
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_err_correction_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -12860,19 +15720,29 @@ int db_get_dimm_err_correction_history_by_history_id(const PersistentStore *p_ps
 	char *sql = "SELECT \
 		device_handle,  unrefreshed_enable,  refreshed_enable,  unrefreshed_force_write,  refreshed_force_write  \
 		FROM dimm_err_correction_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_err_correction_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_err_correction_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_dimm_err_correction(p_ps, p_stmt, &p_dimm_err_correction[index]);
-		local_get_dimm_err_correction_relationships_history(p_ps, p_stmt, &p_dimm_err_correction[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_dimm_err_correction(p_ps, p_stmt, &p_dimm_err_correction[index]);
+			local_get_dimm_err_correction_relationships_history(p_ps, p_stmt, &p_dimm_err_correction[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -12952,14 +15822,25 @@ enum db_return_codes db_add_dimm_erasure_coding(const PersistentStore *p_ps,
 		$refreshed_enable, \
 		$unrefreshed_force_write, \
 		$refreshed_force_write) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_dimm_erasure_coding(p_stmt, p_dimm_erasure_coding);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -12986,17 +15867,27 @@ int db_get_dimm_erasure_codings(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_erasure_coding_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_erasure_coding_count)
 		{
 			local_row_to_dimm_erasure_coding(p_ps, p_stmt, &p_dimm_erasure_coding[index]);
 			local_get_dimm_erasure_coding_relationships(p_ps, p_stmt, &p_dimm_erasure_coding[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -13032,14 +15923,22 @@ enum db_return_codes db_save_dimm_erasure_coding_state(const PersistentStore *p_
 			$refreshed_enable, \
 			$unrefreshed_force_write, \
 			$refreshed_force_write) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_dimm_erasure_coding(p_stmt, p_dimm_erasure_coding);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -13058,16 +15957,28 @@ enum db_return_codes db_save_dimm_erasure_coding_state(const PersistentStore *p_
 				 $refreshed_enable , \
 				 $unrefreshed_force_write , \
 				 $refreshed_force_write )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_dimm_erasure_coding(p_stmt, p_dimm_erasure_coding);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -13084,16 +15995,29 @@ enum db_return_codes db_get_dimm_erasure_coding_by_device_handle(const Persisten
 		device_handle,  verify_erc,  unrefreshed_enable,  refreshed_enable,  unrefreshed_force_write,  refreshed_force_write  \
 		FROM dimm_erasure_coding \
 		WHERE  device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_dimm_erasure_coding(p_ps, p_stmt, p_dimm_erasure_coding);
 			local_get_dimm_erasure_coding_relationships(p_ps, p_stmt, p_dimm_erasure_coding);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -13103,7 +16027,6 @@ enum db_return_codes db_update_dimm_erasure_coding_by_device_handle(const Persis
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE dimm_erasure_coding \
 	SET \
 	device_handle=$device_handle \
@@ -13114,20 +16037,23 @@ enum db_return_codes db_update_dimm_erasure_coding_by_device_handle(const Persis
 		,  refreshed_force_write=$refreshed_force_write \
 		  \
 	WHERE device_handle=$device_handle ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		local_bind_dimm_erasure_coding(p_stmt, p_dimm_erasure_coding);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -13138,14 +16064,26 @@ enum db_return_codes db_delete_dimm_erasure_coding_by_device_handle(const Persis
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM dimm_erasure_coding \
 				 WHERE device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -13159,15 +16097,26 @@ enum db_return_codes db_get_dimm_erasure_coding_history_by_history_id_count(cons
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_erasure_coding_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -13178,15 +16127,26 @@ enum db_return_codes db_get_dimm_erasure_coding_history_count(const PersistentSt
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_erasure_coding_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -13201,19 +16161,29 @@ int db_get_dimm_erasure_coding_history_by_history_id(const PersistentStore *p_ps
 	char *sql = "SELECT \
 		device_handle,  verify_erc,  unrefreshed_enable,  refreshed_enable,  unrefreshed_force_write,  refreshed_force_write  \
 		FROM dimm_erasure_coding_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_erasure_coding_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_erasure_coding_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_dimm_erasure_coding(p_ps, p_stmt, &p_dimm_erasure_coding[index]);
-		local_get_dimm_erasure_coding_relationships_history(p_ps, p_stmt, &p_dimm_erasure_coding[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_dimm_erasure_coding(p_ps, p_stmt, &p_dimm_erasure_coding[index]);
+			local_get_dimm_erasure_coding_relationships_history(p_ps, p_stmt, &p_dimm_erasure_coding[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -13281,14 +16251,25 @@ enum db_return_codes db_add_dimm_thermal(const PersistentStore *p_ps,
 		$throttling_enable, \
 		$alerting_enable, \
 		$critical_shutdown_enable) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_dimm_thermal(p_stmt, p_dimm_thermal);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -13313,17 +16294,27 @@ int db_get_dimm_thermals(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_thermal_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_thermal_count)
 		{
 			local_row_to_dimm_thermal(p_ps, p_stmt, &p_dimm_thermal[index]);
 			local_get_dimm_thermal_relationships(p_ps, p_stmt, &p_dimm_thermal[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -13357,14 +16348,22 @@ enum db_return_codes db_save_dimm_thermal_state(const PersistentStore *p_ps,
 			$throttling_enable, \
 			$alerting_enable, \
 			$critical_shutdown_enable) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_dimm_thermal(p_stmt, p_dimm_thermal);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -13381,16 +16380,28 @@ enum db_return_codes db_save_dimm_thermal_state(const PersistentStore *p_ps,
 				 $throttling_enable , \
 				 $alerting_enable , \
 				 $critical_shutdown_enable )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_dimm_thermal(p_stmt, p_dimm_thermal);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -13407,16 +16418,29 @@ enum db_return_codes db_get_dimm_thermal_by_device_handle(const PersistentStore 
 		device_handle,  throttling_enable,  alerting_enable,  critical_shutdown_enable  \
 		FROM dimm_thermal \
 		WHERE  device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_dimm_thermal(p_ps, p_stmt, p_dimm_thermal);
 			local_get_dimm_thermal_relationships(p_ps, p_stmt, p_dimm_thermal);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -13426,7 +16450,6 @@ enum db_return_codes db_update_dimm_thermal_by_device_handle(const PersistentSto
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE dimm_thermal \
 	SET \
 	device_handle=$device_handle \
@@ -13435,20 +16458,23 @@ enum db_return_codes db_update_dimm_thermal_by_device_handle(const PersistentSto
 		,  critical_shutdown_enable=$critical_shutdown_enable \
 		  \
 	WHERE device_handle=$device_handle ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		local_bind_dimm_thermal(p_stmt, p_dimm_thermal);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -13459,14 +16485,26 @@ enum db_return_codes db_delete_dimm_thermal_by_device_handle(const PersistentSto
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM dimm_thermal \
 				 WHERE device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -13480,15 +16518,26 @@ enum db_return_codes db_get_dimm_thermal_history_by_history_id_count(const Persi
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_thermal_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -13499,15 +16548,26 @@ enum db_return_codes db_get_dimm_thermal_history_count(const PersistentStore *p_
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_thermal_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -13522,19 +16582,29 @@ int db_get_dimm_thermal_history_by_history_id(const PersistentStore *p_ps,
 	char *sql = "SELECT \
 		device_handle,  throttling_enable,  alerting_enable,  critical_shutdown_enable  \
 		FROM dimm_thermal_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_thermal_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_thermal_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_dimm_thermal(p_ps, p_stmt, &p_dimm_thermal[index]);
-		local_get_dimm_thermal_relationships_history(p_ps, p_stmt, &p_dimm_thermal[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_dimm_thermal(p_ps, p_stmt, &p_dimm_thermal[index]);
+			local_get_dimm_thermal_relationships_history(p_ps, p_stmt, &p_dimm_thermal[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -13624,14 +16694,25 @@ enum db_return_codes db_add_dimm_fw_image(const PersistentStore *p_ps,
 		$fw_update_status, \
 		$commit_id, \
 		$build_configuration) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_dimm_fw_image(p_stmt, p_dimm_fw_image);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -13659,17 +16740,27 @@ int db_get_dimm_fw_images(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_fw_image_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_fw_image_count)
 		{
 			local_row_to_dimm_fw_image(p_ps, p_stmt, &p_dimm_fw_image[index]);
 			local_get_dimm_fw_image_relationships(p_ps, p_stmt, &p_dimm_fw_image[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -13706,14 +16797,22 @@ enum db_return_codes db_save_dimm_fw_image_state(const PersistentStore *p_ps,
 			$fw_update_status, \
 			$commit_id, \
 			$build_configuration) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_dimm_fw_image(p_stmt, p_dimm_fw_image);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -13733,16 +16832,28 @@ enum db_return_codes db_save_dimm_fw_image_state(const PersistentStore *p_ps,
 				 $fw_update_status , \
 				 $commit_id , \
 				 $build_configuration )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_dimm_fw_image(p_stmt, p_dimm_fw_image);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -13759,16 +16870,29 @@ enum db_return_codes db_get_dimm_fw_image_by_device_handle(const PersistentStore
 		device_handle,  fw_rev,  fw_type,  staged_fw_rev,  fw_update_status,  commit_id,  build_configuration  \
 		FROM dimm_fw_image \
 		WHERE  device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_dimm_fw_image(p_ps, p_stmt, p_dimm_fw_image);
 			local_get_dimm_fw_image_relationships(p_ps, p_stmt, p_dimm_fw_image);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -13778,7 +16902,6 @@ enum db_return_codes db_update_dimm_fw_image_by_device_handle(const PersistentSt
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE dimm_fw_image \
 	SET \
 	device_handle=$device_handle \
@@ -13790,20 +16913,23 @@ enum db_return_codes db_update_dimm_fw_image_by_device_handle(const PersistentSt
 		,  build_configuration=$build_configuration \
 		  \
 	WHERE device_handle=$device_handle ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		local_bind_dimm_fw_image(p_stmt, p_dimm_fw_image);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -13814,14 +16940,26 @@ enum db_return_codes db_delete_dimm_fw_image_by_device_handle(const PersistentSt
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM dimm_fw_image \
 				 WHERE device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -13835,15 +16973,26 @@ enum db_return_codes db_get_dimm_fw_image_history_by_history_id_count(const Pers
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_fw_image_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -13854,15 +17003,26 @@ enum db_return_codes db_get_dimm_fw_image_history_count(const PersistentStore *p
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_fw_image_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -13877,19 +17037,29 @@ int db_get_dimm_fw_image_history_by_history_id(const PersistentStore *p_ps,
 	char *sql = "SELECT \
 		device_handle,  fw_rev,  fw_type,  staged_fw_rev,  fw_update_status,  commit_id,  build_configuration  \
 		FROM dimm_fw_image_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_fw_image_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_fw_image_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_dimm_fw_image(p_ps, p_stmt, &p_dimm_fw_image[index]);
-		local_get_dimm_fw_image_relationships_history(p_ps, p_stmt, &p_dimm_fw_image[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_dimm_fw_image(p_ps, p_stmt, &p_dimm_fw_image[index]);
+			local_get_dimm_fw_image_relationships_history(p_ps, p_stmt, &p_dimm_fw_image[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -13946,14 +17116,25 @@ enum db_return_codes db_add_dimm_fw_debug_log(const PersistentStore *p_ps,
 		VALUES 		\
 		($device_handle, \
 		$fw_log) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_dimm_fw_debug_log(p_stmt, p_dimm_fw_debug_log);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -13976,17 +17157,27 @@ int db_get_dimm_fw_debug_logs(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_fw_debug_log_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_fw_debug_log_count)
 		{
 			local_row_to_dimm_fw_debug_log(p_ps, p_stmt, &p_dimm_fw_debug_log[index]);
 			local_get_dimm_fw_debug_log_relationships(p_ps, p_stmt, &p_dimm_fw_debug_log[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -14018,14 +17209,22 @@ enum db_return_codes db_save_dimm_fw_debug_log_state(const PersistentStore *p_ps
 			VALUES 		\
 			($device_handle, \
 			$fw_log) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_dimm_fw_debug_log(p_stmt, p_dimm_fw_debug_log);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -14040,16 +17239,28 @@ enum db_return_codes db_save_dimm_fw_debug_log_state(const PersistentStore *p_ps
 			VALUES 		($history_id, \
 				 $device_handle , \
 				 $fw_log )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_dimm_fw_debug_log(p_stmt, p_dimm_fw_debug_log);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -14066,16 +17277,29 @@ enum db_return_codes db_get_dimm_fw_debug_log_by_fw_log(const PersistentStore *p
 		device_handle,  fw_log  \
 		FROM dimm_fw_debug_log \
 		WHERE  fw_log = $fw_log";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_TEXT(p_stmt, "$fw_log", (unsigned char *)fw_log);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_dimm_fw_debug_log(p_ps, p_stmt, p_dimm_fw_debug_log);
 			local_get_dimm_fw_debug_log_relationships(p_ps, p_stmt, p_dimm_fw_debug_log);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -14085,27 +17309,29 @@ enum db_return_codes db_update_dimm_fw_debug_log_by_fw_log(const PersistentStore
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE dimm_fw_debug_log \
 	SET \
 	device_handle=$device_handle \
 		,  fw_log=$fw_log \
 		  \
 	WHERE fw_log=$fw_log ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_TEXT(p_stmt, "$fw_log", (unsigned char *)fw_log);
 		local_bind_dimm_fw_debug_log(p_stmt, p_dimm_fw_debug_log);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -14116,14 +17342,26 @@ enum db_return_codes db_delete_dimm_fw_debug_log_by_fw_log(const PersistentStore
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM dimm_fw_debug_log \
 				 WHERE fw_log = $fw_log";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_TEXT(p_stmt, "$fw_log", (unsigned char *)fw_log);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -14137,15 +17375,26 @@ enum db_return_codes db_get_dimm_fw_debug_log_history_by_history_id_count(const 
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_fw_debug_log_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -14156,15 +17405,26 @@ enum db_return_codes db_get_dimm_fw_debug_log_history_count(const PersistentStor
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_fw_debug_log_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -14179,19 +17439,29 @@ int db_get_dimm_fw_debug_log_history_by_history_id(const PersistentStore *p_ps,
 	char *sql = "SELECT \
 		device_handle,  fw_log  \
 		FROM dimm_fw_debug_log_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_fw_debug_log_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_fw_debug_log_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_dimm_fw_debug_log(p_ps, p_stmt, &p_dimm_fw_debug_log[index]);
-		local_get_dimm_fw_debug_log_relationships_history(p_ps, p_stmt, &p_dimm_fw_debug_log[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_dimm_fw_debug_log(p_ps, p_stmt, &p_dimm_fw_debug_log[index]);
+			local_get_dimm_fw_debug_log_relationships_history(p_ps, p_stmt, &p_dimm_fw_debug_log[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -14209,15 +17479,27 @@ enum db_return_codes db_get_dimm_fw_debug_log_count_by_dimm_topology_device_hand
 	*p_count = 0;
 	const char *sql = "SELECT COUNT (*) FROM dimm_fw_debug_log WHERE device_handle = $device_handle";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -14232,16 +17514,28 @@ enum db_return_codes db_get_dimm_fw_debug_log_count_by_dimm_topology_device_hand
 		"WHERE device_handle = $device_handle "
 			"AND history_id=$history_id";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -14256,18 +17550,28 @@ enum db_return_codes db_get_dimm_fw_debug_logs_by_dimm_topology_device_handle(co
 		 device_handle ,  fw_log  \
 		FROM dimm_fw_debug_log \
 		WHERE  device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		rc = DB_SUCCESS;
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_fw_debug_log_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_fw_debug_log_count)
 		{
 			local_row_to_dimm_fw_debug_log(p_ps, p_stmt, &p_dimm_fw_debug_log[index]);
 			local_get_dimm_fw_debug_log_relationships(p_ps, p_stmt, &p_dimm_fw_debug_log[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -14282,19 +17586,29 @@ enum db_return_codes db_get_dimm_fw_debug_logs_by_dimm_topology_device_handle_hi
 		 device_handle ,  fw_log  \
 		FROM dimm_fw_debug_log_history \
 		WHERE  device_handle = $device_handle AND history_id=$history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		rc = DB_SUCCESS;
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_fw_debug_log_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_fw_debug_log_count)
 		{
 			local_row_to_dimm_fw_debug_log(p_ps, p_stmt, &p_dimm_fw_debug_log[index]);
 			local_get_dimm_fw_debug_log_relationships(p_ps, p_stmt, &p_dimm_fw_debug_log[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -14305,14 +17619,24 @@ enum db_return_codes db_delete_dimm_fw_debug_log_by_dimm_topology_device_handle(
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM dimm_fw_debug_log \
 				 WHERE device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -14393,14 +17717,25 @@ enum db_return_codes db_add_dimm_memory_info_page0(const PersistentStore *p_ps,
 		$write_reqs, \
 		$block_read_reqs, \
 		$block_write_reqs) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_dimm_memory_info_page0(p_stmt, p_dimm_memory_info_page0);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -14428,17 +17763,27 @@ int db_get_dimm_memory_info_page0s(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_memory_info_page0_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_memory_info_page0_count)
 		{
 			local_row_to_dimm_memory_info_page0(p_ps, p_stmt, &p_dimm_memory_info_page0[index]);
 			local_get_dimm_memory_info_page0_relationships(p_ps, p_stmt, &p_dimm_memory_info_page0[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -14475,14 +17820,22 @@ enum db_return_codes db_save_dimm_memory_info_page0_state(const PersistentStore 
 			$write_reqs, \
 			$block_read_reqs, \
 			$block_write_reqs) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_dimm_memory_info_page0(p_stmt, p_dimm_memory_info_page0);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -14502,16 +17855,28 @@ enum db_return_codes db_save_dimm_memory_info_page0_state(const PersistentStore 
 				 $write_reqs , \
 				 $block_read_reqs , \
 				 $block_write_reqs )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_dimm_memory_info_page0(p_stmt, p_dimm_memory_info_page0);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -14528,16 +17893,29 @@ enum db_return_codes db_get_dimm_memory_info_page0_by_device_handle(const Persis
 		device_handle,  bytes_read,  bytes_written,  read_reqs,  write_reqs,  block_read_reqs,  block_write_reqs  \
 		FROM dimm_memory_info_page0 \
 		WHERE  device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_dimm_memory_info_page0(p_ps, p_stmt, p_dimm_memory_info_page0);
 			local_get_dimm_memory_info_page0_relationships(p_ps, p_stmt, p_dimm_memory_info_page0);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -14547,7 +17925,6 @@ enum db_return_codes db_update_dimm_memory_info_page0_by_device_handle(const Per
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE dimm_memory_info_page0 \
 	SET \
 	device_handle=$device_handle \
@@ -14559,20 +17936,23 @@ enum db_return_codes db_update_dimm_memory_info_page0_by_device_handle(const Per
 		,  block_write_reqs=$block_write_reqs \
 		  \
 	WHERE device_handle=$device_handle ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		local_bind_dimm_memory_info_page0(p_stmt, p_dimm_memory_info_page0);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -14583,14 +17963,26 @@ enum db_return_codes db_delete_dimm_memory_info_page0_by_device_handle(const Per
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM dimm_memory_info_page0 \
 				 WHERE device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -14604,15 +17996,26 @@ enum db_return_codes db_get_dimm_memory_info_page0_history_by_history_id_count(c
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_memory_info_page0_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -14623,15 +18026,26 @@ enum db_return_codes db_get_dimm_memory_info_page0_history_count(const Persisten
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_memory_info_page0_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -14646,19 +18060,29 @@ int db_get_dimm_memory_info_page0_history_by_history_id(const PersistentStore *p
 	char *sql = "SELECT \
 		device_handle,  bytes_read,  bytes_written,  read_reqs,  write_reqs,  block_read_reqs,  block_write_reqs  \
 		FROM dimm_memory_info_page0_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_memory_info_page0_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_memory_info_page0_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_dimm_memory_info_page0(p_ps, p_stmt, &p_dimm_memory_info_page0[index]);
-		local_get_dimm_memory_info_page0_relationships_history(p_ps, p_stmt, &p_dimm_memory_info_page0[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_dimm_memory_info_page0(p_ps, p_stmt, &p_dimm_memory_info_page0[index]);
+			local_get_dimm_memory_info_page0_relationships_history(p_ps, p_stmt, &p_dimm_memory_info_page0[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -14744,14 +18168,25 @@ enum db_return_codes db_add_dimm_memory_info_page1(const PersistentStore *p_ps,
 		$total_write_reqs, \
 		$total_block_read_reqs, \
 		$total_block_write_reqs) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_dimm_memory_info_page1(p_stmt, p_dimm_memory_info_page1);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -14779,17 +18214,27 @@ int db_get_dimm_memory_info_page1s(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_memory_info_page1_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_memory_info_page1_count)
 		{
 			local_row_to_dimm_memory_info_page1(p_ps, p_stmt, &p_dimm_memory_info_page1[index]);
 			local_get_dimm_memory_info_page1_relationships(p_ps, p_stmt, &p_dimm_memory_info_page1[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -14826,14 +18271,22 @@ enum db_return_codes db_save_dimm_memory_info_page1_state(const PersistentStore 
 			$total_write_reqs, \
 			$total_block_read_reqs, \
 			$total_block_write_reqs) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_dimm_memory_info_page1(p_stmt, p_dimm_memory_info_page1);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -14853,16 +18306,28 @@ enum db_return_codes db_save_dimm_memory_info_page1_state(const PersistentStore 
 				 $total_write_reqs , \
 				 $total_block_read_reqs , \
 				 $total_block_write_reqs )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_dimm_memory_info_page1(p_stmt, p_dimm_memory_info_page1);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -14879,16 +18344,29 @@ enum db_return_codes db_get_dimm_memory_info_page1_by_device_handle(const Persis
 		device_handle,  total_bytes_read,  total_bytes_written,  total_read_reqs,  total_write_reqs,  total_block_read_reqs,  total_block_write_reqs  \
 		FROM dimm_memory_info_page1 \
 		WHERE  device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_dimm_memory_info_page1(p_ps, p_stmt, p_dimm_memory_info_page1);
 			local_get_dimm_memory_info_page1_relationships(p_ps, p_stmt, p_dimm_memory_info_page1);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -14898,7 +18376,6 @@ enum db_return_codes db_update_dimm_memory_info_page1_by_device_handle(const Per
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE dimm_memory_info_page1 \
 	SET \
 	device_handle=$device_handle \
@@ -14910,20 +18387,23 @@ enum db_return_codes db_update_dimm_memory_info_page1_by_device_handle(const Per
 		,  total_block_write_reqs=$total_block_write_reqs \
 		  \
 	WHERE device_handle=$device_handle ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		local_bind_dimm_memory_info_page1(p_stmt, p_dimm_memory_info_page1);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -14934,14 +18414,26 @@ enum db_return_codes db_delete_dimm_memory_info_page1_by_device_handle(const Per
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM dimm_memory_info_page1 \
 				 WHERE device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -14955,15 +18447,26 @@ enum db_return_codes db_get_dimm_memory_info_page1_history_by_history_id_count(c
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_memory_info_page1_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -14974,15 +18477,26 @@ enum db_return_codes db_get_dimm_memory_info_page1_history_count(const Persisten
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_memory_info_page1_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -14997,19 +18511,29 @@ int db_get_dimm_memory_info_page1_history_by_history_id(const PersistentStore *p
 	char *sql = "SELECT \
 		device_handle,  total_bytes_read,  total_bytes_written,  total_read_reqs,  total_write_reqs,  total_block_read_reqs,  total_block_write_reqs  \
 		FROM dimm_memory_info_page1_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_memory_info_page1_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_memory_info_page1_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_dimm_memory_info_page1(p_ps, p_stmt, &p_dimm_memory_info_page1[index]);
-		local_get_dimm_memory_info_page1_relationships_history(p_ps, p_stmt, &p_dimm_memory_info_page1[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_dimm_memory_info_page1(p_ps, p_stmt, &p_dimm_memory_info_page1[index]);
+			local_get_dimm_memory_info_page1_relationships_history(p_ps, p_stmt, &p_dimm_memory_info_page1[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -15107,14 +18631,25 @@ enum db_return_codes db_add_dimm_memory_info_page2(const PersistentStore *p_ps,
 		$media_errors_ce, \
 		$media_errors_ecc, \
 		$dram_errors_ce) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_dimm_memory_info_page2(p_stmt, p_dimm_memory_info_page2);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -15144,17 +18679,27 @@ int db_get_dimm_memory_info_page2s(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_memory_info_page2_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_memory_info_page2_count)
 		{
 			local_row_to_dimm_memory_info_page2(p_ps, p_stmt, &p_dimm_memory_info_page2[index]);
 			local_get_dimm_memory_info_page2_relationships(p_ps, p_stmt, &p_dimm_memory_info_page2[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -15193,14 +18738,22 @@ enum db_return_codes db_save_dimm_memory_info_page2_state(const PersistentStore 
 			$media_errors_ce, \
 			$media_errors_ecc, \
 			$dram_errors_ce) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_dimm_memory_info_page2(p_stmt, p_dimm_memory_info_page2);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -15222,16 +18775,28 @@ enum db_return_codes db_save_dimm_memory_info_page2_state(const PersistentStore 
 				 $media_errors_ce , \
 				 $media_errors_ecc , \
 				 $dram_errors_ce )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_dimm_memory_info_page2(p_stmt, p_dimm_memory_info_page2);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -15248,16 +18813,29 @@ enum db_return_codes db_get_dimm_memory_info_page2_by_device_handle(const Persis
 		device_handle,  write_count_max,  write_count_average,  uncorrectable_host,  uncorrectable_non_host,  media_errors_uc,  media_errors_ce,  media_errors_ecc,  dram_errors_ce  \
 		FROM dimm_memory_info_page2 \
 		WHERE  device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_dimm_memory_info_page2(p_ps, p_stmt, p_dimm_memory_info_page2);
 			local_get_dimm_memory_info_page2_relationships(p_ps, p_stmt, p_dimm_memory_info_page2);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -15267,7 +18845,6 @@ enum db_return_codes db_update_dimm_memory_info_page2_by_device_handle(const Per
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE dimm_memory_info_page2 \
 	SET \
 	device_handle=$device_handle \
@@ -15281,20 +18858,23 @@ enum db_return_codes db_update_dimm_memory_info_page2_by_device_handle(const Per
 		,  dram_errors_ce=$dram_errors_ce \
 		  \
 	WHERE device_handle=$device_handle ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		local_bind_dimm_memory_info_page2(p_stmt, p_dimm_memory_info_page2);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -15305,14 +18885,26 @@ enum db_return_codes db_delete_dimm_memory_info_page2_by_device_handle(const Per
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM dimm_memory_info_page2 \
 				 WHERE device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -15326,15 +18918,26 @@ enum db_return_codes db_get_dimm_memory_info_page2_history_by_history_id_count(c
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_memory_info_page2_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -15345,15 +18948,26 @@ enum db_return_codes db_get_dimm_memory_info_page2_history_count(const Persisten
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_memory_info_page2_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -15368,19 +18982,29 @@ int db_get_dimm_memory_info_page2_history_by_history_id(const PersistentStore *p
 	char *sql = "SELECT \
 		device_handle,  write_count_max,  write_count_average,  uncorrectable_host,  uncorrectable_non_host,  media_errors_uc,  media_errors_ce,  media_errors_ecc,  dram_errors_ce  \
 		FROM dimm_memory_info_page2_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_memory_info_page2_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_memory_info_page2_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_dimm_memory_info_page2(p_ps, p_stmt, &p_dimm_memory_info_page2[index]);
-		local_get_dimm_memory_info_page2_relationships_history(p_ps, p_stmt, &p_dimm_memory_info_page2[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_dimm_memory_info_page2(p_ps, p_stmt, &p_dimm_memory_info_page2[index]);
+			local_get_dimm_memory_info_page2_relationships_history(p_ps, p_stmt, &p_dimm_memory_info_page2[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -15526,14 +19150,25 @@ enum db_return_codes db_add_dimm_ars_command_specific_data(const PersistentStore
 		$dpa_error_address_11, \
 		$dpa_error_address_12, \
 		$dpa_error_address_13) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_dimm_ars_command_specific_data(p_stmt, p_dimm_ars_command_specific_data);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -15571,17 +19206,27 @@ int db_get_dimm_ars_command_specific_datas(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_ars_command_specific_data_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_ars_command_specific_data_count)
 		{
 			local_row_to_dimm_ars_command_specific_data(p_ps, p_stmt, &p_dimm_ars_command_specific_data[index]);
 			local_get_dimm_ars_command_specific_data_relationships(p_ps, p_stmt, &p_dimm_ars_command_specific_data[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -15628,14 +19273,22 @@ enum db_return_codes db_save_dimm_ars_command_specific_data_state(const Persiste
 			$dpa_error_address_11, \
 			$dpa_error_address_12, \
 			$dpa_error_address_13) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_dimm_ars_command_specific_data(p_stmt, p_dimm_ars_command_specific_data);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -15665,16 +19318,28 @@ enum db_return_codes db_save_dimm_ars_command_specific_data_state(const Persiste
 				 $dpa_error_address_11 , \
 				 $dpa_error_address_12 , \
 				 $dpa_error_address_13 )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_dimm_ars_command_specific_data(p_stmt, p_dimm_ars_command_specific_data);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -15691,16 +19356,29 @@ enum db_return_codes db_get_dimm_ars_command_specific_data_by_device_handle(cons
 		device_handle,  num_errors,  ars_state,  dpa_error_address_0,  dpa_error_address_1,  dpa_error_address_2,  dpa_error_address_3,  dpa_error_address_4,  dpa_error_address_5,  dpa_error_address_6,  dpa_error_address_7,  dpa_error_address_8,  dpa_error_address_9,  dpa_error_address_10,  dpa_error_address_11,  dpa_error_address_12,  dpa_error_address_13  \
 		FROM dimm_ars_command_specific_data \
 		WHERE  device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_dimm_ars_command_specific_data(p_ps, p_stmt, p_dimm_ars_command_specific_data);
 			local_get_dimm_ars_command_specific_data_relationships(p_ps, p_stmt, p_dimm_ars_command_specific_data);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -15710,7 +19388,6 @@ enum db_return_codes db_update_dimm_ars_command_specific_data_by_device_handle(c
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE dimm_ars_command_specific_data \
 	SET \
 	device_handle=$device_handle \
@@ -15732,20 +19409,23 @@ enum db_return_codes db_update_dimm_ars_command_specific_data_by_device_handle(c
 		,  dpa_error_address_13=$dpa_error_address_13 \
 		  \
 	WHERE device_handle=$device_handle ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		local_bind_dimm_ars_command_specific_data(p_stmt, p_dimm_ars_command_specific_data);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -15756,14 +19436,26 @@ enum db_return_codes db_delete_dimm_ars_command_specific_data_by_device_handle(c
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM dimm_ars_command_specific_data \
 				 WHERE device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -15777,15 +19469,26 @@ enum db_return_codes db_get_dimm_ars_command_specific_data_history_by_history_id
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_ars_command_specific_data_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -15796,15 +19499,26 @@ enum db_return_codes db_get_dimm_ars_command_specific_data_history_count(const P
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_ars_command_specific_data_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -15819,19 +19533,29 @@ int db_get_dimm_ars_command_specific_data_history_by_history_id(const Persistent
 	char *sql = "SELECT \
 		device_handle,  num_errors,  ars_state,  dpa_error_address_0,  dpa_error_address_1,  dpa_error_address_2,  dpa_error_address_3,  dpa_error_address_4,  dpa_error_address_5,  dpa_error_address_6,  dpa_error_address_7,  dpa_error_address_8,  dpa_error_address_9,  dpa_error_address_10,  dpa_error_address_11,  dpa_error_address_12,  dpa_error_address_13  \
 		FROM dimm_ars_command_specific_data_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_ars_command_specific_data_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_ars_command_specific_data_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_dimm_ars_command_specific_data(p_ps, p_stmt, &p_dimm_ars_command_specific_data[index]);
-		local_get_dimm_ars_command_specific_data_relationships_history(p_ps, p_stmt, &p_dimm_ars_command_specific_data[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_dimm_ars_command_specific_data(p_ps, p_stmt, &p_dimm_ars_command_specific_data[index]);
+			local_get_dimm_ars_command_specific_data_relationships_history(p_ps, p_stmt, &p_dimm_ars_command_specific_data[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -15911,14 +19635,25 @@ enum db_return_codes db_add_dimm_long_op_status(const PersistentStore *p_ps,
 		$percent_complete, \
 		$etc, \
 		$status_code) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_dimm_long_op_status(p_stmt, p_dimm_long_op_status);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -15945,17 +19680,27 @@ int db_get_dimm_long_op_statuss(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_long_op_status_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_long_op_status_count)
 		{
 			local_row_to_dimm_long_op_status(p_ps, p_stmt, &p_dimm_long_op_status[index]);
 			local_get_dimm_long_op_status_relationships(p_ps, p_stmt, &p_dimm_long_op_status[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -15991,14 +19736,22 @@ enum db_return_codes db_save_dimm_long_op_status_state(const PersistentStore *p_
 			$percent_complete, \
 			$etc, \
 			$status_code) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_dimm_long_op_status(p_stmt, p_dimm_long_op_status);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -16017,16 +19770,28 @@ enum db_return_codes db_save_dimm_long_op_status_state(const PersistentStore *p_
 				 $percent_complete , \
 				 $etc , \
 				 $status_code )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_dimm_long_op_status(p_stmt, p_dimm_long_op_status);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -16043,16 +19808,29 @@ enum db_return_codes db_get_dimm_long_op_status_by_device_handle(const Persisten
 		device_handle,  opcode,  subopcode,  percent_complete,  etc,  status_code  \
 		FROM dimm_long_op_status \
 		WHERE  device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_dimm_long_op_status(p_ps, p_stmt, p_dimm_long_op_status);
 			local_get_dimm_long_op_status_relationships(p_ps, p_stmt, p_dimm_long_op_status);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -16062,7 +19840,6 @@ enum db_return_codes db_update_dimm_long_op_status_by_device_handle(const Persis
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE dimm_long_op_status \
 	SET \
 	device_handle=$device_handle \
@@ -16073,20 +19850,23 @@ enum db_return_codes db_update_dimm_long_op_status_by_device_handle(const Persis
 		,  status_code=$status_code \
 		  \
 	WHERE device_handle=$device_handle ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		local_bind_dimm_long_op_status(p_stmt, p_dimm_long_op_status);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -16097,14 +19877,26 @@ enum db_return_codes db_delete_dimm_long_op_status_by_device_handle(const Persis
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM dimm_long_op_status \
 				 WHERE device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -16118,15 +19910,26 @@ enum db_return_codes db_get_dimm_long_op_status_history_by_history_id_count(cons
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_long_op_status_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -16137,15 +19940,26 @@ enum db_return_codes db_get_dimm_long_op_status_history_count(const PersistentSt
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_long_op_status_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -16160,19 +19974,29 @@ int db_get_dimm_long_op_status_history_by_history_id(const PersistentStore *p_ps
 	char *sql = "SELECT \
 		device_handle,  opcode,  subopcode,  percent_complete,  etc,  status_code  \
 		FROM dimm_long_op_status_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_long_op_status_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_long_op_status_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_dimm_long_op_status(p_ps, p_stmt, &p_dimm_long_op_status[index]);
-		local_get_dimm_long_op_status_relationships_history(p_ps, p_stmt, &p_dimm_long_op_status[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_dimm_long_op_status(p_ps, p_stmt, &p_dimm_long_op_status[index]);
+			local_get_dimm_long_op_status_relationships_history(p_ps, p_stmt, &p_dimm_long_op_status[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -16298,14 +20122,25 @@ enum db_return_codes db_add_dimm_details(const PersistentStore *p_ps,
 		$type, \
 		$type_detail, \
 		$id) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_dimm_details(p_stmt, p_dimm_details);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -16339,17 +20174,27 @@ int db_get_dimm_detailss(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_details_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_details_count)
 		{
 			local_row_to_dimm_details(p_ps, p_stmt, &p_dimm_details[index]);
 			local_get_dimm_details_relationships(p_ps, p_stmt, &p_dimm_details[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -16392,14 +20237,22 @@ enum db_return_codes db_save_dimm_details_state(const PersistentStore *p_ps,
 			$type, \
 			$type_detail, \
 			$id) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_dimm_details(p_stmt, p_dimm_details);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -16425,16 +20278,28 @@ enum db_return_codes db_save_dimm_details_state(const PersistentStore *p_ps,
 				 $type , \
 				 $type_detail , \
 				 $id )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_dimm_details(p_stmt, p_dimm_details);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -16451,16 +20316,29 @@ enum db_return_codes db_get_dimm_details_by_id(const PersistentStore *p_ps,
 		device_handle,  form_factor,  data_width,  total_width,  size,  speed,  part_number,  device_locator,  bank_label,  manufacturer,  type,  type_detail,  id  \
 		FROM dimm_details \
 		WHERE  id = $id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$id", (unsigned int)id);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_dimm_details(p_ps, p_stmt, p_dimm_details);
 			local_get_dimm_details_relationships(p_ps, p_stmt, p_dimm_details);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -16470,7 +20348,6 @@ enum db_return_codes db_update_dimm_details_by_id(const PersistentStore *p_ps,
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE dimm_details \
 	SET \
 	device_handle=$device_handle \
@@ -16488,20 +20365,23 @@ enum db_return_codes db_update_dimm_details_by_id(const PersistentStore *p_ps,
 		,  id=$id \
 		  \
 	WHERE id=$id ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$id", (unsigned int)id);
 		local_bind_dimm_details(p_stmt, p_dimm_details);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -16512,14 +20392,26 @@ enum db_return_codes db_delete_dimm_details_by_id(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM dimm_details \
 				 WHERE id = $id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$id", (unsigned int)id);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -16533,15 +20425,26 @@ enum db_return_codes db_get_dimm_details_history_by_history_id_count(const Persi
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_details_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -16552,15 +20455,26 @@ enum db_return_codes db_get_dimm_details_history_count(const PersistentStore *p_
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_details_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -16575,19 +20489,29 @@ int db_get_dimm_details_history_by_history_id(const PersistentStore *p_ps,
 	char *sql = "SELECT \
 		device_handle,  form_factor,  data_width,  total_width,  size,  speed,  part_number,  device_locator,  bank_label,  manufacturer,  type,  type_detail,  id  \
 		FROM dimm_details_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_details_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_details_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_dimm_details(p_ps, p_stmt, &p_dimm_details[index]);
-		local_get_dimm_details_relationships_history(p_ps, p_stmt, &p_dimm_details[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_dimm_details(p_ps, p_stmt, &p_dimm_details[index]);
+			local_get_dimm_details_relationships_history(p_ps, p_stmt, &p_dimm_details[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -16643,14 +20567,25 @@ enum db_return_codes db_add_dimm_security_info(const PersistentStore *p_ps,
 		VALUES 		\
 		($device_handle, \
 		$security_state) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_dimm_security_info(p_stmt, p_dimm_security_info);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -16673,17 +20608,27 @@ int db_get_dimm_security_infos(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_security_info_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_security_info_count)
 		{
 			local_row_to_dimm_security_info(p_ps, p_stmt, &p_dimm_security_info[index]);
 			local_get_dimm_security_info_relationships(p_ps, p_stmt, &p_dimm_security_info[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -16715,14 +20660,22 @@ enum db_return_codes db_save_dimm_security_info_state(const PersistentStore *p_p
 			VALUES 		\
 			($device_handle, \
 			$security_state) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_dimm_security_info(p_stmt, p_dimm_security_info);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -16737,16 +20690,28 @@ enum db_return_codes db_save_dimm_security_info_state(const PersistentStore *p_p
 			VALUES 		($history_id, \
 				 $device_handle , \
 				 $security_state )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_dimm_security_info(p_stmt, p_dimm_security_info);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -16763,16 +20728,29 @@ enum db_return_codes db_get_dimm_security_info_by_device_handle(const Persistent
 		device_handle,  security_state  \
 		FROM dimm_security_info \
 		WHERE  device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_dimm_security_info(p_ps, p_stmt, p_dimm_security_info);
 			local_get_dimm_security_info_relationships(p_ps, p_stmt, p_dimm_security_info);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -16782,27 +20760,29 @@ enum db_return_codes db_update_dimm_security_info_by_device_handle(const Persist
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE dimm_security_info \
 	SET \
 	device_handle=$device_handle \
 		,  security_state=$security_state \
 		  \
 	WHERE device_handle=$device_handle ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		local_bind_dimm_security_info(p_stmt, p_dimm_security_info);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -16813,14 +20793,26 @@ enum db_return_codes db_delete_dimm_security_info_by_device_handle(const Persist
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM dimm_security_info \
 				 WHERE device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -16834,15 +20826,26 @@ enum db_return_codes db_get_dimm_security_info_history_by_history_id_count(const
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_security_info_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -16853,15 +20856,26 @@ enum db_return_codes db_get_dimm_security_info_history_count(const PersistentSto
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_security_info_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -16876,19 +20890,29 @@ int db_get_dimm_security_info_history_by_history_id(const PersistentStore *p_ps,
 	char *sql = "SELECT \
 		device_handle,  security_state  \
 		FROM dimm_security_info_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_security_info_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_security_info_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_dimm_security_info(p_ps, p_stmt, &p_dimm_security_info[index]);
-		local_get_dimm_security_info_relationships_history(p_ps, p_stmt, &p_dimm_security_info[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_dimm_security_info(p_ps, p_stmt, &p_dimm_security_info[index]);
+			local_get_dimm_security_info_relationships_history(p_ps, p_stmt, &p_dimm_security_info[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -16950,14 +20974,25 @@ enum db_return_codes db_add_dimm_sanitize_info(const PersistentStore *p_ps,
 		($device_handle, \
 		$sanitize_state, \
 		$sanitize_progress) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_dimm_sanitize_info(p_stmt, p_dimm_sanitize_info);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -16981,17 +21016,27 @@ int db_get_dimm_sanitize_infos(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_sanitize_info_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_sanitize_info_count)
 		{
 			local_row_to_dimm_sanitize_info(p_ps, p_stmt, &p_dimm_sanitize_info[index]);
 			local_get_dimm_sanitize_info_relationships(p_ps, p_stmt, &p_dimm_sanitize_info[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -17024,14 +21069,22 @@ enum db_return_codes db_save_dimm_sanitize_info_state(const PersistentStore *p_p
 			($device_handle, \
 			$sanitize_state, \
 			$sanitize_progress) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_dimm_sanitize_info(p_stmt, p_dimm_sanitize_info);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -17047,16 +21100,28 @@ enum db_return_codes db_save_dimm_sanitize_info_state(const PersistentStore *p_p
 				 $device_handle , \
 				 $sanitize_state , \
 				 $sanitize_progress )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_dimm_sanitize_info(p_stmt, p_dimm_sanitize_info);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -17073,16 +21138,29 @@ enum db_return_codes db_get_dimm_sanitize_info_by_device_handle(const Persistent
 		device_handle,  sanitize_state,  sanitize_progress  \
 		FROM dimm_sanitize_info \
 		WHERE  device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_dimm_sanitize_info(p_ps, p_stmt, p_dimm_sanitize_info);
 			local_get_dimm_sanitize_info_relationships(p_ps, p_stmt, p_dimm_sanitize_info);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -17092,7 +21170,6 @@ enum db_return_codes db_update_dimm_sanitize_info_by_device_handle(const Persist
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE dimm_sanitize_info \
 	SET \
 	device_handle=$device_handle \
@@ -17100,20 +21177,23 @@ enum db_return_codes db_update_dimm_sanitize_info_by_device_handle(const Persist
 		,  sanitize_progress=$sanitize_progress \
 		  \
 	WHERE device_handle=$device_handle ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		local_bind_dimm_sanitize_info(p_stmt, p_dimm_sanitize_info);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -17124,14 +21204,26 @@ enum db_return_codes db_delete_dimm_sanitize_info_by_device_handle(const Persist
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM dimm_sanitize_info \
 				 WHERE device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -17145,15 +21237,26 @@ enum db_return_codes db_get_dimm_sanitize_info_history_by_history_id_count(const
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_sanitize_info_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -17164,15 +21267,26 @@ enum db_return_codes db_get_dimm_sanitize_info_history_count(const PersistentSto
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_sanitize_info_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -17187,19 +21301,29 @@ int db_get_dimm_sanitize_info_history_by_history_id(const PersistentStore *p_ps,
 	char *sql = "SELECT \
 		device_handle,  sanitize_state,  sanitize_progress  \
 		FROM dimm_sanitize_info_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_sanitize_info_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_sanitize_info_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_dimm_sanitize_info(p_ps, p_stmt, &p_dimm_sanitize_info[index]);
-		local_get_dimm_sanitize_info_relationships_history(p_ps, p_stmt, &p_dimm_sanitize_info[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_dimm_sanitize_info(p_ps, p_stmt, &p_dimm_sanitize_info[index]);
+			local_get_dimm_sanitize_info_relationships_history(p_ps, p_stmt, &p_dimm_sanitize_info[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -17291,14 +21415,25 @@ enum db_return_codes db_add_fw_media_low_log_entry(const PersistentStore *p_ps,
 		$error_type, \
 		$error_flags, \
 		$transaction_type) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_fw_media_low_log_entry(p_stmt, p_fw_media_low_log_entry);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -17327,17 +21462,27 @@ int db_get_fw_media_low_log_entrys(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < fw_media_low_log_entry_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < fw_media_low_log_entry_count)
 		{
 			local_row_to_fw_media_low_log_entry(p_ps, p_stmt, &p_fw_media_low_log_entry[index]);
 			local_get_fw_media_low_log_entry_relationships(p_ps, p_stmt, &p_fw_media_low_log_entry[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -17375,14 +21520,22 @@ enum db_return_codes db_save_fw_media_low_log_entry_state(const PersistentStore 
 			$error_type, \
 			$error_flags, \
 			$transaction_type) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_fw_media_low_log_entry(p_stmt, p_fw_media_low_log_entry);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -17403,16 +21556,28 @@ enum db_return_codes db_save_fw_media_low_log_entry_state(const PersistentStore 
 				 $error_type , \
 				 $error_flags , \
 				 $transaction_type )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_fw_media_low_log_entry(p_stmt, p_fw_media_low_log_entry);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -17429,16 +21594,29 @@ enum db_return_codes db_get_fw_media_low_log_entry_by_system_timestamp(const Per
 		device_handle,  system_timestamp,  dpa,  pda,  range,  error_type,  error_flags,  transaction_type  \
 		FROM fw_media_low_log_entry \
 		WHERE  system_timestamp = $system_timestamp";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$system_timestamp", (unsigned long long)system_timestamp);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_fw_media_low_log_entry(p_ps, p_stmt, p_fw_media_low_log_entry);
 			local_get_fw_media_low_log_entry_relationships(p_ps, p_stmt, p_fw_media_low_log_entry);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -17448,7 +21626,6 @@ enum db_return_codes db_update_fw_media_low_log_entry_by_system_timestamp(const 
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE fw_media_low_log_entry \
 	SET \
 	device_handle=$device_handle \
@@ -17461,20 +21638,23 @@ enum db_return_codes db_update_fw_media_low_log_entry_by_system_timestamp(const 
 		,  transaction_type=$transaction_type \
 		  \
 	WHERE system_timestamp=$system_timestamp ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$system_timestamp", (unsigned long long)system_timestamp);
 		local_bind_fw_media_low_log_entry(p_stmt, p_fw_media_low_log_entry);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -17485,14 +21665,26 @@ enum db_return_codes db_delete_fw_media_low_log_entry_by_system_timestamp(const 
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM fw_media_low_log_entry \
 				 WHERE system_timestamp = $system_timestamp";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$system_timestamp", (unsigned long long)system_timestamp);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -17506,15 +21698,26 @@ enum db_return_codes db_get_fw_media_low_log_entry_history_by_history_id_count(c
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM fw_media_low_log_entry_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -17525,15 +21728,26 @@ enum db_return_codes db_get_fw_media_low_log_entry_history_count(const Persisten
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM fw_media_low_log_entry_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -17548,19 +21762,29 @@ int db_get_fw_media_low_log_entry_history_by_history_id(const PersistentStore *p
 	char *sql = "SELECT \
 		device_handle,  system_timestamp,  dpa,  pda,  range,  error_type,  error_flags,  transaction_type  \
 		FROM fw_media_low_log_entry_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < fw_media_low_log_entry_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < fw_media_low_log_entry_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_fw_media_low_log_entry(p_ps, p_stmt, &p_fw_media_low_log_entry[index]);
-		local_get_fw_media_low_log_entry_relationships_history(p_ps, p_stmt, &p_fw_media_low_log_entry[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_fw_media_low_log_entry(p_ps, p_stmt, &p_fw_media_low_log_entry[index]);
+			local_get_fw_media_low_log_entry_relationships_history(p_ps, p_stmt, &p_fw_media_low_log_entry[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -17578,15 +21802,27 @@ enum db_return_codes db_get_fw_media_low_log_entry_count_by_dimm_topology_device
 	*p_count = 0;
 	const char *sql = "SELECT COUNT (*) FROM fw_media_low_log_entry WHERE device_handle = $device_handle";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -17601,16 +21837,28 @@ enum db_return_codes db_get_fw_media_low_log_entry_count_by_dimm_topology_device
 		"WHERE device_handle = $device_handle "
 			"AND history_id=$history_id";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -17625,18 +21873,28 @@ enum db_return_codes db_get_fw_media_low_log_entrys_by_dimm_topology_device_hand
 		 device_handle ,  system_timestamp ,  dpa ,  pda ,  range ,  error_type ,  error_flags ,  transaction_type  \
 		FROM fw_media_low_log_entry \
 		WHERE  device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		rc = DB_SUCCESS;
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < fw_media_low_log_entry_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < fw_media_low_log_entry_count)
 		{
 			local_row_to_fw_media_low_log_entry(p_ps, p_stmt, &p_fw_media_low_log_entry[index]);
 			local_get_fw_media_low_log_entry_relationships(p_ps, p_stmt, &p_fw_media_low_log_entry[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -17651,19 +21909,29 @@ enum db_return_codes db_get_fw_media_low_log_entrys_by_dimm_topology_device_hand
 		 device_handle ,  system_timestamp ,  dpa ,  pda ,  range ,  error_type ,  error_flags ,  transaction_type  \
 		FROM fw_media_low_log_entry_history \
 		WHERE  device_handle = $device_handle AND history_id=$history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		rc = DB_SUCCESS;
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < fw_media_low_log_entry_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < fw_media_low_log_entry_count)
 		{
 			local_row_to_fw_media_low_log_entry(p_ps, p_stmt, &p_fw_media_low_log_entry[index]);
 			local_get_fw_media_low_log_entry_relationships(p_ps, p_stmt, &p_fw_media_low_log_entry[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -17674,14 +21942,24 @@ enum db_return_codes db_delete_fw_media_low_log_entry_by_dimm_topology_device_ha
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM fw_media_low_log_entry \
 				 WHERE device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -17768,14 +22046,25 @@ enum db_return_codes db_add_fw_media_high_log_entry(const PersistentStore *p_ps,
 		$error_type, \
 		$error_flags, \
 		$transaction_type) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_fw_media_high_log_entry(p_stmt, p_fw_media_high_log_entry);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -17804,17 +22093,27 @@ int db_get_fw_media_high_log_entrys(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < fw_media_high_log_entry_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < fw_media_high_log_entry_count)
 		{
 			local_row_to_fw_media_high_log_entry(p_ps, p_stmt, &p_fw_media_high_log_entry[index]);
 			local_get_fw_media_high_log_entry_relationships(p_ps, p_stmt, &p_fw_media_high_log_entry[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -17852,14 +22151,22 @@ enum db_return_codes db_save_fw_media_high_log_entry_state(const PersistentStore
 			$error_type, \
 			$error_flags, \
 			$transaction_type) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_fw_media_high_log_entry(p_stmt, p_fw_media_high_log_entry);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -17880,16 +22187,28 @@ enum db_return_codes db_save_fw_media_high_log_entry_state(const PersistentStore
 				 $error_type , \
 				 $error_flags , \
 				 $transaction_type )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_fw_media_high_log_entry(p_stmt, p_fw_media_high_log_entry);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -17906,16 +22225,29 @@ enum db_return_codes db_get_fw_media_high_log_entry_by_system_timestamp(const Pe
 		device_handle,  system_timestamp,  dpa,  pda,  range,  error_type,  error_flags,  transaction_type  \
 		FROM fw_media_high_log_entry \
 		WHERE  system_timestamp = $system_timestamp";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$system_timestamp", (unsigned long long)system_timestamp);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_fw_media_high_log_entry(p_ps, p_stmt, p_fw_media_high_log_entry);
 			local_get_fw_media_high_log_entry_relationships(p_ps, p_stmt, p_fw_media_high_log_entry);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -17925,7 +22257,6 @@ enum db_return_codes db_update_fw_media_high_log_entry_by_system_timestamp(const
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE fw_media_high_log_entry \
 	SET \
 	device_handle=$device_handle \
@@ -17938,20 +22269,23 @@ enum db_return_codes db_update_fw_media_high_log_entry_by_system_timestamp(const
 		,  transaction_type=$transaction_type \
 		  \
 	WHERE system_timestamp=$system_timestamp ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$system_timestamp", (unsigned long long)system_timestamp);
 		local_bind_fw_media_high_log_entry(p_stmt, p_fw_media_high_log_entry);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -17962,14 +22296,26 @@ enum db_return_codes db_delete_fw_media_high_log_entry_by_system_timestamp(const
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM fw_media_high_log_entry \
 				 WHERE system_timestamp = $system_timestamp";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$system_timestamp", (unsigned long long)system_timestamp);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -17983,15 +22329,26 @@ enum db_return_codes db_get_fw_media_high_log_entry_history_by_history_id_count(
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM fw_media_high_log_entry_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -18002,15 +22359,26 @@ enum db_return_codes db_get_fw_media_high_log_entry_history_count(const Persiste
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM fw_media_high_log_entry_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -18025,19 +22393,29 @@ int db_get_fw_media_high_log_entry_history_by_history_id(const PersistentStore *
 	char *sql = "SELECT \
 		device_handle,  system_timestamp,  dpa,  pda,  range,  error_type,  error_flags,  transaction_type  \
 		FROM fw_media_high_log_entry_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < fw_media_high_log_entry_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < fw_media_high_log_entry_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_fw_media_high_log_entry(p_ps, p_stmt, &p_fw_media_high_log_entry[index]);
-		local_get_fw_media_high_log_entry_relationships_history(p_ps, p_stmt, &p_fw_media_high_log_entry[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_fw_media_high_log_entry(p_ps, p_stmt, &p_fw_media_high_log_entry[index]);
+			local_get_fw_media_high_log_entry_relationships_history(p_ps, p_stmt, &p_fw_media_high_log_entry[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -18055,15 +22433,27 @@ enum db_return_codes db_get_fw_media_high_log_entry_count_by_dimm_topology_devic
 	*p_count = 0;
 	const char *sql = "SELECT COUNT (*) FROM fw_media_high_log_entry WHERE device_handle = $device_handle";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -18078,16 +22468,28 @@ enum db_return_codes db_get_fw_media_high_log_entry_count_by_dimm_topology_devic
 		"WHERE device_handle = $device_handle "
 			"AND history_id=$history_id";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -18102,18 +22504,28 @@ enum db_return_codes db_get_fw_media_high_log_entrys_by_dimm_topology_device_han
 		 device_handle ,  system_timestamp ,  dpa ,  pda ,  range ,  error_type ,  error_flags ,  transaction_type  \
 		FROM fw_media_high_log_entry \
 		WHERE  device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		rc = DB_SUCCESS;
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < fw_media_high_log_entry_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < fw_media_high_log_entry_count)
 		{
 			local_row_to_fw_media_high_log_entry(p_ps, p_stmt, &p_fw_media_high_log_entry[index]);
 			local_get_fw_media_high_log_entry_relationships(p_ps, p_stmt, &p_fw_media_high_log_entry[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -18128,19 +22540,29 @@ enum db_return_codes db_get_fw_media_high_log_entrys_by_dimm_topology_device_han
 		 device_handle ,  system_timestamp ,  dpa ,  pda ,  range ,  error_type ,  error_flags ,  transaction_type  \
 		FROM fw_media_high_log_entry_history \
 		WHERE  device_handle = $device_handle AND history_id=$history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		rc = DB_SUCCESS;
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < fw_media_high_log_entry_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < fw_media_high_log_entry_count)
 		{
 			local_row_to_fw_media_high_log_entry(p_ps, p_stmt, &p_fw_media_high_log_entry[index]);
 			local_get_fw_media_high_log_entry_relationships(p_ps, p_stmt, &p_fw_media_high_log_entry[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -18151,14 +22573,24 @@ enum db_return_codes db_delete_fw_media_high_log_entry_by_dimm_topology_device_h
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM fw_media_high_log_entry \
 				 WHERE device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -18215,14 +22647,25 @@ enum db_return_codes db_add_fw_thermal_low_log_entry(const PersistentStore *p_ps
 		($device_handle, \
 		$system_timestamp, \
 		$host_reported_temp_data) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_fw_thermal_low_log_entry(p_stmt, p_fw_thermal_low_log_entry);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -18246,17 +22689,27 @@ int db_get_fw_thermal_low_log_entrys(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < fw_thermal_low_log_entry_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < fw_thermal_low_log_entry_count)
 		{
 			local_row_to_fw_thermal_low_log_entry(p_ps, p_stmt, &p_fw_thermal_low_log_entry[index]);
 			local_get_fw_thermal_low_log_entry_relationships(p_ps, p_stmt, &p_fw_thermal_low_log_entry[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -18289,14 +22742,22 @@ enum db_return_codes db_save_fw_thermal_low_log_entry_state(const PersistentStor
 			($device_handle, \
 			$system_timestamp, \
 			$host_reported_temp_data) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_fw_thermal_low_log_entry(p_stmt, p_fw_thermal_low_log_entry);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -18312,16 +22773,28 @@ enum db_return_codes db_save_fw_thermal_low_log_entry_state(const PersistentStor
 				 $device_handle , \
 				 $system_timestamp , \
 				 $host_reported_temp_data )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_fw_thermal_low_log_entry(p_stmt, p_fw_thermal_low_log_entry);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -18338,16 +22811,29 @@ enum db_return_codes db_get_fw_thermal_low_log_entry_by_system_timestamp(const P
 		device_handle,  system_timestamp,  host_reported_temp_data  \
 		FROM fw_thermal_low_log_entry \
 		WHERE  system_timestamp = $system_timestamp";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$system_timestamp", (unsigned long long)system_timestamp);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_fw_thermal_low_log_entry(p_ps, p_stmt, p_fw_thermal_low_log_entry);
 			local_get_fw_thermal_low_log_entry_relationships(p_ps, p_stmt, p_fw_thermal_low_log_entry);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -18357,7 +22843,6 @@ enum db_return_codes db_update_fw_thermal_low_log_entry_by_system_timestamp(cons
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE fw_thermal_low_log_entry \
 	SET \
 	device_handle=$device_handle \
@@ -18365,20 +22850,23 @@ enum db_return_codes db_update_fw_thermal_low_log_entry_by_system_timestamp(cons
 		,  host_reported_temp_data=$host_reported_temp_data \
 		  \
 	WHERE system_timestamp=$system_timestamp ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$system_timestamp", (unsigned long long)system_timestamp);
 		local_bind_fw_thermal_low_log_entry(p_stmt, p_fw_thermal_low_log_entry);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -18389,14 +22877,26 @@ enum db_return_codes db_delete_fw_thermal_low_log_entry_by_system_timestamp(cons
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM fw_thermal_low_log_entry \
 				 WHERE system_timestamp = $system_timestamp";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$system_timestamp", (unsigned long long)system_timestamp);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -18410,15 +22910,26 @@ enum db_return_codes db_get_fw_thermal_low_log_entry_history_by_history_id_count
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM fw_thermal_low_log_entry_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -18429,15 +22940,26 @@ enum db_return_codes db_get_fw_thermal_low_log_entry_history_count(const Persist
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM fw_thermal_low_log_entry_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -18452,19 +22974,29 @@ int db_get_fw_thermal_low_log_entry_history_by_history_id(const PersistentStore 
 	char *sql = "SELECT \
 		device_handle,  system_timestamp,  host_reported_temp_data  \
 		FROM fw_thermal_low_log_entry_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < fw_thermal_low_log_entry_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < fw_thermal_low_log_entry_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_fw_thermal_low_log_entry(p_ps, p_stmt, &p_fw_thermal_low_log_entry[index]);
-		local_get_fw_thermal_low_log_entry_relationships_history(p_ps, p_stmt, &p_fw_thermal_low_log_entry[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_fw_thermal_low_log_entry(p_ps, p_stmt, &p_fw_thermal_low_log_entry[index]);
+			local_get_fw_thermal_low_log_entry_relationships_history(p_ps, p_stmt, &p_fw_thermal_low_log_entry[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -18482,15 +23014,27 @@ enum db_return_codes db_get_fw_thermal_low_log_entry_count_by_dimm_topology_devi
 	*p_count = 0;
 	const char *sql = "SELECT COUNT (*) FROM fw_thermal_low_log_entry WHERE device_handle = $device_handle";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -18505,16 +23049,28 @@ enum db_return_codes db_get_fw_thermal_low_log_entry_count_by_dimm_topology_devi
 		"WHERE device_handle = $device_handle "
 			"AND history_id=$history_id";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -18529,18 +23085,28 @@ enum db_return_codes db_get_fw_thermal_low_log_entrys_by_dimm_topology_device_ha
 		 device_handle ,  system_timestamp ,  host_reported_temp_data  \
 		FROM fw_thermal_low_log_entry \
 		WHERE  device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		rc = DB_SUCCESS;
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < fw_thermal_low_log_entry_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < fw_thermal_low_log_entry_count)
 		{
 			local_row_to_fw_thermal_low_log_entry(p_ps, p_stmt, &p_fw_thermal_low_log_entry[index]);
 			local_get_fw_thermal_low_log_entry_relationships(p_ps, p_stmt, &p_fw_thermal_low_log_entry[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -18555,19 +23121,29 @@ enum db_return_codes db_get_fw_thermal_low_log_entrys_by_dimm_topology_device_ha
 		 device_handle ,  system_timestamp ,  host_reported_temp_data  \
 		FROM fw_thermal_low_log_entry_history \
 		WHERE  device_handle = $device_handle AND history_id=$history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		rc = DB_SUCCESS;
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < fw_thermal_low_log_entry_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < fw_thermal_low_log_entry_count)
 		{
 			local_row_to_fw_thermal_low_log_entry(p_ps, p_stmt, &p_fw_thermal_low_log_entry[index]);
 			local_get_fw_thermal_low_log_entry_relationships(p_ps, p_stmt, &p_fw_thermal_low_log_entry[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -18578,14 +23154,24 @@ enum db_return_codes db_delete_fw_thermal_low_log_entry_by_dimm_topology_device_
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM fw_thermal_low_log_entry \
 				 WHERE device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -18642,14 +23228,25 @@ enum db_return_codes db_add_fw_thermal_high_log_entry(const PersistentStore *p_p
 		($device_handle, \
 		$system_timestamp, \
 		$host_reported_temp_data) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_fw_thermal_high_log_entry(p_stmt, p_fw_thermal_high_log_entry);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -18673,17 +23270,27 @@ int db_get_fw_thermal_high_log_entrys(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < fw_thermal_high_log_entry_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < fw_thermal_high_log_entry_count)
 		{
 			local_row_to_fw_thermal_high_log_entry(p_ps, p_stmt, &p_fw_thermal_high_log_entry[index]);
 			local_get_fw_thermal_high_log_entry_relationships(p_ps, p_stmt, &p_fw_thermal_high_log_entry[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -18716,14 +23323,22 @@ enum db_return_codes db_save_fw_thermal_high_log_entry_state(const PersistentSto
 			($device_handle, \
 			$system_timestamp, \
 			$host_reported_temp_data) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_fw_thermal_high_log_entry(p_stmt, p_fw_thermal_high_log_entry);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -18739,16 +23354,28 @@ enum db_return_codes db_save_fw_thermal_high_log_entry_state(const PersistentSto
 				 $device_handle , \
 				 $system_timestamp , \
 				 $host_reported_temp_data )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_fw_thermal_high_log_entry(p_stmt, p_fw_thermal_high_log_entry);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -18765,16 +23392,29 @@ enum db_return_codes db_get_fw_thermal_high_log_entry_by_system_timestamp(const 
 		device_handle,  system_timestamp,  host_reported_temp_data  \
 		FROM fw_thermal_high_log_entry \
 		WHERE  system_timestamp = $system_timestamp";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$system_timestamp", (unsigned long long)system_timestamp);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_fw_thermal_high_log_entry(p_ps, p_stmt, p_fw_thermal_high_log_entry);
 			local_get_fw_thermal_high_log_entry_relationships(p_ps, p_stmt, p_fw_thermal_high_log_entry);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -18784,7 +23424,6 @@ enum db_return_codes db_update_fw_thermal_high_log_entry_by_system_timestamp(con
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE fw_thermal_high_log_entry \
 	SET \
 	device_handle=$device_handle \
@@ -18792,20 +23431,23 @@ enum db_return_codes db_update_fw_thermal_high_log_entry_by_system_timestamp(con
 		,  host_reported_temp_data=$host_reported_temp_data \
 		  \
 	WHERE system_timestamp=$system_timestamp ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$system_timestamp", (unsigned long long)system_timestamp);
 		local_bind_fw_thermal_high_log_entry(p_stmt, p_fw_thermal_high_log_entry);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -18816,14 +23458,26 @@ enum db_return_codes db_delete_fw_thermal_high_log_entry_by_system_timestamp(con
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM fw_thermal_high_log_entry \
 				 WHERE system_timestamp = $system_timestamp";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$system_timestamp", (unsigned long long)system_timestamp);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -18837,15 +23491,26 @@ enum db_return_codes db_get_fw_thermal_high_log_entry_history_by_history_id_coun
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM fw_thermal_high_log_entry_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -18856,15 +23521,26 @@ enum db_return_codes db_get_fw_thermal_high_log_entry_history_count(const Persis
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM fw_thermal_high_log_entry_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -18879,19 +23555,29 @@ int db_get_fw_thermal_high_log_entry_history_by_history_id(const PersistentStore
 	char *sql = "SELECT \
 		device_handle,  system_timestamp,  host_reported_temp_data  \
 		FROM fw_thermal_high_log_entry_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < fw_thermal_high_log_entry_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < fw_thermal_high_log_entry_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_fw_thermal_high_log_entry(p_ps, p_stmt, &p_fw_thermal_high_log_entry[index]);
-		local_get_fw_thermal_high_log_entry_relationships_history(p_ps, p_stmt, &p_fw_thermal_high_log_entry[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_fw_thermal_high_log_entry(p_ps, p_stmt, &p_fw_thermal_high_log_entry[index]);
+			local_get_fw_thermal_high_log_entry_relationships_history(p_ps, p_stmt, &p_fw_thermal_high_log_entry[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -18909,15 +23595,27 @@ enum db_return_codes db_get_fw_thermal_high_log_entry_count_by_dimm_topology_dev
 	*p_count = 0;
 	const char *sql = "SELECT COUNT (*) FROM fw_thermal_high_log_entry WHERE device_handle = $device_handle";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -18932,16 +23630,28 @@ enum db_return_codes db_get_fw_thermal_high_log_entry_count_by_dimm_topology_dev
 		"WHERE device_handle = $device_handle "
 			"AND history_id=$history_id";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -18956,18 +23666,28 @@ enum db_return_codes db_get_fw_thermal_high_log_entrys_by_dimm_topology_device_h
 		 device_handle ,  system_timestamp ,  host_reported_temp_data  \
 		FROM fw_thermal_high_log_entry \
 		WHERE  device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		rc = DB_SUCCESS;
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < fw_thermal_high_log_entry_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < fw_thermal_high_log_entry_count)
 		{
 			local_row_to_fw_thermal_high_log_entry(p_ps, p_stmt, &p_fw_thermal_high_log_entry[index]);
 			local_get_fw_thermal_high_log_entry_relationships(p_ps, p_stmt, &p_fw_thermal_high_log_entry[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -18982,19 +23702,29 @@ enum db_return_codes db_get_fw_thermal_high_log_entrys_by_dimm_topology_device_h
 		 device_handle ,  system_timestamp ,  host_reported_temp_data  \
 		FROM fw_thermal_high_log_entry_history \
 		WHERE  device_handle = $device_handle AND history_id=$history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		rc = DB_SUCCESS;
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < fw_thermal_high_log_entry_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < fw_thermal_high_log_entry_count)
 		{
 			local_row_to_fw_thermal_high_log_entry(p_ps, p_stmt, &p_fw_thermal_high_log_entry[index]);
 			local_get_fw_thermal_high_log_entry_relationships(p_ps, p_stmt, &p_fw_thermal_high_log_entry[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -19005,14 +23735,24 @@ enum db_return_codes db_delete_fw_thermal_high_log_entry_by_dimm_topology_device
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM fw_thermal_high_log_entry \
 				 WHERE device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -19087,14 +23827,25 @@ enum db_return_codes db_add_fw_media_low_log_info(const PersistentStore *p_ps,
 		$oldest_sequence_number, \
 		$newest_log_entry_timestamp, \
 		$oldest_log_entry_timestamp) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_fw_media_low_log_info(p_stmt, p_fw_media_low_log_info);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -19121,17 +23872,27 @@ int db_get_fw_media_low_log_infos(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < fw_media_low_log_info_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < fw_media_low_log_info_count)
 		{
 			local_row_to_fw_media_low_log_info(p_ps, p_stmt, &p_fw_media_low_log_info[index]);
 			local_get_fw_media_low_log_info_relationships(p_ps, p_stmt, &p_fw_media_low_log_info[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -19167,14 +23928,22 @@ enum db_return_codes db_save_fw_media_low_log_info_state(const PersistentStore *
 			$oldest_sequence_number, \
 			$newest_log_entry_timestamp, \
 			$oldest_log_entry_timestamp) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_fw_media_low_log_info(p_stmt, p_fw_media_low_log_info);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -19193,16 +23962,28 @@ enum db_return_codes db_save_fw_media_low_log_info_state(const PersistentStore *
 				 $oldest_sequence_number , \
 				 $newest_log_entry_timestamp , \
 				 $oldest_log_entry_timestamp )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_fw_media_low_log_info(p_stmt, p_fw_media_low_log_info);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -19219,16 +24000,29 @@ enum db_return_codes db_get_fw_media_low_log_info_by_device_handle(const Persist
 		device_handle,  max_log_entries,  current_sequence_number,  oldest_sequence_number,  newest_log_entry_timestamp,  oldest_log_entry_timestamp  \
 		FROM fw_media_low_log_info \
 		WHERE  device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_fw_media_low_log_info(p_ps, p_stmt, p_fw_media_low_log_info);
 			local_get_fw_media_low_log_info_relationships(p_ps, p_stmt, p_fw_media_low_log_info);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -19238,7 +24032,6 @@ enum db_return_codes db_update_fw_media_low_log_info_by_device_handle(const Pers
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE fw_media_low_log_info \
 	SET \
 	device_handle=$device_handle \
@@ -19249,20 +24042,23 @@ enum db_return_codes db_update_fw_media_low_log_info_by_device_handle(const Pers
 		,  oldest_log_entry_timestamp=$oldest_log_entry_timestamp \
 		  \
 	WHERE device_handle=$device_handle ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		local_bind_fw_media_low_log_info(p_stmt, p_fw_media_low_log_info);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -19273,14 +24069,26 @@ enum db_return_codes db_delete_fw_media_low_log_info_by_device_handle(const Pers
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM fw_media_low_log_info \
 				 WHERE device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -19294,15 +24102,26 @@ enum db_return_codes db_get_fw_media_low_log_info_history_by_history_id_count(co
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM fw_media_low_log_info_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -19313,15 +24132,26 @@ enum db_return_codes db_get_fw_media_low_log_info_history_count(const Persistent
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM fw_media_low_log_info_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -19336,19 +24166,29 @@ int db_get_fw_media_low_log_info_history_by_history_id(const PersistentStore *p_
 	char *sql = "SELECT \
 		device_handle,  max_log_entries,  current_sequence_number,  oldest_sequence_number,  newest_log_entry_timestamp,  oldest_log_entry_timestamp  \
 		FROM fw_media_low_log_info_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < fw_media_low_log_info_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < fw_media_low_log_info_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_fw_media_low_log_info(p_ps, p_stmt, &p_fw_media_low_log_info[index]);
-		local_get_fw_media_low_log_info_relationships_history(p_ps, p_stmt, &p_fw_media_low_log_info[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_fw_media_low_log_info(p_ps, p_stmt, &p_fw_media_low_log_info[index]);
+			local_get_fw_media_low_log_info_relationships_history(p_ps, p_stmt, &p_fw_media_low_log_info[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -19428,14 +24268,25 @@ enum db_return_codes db_add_fw_media_high_log_info(const PersistentStore *p_ps,
 		$oldest_sequence_number, \
 		$newest_log_entry_timestamp, \
 		$oldest_log_entry_timestamp) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_fw_media_high_log_info(p_stmt, p_fw_media_high_log_info);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -19462,17 +24313,27 @@ int db_get_fw_media_high_log_infos(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < fw_media_high_log_info_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < fw_media_high_log_info_count)
 		{
 			local_row_to_fw_media_high_log_info(p_ps, p_stmt, &p_fw_media_high_log_info[index]);
 			local_get_fw_media_high_log_info_relationships(p_ps, p_stmt, &p_fw_media_high_log_info[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -19508,14 +24369,22 @@ enum db_return_codes db_save_fw_media_high_log_info_state(const PersistentStore 
 			$oldest_sequence_number, \
 			$newest_log_entry_timestamp, \
 			$oldest_log_entry_timestamp) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_fw_media_high_log_info(p_stmt, p_fw_media_high_log_info);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -19534,16 +24403,28 @@ enum db_return_codes db_save_fw_media_high_log_info_state(const PersistentStore 
 				 $oldest_sequence_number , \
 				 $newest_log_entry_timestamp , \
 				 $oldest_log_entry_timestamp )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_fw_media_high_log_info(p_stmt, p_fw_media_high_log_info);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -19560,16 +24441,29 @@ enum db_return_codes db_get_fw_media_high_log_info_by_device_handle(const Persis
 		device_handle,  max_log_entries,  current_sequence_number,  oldest_sequence_number,  newest_log_entry_timestamp,  oldest_log_entry_timestamp  \
 		FROM fw_media_high_log_info \
 		WHERE  device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_fw_media_high_log_info(p_ps, p_stmt, p_fw_media_high_log_info);
 			local_get_fw_media_high_log_info_relationships(p_ps, p_stmt, p_fw_media_high_log_info);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -19579,7 +24473,6 @@ enum db_return_codes db_update_fw_media_high_log_info_by_device_handle(const Per
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE fw_media_high_log_info \
 	SET \
 	device_handle=$device_handle \
@@ -19590,20 +24483,23 @@ enum db_return_codes db_update_fw_media_high_log_info_by_device_handle(const Per
 		,  oldest_log_entry_timestamp=$oldest_log_entry_timestamp \
 		  \
 	WHERE device_handle=$device_handle ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		local_bind_fw_media_high_log_info(p_stmt, p_fw_media_high_log_info);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -19614,14 +24510,26 @@ enum db_return_codes db_delete_fw_media_high_log_info_by_device_handle(const Per
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM fw_media_high_log_info \
 				 WHERE device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -19635,15 +24543,26 @@ enum db_return_codes db_get_fw_media_high_log_info_history_by_history_id_count(c
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM fw_media_high_log_info_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -19654,15 +24573,26 @@ enum db_return_codes db_get_fw_media_high_log_info_history_count(const Persisten
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM fw_media_high_log_info_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -19677,19 +24607,29 @@ int db_get_fw_media_high_log_info_history_by_history_id(const PersistentStore *p
 	char *sql = "SELECT \
 		device_handle,  max_log_entries,  current_sequence_number,  oldest_sequence_number,  newest_log_entry_timestamp,  oldest_log_entry_timestamp  \
 		FROM fw_media_high_log_info_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < fw_media_high_log_info_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < fw_media_high_log_info_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_fw_media_high_log_info(p_ps, p_stmt, &p_fw_media_high_log_info[index]);
-		local_get_fw_media_high_log_info_relationships_history(p_ps, p_stmt, &p_fw_media_high_log_info[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_fw_media_high_log_info(p_ps, p_stmt, &p_fw_media_high_log_info[index]);
+			local_get_fw_media_high_log_info_relationships_history(p_ps, p_stmt, &p_fw_media_high_log_info[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -19769,14 +24709,25 @@ enum db_return_codes db_add_fw_thermal_low_log_info(const PersistentStore *p_ps,
 		$oldest_sequence_number, \
 		$newest_log_entry_timestamp, \
 		$oldest_log_entry_timestamp) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_fw_thermal_low_log_info(p_stmt, p_fw_thermal_low_log_info);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -19803,17 +24754,27 @@ int db_get_fw_thermal_low_log_infos(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < fw_thermal_low_log_info_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < fw_thermal_low_log_info_count)
 		{
 			local_row_to_fw_thermal_low_log_info(p_ps, p_stmt, &p_fw_thermal_low_log_info[index]);
 			local_get_fw_thermal_low_log_info_relationships(p_ps, p_stmt, &p_fw_thermal_low_log_info[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -19849,14 +24810,22 @@ enum db_return_codes db_save_fw_thermal_low_log_info_state(const PersistentStore
 			$oldest_sequence_number, \
 			$newest_log_entry_timestamp, \
 			$oldest_log_entry_timestamp) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_fw_thermal_low_log_info(p_stmt, p_fw_thermal_low_log_info);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -19875,16 +24844,28 @@ enum db_return_codes db_save_fw_thermal_low_log_info_state(const PersistentStore
 				 $oldest_sequence_number , \
 				 $newest_log_entry_timestamp , \
 				 $oldest_log_entry_timestamp )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_fw_thermal_low_log_info(p_stmt, p_fw_thermal_low_log_info);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -19901,16 +24882,29 @@ enum db_return_codes db_get_fw_thermal_low_log_info_by_device_handle(const Persi
 		device_handle,  max_log_entries,  current_sequence_number,  oldest_sequence_number,  newest_log_entry_timestamp,  oldest_log_entry_timestamp  \
 		FROM fw_thermal_low_log_info \
 		WHERE  device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_fw_thermal_low_log_info(p_ps, p_stmt, p_fw_thermal_low_log_info);
 			local_get_fw_thermal_low_log_info_relationships(p_ps, p_stmt, p_fw_thermal_low_log_info);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -19920,7 +24914,6 @@ enum db_return_codes db_update_fw_thermal_low_log_info_by_device_handle(const Pe
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE fw_thermal_low_log_info \
 	SET \
 	device_handle=$device_handle \
@@ -19931,20 +24924,23 @@ enum db_return_codes db_update_fw_thermal_low_log_info_by_device_handle(const Pe
 		,  oldest_log_entry_timestamp=$oldest_log_entry_timestamp \
 		  \
 	WHERE device_handle=$device_handle ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		local_bind_fw_thermal_low_log_info(p_stmt, p_fw_thermal_low_log_info);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -19955,14 +24951,26 @@ enum db_return_codes db_delete_fw_thermal_low_log_info_by_device_handle(const Pe
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM fw_thermal_low_log_info \
 				 WHERE device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -19976,15 +24984,26 @@ enum db_return_codes db_get_fw_thermal_low_log_info_history_by_history_id_count(
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM fw_thermal_low_log_info_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -19995,15 +25014,26 @@ enum db_return_codes db_get_fw_thermal_low_log_info_history_count(const Persiste
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM fw_thermal_low_log_info_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -20018,19 +25048,29 @@ int db_get_fw_thermal_low_log_info_history_by_history_id(const PersistentStore *
 	char *sql = "SELECT \
 		device_handle,  max_log_entries,  current_sequence_number,  oldest_sequence_number,  newest_log_entry_timestamp,  oldest_log_entry_timestamp  \
 		FROM fw_thermal_low_log_info_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < fw_thermal_low_log_info_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < fw_thermal_low_log_info_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_fw_thermal_low_log_info(p_ps, p_stmt, &p_fw_thermal_low_log_info[index]);
-		local_get_fw_thermal_low_log_info_relationships_history(p_ps, p_stmt, &p_fw_thermal_low_log_info[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_fw_thermal_low_log_info(p_ps, p_stmt, &p_fw_thermal_low_log_info[index]);
+			local_get_fw_thermal_low_log_info_relationships_history(p_ps, p_stmt, &p_fw_thermal_low_log_info[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -20110,14 +25150,25 @@ enum db_return_codes db_add_fw_thermal_high_log_info(const PersistentStore *p_ps
 		$oldest_sequence_number, \
 		$newest_log_entry_timestamp, \
 		$oldest_log_entry_timestamp) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_fw_thermal_high_log_info(p_stmt, p_fw_thermal_high_log_info);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -20144,17 +25195,27 @@ int db_get_fw_thermal_high_log_infos(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < fw_thermal_high_log_info_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < fw_thermal_high_log_info_count)
 		{
 			local_row_to_fw_thermal_high_log_info(p_ps, p_stmt, &p_fw_thermal_high_log_info[index]);
 			local_get_fw_thermal_high_log_info_relationships(p_ps, p_stmt, &p_fw_thermal_high_log_info[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -20190,14 +25251,22 @@ enum db_return_codes db_save_fw_thermal_high_log_info_state(const PersistentStor
 			$oldest_sequence_number, \
 			$newest_log_entry_timestamp, \
 			$oldest_log_entry_timestamp) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_fw_thermal_high_log_info(p_stmt, p_fw_thermal_high_log_info);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -20216,16 +25285,28 @@ enum db_return_codes db_save_fw_thermal_high_log_info_state(const PersistentStor
 				 $oldest_sequence_number , \
 				 $newest_log_entry_timestamp , \
 				 $oldest_log_entry_timestamp )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_fw_thermal_high_log_info(p_stmt, p_fw_thermal_high_log_info);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -20242,16 +25323,29 @@ enum db_return_codes db_get_fw_thermal_high_log_info_by_device_handle(const Pers
 		device_handle,  max_log_entries,  current_sequence_number,  oldest_sequence_number,  newest_log_entry_timestamp,  oldest_log_entry_timestamp  \
 		FROM fw_thermal_high_log_info \
 		WHERE  device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_fw_thermal_high_log_info(p_ps, p_stmt, p_fw_thermal_high_log_info);
 			local_get_fw_thermal_high_log_info_relationships(p_ps, p_stmt, p_fw_thermal_high_log_info);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -20261,7 +25355,6 @@ enum db_return_codes db_update_fw_thermal_high_log_info_by_device_handle(const P
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE fw_thermal_high_log_info \
 	SET \
 	device_handle=$device_handle \
@@ -20272,20 +25365,23 @@ enum db_return_codes db_update_fw_thermal_high_log_info_by_device_handle(const P
 		,  oldest_log_entry_timestamp=$oldest_log_entry_timestamp \
 		  \
 	WHERE device_handle=$device_handle ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		local_bind_fw_thermal_high_log_info(p_stmt, p_fw_thermal_high_log_info);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -20296,14 +25392,26 @@ enum db_return_codes db_delete_fw_thermal_high_log_info_by_device_handle(const P
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM fw_thermal_high_log_info \
 				 WHERE device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -20317,15 +25425,26 @@ enum db_return_codes db_get_fw_thermal_high_log_info_history_by_history_id_count
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM fw_thermal_high_log_info_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -20336,15 +25455,26 @@ enum db_return_codes db_get_fw_thermal_high_log_info_history_count(const Persist
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM fw_thermal_high_log_info_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -20359,19 +25489,29 @@ int db_get_fw_thermal_high_log_info_history_by_history_id(const PersistentStore 
 	char *sql = "SELECT \
 		device_handle,  max_log_entries,  current_sequence_number,  oldest_sequence_number,  newest_log_entry_timestamp,  oldest_log_entry_timestamp  \
 		FROM fw_thermal_high_log_info_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < fw_thermal_high_log_info_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < fw_thermal_high_log_info_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_fw_thermal_high_log_info(p_ps, p_stmt, &p_fw_thermal_high_log_info[index]);
-		local_get_fw_thermal_high_log_info_relationships_history(p_ps, p_stmt, &p_fw_thermal_high_log_info[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_fw_thermal_high_log_info(p_ps, p_stmt, &p_fw_thermal_high_log_info[index]);
+			local_get_fw_thermal_high_log_info_relationships_history(p_ps, p_stmt, &p_fw_thermal_high_log_info[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -20427,14 +25567,25 @@ enum db_return_codes db_add_dimm_fw_log_level(const PersistentStore *p_ps,
 		VALUES 		\
 		($device_handle, \
 		$log_level) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_dimm_fw_log_level(p_stmt, p_dimm_fw_log_level);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -20457,17 +25608,27 @@ int db_get_dimm_fw_log_levels(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_fw_log_level_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_fw_log_level_count)
 		{
 			local_row_to_dimm_fw_log_level(p_ps, p_stmt, &p_dimm_fw_log_level[index]);
 			local_get_dimm_fw_log_level_relationships(p_ps, p_stmt, &p_dimm_fw_log_level[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -20499,14 +25660,22 @@ enum db_return_codes db_save_dimm_fw_log_level_state(const PersistentStore *p_ps
 			VALUES 		\
 			($device_handle, \
 			$log_level) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_dimm_fw_log_level(p_stmt, p_dimm_fw_log_level);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -20521,16 +25690,28 @@ enum db_return_codes db_save_dimm_fw_log_level_state(const PersistentStore *p_ps
 			VALUES 		($history_id, \
 				 $device_handle , \
 				 $log_level )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_dimm_fw_log_level(p_stmt, p_dimm_fw_log_level);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -20547,16 +25728,29 @@ enum db_return_codes db_get_dimm_fw_log_level_by_device_handle(const PersistentS
 		device_handle,  log_level  \
 		FROM dimm_fw_log_level \
 		WHERE  device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_dimm_fw_log_level(p_ps, p_stmt, p_dimm_fw_log_level);
 			local_get_dimm_fw_log_level_relationships(p_ps, p_stmt, p_dimm_fw_log_level);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -20566,27 +25760,29 @@ enum db_return_codes db_update_dimm_fw_log_level_by_device_handle(const Persiste
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE dimm_fw_log_level \
 	SET \
 	device_handle=$device_handle \
 		,  log_level=$log_level \
 		  \
 	WHERE device_handle=$device_handle ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (int)device_handle);
 		local_bind_dimm_fw_log_level(p_stmt, p_dimm_fw_log_level);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -20597,14 +25793,26 @@ enum db_return_codes db_delete_dimm_fw_log_level_by_device_handle(const Persiste
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM dimm_fw_log_level \
 				 WHERE device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -20618,15 +25826,26 @@ enum db_return_codes db_get_dimm_fw_log_level_history_by_history_id_count(const 
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_fw_log_level_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -20637,15 +25856,26 @@ enum db_return_codes db_get_dimm_fw_log_level_history_count(const PersistentStor
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_fw_log_level_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -20660,19 +25890,29 @@ int db_get_dimm_fw_log_level_history_by_history_id(const PersistentStore *p_ps,
 	char *sql = "SELECT \
 		device_handle,  log_level  \
 		FROM dimm_fw_log_level_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_fw_log_level_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_fw_log_level_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_dimm_fw_log_level(p_ps, p_stmt, &p_dimm_fw_log_level[index]);
-		local_get_dimm_fw_log_level_relationships_history(p_ps, p_stmt, &p_dimm_fw_log_level[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_dimm_fw_log_level(p_ps, p_stmt, &p_dimm_fw_log_level[index]);
+			local_get_dimm_fw_log_level_relationships_history(p_ps, p_stmt, &p_dimm_fw_log_level[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -20728,14 +25968,25 @@ enum db_return_codes db_add_dimm_fw_time(const PersistentStore *p_ps,
 		VALUES 		\
 		($device_handle, \
 		$time) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_dimm_fw_time(p_stmt, p_dimm_fw_time);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -20758,17 +26009,27 @@ int db_get_dimm_fw_times(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_fw_time_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_fw_time_count)
 		{
 			local_row_to_dimm_fw_time(p_ps, p_stmt, &p_dimm_fw_time[index]);
 			local_get_dimm_fw_time_relationships(p_ps, p_stmt, &p_dimm_fw_time[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -20800,14 +26061,22 @@ enum db_return_codes db_save_dimm_fw_time_state(const PersistentStore *p_ps,
 			VALUES 		\
 			($device_handle, \
 			$time) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_dimm_fw_time(p_stmt, p_dimm_fw_time);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -20822,16 +26091,28 @@ enum db_return_codes db_save_dimm_fw_time_state(const PersistentStore *p_ps,
 			VALUES 		($history_id, \
 				 $device_handle , \
 				 $time )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_dimm_fw_time(p_stmt, p_dimm_fw_time);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -20848,16 +26129,29 @@ enum db_return_codes db_get_dimm_fw_time_by_device_handle(const PersistentStore 
 		device_handle,  time  \
 		FROM dimm_fw_time \
 		WHERE  device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_dimm_fw_time(p_ps, p_stmt, p_dimm_fw_time);
 			local_get_dimm_fw_time_relationships(p_ps, p_stmt, p_dimm_fw_time);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -20867,27 +26161,29 @@ enum db_return_codes db_update_dimm_fw_time_by_device_handle(const PersistentSto
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE dimm_fw_time \
 	SET \
 	device_handle=$device_handle \
 		,  time=$time \
 		  \
 	WHERE device_handle=$device_handle ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (int)device_handle);
 		local_bind_dimm_fw_time(p_stmt, p_dimm_fw_time);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -20898,14 +26194,26 @@ enum db_return_codes db_delete_dimm_fw_time_by_device_handle(const PersistentSto
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM dimm_fw_time \
 				 WHERE device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -20919,15 +26227,26 @@ enum db_return_codes db_get_dimm_fw_time_history_by_history_id_count(const Persi
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_fw_time_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -20938,15 +26257,26 @@ enum db_return_codes db_get_dimm_fw_time_history_count(const PersistentStore *p_
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_fw_time_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -20961,19 +26291,29 @@ int db_get_dimm_fw_time_history_by_history_id(const PersistentStore *p_ps,
 	char *sql = "SELECT \
 		device_handle,  time  \
 		FROM dimm_fw_time_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_fw_time_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_fw_time_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_dimm_fw_time(p_ps, p_stmt, &p_dimm_fw_time[index]);
-		local_get_dimm_fw_time_relationships_history(p_ps, p_stmt, &p_dimm_fw_time[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_dimm_fw_time(p_ps, p_stmt, &p_dimm_fw_time[index]);
+			local_get_dimm_fw_time_relationships_history(p_ps, p_stmt, &p_dimm_fw_time[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -21116,14 +26456,25 @@ enum db_return_codes db_add_dimm_platform_config(const PersistentStore *p_ps,
 		$config_input_offset, \
 		$config_output_size, \
 		$config_output_offset) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_dimm_platform_config(p_stmt, p_dimm_platform_config);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -21160,17 +26511,27 @@ int db_get_dimm_platform_configs(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_platform_config_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_platform_config_count)
 		{
 			local_row_to_dimm_platform_config(p_ps, p_stmt, &p_dimm_platform_config[index]);
 			local_get_dimm_platform_config_relationships(p_ps, p_stmt, &p_dimm_platform_config[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -21216,14 +26577,22 @@ enum db_return_codes db_save_dimm_platform_config_state(const PersistentStore *p
 			$config_input_offset, \
 			$config_output_size, \
 			$config_output_offset) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_dimm_platform_config(p_stmt, p_dimm_platform_config);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -21252,16 +26621,28 @@ enum db_return_codes db_save_dimm_platform_config_state(const PersistentStore *p
 				 $config_input_offset , \
 				 $config_output_size , \
 				 $config_output_offset )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_dimm_platform_config(p_stmt, p_dimm_platform_config);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -21278,16 +26659,29 @@ enum db_return_codes db_get_dimm_platform_config_by_device_handle(const Persiste
 		device_handle,  signature,  length,  revision,  checksum,  oem_id,  oem_table_id,  oem_revision,  creator_id,  creator_revision,  current_config_size,  current_config_offset,  config_input_size,  config_input_offset,  config_output_size,  config_output_offset  \
 		FROM dimm_platform_config \
 		WHERE  device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_dimm_platform_config(p_ps, p_stmt, p_dimm_platform_config);
 			local_get_dimm_platform_config_relationships(p_ps, p_stmt, p_dimm_platform_config);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -21297,7 +26691,6 @@ enum db_return_codes db_update_dimm_platform_config_by_device_handle(const Persi
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE dimm_platform_config \
 	SET \
 	device_handle=$device_handle \
@@ -21318,20 +26711,23 @@ enum db_return_codes db_update_dimm_platform_config_by_device_handle(const Persi
 		,  config_output_offset=$config_output_offset \
 		  \
 	WHERE device_handle=$device_handle ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		local_bind_dimm_platform_config(p_stmt, p_dimm_platform_config);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -21342,14 +26738,26 @@ enum db_return_codes db_delete_dimm_platform_config_by_device_handle(const Persi
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM dimm_platform_config \
 				 WHERE device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -21363,15 +26771,26 @@ enum db_return_codes db_get_dimm_platform_config_history_by_history_id_count(con
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_platform_config_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -21382,15 +26801,26 @@ enum db_return_codes db_get_dimm_platform_config_history_count(const PersistentS
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_platform_config_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -21405,19 +26835,29 @@ int db_get_dimm_platform_config_history_by_history_id(const PersistentStore *p_p
 	char *sql = "SELECT \
 		device_handle,  signature,  length,  revision,  checksum,  oem_id,  oem_table_id,  oem_revision,  creator_id,  creator_revision,  current_config_size,  current_config_offset,  config_input_size,  config_input_offset,  config_output_size,  config_output_offset  \
 		FROM dimm_platform_config_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_platform_config_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_platform_config_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_dimm_platform_config(p_ps, p_stmt, &p_dimm_platform_config[index]);
-		local_get_dimm_platform_config_relationships_history(p_ps, p_stmt, &p_dimm_platform_config[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_dimm_platform_config(p_ps, p_stmt, &p_dimm_platform_config[index]);
+			local_get_dimm_platform_config_relationships_history(p_ps, p_stmt, &p_dimm_platform_config[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -21542,14 +26982,25 @@ enum db_return_codes db_add_dimm_current_config(const PersistentStore *p_ps,
 		$config_status, \
 		$mapped_memory_capacity, \
 		$mapped_app_direct_capacity) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_dimm_current_config(p_stmt, p_dimm_current_config);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -21583,17 +27034,27 @@ int db_get_dimm_current_configs(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_current_config_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_current_config_count)
 		{
 			local_row_to_dimm_current_config(p_ps, p_stmt, &p_dimm_current_config[index]);
 			local_get_dimm_current_config_relationships(p_ps, p_stmt, &p_dimm_current_config[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -21636,14 +27097,22 @@ enum db_return_codes db_save_dimm_current_config_state(const PersistentStore *p_
 			$config_status, \
 			$mapped_memory_capacity, \
 			$mapped_app_direct_capacity) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_dimm_current_config(p_stmt, p_dimm_current_config);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -21669,16 +27138,28 @@ enum db_return_codes db_save_dimm_current_config_state(const PersistentStore *p_
 				 $config_status , \
 				 $mapped_memory_capacity , \
 				 $mapped_app_direct_capacity )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_dimm_current_config(p_stmt, p_dimm_current_config);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -21695,16 +27176,29 @@ enum db_return_codes db_get_dimm_current_config_by_device_handle(const Persisten
 		device_handle,  signature,  length,  revision,  checksum,  oem_id,  oem_table_id,  oem_revision,  creator_id,  creator_revision,  config_status,  mapped_memory_capacity,  mapped_app_direct_capacity  \
 		FROM dimm_current_config \
 		WHERE  device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_dimm_current_config(p_ps, p_stmt, p_dimm_current_config);
 			local_get_dimm_current_config_relationships(p_ps, p_stmt, p_dimm_current_config);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -21714,7 +27208,6 @@ enum db_return_codes db_update_dimm_current_config_by_device_handle(const Persis
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE dimm_current_config \
 	SET \
 	device_handle=$device_handle \
@@ -21732,20 +27225,23 @@ enum db_return_codes db_update_dimm_current_config_by_device_handle(const Persis
 		,  mapped_app_direct_capacity=$mapped_app_direct_capacity \
 		  \
 	WHERE device_handle=$device_handle ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		local_bind_dimm_current_config(p_stmt, p_dimm_current_config);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -21756,14 +27252,26 @@ enum db_return_codes db_delete_dimm_current_config_by_device_handle(const Persis
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM dimm_current_config \
 				 WHERE device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -21777,15 +27285,26 @@ enum db_return_codes db_get_dimm_current_config_history_by_history_id_count(cons
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_current_config_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -21796,15 +27315,26 @@ enum db_return_codes db_get_dimm_current_config_history_count(const PersistentSt
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_current_config_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -21819,19 +27349,29 @@ int db_get_dimm_current_config_history_by_history_id(const PersistentStore *p_ps
 	char *sql = "SELECT \
 		device_handle,  signature,  length,  revision,  checksum,  oem_id,  oem_table_id,  oem_revision,  creator_id,  creator_revision,  config_status,  mapped_memory_capacity,  mapped_app_direct_capacity  \
 		FROM dimm_current_config_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_current_config_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_current_config_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_dimm_current_config(p_ps, p_stmt, &p_dimm_current_config[index]);
-		local_get_dimm_current_config_relationships_history(p_ps, p_stmt, &p_dimm_current_config[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_dimm_current_config(p_ps, p_stmt, &p_dimm_current_config[index]);
+			local_get_dimm_current_config_relationships_history(p_ps, p_stmt, &p_dimm_current_config[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -21944,14 +27484,25 @@ enum db_return_codes db_add_dimm_config_input(const PersistentStore *p_ps,
 		$creator_id, \
 		$creator_revision, \
 		$sequence_number) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_dimm_config_input(p_stmt, p_dimm_config_input);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -21983,17 +27534,27 @@ int db_get_dimm_config_inputs(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_config_input_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_config_input_count)
 		{
 			local_row_to_dimm_config_input(p_ps, p_stmt, &p_dimm_config_input[index]);
 			local_get_dimm_config_input_relationships(p_ps, p_stmt, &p_dimm_config_input[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -22034,14 +27595,22 @@ enum db_return_codes db_save_dimm_config_input_state(const PersistentStore *p_ps
 			$creator_id, \
 			$creator_revision, \
 			$sequence_number) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_dimm_config_input(p_stmt, p_dimm_config_input);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -22065,16 +27634,28 @@ enum db_return_codes db_save_dimm_config_input_state(const PersistentStore *p_ps
 				 $creator_id , \
 				 $creator_revision , \
 				 $sequence_number )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_dimm_config_input(p_stmt, p_dimm_config_input);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -22091,16 +27672,29 @@ enum db_return_codes db_get_dimm_config_input_by_device_handle(const PersistentS
 		device_handle,  signature,  length,  revision,  checksum,  oem_id,  oem_table_id,  oem_revision,  creator_id,  creator_revision,  sequence_number  \
 		FROM dimm_config_input \
 		WHERE  device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_dimm_config_input(p_ps, p_stmt, p_dimm_config_input);
 			local_get_dimm_config_input_relationships(p_ps, p_stmt, p_dimm_config_input);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -22110,7 +27704,6 @@ enum db_return_codes db_update_dimm_config_input_by_device_handle(const Persiste
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE dimm_config_input \
 	SET \
 	device_handle=$device_handle \
@@ -22126,20 +27719,23 @@ enum db_return_codes db_update_dimm_config_input_by_device_handle(const Persiste
 		,  sequence_number=$sequence_number \
 		  \
 	WHERE device_handle=$device_handle ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		local_bind_dimm_config_input(p_stmt, p_dimm_config_input);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -22150,14 +27746,26 @@ enum db_return_codes db_delete_dimm_config_input_by_device_handle(const Persiste
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM dimm_config_input \
 				 WHERE device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -22171,15 +27779,26 @@ enum db_return_codes db_get_dimm_config_input_history_by_history_id_count(const 
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_config_input_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -22190,15 +27809,26 @@ enum db_return_codes db_get_dimm_config_input_history_count(const PersistentStor
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_config_input_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -22213,19 +27843,29 @@ int db_get_dimm_config_input_history_by_history_id(const PersistentStore *p_ps,
 	char *sql = "SELECT \
 		device_handle,  signature,  length,  revision,  checksum,  oem_id,  oem_table_id,  oem_revision,  creator_id,  creator_revision,  sequence_number  \
 		FROM dimm_config_input_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_config_input_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_config_input_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_dimm_config_input(p_ps, p_stmt, &p_dimm_config_input[index]);
-		local_get_dimm_config_input_relationships_history(p_ps, p_stmt, &p_dimm_config_input[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_dimm_config_input(p_ps, p_stmt, &p_dimm_config_input[index]);
+			local_get_dimm_config_input_relationships_history(p_ps, p_stmt, &p_dimm_config_input[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -22344,14 +27984,25 @@ enum db_return_codes db_add_dimm_config_output(const PersistentStore *p_ps,
 		$creator_revision, \
 		$sequence_number, \
 		$validation_status) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_dimm_config_output(p_stmt, p_dimm_config_output);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -22384,17 +28035,27 @@ int db_get_dimm_config_outputs(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_config_output_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_config_output_count)
 		{
 			local_row_to_dimm_config_output(p_ps, p_stmt, &p_dimm_config_output[index]);
 			local_get_dimm_config_output_relationships(p_ps, p_stmt, &p_dimm_config_output[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -22436,14 +28097,22 @@ enum db_return_codes db_save_dimm_config_output_state(const PersistentStore *p_p
 			$creator_revision, \
 			$sequence_number, \
 			$validation_status) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_dimm_config_output(p_stmt, p_dimm_config_output);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -22468,16 +28137,28 @@ enum db_return_codes db_save_dimm_config_output_state(const PersistentStore *p_p
 				 $creator_revision , \
 				 $sequence_number , \
 				 $validation_status )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_dimm_config_output(p_stmt, p_dimm_config_output);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -22494,16 +28175,29 @@ enum db_return_codes db_get_dimm_config_output_by_device_handle(const Persistent
 		device_handle,  signature,  length,  revision,  checksum,  oem_id,  oem_table_id,  oem_revision,  creator_id,  creator_revision,  sequence_number,  validation_status  \
 		FROM dimm_config_output \
 		WHERE  device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_dimm_config_output(p_ps, p_stmt, p_dimm_config_output);
 			local_get_dimm_config_output_relationships(p_ps, p_stmt, p_dimm_config_output);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -22513,7 +28207,6 @@ enum db_return_codes db_update_dimm_config_output_by_device_handle(const Persist
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE dimm_config_output \
 	SET \
 	device_handle=$device_handle \
@@ -22530,20 +28223,23 @@ enum db_return_codes db_update_dimm_config_output_by_device_handle(const Persist
 		,  validation_status=$validation_status \
 		  \
 	WHERE device_handle=$device_handle ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		local_bind_dimm_config_output(p_stmt, p_dimm_config_output);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -22554,14 +28250,26 @@ enum db_return_codes db_delete_dimm_config_output_by_device_handle(const Persist
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM dimm_config_output \
 				 WHERE device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -22575,15 +28283,26 @@ enum db_return_codes db_get_dimm_config_output_history_by_history_id_count(const
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_config_output_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -22594,15 +28313,26 @@ enum db_return_codes db_get_dimm_config_output_history_count(const PersistentSto
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_config_output_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -22617,19 +28347,29 @@ int db_get_dimm_config_output_history_by_history_id(const PersistentStore *p_ps,
 	char *sql = "SELECT \
 		device_handle,  signature,  length,  revision,  checksum,  oem_id,  oem_table_id,  oem_revision,  creator_id,  creator_revision,  sequence_number,  validation_status  \
 		FROM dimm_config_output_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_config_output_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_config_output_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_dimm_config_output(p_ps, p_stmt, &p_dimm_config_output[index]);
-		local_get_dimm_config_output_relationships_history(p_ps, p_stmt, &p_dimm_config_output[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_dimm_config_output(p_ps, p_stmt, &p_dimm_config_output[index]);
+			local_get_dimm_config_output_relationships_history(p_ps, p_stmt, &p_dimm_config_output[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -22715,14 +28455,25 @@ enum db_return_codes db_add_dimm_partition_change(const PersistentStore *p_ps,
 		$length, \
 		$partition_size, \
 		$status) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_dimm_partition_change(p_stmt, p_dimm_partition_change);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -22750,17 +28501,27 @@ int db_get_dimm_partition_changes(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_partition_change_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_partition_change_count)
 		{
 			local_row_to_dimm_partition_change(p_ps, p_stmt, &p_dimm_partition_change[index]);
 			local_get_dimm_partition_change_relationships(p_ps, p_stmt, &p_dimm_partition_change[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -22797,14 +28558,22 @@ enum db_return_codes db_save_dimm_partition_change_state(const PersistentStore *
 			$length, \
 			$partition_size, \
 			$status) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_dimm_partition_change(p_stmt, p_dimm_partition_change);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -22824,16 +28593,28 @@ enum db_return_codes db_save_dimm_partition_change_state(const PersistentStore *
 				 $length , \
 				 $partition_size , \
 				 $status )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_dimm_partition_change(p_stmt, p_dimm_partition_change);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -22850,16 +28631,29 @@ enum db_return_codes db_get_dimm_partition_change_by_id(const PersistentStore *p
 		device_handle,  id,  config_table_type,  extension_table_type,  length,  partition_size,  status  \
 		FROM dimm_partition_change \
 		WHERE  id = $id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$id", (int)id);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_dimm_partition_change(p_ps, p_stmt, p_dimm_partition_change);
 			local_get_dimm_partition_change_relationships(p_ps, p_stmt, p_dimm_partition_change);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -22869,7 +28663,6 @@ enum db_return_codes db_update_dimm_partition_change_by_id(const PersistentStore
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE dimm_partition_change \
 	SET \
 	device_handle=$device_handle \
@@ -22881,20 +28674,23 @@ enum db_return_codes db_update_dimm_partition_change_by_id(const PersistentStore
 		,  status=$status \
 		  \
 	WHERE id=$id ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$id", (int)id);
 		local_bind_dimm_partition_change(p_stmt, p_dimm_partition_change);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -22905,14 +28701,26 @@ enum db_return_codes db_delete_dimm_partition_change_by_id(const PersistentStore
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM dimm_partition_change \
 				 WHERE id = $id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$id", (int)id);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -22926,15 +28734,26 @@ enum db_return_codes db_get_dimm_partition_change_history_by_history_id_count(co
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_partition_change_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -22945,15 +28764,26 @@ enum db_return_codes db_get_dimm_partition_change_history_count(const Persistent
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_partition_change_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -22968,19 +28798,29 @@ int db_get_dimm_partition_change_history_by_history_id(const PersistentStore *p_
 	char *sql = "SELECT \
 		device_handle,  id,  config_table_type,  extension_table_type,  length,  partition_size,  status  \
 		FROM dimm_partition_change_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_partition_change_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_partition_change_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_dimm_partition_change(p_ps, p_stmt, &p_dimm_partition_change[index]);
-		local_get_dimm_partition_change_relationships_history(p_ps, p_stmt, &p_dimm_partition_change[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_dimm_partition_change(p_ps, p_stmt, &p_dimm_partition_change[index]);
+			local_get_dimm_partition_change_relationships_history(p_ps, p_stmt, &p_dimm_partition_change[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -22998,15 +28838,27 @@ enum db_return_codes db_get_dimm_partition_change_count_by_dimm_topology_device_
 	*p_count = 0;
 	const char *sql = "SELECT COUNT (*) FROM dimm_partition_change WHERE device_handle = $device_handle";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -23021,16 +28873,28 @@ enum db_return_codes db_get_dimm_partition_change_count_by_dimm_topology_device_
 		"WHERE device_handle = $device_handle "
 			"AND history_id=$history_id";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -23045,18 +28909,28 @@ enum db_return_codes db_get_dimm_partition_changes_by_dimm_topology_device_handl
 		 device_handle ,  id ,  config_table_type ,  extension_table_type ,  length ,  partition_size ,  status  \
 		FROM dimm_partition_change \
 		WHERE  device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		rc = DB_SUCCESS;
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_partition_change_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_partition_change_count)
 		{
 			local_row_to_dimm_partition_change(p_ps, p_stmt, &p_dimm_partition_change[index]);
 			local_get_dimm_partition_change_relationships(p_ps, p_stmt, &p_dimm_partition_change[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -23071,19 +28945,29 @@ enum db_return_codes db_get_dimm_partition_changes_by_dimm_topology_device_handl
 		 device_handle ,  id ,  config_table_type ,  extension_table_type ,  length ,  partition_size ,  status  \
 		FROM dimm_partition_change_history \
 		WHERE  device_handle = $device_handle AND history_id=$history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		rc = DB_SUCCESS;
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_partition_change_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_partition_change_count)
 		{
 			local_row_to_dimm_partition_change(p_ps, p_stmt, &p_dimm_partition_change[index]);
 			local_get_dimm_partition_change_relationships(p_ps, p_stmt, &p_dimm_partition_change[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -23094,14 +28978,24 @@ enum db_return_codes db_delete_dimm_partition_change_by_dimm_topology_device_han
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM dimm_partition_change \
 				 WHERE device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -23121,13 +29015,23 @@ enum db_return_codes db_roll_dimm_partition_changes_by_id(const PersistentStore 
 				"FROM dimm_partition_change "
 				"ORDER BY id DESC "
 				"LIMIT %d)", max_rows); 
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -23249,14 +29153,25 @@ enum db_return_codes db_add_dimm_interleave_set(const PersistentStore *p_ps,
 		$interleave_format, \
 		$mirror_enable, \
 		$status) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_dimm_interleave_set(p_stmt, p_dimm_interleave_set);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -23288,17 +29203,27 @@ int db_get_dimm_interleave_sets(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_interleave_set_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_interleave_set_count)
 		{
 			local_row_to_dimm_interleave_set(p_ps, p_stmt, &p_dimm_interleave_set[index]);
 			local_get_dimm_interleave_set_relationships(p_ps, p_stmt, &p_dimm_interleave_set[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -23339,14 +29264,22 @@ enum db_return_codes db_save_dimm_interleave_set_state(const PersistentStore *p_
 			$interleave_format, \
 			$mirror_enable, \
 			$status) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_dimm_interleave_set(p_stmt, p_dimm_interleave_set);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -23370,16 +29303,28 @@ enum db_return_codes db_save_dimm_interleave_set_state(const PersistentStore *p_
 				 $interleave_format , \
 				 $mirror_enable , \
 				 $status )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_dimm_interleave_set(p_stmt, p_dimm_interleave_set);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -23396,16 +29341,29 @@ enum db_return_codes db_get_dimm_interleave_set_by_id(const PersistentStore *p_p
 		id,  device_handle,  config_table_type,  extension_table_type,  length,  index_id,  dimm_count,  memory_type,  interleave_format,  mirror_enable,  status  \
 		FROM dimm_interleave_set \
 		WHERE  id = $id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$id", (int)id);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_dimm_interleave_set(p_ps, p_stmt, p_dimm_interleave_set);
 			local_get_dimm_interleave_set_relationships(p_ps, p_stmt, p_dimm_interleave_set);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -23415,7 +29373,6 @@ enum db_return_codes db_update_dimm_interleave_set_by_id(const PersistentStore *
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE dimm_interleave_set \
 	SET \
 	id=$id \
@@ -23431,20 +29388,23 @@ enum db_return_codes db_update_dimm_interleave_set_by_id(const PersistentStore *
 		,  status=$status \
 		  \
 	WHERE id=$id ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$id", (int)id);
 		local_bind_dimm_interleave_set(p_stmt, p_dimm_interleave_set);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -23455,14 +29415,26 @@ enum db_return_codes db_delete_dimm_interleave_set_by_id(const PersistentStore *
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM dimm_interleave_set \
 				 WHERE id = $id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$id", (int)id);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -23476,15 +29448,26 @@ enum db_return_codes db_get_dimm_interleave_set_history_by_history_id_count(cons
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_interleave_set_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -23495,15 +29478,26 @@ enum db_return_codes db_get_dimm_interleave_set_history_count(const PersistentSt
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM dimm_interleave_set_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -23518,19 +29512,29 @@ int db_get_dimm_interleave_set_history_by_history_id(const PersistentStore *p_ps
 	char *sql = "SELECT \
 		id,  device_handle,  config_table_type,  extension_table_type,  length,  index_id,  dimm_count,  memory_type,  interleave_format,  mirror_enable,  status  \
 		FROM dimm_interleave_set_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_interleave_set_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_interleave_set_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_dimm_interleave_set(p_ps, p_stmt, &p_dimm_interleave_set[index]);
-		local_get_dimm_interleave_set_relationships_history(p_ps, p_stmt, &p_dimm_interleave_set[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_dimm_interleave_set(p_ps, p_stmt, &p_dimm_interleave_set[index]);
+			local_get_dimm_interleave_set_relationships_history(p_ps, p_stmt, &p_dimm_interleave_set[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -23555,13 +29559,23 @@ enum db_return_codes db_roll_dimm_interleave_sets_by_id(const PersistentStore *p
 				"FROM dimm_interleave_set "
 				"ORDER BY id DESC "
 				"LIMIT %d)", max_rows); 
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -23591,15 +29605,27 @@ enum db_return_codes db_get_dimm_interleave_set_count_by_dimm_topology_device_ha
 	*p_count = 0;
 	const char *sql = "SELECT COUNT (*) FROM dimm_interleave_set WHERE device_handle = $device_handle";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -23614,16 +29640,28 @@ enum db_return_codes db_get_dimm_interleave_set_count_by_dimm_topology_device_ha
 		"WHERE device_handle = $device_handle "
 			"AND history_id=$history_id";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -23638,18 +29676,28 @@ enum db_return_codes db_get_dimm_interleave_sets_by_dimm_topology_device_handle(
 		 id ,  device_handle ,  config_table_type ,  extension_table_type ,  length ,  index_id ,  dimm_count ,  memory_type ,  interleave_format ,  mirror_enable ,  status  \
 		FROM dimm_interleave_set \
 		WHERE  device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		rc = DB_SUCCESS;
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_interleave_set_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_interleave_set_count)
 		{
 			local_row_to_dimm_interleave_set(p_ps, p_stmt, &p_dimm_interleave_set[index]);
 			local_get_dimm_interleave_set_relationships(p_ps, p_stmt, &p_dimm_interleave_set[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -23664,19 +29712,29 @@ enum db_return_codes db_get_dimm_interleave_sets_by_dimm_topology_device_handle_
 		 id ,  device_handle ,  config_table_type ,  extension_table_type ,  length ,  index_id ,  dimm_count ,  memory_type ,  interleave_format ,  mirror_enable ,  status  \
 		FROM dimm_interleave_set_history \
 		WHERE  device_handle = $device_handle AND history_id=$history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		rc = DB_SUCCESS;
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < dimm_interleave_set_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_interleave_set_count)
 		{
 			local_row_to_dimm_interleave_set(p_ps, p_stmt, &p_dimm_interleave_set[index]);
 			local_get_dimm_interleave_set_relationships(p_ps, p_stmt, &p_dimm_interleave_set[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -23687,14 +29745,24 @@ enum db_return_codes db_delete_dimm_interleave_set_by_dimm_topology_device_handl
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM dimm_interleave_set \
 				 WHERE device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -23788,14 +29856,25 @@ enum db_return_codes db_add_interleave_set_dimm_info(const PersistentStore *p_ps
 		$part_num, \
 		$offset, \
 		$size) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_interleave_set_dimm_info(p_stmt, p_interleave_set_dimm_info);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -23825,17 +29904,27 @@ int db_get_interleave_set_dimm_infos(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < interleave_set_dimm_info_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < interleave_set_dimm_info_count)
 		{
 			local_row_to_interleave_set_dimm_info(p_ps, p_stmt, &p_interleave_set_dimm_info[index]);
 			local_get_interleave_set_dimm_info_relationships(p_ps, p_stmt, &p_interleave_set_dimm_info[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -23874,14 +29963,22 @@ enum db_return_codes db_save_interleave_set_dimm_info_state(const PersistentStor
 			$part_num, \
 			$offset, \
 			$size) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_interleave_set_dimm_info(p_stmt, p_interleave_set_dimm_info);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -23903,16 +30000,28 @@ enum db_return_codes db_save_interleave_set_dimm_info_state(const PersistentStor
 				 $part_num , \
 				 $offset , \
 				 $size )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_interleave_set_dimm_info(p_stmt, p_interleave_set_dimm_info);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -23929,16 +30038,29 @@ enum db_return_codes db_get_interleave_set_dimm_info_by_id(const PersistentStore
 		id,  config_table_type,  index_id,  device_handle,  manufacturer,  serial_num,  part_num,  offset,  size  \
 		FROM interleave_set_dimm_info \
 		WHERE  id = $id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$id", (int)id);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_interleave_set_dimm_info(p_ps, p_stmt, p_interleave_set_dimm_info);
 			local_get_interleave_set_dimm_info_relationships(p_ps, p_stmt, p_interleave_set_dimm_info);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -23948,7 +30070,6 @@ enum db_return_codes db_update_interleave_set_dimm_info_by_id(const PersistentSt
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE interleave_set_dimm_info \
 	SET \
 	id=$id \
@@ -23962,20 +30083,23 @@ enum db_return_codes db_update_interleave_set_dimm_info_by_id(const PersistentSt
 		,  size=$size \
 		  \
 	WHERE id=$id ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$id", (int)id);
 		local_bind_interleave_set_dimm_info(p_stmt, p_interleave_set_dimm_info);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -23986,14 +30110,26 @@ enum db_return_codes db_delete_interleave_set_dimm_info_by_id(const PersistentSt
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM interleave_set_dimm_info \
 				 WHERE id = $id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$id", (int)id);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -24007,15 +30143,26 @@ enum db_return_codes db_get_interleave_set_dimm_info_history_by_history_id_count
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM interleave_set_dimm_info_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -24026,15 +30173,26 @@ enum db_return_codes db_get_interleave_set_dimm_info_history_count(const Persist
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM interleave_set_dimm_info_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -24049,19 +30207,29 @@ int db_get_interleave_set_dimm_info_history_by_history_id(const PersistentStore 
 	char *sql = "SELECT \
 		id,  config_table_type,  index_id,  device_handle,  manufacturer,  serial_num,  part_num,  offset,  size  \
 		FROM interleave_set_dimm_info_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < interleave_set_dimm_info_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < interleave_set_dimm_info_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_interleave_set_dimm_info(p_ps, p_stmt, &p_interleave_set_dimm_info[index]);
-		local_get_interleave_set_dimm_info_relationships_history(p_ps, p_stmt, &p_interleave_set_dimm_info[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_interleave_set_dimm_info(p_ps, p_stmt, &p_interleave_set_dimm_info[index]);
+			local_get_interleave_set_dimm_info_relationships_history(p_ps, p_stmt, &p_interleave_set_dimm_info[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -24086,13 +30254,23 @@ enum db_return_codes db_roll_interleave_set_dimm_infos_by_id(const PersistentSto
 				"FROM interleave_set_dimm_info "
 				"ORDER BY id DESC "
 				"LIMIT %d)", max_rows); 
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -24122,15 +30300,27 @@ enum db_return_codes db_get_interleave_set_dimm_info_count_by_dimm_interleave_se
 	*p_count = 0;
 	const char *sql = "SELECT COUNT (*) FROM interleave_set_dimm_info WHERE index_id = $index_id";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$index_id", (unsigned int)index_id);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -24145,16 +30335,28 @@ enum db_return_codes db_get_interleave_set_dimm_info_count_by_dimm_interleave_se
 		"WHERE index_id = $index_id "
 			"AND history_id=$history_id";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$index_id", (unsigned int)index_id);
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -24169,18 +30371,28 @@ enum db_return_codes db_get_interleave_set_dimm_infos_by_dimm_interleave_set_ind
 		 id ,  config_table_type ,  index_id ,  device_handle ,  manufacturer ,  serial_num ,  part_num ,  offset ,  size  \
 		FROM interleave_set_dimm_info \
 		WHERE  index_id = $index_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		rc = DB_SUCCESS;
 		BIND_INTEGER(p_stmt, "$index_id", (unsigned int)index_id);
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < interleave_set_dimm_info_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < interleave_set_dimm_info_count)
 		{
 			local_row_to_interleave_set_dimm_info(p_ps, p_stmt, &p_interleave_set_dimm_info[index]);
 			local_get_interleave_set_dimm_info_relationships(p_ps, p_stmt, &p_interleave_set_dimm_info[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -24195,19 +30407,29 @@ enum db_return_codes db_get_interleave_set_dimm_infos_by_dimm_interleave_set_ind
 		 id ,  config_table_type ,  index_id ,  device_handle ,  manufacturer ,  serial_num ,  part_num ,  offset ,  size  \
 		FROM interleave_set_dimm_info_history \
 		WHERE  index_id = $index_id AND history_id=$history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		rc = DB_SUCCESS;
 		BIND_INTEGER(p_stmt, "$index_id", (unsigned int)index_id);
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < interleave_set_dimm_info_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < interleave_set_dimm_info_count)
 		{
 			local_row_to_interleave_set_dimm_info(p_ps, p_stmt, &p_interleave_set_dimm_info[index]);
 			local_get_interleave_set_dimm_info_relationships(p_ps, p_stmt, &p_interleave_set_dimm_info[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -24218,14 +30440,24 @@ enum db_return_codes db_delete_interleave_set_dimm_info_by_dimm_interleave_set_i
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM interleave_set_dimm_info \
 				 WHERE index_id = $index_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$index_id", (unsigned int)index_id);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -24238,15 +30470,27 @@ enum db_return_codes db_get_interleave_set_dimm_info_count_by_dimm_topology_devi
 	*p_count = 0;
 	const char *sql = "SELECT COUNT (*) FROM interleave_set_dimm_info WHERE device_handle = $device_handle";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -24261,16 +30505,28 @@ enum db_return_codes db_get_interleave_set_dimm_info_count_by_dimm_topology_devi
 		"WHERE device_handle = $device_handle "
 			"AND history_id=$history_id";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -24285,18 +30541,28 @@ enum db_return_codes db_get_interleave_set_dimm_infos_by_dimm_topology_device_ha
 		 id ,  config_table_type ,  index_id ,  device_handle ,  manufacturer ,  serial_num ,  part_num ,  offset ,  size  \
 		FROM interleave_set_dimm_info \
 		WHERE  device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		rc = DB_SUCCESS;
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < interleave_set_dimm_info_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < interleave_set_dimm_info_count)
 		{
 			local_row_to_interleave_set_dimm_info(p_ps, p_stmt, &p_interleave_set_dimm_info[index]);
 			local_get_interleave_set_dimm_info_relationships(p_ps, p_stmt, &p_interleave_set_dimm_info[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -24311,19 +30577,29 @@ enum db_return_codes db_get_interleave_set_dimm_infos_by_dimm_topology_device_ha
 		 id ,  config_table_type ,  index_id ,  device_handle ,  manufacturer ,  serial_num ,  part_num ,  offset ,  size  \
 		FROM interleave_set_dimm_info_history \
 		WHERE  device_handle = $device_handle AND history_id=$history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		rc = DB_SUCCESS;
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < interleave_set_dimm_info_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < interleave_set_dimm_info_count)
 		{
 			local_row_to_interleave_set_dimm_info(p_ps, p_stmt, &p_interleave_set_dimm_info[index]);
 			local_get_interleave_set_dimm_info_relationships(p_ps, p_stmt, &p_interleave_set_dimm_info[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -24334,14 +30610,24 @@ enum db_return_codes db_delete_interleave_set_dimm_info_by_dimm_topology_device_
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM interleave_set_dimm_info \
 				 WHERE device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -24407,14 +30693,25 @@ enum db_return_codes db_add_enable_error_injection_info(const PersistentStore *p
 		VALUES 		\
 		($device_handle, \
 		$enable) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_enable_error_injection_info(p_stmt, p_enable_error_injection_info);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -24437,17 +30734,27 @@ int db_get_enable_error_injection_infos(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < enable_error_injection_info_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < enable_error_injection_info_count)
 		{
 			local_row_to_enable_error_injection_info(p_ps, p_stmt, &p_enable_error_injection_info[index]);
 			local_get_enable_error_injection_info_relationships(p_ps, p_stmt, &p_enable_error_injection_info[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -24479,14 +30786,22 @@ enum db_return_codes db_save_enable_error_injection_info_state(const PersistentS
 			VALUES 		\
 			($device_handle, \
 			$enable) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_enable_error_injection_info(p_stmt, p_enable_error_injection_info);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -24501,16 +30816,28 @@ enum db_return_codes db_save_enable_error_injection_info_state(const PersistentS
 			VALUES 		($history_id, \
 				 $device_handle , \
 				 $enable )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_enable_error_injection_info(p_stmt, p_enable_error_injection_info);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -24527,16 +30854,29 @@ enum db_return_codes db_get_enable_error_injection_info_by_device_handle(const P
 		device_handle,  enable  \
 		FROM enable_error_injection_info \
 		WHERE  device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_enable_error_injection_info(p_ps, p_stmt, p_enable_error_injection_info);
 			local_get_enable_error_injection_info_relationships(p_ps, p_stmt, p_enable_error_injection_info);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -24546,27 +30886,29 @@ enum db_return_codes db_update_enable_error_injection_info_by_device_handle(cons
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE enable_error_injection_info \
 	SET \
 	device_handle=$device_handle \
 		,  enable=$enable \
 		  \
 	WHERE device_handle=$device_handle ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		local_bind_enable_error_injection_info(p_stmt, p_enable_error_injection_info);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -24577,14 +30919,26 @@ enum db_return_codes db_delete_enable_error_injection_info_by_device_handle(cons
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM enable_error_injection_info \
 				 WHERE device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -24598,15 +30952,26 @@ enum db_return_codes db_get_enable_error_injection_info_history_by_history_id_co
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM enable_error_injection_info_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -24617,15 +30982,26 @@ enum db_return_codes db_get_enable_error_injection_info_history_count(const Pers
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM enable_error_injection_info_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -24640,19 +31016,29 @@ int db_get_enable_error_injection_info_history_by_history_id(const PersistentSto
 	char *sql = "SELECT \
 		device_handle,  enable  \
 		FROM enable_error_injection_info_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < enable_error_injection_info_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < enable_error_injection_info_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_enable_error_injection_info(p_ps, p_stmt, &p_enable_error_injection_info[index]);
-		local_get_enable_error_injection_info_relationships_history(p_ps, p_stmt, &p_enable_error_injection_info[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_enable_error_injection_info(p_ps, p_stmt, &p_enable_error_injection_info[index]);
+			local_get_enable_error_injection_info_relationships_history(p_ps, p_stmt, &p_enable_error_injection_info[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -24708,14 +31094,25 @@ enum db_return_codes db_add_temperature_error_injection_info(const PersistentSto
 		VALUES 		\
 		($device_handle, \
 		$temperature) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_temperature_error_injection_info(p_stmt, p_temperature_error_injection_info);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -24738,17 +31135,27 @@ int db_get_temperature_error_injection_infos(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < temperature_error_injection_info_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < temperature_error_injection_info_count)
 		{
 			local_row_to_temperature_error_injection_info(p_ps, p_stmt, &p_temperature_error_injection_info[index]);
 			local_get_temperature_error_injection_info_relationships(p_ps, p_stmt, &p_temperature_error_injection_info[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -24780,14 +31187,22 @@ enum db_return_codes db_save_temperature_error_injection_info_state(const Persis
 			VALUES 		\
 			($device_handle, \
 			$temperature) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_temperature_error_injection_info(p_stmt, p_temperature_error_injection_info);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -24802,16 +31217,28 @@ enum db_return_codes db_save_temperature_error_injection_info_state(const Persis
 			VALUES 		($history_id, \
 				 $device_handle , \
 				 $temperature )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_temperature_error_injection_info(p_stmt, p_temperature_error_injection_info);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -24828,16 +31255,29 @@ enum db_return_codes db_get_temperature_error_injection_info_by_device_handle(co
 		device_handle,  temperature  \
 		FROM temperature_error_injection_info \
 		WHERE  device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_temperature_error_injection_info(p_ps, p_stmt, p_temperature_error_injection_info);
 			local_get_temperature_error_injection_info_relationships(p_ps, p_stmt, p_temperature_error_injection_info);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -24847,27 +31287,29 @@ enum db_return_codes db_update_temperature_error_injection_info_by_device_handle
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE temperature_error_injection_info \
 	SET \
 	device_handle=$device_handle \
 		,  temperature=$temperature \
 		  \
 	WHERE device_handle=$device_handle ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		local_bind_temperature_error_injection_info(p_stmt, p_temperature_error_injection_info);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -24878,14 +31320,26 @@ enum db_return_codes db_delete_temperature_error_injection_info_by_device_handle
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM temperature_error_injection_info \
 				 WHERE device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -24899,15 +31353,26 @@ enum db_return_codes db_get_temperature_error_injection_info_history_by_history_
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM temperature_error_injection_info_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -24918,15 +31383,26 @@ enum db_return_codes db_get_temperature_error_injection_info_history_count(const
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM temperature_error_injection_info_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -24941,19 +31417,29 @@ int db_get_temperature_error_injection_info_history_by_history_id(const Persiste
 	char *sql = "SELECT \
 		device_handle,  temperature  \
 		FROM temperature_error_injection_info_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < temperature_error_injection_info_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < temperature_error_injection_info_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_temperature_error_injection_info(p_ps, p_stmt, &p_temperature_error_injection_info[index]);
-		local_get_temperature_error_injection_info_relationships_history(p_ps, p_stmt, &p_temperature_error_injection_info[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_temperature_error_injection_info(p_ps, p_stmt, &p_temperature_error_injection_info[index]);
+			local_get_temperature_error_injection_info_relationships_history(p_ps, p_stmt, &p_temperature_error_injection_info[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -25021,14 +31507,25 @@ enum db_return_codes db_add_poison_error_injection_info(const PersistentStore *p
 		$device_handle, \
 		$dpa_address, \
 		$memory) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_poison_error_injection_info(p_stmt, p_poison_error_injection_info);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -25053,17 +31550,27 @@ int db_get_poison_error_injection_infos(const PersistentStore *p_ps,
 		 ORDER BY id DESC  \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < poison_error_injection_info_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < poison_error_injection_info_count)
 		{
 			local_row_to_poison_error_injection_info(p_ps, p_stmt, &p_poison_error_injection_info[index]);
 			local_get_poison_error_injection_info_relationships(p_ps, p_stmt, &p_poison_error_injection_info[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -25097,14 +31604,22 @@ enum db_return_codes db_save_poison_error_injection_info_state(const PersistentS
 			$device_handle, \
 			$dpa_address, \
 			$memory) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_poison_error_injection_info(p_stmt, p_poison_error_injection_info);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -25121,16 +31636,28 @@ enum db_return_codes db_save_poison_error_injection_info_state(const PersistentS
 				 $device_handle , \
 				 $dpa_address , \
 				 $memory )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_poison_error_injection_info(p_stmt, p_poison_error_injection_info);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -25147,16 +31674,29 @@ enum db_return_codes db_get_poison_error_injection_info_by_id(const PersistentSt
 		id,  device_handle,  dpa_address,  memory  \
 		FROM poison_error_injection_info \
 		WHERE  id = $id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$id", (int)id);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_poison_error_injection_info(p_ps, p_stmt, p_poison_error_injection_info);
 			local_get_poison_error_injection_info_relationships(p_ps, p_stmt, p_poison_error_injection_info);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -25166,7 +31706,6 @@ enum db_return_codes db_update_poison_error_injection_info_by_id(const Persisten
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE poison_error_injection_info \
 	SET \
 	id=$id \
@@ -25175,20 +31714,23 @@ enum db_return_codes db_update_poison_error_injection_info_by_id(const Persisten
 		,  memory=$memory \
 		  \
 	WHERE id=$id ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$id", (int)id);
 		local_bind_poison_error_injection_info(p_stmt, p_poison_error_injection_info);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -25199,14 +31741,26 @@ enum db_return_codes db_delete_poison_error_injection_info_by_id(const Persisten
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM poison_error_injection_info \
 				 WHERE id = $id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$id", (int)id);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -25220,15 +31774,26 @@ enum db_return_codes db_get_poison_error_injection_info_history_by_history_id_co
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM poison_error_injection_info_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -25239,15 +31804,26 @@ enum db_return_codes db_get_poison_error_injection_info_history_count(const Pers
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM poison_error_injection_info_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -25262,19 +31838,29 @@ int db_get_poison_error_injection_info_history_by_history_id(const PersistentSto
 	char *sql = "SELECT \
 		id,  device_handle,  dpa_address,  memory  \
 		FROM poison_error_injection_info_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < poison_error_injection_info_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < poison_error_injection_info_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_poison_error_injection_info(p_ps, p_stmt, &p_poison_error_injection_info[index]);
-		local_get_poison_error_injection_info_relationships_history(p_ps, p_stmt, &p_poison_error_injection_info[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_poison_error_injection_info(p_ps, p_stmt, &p_poison_error_injection_info[index]);
+			local_get_poison_error_injection_info_relationships_history(p_ps, p_stmt, &p_poison_error_injection_info[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -25292,15 +31878,27 @@ enum db_return_codes db_get_poison_error_injection_info_count_by_dimm_topology_d
 	*p_count = 0;
 	const char *sql = "SELECT COUNT (*) FROM poison_error_injection_info WHERE device_handle = $device_handle";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -25315,16 +31913,28 @@ enum db_return_codes db_get_poison_error_injection_info_count_by_dimm_topology_d
 		"WHERE device_handle = $device_handle "
 			"AND history_id=$history_id";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -25339,18 +31949,28 @@ enum db_return_codes db_get_poison_error_injection_infos_by_dimm_topology_device
 		 id ,  device_handle ,  dpa_address ,  memory  \
 		FROM poison_error_injection_info \
 		WHERE  device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		rc = DB_SUCCESS;
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < poison_error_injection_info_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < poison_error_injection_info_count)
 		{
 			local_row_to_poison_error_injection_info(p_ps, p_stmt, &p_poison_error_injection_info[index]);
 			local_get_poison_error_injection_info_relationships(p_ps, p_stmt, &p_poison_error_injection_info[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -25365,19 +31985,29 @@ enum db_return_codes db_get_poison_error_injection_infos_by_dimm_topology_device
 		 id ,  device_handle ,  dpa_address ,  memory  \
 		FROM poison_error_injection_info_history \
 		WHERE  device_handle = $device_handle AND history_id=$history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		rc = DB_SUCCESS;
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < poison_error_injection_info_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < poison_error_injection_info_count)
 		{
 			local_row_to_poison_error_injection_info(p_ps, p_stmt, &p_poison_error_injection_info[index]);
 			local_get_poison_error_injection_info_relationships(p_ps, p_stmt, &p_poison_error_injection_info[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -25388,14 +32018,24 @@ enum db_return_codes db_delete_poison_error_injection_info_by_dimm_topology_devi
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM poison_error_injection_info \
 				 WHERE device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -25458,14 +32098,25 @@ enum db_return_codes db_add_software_trigger_info(const PersistentStore *p_ps,
 		$die_sparing_trigger, \
 		$user_spare_block_alarm_trip_trigger, \
 		$fatal_error_trigger) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_software_trigger_info(p_stmt, p_software_trigger_info);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -25490,17 +32141,27 @@ int db_get_software_trigger_infos(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < software_trigger_info_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < software_trigger_info_count)
 		{
 			local_row_to_software_trigger_info(p_ps, p_stmt, &p_software_trigger_info[index]);
 			local_get_software_trigger_info_relationships(p_ps, p_stmt, &p_software_trigger_info[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -25534,14 +32195,22 @@ enum db_return_codes db_save_software_trigger_info_state(const PersistentStore *
 			$die_sparing_trigger, \
 			$user_spare_block_alarm_trip_trigger, \
 			$fatal_error_trigger) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_software_trigger_info(p_stmt, p_software_trigger_info);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -25558,16 +32227,28 @@ enum db_return_codes db_save_software_trigger_info_state(const PersistentStore *
 				 $die_sparing_trigger , \
 				 $user_spare_block_alarm_trip_trigger , \
 				 $fatal_error_trigger )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_software_trigger_info(p_stmt, p_software_trigger_info);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -25584,16 +32265,29 @@ enum db_return_codes db_get_software_trigger_info_by_device_handle(const Persist
 		device_handle,  die_sparing_trigger,  user_spare_block_alarm_trip_trigger,  fatal_error_trigger  \
 		FROM software_trigger_info \
 		WHERE  device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_software_trigger_info(p_ps, p_stmt, p_software_trigger_info);
 			local_get_software_trigger_info_relationships(p_ps, p_stmt, p_software_trigger_info);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -25603,7 +32297,6 @@ enum db_return_codes db_update_software_trigger_info_by_device_handle(const Pers
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE software_trigger_info \
 	SET \
 	device_handle=$device_handle \
@@ -25612,20 +32305,23 @@ enum db_return_codes db_update_software_trigger_info_by_device_handle(const Pers
 		,  fatal_error_trigger=$fatal_error_trigger \
 		  \
 	WHERE device_handle=$device_handle ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		local_bind_software_trigger_info(p_stmt, p_software_trigger_info);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -25636,14 +32332,26 @@ enum db_return_codes db_delete_software_trigger_info_by_device_handle(const Pers
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM software_trigger_info \
 				 WHERE device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -25657,15 +32365,26 @@ enum db_return_codes db_get_software_trigger_info_history_by_history_id_count(co
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM software_trigger_info_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -25676,15 +32395,26 @@ enum db_return_codes db_get_software_trigger_info_history_count(const Persistent
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM software_trigger_info_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -25699,19 +32429,29 @@ int db_get_software_trigger_info_history_by_history_id(const PersistentStore *p_
 	char *sql = "SELECT \
 		device_handle,  die_sparing_trigger,  user_spare_block_alarm_trip_trigger,  fatal_error_trigger  \
 		FROM software_trigger_info_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < software_trigger_info_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < software_trigger_info_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_software_trigger_info(p_ps, p_stmt, &p_software_trigger_info[index]);
-		local_get_software_trigger_info_relationships_history(p_ps, p_stmt, &p_software_trigger_info[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_software_trigger_info(p_ps, p_stmt, &p_software_trigger_info[index]);
+			local_get_software_trigger_info_relationships_history(p_ps, p_stmt, &p_software_trigger_info[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -25815,14 +32555,25 @@ enum db_return_codes db_add_performance(const PersistentStore *p_ps,
 		$host_write_cmds, \
 		$block_reads, \
 		$block_writes) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_performance(p_stmt, p_performance);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -25852,17 +32603,27 @@ int db_get_performances(const PersistentStore *p_ps,
 		 ORDER BY time DESC  \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < performance_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < performance_count)
 		{
 			local_row_to_performance(p_ps, p_stmt, &p_performance[index]);
 			local_get_performance_relationships(p_ps, p_stmt, &p_performance[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -25904,14 +32665,22 @@ enum db_return_codes db_save_performance_state(const PersistentStore *p_ps,
 			$host_write_cmds, \
 			$block_reads, \
 			$block_writes) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_performance(p_stmt, p_performance);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -25933,16 +32702,28 @@ enum db_return_codes db_save_performance_state(const PersistentStore *p_ps,
 				 $host_write_cmds , \
 				 $block_reads , \
 				 $block_writes )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_performance(p_stmt, p_performance);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -25961,16 +32742,29 @@ enum db_return_codes db_get_performance_by_id(const PersistentStore *p_ps,
 		id,  dimm_uid,  time,  bytes_read,  bytes_written,  read_reqs,  host_write_cmds,  block_reads,  block_writes  \
 		FROM performance \
 		WHERE  id = $id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$id", (int)id);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_performance(p_ps, p_stmt, p_performance);
 			local_get_performance_relationships(p_ps, p_stmt, p_performance);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -25980,7 +32774,6 @@ enum db_return_codes db_update_performance_by_id(const PersistentStore *p_ps,
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE performance \
 	SET \
 	id=$id \
@@ -25994,20 +32787,23 @@ enum db_return_codes db_update_performance_by_id(const PersistentStore *p_ps,
 		,  block_writes=$block_writes \
 		  \
 	WHERE id=$id ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$id", (int)id);
 		local_bind_performance(p_stmt, p_performance);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -26018,14 +32814,26 @@ enum db_return_codes db_delete_performance_by_id(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM performance \
 				 WHERE id = $id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$id", (int)id);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -26042,15 +32850,26 @@ enum db_return_codes db_get_performance_history_by_history_id_count(const Persis
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM performance_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -26061,15 +32880,26 @@ enum db_return_codes db_get_performance_history_count(const PersistentStore *p_p
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM performance_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -26084,19 +32914,29 @@ int db_get_performance_history_by_history_id(const PersistentStore *p_ps,
 	char *sql = "SELECT \
 		id,  dimm_uid,  time,  bytes_read,  bytes_written,  read_reqs,  host_write_cmds,  block_reads,  block_writes  \
 		FROM performance_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < performance_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < performance_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_performance(p_ps, p_stmt, &p_performance[index]);
-		local_get_performance_relationships_history(p_ps, p_stmt, &p_performance[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_performance(p_ps, p_stmt, &p_performance[index]);
+			local_get_performance_relationships_history(p_ps, p_stmt, &p_performance[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -26178,14 +33018,25 @@ enum db_return_codes db_add_driver_metadata_check_diag_result(const PersistentSt
 		$ns_uid, \
 		$device_handle, \
 		$health_flag) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_driver_metadata_check_diag_result(p_stmt, p_driver_metadata_check_diag_result);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -26211,17 +33062,27 @@ int db_get_driver_metadata_check_diag_results(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < driver_metadata_check_diag_result_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < driver_metadata_check_diag_result_count)
 		{
 			local_row_to_driver_metadata_check_diag_result(p_ps, p_stmt, &p_driver_metadata_check_diag_result[index]);
 			local_get_driver_metadata_check_diag_result_relationships(p_ps, p_stmt, &p_driver_metadata_check_diag_result[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -26259,14 +33120,22 @@ enum db_return_codes db_save_driver_metadata_check_diag_result_state(const Persi
 			$ns_uid, \
 			$device_handle, \
 			$health_flag) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_driver_metadata_check_diag_result(p_stmt, p_driver_metadata_check_diag_result);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -26284,16 +33153,28 @@ enum db_return_codes db_save_driver_metadata_check_diag_result_state(const Persi
 				 $ns_uid , \
 				 $device_handle , \
 				 $health_flag )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_driver_metadata_check_diag_result(p_stmt, p_driver_metadata_check_diag_result);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -26312,16 +33193,29 @@ enum db_return_codes db_get_driver_metadata_check_diag_result_by_id(const Persis
 		id,  result_type,  ns_uid,  device_handle,  health_flag  \
 		FROM driver_metadata_check_diag_result \
 		WHERE  id = $id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$id", (int)id);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_driver_metadata_check_diag_result(p_ps, p_stmt, p_driver_metadata_check_diag_result);
 			local_get_driver_metadata_check_diag_result_relationships(p_ps, p_stmt, p_driver_metadata_check_diag_result);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -26331,7 +33225,6 @@ enum db_return_codes db_update_driver_metadata_check_diag_result_by_id(const Per
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE driver_metadata_check_diag_result \
 	SET \
 	id=$id \
@@ -26341,20 +33234,23 @@ enum db_return_codes db_update_driver_metadata_check_diag_result_by_id(const Per
 		,  health_flag=$health_flag \
 		  \
 	WHERE id=$id ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$id", (int)id);
 		local_bind_driver_metadata_check_diag_result(p_stmt, p_driver_metadata_check_diag_result);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -26365,14 +33261,26 @@ enum db_return_codes db_delete_driver_metadata_check_diag_result_by_id(const Per
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM driver_metadata_check_diag_result \
 				 WHERE id = $id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$id", (int)id);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -26389,15 +33297,26 @@ enum db_return_codes db_get_driver_metadata_check_diag_result_history_by_history
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM driver_metadata_check_diag_result_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -26408,15 +33327,26 @@ enum db_return_codes db_get_driver_metadata_check_diag_result_history_count(cons
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM driver_metadata_check_diag_result_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -26431,19 +33361,29 @@ int db_get_driver_metadata_check_diag_result_history_by_history_id(const Persist
 	char *sql = "SELECT \
 		id,  result_type,  ns_uid,  device_handle,  health_flag  \
 		FROM driver_metadata_check_diag_result_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < driver_metadata_check_diag_result_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < driver_metadata_check_diag_result_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_driver_metadata_check_diag_result(p_ps, p_stmt, &p_driver_metadata_check_diag_result[index]);
-		local_get_driver_metadata_check_diag_result_relationships_history(p_ps, p_stmt, &p_driver_metadata_check_diag_result[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_driver_metadata_check_diag_result(p_ps, p_stmt, &p_driver_metadata_check_diag_result[index]);
+			local_get_driver_metadata_check_diag_result_relationships_history(p_ps, p_stmt, &p_driver_metadata_check_diag_result[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -26506,14 +33446,25 @@ enum db_return_codes db_add_boot_status_register(const PersistentStore *p_ps,
 		VALUES 		\
 		($device_handle, \
 		$bsr) ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		local_bind_boot_status_register(p_stmt, p_boot_status_register);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -26536,17 +33487,27 @@ int db_get_boot_status_registers(const PersistentStore *p_ps,
 		 \
 		";
 	sqlite3_stmt *p_stmt;
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < boot_status_register_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < boot_status_register_count)
 		{
 			local_row_to_boot_status_register(p_ps, p_stmt, &p_boot_status_register[index]);
 			local_get_boot_status_register_relationships(p_ps, p_stmt, &p_boot_status_register[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
 		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -26581,14 +33542,22 @@ enum db_return_codes db_save_boot_status_register_state(const PersistentStore *p
 			VALUES 		\
 			($device_handle, \
 			$bsr) ";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			local_bind_boot_status_register(p_stmt, p_boot_status_register);
-			if (sqlite3_step(p_stmt) != SQLITE_DONE)
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
 			{
 				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
 			}
-			sqlite3_finalize(p_stmt);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	/*
@@ -26603,16 +33572,28 @@ enum db_return_codes db_save_boot_status_register_state(const PersistentStore *p
 			VALUES 		($history_id, \
 				 $device_handle , \
 				 $bsr )";
-		if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
 			local_bind_boot_status_register(p_stmt, p_boot_status_register);
-			rc = sqlite3_step(p_stmt) == SQLITE_DONE ? DB_SUCCESS : DB_ERR_FAILURE;
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
 			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
 		}
 		else
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 		}
 	}
 	return rc;
@@ -26631,16 +33612,29 @@ enum db_return_codes db_get_boot_status_register_by_device_handle(const Persiste
 		device_handle,  bsr  \
 		FROM boot_status_register \
 		WHERE  device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
 		{
 			local_row_to_boot_status_register(p_ps, p_stmt, p_boot_status_register);
 			local_get_boot_status_register_relationships(p_ps, p_stmt, p_boot_status_register);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -26650,27 +33644,29 @@ enum db_return_codes db_update_boot_status_register_by_device_handle(const Persi
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	int sqlrc = 0;
 	char *sql = "UPDATE boot_status_register \
 	SET \
 	device_handle=$device_handle \
 		,  bsr=$bsr \
 		  \
 	WHERE device_handle=$device_handle ";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		local_bind_boot_status_register(p_stmt, p_boot_status_register);
-		sqlrc = sqlite3_step(p_stmt) == SQLITE_OK;
+		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
-		if (sqlrc != SQLITE_OK)
+		if (sql_rc != SQLITE_DONE)
 		{
 			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
 		}
 	}
 	else
 	{
 		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -26681,14 +33677,26 @@ enum db_return_codes db_delete_boot_status_register_by_device_handle(const Persi
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM boot_status_register \
 				 WHERE device_handle = $device_handle";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if (sqlite3_step(p_stmt) == SQLITE_DONE)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -26705,15 +33713,26 @@ enum db_return_codes db_get_boot_status_register_history_by_history_id_count(con
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM boot_status_register_history WHERE  history_id = '%d'", history_id);
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -26724,15 +33743,26 @@ enum db_return_codes db_get_boot_status_register_history_count(const PersistentS
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
 	snprintf(buffer, 1024, "select count(*) FROM boot_status_register_history");
-	if (SQLITE_PREPARE(p_ps->db, buffer, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
-		if (sqlite3_step(p_stmt) == SQLITE_ROW)
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
 		{
 			*p_count = sqlite3_column_int(p_stmt, 0);
 			rc = DB_SUCCESS;
 		}
-		// cleanup
 		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
@@ -26747,19 +33777,29 @@ int db_get_boot_status_register_history_by_history_id(const PersistentStore *p_p
 	char *sql = "SELECT \
 		device_handle,  bsr  \
 		FROM boot_status_register_history WHERE history_id = $history_id";
-	if (SQLITE_PREPARE(p_ps->db, sql, p_stmt))
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while (sqlite3_step(p_stmt) == SQLITE_ROW && index < boot_status_register_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < boot_status_register_count)
 		{
-		rc = DB_SUCCESS;
-		local_row_to_boot_status_register(p_ps, p_stmt, &p_boot_status_register[index]);
-		local_get_boot_status_register_relationships_history(p_ps, p_stmt, &p_boot_status_register[index], history_id);
+			rc = DB_SUCCESS;
+			local_row_to_boot_status_register(p_ps, p_stmt, &p_boot_status_register[index]);
+			local_get_boot_status_register_relationships_history(p_ps, p_stmt, &p_boot_status_register[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
 		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
 	}
 	return rc;
 }
