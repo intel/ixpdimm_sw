@@ -90,6 +90,8 @@ void monitor::EventMonitor::init()
 
 	NvmMonitorBase::init();
 	startOfDay();
+
+	log_gather();
 }
 
 void monitor::EventMonitor::cleanup()
@@ -509,6 +511,10 @@ void monitor::EventMonitor::saveCurrentTopologyState(const DeviceMap &devices)
 		{
 			add_config_value(SQL_KEY_TOPOLOGY_STATE_VALID, "1");
 		}
+		else
+		{
+			add_config_value(SQL_KEY_TOPOLOGY_STATE_VALID, "0");
+		}
 	}
 }
 
@@ -856,6 +862,7 @@ void monitor::EventMonitor::monitor()
 	}
 
 	nvm_free_context(1);
+	log_gather();
 }
 
 void monitor::EventMonitor::monitorDevices()

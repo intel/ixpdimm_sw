@@ -39,7 +39,6 @@ extern "C"
 
 #include <stdio.h>
 #include <common_types.h>
-#include "schema.h"
 
 /*!
  * Where the logs get written

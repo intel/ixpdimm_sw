@@ -38,7 +38,6 @@
 #include <os/os_adapter.h>
 #include <file_ops/file_ops_adapter.h>
 
-#include "schema.h"
 #include "logging.h"
 #include "csv_log.h"
 #include "config_settings.h"

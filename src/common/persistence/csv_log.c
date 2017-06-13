@@ -178,7 +178,6 @@ int csv_write_log(int level, const char *file_name,
 		const int line_number, const char *message)
 {
 	int rc = COMMON_ERR_UNKNOWN;
-	COMMON_BOOL flush_log = 0;
 	if (mutex_lock(&g_db_mutex))
 	{
 		COMMON_PATH logfile_path;
@@ -193,21 +192,8 @@ int csv_write_log(int level, const char *file_name,
 			rc = COMMON_SUCCESS;
 		}
 
-		// time to flush the cache to the db?
-		struct stat file_stats;
-		if ((stat(logfile_path, &file_stats) == 0) && file_stats.st_size)
-		{
-			if (file_stats.st_size > MAX_CACHE_FILE_SIZE)
-			{
-				flush_log = 1;
-			}
-		}
 		mutex_unlock(&g_db_mutex);
 	}
 
-	if (flush_log)
-	{
-		rc = flush_csv_log_to_db(get_lib_store());
-	}
 	return rc;
 }
