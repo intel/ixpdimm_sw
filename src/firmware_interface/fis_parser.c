@@ -269,6 +269,7 @@ enum fis_parser_codes fis_parse_platform_config_data_interleave_information_tabl
 		p_data->platform_config_data_identification_information_table_count++;
 		current_offset += (i + 1) * sizeof(struct pt_output_platform_config_data_identification_information_table);
 	}
+	
 	return rc;
 }
 
@@ -534,6 +535,62 @@ enum fis_parser_codes fis_parse_platform_config_data_configuration_header_table(
     	}
 	}
 
+	return rc;
+}
+
+
+enum fis_parser_codes fis_parse_ns_index(
+	const struct pt_output_ns_index *p_output_payload,
+	struct fwcmd_ns_index_data *p_data)
+{
+	memset(p_data, 0, sizeof (*p_data));
+	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
+	memmove(p_data->signature, p_output_payload->signature, 16);
+	p_data->flags = p_output_payload->flags;
+	p_data->sequence = p_output_payload->sequence;
+	p_data->my_offset = p_output_payload->my_offset;
+	p_data->my_size = p_output_payload->my_size;
+	p_data->other_offset = p_output_payload->other_offset;
+	p_data->label_offset = p_output_payload->label_offset;
+	p_data->nlabel = p_output_payload->nlabel;
+	p_data->label_major_version = p_output_payload->label_major_version;
+	p_data->label_minor_version = p_output_payload->label_minor_version;
+	p_data->checksum = p_output_payload->checksum;
+	return rc;
+}
+
+enum fis_parser_codes fis_parse_ns_label(
+	const struct pt_output_ns_label *p_output_payload,
+	struct fwcmd_ns_label_data *p_data)
+{
+	memset(p_data, 0, sizeof (*p_data));
+	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
+	memmove(p_data->uuid, p_output_payload->uuid, 16);
+	memmove(p_data->name, p_output_payload->name, 64);
+	p_data->flags = p_output_payload->flags;
+	p_data->nlabel = p_output_payload->nlabel;
+	p_data->position = p_output_payload->position;
+	p_data->iset_cookie = p_output_payload->iset_cookie;
+	p_data->lba_size = p_output_payload->lba_size;
+	p_data->dpa = p_output_payload->dpa;
+	p_data->rawsize = p_output_payload->rawsize;
+	p_data->slot = p_output_payload->slot;
+	p_data->unused = p_output_payload->unused;
+	return rc;
+}
+
+enum fis_parser_codes fis_parse_namespace_labels(
+	const struct pt_output_namespace_labels *p_output_payload,
+	struct fwcmd_namespace_labels_data *p_data)
+{
+	memset(p_data, 0, sizeof (*p_data));
+	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
+	rc = fis_parse_ns_index(&p_output_payload->index1, &p_data->index1);
+	rc = fis_parse_ns_index(&p_output_payload->index2, &p_data->index2);
+	for (int i = 0; i < 1020 && PARSING_SUCCESS(rc); i++)
+	{
+		rc = fis_parse_ns_label(&p_output_payload->labels[i], &p_data->labels[i]);
+	}
 	return rc;
 }
 

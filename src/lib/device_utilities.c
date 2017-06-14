@@ -39,6 +39,7 @@
 #include <string/s_str.h>
 #include <string/revision.h>
 #include "pool_utilities.h"
+#include "nfit_utilities.h"
 #include <utility.h>
 
 /*
@@ -184,8 +185,9 @@ int lookup_dev_uids(const NVM_UID *uids, NVM_UINT16 uid_count,
 			{
 				if (is_uid_in_list(p_devices[i].uid, uids, uid_count))
 				{
-					memmove(&p_devs[matched_uids++], &p_devices[i],
+					memmove(&p_devs[matched_uids], &p_devices[i],
 						sizeof (struct device_discovery));
+					matched_uids++;
 				}
 			}
 			if (matched_uids != uid_count)
@@ -669,7 +671,8 @@ NVM_BOOL device_is_encryption_enabled(enum lock_state lock_state)
 {
 	NVM_BOOL is_encryption_enabled = 0;
 	if ((lock_state != LOCK_STATE_DISABLED) &&
-		(lock_state != LOCK_STATE_UNKNOWN))
+		(lock_state != LOCK_STATE_UNKNOWN) &&
+		(lock_state != LOCK_STATE_NOT_SUPPORTED))
 	{
 		is_encryption_enabled = 1;
 	}
@@ -829,53 +832,24 @@ enum device_form_factor get_device_form_factor_from_smbios_form_factor(
 	return form_factor;
 }
 
-int get_dimm_storage_capacity(NVM_UINT32 handle, NVM_UINT64 *p_storage_capacity)
-{
-	COMMON_LOG_ENTRY();
-	int rc = NVM_SUCCESS;
-
-	if ((rc = get_topology_count()) > 0)
-	{
-		int num_dimms = rc;
-		struct nvm_storage_capacities capacities[num_dimms];
-		memset(&capacities, 0, (sizeof (struct nvm_storage_capacities) * num_dimms));
-		if ((rc = get_dimm_storage_capacities(num_dimms, capacities)) > 0)
-		{
-			num_dimms = rc;
-			rc = NVM_ERR_BADDEVICE;
-			*p_storage_capacity = 0;
-			for (int i = 0; i < num_dimms; i++)
-			{
-				if (handle == capacities[i].device_handle.handle)
-				{
-					*p_storage_capacity = capacities[i].total_storage_capacity;
-					rc = NVM_SUCCESS;
-					break;
-				}
-			}
-		}
-	}
-
-	COMMON_LOG_EXIT_RETURN_I(rc);
-	return rc;
-}
-
 /*
  * helper to check memory mode sku violation
  */
-int check_sku_violation_for_memory_mode(struct device_discovery *p_discovery,
+int check_sku_violation_for_memory_mode(const struct device_discovery *p_discovery,
 		NVM_BOOL *p_sku_violation)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
-	struct pt_payload_get_dimm_partition_info pi;
 
-	if ((rc = get_partition_info(p_discovery->device_handle, &pi)) == NVM_SUCCESS)
+	if (!(p_discovery->dimm_sku & SKU_MEMORY_MODE_ENABLED))
 	{
-		if ((!p_discovery->device_capabilities.memory_mode_capable) &&
-				(pi.volatile_capacity > 0))
+		struct pt_payload_get_dimm_partition_info pi;
+		if ((rc = get_partition_info(p_discovery->device_handle, &pi)) == NVM_SUCCESS)
 		{
-			*p_sku_violation = 1;
+			if (pi.volatile_capacity > 0)
+			{
+				*p_sku_violation = 1;
+			}
 		}
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -885,19 +859,19 @@ int check_sku_violation_for_memory_mode(struct device_discovery *p_discovery,
 /*
  * helper to check AppDirect mode sku violation
  */
-int check_sku_violation_for_appdirect_mode(struct device_discovery *p_discovery,
+int check_sku_violation_for_appdirect_mode(const struct device_discovery *p_discovery,
 		NVM_BOOL *p_sku_violation)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
-	NVM_UINT64 app_direct_capacity_on_dimm = 0;
+	*p_sku_violation = 0;
 
-	if (!p_discovery->device_capabilities.app_direct_mode_capable)
+	if (!(p_discovery->dimm_sku & SKU_APP_DIRECT_MODE_ENABLED))
 	{
-		rc = get_app_direct_capacity_on_device(p_discovery->device_handle,
-					&app_direct_capacity_on_dimm);
-
-		if (app_direct_capacity_on_dimm != 0)
+		NVM_UINT64 ad_capacity = 0;
+		NVM_UINT64 mirrored_ad_capacity;
+		rc = get_app_direct_capacity_on_device(p_discovery, &ad_capacity, &mirrored_ad_capacity);
+		if (rc == NVM_SUCCESS && ad_capacity > 0)
 		{
 			*p_sku_violation = 1;
 		}
@@ -907,45 +881,51 @@ int check_sku_violation_for_appdirect_mode(struct device_discovery *p_discovery,
 }
 
 /*
- * Check if dimm contains appdirect capacity
+ * Retrieve the app direct capacity for the specified DIMM
  */
-int get_app_direct_capacity_on_device(const NVM_NFIT_DEVICE_HANDLE device_handle,
-		NVM_UINT64 *p_app_direct_capacity_on_dimm)
+int get_app_direct_capacity_on_device(const struct device_discovery *p_dimm,
+		NVM_UINT64 *p_ad_capacity, NVM_UINT64 *p_mirrored_ad_capacity)
 {
-	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
-	int set_count = 0;
-	*p_app_direct_capacity_on_dimm = 0;
-
-	if ((set_count = get_interleave_set_count()) > 0)
+	*p_ad_capacity = 0;
+	*p_mirrored_ad_capacity = 0;
+	int set_count = get_interleave_set_count();
+	if (set_count < 0)
+	{
+		rc = set_count;
+	}
+	else if (set_count > 0)
 	{
 		struct nvm_interleave_set sets[set_count];
-
-		if ((rc = get_interleave_sets(set_count, sets)) != set_count)
+		set_count = get_interleave_sets(set_count, sets);
+		if (set_count < 0)
 		{
-			COMMON_LOG_ERROR_F("get_interleave_sets failed with error: %d", rc);
+			rc = set_count;
 		}
-		else
+		else if (set_count > 0)
 		{
-			rc = NVM_SUCCESS;
-			for (int i = 0; i < set_count; i++)
+			for (int iset_idx = 0; iset_idx < set_count; iset_idx++)
 			{
-				for (int dimmIdx = 0; dimmIdx < sets[i].dimm_count; dimmIdx++)
+				for (int dimm_idx = 0; dimm_idx < sets[iset_idx].dimm_count; dimm_idx++)
 				{
-					if (sets[i].dimms[dimmIdx].handle == device_handle.handle)
+					if (sets[iset_idx].dimms[dimm_idx] == p_dimm->device_handle.handle)
 					{
-						*p_app_direct_capacity_on_dimm += (sets[i].size/sets[i].dimm_count);
+						NVM_UINT64 dimm_size = sets[iset_idx].dimm_sizes[dimm_idx];
+						if (MIRRORED_INTERLEAVE(sets[iset_idx].attributes))
+						{
+							(*p_ad_capacity) += (dimm_size * 2llu);
+							(*p_mirrored_ad_capacity) += dimm_size;
+						}
+						else
+						{
+							(*p_ad_capacity) += dimm_size;
+						}
+						break;
 					}
 				}
 			}
 		}
 	}
-	else
-	{
-		COMMON_LOG_ERROR_F("get_interleave_set_count failed with error: %d", set_count);
-		rc = set_count;
-	}
-	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
 
@@ -977,6 +957,7 @@ int update_capacities_based_on_sku(const NVM_NFIT_DEVICE_HANDLE device_handle,
 			p_capacities->inaccessible_capacity += raw_capacity;
 			p_capacities->memory_capacity = 0;
 			p_capacities->app_direct_capacity = 0;
+			p_capacities->mirrored_app_direct_capacity = 0;
 			p_capacities->storage_capacity = 0;
 			p_capacities->unconfigured_capacity = 0;
 		}
@@ -998,6 +979,7 @@ int update_capacities_based_on_sku(const NVM_NFIT_DEVICE_HANDLE device_handle,
 			{
 				p_capacities->inaccessible_capacity += pm_capacity;
 				p_capacities->app_direct_capacity = 0;
+				p_capacities->mirrored_app_direct_capacity = 0;
 				p_capacities->storage_capacity = 0;
 				p_capacities->unconfigured_capacity = 0;
 			}
@@ -1008,14 +990,22 @@ int update_capacities_based_on_sku(const NVM_NFIT_DEVICE_HANDLE device_handle,
 			{
 				p_capacities->inaccessible_capacity += p_capacities->app_direct_capacity;
 				p_capacities->app_direct_capacity = 0;
+				p_capacities->mirrored_app_direct_capacity = 0;
 			}
 			// App direct but no Storage
 			else if (p_capacities->storage_capacity > 0 &&
 					(!p_capabilities->nvm_features.storage_mode ||
 					!discovery.device_capabilities.storage_mode_capable))
 			{
-				// Storage capacity is considered "un-configured", not inaccessible
-				p_capacities->storage_capacity = 0;
+				// Unmapped PM capacity can't be used in pools
+				if (p_capacities->storage_capacity > p_capacities->unconfigured_capacity)
+				{
+					p_capacities->storage_capacity -= p_capacities->unconfigured_capacity;
+				}
+				else
+				{
+					p_capacities->storage_capacity = 0;
+				}
 			}
 		}
 	}
@@ -1027,53 +1017,52 @@ int update_capacities_based_on_sku(const NVM_NFIT_DEVICE_HANDLE device_handle,
 /*
  * Helper function to populate the capacities of a single dimm
  */
-int get_dimm_capacities(const NVM_NFIT_DEVICE_HANDLE device_handle,
+int get_dimm_capacities(const struct device_discovery *p_dimm,
 		const struct nvm_capabilities *p_capabilities,
 		struct device_capacities *p_capacities)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
 
-	memset(p_capacities, 0, sizeof (struct device_capacities));
-	// get total FW reported capacities from the dimm partition info struct
-	struct pt_payload_get_dimm_partition_info pi;
-	memset(&pi, 0, sizeof (pi));
-	if ((rc = get_partition_info(device_handle, &pi)) == NVM_SUCCESS)
+	if (!p_capacities)
 	{
-		p_capacities->capacity = MULTIPLES_TO_BYTES(pi.raw_capacity);
-		p_capacities->memory_capacity = MULTIPLES_TO_BYTES(pi.volatile_capacity);
-		if (p_capacities->memory_capacity)
+		COMMON_LOG_ERROR("Device capacity structure invalid");
+		rc = NVM_ERR_UNKNOWN;
+	}
+	else
+	{
+		memset(p_capacities, 0, sizeof (struct device_capacities));
+		// get total FW reported capacities from the dimm partition info struct
+		struct pt_payload_get_dimm_partition_info pi;
+		memset(&pi, 0, sizeof (pi));
+		if ((rc = get_partition_info(p_dimm->device_handle, &pi)) == NVM_SUCCESS)
 		{
-			p_capacities->reserved_capacity = RESERVED_CAPACITY_BYTES(p_capacities->capacity);
-			p_capacities->memory_capacity -= p_capacities->reserved_capacity;
-		}
-		p_capacities->unconfigured_capacity = MULTIPLES_TO_BYTES(pi.pmem_capacity);
-
-		// get BIOS mapped capacities from the platform config data
-		struct platform_config_data *p_cfg_data = NULL;
-		// on failure or missing current config table, default mapped values are 0
-		if ((rc = get_dimm_platform_config(device_handle, &p_cfg_data)) == NVM_SUCCESS)
-		{
-			struct current_config_table *p_current_config =
-					cast_current_config(p_cfg_data);
-			if (p_current_config)
+			p_capacities->capacity = MULTIPLES_TO_BYTES(pi.raw_capacity);
+			p_capacities->memory_capacity = MULTIPLES_TO_BYTES(pi.volatile_capacity);
+			if (p_capacities->memory_capacity)
 			{
-				p_capacities->app_direct_capacity =
-					p_current_config->mapped_app_direct_capacity;
-				get_dimm_storage_capacity(device_handle.handle,
-						&p_capacities->storage_capacity);
-				p_capacities->unconfigured_capacity =
-						p_capacities->capacity
-						- p_capacities->memory_capacity
-						- p_current_config->mapped_app_direct_capacity
-						- p_capacities->reserved_capacity;
+				p_capacities->reserved_capacity =
+					RESERVED_CAPACITY_BYTES(p_capacities->capacity);
+				p_capacities->memory_capacity -= p_capacities->reserved_capacity;
+			}
+			p_capacities->unconfigured_capacity = MULTIPLES_TO_BYTES(pi.pmem_capacity);
+			p_capacities->storage_capacity = MULTIPLES_TO_BYTES(pi.pmem_capacity);
+			NVM_UINT64 ad_capacity = 0;
+			NVM_UINT64 mirrored_ad_capacity = 0;
+			rc = get_app_direct_capacity_on_device(p_dimm, &ad_capacity, &mirrored_ad_capacity);
+			if (rc == NVM_SUCCESS)
+			{
+				p_capacities->app_direct_capacity = ad_capacity;
+				p_capacities->mirrored_app_direct_capacity = mirrored_ad_capacity;
+				p_capacities->storage_capacity -=
+					(p_capacities->mirrored_app_direct_capacity * 2llu);
+				p_capacities->unconfigured_capacity -= ad_capacity;
+
+				// update capacities based on DIMM SKU
+				KEEP_ERROR(rc, update_capacities_based_on_sku(p_dimm->device_handle,
+						p_capabilities, p_capacities));
 			}
 		}
-		free(p_cfg_data);
-
-		// update capacities based on DIMM SKU
-		KEEP_ERROR(rc, update_capacities_based_on_sku(device_handle,
-				p_capabilities, p_capacities));
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -1131,7 +1120,7 @@ int dimm_has_namespaces_of_type(const NVM_NFIT_DEVICE_HANDLE dimm_handle,
 							{
 								for (int j = 0; j < set.dimm_count; j++)
 								{
-									if (set.dimms[j].handle == dimm_handle.handle)
+									if (set.dimms[j] == dimm_handle.handle)
 									{
 										matched++;
 										break;
@@ -1199,4 +1188,87 @@ void uint32_to_bytes(unsigned long val, unsigned char *arr, size_t len)
 	{
 		arr[i] = (unsigned char)(((0x000000FF << (i * 8)) & val) >> (i * 8));
 	}
+}
+
+/*
+ * Retrieve a list of manageable DIMMs
+ * NOTE: The caller is responsible for freeing the list
+ */
+int get_manageable_dimms(struct device_discovery **pp_dimms)
+{
+	int rc = 0;
+	struct device_discovery *p_all_dimms = NULL;
+	int device_count = get_devices(&p_all_dimms);
+	if (device_count <= 0 || !p_all_dimms)
+	{
+		rc = device_count;
+	}
+	else
+	{
+		// get the count first
+		int manageable_devices = 0;
+		for (int i = 0; i < device_count; i++)
+		{
+			if (p_all_dimms[i].manageability == MANAGEMENT_VALIDCONFIG)
+			{
+				manageable_devices++;
+			}
+		}
+		if (manageable_devices > 0)
+		{
+			rc = 0;
+			// allocate memory and copy
+			*pp_dimms = realloc(*pp_dimms,
+					manageable_devices * sizeof (struct device_discovery));
+			if (!(*pp_dimms))
+			{
+				COMMON_LOG_ERROR("No memory to allocate device_discovery array");
+				rc = NVM_ERR_NOMEMORY;
+			}
+			else
+			{
+				for (int i = 0; i < device_count; i++)
+				{
+					if (p_all_dimms[i].manageability == MANAGEMENT_VALIDCONFIG)
+					{
+						memmove(&(*pp_dimms)[rc], &p_all_dimms[i],
+								sizeof (struct device_discovery));
+						rc++;
+					}
+				}
+			}
+		}
+		free(p_all_dimms);
+	}
+	return rc;
+}
+
+int is_ars_in_progress()
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+	struct device_discovery *p_dimms = NULL;
+	int device_count = get_manageable_dimms(&p_dimms);
+	if (device_count <= 0 || !p_dimms)
+	{
+		rc = device_count;
+	}
+	else
+	{
+		for (int i = 0; i < device_count; i++)
+		{
+			enum device_ars_status ars_status;
+			enum device_sanitize_status sanitize_status;
+			rc = get_long_status(p_dimms[i].device_handle, &ars_status, &sanitize_status);
+			if (rc == NVM_SUCCESS && ars_status == DEVICE_ARS_STATUS_INPROGRESS)
+			{
+				rc = NVM_ERR_ARSINPROGRESS;
+				break;
+			}
+		}
+		free(p_dimms);
+	}
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+
 }

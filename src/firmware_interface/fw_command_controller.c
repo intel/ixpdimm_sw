@@ -92,6 +92,13 @@ void fwcmd_print_all(unsigned int handle)
 		, 0
 		);
 	printf("--------------------------------------------\n");
+	printf("Printing namespace_labels ... \n");
+	fwcmd_run_namespace_labels(handle
+		, 2
+		, 0
+		, 0
+		);
+	printf("--------------------------------------------\n");
 	printf("Printing dimm_partition_info ... \n");
 	fwcmd_run_dimm_partition_info(handle
 		);
@@ -349,6 +356,31 @@ void fwcmd_run(const char *command_name,
 		);
 
 	}
+	else if (s_strncmpi(command_name, "namespace_labels",
+		sizeof ("namespace_labels")) == 0)
+	{
+		char * partition_id_value = find_arg(p_args, "partition_id");
+		if (!partition_id_value)
+		{
+			partition_id_value = "2";
+		}
+		char * command_option_value = find_arg(p_args, "command_option");
+		if (!command_option_value)
+		{
+			command_option_value = "0";
+		}
+		char * offset_value = find_arg(p_args, "offset");
+		if (!offset_value)
+		{
+			offset_value = "0";
+		}
+		fwcmd_run_namespace_labels(handle
+			, to_int(partition_id_value)
+			, to_int(command_option_value)
+			, to_int(offset_value)
+		);
+
+	}
 	else if (s_strncmpi(command_name, "dimm_partition_info",
 		sizeof ("dimm_partition_info")) == 0)
 	{
@@ -477,6 +509,7 @@ void fwcmd_run(const char *command_name,
 		printf("\tset_alarm_threshold\n");
 		printf("\tsystem_time\n");
 		printf("\tplatform_config_data_configuration_header_table\n");
+		printf("\tnamespace_labels\n");
 		printf("\tdimm_partition_info\n");
 		printf("\tfw_debug_log_level\n");
 		printf("\tfw_load_flag\n");
@@ -767,6 +800,23 @@ void fwcmd_run_platform_config_data_configuration_header_table(unsigned int hand
 		fwcmd_print_error(result.error_code);
 	}
 	fwcmd_free_platform_config_data_configuration_header_table(&result);
+}
+
+void fwcmd_run_namespace_labels(unsigned int handle, const unsigned char partition_id, const unsigned char command_option, const unsigned int offset)
+{
+	struct fwcmd_namespace_labels_result result = fwcmd_alloc_namespace_labels(handle, partition_id, command_option, offset);
+
+	if (result.success)
+	{
+		printf("0x%x: Success!\n", handle);
+		fwcmd_namespace_labels_printer(result.p_data, 0);
+	}
+	else
+	{
+		printf("There was an issue executing namespace_labels. \n");
+		fwcmd_print_error(result.error_code);
+	}
+	fwcmd_free_namespace_labels(&result);
 }
 
 void fwcmd_run_dimm_partition_info(unsigned int handle)

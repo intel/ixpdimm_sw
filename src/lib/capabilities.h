@@ -70,7 +70,7 @@ extern "C" {
 /*
  * Determine if the specified nvm_feature is supported by
  * retrieving the capabilities and checking the specified feature_name
- * and checking the
+ * and checking the population
  */
 #define	IS_NVM_FEATURE_LICENSED(feature_name)	\
 (\
@@ -83,14 +83,9 @@ extern "C" {
 		{ \
 			rc = NVM_ERR_NOTSUPPORTED; \
 		} \
-		else \
+		else if (capabilities.sku_capabilities.sku_violation) \
 		{ \
-			NVM_BOOL sku_violation; \
-			rc = system_in_sku_violation(&capabilities, &sku_violation); \
-			if (rc == NVM_SUCCESS && sku_violation) \
-			{ \
-				rc = NVM_ERR_SKUVIOLATION; \
-			} \
+			rc = NVM_ERR_SKUVIOLATION; \
 		} \
 	} \
 	rc; \

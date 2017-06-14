@@ -251,8 +251,7 @@ void check_interleave_sets(struct current_config_table *p_current_config,
  * Return the index where the uid is found in the pool's dimms array.
  * Return NVM_ERR_NOTFOUND if the uid is not in the array.
  */
-int get_dimm_index_in_pool(const NVM_NFIT_DEVICE_HANDLE device_handle,
-		const struct nvm_pool *p_pool)
+int get_dimm_index_in_pool(const NVM_UID uid, const struct pool *p_pool)
 {
 	COMMON_LOG_ENTRY();
 	int result = NVM_ERR_NOTFOUND;
@@ -260,7 +259,7 @@ int get_dimm_index_in_pool(const NVM_NFIT_DEVICE_HANDLE device_handle,
 	for (int dimm_index = 0; dimm_index < p_pool->dimm_count &&
 			dimm_index < NVM_MAX_DEVICES_PER_POOL; dimm_index++)
 	{
-		if (device_handle.handle == p_pool->dimms[dimm_index].handle)
+		if (uid_cmp(uid, p_pool->dimms[dimm_index]))
 		{
 			result = dimm_index;
 			break;
@@ -274,21 +273,21 @@ int get_dimm_index_in_pool(const NVM_NFIT_DEVICE_HANDLE device_handle,
 /*
  * find mapped memory capacity of this dimm
  */
-void get_mapped_memory_capacity(const NVM_NFIT_DEVICE_HANDLE device_handle,
-		const struct nvm_pool *pools, const int pool_count, NVM_UINT64 *p_memory_capacity)
+void get_mapped_memory_capacity(const NVM_UID device_uid,
+		const struct pool *pools, const int pool_count, NVM_UINT64 *p_memory_capacity)
 {
 	COMMON_LOG_ENTRY();
 
-	int index = 0;
-
 	for (int pool_index = 0; pool_index < pool_count; pool_index++)
 	{
-		if (pools[pool_index].type == POOL_TYPE_VOLATILE &&
-				(index = get_dimm_index_in_pool(device_handle,
-						&(pools[pool_index]))) != NVM_ERR_NOTFOUND)
+		if (pools[pool_index].type == POOL_TYPE_VOLATILE)
 		{
-			*p_memory_capacity += pools[pool_index].memory_capacities[index];
-			break;
+			int index = get_dimm_index_in_pool(device_uid, &(pools[pool_index]));
+			if (index >= 0)
+			{
+				*p_memory_capacity += pools[pool_index].memory_capacities[index];
+				break;
+			}
 		}
 	}
 
@@ -298,22 +297,22 @@ void get_mapped_memory_capacity(const NVM_NFIT_DEVICE_HANDLE device_handle,
 /*
  * find mapped app direct capacity of this dimm
  */
-void get_mapped_app_direct_capacity(const NVM_NFIT_DEVICE_HANDLE device_handle,
-		const struct nvm_pool *pools, const int pool_count, NVM_UINT64 *p_app_direct_capacity)
+void get_mapped_app_direct_capacity(const NVM_UID device_uid,
+		const struct pool *pools, const int pool_count, NVM_UINT64 *p_app_direct_capacity)
 {
 	COMMON_LOG_ENTRY();
 
 	for (int pool_index = 0; pool_index < pool_count; pool_index++)
 	{
-		struct nvm_pool pool = pools[pool_index];
+		struct pool pool = pools[pool_index];
 		if (pool.type != POOL_TYPE_VOLATILE)
 		{
-			if (get_dimm_index_in_pool(device_handle, &pool) != NVM_ERR_NOTFOUND)
+			if (get_dimm_index_in_pool(device_uid, &pool) != NVM_ERR_NOTFOUND)
 			{
 				for (int iset_index = 0; iset_index < pool.ilset_count; iset_index++)
 				{
-					struct nvm_interleave_set iset = pool.ilsets[iset_index];
-					if (dimm_is_in_interleave_set(device_handle, &iset))
+					struct interleave_set iset = pool.ilsets[iset_index];
+					if (dimm_is_in_interleave_set(device_uid, &iset))
 					{
 						// individual dimms in an interleave set contribute the
 						// same amount to the interleave set

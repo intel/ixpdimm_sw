@@ -156,7 +156,6 @@ int init_scsi_port()
 
 	if (g_scsi_port < 0)
 	{
-		COMMON_LOG_ERROR("Unable to locate NVDIMM IOCTL Target SCSI Port");
 		rc = NVM_ERR_DRIVERFAILED;
 	}
 
@@ -179,7 +178,6 @@ int open_ioctl_target(PHANDLE p_handle, short scsi_port)
 
 	if (*p_handle == INVALID_HANDLE_VALUE)
 	{
-		COMMON_LOG_ERROR("Error: CreateFile Failed, Verify if driver installed.");
 		rc = NVM_ERR_DRIVERFAILED;
 	}
 
@@ -211,7 +209,6 @@ int send_ioctl_command(HANDLE handle,
 
 	if (!io_result)
 	{
-		COMMON_LOG_ERROR_F("IOCTL send failed with Windows Error: %d", GetLastError());
 		rc = NVM_ERR_DRIVERFAILED;
 	}
 	else if (out_size != bytes_returned)
@@ -234,7 +231,7 @@ int execute_ioctl(size_t bufSize, void *p_ioctl_data, unsigned long io_controlco
 	HANDLE handle;
 	if ((rc = init_scsi_port()) != NVM_SUCCESS)
 	{
-		COMMON_LOG_ERROR("Unable to find valid SCSI Port");
+		// COMMON_LOG_INFO("Unable to find valid SCSI Port");
 	}
 	else
 	{

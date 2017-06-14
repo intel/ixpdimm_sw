@@ -40,6 +40,8 @@
 extern "C" {
 #endif
 
+#define NFIT_MAX_DIMMS	12
+
 /*
  * NFIT parsing errors
  */
@@ -74,6 +76,23 @@ struct nfit_dimm
 	unsigned short state_flags;
 	unsigned short ifc[NFIT_MAX_IFC_COUNT];
 };
+
+/*
+ * NFIT Interleave set
+ */
+struct nfit_interleave_set
+{
+	unsigned short id; // SPA range index
+	unsigned int proximity_domain; // socket id
+	unsigned long long address; // spa range base address
+	unsigned long long size; // total interleave set size
+	unsigned long long attributes; // memory mapping attributes
+	int dimm_count; // number of dimms in the interleave set
+	unsigned int dimms[NFIT_MAX_DIMMS]; // array of DIMM handles
+	unsigned long long dimm_offsets[NFIT_MAX_DIMMS]; // address base for each DIMM
+	unsigned long long dimm_sizes[NFIT_MAX_DIMMS]; // region size for each DIMM
+};
+
 
 /*
  * Print a descriptive version of an NFIT error
@@ -123,6 +142,26 @@ int nfit_get_dimms_from_parsed_nfit(const int count,
  * Print an NFIT NVDIMM
  */
 void nfit_print_dimm(const struct nfit_dimm *p_dimm);
+
+
+/*
+ * Retrieves a list of interleave sets from the NFIT and returns the count.
+ * If input count is 0, simply retrieve the count from the NFIT.
+ */
+int nfit_get_interleave_sets(const int count, struct nfit_interleave_set *p_interleave_sets);
+
+/*
+ * Retrieves a list of interleave sets from a pre-parsed NFIT and returns the count.
+ * If input count is 0, simply retrieve the count from the NFIT.
+ */
+int nfit_get_interleave_sets_from_parsed_nfit(const int count,
+		struct nfit_interleave_set *p_interleave_sets,
+		const struct parsed_nfit *p_parsed_nfit);
+
+/*
+ * Print an NFIT interleave set
+ */
+void nfit_print_interleave_set(const struct nfit_interleave_set *p_interleave);
 
 #ifdef __cplusplus
 }

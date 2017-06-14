@@ -249,12 +249,6 @@ int modify_namespace_enabled(
 		const enum namespace_enable_state enabled);
 
 /*
- * Retrieve the storage capacities of all DIMMs
- */
-int get_dimm_storage_capacities(const NVM_UINT32 count,
-		struct nvm_storage_capacities *p_capacities);
-
-/*
  * Return the capabilities supported by the device driver
  * @param[out] p_capabilities
  * @return One of the following:

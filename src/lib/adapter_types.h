@@ -223,17 +223,19 @@ struct nvm_details {
  */
 struct nvm_interleave_set
 {
-	NVM_UINT64 size; // the size of the interleave set in bytes
-	NVM_UINT64 available_size; // Available capacity in the interleave set in bytes
+	NVM_UINT8 id; // Unique identifier from the NFIT
 	NVM_UINT8 socket_id; // The socket where the interleave set resides
-	struct interleave_format settings; // The interleave format
+	NVM_UINT64 size; // the size of the interleave set in bytes
+	NVM_UINT64 available_size; // the size of the interleave set in bytes
+	NVM_UINT64 attributes;
 	NVM_UINT8 dimm_count; // The number of dimm in the interleave set
-	// Unique ids of the dimms in the interleave set
-	NVM_NFIT_DEVICE_HANDLE dimms[NVM_MAX_DEVICES_PER_SOCKET];
-	NVM_UINT32 set_index; // Unique identifier from the PCD
-	NVM_UINT32 driver_id; // Unique identifier from the NFIT
-	NVM_BOOL mirrored; // Whether the interleave set it mirrored
+	// NFIT handles of the dimms in the interleave set
+	NVM_UINT32 dimms[NVM_MAX_DEVICES_PER_SOCKET];
+	NVM_UINT64 dimm_offsets[NVM_MAX_DEVICES_PER_SOCKET];
+	NVM_UINT64 dimm_sizes[NVM_MAX_DEVICES_PER_SOCKET];
+	NVM_UINT32 set_index; // Unique identifier from the PCD (only used by sim adapter)
 };
+
 
 /*
  * Describes the storage capacity (total and available) of a DIMM.

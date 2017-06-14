@@ -90,37 +90,31 @@ int win_scm_adp_get_driver_capabilities(struct nvm_driver_capabilities *p_caps)
 	{
 		memset(p_caps, 0, sizeof (struct nvm_driver_capabilities));
 
-		p_caps->min_namespace_size = drv_caps.MinNamespaceSize;
-
-		p_caps->num_block_sizes = drv_caps.NumBlockSizes;
-		for (NVM_UINT32 i = 0; (i < p_caps->num_block_sizes) &&
-				(i < MAX_NUMBER_OF_BLOCK_SIZES); i++)
-		{
-			p_caps->block_sizes[i] = drv_caps.BlockSizes[i];
-		}
+		p_caps->min_namespace_size = BYTES_PER_GIB;
+		p_caps->num_block_sizes = 1;
+		p_caps->block_sizes[0] = 1;
 		p_caps->namespace_memory_page_allocation_capable = 0;
-
 		p_caps->features.get_platform_capabilities = 1;
 		p_caps->features.get_topology = drv_caps.SupportedFeatures.GetTopology;
-		p_caps->features.get_interleave = drv_caps.SupportedFeatures.GetInterleave;
+		p_caps->features.get_interleave = 1;
 		p_caps->features.get_dimm_detail = drv_caps.SupportedFeatures.GetDimmDetail;
-		p_caps->features.get_namespaces = drv_caps.SupportedFeatures.GetNamespaces;
-		p_caps->features.get_namespace_detail = drv_caps.SupportedFeatures.GetNamespaceDetail;
+		p_caps->features.get_namespaces = 1;
+		p_caps->features.get_namespace_detail = 1;
 		p_caps->features.get_boot_status = drv_caps.SupportedFeatures.SendPassthru;
 		p_caps->features.get_power_data = drv_caps.SupportedFeatures.GetPowerData;
 		p_caps->features.get_security_state = drv_caps.SupportedFeatures.SendPassthru;
 		p_caps->features.get_log_page = drv_caps.SupportedFeatures.SendPassthru;
 		p_caps->features.get_features = drv_caps.SupportedFeatures.SendPassthru;
 		p_caps->features.set_features = drv_caps.SupportedFeatures.SendPassthru;
-		p_caps->features.create_namespace = drv_caps.SupportedFeatures.CreateNamespace;
-		p_caps->features.rename_namespace = drv_caps.SupportedFeatures.RenameNamespace;
-		p_caps->features.delete_namespace = drv_caps.SupportedFeatures.DeleteNamespace;
+		p_caps->features.create_namespace = 0;
+		p_caps->features.rename_namespace = 0;
+		p_caps->features.delete_namespace = 0;
 		p_caps->features.set_security_state = drv_caps.SupportedFeatures.SendPassthru;
 		p_caps->features.enable_logging = drv_caps.SupportedFeatures.SendPassthru;
 		p_caps->features.run_diagnostic = drv_caps.SupportedFeatures.RunDiagnostic;
 		p_caps->features.passthrough = drv_caps.SupportedFeatures.SendPassthru;
-		p_caps->features.app_direct_mode = drv_caps.SupportedFeatures.PmemNamespace;
-		p_caps->features.storage_mode = drv_caps.SupportedFeatures.BlockNamespace;
+		p_caps->features.app_direct_mode = 1;
+		p_caps->features.storage_mode = 0;
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);

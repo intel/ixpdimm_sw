@@ -43,10 +43,16 @@ extern "C"
 //- macro payload_fields(payload)
 //- for f in payload.fields
 //- 	if not f.ignore
+//-			if f.is_struct
+	struct {{f.struct_type|fw_cmd_data}} {{f.name}};
+//-			elif f.is_struct_array
+	struct {{f.struct_type|fw_cmd_data}} {{f.name}}[{{f.struct_array_count}}];
+//-			else
 	{{f.c_definition}};
 //- 		for b in f.bits
 	unsigned char {{f.name}}_{{b.name}};
 //- 		endfor
+//-		 	endif
 //- 	endif
 //- endfor
 //- for r in payload.payload_refs
@@ -58,6 +64,10 @@ extern "C"
 	struct {{r.name|fw_cmd_data}} {{r.name}};
 //- 			endif
 //- 		endfor
+//-		elif r.is_struct
+	struct {{r.struct_type|fw_cmd_data}} {{r.name}};    
+//-		elif r.is_struct_array
+	struct {{r.struct_type|fw_cmd_data}} {{r.name}}[{{r.struct_array_count}}];  
 //- 	else
 //- 		if r.is_multiple
 {{multiple_field(r.name)}}

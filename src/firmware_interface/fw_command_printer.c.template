@@ -33,11 +33,20 @@ void {{name|fw_cmd_printer}}(const struct {{name|fw_cmd_data}} *p_value, int {{t
 //- 		for f in payload.fields
 //- 			if not f.ignore
 	print_tabs({{tab_counter}} + 1);
+//-					if f.is_struct
+	fwcmd_{{f.struct_type}}_printer(&p_value->{{f.name}}, {{tab_counter}} + 1);
+//-					elif f.is_struct_array
+	for (int i = 0; i < {{f.struct_array_count}}; i++)
+	{
+		fwcmd_{{f.struct_type}}_printer(&p_value->{{f.name}}[i], {{tab_counter}} + 1);
+	}
+//-					else
 	printf("{{f.name|camel}}: {{f.print_type}}\n", p_value->{{f.name}});
-//-					for b in f.bits
+//-						for b in f.bits
 	print_tabs({{tab_counter}} + 2);
 	printf("{{b.name|camel}}: %d\n", p_value->{{f.name}}_{{b.name}});
-//-					endfor
+//-						endfor
+//- 				endif
 //- 			endif
 //- 		endfor
 //- 		for r in payload.payload_refs:

@@ -716,6 +716,7 @@ struct device_capacities
 	NVM_UINT64 capacity; // The total AEP DIMM capacity in bytes.
 	NVM_UINT64 memory_capacity; // The total AEP DIMM capacity in bytes for memory mode.
 	NVM_UINT64 app_direct_capacity; // The total AEP DIMM capacity in bytes for app direct mode.
+	NVM_UINT64 mirrored_app_direct_capacity; // The total AEP DIMM mirrored app direct capacity.
 	NVM_UINT64 storage_capacity; // AEP DIMM capacity allocated that can be used as storage.
 	NVM_UINT64 unconfigured_capacity; // Unconfigured AEP DIMM capacity. Can be used as storage.
 	NVM_UINT64 inaccessible_capacity; // AEP DIMM capacity not licensed for this AEP DIMM SKU.
@@ -873,6 +874,7 @@ struct sw_capabilities
 struct dimm_sku_capabilities
 {
 	NVM_BOOL mixed_sku; // One or more AEP DIMMs have different SKUs.
+	NVM_BOOL sku_violation; // One or more AEP DIMMs are in violation of their SKU.
 	NVM_BOOL memory_sku; // One or more AEP DIMMs support memory mode.
 	NVM_BOOL app_direct_sku; // One or more AEP DIMMs support app direct mode.
 	NVM_BOOL storage_sku; // One or more AEP DIMMs support storage mode.

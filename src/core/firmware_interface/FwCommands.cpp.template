@@ -114,7 +114,14 @@ std::string FwCommands::{{name|fw_payload_to_string}}(const struct {{name|fw_cmd
 	result << "\n{{name|space}}:" << "\n";
 //- 		for f in payload.fields
 //- 			if not f.ignore
-//- 			if f.unsigned_char_needs_typecast_to_int
+//-					if f.is_struct
+	result << {{f.struct_type|fw_payload_to_string}}(&p_data->{{f.name}});
+//-					elif f.is_struct_array
+	for (int i = 0; i < {{f.struct_array_count}}; i++)
+	{
+		result << {{f.struct_type|fw_payload_to_string}}(&p_data->{{f.name}}[i]);
+	}
+//- 				elif f.unsigned_char_needs_typecast_to_int
 	result << "{{f.name|camel}}: " << (int) p_data->{{f.name}} << "\n";
 //-			else
 	result << "{{f.name|camel}}: " << p_data->{{f.name}} << "\n";

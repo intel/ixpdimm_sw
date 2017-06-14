@@ -49,6 +49,17 @@ extern "C"
 #include "adapter_types.h"
 #include "nvm_types.h"
 #include "platform_config_data.h"
+#include "nfit_tables.h"
+
+#define	MIRRORED_INTERLEAVE(attributes) \
+		(attributes & NFIT_MAPPING_ATTRIBUTE_EFI_MEMORY_MORE_RELIABLE) \
+		== NFIT_MAPPING_ATTRIBUTE_EFI_MEMORY_MORE_RELIABLE
+
+#define	REDUCE_CAPACITY(current, less) \
+	if (less >= current) \
+		current = 0; \
+	else \
+		current -= less;
 
 /*
  * Describes the features pertaining to the unique construction and usage of a
@@ -76,98 +87,19 @@ struct nvm_pool
 };
 
 /*
- * Retrieve the number of pools.
+ * Device persistent capacities that are available for namespace creation.
+ * Calculated from free storage capacity and interleave information.
  */
-int get_pool_count();
-
-/*
- * Retrieve a list of pools.
- */
-int get_pools(const NVM_UINT32 count, struct nvm_pool *p_pools);
-
-/*
- * Get if the system has a memory pool configured
- * @return
- * 		1 if has memory pool, 0 if not, or an error code
- */
-int has_memory_pool();
-
-/*
- * If a system is configured to have memory memory, setup the memory pool.
- * @return
- * 		NVM_SUCCESS or appropriate error code
- */
-int get_memory_pool(struct nvm_pool *p_pool);
-
-/*
- * Get the number of mirrored pools on the system
- * @return
- * 		Number of mirrored pools or an error code
- */
-int get_mirrored_pools_count();
-
-/*
- * Get the mirrored pools on the system
- * @return
- * 		Number of mirrored pools or an error code
- */
-int get_mirrored_pools(struct nvm_pool pools[], const NVM_UINT32 count);
-
-/*
- * Get the number of persistent pools on the system
- * @return
- * 		Number of persistent pools or an error code
- */
-int get_persistent_pools_count();
-
-/*
- * Get the persistent pools on the system
- * @return
- * 		Number of persistent pools or an error code
- */
-int get_persistent_pools(struct nvm_pool pools[], const NVM_UINT32 count);
-
-/*
- * Helper function to copy one set of pools to another. Handles the case when
- * caller doesn't want to copy the pools, but just wants to know the number of source
- * pools. Also handles the case if the caller passes an invalid destination array size
- *
- * Return the number of source pools, or an error code.
- */
-int copy_pools(struct nvm_pool dst_pools[], const NVM_UINT32 dst_count,
-		struct nvm_pool src_pools[], const NVM_UINT32 src_count);
-
-/*
- * Add a DIMM to the pool structure.
- */
-int add_dimm_to_pool(struct nvm_pool *p_pool, NVM_NFIT_DEVICE_HANDLE handle);
-
-/*
- * Add a DIMM to the relevant pool. If it doesn't exist, create it.
- */
-int add_dimm_to_pools(struct nvm_pool *p_pools, int *p_pools_count, NVM_NFIT_DEVICE_HANDLE handle,
-		enum pool_type type, char *uuid_src_prefix);
-
-/*
- * Add an interleave set to the pool structure.
- */
-int add_ilset_to_pool(struct nvm_pool *p_pool, struct nvm_interleave_set *p_ilset);
-
-/*
- * Add an interleave set to the relevant pool. If it doesn't exist, create it.
- */
-int add_ilset_to_pools(struct nvm_pool *p_pools, int *p_pools_count,
-	struct nvm_interleave_set *p_ilset,	enum pool_type type, char *uuid_src_prefix);
-
-/*
- * Get the capacity of a DIMM occupied by interleave sets
- */
-int get_dimm_ilset_capacity(NVM_NFIT_DEVICE_HANDLE handle, NVM_UINT64 *p_mirrored_size,
-		NVM_UINT64 *p_unmirrored_size);
-void get_dimm_ilset_capacity_from_interleave_sets(NVM_NFIT_DEVICE_HANDLE handle,
-		NVM_UINT64 *p_mirrored_size,
-		NVM_UINT64 *p_unmirrored_size,
-		const struct nvm_interleave_set *p_interleaves, const NVM_UINT32 interleave_count);
+struct device_free_capacities
+{
+	NVM_NFIT_DEVICE_HANDLE device_handle; // The unique device handle of the memory module
+	NVM_UID uid;
+	NVM_UINT64 total_storage_capacity; // total free storage + not mirrored AD capacity
+	NVM_UINT64 app_direct_byone_capacity; // total free x1 AD capacity
+	NVM_UINT64 app_direct_interleaved_capacity; // total free (not mirrored) AD capacity
+	NVM_UINT64 app_direct_mirrored_capacity; // total free mirrored AD capacity
+	NVM_UINT64 storage_only_capacity; // total free storage capacity
+};
 
 /*
  * Get the Memory Mode capacity of a DIMM
@@ -177,16 +109,8 @@ int get_dimm_memory_capacity(NVM_NFIT_DEVICE_HANDLE handle, NVM_UINT64 *p_size);
 /*
  * Initialize a new pool with its UUID and type
  */
-int init_pool(struct nvm_pool *p_pool, const char *uuid_src, const enum pool_type type,
-		const int socket);
-
-/*
- * Determine the security status for an interleave set.
- */
-int calculate_app_direct_interleave_security(NVM_UINT32 interleave_setid,
-	enum encryption_status *p_encryption,
-	enum erase_capable_status *p_erase_capable,
-	enum encryption_status *p_encryption_capable /* could be NULL */);
+int init_pool(struct pool *p_pool, const char *host_name,
+		const enum pool_type type, const int socket);
 
 /*
  * Get an nvm_interleave set by the driver identifier
@@ -194,8 +118,8 @@ int calculate_app_direct_interleave_security(NVM_UINT32 interleave_setid,
 int get_interleaveset_by_driver_id(NVM_UINT32 driver_id,
 		struct nvm_interleave_set *p_interleave);
 
-int get_pool_uid_from_namespace_details(
-		const struct nvm_namespace_details *p_details, NVM_UID *p_pool_uid);
+int get_pool_from_namespace_details(
+		const struct nvm_namespace_details *p_details, struct pool *p_pool);
 
 /*
  * Converts DPA offset (from start of DIMM) to offset from the start of the PM partition.
@@ -213,21 +137,27 @@ int get_interleave_set_offset_from_pm_partition_start(
  * identify the specific interleave set on the DIMM.
  */
 int fill_interleave_set_settings_and_id_from_dimm(
-		struct nvm_interleave_set *p_interleave_set,
+		struct interleave_set *p_interleave_set,
 		const NVM_NFIT_DEVICE_HANDLE handle,
 		const NVM_UINT64 interleave_dpa_offset);
 
 /*
- * Determines if a DIMM with a given handle is in a given interleave set.
+ * Determines if a DIMM with a given UID is in a given interleave set.
  */
-NVM_BOOL dimm_is_in_interleave_set(const NVM_NFIT_DEVICE_HANDLE device_handle,
-		const struct nvm_interleave_set *p_ilset);
+NVM_BOOL dimm_is_in_interleave_set(const NVM_UID device_uid,
+		const struct interleave_set *p_ilset);
 
-/*
- * Determines the pool health based on config data
- */
-enum pool_health calculate_pool_health(NVM_NFIT_DEVICE_HANDLE handle,
-		struct platform_config_data *p_cfg_data);
+int get_dimm_free_capacities(
+		const struct nvm_capabilities *p_nvm_caps,
+		const struct device_discovery *p_discovery,
+		const struct pool *p_pool,
+		const struct nvm_namespace_details *p_namespaces,
+		const int ns_count,
+		struct device_capacities *p_capacity,
+		struct device_free_capacities *p_free_capacity);
+
+NVM_BOOL interleave_set_has_namespace(const NVM_UINT32 interleave_set_driver_id,
+	const struct nvm_namespace_details *p_namespaces, int ns_count);
 
 #ifdef __cplusplus
 }

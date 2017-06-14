@@ -270,6 +270,26 @@ void FwCommandsWrapper::FwcmdFreePlatformConfigDataConfigurationHeaderTable(stru
 	fwcmd_free_platform_config_data_configuration_header_table(p_result);
 }
 
+struct fwcmd_namespace_labels_result FwCommandsWrapper::FwcmdAllocNamespaceLabels(unsigned int handle,
+const unsigned char partition_id,
+const unsigned char command_option,
+const unsigned int offset) const
+{
+	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
+
+	return fwcmd_alloc_namespace_labels(handle,
+	partition_id,
+	command_option,
+	offset);
+}
+
+void FwCommandsWrapper::FwcmdFreeNamespaceLabels(struct fwcmd_namespace_labels_result *p_result) const
+{
+	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
+
+	fwcmd_free_namespace_labels(p_result);
+}
+
 struct fwcmd_dimm_partition_info_result FwCommandsWrapper::FwcmdAllocDimmPartitionInfo(unsigned int handle) const
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);

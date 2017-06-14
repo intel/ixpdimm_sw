@@ -54,7 +54,7 @@ int fill_host_sku_status(struct host *p_host)
 	if (rc == NVM_SUCCESS)
 	{
 		p_host->mixed_sku = capabilities.sku_capabilities.mixed_sku;
-		rc = system_in_sku_violation(&capabilities, &p_host->sku_violation);
+		p_host->sku_violation = capabilities.sku_capabilities.sku_violation;
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);

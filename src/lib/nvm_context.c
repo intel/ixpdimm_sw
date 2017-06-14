@@ -33,6 +33,7 @@
 #include <os/os_adapter.h>
 #include <persistence/logging.h>
 #include <uid/uid.h>
+#include <nfit.h>
 
 #ifdef __WINDOWS__
 #include <Windows.h>
@@ -88,6 +89,8 @@ int nvm_create_context()
 				p_context->p_pools = NULL;
 				p_context->namespace_count = -1;
 				p_context->p_namespaces = NULL;
+				p_context->nfit_size = -1;
+				p_context->p_nfit = NULL;
 			}
 		}
 
@@ -184,6 +187,24 @@ void free_namespace_list()
 	}
 	COMMON_LOG_EXIT();
 }
+
+/*
+ * Helper function to free the nfit
+ * NOTE: This function assumes the caller has obtained the lock
+ */
+void free_nfit()
+{
+	COMMON_LOG_ENTRY();
+	// clean up the device list
+	if (p_context && p_context->nfit_size > 0 && p_context->p_nfit)
+	{
+		free_parsed_nfit(p_context->p_nfit);
+		p_context->p_nfit = NULL;
+		p_context->nfit_size = -1;
+	}
+	COMMON_LOG_EXIT();
+}
+
 /*
  * Clean up the resources allocated by nvm_create_context
  * Use the force flag to clear the context regardless of the count
@@ -218,6 +239,7 @@ int nvm_free_context(const NVM_BOOL force)
 				free_device_list();
 				free_pool_list();
 				free_namespace_list();
+				free_nfit();
 
 				// clean up pointer
 				free(p_context);
@@ -1170,6 +1192,119 @@ int set_nvm_context_namespace_details(const NVM_UID namespace_uid,
 		{
 			COMMON_LOG_ERROR("Could not release the context lock.");
 			rc = NVM_ERR_UNKNOWN;
+		}
+	}
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+
+// NFIT
+int get_nvm_context_nfit_size()
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_ERR_UNKNOWN;
+
+	// lock
+	if (!mutex_lock(&g_context_lock))
+	{
+		COMMON_LOG_ERROR("Could not obtain the context lock");
+		rc = NVM_ERR_UNKNOWN;
+	}
+	else
+	{
+		if (p_context && p_context->nfit_size >= 0)
+		{
+			rc = p_context->nfit_size;
+		}
+
+		// unlock
+		if (!mutex_unlock(&g_context_lock))
+		{
+			COMMON_LOG_ERROR("Could not release the context lock.");
+			rc = NVM_ERR_UNKNOWN;
+		}
+	}
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+int get_nvm_context_nfit(int nfit_size, struct parsed_nfit *p_nfit)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_ERR_UNKNOWN;
+
+	if (nfit_size && p_nfit)
+	{
+		// lock
+		if (!mutex_lock(&g_context_lock))
+		{
+			COMMON_LOG_ERROR("Could not obtain the context lock");
+			rc = NVM_ERR_UNKNOWN;
+		}
+		else
+		{
+			if (p_context && p_context->nfit_size > 0 && p_context->p_nfit)
+			{
+				if (nfit_size >= p_context->nfit_size)
+				{
+					memmove(p_nfit, p_context->p_nfit, p_context->nfit_size);
+					rc = NVM_SUCCESS;
+				}
+			}
+
+			// unlock
+			if (!mutex_unlock(&g_context_lock))
+			{
+				COMMON_LOG_ERROR("Could not release the context lock.");
+				rc = NVM_ERR_UNKNOWN;
+			}
+		}
+	}
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+int set_nvm_context_nfit(int nfit_size, const struct parsed_nfit *p_nfit)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_ERR_UNKNOWN;
+
+	if (nfit_size && p_nfit)
+	{
+		// lock
+		if (!mutex_lock(&g_context_lock))
+		{
+			COMMON_LOG_ERROR("Could not obtain the context lock");
+			rc = NVM_ERR_UNKNOWN;
+		}
+		else
+		{
+			if (p_context)
+			{
+				// clean up nfit
+				free_nfit();
+
+				// create new list
+				p_context->p_nfit = calloc(1, nfit_size);
+				if (!p_context->p_nfit)
+				{
+					COMMON_LOG_ERROR("Failed to allocate memory for context structure");
+					rc = NVM_ERR_NOMEMORY;
+				}
+				else
+				{
+					p_context->nfit_size = nfit_size;
+					memmove(p_context->p_nfit, p_nfit, nfit_size);
+					rc = NVM_SUCCESS;
+				}
+			}
+			// unlock
+			if (!mutex_unlock(&g_context_lock))
+			{
+				COMMON_LOG_ERROR("Could not release the context lock.");
+				rc = NVM_ERR_UNKNOWN;
+			}
 		}
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);

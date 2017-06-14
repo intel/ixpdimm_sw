@@ -111,6 +111,13 @@ public:
 
 	virtual void FwcmdFreePlatformConfigDataConfigurationHeaderTable(struct fwcmd_platform_config_data_configuration_header_table_result *p_result) const;
 
+	virtual struct fwcmd_namespace_labels_result FwcmdAllocNamespaceLabels(unsigned int handle,
+	const unsigned char partition_id,
+	const unsigned char command_option,
+	const unsigned int offset) const;
+
+	virtual void FwcmdFreeNamespaceLabels(struct fwcmd_namespace_labels_result *p_result) const;
+
 	virtual struct fwcmd_dimm_partition_info_result FwcmdAllocDimmPartitionInfo(unsigned int handle) const;
 
 	virtual void FwcmdFreeDimmPartitionInfo(struct fwcmd_dimm_partition_info_result *p_result) const;

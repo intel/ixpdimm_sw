@@ -383,6 +383,25 @@ enum return_code FwCommands::fwGetPayload_PlatformConfigDataConfigurationHeaderT
 	return rc;
 }
 
+enum return_code FwCommands::fwGetPayload_NamespaceLabels(unsigned int handle, const unsigned char partition_id, const unsigned char command_option, const unsigned int offset, std::string &resultString)
+{
+	enum return_code rc = NVM_SUCCESS;
+
+	struct fwcmd_namespace_labels_result result = m_wrapper.FwcmdAllocNamespaceLabels(handle, partition_id, command_option, offset);
+
+	if (result.success)
+	{
+		resultString += fwPayloadToString_NamespaceLabels(result.p_data);
+	}
+	else
+	{
+		rc = convertFwcmdErrorCodeToNvmErrorCode(result.error_code);
+	}
+
+	m_wrapper.FwcmdFreeNamespaceLabels(&result);
+	return rc;
+}
+
 enum return_code FwCommands::fwGetPayload_DimmPartitionInfo(unsigned int handle, std::string &resultString)
 {
 	enum return_code rc = NVM_SUCCESS;
@@ -908,6 +927,55 @@ std::string FwCommands::fwPayloadToString_PlatformConfigDataConfigurationHeaderT
 	result << fwPayloadToString_PlatformConfigDataCurrentConfigTable(&p_data->platform_config_data_current_config_table);
 	result << fwPayloadToString_PlatformConfigDataConfigInputTable(&p_data->platform_config_data_config_input_table);
 	result << fwPayloadToString_PlatformConfigDataConfigOutputTable(&p_data->platform_config_data_config_output_table);
+	return result.str();
+}
+
+std::string FwCommands::fwPayloadToString_NsIndex(const struct fwcmd_ns_index_data *p_data)
+{
+	std::stringstream result;
+	result << "\nNs Index:" << "\n";
+	result << "Signature: " << p_data->signature << "\n";
+	result << "Flags: " << p_data->flags << "\n";
+	result << "Sequence: " << p_data->sequence << "\n";
+	result << "MyOffset: " << p_data->my_offset << "\n";
+	result << "MySize: " << p_data->my_size << "\n";
+	result << "OtherOffset: " << p_data->other_offset << "\n";
+	result << "LabelOffset: " << p_data->label_offset << "\n";
+	result << "Nlabel: " << p_data->nlabel << "\n";
+	result << "LabelMajorVersion: " << p_data->label_major_version << "\n";
+	result << "LabelMinorVersion: " << p_data->label_minor_version << "\n";
+	result << "Checksum: " << p_data->checksum << "\n";
+	return result.str();
+}
+
+std::string FwCommands::fwPayloadToString_NsLabel(const struct fwcmd_ns_label_data *p_data)
+{
+	std::stringstream result;
+	result << "\nNs Label:" << "\n";
+	result << "Uuid: " << p_data->uuid << "\n";
+	result << "Name: " << p_data->name << "\n";
+	result << "Flags: " << p_data->flags << "\n";
+	result << "Nlabel: " << p_data->nlabel << "\n";
+	result << "Position: " << p_data->position << "\n";
+	result << "IsetCookie: " << p_data->iset_cookie << "\n";
+	result << "LbaSize: " << p_data->lba_size << "\n";
+	result << "Dpa: " << p_data->dpa << "\n";
+	result << "Rawsize: " << p_data->rawsize << "\n";
+	result << "Slot: " << p_data->slot << "\n";
+	result << "Unused: " << p_data->unused << "\n";
+	return result.str();
+}
+
+std::string FwCommands::fwPayloadToString_NamespaceLabels(const struct fwcmd_namespace_labels_data *p_data)
+{
+	std::stringstream result;
+	result << "\nNamespace Labels:" << "\n";
+	result << fwPayloadToString_NsIndex(&p_data->index1);
+	result << fwPayloadToString_NsIndex(&p_data->index2);
+	for (int i = 0; i < 1020; i++)
+	{
+		result << fwPayloadToString_NsLabel(&p_data->labels[i]);
+	}
 	return result.str();
 }
 

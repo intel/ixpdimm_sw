@@ -27,20 +27,7 @@
 
 #include "nvm_management.h"
 #include "adapter_types.h"
-
-/*
- * Device persistent capacities that are available for namespace creation.
- * Calculated from free storage capacity and interleave information.
- */
-struct device_free_capacities
-{
-	NVM_NFIT_DEVICE_HANDLE device_handle; // The unique device handle of the memory module
-	NVM_UID uid;
-	NVM_UINT64 total_capacity;
-	NVM_UINT64 app_direct_byone_capacity;
-	NVM_UINT64 app_direct_interleaved_capacity;
-	NVM_UINT64 storage_only_capacity;
-};
+#include "pool_utilities.h"
 
 void adjust_namespace_block_count_if_allowed(NVM_UINT64 *p_block_count,
 		const NVM_UINT16 block_size,
@@ -103,11 +90,4 @@ int select_smallest_matching_region(const struct pool *p_pool,
 		const struct interleave_format *p_format, NVM_UINT64 minimum_ns_size,
 		NVM_UINT32 *p_namespace_creation_id, NVM_BOOL allow_adj);
 
-NVM_UINT64 get_dimm_free_ad_byone_capacity(const struct pool *p_pool, const NVM_UID dimm);
-
-NVM_UINT64 get_dimm_free_ad_capacity(const struct pool *p_pool, const NVM_UID dimm);
-
-void get_free_capacities_for_devices(const struct pool *p_pool,
-		const struct device_discovery *p_discoveries,
-		const struct nvm_storage_capacities *p_capacities, NVM_UINT16 dimm_count,
-		struct device_free_capacities *p_free_capacities);
+int get_nvm_namespaces_details_alloc(struct nvm_namespace_details **pp_namespaces);

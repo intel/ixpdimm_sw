@@ -586,6 +586,9 @@ int nvm_get_nvm_capabilities(struct nvm_capabilities *p_capabilities)
 
 			// Finally retrieve and apply the NVM-DIMM SKU capabilities
 			KEEP_ERROR(rc, apply_dimm_sku_capabilities(p_capabilities));
+
+			KEEP_ERROR(rc, system_in_sku_violation(p_capabilities,
+					&p_capabilities->sku_capabilities.sku_violation));
 		}
 
 		// Second most common configuration is memory mode only.
@@ -681,28 +684,6 @@ int device_in_sku_violation(struct device_discovery *p_discovery,
 		if (!(*p_sku_violation))
 		{
 			rc = check_sku_violation_for_appdirect_mode(p_discovery, p_sku_violation);
-		}
-
-		// check for storage namespaces when storage mode is not supported
-		if (!(*p_sku_violation))
-		{
-			int tmprc = check_device_storage_namespaces_for_sku_violation(p_discovery,
-					p_sku_violation);
-			if (tmprc != NVM_ERR_NOTSUPPORTED) // ignore not supported errors
-			{
-				KEEP_ERROR(rc, tmprc);
-			}
-		}
-
-		// check for app direct namespaces when app direct mode is not supported
-		if (!(*p_sku_violation))
-		{
-			int tmprc = check_device_app_direct_namespaces_for_sku_violation(p_discovery,
-					p_sku_violation);
-			if (tmprc != NVM_ERR_NOTSUPPORTED) // ignore not supported
-			{
-				KEEP_ERROR(rc, tmprc);
-			}
 		}
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);

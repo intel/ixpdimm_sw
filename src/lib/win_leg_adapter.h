@@ -54,8 +54,6 @@ int win_leg_adp_modify_namespace_block_count(const NVM_UID namespace_uid,
 	const NVM_UINT64 block_count);
 int win_leg_adp_modify_namespace_enabled(const NVM_UID namespace_uid,
 	const enum namespace_enable_state enabled);
-int win_leg_adp_get_dimm_storage_capacities(const NVM_UINT32 count,
-	struct nvm_storage_capacities *p_capacities);
 
 int win_leg_adp_ioctl_passthrough_cmd(struct fw_cmd *p_cmd);
 

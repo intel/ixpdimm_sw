@@ -38,6 +38,7 @@
 #include <stdio.h>
 
 #define	SYSFS_ACPI_PATH	"/sys/firmware/acpi/tables/"
+int g_count = 0;
 
 /*!
  * Return the specified ACPI table or the size
