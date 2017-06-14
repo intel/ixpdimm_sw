@@ -380,6 +380,11 @@ int nvm_get_error(const enum return_code code, NVM_ERROR_DESCRIPTION description
 						TR("The NVDIMM firmware interface table is not found or invalid."),
 								description_len);
 				break;
+			case NVM_ERR_NAMESPACEENABLEFAILED:
+				s_strcpy(description,
+						TR("The driver failed to enable all the namespaces after device unlock."),
+								description_len);
+				break;
 			default:
 				s_strcpy(description, TR("The return code is not valid."),
 						description_len);

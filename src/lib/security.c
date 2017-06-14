@@ -171,6 +171,20 @@ int security_change_prepare(struct device_discovery *p_discovery,
 		cmd.input_payload = &input_payload;
 		rc = ioctl_passthrough_cmd(&cmd);
 		s_memset(&input_payload, sizeof (input_payload));
+
+		if (rc == NVM_SUCCESS)
+		{
+			int tmprc = NVM_SUCCESS;
+			if ((tmprc = reenumerate_namespaces(p_discovery->device_handle))
+					!= NVM_ERR_NOTSUPPORTED)
+			{
+				if (tmprc != NVM_SUCCESS)
+				{
+					COMMON_LOG_ERROR("Could not reenumerate the namespaces");
+					rc = NVM_ERR_NAMESPACEENABLEFAILED;
+				}
+			}
+		}
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
