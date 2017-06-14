@@ -40,6 +40,8 @@
 int nvm_open_lib();
 int nvm_close_lib();
 
+#ifndef BUILD_STATIC
+
 #ifdef __WINDOWS__
 #include <Windows.h>
 #include <process.h>
@@ -103,6 +105,7 @@ void lib_unload()
 	// assert if we fail to unload the db
 	assert(nvm_close_lib() == COMMON_SUCCESS);
 }
+#endif
 #endif
 
 /*

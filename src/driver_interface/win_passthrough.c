@@ -42,19 +42,18 @@ extern short g_scsi_port;
 #define DSM_BACKGROUND_OP_STATE_SHIFT (24)
 #define DSM_VENDOR_ERROR_SHIFT (0)
 
-int ind_err_to_nvm_lib_err(CR_RETURN_CODES ind_err);
+int pt_ind_err_to_nvm_lib_err(CR_RETURN_CODES ind_err);
 
-int init_scsi_port();
-int open_ioctl_target(PHANDLE p_handle, short scsi_port);
-int send_ioctl_command(HANDLE handle,
+int pt_open_ioctl_target(PHANDLE p_handle, short scsi_port);
+int pt_send_ioctl_command(HANDLE handle,
 	unsigned long io_controlcode,
 	void *p_in_buffer,
 	size_t in_size,
 	void *p_out_buffer,
 	size_t out_size);
-int execute_ioctl(size_t bufSize, void *p_ioctl_data, unsigned long io_controlcode);
+int pt_execute_ioctl(size_t bufSize, void *p_ioctl_data, unsigned long io_controlcode);
 
-unsigned int win_dsm_status_to_int(DSM_STATUS win_dsm_status)
+unsigned int pt_win_dsm_status_to_int(DSM_STATUS win_dsm_status)
 {
 	return win_dsm_status.BackgroundOperationState << DSM_BACKGROUND_OP_STATE_SHIFT
 		   | win_dsm_status.MailboxStatusCode << DSM_MAILBOX_ERROR_SHIFT
@@ -64,7 +63,7 @@ unsigned int win_dsm_status_to_int(DSM_STATUS win_dsm_status)
 /*
  * Execute an emulated BIOS ioctl to retrieve information about the bios large mailboxes
  */
-int bios_get_large_payload_size(unsigned int device_handle,
+int pt_bios_get_large_payload_size(unsigned int device_handle,
 	GET_LARGE_PAYLOAD_SIZE_OUTPUT_PAYLOAD *p_large_payload_size)
 {
 		int rc = PT_ERR_UNKNOWN;
@@ -90,11 +89,11 @@ int bios_get_large_payload_size(unsigned int device_handle,
 			(PDSM_VENDOR_SPECIFIC_COMMAND_OUTPUT_PAYLOAD)
 				(&p_ioctl_data->InputPayload.Arg3OpCodeParameterDataBuffer);
 
-		if ((rc = execute_ioctl(buf_size, p_ioctl_data, IOCTL_CR_PASS_THROUGH))
+		if ((rc = pt_execute_ioctl(buf_size, p_ioctl_data, IOCTL_CR_PASS_THROUGH))
 			== PT_SUCCESS &&
-			(rc = ind_err_to_nvm_lib_err(p_ioctl_data->ReturnCode)) == PT_SUCCESS)
+			(rc = pt_ind_err_to_nvm_lib_err(p_ioctl_data->ReturnCode)) == PT_SUCCESS)
 		{
-			if ((rc = win_dsm_status_to_int(p_DsmOutputPayload->Arg3Status))
+			if ((rc = pt_win_dsm_status_to_int(p_DsmOutputPayload->Arg3Status))
 				== PT_SUCCESS)
 			{
 				memmove(p_large_payload_size, p_DsmOutputPayload->Arg3OutputBuffer,
@@ -115,12 +114,12 @@ int bios_get_large_payload_size(unsigned int device_handle,
 /*
  * Populate the emulated bios large input mailbox
  */
-int bios_write_large_payload(struct pt_fw_cmd *p_fw_cmd)
+int pt_bios_write_large_payload(struct pt_fw_cmd *p_fw_cmd)
 {
 	int rc = PT_SUCCESS;
 
 	GET_LARGE_PAYLOAD_SIZE_OUTPUT_PAYLOAD large_payload_size;
-	if ((rc = bios_get_large_payload_size(p_fw_cmd->device_handle,
+	if ((rc = pt_bios_get_large_payload_size(p_fw_cmd->device_handle,
 		&large_payload_size)) == PT_SUCCESS)
 	{
 		if (large_payload_size.LargeInputPayloadSize < p_fw_cmd->large_input_payload_size)
@@ -178,11 +177,11 @@ int bios_write_large_payload(struct pt_fw_cmd *p_fw_cmd)
 						p_fw_cmd->large_input_payload + current_offset,
 						write_size);
 
-					if ((rc = execute_ioctl(buf_size, p_ioctl_data, IOCTL_CR_PASS_THROUGH))
+					if ((rc = pt_execute_ioctl(buf_size, p_ioctl_data, IOCTL_CR_PASS_THROUGH))
 						== PT_SUCCESS &&
-						(rc = ind_err_to_nvm_lib_err(p_ioctl_data->ReturnCode)) == PT_SUCCESS)
+						(rc = pt_ind_err_to_nvm_lib_err(p_ioctl_data->ReturnCode)) == PT_SUCCESS)
 					{
-						if ((rc = (win_dsm_status_to_int(p_outputPayload->Arg3Status))) == PT_SUCCESS)
+						if ((rc = (pt_win_dsm_status_to_int(p_outputPayload->Arg3Status))) == PT_SUCCESS)
 						{
 							current_offset += write_size;
 						}
@@ -208,12 +207,12 @@ int bios_write_large_payload(struct pt_fw_cmd *p_fw_cmd)
 /*
  * Read the emulated bios large input mailbox
  */
-int bios_read_large_payload(struct pt_fw_cmd *p_fw_cmd)
+int pt_bios_read_large_payload(struct pt_fw_cmd *p_fw_cmd)
 {
 		int rc = PT_SUCCESS;
 
 	GET_LARGE_PAYLOAD_SIZE_OUTPUT_PAYLOAD large_payload_size;
-	if ((rc = bios_get_large_payload_size(p_fw_cmd->device_handle,
+	if ((rc = pt_bios_get_large_payload_size(p_fw_cmd->device_handle,
 		&large_payload_size)) == PT_SUCCESS)
 	{
 		if (large_payload_size.LargeOutputPayloadSize < p_fw_cmd->large_output_payload_size)
@@ -268,11 +267,11 @@ int bios_read_large_payload(struct pt_fw_cmd *p_fw_cmd)
 
 					p_read_payload->LargeOutputPayloadOffset = current_offset;
 
-					if ((rc = execute_ioctl(buf_size, p_ioctl_data, IOCTL_CR_PASS_THROUGH))
+					if ((rc = pt_execute_ioctl(buf_size, p_ioctl_data, IOCTL_CR_PASS_THROUGH))
 						== PT_SUCCESS &&
-						(rc = ind_err_to_nvm_lib_err(p_ioctl_data->ReturnCode)) == PT_SUCCESS)
+						(rc = pt_ind_err_to_nvm_lib_err(p_ioctl_data->ReturnCode)) == PT_SUCCESS)
 					{
-						if ((rc = (win_dsm_status_to_int(p_outputPayload->Arg3Status))) == PT_SUCCESS)
+						if ((rc = (pt_win_dsm_status_to_int(p_outputPayload->Arg3Status))) == PT_SUCCESS)
 						{
 							memmove(p_fw_cmd->large_output_payload + current_offset,
 								p_outputPayload->Arg3OutputBuffer, read_size);
@@ -333,7 +332,7 @@ int adapter_pt_ioctl_cmd(struct pt_fw_cmd *p_cmd)
 
 		if (p_cmd->large_input_payload_size > 0)
 		{
-			rc = bios_write_large_payload(p_cmd);
+			rc = pt_bios_write_large_payload(p_cmd);
 		}
 
 		PDSM_VENDOR_SPECIFIC_COMMAND_OUTPUT_PAYLOAD p_output_payload = NULL;
@@ -343,12 +342,12 @@ int adapter_pt_ioctl_cmd(struct pt_fw_cmd *p_cmd)
 				(p_ioctl_data->InputPayload.Arg3OpCodeParameterDataBuffer
 				 + p_cmd->input_payload_size);
 
-		rc = execute_ioctl(buf_size, p_ioctl_data, IOCTL_CR_PASS_THROUGH);
+		rc = pt_execute_ioctl(buf_size, p_ioctl_data, IOCTL_CR_PASS_THROUGH);
 
 		if (rc == PT_SUCCESS &&
-			(rc = ind_err_to_nvm_lib_err(p_ioctl_data->ReturnCode)) == PT_SUCCESS)
+			(rc = pt_ind_err_to_nvm_lib_err(p_ioctl_data->ReturnCode)) == PT_SUCCESS)
 		{
-			if ((rc = (win_dsm_status_to_int(p_output_payload->Arg3Status))) == PT_SUCCESS)
+			if ((rc = (pt_win_dsm_status_to_int(p_output_payload->Arg3Status))) == PT_SUCCESS)
 			{
 				if (p_cmd->output_payload_size > 0)
 				{
@@ -366,7 +365,7 @@ int adapter_pt_ioctl_cmd(struct pt_fw_cmd *p_cmd)
 
 				if (p_cmd->large_output_payload_size > 0)
 				{
-					rc = bios_read_large_payload(p_cmd);
+					rc = pt_bios_read_large_payload(p_cmd);
 				}
 			}
 		}
@@ -392,7 +391,7 @@ int adapter_pt_ioctl_cmd(struct pt_fw_cmd *p_cmd)
  */
 #define	POWER_LIMIT_ENABLE_BIT	0x80
 
-short g_scsi_port = -1;
+short pt_g_scsi_port = -1;
 
 // Helper function declarations
 //enum label_area_health_result convert_label_health_result(LABEL_AREA_HEALTH_EVENT event);
@@ -403,7 +402,7 @@ short g_scsi_port = -1;
  * Support is determined by driver version
  */
 
-int ind_err_to_nvm_lib_err(CR_RETURN_CODES ind_err)
+int pt_ind_err_to_nvm_lib_err(CR_RETURN_CODES ind_err)
 {
 	return (ind_err);
 }
@@ -415,7 +414,7 @@ static int __get_driver_revision(short scsi_port)
 	HANDLE handle = INVALID_HANDLE_VALUE;
 
 	// Open the Drivers IOCTL File Handle
-	if ((rc = open_ioctl_target(&handle, scsi_port)) == 0)
+	if ((rc = pt_open_ioctl_target(&handle, scsi_port)) == 0)
 	{
 		CR_GET_DRIVER_REVISION_IOCTL payload_in;
 		CR_GET_DRIVER_REVISION_IOCTL payload_out;
@@ -423,14 +422,14 @@ static int __get_driver_revision(short scsi_port)
 		memset(&payload_in, 0, sizeof (CR_GET_DRIVER_REVISION_IOCTL));
 
 		// Verify IOCTL is sent successfully and that the driver had no errors
-		if ((rc = send_ioctl_command(handle,
+		if ((rc = pt_send_ioctl_command(handle,
 			IOCTL_CR_GET_VENDOR_DRIVER_REVISION,
 			&payload_in,
 			sizeof (CR_GET_DRIVER_REVISION_IOCTL),
 			&payload_out,
 			sizeof (CR_GET_DRIVER_REVISION_IOCTL))) == 0)
 		{
-			rc = ind_err_to_nvm_lib_err(payload_out.ReturnCode);
+			rc = pt_ind_err_to_nvm_lib_err(payload_out.ReturnCode);
 		}
 
 		CloseHandle(handle);
@@ -440,24 +439,24 @@ static int __get_driver_revision(short scsi_port)
 	return rc;
 }
 
-int init_scsi_port()
+int pt_init_scsi_port()
 {
 	int rc = 0;
 	int i = 0;
 
-	while (g_scsi_port < 0 && i < SCSI_PORT_MAX)
+	while (pt_g_scsi_port < 0 && i < SCSI_PORT_MAX)
 	{
 		int temp_rc = -1;
 
 		if ((temp_rc = __get_driver_revision(i)) == 0)
 		{
-			g_scsi_port = i;
+			pt_g_scsi_port = i;
 		}
 
 		i++;
 	}
 
-	if (g_scsi_port < 0)
+	if (pt_g_scsi_port < 0)
 	{
 		rc = -1;
 	}
@@ -467,7 +466,7 @@ int init_scsi_port()
 
 
 
-int open_ioctl_target(PHANDLE p_handle, short scsi_port)
+int pt_open_ioctl_target(PHANDLE p_handle, short scsi_port)
 {
 
 	int rc = 0;
@@ -492,7 +491,7 @@ int open_ioctl_target(PHANDLE p_handle, short scsi_port)
 	return rc;
 }
 
-int send_ioctl_command(HANDLE handle,
+int pt_send_ioctl_command(HANDLE handle,
 	unsigned long io_controlcode,
 	void *p_in_buffer,
 	size_t in_size,
@@ -528,18 +527,18 @@ int send_ioctl_command(HANDLE handle,
 /*
  * Send an IOCTL payload to the driver
  */
-int execute_ioctl(size_t bufSize, void *p_ioctl_data, unsigned long io_controlcode)
+int pt_execute_ioctl(size_t bufSize, void *p_ioctl_data, unsigned long io_controlcode)
 {
 	int rc;
 	HANDLE handle;
-	if ((rc = init_scsi_port()) != 0)
+	if ((rc = pt_init_scsi_port()) != 0)
 	{
 	}
 	else
 	{
-		if ((rc = open_ioctl_target(&handle, g_scsi_port)) == 0)
+		if ((rc = pt_open_ioctl_target(&handle, pt_g_scsi_port)) == 0)
 		{
-			rc = send_ioctl_command(handle, io_controlcode, p_ioctl_data, bufSize, p_ioctl_data,
+			rc = pt_send_ioctl_command(handle, io_controlcode, p_ioctl_data, bufSize, p_ioctl_data,
 				bufSize);
 			CloseHandle(handle);
 		}

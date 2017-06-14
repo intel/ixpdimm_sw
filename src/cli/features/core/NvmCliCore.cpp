@@ -40,6 +40,8 @@
 #include <persistence/lib_persistence.h>
 #include <nvm_types.h>
 
+#ifndef BUILD_STATIC
+
 #ifdef __WINDOWS__
 #include <Windows.h>
 #include <process.h>
@@ -52,19 +54,19 @@ extern "C" BOOL WINAPI NVM_API DllMain(HANDLE hModule, DWORD ulReason, LPVOID lp
 	int rc = COMMON_SUCCESS;
 	switch (ulReason)
 	{
-		case DLL_PROCESS_ATTACH:
-			if (!open_default_lib_store())
-			{
-				rc = COMMON_ERR_FAILED;
-			}
-			break;
-		case DLL_THREAD_ATTACH:
-			break;
-		case DLL_PROCESS_DETACH:
-			rc = close_lib_store();
-			break;
-		case DLL_THREAD_DETACH:
-			break;
+	case DLL_PROCESS_ATTACH:
+		if (!open_default_lib_store())
+		{
+			rc = COMMON_ERR_FAILED;
+		}
+		break;
+	case DLL_THREAD_ATTACH:
+		break;
+	case DLL_PROCESS_DETACH:
+		rc = close_lib_store();
+		break;
+	case DLL_THREAD_DETACH:
+		break;
 	}
 
 	if (rc >= 0)
@@ -74,6 +76,7 @@ extern "C" BOOL WINAPI NVM_API DllMain(HANDLE hModule, DWORD ulReason, LPVOID lp
 }
 
 #else
+
 #include <assert.h>
 /*
  * Tell gcc to generate code that calls these functions when the shared
@@ -101,6 +104,7 @@ void lib_unload()
 	// assert if we fail to unload the db
 	assert(close_lib_store() == COMMON_SUCCESS);
 }
+#endif
 #endif
 
 void registerFeatures()
