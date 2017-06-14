@@ -149,7 +149,11 @@ fi
 /bin/systemctl --no-reload enable ixpdimm-monitor.service &> /dev/null || :
 
 %post -n ixpdimm_sw -p /sbin/ldconfig
-%postun -n ixpdimm_sw -p /sbin/ldconfig
+
+%postun -n ixpdimm_sw
+/sbin/ldconfig
+rm -f %{_sharedstatedir}/%{name}/*.dat.log
+rm -f %{_sharedstatedir}/%{name}/*.dat-journal
 
 %postun -n libixpdimm-core -p /sbin/ldconfig
 %postun -n libixpdimm-cim -p /sbin/ldconfig
@@ -218,7 +222,6 @@ fi
 
 %preun -n ixpdimm-monitor
 %systemd_preun stop ixpdimm-monitor.service
-rm %{_sharedstatedir}/%{name}/*.dat.log
 
 %postun -n ixpdimm-monitor
 %systemd_postun_with_restart ixpdimm-monitor.service
