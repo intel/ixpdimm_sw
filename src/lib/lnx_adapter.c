@@ -158,6 +158,104 @@ NVM_UINT32 get_capabilities_format(NVM_UINT8 channel, NVM_UINT8 imc, NVM_UINT8 w
 	return format;
 }
 
+int enable_dimm(NVM_NFIT_DEVICE_HANDLE device_handle)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+	struct ndctl_ctx *ctx;
+
+	if ((rc = ndctl_new(&ctx)) >= 0)
+	{
+		rc = NVM_ERR_BADDEVICE;
+		struct ndctl_bus *bus;
+
+		ndctl_bus_foreach(ctx, bus)
+		{
+			struct ndctl_dimm *dimm;
+			ndctl_dimm_foreach(bus, dimm)
+			{
+				if (ndctl_dimm_get_handle(dimm) == device_handle.handle)
+				{
+					rc = linux_err_to_nvm_lib_err(ndctl_dimm_enable(dimm));
+				}
+			}
+		}
+	}
+	else
+	{
+		rc = linux_err_to_nvm_lib_err(rc);
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+int enable_all_regions()
+{
+	COMMON_LOG_ENTRY();
+
+	int rc = NVM_SUCCESS;
+	struct ndctl_ctx *ctx;
+
+	if ((rc = ndctl_new(&ctx)) >= 0)
+	{
+		struct ndctl_bus *bus;
+		rc = NVM_SUCCESS;
+
+		ndctl_bus_foreach(ctx, bus)
+		{
+			struct ndctl_region *region;
+			ndctl_region_foreach(bus, region)
+			{
+				struct ndctl_dimm *dimm;
+				NVM_BOOL all_dimms_in_the_region_are_enabled = 1;
+
+				ndctl_dimm_foreach_in_region(region, dimm)
+				{
+					if (!ndctl_dimm_is_enabled(dimm))
+					{
+						all_dimms_in_the_region_are_enabled = 0;
+					}
+				}
+
+				if (all_dimms_in_the_region_are_enabled)
+				{
+					rc = linux_err_to_nvm_lib_err(ndctl_region_enable(region));
+				}
+			}
+		}
+	}
+	else
+	{
+		rc = linux_err_to_nvm_lib_err(rc);
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+int reenumerate_namespaces(NVM_NFIT_DEVICE_HANDLE device_handle)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	if ((rc = enable_dimm(device_handle)) == NVM_SUCCESS)
+	{
+		rc = enable_all_regions();
+
+		if (rc != NVM_SUCCESS)
+		{
+			COMMON_LOG_ERROR("Could not enable the interleaved set");
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR("Could not enable the DIMM");
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
 
 /*
  * Get the capabilities of the host platform

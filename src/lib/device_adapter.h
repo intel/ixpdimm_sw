@@ -294,7 +294,7 @@ int get_test_result_count(enum driver_diagnostic diagnostic);
 int run_test(enum driver_diagnostic diagnostic, const NVM_UINT32 count,
 		struct health_event results[]);
 
-
+int reenumerate_namespaces(NVM_NFIT_DEVICE_HANDLE device_handle);
 
 #ifdef __cplusplus
 }

@@ -516,3 +516,12 @@ int run_test(enum driver_diagnostic diagnostic, const NVM_UINT32 count,
 
 	return rc;
 }
+
+int reenumerate_namespaces(NVM_NFIT_DEVICE_HANDLE device_handle)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_ERR_NOTSUPPORTED;
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
