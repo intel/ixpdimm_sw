@@ -39,6 +39,10 @@
 #include <libinvm-cli/Framework.h>
 #include <lib_interface/NvmContext.h>
 
+#ifdef BUILD_STATIC
+#include <features/core/NvmCliCore.h>
+#endif
+
 #ifdef _INTEL_I18N_
 #include <libIntel_i18n.h>
 #endif
@@ -123,13 +127,17 @@ int main(int argc, char * argv[])
 
 	int rc = 0;
 
-	// use shared libraries to register feature sets
-	if (!(handle = registerLib())) // ixpdimm-cli are required .. if they don't load fail
-	{
-		std::cout << "Couldn't load features" << std::endl;
-	}
+	#ifdef BUILD_STATIC
+		registerFeatures();
+	#else
+		// use shared libraries to register feature sets
+		if (!(handle = registerLib())) // ixpdimm-cli are required .. if they don't load fail
+		{
+			std::cout << "Couldn't load features" << std::endl;
+		}
+	#endif
 	// make sure we can get a connection to the db
-	else if (!open_default_lib_store())
+	if (!open_default_lib_store())
 	{
 		std::cout << "Couldn't connect to configuration database" << std::endl;
 		unregisterLib(handle);
@@ -177,8 +185,12 @@ int main(int argc, char * argv[])
 		// delete the context
 		wbem::lib_interface::freeNvmContext();
 
-		// unregister features
-		unregisterLib(handle);
+		#ifdef BUILD_STATIC
+			unRegisterFeatures();
+		#else
+			// unregister features
+			unregisterLib(handle);
+		#endif
 
 		// close the connection to the db for this process
 		close_lib_store();

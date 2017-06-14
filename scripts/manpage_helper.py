@@ -18,7 +18,7 @@ cliName = "ixpdimm-cli"
 fullProductName = "Intel(R) DIMM"
 abbrProductName = "DIMM"
 serviceName = "ixpdimm-monitor"
-dataPath = "/usr/share/nvdimm-mgmt"
+dataPath = "/usr/share/ixpdimm_sw"
 installPath = "/var/run"
 outputPath = "../output/build/linux/real/debug"
 

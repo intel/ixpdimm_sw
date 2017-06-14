@@ -57,6 +57,8 @@ pthread_mutex_t g_context_lock;
 int nvm_open_lib();
 int nvm_close_lib();
 
+#ifndef BUILD_STATIC
+
 #ifdef __WINDOWS__
 /*
  * Windows API call that deals with DLL administrative tasks.
@@ -112,6 +114,7 @@ void lib_unload()
 	// assert if the library fails while unloading
 	assert(nvm_close_lib() == NVM_SUCCESS);
 }
+#endif
 #endif
 
 /*
