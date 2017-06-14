@@ -97,6 +97,7 @@ void fwcmd_print_command_names()
 	printf("\tset_alarm_threshold\n");
 	printf("\tsystem_time\n");
 	printf("\tplatform_config_data_configuration_header_table\n");
+	printf("\tnamespace_labels\n");
 	printf("\tdimm_partition_info\n");
 	printf("\tfw_debug_log_level\n");
 	printf("\tfw_load_flag\n");
@@ -126,6 +127,7 @@ void fwcmd_print_output_command_names()
 	printf("\tpmon_registers\n");
 	printf("\tsystem_time\n");
 	printf("\tplatform_config_data_configuration_header_table\n");
+	printf("\tnamespace_labels\n");
 	printf("\tdimm_partition_info\n");
 	printf("\tfw_debug_log_level\n");
 	printf("\tfw_load_flag\n");
@@ -575,6 +577,77 @@ void fwcmd_platform_config_data_configuration_header_table_printer(const struct 
 	fwcmd_platform_config_data_current_config_table_printer(&p_value->platform_config_data_current_config_table, indent_count + 1);
 	fwcmd_platform_config_data_config_input_table_printer(&p_value->platform_config_data_config_input_table, indent_count + 1);
 	fwcmd_platform_config_data_config_output_table_printer(&p_value->platform_config_data_config_output_table, indent_count + 1);
+}
+
+void fwcmd_ns_index_printer(const struct fwcmd_ns_index_data *p_value, int indent_count)
+{
+	print_tabs(indent_count);
+	printf("NsIndex:\n");
+	print_tabs(indent_count + 1);
+	printf("Signature: %.16s\n", p_value->signature);
+	print_tabs(indent_count + 1);
+	printf("Flags: 0x%x\n", p_value->flags);
+	print_tabs(indent_count + 1);
+	printf("Sequence: 0x%x\n", p_value->sequence);
+	print_tabs(indent_count + 1);
+	printf("MyOffset: 0x%llx\n", p_value->my_offset);
+	print_tabs(indent_count + 1);
+	printf("MySize: 0x%llx\n", p_value->my_size);
+	print_tabs(indent_count + 1);
+	printf("OtherOffset: 0x%llx\n", p_value->other_offset);
+	print_tabs(indent_count + 1);
+	printf("LabelOffset: 0x%llx\n", p_value->label_offset);
+	print_tabs(indent_count + 1);
+	printf("Nlabel: 0x%x\n", p_value->nlabel);
+	print_tabs(indent_count + 1);
+	printf("LabelMajorVersion: 0x%x\n", p_value->label_major_version);
+	print_tabs(indent_count + 1);
+	printf("LabelMinorVersion: 0x%x\n", p_value->label_minor_version);
+	print_tabs(indent_count + 1);
+	printf("Checksum: 0x%llx\n", p_value->checksum);
+}
+
+void fwcmd_ns_label_printer(const struct fwcmd_ns_label_data *p_value, int indent_count)
+{
+	print_tabs(indent_count);
+	printf("NsLabel:\n");
+	print_tabs(indent_count + 1);
+	printf("Uuid: %.16s\n", p_value->uuid);
+	print_tabs(indent_count + 1);
+	printf("Name: %.64s\n", p_value->name);
+	print_tabs(indent_count + 1);
+	printf("Flags: 0x%x\n", p_value->flags);
+	print_tabs(indent_count + 1);
+	printf("Nlabel: 0x%x\n", p_value->nlabel);
+	print_tabs(indent_count + 1);
+	printf("Position: 0x%x\n", p_value->position);
+	print_tabs(indent_count + 1);
+	printf("IsetCookie: 0x%llx\n", p_value->iset_cookie);
+	print_tabs(indent_count + 1);
+	printf("LbaSize: 0x%llx\n", p_value->lba_size);
+	print_tabs(indent_count + 1);
+	printf("Dpa: 0x%llx\n", p_value->dpa);
+	print_tabs(indent_count + 1);
+	printf("Rawsize: 0x%llx\n", p_value->rawsize);
+	print_tabs(indent_count + 1);
+	printf("Slot: 0x%x\n", p_value->slot);
+	print_tabs(indent_count + 1);
+	printf("Unused: 0x%x\n", p_value->unused);
+}
+
+void fwcmd_namespace_labels_printer(const struct fwcmd_namespace_labels_data *p_value, int indent_count)
+{
+	print_tabs(indent_count);
+	printf("NamespaceLabels:\n");
+	print_tabs(indent_count + 1);
+	fwcmd_ns_index_printer(&p_value->index1, indent_count + 1);
+	print_tabs(indent_count + 1);
+	fwcmd_ns_index_printer(&p_value->index2, indent_count + 1);
+	print_tabs(indent_count + 1);
+	for (int i = 0; i < 1020; i++)
+	{
+		fwcmd_ns_label_printer(&p_value->labels[i], indent_count + 1);
+	}
 }
 
 void fwcmd_dimm_partition_info_printer(const struct fwcmd_dimm_partition_info_data *p_value, int indent_count)

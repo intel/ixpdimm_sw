@@ -852,6 +852,80 @@ void fwcmd_free_platform_config_data_configuration_header_table(struct fwcmd_pla
 }
 /* END platform_config_data_configuration_header_table */
 
+/* BEGIN namespace_labels */
+struct fwcmd_namespace_labels_result fwcmd_alloc_namespace_labels(unsigned int handle,
+	const unsigned char partition_id,
+	const unsigned char command_option,
+	const unsigned int offset)
+{
+	struct fwcmd_namespace_labels_result result;
+	memset(&result, 0, sizeof (struct fwcmd_namespace_labels_result));
+
+	struct pt_input_namespace_labels input_payload;
+	input_payload.partition_id = partition_id;
+	input_payload.command_option = command_option;
+	input_payload.offset = offset;
+	struct pt_output_namespace_labels output_payload;
+	unsigned int rc = fis_namespace_labels(handle,
+		&input_payload,
+		&output_payload);
+
+	if (PT_IS_SUCCESS(rc))
+	{
+		result.p_data = (struct fwcmd_namespace_labels_data *)malloc(sizeof(*result.p_data));
+		if (result.p_data)
+		{
+			rc = fis_parse_namespace_labels(&output_payload, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(rc))
+			{
+				result.success = 1;
+			}
+			else
+			{
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = rc;
+			}
+		}
+		else
+		{
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
+		}
+	}
+	else
+	{
+		result.error_code.type = FWCMD_ERROR_TYPE_PT;
+        result.error_code.code = rc;
+	}
+	return result;
+}
+void fwcmd_free_ns_index_data(struct fwcmd_ns_index_data *p_data)
+{
+	if (p_data)
+	{
+	}
+}
+
+void fwcmd_free_ns_label_data(struct fwcmd_ns_label_data *p_data)
+{
+	if (p_data)
+	{
+	}
+}
+
+void fwcmd_free_namespace_labels_data(struct fwcmd_namespace_labels_data *p_data)
+{
+	if (p_data)
+	{
+	}
+}
+
+void fwcmd_free_namespace_labels(struct fwcmd_namespace_labels_result *p_result)
+{
+	fwcmd_free_namespace_labels_data(p_result->p_data);
+	free(p_result->p_data);
+}
+/* END namespace_labels */
+
 /* BEGIN dimm_partition_info */
 struct fwcmd_dimm_partition_info_result fwcmd_alloc_dimm_partition_info(unsigned int handle)
 {
@@ -1563,6 +1637,10 @@ int fwcmd_is_command_name(const char * cmd_name)
 	{
 		exists = 1;
 	}
+	if (s_strncmpi(cmd_name, "namespace_labels", sizeof ("namespace_labels")) == 0)
+	{
+		exists = 1;
+	}
 	if (s_strncmpi(cmd_name, "dimm_partition_info", sizeof ("dimm_partition_info")) == 0)
 	{
 		exists = 1;
@@ -1659,6 +1737,10 @@ int fwcmd_is_output_command_name(const char * cmd_name)
 		exists = 1;
 	}
 	if (s_strncmpi(cmd_name, "platform_config_data_configuration_header_table", sizeof ("platform_config_data_configuration_header_table")) == 0)
+	{
+		exists = 1;
+	}
+	if (s_strncmpi(cmd_name, "namespace_labels", sizeof ("namespace_labels")) == 0)
 	{
 		exists = 1;
 	}

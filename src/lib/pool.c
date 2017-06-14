@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 2016, Intel Corporation
+ * Copyright (c) 2015 2017, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -45,57 +45,31 @@
 #include "capabilities.h"
 #include "nvm_context.h"
 #include "system.h"
+#include "nfit_utilities.h"
+#include "namespace_utils.h"
 
+// defined in device.c
+extern int get_device_status_by_handle(NVM_NFIT_DEVICE_HANDLE dimm_handle,
+		struct device_status *p_status, struct nvm_capabilities *p_capabilities);
+
+#define	MAX_POOLS	9
 /*
- * Use the device handles in struct nvm_pool to get uids for struct pool
+ * Data required to create pools
  */
-int fill_in_device_uids(struct pool *p_pool, struct nvm_pool *p_nvm_pool)
+struct pool_data
 {
-	int rc = NVM_SUCCESS;
-	int tmp_rc = NVM_SUCCESS;
-
-	for (int i = 0; i < p_pool->dimm_count; i++)
-	{
-		struct device_discovery discovery;
-		tmp_rc = lookup_dev_handle(p_nvm_pool->dimms[i], &discovery);
-		if (tmp_rc != NVM_SUCCESS)
-		{
-			COMMON_LOG_ERROR_F(
-				"Failed to find the device from the device handle %u",
-				p_nvm_pool->dimms[i].handle);
-			rc = tmp_rc;
-			break; // don't continue on error
-		}
-		else
-		{
-			memmove(p_pool->dimms[i], discovery.uid, NVM_MAX_UID_LEN);
-		}
-	}
-
-	for (int i = 0; i < p_pool->ilset_count; i++)
-	{
-		for (int j = 0; j < p_pool->ilsets[i].dimm_count; j++)
-		{
-			struct device_discovery discovery;
-			tmp_rc = lookup_dev_handle(p_nvm_pool->ilsets[i].dimms[j], &discovery);
-			if (tmp_rc != NVM_SUCCESS)
-			{
-				COMMON_LOG_ERROR_F(
-					"Failed to find the device from the device handle %u",
-					p_nvm_pool->ilsets[i].dimms[j].handle);
-				rc = tmp_rc;
-				break; // don't continue on error
-			}
-			else
-			{
-				memmove(p_pool->ilsets[i].dimms[j],
-						discovery.uid, NVM_MAX_UID_LEN);
-			}
-		}
-	}
-
-	return rc;
-}
+	struct host host;
+	struct nvm_capabilities capabilities;
+	int dimm_count;
+	struct device_discovery *dimm_list;
+	struct device_capacities *dimm_capacities_list;
+	struct device_status *dimm_status_list;
+	struct config_goal *dimm_goal_list;
+	int iset_count;
+	struct nvm_interleave_set *iset_list;
+	int namespace_count;
+	struct nvm_namespace_details *namespace_list;
+};
 
 // Macro used in interleave calculations - hold onto more severe health
 #define	KEEP_INTERLEAVE_HEALTH(health, new_health)	\
@@ -106,209 +80,432 @@ int fill_in_device_uids(struct pool *p_pool, struct nvm_pool *p_nvm_pool)
 	} \
 }
 
-/*
- * Calculate the health of an interleave set based on DIMM info.
- * Assumes the underlying DIMMs have already been populated in the struct.
- */
-int calculate_interleave_health(struct interleave_set *p_interleave)
+// Macro used in interleave calculations - hold onto more severe health
+#define	KEEP_POOL_HEALTH(health, new_health)	\
+{ \
+	if ((new_health > health) || (health == POOL_HEALTH_NORMAL)) \
+	{ \
+		health = new_health; \
+	} \
+}
+
+int update_pool_security_from_iset(struct pool *p_pool,
+		const struct interleave_set *p_set,
+		const struct pool_data *p_pool_data)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
 
-	enum interleave_set_health health = INTERLEAVE_HEALTH_NORMAL;
-	for (int i = 0; i < p_interleave->dimm_count; i++)
+	// can an app direct ns be created on this iset
+	if (p_set->available_size >
+		p_pool_data->capabilities.sw_capabilities.min_namespace_size)
 	{
-		struct device_status status;
-		memset(&status, 0, sizeof (status));
-		rc = nvm_get_device_status(p_interleave->dimms[i], &status);
-		if (rc != NVM_SUCCESS)
+		if (p_set->encryption == NVM_ENCRYPTION_ON)
 		{
-			if (rc == NVM_ERR_BADDEVICE) // DIMM is gone
+			p_pool->encryption_enabled = 1;
+		}
+		if (p_set->erase_capable == 1)
+		{
+			p_pool->erase_capable = 1;
+		}
+
+		p_pool->encryption_capable = 1;
+		for (int dimm_pool_idx = 0; dimm_pool_idx < p_set->dimm_count &&
+				p_pool->encryption_capable; dimm_pool_idx++)
+		{
+			// find the dimm in the pool data
+			for (int dimm_data_idx = 0; dimm_data_idx < p_pool_data->dimm_count;
+					dimm_data_idx++)
 			{
-				health = INTERLEAVE_HEALTH_FAILED;
+				if (uid_cmp(p_pool->dimms[dimm_pool_idx],
+						p_pool_data->dimm_list[dimm_data_idx].uid))
+				{
+					if (!p_pool_data->dimm_list[dimm_data_idx].\
+							security_capabilities.passphrase_capable)
+					{
+						p_pool->encryption_capable = 0;
+					}
+					break;
+				}
+			}
+		}
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+int update_pool_security_from_dimm(struct pool *p_pool, const int pool_dimm_idx,
+		const struct pool_data *p_pool_data, const int data_idx)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	struct device_discovery dimm = p_pool_data->dimm_list[data_idx];
+
+	// can a storage ns be created on this dimm?
+	struct device_free_capacities free_caps;
+	memset(&free_caps, 0, sizeof (struct device_free_capacities));
+	get_dimm_free_capacities(
+			&p_pool_data->capabilities,
+			&dimm,
+			p_pool,
+			p_pool_data->namespace_list,
+			p_pool_data->namespace_count,
+			&p_pool_data->dimm_capacities_list[data_idx],
+			&free_caps);
+
+	if (free_caps.total_storage_capacity >
+			p_pool_data->capabilities.sw_capabilities.min_namespace_size)
+	{
+		if (device_is_encryption_enabled(dimm.lock_state))
+		{
+			p_pool->encryption_enabled = 1;
+		}
+		if (dimm.security_capabilities.passphrase_capable)
+		{
+			p_pool->encryption_capable = 1;
+		}
+		if (device_is_erase_capable(dimm.security_capabilities))
+		{
+			p_pool->erase_capable = 1;
+		}
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+/*
+ * Deallocate the memory in a pool_data structure
+ */
+void free_pool_data(struct pool_data *p_pool_data)
+{
+	COMMON_LOG_ENTRY();
+	if (p_pool_data)
+	{
+		if (p_pool_data->dimm_count)
+		{
+			if (p_pool_data->dimm_list)
+			{
+				free(p_pool_data->dimm_list);
+			}
+			if (p_pool_data->dimm_capacities_list)
+			{
+				free(p_pool_data->dimm_capacities_list);
+			}
+			if (p_pool_data->dimm_status_list)
+			{
+				free(p_pool_data->dimm_status_list);
+			}
+			if (p_pool_data->dimm_goal_list)
+			{
+				free(p_pool_data->dimm_goal_list);
+			}
+		}
+		if (p_pool_data->iset_count && p_pool_data->iset_list)
+		{
+				free(p_pool_data->iset_list);
+		}
+		if (p_pool_data->namespace_count && p_pool_data->namespace_list)
+		{
+				free(p_pool_data->namespace_list);
+		}
+		free(p_pool_data);
+	}
+	COMMON_LOG_EXIT();
+}
+
+/*
+ * Retrieve namespaces and store them in the pool data structure
+ */
+int collect_namespaces(struct pool_data **pp_pool_data)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+	// get namespaces
+	(*pp_pool_data)->namespace_count = get_namespace_count();
+	if ((*pp_pool_data)->namespace_count < 0)
+	{
+		rc = (*pp_pool_data)->namespace_count;
+	}
+	else if ((*pp_pool_data)->namespace_count > 0)
+	{
+		struct nvm_namespace_discovery namespaces[(*pp_pool_data)->namespace_count];
+		(*pp_pool_data)->namespace_count =
+				get_namespaces((*pp_pool_data)->namespace_count, namespaces);
+		if ((*pp_pool_data)->namespace_count < 0)
+		{
+			rc = (*pp_pool_data)->namespace_count;
+		}
+		else if ((*pp_pool_data)->namespace_count > 0)
+		{
+			(*pp_pool_data)->namespace_list = calloc((*pp_pool_data)->namespace_count,
+					sizeof (struct nvm_namespace_details));
+			if (!(*pp_pool_data)->namespace_list)
+			{
+				COMMON_LOG_ERROR("No memory to collect pool information");
+				rc = NVM_ERR_NOMEMORY;
 			}
 			else
 			{
-				health = INTERLEAVE_HEALTH_UNKNOWN;
-			}
-
-			NVM_UID uid_str;
-			uid_copy(p_interleave->dimms[i], uid_str);
-			COMMON_LOG_ERROR_F("couldn't get status of underlying DIMM %s",
-					uid_str);
-			break;
-		}
-
-		// Interleave health should correlate with underlying DIMM health
-		switch (status.health)
-		{
-		case DEVICE_HEALTH_NORMAL:
-			// Ignore
-			break;
-		case DEVICE_HEALTH_NONCRITICAL:
-		case DEVICE_HEALTH_CRITICAL:
-			KEEP_INTERLEAVE_HEALTH(health, INTERLEAVE_HEALTH_DEGRADED);
-			break;
-		case DEVICE_HEALTH_FATAL:
-			KEEP_INTERLEAVE_HEALTH(health, INTERLEAVE_HEALTH_FAILED);
-			break;
-		case DEVICE_HEALTH_UNKNOWN:
-		default:
-			KEEP_INTERLEAVE_HEALTH(health, INTERLEAVE_HEALTH_UNKNOWN);
-		}
-
-		// Check platform config info
-		if (status.config_status == CONFIG_STATUS_ERR_BROKEN_INTERLEAVE)
-		{
-			KEEP_INTERLEAVE_HEALTH(health, INTERLEAVE_HEALTH_FAILED);
-		}
-	}
-
-	p_interleave->health = health;
-
-	COMMON_LOG_EXIT_RETURN_I(rc);
-	return rc;
-}
-
-int calculate_all_interleave_health(struct pool *p_pool)
-{
-	COMMON_LOG_ENTRY();
-	int rc = NVM_SUCCESS;
-
-	for (int i = 0; i < p_pool->ilset_count; i++)
-	{
-		int tmp_rc = calculate_interleave_health(&(p_pool->ilsets[i]));
-		if (tmp_rc != NVM_SUCCESS)
-		{
-			COMMON_LOG_ERROR_F("couldn't calculate interleave health for set %u",
-					i);
-			rc = tmp_rc;
-		}
-	}
-
-	COMMON_LOG_EXIT_RETURN_I(rc);
-	return rc;
-}
-
-int calculate_pool_security(struct pool *p_pool)
-{
-	COMMON_LOG_ENTRY();
-	int rc = NVM_SUCCESS;
-
-	/*
-	 * EncryptionCapable is true if its possible to create a namespace that is wholly
-	 * contained on NVM-DIMMs that support encryption.
-	 * EncryptionEnabled is true if its possible to create a namespace that is wholly
-	 * contained on NVM-DIMMs that have encryption enabled.
-	 * EraseCapable is true if its possible to create namespace that would be
-	 * wholly contained on eraseable NVDIMMs.
-	 */
-
-	// check if a storage namespace can be created
-	NVM_BOOL create_storage_encryption_enabled_ns = 0;
-	NVM_BOOL create_storage_encryption_capable_ns = 0;
-	NVM_BOOL create_storage_erase_capable_ns = 0;
-	if (p_pool->type == POOL_TYPE_PERSISTENT)
-	{
-		struct nvm_capabilities nvm_caps;
-		rc = nvm_get_nvm_capabilities(&nvm_caps);
-		if (rc == NVM_SUCCESS)
-		{
-			for (int i = 0; i < p_pool->dimm_count; i++)
-			{
-				struct device_discovery discovery;
-				if ((nvm_get_device_discovery(
-					p_pool->dimms[i],
-					&discovery)) == NVM_SUCCESS)
+				for (int i = 0; i < (*pp_pool_data)->namespace_count; i++)
 				{
-					if ((p_pool->storage_capacities[i] >
-						nvm_caps.sw_capabilities.min_namespace_size))
+					rc = get_namespace_details(namespaces[i].namespace_uid,
+							&(*pp_pool_data)->namespace_list[i]);
+					if (rc != NVM_SUCCESS)
 					{
-						if (device_is_encryption_enabled(discovery.lock_state))
-						{
-							create_storage_encryption_enabled_ns = 1;
-						}
-						if (discovery.security_capabilities.passphrase_capable)
-						{
-							create_storage_encryption_capable_ns = 1;
-						}
-						if (device_is_erase_capable(discovery.security_capabilities))
-						{
-							create_storage_erase_capable_ns = 1;
-						}
+						break;
 					}
 				}
 			}
+		}
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+/*
+ * Retrieve interleave sets and store them in the pool data structure
+ */
+int collect_interleave_sets(struct pool_data **pp_pool_data)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+	(*pp_pool_data)->iset_count = get_interleave_set_count();
+	if ((*pp_pool_data)->iset_count < 0)
+	{
+		rc = (*pp_pool_data)->iset_count;
+		(*pp_pool_data)->iset_count = 0;
+	}
+	else if ((*pp_pool_data)->iset_count > 0)
+	{
+		(*pp_pool_data)->iset_list = calloc((*pp_pool_data)->iset_count,
+				sizeof (struct nvm_interleave_set));
+		if (!(*pp_pool_data)->iset_list)
+		{
+			COMMON_LOG_ERROR("No memory to collect pool information");
+			rc = NVM_ERR_NOMEMORY;
 		}
 		else
 		{
-			COMMON_LOG_ERROR("Failed to get capabilities.");
+			(*pp_pool_data)->iset_count = get_interleave_sets(
+					(*pp_pool_data)->iset_count, (*pp_pool_data)->iset_list);
+			if ((*pp_pool_data)->iset_count < 0)
+			{
+				rc = (*pp_pool_data)->iset_count;
+				(*pp_pool_data)->iset_count = 0;
+			}
 		}
 	}
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
 
-	// check if a app direct namespace can be created if storage ns can't be created
-	NVM_BOOL create_ad_encryption_enabled_ns = 0;
-	NVM_BOOL create_ad_encryption_capable_ns = 0;
-	NVM_BOOL create_ad_erase_capable_ns = 0;
-	if (!create_storage_encryption_enabled_ns)
+/*
+ * Retrieve config goal for each manageable DIMM in the pool data struct
+ * and store them.
+ */
+int collect_dimm_goals(struct pool_data **pp_pool_data)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+	if ((*pp_pool_data)->dimm_count > 0)
 	{
-		if ((p_pool->type == POOL_TYPE_PERSISTENT_MIRROR) ||
-			(p_pool->type == POOL_TYPE_PERSISTENT))
+		(*pp_pool_data)->dimm_goal_list = calloc(
+			(*pp_pool_data)->dimm_count, sizeof (struct config_goal));
+		if (!(*pp_pool_data)->dimm_goal_list)
 		{
-			enum encryption_status encryption_enabled;
-			enum encryption_status encryption_capable;
-			enum erase_capable_status erase_capable;
-			for (int i = 0; i < p_pool->ilset_count; i++)
+			COMMON_LOG_ERROR("No memory to collect pool information");
+			rc = NVM_ERR_NOMEMORY;
+		}
+		else
+		{
+			for (int i = 0; i < (*pp_pool_data)->dimm_count; i++)
 			{
-				rc = calculate_app_direct_interleave_security(p_pool->ilsets[i].driver_id,
-						&encryption_enabled, &erase_capable, &encryption_capable);
-				if (rc == NVM_SUCCESS)
-				{
-					if (encryption_capable == NVM_ENCRYPTION_ON)
-					{
-						create_ad_encryption_capable_ns = 1;
+				// ignore failures because not all dimms have goals
+				nvm_get_config_goal(
+					(*pp_pool_data)->dimm_list[i].uid,
+					&(*pp_pool_data)->dimm_goal_list[i]);
+			}
+		}
+	}
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
 
-						if (encryption_enabled == NVM_ENCRYPTION_ON)
-						{
-							create_ad_encryption_enabled_ns = 1;
-						}
-					}
-					if (erase_capable)
-					{
-						create_ad_erase_capable_ns = 1;
-					}
+/*
+ * Retrieve status for each manageable DIMM in the pool data struct
+ * and store them.
+ */
+int collect_dimm_statuses(struct pool_data **pp_pool_data)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+	if ((*pp_pool_data)->dimm_count > 0)
+	{
+		(*pp_pool_data)->dimm_status_list = calloc(
+			(*pp_pool_data)->dimm_count, sizeof (struct device_status));
+		if (!(*pp_pool_data)->dimm_status_list)
+		{
+			COMMON_LOG_ERROR("No memory to collect pool information");
+			rc = NVM_ERR_NOMEMORY;
+		}
+		else
+		{
+			for (int i = 0; i < (*pp_pool_data)->dimm_count; i++)
+			{
+				// ignore failures because not all status can be retrieved
+				get_device_status_by_handle(
+					(*pp_pool_data)->dimm_list[i].device_handle,
+					&(*pp_pool_data)->dimm_status_list[i],
+					&(*pp_pool_data)->capabilities);
+			}
+		}
+	}
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+/*
+ * Retrieve capacities for each manageable DIMM in the pool data struct
+ * and store them.
+ */
+int collect_dimm_capacities(struct pool_data **pp_pool_data)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+	if ((*pp_pool_data)->dimm_count > 0)
+	{
+		(*pp_pool_data)->dimm_capacities_list = calloc(
+			(*pp_pool_data)->dimm_count, sizeof (struct device_capacities));
+		if (!(*pp_pool_data)->dimm_capacities_list)
+		{
+			COMMON_LOG_ERROR("No memory to collect pool information");
+			rc = NVM_ERR_NOMEMORY;
+		}
+		else
+		{
+			for (int i = 0; i < (*pp_pool_data)->dimm_count; i++)
+			{
+				rc = get_dimm_capacities(&(*pp_pool_data)->dimm_list[i],
+						&(*pp_pool_data)->capabilities,
+						&(*pp_pool_data)->dimm_capacities_list[i]);
+				if (rc != NVM_SUCCESS)
+				{
+					break;
 				}
 			}
 		}
 	}
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
 
-	// if a storage or app direct namespace cannot be created, security attributes are on
-	if (create_storage_encryption_enabled_ns || create_ad_encryption_enabled_ns)
+/*
+ * Retrieve a list of manageable DIMMs and store them in the pool data struct
+ */
+int collect_manageable_dimms(struct pool_data **pp_pool_data)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+	(*pp_pool_data)->dimm_count = get_manageable_dimms(&(*pp_pool_data)->dimm_list);
+	if ((*pp_pool_data)->dimm_count < 0)
 	{
-		p_pool->encryption_enabled = 1;
+		rc = (*pp_pool_data)->dimm_count;
 	}
-	else
-	{
-		p_pool->encryption_enabled = 0;
-	}
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
 
-	if (create_storage_encryption_capable_ns || create_ad_encryption_capable_ns)
-	{
-		p_pool->encryption_capable = 1;
-	}
-	else
-	{
-		p_pool->encryption_capable = 0;
-	}
+/*
+ * Retrieve system capabilities and store them in the pool data structure
+ */
+int collect_capabilities(struct pool_data **pp_pool_data)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+	rc = nvm_get_nvm_capabilities(&(*pp_pool_data)->capabilities);
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
 
-	if (create_storage_erase_capable_ns || create_ad_erase_capable_ns)
-	{
-		p_pool->erase_capable = 1;
-	}
-	else
-	{
-		p_pool->erase_capable = 0;
+/*
+ * Retrieve host info and store them in the pool data struct
+ */
+int collect_host(struct pool_data **pp_pool_data)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+	rc = get_host(&(*pp_pool_data)->host);
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
 
+/*
+ * Gather all the required data to populate the pool information
+ */
+int collect_required_pool_data(struct pool_data **pp_pool_data,
+		const NVM_BOOL count_only)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+	*pp_pool_data = calloc(1, sizeof (struct pool_data));
+	if (!(*pp_pool_data))
+	{
+		COMMON_LOG_ERROR("No memory to collect pool information");
+		rc = NVM_ERR_NOMEMORY;
+	}
+	// get the manageable DIMMs
+	else if ((rc = collect_manageable_dimms(pp_pool_data)) != NVM_SUCCESS)
+	{
+		free_pool_data(*pp_pool_data);
+	}
+	// no reason to continue if no manageable DIMMs
+	else if ((*pp_pool_data)->dimm_count)
+	{
+		// get the system capabilities
+		if ((rc = collect_capabilities(pp_pool_data)) != NVM_SUCCESS)
+		{
+			free_pool_data(*pp_pool_data);
+		}
+		// get DIMM capacities for each manageable DIMM
+		else if ((rc = collect_dimm_capacities(pp_pool_data)) != NVM_SUCCESS)
+		{
+			free_pool_data(*pp_pool_data);
+		}
+		// get interleave sets
+		else if ((rc = collect_interleave_sets(pp_pool_data)) != NVM_SUCCESS)
+		{
+			free_pool_data(*pp_pool_data);
+		}
+
+
+		// this data is not needed when just counting pools
+		if (rc == NVM_SUCCESS && !count_only)
+		{
+			// get the host
+			if ((rc = collect_host(pp_pool_data)) != NVM_SUCCESS)
+			{
+				free_pool_data(*pp_pool_data);
+			}
+			// collect DIMM goals
+			else if ((rc = collect_dimm_goals(pp_pool_data)) != NVM_SUCCESS)
+			{
+				free_pool_data(*pp_pool_data);
+			}
+			// get DIMM status for each manageable DIMM
+			else if ((rc = collect_dimm_statuses(pp_pool_data)) != NVM_SUCCESS)
+			{
+				free_pool_data(*pp_pool_data);
+			}
+			// get namespaces
+			else if ((rc = collect_namespaces(pp_pool_data)) != NVM_SUCCESS)
+			{
+				free_pool_data(*pp_pool_data);
+			}
+		}
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -316,101 +513,545 @@ int calculate_pool_security(struct pool *p_pool)
 }
 
 /*
- * Helper function to convert an nvm_pool structure into a pool structure
+ * Retrieve the index of a pool from the pool list
  */
-int convert_nvm_pool_to_pool(struct nvm_pool *p_nvm_pool, struct pool *p_pool)
+int get_pool_index(const NVM_INT16 pool_socket_id,
+		const enum pool_type pool_type, const struct pool *p_pools,
+		const int count)
+{
+	COMMON_LOG_ENTRY();
+	int index = -1;
+	for (int i = 0; i < count; i++)
+	{
+		if (p_pools[i].socket_id == pool_socket_id &&
+			p_pools[i].type == pool_type)
+		{
+			index = i;
+			break;
+		}
+	}
+	COMMON_LOG_EXIT_RETURN_I(index);
+	return index;
+}
+
+/*
+ * Retrieve the index of a DIMM from a pool
+ */
+int get_dimm_index_from_pool(const NVM_UID dimm_uid, struct pool *p_pool)
+{
+	COMMON_LOG_ENTRY();
+	int index = -1;
+	for (int i = 0; i < p_pool->dimm_count; i++)
+	{
+		if (uid_cmp(p_pool->dimms[i], dimm_uid))
+		{
+			index = i;
+			break;
+		}
+	}
+	COMMON_LOG_EXIT_RETURN_I(index);
+	return index;
+}
+
+/*
+ * Add a DIMM to a pool
+ */
+void add_dimm_to_pool(const struct pool_data *p_pool_data,
+		int data_idx, struct pool *p_pool)
+{
+	COMMON_LOG_ENTRY();
+	int dimm_index = get_dimm_index_from_pool(
+			p_pool_data->dimm_list[data_idx].uid, p_pool);
+	if (dimm_index < 0)
+	{
+		// update the pool based on this new DIMM
+		struct device_discovery dimm = p_pool_data->dimm_list[data_idx];
+		struct device_capacities caps = p_pool_data->dimm_capacities_list[data_idx];
+		struct device_status status = p_pool_data->dimm_status_list[data_idx];
+		struct config_goal goal = p_pool_data->dimm_goal_list[data_idx];
+
+		struct device_free_capacities free_caps;
+		memset(&free_caps, 0, sizeof (struct device_free_capacities));
+		get_dimm_free_capacities(
+				&p_pool_data->capabilities,
+				&dimm,
+				p_pool,
+				p_pool_data->namespace_list,
+				p_pool_data->namespace_count,
+				&caps,
+				&free_caps);
+
+		dimm_index = p_pool->dimm_count;
+		uid_copy(dimm.uid, p_pool->dimms[p_pool->dimm_count]);
+		p_pool->raw_capacities[dimm_index] = caps.capacity;
+		if (p_pool->type == POOL_TYPE_VOLATILE)
+		{
+			p_pool->memory_capacities[dimm_index] = caps.memory_capacity;
+			p_pool->capacity += caps.memory_capacity;
+			p_pool->free_capacity += caps.memory_capacity;
+		}
+		else if (p_pool->type == POOL_TYPE_PERSISTENT)
+		{
+			if (p_pool_data->capabilities.nvm_features.storage_mode)
+			{
+				p_pool->storage_capacities[dimm_index] = caps.storage_capacity;
+			}
+			p_pool->capacity += caps.storage_capacity;
+			p_pool->free_capacity += free_caps.total_storage_capacity;
+		}
+		else if (p_pool->type == POOL_TYPE_PERSISTENT_MIRROR)
+		{
+			p_pool->capacity += caps.mirrored_app_direct_capacity;
+			p_pool->free_capacity += free_caps.app_direct_mirrored_capacity;
+		}
+
+		if (dimm.lock_state == LOCK_STATE_LOCKED ||
+			dimm.lock_state == LOCK_STATE_PASSPHRASE_LIMIT)
+		{
+			KEEP_POOL_HEALTH(p_pool->health, POOL_HEALTH_LOCKED);
+		}
+		if (goal.status == CONFIG_GOAL_STATUS_NEW)
+		{
+			KEEP_POOL_HEALTH(p_pool->health, POOL_HEALTH_PENDING);
+		}
+		if (status.health == DEVICE_HEALTH_UNKNOWN)
+		{
+			KEEP_POOL_HEALTH(p_pool->health, POOL_HEALTH_UNKNOWN);
+		}
+		else if (status.health != DEVICE_HEALTH_NORMAL ||
+				status.viral_state)
+		{
+			KEEP_POOL_HEALTH(p_pool->health, POOL_HEALTH_ERROR);
+		}
+		if ((status.config_status != CONFIG_STATUS_NOT_CONFIGURED) &&
+			(status.config_status != CONFIG_STATUS_VALID))
+		{
+			KEEP_POOL_HEALTH(p_pool->health, POOL_HEALTH_ERROR);
+		}
+		p_pool->dimm_count++;
+	}
+	COMMON_LOG_EXIT();
+}
+
+int get_dimm_index_from_handle(const struct pool_data *p_pool_data,
+	const NVM_UINT32 device_handle)
+{
+	COMMON_LOG_ENTRY();
+	int index = -1;
+	for (int i = 0; i < p_pool_data->dimm_count; i++)
+	{
+		if (p_pool_data->dimm_list[i].device_handle.handle == device_handle)
+		{
+			index = i;
+			break;
+		}
+	}
+	COMMON_LOG_EXIT_RETURN_I(index);
+	return index;
+}
+
+void calculate_iset_free_capacity(const struct pool_data *p_pool_data,
+		struct interleave_set *p_iset)
+{
+	p_iset->available_size = p_iset->size;
+	for (int i = 0; i < p_pool_data->namespace_count; i++)
+	{
+		struct nvm_namespace_details ns = p_pool_data->namespace_list[i];
+		if (ns.type == NAMESPACE_TYPE_APP_DIRECT &&
+			ns.namespace_creation_id.interleave_setid == p_iset->driver_id)
+		{
+			NVM_UINT64 ns_capacity = (ns.block_count * ns.block_size);
+			REDUCE_CAPACITY(p_iset->available_size, ns_capacity);
+		}
+	}
+}
+
+int nvm_interleave_to_interleave(
+		const struct pool_data *p_pool_data,
+		const struct nvm_interleave_set *p_nvm_iset,
+		struct interleave_set *p_iset)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
 
-	memmove(p_pool->pool_uid, p_nvm_pool->pool_uid, NVM_MAX_UID_LEN);
-	p_pool->type = p_nvm_pool->type;
-	p_pool->capacity = p_nvm_pool->capacity;
-	p_pool->free_capacity = p_nvm_pool->free_capacity;
-	p_pool->health = p_nvm_pool->health;
-	p_pool->socket_id = p_nvm_pool->socket_id;
-	p_pool->dimm_count = p_nvm_pool->dimm_count;
-	p_pool->ilset_count = p_nvm_pool->ilset_count;
-
-	for (int j = 0; j < p_pool->dimm_count; j++)
+	p_iset->driver_id = p_nvm_iset->id;
+	p_iset->size = p_nvm_iset->size;
+	calculate_iset_free_capacity(p_pool_data, p_iset);
+	p_iset->socket_id = p_nvm_iset->socket_id;
+	if (p_nvm_iset->dimm_count)
 	{
-		p_pool->memory_capacities[j] =
-				p_nvm_pool->memory_capacities[j];
-		p_pool->storage_capacities[j] =
-				p_nvm_pool->storage_capacities[j];
-		p_pool->raw_capacities[j] =
-				p_nvm_pool->raw_capacities[j];
+		p_iset->health = INTERLEAVE_HEALTH_NORMAL;
+		p_iset->encryption = NVM_ENCRYPTION_ON;
+		p_iset->erase_capable = 1;
+
+		for (int dimm_idx = 0; dimm_idx < p_nvm_iset->dimm_count; dimm_idx++)
+		{
+			NVM_BOOL iset_settings_filled = 0;
+			// find the dimm by the handle
+			for (int data_idx = 0; data_idx < p_pool_data->dimm_count; data_idx++)
+			{
+				if (p_nvm_iset->dimms[dimm_idx] ==
+						p_pool_data->dimm_list[data_idx].device_handle.handle)
+				{
+					uid_copy(p_pool_data->dimm_list[data_idx].uid, p_iset->dimms[dimm_idx]);
+					if (!p_pool_data->dimm_list[data_idx].\
+							security_capabilities.passphrase_capable)
+					{
+						p_iset->erase_capable = 0;
+						p_iset->encryption = NVM_ENCRYPTION_OFF;
+					}
+					else
+					{
+						if (!p_pool_data->dimm_list[data_idx].\
+								security_capabilities.erase_crypto_capable)
+						{
+							p_iset->erase_capable = 0;
+						}
+						if (!device_is_encryption_enabled(
+								p_pool_data->dimm_list[data_idx].lock_state))
+						{
+							p_iset->encryption = NVM_ENCRYPTION_OFF;
+						}
+					}
+
+					if (p_pool_data->dimm_status_list[data_idx].health ==
+						DEVICE_HEALTH_UNKNOWN)
+					{
+						KEEP_INTERLEAVE_HEALTH(p_iset->health, INTERLEAVE_HEALTH_UNKNOWN)
+					}
+					else if (p_pool_data->dimm_status_list[data_idx].health ==
+						DEVICE_HEALTH_FATAL)
+					{
+						KEEP_INTERLEAVE_HEALTH(p_iset->health, INTERLEAVE_HEALTH_FAILED)
+					}
+					else if (p_pool_data->dimm_status_list[data_idx].health !=
+							DEVICE_HEALTH_NORMAL)
+					{
+						KEEP_INTERLEAVE_HEALTH(p_iset->health, INTERLEAVE_HEALTH_DEGRADED)
+					}
+					// fill the interleave settings from pcd
+					if (!iset_settings_filled)
+					{
+						rc = fill_interleave_set_settings_and_id_from_dimm(
+							p_iset, p_pool_data->dimm_list[data_idx].device_handle,
+							p_nvm_iset->dimm_offsets[dimm_idx]);
+						if (rc == NVM_SUCCESS)
+						{
+							iset_settings_filled = 1;
+						}
+						else
+						{
+							rc = NVM_SUCCESS;
+							continue;
+						}
+					}
+					p_iset->dimm_count++;
+				}
+			}
+		}
+	}
+	if (p_iset->dimm_count != p_nvm_iset->dimm_count)
+	{
+		p_iset->health = INTERLEAVE_HEALTH_FAILED;
+		p_iset->encryption = NVM_ENCRYPTION_OFF;
+		p_iset->erase_capable = 0;
 	}
 
-	for (int j = 0; j < p_pool->ilset_count; j++)
-	{
-		p_pool->ilsets[j].size = p_nvm_pool->ilsets[j].size;
-		memmove(&(p_pool->ilsets[j].settings),
-			&(p_nvm_pool->ilsets[j].settings),
-			sizeof (struct interleave_format));
-		p_pool->ilsets[j].dimm_count = p_nvm_pool->ilsets[j].dimm_count;
-		p_pool->ilsets[j].set_index = p_nvm_pool->ilsets[j].set_index;
-		p_pool->ilsets[j].driver_id = p_nvm_pool->ilsets[j].driver_id;
-		p_pool->ilsets[j].mirrored = p_nvm_pool->ilsets[j].mirrored;
-		p_pool->ilsets[j].available_size = p_nvm_pool->ilsets[j].available_size;
-		p_pool->ilsets[j].socket_id = p_nvm_pool->ilsets[j].socket_id;
-	}
+#if 0
+	printf("p_iset->socket_id = 0x%x\n", p_iset->socket_id);
+	printf("p_iset->driver_id = 0x%x\n", p_iset->driver_id);
+	printf("p_iset->size = 0x%llx\n", p_iset->size);
+	printf("p_iset->available_size = 0x%llx\n", p_iset->available_size);
+	printf("p_iset->encryption = 0x%x\n", p_iset->encryption);
+	printf("p_iset->erase_capable = 0x%x\n", p_iset->erase_capable);
+	printf("p_iset->health = 0x%x\n", p_iset->health);
+	printf("p_iset->dimm_count = 0x%x\n", p_iset->dimm_count);
+	printf("p_iset->set_index = 0x%x\n", p_iset->set_index);
+	printf("p_iset->mirrored = 0x%x\n", p_iset->mirrored);
+	printf("p_iset->settings.ways = 0x%x\n", p_iset->settings.ways);
+	printf("p_iset->settings.channel = 0x%x\n", p_iset->settings.channel);
+	printf("p_iset->settings.imc = 0x%x\n", p_iset->settings.imc);
+#endif
 
-	rc = fill_in_device_uids(p_pool, p_nvm_pool);
-	if (rc != NVM_SUCCESS)
-	{
-		COMMON_LOG_ERROR("The device is not in the device table.");
-		rc = NVM_ERR_BADDEVICE;
-	}
-
-	KEEP_ERROR(rc, calculate_all_interleave_health(p_pool));
-	KEEP_ERROR(rc, calculate_pool_security(p_pool));
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
 
 /*
- * Helper function to retrieve the nvm_pool directly from the driver
+ * Add an interleave set to a pool
  */
-int get_nvm_pool(const NVM_UID pool_uid, struct nvm_pool *p_nvm_pool)
+int add_interleave_set_to_pool(const struct pool_data *p_pool_data,
+		struct pool *p_pool, struct nvm_interleave_set *p_iset)
 {
 	COMMON_LOG_ENTRY();
 
-	int rc = NVM_ERR_BADPOOL;
-	int pool_count = get_pool_count();
-	if (pool_count < 0)
+	// convert the NVM interleave and fill missing data
+	int rc = nvm_interleave_to_interleave(p_pool_data, p_iset,
+			&p_pool->ilsets[p_pool->ilset_count]);
+	if (rc == NVM_SUCCESS)
 	{
-		rc = pool_count;
-	}
-	else if (pool_count > 0)
-	{
-		struct nvm_pool nvm_pools[pool_count];
-		memset(nvm_pools, 0, sizeof (nvm_pools));
-		pool_count = get_pools(pool_count, nvm_pools);
-		if (pool_count < 0)
+		struct interleave_set set = p_pool->ilsets[p_pool->ilset_count];
+		p_pool->ilset_count++;
+		// update the pool based on the interleave set
+		for (int iset_dimm = 0; iset_dimm < set.dimm_count; iset_dimm++)
 		{
-			rc = pool_count;
-		}
-		else if (pool_count > 0)
-		{
-			rc = NVM_ERR_BADPOOL;
-			for (int i = 0; i < pool_count; i++)
+			for (int data_dimm = 0; data_dimm < p_pool_data->dimm_count; data_dimm++)
 			{
-				if (uid_cmp(nvm_pools[i].pool_uid, pool_uid))
+				if (uid_cmp(p_pool_data->dimm_list[data_dimm].uid, set.dimms[iset_dimm]))
 				{
-					rc = NVM_SUCCESS;
-					memmove(p_nvm_pool, &nvm_pools[i], sizeof (struct nvm_pool));
+					add_dimm_to_pool(p_pool_data, data_dimm, p_pool);
 					break;
 				}
-
 			}
 		}
+		if (set.health == INTERLEAVE_HEALTH_UNKNOWN)
+		{
+			KEEP_POOL_HEALTH(p_pool->health, POOL_HEALTH_UNKNOWN);
+		}
+		else if (set.health == INTERLEAVE_HEALTH_DEGRADED ||
+				set.health == INTERLEAVE_HEALTH_FAILED)
+		{
+			KEEP_POOL_HEALTH(p_pool->health, POOL_HEALTH_ERROR);
+		}
+		update_pool_security_from_iset(p_pool, &set, p_pool_data);
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
 
+/*
+ * Create pools from interleave sets
+ */
+int add_interleave_sets_to_pools(struct pool_data *p_pool_data,
+		struct pool *p_pools, const NVM_UINT8 count, int *p_pool_count)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	// create pools from interleave sets
+	for (int i = 0; i < p_pool_data->iset_count; i++)
+	{
+		enum pool_type pool_type = POOL_TYPE_PERSISTENT;
+		if (MIRRORED_INTERLEAVE(p_pool_data->iset_list[i].attributes))
+		{
+			pool_type = POOL_TYPE_PERSISTENT_MIRROR;
+		}
+		// if not already created, create a new pool
+		int pool_index = get_pool_index(p_pool_data->iset_list[i].socket_id,
+				pool_type, p_pools, *p_pool_count);
+		if (pool_index < 0)
+		{
+			if (*p_pool_count >= count)
+			{
+				rc = NVM_ERR_ARRAYTOOSMALL;
+			}
+			else
+			{
+				pool_index = *p_pool_count;
+				rc = init_pool(&p_pools[*p_pool_count], p_pool_data->host.name, pool_type,
+						p_pool_data->iset_list[i].socket_id);
+				if (rc != NVM_SUCCESS)
+				{
+					break;
+				}
+				(*p_pool_count)++;
+			}
+		}
+		// add this interleave set to the pool
+		if (pool_index >= 0)
+		{
+			rc = add_interleave_set_to_pool(p_pool_data, &p_pools[pool_index],
+				&p_pool_data->iset_list[i]);
+			if (rc != NVM_SUCCESS)
+			{
+				break;
+			}
+		}
+	}
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+int add_dimms_storage_capacity_to_pools(struct pool_data *p_pool_data,
+	struct pool *p_pools, const NVM_UINT8 count, int *p_pool_count)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+	for (int dimm_idx = 0; dimm_idx < p_pool_data->dimm_count; dimm_idx++)
+	{
+		struct device_discovery dimm = p_pool_data->dimm_list[dimm_idx];
+		struct device_capacities cap = p_pool_data->dimm_capacities_list[dimm_idx];
+		if (cap.storage_capacity)
+		{
+			int pool_index = get_pool_index(dimm.socket_id, POOL_TYPE_PERSISTENT,
+					p_pools, *p_pool_count);
+			if (pool_index < 0)
+			{
+				if (*p_pool_count >= count)
+				{
+					rc = NVM_ERR_ARRAYTOOSMALL;
+				}
+				else
+				{
+					pool_index = *p_pool_count;
+					rc = init_pool(&p_pools[pool_index], p_pool_data->host.name,
+							POOL_TYPE_PERSISTENT, dimm.socket_id);
+					if (rc != NVM_SUCCESS)
+					{
+						break;
+					}
+					(*p_pool_count)++;
+				}
+			}
+			if (pool_index >= 0)
+			{
+				add_dimm_to_pool(p_pool_data, dimm_idx, &p_pools[pool_index]);
+				update_pool_security_from_dimm(&p_pools[pool_index],
+						p_pools[pool_index].dimm_count-1, p_pool_data, dimm_idx);
+			}
+		}
+	}
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+int add_dimms_volatile_capacity_to_pools(struct pool_data *p_pool_data,
+	struct pool *p_pools, const NVM_UINT8 count, int *p_pool_count)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+	for (int dimm_idx = 0; dimm_idx < p_pool_data->dimm_count; dimm_idx++)
+	{
+		struct device_capacities cap = p_pool_data->dimm_capacities_list[dimm_idx];
+		if (cap.memory_capacity)
+		{
+			int pool_index = get_pool_index(-1, POOL_TYPE_VOLATILE, p_pools, *p_pool_count);
+			if (pool_index < 0)
+			{
+				if (*p_pool_count >= count)
+				{
+					rc = NVM_ERR_ARRAYTOOSMALL;
+					break; // only one volatile pool, so just exit on failure
+				}
+				pool_index = *p_pool_count;
+				rc = init_pool(&p_pools[pool_index], p_pool_data->host.name,
+						POOL_TYPE_VOLATILE, -1);
+				if (rc != NVM_SUCCESS)
+				{
+					break;
+				}
+				(*p_pool_count)++;
+			}
+			add_dimm_to_pool(p_pool_data, dimm_idx, &p_pools[pool_index]);
+		}
+	}
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+/*
+ * Given all the required data, populate the pool list
+ */
+int populate_pools(struct pool_data *p_pool_data,
+		struct pool *p_pools, const NVM_UINT8 count)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+	int pool_count = 0;
+
+	rc = add_dimms_volatile_capacity_to_pools(p_pool_data, p_pools, count, &pool_count);
+	if (rc == NVM_SUCCESS)
+	{
+		rc = pool_count;
+	}
+	if (rc >= 0 && p_pool_data->capabilities.nvm_features.app_direct_mode)
+	{
+		rc = add_interleave_sets_to_pools(p_pool_data, p_pools, count, &pool_count);
+		if (rc == NVM_SUCCESS)
+		{
+			rc = pool_count;
+		}
+	}
+	if (rc >= 0 && p_pool_data->capabilities.nvm_features.storage_mode)
+	{
+		rc = add_dimms_storage_capacity_to_pools(p_pool_data,
+				p_pools, count, &pool_count);
+		if (rc == NVM_SUCCESS)
+		{
+			rc = pool_count;
+		}
+	}
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+/*
+ * Count the pools in the system given a pool data struct
+ */
+int count_pools(struct pool_data *p_pool_data)
+{
+	COMMON_LOG_ENTRY();
+	int pool_count = 0;
+
+	struct pool *pools_list = calloc(MAX_POOLS, sizeof (struct pool));
+	if (pools_list)
+	{
+		for (int i = 0; i < p_pool_data->dimm_count; i++)
+		{
+			if (p_pool_data->dimm_capacities_list[i].memory_capacity)
+			{
+				int pool_index = get_pool_index(-1, POOL_TYPE_VOLATILE, pools_list, pool_count);
+				if (pool_index < 0)
+				{
+					pools_list[pool_count].socket_id = -1;
+					pools_list[pool_count].type = POOL_TYPE_VOLATILE;
+					pool_count++;
+				}
+			}
+			if (p_pool_data->capabilities.nvm_features.storage_mode &&
+					p_pool_data->dimm_capacities_list[i].storage_capacity)
+			{
+				int pool_index = get_pool_index(p_pool_data->dimm_list[i].socket_id,
+						POOL_TYPE_PERSISTENT, pools_list, pool_count);
+				if (pool_index < 0)
+				{
+					pools_list[pool_count].socket_id = p_pool_data->dimm_list[i].socket_id;
+					pools_list[pool_count].type = POOL_TYPE_PERSISTENT;
+					pool_count++;
+				}
+			}
+		}
+
+		// is pm pool on each socket
+		if (p_pool_data->capabilities.nvm_features.app_direct_mode)
+		{
+			for (int i = 0; i < p_pool_data->iset_count; i++)
+			{
+				enum pool_type pool_type = POOL_TYPE_PERSISTENT;
+				if (MIRRORED_INTERLEAVE(p_pool_data->iset_list[i].attributes))
+				{
+					pool_type = POOL_TYPE_PERSISTENT_MIRROR;
+				}
+				// if not already created, create a new pool
+				int pool_index = get_pool_index(p_pool_data->iset_list[i].socket_id,
+						pool_type, pools_list, pool_count);
+				if (pool_index < 0)
+				{
+					pools_list[pool_count].socket_id = p_pool_data->iset_list[i].socket_id;
+					pools_list[pool_count].type = pool_type;
+					pool_count++;
+				}
+			}
+		}
+
+		// clean up
+		free(pools_list);
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(pool_count);
+	return pool_count;
+}
 
 /*
  * Retrieve the number of configured pools of NVM-DIMM capacity in the host server.
@@ -432,9 +1073,19 @@ int nvm_get_pool_count()
 	{
 		COMMON_LOG_ERROR("Retrieving pools is not supported.");
 	}
+	else if ((rc = is_ars_in_progress()) != NVM_SUCCESS)
+	{
+		COMMON_LOG_ERROR("Retrieving pools is not supported when an ARS is in progress.");
+	}
 	else if ((rc = get_nvm_context_pool_count()) < 0)
 	{
-		rc = get_pool_count();
+		struct pool_data *p_pool_data = NULL;
+		rc = collect_required_pool_data(&p_pool_data, 1);
+		if (rc == NVM_SUCCESS && p_pool_data)
+		{
+			rc = count_pools(p_pool_data);
+			free_pool_data(p_pool_data);
+		}
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -472,53 +1123,24 @@ int nvm_get_pools(struct pool *p_pools, const NVM_UINT8 count)
 		COMMON_LOG_ERROR("Invalid parameter, count is 0");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
+	else if ((rc = is_ars_in_progress()) != NVM_SUCCESS)
+	{
+		COMMON_LOG_ERROR("Retrieving pools is not supported when an ARS is in progress.");
+	}
 	else if ((rc = get_nvm_context_pools(p_pools, count)) < 0 &&
 			rc != NVM_ERR_ARRAYTOOSMALL)
 	{
-		memset(p_pools, 0, (sizeof (struct pool) * count));
-
-		int pool_count = get_pool_count();
-		if (pool_count < 0)
+		struct pool_data *p_pool_data = NULL;
+		rc = collect_required_pool_data(&p_pool_data, 0);
+		if (rc == NVM_SUCCESS && p_pool_data)
 		{
-			rc = pool_count;
-		}
-		else
-		{
-			struct nvm_pool nvm_pools[pool_count];
-			pool_count = get_pools(pool_count, nvm_pools);
-			if (pool_count < 0)
+			rc = populate_pools(p_pool_data, p_pools, count);
+			// update the context
+			if (rc > 0)
 			{
-				rc = pool_count;
+				set_nvm_context_pools(p_pools, rc);
 			}
-			else
-			{
-				int copy_count = 0;
-				for (int i = 0; i < pool_count; i++)
-				{
-					// check array size
-					if (i >= count)
-					{
-						COMMON_LOG_ERROR("The provided array is too small.");
-						rc = NVM_ERR_ARRAYTOOSMALL;
-						break;
-					}
-					if ((rc = convert_nvm_pool_to_pool(&nvm_pools[i], &p_pools[i])) != NVM_SUCCESS)
-					{
-						break;
-					}
-					else
-					{
-						copy_count++;
-					}
-				}
-				if (rc == NVM_SUCCESS)
-				{
-					rc = copy_count;
-				}
-
-				// update the context
-				set_nvm_context_pools(p_pools, copy_count);
-			}
+			free_pool_data(p_pool_data);
 		}
 	}
 
@@ -556,15 +1178,47 @@ int nvm_get_pool(const NVM_UID pool_uid, struct pool *p_pool)
 		COMMON_LOG_ERROR("Invalid parameter, p_pool is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
+	else if ((rc = is_ars_in_progress()) != NVM_SUCCESS)
+	{
+		COMMON_LOG_ERROR("Retrieving pools is not supported when an ARS is in progress.");
+	}
 	else if ((rc = get_nvm_context_pool(pool_uid, p_pool)) != NVM_SUCCESS)
 	{
-		memset(p_pool, 0, sizeof (struct pool));
-
-		struct nvm_pool nvm_pool;
-		memset(&nvm_pool, 0, sizeof (nvm_pool));
-		if ((rc = get_nvm_pool(pool_uid, &nvm_pool)) == NVM_SUCCESS)
+		struct pool_data *p_pool_data = NULL;
+		rc = collect_required_pool_data(&p_pool_data, 0);
+		if (rc == NVM_SUCCESS && p_pool_data)
 		{
-			rc = convert_nvm_pool_to_pool(&nvm_pool, p_pool);
+			rc = count_pools(p_pool_data);
+			if (rc > 0)
+			{
+				int pool_count = rc;
+				struct pool *pools = (struct pool *)calloc(pool_count, sizeof (struct pool));
+				if (!pools)
+				{
+					COMMON_LOG_ERROR("Not enough memory to allocate pool list");
+					rc = NVM_ERR_NOMEMORY;
+				}
+				else
+				{
+					rc = populate_pools(p_pool_data, pools, pool_count);
+					if (rc > 0)
+					{
+						pool_count = rc;
+						rc = NVM_ERR_BADPOOL;
+						for (int i = 0; i < pool_count; i++)
+						{
+							if (uid_cmp(pools[i].pool_uid, pool_uid))
+							{
+								memmove(p_pool, &pools[i], sizeof (struct pool));
+								rc = NVM_SUCCESS;
+								break;
+							}
+						}
+					}
+					free(pools);
+				}
+			}
+			free_pool_data(p_pool_data);
 		}
 	}
 

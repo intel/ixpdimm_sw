@@ -28,6 +28,7 @@
 #include <uid/uid.h>
 #include "utility.h"
 #include "namespace_utils.h"
+#include "device_utilities.h"
 
 void adjust_namespace_block_count(NVM_UINT64 *p_block_count, const NVM_UINT16 block_size,
 			const NVM_UINT8 ways)
@@ -254,11 +255,11 @@ int select_largest_region(const struct device_free_capacities *p_free_capacities
 	const struct device_free_capacities *p_best_cap = NULL;
 	for (int i = 0; i < candidate_dimm_count; i++)
 	{
-		if (p_free_capacities[i].total_capacity >= minimum_ns_size)
+		if (p_free_capacities[i].total_storage_capacity >= minimum_ns_size)
 		{
 			if (!p_best_cap ||
-				is_capacity_larger(p_free_capacities[i].total_capacity,
-						p_best_cap->total_capacity,
+				is_capacity_larger(p_free_capacities[i].total_storage_capacity,
+						p_best_cap->total_storage_capacity,
 						p_free_capacities[i].storage_only_capacity,
 						p_best_cap->storage_only_capacity))
 			{
@@ -274,7 +275,7 @@ int select_largest_region(const struct device_free_capacities *p_free_capacities
 	else
 	{
 		*p_namespace_creation_id = p_best_cap->device_handle.handle;
-		set_block_count_in_settings(p_best_cap, 1, p_best_cap->total_capacity, 0,
+		set_block_count_in_settings(p_best_cap, 1, p_best_cap->total_storage_capacity, 0,
 			p_settings);
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -495,22 +496,22 @@ int select_smallest_combined_region(const struct device_free_capacities *p_free_
 		{
 			if (hi_ns_cap >= minimum_ns_size)
 			{
-				if (p_free_capacities[i].total_capacity >= hi_ns_cap)
+				if (p_free_capacities[i].total_storage_capacity >= hi_ns_cap)
 				{
 					if (!p_best_cap ||
-						p_free_capacities[i].total_capacity <
-						p_best_cap->total_capacity)
+						p_free_capacities[i].total_storage_capacity <
+						p_best_cap->total_storage_capacity)
 					{
 						p_best_cap = &p_free_capacities[i];
 						best_cap_is_hi = 1;
 					}
 				}
 				else if (!best_cap_is_hi && low_ns_cap >= minimum_ns_size &&
-					p_free_capacities[i].total_capacity >= low_ns_cap)
+					p_free_capacities[i].total_storage_capacity >= low_ns_cap)
 				{
 					if (!p_best_cap ||
-						p_free_capacities[i].total_capacity <
-						p_best_cap->total_capacity)
+						p_free_capacities[i].total_storage_capacity <
+						p_best_cap->total_storage_capacity)
 					{
 						p_best_cap = &p_free_capacities[i];
 					}
@@ -610,70 +611,44 @@ int select_smallest_matching_region(const struct pool *p_pool,
 	return rc;
 }
 
-NVM_UINT64 get_dimm_free_ad_byone_capacity(const struct pool *p_pool, const NVM_UID dimm)
-{
-	NVM_UINT64 capacity = 0;
-	for (int i = 0; i < p_pool->ilset_count; i++)
-	{
-		if ((p_pool->ilsets[i].settings.ways == INTERLEAVE_WAYS_1) &&
-			(is_uid_in_list(dimm, p_pool->ilsets[i].dimms, p_pool->ilsets[i].dimm_count)))
-		{
-			capacity += p_pool->ilsets[i].available_size;
-		}
-	}
-	return capacity;
-}
-
-NVM_UINT64 get_dimm_free_ad_capacity(const struct pool *p_pool, const NVM_UID dimm)
-{
-	NVM_UINT64 capacity = 0;
-	for (int i = 0; i < p_pool->ilset_count; i++)
-	{
-		if ((p_pool->ilsets[i].settings.ways != INTERLEAVE_WAYS_1) &&
-			(is_uid_in_list(dimm, p_pool->ilsets[i].dimms, p_pool->ilsets[i].dimm_count)))
-		{
-			capacity += p_pool->ilsets[i].available_size / p_pool->ilsets[i].dimm_count;
-		}
-	}
-	return capacity;
-}
-
-void get_free_capacities_for_devices(const struct pool *p_pool,
-		const struct device_discovery *p_discoveries,
-		const struct nvm_storage_capacities *p_capacities, NVM_UINT16 dimm_count,
-		struct device_free_capacities *p_free_capacities)
+int get_nvm_namespaces_details_alloc(struct nvm_namespace_details **pp_namespaces)
 {
 	COMMON_LOG_ENTRY();
-	struct device_free_capacities free_caps;
-	for (int i = 0; i < dimm_count; i++)
+	int rc = NVM_SUCCESS;
+
+	int ns_count = get_namespace_count();
+	if (ns_count > 0)
 	{
-		memset(&free_caps, 0, sizeof (free_caps));
-		free_caps.device_handle = p_discoveries[i].device_handle;
-		uid_copy(p_discoveries[i].uid, free_caps.uid);
-		for (int j = 0; j < dimm_count; j++)
+		struct nvm_namespace_discovery namespaces[ns_count];
+		memset(&namespaces, 0, sizeof (struct namespace_discovery) * ns_count);
+		if (get_namespaces(ns_count, namespaces) == ns_count)
 		{
-			if (p_capacities[j].device_handle.handle ==
-					p_discoveries[i].device_handle.handle)
+			*pp_namespaces = calloc(1, sizeof (struct nvm_namespace_details) * ns_count);
+			if (!(*pp_namespaces))
 			{
-				free_caps.app_direct_byone_capacity =
-					get_dimm_free_ad_byone_capacity(p_pool,
-									p_discoveries[i].uid);
-				free_caps.app_direct_interleaved_capacity =
-					get_dimm_free_ad_capacity(p_pool, p_discoveries[i].uid);
-				free_caps.total_capacity = p_capacities[j].free_storage_capacity;
-				if (p_capacities[j].free_storage_capacity >
-						free_caps.app_direct_byone_capacity +
-						free_caps.app_direct_interleaved_capacity)
+				COMMON_LOG_ERROR("Failed to allocate memory to gather namespaces");
+				rc = NVM_ERR_NOMEMORY;
+			}
+			for (int i = 0; i < ns_count; i++)
+			{
+				int tmp_rc = get_namespace_details(namespaces[i].namespace_uid,
+						&(*pp_namespaces)[i]);
+				if (tmp_rc != NVM_SUCCESS)
 				{
-					free_caps.storage_only_capacity =
-						p_capacities[j].free_storage_capacity -
-						free_caps.app_direct_byone_capacity -
-						free_caps.app_direct_interleaved_capacity;
+					COMMON_LOG_ERROR("Failed to retrieve current namespaces");
+					free(*pp_namespaces);
+					rc = tmp_rc;
+					break;
 				}
-				break;
 			}
 		}
-		memmove(&p_free_capacities[i], &free_caps, sizeof (free_caps));
 	}
-	COMMON_LOG_EXIT();
+
+	if (rc == NVM_SUCCESS)
+	{
+		rc = ns_count;
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
 }

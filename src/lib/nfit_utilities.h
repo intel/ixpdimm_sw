@@ -32,8 +32,8 @@
 #ifndef NFIT_UTILITIES_H
 #define	NFIT_UTILITIES_H
 
-#include <acpi/nfit.h>
-#include "nvm_types.h"
+#include <nfit.h>
+#include "nvm_management.h"
 #include "adapter_types.h"
 
 /*
@@ -45,5 +45,17 @@ int get_topology_count_from_nfit();
  * Get the DIMMs from the NFIT
  */
 int get_topology_from_nfit(const NVM_UINT8 count, struct nvm_topology *p_dimm_topo);
+
+/*
+ * Get the number of interleave sets from the NFIT
+ */
+int get_interleave_set_count_from_nfit();
+
+/*
+ * Get the interleave sets from the NFIT
+ */
+int get_interleave_sets_from_nfit(const NVM_UINT8 count,
+		struct nvm_interleave_set *p_interleaves);
+
 
 #endif /* NFIT_UTILITIES_H */

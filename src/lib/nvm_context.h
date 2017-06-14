@@ -33,6 +33,8 @@
 #define	_NVM_CONTEXT_H_
 
 #include "nvm_management.h"
+#include "adapter_types.h"
+#include <nfit_tables.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -73,6 +75,9 @@ struct nvm_context
 	struct pool *p_pools;
 	int namespace_count;
 	struct nvm_namespace_context *p_namespaces;
+	// avoid unnecessary calls to retrieve ACPI tables
+	int nfit_size;
+	struct parsed_nfit *p_nfit;
 };
 
 /*
@@ -122,6 +127,11 @@ int get_nvm_context_namespace_details(const NVM_UID namespace_uid,
 		struct namespace_details *p_namespace);
 int set_nvm_context_namespace_details(const NVM_UID namespace_uid,
 		const struct namespace_details *p_namespace);
+
+// NFIT
+int get_nvm_context_nfit_size();
+int get_nvm_context_nfit(int nfit_size, struct parsed_nfit *p_nfit);
+int set_nvm_context_nfit(int nfit_size, const struct parsed_nfit *p_nfit);
 
 #ifdef __cplusplus
 }

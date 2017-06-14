@@ -43,6 +43,13 @@ enum fis_parser_codes {{name|fw_cmd_parser}}(
 //- 	elif f.is_string
 	memmove(p_data->{{f.name}}, p_output_payload->{{f.name}}, {{f.byte_count}});
 	p_data->{{f.name}}[{{f.byte_count}}] = '\0';
+//-		elif f.is_struct
+	rc = {{f.struct_type|fw_cmd_parser}}(&p_output_payload->{{f.name}}, &p_data->{{f.name}});
+//-		elif f.is_struct_array
+	for (int i = 0; i < {{f.struct_array_count}} && PARSING_SUCCESS(rc); i++)
+	{
+		rc = {{f.struct_type|fw_cmd_parser}}(&p_output_payload->{{f.name}}[i], &p_data->{{f.name}}[i]);
+	}
 //- 	else
 	memmove(p_data->{{f.name}}, p_output_payload->{{f.name}}, {{f.byte_count}});
 //- 	endif
@@ -120,6 +127,7 @@ enum fis_parser_codes {{name|fw_cmd_parser}}(
 		p_data->{{r.name}}_count++;
 		current_offset += (i + 1) * sizeof(struct {{r.name|output_payload}});
 	}
+	
 //- endif
 //- endfor
 	return rc;

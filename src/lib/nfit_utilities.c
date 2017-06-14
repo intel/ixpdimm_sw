@@ -33,6 +33,126 @@
 #include "nfit_utilities.h"
 #include <persistence/logging.h>
 #include <string.h>
+#include "device_utilities.h"
+#include <uid/uid.h>
+#include "nvm_context.h"
+
+/*
+ * Convert NFIT library error the NVM library error
+ */
+int nfit_err_to_lib_err(const enum nfit_error err)
+{
+	int rc = NVM_SUCCESS;
+	switch (err)
+	{
+		case NFIT_SUCCESS:
+			rc = NVM_SUCCESS;
+			break;
+		case NFIT_ERR_TABLENOTFOUND:
+			COMMON_LOG_ERROR("The NFIT table was not found.");
+			rc = NVM_ERR_BADNFIT;
+			break;
+		case NFIT_ERR_CHECKSUMFAIL:
+			COMMON_LOG_ERROR("The NFIT table checksum failed.");
+			rc = NVM_ERR_BADNFIT;
+			break;
+		case NFIT_ERR_BADNFIT:
+			COMMON_LOG_ERROR("The NFIT table was corrupted.");
+			rc = NVM_ERR_BADNFIT;
+			break;
+		case NFIT_ERR_NOMEMORY:
+			COMMON_LOG_ERROR("No memory to retrieve the NFIT table.");
+			rc = NVM_ERR_NOMEMORY;
+			break;
+		case NFIT_ERR_BADINPUT:
+			COMMON_LOG_ERROR("Bad input to the NFIT library.");
+			rc = NVM_ERR_BADNFIT;
+			break;
+		default:
+			COMMON_LOG_ERROR("An unknown NFIT error occurred.");
+			rc = NVM_ERR_BADNFIT;
+			break;
+	}
+	return rc;
+}
+
+/*
+ * Retrieve the NFIT table from ACPI and parse it.
+ * The caller is responsible for freeing the parsed_nfit structure.
+ */
+int get_parsed_nfit(struct parsed_nfit **pp_parsed_nfit)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_ERR_BADNFIT;
+	int nfit_size = get_nvm_context_nfit_size();
+	if (nfit_size > 0)
+	{
+		*pp_parsed_nfit = calloc(1, nfit_size);
+		if (!(*pp_parsed_nfit))
+		{
+			COMMON_LOG_ERROR("Not enough memory to retrieve the NFIT");
+			rc = NVM_ERR_NOMEMORY;
+		}
+		else
+		{
+			rc = get_nvm_context_nfit(nfit_size, *pp_parsed_nfit);
+		}
+	}
+	else
+	{
+		nfit_size = nfit_get_parsed_nfit(pp_parsed_nfit);
+		if (nfit_size && *pp_parsed_nfit)
+		{
+			rc = set_nvm_context_nfit(nfit_size, *pp_parsed_nfit);
+		}
+		else
+		{
+			rc = nfit_err_to_lib_err(nfit_size);
+		}
+	}
+	return rc;
+}
+
+/*
+ * Convert NFIT dimm to NVM topology struct
+ */
+void nfit_dimm_to_nvm_topology(const struct nfit_dimm *p_nfit_dimm,
+		struct nvm_topology *p_dimm_topo)
+{
+	p_dimm_topo->device_handle.handle = p_nfit_dimm->handle;
+	p_dimm_topo->id = p_nfit_dimm->physical_id;
+	// swap bytes for JEDEC compatibility
+	memmove(&p_dimm_topo->serial_number, &p_nfit_dimm->serial_number,
+			sizeof (NVM_SERIAL_NUMBER));
+	swap_bytes((unsigned char *)&p_dimm_topo->vendor_id,
+			(unsigned char *)&p_nfit_dimm->vendor_id,
+			sizeof (p_dimm_topo->vendor_id));
+	swap_bytes((unsigned char *)&p_dimm_topo->device_id,
+			(unsigned char *)&p_nfit_dimm->device_id,
+			sizeof (p_nfit_dimm->device_id));
+	swap_bytes((unsigned char *)&p_dimm_topo->subsystem_vendor_id,
+			(unsigned char *)&p_nfit_dimm->subsystem_vendor_id,
+			sizeof (p_dimm_topo->subsystem_vendor_id));
+	swap_bytes((unsigned char *)&p_dimm_topo->subsystem_device_id,
+			(unsigned char *)&p_nfit_dimm->subsystem_device_id,
+			sizeof (p_dimm_topo->subsystem_device_id));
+	swap_bytes((unsigned char *)&p_dimm_topo->manufacturing_location,
+			(unsigned char *)&p_nfit_dimm->manufacturing_location,
+		sizeof (p_dimm_topo->manufacturing_location));
+	swap_bytes((unsigned char *)&p_dimm_topo->manufacturing_date,
+			(unsigned char *)&p_nfit_dimm->manufacturing_date,
+			sizeof (p_dimm_topo->manufacturing_date));
+	p_dimm_topo->revision_id = p_nfit_dimm->revision_id;
+	p_dimm_topo->subsystem_revision_id = p_nfit_dimm->subsystem_revision_id;
+	p_dimm_topo->manufacturing_info_valid = p_nfit_dimm->valid_fields;
+
+	for (int j = 0; j < NFIT_MAX_IFC_COUNT && j < NVM_MAX_IFCS_PER_DIMM; j++)
+	{
+		p_dimm_topo->fmt_interface_codes[j] = p_nfit_dimm->ifc[j];
+	}
+}
+
+
 
 /*
  * Get the number of DIMMs in the system's memory topology
@@ -41,14 +161,23 @@
 int get_topology_count_from_nfit()
 {
 	COMMON_LOG_ENTRY();
-	int topo_count = nfit_get_dimms(0, NULL);
-	if (topo_count < 0)
+	struct parsed_nfit *p_nfit = NULL;
+	int rc = get_parsed_nfit(&p_nfit);
+	if (rc == NVM_SUCCESS && p_nfit)
 	{
-		COMMON_LOG_ERROR("The NFIT could not be read");
-		topo_count = NVM_ERR_BADNFIT;
+		int topo_count = nfit_get_dimms_from_parsed_nfit(0, NULL, p_nfit);
+		if (topo_count < 0)
+		{
+			rc = nfit_err_to_lib_err(topo_count);
+		}
+		else
+		{
+			rc = topo_count;
+		}
+		free(p_nfit);
 	}
-	COMMON_LOG_EXIT_RETURN_I(topo_count);
-	return topo_count;
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
 }
 
 /*
@@ -57,68 +186,142 @@ int get_topology_count_from_nfit()
 int get_topology_from_nfit(const NVM_UINT8 count, struct nvm_topology *p_dimm_topo)
 {
 	COMMON_LOG_ENTRY();
-	int topo_count = 0;
+	int rc = 0;
 
-	if (p_dimm_topo == NULL || count == 0)
+	if (count == 0 || p_dimm_topo == NULL)
 	{
-		topo_count = NVM_ERR_INVALIDPARAMETER;
+		rc = NVM_ERR_INVALIDPARAMETER;
 	}
-	else if ((topo_count = get_topology_count_from_nfit()) > 0)
+	else
 	{
-		struct nfit_dimm nfit_dimms[topo_count];
-		memset(nfit_dimms, 0, sizeof (struct nfit_dimm) * topo_count);
-		topo_count = nfit_get_dimms(topo_count, nfit_dimms);
-		if (topo_count < 0)
+		struct parsed_nfit *p_nfit = NULL;
+		rc = get_parsed_nfit(&p_nfit);
+		if (rc == NVM_SUCCESS && p_nfit)
 		{
-			COMMON_LOG_ERROR("The NFIT could not be read");
-			topo_count = NVM_ERR_BADNFIT;
-		}
-		else if (count < topo_count)
-		{
-			COMMON_LOG_ERROR("Array is too small for all the dimms");
-			topo_count = NVM_ERR_ARRAYTOOSMALL;
-		}
-		else if (topo_count > 0)
-		{
-			// convert nfit dimm struct to topology struct
-			memset(p_dimm_topo, 0, sizeof (struct nvm_topology) * count);
-			for (int i = 0; i < topo_count; i++)
+			rc = get_topology_count_from_nfit();
+			if (rc > 0)
 			{
-				p_dimm_topo[i].device_handle.handle = nfit_dimms[i].handle;
-				p_dimm_topo[i].id = nfit_dimms[i].physical_id;
-				memmove(&p_dimm_topo[i].serial_number, &nfit_dimms[i].serial_number,
-						sizeof (NVM_SERIAL_NUMBER));
-				// swap bytes for JEDEC compatibility
-				swap_bytes((unsigned char *)&p_dimm_topo[i].vendor_id,
-						(unsigned char *)&nfit_dimms[i].vendor_id,
-						sizeof (p_dimm_topo[i].vendor_id));
-				swap_bytes((unsigned char *)&p_dimm_topo[i].device_id,
-						(unsigned char *)&nfit_dimms[i].device_id,
-						sizeof (nfit_dimms[i].device_id));
-				swap_bytes((unsigned char *)&p_dimm_topo[i].subsystem_vendor_id,
-						(unsigned char *)&nfit_dimms[i].subsystem_vendor_id,
-						sizeof (p_dimm_topo[i].subsystem_vendor_id));
-				swap_bytes((unsigned char *)&p_dimm_topo[i].subsystem_device_id,
-						(unsigned char *)&nfit_dimms[i].subsystem_device_id,
-						sizeof (p_dimm_topo[i].subsystem_device_id));
-				swap_bytes((unsigned char *)&p_dimm_topo[i].manufacturing_location,
-						(unsigned char *)&nfit_dimms[i].manufacturing_location,
-					sizeof (p_dimm_topo[i].manufacturing_location));
-				swap_bytes((unsigned char *)&p_dimm_topo[i].manufacturing_date,
-						(unsigned char *)&nfit_dimms[i].manufacturing_date,
-						sizeof (p_dimm_topo[i].manufacturing_date));
-				p_dimm_topo[i].revision_id = nfit_dimms[i].revision_id;
-				p_dimm_topo[i].subsystem_revision_id = nfit_dimms[i].subsystem_revision_id;
-				p_dimm_topo[i].manufacturing_info_valid = nfit_dimms[i].valid_fields;
-				p_dimm_topo[i].state_flags = nfit_dimms[i].state_flags;
-
-				for (int j = 0; j < NFIT_MAX_IFC_COUNT && j < NVM_MAX_IFCS_PER_DIMM; j++)
+				int topo_count = rc;
+				struct nfit_dimm nfit_dimms[topo_count];
+				memset(nfit_dimms, 0, sizeof (struct nfit_dimm) * topo_count);
+				topo_count = nfit_get_dimms_from_parsed_nfit(topo_count, nfit_dimms, p_nfit);
+				if (topo_count < 0)
 				{
-					p_dimm_topo[i].fmt_interface_codes[j] = nfit_dimms[i].ifc[j];
+					rc = nfit_err_to_lib_err(topo_count);
+				}
+				else if (count < topo_count)
+				{
+					COMMON_LOG_ERROR("Array is too small for all the dimms");
+					rc = NVM_ERR_ARRAYTOOSMALL;
+				}
+				else if (topo_count > 0)
+				{
+					rc = topo_count;
+					// convert nfit dimm struct to topology struct
+					memset(p_dimm_topo, 0, sizeof (struct nvm_topology) * count);
+					for (int i = 0; i < topo_count; i++)
+					{
+						nfit_dimm_to_nvm_topology(&nfit_dimms[i], &p_dimm_topo[i]);
+					}
 				}
 			}
+			free(p_nfit);
 		}
 	}
-	COMMON_LOG_EXIT_RETURN_I(topo_count);
-	return topo_count;
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+
+/*
+ * Get the number of interleave sets from the NFIT
+ */
+int get_interleave_set_count_from_nfit()
+{
+	COMMON_LOG_ENTRY();
+	struct parsed_nfit *p_nfit = NULL;
+	int rc = get_parsed_nfit(&p_nfit);
+	if (rc == NVM_SUCCESS && p_nfit)
+	{
+		int count = nfit_get_interleave_sets_from_parsed_nfit(0, NULL, p_nfit);
+		if (count < 0)
+		{
+			rc = nfit_err_to_lib_err(count);
+		}
+		else
+		{
+			rc = count;
+		}
+		free(p_nfit);
+	}
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+void nfit_iset_to_nvm_iset(const struct nfit_interleave_set *p_nfit_iset,
+		struct nvm_interleave_set *p_nvm_iset)
+{
+	p_nvm_iset->id = p_nfit_iset->id;
+	p_nvm_iset->socket_id = p_nfit_iset->proximity_domain;
+	p_nvm_iset->size = p_nfit_iset->size;
+	p_nvm_iset->attributes = p_nfit_iset->attributes;
+	p_nvm_iset->dimm_count = p_nfit_iset->dimm_count;
+	for (int i = 0; i < p_nvm_iset->dimm_count; i++)
+	{
+		p_nvm_iset->dimms[i] = p_nfit_iset->dimms[i];
+		p_nvm_iset->dimm_offsets[i] = p_nfit_iset->dimm_offsets[i];
+		p_nvm_iset->dimm_sizes[i] = p_nfit_iset->dimm_sizes[i];
+	}
+}
+
+/*
+ * Get the interleave sets from the NFIT
+ */
+int get_interleave_sets_from_nfit(const NVM_UINT8 count,
+		struct nvm_interleave_set *p_interleaves)
+{
+	COMMON_LOG_ENTRY();
+	int rc = 0;
+	if (count == 0 || p_interleaves == NULL)
+	{
+		rc = NVM_ERR_INVALIDPARAMETER;
+	}
+	else
+	{
+		struct parsed_nfit *p_nfit = NULL;
+		rc = get_parsed_nfit(&p_nfit);
+		if (rc == NVM_SUCCESS && p_nfit)
+		{
+			rc = get_interleave_set_count_from_nfit();
+			if (rc > 0)
+			{
+				int set_count = rc;
+				struct nfit_interleave_set nfit_isets[set_count];
+				set_count = nfit_get_interleave_sets_from_parsed_nfit(set_count,
+						nfit_isets, p_nfit);
+				if (set_count < 0)
+				{
+					rc = nfit_err_to_lib_err(set_count);
+				}
+				else if (count < set_count)
+				{
+					COMMON_LOG_ERROR("Array is too small for all the dimms");
+					rc = NVM_ERR_ARRAYTOOSMALL;
+				}
+				else if (set_count > 0)
+				{
+					rc = set_count;
+					// convert nfit dimm struct to topology struct
+					memset(p_interleaves, 0, sizeof (struct nvm_interleave_set) * count);
+					for (int i = 0; i < set_count; i++)
+					{
+						nfit_iset_to_nvm_iset(&nfit_isets[i], &p_interleaves[i]);
+					}
+				}
+			}
+			free(p_nfit);
+		}
+	}
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
 }

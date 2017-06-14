@@ -113,6 +113,12 @@ virtual enum return_code fwGetPayload_PlatformConfigDataConfigurationHeaderTable
 	const unsigned int offset,
     std::string &resultString);
 
+virtual enum return_code fwGetPayload_NamespaceLabels(unsigned int handle,
+	const unsigned char partition_id,
+	const unsigned char command_option,
+	const unsigned int offset,
+    std::string &resultString);
+
 virtual enum return_code fwGetPayload_DimmPartitionInfo(unsigned int handle,
     std::string &resultString);
 
@@ -203,6 +209,15 @@ virtual std::string fwPayloadToString_PlatformConfigDataConfigOutputTable(
 
 virtual std::string fwPayloadToString_PlatformConfigDataConfigurationHeaderTable(
     const struct fwcmd_platform_config_data_configuration_header_table_data *p_data);
+
+virtual std::string fwPayloadToString_NsIndex(
+    const struct fwcmd_ns_index_data *p_data);
+
+virtual std::string fwPayloadToString_NsLabel(
+    const struct fwcmd_ns_label_data *p_data);
+
+virtual std::string fwPayloadToString_NamespaceLabels(
+    const struct fwcmd_namespace_labels_data *p_data);
 
 virtual std::string fwPayloadToString_DimmPartitionInfo(
     const struct fwcmd_dimm_partition_info_data *p_data);

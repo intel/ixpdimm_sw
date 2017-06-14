@@ -571,6 +571,62 @@ struct fwcmd_platform_config_data_configuration_header_table_result fwcmd_alloc_
 
 void fwcmd_free_platform_config_data_configuration_header_table(struct fwcmd_platform_config_data_configuration_header_table_result *p_result);
 /*
+ * Data Structures for namespace_labels
+ */
+struct fwcmd_ns_index_data
+{
+	char signature[16];
+	unsigned int flags;
+	unsigned int sequence;
+	unsigned long long my_offset;
+	unsigned long long my_size;
+	unsigned long long other_offset;
+	unsigned long long label_offset;
+	unsigned int nlabel;
+	unsigned short label_major_version;
+	unsigned short label_minor_version;
+	unsigned long long checksum;
+
+};
+struct fwcmd_ns_label_data
+{
+	char uuid[16];
+	char name[64];
+	unsigned int flags;
+	unsigned short nlabel;
+	unsigned short position;
+	unsigned long long iset_cookie;
+	unsigned long long lba_size;
+	unsigned long long dpa;
+	unsigned long long rawsize;
+	unsigned int slot;
+	unsigned int unused;
+
+};
+struct fwcmd_namespace_labels_data
+{
+	struct fwcmd_ns_index_data index1;
+	struct fwcmd_ns_index_data index2;
+	struct fwcmd_ns_label_data labels[1020];
+
+};
+struct fwcmd_namespace_labels_result
+{
+	int success:1;
+	struct fwcmd_error_code error_code;
+	struct fwcmd_namespace_labels_data *p_data;
+};
+
+/*
+ * Firmware Command Function namespace_labels
+ */
+struct fwcmd_namespace_labels_result fwcmd_alloc_namespace_labels(unsigned int handle,
+	const unsigned char partition_id,
+	const unsigned char command_option,
+	const unsigned int offset);
+
+void fwcmd_free_namespace_labels(struct fwcmd_namespace_labels_result *p_result);
+/*
  * Data Structures for dimm_partition_info
  */
 struct fwcmd_dimm_partition_info_data

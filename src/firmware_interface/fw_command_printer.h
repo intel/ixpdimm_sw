@@ -72,6 +72,9 @@ void fwcmd_system_time_printer(const struct fwcmd_system_time_data *p_value,
 void fwcmd_platform_config_data_configuration_header_table_printer(const struct fwcmd_platform_config_data_configuration_header_table_data *p_value,
 	int );
 
+void fwcmd_namespace_labels_printer(const struct fwcmd_namespace_labels_data *p_value,
+	int );
+
 void fwcmd_dimm_partition_info_printer(const struct fwcmd_dimm_partition_info_data *p_value,
 	int );
 

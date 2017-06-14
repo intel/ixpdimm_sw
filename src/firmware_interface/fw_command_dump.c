@@ -109,6 +109,15 @@ int fwcmd_dump(const char *command_name, unsigned int handle, const char *filena
 			0,
 			filename);
 	}
+	else if (s_strncmpi(command_name, "namespace_labels",
+		sizeof ("namespace_labels")) == 0)
+	{
+		rc = fwcmd_dump_namespace_labels(handle,
+			2,
+			0,
+			0,
+			filename);
+	}
 	else if (s_strncmpi(command_name, "dimm_partition_info",
 		sizeof ("dimm_partition_info")) == 0)
 	{
@@ -199,6 +208,7 @@ int fwcmd_dump(const char *command_name, unsigned int handle, const char *filena
 		printf("\tpmon_registers\n");
 		printf("\tsystem_time\n");
 		printf("\tplatform_config_data_configuration_header_table\n");
+		printf("\tnamespace_labels\n");
 		printf("\tdimm_partition_info\n");
 		printf("\tfw_debug_log_level\n");
 		printf("\tfw_load_flag\n");
@@ -322,6 +332,14 @@ void fwcmd_read_and_print(const char *filename)
 
 				fis_parse_platform_config_data_configuration_header_table((struct pt_output_platform_config_data_configuration_header_table *)p_payload, &data);
 				fwcmd_platform_config_data_configuration_header_table_printer(&data, 0);
+            }
+            else if (s_strncmpi(command_name, "namespace_labels",
+            		sizeof ("namespace_labels")) == 0)
+            {
+            	struct fwcmd_namespace_labels_data data;
+
+				fis_parse_namespace_labels((struct pt_output_namespace_labels *)p_payload, &data);
+				fwcmd_namespace_labels_printer(&data, 0);
             }
             else if (s_strncmpi(command_name, "dimm_partition_info",
             		sizeof ("dimm_partition_info")) == 0)
@@ -1322,6 +1340,96 @@ struct fwcmd_platform_config_data_configuration_header_table_result fwcmd_read_p
 		{
 			result.p_data = (struct fwcmd_platform_config_data_configuration_header_table_data *)malloc(sizeof(*result.p_data));
 			int parse_result = fis_parse_platform_config_data_configuration_header_table((const struct pt_output_platform_config_data_configuration_header_table*) buffer, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(parse_result))
+			{
+				result.success = 1;
+			}
+			else
+			{
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = parse_result;
+			}
+		}
+		else
+		{
+			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
+		}
+	}
+	else
+	{
+		result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+		result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
+	}
+
+	return result;
+}
+int fwcmd_dump_namespace_labels(const int handle,
+	const unsigned char partition_id,
+	const unsigned char command_option,
+	const unsigned int offset,
+	const char * filename)
+{
+	FILE *pFile = fopen(filename, "wb");
+	int rc = 0;
+	if (pFile)
+	{
+		struct pt_output_namespace_labels output_payload;
+
+		struct pt_input_namespace_labels input_payload;
+		input_payload.partition_id = partition_id;
+		input_payload.command_option = command_option;
+		input_payload.offset = offset;
+		rc = fis_namespace_labels(handle,
+			&input_payload,
+			&output_payload);
+		if (rc == 0)
+		{
+			size_t bytes_written = 0;
+			char name[COMMAND_NAME_BUFFER_SIZE] = {0};
+			s_strcpy(name, "namespace_labels", COMMAND_NAME_BUFFER_SIZE);
+			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
+			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
+			{
+                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+			}
+			else
+			{
+				unsigned char *p_buffer = (unsigned char *) (&output_payload);
+				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
+				if (bytes_written != sizeof(output_payload))
+				{
+                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+				}
+			}
+			fclose(pFile);
+		}
+	}
+	else
+	{
+		rc = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
+	}
+
+	return rc;
+}
+
+struct fwcmd_namespace_labels_result fwcmd_read_namespace_labels(const char *filename)
+{
+	struct fwcmd_namespace_labels_result result = {0,};
+	FILE *pFile = fopen(filename, "rb");
+	if (pFile)
+	{
+		fseek(pFile, 0, SEEK_END);
+		long fsize = ftell(pFile);
+		rewind(pFile);
+		unsigned char buffer[fsize];
+		size_t bytes_read = fread(buffer, 1, fsize, pFile);
+		fclose(pFile);
+
+		if (bytes_read == fsize)
+		{
+			result.p_data = (struct fwcmd_namespace_labels_data *)malloc(sizeof(*result.p_data));
+			int parse_result = fis_parse_namespace_labels((const struct pt_output_namespace_labels*) buffer, result.p_data);
 			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;

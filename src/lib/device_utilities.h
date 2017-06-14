@@ -101,14 +101,14 @@ enum device_sanitize_status translate_to_sanitize_status(
  * Helper functions to determine sku violation
  */
 
-int check_sku_violation_for_memory_mode(struct device_discovery *p_discovery,
+int check_sku_violation_for_memory_mode(const struct device_discovery *p_discovery,
 		NVM_BOOL *p_sku_violation);
 
-int check_sku_violation_for_appdirect_mode(struct device_discovery *p_discovery,
+int check_sku_violation_for_appdirect_mode(const struct device_discovery *p_discovery,
 		NVM_BOOL *p_sku_violation);
 
-int get_app_direct_capacity_on_device(const NVM_NFIT_DEVICE_HANDLE device_handle,
-		NVM_UINT64 *app_direct_capacity_on_dimm);
+int get_app_direct_capacity_on_device(const struct device_discovery *p_discovery,
+		NVM_UINT64 *p_ad_capacity, NVM_UINT64 *p_mirrored_ad_capacity);
 /*
  * Derive DIMM manageability state from firmware
  */
@@ -191,7 +191,7 @@ enum memory_type get_memory_type_from_smbios_memory_type(const NVM_UINT8 smbios_
 enum device_form_factor get_device_form_factor_from_smbios_form_factor(
 		const NVM_UINT16 smbios_form_factor);
 
-int get_dimm_capacities(const NVM_NFIT_DEVICE_HANDLE device_handle,
+int get_dimm_capacities(const struct device_discovery *p_dimm,
 		const struct nvm_capabilities *p_capabilities,
 		struct device_capacities *p_capacities);
 
@@ -202,9 +202,17 @@ void add_ifcs_from_identify_dimm_to_device(struct device_discovery *p_device,
 		struct pt_payload_identify_dimm *p_id_dimm);
 
 /*
+ * Retrieve a list of manageable DIMM handles
+ * NOTE: The caller is responsible for freeing the list
+ */
+int get_manageable_dimms(struct device_discovery **pp_dimms);
+
+/*
  * Helper function to convert unsigned integer to bytes
  */
 void uint32_to_bytes(unsigned long val, unsigned char *arr, size_t len);
+
+int is_ars_in_progress();
 
 #ifdef __cplusplus
 }

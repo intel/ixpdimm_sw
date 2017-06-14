@@ -75,6 +75,8 @@ void fwcmd_run_system_time(unsigned int handle);
 
 void fwcmd_run_platform_config_data_configuration_header_table(unsigned int handle, const unsigned char partition_id, const unsigned char command_option, const unsigned int offset);
 
+void fwcmd_run_namespace_labels(unsigned int handle, const unsigned char partition_id, const unsigned char command_option, const unsigned int offset);
+
 void fwcmd_run_dimm_partition_info(unsigned int handle);
 
 void fwcmd_run_fw_debug_log_level(unsigned int handle, const unsigned char log_id);

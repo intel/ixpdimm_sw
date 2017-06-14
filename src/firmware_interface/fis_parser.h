@@ -86,6 +86,10 @@ enum fis_parser_codes fis_parse_platform_config_data_configuration_header_table(
 	const struct pt_output_platform_config_data_configuration_header_table *p_output_payload,
 	struct fwcmd_platform_config_data_configuration_header_table_data *p_data);
 
+enum fis_parser_codes fis_parse_namespace_labels(
+	const struct pt_output_namespace_labels *p_output_payload,
+	struct fwcmd_namespace_labels_data *p_data);
+
 enum fis_parser_codes fis_parse_dimm_partition_info(
 	const struct pt_output_dimm_partition_info *p_output_payload,
 	struct fwcmd_dimm_partition_info_data *p_data);

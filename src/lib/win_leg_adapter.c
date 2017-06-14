@@ -179,7 +179,6 @@ int win_leg_adp_get_vendor_driver_revision(NVM_VERSION version_str, const NVM_SI
 		}
 		else if (rc == NVM_ERR_DRIVERFAILED)
 		{
-			COMMON_LOG_ERROR("Failed to communicate with driver to get version");
 			rc = NVM_ERR_BADDRIVER;
 		}
 	}

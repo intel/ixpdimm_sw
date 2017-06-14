@@ -35,6 +35,7 @@
 #include "nfit_utilities.h"
 #include "smbios_utilities.h"
 #include "system.h"
+#include "nfit_utilities.h"
 #include "win_leg_adapter.h"
 #include "win_scm2_adapter.h"
 
@@ -183,41 +184,17 @@ int get_smbios_inventory(const NVM_UINT8 count, struct nvm_details *p_smbios_inv
 
 int get_interleave_set_count()
 {
-	int rc = NVM_ERR_UNKNOWN;
-	switch (get_driver_type())
-	{
-		case DRIVER_TYPE_UNKNOWN:
-			rc = NVM_ERR_BADDRIVER;
-			break;
-		case DRIVER_TYPE_LEGACY:
-			rc = win_leg_adp_get_interleave_set_count();
-			break;
-		case DRIVER_TYPE_SCM2:
-			COMMON_LOG_WARN_F("%s() not supported", __FUNCTION__);
-			rc = NVM_ERR_NOTSUPPORTED;
-			break;
-	}
-
+	COMMON_LOG_ENTRY();
+	int rc = get_interleave_set_count_from_nfit();
+	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
 
 int get_interleave_sets(const NVM_UINT32 count, struct nvm_interleave_set *p_interleaves)
 {
-	int rc = NVM_ERR_UNKNOWN;
-	switch (get_driver_type())
-	{
-		case DRIVER_TYPE_UNKNOWN:
-			rc = NVM_ERR_BADDRIVER;
-			break;
-		case DRIVER_TYPE_LEGACY:
-			rc = win_leg_adp_get_interleave_sets(count, p_interleaves);
-			break;
-		case DRIVER_TYPE_SCM2:
-			COMMON_LOG_WARN_F("%s() not supported", __FUNCTION__);
-			rc = NVM_ERR_NOTSUPPORTED;
-			break;
-	}
-
+	COMMON_LOG_ENTRY();
+	int rc = get_interleave_sets_from_nfit(count, p_interleaves);
+	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
 
@@ -233,8 +210,7 @@ int get_namespace_count()
 			rc = win_leg_adp_get_namespace_count();
 			break;
 		case DRIVER_TYPE_SCM2:
-			COMMON_LOG_WARN_F("%s() not supported", __FUNCTION__);
-			rc = NVM_ERR_NOTSUPPORTED;
+			rc = 0;
 			break;
 	}
 
@@ -254,8 +230,7 @@ int get_namespaces(const NVM_UINT32 count,
 			rc = win_leg_adp_get_namespaces(count, p_namespaces);
 			break;
 		case DRIVER_TYPE_SCM2:
-			COMMON_LOG_WARN_F("%s() not supported", __FUNCTION__);
-			rc = NVM_ERR_NOTSUPPORTED;
+			rc = 0;
 			break;
 	}
 
@@ -276,8 +251,7 @@ int get_namespace_details(
 			rc = win_leg_adp_get_namespace_details(namespace_uid, p_details);
 			break;
 		case DRIVER_TYPE_SCM2:
-			COMMON_LOG_WARN_F("%s() not supported", __FUNCTION__);
-			rc = NVM_ERR_NOTSUPPORTED;
+			rc = 0;
 			break;
 	}
 
@@ -381,27 +355,6 @@ int modify_namespace_enabled(const NVM_UID namespace_uid,
 			break;
 		case DRIVER_TYPE_LEGACY:
 			rc = win_leg_adp_modify_namespace_enabled(namespace_uid, enabled);
-			break;
-		case DRIVER_TYPE_SCM2:
-			COMMON_LOG_WARN_F("%s() not supported", __FUNCTION__);
-			rc = NVM_ERR_NOTSUPPORTED;
-			break;
-	}
-
-	return rc;
-}
-
-int get_dimm_storage_capacities(const NVM_UINT32 count,
-		struct nvm_storage_capacities *p_capacities)
-{
-	int rc = NVM_ERR_UNKNOWN;
-	switch (get_driver_type())
-	{
-		case DRIVER_TYPE_UNKNOWN:
-			rc = NVM_ERR_BADDRIVER;
-			break;
-		case DRIVER_TYPE_LEGACY:
-			rc = win_leg_adp_get_dimm_storage_capacities(count, p_capacities);
 			break;
 		case DRIVER_TYPE_SCM2:
 			COMMON_LOG_WARN_F("%s() not supported", __FUNCTION__);

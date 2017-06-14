@@ -1156,8 +1156,7 @@ int populate_manageable_device_details(const NVM_UID device_uid,
 
 	if (p_capabilities->nvm_features.get_device_capacity)
 	{
-		KEEP_ERROR(rc, get_dimm_capacities(p_details->discovery.device_handle,
-				p_capabilities,
+		KEEP_ERROR(rc, get_dimm_capacities(&p_details->discovery, p_capabilities,
 				&p_details->capacities));
 	}
 
@@ -1766,7 +1765,7 @@ int nvm_get_nvm_capacities(struct device_capacities *p_capacities)
 							if (devices[i].manageability == MANAGEMENT_VALIDCONFIG)
 							{
 								struct device_capacities dimm_capacities;
-								int temp_rc = get_dimm_capacities(devices[i].device_handle,
+								int temp_rc = get_dimm_capacities(&devices[i],
 										&capabilities, &dimm_capacities);
 								if (temp_rc == NVM_SUCCESS)
 								{

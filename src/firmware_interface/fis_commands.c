@@ -240,6 +240,20 @@ unsigned int fis_platform_config_data_configuration_header_table(const unsigned 
 	return pt_ioctl_cmd(&cmd);
 }
 
+unsigned int fis_namespace_labels(const unsigned int device_handle, struct pt_input_namespace_labels *p_input_payload, struct pt_output_namespace_labels *p_output_payload)
+{
+	struct pt_fw_cmd cmd;
+	memset(&cmd, 0, sizeof (struct pt_fw_cmd));
+	cmd.device_handle = device_handle;
+	cmd.opcode = 0x06;
+	cmd.sub_opcode = 0x01;
+	cmd.large_output_payload_size = sizeof (struct pt_output_namespace_labels);
+	cmd.large_output_payload = p_output_payload;
+	cmd.input_payload = p_input_payload;
+	cmd.input_payload_size = sizeof (struct pt_input_namespace_labels);
+	return pt_ioctl_cmd(&cmd);
+}
+
 unsigned int fis_dimm_partition_info(const unsigned int device_handle, struct pt_output_dimm_partition_info *p_output_payload)
 {
 	struct pt_fw_cmd cmd;
