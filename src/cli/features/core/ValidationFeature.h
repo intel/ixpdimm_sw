@@ -65,7 +65,6 @@ static std::string FATAL_MEDIA_ERROR_PROPERTYNAME = "FatalMediaError";
 // memory type to poison strings
 static std::string MEMORY_TYPE_STR_MEMORYMODE = "MemoryMode";
 static std::string MEMORY_TYPE_STR_APPDIRECT = "AppDirect";
-static std::string MEMORY_TYPE_STR_STORAGE = "Storage";
 static std::string MEMORY_TYPE_STR_PATROLSCRUB = "PatrolScrub";
 
 /*!
@@ -107,7 +106,7 @@ private:
 	 * member variables for storing parsed information
 	 */
 	std::string m_dimmUid;
-	std::string m_poisontype;
+	enum poison_memory_type m_poisontype;
 	NVM_UINT16 m_temperature;
 	NVM_UINT64 m_poison;
 	bool m_clearStateExists;
@@ -170,7 +169,7 @@ private:
 	void clear_injected_error(std::string &prefixMsg,
 			std::vector<std::string>::iterator iUid,
 			framework::SimpleListResult &listResult);
-	enum poison_memory_type get_poison_type_from_string(const std::string poisonmemorytype);
+	enum poison_memory_type get_poison_type_from_string(const std::string poisonmemorytype, bool &typeIsValid);
 };
 
 }

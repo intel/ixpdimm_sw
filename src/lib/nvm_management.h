@@ -330,10 +330,9 @@ enum error_type
  */
 enum poison_memory_type
 {
-	MEMORY_TYPE_MEMORYMODE = 0, // currently allocated in Memory mode
-	MEMORY_TYPE_APPDIRECT = 1, // currently allocated in AppDirect
-	MEMORY_TYPE_STORAGE = 2, // currently allocated in Storage mode
-	MEMORY_TYPE_PATROLSCRUB = 3, // simulating an error found during a patrol scrub operation
+	POISON_MEMORY_TYPE_MEMORYMODE = 1, // currently allocated in Memory mode
+	POISON_MEMORY_TYPE_APPDIRECT = 2, // currently allocated in AppDirect
+	POISON_MEMORY_TYPE_PATROLSCRUB = 4, // simulating an error found during a patrol scrub operation
 								// indifferent to how the memory is currently allocated
 };
 
