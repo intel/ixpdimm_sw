@@ -66,17 +66,9 @@ and the source can be found at
 
 https://github.com/pmem/ndctl
 
-libinvm-cim library is required, the source can be found at
+invm-frameworks library is required, the source can be found at
 
-https://github.com/01org/libinvm-cim
-
-libinvm-cli library is required, the source can be found at
-
-https://github.com/01org/libinvm-cli
-
-libinvm-i18n library is required, the source can be found at
-
-https://github.com/01org/libinvm-i18n
+https://github.com/01org/invm-frameworks
 
 All other dependencies are widely available. This includes openssl
 sqlite and zlib.

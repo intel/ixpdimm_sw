@@ -69,6 +69,12 @@ message(LIB_TYPE: ${LIB_TYPE})
 
 get_filename_component(ROOT ./ ABSOLUTE)
 
+set(FRAMEWORK_LIBS_DIR ${ROOT}/../external CACHE STRING "Path to the invm-framework libraries")
+message(WARNING ${FRAMEWORK_LIBS_DIR})
+find_library(invm-i18n NO_DEFAULT_PATH NAMES invm-i18n PATHS ${FRAMEWORK_LIBS_DIR})
+find_library(invm-cli NO_DEFAULT_PATH NAMES invm-cli PATHS ${FRAMEWORK_LIBS_DIR})
+find_library(invm-cim NO_DEFAULT_PATH NAMES invm-cim PATHS ${FRAMEWORK_LIBS_DIR})
+
 set(OUTPUT_DIR ${ROOT}/output/build/${OS_TYPE}/${ADAPTER_TYPE}/${BUILD_TYPE})
 
 set(CMAKE_BINARY_DIR ${OUTPUT_DIR})
@@ -78,6 +84,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 set(extern_dir ${ROOT}/external)
 
+include(cmakesetup.cmake)
 # --------------------------------------------------------------------------------------------------
 # DRIVER INTERFACE
 # --------------------------------------------------------------------------------------------------
@@ -119,18 +126,6 @@ target_link_libraries(firmware_interface driver_adapter)
 target_include_directories(firmware_interface PUBLIC
         ../
         ./
-        )
-
-#---------------------------------------------------------------------------------------------------
-# db_schema_gen library
-#---------------------------------------------------------------------------------------------------
-add_library(db_schema_gen
-        tools/db_schema_gen/Attribute.cpp
-        tools/db_schema_gen/CrudSchemaGenerator.cpp
-        tools/db_schema_gen/TemplateModifiers.cpp
-        )
-target_include_directories(db_schema_gen PUBLIC
-        external
         )
 
 #---------------------------------------------------------------------------------------------------
@@ -245,16 +240,7 @@ if (WIN_BUILD)
     	${extern_dir}/openssl/include
         ${extern_libs}/openssl
 		)        
-	target_link_libraries(
-		zlib
-		)
 endif ()
-
-if (LNX_BUILD)
-	target_link_libraries(
-		z
-		)
-endif()
 
 # --------------------------------------------------------------------------------------------------
 # Native Library
@@ -296,7 +282,7 @@ target_link_libraries(${API_LIB_NAME}
         sqlite3
         ssl
         crypto
-		libinvm-i18n
+		${invm-i18n}
         )
 
 if (WIN_BUILD)
@@ -426,7 +412,7 @@ target_include_directories(${CIM_LIB_NAME} PUBLIC
 target_link_libraries(${CIM_LIB_NAME}
         ${API_LIB_NAME}
         ${CORE_LIB_NAME}
-		libinvm-cim
+		${invm-cim}
         )
 if (LNX_BUILD)
   add_custom_command(TARGET ${CIM_LIB_NAME} POST_BUILD
@@ -462,13 +448,14 @@ target_include_directories(${CLI_LIB_SONAME} PUBLIC
         src/lib/
         src/wbem/
 		)
+message(WARNING ${invm-cli} ${invm-cim} ${invm-i18n})
 target_link_libraries(${CLI_LIB_SONAME}
         ${CORE_LIB_NAME}
         ${CIM_LIB_NAME}
         ${API_LIB_NAME}
-		libinvm-cli
-		libinvm-cim
-		libinvm-i18n
+		${invm-cli}
+		${invm-cim}
+		${invm-i18n}
         )
 
 # --------------------------------------------------------------------------------------------------
@@ -482,8 +469,8 @@ target_include_directories(${CLI_NAME} PUBLIC
 		${I18N_INCLUDE_DIR}
         )
 target_link_libraries(${CLI_NAME}
-        ${intel_i18n}
-        ${cli_framework}
+        ${invm-i18n}
+        ${invm-cli}
         ${CIM_LIB_NAME}
         ${CLI_LIB_SONAME}
         ${API_LIB_NAME}
