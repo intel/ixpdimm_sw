@@ -80,7 +80,7 @@ void cli::nvmcli::ValidationFeature::getPaths(cli::framework::CommandSpecList &l
 			"for keeping a list of injected poison errors in order to properly clear them after "
 			"testing is complete."));
 	injectError.addProperty(POISON_MEMORY_TYPE_PROPERTYNAME, false, "memory type", true,
-			TR("The type of memory to poison. One of PatrolScrub(Default), MemoryMode, AppDirect, Storage."
+			TR("The type of memory to poison. One of PatrolScrub(Default), MemoryMode, AppDirect."
 			"If the address to poison is not currently allocated as the specified "
 			"memory type, an error is occured"));
 	injectError.addProperty(DIE_SPARING_PROPERTYNAME, false, "1", true,
@@ -99,7 +99,7 @@ void cli::nvmcli::ValidationFeature::getPaths(cli::framework::CommandSpecList &l
 
 // Constructor, just calls super class
 cli::nvmcli::ValidationFeature::ValidationFeature() : cli::nvmcli::VerboseFeatureBase(),
-	m_dimmUid(""), m_poisontype(""), m_temperature(0), m_poison(0), m_clearStateExists(false),
+	m_dimmUid(""), m_poisontype(POISON_MEMORY_TYPE_PATROLSCRUB), m_temperature(0), m_poison(0), m_clearStateExists(false),
 	m_temperatureExists(false), m_poisonExists(false), m_poisonTypeExists(false), m_dieSparingExists(false),
 	m_spareAlarmExists(false), m_fatalMediaErrorExists(false)
 { }
@@ -132,12 +132,10 @@ void cli::nvmcli::ValidationFeature::inject_error(std::string &prefixMsg,
 {
 	if (m_poisonExists)
 	{
-		enum poison_memory_type type;
 		prefixMsg = framework::ResultBase::stringFromArgList(
 				SETPOISON_MSG_PREFIX.c_str(), m_poison, m_dimmUid.c_str());
 		prefixMsg += ": ";
-		type = get_poison_type_from_string(m_poisontype);
-		m_DimmProvider.injectPoisonError(*iUid, m_poison, type);
+		m_DimmProvider.injectPoisonError(*iUid, m_poison, m_poisontype);
 		listResult.insert(prefixMsg + cli::framework::SUCCESS_MSG);
 	}
 	else if (m_temperatureExists)
@@ -179,12 +177,10 @@ void cli::nvmcli::ValidationFeature::clear_injected_error(std::string &prefixMsg
 {
 	if (m_poisonExists)
 	{
-		enum poison_memory_type type;
 		prefixMsg = framework::ResultBase::stringFromArgList(
 				CLEARPOISON_MSG_PREFIX.c_str(), m_poison, m_dimmUid.c_str());
 		prefixMsg += ": ";
-		type = get_poison_type_from_string(m_poisontype);
-		m_DimmProvider.clearPoisonError(*iUid, m_poison, type);
+		m_DimmProvider.clearPoisonError(*iUid, m_poison, m_poisontype);
 		listResult.insert(prefixMsg + cli::framework::SUCCESS_MSG);
 	}
 	else if (m_temperatureExists)
@@ -361,11 +357,21 @@ cli::framework::ResultBase* cli::nvmcli::ValidationFeature::parsePoisonTypePrope
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	framework::ResultBase *pResult = NULL;
 
-	m_poisontype = framework::Parser::getPropertyValue(parsedCommand,
+	std::string poisonType = framework::Parser::getPropertyValue(parsedCommand,
 			POISON_MEMORY_TYPE_PROPERTYNAME, &m_poisonTypeExists);
-	if (m_poisonExists && !m_poisonTypeExists)
+	if (!m_poisonTypeExists)
 	{
-		m_poisontype = MEMORY_TYPE_STR_PATROLSCRUB;
+		m_poisontype = POISON_MEMORY_TYPE_PATROLSCRUB;
+	}
+	else
+	{
+		bool poisonTypeValid = false;
+		m_poisontype = get_poison_type_from_string(poisonType, poisonTypeValid);
+		if (!poisonTypeValid)
+		{
+			pResult = new framework::SyntaxErrorBadValueResult(framework::TOKENTYPE_PROPERTY,
+					POISON_MEMORY_TYPE_PROPERTYNAME, poisonType);
+		}
 	}
 
 	return pResult;
@@ -560,26 +566,25 @@ cli::framework::ResultBase* cli::nvmcli::ValidationFeature::verifySWTriggerPrope
 }
 
 enum poison_memory_type cli::nvmcli::ValidationFeature::get_poison_type_from_string(
-		const std::string poisonmemorytype)
+		const std::string poisonmemorytype, bool &typeIsValid)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	poison_memory_type type;
-
+	poison_memory_type type = POISON_MEMORY_TYPE_PATROLSCRUB;
+	typeIsValid = false;
 	if (framework::stringsIEqual(poisonmemorytype, MEMORY_TYPE_STR_MEMORYMODE))
 	{
-		type = MEMORY_TYPE_MEMORYMODE;
+		type = POISON_MEMORY_TYPE_MEMORYMODE;
+		typeIsValid = true;
 	}
 	else if (framework::stringsIEqual(poisonmemorytype, MEMORY_TYPE_STR_APPDIRECT))
 	{
-		type = MEMORY_TYPE_APPDIRECT;
+		type = POISON_MEMORY_TYPE_APPDIRECT;
+		typeIsValid = true;
 	}
-	else if (framework::stringsIEqual(poisonmemorytype, MEMORY_TYPE_STR_STORAGE))
+	else if (framework::stringsIEqual(poisonmemorytype, MEMORY_TYPE_STR_PATROLSCRUB))
 	{
-		type = MEMORY_TYPE_STORAGE;
-	}
-	else
-	{
-		type = MEMORY_TYPE_PATROLSCRUB;
+		type = POISON_MEMORY_TYPE_PATROLSCRUB;
+		typeIsValid = true;
 	}
 	return type;
 }
