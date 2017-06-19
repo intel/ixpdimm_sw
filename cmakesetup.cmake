@@ -27,11 +27,9 @@
 if (NOT BUILDNUM)
 	execute_process(COMMAND git describe --abbrev=0 OUTPUT_VARIABLE BUILDNUM)
 
-	message("Build Bumber ${BUILDNUM}")
-
 	if ("${BUILDNUM}" MATCHES "^([a-zA-Z-]*)(.*)$")
 		#replace 
-		string(REGEX REPLACE "^([a-zA-Z-]*)" "" BUILDNUM "${BUILDNUM}")
+		string(REGEX REPLACE "^([a-zA-Z-]+)" "" BUILDNUM "${BUILDNUM}")
 		string(REGEX REPLACE "\n$" "" BUILDNUM "${BUILDNUM}")
 	else ()
 		execute_process(COMMAND pwd OUTPUT_VARIABLE BUILDNUM)
