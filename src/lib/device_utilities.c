@@ -344,7 +344,7 @@ enum device_ars_status translate_to_ars_status(struct pt_payload_long_op_stat *p
 	if (((p_long_op_payload->command & 0x00FF) == PT_GET_LOG) &&
 			(((p_long_op_payload->command & 0xFF00) >> 8) == SUBOP_POLICY_ADDRESS_RANGE_SCRUB))
 	{
-		if ((ars_command_return_data->ars_state & (ARS_STATUS_ENDED_EARLY<<0)) == 0)
+		if (ars_command_return_data->ars_state == ARS_STATUS_NORMAL)
 		{
 			if (p_long_op_payload->percent_complete == 100)
 			{
@@ -355,9 +355,15 @@ enum device_ars_status translate_to_ars_status(struct pt_payload_long_op_stat *p
 				status = DEVICE_ARS_STATUS_INPROGRESS;
 			}
 		}
+		else if ((ars_command_return_data->ars_state  == ARS_STATUS_ENDED_EARLY) ||
+			(ars_command_return_data->ars_state  == ARS_STATUS_USER_REQUESTED_ABORT) ||
+			(ars_command_return_data->ars_state  == ARS_STATUS_WARM_RESET_ABORT))
+		{
+			status = DEVICE_ARS_STATUS_ABORTED;
+		}
 		else
 		{
-			status = DEVICE_ARS_STATUS_INPROGRESS;
+			status = DEVICE_ARS_STATUS_UNKNOWN;
 		}
 	}
 	else

@@ -161,7 +161,10 @@ extern const NVM_UINT16 SUPPORTED_DEVICE_IDS[];
 
 // Specify that the ARS command has reached the limit+1 errors it can report and has
 // ended prior to reaching the DPA end address
+#define ARS_STATUS_NORMAL 0x00
 #define	ARS_STATUS_ENDED_EARLY	0x01
+#define ARS_STATUS_USER_REQUESTED_ABORT 0x02 /* 0x02 for both user requested abort or power cycle */ 
+#define ARS_STATUS_WARM_RESET_ABORT 0x03 
 
 /*
  * ****************************************************************************
