@@ -78,8 +78,6 @@ struct nvm_pool
 	NVM_UINT64 memory_capacities[NVM_MAX_DEVICES_PER_POOL];
 	// The raw capacities of the dimms in the pool in bytes
 	NVM_UINT64 raw_capacities[NVM_MAX_DEVICES_PER_POOL];
-	// The storage ONLY capacities of the dimms in the pool in bytes
-	NVM_UINT64 storage_capacities[NVM_MAX_DEVICES_PER_POOL];
 	NVM_NFIT_DEVICE_HANDLE dimms[NVM_MAX_DEVICES_PER_POOL]; // Unique ID's of underlying NVM-DIMMs.
 	// The interleave sets in this pool
 	struct nvm_interleave_set ilsets[NVM_MAX_DEVICES_PER_SOCKET * 2];
@@ -94,11 +92,9 @@ struct device_free_capacities
 {
 	NVM_NFIT_DEVICE_HANDLE device_handle; // The unique device handle of the memory module
 	NVM_UID uid;
-	NVM_UINT64 total_storage_capacity; // total free storage + not mirrored AD capacity
 	NVM_UINT64 app_direct_byone_capacity; // total free x1 AD capacity
 	NVM_UINT64 app_direct_interleaved_capacity; // total free (not mirrored) AD capacity
 	NVM_UINT64 app_direct_mirrored_capacity; // total free mirrored AD capacity
-	NVM_UINT64 storage_only_capacity; // total free storage capacity
 };
 
 /*

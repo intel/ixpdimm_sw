@@ -216,6 +216,12 @@ virtual std::string fwPayloadToString_NsIndex(
 virtual std::string fwPayloadToString_NsLabel(
     const struct fwcmd_ns_label_data *p_data);
 
+virtual std::string fwPayloadToString_NsLabelV11(
+    const struct fwcmd_ns_label_v1_1_data *p_data);
+
+virtual std::string fwPayloadToString_NsLabelV12(
+    const struct fwcmd_ns_label_v1_2_data *p_data);
+
 virtual std::string fwPayloadToString_NamespaceLabels(
     const struct fwcmd_namespace_labels_data *p_data);
 

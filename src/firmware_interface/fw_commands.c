@@ -912,6 +912,20 @@ void fwcmd_free_ns_label_data(struct fwcmd_ns_label_data *p_data)
 	}
 }
 
+void fwcmd_free_ns_label_v1_1_data(struct fwcmd_ns_label_v1_1_data *p_data)
+{
+	if (p_data)
+	{
+	}
+}
+
+void fwcmd_free_ns_label_v1_2_data(struct fwcmd_ns_label_v1_2_data *p_data)
+{
+	if (p_data)
+	{
+	}
+}
+
 void fwcmd_free_namespace_labels_data(struct fwcmd_namespace_labels_data *p_data)
 {
 	if (p_data)

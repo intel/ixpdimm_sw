@@ -63,8 +63,10 @@ int populate_interleave_set_dimm_info(struct nfit_interleave_set *p_interleave_s
 			{
 				p_interleave_set->dimms[p_interleave_set->dimm_count] =
 					p_parsed_nfit->region_mapping_list[i].handle;
-				p_interleave_set->dimm_offsets[p_interleave_set->dimm_count] =
+				p_interleave_set->dimm_region_pdas[p_interleave_set->dimm_count] =
 					p_parsed_nfit->region_mapping_list[i].physical_address_region_base;
+				p_interleave_set->dimm_region_offsets[p_interleave_set->dimm_count] =
+					p_parsed_nfit->region_mapping_list[i].region_offset;
 				p_interleave_set->dimm_sizes[p_interleave_set->dimm_count] =
 					p_parsed_nfit->region_mapping_list[i].region_size;
 				p_interleave_set->dimm_count++;
@@ -83,7 +85,7 @@ int nfit_get_interleave_sets(const int count, struct nfit_interleave_set *p_inte
 	// get the parsed nfit
 	struct parsed_nfit *p_parsed_nfit;
 	int result = nfit_get_parsed_nfit(&p_parsed_nfit);
-	if (result == NFIT_SUCCESS)
+	if (result == NFIT_SUCCESS && p_parsed_nfit)
 	{
 		result = nfit_get_interleave_sets_from_parsed_nfit(
 				count, p_interleave_sets, p_parsed_nfit);
@@ -160,7 +162,8 @@ void nfit_print_interleave_set(const struct nfit_interleave_set *p_interleave)
 		for (int i = 0; i < p_interleave->dimm_count; i++)
 		{
 			printf("\tdimm handle: 0x%x\n", p_interleave->dimms[i]);
-			printf("\tdimm offset: 0x%llx\n", p_interleave->dimm_offsets[i]);
+			printf("\tdimm region address: 0x%llx\n", p_interleave->dimm_region_pdas[i]);
+			printf("\tdimm region offset: 0x%llx\n", p_interleave->dimm_region_offsets[i]);
 			printf("\tdimm size: 0x%llx\n", p_interleave->dimm_sizes[i]);
 			printf("\n");
 		}

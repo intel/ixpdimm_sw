@@ -919,12 +919,12 @@ int get_app_direct_capacity_on_device(const struct device_discovery *p_dimm,
 						NVM_UINT64 dimm_size = sets[iset_idx].dimm_sizes[dimm_idx];
 						if (MIRRORED_INTERLEAVE(sets[iset_idx].attributes))
 						{
-							(*p_ad_capacity) += (dimm_size * 2llu);
-							(*p_mirrored_ad_capacity) += dimm_size;
+							*p_ad_capacity = *p_ad_capacity + (dimm_size * 2llu);
+							*p_mirrored_ad_capacity = *p_mirrored_ad_capacity + dimm_size;
 						}
 						else
 						{
-							(*p_ad_capacity) += dimm_size;
+							*p_ad_capacity = *p_ad_capacity + dimm_size;
 						}
 						break;
 					}

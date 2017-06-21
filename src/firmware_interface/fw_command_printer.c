@@ -617,6 +617,12 @@ void fwcmd_ns_label_printer(const struct fwcmd_ns_label_data *p_value, int inden
 	printf("Name: %.64s\n", p_value->name);
 	print_tabs(indent_count + 1);
 	printf("Flags: 0x%x\n", p_value->flags);
+	print_tabs(indent_count + 2);
+	printf("ReadOnly: %d\n", p_value->flags_read_only);
+	print_tabs(indent_count + 2);
+	printf("Local: %d\n", p_value->flags_local);
+	print_tabs(indent_count + 2);
+	printf("Updating: %d\n", p_value->flags_updating);
 	print_tabs(indent_count + 1);
 	printf("Nlabel: 0x%x\n", p_value->nlabel);
 	print_tabs(indent_count + 1);
@@ -631,8 +637,36 @@ void fwcmd_ns_label_printer(const struct fwcmd_ns_label_data *p_value, int inden
 	printf("Rawsize: 0x%llx\n", p_value->rawsize);
 	print_tabs(indent_count + 1);
 	printf("Slot: 0x%x\n", p_value->slot);
+}
+
+void fwcmd_ns_label_v1_1_printer(const struct fwcmd_ns_label_v1_1_data *p_value, int indent_count)
+{
+	print_tabs(indent_count);
+	printf("NsLabelV11:\n");
+	print_tabs(indent_count + 1);
+	fwcmd_ns_label_printer(&p_value->label, indent_count + 1);
 	print_tabs(indent_count + 1);
 	printf("Unused: 0x%x\n", p_value->unused);
+}
+
+void fwcmd_ns_label_v1_2_printer(const struct fwcmd_ns_label_v1_2_data *p_value, int indent_count)
+{
+	print_tabs(indent_count);
+	printf("NsLabelV12:\n");
+	print_tabs(indent_count + 1);
+	fwcmd_ns_label_printer(&p_value->label, indent_count + 1);
+	print_tabs(indent_count + 1);
+	printf("Alignment: 0x%x\n", p_value->alignment);
+	print_tabs(indent_count + 1);
+	printf("Reserved: %.3s\n", p_value->reserved);
+	print_tabs(indent_count + 1);
+	printf("TypeGuid: %.16s\n", p_value->type_guid);
+	print_tabs(indent_count + 1);
+	printf("AddressAbstractionGuid: %.16s\n", p_value->address_abstraction_guid);
+	print_tabs(indent_count + 1);
+	printf("Reserved1: %.88s\n", p_value->reserved1);
+	print_tabs(indent_count + 1);
+	printf("Checksum: 0x%llx\n", p_value->checksum);
 }
 
 void fwcmd_namespace_labels_printer(const struct fwcmd_namespace_labels_data *p_value, int indent_count)
@@ -643,11 +677,6 @@ void fwcmd_namespace_labels_printer(const struct fwcmd_namespace_labels_data *p_
 	fwcmd_ns_index_printer(&p_value->index1, indent_count + 1);
 	print_tabs(indent_count + 1);
 	fwcmd_ns_index_printer(&p_value->index2, indent_count + 1);
-	print_tabs(indent_count + 1);
-	for (int i = 0; i < 1020; i++)
-	{
-		fwcmd_ns_label_printer(&p_value->labels[i], indent_count + 1);
-	}
 }
 
 void fwcmd_dimm_partition_info_printer(const struct fwcmd_dimm_partition_info_data *p_value, int indent_count)

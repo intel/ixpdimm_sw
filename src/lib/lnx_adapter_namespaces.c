@@ -31,6 +31,7 @@
 
 #include "device_adapter.h"
 #include "lnx_adapter.h"
+#include "namespace_labels.h"
 #include <fcntl.h>
 #include <unistd.h>
 #include <linux/fs.h>
@@ -50,7 +51,6 @@ void get_namespace_guid(struct ndctl_namespace *p_namespace, COMMON_UID guid);
  */
 int get_namespace_count()
 {
-	COMMON_LOG_ENTRY();
 	int rc = 0; // returns the namespace count
 
 	int num_namespaces = 0;
@@ -86,7 +86,6 @@ int get_namespace_count()
 	{
 		rc = linux_err_to_nvm_lib_err(rc);
 	}
-
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
@@ -157,7 +156,6 @@ int get_namespaces(const NVM_UINT32 count,
 	{
 		rc = linux_err_to_nvm_lib_err(rc);
 	}
-
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
@@ -491,7 +489,6 @@ int get_namespace_details(
 	{
 		rc = linux_err_to_nvm_lib_err(rc);
 	}
-
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }

@@ -112,7 +112,7 @@ throw(wbem::framework::Exception)
 		{
 			possible_namespace_ranges ranges = getAvailablePersistentSizeRange(pPool->pool_uid);
 
-			// List of underlying types of PM- AppDirect,AppDirectNotInterleaved, Storage
+			// List of underlying types of PM- AppDirect,AppDirectNotInterleaved
 			if (containsAttribute(PERSISTENTMEMORYTYPE_KEY, attributes))
 			{
 				framework::Attribute a(getPersistentMemoryType(pPool), false);
@@ -464,24 +464,6 @@ bool wbem::mem_config::PoolViewFactory::getEncryptionEnabled(const struct pool *
 	return result;
 }
 
-bool wbem::mem_config::PoolViewFactory::PoolHasStorage(const struct pool *pPool)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	bool result = false;
-	if (pPool->type == POOL_TYPE_PERSISTENT)
-	{
-		for (NVM_UINT16 i = 0; i < pPool->dimm_count; i++)
-		{
-			if (pPool->storage_capacities[i] > 0)
-			{
-				result = true;
-			}
-		}
-	}
-
-	return result;
-}
-
 bool wbem::mem_config::PoolViewFactory::PoolHasAppDirectInterleaved(const struct pool *pPool)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -529,10 +511,6 @@ wbem::framework::STR_LIST wbem::mem_config::PoolViewFactory::getPersistentMemory
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	framework::STR_LIST pmType;
-	if (PoolHasStorage(pPool))
-	{
-		pmType.push_back(wbem::mem_config::PMTYPE_STORAGE);
-	}
 
 	if (PoolHasAppDirectByOne(pPool))
 	{

@@ -210,7 +210,7 @@ int nfit_get_dimms(const int count, struct nfit_dimm *p_nfit_dimms)
 	// get the parsed nfit
 	struct parsed_nfit *p_parsed_nfit;
 	int result = nfit_get_parsed_nfit(&p_parsed_nfit);
-	if (result == NFIT_SUCCESS)
+	if (result == NFIT_SUCCESS && p_parsed_nfit)
 	{
 		result = nfit_get_dimms_from_parsed_nfit(count, p_nfit_dimms, p_parsed_nfit);
 		free_parsed_nfit(p_parsed_nfit);

@@ -75,20 +75,15 @@ struct nvm_context
 	struct pool *p_pools;
 	int namespace_count;
 	struct nvm_namespace_context *p_namespaces;
+
+	// avoid unnecessary calls to the read PCD
+	int pcd_namespace_count;
+	struct nvm_namespace_details *p_pcd_namespaces;
+
 	// avoid unnecessary calls to retrieve ACPI tables
 	int nfit_size;
 	struct parsed_nfit *p_nfit;
 };
-
-/*
- * Initialize a new context
- */
-extern NVM_API int nvm_create_context();
-
-/*
- * Clean up the current context
- */
-extern NVM_API int nvm_free_context(const NVM_BOOL force);
 
 // capabilities
 int get_nvm_context_capabilities(struct nvm_capabilities *p_capabilities);
@@ -127,6 +122,13 @@ int get_nvm_context_namespace_details(const NVM_UID namespace_uid,
 		struct namespace_details *p_namespace);
 int set_nvm_context_namespace_details(const NVM_UID namespace_uid,
 		const struct namespace_details *p_namespace);
+
+// PCD namespaces
+int get_nvm_context_pcd_namespace_count();
+int get_nvm_context_pcd_namespaces(int pcd_nscount,
+		struct nvm_namespace_details *p_pcd_nslist);
+int set_nvm_context_pcd_namespaces(const int pcd_nscount,
+	const struct nvm_namespace_details *p_pcd_nslist);
 
 // NFIT
 int get_nvm_context_nfit_size();

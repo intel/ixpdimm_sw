@@ -955,6 +955,9 @@ std::string FwCommands::fwPayloadToString_NsLabel(const struct fwcmd_ns_label_da
 	result << "Uuid: " << p_data->uuid << "\n";
 	result << "Name: " << p_data->name << "\n";
 	result << "Flags: " << p_data->flags << "\n";
+	result << "ReadOnly: " << p_data->flags_read_only << "\n";
+	result << "Local: " << p_data->flags_local << "\n";
+	result << "Updating: " << p_data->flags_updating << "\n";
 	result << "Nlabel: " << p_data->nlabel << "\n";
 	result << "Position: " << p_data->position << "\n";
 	result << "IsetCookie: " << p_data->iset_cookie << "\n";
@@ -962,7 +965,29 @@ std::string FwCommands::fwPayloadToString_NsLabel(const struct fwcmd_ns_label_da
 	result << "Dpa: " << p_data->dpa << "\n";
 	result << "Rawsize: " << p_data->rawsize << "\n";
 	result << "Slot: " << p_data->slot << "\n";
+	return result.str();
+}
+
+std::string FwCommands::fwPayloadToString_NsLabelV11(const struct fwcmd_ns_label_v1_1_data *p_data)
+{
+	std::stringstream result;
+	result << "\nNs Label V1 1:" << "\n";
+	result << fwPayloadToString_NsLabel(&p_data->label);
 	result << "Unused: " << p_data->unused << "\n";
+	return result.str();
+}
+
+std::string FwCommands::fwPayloadToString_NsLabelV12(const struct fwcmd_ns_label_v1_2_data *p_data)
+{
+	std::stringstream result;
+	result << "\nNs Label V1 2:" << "\n";
+	result << fwPayloadToString_NsLabel(&p_data->label);
+	result << "Alignment: " << (int) p_data->alignment << "\n";
+	result << "Reserved: " << p_data->reserved << "\n";
+	result << "TypeGuid: " << p_data->type_guid << "\n";
+	result << "AddressAbstractionGuid: " << p_data->address_abstraction_guid << "\n";
+	result << "Reserved1: " << p_data->reserved1 << "\n";
+	result << "Checksum: " << p_data->checksum << "\n";
 	return result.str();
 }
 
@@ -972,10 +997,6 @@ std::string FwCommands::fwPayloadToString_NamespaceLabels(const struct fwcmd_nam
 	result << "\nNamespace Labels:" << "\n";
 	result << fwPayloadToString_NsIndex(&p_data->index1);
 	result << fwPayloadToString_NsIndex(&p_data->index2);
-	for (int i = 0; i < 1020; i++)
-	{
-		result << fwPayloadToString_NsLabel(&p_data->labels[i]);
-	}
 	return result.str();
 }
 

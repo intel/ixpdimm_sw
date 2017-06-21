@@ -35,7 +35,7 @@
 
 #include <persistence/schema.h>
 #include "nvm_types.h"
-#include <acpi/acpi.h>
+#include <acpi.h>
 #include "platform_capabilities.h"
 
 #ifdef __cplusplus

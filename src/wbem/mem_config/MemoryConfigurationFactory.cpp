@@ -181,34 +181,7 @@ NVM_UINT64 wbem::mem_config::MemoryConfigurationFactory::getDimmMemoryCapacityFr
 }
 
 /*
- * find the storage capacity of this dimm
- */
-NVM_UINT64 wbem::mem_config::MemoryConfigurationFactory::getDimmStorageCapacityFromCurrentConfig(
-		const NVM_UID uid, const std::vector<struct pool> &pools) throw (wbem::framework::Exception)
-{
-	int index;
-	NVM_UINT64 size = 0;
-	for (size_t i = 0; i < pools.size(); i++)
-	{
-		if (pools[i].type == POOL_TYPE_PERSISTENT && 
-			(index = getDimmIndexInPoolOrReturnNotFound(uid, &(pools[i]))) != framework::NOTFOUND)
-		{
-			if (index < NVM_MAX_DEVICES_PER_POOL)
-			{
-				size = pools[i].storage_capacities[index];
-				break;
-			}
-			else
-			{
-				throw exception::NvmExceptionLibError(NVM_ERR_BADDEVICECONFIG);
-			}
-		}
-	}
-	return size;
-}
-
-/*
- * Populate a current config instance with memory and storage sizes and also interleave set information
+ * Populate a current config instance with memory and interleave set information
  */
 void wbem::mem_config::MemoryConfigurationFactory::populateCurrentConfigInstance(
 		const framework::attribute_names_t &attributes,
@@ -217,7 +190,6 @@ void wbem::mem_config::MemoryConfigurationFactory::populateCurrentConfigInstance
 		const struct device_discovery *p_discovery)
 {
 	framework::UINT64 memoryCapacity = 0;
-	framework::UINT64 storageCapacity = 0;
 	framework::UINT32_LIST interleaveFormats;
 	framework::UINT64_LIST interleaveSizes;
 	framework::UINT16_LIST redundancies;
@@ -234,7 +206,6 @@ void wbem::mem_config::MemoryConfigurationFactory::populateCurrentConfigInstance
 	if (pools.size() > 0)
 	{
 		memoryCapacity = getDimmMemoryCapacityFromCurrentConfig(uid, pools);
-		storageCapacity = getDimmStorageCapacityFromCurrentConfig(uid, pools);
 
 		std::vector <InterleaveSetInfo> infos;
 		getCurrentIlsetInfo(uid, pools, infos);
@@ -254,13 +225,6 @@ void wbem::mem_config::MemoryConfigurationFactory::populateCurrentConfigInstance
 	{
 		framework::Attribute a(memoryCapacity, false);
 		pInstance->setAttribute(MEMORYSIZE_KEY, a, attributes);
-	}
-
-	// StorageCapacity - unmapped storage capacity in this pool
-	if (containsAttribute(STORAGECAPACITY_KEY, attributes))
-	{
-		framework::Attribute a(storageCapacity, false);
-		pInstance->setAttribute(STORAGECAPACITY_KEY, a, attributes);
 	}
 
 	// InterleaveFormats - list of uint16 bitmaps representing channel size, iMC size, way
@@ -367,15 +331,6 @@ void wbem::mem_config::MemoryConfigurationFactory::configGoalToGoalInstance(
 		pInstance->setAttribute(INTERLEAVEINDEXES_KEY, indexes, attributes);
 	}
 
-	// Storage capacity
-	if (containsAttribute(STORAGECAPACITY_KEY, attributes))
-	{
-		NVM_UINT64 storageCapacity = getDimmStorageCapacityFromGoal(pDiscovery, goal);
-
-		framework::Attribute a(storageCapacity, false);
-		pInstance->setAttribute(STORAGECAPACITY_KEY, a, attributes);
-	}
-
 	// Status
 	if (containsAttribute(STATUS_KEY, attributes))
 	{
@@ -386,7 +341,7 @@ void wbem::mem_config::MemoryConfigurationFactory::configGoalToGoalInstance(
 }
 
 /*
- * Populate a goal config instance with memory and storage sizes and also interleave set information
+ * Populate a goal config instance with memory and interleave set information
  */
 void wbem::mem_config::MemoryConfigurationFactory::populateGoalInstance(
 			const framework::attribute_names_t &attributes,
@@ -749,37 +704,6 @@ wbem::framework::instances_t* wbem::mem_config::MemoryConfigurationFactory::getG
 	}
 
 	return pGoalList;
-}
-
-
-NVM_UINT64 wbem::mem_config::MemoryConfigurationFactory::getDimmStorageCapacityFromGoal
-	(const struct device_discovery *pDiscovery, const struct config_goal &goal)
-{
-	NVM_UINT64 storageCapacity = USABLE_CAPACITY_BYTES(pDiscovery->capacity);
-	storageCapacity -= (goal.memory_size * BYTES_PER_GIB);
-	if (goal.app_direct_count > 0)
-	{
-		if (goal.app_direct_1_settings.mirrored)
-		{
-			storageCapacity -= (goal.app_direct_1_size * BYTES_PER_GIB * 2);
-		}
-		else
-		{
-			storageCapacity -= (goal.app_direct_1_size * BYTES_PER_GIB);
-		}
-	}
-	if (goal.app_direct_count > 1)
-	{
-		if (goal.app_direct_2_settings.mirrored)
-		{
-			storageCapacity -= (goal.app_direct_2_size * BYTES_PER_GIB * 2);
-		}
-		else
-		{
-			storageCapacity -= (goal.app_direct_2_size * BYTES_PER_GIB);
-		}
-	}
-	return storageCapacity;
 }
 
 bool wbem::mem_config::MemoryConfigurationFactory::dimmIsInAPool(NVM_UID uid, std::vector<struct pool> pools)

@@ -224,6 +224,8 @@ enum return_code
 	NVM_ERR_FWALREADYSTAGED = -55, 	// A firmware image is already staged for execution.
 									// A power cycle is required before another can be staged.
 	NVM_ERR_BADNFIT = -56, // The NFIT table is invalid.
+	NVM_ERR_TIMEOUT = -57, // The operation timed out.
+	NVM_ERR_BADNAMESPACELABELS = -58, // The NS labels are corrupt
 	NVM_ERR_NAMESPACEENABLEFAILED = -59 // The driver failed to enable all the namespaces
 										// after device unlock.
 };

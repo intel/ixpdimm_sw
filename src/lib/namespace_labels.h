@@ -24,37 +24,33 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef CR_MGMT_FW_COMMAND_PRINTER_H
-#define CR_MGMT_FW_COMMAND_PRINTER_H
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
+#include "nvm_types.h"
+#include "adapter_types.h"
 
-#include "fw_commands.h"
+#ifndef NAMESPACE_LABELS_H
+#define	NAMESPACE_LABELS_H
 
-void fwcmd_print_command_names();
-void fwcmd_print_output_command_names();
-void fwcmd_print_error(struct fwcmd_error_code error);
+/*
+ * Retrieve the count of namespaces from the PCD data on all manageable DIMMs
+ */
+int get_namespace_count_from_pcd();
 
+/*
+ * Retrieve namespace discovery information from the PCD data on all manageable DIMMs
+ */
+int get_namespaces_from_pcd(const NVM_UINT32 count,
+		struct nvm_namespace_discovery *p_namespaces);
 
-//- for cmd in commands
-//- 	if cmd.has_output
-//-			for s in cmd.sub_payloads
-void {{s.name|fw_cmd_printer}}(const struct {{s.name|fw_cmd_data}} *p_value, 
-	int {{tab_counter}});	
-	
-//- 		endfor
-void {{cmd.name|fw_cmd_printer}}(const struct {{cmd.name|fw_cmd_data}} *p_value,
-	int {{tab_counter}});
+/*
+ * Retrieve namespace details from the PCD data on all manageable DIMMs
+ */
+int get_namespace_details_from_pcd(const NVM_UID namespace_uid,
+		struct nvm_namespace_details *p_details);
 
-//- 	endif
-//- endfor
+/*
+ * Zero the namespace label PCD partition on the specified DIMM
+ */
+int zero_dimm_namespace_labels(const NVM_UINT32 device_handle);
 
-#ifdef __cplusplus
-}
-#endif
-
-
-#endif //CR_MGMT_FW_COMMAND_PRINTER_H
+#endif // NAMESPACE_LABELS_H

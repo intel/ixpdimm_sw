@@ -56,7 +56,7 @@ static const std::string MEMORYALLOCATIONSETTINGS_ALLOCATIONUNITS = "bytes";
 // A MemoryAllocationSettings instanceId has the form AA.B.CCCC.D
 // Where:
 // AA is the socket number
-// B is the type of memory region (V - memory, P - app direct, U - unmapped)
+// B is the type of memory region (V - memory, P - app direct)
 // CCCC is the regionID - all digits
 // D is the config type - either C (current config) or G (goal config)
 
@@ -137,21 +137,9 @@ private:
 		const framework::Instance* pMemoryInstance);
 
 	/*
-	 * Return true if the unmapped region is associated with the AppDirectMemory instance
-	 */
-	bool isUnmappedSettingAssociatedWithMemoryInstance(
-		const framework::Instance* pSettingInstance,
-		const framework::Instance* pMemoryInstance);
-
-	/*
 	 * Return true if the setting instance describes an app direct memory region
 	 */
 	bool isAppDirectInstance(const framework::Instance* pSettingInstance);
-
-	/*
-	 * Return true if the setting instance describes an unmapped memory region
-	 */
-	bool isUnmappedInstance(const framework::Instance* pSettingInstance);
 
 	/*
 	 * Return true if the the app direct memory setting described by the
@@ -296,11 +284,6 @@ private:
 	 */
 	InterleaveSet getInterleaveSetFromGoals
 		(const physical_asset::devices_t &devices, std::string instanceIdStr);
-
-	void getUnmappedInstanceFromGoals(framework::Instance *pInstance,
-			const std::string instanceIdStr,
-			const framework::attribute_names_t attributes,
-			const physical_asset::devices_t &devices);
 
 	/*
 	 * Add the ilsets from the goal struct to the vector of ilsets

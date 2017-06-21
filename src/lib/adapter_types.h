@@ -218,6 +218,8 @@ struct nvm_details {
 	char manufacturer[NVM_MANUFACTURERSTR_LEN]; // SMBIOS manufacturer string
 };
 
+
+
 /*
  * Interleave set information
  */
@@ -231,22 +233,14 @@ struct nvm_interleave_set
 	NVM_UINT8 dimm_count; // The number of dimm in the interleave set
 	// NFIT handles of the dimms in the interleave set
 	NVM_UINT32 dimms[NVM_MAX_DEVICES_PER_SOCKET];
-	NVM_UINT64 dimm_offsets[NVM_MAX_DEVICES_PER_SOCKET];
+	NVM_UINT64 dimm_region_pdas[NVM_MAX_DEVICES_PER_SOCKET];
+	NVM_UINT64 dimm_region_offsets[NVM_MAX_DEVICES_PER_SOCKET];
 	NVM_UINT64 dimm_sizes[NVM_MAX_DEVICES_PER_SOCKET];
 	NVM_UINT32 set_index; // Unique identifier from the PCD (only used by sim adapter)
+	NVM_UINT64 cookie_v1_1; // v1.1 cookie
+	NVM_UINT64 cookie_v1_2; // v1.2 cookie
 };
 
-
-/*
- * Describes the storage capacity (total and available) of a DIMM.
- */
-struct nvm_storage_capacities
-{
-	NVM_NFIT_DEVICE_HANDLE device_handle; // DIMM handle
-	NVM_UINT64 total_storage_capacity; // total storage capacity - storage-only + App Direct
-	NVM_UINT64 free_storage_capacity; // portion of total storage capacity not used by a namespace
-	NVM_UINT64 storage_only_capacity; // storage-only capacity - unmapped
-};
 
 /*
  * A lightweight description of a namespace.
@@ -274,6 +268,8 @@ struct nvm_namespace_details
 		NVM_UINT32 interleave_setid; // Used when creating an App Direct Namespace
 	} namespace_creation_id; // the identifier used by the driver when creating a Namespace
 	enum namespace_memory_page_allocation memory_page_allocation;
+	NVM_UINT16 nlabels;
+	NVM_UINT32 label_sum;
 };
 
 /*

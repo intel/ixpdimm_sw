@@ -269,7 +269,8 @@ void nfit_iset_to_nvm_iset(const struct nfit_interleave_set *p_nfit_iset,
 	for (int i = 0; i < p_nvm_iset->dimm_count; i++)
 	{
 		p_nvm_iset->dimms[i] = p_nfit_iset->dimms[i];
-		p_nvm_iset->dimm_offsets[i] = p_nfit_iset->dimm_offsets[i];
+		p_nvm_iset->dimm_region_pdas[i] = p_nfit_iset->dimm_region_pdas[i];
+		p_nvm_iset->dimm_region_offsets[i] = p_nfit_iset->dimm_region_offsets[i];
 		p_nvm_iset->dimm_sizes[i] = p_nfit_iset->dimm_sizes[i];
 	}
 }

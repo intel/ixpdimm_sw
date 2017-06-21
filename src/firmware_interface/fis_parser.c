@@ -568,6 +568,9 @@ enum fis_parser_codes fis_parse_ns_label(
 	memmove(p_data->uuid, p_output_payload->uuid, 16);
 	memmove(p_data->name, p_output_payload->name, 64);
 	p_data->flags = p_output_payload->flags;
+	p_data->flags_read_only = (unsigned char)((p_data->flags >> 0) & 0x01);
+	p_data->flags_local = (unsigned char)((p_data->flags >> 1) & 0x01);
+	p_data->flags_updating = (unsigned char)((p_data->flags >> 2) & 0x01);
 	p_data->nlabel = p_output_payload->nlabel;
 	p_data->position = p_output_payload->position;
 	p_data->iset_cookie = p_output_payload->iset_cookie;
@@ -575,7 +578,33 @@ enum fis_parser_codes fis_parse_ns_label(
 	p_data->dpa = p_output_payload->dpa;
 	p_data->rawsize = p_output_payload->rawsize;
 	p_data->slot = p_output_payload->slot;
+	return rc;
+}
+
+enum fis_parser_codes fis_parse_ns_label_v1_1(
+	const struct pt_output_ns_label_v1_1 *p_output_payload,
+	struct fwcmd_ns_label_v1_1_data *p_data)
+{
+	memset(p_data, 0, sizeof (*p_data));
+	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
+	rc = fis_parse_ns_label(&p_output_payload->label, &p_data->label);
 	p_data->unused = p_output_payload->unused;
+	return rc;
+}
+
+enum fis_parser_codes fis_parse_ns_label_v1_2(
+	const struct pt_output_ns_label_v1_2 *p_output_payload,
+	struct fwcmd_ns_label_v1_2_data *p_data)
+{
+	memset(p_data, 0, sizeof (*p_data));
+	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
+	rc = fis_parse_ns_label(&p_output_payload->label, &p_data->label);
+	p_data->alignment = p_output_payload->alignment;
+	memmove(p_data->reserved, p_output_payload->reserved, 3);
+	memmove(p_data->type_guid, p_output_payload->type_guid, 16);
+	memmove(p_data->address_abstraction_guid, p_output_payload->address_abstraction_guid, 16);
+	memmove(p_data->reserved1, p_output_payload->reserved1, 88);
+	p_data->checksum = p_output_payload->checksum;
 	return rc;
 }
 
@@ -587,10 +616,6 @@ enum fis_parser_codes fis_parse_namespace_labels(
 	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
 	rc = fis_parse_ns_index(&p_output_payload->index1, &p_data->index1);
 	rc = fis_parse_ns_index(&p_output_payload->index2, &p_data->index2);
-	for (int i = 0; i < 1020 && PARSING_SUCCESS(rc); i++)
-	{
-		rc = fis_parse_ns_label(&p_output_payload->labels[i], &p_data->labels[i]);
-	}
 	return rc;
 }
 

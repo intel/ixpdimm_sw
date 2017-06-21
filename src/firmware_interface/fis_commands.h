@@ -85,8 +85,8 @@ struct pt_output_identify_dimm
 	unsigned short interface_format_code_extra;
 	unsigned short api_ver;
 	unsigned char reserved3[58];
-} __attribute__((packed));
 
+} __attribute__((packed));
 struct pt_output_identify_dimm_characteristics
 {
 	unsigned short controller_temp_shutdown_threshold;
@@ -365,14 +365,30 @@ struct pt_output_ns_label
 	unsigned long long dpa;
 	unsigned long long rawsize;
 	unsigned int slot;
+
+} __attribute__((packed));
+struct pt_output_ns_label_v1_1
+{
+	struct pt_output_ns_label label;	
 	unsigned int unused;
+
+} __attribute__((packed));
+struct pt_output_ns_label_v1_2
+{
+	struct pt_output_ns_label label;	
+	unsigned char alignment;
+	unsigned char reserved[3];
+	unsigned char type_guid[16];
+	unsigned char address_abstraction_guid[16];
+	unsigned char reserved1[88];
+	unsigned long long checksum;
 
 } __attribute__((packed));
 struct pt_output_namespace_labels
 {
 	struct pt_output_ns_index index1;	
 	struct pt_output_ns_index index2;	
-	struct pt_output_ns_label labels[1020];	
+	unsigned char labels[129536];
 
 } __attribute__((packed));
 struct pt_input_namespace_labels

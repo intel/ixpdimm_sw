@@ -593,6 +593,9 @@ struct fwcmd_ns_label_data
 	char uuid[16];
 	char name[64];
 	unsigned int flags;
+	unsigned char flags_read_only;
+	unsigned char flags_local;
+	unsigned char flags_updating;
 	unsigned short nlabel;
 	unsigned short position;
 	unsigned long long iset_cookie;
@@ -600,14 +603,29 @@ struct fwcmd_ns_label_data
 	unsigned long long dpa;
 	unsigned long long rawsize;
 	unsigned int slot;
+
+};
+struct fwcmd_ns_label_v1_1_data
+{
+	struct fwcmd_ns_label_data label;
 	unsigned int unused;
+
+};
+struct fwcmd_ns_label_v1_2_data
+{
+	struct fwcmd_ns_label_data label;
+	unsigned char alignment;
+	char reserved[3];
+	char type_guid[16];
+	char address_abstraction_guid[16];
+	char reserved1[88];
+	unsigned long long checksum;
 
 };
 struct fwcmd_namespace_labels_data
 {
 	struct fwcmd_ns_index_data index1;
 	struct fwcmd_ns_index_data index2;
-	struct fwcmd_ns_label_data labels[1020];
 
 };
 struct fwcmd_namespace_labels_result

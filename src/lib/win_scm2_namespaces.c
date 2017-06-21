@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Intel Corporation
+ * Copyright (c) 2017 Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -24,37 +24,48 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef CR_MGMT_FW_COMMAND_PRINTER_H
-#define CR_MGMT_FW_COMMAND_PRINTER_H
 
-#ifdef __cplusplus
-extern "C"
+/*
+ * This file implements the Windows SCM2 driver adapter interface for managing namespaces.
+ */
+
+#include "win_scm2_adapter.h"
+#include "device_adapter.h"
+#include <string/s_str.h>
+#include "namespace_labels.h"
+
+/*
+ * Get the number of existing namespaces
+ */
+int win_scm2_get_namespace_count()
 {
-#endif
-
-#include "fw_commands.h"
-
-void fwcmd_print_command_names();
-void fwcmd_print_output_command_names();
-void fwcmd_print_error(struct fwcmd_error_code error);
-
-
-//- for cmd in commands
-//- 	if cmd.has_output
-//-			for s in cmd.sub_payloads
-void {{s.name|fw_cmd_printer}}(const struct {{s.name|fw_cmd_data}} *p_value, 
-	int {{tab_counter}});	
-	
-//- 		endfor
-void {{cmd.name|fw_cmd_printer}}(const struct {{cmd.name|fw_cmd_data}} *p_value,
-	int {{tab_counter}});
-
-//- 	endif
-//- endfor
-
-#ifdef __cplusplus
+	COMMON_LOG_ENTRY();
+	int rc = get_namespace_count_from_pcd();
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
 }
-#endif
 
+/*
+ * Get the discovery information for a given number of namespaces
+ */
+int win_scm2_get_namespaces(const NVM_UINT32 count,
+		struct nvm_namespace_discovery *p_namespaces)
+{
+	COMMON_LOG_ENTRY();
+	int rc = get_namespaces_from_pcd(count, p_namespaces);
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
 
-#endif //CR_MGMT_FW_COMMAND_PRINTER_H
+/*
+ * Get the details for a specific namespace
+ */
+int win_scm2_get_namespace_details(
+		const NVM_UID namespace_uid,
+		struct nvm_namespace_details *p_details)
+{
+	COMMON_LOG_ENTRY();
+	int rc = get_namespace_details_from_pcd(namespace_uid, p_details);
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}

@@ -50,13 +50,13 @@ enum DRIVER_TYPE get_driver_type()
 {
 	enum DRIVER_TYPE result = DRIVER_TYPE_UNKNOWN;
 
-	if (win_leg_adp_is_supported_driver_available())
-	{
-		result = DRIVER_TYPE_LEGACY;
-	}
-	else if (win_scm_adp_is_supported_driver_available())
+	if (win_scm_adp_is_supported_driver_available())
 	{
 		result = DRIVER_TYPE_SCM2;
+	}
+	else if (win_leg_adp_is_supported_driver_available())
+	{
+		result = DRIVER_TYPE_LEGACY;
 	}
 
 	return result;
@@ -210,7 +210,7 @@ int get_namespace_count()
 			rc = win_leg_adp_get_namespace_count();
 			break;
 		case DRIVER_TYPE_SCM2:
-			rc = 0;
+			rc = win_scm2_get_namespace_count();
 			break;
 	}
 
@@ -230,7 +230,7 @@ int get_namespaces(const NVM_UINT32 count,
 			rc = win_leg_adp_get_namespaces(count, p_namespaces);
 			break;
 		case DRIVER_TYPE_SCM2:
-			rc = 0;
+			rc = win_scm2_get_namespaces(count, p_namespaces);
 			break;
 	}
 
@@ -251,7 +251,7 @@ int get_namespace_details(
 			rc = win_leg_adp_get_namespace_details(namespace_uid, p_details);
 			break;
 		case DRIVER_TYPE_SCM2:
-			rc = 0;
+			rc = win_scm2_get_namespace_details(namespace_uid, p_details);
 			break;
 	}
 

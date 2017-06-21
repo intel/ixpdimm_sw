@@ -123,9 +123,9 @@ std::string FwCommands::{{name|fw_payload_to_string}}(const struct {{name|fw_cmd
 	}
 //- 				elif f.unsigned_char_needs_typecast_to_int
 	result << "{{f.name|camel}}: " << (int) p_data->{{f.name}} << "\n";
-//-			else
+//-					else
 	result << "{{f.name|camel}}: " << p_data->{{f.name}} << "\n";
-//- 			endif
+//-		 			endif
 //-					for b in f.bits
 	result << "{{b.name|camel}}: " << p_data->{{f.name}}_{{b.name}} << "\n";
 //-					endfor

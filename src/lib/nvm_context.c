@@ -51,7 +51,7 @@ int g_ctx_count = 0;
 /*
  * Initialize the context. This is a lazy context meaning
  * details are added as they are requested rather than up
- * front. This call should be pair with free_nvm_context.
+ * front. This call should be paired with free_nvm_context.
  */
 int nvm_create_context()
 {
@@ -89,6 +89,8 @@ int nvm_create_context()
 				p_context->p_pools = NULL;
 				p_context->namespace_count = -1;
 				p_context->p_namespaces = NULL;
+				p_context->pcd_namespace_count = -1;
+				p_context->p_pcd_namespaces = NULL;
 				p_context->nfit_size = -1;
 				p_context->p_nfit = NULL;
 			}
@@ -187,6 +189,22 @@ void free_namespace_list()
 	}
 	COMMON_LOG_EXIT();
 }
+/*
+ * Helper function to free the entire PCD namespace list
+ * NOTE: This function assumes the caller has obtained the lock
+ */
+void free_pcd_namespace_list()
+{
+	COMMON_LOG_ENTRY();
+	// clean up the PCD namespace list
+	if (p_context && p_context->pcd_namespace_count > 0 && p_context->p_pcd_namespaces)
+	{
+		free(p_context->p_pcd_namespaces);
+		p_context->p_pcd_namespaces = NULL;
+		p_context->pcd_namespace_count = -1;
+	}
+	COMMON_LOG_EXIT();
+}
 
 /*
  * Helper function to free the nfit
@@ -239,6 +257,7 @@ int nvm_free_context(const NVM_BOOL force)
 				free_device_list();
 				free_pool_list();
 				free_namespace_list();
+				free_pcd_namespace_list();
 				free_nfit();
 
 				// clean up pointer
@@ -946,6 +965,7 @@ void invalidate_namespaces()
 	else
 	{
 		free_namespace_list();
+		free_pcd_namespace_list();
 
 		// unlock
 		if (!mutex_unlock(&g_context_lock))
@@ -1183,6 +1203,134 @@ int set_nvm_context_namespace_details(const NVM_UID namespace_uid,
 						rc = NVM_SUCCESS;
 					}
 					break;
+				}
+			}
+		}
+
+		// unlock
+		if (!mutex_unlock(&g_context_lock))
+		{
+			COMMON_LOG_ERROR("Could not release the context lock.");
+			rc = NVM_ERR_UNKNOWN;
+		}
+	}
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+
+int get_nvm_context_pcd_namespace_count()
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_ERR_UNKNOWN;
+
+	// lock
+	if (!mutex_lock(&g_context_lock))
+	{
+		COMMON_LOG_ERROR("Could not obtain the context lock");
+		rc = NVM_ERR_UNKNOWN;
+	}
+	else
+	{
+		if (p_context && p_context->pcd_namespace_count >= 0)
+		{
+			rc = p_context->pcd_namespace_count;
+		}
+
+		// unlock
+		if (!mutex_unlock(&g_context_lock))
+		{
+			COMMON_LOG_ERROR("Could not release the context lock.");
+			rc = NVM_ERR_UNKNOWN;
+		}
+	}
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+int get_nvm_context_pcd_namespaces(int pcd_nscount,
+		struct nvm_namespace_details *p_pcd_nslist)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_ERR_UNKNOWN;
+
+	// lock
+	if (!mutex_lock(&g_context_lock))
+	{
+		COMMON_LOG_ERROR("Could not obtain the context lock");
+		rc = NVM_ERR_UNKNOWN;
+	}
+	else
+	{
+		if (p_context && p_context->pcd_namespace_count > 0 && p_context->p_pcd_namespaces)
+		{
+			int copy_count = pcd_nscount;
+			rc = pcd_nscount;
+			if (pcd_nscount > p_context->pcd_namespace_count)
+			{
+				copy_count = p_context->pcd_namespace_count;
+				rc = p_context->pcd_namespace_count;
+			}
+			else if (pcd_nscount < p_context->pcd_namespace_count)
+			{
+				rc = NVM_ERR_ARRAYTOOSMALL;
+			}
+
+			memset(p_pcd_nslist, 0, pcd_nscount * sizeof (struct nvm_namespace_details));
+			for (int i = 0; i < copy_count; i++)
+			{
+				memmove(&p_pcd_nslist[i], &p_context->p_pcd_namespaces[i],
+						(sizeof (struct nvm_namespace_details)));
+			}
+		}
+
+		// unlock
+		if (!mutex_unlock(&g_context_lock))
+		{
+			COMMON_LOG_ERROR("Could not release the context lock.");
+			rc = NVM_ERR_UNKNOWN;
+		}
+	}
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+int set_nvm_context_pcd_namespaces(const int pcd_nscount,
+	const struct nvm_namespace_details *p_pcd_nslist)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_ERR_UNKNOWN;
+
+	// lock
+	if (!mutex_lock(&g_context_lock))
+	{
+		COMMON_LOG_ERROR("Could not obtain the context lock");
+		rc = NVM_ERR_UNKNOWN;
+	}
+	else
+	{
+		if (p_context)
+		{
+			// clean up existing namespaces - PCD + nvm
+			free_namespace_list();
+			free_pcd_namespace_list();
+
+			// create new list
+			p_context->p_pcd_namespaces = calloc(pcd_nscount,
+					sizeof (struct nvm_namespace_details));
+			if (!p_context->p_pcd_namespaces)
+			{
+				COMMON_LOG_ERROR("Failed to allocate memory for context structure");
+				rc = NVM_ERR_NOMEMORY;
+			}
+			else
+			{
+				p_context->pcd_namespace_count = pcd_nscount;
+				rc = NVM_SUCCESS;
+				for (int i = 0; i < pcd_nscount; i++)
+				{
+					memmove(&p_context->p_pcd_namespaces[i],
+						&p_pcd_nslist[i], sizeof (struct nvm_namespace_details));
 				}
 			}
 		}

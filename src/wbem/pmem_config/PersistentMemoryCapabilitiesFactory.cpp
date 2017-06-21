@@ -348,7 +348,6 @@ wbem::framework::UINT64 wbem::pmem_config::PersistentMemoryCapabilitiesFactory::
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	NVM_UINT64 maxAppDirectNS = 0;
-	NVM_UINT64 maxBlockNS = 0;
 
 	NVM_UID poolUidStr;
 	uid_copy(pPool->pool_uid, poolUidStr);
@@ -363,17 +362,7 @@ wbem::framework::UINT64 wbem::pmem_config::PersistentMemoryCapabilitiesFactory::
 		}
 	}
 
-	// A pool can have as many storage namespaces as its dimms as long as the size is greater
-	// than minimum namespace size
-	for (int j = 0; j < pPool->dimm_count; j++)
-	{
-		if (pPool->storage_capacities[j] >= minNamespaceSize)
-		{
-			maxBlockNS++;
-		}
-	}
-
-	return (maxAppDirectNS + maxBlockNS);
+	return (maxAppDirectNS);
 }
 
 /*

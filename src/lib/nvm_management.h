@@ -937,8 +937,6 @@ struct pool
 	NVM_UINT64 raw_capacities[NVM_MAX_DEVICES_PER_POOL];
 	// Memory mode capacity of each dimm in the pool in bytes.
 	NVM_UINT64 memory_capacities[NVM_MAX_DEVICES_PER_POOL];
-	// Storage mode capacity of each dimm in the pool in bytes.
-	NVM_UINT64 storage_capacities[NVM_MAX_DEVICES_PER_POOL];
 	NVM_UID dimms[NVM_MAX_DEVICES_PER_POOL]; // Unique ID's of underlying AEP DIMMs.
 	// The interleave sets in this pool
 	struct interleave_set ilsets[NVM_MAX_DEVICES_PER_POOL * 2];
@@ -3037,6 +3035,16 @@ extern NVM_API int nvm_get_job_count();
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
 extern NVM_API int nvm_get_jobs(struct job *p_jobs, const NVM_UINT32 count);
+
+/*
+ * Initialize a new context
+ */
+extern NVM_API int nvm_create_context();
+
+/*
+ * Clean up the current context
+ */
+extern NVM_API int nvm_free_context(const NVM_BOOL force);
 
 #if __ADD_MANUFACTURING__
 /*

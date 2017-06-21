@@ -41,6 +41,7 @@ extern "C" {
 #endif
 
 #define NFIT_MAX_DIMMS	12
+#define	MAX_REGIONS_PER_ISET	64
 
 /*
  * NFIT parsing errors
@@ -89,10 +90,10 @@ struct nfit_interleave_set
 	unsigned long long attributes; // memory mapping attributes
 	int dimm_count; // number of dimms in the interleave set
 	unsigned int dimms[NFIT_MAX_DIMMS]; // array of DIMM handles
-	unsigned long long dimm_offsets[NFIT_MAX_DIMMS]; // address base for each DIMM
+	unsigned long long dimm_region_pdas[NFIT_MAX_DIMMS]; // address base for each DIMM
+	unsigned long long dimm_region_offsets[NFIT_MAX_DIMMS]; // address offset for each DIMM
 	unsigned long long dimm_sizes[NFIT_MAX_DIMMS]; // region size for each DIMM
 };
-
 
 /*
  * Print a descriptive version of an NFIT error

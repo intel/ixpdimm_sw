@@ -69,9 +69,39 @@ void fwcmd_pmon_registers_printer(const struct fwcmd_pmon_registers_data *p_valu
 void fwcmd_system_time_printer(const struct fwcmd_system_time_data *p_value,
 	int );
 
+void fwcmd_platform_config_data_identification_information_table_printer(const struct fwcmd_platform_config_data_identification_information_table_data *p_value, 
+	int );	
+	
+void fwcmd_platform_config_data_interleave_information_table_printer(const struct fwcmd_platform_config_data_interleave_information_table_data *p_value, 
+	int );	
+	
+void fwcmd_platform_config_data_partition_size_change_table_printer(const struct fwcmd_platform_config_data_partition_size_change_table_data *p_value, 
+	int );	
+	
+void fwcmd_platform_config_data_current_config_table_printer(const struct fwcmd_platform_config_data_current_config_table_data *p_value, 
+	int );	
+	
+void fwcmd_platform_config_data_config_input_table_printer(const struct fwcmd_platform_config_data_config_input_table_data *p_value, 
+	int );	
+	
+void fwcmd_platform_config_data_config_output_table_printer(const struct fwcmd_platform_config_data_config_output_table_data *p_value, 
+	int );	
+	
 void fwcmd_platform_config_data_configuration_header_table_printer(const struct fwcmd_platform_config_data_configuration_header_table_data *p_value,
 	int );
 
+void fwcmd_ns_index_printer(const struct fwcmd_ns_index_data *p_value, 
+	int );	
+	
+void fwcmd_ns_label_printer(const struct fwcmd_ns_label_data *p_value, 
+	int );	
+	
+void fwcmd_ns_label_v1_1_printer(const struct fwcmd_ns_label_v1_1_data *p_value, 
+	int );	
+	
+void fwcmd_ns_label_v1_2_printer(const struct fwcmd_ns_label_v1_2_data *p_value, 
+	int );	
+	
 void fwcmd_namespace_labels_printer(const struct fwcmd_namespace_labels_data *p_value,
 	int );
 

@@ -74,51 +74,6 @@ NVM_BOOL pool_interleave_sets_need_namespace(
 	return result;
 }
 
-NVM_BOOL pool_storage_regions_need_namespace(
-		const struct nvm_namespace_details *p_namespaces,
-		const NVM_UINT32 namespace_count,
-		const struct pool *p_pool)
-{
-	NVM_BOOL result = 0;
-
-	if (p_pool->type == POOL_TYPE_PERSISTENT)
-	{
-		for (NVM_UINT16 i = 0; i < p_pool->dimm_count; i++)
-		{
-			if (p_pool->storage_capacities[i] > 0)
-			{
-				NVM_BOOL namespace_found = 0;
-				for (NVM_UINT32 j = 0; j < namespace_count; j++)
-				{
-					if (p_namespaces[j].type == NAMESPACE_TYPE_STORAGE)
-					{
-						struct device_discovery discovery;
-						if (lookup_dev_uid(p_pool->dimms[i], &discovery) == NVM_SUCCESS)
-						{
-							result = 1;
-							break;
-						}
-						else if (p_namespaces[j].namespace_creation_id.device_handle.handle ==
-								discovery.device_handle.handle)
-						{
-							namespace_found = 1;
-							break;
-						}
-					}
-				}
-
-				if (!namespace_found)
-				{
-					result = 1;
-					break;
-				}
-			}
-		}
-	}
-
-	return result;
-}
-
 void check_if_pool_interleave_sets_need_namespace(NVM_UINT32 *p_results,
 		const struct nvm_namespace_details *p_namespaces,
 		const NVM_UINT32 namespace_count,
@@ -129,25 +84,6 @@ void check_if_pool_interleave_sets_need_namespace(NVM_UINT32 *p_results,
 		store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG,
 				EVENT_SEVERITY_INFO,
 				EVENT_CODE_DIAG_PCONFIG_POOL_NEEDS_APP_DIRECT_NAMESPACES,
-				p_pool->pool_uid,
-				0,
-				p_pool->pool_uid, NULL, NULL,
-				DIAGNOSTIC_RESULT_OK);
-
-		(*p_results)++;
-	}
-}
-
-void check_if_pool_storage_regions_need_namespace(NVM_UINT32 *p_results,
-		const struct nvm_namespace_details *p_namespaces,
-		const NVM_UINT32 namespace_count,
-		const struct pool *p_pool)
-{
-	if (pool_storage_regions_need_namespace(p_namespaces, namespace_count, p_pool))
-	{
-		store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG,
-				EVENT_SEVERITY_INFO,
-				EVENT_CODE_DIAG_PCONFIG_POOL_NEEDS_STORAGE_NAMESPACES,
 				p_pool->pool_uid,
 				0,
 				p_pool->pool_uid, NULL, NULL,
@@ -170,10 +106,6 @@ void check_if_pools_need_namespaces(NVM_UINT32 *p_results,
 		if (p_pools[i].type != POOL_TYPE_VOLATILE)
 		{
 			check_if_pool_interleave_sets_need_namespace(p_results,
-					p_namespaces, namespace_count,
-					&(p_pools[i]));
-
-			check_if_pool_storage_regions_need_namespace(p_results,
 					p_namespaces, namespace_count,
 					&(p_pools[i]));
 		}

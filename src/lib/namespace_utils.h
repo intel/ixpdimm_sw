@@ -37,57 +37,6 @@ NVM_UINT32 get_alignment_size(NVM_UINT32 block_size, NVM_UINT32 ways);
 
 NVM_BOOL check_namespace_alignment(NVM_UINT64 capacity, NVM_UINT32 block_size, NVM_UINT8 ways);
 
-int get_ad_dimms_from_pool(const struct pool *p_pool,
-		struct device_free_capacities *ad_caps,
-		NVM_UINT16 *ad_cap_count, int by_one);
-
 NVM_UINT64 capacity_to_real_block_count(NVM_UINT64 capacity, NVM_UINT32 block_size);
-
-int select_largest_storage_only_region(const struct device_free_capacities *p_free_capacities,
-		NVM_UINT16 candidate_dimm_count, struct namespace_create_settings *p_settings,
-		NVM_UINT64 minimum_ns_size, NVM_UINT32 *p_namespace_creation_id);
-
-int select_largest_adx1_region(const struct device_free_capacities *p_free_capacities,
-		NVM_UINT16 candidate_dimm_count, struct namespace_create_settings *p_settings,
-		NVM_UINT64 minimum_ns_size, NVM_UINT32 *p_namespace_creation_id);
-
-int select_largest_region(const struct device_free_capacities *p_free_capacities,
-		NVM_UINT16 candidate_dimm_count, struct namespace_create_settings *p_settings,
-		NVM_UINT64 minimum_ns_size, NVM_UINT32 *p_namespace_creation_id);
-
-int fit_namespace_to_largest_matching_region(const struct pool *p_pool,
-		struct device_free_capacities *p_free_capacities,
-		NVM_UINT16 candidate_dimm_count, struct namespace_create_settings *p_settings,
-		const struct interleave_format *p_format, NVM_UINT64 minimum_ns_size,
-		NVM_UINT32 *p_namespace_creation_id);
-
-int calculate_aligned_storage_capacity(struct namespace_create_settings *p_settings,
-		NVM_BOOL allow_adj, NVM_UINT64 *hi_ns_cap, NVM_UINT64 *low_ns_cap);
-
-int select_smallest_storage_only_region(const struct device_free_capacities *p_free_capacities,
-		NVM_UINT16 candidate_dimm_count, struct namespace_create_settings *p_settings,
-		NVM_UINT64 minimum_ns_size, NVM_UINT32 *p_namespace_creation_id,
-		NVM_BOOL allow_adj);
-
-int select_smallest_adx1_region(const struct device_free_capacities *p_free_capacities,
-		NVM_UINT16 candidate_dimm_count, struct namespace_create_settings *p_settings,
-		NVM_UINT64 minimum_ns_size, NVM_UINT32 *p_namespace_creation_id,
-		NVM_BOOL allow_adj);
-
-int select_smallest_combined_region(const struct device_free_capacities *p_free_capacities,
-		NVM_UINT16 candidate_dimm_count, struct namespace_create_settings *p_settings,
-		NVM_UINT64 minimum_ns_size, NVM_UINT32 *p_namespace_creation_id,
-		NVM_BOOL allow_adj);
-
-int select_smallest_region(const struct device_free_capacities *p_free_capacities,
-		NVM_UINT16 candidate_dimm_count, struct namespace_create_settings *p_settings,
-		NVM_UINT64 minimum_ns_size, NVM_UINT32 *p_namespace_creation_id,
-		NVM_BOOL allow_adj);
-
-int select_smallest_matching_region(const struct pool *p_pool,
-		struct device_free_capacities *p_free_capacities,
-		NVM_UINT16 candidate_dimm_count, struct namespace_create_settings *p_settings,
-		const struct interleave_format *p_format, NVM_UINT64 minimum_ns_size,
-		NVM_UINT32 *p_namespace_creation_id, NVM_BOOL allow_adj);
 
 int get_nvm_namespaces_details_alloc(struct nvm_namespace_details **pp_namespaces);

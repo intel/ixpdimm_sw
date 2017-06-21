@@ -199,16 +199,6 @@ wbem::framework::Instance* wbem::memory::PersistentMemoryFactory::getInstance(
 				{
 					setInterleaveSetInstanceAttributes(*pInstance, attributes, interleave);
 				}
-				else if (pool.type == POOL_TYPE_PERSISTENT)
-				{
-					// Non-mirrored persistent pools may have Storage-only regions
-					size_t dimmIndex = 0;
-					found = findStorageDimmIndexForUuid(deviceId, pool, dimmIndex);
-					if (found)
-					{
-						setStorageCapacityInstanceAttributes(*pInstance, attributes, pool, dimmIndex);
-					}
-				}
 			}
 		}
 
@@ -575,59 +565,6 @@ void wbem::memory::PersistentMemoryFactory::setInterleaveSetInstanceAttributes(
 			replication = PERSISTENTMEMORY_REPLICATION_LOCAL;
 		}
 
-		framework::Attribute attr(replication, getReplicationString(replication), false);
-		instance.setAttribute(REPLICATION_KEY, attr);
-	}
-}
-
-void wbem::memory::PersistentMemoryFactory::setStorageCapacityInstanceAttributes(
-		framework::Instance &instance,
-		const framework::attribute_names_t &attributes,
-		const struct pool& pool,
-		const size_t& dimmIdx)
-	throw (framework::Exception)
-{
-	setGenericInstanceAttributes(instance, attributes, pool.socket_id);
-
-	// NumberOfBlocks - uint64
-	if (containsAttribute(NUMBEROFBLOCKS_KEY, attributes))
-	{
-		framework::Attribute attr(getNumBlocks(pool.storage_capacities[dimmIdx]), false);
-		instance.setAttribute(NUMBEROFBLOCKS_KEY, attr);
-	}
-
-	// HealthState - uint16 enum
-	if (containsAttribute(HEALTHSTATE_KEY, attributes))
-	{
-		NVM_UINT16 healthState = getStorageRegionHealthState(pool.dimms[dimmIdx]);
-		framework::Attribute attr(healthState, getHealthStateString(healthState), false);
-		instance.setAttribute(HEALTHSTATE_KEY, attr);
-	}
-
-	// OperationalStatus - uint16 array
-	if (containsAttribute(OPERATIONALSTATUS_KEY, attributes))
-	{
-		framework::UINT16_LIST opStatus;
-		opStatus.push_back(getStorageRegionOperationalStatus(pool.dimms[dimmIdx]));
-		framework::Attribute attr(opStatus, false);
-		instance.setAttribute(OPERATIONALSTATUS_KEY, attr);
-	}
-
-	// AccessGranularity - uint16 - enum
-	// Always block-accessible for Storage region
-	if (containsAttribute(ACCESSGRANULARITY_KEY, attributes))
-	{
-		NVM_UINT16 accessGranularity = PERSISTENTMEMORY_ACCESSGRANULARITY_BLOCK;
-		framework::Attribute attr(accessGranularity,
-				getAccessGranularityString(accessGranularity), false);
-		instance.setAttribute(ACCESSGRANULARITY_KEY, attr);
-	}
-
-	// Replication - uint16 - enum
-	// Storage is never mirrored
-	if (containsAttribute(REPLICATION_KEY, attributes))
-	{
-		NVM_UINT16 replication = PERSISTENTMEMORY_REPLICATION_NONE;
 		framework::Attribute attr(replication, getReplicationString(replication), false);
 		instance.setAttribute(REPLICATION_KEY, attr);
 	}

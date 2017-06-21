@@ -42,6 +42,7 @@
 #include "capabilities.h"
 #include "system.h"
 #include "config_goal_utilities.h"
+#include "namespace_labels.h"
 
 /*
  * Helper function to verify the config goal size (in GiB) is valid with the given alignment
@@ -730,6 +731,9 @@ int nvm_create_config_goal(const NVM_UID device_uid,
 						device_uid,
 						0, // no action required
 						uid_arg, NULL, NULL);
+
+				// be a good citizen and clear out broken any old broken ns labels
+				zero_dimm_namespace_labels(discovery.device_handle.handle);
 			}
 		}
 	}

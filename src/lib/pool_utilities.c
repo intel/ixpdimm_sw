@@ -306,89 +306,45 @@ int get_dimm_free_capacities(
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
 
-	// TODO: This function is not accurate if storage mode namespaces
-	// are created on regions overlapping interleave sets before
-	// App Direct mode namespaces are created. This can only be corrected
-	// by parsing namespace labels and comparing them to the offsets of the
-	// regions.
-	if (p_dimm_caps == NULL)
+	if (p_nvm_caps->nvm_features.app_direct_mode)
 	{
-		struct device_capacities caps;
-		rc = get_dimm_capacities(p_discovery, p_nvm_caps, &caps);
-		if (rc == NVM_SUCCESS)
+		// calculate app direct capacities
+		for (int iset_idx = 0; iset_idx < p_pool->ilset_count; iset_idx++)
 		{
-			p_dimm_free_caps->total_storage_capacity = caps.storage_capacity;
-		}
-	}
-	else
-	{
-		p_dimm_free_caps->total_storage_capacity = p_dimm_caps->storage_capacity;
-	}
-	if (rc == NVM_SUCCESS)
-	{
-		if (p_nvm_caps->nvm_features.app_direct_mode)
-		{
-			// calculate app direct capacities
-			for (int iset_idx = 0; iset_idx < p_pool->ilset_count; iset_idx++)
+			struct interleave_set iset = p_pool->ilsets[iset_idx];
+			// is this dimm in the interleave set?
+			for (int dimm_idx = 0; dimm_idx < iset.dimm_count; dimm_idx++)
 			{
-				struct interleave_set iset = p_pool->ilsets[iset_idx];
-				// is this dimm in the interleave set?
-				for (int dimm_idx = 0; dimm_idx < iset.dimm_count; dimm_idx++)
+				if (uid_cmp(p_discovery->uid, iset.dimms[dimm_idx]))
 				{
-					if (uid_cmp(p_discovery->uid, iset.dimms[dimm_idx]))
+					if (iset.mirrored)
 					{
-						if (iset.mirrored)
+						p_dimm_free_caps->app_direct_mirrored_capacity +=
+							(iset.available_size / iset.dimm_count);
+					}
+					else
+					{
+						NVM_UINT64 used_ad = 0;
+						if (iset.settings.ways == INTERLEAVE_WAYS_1)
 						{
-							p_dimm_free_caps->app_direct_mirrored_capacity +=
-								(iset.available_size / iset.dimm_count);
+							p_dimm_free_caps->app_direct_byone_capacity +=
+								iset.available_size;
+							used_ad = iset.size;
+							REDUCE_CAPACITY(used_ad, iset.available_size)
 						}
 						else
 						{
-							NVM_UINT64 used_ad = 0;
-							if (iset.settings.ways == INTERLEAVE_WAYS_1)
-							{
-								p_dimm_free_caps->app_direct_byone_capacity +=
-									iset.available_size;
-								used_ad = iset.size;
-								REDUCE_CAPACITY(used_ad, iset.available_size)
-							}
-							else
-							{
-								p_dimm_free_caps->app_direct_interleaved_capacity +=
-									(iset.available_size / iset.dimm_count);
-								used_ad = (iset.size / iset.dimm_count);
-								REDUCE_CAPACITY(used_ad,
-									p_dimm_free_caps->app_direct_interleaved_capacity);
+							p_dimm_free_caps->app_direct_interleaved_capacity +=
+								(iset.available_size / iset.dimm_count);
+							used_ad = (iset.size / iset.dimm_count);
+							REDUCE_CAPACITY(used_ad,
+								p_dimm_free_caps->app_direct_interleaved_capacity);
 
-							}
-							REDUCE_CAPACITY(p_dimm_free_caps->total_storage_capacity,
-								used_ad);
 						}
-						break;
 					}
+					break;
 				}
 			}
-		}
-
-		if (p_nvm_caps->nvm_features.storage_mode)
-		{
-			// calculate free storage capacity
-			for (int ns_idx = 0; ns_idx < ns_count; ns_idx++)
-			{
-				if (p_namespaces[ns_idx].namespace_creation_id.device_handle.handle ==
-						p_discovery->device_handle.handle)
-				{
-					NVM_UINT64 ns_size =
-						p_namespaces[ns_idx].block_count * p_namespaces[ns_idx].block_size;
-					REDUCE_CAPACITY(p_dimm_free_caps->total_storage_capacity, ns_size);
-				}
-			}
-
-			p_dimm_free_caps->storage_only_capacity = p_dimm_free_caps->total_storage_capacity;
-			REDUCE_CAPACITY(p_dimm_free_caps->storage_only_capacity,
-					p_dimm_free_caps->app_direct_byone_capacity);
-			REDUCE_CAPACITY(p_dimm_free_caps->storage_only_capacity,
-					p_dimm_free_caps->app_direct_interleaved_capacity);
 		}
 	}
 

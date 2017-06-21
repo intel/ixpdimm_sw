@@ -135,47 +135,6 @@ int update_pool_security_from_iset(struct pool *p_pool,
 	return rc;
 }
 
-int update_pool_security_from_dimm(struct pool *p_pool, const int pool_dimm_idx,
-		const struct pool_data *p_pool_data, const int data_idx)
-{
-	COMMON_LOG_ENTRY();
-	int rc = NVM_SUCCESS;
-
-	struct device_discovery dimm = p_pool_data->dimm_list[data_idx];
-
-	// can a storage ns be created on this dimm?
-	struct device_free_capacities free_caps;
-	memset(&free_caps, 0, sizeof (struct device_free_capacities));
-	get_dimm_free_capacities(
-			&p_pool_data->capabilities,
-			&dimm,
-			p_pool,
-			p_pool_data->namespace_list,
-			p_pool_data->namespace_count,
-			&p_pool_data->dimm_capacities_list[data_idx],
-			&free_caps);
-
-	if (free_caps.total_storage_capacity >
-			p_pool_data->capabilities.sw_capabilities.min_namespace_size)
-	{
-		if (device_is_encryption_enabled(dimm.lock_state))
-		{
-			p_pool->encryption_enabled = 1;
-		}
-		if (dimm.security_capabilities.passphrase_capable)
-		{
-			p_pool->encryption_capable = 1;
-		}
-		if (device_is_erase_capable(dimm.security_capabilities))
-		{
-			p_pool->erase_capable = 1;
-		}
-	}
-
-	COMMON_LOG_EXIT_RETURN_I(rc);
-	return rc;
-}
-
 /*
  * Deallocate the memory in a pool_data structure
  */
@@ -592,12 +551,11 @@ void add_dimm_to_pool(const struct pool_data *p_pool_data,
 		}
 		else if (p_pool->type == POOL_TYPE_PERSISTENT)
 		{
-			if (p_pool_data->capabilities.nvm_features.storage_mode)
-			{
-				p_pool->storage_capacities[dimm_index] = caps.storage_capacity;
-			}
-			p_pool->capacity += caps.storage_capacity;
-			p_pool->free_capacity += free_caps.total_storage_capacity;
+			NVM_UINT64 ad_cap = caps.app_direct_capacity;
+			REDUCE_CAPACITY(ad_cap, caps.mirrored_app_direct_capacity * 2llu);
+			p_pool->capacity += ad_cap;
+			p_pool->free_capacity += free_caps.app_direct_byone_capacity +
+				free_caps.app_direct_interleaved_capacity;
 		}
 		else if (p_pool->type == POOL_TYPE_PERSISTENT_MIRROR)
 		{
@@ -734,7 +692,7 @@ int nvm_interleave_to_interleave(
 					{
 						rc = fill_interleave_set_settings_and_id_from_dimm(
 							p_iset, p_pool_data->dimm_list[data_idx].device_handle,
-							p_nvm_iset->dimm_offsets[dimm_idx]);
+							p_nvm_iset->dimm_region_pdas[dimm_idx]);
 						if (rc == NVM_SUCCESS)
 						{
 							iset_settings_filled = 1;
@@ -873,49 +831,6 @@ int add_interleave_sets_to_pools(struct pool_data *p_pool_data,
 	return rc;
 }
 
-int add_dimms_storage_capacity_to_pools(struct pool_data *p_pool_data,
-	struct pool *p_pools, const NVM_UINT8 count, int *p_pool_count)
-{
-	COMMON_LOG_ENTRY();
-	int rc = NVM_SUCCESS;
-	for (int dimm_idx = 0; dimm_idx < p_pool_data->dimm_count; dimm_idx++)
-	{
-		struct device_discovery dimm = p_pool_data->dimm_list[dimm_idx];
-		struct device_capacities cap = p_pool_data->dimm_capacities_list[dimm_idx];
-		if (cap.storage_capacity)
-		{
-			int pool_index = get_pool_index(dimm.socket_id, POOL_TYPE_PERSISTENT,
-					p_pools, *p_pool_count);
-			if (pool_index < 0)
-			{
-				if (*p_pool_count >= count)
-				{
-					rc = NVM_ERR_ARRAYTOOSMALL;
-				}
-				else
-				{
-					pool_index = *p_pool_count;
-					rc = init_pool(&p_pools[pool_index], p_pool_data->host.name,
-							POOL_TYPE_PERSISTENT, dimm.socket_id);
-					if (rc != NVM_SUCCESS)
-					{
-						break;
-					}
-					(*p_pool_count)++;
-				}
-			}
-			if (pool_index >= 0)
-			{
-				add_dimm_to_pool(p_pool_data, dimm_idx, &p_pools[pool_index]);
-				update_pool_security_from_dimm(&p_pools[pool_index],
-						p_pools[pool_index].dimm_count-1, p_pool_data, dimm_idx);
-			}
-		}
-	}
-	COMMON_LOG_EXIT_RETURN_I(rc);
-	return rc;
-}
-
 int add_dimms_volatile_capacity_to_pools(struct pool_data *p_pool_data,
 	struct pool *p_pools, const NVM_UINT8 count, int *p_pool_count)
 {
@@ -973,15 +888,6 @@ int populate_pools(struct pool_data *p_pool_data,
 			rc = pool_count;
 		}
 	}
-	if (rc >= 0 && p_pool_data->capabilities.nvm_features.storage_mode)
-	{
-		rc = add_dimms_storage_capacity_to_pools(p_pool_data,
-				p_pools, count, &pool_count);
-		if (rc == NVM_SUCCESS)
-		{
-			rc = pool_count;
-		}
-	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
@@ -1006,18 +912,6 @@ int count_pools(struct pool_data *p_pool_data)
 				{
 					pools_list[pool_count].socket_id = -1;
 					pools_list[pool_count].type = POOL_TYPE_VOLATILE;
-					pool_count++;
-				}
-			}
-			if (p_pool_data->capabilities.nvm_features.storage_mode &&
-					p_pool_data->dimm_capacities_list[i].storage_capacity)
-			{
-				int pool_index = get_pool_index(p_pool_data->dimm_list[i].socket_id,
-						POOL_TYPE_PERSISTENT, pools_list, pool_count);
-				if (pool_index < 0)
-				{
-					pools_list[pool_count].socket_id = p_pool_data->dimm_list[i].socket_id;
-					pools_list[pool_count].type = POOL_TYPE_PERSISTENT;
 					pool_count++;
 				}
 			}

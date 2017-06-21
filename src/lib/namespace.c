@@ -66,15 +66,6 @@ int find_interleave_with_capacity(const struct pool *p_pool,
 		const struct nvm_namespace_details *p_namespaces,
 		int ns_count);
 
-int find_dimm_with_capacity(const struct pool *p_pool,
-		const struct nvm_capabilities *p_nvm_caps,
-		struct namespace_create_settings *p_settings,
-		NVM_UINT32 *p_namespace_creation_id,
-		const struct interleave_format *p_format,
-		NVM_BOOL allow_adj,
-		const struct nvm_namespace_details *p_namespaces,
-		int ns_count);
-
 int find_id_for_ns_creation(const struct pool *p_pool,
 		const struct nvm_capabilities *p_nvm_caps,
 		struct namespace_create_settings *p_settings,
@@ -94,11 +85,6 @@ int get_pool_supported_size_ranges(const struct pool *p_pool,
 		struct possible_namespace_ranges *p_range,
 		const struct nvm_namespace_details *p_namespaces,
 		int ns_count);
-
-int get_largest_storage_namespace_on_a_dimm(const struct nvm_capabilities *p_caps,
-		const struct pool *p_pool, const NVM_UID device_uid, NVM_UINT64 *p_size,
-		const struct nvm_namespace_details *p_namespaces, int ns_count);
-
 
 /*
  * Retrieve the number of PM namespaces allocated across all devices.
@@ -586,58 +572,6 @@ int find_id_for_ns_creation(const struct pool *p_pool,
 				p_namespace_creation_id, p_format, allow_adjustment,
 				p_namespaces, ns_count);
 	}
-	else if (p_settings->type == NAMESPACE_TYPE_STORAGE)
-	{
-		rc = find_dimm_with_capacity(p_pool, p_nvm_caps, p_settings,
-				p_namespace_creation_id, p_format, allow_adjustment,
-				p_namespaces, ns_count);
-	}
-
-	COMMON_LOG_EXIT_RETURN_I(rc);
-	return rc;
-}
-
-int select_best_dimm_for_settings(const struct pool *p_pool,
-		const struct nvm_capabilities *p_nvm_caps,
-		const struct device_discovery *p_discoveries,
-		NVM_UINT16 candidate_dimm_count,
-		struct namespace_create_settings *p_settings,
-		const struct interleave_format *p_format,
-		NVM_UINT64 minimum_ns_size,
-		NVM_UINT32 *p_namespace_creation_id,
-		NVM_BOOL allow_adj,
-		const struct nvm_namespace_details *p_namespaces,
-		int ns_count)
-{
-	COMMON_LOG_ENTRY();
-	int rc = NVM_SUCCESS;
-
-	// calculate device free capacities
-	struct device_free_capacities free_capacities[candidate_dimm_count];
-	memset(free_capacities, 0, sizeof (struct device_free_capacities) * candidate_dimm_count);
-	for (int i = 0; i < candidate_dimm_count; i++)
-	{
-		uid_copy(p_discoveries[i].uid, free_capacities[i].uid);
-		free_capacities[i].device_handle.handle = p_discoveries[i].device_handle.handle;
-		rc = get_dimm_free_capacities(p_nvm_caps, &p_discoveries[i],
-				p_pool, p_namespaces, ns_count, NULL, &free_capacities[i]);
-	}
-
-	if (rc == NVM_SUCCESS)
-	{
-		if (p_settings->block_count == NVM_REQUEST_MAX_AVAILABLE_BLOCK_COUNT)
-		{
-			rc = fit_namespace_to_largest_matching_region(p_pool,
-				free_capacities, candidate_dimm_count, p_settings,
-				p_format, minimum_ns_size, p_namespace_creation_id);
-		}
-		else
-		{
-			rc = select_smallest_matching_region(p_pool, free_capacities,
-				candidate_dimm_count, p_settings, p_format,
-				minimum_ns_size, p_namespace_creation_id, allow_adj);
-		}
-	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
@@ -689,78 +623,6 @@ NVM_BOOL are_all_dimms_locked(const struct device_discovery *p_discoveries, NVM_
 	}
 	COMMON_LOG_EXIT();
 	return all_locked;
-}
-
-int find_dimm_with_capacity(const struct pool *p_pool,
-		const struct nvm_capabilities *p_nvm_caps,
-		struct namespace_create_settings *p_settings,
-		NVM_UINT32 *p_namespace_creation_id,
-		const struct interleave_format *p_format,
-		NVM_BOOL allow_adj,
-		const struct nvm_namespace_details *p_namespaces,
-		int ns_count)
-{
-	COMMON_LOG_ENTRY();
-	int rc = NVM_SUCCESS;
-	int ways = 1;
-
-	NVM_UINT64 minimum_ns_size =
-			get_minimum_ns_size(ways, p_nvm_caps->sw_capabilities.min_namespace_size);
-
-	struct device_discovery *p_discoveries = NULL;
-	NVM_UID *p_candidate_dimms = NULL;
-	NVM_UINT16 candidate_dimm_count = 0;
-
-	p_candidate_dimms = calloc(p_pool->dimm_count, sizeof (NVM_UID));
-	if (!p_candidate_dimms)
-	{
-		rc = NVM_ERR_NOMEMORY;
-	}
-	else
-	{
-		memmove(p_candidate_dimms, p_pool->dimms, p_pool->dimm_count * sizeof (NVM_UID));
-		candidate_dimm_count = p_pool->dimm_count;
-		p_discoveries = calloc(candidate_dimm_count, sizeof (struct device_discovery));
-		if (!p_discoveries)
-		{
-			rc = NVM_ERR_NOMEMORY;
-		}
-	}
-
-	if (rc == NVM_SUCCESS)
-	{
-		rc = lookup_dev_uids((const NVM_UID*)p_candidate_dimms, p_pool->dimm_count,
-					p_discoveries);
-	}
-	if (rc == NVM_SUCCESS)
-	{
-		if (are_all_dimms_locked(p_discoveries, candidate_dimm_count))
-		{
-			rc = NVM_ERR_BADSECURITYSTATE;
-		}
-	}
-	if (rc == NVM_SUCCESS)
-	{
-		rc = get_devices_matching_security(p_discoveries, &candidate_dimm_count,
-				&p_settings->security_features);
-		if (rc == NVM_SUCCESS && !candidate_dimm_count)
-		{
-			rc = NVM_ERR_BADSECURITYGOAL;
-		}
-	}
-	if (rc == NVM_SUCCESS)
-	{
-		rc = select_best_dimm_for_settings(p_pool, p_nvm_caps,
-			p_discoveries, candidate_dimm_count, p_settings, p_format,
-			minimum_ns_size, p_namespace_creation_id, allow_adj,
-			p_namespaces, ns_count);
-	}
-
-	free(p_discoveries);
-	free(p_candidate_dimms);
-
-	COMMON_LOG_EXIT_RETURN_I(rc);
-	return rc;
 }
 
 NVM_UINT64 get_minimum_ns_size(NVM_UINT8 ways, NVM_UINT64 driver_min_ns_size)
@@ -1076,12 +938,6 @@ int validate_namespace_create_settings(struct pool *p_pool,
 						COMMON_LOG_ERROR(
 							"Storage namespaces not supported");
 						rc = NVM_ERR_NOTSUPPORTED;
-					}
-					else if (range.largest_possible_storage_ns == 0)
-					{
-						COMMON_LOG_ERROR(
-								"No more Storage namespaces can be created on the pool");
-						rc = NVM_ERR_TOOMANYNAMESPACES;
 					}
 					else if (allocatedPageStructsAreInDramOrPmem(p_settings))
 					{
@@ -1463,87 +1319,6 @@ int validate_app_direct_namespace_size_for_modification(
 	return rc;
 }
 
-int validate_storage_namespace_size_for_modification(const struct pool *p_pool,
-		NVM_UINT64 *p_block_count,
-		struct nvm_namespace_details *p_nvm_details,
-		struct nvm_capabilities *p_nvm_caps,
-		const NVM_BOOL allow_adjustment)
-{
-	int rc = NVM_SUCCESS;
-
-	struct device_discovery discovery;
-	if (lookup_dev_handle(p_nvm_details->namespace_creation_id.device_handle,
-			&discovery) >= 0)
-	{
-		// retrieve the current namespaces
-		struct nvm_namespace_details *p_namespaces = NULL;
-		int ns_count = get_nvm_namespaces_details_alloc(&p_namespaces);
-		if (ns_count >= 0)
-		{
-			// storage namespaces are restricted to one DIMM
-			NVM_UINT64 minimum_ns_size =
-				get_minimum_ns_size(1, p_nvm_caps->sw_capabilities.min_namespace_size);
-			NVM_UINT32 real_block_size =
-				get_real_block_size(p_nvm_details->block_size);
-			NVM_UINT64 old_namespace_capacity =
-				p_nvm_details->block_count * (NVM_UINT64)real_block_size;
-			NVM_UINT64 new_block_count = *p_block_count;
-			adjust_namespace_block_count_if_allowed(&new_block_count,
-				real_block_size, 1, allow_adjustment);
-			NVM_UINT64 namespace_capacity = new_block_count * real_block_size;
-			NVM_UINT64 available_size = 0;
-
-			rc = get_largest_storage_namespace_on_a_dimm(
-				p_nvm_caps, p_pool, discovery.uid, &available_size,
-				p_namespaces, ns_count);
-			if (rc == NVM_SUCCESS)
-			{
-				if ((namespace_capacity > old_namespace_capacity) &&
-						(available_size < (namespace_capacity - old_namespace_capacity)))
-				{
-					COMMON_LOG_ERROR_F("Caller requested namespace capacity %llu \
-							bytes is more than the available size on the dimm %llu \
-							bytes", namespace_capacity, available_size);
-					rc = NVM_ERR_BADSIZE;
-				}
-				else if (namespace_capacity < minimum_ns_size)
-				{
-					COMMON_LOG_ERROR_F("Caller requested namespace capacity %llu bytes \
-							is smaller than the supported minimum namespace size %llu bytes.",
-							namespace_capacity, minimum_ns_size);
-					rc = NVM_ERR_BADSIZE;
-				}
-				else if (!check_namespace_alignment(namespace_capacity, real_block_size, 1))
-				{
-					COMMON_LOG_ERROR_F("Caller requested namespace capacity %llu \
-							bytes is not in alignment with the namespace alignment \
-							size supported by the driver %llu bytes",
-							namespace_capacity, p_pool->free_capacity);
-
-					rc = NVM_ERR_BADALIGNMENT;
-				}
-				else
-				{
-					*p_block_count = new_block_count;
-				}
-			}
-			else
-			{
-				COMMON_LOG_ERROR_F("get_largest_namespace_on_a_dimm failed with error code %d", rc);
-			}
-			free(p_namespaces);
-		}
-	}
-	else
-	{
-		COMMON_LOG_ERROR("Failed to find device");
-		rc = NVM_ERR_BADDEVICE;
-	}
-
-	COMMON_LOG_EXIT_RETURN_I(rc);
-	return rc;
-}
-
 /*
  * Helper function to validate namespace size when modifying a NS
  */
@@ -1573,11 +1348,6 @@ int validate_namespace_size_for_modification(const struct pool *p_pool, NVM_UINT
 		else if (p_nvm_details->type == NAMESPACE_TYPE_APP_DIRECT)
 		{
 			rc = validate_app_direct_namespace_size_for_modification(p_pool, p_block_count,
-					p_nvm_details, &nvm_caps, allow_adjustment);
-		}
-		else if (p_nvm_details->type == NAMESPACE_TYPE_STORAGE)
-		{
-			rc = validate_storage_namespace_size_for_modification(p_pool, p_block_count,
 					p_nvm_details, &nvm_caps, allow_adjustment);
 		}
 		else
@@ -2086,81 +1856,6 @@ void get_smallest_app_direct_namespace(const struct pool *p_pool,
 	COMMON_LOG_EXIT();
 }
 
-
-/*
- * Return the capacity of the largest storage namespace that can be created on the
- * specified dimm.
- * Expect p_pool and p_size to not be NULL.
- */
-int get_largest_storage_namespace_on_a_dimm(const struct nvm_capabilities *p_caps,
-		const struct pool *p_pool, const NVM_UID device_uid, NVM_UINT64 *p_size,
-		const struct nvm_namespace_details *p_namespaces, int ns_count)
-{
-	COMMON_LOG_ENTRY();
-	int rc = NVM_ERR_DRIVERFAILED;
-
-	struct device_discovery discovery;
-	rc = lookup_dev_uid(device_uid, &discovery);
-	if (rc != NVM_SUCCESS)
-	{
-		COMMON_LOG_ERROR("Failed to find the device in the lookup table");
-	}
-	else
-	{
-		struct device_free_capacities free_capacities;
-		memset(&free_capacities, 0, sizeof (struct device_free_capacities));
-		rc = get_dimm_free_capacities(p_caps, &discovery,
-				p_pool, p_namespaces, ns_count, NULL, &free_capacities);
-		if (rc == NVM_SUCCESS)
-		{
-			*p_size = free_capacities.total_storage_capacity;
-		}
-	}
-
-	COMMON_LOG_EXIT_RETURN_I(rc);
-	return rc;
-}
-
-/*
- * Return the size of the largest storage namespace that can be created
- */
-int get_largest_storage_namespace(const struct pool *p_pool,
-		const struct nvm_capabilities *p_caps, NVM_UINT64 *p_size,
-		const struct nvm_namespace_details *p_namespaces, int ns_count)
-{
-	COMMON_LOG_ENTRY();
-	int rc = NVM_SUCCESS;
-
-	if (p_pool->type == POOL_TYPE_PERSISTENT_MIRROR ||
-		p_pool->type == POOL_TYPE_VOLATILE)
-	{
-		*p_size = 0;
-	}
-	else
-	{
-		*p_size = 0;
-		for (int i = 0; (i < p_pool->dimm_count) && (rc == NVM_SUCCESS); i++)
-		{
-			NVM_UINT64 max_dimm_storage_capacity = 0;
-			rc = get_largest_storage_namespace_on_a_dimm(p_caps,
-					p_pool, p_pool->dimms[i], &max_dimm_storage_capacity,
-					p_namespaces, ns_count);
-
-			if (rc != NVM_SUCCESS)
-			{
-				break;
-			}
-			if (max_dimm_storage_capacity > *p_size)
-			{
-				*p_size = max_dimm_storage_capacity;
-			}
-		}
-	}
-
-	COMMON_LOG_EXIT_RETURN_I(rc);
-	return rc;
-}
-
 NVM_UINT64 get_smallest_block_size(const struct nvm_capabilities *p_caps)
 {
 	COMMON_LOG_ENTRY();
@@ -2202,17 +1897,6 @@ int get_pool_supported_size_ranges(const struct pool *p_pool,
 			p_range->app_direct_increment = interleave_alignment_size;
 			get_smallest_app_direct_namespace(p_pool, interleave_alignment_size,
 					&(p_range->smallest_possible_app_direct_ns));
-		}
-	}
-	if (p_caps->nvm_features.storage_mode)
-	{
-		rc = get_largest_storage_namespace(p_pool, p_caps,
-				&(p_range->largest_possible_storage_ns), p_namespaces, ns_count);
-		if (p_range->largest_possible_storage_ns > 0)
-		{
-			p_range->storage_increment = get_smallest_block_size(p_caps);
-			p_range->smallest_possible_storage_ns =
-					get_minimum_ns_size(1, p_caps->sw_capabilities.min_namespace_size);
 		}
 	}
 
