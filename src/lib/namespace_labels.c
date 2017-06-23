@@ -524,17 +524,18 @@ NVM_BOOL is_valid_label(struct pt_output_ns_label_v1_2 *p_label)
 			p_label->label.slot);
 		rc = 0;
 	}
-	// ignore block ns
-	else if (NS_FLAGS_LOCAL(p_label->label.flags))
-	{
-		COMMON_LOG_INFO_F(
-			"Storage namespace label in slot %d ignored", p_label->label.slot);
-		rc = 0;
-	}
-	// app direct ns checks
 	else
 	{
-		if (p_label->label.position > p_label->label.nlabel)
+		// only care about pm namespaces
+		COMMON_GUID pm_guid;
+		str_to_guid(SPA_RANGE_PM_REGION_GUID_STR, pm_guid);
+		if (!guid_cmp(pm_guid, p_label->type_guid))
+		{
+			COMMON_LOG_INFO_F(
+				"Unsupported namespace label type guid in slot %d", p_label->label.slot);
+			rc = 0;
+		}
+		else if (p_label->label.position > p_label->label.nlabel)
 		{
 			COMMON_LOG_INFO_F(
 				"Invalid namespace label in slot %d, position is > nlabel", p_label->label.slot);
@@ -798,10 +799,14 @@ int parse_dimm_ns_labels(struct ns_data **pp_ns_data, const int dimm_index)
 					struct pt_output_ns_label_v1_2 label;
 					memset(&label, 0, sizeof (struct pt_output_ns_label_v1_2));
 					memmove(&label.label, &p_label->label, sizeof (struct pt_output_ns_label));
+					// set the appropriate type guid for v1.2 PM namespaces, v1.1 block was local
+					if (!NS_FLAGS_LOCAL(p_label->label.flags))
+					{
+						str_to_guid(SPA_RANGE_PM_REGION_GUID_STR, label.type_guid);
+					}
 					// create a valid checksum
 					checksum_fletcher64((void *)&label, sizeof (label),
 							&label.checksum, 1);
-
 				    rc = init_namespace_from_label(pp_ns_data, dimm_index, &label);
 				}
 				else if (ns_index.label_major_version == 1 &&
