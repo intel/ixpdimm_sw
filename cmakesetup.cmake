@@ -26,14 +26,14 @@
 
 if (NOT BUILDNUM)
 	execute_process(COMMAND git describe --abbrev=0 OUTPUT_VARIABLE BUILDNUM)
-
 	if ("${BUILDNUM}" MATCHES "^([a-zA-Z-]*)(.*)$")
-		#replace 
+		#replace
+
 		string(REGEX REPLACE "^([a-zA-Z-]+)" "" BUILDNUM "${BUILDNUM}")
 		string(REGEX REPLACE "\n$" "" BUILDNUM "${BUILDNUM}")
 	else ()
 		execute_process(COMMAND pwd OUTPUT_VARIABLE BUILDNUM)
-		if ("${BUILDNUM}" NOT MATCHES "^([0-9]+)\\.([0-9]+)\\.([0-9]+)\\.([0-9]+)$")
+		if ("NOT ${BUILDNUM}" MATCHES "^v([0-9]+)\\.([0-9]+)\\.([0-9]+)\\.([0-9]+)$")
 			set(BUILDNUM 99.99.99.9999)
 		endif()
 	endif()

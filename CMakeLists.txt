@@ -70,10 +70,13 @@ message(LIB_TYPE: ${LIB_TYPE})
 get_filename_component(ROOT ./ ABSOLUTE)
 
 set(FRAMEWORK_LIBS_DIR ${ROOT}/../external CACHE STRING "Path to the invm-framework libraries")
-message(WARNING ${FRAMEWORK_LIBS_DIR})
 find_library(invm-i18n NO_DEFAULT_PATH NAMES invm-i18n PATHS ${FRAMEWORK_LIBS_DIR})
 find_library(invm-cli NO_DEFAULT_PATH NAMES invm-cli PATHS ${FRAMEWORK_LIBS_DIR})
 find_library(invm-cim NO_DEFAULT_PATH NAMES invm-cim PATHS ${FRAMEWORK_LIBS_DIR})
+
+set(invm-i18n_include ${FRAMEWORK_LIBS_DIR}/include)
+set(invm-cim_include ${FRAMEWORK_LIBS_DIR}/include)
+set(invm-cli_include ${FRAMEWORK_LIBS_DIR}/include)
 
 set(OUTPUT_DIR ${ROOT}/output/build/${OS_TYPE}/${ADAPTER_TYPE}/${BUILD_TYPE})
 
@@ -96,6 +99,7 @@ file(GLOB DRIVER_INTERFACE_FILES
 add_library(driver_adapter ${DRIVER_INTERFACE_FILES})
 target_include_directories(driver_adapter PUBLIC
        		${extern_dir}/os_headers
+			src
             )
 if (LNX_BUILD)
     target_link_libraries(driver_adapter ndctl)
@@ -166,7 +170,7 @@ target_link_libraries(common
         ssl
         crypto
         m
-        zlib
+        z
        	)
 target_include_directories(common PUBLIC
         ${extern_dir}/sqlite
@@ -226,10 +230,9 @@ file(GLOB ACPI_SRC_FILES
         src/acpi/nfit_tables.h
         src/acpi/nfit_printer.c
         src/acpi/nfit.c
+        src/acpi/nfit_interleave.c
         src/common/guid/guid.c)
 add_library(acpi ${ACPI_SRC_FILES})
-add_custom_command(TARGET acpi COMMAND cov01 --on 
-		COMMENT "Switchin gon cov....")
 target_include_directories(acpi PUBLIC src/common)
 target_link_libraries(acpi
         ssl
@@ -273,8 +276,11 @@ include_directories(${API_LIB_NAME} SYSTEM PUBLIC
         external/os_headers
         )
 target_include_directories(${API_LIB_NAME} PUBLIC
+		src
+		src/acpi
         src/common/persistence
         external/fw_headers
+
         )
 target_link_libraries(${API_LIB_NAME}
         common
@@ -321,6 +327,7 @@ target_link_libraries(db_creator
         sqlite3
         pthread
         )
+
 add_custom_command(TARGET db_creator POST_BUILD
         COMMAND cd ${OUTPUT_DIR} && $<TARGET_FILE:db_creator>)
 if (WIN_BUILD)
@@ -408,6 +415,7 @@ target_include_directories(${CIM_LIB_NAME} PUBLIC
         src/wbem/
         external/cmpi/include/
         external/rapidxml-1.13
+		${invm-cim_include}
         )
 target_link_libraries(${CIM_LIB_NAME}
         ${API_LIB_NAME}
@@ -448,7 +456,6 @@ target_include_directories(${CLI_LIB_SONAME} PUBLIC
         src/lib/
         src/wbem/
 		)
-message(WARNING ${invm-cli} ${invm-cim} ${invm-i18n})
 target_link_libraries(${CLI_LIB_SONAME}
         ${CORE_LIB_NAME}
         ${CIM_LIB_NAME}
@@ -464,9 +471,10 @@ target_link_libraries(${CLI_LIB_SONAME}
 add_executable(${CLI_NAME} src/cli/nvmcli.cpp)
 
 target_include_directories(${CLI_NAME} PUBLIC
+		src/cli
         src/common
-        ${CLI_INCLUDE_DIR}
-		${I18N_INCLUDE_DIR}
+        ${invm-cli_include}
+		${invm-i18n_include}
         )
 target_link_libraries(${CLI_NAME}
         ${invm-i18n}
