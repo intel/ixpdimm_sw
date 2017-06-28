@@ -101,6 +101,7 @@ ALL_TARGETS = $(OBJECT_MODULE_DIR) $(TARGETNAME) create_config_db $(UNITTEST)
 # ---- COMPILER PARAMETERS -------------------------------------------------------------------------
 INCS =  -I. \
 		-I$(SRC_DIR)/ \
+		-I$(SRC_DIR)/src \
 		-I$(SRC_DIR)/common \
 		-I$(SRC_DIR)/acpi \
 		-I$(EXTERN_DIR)/sqlite \

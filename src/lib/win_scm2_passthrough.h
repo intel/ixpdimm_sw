@@ -25,37 +25,21 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * This file contains NFIT helper functions
- */
+#ifndef CR_MGMT_WIN_SCM2_PASSTHROUGH_H
+#define	CR_MGMT_WIN_SCM2_PASSTHROUGH_H
 
-#ifndef NFIT_UTILITIES_H
-#define	NFIT_UTILITIES_H
-
-#include <acpi/nfit.h>
-#include "nvm_management.h"
-#include "adapter_types.h"
-
-/*
- * Get the number of DIMMS from the NFIT
- */
-int get_topology_count_from_nfit();
-
-/*
- * Get the DIMMs from the NFIT
- */
-int get_topology_from_nfit(const NVM_UINT8 count, struct nvm_topology *p_dimm_topo);
-
-/*
- * Get the number of interleave sets from the NFIT
- */
-int get_interleave_set_count_from_nfit();
-
-/*
- * Get the interleave sets from the NFIT
- */
-int get_interleave_sets_from_nfit(const NVM_UINT8 count,
-		struct nvm_interleave_set *p_interleaves);
+#include "fis_types.h"
 
 
-#endif /* NFIT_UTILITIES_H */
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+int win_scm2_passthrough(struct fw_cmd *p_cmd, unsigned int *p_dsm_status);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // CR_MGMT_WIN_SCM2_PASSTHROUGH_H

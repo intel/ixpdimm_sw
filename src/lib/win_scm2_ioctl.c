@@ -46,7 +46,8 @@ static enum WIN_SCM2_IOCTL_RETURN_CODES scm2_open_ioctl_target(PHANDLE p_handle,
 
 	if (*p_handle == INVALID_HANDLE_VALUE)
 	{
-		SCM_LOG_ERROR_F("CreateFile Failed, Verify if driver installed. Error: %d",
+		SCM_LOG_ERROR_F("CreateFile Failed for target: %s, Verify if driver installed. Error: %d",
+				ioctl_target,
 				(int)GetLastError());
 		rc = WIN_SCM2_IOCTL_RC_ERR;
 	}
@@ -73,7 +74,7 @@ static enum WIN_SCM2_IOCTL_RETURN_CODES scm2_send_ioctl_command(HANDLE handle,
 
 	if (!io_result)
 	{
-		SCM_LOG_ERROR_F("IOCTL send failed with Windows Error: %d", GetLastError());
+		SCM_LOG_ERROR_F("IOCTL send failed with Windows Error: %d", (int)GetLastError());
 		rc = WIN_SCM2_IOCTL_RC_ERR;
 	}
 	else if (out_size != bytes_returned)

@@ -25,37 +25,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * This file contains NFIT helper functions
- */
+#ifndef CR_MGMT_WIN_SCM2_IOCTL_DRIVER_VERSION_H
+#define	CR_MGMT_WIN_SCM2_IOCTL_DRIVER_VERSION_H
 
-#ifndef NFIT_UTILITIES_H
-#define	NFIT_UTILITIES_H
+#define	DRIVER_VERSION_LEN 25
 
-#include <acpi/nfit.h>
-#include "nvm_management.h"
-#include "adapter_types.h"
-
-/*
- * Get the number of DIMMS from the NFIT
- */
-int get_topology_count_from_nfit();
-
-/*
- * Get the DIMMs from the NFIT
- */
-int get_topology_from_nfit(const NVM_UINT8 count, struct nvm_topology *p_dimm_topo);
-
-/*
- * Get the number of interleave sets from the NFIT
- */
-int get_interleave_set_count_from_nfit();
-
-/*
- * Get the interleave sets from the NFIT
- */
-int get_interleave_sets_from_nfit(const NVM_UINT8 count,
-		struct nvm_interleave_set *p_interleaves);
+int win_scm2_ioctl_driver_version(unsigned short nfit_handle,
+		char driver_revision[DRIVER_VERSION_LEN]);
 
 
-#endif /* NFIT_UTILITIES_H */
+#endif // CR_MGMT_WIN_SCM2_IOCTL_DRIVER_VERSION_H

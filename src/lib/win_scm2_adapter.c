@@ -28,12 +28,15 @@
 #include <common/persistence/logging.h>
 #include <string/s_str.h>
 #include <acpi/nfit.h>
+
+#include "device_fw.h"
 #include "win_scm2_adapter.h"
 #include "win_scm2_version_info.h"
-#include "win_scm2_ioctl_passthrough.h"
 #include "win_scm2_capabilities.h"
 #include "win_scm2_ioctl.h"
-#include "device_fw.h"
+#include "win_scm2_passthrough.h"
+#include "win_scm2_ioctl_driver_version.h"
+
 
 static enum return_code win_scm_to_nvm_err(int scm_rc);
 static unsigned int win_scm2_get_first_handle();
@@ -70,8 +73,21 @@ NVM_BOOL win_scm_adp_is_supported_driver_available()
 
 int win_scm_adp_get_vendor_driver_revision(NVM_VERSION version_str, const NVM_SIZE str_len)
 {
-	s_strcpy(version_str, "", str_len);
-	return NVM_ERR_NOTSUPPORTED;
+	enum return_code rc = NVM_SUCCESS;
+
+	unsigned int handle = win_scm2_get_first_handle();
+	char tmp[DRIVER_VERSION_LEN];
+	int scm_rc = win_scm2_ioctl_driver_version(handle, tmp);
+	if (WIN_SCM2_IOCTL_SUCCESS(scm_rc))
+	{
+		s_strcpy(version_str, tmp, str_len);
+	}
+	else
+	{
+		rc = win_scm_to_nvm_err(scm_rc);
+	}
+
+	return rc;
 }
 
 int win_scm_adp_get_driver_capabilities(struct nvm_driver_capabilities *p_caps)
@@ -123,31 +139,19 @@ int win_scm_adp_get_driver_capabilities(struct nvm_driver_capabilities *p_caps)
 
 int win_scm_adp_ioctl_passthrough_cmd(struct fw_cmd *p_cmd)
 {
+	unsigned int dsm_status = 0;
+	int scm_rc = win_scm2_passthrough(p_cmd, &dsm_status);
 	int rc = NVM_SUCCESS;
-	if (p_cmd->large_input_payload_size > 0 || p_cmd->large_output_payload_size > 0)
-	{
-		COMMON_LOG_WARN_F("Large Payloads are not supported yet", __FUNCTION__);
-		rc = NVM_ERR_NOTSUPPORTED;
-	}
-	else
-	{
-		unsigned int dsm_status;
 
-		int scm_rc = win_scm2_ioctl_passthrough_cmd(p_cmd->device_handle,
-				p_cmd->opcode, p_cmd->sub_opcode,
-				p_cmd->input_payload, p_cmd->input_payload_size,
-				p_cmd->output_payload, p_cmd->output_payload_size,
-				&dsm_status);
-
-		if (!WIN_SCM2_IS_SUCCESS(scm_rc))
-		{
-			rc = win_scm_to_nvm_err(scm_rc);
-		}
-		else if (dsm_status != 0)
-		{
-			rc = dsm_err_to_nvm_lib_err(dsm_status);
-		}
+	if (!WIN_SCM2_IOCTL_SUCCESS(scm_rc))
+	{
+		rc = win_scm_to_nvm_err(scm_rc);
 	}
+	else if (dsm_status != 0)
+	{
+		rc = dsm_err_to_nvm_lib_err(dsm_status);
+	}
+
 	return rc;
 }
 
@@ -225,10 +229,12 @@ static unsigned int win_scm2_get_first_handle()
 	int dimm_count = nfit_get_dimms(0, NULL);
 	if (dimm_count > 0)
 	{
-		struct nfit_dimm dimms;
-		if (nfit_get_dimms(1, &dimms) > 0)
+		// TODO-RYON(6/26/2017): Need to look through all NFIT DIMMs and return handle of first
+		// Intel DIMM (TA44191)
+		struct nfit_dimm dimms[dimm_count];
+		if (nfit_get_dimms(dimm_count, dimms) > 0)
 		{
-			handle = dimms.handle;
+			handle = dimms[0].handle;
 		}
 	}
 	return handle;

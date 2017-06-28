@@ -33,7 +33,7 @@
 #include <os/os_adapter.h>
 #include <persistence/logging.h>
 #include <uid/uid.h>
-#include <nfit.h>
+#include <acpi/nfit.h>
 
 #ifdef __WINDOWS__
 #include <Windows.h>

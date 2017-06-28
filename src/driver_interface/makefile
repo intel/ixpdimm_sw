@@ -52,6 +52,9 @@ else ifdef BUILD_ESX
 endif
 
 SRC = passthrough.c $(ADAPTER_PREFIX)_passthrough.c ../common/string/s_str.c
+ifdef BUILD_WINDOWS
+	SRC += $(wildcard ../lib/win_scm2_*.c)
+endif
 
 OBJS = $(patsubst %.c,%.o,$(SRC))
 
@@ -94,9 +97,10 @@ endif
 # ---- RECIPES -------------------------------------------------------------------------------------
 all :
 	$(MAKE) $(JOBCOUNT) $(OBJECT_MODULE_DIR)
+	$(MAKE) $(JOBCOUNT) $(OBJECT_DIR)/lib
 	$(MAKE) $(JOBCOUNT) $(TARGETNAME)
 
-$(OBJECT_MODULE_DIR) :
+$(OBJECT_MODULE_DIR) $(OBJECT_DIR)/lib:
 	$(MKDIR) $@
 
 $(TARGETNAME) : $(OBJNAMES)

@@ -32,6 +32,8 @@
 #ifndef	CR_MGMT_FIS_TYPES_H
 #define	CR_MGMT_FIS_TYPES_H
 
+#include "nvm_types.h"
+
 /*
  * ****************************************************************************
  * DEFINES
@@ -655,7 +657,7 @@ struct pt_payload_get_security_state {
 	 */
 	unsigned char security_status;
 
-	unsigned char reserved[7]; /* TODO */
+	unsigned char reserved[127];
 } __attribute__((packed));
 
 struct pt_payload_sanitize_dimm_status {

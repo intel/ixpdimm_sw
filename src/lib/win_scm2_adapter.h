@@ -31,11 +31,24 @@
 #include "nvm_types.h"
 #include "fis_types.h"
 #include "adapter_types.h"
+#include <stdio.h>
 
 #define	SCM_LOG_ENTRY()
+#define	SCM_LOG_EXIT_RETURN_I(i)
+
+#define	SCM_LOG_INFO(str)
+#define	SCM_LOG_INFO_F(fmt, ...)
+
+#ifdef WIN_SCM2_DEBUG
+#define	SCM_LOG_ERROR(str) \
+	printf("%s:%d(%s)> "str"\n", __FILE__, __LINE__, __FUNCTION__)
+#define	SCM_LOG_ERROR_F(fmt, ...) \
+	printf("%s:%d(%s)> ", __FILE__, __LINE__, __FUNCTION__);  \
+	printf(fmt"\n", __VA_ARGS__)
+#else
 #define	SCM_LOG_ERROR(str)
 #define	SCM_LOG_ERROR_F(fmt, ...)
-#define	SCM_LOG_EXIT_RETURN_I(i)
+#endif
 
 #define	WIN_SCM2_IS_SUCCESS(rc) (rc) == WIN_SCM2_SUCCESS
 enum WIN_SCM2_RETURN_CODES

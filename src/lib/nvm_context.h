@@ -34,7 +34,7 @@
 
 #include "nvm_management.h"
 #include "adapter_types.h"
-#include <nfit_tables.h>
+#include <acpi/nfit_tables.h>
 
 #ifdef __cplusplus
 extern "C"

@@ -49,7 +49,7 @@ extern "C"
 #include "adapter_types.h"
 #include "nvm_types.h"
 #include "platform_config_data.h"
-#include "nfit_tables.h"
+#include <acpi/nfit_tables.h>
 
 #define	MIRRORED_INTERLEAVE(attributes) \
 		(attributes & NFIT_MAPPING_ATTRIBUTE_EFI_MEMORY_MORE_RELIABLE) \

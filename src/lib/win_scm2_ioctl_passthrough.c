@@ -29,8 +29,6 @@
 #include "win_scm2_ioctl.h"
 #include "win_scm2_adapter.h"
 
-#include <stdio.h>
-
 #define	IOCTL_CR_PASS_THROUGH CTL_CODE(NVDIMM_IOCTL, 0x960, METHOD_BUFFERED, FILE_ANY_ACCESS)
 #define	SCM_BUILD_DSM_OPCODE(opcode, subop_code) (unsigned int)(subop_code << 8 | opcode)
 
@@ -96,14 +94,21 @@ int win_scm2_ioctl_passthrough_cmd(unsigned short nfit_handle,
 		void *output_payload, unsigned long output_payload_size,
 		unsigned int *p_dsm_status)
 {
+	SCM_LOG_ENTRY();
+	SCM_LOG_INFO_F("handle: %d, opcode 0x%x, sub op: 0x%x, "
+			"input payload size: %lu, output payload size: %lu",
+			nfit_handle, op_code, sub_op_code, input_payload_size, output_payload_size);
+
 	int rc = 0;
 	*p_dsm_status = 0;
 	size_t buf_size = sizeof (CR_DSM_PASS_THROUGH_IOCTL) +
 			input_payload_size + output_payload_size;
 
 	// Because the CR_DSM_PASS_THROUGH_IOCTL struct has a byte for the input and output payloads
-	// already, we need to subtract those bytes from from the buffer size
+	// already, we need to subtract those bytes from the total buffer size
 	buf_size -= 8; // minus 2 bytes
+
+	SCM_LOG_INFO_F("buf_size (%xh, %xh): %d", op_code, sub_op_code, (int)buf_size);
 
 	CR_DSM_PASS_THROUGH_IOCTL *p_ioctl_data = calloc(1, buf_size);
 	if (p_ioctl_data)
@@ -120,9 +125,8 @@ int win_scm2_ioctl_passthrough_cmd(unsigned short nfit_handle,
 					input_payload_size);
 		}
 
-		DSM_VENDOR_SPECIFIC_COMMAND_OUTPUT_PAYLOAD *p_output_payload = NULL;
-
-		p_output_payload = (DSM_VENDOR_SPECIFIC_COMMAND_OUTPUT_PAYLOAD *)
+		DSM_VENDOR_SPECIFIC_COMMAND_OUTPUT_PAYLOAD *p_output_payload =
+				(DSM_VENDOR_SPECIFIC_COMMAND_OUTPUT_PAYLOAD *)
 						(p_ioctl_data->InputPayload.Arg3OpCodeParameterDataBuffer +
 								input_payload_size);
 
@@ -136,13 +140,17 @@ int win_scm2_ioctl_passthrough_cmd(unsigned short nfit_handle,
 		else if (p_ioctl_data->ReturnCode > 0)
 		{
 			rc = (int)p_ioctl_data->ReturnCode;
-			SCM_LOG_ERROR_F("IOCTL for %s returned error code: %d", __FUNCTION__, rc);
+			SCM_LOG_ERROR_F("Error with passthrough command (%xh, %xh). IOCTL Return Code: 0x%x",
+					op_code, sub_op_code, (int)p_ioctl_data->ReturnCode);
 		}
 		else if (p_output_payload->Arg3Status.DsmStatus != 0)
 		{
-			*p_dsm_status = p_output_payload->Arg3Status.DsmStatus;
+			unsigned int status = p_output_payload->Arg3Status.DsmStatus |
+					(p_output_payload->Arg3Status.MailboxStatusCode << DSM_MAILBOX_ERROR_SHIFT);
+			*p_dsm_status = status;
+
 			SCM_LOG_ERROR_F("Error with FW Command (%xh, %xh). DSM Status: 0x%x",
-					op_code, sub_op_code, *p_dsm_status);
+					op_code, sub_op_code, status);
 		}
 		else
 		{
@@ -165,6 +173,8 @@ int win_scm2_ioctl_passthrough_cmd(unsigned short nfit_handle,
 	{
 		rc = WIN_SCM2_ERR_NOMEMORY;
 	}
+
+	SCM_LOG_EXIT_RETURN_I(rc);
 
 	return rc;
 }

@@ -99,7 +99,6 @@ INCS = 	-I$(SRC_DIR) \
 		-I$(SRC_DIR)/acpi \
 		-I$(SRC_DIR)/lib \
 		-I$(SRC_DIR)/wbem \
-		-I$(SRC_DIR) \
 		-I$(EXTERN_DIR)/rapidxml-1.13 \
 		-I$(CIM_FRAMEWORK_DIR)/include
 
