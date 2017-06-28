@@ -475,7 +475,8 @@ static inline NVM_UINT32 get_lowest_common_multiple(
 
 static inline NVM_REAL32 round_to_decimal_places(NVM_REAL32 number, int decimal_places)
 {
-	return floor(number * pow(10, decimal_places) + 0.5) / pow(10, decimal_places);
+	// always rounding down to match UEFI
+	return floor(number * pow(10, decimal_places)) / pow(10, decimal_places);
 }
 
 static inline NVM_UINT64 round_up(const NVM_UINT64 num_to_round, const NVM_UINT64 multiple_of)

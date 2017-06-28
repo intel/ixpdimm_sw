@@ -935,6 +935,19 @@ int get_app_direct_capacity_on_device(const struct device_discovery *p_dimm,
 	return rc;
 }
 
+void update_capacities_based_on_platform_capabilities(const NVM_NFIT_DEVICE_HANDLE device_handle,
+		const struct nvm_capabilities *p_capabilities,
+		struct device_capacities *p_capacities)
+{
+	COMMON_LOG_ENTRY();
+	if (p_capabilities->platform_capabilities.current_volatile_mode == VOLATILE_MODE_1LM)
+	{
+		p_capacities->memory_capacity = 0;
+		p_capacities->reserved_capacity = 0;
+	}
+	COMMON_LOG_EXIT();
+}
+
 int update_capacities_based_on_sku(const NVM_NFIT_DEVICE_HANDLE device_handle,
 		const struct nvm_capabilities *p_capabilities,
 		struct device_capacities *p_capacities)
@@ -1067,6 +1080,8 @@ int get_dimm_capacities(const struct device_discovery *p_dimm,
 				// update capacities based on DIMM SKU
 				KEEP_ERROR(rc, update_capacities_based_on_sku(p_dimm->device_handle,
 						p_capabilities, p_capacities));
+				update_capacities_based_on_platform_capabilities(p_dimm->device_handle,
+						p_capabilities, p_capacities);
 			}
 		}
 	}
