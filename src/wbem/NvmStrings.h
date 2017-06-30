@@ -297,7 +297,6 @@ static std::string ERASECAPABLE_KEY = "EraseCapable";
 static std::string APPDIRECTNAMESPACE_MAX_SIZE_KEY = "AppDirectNamespaceMaxSize";
 static std::string APPDIRECTNAMESPACE_MIN_SIZE_KEY = "AppDirectNamespaceMinSize";
 static std::string APPDIRECTNAMESPACE_COUNT_KEY = "AppDirectNamespaceCount";
-static std::string STORAGENAMESPACE_MAX_SIZE_KEY = "StorageNamespaceMaxSize";
 static std::string STORAGENAMESPACE_MIN_SIZE_KEY = "StorageNamespaceMinSize";
 static std::string STORAGENAMESPACE_COUNT_KEY = "StorageNamespaceCount";
 static std::string APP_DIRECT_SETTINGS_KEY = "AppDirectSettings";

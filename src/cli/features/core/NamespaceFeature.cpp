@@ -376,9 +376,6 @@ cli::framework::ResultBase *cli::nvmcli::NamespaceFeature::showPools(cli::framew
 			allAttributes.push_back(wbem::APPDIRECTNAMESPACE_MAX_SIZE_KEY);
 			allAttributes.push_back(wbem::APPDIRECTNAMESPACE_MIN_SIZE_KEY);
 			allAttributes.push_back(wbem::APPDIRECTNAMESPACE_COUNT_KEY);
-			allAttributes.push_back(wbem::STORAGENAMESPACE_MAX_SIZE_KEY);
-			allAttributes.push_back(wbem::STORAGENAMESPACE_MIN_SIZE_KEY);
-			allAttributes.push_back(wbem::STORAGENAMESPACE_COUNT_KEY);
 			allAttributes.push_back(wbem::HEALTHSTATE_KEY);
 			allAttributes.push_back(wbem::ACTIONREQUIRED_KEY);
 			allAttributes.push_back(wbem::ACTIONREQUIREDEVENTS_KEY);
@@ -416,8 +413,6 @@ cli::framework::ResultBase *cli::nvmcli::NamespaceFeature::showPools(cli::framew
 					cli::nvmcli::convertCapacityAttribute((*pInstances)[i], wbem::FREECAPACITY_KEY, capacityUnits);
 					cli::nvmcli::convertCapacityAttribute((*pInstances)[i], wbem::APPDIRECTNAMESPACE_MAX_SIZE_KEY, capacityUnits);
 					cli::nvmcli::convertCapacityAttribute((*pInstances)[i], wbem::APPDIRECTNAMESPACE_MIN_SIZE_KEY, capacityUnits);
-					cli::nvmcli::convertCapacityAttribute((*pInstances)[i], wbem::STORAGENAMESPACE_MAX_SIZE_KEY, capacityUnits);
-					cli::nvmcli::convertCapacityAttribute((*pInstances)[i], wbem::STORAGENAMESPACE_MIN_SIZE_KEY, capacityUnits);
 				}
 				pResult = NvmInstanceToObjectListResult(*pInstances, "Pool",
 						wbem::POOLID_KEY, attributes, filters);

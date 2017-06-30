@@ -73,9 +73,6 @@ throw(wbem::framework::Exception)
 	attributes.push_back(APPDIRECTNAMESPACE_MAX_SIZE_KEY);
 	attributes.push_back(APPDIRECTNAMESPACE_MIN_SIZE_KEY);
 	attributes.push_back(APPDIRECTNAMESPACE_COUNT_KEY);
-	attributes.push_back(STORAGENAMESPACE_MAX_SIZE_KEY);
-	attributes.push_back(STORAGENAMESPACE_MIN_SIZE_KEY);
-	attributes.push_back(STORAGENAMESPACE_COUNT_KEY);
 	attributes.push_back(HEALTHSTATE_KEY);
 	attributes.push_back(ACTIONREQUIRED_KEY);
 	attributes.push_back(ACTIONREQUIREDEVENTS_KEY);
@@ -179,27 +176,6 @@ throw(wbem::framework::Exception)
 			{
 				framework::Attribute a(getString(countNamespaces(pPool, NAMESPACE_TYPE_APP_DIRECT)), false);
 				pInstance->setAttribute(APPDIRECTNAMESPACE_COUNT_KEY, a, attributes);
-			}
-
-			// StorageNamespaceMaxSize - Largest Storage namespace that can be created
-			if (containsAttribute(STORAGENAMESPACE_MAX_SIZE_KEY, attributes))
-			{
-				framework::Attribute a(ranges.largest_possible_storage_ns, false);
-				pInstance->setAttribute(STORAGENAMESPACE_MAX_SIZE_KEY, a, attributes);
-			}
-
-			// StorageNamespaceMinSize - Smallest Storage namespace that can be created (smallest block size)
-			if (containsAttribute(STORAGENAMESPACE_MIN_SIZE_KEY, attributes))
-			{
-				framework::Attribute a(ranges.smallest_possible_storage_ns, false);
-				pInstance->setAttribute(STORAGENAMESPACE_MIN_SIZE_KEY, a, attributes);
-			}
-
-			// StorageNamespacesCount - Current number of Storage namespaces
-			if (containsAttribute(STORAGENAMESPACE_COUNT_KEY, attributes))
-			{
-				framework::Attribute a(getString(countNamespaces(pPool, NAMESPACE_TYPE_STORAGE)), false);
-				pInstance->setAttribute(STORAGENAMESPACE_COUNT_KEY, a, attributes);
 			}
 
 			// Health State = enum + string

@@ -1121,17 +1121,7 @@ int dimm_has_namespaces_of_type(const NVM_NFIT_DEVICE_HANDLE dimm_handle,
 					// check type we're looking for
 					if (ns_type == NAMESPACE_TYPE_UNKNOWN || ns_details.type == ns_type)
 					{
-						// storage, check if dimm handle matches
-						if (ns_details.type == NAMESPACE_TYPE_STORAGE)
-						{
-							if (ns_details.namespace_creation_id.device_handle.handle ==
-									dimm_handle.handle)
-							{
-								matched++;
-							}
-						}
-						// check if dimm is in interleave set
-						else if (ns_details.type == NAMESPACE_TYPE_APP_DIRECT)
+						if (ns_details.type == NAMESPACE_TYPE_APP_DIRECT)
 						{
 							struct nvm_interleave_set set;
 							memset(&set, 0, sizeof (set));

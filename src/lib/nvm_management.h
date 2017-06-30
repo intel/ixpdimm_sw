@@ -1032,9 +1032,6 @@ struct possible_namespace_ranges
     NVM_UINT64 largest_possible_app_direct_ns; // largest app direct namespace size possible
     NVM_UINT64 smallest_possible_app_direct_ns; // smallest app direct namespace size possible
     NVM_UINT64 app_direct_increment; // Valid increment between smallest & largest app direct size
-    NVM_UINT64 largest_possible_storage_ns; // largest storage namespace size possible
-    NVM_UINT64 smallest_possible_storage_ns; // smallest storage namespace size possible
-    NVM_UINT64 storage_increment; // Valid increment between smallest & largest storage size
 };
 
 /*

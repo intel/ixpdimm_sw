@@ -271,8 +271,7 @@ enum interleave_set_health
 enum namespace_type
 {
 	NAMESPACE_TYPE_UNKNOWN = 0, // Type cannot be determined
-	NAMESPACE_TYPE_STORAGE = 1, // Storage namespace
-	NAMESPACE_TYPE_APP_DIRECT = 2 // App Direct namespace
+	NAMESPACE_TYPE_APP_DIRECT = 1 // App Direct namespace
 };
 
 /*

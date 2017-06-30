@@ -453,9 +453,6 @@ std::string wbem::pmem_config::NamespaceViewFactory::namespaceTypeToStr(const en
 	std::string typeStr;
 	switch (type)
 	{
-		case NAMESPACE_TYPE_STORAGE:
-			typeStr = NS_TYPE_STR_STORAGE;
-			break;
 		case NAMESPACE_TYPE_APP_DIRECT:
 			typeStr = NS_TYPE_STR_APPDIRECT;
 			break;
@@ -530,11 +527,7 @@ std::string wbem::pmem_config::NamespaceViewFactory::getUnderlyingPMType(const s
 
 	std::string pmTypeStr = TRS(mem_config::PMTYPE_UNKNOWN);
 
-	if (ns.type == NAMESPACE_TYPE_STORAGE)
-	{
-		pmTypeStr = TRS(mem_config::PMTYPE_STORAGE);
-	}
-	else if (ns.type == NAMESPACE_TYPE_APP_DIRECT)
+	if (ns.type == NAMESPACE_TYPE_APP_DIRECT)
 	{
 		if (ns.interleave_format.ways == INTERLEAVE_WAYS_1)
 		{

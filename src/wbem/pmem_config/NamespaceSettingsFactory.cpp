@@ -245,9 +245,6 @@ std::string wbem::pmem_config::NamespaceSettingsFactory::namespaceResourceTypeTo
 	std::string typeStr;
 	switch (type)
 	{
-		case NAMESPACE_TYPE_STORAGE:
-			typeStr = "Storage Volume";
-			break;
 		case NAMESPACE_TYPE_APP_DIRECT:
 			typeStr = "Non-Volatile Memory";
 			break;
@@ -272,7 +269,6 @@ NVM_UINT16 wbem::pmem_config::NamespaceSettingsFactory::namespaceResourceTypeToV
 		case NAMESPACE_TYPE_APP_DIRECT:
 			typeVal = NS_RESOURCETYPE_BYTE_ADDRESSABLE;
 			break;
-		case NAMESPACE_TYPE_STORAGE:
 		default:
 			typeVal = 0;
 			break;
@@ -286,11 +282,7 @@ NVM_UINT16 wbem::pmem_config::NamespaceSettingsFactory::getNamespacePMType(const
 
 		NVM_UINT16 pmType = NSSETTINGS_PMTYPE_UNKNOWN;
 
-		if (details.type == NAMESPACE_TYPE_STORAGE)
-		{
-			pmType = NSSETTINGS_PMTYPE_STORAGE;
-		}
-		else if (details.type == NAMESPACE_TYPE_APP_DIRECT)
+		if (details.type == NAMESPACE_TYPE_APP_DIRECT)
 		{
 			if (details.interleave_format.ways == INTERLEAVE_WAYS_1)
 			{

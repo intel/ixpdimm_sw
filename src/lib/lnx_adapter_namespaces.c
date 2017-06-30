@@ -441,21 +441,6 @@ int get_namespace_details(
 					p_details->block_size = 1;
 					break;
 
-				case ND_DEVICE_NAMESPACE_BLK:
-					p_details->type = NAMESPACE_TYPE_STORAGE;
-					struct ndctl_dimm *dimm = ndctl_region_get_first_dimm(p_region);
-					if (dimm)
-					{
-						p_details->namespace_creation_id.device_handle.handle =
-								ndctl_dimm_get_handle(dimm);
-						p_details->block_size = ndctl_namespace_get_sector_size(p_namespace);
-					}
-					else
-					{
-						rc = NVM_ERR_DRIVERFAILED;
-					}
-					break;
-
 				default:
 					p_details->type = NAMESPACE_TYPE_UNKNOWN;
 					break;
@@ -728,10 +713,6 @@ int create_btt_namespace(struct ndctl_namespace *namespace,
 		// namespace. 1 is not valid for this, so use default of 4kB
 		// for app direct namespaces
 		unsigned int sector_size = DEFAULT_BTT_SECTOR_SIZE;
-		if (p_settings->type == NAMESPACE_TYPE_STORAGE)
-		{
-			sector_size = p_settings->block_size;
-		}
 
 		if (ndctl_btt_set_uuid(btt, btt_guid))
 		{
@@ -791,11 +772,6 @@ int create_namespace(
 			rc = get_ndctl_app_direct_region_by_range_index(ctx, &region,
 				p_settings->namespace_creation_id.interleave_setid);
 		}
-		else if (p_settings->type == NAMESPACE_TYPE_STORAGE)
-		{
-			rc = get_ndctl_storage_region_by_handle(ctx, &region,
-				p_settings->namespace_creation_id.device_handle.handle);
-		}
 		else
 		{
 			COMMON_LOG_ERROR("Cannot create unknown namespace type");
@@ -825,14 +801,6 @@ int create_namespace(
 			{
 				COMMON_LOG_ERROR("Set SizeFailed");
 				rc = NVM_ERR_DRIVERFAILED;
-			}
-			else if (p_settings->type == NAMESPACE_TYPE_STORAGE)
-			{
-				if (ndctl_namespace_set_sector_size(namespace, p_settings->block_size))
-				{
-					COMMON_LOG_ERROR("Set SectorSize Failed");
-					rc = NVM_ERR_DRIVERFAILED;
-				}
 			}
 
 			if (rc == NVM_SUCCESS && ndctl_namespace_is_configured(namespace))

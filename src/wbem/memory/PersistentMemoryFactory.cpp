@@ -980,13 +980,7 @@ bool wbem::memory::PersistentMemoryFactory::isPersistentMemoryAssociatedToPersis
 		lib_interface::NvmApi::getApi()->getNamespaceDetails(nsUid, &details);
 
 		std::string nsBasedOnUid = "";
-		if (details.type == NAMESPACE_TYPE_STORAGE)
-		{
-			NVM_UID uidStr;
-			uid_copy(details.creation_id.device_uid, uidStr);
-			nsBasedOnUid = std::string(uidStr);
-		}
-		else if (details.type == NAMESPACE_TYPE_APP_DIRECT)
+		if (details.type == NAMESPACE_TYPE_APP_DIRECT)
 		{
 			struct pool *pPool = new struct pool;
 			if (pPool != NULL)

@@ -149,48 +149,21 @@ int get_pool_from_namespace_details(
 			else if (pool_count > 0)
 			{
 				int tmprc = NVM_ERR_NOTFOUND;
-				if (p_details->type == NAMESPACE_TYPE_STORAGE &&
-					p_details->namespace_creation_id.device_handle.handle)
+				for (int pool_idx = 0; pool_idx < pool_count; pool_idx++)
 				{
-					struct device_discovery discovery;
-					rc = lookup_dev_handle(
-						p_details->namespace_creation_id.device_handle,
-						&discovery);
-					if (rc == NVM_SUCCESS)
+					for (int iset_idx = 0; iset_idx <
+						pools[pool_idx].ilset_count; iset_idx++)
 					{
-						for (int pool_idx = 0; pool_idx < pool_count; pool_idx++)
+						if (p_details->namespace_creation_id.interleave_setid
+								== pools[pool_idx].ilsets[iset_idx].driver_id)
 						{
-							for (int dimm_idx = 0;
-								dimm_idx < pools[pool_idx].dimm_count; dimm_idx++)
-							{
-								if (uid_cmp(discovery.uid, pools[pool_idx].dimms[dimm_idx]) &&
-										(pools[pool_idx].type == POOL_TYPE_PERSISTENT))
-								{
-									memmove(p_pool, &pools[pool_idx], sizeof (struct pool));
-									tmprc = NVM_SUCCESS;
-									break;
-								}
-							}
+							memmove(p_pool, &pools[pool_idx], sizeof (struct pool));
+							tmprc = NVM_SUCCESS;
+							break;
 						}
 					}
 				}
-				else
-				{
-					for (int pool_idx = 0; pool_idx < pool_count; pool_idx++)
-					{
-						for (int iset_idx = 0; iset_idx <
-							pools[pool_idx].ilset_count; iset_idx++)
-						{
-							if (p_details->namespace_creation_id.interleave_setid
-									== pools[pool_idx].ilsets[iset_idx].driver_id)
-							{
-								memmove(p_pool, &pools[pool_idx], sizeof (struct pool));
-								tmprc = NVM_SUCCESS;
-								break;
-							}
-						}
-					}
-				}
+
 				if (tmprc == NVM_ERR_NOTFOUND)
 				{
 					NVM_UID ns_uid_str;

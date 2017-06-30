@@ -321,29 +321,6 @@ int nvm_get_namespace_details(const NVM_UID namespace_uid, struct namespace_deta
 						rc = NVM_ERR_DRIVERFAILED;
 					}
 				}
-				else if (p_namespace->type == NAMESPACE_TYPE_STORAGE)
-				{
-					struct device_discovery discovery;
-					if (lookup_dev_handle(nvm_details.namespace_creation_id.device_handle,
-							&discovery) != NVM_SUCCESS)
-					{
-						COMMON_LOG_ERROR_F(
-							"Failed to find the namespace underlying DIMM %s\n",
-							p_namespace->creation_id.device_uid);
-						rc = NVM_ERR_DRIVERFAILED;
-					}
-					else
-					{
-						memmove(p_namespace->creation_id.device_uid,
-								discovery.uid, NVM_MAX_UID_LEN);
-						p_namespace->security_features.encryption =
-								device_is_encryption_enabled(discovery.lock_state)?
-								NVM_ENCRYPTION_ON:NVM_ENCRYPTION_OFF;
-						p_namespace->security_features.erase_capable =
-								device_is_erase_capable(discovery.security_capabilities)?
-								NVM_ERASE_CAPABLE_TRUE:NVM_ERASE_CAPABLE_FALSE;
-					}
-				}
 				free(p_pool);
 			}
 			// update the context
@@ -505,22 +482,8 @@ int validate_ns_size_for_creation(struct pool *p_pool,
 	int rc = NVM_SUCCESS;
 
 	NVM_UINT64 namespace_capacity = p_settings->block_count * p_settings->block_size;
-	NVM_BOOL namespace_blocksize_supported = 0;
-	for (int i = 0; i < p_nvm_caps->sw_capabilities.block_size_count; i++)
-	{
-		if (p_nvm_caps->sw_capabilities.block_sizes[i] == p_settings->block_size)
-		{
-			namespace_blocksize_supported = 1;
-			break;
-		}
-	}
-	if ((namespace_blocksize_supported == 0) &&
-			(p_settings->type == NAMESPACE_TYPE_STORAGE))
-	{
-		COMMON_LOG_ERROR("Invalid block size to create a Storage namespace.");
-		rc = NVM_ERR_BADBLOCKSIZE;
-	}
-	else if ((p_settings->type == NAMESPACE_TYPE_APP_DIRECT) &&
+
+	if ((p_settings->type == NAMESPACE_TYPE_APP_DIRECT) &&
 			(p_settings->block_size != 1))
 	{
 		COMMON_LOG_ERROR("Invalid block size to create an App Direct namespace.");
@@ -539,14 +502,6 @@ int validate_ns_size_for_creation(struct pool *p_pool,
 		COMMON_LOG_ERROR_F("Requested namespace capacity %llu bytes \
 					is more than the maximum available size of %llu bytes",
 				namespace_capacity, p_range->largest_possible_app_direct_ns);
-		rc = NVM_ERR_BADSIZE;
-	}
-	else if (p_settings->type == NAMESPACE_TYPE_STORAGE &&
-			namespace_capacity > p_range->largest_possible_storage_ns)
-	{
-		COMMON_LOG_ERROR_F("Requested namespace capacity %llu bytes \
-					is more than the maximum available size of %llu bytes",
-				namespace_capacity, p_range->largest_possible_storage_ns);
 		rc = NVM_ERR_BADSIZE;
 	}
 
@@ -571,6 +526,11 @@ int find_id_for_ns_creation(const struct pool *p_pool,
 		rc = find_interleave_with_capacity(p_pool, p_nvm_caps, p_settings,
 				p_namespace_creation_id, p_format, allow_adjustment,
 				p_namespaces, ns_count);
+	}
+	else
+	{
+		COMMON_LOG_ERROR("Invalid namespace type.");
+		rc = NVM_ERR_BADNAMESPACETYPE;
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -813,7 +773,7 @@ int validate_ns_type_for_pool(enum namespace_type type, const struct pool *p_poo
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
 
-	if ((type != NAMESPACE_TYPE_STORAGE) && (type != NAMESPACE_TYPE_APP_DIRECT))
+	if (type != NAMESPACE_TYPE_APP_DIRECT)
 	{
 		COMMON_LOG_ERROR("Invalid namespace type.");
 		rc = NVM_ERR_BADNAMESPACETYPE;
@@ -825,13 +785,6 @@ int validate_ns_type_for_pool(enum namespace_type type, const struct pool *p_poo
 		COMMON_LOG_ERROR("Invalid namespace type for the specified pool.");
 		rc = NVM_ERR_BADNAMESPACETYPE;
 	}
-	else if (type == NAMESPACE_TYPE_STORAGE &&
-			p_pool->type != POOL_TYPE_PERSISTENT)
-	{
-		COMMON_LOG_ERROR("Invalid namespace type for the specified pool.");
-		rc = NVM_ERR_BADNAMESPACETYPE;
-	}
-
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
@@ -884,13 +837,7 @@ int validate_namespace_create_settings(struct pool *p_pool,
 	struct nvm_capabilities nvm_caps;
 	memset(&nvm_caps, 0, sizeof (nvm_caps));
 
-	if ((p_pool->type == POOL_TYPE_PERSISTENT_MIRROR) &&
-			(p_settings->type == NAMESPACE_TYPE_STORAGE))
-	{
-		COMMON_LOG_ERROR("Cannot create storage namespace in mirrored pool");
-		rc = NVM_ERR_BADNAMESPACETYPE;
-	}
-	else if ((rc = nvm_get_nvm_capabilities(&nvm_caps)) == NVM_SUCCESS)
+	if ((rc = nvm_get_nvm_capabilities(&nvm_caps)) == NVM_SUCCESS)
 	{
 		struct nvm_namespace_details *p_namespaces = NULL;
 		int ns_count = get_nvm_namespaces_details_alloc(&p_namespaces);
@@ -931,19 +878,10 @@ int validate_namespace_create_settings(struct pool *p_pool,
 						rc = NVM_ERR_NOTSUPPORTED;
 					}
 				}
-				else if (p_settings->type == NAMESPACE_TYPE_STORAGE)
+				else
 				{
-					if (!nvm_caps.nvm_features.storage_mode)
-					{
-						COMMON_LOG_ERROR(
-							"Storage namespaces not supported");
-						rc = NVM_ERR_NOTSUPPORTED;
-					}
-					else if (allocatedPageStructsAreInDramOrPmem(p_settings))
-					{
-						COMMON_LOG_ERROR("storage namespace do not support memory mode");
-						rc = NVM_ERR_NOTSUPPORTED;
-					}
+					COMMON_LOG_ERROR("Invalid namespace type.");
+					rc = NVM_ERR_BADNAMESPACETYPE;
 				}
 
 				if (rc == NVM_SUCCESS)
@@ -1348,7 +1286,7 @@ int validate_namespace_size_for_modification(const struct pool *p_pool, NVM_UINT
 		else if (p_nvm_details->type == NAMESPACE_TYPE_APP_DIRECT)
 		{
 			rc = validate_app_direct_namespace_size_for_modification(p_pool, p_block_count,
-					p_nvm_details, &nvm_caps, allow_adjustment);
+				p_nvm_details, &nvm_caps, allow_adjustment);
 		}
 		else
 		{
@@ -1441,20 +1379,9 @@ int dimms_are_locked(const struct namespace_details *details, NVM_BOOL *p_locked
 			rc = NVM_ERR_NOMEMORY;
 		}
 	}
-	else if (details->type == NAMESPACE_TYPE_STORAGE)
+	else
 	{
-		NVM_UID device_uid;
-		s_strcpy(device_uid, details->creation_id.device_uid, NVM_MAX_UID_LEN);
-
-		struct device_discovery discovery;
-
-		if ((rc = lookup_dev_uid(device_uid, &discovery)) == NVM_SUCCESS)
-		{
-			if (discovery.lock_state != LOCK_STATE_LOCKED)
-			{
-				*p_locked = 0;
-			}
-		}
+		rc = NVM_ERR_BADNAMESPACETYPE;
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);

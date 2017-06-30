@@ -190,9 +190,6 @@ enum namespace_type wbem::pmem_config::PersistentMemoryServiceFactory::namespace
 	enum namespace_type enum_val;
 	switch (type)
 	{
-		case wbem::pmem_config::PM_SERVICE_STORAGE_TYPE:
-			enum_val = NAMESPACE_TYPE_STORAGE;
-			break;
 		case wbem::pmem_config::PM_SERVICE_APP_DIRECT_TYPE:
 			enum_val = NAMESPACE_TYPE_APP_DIRECT;
 			break;

@@ -640,29 +640,6 @@ int check_device_app_direct_namespaces_for_sku_violation(struct device_discovery
 	return rc;
 }
 
-int check_device_storage_namespaces_for_sku_violation(struct device_discovery *p_discovery,
-		NVM_BOOL *p_sku_violation)
-{
-	int rc = NVM_SUCCESS;
-
-	if (!p_discovery->device_capabilities.storage_mode_capable)
-	{
-		int has_namespaces = dimm_has_namespaces_of_type(p_discovery->device_handle,
-				NAMESPACE_TYPE_STORAGE);
-		if (has_namespaces < 0)
-		{
-			KEEP_ERROR(rc, has_namespaces);
-		}
-		else if (has_namespaces)
-		{
-			COMMON_LOG_ERROR_F("An unsupported storage namespace exists on " NVM_DIMM_NAME " %u",
-					p_discovery->device_handle.handle);
-			*p_sku_violation = 1;
-		}
-	}
-	return rc;
-}
-
 
 /*
  * Helper function to determine if an NVM-DIMM is in violation of it's supported license.
