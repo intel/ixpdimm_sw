@@ -4,32 +4,77 @@ MOVE=mv
 MKDIR="mkdir -p"
 RMDIR="rm -rf"		
 
-# Linux Install Directories
-if [[ "$(uname -m)" =~ "i686" ]]
-then
-	LIB_DIR=/usr/lib64
-	CIM_LIB_DIR=/usr/lib64/cmpi
-else
-	LIB_DIR=/usr/lib64
-	CIM_LIB_DIR=/usr/lib64/cmpi
-fi
-
 HW_ARCH=$(uname -i)
 
-LINUX_PRODUCT_NAME=ixpdimm_sw
-CLI_NAME=ixpdimm-cli
-MONITOR_NAME=ixpdimm-monitor	
+# Linux Install Directories
+RPM_ROOT=$(grep RPM_ROOT CMakeCache.txt | cut -d "=" -f2)
 
-INCLUDE_DIR=/usr/include
-BIN_DIR=/usr/bin
-DATADIR=/var/lib
-LOCALSTATE_DIR=/var
+LIB_DIR=$(grep LIB_DIR CMakeCache.txt | cut -d "=" -f2)
+if [ -z "$INCLUDE_DIR" ]
+then 
+	if [[ "$(uname -m)" =~ "i686" ]]
+	then
+		LIB_DIR=/usr/lib64
+		CIM_LIB_DIR=/usr/lib64/cmpi
+	else
+		LIB_DIR=/usr/lib64
+		CIM_LIB_DIR=/usr/lib64/cmpi
+	fi
+fi
+
+CLI_NAME=ixpdimm-cli
+MONITOR_NAME=ixpdimm-monitor
+
+LINUX_PRODUCT_NAME=$(grep LINUX_PRODUCT_NAME CMakeCache.txt | cut -d "=" -f2) 
+if [ -z "$LINUX_PRODUCT_NAME" ]
+then
+	LINUX_PRODUCT_NAME=ixpdimm_sw
+fi
+
+INCLUDE_DIR=$(grep INCLUDE_DIR CMakeCache.txt | cut -d "=" -f2)
+if [ -z "$INCLUDE_DIR" ]
+then
+	INCLUDE_DIR=/usr/include
+fi
+
+BIN_DIR=$(grep BIN_DIR CMakeCache.txt | cut -d "=" -f2)
+if [ -z "$BIN_DIR" ]
+then
+	BIN_DIR=/usr/bin
+fi
+
+DATADIR=$(grep DATADIR CMakeCache.txt | cut -d "=" -f2) 
+if [ -z "$DATADIR" ]
+then
+	DATADIR=/var/lib
+fi
+
+if [ -z "$LOCALSTATE_DIR" ]
+then
+	LOCALSTATE_DIR=/var
+fi
+
+UNIT_DIR=$(grep UNIT_DIR CMakeCache.txt | cut -d "=" -f2)
+if [ -z "$UNIT_DIR" ]
+then
+	UNIT_DIR=/usr/lib/systemd/system
+fi
+
+SYSCONF_DIR=$(grep SYSCONF_DIR CMakeCache.txt | cut -d "=" -f2)
+if [ -z "$SYSCONF_DIR" ]
+then
+	SYSCONF_DIR=/etc
+fi
+
+MANPAGE_DIR=$(grep MANPAGE_DIR CMakeCache.txt | cut -d "=" -f2)
+if [ -z "$MANPAGE_DIR" ]
+then
+	MANPAGE_DIR=/usr/share/man
+fi 
+
 PRODUCT_DATADIR=$DATADIR/$LINUX_PRODUCT_NAME
 PEGASUS_MOFDIR=$PRODUCT_DATADIR/Pegasus/mof
-UNIT_DIR=/usr/lib/systemd/system
 SFCB_DIR=$PRODUCT_DATADIR/sfcb
-SYSCONF_DIR=/etc
-MANPAGE_DIR=/usr/share/man
 MAN8_DIR=$MANPAGE_DIR/man8
 
 # Linux Install Files
@@ -42,4 +87,4 @@ SFCB_MOF_FILES=sfcb_intelwbem.mof
 SFCB_REG_FILE=INTEL_NVDIMM.reg 
 DATADIR_FILES=(apss.dat public.rev0.pem)
 INIT_FILES=$MONITOR_NAME.service
-MANPAGE_GZ_FILES=($CLI_NAME.8.gz $MONITOR_NAME.8.gz)
+MANPAGE_GZ_FILES=($MONITOR_NAME.8.gz $CLI_NAME.8.gz)

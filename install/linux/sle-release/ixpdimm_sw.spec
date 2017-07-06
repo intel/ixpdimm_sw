@@ -85,10 +85,11 @@ managing IXPDIMMs from the command line.
 %setup -q -n %{product_name}-%{version}
 
 %build
-make BUILDNUM=%{build_version} RELEASE=1 DATADIR=%{_sharedstatedir} LINUX_PRODUCT_NAME=%{product_name} CFLAGS_EXTERNAL="%{?cflag}"
+%cmake -DBUILDNUM=%{build_version} -DRELEASE=1 -DLINUX_PRODUCT_NAME=%{name} -DRPM_ROOT=%{buildroot} -DLIB_DIR=%{_libdir} -DINCLUDE_DIR=%{_includedir} -DBIN_DIR=%{_bindir} -DDATADIR=%{_sharedstatedir} -DUNIT_DIR=%{_unitdir} -DSYSCONF_DIR=%{_sysconfdir} -DMANPAGE_DIR=%{_mandir} -DCFLAGS_EXTERNAL="%{?optflags}" 
+make %{?_smp_mflags}
 
 %install
-make install RELEASE=1 RPM_ROOT=%{buildroot} LIB_DIR=%{_libdir} INCLUDE_DIR=%{_includedir} BIN_DIR=%{_bindir} DATADIR=%{_sharedstatedir} UNIT_DIR=%{_unitdir} LINUX_PRODUCT_NAME=%{product_name} SYSCONF_DIR=%{_sysconfdir} MANPAGE_DIR=%{_mandir}
+%cmake_install
 
 %post -n %corename -p /sbin/ldconfig
 

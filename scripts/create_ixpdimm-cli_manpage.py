@@ -271,8 +271,8 @@ os.system('rm -f ' + manpage_helper.cliName + '.8.gz')
 os.system('gzip ' + manpage_helper.cliName + '.8')
 
 #delete temp files
-os.system('rm ' + tempTextFileName)
-os.system('rm ' + helpTempFile)
+os.remove(tempTextFileName)
+os.remove(helpTempFile)
 
 # View man page by doing a 'man ./ixpdimm-cli.8.gz'
 # Installation needs to put this ixpdimm-cli.8.gz file in the man8 subdirectory in the 
