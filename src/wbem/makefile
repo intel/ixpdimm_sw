@@ -270,13 +270,13 @@ clobber :
 sourcedrop: 
 	$(MKDIR) $(SOURCEDROP_DIR)/src/wbem
 	$(COPY) makefile $(SOURCEDROP_DIR)/src/wbem
+
 	for dir in $(SUBMODULES); do \
 		$(MKDIR) $(SOURCEDROP_DIR)/src/wbem/$${dir}; \
 		$(COPY) $${dir}/*.* $(SOURCEDROP_DIR)/src/wbem/$${dir}/; \
 	done
 	$(MKDIR) $(SOURCEDROP_DIR)/src/wbem/mof
-	$(COPY) mof/*.mof $(SOURCEDROP_DIR)/src/wbem/mof/
-
+	$(COPY) mof/* $(SOURCEDROP_DIR)/src/wbem/mof/
 ifndef BUILD_WINDOWS
 	$(MKDIR) $(SOURCEDROP_DIR)/src/wbem/cimom/cmpi
 	$(COPY) cimom/cmpi/* $(SOURCEDROP_DIR)/src/wbem/cimom/cmpi/

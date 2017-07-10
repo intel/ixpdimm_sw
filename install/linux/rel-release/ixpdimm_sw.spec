@@ -90,11 +90,11 @@ managing IXPDIMMs from the command line.
 
 %build
 %cmake -DBUILDNUM=%{build_version} -DRELEASE=1 -DLINUX_PRODUCT_NAME=%{name} -DRPM_ROOT=%{buildroot} -DLIB_DIR=%{_libdir} -DINCLUDE_DIR=%{_includedir} -DBIN_DIR=%{_bindir} -DDATADIR=%{_sharedstatedir} -DUNIT_DIR=%{_unitdir} -DSYSCONF_DIR=%{_sysconfdir} -DMANPAGE_DIR=%{_mandir} -DCFLAGS_EXTERNAL="%{?optflags}" 
-make %{?_smp_mflags}
+make -f Makefile %{?_smp_mflags}
 
 %install
 %{!?_cmake_version: cd build}
-make install
+make -f Makefile install
 
 %post -n libixpdimm-core -p /sbin/ldconfig
 
