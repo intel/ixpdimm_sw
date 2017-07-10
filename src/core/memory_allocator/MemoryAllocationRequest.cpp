@@ -35,9 +35,9 @@ namespace memory_allocator
 {
 
 MemoryAllocationRequest::MemoryAllocationRequest() :
-		m_memoryCapacityGiB(0), m_appDirectExtent(), m_storageRemaining(false),
-		m_reserveStorageCapacityGiB(0), m_reserveDimmUid(""), m_reserveDimmType(RESERVE_DIMM_NONE),
-		m_dimms()
+	    m_memoryCapacityGiB(0), m_appDirectExtent(), m_storageRemaining(false),
+	    m_reserveStorageCapacityGiB(0), m_reserveDimmUid(""), m_reserveDimmType(RESERVE_DIMM_NONE),
+	    m_dimms()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }

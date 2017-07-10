@@ -49,11 +49,11 @@ class NVM_API LayoutStepCheckRequestLayoutDeviation : public LayoutStep
 		virtual void execute(const MemoryAllocationRequest &request, MemoryAllocationLayout &layout);
 
 	protected:
-		void checkIfMemoryCapacityLayoutIsAcceptable(
+		bool isMemoryCapacityLayoutAcceptable(
 				const struct MemoryAllocationRequest& request,
 				MemoryAllocationLayout& layout);
 
-		void checkAppDirectCapacityLayoutIsAcceptable(
+		bool isAppDirectCapacityLayoutAcceptable(
 				const struct MemoryAllocationRequest& request,
 				MemoryAllocationLayout& layout);
 
@@ -62,9 +62,9 @@ class NVM_API LayoutStepCheckRequestLayoutDeviation : public LayoutStep
 		bool reservedDimmIsAppDirect(const struct MemoryAllocationRequest& request);
 		NVM_UINT64 getReservedAppDirectCapacityGiB(const struct MemoryAllocationRequest& request);
 
-		double findPercentDeviation(NVM_UINT64 expectedValue, NVM_UINT64 observedValue);
+		double findPercentDeviation(NVM_UINT64 expectedValue, NVM_UINT64 observedValue, NVM_UINT64 totalCapacity);
 
-		bool layoutDeviationIsWithinBounds(double percentDeviation);
+		bool isLayoutDeviationWithinBounds(double percentDeviation);
 };
 
 } /* namespace memory_allocator */

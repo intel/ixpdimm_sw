@@ -67,8 +67,8 @@ static const std::string CREATE_GOAL_APP_DIRECT_NOT_SUPPORTED_BY_DRIVER_WARNING 
 		"App Direct capacity which is not supported by the host software.");
 static const std::string CREATE_GOAL_REQUESTED_MEMORY_MODE_NOT_USABLE_WARNING = TR("The requested goal will result in Memory "
 		"Mode capacity that is unusable with the currently selected platform BIOS volatile mode.");
-static const std::string CREATE_GOAL_ADJUSTED_MORE_THAN_10PERCENT_WARNING = TR("The requested goal was adjusted more than 10% "
-		"to find a valid configuration.");
+static const std::string CREATE_GOAL_ADJUSTED_MORE_THAN_10PERCENT_WARNING = TR("The requested goal was adjusted more than 10%% "
+		"to find a valid configuration."); // Escape the '%' character to print it safely using printf statement
 static const std::string CREATE_GOAL_SKU_MAPPED_MEMORY_LIMITED_WARNING = TR("The amount of mapped memory was limited based "
 		"on the SKU resulting in un-mapped Storage only capacity.");
 

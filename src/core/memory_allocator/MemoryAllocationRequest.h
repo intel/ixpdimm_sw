@@ -71,36 +71,36 @@ class NVM_API MemoryAllocationRequest
 		 * All requested capacity is in GiB.
 		 */
 
-		NVM_UINT64 getMemoryModeCapacityGiB() const;
-		void setMemoryModeCapacityGiB(const NVM_UINT64 capacity);
+		virtual NVM_UINT64 getMemoryModeCapacityGiB() const;
+		virtual void setMemoryModeCapacityGiB(const NVM_UINT64 capacity);
 
-		NVM_UINT64 getAppDirectCapacityGiB() const;
-		AppDirectExtent getAppDirectExtent() const;
-		void setAppDirectExtent(const AppDirectExtent &extent);
+		virtual NVM_UINT64 getAppDirectCapacityGiB() const;
+		virtual AppDirectExtent getAppDirectExtent() const;
+		virtual void setAppDirectExtent(const AppDirectExtent &extent);
 
-		bool isStorageRemaining() const;
-		void setStorageRemaining(const bool storageIsRemaining);
-		bool hasStorage() const;
+		virtual bool isStorageRemaining() const;
+		virtual void setStorageRemaining(const bool storageIsRemaining);
+		virtual bool hasStorage() const;
 
-		NVM_UINT64 getReserveStorageCapacityGiB() const;
-		void setReserveStorageCapacityGiB(const NVM_UINT64 capacity);
+		virtual NVM_UINT64 getReserveStorageCapacityGiB() const;
+		virtual void setReserveStorageCapacityGiB(const NVM_UINT64 capacity);
 
-		std::string getReservedDimmUid() const;
-		void setReservedDimmUid(const std::string &uid);
-		ReserveDimmType getReservedDimmCapacityType() const;
-		void setReservedDimmCapacityType(const ReserveDimmType type);
-		bool hasReservedDimm() const;
-		Dimm getReservedDimm() const;
+		virtual std::string getReservedDimmUid() const;
+		virtual void setReservedDimmUid(const std::string &uid);
+		virtual ReserveDimmType getReservedDimmCapacityType() const;
+		virtual void setReservedDimmCapacityType(const ReserveDimmType type);
+		virtual bool hasReservedDimm() const;
+		virtual Dimm getReservedDimm() const;
 
-		std::vector<Dimm> getDimms() const;
-		size_t getNumberOfDimms() const;
-		void addDimm(const Dimm &dimm);
-		void setDimms(const std::vector<Dimm> &dimmList);
-		std::vector<Dimm> getNonReservedDimms() const;
+		virtual std::vector<Dimm> getDimms() const;
+		virtual size_t getNumberOfDimms() const;
+		virtual void addDimm(const Dimm &dimm);
+		virtual void setDimms(const std::vector<Dimm> &dimmList);
+		virtual std::vector<Dimm> getNonReservedDimms() const;
 
-		NVM_UINT64 getAllMappableNonReservedCapacity() const;
-		NVM_UINT64 getAllMappableDimmCapacityInGiB() const;
-		NVM_UINT64 getRequestedMappedCapacityInBytes() const;
+		virtual NVM_UINT64 getAllMappableNonReservedCapacity() const;
+		virtual NVM_UINT64 getAllMappableDimmCapacityInGiB() const;
+		virtual NVM_UINT64 getRequestedMappedCapacityInBytes() const;
 
 		// TODO: Update this function and move it to utils when nvm_get_socket
 		// is updated to get mapped memory limit (US20271)

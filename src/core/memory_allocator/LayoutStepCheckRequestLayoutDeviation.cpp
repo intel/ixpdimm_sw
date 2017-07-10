@@ -53,60 +53,76 @@ void core::memory_allocator::LayoutStepCheckRequestLayoutDeviation::execute(cons
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	checkIfMemoryCapacityLayoutIsAcceptable(request, layout);
-	checkAppDirectCapacityLayoutIsAcceptable(request, layout);
+	bool isAcceptableDeviation = false;
+
+	isAcceptableDeviation = isMemoryCapacityLayoutAcceptable(request, layout) &&
+			isAppDirectCapacityLayoutAcceptable(request, layout);
+
+	if(!isAcceptableDeviation)
+	{
+		layout.warnings.push_back(LAYOUT_WARNING_GOAL_ADJUSTED_MORE_THAN_10PERCENT);
+	}
 }
 
 double core::memory_allocator::LayoutStepCheckRequestLayoutDeviation::findPercentDeviation(
-		NVM_UINT64 expectedValue, NVM_UINT64 observedValue)
+		NVM_UINT64 expectedValue, NVM_UINT64 observedValue, NVM_UINT64 totalCapacity)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
 	int deviation = ABSOLUTEDIFFERENCE(observedValue, expectedValue);
 
-	return (double)100.0 * (deviation)/expectedValue;
+	return (double) 100 * deviation / totalCapacity;
 }
 
-bool core::memory_allocator::LayoutStepCheckRequestLayoutDeviation::layoutDeviationIsWithinBounds(
+bool core::memory_allocator::LayoutStepCheckRequestLayoutDeviation::isLayoutDeviationWithinBounds(
 		double percentDeviation)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return (percentDeviation <= ACCEPTED_PERCENT_DEVIATION);
 }
 
-void core::memory_allocator::LayoutStepCheckRequestLayoutDeviation::checkIfMemoryCapacityLayoutIsAcceptable(
+bool core::memory_allocator::LayoutStepCheckRequestLayoutDeviation::isMemoryCapacityLayoutAcceptable(
 		const struct MemoryAllocationRequest& request,
 		MemoryAllocationLayout& layout)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	if (request.getMemoryModeCapacityGiB())
+	bool isDeviationWithinBounds = true;
+	if (request.getAllMappableDimmCapacityInGiB() > 0 && request.getMemoryModeCapacityGiB() > 0)
 	{
 		double percentDeviation =
-				findPercentDeviation(request.getMemoryModeCapacityGiB(), layout.memoryCapacity);
+				findPercentDeviation(request.getMemoryModeCapacityGiB(), layout.memoryCapacity, request.getAllMappableDimmCapacityInGiB());
+
 		if ((layout.memoryCapacity == 0)  ||
-				(!layoutDeviationIsWithinBounds(percentDeviation)))
+				(!isLayoutDeviationWithinBounds(percentDeviation)))
 		{
-			layout.warnings.push_back(LAYOUT_WARNING_GOAL_ADJUSTED_MORE_THAN_10PERCENT);
+			isDeviationWithinBounds = false;
 		}
 	}
+
+	return isDeviationWithinBounds;
 }
 
-void core::memory_allocator::LayoutStepCheckRequestLayoutDeviation::checkAppDirectCapacityLayoutIsAcceptable(
+bool core::memory_allocator::LayoutStepCheckRequestLayoutDeviation::isAppDirectCapacityLayoutAcceptable(
 		const struct MemoryAllocationRequest& request,
 		MemoryAllocationLayout& layout)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	if (request.getAppDirectCapacityGiB() > 0)
+	bool isDeviationWithinBounds = true;
+	if (request.getAllMappableDimmCapacityInGiB() > 0 && request.getAppDirectCapacityGiB() > 0)
 	{
 		NVM_UINT64 layoutAppDirectCapacity = getNonReservedAppDirectCapacityGiBFromLayout(request, layout);
 		double percentDeviation = findPercentDeviation(request.getAppDirectCapacityGiB(),
-						layoutAppDirectCapacity);
-		if (!layoutDeviationIsWithinBounds(percentDeviation))
+						layoutAppDirectCapacity, request.getAllMappableDimmCapacityInGiB());
+
+		if(!isLayoutDeviationWithinBounds(percentDeviation))
 		{
-			layout.warnings.push_back(LAYOUT_WARNING_GOAL_ADJUSTED_MORE_THAN_10PERCENT);
+			isDeviationWithinBounds = false;
 		}
 	}
+
+	return isDeviationWithinBounds;
 }
 
 NVM_UINT64 core::memory_allocator::LayoutStepCheckRequestLayoutDeviation::getReservedAppDirectCapacityGiB(
