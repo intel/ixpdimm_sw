@@ -417,6 +417,7 @@ int get_long_status(const NVM_NFIT_DEVICE_HANDLE dimm_handle, enum device_ars_st
 	if (rc == NVM_ERR_DEVICEERROR)
 	{
 		*p_ars_status = DEVICE_ARS_STATUS_NOTSTARTED;
+		*p_sanitize_status = DEVICE_SANITIZE_STATUS_NOTSTARTED;
 		rc = NVM_SUCCESS;
 	}
 	else if (rc != NVM_SUCCESS)
