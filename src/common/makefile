@@ -162,6 +162,14 @@ file_ops :
 os :
 	$(MAKE) -C $(OS) all
 
+persistence/schema.c : $(SCHEMA_GEN_ABS) $(TEMPLATE_NAMES) $(NON_TEMPLATE_NAMES)
+ifndef BUILD_ESX
+	cd $(BUILT_TOOLS_DIR); export LD_LIBRARY_PATH=.; $(SCHEMA_GEN_ABS) $(TEMPLATE_DIR) $(CURDIR)/persistence
+else
+	cd $(BUILT_TOOLS_DIR); export LD_LIBRARY_PATH=.:../../../$(EXTERN_LIB_DIR)/ctemplate; $(SCHEMA_GEN_ABS) $(TEMPLATE_DIR) $(CURDIR)/persistence
+endif
+	
+
 # this is separate because I need to turn off warnings on ESX
 encryptdir:
 	$(CC) $(ENCRYPT_CFLAGS) $(INCS) -c encrypt/encrypt.c -o $(OBJECT_MODULE_DIR)/encrypt/encrypt.o $(LDFLAGS)

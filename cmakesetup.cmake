@@ -26,14 +26,14 @@
 
 if (NOT BUILDNUM)
 	execute_process(COMMAND git describe --abbrev=0 OUTPUT_VARIABLE BUILDNUM)
-	if ("${BUILDNUM}" MATCHES "^([a-zA-Z-]*)(.*)$")
-		#replace
 
-		string(REGEX REPLACE "^([a-zA-Z-]+)" "" BUILDNUM "${BUILDNUM}")
+	if ("${BUILDNUM}" MATCHES "^([a-zA-Z-]*-)(.*)$")
+		#replace 
+		string(REGEX REPLACE "^([a-zA-Z-]*-)" "" BUILDNUM "${BUILDNUM}")
 		string(REGEX REPLACE "\n$" "" BUILDNUM "${BUILDNUM}")
 	else ()
 		execute_process(COMMAND pwd OUTPUT_VARIABLE BUILDNUM)
-		if ("NOT ${BUILDNUM}" MATCHES "^v([0-9]+)\\.([0-9]+)\\.([0-9]+)\\.([0-9]+)$")
+		if (NOT "${BUILDNUM}" MATCHES "^([0-9]+)\\.([0-9]+)\\.([0-9]+)\\.([0-9]+)$")
 			set(BUILDNUM 99.99.99.9999)
 		endif()
 	endif()
@@ -46,8 +46,6 @@ list(GET VERSION_LIST 0 VERSION_MAJOR)
 list(GET VERSION_LIST 1 VERSION_MINOR) 
 list(GET VERSION_LIST 2 VERSION_HOTFIX) 
 list(GET VERSION_LIST 3 VERSION_BUILDNUM) 
-
-##install
 
 #Target names
 set(MARKETING_PRODUCT_NAME ixpdimm_sw)
@@ -62,19 +60,26 @@ set(CLI_NAME ixpdimm-cli)
 set(MONITOR_NAME ixpdimm-monitor)
 set(CIM_NAMESPACE intelwbem)
 
-set(SCRIPTS_PATH ${ROOT}/scripts)
-
 if (LNX_BUILD)
         #Change to conditionally set        
         set(LIB_BUILD_VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.0)
 		set(SO_BUILD_VERSION ${VERSION_MAJOR})
 		set(LINUX_PRODUCT_NAME  ${MARKETING_PRODUCT_NAME})
 		set(PRODUCT_DATADIR "/var/lib/${LINUX_PRODUCT_NAME}")
-		
+		if (NOT RPMBUILD_DIR)
+			set(RPMBUILD_DIR ${ROOT}/output/rpmbuild)
+		endif ()
 		set(MGMT_ENV_DIR "/opt/mgmt_env")
 		# doxygen
 		set(DOXYGEN "${MGMT_ENV_DIR}/doxygen/doxygen")
 		
+		if (EXISTS "/etc/redhat-release")
+			set(LINUX_DIST rel)
+		elseif (EXISTS "/etc/SuSE-release")
+			set(LINUX_DIST sle)
+		else ()
+			set(LINUX_DIST Unrecognized Linux distribution)
+		endif()		
 elseif (WIN_BUILD)
 		set(MGMT_ENV_DIR "C:/mgmt_env")
 		# doxygen
@@ -113,3 +118,13 @@ else ()
 	set(CMAKE_CXX_COMPILER g++)
 endif ()
 
+
+file(GLOB INCLUDE_FILES 
+		   src/lib/nvm_management.h
+		   src/lib/nvm_types.h
+		   src/monitor/ixpdimm-monitor.service
+		   src/common/encrypt/public.rev0.pem
+		   REPORTING_ISSUES
+		   TROUBLESHOOTING)
+file(COPY ${INCLUDE_FILES}
+		  DESTINATION  ${OUTPUT_DIR})

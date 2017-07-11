@@ -27,7 +27,7 @@
 cmake_minimum_required(VERSION 2.8.4)
 project(cr_mgmt)
 
-#set(CMAKE_VERBOSE_MAKEFILE on )
+set(CMAKE_VERBOSE_MAKEFILE on )
 
 set(SIM_BUILD 0)
 set(ADAPTER_TYPE real)
@@ -39,7 +39,7 @@ if (BUILD_STATIC)
     set(LIB_TYPE STATIC)
 endif()
 
-option(RELEASE "Build in release mode." OFF)
+option(RELEASE "Build in simulator mode." OFF)
 if (RELEASE)
     set(BUILD_TYPE release)
 else ()
@@ -62,21 +62,22 @@ elseif (WIN_BUILD)
     set(ADAPTER_PREFIX win)
 endif ()
 
-message(ADAPTER_TYPE: ${ADAPTER_TYPE})
-message(BUILD_TYPE: ${BUILD_TYPE})
-message(OS_TYPE: ${OS_TYPE})
-message(LIB_TYPE: ${LIB_TYPE})
-
 get_filename_component(ROOT ./ ABSOLUTE)
 
 set(FRAMEWORK_LIBS_DIR ${ROOT}/../external CACHE STRING "Path to the invm-framework libraries")
-find_library(invm-i18n NO_DEFAULT_PATH NAMES invm-i18n PATHS ${FRAMEWORK_LIBS_DIR})
-find_library(invm-cli NO_DEFAULT_PATH NAMES invm-cli PATHS ${FRAMEWORK_LIBS_DIR})
-find_library(invm-cim NO_DEFAULT_PATH NAMES invm-cim PATHS ${FRAMEWORK_LIBS_DIR})
-
-set(invm-i18n_include ${FRAMEWORK_LIBS_DIR}/include)
-set(invm-cim_include ${FRAMEWORK_LIBS_DIR}/include)
-set(invm-cli_include ${FRAMEWORK_LIBS_DIR}/include)
+if ("${LIB_TYPE}" STREQUAL "STATIC")
+	find_library(invm-i18n NO_DEFAULT_PATH NAMES invm-i18n PATHS ${FRAMEWORK_LIBS_DIR})
+	find_library(invm-cli NO_DEFAULT_PATH NAMES invm-cli PATHS ${FRAMEWORK_LIBS_DIR})
+	find_library(invm-cim NO_DEFAULT_PATH NAMES invm-cim PATHS ${FRAMEWORK_LIBS_DIR})
+	
+	set(invm-i18n_include ${FRAMEWORK_LIBS_DIR}/include)
+	set(invm-cim_include ${FRAMEWORK_LIBS_DIR}/include)
+	set(invm-cli_include ${FRAMEWORK_LIBS_DIR}/include)
+else ()
+	find_library(invm-i18n NAMES invm-i18n PATHS ${FRAMEWORK_LIBS_DIR})
+	find_library(invm-cli NAMES invm-cli PATHS ${FRAMEWORK_LIBS_DIR})
+	find_library(invm-cim NAMES invm-cim PATHS ${FRAMEWORK_LIBS_DIR})
+endif ()
 
 set(OUTPUT_DIR ${ROOT}/output/build/${OS_TYPE}/${ADAPTER_TYPE}/${BUILD_TYPE})
 
@@ -86,27 +87,33 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 set(extern_dir ${ROOT}/external)
+set(SCRIPTS_PATH ${ROOT}/scripts)
 
 include(cmakesetup.cmake)
+
 # --------------------------------------------------------------------------------------------------
 # DRIVER INTERFACE
 # --------------------------------------------------------------------------------------------------
 file(GLOB DRIVER_INTERFACE_FILES
         src/driver_interface/${ADAPTER_PREFIX}_passthrough.c
         src/driver_interface/passthrough.c
+		src/common/string/s_str.c
         )
+if (WIN_BUILD)
+	file(GLOB WIN_DRIVER_INTERFACE_FILES src/lib/win_scm2*.c)
+	list(APPEND DRIVER_INTERFACE_FILES ${WIN_DRIVER_INTERFACE_FILES})
+endif()
 
-add_library(driver_adapter ${DRIVER_INTERFACE_FILES})
-target_include_directories(driver_adapter PUBLIC
-       		${extern_dir}/os_headers
-			src
+add_library(driver_interface STATIC ${DRIVER_INTERFACE_FILES})
+target_include_directories(driver_interface PUBLIC
+       		src/
             )
 if (LNX_BUILD)
-    target_link_libraries(driver_adapter ndctl)
+    target_link_libraries(driver_interface ndctl)
 elseif (WIN_BUILD)
-    target_include_directories(driver_adapter PUBLIC
+    target_include_directories(driver_interface PUBLIC
         	src/common
-            ${I18N_INCLUDE_DIR}          
+            ${invm-i18n_include}         
             )
 endif ()
 
@@ -124,9 +131,9 @@ file(GLOB FIRMWARE_INTERFACE_FILES
         src/common/string/s_str.c
         )
 
-add_library(firmware_interface ${FIRMWARE_INTERFACE_FILES})
+add_library(firmware_interface STATIC ${FIRMWARE_INTERFACE_FILES})
 
-target_link_libraries(firmware_interface driver_adapter)
+target_link_libraries(firmware_interface driver_interface)
 target_include_directories(firmware_interface PUBLIC
         ../
         ./
@@ -161,7 +168,7 @@ elseif (WIN_BUILD)
             )
 endif ()
 
-add_library(common ${LIB_TYPE}
+add_library(common STATIC
         ${COMMON_SOURCE_FILES}
         )
 
@@ -173,10 +180,6 @@ target_link_libraries(common
         z
        	)
 target_include_directories(common PUBLIC
-        ${extern_dir}/sqlite
-        ${extern_dir}/openssl/include
-        ${extern_dir}/openssl
-        ${extern_dir}/zlib
         src/common/
         src/lib
         )
@@ -191,7 +194,6 @@ if (WIN_BUILD)
             COMMAND ${WINDRES} ${OBJECT_MODULE_DIR}/common/os/win_msgs.rc -o ${OBJECT_MODULE_DIR}/common/os/win_msgs.o
             DEPENDS src/common/os/win_msgs.mc
             VERBATIM
-            COMMENT "Generating win_msgs.h ..."
    			)
     add_custom_target(
             win_msgs_header
@@ -200,10 +202,6 @@ if (WIN_BUILD)
     set_source_files_properties(${win_msgs_header}
         	PROPERTIES GENERATED TRUE
         	)
-    target_include_directories(common PUBLIC
-            ${extern_libs}/openssl
-            ${extern_libs}/zlib
-            )
     target_link_libraries(common
             ws2_32
             mswsock
@@ -212,7 +210,7 @@ if (WIN_BUILD)
             Gdi32
             Shlwapi
             iconv
-            zlib
+            z
             )
     add_dependencies(common
        		win_msgs_header
@@ -229,22 +227,17 @@ file(GLOB ACPI_SRC_FILES
         src/acpi/nfit_dimm.c
         src/acpi/nfit_tables.h
         src/acpi/nfit_printer.c
-        src/acpi/nfit.c
         src/acpi/nfit_interleave.c
+        src/acpi/nfit.c
         src/common/guid/guid.c)
-add_library(acpi ${ACPI_SRC_FILES})
+add_library(acpi STATIC ${ACPI_SRC_FILES})
 target_include_directories(acpi PUBLIC src/common)
 target_link_libraries(acpi
         ssl
         crypto
+        z
         )
-if (WIN_BUILD)
-    target_include_directories(acpi PUBLIC src/common
-    	${extern_dir}/openssl/include
-        ${extern_libs}/openssl
-		)        
-endif ()
-
+        
 # --------------------------------------------------------------------------------------------------
 # Native Library
 # --------------------------------------------------------------------------------------------------
@@ -254,6 +247,8 @@ file(GLOB LIB_SOURCE_FILES
 file(GLOB_RECURSE TO_REMOVE
         src/lib/lnx_*
         src/lib/win_*
+        src/lib/esx_*
+        src/lib/sim_*
         )
 list(REMOVE_ITEM LIB_SOURCE_FILES ${TO_REMOVE})
 
@@ -276,11 +271,10 @@ include_directories(${API_LIB_NAME} SYSTEM PUBLIC
         external/os_headers
         )
 target_include_directories(${API_LIB_NAME} PUBLIC
-		src
-		src/acpi
-        src/common/persistence
+        src
+        src/acpi
         external/fw_headers
-
+        external/os_headers
         )
 target_link_libraries(${API_LIB_NAME}
         common
@@ -288,7 +282,9 @@ target_link_libraries(${API_LIB_NAME}
         sqlite3
         ssl
         crypto
-		${invm-i18n}
+        ${invm-i18n}
+        z
+        pthread
         )
 
 if (WIN_BUILD)
@@ -302,19 +298,13 @@ if (WIN_BUILD)
             Gdi32
             Shlwapi
             iconv
-            pthread
-            zlib
             )
 elseif (LNX_BUILD)
     target_link_libraries(${API_LIB_NAME}
-            pthread
             dl
             numa
             m
             ndctl
-            )
-    target_include_directories(${API_LIB_NAME} PUBLIC
-       		${extern_dir}/ndctl
             )
 endif ()
 
@@ -323,27 +313,17 @@ endif ()
 # ---------------------------------------------------------------------------------------
 add_executable(db_creator src/lib/create_config_db/main.c)
 target_link_libraries(db_creator
-        common 
+        common
         sqlite3
         pthread
-        )
-
+	    )
+target_include_directories(db_creator PUBLIC
+       		src/common
+            )      
 add_custom_command(TARGET db_creator POST_BUILD
-        COMMAND cd ${OUTPUT_DIR} && $<TARGET_FILE:db_creator>)
-if (WIN_BUILD)
-    target_link_libraries(db_creator
-            Shlwapi
-            ws2_32
-            mswsock
-            advapi32
-            version
-            Gdi32
-            ssp
-            libintl
-            )
-elseif (LNX_BUILD)
-    target_link_libraries(db_creator dl)
-endif ()
+       COMMAND cd ${OUTPUT_DIR} && $<TARGET_FILE:db_creator>)
+
+target_link_libraries(db_creator dl ssl)
 
 # --------------------------------------------------------------------------------------------------
 # core
@@ -371,7 +351,7 @@ target_link_libraries(${CORE_LIB_NAME}
         ${API_LIB_NAME}
         firmware_interface
         )
-
+            
 # ---------------------------------------------------------------------------------------
 # WBEM
 # ---------------------------------------------------------------------------------------
@@ -413,27 +393,35 @@ SET_TARGET_PROPERTIES(${CIM_LIB_NAME}
 target_include_directories(${CIM_LIB_NAME} PUBLIC
         src/lib/
         src/wbem/
-        external/cmpi/include/
         external/rapidxml-1.13
-		${invm-cim_include}
+        ${invm-cim_include}
         )
 target_link_libraries(${CIM_LIB_NAME}
         ${API_LIB_NAME}
         ${CORE_LIB_NAME}
-		${invm-cim}
+        ${invm-cim}
         )
+
+# ---------------------------------------------------------------------------------------
+# Generating mofs
+# ---------------------------------------------------------------------------------------
+add_custom_target(generate_mofs ALL)
 if (LNX_BUILD)
-  add_custom_command(TARGET ${CIM_LIB_NAME} POST_BUILD
+  add_custom_command(TARGET generate_mofs POST_BUILD
   				COMMAND cd ${ROOT} && 
   				/bin/sh ${ROOT}/src/wbem/mof/createmof_linux.sh ${ROOT} ${OUTPUT_DIR}
   				)
 elseif (WIN_BUILD)
-  add_custom_command(TARGET ${CIM_LIB_NAME} POST_BUILD
+  add_custom_command(TARGET generate_mofs POST_BUILD
 				WORKING_DIRECTORY ${ROOT}/src/wbem/mof
-				COMMENT "executing COMMAND cmd //C createmof_windows.cmd ${ROOT} ${OUTPUT_DIR}"
   				COMMAND cmd \"/\"/C createmof_windows.cmd ${ROOT} ${OUTPUT_DIR}
   				)
 endif ()
+
+# ---------------------------------------------------------------------------------------
+# Cim provider
+# ---------------------------------------------------------------------------------------
+add_custom_target(cimprovider DEPENDS ${CIM_LIB_NAME} generate_mofs)
 
 # --------------------------------------------------------------------------------------------------
 # CLI Library Source
@@ -455,14 +443,16 @@ target_include_directories(${CLI_LIB_SONAME} PUBLIC
         src/
         src/lib/
         src/wbem/
+        src/acpi/
 		)
 target_link_libraries(${CLI_LIB_SONAME}
+        acpi
         ${CORE_LIB_NAME}
         ${CIM_LIB_NAME}
         ${API_LIB_NAME}
-		${invm-cli}
-		${invm-cim}
-		${invm-i18n}
+        ${invm-cim}
+        #{invm-cli}
+        ${invm-i18n}
         )
 
 # --------------------------------------------------------------------------------------------------
@@ -471,14 +461,14 @@ target_link_libraries(${CLI_LIB_SONAME}
 add_executable(${CLI_NAME} src/cli/nvmcli.cpp)
 
 target_include_directories(${CLI_NAME} PUBLIC
-		src/cli
         src/common
         ${invm-cli_include}
 		${invm-i18n_include}
+		src/
         )
 target_link_libraries(${CLI_NAME}
-        ${invm-i18n}
         ${invm-cli}
+        ${invm-i18n}
         ${CIM_LIB_NAME}
         ${CLI_LIB_SONAME}
         ${API_LIB_NAME}
@@ -490,7 +480,7 @@ add_dependencies(${CLI_NAME}
 if (LNX_BUILD) 
 		add_custom_command(TARGET ${CLI_NAME} POST_BUILD
 					COMMAND cd ${SCRIPTS_PATH} && ./create_${CLI_NAME}_manpage.py dataPath=${PRODUCT_DATADIR} outputPath=${OUTPUT_DIR}
-					COMMAND cd ${SCRIPTS_PATH} && ./create_${MONITOR_NAME}_manpage.py dataPath=$[PRODUCT_DATADIR}
+					COMMAND cd ${SCRIPTS_PATH} && ./create_${MONITOR_NAME}_manpage.py dataPath=${PRODUCT_DATADIR}
 					COMMAND mv ${SCRIPTS_PATH}/${CLI_NAME}.8.gz ${SCRIPTS_PATH}/${MONITOR_NAME}.8.gz ${OUTPUT_DIR}
 					COMMAND ${CMAKE_COMMAND} -E touch ${ROOT}/src/cli/nvmcli.cpp
 					)
@@ -522,9 +512,9 @@ target_link_libraries(ixpdimm-monitor ${API_LIB_NAME} ${CORE_LIB_NAME})
 # Install
 # --------------------------------------------------------------------------------------------------
 if (LNX_BUILD)
-		install (CODE "execute_process(COMMAND /bin/sh ${ROOT}/install/linux/install.sh ${OUTPUT_DIR} ${SIM_BUILD})")
+	install (CODE "execute_process(COMMAND /bin/sh ${ROOT}/install/linux/install.sh ${OUTPUT_DIR} ${SIM_BUILD})")
 elseif (WIN_BUILD)
-		install (CODE "execute_process(COMMAND cmd /c ${ROOT}/install/windows/install.cmd ${OUTPUT_DIR} ${SIM_BUILD})")
+	install (CODE "execute_process(COMMAND cmd /c ${ROOT}/install/windows/install.cmd ${OUTPUT_DIR} ${SIM_BUILD})")
 endif ()
 
 # --------------------------------------------------------------------------------------------------
@@ -534,7 +524,8 @@ if (LNX_BUILD)
 		add_custom_target(uninstall 
 			COMMAND /bin/sh ${ROOT}/install/linux/uninstall.sh ${OUTPUT_DIR} ${SIM_BUILD})
 elseif (WIN_BUILD)
-		#install (CODE "execute_process(COMMAND cmd /c ${ROOT}/install/windows/install.cmd ${OUTPUT_DIR} ${SIM_BUILD})")
+		add_custom_target(uninstall 
+			COMMAND cmd /c ${ROOT}/install/windows/uninstall.cmd ${OUTPUT_DIR} ${SIM_BUILD})
 endif ()
 
 # --------------------------------------------------------------------------------------------------
@@ -548,6 +539,31 @@ add_custom_target(pegasus_deregister COMMAND /bin/sh ${ROOT}/install/linux/pegas
 # --------------------------------------------------------------------------------------------------
 add_custom_target(sfcb_register COMMAND /bin/sh ${ROOT}/install/linux/sfcb_register.sh)
 add_custom_target(sfcb_deregister COMMAND /bin/sh ${ROOT}/install/linux/sfcb_deregister.sh)
+
+# --------------------------------------------------------------------------------------------------
+# RPM
+# --------------------------------------------------------------------------------------------------
+add_custom_target(rpm 
+        COMMAND ${CMAKE_COMMAND} -E echo "Entering make rpm..."
+        # Make directories 
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${RPMBUILD_DIR} 
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${RPMBUILD_DIR}/BUILDROOT 
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${RPMBUILD_DIR}/SOURCES 
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${RPMBUILD_DIR}/RPMS
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${RPMBUILD_DIR}/SRPMS
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${RPMBUILD_DIR}/SPECS
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${RPMBUILD_DIR}/BUILD/${MARKETING_PRODUCT_NAME}-${BUILDNUM}
+        # Copy spec file 
+        COMMAND ${CMAKE_COMMAND} -E copy
+         ${ROOT}/install/linux/${LINUX_DIST}-release/*.spec ${RPMBUILD_DIR}/SPECS/${MARKETING_PRODUCT_NAME}.spec
+        # Update the spec file with build version
+        COMMAND sed -i "s/^%define build_version .*/%define build_version ${BUILDNUM}/g" ${RPMBUILD_DIR}/SPECS/${MARKETING_PRODUCT_NAME}.spec
+        # Archive the directory 
+        COMMAND cd ${ROOT} && git archive --format=tar --prefix="${MARKETING_PRODUCT_NAME}-${BUILDNUM}/" HEAD | gzip -c > ${RPMBUILD_DIR}/SOURCES/${MARKETING_PRODUCT_NAME}-${BUILDNUM}.tar.gz
+        
+        # rpmbuild
+        COMMAND cd ${ROOT} && rpmbuild -ba ${RPMBUILD_DIR}/SPECS/${MARKETING_PRODUCT_NAME}.spec --define "_topdir ${RPMBUILD_DIR}" --define "cflag ${CFLAGS_EXTERNAL}"
+        ) 
 
 # --------------------------------------------------------------------------------------------------
 # Project wide defines and flags
@@ -577,7 +593,10 @@ if (RELEASE)
     add_definitions(
             -DRELEASE
     )
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -fno-strict-aliasing")
+    add_definitions(-O2 
+    -fno-strict-aliasing
+    )
+    #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -fno-strict-aliasing")
 else ()
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O")
 endif ()
@@ -587,11 +606,13 @@ if (LNX_BUILD)
             -D_GNU_SOURCE
             -D__LINUX__
             -D__LARGE_PAYLOAD__=1
-            -D__NVM_DLL__          
+            -D__NVM_DLL__
+            -fPIC                    
             -DCMPI_PLATFORM_LINUX_GENERIC_GNU=1
             -D__PRODUCT_DATADIR__="${PRODUCT_DATADIR}/"
     )
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -z noexecstack -z relro -z now -pie -fPIC")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -z noexecstack -z relro -z now -pie")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${CFLAGS_EXTERNAL}")
 endif ()
 
 # Windows specific
@@ -604,5 +625,5 @@ if (WIN_BUILD)
             -D__INTEL_I18N__
             -D__WINDOWS__
     )
-set(CMAKE_C_FLAGES "${CMAKE_C_FLAGES} -m64 -mno-ms-bitfields -static-libgcc -static-libstdc++")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -m64 -mno-ms-bitfields -static-libgcc -static-libstdc++")
 endif ()
