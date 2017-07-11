@@ -101,6 +101,8 @@ void fwcmd_run_long_operation_status(unsigned int handle);
 
 void fwcmd_run_bsr(unsigned int handle);
 
+void fwcmd_run_format(unsigned int handle, const unsigned char fill_pattern, const unsigned char preserve_pdas_write_count);
+
 #ifdef __cplusplus
 }
 #endif

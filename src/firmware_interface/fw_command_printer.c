@@ -110,6 +110,7 @@ void fwcmd_print_command_names()
 	printf("\tfirmware_debug_log\n");
 	printf("\tlong_operation_status\n");
 	printf("\tbsr\n");
+	printf("\tformat\n");
 }
 
 void fwcmd_print_output_command_names()

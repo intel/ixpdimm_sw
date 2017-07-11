@@ -466,5 +466,16 @@ void FwCommandsWrapper::FwcmdFreeBsr(struct fwcmd_bsr_result *p_result) const
 	fwcmd_free_bsr(p_result);
 }
 
+struct fwcmd_format_result FwCommandsWrapper::FwcmdCallFormat(unsigned int handle,
+const unsigned char fill_pattern,
+const unsigned char preserve_pdas_write_count) const
+{
+	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
+
+	return fwcmd_call_format(handle,
+	fill_pattern,
+	preserve_pdas_write_count);
+}
+
 }
 }

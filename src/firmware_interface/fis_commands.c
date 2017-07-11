@@ -402,6 +402,18 @@ unsigned int fis_bsr(const unsigned int device_handle, struct pt_output_bsr *p_o
 	return pt_ioctl_cmd(&cmd);
 }
 
+unsigned int fis_format(const unsigned int device_handle, struct pt_input_format *p_input_payload)
+{
+	struct pt_fw_cmd cmd;
+	memset(&cmd, 0, sizeof (struct pt_fw_cmd));
+	cmd.device_handle = device_handle;
+	cmd.opcode = 0xF1;
+	cmd.sub_opcode = 0x0;
+	cmd.input_payload = p_input_payload;
+	cmd.input_payload_size = sizeof (struct pt_input_format);
+	return pt_ioctl_cmd(&cmd);
+}
+
 void fis_get_error_message(unsigned int code, char *message, size_t message_size)
 {
 	switch (code)

@@ -973,6 +973,22 @@ struct fwcmd_bsr_result
 struct fwcmd_bsr_result fwcmd_alloc_bsr(unsigned int handle);
 
 void fwcmd_free_bsr(struct fwcmd_bsr_result *p_result);
+/*
+ * Data Structures for format
+ */
+struct fwcmd_format_result
+{
+	int success:1;
+	struct fwcmd_error_code error_code;
+};
+
+/*
+ * Firmware Command Function format
+ */
+struct fwcmd_format_result fwcmd_call_format(unsigned int handle,
+	const unsigned char fill_pattern,
+	const unsigned char preserve_pdas_write_count);
+
 int fwcmd_is_command_name(const char * cmd_name);
 
 int fwcmd_is_output_command_name(const char * cmd_name);

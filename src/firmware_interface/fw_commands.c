@@ -1576,6 +1576,33 @@ void fwcmd_free_bsr(struct fwcmd_bsr_result *p_result)
 }
 /* END bsr */
 
+/* BEGIN format */
+struct fwcmd_format_result fwcmd_call_format(unsigned int handle,
+	const unsigned char fill_pattern,
+	const unsigned char preserve_pdas_write_count)
+{
+	struct fwcmd_format_result result;
+	memset(&result, 0, sizeof (struct fwcmd_format_result));
+
+	struct pt_input_format input_payload;
+	input_payload.fill_pattern = fill_pattern;
+	input_payload.preserve_pdas_write_count = preserve_pdas_write_count;
+	unsigned int rc = fis_format(handle,
+		&input_payload);
+
+	if (PT_IS_SUCCESS(rc))
+	{
+		result.success = 1;
+	}
+	else
+	{
+		result.error_code.type = FWCMD_ERROR_TYPE_PT;
+        result.error_code.code = rc;
+	}
+	return result;
+}
+/* END format */
+
 /*
  * helper functions
  */
@@ -1700,6 +1727,10 @@ int fwcmd_is_command_name(const char * cmd_name)
 		exists = 1;
 	}
 	if (s_strncmpi(cmd_name, "bsr", sizeof ("bsr")) == 0)
+	{
+		exists = 1;
+	}
+	if (s_strncmpi(cmd_name, "format", sizeof ("format")) == 0)
 	{
 		exists = 1;
 	}

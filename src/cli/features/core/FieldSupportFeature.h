@@ -159,6 +159,7 @@ public:
 		SHOW_DEVICE_FIRMWARE,
 		SHOW_LOGS,
 		SHOW_DEVICE_PCD,
+		START_FORMAT
 	};
 
 	/*!
@@ -364,6 +365,7 @@ private:
 	bool fwHasLastFwUpdateStatusField(const std::string &fwApiVersion);
 
 	virtual cli::framework::ResultBase *showDevicePcd(const framework::ParsedCommand& parsedCommand);
+	virtual cli::framework::ResultBase *formatDevice(const framework::ParsedCommand& parsedCommand);
 };
 
 };

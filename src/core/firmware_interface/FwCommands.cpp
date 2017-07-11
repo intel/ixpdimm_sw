@@ -630,6 +630,23 @@ enum return_code FwCommands::fwGetPayload_Bsr(unsigned int handle, std::string &
 	return rc;
 }
 
+enum return_code FwCommands::fwGetPayload_Format(unsigned int handle, const unsigned char fill_pattern, const unsigned char preserve_pdas_write_count, std::string &resultString)
+{
+	enum return_code rc = NVM_SUCCESS;
+
+	struct fwcmd_format_result result = m_wrapper.FwcmdCallFormat(handle, fill_pattern, preserve_pdas_write_count);
+
+	if (result.success)
+	{
+	}
+	else
+	{
+		rc = convertFwcmdErrorCodeToNvmErrorCode(result.error_code);
+	}
+
+	return rc;
+}
+
 std::string FwCommands::fwPayloadToString_IdentifyDimm(const struct fwcmd_identify_dimm_data *p_data)
 {
 	std::stringstream result;
@@ -1190,7 +1207,7 @@ enum return_code FwCommands::dsm_err_to_nvm_lib_err(pt_result result)
 			rc = NVM_ERR_DEVICEERROR;
 			break;
 		case DSM_VENDOR_RETRY_SUGGESTED:
-			rc = NVM_ERR_DEVICEERROR;
+			rc = NVM_ERR_TIMEOUT;
 			break;
 		case DSM_VENDOR_UNKNOWN:
 			rc = NVM_ERR_UNKNOWN;

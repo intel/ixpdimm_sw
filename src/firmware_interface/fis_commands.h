@@ -523,6 +523,13 @@ struct pt_output_bsr
 	unsigned short rest2;
 
 } __attribute__((packed));
+struct pt_input_format
+{
+	unsigned char fill_pattern;
+	unsigned char preserve_pdas_write_count;
+	unsigned char reserved[126];
+
+} __attribute__((packed));
 /*
  * FIS Commands
  */
@@ -556,6 +563,7 @@ unsigned int fis_firmware_image_info(const unsigned int device_handle, struct pt
 unsigned int fis_firmware_debug_log(const unsigned int device_handle, struct pt_input_firmware_debug_log *p_input_payload, struct pt_output_firmware_debug_log *p_output_payload);
 unsigned int fis_long_operation_status(const unsigned int device_handle, struct pt_output_long_operation_status *p_output_payload);
 unsigned int fis_bsr(const unsigned int device_handle, struct pt_output_bsr *p_output_payload);
+unsigned int fis_format(const unsigned int device_handle, struct pt_input_format *p_input_payload);
 void fis_get_error_message(unsigned int code, char *message, size_t message_size);
 
 #ifdef __cplusplus

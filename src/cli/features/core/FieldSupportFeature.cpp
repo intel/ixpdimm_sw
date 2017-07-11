@@ -80,6 +80,7 @@
 
 #include "ShowVersionCommand.h"
 #include "ShowDevicePcdCommand.h"
+#include "FormatDeviceCommand.h"
 
 const std::string cli::nvmcli::FieldSupportFeature::Name = "Field Support";
 const std::string LOG_PROPERTY_NAME = "LogLevel";
@@ -304,6 +305,7 @@ void cli::nvmcli::FieldSupportFeature::getPaths(cli::framework::CommandSpecList 
 	list.push_back(changePreferences);
 	list.push_back(showLogs);
 	list.push_back(ShowDevicePcdCommand::getCommandSpec(SHOW_DEVICE_PCD));
+	list.push_back(FormatDeviceCommand::getCommandSpec(START_FORMAT));
 }
 
 // Constructor, just calls super class and initializes member variables
@@ -377,6 +379,9 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::run(
 			break;
 		case SHOW_LOGS:
 			pResult = showLogs(parsedCommand);
+			break;
+		case START_FORMAT:
+			pResult = formatDevice(parsedCommand);
 			break;
 	}
 
@@ -2236,5 +2241,16 @@ cli::framework::ResultBase* cli::nvmcli::FieldSupportFeature::showDevicePcd(
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	ShowDevicePcdCommand command;
+	return command.execute(parsedCommand);
+}
+
+cli::framework::ResultBase* cli::nvmcli::FieldSupportFeature::formatDevice(
+		const framework::ParsedCommand& parsedCommand)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	cli::framework::YesNoPrompt yesNoPrompt;
+	FormatDeviceCommand::UserPrompt prompt(yesNoPrompt);
+	FormatDeviceCommand command(prompt);
 	return command.execute(parsedCommand);
 }

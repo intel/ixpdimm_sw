@@ -489,6 +489,27 @@ void fwcmd_run(const char *command_name,
 		);
 
 	}
+	else if (s_strncmpi(command_name, "format",
+		sizeof ("format")) == 0)
+	{
+		char * fill_pattern_value = find_arg(p_args, "fill_pattern");
+		if (!fill_pattern_value)
+		{
+			printf("Required argument 'fill_pattern' not found\n");
+			return;
+		}
+		char * preserve_pdas_write_count_value = find_arg(p_args, "preserve_pdas_write_count");
+		if (!preserve_pdas_write_count_value)
+		{
+			printf("Required argument 'preserve_pdas_write_count' not found\n");
+			return;
+		}
+		fwcmd_run_format(handle
+			, to_int(fill_pattern_value)
+			, to_int(preserve_pdas_write_count_value)
+		);
+
+	}
 	else
 	{
 		printf("Command \"%s\" not recognized. Available commands: \n", command_name);
@@ -522,6 +543,7 @@ void fwcmd_run(const char *command_name,
 		printf("\tfirmware_debug_log\n");
 		printf("\tlong_operation_status\n");
 		printf("\tbsr\n");
+		printf("\tformat\n");
 	}
 }
 
@@ -1021,5 +1043,20 @@ void fwcmd_run_bsr(unsigned int handle)
 		fwcmd_print_error(result.error_code);
 	}
 	fwcmd_free_bsr(&result);
+}
+
+void fwcmd_run_format(unsigned int handle, const unsigned char fill_pattern, const unsigned char preserve_pdas_write_count)
+{
+	struct fwcmd_format_result result = fwcmd_call_format(handle, fill_pattern, preserve_pdas_write_count);
+
+	if (result.success)
+	{
+		printf("0x%x: Success!\n", handle);
+	}
+	else
+	{
+		printf("There was an issue executing format. \n");
+		fwcmd_print_error(result.error_code);
+	}
 }
 

@@ -170,6 +170,10 @@ public:
 
 	virtual void FwcmdFreeBsr(struct fwcmd_bsr_result *p_result) const;
 
+	virtual struct fwcmd_format_result FwcmdCallFormat(unsigned int handle,
+	const unsigned char fill_pattern,
+	const unsigned char preserve_pdas_write_count) const;
+
 protected:
 	FwCommandsWrapper();
 

@@ -159,6 +159,11 @@ virtual enum return_code fwGetPayload_LongOperationStatus(unsigned int handle,
 virtual enum return_code fwGetPayload_Bsr(unsigned int handle,
     std::string &resultString);
 
+virtual enum return_code fwGetPayload_Format(unsigned int handle,
+	const unsigned char fill_pattern,
+	const unsigned char preserve_pdas_write_count,
+    std::string &resultString);
+
 virtual std::string fwPayloadToString_IdentifyDimm(
     const struct fwcmd_identify_dimm_data *p_data);
 
