@@ -214,64 +214,6 @@ wbem::framework::instance_names_t *wbem::pmem_config::PersistentMemoryCapabiliti
 	return pNames;
 }
 
-/*
- * Execute an extrinsic method
- */
-wbem::framework::UINT32 wbem::pmem_config::PersistentMemoryCapabilitiesFactory::executeMethod(
-		wbem::framework::UINT32 &wbemRc,
-		const std::string method,
-		wbem::framework::ObjectPath &object,
-		wbem::framework::attributes_t &inParms,
-		wbem::framework::attributes_t &outParms)
-{
-	framework::UINT32 httpRc = framework::MOF_ERR_SUCCESS;
-	wbemRc = framework::MOF_ERR_SUCCESS;
-	struct pool *pPool = NULL;
-
-	COMMON_LOG_ENTRY_PARAMS("methodName: %s, number of in params: %d", method.c_str(), (int)(inParms.size()));
-
-	try
-	{
-		if (method == PMCAP_GETBLOCKSIZES)
-		{
-			// get the supported block sizes for this pool
-			wbem::framework::UINT64_LIST blockSizes;
-			pPool = getPool(object);
-			// if pool is block capable, then retrieve supported block sizes, else empty
-			if (pPool->type == POOL_TYPE_PERSISTENT)
-			{
-				// get system supported block sizes
-				getSupportedBlockSizes(blockSizes);
-			}
-			// return in outParams
-			outParms[PMCAP_BLOCKSIZES_PARAMNAME] = framework::Attribute(blockSizes, false);
-		}
-		else
-		{
-			httpRc = framework::CIM_ERR_METHOD_NOT_AVAILABLE;
-		}
-	}
-	catch (framework::ExceptionBadParameter &)
-	{
-		wbemRc = PMCAP_ERR_INVALID_PARAMETER;
-	}
-	catch(exception::NvmExceptionLibError &e)
-	{
-		wbemRc = getReturnCodeFromLibException(e);
-	}
-	catch(framework::Exception &)
-	{
-		wbemRc = PMCAP_ERR_UNKNOWN;
-	}
-	if (pPool)
-	{
-		delete pPool;
-	}
-
-	COMMON_LOG_EXIT_RETURN("httpRc: %u, wbemRc: %u", httpRc, wbemRc);
-	return httpRc;
-}
-
 wbem::framework::UINT32
 wbem::pmem_config::PersistentMemoryCapabilitiesFactory::getReturnCodeFromLibException(
 		exception::NvmExceptionLibError e)
@@ -403,17 +345,6 @@ struct pool *wbem::pmem_config::PersistentMemoryCapabilitiesFactory::getPool(
 	}
 
 	return poolViewFactory.getPool(poolUidStr);
-}
-
-void wbem::pmem_config::PersistentMemoryCapabilitiesFactory::getSupportedBlockSizes(
-		framework::UINT64_LIST &list)
-{
-	// get system supported block sizes
-	struct nvm_capabilities capabilities = getNvmCapabilities();
-	for (NVM_UINT32 i = 0; i < capabilities.sw_capabilities.block_size_count; i++)
-	{
-		list.push_back((NVM_UINT64)capabilities.sw_capabilities.block_sizes[i]);
-	}
 }
 
 NVM_BOOL wbem::pmem_config::PersistentMemoryCapabilitiesFactory::getMemoryPageAllocationCapability()

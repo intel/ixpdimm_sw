@@ -862,8 +862,6 @@ struct nvm_features
  */
 struct sw_capabilities
 {
-	NVM_UINT32 block_size_count; // number of supported block sizes in the block sizes array
-	NVM_UINT32 block_sizes[NVM_MAX_BLOCK_SIZES]; // the driver-validated list of block sizes
 	NVM_UINT64 min_namespace_size; // smallest namespace supported by the driver, in bytes
 	NVM_BOOL namespace_memory_page_allocation_capable;
 };

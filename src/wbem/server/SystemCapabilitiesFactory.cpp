@@ -69,7 +69,6 @@ void wbem::server::SystemCapabilitiesFactory::populateAttributeList(
 	attributes.push_back(SUPPORTEDAPP_DIRECT_SETTINGS_KEY);
 	attributes.push_back(RECOMMENDEDAPP_DIRECT_SETTINGS_KEY);
 	attributes.push_back(MINNAMESPACESIZE_KEY);
-	attributes.push_back(BLOCKSIZES_KEY);
 	attributes.push_back(APP_DIRECT_MEMORY_MIRROR_SUPPORT_KEY);
 	attributes.push_back(DIMMSPARESUPPORT_KEY);
 	attributes.push_back(APP_DIRECT_MEMORY_MIGRATION_SUPPORT_KEY);
@@ -171,19 +170,6 @@ wbem::framework::Instance* wbem::server::SystemCapabilitiesFactory::getInstance(
 				}
 				framework::Attribute attr(minSize, false);
 				pInstance->setAttribute(MINNAMESPACESIZE_KEY, attr, attributes);
-			}
-			if (containsAttribute(BLOCKSIZES_KEY, attributes))
-			{
-				framework::UINT32_LIST blockSizeList;
-				if (nvmCaps.nvm_features.create_namespace)
-				{
-					for (NVM_UINT32 i = 0; i < nvmCaps.sw_capabilities.block_size_count; i++)
-					{
-						blockSizeList.push_back(nvmCaps.sw_capabilities.block_sizes[i]);
-					}
-				}
-				framework::Attribute attr(blockSizeList, false);
-				pInstance->setAttribute(BLOCKSIZES_KEY, attr, attributes);
 			}
 			if (containsAttribute(APP_DIRECT_MEMORY_MIRROR_SUPPORT_KEY, attributes))
 			{

@@ -180,9 +180,6 @@ class NVM_API NamespaceFeature : public cli::nvmcli::VerboseFeatureBase
 		// Interface for WBEM deleteNamespace functionality
 		void (*m_deleteNamespace) (const std::string & namespaceUid);
 
-		// Interface for WBEM getSupportedBlockSizes functionality
-		void (*m_getSupportedBlockSizes)(std::vector<COMMON_UINT64> &sizes);
-
 		// Interface for WBEM getSupportedSizeRange functionaliry
 		void (*m_getSupportedSizeRange)(const std::string &poolUid,
 				COMMON_UINT64 &largestPossibleAppDirectNs,
@@ -326,7 +323,6 @@ protected:
 		static void wbemDeleteNamespace (const std::string & namespaceUid)
 				throw (wbem::framework::Exception);
 
-		static void wbemGetSupportedBlockSizes(std::vector<COMMON_UINT64> &sizes);
 		static void wbemGetSupportedSizeRange(const std::string &poolUid,
 				COMMON_UINT64 &largestPossibleAdNs,
 				COMMON_UINT64 &smallestPossibleAdNs,

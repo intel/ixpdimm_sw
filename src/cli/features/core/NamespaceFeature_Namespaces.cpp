@@ -491,14 +491,6 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::createNamespace(
 	return pResult;
 }
 
-void cli::nvmcli::NamespaceFeature::wbemGetSupportedBlockSizes(
-		std::vector<COMMON_UINT64> &sizes)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	wbem::pmem_config::PersistentMemoryCapabilitiesFactory provider;
-	provider.getSupportedBlockSizes(sizes);
-}
-
 void cli::nvmcli::NamespaceFeature::wbemGetSupportedSizeRange(const std::string &poolUid,
 		COMMON_UINT64 &largestPossibleAdNs,
 		COMMON_UINT64 &smallestPossibleAdNs,
@@ -562,54 +554,6 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseCreateNsBlockSiz
 			{
 				// the library will determine if this is a valid size
 				m_blockSize = stringToUInt64(value);
-			}
-		}
-	}
-	else if (m_nsType == wbem::pmem_config::PM_SERVICE_STORAGE_TYPE)
-	{
-		if (m_blockSizeExists)
-		{
-			if(!isStringValidNumber(value))
-			{
-				pResult = new framework::SyntaxErrorBadValueResult(
-						framework::TOKENTYPE_PROPERTY, CREATE_NS_PROP_BLOCKSIZE, value);
-			}
-			else
-			{
-				// the library will determine if this is a valid size
-				m_blockSize = stringToUInt64(value);
-			}
-		}
-		else
-		{
-			try
-			{
-				// get system supported values
-				std::vector<COMMON_UINT64> supportedSizes;
-				m_pCapProvider->getSupportedBlockSizes(supportedSizes);
-
-				if (supportedSizes.size() > 0u)
-				{
-					m_blockSize = supportedSizes[0];
-					for(size_t i = 1; i < supportedSizes.size(); i++)
-					{
-						m_blockSize = supportedSizes[i] < m_blockSize ? supportedSizes[i] : m_blockSize;
-					}
-				}
-				else
-				{
-					COMMON_LOG_ERROR("GetSupportedBlockSizes returned 0 block sizes");
-					pResult = new framework::ErrorResult(
-							framework::ErrorResult::ERRORCODE_NOTSUPPORTED, NOTSUPPORTED_ERROR_STR, "");
-				}
-			}
-			catch (wbem::framework::Exception &e)
-			{
-				if (pResult)
-				{
-					delete pResult;
-				}
-				pResult = NvmExceptionToResult(e);
 			}
 		}
 	}

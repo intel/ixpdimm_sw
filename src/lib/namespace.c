@@ -1783,25 +1783,6 @@ void get_smallest_app_direct_namespace(const struct pool *p_pool,
 	COMMON_LOG_EXIT();
 }
 
-NVM_UINT64 get_smallest_block_size(const struct nvm_capabilities *p_caps)
-{
-	COMMON_LOG_ENTRY();
-	NVM_UINT64 smallest_block_size = 0;
-	if (p_caps->sw_capabilities.block_size_count > 0)
-	{
-		smallest_block_size = p_caps->sw_capabilities.block_sizes[0];
-		for (int i = 1; i < p_caps->sw_capabilities.block_size_count; i++)
-		{
-			if (p_caps->sw_capabilities.block_sizes[i] < smallest_block_size)
-			{
-				smallest_block_size = p_caps->sw_capabilities.block_sizes[i];
-			}
-		}
-	}
-	COMMON_LOG_EXIT();
-	return smallest_block_size;
-}
-
 int get_pool_supported_size_ranges(const struct pool *p_pool,
 		const struct nvm_capabilities *p_caps,
 		struct possible_namespace_ranges *p_range,

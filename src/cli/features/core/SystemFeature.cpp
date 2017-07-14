@@ -1124,44 +1124,6 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::showMemoryResources(
 	return cmd.execute(parsedCommand);
 }
 
-void cli::nvmcli::SystemFeature::generateBlockSizeAttributeValue(wbem::framework::Instance &wbemInstance)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	wbem::framework::Attribute blockSizesAttr;
-	if (wbemInstance.getAttribute(wbem::BLOCKSIZES_KEY, blockSizesAttr) ==
-			wbem::framework::SUCCESS)
-	{
-		std::string blockSizesStr;
-		wbem::framework::UINT32_LIST blockSizesList = blockSizesAttr.uint32ListValue();
-		// display Unknown when the driver doesn't report any recommended namespace blocksizes
-		if (blockSizesList.empty())
-		{
-			blockSizesStr = wbem::UNKNOWN;
-			wbem::framework::Attribute newBlockSizesAttr(blockSizesStr, false);
-			wbemInstance.setAttribute(wbem::BLOCKSIZES_KEY, newBlockSizesAttr);
-		}
-		else
-		{
-			// append units to block size output
-			std::stringstream bsStr;
-			for (size_t i = 0; i < blockSizesList.size(); i++)
-			{
-				if (i == blockSizesList.size() -1)
-				{
-					bsStr << blockSizesList[i] << " B";
-				}
-				else
-				{
-					bsStr << blockSizesList[i] << " B, ";
-				}
-			}
-			wbem::framework::Attribute newBlockSizesAttr(bsStr.str(), false);
-			wbemInstance.setAttribute(wbem::BLOCKSIZES_KEY, newBlockSizesAttr);
-		}
-	}
-}
-
 cli::framework::ResultBase *cli::nvmcli::SystemFeature::showSystemCapabilities(
 		const framework::ParsedCommand &parsedCommand)
 {
@@ -1185,7 +1147,6 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::showSystemCapabilities(
 		allAttributes.push_back(wbem::SUPPORTEDAPP_DIRECT_SETTINGS_KEY);
 		allAttributes.push_back(wbem::RECOMMENDEDAPP_DIRECT_SETTINGS_KEY);
 		allAttributes.push_back(wbem::MINNAMESPACESIZE_KEY);
-		allAttributes.push_back(wbem::BLOCKSIZES_KEY);
 		allAttributes.push_back(wbem::APP_DIRECT_MEMORY_MIRROR_SUPPORT_KEY);
 		allAttributes.push_back(wbem::DIMMSPARESUPPORT_KEY);
 		allAttributes.push_back(wbem::APP_DIRECT_MEMORY_MIGRATION_SUPPORT_KEY);
@@ -1217,7 +1178,6 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::showSystemCapabilities(
 						wbem::ALIGNMENT_KEY, capacityUnits);
 				cli::nvmcli::convertCapacityAttribute((*pInstances)[0],
 						wbem::MINNAMESPACESIZE_KEY, capacityUnits);
-				generateBlockSizeAttributeValue((*pInstances)[0]);
 				pResult = NvmInstanceToPropertyListResult((*pInstances)[0], attributes, "SystemCapabilities");
 			}
 		}

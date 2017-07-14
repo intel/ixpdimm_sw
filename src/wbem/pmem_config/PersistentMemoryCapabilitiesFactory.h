@@ -96,28 +96,12 @@ class NVM_API PersistentMemoryCapabilitiesFactory : public framework_interface::
 		framework::instance_names_t* getInstanceNames() throw (framework::Exception);
 
 		/*!
-		 * Implementation of the standard CIM extrinsic method
-		 */
-		wbem::framework::UINT32 executeMethod(
-					wbem::framework::UINT32 &wbem_return,
-					const std::string method,
-					wbem::framework::ObjectPath &object,
-					wbem::framework::attributes_t &inParms,
-					wbem::framework::attributes_t &outParms);
-
-
-		/*!
 		 * Determine the security features of the dimms in the pool
 		 */
 		framework::UINT16_LIST getPoolSecurityFeatures(struct pool *pPool) throw (framework::Exception);
 
 		framework::UINT64 getMaxNamespacesPerPool(struct pool *pPool, NVM_UINT64 min_namespace_size)
 		throw (framework::Exception);
-
-		/*!
-		 * Get the supported block sizes
-		 */
-		virtual void getSupportedBlockSizes(framework::UINT64_LIST &list);
 
 		/*!
 		 * Get memory page allocation capability

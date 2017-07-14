@@ -165,7 +165,6 @@ private:
 
 		void generateJobFilter(const cli::framework::ParsedCommand &parsedCommand,
 				wbem::framework::attribute_names_t &attributes, cli::nvmcli::filters_t &filters);
-		void generateBlockSizeAttributeValue(wbem::framework::Instance &wbemInstance);
 
 		/*
 		 * Helper routine to convert a logLevel string to fw_log_level enum

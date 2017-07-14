@@ -163,18 +163,6 @@ int apply_driver_capabilities(struct nvm_capabilities *p_capabilities)
 		p_capabilities->sw_capabilities.min_namespace_size =
 						(driver_caps.min_namespace_size < BYTES_PER_GIB) ? BYTES_PER_GIB :
 								driver_caps.min_namespace_size;
-		NVM_UINT32 num_block_sizes = driver_caps.num_block_sizes;
-		if (num_block_sizes > NVM_MAX_BLOCK_SIZES)
-		{
-			COMMON_LOG_ERROR_F(
-					"The driver returned invalid number of block sizes: %u", num_block_sizes);
-			num_block_sizes = NVM_MAX_BLOCK_SIZES;
-		}
-		p_capabilities->sw_capabilities.block_size_count = num_block_sizes;
-		for (NVM_UINT32 i = 0; i < num_block_sizes; i++)
-		{
-			p_capabilities->sw_capabilities.block_sizes[i] = driver_caps.block_sizes[i];
-		}
 		p_capabilities->sw_capabilities.namespace_memory_page_allocation_capable =
 				driver_caps.namespace_memory_page_allocation_capable;
 

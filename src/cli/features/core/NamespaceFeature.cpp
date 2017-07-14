@@ -222,7 +222,6 @@ void cli::nvmcli::NamespaceFeature::getPaths(cli::framework::CommandSpecList &li
 // Constructor, just calls super class
 cli::nvmcli::NamespaceFeature::NamespaceFeature() : cli::nvmcli::VerboseFeatureBase(),
 	m_deleteNamespace(wbemDeleteNamespace),
-	m_getSupportedBlockSizes(wbemGetSupportedBlockSizes),
 	m_getSupportedSizeRange(wbemGetSupportedSizeRange),
 	m_poolUid(""), m_blockSize(0), m_blockSizeExists(false),
 	m_blockCount(0), m_blockCountExists(false), m_nsTypeStr(""),
