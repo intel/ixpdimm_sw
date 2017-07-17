@@ -303,7 +303,7 @@ const char *EVENT_MESSAGES_FW_DIAG[EVENT_CODE_DIAG_FW_UNKNOWN -
 			NVM_DIMM_NAME"s."),
 	// EVENT_CODE_DIAG_FW_INCONSISTENT
 	N_TR("The firmware consistency and settings check detected that firmware version "
-			"on " NVM_DIMM_NAME "s %s with part number %s "
+			"on " NVM_DIMM_NAME "s %s with subsystem device ID %s "
 			"is non-optimal, preferred version is %s"),
 	// EVENT_CODE_DIAG_FW_BAD_TEMP_MEDIA_THRESHOLD
 	N_TR("The firmware consistency and settings check detected that " NVM_DIMM_NAME " %s is "

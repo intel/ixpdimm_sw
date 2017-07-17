@@ -51,7 +51,7 @@
 static const char *fw_log_level_strings[] =
 { "Disabled", "Error", "Warning", "Info", "Debug", "Unknown" };
 
-void find_optimal_fw_revision(char *optimal_fw_revision, char *part_number,
+void find_optimal_fw_revision(char *optimal_fw_revision, NVM_UINT16 subsys_dev_id,
 		const struct device_discovery *p_dimms, int dev_count);
 int get_fw_system_time(NVM_NFIT_DEVICE_HANDLE dimm_handle,
 		struct pt_payload_system_time *payload);
@@ -97,49 +97,26 @@ int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 			{
 				if (!(p_diagnostic->excludes & DIAG_THRESHOLD_FW_CONSISTENT))
 				{
-					// construct an array of part numbers
-					char part_num_list[NVM_MAX_TOPO_SIZE][NVM_PART_NUM_LEN] = {};
-					int part_count = 0;
-					NVM_BOOL part_exists = 0;
-					for (int dev_index = 0; dev_index < dev_count; dev_index++)
+					// get optimal FW revision per subsystem device ID
+					NVM_VERSION optimal_fw_rev[NUM_SUPPORTED_DEVICE_IDS];
+					for (int current_subsys_dev = 0; current_subsys_dev < NUM_SUPPORTED_DEVICE_IDS;
+							current_subsys_dev++)
 					{
-						for (int part_index = 0; part_index < part_count; part_index++)
-						{
-							if (strncmp(part_num_list[part_index], dimms[dev_index].part_number,
-									NVM_PART_NUM_LEN) == 0)
-							{
-								part_exists = 1;
-								break;
-							}
-							part_exists = 0;
-						}
-						if (part_exists == 0)
-						{
-							s_strncpy(part_num_list[part_count], NVM_PART_NUM_LEN,
-									dimms[dev_index].part_number, NVM_PART_NUM_LEN);
-							part_count++;
-						}
+						find_optimal_fw_revision(optimal_fw_rev[current_subsys_dev],
+								SUPPORTED_DEVICE_IDS[current_subsys_dev], dimms, dev_count);
 					}
 
-					// get optimal FW revision per part number
-					NVM_VERSION optimal_fw_rev[part_count];
-					for (int current_part = 0; current_part < part_count; current_part++)
-					{
-						find_optimal_fw_revision(optimal_fw_rev[current_part],
-								part_num_list[current_part], dimms, dev_count);
-					}
-
-					// compare firmware revisions of dimms having the same part number
+					// compare firmware revisions of dimms having the same subsystem device ID
 					char inconsistent_uids_event_str[NVM_EVENT_ARG_LEN] = {0};
 					NVM_BOOL inconsistency_flag = 0;
-					for (int part_num = 0; part_num < part_count; part_num++)
+					for (int subsys_dev = 0; subsys_dev < NUM_SUPPORTED_DEVICE_IDS; subsys_dev++)
 					{
 						for (int dev_num = 0; dev_num < dev_count; dev_num++)
 						{
-							if (strncmp(part_num_list[part_num], dimms[dev_num].part_number,
-									NVM_PART_NUM_LEN) == 0)
+							if (SUPPORTED_DEVICE_IDS[subsys_dev] ==
+									dimms[dev_num].subsystem_device_id)
 							{
-								if (strncmp(optimal_fw_rev[part_num],
+								if (strncmp(optimal_fw_rev[subsys_dev],
 										dimms[dev_num].fw_revision, NVM_VERSION_LEN) != 0)
 								{
 									NVM_UID uid_str;
@@ -151,14 +128,18 @@ int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 								}
 							}
 						}
-						// log an event per part number if fw version is inconsistent
+						// log an event per subsystem device ID if fw version is inconsistent
 						if (inconsistency_flag)
 						{
+							char subsys_dev_string[NVM_EVENT_ARG_LEN] = {0};
+							s_snprintf(subsys_dev_string, NVM_EVENT_ARG_LEN, "%hu",
+									SUPPORTED_DEVICE_IDS[subsys_dev]);
+
 							store_event_by_parts(EVENT_TYPE_DIAG_FW_CONSISTENCY,
 									EVENT_SEVERITY_WARN,
 									EVENT_CODE_DIAG_FW_INCONSISTENT, NULL, 0,
 									inconsistent_uids_event_str,
-									part_num_list[part_num], optimal_fw_rev[part_num],
+									subsys_dev_string, optimal_fw_rev[subsys_dev],
 									DIAGNOSTIC_RESULT_WARNING);
 							(*p_results)++;
 						}
@@ -542,14 +523,14 @@ int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 /*
  * Helper function to find the optimal firmware version
  */
-void find_optimal_fw_revision(char *optimal_fw_revision, char *part_number,
+void find_optimal_fw_revision(char *optimal_fw_revision, NVM_UINT16  subsys_dev_id,
 		const struct device_discovery *p_dimms, int dev_count)
 {
 	s_strncpy(optimal_fw_revision, NVM_VERSION_LEN,
 							"00.00.00.0000", NVM_VERSION_LEN);
 	for (int i = 0; i < dev_count; i++)
 	{
-		if (strncmp(part_number, p_dimms[i].part_number, NVM_PART_NUM_LEN) == 0)
+		if (subsys_dev_id == p_dimms[i].subsystem_device_id)
 		{
 			// parse the version string into parts
 			NVM_UINT16 opt_major, opt_minor, opt_hotfix, opt_build;
