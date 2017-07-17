@@ -2156,7 +2156,7 @@ std::string cli::nvmcli::FieldSupportFeature::convertFWUpdateStatusToStr(enum fw
 	std::map<fw_update_status, std::string> fwUpdateStatusMap;
 	fwUpdateStatusMap[FW_UPDATE_UNKNOWN] = TR("Unknown");
 	fwUpdateStatusMap[FW_UPDATE_STAGED] = TR("Staged successfully");
-	fwUpdateStatusMap[FW_UPDATE_SUCCESS] = TR("Upload loaded successfully");
+	fwUpdateStatusMap[FW_UPDATE_SUCCESS] = TR("Update loaded successfully");
 	fwUpdateStatusMap[FW_UPDATE_FAILED] = TR("Update failed to load, fell back to previous firmware");
 
 	return fwUpdateStatusMap[status];
