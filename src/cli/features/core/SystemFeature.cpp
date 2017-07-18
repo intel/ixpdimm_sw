@@ -661,7 +661,7 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::enableDeviceSecurity(
 		if ((pResults == NULL) && (newPassphrase.compare(confirmPassphrase) != 0))
 		{
 			pResults = new framework::ErrorResult(
-					ERRORCODE_SECURITY_PASSPHRASEMISSMATCH,
+					framework::ResultBase::ERRORCODE_UNKNOWN,
 					TRS(ERRORMSG_SECURITY_PASSPHRASEMISSMATCH),
 					basePrefix);
 		}
@@ -842,7 +842,7 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::changeDevicePassphrase(
 			if (newPassphrase.compare(confirmPassphrase) != 0)
 			{
 				pResults = new framework::ErrorResult(
-						ERRORCODE_SECURITY_PASSPHRASEMISSMATCH,
+						framework::ResultBase::ERRORCODE_UNKNOWN,
 						TRS(ERRORMSG_SECURITY_PASSPHRASEMISSMATCH),
 						basePrefix);
 			}

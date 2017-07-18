@@ -98,8 +98,6 @@ static const std::string PASSPHRASE_PROMPT = N_TR("Current passphrase: ");
 static const std::string NEW_PASSPHRASE_PROMPT = N_TR("New passphrase: ");
 static const std::string CONFIRM_NEW_PASSPHRASE_PROMPT = N_TR("Confirm new passphrase: ");
 
-static const int ERRORCODE_SECURITY_PASSPHRASEMISSMATCH = -1000;   //!< New and Confirm passphrase do not match
-
 /*!
  * Implements the CR show -host command to display host server information.
  */
