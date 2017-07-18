@@ -311,7 +311,7 @@ const char *EVENT_MESSAGES_FW_DIAG[EVENT_CODE_DIAG_FW_UNKNOWN -
 			"threshold %s C."),
 	// EVENT_CODE_DIAG_FW_BAD_TEMP_CONTROLLER_THRESHOLD
 	N_TR("The firmware consistency and settings check detected that " NVM_DIMM_NAME " %s is "
-			"reporting a controller temperature threshold of %s C which is above the recommended "
+			"reporting a core temperature threshold of %s C which is above the recommended "
 			"threshold %s C."),
 	// EVENT_CODE_DIAG_FW_BAD_SPARE_BLOCK
 	N_TR("The firmware consistency and settings check detected that " NVM_DIMM_NAME " %s is "
