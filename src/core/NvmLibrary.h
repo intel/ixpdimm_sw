@@ -135,6 +135,8 @@ public:
 	virtual int getDebugLogCount();
 	virtual std::vector<struct log> getDebugLogs();
 	virtual void purgeDebugLog();
+	virtual int dumpDeviceSupport(NVM_UID device_uid, NVM_PATH support_file,
+			NVM_SIZE support_file_len, NVM_PATH support_files[NVM_MAX_EAFD_FILES]);
 
 private:
 	const LibWrapper &m_lib;

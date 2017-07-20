@@ -81,6 +81,7 @@
 #include "ShowVersionCommand.h"
 #include "ShowDevicePcdCommand.h"
 #include "FormatDeviceCommand.h"
+#include "DumpDeviceSupportCommand.h"
 
 const std::string cli::nvmcli::FieldSupportFeature::Name = "Field Support";
 const std::string LOG_PROPERTY_NAME = "LogLevel";
@@ -290,6 +291,22 @@ void cli::nvmcli::FieldSupportFeature::getPaths(cli::framework::CommandSpecList 
 			TR("The maximum number of debug messages to display 0-10000. If not provided, "
 					"the default is to display a maximum of the most recent 50 debug log messages."));
 
+	cli::framework::CommandSpec dumpDeviceSupport(DUMP_DEVICE_SUPPORT,
+			TR("Dump Device Support Data"), framework::VERB_DUMP, TR("Dump device support data on"
+			"one or more " NVM_DIMM_NAME "s. The default is to dump support data from all "
+			"manageable AEP DIMMs."));
+	dumpDeviceSupport.addOption(framework::OPTION_DESTINATION_R);
+	dumpDeviceSupport.addOption(framework::OPTION_HELP);
+	dumpDeviceSupport.addOption(framework::OPTION_OUTPUT);
+	dumpDeviceSupport.addTarget(TARGET_DIMM_R)
+			.valueText(DIMMIDS_STR)
+			.helpText(TR("Dump device support data on one or more " NVM_DIMM_NAME "s by supplying "
+			"one or more comma-separated " NVM_DIMM_NAME " identifiers."));
+	dumpDeviceSupport.addTarget(TARGET_SUPPORT_R.name, true, "", false,
+			TR("The support data. No filtering is supported on this command."))
+			.isValueAccepted(false);
+
+
 	list.push_back(showDeviceFirmware);
 	list.push_back(updateFirmware);
 	list.push_back(showPerformance);
@@ -306,6 +323,8 @@ void cli::nvmcli::FieldSupportFeature::getPaths(cli::framework::CommandSpecList 
 	list.push_back(showLogs);
 	list.push_back(ShowDevicePcdCommand::getCommandSpec(SHOW_DEVICE_PCD));
 	list.push_back(FormatDeviceCommand::getCommandSpec(START_FORMAT));
+	list.push_back(dumpDeviceSupport);
+
 }
 
 // Constructor, just calls super class and initializes member variables
@@ -382,6 +401,9 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::run(
 			break;
 		case START_FORMAT:
 			pResult = formatDevice(parsedCommand);
+			break;
+		case DUMP_DEVICE_SUPPORT:
+			pResult = dumpDeviceSupport(parsedCommand);
 			break;
 	}
 
@@ -2252,5 +2274,14 @@ cli::framework::ResultBase* cli::nvmcli::FieldSupportFeature::formatDevice(
 	cli::framework::YesNoPrompt yesNoPrompt;
 	FormatDeviceCommand::UserPrompt prompt(yesNoPrompt);
 	FormatDeviceCommand command(prompt);
+	return command.execute(parsedCommand);
+}
+
+cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::dumpDeviceSupport(
+		const framework::ParsedCommand &parsedCommand)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	DumpDeviceSupportCommand command;
 	return command.execute(parsedCommand);
 }

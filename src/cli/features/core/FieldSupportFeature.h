@@ -159,7 +159,8 @@ public:
 		SHOW_DEVICE_FIRMWARE,
 		SHOW_LOGS,
 		SHOW_DEVICE_PCD,
-		START_FORMAT
+		START_FORMAT,
+		DUMP_DEVICE_SUPPORT,
 	};
 
 	/*!
@@ -249,6 +250,11 @@ private:
 	framework::ResultBase *showPerformance(const framework::ParsedCommand &parsedCommand);
 	framework::ResultBase *showEvents(const framework::ParsedCommand &parsedCommand);
 	framework::ResultBase *showLogs(const framework::ParsedCommand &parsedCommand);
+
+	/*!
+	 * Dump device support data
+	 */
+	framework::ResultBase *dumpDeviceSupport(const framework::ParsedCommand &parsedCommand);
 
 	/*!
 	 * Acknowledge an event

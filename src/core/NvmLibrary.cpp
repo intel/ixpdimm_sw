@@ -1396,5 +1396,15 @@ void NvmLibrary::purgeDebugLog()
 	}
 
 }
+
+int NvmLibrary::dumpDeviceSupport(NVM_UID device_uid, NVM_PATH support_file,
+		NVM_SIZE support_file_len, NVM_PATH support_files[NVM_MAX_EAFD_FILES])
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	LibWrapper &lib = LibWrapper::getLibWrapper();
+	return lib.dumpDeviceSupport(device_uid, support_file, support_file_len, support_files);
+}
+
 }
 

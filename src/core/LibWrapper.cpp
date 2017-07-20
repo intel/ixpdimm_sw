@@ -523,4 +523,11 @@ int LibWrapper::purgeDebugLog() const
 	return nvm_purge_debug_log();
 }
 
+int LibWrapper::dumpDeviceSupport(NVM_UID device_uid, NVM_PATH support_file,
+			NVM_SIZE support_file_len, NVM_PATH *support_files)
+{
+	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
+	return nvm_dump_device_support(device_uid, support_file, support_file_len, support_files);
+}
+
 }

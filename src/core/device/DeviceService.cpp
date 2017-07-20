@@ -154,3 +154,15 @@ std::string core::device::DeviceService::getFirmwareApiVersionByUid(const std::s
 	return m_lib.getDeviceDiscovery(deviceUid).fw_api_version;
 }
 
+int core::device::DeviceService::dumpDeviceSupport(NVM_UID device_uid, NVM_PATH support_file,
+		NVM_SIZE support_file_len, NVM_PATH support_files[NVM_MAX_EAFD_FILES])
+{
+	int rc = m_lib.dumpDeviceSupport(device_uid, support_file, support_file_len, support_files);
+
+	if (rc < 0)
+	{
+		throw core::LibraryException(rc);
+	}
+
+	return rc;
+}

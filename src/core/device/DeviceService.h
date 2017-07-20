@@ -51,6 +51,8 @@ public:
 	virtual DeviceCollection getAllDevices();
 	virtual Result<Device> getDevice(std::string uid);
 	virtual std::string getFirmwareApiVersionByUid(const std::string &deviceUid);
+	virtual int dumpDeviceSupport(NVM_UID device_uid, NVM_PATH support_file,
+			NVM_SIZE support_file_len, NVM_PATH support_files[NVM_MAX_EAFD_FILES]);
 
 	static DeviceService &getService();
 
@@ -60,6 +62,7 @@ protected:
 	std::string getUidForDeviceIdFromCollection(const std::string &deviceId,
 			DeviceCollection &devices);
 };
+
 }
 }
 #endif //CR_MGMT_GETDEVICE_H
