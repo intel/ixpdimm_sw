@@ -98,6 +98,7 @@
 #define	NVM_BUILD_CONFIGURATION_LEN 17
 #define	NVM_MAX_IFCS_PER_DIMM	9
 #define	NVM_REQUEST_MAX_AVAILABLE_BLOCK_COUNT	0
+#define	NVM_MAX_EAFD_FILES 10
 
 /*
  * Macros for controlling what is exported by the library
@@ -221,13 +222,14 @@ enum return_code
 									//	version of software.
 	NVM_ERR_NAMESPACEBUSY = -54, // The namespace cannot be changed because it is in use by
 								// a file system.
-	NVM_ERR_FWALREADYSTAGED = -55, 	// A firmware image is already staged for execution.
+	NVM_ERR_FWALREADYSTAGED = -55,	// A firmware image is already staged for execution.
 									// A power cycle is required before another can be staged.
 	NVM_ERR_BADNFIT = -56, // The NFIT table is invalid.
 	NVM_ERR_TIMEOUT = -57, // The operation timed out.
 	NVM_ERR_BADNAMESPACELABELS = -58, // The NS labels are corrupt
-	NVM_ERR_NAMESPACEENABLEFAILED = -59 // The driver failed to enable all the namespaces
+	NVM_ERR_NAMESPACEENABLEFAILED = -59, // The driver failed to enable all the namespaces
 										// after device unlock.
+	NVM_ERR_NOFADATAAVAILABLE = -60	// No device support data available from AEP DIMM
 };
 
 /*

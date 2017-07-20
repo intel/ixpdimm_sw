@@ -52,6 +52,50 @@ int file_exists(const COMMON_PATH path, const COMMON_SIZE path_len)
 }
 
 /*
+ * Copy a buffer to a file.
+ */
+int copy_buffer_to_file(void *p_buf, unsigned int buf_size,
+		const COMMON_PATH path, const COMMON_SIZE path_len, int oflags)
+{
+	int rc = COMMON_SUCCESS;
+	int fd = -1;
+#ifdef __WINDOWS__
+	int OS_flags = O_BINARY|oflags;
+#else
+	int OS_flags = oflags;
+#endif
+
+
+	if (path == NULL || (p_buf == NULL))
+	{
+		rc = COMMON_ERR_INVALIDPARAMETER;
+	}
+	else
+	{
+		// safe file name
+		COMMON_PATH file_path;
+		s_strncpy(file_path, COMMON_PATH_LEN, path, path_len);
+
+		// check if the file exists
+		if ((fd = open(file_path, O_RDWR|OS_flags, 0)) == -1)
+		{
+			rc = COMMON_ERR_BADFILE;
+		}
+		else if (write(fd, p_buf, buf_size) != (ssize_t)buf_size)
+		{
+			rc = COMMON_ERR_BADFILE;
+		}
+	}
+
+	if (fd != -1)
+	{
+		close(fd);
+		fd = -1;
+	}
+	return rc;
+}
+
+/*
  * Copy a file to a buffer.
  */
 int copy_file_to_buffer(const COMMON_PATH path, const COMMON_SIZE path_len,

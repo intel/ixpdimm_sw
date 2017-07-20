@@ -66,6 +66,8 @@
 #define	DEV_FW_BUILD_CONFIGURATION_LEN 16 /* Size of the build configuration including null */
 /* Number of bytes that can be written to PCD through small payload path at a time */
 #define DEV_PLT_CFG_SMALL_PAYLOAD_WRITE_SIZE 64
+#define	DEV_FA_LARGE_PAYLOAD_BLOB_DATA_SIZE	(1 << 20) /* 1MB - Size for a passthrough command large payload */
+#define DEV_FA_SMALL_PAYLOAD_BLOB_DATA_SIZE	128 /* 128B - Size for a passthrough command small payload */
 
 #define DEV_FW_ERR_LOG_OVERRUN (1 << 7)
 #define DEV_FW_ERR_LOG_LOW (0)
@@ -165,8 +167,8 @@ extern const NVM_UINT16 SUPPORTED_DEVICE_IDS[];
 // ended prior to reaching the DPA end address
 #define ARS_STATUS_NORMAL 0x00
 #define	ARS_STATUS_ENDED_EARLY	0x01
-#define ARS_STATUS_USER_REQUESTED_ABORT 0x02 /* 0x02 for both user requested abort or power cycle */ 
-#define ARS_STATUS_WARM_RESET_ABORT 0x03 
+#define ARS_STATUS_USER_REQUESTED_ABORT 0x02 /* 0x02 for both user requested abort or power cycle */
+#define ARS_STATUS_WARM_RESET_ABORT 0x03
 
 /*
  * ****************************************************************************
@@ -556,6 +558,7 @@ enum get_log_subop {
 	/* Status of any pending long operations. */
 	SUBOP_LONG_OPERATION_STATUS = 0x04,
 	SUBOP_ERROR_LOG = 0x05, /* Retrieves firmware error log */
+	SUBOP_FAILURE_ANALYSIS_DATA = 0xFA, /* Retrieves the data that can be used for failure analysis */
 };
 
 /*
@@ -565,6 +568,16 @@ enum update_fw_subop {
 	SUBOP_UPDATE_FW = 0x00, /* Update the running FW */
 	/* Force the execution of a newly updated FW image. */
 	SUBOP_EXECUTE_FW = 0x01
+};
+
+/*
+ * Determines what type of Failure Analysis operation to perform
+ */
+enum fa_action {
+	GET_FA_INVENTORY = 0x00,
+	GET_FA_BLOB_HEADER = 0x01,
+	GET_FA_BLOB_SMALL_PAYLOAD = 0x02,
+	GET_FA_BLOB_LARGE_PAYLOAD = 0x03
 };
 
 /*
@@ -1966,4 +1979,87 @@ struct pt_update_fw_small_payload {
 	unsigned char reserved_2[60];
 
 }__attribute__((packed));
+
+/*
+ * FA Data Input Payload Register Values
+ */
+struct pt_input_payload_fa_data_register_values {
+	/*
+	 * This determines what type of FA operation to perform.
+	 * 0x00 - Get FA Inventory
+	 * 0x01 - Get FA Blob Header
+	 * 0x02 - Get FA Blob - Small Payload
+	 * 0x03 - Get FA Blob - Large Payload
+	 */
+		unsigned char action;
+	/*
+	 * Reserved
+	 */
+		unsigned char rsvd[3];
+	/*
+	 * TokenID of the FA Blob
+	 */
+		unsigned int id;
+	/*
+	 * Offset of the data blob to retrieve
+	 */
+		unsigned int offset;
+	/*
+	 * Reserved
+	 */
+		unsigned char rsvd1[116];
+}__attribute__((packed));
+
+/*
+ * FA Get Blob Header Action Output Payload
+ * This blob header is appended at the beginning of every FA data blob
+ */
+struct pt_output_payload_get_fa_blob_header {
+	/*
+	 * version of the FA Blob Data Header
+	 */
+		unsigned int version;
+	/*
+	 * size of the FA Blob Data - does not include the
+	 * size of this header
+	 */
+		unsigned int size;
+	/*
+	 * unique token id for the FA blob
+	 */
+		unsigned int token_id;
+	/*
+	 * dimm serial number , populated from ID DIMM / SPD
+	 */
+		unsigned char dimm_sn[4];
+	/*
+	 * dimm part number , populated from ID DIMM / SPD
+	 */
+		unsigned char dimm_pn[20];
+	/*
+	 * SHA Digest value for the data blob to verify all the packets were
+	 * combined successfully
+	 */
+		unsigned int sha256;
+	/*
+	 * padding to 128 B to accomodate a full small payload
+	 */
+		unsigned char rsvd[88];
+}__attribute__((packed));
+
+/*
+ * FA Get Inventory Action Output Payload
+ */
+struct pt_output_payload_get_fa_inventory {
+	/*
+	 * This is the last TokenID of all valid FA Data Blobs. The TokenID’s are in
+	 * sequential order starting at 0x01 up to the MAX value
+	 */
+		unsigned int max_fa_token_id;
+	/*
+	 * Reserved
+	 */
+		unsigned char rsvd[124];
+}__attribute__((packed));
+
 #endif // CR_MGMT_FIS_TYPES_H

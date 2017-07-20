@@ -483,6 +483,48 @@ int fw_set_config_data_policy(unsigned int device_handle,
 	return rc;
 }
 
+int fw_get_fa_data(const NVM_NFIT_DEVICE_HANDLE device_handle,
+		struct pt_input_payload_fa_data_register_values *p_input_register,
+		void *p_output_data)
+{
+	COMMON_LOG_ENTRY();
+
+	struct fw_cmd fw_cmd;
+	memset(&fw_cmd, 0, sizeof (fw_cmd));
+
+	fw_cmd.device_handle = device_handle.handle;
+	fw_cmd.opcode = PT_GET_LOG;
+	fw_cmd.sub_opcode = SUBOP_FAILURE_ANALYSIS_DATA;
+	fw_cmd.input_payload_size = sizeof (*p_input_register);
+	fw_cmd.input_payload = p_input_register;
+
+	switch (p_input_register->action)
+	{
+		case GET_FA_INVENTORY:
+			fw_cmd.output_payload_size = sizeof (struct pt_output_payload_get_fa_inventory);
+			break;
+
+		case GET_FA_BLOB_HEADER:
+			fw_cmd.output_payload_size = sizeof (struct pt_output_payload_get_fa_blob_header);
+			break;
+
+		case GET_FA_BLOB_SMALL_PAYLOAD:
+			fw_cmd.output_payload_size = DEV_FA_SMALL_PAYLOAD_BLOB_DATA_SIZE;
+			break;
+
+		case GET_FA_BLOB_LARGE_PAYLOAD:
+			fw_cmd.output_payload_size = DEV_FA_LARGE_PAYLOAD_BLOB_DATA_SIZE;
+			break;
+	}
+
+	fw_cmd.output_payload = p_output_data;
+
+	int rc = ioctl_passthrough_cmd(&fw_cmd);
+	COMMON_LOG_EXIT_RETURN_I(rc);
+
+	return rc;
+}
+
 /*
  * Note: For the celsius conversion functions - FW represents celsius as a 16 bit value
  * 		bit 16 = sign value

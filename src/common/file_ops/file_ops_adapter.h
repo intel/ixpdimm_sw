@@ -98,7 +98,7 @@ extern int copy_file(const COMMON_PATH source, const COMMON_SIZE source_len,
  * @note The buffer needs to be freed by the caller
  * @param[in] path
  * 		The full path of the source file to be copied
- * @param[in] path
+ * @param[in] path_len
  * 		The length of the path buffer
  * @param[in,out] pp_buf
  * 		A pointer to the buffer to copy the file into
@@ -111,6 +111,24 @@ extern int copy_file(const COMMON_PATH source, const COMMON_SIZE source_len,
 extern int copy_file_to_buffer(const COMMON_PATH path, const COMMON_SIZE path_len,
 		void **pp_buf, unsigned int *p_buf_len);
 
+/*!
+ * Copy a buffer to a file
+ * @param[in] p_buf
+ * 		The buffer to be copied to the file
+ * @param[in] buf_size
+ * 		The length of the buffer
+ * @param[in, out] path
+ * 		Path of the file to be copied to
+ * @param[in] path_len
+ * 		The length of the path
+ * @param[in] oflags
+ * 		Bitwise 'or' separated list of values to determine the method to open the file
+ * @return
+ * 		Non-zero if failure, @n
+ * 		0 if success
+ */
+extern int copy_buffer_to_file(void *p_buf, unsigned int buf_size,
+		const COMMON_PATH path, const COMMON_SIZE path_len, int oflags);
 /*!
  * Open a file
  * @param[in] path

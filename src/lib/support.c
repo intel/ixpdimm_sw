@@ -48,8 +48,10 @@
 #include "nvm_context.h"
 #include "system.h"
 #include <unistd.h>
+#include <fcntl.h>
 #include "utility.h"
 
+#define	COMMON_INT_LENGTH	11
 /*
  * Declare Internal Helper functions
  */
@@ -194,6 +196,271 @@ int nvm_gather_support(const NVM_PATH support_file, const NVM_SIZE support_file_
 		}
 	}
 
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+unsigned int get_size_of_fa_blob_including_header(const NVM_NFIT_DEVICE_HANDLE device_handle,
+		unsigned int current_token_id)
+{
+	COMMON_LOG_ENTRY();
+
+	unsigned int size = 0;
+	struct pt_input_payload_fa_data_register_values input_register;
+	struct pt_output_payload_get_fa_blob_header blob_header;
+
+	memset(&input_register, 0, sizeof (input_register));
+	memset(&blob_header, 0, sizeof (blob_header));
+
+	input_register.action = GET_FA_BLOB_HEADER;
+	input_register.id = current_token_id;
+
+	int rc = fw_get_fa_data(device_handle, &input_register, &blob_header);
+
+	if (rc == NVM_SUCCESS)
+	{
+		if (blob_header.size != 0)
+		{
+			size = blob_header.size +
+					sizeof (struct pt_output_payload_get_fa_blob_header);
+		}
+	}
+
+	COMMON_LOG_EXIT();
+	return size;
+}
+
+int retrieve_fa_blob_header(const NVM_NFIT_DEVICE_HANDLE device_handle,
+		struct pt_output_payload_get_fa_blob_header *p_blob_header,
+		unsigned int current_token_id)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	struct pt_input_payload_fa_data_register_values input_register;
+
+	memset(&input_register, 0, sizeof (input_register));
+
+	/* Get the inventory to get the max token ID */
+
+	input_register.action = GET_FA_BLOB_HEADER;
+	input_register.id = current_token_id;
+
+	rc = fw_get_fa_data(device_handle, &input_register, p_blob_header);
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+int retrieve_fa_blob_small_payload(const NVM_NFIT_DEVICE_HANDLE device_handle,
+		unsigned char *p_blob, unsigned int current_token_id)
+{
+	COMMON_LOG_ENTRY();
+
+	int rc = NVM_SUCCESS;
+	unsigned int blob_data_size = 0;
+	unsigned int bytes_remaining = 0;
+	unsigned int bytes_retrieved = 0;
+	unsigned int bytes_written = 0;
+	unsigned char small_payload_buffer[DEV_FA_SMALL_PAYLOAD_BLOB_DATA_SIZE];
+
+	struct pt_output_payload_get_fa_blob_header blob_header;
+
+	memset(&blob_header, 0, sizeof (blob_header));
+
+	rc = retrieve_fa_blob_header(device_handle, &blob_header, current_token_id);
+
+	memmove(p_blob, &blob_header, sizeof (blob_header));
+
+	bytes_written += sizeof (blob_header);
+
+	if (rc == NVM_SUCCESS)
+	{
+		blob_data_size = blob_header.size;
+
+		struct pt_input_payload_fa_data_register_values input_register;
+		memset(&input_register, 0, sizeof (input_register));
+
+		input_register.action = GET_FA_BLOB_SMALL_PAYLOAD;
+		input_register.id = current_token_id;
+
+		for (input_register.offset = 0;
+				input_register.offset < blob_data_size;
+				input_register.offset += DEV_FA_SMALL_PAYLOAD_BLOB_DATA_SIZE)
+		{
+			memset(small_payload_buffer, 0, DEV_FA_SMALL_PAYLOAD_BLOB_DATA_SIZE);
+			rc = fw_get_fa_data(device_handle, &input_register, small_payload_buffer);
+
+			if (rc == NVM_SUCCESS)
+			{
+				bytes_remaining = blob_data_size - input_register.offset;
+
+				if (bytes_remaining < DEV_FA_SMALL_PAYLOAD_BLOB_DATA_SIZE)
+				{
+					bytes_retrieved = bytes_remaining;
+				}
+				else
+				{
+					bytes_retrieved = DEV_FA_SMALL_PAYLOAD_BLOB_DATA_SIZE;
+				}
+
+				memmove((p_blob + bytes_written), small_payload_buffer, bytes_retrieved);
+				bytes_written += bytes_retrieved;
+			}
+			else
+			{
+				break;
+			}
+		}
+	}
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+int retrieve_all_fa_data_blobs(const NVM_NFIT_DEVICE_HANDLE device_handle,
+		unsigned int max_token_id, const NVM_PATH support_file,
+		const NVM_SIZE support_file_len,
+		NVM_PATH support_files[NVM_MAX_EAFD_FILES])
+{
+	COMMON_LOG_ENTRY();
+
+	int rc = NVM_SUCCESS;
+	unsigned char *p_blob = NULL;
+	unsigned int blob_file_name_size = support_file_len + COMMON_INT_LENGTH;
+	char blob_file[blob_file_name_size];
+	unsigned int blob_count = 0;
+
+	for (unsigned int current_token_id = 1; current_token_id <= max_token_id; current_token_id++)
+	{
+		unsigned int blob_size =
+				get_size_of_fa_blob_including_header(device_handle,
+						current_token_id);
+
+		if (blob_size != 0)
+		{
+			p_blob = (unsigned char *)malloc(blob_size);
+
+			if (p_blob)
+			{
+				memset(p_blob, 0, blob_size);
+
+				retrieve_fa_blob_small_payload(device_handle, (unsigned char *)(p_blob),
+						current_token_id);
+
+				snprintf(blob_file, blob_file_name_size, "%s_%d", support_file,
+						current_token_id);
+
+				int tmprc = copy_buffer_to_file((unsigned char *)p_blob, blob_size, blob_file,
+						blob_file_name_size, O_CREAT);
+
+				if (tmprc == COMMON_SUCCESS && support_files != NULL)
+				{
+					snprintf(support_files[blob_count],
+							blob_file_name_size, "%s", blob_file);
+				}
+				else if (tmprc == COMMON_ERR_BADFILE)
+				{
+					rc = NVM_ERR_BADFILE;
+				}
+				else if (tmprc == COMMON_ERR_INVALIDPARAMETER)
+				{
+					rc = NVM_ERR_INVALIDPARAMETER;
+				}
+
+				free(p_blob);
+			}
+			else
+			{
+				rc = NVM_ERR_NOMEMORY;
+				break;
+			}
+
+			blob_count++;
+		}
+	}
+
+	if (blob_count == 0)
+	{
+		rc = NVM_ERR_NOFADATAAVAILABLE;
+	}
+	else
+	{
+		rc = blob_count;
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+int get_maximum_token_id(const NVM_NFIT_DEVICE_HANDLE device_handle,
+		unsigned int *p_max_token_id)
+{
+	int rc = NVM_SUCCESS;
+	struct pt_input_payload_fa_data_register_values input_register;
+	struct pt_output_payload_get_fa_inventory fa_inventory;
+
+	memset(&input_register, 0, sizeof (input_register));
+
+	/* Get the inventory to get the max token ID */
+
+	input_register.action = GET_FA_INVENTORY;
+	if ((rc = fw_get_fa_data(device_handle, &input_register,
+			&fa_inventory)) == NVM_SUCCESS)
+	{
+		*p_max_token_id = fa_inventory.max_fa_token_id;
+	}
+	return rc;
+}
+
+int nvm_dump_device_support(const NVM_UID device_uid, const NVM_PATH support_file,
+		const NVM_SIZE support_file_len,
+		NVM_PATH support_files[NVM_MAX_EAFD_FILES])
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+	struct device_discovery discovery;
+
+	if (check_caller_permissions() != NVM_SUCCESS)
+	{
+		rc = NVM_ERR_INVALIDPERMISSIONS;
+	}
+	else if (support_file == NULL)
+	{
+		COMMON_LOG_ERROR("Invalid parameter, support file buffer is NULL");
+		rc = NVM_ERR_INVALIDPARAMETER;
+	}
+	else if (support_file_len == 0)
+	{
+		COMMON_LOG_ERROR("Invalid parameter, support file buffer length is 0");
+		rc = NVM_ERR_INVALIDPARAMETER;
+	}
+	else if (support_file_len >= NVM_PATH_LEN)
+	{
+		COMMON_LOG_ERROR_F(
+				"Invalid parameter, path length is too big: %d; <= %d",
+				support_file_len, NVM_PATH_LEN);
+		rc = NVM_ERR_INVALIDPARAMETER;
+	}
+	else if ((rc = exists_and_manageable(device_uid, &discovery, 1)) == NVM_SUCCESS)
+	{
+		unsigned int max_token_id = 0;
+
+		if ((rc = get_maximum_token_id(discovery.device_handle, &max_token_id))
+				== NVM_SUCCESS)
+		{
+			unsigned int fa_file_name_size = support_file_len + NVM_MAX_UID_LEN;
+			char fa_file_name[fa_file_name_size];
+
+			snprintf(fa_file_name, fa_file_name_size, "%s_%s", support_file, discovery.uid);
+
+			rc = retrieve_all_fa_data_blobs(discovery.device_handle,
+					max_token_id, fa_file_name, fa_file_name_size, support_files);
+		}
+		else
+		{
+			COMMON_LOG_ERROR("Could not retrieve inventory");
+		}
+	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }

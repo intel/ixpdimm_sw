@@ -434,7 +434,7 @@ int db_get_history_ids(const PersistentStore *p_ps,
 	return rc;
 }
 // Table count is calculated in CrudSchemaGenerator
-#define	TABLE_COUNT (116)
+#define	TABLE_COUNT (117)
 /*
  * Create a PersistentStore object
  */
@@ -1990,6 +1990,24 @@ tables[populate_index++] = ((struct table){"boot_status_register",
 					);"}
 #endif
 );
+tables[populate_index++] = ((struct table){"eafd",
+				"CREATE TABLE eafd (       \
+					 device_handle INTEGER  PRIMARY KEY  NOT NULL UNIQUE  , \
+					 blob_size INTEGER  , \
+					 max_fa_token_id INTEGER   \
+					);"}
+#if 0
+//NON-HISTORY TABLE
+);
+			tables[populate_index++] = ((struct table){"eafd_history",
+				"CREATE TABLE eafd_history (       \
+					history_id INTEGER NOT NULL, \
+					 device_handle INTEGER , \
+					 blob_size INTEGER , \
+					 max_fa_token_id INTEGER  \
+					);"}
+#endif
+);
 			int sql_rc;
 			if ((sql_rc = sqlite3_open_v2(path, &(result->db),
 				SQLITE_OPEN_READWRITE|SQLITE_OPEN_CREATE|SQLITE_OPEN_FULLMUTEX, NULL)) == SQLITE_OK)
@@ -2183,6 +2201,13 @@ char* history_table_names[] = {
 //NON-HISTORY TABLE
 
 	"boot_status_register_history",
+
+#endif
+
+#if 0
+//NON-HISTORY TABLE
+
+	"eafd_history",
 
 #endif
 
@@ -33814,6 +33839,432 @@ enum db_return_codes db_delete_boot_status_register_history(const PersistentStor
  * --- END boot_status_register ----------------
  */
 /*
+ * --- eafd ----------------
+ */
+void local_bind_eafd(sqlite3_stmt *p_stmt, struct db_eafd *p_eafd)
+{
+	BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)p_eafd->device_handle);
+	BIND_INTEGER(p_stmt, "$blob_size", (unsigned int)p_eafd->blob_size);
+	BIND_INTEGER(p_stmt, "$max_fa_token_id", (unsigned int)p_eafd->max_fa_token_id);
+}
+void local_get_eafd_relationships(const PersistentStore *p_ps,
+	sqlite3_stmt *p_stmt, struct db_eafd *p_eafd)
+{
+}
+
+#if 0
+//NON-HISTORY TABLE
+
+void local_get_eafd_relationships_history(const PersistentStore *p_ps,
+	sqlite3_stmt *p_stmt, struct db_eafd *p_eafd,
+	int history_id)
+{
+}
+
+#endif
+
+void local_row_to_eafd(const PersistentStore *p_ps,
+	sqlite3_stmt *p_stmt, struct db_eafd *p_eafd)
+{
+	INTEGER_COLUMN(p_stmt,
+		0,
+		p_eafd->device_handle);
+	INTEGER_COLUMN(p_stmt,
+		1,
+		p_eafd->blob_size);
+	INTEGER_COLUMN(p_stmt,
+		2,
+		p_eafd->max_fa_token_id);
+}
+void db_print_eafd(struct db_eafd *p_value)
+{
+	printf("eafd.device_handle: unsigned %d\n", p_value->device_handle);
+	printf("eafd.blob_size: unsigned %d\n", p_value->blob_size);
+	printf("eafd.max_fa_token_id: unsigned %d\n", p_value->max_fa_token_id);
+}
+enum db_return_codes db_add_eafd(const PersistentStore *p_ps,
+	struct db_eafd *p_eafd)
+{
+	enum db_return_codes rc = DB_ERR_FAILURE;
+	sqlite3_stmt *p_stmt;
+	char *sql = 	"INSERT INTO eafd \
+		(device_handle, blob_size, max_fa_token_id)  \
+		VALUES 		\
+		($device_handle, \
+		$blob_size, \
+		$max_fa_token_id) ";
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
+	{
+		local_bind_eafd(p_stmt, p_eafd);
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
+		{
+			rc = DB_SUCCESS;
+		}
+		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+	}
+	return rc;
+}
+enum db_return_codes db_get_eafd_count(const PersistentStore *p_ps, int *p_count)
+{
+	return table_row_count(p_ps, "eafd", p_count);
+}
+int db_get_eafds(const PersistentStore *p_ps,
+	struct db_eafd *p_eafd,
+	int eafd_count)
+{
+	int rc = DB_ERR_FAILURE;
+	memset(p_eafd, 0, sizeof (struct db_eafd) * eafd_count);
+	char *sql = "SELECT \
+		device_handle \
+		,  blob_size \
+		,  max_fa_token_id \
+		  \
+		FROM eafd \
+		    \
+		 \
+		";
+	sqlite3_stmt *p_stmt;
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
+	{
+		int index = 0;
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < eafd_count)
+		{
+			local_row_to_eafd(p_ps, p_stmt, &p_eafd[index]);
+			local_get_eafd_relationships(p_ps, p_stmt, &p_eafd[index]);
+			index++;
+		}
+		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+	}
+	return rc;
+}
+enum db_return_codes db_delete_all_eafds(const PersistentStore *p_ps)
+{
+	return run_sql_no_results(p_ps->db, "DELETE FROM eafd");
+}
+
+#if 0
+//NON-HISTORY TABLE
+
+enum db_return_codes db_save_eafd_state(const PersistentStore *p_ps,
+	int history_id,
+	struct db_eafd *p_eafd)
+{
+	enum db_return_codes rc = DB_SUCCESS;
+	struct db_eafd temp;
+	/*
+	 * Main table - Insert new or update existing
+	 */
+	if (db_get_eafd_by_device_handle(p_ps, p_eafd->device_handle, &temp) == DB_SUCCESS)
+	{
+		rc = db_update_eafd_by_device_handle(p_ps,
+				p_eafd->device_handle,
+				p_eafd);
+	}
+	else
+	{
+		sqlite3_stmt *p_stmt;
+		char *sql = 	"INSERT INTO eafd \
+			( device_handle ,  blob_size ,  max_fa_token_id )  \
+			VALUES 		\
+			($device_handle, \
+			$blob_size, \
+			$max_fa_token_id) ";
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
+		{
+			local_bind_eafd(p_stmt, p_eafd);
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+		}
+	}
+	/*
+	 * Insert as a history
+	 */
+	if (rc == DB_SUCCESS)
+	{
+		sqlite3_stmt *p_stmt;
+		char *sql = "INSERT INTO eafd_history \
+			(history_id, \
+				 device_handle,  blob_size,  max_fa_token_id)  \
+			VALUES 		($history_id, \
+				 $device_handle , \
+				 $blob_size , \
+				 $max_fa_token_id )";
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
+		{
+			BIND_INTEGER(p_stmt, "$history_id", history_id);
+			local_bind_eafd(p_stmt, p_eafd);
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
+		}
+		else
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+		}
+	}
+	return rc;
+}
+
+#endif
+
+enum db_return_codes db_get_eafd_by_device_handle(const PersistentStore *p_ps,
+	const unsigned int device_handle,
+	struct db_eafd *p_eafd)
+{
+	memset(p_eafd, 0, sizeof (struct db_eafd));
+	enum db_return_codes rc = DB_ERR_FAILURE;
+	sqlite3_stmt *p_stmt;
+	char *sql = "SELECT \
+		device_handle,  blob_size,  max_fa_token_id  \
+		FROM eafd \
+		WHERE  device_handle = $device_handle";
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
+	{
+		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
+		{
+			local_row_to_eafd(p_ps, p_stmt, p_eafd);
+			local_get_eafd_relationships(p_ps, p_stmt, p_eafd);
+			rc = DB_SUCCESS;
+		}
+		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+	}
+	return rc;
+}
+enum db_return_codes db_update_eafd_by_device_handle(const PersistentStore *p_ps,
+	const unsigned int device_handle,
+	struct db_eafd *p_eafd)
+{
+	sqlite3_stmt *p_stmt;
+	enum db_return_codes rc = DB_SUCCESS;
+	char *sql = "UPDATE eafd \
+	SET \
+	device_handle=$device_handle \
+		,  blob_size=$blob_size \
+		,  max_fa_token_id=$max_fa_token_id \
+		  \
+	WHERE device_handle=$device_handle ";
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
+	{
+		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
+		local_bind_eafd(p_stmt, p_eafd);
+		sql_rc = sqlite3_step(p_stmt);
+		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+	}
+	return rc;
+}
+enum db_return_codes db_delete_eafd_by_device_handle(const PersistentStore *p_ps,
+	const unsigned int device_handle)
+{
+	enum db_return_codes rc = DB_ERR_FAILURE;
+	sqlite3_stmt *p_stmt;
+	char *sql = "DELETE FROM eafd \
+				 WHERE device_handle = $device_handle";
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
+	{
+		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
+		{
+			rc = DB_SUCCESS;
+		}
+		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+	}
+	return rc;
+}
+
+#if 0
+//NON-HISTORY TABLE
+
+enum db_return_codes db_get_eafd_history_by_history_id_count(const PersistentStore *p_ps, 
+	int history_id,
+	int *p_count)
+{
+	enum db_return_codes rc = DB_ERR_FAILURE;
+	*p_count = 0;
+	sqlite3_stmt *p_stmt;
+	char buffer[1024];
+	snprintf(buffer, 1024, "select count(*) FROM eafd_history WHERE  history_id = '%d'", history_id);
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
+	{
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
+		{
+			*p_count = sqlite3_column_int(p_stmt, 0);
+			rc = DB_SUCCESS;
+		}
+		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+	}
+	return rc;
+}
+enum db_return_codes db_get_eafd_history_count(const PersistentStore *p_ps, int *p_count)
+{
+	enum db_return_codes rc = DB_ERR_FAILURE;
+	*p_count = 0;
+	sqlite3_stmt *p_stmt;
+	char buffer[1024];
+	snprintf(buffer, 1024, "select count(*) FROM eafd_history");
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
+	{
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
+		{
+			*p_count = sqlite3_column_int(p_stmt, 0);
+			rc = DB_SUCCESS;
+		}
+		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+	}
+	return rc;
+}
+int db_get_eafd_history_by_history_id(const PersistentStore *p_ps,
+	struct db_eafd *p_eafd,
+	int history_id,
+	int eafd_count)
+{
+	int rc = DB_ERR_FAILURE;
+	memset(p_eafd, 0, sizeof (struct db_eafd) * eafd_count);
+	sqlite3_stmt *p_stmt;
+	char *sql = "SELECT \
+		device_handle,  blob_size,  max_fa_token_id  \
+		FROM eafd_history WHERE history_id = $history_id";
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
+	{
+		int index = 0;
+		BIND_INTEGER(p_stmt, "$history_id", history_id);
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < eafd_count)
+		{
+			rc = DB_SUCCESS;
+			local_row_to_eafd(p_ps, p_stmt, &p_eafd[index]);
+			local_get_eafd_relationships_history(p_ps, p_stmt, &p_eafd[index], history_id);
+			index++;
+		}
+		sqlite3_finalize(p_stmt);
+		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+	}
+	return rc;
+}
+enum db_return_codes db_delete_eafd_history(const PersistentStore *p_ps)
+{
+	return run_sql_no_results(p_ps->db, "DELETE FROM eafd_history");
+}
+
+#endif
+
+/*
+ * --- END eafd ----------------
+ */
+/*
  * Delete all histories
  */
 enum db_return_codes db_clear_history(PersistentStore *p_ps)
@@ -33986,6 +34437,13 @@ enum db_return_codes db_clear_history(PersistentStore *p_ps)
 //NON-HISTORY TABLE
 
 	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM boot_status_register_history"));
+	
+#endif
+
+#if 0
+//NON-HISTORY TABLE
+
+	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM eafd_history"));
 	
 #endif
 
@@ -34227,6 +34685,14 @@ enum db_return_codes db_clear_state(PersistentStore *p_ps)
 
 	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM boot_status_register_history"));
 	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM boot_status_register"));
+	
+#endif
+
+#if 0
+//NON-HISTORY TABLE
+
+	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM eafd_history"));
+	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM eafd"));
 	
 #endif
 
@@ -34653,6 +35119,17 @@ enum db_return_codes db_roll_history(PersistentStore *p_ps, int max)
 
 	snprintf(sql, 1024,
 				"DELETE FROM boot_status_register_history "
+				"WHERE history_id NOT IN "
+				"(SELECT history_id FROM history ORDER BY ROWID DESC LIMIT %d)", max); 
+	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, sql));
+	
+#endif
+
+#if 0
+//NON-HISTORY TABLE
+
+	snprintf(sql, 1024,
+				"DELETE FROM eafd_history "
 				"WHERE history_id NOT IN "
 				"(SELECT history_id FROM history ORDER BY ROWID DESC LIMIT %d)", max); 
 	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, sql));

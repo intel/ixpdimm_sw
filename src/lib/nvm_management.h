@@ -2709,6 +2709,47 @@ extern NVM_API int nvm_get_error(const enum return_code code, NVM_ERROR_DESCRIPT
 extern NVM_API int nvm_gather_support(const NVM_PATH support_file, const NVM_SIZE support_file_len);
 
 /*
+ * Collect failure analysis data into a single file to document the context of a problem
+ * for offline analysis by support or development personnel.
+ * @param[in] device_uid
+ *		DimmUID for which the support files will be generated.
+ * @param[in] support_file
+ *		Absolute file path which will be used to generate the support files. For each AEP DIMM,
+ *		one or more support files may be generated at the specified destination path
+ *		with the DimmUID and file number appended to the filename. Note the support
+ *		files are encrypted
+ * @param[in] support_file_len
+ *		String length of the file path, should be < #NVM_PATH_LEN.
+ * @param[out] support_files
+ *		Array of the absolute paths to the support files. This parameter can be NULL.
+ * @pre The caller must have administrative privileges.
+ * @post A support file exists at the path specified for debug by
+ * support or development personnel.
+ * @remarks The failure analysis file contains a dump of encrypted logs from the FW. One or more
+ *			files for individual data blobs from the FW may be generated depending on the number of
+ *			blobs returned by the FW.
+ * @return Returns one of the following @link #return_code return_codes: @endlink @n
+ *		#NVM_ERR_INVALIDPERMISSIONS @n
+ *		#NVM_ERR_NOTSUPPORTED @n
+ *		#NVM_ERR_UNKNOWN @n
+ *		#NVM_ERR_INVALIDPARAMETER @n
+ *		#NVM_ERR_NOMEMORY @n
+ *		#NVM_ERR_BADDEVICE @n
+ *		#NVM_ERR_NOTMANAGEABLE @n
+ *		#NVM_ERR_BADFILE @n
+ *		#NVM_ERR_DEVICEERROR @n
+ *		#NVM_ERR_DEVICEBUSY @n
+ *		#NVM_ERR_NOSIMULATOR @n (Simulated builds only)
+ *		#NVM_ERR_BADDRIVER @n
+ *		#NVM_ERR_NOFADATAAVAILABLE @n
+ *
+ *			Or
+ *
+ *			The number of eAFD files generated.
+ */
+extern NVM_API int nvm_dump_device_support(const NVM_UID device_uid, const NVM_PATH support_file,
+		const NVM_SIZE support_file_len, NVM_PATH support_files[NVM_MAX_EAFD_FILES]);
+/*
  * Capture a snapshot of the current state of the system in the configuration database
  * with the current date/time and optionally a user supplied name and description.
  * @param[in] name

@@ -11515,6 +11515,178 @@ enum db_return_codes db_delete_boot_status_register_by_device_handle(const Persi
 	int history_id,
 	int boot_status_register_count);
 /*!
+ * @defgroup eafd eafd 
+ * @ingroup db_schema
+ */
+ // Lengths for strings and arrays
+/*!
+ * struct representing the eafd table
+ * @ingroup eafd
+ */
+struct db_eafd
+{
+	unsigned int device_handle;
+	unsigned int blob_size;
+	unsigned int max_fa_token_id;
+};
+/*!
+ * Helper function to print a db_eafd to the screen.
+ * @ingroup eafd
+ * @param p_eafd
+ * 		value to print
+ * @return
+ *		void
+ */
+void db_print_eafd(struct db_eafd *p_value);
+/*!
+ * Create a new row in the eafd table
+ * @ingroup eafd
+ * @param[in] p_ps
+ *		Pointer to the PersistentStore
+ * @param[in] p_eafd
+ *		Pointer to the object to be saved to the eafd table
+ * @return return_code whether or not it was successful
+ */
+enum db_return_codes db_add_eafd(const PersistentStore *p_ps, struct db_eafd *p_eafd);
+/*!
+ * Get the total number of eafds
+ * @param[in] p_ps
+ *		Pointer to the instance of the PersistentStore
+ * @param[out] p_count
+ * 		Set to the number of eafds
+ * @return whether successful or not
+ */
+enum db_return_codes db_get_eafd_count(const PersistentStore *p_ps, int *p_count);
+/*!
+ * Return all eafds
+ * @ingroup eafd
+ * @param[in] p_ps
+ *		Pointer to the PersistentStore
+ * @param[out] p_eafd
+ *		Pointer to an array of eafd objects that will contain all the eafds
+ * @param[in] eafd_count
+ *		Size of p_eafd
+ * @return The number of row (to max of eafd_count) on success.  DB_FAILURE on failure.
+ */
+int db_get_eafds(const PersistentStore *p_ps,
+	struct db_eafd
+	*p_eafd,
+	int eafd_count);
+/*!
+ * Truncate all the data in the eafd table
+ * @ingroup 
+ * @param[in] p_ps
+ *		Pointer to the PersistentStore
+ * @return return_code whether or not it was successful
+ */	
+enum db_return_codes db_delete_all_eafds(const PersistentStore *p_ps);
+
+#if 0
+//NON-HISTORY TABLE
+
+/*!
+ * delete all entries from eafd history
+ * @ingroup eafd
+ * @param[in] p_ps
+ *		Pointer to the PersistentStore
+ * @return return_code whether or not it was successful
+ */
+ enum db_return_codes db_delete_eafd_history(const PersistentStore *p_ps);
+ 
+#endif
+
+/*!
+ * save eafd state
+ * @ingroup eafd
+ * @param[in] p_ps
+ *		Pointer to the PersistentStore
+ * @param[in] history_id
+ *		ID of the history to add the eafd to
+ * @param[in] p_eafd
+ *		eafd to save to history
+ * @return return_code whether or not it was successful
+ */
+enum db_return_codes db_save_eafd_state(const PersistentStore *p_ps,
+	int history_id,
+	struct db_eafd *p_eafd);
+/*!
+ * Return a specific eafd for a given device_handle
+ * @ingroup eafd
+ * @param[in] p_ps
+ *		Pointer to the PersistentStore
+ * @param[in] device_handle
+ *		device_handle to identify the correct eafd
+ * @param[out] p_eafd
+ *		struct to put the eafd retrieved
+ * @return return_code whether or not it was successful
+ */
+enum db_return_codes db_get_eafd_by_device_handle(const PersistentStore *p_ps,
+	const unsigned int device_handle,
+	struct db_eafd *p_eafd);
+/*!
+ * Update a specific eafd given the original device_handle
+ * @ingroup eafd
+ * @param[in] p_ps
+ *		Pointer to the PersistentStore
+ * @param[in] device_handle
+ * 		device_handle points to the eafd to update
+ * @param[in] *p_updated_eafd
+ *		structure with new values for the eafd
+ * @return return_code whether or not it was successful
+ */
+enum db_return_codes db_update_eafd_by_device_handle(const PersistentStore *p_ps,
+	const unsigned int device_handle,
+	struct db_eafd *p_updated_eafd);
+/*!
+ * Delete a specific eafd given the device_handle
+ * @ingroup eafd
+ * @param[in] p_ps
+ *		Pointer to the PersistentStore
+ * @param[in] device_handle
+ *		device_handle points to the record to delete
+ * @return return_code whether or not it was successful
+ */
+enum db_return_codes db_delete_eafd_by_device_handle(const PersistentStore *p_ps,
+	const unsigned int device_handle);
+/*!
+ * Return number of matching history rows
+ * @param[in] p_ps
+ *		Pointer to the PersistentStore
+ * @param[in] history_id
+ *		history_id of rows to count
+ * @param[out] count
+ *		count of rows matching this history_id
+ * @return The number of row (to max of eafd_count) on success.  DB_FAILURE on failure.
+ */
+ enum db_return_codes db_get_eafd_history_by_history_id_count(const PersistentStore *p_ps, 
+	int history_id,
+	int *p_count);
+/*!
+ * Return number of history rows
+ * @param[in] p_ps
+ *		Pointer to the PersistentStore
+ * @param[out] count
+ *		count of rows matching this history_id
+ * @return The number of row (to max of eafd_count) on success.  DB_FAILURE on failure.
+ */
+ enum db_return_codes db_get_eafd_history_count(const PersistentStore *p_ps, int *p_count);
+/*!
+ * Return all rows of matching custom sql
+ * @param[in] p_ps
+ *		Pointer to the PersistentStore
+ * @param[out] struct db_eafd
+ *		Structure type for row results
+ * @param[in] p_eafd
+ *		Pointer to memory to hold row results
+ * @param[in] history_id
+ *		history_id of rows to return
+ * @return The number of row (to max of eafd_count) on success.  DB_FAILURE on failure.
+ */
+ int db_get_eafd_history_by_history_id(const PersistentStore *p_ps,
+	struct db_eafd *p_eafd,
+	int history_id,
+	int eafd_count);
+/*!
  * Delete all history
  * @param[in] p_ps
  *		Pointer to the PersistentStore
