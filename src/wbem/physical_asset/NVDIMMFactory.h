@@ -56,8 +56,10 @@ static const std::string NVDIMM_SETPASSPHRASE = "SetPassphrase"; //!< extrinsic 
 static const std::string NVDIMM_REMOVEPASSPHRASE = "RemovePassphrase"; //!< extrinsic method name
 static const std::string NVDIMM_UNLOCK = "Unlock"; //!< extrinsic method name
 static const std::string NVDIMM_FREEZELOCK = "FreezeLock"; //!< extrinsic method name
+static const std::string NVDIMM_EXPORTSUPPORTFILE = "ExportSupportFile"; //!< extrinsic method name
 static const std::string NVDIMM_SETPASSPHRASE_NEWPASSPHRASE = "NewPassphrase"; //!< method param
 static const std::string NVDIMM_SETPASSPHRASE_CURRENTPASSPHRASE = "CurrentPassphrase"; //!< method param
+static const std::string NVDIMM_EXPORT_URI = "ExportURI"; //!< method param
 static const NVM_UINT16 DEVICE_HEALTH_UNMANAGEABLE = 65534; //!< Additional health state for unmanageable dimms
 
 static const NVM_UINT32 SECURITY_PASSPHRASE = 0;
@@ -141,6 +143,8 @@ public:
 	virtual void unlock(std::string deviceUid, std::string currentPassphrase);
 
 	virtual void freezeLock(const std::string deviceUid);
+
+	virtual void exportSupportFile(std::string deviceUid, std::string exportUri);
 
 	virtual void injectTemperatureError(const std::string &dimmUid,
 			const NVM_REAL32 temperature);

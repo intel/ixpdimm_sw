@@ -257,6 +257,10 @@ wbem::framework::UINT32 NVDIMMFactory::executeMethod(
 			// unint32 FreezeLock();
 			freezeLock(deviceUid);
 		}
+		else if (method == NVDIMM_EXPORTSUPPORTFILE)
+		{
+			exportSupportFile(deviceUid, inParms[NVDIMM_EXPORT_URI].stringValue());
+		}
 		else
 		{
 			httpRc = framework::CIM_ERR_METHOD_NOT_AVAILABLE;
@@ -419,6 +423,35 @@ void NVDIMMFactory::freezeLock(std::string deviceUid)
 	{
 		throw exception::NvmExceptionLibError(rc);
 	}
+}
+
+void NVDIMMFactory::exportSupportFile(std::string deviceUid, std::string exportUri)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	if (exportUri.empty())
+	{
+		throw framework::ExceptionBadParameter(NVDIMM_EXPORT_URI.c_str());
+	}
+	if (!core::device::isUidValid(deviceUid))
+	{
+		throw framework::ExceptionBadParameter("deviceUid");
+	}
+	COMMON_PATH absPath;
+	if (get_absolute_path(exportUri.c_str(), exportUri.length() + 1, absPath) != COMMON_SUCCESS)
+	{
+		throw framework::ExceptionBadParameter(NVDIMM_EXPORT_URI.c_str());
+	}
+	NVM_UID uid;
+	uid_copy(deviceUid.c_str(), uid);
+
+	NVM_PATH support_files[NVM_MAX_EAFD_FILES];
+	int rc = m_deviceService.dumpDeviceSupport(uid, absPath, strlen(absPath), support_files);
+
+	if (rc <= 0)
+	{
+		throw exception::NvmExceptionLibError(rc);
+	}
+
 }
 
 std::vector<std::string>  wbem::physical_asset::NVDIMMFactory::getManageableDeviceUids()

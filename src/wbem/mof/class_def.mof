@@ -238,22 +238,28 @@ class <NVM_WBEM_PREFIX>NVDIMM : CIM_PhysicalMemory
 	uint32 SetPassphrase(string NewPassphrase, string CurrentPassphrase);
 
 	[implemented,
-	   ValueMap { "0", "1", "2", "3", "4", "5" },
+	   ValueMap { "0", "1", "2", "3", "4" },
        Values { "Success", "Unknown", "Failed", "Not Allowed",
-       "Not Supported", "Invalid Parameter" }]
+       "Not Supported" }]
 	uint32 Unlock(string CurrentPassphrase);
 
 	[implemented,
-	   ValueMap { "0", "1", "2", "3", "4", "5" },
+	   ValueMap { "0", "1", "2", "3", "4" },
        Values { "Success", "Unknown", "Failed", "Not Allowed",
-       "Not Supported", "Invalid Parameter" }]
+       "Not Supported" }]
 	uint32 RemovePassphrase(string CurrentPassphrase);
 
 	[implemented,
-		ValueMap { "0", "1", "2", "3", "4", "5" },
-		Values { "Success", "Failed", "Not Allowed",
-		"Not Supported", "Unknown"}]
+		ValueMap { "0", "1", "2", "3", "4" },
+		Values { "Success", "Unknown", "Failed", "Not Allowed",
+		"Not Supported"}]
 	uint32 FreezeLock();
+
+	[implemented,
+		ValueMap { "0", "1", "2", "3", "4" },
+		Values { "Success", "Unknown", "Failed", "Not Allowed",
+		"Not Supported"}]
+	uint32 ExportSupportFile(string ExportURI);
 
 };
 
