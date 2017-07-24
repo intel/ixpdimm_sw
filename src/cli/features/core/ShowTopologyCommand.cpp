@@ -51,7 +51,7 @@ ShowTopologyCommand::ShowTopologyCommand(core::device::TopologyService &service)
 	m_props.addCustom("DimmID", getDimmId).setIsRequired();
 	m_props.addUint16("PhysicalID", &core::device::Topology::getPhysicalID).setIsDefault();
 	m_props.addStr("DeviceLocator", &core::device::Topology::getDeviceLocator).setIsDefault();
-	m_props.addUint16("SocketID", &core::device::Topology::getSocketId);
+	m_props.addCustom("SocketID", getSocketId);
 	m_props.addCustom("MemControllerID", getMemoryControllerId);
 	m_props.addCustom("ChannelID", getChannelId);
 	m_props.addCustom("ChannelPos", getChannelPosition);
@@ -147,11 +147,10 @@ void ShowTopologyCommand::filterTopologiesOnSocketIds()
 	{
 		for (size_t i = m_topologies.size(); i > 0; i--)
 		{
-			core::device::Topology &topology = m_topologies[i - 1];
+			std::string socket_id = getSocketId(m_topologies[i - 1]);
 
-			std::string socket_id = uint64ToString(topology.getSocketId());
-
-			if (!m_socketIds.contains(socket_id))
+			if (!m_socketIds.contains(socket_id) &&
+					socket_id.compare("N/A") != 0)
 			{
 				m_topologies.removeAt(i - 1);
 			}
@@ -387,6 +386,22 @@ std::string ShowTopologyCommand::getNodeControllerId(core::device::Topology &top
 	if (topology.getMemoryType() == MEMORY_TYPE_NVMDIMM)
 	{
 		result << topology.getNodeControllerId();
+	}
+	else if (topology.getMemoryType() == MEMORY_TYPE_DDR4)
+	{
+		result << "N/A";
+	}
+
+	return result.str();
+}
+std::string ShowTopologyCommand::getSocketId(core::device::Topology &topology)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	std::stringstream result;
+
+	if(topology.getMemoryType() == MEMORY_TYPE_NVMDIMM)
+	{
+		result << topology.getSocketId();
 	}
 	else if (topology.getMemoryType() == MEMORY_TYPE_DDR4)
 	{

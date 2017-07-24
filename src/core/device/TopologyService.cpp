@@ -52,6 +52,7 @@ core::device::TopologyCollection core::device::TopologyService::getAllTopologies
 		{
 			if (devices[j].physical_id == mem_topology[i].physical_id)
 			{
+				memset(&device, 0, sizeof(device_discovery));
 				device = devices[j];
 				break;
 			}

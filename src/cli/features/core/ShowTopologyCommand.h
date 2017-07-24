@@ -75,6 +75,7 @@ private:
 	static std::string getChannelPosition(core::device::Topology &);
 	static std::string getMemoryControllerId(core::device::Topology &);
 	static std::string getNodeControllerId(core::device::Topology &);
+	static std::string getSocketId(core::device::Topology &topology);
 	static std::string m_capacityUnits;
 	static std::string convertCapacity(NVM_UINT64 capacity);
 	static std::string convertMemoryType(memory_type type);
