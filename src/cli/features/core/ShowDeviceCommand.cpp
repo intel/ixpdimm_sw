@@ -322,7 +322,6 @@ std::string ShowDeviceCommand::convertMemoryModes(NVM_UINT16 mode)
 {
 	std::map<NVM_UINT16, std::string> map;
 	map[MEMORY_CAPABILITY_MEMORYMODE] = TR("Memory Mode");
-	map[MEMORYTYPE_CAPABILITY_STORAGEMODE] = TR("Storage Mode");
 	map[MEMORYTYPE_CAPABILITY_APPDIRECTMODE] = TR("App Direct");
 	return map[mode];
 }

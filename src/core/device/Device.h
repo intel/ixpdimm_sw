@@ -48,7 +48,6 @@ static const NVM_UINT32 SECURITY_UNLOCK = 1;
 static const NVM_UINT32 SECURITY_ERASE = 2;
 
 static const NVM_UINT16 MEMORY_CAPABILITY_MEMORYMODE = 0;
-static const NVM_UINT16 MEMORYTYPE_CAPABILITY_STORAGEMODE = 1;
 static const NVM_UINT16 MEMORYTYPE_CAPABILITY_APPDIRECTMODE = 2;
 
 static const NVM_UINT16 DEVICE_HEALTH_UNMANAGEABLE = 65534;
@@ -123,7 +122,6 @@ public:
 	virtual bool isDieSparingCapable();
 	virtual bool isAppDirectModeCapable();
 	virtual bool isMemoryModeCapable();
-	virtual bool isStorageModeCapable();
 	virtual std::vector<NVM_UINT16> getMemoryCapabilities();
 	virtual NVM_UINT32 getSku();
 	virtual enum device_health getDeviceStatusHealth();

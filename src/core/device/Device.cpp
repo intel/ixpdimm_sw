@@ -427,12 +427,6 @@ bool Device::isMemoryModeCapable()
 	return getDiscovery().device_capabilities.memory_mode_capable;
 }
 
-bool Device::isStorageModeCapable()
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	return false;
-}
-
 std::vector<NVM_UINT16> Device::getMemoryCapabilities()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -441,10 +435,6 @@ std::vector<NVM_UINT16> Device::getMemoryCapabilities()
 	if (isMemoryModeCapable())
 	{
 		result.push_back(MEMORY_CAPABILITY_MEMORYMODE);
-	}
-	if (isStorageModeCapable())
-	{
-		result.push_back(MEMORYTYPE_CAPABILITY_STORAGEMODE);
 	}
 	if (isAppDirectModeCapable())
 	{
