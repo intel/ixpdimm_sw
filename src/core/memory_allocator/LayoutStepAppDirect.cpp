@@ -310,13 +310,10 @@ NVM_UINT64 core::memory_allocator::LayoutStepAppDirect::getExtentCapacityFromLay
 	for (std::map<std::string, config_goal>::const_iterator goalPair = layout.goals.begin();
 			goalPair != layout.goals.end(); goalPair++)
 	{
-		if (goalPair->first != layout.reservedimmUid)
-		{
-			const config_goal &goal = goalPair->second;
+		const config_goal &goal = goalPair->second;
 
-			extentCapacityGiB += configGoalSizeToGiB(goal.app_direct_1_size);
-			extentCapacityGiB += configGoalSizeToGiB(goal.app_direct_2_size);
-		}
+		extentCapacityGiB += configGoalSizeToGiB(goal.app_direct_1_size);
+		extentCapacityGiB += configGoalSizeToGiB(goal.app_direct_2_size);
 	}
 
 	return extentCapacityGiB;

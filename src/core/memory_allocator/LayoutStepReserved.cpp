@@ -26,56 +26,68 @@
  */
 
 /*
- * Rule that checks if ReserveDimm is a valid property.
- * StorageCapacity is the only valid property that can be used in
- * conjunction with ReserveDimm property.
+ * Lay out the storage region in memory.
  */
 
-#include "RuleReserveDimmPropertyInvalid.h"
+#include "LayoutStepReserved.h"
 
 #include <LogEnterExit.h>
+#include <utility.h>
 #include <core/exceptions/NvmExceptionBadRequest.h>
 
-core::memory_allocator::RuleReserveDimmPropertyInvalid::RuleReserveDimmPropertyInvalid()
+core::memory_allocator::LayoutStepReserved::LayoutStepReserved()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
 
-core::memory_allocator::RuleReserveDimmPropertyInvalid::~RuleReserveDimmPropertyInvalid()
+core::memory_allocator::LayoutStepReserved::~LayoutStepReserved()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
 
-void core::memory_allocator::RuleReserveDimmPropertyInvalid::verify(const MemoryAllocationRequest &request)
+void core::memory_allocator::LayoutStepReserved::execute(const MemoryAllocationRequest& request,
+		MemoryAllocationLayout& layout)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	if (reserveSingleDimm(request) &&
-			memoryOrAppDirectIsRequested(request))
+	NVM_UINT64 reservedCapacity = request.getReservedCapacityGiB();
+	if (reservedCapacity > 0)
 	{
-		throw core::NvmExceptionBadRequestReserveDimm();
+		shrinkAppDirectPerReservedCapacity(request, reservedCapacity, layout);
+
+		layout.appDirectCapacity = getTotalADCapacity(request, layout);
 	}
+
+	layout.remainingCapacity = B_TO_GiB(getRemainingBytesFromRequestedDimms(request, layout));
 }
 
-bool core::memory_allocator::RuleReserveDimmPropertyInvalid::reserveSingleDimm(
-		const MemoryAllocationRequest &request)
+void core::memory_allocator::LayoutStepReserved::shrinkAppDirectPerReservedCapacity(
+		const MemoryAllocationRequest& request, NVM_UINT64 reservedCapacity,
+		MemoryAllocationLayout& layout)
 {
-	bool result = false;
-	if (request.hasReservedDimm() && (request.getNumberOfDimms() == 1))
-	{
-		result = true;
-	}
-	return result;
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	std::vector<core::memory_allocator::Dimm> dimms = request.getNonReservedDimms();
+
+	shrinkAD2(dimms, reservedCapacity, layout);
+	shrinkAD1(dimms, reservedCapacity, layout);
 }
 
-bool core::memory_allocator::RuleReserveDimmPropertyInvalid::memoryOrAppDirectIsRequested(
-		const MemoryAllocationRequest &request)
+NVM_UINT64 core::memory_allocator::LayoutStepReserved::getTotalADCapacity(
+		const MemoryAllocationRequest& request, MemoryAllocationLayout& layout)
 {
-	bool result = false;
-	if ((request.getMemoryModeCapacityGiB() > 0) ||
-			(request.getAppDirectCapacityGiB() > 0))
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	NVM_UINT64 totalADCapacity = 0;
+
+	std::vector<core::memory_allocator::Dimm> dimms = request.getDimms();
+	for (std::vector<core::memory_allocator::Dimm>::const_iterator dimm =
+			dimms.begin(); dimm != dimms.end(); dimm++)
 	{
-		result = true;
+		totalADCapacity +=
+				layout.goals[dimm->uid].app_direct_1_size +
+				layout.goals[dimm->uid].app_direct_2_size;
 	}
-	return result;
+
+	return totalADCapacity;
 }

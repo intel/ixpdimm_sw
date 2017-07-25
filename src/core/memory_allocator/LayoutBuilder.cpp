@@ -36,15 +36,13 @@
 #include <core/exceptions/NvmExceptionBadRequest.h>
 #include "LayoutStepCheckAsymmetricalPopulation.h"
 #include "LayoutStepCheckDriverSupportsAppDirect.h"
-#include "LayoutStepCheckDriverSupportsStorage.h"
 #include "LayoutStepCheckCurrentVolatileMode.h"
 #include "LayoutStepAppDirectSettingsNotRecommended.h"
-#include "LayoutStepReserveDimm.h"
 #include "LayoutStepMemory.h"
 #include "LayoutStepAppDirect.h"
 #include "LayoutStepMemory.h"
-#include "LayoutStepStorage.h"
-#include "LayoutStepReserveDimm.h"
+#include "LayoutStepReserved.h"
+
 #include "LayoutStepLimitTotalMappedMemory.h"
 #include "LayoutStepCheckRequestLayoutDeviation.h"
 
@@ -105,7 +103,6 @@ void core::memory_allocator::LayoutBuilder::populateWarningGeneratingLayoutSteps
 
 	m_layoutSteps.push_back(new LayoutStepCheckDriverSupportsAppDirect(m_systemCapabilities.nvm_features));
 	m_layoutSteps.push_back(new LayoutStepAppDirectSettingsNotRecommended(m_systemCapabilities.platform_capabilities));
-	m_layoutSteps.push_back(new LayoutStepCheckDriverSupportsStorage(m_systemCapabilities.nvm_features));
 	m_layoutSteps.push_back(new LayoutStepCheckAsymmetricalPopulation());
 	m_layoutSteps.push_back(new LayoutStepCheckCurrentVolatileMode(m_systemCapabilities.platform_capabilities));
 }
@@ -115,9 +112,6 @@ void core::memory_allocator::LayoutBuilder::populateOrderedLayoutStepsForRequest
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	// Reserve a DIMM before we get started laying out other capacity
-	m_layoutSteps.push_back(new LayoutStepReserveDimm(m_util));
-
 	m_layoutSteps.push_back(new LayoutStepMemory());
 
 	m_layoutSteps.push_back(new LayoutStepAppDirect(m_util));
@@ -125,7 +119,7 @@ void core::memory_allocator::LayoutBuilder::populateOrderedLayoutStepsForRequest
 	// Shrink Memory and AppDirect based on SKU mapped memory limit
 	m_layoutSteps.push_back(new LayoutStepLimitTotalMappedMemory());
 
-	m_layoutSteps.push_back(new LayoutStepStorage());
+	m_layoutSteps.push_back(new LayoutStepReserved());
 
 	// Post layout check that adds a warning to layout object
 	m_layoutSteps.push_back(new LayoutStepCheckRequestLayoutDeviation());

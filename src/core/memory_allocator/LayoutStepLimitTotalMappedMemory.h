@@ -73,8 +73,6 @@ class NVM_API LayoutStepLimitTotalMappedMemory : public LayoutStep
 
 		void shrinkAppDirect1(MemoryAllocationLayout& layout);
 
-		void shrinkReservedDimm(MemoryAllocationLayout& layout);
-
 		void shrinkMemory(MemoryAllocationLayout& layout);
 
 		void shrinkSizePerDimm(NVM_UINT64 reduceBy, NVM_UINT64 &size);

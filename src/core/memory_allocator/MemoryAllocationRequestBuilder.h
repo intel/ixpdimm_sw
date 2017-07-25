@@ -49,52 +49,37 @@ public:
 
 	virtual MemoryAllocationRequest build();
 
-	void setPersistentTypeStorage();
 	void setPersistentTypeAppDirectNonInterleaved();
 	void setPersistentTypeAppDirectInterleaved();
 
 	void setMemoryModePercentage(const NVM_UINT32 percentage);
 
-	void setReserveStoragePercentage(const NVM_UINT32 percentage);
+	void setReservedPercentage(const NVM_UINT32 percentage);
 
 	void addDimmIds(const std::vector<std::string> &dimmIds);
 	void addSocketIds(const std::vector<NVM_UINT16> &socketIds);
-
-	void reserveDimmForStorage();
-	void reserveDimmForNonInterleavedAppDirect();
-	void noReservedDimm();
 
 protected:
 	enum PersistentType
 	{
 		AppDirect = 0,
 		AppDirectNoInterleave = 1,
-		Storage = 2,
-	};
-
-	enum ReserveDimmCapacityType
-	{
-		NoReserveDimm,
-		ReserveDimmStorage,
-		ReserveDimmAppDirectNonInterleaved
 	};
 
 	std::vector<std::string> m_dimmIds;
 	std::vector<NVM_UINT16> m_sockets;
 	PersistentType m_pmType;
 	float m_memoryRatio;
-	float m_storageRatio;
-	ReserveDimmCapacityType m_reserveDimmType;
+	float m_reservedRatio;
 
 private:
 	core::device::DeviceService &m_service;
 	MemoryAllocationRequest m_result;
 
 	void buildRequestedDimms();
-	void buildReservedDimm();
 	void buildMemoryCapacity();
 	void buildAppDirectCapacity();
-	void buildStorageCapacity();
+	void buildReservedCapacity();
 
 	std::vector<Dimm> getAllDimms();
 	std::vector<Dimm> getRequestedDimms();
@@ -103,11 +88,6 @@ private:
 	std::vector<std::string> getUidsFromRequestedDimmIds();
 	std::vector<std::string> getUidsFromRequestedSockets();
 	Dimm getDimmFromDevice(core::device::Device &device);
-
-	bool needReservedDimm();
-	std::string getReserveDimmUid();
-	ReserveDimmType getReserveDimmTypeForRequest();
-
 	NVM_UINT64 getTotalCapacityBytesFromRequestDimms();
 	NVM_UINT64 getPersistentCapacityGiBFromRequest();
 	AppDirectExtent getAppDirectExtent();

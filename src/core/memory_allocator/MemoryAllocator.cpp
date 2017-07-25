@@ -38,14 +38,12 @@
 #include "LayoutBuilder.h"
 #include "RuleNoDimms.h"
 #include "RuleProvisionCapacityNotSupported.h"
-#include "RuleStorageCapacityNotSupported.h"
 #include "RuleMemoryModeCapacityNotSupported.h"
 #include "RuleAppDirectNotSupported.h"
 #include "RuleMirroredAppDirectNotSupported.h"
 #include "RuleDimmHasConfigGoal.h"
 #include "RuleNamespacesExist.h"
 #include "RulePartialSocketConfigured.h"
-#include "RuleReserveDimmPropertyInvalid.h"
 #include "RuleDimmListInvalid.h"
 #include "RuleRejectLockedDimms.h"
 #include "PostLayoutAddressDecoderLimitCheck.h"
@@ -131,12 +129,10 @@ void core::memory_allocator::MemoryAllocator::populateRequestRules()
 	// Note that order matters
 	m_requestRules.push_back(new RuleProvisionCapacityNotSupported(m_systemCapabilities));
 	m_requestRules.push_back(new RuleNoDimms());
-	m_requestRules.push_back(new RuleReserveDimmPropertyInvalid());
 	m_requestRules.push_back(new RuleDimmListInvalid(m_manageableDevices));
 	m_requestRules.push_back(new RuleMemoryModeCapacityNotSupported(m_systemCapabilities));
 	m_requestRules.push_back(new RuleAppDirectNotSupported(m_systemCapabilities));
 	m_requestRules.push_back(new RuleMirroredAppDirectNotSupported);
-	m_requestRules.push_back(new RuleStorageCapacityNotSupported(m_systemCapabilities));
 	m_requestRules.push_back(new RuleDimmHasConfigGoal(m_nvmLib));
 	m_requestRules.push_back(new RuleNamespacesExist(m_nvmLib));
 	m_requestRules.push_back(new RuleRejectLockedDimms(m_manageableDevices));

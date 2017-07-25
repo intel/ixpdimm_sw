@@ -1027,10 +1027,6 @@ void wbem::mem_config::MemoryConfigurationServiceFactory::updateRequestForDimm(
 	newExtent.channel = goal.app_direct_1_settings.interleave.channel;
 	newExtent.imc = goal.app_direct_1_settings.interleave.imc;
 	request.setAppDirectExtent(newExtent);
-	if (dimm_size - goal.memory_size - goal.app_direct_1_size > 0)
-	{
-		request.setStorageRemaining(true);
-	}
 }
 
 void wbem::mem_config::MemoryConfigurationServiceFactory::populateRequestFromPath(
@@ -1138,11 +1134,6 @@ wbem::mem_config::MemoryConfigurationServiceFactory::memAllocSettingsToRequest(
 	if (isValidAppDirectExtentForRequest(appDirectExtents))
 	{
 		request.setAppDirectExtent(appDirectExtents.front());
-	}
-
-	if (requestLeavesSpaceForStorage(request))
-	{
-		request.setStorageRemaining(true);
 	}
 
 	return request;

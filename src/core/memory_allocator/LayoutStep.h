@@ -90,10 +90,6 @@ class NVM_API LayoutStep
 				const std::vector<core::memory_allocator::Dimm>& requestedDimms,
 				MemoryAllocationLayout& layout);
 
-		std::vector<core::memory_allocator::Dimm> getReservedADByOneDimms(
-				const std::vector<core::memory_allocator::Dimm>& requestedDimms,
-				MemoryAllocationLayout& layout);
-
 		bool dimmHasAppDirect1(std::vector<core::memory_allocator::Dimm>::const_iterator dimm,
 				MemoryAllocationLayout& layout);
 
@@ -102,13 +98,6 @@ class NVM_API LayoutStep
 
 		bool dimmHas2LM(std::vector<core::memory_allocator::Dimm>::const_iterator dimm,
 				MemoryAllocationLayout& layout);
-
-		bool dimmIsReservedAppDirectByOne(
-				std::vector<core::memory_allocator::Dimm>::const_iterator dimm,
-				MemoryAllocationLayout& layout);
-
-		bool isReserveDimm(std::vector<core::memory_allocator::Dimm>::const_iterator dimm,
-					MemoryAllocationLayout& layout);
 
 		NVM_UINT64 getTotalAD2Capacity(const std::vector<core::memory_allocator::Dimm>& ad2Dimms,
 				MemoryAllocationLayout& layout);

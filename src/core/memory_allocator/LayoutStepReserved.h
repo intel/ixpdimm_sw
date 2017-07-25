@@ -26,11 +26,11 @@
  */
 
 /*
- * Check if the driver supports storage. If not, create a warning.
+ * Lay out the Reserved region in memory.
  */
 
-#ifndef _core_LOGIC_LAYOUTSTEPCHECKDRIVERSUPPORTSSTORAGE_H_
-#define _core_LOGIC_LAYOUTSTEPCHECKDRIVERSUPPORTSSTORAGE_H_
+#ifndef _core_LOGIC_LAYOUTSTEPRESERVED_H_
+#define _core_LOGIC_LAYOUTSTEPRESERVED_H_
 
 #include <nvm_types.h>
 #include <core/memory_allocator/LayoutStep.h>
@@ -40,19 +40,25 @@ namespace core
 namespace memory_allocator
 {
 
-class NVM_API LayoutStepCheckDriverSupportsStorage : public LayoutStep
+class NVM_API LayoutStepReserved: public LayoutStep
 {
 	public:
-		LayoutStepCheckDriverSupportsStorage(const struct nvm_features &driverFeatures);
-		virtual ~LayoutStepCheckDriverSupportsStorage();
+		LayoutStepReserved();
+		virtual ~LayoutStepReserved();
 
-		virtual void execute(const MemoryAllocationRequest &request, MemoryAllocationLayout &layout);
+		virtual void execute(const MemoryAllocationRequest &request,
+			MemoryAllocationLayout &layout);
 
-	protected:
-		struct nvm_features m_driverFeatures;
+	private:
+		void shrinkAppDirectPerReservedCapacity(
+			const MemoryAllocationRequest& request, NVM_UINT64 reservedCapacity,
+			MemoryAllocationLayout& layout);
+
+		NVM_UINT64 getTotalADCapacity(const MemoryAllocationRequest& request,
+			MemoryAllocationLayout &layout);
 };
 
 } /* namespace memory_allocator */
 } /* namespace core */
 
-#endif /* LAYOUTSTEPCHECKDRIVERSUPPORTSSTORAGE_H_ */
+#endif /* _core_LOGIC_LAYOUTSTEPRESERVED_H_ */

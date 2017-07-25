@@ -85,8 +85,6 @@ void core::memory_allocator::LayoutStepLimitTotalMappedMemory::shrinkLayoutGoals
 	shrinkAppDirect1(layout);
 
 	shrinkMemory(layout);
-
-	shrinkReservedDimm(layout);
 }
 
 void core::memory_allocator::LayoutStepLimitTotalMappedMemory::shrinkAppDirect2(
@@ -146,31 +144,6 @@ void core::memory_allocator::LayoutStepLimitTotalMappedMemory::shrinkMemory(
 	}
 }
 
-void core::memory_allocator::LayoutStepLimitTotalMappedMemory::shrinkReservedDimm(
-		MemoryAllocationLayout& layout)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	if (m_mappedCapacityExceedsLimit > 0)
-	{
-		// we'll only have one reserved DIMM per socket
-		std::vector<core::memory_allocator::Dimm> reservedDimms =
-				getReservedADByOneDimms(m_socketDimms, layout);
-
-		for (std::vector<core::memory_allocator::Dimm>::const_iterator dimm =
-				reservedDimms.begin(); dimm != reservedDimms.end(); dimm++)
-		{
-			config_goal& goal = layout.goals[dimm->uid];
-			if (m_mappedCapacityExceedsLimit <= goal.app_direct_1_size)
-			{
-				goal.app_direct_1_size -= m_mappedCapacityExceedsLimit;
-				m_mappedCapacityExceedsLimit = 0;
-
-				killADIfSizeIsZero(goal, CAPACITY_TYPE_RESERVED_APPDIRECT_BYONE);
-			}
-		}
-	}
-}
 
 // TODO: Get from PCAT for each socket (US20271)
 NVM_UINT64 core::memory_allocator::LayoutStepLimitTotalMappedMemory::getLimit(const MemoryAllocationRequest& request)

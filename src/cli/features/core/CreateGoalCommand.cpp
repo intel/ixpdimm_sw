@@ -45,9 +45,8 @@ framework::ResultBase *CreateGoalCommand::Parser::parse(
 	parseTargetDimm();
 	parseTargetSocket();
 	parsePropertyMemoryMode();
-	parsePropertyReserveDimm();
 	parsePropertyPmType();
-	parsePropertyReserveStorage();
+	parsePropertyReserved();
 	parseOptionForce();
 	parseOptionUnits();
 
@@ -60,10 +59,10 @@ int CreateGoalCommand::Parser::getMemoryMode()
 	return m_memoryModeValue;
 }
 
-NVM_UINT64 CreateGoalCommand::Parser::getReserveStorage()
+NVM_UINT64 CreateGoalCommand::Parser::getReserved()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	return m_reserveStorageValue;
+	return m_reservedValue;
 }
 
 bool CreateGoalCommand::Parser::isPmTypeAppDirect()
@@ -76,30 +75,6 @@ bool CreateGoalCommand::Parser::isPmTypeAppDirectNotInterleaved()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return framework::stringsIEqual(m_pmType, PMTYPE_VALUE_APPDIRECTNOTINTERLEAVED);
-}
-
-bool CreateGoalCommand::Parser::isPmTypeAppDirectStorage()
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	return framework::stringsIEqual(m_pmType, PMTYPE_VALUE_STORAGE);
-}
-
-bool CreateGoalCommand::Parser::isReserveDimmNone()
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	return framework::stringsIEqual(m_reserveDimmType, PMTYPE_VALUE_NONE);
-}
-
-bool CreateGoalCommand::Parser::isReserveDimmAppDirect()
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	return framework::stringsIEqual(m_reserveDimmType, PMTYPE_VALUE_APPDIRECTNOTINTERLEAVED);
-}
-
-bool CreateGoalCommand::Parser::isReserveDimmStorage()
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	return framework::stringsIEqual(m_reserveDimmType, PMTYPE_VALUE_STORAGE);
 }
 
 bool CreateGoalCommand::Parser::isForce()
@@ -128,9 +103,8 @@ std::vector<NVM_UINT16> CreateGoalCommand::Parser::getSockets()
 
 CreateGoalCommand::Parser::Parser() : m_pResult(NULL),
 	m_memoryModeValue(0),
-	m_reserveStorageValue(0),
+	m_reservedValue(0),
 	m_pmType(PMTYPE_VALUE_APPDIRECT),
-	m_reserveDimmType(PMTYPE_VALUE_NONE),
 	m_isForce(false) { }
 
 framework::ResultBase *CreateGoalCommand::ShowGoalAdapter::showCurrentGoal(
@@ -380,25 +354,15 @@ framework::CommandSpec CreateGoalCommand::getCommandSpec(int id)
 	result.addProperty("PersistentMemoryType")
 		.isRequired(false)
 		.isValueRequired(true)
-		.valueText("AppDirect|AppDirectNotInterleaved|Storage")
+		.valueText("AppDirect|AppDirectNotInterleaved")
 		.helpText(TR("If MemoryMode is not 100%, the type of persistent memory to create."));
 
-	result.addProperty("ReserveDimm")
-		.isRequired(false)
-		.isValueRequired(true)
-		.valueText("None|AppDirectNotInterleaved|Storage")
-		.helpText(TR("Reserve one "
-			NVM_DIMM_NAME
-			" across the specified target "
-			"for a different purpose"));
-
-	result.addProperty(RESERVESTORAGE_NAME)
+	result.addProperty(RESERVED_NAME)
 		.isRequired(false)
 		.isValueRequired(true)
 		.valueText("0|%")
-		.helpText(TR("Reserve a percentage (0-100) of the requested AEP DIMM capacity to use"
-			" as Storage mode only capacity that is not mapped into the system physical address"
-			" space and therefore can only be used for Storage namespaces."));
+		.helpText(TR("Reserve a percentage (0-100) of the requested AEP DIMM capacity"
+			" that will not be mapped into the system physical address space."));
 
 	return result;
 }
@@ -452,21 +416,7 @@ void CreateGoalCommand::setupRequestBuilder()
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	m_requestBuilder.setMemoryModePercentage(m_parser.getMemoryMode());
-
-	m_requestBuilder.setReserveStoragePercentage(m_parser.getReserveStorage());
-
-	if (m_parser.isReserveDimmStorage())
-	{
-		m_requestBuilder.reserveDimmForStorage();
-	}
-	else if (m_parser.isReserveDimmNone())
-	{
-		m_requestBuilder.noReservedDimm();
-	}
-	else if (m_parser.isReserveDimmAppDirect())
-	{
-		m_requestBuilder.reserveDimmForNonInterleavedAppDirect();
-	}
+	m_requestBuilder.setReservedPercentage(m_parser.getReserved());
 
 	if (m_parser.isPmTypeAppDirect())
 	{
@@ -475,10 +425,6 @@ void CreateGoalCommand::setupRequestBuilder()
 	else if (m_parser.isPmTypeAppDirectNotInterleaved())
 	{
 		m_requestBuilder.setPersistentTypeAppDirectNonInterleaved();
-	}
-	else if (m_parser.isPmTypeAppDirectStorage())
-	{
-		m_requestBuilder.setPersistentTypeStorage();
 	}
 
 	if (m_parser.getDimms().size() > 0u)
@@ -600,7 +546,6 @@ void CreateGoalCommand::Parser::parsePropertyPmType()
 			m_pmType = pmType;
 
 			if (!isPmTypeAppDirect() &&
-				!isPmTypeAppDirectStorage() &&
 				!isPmTypeAppDirectNotInterleaved())
 			{
 				m_pResult = new framework::SyntaxErrorBadValueResult(
@@ -610,54 +555,25 @@ void CreateGoalCommand::Parser::parsePropertyPmType()
 	}
 }
 
-void CreateGoalCommand::Parser::parsePropertyReserveDimm()
-{
-	if (!hasError())
-	{
-		bool reserveDimmExists;
-		std::string reserveDimm =
-			framework::Parser::getPropertyValue(m_parsedCommand, RESERVEDIMM_NAME,
-				&reserveDimmExists);
-
-		if (reserveDimmExists)
-		{
-			m_reserveDimmType = reserveDimm;
-			if (!isReserveDimmAppDirect() &&
-				!isReserveDimmNone() &&
-				!isReserveDimmStorage())
-			{
-				m_pResult = new framework::SyntaxErrorBadValueResult(
-					framework::TOKENTYPE_PROPERTY, RESERVEDIMM_NAME, reserveDimm);
-			}
-		}
-	}
-}
-
-void CreateGoalCommand::Parser::parsePropertyReserveStorage()
+void CreateGoalCommand::Parser::parsePropertyReserved()
 {
 	if (!hasError())
 	{
 		bool reserveStorageExists = false;
 		std::string reserveStorageString =
-				framework::Parser::getPropertyValue(m_parsedCommand, RESERVESTORAGE_NAME,
+				framework::Parser::getPropertyValue(m_parsedCommand, RESERVED_NAME,
 						&reserveStorageExists);
 
 		if (reserveStorageExists)
 		{
-			if (!stringToInt(reserveStorageString, &m_reserveStorageValue)
-					|| m_reserveStorageValue > 100
-					|| m_reserveStorageValue < 0
-					|| m_reserveStorageValue + m_memoryModeValue > 100)
+			if (!stringToInt(reserveStorageString, &m_reservedValue)
+					|| m_reservedValue > 100
+					|| m_reservedValue < 0
+					|| m_reservedValue + m_memoryModeValue > 100)
 			{
 				m_pResult = new framework::SyntaxErrorBadValueResult(
-						framework::TOKENTYPE_PROPERTY, RESERVESTORAGE_NAME, reserveStorageString);
-				m_reserveStorageValue = 0;
-			}
-
-			// if type is storage, ignore reserve storage property
-			if (isPmTypeAppDirectStorage())
-			{
-				m_reserveStorageValue = 0;
+						framework::TOKENTYPE_PROPERTY, RESERVED_NAME, reserveStorageString);
+				m_reservedValue = 0;
 			}
 		}
 	}

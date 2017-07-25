@@ -217,43 +217,13 @@ std::vector<core::memory_allocator::Dimm> core::memory_allocator::LayoutStep::ge
 	return dimms;
 }
 
-std::vector<core::memory_allocator::Dimm> core::memory_allocator::LayoutStep::getReservedADByOneDimms(
-		const std::vector<core::memory_allocator::Dimm>& requestedDimms,
-		MemoryAllocationLayout& layout)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	std::vector<core::memory_allocator::Dimm> dimms;
-
-	for (std::vector<core::memory_allocator::Dimm>::const_iterator dimm =
-			requestedDimms.begin(); dimm != requestedDimms.end(); dimm++)
-	{
-		if (dimmIsReservedAppDirectByOne(dimm, layout))
-		{
-			dimms.push_back(*dimm);
-		}
-	}
-
-	return dimms;
-}
-
-bool core::memory_allocator::LayoutStep::isReserveDimm(
-		std::vector<core::memory_allocator::Dimm>::const_iterator dimm,
-		MemoryAllocationLayout& layout)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	return layout.reservedimmUid == dimm->uid;
-}
-
 bool core::memory_allocator::LayoutStep::dimmHasAppDirect1(
 		std::vector<core::memory_allocator::Dimm>::const_iterator dimm,
 		MemoryAllocationLayout& layout)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	return !isReserveDimm(dimm, layout) &&
-			layout.goals[dimm->uid].app_direct_1_size > 0;
+	return layout.goals[dimm->uid].app_direct_1_size > 0;
 }
 
 bool core::memory_allocator::LayoutStep::dimmHasAppDirect2(
@@ -262,8 +232,7 @@ bool core::memory_allocator::LayoutStep::dimmHasAppDirect2(
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	return !isReserveDimm(dimm, layout) &&
-			layout.goals[dimm->uid].app_direct_2_size > 0;
+	return layout.goals[dimm->uid].app_direct_2_size > 0;
 }
 
 bool core::memory_allocator::LayoutStep::dimmHas2LM(
@@ -273,17 +242,6 @@ bool core::memory_allocator::LayoutStep::dimmHas2LM(
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	return layout.goals[dimm->uid].memory_size > 0;
-}
-
-bool core::memory_allocator::LayoutStep::dimmIsReservedAppDirectByOne(
-		std::vector<core::memory_allocator::Dimm>::const_iterator dimm,
-		MemoryAllocationLayout& layout)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	return isReserveDimm(dimm, layout) &&
-			layout.goals[dimm->uid].app_direct_1_settings.interleave.ways == INTERLEAVE_WAYS_1 &&
-			layout.goals[dimm->uid].app_direct_1_size > 0;
 }
 
 NVM_UINT64 core::memory_allocator::LayoutStep::getTotalAD2Capacity(

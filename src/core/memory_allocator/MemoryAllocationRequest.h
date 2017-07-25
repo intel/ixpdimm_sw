@@ -52,20 +52,11 @@ struct AppDirectExtent
 	int imc; // memory controller interleave size
 };
 
-enum ReserveDimmType
-{
-	RESERVE_DIMM_NONE,
-	RESERVE_DIMM_STORAGE,
-	RESERVE_DIMM_APP_DIRECT_X1
-};
-
 class NVM_API MemoryAllocationRequest
 {
 	public:
 		MemoryAllocationRequest();
 		virtual ~MemoryAllocationRequest();
-
-		class NoReservedDimmException : public std::exception {};
 
 		/*
 		 * All requested capacity is in GiB.
@@ -78,20 +69,9 @@ class NVM_API MemoryAllocationRequest
 		virtual AppDirectExtent getAppDirectExtent() const;
 		virtual void setAppDirectExtent(const AppDirectExtent &extent);
 
-		virtual bool isStorageRemaining() const;
-		virtual void setStorageRemaining(const bool storageIsRemaining);
-		virtual bool hasStorage() const;
-
-		virtual NVM_UINT64 getReserveStorageCapacityGiB() const;
-		virtual void setReserveStorageCapacityGiB(const NVM_UINT64 capacity);
-
-		virtual std::string getReservedDimmUid() const;
-		virtual void setReservedDimmUid(const std::string &uid);
-		virtual ReserveDimmType getReservedDimmCapacityType() const;
-		virtual void setReservedDimmCapacityType(const ReserveDimmType type);
-		virtual bool hasReservedDimm() const;
-		virtual Dimm getReservedDimm() const;
-
+		virtual NVM_UINT64 getReservedCapacityGiB() const;
+		virtual void setReservedCapacityGiB(const NVM_UINT64 capacity);
+ 
 		virtual std::vector<Dimm> getDimms() const;
 		virtual size_t getNumberOfDimms() const;
 		virtual void addDimm(const Dimm &dimm);
@@ -109,16 +89,9 @@ class NVM_API MemoryAllocationRequest
 	private:
 		NVM_UINT64 m_memoryCapacityGiB;
 		AppDirectExtent m_appDirectExtent;
-		bool m_storageRemaining;
-		NVM_UINT64 m_reserveStorageCapacityGiB;
-
-		std::string m_reserveDimmUid;
-		ReserveDimmType m_reserveDimmType;
-
+ 		NVM_UINT64 m_reservedCapacityGiB;
 		std::vector<Dimm> m_dimms;
 
-		bool isReservedDimm(const Dimm &dimm) const;
-		bool isReservedAppDirectByOneDimm(const Dimm &dimm) const;
 };
 
 } /* namespace memory_allocator */

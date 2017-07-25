@@ -28,7 +28,6 @@
 #include "MemoryAllocationRequestBuilder.h"
 #include <LogEnterExit.h>
 #include <set>
-#include <core/memory_allocator/ReserveDimmSelector.h>
 
 namespace core
 {
@@ -39,8 +38,7 @@ MemoryAllocationRequestBuilder::MemoryAllocationRequestBuilder(
 		core::device::DeviceService &service) :
 				m_pmType(AppDirect),
 				m_memoryRatio(0.0),
-				m_storageRatio(0.0),
-				m_reserveDimmType(NoReserveDimm),
+				m_reservedRatio(0.0),
 				m_service(service)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -51,9 +49,8 @@ MemoryAllocationRequest MemoryAllocationRequestBuilder::build()
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	buildRequestedDimms();
-	buildReservedDimm();
 	buildMemoryCapacity();
-	buildStorageCapacity();
+	buildReservedCapacity();
 	buildAppDirectCapacity();
 
 	return m_result;
@@ -179,58 +176,6 @@ std::vector<std::string> MemoryAllocationRequestBuilder::getUniqueUidsFromList(
 	return uniqueUids;
 }
 
-void MemoryAllocationRequestBuilder::buildReservedDimm()
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	if (needReservedDimm())
-	{
-		m_result.setReservedDimmUid(getReserveDimmUid());
-		m_result.setReservedDimmCapacityType(getReserveDimmTypeForRequest());
-	}
-	else
-	{
-		m_result.setReservedDimmUid("");
-		m_result.setReservedDimmCapacityType(RESERVE_DIMM_NONE);
-	}
-}
-
-bool MemoryAllocationRequestBuilder::needReservedDimm()
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	return (m_reserveDimmType != NoReserveDimm && m_result.getNumberOfDimms() > 0);
-}
-
-std::string MemoryAllocationRequestBuilder::getReserveDimmUid()
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	ReserveDimmSelector dimmSelector(m_result.getDimms());
-	return dimmSelector.getReservedDimm();
-}
-
-ReserveDimmType MemoryAllocationRequestBuilder::getReserveDimmTypeForRequest()
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	ReserveDimmType requestReserveDimmType = RESERVE_DIMM_NONE;
-	switch (m_reserveDimmType)
-	{
-	case ReserveDimmStorage:
-		requestReserveDimmType = RESERVE_DIMM_STORAGE;
-		break;
-	case ReserveDimmAppDirectNonInterleaved:
-		requestReserveDimmType = RESERVE_DIMM_APP_DIRECT_X1;
-		break;
-	default:
-		COMMON_LOG_ERROR_F("Unexpected reserve DIMM type: %d", m_reserveDimmType);
-		break;
-	}
-
-	return requestReserveDimmType;
-}
-
 void MemoryAllocationRequestBuilder::buildMemoryCapacity()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -249,10 +194,7 @@ NVM_UINT64 MemoryAllocationRequestBuilder::getTotalCapacityBytesFromRequestDimms
 	std::vector<Dimm> dimms = m_result.getDimms();
 	for (size_t i = 0; i < dimms.size(); i++)
 	{
-		if (dimms[i].uid != m_result.getReservedDimmUid())
-		{
-			totalCapacity += dimms[i].capacityBytes;
-		}
+		totalCapacity += dimms[i].capacityBytes;
 	}
 
 	return totalCapacity;
@@ -272,7 +214,8 @@ AppDirectExtent MemoryAllocationRequestBuilder::getAppDirectExtent()
 	AppDirectExtent extent;
 
 	NVM_UINT64 pmCapacityGiB = getPersistentCapacityGiBFromRequest();
-	if (pmCapacityGiB > 0 && m_pmType != Storage)
+
+	if (pmCapacityGiB > 0)
 	{
 		extent.capacityGiB = pmCapacityGiB;
 		if (m_pmType == AppDirectNoInterleave)
@@ -293,33 +236,24 @@ NVM_UINT64 MemoryAllocationRequestBuilder::getPersistentCapacityGiBFromRequest()
 	NVM_UINT64 totalCapacityGiB = B_TO_GiB(getTotalCapacityBytesFromRequestDimms());
 
 	if (totalCapacityGiB >=
-			(m_result.getMemoryModeCapacityGiB() + m_result.getReserveStorageCapacityGiB()))
+			(m_result.getMemoryModeCapacityGiB() + m_result.getReservedCapacityGiB()))
 	{
 		persistentCapacityGiB = totalCapacityGiB -
-			m_result.getMemoryModeCapacityGiB() - m_result.getReserveStorageCapacityGiB();
+			m_result.getMemoryModeCapacityGiB() - m_result.getReservedCapacityGiB();
 	}
 
 	return  persistentCapacityGiB;
 }
 
-void MemoryAllocationRequestBuilder::buildStorageCapacity()
+void MemoryAllocationRequestBuilder::buildReservedCapacity()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	if (m_pmType == Storage && getPersistentCapacityGiBFromRequest() > 0)
-	{
-		m_result.setStorageRemaining(true);
-	}
-	else
-	{
-		m_result.setStorageRemaining(false);
+	NVM_UINT64 totalCapacityBytes = getTotalCapacityBytesFromRequestDimms();
+	NVM_UINT64 reservedGiB =
+		B_TO_GiB((NVM_UINT64)(totalCapacityBytes * m_reservedRatio));
 
-		NVM_UINT64 totalCapacityBytes = getTotalCapacityBytesFromRequestDimms();
-		NVM_UINT64 reserveStorageGiB =
-			B_TO_GiB((NVM_UINT64)(totalCapacityBytes * m_storageRatio));
-
-		m_result.setReserveStorageCapacityGiB(reserveStorageGiB);
-	}
+	m_result.setReservedCapacityGiB(reservedGiB);
 }
 
 void MemoryAllocationRequestBuilder::addDimmIds(const std::vector<std::string> &dimmIds)
@@ -334,13 +268,6 @@ void MemoryAllocationRequestBuilder::addSocketIds(const std::vector<NVM_UINT16>&
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	m_sockets.insert(m_sockets.end(), socketIds.begin(), socketIds.end());
-}
-
-void MemoryAllocationRequestBuilder::setPersistentTypeStorage()
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	m_pmType = Storage;
 }
 
 void MemoryAllocationRequestBuilder::setPersistentTypeAppDirectNonInterleaved()
@@ -370,7 +297,7 @@ void MemoryAllocationRequestBuilder::setMemoryModePercentage(const NVM_UINT32 pe
 	m_memoryRatio = percentage / 100.0;
 }
 
-void MemoryAllocationRequestBuilder::setReserveStoragePercentage(const NVM_UINT32 percentage)
+void MemoryAllocationRequestBuilder::setReservedPercentage(const NVM_UINT32 percentage)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
@@ -380,29 +307,7 @@ void MemoryAllocationRequestBuilder::setReserveStoragePercentage(const NVM_UINT3
 		throw InvalidPercentageException();
 	}
 
-	m_storageRatio = percentage / 100.0;
+	m_reservedRatio = percentage / 100.0;
 }
-
-void MemoryAllocationRequestBuilder::reserveDimmForStorage()
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	m_reserveDimmType = ReserveDimmStorage;
-}
-
-void MemoryAllocationRequestBuilder::reserveDimmForNonInterleavedAppDirect()
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	m_reserveDimmType = ReserveDimmAppDirectNonInterleaved;
-}
-
-void MemoryAllocationRequestBuilder::noReservedDimm()
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	m_reserveDimmType = NoReserveDimm;
-}
-
 }
 }

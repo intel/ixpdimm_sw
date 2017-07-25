@@ -59,8 +59,6 @@ class NVM_API LayoutStepCheckRequestLayoutDeviation : public LayoutStep
 
 		NVM_UINT64 getNonReservedAppDirectCapacityGiBFromLayout(const struct MemoryAllocationRequest& request,
 				const MemoryAllocationLayout& layout);
-		bool reservedDimmIsAppDirect(const struct MemoryAllocationRequest& request);
-		NVM_UINT64 getReservedAppDirectCapacityGiB(const struct MemoryAllocationRequest& request);
 
 		double findPercentDeviation(NVM_UINT64 expectedValue, NVM_UINT64 observedValue, NVM_UINT64 totalCapacity);
 

@@ -78,15 +78,15 @@ enum LayoutWarningCode
 struct MemoryAllocationLayout
 {
 	MemoryAllocationLayout() :
-		memoryCapacity(0), appDirectCapacity(0), storageCapacity(0), goals() {}
+		memoryCapacity(0), appDirectCapacity(0), remainingCapacity(0), goals() {}
 
 	NVM_UINT64 memoryCapacity; // total in GiB
 	NVM_UINT64 appDirectCapacity; // in GiB
-	NVM_UINT64 storageCapacity; // in GiB
+	NVM_UINT64 remainingCapacity; // in GiB
 
 	// the string is a DIMM UID
 	std::map<std::string, struct config_goal> goals;
-	std::string reservedimmUid;
+
 	std::vector<enum LayoutWarningCode> warnings;
 };
 

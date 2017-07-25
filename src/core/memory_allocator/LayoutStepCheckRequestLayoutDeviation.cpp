@@ -125,36 +125,10 @@ bool core::memory_allocator::LayoutStepCheckRequestLayoutDeviation::isAppDirectC
 	return isDeviationWithinBounds;
 }
 
-NVM_UINT64 core::memory_allocator::LayoutStepCheckRequestLayoutDeviation::getReservedAppDirectCapacityGiB(
-		const struct MemoryAllocationRequest& request)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	NVM_UINT64 reservedAppDirectCapacity = 0;
-	if (reservedDimmIsAppDirect(request))
-	{
-		Dimm reservedDimm = request.getReservedDimm();
-		reservedAppDirectCapacity = B_TO_GiB(reservedDimm.capacityBytes);
-	}
-
-	return reservedAppDirectCapacity;
-}
-
-bool core::memory_allocator::LayoutStepCheckRequestLayoutDeviation::reservedDimmIsAppDirect(
-		const struct MemoryAllocationRequest& request)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	return (request.hasReservedDimm() &&
-			request.getReservedDimmCapacityType() == RESERVE_DIMM_APP_DIRECT_X1);
-}
-
 NVM_UINT64 core::memory_allocator::LayoutStepCheckRequestLayoutDeviation::getNonReservedAppDirectCapacityGiBFromLayout(
 		const struct MemoryAllocationRequest& request, const MemoryAllocationLayout& layout)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	NVM_UINT64 reservedAppDirectCapacity = getReservedAppDirectCapacityGiB(request);
-
-	return layout.appDirectCapacity - reservedAppDirectCapacity;
+	return layout.appDirectCapacity;
 }

@@ -78,15 +78,16 @@ void core::memory_allocator::RuleNamespacesExist::verify(const MemoryAllocationR
 	}
 }
 
+
 bool core::memory_allocator::RuleNamespacesExist::requestIsMemoryModeOnly(
 		const MemoryAllocationRequest &request)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	return ((request.getMemoryModeCapacityGiB() > 0) &&
-		(request.getAppDirectCapacityGiB() == 0) &&
-		(!request.hasStorage()));
+		(request.getAppDirectCapacityGiB() == 0));
 }
+
 
 bool core::memory_allocator::RuleNamespacesExist::requestIsOkWithGetNamespaceErrorCode(
 		const MemoryAllocationRequest& request, const int errorCode)

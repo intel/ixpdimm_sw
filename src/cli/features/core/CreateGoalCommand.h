@@ -46,8 +46,7 @@ namespace nvmcli
 {
 static const std::string MEMORYMODE_NAME = "MemoryMode";
 static const std::string PMTYPE_NAME = "PersistentMemoryType";
-static const std::string RESERVEDIMM_NAME = "ReserveDimm";
-static const std::string RESERVESTORAGE_NAME = "ReserveStorage";
+static const std::string RESERVED_NAME = "Reserved";
 
 static const std::string PMTYPE_VALUE_APPDIRECT = "AppDirect";
 static const std::string PMTYPE_VALUE_APPDIRECTNOTINTERLEAVED = "AppDirectNotInterleaved";
@@ -82,13 +81,9 @@ public:
 		Parser();
 		framework::ResultBase *parse(const framework::ParsedCommand &parsedCommand);
 		int getMemoryMode();
-		NVM_UINT64 getReserveStorage();
+		NVM_UINT64 getReserved();
 		bool isPmTypeAppDirect();
 		bool isPmTypeAppDirectNotInterleaved();
-		bool isPmTypeAppDirectStorage();
-		bool isReserveDimmNone();
-		bool isReserveDimmAppDirect();
-		bool isReserveDimmStorage();
 		bool isForce();
 
 		std::string getUnits();
@@ -98,9 +93,8 @@ public:
 	private:
 		framework::ResultBase *m_pResult;
 		int m_memoryModeValue;
-		int m_reserveStorageValue;
+		int m_reservedValue;
 		std::string m_pmType;
-		std::string m_reserveDimmType;
 		bool m_isForce;
 		std::string m_units;
 		std::vector<std::string> m_dimms;
@@ -120,10 +114,8 @@ public:
 		void parsePropertyMemoryMode();
 
 		void parsePropertyPmType();
-
-		void parsePropertyReserveDimm();
-
-		void parsePropertyReserveStorage();
+	
+		void parsePropertyReserved();
 	};
 
 	class NVM_API ShowGoalAdapter
