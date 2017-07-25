@@ -183,7 +183,6 @@ core::StringList CreateGoalCommand::ShowGoalAdapter::getLayoutGoalDisplayPropert
 	displayProperties.push_back(ShowGoalCommand::MEMORYSIZE);
 	displayProperties.push_back(ShowGoalCommand::APPDIRECT1SIZE);
 	displayProperties.push_back(ShowGoalCommand::APPDIRECT2SIZE);
-	displayProperties.push_back(ShowGoalCommand::STORAGESIZE);
 
 	return displayProperties;
 }

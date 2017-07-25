@@ -50,7 +50,6 @@ const std::string ShowGoalCommand::APPDIRECT1SETTINGS = "AppDirect1Settings";
 const std::string ShowGoalCommand::APPDIRECT2SIZE = "AppDirect2Size";
 const std::string ShowGoalCommand::APPDIRECT2INDEX = "AppDirect2Index";
 const std::string ShowGoalCommand::APPDIRECT2SETTINGS = "AppDirect2Settings";
-const std::string ShowGoalCommand::STORAGESIZE = "StorageSize";
 const std::string ShowGoalCommand::STATUS = "Status";
 const std::string ShowGoalCommand::ACTIONREQUIRED = "ActionRequired";
 const std::string ShowGoalCommand::ACTIONREQUIREDEVENTS = "ActionRequiredEvents";
@@ -248,7 +247,6 @@ ShowGoalCommand::ResultBuilder::ResultBuilder() :
 	m_props.addUint64(ShowGoalCommand::MEMORYSIZE, &core::configuration::MemoryAllocationGoal::getMemorySizeInBytes, convertBytesToUnits).setIsDefault();
 	m_props.addUint64(ShowGoalCommand::APPDIRECT1SIZE, &core::configuration::MemoryAllocationGoal::getAppDirect1SizeInBytes, convertBytesToUnits).setIsDefault();
 	m_props.addUint64(ShowGoalCommand::APPDIRECT2SIZE, &core::configuration::MemoryAllocationGoal::getAppDirect2SizeInBytes, convertBytesToUnits).setIsDefault();
-	m_props.addUint64(ShowGoalCommand::STORAGESIZE, &core::configuration::MemoryAllocationGoal::getStorageSizeInBytes, convertBytesToUnits).setIsDefault();
 	m_props.addBool(ShowGoalCommand::ACTIONREQUIRED, &core::configuration::MemoryAllocationGoal::isActionRequired).setIsDefault();
 
 	m_props.addCustom(ShowGoalCommand::APPDIRECT1INDEX, getAppDirect1Index);

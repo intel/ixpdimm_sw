@@ -66,7 +66,6 @@ class NVM_API ShowGoalCommand : public framework::CommandBase
 		static const std::string APPDIRECT2SIZE;
 		static const std::string APPDIRECT2INDEX;
 		static const std::string APPDIRECT2SETTINGS;
-		static const std::string STORAGESIZE;
 		static const std::string STATUS;
 		static const std::string ACTIONREQUIRED;
 		static const std::string ACTIONREQUIREDEVENTS;
