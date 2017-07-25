@@ -137,68 +137,6 @@ NVM_UINT64 get_size_bytes_difference_between_namespace_and_containing_interleave
 	return difference_bytes;
 }
 
-void check_for_namespaces_smaller_than_containing_interleave_set(NVM_UINT32 *p_results,
-		const struct nvm_namespace_details *p_namespaces,
-		const NVM_UINT32 namespace_count,
-		const struct pool *p_pools,
-		const NVM_UINT32 pool_count)
-{
-	COMMON_LOG_ENTRY();
-
-	for (NVM_UINT32 i = 0; i < namespace_count; i++)
-	{
-		if (p_namespaces[i].type == NAMESPACE_TYPE_APP_DIRECT)
-		{
-			NVM_UID namespace_uid_str;
-			uid_copy(p_namespaces[i].discovery.namespace_uid, namespace_uid_str);
-
-			struct pool *p_pool = calloc(1, sizeof (struct pool));
-			if (p_pool)
-			{
-				int rc = get_pool_from_namespace_details(&p_namespaces[i], p_pool);
-				if (rc == NVM_SUCCESS)
-				{
-					NVM_UINT64 difference_bytes =
-						get_size_bytes_difference_between_namespace_and_containing_interleave_set(
-						&(p_namespaces[i]), p_pool);
-					if (difference_bytes > 0)
-					{
-						NVM_EVENT_ARG difference_mb_str;
-						s_snprintf(difference_mb_str, sizeof (difference_mb_str),
-								"%llu MB", difference_bytes / BYTES_PER_MIB);
-
-						store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG,
-								EVENT_SEVERITY_INFO,
-								EVENT_CODE_DIAG_PCONFIG_APP_DIRECT_NAMESPACE_TOO_SMALL,
-								p_namespaces[i].discovery.namespace_uid,
-								0,
-								namespace_uid_str, difference_mb_str, NULL,
-								DIAGNOSTIC_RESULT_OK);
-
-						(*p_results)++;
-					}
-					free(p_pool);
-				}
-				else
-				{
-					COMMON_LOG_ERROR_F("Error fetching namespaces, rc = %d", rc);
-					store_event_by_parts(EVENT_TYPE_DIAG_PLATFORM_CONFIG,
-							EVENT_SEVERITY_CRITICAL,
-							EVENT_CODE_DIAG_PCONFIG_NAMESPACES_FAILED,
-							NULL,
-							0,
-							NULL,
-							NULL,
-							NULL,
-							DIAGNOSTIC_RESULT_FAILED);
-				}
-			}
-		}
-	}
-
-	COMMON_LOG_EXIT();
-}
-
 int get_all_driver_namespace_details(struct nvm_namespace_details *p_namespaces,
 		const int namespace_count)
 {
@@ -248,8 +186,6 @@ void check_namespace_best_practices_with_pools(NVM_UINT32 *p_results,
 		rc = get_all_driver_namespace_details(namespaces, ns_count);
 		if (rc == NVM_SUCCESS)
 		{
-			check_for_namespaces_smaller_than_containing_interleave_set(p_results,
-					namespaces, ns_count, p_pools, pool_count);
 			check_if_pools_need_namespaces(p_results, namespaces, ns_count,
 					p_pools, pool_count);
 		}
@@ -754,8 +690,6 @@ NVM_BOOL dimm_mode_skus_are_different(const struct device_discovery *p_device1,
 
 	if ((p_device1->device_capabilities.app_direct_mode_capable !=
 			p_device2->device_capabilities.app_direct_mode_capable) ||
-			(p_device1->device_capabilities.storage_mode_capable !=
-			p_device2->device_capabilities.storage_mode_capable) ||
 			(p_device1->device_capabilities.memory_mode_capable !=
 			p_device2->device_capabilities.memory_mode_capable))
 	{

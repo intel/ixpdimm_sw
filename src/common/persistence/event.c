@@ -369,17 +369,15 @@ const char *EVENT_MESSAGES_PCONFIG_DIAG[EVENT_CODE_DIAG_PCONFIG_UNKNOWN -
 	N_TR("The platform configuration check detected that " NVM_DIMM_NAME " %s has "
 			"a goal configuration that has not yet been applied. A system reboot "
 			"is required for the new configuration to take effect."),
-	// EVENT_CODE_DIAG_PCONFIG_APP_DIRECT_NAMESPACE_TOO_SMALL
+	// Available event 610
 	N_TR("The platform configuration check detected that the capacity of App Direct "
 			"namespace %s is smaller than its containing interleave set. The remaining %s "
-			"of the interleave set cannot be accessed as App Direct, but may "
-			"be used as a Storage Mode namespace on each " NVM_DIMM_NAME "."),
+			"of the interleave set cannot be accessed as App Direct."),
 	// EVENT_CODE_DIAG_PCONFIG_POOL_NEEDS_APP_DIRECT_NAMESPACES
 	N_TR("The platform configuration check detected that pool %s contains empty App Direct "
 			"capacity. Create App Direct namespaces to access this capacity."),
-	// EVENT_CODE_DIAG_PCONFIG_POOL_NEEDS_STORAGE_NAMESPACES
-	N_TR("The platform configuration check detected that pool %s contains empty Storage "
-			"capacity. Create Storage namespaces to access this capacity."),
+	// Available event 612
+	N_TR("Placeholder"),
 	// EVENT_CODE_DIAG_PCONFIG_DIMM_CONFIG_UNBALANCED
 	N_TR("The platform configuration check detected that " NVM_DIMM_NAME "s on "
 			"socket %s are arranged in an unbalanced configuration. "
