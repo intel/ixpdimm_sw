@@ -77,8 +77,6 @@ void wbem::server::SystemCapabilitiesFactory::populateAttributeList(
 	attributes.push_back(DISABLENAMESPACESUPPORT_KEY);
 	attributes.push_back(GROWAPPDIRECTNAMESPACESUPPORT_KEY);
 	attributes.push_back(SHRINKAPPDIRECTNAMESPACESUPPORT_KEY);
-	attributes.push_back(GROWSTORAGENAMESPACESUPPORT_KEY);
-	attributes.push_back(SHRINKSTORAGENAMESPACESUPPORT_KEY);
 	attributes.push_back(INITIATESCRUBSUPPORT_KEY);
 	attributes.push_back(MEMORYPAGEALLOCATIONCAPABLE_KEY);
 }
@@ -218,12 +216,6 @@ wbem::framework::Instance* wbem::server::SystemCapabilitiesFactory::getInstance(
 					SHRINKAPPDIRECTNAMESPACESUPPORT_KEY,
 					nvmCaps.nvm_features.shrink_namespace && nvmCaps.nvm_features.app_direct_mode);
 			addCapabilitySupportedAttribute(pInstance, attributes,
-					GROWSTORAGENAMESPACESUPPORT_KEY,
-					nvmCaps.nvm_features.grow_namespace && nvmCaps.nvm_features.storage_mode);
-			addCapabilitySupportedAttribute(pInstance, attributes,
-					SHRINKSTORAGENAMESPACESUPPORT_KEY,
-					nvmCaps.nvm_features.shrink_namespace && nvmCaps.nvm_features.app_direct_mode);
-			addCapabilitySupportedAttribute(pInstance, attributes,
 					INITIATESCRUBSUPPORT_KEY,
 					(bool)nvmCaps.nvm_features.start_address_scrub);
 			addCapabilitySupportedAttribute(pInstance, attributes,
@@ -279,10 +271,6 @@ wbem::framework::STR_LIST wbem::server::SystemCapabilitiesFactory::getSupportedM
 	if (nvmCaps.nvm_features.memory_mode)
 	{
 		modes.push_back(MEMORYMODE_MEMORY_STR);
-	}
-	if (nvmCaps.nvm_features.storage_mode)
-	{
-		modes.push_back(MEMORYMODE_STORAGE_STR);
 	}
 	if (nvmCaps.nvm_features.app_direct_mode)
 	{

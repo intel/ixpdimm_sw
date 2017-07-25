@@ -1155,8 +1155,6 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::showSystemCapabilities(
 		allAttributes.push_back(wbem::DISABLENAMESPACESUPPORT_KEY);
 		allAttributes.push_back(wbem::GROWAPPDIRECTNAMESPACESUPPORT_KEY);
 		allAttributes.push_back(wbem::SHRINKAPPDIRECTNAMESPACESUPPORT_KEY);
-		allAttributes.push_back(wbem::GROWSTORAGENAMESPACESUPPORT_KEY);
-		allAttributes.push_back(wbem::SHRINKSTORAGENAMESPACESUPPORT_KEY);
 		allAttributes.push_back(wbem::INITIATESCRUBSUPPORT_KEY);
 		allAttributes.push_back(wbem::MEMORYPAGEALLOCATIONCAPABLE_KEY);
 

@@ -291,10 +291,6 @@ wbem::framework::UINT16_LIST wbem::mem_config::MemoryCapabilitiesFactory::getMem
 	{
 		modes.push_back(MEMORYMODE_MEMORY);
 	}
-	if (nvmCaps.nvm_features.storage_mode)
-	{
-		modes.push_back(MEMORYMODE_STORAGE);
-	}
 	if (nvmCaps.nvm_features.app_direct_mode)
 	{
 		modes.push_back(MEMORYMODE_APP_DIRECT);

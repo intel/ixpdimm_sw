@@ -53,7 +53,6 @@ static const NVM_UINT16 REPLICATION_LOCAL = 3;
 // supported memory mode values
 static const NVM_UINT16 MEMORYMODE_1LM = 2;
 static const NVM_UINT16 MEMORYMODE_MEMORY = 3;
-static const NVM_UINT16 MEMORYMODE_STORAGE = 4;
 static const NVM_UINT16 MEMORYMODE_APP_DIRECT = 5;
 
 // current values

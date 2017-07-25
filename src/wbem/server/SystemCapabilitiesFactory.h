@@ -51,7 +51,6 @@ static const std::string MEMORYMODE_MEMORY_STR = "Memory Mode";
 static const std::string MEMORYMODE_AUTO_STR = "Auto";
 static const std::string MEMORYMODE_APP_DIRECT_STR = "App Direct";
 static const std::string MEMORYMODE_APP_DIRECT_DISABLED_STR = "Disabled";
-static const std::string MEMORYMODE_STORAGE_STR = "Storage Mode";
 
 // Reliability strings
 static const std::string RELIABILITY_DIMM_SPARING = "DIMM Sparing";
