@@ -71,7 +71,6 @@ static const NVM_UINT32 PM_SERVICE_ERR_INCONSISTENT_PARAMETERS = 4098;
 static const NVM_UINT32 PM_SERVICE_ERR_IN_USE = 32768;
 
 // constants used in AllocateFromPool
-static const NVM_UINT32 PM_SERVICE_STORAGE_TYPE = NS_RESOURCETYPE_BLOCK_ADDRESSABLE; // Block addressable persistent memory
 static const NVM_UINT32 PM_SERVICE_APP_DIRECT_TYPE = NS_RESOURCETYPE_BYTE_ADDRESSABLE; // Byte addressable persistent memory
 static const NVM_UINT32 PM_SERVICE_OPTIMIZE_NONE = 2; // best performance
 static const NVM_UINT32 PM_SERVICE_OPTIMIZE_BEST_PERFORMANCE = 3; // best performance
@@ -154,7 +153,6 @@ public:
 		enum mem_config::MemoryAllocationSettingsInterleaveSizeExponent interleaveChannelSize;
 		enum mem_config::MemoryAllocationSettingsInterleaveSizeExponent interleaveControllerSize;
 		bool byOne;
-		bool storageOnly;
 		NVM_UINT16 memoryPageAllocation;
 	} createNamespaceParams;
 
@@ -170,7 +168,7 @@ public:
 			const NVM_UINT16 encryption, const NVM_UINT16 eraseCapable,
 			const mem_config::MemoryAllocationSettingsInterleaveSizeExponent channelSize,
 			const mem_config::MemoryAllocationSettingsInterleaveSizeExponent controllerSize,
-			const bool byOne, const bool storageOnly, const NVM_UINT16 memoryPageAllocation);
+			const bool byOne, const NVM_UINT16 memoryPageAllocation);
 
 	/*!
 	 *  Check if the modifyNamespaceName operation is supported
@@ -257,7 +255,6 @@ private:
 	/*
 	 * helpers to set the namespace interleave settings
 	 */
-	void validate_pmtype_with_type(NVM_UINT16 pmtype, NVM_UINT16 type);
 	void get_recommended_interleave_size_exps(
 	        	mem_config::MemoryAllocationSettingsInterleaveSizeExponent &channelSizeExp,
 	        	mem_config::MemoryAllocationSettingsInterleaveSizeExponent &controllerSizeExp);
@@ -265,8 +262,8 @@ private:
 		        NVM_UINT16 pmtype,
 		        mem_config::MemoryAllocationSettingsInterleaveSizeExponent &channelSizeExp,
 		        mem_config::MemoryAllocationSettingsInterleaveSizeExponent &controllerSizeExp,
-		        bool &byone, bool &storageOnly);
-	NVM_BOOL populateInterleaveFormat(const bool byone, const bool storageOnly,
+		        bool &byone);
+	NVM_BOOL populateInterleaveFormat(const bool byone,
 			const mem_config::MemoryAllocationSettingsInterleaveSizeExponent &channelSize,
 			const mem_config::MemoryAllocationSettingsInterleaveSizeExponent &controllerSize,
 			struct interleave_format &format);

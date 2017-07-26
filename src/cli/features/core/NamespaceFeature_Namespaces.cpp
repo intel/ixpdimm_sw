@@ -86,48 +86,6 @@ void cli::nvmcli::NamespaceFeature::generateNamespaceFilter(
 /*
  * Filter namespaces based on namespace type
  */
-cli::framework::ResultBase *cli::nvmcli::NamespaceFeature::generateNamespaceTypeFilter(
-		const cli::framework::ParsedCommand &parsedCommand,
-		wbem::framework::attribute_names_t &attributes,
-		cli::nvmcli::filters_t &filters)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	cli::framework::ResultBase *pResult = NULL;
-	// check for the type property
-	bool exists = false;
-	std::string type = cli::framework::Parser::getPropertyValue(parsedCommand,
-			wbem::TYPE_KEY, &exists);
-	if (exists)
-	{
-		// make sure the type is valid
-		if (!cli::framework::stringsIEqual(type, wbem::pmem_config::NS_TYPE_STR_UNKNOWN) &&
-			!cli::framework::stringsIEqual(type, wbem::pmem_config::NS_TYPE_STR_STORAGE) &&
-			!cli::framework::stringsIEqual(type, wbem::pmem_config::NS_TYPE_STR_APPDIRECT))
-		{
-			pResult = new framework::SyntaxErrorBadValueResult(framework::TOKENTYPE_PROPERTY,
-					wbem::TYPE_KEY, type);
-		}
-		else
-		{
-			struct instanceFilter typeFilter;
-			typeFilter.attributeName = wbem::TYPE_KEY;
-			typeFilter.attributeValues.push_back(type);
-			filters.push_back(typeFilter);
-
-			// make sure we have type being requested from wbem
-			if (!wbem::framework_interface::NvmInstanceFactory::containsAttribute(
-					wbem::TYPE_KEY, attributes))
-			{
-				attributes.insert(attributes.begin(), wbem::TYPE_KEY);
-			}
-		}
-	}
-	return pResult;
-}
-
-/*
- * Filter namespaces based on namespace type
- */
 cli::framework::ResultBase *cli::nvmcli::NamespaceFeature::generateNamespaceHealthFilter(
 		const cli::framework::ParsedCommand &parsedCommand,
 		wbem::framework::attribute_names_t &attributes,
@@ -190,7 +148,6 @@ cli::framework::ResultBase *cli::nvmcli::NamespaceFeature::showNamespaces(
 			cli::nvmcli::filters_t filters;
 			generateNamespaceFilter(parsedCommand, attributes, filters);
 			generatePoolFilter(parsedCommand, attributes, filters);
-			pResult = generateNamespaceTypeFilter(parsedCommand, attributes, filters);
 			if (pResult == NULL)
 			{
 				pResult = generateNamespaceHealthFilter(parsedCommand, attributes, filters);
@@ -379,28 +336,10 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::createNamespace(
 		pResult = GetRequestedCapacityUnits(parsedCommand, capacityUnits);
 	}
 
-	// Type
-	if (!pResult)
-	{
-		pResult = parseCreateNsType(parsedCommand);
-	}
-
-	// Block Size
-	if (!pResult)
-	{
-		pResult = parseCreateNsBlockSize(parsedCommand);
-	}
-
 	// Capacity in Bytes
 	if (!pResult)
 	{
 		pResult = parseCreateNsCapacity(parsedCommand);
-	}
-
-	// Block Count
-	if (!pResult)
-	{
-		pResult = parseCreateNsBlockCount(parsedCommand);
 	}
 
 	if (!pResult)
@@ -446,7 +385,8 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::createNamespace(
 
 			// So far so good. Now try to create the namespace ...
 			wbem::pmem_config::PersistentMemoryServiceFactory::createNamespaceParams parms;
-			parms.type = m_nsType;
+
+			parms.type = wbem::pmem_config::PM_SERVICE_APP_DIRECT_TYPE;
 			parms.blockCount = m_blockCount;
 			parms.blockSize = m_blockSize;
 			parms.enabled = m_enableState;
@@ -458,7 +398,6 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::createNamespace(
 			parms.interleaveChannelSize = m_channelSize;
 			parms.interleaveControllerSize = m_controllerSize;
 			parms.byOne = m_byOne;
-			parms.storageOnly = m_storageOnly;
 			parms.memoryPageAllocation = m_memoryPageAllocation;
 			NVM_UINT64 adjustedBlockCount = m_pPmServiceProvider->getAdjustedCreateNamespaceBlockCount(parms);
 
@@ -506,74 +445,6 @@ void cli::nvmcli::NamespaceFeature::wbemGetSupportedSizeRange(const std::string 
 			largestPossibleStorageNs, smallestPossibleStorageNs, storageIncrement);
 }
 
-cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseCreateNsType(
-		const framework::ParsedCommand& parsedCommand)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	framework::ResultBase *pResult = NULL;
-	m_nsTypeStr = framework::Parser::getPropertyValue(parsedCommand, CREATE_NS_PROP_TYPE);
-
-	if (framework::stringsIEqual(m_nsTypeStr, CREATE_NS_PROP_NS_TYPE_APPDIRECT))
-	{
-		m_nsType = wbem::pmem_config::PM_SERVICE_APP_DIRECT_TYPE;
-	}
-	else if (framework::stringsIEqual(m_nsTypeStr, CREATE_NS_PROP_NS_TYPE_STORAGE))
-	{
-		m_nsType = wbem::pmem_config::PM_SERVICE_STORAGE_TYPE;
-	}
-	else
-	{
-		pResult = new framework::SyntaxErrorBadValueResult(
-				framework::TOKENTYPE_PROPERTY, CREATE_NS_PROP_TYPE, m_nsTypeStr);
-	}
-
-	return pResult;
-}
-
-cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseCreateNsBlockSize(
-		const framework::ParsedCommand& parsedCommand)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	framework::ResultBase *pResult = NULL;
-
-	std::string value = framework::Parser::getPropertyValue(parsedCommand,
-			CREATE_NS_PROP_BLOCKSIZE, &m_blockSizeExists);
-	m_blockSize = 0;
-
-	if (m_nsType == wbem::pmem_config::PM_SERVICE_APP_DIRECT_TYPE)
-	{
-		m_blockSize = 1u;
-		if (m_blockSizeExists)
-		{
-			if(!isStringValidNumber(value))
-			{
-				pResult = new framework::SyntaxErrorBadValueResult(
-						framework::TOKENTYPE_PROPERTY, CREATE_NS_PROP_BLOCKSIZE, value);
-			}
-			else
-			{
-				// the library will determine if this is a valid size
-				m_blockSize = stringToUInt64(value);
-			}
-		}
-	}
-
-	// blocksize of 0 is not supported, fail before further parsing of capacity property
-	if (m_blockSize == 0)
-	{
-		std::string errorString = framework::ResultBase::stringFromArgList(
-				TR(BLOCKSIZE_NOT_SUPPORTED_STR.c_str()), m_blockSize);
-		if (pResult)
-		{
-			delete pResult;
-		}
-		pResult = new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
-				errorString);
-	}
-
-	return pResult;
-}
-
 cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseCreateNsCapacity(
 		const framework::ParsedCommand& parsedCommand)
 {
@@ -587,6 +458,7 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseCreateNsCapacity
 	if (m_capacityExists)
 	{
 		NVM_REAL32 capacity = 0;
+
 		if (cli::nvmcli::stringToReal32(value, &capacity))
 		{
 			if (capacity == 0)
@@ -604,84 +476,58 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseCreateNsCapacity
 				}
 			}
 		}
+		else
+		{
+			pResult = new framework::SyntaxErrorBadValueResult(
+				framework::TOKENTYPE_PROPERTY, CREATE_NS_PROP_CAPACITY, value);
+		}
+	}
+
+	if (!pResult)
+	{
+		pResult = getCreateNsBlockCount();
 	}
 
 	return pResult;
 }
 
-cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseCreateNsBlockCount(
-		const framework::ParsedCommand& parsedCommand)
+cli::framework::ResultBase * cli::nvmcli::NamespaceFeature::getCreateNsBlockCount()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	framework::ResultBase *pResult = NULL;
 
-	std::string value = framework::Parser::getPropertyValue(parsedCommand,
-			CREATE_NS_PROP_BLOCKCOUNT, &m_blockCountExists);
 	m_blockCount = 0;
 
-	if (m_blockCountExists)
+	try
 	{
-		if (m_capacityExists)
+		if (!m_capacityExists)
 		{
-			COMMON_LOG_ERROR(
-					"Capacity and BlockCount properties are exclusive and cannot be used together.");
-			std::string errorString = framework::ResultBase::stringFromArgList(
-					TR(CANT_USE_TOGETHER_ERROR_STR.c_str()),
-					CREATE_NS_PROP_CAPACITY.c_str(),
-					CREATE_NS_PROP_BLOCKCOUNT.c_str());
-			pResult = new framework::SyntaxErrorResult(errorString);
-		}
-		else if (!isStringValidNumber(value))
-		{
-			pResult = new framework::SyntaxErrorBadValueResult(
-					framework::TOKENTYPE_PROPERTY, CREATE_NS_PROP_BLOCKCOUNT, value);
+			COMMON_UINT64 minAdNamespaceSize = 0;
+			COMMON_UINT64 maxAdNamespaceSize = 0;
+			COMMON_UINT64 adNamespaceDivisor = 0;
+			COMMON_UINT64 minStorageNamespaceSize = 0;
+			COMMON_UINT64 maxStorageNamespaceSize = 0;
+			COMMON_UINT64 storageNamespaceDivisor = 0;
+			m_pPmPoolProvider->getSupportedSizeRange(m_poolUid,
+					maxAdNamespaceSize, minAdNamespaceSize, adNamespaceDivisor,
+					maxStorageNamespaceSize, minStorageNamespaceSize, storageNamespaceDivisor);
+
+
+			m_blockCount = maxAdNamespaceSize; // App Direct NS has block size = 1
 		}
 		else
 		{
-			// the library will determine if this is a valid count
-			m_blockCount = stringToUInt64(value);
+			m_blockCount =
+					calculateBlockCountForNamespace(m_capacityBytes, m_blockSize);
 		}
 	}
-	else
+	catch (wbem::framework::Exception &e)
 	{
-		try
+		if (pResult)
 		{
-			if (!m_capacityExists)
-			{
-				COMMON_UINT64 minAdNamespaceSize = 0;
-				COMMON_UINT64 maxAdNamespaceSize = 0;
-				COMMON_UINT64 adNamespaceDivisor = 0;
-				COMMON_UINT64 minStorageNamespaceSize = 0;
-				COMMON_UINT64 maxStorageNamespaceSize = 0;
-				COMMON_UINT64 storageNamespaceDivisor = 0;
-				m_pPmPoolProvider->getSupportedSizeRange(m_poolUid,
-						maxAdNamespaceSize, minAdNamespaceSize, adNamespaceDivisor,
-						maxStorageNamespaceSize, minStorageNamespaceSize, storageNamespaceDivisor);
-
-				if (m_nsType == wbem::pmem_config::PM_SERVICE_APP_DIRECT_TYPE)
-				{
-					m_blockCount = maxAdNamespaceSize; // App Direct NS has block size = 1
-
-				}
-				else if (m_nsType == wbem::pmem_config::PM_SERVICE_STORAGE_TYPE)
-				{
-					m_blockCount = NVM_REQUEST_MAX_AVAILABLE_BLOCK_COUNT; // The library will figure out the best size based on pmem type
-				}
-			}
-			else
-			{
-				m_blockCount =
-					calculateBlockCountForNamespace(m_capacityBytes, m_blockSize);
-			}
+			delete pResult;
 		}
-		catch (wbem::framework::Exception &e)
-		{
-			if (pResult)
-			{
-				delete pResult;
-			}
-			pResult = NvmExceptionToResult(e);
-		}
+		pResult = NvmExceptionToResult(e);
 	}
 
 	return pResult;
@@ -775,14 +621,9 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseCreateNsOptimize
 	}
 	else
 	{
-		if (m_nsType == wbem::pmem_config::PM_SERVICE_APP_DIRECT_TYPE)
-		{
-			m_optimize = wbem::pmem_config::PM_SERVICE_OPTIMIZE_NONE;
-		}
-		else if (m_nsType == wbem::pmem_config::PM_SERVICE_STORAGE_TYPE)
-		{
-			m_optimize = wbem::pmem_config::PM_SERVICE_OPTIMIZE_COPYONWRITE;
-		}
+
+		m_optimize = wbem::pmem_config::PM_SERVICE_OPTIMIZE_NONE;
+
 	}
 
 	return pResult;
@@ -849,19 +690,9 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseCreateNsMemoryPa
 			framework::Parser::getPropertyValue(parsedCommand, CREATE_NS_PROP_MEMORYPAGEALLOCATION, &hasProp);
 	if (hasProp)
 	{
-		if (m_nsType == wbem::pmem_config::PM_SERVICE_APP_DIRECT_TYPE)
-		{
-			pResult = parseMemoryPageAllocationForAppDirectNS(requestedMode);
-		}
-		else
-		{ // storage namespace
-			if (!framework::stringsIEqual(requestedMode, wbem::NONE))
-			{
-				COMMON_LOG_ERROR("Memory page allocation is not supported for storage namespaces");
-				pResult = new framework::ErrorResult(
-						framework::ErrorResult::ERRORCODE_NOTSUPPORTED, NOTSUPPORTED_ERROR_STR, "");
-			}
-		}
+
+		pResult = parseMemoryPageAllocationForAppDirectNS(requestedMode);
+
 	}
 	else
 	{ // default values
@@ -869,7 +700,6 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseCreateNsMemoryPa
 
 		// default to AppDirect for AppDirect Namespaces if capable and if btt is not requested
 		if (!optimizePropertyExists() &&
-				(m_nsType == wbem::pmem_config::PM_SERVICE_APP_DIRECT_TYPE) &&
 				(m_pCapProvider->getMemoryPageAllocationCapability()))
 		{
 			m_memoryPageAllocation = wbem::pmem_config::PM_SERVICE_MEMORYPAGEALLOCATION_APP_DIRECT;
@@ -978,31 +808,16 @@ cli::framework::ResultBase *cli::nvmcli::NamespaceFeature::parsePersistentMemory
 	if (hasProp)
 	{
 		if (!(framework::stringsIEqual(value, CREATE_NS_PROP_PM_TYPE_APPDIRECT) ||
-			framework::stringsIEqual(value, CREATE_NS_PROP_PM_TYPE_APPDIRECT_NOTINTERLEAVED) ||
-			framework::stringsIEqual(value, CREATE_NS_PROP_PM_TYPE_STORAGE)))
+			framework::stringsIEqual(value, CREATE_NS_PROP_PM_TYPE_APPDIRECT_NOTINTERLEAVED)))
 		{
 			pResult = new framework::SyntaxErrorBadValueResult(
 					framework::TOKENTYPE_PROPERTY, CREATE_NS_PM_TYPE, value);
-		}
-		else if ((m_nsType == wbem::pmem_config::PM_SERVICE_APP_DIRECT_TYPE) &&
-				(framework::stringsIEqual(value, CREATE_NS_PROP_PM_TYPE_STORAGE)))
-		{ // NS type appDirect cannot be build atop of a storage pool
-			char errbuff[NVM_ERROR_LEN];
-			s_snprintf(errbuff, NVM_ERROR_LEN,
-					TR("The namespace type '%s' is not valid for the given pool."),
-					m_nsTypeStr.c_str());
-			pResult = new framework::ErrorResult(framework::ResultBase::ERRORCODE_UNKNOWN,
-					errbuff);
 		}
 		else
 		{
 			if (framework::stringsIEqual(value, CREATE_NS_PROP_PM_TYPE_APPDIRECT_NOTINTERLEAVED))
 			{
 				m_byOne = true;
-			}
-			else if (framework::stringsIEqual(value, CREATE_NS_PROP_PM_TYPE_STORAGE))
-			{
-				m_storageOnly = true;
 			}
 			else if (framework::stringsIEqual(value, CREATE_NS_PROP_PM_TYPE_APPDIRECT))
 			{
@@ -1038,10 +853,6 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::modifyNamespace(
 	if (!pResult)
 	{
 		pResult = m_pWbemToCli->getNamespaces(parsedCommand, nsList);
-	}
-	if (!pResult)
-	{
-		pResult = parseModifyNsBlockCount(parsedCommand);
 	}
 
 	if (!pResult)
@@ -1085,6 +896,7 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::modifyNamespace(
 					struct namespace_details details;
 					m_pPmServiceProvider->getNamespaceDetails(nsList[i], details);
 					m_blockSize = details.block_size;
+					m_blockCount = calculateBlockCountForNamespace(m_capacityBytes, m_blockSize);
 
 					if (isNamespaceModificationSupported(details))
 					{
@@ -1129,7 +941,7 @@ bool cli::nvmcli::NamespaceFeature::isBlockCountAligned(std::string namespaceUid
 {
 	bool isAligned = true;
 
-	if (m_blockCountExists || m_capacityExists)
+	if (m_capacityExists)
 	{
 		NVM_UINT64 adjustedBlockCount = m_pPmServiceProvider->getAdjustedModifyNamespaceBlockCount(
 				namespaceUidStr, m_blockCount);
@@ -1138,39 +950,6 @@ bool cli::nvmcli::NamespaceFeature::isBlockCountAligned(std::string namespaceUid
 	}
 
 	return isAligned;
-}
-
-/*
- * Parsing helpers for modify namespace
- */
-cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseModifyNsBlockCount(
-		const framework::ParsedCommand& parsedCommand)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	cli::framework::ResultBase* pResult = NULL;
-	std::string value = framework::Parser::getPropertyValue(parsedCommand,
-			CREATE_NS_PROP_BLOCKCOUNT, &m_blockCountExists);
-
-	if (m_blockCountExists)
-	{
-		if(!isStringValidNumber(value))
-		{
-			pResult = new framework::SyntaxErrorBadValueResult(
-					framework::TOKENTYPE_PROPERTY, CREATE_NS_PROP_BLOCKSIZE, value);
-		}
-		else
-		{
-			// the library will determine if this is a valid
-			m_blockCount = stringToUInt64(value);
-			if (m_blockCount <= 0)
-			{
-				pResult = new framework::SyntaxErrorBadValueResult(
-						framework::TOKENTYPE_PROPERTY, CREATE_NS_PROP_BLOCKSIZE, value);
-			}
-		}
-	}
-
-	return pResult;
 }
 
 cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseModifyNsCapacity(
@@ -1185,35 +964,22 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseModifyNsCapacity
 
 	if (m_capacityExists)
 	{
-		if (m_blockCountExists)
-		{
-			COMMON_LOG_ERROR(
-					"Capacity and BlockCount are exclusive and cannot be used together.");
-			std::string errorString = framework::ResultBase::stringFromArgList(
-					TR(CANT_USE_TOGETHER_ERROR_STR.c_str()),
-					CREATE_NS_PROP_CAPACITY.c_str(),
-					CREATE_NS_PROP_BLOCKCOUNT.c_str());
-			pResult = new framework::SyntaxErrorResult(errorString);
-		}
-		else
-		{
-			NVM_REAL32 capacity = 0;
-			if (cli::nvmcli::stringToReal32(value, &capacity))
-			{
-				if (capacity == 0)
-				{
-					pResult = new framework::SyntaxErrorBadValueResult(
-						framework::TOKENTYPE_PROPERTY, CREATE_NS_PROP_CAPACITY, value);
-				}
-				else
-				{
-					std::string capacityUnits;
-					pResult = GetRequestedCapacityUnits(parsedCommand, capacityUnits);
-					if (!pResult)
-					{
-						m_capacityBytes = convertCapacityToBytes(capacityUnits, capacity);
 
-					}
+		NVM_REAL32 capacity = 0;
+		if (cli::nvmcli::stringToReal32(value, &capacity))
+		{
+			if (capacity == 0)
+			{
+				pResult = new framework::SyntaxErrorBadValueResult(
+						framework::TOKENTYPE_PROPERTY, CREATE_NS_PROP_CAPACITY, value);
+			}
+			else
+			{
+				std::string capacityUnits;
+				pResult = GetRequestedCapacityUnits(parsedCommand, capacityUnits);
+				if (!pResult)
+				{
+					m_capacityBytes = convertCapacityToBytes(capacityUnits, capacity);
 				}
 			}
 		}
@@ -1260,16 +1026,6 @@ cli::framework::ErrorResult* cli::nvmcli::NamespaceFeature::nsNvmExceptionToResu
 					errbuff);
 			break;
 		}
-		case NVM_ERR_BADNAMESPACETYPE:
-		{
-			char errbuff[NVM_ERROR_LEN];
-			s_snprintf(errbuff, NVM_ERROR_LEN,
-					TR("The namespace type '%s' is not valid for the given pool."),
-					m_nsTypeStr.c_str());
-			pResult = new framework::ErrorResult(framework::ResultBase::ERRORCODE_UNKNOWN,
-					errbuff);
-			break;
-		}
 		case NVM_ERR_BADNAMESPACESETTINGS:
 		{
 			pResult = new framework::ErrorResult(framework::ResultBase::ERRORCODE_UNKNOWN,
@@ -1298,11 +1054,6 @@ bool cli::nvmcli::NamespaceFeature::isNamespaceModificationSupported(const names
 	bool isSupported = true;
 
 	if (m_friendlyNameExists && !m_pPmServiceProvider->isModifyNamespaceNameSupported())
-	{
-		isSupported = false;
-	}
-
-	if (m_blockCountExists && !m_pPmServiceProvider->isModifyNamespaceBlockCountSupported(details, m_blockCount))
 	{
 		isSupported = false;
 	}
@@ -1338,7 +1089,7 @@ bool cli::nvmcli::NamespaceFeature::adjustNamespaceBlockCount(NVM_UINT64 adjuste
 		std::string prompt = framework::ResultBase::stringFromArgList(NS_ALIGNMENT_PROMPT.c_str(),
 			requestedCapacity, adjustedCapacity);
 
-		if ((m_blockCountExists || m_capacityExists)  && !m_forceOption && !promptUserYesOrNo(prompt))
+		if ((m_capacityExists)  && !m_forceOption && !promptUserYesOrNo(prompt))
 		{
 			result = false;
 		}
@@ -1400,7 +1151,7 @@ void cli::nvmcli::NamespaceFeature::modifyNamespace(
 		m_pPmServiceProvider->modifyNamespaceName(namespaceUidStr, m_friendlyName);
 	}
 
-	if (m_blockCountExists || m_capacityExists)
+	if (m_capacityExists)
 	{
 		m_pPmServiceProvider->modifyNamespaceBlockCount(namespaceUidStr, m_blockCount);
 	}
@@ -1473,7 +1224,6 @@ void cli::nvmcli::NamespaceFeature::populateNamespaceAttributes(
 	// define default display attributes
 	wbem::framework::attribute_names_t defaultAttributes;
 	defaultAttributes.push_back(wbem::NAMESPACEID_KEY);
-	defaultAttributes.push_back(wbem::TYPE_KEY);
 	defaultAttributes.push_back(wbem::CAPACITY_KEY);
 	defaultAttributes.push_back(wbem::HEALTHSTATE_KEY);
 	defaultAttributes.push_back(wbem::ACTIONREQUIRED_KEY);
@@ -1484,7 +1234,6 @@ void cli::nvmcli::NamespaceFeature::populateNamespaceAttributes(
 	allAttributes.push_back(wbem::NAME_KEY);
 	allAttributes.push_back(wbem::POOLID_KEY);
 	allAttributes.push_back(wbem::BLOCKSIZE_KEY);
-	allAttributes.push_back(wbem::BLOCKCOUNT_KEY);
 	allAttributes.push_back(wbem::ENABLED_KEY);
 	allAttributes.push_back(wbem::OPTIMIZE_KEY);
 	allAttributes.push_back(wbem::ERASECAPABLE_KEY);

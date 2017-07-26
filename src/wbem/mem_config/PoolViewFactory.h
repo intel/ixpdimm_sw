@@ -46,7 +46,6 @@ namespace wbem
 
 		static const std::string PMTYPE_APPDIRECT = "AppDirect";
 		static const std::string PMTYPE_APPDIRECT_NOTINTERLEAVED = "AppDirectNotInterleaved";
-		static const std::string PMTYPE_STORAGE = "Storage";
 		static const std::string PMTYPE_UNKNOWN = "Unknown";
 
 		static const std::string POOLENCRYPTION_ENCRYPTED = "Encrypted";

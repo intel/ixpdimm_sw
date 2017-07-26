@@ -304,18 +304,6 @@ NVM_UINT64 wbem::pmem_config::PersistentMemoryServiceFactory::getBlockSizeInByte
 	return size;
 }
 
-void wbem::pmem_config::PersistentMemoryServiceFactory::validate_pmtype_with_type(
-		NVM_UINT16 pmtype, NVM_UINT16 type)
-{
-	if (pmtype == wbem::pmem_config::NSSETTINGS_PMTYPE_STORAGE &&
-		type == wbem::pmem_config::PM_SERVICE_APP_DIRECT_TYPE)
-	{
-			COMMON_LOG_ERROR_F("Invalid value for Type: %d with Persistent Memory Type: %d",
-						type, pmtype);
-			throw framework::ExceptionBadParameter(PM_SERVICE_GOAL.c_str());
-	}
-}
-
 void wbem::pmem_config::PersistentMemoryServiceFactory::get_recommended_interleave_size_exps(
 		mem_config::MemoryAllocationSettingsInterleaveSizeExponent &channelSizeExp,
 		mem_config::MemoryAllocationSettingsInterleaveSizeExponent &controllerSizeExp)
@@ -341,18 +329,13 @@ NVM_BOOL wbem::pmem_config::PersistentMemoryServiceFactory::get_settings_by_pmem
 		NVM_UINT16 pmtype,
 		mem_config::MemoryAllocationSettingsInterleaveSizeExponent &channelSizeExp,
 		mem_config::MemoryAllocationSettingsInterleaveSizeExponent &controllerSizeExp,
-		bool &byOne, bool &storageOnly)
+		bool &byOne)
 {
 	NVM_BOOL ret = 0;
 	byOne = false;
 	channelSizeExp = mem_config::MEMORYALLOCATIONSETTINGS_EXPONENT_UNKNOWN;
 	controllerSizeExp = mem_config::MEMORYALLOCATIONSETTINGS_EXPONENT_UNKNOWN;
-	if (pmtype == wbem::pmem_config::NSSETTINGS_PMTYPE_STORAGE)
-	{
-		storageOnly = true;
-		ret = true;
-	}
-	else if (pmtype == wbem::pmem_config::NSSETTINGS_PMTYPE_APPDIRECT_NOTINTERLEAVED)
+	if (pmtype == wbem::pmem_config::NSSETTINGS_PMTYPE_APPDIRECT_NOTINTERLEAVED)
 	{
 		byOne = true;
 		ret = true;
@@ -366,7 +349,7 @@ NVM_BOOL wbem::pmem_config::PersistentMemoryServiceFactory::get_settings_by_pmem
 }
 
 NVM_BOOL wbem::pmem_config::PersistentMemoryServiceFactory::populateInterleaveFormat(
-		const bool byOne, const bool storageOnly,
+		const bool byOne,
 		const mem_config::MemoryAllocationSettingsInterleaveSizeExponent &channelSize,
 		const mem_config::MemoryAllocationSettingsInterleaveSizeExponent &controllerSize,
 		struct interleave_format &format)
@@ -383,7 +366,7 @@ NVM_BOOL wbem::pmem_config::PersistentMemoryServiceFactory::populateInterleaveFo
 		format.imc = mem_config::InterleaveSet::getInterleaveSizeFromExponent(controllerSize);
 		format.ways = INTERLEAVE_WAYS_0; // 0 indicates that byOne wasn't specified
 	}
-	else if (!storageOnly)
+	else
 	{
 		ret = 0;
 	}
@@ -603,8 +586,7 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::allocateFromPool(
 				type = namespaceTypeAttribute.uintValue();
 			}
 
-			if ((type != wbem::pmem_config::PM_SERVICE_APP_DIRECT_TYPE) &&
-				(type != wbem::pmem_config::PM_SERVICE_STORAGE_TYPE))
+			if (type != wbem::pmem_config::PM_SERVICE_APP_DIRECT_TYPE)
 			{
 				COMMON_LOG_ERROR_F("Invalid namespace type in object path: %d", type);
 				throw framework::ExceptionBadParameter(PM_SERVICE_GOAL.c_str());
@@ -671,13 +653,11 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::allocateFromPool(
 			mem_config::MemoryAllocationSettingsInterleaveSizeExponent controllerSizeExp =
 				mem_config::MEMORYALLOCATIONSETTINGS_EXPONENT_UNKNOWN;
 			bool byOne = false;
-			bool storageOnly = false;
 			if (pGoalInstance->getAttribute(PERSISTENTMEMORYTYPE_KEY, pmemTypeAttr) == framework::SUCCESS)
 			{
 				NVM_UINT16 pmemType = pmemTypeAttr.uintValue();
-				validate_pmtype_with_type(pmemType, type);
 				if (!get_settings_by_pmem_type(pmemType, channelSizeExp, controllerSizeExp,
-								byOne, storageOnly))
+								byOne))
 				{
 					COMMON_LOG_ERROR_F("Invalid value for Persistent Memory Type: %d", pmemType);
 					throw framework::ExceptionBadParameter(PM_SERVICE_GOAL.c_str());
@@ -687,7 +667,7 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::allocateFromPool(
 				poolUidStr, initialState,
 				friendlyNameStr, blockSize, blockCount, type, optimize,
 				encryption, eraseCapable,
-				channelSizeExp, controllerSizeExp, byOne, storageOnly, memoryPageAllocation);
+				channelSizeExp, controllerSizeExp, byOne, memoryPageAllocation);
 
 			delete pGoalInstance;
 
@@ -834,8 +814,7 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::createNamespace(std::str
 		const NVM_UINT16 encryption, const NVM_UINT16 eraseCapable,
 		const mem_config::MemoryAllocationSettingsInterleaveSizeExponent channelSize,
 		const mem_config::MemoryAllocationSettingsInterleaveSizeExponent controllerSize,
-		const bool byOne, const bool storageOnly,
-		const NVM_UINT16 memoryPageAllocation)
+		const bool byOne, const NVM_UINT16 memoryPageAllocation)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
@@ -869,7 +848,7 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::createNamespace(std::str
 	struct interleave_format format;
 	memset(&format, 0, sizeof (format));
 	struct interleave_format *p_format = NULL;
-	if (populateInterleaveFormat(byOne, storageOnly, channelSize, controllerSize, format))
+	if (populateInterleaveFormat(byOne, channelSize, controllerSize, format))
 	{
 		p_format = &format;
 	}
@@ -1047,7 +1026,7 @@ void wbem::pmem_config::PersistentMemoryServiceFactory::createNamespace(
 		settings.friendlyName, settings.blockSize, settings.blockCount, settings.type,
 		settings.optimize, settings.encryption, settings.eraseCapable,
 		settings.interleaveChannelSize, settings.interleaveControllerSize, settings.byOne,
-		settings.storageOnly, settings.memoryPageAllocation);
+		settings.memoryPageAllocation);
 }
 
 NVM_UINT64 wbem::pmem_config::PersistentMemoryServiceFactory::getAdjustedCreateNamespaceBlockCount(
@@ -1068,7 +1047,7 @@ NVM_UINT64 wbem::pmem_config::PersistentMemoryServiceFactory::getAdjustedCreateN
 	struct interleave_format format;
 	memset(&format, 0, sizeof (format));
 	struct interleave_format *p_format = NULL;
-	if (populateInterleaveFormat(params.byOne, params.storageOnly,
+	if (populateInterleaveFormat(params.byOne,
 			params.interleaveChannelSize, params.interleaveControllerSize, format))
 	{
 		p_format = &format;

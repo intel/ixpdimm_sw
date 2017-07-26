@@ -116,10 +116,7 @@ static const std::string LOAD_GOAL_PROMPT = TR(
 /*
  * Command spec parts for namespace feature
  */
-static const std::string CREATE_NS_PROP_TYPE = "Type";
 static const std::string CREATE_NS_PM_TYPE = "PersistentMemoryType";
-static const std::string CREATE_NS_PROP_BLOCKSIZE = "BlockSize";
-static const std::string CREATE_NS_PROP_BLOCKCOUNT = "BlockCount";
 static const std::string CREATE_NS_PROP_FRIENDLYNAME = "Name";
 static const std::string CREATE_NS_PROP_ENABLED = "Enabled";
 static const std::string CREATE_NS_PROP_CAPACITY = "Capacity";
@@ -128,10 +125,7 @@ static const std::string CREATE_NS_PROP_ENCRYPTION = "Encryption";
 static const std::string CREATE_NS_PROP_ERASECAPABLE = "EraseCapable";
 static const std::string CREATE_NS_PROP_MEMORYPAGEALLOCATION = "MemoryPageAllocation";
 
-static const std::string CREATE_NS_PROP_NS_TYPE_STORAGE = "Storage";
-static const std::string CREATE_NS_PROP_NS_TYPE_APPDIRECT = "AppDirect";
 static const std::string CREATE_NS_PROP_PM_TYPE_APPDIRECT_NOTINTERLEAVED = "AppDirectNotInterleaved";
-static const std::string CREATE_NS_PROP_PM_TYPE_STORAGE = "Storage";
 static const std::string CREATE_NS_PROP_PM_TYPE_APPDIRECT = "AppDirect";
 static const std::string CREATE_NS_PROP_READONLY = "ReadOnly";
 static const std::string CREATE_NS_PROP_OPTIMIZE_COPYONWRITE = "CopyOnWrite";
@@ -221,11 +215,7 @@ protected:
 		// member variables for storing parsed information
 		std::string m_poolUid;
 		COMMON_UINT64 m_blockSize;
-		bool m_blockSizeExists;
 		COMMON_UINT64 m_blockCount;
-		bool m_blockCountExists;
-		std::string m_nsTypeStr;
-		COMMON_UINT16 m_nsType;
 		bool m_capacityExists;
 		NVM_UINT64 m_capacityBytes; // Advertised capacity
 		std::string m_friendlyName;
@@ -238,7 +228,6 @@ protected:
 		wbem::mem_config::MemoryAllocationSettingsInterleaveSizeExponent m_channelSize;
 		wbem::mem_config::MemoryAllocationSettingsInterleaveSizeExponent m_controllerSize;
 		bool m_byOne;
-		bool m_storageOnly;
 		bool m_forceOption;
 		std::string m_prefix;
 		COMMON_UINT16 m_memoryPageAllocation;
@@ -334,9 +323,7 @@ protected:
 		/*
 		 * Parsing helpers for creating a namespace
 		 */
-		framework::ResultBase * parseCreateNsType(const framework::ParsedCommand& parsedCommand);
-		framework::ResultBase * parseCreateNsBlockSize(const framework::ParsedCommand& parsedCommand);
-		framework::ResultBase * parseCreateNsBlockCount(const framework::ParsedCommand& parsedCommand);
+		cli::framework::ResultBase *getCreateNsBlockCount();
 		framework::ResultBase * parseNsFriendlyName(const framework::ParsedCommand& parsedCommand);
 		framework::ResultBase * parseCreateNsEnabled(const framework::ParsedCommand& parsedCommand);
 		framework::ResultBase * parseCreateNsOptimize(const framework::ParsedCommand& parsedCommand);
@@ -370,7 +357,6 @@ protected:
 		/*
 		 * Parsing helpers for modify namespaces
 		 */
-		framework::ResultBase * parseModifyNsBlockCount(const framework::ParsedCommand& parsedCommand);
 		framework::ResultBase* parseModifyNsCapacity(const framework::ParsedCommand& parsedCommand);
 
 		static void convertSecurityAttributes(wbem::framework::Instance &wbemInstance);

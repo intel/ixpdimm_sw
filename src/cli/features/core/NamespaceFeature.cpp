@@ -87,11 +87,6 @@ void cli::nvmcli::NamespaceFeature::getPaths(cli::framework::CommandSpecList &li
 			.helpText(TR("Restrict output to the namespaces on specific pools by supplying the pool "
 					"target and one or more comma-separated pool identifiers. The default is to "
 					"display namespaces on all pools."));
-	showNamespace.addProperty(wbem::TYPE_KEY, false,
-			wbem::pmem_config::NS_TYPE_STR_UNKNOWN + "|" + wbem::pmem_config::NS_TYPE_STR_APPDIRECT + "|" +
-				wbem::pmem_config::NS_TYPE_STR_STORAGE, true,
-			TR("Restrict output to namespaces of a specific type by supplying the Type property "
-				"with the desired namespace type. The default is to display every type of namespace."));
 	showNamespace.addProperty(wbem::HEALTHSTATE_KEY, false,
 			wbem::pmem_config::NS_HEALTH_STR_UNKNOWN + "|" + wbem::pmem_config::NS_HEALTH_STR_NORMAL + "|" +
 			wbem::pmem_config::NS_HEALTH_STR_WARN + "|" + wbem::pmem_config::NS_HEALTH_STR_ERR + "|" +
@@ -110,15 +105,9 @@ void cli::nvmcli::NamespaceFeature::getPaths(cli::framework::CommandSpecList &li
 			.helpText(TR("Create a new namespace. No filtering is supported on this target."));
 	createNamespace.addTarget(TARGET_POOL).isValueRequired(false)
 			.helpText(TR("The pool identifier on which to create the namespace."));
-	createNamespace.addProperty(CREATE_NS_PROP_TYPE, true, "AppDirect|Storage", true,
-			TR("The type of namespace to be created."));
-	createNamespace.addProperty(CREATE_NS_PM_TYPE, false, "AppDirect|AppDirectNotInterleaved|Storage",
+	createNamespace.addProperty(CREATE_NS_PM_TYPE, false, "AppDirect|AppDirectNotInterleaved",
 			true, TR("Create the namespace from persistent memory capacity in the pool that matches the type."));
-	createNamespace.addProperty(CREATE_NS_PROP_BLOCKSIZE, false, "size", true,
-			TR("The logical size in bytes for read/write operations. Must be one of the supported "
-					"block sizes retrieved using the Show System Capabilities command."));
-	createNamespace.addProperty(CREATE_NS_PROP_BLOCKCOUNT, false, "count", true,
-			TR("The total number of blocks of memory that make up the namespace (BlockCount x BlockSize = Capacity)."));
+
 	createNamespace.addProperty(CREATE_NS_PROP_FRIENDLYNAME, false, "string", true,
 			TR("Optional user specified namespace name to more easily identify the namespace. Up to a maximum of 64 "
 			"characters."));
@@ -147,9 +136,6 @@ void cli::nvmcli::NamespaceFeature::getPaths(cli::framework::CommandSpecList &li
 			"providing comma separated list of one or more namespace identifiers. The default is to modify all namespaces."));
 	modifyNamespace.addProperty(CREATE_NS_PROP_FRIENDLYNAME, false, "string", true,
 			TR("Change the user specified namespace name up to a maximum of 64 characters."));
-	modifyNamespace.addProperty("BlockCount", false, "count", true,
-			TR("Change the total number of blocks of memory that make up in the namespace "
-			"(BlockCount x BlockSize = Capacity)."));
 	modifyNamespace.addProperty(CREATE_NS_PROP_ENABLED, false, "0|1", true,
 			TR("Enable or disable the namespace.  A disabled namespace is hidden from the OS by the "
 			"driver."));
@@ -223,15 +209,15 @@ void cli::nvmcli::NamespaceFeature::getPaths(cli::framework::CommandSpecList &li
 cli::nvmcli::NamespaceFeature::NamespaceFeature() : cli::nvmcli::VerboseFeatureBase(),
 	m_deleteNamespace(wbemDeleteNamespace),
 	m_getSupportedSizeRange(wbemGetSupportedSizeRange),
-	m_poolUid(""), m_blockSize(0), m_blockSizeExists(false),
-	m_blockCount(0), m_blockCountExists(false), m_nsTypeStr(""),
-	m_nsType(0), m_capacityExists(false), m_capacityBytes(0),
+	m_poolUid(""), m_blockSize(1),
+	m_blockCount(0),
+	m_capacityExists(false), m_capacityBytes(0),
 	m_friendlyName(""), m_friendlyNameExists(false),
 	m_enableState(0), m_enabledStateExists(false),
 	m_optimize(0), m_encryption(0), m_eraseCapable(0),
 	m_channelSize(wbem::mem_config::MEMORYALLOCATIONSETTINGS_EXPONENT_UNKNOWN),
 	m_controllerSize(wbem::mem_config::MEMORYALLOCATIONSETTINGS_EXPONENT_UNKNOWN),
-	m_byOne(false), m_storageOnly(false), m_forceOption(false),
+	m_byOne(false), m_forceOption(false),
 	m_memoryPageAllocation(0), m_optimizeExists(false),
 	m_pPmNamespaceProvider(new wbem::pmem_config::PersistentMemoryNamespaceFactory()),
 	m_pPmServiceProvider(new wbem::pmem_config::PersistentMemoryServiceFactory()),

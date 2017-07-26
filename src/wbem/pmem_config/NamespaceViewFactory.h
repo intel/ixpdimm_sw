@@ -53,9 +53,7 @@ namespace pmem_config
 	static const NVM_UINT16 NS_OPTIMIZE_SIZE = 4;
 	static const NVM_UINT16 NS_OPTIMIZE_COPYONWRITE = 5;
 
-	// namespace type strings
 	static const std::string NS_TYPE_STR_UNKNOWN = "Unknown";
-	static const std::string NS_TYPE_STR_STORAGE = "Storage";
 	static const std::string NS_TYPE_STR_APPDIRECT = "AppDirect";
 
 	// namespace health strings
