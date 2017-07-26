@@ -44,6 +44,7 @@ namespace cli
 namespace nvmcli
 {
 
+static const std::string ZERO_FW_VERSION = "00.00.00.0000";
 std::string ShowDeviceCommand::m_capacityUnits = "";
 
 ShowDeviceCommand::ShowDeviceCommand(core::device::DeviceService &service)
@@ -84,7 +85,7 @@ ShowDeviceCommand::ShowDeviceCommand(core::device::DeviceService &service)
 	m_props.addUint64("Speed", &core::device::Device::getSpeed, &convertSpeed);
 	m_props.addCustom("ActionRequiredEvents", getActionRequiredEvents);
 	m_props.addOther("LockState", &core::device::Device::getLockState, &convertLockState).setIsDefault();
-	m_props.addStr("FWVersion", &core::device::Device::getFwRevision).setIsDefault();
+	m_props.addOther("FWVersion", &core::device::Device::getFwRevision, &convertFwVersion).setIsDefault();
 	m_props.addStr("FWAPIVersion", &core::device::Device::getFwApiVersion);
 	m_props.addStr("Manufacturer", &core::device::Device::getManufacturer);
 	m_props.addUint16("ManufacturerID", &core::device::Device::getManufacturerId, toHex);
@@ -192,6 +193,15 @@ std::string ShowDeviceCommand::convertLockState(lock_state lockState)
 	map[LOCK_STATE_PASSPHRASE_LIMIT] = TR("Exceeded");
 	map[LOCK_STATE_NOT_SUPPORTED] = TR("Not Supported");
 	return map[lockState];
+}
+
+std::string ShowDeviceCommand::convertFwVersion(std::string fwRevision)
+{
+	if(fwRevision.compare(ZERO_FW_VERSION) == 0)
+	{
+		fwRevision = "N/A";
+	}
+	return fwRevision;
 }
 
 std::string ShowDeviceCommand::convertHealthState(NVM_UINT16 healthState)

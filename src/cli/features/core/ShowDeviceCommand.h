@@ -128,6 +128,7 @@ private:
 	bool unitsOptionIsValid();
 
 	static std::string convertLockState(lock_state lockState);
+	static std::string convertFwVersion(std::string fwRevision);
 	static std::string convertHealthState(NVM_UINT16 healthState);
 	static std::string convertManageabilityState(manageability_state state);
 	static std::string convertMemoryType(memory_type type);
