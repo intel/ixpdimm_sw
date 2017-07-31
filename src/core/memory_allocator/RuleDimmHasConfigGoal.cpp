@@ -78,8 +78,8 @@ bool core::memory_allocator::RuleDimmHasConfigGoal::dimmHasUnappliedGoal(const s
 	}
 	catch (core::LibraryException &e)
 	{
-		// Goal not existing is OK
-		if (e.getErrorCode() != NVM_ERR_NOTFOUND)
+		// Goal not existing and having corrupt pcd is OK
+		if (e.getErrorCode() != NVM_ERR_NOTFOUND && e.getErrorCode() != NVM_ERR_BADDEVICECONFIG)
 		{
 			throw;
 		}

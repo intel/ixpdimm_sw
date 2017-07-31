@@ -497,6 +497,9 @@ enum config_error get_config_error_from_config_output(
 enum config_status get_config_status_from_current_config(
 		struct current_config_table *p_current_config);
 
+int get_repaired_dimm_platform_config(const NVM_NFIT_DEVICE_HANDLE device_handle,
+		struct platform_config_data **pp_config);
+
 #ifdef __cplusplus
 }
 #endif

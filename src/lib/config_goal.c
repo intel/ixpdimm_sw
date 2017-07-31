@@ -42,6 +42,7 @@
 #include "capabilities.h"
 #include "system.h"
 #include "config_goal_utilities.h"
+#include "platform_config_data.h"
 #include "namespace_labels.h"
 
 /*
@@ -607,7 +608,7 @@ int update_config_goal(const struct device_discovery *p_discovery,
 	int rc = NVM_SUCCESS;
 
 	struct platform_config_data *p_old_cfg = NULL;
-	rc = get_dimm_platform_config(p_discovery->device_handle, &p_old_cfg);
+	rc = get_repaired_dimm_platform_config(p_discovery->device_handle, &p_old_cfg);
 	if (rc == NVM_SUCCESS)
 	{
 		// If a goal was provided, build a new config input table.
@@ -636,17 +637,17 @@ int update_config_goal(const struct device_discovery *p_discovery,
 			// write our new input table.
 			// Note that the config output table is removed - BIOS requires this.
 			struct current_config_table *p_old_current_cfg = cast_current_config(p_old_cfg);
-
 			// build our new table
 			struct platform_config_data *p_cfg_data = NULL;
 			rc = build_platform_config_data(p_old_current_cfg, p_input_table, NULL,
 					&p_cfg_data);
+
+
 			if (rc == NVM_SUCCESS)
 			{
 				// Write it
 				rc = set_dimm_platform_config(p_discovery->device_handle, p_cfg_data);
 			}
-
 			if (p_cfg_data) // clean up
 			{
 				free(p_cfg_data);
@@ -1026,6 +1027,7 @@ int nvm_delete_config_goal(const NVM_UID device_uid)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
+
 	struct device_discovery discovery;
 
 	if (check_caller_permissions() != COMMON_SUCCESS)
@@ -1050,7 +1052,8 @@ int nvm_delete_config_goal(const NVM_UID device_uid)
 		// Is there a config goal on this DIMM?
 		struct config_goal current_goal;
 		rc = nvm_get_config_goal(device_uid, &current_goal);
-		if (rc == NVM_SUCCESS) // Goal found!
+
+		if (rc == NVM_SUCCESS || rc == NVM_ERR_BADDEVICECONFIG)
 		{
 			// Delete it
 			rc = update_config_goal(&discovery, NULL, NULL);

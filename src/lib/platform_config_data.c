@@ -1379,3 +1379,70 @@ int get_interleave_settings_from_platform_config_data(const NVM_NFIT_DEVICE_HAND
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
+
+int get_repaired_dimm_platform_config(const NVM_NFIT_DEVICE_HANDLE device_handle,
+		struct platform_config_data **pp_config)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	if (!pp_config)
+	{
+		COMMON_LOG_ERROR("Invalid pointer for platform_config_data");
+		rc = NVM_ERR_INVALIDPARAMETER;
+	}
+	else if (*pp_config != NULL)
+	{
+		COMMON_LOG_ERROR("Invalid pointer for platform_config_data");
+		rc = NVM_ERR_INVALIDPARAMETER;
+	}
+	else
+	{
+		struct platform_config_data *p_old_config_data = NULL;
+		struct config_input_table *p_old_config_input = NULL;
+		struct current_config_table *p_old_current_cfg = NULL;
+		struct config_output_table *p_old_config_output = NULL;
+		rc = get_dimm_platform_config(device_handle, &p_old_config_data);
+		if (rc != NVM_SUCCESS)
+		{
+			// Repair the corrupt component and retain the rest
+			if (p_old_config_data != NULL)
+			{
+				NVM_SIZE pcd_size;
+				if ((rc = get_pcd_table_size(device_handle.handle, &pcd_size)) != NVM_SUCCESS)
+				{
+					COMMON_LOG_ERROR("Failed to retrieve pcd table size");
+				}
+				else
+				{
+					if (check_platform_config_header(p_old_config_data, pcd_size) == NVM_SUCCESS)
+					{
+						if (check_config_input(p_old_config_data) == NVM_SUCCESS)
+						{
+							p_old_config_input = cast_config_input(p_old_config_data);
+						}
+						if (check_current_config(p_old_config_data) == NVM_SUCCESS)
+						{
+							p_old_current_cfg = cast_current_config(p_old_config_data);
+						}
+						if (check_config_output(p_old_config_data) == NVM_SUCCESS)
+						{
+							p_old_config_output = cast_config_output(p_old_config_data);
+						}
+					}
+				}
+				rc = build_platform_config_data(p_old_current_cfg, p_old_config_input,
+						p_old_config_output, pp_config);
+				free(p_old_config_data);
+			}
+		}
+		else
+		{
+			*pp_config = p_old_config_data;
+			p_old_config_data = NULL;
+		}
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}

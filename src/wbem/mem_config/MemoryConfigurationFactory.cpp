@@ -631,7 +631,7 @@ wbem::framework::instance_names_t* wbem::mem_config::MemoryConfigurationFactory:
 					pNames->push_back(configPath);
 				}
 			}
-			else if (rc != NVM_ERR_NOTFOUND)
+			else if (rc != NVM_ERR_NOTFOUND && rc != NVM_ERR_BADDEVICECONFIG)
 			{
 				throw exception::NvmExceptionLibError(rc);
 			}

@@ -114,8 +114,9 @@ NVM_UINT16 core::memory_allocator::MemoryAllocationUtil::getDimmInterleaveInfoMa
 	}
 	catch (core::LibraryException &e)
 	{
-		// no goal is OK - but anything else is bad news
-		if (e.getErrorCode() != NVM_ERR_NOTFOUND)
+		// no goal and corrupt pcd is OK - but anything else is bad news
+		if ((e.getErrorCode() != NVM_ERR_NOTFOUND) &&
+				(e.getErrorCode() != NVM_ERR_BADDEVICECONFIG))
 		{
 			throw;
 		}
