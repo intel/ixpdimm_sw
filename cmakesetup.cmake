@@ -124,6 +124,7 @@ file(GLOB INCLUDE_FILES
 		   src/lib/nvm_types.h
 		   src/monitor/ixpdimm-monitor.service
 		   src/common/encrypt/public.rev0.pem
+		   Help.pdf
 		   REPORTING_ISSUES
 		   TROUBLESHOOTING)
 file(COPY ${INCLUDE_FILES}
