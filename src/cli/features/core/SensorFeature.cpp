@@ -64,14 +64,6 @@ static std::vector<std::string> getWbemSensors()
 	result.push_back(wbem::support::PROPERTY_SENSOR_TYPE_UNSAFESHUTDOWNS);
 	result.push_back(wbem::support::PROPERTY_SENSOR_TYPE_FWERRORLOGCOUNT);
 	result.push_back(wbem::support::PROPERTY_SENSOR_TYPE_POWERLIMITED);
-	result.push_back(wbem::support::PROPERTY_SENSOR_TYPE_MEDIAERRORS_UNCORRECTABLE);
-	result.push_back(wbem::support::PROPERTY_SENSOR_TYPE_MEDIAERRORS_CORRECTED);
-	result.push_back(wbem::support::PROPERTY_SENSOR_TYPE_MEDIAERRORS_ERASURECODED);
-	result.push_back(wbem::support::PROPERTY_SENSOR_TYPE_DRAMERRORS_CORRECTED);
-	result.push_back(wbem::support::PROPERTY_SENSOR_TYPE_WRITECOUNT_MAXIMUM);
-	result.push_back(wbem::support::PROPERTY_SENSOR_TYPE_WRITECOUNT_AVERAGE);
-	result.push_back(wbem::support::PROPERTY_SENSOR_TYPE_MEDIAERRORS_HOST);
-	result.push_back(wbem::support::PROPERTY_SENSOR_TYPE_MEDIAERRORS_NONHOST);
 	return result;
 }
 
@@ -94,9 +86,7 @@ void cli::nvmcli::SensorFeature::getPaths(cli::framework::CommandSpecList &list)
 	showSensor.addOption(framework::OPTION_ALL);
 	showSensor.addTarget(TARGET_SENSOR_R)
 			.valueText("MediaTemperature|ControllerTemperature|SpareCapacity|WearLevel|UnsafeShutdowns|"
-					"PowerOnTime|UpTime|PowerCycles|FWErrorCount|PowerLimited|"
-					"MediaErrorsUncorrectable|MediaErrorsCorrected|MediaErrorsErasureCoded|DramErrorsCorrected"
-					"WriteCountMax|WriteCountAvg|MediaErrorsHost|MediaErrorsNonHost")
+					"PowerOnTime|UpTime|PowerCycles|FWErrorCount|PowerLimited|")
 			.helpText(TR("Restrict output to a specific sensor type by supplying the name. "
 					"The default is to display all sensors."));
 	showSensor.addTarget(TARGET_DIMM)

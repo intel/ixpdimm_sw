@@ -217,15 +217,7 @@ enum sensor_type
 	SENSOR_UNSAFESHUTDOWNS = 6, // Device shutdowns without notification.
 	SENSOR_FWERRORLOGCOUNT = 7, // The total number of firmware error log entries.
 	SENSOR_POWERLIMITED = 8, // Whether or not the AEP DIMM is power limited.
-	SENSOR_MEDIAERRORS_UNCORRECTABLE = 9, // Number of ECC uncorrectable errors.
-	SENSOR_MEDIAERRORS_CORRECTED = 10, // Number of ECC corrected errors.
-	SENSOR_MEDIAERRORS_ERASURECODED = 11, // Number of erasure code corrected errors.
-	SENSOR_WRITECOUNT_MAXIMUM = 12, // Max num of data writes to a single block across the device.
-	SENSOR_WRITECOUNT_AVERAGE = 13, // Avg num of data writes to all blocks across the device.
-	SENSOR_MEDIAERRORS_HOST = 14, // Num of ECC errors encountered by hosts requests only.
-	SENSOR_MEDIAERRORS_NONHOST = 15, // Num of ECC errors encountered by non-host requests only.
-	SENSOR_CONTROLLER_TEMPERATURE = 16, // Device media temperature in degrees Celsius.
-	SENSOR_DRAM_ERRORS_CORRECTED = 17 // The number of ECC corrected errors in the DRAM.
+	SENSOR_CONTROLLER_TEMPERATURE = 9, // Device media temperature in degrees Celsius.
 };
 
 /*

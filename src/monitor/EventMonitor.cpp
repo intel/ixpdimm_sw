@@ -952,10 +952,8 @@ void monitor::EventMonitor::processSensorStateChangesForDevice(const deviceInfo&
 
 	std::vector<sensor> sensors = getSensorsForDevice(device);
 
-	detectMediaErrorSensorChanges(sensors, device.discovery.uid, dimmState);
 	detectFwErrorSensorChanges(sensors, device.discovery.uid, dimmState);
 
-	updateStateForMediaErrorSensors(dimmState, sensors);
 	updateStateForFwErrorSensors(dimmState, sensors);
 }
 
@@ -981,31 +979,6 @@ std::vector<sensor> monitor::EventMonitor::getSensorsForDevice(const deviceInfo&
 	return sensors;
 }
 
-
-void monitor::EventMonitor::detectMediaErrorSensorChanges(const std::vector<sensor>& sensors,
-		const NVM_UID deviceUid, const struct db_dimm_state& savedState)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	if (sensorReadingHasIncreased(sensors, SENSOR_MEDIAERRORS_CORRECTED,
-			savedState.mediaerrors_corrected))
-	{
-		createMediaErrorEvent(deviceUid, TR("corrected"));
-	}
-
-	if (sensorReadingHasIncreased(sensors, SENSOR_MEDIAERRORS_UNCORRECTABLE,
-			savedState.mediaerrors_uncorrectable))
-	{
-		createMediaErrorEvent(deviceUid, TR("uncorrectable"));
-	}
-
-	if (sensorReadingHasIncreased(sensors, SENSOR_MEDIAERRORS_ERASURECODED,
-			savedState.mediaerrors_erasurecoded))
-	{
-		createMediaErrorEvent(deviceUid, TR("erasure coded"));
-	}
-}
-
 bool monitor::EventMonitor::sensorReadingHasIncreased(const std::vector<sensor>& sensors,
 		const sensor_type sensorType, const NVM_UINT64 oldReading)
 {
@@ -1021,22 +994,6 @@ bool monitor::EventMonitor::sensorsIncludeType(const std::vector<sensor>& sensor
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	return (sensors.size() > type);
-}
-
-void monitor::EventMonitor::createMediaErrorEvent(const NVM_UID uid,
-		const std::string& errorType)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	store_event_by_parts(EVENT_TYPE_HEALTH,
-			EVENT_SEVERITY_WARN,
-			EVENT_CODE_HEALTH_NEW_MEDIAERRORS_FOUND,
-			uid,
-			false,
-			core::Helper::uidToString(uid).c_str(),
-			errorType.c_str(),
-			NULL,
-			DIAGNOSTIC_RESULT_UNKNOWN);
 }
 
 void monitor::EventMonitor::detectFwErrorSensorChanges(const std::vector<sensor>& sensors,
@@ -1070,20 +1027,6 @@ void monitor::EventMonitor::createFwErrorLogEvent(const NVM_UID deviceUid,
 			DIAGNOSTIC_RESULT_UNKNOWN);
 }
 
-void monitor::EventMonitor::updateStateForMediaErrorSensors(struct db_dimm_state& dimmState,
-		const std::vector<sensor>& sensors)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	dimmState.mediaerrors_corrected = getLatestSensorReading(sensors, SENSOR_MEDIAERRORS_CORRECTED,
-			dimmState.mediaerrors_corrected);
-	dimmState.mediaerrors_uncorrectable = getLatestSensorReading(sensors, SENSOR_MEDIAERRORS_UNCORRECTABLE,
-			dimmState.mediaerrors_uncorrectable);
-	dimmState.mediaerrors_erasurecoded = getLatestSensorReading(sensors, SENSOR_MEDIAERRORS_ERASURECODED,
-			dimmState.mediaerrors_erasurecoded);
-}
-
-
 void monitor::EventMonitor::updateStateForFwErrorSensors(struct db_dimm_state& dimmState,
 		const std::vector<sensor>& sensors)
 {
@@ -1110,10 +1053,6 @@ void monitor::EventMonitor::initializeSensorStateForDevice(struct db_dimm_state&
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	std::vector<sensor> sensors = getSensorsForDevice(device);
-
-	dimmState.mediaerrors_corrected = getLatestSensorReading(sensors, SENSOR_MEDIAERRORS_CORRECTED, 0);
-	dimmState.mediaerrors_uncorrectable = getLatestSensorReading(sensors, SENSOR_MEDIAERRORS_UNCORRECTABLE, 0);
-	dimmState.mediaerrors_erasurecoded = getLatestSensorReading(sensors, SENSOR_MEDIAERRORS_ERASURECODED, 0);
 
 	dimmState.fw_log_errors = getLatestSensorReading(sensors, SENSOR_FWERRORLOGCOUNT, 0);
 }

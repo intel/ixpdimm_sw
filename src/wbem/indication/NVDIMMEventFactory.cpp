@@ -51,7 +51,6 @@ wbem::framework::Instance *wbem::indication::NVDIMMEventFactory::createIndicatio
 			pEvent->code == EVENT_CODE_DIAG_QUICK_BAD_SPARE ||
 			pEvent->code == EVENT_CODE_DIAG_QUICK_BAD_MEDIA_TEMP ||
 			pEvent->code == EVENT_CODE_DIAG_QUICK_BAD_CORE_TEMP ||
-			pEvent->code == EVENT_CODE_HEALTH_NEW_MEDIAERRORS_FOUND ||
 			pEvent->code == EVENT_CODE_DIAG_QUICK_BAD_PERCENT_USED)
 	{
 		COMMON_LOG_DEBUG_F("Type: %d, Code: %d is an NVDIMMEvent Indication",

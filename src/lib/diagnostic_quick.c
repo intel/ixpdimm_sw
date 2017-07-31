@@ -58,9 +58,6 @@ int check_dimm_manageability(const NVM_UID device_uid,
 		const struct diagnostic *p_diagnostic, NVM_UINT32* p_results);
 int check_dimm_health(const NVM_UID device_uid, const NVM_NFIT_DEVICE_HANDLE device_handle,
 		const struct diagnostic *p_diagnostic, NVM_UINT32 *p_results);
-int check_dimm_media_errors(const NVM_UID device_uid,
-		const NVM_NFIT_DEVICE_HANDLE device_handle,
-		const struct diagnostic *p_diagnostic, NVM_UINT32* p_results);
 void check_dimm_power_limitation(const NVM_UID device_uid,
 		const NVM_NFIT_DEVICE_HANDLE device_handle,
 		const struct diagnostic *p_diagnostic, NVM_UINT32* p_results);
@@ -129,10 +126,6 @@ int diag_quick_health_check(const NVM_UID device_uid,
 
 					check_dimm_power_limitation(device_uid,
 						device_handle, p_diagnostic, p_results);
-
-					tmp_rc = check_dimm_media_errors(device_uid,
-						device_handle, p_diagnostic, p_results);
-					KEEP_ERROR(rc, tmp_rc);
 
 					tmp_rc = check_dimm_viral_state(device_uid,
 						device_handle, p_diagnostic, p_results);
@@ -741,118 +734,6 @@ NVM_BOOL errors_exceed_threshold(const struct diagnostic *p_diagnostic,
 
 	return !diag_check(p_diagnostic, threshold_exclude_flag,
 			media_errors, &error_threshold, EQUALITY_LESSTHANEQUAL);
-}
-
-void generate_diagnostic_media_error_event(NVM_UINT32 *p_results,
-		const int event_code, const enum event_severity severity,
-		const NVM_UID device_uid, const NVM_UINT64 media_errors,
-		const enum diagnostic_result result)
-{
-	COMMON_LOG_ENTRY();
-
-	char actual_errors_str[10];
-	s_snprintf(actual_errors_str, sizeof (actual_errors_str),
-			"%u", media_errors);
-
-	store_event_by_parts(EVENT_TYPE_DIAG_QUICK,
-			severity,
-			event_code,
-			device_uid,
-			0,
-			device_uid,
-			actual_errors_str,
-			NULL,
-			result);
-	(*p_results)++;
-
-	COMMON_LOG_EXIT();
-}
-
-void check_uncorrectable_errors(const struct diagnostic *p_diagnostic,
-		NVM_UINT32 *p_results, const NVM_UID device_uid,
-		struct pt_payload_memory_info_page2 *p_memory_info)
-{
-	COMMON_LOG_ENTRY();
-
-	NVM_UINT64 media_errors = p_memory_info->media_errors_uc;
-	if (errors_exceed_threshold(p_diagnostic, DIAG_THRESHOLD_QUICK_UNCORRECT_ERRORS,
-			media_errors, SQL_KEY_UNCORRECTABLE_THRESHOLD))
-	{
-		generate_diagnostic_media_error_event(p_results,
-				EVENT_CODE_DIAG_QUICK_BAD_UNCORRECTABLE_MEDIA_ERRORS,
-				EVENT_SEVERITY_WARN,
-				device_uid,
-				media_errors,
-				DIAGNOSTIC_RESULT_WARNING);
-	}
-
-	COMMON_LOG_EXIT();
-}
-
-void check_corrected_errors(const struct diagnostic *p_diagnostic,
-		NVM_UINT32 *p_results, const NVM_UID device_uid,
-		struct pt_payload_memory_info_page2 *p_memory_info)
-{
-	COMMON_LOG_ENTRY();
-
-	NVM_UINT64 media_errors_ce = 0;
-	NVM_8_BYTE_ARRAY_TO_64_BIT_VALUE(p_memory_info->media_errors_ce, media_errors_ce);
-
-	if (errors_exceed_threshold(p_diagnostic, DIAG_THRESHOLD_QUICK_CORRECTED_ERRORS,
-			media_errors_ce, SQL_KEY_CORRECTED_THRESHOLD))
-	{
-		generate_diagnostic_media_error_event(p_results,
-				EVENT_CODE_DIAG_QUICK_BAD_CORRECTED_MEDIA_ERRORS,
-				EVENT_SEVERITY_INFO,
-				device_uid,
-				media_errors_ce,
-				DIAGNOSTIC_RESULT_OK);
-	}
-
-	COMMON_LOG_EXIT();
-}
-
-void check_ecc_errors(const struct diagnostic *p_diagnostic,
-		NVM_UINT32 *p_results, const NVM_UID device_uid,
-		struct pt_payload_memory_info_page2 *p_memory_info)
-{
-	COMMON_LOG_ENTRY();
-
-	NVM_UINT64 media_errors_ecc = 0;
-	NVM_8_BYTE_ARRAY_TO_64_BIT_VALUE(p_memory_info->media_errors_ecc, media_errors_ecc);
-
-	if (errors_exceed_threshold(p_diagnostic, DIAG_THRESHOLD_QUICK_ERASURE_CODED_CORRECTED_ERRORS,
-			media_errors_ecc, SQL_KEY_ERASURE_CODED_CORRECTED_THRESHOLD))
-	{
-		generate_diagnostic_media_error_event(p_results,
-				EVENT_CODE_DIAG_QUICK_BAD_ERASURE_CODED_CORRECTED_MEDIA_ERRORS,
-				EVENT_SEVERITY_INFO,
-				device_uid,
-				media_errors_ecc,
-				DIAGNOSTIC_RESULT_OK);
-	}
-
-	COMMON_LOG_EXIT();
-}
-
-int check_dimm_media_errors(const NVM_UID device_uid,
-		const NVM_NFIT_DEVICE_HANDLE device_handle,
-		const struct diagnostic *p_diagnostic, NVM_UINT32 *p_results)
-{
-	COMMON_LOG_ENTRY();
-	int rc = NVM_SUCCESS;
-
-	struct pt_payload_memory_info_page2 memory_info_page2;
-	if (NVM_SUCCESS == (rc = fw_get_memory_info_page(device_handle.handle, 2,
-		&memory_info_page2, sizeof (memory_info_page2))))
-	{
-		check_uncorrectable_errors(p_diagnostic, p_results, device_uid, &memory_info_page2);
-		check_corrected_errors(p_diagnostic, p_results, device_uid, &memory_info_page2);
-		check_ecc_errors(p_diagnostic, p_results, device_uid, &memory_info_page2);
-	}
-
-	COMMON_LOG_EXIT_RETURN_I(rc);
-	return rc;
 }
 
 int check_dimm_fw_update_status(const NVM_UID device_uid,

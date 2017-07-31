@@ -66,14 +66,6 @@ static std::string PROPERTY_SENSOR_TYPE_UPTIME = N_TR("UpTime"); //!< type value
 static std::string PROPERTY_SENSOR_TYPE_UNSAFESHUTDOWNS = N_TR("UnsafeShutDowns"); //!< type value
 static std::string PROPERTY_SENSOR_TYPE_FWERRORLOGCOUNT = N_TR("FWErrorCount"); //!< type value
 static std::string PROPERTY_SENSOR_TYPE_POWERLIMITED = N_TR("PowerLimited"); //!< type value
-static std::string PROPERTY_SENSOR_TYPE_MEDIAERRORS_UNCORRECTABLE = N_TR("MediaErrorsUncorrectable"); //!< type value
-static std::string PROPERTY_SENSOR_TYPE_MEDIAERRORS_CORRECTED = N_TR("MediaErrorsCorrected"); //!< type value
-static std::string PROPERTY_SENSOR_TYPE_MEDIAERRORS_ERASURECODED = N_TR("MediaErrorsErasureCoded"); //!< type value
-static std::string PROPERTY_SENSOR_TYPE_DRAMERRORS_CORRECTED = N_TR("DramErrorsCorrected"); //!< type value
-static std::string PROPERTY_SENSOR_TYPE_WRITECOUNT_MAXIMUM = N_TR("WriteCountMax"); //!< type value
-static std::string PROPERTY_SENSOR_TYPE_WRITECOUNT_AVERAGE = N_TR("WriteCountAvg"); //!< type value
-static std::string PROPERTY_SENSOR_TYPE_MEDIAERRORS_HOST = N_TR("MediaErrorsHost"); //!< type value
-static std::string PROPERTY_SENSOR_TYPE_MEDIAERRORS_NONHOST = N_TR("MediaErrorsNonHost"); //!< type value
 static std::string PROPERTY_SENSOR_TYPE_CONTROLLERTEMP = N_TR("ControllerTemperature"); //!< type value
 static std::string PROPERTY_SENSOR_TYPE_UNKNOWN = N_TR("Unknown"); //!< unknown type
 /*!

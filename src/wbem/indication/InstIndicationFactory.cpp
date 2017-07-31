@@ -320,26 +320,6 @@ bool wbem::indication::InstIndicationFactory::canGetEventSensorType(const struct
 	case EVENT_CODE_DIAG_QUICK_BAD_PERCENT_USED:
 		sensorType = SENSOR_WEARLEVEL;
 		break;
-	case EVENT_CODE_HEALTH_NEW_MEDIAERRORS_FOUND:
-		// arg[1] should be media error type
-		if (pEvent->args[1] == ERASURE_CODED)
-		{
-			sensorType = SENSOR_MEDIAERRORS_ERASURECODED;
-		}
-		else if (pEvent->args[1] == CORRECTED)
-		{
-			sensorType = SENSOR_MEDIAERRORS_CORRECTED;
-		}
-		else if (pEvent->args[1] == UNCORRECTABLE)
-		{
-			sensorType = SENSOR_MEDIAERRORS_UNCORRECTABLE;
-		}
-		else
-		{
-			eventCodeIsSensor = false;
-		}
-
-		break;
 	case EVENT_CODE_DIAG_QUICK_UNSAFE_SHUTDOWN:
 		sensorType = SENSOR_UNSAFESHUTDOWNS;
 		break;

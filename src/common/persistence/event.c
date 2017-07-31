@@ -118,9 +118,6 @@ const char *EVENT_MESSAGES_MGMT[EVENT_CODE_MGMT_UNKNOWN -
 const char *EVENT_MESSAGES_HEALTH[EVENT_CODE_HEALTH_UNKNOWN -
 	EVENT_CODE_OFFSET_HEALTH + 1] =
 {
-	// EVENT_CODE_HEALTH_NEW_MEDIAERRORS_FOUND
-	N_TR("The health monitor has detected that " NVM_DIMM_NAME " %s "
-			"is reporting new %s media errors."),
 	// EVENT_CODE_HEALTH_HEALTH_STATE_CHANGED
 	N_TR("The health monitor has detected that " NVM_DIMM_NAME " %s "
 			"is reporting a change in health state from %s to %s."),
@@ -178,15 +175,12 @@ const char *EVENT_MESSAGES_QUICK_DIAG[EVENT_CODE_DIAG_QUICK_UNKNOWN -
 	N_TR("The quick health check detected that " NVM_DIMM_NAME " %s "
 			"is reporting percentage used at %s% which is above "
 			"the recommended threshold %s%."),
-	// EVENT_CODE_DIAG_QUICK_BAD_UNCORRECTABLE_MEDIA_ERRORS
-	N_TR("The quick health check detected that " NVM_DIMM_NAME " %s "
-			"is reporting %s uncorrectable media errors."),
-	// EVENT_CODE_DIAG_QUICK_BAD_CORRECTED_MEDIA_ERRORS
-	N_TR("The quick health check detected that " NVM_DIMM_NAME " %s "
-			"is reporting %s corrected media errors."),
-	// EVENT_CODE_DIAG_QUICK_BAD_ERASURE_CODED_CORRECTED_MEDIA_ERRORS
-	N_TR("The quick health check detected that " NVM_DIMM_NAME " %s "
-			"is reporting %s Erasure Coded Corrected media errors."),
+	// Available event 508
+	N_TR("Placeholder"),
+	// Available event 509
+	N_TR("Placeholder"),
+	// Available event 510
+	N_TR("Placeholder"),
 	// EVENT_CODE_DIAG_QUICK_BAD_CORE_TEMP
 	N_TR("The quick health check detected that " NVM_DIMM_NAME " %s "
 			"is reporting a core temperature of %s C which is above "

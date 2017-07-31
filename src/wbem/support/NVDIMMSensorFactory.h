@@ -77,14 +77,6 @@ public:
 	static const int SENSORTYPE_UNSAFESHUTDOWNS; //!< Device shutdowns without notification.
 	static const int SENSORTYPE_FWERRORLOGCOUNT; //!< Number of new FW errors
 	static const int SENSORTYPE_POWERLIMITED; //!<Whether or not the DIMM is power limited
-	static const int SENSORTYPE_MEDIAERRORS_UNCORRECTABLE; //!< Number of ECC uncorrectable errors.
-	static const int SENSORTYPE_MEDIAERRORS_CORRECTED; //!< Number of ECC corrected errors.
-	static const int SENSORTYPE_MEDIAERRORS_ERASURECODED; //!< Number of erasure code corrected errors.
-	static const int SENSORTYPE_WRITECOUNT_MAXIMUM; //!< Largest number of data writes to a single block across the device.
-	static const int SENSORTYPE_WRITECOUNT_AVERAGE; //!< Average number of data writes to all blocks across the device.
-	static const int SENSORTYPE_DRAMERRORS_CORRECTED; //!< Number of ECC corrected errors.
-	static const int SENSORTYPE_MEDIAERRORS_HOST; //!< Number of ECC errors encountered by hosts requests only.
-	static const int SENSORTYPE_MEDIAERRORS_NONHOST; //!< Number of ECC errors encountered by non-hosts requests only.
 	static const int SENSORTYPE_CONTROLLER_TEMPERATURE; //!< Device controller temperature in degrees Celsius
 
 	static const int SENSOR_TEMP_MODIFIER = 10000;

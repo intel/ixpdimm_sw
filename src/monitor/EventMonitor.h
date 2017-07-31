@@ -146,14 +146,9 @@ namespace monitor
 
 		void processSensorStateChangesForDevice(const deviceInfo &device, struct db_dimm_state &dimmState);
 		std::vector<sensor> getSensorsForDevice(const deviceInfo &device);
-		void detectMediaErrorSensorChanges(const std::vector<sensor> &sensors, const NVM_UID deviceUid,
-				const struct db_dimm_state &savedState);
 		bool sensorReadingHasIncreased(const std::vector<sensor>& sensors,
 				const sensor_type sensorType, const NVM_UINT64 oldReading);
 		bool sensorsIncludeType(const std::vector<sensor> &sensors, const sensor_type type);
-		void createMediaErrorEvent(const NVM_UID uid, const std::string &errorType);
-		void updateStateForMediaErrorSensors(struct db_dimm_state &dimmState,
-				const std::vector<sensor> &sensors);
 
 		void detectFwErrorSensorChanges(const std::vector<sensor> &sensors, const NVM_UID deviceUid,
 				const struct db_dimm_state &savedState);

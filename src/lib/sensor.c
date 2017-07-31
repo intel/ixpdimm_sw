@@ -302,55 +302,6 @@ int get_smart_log_sensors(const NVM_UID device_uid,
 	return rc;
 }
 
-int get_media_page2_sensors(const NVM_UID device_uid,
-	const NVM_UINT32 dev_handle, struct sensor *p_sensors)
-{
-	COMMON_LOG_ENTRY();
-	struct pt_payload_memory_info_page2 meminfo2;
-	memset(&meminfo2, 0, sizeof (meminfo2));
-	int rc = fw_get_memory_info_page(dev_handle, 2, &meminfo2, sizeof (meminfo2));
-	if (rc == NVM_SUCCESS)
-	{
-		// Media errors - Uncorrectable
-		p_sensors[SENSOR_MEDIAERRORS_UNCORRECTABLE].reading = meminfo2.media_errors_uc;
-		p_sensors[SENSOR_MEDIAERRORS_UNCORRECTABLE].current_state = SENSOR_NORMAL;
-
-		// Media errors - Corrected
-		NVM_8_BYTE_ARRAY_TO_64_BIT_VALUE(meminfo2.media_errors_ce,
-			p_sensors[SENSOR_MEDIAERRORS_CORRECTED].reading);
-		p_sensors[SENSOR_MEDIAERRORS_CORRECTED].current_state = SENSOR_NORMAL;
-
-		// Media errors - erasure coded
-		NVM_8_BYTE_ARRAY_TO_64_BIT_VALUE(meminfo2.media_errors_ecc,
-			p_sensors[SENSOR_MEDIAERRORS_ERASURECODED].reading)
-		p_sensors[SENSOR_MEDIAERRORS_ERASURECODED].current_state = SENSOR_NORMAL;
-
-		// Write Count - Maximum
-		p_sensors[SENSOR_WRITECOUNT_MAXIMUM].reading = meminfo2.write_count_max;
-		p_sensors[SENSOR_WRITECOUNT_MAXIMUM].current_state = SENSOR_NORMAL;
-
-		// Write Count - Average
-		p_sensors[SENSOR_WRITECOUNT_AVERAGE].reading = meminfo2.write_count_average;
-		p_sensors[SENSOR_WRITECOUNT_AVERAGE].current_state = SENSOR_NORMAL;
-
-		// Media Errors - Host
-		p_sensors[SENSOR_MEDIAERRORS_HOST].reading = meminfo2.uncorrectable_host;
-		p_sensors[SENSOR_MEDIAERRORS_HOST].current_state = SENSOR_NORMAL;
-
-		// Media Errors - Non Host
-		p_sensors[SENSOR_MEDIAERRORS_NONHOST].reading = meminfo2.uncorrectable_non_host;
-		p_sensors[SENSOR_MEDIAERRORS_NONHOST].current_state = SENSOR_NORMAL;
-
-		// DRAM errors - Corrected
-		NVM_8_BYTE_ARRAY_TO_64_BIT_VALUE(meminfo2.dram_errors_ce,
-			p_sensors[SENSOR_DRAM_ERRORS_CORRECTED].reading);
-		p_sensors[SENSOR_DRAM_ERRORS_CORRECTED].current_state = SENSOR_NORMAL;
-	}
-
-	COMMON_LOG_EXIT_RETURN_I(rc);
-	return rc;
-}
-
 int get_fw_error_log_sensors(const NVM_UID device_uid,
 	const NVM_UINT32 dev_handle, struct sensor sensors[NVM_MAX_DEVICE_SENSORS])
 {
@@ -424,17 +375,9 @@ void initialize_sensors(const NVM_UID device_uid,
 	sensors[SENSOR_POWERONTIME].units = UNIT_SECONDS;
 	sensors[SENSOR_UPTIME].units = UNIT_SECONDS;
 	sensors[SENSOR_UNSAFESHUTDOWNS].units = UNIT_COUNT;
-	sensors[SENSOR_MEDIAERRORS_UNCORRECTABLE].units = UNIT_COUNT;
-	sensors[SENSOR_MEDIAERRORS_CORRECTED].units = UNIT_COUNT;
-	sensors[SENSOR_MEDIAERRORS_ERASURECODED].units = UNIT_COUNT;
-	sensors[SENSOR_WRITECOUNT_MAXIMUM].units = UNIT_COUNT;
-	sensors[SENSOR_WRITECOUNT_AVERAGE].units = UNIT_COUNT;
-	sensors[SENSOR_MEDIAERRORS_HOST].units = UNIT_COUNT;
-	sensors[SENSOR_MEDIAERRORS_NONHOST].units = UNIT_COUNT;
 	sensors[SENSOR_FWERRORLOGCOUNT].units = UNIT_COUNT;
 	sensors[SENSOR_POWERLIMITED].units = UNIT_COUNT;
 	sensors[SENSOR_CONTROLLER_TEMPERATURE].units = UNIT_CELSIUS;
-	sensors[SENSOR_DRAM_ERRORS_CORRECTED].units = UNIT_COUNT;
 }
 
 int get_all_sensors(const NVM_UID device_uid,
@@ -444,7 +387,6 @@ int get_all_sensors(const NVM_UID device_uid,
 
 	initialize_sensors(device_uid, sensors);
 	int rc = get_smart_log_sensors(device_uid, dev_handle, sensors);
-	KEEP_ERROR(rc, get_media_page2_sensors(device_uid, dev_handle, sensors));
 	KEEP_ERROR(rc, get_fw_error_log_sensors(device_uid, dev_handle, sensors));
 	KEEP_ERROR(rc, get_power_limited_sensor(device_uid, dev_handle, sensors));
 
@@ -564,24 +506,8 @@ static const char *SENSOR_STRINGS[NVM_MAX_DEVICE_SENSORS] =
 		N_TR("FW Error Log Count"),
 		// SENSOR_POWERLIMITED
 		N_TR("Power Limited"),
-		// SENSOR_MEDIAERRORS_UNCORRECTABLE
-		N_TR("Uncorrectable Media Errors"),
-		// SENSOR_MEDIAERRORS_CORRECTED
-		N_TR("Corrected Media Errors"),
-		// SENSOR_MEDIAERRORS_ERASURECODED
-		N_TR("Erasure Coded Media Errors"),
-		// SENSOR_WRITECOUNT_MAXIMUM
-		N_TR("Maximum Write Count"),
-		// SENSOR_WRITECOUNT_AVERAGE
-		N_TR("Average Write Count"),
-		// SENSOR_MEDIAERRORS_HOST
-		N_TR("Host Media Errors"),
-		// SENSOR_MEDIAERRORS_NONHOST
-		N_TR("Non-host Media Errors"),
 		// SENSOR_CONTROLLER_TEMPERATURE
 		N_TR("Controller Temperature"),
-		// SENSOR_DRAM_ERRORS_CORRECTED
-		N_TR("Corrected DRAM Errors"),
 	};
 
 void sensor_type_to_string(const enum sensor_type type, char *p_dst, size_t dst_size)
