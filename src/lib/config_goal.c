@@ -45,6 +45,8 @@
 #include "platform_config_data.h"
 #include "namespace_labels.h"
 
+#define	DEFAULT_PCD_TABLE_REVISION	2
+
 /*
  * Helper function to verify the config goal size (in GiB) is valid with the given alignment
  * (in bytes).
@@ -395,6 +397,7 @@ int config_goal_to_interleave_ext_table(const struct app_direct_attributes *p_qo
 		const NVM_UINT64 interleave_set_size,
 		const NVM_UINT64 interleave_set_offset,
 		const NVM_UINT16 interleave_set_id,
+		const NVM_UINT8 table_revision,
 		struct interleave_info_extension_table **pp_table)
 {
 	int rc = NVM_SUCCESS;
@@ -427,6 +430,7 @@ int config_goal_to_interleave_ext_table(const struct app_direct_attributes *p_qo
 						(struct dimm_info_extension_table *)&p_table->p_dimms;
 
 				rc = populate_dimm_info_extension_tables(p_dimms_ext, p_qos, pcat_revision,
+						table_revision,
 						interleave_set_size, interleave_set_offset);
 			}
 			else
@@ -452,7 +456,8 @@ int config_goal_to_interleave_ext_table(const struct app_direct_attributes *p_qo
 int config_goal_to_config_input(const struct config_goal *p_goal,
 		struct config_input_table **pp_input_table,
 		const struct device_discovery *p_discovery,
-		NVM_UINT32 seq_num)
+		NVM_UINT32 seq_num,
+		NVM_UINT8 table_revision)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
@@ -488,6 +493,7 @@ int config_goal_to_config_input(const struct config_goal *p_goal,
 				ad1_gib, // in GiB
 				0, // offset - top of PM partition
 				p_goal->app_direct_1_set_id,
+				table_revision,
 				&p_ad1_interleave_table);
 		if (rc == NVM_SUCCESS)
 		{
@@ -504,6 +510,7 @@ int config_goal_to_config_input(const struct config_goal *p_goal,
 						ad2_gib, // in GiB
 						p_goal->app_direct_1_size, // offset - after first interleave set
 						p_goal->app_direct_2_set_id,
+						table_revision,
 						&p_ad2_interleave_table);
 				if (rc == NVM_SUCCESS)
 				{
@@ -533,7 +540,7 @@ int config_goal_to_config_input(const struct config_goal *p_goal,
 				// Populate header
 				memmove(p_input_table->header.signature, CONFIG_INPUT_TABLE_SIGNATURE,
 						SIGNATURE_LEN);
-				p_input_table->header.revision = 1;
+				p_input_table->header.revision = table_revision;
 				memmove(&p_input_table->header.oem_id, "INTEL ", OEM_ID_LEN);
 				memmove(&p_input_table->header.oem_table_id, "PURLEY  ", OEM_TABLE_ID_LEN);
 				p_input_table->header.oem_revision = 2;
@@ -595,6 +602,65 @@ int config_goal_to_config_input(const struct config_goal *p_goal,
 	return rc;
 }
 
+NVM_UINT8 get_pcd_revision_from_another_device_in_list(
+		const NVM_NFIT_DEVICE_HANDLE this_device,
+		const struct device_discovery *devices, const int device_count)
+{
+	COMMON_LOG_ENTRY();
+	NVM_UINT8 rev = DEFAULT_PCD_TABLE_REVISION;
+
+	for (int i = 0; i < device_count; i++)
+	{
+		if (devices[i].device_handle.handle !=
+				this_device.handle)
+		{
+			struct platform_config_data *p_pcd = NULL;
+			int rc = get_dimm_platform_config(devices[i].device_handle, &p_pcd);
+			if (rc == NVM_SUCCESS)
+			{
+				struct current_config_table *p_ccur = cast_current_config(p_pcd);
+				if (p_ccur)
+				{
+					rev = p_ccur->header.revision;
+					break;
+				}
+			}
+		}
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rev);
+	return rev;
+}
+
+NVM_UINT8 get_revision_for_new_config_input(struct current_config_table *p_current_cfg,
+		const NVM_NFIT_DEVICE_HANDLE device_handle)
+{
+	COMMON_LOG_ENTRY();
+	NVM_UINT8 rev = DEFAULT_PCD_TABLE_REVISION;
+	if (p_current_cfg)
+	{
+		rev = p_current_cfg->header.revision;
+	}
+	else
+	{
+		int rc = nvm_get_device_count();
+		if (rc > 0)
+		{
+			int device_count = rc;
+			struct device_discovery devices[device_count];
+			rc = nvm_get_devices(devices, device_count);
+			if (rc > 0)
+			{
+				rev = get_pcd_revision_from_another_device_in_list(device_handle,
+						devices, device_count);
+			}
+		}
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rev);
+	return rev;
+}
+
 /*
  * Build the config tables for a DIMM config goal and write them to the
  * platform config.
@@ -611,6 +677,11 @@ int update_config_goal(const struct device_discovery *p_discovery,
 	rc = get_repaired_dimm_platform_config(p_discovery->device_handle, &p_old_cfg);
 	if (rc == NVM_SUCCESS)
 	{
+		// We won't be changing current config, but we need to avoid clobbering it when we
+		// write our new input table.
+		// We also need to know the current revision.
+		struct current_config_table *p_old_current_cfg = cast_current_config(p_old_cfg);
+
 		// If a goal was provided, build a new config input table.
 		struct config_input_table *p_input_table = NULL;
 		if (p_goal)
@@ -619,7 +690,9 @@ int update_config_goal(const struct device_discovery *p_discovery,
 			NVM_UINT32 seq_num = 0;
 			seq_num = get_last_config_output_sequence_number(p_old_cfg) + 1;
 
-			rc = config_goal_to_config_input(p_goal, &p_input_table, p_discovery, seq_num);
+			rc = config_goal_to_config_input(p_goal, &p_input_table, p_discovery, seq_num,
+					get_revision_for_new_config_input(p_old_current_cfg,
+							p_discovery->device_handle));
 			if (rc == NVM_SUCCESS)
 			{
 				// Generate a checksum for our newly-generated input table
@@ -632,9 +705,6 @@ int update_config_goal(const struct device_discovery *p_discovery,
 		// Create the platform config table and write it
 		if (rc == NVM_SUCCESS)
 		{
-			// Fetch current config tables from existing data
-			// We won't be changing these, but we need to avoid clobbering them when we
-			// write our new input table.
 			// Note that the config output table is removed - BIOS requires this.
 			struct current_config_table *p_old_current_cfg = cast_current_config(p_old_cfg);
 			// build our new table
@@ -809,6 +879,39 @@ enum config_goal_status get_config_goal_status_from_platform_config_data(
 	return status;
 }
 
+void get_device_uid_from_dimm_interleave_info_table(
+		const struct dimm_info_extension_table *p_dimm_info,
+		const NVM_UINT8 revision, NVM_UID uid)
+{
+	if (revision == 1)
+	{
+		// dimm info to dimm uid
+		struct device_discovery discovery;
+		if (lookup_dev_manufacturer_serial_part(
+				p_dimm_info->dimm_identifier.v1.manufacturer,
+				p_dimm_info->dimm_identifier.v1.serial_number,
+				p_dimm_info->dimm_identifier.v1.part_number,
+				&discovery) != NVM_SUCCESS)
+		{
+			char serial_str[NVM_SERIALSTR_LEN];
+			SERIAL_NUMBER_TO_STRING(p_dimm_info->dimm_identifier.v1.serial_number,
+					serial_str);
+			COMMON_LOG_ERROR_F("Interleave set dimm serial # %s not found",
+					serial_str);
+		}
+		else
+		{
+			uid_copy(discovery.uid, uid);
+		}
+	}
+	else
+	{
+		device_uid_bytes_to_string(p_dimm_info->dimm_identifier.v2.uid,
+				sizeof (p_dimm_info->dimm_identifier.v2.uid),
+				uid);
+	}
+}
+
 /*
  * Helper function to convert a platform config data input table to a config
  * goal structure.
@@ -821,6 +924,8 @@ int config_input_table_to_config_goal(const NVM_UID device_uid,
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
+
+	struct config_input_table *p_input = (struct config_input_table *)p_table;
 
 	NVM_UINT32 offset = ext_table_offset;
 	while (offset < table_length && rc == NVM_SUCCESS)
@@ -911,22 +1016,8 @@ int config_input_table_to_config_goal(const NVM_UID device_uid,
 
 					struct dimm_info_extension_table *p_dimm =
 						(struct dimm_info_extension_table *)(p_table + set_offset);
-					// dimm info to dimm uid
-					struct device_discovery discovery;
-					if (lookup_dev_manufacturer_serial_part(p_dimm->manufacturer,
-							p_dimm->serial_number,
-							p_dimm->part_number,
-							&discovery) != NVM_SUCCESS)
-					{
-						char serial_str[NVM_SERIALSTR_LEN];
-						SERIAL_NUMBER_TO_STRING(p_dimm->serial_number, serial_str);
-						COMMON_LOG_ERROR_F("Interleave set dimm serial # %s not found",
-								serial_str);
-					}
-					else
-					{
-						uid_copy(discovery.uid, p_qos->dimms[i]);
-					}
+					get_device_uid_from_dimm_interleave_info_table(p_dimm,
+							p_input->header.revision, p_qos->dimms[i]);
 
 					// If this is the requested DIMM, get the size
 					if (uid_cmp(p_qos->dimms[i], device_uid))

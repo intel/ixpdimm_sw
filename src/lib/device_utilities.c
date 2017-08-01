@@ -42,6 +42,10 @@
 #include "nfit_utilities.h"
 #include <utility.h>
 
+#define	DEVICE_UID_FORMAT_WITH_MANUFACTURING \
+	"%02hhx%02hhx-%02hhx-%02hhx%02hhx-%02hhx%02hhx%02hhx%02hhx"
+#define	DEVICE_UID_FORMAT_WITHOUT_MANUFACTURING "%02hhx%02hhx-%02hhx%02hhx%02hhx%02hhx"
+
 /*
  * Check if a device exists and is manageable
  *
@@ -64,8 +68,118 @@ int exists_and_manageable(const NVM_UID device_uid, struct device_discovery *p_d
 	return rc;
 }
 
+NVM_BOOL convert_uid_with_manufacturing_data_to_bytes(const NVM_UID uid,
+		NVM_UINT8 *p_bytes, const size_t bytes_len)
+{
+	memset(p_bytes, 0, bytes_len);
+
+	int expected_bytes_filled = DEVICE_UID_BYTES;
+	int bytes_filled =
+			sscanf(uid, DEVICE_UID_FORMAT_WITH_MANUFACTURING,
+				&p_bytes[0],
+				&p_bytes[1],
+				&p_bytes[2],
+				&p_bytes[3],
+				&p_bytes[4],
+				&p_bytes[5],
+				&p_bytes[6],
+				&p_bytes[7],
+				&p_bytes[8]);
+
+	return (bytes_filled == expected_bytes_filled);
+}
+
+NVM_BOOL convert_uid_without_manufacturing_data_to_bytes(const NVM_UID uid,
+		NVM_UINT8 *p_bytes, const size_t bytes_len)
+{
+	memset(p_bytes, 0, bytes_len);
+
+	int expected_bytes_filled = DEVICE_UID_BYTES - 3;
+	int bytes_filled = sscanf(uid, DEVICE_UID_FORMAT_WITHOUT_MANUFACTURING,
+		&p_bytes[0],
+		&p_bytes[1],
+		&p_bytes[5],
+		&p_bytes[6],
+		&p_bytes[7],
+		&p_bytes[8]);
+
+	return (bytes_filled == expected_bytes_filled);
+}
+
+int device_uid_string_to_bytes(const NVM_UID uid, NVM_UINT8 *p_bytes, const size_t bytes_len)
+{
+	int rc = NVM_SUCCESS;
+	if (uid && p_bytes && bytes_len >= DEVICE_UID_BYTES)
+	{
+		if (!(convert_uid_with_manufacturing_data_to_bytes(uid, p_bytes, bytes_len) ||
+				convert_uid_without_manufacturing_data_to_bytes(uid, p_bytes, bytes_len)))
+		{
+			COMMON_LOG_ERROR_F("UID string format bad: %s", uid);
+			rc = NVM_ERR_INVALIDPARAMETER;
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Bad input, uid=%p, bytes=%p, bytes_len=%llu",
+				(void*)uid, (void*)p_bytes, bytes_len);
+		rc = NVM_ERR_INVALIDPARAMETER;
+	}
+
+	return rc;
+}
+
+NVM_BOOL uid_manufacturing_bytes_empty(const NVM_UINT8 *p_bytes)
+{
+	return p_bytes[2] == 0 && p_bytes[3] == 0 && p_bytes[4] == 0;
+}
+
+int device_uid_bytes_to_string(const NVM_UINT8 *p_bytes, const size_t bytes_len, NVM_UID uid)
+{
+	int rc = NVM_SUCCESS;
+
+	if (uid && p_bytes && bytes_len >= DEVICE_UID_BYTES)
+	{
+		memset(uid, 0, NVM_MAX_UID_LEN);
+
+		// These are the manufacturing data bytes
+		if (uid_manufacturing_bytes_empty(p_bytes))
+		{
+			s_snprintf(uid, NVM_MAX_UID_LEN,
+					DEVICE_UID_FORMAT_WITHOUT_MANUFACTURING,
+					p_bytes[0],
+					p_bytes[1],
+					p_bytes[5],
+					p_bytes[6],
+					p_bytes[7],
+					p_bytes[8]);
+		}
+		else
+		{
+			s_snprintf(uid, NVM_MAX_UID_LEN,
+					DEVICE_UID_FORMAT_WITH_MANUFACTURING,
+					p_bytes[0],
+					p_bytes[1],
+					p_bytes[2],
+					p_bytes[3],
+					p_bytes[4],
+					p_bytes[5],
+					p_bytes[6],
+					p_bytes[7],
+					p_bytes[8]);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Bad input, bytes=%p, bytes_len=%llu, uid=%p",
+				(void*)p_bytes, bytes_len, (void*)uid);
+		rc = NVM_ERR_INVALIDPARAMETER;
+	}
+
+	return rc;
+}
+
 void calculate_uid_without_manufacturing_info(NVM_UID uid,
-		NVM_UINT16 vendor_id, NVM_SERIAL_NUMBER serial_number)
+		const NVM_UINT16 vendor_id, const NVM_SERIAL_NUMBER serial_number)
 {
 	// assuming little endian
 	s_snprintf(uid, NVM_MAX_UID_LEN, "%04x-%02x%02x%02x%02x", vendor_id,
@@ -76,8 +190,8 @@ void calculate_uid_without_manufacturing_info(NVM_UID uid,
 }
 
 void calculate_uid_with_valid_manufacturing_info(NVM_UID uid,
-		NVM_UINT16 vendor_id, NVM_SERIAL_NUMBER serial_number,
-		NVM_UINT8 manufacturing_loc, NVM_UINT16 manufacturing_date)
+		const NVM_UINT16 vendor_id, const NVM_SERIAL_NUMBER serial_number,
+		const NVM_UINT8 manufacturing_loc, const NVM_UINT16 manufacturing_date)
 {
 	// assuming little endian
 	s_snprintf(uid, NVM_MAX_UID_LEN, "%04x-%02x-%04x-%02x%02x%02x%02x",

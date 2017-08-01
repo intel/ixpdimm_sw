@@ -357,6 +357,7 @@ int arrange_devices_in_interleave_set_for_pcat2(struct device_discovery *p_devic
 }
 
 void populate_dimm_info_extension_table(struct dimm_info_extension_table *p_dimms_ext,
+		NVM_UINT8 pcd_table_revision,
 		struct device_discovery *p_devices,
 		int num_devices,
 		const NVM_UINT64 interleave_set_size,
@@ -367,15 +368,28 @@ void populate_dimm_info_extension_table(struct dimm_info_extension_table *p_dimm
 		// The DIMM is OK - put it in the list
 		p_dimms_ext[i].size = interleave_set_size * BYTES_PER_GIB;
 		p_dimms_ext[i].offset = interleave_set_offset * BYTES_PER_GIB;
-		memmove(p_dimms_ext[i].serial_number, p_devices[i].serial_number, NVM_SERIAL_LEN);
-		memmove(p_dimms_ext[i].manufacturer, p_devices[i].manufacturer, NVM_MANUFACTURER_LEN);
-		memmove(p_dimms_ext[i].part_number, p_devices[i].part_number, NVM_PART_NUM_LEN-1);
+		if (pcd_table_revision == 1)
+		{
+			memmove(p_dimms_ext[i].dimm_identifier.v1.serial_number,
+					p_devices[i].serial_number, NVM_SERIAL_LEN);
+			memmove(p_dimms_ext[i].dimm_identifier.v1.manufacturer,
+					p_devices[i].manufacturer, NVM_MANUFACTURER_LEN);
+			memmove(p_dimms_ext[i].dimm_identifier.v1.part_number,
+					p_devices[i].part_number, NVM_PART_NUM_LEN-1);
+		}
+		else
+		{
+			device_uid_string_to_bytes(p_devices[i].uid,
+					p_dimms_ext[i].dimm_identifier.v2.uid,
+					sizeof (p_dimms_ext[i].dimm_identifier.v2.uid));
+		}
 	}
 }
 
 int populate_dimm_info_extension_tables(struct dimm_info_extension_table *p_dimms_ext,
 		const struct app_direct_attributes *p_qos,
 		const NVM_UINT8 pcat_revision,
+		const NVM_UINT8 pcd_table_revision,
 		const NVM_UINT64 interleave_set_size,
 		const NVM_UINT64 interleave_set_offset)
 {
@@ -397,7 +411,8 @@ int populate_dimm_info_extension_tables(struct dimm_info_extension_table *p_dimm
 		{
 			if (pcat_revision == 1)
 			{
-				populate_dimm_info_extension_table(p_dimms_ext, p_devices, num_devices,
+				populate_dimm_info_extension_table(p_dimms_ext, pcd_table_revision,
+						p_devices, num_devices,
 						interleave_set_size, interleave_set_offset);
 			}
 			else if (pcat_revision == 2)
@@ -405,7 +420,8 @@ int populate_dimm_info_extension_tables(struct dimm_info_extension_table *p_dimm
 				if ((rc = arrange_devices_in_interleave_set_for_pcat2(p_devices, num_devices))
 						== NVM_SUCCESS)
 				{
-					populate_dimm_info_extension_table(p_dimms_ext, p_devices, num_devices,
+					populate_dimm_info_extension_table(p_dimms_ext, pcd_table_revision,
+							p_devices, num_devices,
 							interleave_set_size, interleave_set_offset);
 				}
 			}

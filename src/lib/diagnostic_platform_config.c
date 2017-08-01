@@ -159,6 +159,51 @@ void check_bios_config_support(NVM_UINT32 *p_results, const struct platform_capa
 	COMMON_LOG_EXIT();
 }
 
+NVM_BOOL is_interleave_dimm_missing(struct dimm_info_extension_table *p_dimm,
+		NVM_UINT8 pcd_revision)
+{
+	NVM_BOOL missing = 0;
+
+	struct device_discovery discovery;
+	if (pcd_revision == 1)
+	{
+		missing = (lookup_dev_manufacturer_serial_part(
+			p_dimm->dimm_identifier.v1.manufacturer,
+			p_dimm->dimm_identifier.v1.serial_number,
+			p_dimm->dimm_identifier.v1.part_number,
+			&discovery) != NVM_SUCCESS);
+	}
+	else
+	{
+		NVM_UID uid;
+		device_uid_bytes_to_string(p_dimm->dimm_identifier.v2.uid,
+				sizeof (p_dimm->dimm_identifier.v2.uid), uid);
+		missing = (nvm_get_device_discovery(uid, &discovery) == NVM_ERR_BADDEVICE);
+	}
+
+	return missing;
+}
+
+void populate_dimm_identifier_for_event(struct dimm_info_extension_table *p_dimm,
+		NVM_UINT8 pcd_revision, NVM_EVENT_ARG identifier)
+{
+	if (pcd_revision == 1)
+	{
+		char serial_str[NVM_SERIALSTR_LEN];
+		SERIAL_NUMBER_TO_STRING(
+				p_dimm->dimm_identifier.v1.serial_number,
+				serial_str);
+		s_strcpy(identifier, serial_str, NVM_EVENT_ARG_LEN);
+	}
+	else
+	{
+		NVM_UID uid;
+		device_uid_bytes_to_string(p_dimm->dimm_identifier.v2.uid,
+				sizeof (p_dimm->dimm_identifier.v2.uid), uid);
+		s_strcpy(identifier, uid, NVM_EVENT_ARG_LEN);
+	}
+}
+
 /*
  * verify that all interleave sets described by current config data are complete
  */
@@ -210,19 +255,16 @@ void check_interleave_sets(struct current_config_table *p_current_config,
 							p_header;
 					p_dimms = (struct dimm_info_extension_table *)
 										&p_interleave_info_tbl->p_dimms;
-					for (int i = 0; i
-					< p_interleave_info_tbl->dimm_count; i++)
+					for (int i = 0;
+							i < p_interleave_info_tbl->dimm_count; i++)
 					{
-						struct device_discovery discovery;
-						if (lookup_dev_manufacturer_serial_part(
-								p_dimms[i].manufacturer,
-								p_dimms[i].serial_number,
-								p_dimms[i].part_number,
-								&discovery) != NVM_SUCCESS)
+						if (is_interleave_dimm_missing(&(p_dimms[i]),
+								p_current_config->header.revision))
 						{
-							char serial_str[NVM_SERIALSTR_LEN];
-							SERIAL_NUMBER_TO_STRING(
-									p_dimms[i].serial_number, serial_str);
+							NVM_EVENT_ARG dimm_identifier;
+							populate_dimm_identifier_for_event(&(p_dimms[i]),
+									p_current_config->header.revision,
+									dimm_identifier);
 							char set_index_str[10];
 							s_snprintf(set_index_str, 10, "%hu",
 									p_interleave_info_tbl->index);
@@ -232,10 +274,12 @@ void check_interleave_sets(struct current_config_table *p_current_config,
 									EVENT_CODE_DIAG_PCONFIG_BROKEN_ISET,
 									NULL, 0,
 									set_index_str,
-									serial_str, NULL,
+									dimm_identifier, NULL,
 									DIAGNOSTIC_RESULT_FAILED);
+
 							(*p_results)++;
 						}
+
 					}
 				}
 				// go to next extension table

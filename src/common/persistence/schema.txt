@@ -670,9 +670,9 @@ Attributes:
 	unsigned int mirror_enable
 	unsigned int status
 
-Table(s): db_interleave_set_dimm_info 
- 	  db_interleave_set_dimm_info_history 
-Description: Vendor Firmware: Get Admin Features - Platform Config Data DIMM Interleave Information Table Type 5 - DIMM Identification Information Extension Table. 
+Table(s): db_interleave_set_dimm_info_v1 
+ 	  db_interleave_set_dimm_info_v1_history 
+Description: Vendor Firmware: Get Admin Features - Platform Config Data DIMM Interleave Information Table Type 5 - DIMM Identification Information Extension Table, Revision 1. 
 Attributes: 
 	int id(PK)(Indexed)
 	unsigned int config_table_type
@@ -681,6 +681,18 @@ Attributes:
 	unsigned int manufacturer
 	unsigned int serial_num
 	char * part_num
+	unsigned long long offset
+	unsigned long long size
+
+Table(s): db_interleave_set_dimm_info_v2 
+ 	  db_interleave_set_dimm_info_v2_history 
+Description: Vendor Firmware: Get Admin Features - Platform Config Data DIMM Interleave Information Table Type 5 - DIMM Identification Information Extension Table, Revision 2. 
+Attributes: 
+	int id(PK)(Indexed)
+	unsigned int config_table_type
+	unsigned int index_id(FK)
+	unsigned int device_handle(FK)
+	char * device_uid
 	unsigned long long offset
 	unsigned long long size
 

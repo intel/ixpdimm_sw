@@ -78,8 +78,12 @@ int clear_dimm_platform_config_from_db(PersistentStore *p_db,
 
 	// clear interleave set dimm info tables (current, input and output) for this dimm
 	DB_DIMM_ERROR(rc,
-		db_delete_interleave_set_dimm_info_by_dimm_topology_device_handle(p_db, device_handle),
-		"Failed to remove the existing interleave set dimm info data for " NVM_DIMM_NAME " %d",
+		db_delete_interleave_set_dimm_info_v1_by_dimm_topology_device_handle(p_db, device_handle),
+		"Failed to remove the existing interleave set dimm info v1 data for " NVM_DIMM_NAME " %d",
+		device_handle);
+	DB_DIMM_ERROR(rc,
+		db_delete_interleave_set_dimm_info_v2_by_dimm_topology_device_handle(p_db, device_handle),
+		"Failed to remove the existing interleave set dimm info v2 data for " NVM_DIMM_NAME " %d",
 		device_handle);
 
 	// clear partition size change tables (input and output)
@@ -117,6 +121,7 @@ int update_dimm_partition_size_in_db(PersistentStore *p_db,
 int update_dimm_interleave_set_in_db(PersistentStore *p_db,
 		const unsigned int device_handle,
 		const enum config_table_type table_type,
+		const NVM_UINT8 revision,
 		struct interleave_info_extension_table *p_interleave_set)
 {
 	COMMON_LOG_ENTRY();
@@ -140,7 +145,6 @@ int update_dimm_interleave_set_in_db(PersistentStore *p_db,
 	int offset = sizeof (struct interleave_info_extension_table);
 	for (int i = 0; i < p_interleave_set->dimm_count && rc == NVM_SUCCESS; i++)
 	{
-		// check the length
 		if (p_interleave_set->header.length <
 				(offset + sizeof (struct dimm_info_extension_table)))
 		{
@@ -152,19 +156,38 @@ int update_dimm_interleave_set_in_db(PersistentStore *p_db,
 
 		struct dimm_info_extension_table *p_dimm_info =
 				(struct dimm_info_extension_table *)((NVM_UINT8 *)p_interleave_set + offset);
-		struct db_interleave_set_dimm_info db_dimm;
-		db_get_next_interleave_set_dimm_info_id(p_db, &db_dimm.id);
-		db_dimm.config_table_type = table_type;
-		db_dimm.index_id = p_interleave_set->index;
-		db_dimm.device_handle = device_handle;
-		// convert manufacturer to uint16
-		db_dimm.manufacturer = MANUFACTURER_TO_UINT(p_dimm_info->manufacturer);
-		// convert serial number to uint32
-		db_dimm.serial_num = SERIAL_NUMBER_TO_UINT(p_dimm_info->serial_number);
-		s_strcpy(db_dimm.part_num, p_dimm_info->part_number, NVM_PART_NUM_LEN);
-		db_dimm.offset = p_dimm_info->offset;
-		db_dimm.size = p_dimm_info->size;
-		rc = db_add_interleave_set_dimm_info(p_db, &db_dimm);
+		if (revision == 1)
+		{
+			struct db_interleave_set_dimm_info_v1 db_dimm;
+			db_get_next_interleave_set_dimm_info_v1_id(p_db, &db_dimm.id);
+			db_dimm.config_table_type = table_type;
+			db_dimm.index_id = p_interleave_set->index;
+			db_dimm.device_handle = device_handle;
+			// convert manufacturer to uint16
+			db_dimm.manufacturer =
+					MANUFACTURER_TO_UINT(p_dimm_info->dimm_identifier.v1.manufacturer);
+			// convert serial number to uint32
+			db_dimm.serial_num =
+					SERIAL_NUMBER_TO_UINT(p_dimm_info->dimm_identifier.v1.serial_number);
+			s_strcpy(db_dimm.part_num, p_dimm_info->dimm_identifier.v1.part_number,
+					NVM_PART_NUM_LEN);
+			db_dimm.offset = p_dimm_info->offset;
+			db_dimm.size = p_dimm_info->size;
+			rc = db_add_interleave_set_dimm_info_v1(p_db, &db_dimm);
+		}
+		else
+		{
+			struct db_interleave_set_dimm_info_v2 db_dimm;
+			db_get_next_interleave_set_dimm_info_v2_id(p_db, &db_dimm.id);
+			db_dimm.config_table_type = table_type;
+			db_dimm.index_id = p_interleave_set->index;
+			db_dimm.device_handle = device_handle;
+			device_uid_bytes_to_string(p_dimm_info->dimm_identifier.v2.uid,
+					sizeof (p_dimm_info->dimm_identifier.v2.uid), db_dimm.device_uid);
+			db_dimm.offset = p_dimm_info->offset;
+			db_dimm.size = p_dimm_info->size;
+			rc = db_add_interleave_set_dimm_info_v2(p_db, &db_dimm);
+		}
 		offset += sizeof (struct dimm_info_extension_table);
 	}
 
@@ -175,6 +198,7 @@ int update_dimm_interleave_set_in_db(PersistentStore *p_db,
 int update_dimm_extension_tables_in_db(PersistentStore *p_db,
 		const unsigned int device_handle,
 		const enum config_table_type table_type,
+		NVM_UINT8 revision,
 		struct extension_table_header *p_top,
 		const NVM_UINT32 size)
 {
@@ -207,6 +231,7 @@ int update_dimm_extension_tables_in_db(PersistentStore *p_db,
 		{
 			// store it in the db
 			rc = update_dimm_interleave_set_in_db(p_db, device_handle, table_type,
+					revision,
 					(struct interleave_info_extension_table *)p_header);
 		}
 		// else unrecognized table, go to next
@@ -301,6 +326,7 @@ int update_dimm_platform_config_in_db(PersistentStore *p_db,
 				{
 					KEEP_ERROR(rc, update_dimm_extension_tables_in_db(p_db, device_handle,
 						TABLE_TYPE_CONFIG_INPUT,
+						p_config_input->header.revision,
 						(struct extension_table_header *)(NVM_UINT8 *)&p_config_input->p_ext_tables,
 						p_config_input->header.length - sizeof (struct config_input_table)));
 				}
@@ -339,6 +365,7 @@ int update_dimm_platform_config_in_db(PersistentStore *p_db,
 				{
 					KEEP_ERROR(rc, update_dimm_extension_tables_in_db(p_db, device_handle,
 						TABLE_TYPE_CONFIG_OUTPUT,
+						p_config_output->header.revision,
 						(struct extension_table_header *)
 								(NVM_UINT8 *)&p_config_output->p_ext_tables,
 						p_config_output->header.length - sizeof (struct config_output_table)));
@@ -381,6 +408,7 @@ int update_dimm_platform_config_in_db(PersistentStore *p_db,
 				{
 					KEEP_ERROR(rc, update_dimm_extension_tables_in_db(p_db, device_handle,
 							TABLE_TYPE_CURRENT_CONFIG,
+							p_current_config->header.revision,
 							(struct extension_table_header *)
 									(NVM_UINT8 *)&p_current_config->p_ext_tables,
 							p_current_config->header.length -
@@ -400,7 +428,7 @@ int update_dimm_platform_config_in_db(PersistentStore *p_db,
  * database and return the size. Data is only copied
  * if p_data is not null.
  */
-int get_dimm_interleave_dimms_from_db(PersistentStore *p_db,
+int get_dimm_interleave_dimms_v1_from_db(PersistentStore *p_db,
 		const unsigned int device_handle, const int table_type, const int index,
 		struct platform_config_data *p_data, const NVM_UINT32 offset,
 		const NVM_UINT32 size)
@@ -410,7 +438,7 @@ int get_dimm_interleave_dimms_from_db(PersistentStore *p_db,
 
 	// get the total number of dimm info table
 	int count = 0;
-	int db_rc = db_get_interleave_set_dimm_info_count(p_db, &count);
+	int db_rc = db_get_interleave_set_dimm_info_v1_count(p_db, &count);
 	if (db_rc != DB_SUCCESS)
 	{
 		COMMON_LOG_ERROR("Failed to retrieve the count of interleave set dimms");
@@ -419,9 +447,9 @@ int get_dimm_interleave_dimms_from_db(PersistentStore *p_db,
 	else if (count > 0)
 	{
 		// get all the dimms for this interleave set, then filter out the ones we want
-		struct db_interleave_set_dimm_info db_dimms[count];
-		memset(db_dimms, 0, count * sizeof (struct db_interleave_set_dimm_info));
-		count = db_get_interleave_set_dimm_infos(p_db, db_dimms, count);
+		struct db_interleave_set_dimm_info_v1 db_dimms[count];
+		memset(db_dimms, 0, count * sizeof (struct db_interleave_set_dimm_info_v1));
+		count = db_get_interleave_set_dimm_info_v1s(p_db, db_dimms, count);
 		if (count < DB_SUCCESS)
 		{
 			COMMON_LOG_ERROR("Failed to retrieve the interleave set dimms");
@@ -456,9 +484,12 @@ int get_dimm_interleave_dimms_from_db(PersistentStore *p_db,
 						p_dimm->offset = db_dimms[i].offset;
 
 						// convert db storage to unsigned char array
-						UINT_TO_MANUFACTURER(db_dimms[i].manufacturer, p_dimm->manufacturer);
-						UINT_TO_SERIAL_NUMBER(db_dimms[i].serial_num, p_dimm->serial_number);
-						memmove(p_dimm->part_number, db_dimms[i].part_num, NVM_PART_NUM_LEN - 1);
+						UINT_TO_MANUFACTURER(db_dimms[i].manufacturer,
+								p_dimm->dimm_identifier.v1.manufacturer);
+						UINT_TO_SERIAL_NUMBER(db_dimms[i].serial_num,
+								p_dimm->dimm_identifier.v1.serial_number);
+						memmove(p_dimm->dimm_identifier.v1.part_number,
+								db_dimms[i].part_num, NVM_PART_NUM_LEN - 1);
 					}
 					rc += sizeof (struct dimm_info_extension_table);
 				}
@@ -468,6 +499,111 @@ int get_dimm_interleave_dimms_from_db(PersistentStore *p_db,
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
+
+int get_dimm_interleave_dimms_v2_from_db(PersistentStore *p_db,
+		const unsigned int device_handle, const int table_type, const int index,
+		struct platform_config_data *p_data, const NVM_UINT32 offset,
+		const NVM_UINT32 size)
+{
+	COMMON_LOG_ENTRY();
+	int rc = 0; // 0 dimm info structs
+
+	// get the total number of dimm info table
+	int count = 0;
+	int db_rc = db_get_interleave_set_dimm_info_v2_count(p_db, &count);
+	if (db_rc != DB_SUCCESS)
+	{
+		COMMON_LOG_ERROR("Failed to retrieve the count of interleave set dimms");
+		rc = NVM_ERR_DRIVERFAILED;
+	}
+	else if (count > 0)
+	{
+		struct db_interleave_set_dimm_info_v2 db_dimms[count];
+		memset(db_dimms, 0, sizeof (db_dimms));
+		db_rc = db_get_interleave_set_dimm_info_v2s(p_db, db_dimms, count);
+		if (db_rc < DB_SUCCESS)
+		{
+			COMMON_LOG_ERROR("Failed to retrieve the interleave set dimms");
+			rc = NVM_ERR_DRIVERFAILED;
+		}
+		else
+		{
+			for (int i = 0; i < count; i++)
+			{
+				if (db_dimms[i].device_handle == device_handle &&
+						db_dimms[i].index_id == index &&
+						db_dimms[i].config_table_type == table_type)
+				{
+					if (p_data)
+					{
+						// make sure we have enough space for the dimm info struct
+						if (size < p_data->header.length + rc +
+								sizeof (struct dimm_info_extension_table))
+						{
+							COMMON_LOG_ERROR(
+								"Platform config data buffer size is too small");
+							rc = NVM_ERR_BADDEVICECONFIG;
+							break;
+						}
+
+						struct dimm_info_extension_table *p_dimm =
+							(struct dimm_info_extension_table *)
+							((NVM_UINT8 *)p_data + offset + rc);
+						p_dimm->size = db_dimms[i].size;
+						p_dimm->offset = db_dimms[i].offset;
+						device_uid_string_to_bytes(db_dimms[i].device_uid,
+								p_dimm->dimm_identifier.v2.uid,
+								sizeof (p_dimm->dimm_identifier.v2.uid));
+					}
+					rc += sizeof (struct dimm_info_extension_table);
+				}
+			}
+		}
+	}
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+int get_table_revision(PersistentStore *p_db, const NVM_UINT32 device_handle, const int table_type)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_ERR_NOTFOUND;
+
+	if (table_type == TABLE_TYPE_CURRENT_CONFIG)
+	{
+		struct db_dimm_current_config current_config;
+		memset(&current_config, 0, sizeof (current_config));
+		if (db_get_dimm_current_config_by_device_handle(p_db, device_handle,
+				&current_config) == DB_SUCCESS)
+		{
+			rc = current_config.revision;
+		}
+	}
+	else if (table_type == TABLE_TYPE_CONFIG_OUTPUT)
+	{
+		struct db_dimm_config_output config_output;
+		memset(&config_output, 0, sizeof (config_output));
+		if (db_get_dimm_config_output_by_device_handle(p_db, device_handle,
+				&config_output) == DB_SUCCESS)
+		{
+			rc = config_output.revision;
+		}
+	}
+	else if (table_type == TABLE_TYPE_CONFIG_INPUT)
+	{
+		struct db_dimm_config_input config_input;
+		memset(&config_input, 0, sizeof (config_input));
+		if (db_get_dimm_config_input_by_device_handle(p_db, device_handle,
+				&config_input) == DB_SUCCESS)
+		{
+			rc = config_input.revision;
+		}
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
 /*
  * Get the interleave tables from the
  * database and return the size. Data is only copied
@@ -535,9 +671,21 @@ int get_dimm_interleave_tables_from_db(PersistentStore *p_db,
 						p_set->dimm_count = (NVM_UINT8) db_sets[i].dimm_count;
 					}
 
-					int dimm_info_size = get_dimm_interleave_dimms_from_db(p_db, device_handle,
+					int revision = get_table_revision(p_db, device_handle, table_type);
+					int dimm_info_size = 0;
+					if (revision == 1)
+					{
+						dimm_info_size = get_dimm_interleave_dimms_v1_from_db(p_db, device_handle,
 							table_type, db_sets[i].index_id, p_data,
 							offset + rc + sizeof (struct interleave_info_extension_table), size);
+					}
+					else
+					{
+						dimm_info_size = get_dimm_interleave_dimms_v2_from_db(p_db, device_handle,
+							table_type, db_sets[i].index_id, p_data,
+							offset + rc + sizeof (struct interleave_info_extension_table), size);
+					}
+
 					if (dimm_info_size < 0)
 					{
 						rc = dimm_info_size;
@@ -547,10 +695,10 @@ int get_dimm_interleave_tables_from_db(PersistentStore *p_db,
 							!= db_sets[i].dimm_count)
 					{
 						COMMON_LOG_ERROR_F(
-							"Dimm count %d is incorrect for interleave set %d, expect %d",
-								(int)(dimm_info_size / sizeof (struct dimm_info_extension_table)),
-								db_sets[i].index_id,
-								db_sets[i].dimm_count);
+							"Dimm count %llu is incorrect for interleave set %d, expect %d",
+							(size_t)dimm_info_size / sizeof (struct dimm_info_extension_table),
+							db_sets[i].index_id,
+							db_sets[i].dimm_count);
 						rc = NVM_ERR_BADDEVICECONFIG;
 						break;
 					}

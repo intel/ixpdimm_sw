@@ -145,7 +145,7 @@ int nvm_save_state(const char *name, const NVM_SIZE name_len)
 			KEEP_ERROR(rc, support_store_host(p_store, history_id));
 
 			// clear interleave tables from store file
-			db_delete_all_interleave_set_dimm_infos(p_store);
+			db_delete_all_interleave_set_dimm_info_v1s(p_store);
 			db_delete_all_dimm_interleave_sets(p_store);
 
 			KEEP_ERROR(rc, support_store_sockets(p_store, history_id));
@@ -1556,6 +1556,7 @@ int support_store_interleave_set(PersistentStore *p_store,
 		int history_id,
 		NVM_NFIT_DEVICE_HANDLE device_handle,
 		const enum config_table_type table_type,
+		NVM_UINT8 table_revision,
 		struct interleave_info_extension_table *p_interleave_set)
 {
 	int rc = NVM_SUCCESS;
@@ -1591,20 +1592,41 @@ int support_store_interleave_set(PersistentStore *p_store,
 
 		struct dimm_info_extension_table *p_dimm_info =
 				(struct dimm_info_extension_table *)((NVM_UINT8 *)p_interleave_set + offset);
-		struct db_interleave_set_dimm_info db_dimm;
-		db_get_next_interleave_set_dimm_info_id(p_store, &db_dimm.id);
-		db_dimm.config_table_type = table_type;
-		db_dimm.index_id = p_interleave_set->index;
-		db_dimm.device_handle = device_handle.handle;
-		// convert manufacturer to uint16
-		db_dimm.manufacturer = MANUFACTURER_TO_UINT(p_dimm_info->manufacturer);
-		// convert serial number to uint32
-		db_dimm.serial_num = SERIAL_NUMBER_TO_UINT(p_dimm_info->serial_number);
-		s_strcpy(db_dimm.part_num, p_dimm_info->part_number, NVM_PART_NUM_LEN);
-		db_dimm.offset = p_dimm_info->offset;
-		db_dimm.size = p_dimm_info->size;
+		if (table_revision == 1)
+		{
+			struct db_interleave_set_dimm_info_v1 db_dimm;
+			db_get_next_interleave_set_dimm_info_v1_id(p_store, &db_dimm.id);
+			db_dimm.config_table_type = table_type;
+			db_dimm.index_id = p_interleave_set->index;
+			db_dimm.device_handle = device_handle.handle;
+			// convert manufacturer to uint16
+			db_dimm.manufacturer =
+					MANUFACTURER_TO_UINT(p_dimm_info->dimm_identifier.v1.manufacturer);
+			// convert serial number to uint32
+			db_dimm.serial_num =
+					SERIAL_NUMBER_TO_UINT(p_dimm_info->dimm_identifier.v1.serial_number);
+			s_strcpy(db_dimm.part_num, p_dimm_info->dimm_identifier.v1.part_number,
+					NVM_PART_NUM_LEN);
+			db_dimm.offset = p_dimm_info->offset;
+			db_dimm.size = p_dimm_info->size;
 
-		rc = db_save_interleave_set_dimm_info_state(p_store, history_id, &db_dimm);
+			rc = db_save_interleave_set_dimm_info_v1_state(p_store, history_id, &db_dimm);
+		}
+		else
+		{
+			struct db_interleave_set_dimm_info_v2 db_dimm;
+			db_get_next_interleave_set_dimm_info_v2_id(p_store, &db_dimm.id);
+			db_dimm.config_table_type = table_type;
+			db_dimm.index_id = p_interleave_set->index;
+			db_dimm.device_handle = device_handle.handle;
+			device_uid_bytes_to_string(p_dimm_info->dimm_identifier.v2.uid,
+					sizeof (p_dimm_info->dimm_identifier.v2.uid),
+					db_dimm.device_uid);
+			db_dimm.offset = p_dimm_info->offset;
+			db_dimm.size = p_dimm_info->size;
+
+			rc = db_save_interleave_set_dimm_info_v2_state(p_store, history_id, &db_dimm);
+		}
 		offset += sizeof (struct dimm_info_extension_table);
 	}
 	return rc;
@@ -1614,6 +1636,7 @@ int support_store_extension_tables_in_db(PersistentStore *p_store,
 		int history_id,
 		NVM_NFIT_DEVICE_HANDLE device_handle,
 		const enum config_table_type table_type,
+		NVM_UINT8 table_revision,
 		struct extension_table_header *p_top,
 		const NVM_UINT32 size)
 {
@@ -1651,6 +1674,7 @@ int support_store_extension_tables_in_db(PersistentStore *p_store,
 					history_id,
 					device_handle,
 					table_type,
+					table_revision,
 					(struct interleave_info_extension_table *)p_header);
 		}
 		// else unrecognized table, go to next
@@ -1734,6 +1758,7 @@ int support_store_platform_config_data(PersistentStore *p_store, int history_id,
 						history_id,
 						device_handle,
 						TABLE_TYPE_CONFIG_INPUT,
+						p_config_input->header.revision,
 						(struct extension_table_header *)(NVM_UINT8 *)&p_config_input->p_ext_tables,
 						p_config_input->header.length - sizeof (struct config_input_table)));
 				}
@@ -1774,6 +1799,7 @@ int support_store_platform_config_data(PersistentStore *p_store, int history_id,
 						history_id,
 						device_handle,
 						TABLE_TYPE_CONFIG_OUTPUT,
+						p_config_output->header.revision,
 					(struct extension_table_header *)(NVM_UINT8 *)&p_config_output->p_ext_tables,
 						p_config_output->header.length - sizeof (struct config_output_table)));
 
@@ -1821,6 +1847,7 @@ int support_store_platform_config_data(PersistentStore *p_store, int history_id,
 							history_id,
 						device_handle,
 						TABLE_TYPE_CURRENT_CONFIG,
+						p_current_config->header.revision,
 					(struct extension_table_header *)(NVM_UINT8 *)&p_current_config->p_ext_tables,
 						p_current_config->header.length - sizeof (struct current_config_table)));
 				}

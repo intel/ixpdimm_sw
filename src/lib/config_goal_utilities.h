@@ -51,6 +51,7 @@ int arrange_devices_in_interleave_set_for_pcat2(struct device_discovery *p_devic
 		int num_devices);
 
 void populate_dimm_info_extension_table(struct dimm_info_extension_table *p_dimms_ext,
+		NVM_UINT8 pcd_table_revision,
 		struct device_discovery *p_devices,
 		int num_devices,
 		const NVM_UINT64 interleave_set_size,
@@ -59,6 +60,7 @@ void populate_dimm_info_extension_table(struct dimm_info_extension_table *p_dimm
 int populate_dimm_info_extension_tables(struct dimm_info_extension_table *p_dimms_ext,
 		const struct app_direct_attributes *p_qos,
 		const NVM_UINT8 pcat_revision,
+		const NVM_UINT8 pcd_table_revision,
 		const NVM_UINT64 interleave_set_size,
 		const NVM_UINT64 interleave_set_offset);
 

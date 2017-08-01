@@ -70,7 +70,7 @@ void print_config_data_table_header(struct config_data_table_header header)
 	DEBUG_PCD("Config Data Table Header - Creator Revision: %u", header.creator_revision);
 }
 
-void print_extension_tables(void *p_ext_table, NVM_SIZE total_length)
+void print_extension_tables(void *p_ext_table, NVM_SIZE total_length, NVM_UINT32 table_revision)
 {
 	struct partition_size_change_extension_table *p_part_size_tbl;
 	struct interleave_info_extension_table *p_interleave_info_tbl;
@@ -119,17 +119,34 @@ void print_extension_tables(void *p_ext_table, NVM_SIZE total_length)
 
 			for (int i = 0; i < p_interleave_info_tbl->dimm_count; i++)
 			{
-				DEBUG_PCD("DIMM Info Extension Table - Manufacturer: 0x%02x%02x",
-					p_dimms[i].manufacturer[1],
-					p_dimms[i].manufacturer[0]);
-				DEBUG_PCD(
-					"DIMM Info Extension Table - Serial Number: 0x%02x%02x%02x%02x",
-					p_dimms[i].serial_number[3],
-					p_dimms[i].serial_number[2],
-					p_dimms[i].serial_number[1],
-					p_dimms[i].serial_number[0]);
-				DEBUG_PCD("DIMM Info Extension Table - Part Number: %s",
-					p_dimms[i].part_number);
+				if (table_revision == 1)
+				{
+					DEBUG_PCD("DIMM Info Extension Table - Manufacturer: 0x%02x%02x",
+						p_dimms[i].dimm_identifier.v1.manufacturer[1],
+						p_dimms[i].dimm_identifier.v1.manufacturer[0]);
+					DEBUG_PCD(
+						"DIMM Info Extension Table - Serial Number: 0x%02x%02x%02x%02x",
+						p_dimms[i].dimm_identifier.v1.serial_number[3],
+						p_dimms[i].dimm_identifier.v1.serial_number[2],
+						p_dimms[i].dimm_identifier.v1.serial_number[1],
+						p_dimms[i].dimm_identifier.v1.serial_number[0]);
+					DEBUG_PCD("DIMM Info Extension Table - Part Number: %s",
+						p_dimms[i].dimm_identifier.v1.part_number);
+				}
+				else
+				{
+					DEBUG_PCD("DIMM Info Extension Table - UID: "
+							"0x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
+						p_dimms[i].dimm_identifier.v2.uid[0],
+						p_dimms[i].dimm_identifier.v2.uid[1],
+						p_dimms[i].dimm_identifier.v2.uid[2],
+						p_dimms[i].dimm_identifier.v2.uid[3],
+						p_dimms[i].dimm_identifier.v2.uid[4],
+						p_dimms[i].dimm_identifier.v2.uid[5],
+						p_dimms[i].dimm_identifier.v2.uid[6],
+						p_dimms[i].dimm_identifier.v2.uid[7],
+						p_dimms[i].dimm_identifier.v2.uid[8]);
+				}
 				DEBUG_PCD("DIMM Info Extension Table - Offset: %llu", p_dimms[i].offset);
 				DEBUG_PCD("DIMM Info Extension Table - Size: %llu", p_dimms[i].size);
 			}
@@ -154,7 +171,8 @@ void print_pcd_current(struct current_config_table *p_current)
 	if (p_current->header.length > sizeof (struct current_config_table))
 	{
 		print_extension_tables(&p_current->p_ext_tables,
-			(p_current->header.length - sizeof (struct current_config_table)));
+			(p_current->header.length - sizeof (struct current_config_table)),
+			p_current->header.revision);
 	}
 }
 
@@ -168,7 +186,8 @@ void print_pcd_output(struct config_output_table *p_output)
 	if (p_output->header.length > sizeof (struct config_output_table))
 	{
 		print_extension_tables(&p_output->p_ext_tables,
-			(p_output->header.length - sizeof (struct config_output_table)));
+			(p_output->header.length - sizeof (struct config_output_table)),
+			p_output->header.revision);
 	}
 }
 
@@ -180,7 +199,8 @@ void print_pcd_input(struct config_input_table *p_input)
 	if (p_input->header.length > sizeof (struct config_input_table))
 	{
 		print_extension_tables(&p_input->p_ext_tables,
-			(p_input->header.length - sizeof (struct config_input_table)));
+			(p_input->header.length - sizeof (struct config_input_table)),
+			p_input->header.revision);
 	}
 }
 

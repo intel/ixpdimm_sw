@@ -434,7 +434,7 @@ int db_get_history_ids(const PersistentStore *p_ps,
 	return rc;
 }
 // Table count is calculated in CrudSchemaGenerator
-#define	TABLE_COUNT (117)
+#define	TABLE_COUNT (119)
 /*
  * Create a PersistentStore object
  */
@@ -1845,8 +1845,8 @@ tables[populate_index++] = ((struct table){"dimm_interleave_set",
 					 mirror_enable INTEGER , \
 					 status INTEGER  \
 					);"});
-tables[populate_index++] = ((struct table){"interleave_set_dimm_info",
-				"CREATE TABLE interleave_set_dimm_info (       \
+tables[populate_index++] = ((struct table){"interleave_set_dimm_info_v1",
+				"CREATE TABLE interleave_set_dimm_info_v1 (       \
 					 id INTEGER  PRIMARY KEY  NOT NULL UNIQUE  , \
 					 config_table_type INTEGER  , \
 					 index_id INTEGER  , \
@@ -1857,8 +1857,8 @@ tables[populate_index++] = ((struct table){"interleave_set_dimm_info",
 					 offset INTEGER  , \
 					 size INTEGER   \
 					);"});
-			tables[populate_index++] = ((struct table){"interleave_set_dimm_info_history",
-				"CREATE TABLE interleave_set_dimm_info_history (       \
+			tables[populate_index++] = ((struct table){"interleave_set_dimm_info_v1_history",
+				"CREATE TABLE interleave_set_dimm_info_v1_history (       \
 					history_id INTEGER NOT NULL, \
 					 id INTEGER , \
 					 config_table_type INTEGER , \
@@ -1867,6 +1867,27 @@ tables[populate_index++] = ((struct table){"interleave_set_dimm_info",
 					 manufacturer INTEGER , \
 					 serial_num INTEGER , \
 					 part_num TEXT , \
+					 offset INTEGER , \
+					 size INTEGER  \
+					);"});
+tables[populate_index++] = ((struct table){"interleave_set_dimm_info_v2",
+				"CREATE TABLE interleave_set_dimm_info_v2 (       \
+					 id INTEGER  PRIMARY KEY  NOT NULL UNIQUE  , \
+					 config_table_type INTEGER  , \
+					 index_id INTEGER  , \
+					 device_handle INTEGER  , \
+					 device_uid TEXT  , \
+					 offset INTEGER  , \
+					 size INTEGER   \
+					);"});
+			tables[populate_index++] = ((struct table){"interleave_set_dimm_info_v2_history",
+				"CREATE TABLE interleave_set_dimm_info_v2_history (       \
+					history_id INTEGER NOT NULL, \
+					 id INTEGER , \
+					 config_table_type INTEGER , \
+					 index_id INTEGER , \
+					 device_handle INTEGER , \
+					 device_uid TEXT , \
 					 offset INTEGER , \
 					 size INTEGER  \
 					);"});
@@ -2173,7 +2194,9 @@ char* history_table_names[] = {
 
 	"dimm_interleave_set_history",
 
-	"interleave_set_dimm_info_history",
+	"interleave_set_dimm_info_v1_history",
+
+	"interleave_set_dimm_info_v2_history",
 
 	"enable_error_injection_info_history",
 
@@ -10607,7 +10630,7 @@ enum db_return_codes db_delete_namespace_by_dimm_topology_device_handle(const Pe
 	}
 	return rc;
 }
-enum db_return_codes db_get_namespace_count_by_interleave_set_dimm_info_index_id(
+enum db_return_codes db_get_namespace_count_by_dimm_interleave_set_index_id(
 	const PersistentStore *p_ps,
 	const unsigned int interleave_set_index,
 	int *p_count)
@@ -10640,7 +10663,7 @@ enum db_return_codes db_get_namespace_count_by_interleave_set_dimm_info_index_id
 	}
 	return rc;
 }
-enum db_return_codes db_get_namespace_count_by_interleave_set_dimm_info_index_id_history(
+enum db_return_codes db_get_namespace_count_by_dimm_interleave_set_index_id_history(
 	const PersistentStore *p_ps,
 	const unsigned int interleave_set_index,
 	int *p_count, int history_id)
@@ -10676,7 +10699,7 @@ enum db_return_codes db_get_namespace_count_by_interleave_set_dimm_info_index_id
 	}
 	return rc;
 }
-enum db_return_codes db_get_namespaces_by_interleave_set_dimm_info_index_id(const PersistentStore *p_ps,
+enum db_return_codes db_get_namespaces_by_dimm_interleave_set_index_id(const PersistentStore *p_ps,
 	unsigned int interleave_set_index,
 	struct db_namespace *p_namespace,
 	int namespace_count)
@@ -10712,7 +10735,7 @@ enum db_return_codes db_get_namespaces_by_interleave_set_dimm_info_index_id(cons
 	}
 	return rc;
 }
-enum db_return_codes db_get_namespaces_by_interleave_set_dimm_info_index_id_history(const PersistentStore *p_ps,
+enum db_return_codes db_get_namespaces_by_dimm_interleave_set_index_id_history(const PersistentStore *p_ps,
 	unsigned int interleave_set_index,
 	struct db_namespace *p_namespace,
 	int namespace_count, int history_id)
@@ -10749,7 +10772,7 @@ enum db_return_codes db_get_namespaces_by_interleave_set_dimm_info_index_id_hist
 	}
 	return rc;
 }
-enum db_return_codes db_delete_namespace_by_interleave_set_dimm_info_index_id(const PersistentStore *p_ps,
+enum db_return_codes db_delete_namespace_by_dimm_interleave_set_index_id(const PersistentStore *p_ps,
 	unsigned int interleave_set_index)
 {
 	enum db_return_codes rc = DB_ERR_FAILURE;
@@ -29795,81 +29818,81 @@ enum db_return_codes db_delete_dimm_interleave_set_by_dimm_topology_device_handl
  * --- END dimm_interleave_set ----------------
  */
 /*
- * --- interleave_set_dimm_info ----------------
+ * --- interleave_set_dimm_info_v1 ----------------
  */
-void local_bind_interleave_set_dimm_info(sqlite3_stmt *p_stmt, struct db_interleave_set_dimm_info *p_interleave_set_dimm_info)
+void local_bind_interleave_set_dimm_info_v1(sqlite3_stmt *p_stmt, struct db_interleave_set_dimm_info_v1 *p_interleave_set_dimm_info_v1)
 {
-	BIND_INTEGER(p_stmt, "$id", (int)p_interleave_set_dimm_info->id);
-	BIND_INTEGER(p_stmt, "$config_table_type", (unsigned int)p_interleave_set_dimm_info->config_table_type);
-	BIND_INTEGER(p_stmt, "$index_id", (unsigned int)p_interleave_set_dimm_info->index_id);
-	BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)p_interleave_set_dimm_info->device_handle);
-	BIND_INTEGER(p_stmt, "$manufacturer", (unsigned int)p_interleave_set_dimm_info->manufacturer);
-	BIND_INTEGER(p_stmt, "$serial_num", (unsigned int)p_interleave_set_dimm_info->serial_num);
-	BIND_TEXT(p_stmt, "$part_num", (char *)p_interleave_set_dimm_info->part_num);
-	BIND_INTEGER(p_stmt, "$offset", (unsigned long long)p_interleave_set_dimm_info->offset);
-	BIND_INTEGER(p_stmt, "$size", (unsigned long long)p_interleave_set_dimm_info->size);
+	BIND_INTEGER(p_stmt, "$id", (int)p_interleave_set_dimm_info_v1->id);
+	BIND_INTEGER(p_stmt, "$config_table_type", (unsigned int)p_interleave_set_dimm_info_v1->config_table_type);
+	BIND_INTEGER(p_stmt, "$index_id", (unsigned int)p_interleave_set_dimm_info_v1->index_id);
+	BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)p_interleave_set_dimm_info_v1->device_handle);
+	BIND_INTEGER(p_stmt, "$manufacturer", (unsigned int)p_interleave_set_dimm_info_v1->manufacturer);
+	BIND_INTEGER(p_stmt, "$serial_num", (unsigned int)p_interleave_set_dimm_info_v1->serial_num);
+	BIND_TEXT(p_stmt, "$part_num", (char *)p_interleave_set_dimm_info_v1->part_num);
+	BIND_INTEGER(p_stmt, "$offset", (unsigned long long)p_interleave_set_dimm_info_v1->offset);
+	BIND_INTEGER(p_stmt, "$size", (unsigned long long)p_interleave_set_dimm_info_v1->size);
 }
-void local_get_interleave_set_dimm_info_relationships(const PersistentStore *p_ps,
-	sqlite3_stmt *p_stmt, struct db_interleave_set_dimm_info *p_interleave_set_dimm_info)
+void local_get_interleave_set_dimm_info_v1_relationships(const PersistentStore *p_ps,
+	sqlite3_stmt *p_stmt, struct db_interleave_set_dimm_info_v1 *p_interleave_set_dimm_info_v1)
 {
 }
 
-void local_get_interleave_set_dimm_info_relationships_history(const PersistentStore *p_ps,
-	sqlite3_stmt *p_stmt, struct db_interleave_set_dimm_info *p_interleave_set_dimm_info,
+void local_get_interleave_set_dimm_info_v1_relationships_history(const PersistentStore *p_ps,
+	sqlite3_stmt *p_stmt, struct db_interleave_set_dimm_info_v1 *p_interleave_set_dimm_info_v1,
 	int history_id)
 {
 }
 
-void local_row_to_interleave_set_dimm_info(const PersistentStore *p_ps,
-	sqlite3_stmt *p_stmt, struct db_interleave_set_dimm_info *p_interleave_set_dimm_info)
+void local_row_to_interleave_set_dimm_info_v1(const PersistentStore *p_ps,
+	sqlite3_stmt *p_stmt, struct db_interleave_set_dimm_info_v1 *p_interleave_set_dimm_info_v1)
 {
 	INTEGER_COLUMN(p_stmt,
 		0,
-		p_interleave_set_dimm_info->id);
+		p_interleave_set_dimm_info_v1->id);
 	INTEGER_COLUMN(p_stmt,
 		1,
-		p_interleave_set_dimm_info->config_table_type);
+		p_interleave_set_dimm_info_v1->config_table_type);
 	INTEGER_COLUMN(p_stmt,
 		2,
-		p_interleave_set_dimm_info->index_id);
+		p_interleave_set_dimm_info_v1->index_id);
 	INTEGER_COLUMN(p_stmt,
 		3,
-		p_interleave_set_dimm_info->device_handle);
+		p_interleave_set_dimm_info_v1->device_handle);
 	INTEGER_COLUMN(p_stmt,
 		4,
-		p_interleave_set_dimm_info->manufacturer);
+		p_interleave_set_dimm_info_v1->manufacturer);
 	INTEGER_COLUMN(p_stmt,
 		5,
-		p_interleave_set_dimm_info->serial_num);
+		p_interleave_set_dimm_info_v1->serial_num);
 	TEXT_COLUMN(p_stmt,
 		6,
-		p_interleave_set_dimm_info->part_num,
-		INTERLEAVE_SET_DIMM_INFO_PART_NUM_LEN);
+		p_interleave_set_dimm_info_v1->part_num,
+		INTERLEAVE_SET_DIMM_INFO_V1_PART_NUM_LEN);
 	INTEGER_COLUMN(p_stmt,
 		7,
-		p_interleave_set_dimm_info->offset);
+		p_interleave_set_dimm_info_v1->offset);
 	INTEGER_COLUMN(p_stmt,
 		8,
-		p_interleave_set_dimm_info->size);
+		p_interleave_set_dimm_info_v1->size);
 }
-void db_print_interleave_set_dimm_info(struct db_interleave_set_dimm_info *p_value)
+void db_print_interleave_set_dimm_info_v1(struct db_interleave_set_dimm_info_v1 *p_value)
 {
-	printf("interleave_set_dimm_info.id: %d\n", p_value->id);
-	printf("interleave_set_dimm_info.config_table_type: unsigned %d\n", p_value->config_table_type);
-	printf("interleave_set_dimm_info.index_id: unsigned %d\n", p_value->index_id);
-	printf("interleave_set_dimm_info.device_handle: unsigned %d\n", p_value->device_handle);
-	printf("interleave_set_dimm_info.manufacturer: unsigned %d\n", p_value->manufacturer);
-	printf("interleave_set_dimm_info.serial_num: unsigned %d\n", p_value->serial_num);
-	printf("interleave_set_dimm_info.part_num: %s\n", p_value->part_num);
-	printf("interleave_set_dimm_info.offset: unsigned %lld\n", p_value->offset);
-	printf("interleave_set_dimm_info.size: unsigned %lld\n", p_value->size);
+	printf("interleave_set_dimm_info_v1.id: %d\n", p_value->id);
+	printf("interleave_set_dimm_info_v1.config_table_type: unsigned %d\n", p_value->config_table_type);
+	printf("interleave_set_dimm_info_v1.index_id: unsigned %d\n", p_value->index_id);
+	printf("interleave_set_dimm_info_v1.device_handle: unsigned %d\n", p_value->device_handle);
+	printf("interleave_set_dimm_info_v1.manufacturer: unsigned %d\n", p_value->manufacturer);
+	printf("interleave_set_dimm_info_v1.serial_num: unsigned %d\n", p_value->serial_num);
+	printf("interleave_set_dimm_info_v1.part_num: %s\n", p_value->part_num);
+	printf("interleave_set_dimm_info_v1.offset: unsigned %lld\n", p_value->offset);
+	printf("interleave_set_dimm_info_v1.size: unsigned %lld\n", p_value->size);
 }
-enum db_return_codes db_add_interleave_set_dimm_info(const PersistentStore *p_ps,
-	struct db_interleave_set_dimm_info *p_interleave_set_dimm_info)
+enum db_return_codes db_add_interleave_set_dimm_info_v1(const PersistentStore *p_ps,
+	struct db_interleave_set_dimm_info_v1 *p_interleave_set_dimm_info_v1)
 {
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
-	char *sql = 	"INSERT INTO interleave_set_dimm_info \
+	char *sql = 	"INSERT INTO interleave_set_dimm_info_v1 \
 		(id, config_table_type, index_id, device_handle, manufacturer, serial_num, part_num, offset, size)  \
 		VALUES 		\
 		($id, \
@@ -29884,7 +29907,7 @@ enum db_return_codes db_add_interleave_set_dimm_info(const PersistentStore *p_ps
 	int sql_rc;
 	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
-		local_bind_interleave_set_dimm_info(p_stmt, p_interleave_set_dimm_info);
+		local_bind_interleave_set_dimm_info_v1(p_stmt, p_interleave_set_dimm_info_v1);
 		sql_rc = sqlite3_step(p_stmt);
 		if (sql_rc == SQLITE_DONE)
 		{
@@ -29903,16 +29926,16 @@ enum db_return_codes db_add_interleave_set_dimm_info(const PersistentStore *p_ps
 	}
 	return rc;
 }
-enum db_return_codes db_get_interleave_set_dimm_info_count(const PersistentStore *p_ps, int *p_count)
+enum db_return_codes db_get_interleave_set_dimm_info_v1_count(const PersistentStore *p_ps, int *p_count)
 {
-	return table_row_count(p_ps, "interleave_set_dimm_info", p_count);
+	return table_row_count(p_ps, "interleave_set_dimm_info_v1", p_count);
 }
-int db_get_interleave_set_dimm_infos(const PersistentStore *p_ps,
-	struct db_interleave_set_dimm_info *p_interleave_set_dimm_info,
-	int interleave_set_dimm_info_count)
+int db_get_interleave_set_dimm_info_v1s(const PersistentStore *p_ps,
+	struct db_interleave_set_dimm_info_v1 *p_interleave_set_dimm_info_v1,
+	int interleave_set_dimm_info_v1_count)
 {
 	int rc = DB_ERR_FAILURE;
-	memset(p_interleave_set_dimm_info, 0, sizeof (struct db_interleave_set_dimm_info) * interleave_set_dimm_info_count);
+	memset(p_interleave_set_dimm_info_v1, 0, sizeof (struct db_interleave_set_dimm_info_v1) * interleave_set_dimm_info_v1_count);
 	char *sql = "SELECT \
 		id \
 		,  config_table_type \
@@ -29924,7 +29947,7 @@ int db_get_interleave_set_dimm_infos(const PersistentStore *p_ps,
 		,  offset \
 		,  size \
 		  \
-		FROM interleave_set_dimm_info \
+		FROM interleave_set_dimm_info_v1 \
 		          \
 		 \
 		";
@@ -29933,10 +29956,10 @@ int db_get_interleave_set_dimm_infos(const PersistentStore *p_ps,
 	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
-		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < interleave_set_dimm_info_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < interleave_set_dimm_info_v1_count)
 		{
-			local_row_to_interleave_set_dimm_info(p_ps, p_stmt, &p_interleave_set_dimm_info[index]);
-			local_get_interleave_set_dimm_info_relationships(p_ps, p_stmt, &p_interleave_set_dimm_info[index]);
+			local_row_to_interleave_set_dimm_info_v1(p_ps, p_stmt, &p_interleave_set_dimm_info_v1[index]);
+			local_get_interleave_set_dimm_info_v1_relationships(p_ps, p_stmt, &p_interleave_set_dimm_info_v1[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
@@ -29953,30 +29976,30 @@ int db_get_interleave_set_dimm_infos(const PersistentStore *p_ps,
 	}
 	return rc;
 }
-enum db_return_codes db_delete_all_interleave_set_dimm_infos(const PersistentStore *p_ps)
+enum db_return_codes db_delete_all_interleave_set_dimm_info_v1s(const PersistentStore *p_ps)
 {
-	return run_sql_no_results(p_ps->db, "DELETE FROM interleave_set_dimm_info");
+	return run_sql_no_results(p_ps->db, "DELETE FROM interleave_set_dimm_info_v1");
 }
 
-enum db_return_codes db_save_interleave_set_dimm_info_state(const PersistentStore *p_ps,
+enum db_return_codes db_save_interleave_set_dimm_info_v1_state(const PersistentStore *p_ps,
 	int history_id,
-	struct db_interleave_set_dimm_info *p_interleave_set_dimm_info)
+	struct db_interleave_set_dimm_info_v1 *p_interleave_set_dimm_info_v1)
 {
 	enum db_return_codes rc = DB_SUCCESS;
-	struct db_interleave_set_dimm_info temp;
+	struct db_interleave_set_dimm_info_v1 temp;
 	/*
 	 * Main table - Insert new or update existing
 	 */
-	if (db_get_interleave_set_dimm_info_by_id(p_ps, p_interleave_set_dimm_info->id, &temp) == DB_SUCCESS)
+	if (db_get_interleave_set_dimm_info_v1_by_id(p_ps, p_interleave_set_dimm_info_v1->id, &temp) == DB_SUCCESS)
 	{
-		rc = db_update_interleave_set_dimm_info_by_id(p_ps,
-				p_interleave_set_dimm_info->id,
-				p_interleave_set_dimm_info);
+		rc = db_update_interleave_set_dimm_info_v1_by_id(p_ps,
+				p_interleave_set_dimm_info_v1->id,
+				p_interleave_set_dimm_info_v1);
 	}
 	else
 	{
 		sqlite3_stmt *p_stmt;
-		char *sql = 	"INSERT INTO interleave_set_dimm_info \
+		char *sql = 	"INSERT INTO interleave_set_dimm_info_v1 \
 			( id ,  config_table_type ,  index_id ,  device_handle ,  manufacturer ,  serial_num ,  part_num ,  offset ,  size )  \
 			VALUES 		\
 			($id, \
@@ -29991,7 +30014,7 @@ enum db_return_codes db_save_interleave_set_dimm_info_state(const PersistentStor
 		int sql_rc;
 		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
-			local_bind_interleave_set_dimm_info(p_stmt, p_interleave_set_dimm_info);
+			local_bind_interleave_set_dimm_info_v1(p_stmt, p_interleave_set_dimm_info_v1);
 			sql_rc = sqlite3_step(p_stmt);
 			sqlite3_finalize(p_stmt);
 			if (sql_rc != SQLITE_DONE)
@@ -30012,7 +30035,7 @@ enum db_return_codes db_save_interleave_set_dimm_info_state(const PersistentStor
 	if (rc == DB_SUCCESS)
 	{
 		sqlite3_stmt *p_stmt;
-		char *sql = "INSERT INTO interleave_set_dimm_info_history \
+		char *sql = "INSERT INTO interleave_set_dimm_info_v1_history \
 			(history_id, \
 				 id,  config_table_type,  index_id,  device_handle,  manufacturer,  serial_num,  part_num,  offset,  size)  \
 			VALUES 		($history_id, \
@@ -30029,7 +30052,7 @@ enum db_return_codes db_save_interleave_set_dimm_info_state(const PersistentStor
 		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
 			BIND_INTEGER(p_stmt, "$history_id", history_id);
-			local_bind_interleave_set_dimm_info(p_stmt, p_interleave_set_dimm_info);
+			local_bind_interleave_set_dimm_info_v1(p_stmt, p_interleave_set_dimm_info_v1);
 			sql_rc = sqlite3_step(p_stmt);
 			if (sql_rc == SQLITE_DONE)
 			{
@@ -30052,16 +30075,16 @@ enum db_return_codes db_save_interleave_set_dimm_info_state(const PersistentStor
 	return rc;
 }
 
-enum db_return_codes db_get_interleave_set_dimm_info_by_id(const PersistentStore *p_ps,
+enum db_return_codes db_get_interleave_set_dimm_info_v1_by_id(const PersistentStore *p_ps,
 	const int id,
-	struct db_interleave_set_dimm_info *p_interleave_set_dimm_info)
+	struct db_interleave_set_dimm_info_v1 *p_interleave_set_dimm_info_v1)
 {
-	memset(p_interleave_set_dimm_info, 0, sizeof (struct db_interleave_set_dimm_info));
+	memset(p_interleave_set_dimm_info_v1, 0, sizeof (struct db_interleave_set_dimm_info_v1));
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		id,  config_table_type,  index_id,  device_handle,  manufacturer,  serial_num,  part_num,  offset,  size  \
-		FROM interleave_set_dimm_info \
+		FROM interleave_set_dimm_info_v1 \
 		WHERE  id = $id";
 	int sql_rc;
 	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
@@ -30070,8 +30093,8 @@ enum db_return_codes db_get_interleave_set_dimm_info_by_id(const PersistentStore
 		sql_rc = sqlite3_step(p_stmt);
 		if (sql_rc == SQLITE_ROW)
 		{
-			local_row_to_interleave_set_dimm_info(p_ps, p_stmt, p_interleave_set_dimm_info);
-			local_get_interleave_set_dimm_info_relationships(p_ps, p_stmt, p_interleave_set_dimm_info);
+			local_row_to_interleave_set_dimm_info_v1(p_ps, p_stmt, p_interleave_set_dimm_info_v1);
+			local_get_interleave_set_dimm_info_v1_relationships(p_ps, p_stmt, p_interleave_set_dimm_info_v1);
 			rc = DB_SUCCESS;
 		}
 		sqlite3_finalize(p_stmt);
@@ -30089,13 +30112,13 @@ enum db_return_codes db_get_interleave_set_dimm_info_by_id(const PersistentStore
 	}
 	return rc;
 }
-enum db_return_codes db_update_interleave_set_dimm_info_by_id(const PersistentStore *p_ps,
+enum db_return_codes db_update_interleave_set_dimm_info_v1_by_id(const PersistentStore *p_ps,
 	const int id,
-	struct db_interleave_set_dimm_info *p_interleave_set_dimm_info)
+	struct db_interleave_set_dimm_info_v1 *p_interleave_set_dimm_info_v1)
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
-	char *sql = "UPDATE interleave_set_dimm_info \
+	char *sql = "UPDATE interleave_set_dimm_info_v1 \
 	SET \
 	id=$id \
 		,  config_table_type=$config_table_type \
@@ -30112,7 +30135,7 @@ enum db_return_codes db_update_interleave_set_dimm_info_by_id(const PersistentSt
 	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		BIND_INTEGER(p_stmt, "$id", (int)id);
-		local_bind_interleave_set_dimm_info(p_stmt, p_interleave_set_dimm_info);
+		local_bind_interleave_set_dimm_info_v1(p_stmt, p_interleave_set_dimm_info_v1);
 		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
 		if (sql_rc != SQLITE_DONE)
@@ -30128,12 +30151,12 @@ enum db_return_codes db_update_interleave_set_dimm_info_by_id(const PersistentSt
 	}
 	return rc;
 }
-enum db_return_codes db_delete_interleave_set_dimm_info_by_id(const PersistentStore *p_ps,
+enum db_return_codes db_delete_interleave_set_dimm_info_v1_by_id(const PersistentStore *p_ps,
 	const int id)
 {
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
-	char *sql = "DELETE FROM interleave_set_dimm_info \
+	char *sql = "DELETE FROM interleave_set_dimm_info_v1 \
 				 WHERE id = $id";
 	int sql_rc;
 	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
@@ -30159,7 +30182,7 @@ enum db_return_codes db_delete_interleave_set_dimm_info_by_id(const PersistentSt
 	return rc;
 }
 
-enum db_return_codes db_get_interleave_set_dimm_info_history_by_history_id_count(const PersistentStore *p_ps, 
+enum db_return_codes db_get_interleave_set_dimm_info_v1_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count)
 {
@@ -30167,7 +30190,7 @@ enum db_return_codes db_get_interleave_set_dimm_info_history_by_history_id_count
 	*p_count = 0;
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
-	snprintf(buffer, 1024, "select count(*) FROM interleave_set_dimm_info_history WHERE  history_id = '%d'", history_id);
+	snprintf(buffer, 1024, "select count(*) FROM interleave_set_dimm_info_v1_history WHERE  history_id = '%d'", history_id);
 	int sql_rc;
 	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
@@ -30191,13 +30214,13 @@ enum db_return_codes db_get_interleave_set_dimm_info_history_by_history_id_count
 	}
 	return rc;
 }
-enum db_return_codes db_get_interleave_set_dimm_info_history_count(const PersistentStore *p_ps, int *p_count)
+enum db_return_codes db_get_interleave_set_dimm_info_v1_history_count(const PersistentStore *p_ps, int *p_count)
 {
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	*p_count = 0;
 	sqlite3_stmt *p_stmt;
 	char buffer[1024];
-	snprintf(buffer, 1024, "select count(*) FROM interleave_set_dimm_info_history");
+	snprintf(buffer, 1024, "select count(*) FROM interleave_set_dimm_info_v1_history");
 	int sql_rc;
 	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
 	{
@@ -30221,27 +30244,27 @@ enum db_return_codes db_get_interleave_set_dimm_info_history_count(const Persist
 	}
 	return rc;
 }
-int db_get_interleave_set_dimm_info_history_by_history_id(const PersistentStore *p_ps,
-	struct db_interleave_set_dimm_info *p_interleave_set_dimm_info,
+int db_get_interleave_set_dimm_info_v1_history_by_history_id(const PersistentStore *p_ps,
+	struct db_interleave_set_dimm_info_v1 *p_interleave_set_dimm_info_v1,
 	int history_id,
-	int interleave_set_dimm_info_count)
+	int interleave_set_dimm_info_v1_count)
 {
 	int rc = DB_ERR_FAILURE;
-	memset(p_interleave_set_dimm_info, 0, sizeof (struct db_interleave_set_dimm_info) * interleave_set_dimm_info_count);
+	memset(p_interleave_set_dimm_info_v1, 0, sizeof (struct db_interleave_set_dimm_info_v1) * interleave_set_dimm_info_v1_count);
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		id,  config_table_type,  index_id,  device_handle,  manufacturer,  serial_num,  part_num,  offset,  size  \
-		FROM interleave_set_dimm_info_history WHERE history_id = $history_id";
+		FROM interleave_set_dimm_info_v1_history WHERE history_id = $history_id";
 	int sql_rc;
 	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
 		int index = 0;
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < interleave_set_dimm_info_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < interleave_set_dimm_info_v1_count)
 		{
 			rc = DB_SUCCESS;
-			local_row_to_interleave_set_dimm_info(p_ps, p_stmt, &p_interleave_set_dimm_info[index]);
-			local_get_interleave_set_dimm_info_relationships_history(p_ps, p_stmt, &p_interleave_set_dimm_info[index], history_id);
+			local_row_to_interleave_set_dimm_info_v1(p_ps, p_stmt, &p_interleave_set_dimm_info_v1[index]);
+			local_get_interleave_set_dimm_info_v1_relationships_history(p_ps, p_stmt, &p_interleave_set_dimm_info_v1[index], history_id);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
@@ -30258,25 +30281,25 @@ int db_get_interleave_set_dimm_info_history_by_history_id(const PersistentStore 
 	}
 	return rc;
 }
-enum db_return_codes db_delete_interleave_set_dimm_info_history(const PersistentStore *p_ps)
+enum db_return_codes db_delete_interleave_set_dimm_info_v1_history(const PersistentStore *p_ps)
 {
-	return run_sql_no_results(p_ps->db, "DELETE FROM interleave_set_dimm_info_history");
+	return run_sql_no_results(p_ps->db, "DELETE FROM interleave_set_dimm_info_v1_history");
 }
 
 /*!
- * Roll interleave_set_dimm_infos by id to specified max.
+ * Roll interleave_set_dimm_info_v1s by id to specified max.
  */
-enum db_return_codes db_roll_interleave_set_dimm_infos_by_id(const PersistentStore *p_ps,
+enum db_return_codes db_roll_interleave_set_dimm_info_v1s_by_id(const PersistentStore *p_ps,
 	int max_rows)
 {
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char sql[1024];
 	snprintf(sql, 1024,
-				"DELETE FROM interleave_set_dimm_info "
+				"DELETE FROM interleave_set_dimm_info_v1 "
 				"WHERE id NOT IN ("
 				"SELECT id "
-				"FROM interleave_set_dimm_info "
+				"FROM interleave_set_dimm_info_v1 "
 				"ORDER BY id DESC "
 				"LIMIT %d)", max_rows); 
 	int sql_rc;
@@ -30300,15 +30323,15 @@ enum db_return_codes db_roll_interleave_set_dimm_infos_by_id(const PersistentSto
 	return rc;
 }
 /*!
- * Get the max id in the interleave_set_dimm_info table.
+ * Get the max id in the interleave_set_dimm_info_v1 table.
  */
-enum db_return_codes db_get_next_interleave_set_dimm_info_id(const PersistentStore *p_ps, int *p_max)
+enum db_return_codes db_get_next_interleave_set_dimm_info_v1_id(const PersistentStore *p_ps, int *p_max)
 {
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	if (p_max)
 	{
 		if ((rc = run_scalar_sql(p_ps, 
-			"SELECT MAX(id) FROM interleave_set_dimm_info", p_max)) 
+			"SELECT MAX(id) FROM interleave_set_dimm_info_v1", p_max)) 
 			==  DB_SUCCESS)
 		{
 			(*p_max)++;
@@ -30316,14 +30339,14 @@ enum db_return_codes db_get_next_interleave_set_dimm_info_id(const PersistentSto
 	}
 	return rc;
 }
-enum db_return_codes db_get_interleave_set_dimm_info_count_by_dimm_interleave_set_index_id(
+enum db_return_codes db_get_interleave_set_dimm_info_v1_count_by_dimm_interleave_set_index_id(
 	const PersistentStore *p_ps,
 	const unsigned int index_id,
 	int *p_count)
 {
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	*p_count = 0;
-	const char *sql = "SELECT COUNT (*) FROM interleave_set_dimm_info WHERE index_id = $index_id";
+	const char *sql = "SELECT COUNT (*) FROM interleave_set_dimm_info_v1 WHERE index_id = $index_id";
 	sqlite3_stmt *p_stmt;
 	int sql_rc;
 	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
@@ -30349,14 +30372,14 @@ enum db_return_codes db_get_interleave_set_dimm_info_count_by_dimm_interleave_se
 	}
 	return rc;
 }
-enum db_return_codes db_get_interleave_set_dimm_info_count_by_dimm_interleave_set_index_id_history(
+enum db_return_codes db_get_interleave_set_dimm_info_v1_count_by_dimm_interleave_set_index_id_history(
 	const PersistentStore *p_ps,
 	const unsigned int index_id,
 	int *p_count, int history_id)
 {
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	*p_count = 0;
-	const char *sql = "SELECT COUNT (*) FROM interleave_set_dimm_info_history "
+	const char *sql = "SELECT COUNT (*) FROM interleave_set_dimm_info_v1_history "
 		"WHERE index_id = $index_id "
 			"AND history_id=$history_id";
 	sqlite3_stmt *p_stmt;
@@ -30385,16 +30408,16 @@ enum db_return_codes db_get_interleave_set_dimm_info_count_by_dimm_interleave_se
 	}
 	return rc;
 }
-enum db_return_codes db_get_interleave_set_dimm_infos_by_dimm_interleave_set_index_id(const PersistentStore *p_ps,
+enum db_return_codes db_get_interleave_set_dimm_info_v1s_by_dimm_interleave_set_index_id(const PersistentStore *p_ps,
 	unsigned int index_id,
-	struct db_interleave_set_dimm_info *p_interleave_set_dimm_info,
-	int interleave_set_dimm_info_count)
+	struct db_interleave_set_dimm_info_v1 *p_interleave_set_dimm_info_v1,
+	int interleave_set_dimm_info_v1_count)
 {
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		 id ,  config_table_type ,  index_id ,  device_handle ,  manufacturer ,  serial_num ,  part_num ,  offset ,  size  \
-		FROM interleave_set_dimm_info \
+		FROM interleave_set_dimm_info_v1 \
 		WHERE  index_id = $index_id";
 	int sql_rc;
 	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
@@ -30402,10 +30425,10 @@ enum db_return_codes db_get_interleave_set_dimm_infos_by_dimm_interleave_set_ind
 		rc = DB_SUCCESS;
 		BIND_INTEGER(p_stmt, "$index_id", (unsigned int)index_id);
 		int index = 0;
-		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < interleave_set_dimm_info_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < interleave_set_dimm_info_v1_count)
 		{
-			local_row_to_interleave_set_dimm_info(p_ps, p_stmt, &p_interleave_set_dimm_info[index]);
-			local_get_interleave_set_dimm_info_relationships(p_ps, p_stmt, &p_interleave_set_dimm_info[index]);
+			local_row_to_interleave_set_dimm_info_v1(p_ps, p_stmt, &p_interleave_set_dimm_info_v1[index]);
+			local_get_interleave_set_dimm_info_v1_relationships(p_ps, p_stmt, &p_interleave_set_dimm_info_v1[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
@@ -30421,16 +30444,16 @@ enum db_return_codes db_get_interleave_set_dimm_infos_by_dimm_interleave_set_ind
 	}
 	return rc;
 }
-enum db_return_codes db_get_interleave_set_dimm_infos_by_dimm_interleave_set_index_id_history(const PersistentStore *p_ps,
+enum db_return_codes db_get_interleave_set_dimm_info_v1s_by_dimm_interleave_set_index_id_history(const PersistentStore *p_ps,
 	unsigned int index_id,
-	struct db_interleave_set_dimm_info *p_interleave_set_dimm_info,
-	int interleave_set_dimm_info_count, int history_id)
+	struct db_interleave_set_dimm_info_v1 *p_interleave_set_dimm_info_v1,
+	int interleave_set_dimm_info_v1_count, int history_id)
 {
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		 id ,  config_table_type ,  index_id ,  device_handle ,  manufacturer ,  serial_num ,  part_num ,  offset ,  size  \
-		FROM interleave_set_dimm_info_history \
+		FROM interleave_set_dimm_info_v1_history \
 		WHERE  index_id = $index_id AND history_id=$history_id";
 	int sql_rc;
 	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
@@ -30439,10 +30462,10 @@ enum db_return_codes db_get_interleave_set_dimm_infos_by_dimm_interleave_set_ind
 		BIND_INTEGER(p_stmt, "$index_id", (unsigned int)index_id);
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
 		int index = 0;
-		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < interleave_set_dimm_info_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < interleave_set_dimm_info_v1_count)
 		{
-			local_row_to_interleave_set_dimm_info(p_ps, p_stmt, &p_interleave_set_dimm_info[index]);
-			local_get_interleave_set_dimm_info_relationships(p_ps, p_stmt, &p_interleave_set_dimm_info[index]);
+			local_row_to_interleave_set_dimm_info_v1(p_ps, p_stmt, &p_interleave_set_dimm_info_v1[index]);
+			local_get_interleave_set_dimm_info_v1_relationships(p_ps, p_stmt, &p_interleave_set_dimm_info_v1[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
@@ -30458,12 +30481,12 @@ enum db_return_codes db_get_interleave_set_dimm_infos_by_dimm_interleave_set_ind
 	}
 	return rc;
 }
-enum db_return_codes db_delete_interleave_set_dimm_info_by_dimm_interleave_set_index_id(const PersistentStore *p_ps,
+enum db_return_codes db_delete_interleave_set_dimm_info_v1_by_dimm_interleave_set_index_id(const PersistentStore *p_ps,
 	unsigned int index_id)
 {
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
-	char *sql = "DELETE FROM interleave_set_dimm_info \
+	char *sql = "DELETE FROM interleave_set_dimm_info_v1 \
 				 WHERE index_id = $index_id";
 	int sql_rc;
 	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
@@ -30486,14 +30509,14 @@ enum db_return_codes db_delete_interleave_set_dimm_info_by_dimm_interleave_set_i
 	}
 	return rc;
 }
-enum db_return_codes db_get_interleave_set_dimm_info_count_by_dimm_topology_device_handle(
+enum db_return_codes db_get_interleave_set_dimm_info_v1_count_by_dimm_topology_device_handle(
 	const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	int *p_count)
 {
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	*p_count = 0;
-	const char *sql = "SELECT COUNT (*) FROM interleave_set_dimm_info WHERE device_handle = $device_handle";
+	const char *sql = "SELECT COUNT (*) FROM interleave_set_dimm_info_v1 WHERE device_handle = $device_handle";
 	sqlite3_stmt *p_stmt;
 	int sql_rc;
 	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
@@ -30519,14 +30542,14 @@ enum db_return_codes db_get_interleave_set_dimm_info_count_by_dimm_topology_devi
 	}
 	return rc;
 }
-enum db_return_codes db_get_interleave_set_dimm_info_count_by_dimm_topology_device_handle_history(
+enum db_return_codes db_get_interleave_set_dimm_info_v1_count_by_dimm_topology_device_handle_history(
 	const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	int *p_count, int history_id)
 {
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	*p_count = 0;
-	const char *sql = "SELECT COUNT (*) FROM interleave_set_dimm_info_history "
+	const char *sql = "SELECT COUNT (*) FROM interleave_set_dimm_info_v1_history "
 		"WHERE device_handle = $device_handle "
 			"AND history_id=$history_id";
 	sqlite3_stmt *p_stmt;
@@ -30555,16 +30578,16 @@ enum db_return_codes db_get_interleave_set_dimm_info_count_by_dimm_topology_devi
 	}
 	return rc;
 }
-enum db_return_codes db_get_interleave_set_dimm_infos_by_dimm_topology_device_handle(const PersistentStore *p_ps,
+enum db_return_codes db_get_interleave_set_dimm_info_v1s_by_dimm_topology_device_handle(const PersistentStore *p_ps,
 	unsigned int device_handle,
-	struct db_interleave_set_dimm_info *p_interleave_set_dimm_info,
-	int interleave_set_dimm_info_count)
+	struct db_interleave_set_dimm_info_v1 *p_interleave_set_dimm_info_v1,
+	int interleave_set_dimm_info_v1_count)
 {
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		 id ,  config_table_type ,  index_id ,  device_handle ,  manufacturer ,  serial_num ,  part_num ,  offset ,  size  \
-		FROM interleave_set_dimm_info \
+		FROM interleave_set_dimm_info_v1 \
 		WHERE  device_handle = $device_handle";
 	int sql_rc;
 	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
@@ -30572,10 +30595,10 @@ enum db_return_codes db_get_interleave_set_dimm_infos_by_dimm_topology_device_ha
 		rc = DB_SUCCESS;
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		int index = 0;
-		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < interleave_set_dimm_info_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < interleave_set_dimm_info_v1_count)
 		{
-			local_row_to_interleave_set_dimm_info(p_ps, p_stmt, &p_interleave_set_dimm_info[index]);
-			local_get_interleave_set_dimm_info_relationships(p_ps, p_stmt, &p_interleave_set_dimm_info[index]);
+			local_row_to_interleave_set_dimm_info_v1(p_ps, p_stmt, &p_interleave_set_dimm_info_v1[index]);
+			local_get_interleave_set_dimm_info_v1_relationships(p_ps, p_stmt, &p_interleave_set_dimm_info_v1[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
@@ -30591,16 +30614,16 @@ enum db_return_codes db_get_interleave_set_dimm_infos_by_dimm_topology_device_ha
 	}
 	return rc;
 }
-enum db_return_codes db_get_interleave_set_dimm_infos_by_dimm_topology_device_handle_history(const PersistentStore *p_ps,
+enum db_return_codes db_get_interleave_set_dimm_info_v1s_by_dimm_topology_device_handle_history(const PersistentStore *p_ps,
 	unsigned int device_handle,
-	struct db_interleave_set_dimm_info *p_interleave_set_dimm_info,
-	int interleave_set_dimm_info_count, int history_id)
+	struct db_interleave_set_dimm_info_v1 *p_interleave_set_dimm_info_v1,
+	int interleave_set_dimm_info_v1_count, int history_id)
 {
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
 		 id ,  config_table_type ,  index_id ,  device_handle ,  manufacturer ,  serial_num ,  part_num ,  offset ,  size  \
-		FROM interleave_set_dimm_info_history \
+		FROM interleave_set_dimm_info_v1_history \
 		WHERE  device_handle = $device_handle AND history_id=$history_id";
 	int sql_rc;
 	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
@@ -30609,10 +30632,10 @@ enum db_return_codes db_get_interleave_set_dimm_infos_by_dimm_topology_device_ha
 		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
 		BIND_INTEGER(p_stmt, "$history_id", history_id);
 		int index = 0;
-		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < interleave_set_dimm_info_count)
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < interleave_set_dimm_info_v1_count)
 		{
-			local_row_to_interleave_set_dimm_info(p_ps, p_stmt, &p_interleave_set_dimm_info[index]);
-			local_get_interleave_set_dimm_info_relationships(p_ps, p_stmt, &p_interleave_set_dimm_info[index]);
+			local_row_to_interleave_set_dimm_info_v1(p_ps, p_stmt, &p_interleave_set_dimm_info_v1[index]);
+			local_get_interleave_set_dimm_info_v1_relationships(p_ps, p_stmt, &p_interleave_set_dimm_info_v1[index]);
 			index++;
 		}
 		sqlite3_finalize(p_stmt);
@@ -30628,12 +30651,12 @@ enum db_return_codes db_get_interleave_set_dimm_infos_by_dimm_topology_device_ha
 	}
 	return rc;
 }
-enum db_return_codes db_delete_interleave_set_dimm_info_by_dimm_topology_device_handle(const PersistentStore *p_ps,
+enum db_return_codes db_delete_interleave_set_dimm_info_v1_by_dimm_topology_device_handle(const PersistentStore *p_ps,
 	unsigned int device_handle)
 {
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
-	char *sql = "DELETE FROM interleave_set_dimm_info \
+	char *sql = "DELETE FROM interleave_set_dimm_info_v1 \
 				 WHERE device_handle = $device_handle";
 	int sql_rc;
 	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
@@ -30657,22 +30680,867 @@ enum db_return_codes db_delete_interleave_set_dimm_info_by_dimm_topology_device_
 	return rc;
 }
 /*!
- * Clear interleave_set_dimm_info.serial_num
+ * Clear interleave_set_dimm_info_v1.serial_num
  */
-enum db_return_codes  db_clear_interleave_set_dimm_info_serial_num(PersistentStore *p_ps)
+enum db_return_codes  db_clear_interleave_set_dimm_info_v1_serial_num(PersistentStore *p_ps)
 {
 	enum db_return_codes rc =
-		run_sql_no_results(p_ps->db, "UPDATE interleave_set_dimm_info SET serial_num=''");
+		run_sql_no_results(p_ps->db, "UPDATE interleave_set_dimm_info_v1 SET serial_num=''");
 
 	if (rc == DB_SUCCESS)
 	{
-		rc = run_sql_no_results(p_ps->db, "UPDATE interleave_set_dimm_info_history SET serial_num=''");
+		rc = run_sql_no_results(p_ps->db, "UPDATE interleave_set_dimm_info_v1_history SET serial_num=''");
 	}
 
 	return rc;
 }
 /*
- * --- END interleave_set_dimm_info ----------------
+ * --- END interleave_set_dimm_info_v1 ----------------
+ */
+/*
+ * --- interleave_set_dimm_info_v2 ----------------
+ */
+void local_bind_interleave_set_dimm_info_v2(sqlite3_stmt *p_stmt, struct db_interleave_set_dimm_info_v2 *p_interleave_set_dimm_info_v2)
+{
+	BIND_INTEGER(p_stmt, "$id", (int)p_interleave_set_dimm_info_v2->id);
+	BIND_INTEGER(p_stmt, "$config_table_type", (unsigned int)p_interleave_set_dimm_info_v2->config_table_type);
+	BIND_INTEGER(p_stmt, "$index_id", (unsigned int)p_interleave_set_dimm_info_v2->index_id);
+	BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)p_interleave_set_dimm_info_v2->device_handle);
+	BIND_TEXT(p_stmt, "$device_uid", (char *)p_interleave_set_dimm_info_v2->device_uid);
+	BIND_INTEGER(p_stmt, "$offset", (unsigned long long)p_interleave_set_dimm_info_v2->offset);
+	BIND_INTEGER(p_stmt, "$size", (unsigned long long)p_interleave_set_dimm_info_v2->size);
+}
+void local_get_interleave_set_dimm_info_v2_relationships(const PersistentStore *p_ps,
+	sqlite3_stmt *p_stmt, struct db_interleave_set_dimm_info_v2 *p_interleave_set_dimm_info_v2)
+{
+}
+
+void local_get_interleave_set_dimm_info_v2_relationships_history(const PersistentStore *p_ps,
+	sqlite3_stmt *p_stmt, struct db_interleave_set_dimm_info_v2 *p_interleave_set_dimm_info_v2,
+	int history_id)
+{
+}
+
+void local_row_to_interleave_set_dimm_info_v2(const PersistentStore *p_ps,
+	sqlite3_stmt *p_stmt, struct db_interleave_set_dimm_info_v2 *p_interleave_set_dimm_info_v2)
+{
+	INTEGER_COLUMN(p_stmt,
+		0,
+		p_interleave_set_dimm_info_v2->id);
+	INTEGER_COLUMN(p_stmt,
+		1,
+		p_interleave_set_dimm_info_v2->config_table_type);
+	INTEGER_COLUMN(p_stmt,
+		2,
+		p_interleave_set_dimm_info_v2->index_id);
+	INTEGER_COLUMN(p_stmt,
+		3,
+		p_interleave_set_dimm_info_v2->device_handle);
+	TEXT_COLUMN(p_stmt,
+		4,
+		p_interleave_set_dimm_info_v2->device_uid,
+		INTERLEAVE_SET_DIMM_INFO_V2_DEVICE_UID_LEN);
+	INTEGER_COLUMN(p_stmt,
+		5,
+		p_interleave_set_dimm_info_v2->offset);
+	INTEGER_COLUMN(p_stmt,
+		6,
+		p_interleave_set_dimm_info_v2->size);
+}
+void db_print_interleave_set_dimm_info_v2(struct db_interleave_set_dimm_info_v2 *p_value)
+{
+	printf("interleave_set_dimm_info_v2.id: %d\n", p_value->id);
+	printf("interleave_set_dimm_info_v2.config_table_type: unsigned %d\n", p_value->config_table_type);
+	printf("interleave_set_dimm_info_v2.index_id: unsigned %d\n", p_value->index_id);
+	printf("interleave_set_dimm_info_v2.device_handle: unsigned %d\n", p_value->device_handle);
+	printf("interleave_set_dimm_info_v2.device_uid: %s\n", p_value->device_uid);
+	printf("interleave_set_dimm_info_v2.offset: unsigned %lld\n", p_value->offset);
+	printf("interleave_set_dimm_info_v2.size: unsigned %lld\n", p_value->size);
+}
+enum db_return_codes db_add_interleave_set_dimm_info_v2(const PersistentStore *p_ps,
+	struct db_interleave_set_dimm_info_v2 *p_interleave_set_dimm_info_v2)
+{
+	enum db_return_codes rc = DB_ERR_FAILURE;
+	sqlite3_stmt *p_stmt;
+	char *sql = 	"INSERT INTO interleave_set_dimm_info_v2 \
+		(id, config_table_type, index_id, device_handle, device_uid, offset, size)  \
+		VALUES 		\
+		($id, \
+		$config_table_type, \
+		$index_id, \
+		$device_handle, \
+		$device_uid, \
+		$offset, \
+		$size) ";
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
+	{
+		local_bind_interleave_set_dimm_info_v2(p_stmt, p_interleave_set_dimm_info_v2);
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
+		{
+			rc = DB_SUCCESS;
+		}
+		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+	}
+	return rc;
+}
+enum db_return_codes db_get_interleave_set_dimm_info_v2_count(const PersistentStore *p_ps, int *p_count)
+{
+	return table_row_count(p_ps, "interleave_set_dimm_info_v2", p_count);
+}
+int db_get_interleave_set_dimm_info_v2s(const PersistentStore *p_ps,
+	struct db_interleave_set_dimm_info_v2 *p_interleave_set_dimm_info_v2,
+	int interleave_set_dimm_info_v2_count)
+{
+	int rc = DB_ERR_FAILURE;
+	memset(p_interleave_set_dimm_info_v2, 0, sizeof (struct db_interleave_set_dimm_info_v2) * interleave_set_dimm_info_v2_count);
+	char *sql = "SELECT \
+		id \
+		,  config_table_type \
+		,  index_id \
+		,  device_handle \
+		,  device_uid \
+		,  offset \
+		,  size \
+		  \
+		FROM interleave_set_dimm_info_v2 \
+		        \
+		 \
+		";
+	sqlite3_stmt *p_stmt;
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
+	{
+		int index = 0;
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < interleave_set_dimm_info_v2_count)
+		{
+			local_row_to_interleave_set_dimm_info_v2(p_ps, p_stmt, &p_interleave_set_dimm_info_v2[index]);
+			local_get_interleave_set_dimm_info_v2_relationships(p_ps, p_stmt, &p_interleave_set_dimm_info_v2[index]);
+			index++;
+		}
+		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+	}
+	return rc;
+}
+enum db_return_codes db_delete_all_interleave_set_dimm_info_v2s(const PersistentStore *p_ps)
+{
+	return run_sql_no_results(p_ps->db, "DELETE FROM interleave_set_dimm_info_v2");
+}
+
+enum db_return_codes db_save_interleave_set_dimm_info_v2_state(const PersistentStore *p_ps,
+	int history_id,
+	struct db_interleave_set_dimm_info_v2 *p_interleave_set_dimm_info_v2)
+{
+	enum db_return_codes rc = DB_SUCCESS;
+	struct db_interleave_set_dimm_info_v2 temp;
+	/*
+	 * Main table - Insert new or update existing
+	 */
+	if (db_get_interleave_set_dimm_info_v2_by_id(p_ps, p_interleave_set_dimm_info_v2->id, &temp) == DB_SUCCESS)
+	{
+		rc = db_update_interleave_set_dimm_info_v2_by_id(p_ps,
+				p_interleave_set_dimm_info_v2->id,
+				p_interleave_set_dimm_info_v2);
+	}
+	else
+	{
+		sqlite3_stmt *p_stmt;
+		char *sql = 	"INSERT INTO interleave_set_dimm_info_v2 \
+			( id ,  config_table_type ,  index_id ,  device_handle ,  device_uid ,  offset ,  size )  \
+			VALUES 		\
+			($id, \
+			$config_table_type, \
+			$index_id, \
+			$device_handle, \
+			$device_uid, \
+			$offset, \
+			$size) ";
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
+		{
+			local_bind_interleave_set_dimm_info_v2(p_stmt, p_interleave_set_dimm_info_v2);
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+		}
+	}
+	/*
+	 * Insert as a history
+	 */
+	if (rc == DB_SUCCESS)
+	{
+		sqlite3_stmt *p_stmt;
+		char *sql = "INSERT INTO interleave_set_dimm_info_v2_history \
+			(history_id, \
+				 id,  config_table_type,  index_id,  device_handle,  device_uid,  offset,  size)  \
+			VALUES 		($history_id, \
+				 $id , \
+				 $config_table_type , \
+				 $index_id , \
+				 $device_handle , \
+				 $device_uid , \
+				 $offset , \
+				 $size )";
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
+		{
+			BIND_INTEGER(p_stmt, "$history_id", history_id);
+			local_bind_interleave_set_dimm_info_v2(p_stmt, p_interleave_set_dimm_info_v2);
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
+		}
+		else
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+		}
+	}
+	return rc;
+}
+
+enum db_return_codes db_get_interleave_set_dimm_info_v2_by_id(const PersistentStore *p_ps,
+	const int id,
+	struct db_interleave_set_dimm_info_v2 *p_interleave_set_dimm_info_v2)
+{
+	memset(p_interleave_set_dimm_info_v2, 0, sizeof (struct db_interleave_set_dimm_info_v2));
+	enum db_return_codes rc = DB_ERR_FAILURE;
+	sqlite3_stmt *p_stmt;
+	char *sql = "SELECT \
+		id,  config_table_type,  index_id,  device_handle,  device_uid,  offset,  size  \
+		FROM interleave_set_dimm_info_v2 \
+		WHERE  id = $id";
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
+	{
+		BIND_INTEGER(p_stmt, "$id", (int)id);
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
+		{
+			local_row_to_interleave_set_dimm_info_v2(p_ps, p_stmt, p_interleave_set_dimm_info_v2);
+			local_get_interleave_set_dimm_info_v2_relationships(p_ps, p_stmt, p_interleave_set_dimm_info_v2);
+			rc = DB_SUCCESS;
+		}
+		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+	}
+	return rc;
+}
+enum db_return_codes db_update_interleave_set_dimm_info_v2_by_id(const PersistentStore *p_ps,
+	const int id,
+	struct db_interleave_set_dimm_info_v2 *p_interleave_set_dimm_info_v2)
+{
+	sqlite3_stmt *p_stmt;
+	enum db_return_codes rc = DB_SUCCESS;
+	char *sql = "UPDATE interleave_set_dimm_info_v2 \
+	SET \
+	id=$id \
+		,  config_table_type=$config_table_type \
+		,  index_id=$index_id \
+		,  device_handle=$device_handle \
+		,  device_uid=$device_uid \
+		,  offset=$offset \
+		,  size=$size \
+		  \
+	WHERE id=$id ";
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
+	{
+		BIND_INTEGER(p_stmt, "$id", (int)id);
+		local_bind_interleave_set_dimm_info_v2(p_stmt, p_interleave_set_dimm_info_v2);
+		sql_rc = sqlite3_step(p_stmt);
+		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+	}
+	return rc;
+}
+enum db_return_codes db_delete_interleave_set_dimm_info_v2_by_id(const PersistentStore *p_ps,
+	const int id)
+{
+	enum db_return_codes rc = DB_ERR_FAILURE;
+	sqlite3_stmt *p_stmt;
+	char *sql = "DELETE FROM interleave_set_dimm_info_v2 \
+				 WHERE id = $id";
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
+	{
+		BIND_INTEGER(p_stmt, "$id", (int)id);
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
+		{
+			rc = DB_SUCCESS;
+		}
+		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+	}
+	return rc;
+}
+
+enum db_return_codes db_get_interleave_set_dimm_info_v2_history_by_history_id_count(const PersistentStore *p_ps, 
+	int history_id,
+	int *p_count)
+{
+	enum db_return_codes rc = DB_ERR_FAILURE;
+	*p_count = 0;
+	sqlite3_stmt *p_stmt;
+	char buffer[1024];
+	snprintf(buffer, 1024, "select count(*) FROM interleave_set_dimm_info_v2_history WHERE  history_id = '%d'", history_id);
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
+	{
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
+		{
+			*p_count = sqlite3_column_int(p_stmt, 0);
+			rc = DB_SUCCESS;
+		}
+		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+	}
+	return rc;
+}
+enum db_return_codes db_get_interleave_set_dimm_info_v2_history_count(const PersistentStore *p_ps, int *p_count)
+{
+	enum db_return_codes rc = DB_ERR_FAILURE;
+	*p_count = 0;
+	sqlite3_stmt *p_stmt;
+	char buffer[1024];
+	snprintf(buffer, 1024, "select count(*) FROM interleave_set_dimm_info_v2_history");
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
+	{
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
+		{
+			*p_count = sqlite3_column_int(p_stmt, 0);
+			rc = DB_SUCCESS;
+		}
+		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+	}
+	return rc;
+}
+int db_get_interleave_set_dimm_info_v2_history_by_history_id(const PersistentStore *p_ps,
+	struct db_interleave_set_dimm_info_v2 *p_interleave_set_dimm_info_v2,
+	int history_id,
+	int interleave_set_dimm_info_v2_count)
+{
+	int rc = DB_ERR_FAILURE;
+	memset(p_interleave_set_dimm_info_v2, 0, sizeof (struct db_interleave_set_dimm_info_v2) * interleave_set_dimm_info_v2_count);
+	sqlite3_stmt *p_stmt;
+	char *sql = "SELECT \
+		id,  config_table_type,  index_id,  device_handle,  device_uid,  offset,  size  \
+		FROM interleave_set_dimm_info_v2_history WHERE history_id = $history_id";
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
+	{
+		int index = 0;
+		BIND_INTEGER(p_stmt, "$history_id", history_id);
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < interleave_set_dimm_info_v2_count)
+		{
+			rc = DB_SUCCESS;
+			local_row_to_interleave_set_dimm_info_v2(p_ps, p_stmt, &p_interleave_set_dimm_info_v2[index]);
+			local_get_interleave_set_dimm_info_v2_relationships_history(p_ps, p_stmt, &p_interleave_set_dimm_info_v2[index], history_id);
+			index++;
+		}
+		sqlite3_finalize(p_stmt);
+		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+	}
+	return rc;
+}
+enum db_return_codes db_delete_interleave_set_dimm_info_v2_history(const PersistentStore *p_ps)
+{
+	return run_sql_no_results(p_ps->db, "DELETE FROM interleave_set_dimm_info_v2_history");
+}
+
+/*!
+ * Roll interleave_set_dimm_info_v2s by id to specified max.
+ */
+enum db_return_codes db_roll_interleave_set_dimm_info_v2s_by_id(const PersistentStore *p_ps,
+	int max_rows)
+{
+	enum db_return_codes rc = DB_ERR_FAILURE;
+	sqlite3_stmt *p_stmt;
+	char sql[1024];
+	snprintf(sql, 1024,
+				"DELETE FROM interleave_set_dimm_info_v2 "
+				"WHERE id NOT IN ("
+				"SELECT id "
+				"FROM interleave_set_dimm_info_v2 "
+				"ORDER BY id DESC "
+				"LIMIT %d)", max_rows); 
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
+	{
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
+		{
+			rc = DB_SUCCESS;
+		}
+		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+	}
+	return rc;
+}
+/*!
+ * Get the max id in the interleave_set_dimm_info_v2 table.
+ */
+enum db_return_codes db_get_next_interleave_set_dimm_info_v2_id(const PersistentStore *p_ps, int *p_max)
+{
+	enum db_return_codes rc = DB_ERR_FAILURE;
+	if (p_max)
+	{
+		if ((rc = run_scalar_sql(p_ps, 
+			"SELECT MAX(id) FROM interleave_set_dimm_info_v2", p_max)) 
+			==  DB_SUCCESS)
+		{
+			(*p_max)++;
+		}
+	}
+	return rc;
+}
+enum db_return_codes db_get_interleave_set_dimm_info_v2_count_by_dimm_interleave_set_index_id(
+	const PersistentStore *p_ps,
+	const unsigned int index_id,
+	int *p_count)
+{
+	enum db_return_codes rc = DB_ERR_FAILURE;
+	*p_count = 0;
+	const char *sql = "SELECT COUNT (*) FROM interleave_set_dimm_info_v2 WHERE index_id = $index_id";
+	sqlite3_stmt *p_stmt;
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
+	{
+		BIND_INTEGER(p_stmt, "$index_id", (unsigned int)index_id);
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
+		{
+			*p_count = sqlite3_column_int(p_stmt, 0);
+			rc = DB_SUCCESS;
+		}
+		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+	}
+	return rc;
+}
+enum db_return_codes db_get_interleave_set_dimm_info_v2_count_by_dimm_interleave_set_index_id_history(
+	const PersistentStore *p_ps,
+	const unsigned int index_id,
+	int *p_count, int history_id)
+{
+	enum db_return_codes rc = DB_ERR_FAILURE;
+	*p_count = 0;
+	const char *sql = "SELECT COUNT (*) FROM interleave_set_dimm_info_v2_history "
+		"WHERE index_id = $index_id "
+			"AND history_id=$history_id";
+	sqlite3_stmt *p_stmt;
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
+	{
+		BIND_INTEGER(p_stmt, "$index_id", (unsigned int)index_id);
+		BIND_INTEGER(p_stmt, "$history_id", history_id);
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
+		{
+			*p_count = sqlite3_column_int(p_stmt, 0);
+			rc = DB_SUCCESS;
+		}
+		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+	}
+	return rc;
+}
+enum db_return_codes db_get_interleave_set_dimm_info_v2s_by_dimm_interleave_set_index_id(const PersistentStore *p_ps,
+	unsigned int index_id,
+	struct db_interleave_set_dimm_info_v2 *p_interleave_set_dimm_info_v2,
+	int interleave_set_dimm_info_v2_count)
+{
+	enum db_return_codes rc = DB_ERR_FAILURE;
+	sqlite3_stmt *p_stmt;
+	char *sql = "SELECT \
+		 id ,  config_table_type ,  index_id ,  device_handle ,  device_uid ,  offset ,  size  \
+		FROM interleave_set_dimm_info_v2 \
+		WHERE  index_id = $index_id";
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
+	{
+		rc = DB_SUCCESS;
+		BIND_INTEGER(p_stmt, "$index_id", (unsigned int)index_id);
+		int index = 0;
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < interleave_set_dimm_info_v2_count)
+		{
+			local_row_to_interleave_set_dimm_info_v2(p_ps, p_stmt, &p_interleave_set_dimm_info_v2[index]);
+			local_get_interleave_set_dimm_info_v2_relationships(p_ps, p_stmt, &p_interleave_set_dimm_info_v2[index]);
+			index++;
+		}
+		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+	}
+	return rc;
+}
+enum db_return_codes db_get_interleave_set_dimm_info_v2s_by_dimm_interleave_set_index_id_history(const PersistentStore *p_ps,
+	unsigned int index_id,
+	struct db_interleave_set_dimm_info_v2 *p_interleave_set_dimm_info_v2,
+	int interleave_set_dimm_info_v2_count, int history_id)
+{
+	enum db_return_codes rc = DB_ERR_FAILURE;
+	sqlite3_stmt *p_stmt;
+	char *sql = "SELECT \
+		 id ,  config_table_type ,  index_id ,  device_handle ,  device_uid ,  offset ,  size  \
+		FROM interleave_set_dimm_info_v2_history \
+		WHERE  index_id = $index_id AND history_id=$history_id";
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
+	{
+		rc = DB_SUCCESS;
+		BIND_INTEGER(p_stmt, "$index_id", (unsigned int)index_id);
+		BIND_INTEGER(p_stmt, "$history_id", history_id);
+		int index = 0;
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < interleave_set_dimm_info_v2_count)
+		{
+			local_row_to_interleave_set_dimm_info_v2(p_ps, p_stmt, &p_interleave_set_dimm_info_v2[index]);
+			local_get_interleave_set_dimm_info_v2_relationships(p_ps, p_stmt, &p_interleave_set_dimm_info_v2[index]);
+			index++;
+		}
+		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+	}
+	return rc;
+}
+enum db_return_codes db_delete_interleave_set_dimm_info_v2_by_dimm_interleave_set_index_id(const PersistentStore *p_ps,
+	unsigned int index_id)
+{
+	enum db_return_codes rc = DB_ERR_FAILURE;
+	sqlite3_stmt *p_stmt;
+	char *sql = "DELETE FROM interleave_set_dimm_info_v2 \
+				 WHERE index_id = $index_id";
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
+	{
+		BIND_INTEGER(p_stmt, "$index_id", (unsigned int)index_id);
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
+		{
+			rc = DB_SUCCESS;
+		}
+		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+	}
+	return rc;
+}
+enum db_return_codes db_get_interleave_set_dimm_info_v2_count_by_dimm_topology_device_handle(
+	const PersistentStore *p_ps,
+	const unsigned int device_handle,
+	int *p_count)
+{
+	enum db_return_codes rc = DB_ERR_FAILURE;
+	*p_count = 0;
+	const char *sql = "SELECT COUNT (*) FROM interleave_set_dimm_info_v2 WHERE device_handle = $device_handle";
+	sqlite3_stmt *p_stmt;
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
+	{
+		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
+		{
+			*p_count = sqlite3_column_int(p_stmt, 0);
+			rc = DB_SUCCESS;
+		}
+		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+	}
+	return rc;
+}
+enum db_return_codes db_get_interleave_set_dimm_info_v2_count_by_dimm_topology_device_handle_history(
+	const PersistentStore *p_ps,
+	const unsigned int device_handle,
+	int *p_count, int history_id)
+{
+	enum db_return_codes rc = DB_ERR_FAILURE;
+	*p_count = 0;
+	const char *sql = "SELECT COUNT (*) FROM interleave_set_dimm_info_v2_history "
+		"WHERE device_handle = $device_handle "
+			"AND history_id=$history_id";
+	sqlite3_stmt *p_stmt;
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
+	{
+		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
+		BIND_INTEGER(p_stmt, "$history_id", history_id);
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
+		{
+			*p_count = sqlite3_column_int(p_stmt, 0);
+			rc = DB_SUCCESS;
+		}
+		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+	}
+	return rc;
+}
+enum db_return_codes db_get_interleave_set_dimm_info_v2s_by_dimm_topology_device_handle(const PersistentStore *p_ps,
+	unsigned int device_handle,
+	struct db_interleave_set_dimm_info_v2 *p_interleave_set_dimm_info_v2,
+	int interleave_set_dimm_info_v2_count)
+{
+	enum db_return_codes rc = DB_ERR_FAILURE;
+	sqlite3_stmt *p_stmt;
+	char *sql = "SELECT \
+		 id ,  config_table_type ,  index_id ,  device_handle ,  device_uid ,  offset ,  size  \
+		FROM interleave_set_dimm_info_v2 \
+		WHERE  device_handle = $device_handle";
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
+	{
+		rc = DB_SUCCESS;
+		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
+		int index = 0;
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < interleave_set_dimm_info_v2_count)
+		{
+			local_row_to_interleave_set_dimm_info_v2(p_ps, p_stmt, &p_interleave_set_dimm_info_v2[index]);
+			local_get_interleave_set_dimm_info_v2_relationships(p_ps, p_stmt, &p_interleave_set_dimm_info_v2[index]);
+			index++;
+		}
+		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+	}
+	return rc;
+}
+enum db_return_codes db_get_interleave_set_dimm_info_v2s_by_dimm_topology_device_handle_history(const PersistentStore *p_ps,
+	unsigned int device_handle,
+	struct db_interleave_set_dimm_info_v2 *p_interleave_set_dimm_info_v2,
+	int interleave_set_dimm_info_v2_count, int history_id)
+{
+	enum db_return_codes rc = DB_ERR_FAILURE;
+	sqlite3_stmt *p_stmt;
+	char *sql = "SELECT \
+		 id ,  config_table_type ,  index_id ,  device_handle ,  device_uid ,  offset ,  size  \
+		FROM interleave_set_dimm_info_v2_history \
+		WHERE  device_handle = $device_handle AND history_id=$history_id";
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
+	{
+		rc = DB_SUCCESS;
+		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
+		BIND_INTEGER(p_stmt, "$history_id", history_id);
+		int index = 0;
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < interleave_set_dimm_info_v2_count)
+		{
+			local_row_to_interleave_set_dimm_info_v2(p_ps, p_stmt, &p_interleave_set_dimm_info_v2[index]);
+			local_get_interleave_set_dimm_info_v2_relationships(p_ps, p_stmt, &p_interleave_set_dimm_info_v2[index]);
+			index++;
+		}
+		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+	}
+	return rc;
+}
+enum db_return_codes db_delete_interleave_set_dimm_info_v2_by_dimm_topology_device_handle(const PersistentStore *p_ps,
+	unsigned int device_handle)
+{
+	enum db_return_codes rc = DB_ERR_FAILURE;
+	sqlite3_stmt *p_stmt;
+	char *sql = "DELETE FROM interleave_set_dimm_info_v2 \
+				 WHERE device_handle = $device_handle";
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
+	{
+		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
+		{
+			rc = DB_SUCCESS;
+		}
+		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+	}
+	return rc;
+}
+/*
+ * --- END interleave_set_dimm_info_v2 ----------------
  */
 /*
  * --- enable_error_injection_info ----------------
@@ -34409,7 +35277,9 @@ enum db_return_codes db_clear_history(PersistentStore *p_ps)
 	
 	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM dimm_interleave_set_history"));
 	
-	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM interleave_set_dimm_info_history"));
+	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM interleave_set_dimm_info_v1_history"));
+	
+	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM interleave_set_dimm_info_v2_history"));
 	
 	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM enable_error_injection_info_history"));
 	
@@ -34649,8 +35519,11 @@ enum db_return_codes db_clear_state(PersistentStore *p_ps)
 	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM dimm_interleave_set_history"));
 	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM dimm_interleave_set"));
 	
-	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM interleave_set_dimm_info_history"));
-	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM interleave_set_dimm_info"));
+	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM interleave_set_dimm_info_v1_history"));
+	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM interleave_set_dimm_info_v1"));
+	
+	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM interleave_set_dimm_info_v2_history"));
+	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM interleave_set_dimm_info_v2"));
 	
 	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM enable_error_injection_info_history"));
 	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM enable_error_injection_info"));
@@ -35063,7 +35936,13 @@ enum db_return_codes db_roll_history(PersistentStore *p_ps, int max)
 	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, sql));
 	
 	snprintf(sql, 1024,
-				"DELETE FROM interleave_set_dimm_info_history "
+				"DELETE FROM interleave_set_dimm_info_v1_history "
+				"WHERE history_id NOT IN "
+				"(SELECT history_id FROM history ORDER BY ROWID DESC LIMIT %d)", max); 
+	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, sql));
+	
+	snprintf(sql, 1024,
+				"DELETE FROM interleave_set_dimm_info_v2_history "
 				"WHERE history_id NOT IN "
 				"(SELECT history_id FROM history ORDER BY ROWID DESC LIMIT %d)", max); 
 	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, sql));

@@ -56,6 +56,7 @@ extern "C"
 #define	SWAP_SHORT(x) \
 	(((x & 0xFF) << 8) + ((x & 0xFF00) >> 8))
 
+#define	DEVICE_UID_BYTES 9
 
 /*
  * Check whether the device manageability state is valid
@@ -66,12 +67,15 @@ extern "C"
 int exists_and_manageable(const NVM_UID device_uid, struct device_discovery *p_dev,
 		NVM_BOOL check_manageability);
 
+int device_uid_string_to_bytes(const NVM_UID uid, NVM_UINT8 *p_bytes, const size_t bytes_len);
+int device_uid_bytes_to_string(const NVM_UINT8 *p_bytes, const size_t bytes_len, NVM_UID uid);
+
 int calculate_device_uid(struct device_discovery *p_device);
 void calculate_uid_without_manufacturing_info(NVM_UID uid,
-		NVM_UINT16 vendor_id, NVM_SERIAL_NUMBER serial_number);
+		const NVM_UINT16 vendor_id, const NVM_SERIAL_NUMBER serial_number);
 void calculate_uid_with_valid_manufacturing_info(NVM_UID uid,
-		NVM_UINT16 vendor_id, NVM_SERIAL_NUMBER serial_number,
-		NVM_UINT8 manufacturing_loc, NVM_UINT16 manufacturing_date);
+		const NVM_UINT16 vendor_id, const NVM_SERIAL_NUMBER serial_number,
+		const NVM_UINT8 manufacturing_loc, const NVM_UINT16 manufacturing_date);
 
 int lookup_dev_uids(const NVM_UID *uids, NVM_UINT16 uid_count, struct device_discovery *p_devs);
 int lookup_dev_uid(const NVM_UID dev_uid, struct device_discovery *p_dev);

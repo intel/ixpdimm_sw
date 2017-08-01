@@ -722,7 +722,7 @@ int change_serial_num_in_identify_dimm_history(PersistentStore *p_ps)
 int change_serial_num_in_interleave_set_dimm_info(PersistentStore *p_ps)
 {
 	COMMON_LOG_ENTRY();
-	int rc = change_serial_num_in_db_table(p_ps, "interleave_set_dimm_info");
+	int rc = change_serial_num_in_db_table(p_ps, "interleave_set_dimm_info_v1");
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
@@ -734,7 +734,7 @@ int change_serial_num_in_interleave_set_dimm_info(PersistentStore *p_ps)
 int change_serial_num_in_interleave_set_dimm_info_history(PersistentStore *p_ps)
 {
 	COMMON_LOG_ENTRY();
-	int rc = change_serial_num_in_db_table(p_ps, "interleave_set_dimm_info_history");
+	int rc = change_serial_num_in_db_table(p_ps, "interleave_set_dimm_info_v1_history");
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;

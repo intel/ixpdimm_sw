@@ -136,10 +136,22 @@ struct partition_size_change_extension_table
  */
 struct dimm_info_extension_table
 {
-	NVM_UINT8 manufacturer[2]; // NVM-DIMM manufacturer
-	NVM_UINT8 serial_number[4]; // NVM-DIMM serial number
-	char part_number[20]; // NVM-DIMM serial number
-	NVM_UINT8 reserved[6];
+	union
+	{
+		struct // Associated with CCUR/CIN/COUT table revision 1
+		{
+			NVM_UINT8 manufacturer[2]; // NVM-DIMM manufacturer
+			NVM_UINT8 serial_number[4]; // NVM-DIMM serial number
+			char part_number[20]; // NVM-DIMM serial number
+			NVM_UINT8 reserved[6];
+		}__attribute__((packed)) v1;
+
+		struct // Associated with CCUR/CIN/COUT table revision 2
+		{
+			NVM_UINT8 uid[9];
+			NVM_UINT8 reserved[23];
+		}__attribute__((packed)) v2;
+	} dimm_identifier;
 	NVM_UINT64 offset; // Logical offset from the base of the partition
 	NVM_UINT64 size; // Size in bytes to add to interleave set
 }__attribute__((packed));
