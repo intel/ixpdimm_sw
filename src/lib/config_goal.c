@@ -622,9 +622,11 @@ NVM_UINT8 get_pcd_revision_from_another_device_in_list(
 				if (p_ccur)
 				{
 					rev = p_ccur->header.revision;
+					free(p_pcd);
 					break;
 				}
 			}
+			free(p_pcd);
 		}
 	}
 
