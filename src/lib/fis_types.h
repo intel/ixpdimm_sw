@@ -1671,26 +1671,6 @@ struct pt_payload_memory_info_page1 {
 /*
  * Passthrough Payload:
  *		Opcode:		0x08h (Get Log Page)
- *		Sub-Opcode:	0x03h (Memory Info)
- *	Small Output Payload
- */
-struct pt_payload_memory_info_page2 {
-	unsigned long long write_count_max; /* Largest num data writes to a single block across DIMM */
-	unsigned long long write_count_average; /* Avg num of data writes to all blocks across DIMM */
-	unsigned int uncorrectable_host; /* ECC errors encountered by host requests only */
-	unsigned int uncorrectable_non_host; /* ECC errors encountered by non-host requests only */
-	unsigned int media_errors_uc; /* ECC uncorrectable errors. */
-	unsigned char media_errors_ce[16]; /* ECC corrected errors */
-	unsigned char media_errors_ecc[16]; /* Erasure Code Corrected Errors */
-	unsigned char dram_errors_uc[16]; /* ECC uncorrectable errors */
-	unsigned char dram_errors_ce[16]; /* ECC corrected errors */
-
-	unsigned char rsvd[36];
-} __attribute__((packed));
-
-/*
- * Passthrough Payload:
- *		Opcode:		0x08h (Get Log Page)
  *		Sub-Opcode:	0x04h (Long Operations Status)
  *	Small Output Payload
  */

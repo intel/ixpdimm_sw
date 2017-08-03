@@ -666,34 +666,6 @@ int support_store_memory(PersistentStore *p_store, int history_id,
 		}
 	}
 
-	// Page 2
-	{
-		struct pt_payload_memory_info_page2 page;
-		temp_rc = fw_get_memory_info_page(device_handle.handle, 2,
-			&page, sizeof (page));
-		KEEP_ERROR(rc, temp_rc);
-
-		if (temp_rc == NVM_SUCCESS)
-		{
-			struct db_dimm_memory_info_page2 db_page = {
-				.device_handle = device_handle.handle,
-				.write_count_max = page.write_count_max,
-				.write_count_average = page.write_count_average,
-				.uncorrectable_host = page.uncorrectable_host,
-				.uncorrectable_non_host = page.uncorrectable_non_host,
-				.media_errors_uc = page.media_errors_uc
-			};
-			NVM_8_BYTE_ARRAY_TO_64_BIT_VALUE(page.media_errors_ce,
-				db_page.media_errors_ce);
-			NVM_8_BYTE_ARRAY_TO_64_BIT_VALUE(page.media_errors_ecc,
-				db_page.media_errors_ecc);
-			NVM_8_BYTE_ARRAY_TO_64_BIT_VALUE(page.dram_errors_ce,
-				db_page.dram_errors_ce);
-
-			db_save_dimm_memory_info_page2_state(p_store, history_id, &db_page);
-		}
-	}
-
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }

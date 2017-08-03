@@ -434,7 +434,7 @@ int db_get_history_ids(const PersistentStore *p_ps,
 	return rc;
 }
 // Table count is calculated in CrudSchemaGenerator
-#define	TABLE_COUNT (119)
+#define	TABLE_COUNT (117)
 /*
  * Create a PersistentStore object
  */
@@ -1123,9 +1123,6 @@ tables[populate_index++] = ((struct table){"dimm_smart",
 tables[populate_index++] = ((struct table){"dimm_state",
 				"CREATE TABLE dimm_state (       \
 					 device_handle INTEGER  PRIMARY KEY  NOT NULL UNIQUE  , \
-					 mediaerrors_corrected INTEGER  , \
-					 mediaerrors_uncorrectable INTEGER  , \
-					 mediaerrors_erasurecoded INTEGER  , \
 					 health_state INTEGER  , \
 					 sanitize_status INTEGER  , \
 					 fw_log_errors INTEGER   \
@@ -1137,9 +1134,6 @@ tables[populate_index++] = ((struct table){"dimm_state",
 				"CREATE TABLE dimm_state_history (       \
 					history_id INTEGER NOT NULL, \
 					 device_handle INTEGER , \
-					 mediaerrors_corrected INTEGER , \
-					 mediaerrors_uncorrectable INTEGER , \
-					 mediaerrors_erasurecoded INTEGER , \
 					 health_state INTEGER , \
 					 sanitize_status INTEGER , \
 					 fw_log_errors INTEGER  \
@@ -1350,31 +1344,6 @@ tables[populate_index++] = ((struct table){"dimm_memory_info_page1",
 					 total_write_reqs INTEGER , \
 					 total_block_read_reqs INTEGER , \
 					 total_block_write_reqs INTEGER  \
-					);"});
-tables[populate_index++] = ((struct table){"dimm_memory_info_page2",
-				"CREATE TABLE dimm_memory_info_page2 (       \
-					 device_handle INTEGER  PRIMARY KEY  NOT NULL UNIQUE  , \
-					 write_count_max INTEGER  , \
-					 write_count_average INTEGER  , \
-					 uncorrectable_host INTEGER  , \
-					 uncorrectable_non_host INTEGER  , \
-					 media_errors_uc INTEGER  , \
-					 media_errors_ce INTEGER  , \
-					 media_errors_ecc INTEGER  , \
-					 dram_errors_ce INTEGER   \
-					);"});
-			tables[populate_index++] = ((struct table){"dimm_memory_info_page2_history",
-				"CREATE TABLE dimm_memory_info_page2_history (       \
-					history_id INTEGER NOT NULL, \
-					 device_handle INTEGER , \
-					 write_count_max INTEGER , \
-					 write_count_average INTEGER , \
-					 uncorrectable_host INTEGER , \
-					 uncorrectable_non_host INTEGER , \
-					 media_errors_uc INTEGER , \
-					 media_errors_ce INTEGER , \
-					 media_errors_ecc INTEGER , \
-					 dram_errors_ce INTEGER  \
 					);"});
 tables[populate_index++] = ((struct table){"dimm_ars_command_specific_data",
 				"CREATE TABLE dimm_ars_command_specific_data (       \
@@ -2149,8 +2118,6 @@ char* history_table_names[] = {
 	"dimm_memory_info_page0_history",
 
 	"dimm_memory_info_page1_history",
-
-	"dimm_memory_info_page2_history",
 
 	"dimm_ars_command_specific_data_history",
 
@@ -12790,9 +12757,6 @@ enum db_return_codes db_delete_dimm_smart_history(const PersistentStore *p_ps)
 void local_bind_dimm_state(sqlite3_stmt *p_stmt, struct db_dimm_state *p_dimm_state)
 {
 	BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)p_dimm_state->device_handle);
-	BIND_INTEGER(p_stmt, "$mediaerrors_corrected", (unsigned long long)p_dimm_state->mediaerrors_corrected);
-	BIND_INTEGER(p_stmt, "$mediaerrors_uncorrectable", (unsigned long long)p_dimm_state->mediaerrors_uncorrectable);
-	BIND_INTEGER(p_stmt, "$mediaerrors_erasurecoded", (unsigned long long)p_dimm_state->mediaerrors_erasurecoded);
 	BIND_INTEGER(p_stmt, "$health_state", (int)p_dimm_state->health_state);
 	BIND_INTEGER(p_stmt, "$sanitize_status", (int)p_dimm_state->sanitize_status);
 	BIND_INTEGER(p_stmt, "$fw_log_errors", (unsigned long long)p_dimm_state->fw_log_errors);
@@ -12821,29 +12785,17 @@ void local_row_to_dimm_state(const PersistentStore *p_ps,
 		p_dimm_state->device_handle);
 	INTEGER_COLUMN(p_stmt,
 		1,
-		p_dimm_state->mediaerrors_corrected);
-	INTEGER_COLUMN(p_stmt,
-		2,
-		p_dimm_state->mediaerrors_uncorrectable);
-	INTEGER_COLUMN(p_stmt,
-		3,
-		p_dimm_state->mediaerrors_erasurecoded);
-	INTEGER_COLUMN(p_stmt,
-		4,
 		p_dimm_state->health_state);
 	INTEGER_COLUMN(p_stmt,
-		5,
+		2,
 		p_dimm_state->sanitize_status);
 	INTEGER_COLUMN(p_stmt,
-		6,
+		3,
 		p_dimm_state->fw_log_errors);
 }
 void db_print_dimm_state(struct db_dimm_state *p_value)
 {
 	printf("dimm_state.device_handle: unsigned %d\n", p_value->device_handle);
-	printf("dimm_state.mediaerrors_corrected: unsigned %lld\n", p_value->mediaerrors_corrected);
-	printf("dimm_state.mediaerrors_uncorrectable: unsigned %lld\n", p_value->mediaerrors_uncorrectable);
-	printf("dimm_state.mediaerrors_erasurecoded: unsigned %lld\n", p_value->mediaerrors_erasurecoded);
 	printf("dimm_state.health_state: %d\n", p_value->health_state);
 	printf("dimm_state.sanitize_status: %d\n", p_value->sanitize_status);
 	printf("dimm_state.fw_log_errors: unsigned %lld\n", p_value->fw_log_errors);
@@ -12854,12 +12806,9 @@ enum db_return_codes db_add_dimm_state(const PersistentStore *p_ps,
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = 	"INSERT INTO dimm_state \
-		(device_handle, mediaerrors_corrected, mediaerrors_uncorrectable, mediaerrors_erasurecoded, health_state, sanitize_status, fw_log_errors)  \
+		(device_handle, health_state, sanitize_status, fw_log_errors)  \
 		VALUES 		\
 		($device_handle, \
-		$mediaerrors_corrected, \
-		$mediaerrors_uncorrectable, \
-		$mediaerrors_erasurecoded, \
 		$health_state, \
 		$sanitize_status, \
 		$fw_log_errors) ";
@@ -12897,15 +12846,12 @@ int db_get_dimm_states(const PersistentStore *p_ps,
 	memset(p_dimm_state, 0, sizeof (struct db_dimm_state) * dimm_state_count);
 	char *sql = "SELECT \
 		device_handle \
-		,  mediaerrors_corrected \
-		,  mediaerrors_uncorrectable \
-		,  mediaerrors_erasurecoded \
 		,  health_state \
 		,  sanitize_status \
 		,  fw_log_errors \
 		  \
 		FROM dimm_state \
-		        \
+		     \
 		 \
 		";
 	sqlite3_stmt *p_stmt;
@@ -12960,12 +12906,9 @@ enum db_return_codes db_save_dimm_state_state(const PersistentStore *p_ps,
 	{
 		sqlite3_stmt *p_stmt;
 		char *sql = 	"INSERT INTO dimm_state \
-			( device_handle ,  mediaerrors_corrected ,  mediaerrors_uncorrectable ,  mediaerrors_erasurecoded ,  health_state ,  sanitize_status ,  fw_log_errors )  \
+			( device_handle ,  health_state ,  sanitize_status ,  fw_log_errors )  \
 			VALUES 		\
 			($device_handle, \
-			$mediaerrors_corrected, \
-			$mediaerrors_uncorrectable, \
-			$mediaerrors_erasurecoded, \
 			$health_state, \
 			$sanitize_status, \
 			$fw_log_errors) ";
@@ -12995,12 +12938,9 @@ enum db_return_codes db_save_dimm_state_state(const PersistentStore *p_ps,
 		sqlite3_stmt *p_stmt;
 		char *sql = "INSERT INTO dimm_state_history \
 			(history_id, \
-				 device_handle,  mediaerrors_corrected,  mediaerrors_uncorrectable,  mediaerrors_erasurecoded,  health_state,  sanitize_status,  fw_log_errors)  \
+				 device_handle,  health_state,  sanitize_status,  fw_log_errors)  \
 			VALUES 		($history_id, \
 				 $device_handle , \
-				 $mediaerrors_corrected , \
-				 $mediaerrors_uncorrectable , \
-				 $mediaerrors_erasurecoded , \
 				 $health_state , \
 				 $sanitize_status , \
 				 $fw_log_errors )";
@@ -13041,7 +12981,7 @@ enum db_return_codes db_get_dimm_state_by_device_handle(const PersistentStore *p
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
-		device_handle,  mediaerrors_corrected,  mediaerrors_uncorrectable,  mediaerrors_erasurecoded,  health_state,  sanitize_status,  fw_log_errors  \
+		device_handle,  health_state,  sanitize_status,  fw_log_errors  \
 		FROM dimm_state \
 		WHERE  device_handle = $device_handle";
 	int sql_rc;
@@ -13079,9 +13019,6 @@ enum db_return_codes db_update_dimm_state_by_device_handle(const PersistentStore
 	char *sql = "UPDATE dimm_state \
 	SET \
 	device_handle=$device_handle \
-		,  mediaerrors_corrected=$mediaerrors_corrected \
-		,  mediaerrors_uncorrectable=$mediaerrors_uncorrectable \
-		,  mediaerrors_erasurecoded=$mediaerrors_erasurecoded \
 		,  health_state=$health_state \
 		,  sanitize_status=$sanitize_status \
 		,  fw_log_errors=$fw_log_errors \
@@ -13212,7 +13149,7 @@ int db_get_dimm_state_history_by_history_id(const PersistentStore *p_ps,
 	memset(p_dimm_state, 0, sizeof (struct db_dimm_state) * dimm_state_count);
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
-		device_handle,  mediaerrors_corrected,  mediaerrors_uncorrectable,  mediaerrors_erasurecoded,  health_state,  sanitize_status,  fw_log_errors  \
+		device_handle,  health_state,  sanitize_status,  fw_log_errors  \
 		FROM dimm_state_history WHERE history_id = $history_id";
 	int sql_rc;
 	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
@@ -18592,477 +18529,6 @@ enum db_return_codes db_delete_dimm_memory_info_page1_history(const PersistentSt
 
 /*
  * --- END dimm_memory_info_page1 ----------------
- */
-/*
- * --- dimm_memory_info_page2 ----------------
- */
-void local_bind_dimm_memory_info_page2(sqlite3_stmt *p_stmt, struct db_dimm_memory_info_page2 *p_dimm_memory_info_page2)
-{
-	BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)p_dimm_memory_info_page2->device_handle);
-	BIND_INTEGER(p_stmt, "$write_count_max", (unsigned long long)p_dimm_memory_info_page2->write_count_max);
-	BIND_INTEGER(p_stmt, "$write_count_average", (unsigned long long)p_dimm_memory_info_page2->write_count_average);
-	BIND_INTEGER(p_stmt, "$uncorrectable_host", (unsigned int)p_dimm_memory_info_page2->uncorrectable_host);
-	BIND_INTEGER(p_stmt, "$uncorrectable_non_host", (unsigned int)p_dimm_memory_info_page2->uncorrectable_non_host);
-	BIND_INTEGER(p_stmt, "$media_errors_uc", (unsigned int)p_dimm_memory_info_page2->media_errors_uc);
-	BIND_INTEGER(p_stmt, "$media_errors_ce", (unsigned long long)p_dimm_memory_info_page2->media_errors_ce);
-	BIND_INTEGER(p_stmt, "$media_errors_ecc", (unsigned long long)p_dimm_memory_info_page2->media_errors_ecc);
-	BIND_INTEGER(p_stmt, "$dram_errors_ce", (unsigned long long)p_dimm_memory_info_page2->dram_errors_ce);
-}
-void local_get_dimm_memory_info_page2_relationships(const PersistentStore *p_ps,
-	sqlite3_stmt *p_stmt, struct db_dimm_memory_info_page2 *p_dimm_memory_info_page2)
-{
-}
-
-void local_get_dimm_memory_info_page2_relationships_history(const PersistentStore *p_ps,
-	sqlite3_stmt *p_stmt, struct db_dimm_memory_info_page2 *p_dimm_memory_info_page2,
-	int history_id)
-{
-}
-
-void local_row_to_dimm_memory_info_page2(const PersistentStore *p_ps,
-	sqlite3_stmt *p_stmt, struct db_dimm_memory_info_page2 *p_dimm_memory_info_page2)
-{
-	INTEGER_COLUMN(p_stmt,
-		0,
-		p_dimm_memory_info_page2->device_handle);
-	INTEGER_COLUMN(p_stmt,
-		1,
-		p_dimm_memory_info_page2->write_count_max);
-	INTEGER_COLUMN(p_stmt,
-		2,
-		p_dimm_memory_info_page2->write_count_average);
-	INTEGER_COLUMN(p_stmt,
-		3,
-		p_dimm_memory_info_page2->uncorrectable_host);
-	INTEGER_COLUMN(p_stmt,
-		4,
-		p_dimm_memory_info_page2->uncorrectable_non_host);
-	INTEGER_COLUMN(p_stmt,
-		5,
-		p_dimm_memory_info_page2->media_errors_uc);
-	INTEGER_COLUMN(p_stmt,
-		6,
-		p_dimm_memory_info_page2->media_errors_ce);
-	INTEGER_COLUMN(p_stmt,
-		7,
-		p_dimm_memory_info_page2->media_errors_ecc);
-	INTEGER_COLUMN(p_stmt,
-		8,
-		p_dimm_memory_info_page2->dram_errors_ce);
-}
-void db_print_dimm_memory_info_page2(struct db_dimm_memory_info_page2 *p_value)
-{
-	printf("dimm_memory_info_page2.device_handle: unsigned %d\n", p_value->device_handle);
-	printf("dimm_memory_info_page2.write_count_max: unsigned %lld\n", p_value->write_count_max);
-	printf("dimm_memory_info_page2.write_count_average: unsigned %lld\n", p_value->write_count_average);
-	printf("dimm_memory_info_page2.uncorrectable_host: unsigned %d\n", p_value->uncorrectable_host);
-	printf("dimm_memory_info_page2.uncorrectable_non_host: unsigned %d\n", p_value->uncorrectable_non_host);
-	printf("dimm_memory_info_page2.media_errors_uc: unsigned %d\n", p_value->media_errors_uc);
-	printf("dimm_memory_info_page2.media_errors_ce: unsigned %lld\n", p_value->media_errors_ce);
-	printf("dimm_memory_info_page2.media_errors_ecc: unsigned %lld\n", p_value->media_errors_ecc);
-	printf("dimm_memory_info_page2.dram_errors_ce: unsigned %lld\n", p_value->dram_errors_ce);
-}
-enum db_return_codes db_add_dimm_memory_info_page2(const PersistentStore *p_ps,
-	struct db_dimm_memory_info_page2 *p_dimm_memory_info_page2)
-{
-	enum db_return_codes rc = DB_ERR_FAILURE;
-	sqlite3_stmt *p_stmt;
-	char *sql = 	"INSERT INTO dimm_memory_info_page2 \
-		(device_handle, write_count_max, write_count_average, uncorrectable_host, uncorrectable_non_host, media_errors_uc, media_errors_ce, media_errors_ecc, dram_errors_ce)  \
-		VALUES 		\
-		($device_handle, \
-		$write_count_max, \
-		$write_count_average, \
-		$uncorrectable_host, \
-		$uncorrectable_non_host, \
-		$media_errors_uc, \
-		$media_errors_ce, \
-		$media_errors_ecc, \
-		$dram_errors_ce) ";
-	int sql_rc;
-	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
-	{
-		local_bind_dimm_memory_info_page2(p_stmt, p_dimm_memory_info_page2);
-		sql_rc = sqlite3_step(p_stmt);
-		if (sql_rc == SQLITE_DONE)
-		{
-			rc = DB_SUCCESS;
-		}
-		sqlite3_finalize(p_stmt);
-		if (sql_rc != SQLITE_DONE)
-		{
-			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
-					sql_rc);
-		}
-	}
-	else
-	{
-		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
-	}
-	return rc;
-}
-enum db_return_codes db_get_dimm_memory_info_page2_count(const PersistentStore *p_ps, int *p_count)
-{
-	return table_row_count(p_ps, "dimm_memory_info_page2", p_count);
-}
-int db_get_dimm_memory_info_page2s(const PersistentStore *p_ps,
-	struct db_dimm_memory_info_page2 *p_dimm_memory_info_page2,
-	int dimm_memory_info_page2_count)
-{
-	int rc = DB_ERR_FAILURE;
-	memset(p_dimm_memory_info_page2, 0, sizeof (struct db_dimm_memory_info_page2) * dimm_memory_info_page2_count);
-	char *sql = "SELECT \
-		device_handle \
-		,  write_count_max \
-		,  write_count_average \
-		,  uncorrectable_host \
-		,  uncorrectable_non_host \
-		,  media_errors_uc \
-		,  media_errors_ce \
-		,  media_errors_ecc \
-		,  dram_errors_ce \
-		  \
-		FROM dimm_memory_info_page2 \
-		          \
-		 \
-		";
-	sqlite3_stmt *p_stmt;
-	int sql_rc;
-	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
-	{
-		int index = 0;
-		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_memory_info_page2_count)
-		{
-			local_row_to_dimm_memory_info_page2(p_ps, p_stmt, &p_dimm_memory_info_page2[index]);
-			local_get_dimm_memory_info_page2_relationships(p_ps, p_stmt, &p_dimm_memory_info_page2[index]);
-			index++;
-		}
-		sqlite3_finalize(p_stmt);
-		if (sql_rc != SQLITE_DONE)
-		{
-			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
-					sql_rc);
-		}
-		rc = index;
-	}
-	else
-	{
-		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
-	}
-	return rc;
-}
-enum db_return_codes db_delete_all_dimm_memory_info_page2s(const PersistentStore *p_ps)
-{
-	return run_sql_no_results(p_ps->db, "DELETE FROM dimm_memory_info_page2");
-}
-
-enum db_return_codes db_save_dimm_memory_info_page2_state(const PersistentStore *p_ps,
-	int history_id,
-	struct db_dimm_memory_info_page2 *p_dimm_memory_info_page2)
-{
-	enum db_return_codes rc = DB_SUCCESS;
-	struct db_dimm_memory_info_page2 temp;
-	/*
-	 * Main table - Insert new or update existing
-	 */
-	if (db_get_dimm_memory_info_page2_by_device_handle(p_ps, p_dimm_memory_info_page2->device_handle, &temp) == DB_SUCCESS)
-	{
-		rc = db_update_dimm_memory_info_page2_by_device_handle(p_ps,
-				p_dimm_memory_info_page2->device_handle,
-				p_dimm_memory_info_page2);
-	}
-	else
-	{
-		sqlite3_stmt *p_stmt;
-		char *sql = 	"INSERT INTO dimm_memory_info_page2 \
-			( device_handle ,  write_count_max ,  write_count_average ,  uncorrectable_host ,  uncorrectable_non_host ,  media_errors_uc ,  media_errors_ce ,  media_errors_ecc ,  dram_errors_ce )  \
-			VALUES 		\
-			($device_handle, \
-			$write_count_max, \
-			$write_count_average, \
-			$uncorrectable_host, \
-			$uncorrectable_non_host, \
-			$media_errors_uc, \
-			$media_errors_ce, \
-			$media_errors_ecc, \
-			$dram_errors_ce) ";
-		int sql_rc;
-		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
-		{
-			local_bind_dimm_memory_info_page2(p_stmt, p_dimm_memory_info_page2);
-			sql_rc = sqlite3_step(p_stmt);
-			sqlite3_finalize(p_stmt);
-			if (sql_rc != SQLITE_DONE)
-			{
-				rc = DB_ERR_FAILURE;
-				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
-					sql_rc);
-			}
-		}
-		else
-		{
-			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
-		}
-	}
-	/*
-	 * Insert as a history
-	 */
-	if (rc == DB_SUCCESS)
-	{
-		sqlite3_stmt *p_stmt;
-		char *sql = "INSERT INTO dimm_memory_info_page2_history \
-			(history_id, \
-				 device_handle,  write_count_max,  write_count_average,  uncorrectable_host,  uncorrectable_non_host,  media_errors_uc,  media_errors_ce,  media_errors_ecc,  dram_errors_ce)  \
-			VALUES 		($history_id, \
-				 $device_handle , \
-				 $write_count_max , \
-				 $write_count_average , \
-				 $uncorrectable_host , \
-				 $uncorrectable_non_host , \
-				 $media_errors_uc , \
-				 $media_errors_ce , \
-				 $media_errors_ecc , \
-				 $dram_errors_ce )";
-		int sql_rc;
-		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
-		{
-			BIND_INTEGER(p_stmt, "$history_id", history_id);
-			local_bind_dimm_memory_info_page2(p_stmt, p_dimm_memory_info_page2);
-			sql_rc = sqlite3_step(p_stmt);
-			if (sql_rc == SQLITE_DONE)
-			{
-				rc = DB_SUCCESS;
-			}
-			sqlite3_finalize(p_stmt);
-			if (sql_rc != SQLITE_DONE)
-			{
-				rc = DB_ERR_FAILURE;
-				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
-					sql_rc);
-			}
-		}
-		else
-		{
-			rc = DB_ERR_FAILURE;
-			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
-		}
-	}
-	return rc;
-}
-
-enum db_return_codes db_get_dimm_memory_info_page2_by_device_handle(const PersistentStore *p_ps,
-	const unsigned int device_handle,
-	struct db_dimm_memory_info_page2 *p_dimm_memory_info_page2)
-{
-	memset(p_dimm_memory_info_page2, 0, sizeof (struct db_dimm_memory_info_page2));
-	enum db_return_codes rc = DB_ERR_FAILURE;
-	sqlite3_stmt *p_stmt;
-	char *sql = "SELECT \
-		device_handle,  write_count_max,  write_count_average,  uncorrectable_host,  uncorrectable_non_host,  media_errors_uc,  media_errors_ce,  media_errors_ecc,  dram_errors_ce  \
-		FROM dimm_memory_info_page2 \
-		WHERE  device_handle = $device_handle";
-	int sql_rc;
-	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
-	{
-		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		sql_rc = sqlite3_step(p_stmt);
-		if (sql_rc == SQLITE_ROW)
-		{
-			local_row_to_dimm_memory_info_page2(p_ps, p_stmt, p_dimm_memory_info_page2);
-			local_get_dimm_memory_info_page2_relationships(p_ps, p_stmt, p_dimm_memory_info_page2);
-			rc = DB_SUCCESS;
-		}
-		sqlite3_finalize(p_stmt);
-		if (sql_rc != SQLITE_ROW)
-		{
-			rc = DB_ERR_FAILURE;
-			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
-				sql_rc);
-		}
-	}
-	else
-	{
-		rc = DB_ERR_FAILURE;
-		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
-	}
-	return rc;
-}
-enum db_return_codes db_update_dimm_memory_info_page2_by_device_handle(const PersistentStore *p_ps,
-	const unsigned int device_handle,
-	struct db_dimm_memory_info_page2 *p_dimm_memory_info_page2)
-{
-	sqlite3_stmt *p_stmt;
-	enum db_return_codes rc = DB_SUCCESS;
-	char *sql = "UPDATE dimm_memory_info_page2 \
-	SET \
-	device_handle=$device_handle \
-		,  write_count_max=$write_count_max \
-		,  write_count_average=$write_count_average \
-		,  uncorrectable_host=$uncorrectable_host \
-		,  uncorrectable_non_host=$uncorrectable_non_host \
-		,  media_errors_uc=$media_errors_uc \
-		,  media_errors_ce=$media_errors_ce \
-		,  media_errors_ecc=$media_errors_ecc \
-		,  dram_errors_ce=$dram_errors_ce \
-		  \
-	WHERE device_handle=$device_handle ";
-	int sql_rc;
-	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
-	{
-		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		local_bind_dimm_memory_info_page2(p_stmt, p_dimm_memory_info_page2);
-		sql_rc = sqlite3_step(p_stmt);
-		sqlite3_finalize(p_stmt);
-		if (sql_rc != SQLITE_DONE)
-		{
-			rc = DB_ERR_FAILURE;
-			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
-		}
-	}
-	else
-	{
-		rc = DB_ERR_FAILURE;
-		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
-	}
-	return rc;
-}
-enum db_return_codes db_delete_dimm_memory_info_page2_by_device_handle(const PersistentStore *p_ps,
-	const unsigned int device_handle)
-{
-	enum db_return_codes rc = DB_ERR_FAILURE;
-	sqlite3_stmt *p_stmt;
-	char *sql = "DELETE FROM dimm_memory_info_page2 \
-				 WHERE device_handle = $device_handle";
-	int sql_rc;
-	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
-	{
-		BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)device_handle);
-		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
-		{
-			rc = DB_SUCCESS;
-		}
-		sqlite3_finalize(p_stmt);
-		if (sql_rc != SQLITE_DONE)
-		{
-			rc = DB_ERR_FAILURE;
-			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
-				sql_rc);
-		}
-	}
-	else
-	{
-		rc = DB_ERR_FAILURE;
-		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
-	}
-	return rc;
-}
-
-enum db_return_codes db_get_dimm_memory_info_page2_history_by_history_id_count(const PersistentStore *p_ps, 
-	int history_id,
-	int *p_count)
-{
-	enum db_return_codes rc = DB_ERR_FAILURE;
-	*p_count = 0;
-	sqlite3_stmt *p_stmt;
-	char buffer[1024];
-	snprintf(buffer, 1024, "select count(*) FROM dimm_memory_info_page2_history WHERE  history_id = '%d'", history_id);
-	int sql_rc;
-	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
-	{
-		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
-		{
-			*p_count = sqlite3_column_int(p_stmt, 0);
-			rc = DB_SUCCESS;
-		}
-		sqlite3_finalize(p_stmt);
-		if (sql_rc != SQLITE_ROW)
-		{
-			rc = DB_ERR_FAILURE;
-			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
-				sql_rc);
-		}
-	}
-	else
-	{
-		rc = DB_ERR_FAILURE;
-		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
-	}
-	return rc;
-}
-enum db_return_codes db_get_dimm_memory_info_page2_history_count(const PersistentStore *p_ps, int *p_count)
-{
-	enum db_return_codes rc = DB_ERR_FAILURE;
-	*p_count = 0;
-	sqlite3_stmt *p_stmt;
-	char buffer[1024];
-	snprintf(buffer, 1024, "select count(*) FROM dimm_memory_info_page2_history");
-	int sql_rc;
-	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
-	{
-		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
-		{
-			*p_count = sqlite3_column_int(p_stmt, 0);
-			rc = DB_SUCCESS;
-		}
-		sqlite3_finalize(p_stmt);
-		if (sql_rc != SQLITE_ROW)
-		{
-			rc = DB_ERR_FAILURE;
-			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
-				sql_rc);
-		}
-	}
-	else
-	{
-		rc = DB_ERR_FAILURE;
-		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
-	}
-	return rc;
-}
-int db_get_dimm_memory_info_page2_history_by_history_id(const PersistentStore *p_ps,
-	struct db_dimm_memory_info_page2 *p_dimm_memory_info_page2,
-	int history_id,
-	int dimm_memory_info_page2_count)
-{
-	int rc = DB_ERR_FAILURE;
-	memset(p_dimm_memory_info_page2, 0, sizeof (struct db_dimm_memory_info_page2) * dimm_memory_info_page2_count);
-	sqlite3_stmt *p_stmt;
-	char *sql = "SELECT \
-		device_handle,  write_count_max,  write_count_average,  uncorrectable_host,  uncorrectable_non_host,  media_errors_uc,  media_errors_ce,  media_errors_ecc,  dram_errors_ce  \
-		FROM dimm_memory_info_page2_history WHERE history_id = $history_id";
-	int sql_rc;
-	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
-	{
-		int index = 0;
-		BIND_INTEGER(p_stmt, "$history_id", history_id);
-		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < dimm_memory_info_page2_count)
-		{
-			rc = DB_SUCCESS;
-			local_row_to_dimm_memory_info_page2(p_ps, p_stmt, &p_dimm_memory_info_page2[index]);
-			local_get_dimm_memory_info_page2_relationships_history(p_ps, p_stmt, &p_dimm_memory_info_page2[index], history_id);
-			index++;
-		}
-		sqlite3_finalize(p_stmt);
-		rc = index;
-		if (sql_rc != SQLITE_DONE)
-		{
-			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
-		}
-	}
-	else
-	{
-		rc = DB_ERR_FAILURE;
-		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
-	}
-	return rc;
-}
-enum db_return_codes db_delete_dimm_memory_info_page2_history(const PersistentStore *p_ps)
-{
-	return run_sql_no_results(p_ps->db, "DELETE FROM dimm_memory_info_page2_history");
-}
-
-/*
- * --- END dimm_memory_info_page2 ----------------
  */
 /*
  * --- dimm_ars_command_specific_data ----------------
@@ -35233,8 +34699,6 @@ enum db_return_codes db_clear_history(PersistentStore *p_ps)
 	
 	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM dimm_memory_info_page1_history"));
 	
-	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM dimm_memory_info_page2_history"));
-	
 	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM dimm_ars_command_specific_data_history"));
 	
 	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM dimm_long_op_status_history"));
@@ -35452,9 +34916,6 @@ enum db_return_codes db_clear_state(PersistentStore *p_ps)
 	
 	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM dimm_memory_info_page1_history"));
 	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM dimm_memory_info_page1"));
-	
-	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM dimm_memory_info_page2_history"));
-	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM dimm_memory_info_page2"));
 	
 	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM dimm_ars_command_specific_data_history"));
 	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM dimm_ars_command_specific_data"));
@@ -35799,12 +35260,6 @@ enum db_return_codes db_roll_history(PersistentStore *p_ps, int max)
 	
 	snprintf(sql, 1024,
 				"DELETE FROM dimm_memory_info_page1_history "
-				"WHERE history_id NOT IN "
-				"(SELECT history_id FROM history ORDER BY ROWID DESC LIMIT %d)", max); 
-	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, sql));
-	
-	snprintf(sql, 1024,
-				"DELETE FROM dimm_memory_info_page2_history "
 				"WHERE history_id NOT IN "
 				"(SELECT history_id FROM history ORDER BY ROWID DESC LIMIT %d)", max); 
 	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, sql));

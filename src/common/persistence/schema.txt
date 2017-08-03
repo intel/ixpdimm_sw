@@ -279,9 +279,6 @@ Table(s): db_dimm_state
 Description: Monitor stored DIMM state for detecting changes. 
 Attributes: 
 	unsigned int device_handle(PK)
-	unsigned long long mediaerrors_corrected
-	unsigned long long mediaerrors_uncorrectable
-	unsigned long long mediaerrors_erasurecoded
 	int health_state
 	int sanitize_status
 	unsigned long long fw_log_errors
@@ -402,20 +399,6 @@ Attributes:
 	unsigned long long total_write_reqs
 	unsigned long long total_block_read_reqs
 	unsigned long long total_block_write_reqs
-
-Table(s): db_dimm_memory_info_page2 
- 	  db_dimm_memory_info_page2_history 
-Description: Vendor Firmware: Get Log - Memory Info Page 2. 
-Attributes: 
-	unsigned int device_handle(PK)
-	unsigned long long write_count_max
-	unsigned long long write_count_average
-	unsigned int uncorrectable_host
-	unsigned int uncorrectable_non_host
-	unsigned int media_errors_uc
-	unsigned long long media_errors_ce
-	unsigned long long media_errors_ecc
-	unsigned long long dram_errors_ce
 
 Table(s): db_dimm_ars_command_specific_data 
  	  db_dimm_ars_command_specific_data_history 
