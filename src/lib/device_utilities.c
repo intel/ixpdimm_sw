@@ -1050,19 +1050,6 @@ int get_app_direct_capacity_on_device(const struct device_discovery *p_dimm,
 	return rc;
 }
 
-void update_capacities_based_on_platform_capabilities(const NVM_NFIT_DEVICE_HANDLE device_handle,
-		const struct nvm_capabilities *p_capabilities,
-		struct device_capacities *p_capacities)
-{
-	COMMON_LOG_ENTRY();
-	if (p_capabilities->platform_capabilities.current_volatile_mode == VOLATILE_MODE_1LM)
-	{
-		p_capacities->memory_capacity = 0;
-		p_capacities->reserved_capacity = 0;
-	}
-	COMMON_LOG_EXIT();
-}
-
 int update_capacities_based_on_sku(const NVM_NFIT_DEVICE_HANDLE device_handle,
 		const struct nvm_capabilities *p_capabilities,
 		struct device_capacities *p_capacities)
@@ -1116,6 +1103,7 @@ int update_capacities_based_on_sku(const NVM_NFIT_DEVICE_HANDLE device_handle,
 				p_capacities->mirrored_app_direct_capacity = 0;
 				p_capacities->storage_capacity = 0;
 				p_capacities->unconfigured_capacity = 0;
+				p_capacities->reserved_capacity = 0;
 			}
 			// Storage but no App Direct
 			else if (p_capacities->app_direct_capacity > 0 &&
@@ -1148,6 +1136,19 @@ int update_capacities_based_on_sku(const NVM_NFIT_DEVICE_HANDLE device_handle,
 	return rc;
 }
 
+NVM_BOOL is_in_memory_mode(const struct nvm_capabilities *p_capabilities,
+			const struct pt_payload_get_dimm_partition_info *p_partition_info)
+{
+	if (p_capabilities->platform_capabilities.current_volatile_mode ==
+		VOLATILE_MODE_MEMORY ||
+		(p_capabilities->platform_capabilities.current_volatile_mode ==
+			VOLATILE_MODE_AUTO && p_partition_info->volatile_capacity))
+	{
+		return 1;
+	}
+	return 0;
+}
+
 /*
  * Helper function to populate the capacities of a single dimm
  */
@@ -1166,38 +1167,44 @@ int get_dimm_capacities(const struct device_discovery *p_dimm,
 	else
 	{
 		memset(p_capacities, 0, sizeof (struct device_capacities));
+		NVM_UINT64 ad_capacity = 0;
+		NVM_UINT64 mirrored_ad_capacity = 0;
+		int ad_rc = get_app_direct_capacity_on_device(p_dimm, &ad_capacity, &mirrored_ad_capacity);
+		if (ad_rc != NVM_SUCCESS)
+		{
+			COMMON_LOG_ERROR_F("Unable to get dimm app direct capacities. Will continue "
+					"calculating assuming they are all 0. Error code: %d", ad_rc);
+			ad_capacity = 0;
+			mirrored_ad_capacity = 0;
+		}
+
 		// get total FW reported capacities from the dimm partition info struct
 		struct pt_payload_get_dimm_partition_info pi;
 		memset(&pi, 0, sizeof (pi));
 		if ((rc = get_partition_info(p_dimm->device_handle, &pi)) == NVM_SUCCESS)
 		{
 			p_capacities->capacity = MULTIPLES_TO_BYTES(pi.raw_capacity);
-			p_capacities->memory_capacity = MULTIPLES_TO_BYTES(pi.volatile_capacity);
-			if (p_capacities->memory_capacity)
-			{
-				p_capacities->reserved_capacity =
-					RESERVED_CAPACITY_BYTES(p_capacities->capacity);
-				p_capacities->memory_capacity -= p_capacities->reserved_capacity;
-			}
-			p_capacities->unconfigured_capacity = MULTIPLES_TO_BYTES(pi.pmem_capacity);
-			p_capacities->storage_capacity = MULTIPLES_TO_BYTES(pi.pmem_capacity);
-			NVM_UINT64 ad_capacity = 0;
-			NVM_UINT64 mirrored_ad_capacity = 0;
-			rc = get_app_direct_capacity_on_device(p_dimm, &ad_capacity, &mirrored_ad_capacity);
-			if (rc == NVM_SUCCESS)
-			{
-				p_capacities->app_direct_capacity = ad_capacity;
-				p_capacities->mirrored_app_direct_capacity = mirrored_ad_capacity;
-				p_capacities->storage_capacity -=
-					(p_capacities->mirrored_app_direct_capacity * 2llu);
-				p_capacities->unconfigured_capacity -= ad_capacity;
 
-				// update capacities based on DIMM SKU
-				KEEP_ERROR(rc, update_capacities_based_on_sku(p_dimm->device_handle,
-						p_capabilities, p_capacities));
-				update_capacities_based_on_platform_capabilities(p_dimm->device_handle,
-						p_capabilities, p_capacities);
+			if (is_in_memory_mode(p_capabilities, &pi))
+			{
+				p_capacities->memory_capacity = MULTIPLES_TO_BYTES(pi.volatile_capacity);
 			}
+
+			p_capacities->storage_capacity = MULTIPLES_TO_BYTES(pi.pmem_capacity);
+			p_capacities->app_direct_capacity = ad_capacity;
+			p_capacities->mirrored_app_direct_capacity = mirrored_ad_capacity;
+			p_capacities->storage_capacity -=
+				(p_capacities->mirrored_app_direct_capacity * 2llu);
+			p_capacities->reserved_capacity = RESERVED_CAPACITY_BYTES(p_capacities->capacity);
+			p_capacities->unconfigured_capacity =
+					p_capacities->capacity -
+					p_capacities->reserved_capacity -
+					p_capacities->memory_capacity -
+					p_capacities->app_direct_capacity;
+
+			// update capacities based on DIMM SKU
+			rc = update_capacities_based_on_sku
+					(p_dimm->device_handle, p_capabilities, p_capacities);
 		}
 	}
 
