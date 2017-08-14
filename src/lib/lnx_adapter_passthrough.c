@@ -46,10 +46,13 @@ struct NAME {								\
 /*
  * Execute an emulated BIOS ioctl to retrieve information about the bios large mailboxes
  */
-int bios_get_payload_size(struct ndctl_dimm *p_dimm, struct pt_bios_get_size *p_bios_mb_size)
+int bios_get_payload_size(struct ndctl_dimm *p_dimm, struct pt_bios_get_size *p_bios_mb_size,
+		struct fw_cmd *p_fw_cmd)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
+	int lnx_err_status = 0;
+	unsigned int dsm_vendor_err_status = 0;
 
 	if (p_dimm == NULL)
 	{
@@ -74,18 +77,34 @@ int bios_get_payload_size(struct ndctl_dimm *p_dimm, struct pt_bios_get_size *p_
 		}
 		else
 		{
-			if (((rc = linux_err_to_nvm_lib_err(ndctl_cmd_submit(
-				p_vendor_cmd))) == NVM_SUCCESS) &&
-				((rc = dsm_err_to_nvm_lib_err(ndctl_cmd_get_firmware_status(
-				p_vendor_cmd))) == NVM_SUCCESS))
+			if ((lnx_err_status = ndctl_cmd_submit(p_vendor_cmd)) == 0)
 			{
-				NVM_SIZE return_size = ndctl_cmd_vendor_get_output(p_vendor_cmd,
-					p_bios_mb_size, sizeof (struct pt_bios_get_size));
-				if (return_size != sizeof (struct pt_bios_get_size))
+				if ((dsm_vendor_err_status = ndctl_cmd_get_firmware_status(p_vendor_cmd))
+						!= DSM_VENDOR_SUCCESS)
 				{
-					rc = NVM_ERR_DRIVERFAILED;
-					COMMON_LOG_ERROR("Small Payload returned less data than requested");
+					rc = dsm_err_to_nvm_lib_err(dsm_vendor_err_status);
+					COMMON_LOG_ERROR_F("BIOS get failed:DSM returned error %d for command with "
+							"Opcode - 0x%x SubOpcode - 0x%x ", dsm_vendor_err_status,
+							p_fw_cmd->opcode, p_fw_cmd->sub_opcode);
 				}
+				else
+				{
+					NVM_SIZE return_size = ndctl_cmd_vendor_get_output(p_vendor_cmd,
+						p_bios_mb_size, sizeof (struct pt_bios_get_size));
+					if (return_size != sizeof (struct pt_bios_get_size))
+					{
+						rc = NVM_ERR_DRIVERFAILED;
+						COMMON_LOG_ERROR("Small Payload returned less data than requested");
+					}
+				}
+			}
+			else
+			{
+				rc = linux_err_to_nvm_lib_err(lnx_err_status);
+				COMMON_LOG_ERROR_F("BIOS get failed: "
+						"Linux driver returned error %d for command with "
+								"Opcode- 0x%x SubOpcode- 0x%x ", lnx_err_status,
+										p_fw_cmd->opcode, p_fw_cmd->sub_opcode);
 			}
 			ndctl_cmd_unref(p_vendor_cmd);
 		}
@@ -108,7 +127,7 @@ int bios_write_large_payload(struct ndctl_dimm *p_dimm, struct fw_cmd *p_fw_cmd)
 		COMMON_LOG_ERROR("Invalid parameter, Dimm is null");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
-	else if ((rc = bios_get_payload_size(p_dimm, &mb_size)) == NVM_SUCCESS)
+	else if ((rc = bios_get_payload_size(p_dimm, &mb_size, p_fw_cmd)) == NVM_SUCCESS)
 	{
 		if (mb_size.large_input_payload_size < p_fw_cmd->large_input_payload_size)
 		{
@@ -143,6 +162,9 @@ int bios_write_large_payload(struct ndctl_dimm *p_dimm, struct fw_cmd *p_fw_cmd)
 					}
 					else
 					{
+						int lnx_err_status = 0;
+						unsigned int dsm_vendor_err_status = 0;
+
 						p_dsm_input->size = transfer_size;
 						p_dsm_input->offset = current_offset;
 
@@ -158,12 +180,35 @@ int bios_write_large_payload(struct ndctl_dimm *p_dimm, struct fw_cmd *p_fw_cmd)
 							COMMON_LOG_ERROR("Failed to write input payload");
 							rc = NVM_ERR_DRIVERFAILED;
 						}
-						else if (((rc = linux_err_to_nvm_lib_err(ndctl_cmd_submit(
-								p_vendor_cmd))) == NVM_SUCCESS) &&
-								((rc = dsm_err_to_nvm_lib_err(
-								ndctl_cmd_get_firmware_status(p_vendor_cmd))) == NVM_SUCCESS))
+						else
 						{
-							current_offset += transfer_size;
+							if ((lnx_err_status = ndctl_cmd_submit(p_vendor_cmd)) == 0)
+							{
+								if ((dsm_vendor_err_status =
+										ndctl_cmd_get_firmware_status(p_vendor_cmd))
+												!= DSM_VENDOR_SUCCESS)
+								{
+									rc = dsm_err_to_nvm_lib_err(dsm_vendor_err_status);
+									COMMON_LOG_ERROR_F("BIOS write failed: "
+											"DSM returned error %d for command with "
+											"Opcode- 0x%x SubOpcode- 0x%x ", dsm_vendor_err_status,
+											p_fw_cmd->opcode, p_fw_cmd->sub_opcode);
+								}
+								else
+								{
+										current_offset += transfer_size;
+								}
+
+							}
+							else
+							{
+								rc = linux_err_to_nvm_lib_err(lnx_err_status);
+								COMMON_LOG_ERROR_F("BIOS write failed: "
+										"Linux driver returned error %d for command with "
+											"Opcode- 0x%x SubOpcode- 0x%x ", lnx_err_status,
+												p_fw_cmd->opcode, p_fw_cmd->sub_opcode);
+
+							}
 						}
 
 						ndctl_cmd_unref(p_vendor_cmd);
@@ -203,7 +248,7 @@ int bios_read_large_payload(struct ndctl_dimm *p_dimm, struct fw_cmd *p_fw_cmd)
 		COMMON_LOG_ERROR("Invalid parameter, Dimm is null");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
-	else if ((rc = bios_get_payload_size(p_dimm, &mb_size)) == NVM_SUCCESS)
+	else if ((rc = bios_get_payload_size(p_dimm, &mb_size, p_fw_cmd)) == NVM_SUCCESS)
 	{
 		if (mb_size.large_output_payload_size < p_fw_cmd->large_output_payload_size)
 		{
@@ -213,6 +258,9 @@ int bios_read_large_payload(struct ndctl_dimm *p_dimm, struct fw_cmd *p_fw_cmd)
 		{
 			unsigned int transfer_size = mb_size.rw_size;
 			unsigned int current_offset = 0;
+			int lnx_err_status = 0;
+			unsigned int dsm_vendor_err_status = 0;
+
 			rc = NVM_SUCCESS;
 			while (current_offset < p_fw_cmd->large_output_payload_size &&
 					rc == NVM_SUCCESS)
@@ -248,21 +296,42 @@ int bios_read_large_payload(struct ndctl_dimm *p_dimm, struct fw_cmd *p_fw_cmd)
 							rc = NVM_ERR_DRIVERFAILED;
 						}
 
-						if (((rc = linux_err_to_nvm_lib_err(ndctl_cmd_submit(p_vendor_cmd)))
-							== NVM_SUCCESS) && ((rc = dsm_err_to_nvm_lib_err(
-								ndctl_cmd_get_firmware_status(p_vendor_cmd))) == NVM_SUCCESS))
+						if ((lnx_err_status = ndctl_cmd_submit(p_vendor_cmd)) == 0)
 						{
-							NVM_SIZE return_size = ndctl_cmd_vendor_get_output(p_vendor_cmd,
-								p_fw_cmd->large_output_payload + current_offset, transfer_size);
-							if (return_size != transfer_size)
+							if ((dsm_vendor_err_status =
+									ndctl_cmd_get_firmware_status(p_vendor_cmd)) !=
+											DSM_VENDOR_SUCCESS)
 							{
-								rc = NVM_ERR_DRIVERFAILED;
-								COMMON_LOG_ERROR("Large Payload returned less data than requested");
+								rc = dsm_err_to_nvm_lib_err(dsm_vendor_err_status);
+								COMMON_LOG_ERROR_F("BIOS read failed: "
+										"DSM returned error %d for command with "
+										"Opcode - 0x%x SubOpcode - 0x%x ", dsm_vendor_err_status,
+										p_fw_cmd->opcode, p_fw_cmd->sub_opcode);
 							}
 							else
 							{
-								current_offset += transfer_size;
+								NVM_SIZE return_size = ndctl_cmd_vendor_get_output(p_vendor_cmd,
+										p_fw_cmd->large_output_payload +
+										current_offset, transfer_size);
+								if (return_size != transfer_size)
+								{
+									rc = NVM_ERR_DRIVERFAILED;
+									COMMON_LOG_ERROR("Large Payload returned "
+											"less data than requested");
+								}
+								else
+								{
+									current_offset += transfer_size;
+								}
 							}
+						}
+						else
+						{
+							rc = linux_err_to_nvm_lib_err(lnx_err_status);
+							COMMON_LOG_ERROR_F("BIOS read failed: "
+									"Linux driver returned error %d for command with "
+									"Opcode - 0x%x SubOpcode - 0x%x ", lnx_err_status,
+									p_fw_cmd->opcode, p_fw_cmd->sub_opcode);
 						}
 						ndctl_cmd_unref(p_vendor_cmd);
 					}
@@ -373,6 +442,9 @@ int ioctl_passthrough_cmd(struct fw_cmd *p_fw_cmd)
 			}
 			else
 			{
+				int lnx_err_status = 0;
+				unsigned int dsm_vendor_err_status = 0;
+
 				if (p_fw_cmd->input_payload_size > 0)
 				{
 					NVM_SIZE bytes_written = ndctl_cmd_vendor_set_input(p_vendor_cmd,
@@ -400,23 +472,44 @@ int ioctl_passthrough_cmd(struct fw_cmd *p_fw_cmd)
 							i, ((NVM_UINT64 *) (p_fw_cmd->input_payload))[i]);
 					}
 				}
-				if (rc == NVM_SUCCESS && ((rc = linux_err_to_nvm_lib_err(
-						ndctl_cmd_submit(p_vendor_cmd))) == NVM_SUCCESS) &&
-						((rc = dsm_err_to_nvm_lib_err(
-						ndctl_cmd_get_firmware_status(p_vendor_cmd))) == NVM_SUCCESS))
+				if (rc == NVM_SUCCESS)
 				{
-					if (p_fw_cmd->output_payload_size > 0)
+					if ((lnx_err_status = ndctl_cmd_submit(p_vendor_cmd)) == 0)
 					{
-						ndctl_cmd_vendor_get_output(p_vendor_cmd,
-							p_fw_cmd->output_payload,
-							p_fw_cmd->output_payload_size);
-					}
+						if ((dsm_vendor_err_status =
+								ndctl_cmd_get_firmware_status(p_vendor_cmd)) != DSM_VENDOR_SUCCESS)
+						{
+							rc = dsm_err_to_nvm_lib_err(dsm_vendor_err_status);
+							COMMON_LOG_ERROR_F("IOCTL passthrough failed: "
+								"DSM returned error %d for command with "
+										"Opcode - 0x%x SubOpcode - 0x%x ", dsm_vendor_err_status,
+											p_fw_cmd->opcode, p_fw_cmd->sub_opcode);
+						}
+						else
+						{
+							if (p_fw_cmd->output_payload_size > 0)
+							{
+								ndctl_cmd_vendor_get_output(p_vendor_cmd,
+											p_fw_cmd->output_payload,
+												p_fw_cmd->output_payload_size);
+							}
 
-					if (p_fw_cmd->large_output_payload_size > 0)
+							if (p_fw_cmd->large_output_payload_size > 0)
+							{
+								rc = bios_read_large_payload(p_dimm, p_fw_cmd);
+							}
+						}
+					}
+					else
 					{
-						rc = bios_read_large_payload(p_dimm, p_fw_cmd);
+						rc = linux_err_to_nvm_lib_err(lnx_err_status);
+						COMMON_LOG_ERROR_F("IOCTL passthrough failed "
+								"Linux driver returned error %d for command with "
+								"Opcode- 0x%x SubOpcode- 0x%x ", lnx_err_status,
+								p_fw_cmd->opcode, p_fw_cmd->sub_opcode);
 					}
 				}
+
 				ndctl_cmd_unref(p_vendor_cmd);
 			}
 		}

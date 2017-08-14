@@ -146,10 +146,16 @@ int win_scm_adp_ioctl_passthrough_cmd(struct fw_cmd *p_cmd)
 	if (!WIN_SCM2_IOCTL_SUCCESS(scm_rc))
 	{
 		rc = win_scm_to_nvm_err(scm_rc);
+		COMMON_LOG_ERROR_F("IOCTL passthrough failed: Windows SCM driver "
+			"returned error %d for command with opcode -"
+				" 0x%x Subopcode - 0x%x", scm_rc, p_cmd->opcode, p_cmd->sub_opcode);
 	}
 	else if (dsm_status != 0)
 	{
 		rc = dsm_err_to_nvm_lib_err(dsm_status);
+		COMMON_LOG_ERROR_F("IOCTL passthrough failed: DSM returned error %d "
+				"for command with opcode - "
+						"0x%x Subopcode - 0x%x", dsm_status, p_cmd->opcode, p_cmd->sub_opcode);
 	}
 
 	return rc;

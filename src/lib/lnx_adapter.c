@@ -605,7 +605,6 @@ int linux_err_to_nvm_lib_err(int crbd_err)
 	int ret = NVM_SUCCESS;
 	if (crbd_err < 0)
 	{
-		COMMON_LOG_ERROR_F("Linux driver error = %d", crbd_err);
 		switch (crbd_err)
 		{
 			case -EACCES :
