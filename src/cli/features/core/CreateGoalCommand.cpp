@@ -47,6 +47,7 @@ framework::ResultBase *CreateGoalCommand::Parser::parse(
 	parsePropertyMemoryMode();
 	parsePropertyPmType();
 	parsePropertyReserved();
+	parsePropertyConfig();
 	parseOptionForce();
 	parseOptionUnits();
 
@@ -63,6 +64,12 @@ NVM_UINT64 CreateGoalCommand::Parser::getReserved()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return m_reservedValue;
+}
+
+std::string CreateGoalCommand::Parser::getConfig()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	return m_configValue;
 }
 
 bool CreateGoalCommand::Parser::isPmTypeAppDirect()
@@ -105,6 +112,10 @@ CreateGoalCommand::Parser::Parser() : m_pResult(NULL),
 	m_memoryModeValue(0),
 	m_reservedValue(0),
 	m_pmType(PMTYPE_VALUE_APPDIRECT),
+	m_configValue(""),
+	m_memoryModeExists(false),
+	m_pmTypeExists(false),
+	m_reserveStorageExists(false),
 	m_isForce(false) { }
 
 framework::ResultBase *CreateGoalCommand::ShowGoalAdapter::showCurrentGoal(
@@ -363,6 +374,12 @@ framework::CommandSpec CreateGoalCommand::getCommandSpec(int id)
 		.helpText(TR("Reserve a percentage (0-100) of the requested AEP DIMM capacity"
 			" that will not be mapped into the system physical address space."));
 
+	result.addProperty(CONFIG_NAME)
+			.isRequired(false)
+			.isValueRequired(true)
+			.valueText("MM|AD|MM+AD")
+			.helpText(TR("Create a memory allocation goal which utilizes all of the "
+					"specified AEP DIMMs in one of pre-defined configurations."));
 	return result;
 }
 
@@ -414,9 +431,23 @@ void CreateGoalCommand::setupRequestBuilder()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	m_requestBuilder.setMemoryModePercentage(m_parser.getMemoryMode());
-	m_requestBuilder.setReservedPercentage(m_parser.getReserved());
-
+	std::string configString = m_parser.getConfig();
+	if (configString.empty())
+	{
+		m_requestBuilder.setMemoryModePercentage(m_parser.getMemoryMode());
+		m_requestBuilder.setReservedPercentage(m_parser.getReserved());
+	}
+	else
+	{
+		if (configString.compare(CREATE_GOAL_CONFIG_MEMORY_MODE) == 0)
+		{
+			m_requestBuilder.setMemoryModePercentage(100);
+		}
+		else if (configString.compare(CREATE_GOAL_CONFIG_MEMORY_APPDIRECT_MODE) == 0)
+		{
+			m_requestBuilder.setMemoryModePercentage(25);
+		}
+	}
 	if (m_parser.isPmTypeAppDirect())
 	{
 		m_requestBuilder.setPersistentTypeAppDirectInterleaved();
@@ -512,12 +543,11 @@ void CreateGoalCommand::Parser::parsePropertyMemoryMode()
 {
 	if (!hasError())
 	{
-		bool memoryModeExists = false;
 		std::string memoryMode =
 			framework::Parser::getPropertyValue(m_parsedCommand, MEMORYMODE_NAME,
-				&memoryModeExists);
+				&m_memoryModeExists);
 
-		if (memoryModeExists)
+		if (m_memoryModeExists)
 		{
 			if (!stringToInt(memoryMode, &m_memoryModeValue)
 				|| m_memoryModeValue > 100
@@ -535,12 +565,11 @@ void CreateGoalCommand::Parser::parsePropertyPmType()
 {
 	if (!hasError())
 	{
-		bool pmTypeExists = false;
 		std::string pmType =
 			framework::Parser::getPropertyValue(m_parsedCommand, PMTYPE_NAME,
-				&pmTypeExists);
+				&m_pmTypeExists);
 
-		if (pmTypeExists)
+		if (m_pmTypeExists)
 		{
 			m_pmType = pmType;
 
@@ -558,12 +587,11 @@ void CreateGoalCommand::Parser::parsePropertyReserved()
 {
 	if (!hasError())
 	{
-		bool reserveStorageExists = false;
 		std::string reserveStorageString =
 				framework::Parser::getPropertyValue(m_parsedCommand, RESERVED_NAME,
-						&reserveStorageExists);
+						&m_reserveStorageExists);
 
-		if (reserveStorageExists)
+		if (m_reserveStorageExists)
 		{
 			if (!stringToInt(reserveStorageString, &m_reservedValue)
 					|| m_reservedValue > 100
@@ -575,6 +603,35 @@ void CreateGoalCommand::Parser::parsePropertyReserved()
 				m_reservedValue = 0;
 			}
 		}
+	}
+}
+
+void CreateGoalCommand::Parser::parsePropertyConfig()
+{
+	if (!hasError())
+	{
+		bool configExists = false;
+		m_configValue =
+				framework::Parser::getPropertyValue(m_parsedCommand, CONFIG_NAME,
+						&configExists);
+		std::vector<std::string> validConfigs;
+		validConfigs.push_back(CREATE_GOAL_CONFIG_MEMORY_MODE);
+		validConfigs.push_back(CREATE_GOAL_CONFIG_APPDIRECT_MODE);
+		validConfigs.push_back(CREATE_GOAL_CONFIG_MEMORY_APPDIRECT_MODE);
+
+		if (configExists)
+		{
+			if (std::find(validConfigs.begin(), validConfigs.end(), m_configValue) == validConfigs.end())
+			{
+				m_pResult = new framework::SyntaxErrorBadValueResult(framework::TOKENTYPE_PROPERTY,
+						CONFIG_NAME, m_configValue);
+			}
+			else if (m_memoryModeExists || m_reserveStorageExists || m_pmTypeExists)
+			{
+				m_pResult = new framework::SyntaxErrorResult(TRS(CREATE_GOAL_CONFIG_CANNOT_BE_COMBINED_ERROR));
+			}
+		}
+
 	}
 }
 

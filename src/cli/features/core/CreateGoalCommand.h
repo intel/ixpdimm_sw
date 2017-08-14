@@ -47,11 +47,16 @@ namespace nvmcli
 static const std::string MEMORYMODE_NAME = "MemoryMode";
 static const std::string PMTYPE_NAME = "PersistentMemoryType";
 static const std::string RESERVED_NAME = "Reserved";
+static const std::string CONFIG_NAME = "Config";
 
 static const std::string PMTYPE_VALUE_APPDIRECT = "AppDirect";
 static const std::string PMTYPE_VALUE_APPDIRECTNOTINTERLEAVED = "AppDirectNotInterleaved";
 static const std::string PMTYPE_VALUE_NONE = "None";
 static const std::string PMTYPE_VALUE_STORAGE = "Storage";
+
+static const std::string CREATE_GOAL_CONFIG_MEMORY_MODE = "MM";
+static const std::string CREATE_GOAL_CONFIG_APPDIRECT_MODE = "AD";
+static const std::string CREATE_GOAL_CONFIG_MEMORY_APPDIRECT_MODE = "MM+AD";
 
 static const std::string CREATE_CONFIG_GOAL_MSG = TR("Create configuration goal: ");
 
@@ -70,6 +75,7 @@ static const std::string CREATE_GOAL_ADJUSTED_MORE_THAN_10PERCENT_WARNING = TR("
 		"to find a valid configuration."); // Escape the '%' character to print it safely using printf statement
 static const std::string CREATE_GOAL_SKU_MAPPED_MEMORY_LIMITED_WARNING = TR("The amount of mapped memory was limited based "
 		"on the SKU resulting in un-mapped Storage only capacity.");
+static const std::string CREATE_GOAL_CONFIG_CANNOT_BE_COMBINED_ERROR = TR("Config cannot be combined with any other property");
 
 class NVM_API CreateGoalCommand : public framework::CommandBase
 {
@@ -86,6 +92,7 @@ public:
 		bool isPmTypeAppDirectNotInterleaved();
 		bool isForce();
 
+		std::string getConfig();
 		std::string getUnits();
 		std::vector<std::string> getDimms();
 		std::vector<NVM_UINT16> getSockets();
@@ -95,6 +102,10 @@ public:
 		int m_memoryModeValue;
 		int m_reservedValue;
 		std::string m_pmType;
+		std::string m_configValue;
+		bool m_memoryModeExists;
+		bool m_pmTypeExists;
+		bool m_reserveStorageExists;
 		bool m_isForce;
 		std::string m_units;
 		std::vector<std::string> m_dimms;
@@ -116,6 +127,8 @@ public:
 		void parsePropertyPmType();
 	
 		void parsePropertyReserved();
+
+		void parsePropertyConfig();
 	};
 
 	class NVM_API ShowGoalAdapter
