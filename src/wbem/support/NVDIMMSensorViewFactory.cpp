@@ -177,6 +177,10 @@ std::string NVDIMMSensorViewFactory::getSensorNameStr(int type)
 	{
 		result = PROPERTY_SENSOR_TYPE_CONTROLLERTEMP;
 	}
+	else if (type == NVDIMMSensorFactory::SENSORTYPE_HEALTH)
+	{
+		result = PROPERTY_SENSOR_TYPE_HEALTH;
+	}
 	else
 	{
 		result = PROPERTY_SENSOR_TYPE_UNKNOWN;

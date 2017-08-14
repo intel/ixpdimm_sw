@@ -64,6 +64,7 @@ static std::vector<std::string> getWbemSensors()
 	result.push_back(wbem::support::PROPERTY_SENSOR_TYPE_UNSAFESHUTDOWNS);
 	result.push_back(wbem::support::PROPERTY_SENSOR_TYPE_FWERRORLOGCOUNT);
 	result.push_back(wbem::support::PROPERTY_SENSOR_TYPE_POWERLIMITED);
+	result.push_back(wbem::support::PROPERTY_SENSOR_TYPE_HEALTH);
 	return result;
 }
 
@@ -86,7 +87,7 @@ void cli::nvmcli::SensorFeature::getPaths(cli::framework::CommandSpecList &list)
 	showSensor.addOption(framework::OPTION_ALL);
 	showSensor.addTarget(TARGET_SENSOR_R)
 			.valueText("MediaTemperature|ControllerTemperature|SpareCapacity|WearLevel|UnsafeShutdowns|"
-					"PowerOnTime|UpTime|PowerCycles|FWErrorCount|PowerLimited|")
+					"PowerOnTime|UpTime|PowerCycles|FWErrorCount|PowerLimited|Health")
 			.helpText(TR("Restrict output to a specific sensor type by supplying the name. "
 					"The default is to display all sensors."));
 	showSensor.addTarget(TARGET_DIMM)

@@ -296,6 +296,34 @@ int get_smart_log_sensors(const NVM_UID device_uid,
 				p_sensor->current_state = SENSOR_NORMAL;
 			}
 		}
+
+		// Health
+		{
+			p_sensor = &p_sensors[SENSOR_HEALTH];
+			if (dimm_smart.validation_flags.parts.health_status_field)
+			{
+				p_sensor->reading = dimm_smart.health_status;
+
+				switch (dimm_smart.health_status)
+				{
+				case SMART_NORMAL:
+					p_sensor->current_state = SENSOR_NORMAL;
+					break;
+				case SMART_CRITICAL:
+					p_sensor->current_state = SENSOR_CRITICAL;
+					break;
+				case SMART_NON_CRITICAL:
+					p_sensor->current_state = SENSOR_NONCRITICAL;
+					break;
+				case SMART_FATAL:
+					p_sensor->current_state = SENSOR_FATAL;
+					break;
+				default:
+					p_sensor->current_state = SENSOR_UNKNOWN;
+					break;
+				}
+			}
+		}
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -378,6 +406,7 @@ void initialize_sensors(const NVM_UID device_uid,
 	sensors[SENSOR_FWERRORLOGCOUNT].units = UNIT_COUNT;
 	sensors[SENSOR_POWERLIMITED].units = UNIT_COUNT;
 	sensors[SENSOR_CONTROLLER_TEMPERATURE].units = UNIT_CELSIUS;
+	sensors[SENSOR_HEALTH].units = UNIT_COUNT;
 }
 
 int get_all_sensors(const NVM_UID device_uid,
@@ -508,6 +537,8 @@ static const char *SENSOR_STRINGS[NVM_MAX_DEVICE_SENSORS] =
 		N_TR("Power Limited"),
 		// SENSOR_CONTROLLER_TEMPERATURE
 		N_TR("Controller Temperature"),
+		// SENSOR_HEALTH
+		N_TR("Health"),
 	};
 
 void sensor_type_to_string(const enum sensor_type type, char *p_dst, size_t dst_size)

@@ -78,6 +78,7 @@ public:
 	static const int SENSORTYPE_FWERRORLOGCOUNT; //!< Number of new FW errors
 	static const int SENSORTYPE_POWERLIMITED; //!<Whether or not the DIMM is power limited
 	static const int SENSORTYPE_CONTROLLER_TEMPERATURE; //!< Device controller temperature in degrees Celsius
+	static const int SENSORTYPE_HEALTH; //!< Apache Pass DIMM health as reported in the SMART log
 
 	static const int SENSOR_TEMP_MODIFIER = 10000;
 	static const int SENSOR_TEMP_MODIFIER_POWER = -4;

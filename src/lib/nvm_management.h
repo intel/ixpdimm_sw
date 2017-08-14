@@ -218,6 +218,7 @@ enum sensor_type
 	SENSOR_FWERRORLOGCOUNT = 7, // The total number of firmware error log entries.
 	SENSOR_POWERLIMITED = 8, // Whether or not the AEP DIMM is power limited.
 	SENSOR_CONTROLLER_TEMPERATURE = 9, // Device media temperature in degrees Celsius.
+	SENSOR_HEALTH = 10, // Apache Pass DIMM health as reported in the SMART log.
 };
 
 /*

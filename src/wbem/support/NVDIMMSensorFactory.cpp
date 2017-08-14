@@ -65,7 +65,7 @@ const int NVDIMMSensorFactory::SENSORTYPE_UNSAFESHUTDOWNS = SENSOR_UNSAFESHUTDOW
 const int NVDIMMSensorFactory::SENSORTYPE_FWERRORLOGCOUNT = SENSOR_FWERRORLOGCOUNT;
 const int NVDIMMSensorFactory::SENSORTYPE_POWERLIMITED = SENSOR_POWERLIMITED;
 const int NVDIMMSensorFactory::SENSORTYPE_CONTROLLER_TEMPERATURE = SENSOR_CONTROLLER_TEMPERATURE;
-
+const int NVDIMMSensorFactory::SENSORTYPE_HEALTH = SENSOR_HEALTH;
 /*
  * CIM list of possible sensor states.
  */
@@ -126,6 +126,7 @@ const cimSensorDescriptionsMap &getSensorDescriptionMap()
 		result[SENSOR_FWERRORLOGCOUNT] = (cimSensorDescription) {"error", NVDIMMSENSOR_ELEMENTPREFIX + "FW Error Log Count", SENSOR_TYPE_OTHER, "FWError"};
 		result[SENSOR_POWERLIMITED] = (cimSensorDescription) {"pl", NVDIMMSENSOR_ELEMENTPREFIX + "Power Limited", SENSOR_TYPE_OTHER, "PowerLimited"};
 		result[SENSOR_CONTROLLER_TEMPERATURE] = (cimSensorDescription) {"controllertemp", NVDIMMSENSOR_ELEMENTPREFIX + "Controller Temp", SENSOR_TYPE_TEMP, ""};
+		result[SENSOR_HEALTH] = (cimSensorDescription) {"health", NVDIMMSENSOR_ELEMENTPREFIX + "Health", SENSOR_TYPE_OTHER, ""};
 	}
 
 	return result;
