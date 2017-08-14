@@ -266,6 +266,7 @@ std::string ShowDeviceCommand::convertConfigStatus(config_status status)
 	map[CONFIG_STATUS_ERR_BROKEN_INTERLEAVE] = TR("Failed - Broken interleave");
 	map[CONFIG_STATUS_ERR_REVERTED] = TR("Failed - Reverted");
 	map[CONFIG_STATUS_ERR_NOT_SUPPORTED] = TR("Failed - Unsupported");
+	map[CONFIG_STATUS_UNKNOWN] = TR("Unknown");
 	return map[status];
 }
 

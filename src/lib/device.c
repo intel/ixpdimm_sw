@@ -638,6 +638,7 @@ int fill_device_config_status(const NVM_NFIT_DEVICE_HANDLE device_handle,
 			if (!p_current_config)
 			{
 				COMMON_LOG_ERROR("Failed to find current config table in platform config data.");
+				p_status->config_status = CONFIG_STATUS_UNKNOWN;
 			}
 			else
 			{

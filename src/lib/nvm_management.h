@@ -436,6 +436,7 @@ enum config_status
 	CONFIG_STATUS_ERR_BROKEN_INTERLEAVE = 3, // The interleave set is broken.
 	CONFIG_STATUS_ERR_REVERTED = 4, // The configuration failed and was reverted.
 	CONFIG_STATUS_ERR_NOT_SUPPORTED = 5, // The configuration is not supported by the BIOS.
+	CONFIG_STATUS_UNKNOWN = 6 // The configuration status cannot be determined
 };
 
 /*
