@@ -24,7 +24,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
+ 
 #include "fw_command_printer.h"
 #include <driver_interface/passthrough.h>
 #include <stdio.h>
@@ -96,7 +96,7 @@ void fwcmd_print_command_names()
 	printf("\tpmon_registers\n");
 	printf("\tset_alarm_threshold\n");
 	printf("\tsystem_time\n");
-	printf("\tplatform_config_data_configuration_header_table\n");
+	printf("\tplatform_config_data\n");
 	printf("\tnamespace_labels\n");
 	printf("\tdimm_partition_info\n");
 	printf("\tfw_debug_log_level\n");
@@ -127,7 +127,7 @@ void fwcmd_print_output_command_names()
 	printf("\toptional_configuration_data_policy\n");
 	printf("\tpmon_registers\n");
 	printf("\tsystem_time\n");
-	printf("\tplatform_config_data_configuration_header_table\n");
+	printf("\tplatform_config_data\n");
 	printf("\tnamespace_labels\n");
 	printf("\tdimm_partition_info\n");
 	printf("\tfw_debug_log_level\n");
@@ -145,6 +145,214 @@ void fwcmd_print_output_command_names()
 
 
 void fwcmd_identify_dimm_printer(const struct fwcmd_identify_dimm_data *p_value, int indent_count)
+{
+	fwcmd_identify_dimm_field_printer(p_value, indent_count);
+}
+
+void fwcmd_identify_dimm_characteristics_printer(const struct fwcmd_identify_dimm_characteristics_data *p_value, int indent_count)
+{
+	fwcmd_identify_dimm_characteristics_field_printer(p_value, indent_count);
+}
+
+void fwcmd_get_security_state_printer(const struct fwcmd_get_security_state_data *p_value, int indent_count)
+{
+	fwcmd_get_security_state_field_printer(p_value, indent_count);
+}
+
+void fwcmd_get_alarm_threshold_printer(const struct fwcmd_get_alarm_threshold_data *p_value, int indent_count)
+{
+	fwcmd_get_alarm_threshold_field_printer(p_value, indent_count);
+}
+
+void fwcmd_power_management_policy_printer(const struct fwcmd_power_management_policy_data *p_value, int indent_count)
+{
+	fwcmd_power_management_policy_field_printer(p_value, indent_count);
+}
+
+void fwcmd_die_sparing_policy_printer(const struct fwcmd_die_sparing_policy_data *p_value, int indent_count)
+{
+	fwcmd_die_sparing_policy_field_printer(p_value, indent_count);
+}
+
+void fwcmd_address_range_scrub_printer(const struct fwcmd_address_range_scrub_data *p_value, int indent_count)
+{
+	fwcmd_address_range_scrub_field_printer(p_value, indent_count);
+}
+
+void fwcmd_optional_configuration_data_policy_printer(const struct fwcmd_optional_configuration_data_policy_data *p_value, int indent_count)
+{
+	fwcmd_optional_configuration_data_policy_field_printer(p_value, indent_count);
+}
+
+void fwcmd_pmon_registers_printer(const struct fwcmd_pmon_registers_data *p_value, int indent_count)
+{
+	fwcmd_pmon_registers_field_printer(p_value, indent_count);
+}
+
+void fwcmd_system_time_printer(const struct fwcmd_system_time_data *p_value, int indent_count)
+{
+	fwcmd_system_time_field_printer(p_value, indent_count);
+}
+
+void fwcmd_device_identification_v1_printer(const struct fwcmd_device_identification_v1_data *p_value, int indent_count)
+{
+	fwcmd_device_identification_v1_field_printer(p_value, indent_count);
+}
+
+void fwcmd_device_identification_v2_printer(const struct fwcmd_device_identification_v2_data *p_value, int indent_count)
+{
+	fwcmd_device_identification_v2_field_printer(p_value, indent_count);
+}
+
+void fwcmd_id_info_table_printer(const struct fwcmd_id_info_table_data *p_value, int indent_count)
+{
+	fwcmd_id_info_table_field_printer(p_value, indent_count);
+}
+
+void fwcmd_interleave_information_table_printer(const struct fwcmd_interleave_information_table_data *p_value, int indent_count)
+{
+	fwcmd_interleave_information_table_field_printer(p_value, indent_count);
+	for (size_t i = 0; i < p_value->id_info_table_count; i++)
+	{
+		fwcmd_id_info_table_printer(&p_value->id_info_table[i], indent_count + 1);
+	}
+
+}
+
+void fwcmd_partition_size_change_table_printer(const struct fwcmd_partition_size_change_table_data *p_value, int indent_count)
+{
+	fwcmd_partition_size_change_table_field_printer(p_value, indent_count);
+}
+
+void fwcmd_current_config_table_printer(const struct fwcmd_current_config_table_data *p_value, int indent_count)
+{
+	fwcmd_current_config_table_field_printer(p_value, indent_count);
+	for (size_t i = 0; i < p_value->interleave_information_table_count; i++)
+	{
+		fwcmd_interleave_information_table_printer(&p_value->interleave_information_table[i], indent_count + 1);
+	}
+}
+
+void fwcmd_config_input_table_printer(const struct fwcmd_config_input_table_data *p_value, int indent_count)
+{
+	fwcmd_config_input_table_field_printer(p_value, indent_count);
+	for (size_t i = 0; i < p_value->interleave_information_table_count; i++)
+	{
+		fwcmd_interleave_information_table_printer(&p_value->interleave_information_table[i], indent_count + 1);
+	}
+	for (size_t i = 0; i < p_value->partition_size_change_table_count; i++)
+	{
+		fwcmd_partition_size_change_table_printer(&p_value->partition_size_change_table[i], indent_count + 1);
+	}
+}
+
+void fwcmd_config_output_table_printer(const struct fwcmd_config_output_table_data *p_value, int indent_count)
+{
+	fwcmd_config_output_table_field_printer(p_value, indent_count);
+	for (size_t i = 0; i < p_value->interleave_information_table_count; i++)
+	{
+		fwcmd_interleave_information_table_printer(&p_value->interleave_information_table[i], indent_count + 1);
+	}
+	for (size_t i = 0; i < p_value->partition_size_change_table_count; i++)
+	{
+		fwcmd_partition_size_change_table_printer(&p_value->partition_size_change_table[i], indent_count + 1);
+	}
+}
+
+void fwcmd_platform_config_data_printer(const struct fwcmd_platform_config_data_data *p_value, int indent_count)
+{
+	fwcmd_platform_config_data_field_printer(p_value, indent_count);
+	fwcmd_current_config_table_printer(&p_value->current_config_table, indent_count + 1);
+	fwcmd_config_input_table_printer(&p_value->config_input_table, indent_count + 1);
+	fwcmd_config_output_table_printer(&p_value->config_output_table, indent_count + 1);
+}
+
+void fwcmd_ns_index_printer(const struct fwcmd_ns_index_data *p_value, int indent_count)
+{
+	fwcmd_ns_index_field_printer(p_value, indent_count);
+}
+
+void fwcmd_ns_label_printer(const struct fwcmd_ns_label_data *p_value, int indent_count)
+{
+	fwcmd_ns_label_field_printer(p_value, indent_count);
+}
+
+void fwcmd_ns_label_v1_1_printer(const struct fwcmd_ns_label_v1_1_data *p_value, int indent_count)
+{
+	fwcmd_ns_label_v1_1_field_printer(p_value, indent_count);
+}
+
+void fwcmd_ns_label_v1_2_printer(const struct fwcmd_ns_label_v1_2_data *p_value, int indent_count)
+{
+	fwcmd_ns_label_v1_2_field_printer(p_value, indent_count);
+}
+
+void fwcmd_namespace_labels_printer(const struct fwcmd_namespace_labels_data *p_value, int indent_count)
+{
+	fwcmd_namespace_labels_field_printer(p_value, indent_count);
+}
+
+void fwcmd_dimm_partition_info_printer(const struct fwcmd_dimm_partition_info_data *p_value, int indent_count)
+{
+	fwcmd_dimm_partition_info_field_printer(p_value, indent_count);
+}
+
+void fwcmd_fw_debug_log_level_printer(const struct fwcmd_fw_debug_log_level_data *p_value, int indent_count)
+{
+	fwcmd_fw_debug_log_level_field_printer(p_value, indent_count);
+}
+
+void fwcmd_fw_load_flag_printer(const struct fwcmd_fw_load_flag_data *p_value, int indent_count)
+{
+	fwcmd_fw_load_flag_field_printer(p_value, indent_count);
+}
+
+void fwcmd_config_lockdown_printer(const struct fwcmd_config_lockdown_data *p_value, int indent_count)
+{
+	fwcmd_config_lockdown_field_printer(p_value, indent_count);
+}
+
+void fwcmd_ddrt_io_init_info_printer(const struct fwcmd_ddrt_io_init_info_data *p_value, int indent_count)
+{
+	fwcmd_ddrt_io_init_info_field_printer(p_value, indent_count);
+}
+
+void fwcmd_get_supported_sku_features_printer(const struct fwcmd_get_supported_sku_features_data *p_value, int indent_count)
+{
+	fwcmd_get_supported_sku_features_field_printer(p_value, indent_count);
+}
+
+void fwcmd_enable_dimm_printer(const struct fwcmd_enable_dimm_data *p_value, int indent_count)
+{
+	fwcmd_enable_dimm_field_printer(p_value, indent_count);
+}
+
+void fwcmd_smart_health_info_printer(const struct fwcmd_smart_health_info_data *p_value, int indent_count)
+{
+	fwcmd_smart_health_info_field_printer(p_value, indent_count);
+}
+
+void fwcmd_firmware_image_info_printer(const struct fwcmd_firmware_image_info_data *p_value, int indent_count)
+{
+	fwcmd_firmware_image_info_field_printer(p_value, indent_count);
+}
+
+void fwcmd_firmware_debug_log_printer(const struct fwcmd_firmware_debug_log_data *p_value, int indent_count)
+{
+	fwcmd_firmware_debug_log_field_printer(p_value, indent_count);
+}
+
+void fwcmd_long_operation_status_printer(const struct fwcmd_long_operation_status_data *p_value, int indent_count)
+{
+	fwcmd_long_operation_status_field_printer(p_value, indent_count);
+}
+
+void fwcmd_bsr_printer(const struct fwcmd_bsr_data *p_value, int indent_count)
+{
+	fwcmd_bsr_field_printer(p_value, indent_count);
+}
+
+void fwcmd_identify_dimm_field_printer(const struct fwcmd_identify_dimm_data *p_value, int indent_count)
 {
 	print_tabs(indent_count);
 	printf("IdentifyDimm:\n");
@@ -198,7 +406,7 @@ void fwcmd_identify_dimm_printer(const struct fwcmd_identify_dimm_data *p_value,
 	printf("ApiVer: 0x%x\n", p_value->api_ver);
 }
 
-void fwcmd_identify_dimm_characteristics_printer(const struct fwcmd_identify_dimm_characteristics_data *p_value, int indent_count)
+void fwcmd_identify_dimm_characteristics_field_printer(const struct fwcmd_identify_dimm_characteristics_data *p_value, int indent_count)
 {
 	print_tabs(indent_count);
 	printf("IdentifyDimmCharacteristics:\n");
@@ -212,7 +420,7 @@ void fwcmd_identify_dimm_characteristics_printer(const struct fwcmd_identify_dim
 	printf("ThrottlingStopThreshold: 0x%x\n", p_value->throttling_stop_threshold);
 }
 
-void fwcmd_get_security_state_printer(const struct fwcmd_get_security_state_data *p_value, int indent_count)
+void fwcmd_get_security_state_field_printer(const struct fwcmd_get_security_state_data *p_value, int indent_count)
 {
 	print_tabs(indent_count);
 	printf("GetSecurityState:\n");
@@ -230,7 +438,7 @@ void fwcmd_get_security_state_printer(const struct fwcmd_get_security_state_data
 	printf("NotSupported: %d\n", p_value->security_state_not_supported);
 }
 
-void fwcmd_get_alarm_threshold_printer(const struct fwcmd_get_alarm_threshold_data *p_value, int indent_count)
+void fwcmd_get_alarm_threshold_field_printer(const struct fwcmd_get_alarm_threshold_data *p_value, int indent_count)
 {
 	print_tabs(indent_count);
 	printf("GetAlarmThreshold:\n");
@@ -250,7 +458,7 @@ void fwcmd_get_alarm_threshold_printer(const struct fwcmd_get_alarm_threshold_da
 	printf("ControllerTempThreshold: 0x%x\n", p_value->controller_temp_threshold);
 }
 
-void fwcmd_power_management_policy_printer(const struct fwcmd_power_management_policy_data *p_value, int indent_count)
+void fwcmd_power_management_policy_field_printer(const struct fwcmd_power_management_policy_data *p_value, int indent_count)
 {
 	print_tabs(indent_count);
 	printf("PowerManagementPolicy:\n");
@@ -264,7 +472,7 @@ void fwcmd_power_management_policy_printer(const struct fwcmd_power_management_p
 	printf("MaxPower: 0x%x\n", p_value->max_power);
 }
 
-void fwcmd_die_sparing_policy_printer(const struct fwcmd_die_sparing_policy_data *p_value, int indent_count)
+void fwcmd_die_sparing_policy_field_printer(const struct fwcmd_die_sparing_policy_data *p_value, int indent_count)
 {
 	print_tabs(indent_count);
 	printf("DieSparingPolicy:\n");
@@ -284,7 +492,7 @@ void fwcmd_die_sparing_policy_printer(const struct fwcmd_die_sparing_policy_data
 	printf("Rank3: %d\n", p_value->supported_rank_3);
 }
 
-void fwcmd_address_range_scrub_printer(const struct fwcmd_address_range_scrub_data *p_value, int indent_count)
+void fwcmd_address_range_scrub_field_printer(const struct fwcmd_address_range_scrub_data *p_value, int indent_count)
 {
 	print_tabs(indent_count);
 	printf("AddressRangeScrub:\n");
@@ -298,7 +506,7 @@ void fwcmd_address_range_scrub_printer(const struct fwcmd_address_range_scrub_da
 	printf("DpaCurrentAddress: 0x%llx\n", p_value->dpa_current_address);
 }
 
-void fwcmd_optional_configuration_data_policy_printer(const struct fwcmd_optional_configuration_data_policy_data *p_value, int indent_count)
+void fwcmd_optional_configuration_data_policy_field_printer(const struct fwcmd_optional_configuration_data_policy_data *p_value, int indent_count)
 {
 	print_tabs(indent_count);
 	printf("OptionalConfigurationDataPolicy:\n");
@@ -310,7 +518,7 @@ void fwcmd_optional_configuration_data_policy_printer(const struct fwcmd_optiona
 	printf("ViralStatus: 0x%x\n", p_value->viral_status);
 }
 
-void fwcmd_pmon_registers_printer(const struct fwcmd_pmon_registers_data *p_value, int indent_count)
+void fwcmd_pmon_registers_field_printer(const struct fwcmd_pmon_registers_data *p_value, int indent_count)
 {
 	print_tabs(indent_count);
 	printf("PmonRegisters:\n");
@@ -370,7 +578,7 @@ void fwcmd_pmon_registers_printer(const struct fwcmd_pmon_registers_data *p_valu
 	printf("Pmon14Control: 0x%x\n", p_value->pmon_14_control);
 }
 
-void fwcmd_system_time_printer(const struct fwcmd_system_time_data *p_value, int indent_count)
+void fwcmd_system_time_field_printer(const struct fwcmd_system_time_data *p_value, int indent_count)
 {
 	print_tabs(indent_count);
 	printf("SystemTime:\n");
@@ -378,23 +586,40 @@ void fwcmd_system_time_printer(const struct fwcmd_system_time_data *p_value, int
 	printf("UnixTime: 0x%llx\n", p_value->unix_time);
 }
 
-void fwcmd_platform_config_data_identification_information_table_printer(const struct fwcmd_platform_config_data_identification_information_table_data *p_value, int indent_count)
+void fwcmd_device_identification_v1_field_printer(const struct fwcmd_device_identification_v1_data *p_value, int indent_count)
 {
 	print_tabs(indent_count);
-	printf("PlatformConfigDataIdentificationInformationTable:\n");
+	printf("PlatformConfigDataDeviceIdentificationV1:\n");
 	print_tabs(indent_count + 1);
 	printf("ManufacturerId: 0x%x\n", p_value->manufacturer_id);
 	print_tabs(indent_count + 1);
 	printf("SerialNumber: 0x%x\n", p_value->serial_number);
 	print_tabs(indent_count + 1);
 	printf("ModelNumber: %s\n", p_value->model_number);
+}
+
+void fwcmd_device_identification_v2_field_printer(const struct fwcmd_device_identification_v2_data *p_value, int indent_count)
+{
+	print_tabs(indent_count);
+	printf("PlatformConfigDataDeviceIdentificationV2:\n");
+	print_tabs(indent_count + 1);
+	printf("Uid: %.9s\n", p_value->uid);
+}
+
+void fwcmd_id_info_table_field_printer(const struct fwcmd_id_info_table_data *p_value, int indent_count)
+{
+	print_tabs(indent_count);
+	printf("PlatformConfigDataIdentificationInformationTable:\n");
+	print_tabs(indent_count + 1);
+	fwcmd_device_identification_v1_field_printer(&(p_value->device_identification.device_identification_v1), indent_count + 1);
+	fwcmd_device_identification_v2_field_printer(&(p_value->device_identification.device_identification_v2), indent_count + 1);
 	print_tabs(indent_count + 1);
 	printf("PartitionOffset: 0x%llx\n", p_value->partition_offset);
 	print_tabs(indent_count + 1);
 	printf("PartitionSize: 0x%llx\n", p_value->partition_size);
 }
 
-void fwcmd_platform_config_data_interleave_information_table_printer(const struct fwcmd_platform_config_data_interleave_information_table_data *p_value, int indent_count)
+void fwcmd_interleave_information_table_field_printer(const struct fwcmd_interleave_information_table_data *p_value, int indent_count)
 {
 	print_tabs(indent_count);
 	printf("PlatformConfigDataInterleaveInformationTable:\n");
@@ -416,14 +641,9 @@ void fwcmd_platform_config_data_interleave_information_table_printer(const struc
 	printf("ChangeStatus: 0x%x\n", p_value->change_status);
 	print_tabs(indent_count + 1);
 	printf("MemorySpare: 0x%x\n", p_value->memory_spare);
-	for (size_t i = 0; i < p_value->platform_config_data_identification_information_table_count; i++)
-	{
-		fwcmd_platform_config_data_identification_information_table_printer(&p_value->platform_config_data_identification_information_table[i], indent_count + 1);
-	}
-
 }
 
-void fwcmd_platform_config_data_partition_size_change_table_printer(const struct fwcmd_platform_config_data_partition_size_change_table_data *p_value, int indent_count)
+void fwcmd_partition_size_change_table_field_printer(const struct fwcmd_partition_size_change_table_data *p_value, int indent_count)
 {
 	print_tabs(indent_count);
 	printf("PlatformConfigDataPartitionSizeChangeTable:\n");
@@ -437,7 +657,7 @@ void fwcmd_platform_config_data_partition_size_change_table_printer(const struct
 	printf("PersistentMemoryPartitionSize: 0x%llx\n", p_value->persistent_memory_partition_size);
 }
 
-void fwcmd_platform_config_data_current_config_table_printer(const struct fwcmd_platform_config_data_current_config_table_data *p_value, int indent_count)
+void fwcmd_current_config_table_field_printer(const struct fwcmd_current_config_table_data *p_value, int indent_count)
 {
 	print_tabs(indent_count);
 	printf("PlatformConfigDataCurrentConfigTable:\n");
@@ -465,13 +685,9 @@ void fwcmd_platform_config_data_current_config_table_printer(const struct fwcmd_
 	printf("VolatileMemorySize: 0x%llx\n", p_value->volatile_memory_size);
 	print_tabs(indent_count + 1);
 	printf("PersistentMemorySize: 0x%llx\n", p_value->persistent_memory_size);
-	for (size_t i = 0; i < p_value->platform_config_data_interleave_information_table_count; i++)
-	{
-		fwcmd_platform_config_data_interleave_information_table_printer(&p_value->platform_config_data_interleave_information_table[i], indent_count + 1);
-	}
 }
 
-void fwcmd_platform_config_data_config_input_table_printer(const struct fwcmd_platform_config_data_config_input_table_data *p_value, int indent_count)
+void fwcmd_config_input_table_field_printer(const struct fwcmd_config_input_table_data *p_value, int indent_count)
 {
 	print_tabs(indent_count);
 	printf("PlatformConfigDataConfigInputTable:\n");
@@ -495,17 +711,9 @@ void fwcmd_platform_config_data_config_input_table_printer(const struct fwcmd_pl
 	printf("CreatorRevision: 0x%x\n", p_value->creator_revision);
 	print_tabs(indent_count + 1);
 	printf("SequenceNumber: 0x%x\n", p_value->sequence_number);
-	for (size_t i = 0; i < p_value->platform_config_data_interleave_information_table_count; i++)
-	{
-		fwcmd_platform_config_data_interleave_information_table_printer(&p_value->platform_config_data_interleave_information_table[i], indent_count + 1);
-	}
-	for (size_t i = 0; i < p_value->platform_config_data_partition_size_change_table_count; i++)
-	{
-		fwcmd_platform_config_data_partition_size_change_table_printer(&p_value->platform_config_data_partition_size_change_table[i], indent_count + 1);
-	}
 }
 
-void fwcmd_platform_config_data_config_output_table_printer(const struct fwcmd_platform_config_data_config_output_table_data *p_value, int indent_count)
+void fwcmd_config_output_table_field_printer(const struct fwcmd_config_output_table_data *p_value, int indent_count)
 {
 	print_tabs(indent_count);
 	printf("PlatformConfigDataConfigOutputTable:\n");
@@ -531,17 +739,9 @@ void fwcmd_platform_config_data_config_output_table_printer(const struct fwcmd_p
 	printf("SequenceNumber: 0x%x\n", p_value->sequence_number);
 	print_tabs(indent_count + 1);
 	printf("ValidationStatus: 0x%x\n", p_value->validation_status);
-	for (size_t i = 0; i < p_value->platform_config_data_interleave_information_table_count; i++)
-	{
-		fwcmd_platform_config_data_interleave_information_table_printer(&p_value->platform_config_data_interleave_information_table[i], indent_count + 1);
-	}
-	for (size_t i = 0; i < p_value->platform_config_data_partition_size_change_table_count; i++)
-	{
-		fwcmd_platform_config_data_partition_size_change_table_printer(&p_value->platform_config_data_partition_size_change_table[i], indent_count + 1);
-	}
 }
 
-void fwcmd_platform_config_data_configuration_header_table_printer(const struct fwcmd_platform_config_data_configuration_header_table_data *p_value, int indent_count)
+void fwcmd_platform_config_data_field_printer(const struct fwcmd_platform_config_data_data *p_value, int indent_count)
 {
 	print_tabs(indent_count);
 	printf("PlatformConfigDataConfigurationHeaderTable:\n");
@@ -575,12 +775,9 @@ void fwcmd_platform_config_data_configuration_header_table_printer(const struct 
 	printf("OutputConfigSize: 0x%x\n", p_value->output_config_size);
 	print_tabs(indent_count + 1);
 	printf("OutputConfigOffset: 0x%x\n", p_value->output_config_offset);
-	fwcmd_platform_config_data_current_config_table_printer(&p_value->platform_config_data_current_config_table, indent_count + 1);
-	fwcmd_platform_config_data_config_input_table_printer(&p_value->platform_config_data_config_input_table, indent_count + 1);
-	fwcmd_platform_config_data_config_output_table_printer(&p_value->platform_config_data_config_output_table, indent_count + 1);
 }
 
-void fwcmd_ns_index_printer(const struct fwcmd_ns_index_data *p_value, int indent_count)
+void fwcmd_ns_index_field_printer(const struct fwcmd_ns_index_data *p_value, int indent_count)
 {
 	print_tabs(indent_count);
 	printf("NsIndex:\n");
@@ -608,7 +805,7 @@ void fwcmd_ns_index_printer(const struct fwcmd_ns_index_data *p_value, int inden
 	printf("Checksum: 0x%llx\n", p_value->checksum);
 }
 
-void fwcmd_ns_label_printer(const struct fwcmd_ns_label_data *p_value, int indent_count)
+void fwcmd_ns_label_field_printer(const struct fwcmd_ns_label_data *p_value, int indent_count)
 {
 	print_tabs(indent_count);
 	printf("NsLabel:\n");
@@ -640,7 +837,7 @@ void fwcmd_ns_label_printer(const struct fwcmd_ns_label_data *p_value, int inden
 	printf("Slot: 0x%x\n", p_value->slot);
 }
 
-void fwcmd_ns_label_v1_1_printer(const struct fwcmd_ns_label_v1_1_data *p_value, int indent_count)
+void fwcmd_ns_label_v1_1_field_printer(const struct fwcmd_ns_label_v1_1_data *p_value, int indent_count)
 {
 	print_tabs(indent_count);
 	printf("NsLabelV11:\n");
@@ -650,7 +847,7 @@ void fwcmd_ns_label_v1_1_printer(const struct fwcmd_ns_label_v1_1_data *p_value,
 	printf("Unused: 0x%x\n", p_value->unused);
 }
 
-void fwcmd_ns_label_v1_2_printer(const struct fwcmd_ns_label_v1_2_data *p_value, int indent_count)
+void fwcmd_ns_label_v1_2_field_printer(const struct fwcmd_ns_label_v1_2_data *p_value, int indent_count)
 {
 	print_tabs(indent_count);
 	printf("NsLabelV12:\n");
@@ -670,7 +867,7 @@ void fwcmd_ns_label_v1_2_printer(const struct fwcmd_ns_label_v1_2_data *p_value,
 	printf("Checksum: 0x%llx\n", p_value->checksum);
 }
 
-void fwcmd_namespace_labels_printer(const struct fwcmd_namespace_labels_data *p_value, int indent_count)
+void fwcmd_namespace_labels_field_printer(const struct fwcmd_namespace_labels_data *p_value, int indent_count)
 {
 	print_tabs(indent_count);
 	printf("NamespaceLabels:\n");
@@ -680,7 +877,7 @@ void fwcmd_namespace_labels_printer(const struct fwcmd_namespace_labels_data *p_
 	fwcmd_ns_index_printer(&p_value->index2, indent_count + 1);
 }
 
-void fwcmd_dimm_partition_info_printer(const struct fwcmd_dimm_partition_info_data *p_value, int indent_count)
+void fwcmd_dimm_partition_info_field_printer(const struct fwcmd_dimm_partition_info_data *p_value, int indent_count)
 {
 	print_tabs(indent_count);
 	printf("DimmPartitionInfo:\n");
@@ -698,7 +895,7 @@ void fwcmd_dimm_partition_info_printer(const struct fwcmd_dimm_partition_info_da
 	printf("EnabledCapacity: 0x%x\n", p_value->enabled_capacity);
 }
 
-void fwcmd_fw_debug_log_level_printer(const struct fwcmd_fw_debug_log_level_data *p_value, int indent_count)
+void fwcmd_fw_debug_log_level_field_printer(const struct fwcmd_fw_debug_log_level_data *p_value, int indent_count)
 {
 	print_tabs(indent_count);
 	printf("FwDebugLogLevel:\n");
@@ -708,7 +905,7 @@ void fwcmd_fw_debug_log_level_printer(const struct fwcmd_fw_debug_log_level_data
 	printf("Logs: 0x%x\n", p_value->logs);
 }
 
-void fwcmd_fw_load_flag_printer(const struct fwcmd_fw_load_flag_data *p_value, int indent_count)
+void fwcmd_fw_load_flag_field_printer(const struct fwcmd_fw_load_flag_data *p_value, int indent_count)
 {
 	print_tabs(indent_count);
 	printf("FwLoadFlag:\n");
@@ -716,7 +913,7 @@ void fwcmd_fw_load_flag_printer(const struct fwcmd_fw_load_flag_data *p_value, i
 	printf("LoadFlag: 0x%x\n", p_value->load_flag);
 }
 
-void fwcmd_config_lockdown_printer(const struct fwcmd_config_lockdown_data *p_value, int indent_count)
+void fwcmd_config_lockdown_field_printer(const struct fwcmd_config_lockdown_data *p_value, int indent_count)
 {
 	print_tabs(indent_count);
 	printf("ConfigLockdown:\n");
@@ -724,7 +921,7 @@ void fwcmd_config_lockdown_printer(const struct fwcmd_config_lockdown_data *p_va
 	printf("Locked: 0x%x\n", p_value->locked);
 }
 
-void fwcmd_ddrt_io_init_info_printer(const struct fwcmd_ddrt_io_init_info_data *p_value, int indent_count)
+void fwcmd_ddrt_io_init_info_field_printer(const struct fwcmd_ddrt_io_init_info_data *p_value, int indent_count)
 {
 	print_tabs(indent_count);
 	printf("DdrtIoInitInfo:\n");
@@ -734,7 +931,7 @@ void fwcmd_ddrt_io_init_info_printer(const struct fwcmd_ddrt_io_init_info_data *
 	printf("DdrtTrainingComplete: 0x%x\n", p_value->ddrt_training_complete);
 }
 
-void fwcmd_get_supported_sku_features_printer(const struct fwcmd_get_supported_sku_features_data *p_value, int indent_count)
+void fwcmd_get_supported_sku_features_field_printer(const struct fwcmd_get_supported_sku_features_data *p_value, int indent_count)
 {
 	print_tabs(indent_count);
 	printf("GetSupportedSkuFeatures:\n");
@@ -742,7 +939,7 @@ void fwcmd_get_supported_sku_features_printer(const struct fwcmd_get_supported_s
 	printf("DimmSku: 0x%x\n", p_value->dimm_sku);
 }
 
-void fwcmd_enable_dimm_printer(const struct fwcmd_enable_dimm_data *p_value, int indent_count)
+void fwcmd_enable_dimm_field_printer(const struct fwcmd_enable_dimm_data *p_value, int indent_count)
 {
 	print_tabs(indent_count);
 	printf("EnableDimm:\n");
@@ -750,7 +947,7 @@ void fwcmd_enable_dimm_printer(const struct fwcmd_enable_dimm_data *p_value, int
 	printf("Enable: 0x%x\n", p_value->enable);
 }
 
-void fwcmd_smart_health_info_printer(const struct fwcmd_smart_health_info_data *p_value, int indent_count)
+void fwcmd_smart_health_info_field_printer(const struct fwcmd_smart_health_info_data *p_value, int indent_count)
 {
 	print_tabs(indent_count);
 	printf("SmartHealthInfo:\n");
@@ -838,7 +1035,7 @@ void fwcmd_smart_health_info_printer(const struct fwcmd_smart_health_info_data *
 	printf("LastShutdownTime: 0x%llx\n", p_value->last_shutdown_time);
 }
 
-void fwcmd_firmware_image_info_printer(const struct fwcmd_firmware_image_info_data *p_value, int indent_count)
+void fwcmd_firmware_image_info_field_printer(const struct fwcmd_firmware_image_info_data *p_value, int indent_count)
 {
 	print_tabs(indent_count);
 	printf("FirmwareImageInfo:\n");
@@ -856,7 +1053,7 @@ void fwcmd_firmware_image_info_printer(const struct fwcmd_firmware_image_info_da
 	printf("BuildConfiguration: %s\n", p_value->build_configuration);
 }
 
-void fwcmd_firmware_debug_log_printer(const struct fwcmd_firmware_debug_log_data *p_value, int indent_count)
+void fwcmd_firmware_debug_log_field_printer(const struct fwcmd_firmware_debug_log_data *p_value, int indent_count)
 {
 	print_tabs(indent_count);
 	printf("FirmwareDebugLog:\n");
@@ -864,7 +1061,7 @@ void fwcmd_firmware_debug_log_printer(const struct fwcmd_firmware_debug_log_data
 	printf("LogSize: 0x%x\n", p_value->log_size);
 }
 
-void fwcmd_long_operation_status_printer(const struct fwcmd_long_operation_status_data *p_value, int indent_count)
+void fwcmd_long_operation_status_field_printer(const struct fwcmd_long_operation_status_data *p_value, int indent_count)
 {
 	print_tabs(indent_count);
 	printf("LongOperationStatus:\n");
@@ -880,7 +1077,7 @@ void fwcmd_long_operation_status_printer(const struct fwcmd_long_operation_statu
 	printf("CommandSpecificReturnData: %.119s\n", p_value->command_specific_return_data);
 }
 
-void fwcmd_bsr_printer(const struct fwcmd_bsr_data *p_value, int indent_count)
+void fwcmd_bsr_field_printer(const struct fwcmd_bsr_data *p_value, int indent_count)
 {
 	print_tabs(indent_count);
 	printf("Bsr:\n");

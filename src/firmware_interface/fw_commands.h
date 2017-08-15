@@ -54,7 +54,7 @@ struct fwcmd_error_code
 {
 	enum fwcmd_error_type type;
 	unsigned int code;
-};
+}  __attribute__((packed));
 
 /*
  * Data Structures for identify_dimm
@@ -65,7 +65,7 @@ struct fwcmd_identify_dimm_data
 	unsigned short device_id;
 	unsigned short revision_id;
 	unsigned short interface_format_code;
-	char firmware_revision[5];
+	unsigned char firmware_revision[5];
 	unsigned char reserved_old_api;
 	unsigned char feature_sw_required_mask;
 	unsigned char feature_sw_required_mask_invalidate_before_block_read;
@@ -86,13 +86,13 @@ struct fwcmd_identify_dimm_data
 	unsigned short interface_format_code_extra;
 	unsigned short api_ver;
 
-};
+}  __attribute__((packed));
 struct fwcmd_identify_dimm_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
 	struct fwcmd_identify_dimm_data *p_data;
-};
+}  __attribute__((packed));
 
 /*
  * Firmware Command Function identify_dimm
@@ -110,13 +110,13 @@ struct fwcmd_identify_dimm_characteristics_data
 	unsigned short throttling_start_threshold;
 	unsigned short throttling_stop_threshold;
 
-};
+}  __attribute__((packed));
 struct fwcmd_identify_dimm_characteristics_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
 	struct fwcmd_identify_dimm_characteristics_data *p_data;
-};
+}  __attribute__((packed));
 
 /*
  * Firmware Command Function identify_dimm_characteristics
@@ -136,13 +136,13 @@ struct fwcmd_get_security_state_data
 	unsigned char security_state_count_expired;
 	unsigned char security_state_not_supported;
 
-};
+}  __attribute__((packed));
 struct fwcmd_get_security_state_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
 	struct fwcmd_get_security_state_data *p_data;
-};
+}  __attribute__((packed));
 
 /*
  * Firmware Command Function get_security_state
@@ -157,7 +157,7 @@ struct fwcmd_set_passphrase_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
-};
+}  __attribute__((packed));
 
 /*
  * Firmware Command Function set_passphrase
@@ -173,7 +173,7 @@ struct fwcmd_disable_passphrase_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
-};
+}  __attribute__((packed));
 
 /*
  * Firmware Command Function disable_passphrase
@@ -188,7 +188,7 @@ struct fwcmd_unlock_unit_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
-};
+}  __attribute__((packed));
 
 /*
  * Firmware Command Function unlock_unit
@@ -203,7 +203,7 @@ struct fwcmd_secure_erase_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
-};
+}  __attribute__((packed));
 
 /*
  * Firmware Command Function secure_erase
@@ -218,7 +218,7 @@ struct fwcmd_freeze_lock_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
-};
+}  __attribute__((packed));
 
 /*
  * Firmware Command Function freeze_lock
@@ -238,13 +238,13 @@ struct fwcmd_get_alarm_threshold_data
 	unsigned short media_temp_threshold;
 	unsigned short controller_temp_threshold;
 
-};
+}  __attribute__((packed));
 struct fwcmd_get_alarm_threshold_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
 	struct fwcmd_get_alarm_threshold_data *p_data;
-};
+}  __attribute__((packed));
 
 /*
  * Firmware Command Function get_alarm_threshold
@@ -262,13 +262,13 @@ struct fwcmd_power_management_policy_data
 	unsigned short average_power_budget;
 	unsigned char max_power;
 
-};
+}  __attribute__((packed));
 struct fwcmd_power_management_policy_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
 	struct fwcmd_power_management_policy_data *p_data;
-};
+}  __attribute__((packed));
 
 /*
  * Firmware Command Function power_management_policy
@@ -289,13 +289,13 @@ struct fwcmd_die_sparing_policy_data
 	unsigned char supported_rank_2;
 	unsigned char supported_rank_3;
 
-};
+}  __attribute__((packed));
 struct fwcmd_die_sparing_policy_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
 	struct fwcmd_die_sparing_policy_data *p_data;
-};
+}  __attribute__((packed));
 
 /*
  * Firmware Command Function die_sparing_policy
@@ -313,13 +313,13 @@ struct fwcmd_address_range_scrub_data
 	unsigned long long dpa_end_address;
 	unsigned long long dpa_current_address;
 
-};
+}  __attribute__((packed));
 struct fwcmd_address_range_scrub_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
 	struct fwcmd_address_range_scrub_data *p_data;
-};
+}  __attribute__((packed));
 
 /*
  * Firmware Command Function address_range_scrub
@@ -336,13 +336,13 @@ struct fwcmd_optional_configuration_data_policy_data
 	unsigned char viral_policy_enabled;
 	unsigned char viral_status;
 
-};
+}  __attribute__((packed));
 struct fwcmd_optional_configuration_data_policy_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
 	struct fwcmd_optional_configuration_data_policy_data *p_data;
-};
+}  __attribute__((packed));
 
 /*
  * Firmware Command Function optional_configuration_data_policy
@@ -383,13 +383,13 @@ struct fwcmd_pmon_registers_data
 	unsigned int pmon_14_counter;
 	unsigned int pmon_14_control;
 
-};
+}  __attribute__((packed));
 struct fwcmd_pmon_registers_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
 	struct fwcmd_pmon_registers_data *p_data;
-};
+}  __attribute__((packed));
 
 /*
  * Firmware Command Function pmon_registers
@@ -405,7 +405,7 @@ struct fwcmd_set_alarm_threshold_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
-};
+}  __attribute__((packed));
 
 /*
  * Firmware Command Function set_alarm_threshold
@@ -422,13 +422,13 @@ struct fwcmd_system_time_data
 {
 	unsigned long long unix_time;
 
-};
+}  __attribute__((packed));
 struct fwcmd_system_time_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
 	struct fwcmd_system_time_data *p_data;
-};
+}  __attribute__((packed));
 
 /*
  * Firmware Command Function system_time
@@ -437,18 +437,36 @@ struct fwcmd_system_time_result fwcmd_alloc_system_time(unsigned int handle);
 
 void fwcmd_free_system_time(struct fwcmd_system_time_result *p_result);
 /*
- * Data Structures for platform_config_data_configuration_header_table
+ * Data Structures for platform_config_data
  */
-struct fwcmd_platform_config_data_identification_information_table_data
+struct fwcmd_device_identification_v1_data
 {
 	unsigned short manufacturer_id;
 	unsigned int serial_number;
 	char model_number[21];
+
+}  __attribute__((packed));
+
+struct fwcmd_device_identification_v2_data
+{
+	unsigned char uid[9];
+
+}  __attribute__((packed));
+
+struct fwcmd_id_info_table_data
+{
+	union
+	{
+		unsigned char bytes[32];
+		struct fwcmd_device_identification_v1_data device_identification_v1;
+		struct fwcmd_device_identification_v2_data device_identification_v2;
+	} device_identification;
 	unsigned long long partition_offset;
 	unsigned long long partition_size;
 
-};
-struct fwcmd_platform_config_data_interleave_information_table_data
+}  __attribute__((packed));
+
+struct fwcmd_interleave_information_table_data
 {
 	unsigned short type;
 	unsigned short length;
@@ -459,20 +477,22 @@ struct fwcmd_platform_config_data_interleave_information_table_data
 	unsigned char mirror_enabled;
 	unsigned char change_status;
 	unsigned char memory_spare;
-	int platform_config_data_identification_information_table_count;
-	struct fwcmd_platform_config_data_identification_information_table_data *platform_config_data_identification_information_table;
+	int id_info_table_count;
+	struct fwcmd_id_info_table_data *id_info_table;
 
 
-};
-struct fwcmd_platform_config_data_partition_size_change_table_data
+}  __attribute__((packed));
+
+struct fwcmd_partition_size_change_table_data
 {
 	unsigned short type;
 	unsigned short length;
 	unsigned int platform_config_data_partition_size_change_table;
 	unsigned long long persistent_memory_partition_size;
 
-};
-struct fwcmd_platform_config_data_current_config_table_data
+}  __attribute__((packed));
+
+struct fwcmd_current_config_table_data
 {
 	char signature[5];
 	unsigned int length;
@@ -486,12 +506,13 @@ struct fwcmd_platform_config_data_current_config_table_data
 	unsigned short config_status;
 	unsigned long long volatile_memory_size;
 	unsigned long long persistent_memory_size;
-	int platform_config_data_interleave_information_table_count;
-	struct fwcmd_platform_config_data_interleave_information_table_data *platform_config_data_interleave_information_table;
+	int interleave_information_table_count;
+	struct fwcmd_interleave_information_table_data *interleave_information_table;
 
 
-};
-struct fwcmd_platform_config_data_config_input_table_data
+}  __attribute__((packed));
+
+struct fwcmd_config_input_table_data
 {
 	char signature[5];
 	unsigned int length;
@@ -503,15 +524,16 @@ struct fwcmd_platform_config_data_config_input_table_data
 	unsigned int creator_id;
 	unsigned int creator_revision;
 	unsigned int sequence_number;
-	int platform_config_data_interleave_information_table_count;
-	struct fwcmd_platform_config_data_interleave_information_table_data *platform_config_data_interleave_information_table;
+	int interleave_information_table_count;
+	struct fwcmd_interleave_information_table_data *interleave_information_table;
 
-	int platform_config_data_partition_size_change_table_count;
-	struct fwcmd_platform_config_data_partition_size_change_table_data *platform_config_data_partition_size_change_table;
+	int partition_size_change_table_count;
+	struct fwcmd_partition_size_change_table_data *partition_size_change_table;
 
 
-};
-struct fwcmd_platform_config_data_config_output_table_data
+}  __attribute__((packed));
+
+struct fwcmd_config_output_table_data
 {
 	char signature[5];
 	unsigned int length;
@@ -524,15 +546,16 @@ struct fwcmd_platform_config_data_config_output_table_data
 	unsigned int creator_revision;
 	unsigned int sequence_number;
 	unsigned char validation_status;
-	int platform_config_data_interleave_information_table_count;
-	struct fwcmd_platform_config_data_interleave_information_table_data *platform_config_data_interleave_information_table;
+	int interleave_information_table_count;
+	struct fwcmd_interleave_information_table_data *interleave_information_table;
 
-	int platform_config_data_partition_size_change_table_count;
-	struct fwcmd_platform_config_data_partition_size_change_table_data *platform_config_data_partition_size_change_table;
+	int partition_size_change_table_count;
+	struct fwcmd_partition_size_change_table_data *partition_size_change_table;
 
 
-};
-struct fwcmd_platform_config_data_configuration_header_table_data
+}  __attribute__((packed));
+
+struct fwcmd_platform_config_data_data
 {
 	char signature[5];
 	unsigned int length;
@@ -549,33 +572,33 @@ struct fwcmd_platform_config_data_configuration_header_table_data
 	unsigned int input_config_offset;
 	unsigned int output_config_size;
 	unsigned int output_config_offset;
-	struct fwcmd_platform_config_data_current_config_table_data platform_config_data_current_config_table;
-	struct fwcmd_platform_config_data_config_input_table_data platform_config_data_config_input_table;
-	struct fwcmd_platform_config_data_config_output_table_data platform_config_data_config_output_table;
+	struct fwcmd_current_config_table_data current_config_table;
+	struct fwcmd_config_input_table_data config_input_table;
+	struct fwcmd_config_output_table_data config_output_table;
 
-};
-struct fwcmd_platform_config_data_configuration_header_table_result
+}  __attribute__((packed));
+struct fwcmd_platform_config_data_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
-	struct fwcmd_platform_config_data_configuration_header_table_data *p_data;
-};
+	struct fwcmd_platform_config_data_data *p_data;
+}  __attribute__((packed));
 
 /*
- * Firmware Command Function platform_config_data_configuration_header_table
+ * Firmware Command Function platform_config_data
  */
-struct fwcmd_platform_config_data_configuration_header_table_result fwcmd_alloc_platform_config_data_configuration_header_table(unsigned int handle,
+struct fwcmd_platform_config_data_result fwcmd_alloc_platform_config_data(unsigned int handle,
 	const unsigned char partition_id,
 	const unsigned char command_option,
 	const unsigned int offset);
 
-void fwcmd_free_platform_config_data_configuration_header_table(struct fwcmd_platform_config_data_configuration_header_table_result *p_result);
+void fwcmd_free_platform_config_data(struct fwcmd_platform_config_data_result *p_result);
 /*
  * Data Structures for namespace_labels
  */
 struct fwcmd_ns_index_data
 {
-	char signature[16];
+	unsigned char signature[16];
 	unsigned int flags;
 	unsigned int sequence;
 	unsigned long long my_offset;
@@ -587,11 +610,12 @@ struct fwcmd_ns_index_data
 	unsigned short label_minor_version;
 	unsigned long long checksum;
 
-};
+}  __attribute__((packed));
+
 struct fwcmd_ns_label_data
 {
-	char uuid[16];
-	char name[64];
+	unsigned char uuid[16];
+	unsigned char name[64];
 	unsigned int flags;
 	unsigned char flags_read_only;
 	unsigned char flags_local;
@@ -604,36 +628,39 @@ struct fwcmd_ns_label_data
 	unsigned long long rawsize;
 	unsigned int slot;
 
-};
+}  __attribute__((packed));
+
 struct fwcmd_ns_label_v1_1_data
 {
 	struct fwcmd_ns_label_data label;
 	unsigned int unused;
 
-};
+}  __attribute__((packed));
+
 struct fwcmd_ns_label_v1_2_data
 {
 	struct fwcmd_ns_label_data label;
 	unsigned char alignment;
-	char reserved[3];
-	char type_guid[16];
-	char address_abstraction_guid[16];
-	char reserved1[88];
+	unsigned char reserved[3];
+	unsigned char type_guid[16];
+	unsigned char address_abstraction_guid[16];
+	unsigned char reserved1[88];
 	unsigned long long checksum;
 
-};
+}  __attribute__((packed));
+
 struct fwcmd_namespace_labels_data
 {
 	struct fwcmd_ns_index_data index1;
 	struct fwcmd_ns_index_data index2;
 
-};
+}  __attribute__((packed));
 struct fwcmd_namespace_labels_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
 	struct fwcmd_namespace_labels_data *p_data;
-};
+}  __attribute__((packed));
 
 /*
  * Firmware Command Function namespace_labels
@@ -656,13 +683,13 @@ struct fwcmd_dimm_partition_info_data
 	unsigned int raw_capacity;
 	unsigned int enabled_capacity;
 
-};
+}  __attribute__((packed));
 struct fwcmd_dimm_partition_info_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
 	struct fwcmd_dimm_partition_info_data *p_data;
-};
+}  __attribute__((packed));
 
 /*
  * Firmware Command Function dimm_partition_info
@@ -678,13 +705,13 @@ struct fwcmd_fw_debug_log_level_data
 	unsigned char log_level;
 	unsigned char logs;
 
-};
+}  __attribute__((packed));
 struct fwcmd_fw_debug_log_level_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
 	struct fwcmd_fw_debug_log_level_data *p_data;
-};
+}  __attribute__((packed));
 
 /*
  * Firmware Command Function fw_debug_log_level
@@ -700,13 +727,13 @@ struct fwcmd_fw_load_flag_data
 {
 	unsigned char load_flag;
 
-};
+}  __attribute__((packed));
 struct fwcmd_fw_load_flag_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
 	struct fwcmd_fw_load_flag_data *p_data;
-};
+}  __attribute__((packed));
 
 /*
  * Firmware Command Function fw_load_flag
@@ -721,13 +748,13 @@ struct fwcmd_config_lockdown_data
 {
 	unsigned char locked;
 
-};
+}  __attribute__((packed));
 struct fwcmd_config_lockdown_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
 	struct fwcmd_config_lockdown_data *p_data;
-};
+}  __attribute__((packed));
 
 /*
  * Firmware Command Function config_lockdown
@@ -743,13 +770,13 @@ struct fwcmd_ddrt_io_init_info_data
 	unsigned char ddrt_io_info;
 	unsigned char ddrt_training_complete;
 
-};
+}  __attribute__((packed));
 struct fwcmd_ddrt_io_init_info_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
 	struct fwcmd_ddrt_io_init_info_data *p_data;
-};
+}  __attribute__((packed));
 
 /*
  * Firmware Command Function ddrt_io_init_info
@@ -764,13 +791,13 @@ struct fwcmd_get_supported_sku_features_data
 {
 	unsigned int dimm_sku;
 
-};
+}  __attribute__((packed));
 struct fwcmd_get_supported_sku_features_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
 	struct fwcmd_get_supported_sku_features_data *p_data;
-};
+}  __attribute__((packed));
 
 /*
  * Firmware Command Function get_supported_sku_features
@@ -785,13 +812,13 @@ struct fwcmd_enable_dimm_data
 {
 	unsigned char enable;
 
-};
+}  __attribute__((packed));
 struct fwcmd_enable_dimm_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
 	struct fwcmd_enable_dimm_data *p_data;
-};
+}  __attribute__((packed));
 
 /*
  * Firmware Command Function enable_dimm
@@ -846,13 +873,13 @@ struct fwcmd_smart_health_info_data
 	unsigned char last_shutdown_status_details_flush_complete;
 	unsigned long long last_shutdown_time;
 
-};
+}  __attribute__((packed));
 struct fwcmd_smart_health_info_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
 	struct fwcmd_smart_health_info_data *p_data;
-};
+}  __attribute__((packed));
 
 /*
  * Firmware Command Function smart_health_info
@@ -865,20 +892,20 @@ void fwcmd_free_smart_health_info(struct fwcmd_smart_health_info_result *p_resul
  */
 struct fwcmd_firmware_image_info_data
 {
-	char firmware_revision[5];
+	unsigned char firmware_revision[5];
 	unsigned char firmware_type;
-	char staged_fw_revision[5];
+	unsigned char staged_fw_revision[5];
 	unsigned char last_fw_update_status;
 	char commit_id[41];
 	char build_configuration[17];
 
-};
+}  __attribute__((packed));
 struct fwcmd_firmware_image_info_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
 	struct fwcmd_firmware_image_info_data *p_data;
-};
+}  __attribute__((packed));
 
 /*
  * Firmware Command Function firmware_image_info
@@ -893,13 +920,13 @@ struct fwcmd_firmware_debug_log_data
 {
 	unsigned char log_size;
 
-};
+}  __attribute__((packed));
 struct fwcmd_firmware_debug_log_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
 	struct fwcmd_firmware_debug_log_data *p_data;
-};
+}  __attribute__((packed));
 
 /*
  * Firmware Command Function firmware_debug_log
@@ -919,15 +946,15 @@ struct fwcmd_long_operation_status_data
 	unsigned short percent_complete;
 	unsigned int estimate_time_to_completion;
 	unsigned char status_code;
-	char command_specific_return_data[119];
+	unsigned char command_specific_return_data[119];
 
-};
+}  __attribute__((packed));
 struct fwcmd_long_operation_status_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
 	struct fwcmd_long_operation_status_data *p_data;
-};
+}  __attribute__((packed));
 
 /*
  * Firmware Command Function long_operation_status
@@ -959,13 +986,13 @@ struct fwcmd_bsr_data
 	unsigned char rest1_ait_dram_ready;
 	unsigned short rest2;
 
-};
+}  __attribute__((packed));
 struct fwcmd_bsr_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
 	struct fwcmd_bsr_data *p_data;
-};
+}  __attribute__((packed));
 
 /*
  * Firmware Command Function bsr
@@ -980,7 +1007,7 @@ struct fwcmd_format_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
-};
+}  __attribute__((packed));
 
 /*
  * Firmware Command Function format

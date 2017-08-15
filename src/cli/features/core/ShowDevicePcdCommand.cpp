@@ -125,7 +125,7 @@ void ShowDevicePcdCommand::createResults()
 	{
 		std::string dimmId = ShowCommandUtilities::getDimmId(m_devices[i]);
 		std::string resultPerDimm = "\nDimmID: " + dimmId + '\n';
-		rc = fwCmds.fwGetPayload_PlatformConfigDataConfigurationHeaderTable(m_devices[i].getDeviceHandle(), 1, 0, 0, resultPerDimm);
+		rc = fwCmds.fwGetPayload_PlatformConfigData(m_devices[i].getDeviceHandle(), 1, 0, 0, resultPerDimm);
 		if (rc == NVM_SUCCESS)
 		{
 			result = resultPerDimm;

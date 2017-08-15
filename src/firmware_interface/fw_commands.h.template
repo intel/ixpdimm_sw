@@ -39,23 +39,40 @@ extern "C"
 	struct {{name|fw_cmd_data}} *{{name}};
 //- endmacro
 
+//- macro simple_field(f)
+{%-	if f.is_struct -%}
+struct {{f.struct_type|fw_cmd_data}} {{f.name}};
+{%-	elif f.is_struct_array -%}
+struct {{f.struct_type|fw_cmd_data}} {{f.name}}[{{f.struct_array_count}}];
+{%-	else -%}
+{{f.c_definition}};
+{%- 	for b in f.bits %}
+	unsigned char {{f.name}}_{{b.name}};
+{%- 	endfor -%}
+{%-	endif -%}
+//- endmacro
+
+//- macro field(f)
+//- if not f.ignore
+//-		if f.is_union
+	union
+	{
+		unsigned char bytes[{{f.byte_count}}];
+//- 		for u in f.union_payloads
+		{{simple_field(u)}}
+//- 		endfor
+	} {{f.name}};
+//-		else
+	{{simple_field(f)}}
+//-		endif
+//- endif
+//- endmacro
 
 //- macro payload_fields(payload)
-//- for f in payload.fields
-//- 	if not f.ignore
-//-			if f.is_struct
-	struct {{f.struct_type|fw_cmd_data}} {{f.name}};
-//-			elif f.is_struct_array
-	struct {{f.struct_type|fw_cmd_data}} {{f.name}}[{{f.struct_array_count}}];
-//-			else
-	{{f.c_definition}};
-//- 		for b in f.bits
-	unsigned char {{f.name}}_{{b.name}};
-//- 		endfor
-//-		 	endif
-//- 	endif
-//- endfor
-//- for r in payload.payload_refs
+{%- for f in payload.fields -%}
+{{field(f)}}
+{%- endfor -%}
+{%- for r in payload.payload_refs -%}
 //- 	if r.is_type_based
 //- 		for t in r.types
 //- 			if r.is_multiple
@@ -75,7 +92,7 @@ extern "C"
 	struct {{r.name|fw_cmd_data}} {{r.name}};
 //- 		endif
 //- 	endif
-//- endfor
+{%- endfor -%}
 //- endmacro
 
 enum fwcmd_error_type
@@ -98,7 +115,7 @@ struct fwcmd_error_code
 {
 	enum fwcmd_error_type type;
 	unsigned int code;
-};
+}  __attribute__((packed));
 
 //- for cmd in commands
 /*
@@ -108,15 +125,17 @@ struct fwcmd_error_code
 struct {{s.name|fw_cmd_data}}
 {
 {{payload_fields(s.payload)}}
-};
+}  __attribute__((packed));
+
 //- 	endfor
 
 //- 	if cmd.has_output
 struct {{cmd.name|fw_cmd_data}}
 {
 {{payload_fields(cmd.output_payload)}}
-};
+}  __attribute__((packed));
 //- 	endif
+
 struct {{cmd.name|fw_cmd_result}}
 {
 	int success:1;
@@ -124,7 +143,7 @@ struct {{cmd.name|fw_cmd_result}}
 //- 	if cmd.has_output
 	struct {{cmd.name|fw_cmd_data}} *p_data;
 //- 	endif
-};
+}  __attribute__((packed));
 
 /*
  * Firmware Command Function {{cmd.name}}

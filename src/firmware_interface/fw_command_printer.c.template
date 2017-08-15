@@ -24,12 +24,15 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
-//- macro printer(name, payload, tab_counter)
-void {{name|fw_cmd_printer}}(const struct {{name|fw_cmd_data}} *p_value, int {{tab_counter}})
+ 
+//- macro simple_printer(name, header, payload, tab_counter)
+//- if not header
+//-		set header = name
+//- endif
+void {{name|fw_cmd_field_printer}}(const struct {{name|fw_cmd_data}} *p_value, int {{tab_counter}})
 {
 	print_tabs({{tab_counter}});
-	printf("{{name|camel}}:\n");
+	printf("{{header|camel}}:\n");
 //- 		for f in payload.fields
 //- 			if not f.ignore
 	print_tabs({{tab_counter}} + 1);
@@ -40,6 +43,10 @@ void {{name|fw_cmd_printer}}(const struct {{name|fw_cmd_data}} *p_value, int {{t
 	{
 		fwcmd_{{f.struct_type}}_printer(&p_value->{{f.name}}[i], {{tab_counter}} + 1);
 	}
+//-					elif f.is_union
+//-						for u in f.union_payloads
+	{{u.struct_type|fw_cmd_field_printer}}(&(p_value->{{f.name}}.{{u.name}}), {{tab_counter}} + 1);
+//-						endfor
 //-					else
 	printf("{{f.name|camel}}: {{f.print_type}}\n", p_value->{{f.name}});
 //-						for b in f.bits
@@ -49,6 +56,13 @@ void {{name|fw_cmd_printer}}(const struct {{name|fw_cmd_data}} *p_value, int {{t
 //- 				endif
 //- 			endif
 //- 		endfor
+}
+//- endmacro
+
+//- macro printer(name, payload, tab_counter)
+void {{name|fw_cmd_printer}}(const struct {{name|fw_cmd_data}} *p_value, int {{tab_counter}})
+{
+	{{name|fw_cmd_field_printer}}(p_value, {{tab_counter}});
 //- 		for r in payload.payload_refs:
 //- 			if r.is_type_based
 //- 				for t in r.types
@@ -155,5 +169,14 @@ void fwcmd_print_output_command_names()
 {{printer(s.name, s.payload, "indent_count")}}
 //- 		endfor
 {{printer(cmd.name, cmd.output_payload, "indent_count")}}
+//- 	endif
+//- endfor
+
+//- for cmd in commands
+//- 	if cmd.has_output
+//- 		for s in cmd.sub_payloads
+{{simple_printer(s.name, s.header, s.payload, "indent_count")}}
+//- 		endfor
+{{simple_printer(cmd.name, cmd.header, cmd.output_payload, "indent_count")}}
 //- 	endif
 //- endfor

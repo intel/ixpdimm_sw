@@ -104,12 +104,12 @@ public:
 
 	virtual void FwcmdFreeSystemTime(struct fwcmd_system_time_result *p_result) const;
 
-	virtual struct fwcmd_platform_config_data_configuration_header_table_result FwcmdAllocPlatformConfigDataConfigurationHeaderTable(unsigned int handle,
+	virtual struct fwcmd_platform_config_data_result FwcmdAllocPlatformConfigData(unsigned int handle,
 	const unsigned char partition_id,
 	const unsigned char command_option,
 	const unsigned int offset) const;
 
-	virtual void FwcmdFreePlatformConfigDataConfigurationHeaderTable(struct fwcmd_platform_config_data_configuration_header_table_result *p_result) const;
+	virtual void FwcmdFreePlatformConfigData(struct fwcmd_platform_config_data_result *p_result) const;
 
 	virtual struct fwcmd_namespace_labels_result FwcmdAllocNamespaceLabels(unsigned int handle,
 	const unsigned char partition_id,

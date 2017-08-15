@@ -31,6 +31,7 @@
 #include "fw_command_controller.h"
 #include "fw_commands.h"
 #include "fw_command_printer.h"
+#include "fw_command_custom_printer.h"
 
 int to_int(char * value)
 {
@@ -85,8 +86,8 @@ void fwcmd_print_all(unsigned int handle)
 	fwcmd_run_system_time(handle
 		);
 	printf("--------------------------------------------\n");
-	printf("Printing platform_config_data_configuration_header_table ... \n");
-	fwcmd_run_platform_config_data_configuration_header_table(handle
+	printf("Printing platform_config_data ... \n");
+	fwcmd_run_platform_config_data(handle
 		, 1
 		, 0
 		, 0
@@ -331,8 +332,8 @@ void fwcmd_run(const char *command_name,
 		);
 
 	}
-	else if (s_strncmpi(command_name, "platform_config_data_configuration_header_table",
-		sizeof ("platform_config_data_configuration_header_table")) == 0)
+	else if (s_strncmpi(command_name, "platform_config_data",
+		sizeof ("platform_config_data")) == 0)
 	{
 		char * partition_id_value = find_arg(p_args, "partition_id");
 		if (!partition_id_value)
@@ -349,7 +350,7 @@ void fwcmd_run(const char *command_name,
 		{
 			offset_value = "0";
 		}
-		fwcmd_run_platform_config_data_configuration_header_table(handle
+		fwcmd_run_platform_config_data(handle
 			, to_int(partition_id_value)
 			, to_int(command_option_value)
 			, to_int(offset_value)
@@ -529,7 +530,7 @@ void fwcmd_run(const char *command_name,
 		printf("\tpmon_registers\n");
 		printf("\tset_alarm_threshold\n");
 		printf("\tsystem_time\n");
-		printf("\tplatform_config_data_configuration_header_table\n");
+		printf("\tplatform_config_data\n");
 		printf("\tnamespace_labels\n");
 		printf("\tdimm_partition_info\n");
 		printf("\tfw_debug_log_level\n");
@@ -807,21 +808,21 @@ void fwcmd_run_system_time(unsigned int handle)
 	fwcmd_free_system_time(&result);
 }
 
-void fwcmd_run_platform_config_data_configuration_header_table(unsigned int handle, const unsigned char partition_id, const unsigned char command_option, const unsigned int offset)
+void fwcmd_run_platform_config_data(unsigned int handle, const unsigned char partition_id, const unsigned char command_option, const unsigned int offset)
 {
-	struct fwcmd_platform_config_data_configuration_header_table_result result = fwcmd_alloc_platform_config_data_configuration_header_table(handle, partition_id, command_option, offset);
+	struct fwcmd_platform_config_data_result result = fwcmd_alloc_platform_config_data(handle, partition_id, command_option, offset);
 
 	if (result.success)
 	{
 		printf("0x%x: Success!\n", handle);
-		fwcmd_platform_config_data_configuration_header_table_printer(result.p_data, 0);
+		fwcmd_custom_platform_config_data_printer(result.p_data, 0);
 	}
 	else
 	{
-		printf("There was an issue executing platform_config_data_configuration_header_table. \n");
+		printf("There was an issue executing platform_config_data. \n");
 		fwcmd_print_error(result.error_code);
 	}
-	fwcmd_free_platform_config_data_configuration_header_table(&result);
+	fwcmd_free_platform_config_data(&result);
 }
 
 void fwcmd_run_namespace_labels(unsigned int handle, const unsigned char partition_id, const unsigned char command_option, const unsigned int offset)

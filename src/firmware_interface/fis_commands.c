@@ -226,17 +226,17 @@ unsigned int fis_system_time(const unsigned int device_handle, struct pt_output_
 	return pt_ioctl_cmd(&cmd);
 }
 
-unsigned int fis_platform_config_data_configuration_header_table(const unsigned int device_handle, struct pt_input_platform_config_data_configuration_header_table *p_input_payload, struct pt_output_platform_config_data_configuration_header_table *p_output_payload)
+unsigned int fis_platform_config_data(const unsigned int device_handle, struct pt_input_platform_config_data *p_input_payload, struct pt_output_platform_config_data *p_output_payload)
 {
 	struct pt_fw_cmd cmd;
 	memset(&cmd, 0, sizeof (struct pt_fw_cmd));
 	cmd.device_handle = device_handle;
 	cmd.opcode = 0x06;
 	cmd.sub_opcode = 0x01;
-	cmd.large_output_payload_size = sizeof (struct pt_output_platform_config_data_configuration_header_table);
+	cmd.large_output_payload_size = sizeof (struct pt_output_platform_config_data);
 	cmd.large_output_payload = p_output_payload;
 	cmd.input_payload = p_input_payload;
-	cmd.input_payload_size = sizeof (struct pt_input_platform_config_data_configuration_header_table);
+	cmd.input_payload_size = sizeof (struct pt_input_platform_config_data);
 	return pt_ioctl_cmd(&cmd);
 }
 

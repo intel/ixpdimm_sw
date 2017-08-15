@@ -31,6 +31,7 @@
 #include "fw_command_controller.h"
 #include "fw_commands.h"
 #include "fw_command_printer.h"
+#include "fw_command_custom_printer.h"
 
 int to_int(char * value)
 {
@@ -126,7 +127,11 @@ void {{cmd.name|fw_cmd_print_controller}}(unsigned int handle
 	{
 		printf("0x%x: Success!\n", handle);
 //- if cmd.has_output
+//-		if cmd.has_custom_printer
+		{{cmd.name|fw_cmd_custom_printer}}(result.p_data, 0);
+//-		else
 		{{cmd.name|fw_cmd_printer}}(result.p_data, 0);
+//-		endif
 //- endif
 	}
 	else

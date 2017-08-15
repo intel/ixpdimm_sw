@@ -24,51 +24,13 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef CR_MGMT_FW_COMMAND_PRINTER_H
-#define CR_MGMT_FW_COMMAND_PRINTER_H
-
-#ifdef __cplusplus
-extern "C"
-{
-#endif
+#ifndef CR_MGMT_FW_COMMAND_CUSTOM_PRINTER_H
+#define CR_MGMT_FW_COMMAND_CUSTOM_PRINTER_H
 
 #include "fw_commands.h"
 
-void fwcmd_print_command_names();
-void fwcmd_print_output_command_names();
-void fwcmd_print_error(struct fwcmd_error_code error);
-void print_tabs(int tab_count);
+void fwcmd_custom_platform_config_data_printer(
+	const struct fwcmd_platform_config_data_data *p_value,
+	int indent_count);
 
-
-//- for cmd in commands
-//- 	if cmd.has_output
-//-			for s in cmd.sub_payloads
-void {{s.name|fw_cmd_printer}}(const struct {{s.name|fw_cmd_data}} *p_value, 
-	int {{tab_counter}});	
-	
-//- 		endfor
-void {{cmd.name|fw_cmd_printer}}(const struct {{cmd.name|fw_cmd_data}} *p_value,
-	int {{tab_counter}});
-
-//- 	endif
-//- endfor
-
-//- for cmd in commands
-//- 	if cmd.has_output
-//-			for s in cmd.sub_payloads
-void {{s.name|fw_cmd_field_printer}}(const struct {{s.name|fw_cmd_data}} *p_value, 
-	int {{tab_counter}});	
-	
-//- 		endfor
-void {{cmd.name|fw_cmd_field_printer}}(const struct {{cmd.name|fw_cmd_data}} *p_value,
-	int {{tab_counter}});
-
-//- 	endif
-//- endfor
-
-#ifdef __cplusplus
-}
-#endif
-
-
-#endif //CR_MGMT_FW_COMMAND_PRINTER_H
+#endif //CR_MGMT_FW_COMMAND_CUSTOM_PRINTER_H

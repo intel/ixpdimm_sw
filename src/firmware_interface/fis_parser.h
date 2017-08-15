@@ -82,9 +82,9 @@ enum fis_parser_codes fis_parse_system_time(
 	const struct pt_output_system_time *p_output_payload,
 	struct fwcmd_system_time_data *p_data);
 
-enum fis_parser_codes fis_parse_platform_config_data_configuration_header_table(
-	const struct pt_output_platform_config_data_configuration_header_table *p_output_payload,
-	struct fwcmd_platform_config_data_configuration_header_table_data *p_data);
+enum fis_parser_codes fis_parse_platform_config_data(
+	const struct pt_output_platform_config_data *p_output_payload,
+	struct fwcmd_platform_config_data_data *p_data);
 
 enum fis_parser_codes fis_parse_namespace_labels(
 	const struct pt_output_namespace_labels *p_output_payload,

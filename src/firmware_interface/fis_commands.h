@@ -228,17 +228,28 @@ struct pt_output_system_time
 	unsigned char reserved[120];
 
 } __attribute__((packed));
-struct pt_output_platform_config_data_identification_information_table
+struct pt_output_device_identification_v1
 {
 	unsigned short manufacturer_id;
 	unsigned int serial_number;
 	unsigned char model_number[20];
 	unsigned char reserved[6];
+
+} __attribute__((packed));
+struct pt_output_device_identification_v2
+{
+	unsigned char uid[9];
+	unsigned char reserved[23];
+
+} __attribute__((packed));
+struct pt_output_id_info_table
+{
+	unsigned char device_identification[32];
 	unsigned long long partition_offset;
 	unsigned long long partition_size;
 
 } __attribute__((packed));
-struct pt_output_platform_config_data_interleave_information_table
+struct pt_output_interleave_information_table
 {
 	unsigned short type;
 	unsigned short length;
@@ -252,7 +263,7 @@ struct pt_output_platform_config_data_interleave_information_table
 	unsigned char reserved[9];
 
 } __attribute__((packed));
-struct pt_output_platform_config_data_partition_size_change_table
+struct pt_output_partition_size_change_table
 {
 	unsigned short type;
 	unsigned short length;
@@ -260,7 +271,7 @@ struct pt_output_platform_config_data_partition_size_change_table
 	unsigned long long persistent_memory_partition_size;
 
 } __attribute__((packed));
-struct pt_output_platform_config_data_current_config_table
+struct pt_output_current_config_table
 {
 	unsigned char signature[4];
 	unsigned int length;
@@ -277,7 +288,7 @@ struct pt_output_platform_config_data_current_config_table
 	unsigned long long persistent_memory_size;
 
 } __attribute__((packed));
-struct pt_output_platform_config_data_config_input_table
+struct pt_output_config_input_table
 {
 	unsigned char signature[4];
 	unsigned int length;
@@ -292,7 +303,7 @@ struct pt_output_platform_config_data_config_input_table
 	unsigned long long reserved;
 
 } __attribute__((packed));
-struct pt_output_platform_config_data_config_output_table
+struct pt_output_config_output_table
 {
 	unsigned char signature[4];
 	unsigned int length;
@@ -308,7 +319,7 @@ struct pt_output_platform_config_data_config_output_table
 	unsigned char reserved[7];
 
 } __attribute__((packed));
-struct pt_output_platform_config_data_configuration_header_table
+struct pt_output_platform_config_data
 {
 	unsigned char signature[4];
 	unsigned int length;
@@ -328,7 +339,7 @@ struct pt_output_platform_config_data_configuration_header_table
 	unsigned char body[131012];
 
 } __attribute__((packed));
-struct pt_input_platform_config_data_configuration_header_table
+struct pt_input_platform_config_data
 {
 	unsigned char partition_id;
 	unsigned char command_option;
@@ -549,7 +560,7 @@ unsigned int fis_optional_configuration_data_policy(const unsigned int device_ha
 unsigned int fis_pmon_registers(const unsigned int device_handle, struct pt_input_pmon_registers *p_input_payload, struct pt_output_pmon_registers *p_output_payload);
 unsigned int fis_set_alarm_threshold(const unsigned int device_handle, struct pt_input_set_alarm_threshold *p_input_payload);
 unsigned int fis_system_time(const unsigned int device_handle, struct pt_output_system_time *p_output_payload);
-unsigned int fis_platform_config_data_configuration_header_table(const unsigned int device_handle, struct pt_input_platform_config_data_configuration_header_table *p_input_payload, struct pt_output_platform_config_data_configuration_header_table *p_output_payload);
+unsigned int fis_platform_config_data(const unsigned int device_handle, struct pt_input_platform_config_data *p_input_payload, struct pt_output_platform_config_data *p_output_payload);
 unsigned int fis_namespace_labels(const unsigned int device_handle, struct pt_input_namespace_labels *p_input_payload, struct pt_output_namespace_labels *p_output_payload);
 unsigned int fis_dimm_partition_info(const unsigned int device_handle, struct pt_output_dimm_partition_info *p_output_payload);
 unsigned int fis_fw_debug_log_level(const unsigned int device_handle, struct pt_input_fw_debug_log_level *p_input_payload, struct pt_output_fw_debug_log_level *p_output_payload);

@@ -90,7 +90,11 @@ enum return_code FwCommands::{{cmd.name|fw_get_payload}}(unsigned int handle
 	if (result.success)
 	{
 	//- if cmd.has_output
+	//-		if cmd.has_custom_printer
+		resultString += {{cmd.name|fw_payload_to_string_custom}}(result.p_data);
+	//-		else
 		resultString += {{cmd.name|fw_payload_to_string}}(result.p_data);
+	//-		endif
 	//- endif
 	}
 	else
@@ -107,30 +111,53 @@ enum return_code FwCommands::{{cmd.name|fw_get_payload}}(unsigned int handle
 
 //- endfor
 
+//- macro fieldToString(f)
+//-		if f.is_struct
+	result << {{f.struct_type|fw_payload_to_string}}(&p_data->{{f.name}});
+//-		elif f.is_struct_array
+	for (int i = 0; i < {{f.struct_array_count}}; i++)
+	{
+		result << {{f.struct_type|fw_payload_to_string}}(&p_data->{{f.name}}[i]);
+	}
+//- 	elif f.unsigned_char_needs_typecast_to_int
+	result << "{{f.name|camel}}: " << (int) p_data->{{f.name}} << "\n";
+{%-		elif f.is_union -%}
+//-			for u in f.union_payloads
+	result << {{u.struct_type|fw_payload_to_string}}(&p_data->{{f.name}}.{{u.name}});
+//-			endfor
+//-		else
+	result << "{{f.name|camel}}: " << p_data->{{f.name}} << "\n";
+{%-		endif  -%}
+//-		for b in f.bits
+	result << "{{b.name|camel}}: " << p_data->{{f.name}}_{{b.name}} << "\n";
+//-		endfor
+//- endmacro
+
+//- macro payloadFieldsToString(name, header, payload)
+//-	if not header
+//- 	set header=name
+//-	endif
+std::string FwCommands::{{name|fw_payload_fields_to_string}}(const struct {{name|fw_cmd_data}} *p_data)
+{
+	std::stringstream result;
+	result << "\n{{header|space}}:" << "\n";
+//- 		for f in payload.fields
+//- 			if not f.ignore
+{{fieldToString(f)}}
+//- 			endif
+//- 		endfor
+
+	return result.str();
+}
+//- endmacro
+
 //- macro payloadToString(name, payload)
 std::string FwCommands::{{name|fw_payload_to_string}}(const struct {{name|fw_cmd_data}} *p_data)
 {
 	std::stringstream result;
 	result << "\n{{name|space}}:" << "\n";
-//- 		for f in payload.fields
-//- 			if not f.ignore
-//-					if f.is_struct
-	result << {{f.struct_type|fw_payload_to_string}}(&p_data->{{f.name}});
-//-					elif f.is_struct_array
-	for (int i = 0; i < {{f.struct_array_count}}; i++)
-	{
-		result << {{f.struct_type|fw_payload_to_string}}(&p_data->{{f.name}}[i]);
-	}
-//- 				elif f.unsigned_char_needs_typecast_to_int
-	result << "{{f.name|camel}}: " << (int) p_data->{{f.name}} << "\n";
-//-					else
-	result << "{{f.name|camel}}: " << p_data->{{f.name}} << "\n";
-//-		 			endif
-//-					for b in f.bits
-	result << "{{b.name|camel}}: " << p_data->{{f.name}}_{{b.name}} << "\n";
-//-					endfor
-//- 			endif
-//- 		endfor
+	result << {{name|fw_payload_fields_to_string}}(p_data);
+	
 //- 		for r in payload.payload_refs:
 //- 			if r.is_type_based
 //- 				for t in r.types
@@ -170,6 +197,15 @@ std::string FwCommands::{{name|fw_payload_to_string}}(const struct {{name|fw_cmd
 //- 	endif
 //- endfor
 
+//- for cmd in commands
+//- 	if cmd.has_output
+//- 		for s in cmd.sub_payloads
+{{payloadFieldsToString(s.name, s.header, s.payload)}}
+//- 		endfor
+{{payloadFieldsToString(cmd.name, cmd.header, cmd.output_payload)}}
+//- 	endif
+//- endfor
+
 enum return_code FwCommands::dsm_err_to_nvm_lib_err(pt_result result)
 {
 	enum return_code rc = NVM_SUCCESS;
@@ -191,7 +227,7 @@ enum return_code FwCommands::dsm_err_to_nvm_lib_err(pt_result result)
 			rc = NVM_ERR_DEVICEERROR;
 			break;
 		case DSM_VENDOR_RETRY_SUGGESTED:
-			rc = NVM_ERR_DEVICEERROR;
+        	rc = NVM_ERR_TIMEOUT;
 			break;
 		case DSM_VENDOR_UNKNOWN:
 			rc = NVM_ERR_UNKNOWN;

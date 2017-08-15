@@ -50,6 +50,8 @@ enum fis_parser_codes {{name|fw_cmd_parser}}(
 	{
 		rc = {{f.struct_type|fw_cmd_parser}}(&p_output_payload->{{f.name}}[i], &p_data->{{f.name}}[i]);
 	}
+//-		elif f.is_union
+	memmove(p_data->{{f.name}}.bytes, p_output_payload->{{f.name}}, {{f.byte_count}});
 //- 	else
 	memmove(p_data->{{f.name}}, p_output_payload->{{f.name}}, {{f.byte_count}});
 //- 	endif

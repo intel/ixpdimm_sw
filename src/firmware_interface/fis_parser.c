@@ -225,9 +225,9 @@ enum fis_parser_codes fis_parse_system_time(
 }
 
 
-enum fis_parser_codes fis_parse_platform_config_data_identification_information_table(
-	const struct pt_output_platform_config_data_identification_information_table *p_output_payload,
-	struct fwcmd_platform_config_data_identification_information_table_data *p_data)
+enum fis_parser_codes fis_parse_device_identification_v1(
+	const struct pt_output_device_identification_v1 *p_output_payload,
+	struct fwcmd_device_identification_v1_data *p_data)
 {
 	memset(p_data, 0, sizeof (*p_data));
 	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
@@ -235,14 +235,34 @@ enum fis_parser_codes fis_parse_platform_config_data_identification_information_
 	p_data->serial_number = p_output_payload->serial_number;
 	memmove(p_data->model_number, p_output_payload->model_number, 20);
 	p_data->model_number[20] = '\0';
+	return rc;
+}
+
+enum fis_parser_codes fis_parse_device_identification_v2(
+	const struct pt_output_device_identification_v2 *p_output_payload,
+	struct fwcmd_device_identification_v2_data *p_data)
+{
+	memset(p_data, 0, sizeof (*p_data));
+	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
+	memmove(p_data->uid, p_output_payload->uid, 9);
+	return rc;
+}
+
+enum fis_parser_codes fis_parse_id_info_table(
+	const struct pt_output_id_info_table *p_output_payload,
+	struct fwcmd_id_info_table_data *p_data)
+{
+	memset(p_data, 0, sizeof (*p_data));
+	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
+	memmove(p_data->device_identification.bytes, p_output_payload->device_identification, 32);
 	p_data->partition_offset = p_output_payload->partition_offset;
 	p_data->partition_size = p_output_payload->partition_size;
 	return rc;
 }
 
-enum fis_parser_codes fis_parse_platform_config_data_interleave_information_table(
-	const struct pt_output_platform_config_data_interleave_information_table *p_output_payload,
-	struct fwcmd_platform_config_data_interleave_information_table_data *p_data)
+enum fis_parser_codes fis_parse_interleave_information_table(
+	const struct pt_output_interleave_information_table *p_output_payload,
+	struct fwcmd_interleave_information_table_data *p_data)
 {
 	memset(p_data, 0, sizeof (*p_data));
 	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
@@ -261,21 +281,21 @@ enum fis_parser_codes fis_parse_platform_config_data_interleave_information_tabl
 	int current_offset = sizeof(*p_output_payload); // start at end of parent payload
 	for (int i = 0; i < (int)p_data->number_of_dimms && FWCMD_PARSE_SUCCESS(rc); i++)
 	{
-		p_data->platform_config_data_identification_information_table = realloc(p_data->platform_config_data_identification_information_table,
-    		sizeof(struct fwcmd_platform_config_data_identification_information_table_data) * (p_data->platform_config_data_identification_information_table_count + 1));
-		struct pt_output_platform_config_data_identification_information_table *p_sub_payloads =
-			((struct pt_output_platform_config_data_identification_information_table *) (base + current_offset));
-		rc = fis_parse_platform_config_data_identification_information_table(p_sub_payloads, &p_data->platform_config_data_identification_information_table[p_data->platform_config_data_identification_information_table_count]);
-		p_data->platform_config_data_identification_information_table_count++;
-		current_offset += (i + 1) * sizeof(struct pt_output_platform_config_data_identification_information_table);
+		p_data->id_info_table = realloc(p_data->id_info_table,
+    		sizeof(struct fwcmd_id_info_table_data) * (p_data->id_info_table_count + 1));
+		struct pt_output_id_info_table *p_sub_payloads =
+			((struct pt_output_id_info_table *) (base + current_offset));
+		rc = fis_parse_id_info_table(p_sub_payloads, &p_data->id_info_table[p_data->id_info_table_count]);
+		p_data->id_info_table_count++;
+		current_offset += (i + 1) * sizeof(struct pt_output_id_info_table);
 	}
 	
 	return rc;
 }
 
-enum fis_parser_codes fis_parse_platform_config_data_partition_size_change_table(
-	const struct pt_output_platform_config_data_partition_size_change_table *p_output_payload,
-	struct fwcmd_platform_config_data_partition_size_change_table_data *p_data)
+enum fis_parser_codes fis_parse_partition_size_change_table(
+	const struct pt_output_partition_size_change_table *p_output_payload,
+	struct fwcmd_partition_size_change_table_data *p_data)
 {
 	memset(p_data, 0, sizeof (*p_data));
 	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
@@ -286,9 +306,9 @@ enum fis_parser_codes fis_parse_platform_config_data_partition_size_change_table
 	return rc;
 }
 
-enum fis_parser_codes fis_parse_platform_config_data_current_config_table(
-	const struct pt_output_platform_config_data_current_config_table *p_output_payload,
-	struct fwcmd_platform_config_data_current_config_table_data *p_data)
+enum fis_parser_codes fis_parse_current_config_table(
+	const struct pt_output_current_config_table *p_output_payload,
+	struct fwcmd_current_config_table_data *p_data)
 {
 	memset(p_data, 0, sizeof (*p_data));
 	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
@@ -315,16 +335,16 @@ enum fis_parser_codes fis_parse_platform_config_data_current_config_table(
 	while (current_offset < (int)p_data->length && FWCMD_PARSE_SUCCESS(rc))
 	{
 		int type_id = *(base + current_offset + type_offset);
-		if (type_id == 5) // 5 = platform_config_data_interleave_information_table
+		if (type_id == 5) // 5 = interleave_information_table
 		{
-			p_data->platform_config_data_interleave_information_table = realloc(p_data->platform_config_data_interleave_information_table,
-				sizeof(struct fwcmd_platform_config_data_interleave_information_table_data) * (p_data->platform_config_data_interleave_information_table_count + 1));
+			p_data->interleave_information_table = realloc(p_data->interleave_information_table,
+				sizeof(struct fwcmd_interleave_information_table_data) * (p_data->interleave_information_table_count + 1));
 
-			struct pt_output_platform_config_data_interleave_information_table *p_sub_payloads =
-				((struct pt_output_platform_config_data_interleave_information_table *) (base + current_offset));
-			struct fwcmd_platform_config_data_interleave_information_table_data *p_converted = &p_data->platform_config_data_interleave_information_table[p_data->platform_config_data_interleave_information_table_count];
-			rc = fis_parse_platform_config_data_interleave_information_table(p_sub_payloads, p_converted);
-			p_data->platform_config_data_interleave_information_table_count++;
+			struct pt_output_interleave_information_table *p_sub_payloads =
+				((struct pt_output_interleave_information_table *) (base + current_offset));
+			struct fwcmd_interleave_information_table_data *p_converted = &p_data->interleave_information_table[p_data->interleave_information_table_count];
+			rc = fis_parse_interleave_information_table(p_sub_payloads, p_converted);
+			p_data->interleave_information_table_count++;
 			current_offset += p_converted->length;
 		}
 		else
@@ -335,9 +355,9 @@ enum fis_parser_codes fis_parse_platform_config_data_current_config_table(
 	return rc;
 }
 
-enum fis_parser_codes fis_parse_platform_config_data_config_input_table(
-	const struct pt_output_platform_config_data_config_input_table *p_output_payload,
-	struct fwcmd_platform_config_data_config_input_table_data *p_data)
+enum fis_parser_codes fis_parse_config_input_table(
+	const struct pt_output_config_input_table *p_output_payload,
+	struct fwcmd_config_input_table_data *p_data)
 {
 	memset(p_data, 0, sizeof (*p_data));
 	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
@@ -362,28 +382,28 @@ enum fis_parser_codes fis_parse_platform_config_data_config_input_table(
 	while (current_offset < (int)p_data->length && FWCMD_PARSE_SUCCESS(rc))
 	{
 		int type_id = *(base + current_offset + type_offset);
-		if (type_id == 5) // 5 = platform_config_data_interleave_information_table
+		if (type_id == 5) // 5 = interleave_information_table
 		{
-			p_data->platform_config_data_interleave_information_table = realloc(p_data->platform_config_data_interleave_information_table,
-				sizeof(struct fwcmd_platform_config_data_interleave_information_table_data) * (p_data->platform_config_data_interleave_information_table_count + 1));
+			p_data->interleave_information_table = realloc(p_data->interleave_information_table,
+				sizeof(struct fwcmd_interleave_information_table_data) * (p_data->interleave_information_table_count + 1));
 
-			struct pt_output_platform_config_data_interleave_information_table *p_sub_payloads =
-				((struct pt_output_platform_config_data_interleave_information_table *) (base + current_offset));
-			struct fwcmd_platform_config_data_interleave_information_table_data *p_converted = &p_data->platform_config_data_interleave_information_table[p_data->platform_config_data_interleave_information_table_count];
-			rc = fis_parse_platform_config_data_interleave_information_table(p_sub_payloads, p_converted);
-			p_data->platform_config_data_interleave_information_table_count++;
+			struct pt_output_interleave_information_table *p_sub_payloads =
+				((struct pt_output_interleave_information_table *) (base + current_offset));
+			struct fwcmd_interleave_information_table_data *p_converted = &p_data->interleave_information_table[p_data->interleave_information_table_count];
+			rc = fis_parse_interleave_information_table(p_sub_payloads, p_converted);
+			p_data->interleave_information_table_count++;
 			current_offset += p_converted->length;
 		}
-		else if (type_id == 4) // 4 = platform_config_data_partition_size_change_table
+		else if (type_id == 4) // 4 = partition_size_change_table
 		{
-			p_data->platform_config_data_partition_size_change_table = realloc(p_data->platform_config_data_partition_size_change_table,
-				sizeof(struct fwcmd_platform_config_data_partition_size_change_table_data) * (p_data->platform_config_data_partition_size_change_table_count + 1));
+			p_data->partition_size_change_table = realloc(p_data->partition_size_change_table,
+				sizeof(struct fwcmd_partition_size_change_table_data) * (p_data->partition_size_change_table_count + 1));
 
-			struct pt_output_platform_config_data_partition_size_change_table *p_sub_payloads =
-				((struct pt_output_platform_config_data_partition_size_change_table *) (base + current_offset));
-			struct fwcmd_platform_config_data_partition_size_change_table_data *p_converted = &p_data->platform_config_data_partition_size_change_table[p_data->platform_config_data_partition_size_change_table_count];
-			rc = fis_parse_platform_config_data_partition_size_change_table(p_sub_payloads, p_converted);
-			p_data->platform_config_data_partition_size_change_table_count++;
+			struct pt_output_partition_size_change_table *p_sub_payloads =
+				((struct pt_output_partition_size_change_table *) (base + current_offset));
+			struct fwcmd_partition_size_change_table_data *p_converted = &p_data->partition_size_change_table[p_data->partition_size_change_table_count];
+			rc = fis_parse_partition_size_change_table(p_sub_payloads, p_converted);
+			p_data->partition_size_change_table_count++;
 			current_offset += p_converted->length;
 		}
 		else
@@ -394,9 +414,9 @@ enum fis_parser_codes fis_parse_platform_config_data_config_input_table(
 	return rc;
 }
 
-enum fis_parser_codes fis_parse_platform_config_data_config_output_table(
-	const struct pt_output_platform_config_data_config_output_table *p_output_payload,
-	struct fwcmd_platform_config_data_config_output_table_data *p_data)
+enum fis_parser_codes fis_parse_config_output_table(
+	const struct pt_output_config_output_table *p_output_payload,
+	struct fwcmd_config_output_table_data *p_data)
 {
 	memset(p_data, 0, sizeof (*p_data));
 	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
@@ -422,28 +442,28 @@ enum fis_parser_codes fis_parse_platform_config_data_config_output_table(
 	while (current_offset < (int)p_data->length && FWCMD_PARSE_SUCCESS(rc))
 	{
 		int type_id = *(base + current_offset + type_offset);
-		if (type_id == 5) // 5 = platform_config_data_interleave_information_table
+		if (type_id == 5) // 5 = interleave_information_table
 		{
-			p_data->platform_config_data_interleave_information_table = realloc(p_data->platform_config_data_interleave_information_table,
-				sizeof(struct fwcmd_platform_config_data_interleave_information_table_data) * (p_data->platform_config_data_interleave_information_table_count + 1));
+			p_data->interleave_information_table = realloc(p_data->interleave_information_table,
+				sizeof(struct fwcmd_interleave_information_table_data) * (p_data->interleave_information_table_count + 1));
 
-			struct pt_output_platform_config_data_interleave_information_table *p_sub_payloads =
-				((struct pt_output_platform_config_data_interleave_information_table *) (base + current_offset));
-			struct fwcmd_platform_config_data_interleave_information_table_data *p_converted = &p_data->platform_config_data_interleave_information_table[p_data->platform_config_data_interleave_information_table_count];
-			rc = fis_parse_platform_config_data_interleave_information_table(p_sub_payloads, p_converted);
-			p_data->platform_config_data_interleave_information_table_count++;
+			struct pt_output_interleave_information_table *p_sub_payloads =
+				((struct pt_output_interleave_information_table *) (base + current_offset));
+			struct fwcmd_interleave_information_table_data *p_converted = &p_data->interleave_information_table[p_data->interleave_information_table_count];
+			rc = fis_parse_interleave_information_table(p_sub_payloads, p_converted);
+			p_data->interleave_information_table_count++;
 			current_offset += p_converted->length;
 		}
-		else if (type_id == 4) // 4 = platform_config_data_partition_size_change_table
+		else if (type_id == 4) // 4 = partition_size_change_table
 		{
-			p_data->platform_config_data_partition_size_change_table = realloc(p_data->platform_config_data_partition_size_change_table,
-				sizeof(struct fwcmd_platform_config_data_partition_size_change_table_data) * (p_data->platform_config_data_partition_size_change_table_count + 1));
+			p_data->partition_size_change_table = realloc(p_data->partition_size_change_table,
+				sizeof(struct fwcmd_partition_size_change_table_data) * (p_data->partition_size_change_table_count + 1));
 
-			struct pt_output_platform_config_data_partition_size_change_table *p_sub_payloads =
-				((struct pt_output_platform_config_data_partition_size_change_table *) (base + current_offset));
-			struct fwcmd_platform_config_data_partition_size_change_table_data *p_converted = &p_data->platform_config_data_partition_size_change_table[p_data->platform_config_data_partition_size_change_table_count];
-			rc = fis_parse_platform_config_data_partition_size_change_table(p_sub_payloads, p_converted);
-			p_data->platform_config_data_partition_size_change_table_count++;
+			struct pt_output_partition_size_change_table *p_sub_payloads =
+				((struct pt_output_partition_size_change_table *) (base + current_offset));
+			struct fwcmd_partition_size_change_table_data *p_converted = &p_data->partition_size_change_table[p_data->partition_size_change_table_count];
+			rc = fis_parse_partition_size_change_table(p_sub_payloads, p_converted);
+			p_data->partition_size_change_table_count++;
 			current_offset += p_converted->length;
 		}
 		else
@@ -454,9 +474,9 @@ enum fis_parser_codes fis_parse_platform_config_data_config_output_table(
 	return rc;
 }
 
-enum fis_parser_codes fis_parse_platform_config_data_configuration_header_table(
-	const struct pt_output_platform_config_data_configuration_header_table *p_output_payload,
-	struct fwcmd_platform_config_data_configuration_header_table_data *p_data)
+enum fis_parser_codes fis_parse_platform_config_data(
+	const struct pt_output_platform_config_data *p_output_payload,
+	struct fwcmd_platform_config_data_data *p_data)
 {
 	memset(p_data, 0, sizeof (*p_data));
 	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
@@ -485,10 +505,10 @@ enum fis_parser_codes fis_parse_platform_config_data_configuration_header_table(
     	{
     	 	if (p_data->current_config_offset > 0)
     	 	{
-				struct pt_output_platform_config_data_current_config_table *p_platform_config_data_current_config_table  =
-					((struct pt_output_platform_config_data_current_config_table *)
+				struct pt_output_current_config_table *p_current_config_table  =
+					((struct pt_output_current_config_table *)
 						((unsigned char *) p_output_payload + p_data->current_config_offset));
-				rc = fis_parse_platform_config_data_current_config_table(p_platform_config_data_current_config_table, &(p_data->platform_config_data_current_config_table));
+				rc = fis_parse_current_config_table(p_current_config_table, &(p_data->current_config_table));
     		}
     	}
     	else
@@ -504,10 +524,10 @@ enum fis_parser_codes fis_parse_platform_config_data_configuration_header_table(
     	{
     	 	if (p_data->input_config_offset > 0)
     	 	{
-				struct pt_output_platform_config_data_config_input_table *p_platform_config_data_config_input_table  =
-					((struct pt_output_platform_config_data_config_input_table *)
+				struct pt_output_config_input_table *p_config_input_table  =
+					((struct pt_output_config_input_table *)
 						((unsigned char *) p_output_payload + p_data->input_config_offset));
-				rc = fis_parse_platform_config_data_config_input_table(p_platform_config_data_config_input_table, &(p_data->platform_config_data_config_input_table));
+				rc = fis_parse_config_input_table(p_config_input_table, &(p_data->config_input_table));
     		}
     	}
     	else
@@ -523,10 +543,10 @@ enum fis_parser_codes fis_parse_platform_config_data_configuration_header_table(
     	{
     	 	if (p_data->output_config_offset > 0)
     	 	{
-				struct pt_output_platform_config_data_config_output_table *p_platform_config_data_config_output_table  =
-					((struct pt_output_platform_config_data_config_output_table *)
+				struct pt_output_config_output_table *p_config_output_table  =
+					((struct pt_output_config_output_table *)
 						((unsigned char *) p_output_payload + p_data->output_config_offset));
-				rc = fis_parse_platform_config_data_config_output_table(p_platform_config_data_config_output_table, &(p_data->platform_config_data_config_output_table));
+				rc = fis_parse_config_output_table(p_config_output_table, &(p_data->config_output_table));
     		}
     	}
     	else

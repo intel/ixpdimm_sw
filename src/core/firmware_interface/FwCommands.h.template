@@ -51,6 +51,12 @@ FwCommands &operator=(const FwCommands &other);
 static FwCommands &getFwCommands();
 
 //- for cmd in commands
+//- 	if cmd.has_custom_printer
+virtual std::string {{cmd.name|fw_payload_to_string_custom}}({{cmd.name|fw_cmd_data}} *pData);
+//- 	endif
+//- endfor
+
+//- for cmd in commands
 
 virtual enum return_code {{cmd.name|fw_get_payload}}(unsigned int handle
 	{%- for f in cmd.input_fields_not_ignored -%}
@@ -71,11 +77,16 @@ virtual std::string {{name|fw_payload_to_string}}(
 //-                     set name=r.types[t]
 //-                         if r.is_multiple
 
-//-                     endif
+//-                     	endif
 //-                 endfor
 //-             endif
 //-         endfor
 		
+//- endmacro
+
+//- macro payloadFieldsToString(name, payload)
+virtual std::string {{name|fw_payload_fields_to_string}}(
+    const struct {{name|fw_cmd_data}} *p_data);	
 //- endmacro
 
 //- for cmd in commands
@@ -84,6 +95,15 @@ virtual std::string {{name|fw_payload_to_string}}(
 {{payloadToString(s.name, s.payload)}}
 //- 		endfor
 {{payloadToString(cmd.name, cmd.output_payload)}}
+//- 	endif
+//- endfor
+
+//- for cmd in commands
+//- 	if cmd.has_output
+//- 		for s in cmd.sub_payloads
+{{payloadFieldsToString(s.name, s.payload)}}
+//- 		endfor
+{{payloadFieldsToString(cmd.name, cmd.output_payload)}}
 //- 	endif
 //- endfor
 

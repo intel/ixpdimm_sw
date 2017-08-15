@@ -250,24 +250,24 @@ void FwCommandsWrapper::FwcmdFreeSystemTime(struct fwcmd_system_time_result *p_r
 	fwcmd_free_system_time(p_result);
 }
 
-struct fwcmd_platform_config_data_configuration_header_table_result FwCommandsWrapper::FwcmdAllocPlatformConfigDataConfigurationHeaderTable(unsigned int handle,
+struct fwcmd_platform_config_data_result FwCommandsWrapper::FwcmdAllocPlatformConfigData(unsigned int handle,
 const unsigned char partition_id,
 const unsigned char command_option,
 const unsigned int offset) const
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
 
-	return fwcmd_alloc_platform_config_data_configuration_header_table(handle,
+	return fwcmd_alloc_platform_config_data(handle,
 	partition_id,
 	command_option,
 	offset);
 }
 
-void FwCommandsWrapper::FwcmdFreePlatformConfigDataConfigurationHeaderTable(struct fwcmd_platform_config_data_configuration_header_table_result *p_result) const
+void FwCommandsWrapper::FwcmdFreePlatformConfigData(struct fwcmd_platform_config_data_result *p_result) const
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
 
-	fwcmd_free_platform_config_data_configuration_header_table(p_result);
+	fwcmd_free_platform_config_data(p_result);
 }
 
 struct fwcmd_namespace_labels_result FwCommandsWrapper::FwcmdAllocNamespaceLabels(unsigned int handle,
