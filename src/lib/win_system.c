@@ -170,6 +170,23 @@ int get_sockets(struct socket *p_sockets, NVM_UINT16 count)
 				{
 					rc = NVM_ERR_ARRAYTOOSMALL;
 				}
+				else
+				{
+					int rc_org = rc;
+					for (int i = 0; i < count; i++)
+					{
+						if (NVM_SUCCESS != (rc = get_mapped_memory_info(&p_sockets[i])))
+						{
+							COMMON_LOG_ERROR_F("Failed to retrieve mapped memory information for "
+									"node_id(%hu)", node_ids[i]);
+							break;
+						}
+					}
+					if (NVM_SUCCESS == rc)
+					{
+						rc = rc_org;
+					}
+				}
 
 				// regardless of success or failure, try to restore the process' original affinity
 				if (!SetThreadGroupAffinity(thread_handle, &old_affinity, NULL))
@@ -224,7 +241,16 @@ int get_socket(NVM_UINT16 node_id, struct socket *p_socket)
 			}
 			else
 			{
-				rc = NVM_SUCCESS;
+				int rc_org = rc;
+				if (NVM_SUCCESS != (rc = get_mapped_memory_info(p_socket)))
+				{
+					COMMON_LOG_ERROR_F("Failed to retrieve mapped memory information.for "
+							"node_id(%hu)", node_id);
+				}
+				else
+				{
+					rc = rc_org;
+				}
 			}
 
 			// regardless of success or failure, try to restore the process' original affinity

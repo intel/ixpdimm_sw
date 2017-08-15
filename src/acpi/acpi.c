@@ -61,6 +61,7 @@ int check_acpi_table(const char *signature,
 	{
 		rc = ACPI_ERR_BADTABLESIGNATURE;
 	}
+
 	return rc;
 }
 
@@ -71,18 +72,18 @@ void print_acpi_table_header(struct acpi_table_header *p_header)
 {
 	if (p_header)
 	{
-		printf("Signature: %.4s", p_header->signature);
-		printf("Length: %u", p_header->length);
-		printf("Revision: %hhu", p_header->revision);
-		printf("Checksum: %hhu", p_header->checksum);
-		printf("OEM ID: %s", p_header->oem_id);
-		printf("OEM Table ID: %s", p_header->oem_table_id);
-		printf("OEM Revision: %u", p_header->oem_revision);
-		printf("Creator ID: %u", p_header->creator_id);
-		printf("Creator Revision: %u", p_header->creator_revision);
+		printf("Signature: %.4s\n", p_header->signature);
+		printf("Length: %u\n", p_header->length);
+		printf("Revision: %hhu\n", p_header->revision);
+		printf("Checksum: %hhu\n", p_header->checksum);
+		printf("OEM ID: %s\n", p_header->oem_id);
+		printf("OEM Table ID: %s\n", p_header->oem_table_id);
+		printf("OEM Revision: %u\n", p_header->oem_revision);
+		printf("Creator ID: %u\n", p_header->creator_id);
+		printf("Creator Revision: %u\n", p_header->creator_revision);
 	}
 	else
 	{
-		printf("ACPI table is NULL");
+		printf("ACPI table is NULL\n");
 	}
 }

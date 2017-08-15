@@ -202,6 +202,14 @@ int get_sockets(struct socket *p_node, NVM_UINT16 count)
 							break;
 						}
 
+						// retrieve mapped memory attributes
+						if (NVM_SUCCESS != (rc = get_mapped_memory_info(&p_node[i_node])))
+						{
+							COMMON_LOG_ERROR_F("Failed to retrieve mapped memory information for "
+									"node_id(%hu)", node_ids[i_node]);
+							break;
+						}
+
 						// set rc to the number of NUMA nodes successfully queried thus far
 						rc = i_node + 1;
 					}
@@ -258,6 +266,15 @@ int get_socket(NVM_UINT16 node_id, struct socket *p_node)
 		else
 		{
 			rc = get_cpu_data_from_numa_node(node_id, p_node);
+			if (NVM_SUCCESS == rc)
+			{
+				rc = get_mapped_memory_info(p_node);
+				if (NVM_SUCCESS != rc)
+				{
+					COMMON_LOG_ERROR_F("Failed to retrieve mapped memory information for "
+							"node_id(%hu)", node_id);
+				}
+			}
 
 			// regardless of success or failure, try to restore the process' original affinity
 			if (numa_run_on_node_mask(p_process_node_mask) != 0)

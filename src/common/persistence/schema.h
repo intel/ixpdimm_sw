@@ -1602,6 +1602,176 @@ enum db_return_codes db_roll_runtime_config_validations_by_id(const PersistentSt
  */
 enum db_return_codes db_get_next_runtime_config_validation_id(const PersistentStore *p_ps, int *p_max);
 /*!
+ * @defgroup socket_sku socket_sku 
+ * @ingroup db_schema
+ */
+ // Lengths for strings and arrays
+/*!
+ * struct representing the socket_sku table
+ * @ingroup socket_sku
+ */
+struct db_socket_sku
+{
+	unsigned int type;
+	unsigned int length;
+	unsigned int socket_id;
+	unsigned long long mapped_memory_limit;
+	unsigned long long total_mapped_memory;
+	unsigned long long cache_memory_limit;
+};
+/*!
+ * Helper function to print a db_socket_sku to the screen.
+ * @ingroup socket_sku
+ * @param p_socket_sku
+ * 		value to print
+ * @return
+ *		void
+ */
+void db_print_socket_sku(struct db_socket_sku *p_value);
+/*!
+ * Create a new row in the socket_sku table
+ * @ingroup socket_sku
+ * @param[in] p_ps
+ *		Pointer to the PersistentStore
+ * @param[in] p_socket_sku
+ *		Pointer to the object to be saved to the socket_sku table
+ * @return return_code whether or not it was successful
+ */
+enum db_return_codes db_add_socket_sku(const PersistentStore *p_ps, struct db_socket_sku *p_socket_sku);
+/*!
+ * Get the total number of socket_skus
+ * @param[in] p_ps
+ *		Pointer to the instance of the PersistentStore
+ * @param[out] p_count
+ * 		Set to the number of socket_skus
+ * @return whether successful or not
+ */
+enum db_return_codes db_get_socket_sku_count(const PersistentStore *p_ps, int *p_count);
+/*!
+ * Return all socket_skus
+ * @ingroup socket_sku
+ * @param[in] p_ps
+ *		Pointer to the PersistentStore
+ * @param[out] p_socket_sku
+ *		Pointer to an array of socket_sku objects that will contain all the socket_skus
+ * @param[in] socket_sku_count
+ *		Size of p_socket_sku
+ * @return The number of row (to max of socket_sku_count) on success.  DB_FAILURE on failure.
+ */
+int db_get_socket_skus(const PersistentStore *p_ps,
+	struct db_socket_sku
+	*p_socket_sku,
+	int socket_sku_count);
+/*!
+ * Truncate all the data in the socket_sku table
+ * @ingroup 
+ * @param[in] p_ps
+ *		Pointer to the PersistentStore
+ * @return return_code whether or not it was successful
+ */	
+enum db_return_codes db_delete_all_socket_skus(const PersistentStore *p_ps);
+
+/*!
+ * delete all entries from socket_sku history
+ * @ingroup socket_sku
+ * @param[in] p_ps
+ *		Pointer to the PersistentStore
+ * @return return_code whether or not it was successful
+ */
+ enum db_return_codes db_delete_socket_sku_history(const PersistentStore *p_ps);
+ 
+/*!
+ * save socket_sku state
+ * @ingroup socket_sku
+ * @param[in] p_ps
+ *		Pointer to the PersistentStore
+ * @param[in] history_id
+ *		ID of the history to add the socket_sku to
+ * @param[in] p_socket_sku
+ *		socket_sku to save to history
+ * @return return_code whether or not it was successful
+ */
+enum db_return_codes db_save_socket_sku_state(const PersistentStore *p_ps,
+	int history_id,
+	struct db_socket_sku *p_socket_sku);
+/*!
+ * Return a specific socket_sku for a given socket_id
+ * @ingroup socket_sku
+ * @param[in] p_ps
+ *		Pointer to the PersistentStore
+ * @param[in] socket_id
+ *		socket_id to identify the correct socket_sku
+ * @param[out] p_socket_sku
+ *		struct to put the socket_sku retrieved
+ * @return return_code whether or not it was successful
+ */
+enum db_return_codes db_get_socket_sku_by_socket_id(const PersistentStore *p_ps,
+	const unsigned int socket_id,
+	struct db_socket_sku *p_socket_sku);
+/*!
+ * Update a specific socket_sku given the original socket_id
+ * @ingroup socket_sku
+ * @param[in] p_ps
+ *		Pointer to the PersistentStore
+ * @param[in] socket_id
+ * 		socket_id points to the socket_sku to update
+ * @param[in] *p_updated_socket_sku
+ *		structure with new values for the socket_sku
+ * @return return_code whether or not it was successful
+ */
+enum db_return_codes db_update_socket_sku_by_socket_id(const PersistentStore *p_ps,
+	const unsigned int socket_id,
+	struct db_socket_sku *p_updated_socket_sku);
+/*!
+ * Delete a specific socket_sku given the socket_id
+ * @ingroup socket_sku
+ * @param[in] p_ps
+ *		Pointer to the PersistentStore
+ * @param[in] socket_id
+ *		socket_id points to the record to delete
+ * @return return_code whether or not it was successful
+ */
+enum db_return_codes db_delete_socket_sku_by_socket_id(const PersistentStore *p_ps,
+	const unsigned int socket_id);
+/*!
+ * Return number of matching history rows
+ * @param[in] p_ps
+ *		Pointer to the PersistentStore
+ * @param[in] history_id
+ *		history_id of rows to count
+ * @param[out] count
+ *		count of rows matching this history_id
+ * @return The number of row (to max of socket_sku_count) on success.  DB_FAILURE on failure.
+ */
+ enum db_return_codes db_get_socket_sku_history_by_history_id_count(const PersistentStore *p_ps, 
+	int history_id,
+	int *p_count);
+/*!
+ * Return number of history rows
+ * @param[in] p_ps
+ *		Pointer to the PersistentStore
+ * @param[out] count
+ *		count of rows matching this history_id
+ * @return The number of row (to max of socket_sku_count) on success.  DB_FAILURE on failure.
+ */
+ enum db_return_codes db_get_socket_sku_history_count(const PersistentStore *p_ps, int *p_count);
+/*!
+ * Return all rows of matching custom sql
+ * @param[in] p_ps
+ *		Pointer to the PersistentStore
+ * @param[out] struct db_socket_sku
+ *		Structure type for row results
+ * @param[in] p_socket_sku
+ *		Pointer to memory to hold row results
+ * @param[in] history_id
+ *		history_id of rows to return
+ * @return The number of row (to max of socket_sku_count) on success.  DB_FAILURE on failure.
+ */
+ int db_get_socket_sku_history_by_history_id(const PersistentStore *p_ps,
+	struct db_socket_sku *p_socket_sku,
+	int history_id,
+	int socket_sku_count);
+/*!
  * @defgroup interleave_capability interleave_capability 
  * @ingroup db_schema
  */

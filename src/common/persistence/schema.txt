@@ -92,6 +92,17 @@ Attributes:
 	unsigned int operation_type_2
 	unsigned long long mask_2
 
+Table(s): db_socket_sku 
+ 	  db_socket_sku_history 
+Description: Platform Configuration Attributes Table (PCAT): Socket SKU Information Table - Type 6. 
+Attributes: 
+	unsigned int type
+	unsigned int length
+	unsigned int socket_id(PK)
+	unsigned long long mapped_memory_limit
+	unsigned long long total_mapped_memory
+	unsigned long long cache_memory_limit
+
 Table(s): db_interleave_capability 
  	  db_interleave_capability_history 
 Description: Platform Configuration Attributes Table (PCAT): Memory Interleave Capability Information Table - Type 1. 

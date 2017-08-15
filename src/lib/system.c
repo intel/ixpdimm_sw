@@ -29,19 +29,7 @@
  * This file contains the implementation of system management functions of the Native API.
  */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-
-#include <string/s_str.h>
-
-#include "nvm_management.h"
-#include <persistence/logging.h>
-#include "device_adapter.h"
-#include <persistence/lib_persistence.h>
 #include "system.h"
-#include "device_utilities.h"
-#include "capabilities.h"
 
 int fill_host_sku_status(struct host *p_host)
 {
@@ -257,5 +245,87 @@ int nvm_get_socket(const NVM_UINT16 node_id, struct socket *p_node)
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+// Helper function for get_mapped_memory_info and get_mapped_memory_info_db
+int get_socket_sku(struct bios_capabilities *p_pcat, struct socket *p_socket)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	// iterate over all the extension tables
+	NVM_UINT32 offset = PCAT_TABLE_SIZE; // Size occupied by ACPI Table Header
+	while (offset < p_pcat->header.length)
+	{
+		struct pcat_extension_table_header *p_header =
+				(struct pcat_extension_table_header *)((NVM_UINT8 *)p_pcat + offset);
+
+		// check the length for validity
+		if (p_header->length == 0 || (p_header->length + offset) > p_pcat->header.length)
+		{
+			COMMON_LOG_ERROR_F("Extension table length %d invalid",	p_header->length);
+			rc = NVM_ERR_BADPCAT;
+			break;
+		}
+
+		// socket SKU info table
+		if (p_header->type == PCAT_TABLE_SOCKET_INFO)
+		{
+			struct socket_information_table *p_socket_info =
+					(struct socket_information_table *)p_header;
+
+			if (p_socket_info->socket_id == p_socket->id)
+			{
+				if (!p_socket_info->mapped_memory_limit)
+				{
+					COMMON_LOG_ERROR("Mapped memory limit is not defined");
+				}
+				else if (p_socket_info->total_mapped_memory >= p_socket_info->mapped_memory_limit)
+				{
+					COMMON_LOG_ERROR("Occupied mapped memory is greater than limit");
+				}
+
+				p_socket->mapped_memory_limit = p_socket_info->mapped_memory_limit;
+				p_socket->total_mapped_memory = p_socket_info->total_mapped_memory;
+				break;
+			}
+		}
+
+		// Loop through all PCAT tables
+		offset += p_header->length;
+	}
+
+	return rc;
+}
+
+// NOTE: This function is called in <OS>_system.c after populating the list of available sockets.
+int get_mapped_memory_info(struct socket *p_socket)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	if (NULL == p_socket)
+	{
+		COMMON_LOG_ERROR("Invalid parameter, p_socket is NULL");
+		rc = NVM_ERR_INVALIDPARAMETER;
+	}
+	else
+	{
+		struct bios_capabilities *p_pcat = calloc(1, sizeof (struct bios_capabilities));
+		// retrieve from ACPI table
+
+		if (NVM_SUCCESS != (rc = get_pcat(p_pcat)))
+		{
+			COMMON_LOG_ERROR("Retrieving PCAT from ACPI table failed.");
+		}
+		else
+		{
+			rc = get_socket_sku(p_pcat, p_socket);
+		}
+
+		free(p_pcat);
+	}
+
 	return rc;
 }

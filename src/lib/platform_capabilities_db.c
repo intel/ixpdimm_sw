@@ -71,6 +71,10 @@ int clear_pcat_from_db(PersistentStore *p_db)
 	DB_PCAT_ERROR(rc, db_delete_all_runtime_config_validations(p_db),
 		"Failed to remove existing PCAT runtime config validation extension tables");
 
+	// clear existing PCAT socket SKU info table
+	DB_PCAT_ERROR(rc, db_delete_all_socket_skus(p_db),
+		"Failed to remove existing PCAT socket SKU info table");
+
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
@@ -256,6 +260,33 @@ int update_pcat_in_db(PersistentStore *p_db,
 						DB_PCAT_ERROR(rc, db_rc,
 								"Unable to store the PCAT runtime config validation "
 								"extension table in the db");
+					}
+					else if (p_header->type == PCAT_TABLE_SOCKET_INFO)
+					{
+						struct socket_information_table *p_socket_info =
+								(struct socket_information_table *)p_header;
+
+						struct db_socket_sku db_socket_sku;
+						memset(&db_socket_sku, 0, sizeof (db_socket_sku));
+						db_socket_sku.type = p_socket_info->header.type;
+						db_socket_sku.length = p_socket_info->header.length;
+						db_socket_sku.socket_id = p_socket_info->socket_id;
+						db_socket_sku.mapped_memory_limit = p_socket_info->mapped_memory_limit;
+						db_socket_sku.total_mapped_memory = p_socket_info->total_mapped_memory;
+						db_socket_sku.cache_memory_limit = p_socket_info->cache_memory_limit;
+
+						// store history
+						if (history_id)
+						{
+							db_rc = db_save_socket_sku_state(p_db,	history_id, &db_socket_sku);
+						}
+						else
+						{
+							db_rc = db_add_socket_sku(p_db, &db_socket_sku);
+						}
+						// store error but continue to save as much data as possible
+						DB_PCAT_ERROR(rc, db_rc,
+							"Unable to store the PCAT socket SKU info table in the db");
 					}
 					// else, just ignore it other table types
 					offset += p_header->length;
@@ -454,6 +485,57 @@ int get_pcat_platform_info_from_db(PersistentStore *p_db,
 	return rc;
 }
 
+int get_pcat_socket_sku_info_from_db(PersistentStore *p_db,
+		struct bios_capabilities *p_capabilities,
+		NVM_UINT32 *p_offset, const NVM_UINT32 cap_len)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	if (!p_db)
+	{
+		COMMON_LOG_ERROR("Database is invalid");
+		rc =  NVM_ERR_UNKNOWN;
+	}
+	else
+	{
+		struct db_socket_sku db_socket_sku;
+		memset(&db_socket_sku, 0, sizeof (db_socket_sku));
+
+		if (db_get_socket_skus(p_db, &db_socket_sku, 1) != 1)
+		{
+			COMMON_LOG_INFO("Unable to retrieve the PCAT socket SKU info table from the db");
+			rc = 0; // no error, just doesn't exist
+		}
+		else
+		{
+			// make sure there is enough buffer space
+			NVM_UINT32 space_needed = *p_offset + SOCKET_INFO_TABLE_SIZE;
+			if (space_needed > cap_len)
+			{
+				COMMON_LOG_ERROR(
+					"p_capabilities buffer is too small to add the platform info ext table");
+				rc = NVM_ERR_INVALIDPARAMETER;
+			}
+			else
+			{
+				struct socket_information_table *p_socket_sku =	(struct socket_information_table *)
+						((NVM_UINT8 *)p_capabilities + *p_offset);
+				p_socket_sku ->header.type = PCAT_TABLE_SOCKET_INFO;
+				p_socket_sku->header.length = SOCKET_INFO_TABLE_SIZE;
+				p_socket_sku->mapped_memory_limit = db_socket_sku.mapped_memory_limit;
+				p_socket_sku->total_mapped_memory = db_socket_sku.total_mapped_memory;
+				p_socket_sku->cache_memory_limit = db_socket_sku.cache_memory_limit;
+				*p_offset += p_socket_sku->header.length;
+			}
+		}
+		// else ignore any db read failures - table is optional
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
 /*
  * Get the capabilities of the host platform
  */
@@ -503,7 +585,6 @@ int get_pcat_from_db(PersistentStore *p_db,
 			p_capabilities->header.creator_id = db_cap.creator_id;
 			p_capabilities->header.creator_revision = db_cap.creator_revision;
 
-
 			// variable length extension tables
 			// get the platform info tables
 			NVM_UINT32 offset = PCAT_TABLE_SIZE;
@@ -517,14 +598,18 @@ int get_pcat_from_db(PersistentStore *p_db,
 					// get runtime validation tables
 					rc = get_pcat_runtime_validation_table_from_db(p_db,
 							p_capabilities, &offset, cap_len);
+					if (rc == NVM_SUCCESS)
+					{
+						rc = get_pcat_socket_sku_info_from_db(
+								p_db, p_capabilities, &offset, cap_len);
 
-					// set the length
-					p_capabilities->header.length = offset;
+						// set the length
+						p_capabilities->header.length = offset;
 
-					// generate a valid checksum
-					generate_checksum((NVM_UINT8*)p_capabilities,
-							p_capabilities->header.length,
-							ACPI_CHECKSUM_OFFSET);
+						// generate a valid checksum
+						generate_checksum((NVM_UINT8*)p_capabilities, p_capabilities->header.length,
+								ACPI_CHECKSUM_OFFSET);
+					}
 				}
 			}
 		}

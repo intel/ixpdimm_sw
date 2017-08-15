@@ -434,7 +434,7 @@ int db_get_history_ids(const PersistentStore *p_ps,
 	return rc;
 }
 // Table count is calculated in CrudSchemaGenerator
-#define	TABLE_COUNT (117)
+#define	TABLE_COUNT (119)
 /*
  * Create a PersistentStore object
  */
@@ -672,6 +672,25 @@ tables[populate_index++] = ((struct table){"runtime_config_validation",
 					 gas_structure_11 INTEGER , \
 					 operation_type_2 INTEGER , \
 					 mask_2 INTEGER  \
+					);"});
+tables[populate_index++] = ((struct table){"socket_sku",
+				"CREATE TABLE socket_sku (       \
+					 type INTEGER  , \
+					 length INTEGER  , \
+					 socket_id INTEGER  PRIMARY KEY  NOT NULL UNIQUE  , \
+					 mapped_memory_limit INTEGER  , \
+					 total_mapped_memory INTEGER  , \
+					 cache_memory_limit INTEGER   \
+					);"});
+			tables[populate_index++] = ((struct table){"socket_sku_history",
+				"CREATE TABLE socket_sku_history (       \
+					history_id INTEGER NOT NULL, \
+					 type INTEGER , \
+					 length INTEGER , \
+					 socket_id INTEGER , \
+					 mapped_memory_limit INTEGER , \
+					 total_mapped_memory INTEGER , \
+					 cache_memory_limit INTEGER  \
 					);"});
 tables[populate_index++] = ((struct table){"interleave_capability",
 				"CREATE TABLE interleave_capability (       \
@@ -2060,6 +2079,8 @@ char* history_table_names[] = {
 	"socket_history",
 
 	"runtime_config_validation_history",
+
+	"socket_sku_history",
 
 	"interleave_capability_history",
 
@@ -6241,6 +6262,447 @@ enum db_return_codes db_get_next_runtime_config_validation_id(const PersistentSt
 }
 /*
  * --- END runtime_config_validation ----------------
+ */
+/*
+ * --- socket_sku ----------------
+ */
+void local_bind_socket_sku(sqlite3_stmt *p_stmt, struct db_socket_sku *p_socket_sku)
+{
+	BIND_INTEGER(p_stmt, "$type", (unsigned int)p_socket_sku->type);
+	BIND_INTEGER(p_stmt, "$length", (unsigned int)p_socket_sku->length);
+	BIND_INTEGER(p_stmt, "$socket_id", (unsigned int)p_socket_sku->socket_id);
+	BIND_INTEGER(p_stmt, "$mapped_memory_limit", (unsigned long long)p_socket_sku->mapped_memory_limit);
+	BIND_INTEGER(p_stmt, "$total_mapped_memory", (unsigned long long)p_socket_sku->total_mapped_memory);
+	BIND_INTEGER(p_stmt, "$cache_memory_limit", (unsigned long long)p_socket_sku->cache_memory_limit);
+}
+void local_get_socket_sku_relationships(const PersistentStore *p_ps,
+	sqlite3_stmt *p_stmt, struct db_socket_sku *p_socket_sku)
+{
+}
+
+void local_get_socket_sku_relationships_history(const PersistentStore *p_ps,
+	sqlite3_stmt *p_stmt, struct db_socket_sku *p_socket_sku,
+	int history_id)
+{
+}
+
+void local_row_to_socket_sku(const PersistentStore *p_ps,
+	sqlite3_stmt *p_stmt, struct db_socket_sku *p_socket_sku)
+{
+	INTEGER_COLUMN(p_stmt,
+		0,
+		p_socket_sku->type);
+	INTEGER_COLUMN(p_stmt,
+		1,
+		p_socket_sku->length);
+	INTEGER_COLUMN(p_stmt,
+		2,
+		p_socket_sku->socket_id);
+	INTEGER_COLUMN(p_stmt,
+		3,
+		p_socket_sku->mapped_memory_limit);
+	INTEGER_COLUMN(p_stmt,
+		4,
+		p_socket_sku->total_mapped_memory);
+	INTEGER_COLUMN(p_stmt,
+		5,
+		p_socket_sku->cache_memory_limit);
+}
+void db_print_socket_sku(struct db_socket_sku *p_value)
+{
+	printf("socket_sku.type: unsigned %d\n", p_value->type);
+	printf("socket_sku.length: unsigned %d\n", p_value->length);
+	printf("socket_sku.socket_id: unsigned %d\n", p_value->socket_id);
+	printf("socket_sku.mapped_memory_limit: unsigned %lld\n", p_value->mapped_memory_limit);
+	printf("socket_sku.total_mapped_memory: unsigned %lld\n", p_value->total_mapped_memory);
+	printf("socket_sku.cache_memory_limit: unsigned %lld\n", p_value->cache_memory_limit);
+}
+enum db_return_codes db_add_socket_sku(const PersistentStore *p_ps,
+	struct db_socket_sku *p_socket_sku)
+{
+	enum db_return_codes rc = DB_ERR_FAILURE;
+	sqlite3_stmt *p_stmt;
+	char *sql = 	"INSERT INTO socket_sku \
+		(type, length, socket_id, mapped_memory_limit, total_mapped_memory, cache_memory_limit)  \
+		VALUES 		\
+		($type, \
+		$length, \
+		$socket_id, \
+		$mapped_memory_limit, \
+		$total_mapped_memory, \
+		$cache_memory_limit) ";
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
+	{
+		local_bind_socket_sku(p_stmt, p_socket_sku);
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
+		{
+			rc = DB_SUCCESS;
+		}
+		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+	}
+	return rc;
+}
+enum db_return_codes db_get_socket_sku_count(const PersistentStore *p_ps, int *p_count)
+{
+	return table_row_count(p_ps, "socket_sku", p_count);
+}
+int db_get_socket_skus(const PersistentStore *p_ps,
+	struct db_socket_sku *p_socket_sku,
+	int socket_sku_count)
+{
+	int rc = DB_ERR_FAILURE;
+	memset(p_socket_sku, 0, sizeof (struct db_socket_sku) * socket_sku_count);
+	char *sql = "SELECT \
+		type \
+		,  length \
+		,  socket_id \
+		,  mapped_memory_limit \
+		,  total_mapped_memory \
+		,  cache_memory_limit \
+		  \
+		FROM socket_sku \
+		       \
+		 \
+		";
+	sqlite3_stmt *p_stmt;
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
+	{
+		int index = 0;
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < socket_sku_count)
+		{
+			local_row_to_socket_sku(p_ps, p_stmt, &p_socket_sku[index]);
+			local_get_socket_sku_relationships(p_ps, p_stmt, &p_socket_sku[index]);
+			index++;
+		}
+		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+	}
+	return rc;
+}
+enum db_return_codes db_delete_all_socket_skus(const PersistentStore *p_ps)
+{
+	return run_sql_no_results(p_ps->db, "DELETE FROM socket_sku");
+}
+
+enum db_return_codes db_save_socket_sku_state(const PersistentStore *p_ps,
+	int history_id,
+	struct db_socket_sku *p_socket_sku)
+{
+	enum db_return_codes rc = DB_SUCCESS;
+	struct db_socket_sku temp;
+	/*
+	 * Main table - Insert new or update existing
+	 */
+	if (db_get_socket_sku_by_socket_id(p_ps, p_socket_sku->socket_id, &temp) == DB_SUCCESS)
+	{
+		rc = db_update_socket_sku_by_socket_id(p_ps,
+				p_socket_sku->socket_id,
+				p_socket_sku);
+	}
+	else
+	{
+		sqlite3_stmt *p_stmt;
+		char *sql = 	"INSERT INTO socket_sku \
+			( type ,  length ,  socket_id ,  mapped_memory_limit ,  total_mapped_memory ,  cache_memory_limit )  \
+			VALUES 		\
+			($type, \
+			$length, \
+			$socket_id, \
+			$mapped_memory_limit, \
+			$total_mapped_memory, \
+			$cache_memory_limit) ";
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
+		{
+			local_bind_socket_sku(p_stmt, p_socket_sku);
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+		}
+	}
+	/*
+	 * Insert as a history
+	 */
+	if (rc == DB_SUCCESS)
+	{
+		sqlite3_stmt *p_stmt;
+		char *sql = "INSERT INTO socket_sku_history \
+			(history_id, \
+				 type,  length,  socket_id,  mapped_memory_limit,  total_mapped_memory,  cache_memory_limit)  \
+			VALUES 		($history_id, \
+				 $type , \
+				 $length , \
+				 $socket_id , \
+				 $mapped_memory_limit , \
+				 $total_mapped_memory , \
+				 $cache_memory_limit )";
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
+		{
+			BIND_INTEGER(p_stmt, "$history_id", history_id);
+			local_bind_socket_sku(p_stmt, p_socket_sku);
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
+		}
+		else
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+		}
+	}
+	return rc;
+}
+
+enum db_return_codes db_get_socket_sku_by_socket_id(const PersistentStore *p_ps,
+	const unsigned int socket_id,
+	struct db_socket_sku *p_socket_sku)
+{
+	memset(p_socket_sku, 0, sizeof (struct db_socket_sku));
+	enum db_return_codes rc = DB_ERR_FAILURE;
+	sqlite3_stmt *p_stmt;
+	char *sql = "SELECT \
+		type,  length,  socket_id,  mapped_memory_limit,  total_mapped_memory,  cache_memory_limit  \
+		FROM socket_sku \
+		WHERE  socket_id = $socket_id";
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
+	{
+		BIND_INTEGER(p_stmt, "$socket_id", (unsigned int)socket_id);
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
+		{
+			local_row_to_socket_sku(p_ps, p_stmt, p_socket_sku);
+			local_get_socket_sku_relationships(p_ps, p_stmt, p_socket_sku);
+			rc = DB_SUCCESS;
+		}
+		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+	}
+	return rc;
+}
+enum db_return_codes db_update_socket_sku_by_socket_id(const PersistentStore *p_ps,
+	const unsigned int socket_id,
+	struct db_socket_sku *p_socket_sku)
+{
+	sqlite3_stmt *p_stmt;
+	enum db_return_codes rc = DB_SUCCESS;
+	char *sql = "UPDATE socket_sku \
+	SET \
+	type=$type \
+		,  length=$length \
+		,  socket_id=$socket_id \
+		,  mapped_memory_limit=$mapped_memory_limit \
+		,  total_mapped_memory=$total_mapped_memory \
+		,  cache_memory_limit=$cache_memory_limit \
+		  \
+	WHERE socket_id=$socket_id ";
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
+	{
+		BIND_INTEGER(p_stmt, "$socket_id", (unsigned int)socket_id);
+		local_bind_socket_sku(p_stmt, p_socket_sku);
+		sql_rc = sqlite3_step(p_stmt);
+		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+	}
+	return rc;
+}
+enum db_return_codes db_delete_socket_sku_by_socket_id(const PersistentStore *p_ps,
+	const unsigned int socket_id)
+{
+	enum db_return_codes rc = DB_ERR_FAILURE;
+	sqlite3_stmt *p_stmt;
+	char *sql = "DELETE FROM socket_sku \
+				 WHERE socket_id = $socket_id";
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
+	{
+		BIND_INTEGER(p_stmt, "$socket_id", (unsigned int)socket_id);
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
+		{
+			rc = DB_SUCCESS;
+		}
+		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+	}
+	return rc;
+}
+
+enum db_return_codes db_get_socket_sku_history_by_history_id_count(const PersistentStore *p_ps, 
+	int history_id,
+	int *p_count)
+{
+	enum db_return_codes rc = DB_ERR_FAILURE;
+	*p_count = 0;
+	sqlite3_stmt *p_stmt;
+	char buffer[1024];
+	snprintf(buffer, 1024, "select count(*) FROM socket_sku_history WHERE  history_id = '%d'", history_id);
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
+	{
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
+		{
+			*p_count = sqlite3_column_int(p_stmt, 0);
+			rc = DB_SUCCESS;
+		}
+		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+	}
+	return rc;
+}
+enum db_return_codes db_get_socket_sku_history_count(const PersistentStore *p_ps, int *p_count)
+{
+	enum db_return_codes rc = DB_ERR_FAILURE;
+	*p_count = 0;
+	sqlite3_stmt *p_stmt;
+	char buffer[1024];
+	snprintf(buffer, 1024, "select count(*) FROM socket_sku_history");
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
+	{
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
+		{
+			*p_count = sqlite3_column_int(p_stmt, 0);
+			rc = DB_SUCCESS;
+		}
+		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+	}
+	return rc;
+}
+int db_get_socket_sku_history_by_history_id(const PersistentStore *p_ps,
+	struct db_socket_sku *p_socket_sku,
+	int history_id,
+	int socket_sku_count)
+{
+	int rc = DB_ERR_FAILURE;
+	memset(p_socket_sku, 0, sizeof (struct db_socket_sku) * socket_sku_count);
+	sqlite3_stmt *p_stmt;
+	char *sql = "SELECT \
+		type,  length,  socket_id,  mapped_memory_limit,  total_mapped_memory,  cache_memory_limit  \
+		FROM socket_sku_history WHERE history_id = $history_id";
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
+	{
+		int index = 0;
+		BIND_INTEGER(p_stmt, "$history_id", history_id);
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < socket_sku_count)
+		{
+			rc = DB_SUCCESS;
+			local_row_to_socket_sku(p_ps, p_stmt, &p_socket_sku[index]);
+			local_get_socket_sku_relationships_history(p_ps, p_stmt, &p_socket_sku[index], history_id);
+			index++;
+		}
+		sqlite3_finalize(p_stmt);
+		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+	}
+	return rc;
+}
+enum db_return_codes db_delete_socket_sku_history(const PersistentStore *p_ps)
+{
+	return run_sql_no_results(p_ps->db, "DELETE FROM socket_sku_history");
+}
+
+/*
+ * --- END socket_sku ----------------
  */
 /*
  * --- interleave_capability ----------------
@@ -34641,6 +35103,8 @@ enum db_return_codes db_clear_history(PersistentStore *p_ps)
 	
 	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM runtime_config_validation_history"));
 	
+	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM socket_sku_history"));
+	
 	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM interleave_capability_history"));
 	
 	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM platform_info_capability_history"));
@@ -34834,6 +35298,9 @@ enum db_return_codes db_clear_state(PersistentStore *p_ps)
 	
 	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM runtime_config_validation_history"));
 	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM runtime_config_validation"));
+	
+	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM socket_sku_history"));
+	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM socket_sku"));
 	
 	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM interleave_capability_history"));
 	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM interleave_capability"));
@@ -35106,6 +35573,12 @@ enum db_return_codes db_roll_history(PersistentStore *p_ps, int max)
 	
 	snprintf(sql, 1024,
 				"DELETE FROM runtime_config_validation_history "
+				"WHERE history_id NOT IN "
+				"(SELECT history_id FROM history ORDER BY ROWID DESC LIMIT %d)", max); 
+	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, sql));
+	
+	snprintf(sql, 1024,
+				"DELETE FROM socket_sku_history "
 				"WHERE history_id NOT IN "
 				"(SELECT history_id FROM history ORDER BY ROWID DESC LIMIT %d)", max); 
 	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, sql));

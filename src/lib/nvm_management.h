@@ -1170,6 +1170,8 @@ struct socket
 	NVM_UINT8 stepping; // Physical processor stepping number (via CPUID)
 	char manufacturer[NVM_SOCKET_MANUFACTURER_LEN]; // Physical processor manufacturer (via CPUID)
 	NVM_UINT16 logical_processor_count; // Logical processor count on node (incl. Hyperthreading)
+	NVM_UINT64 mapped_memory_limit; // Maximum allowed memory (via PCAT)
+	NVM_UINT64 total_mapped_memory; // Current occupied memory (via PCAT)
 };
 
 struct job

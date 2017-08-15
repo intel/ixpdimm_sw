@@ -49,8 +49,10 @@ extern "C"
 #define	PLATFORM_INFO_TABLE_SIZE	sizeof (struct platform_capabilities_ext_table)
 #define	MEMORY_INTERLEAVE_TABLE_SIZE	sizeof (struct memory_interleave_capabilities_ext_table)
 #define	RT_CONFIG_TABLE_SIZE	sizeof (struct reconfig_input_validation_ext_table)
+#define	MGMT_ATTR_TABLE_SIZE	sizeof (struct mgmt_attributes_ext_table)
+#define	SOCKET_INFO_TABLE_SIZE	sizeof (struct socket_information_table)
 #define	MGMT_SW_CONFIG_SUPPORTED(bits)	((bits) & 1)
-#define	RUNTIME_CONFIG_SUPPORTED(bits) ((bits >> 1) & 1)
+#define	RUNTIME_CONFIG_SUPPORTED(bits)	((bits >> 1) & 1)
 #define	PMEM_MIRROR_SUPPORTED(bits)	((bits) & 1)
 #define	PMEM_SPARE_SUPPORTED(bits)	((bits >> 1) & 1)
 #define	PMEM_MIGRATION_SUPPORTED(bits)	((bits >> 2) & 1)
@@ -70,7 +72,8 @@ enum pcat_ext_table_type
 	PCAT_TABLE_PLATFORM_INFO = 0,
 	PCAT_TABLE_MEMORY_INTERLEAVE_INFO = 1,
 	PCAT_TABLE_RECONFIG_INPUT_VALIDATION = 2,
-	PCAT_TABLE_MGMT_ATTRIBUTES = 3
+	PCAT_TABLE_MGMT_ATTRIBUTES = 3,
+	PCAT_TABLE_SOCKET_INFO = 6,
 };
 
 /*
@@ -145,6 +148,7 @@ struct pcat_extension_table_header
 	 * 1 - Memory Interleave Capability Information Table
 	 * 2 - Re-Configuration Input Validation Interface Table
 	 * 3 - Configuration Management Attributes Extension Table
+	 * 6 - Socket SKU Information Table
 	 */
 	NVM_UINT16 type;
 
@@ -390,8 +394,8 @@ struct reconfig_input_validation_ext_table
 } __attribute__((packed));
 
 /*
- * Re-configuration Input Validation Extension Table
- * Type 2
+ * Configuration Management Attributes Extension Table
+ * Type 3
  */
 struct mgmt_attributes_ext_table
 {
@@ -418,6 +422,39 @@ struct mgmt_attributes_ext_table
 	NVM_UINT8 uid_data[0];
 
 } __attribute__((packed));
+
+/*
+ * Socket SKU Information Table
+ * Type 6
+ */
+struct socket_information_table
+{
+	/*
+	 * Header
+	 */
+	struct pcat_extension_table_header header;
+
+	NVM_UINT16 socket_id; // Zero indexed NUMA node identifier
+
+	NVM_UINT8 reserved[2];
+
+	/*
+	 * The total amount of physical memory in bytes that is allowed to be mapped into the SPA
+	 */
+	NVM_UINT64 mapped_memory_limit;
+
+	/*
+	 * Total amount of physical memory in bytes that is currently mapped info the SPA
+	 */
+	NVM_UINT64 total_mapped_memory;
+
+	/*
+	 * Total amount of physical memory in bytes that is used for caching when system is in 2LM mode
+	 */
+	NVM_UINT64 cache_memory_limit;
+
+} __attribute__((packed));
+
 
 /*
  * BIOS PCAT Table

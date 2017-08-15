@@ -32,7 +32,17 @@
 #ifndef SYSTEM_H_
 #define	SYSTEM_H_
 
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <string/s_str.h>
+#include <persistence/logging.h>
+#include <persistence/lib_persistence.h>
+#include "device_adapter.h"
+#include "device_utilities.h"
+#include "capabilities.h"
 #include "nvm_management.h"
+#include "platform_capabilities.h"
 
 /*
  * Retrieve basic information about the host server the native API library is running on.
@@ -141,5 +151,33 @@ int get_socket(NVM_UINT16 socket_id, struct socket *p_socket);
  * Caller is responsible for freeing the memory at *pp_smbios_table.
  */
 int get_smbios_table_alloc(NVM_UINT8 **pp_smbios_table, size_t *p_allocated_size);
+
+/*
+ * Retrieves Socket SKU information about a given processor socket.
+ * @param[in] p_pcat
+ *		A pointer to a #bios_capabilities structure allocated by the caller.
+ * @param[in,out] p_socket
+ *		A pointer to a #socket structure allocated by the caller.
+ * @return
+ *		Returns one of the following @link #return_code return_codes: @endlink @n
+ *		#NVM_SUCCESS @n
+ *		#NVM_ERR_INVALIDPARAMETER @n
+ *		#NVM_ERR_ARRAYTOOSMALL @n
+ *		#NVM_ERR_UNKNOWN @n
+ */
+int get_socket_sku(struct bios_capabilities *p_pcat, struct socket *p_socket);
+
+/*
+ * Fetches the PCAT Socket SKU Info table as raw data.
+ * @param[in,out] p_socket
+ *		A pointer to a #socket structure allocated by the caller.
+ * @return
+ *		Returns one of the following @link #return_code return_codes: @endlink @n
+ *		#NVM_SUCCESS @n
+ *		#NVM_ERR_INVALIDPARAMETER @n
+ *		#NVM_ERR_ARRAYTOOSMALL @n
+ *		#NVM_ERR_UNKNOWN @n
+ */
+int get_mapped_memory_info(struct socket *p_socket);
 
 #endif /* SYSTEM_H_ */
