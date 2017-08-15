@@ -185,6 +185,8 @@ static std::string OTHERFAMILYDESCRIPTION_KEY = "OtherFamilyDescription";
 static std::string STEPPING_KEY = "Stepping";
 static std::string NUMBEROFLOGICALPROCESSORS_KEY = "NumberOfLogicalProcessors";
 static std::string TYPE_KEY = "Type";
+static std::string MAPPEDMEMORYLIMIT_KEY = "MappedMemoryLimit";
+static std::string TOTALMAPPEDMEMORY_KEY = "TotalMappedMemory";
 
 // ConformsToProfile attribute keys
 static std::string REGISTEREDNAME_KEY = "RegisteredName";

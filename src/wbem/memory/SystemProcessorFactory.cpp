@@ -69,6 +69,8 @@ void wbem::memory::SystemProcessorFactory::populateAttributeList(
 	attributes.push_back(TYPE_KEY);
 	attributes.push_back(MODEL_KEY);
 	attributes.push_back(MANUFACTURER_KEY);
+	attributes.push_back(MAPPEDMEMORYLIMIT_KEY);
+	attributes.push_back(TOTALMAPPEDMEMORY_KEY);
 }
 
 /*
@@ -198,6 +200,21 @@ wbem::framework::Instance* wbem::memory::SystemProcessorFactory::getInstance(
 				framework::Attribute mfrAttr(std::string(node.manufacturer), false);
 				pInstance->setAttribute(MANUFACTURER_KEY, mfrAttr, attributes);
 			}
+
+			//MappedMemoryLimit
+			if (containsAttribute(MAPPEDMEMORYLIMIT_KEY, attributes))
+			{
+				framework::Attribute mmlAttr((NVM_UINT64)node.mapped_memory_limit, false);
+				pInstance->setAttribute(MAPPEDMEMORYLIMIT_KEY, mmlAttr, attributes);
+			}
+
+			//TotalMappedMemory
+			if (containsAttribute(TOTALMAPPEDMEMORY_KEY, attributes))
+			{
+				framework::Attribute tmmAttr((NVM_UINT64)node.total_mapped_memory, false);
+				pInstance->setAttribute(TOTALMAPPEDMEMORY_KEY, tmmAttr, attributes);
+			}
+
 		}
 	}
 	catch (framework::Exception) // clean up and re-throw

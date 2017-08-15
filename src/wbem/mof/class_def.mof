@@ -282,6 +282,8 @@ class <NVM_WBEM_PREFIX>SystemProcessor : CIM_Processor
 	uint16 Type;
 	uint16 Model;
 	string Manufacturer;
+	uint64 MappedMemoryLimit;
+	uint64 TotalMappedMemory;
 };
 
 [dynamic, provider("intelwbemprovider"), Description("Intel Support Data Service")]
