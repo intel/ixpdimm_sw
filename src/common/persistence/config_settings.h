@@ -179,6 +179,9 @@ extern "C"
 //! SQL Key name for default AppDirect Setting
 #define SQL_KEY_APPDIRECT_SETTINGS "APPDIRECT_SETTINGS"
 
+//! SQL Key name for default AppDirect Granularity
+#define SQL_KEY_APPDIRECT_GRANULARITY "APPDIRECT_GRANULARITY"
+
 // EVENT MONITOR KEYS
 //! SQL Key name for event monitor enabled
 #define	SQL_KEY_EVENT_MONITOR_ENABLED "EVENT_MONITOR_ENABLED"

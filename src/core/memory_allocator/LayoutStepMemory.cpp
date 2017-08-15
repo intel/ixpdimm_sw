@@ -34,6 +34,9 @@
 #include <utility.h>
 #include <LogEnterExit.h>
 #include <core/exceptions/NvmExceptionBadRequest.h>
+#include <persistence/config_settings.h>
+#include <persistence/lib_persistence.h>
+#include <string/s_str.h>
 
 core::memory_allocator::LayoutStepMemory::LayoutStepMemory()
 {
@@ -165,9 +168,25 @@ NVM_UINT64 core::memory_allocator::LayoutStepMemory::getAlignedPersistentPartiti
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	NVM_UINT64 roundedUpPersistentGiB = round_up(persistentPartitionGiB, PM_ALIGNMENT_GIB);
+	NVM_UINT64 appdirect_granularity = 0;
+	char value[CONFIG_VALUE_LEN];
+	int rc = get_config_value(SQL_KEY_APPDIRECT_GRANULARITY, value);
+	if (rc != NVM_SUCCESS)
+	{
+		COMMON_LOG_DEBUG_F("Failed to retrieve key %s. ", SQL_KEY_APPDIRECT_GRANULARITY);
+		appdirect_granularity = PM_RECOMMENDED_ALIGNMENT_GIB;
+	}
+	else if (strcmp(value, "RECOMMENDED") == 0)
+	{
+		appdirect_granularity = PM_RECOMMENDED_ALIGNMENT_GIB;
+	}
+	else
+	{
+		appdirect_granularity = s_strtoull(value, CONFIG_VALUE_LEN, NULL, &appdirect_granularity);
+	}
+	NVM_UINT64 roundedUpPersistentGiB = round_up(persistentPartitionGiB, appdirect_granularity);
 	NVM_UINT64 roundedUpDiff = roundedUpPersistentGiB - persistentPartitionGiB;
-	NVM_UINT64 roundedDownPersistentGiB = round_down(persistentPartitionGiB, PM_ALIGNMENT_GIB);
+	NVM_UINT64 roundedDownPersistentGiB = round_down(persistentPartitionGiB, appdirect_granularity);
 	NVM_UINT64 roundedDownDiff = persistentPartitionGiB - roundedDownPersistentGiB;
 
 	NVM_UINT64 alignedPersistentPartitionGiB = 0;

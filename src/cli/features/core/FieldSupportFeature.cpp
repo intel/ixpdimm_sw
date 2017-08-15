@@ -283,6 +283,8 @@ void cli::nvmcli::FieldSupportFeature::getPaths(cli::framework::CommandSpecList 
 					"The default value is 100. The valid range is 0-100.");
 	changePreferences.addProperty(SQL_KEY_APPDIRECT_SETTINGS, false, "RECOMMENDED|(IMCSize)_(ChannelSize)",
 			true, "The interleave settings to use when creating App Direct capacity in the format: (IMCSize_ChannelSize)");
+	changePreferences.addProperty(SQL_KEY_APPDIRECT_GRANULARITY, false, "RECOMMENDED|1",
+				true, "The minimum App Direct granularity per AEP DIMM supported by the command Create Memory Allocation Goal.");
 
 	cli::framework::CommandSpec showLogs(SHOW_LOGS, TR("Show Logs"), framework::VERB_SHOW,
 			TR("Show " NVM_DIMM_NAME " related debug messages."));
@@ -1768,7 +1770,8 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::showPreferences(
 			(*prefIter == SQL_KEY_CLI_SIZE) ||
 			(*prefIter == SQL_KEY_PERFORMANCE_MONITOR_ENABLED) ||
 			(*prefIter == SQL_KEY_EVENT_MONITOR_ENABLED) ||
-			(*prefIter == SQL_KEY_APPDIRECT_SETTINGS))
+			(*prefIter == SQL_KEY_APPDIRECT_SETTINGS ||
+			 *prefIter == SQL_KEY_APPDIRECT_GRANULARITY))
 		{
 			memset(currentSetting, 0, sizeof (currentSetting));
 			get_config_value((*prefIter).c_str(), currentSetting);
@@ -1796,7 +1799,6 @@ std::vector<std::string> cli::nvmcli::FieldSupportFeature::getSupportedPreferenc
 
 	preferences.push_back(SQL_KEY_CLI_DIMM_ID);
 	preferences.push_back(SQL_KEY_CLI_SIZE);
-	preferences.push_back(SQL_KEY_APPDIRECT_SETTINGS);
 	preferences.push_back(SQL_KEY_PERFORMANCE_MONITOR_ENABLED);
 	preferences.push_back(SQL_KEY_PERFORMANCE_MONITOR_INTERVAL_MINUTES);
 	preferences.push_back(SQL_KEY_EVENT_MONITOR_ENABLED);
@@ -1804,6 +1806,8 @@ std::vector<std::string> cli::nvmcli::FieldSupportFeature::getSupportedPreferenc
 	preferences.push_back(SQL_KEY_EVENT_LOG_MAX);
 	preferences.push_back(SQL_KEY_LOG_MAX);
 	preferences.push_back(SQL_KEY_SUPPORT_SNAPSHOT_MAX);
+	preferences.push_back(SQL_KEY_APPDIRECT_SETTINGS);
+	preferences.push_back(SQL_KEY_APPDIRECT_GRANULARITY);
 
 	return preferences;
 }
@@ -1856,8 +1860,17 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::changePreferences(
 			else if (framework::stringsIEqual(propIter->first, SQL_KEY_APPDIRECT_SETTINGS))
 			{
 				// Recommended|(IMCSize_ChannelSize)
-				if(!framework::stringsIEqual(propIter->second, PREFERENCE_APPDIRECT_SETTING_DEFAULT) &&
+				if(!framework::stringsIEqual(propIter->second, PREFERENCE_RECOMMENDED) &&
 				   !appDirectSettingIsValid(parsedCommand))
+				{
+					validValue = false;
+				}
+			}
+			else if (framework::stringsIEqual(propIter->first, SQL_KEY_APPDIRECT_GRANULARITY))
+			{
+				// Recommended|1
+				if(!framework::stringsIEqual(propIter->second, PREFERENCE_RECOMMENDED) &&
+				   !framework::stringsIEqual(propIter->second, PREFERENCE_APPDIRECT_GRANULARITY_1GiB))
 				{
 					validValue = false;
 				}
@@ -1920,7 +1933,7 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::changePreferences(
 							pListResult->setErrorCode(pADError->getErrorCode());
 							COMMON_LOG_ERROR_F("%s", pADError->outputText().c_str());
 						}
-						else if (!framework::stringsIEqual(propIter->second, PREFERENCE_APPDIRECT_SETTING_DEFAULT) &&
+						else if (!framework::stringsIEqual(propIter->second, PREFERENCE_RECOMMENDED) &&
 							 !appDirectSettingIsSupported(parsedCommand))
 						{
 							pADError = new framework::SyntaxErrorBadValueResult(

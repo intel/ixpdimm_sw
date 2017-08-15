@@ -112,8 +112,9 @@ static const std::string PREFERENCE_SIZE_TB = "TB"; // Terabytes
 
 static const std::string PREFERENCE_ENABLED = "1";
 static const std::string PREFERENCE_DISABLED = "0";
-static const std::string PREFERENCE_APPDIRECT_SETTING_DEFAULT = "RECOMMENDED";
+static const std::string PREFERENCE_RECOMMENDED = "RECOMMENDED";
 
+static const std::string PREFERENCE_APPDIRECT_GRANULARITY_1GiB = "1";
 static const std::string SHOWLOGS_COUNT = "Count";
 
 /*!

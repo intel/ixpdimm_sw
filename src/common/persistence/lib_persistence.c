@@ -480,6 +480,8 @@ int set_default_config_settings(PersistentStore *p_ps)
 		add_config_value_to_pstore(p_ps, SQL_KEY_CLI_DIMM_ID, "HANDLE");
 		add_config_value_to_pstore(p_ps, SQL_KEY_CLI_SIZE, "AUTO");
 		add_config_value_to_pstore(p_ps, SQL_KEY_APPDIRECT_SETTINGS, "RECOMMENDED");
+		add_config_value_to_pstore(p_ps, SQL_KEY_APPDIRECT_GRANULARITY, "RECOMMENDED");
+
 		rc = COMMON_SUCCESS;
 	}
 	return rc;
