@@ -113,14 +113,14 @@ void cli::nvmcli::NamespaceFeature::getPaths(cli::framework::CommandSpecList &li
 			"characters."));
 	createNamespace.addProperty(CREATE_NS_PROP_OPTIMIZE, false, "CopyOnWrite|None", true,
 			TR("If the namespace has CopyOnWrite optimization turned on after creation."));
-	createNamespace.addProperty(CREATE_NS_PROP_ENABLED, false, "0|1|False|True", true,
+	createNamespace.addProperty(CREATE_NS_PROP_ENABLED, false, "0|1", true,
 			TR("Enable or disable the namespace after creation. "
 					"A disabled namespace is hidden from the OS by the driver."));
-	createNamespace.addProperty(CREATE_NS_PROP_ENCRYPTION, false, "0|1|False|True", true,
+	createNamespace.addProperty(CREATE_NS_PROP_ENCRYPTION, false, "No|Yes|Ignore", true,
 			TR("If the namespace has Encryption turned on after creation."));
-	createNamespace.addProperty(CREATE_NS_PROP_ERASECAPABLE, false, "0|1|False|True", true,
+	createNamespace.addProperty(CREATE_NS_PROP_ERASECAPABLE, false, "No|Yes|Ignore", true,
 			TR("If the namespace supports erase capability after creation."));
-	createNamespace.addProperty(CREATE_NS_PROP_CAPACITY, false, "capacity", true,
+	createNamespace.addProperty(CREATE_NS_PROP_CAPACITY, false, "GiB", true,
 			TR("The size of the namespace in GB. Capacity and BlockCount are exclusive "
 					"and therefore cannot be used together. Note: Capacity can only be provided "
 					"as decimal gigabytes and not gibibytes (e.g. 16.7 GB vs 16 GiB)."));
@@ -139,7 +139,7 @@ void cli::nvmcli::NamespaceFeature::getPaths(cli::framework::CommandSpecList &li
 	modifyNamespace.addProperty(CREATE_NS_PROP_ENABLED, false, "0|1", true,
 			TR("Enable or disable the namespace.  A disabled namespace is hidden from the OS by the "
 			"driver."));
-	modifyNamespace.addProperty(CREATE_NS_PROP_CAPACITY, false, "capacity", true,
+	modifyNamespace.addProperty(CREATE_NS_PROP_CAPACITY, false, "GiB", true,
 			TR("Change the size of the namespace."));
 
 	cli::framework::CommandSpec deleteNamespace(DELETE_NAMESPACE, TR("Delete Namespace"), framework::VERB_DELETE,

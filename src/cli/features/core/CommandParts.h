@@ -49,6 +49,7 @@ const std::string NAMESPACEIDS_STR = "NamespaceIDs";
 const std::string SOCKETIDS_STR = "SocketIDs";
 const std::string JOBIDS_STR = "JobIDs";
 const std::string POOLIDS_STR = "PoolIDs";
+const std::string POOLID_STR = "PoolID";
 
 /*
  * These are some common targets.  Required and non-required versions are included where it has been
@@ -69,6 +70,9 @@ const framework::CommandSpecPart TARGET_GOAL_R = {"-goal", true, "", false,
 		N_TR("The memory allocation goal."), "", false};
 const framework::CommandSpecPart TARGET_POOL = {"-pool", false, POOLIDS_STR, false, N_TR("Pool target.")};
 const framework::CommandSpecPart TARGET_POOL_R = {"-pool", true, POOLIDS_STR, false, N_TR("Pool target is required.")};
+const framework::CommandSpecPart TARGET_PCD = {"-pcd", false, "", false, N_TR("Platform Configuration Data target.")};
+const framework::CommandSpecPart TARGET_1_POOL = {"-pool", false, POOLID_STR, false, N_TR("Pool target.")};
+const framework::CommandSpecPart TARGET_1_POOL_R = {"-pool", true, POOLID_STR, false, N_TR("Pool target is required.")};
 const framework::CommandSpecPart TARGET_SUPPORT = {"-support", false, "", true, N_TR("Support target.")};
 const framework::CommandSpecPart TARGET_SUPPORT_R = {"-support", true, "", true, N_TR("Support target is required.")};
 const framework::CommandSpecPart TARGET_MEMORYRESOURCES_R = {"-memoryresources", true, "", false, "MemoryResources target is required."};

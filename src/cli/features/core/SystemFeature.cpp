@@ -118,7 +118,7 @@ void cli::nvmcli::SystemFeature::getPaths(cli::framework::CommandSpecList &list)
 	modifyDevice.addProperty(VIRALPOLICY_PROPERTYNAME, false, "0|1", true,
 			TR("Whether the viral policies are enabled."));
 
-	framework::CommandSpec setFwLogging(SET_FW_LOGGING, TR("Set Firmware Logging"), framework::VERB_SET,
+	framework::CommandSpec setFwLogging(SET_FW_LOGGING, TR("Set Firmware Log Level"), framework::VERB_SET,
 			TR("Set the firmware logging level on one or more " NVM_DIMM_NAME "s."));
 	setFwLogging.addTarget(TARGET_DIMM.name, true,
 			DIMMIDS_STR, false,

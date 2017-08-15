@@ -79,7 +79,7 @@ void cli::nvmcli::ValidationFeature::getPaths(cli::framework::CommandSpecList &l
 			"triggered on a subsequent read of the poisoned address. The caller is responsible "
 			"for keeping a list of injected poison errors in order to properly clear them after "
 			"testing is complete."));
-	injectError.addProperty(POISON_MEMORY_TYPE_PROPERTYNAME, false, "memory type", true,
+	injectError.addProperty(POISON_MEMORY_TYPE_PROPERTYNAME, false, "PatrolScrub|MemoryMode|AppDirect", true,
 			TR("The type of memory to poison. One of PatrolScrub(Default), MemoryMode, AppDirect."
 			"If the address to poison is not currently allocated as the specified "
 			"memory type, an error is occured"));

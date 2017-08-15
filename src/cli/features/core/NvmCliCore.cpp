@@ -126,9 +126,10 @@ void registerFeatures()
 
 	cli::framework::FeatureBase *pFieldSupportFeature = new cli::nvmcli::FieldSupportFeature();
 	pFrameworkInst->registerFeature("FieldSupportFeature", pFieldSupportFeature);
-
+#ifdef BUILD_SIM
 	cli::framework::FeatureBase *pSimulatorFeature = new cli::nvmcli::SimulatorFeature();
 	pFrameworkInst->registerFeature("SimulatorFeature", pSimulatorFeature);
+#endif
 }
 
 void unRegisterFeatures()
@@ -141,5 +142,7 @@ void unRegisterFeatures()
 	pFrameworkInst->removeFeature("SensorFeature");
 	pFrameworkInst->removeFeature("ValidationFeature");
 	pFrameworkInst->removeFeature("FieldSupportFeature");
+#ifdef BUILD_SIM
 	pFrameworkInst->removeFeature("SimulatorFeature");
+#endif
 }

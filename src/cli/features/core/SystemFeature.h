@@ -137,7 +137,8 @@ class NVM_API SystemFeature : public cli::nvmcli::VerboseFeatureBase
 			ERASE_DEVICE_DATA,
 			SHOW_MEMORYRESOURCES,
 			SHOW_SYSTEM_CAPABILITIES,
-			SHOW_TOPOLOGY
+			SHOW_TOPOLOGY,
+			SHOW_DEVICES_PLATFORM_CONFIGURATION_DATA
 		};
 
 		std::string (* m_uidToDimmIdStr)(const std::string &dimmUid)

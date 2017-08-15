@@ -56,7 +56,7 @@ def createCommandList():
 def prepareBracketWordForFormatting(string):
 	newstring = ""
 	spaceAroundValuesForBold = 0
-	if "|" in string and "GB|GiB" not in string:
+	if "|" in string:
 		spaceAroundValuesForBold = 1
 	for char in string:
 		if char == '[':
@@ -131,19 +131,19 @@ def addSpacesForKeyPair(string):
 #################################################################
 def formatCommands(commandlist):
 	manpagecommandlist = []
-	# for each command, format for man page		
+	# for each command, format for man page
 	for i in range(len(commandlist)):
 		# set command name as section header on man page
 		manpagecommand = "\n.B " + commandlist[i][0] + "\n.RS\n"
-		
+
 		# split the line into words so we can tackle one word at a time
 		# cmd[0] ends up being the verb, and cmd[1] is a space,
 		# and cmd[2] is the rest of the command
 		cmd = commandlist[i][1].partition(" ")
-	
+
 		# format the command syntax, first word being the bolded verb
 		manpagecommand += ".B " + cmd[0]
-		
+
 		# remove spaces before & after '=' so we can parse the value/pair
 		# setting together later
 		remaining = cmd[2].replace(" = ", "=")
@@ -191,9 +191,19 @@ def formatCommands(commandlist):
 					if '(' in keyPairSplit[keysplitoffset]:
 							manpagecommand += "\n" + keyPairSplit[keysplitoffset]
 					else:
-						manpagecommand += "\n.B " + keyPairSplit[keysplitoffset]
-					
-			# if it starts with brackets, need to separate with spaces so can 
+						# right side of "=", alternating bold 
+						# for example, in case of [something = 1], show bold "1" and unbold "]"
+						manpagecommand += "\n.BR " + keyPairSplit[keysplitoffset]
+
+				keysplitoffset += 1
+				totalNumbOfPart = len(keyPairSplit)
+				# already parsed keysplitoffset pieces of the part, add rest if any
+				while totalNumbOfPart > keysplitoffset:
+					# likely to be "]", do not add new line
+					manpagecommand += " " + keyPairSplit[keysplitoffset]
+					keysplitoffset += 1
+
+			# if it starts with brackets, need to separate with spaces so can
 			# use .B or .RB formatting as appropriate
 			elif part.startswith("[") or part.startswith("("):
 				BracketWordWithSpaces = prepareBracketWordForFormatting(part);

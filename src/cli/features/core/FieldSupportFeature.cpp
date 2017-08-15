@@ -141,7 +141,7 @@ void cli::nvmcli::FieldSupportFeature::getPaths(cli::framework::CommandSpecList 
 					"supplying one or more comma-separated " NVM_DIMM_NAME " identifiers. The default is to "
 					"display performance metrics for all manageable " NVM_DIMM_NAME "s."));
 	showPerformance.addTarget(PERFORMANCE_TARGET, true,
-		"BytesRead|BytesWritten|HostReads|HostWrites|BlockWrites|BlockReads", false,
+		"BytesRead|BytesWritten|HostReads|HostWrites|BlockReads|BlockWrites", false,
 			TR("Restrict output to a specific performance metric by supplying the metric name. "
 					"The default is to display all performance metrics."));
 
@@ -200,7 +200,7 @@ void cli::nvmcli::FieldSupportFeature::getPaths(cli::framework::CommandSpecList 
 				TR("Turns off the flag that signals a corrective action on the event."));
 	acknowledgeEvent.addTarget(TARGET_EVENT_STR, true, EVENTID_STR, true,
 				TR("The identifier of the event to be acknowledged."));
-	acknowledgeEvent.addProperty(ACTIONREQUIRED_PROPERTY_NAME, true, "false|0", true,
+	acknowledgeEvent.addProperty(ACTIONREQUIRED_PROPERTY_NAME, true, "0", true,
 			TR("A flag indicating whether the event needs a corrective action or acknowledgment."));
 
 	cli::framework::CommandSpec showEvents(SHOW_EVENTS, TR("Show Events"), framework::VERB_SHOW,
@@ -257,7 +257,7 @@ void cli::nvmcli::FieldSupportFeature::getPaths(cli::framework::CommandSpecList 
 	changePreferences.addTarget(TARGET_PREFERENCES);
 	changePreferences.addProperty(SQL_KEY_CLI_DIMM_ID, false, "HANDLE|UID",
 			true, "The default display of " NVM_DIMM_NAME " identifiers.");
-	changePreferences.addProperty(SQL_KEY_CLI_SIZE, false, "AUTO|AUTO_10|B|MiB|GiB|TiB|MB|GB|TB",
+	changePreferences.addProperty(SQL_KEY_CLI_SIZE, false, "AUTO|AUTO_10|B|MiB|MB|GiB|GB|TiB|TB",
 			true, "The default display of capacities in the CLI.");
 	changePreferences.addProperty(SQL_KEY_PERFORMANCE_MONITOR_ENABLED, false, "0|1",
 			true, "Whether or not the monitor is periodically storing performance metrics "

@@ -41,6 +41,9 @@ There was not enough memory to complete the requested operation.
 .TP
 .B 3
 The command is not supported in the current context.
+.TP
+.B 201
+Syntax error.
 
 EXAMPLE
 .B **cliName** show -dimm
@@ -70,12 +73,12 @@ NewPassphrase=myNewPassphrase
 .RE
 .RE
 
-.B **cliName** create -goal VolatileSize=32 PersistentSize=Remaining PersistentSettings=4KB_4KB
+.B **cliName** create -goal -dimm 1234 PersistentMemoryType=AppDirect
 .RS
-Configure the capacity on each DIMM with 32 GiB of volatile memory, and the remaining persistent memory with specific QoS attributes.
+Configure the capacity on a specific DIMM in AppDirect Mode.
 .RE
 
-.B nvncli set -sensor MediaTemperature -dimm 1234 CriticalThreshold=51 EnabledState=1
+.B **cliName** set -sensor MediaTemperature -dimm 1234 NonCriticalThreshold=51 EnabledState=1
 .RS
 Change the media temperature threshold to 51 on the specified **abbrProductName** and enable the alarm.
 .RE
@@ -83,11 +86,6 @@ Change the media temperature threshold to 51 on the specified **abbrProductName*
 .B **cliName** show -dimm -performance BytesRead
 .RS
 Show the number of bytes read for all DIMMs in the server.
-.RE
-
-.B nvncli set -sensor MediaTemperature -dimm 1234 CriticalThreshold=51 EnabledState=1
-.RS
-Change the media temperature threshold to 51 on the specified **abbrProductName** and enable the alarm.
 .RE
 
 .B **cliName** show -a -namspace 12345678-1234-1234-1234-123456789012
