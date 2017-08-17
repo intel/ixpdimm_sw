@@ -54,7 +54,7 @@ extern "C"
 			(((arr[0] >> 4) & 0xF) * 10) + (arr[0] & 0xF));
 
 #define	SWAP_SHORT(x) \
-	(((x & 0xFF) << 8) + ((x & 0xFF00) >> 8))
+	(NVM_UINT16)(((x & 0xFF) << 8) + ((x & 0xFF00) >> 8))
 
 #define	DEVICE_UID_BYTES 9
 

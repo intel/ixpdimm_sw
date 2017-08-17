@@ -46,7 +46,7 @@
 #define	NS_INDEX_FREEMAP_LEN	128	// Map for 1024 labels
 #define	NS_INDEX_PADDING	56	// Alignment to 256B boundary
 #define	NS_INDEX_MAJOR	1
-#define	NS_INDEX_MINOR	1
+#define	NS_INDEX_MINOR	2 // Used for windows only
 #define	MAX_NS_LABELS	1020
 #define	MAX_NAMESPACES	(MAX_NS_LABELS - 1) // Need to leave one free for updates
 #define	NS_FLAGS_UPDATING(flags)	(flags & 0b100)
@@ -285,9 +285,10 @@ int collect_dimm_nslsa_list(struct ns_data **pp_ns_data)
 int get_ns_data_dimm_index_from_handle(struct ns_data *p_ns_data, NVM_UINT32 handle)
 {
 	int index = -1;
-	for (int i = 0; i < p_ns_data->dimm_count; i++)
+	struct device_discovery *dimm = p_ns_data->dimm_list;
+	for (int i = 0; i < p_ns_data->dimm_count; i++, dimm++)
 	{
-		if (p_ns_data->dimm_list->device_handle.handle == handle)
+		if (dimm->device_handle.handle == handle)
 		{
 			index = i;
 			break;
@@ -350,7 +351,10 @@ void calculate_iset_cookies(struct ns_data **pp_ns_data)
 				memmove(&data_v1_2[dimm_idx].serial_number,
 					dimm.serial_number, sizeof (NVM_SERIAL_NUMBER));
 				data_v1_2[dimm_idx].vendor_id = dimm.vendor_id;
+				data_v1_2[dimm_idx].vendor_id = SWAP_SHORT(data_v1_2[dimm_idx].vendor_id);
 				data_v1_2[dimm_idx].manufacturing_date = dimm.manufacturing_date;
+				data_v1_2[dimm_idx].manufacturing_date =
+						SWAP_SHORT(data_v1_2[dimm_idx].manufacturing_date);
 				data_v1_2[dimm_idx].manufacturing_location = dimm.manufacturing_location;
 			}
 		}
@@ -463,7 +467,7 @@ NVM_BOOL is_valid_index_block(struct pt_output_ns_index *p_ns_index,
 		COMMON_LOG_INFO_F("Invalid major version on NS Index Block %d", index_pos);
 		rc = 0;
 	}
-	else if (p_ns_index->label_minor_version != NS_INDEX_MINOR)
+	else if (p_ns_index->label_minor_version > NS_INDEX_MINOR)
 	{
 		COMMON_LOG_INFO_F("Invalid minor version on NS Index Block %d", index_pos);
 		rc = 0;
@@ -644,7 +648,7 @@ int get_namespace_index_in_list(const struct ns_data *p_ns_data,
 }
 
 int get_isetid_from_nslabel_cookie(const struct ns_data *p_ns_data,
-	const NVM_UINT64 cookie)
+	const NVM_UINT64 cookie, enum namespace_health *p_ns_health)
 {
 	int iset_id = -1;
 
@@ -661,7 +665,7 @@ int get_isetid_from_nslabel_cookie(const struct ns_data *p_ns_data,
 	if (iset_id < 0)
 	{
 		COMMON_LOG_INFO("Failed to find an interleave set with the matching cookie");
-		iset_id = 1;
+		KEEP_NS_HEALTH(*p_ns_health, NAMESPACE_HEALTH_CRITICAL);
 	}
 
 	return iset_id;
@@ -732,13 +736,15 @@ int init_namespace_from_label(struct ns_data **pp_ns_data,
 				guid_to_uid(p_label->label.uuid, p_ns_details->discovery.namespace_uid);
 				s_strcpy(p_ns_details->discovery.friendly_name,
 						(char *)p_label->label.name, NS_NAME_LEN);
+				p_ns_details->health = NAMESPACE_HEALTH_NORMAL;
 				p_ns_details->type = NAMESPACE_TYPE_APP_DIRECT;
 				p_ns_details->enabled = NAMESPACE_ENABLE_STATE_ENABLED;
 				p_ns_details->block_size = p_label->label.lba_size ? p_label->label.lba_size : 1;
 				p_ns_details->block_count = p_label->label.rawsize / p_ns_details->block_size;
 
 				p_ns_details->namespace_creation_id.interleave_setid =
-					get_isetid_from_nslabel_cookie(*pp_ns_data, p_label->label.iset_cookie);
+					get_isetid_from_nslabel_cookie(*pp_ns_data, p_label->label.iset_cookie,
+							&(p_ns_details->health));
 
 				// is BTT
 				p_ns_details->btt = namespace_has_abstraction_guid(
