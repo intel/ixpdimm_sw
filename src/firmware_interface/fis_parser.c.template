@@ -127,7 +127,7 @@ enum fis_parser_codes {{name|fw_cmd_parser}}(
 			((struct {{r.name|output_payload}} *) (base + current_offset));
 		rc = {{r.name|fw_cmd_parser}}(p_sub_payloads, &p_data->{{r.name}}[p_data->{{r.name}}_count]);
 		p_data->{{r.name}}_count++;
-		current_offset += (i + 1) * sizeof(struct {{r.name|output_payload}});
+		current_offset += sizeof(struct {{r.name|output_payload}});
 	}
 	
 //- endif

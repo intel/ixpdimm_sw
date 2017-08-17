@@ -45,6 +45,7 @@
 int support_store_host(PersistentStore *p_store, int history_id);
 int support_store_sockets(PersistentStore *p_store, int history_id);
 int support_store_platform_capabilities(PersistentStore *p_store, int history_id);
+int support_store_interleave_sets(PersistentStore *p_store, int history_id);
 int support_store_dimm_topology(PersistentStore *p_store,
 		int history_id, struct nvm_topology topol);
 int support_store_identify_dimm(PersistentStore *p_store,
@@ -152,8 +153,7 @@ int nvm_save_state(const char *name, const NVM_SIZE name_len)
 			KEEP_ERROR(rc, support_store_platform_capabilities(p_store, history_id));
 			KEEP_ERROR(rc, support_store_namespaces(p_store, history_id));
 			KEEP_ERROR(rc, support_store_driver_capabilities(p_store, history_id));
-
-			// TODO:  add dimm_long_op_status when implemented
+			KEEP_ERROR(rc, support_store_interleave_sets(p_store, history_id));
 
 			// iterate through each device (for all adapters)
 			int dev_count = get_topology_count();
@@ -1524,7 +1524,7 @@ int support_store_partition_change_table(PersistentStore *p_store,
 	return rc;
 }
 
-int support_store_interleave_set(PersistentStore *p_store,
+int support_store_platform_config_interleave_set(PersistentStore *p_store,
 		int history_id,
 		NVM_NFIT_DEVICE_HANDLE device_handle,
 		const enum config_table_type table_type,
@@ -1642,7 +1642,7 @@ int support_store_extension_tables_in_db(PersistentStore *p_store,
 		else if (p_header->type == INTERLEAVE_TABLE)
 		{
 			// store it in the db
-			rc = support_store_interleave_set(p_store,
+			rc = support_store_platform_config_interleave_set(p_store,
 					history_id,
 					device_handle,
 					table_type,
@@ -1887,5 +1887,50 @@ int support_store_dimm_long_operation_status(PersistentStore *p_store, int histo
 
 	}
 	free(p_payload);
+	return rc;
+}
+
+int support_store_interleave_sets(PersistentStore *p_store, int history_id)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	if ((rc = get_interleave_set_count()) > 0)
+	{
+		int interleave_count = rc;
+		struct nvm_interleave_set interleaves[interleave_count];
+		memset(interleaves, 0, sizeof (interleaves));
+		if ((rc = get_interleave_sets(interleave_count, interleaves)) > 0)
+		{
+			for (int i = 0; i < interleave_count; i++)
+			{
+				struct db_interleave_set db_interleave;
+				memset(&db_interleave, 0, sizeof (db_interleave));
+				db_interleave.id = interleaves[i].id;
+				db_interleave.pcd_interleave_index = interleaves[i].set_index;
+				db_interleave.socket_id = interleaves[i].socket_id;
+				db_interleave.attributes = interleaves[i].attributes;
+				db_interleave.size = interleaves[i].size;
+				db_interleave.available_size = interleaves[i].available_size;
+				db_interleave.cookie_v1_1 = interleaves[i].cookie_v1_1;
+				db_interleave.cookie_v1_2 = interleaves[i].cookie_v1_2;
+				db_interleave.dimm_count = interleaves[i].dimm_count;
+				for (unsigned int j = 0; j < db_interleave.dimm_count; j++)
+				{
+					db_interleave.dimm_handles[j] = interleaves[i].dimms[j];
+					db_interleave.dimm_region_offsets[j] =
+							interleaves[i].dimm_region_offsets[j];
+					db_interleave.dimm_region_pdas[j] =
+							interleaves[i].dimm_region_pdas[j];
+					db_interleave.dimm_sizes[j] = interleaves[i].dimm_sizes[j];
+				}
+
+				KEEP_ERROR(rc, db_save_interleave_set_state(p_store, history_id,
+						&db_interleave));
+			}
+		}
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }

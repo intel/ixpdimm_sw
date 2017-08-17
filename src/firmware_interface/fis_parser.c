@@ -287,7 +287,7 @@ enum fis_parser_codes fis_parse_interleave_information_table(
 			((struct pt_output_id_info_table *) (base + current_offset));
 		rc = fis_parse_id_info_table(p_sub_payloads, &p_data->id_info_table[p_data->id_info_table_count]);
 		p_data->id_info_table_count++;
-		current_offset += (i + 1) * sizeof(struct pt_output_id_info_table);
+		current_offset += sizeof(struct pt_output_id_info_table);
 	}
 	
 	return rc;

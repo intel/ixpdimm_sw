@@ -624,13 +624,12 @@ void calculate_iset_free_capacity(const struct pool_data *p_pool_data,
 	}
 }
 
-int nvm_interleave_to_interleave(
+void nvm_interleave_to_interleave(
 		const struct pool_data *p_pool_data,
 		const struct nvm_interleave_set *p_nvm_iset,
 		struct interleave_set *p_iset)
 {
 	COMMON_LOG_ENTRY();
-	int rc = NVM_SUCCESS;
 
 	p_iset->driver_id = p_nvm_iset->id;
 	p_iset->size = p_nvm_iset->size;
@@ -687,20 +686,18 @@ int nvm_interleave_to_interleave(
 					{
 						KEEP_INTERLEAVE_HEALTH(p_iset->health, INTERLEAVE_HEALTH_DEGRADED)
 					}
+
+					p_iset->mirrored = MIRRORED_INTERLEAVE(p_nvm_iset->attributes);
+
 					// fill the interleave settings from pcd
 					if (!iset_settings_filled)
 					{
-						rc = fill_interleave_set_settings_and_id_from_dimm(
+						int rc = fill_interleave_set_settings_and_id_from_dimm(
 							p_iset, p_pool_data->dimm_list[data_idx].device_handle,
 							p_nvm_iset->dimm_region_pdas[dimm_idx]);
 						if (rc == NVM_SUCCESS)
 						{
 							iset_settings_filled = 1;
-						}
-						else
-						{
-							rc = NVM_SUCCESS;
-							continue;
 						}
 					}
 					p_iset->dimm_count++;
@@ -731,51 +728,46 @@ int nvm_interleave_to_interleave(
 	printf("p_iset->settings.imc = 0x%x\n", p_iset->settings.imc);
 #endif
 
-	COMMON_LOG_EXIT_RETURN_I(rc);
-	return rc;
+	COMMON_LOG_EXIT();
 }
 
 /*
  * Add an interleave set to a pool
  */
-int add_interleave_set_to_pool(const struct pool_data *p_pool_data,
+void add_interleave_set_to_pool(const struct pool_data *p_pool_data,
 		struct pool *p_pool, struct nvm_interleave_set *p_iset)
 {
 	COMMON_LOG_ENTRY();
 
 	// convert the NVM interleave and fill missing data
-	int rc = nvm_interleave_to_interleave(p_pool_data, p_iset,
+	nvm_interleave_to_interleave(p_pool_data, p_iset,
 			&p_pool->ilsets[p_pool->ilset_count]);
-	if (rc == NVM_SUCCESS)
+	struct interleave_set set = p_pool->ilsets[p_pool->ilset_count];
+	p_pool->ilset_count++;
+	// update the pool based on the interleave set
+	for (int iset_dimm = 0; iset_dimm < set.dimm_count; iset_dimm++)
 	{
-		struct interleave_set set = p_pool->ilsets[p_pool->ilset_count];
-		p_pool->ilset_count++;
-		// update the pool based on the interleave set
-		for (int iset_dimm = 0; iset_dimm < set.dimm_count; iset_dimm++)
+		for (int data_dimm = 0; data_dimm < p_pool_data->dimm_count; data_dimm++)
 		{
-			for (int data_dimm = 0; data_dimm < p_pool_data->dimm_count; data_dimm++)
+			if (uid_cmp(p_pool_data->dimm_list[data_dimm].uid, set.dimms[iset_dimm]))
 			{
-				if (uid_cmp(p_pool_data->dimm_list[data_dimm].uid, set.dimms[iset_dimm]))
-				{
-					add_dimm_to_pool(p_pool_data, data_dimm, p_pool);
-					break;
-				}
+				add_dimm_to_pool(p_pool_data, data_dimm, p_pool);
+				break;
 			}
 		}
-		if (set.health == INTERLEAVE_HEALTH_UNKNOWN)
-		{
-			KEEP_POOL_HEALTH(p_pool->health, POOL_HEALTH_UNKNOWN);
-		}
-		else if (set.health == INTERLEAVE_HEALTH_DEGRADED ||
-				set.health == INTERLEAVE_HEALTH_FAILED)
-		{
-			KEEP_POOL_HEALTH(p_pool->health, POOL_HEALTH_ERROR);
-		}
-		update_pool_security_from_iset(p_pool, &set, p_pool_data);
 	}
+	if (set.health == INTERLEAVE_HEALTH_UNKNOWN)
+	{
+		KEEP_POOL_HEALTH(p_pool->health, POOL_HEALTH_UNKNOWN);
+	}
+	else if (set.health == INTERLEAVE_HEALTH_DEGRADED ||
+			set.health == INTERLEAVE_HEALTH_FAILED)
+	{
+		KEEP_POOL_HEALTH(p_pool->health, POOL_HEALTH_ERROR);
+	}
+	update_pool_security_from_iset(p_pool, &set, p_pool_data);
 
-	COMMON_LOG_EXIT_RETURN_I(rc);
-	return rc;
+	COMMON_LOG_EXIT();
 }
 
 /*
@@ -819,12 +811,8 @@ int add_interleave_sets_to_pools(struct pool_data *p_pool_data,
 		// add this interleave set to the pool
 		if (pool_index >= 0)
 		{
-			rc = add_interleave_set_to_pool(p_pool_data, &p_pools[pool_index],
+			add_interleave_set_to_pool(p_pool_data, &p_pools[pool_index],
 				&p_pool_data->iset_list[i]);
-			if (rc != NVM_SUCCESS)
-			{
-				break;
-			}
 		}
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);

@@ -434,7 +434,7 @@ int db_get_history_ids(const PersistentStore *p_ps,
 	return rc;
 }
 // Table count is calculated in CrudSchemaGenerator
-#define	TABLE_COUNT (119)
+#define	TABLE_COUNT (121)
 /*
  * Create a PersistentStore object
  */
@@ -451,7 +451,7 @@ PersistentStore *create_PersistentStore(const char *path, int force)
 			delete_file(path); // make sure doesn't already exist
 		}
 		// build the schema ...
-		struct table { char table_name[256]; char create_statement[2048]; };
+		struct table { char table_name[256]; char create_statement[4096]; };
 		struct table *tables = (struct table *)malloc(TABLE_COUNT * sizeof (struct table));
 		if (tables)
 		{
@@ -2017,6 +2017,223 @@ tables[populate_index++] = ((struct table){"eafd",
 					);"}
 #endif
 );
+tables[populate_index++] = ((struct table){"interleave_set",
+				"CREATE TABLE interleave_set (       \
+					 id INTEGER  PRIMARY KEY  NOT NULL UNIQUE  , \
+					 socket_id INTEGER  , \
+					 size INTEGER  , \
+					 available_size INTEGER  , \
+					 attributes INTEGER  , \
+					 dimm_count INTEGER  , \
+					 dimm_handles_0 INTEGER  , \
+					 dimm_handles_1 INTEGER  , \
+					 dimm_handles_2 INTEGER  , \
+					 dimm_handles_3 INTEGER  , \
+					 dimm_handles_4 INTEGER  , \
+					 dimm_handles_5 INTEGER  , \
+					 dimm_handles_6 INTEGER  , \
+					 dimm_handles_7 INTEGER  , \
+					 dimm_handles_8 INTEGER  , \
+					 dimm_handles_9 INTEGER  , \
+					 dimm_handles_10 INTEGER  , \
+					 dimm_handles_11 INTEGER  , \
+					 dimm_handles_12 INTEGER  , \
+					 dimm_handles_13 INTEGER  , \
+					 dimm_handles_14 INTEGER  , \
+					 dimm_handles_15 INTEGER  , \
+					 dimm_handles_16 INTEGER  , \
+					 dimm_handles_17 INTEGER  , \
+					 dimm_handles_18 INTEGER  , \
+					 dimm_handles_19 INTEGER  , \
+					 dimm_handles_20 INTEGER  , \
+					 dimm_handles_21 INTEGER  , \
+					 dimm_handles_22 INTEGER  , \
+					 dimm_handles_23 INTEGER  , \
+					 dimm_region_pdas_0 INTEGER  , \
+					 dimm_region_pdas_1 INTEGER  , \
+					 dimm_region_pdas_2 INTEGER  , \
+					 dimm_region_pdas_3 INTEGER  , \
+					 dimm_region_pdas_4 INTEGER  , \
+					 dimm_region_pdas_5 INTEGER  , \
+					 dimm_region_pdas_6 INTEGER  , \
+					 dimm_region_pdas_7 INTEGER  , \
+					 dimm_region_pdas_8 INTEGER  , \
+					 dimm_region_pdas_9 INTEGER  , \
+					 dimm_region_pdas_10 INTEGER  , \
+					 dimm_region_pdas_11 INTEGER  , \
+					 dimm_region_pdas_12 INTEGER  , \
+					 dimm_region_pdas_13 INTEGER  , \
+					 dimm_region_pdas_14 INTEGER  , \
+					 dimm_region_pdas_15 INTEGER  , \
+					 dimm_region_pdas_16 INTEGER  , \
+					 dimm_region_pdas_17 INTEGER  , \
+					 dimm_region_pdas_18 INTEGER  , \
+					 dimm_region_pdas_19 INTEGER  , \
+					 dimm_region_pdas_20 INTEGER  , \
+					 dimm_region_pdas_21 INTEGER  , \
+					 dimm_region_pdas_22 INTEGER  , \
+					 dimm_region_pdas_23 INTEGER  , \
+					 dimm_region_offsets_0 INTEGER  , \
+					 dimm_region_offsets_1 INTEGER  , \
+					 dimm_region_offsets_2 INTEGER  , \
+					 dimm_region_offsets_3 INTEGER  , \
+					 dimm_region_offsets_4 INTEGER  , \
+					 dimm_region_offsets_5 INTEGER  , \
+					 dimm_region_offsets_6 INTEGER  , \
+					 dimm_region_offsets_7 INTEGER  , \
+					 dimm_region_offsets_8 INTEGER  , \
+					 dimm_region_offsets_9 INTEGER  , \
+					 dimm_region_offsets_10 INTEGER  , \
+					 dimm_region_offsets_11 INTEGER  , \
+					 dimm_region_offsets_12 INTEGER  , \
+					 dimm_region_offsets_13 INTEGER  , \
+					 dimm_region_offsets_14 INTEGER  , \
+					 dimm_region_offsets_15 INTEGER  , \
+					 dimm_region_offsets_16 INTEGER  , \
+					 dimm_region_offsets_17 INTEGER  , \
+					 dimm_region_offsets_18 INTEGER  , \
+					 dimm_region_offsets_19 INTEGER  , \
+					 dimm_region_offsets_20 INTEGER  , \
+					 dimm_region_offsets_21 INTEGER  , \
+					 dimm_region_offsets_22 INTEGER  , \
+					 dimm_region_offsets_23 INTEGER  , \
+					 dimm_sizes_0 INTEGER  , \
+					 dimm_sizes_1 INTEGER  , \
+					 dimm_sizes_2 INTEGER  , \
+					 dimm_sizes_3 INTEGER  , \
+					 dimm_sizes_4 INTEGER  , \
+					 dimm_sizes_5 INTEGER  , \
+					 dimm_sizes_6 INTEGER  , \
+					 dimm_sizes_7 INTEGER  , \
+					 dimm_sizes_8 INTEGER  , \
+					 dimm_sizes_9 INTEGER  , \
+					 dimm_sizes_10 INTEGER  , \
+					 dimm_sizes_11 INTEGER  , \
+					 dimm_sizes_12 INTEGER  , \
+					 dimm_sizes_13 INTEGER  , \
+					 dimm_sizes_14 INTEGER  , \
+					 dimm_sizes_15 INTEGER  , \
+					 dimm_sizes_16 INTEGER  , \
+					 dimm_sizes_17 INTEGER  , \
+					 dimm_sizes_18 INTEGER  , \
+					 dimm_sizes_19 INTEGER  , \
+					 dimm_sizes_20 INTEGER  , \
+					 dimm_sizes_21 INTEGER  , \
+					 dimm_sizes_22 INTEGER  , \
+					 dimm_sizes_23 INTEGER  , \
+					 pcd_interleave_index INTEGER  , \
+					 cookie_v1_1 INTEGER  , \
+					 cookie_v1_2 INTEGER   \
+					);"});
+			tables[populate_index++] = ((struct table){"interleave_set_history",
+				"CREATE TABLE interleave_set_history (       \
+					history_id INTEGER NOT NULL, \
+					 id INTEGER , \
+					 socket_id INTEGER , \
+					 size INTEGER , \
+					 available_size INTEGER , \
+					 attributes INTEGER , \
+					 dimm_count INTEGER , \
+					 dimm_handles_0 INTEGER , \
+					 dimm_handles_1 INTEGER , \
+					 dimm_handles_2 INTEGER , \
+					 dimm_handles_3 INTEGER , \
+					 dimm_handles_4 INTEGER , \
+					 dimm_handles_5 INTEGER , \
+					 dimm_handles_6 INTEGER , \
+					 dimm_handles_7 INTEGER , \
+					 dimm_handles_8 INTEGER , \
+					 dimm_handles_9 INTEGER , \
+					 dimm_handles_10 INTEGER , \
+					 dimm_handles_11 INTEGER , \
+					 dimm_handles_12 INTEGER , \
+					 dimm_handles_13 INTEGER , \
+					 dimm_handles_14 INTEGER , \
+					 dimm_handles_15 INTEGER , \
+					 dimm_handles_16 INTEGER , \
+					 dimm_handles_17 INTEGER , \
+					 dimm_handles_18 INTEGER , \
+					 dimm_handles_19 INTEGER , \
+					 dimm_handles_20 INTEGER , \
+					 dimm_handles_21 INTEGER , \
+					 dimm_handles_22 INTEGER , \
+					 dimm_handles_23 INTEGER , \
+					 dimm_region_pdas_0 INTEGER , \
+					 dimm_region_pdas_1 INTEGER , \
+					 dimm_region_pdas_2 INTEGER , \
+					 dimm_region_pdas_3 INTEGER , \
+					 dimm_region_pdas_4 INTEGER , \
+					 dimm_region_pdas_5 INTEGER , \
+					 dimm_region_pdas_6 INTEGER , \
+					 dimm_region_pdas_7 INTEGER , \
+					 dimm_region_pdas_8 INTEGER , \
+					 dimm_region_pdas_9 INTEGER , \
+					 dimm_region_pdas_10 INTEGER , \
+					 dimm_region_pdas_11 INTEGER , \
+					 dimm_region_pdas_12 INTEGER , \
+					 dimm_region_pdas_13 INTEGER , \
+					 dimm_region_pdas_14 INTEGER , \
+					 dimm_region_pdas_15 INTEGER , \
+					 dimm_region_pdas_16 INTEGER , \
+					 dimm_region_pdas_17 INTEGER , \
+					 dimm_region_pdas_18 INTEGER , \
+					 dimm_region_pdas_19 INTEGER , \
+					 dimm_region_pdas_20 INTEGER , \
+					 dimm_region_pdas_21 INTEGER , \
+					 dimm_region_pdas_22 INTEGER , \
+					 dimm_region_pdas_23 INTEGER , \
+					 dimm_region_offsets_0 INTEGER , \
+					 dimm_region_offsets_1 INTEGER , \
+					 dimm_region_offsets_2 INTEGER , \
+					 dimm_region_offsets_3 INTEGER , \
+					 dimm_region_offsets_4 INTEGER , \
+					 dimm_region_offsets_5 INTEGER , \
+					 dimm_region_offsets_6 INTEGER , \
+					 dimm_region_offsets_7 INTEGER , \
+					 dimm_region_offsets_8 INTEGER , \
+					 dimm_region_offsets_9 INTEGER , \
+					 dimm_region_offsets_10 INTEGER , \
+					 dimm_region_offsets_11 INTEGER , \
+					 dimm_region_offsets_12 INTEGER , \
+					 dimm_region_offsets_13 INTEGER , \
+					 dimm_region_offsets_14 INTEGER , \
+					 dimm_region_offsets_15 INTEGER , \
+					 dimm_region_offsets_16 INTEGER , \
+					 dimm_region_offsets_17 INTEGER , \
+					 dimm_region_offsets_18 INTEGER , \
+					 dimm_region_offsets_19 INTEGER , \
+					 dimm_region_offsets_20 INTEGER , \
+					 dimm_region_offsets_21 INTEGER , \
+					 dimm_region_offsets_22 INTEGER , \
+					 dimm_region_offsets_23 INTEGER , \
+					 dimm_sizes_0 INTEGER , \
+					 dimm_sizes_1 INTEGER , \
+					 dimm_sizes_2 INTEGER , \
+					 dimm_sizes_3 INTEGER , \
+					 dimm_sizes_4 INTEGER , \
+					 dimm_sizes_5 INTEGER , \
+					 dimm_sizes_6 INTEGER , \
+					 dimm_sizes_7 INTEGER , \
+					 dimm_sizes_8 INTEGER , \
+					 dimm_sizes_9 INTEGER , \
+					 dimm_sizes_10 INTEGER , \
+					 dimm_sizes_11 INTEGER , \
+					 dimm_sizes_12 INTEGER , \
+					 dimm_sizes_13 INTEGER , \
+					 dimm_sizes_14 INTEGER , \
+					 dimm_sizes_15 INTEGER , \
+					 dimm_sizes_16 INTEGER , \
+					 dimm_sizes_17 INTEGER , \
+					 dimm_sizes_18 INTEGER , \
+					 dimm_sizes_19 INTEGER , \
+					 dimm_sizes_20 INTEGER , \
+					 dimm_sizes_21 INTEGER , \
+					 dimm_sizes_22 INTEGER , \
+					 dimm_sizes_23 INTEGER , \
+					 pcd_interleave_index INTEGER , \
+					 cookie_v1_1 INTEGER , \
+					 cookie_v1_2 INTEGER  \
+					);"});
 			int sql_rc;
 			if ((sql_rc = sqlite3_open_v2(path, &(result->db),
 				SQLITE_OPEN_READWRITE|SQLITE_OPEN_CREATE|SQLITE_OPEN_FULLMUTEX, NULL)) == SQLITE_OK)
@@ -2221,6 +2438,8 @@ char* history_table_names[] = {
 	"eafd_history",
 
 #endif
+
+	"interleave_set_history",
 
 	"history",
 	"\0"
@@ -35061,6 +35280,1660 @@ enum db_return_codes db_delete_eafd_history(const PersistentStore *p_ps)
  * --- END eafd ----------------
  */
 /*
+ * --- interleave_set ----------------
+ */
+void local_bind_interleave_set(sqlite3_stmt *p_stmt, struct db_interleave_set *p_interleave_set)
+{
+	BIND_INTEGER(p_stmt, "$id", (int)p_interleave_set->id);
+	BIND_INTEGER(p_stmt, "$socket_id", (unsigned int)p_interleave_set->socket_id);
+	BIND_INTEGER(p_stmt, "$size", (unsigned long long)p_interleave_set->size);
+	BIND_INTEGER(p_stmt, "$available_size", (unsigned long long)p_interleave_set->available_size);
+	BIND_INTEGER(p_stmt, "$attributes", (unsigned long long)p_interleave_set->attributes);
+	BIND_INTEGER(p_stmt, "$dimm_count", (unsigned int)p_interleave_set->dimm_count);
+	BIND_INTEGER(p_stmt, "$dimm_handles_0", (unsigned int)p_interleave_set->dimm_handles[0]);
+	BIND_INTEGER(p_stmt, "$dimm_handles_1", (unsigned int)p_interleave_set->dimm_handles[1]);
+	BIND_INTEGER(p_stmt, "$dimm_handles_2", (unsigned int)p_interleave_set->dimm_handles[2]);
+	BIND_INTEGER(p_stmt, "$dimm_handles_3", (unsigned int)p_interleave_set->dimm_handles[3]);
+	BIND_INTEGER(p_stmt, "$dimm_handles_4", (unsigned int)p_interleave_set->dimm_handles[4]);
+	BIND_INTEGER(p_stmt, "$dimm_handles_5", (unsigned int)p_interleave_set->dimm_handles[5]);
+	BIND_INTEGER(p_stmt, "$dimm_handles_6", (unsigned int)p_interleave_set->dimm_handles[6]);
+	BIND_INTEGER(p_stmt, "$dimm_handles_7", (unsigned int)p_interleave_set->dimm_handles[7]);
+	BIND_INTEGER(p_stmt, "$dimm_handles_8", (unsigned int)p_interleave_set->dimm_handles[8]);
+	BIND_INTEGER(p_stmt, "$dimm_handles_9", (unsigned int)p_interleave_set->dimm_handles[9]);
+	BIND_INTEGER(p_stmt, "$dimm_handles_10", (unsigned int)p_interleave_set->dimm_handles[10]);
+	BIND_INTEGER(p_stmt, "$dimm_handles_11", (unsigned int)p_interleave_set->dimm_handles[11]);
+	BIND_INTEGER(p_stmt, "$dimm_handles_12", (unsigned int)p_interleave_set->dimm_handles[12]);
+	BIND_INTEGER(p_stmt, "$dimm_handles_13", (unsigned int)p_interleave_set->dimm_handles[13]);
+	BIND_INTEGER(p_stmt, "$dimm_handles_14", (unsigned int)p_interleave_set->dimm_handles[14]);
+	BIND_INTEGER(p_stmt, "$dimm_handles_15", (unsigned int)p_interleave_set->dimm_handles[15]);
+	BIND_INTEGER(p_stmt, "$dimm_handles_16", (unsigned int)p_interleave_set->dimm_handles[16]);
+	BIND_INTEGER(p_stmt, "$dimm_handles_17", (unsigned int)p_interleave_set->dimm_handles[17]);
+	BIND_INTEGER(p_stmt, "$dimm_handles_18", (unsigned int)p_interleave_set->dimm_handles[18]);
+	BIND_INTEGER(p_stmt, "$dimm_handles_19", (unsigned int)p_interleave_set->dimm_handles[19]);
+	BIND_INTEGER(p_stmt, "$dimm_handles_20", (unsigned int)p_interleave_set->dimm_handles[20]);
+	BIND_INTEGER(p_stmt, "$dimm_handles_21", (unsigned int)p_interleave_set->dimm_handles[21]);
+	BIND_INTEGER(p_stmt, "$dimm_handles_22", (unsigned int)p_interleave_set->dimm_handles[22]);
+	BIND_INTEGER(p_stmt, "$dimm_handles_23", (unsigned int)p_interleave_set->dimm_handles[23]);
+	BIND_INTEGER(p_stmt, "$dimm_region_pdas_0", (unsigned long long)p_interleave_set->dimm_region_pdas[0]);
+	BIND_INTEGER(p_stmt, "$dimm_region_pdas_1", (unsigned long long)p_interleave_set->dimm_region_pdas[1]);
+	BIND_INTEGER(p_stmt, "$dimm_region_pdas_2", (unsigned long long)p_interleave_set->dimm_region_pdas[2]);
+	BIND_INTEGER(p_stmt, "$dimm_region_pdas_3", (unsigned long long)p_interleave_set->dimm_region_pdas[3]);
+	BIND_INTEGER(p_stmt, "$dimm_region_pdas_4", (unsigned long long)p_interleave_set->dimm_region_pdas[4]);
+	BIND_INTEGER(p_stmt, "$dimm_region_pdas_5", (unsigned long long)p_interleave_set->dimm_region_pdas[5]);
+	BIND_INTEGER(p_stmt, "$dimm_region_pdas_6", (unsigned long long)p_interleave_set->dimm_region_pdas[6]);
+	BIND_INTEGER(p_stmt, "$dimm_region_pdas_7", (unsigned long long)p_interleave_set->dimm_region_pdas[7]);
+	BIND_INTEGER(p_stmt, "$dimm_region_pdas_8", (unsigned long long)p_interleave_set->dimm_region_pdas[8]);
+	BIND_INTEGER(p_stmt, "$dimm_region_pdas_9", (unsigned long long)p_interleave_set->dimm_region_pdas[9]);
+	BIND_INTEGER(p_stmt, "$dimm_region_pdas_10", (unsigned long long)p_interleave_set->dimm_region_pdas[10]);
+	BIND_INTEGER(p_stmt, "$dimm_region_pdas_11", (unsigned long long)p_interleave_set->dimm_region_pdas[11]);
+	BIND_INTEGER(p_stmt, "$dimm_region_pdas_12", (unsigned long long)p_interleave_set->dimm_region_pdas[12]);
+	BIND_INTEGER(p_stmt, "$dimm_region_pdas_13", (unsigned long long)p_interleave_set->dimm_region_pdas[13]);
+	BIND_INTEGER(p_stmt, "$dimm_region_pdas_14", (unsigned long long)p_interleave_set->dimm_region_pdas[14]);
+	BIND_INTEGER(p_stmt, "$dimm_region_pdas_15", (unsigned long long)p_interleave_set->dimm_region_pdas[15]);
+	BIND_INTEGER(p_stmt, "$dimm_region_pdas_16", (unsigned long long)p_interleave_set->dimm_region_pdas[16]);
+	BIND_INTEGER(p_stmt, "$dimm_region_pdas_17", (unsigned long long)p_interleave_set->dimm_region_pdas[17]);
+	BIND_INTEGER(p_stmt, "$dimm_region_pdas_18", (unsigned long long)p_interleave_set->dimm_region_pdas[18]);
+	BIND_INTEGER(p_stmt, "$dimm_region_pdas_19", (unsigned long long)p_interleave_set->dimm_region_pdas[19]);
+	BIND_INTEGER(p_stmt, "$dimm_region_pdas_20", (unsigned long long)p_interleave_set->dimm_region_pdas[20]);
+	BIND_INTEGER(p_stmt, "$dimm_region_pdas_21", (unsigned long long)p_interleave_set->dimm_region_pdas[21]);
+	BIND_INTEGER(p_stmt, "$dimm_region_pdas_22", (unsigned long long)p_interleave_set->dimm_region_pdas[22]);
+	BIND_INTEGER(p_stmt, "$dimm_region_pdas_23", (unsigned long long)p_interleave_set->dimm_region_pdas[23]);
+	BIND_INTEGER(p_stmt, "$dimm_region_offsets_0", (unsigned long long)p_interleave_set->dimm_region_offsets[0]);
+	BIND_INTEGER(p_stmt, "$dimm_region_offsets_1", (unsigned long long)p_interleave_set->dimm_region_offsets[1]);
+	BIND_INTEGER(p_stmt, "$dimm_region_offsets_2", (unsigned long long)p_interleave_set->dimm_region_offsets[2]);
+	BIND_INTEGER(p_stmt, "$dimm_region_offsets_3", (unsigned long long)p_interleave_set->dimm_region_offsets[3]);
+	BIND_INTEGER(p_stmt, "$dimm_region_offsets_4", (unsigned long long)p_interleave_set->dimm_region_offsets[4]);
+	BIND_INTEGER(p_stmt, "$dimm_region_offsets_5", (unsigned long long)p_interleave_set->dimm_region_offsets[5]);
+	BIND_INTEGER(p_stmt, "$dimm_region_offsets_6", (unsigned long long)p_interleave_set->dimm_region_offsets[6]);
+	BIND_INTEGER(p_stmt, "$dimm_region_offsets_7", (unsigned long long)p_interleave_set->dimm_region_offsets[7]);
+	BIND_INTEGER(p_stmt, "$dimm_region_offsets_8", (unsigned long long)p_interleave_set->dimm_region_offsets[8]);
+	BIND_INTEGER(p_stmt, "$dimm_region_offsets_9", (unsigned long long)p_interleave_set->dimm_region_offsets[9]);
+	BIND_INTEGER(p_stmt, "$dimm_region_offsets_10", (unsigned long long)p_interleave_set->dimm_region_offsets[10]);
+	BIND_INTEGER(p_stmt, "$dimm_region_offsets_11", (unsigned long long)p_interleave_set->dimm_region_offsets[11]);
+	BIND_INTEGER(p_stmt, "$dimm_region_offsets_12", (unsigned long long)p_interleave_set->dimm_region_offsets[12]);
+	BIND_INTEGER(p_stmt, "$dimm_region_offsets_13", (unsigned long long)p_interleave_set->dimm_region_offsets[13]);
+	BIND_INTEGER(p_stmt, "$dimm_region_offsets_14", (unsigned long long)p_interleave_set->dimm_region_offsets[14]);
+	BIND_INTEGER(p_stmt, "$dimm_region_offsets_15", (unsigned long long)p_interleave_set->dimm_region_offsets[15]);
+	BIND_INTEGER(p_stmt, "$dimm_region_offsets_16", (unsigned long long)p_interleave_set->dimm_region_offsets[16]);
+	BIND_INTEGER(p_stmt, "$dimm_region_offsets_17", (unsigned long long)p_interleave_set->dimm_region_offsets[17]);
+	BIND_INTEGER(p_stmt, "$dimm_region_offsets_18", (unsigned long long)p_interleave_set->dimm_region_offsets[18]);
+	BIND_INTEGER(p_stmt, "$dimm_region_offsets_19", (unsigned long long)p_interleave_set->dimm_region_offsets[19]);
+	BIND_INTEGER(p_stmt, "$dimm_region_offsets_20", (unsigned long long)p_interleave_set->dimm_region_offsets[20]);
+	BIND_INTEGER(p_stmt, "$dimm_region_offsets_21", (unsigned long long)p_interleave_set->dimm_region_offsets[21]);
+	BIND_INTEGER(p_stmt, "$dimm_region_offsets_22", (unsigned long long)p_interleave_set->dimm_region_offsets[22]);
+	BIND_INTEGER(p_stmt, "$dimm_region_offsets_23", (unsigned long long)p_interleave_set->dimm_region_offsets[23]);
+	BIND_INTEGER(p_stmt, "$dimm_sizes_0", (unsigned long long)p_interleave_set->dimm_sizes[0]);
+	BIND_INTEGER(p_stmt, "$dimm_sizes_1", (unsigned long long)p_interleave_set->dimm_sizes[1]);
+	BIND_INTEGER(p_stmt, "$dimm_sizes_2", (unsigned long long)p_interleave_set->dimm_sizes[2]);
+	BIND_INTEGER(p_stmt, "$dimm_sizes_3", (unsigned long long)p_interleave_set->dimm_sizes[3]);
+	BIND_INTEGER(p_stmt, "$dimm_sizes_4", (unsigned long long)p_interleave_set->dimm_sizes[4]);
+	BIND_INTEGER(p_stmt, "$dimm_sizes_5", (unsigned long long)p_interleave_set->dimm_sizes[5]);
+	BIND_INTEGER(p_stmt, "$dimm_sizes_6", (unsigned long long)p_interleave_set->dimm_sizes[6]);
+	BIND_INTEGER(p_stmt, "$dimm_sizes_7", (unsigned long long)p_interleave_set->dimm_sizes[7]);
+	BIND_INTEGER(p_stmt, "$dimm_sizes_8", (unsigned long long)p_interleave_set->dimm_sizes[8]);
+	BIND_INTEGER(p_stmt, "$dimm_sizes_9", (unsigned long long)p_interleave_set->dimm_sizes[9]);
+	BIND_INTEGER(p_stmt, "$dimm_sizes_10", (unsigned long long)p_interleave_set->dimm_sizes[10]);
+	BIND_INTEGER(p_stmt, "$dimm_sizes_11", (unsigned long long)p_interleave_set->dimm_sizes[11]);
+	BIND_INTEGER(p_stmt, "$dimm_sizes_12", (unsigned long long)p_interleave_set->dimm_sizes[12]);
+	BIND_INTEGER(p_stmt, "$dimm_sizes_13", (unsigned long long)p_interleave_set->dimm_sizes[13]);
+	BIND_INTEGER(p_stmt, "$dimm_sizes_14", (unsigned long long)p_interleave_set->dimm_sizes[14]);
+	BIND_INTEGER(p_stmt, "$dimm_sizes_15", (unsigned long long)p_interleave_set->dimm_sizes[15]);
+	BIND_INTEGER(p_stmt, "$dimm_sizes_16", (unsigned long long)p_interleave_set->dimm_sizes[16]);
+	BIND_INTEGER(p_stmt, "$dimm_sizes_17", (unsigned long long)p_interleave_set->dimm_sizes[17]);
+	BIND_INTEGER(p_stmt, "$dimm_sizes_18", (unsigned long long)p_interleave_set->dimm_sizes[18]);
+	BIND_INTEGER(p_stmt, "$dimm_sizes_19", (unsigned long long)p_interleave_set->dimm_sizes[19]);
+	BIND_INTEGER(p_stmt, "$dimm_sizes_20", (unsigned long long)p_interleave_set->dimm_sizes[20]);
+	BIND_INTEGER(p_stmt, "$dimm_sizes_21", (unsigned long long)p_interleave_set->dimm_sizes[21]);
+	BIND_INTEGER(p_stmt, "$dimm_sizes_22", (unsigned long long)p_interleave_set->dimm_sizes[22]);
+	BIND_INTEGER(p_stmt, "$dimm_sizes_23", (unsigned long long)p_interleave_set->dimm_sizes[23]);
+	BIND_INTEGER(p_stmt, "$pcd_interleave_index", (unsigned int)p_interleave_set->pcd_interleave_index);
+	BIND_INTEGER(p_stmt, "$cookie_v1_1", (unsigned long long)p_interleave_set->cookie_v1_1);
+	BIND_INTEGER(p_stmt, "$cookie_v1_2", (unsigned long long)p_interleave_set->cookie_v1_2);
+}
+void local_get_interleave_set_relationships(const PersistentStore *p_ps,
+	sqlite3_stmt *p_stmt, struct db_interleave_set *p_interleave_set)
+{
+}
+
+void local_get_interleave_set_relationships_history(const PersistentStore *p_ps,
+	sqlite3_stmt *p_stmt, struct db_interleave_set *p_interleave_set,
+	int history_id)
+{
+}
+
+void local_row_to_interleave_set(const PersistentStore *p_ps,
+	sqlite3_stmt *p_stmt, struct db_interleave_set *p_interleave_set)
+{
+	INTEGER_COLUMN(p_stmt,
+		0,
+		p_interleave_set->id);
+	INTEGER_COLUMN(p_stmt,
+		1,
+		p_interleave_set->socket_id);
+	INTEGER_COLUMN(p_stmt,
+		2,
+		p_interleave_set->size);
+	INTEGER_COLUMN(p_stmt,
+		3,
+		p_interleave_set->available_size);
+	INTEGER_COLUMN(p_stmt,
+		4,
+		p_interleave_set->attributes);
+	INTEGER_COLUMN(p_stmt,
+		5,
+		p_interleave_set->dimm_count);
+	INTEGER_COLUMN(p_stmt,
+		6,
+		p_interleave_set->dimm_handles[0]);
+	INTEGER_COLUMN(p_stmt,
+		7,
+		p_interleave_set->dimm_handles[1]);
+	INTEGER_COLUMN(p_stmt,
+		8,
+		p_interleave_set->dimm_handles[2]);
+	INTEGER_COLUMN(p_stmt,
+		9,
+		p_interleave_set->dimm_handles[3]);
+	INTEGER_COLUMN(p_stmt,
+		10,
+		p_interleave_set->dimm_handles[4]);
+	INTEGER_COLUMN(p_stmt,
+		11,
+		p_interleave_set->dimm_handles[5]);
+	INTEGER_COLUMN(p_stmt,
+		12,
+		p_interleave_set->dimm_handles[6]);
+	INTEGER_COLUMN(p_stmt,
+		13,
+		p_interleave_set->dimm_handles[7]);
+	INTEGER_COLUMN(p_stmt,
+		14,
+		p_interleave_set->dimm_handles[8]);
+	INTEGER_COLUMN(p_stmt,
+		15,
+		p_interleave_set->dimm_handles[9]);
+	INTEGER_COLUMN(p_stmt,
+		16,
+		p_interleave_set->dimm_handles[10]);
+	INTEGER_COLUMN(p_stmt,
+		17,
+		p_interleave_set->dimm_handles[11]);
+	INTEGER_COLUMN(p_stmt,
+		18,
+		p_interleave_set->dimm_handles[12]);
+	INTEGER_COLUMN(p_stmt,
+		19,
+		p_interleave_set->dimm_handles[13]);
+	INTEGER_COLUMN(p_stmt,
+		20,
+		p_interleave_set->dimm_handles[14]);
+	INTEGER_COLUMN(p_stmt,
+		21,
+		p_interleave_set->dimm_handles[15]);
+	INTEGER_COLUMN(p_stmt,
+		22,
+		p_interleave_set->dimm_handles[16]);
+	INTEGER_COLUMN(p_stmt,
+		23,
+		p_interleave_set->dimm_handles[17]);
+	INTEGER_COLUMN(p_stmt,
+		24,
+		p_interleave_set->dimm_handles[18]);
+	INTEGER_COLUMN(p_stmt,
+		25,
+		p_interleave_set->dimm_handles[19]);
+	INTEGER_COLUMN(p_stmt,
+		26,
+		p_interleave_set->dimm_handles[20]);
+	INTEGER_COLUMN(p_stmt,
+		27,
+		p_interleave_set->dimm_handles[21]);
+	INTEGER_COLUMN(p_stmt,
+		28,
+		p_interleave_set->dimm_handles[22]);
+	INTEGER_COLUMN(p_stmt,
+		29,
+		p_interleave_set->dimm_handles[23]);
+	INTEGER_COLUMN(p_stmt,
+		30,
+		p_interleave_set->dimm_region_pdas[0]);
+	INTEGER_COLUMN(p_stmt,
+		31,
+		p_interleave_set->dimm_region_pdas[1]);
+	INTEGER_COLUMN(p_stmt,
+		32,
+		p_interleave_set->dimm_region_pdas[2]);
+	INTEGER_COLUMN(p_stmt,
+		33,
+		p_interleave_set->dimm_region_pdas[3]);
+	INTEGER_COLUMN(p_stmt,
+		34,
+		p_interleave_set->dimm_region_pdas[4]);
+	INTEGER_COLUMN(p_stmt,
+		35,
+		p_interleave_set->dimm_region_pdas[5]);
+	INTEGER_COLUMN(p_stmt,
+		36,
+		p_interleave_set->dimm_region_pdas[6]);
+	INTEGER_COLUMN(p_stmt,
+		37,
+		p_interleave_set->dimm_region_pdas[7]);
+	INTEGER_COLUMN(p_stmt,
+		38,
+		p_interleave_set->dimm_region_pdas[8]);
+	INTEGER_COLUMN(p_stmt,
+		39,
+		p_interleave_set->dimm_region_pdas[9]);
+	INTEGER_COLUMN(p_stmt,
+		40,
+		p_interleave_set->dimm_region_pdas[10]);
+	INTEGER_COLUMN(p_stmt,
+		41,
+		p_interleave_set->dimm_region_pdas[11]);
+	INTEGER_COLUMN(p_stmt,
+		42,
+		p_interleave_set->dimm_region_pdas[12]);
+	INTEGER_COLUMN(p_stmt,
+		43,
+		p_interleave_set->dimm_region_pdas[13]);
+	INTEGER_COLUMN(p_stmt,
+		44,
+		p_interleave_set->dimm_region_pdas[14]);
+	INTEGER_COLUMN(p_stmt,
+		45,
+		p_interleave_set->dimm_region_pdas[15]);
+	INTEGER_COLUMN(p_stmt,
+		46,
+		p_interleave_set->dimm_region_pdas[16]);
+	INTEGER_COLUMN(p_stmt,
+		47,
+		p_interleave_set->dimm_region_pdas[17]);
+	INTEGER_COLUMN(p_stmt,
+		48,
+		p_interleave_set->dimm_region_pdas[18]);
+	INTEGER_COLUMN(p_stmt,
+		49,
+		p_interleave_set->dimm_region_pdas[19]);
+	INTEGER_COLUMN(p_stmt,
+		50,
+		p_interleave_set->dimm_region_pdas[20]);
+	INTEGER_COLUMN(p_stmt,
+		51,
+		p_interleave_set->dimm_region_pdas[21]);
+	INTEGER_COLUMN(p_stmt,
+		52,
+		p_interleave_set->dimm_region_pdas[22]);
+	INTEGER_COLUMN(p_stmt,
+		53,
+		p_interleave_set->dimm_region_pdas[23]);
+	INTEGER_COLUMN(p_stmt,
+		54,
+		p_interleave_set->dimm_region_offsets[0]);
+	INTEGER_COLUMN(p_stmt,
+		55,
+		p_interleave_set->dimm_region_offsets[1]);
+	INTEGER_COLUMN(p_stmt,
+		56,
+		p_interleave_set->dimm_region_offsets[2]);
+	INTEGER_COLUMN(p_stmt,
+		57,
+		p_interleave_set->dimm_region_offsets[3]);
+	INTEGER_COLUMN(p_stmt,
+		58,
+		p_interleave_set->dimm_region_offsets[4]);
+	INTEGER_COLUMN(p_stmt,
+		59,
+		p_interleave_set->dimm_region_offsets[5]);
+	INTEGER_COLUMN(p_stmt,
+		60,
+		p_interleave_set->dimm_region_offsets[6]);
+	INTEGER_COLUMN(p_stmt,
+		61,
+		p_interleave_set->dimm_region_offsets[7]);
+	INTEGER_COLUMN(p_stmt,
+		62,
+		p_interleave_set->dimm_region_offsets[8]);
+	INTEGER_COLUMN(p_stmt,
+		63,
+		p_interleave_set->dimm_region_offsets[9]);
+	INTEGER_COLUMN(p_stmt,
+		64,
+		p_interleave_set->dimm_region_offsets[10]);
+	INTEGER_COLUMN(p_stmt,
+		65,
+		p_interleave_set->dimm_region_offsets[11]);
+	INTEGER_COLUMN(p_stmt,
+		66,
+		p_interleave_set->dimm_region_offsets[12]);
+	INTEGER_COLUMN(p_stmt,
+		67,
+		p_interleave_set->dimm_region_offsets[13]);
+	INTEGER_COLUMN(p_stmt,
+		68,
+		p_interleave_set->dimm_region_offsets[14]);
+	INTEGER_COLUMN(p_stmt,
+		69,
+		p_interleave_set->dimm_region_offsets[15]);
+	INTEGER_COLUMN(p_stmt,
+		70,
+		p_interleave_set->dimm_region_offsets[16]);
+	INTEGER_COLUMN(p_stmt,
+		71,
+		p_interleave_set->dimm_region_offsets[17]);
+	INTEGER_COLUMN(p_stmt,
+		72,
+		p_interleave_set->dimm_region_offsets[18]);
+	INTEGER_COLUMN(p_stmt,
+		73,
+		p_interleave_set->dimm_region_offsets[19]);
+	INTEGER_COLUMN(p_stmt,
+		74,
+		p_interleave_set->dimm_region_offsets[20]);
+	INTEGER_COLUMN(p_stmt,
+		75,
+		p_interleave_set->dimm_region_offsets[21]);
+	INTEGER_COLUMN(p_stmt,
+		76,
+		p_interleave_set->dimm_region_offsets[22]);
+	INTEGER_COLUMN(p_stmt,
+		77,
+		p_interleave_set->dimm_region_offsets[23]);
+	INTEGER_COLUMN(p_stmt,
+		78,
+		p_interleave_set->dimm_sizes[0]);
+	INTEGER_COLUMN(p_stmt,
+		79,
+		p_interleave_set->dimm_sizes[1]);
+	INTEGER_COLUMN(p_stmt,
+		80,
+		p_interleave_set->dimm_sizes[2]);
+	INTEGER_COLUMN(p_stmt,
+		81,
+		p_interleave_set->dimm_sizes[3]);
+	INTEGER_COLUMN(p_stmt,
+		82,
+		p_interleave_set->dimm_sizes[4]);
+	INTEGER_COLUMN(p_stmt,
+		83,
+		p_interleave_set->dimm_sizes[5]);
+	INTEGER_COLUMN(p_stmt,
+		84,
+		p_interleave_set->dimm_sizes[6]);
+	INTEGER_COLUMN(p_stmt,
+		85,
+		p_interleave_set->dimm_sizes[7]);
+	INTEGER_COLUMN(p_stmt,
+		86,
+		p_interleave_set->dimm_sizes[8]);
+	INTEGER_COLUMN(p_stmt,
+		87,
+		p_interleave_set->dimm_sizes[9]);
+	INTEGER_COLUMN(p_stmt,
+		88,
+		p_interleave_set->dimm_sizes[10]);
+	INTEGER_COLUMN(p_stmt,
+		89,
+		p_interleave_set->dimm_sizes[11]);
+	INTEGER_COLUMN(p_stmt,
+		90,
+		p_interleave_set->dimm_sizes[12]);
+	INTEGER_COLUMN(p_stmt,
+		91,
+		p_interleave_set->dimm_sizes[13]);
+	INTEGER_COLUMN(p_stmt,
+		92,
+		p_interleave_set->dimm_sizes[14]);
+	INTEGER_COLUMN(p_stmt,
+		93,
+		p_interleave_set->dimm_sizes[15]);
+	INTEGER_COLUMN(p_stmt,
+		94,
+		p_interleave_set->dimm_sizes[16]);
+	INTEGER_COLUMN(p_stmt,
+		95,
+		p_interleave_set->dimm_sizes[17]);
+	INTEGER_COLUMN(p_stmt,
+		96,
+		p_interleave_set->dimm_sizes[18]);
+	INTEGER_COLUMN(p_stmt,
+		97,
+		p_interleave_set->dimm_sizes[19]);
+	INTEGER_COLUMN(p_stmt,
+		98,
+		p_interleave_set->dimm_sizes[20]);
+	INTEGER_COLUMN(p_stmt,
+		99,
+		p_interleave_set->dimm_sizes[21]);
+	INTEGER_COLUMN(p_stmt,
+		100,
+		p_interleave_set->dimm_sizes[22]);
+	INTEGER_COLUMN(p_stmt,
+		101,
+		p_interleave_set->dimm_sizes[23]);
+	INTEGER_COLUMN(p_stmt,
+		102,
+		p_interleave_set->pcd_interleave_index);
+	INTEGER_COLUMN(p_stmt,
+		103,
+		p_interleave_set->cookie_v1_1);
+	INTEGER_COLUMN(p_stmt,
+		104,
+		p_interleave_set->cookie_v1_2);
+}
+void db_print_interleave_set(struct db_interleave_set *p_value)
+{
+	printf("interleave_set.id: %d\n", p_value->id);
+	printf("interleave_set.socket_id: unsigned %d\n", p_value->socket_id);
+	printf("interleave_set.size: unsigned %lld\n", p_value->size);
+	printf("interleave_set.available_size: unsigned %lld\n", p_value->available_size);
+	printf("interleave_set.attributes: unsigned %lld\n", p_value->attributes);
+	printf("interleave_set.dimm_count: unsigned %d\n", p_value->dimm_count);
+	printf("interleave_set.dimm_handles: unsigned %d\n", p_value->dimm_handles[0]);
+	printf("interleave_set.dimm_handles: unsigned %d\n", p_value->dimm_handles[1]);
+	printf("interleave_set.dimm_handles: unsigned %d\n", p_value->dimm_handles[2]);
+	printf("interleave_set.dimm_handles: unsigned %d\n", p_value->dimm_handles[3]);
+	printf("interleave_set.dimm_handles: unsigned %d\n", p_value->dimm_handles[4]);
+	printf("interleave_set.dimm_handles: unsigned %d\n", p_value->dimm_handles[5]);
+	printf("interleave_set.dimm_handles: unsigned %d\n", p_value->dimm_handles[6]);
+	printf("interleave_set.dimm_handles: unsigned %d\n", p_value->dimm_handles[7]);
+	printf("interleave_set.dimm_handles: unsigned %d\n", p_value->dimm_handles[8]);
+	printf("interleave_set.dimm_handles: unsigned %d\n", p_value->dimm_handles[9]);
+	printf("interleave_set.dimm_handles: unsigned %d\n", p_value->dimm_handles[10]);
+	printf("interleave_set.dimm_handles: unsigned %d\n", p_value->dimm_handles[11]);
+	printf("interleave_set.dimm_handles: unsigned %d\n", p_value->dimm_handles[12]);
+	printf("interleave_set.dimm_handles: unsigned %d\n", p_value->dimm_handles[13]);
+	printf("interleave_set.dimm_handles: unsigned %d\n", p_value->dimm_handles[14]);
+	printf("interleave_set.dimm_handles: unsigned %d\n", p_value->dimm_handles[15]);
+	printf("interleave_set.dimm_handles: unsigned %d\n", p_value->dimm_handles[16]);
+	printf("interleave_set.dimm_handles: unsigned %d\n", p_value->dimm_handles[17]);
+	printf("interleave_set.dimm_handles: unsigned %d\n", p_value->dimm_handles[18]);
+	printf("interleave_set.dimm_handles: unsigned %d\n", p_value->dimm_handles[19]);
+	printf("interleave_set.dimm_handles: unsigned %d\n", p_value->dimm_handles[20]);
+	printf("interleave_set.dimm_handles: unsigned %d\n", p_value->dimm_handles[21]);
+	printf("interleave_set.dimm_handles: unsigned %d\n", p_value->dimm_handles[22]);
+	printf("interleave_set.dimm_handles: unsigned %d\n", p_value->dimm_handles[23]);
+	printf("interleave_set.dimm_region_pdas: unsigned %lld\n", p_value->dimm_region_pdas[0]);
+	printf("interleave_set.dimm_region_pdas: unsigned %lld\n", p_value->dimm_region_pdas[1]);
+	printf("interleave_set.dimm_region_pdas: unsigned %lld\n", p_value->dimm_region_pdas[2]);
+	printf("interleave_set.dimm_region_pdas: unsigned %lld\n", p_value->dimm_region_pdas[3]);
+	printf("interleave_set.dimm_region_pdas: unsigned %lld\n", p_value->dimm_region_pdas[4]);
+	printf("interleave_set.dimm_region_pdas: unsigned %lld\n", p_value->dimm_region_pdas[5]);
+	printf("interleave_set.dimm_region_pdas: unsigned %lld\n", p_value->dimm_region_pdas[6]);
+	printf("interleave_set.dimm_region_pdas: unsigned %lld\n", p_value->dimm_region_pdas[7]);
+	printf("interleave_set.dimm_region_pdas: unsigned %lld\n", p_value->dimm_region_pdas[8]);
+	printf("interleave_set.dimm_region_pdas: unsigned %lld\n", p_value->dimm_region_pdas[9]);
+	printf("interleave_set.dimm_region_pdas: unsigned %lld\n", p_value->dimm_region_pdas[10]);
+	printf("interleave_set.dimm_region_pdas: unsigned %lld\n", p_value->dimm_region_pdas[11]);
+	printf("interleave_set.dimm_region_pdas: unsigned %lld\n", p_value->dimm_region_pdas[12]);
+	printf("interleave_set.dimm_region_pdas: unsigned %lld\n", p_value->dimm_region_pdas[13]);
+	printf("interleave_set.dimm_region_pdas: unsigned %lld\n", p_value->dimm_region_pdas[14]);
+	printf("interleave_set.dimm_region_pdas: unsigned %lld\n", p_value->dimm_region_pdas[15]);
+	printf("interleave_set.dimm_region_pdas: unsigned %lld\n", p_value->dimm_region_pdas[16]);
+	printf("interleave_set.dimm_region_pdas: unsigned %lld\n", p_value->dimm_region_pdas[17]);
+	printf("interleave_set.dimm_region_pdas: unsigned %lld\n", p_value->dimm_region_pdas[18]);
+	printf("interleave_set.dimm_region_pdas: unsigned %lld\n", p_value->dimm_region_pdas[19]);
+	printf("interleave_set.dimm_region_pdas: unsigned %lld\n", p_value->dimm_region_pdas[20]);
+	printf("interleave_set.dimm_region_pdas: unsigned %lld\n", p_value->dimm_region_pdas[21]);
+	printf("interleave_set.dimm_region_pdas: unsigned %lld\n", p_value->dimm_region_pdas[22]);
+	printf("interleave_set.dimm_region_pdas: unsigned %lld\n", p_value->dimm_region_pdas[23]);
+	printf("interleave_set.dimm_region_offsets: unsigned %lld\n", p_value->dimm_region_offsets[0]);
+	printf("interleave_set.dimm_region_offsets: unsigned %lld\n", p_value->dimm_region_offsets[1]);
+	printf("interleave_set.dimm_region_offsets: unsigned %lld\n", p_value->dimm_region_offsets[2]);
+	printf("interleave_set.dimm_region_offsets: unsigned %lld\n", p_value->dimm_region_offsets[3]);
+	printf("interleave_set.dimm_region_offsets: unsigned %lld\n", p_value->dimm_region_offsets[4]);
+	printf("interleave_set.dimm_region_offsets: unsigned %lld\n", p_value->dimm_region_offsets[5]);
+	printf("interleave_set.dimm_region_offsets: unsigned %lld\n", p_value->dimm_region_offsets[6]);
+	printf("interleave_set.dimm_region_offsets: unsigned %lld\n", p_value->dimm_region_offsets[7]);
+	printf("interleave_set.dimm_region_offsets: unsigned %lld\n", p_value->dimm_region_offsets[8]);
+	printf("interleave_set.dimm_region_offsets: unsigned %lld\n", p_value->dimm_region_offsets[9]);
+	printf("interleave_set.dimm_region_offsets: unsigned %lld\n", p_value->dimm_region_offsets[10]);
+	printf("interleave_set.dimm_region_offsets: unsigned %lld\n", p_value->dimm_region_offsets[11]);
+	printf("interleave_set.dimm_region_offsets: unsigned %lld\n", p_value->dimm_region_offsets[12]);
+	printf("interleave_set.dimm_region_offsets: unsigned %lld\n", p_value->dimm_region_offsets[13]);
+	printf("interleave_set.dimm_region_offsets: unsigned %lld\n", p_value->dimm_region_offsets[14]);
+	printf("interleave_set.dimm_region_offsets: unsigned %lld\n", p_value->dimm_region_offsets[15]);
+	printf("interleave_set.dimm_region_offsets: unsigned %lld\n", p_value->dimm_region_offsets[16]);
+	printf("interleave_set.dimm_region_offsets: unsigned %lld\n", p_value->dimm_region_offsets[17]);
+	printf("interleave_set.dimm_region_offsets: unsigned %lld\n", p_value->dimm_region_offsets[18]);
+	printf("interleave_set.dimm_region_offsets: unsigned %lld\n", p_value->dimm_region_offsets[19]);
+	printf("interleave_set.dimm_region_offsets: unsigned %lld\n", p_value->dimm_region_offsets[20]);
+	printf("interleave_set.dimm_region_offsets: unsigned %lld\n", p_value->dimm_region_offsets[21]);
+	printf("interleave_set.dimm_region_offsets: unsigned %lld\n", p_value->dimm_region_offsets[22]);
+	printf("interleave_set.dimm_region_offsets: unsigned %lld\n", p_value->dimm_region_offsets[23]);
+	printf("interleave_set.dimm_sizes: unsigned %lld\n", p_value->dimm_sizes[0]);
+	printf("interleave_set.dimm_sizes: unsigned %lld\n", p_value->dimm_sizes[1]);
+	printf("interleave_set.dimm_sizes: unsigned %lld\n", p_value->dimm_sizes[2]);
+	printf("interleave_set.dimm_sizes: unsigned %lld\n", p_value->dimm_sizes[3]);
+	printf("interleave_set.dimm_sizes: unsigned %lld\n", p_value->dimm_sizes[4]);
+	printf("interleave_set.dimm_sizes: unsigned %lld\n", p_value->dimm_sizes[5]);
+	printf("interleave_set.dimm_sizes: unsigned %lld\n", p_value->dimm_sizes[6]);
+	printf("interleave_set.dimm_sizes: unsigned %lld\n", p_value->dimm_sizes[7]);
+	printf("interleave_set.dimm_sizes: unsigned %lld\n", p_value->dimm_sizes[8]);
+	printf("interleave_set.dimm_sizes: unsigned %lld\n", p_value->dimm_sizes[9]);
+	printf("interleave_set.dimm_sizes: unsigned %lld\n", p_value->dimm_sizes[10]);
+	printf("interleave_set.dimm_sizes: unsigned %lld\n", p_value->dimm_sizes[11]);
+	printf("interleave_set.dimm_sizes: unsigned %lld\n", p_value->dimm_sizes[12]);
+	printf("interleave_set.dimm_sizes: unsigned %lld\n", p_value->dimm_sizes[13]);
+	printf("interleave_set.dimm_sizes: unsigned %lld\n", p_value->dimm_sizes[14]);
+	printf("interleave_set.dimm_sizes: unsigned %lld\n", p_value->dimm_sizes[15]);
+	printf("interleave_set.dimm_sizes: unsigned %lld\n", p_value->dimm_sizes[16]);
+	printf("interleave_set.dimm_sizes: unsigned %lld\n", p_value->dimm_sizes[17]);
+	printf("interleave_set.dimm_sizes: unsigned %lld\n", p_value->dimm_sizes[18]);
+	printf("interleave_set.dimm_sizes: unsigned %lld\n", p_value->dimm_sizes[19]);
+	printf("interleave_set.dimm_sizes: unsigned %lld\n", p_value->dimm_sizes[20]);
+	printf("interleave_set.dimm_sizes: unsigned %lld\n", p_value->dimm_sizes[21]);
+	printf("interleave_set.dimm_sizes: unsigned %lld\n", p_value->dimm_sizes[22]);
+	printf("interleave_set.dimm_sizes: unsigned %lld\n", p_value->dimm_sizes[23]);
+	printf("interleave_set.pcd_interleave_index: unsigned %d\n", p_value->pcd_interleave_index);
+	printf("interleave_set.cookie_v1_1: unsigned %lld\n", p_value->cookie_v1_1);
+	printf("interleave_set.cookie_v1_2: unsigned %lld\n", p_value->cookie_v1_2);
+}
+enum db_return_codes db_add_interleave_set(const PersistentStore *p_ps,
+	struct db_interleave_set *p_interleave_set)
+{
+	enum db_return_codes rc = DB_ERR_FAILURE;
+	sqlite3_stmt *p_stmt;
+	char *sql = 	"INSERT INTO interleave_set \
+		(id, socket_id, size, available_size, attributes, dimm_count, dimm_handles_0, dimm_handles_1, dimm_handles_2, dimm_handles_3, dimm_handles_4, dimm_handles_5, dimm_handles_6, dimm_handles_7, dimm_handles_8, dimm_handles_9, dimm_handles_10, dimm_handles_11, dimm_handles_12, dimm_handles_13, dimm_handles_14, dimm_handles_15, dimm_handles_16, dimm_handles_17, dimm_handles_18, dimm_handles_19, dimm_handles_20, dimm_handles_21, dimm_handles_22, dimm_handles_23, dimm_region_pdas_0, dimm_region_pdas_1, dimm_region_pdas_2, dimm_region_pdas_3, dimm_region_pdas_4, dimm_region_pdas_5, dimm_region_pdas_6, dimm_region_pdas_7, dimm_region_pdas_8, dimm_region_pdas_9, dimm_region_pdas_10, dimm_region_pdas_11, dimm_region_pdas_12, dimm_region_pdas_13, dimm_region_pdas_14, dimm_region_pdas_15, dimm_region_pdas_16, dimm_region_pdas_17, dimm_region_pdas_18, dimm_region_pdas_19, dimm_region_pdas_20, dimm_region_pdas_21, dimm_region_pdas_22, dimm_region_pdas_23, dimm_region_offsets_0, dimm_region_offsets_1, dimm_region_offsets_2, dimm_region_offsets_3, dimm_region_offsets_4, dimm_region_offsets_5, dimm_region_offsets_6, dimm_region_offsets_7, dimm_region_offsets_8, dimm_region_offsets_9, dimm_region_offsets_10, dimm_region_offsets_11, dimm_region_offsets_12, dimm_region_offsets_13, dimm_region_offsets_14, dimm_region_offsets_15, dimm_region_offsets_16, dimm_region_offsets_17, dimm_region_offsets_18, dimm_region_offsets_19, dimm_region_offsets_20, dimm_region_offsets_21, dimm_region_offsets_22, dimm_region_offsets_23, dimm_sizes_0, dimm_sizes_1, dimm_sizes_2, dimm_sizes_3, dimm_sizes_4, dimm_sizes_5, dimm_sizes_6, dimm_sizes_7, dimm_sizes_8, dimm_sizes_9, dimm_sizes_10, dimm_sizes_11, dimm_sizes_12, dimm_sizes_13, dimm_sizes_14, dimm_sizes_15, dimm_sizes_16, dimm_sizes_17, dimm_sizes_18, dimm_sizes_19, dimm_sizes_20, dimm_sizes_21, dimm_sizes_22, dimm_sizes_23, pcd_interleave_index, cookie_v1_1, cookie_v1_2)  \
+		VALUES 		\
+		($id, \
+		$socket_id, \
+		$size, \
+		$available_size, \
+		$attributes, \
+		$dimm_count, \
+		$dimm_handles_0, \
+		$dimm_handles_1, \
+		$dimm_handles_2, \
+		$dimm_handles_3, \
+		$dimm_handles_4, \
+		$dimm_handles_5, \
+		$dimm_handles_6, \
+		$dimm_handles_7, \
+		$dimm_handles_8, \
+		$dimm_handles_9, \
+		$dimm_handles_10, \
+		$dimm_handles_11, \
+		$dimm_handles_12, \
+		$dimm_handles_13, \
+		$dimm_handles_14, \
+		$dimm_handles_15, \
+		$dimm_handles_16, \
+		$dimm_handles_17, \
+		$dimm_handles_18, \
+		$dimm_handles_19, \
+		$dimm_handles_20, \
+		$dimm_handles_21, \
+		$dimm_handles_22, \
+		$dimm_handles_23, \
+		$dimm_region_pdas_0, \
+		$dimm_region_pdas_1, \
+		$dimm_region_pdas_2, \
+		$dimm_region_pdas_3, \
+		$dimm_region_pdas_4, \
+		$dimm_region_pdas_5, \
+		$dimm_region_pdas_6, \
+		$dimm_region_pdas_7, \
+		$dimm_region_pdas_8, \
+		$dimm_region_pdas_9, \
+		$dimm_region_pdas_10, \
+		$dimm_region_pdas_11, \
+		$dimm_region_pdas_12, \
+		$dimm_region_pdas_13, \
+		$dimm_region_pdas_14, \
+		$dimm_region_pdas_15, \
+		$dimm_region_pdas_16, \
+		$dimm_region_pdas_17, \
+		$dimm_region_pdas_18, \
+		$dimm_region_pdas_19, \
+		$dimm_region_pdas_20, \
+		$dimm_region_pdas_21, \
+		$dimm_region_pdas_22, \
+		$dimm_region_pdas_23, \
+		$dimm_region_offsets_0, \
+		$dimm_region_offsets_1, \
+		$dimm_region_offsets_2, \
+		$dimm_region_offsets_3, \
+		$dimm_region_offsets_4, \
+		$dimm_region_offsets_5, \
+		$dimm_region_offsets_6, \
+		$dimm_region_offsets_7, \
+		$dimm_region_offsets_8, \
+		$dimm_region_offsets_9, \
+		$dimm_region_offsets_10, \
+		$dimm_region_offsets_11, \
+		$dimm_region_offsets_12, \
+		$dimm_region_offsets_13, \
+		$dimm_region_offsets_14, \
+		$dimm_region_offsets_15, \
+		$dimm_region_offsets_16, \
+		$dimm_region_offsets_17, \
+		$dimm_region_offsets_18, \
+		$dimm_region_offsets_19, \
+		$dimm_region_offsets_20, \
+		$dimm_region_offsets_21, \
+		$dimm_region_offsets_22, \
+		$dimm_region_offsets_23, \
+		$dimm_sizes_0, \
+		$dimm_sizes_1, \
+		$dimm_sizes_2, \
+		$dimm_sizes_3, \
+		$dimm_sizes_4, \
+		$dimm_sizes_5, \
+		$dimm_sizes_6, \
+		$dimm_sizes_7, \
+		$dimm_sizes_8, \
+		$dimm_sizes_9, \
+		$dimm_sizes_10, \
+		$dimm_sizes_11, \
+		$dimm_sizes_12, \
+		$dimm_sizes_13, \
+		$dimm_sizes_14, \
+		$dimm_sizes_15, \
+		$dimm_sizes_16, \
+		$dimm_sizes_17, \
+		$dimm_sizes_18, \
+		$dimm_sizes_19, \
+		$dimm_sizes_20, \
+		$dimm_sizes_21, \
+		$dimm_sizes_22, \
+		$dimm_sizes_23, \
+		$pcd_interleave_index, \
+		$cookie_v1_1, \
+		$cookie_v1_2) ";
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
+	{
+		local_bind_interleave_set(p_stmt, p_interleave_set);
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_DONE)
+		{
+			rc = DB_SUCCESS;
+		}
+		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+	}
+	return rc;
+}
+enum db_return_codes db_get_interleave_set_count(const PersistentStore *p_ps, int *p_count)
+{
+	return table_row_count(p_ps, "interleave_set", p_count);
+}
+int db_get_interleave_sets(const PersistentStore *p_ps,
+	struct db_interleave_set *p_interleave_set,
+	int interleave_set_count)
+{
+	int rc = DB_ERR_FAILURE;
+	memset(p_interleave_set, 0, sizeof (struct db_interleave_set) * interleave_set_count);
+	char *sql = "SELECT \
+		id \
+		,  socket_id \
+		,  size \
+		,  available_size \
+		,  attributes \
+		,  dimm_count \
+		,  dimm_handles_0 \
+		,  dimm_handles_1 \
+		,  dimm_handles_2 \
+		,  dimm_handles_3 \
+		,  dimm_handles_4 \
+		,  dimm_handles_5 \
+		,  dimm_handles_6 \
+		,  dimm_handles_7 \
+		,  dimm_handles_8 \
+		,  dimm_handles_9 \
+		,  dimm_handles_10 \
+		,  dimm_handles_11 \
+		,  dimm_handles_12 \
+		,  dimm_handles_13 \
+		,  dimm_handles_14 \
+		,  dimm_handles_15 \
+		,  dimm_handles_16 \
+		,  dimm_handles_17 \
+		,  dimm_handles_18 \
+		,  dimm_handles_19 \
+		,  dimm_handles_20 \
+		,  dimm_handles_21 \
+		,  dimm_handles_22 \
+		,  dimm_handles_23 \
+		,  dimm_region_pdas_0 \
+		,  dimm_region_pdas_1 \
+		,  dimm_region_pdas_2 \
+		,  dimm_region_pdas_3 \
+		,  dimm_region_pdas_4 \
+		,  dimm_region_pdas_5 \
+		,  dimm_region_pdas_6 \
+		,  dimm_region_pdas_7 \
+		,  dimm_region_pdas_8 \
+		,  dimm_region_pdas_9 \
+		,  dimm_region_pdas_10 \
+		,  dimm_region_pdas_11 \
+		,  dimm_region_pdas_12 \
+		,  dimm_region_pdas_13 \
+		,  dimm_region_pdas_14 \
+		,  dimm_region_pdas_15 \
+		,  dimm_region_pdas_16 \
+		,  dimm_region_pdas_17 \
+		,  dimm_region_pdas_18 \
+		,  dimm_region_pdas_19 \
+		,  dimm_region_pdas_20 \
+		,  dimm_region_pdas_21 \
+		,  dimm_region_pdas_22 \
+		,  dimm_region_pdas_23 \
+		,  dimm_region_offsets_0 \
+		,  dimm_region_offsets_1 \
+		,  dimm_region_offsets_2 \
+		,  dimm_region_offsets_3 \
+		,  dimm_region_offsets_4 \
+		,  dimm_region_offsets_5 \
+		,  dimm_region_offsets_6 \
+		,  dimm_region_offsets_7 \
+		,  dimm_region_offsets_8 \
+		,  dimm_region_offsets_9 \
+		,  dimm_region_offsets_10 \
+		,  dimm_region_offsets_11 \
+		,  dimm_region_offsets_12 \
+		,  dimm_region_offsets_13 \
+		,  dimm_region_offsets_14 \
+		,  dimm_region_offsets_15 \
+		,  dimm_region_offsets_16 \
+		,  dimm_region_offsets_17 \
+		,  dimm_region_offsets_18 \
+		,  dimm_region_offsets_19 \
+		,  dimm_region_offsets_20 \
+		,  dimm_region_offsets_21 \
+		,  dimm_region_offsets_22 \
+		,  dimm_region_offsets_23 \
+		,  dimm_sizes_0 \
+		,  dimm_sizes_1 \
+		,  dimm_sizes_2 \
+		,  dimm_sizes_3 \
+		,  dimm_sizes_4 \
+		,  dimm_sizes_5 \
+		,  dimm_sizes_6 \
+		,  dimm_sizes_7 \
+		,  dimm_sizes_8 \
+		,  dimm_sizes_9 \
+		,  dimm_sizes_10 \
+		,  dimm_sizes_11 \
+		,  dimm_sizes_12 \
+		,  dimm_sizes_13 \
+		,  dimm_sizes_14 \
+		,  dimm_sizes_15 \
+		,  dimm_sizes_16 \
+		,  dimm_sizes_17 \
+		,  dimm_sizes_18 \
+		,  dimm_sizes_19 \
+		,  dimm_sizes_20 \
+		,  dimm_sizes_21 \
+		,  dimm_sizes_22 \
+		,  dimm_sizes_23 \
+		,  pcd_interleave_index \
+		,  cookie_v1_1 \
+		,  cookie_v1_2 \
+		  \
+		FROM interleave_set \
+		                                                                                                          \
+		 \
+		";
+	sqlite3_stmt *p_stmt;
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
+	{
+		int index = 0;
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < interleave_set_count)
+		{
+			local_row_to_interleave_set(p_ps, p_stmt, &p_interleave_set[index]);
+			local_get_interleave_set_relationships(p_ps, p_stmt, &p_interleave_set[index]);
+			index++;
+		}
+		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+		}
+		rc = index;
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+	}
+	return rc;
+}
+enum db_return_codes db_delete_all_interleave_sets(const PersistentStore *p_ps)
+{
+	return run_sql_no_results(p_ps->db, "DELETE FROM interleave_set");
+}
+
+enum db_return_codes db_save_interleave_set_state(const PersistentStore *p_ps,
+	int history_id,
+	struct db_interleave_set *p_interleave_set)
+{
+	enum db_return_codes rc = DB_SUCCESS;
+	struct db_interleave_set temp;
+	/*
+	 * Main table - Insert new or update existing
+	 */
+	if (db_get_interleave_set_by_id(p_ps, p_interleave_set->id, &temp) == DB_SUCCESS)
+	{
+		rc = db_update_interleave_set_by_id(p_ps,
+				p_interleave_set->id,
+				p_interleave_set);
+	}
+	else
+	{
+		sqlite3_stmt *p_stmt;
+		char *sql = 	"INSERT INTO interleave_set \
+			( id ,  socket_id ,  size ,  available_size ,  attributes ,  dimm_count ,  dimm_handles_0 ,  dimm_handles_1 ,  dimm_handles_2 ,  dimm_handles_3 ,  dimm_handles_4 ,  dimm_handles_5 ,  dimm_handles_6 ,  dimm_handles_7 ,  dimm_handles_8 ,  dimm_handles_9 ,  dimm_handles_10 ,  dimm_handles_11 ,  dimm_handles_12 ,  dimm_handles_13 ,  dimm_handles_14 ,  dimm_handles_15 ,  dimm_handles_16 ,  dimm_handles_17 ,  dimm_handles_18 ,  dimm_handles_19 ,  dimm_handles_20 ,  dimm_handles_21 ,  dimm_handles_22 ,  dimm_handles_23 ,  dimm_region_pdas_0 ,  dimm_region_pdas_1 ,  dimm_region_pdas_2 ,  dimm_region_pdas_3 ,  dimm_region_pdas_4 ,  dimm_region_pdas_5 ,  dimm_region_pdas_6 ,  dimm_region_pdas_7 ,  dimm_region_pdas_8 ,  dimm_region_pdas_9 ,  dimm_region_pdas_10 ,  dimm_region_pdas_11 ,  dimm_region_pdas_12 ,  dimm_region_pdas_13 ,  dimm_region_pdas_14 ,  dimm_region_pdas_15 ,  dimm_region_pdas_16 ,  dimm_region_pdas_17 ,  dimm_region_pdas_18 ,  dimm_region_pdas_19 ,  dimm_region_pdas_20 ,  dimm_region_pdas_21 ,  dimm_region_pdas_22 ,  dimm_region_pdas_23 ,  dimm_region_offsets_0 ,  dimm_region_offsets_1 ,  dimm_region_offsets_2 ,  dimm_region_offsets_3 ,  dimm_region_offsets_4 ,  dimm_region_offsets_5 ,  dimm_region_offsets_6 ,  dimm_region_offsets_7 ,  dimm_region_offsets_8 ,  dimm_region_offsets_9 ,  dimm_region_offsets_10 ,  dimm_region_offsets_11 ,  dimm_region_offsets_12 ,  dimm_region_offsets_13 ,  dimm_region_offsets_14 ,  dimm_region_offsets_15 ,  dimm_region_offsets_16 ,  dimm_region_offsets_17 ,  dimm_region_offsets_18 ,  dimm_region_offsets_19 ,  dimm_region_offsets_20 ,  dimm_region_offsets_21 ,  dimm_region_offsets_22 ,  dimm_region_offsets_23 ,  dimm_sizes_0 ,  dimm_sizes_1 ,  dimm_sizes_2 ,  dimm_sizes_3 ,  dimm_sizes_4 ,  dimm_sizes_5 ,  dimm_sizes_6 ,  dimm_sizes_7 ,  dimm_sizes_8 ,  dimm_sizes_9 ,  dimm_sizes_10 ,  dimm_sizes_11 ,  dimm_sizes_12 ,  dimm_sizes_13 ,  dimm_sizes_14 ,  dimm_sizes_15 ,  dimm_sizes_16 ,  dimm_sizes_17 ,  dimm_sizes_18 ,  dimm_sizes_19 ,  dimm_sizes_20 ,  dimm_sizes_21 ,  dimm_sizes_22 ,  dimm_sizes_23 ,  pcd_interleave_index ,  cookie_v1_1 ,  cookie_v1_2 )  \
+			VALUES 		\
+			($id, \
+			$socket_id, \
+			$size, \
+			$available_size, \
+			$attributes, \
+			$dimm_count, \
+			$dimm_handles_0, \
+			$dimm_handles_1, \
+			$dimm_handles_2, \
+			$dimm_handles_3, \
+			$dimm_handles_4, \
+			$dimm_handles_5, \
+			$dimm_handles_6, \
+			$dimm_handles_7, \
+			$dimm_handles_8, \
+			$dimm_handles_9, \
+			$dimm_handles_10, \
+			$dimm_handles_11, \
+			$dimm_handles_12, \
+			$dimm_handles_13, \
+			$dimm_handles_14, \
+			$dimm_handles_15, \
+			$dimm_handles_16, \
+			$dimm_handles_17, \
+			$dimm_handles_18, \
+			$dimm_handles_19, \
+			$dimm_handles_20, \
+			$dimm_handles_21, \
+			$dimm_handles_22, \
+			$dimm_handles_23, \
+			$dimm_region_pdas_0, \
+			$dimm_region_pdas_1, \
+			$dimm_region_pdas_2, \
+			$dimm_region_pdas_3, \
+			$dimm_region_pdas_4, \
+			$dimm_region_pdas_5, \
+			$dimm_region_pdas_6, \
+			$dimm_region_pdas_7, \
+			$dimm_region_pdas_8, \
+			$dimm_region_pdas_9, \
+			$dimm_region_pdas_10, \
+			$dimm_region_pdas_11, \
+			$dimm_region_pdas_12, \
+			$dimm_region_pdas_13, \
+			$dimm_region_pdas_14, \
+			$dimm_region_pdas_15, \
+			$dimm_region_pdas_16, \
+			$dimm_region_pdas_17, \
+			$dimm_region_pdas_18, \
+			$dimm_region_pdas_19, \
+			$dimm_region_pdas_20, \
+			$dimm_region_pdas_21, \
+			$dimm_region_pdas_22, \
+			$dimm_region_pdas_23, \
+			$dimm_region_offsets_0, \
+			$dimm_region_offsets_1, \
+			$dimm_region_offsets_2, \
+			$dimm_region_offsets_3, \
+			$dimm_region_offsets_4, \
+			$dimm_region_offsets_5, \
+			$dimm_region_offsets_6, \
+			$dimm_region_offsets_7, \
+			$dimm_region_offsets_8, \
+			$dimm_region_offsets_9, \
+			$dimm_region_offsets_10, \
+			$dimm_region_offsets_11, \
+			$dimm_region_offsets_12, \
+			$dimm_region_offsets_13, \
+			$dimm_region_offsets_14, \
+			$dimm_region_offsets_15, \
+			$dimm_region_offsets_16, \
+			$dimm_region_offsets_17, \
+			$dimm_region_offsets_18, \
+			$dimm_region_offsets_19, \
+			$dimm_region_offsets_20, \
+			$dimm_region_offsets_21, \
+			$dimm_region_offsets_22, \
+			$dimm_region_offsets_23, \
+			$dimm_sizes_0, \
+			$dimm_sizes_1, \
+			$dimm_sizes_2, \
+			$dimm_sizes_3, \
+			$dimm_sizes_4, \
+			$dimm_sizes_5, \
+			$dimm_sizes_6, \
+			$dimm_sizes_7, \
+			$dimm_sizes_8, \
+			$dimm_sizes_9, \
+			$dimm_sizes_10, \
+			$dimm_sizes_11, \
+			$dimm_sizes_12, \
+			$dimm_sizes_13, \
+			$dimm_sizes_14, \
+			$dimm_sizes_15, \
+			$dimm_sizes_16, \
+			$dimm_sizes_17, \
+			$dimm_sizes_18, \
+			$dimm_sizes_19, \
+			$dimm_sizes_20, \
+			$dimm_sizes_21, \
+			$dimm_sizes_22, \
+			$dimm_sizes_23, \
+			$pcd_interleave_index, \
+			$cookie_v1_1, \
+			$cookie_v1_2) ";
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
+		{
+			local_bind_interleave_set(p_stmt, p_interleave_set);
+			sql_rc = sqlite3_step(p_stmt);
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+		}
+	}
+	/*
+	 * Insert as a history
+	 */
+	if (rc == DB_SUCCESS)
+	{
+		sqlite3_stmt *p_stmt;
+		char *sql = "INSERT INTO interleave_set_history \
+			(history_id, \
+				 id,  socket_id,  size,  available_size,  attributes,  dimm_count,  dimm_handles_0,  dimm_handles_1,  dimm_handles_2,  dimm_handles_3,  dimm_handles_4,  dimm_handles_5,  dimm_handles_6,  dimm_handles_7,  dimm_handles_8,  dimm_handles_9,  dimm_handles_10,  dimm_handles_11,  dimm_handles_12,  dimm_handles_13,  dimm_handles_14,  dimm_handles_15,  dimm_handles_16,  dimm_handles_17,  dimm_handles_18,  dimm_handles_19,  dimm_handles_20,  dimm_handles_21,  dimm_handles_22,  dimm_handles_23,  dimm_region_pdas_0,  dimm_region_pdas_1,  dimm_region_pdas_2,  dimm_region_pdas_3,  dimm_region_pdas_4,  dimm_region_pdas_5,  dimm_region_pdas_6,  dimm_region_pdas_7,  dimm_region_pdas_8,  dimm_region_pdas_9,  dimm_region_pdas_10,  dimm_region_pdas_11,  dimm_region_pdas_12,  dimm_region_pdas_13,  dimm_region_pdas_14,  dimm_region_pdas_15,  dimm_region_pdas_16,  dimm_region_pdas_17,  dimm_region_pdas_18,  dimm_region_pdas_19,  dimm_region_pdas_20,  dimm_region_pdas_21,  dimm_region_pdas_22,  dimm_region_pdas_23,  dimm_region_offsets_0,  dimm_region_offsets_1,  dimm_region_offsets_2,  dimm_region_offsets_3,  dimm_region_offsets_4,  dimm_region_offsets_5,  dimm_region_offsets_6,  dimm_region_offsets_7,  dimm_region_offsets_8,  dimm_region_offsets_9,  dimm_region_offsets_10,  dimm_region_offsets_11,  dimm_region_offsets_12,  dimm_region_offsets_13,  dimm_region_offsets_14,  dimm_region_offsets_15,  dimm_region_offsets_16,  dimm_region_offsets_17,  dimm_region_offsets_18,  dimm_region_offsets_19,  dimm_region_offsets_20,  dimm_region_offsets_21,  dimm_region_offsets_22,  dimm_region_offsets_23,  dimm_sizes_0,  dimm_sizes_1,  dimm_sizes_2,  dimm_sizes_3,  dimm_sizes_4,  dimm_sizes_5,  dimm_sizes_6,  dimm_sizes_7,  dimm_sizes_8,  dimm_sizes_9,  dimm_sizes_10,  dimm_sizes_11,  dimm_sizes_12,  dimm_sizes_13,  dimm_sizes_14,  dimm_sizes_15,  dimm_sizes_16,  dimm_sizes_17,  dimm_sizes_18,  dimm_sizes_19,  dimm_sizes_20,  dimm_sizes_21,  dimm_sizes_22,  dimm_sizes_23,  pcd_interleave_index,  cookie_v1_1,  cookie_v1_2)  \
+			VALUES 		($history_id, \
+				 $id , \
+				 $socket_id , \
+				 $size , \
+				 $available_size , \
+				 $attributes , \
+				 $dimm_count , \
+				 $dimm_handles_0 , \
+				 $dimm_handles_1 , \
+				 $dimm_handles_2 , \
+				 $dimm_handles_3 , \
+				 $dimm_handles_4 , \
+				 $dimm_handles_5 , \
+				 $dimm_handles_6 , \
+				 $dimm_handles_7 , \
+				 $dimm_handles_8 , \
+				 $dimm_handles_9 , \
+				 $dimm_handles_10 , \
+				 $dimm_handles_11 , \
+				 $dimm_handles_12 , \
+				 $dimm_handles_13 , \
+				 $dimm_handles_14 , \
+				 $dimm_handles_15 , \
+				 $dimm_handles_16 , \
+				 $dimm_handles_17 , \
+				 $dimm_handles_18 , \
+				 $dimm_handles_19 , \
+				 $dimm_handles_20 , \
+				 $dimm_handles_21 , \
+				 $dimm_handles_22 , \
+				 $dimm_handles_23 , \
+				 $dimm_region_pdas_0 , \
+				 $dimm_region_pdas_1 , \
+				 $dimm_region_pdas_2 , \
+				 $dimm_region_pdas_3 , \
+				 $dimm_region_pdas_4 , \
+				 $dimm_region_pdas_5 , \
+				 $dimm_region_pdas_6 , \
+				 $dimm_region_pdas_7 , \
+				 $dimm_region_pdas_8 , \
+				 $dimm_region_pdas_9 , \
+				 $dimm_region_pdas_10 , \
+				 $dimm_region_pdas_11 , \
+				 $dimm_region_pdas_12 , \
+				 $dimm_region_pdas_13 , \
+				 $dimm_region_pdas_14 , \
+				 $dimm_region_pdas_15 , \
+				 $dimm_region_pdas_16 , \
+				 $dimm_region_pdas_17 , \
+				 $dimm_region_pdas_18 , \
+				 $dimm_region_pdas_19 , \
+				 $dimm_region_pdas_20 , \
+				 $dimm_region_pdas_21 , \
+				 $dimm_region_pdas_22 , \
+				 $dimm_region_pdas_23 , \
+				 $dimm_region_offsets_0 , \
+				 $dimm_region_offsets_1 , \
+				 $dimm_region_offsets_2 , \
+				 $dimm_region_offsets_3 , \
+				 $dimm_region_offsets_4 , \
+				 $dimm_region_offsets_5 , \
+				 $dimm_region_offsets_6 , \
+				 $dimm_region_offsets_7 , \
+				 $dimm_region_offsets_8 , \
+				 $dimm_region_offsets_9 , \
+				 $dimm_region_offsets_10 , \
+				 $dimm_region_offsets_11 , \
+				 $dimm_region_offsets_12 , \
+				 $dimm_region_offsets_13 , \
+				 $dimm_region_offsets_14 , \
+				 $dimm_region_offsets_15 , \
+				 $dimm_region_offsets_16 , \
+				 $dimm_region_offsets_17 , \
+				 $dimm_region_offsets_18 , \
+				 $dimm_region_offsets_19 , \
+				 $dimm_region_offsets_20 , \
+				 $dimm_region_offsets_21 , \
+				 $dimm_region_offsets_22 , \
+				 $dimm_region_offsets_23 , \
+				 $dimm_sizes_0 , \
+				 $dimm_sizes_1 , \
+				 $dimm_sizes_2 , \
+				 $dimm_sizes_3 , \
+				 $dimm_sizes_4 , \
+				 $dimm_sizes_5 , \
+				 $dimm_sizes_6 , \
+				 $dimm_sizes_7 , \
+				 $dimm_sizes_8 , \
+				 $dimm_sizes_9 , \
+				 $dimm_sizes_10 , \
+				 $dimm_sizes_11 , \
+				 $dimm_sizes_12 , \
+				 $dimm_sizes_13 , \
+				 $dimm_sizes_14 , \
+				 $dimm_sizes_15 , \
+				 $dimm_sizes_16 , \
+				 $dimm_sizes_17 , \
+				 $dimm_sizes_18 , \
+				 $dimm_sizes_19 , \
+				 $dimm_sizes_20 , \
+				 $dimm_sizes_21 , \
+				 $dimm_sizes_22 , \
+				 $dimm_sizes_23 , \
+				 $pcd_interleave_index , \
+				 $cookie_v1_1 , \
+				 $cookie_v1_2 )";
+		int sql_rc;
+		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
+		{
+			BIND_INTEGER(p_stmt, "$history_id", history_id);
+			local_bind_interleave_set(p_stmt, p_interleave_set);
+			sql_rc = sqlite3_step(p_stmt);
+			if (sql_rc == SQLITE_DONE)
+			{
+				rc = DB_SUCCESS;
+			}
+			sqlite3_finalize(p_stmt);
+			if (sql_rc != SQLITE_DONE)
+			{
+				rc = DB_ERR_FAILURE;
+				COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+					sql_rc);
+			}
+		}
+		else
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+		}
+	}
+	return rc;
+}
+
+enum db_return_codes db_get_interleave_set_by_id(const PersistentStore *p_ps,
+	const int id,
+	struct db_interleave_set *p_interleave_set)
+{
+	memset(p_interleave_set, 0, sizeof (struct db_interleave_set));
+	enum db_return_codes rc = DB_ERR_FAILURE;
+	sqlite3_stmt *p_stmt;
+	char *sql = "SELECT \
+		id,  socket_id,  size,  available_size,  attributes,  dimm_count,  dimm_handles_0,  dimm_handles_1,  dimm_handles_2,  dimm_handles_3,  dimm_handles_4,  dimm_handles_5,  dimm_handles_6,  dimm_handles_7,  dimm_handles_8,  dimm_handles_9,  dimm_handles_10,  dimm_handles_11,  dimm_handles_12,  dimm_handles_13,  dimm_handles_14,  dimm_handles_15,  dimm_handles_16,  dimm_handles_17,  dimm_handles_18,  dimm_handles_19,  dimm_handles_20,  dimm_handles_21,  dimm_handles_22,  dimm_handles_23,  dimm_region_pdas_0,  dimm_region_pdas_1,  dimm_region_pdas_2,  dimm_region_pdas_3,  dimm_region_pdas_4,  dimm_region_pdas_5,  dimm_region_pdas_6,  dimm_region_pdas_7,  dimm_region_pdas_8,  dimm_region_pdas_9,  dimm_region_pdas_10,  dimm_region_pdas_11,  dimm_region_pdas_12,  dimm_region_pdas_13,  dimm_region_pdas_14,  dimm_region_pdas_15,  dimm_region_pdas_16,  dimm_region_pdas_17,  dimm_region_pdas_18,  dimm_region_pdas_19,  dimm_region_pdas_20,  dimm_region_pdas_21,  dimm_region_pdas_22,  dimm_region_pdas_23,  dimm_region_offsets_0,  dimm_region_offsets_1,  dimm_region_offsets_2,  dimm_region_offsets_3,  dimm_region_offsets_4,  dimm_region_offsets_5,  dimm_region_offsets_6,  dimm_region_offsets_7,  dimm_region_offsets_8,  dimm_region_offsets_9,  dimm_region_offsets_10,  dimm_region_offsets_11,  dimm_region_offsets_12,  dimm_region_offsets_13,  dimm_region_offsets_14,  dimm_region_offsets_15,  dimm_region_offsets_16,  dimm_region_offsets_17,  dimm_region_offsets_18,  dimm_region_offsets_19,  dimm_region_offsets_20,  dimm_region_offsets_21,  dimm_region_offsets_22,  dimm_region_offsets_23,  dimm_sizes_0,  dimm_sizes_1,  dimm_sizes_2,  dimm_sizes_3,  dimm_sizes_4,  dimm_sizes_5,  dimm_sizes_6,  dimm_sizes_7,  dimm_sizes_8,  dimm_sizes_9,  dimm_sizes_10,  dimm_sizes_11,  dimm_sizes_12,  dimm_sizes_13,  dimm_sizes_14,  dimm_sizes_15,  dimm_sizes_16,  dimm_sizes_17,  dimm_sizes_18,  dimm_sizes_19,  dimm_sizes_20,  dimm_sizes_21,  dimm_sizes_22,  dimm_sizes_23,  pcd_interleave_index,  cookie_v1_1,  cookie_v1_2  \
+		FROM interleave_set \
+		WHERE  id = $id";
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
+	{
+		BIND_INTEGER(p_stmt, "$id", (int)id);
+		sql_rc = sqlite3_step(p_stmt);
+		if (sql_rc == SQLITE_ROW)
+		{
+			local_row_to_interleave_set(p_ps, p_stmt, p_interleave_set);
+			local_get_interleave_set_relationships(p_ps, p_stmt, p_interleave_set);
+			rc = DB_SUCCESS;
+		}
+		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+	}
+	return rc;
+}
+enum db_return_codes db_update_interleave_set_by_id(const PersistentStore *p_ps,
+	const int id,
+	struct db_interleave_set *p_interleave_set)
+{
+	sqlite3_stmt *p_stmt;
+	enum db_return_codes rc = DB_SUCCESS;
+	char *sql = "UPDATE interleave_set \
+	SET \
+	id=$id \
+		,  socket_id=$socket_id \
+		,  size=$size \
+		,  available_size=$available_size \
+		,  attributes=$attributes \
+		,  dimm_count=$dimm_count \
+		,  dimm_handles_0=$dimm_handles_0 \
+		,  dimm_handles_1=$dimm_handles_1 \
+		,  dimm_handles_2=$dimm_handles_2 \
+		,  dimm_handles_3=$dimm_handles_3 \
+		,  dimm_handles_4=$dimm_handles_4 \
+		,  dimm_handles_5=$dimm_handles_5 \
+		,  dimm_handles_6=$dimm_handles_6 \
+		,  dimm_handles_7=$dimm_handles_7 \
+		,  dimm_handles_8=$dimm_handles_8 \
+		,  dimm_handles_9=$dimm_handles_9 \
+		,  dimm_handles_10=$dimm_handles_10 \
+		,  dimm_handles_11=$dimm_handles_11 \
+		,  dimm_handles_12=$dimm_handles_12 \
+		,  dimm_handles_13=$dimm_handles_13 \
+		,  dimm_handles_14=$dimm_handles_14 \
+		,  dimm_handles_15=$dimm_handles_15 \
+		,  dimm_handles_16=$dimm_handles_16 \
+		,  dimm_handles_17=$dimm_handles_17 \
+		,  dimm_handles_18=$dimm_handles_18 \
+		,  dimm_handles_19=$dimm_handles_19 \
+		,  dimm_handles_20=$dimm_handles_20 \
+		,  dimm_handles_21=$dimm_handles_21 \
+		,  dimm_handles_22=$dimm_handles_22 \
+		,  dimm_handles_23=$dimm_handles_23 \
+		,  dimm_region_pdas_0=$dimm_region_pdas_0 \
+		,  dimm_region_pdas_1=$dimm_region_pdas_1 \
+		,  dimm_region_pdas_2=$dimm_region_pdas_2 \
+		,  dimm_region_pdas_3=$dimm_region_pdas_3 \
+		,  dimm_region_pdas_4=$dimm_region_pdas_4 \
+		,  dimm_region_pdas_5=$dimm_region_pdas_5 \
+		,  dimm_region_pdas_6=$dimm_region_pdas_6 \
+		,  dimm_region_pdas_7=$dimm_region_pdas_7 \
+		,  dimm_region_pdas_8=$dimm_region_pdas_8 \
+		,  dimm_region_pdas_9=$dimm_region_pdas_9 \
+		,  dimm_region_pdas_10=$dimm_region_pdas_10 \
+		,  dimm_region_pdas_11=$dimm_region_pdas_11 \
+		,  dimm_region_pdas_12=$dimm_region_pdas_12 \
+		,  dimm_region_pdas_13=$dimm_region_pdas_13 \
+		,  dimm_region_pdas_14=$dimm_region_pdas_14 \
+		,  dimm_region_pdas_15=$dimm_region_pdas_15 \
+		,  dimm_region_pdas_16=$dimm_region_pdas_16 \
+		,  dimm_region_pdas_17=$dimm_region_pdas_17 \
+		,  dimm_region_pdas_18=$dimm_region_pdas_18 \
+		,  dimm_region_pdas_19=$dimm_region_pdas_19 \
+		,  dimm_region_pdas_20=$dimm_region_pdas_20 \
+		,  dimm_region_pdas_21=$dimm_region_pdas_21 \
+		,  dimm_region_pdas_22=$dimm_region_pdas_22 \
+		,  dimm_region_pdas_23=$dimm_region_pdas_23 \
+		,  dimm_region_offsets_0=$dimm_region_offsets_0 \
+		,  dimm_region_offsets_1=$dimm_region_offsets_1 \
+		,  dimm_region_offsets_2=$dimm_region_offsets_2 \
+		,  dimm_region_offsets_3=$dimm_region_offsets_3 \
+		,  dimm_region_offsets_4=$dimm_region_offsets_4 \
+		,  dimm_region_offsets_5=$dimm_region_offsets_5 \
+		,  dimm_region_offsets_6=$dimm_region_offsets_6 \
+		,  dimm_region_offsets_7=$dimm_region_offsets_7 \
+		,  dimm_region_offsets_8=$dimm_region_offsets_8 \
+		,  dimm_region_offsets_9=$dimm_region_offsets_9 \
+		,  dimm_region_offsets_10=$dimm_region_offsets_10 \
+		,  dimm_region_offsets_11=$dimm_region_offsets_11 \
+		,  dimm_region_offsets_12=$dimm_region_offsets_12 \
+		,  dimm_region_offsets_13=$dimm_region_offsets_13 \
+		,  dimm_region_offsets_14=$dimm_region_offsets_14 \
+		,  dimm_region_offsets_15=$dimm_region_offsets_15 \
+		,  dimm_region_offsets_16=$dimm_region_offsets_16 \
+		,  dimm_region_offsets_17=$dimm_region_offsets_17 \
+		,  dimm_region_offsets_18=$dimm_region_offsets_18 \
+		,  dimm_region_offsets_19=$dimm_region_offsets_19 \
+		,  dimm_region_offsets_20=$dimm_region_offsets_20 \
+		,  dimm_region_offsets_21=$dimm_region_offsets_21 \
+		,  dimm_region_offsets_22=$dimm_region_offsets_22 \
+		,  dimm_region_offsets_23=$dimm_region_offsets_23 \
+		,  dimm_sizes_0=$dimm_sizes_0 \
+		,  dimm_sizes_1=$dimm_sizes_1 \
+		,  dimm_sizes_2=$dimm_sizes_2 \
+		,  dimm_sizes_3=$dimm_sizes_3 \
+		,  dimm_sizes_4=$dimm_sizes_4 \
+		,  dimm_sizes_5=$dimm_sizes_5 \
+		,  dimm_sizes_6=$dimm_sizes_6 \
+		,  dimm_sizes_7=$dimm_sizes_7 \
+		,  dimm_sizes_8=$dimm_sizes_8 \
+		,  dimm_sizes_9=$dimm_sizes_9 \
+		,  dimm_sizes_10=$dimm_sizes_10 \
+		,  dimm_sizes_11=$dimm_sizes_11 \
+		,  dimm_sizes_12=$dimm_sizes_12 \
+		,  dimm_sizes_13=$dimm_sizes_13 \
+		,  dimm_sizes_14=$dimm_sizes_14 \
+		,  dimm_sizes_15=$dimm_sizes_15 \
+		,  dimm_sizes_16=$dimm_sizes_16 \
+		,  dimm_sizes_17=$dimm_sizes_17 \
+		,  dimm_sizes_18=$dimm_sizes_18 \
+		,  dimm_sizes_19=$dimm_sizes_19 \
+		,  dimm_sizes_20=$dimm_sizes_20 \
+		,  dimm_sizes_21=$dimm_sizes_21 \
+		,  dimm_sizes_22=$dimm_sizes_22 \
+		,  dimm_sizes_23=$dimm_sizes_23 \
+		,  pcd_interleave_index=$pcd_interleave_index \
+		,  cookie_v1_1=$cookie_v1_1 \
+		,  cookie_v1_2=$cookie_v1_2 \
+		  \
+	WHERE id=$id ";
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
+	{
+		BIND_INTEGER(p_stmt, "$id", (int)id);
+		local_bind_interleave_set(p_stmt, p_interleave_set);
+		sql_rc = sqlite3_step(p_stmt);
+		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+	}
+	return rc;
+}
+enum db_return_codes db_delete_interleave_set_by_id(const PersistentStore *p_ps,
+	const int id)
+{
+	enum db_return_codes rc = DB_ERR_FAILURE;
+	sqlite3_stmt *p_stmt;
+	char *sql = "DELETE FROM interleave_set \
+				 WHERE id = $id";
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
+	{
+		BIND_INTEGER(p_stmt, "$id", (int)id);
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
+		{
+			rc = DB_SUCCESS;
+		}
+		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+	}
+	return rc;
+}
+
+enum db_return_codes db_get_interleave_set_history_by_history_id_count(const PersistentStore *p_ps, 
+	int history_id,
+	int *p_count)
+{
+	enum db_return_codes rc = DB_ERR_FAILURE;
+	*p_count = 0;
+	sqlite3_stmt *p_stmt;
+	char buffer[1024];
+	snprintf(buffer, 1024, "select count(*) FROM interleave_set_history WHERE  history_id = '%d'", history_id);
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
+	{
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
+		{
+			*p_count = sqlite3_column_int(p_stmt, 0);
+			rc = DB_SUCCESS;
+		}
+		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+	}
+	return rc;
+}
+enum db_return_codes db_get_interleave_set_history_count(const PersistentStore *p_ps, int *p_count)
+{
+	enum db_return_codes rc = DB_ERR_FAILURE;
+	*p_count = 0;
+	sqlite3_stmt *p_stmt;
+	char buffer[1024];
+	snprintf(buffer, 1024, "select count(*) FROM interleave_set_history");
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, buffer, p_stmt)) == SQLITE_OK)
+	{
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
+		{
+			*p_count = sqlite3_column_int(p_stmt, 0);
+			rc = DB_SUCCESS;
+		}
+		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+	}
+	return rc;
+}
+int db_get_interleave_set_history_by_history_id(const PersistentStore *p_ps,
+	struct db_interleave_set *p_interleave_set,
+	int history_id,
+	int interleave_set_count)
+{
+	int rc = DB_ERR_FAILURE;
+	memset(p_interleave_set, 0, sizeof (struct db_interleave_set) * interleave_set_count);
+	sqlite3_stmt *p_stmt;
+	char *sql = "SELECT \
+		id,  socket_id,  size,  available_size,  attributes,  dimm_count,  dimm_handles_0,  dimm_handles_1,  dimm_handles_2,  dimm_handles_3,  dimm_handles_4,  dimm_handles_5,  dimm_handles_6,  dimm_handles_7,  dimm_handles_8,  dimm_handles_9,  dimm_handles_10,  dimm_handles_11,  dimm_handles_12,  dimm_handles_13,  dimm_handles_14,  dimm_handles_15,  dimm_handles_16,  dimm_handles_17,  dimm_handles_18,  dimm_handles_19,  dimm_handles_20,  dimm_handles_21,  dimm_handles_22,  dimm_handles_23,  dimm_region_pdas_0,  dimm_region_pdas_1,  dimm_region_pdas_2,  dimm_region_pdas_3,  dimm_region_pdas_4,  dimm_region_pdas_5,  dimm_region_pdas_6,  dimm_region_pdas_7,  dimm_region_pdas_8,  dimm_region_pdas_9,  dimm_region_pdas_10,  dimm_region_pdas_11,  dimm_region_pdas_12,  dimm_region_pdas_13,  dimm_region_pdas_14,  dimm_region_pdas_15,  dimm_region_pdas_16,  dimm_region_pdas_17,  dimm_region_pdas_18,  dimm_region_pdas_19,  dimm_region_pdas_20,  dimm_region_pdas_21,  dimm_region_pdas_22,  dimm_region_pdas_23,  dimm_region_offsets_0,  dimm_region_offsets_1,  dimm_region_offsets_2,  dimm_region_offsets_3,  dimm_region_offsets_4,  dimm_region_offsets_5,  dimm_region_offsets_6,  dimm_region_offsets_7,  dimm_region_offsets_8,  dimm_region_offsets_9,  dimm_region_offsets_10,  dimm_region_offsets_11,  dimm_region_offsets_12,  dimm_region_offsets_13,  dimm_region_offsets_14,  dimm_region_offsets_15,  dimm_region_offsets_16,  dimm_region_offsets_17,  dimm_region_offsets_18,  dimm_region_offsets_19,  dimm_region_offsets_20,  dimm_region_offsets_21,  dimm_region_offsets_22,  dimm_region_offsets_23,  dimm_sizes_0,  dimm_sizes_1,  dimm_sizes_2,  dimm_sizes_3,  dimm_sizes_4,  dimm_sizes_5,  dimm_sizes_6,  dimm_sizes_7,  dimm_sizes_8,  dimm_sizes_9,  dimm_sizes_10,  dimm_sizes_11,  dimm_sizes_12,  dimm_sizes_13,  dimm_sizes_14,  dimm_sizes_15,  dimm_sizes_16,  dimm_sizes_17,  dimm_sizes_18,  dimm_sizes_19,  dimm_sizes_20,  dimm_sizes_21,  dimm_sizes_22,  dimm_sizes_23,  pcd_interleave_index,  cookie_v1_1,  cookie_v1_2  \
+		FROM interleave_set_history WHERE history_id = $history_id";
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
+	{
+		int index = 0;
+		BIND_INTEGER(p_stmt, "$history_id", history_id);
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < interleave_set_count)
+		{
+			rc = DB_SUCCESS;
+			local_row_to_interleave_set(p_ps, p_stmt, &p_interleave_set[index]);
+			local_get_interleave_set_relationships_history(p_ps, p_stmt, &p_interleave_set[index], history_id);
+			index++;
+		}
+		sqlite3_finalize(p_stmt);
+		rc = index;
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+	}
+	return rc;
+}
+enum db_return_codes db_delete_interleave_set_history(const PersistentStore *p_ps)
+{
+	return run_sql_no_results(p_ps->db, "DELETE FROM interleave_set_history");
+}
+
+/*!
+ * Roll interleave_sets by id to specified max.
+ */
+enum db_return_codes db_roll_interleave_sets_by_id(const PersistentStore *p_ps,
+	int max_rows)
+{
+	enum db_return_codes rc = DB_ERR_FAILURE;
+	sqlite3_stmt *p_stmt;
+	char sql[1024];
+	snprintf(sql, 1024,
+				"DELETE FROM interleave_set "
+				"WHERE id NOT IN ("
+				"SELECT id "
+				"FROM interleave_set "
+				"ORDER BY id DESC "
+				"LIMIT %d)", max_rows); 
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
+	{
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
+		{
+			rc = DB_SUCCESS;
+		}
+		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+	}
+	return rc;
+}
+/*!
+ * Get the max id in the interleave_set table.
+ */
+enum db_return_codes db_get_next_interleave_set_id(const PersistentStore *p_ps, int *p_max)
+{
+	enum db_return_codes rc = DB_ERR_FAILURE;
+	if (p_max)
+	{
+		if ((rc = run_scalar_sql(p_ps, 
+			"SELECT MAX(id) FROM interleave_set", p_max)) 
+			==  DB_SUCCESS)
+		{
+			(*p_max)++;
+		}
+	}
+	return rc;
+}
+enum db_return_codes db_get_interleave_set_count_by_dimm_interleave_set_index_id(
+	const PersistentStore *p_ps,
+	const unsigned int pcd_interleave_index,
+	int *p_count)
+{
+	enum db_return_codes rc = DB_ERR_FAILURE;
+	*p_count = 0;
+	const char *sql = "SELECT COUNT (*) FROM interleave_set WHERE pcd_interleave_index = $pcd_interleave_index";
+	sqlite3_stmt *p_stmt;
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
+	{
+		BIND_INTEGER(p_stmt, "$pcd_interleave_index", (unsigned int)pcd_interleave_index);
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
+		{
+			*p_count = sqlite3_column_int(p_stmt, 0);
+			rc = DB_SUCCESS;
+		}
+		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_ROW)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+	}
+	return rc;
+}
+enum db_return_codes db_get_interleave_set_count_by_dimm_interleave_set_index_id_history(
+	const PersistentStore *p_ps,
+	const unsigned int pcd_interleave_index,
+	int *p_count, int history_id)
+{
+	enum db_return_codes rc = DB_ERR_FAILURE;
+	*p_count = 0;
+	const char *sql = "SELECT COUNT (*) FROM interleave_set_history "
+		"WHERE pcd_interleave_index = $pcd_interleave_index "
+			"AND history_id=$history_id";
+	sqlite3_stmt *p_stmt;
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
+	{
+		BIND_INTEGER(p_stmt, "$pcd_interleave_index", (unsigned int)pcd_interleave_index);
+		BIND_INTEGER(p_stmt, "$history_id", history_id);
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW)
+		{
+			*p_count = sqlite3_column_int(p_stmt, 0);
+			rc = DB_SUCCESS;
+		}
+		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			rc = DB_ERR_FAILURE;
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d",
+				sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+	}
+	return rc;
+}
+enum db_return_codes db_get_interleave_sets_by_dimm_interleave_set_index_id(const PersistentStore *p_ps,
+	unsigned int pcd_interleave_index,
+	struct db_interleave_set *p_interleave_set,
+	int interleave_set_count)
+{
+	enum db_return_codes rc = DB_ERR_FAILURE;
+	sqlite3_stmt *p_stmt;
+	char *sql = "SELECT \
+		 id ,  socket_id ,  size ,  available_size ,  attributes ,  dimm_count ,  dimm_handles_0 ,  dimm_handles_1 ,  dimm_handles_2 ,  dimm_handles_3 ,  dimm_handles_4 ,  dimm_handles_5 ,  dimm_handles_6 ,  dimm_handles_7 ,  dimm_handles_8 ,  dimm_handles_9 ,  dimm_handles_10 ,  dimm_handles_11 ,  dimm_handles_12 ,  dimm_handles_13 ,  dimm_handles_14 ,  dimm_handles_15 ,  dimm_handles_16 ,  dimm_handles_17 ,  dimm_handles_18 ,  dimm_handles_19 ,  dimm_handles_20 ,  dimm_handles_21 ,  dimm_handles_22 ,  dimm_handles_23 ,  dimm_region_pdas_0 ,  dimm_region_pdas_1 ,  dimm_region_pdas_2 ,  dimm_region_pdas_3 ,  dimm_region_pdas_4 ,  dimm_region_pdas_5 ,  dimm_region_pdas_6 ,  dimm_region_pdas_7 ,  dimm_region_pdas_8 ,  dimm_region_pdas_9 ,  dimm_region_pdas_10 ,  dimm_region_pdas_11 ,  dimm_region_pdas_12 ,  dimm_region_pdas_13 ,  dimm_region_pdas_14 ,  dimm_region_pdas_15 ,  dimm_region_pdas_16 ,  dimm_region_pdas_17 ,  dimm_region_pdas_18 ,  dimm_region_pdas_19 ,  dimm_region_pdas_20 ,  dimm_region_pdas_21 ,  dimm_region_pdas_22 ,  dimm_region_pdas_23 ,  dimm_region_offsets_0 ,  dimm_region_offsets_1 ,  dimm_region_offsets_2 ,  dimm_region_offsets_3 ,  dimm_region_offsets_4 ,  dimm_region_offsets_5 ,  dimm_region_offsets_6 ,  dimm_region_offsets_7 ,  dimm_region_offsets_8 ,  dimm_region_offsets_9 ,  dimm_region_offsets_10 ,  dimm_region_offsets_11 ,  dimm_region_offsets_12 ,  dimm_region_offsets_13 ,  dimm_region_offsets_14 ,  dimm_region_offsets_15 ,  dimm_region_offsets_16 ,  dimm_region_offsets_17 ,  dimm_region_offsets_18 ,  dimm_region_offsets_19 ,  dimm_region_offsets_20 ,  dimm_region_offsets_21 ,  dimm_region_offsets_22 ,  dimm_region_offsets_23 ,  dimm_sizes_0 ,  dimm_sizes_1 ,  dimm_sizes_2 ,  dimm_sizes_3 ,  dimm_sizes_4 ,  dimm_sizes_5 ,  dimm_sizes_6 ,  dimm_sizes_7 ,  dimm_sizes_8 ,  dimm_sizes_9 ,  dimm_sizes_10 ,  dimm_sizes_11 ,  dimm_sizes_12 ,  dimm_sizes_13 ,  dimm_sizes_14 ,  dimm_sizes_15 ,  dimm_sizes_16 ,  dimm_sizes_17 ,  dimm_sizes_18 ,  dimm_sizes_19 ,  dimm_sizes_20 ,  dimm_sizes_21 ,  dimm_sizes_22 ,  dimm_sizes_23 ,  pcd_interleave_index ,  cookie_v1_1 ,  cookie_v1_2  \
+		FROM interleave_set \
+		WHERE  pcd_interleave_index = $pcd_interleave_index";
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
+	{
+		rc = DB_SUCCESS;
+		BIND_INTEGER(p_stmt, "$pcd_interleave_index", (unsigned int)pcd_interleave_index);
+		int index = 0;
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < interleave_set_count)
+		{
+			local_row_to_interleave_set(p_ps, p_stmt, &p_interleave_set[index]);
+			local_get_interleave_set_relationships(p_ps, p_stmt, &p_interleave_set[index]);
+			index++;
+		}
+		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+	}
+	return rc;
+}
+enum db_return_codes db_get_interleave_sets_by_dimm_interleave_set_index_id_history(const PersistentStore *p_ps,
+	unsigned int pcd_interleave_index,
+	struct db_interleave_set *p_interleave_set,
+	int interleave_set_count, int history_id)
+{
+	enum db_return_codes rc = DB_ERR_FAILURE;
+	sqlite3_stmt *p_stmt;
+	char *sql = "SELECT \
+		 id ,  socket_id ,  size ,  available_size ,  attributes ,  dimm_count ,  dimm_handles_0 ,  dimm_handles_1 ,  dimm_handles_2 ,  dimm_handles_3 ,  dimm_handles_4 ,  dimm_handles_5 ,  dimm_handles_6 ,  dimm_handles_7 ,  dimm_handles_8 ,  dimm_handles_9 ,  dimm_handles_10 ,  dimm_handles_11 ,  dimm_handles_12 ,  dimm_handles_13 ,  dimm_handles_14 ,  dimm_handles_15 ,  dimm_handles_16 ,  dimm_handles_17 ,  dimm_handles_18 ,  dimm_handles_19 ,  dimm_handles_20 ,  dimm_handles_21 ,  dimm_handles_22 ,  dimm_handles_23 ,  dimm_region_pdas_0 ,  dimm_region_pdas_1 ,  dimm_region_pdas_2 ,  dimm_region_pdas_3 ,  dimm_region_pdas_4 ,  dimm_region_pdas_5 ,  dimm_region_pdas_6 ,  dimm_region_pdas_7 ,  dimm_region_pdas_8 ,  dimm_region_pdas_9 ,  dimm_region_pdas_10 ,  dimm_region_pdas_11 ,  dimm_region_pdas_12 ,  dimm_region_pdas_13 ,  dimm_region_pdas_14 ,  dimm_region_pdas_15 ,  dimm_region_pdas_16 ,  dimm_region_pdas_17 ,  dimm_region_pdas_18 ,  dimm_region_pdas_19 ,  dimm_region_pdas_20 ,  dimm_region_pdas_21 ,  dimm_region_pdas_22 ,  dimm_region_pdas_23 ,  dimm_region_offsets_0 ,  dimm_region_offsets_1 ,  dimm_region_offsets_2 ,  dimm_region_offsets_3 ,  dimm_region_offsets_4 ,  dimm_region_offsets_5 ,  dimm_region_offsets_6 ,  dimm_region_offsets_7 ,  dimm_region_offsets_8 ,  dimm_region_offsets_9 ,  dimm_region_offsets_10 ,  dimm_region_offsets_11 ,  dimm_region_offsets_12 ,  dimm_region_offsets_13 ,  dimm_region_offsets_14 ,  dimm_region_offsets_15 ,  dimm_region_offsets_16 ,  dimm_region_offsets_17 ,  dimm_region_offsets_18 ,  dimm_region_offsets_19 ,  dimm_region_offsets_20 ,  dimm_region_offsets_21 ,  dimm_region_offsets_22 ,  dimm_region_offsets_23 ,  dimm_sizes_0 ,  dimm_sizes_1 ,  dimm_sizes_2 ,  dimm_sizes_3 ,  dimm_sizes_4 ,  dimm_sizes_5 ,  dimm_sizes_6 ,  dimm_sizes_7 ,  dimm_sizes_8 ,  dimm_sizes_9 ,  dimm_sizes_10 ,  dimm_sizes_11 ,  dimm_sizes_12 ,  dimm_sizes_13 ,  dimm_sizes_14 ,  dimm_sizes_15 ,  dimm_sizes_16 ,  dimm_sizes_17 ,  dimm_sizes_18 ,  dimm_sizes_19 ,  dimm_sizes_20 ,  dimm_sizes_21 ,  dimm_sizes_22 ,  dimm_sizes_23 ,  pcd_interleave_index ,  cookie_v1_1 ,  cookie_v1_2  \
+		FROM interleave_set_history \
+		WHERE  pcd_interleave_index = $pcd_interleave_index AND history_id=$history_id";
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
+	{
+		rc = DB_SUCCESS;
+		BIND_INTEGER(p_stmt, "$pcd_interleave_index", (unsigned int)pcd_interleave_index);
+		BIND_INTEGER(p_stmt, "$history_id", history_id);
+		int index = 0;
+		while ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_ROW && index < interleave_set_count)
+		{
+			local_row_to_interleave_set(p_ps, p_stmt, &p_interleave_set[index]);
+			local_get_interleave_set_relationships(p_ps, p_stmt, &p_interleave_set[index]);
+			index++;
+		}
+		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+	}
+	return rc;
+}
+enum db_return_codes db_delete_interleave_set_by_dimm_interleave_set_index_id(const PersistentStore *p_ps,
+	unsigned int pcd_interleave_index)
+{
+	enum db_return_codes rc = DB_ERR_FAILURE;
+	sqlite3_stmt *p_stmt;
+	char *sql = "DELETE FROM interleave_set \
+				 WHERE pcd_interleave_index = $pcd_interleave_index";
+	int sql_rc;
+	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
+	{
+		BIND_INTEGER(p_stmt, "$pcd_interleave_index", (unsigned int)pcd_interleave_index);
+		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
+		{
+			rc = DB_SUCCESS;
+		}
+		sqlite3_finalize(p_stmt);
+		if (sql_rc != SQLITE_DONE)
+		{
+			COMMON_LOG_ERROR_F("Running SQL failed, error code %d", sql_rc);
+		}
+	}
+	else
+	{
+		rc = DB_ERR_FAILURE;
+		COMMON_LOG_ERROR_F("Preparing SQL failed, error code %d", sql_rc);
+	}
+	return rc;
+}
+/*
+ * --- END interleave_set ----------------
+ */
+/*
  * Delete all histories
  */
 enum db_return_codes db_clear_history(PersistentStore *p_ps)
@@ -35245,6 +37118,8 @@ enum db_return_codes db_clear_history(PersistentStore *p_ps)
 	
 #endif
 
+	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM interleave_set_history"));
+	
 	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM history"));
 	return rc;
 }
@@ -35497,6 +37372,9 @@ enum db_return_codes db_clear_state(PersistentStore *p_ps)
 	
 #endif
 
+	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM interleave_set_history"));
+	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM interleave_set"));
+	
 	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, "DELETE FROM history"));
 	return rc;
 }
@@ -35943,6 +37821,12 @@ enum db_return_codes db_roll_history(PersistentStore *p_ps, int max)
 	
 #endif
 
+	snprintf(sql, 1024,
+				"DELETE FROM interleave_set_history "
+				"WHERE history_id NOT IN "
+				"(SELECT history_id FROM history ORDER BY ROWID DESC LIMIT %d)", max); 
+	KEEP_DB_ERROR(rc, run_sql_no_results(p_ps->db, sql));
+	
 	snprintf(sql, 1024,
 				"DELETE FROM history "
 				"WHERE history_id NOT IN "

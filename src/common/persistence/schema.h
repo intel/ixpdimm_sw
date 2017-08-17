@@ -11955,6 +11955,248 @@ enum db_return_codes db_delete_eafd_by_device_handle(const PersistentStore *p_ps
 	int history_id,
 	int eafd_count);
 /*!
+ * @defgroup interleave_set interleave_set 
+ * @ingroup db_schema
+ */
+ // Lengths for strings and arrays
+#define	INTERLEAVE_SET_DIMM_HANDLES_COUNT 24 //!< Max length for dimm_handles
+#define	INTERLEAVE_SET_DIMM_REGION_PDAS_COUNT 24 //!< Max length for dimm_region_pdas
+#define	INTERLEAVE_SET_DIMM_REGION_OFFSETS_COUNT 24 //!< Max length for dimm_region_offsets
+#define	INTERLEAVE_SET_DIMM_SIZES_COUNT 24 //!< Max length for dimm_sizes
+/*!
+ * struct representing the interleave_set table
+ * @ingroup interleave_set
+ */
+struct db_interleave_set
+{
+	int id;
+	unsigned int socket_id;
+	unsigned long long size;
+	unsigned long long available_size;
+	unsigned long long attributes;
+	unsigned int dimm_count;
+	unsigned int dimm_handles[INTERLEAVE_SET_DIMM_HANDLES_COUNT];
+	unsigned long long dimm_region_pdas[INTERLEAVE_SET_DIMM_REGION_PDAS_COUNT];
+	unsigned long long dimm_region_offsets[INTERLEAVE_SET_DIMM_REGION_OFFSETS_COUNT];
+	unsigned long long dimm_sizes[INTERLEAVE_SET_DIMM_SIZES_COUNT];
+	unsigned int pcd_interleave_index;
+	unsigned long long cookie_v1_1;
+	unsigned long long cookie_v1_2;
+};
+/*!
+ * Helper function to print a db_interleave_set to the screen.
+ * @ingroup interleave_set
+ * @param p_interleave_set
+ * 		value to print
+ * @return
+ *		void
+ */
+void db_print_interleave_set(struct db_interleave_set *p_value);
+/*!
+ * Create a new row in the interleave_set table
+ * @ingroup interleave_set
+ * @param[in] p_ps
+ *		Pointer to the PersistentStore
+ * @param[in] p_interleave_set
+ *		Pointer to the object to be saved to the interleave_set table
+ * @return return_code whether or not it was successful
+ */
+enum db_return_codes db_add_interleave_set(const PersistentStore *p_ps, struct db_interleave_set *p_interleave_set);
+/*!
+ * Get the total number of interleave_sets
+ * @param[in] p_ps
+ *		Pointer to the instance of the PersistentStore
+ * @param[out] p_count
+ * 		Set to the number of interleave_sets
+ * @return whether successful or not
+ */
+enum db_return_codes db_get_interleave_set_count(const PersistentStore *p_ps, int *p_count);
+/*!
+ * Return all interleave_sets
+ * @ingroup interleave_set
+ * @param[in] p_ps
+ *		Pointer to the PersistentStore
+ * @param[out] p_interleave_set
+ *		Pointer to an array of interleave_set objects that will contain all the interleave_sets
+ * @param[in] interleave_set_count
+ *		Size of p_interleave_set
+ * @return The number of row (to max of interleave_set_count) on success.  DB_FAILURE on failure.
+ */
+int db_get_interleave_sets(const PersistentStore *p_ps,
+	struct db_interleave_set
+	*p_interleave_set,
+	int interleave_set_count);
+/*!
+ * Truncate all the data in the interleave_set table
+ * @ingroup 
+ * @param[in] p_ps
+ *		Pointer to the PersistentStore
+ * @return return_code whether or not it was successful
+ */	
+enum db_return_codes db_delete_all_interleave_sets(const PersistentStore *p_ps);
+
+/*!
+ * delete all entries from interleave_set history
+ * @ingroup interleave_set
+ * @param[in] p_ps
+ *		Pointer to the PersistentStore
+ * @return return_code whether or not it was successful
+ */
+ enum db_return_codes db_delete_interleave_set_history(const PersistentStore *p_ps);
+ 
+/*!
+ * save interleave_set state
+ * @ingroup interleave_set
+ * @param[in] p_ps
+ *		Pointer to the PersistentStore
+ * @param[in] history_id
+ *		ID of the history to add the interleave_set to
+ * @param[in] p_interleave_set
+ *		interleave_set to save to history
+ * @return return_code whether or not it was successful
+ */
+enum db_return_codes db_save_interleave_set_state(const PersistentStore *p_ps,
+	int history_id,
+	struct db_interleave_set *p_interleave_set);
+/*!
+ * Return a specific interleave_set for a given id
+ * @ingroup interleave_set
+ * @param[in] p_ps
+ *		Pointer to the PersistentStore
+ * @param[in] id
+ *		id to identify the correct interleave_set
+ * @param[out] p_interleave_set
+ *		struct to put the interleave_set retrieved
+ * @return return_code whether or not it was successful
+ */
+enum db_return_codes db_get_interleave_set_by_id(const PersistentStore *p_ps,
+	const int id,
+	struct db_interleave_set *p_interleave_set);
+/*!
+ * Update a specific interleave_set given the original id
+ * @ingroup interleave_set
+ * @param[in] p_ps
+ *		Pointer to the PersistentStore
+ * @param[in] id
+ * 		id points to the interleave_set to update
+ * @param[in] *p_updated_interleave_set
+ *		structure with new values for the interleave_set
+ * @return return_code whether or not it was successful
+ */
+enum db_return_codes db_update_interleave_set_by_id(const PersistentStore *p_ps,
+	const int id,
+	struct db_interleave_set *p_updated_interleave_set);
+/*!
+ * Delete a specific interleave_set given the id
+ * @ingroup interleave_set
+ * @param[in] p_ps
+ *		Pointer to the PersistentStore
+ * @param[in] id
+ *		id points to the record to delete
+ * @return return_code whether or not it was successful
+ */
+enum db_return_codes db_delete_interleave_set_by_id(const PersistentStore *p_ps,
+	const int id);
+/*!
+ * Return number of matching history rows
+ * @param[in] p_ps
+ *		Pointer to the PersistentStore
+ * @param[in] history_id
+ *		history_id of rows to count
+ * @param[out] count
+ *		count of rows matching this history_id
+ * @return The number of row (to max of interleave_set_count) on success.  DB_FAILURE on failure.
+ */
+ enum db_return_codes db_get_interleave_set_history_by_history_id_count(const PersistentStore *p_ps, 
+	int history_id,
+	int *p_count);
+/*!
+ * Return number of history rows
+ * @param[in] p_ps
+ *		Pointer to the PersistentStore
+ * @param[out] count
+ *		count of rows matching this history_id
+ * @return The number of row (to max of interleave_set_count) on success.  DB_FAILURE on failure.
+ */
+ enum db_return_codes db_get_interleave_set_history_count(const PersistentStore *p_ps, int *p_count);
+/*!
+ * Return all rows of matching custom sql
+ * @param[in] p_ps
+ *		Pointer to the PersistentStore
+ * @param[out] struct db_interleave_set
+ *		Structure type for row results
+ * @param[in] p_interleave_set
+ *		Pointer to memory to hold row results
+ * @param[in] history_id
+ *		history_id of rows to return
+ * @return The number of row (to max of interleave_set_count) on success.  DB_FAILURE on failure.
+ */
+ int db_get_interleave_set_history_by_history_id(const PersistentStore *p_ps,
+	struct db_interleave_set *p_interleave_set,
+	int history_id,
+	int interleave_set_count);
+/*!
+ * Roll interleave_sets by id to specified max.
+ * @ingroup interleave_set
+ * @param[in] p_ps
+ *		Pointer to the PersistentStore
+ * @param[in]  max_rows
+ *		The max table size
+ * @return return_code whether or not it was successful
+ */
+enum db_return_codes db_roll_interleave_sets_by_id(const PersistentStore *p_ps, int max_rows);
+/*!
+ * Get the max id in the interleave_set table.
+ * @ingroup interleave_set
+ * @param[in] p_ps
+ *		Pointer to the PersistentStore
+ * @param[in,out]  p_max
+ *		The max id
+ * @return return_code whether or not it was successful
+ */
+enum db_return_codes db_get_next_interleave_set_id(const PersistentStore *p_ps, int *p_max);
+/*!
+ * Return the number of interleave_sets for a given dimm_interleave_set.index_id
+ * @ingroup interleave_set
+ * @param[in] p_ps
+ *		Pointer to the PersistentStore
+ * @param[in]  pcd_interleave_index
+ *		Search interleave_set and get count for all with passed in pcd_interleave_index
+ * @param[out]   p_count
+ *		Resulting count
+ * @return return_code whether or not it was successful
+ */
+enum db_return_codes db_get_interleave_set_count_by_dimm_interleave_set_index_id (const PersistentStore *p_ps,
+	const unsigned int pcd_interleave_index, int *p_count);
+/*!
+ * Return a list of interleave_sets for a given dimm_interleave_set.index_id
+ * @ingroup interleave_set
+ * @param[in] p_ps
+ *		Pointer to the PersistentStore
+ * @param[in]  pcd_interleave_index
+ *		Search interleave_set and get all with passed in pcd_interleave_index
+ * @param[out] p_interleave_set
+ *		memory to hold the found interleave_sets
+ * @param[in]   interleave_set_count
+ *		Size of interleave_set array passed in
+ * @return return_code whether or not it was successful
+ */
+enum db_return_codes db_get_interleave_sets_by_dimm_interleave_set_index_id(const PersistentStore *p_ps,
+	unsigned int pcd_interleave_index,
+	struct db_interleave_set *p_interleave_set,
+	int interleave_set_count);
+/*!
+ * Delete a list of specific interleave_sets for a given dimm_interleave_set.index_id
+ * @ingroup interleave_set
+ * @param[in] p_ps
+ *		Pointer to the PersistentStore
+ * @param[in]  pcd_interleave_index
+ *		Search interleave_set and get all with passed in pcd_interleave_index
+ * @return return_code whether or not it was successful
+ */
+enum db_return_codes db_delete_interleave_set_by_dimm_interleave_set_index_id(const PersistentStore *p_ps,
+	unsigned int pcd_interleave_index);
+/*!
  * Delete all history
  * @param[in] p_ps
  *		Pointer to the PersistentStore

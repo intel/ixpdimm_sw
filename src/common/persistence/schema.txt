@@ -757,3 +757,21 @@ Attributes:
 	unsigned int blob_size
 	unsigned int max_fa_token_id
 
+Table(s): db_interleave_set 
+ 	  db_interleave_set_history 
+Description: Interleave sets from NFIT 
+Attributes: 
+	int id(PK)(Indexed)
+	unsigned int socket_id
+	unsigned long long size
+	unsigned long long available_size
+	unsigned long long attributes
+	unsigned int dimm_count
+	unsigned int dimm_handles
+	unsigned long long dimm_region_pdas
+	unsigned long long dimm_region_offsets
+	unsigned long long dimm_sizes
+	unsigned int pcd_interleave_index(FK)
+	unsigned long long cookie_v1_1
+	unsigned long long cookie_v1_2
+

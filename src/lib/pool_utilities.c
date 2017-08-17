@@ -237,7 +237,7 @@ int fill_interleave_set_settings_and_id_from_dimm(
 			interleave_set_pcd_offset,
 			&(p_interleave_set->set_index),
 			&(p_interleave_set->settings),
-			&(p_interleave_set->mirrored))) != NVM_SUCCESS)
+			NULL)) != NVM_SUCCESS)
 		{
 			COMMON_LOG_ERROR("Couldn't get PCD info");
 			rc = NVM_ERR_DRIVERFAILED;
