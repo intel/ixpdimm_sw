@@ -125,8 +125,6 @@ enum log_dest
 
 //! Formatted Function Exit w/ Return Value Log Macro: Log Level = Info
 #define	COMMON_LOG_EXIT_RETURN_I(return_value) \
-	int l_return = return_value; \
-	if (l_return < 0) {COMMON_LOG_ERROR_F("%s() returned %d", __FUNCTION__, l_return);} \
 	COMMON_LOG_EXIT_RETURN("%d", return_value)
 
 //! Formatted Control Handoff Log Macro: Log Level = Debug

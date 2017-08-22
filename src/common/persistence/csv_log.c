@@ -48,6 +48,9 @@
 
 // thread id, time, level, filename, linenumber, message
 #define	MAX_LOG_LINE_LEN	20 + 20 + 10 + 1024 + 10 + 2048 + 1
+#define	CSV_LOG_FIELDS	6
+#define	CSV_WRITE_FORMAT	"%llu,%llu,%d,\'%s\',%d,\'%s\'\n"
+#define	CSV_READ_FORMAT	"%llu,%llu,%d,\'%[^,']\',%d,%[^\n]\n"
 #define	ADD_LOG_SQL	"INSERT INTO log \
 	(thread_id, time, level, file_name, line_number, message) VALUES (%s)"
 #define	TRIM_LOG_SQL	"DELETE FROM log where id NOT IN \
@@ -125,6 +128,7 @@ int roll_db_log(PersistentStore *p_db)
 int flush_csv_log_to_db(PersistentStore *p_db)
 {
 	int rc = COMMON_ERR_UNKNOWN;
+	int flush_complete = 1;
 	if (p_db)
 	{
 		if (mutex_lock(&g_db_mutex))
@@ -140,30 +144,57 @@ int flush_csv_log_to_db(PersistentStore *p_db)
 
 				// read in next log entry in file
 				char line[MAX_LOG_LINE_LEN];
-				while (fgets(line, MAX_LOG_LINE_LEN, p_file) != NULL)
+				int lines_added = 0;
+				struct db_log *db_line = calloc(1, sizeof (struct db_log));
+				if (db_line == NULL)
 				{
-					size_t line_len = s_strnlen(line, MAX_LOG_LINE_LEN);
-					// remove the endline
-					if (line[line_len-1] == '\n')
-					{
-						line[line_len-1] = '\0';
-					}
-					// add it to the db
-					char add_log_stmt[line_len + sizeof (ADD_LOG_SQL)];
-					s_snprintf(add_log_stmt, MAX_LOG_LINE_LEN, ADD_LOG_SQL, line);
-
-					if (db_run_custom_sql(p_db, add_log_stmt) != DB_SUCCESS)
-					{
-						KEEP_ERROR(rc, COMMON_ERR_UNKNOWN);
-					}
+					rc = COMMON_ERR_NOMEMORY;
+					flush_complete = 0;
 				}
-
-				fclose(p_file);
-				delete_file(logfile_path, COMMON_PATH_LEN);
-
+				else
+				{
+					while (fgets(line, MAX_LOG_LINE_LEN, p_file) != NULL)
+					{
+						size_t line_len = s_strnlen(line, MAX_LOG_LINE_LEN);
+						// remove the endline
+						if (line[line_len-1] == '\n')
+						{
+							line[line_len-1] = '\0';
+						}
+						// add it to the db
+						if (CSV_LOG_FIELDS == sscanf(line, CSV_READ_FORMAT,
+							&(db_line->thread_id), &(db_line->time), &(db_line->level),
+							db_line->file_name, &(db_line->line_number), db_line->message))
+						{
+							if (db_add_log(p_db, db_line) != DB_SUCCESS)
+							{
+								KEEP_ERROR(rc, COMMON_ERR_UNKNOWN);
+								flush_complete = 0;
+								break;
+							}
+							if (++lines_added == MAX_LOGS)
+							{
+								KEEP_ERROR(rc, roll_db_log(p_db));
+								lines_added = 0;
+							}
+						}
+					}
+					free(db_line);
+				}
 				// roll the log
 				KEEP_ERROR(rc, roll_db_log(p_db));
-				db_end_transaction(p_db);
+
+				fclose(p_file);
+				if (flush_complete)
+				{
+					delete_file(logfile_path, COMMON_PATH_LEN);
+					db_end_transaction(p_db);
+				}
+				else
+				{
+					db_rollback_transaction(p_db);
+				}
+
 			}
 			mutex_unlock(&g_db_mutex);
 		}
@@ -185,7 +216,7 @@ int csv_write_log(int level, const char *file_name,
 		FILE *p_file = NULL;
 		if ((p_file = open_file(logfile_path, COMMON_PATH_LEN, "a+")) != NULL)
 		{
-			fprintf(p_file, "%llu,%llu,%d,\'%s\',%d,\'%s\'\n",
+			fprintf(p_file, CSV_WRITE_FORMAT,
 					(COMMON_UINT64)get_thread_id(), (COMMON_UINT64)time(NULL), level,
 					file_name, line_number, message);
 			fclose(p_file);
