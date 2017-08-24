@@ -474,8 +474,12 @@ int ioctl_passthrough_cmd(struct fw_cmd *p_fw_cmd)
 				}
 				if (rc == NVM_SUCCESS)
 				{
-					if ((lnx_err_status = ndctl_cmd_submit(p_vendor_cmd)) == 0)
+					if ((lnx_err_status = ndctl_cmd_submit(p_vendor_cmd)) >= 0)
 					{
+						// BSR returns 0x78, but everything else seems to indicate the
+						// command was a success. Going
+						// to ignore the result for now. If there was a real error,
+						// the fw_status should have it.
 						if ((dsm_vendor_err_status =
 								ndctl_cmd_get_firmware_status(p_vendor_cmd)) != DSM_VENDOR_SUCCESS)
 						{
