@@ -600,7 +600,9 @@ int fw_mb_err_to_nvm_lib_err(int status)
 	switch (DSM_EXTENDED_ERROR(status))
 	{
 		case MB_SUCCESS:
-			ret = NVM_SUCCESS;
+			// This function is only called if _DSM error code != SUCCESS.
+			// Here 0x0 means MB code was not updated due to _DSM timeout.
+			ret = NVM_ERR_TIMEOUT;
 			break;
 		case MB_INVALID_CMD_PARAM :
 			ret = NVM_ERR_INVALIDPARAMETER;
@@ -694,7 +696,7 @@ int dsm_err_to_nvm_lib_err(unsigned int status)
 				rc = NVM_ERR_DEVICEERROR;
 				break;
 			case DSM_VENDOR_RETRY_SUGGESTED:
-				rc = NVM_ERR_DEVICEERROR;
+				rc = NVM_ERR_TIMEOUT;
 				break;
 			case DSM_VENDOR_UNKNOWN:
 				rc = NVM_ERR_UNKNOWN;

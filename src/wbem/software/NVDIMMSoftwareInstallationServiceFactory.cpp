@@ -347,6 +347,9 @@ wbem::software::NVDIMMSoftwareInstallationServiceFactory::getReturnCodeFromLibEx
 	case NVM_ERR_UNKNOWN:
 		rc = SWINSTALLSERVICE_ERR_UNKNOWN;
 		break;
+	case NVM_ERR_TIMEOUT:
+		rc = SWINSTALLSERVICE_ERR_TIMEOUT;
+		break;
 	default:
 		rc = SWINSTALLSERVICE_ERR_FAILED;
 		break;

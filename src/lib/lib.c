@@ -389,6 +389,9 @@ int nvm_get_error(const enum return_code code, NVM_ERROR_DESCRIPTION description
 				s_strcpy(description,
 						TR("No device support data available from AEP DIMM."),
 								description_len);
+			case NVM_ERR_TIMEOUT:
+				s_strcpy(description, TR("The operation timed out."),
+						description_len);
 				break;
 			default:
 				s_strcpy(description, TR("The return code is not valid."),
