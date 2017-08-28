@@ -29,47 +29,7 @@
  * This file contains the NVMCLI system related commands.
  */
 
-#include <vector>
-#include <string>
-#include <string.h>
-#include <algorithm>
-#include <fstream>
-
-#include <LogEnterExit.h>
-
-#include <server/BaseServerFactory.h>
 #include "SystemFeature.h"
-#include <mem_config/MemoryResourcesFactory.h>
-#include <server/SystemCapabilitiesFactory.h>
-#include <libinvm-cim/Types.h>
-
-#include <libinvm-cli/CliFrameworkTypes.h>
-
-#include <libinvm-cli/CommandSpec.h>
-#include <libinvm-cli/SimpleListResult.h>
-#include <libinvm-cli/PropertyListResult.h>
-#include <libinvm-cli/SyntaxErrorMissingValueResult.h>
-#include <libinvm-cli/SyntaxErrorBadValueResult.h>
-#include <libinvm-cli/NotImplementedErrorResult.h>
-#include <libinvm-cli/Parser.h>
-#include <libinvm-cli/OutputOptions.h>
-#include <physical_asset/MemoryTopologyViewFactory.h>
-#include "CommandParts.h"
-#include "WbemToCli_utilities.h"
-#include <exception/NvmExceptionBadTarget.h>
-#include <exception/NvmExceptionLibError.h>
-
-#ifdef __WINDOWS__
-#include <windows.h>
-#else
-#include <termios.h>
-#include <unistd.h>
-#endif
-
-#include <cli/features/core/ShowDeviceCommand.h>
-#include <cli/features/core/ShowHostServerCommand.h>
-#include <cli/features/core/ShowMemoryResourcesCommand.h>
-#include <cli/features/core/ShowTopologyCommand.h>
 
 const std::string cli::nvmcli::SystemFeature::Name = "System";
 
@@ -231,6 +191,16 @@ void cli::nvmcli::SystemFeature::getPaths(cli::framework::CommandSpecList &list)
 				"socket target and one or more comma-separated socket identifiers. The default is "
 				"to display all sockets."));
 
+	cli::framework::CommandSpec showSocket(SHOW_SOCKET, TR("Show Socket"), framework::VERB_SHOW,
+			TR("Show basic information about the physical processors in the host server"));
+	showSocket.addOption(framework::OPTION_ALL);
+	showSocket.addOption(framework::OPTION_DISPLAY);
+	showSocket.addOption(framework::OPTION_UNITS)
+			.helpText(TR("Change the units that capacities are displayed in for this command."));
+	showSocket.addTarget(TARGET_SOCKET_R)
+			.helpText(TR("Restrict output to specific sockets by supplying one or more comma-separated socket identifiers."
+				"The default is to display all sockets."));
+
 	list.push_back(showSystem);
 	list.push_back(showDevices);
 	list.push_back(modifyDevice);
@@ -242,6 +212,7 @@ void cli::nvmcli::SystemFeature::getPaths(cli::framework::CommandSpecList &list)
 	list.push_back(showMemoryResources);
 	list.push_back(showSystemCap);
 	list.push_back(showTopology);
+	list.push_back(showSocket);
 }
 
 // Constructor, just calls super class
@@ -320,6 +291,9 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::run(
 		break;
 	case SHOW_TOPOLOGY:
 		pResult = showTopology(parsedCommand);
+		break;
+	case SHOW_SOCKET:
+		pResult = showSocket(parsedCommand);
 		break;
 	case MODIFY_DEVICE:
 		pResult = modifyDevice(parsedCommand);
@@ -1232,6 +1206,15 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::showTopology(
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	ShowTopologyCommand cmd;
+	return cmd.execute(parsedCommand);
+}
+
+cli::framework::ResultBase *cli::nvmcli::SystemFeature::showSocket(
+		const framework::ParsedCommand &parsedCommand)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	ShowSocketCommand cmd;
 	return cmd.execute(parsedCommand);
 }
 

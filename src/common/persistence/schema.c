@@ -593,7 +593,7 @@ tables[populate_index++] = ((struct table){"sw_inventory",
 					);"});
 tables[populate_index++] = ((struct table){"socket",
 				"CREATE TABLE socket (       \
-					 socket_id INTEGER  PRIMARY KEY  NOT NULL UNIQUE  , \
+					 id INTEGER  PRIMARY KEY  NOT NULL UNIQUE  , \
 					 type INTEGER  , \
 					 model INTEGER  , \
 					 brand INTEGER  , \
@@ -606,7 +606,7 @@ tables[populate_index++] = ((struct table){"socket",
 			tables[populate_index++] = ((struct table){"socket_history",
 				"CREATE TABLE socket_history (       \
 					history_id INTEGER NOT NULL, \
-					 socket_id INTEGER , \
+					 id INTEGER , \
 					 type INTEGER , \
 					 model INTEGER , \
 					 brand INTEGER , \
@@ -677,7 +677,8 @@ tables[populate_index++] = ((struct table){"socket_sku",
 				"CREATE TABLE socket_sku (       \
 					 type INTEGER  , \
 					 length INTEGER  , \
-					 socket_id INTEGER  PRIMARY KEY  NOT NULL UNIQUE  , \
+					 node_id INTEGER  PRIMARY KEY  NOT NULL UNIQUE  , \
+					 reserved INTEGER  , \
 					 mapped_memory_limit INTEGER  , \
 					 total_mapped_memory INTEGER  , \
 					 cache_memory_limit INTEGER   \
@@ -687,7 +688,8 @@ tables[populate_index++] = ((struct table){"socket_sku",
 					history_id INTEGER NOT NULL, \
 					 type INTEGER , \
 					 length INTEGER , \
-					 socket_id INTEGER , \
+					 node_id INTEGER , \
+					 reserved INTEGER , \
 					 mapped_memory_limit INTEGER , \
 					 total_mapped_memory INTEGER , \
 					 cache_memory_limit INTEGER  \
@@ -2920,12 +2922,12 @@ void local_row_to_log(const PersistentStore *p_ps,
 }
 void db_print_log(struct db_log *p_value)
 {
-	printf("log.id: %d\n", p_value->id);
-	printf("log.thread_id: unsigned %lld\n", p_value->thread_id);
-	printf("log.time: unsigned %lld\n", p_value->time);
-	printf("log.level: %d\n", p_value->level);
+	printf("log.id: %i\n", p_value->id);
+	printf("log.thread_id: %llu\n", p_value->thread_id);
+	printf("log.time: %llu\n", p_value->time);
+	printf("log.level: %i\n", p_value->level);
 	printf("log.file_name: %s\n", p_value->file_name);
-	printf("log.line_number: unsigned %d\n", p_value->line_number);
+	printf("log.line_number: %u\n", p_value->line_number);
 	printf("log.message: %s\n", p_value->message);
 }
 enum db_return_codes db_add_log(const PersistentStore *p_ps,
@@ -3406,17 +3408,17 @@ void local_row_to_event(const PersistentStore *p_ps,
 }
 void db_print_event(struct db_event *p_value)
 {
-	printf("event.id: %d\n", p_value->id);
-	printf("event.type: unsigned %d\n", p_value->type);
-	printf("event.severity: unsigned %d\n", p_value->severity);
-	printf("event.code: unsigned %d\n", p_value->code);
-	printf("event.action_required: unsigned %d\n", p_value->action_required);
+	printf("event.id: %i\n", p_value->id);
+	printf("event.type: %u\n", p_value->type);
+	printf("event.severity: %u\n", p_value->severity);
+	printf("event.code: %u\n", p_value->code);
+	printf("event.action_required: %u\n", p_value->action_required);
 	printf("event.uid: %s\n", p_value->uid);
-	printf("event.time: unsigned %lld\n", p_value->time);
+	printf("event.time: %llu\n", p_value->time);
 	printf("event.arg1: %s\n", p_value->arg1);
 	printf("event.arg2: %s\n", p_value->arg2);
 	printf("event.arg3: %s\n", p_value->arg3);
-	printf("event.diag_result: unsigned %d\n", p_value->diag_result);
+	printf("event.diag_result: %u\n", p_value->diag_result);
 }
 enum db_return_codes db_add_event(const PersistentStore *p_ps,
 	struct db_event *p_event)
@@ -4068,13 +4070,13 @@ void local_row_to_topology_state(const PersistentStore *p_ps,
 }
 void db_print_topology_state(struct db_topology_state *p_value)
 {
-	printf("topology_state.device_handle: unsigned %d\n", p_value->device_handle);
+	printf("topology_state.device_handle: %u\n", p_value->device_handle);
 	printf("topology_state.uid: %s\n", p_value->uid);
-	printf("topology_state.manufacturer: unsigned %d\n", p_value->manufacturer);
-	printf("topology_state.serial_num: unsigned %d\n", p_value->serial_num);
+	printf("topology_state.manufacturer: %u\n", p_value->manufacturer);
+	printf("topology_state.serial_num: %u\n", p_value->serial_num);
 	printf("topology_state.part_num: %s\n", p_value->part_num);
-	printf("topology_state.current_config_status: %d\n", p_value->current_config_status);
-	printf("topology_state.config_goal_status: %d\n", p_value->config_goal_status);
+	printf("topology_state.current_config_status: %i\n", p_value->current_config_status);
+	printf("topology_state.config_goal_status: %i\n", p_value->config_goal_status);
 }
 enum db_return_codes db_add_topology_state(const PersistentStore *p_ps,
 	struct db_topology_state *p_topology_state)
@@ -4521,7 +4523,7 @@ void local_row_to_host(const PersistentStore *p_ps,
 void db_print_host(struct db_host *p_value)
 {
 	printf("host.name: %s\n", p_value->name);
-	printf("host.os_type: %d\n", p_value->os_type);
+	printf("host.os_type: %i\n", p_value->os_type);
 	printf("host.os_name: %s\n", p_value->os_name);
 	printf("host.os_version: %s\n", p_value->os_version);
 }
@@ -4947,7 +4949,7 @@ void db_print_sw_inventory(struct db_sw_inventory *p_value)
 	printf("sw_inventory.name: %s\n", p_value->name);
 	printf("sw_inventory.mgmt_sw_rev: %s\n", p_value->mgmt_sw_rev);
 	printf("sw_inventory.vendor_driver_rev: %s\n", p_value->vendor_driver_rev);
-	printf("sw_inventory.supported_driver_available: unsigned %d\n", p_value->supported_driver_available);
+	printf("sw_inventory.supported_driver_available: %u\n", p_value->supported_driver_available);
 }
 enum db_return_codes db_add_sw_inventory(const PersistentStore *p_ps,
 	struct db_sw_inventory *p_sw_inventory)
@@ -5331,14 +5333,14 @@ enum db_return_codes db_delete_sw_inventory_history(const PersistentStore *p_ps)
  */
 void local_bind_socket(sqlite3_stmt *p_stmt, struct db_socket *p_socket)
 {
-	BIND_INTEGER(p_stmt, "$socket_id", (unsigned int)p_socket->socket_id);
-	BIND_INTEGER(p_stmt, "$type", (unsigned int)p_socket->type);
-	BIND_INTEGER(p_stmt, "$model", (unsigned int)p_socket->model);
-	BIND_INTEGER(p_stmt, "$brand", (unsigned int)p_socket->brand);
-	BIND_INTEGER(p_stmt, "$family", (unsigned int)p_socket->family);
-	BIND_INTEGER(p_stmt, "$stepping", (unsigned int)p_socket->stepping);
+	BIND_INTEGER(p_stmt, "$id", (unsigned short)p_socket->id);
+	BIND_INTEGER(p_stmt, "$type", (unsigned char)p_socket->type);
+	BIND_INTEGER(p_stmt, "$model", (unsigned char)p_socket->model);
+	BIND_INTEGER(p_stmt, "$brand", (unsigned char)p_socket->brand);
+	BIND_INTEGER(p_stmt, "$family", (unsigned char)p_socket->family);
+	BIND_INTEGER(p_stmt, "$stepping", (unsigned char)p_socket->stepping);
 	BIND_TEXT(p_stmt, "$manufacturer", (char *)p_socket->manufacturer);
-	BIND_INTEGER(p_stmt, "$logical_processor_count", (unsigned int)p_socket->logical_processor_count);
+	BIND_INTEGER(p_stmt, "$logical_processor_count", (unsigned short)p_socket->logical_processor_count);
 	BIND_INTEGER(p_stmt, "$rapl_limited", (unsigned int)p_socket->rapl_limited);
 }
 void local_get_socket_relationships(const PersistentStore *p_ps,
@@ -5357,7 +5359,7 @@ void local_row_to_socket(const PersistentStore *p_ps,
 {
 	INTEGER_COLUMN(p_stmt,
 		0,
-		p_socket->socket_id);
+		p_socket->id);
 	INTEGER_COLUMN(p_stmt,
 		1,
 		p_socket->type);
@@ -5386,15 +5388,15 @@ void local_row_to_socket(const PersistentStore *p_ps,
 }
 void db_print_socket(struct db_socket *p_value)
 {
-	printf("socket.socket_id: unsigned %d\n", p_value->socket_id);
-	printf("socket.type: unsigned %d\n", p_value->type);
-	printf("socket.model: unsigned %d\n", p_value->model);
-	printf("socket.brand: unsigned %d\n", p_value->brand);
-	printf("socket.family: unsigned %d\n", p_value->family);
-	printf("socket.stepping: unsigned %d\n", p_value->stepping);
+	printf("socket.id: %hu\n", p_value->id);
+	printf("socket.type: %hhu\n", p_value->type);
+	printf("socket.model: %hhu\n", p_value->model);
+	printf("socket.brand: %hhu\n", p_value->brand);
+	printf("socket.family: %hhu\n", p_value->family);
+	printf("socket.stepping: %hhu\n", p_value->stepping);
 	printf("socket.manufacturer: %s\n", p_value->manufacturer);
-	printf("socket.logical_processor_count: unsigned %d\n", p_value->logical_processor_count);
-	printf("socket.rapl_limited: unsigned %d\n", p_value->rapl_limited);
+	printf("socket.logical_processor_count: %hu\n", p_value->logical_processor_count);
+	printf("socket.rapl_limited: %u\n", p_value->rapl_limited);
 }
 enum db_return_codes db_add_socket(const PersistentStore *p_ps,
 	struct db_socket *p_socket)
@@ -5402,9 +5404,9 @@ enum db_return_codes db_add_socket(const PersistentStore *p_ps,
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = 	"INSERT INTO socket \
-		(socket_id, type, model, brand, family, stepping, manufacturer, logical_processor_count, rapl_limited)  \
+		(id, type, model, brand, family, stepping, manufacturer, logical_processor_count, rapl_limited)  \
 		VALUES 		\
-		($socket_id, \
+		($id, \
 		$type, \
 		$model, \
 		$brand, \
@@ -5446,7 +5448,7 @@ int db_get_sockets(const PersistentStore *p_ps,
 	int rc = DB_ERR_FAILURE;
 	memset(p_socket, 0, sizeof (struct db_socket) * socket_count);
 	char *sql = "SELECT \
-		socket_id \
+		id \
 		,  type \
 		,  model \
 		,  brand \
@@ -5499,19 +5501,19 @@ enum db_return_codes db_save_socket_state(const PersistentStore *p_ps,
 	/*
 	 * Main table - Insert new or update existing
 	 */
-	if (db_get_socket_by_socket_id(p_ps, p_socket->socket_id, &temp) == DB_SUCCESS)
+	if (db_get_socket_by_id(p_ps, p_socket->id, &temp) == DB_SUCCESS)
 	{
-		rc = db_update_socket_by_socket_id(p_ps,
-				p_socket->socket_id,
+		rc = db_update_socket_by_id(p_ps,
+				p_socket->id,
 				p_socket);
 	}
 	else
 	{
 		sqlite3_stmt *p_stmt;
 		char *sql = 	"INSERT INTO socket \
-			( socket_id ,  type ,  model ,  brand ,  family ,  stepping ,  manufacturer ,  logical_processor_count ,  rapl_limited )  \
+			( id ,  type ,  model ,  brand ,  family ,  stepping ,  manufacturer ,  logical_processor_count ,  rapl_limited )  \
 			VALUES 		\
-			($socket_id, \
+			($id, \
 			$type, \
 			$model, \
 			$brand, \
@@ -5546,9 +5548,9 @@ enum db_return_codes db_save_socket_state(const PersistentStore *p_ps,
 		sqlite3_stmt *p_stmt;
 		char *sql = "INSERT INTO socket_history \
 			(history_id, \
-				 socket_id,  type,  model,  brand,  family,  stepping,  manufacturer,  logical_processor_count,  rapl_limited)  \
+				 id,  type,  model,  brand,  family,  stepping,  manufacturer,  logical_processor_count,  rapl_limited)  \
 			VALUES 		($history_id, \
-				 $socket_id , \
+				 $id , \
 				 $type , \
 				 $model , \
 				 $brand , \
@@ -5584,21 +5586,21 @@ enum db_return_codes db_save_socket_state(const PersistentStore *p_ps,
 	return rc;
 }
 
-enum db_return_codes db_get_socket_by_socket_id(const PersistentStore *p_ps,
-	const unsigned int socket_id,
+enum db_return_codes db_get_socket_by_id(const PersistentStore *p_ps,
+	const unsigned short id,
 	struct db_socket *p_socket)
 {
 	memset(p_socket, 0, sizeof (struct db_socket));
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
-		socket_id,  type,  model,  brand,  family,  stepping,  manufacturer,  logical_processor_count,  rapl_limited  \
+		id,  type,  model,  brand,  family,  stepping,  manufacturer,  logical_processor_count,  rapl_limited  \
 		FROM socket \
-		WHERE  socket_id = $socket_id";
+		WHERE  id = $id";
 	int sql_rc;
 	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
-		BIND_INTEGER(p_stmt, "$socket_id", (unsigned int)socket_id);
+		BIND_INTEGER(p_stmt, "$id", (unsigned short)id);
 		sql_rc = sqlite3_step(p_stmt);
 		if (sql_rc == SQLITE_ROW)
 		{
@@ -5621,15 +5623,15 @@ enum db_return_codes db_get_socket_by_socket_id(const PersistentStore *p_ps,
 	}
 	return rc;
 }
-enum db_return_codes db_update_socket_by_socket_id(const PersistentStore *p_ps,
-	const unsigned int socket_id,
+enum db_return_codes db_update_socket_by_id(const PersistentStore *p_ps,
+	const unsigned short id,
 	struct db_socket *p_socket)
 {
 	sqlite3_stmt *p_stmt;
 	enum db_return_codes rc = DB_SUCCESS;
 	char *sql = "UPDATE socket \
 	SET \
-	socket_id=$socket_id \
+	id=$id \
 		,  type=$type \
 		,  model=$model \
 		,  brand=$brand \
@@ -5639,11 +5641,11 @@ enum db_return_codes db_update_socket_by_socket_id(const PersistentStore *p_ps,
 		,  logical_processor_count=$logical_processor_count \
 		,  rapl_limited=$rapl_limited \
 		  \
-	WHERE socket_id=$socket_id ";
+	WHERE id=$id ";
 	int sql_rc;
 	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
-		BIND_INTEGER(p_stmt, "$socket_id", (unsigned int)socket_id);
+		BIND_INTEGER(p_stmt, "$id", (unsigned short)id);
 		local_bind_socket(p_stmt, p_socket);
 		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
@@ -5660,17 +5662,17 @@ enum db_return_codes db_update_socket_by_socket_id(const PersistentStore *p_ps,
 	}
 	return rc;
 }
-enum db_return_codes db_delete_socket_by_socket_id(const PersistentStore *p_ps,
-	const unsigned int socket_id)
+enum db_return_codes db_delete_socket_by_id(const PersistentStore *p_ps,
+	const unsigned short id)
 {
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM socket \
-				 WHERE socket_id = $socket_id";
+				 WHERE id = $id";
 	int sql_rc;
 	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
-		BIND_INTEGER(p_stmt, "$socket_id", (unsigned int)socket_id);
+		BIND_INTEGER(p_stmt, "$id", (unsigned short)id);
 		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
@@ -5762,7 +5764,7 @@ int db_get_socket_history_by_history_id(const PersistentStore *p_ps,
 	memset(p_socket, 0, sizeof (struct db_socket) * socket_count);
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
-		socket_id,  type,  model,  brand,  family,  stepping,  manufacturer,  logical_processor_count,  rapl_limited  \
+		id,  type,  model,  brand,  family,  stepping,  manufacturer,  logical_processor_count,  rapl_limited  \
 		FROM socket_history WHERE history_id = $history_id";
 	int sql_rc;
 	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
@@ -5921,31 +5923,31 @@ void local_row_to_runtime_config_validation(const PersistentStore *p_ps,
 }
 void db_print_runtime_config_validation(struct db_runtime_config_validation *p_value)
 {
-	printf("runtime_config_validation.id: %d\n", p_value->id);
-	printf("runtime_config_validation.type: unsigned %d\n", p_value->type);
-	printf("runtime_config_validation.length: unsigned %d\n", p_value->length);
-	printf("runtime_config_validation.address_space_id: unsigned %d\n", p_value->address_space_id);
-	printf("runtime_config_validation.bit_width: unsigned %d\n", p_value->bit_width);
-	printf("runtime_config_validation.bit_offset: unsigned %d\n", p_value->bit_offset);
-	printf("runtime_config_validation.access_size: unsigned %d\n", p_value->access_size);
-	printf("runtime_config_validation.address: unsigned %lld\n", p_value->address);
-	printf("runtime_config_validation.operation_type_1: unsigned %d\n", p_value->operation_type_1);
-	printf("runtime_config_validation.value: unsigned %lld\n", p_value->value);
-	printf("runtime_config_validation.mask_1: unsigned %lld\n", p_value->mask_1);
-	printf("runtime_config_validation.gas_structure: unsigned %d\n", p_value->gas_structure[0]);
-	printf("runtime_config_validation.gas_structure: unsigned %d\n", p_value->gas_structure[1]);
-	printf("runtime_config_validation.gas_structure: unsigned %d\n", p_value->gas_structure[2]);
-	printf("runtime_config_validation.gas_structure: unsigned %d\n", p_value->gas_structure[3]);
-	printf("runtime_config_validation.gas_structure: unsigned %d\n", p_value->gas_structure[4]);
-	printf("runtime_config_validation.gas_structure: unsigned %d\n", p_value->gas_structure[5]);
-	printf("runtime_config_validation.gas_structure: unsigned %d\n", p_value->gas_structure[6]);
-	printf("runtime_config_validation.gas_structure: unsigned %d\n", p_value->gas_structure[7]);
-	printf("runtime_config_validation.gas_structure: unsigned %d\n", p_value->gas_structure[8]);
-	printf("runtime_config_validation.gas_structure: unsigned %d\n", p_value->gas_structure[9]);
-	printf("runtime_config_validation.gas_structure: unsigned %d\n", p_value->gas_structure[10]);
-	printf("runtime_config_validation.gas_structure: unsigned %d\n", p_value->gas_structure[11]);
-	printf("runtime_config_validation.operation_type_2: unsigned %d\n", p_value->operation_type_2);
-	printf("runtime_config_validation.mask_2: unsigned %lld\n", p_value->mask_2);
+	printf("runtime_config_validation.id: %i\n", p_value->id);
+	printf("runtime_config_validation.type: %u\n", p_value->type);
+	printf("runtime_config_validation.length: %u\n", p_value->length);
+	printf("runtime_config_validation.address_space_id: %u\n", p_value->address_space_id);
+	printf("runtime_config_validation.bit_width: %u\n", p_value->bit_width);
+	printf("runtime_config_validation.bit_offset: %u\n", p_value->bit_offset);
+	printf("runtime_config_validation.access_size: %u\n", p_value->access_size);
+	printf("runtime_config_validation.address: %llu\n", p_value->address);
+	printf("runtime_config_validation.operation_type_1: %u\n", p_value->operation_type_1);
+	printf("runtime_config_validation.value: %llu\n", p_value->value);
+	printf("runtime_config_validation.mask_1: %llu\n", p_value->mask_1);
+	printf("runtime_config_validation.gas_structure: %u\n", p_value->gas_structure[0]);
+	printf("runtime_config_validation.gas_structure: %u\n", p_value->gas_structure[1]);
+	printf("runtime_config_validation.gas_structure: %u\n", p_value->gas_structure[2]);
+	printf("runtime_config_validation.gas_structure: %u\n", p_value->gas_structure[3]);
+	printf("runtime_config_validation.gas_structure: %u\n", p_value->gas_structure[4]);
+	printf("runtime_config_validation.gas_structure: %u\n", p_value->gas_structure[5]);
+	printf("runtime_config_validation.gas_structure: %u\n", p_value->gas_structure[6]);
+	printf("runtime_config_validation.gas_structure: %u\n", p_value->gas_structure[7]);
+	printf("runtime_config_validation.gas_structure: %u\n", p_value->gas_structure[8]);
+	printf("runtime_config_validation.gas_structure: %u\n", p_value->gas_structure[9]);
+	printf("runtime_config_validation.gas_structure: %u\n", p_value->gas_structure[10]);
+	printf("runtime_config_validation.gas_structure: %u\n", p_value->gas_structure[11]);
+	printf("runtime_config_validation.operation_type_2: %u\n", p_value->operation_type_2);
+	printf("runtime_config_validation.mask_2: %llu\n", p_value->mask_2);
 }
 enum db_return_codes db_add_runtime_config_validation(const PersistentStore *p_ps,
 	struct db_runtime_config_validation *p_runtime_config_validation)
@@ -6487,9 +6489,10 @@ enum db_return_codes db_get_next_runtime_config_validation_id(const PersistentSt
  */
 void local_bind_socket_sku(sqlite3_stmt *p_stmt, struct db_socket_sku *p_socket_sku)
 {
-	BIND_INTEGER(p_stmt, "$type", (unsigned int)p_socket_sku->type);
-	BIND_INTEGER(p_stmt, "$length", (unsigned int)p_socket_sku->length);
-	BIND_INTEGER(p_stmt, "$socket_id", (unsigned int)p_socket_sku->socket_id);
+	BIND_INTEGER(p_stmt, "$type", (unsigned short)p_socket_sku->type);
+	BIND_INTEGER(p_stmt, "$length", (unsigned short)p_socket_sku->length);
+	BIND_INTEGER(p_stmt, "$node_id", (unsigned short)p_socket_sku->node_id);
+	BIND_INTEGER(p_stmt, "$reserved", (short)p_socket_sku->reserved);
 	BIND_INTEGER(p_stmt, "$mapped_memory_limit", (unsigned long long)p_socket_sku->mapped_memory_limit);
 	BIND_INTEGER(p_stmt, "$total_mapped_memory", (unsigned long long)p_socket_sku->total_mapped_memory);
 	BIND_INTEGER(p_stmt, "$cache_memory_limit", (unsigned long long)p_socket_sku->cache_memory_limit);
@@ -6516,25 +6519,29 @@ void local_row_to_socket_sku(const PersistentStore *p_ps,
 		p_socket_sku->length);
 	INTEGER_COLUMN(p_stmt,
 		2,
-		p_socket_sku->socket_id);
+		p_socket_sku->node_id);
 	INTEGER_COLUMN(p_stmt,
 		3,
-		p_socket_sku->mapped_memory_limit);
+		p_socket_sku->reserved);
 	INTEGER_COLUMN(p_stmt,
 		4,
-		p_socket_sku->total_mapped_memory);
+		p_socket_sku->mapped_memory_limit);
 	INTEGER_COLUMN(p_stmt,
 		5,
+		p_socket_sku->total_mapped_memory);
+	INTEGER_COLUMN(p_stmt,
+		6,
 		p_socket_sku->cache_memory_limit);
 }
 void db_print_socket_sku(struct db_socket_sku *p_value)
 {
-	printf("socket_sku.type: unsigned %d\n", p_value->type);
-	printf("socket_sku.length: unsigned %d\n", p_value->length);
-	printf("socket_sku.socket_id: unsigned %d\n", p_value->socket_id);
-	printf("socket_sku.mapped_memory_limit: unsigned %lld\n", p_value->mapped_memory_limit);
-	printf("socket_sku.total_mapped_memory: unsigned %lld\n", p_value->total_mapped_memory);
-	printf("socket_sku.cache_memory_limit: unsigned %lld\n", p_value->cache_memory_limit);
+	printf("socket_sku.type: %hu\n", p_value->type);
+	printf("socket_sku.length: %hu\n", p_value->length);
+	printf("socket_sku.node_id: %hu\n", p_value->node_id);
+	printf("socket_sku.reserved: %hi\n", p_value->reserved);
+	printf("socket_sku.mapped_memory_limit: %llu\n", p_value->mapped_memory_limit);
+	printf("socket_sku.total_mapped_memory: %llu\n", p_value->total_mapped_memory);
+	printf("socket_sku.cache_memory_limit: %llu\n", p_value->cache_memory_limit);
 }
 enum db_return_codes db_add_socket_sku(const PersistentStore *p_ps,
 	struct db_socket_sku *p_socket_sku)
@@ -6542,11 +6549,12 @@ enum db_return_codes db_add_socket_sku(const PersistentStore *p_ps,
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = 	"INSERT INTO socket_sku \
-		(type, length, socket_id, mapped_memory_limit, total_mapped_memory, cache_memory_limit)  \
+		(type, length, node_id, reserved, mapped_memory_limit, total_mapped_memory, cache_memory_limit)  \
 		VALUES 		\
 		($type, \
 		$length, \
-		$socket_id, \
+		$node_id, \
+		$reserved, \
 		$mapped_memory_limit, \
 		$total_mapped_memory, \
 		$cache_memory_limit) ";
@@ -6585,13 +6593,14 @@ int db_get_socket_skus(const PersistentStore *p_ps,
 	char *sql = "SELECT \
 		type \
 		,  length \
-		,  socket_id \
+		,  node_id \
+		,  reserved \
 		,  mapped_memory_limit \
 		,  total_mapped_memory \
 		,  cache_memory_limit \
 		  \
 		FROM socket_sku \
-		       \
+		        \
 		 \
 		";
 	sqlite3_stmt *p_stmt;
@@ -6633,21 +6642,22 @@ enum db_return_codes db_save_socket_sku_state(const PersistentStore *p_ps,
 	/*
 	 * Main table - Insert new or update existing
 	 */
-	if (db_get_socket_sku_by_socket_id(p_ps, p_socket_sku->socket_id, &temp) == DB_SUCCESS)
+	if (db_get_socket_sku_by_node_id(p_ps, p_socket_sku->node_id, &temp) == DB_SUCCESS)
 	{
-		rc = db_update_socket_sku_by_socket_id(p_ps,
-				p_socket_sku->socket_id,
+		rc = db_update_socket_sku_by_node_id(p_ps,
+				p_socket_sku->node_id,
 				p_socket_sku);
 	}
 	else
 	{
 		sqlite3_stmt *p_stmt;
 		char *sql = 	"INSERT INTO socket_sku \
-			( type ,  length ,  socket_id ,  mapped_memory_limit ,  total_mapped_memory ,  cache_memory_limit )  \
+			( type ,  length ,  node_id ,  reserved ,  mapped_memory_limit ,  total_mapped_memory ,  cache_memory_limit )  \
 			VALUES 		\
 			($type, \
 			$length, \
-			$socket_id, \
+			$node_id, \
+			$reserved, \
 			$mapped_memory_limit, \
 			$total_mapped_memory, \
 			$cache_memory_limit) ";
@@ -6677,11 +6687,12 @@ enum db_return_codes db_save_socket_sku_state(const PersistentStore *p_ps,
 		sqlite3_stmt *p_stmt;
 		char *sql = "INSERT INTO socket_sku_history \
 			(history_id, \
-				 type,  length,  socket_id,  mapped_memory_limit,  total_mapped_memory,  cache_memory_limit)  \
+				 type,  length,  node_id,  reserved,  mapped_memory_limit,  total_mapped_memory,  cache_memory_limit)  \
 			VALUES 		($history_id, \
 				 $type , \
 				 $length , \
-				 $socket_id , \
+				 $node_id , \
+				 $reserved , \
 				 $mapped_memory_limit , \
 				 $total_mapped_memory , \
 				 $cache_memory_limit )";
@@ -6712,21 +6723,21 @@ enum db_return_codes db_save_socket_sku_state(const PersistentStore *p_ps,
 	return rc;
 }
 
-enum db_return_codes db_get_socket_sku_by_socket_id(const PersistentStore *p_ps,
-	const unsigned int socket_id,
+enum db_return_codes db_get_socket_sku_by_node_id(const PersistentStore *p_ps,
+	const unsigned short node_id,
 	struct db_socket_sku *p_socket_sku)
 {
 	memset(p_socket_sku, 0, sizeof (struct db_socket_sku));
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
-		type,  length,  socket_id,  mapped_memory_limit,  total_mapped_memory,  cache_memory_limit  \
+		type,  length,  node_id,  reserved,  mapped_memory_limit,  total_mapped_memory,  cache_memory_limit  \
 		FROM socket_sku \
-		WHERE  socket_id = $socket_id";
+		WHERE  node_id = $node_id";
 	int sql_rc;
 	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
-		BIND_INTEGER(p_stmt, "$socket_id", (unsigned int)socket_id);
+		BIND_INTEGER(p_stmt, "$node_id", (unsigned short)node_id);
 		sql_rc = sqlite3_step(p_stmt);
 		if (sql_rc == SQLITE_ROW)
 		{
@@ -6749,8 +6760,8 @@ enum db_return_codes db_get_socket_sku_by_socket_id(const PersistentStore *p_ps,
 	}
 	return rc;
 }
-enum db_return_codes db_update_socket_sku_by_socket_id(const PersistentStore *p_ps,
-	const unsigned int socket_id,
+enum db_return_codes db_update_socket_sku_by_node_id(const PersistentStore *p_ps,
+	const unsigned short node_id,
 	struct db_socket_sku *p_socket_sku)
 {
 	sqlite3_stmt *p_stmt;
@@ -6759,16 +6770,17 @@ enum db_return_codes db_update_socket_sku_by_socket_id(const PersistentStore *p_
 	SET \
 	type=$type \
 		,  length=$length \
-		,  socket_id=$socket_id \
+		,  node_id=$node_id \
+		,  reserved=$reserved \
 		,  mapped_memory_limit=$mapped_memory_limit \
 		,  total_mapped_memory=$total_mapped_memory \
 		,  cache_memory_limit=$cache_memory_limit \
 		  \
-	WHERE socket_id=$socket_id ";
+	WHERE node_id=$node_id ";
 	int sql_rc;
 	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
-		BIND_INTEGER(p_stmt, "$socket_id", (unsigned int)socket_id);
+		BIND_INTEGER(p_stmt, "$node_id", (unsigned short)node_id);
 		local_bind_socket_sku(p_stmt, p_socket_sku);
 		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
@@ -6785,17 +6797,17 @@ enum db_return_codes db_update_socket_sku_by_socket_id(const PersistentStore *p_
 	}
 	return rc;
 }
-enum db_return_codes db_delete_socket_sku_by_socket_id(const PersistentStore *p_ps,
-	const unsigned int socket_id)
+enum db_return_codes db_delete_socket_sku_by_node_id(const PersistentStore *p_ps,
+	const unsigned short node_id)
 {
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = "DELETE FROM socket_sku \
-				 WHERE socket_id = $socket_id";
+				 WHERE node_id = $node_id";
 	int sql_rc;
 	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
-		BIND_INTEGER(p_stmt, "$socket_id", (unsigned int)socket_id);
+		BIND_INTEGER(p_stmt, "$node_id", (unsigned short)node_id);
 		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
@@ -6887,7 +6899,7 @@ int db_get_socket_sku_history_by_history_id(const PersistentStore *p_ps,
 	memset(p_socket_sku, 0, sizeof (struct db_socket_sku) * socket_sku_count);
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
-		type,  length,  socket_id,  mapped_memory_limit,  total_mapped_memory,  cache_memory_limit  \
+		type,  length,  node_id,  reserved,  mapped_memory_limit,  total_mapped_memory,  cache_memory_limit  \
 		FROM socket_sku_history WHERE history_id = $history_id";
 	int sql_rc;
 	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
@@ -7098,44 +7110,44 @@ void local_row_to_interleave_capability(const PersistentStore *p_ps,
 }
 void db_print_interleave_capability(struct db_interleave_capability *p_value)
 {
-	printf("interleave_capability.id: %d\n", p_value->id);
-	printf("interleave_capability.type: unsigned %d\n", p_value->type);
-	printf("interleave_capability.length: unsigned %d\n", p_value->length);
-	printf("interleave_capability.memory_mode: unsigned %d\n", p_value->memory_mode);
-	printf("interleave_capability.interleave_alignment_size: unsigned %d\n", p_value->interleave_alignment_size);
-	printf("interleave_capability.supported_interleave_count: unsigned %d\n", p_value->supported_interleave_count);
-	printf("interleave_capability.interleave_format_list: unsigned %d\n", p_value->interleave_format_list[0]);
-	printf("interleave_capability.interleave_format_list: unsigned %d\n", p_value->interleave_format_list[1]);
-	printf("interleave_capability.interleave_format_list: unsigned %d\n", p_value->interleave_format_list[2]);
-	printf("interleave_capability.interleave_format_list: unsigned %d\n", p_value->interleave_format_list[3]);
-	printf("interleave_capability.interleave_format_list: unsigned %d\n", p_value->interleave_format_list[4]);
-	printf("interleave_capability.interleave_format_list: unsigned %d\n", p_value->interleave_format_list[5]);
-	printf("interleave_capability.interleave_format_list: unsigned %d\n", p_value->interleave_format_list[6]);
-	printf("interleave_capability.interleave_format_list: unsigned %d\n", p_value->interleave_format_list[7]);
-	printf("interleave_capability.interleave_format_list: unsigned %d\n", p_value->interleave_format_list[8]);
-	printf("interleave_capability.interleave_format_list: unsigned %d\n", p_value->interleave_format_list[9]);
-	printf("interleave_capability.interleave_format_list: unsigned %d\n", p_value->interleave_format_list[10]);
-	printf("interleave_capability.interleave_format_list: unsigned %d\n", p_value->interleave_format_list[11]);
-	printf("interleave_capability.interleave_format_list: unsigned %d\n", p_value->interleave_format_list[12]);
-	printf("interleave_capability.interleave_format_list: unsigned %d\n", p_value->interleave_format_list[13]);
-	printf("interleave_capability.interleave_format_list: unsigned %d\n", p_value->interleave_format_list[14]);
-	printf("interleave_capability.interleave_format_list: unsigned %d\n", p_value->interleave_format_list[15]);
-	printf("interleave_capability.interleave_format_list: unsigned %d\n", p_value->interleave_format_list[16]);
-	printf("interleave_capability.interleave_format_list: unsigned %d\n", p_value->interleave_format_list[17]);
-	printf("interleave_capability.interleave_format_list: unsigned %d\n", p_value->interleave_format_list[18]);
-	printf("interleave_capability.interleave_format_list: unsigned %d\n", p_value->interleave_format_list[19]);
-	printf("interleave_capability.interleave_format_list: unsigned %d\n", p_value->interleave_format_list[20]);
-	printf("interleave_capability.interleave_format_list: unsigned %d\n", p_value->interleave_format_list[21]);
-	printf("interleave_capability.interleave_format_list: unsigned %d\n", p_value->interleave_format_list[22]);
-	printf("interleave_capability.interleave_format_list: unsigned %d\n", p_value->interleave_format_list[23]);
-	printf("interleave_capability.interleave_format_list: unsigned %d\n", p_value->interleave_format_list[24]);
-	printf("interleave_capability.interleave_format_list: unsigned %d\n", p_value->interleave_format_list[25]);
-	printf("interleave_capability.interleave_format_list: unsigned %d\n", p_value->interleave_format_list[26]);
-	printf("interleave_capability.interleave_format_list: unsigned %d\n", p_value->interleave_format_list[27]);
-	printf("interleave_capability.interleave_format_list: unsigned %d\n", p_value->interleave_format_list[28]);
-	printf("interleave_capability.interleave_format_list: unsigned %d\n", p_value->interleave_format_list[29]);
-	printf("interleave_capability.interleave_format_list: unsigned %d\n", p_value->interleave_format_list[30]);
-	printf("interleave_capability.interleave_format_list: unsigned %d\n", p_value->interleave_format_list[31]);
+	printf("interleave_capability.id: %i\n", p_value->id);
+	printf("interleave_capability.type: %u\n", p_value->type);
+	printf("interleave_capability.length: %u\n", p_value->length);
+	printf("interleave_capability.memory_mode: %u\n", p_value->memory_mode);
+	printf("interleave_capability.interleave_alignment_size: %u\n", p_value->interleave_alignment_size);
+	printf("interleave_capability.supported_interleave_count: %u\n", p_value->supported_interleave_count);
+	printf("interleave_capability.interleave_format_list: %u\n", p_value->interleave_format_list[0]);
+	printf("interleave_capability.interleave_format_list: %u\n", p_value->interleave_format_list[1]);
+	printf("interleave_capability.interleave_format_list: %u\n", p_value->interleave_format_list[2]);
+	printf("interleave_capability.interleave_format_list: %u\n", p_value->interleave_format_list[3]);
+	printf("interleave_capability.interleave_format_list: %u\n", p_value->interleave_format_list[4]);
+	printf("interleave_capability.interleave_format_list: %u\n", p_value->interleave_format_list[5]);
+	printf("interleave_capability.interleave_format_list: %u\n", p_value->interleave_format_list[6]);
+	printf("interleave_capability.interleave_format_list: %u\n", p_value->interleave_format_list[7]);
+	printf("interleave_capability.interleave_format_list: %u\n", p_value->interleave_format_list[8]);
+	printf("interleave_capability.interleave_format_list: %u\n", p_value->interleave_format_list[9]);
+	printf("interleave_capability.interleave_format_list: %u\n", p_value->interleave_format_list[10]);
+	printf("interleave_capability.interleave_format_list: %u\n", p_value->interleave_format_list[11]);
+	printf("interleave_capability.interleave_format_list: %u\n", p_value->interleave_format_list[12]);
+	printf("interleave_capability.interleave_format_list: %u\n", p_value->interleave_format_list[13]);
+	printf("interleave_capability.interleave_format_list: %u\n", p_value->interleave_format_list[14]);
+	printf("interleave_capability.interleave_format_list: %u\n", p_value->interleave_format_list[15]);
+	printf("interleave_capability.interleave_format_list: %u\n", p_value->interleave_format_list[16]);
+	printf("interleave_capability.interleave_format_list: %u\n", p_value->interleave_format_list[17]);
+	printf("interleave_capability.interleave_format_list: %u\n", p_value->interleave_format_list[18]);
+	printf("interleave_capability.interleave_format_list: %u\n", p_value->interleave_format_list[19]);
+	printf("interleave_capability.interleave_format_list: %u\n", p_value->interleave_format_list[20]);
+	printf("interleave_capability.interleave_format_list: %u\n", p_value->interleave_format_list[21]);
+	printf("interleave_capability.interleave_format_list: %u\n", p_value->interleave_format_list[22]);
+	printf("interleave_capability.interleave_format_list: %u\n", p_value->interleave_format_list[23]);
+	printf("interleave_capability.interleave_format_list: %u\n", p_value->interleave_format_list[24]);
+	printf("interleave_capability.interleave_format_list: %u\n", p_value->interleave_format_list[25]);
+	printf("interleave_capability.interleave_format_list: %u\n", p_value->interleave_format_list[26]);
+	printf("interleave_capability.interleave_format_list: %u\n", p_value->interleave_format_list[27]);
+	printf("interleave_capability.interleave_format_list: %u\n", p_value->interleave_format_list[28]);
+	printf("interleave_capability.interleave_format_list: %u\n", p_value->interleave_format_list[29]);
+	printf("interleave_capability.interleave_format_list: %u\n", p_value->interleave_format_list[30]);
+	printf("interleave_capability.interleave_format_list: %u\n", p_value->interleave_format_list[31]);
 }
 enum db_return_codes db_add_interleave_capability(const PersistentStore *p_ps,
 	struct db_interleave_capability *p_interleave_capability)
@@ -7788,13 +7800,13 @@ void local_row_to_platform_info_capability(const PersistentStore *p_ps,
 }
 void db_print_platform_info_capability(struct db_platform_info_capability *p_value)
 {
-	printf("platform_info_capability.id: %d\n", p_value->id);
-	printf("platform_info_capability.type: unsigned %d\n", p_value->type);
-	printf("platform_info_capability.length: unsigned %d\n", p_value->length);
-	printf("platform_info_capability.mgmt_sw_config_support: unsigned %d\n", p_value->mgmt_sw_config_support);
-	printf("platform_info_capability.mem_mode_capabilities: unsigned %d\n", p_value->mem_mode_capabilities);
-	printf("platform_info_capability.current_mem_mode: unsigned %d\n", p_value->current_mem_mode);
-	printf("platform_info_capability.pmem_ras_capabilities: unsigned %d\n", p_value->pmem_ras_capabilities);
+	printf("platform_info_capability.id: %i\n", p_value->id);
+	printf("platform_info_capability.type: %u\n", p_value->type);
+	printf("platform_info_capability.length: %u\n", p_value->length);
+	printf("platform_info_capability.mgmt_sw_config_support: %u\n", p_value->mgmt_sw_config_support);
+	printf("platform_info_capability.mem_mode_capabilities: %u\n", p_value->mem_mode_capabilities);
+	printf("platform_info_capability.current_mem_mode: %u\n", p_value->current_mem_mode);
+	printf("platform_info_capability.pmem_ras_capabilities: %u\n", p_value->pmem_ras_capabilities);
 }
 enum db_return_codes db_add_platform_info_capability(const PersistentStore *p_ps,
 	struct db_platform_info_capability *p_platform_info_capability)
@@ -8304,14 +8316,14 @@ void local_row_to_platform_capabilities(const PersistentStore *p_ps,
 void db_print_platform_capabilities(struct db_platform_capabilities *p_value)
 {
 	printf("platform_capabilities.signature: %s\n", p_value->signature);
-	printf("platform_capabilities.length: unsigned %d\n", p_value->length);
-	printf("platform_capabilities.revision: unsigned %d\n", p_value->revision);
-	printf("platform_capabilities.checksum: unsigned %d\n", p_value->checksum);
+	printf("platform_capabilities.length: %u\n", p_value->length);
+	printf("platform_capabilities.revision: %u\n", p_value->revision);
+	printf("platform_capabilities.checksum: %u\n", p_value->checksum);
 	printf("platform_capabilities.oem_id: %s\n", p_value->oem_id);
 	printf("platform_capabilities.oem_table_id: %s\n", p_value->oem_table_id);
-	printf("platform_capabilities.oem_revision: unsigned %d\n", p_value->oem_revision);
-	printf("platform_capabilities.creator_id: unsigned %d\n", p_value->creator_id);
-	printf("platform_capabilities.creator_revision: unsigned %d\n", p_value->creator_revision);
+	printf("platform_capabilities.oem_revision: %u\n", p_value->oem_revision);
+	printf("platform_capabilities.creator_id: %u\n", p_value->creator_id);
+	printf("platform_capabilities.creator_revision: %u\n", p_value->creator_revision);
 }
 enum db_return_codes db_add_platform_capabilities(const PersistentStore *p_ps,
 	struct db_platform_capabilities *p_platform_capabilities)
@@ -8822,27 +8834,27 @@ void local_row_to_driver_capabilities(const PersistentStore *p_ps,
 }
 void db_print_driver_capabilities(struct db_driver_capabilities *p_value)
 {
-	printf("driver_capabilities.id: %d\n", p_value->id);
-	printf("driver_capabilities.min_namespace_size: unsigned %lld\n", p_value->min_namespace_size);
-	printf("driver_capabilities.max_non_continguous_namespaces: unsigned %lld\n", p_value->max_non_continguous_namespaces);
-	printf("driver_capabilities.block_sizes: unsigned %d\n", p_value->block_sizes[0]);
-	printf("driver_capabilities.block_sizes: unsigned %d\n", p_value->block_sizes[1]);
-	printf("driver_capabilities.block_sizes: unsigned %d\n", p_value->block_sizes[2]);
-	printf("driver_capabilities.block_sizes: unsigned %d\n", p_value->block_sizes[3]);
-	printf("driver_capabilities.block_sizes: unsigned %d\n", p_value->block_sizes[4]);
-	printf("driver_capabilities.block_sizes: unsigned %d\n", p_value->block_sizes[5]);
-	printf("driver_capabilities.block_sizes: unsigned %d\n", p_value->block_sizes[6]);
-	printf("driver_capabilities.block_sizes: unsigned %d\n", p_value->block_sizes[7]);
-	printf("driver_capabilities.block_sizes: unsigned %d\n", p_value->block_sizes[8]);
-	printf("driver_capabilities.block_sizes: unsigned %d\n", p_value->block_sizes[9]);
-	printf("driver_capabilities.block_sizes: unsigned %d\n", p_value->block_sizes[10]);
-	printf("driver_capabilities.block_sizes: unsigned %d\n", p_value->block_sizes[11]);
-	printf("driver_capabilities.block_sizes: unsigned %d\n", p_value->block_sizes[12]);
-	printf("driver_capabilities.block_sizes: unsigned %d\n", p_value->block_sizes[13]);
-	printf("driver_capabilities.block_sizes: unsigned %d\n", p_value->block_sizes[14]);
-	printf("driver_capabilities.block_sizes: unsigned %d\n", p_value->block_sizes[15]);
-	printf("driver_capabilities.num_block_sizes: unsigned %d\n", p_value->num_block_sizes);
-	printf("driver_capabilities.namespace_memory_page_allocation_capable: unsigned %d\n", p_value->namespace_memory_page_allocation_capable);
+	printf("driver_capabilities.id: %i\n", p_value->id);
+	printf("driver_capabilities.min_namespace_size: %llu\n", p_value->min_namespace_size);
+	printf("driver_capabilities.max_non_continguous_namespaces: %llu\n", p_value->max_non_continguous_namespaces);
+	printf("driver_capabilities.block_sizes: %u\n", p_value->block_sizes[0]);
+	printf("driver_capabilities.block_sizes: %u\n", p_value->block_sizes[1]);
+	printf("driver_capabilities.block_sizes: %u\n", p_value->block_sizes[2]);
+	printf("driver_capabilities.block_sizes: %u\n", p_value->block_sizes[3]);
+	printf("driver_capabilities.block_sizes: %u\n", p_value->block_sizes[4]);
+	printf("driver_capabilities.block_sizes: %u\n", p_value->block_sizes[5]);
+	printf("driver_capabilities.block_sizes: %u\n", p_value->block_sizes[6]);
+	printf("driver_capabilities.block_sizes: %u\n", p_value->block_sizes[7]);
+	printf("driver_capabilities.block_sizes: %u\n", p_value->block_sizes[8]);
+	printf("driver_capabilities.block_sizes: %u\n", p_value->block_sizes[9]);
+	printf("driver_capabilities.block_sizes: %u\n", p_value->block_sizes[10]);
+	printf("driver_capabilities.block_sizes: %u\n", p_value->block_sizes[11]);
+	printf("driver_capabilities.block_sizes: %u\n", p_value->block_sizes[12]);
+	printf("driver_capabilities.block_sizes: %u\n", p_value->block_sizes[13]);
+	printf("driver_capabilities.block_sizes: %u\n", p_value->block_sizes[14]);
+	printf("driver_capabilities.block_sizes: %u\n", p_value->block_sizes[15]);
+	printf("driver_capabilities.num_block_sizes: %u\n", p_value->num_block_sizes);
+	printf("driver_capabilities.namespace_memory_page_allocation_capable: %u\n", p_value->namespace_memory_page_allocation_capable);
 }
 enum db_return_codes db_add_driver_capabilities(const PersistentStore *p_ps,
 	struct db_driver_capabilities *p_driver_capabilities)
@@ -9449,36 +9461,36 @@ void local_row_to_driver_features(const PersistentStore *p_ps,
 }
 void db_print_driver_features(struct db_driver_features *p_value)
 {
-	printf("driver_features.id: %d\n", p_value->id);
-	printf("driver_features.get_platform_capabilities: unsigned %d\n", p_value->get_platform_capabilities);
-	printf("driver_features.get_topology: unsigned %d\n", p_value->get_topology);
-	printf("driver_features.get_interleave: unsigned %d\n", p_value->get_interleave);
-	printf("driver_features.get_dimm_detail: unsigned %d\n", p_value->get_dimm_detail);
-	printf("driver_features.get_namespaces: unsigned %d\n", p_value->get_namespaces);
-	printf("driver_features.get_namespace_detail: unsigned %d\n", p_value->get_namespace_detail);
-	printf("driver_features.get_address_scrub_data: unsigned %d\n", p_value->get_address_scrub_data);
-	printf("driver_features.get_platform_config_data: unsigned %d\n", p_value->get_platform_config_data);
-	printf("driver_features.get_boot_status: unsigned %d\n", p_value->get_boot_status);
-	printf("driver_features.get_power_data: unsigned %d\n", p_value->get_power_data);
-	printf("driver_features.get_security_state: unsigned %d\n", p_value->get_security_state);
-	printf("driver_features.get_log_page: unsigned %d\n", p_value->get_log_page);
-	printf("driver_features.get_features: unsigned %d\n", p_value->get_features);
-	printf("driver_features.set_features: unsigned %d\n", p_value->set_features);
-	printf("driver_features.create_namespace: unsigned %d\n", p_value->create_namespace);
-	printf("driver_features.rename_namespace: unsigned %d\n", p_value->rename_namespace);
-	printf("driver_features.grow_namespace: unsigned %d\n", p_value->grow_namespace);
-	printf("driver_features.shrink_namespace: unsigned %d\n", p_value->shrink_namespace);
-	printf("driver_features.delete_namespace: unsigned %d\n", p_value->delete_namespace);
-	printf("driver_features.enable_namespace: unsigned %d\n", p_value->enable_namespace);
-	printf("driver_features.disable_namespace: unsigned %d\n", p_value->disable_namespace);
-	printf("driver_features.set_security_state: unsigned %d\n", p_value->set_security_state);
-	printf("driver_features.enable_logging: unsigned %d\n", p_value->enable_logging);
-	printf("driver_features.run_diagnostic: unsigned %d\n", p_value->run_diagnostic);
-	printf("driver_features.set_platform_config: unsigned %d\n", p_value->set_platform_config);
-	printf("driver_features.passthrough: unsigned %d\n", p_value->passthrough);
-	printf("driver_features.start_address_scrub: unsigned %d\n", p_value->start_address_scrub);
-	printf("driver_features.app_direct_mode: unsigned %d\n", p_value->app_direct_mode);
-	printf("driver_features.storage_mode: unsigned %d\n", p_value->storage_mode);
+	printf("driver_features.id: %i\n", p_value->id);
+	printf("driver_features.get_platform_capabilities: %u\n", p_value->get_platform_capabilities);
+	printf("driver_features.get_topology: %u\n", p_value->get_topology);
+	printf("driver_features.get_interleave: %u\n", p_value->get_interleave);
+	printf("driver_features.get_dimm_detail: %u\n", p_value->get_dimm_detail);
+	printf("driver_features.get_namespaces: %u\n", p_value->get_namespaces);
+	printf("driver_features.get_namespace_detail: %u\n", p_value->get_namespace_detail);
+	printf("driver_features.get_address_scrub_data: %u\n", p_value->get_address_scrub_data);
+	printf("driver_features.get_platform_config_data: %u\n", p_value->get_platform_config_data);
+	printf("driver_features.get_boot_status: %u\n", p_value->get_boot_status);
+	printf("driver_features.get_power_data: %u\n", p_value->get_power_data);
+	printf("driver_features.get_security_state: %u\n", p_value->get_security_state);
+	printf("driver_features.get_log_page: %u\n", p_value->get_log_page);
+	printf("driver_features.get_features: %u\n", p_value->get_features);
+	printf("driver_features.set_features: %u\n", p_value->set_features);
+	printf("driver_features.create_namespace: %u\n", p_value->create_namespace);
+	printf("driver_features.rename_namespace: %u\n", p_value->rename_namespace);
+	printf("driver_features.grow_namespace: %u\n", p_value->grow_namespace);
+	printf("driver_features.shrink_namespace: %u\n", p_value->shrink_namespace);
+	printf("driver_features.delete_namespace: %u\n", p_value->delete_namespace);
+	printf("driver_features.enable_namespace: %u\n", p_value->enable_namespace);
+	printf("driver_features.disable_namespace: %u\n", p_value->disable_namespace);
+	printf("driver_features.set_security_state: %u\n", p_value->set_security_state);
+	printf("driver_features.enable_logging: %u\n", p_value->enable_logging);
+	printf("driver_features.run_diagnostic: %u\n", p_value->run_diagnostic);
+	printf("driver_features.set_platform_config: %u\n", p_value->set_platform_config);
+	printf("driver_features.passthrough: %u\n", p_value->passthrough);
+	printf("driver_features.start_address_scrub: %u\n", p_value->start_address_scrub);
+	printf("driver_features.app_direct_mode: %u\n", p_value->app_direct_mode);
+	printf("driver_features.storage_mode: %u\n", p_value->storage_mode);
 }
 enum db_return_codes db_add_driver_features(const PersistentStore *p_ps,
 	struct db_driver_features *p_driver_features)
@@ -10110,31 +10122,31 @@ void local_row_to_dimm_topology(const PersistentStore *p_ps,
 }
 void db_print_dimm_topology(struct db_dimm_topology *p_value)
 {
-	printf("dimm_topology.device_handle: unsigned %d\n", p_value->device_handle);
-	printf("dimm_topology.id: unsigned %d\n", p_value->id);
-	printf("dimm_topology.vendor_id: unsigned %d\n", p_value->vendor_id);
-	printf("dimm_topology.device_id: unsigned %d\n", p_value->device_id);
-	printf("dimm_topology.revision_id: unsigned %d\n", p_value->revision_id);
-	printf("dimm_topology.subsystem_vendor_id: unsigned %d\n", p_value->subsystem_vendor_id);
-	printf("dimm_topology.subsystem_device_id: unsigned %d\n", p_value->subsystem_device_id);
-	printf("dimm_topology.subsystem_revision_id: unsigned %d\n", p_value->subsystem_revision_id);
-	printf("dimm_topology.manufacturing_info_valid: unsigned %d\n", p_value->manufacturing_info_valid);
-	printf("dimm_topology.manufacturing_location: unsigned %d\n", p_value->manufacturing_location);
-	printf("dimm_topology.manufacturing_date: unsigned %d\n", p_value->manufacturing_date);
-	printf("dimm_topology.serial_number: unsigned %d\n", p_value->serial_number[0]);
-	printf("dimm_topology.serial_number: unsigned %d\n", p_value->serial_number[1]);
-	printf("dimm_topology.serial_number: unsigned %d\n", p_value->serial_number[2]);
-	printf("dimm_topology.serial_number: unsigned %d\n", p_value->serial_number[3]);
-	printf("dimm_topology.interface_format_codes: unsigned %d\n", p_value->interface_format_codes[0]);
-	printf("dimm_topology.interface_format_codes: unsigned %d\n", p_value->interface_format_codes[1]);
-	printf("dimm_topology.interface_format_codes: unsigned %d\n", p_value->interface_format_codes[2]);
-	printf("dimm_topology.interface_format_codes: unsigned %d\n", p_value->interface_format_codes[3]);
-	printf("dimm_topology.interface_format_codes: unsigned %d\n", p_value->interface_format_codes[4]);
-	printf("dimm_topology.interface_format_codes: unsigned %d\n", p_value->interface_format_codes[5]);
-	printf("dimm_topology.interface_format_codes: unsigned %d\n", p_value->interface_format_codes[6]);
-	printf("dimm_topology.interface_format_codes: unsigned %d\n", p_value->interface_format_codes[7]);
-	printf("dimm_topology.interface_format_codes: unsigned %d\n", p_value->interface_format_codes[8]);
-	printf("dimm_topology.state_flags: unsigned %d\n", p_value->state_flags);
+	printf("dimm_topology.device_handle: %u\n", p_value->device_handle);
+	printf("dimm_topology.id: %u\n", p_value->id);
+	printf("dimm_topology.vendor_id: %u\n", p_value->vendor_id);
+	printf("dimm_topology.device_id: %u\n", p_value->device_id);
+	printf("dimm_topology.revision_id: %u\n", p_value->revision_id);
+	printf("dimm_topology.subsystem_vendor_id: %u\n", p_value->subsystem_vendor_id);
+	printf("dimm_topology.subsystem_device_id: %u\n", p_value->subsystem_device_id);
+	printf("dimm_topology.subsystem_revision_id: %u\n", p_value->subsystem_revision_id);
+	printf("dimm_topology.manufacturing_info_valid: %u\n", p_value->manufacturing_info_valid);
+	printf("dimm_topology.manufacturing_location: %u\n", p_value->manufacturing_location);
+	printf("dimm_topology.manufacturing_date: %u\n", p_value->manufacturing_date);
+	printf("dimm_topology.serial_number: %u\n", p_value->serial_number[0]);
+	printf("dimm_topology.serial_number: %u\n", p_value->serial_number[1]);
+	printf("dimm_topology.serial_number: %u\n", p_value->serial_number[2]);
+	printf("dimm_topology.serial_number: %u\n", p_value->serial_number[3]);
+	printf("dimm_topology.interface_format_codes: %u\n", p_value->interface_format_codes[0]);
+	printf("dimm_topology.interface_format_codes: %u\n", p_value->interface_format_codes[1]);
+	printf("dimm_topology.interface_format_codes: %u\n", p_value->interface_format_codes[2]);
+	printf("dimm_topology.interface_format_codes: %u\n", p_value->interface_format_codes[3]);
+	printf("dimm_topology.interface_format_codes: %u\n", p_value->interface_format_codes[4]);
+	printf("dimm_topology.interface_format_codes: %u\n", p_value->interface_format_codes[5]);
+	printf("dimm_topology.interface_format_codes: %u\n", p_value->interface_format_codes[6]);
+	printf("dimm_topology.interface_format_codes: %u\n", p_value->interface_format_codes[7]);
+	printf("dimm_topology.interface_format_codes: %u\n", p_value->interface_format_codes[8]);
+	printf("dimm_topology.state_flags: %u\n", p_value->state_flags);
 }
 enum db_return_codes db_add_dimm_topology(const PersistentStore *p_ps,
 	struct db_dimm_topology *p_dimm_topology)
@@ -10689,15 +10701,15 @@ void db_print_namespace(struct db_namespace *p_value)
 {
 	printf("namespace.namespace_uid: %s\n", p_value->namespace_uid);
 	printf("namespace.friendly_name: %s\n", p_value->friendly_name);
-	printf("namespace.block_size: unsigned %d\n", p_value->block_size);
-	printf("namespace.block_count: unsigned %lld\n", p_value->block_count);
-	printf("namespace.type: unsigned %d\n", p_value->type);
-	printf("namespace.health: unsigned %d\n", p_value->health);
-	printf("namespace.enabled: unsigned %d\n", p_value->enabled);
-	printf("namespace.btt: unsigned %d\n", p_value->btt);
-	printf("namespace.device_handle: unsigned %d\n", p_value->device_handle);
-	printf("namespace.interleave_set_index: unsigned %d\n", p_value->interleave_set_index);
-	printf("namespace.memory_page_allocation: unsigned %d\n", p_value->memory_page_allocation);
+	printf("namespace.block_size: %u\n", p_value->block_size);
+	printf("namespace.block_count: %llu\n", p_value->block_count);
+	printf("namespace.type: %u\n", p_value->type);
+	printf("namespace.health: %u\n", p_value->health);
+	printf("namespace.enabled: %u\n", p_value->enabled);
+	printf("namespace.btt: %u\n", p_value->btt);
+	printf("namespace.device_handle: %u\n", p_value->device_handle);
+	printf("namespace.interleave_set_index: %u\n", p_value->interleave_set_index);
+	printf("namespace.memory_page_allocation: %u\n", p_value->memory_page_allocation);
 }
 enum db_return_codes db_add_namespace(const PersistentStore *p_ps,
 	struct db_namespace *p_namespace)
@@ -11540,21 +11552,21 @@ void local_row_to_identify_dimm(const PersistentStore *p_ps,
 }
 void db_print_identify_dimm(struct db_identify_dimm *p_value)
 {
-	printf("identify_dimm.device_handle: unsigned %d\n", p_value->device_handle);
-	printf("identify_dimm.vendor_id: unsigned %d\n", p_value->vendor_id);
-	printf("identify_dimm.device_id: unsigned %d\n", p_value->device_id);
-	printf("identify_dimm.revision_id: unsigned %d\n", p_value->revision_id);
-	printf("identify_dimm.interface_format_code: unsigned %d\n", p_value->interface_format_code);
-	printf("identify_dimm.interface_format_code_extra: unsigned %d\n", p_value->interface_format_code_extra);
+	printf("identify_dimm.device_handle: %u\n", p_value->device_handle);
+	printf("identify_dimm.vendor_id: %u\n", p_value->vendor_id);
+	printf("identify_dimm.device_id: %u\n", p_value->device_id);
+	printf("identify_dimm.revision_id: %u\n", p_value->revision_id);
+	printf("identify_dimm.interface_format_code: %u\n", p_value->interface_format_code);
+	printf("identify_dimm.interface_format_code_extra: %u\n", p_value->interface_format_code_extra);
 	printf("identify_dimm.fw_revision: %s\n", p_value->fw_revision);
-	printf("identify_dimm.fw_api_version: unsigned %d\n", p_value->fw_api_version);
-	printf("identify_dimm.fw_sw_mask: unsigned %d\n", p_value->fw_sw_mask);
-	printf("identify_dimm.dimm_sku: unsigned %d\n", p_value->dimm_sku);
-	printf("identify_dimm.block_windows: unsigned %d\n", p_value->block_windows);
-	printf("identify_dimm.block_control_region_offset: unsigned %d\n", p_value->block_control_region_offset);
-	printf("identify_dimm.raw_cap: unsigned %lld\n", p_value->raw_cap);
-	printf("identify_dimm.manufacturer: unsigned %d\n", p_value->manufacturer);
-	printf("identify_dimm.serial_num: unsigned %d\n", p_value->serial_num);
+	printf("identify_dimm.fw_api_version: %u\n", p_value->fw_api_version);
+	printf("identify_dimm.fw_sw_mask: %u\n", p_value->fw_sw_mask);
+	printf("identify_dimm.dimm_sku: %u\n", p_value->dimm_sku);
+	printf("identify_dimm.block_windows: %u\n", p_value->block_windows);
+	printf("identify_dimm.block_control_region_offset: %u\n", p_value->block_control_region_offset);
+	printf("identify_dimm.raw_cap: %llu\n", p_value->raw_cap);
+	printf("identify_dimm.manufacturer: %u\n", p_value->manufacturer);
+	printf("identify_dimm.serial_num: %u\n", p_value->serial_num);
 	printf("identify_dimm.part_num: %s\n", p_value->part_num);
 }
 enum db_return_codes db_add_identify_dimm(const PersistentStore *p_ps,
@@ -12052,11 +12064,11 @@ void local_row_to_device_characteristics(const PersistentStore *p_ps,
 }
 void db_print_device_characteristics(struct db_device_characteristics *p_value)
 {
-	printf("device_characteristics.device_handle: unsigned %d\n", p_value->device_handle);
-	printf("device_characteristics.controller_temp_shutdown_threshold: unsigned %d\n", p_value->controller_temp_shutdown_threshold);
-	printf("device_characteristics.media_temp_shutdown_threshold: unsigned %d\n", p_value->media_temp_shutdown_threshold);
-	printf("device_characteristics.throttling_start_threshold: unsigned %d\n", p_value->throttling_start_threshold);
-	printf("device_characteristics.throttling_stop_threshold: unsigned %d\n", p_value->throttling_stop_threshold);
+	printf("device_characteristics.device_handle: %u\n", p_value->device_handle);
+	printf("device_characteristics.controller_temp_shutdown_threshold: %u\n", p_value->controller_temp_shutdown_threshold);
+	printf("device_characteristics.media_temp_shutdown_threshold: %u\n", p_value->media_temp_shutdown_threshold);
+	printf("device_characteristics.throttling_start_threshold: %u\n", p_value->throttling_start_threshold);
+	printf("device_characteristics.throttling_stop_threshold: %u\n", p_value->throttling_stop_threshold);
 }
 enum db_return_codes db_add_device_characteristics(const PersistentStore *p_ps,
 	struct db_device_characteristics *p_device_characteristics)
@@ -12487,12 +12499,12 @@ void local_row_to_dimm_partition(const PersistentStore *p_ps,
 }
 void db_print_dimm_partition(struct db_dimm_partition *p_value)
 {
-	printf("dimm_partition.device_handle: unsigned %d\n", p_value->device_handle);
-	printf("dimm_partition.volatile_capacity: %d\n", p_value->volatile_capacity);
-	printf("dimm_partition.volatile_start: %lld\n", p_value->volatile_start);
-	printf("dimm_partition.pmem_capacity: %d\n", p_value->pmem_capacity);
-	printf("dimm_partition.pm_start: %lld\n", p_value->pm_start);
-	printf("dimm_partition.raw_capacity: %d\n", p_value->raw_capacity);
+	printf("dimm_partition.device_handle: %u\n", p_value->device_handle);
+	printf("dimm_partition.volatile_capacity: %i\n", p_value->volatile_capacity);
+	printf("dimm_partition.volatile_start: %lli\n", p_value->volatile_start);
+	printf("dimm_partition.pmem_capacity: %i\n", p_value->pmem_capacity);
+	printf("dimm_partition.pm_start: %lli\n", p_value->pm_start);
+	printf("dimm_partition.raw_capacity: %i\n", p_value->raw_capacity);
 }
 enum db_return_codes db_add_dimm_partition(const PersistentStore *p_ps,
 	struct db_dimm_partition *p_dimm_partition)
@@ -12972,23 +12984,23 @@ void local_row_to_dimm_smart(const PersistentStore *p_ps,
 }
 void db_print_dimm_smart(struct db_dimm_smart *p_value)
 {
-	printf("dimm_smart.device_handle: unsigned %d\n", p_value->device_handle);
-	printf("dimm_smart.validation_flags: unsigned %d\n", p_value->validation_flags);
-	printf("dimm_smart.health_status: unsigned %d\n", p_value->health_status);
-	printf("dimm_smart.media_temperature: unsigned %d\n", p_value->media_temperature);
-	printf("dimm_smart.spare: unsigned %d\n", p_value->spare);
-	printf("dimm_smart.alarm_trips: unsigned %d\n", p_value->alarm_trips);
-	printf("dimm_smart.percentage_used: unsigned %d\n", p_value->percentage_used);
-	printf("dimm_smart.lss: unsigned %d\n", p_value->lss);
-	printf("dimm_smart.vendor_specific_data_size: unsigned %d\n", p_value->vendor_specific_data_size);
-	printf("dimm_smart.power_cycles: unsigned %lld\n", p_value->power_cycles);
-	printf("dimm_smart.power_on_seconds: unsigned %lld\n", p_value->power_on_seconds);
-	printf("dimm_smart.uptime: unsigned %lld\n", p_value->uptime);
-	printf("dimm_smart.unsafe_shutdowns: unsigned %d\n", p_value->unsafe_shutdowns);
-	printf("dimm_smart.lss_details: unsigned %d\n", p_value->lss_details);
-	printf("dimm_smart.last_shutdown_time: unsigned %lld\n", p_value->last_shutdown_time);
-	printf("dimm_smart.controller_temperature: unsigned %d\n", p_value->controller_temperature);
-	printf("dimm_smart.ait_dram_status: unsigned %d\n", p_value->ait_dram_status);
+	printf("dimm_smart.device_handle: %u\n", p_value->device_handle);
+	printf("dimm_smart.validation_flags: %u\n", p_value->validation_flags);
+	printf("dimm_smart.health_status: %u\n", p_value->health_status);
+	printf("dimm_smart.media_temperature: %u\n", p_value->media_temperature);
+	printf("dimm_smart.spare: %u\n", p_value->spare);
+	printf("dimm_smart.alarm_trips: %u\n", p_value->alarm_trips);
+	printf("dimm_smart.percentage_used: %u\n", p_value->percentage_used);
+	printf("dimm_smart.lss: %u\n", p_value->lss);
+	printf("dimm_smart.vendor_specific_data_size: %u\n", p_value->vendor_specific_data_size);
+	printf("dimm_smart.power_cycles: %llu\n", p_value->power_cycles);
+	printf("dimm_smart.power_on_seconds: %llu\n", p_value->power_on_seconds);
+	printf("dimm_smart.uptime: %llu\n", p_value->uptime);
+	printf("dimm_smart.unsafe_shutdowns: %u\n", p_value->unsafe_shutdowns);
+	printf("dimm_smart.lss_details: %u\n", p_value->lss_details);
+	printf("dimm_smart.last_shutdown_time: %llu\n", p_value->last_shutdown_time);
+	printf("dimm_smart.controller_temperature: %u\n", p_value->controller_temperature);
+	printf("dimm_smart.ait_dram_status: %u\n", p_value->ait_dram_status);
 }
 enum db_return_codes db_add_dimm_smart(const PersistentStore *p_ps,
 	struct db_dimm_smart *p_dimm_smart)
@@ -13476,10 +13488,10 @@ void local_row_to_dimm_state(const PersistentStore *p_ps,
 }
 void db_print_dimm_state(struct db_dimm_state *p_value)
 {
-	printf("dimm_state.device_handle: unsigned %d\n", p_value->device_handle);
-	printf("dimm_state.health_state: %d\n", p_value->health_state);
-	printf("dimm_state.sanitize_status: %d\n", p_value->sanitize_status);
-	printf("dimm_state.fw_log_errors: unsigned %lld\n", p_value->fw_log_errors);
+	printf("dimm_state.device_handle: %u\n", p_value->device_handle);
+	printf("dimm_state.health_state: %i\n", p_value->health_state);
+	printf("dimm_state.sanitize_status: %i\n", p_value->sanitize_status);
+	printf("dimm_state.fw_log_errors: %llu\n", p_value->fw_log_errors);
 }
 enum db_return_codes db_add_dimm_state(const PersistentStore *p_ps,
 	struct db_dimm_state *p_dimm_state)
@@ -13906,7 +13918,7 @@ void local_row_to_namespace_state(const PersistentStore *p_ps,
 void db_print_namespace_state(struct db_namespace_state *p_value)
 {
 	printf("namespace_state.namespace_uid: %s\n", p_value->namespace_uid);
-	printf("namespace_state.health_state: %d\n", p_value->health_state);
+	printf("namespace_state.health_state: %i\n", p_value->health_state);
 }
 enum db_return_codes db_add_namespace_state(const PersistentStore *p_ps,
 	struct db_namespace_state *p_namespace_state)
@@ -14328,11 +14340,11 @@ void local_row_to_dimm_alarm_thresholds(const PersistentStore *p_ps,
 }
 void db_print_dimm_alarm_thresholds(struct db_dimm_alarm_thresholds *p_value)
 {
-	printf("dimm_alarm_thresholds.device_handle: unsigned %d\n", p_value->device_handle);
-	printf("dimm_alarm_thresholds.enable: unsigned %d\n", p_value->enable);
-	printf("dimm_alarm_thresholds.media_temperature: unsigned %d\n", p_value->media_temperature);
-	printf("dimm_alarm_thresholds.controller_temperature: unsigned %d\n", p_value->controller_temperature);
-	printf("dimm_alarm_thresholds.spare: unsigned %d\n", p_value->spare);
+	printf("dimm_alarm_thresholds.device_handle: %u\n", p_value->device_handle);
+	printf("dimm_alarm_thresholds.enable: %u\n", p_value->enable);
+	printf("dimm_alarm_thresholds.media_temperature: %u\n", p_value->media_temperature);
+	printf("dimm_alarm_thresholds.controller_temperature: %u\n", p_value->controller_temperature);
+	printf("dimm_alarm_thresholds.spare: %u\n", p_value->spare);
 }
 enum db_return_codes db_add_dimm_alarm_thresholds(const PersistentStore *p_ps,
 	struct db_dimm_alarm_thresholds *p_dimm_alarm_thresholds)
@@ -14759,11 +14771,11 @@ void local_row_to_dimm_power_management(const PersistentStore *p_ps,
 }
 void db_print_dimm_power_management(struct db_dimm_power_management *p_value)
 {
-	printf("dimm_power_management.device_handle: unsigned %d\n", p_value->device_handle);
-	printf("dimm_power_management.enable: unsigned %d\n", p_value->enable);
-	printf("dimm_power_management.tdp_power_limit: unsigned %d\n", p_value->tdp_power_limit);
-	printf("dimm_power_management.peak_power_budget: unsigned %d\n", p_value->peak_power_budget);
-	printf("dimm_power_management.avg_power_budget: unsigned %d\n", p_value->avg_power_budget);
+	printf("dimm_power_management.device_handle: %u\n", p_value->device_handle);
+	printf("dimm_power_management.enable: %u\n", p_value->enable);
+	printf("dimm_power_management.tdp_power_limit: %u\n", p_value->tdp_power_limit);
+	printf("dimm_power_management.peak_power_budget: %u\n", p_value->peak_power_budget);
+	printf("dimm_power_management.avg_power_budget: %u\n", p_value->avg_power_budget);
 }
 enum db_return_codes db_add_dimm_power_management(const PersistentStore *p_ps,
 	struct db_dimm_power_management *p_dimm_power_management)
@@ -15186,10 +15198,10 @@ void local_row_to_dimm_die_sparing(const PersistentStore *p_ps,
 }
 void db_print_dimm_die_sparing(struct db_dimm_die_sparing *p_value)
 {
-	printf("dimm_die_sparing.device_handle: unsigned %d\n", p_value->device_handle);
-	printf("dimm_die_sparing.enable: unsigned %d\n", p_value->enable);
-	printf("dimm_die_sparing.aggressiveness: unsigned %d\n", p_value->aggressiveness);
-	printf("dimm_die_sparing.supported: unsigned %d\n", p_value->supported);
+	printf("dimm_die_sparing.device_handle: %u\n", p_value->device_handle);
+	printf("dimm_die_sparing.enable: %u\n", p_value->enable);
+	printf("dimm_die_sparing.aggressiveness: %u\n", p_value->aggressiveness);
+	printf("dimm_die_sparing.supported: %u\n", p_value->supported);
 }
 enum db_return_codes db_add_dimm_die_sparing(const PersistentStore *p_ps,
 	struct db_dimm_die_sparing *p_dimm_die_sparing)
@@ -15607,10 +15619,10 @@ void local_row_to_dimm_optional_config_data(const PersistentStore *p_ps,
 }
 void db_print_dimm_optional_config_data(struct db_dimm_optional_config_data *p_value)
 {
-	printf("dimm_optional_config_data.device_handle: unsigned %d\n", p_value->device_handle);
-	printf("dimm_optional_config_data.first_fast_refresh_enable: unsigned %d\n", p_value->first_fast_refresh_enable);
-	printf("dimm_optional_config_data.viral_policy_enable: unsigned %d\n", p_value->viral_policy_enable);
-	printf("dimm_optional_config_data.viral_status: unsigned %d\n", p_value->viral_status);
+	printf("dimm_optional_config_data.device_handle: %u\n", p_value->device_handle);
+	printf("dimm_optional_config_data.first_fast_refresh_enable: %u\n", p_value->first_fast_refresh_enable);
+	printf("dimm_optional_config_data.viral_policy_enable: %u\n", p_value->viral_policy_enable);
+	printf("dimm_optional_config_data.viral_status: %u\n", p_value->viral_status);
 }
 enum db_return_codes db_add_dimm_optional_config_data(const PersistentStore *p_ps,
 	struct db_dimm_optional_config_data *p_dimm_optional_config_data)
@@ -16032,11 +16044,11 @@ void local_row_to_dimm_err_correction(const PersistentStore *p_ps,
 }
 void db_print_dimm_err_correction(struct db_dimm_err_correction *p_value)
 {
-	printf("dimm_err_correction.device_handle: unsigned %d\n", p_value->device_handle);
-	printf("dimm_err_correction.unrefreshed_enable: unsigned %d\n", p_value->unrefreshed_enable);
-	printf("dimm_err_correction.refreshed_enable: unsigned %d\n", p_value->refreshed_enable);
-	printf("dimm_err_correction.unrefreshed_force_write: unsigned %d\n", p_value->unrefreshed_force_write);
-	printf("dimm_err_correction.refreshed_force_write: unsigned %d\n", p_value->refreshed_force_write);
+	printf("dimm_err_correction.device_handle: %u\n", p_value->device_handle);
+	printf("dimm_err_correction.unrefreshed_enable: %u\n", p_value->unrefreshed_enable);
+	printf("dimm_err_correction.refreshed_enable: %u\n", p_value->refreshed_enable);
+	printf("dimm_err_correction.unrefreshed_force_write: %u\n", p_value->unrefreshed_force_write);
+	printf("dimm_err_correction.refreshed_force_write: %u\n", p_value->refreshed_force_write);
 }
 enum db_return_codes db_add_dimm_err_correction(const PersistentStore *p_ps,
 	struct db_dimm_err_correction *p_dimm_err_correction)
@@ -16467,12 +16479,12 @@ void local_row_to_dimm_erasure_coding(const PersistentStore *p_ps,
 }
 void db_print_dimm_erasure_coding(struct db_dimm_erasure_coding *p_value)
 {
-	printf("dimm_erasure_coding.device_handle: unsigned %d\n", p_value->device_handle);
-	printf("dimm_erasure_coding.verify_erc: unsigned %d\n", p_value->verify_erc);
-	printf("dimm_erasure_coding.unrefreshed_enable: unsigned %d\n", p_value->unrefreshed_enable);
-	printf("dimm_erasure_coding.refreshed_enable: unsigned %d\n", p_value->refreshed_enable);
-	printf("dimm_erasure_coding.unrefreshed_force_write: unsigned %d\n", p_value->unrefreshed_force_write);
-	printf("dimm_erasure_coding.refreshed_force_write: unsigned %d\n", p_value->refreshed_force_write);
+	printf("dimm_erasure_coding.device_handle: %u\n", p_value->device_handle);
+	printf("dimm_erasure_coding.verify_erc: %u\n", p_value->verify_erc);
+	printf("dimm_erasure_coding.unrefreshed_enable: %u\n", p_value->unrefreshed_enable);
+	printf("dimm_erasure_coding.refreshed_enable: %u\n", p_value->refreshed_enable);
+	printf("dimm_erasure_coding.unrefreshed_force_write: %u\n", p_value->unrefreshed_force_write);
+	printf("dimm_erasure_coding.refreshed_force_write: %u\n", p_value->refreshed_force_write);
 }
 enum db_return_codes db_add_dimm_erasure_coding(const PersistentStore *p_ps,
 	struct db_dimm_erasure_coding *p_dimm_erasure_coding)
@@ -16900,10 +16912,10 @@ void local_row_to_dimm_thermal(const PersistentStore *p_ps,
 }
 void db_print_dimm_thermal(struct db_dimm_thermal *p_value)
 {
-	printf("dimm_thermal.device_handle: unsigned %d\n", p_value->device_handle);
-	printf("dimm_thermal.throttling_enable: unsigned %d\n", p_value->throttling_enable);
-	printf("dimm_thermal.alerting_enable: unsigned %d\n", p_value->alerting_enable);
-	printf("dimm_thermal.critical_shutdown_enable: unsigned %d\n", p_value->critical_shutdown_enable);
+	printf("dimm_thermal.device_handle: %u\n", p_value->device_handle);
+	printf("dimm_thermal.throttling_enable: %u\n", p_value->throttling_enable);
+	printf("dimm_thermal.alerting_enable: %u\n", p_value->alerting_enable);
+	printf("dimm_thermal.critical_shutdown_enable: %u\n", p_value->critical_shutdown_enable);
 }
 enum db_return_codes db_add_dimm_thermal(const PersistentStore *p_ps,
 	struct db_dimm_thermal *p_dimm_thermal)
@@ -17337,11 +17349,11 @@ void local_row_to_dimm_fw_image(const PersistentStore *p_ps,
 }
 void db_print_dimm_fw_image(struct db_dimm_fw_image *p_value)
 {
-	printf("dimm_fw_image.device_handle: unsigned %d\n", p_value->device_handle);
+	printf("dimm_fw_image.device_handle: %u\n", p_value->device_handle);
 	printf("dimm_fw_image.fw_rev: %s\n", p_value->fw_rev);
-	printf("dimm_fw_image.fw_type: unsigned %d\n", p_value->fw_type);
+	printf("dimm_fw_image.fw_type: %u\n", p_value->fw_type);
 	printf("dimm_fw_image.staged_fw_rev: %s\n", p_value->staged_fw_rev);
-	printf("dimm_fw_image.fw_update_status: unsigned %d\n", p_value->fw_update_status);
+	printf("dimm_fw_image.fw_update_status: %u\n", p_value->fw_update_status);
 	printf("dimm_fw_image.commit_id: %s\n", p_value->commit_id);
 	printf("dimm_fw_image.build_configuration: %s\n", p_value->build_configuration);
 }
@@ -17743,7 +17755,7 @@ enum db_return_codes db_delete_dimm_fw_image_history(const PersistentStore *p_ps
 void local_bind_dimm_fw_debug_log(sqlite3_stmt *p_stmt, struct db_dimm_fw_debug_log *p_dimm_fw_debug_log)
 {
 	BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)p_dimm_fw_debug_log->device_handle);
-	BIND_TEXT(p_stmt, "$fw_log", (unsigned char *)p_dimm_fw_debug_log->fw_log);
+	BIND_TEXT(p_stmt, "$fw_log", (char *)p_dimm_fw_debug_log->fw_log);
 }
 void local_get_dimm_fw_debug_log_relationships(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt, struct db_dimm_fw_debug_log *p_dimm_fw_debug_log)
@@ -17769,8 +17781,8 @@ void local_row_to_dimm_fw_debug_log(const PersistentStore *p_ps,
 }
 void db_print_dimm_fw_debug_log(struct db_dimm_fw_debug_log *p_value)
 {
-	printf("dimm_fw_debug_log.device_handle: unsigned %d\n", p_value->device_handle);
-	printf("dimm_fw_debug_log.fw_log: unsigned %s\n", p_value->fw_log);
+	printf("dimm_fw_debug_log.device_handle: %u\n", p_value->device_handle);
+	printf("dimm_fw_debug_log.fw_log: %s\n", p_value->fw_log);
 }
 enum db_return_codes db_add_dimm_fw_debug_log(const PersistentStore *p_ps,
 	struct db_dimm_fw_debug_log *p_dimm_fw_debug_log)
@@ -17933,7 +17945,7 @@ enum db_return_codes db_save_dimm_fw_debug_log_state(const PersistentStore *p_ps
 }
 
 enum db_return_codes db_get_dimm_fw_debug_log_by_fw_log(const PersistentStore *p_ps,
-	const unsigned char * fw_log,
+	const char * fw_log,
 	struct db_dimm_fw_debug_log *p_dimm_fw_debug_log)
 {
 	memset(p_dimm_fw_debug_log, 0, sizeof (struct db_dimm_fw_debug_log));
@@ -17946,7 +17958,7 @@ enum db_return_codes db_get_dimm_fw_debug_log_by_fw_log(const PersistentStore *p
 	int sql_rc;
 	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
-		BIND_TEXT(p_stmt, "$fw_log", (unsigned char *)fw_log);
+		BIND_TEXT(p_stmt, "$fw_log", (char *)fw_log);
 		sql_rc = sqlite3_step(p_stmt);
 		if (sql_rc == SQLITE_ROW)
 		{
@@ -17970,7 +17982,7 @@ enum db_return_codes db_get_dimm_fw_debug_log_by_fw_log(const PersistentStore *p
 	return rc;
 }
 enum db_return_codes db_update_dimm_fw_debug_log_by_fw_log(const PersistentStore *p_ps,
-	const unsigned char * fw_log,
+	const char * fw_log,
 	struct db_dimm_fw_debug_log *p_dimm_fw_debug_log)
 {
 	sqlite3_stmt *p_stmt;
@@ -17984,7 +17996,7 @@ enum db_return_codes db_update_dimm_fw_debug_log_by_fw_log(const PersistentStore
 	int sql_rc;
 	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
-		BIND_TEXT(p_stmt, "$fw_log", (unsigned char *)fw_log);
+		BIND_TEXT(p_stmt, "$fw_log", (char *)fw_log);
 		local_bind_dimm_fw_debug_log(p_stmt, p_dimm_fw_debug_log);
 		sql_rc = sqlite3_step(p_stmt);
 		sqlite3_finalize(p_stmt);
@@ -18002,7 +18014,7 @@ enum db_return_codes db_update_dimm_fw_debug_log_by_fw_log(const PersistentStore
 	return rc;
 }
 enum db_return_codes db_delete_dimm_fw_debug_log_by_fw_log(const PersistentStore *p_ps,
-	const unsigned char * fw_log)
+	const char * fw_log)
 {
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
@@ -18011,7 +18023,7 @@ enum db_return_codes db_delete_dimm_fw_debug_log_by_fw_log(const PersistentStore
 	int sql_rc;
 	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
-		BIND_TEXT(p_stmt, "$fw_log", (unsigned char *)fw_log);
+		BIND_TEXT(p_stmt, "$fw_log", (char *)fw_log);
 		if ((sql_rc = sqlite3_step(p_stmt)) == SQLITE_DONE)
 		{
 			rc = DB_SUCCESS;
@@ -18360,13 +18372,13 @@ void local_row_to_dimm_memory_info_page0(const PersistentStore *p_ps,
 }
 void db_print_dimm_memory_info_page0(struct db_dimm_memory_info_page0 *p_value)
 {
-	printf("dimm_memory_info_page0.device_handle: unsigned %d\n", p_value->device_handle);
-	printf("dimm_memory_info_page0.bytes_read: unsigned %lld\n", p_value->bytes_read);
-	printf("dimm_memory_info_page0.bytes_written: unsigned %lld\n", p_value->bytes_written);
-	printf("dimm_memory_info_page0.read_reqs: unsigned %lld\n", p_value->read_reqs);
-	printf("dimm_memory_info_page0.write_reqs: unsigned %lld\n", p_value->write_reqs);
-	printf("dimm_memory_info_page0.block_read_reqs: unsigned %lld\n", p_value->block_read_reqs);
-	printf("dimm_memory_info_page0.block_write_reqs: unsigned %lld\n", p_value->block_write_reqs);
+	printf("dimm_memory_info_page0.device_handle: %u\n", p_value->device_handle);
+	printf("dimm_memory_info_page0.bytes_read: %llu\n", p_value->bytes_read);
+	printf("dimm_memory_info_page0.bytes_written: %llu\n", p_value->bytes_written);
+	printf("dimm_memory_info_page0.read_reqs: %llu\n", p_value->read_reqs);
+	printf("dimm_memory_info_page0.write_reqs: %llu\n", p_value->write_reqs);
+	printf("dimm_memory_info_page0.block_read_reqs: %llu\n", p_value->block_read_reqs);
+	printf("dimm_memory_info_page0.block_write_reqs: %llu\n", p_value->block_write_reqs);
 }
 enum db_return_codes db_add_dimm_memory_info_page0(const PersistentStore *p_ps,
 	struct db_dimm_memory_info_page0 *p_dimm_memory_info_page0)
@@ -18811,13 +18823,13 @@ void local_row_to_dimm_memory_info_page1(const PersistentStore *p_ps,
 }
 void db_print_dimm_memory_info_page1(struct db_dimm_memory_info_page1 *p_value)
 {
-	printf("dimm_memory_info_page1.device_handle: unsigned %d\n", p_value->device_handle);
-	printf("dimm_memory_info_page1.total_bytes_read: unsigned %lld\n", p_value->total_bytes_read);
-	printf("dimm_memory_info_page1.total_bytes_written: unsigned %lld\n", p_value->total_bytes_written);
-	printf("dimm_memory_info_page1.total_read_reqs: unsigned %lld\n", p_value->total_read_reqs);
-	printf("dimm_memory_info_page1.total_write_reqs: unsigned %lld\n", p_value->total_write_reqs);
-	printf("dimm_memory_info_page1.total_block_read_reqs: unsigned %lld\n", p_value->total_block_read_reqs);
-	printf("dimm_memory_info_page1.total_block_write_reqs: unsigned %lld\n", p_value->total_block_write_reqs);
+	printf("dimm_memory_info_page1.device_handle: %u\n", p_value->device_handle);
+	printf("dimm_memory_info_page1.total_bytes_read: %llu\n", p_value->total_bytes_read);
+	printf("dimm_memory_info_page1.total_bytes_written: %llu\n", p_value->total_bytes_written);
+	printf("dimm_memory_info_page1.total_read_reqs: %llu\n", p_value->total_read_reqs);
+	printf("dimm_memory_info_page1.total_write_reqs: %llu\n", p_value->total_write_reqs);
+	printf("dimm_memory_info_page1.total_block_read_reqs: %llu\n", p_value->total_block_read_reqs);
+	printf("dimm_memory_info_page1.total_block_write_reqs: %llu\n", p_value->total_block_write_reqs);
 }
 enum db_return_codes db_add_dimm_memory_info_page1(const PersistentStore *p_ps,
 	struct db_dimm_memory_info_page1 *p_dimm_memory_info_page1)
@@ -19302,23 +19314,23 @@ void local_row_to_dimm_ars_command_specific_data(const PersistentStore *p_ps,
 }
 void db_print_dimm_ars_command_specific_data(struct db_dimm_ars_command_specific_data *p_value)
 {
-	printf("dimm_ars_command_specific_data.device_handle: unsigned %d\n", p_value->device_handle);
-	printf("dimm_ars_command_specific_data.num_errors: %lld\n", p_value->num_errors);
-	printf("dimm_ars_command_specific_data.ars_state: %lld\n", p_value->ars_state);
-	printf("dimm_ars_command_specific_data.dpa_error_address: unsigned %lld\n", p_value->dpa_error_address[0]);
-	printf("dimm_ars_command_specific_data.dpa_error_address: unsigned %lld\n", p_value->dpa_error_address[1]);
-	printf("dimm_ars_command_specific_data.dpa_error_address: unsigned %lld\n", p_value->dpa_error_address[2]);
-	printf("dimm_ars_command_specific_data.dpa_error_address: unsigned %lld\n", p_value->dpa_error_address[3]);
-	printf("dimm_ars_command_specific_data.dpa_error_address: unsigned %lld\n", p_value->dpa_error_address[4]);
-	printf("dimm_ars_command_specific_data.dpa_error_address: unsigned %lld\n", p_value->dpa_error_address[5]);
-	printf("dimm_ars_command_specific_data.dpa_error_address: unsigned %lld\n", p_value->dpa_error_address[6]);
-	printf("dimm_ars_command_specific_data.dpa_error_address: unsigned %lld\n", p_value->dpa_error_address[7]);
-	printf("dimm_ars_command_specific_data.dpa_error_address: unsigned %lld\n", p_value->dpa_error_address[8]);
-	printf("dimm_ars_command_specific_data.dpa_error_address: unsigned %lld\n", p_value->dpa_error_address[9]);
-	printf("dimm_ars_command_specific_data.dpa_error_address: unsigned %lld\n", p_value->dpa_error_address[10]);
-	printf("dimm_ars_command_specific_data.dpa_error_address: unsigned %lld\n", p_value->dpa_error_address[11]);
-	printf("dimm_ars_command_specific_data.dpa_error_address: unsigned %lld\n", p_value->dpa_error_address[12]);
-	printf("dimm_ars_command_specific_data.dpa_error_address: unsigned %lld\n", p_value->dpa_error_address[13]);
+	printf("dimm_ars_command_specific_data.device_handle: %u\n", p_value->device_handle);
+	printf("dimm_ars_command_specific_data.num_errors: %lli\n", p_value->num_errors);
+	printf("dimm_ars_command_specific_data.ars_state: %lli\n", p_value->ars_state);
+	printf("dimm_ars_command_specific_data.dpa_error_address: %llu\n", p_value->dpa_error_address[0]);
+	printf("dimm_ars_command_specific_data.dpa_error_address: %llu\n", p_value->dpa_error_address[1]);
+	printf("dimm_ars_command_specific_data.dpa_error_address: %llu\n", p_value->dpa_error_address[2]);
+	printf("dimm_ars_command_specific_data.dpa_error_address: %llu\n", p_value->dpa_error_address[3]);
+	printf("dimm_ars_command_specific_data.dpa_error_address: %llu\n", p_value->dpa_error_address[4]);
+	printf("dimm_ars_command_specific_data.dpa_error_address: %llu\n", p_value->dpa_error_address[5]);
+	printf("dimm_ars_command_specific_data.dpa_error_address: %llu\n", p_value->dpa_error_address[6]);
+	printf("dimm_ars_command_specific_data.dpa_error_address: %llu\n", p_value->dpa_error_address[7]);
+	printf("dimm_ars_command_specific_data.dpa_error_address: %llu\n", p_value->dpa_error_address[8]);
+	printf("dimm_ars_command_specific_data.dpa_error_address: %llu\n", p_value->dpa_error_address[9]);
+	printf("dimm_ars_command_specific_data.dpa_error_address: %llu\n", p_value->dpa_error_address[10]);
+	printf("dimm_ars_command_specific_data.dpa_error_address: %llu\n", p_value->dpa_error_address[11]);
+	printf("dimm_ars_command_specific_data.dpa_error_address: %llu\n", p_value->dpa_error_address[12]);
+	printf("dimm_ars_command_specific_data.dpa_error_address: %llu\n", p_value->dpa_error_address[13]);
 }
 enum db_return_codes db_add_dimm_ars_command_specific_data(const PersistentStore *p_ps,
 	struct db_dimm_ars_command_specific_data *p_dimm_ars_command_specific_data)
@@ -19809,12 +19821,12 @@ void local_row_to_dimm_long_op_status(const PersistentStore *p_ps,
 }
 void db_print_dimm_long_op_status(struct db_dimm_long_op_status *p_value)
 {
-	printf("dimm_long_op_status.device_handle: unsigned %d\n", p_value->device_handle);
-	printf("dimm_long_op_status.opcode: %lld\n", p_value->opcode);
-	printf("dimm_long_op_status.subopcode: %lld\n", p_value->subopcode);
-	printf("dimm_long_op_status.percent_complete: %lld\n", p_value->percent_complete);
-	printf("dimm_long_op_status.etc: %lld\n", p_value->etc);
-	printf("dimm_long_op_status.status_code: %lld\n", p_value->status_code);
+	printf("dimm_long_op_status.device_handle: %u\n", p_value->device_handle);
+	printf("dimm_long_op_status.opcode: %lli\n", p_value->opcode);
+	printf("dimm_long_op_status.subopcode: %lli\n", p_value->subopcode);
+	printf("dimm_long_op_status.percent_complete: %lli\n", p_value->percent_complete);
+	printf("dimm_long_op_status.etc: %lli\n", p_value->etc);
+	printf("dimm_long_op_status.status_code: %lli\n", p_value->status_code);
 }
 enum db_return_codes db_add_dimm_long_op_status(const PersistentStore *p_ps,
 	struct db_dimm_long_op_status *p_dimm_long_op_status)
@@ -20282,19 +20294,19 @@ void local_row_to_dimm_details(const PersistentStore *p_ps,
 }
 void db_print_dimm_details(struct db_dimm_details *p_value)
 {
-	printf("dimm_details.device_handle: unsigned %d\n", p_value->device_handle);
-	printf("dimm_details.form_factor: unsigned %d\n", p_value->form_factor);
-	printf("dimm_details.data_width: unsigned %lld\n", p_value->data_width);
-	printf("dimm_details.total_width: unsigned %lld\n", p_value->total_width);
-	printf("dimm_details.size: unsigned %lld\n", p_value->size);
-	printf("dimm_details.speed: unsigned %lld\n", p_value->speed);
+	printf("dimm_details.device_handle: %u\n", p_value->device_handle);
+	printf("dimm_details.form_factor: %u\n", p_value->form_factor);
+	printf("dimm_details.data_width: %llu\n", p_value->data_width);
+	printf("dimm_details.total_width: %llu\n", p_value->total_width);
+	printf("dimm_details.size: %llu\n", p_value->size);
+	printf("dimm_details.speed: %llu\n", p_value->speed);
 	printf("dimm_details.part_number: %s\n", p_value->part_number);
 	printf("dimm_details.device_locator: %s\n", p_value->device_locator);
 	printf("dimm_details.bank_label: %s\n", p_value->bank_label);
 	printf("dimm_details.manufacturer: %s\n", p_value->manufacturer);
-	printf("dimm_details.type: unsigned %d\n", p_value->type);
-	printf("dimm_details.type_detail: unsigned %d\n", p_value->type_detail);
-	printf("dimm_details.id: unsigned %d\n", p_value->id);
+	printf("dimm_details.type: %u\n", p_value->type);
+	printf("dimm_details.type_detail: %u\n", p_value->type_detail);
+	printf("dimm_details.id: %u\n", p_value->id);
 }
 enum db_return_codes db_add_dimm_details(const PersistentStore *p_ps,
 	struct db_dimm_details *p_dimm_details)
@@ -20749,8 +20761,8 @@ void local_row_to_dimm_security_info(const PersistentStore *p_ps,
 }
 void db_print_dimm_security_info(struct db_dimm_security_info *p_value)
 {
-	printf("dimm_security_info.device_handle: unsigned %d\n", p_value->device_handle);
-	printf("dimm_security_info.security_state: %d\n", p_value->security_state);
+	printf("dimm_security_info.device_handle: %u\n", p_value->device_handle);
+	printf("dimm_security_info.security_state: %i\n", p_value->security_state);
 }
 enum db_return_codes db_add_dimm_security_info(const PersistentStore *p_ps,
 	struct db_dimm_security_info *p_dimm_security_info)
@@ -21154,9 +21166,9 @@ void local_row_to_dimm_sanitize_info(const PersistentStore *p_ps,
 }
 void db_print_dimm_sanitize_info(struct db_dimm_sanitize_info *p_value)
 {
-	printf("dimm_sanitize_info.device_handle: unsigned %d\n", p_value->device_handle);
-	printf("dimm_sanitize_info.sanitize_state: %d\n", p_value->sanitize_state);
-	printf("dimm_sanitize_info.sanitize_progress: %d\n", p_value->sanitize_progress);
+	printf("dimm_sanitize_info.device_handle: %u\n", p_value->device_handle);
+	printf("dimm_sanitize_info.sanitize_state: %i\n", p_value->sanitize_state);
+	printf("dimm_sanitize_info.sanitize_progress: %i\n", p_value->sanitize_progress);
 }
 enum db_return_codes db_add_dimm_sanitize_info(const PersistentStore *p_ps,
 	struct db_dimm_sanitize_info *p_dimm_sanitize_info)
@@ -21585,14 +21597,14 @@ void local_row_to_fw_media_low_log_entry(const PersistentStore *p_ps,
 }
 void db_print_fw_media_low_log_entry(struct db_fw_media_low_log_entry *p_value)
 {
-	printf("fw_media_low_log_entry.device_handle: unsigned %d\n", p_value->device_handle);
-	printf("fw_media_low_log_entry.system_timestamp: unsigned %lld\n", p_value->system_timestamp);
-	printf("fw_media_low_log_entry.dpa: unsigned %lld\n", p_value->dpa);
-	printf("fw_media_low_log_entry.pda: unsigned %lld\n", p_value->pda);
-	printf("fw_media_low_log_entry.range: unsigned %d\n", p_value->range);
-	printf("fw_media_low_log_entry.error_type: unsigned %d\n", p_value->error_type);
-	printf("fw_media_low_log_entry.error_flags: unsigned %d\n", p_value->error_flags);
-	printf("fw_media_low_log_entry.transaction_type: unsigned %d\n", p_value->transaction_type);
+	printf("fw_media_low_log_entry.device_handle: %u\n", p_value->device_handle);
+	printf("fw_media_low_log_entry.system_timestamp: %llu\n", p_value->system_timestamp);
+	printf("fw_media_low_log_entry.dpa: %llu\n", p_value->dpa);
+	printf("fw_media_low_log_entry.pda: %llu\n", p_value->pda);
+	printf("fw_media_low_log_entry.range: %u\n", p_value->range);
+	printf("fw_media_low_log_entry.error_type: %u\n", p_value->error_type);
+	printf("fw_media_low_log_entry.error_flags: %u\n", p_value->error_flags);
+	printf("fw_media_low_log_entry.transaction_type: %u\n", p_value->transaction_type);
 }
 enum db_return_codes db_add_fw_media_low_log_entry(const PersistentStore *p_ps,
 	struct db_fw_media_low_log_entry *p_fw_media_low_log_entry)
@@ -22216,14 +22228,14 @@ void local_row_to_fw_media_high_log_entry(const PersistentStore *p_ps,
 }
 void db_print_fw_media_high_log_entry(struct db_fw_media_high_log_entry *p_value)
 {
-	printf("fw_media_high_log_entry.device_handle: unsigned %d\n", p_value->device_handle);
-	printf("fw_media_high_log_entry.system_timestamp: unsigned %lld\n", p_value->system_timestamp);
-	printf("fw_media_high_log_entry.dpa: unsigned %lld\n", p_value->dpa);
-	printf("fw_media_high_log_entry.pda: unsigned %lld\n", p_value->pda);
-	printf("fw_media_high_log_entry.range: unsigned %d\n", p_value->range);
-	printf("fw_media_high_log_entry.error_type: unsigned %d\n", p_value->error_type);
-	printf("fw_media_high_log_entry.error_flags: unsigned %d\n", p_value->error_flags);
-	printf("fw_media_high_log_entry.transaction_type: unsigned %d\n", p_value->transaction_type);
+	printf("fw_media_high_log_entry.device_handle: %u\n", p_value->device_handle);
+	printf("fw_media_high_log_entry.system_timestamp: %llu\n", p_value->system_timestamp);
+	printf("fw_media_high_log_entry.dpa: %llu\n", p_value->dpa);
+	printf("fw_media_high_log_entry.pda: %llu\n", p_value->pda);
+	printf("fw_media_high_log_entry.range: %u\n", p_value->range);
+	printf("fw_media_high_log_entry.error_type: %u\n", p_value->error_type);
+	printf("fw_media_high_log_entry.error_flags: %u\n", p_value->error_flags);
+	printf("fw_media_high_log_entry.transaction_type: %u\n", p_value->transaction_type);
 }
 enum db_return_codes db_add_fw_media_high_log_entry(const PersistentStore *p_ps,
 	struct db_fw_media_high_log_entry *p_fw_media_high_log_entry)
@@ -22827,9 +22839,9 @@ void local_row_to_fw_thermal_low_log_entry(const PersistentStore *p_ps,
 }
 void db_print_fw_thermal_low_log_entry(struct db_fw_thermal_low_log_entry *p_value)
 {
-	printf("fw_thermal_low_log_entry.device_handle: unsigned %d\n", p_value->device_handle);
-	printf("fw_thermal_low_log_entry.system_timestamp: unsigned %lld\n", p_value->system_timestamp);
-	printf("fw_thermal_low_log_entry.host_reported_temp_data: unsigned %d\n", p_value->host_reported_temp_data);
+	printf("fw_thermal_low_log_entry.device_handle: %u\n", p_value->device_handle);
+	printf("fw_thermal_low_log_entry.system_timestamp: %llu\n", p_value->system_timestamp);
+	printf("fw_thermal_low_log_entry.host_reported_temp_data: %u\n", p_value->host_reported_temp_data);
 }
 enum db_return_codes db_add_fw_thermal_low_log_entry(const PersistentStore *p_ps,
 	struct db_fw_thermal_low_log_entry *p_fw_thermal_low_log_entry)
@@ -23408,9 +23420,9 @@ void local_row_to_fw_thermal_high_log_entry(const PersistentStore *p_ps,
 }
 void db_print_fw_thermal_high_log_entry(struct db_fw_thermal_high_log_entry *p_value)
 {
-	printf("fw_thermal_high_log_entry.device_handle: unsigned %d\n", p_value->device_handle);
-	printf("fw_thermal_high_log_entry.system_timestamp: unsigned %lld\n", p_value->system_timestamp);
-	printf("fw_thermal_high_log_entry.host_reported_temp_data: unsigned %d\n", p_value->host_reported_temp_data);
+	printf("fw_thermal_high_log_entry.device_handle: %u\n", p_value->device_handle);
+	printf("fw_thermal_high_log_entry.system_timestamp: %llu\n", p_value->system_timestamp);
+	printf("fw_thermal_high_log_entry.host_reported_temp_data: %u\n", p_value->host_reported_temp_data);
 }
 enum db_return_codes db_add_fw_thermal_high_log_entry(const PersistentStore *p_ps,
 	struct db_fw_thermal_high_log_entry *p_fw_thermal_high_log_entry)
@@ -24001,12 +24013,12 @@ void local_row_to_fw_media_low_log_info(const PersistentStore *p_ps,
 }
 void db_print_fw_media_low_log_info(struct db_fw_media_low_log_info *p_value)
 {
-	printf("fw_media_low_log_info.device_handle: unsigned %d\n", p_value->device_handle);
-	printf("fw_media_low_log_info.max_log_entries: unsigned %d\n", p_value->max_log_entries);
-	printf("fw_media_low_log_info.current_sequence_number: unsigned %d\n", p_value->current_sequence_number);
-	printf("fw_media_low_log_info.oldest_sequence_number: unsigned %d\n", p_value->oldest_sequence_number);
-	printf("fw_media_low_log_info.newest_log_entry_timestamp: unsigned %lld\n", p_value->newest_log_entry_timestamp);
-	printf("fw_media_low_log_info.oldest_log_entry_timestamp: unsigned %lld\n", p_value->oldest_log_entry_timestamp);
+	printf("fw_media_low_log_info.device_handle: %u\n", p_value->device_handle);
+	printf("fw_media_low_log_info.max_log_entries: %u\n", p_value->max_log_entries);
+	printf("fw_media_low_log_info.current_sequence_number: %u\n", p_value->current_sequence_number);
+	printf("fw_media_low_log_info.oldest_sequence_number: %u\n", p_value->oldest_sequence_number);
+	printf("fw_media_low_log_info.newest_log_entry_timestamp: %llu\n", p_value->newest_log_entry_timestamp);
+	printf("fw_media_low_log_info.oldest_log_entry_timestamp: %llu\n", p_value->oldest_log_entry_timestamp);
 }
 enum db_return_codes db_add_fw_media_low_log_info(const PersistentStore *p_ps,
 	struct db_fw_media_low_log_info *p_fw_media_low_log_info)
@@ -24442,12 +24454,12 @@ void local_row_to_fw_media_high_log_info(const PersistentStore *p_ps,
 }
 void db_print_fw_media_high_log_info(struct db_fw_media_high_log_info *p_value)
 {
-	printf("fw_media_high_log_info.device_handle: unsigned %d\n", p_value->device_handle);
-	printf("fw_media_high_log_info.max_log_entries: unsigned %d\n", p_value->max_log_entries);
-	printf("fw_media_high_log_info.current_sequence_number: unsigned %d\n", p_value->current_sequence_number);
-	printf("fw_media_high_log_info.oldest_sequence_number: unsigned %d\n", p_value->oldest_sequence_number);
-	printf("fw_media_high_log_info.newest_log_entry_timestamp: unsigned %lld\n", p_value->newest_log_entry_timestamp);
-	printf("fw_media_high_log_info.oldest_log_entry_timestamp: unsigned %lld\n", p_value->oldest_log_entry_timestamp);
+	printf("fw_media_high_log_info.device_handle: %u\n", p_value->device_handle);
+	printf("fw_media_high_log_info.max_log_entries: %u\n", p_value->max_log_entries);
+	printf("fw_media_high_log_info.current_sequence_number: %u\n", p_value->current_sequence_number);
+	printf("fw_media_high_log_info.oldest_sequence_number: %u\n", p_value->oldest_sequence_number);
+	printf("fw_media_high_log_info.newest_log_entry_timestamp: %llu\n", p_value->newest_log_entry_timestamp);
+	printf("fw_media_high_log_info.oldest_log_entry_timestamp: %llu\n", p_value->oldest_log_entry_timestamp);
 }
 enum db_return_codes db_add_fw_media_high_log_info(const PersistentStore *p_ps,
 	struct db_fw_media_high_log_info *p_fw_media_high_log_info)
@@ -24883,12 +24895,12 @@ void local_row_to_fw_thermal_low_log_info(const PersistentStore *p_ps,
 }
 void db_print_fw_thermal_low_log_info(struct db_fw_thermal_low_log_info *p_value)
 {
-	printf("fw_thermal_low_log_info.device_handle: unsigned %d\n", p_value->device_handle);
-	printf("fw_thermal_low_log_info.max_log_entries: unsigned %d\n", p_value->max_log_entries);
-	printf("fw_thermal_low_log_info.current_sequence_number: unsigned %d\n", p_value->current_sequence_number);
-	printf("fw_thermal_low_log_info.oldest_sequence_number: unsigned %d\n", p_value->oldest_sequence_number);
-	printf("fw_thermal_low_log_info.newest_log_entry_timestamp: unsigned %lld\n", p_value->newest_log_entry_timestamp);
-	printf("fw_thermal_low_log_info.oldest_log_entry_timestamp: unsigned %lld\n", p_value->oldest_log_entry_timestamp);
+	printf("fw_thermal_low_log_info.device_handle: %u\n", p_value->device_handle);
+	printf("fw_thermal_low_log_info.max_log_entries: %u\n", p_value->max_log_entries);
+	printf("fw_thermal_low_log_info.current_sequence_number: %u\n", p_value->current_sequence_number);
+	printf("fw_thermal_low_log_info.oldest_sequence_number: %u\n", p_value->oldest_sequence_number);
+	printf("fw_thermal_low_log_info.newest_log_entry_timestamp: %llu\n", p_value->newest_log_entry_timestamp);
+	printf("fw_thermal_low_log_info.oldest_log_entry_timestamp: %llu\n", p_value->oldest_log_entry_timestamp);
 }
 enum db_return_codes db_add_fw_thermal_low_log_info(const PersistentStore *p_ps,
 	struct db_fw_thermal_low_log_info *p_fw_thermal_low_log_info)
@@ -25324,12 +25336,12 @@ void local_row_to_fw_thermal_high_log_info(const PersistentStore *p_ps,
 }
 void db_print_fw_thermal_high_log_info(struct db_fw_thermal_high_log_info *p_value)
 {
-	printf("fw_thermal_high_log_info.device_handle: unsigned %d\n", p_value->device_handle);
-	printf("fw_thermal_high_log_info.max_log_entries: unsigned %d\n", p_value->max_log_entries);
-	printf("fw_thermal_high_log_info.current_sequence_number: unsigned %d\n", p_value->current_sequence_number);
-	printf("fw_thermal_high_log_info.oldest_sequence_number: unsigned %d\n", p_value->oldest_sequence_number);
-	printf("fw_thermal_high_log_info.newest_log_entry_timestamp: unsigned %lld\n", p_value->newest_log_entry_timestamp);
-	printf("fw_thermal_high_log_info.oldest_log_entry_timestamp: unsigned %lld\n", p_value->oldest_log_entry_timestamp);
+	printf("fw_thermal_high_log_info.device_handle: %u\n", p_value->device_handle);
+	printf("fw_thermal_high_log_info.max_log_entries: %u\n", p_value->max_log_entries);
+	printf("fw_thermal_high_log_info.current_sequence_number: %u\n", p_value->current_sequence_number);
+	printf("fw_thermal_high_log_info.oldest_sequence_number: %u\n", p_value->oldest_sequence_number);
+	printf("fw_thermal_high_log_info.newest_log_entry_timestamp: %llu\n", p_value->newest_log_entry_timestamp);
+	printf("fw_thermal_high_log_info.oldest_log_entry_timestamp: %llu\n", p_value->oldest_log_entry_timestamp);
 }
 enum db_return_codes db_add_fw_thermal_high_log_info(const PersistentStore *p_ps,
 	struct db_fw_thermal_high_log_info *p_fw_thermal_high_log_info)
@@ -25749,8 +25761,8 @@ void local_row_to_dimm_fw_log_level(const PersistentStore *p_ps,
 }
 void db_print_dimm_fw_log_level(struct db_dimm_fw_log_level *p_value)
 {
-	printf("dimm_fw_log_level.device_handle: %d\n", p_value->device_handle);
-	printf("dimm_fw_log_level.log_level: %d\n", p_value->log_level);
+	printf("dimm_fw_log_level.device_handle: %i\n", p_value->device_handle);
+	printf("dimm_fw_log_level.log_level: %i\n", p_value->log_level);
 }
 enum db_return_codes db_add_dimm_fw_log_level(const PersistentStore *p_ps,
 	struct db_dimm_fw_log_level *p_dimm_fw_log_level)
@@ -26150,8 +26162,8 @@ void local_row_to_dimm_fw_time(const PersistentStore *p_ps,
 }
 void db_print_dimm_fw_time(struct db_dimm_fw_time *p_value)
 {
-	printf("dimm_fw_time.device_handle: %d\n", p_value->device_handle);
-	printf("dimm_fw_time.time: unsigned %lld\n", p_value->time);
+	printf("dimm_fw_time.device_handle: %i\n", p_value->device_handle);
+	printf("dimm_fw_time.time: %llu\n", p_value->time);
 }
 enum db_return_codes db_add_dimm_fw_time(const PersistentStore *p_ps,
 	struct db_dimm_fw_time *p_dimm_fw_time)
@@ -26610,22 +26622,22 @@ void local_row_to_dimm_platform_config(const PersistentStore *p_ps,
 }
 void db_print_dimm_platform_config(struct db_dimm_platform_config *p_value)
 {
-	printf("dimm_platform_config.device_handle: unsigned %d\n", p_value->device_handle);
+	printf("dimm_platform_config.device_handle: %u\n", p_value->device_handle);
 	printf("dimm_platform_config.signature: %s\n", p_value->signature);
-	printf("dimm_platform_config.length: unsigned %d\n", p_value->length);
-	printf("dimm_platform_config.revision: unsigned %d\n", p_value->revision);
-	printf("dimm_platform_config.checksum: unsigned %d\n", p_value->checksum);
+	printf("dimm_platform_config.length: %u\n", p_value->length);
+	printf("dimm_platform_config.revision: %u\n", p_value->revision);
+	printf("dimm_platform_config.checksum: %u\n", p_value->checksum);
 	printf("dimm_platform_config.oem_id: %s\n", p_value->oem_id);
 	printf("dimm_platform_config.oem_table_id: %s\n", p_value->oem_table_id);
-	printf("dimm_platform_config.oem_revision: unsigned %d\n", p_value->oem_revision);
-	printf("dimm_platform_config.creator_id: unsigned %d\n", p_value->creator_id);
-	printf("dimm_platform_config.creator_revision: unsigned %d\n", p_value->creator_revision);
-	printf("dimm_platform_config.current_config_size: unsigned %d\n", p_value->current_config_size);
-	printf("dimm_platform_config.current_config_offset: unsigned %d\n", p_value->current_config_offset);
-	printf("dimm_platform_config.config_input_size: unsigned %d\n", p_value->config_input_size);
-	printf("dimm_platform_config.config_input_offset: unsigned %d\n", p_value->config_input_offset);
-	printf("dimm_platform_config.config_output_size: unsigned %d\n", p_value->config_output_size);
-	printf("dimm_platform_config.config_output_offset: unsigned %d\n", p_value->config_output_offset);
+	printf("dimm_platform_config.oem_revision: %u\n", p_value->oem_revision);
+	printf("dimm_platform_config.creator_id: %u\n", p_value->creator_id);
+	printf("dimm_platform_config.creator_revision: %u\n", p_value->creator_revision);
+	printf("dimm_platform_config.current_config_size: %u\n", p_value->current_config_size);
+	printf("dimm_platform_config.current_config_offset: %u\n", p_value->current_config_offset);
+	printf("dimm_platform_config.config_input_size: %u\n", p_value->config_input_size);
+	printf("dimm_platform_config.config_input_offset: %u\n", p_value->config_input_offset);
+	printf("dimm_platform_config.config_output_size: %u\n", p_value->config_output_size);
+	printf("dimm_platform_config.config_output_offset: %u\n", p_value->config_output_offset);
 }
 enum db_return_codes db_add_dimm_platform_config(const PersistentStore *p_ps,
 	struct db_dimm_platform_config *p_dimm_platform_config)
@@ -27142,19 +27154,19 @@ void local_row_to_dimm_current_config(const PersistentStore *p_ps,
 }
 void db_print_dimm_current_config(struct db_dimm_current_config *p_value)
 {
-	printf("dimm_current_config.device_handle: unsigned %d\n", p_value->device_handle);
+	printf("dimm_current_config.device_handle: %u\n", p_value->device_handle);
 	printf("dimm_current_config.signature: %s\n", p_value->signature);
-	printf("dimm_current_config.length: unsigned %d\n", p_value->length);
-	printf("dimm_current_config.revision: unsigned %d\n", p_value->revision);
-	printf("dimm_current_config.checksum: unsigned %d\n", p_value->checksum);
+	printf("dimm_current_config.length: %u\n", p_value->length);
+	printf("dimm_current_config.revision: %u\n", p_value->revision);
+	printf("dimm_current_config.checksum: %u\n", p_value->checksum);
 	printf("dimm_current_config.oem_id: %s\n", p_value->oem_id);
 	printf("dimm_current_config.oem_table_id: %s\n", p_value->oem_table_id);
-	printf("dimm_current_config.oem_revision: unsigned %d\n", p_value->oem_revision);
-	printf("dimm_current_config.creator_id: unsigned %d\n", p_value->creator_id);
-	printf("dimm_current_config.creator_revision: unsigned %d\n", p_value->creator_revision);
-	printf("dimm_current_config.config_status: unsigned %d\n", p_value->config_status);
-	printf("dimm_current_config.mapped_memory_capacity: unsigned %lld\n", p_value->mapped_memory_capacity);
-	printf("dimm_current_config.mapped_app_direct_capacity: unsigned %lld\n", p_value->mapped_app_direct_capacity);
+	printf("dimm_current_config.oem_revision: %u\n", p_value->oem_revision);
+	printf("dimm_current_config.creator_id: %u\n", p_value->creator_id);
+	printf("dimm_current_config.creator_revision: %u\n", p_value->creator_revision);
+	printf("dimm_current_config.config_status: %u\n", p_value->config_status);
+	printf("dimm_current_config.mapped_memory_capacity: %llu\n", p_value->mapped_memory_capacity);
+	printf("dimm_current_config.mapped_app_direct_capacity: %llu\n", p_value->mapped_app_direct_capacity);
 }
 enum db_return_codes db_add_dimm_current_config(const PersistentStore *p_ps,
 	struct db_dimm_current_config *p_dimm_current_config)
@@ -27648,17 +27660,17 @@ void local_row_to_dimm_config_input(const PersistentStore *p_ps,
 }
 void db_print_dimm_config_input(struct db_dimm_config_input *p_value)
 {
-	printf("dimm_config_input.device_handle: unsigned %d\n", p_value->device_handle);
+	printf("dimm_config_input.device_handle: %u\n", p_value->device_handle);
 	printf("dimm_config_input.signature: %s\n", p_value->signature);
-	printf("dimm_config_input.length: unsigned %d\n", p_value->length);
-	printf("dimm_config_input.revision: unsigned %d\n", p_value->revision);
-	printf("dimm_config_input.checksum: unsigned %d\n", p_value->checksum);
+	printf("dimm_config_input.length: %u\n", p_value->length);
+	printf("dimm_config_input.revision: %u\n", p_value->revision);
+	printf("dimm_config_input.checksum: %u\n", p_value->checksum);
 	printf("dimm_config_input.oem_id: %s\n", p_value->oem_id);
 	printf("dimm_config_input.oem_table_id: %s\n", p_value->oem_table_id);
-	printf("dimm_config_input.oem_revision: unsigned %d\n", p_value->oem_revision);
-	printf("dimm_config_input.creator_id: unsigned %d\n", p_value->creator_id);
-	printf("dimm_config_input.creator_revision: unsigned %d\n", p_value->creator_revision);
-	printf("dimm_config_input.sequence_number: unsigned %d\n", p_value->sequence_number);
+	printf("dimm_config_input.oem_revision: %u\n", p_value->oem_revision);
+	printf("dimm_config_input.creator_id: %u\n", p_value->creator_id);
+	printf("dimm_config_input.creator_revision: %u\n", p_value->creator_revision);
+	printf("dimm_config_input.sequence_number: %u\n", p_value->sequence_number);
 }
 enum db_return_codes db_add_dimm_config_input(const PersistentStore *p_ps,
 	struct db_dimm_config_input *p_dimm_config_input)
@@ -28146,18 +28158,18 @@ void local_row_to_dimm_config_output(const PersistentStore *p_ps,
 }
 void db_print_dimm_config_output(struct db_dimm_config_output *p_value)
 {
-	printf("dimm_config_output.device_handle: unsigned %d\n", p_value->device_handle);
+	printf("dimm_config_output.device_handle: %u\n", p_value->device_handle);
 	printf("dimm_config_output.signature: %s\n", p_value->signature);
-	printf("dimm_config_output.length: unsigned %d\n", p_value->length);
-	printf("dimm_config_output.revision: unsigned %d\n", p_value->revision);
-	printf("dimm_config_output.checksum: unsigned %d\n", p_value->checksum);
+	printf("dimm_config_output.length: %u\n", p_value->length);
+	printf("dimm_config_output.revision: %u\n", p_value->revision);
+	printf("dimm_config_output.checksum: %u\n", p_value->checksum);
 	printf("dimm_config_output.oem_id: %s\n", p_value->oem_id);
 	printf("dimm_config_output.oem_table_id: %s\n", p_value->oem_table_id);
-	printf("dimm_config_output.oem_revision: unsigned %d\n", p_value->oem_revision);
-	printf("dimm_config_output.creator_id: unsigned %d\n", p_value->creator_id);
-	printf("dimm_config_output.creator_revision: unsigned %d\n", p_value->creator_revision);
-	printf("dimm_config_output.sequence_number: unsigned %d\n", p_value->sequence_number);
-	printf("dimm_config_output.validation_status: unsigned %d\n", p_value->validation_status);
+	printf("dimm_config_output.oem_revision: %u\n", p_value->oem_revision);
+	printf("dimm_config_output.creator_id: %u\n", p_value->creator_id);
+	printf("dimm_config_output.creator_revision: %u\n", p_value->creator_revision);
+	printf("dimm_config_output.sequence_number: %u\n", p_value->sequence_number);
+	printf("dimm_config_output.validation_status: %u\n", p_value->validation_status);
 }
 enum db_return_codes db_add_dimm_config_output(const PersistentStore *p_ps,
 	struct db_dimm_config_output *p_dimm_config_output)
@@ -28627,13 +28639,13 @@ void local_row_to_dimm_partition_change(const PersistentStore *p_ps,
 }
 void db_print_dimm_partition_change(struct db_dimm_partition_change *p_value)
 {
-	printf("dimm_partition_change.device_handle: unsigned %d\n", p_value->device_handle);
-	printf("dimm_partition_change.id: %d\n", p_value->id);
-	printf("dimm_partition_change.config_table_type: unsigned %d\n", p_value->config_table_type);
-	printf("dimm_partition_change.extension_table_type: unsigned %d\n", p_value->extension_table_type);
-	printf("dimm_partition_change.length: unsigned %d\n", p_value->length);
-	printf("dimm_partition_change.partition_size: unsigned %lld\n", p_value->partition_size);
-	printf("dimm_partition_change.status: unsigned %d\n", p_value->status);
+	printf("dimm_partition_change.device_handle: %u\n", p_value->device_handle);
+	printf("dimm_partition_change.id: %i\n", p_value->id);
+	printf("dimm_partition_change.config_table_type: %u\n", p_value->config_table_type);
+	printf("dimm_partition_change.extension_table_type: %u\n", p_value->extension_table_type);
+	printf("dimm_partition_change.length: %u\n", p_value->length);
+	printf("dimm_partition_change.partition_size: %llu\n", p_value->partition_size);
+	printf("dimm_partition_change.status: %u\n", p_value->status);
 }
 enum db_return_codes db_add_dimm_partition_change(const PersistentStore *p_ps,
 	struct db_dimm_partition_change *p_dimm_partition_change)
@@ -29317,17 +29329,17 @@ void local_row_to_dimm_interleave_set(const PersistentStore *p_ps,
 }
 void db_print_dimm_interleave_set(struct db_dimm_interleave_set *p_value)
 {
-	printf("dimm_interleave_set.id: %d\n", p_value->id);
-	printf("dimm_interleave_set.device_handle: unsigned %d\n", p_value->device_handle);
-	printf("dimm_interleave_set.config_table_type: unsigned %d\n", p_value->config_table_type);
-	printf("dimm_interleave_set.extension_table_type: unsigned %d\n", p_value->extension_table_type);
-	printf("dimm_interleave_set.length: unsigned %d\n", p_value->length);
-	printf("dimm_interleave_set.index_id: unsigned %d\n", p_value->index_id);
-	printf("dimm_interleave_set.dimm_count: unsigned %d\n", p_value->dimm_count);
-	printf("dimm_interleave_set.memory_type: unsigned %d\n", p_value->memory_type);
-	printf("dimm_interleave_set.interleave_format: unsigned %d\n", p_value->interleave_format);
-	printf("dimm_interleave_set.mirror_enable: unsigned %d\n", p_value->mirror_enable);
-	printf("dimm_interleave_set.status: unsigned %d\n", p_value->status);
+	printf("dimm_interleave_set.id: %i\n", p_value->id);
+	printf("dimm_interleave_set.device_handle: %u\n", p_value->device_handle);
+	printf("dimm_interleave_set.config_table_type: %u\n", p_value->config_table_type);
+	printf("dimm_interleave_set.extension_table_type: %u\n", p_value->extension_table_type);
+	printf("dimm_interleave_set.length: %u\n", p_value->length);
+	printf("dimm_interleave_set.index_id: %u\n", p_value->index_id);
+	printf("dimm_interleave_set.dimm_count: %u\n", p_value->dimm_count);
+	printf("dimm_interleave_set.memory_type: %u\n", p_value->memory_type);
+	printf("dimm_interleave_set.interleave_format: %u\n", p_value->interleave_format);
+	printf("dimm_interleave_set.mirror_enable: %u\n", p_value->mirror_enable);
+	printf("dimm_interleave_set.status: %u\n", p_value->status);
 }
 enum db_return_codes db_add_dimm_interleave_set(const PersistentStore *p_ps,
 	struct db_dimm_interleave_set *p_dimm_interleave_set)
@@ -30024,15 +30036,15 @@ void local_row_to_interleave_set_dimm_info_v1(const PersistentStore *p_ps,
 }
 void db_print_interleave_set_dimm_info_v1(struct db_interleave_set_dimm_info_v1 *p_value)
 {
-	printf("interleave_set_dimm_info_v1.id: %d\n", p_value->id);
-	printf("interleave_set_dimm_info_v1.config_table_type: unsigned %d\n", p_value->config_table_type);
-	printf("interleave_set_dimm_info_v1.index_id: unsigned %d\n", p_value->index_id);
-	printf("interleave_set_dimm_info_v1.device_handle: unsigned %d\n", p_value->device_handle);
-	printf("interleave_set_dimm_info_v1.manufacturer: unsigned %d\n", p_value->manufacturer);
-	printf("interleave_set_dimm_info_v1.serial_num: unsigned %d\n", p_value->serial_num);
+	printf("interleave_set_dimm_info_v1.id: %i\n", p_value->id);
+	printf("interleave_set_dimm_info_v1.config_table_type: %u\n", p_value->config_table_type);
+	printf("interleave_set_dimm_info_v1.index_id: %u\n", p_value->index_id);
+	printf("interleave_set_dimm_info_v1.device_handle: %u\n", p_value->device_handle);
+	printf("interleave_set_dimm_info_v1.manufacturer: %u\n", p_value->manufacturer);
+	printf("interleave_set_dimm_info_v1.serial_num: %u\n", p_value->serial_num);
 	printf("interleave_set_dimm_info_v1.part_num: %s\n", p_value->part_num);
-	printf("interleave_set_dimm_info_v1.offset: unsigned %lld\n", p_value->offset);
-	printf("interleave_set_dimm_info_v1.size: unsigned %lld\n", p_value->size);
+	printf("interleave_set_dimm_info_v1.offset: %llu\n", p_value->offset);
+	printf("interleave_set_dimm_info_v1.size: %llu\n", p_value->size);
 }
 enum db_return_codes db_add_interleave_set_dimm_info_v1(const PersistentStore *p_ps,
 	struct db_interleave_set_dimm_info_v1 *p_interleave_set_dimm_info_v1)
@@ -30896,13 +30908,13 @@ void local_row_to_interleave_set_dimm_info_v2(const PersistentStore *p_ps,
 }
 void db_print_interleave_set_dimm_info_v2(struct db_interleave_set_dimm_info_v2 *p_value)
 {
-	printf("interleave_set_dimm_info_v2.id: %d\n", p_value->id);
-	printf("interleave_set_dimm_info_v2.config_table_type: unsigned %d\n", p_value->config_table_type);
-	printf("interleave_set_dimm_info_v2.index_id: unsigned %d\n", p_value->index_id);
-	printf("interleave_set_dimm_info_v2.device_handle: unsigned %d\n", p_value->device_handle);
+	printf("interleave_set_dimm_info_v2.id: %i\n", p_value->id);
+	printf("interleave_set_dimm_info_v2.config_table_type: %u\n", p_value->config_table_type);
+	printf("interleave_set_dimm_info_v2.index_id: %u\n", p_value->index_id);
+	printf("interleave_set_dimm_info_v2.device_handle: %u\n", p_value->device_handle);
 	printf("interleave_set_dimm_info_v2.device_uid: %s\n", p_value->device_uid);
-	printf("interleave_set_dimm_info_v2.offset: unsigned %lld\n", p_value->offset);
-	printf("interleave_set_dimm_info_v2.size: unsigned %lld\n", p_value->size);
+	printf("interleave_set_dimm_info_v2.offset: %llu\n", p_value->offset);
+	printf("interleave_set_dimm_info_v2.size: %llu\n", p_value->size);
 }
 enum db_return_codes db_add_interleave_set_dimm_info_v2(const PersistentStore *p_ps,
 	struct db_interleave_set_dimm_info_v2 *p_interleave_set_dimm_info_v2)
@@ -31720,8 +31732,8 @@ void local_row_to_enable_error_injection_info(const PersistentStore *p_ps,
 }
 void db_print_enable_error_injection_info(struct db_enable_error_injection_info *p_value)
 {
-	printf("enable_error_injection_info.device_handle: unsigned %d\n", p_value->device_handle);
-	printf("enable_error_injection_info.enable: unsigned %d\n", p_value->enable);
+	printf("enable_error_injection_info.device_handle: %u\n", p_value->device_handle);
+	printf("enable_error_injection_info.enable: %u\n", p_value->enable);
 }
 enum db_return_codes db_add_enable_error_injection_info(const PersistentStore *p_ps,
 	struct db_enable_error_injection_info *p_enable_error_injection_info)
@@ -32121,8 +32133,8 @@ void local_row_to_temperature_error_injection_info(const PersistentStore *p_ps,
 }
 void db_print_temperature_error_injection_info(struct db_temperature_error_injection_info *p_value)
 {
-	printf("temperature_error_injection_info.device_handle: unsigned %d\n", p_value->device_handle);
-	printf("temperature_error_injection_info.temperature: unsigned %d\n", p_value->temperature);
+	printf("temperature_error_injection_info.device_handle: %u\n", p_value->device_handle);
+	printf("temperature_error_injection_info.temperature: %u\n", p_value->temperature);
 }
 enum db_return_codes db_add_temperature_error_injection_info(const PersistentStore *p_ps,
 	struct db_temperature_error_injection_info *p_temperature_error_injection_info)
@@ -32530,10 +32542,10 @@ void local_row_to_poison_error_injection_info(const PersistentStore *p_ps,
 }
 void db_print_poison_error_injection_info(struct db_poison_error_injection_info *p_value)
 {
-	printf("poison_error_injection_info.id: %d\n", p_value->id);
-	printf("poison_error_injection_info.device_handle: unsigned %d\n", p_value->device_handle);
-	printf("poison_error_injection_info.dpa_address: unsigned %lld\n", p_value->dpa_address);
-	printf("poison_error_injection_info.memory: unsigned %d\n", p_value->memory);
+	printf("poison_error_injection_info.id: %i\n", p_value->id);
+	printf("poison_error_injection_info.device_handle: %u\n", p_value->device_handle);
+	printf("poison_error_injection_info.dpa_address: %llu\n", p_value->dpa_address);
+	printf("poison_error_injection_info.memory: %u\n", p_value->memory);
 }
 enum db_return_codes db_add_poison_error_injection_info(const PersistentStore *p_ps,
 	struct db_poison_error_injection_info *p_poison_error_injection_info)
@@ -33121,10 +33133,10 @@ void local_row_to_software_trigger_info(const PersistentStore *p_ps,
 }
 void db_print_software_trigger_info(struct db_software_trigger_info *p_value)
 {
-	printf("software_trigger_info.device_handle: unsigned %d\n", p_value->device_handle);
-	printf("software_trigger_info.die_sparing_trigger: unsigned %d\n", p_value->die_sparing_trigger);
-	printf("software_trigger_info.user_spare_block_alarm_trip_trigger: unsigned %d\n", p_value->user_spare_block_alarm_trip_trigger);
-	printf("software_trigger_info.fatal_error_trigger: unsigned %d\n", p_value->fatal_error_trigger);
+	printf("software_trigger_info.device_handle: %u\n", p_value->device_handle);
+	printf("software_trigger_info.die_sparing_trigger: %u\n", p_value->die_sparing_trigger);
+	printf("software_trigger_info.user_spare_block_alarm_trip_trigger: %u\n", p_value->user_spare_block_alarm_trip_trigger);
+	printf("software_trigger_info.fatal_error_trigger: %u\n", p_value->fatal_error_trigger);
 }
 enum db_return_codes db_add_software_trigger_info(const PersistentStore *p_ps,
 	struct db_software_trigger_info *p_software_trigger_info)
@@ -33568,15 +33580,15 @@ void local_row_to_performance(const PersistentStore *p_ps,
 }
 void db_print_performance(struct db_performance *p_value)
 {
-	printf("performance.id: %d\n", p_value->id);
+	printf("performance.id: %i\n", p_value->id);
 	printf("performance.dimm_uid: %s\n", p_value->dimm_uid);
-	printf("performance.time: unsigned %lld\n", p_value->time);
-	printf("performance.bytes_read: unsigned %lld\n", p_value->bytes_read);
-	printf("performance.bytes_written: unsigned %lld\n", p_value->bytes_written);
-	printf("performance.read_reqs: unsigned %lld\n", p_value->read_reqs);
-	printf("performance.host_write_cmds: unsigned %lld\n", p_value->host_write_cmds);
-	printf("performance.block_reads: unsigned %lld\n", p_value->block_reads);
-	printf("performance.block_writes: unsigned %lld\n", p_value->block_writes);
+	printf("performance.time: %llu\n", p_value->time);
+	printf("performance.bytes_read: %llu\n", p_value->bytes_read);
+	printf("performance.bytes_written: %llu\n", p_value->bytes_written);
+	printf("performance.read_reqs: %llu\n", p_value->read_reqs);
+	printf("performance.host_write_cmds: %llu\n", p_value->host_write_cmds);
+	printf("performance.block_reads: %llu\n", p_value->block_reads);
+	printf("performance.block_writes: %llu\n", p_value->block_writes);
 }
 enum db_return_codes db_add_performance(const PersistentStore *p_ps,
 	struct db_performance *p_performance)
@@ -34039,11 +34051,11 @@ void local_row_to_driver_metadata_check_diag_result(const PersistentStore *p_ps,
 }
 void db_print_driver_metadata_check_diag_result(struct db_driver_metadata_check_diag_result *p_value)
 {
-	printf("driver_metadata_check_diag_result.id: %d\n", p_value->id);
-	printf("driver_metadata_check_diag_result.result_type: %d\n", p_value->result_type);
+	printf("driver_metadata_check_diag_result.id: %i\n", p_value->id);
+	printf("driver_metadata_check_diag_result.result_type: %i\n", p_value->result_type);
 	printf("driver_metadata_check_diag_result.ns_uid: %s\n", p_value->ns_uid);
-	printf("driver_metadata_check_diag_result.device_handle: unsigned %d\n", p_value->device_handle);
-	printf("driver_metadata_check_diag_result.health_flag: unsigned %d\n", p_value->health_flag);
+	printf("driver_metadata_check_diag_result.device_handle: %u\n", p_value->device_handle);
+	printf("driver_metadata_check_diag_result.health_flag: %u\n", p_value->health_flag);
 }
 enum db_return_codes db_add_driver_metadata_check_diag_result(const PersistentStore *p_ps,
 	struct db_driver_metadata_check_diag_result *p_driver_metadata_check_diag_result)
@@ -34473,8 +34485,8 @@ void local_row_to_boot_status_register(const PersistentStore *p_ps,
 }
 void db_print_boot_status_register(struct db_boot_status_register *p_value)
 {
-	printf("boot_status_register.device_handle: unsigned %d\n", p_value->device_handle);
-	printf("boot_status_register.bsr: unsigned %lld\n", p_value->bsr);
+	printf("boot_status_register.device_handle: %u\n", p_value->device_handle);
+	printf("boot_status_register.bsr: %llu\n", p_value->bsr);
 }
 enum db_return_codes db_add_boot_status_register(const PersistentStore *p_ps,
 	struct db_boot_status_register *p_boot_status_register)
@@ -34893,9 +34905,9 @@ void local_row_to_eafd(const PersistentStore *p_ps,
 }
 void db_print_eafd(struct db_eafd *p_value)
 {
-	printf("eafd.device_handle: unsigned %d\n", p_value->device_handle);
-	printf("eafd.blob_size: unsigned %d\n", p_value->blob_size);
-	printf("eafd.max_fa_token_id: unsigned %d\n", p_value->max_fa_token_id);
+	printf("eafd.device_handle: %u\n", p_value->device_handle);
+	printf("eafd.blob_size: %u\n", p_value->blob_size);
+	printf("eafd.max_fa_token_id: %u\n", p_value->max_fa_token_id);
 }
 enum db_return_codes db_add_eafd(const PersistentStore *p_ps,
 	struct db_eafd *p_eafd)
@@ -35722,111 +35734,111 @@ void local_row_to_interleave_set(const PersistentStore *p_ps,
 }
 void db_print_interleave_set(struct db_interleave_set *p_value)
 {
-	printf("interleave_set.id: %d\n", p_value->id);
-	printf("interleave_set.socket_id: unsigned %d\n", p_value->socket_id);
-	printf("interleave_set.size: unsigned %lld\n", p_value->size);
-	printf("interleave_set.available_size: unsigned %lld\n", p_value->available_size);
-	printf("interleave_set.attributes: unsigned %lld\n", p_value->attributes);
-	printf("interleave_set.dimm_count: unsigned %d\n", p_value->dimm_count);
-	printf("interleave_set.dimm_handles: unsigned %d\n", p_value->dimm_handles[0]);
-	printf("interleave_set.dimm_handles: unsigned %d\n", p_value->dimm_handles[1]);
-	printf("interleave_set.dimm_handles: unsigned %d\n", p_value->dimm_handles[2]);
-	printf("interleave_set.dimm_handles: unsigned %d\n", p_value->dimm_handles[3]);
-	printf("interleave_set.dimm_handles: unsigned %d\n", p_value->dimm_handles[4]);
-	printf("interleave_set.dimm_handles: unsigned %d\n", p_value->dimm_handles[5]);
-	printf("interleave_set.dimm_handles: unsigned %d\n", p_value->dimm_handles[6]);
-	printf("interleave_set.dimm_handles: unsigned %d\n", p_value->dimm_handles[7]);
-	printf("interleave_set.dimm_handles: unsigned %d\n", p_value->dimm_handles[8]);
-	printf("interleave_set.dimm_handles: unsigned %d\n", p_value->dimm_handles[9]);
-	printf("interleave_set.dimm_handles: unsigned %d\n", p_value->dimm_handles[10]);
-	printf("interleave_set.dimm_handles: unsigned %d\n", p_value->dimm_handles[11]);
-	printf("interleave_set.dimm_handles: unsigned %d\n", p_value->dimm_handles[12]);
-	printf("interleave_set.dimm_handles: unsigned %d\n", p_value->dimm_handles[13]);
-	printf("interleave_set.dimm_handles: unsigned %d\n", p_value->dimm_handles[14]);
-	printf("interleave_set.dimm_handles: unsigned %d\n", p_value->dimm_handles[15]);
-	printf("interleave_set.dimm_handles: unsigned %d\n", p_value->dimm_handles[16]);
-	printf("interleave_set.dimm_handles: unsigned %d\n", p_value->dimm_handles[17]);
-	printf("interleave_set.dimm_handles: unsigned %d\n", p_value->dimm_handles[18]);
-	printf("interleave_set.dimm_handles: unsigned %d\n", p_value->dimm_handles[19]);
-	printf("interleave_set.dimm_handles: unsigned %d\n", p_value->dimm_handles[20]);
-	printf("interleave_set.dimm_handles: unsigned %d\n", p_value->dimm_handles[21]);
-	printf("interleave_set.dimm_handles: unsigned %d\n", p_value->dimm_handles[22]);
-	printf("interleave_set.dimm_handles: unsigned %d\n", p_value->dimm_handles[23]);
-	printf("interleave_set.dimm_region_pdas: unsigned %lld\n", p_value->dimm_region_pdas[0]);
-	printf("interleave_set.dimm_region_pdas: unsigned %lld\n", p_value->dimm_region_pdas[1]);
-	printf("interleave_set.dimm_region_pdas: unsigned %lld\n", p_value->dimm_region_pdas[2]);
-	printf("interleave_set.dimm_region_pdas: unsigned %lld\n", p_value->dimm_region_pdas[3]);
-	printf("interleave_set.dimm_region_pdas: unsigned %lld\n", p_value->dimm_region_pdas[4]);
-	printf("interleave_set.dimm_region_pdas: unsigned %lld\n", p_value->dimm_region_pdas[5]);
-	printf("interleave_set.dimm_region_pdas: unsigned %lld\n", p_value->dimm_region_pdas[6]);
-	printf("interleave_set.dimm_region_pdas: unsigned %lld\n", p_value->dimm_region_pdas[7]);
-	printf("interleave_set.dimm_region_pdas: unsigned %lld\n", p_value->dimm_region_pdas[8]);
-	printf("interleave_set.dimm_region_pdas: unsigned %lld\n", p_value->dimm_region_pdas[9]);
-	printf("interleave_set.dimm_region_pdas: unsigned %lld\n", p_value->dimm_region_pdas[10]);
-	printf("interleave_set.dimm_region_pdas: unsigned %lld\n", p_value->dimm_region_pdas[11]);
-	printf("interleave_set.dimm_region_pdas: unsigned %lld\n", p_value->dimm_region_pdas[12]);
-	printf("interleave_set.dimm_region_pdas: unsigned %lld\n", p_value->dimm_region_pdas[13]);
-	printf("interleave_set.dimm_region_pdas: unsigned %lld\n", p_value->dimm_region_pdas[14]);
-	printf("interleave_set.dimm_region_pdas: unsigned %lld\n", p_value->dimm_region_pdas[15]);
-	printf("interleave_set.dimm_region_pdas: unsigned %lld\n", p_value->dimm_region_pdas[16]);
-	printf("interleave_set.dimm_region_pdas: unsigned %lld\n", p_value->dimm_region_pdas[17]);
-	printf("interleave_set.dimm_region_pdas: unsigned %lld\n", p_value->dimm_region_pdas[18]);
-	printf("interleave_set.dimm_region_pdas: unsigned %lld\n", p_value->dimm_region_pdas[19]);
-	printf("interleave_set.dimm_region_pdas: unsigned %lld\n", p_value->dimm_region_pdas[20]);
-	printf("interleave_set.dimm_region_pdas: unsigned %lld\n", p_value->dimm_region_pdas[21]);
-	printf("interleave_set.dimm_region_pdas: unsigned %lld\n", p_value->dimm_region_pdas[22]);
-	printf("interleave_set.dimm_region_pdas: unsigned %lld\n", p_value->dimm_region_pdas[23]);
-	printf("interleave_set.dimm_region_offsets: unsigned %lld\n", p_value->dimm_region_offsets[0]);
-	printf("interleave_set.dimm_region_offsets: unsigned %lld\n", p_value->dimm_region_offsets[1]);
-	printf("interleave_set.dimm_region_offsets: unsigned %lld\n", p_value->dimm_region_offsets[2]);
-	printf("interleave_set.dimm_region_offsets: unsigned %lld\n", p_value->dimm_region_offsets[3]);
-	printf("interleave_set.dimm_region_offsets: unsigned %lld\n", p_value->dimm_region_offsets[4]);
-	printf("interleave_set.dimm_region_offsets: unsigned %lld\n", p_value->dimm_region_offsets[5]);
-	printf("interleave_set.dimm_region_offsets: unsigned %lld\n", p_value->dimm_region_offsets[6]);
-	printf("interleave_set.dimm_region_offsets: unsigned %lld\n", p_value->dimm_region_offsets[7]);
-	printf("interleave_set.dimm_region_offsets: unsigned %lld\n", p_value->dimm_region_offsets[8]);
-	printf("interleave_set.dimm_region_offsets: unsigned %lld\n", p_value->dimm_region_offsets[9]);
-	printf("interleave_set.dimm_region_offsets: unsigned %lld\n", p_value->dimm_region_offsets[10]);
-	printf("interleave_set.dimm_region_offsets: unsigned %lld\n", p_value->dimm_region_offsets[11]);
-	printf("interleave_set.dimm_region_offsets: unsigned %lld\n", p_value->dimm_region_offsets[12]);
-	printf("interleave_set.dimm_region_offsets: unsigned %lld\n", p_value->dimm_region_offsets[13]);
-	printf("interleave_set.dimm_region_offsets: unsigned %lld\n", p_value->dimm_region_offsets[14]);
-	printf("interleave_set.dimm_region_offsets: unsigned %lld\n", p_value->dimm_region_offsets[15]);
-	printf("interleave_set.dimm_region_offsets: unsigned %lld\n", p_value->dimm_region_offsets[16]);
-	printf("interleave_set.dimm_region_offsets: unsigned %lld\n", p_value->dimm_region_offsets[17]);
-	printf("interleave_set.dimm_region_offsets: unsigned %lld\n", p_value->dimm_region_offsets[18]);
-	printf("interleave_set.dimm_region_offsets: unsigned %lld\n", p_value->dimm_region_offsets[19]);
-	printf("interleave_set.dimm_region_offsets: unsigned %lld\n", p_value->dimm_region_offsets[20]);
-	printf("interleave_set.dimm_region_offsets: unsigned %lld\n", p_value->dimm_region_offsets[21]);
-	printf("interleave_set.dimm_region_offsets: unsigned %lld\n", p_value->dimm_region_offsets[22]);
-	printf("interleave_set.dimm_region_offsets: unsigned %lld\n", p_value->dimm_region_offsets[23]);
-	printf("interleave_set.dimm_sizes: unsigned %lld\n", p_value->dimm_sizes[0]);
-	printf("interleave_set.dimm_sizes: unsigned %lld\n", p_value->dimm_sizes[1]);
-	printf("interleave_set.dimm_sizes: unsigned %lld\n", p_value->dimm_sizes[2]);
-	printf("interleave_set.dimm_sizes: unsigned %lld\n", p_value->dimm_sizes[3]);
-	printf("interleave_set.dimm_sizes: unsigned %lld\n", p_value->dimm_sizes[4]);
-	printf("interleave_set.dimm_sizes: unsigned %lld\n", p_value->dimm_sizes[5]);
-	printf("interleave_set.dimm_sizes: unsigned %lld\n", p_value->dimm_sizes[6]);
-	printf("interleave_set.dimm_sizes: unsigned %lld\n", p_value->dimm_sizes[7]);
-	printf("interleave_set.dimm_sizes: unsigned %lld\n", p_value->dimm_sizes[8]);
-	printf("interleave_set.dimm_sizes: unsigned %lld\n", p_value->dimm_sizes[9]);
-	printf("interleave_set.dimm_sizes: unsigned %lld\n", p_value->dimm_sizes[10]);
-	printf("interleave_set.dimm_sizes: unsigned %lld\n", p_value->dimm_sizes[11]);
-	printf("interleave_set.dimm_sizes: unsigned %lld\n", p_value->dimm_sizes[12]);
-	printf("interleave_set.dimm_sizes: unsigned %lld\n", p_value->dimm_sizes[13]);
-	printf("interleave_set.dimm_sizes: unsigned %lld\n", p_value->dimm_sizes[14]);
-	printf("interleave_set.dimm_sizes: unsigned %lld\n", p_value->dimm_sizes[15]);
-	printf("interleave_set.dimm_sizes: unsigned %lld\n", p_value->dimm_sizes[16]);
-	printf("interleave_set.dimm_sizes: unsigned %lld\n", p_value->dimm_sizes[17]);
-	printf("interleave_set.dimm_sizes: unsigned %lld\n", p_value->dimm_sizes[18]);
-	printf("interleave_set.dimm_sizes: unsigned %lld\n", p_value->dimm_sizes[19]);
-	printf("interleave_set.dimm_sizes: unsigned %lld\n", p_value->dimm_sizes[20]);
-	printf("interleave_set.dimm_sizes: unsigned %lld\n", p_value->dimm_sizes[21]);
-	printf("interleave_set.dimm_sizes: unsigned %lld\n", p_value->dimm_sizes[22]);
-	printf("interleave_set.dimm_sizes: unsigned %lld\n", p_value->dimm_sizes[23]);
-	printf("interleave_set.pcd_interleave_index: unsigned %d\n", p_value->pcd_interleave_index);
-	printf("interleave_set.cookie_v1_1: unsigned %lld\n", p_value->cookie_v1_1);
-	printf("interleave_set.cookie_v1_2: unsigned %lld\n", p_value->cookie_v1_2);
+	printf("interleave_set.id: %i\n", p_value->id);
+	printf("interleave_set.socket_id: %u\n", p_value->socket_id);
+	printf("interleave_set.size: %llu\n", p_value->size);
+	printf("interleave_set.available_size: %llu\n", p_value->available_size);
+	printf("interleave_set.attributes: %llu\n", p_value->attributes);
+	printf("interleave_set.dimm_count: %u\n", p_value->dimm_count);
+	printf("interleave_set.dimm_handles: %u\n", p_value->dimm_handles[0]);
+	printf("interleave_set.dimm_handles: %u\n", p_value->dimm_handles[1]);
+	printf("interleave_set.dimm_handles: %u\n", p_value->dimm_handles[2]);
+	printf("interleave_set.dimm_handles: %u\n", p_value->dimm_handles[3]);
+	printf("interleave_set.dimm_handles: %u\n", p_value->dimm_handles[4]);
+	printf("interleave_set.dimm_handles: %u\n", p_value->dimm_handles[5]);
+	printf("interleave_set.dimm_handles: %u\n", p_value->dimm_handles[6]);
+	printf("interleave_set.dimm_handles: %u\n", p_value->dimm_handles[7]);
+	printf("interleave_set.dimm_handles: %u\n", p_value->dimm_handles[8]);
+	printf("interleave_set.dimm_handles: %u\n", p_value->dimm_handles[9]);
+	printf("interleave_set.dimm_handles: %u\n", p_value->dimm_handles[10]);
+	printf("interleave_set.dimm_handles: %u\n", p_value->dimm_handles[11]);
+	printf("interleave_set.dimm_handles: %u\n", p_value->dimm_handles[12]);
+	printf("interleave_set.dimm_handles: %u\n", p_value->dimm_handles[13]);
+	printf("interleave_set.dimm_handles: %u\n", p_value->dimm_handles[14]);
+	printf("interleave_set.dimm_handles: %u\n", p_value->dimm_handles[15]);
+	printf("interleave_set.dimm_handles: %u\n", p_value->dimm_handles[16]);
+	printf("interleave_set.dimm_handles: %u\n", p_value->dimm_handles[17]);
+	printf("interleave_set.dimm_handles: %u\n", p_value->dimm_handles[18]);
+	printf("interleave_set.dimm_handles: %u\n", p_value->dimm_handles[19]);
+	printf("interleave_set.dimm_handles: %u\n", p_value->dimm_handles[20]);
+	printf("interleave_set.dimm_handles: %u\n", p_value->dimm_handles[21]);
+	printf("interleave_set.dimm_handles: %u\n", p_value->dimm_handles[22]);
+	printf("interleave_set.dimm_handles: %u\n", p_value->dimm_handles[23]);
+	printf("interleave_set.dimm_region_pdas: %llu\n", p_value->dimm_region_pdas[0]);
+	printf("interleave_set.dimm_region_pdas: %llu\n", p_value->dimm_region_pdas[1]);
+	printf("interleave_set.dimm_region_pdas: %llu\n", p_value->dimm_region_pdas[2]);
+	printf("interleave_set.dimm_region_pdas: %llu\n", p_value->dimm_region_pdas[3]);
+	printf("interleave_set.dimm_region_pdas: %llu\n", p_value->dimm_region_pdas[4]);
+	printf("interleave_set.dimm_region_pdas: %llu\n", p_value->dimm_region_pdas[5]);
+	printf("interleave_set.dimm_region_pdas: %llu\n", p_value->dimm_region_pdas[6]);
+	printf("interleave_set.dimm_region_pdas: %llu\n", p_value->dimm_region_pdas[7]);
+	printf("interleave_set.dimm_region_pdas: %llu\n", p_value->dimm_region_pdas[8]);
+	printf("interleave_set.dimm_region_pdas: %llu\n", p_value->dimm_region_pdas[9]);
+	printf("interleave_set.dimm_region_pdas: %llu\n", p_value->dimm_region_pdas[10]);
+	printf("interleave_set.dimm_region_pdas: %llu\n", p_value->dimm_region_pdas[11]);
+	printf("interleave_set.dimm_region_pdas: %llu\n", p_value->dimm_region_pdas[12]);
+	printf("interleave_set.dimm_region_pdas: %llu\n", p_value->dimm_region_pdas[13]);
+	printf("interleave_set.dimm_region_pdas: %llu\n", p_value->dimm_region_pdas[14]);
+	printf("interleave_set.dimm_region_pdas: %llu\n", p_value->dimm_region_pdas[15]);
+	printf("interleave_set.dimm_region_pdas: %llu\n", p_value->dimm_region_pdas[16]);
+	printf("interleave_set.dimm_region_pdas: %llu\n", p_value->dimm_region_pdas[17]);
+	printf("interleave_set.dimm_region_pdas: %llu\n", p_value->dimm_region_pdas[18]);
+	printf("interleave_set.dimm_region_pdas: %llu\n", p_value->dimm_region_pdas[19]);
+	printf("interleave_set.dimm_region_pdas: %llu\n", p_value->dimm_region_pdas[20]);
+	printf("interleave_set.dimm_region_pdas: %llu\n", p_value->dimm_region_pdas[21]);
+	printf("interleave_set.dimm_region_pdas: %llu\n", p_value->dimm_region_pdas[22]);
+	printf("interleave_set.dimm_region_pdas: %llu\n", p_value->dimm_region_pdas[23]);
+	printf("interleave_set.dimm_region_offsets: %llu\n", p_value->dimm_region_offsets[0]);
+	printf("interleave_set.dimm_region_offsets: %llu\n", p_value->dimm_region_offsets[1]);
+	printf("interleave_set.dimm_region_offsets: %llu\n", p_value->dimm_region_offsets[2]);
+	printf("interleave_set.dimm_region_offsets: %llu\n", p_value->dimm_region_offsets[3]);
+	printf("interleave_set.dimm_region_offsets: %llu\n", p_value->dimm_region_offsets[4]);
+	printf("interleave_set.dimm_region_offsets: %llu\n", p_value->dimm_region_offsets[5]);
+	printf("interleave_set.dimm_region_offsets: %llu\n", p_value->dimm_region_offsets[6]);
+	printf("interleave_set.dimm_region_offsets: %llu\n", p_value->dimm_region_offsets[7]);
+	printf("interleave_set.dimm_region_offsets: %llu\n", p_value->dimm_region_offsets[8]);
+	printf("interleave_set.dimm_region_offsets: %llu\n", p_value->dimm_region_offsets[9]);
+	printf("interleave_set.dimm_region_offsets: %llu\n", p_value->dimm_region_offsets[10]);
+	printf("interleave_set.dimm_region_offsets: %llu\n", p_value->dimm_region_offsets[11]);
+	printf("interleave_set.dimm_region_offsets: %llu\n", p_value->dimm_region_offsets[12]);
+	printf("interleave_set.dimm_region_offsets: %llu\n", p_value->dimm_region_offsets[13]);
+	printf("interleave_set.dimm_region_offsets: %llu\n", p_value->dimm_region_offsets[14]);
+	printf("interleave_set.dimm_region_offsets: %llu\n", p_value->dimm_region_offsets[15]);
+	printf("interleave_set.dimm_region_offsets: %llu\n", p_value->dimm_region_offsets[16]);
+	printf("interleave_set.dimm_region_offsets: %llu\n", p_value->dimm_region_offsets[17]);
+	printf("interleave_set.dimm_region_offsets: %llu\n", p_value->dimm_region_offsets[18]);
+	printf("interleave_set.dimm_region_offsets: %llu\n", p_value->dimm_region_offsets[19]);
+	printf("interleave_set.dimm_region_offsets: %llu\n", p_value->dimm_region_offsets[20]);
+	printf("interleave_set.dimm_region_offsets: %llu\n", p_value->dimm_region_offsets[21]);
+	printf("interleave_set.dimm_region_offsets: %llu\n", p_value->dimm_region_offsets[22]);
+	printf("interleave_set.dimm_region_offsets: %llu\n", p_value->dimm_region_offsets[23]);
+	printf("interleave_set.dimm_sizes: %llu\n", p_value->dimm_sizes[0]);
+	printf("interleave_set.dimm_sizes: %llu\n", p_value->dimm_sizes[1]);
+	printf("interleave_set.dimm_sizes: %llu\n", p_value->dimm_sizes[2]);
+	printf("interleave_set.dimm_sizes: %llu\n", p_value->dimm_sizes[3]);
+	printf("interleave_set.dimm_sizes: %llu\n", p_value->dimm_sizes[4]);
+	printf("interleave_set.dimm_sizes: %llu\n", p_value->dimm_sizes[5]);
+	printf("interleave_set.dimm_sizes: %llu\n", p_value->dimm_sizes[6]);
+	printf("interleave_set.dimm_sizes: %llu\n", p_value->dimm_sizes[7]);
+	printf("interleave_set.dimm_sizes: %llu\n", p_value->dimm_sizes[8]);
+	printf("interleave_set.dimm_sizes: %llu\n", p_value->dimm_sizes[9]);
+	printf("interleave_set.dimm_sizes: %llu\n", p_value->dimm_sizes[10]);
+	printf("interleave_set.dimm_sizes: %llu\n", p_value->dimm_sizes[11]);
+	printf("interleave_set.dimm_sizes: %llu\n", p_value->dimm_sizes[12]);
+	printf("interleave_set.dimm_sizes: %llu\n", p_value->dimm_sizes[13]);
+	printf("interleave_set.dimm_sizes: %llu\n", p_value->dimm_sizes[14]);
+	printf("interleave_set.dimm_sizes: %llu\n", p_value->dimm_sizes[15]);
+	printf("interleave_set.dimm_sizes: %llu\n", p_value->dimm_sizes[16]);
+	printf("interleave_set.dimm_sizes: %llu\n", p_value->dimm_sizes[17]);
+	printf("interleave_set.dimm_sizes: %llu\n", p_value->dimm_sizes[18]);
+	printf("interleave_set.dimm_sizes: %llu\n", p_value->dimm_sizes[19]);
+	printf("interleave_set.dimm_sizes: %llu\n", p_value->dimm_sizes[20]);
+	printf("interleave_set.dimm_sizes: %llu\n", p_value->dimm_sizes[21]);
+	printf("interleave_set.dimm_sizes: %llu\n", p_value->dimm_sizes[22]);
+	printf("interleave_set.dimm_sizes: %llu\n", p_value->dimm_sizes[23]);
+	printf("interleave_set.pcd_interleave_index: %u\n", p_value->pcd_interleave_index);
+	printf("interleave_set.cookie_v1_1: %llu\n", p_value->cookie_v1_1);
+	printf("interleave_set.cookie_v1_2: %llu\n", p_value->cookie_v1_2);
 }
 enum db_return_codes db_add_interleave_set(const PersistentStore *p_ps,
 	struct db_interleave_set *p_interleave_set)

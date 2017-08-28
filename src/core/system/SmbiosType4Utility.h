@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, Intel Corporation
+ * Copyright (c) 2017, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -24,45 +24,30 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef CR_MGMT_GETSYSTEM_H
-#define CR_MGMT_GETSYSTEM_H
+#ifndef CR_MGMT_SMBIOSTYPE4UTILITY_H
+#define CR_MGMT_SMBIOSTYPE4UTILITY_H
 
 #include <string>
+#include <map>
 #include <LogEnterExit.h>
-#include <core/Result.h>
-#include <core/NvmLibrary.h>
-#include <core/exceptions/NoMemoryException.h>
-#include <core/exceptions/LibraryException.h>
-#include <persistence/config_settings.h>
-#include <persistence/lib_persistence.h>
-#include "SystemInfo.h"
-#include "SystemMemoryResources.h"
-#include "SoftwareInfo.h"
-#include "SystemSocket.h"
+#include <nvm_types.h>
 
 namespace core
 {
 namespace system
 {
-class NVM_API SystemService
+
+class NVM_API SmbiosType4Utility
 {
+
 public:
-	NVM_API SystemService(NvmLibrary &lib = NvmLibrary::getNvmLibrary());
-	virtual ~SystemService();
-	static SystemService &getService();
-
-	virtual std::string getHostName();
-	virtual Result<SystemInfo> getHostInfo();
-	virtual Result<SystemMemoryResources> getMemoryResources();
-	virtual Result<SoftwareInfo> getSoftwareInfo();
-	virtual std::vector<NVM_UINT16> getAllSocketIds();
-	virtual SystemSocketCollection getSocketsForSocketIds(const std::vector<NVM_UINT16> &socketIds);
-
-protected:
-	NvmLibrary &m_lib;
+	SmbiosType4Utility() { }
+	virtual ~SmbiosType4Utility() {}
+	virtual std::string getProcessorType(unsigned char byteValue) const;
+	virtual std::string getProcessorFamily(unsigned int wordValue) const;
+	static SmbiosType4Utility &getUtility();
 };
-
 }
 }
 
-#endif //CR_MGMT_GETSYSTEM_H
+#endif //CR_MGMT_SMBIOSTYPE4UTILITY_H

@@ -66,6 +66,7 @@ const framework::CommandSpecPart TARGET_NAMESPACE_R = {"-namespace", true, NAMES
 const framework::CommandSpecPart TARGET_SENSOR = {"-sensor", false, "", false, N_TR("Sensor target")};
 const framework::CommandSpecPart TARGET_SENSOR_R = {"-sensor", true, "", false, N_TR("Sensor target is required.")};
 const framework::CommandSpecPart TARGET_SOCKET = {"-socket", false, SOCKETIDS_STR, true, N_TR("Socket target.")};
+const framework::CommandSpecPart TARGET_SOCKET_R = {"-socket", true, SOCKETIDS_STR, false, N_TR("Socket target is required.")};
 const framework::CommandSpecPart TARGET_GOAL_R = {"-goal", true, "", false,
 		N_TR("The memory allocation goal."), "", false};
 const framework::CommandSpecPart TARGET_POOL = {"-pool", false, POOLIDS_STR, false, N_TR("Pool target.")};

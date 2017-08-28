@@ -50,7 +50,7 @@ extern "C"
 #define	MEMORY_INTERLEAVE_TABLE_SIZE	sizeof (struct memory_interleave_capabilities_ext_table)
 #define	RT_CONFIG_TABLE_SIZE	sizeof (struct reconfig_input_validation_ext_table)
 #define	MGMT_ATTR_TABLE_SIZE	sizeof (struct mgmt_attributes_ext_table)
-#define	SOCKET_INFO_TABLE_SIZE	sizeof (struct socket_information_table)
+#define	SOCKET_INFO_TABLE_SIZE	sizeof (struct socket_information_ext_table)
 #define	MGMT_SW_CONFIG_SUPPORTED(bits)	((bits) & 1)
 #define	RUNTIME_CONFIG_SUPPORTED(bits)	((bits >> 1) & 1)
 #define	PMEM_MIRROR_SUPPORTED(bits)	((bits) & 1)
@@ -73,7 +73,7 @@ enum pcat_ext_table_type
 	PCAT_TABLE_MEMORY_INTERLEAVE_INFO = 1,
 	PCAT_TABLE_RECONFIG_INPUT_VALIDATION = 2,
 	PCAT_TABLE_MGMT_ATTRIBUTES = 3,
-	PCAT_TABLE_SOCKET_INFO = 6,
+	PCAT_TABLE_SOCKET_INFO = 6
 };
 
 /*
@@ -427,14 +427,14 @@ struct mgmt_attributes_ext_table
  * Socket SKU Information Table
  * Type 6
  */
-struct socket_information_table
+struct socket_information_ext_table
 {
 	/*
 	 * Header
 	 */
 	struct pcat_extension_table_header header;
 
-	NVM_UINT16 socket_id; // Zero indexed NUMA node identifier
+	NVM_UINT16 node_id; // Zero indexed NUMA node identifier
 
 	NVM_UINT8 reserved[2];
 

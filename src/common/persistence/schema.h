@@ -1233,21 +1233,21 @@ enum db_return_codes db_delete_sw_inventory_by_name(const PersistentStore *p_ps,
  * @ingroup db_schema
  */
  // Lengths for strings and arrays
-#define	SOCKET_MANUFACTURER_LEN 32 //!< Max length for manufacturer
+#define	SOCKET_MANUFACTURER_LEN 16 //!< Max length for manufacturer
 /*!
  * struct representing the socket table
  * @ingroup socket
  */
 struct db_socket
 {
-	unsigned int socket_id;
-	unsigned int type;
-	unsigned int model;
-	unsigned int brand;
-	unsigned int family;
-	unsigned int stepping;
+	unsigned short id;
+	unsigned char type;
+	unsigned char model;
+	unsigned char brand;
+	unsigned char family;
+	unsigned char stepping;
 	char   manufacturer[SOCKET_MANUFACTURER_LEN];
-	unsigned int logical_processor_count;
+	unsigned short logical_processor_count;
 	unsigned int rapl_limited;
 };
 /*!
@@ -1326,44 +1326,44 @@ enum db_return_codes db_save_socket_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_socket *p_socket);
 /*!
- * Return a specific socket for a given socket_id
+ * Return a specific socket for a given id
  * @ingroup socket
  * @param[in] p_ps
  *		Pointer to the PersistentStore
- * @param[in] socket_id
- *		socket_id to identify the correct socket
+ * @param[in] id
+ *		id to identify the correct socket
  * @param[out] p_socket
  *		struct to put the socket retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_socket_by_socket_id(const PersistentStore *p_ps,
-	const unsigned int socket_id,
+enum db_return_codes db_get_socket_by_id(const PersistentStore *p_ps,
+	const unsigned short id,
 	struct db_socket *p_socket);
 /*!
- * Update a specific socket given the original socket_id
+ * Update a specific socket given the original id
  * @ingroup socket
  * @param[in] p_ps
  *		Pointer to the PersistentStore
- * @param[in] socket_id
- * 		socket_id points to the socket to update
+ * @param[in] id
+ * 		id points to the socket to update
  * @param[in] *p_updated_socket
  *		structure with new values for the socket
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_socket_by_socket_id(const PersistentStore *p_ps,
-	const unsigned int socket_id,
+enum db_return_codes db_update_socket_by_id(const PersistentStore *p_ps,
+	const unsigned short id,
 	struct db_socket *p_updated_socket);
 /*!
- * Delete a specific socket given the socket_id
+ * Delete a specific socket given the id
  * @ingroup socket
  * @param[in] p_ps
  *		Pointer to the PersistentStore
- * @param[in] socket_id
- *		socket_id points to the record to delete
+ * @param[in] id
+ *		id points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_socket_by_socket_id(const PersistentStore *p_ps,
-	const unsigned int socket_id);
+enum db_return_codes db_delete_socket_by_id(const PersistentStore *p_ps,
+	const unsigned short id);
 /*!
  * Return number of matching history rows
  * @param[in] p_ps
@@ -1612,9 +1612,10 @@ enum db_return_codes db_get_next_runtime_config_validation_id(const PersistentSt
  */
 struct db_socket_sku
 {
-	unsigned int type;
-	unsigned int length;
-	unsigned int socket_id;
+	unsigned short type;
+	unsigned short length;
+	unsigned short node_id;
+	short reserved;
 	unsigned long long mapped_memory_limit;
 	unsigned long long total_mapped_memory;
 	unsigned long long cache_memory_limit;
@@ -1695,44 +1696,44 @@ enum db_return_codes db_save_socket_sku_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_socket_sku *p_socket_sku);
 /*!
- * Return a specific socket_sku for a given socket_id
+ * Return a specific socket_sku for a given node_id
  * @ingroup socket_sku
  * @param[in] p_ps
  *		Pointer to the PersistentStore
- * @param[in] socket_id
- *		socket_id to identify the correct socket_sku
+ * @param[in] node_id
+ *		node_id to identify the correct socket_sku
  * @param[out] p_socket_sku
  *		struct to put the socket_sku retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_socket_sku_by_socket_id(const PersistentStore *p_ps,
-	const unsigned int socket_id,
+enum db_return_codes db_get_socket_sku_by_node_id(const PersistentStore *p_ps,
+	const unsigned short node_id,
 	struct db_socket_sku *p_socket_sku);
 /*!
- * Update a specific socket_sku given the original socket_id
+ * Update a specific socket_sku given the original node_id
  * @ingroup socket_sku
  * @param[in] p_ps
  *		Pointer to the PersistentStore
- * @param[in] socket_id
- * 		socket_id points to the socket_sku to update
+ * @param[in] node_id
+ * 		node_id points to the socket_sku to update
  * @param[in] *p_updated_socket_sku
  *		structure with new values for the socket_sku
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_socket_sku_by_socket_id(const PersistentStore *p_ps,
-	const unsigned int socket_id,
+enum db_return_codes db_update_socket_sku_by_node_id(const PersistentStore *p_ps,
+	const unsigned short node_id,
 	struct db_socket_sku *p_updated_socket_sku);
 /*!
- * Delete a specific socket_sku given the socket_id
+ * Delete a specific socket_sku given the node_id
  * @ingroup socket_sku
  * @param[in] p_ps
  *		Pointer to the PersistentStore
- * @param[in] socket_id
- *		socket_id points to the record to delete
+ * @param[in] node_id
+ *		node_id points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_socket_sku_by_socket_id(const PersistentStore *p_ps,
-	const unsigned int socket_id);
+enum db_return_codes db_delete_socket_sku_by_node_id(const PersistentStore *p_ps,
+	const unsigned short node_id);
 /*!
  * Return number of matching history rows
  * @param[in] p_ps
@@ -5558,7 +5559,7 @@ enum db_return_codes db_delete_dimm_fw_image_by_device_handle(const PersistentSt
 struct db_dimm_fw_debug_log
 {
 	unsigned int device_handle;
-	unsigned char   fw_log[DIMM_FW_DEBUG_LOG_FW_LOG_LEN];
+	char   fw_log[DIMM_FW_DEBUG_LOG_FW_LOG_LEN];
 };
 /*!
  * Helper function to print a db_dimm_fw_debug_log to the screen.
@@ -5647,7 +5648,7 @@ enum db_return_codes db_save_dimm_fw_debug_log_state(const PersistentStore *p_ps
  * @return return_code whether or not it was successful
  */
 enum db_return_codes db_get_dimm_fw_debug_log_by_fw_log(const PersistentStore *p_ps,
-	const unsigned char * fw_log,
+	const char * fw_log,
 	struct db_dimm_fw_debug_log *p_dimm_fw_debug_log);
 /*!
  * Update a specific dimm_fw_debug_log given the original fw_log
@@ -5661,7 +5662,7 @@ enum db_return_codes db_get_dimm_fw_debug_log_by_fw_log(const PersistentStore *p
  * @return return_code whether or not it was successful
  */
 enum db_return_codes db_update_dimm_fw_debug_log_by_fw_log(const PersistentStore *p_ps,
-	const unsigned char * fw_log,
+	const char * fw_log,
 	struct db_dimm_fw_debug_log *p_updated_dimm_fw_debug_log);
 /*!
  * Delete a specific dimm_fw_debug_log given the fw_log
@@ -5673,7 +5674,7 @@ enum db_return_codes db_update_dimm_fw_debug_log_by_fw_log(const PersistentStore
  * @return return_code whether or not it was successful
  */
 enum db_return_codes db_delete_dimm_fw_debug_log_by_fw_log(const PersistentStore *p_ps,
-	const unsigned char * fw_log);
+	const char * fw_log);
 /*!
  * Return number of matching history rows
  * @param[in] p_ps

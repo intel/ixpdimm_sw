@@ -24,45 +24,68 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef CR_MGMT_GETSYSTEM_H
-#define CR_MGMT_GETSYSTEM_H
+#ifndef CR_MGMT_SYSTEM_SOCKET_H
+#define CR_MGMT_SYSTEM_SOCKET_H
 
-#include <string>
+#include <iostream>
 #include <LogEnterExit.h>
-#include <core/Result.h>
-#include <core/NvmLibrary.h>
-#include <core/exceptions/NoMemoryException.h>
+#include <string>
+#include <nvm_management.h>
+#include <core/Helper.h>
+#include <common_types.h>
+#include <system/jedec_manufacturer.h>
+#include <utility.h>
+#include <nvm_types.h>
+#include <vector>
+#include <string/s_str.h>
+#include <sstream>
 #include <core/exceptions/LibraryException.h>
-#include <persistence/config_settings.h>
-#include <persistence/lib_persistence.h>
-#include "SystemInfo.h"
-#include "SystemMemoryResources.h"
-#include "SoftwareInfo.h"
-#include "SystemSocket.h"
+#include <core/Collection.h>
+#include <core/NvmLibrary.h>
+#include "SmbiosType4Utility.h"
 
 namespace core
 {
 namespace system
 {
-class NVM_API SystemService
+
+class NVM_API SystemSocket
 {
 public:
-	NVM_API SystemService(NvmLibrary &lib = NvmLibrary::getNvmLibrary());
-	virtual ~SystemService();
-	static SystemService &getService();
+	// [Comment:RYON]: No need for the lib parameter
+	//SystemSocket(const socket &in_socket);
+	SystemSocket(const socket &in_socket,
+			SmbiosType4Utility &smbiosUtility = core::system::SmbiosType4Utility::getUtility());
 
-	virtual std::string getHostName();
-	virtual Result<SystemInfo> getHostInfo();
-	virtual Result<SystemMemoryResources> getMemoryResources();
-	virtual Result<SoftwareInfo> getSoftwareInfo();
-	virtual std::vector<NVM_UINT16> getAllSocketIds();
-	virtual SystemSocketCollection getSocketsForSocketIds(const std::vector<NVM_UINT16> &socketIds);
+	SystemSocket &operator=(const SystemSocket &other)
+	{
+		if (&other == this)
+			return *this;
+		this->m_socket = other.m_socket;
+		return *this;
+	}
 
-protected:
-	NvmLibrary &m_lib;
+	virtual ~SystemSocket() { }
+
+	virtual SystemSocket *clone();
+	virtual NVM_UINT16 getSocketId();
+	virtual NVM_UINT8 getSocketType();
+	virtual std::string getSocketTypeStr();
+	virtual NVM_UINT8 getSocketFamily();
+	virtual std::string getSocketFamilyStr();
+	virtual std::string getSocketManufacturer();
+	virtual NVM_UINT64 getSocketMappedMemoryLimit();
+	virtual NVM_UINT64 getSocketTotalMappedMemory();
+
+private:
+	socket m_socket;
+	const SmbiosType4Utility &m_smbiosUtility;
+};
+
+class NVM_API SystemSocketCollection : public Collection<SystemSocket>
+{
 };
 
 }
 }
-
-#endif //CR_MGMT_GETSYSTEM_H
+#endif //CR_MGMT_SYSTEM_SOCKET_H

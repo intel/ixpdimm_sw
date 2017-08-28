@@ -263,14 +263,14 @@ int update_pcat_in_db(PersistentStore *p_db,
 					}
 					else if (p_header->type == PCAT_TABLE_SOCKET_INFO)
 					{
-						struct socket_information_table *p_socket_info =
-								(struct socket_information_table *)p_header;
+						struct socket_information_ext_table *p_socket_info =
+								(struct socket_information_ext_table *)p_header;
 
 						struct db_socket_sku db_socket_sku;
 						memset(&db_socket_sku, 0, sizeof (db_socket_sku));
 						db_socket_sku.type = p_socket_info->header.type;
 						db_socket_sku.length = p_socket_info->header.length;
-						db_socket_sku.socket_id = p_socket_info->socket_id;
+						db_socket_sku.node_id = p_socket_info->node_id;
 						db_socket_sku.mapped_memory_limit = p_socket_info->mapped_memory_limit;
 						db_socket_sku.total_mapped_memory = p_socket_info->total_mapped_memory;
 						db_socket_sku.cache_memory_limit = p_socket_info->cache_memory_limit;
@@ -499,37 +499,44 @@ int get_pcat_socket_sku_info_from_db(PersistentStore *p_db,
 	}
 	else
 	{
-		struct db_socket_sku db_socket_sku;
-		memset(&db_socket_sku, 0, sizeof (db_socket_sku));
+		int db_socket_sku_count = 0;
+		if (db_get_socket_sku_count(p_db, &db_socket_sku_count) == DB_SUCCESS)
+		{
+			struct db_socket_sku db_socket_skus[db_socket_sku_count];
+			memset(&db_socket_skus, 0, sizeof (struct db_socket_sku) * db_socket_sku_count);
 
-		if (db_get_socket_skus(p_db, &db_socket_sku, 1) != 1)
-		{
-			COMMON_LOG_INFO("Unable to retrieve the PCAT socket SKU info table from the db");
-			rc = 0; // no error, just doesn't exist
-		}
-		else
-		{
-			// make sure there is enough buffer space
-			NVM_UINT32 space_needed = *p_offset + SOCKET_INFO_TABLE_SIZE;
-			if (space_needed > cap_len)
+			db_socket_sku_count = db_get_socket_skus(p_db, db_socket_skus, db_socket_sku_count);
+			for (int i = 0; i < db_socket_sku_count; i++)
 			{
-				COMMON_LOG_ERROR(
-					"p_capabilities buffer is too small to add the platform info ext table");
-				rc = NVM_ERR_INVALIDPARAMETER;
-			}
-			else
-			{
-				struct socket_information_table *p_socket_sku =	(struct socket_information_table *)
+				// make sure there is enough buffer space to copy
+				NVM_UINT32 space_needed = *p_offset + SOCKET_INFO_TABLE_SIZE;
+				if (space_needed > cap_len)
+				{
+					COMMON_LOG_ERROR(
+						"p_capabilities buffer is too small to add the interleave info ext table");
+					rc = NVM_ERR_INVALIDPARAMETER;
+					break;
+				}
+				else
+				{
+					struct socket_information_ext_table *p_socket_sku_info =
+						(struct socket_information_ext_table *)
 						((NVM_UINT8 *)p_capabilities + *p_offset);
-				p_socket_sku ->header.type = PCAT_TABLE_SOCKET_INFO;
-				p_socket_sku->header.length = SOCKET_INFO_TABLE_SIZE;
-				p_socket_sku->mapped_memory_limit = db_socket_sku.mapped_memory_limit;
-				p_socket_sku->total_mapped_memory = db_socket_sku.total_mapped_memory;
-				p_socket_sku->cache_memory_limit = db_socket_sku.cache_memory_limit;
-				*p_offset += p_socket_sku->header.length;
+					p_socket_sku_info ->header.type = PCAT_TABLE_SOCKET_INFO;
+					p_socket_sku_info->header.length = SOCKET_INFO_TABLE_SIZE;
+					p_socket_sku_info->node_id = (NVM_UINT16)db_socket_skus[i].node_id;
+					p_socket_sku_info->mapped_memory_limit =
+							(NVM_UINT64)db_socket_skus[i].mapped_memory_limit;
+					p_socket_sku_info->total_mapped_memory =
+							(NVM_UINT64)db_socket_skus[i].total_mapped_memory;
+					p_socket_sku_info->cache_memory_limit =
+							(NVM_UINT64)db_socket_skus[i].cache_memory_limit;
+
+					*p_offset += p_socket_sku_info->header.length;
+				}
 			}
 		}
-		// else ignore any db read failures - table is optional
+		// else ignore any db read failures - tables are optional
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -592,12 +599,12 @@ int get_pcat_from_db(PersistentStore *p_db,
 			if (rc == NVM_SUCCESS)
 			{
 				// get memory interleave tables
-				rc = get_pcat_interleave_tables_from_db(p_db, p_capabilities, &offset, cap_len);
+				rc = get_pcat_runtime_validation_table_from_db(
+						p_db, p_capabilities, &offset, cap_len);
 				if (rc == NVM_SUCCESS)
 				{
 					// get runtime validation tables
-					rc = get_pcat_runtime_validation_table_from_db(p_db,
-							p_capabilities, &offset, cap_len);
+					rc = get_pcat_interleave_tables_from_db(p_db, p_capabilities, &offset, cap_len);
 					if (rc == NVM_SUCCESS)
 					{
 						rc = get_pcat_socket_sku_info_from_db(

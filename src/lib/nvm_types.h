@@ -50,7 +50,7 @@
 #define	NVM_VERSION_LEN	25  // Length of version string
 #define	NVM_ERROR_LEN	256 // Length of return code description
 #define	NVM_MAX_UID_LEN	37 // Max Length of Unique ID
-#define	NVM_SOCKET_MANUFACTURER_LEN	32 // Socket manufacturer string length
+#define	NVM_SOCKET_MANUFACTURER_LEN	16 // Socket manufacturer string length
 #define	NVM_MANUFACTURER_LEN	2 // Number of bytes in the manufacturer ID
 #define	NVM_MANUFACTURERSTR_LEN	256 // Manufacturer string length
 #define	NVM_SERIAL_LEN	4 // Number of bytes in the serial number

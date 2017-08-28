@@ -25,11 +25,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <core/exceptions/NoMemoryException.h>
-#include <LogEnterExit.h>
 #include "SystemService.h"
-#include <persistence/config_settings.h>
-#include <persistence/lib_persistence.h>
 
 core::system::SystemService::SystemService(NvmLibrary &lib) : m_lib(lib)
 {
@@ -91,4 +87,38 @@ core::Result<core::system::SoftwareInfo> core::system::SystemService::getSoftwar
 
 	SoftwareInfo result(swInv);
 	return Result<SoftwareInfo>(result);
+}
+
+std::vector<NVM_UINT16> core::system::SystemService::getAllSocketIds()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	std::vector<NVM_UINT16> socketIds;
+	std::vector<struct socket> sockets;
+
+	sockets = m_lib.getSockets();
+
+	for (size_t i = 0; i < sockets.size(); i++)
+	{
+		socketIds.push_back(sockets[i].id);
+	}
+
+	return socketIds;
+}
+
+core::system::SystemSocketCollection core::system::SystemService::getSocketsForSocketIds(
+		const std::vector<NVM_UINT16> &socketIds)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	SystemSocketCollection result;
+	struct socket in_socket;
+
+	for (size_t i = 0; i < socketIds.size(); i++)
+	{
+		in_socket = m_lib.getSocket(socketIds[i]);
+		SystemSocket socket_result(in_socket);
+		result.push_back(socket_result);
+	}
+
+	return result;
 }

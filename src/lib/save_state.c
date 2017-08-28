@@ -300,7 +300,7 @@ int support_store_sockets(PersistentStore *p_store, int history_id)
 			{
 				memset(&db_socket, 0, sizeof (struct db_socket));
 
-				db_socket.socket_id = sockets[i].id;
+				db_socket.id = sockets[i].id;
 				db_socket.type = sockets[i].type;
 				db_socket.model = sockets[i].model;
 				db_socket.family = sockets[i].family;

@@ -63,14 +63,14 @@ Table(s): db_socket
  	  db_socket_history 
 Description: Processor socket information. 
 Attributes: 
-	unsigned int socket_id(PK)
-	unsigned int type
-	unsigned int model
-	unsigned int brand
-	unsigned int family
-	unsigned int stepping
+	unsigned short id(PK)
+	unsigned char type
+	unsigned char model
+	unsigned char brand
+	unsigned char family
+	unsigned char stepping
 	char * manufacturer
-	unsigned int logical_processor_count
+	unsigned short logical_processor_count
 	unsigned int rapl_limited
 
 Table(s): db_runtime_config_validation 
@@ -96,9 +96,10 @@ Table(s): db_socket_sku
  	  db_socket_sku_history 
 Description: Platform Configuration Attributes Table (PCAT): Socket SKU Information Table - Type 6. 
 Attributes: 
-	unsigned int type
-	unsigned int length
-	unsigned int socket_id(PK)
+	unsigned short type
+	unsigned short length
+	unsigned short node_id(PK)
+	short reserved
 	unsigned long long mapped_memory_limit
 	unsigned long long total_mapped_memory
 	unsigned long long cache_memory_limit
@@ -385,7 +386,7 @@ Table(s): db_dimm_fw_debug_log
 Description: Vendor Firmware: Get Log - Firmware Debug Log. 
 Attributes: 
 	unsigned int device_handle(FK)
-	unsigned char * fw_log(PK)
+	char * fw_log(PK)
 
 Table(s): db_dimm_memory_info_page0 
  	  db_dimm_memory_info_page0_history 

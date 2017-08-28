@@ -272,10 +272,10 @@ int get_socket_sku(struct bios_capabilities *p_pcat, struct socket *p_socket)
 		// socket SKU info table
 		if (p_header->type == PCAT_TABLE_SOCKET_INFO)
 		{
-			struct socket_information_table *p_socket_info =
-					(struct socket_information_table *)p_header;
+			struct socket_information_ext_table *p_socket_info =
+					(struct socket_information_ext_table *)p_header;
 
-			if (p_socket_info->socket_id == p_socket->id)
+			if (p_socket_info->node_id == p_socket->id)
 			{
 				if (!p_socket_info->mapped_memory_limit)
 				{

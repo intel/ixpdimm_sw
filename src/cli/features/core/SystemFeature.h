@@ -32,21 +32,52 @@
 #ifndef _CLI_NVMCLI_SYSTEMFEATURE_H_
 #define _CLI_NVMCLI_SYSTEMFEATURE_H_
 
+#include <vector>
+#include <string>
+#include <string.h>
+#include <algorithm>
+#include <fstream>
+#include <LogEnterExit.h>
 #include <nvm_management.h>
 #include <cr_i18n.h>
-
-#include "VerboseFeatureBase.h"
+#include <exception/NvmExceptionBadTarget.h>
+#include <exception/NvmExceptionLibError.h>
+#include <mem_config/MemoryResourcesFactory.h>
+#include <server/BaseServerFactory.h>
+#include <server/SystemCapabilitiesFactory.h>
 #include <erasure/ErasureServiceFactory.h>
+#include <physical_asset/NVDIMMFactory.h>
+#include <physical_asset/MemoryTopologyViewFactory.h>
 #include <libinvm-cli/FeatureBase.h>
 #include <libinvm-cli/ObjectListResult.h>
+#include <libinvm-cli/CliFrameworkTypes.h>
+#include <libinvm-cli/CommandSpec.h>
+#include <libinvm-cli/SimpleListResult.h>
+#include <libinvm-cli/PropertyListResult.h>
 #include <libinvm-cli/SyntaxErrorBadValueResult.h>
+#include <libinvm-cli/SyntaxErrorMissingValueResult.h>
+#include <libinvm-cli/NotImplementedErrorResult.h>
+#include <libinvm-cli/Parser.h>
+#include <libinvm-cli/OutputOptions.h>
+#include <libinvm-cim/Types.h>
 #include <libinvm-cim/Instance.h>
+#include <cli/features/core/ShowDeviceCommand.h>
+#include <cli/features/core/ShowHostServerCommand.h>
+#include <cli/features/core/ShowMemoryResourcesCommand.h>
+#include <cli/features/core/ShowTopologyCommand.h>
+#include <cli/features/core/ShowSocketCommand.h>
+#include "VerboseFeatureBase.h"
 #include "WbemToCli_utilities.h"
-#include <physical_asset/NVDIMMFactory.h>
-
 #include "DimmProviderAdapter.h"
 #include "MemoryProperty.h"
-#include <nvm_types.h>
+#include "CommandParts.h"
+
+#ifdef __WINDOWS__
+#include <windows.h>
+#else
+#include <termios.h>
+#include <unistd.h>
+#endif
 
 namespace cli
 {
@@ -138,7 +169,8 @@ class NVM_API SystemFeature : public cli::nvmcli::VerboseFeatureBase
 			SHOW_MEMORYRESOURCES,
 			SHOW_SYSTEM_CAPABILITIES,
 			SHOW_TOPOLOGY,
-			SHOW_DEVICES_PLATFORM_CONFIGURATION_DATA
+			SHOW_DEVICES_PLATFORM_CONFIGURATION_DATA,
+			SHOW_SOCKET
 		};
 
 		std::string (* m_uidToDimmIdStr)(const std::string &dimmUid)
@@ -161,6 +193,7 @@ private:
 		framework::ResultBase *showMemoryResources(const framework::ParsedCommand &parsedCommand);
 		framework::ResultBase *showSystemCapabilities(const framework::ParsedCommand &parsedCommand);
 		framework::ResultBase *showTopology(const framework::ParsedCommand &parsedCommand);
+		framework::ResultBase *showSocket(const framework::ParsedCommand &parsedCommand);
 
 		void generateJobFilter(const cli::framework::ParsedCommand &parsedCommand,
 				wbem::framework::attribute_names_t &attributes, cli::nvmcli::filters_t &filters);
