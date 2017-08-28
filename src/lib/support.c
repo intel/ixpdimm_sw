@@ -50,6 +50,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include "utility.h"
+#include "namespace_labels.h"
 
 #define	COMMON_INT_LENGTH	11
 /*
@@ -917,6 +918,47 @@ int nvm_set_user_preference(const NVM_PREFERENCE_KEY key,
 		{
 			rc = CommonErrorToLibError(tempRc);
 		}
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+/*
+ * clear NVM dimm LSA (namespace label storage area in PCD)
+ */
+int nvm_clear_dimm_lsa(const NVM_UID device_uid)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_ERR_UNKNOWN;
+	struct device_discovery discovery;
+
+	if (check_caller_permissions() != NVM_SUCCESS)
+	{
+		rc = NVM_ERR_INVALIDPERMISSIONS;
+	}
+	else if (!is_supported_driver_available())
+	{
+		rc = NVM_ERR_BADDRIVER;
+	}
+	else if ((rc = exists_and_manageable(device_uid, &discovery, 1)) != NVM_SUCCESS)
+	{
+		rc = NVM_ERR_NOTMANAGEABLE;
+	}
+	// Check that no namespaces exist on this DIMM
+	else if ((rc = dimm_has_namespaces_of_type(discovery.device_handle,
+			NAMESPACE_TYPE_UNKNOWN)) != 0)
+	{
+		if (rc > 0)
+		{
+			rc = NVM_ERR_NAMESPACESEXIST;
+		}
+	}
+	// check security permission
+	else if ((rc = nvm_get_security_permission(&discovery)) == NVM_SUCCESS)
+	{
+		// clear out namespace label storage area
+		zero_dimm_namespace_labels(discovery.device_handle.handle);
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);

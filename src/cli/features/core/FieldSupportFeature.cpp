@@ -77,11 +77,11 @@
 #include <libinvm-cim/ExceptionNoMemory.h>
 #include <mem_config/PoolViewFactory.h>
 #include "ShowLogCommand.h"
-
 #include "ShowVersionCommand.h"
 #include "ShowDevicePcdCommand.h"
 #include "FormatDeviceCommand.h"
 #include "DumpDeviceSupportCommand.h"
+#include "DeleteDevicePcdCommand.h"
 
 const std::string cli::nvmcli::FieldSupportFeature::Name = "Field Support";
 const std::string LOG_PROPERTY_NAME = "LogLevel";
@@ -326,6 +326,7 @@ void cli::nvmcli::FieldSupportFeature::getPaths(cli::framework::CommandSpecList 
 	list.push_back(ShowDevicePcdCommand::getCommandSpec(SHOW_DEVICE_PCD));
 	list.push_back(FormatDeviceCommand::getCommandSpec(START_FORMAT));
 	list.push_back(dumpDeviceSupport);
+	list.push_back(DeleteDevicePcdCommand::getCommandSpec(DELETE_DEVICE_PCD));
 
 }
 
@@ -406,6 +407,9 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::run(
 			break;
 		case DUMP_DEVICE_SUPPORT:
 			pResult = dumpDeviceSupport(parsedCommand);
+			break;
+		case DELETE_DEVICE_PCD:
+			pResult = deleteDevicePcd(parsedCommand);
 			break;
 	}
 
@@ -2296,5 +2300,14 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::dumpDeviceSupport(
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	DumpDeviceSupportCommand command;
+	return command.execute(parsedCommand);
+}
+
+cli::framework::ResultBase* cli::nvmcli::FieldSupportFeature::deleteDevicePcd(
+		const framework::ParsedCommand& parsedCommand)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	DeleteDevicePcdCommand command;
 	return command.execute(parsedCommand);
 }

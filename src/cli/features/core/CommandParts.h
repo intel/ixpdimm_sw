@@ -41,6 +41,7 @@ namespace nvmcli
 {
 
 const std::string TARGET_EVENT_STR = "-event";
+const std::string TARGET_PCD_STR = "-pcd";
 const std::string EVENTID_STR = "EventID";
 const std::string DIMMID_STR = "DimmID";
 const std::string DIMMIDS_STR = "DimmIDs";
@@ -69,8 +70,8 @@ const framework::CommandSpecPart TARGET_SOCKET = {"-socket", false, SOCKETIDS_ST
 const framework::CommandSpecPart TARGET_SOCKET_R = {"-socket", true, SOCKETIDS_STR, false, N_TR("Socket target is required.")};
 const framework::CommandSpecPart TARGET_GOAL_R = {"-goal", true, "", false,
 		N_TR("The memory allocation goal."), "", false};
-const framework::CommandSpecPart TARGET_POOL = {"-pool", false, POOLIDS_STR, false, N_TR("Pool target.")};
-const framework::CommandSpecPart TARGET_POOL_R = {"-pool", true, POOLIDS_STR, false, N_TR("Pool target is required.")};
+const framework::CommandSpecPart TARGET_POOL = {"-pool", false, POOLID_STR, false, N_TR("Pool target.")};
+const framework::CommandSpecPart TARGET_POOL_R = {"-pool", true, POOLID_STR, false, N_TR("Pool target is required.")};
 const framework::CommandSpecPart TARGET_PCD = {"-pcd", false, "", false, N_TR("Platform Configuration Data target.")};
 const framework::CommandSpecPart TARGET_1_POOL = {"-pool", false, POOLID_STR, false, N_TR("Pool target.")};
 const framework::CommandSpecPart TARGET_1_POOL_R = {"-pool", true, POOLID_STR, false, N_TR("Pool target is required.")};

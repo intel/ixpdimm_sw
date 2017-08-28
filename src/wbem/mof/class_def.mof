@@ -261,6 +261,11 @@ class <NVM_WBEM_PREFIX>NVDIMM : CIM_PhysicalMemory
 		"Not Supported"}]
 	uint32 ExportSupportFile(string ExportURI);
 
+	[implemented,
+		ValueMap { "0", "1", "2", "3", "4" },
+		Values { "Success", "Unknown", "Failed", "Not Allowed",
+		"Not Supported"}]
+	uint32 ClearLSA();
 };
 
 [dynamic, provider("intelwbemprovider"), Description("Intel Raw Memory")]

@@ -1874,6 +1874,21 @@ extern NVM_API int nvm_erase_device(const NVM_UID device_uid,
 		const NVM_PASSPHRASE passphrase, const NVM_SIZE passphrase_len);
 
 /*
+ * Get security permission to access/modify the device.
+ * @param[in] p_discovery
+ * 		pinter to struct device_discovery.
+ * @pre The caller has administrative privileges.
+ * @pre The device is manageable.
+ * @return Returns one of the following @link #return_code return_codes: @endlink @n
+ * 		#NVM_SUCCESS @n
+ * 		#NVM_ERR_UNKNOWN @n
+ *		#NVM_ERR_SECURITYFROZEN @n
+ * 		#NVM_ERR_LIMITPASSPHRASE @n
+ *		#NVM_ERR_NOTSUPPORTED @n
+ */
+extern NVM_API int nvm_get_security_permission(struct device_discovery *p_discovery);
+
+/*
  * monitor.c
  */
 
@@ -2963,6 +2978,28 @@ extern NVM_API int nvm_run_diagnostic(const NVM_UID device_uid,
  */
 extern NVM_API int nvm_set_user_preference(const NVM_PREFERENCE_KEY key,
 		const NVM_PREFERENCE_VALUE value);
+
+/*
+ * Clear namespace label storage area in PCD on the specified AEP DIMM.
+ * @param[in] device_uid
+ * 		The device identifier.
+ * @return Returns one of the following @link #return_code return_codes: @endlink @n
+ * 		#NVM_SUCCESS @n
+ * 		#NVM_ERR_NOTSUPPORTED @n
+ * 		#NVM_ERR_NOMEMORY @n
+ * 		#NVM_ERR_INVALIDPARAMETER @n
+ * 		#NVM_ERR_INVALIDPERMISSIONS @n
+ * 		#NVM_ERR_BADDEVICE @n
+ * 		#NVM_ERR_NOTMANAGEABLE @n
+ * 		#NVM_ERR_DRIVERFAILED @n
+ * 		#NVM_ERR_DATATRANSFERERROR @n
+ * 		#NVM_ERR_DEVICEERROR @n
+ * 		#NVM_ERR_DEVICEBUSY @n
+ * 		#NVM_ERR_UNKNOWN @n
+ * 		#NVM_ERR_BADDRIVER @n
+ * 		#NVM_ERR_NAMESPACESEXIST @n
+ */
+extern NVM_API int nvm_clear_dimm_lsa(const NVM_UID device_uid);
 
 /*
  * logging.c

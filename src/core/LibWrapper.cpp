@@ -530,4 +530,10 @@ int LibWrapper::dumpDeviceSupport(NVM_UID device_uid, NVM_PATH support_file,
 	return nvm_dump_device_support(device_uid, support_file, support_file_len, support_files);
 }
 
+int LibWrapper::clearDimmLsa(const NVM_UID deviceUid) const
+{
+	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
+	return nvm_clear_dimm_lsa(deviceUid);
+}
+
 }

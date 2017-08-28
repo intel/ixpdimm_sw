@@ -65,6 +65,7 @@ NVDIMMFactory::NVDIMMFactory(
 		m_GetFwLogLevel(nvm_get_fw_log_level),
 		m_injectDeviceError(nvm_inject_device_error),
 		m_clearInjectedDeviceError(nvm_clear_injected_device_error),
+		m_ClearLSA(nvm_clear_dimm_lsa),
 		m_deviceService(deviceService),
 		m_systemService(systemService)
 {
@@ -261,6 +262,10 @@ wbem::framework::UINT32 NVDIMMFactory::executeMethod(
 		{
 			exportSupportFile(deviceUid, inParms[NVDIMM_EXPORT_URI].stringValue());
 		}
+		else if (method == NVDIMM_CLEARLSA)
+		{
+			clearLSA(deviceUid);
+		}
 		else
 		{
 			httpRc = framework::CIM_ERR_METHOD_NOT_AVAILABLE;
@@ -452,6 +457,25 @@ void NVDIMMFactory::exportSupportFile(std::string deviceUid, std::string exportU
 		throw exception::NvmExceptionLibError(rc);
 	}
 
+}
+
+void NVDIMMFactory::clearLSA(std::string deviceUid)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	if (!core::device::isUidValid(deviceUid))
+	{
+		throw framework::ExceptionBadParameter("deviceUid");
+	}
+
+	NVM_UID uid;
+	uid_copy(deviceUid.c_str(), uid);
+
+	int rc = m_ClearLSA(uid);
+
+	if (rc != NVM_SUCCESS)
+	{
+		throw exception::NvmExceptionLibError(rc);
+	}
 }
 
 std::vector<std::string>  wbem::physical_asset::NVDIMMFactory::getManageableDeviceUids()

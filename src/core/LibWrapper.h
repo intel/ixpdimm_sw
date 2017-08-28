@@ -219,6 +219,8 @@ public:
 	virtual int dumpDeviceSupport(NVM_UID device_uid, NVM_PATH support_file,
 			NVM_SIZE support_file_len, NVM_PATH *support_files);
 
+	virtual int clearDimmLsa(const NVM_UID deviceUid) const;
+
 protected:
 	LibWrapper();
 };

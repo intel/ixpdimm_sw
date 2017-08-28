@@ -600,3 +600,38 @@ int nvm_erase_device(const NVM_UID device_uid,
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
+
+/*
+ * Get security permission to access/mdify the device specified.
+ */
+int nvm_get_security_permission(struct device_discovery *p_discovery)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_ERR_UNKNOWN;
+
+	rc = check_lock_state(p_discovery);
+	if (rc == NVM_SUCCESS)
+	{
+		// make sure the dimm must be unlocked if data-at-rest secuirty is enabled
+
+		if (p_discovery->lock_state == LOCK_STATE_DISABLED)
+		{
+			rc = NVM_SUCCESS;
+		}
+		else if (p_discovery->lock_state == LOCK_STATE_UNLOCKED)
+		{
+			rc = NVM_SUCCESS;
+		}
+		else if (p_discovery->lock_state == LOCK_STATE_LOCKED)
+		{
+			rc = NVM_ERR_UNKNOWN; // closest NVM error code
+		}
+		else
+		{
+			rc = NVM_ERR_UNKNOWN;
+		}
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}

@@ -137,6 +137,7 @@ public:
 	virtual void purgeDebugLog();
 	virtual int dumpDeviceSupport(NVM_UID device_uid, NVM_PATH support_file,
 			NVM_SIZE support_file_len, NVM_PATH support_files[NVM_MAX_EAFD_FILES]);
+	virtual int clearDimmLsa(const NVM_UID deviceUid);
 
 private:
 	const LibWrapper &m_lib;

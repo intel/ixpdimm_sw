@@ -57,6 +57,8 @@ static const std::string NVDIMM_REMOVEPASSPHRASE = "RemovePassphrase"; //!< extr
 static const std::string NVDIMM_UNLOCK = "Unlock"; //!< extrinsic method name
 static const std::string NVDIMM_FREEZELOCK = "FreezeLock"; //!< extrinsic method name
 static const std::string NVDIMM_EXPORTSUPPORTFILE = "ExportSupportFile"; //!< extrinsic method name
+static const std::string NVDIMM_CLEARLSA = "ClearLSA"; //!< extrinsic method name
+
 static const std::string NVDIMM_SETPASSPHRASE_NEWPASSPHRASE = "NewPassphrase"; //!< method param
 static const std::string NVDIMM_SETPASSPHRASE_CURRENTPASSPHRASE = "CurrentPassphrase"; //!< method param
 static const std::string NVDIMM_EXPORT_URI = "ExportURI"; //!< method param
@@ -146,6 +148,8 @@ public:
 
 	virtual void exportSupportFile(std::string deviceUid, std::string exportUri);
 
+	virtual void clearLSA(std::string deviceUid);
+
 	virtual void injectTemperatureError(const std::string &dimmUid,
 			const NVM_REAL32 temperature);
 
@@ -212,6 +216,8 @@ public:
 
 	int (*m_clearInjectedDeviceError)(const NVM_UID device_uid,
 			const struct device_error *p_error);
+
+	int (*m_ClearLSA)(const NVM_UID device_uid);
 
 private:
 	core::device::DeviceService &m_deviceService;

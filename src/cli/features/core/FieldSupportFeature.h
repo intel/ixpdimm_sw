@@ -162,6 +162,7 @@ public:
 		SHOW_DEVICE_PCD,
 		START_FORMAT,
 		DUMP_DEVICE_SUPPORT,
+		DELETE_DEVICE_PCD,
 	};
 
 	/*!
@@ -373,6 +374,7 @@ private:
 
 	virtual cli::framework::ResultBase *showDevicePcd(const framework::ParsedCommand& parsedCommand);
 	virtual cli::framework::ResultBase *formatDevice(const framework::ParsedCommand& parsedCommand);
+	virtual cli::framework::ResultBase *deleteDevicePcd(const framework::ParsedCommand& parsedCommand);
 };
 
 };
