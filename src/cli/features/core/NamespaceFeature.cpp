@@ -121,9 +121,8 @@ void cli::nvmcli::NamespaceFeature::getPaths(cli::framework::CommandSpecList &li
 	createNamespace.addProperty(CREATE_NS_PROP_ERASECAPABLE, false, "No|Yes|Ignore", true,
 			TR("If the namespace supports erase capability after creation."));
 	createNamespace.addProperty(CREATE_NS_PROP_CAPACITY, false, "GiB", true,
-			TR("The size of the namespace in GB. Capacity and BlockCount are exclusive "
-					"and therefore cannot be used together. Note: Capacity can only be provided "
-					"as decimal gigabytes and not gibibytes (e.g. 16.7 GB vs 16 GiB)."));
+			TR("The size of the namespace. Unless the units option is provided, "
+					"capacity is expected in GiB."));
 	createNamespace.addProperty(CREATE_NS_PROP_MEMORYPAGEALLOCATION, false, "None|DRAM|AppDirect", true,
 			TR("Support access to the AppDirect namespace capacity using legacy memory page protocols "
 					"such as DMA/RDMA by specifying where to create the underlying OS structures."));
@@ -140,7 +139,8 @@ void cli::nvmcli::NamespaceFeature::getPaths(cli::framework::CommandSpecList &li
 			TR("Enable or disable the namespace.  A disabled namespace is hidden from the OS by the "
 			"driver."));
 	modifyNamespace.addProperty(CREATE_NS_PROP_CAPACITY, false, "GiB", true,
-			TR("Change the size of the namespace."));
+			TR("Change the size of the namespace. Unless the units option is provided, "
+					"capacity is expected in GiB."));
 
 	cli::framework::CommandSpec deleteNamespace(DELETE_NAMESPACE, TR("Delete Namespace"), framework::VERB_DELETE,
 			TR("Delete one or more existing namespaces. All data on the deleted namespace(s) becomes "
@@ -210,7 +210,7 @@ cli::nvmcli::NamespaceFeature::NamespaceFeature() : cli::nvmcli::VerboseFeatureB
 	m_deleteNamespace(wbemDeleteNamespace),
 	m_getSupportedSizeRange(wbemGetSupportedSizeRange),
 	m_poolUid(""), m_blockSize(1),
-	m_blockCount(0),
+	m_blockCount(0), m_capacityUnits(""),
 	m_capacityExists(false), m_capacityBytes(0),
 	m_friendlyName(""), m_friendlyNameExists(false),
 	m_enableState(0), m_enabledStateExists(false),

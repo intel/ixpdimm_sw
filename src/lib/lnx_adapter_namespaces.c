@@ -438,7 +438,7 @@ int get_namespace_details(
 					p_details->type = NAMESPACE_TYPE_APP_DIRECT;
 					p_details->namespace_creation_id.interleave_setid =
 							ndctl_region_get_range_index(p_region);
-					p_details->block_size = 1;
+					p_details->block_size = DEFAULT_BTT_SECTOR_SIZE;
 					break;
 
 				default:

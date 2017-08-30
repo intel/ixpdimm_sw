@@ -216,6 +216,7 @@ protected:
 		std::string m_poolUid;
 		COMMON_UINT64 m_blockSize;
 		COMMON_UINT64 m_blockCount;
+		std::string m_capacityUnits;
 		bool m_capacityExists;
 		NVM_UINT64 m_capacityBytes; // Advertised capacity
 		std::string m_friendlyName;

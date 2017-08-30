@@ -135,8 +135,7 @@ cli::framework::ResultBase *cli::nvmcli::NamespaceFeature::showNamespaces(
 	framework::ResultBase *pResult = NULL;
 	wbem::framework::instances_t *pInstances = NULL;
 
-	std::string capacityUnits;
-	pResult = GetRequestedCapacityUnits(parsedCommand, capacityUnits);
+	pResult = GetRequestedCapacityUnits(parsedCommand, m_capacityUnits);
 	if (!pResult)
 	{
 		try
@@ -166,14 +165,13 @@ cli::framework::ResultBase *cli::nvmcli::NamespaceFeature::showNamespaces(
 						for (size_t i = 0; i < pInstances->size(); i++)
 						{
 							wbem::framework::Instance &instance = (*pInstances)[i];
-							convertCapacityAndAddIsMirroredText(instance, capacityUnits);
+							convertCapacityAndAddIsMirroredText(instance, m_capacityUnits);
 							generateBlockSizeAttributeValue(instance);
 							convertEnabledStateAttributes(instance);
 							convertActionRequiredEventsToNAIfEmpty(instance);
 						}
 
 						// add/remove cli display attributes
-						RenameAttributeKey(*pInstances, attributes, wbem::NUMBEROFBLOCKS_KEY, wbem::BLOCKCOUNT_KEY);
 						RenameAttributeKey(*pInstances, attributes, wbem::ENABLEDSTATE_KEY, wbem::ENABLED_KEY);
 						RemoveAttributeName(attributes, wbem::REPLICATION_KEY);
 
@@ -330,10 +328,9 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::createNamespace(
 	m_forceOption = parsedCommand.options.find(framework::OPTION_FORCE.name)
 					!= parsedCommand.options.end();
 
-	std::string capacityUnits;
 	if (!pResult)
 	{
-		pResult = GetRequestedCapacityUnits(parsedCommand, capacityUnits);
+		pResult = GetRequestedCapacityUnits(parsedCommand, m_capacityUnits);
 	}
 
 	// Capacity in Bytes
@@ -413,7 +410,7 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::createNamespace(
 			framework::ParsedCommand showNamespaceCommand;
 			showNamespaceCommand.targets[TARGET_NAMESPACE.name] = namespaceUid;
 			showNamespaceCommand.options[framework::OPTION_ALL.name] = "";
-			showNamespaceCommand.options[framework::OPTION_UNITS.name] = capacityUnits;
+			showNamespaceCommand.options[framework::OPTION_UNITS.name] = m_capacityUnits;
 
 			pResult = showNamespaces(showNamespaceCommand);
 		}
@@ -468,11 +465,10 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseCreateNsCapacity
 			}
 			else
 			{
-				std::string capacityUnits;
-				pResult = GetRequestedCapacityUnits(parsedCommand, capacityUnits);
+				pResult = GetRequestedCapacityUnits(parsedCommand, m_capacityUnits);
 				if (!pResult)
 				{
-					m_capacityBytes = convertCapacityToBytes(capacityUnits, capacity);
+					m_capacityBytes = convertCapacityToBytes(m_capacityUnits, capacity);
 				}
 			}
 		}
@@ -854,6 +850,10 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::modifyNamespace(
 	{
 		pResult = m_pWbemToCli->getNamespaces(parsedCommand, nsList);
 	}
+	if (!pResult)
+	{
+			pResult = GetRequestedCapacityUnits(parsedCommand, m_capacityUnits);
+	}
 
 	if (!pResult)
 	{
@@ -975,11 +975,10 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseModifyNsCapacity
 			}
 			else
 			{
-				std::string capacityUnits;
-				pResult = GetRequestedCapacityUnits(parsedCommand, capacityUnits);
+				pResult = GetRequestedCapacityUnits(parsedCommand, m_capacityUnits);
 				if (!pResult)
 				{
-					m_capacityBytes = convertCapacityToBytes(capacityUnits, capacity);
+					m_capacityBytes = convertCapacityToBytes(m_capacityUnits, capacity);
 				}
 			}
 		}
@@ -1020,8 +1019,9 @@ cli::framework::ErrorResult* cli::nvmcli::NamespaceFeature::nsNvmExceptionToResu
 		{
 			char errbuff[NVM_ERROR_LEN];
 			s_snprintf(errbuff, NVM_ERROR_LEN,
-					TR("The block count '%llu' is not valid."),
-					m_blockCount);
+					TR("The capacity '%s' is not valid."),
+					convertCapacityFormat(m_capacityBytes,
+									m_capacityUnits).c_str());
 			pResult = new framework::ErrorResult(framework::ResultBase::ERRORCODE_UNKNOWN,
 					errbuff);
 			break;
@@ -1263,7 +1263,6 @@ void cli::nvmcli::NamespaceFeature::populateNamespaceAttributes(
 	}
 
 	// wbem attribute names are different than CLI
-	RenameAttributeKey(attributes, wbem::BLOCKCOUNT_KEY, wbem::NUMBEROFBLOCKS_KEY);
 	RenameAttributeKey(attributes, wbem::ENABLED_KEY, wbem::ENABLEDSTATE_KEY);
 }
 
