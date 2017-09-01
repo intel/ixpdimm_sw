@@ -63,6 +63,7 @@ enum pt_ioctl_result
 	PT_ERR_DEVICEBUSY = 6,
 	PT_ERR_INVALIDPERMISSIONS = 7,
 	PT_ERR_NOMEMORY = 8,
+	PT_ERR_NOTSUPPORTED = 9 // To be implemented in <OS>_passthrough.c for "disable-able" FW commands
 };
 
 #define	PT_IS_SUCCESS(result) (*((int*)&result) == 0)

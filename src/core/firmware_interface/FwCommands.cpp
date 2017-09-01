@@ -1697,6 +1697,9 @@ enum return_code FwCommands::convertFwcmdErrorCodeToNvmErrorCode(struct fwcmd_er
 			case PT_ERR_INVALIDPERMISSIONS:
 				rc = NVM_ERR_INVALIDPERMISSIONS;
 				break;
+			case PT_ERR_NOTSUPPORTED:
+				rc = NVM_ERR_NOTSUPPORTED;
+				break;
 			default:
 				rc = NVM_ERR_UNKNOWN;
 				break;

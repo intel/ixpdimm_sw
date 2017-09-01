@@ -77,6 +77,9 @@ void pt_get_error_message(unsigned int code, char message[1024], size_t message_
 			case PT_ERR_INVALIDPERMISSIONS:
 				len += s_snprintf(message, message_len, "Invalid Permissions");
 				break;
+			case PT_ERR_NOTSUPPORTED:
+				len += s_snprintf(message, message_len, "Command not supported");
+				break;
 		}
 		s_strcat(message, message_len, "\n");
 	}
