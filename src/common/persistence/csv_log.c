@@ -49,8 +49,8 @@
 // thread id, time, level, filename, linenumber, message
 #define	MAX_LOG_LINE_LEN	20 + 20 + 10 + 1024 + 10 + 2048 + 1
 #define	CSV_LOG_FIELDS	6
-#define	CSV_WRITE_FORMAT	"%llu,%llu,%d,\'%s\',%d,\'%s\'\n"
-#define	CSV_READ_FORMAT	"%llu,%llu,%d,\'%[^,']\',%d,%[^\n]\n"
+#define	CSV_WRITE_FORMAT	"%llu,%llu,%d,\'%s\',%u,\'%s\'\n"
+#define	CSV_READ_FORMAT	"%llu,%llu,%d,\'%1024[^,']\',%u,%2048[^\n]\n"
 #define	ADD_LOG_SQL	"INSERT INTO log \
 	(thread_id, time, level, file_name, line_number, message) VALUES (%s)"
 #define	TRIM_LOG_SQL	"DELETE FROM log where id NOT IN \
