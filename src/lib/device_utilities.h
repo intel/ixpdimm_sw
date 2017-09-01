@@ -36,6 +36,7 @@
 #include "nvm_management.h"
 #include "device_fw.h"
 #include "device_adapter.h"
+#include <string/revision.h>
 
 #ifdef __cplusplus
 extern "C"
