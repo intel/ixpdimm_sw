@@ -643,6 +643,8 @@ struct device_status
 	NVM_UINT64 newest_error_log_timestamp; // Timestamp of the newest log entry in the fw error log
 	NVM_BOOL ait_dram_enabled; // Whether or not the AIT DRAM is enabled.
 	NVM_UINT64 boot_status; // The status of the AEP DIMM as reported by the firmware in the BSR
+	NVM_UINT32 injected_media_errors; // The number of injected media errors on AEP DIMM
+	NVM_UINT32 injected_non_media_errors; // The number of injected non-media errors on AEP DIMM
 };
 
 /*

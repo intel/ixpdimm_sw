@@ -771,6 +771,13 @@ enum fis_parser_codes fis_parse_smart_health_info(
 	p_data->last_shutdown_status_details_thermal_shutdown_received = (unsigned char)((p_data->last_shutdown_status_details >> 6) & 0x01);
 	p_data->last_shutdown_status_details_flush_complete = (unsigned char)((p_data->last_shutdown_status_details >> 7) & 0x01);
 	p_data->last_shutdown_time = p_output_payload->last_shutdown_time;
+	memmove(p_data->last_shutdown_status_extended_details, p_output_payload->last_shutdown_status_extended_details, 3);
+	p_data->last_shutdown_status_extended_details_viral_interrupt_received = (unsigned char)((*p_data->last_shutdown_status_extended_details >> 0) & 0x01);
+	p_data->last_shutdown_status_extended_details_surprise_clock_stop_interrupt_received = (unsigned char)((*p_data->last_shutdown_status_extended_details >> 1) & 0x01);
+	p_data->last_shutdown_status_extended_details_write_data_flush_complete = (unsigned char)((*p_data->last_shutdown_status_extended_details >> 2) & 0x01);
+	p_data->last_shutdown_status_extended_details_s4_power_state_received = (unsigned char)((*p_data->last_shutdown_status_extended_details >> 3) & 0x01);
+	p_data->media_error_injections = p_output_payload->media_error_injections;
+	p_data->non_media_error_injections = p_output_payload->non_media_error_injections;
 	return rc;
 }
 

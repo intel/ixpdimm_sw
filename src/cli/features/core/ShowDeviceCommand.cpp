@@ -128,6 +128,8 @@ ShowDeviceCommand::ShowDeviceCommand(core::device::DeviceService &service)
 	m_props.addBool("ViralState", &core::device::Device::getCurrentViralState);
 	m_props.addBool("AitDramEnabled", &core::device::Device::isAitDramEnabled);
 	m_props.addList("BootStatus", &core::device::Device::getBootStatus, &convertBootStatus);
+	m_props.addUint32("InjectedMediaErrors", &core::device::Device::getInjectedMediaErrors);
+	m_props.addUint32("InjectedNonMediaErrors", &core::device::Device::getInjectedNonMediaErrors);
 }
 
 framework::ResultBase *ShowDeviceCommand::execute(const framework::ParsedCommand &parsedCommand)

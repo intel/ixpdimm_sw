@@ -1448,6 +1448,8 @@ struct intel_smart_vendor_data
 	unsigned int unsafe_shutdowns;
 	unsigned char lss_details;
 	unsigned long long last_shutdown_time; /* seconds since 1 January 1970 */
+	unsigned int injected_media_errors;
+	unsigned int injected_non_media_errors;
 	unsigned char reserved_b[55];
 } __attribute__((packed));
 
@@ -1524,6 +1526,8 @@ struct pt_payload_smart_health {
 	unsigned char lss;
 
 	unsigned int vendor_specific_data_size;
+
+
 
 	struct intel_smart_vendor_data vendor_data;
 } __attribute__((packed));

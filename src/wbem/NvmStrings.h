@@ -170,6 +170,8 @@ static std::string VIRALSTATE_KEY = "ViralState";
 static std::string BOOTSTATUS_KEY = "BootStatus";
 static std::string INTERFACEFORMATCODE_KEY = "InterfaceFormatCode";
 static std::string AITDRAMENABLED_KEY = "AitDramEnabled";
+static std::string INJECTEDMEDIAERRORS_KEY = "InjectedMediaErrors";
+static std::string INJECTEDNONMEDIAERRORS_KEY = "InjectedNonMediaErrors";
 
 // RawMemory attribute keys
 static std::string BLOCKSIZE_KEY = "BlockSize";

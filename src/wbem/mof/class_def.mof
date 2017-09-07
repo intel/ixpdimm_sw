@@ -229,6 +229,8 @@ class <NVM_WBEM_PREFIX>NVDIMM : CIM_PhysicalMemory
 	Values { "Unknown", "Staged successfully", "Update loaded successfully", 
 			"Update failed to load, fell back to previous firmware" }]
 	uint16 FWUpdateStatus;
+	uint32 InjectedMediaErrors;
+	uint32 InjectedNonMediaErrors;
 
 	// methods
 	[implemented,

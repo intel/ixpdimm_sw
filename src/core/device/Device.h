@@ -171,6 +171,8 @@ public:
 	virtual bool isAitDramEnabled();
 	virtual std::vector<NVM_UINT16> getBootStatus();
 	virtual enum fw_update_status getFwUpdateStatus();
+	virtual NVM_UINT32 getInjectedMediaErrors();
+	virtual NVM_UINT32 getInjectedNonMediaErrors();
 
 private:
 	NvmLibrary &m_lib;

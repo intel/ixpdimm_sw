@@ -486,7 +486,10 @@ struct pt_output_smart_health_info
 	unsigned int unsafe_shutdowns;
 	unsigned char last_shutdown_status_details;
 	unsigned long long last_shutdown_time;
-	unsigned char reserved2[55];
+	unsigned char last_shutdown_status_extended_details[3];
+	unsigned int media_error_injections;
+	unsigned int non_media_error_injections;
+	unsigned char reserved2[44];
 
 } __attribute__((packed));
 struct pt_output_firmware_image_info

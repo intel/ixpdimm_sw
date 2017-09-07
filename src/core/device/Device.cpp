@@ -775,6 +775,18 @@ std::vector<NVM_UINT16> Device::getBootStatus()
 	return result;
 }
 
+NVM_UINT32 Device::getInjectedMediaErrors()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	return getDetails().status.injected_media_errors;
+}
+
+NVM_UINT32 Device::getInjectedNonMediaErrors()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	return getDetails().status.injected_non_media_errors;
+}
+
 const device_discovery &Device::getDiscovery()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);

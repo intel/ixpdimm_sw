@@ -1471,6 +1471,13 @@ std::string FwCommands::fwPayloadFieldsToString_SmartHealthInfo(const struct fwc
 	result << "FlushComplete: " << p_data->last_shutdown_status_details_flush_complete << "\n";
 
 	result << "LastShutdownTime: " << p_data->last_shutdown_time << "\n";
+	result << "LastShutdownStatusExtendedDetails: " << p_data->last_shutdown_status_extended_details << "\n";	result << "ViralInterruptReceived: " << p_data->last_shutdown_status_extended_details_viral_interrupt_received << "\n";
+	result << "SurpriseClockStopInterruptReceived: " << p_data->last_shutdown_status_extended_details_surprise_clock_stop_interrupt_received << "\n";
+	result << "WriteDataFlushComplete: " << p_data->last_shutdown_status_extended_details_write_data_flush_complete << "\n";
+	result << "S4PowerStateReceived: " << p_data->last_shutdown_status_extended_details_s4_power_state_received << "\n";
+
+	result << "MediaErrorInjections: " << p_data->media_error_injections << "\n";
+	result << "NonMediaErrorInjections: " << p_data->non_media_error_injections << "\n";
 	return result.str();
 }
 

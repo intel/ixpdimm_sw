@@ -684,6 +684,10 @@ int fill_device_status_from_smart_health(unsigned int device_handle,
 		{
 			p_status->ait_dram_enabled = dimm_smart.ait_dram_status;
 		}
+
+		p_status->injected_media_errors = dimm_smart.vendor_data.injected_media_errors;
+		p_status->injected_non_media_errors = dimm_smart.vendor_data.injected_non_media_errors;
+
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);

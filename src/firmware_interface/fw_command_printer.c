@@ -1033,6 +1033,20 @@ void fwcmd_smart_health_info_field_printer(const struct fwcmd_smart_health_info_
 	printf("FlushComplete: %d\n", p_value->last_shutdown_status_details_flush_complete);
 	print_tabs(indent_count + 1);
 	printf("LastShutdownTime: 0x%llx\n", p_value->last_shutdown_time);
+	print_tabs(indent_count + 1);
+	printf("LastShutdownStatusExtendedDetails: %.3s\n", p_value->last_shutdown_status_extended_details);
+	print_tabs(indent_count + 2);
+	printf("ViralInterruptReceived: %d\n", p_value->last_shutdown_status_extended_details_viral_interrupt_received);
+	print_tabs(indent_count + 2);
+	printf("SurpriseClockStopInterruptReceived: %d\n", p_value->last_shutdown_status_extended_details_surprise_clock_stop_interrupt_received);
+	print_tabs(indent_count + 2);
+	printf("WriteDataFlushComplete: %d\n", p_value->last_shutdown_status_extended_details_write_data_flush_complete);
+	print_tabs(indent_count + 2);
+	printf("S4PowerStateReceived: %d\n", p_value->last_shutdown_status_extended_details_s4_power_state_received);
+	print_tabs(indent_count + 1);
+	printf("MediaErrorInjections: 0x%x\n", p_value->media_error_injections);
+	print_tabs(indent_count + 1);
+	printf("NonMediaErrorInjections: 0x%x\n", p_value->non_media_error_injections);
 }
 
 void fwcmd_firmware_image_info_field_printer(const struct fwcmd_firmware_image_info_data *p_value, int indent_count)

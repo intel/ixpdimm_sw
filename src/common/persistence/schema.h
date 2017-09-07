@@ -3692,6 +3692,8 @@ struct db_dimm_smart
 	unsigned long long last_shutdown_time;
 	unsigned int controller_temperature;
 	unsigned int ait_dram_status;
+	unsigned int injected_media_errors;
+	unsigned int injected_non_media_errors;
 };
 /*!
  * Helper function to print a db_dimm_smart to the screen.

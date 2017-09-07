@@ -105,6 +105,8 @@ static const std::string SKUVIOLATION = "SKUViolation";
 static const std::string ARSSTATUS = "ARSStatus";
 static const std::string VIRALPOLICY = "ViralPolicy";
 static const std::string VIRALSTATE = "ViralState";
+static const std::string INJECTEDMEDIAERRORS = "InjectedMediaErrors";
+static const std::string INJECTEDNONMEDIAERRORS = "InjectedNonMediaErrors";
 
 class NVM_API ShowDeviceCommand : framework::CommandBase
 {
