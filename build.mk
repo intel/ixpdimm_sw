@@ -181,7 +181,7 @@ ifeq ($(UNAME), Linux)
 
 		CMAKE = cmake
 		CTEST = ctest
-
+		
 		#Linux Product Names
 		LINUX_PRODUCT_NAME = $(MARKETING_PRODUCT_NAME)
 		CIM_NAMESPACE = intelwbem
@@ -252,9 +252,16 @@ else
 	# MinGW_w64 toolchain
 	MINGW_DIR ?= $(MGMT_ENV_DIR)/mingw_w64
 	include $(MINGW_DIR)/mingw.mk
-
+	
+	export CC=$(MGMT_ENV_DIR)/mingw_w64/bin/gcc.exe
+    export CXX=$(MGMT_ENV_DIR)/mingw_w64/bin/g++.exe
+	ifdef CCOV
+		export CC=$(MGMT_ENV_DIR)/bullseye/bin/gcc.exe
+    	export CXX=$(MGMT_ENV_DIR)/bullseye/bin/g++.exe
+	endif
 	CMAKE = $(MGMT_ENV_DIR)/cmake-3.6.2-win64-x64/bin/cmake.exe
 	CTEST = $(MGMT_ENV_DIR)/cmake-3.6.2-win64-x64/bin/ctest.exe
+	
 	CMAKE_OPTIONS = -DCMAKE_C_COMPILER=$(CC)
 
 	# note: -mno-ms-bitfields is a workaround for a gcc (4.7.0)+ byte-packing bug

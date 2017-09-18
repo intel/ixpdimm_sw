@@ -90,12 +90,12 @@ TEST_F(WinScmTests, get_security_state)
 
 TEST_F(WinScmTests, get_platform_config_from_fw_interface)
 {
-	const fwcmd_platform_config_data_configuration_header_table_result &result =
-			fwcmd_alloc_platform_config_data_configuration_header_table(1, 1, 0, 0);
+	const fwcmd_platform_config_data_result &result =
+			fwcmd_alloc_platform_config_data(1, 1, 0, 0);
 
 	if(result.success)
 	{
-		fwcmd_platform_config_data_configuration_header_table_printer(result.p_data, 0);
+		fwcmd_platform_config_data_printer(result.p_data, 0);
 	}
 	else
 	{
@@ -105,13 +105,13 @@ TEST_F(WinScmTests, get_platform_config_from_fw_interface)
 
 void read_pcd()
 {
-	struct pt_input_platform_config_data_configuration_header_table input_payload;
+	struct pt_input_platform_config_data input_payload;
 	memset(&input_payload, 0, sizeof (input_payload));
 	input_payload.partition_id = 1;
 	input_payload.command_option = 0;
 	input_payload.offset = 0;
 
-	struct pt_output_platform_config_data_configuration_header_table large_output_payload;
+	struct pt_output_platform_config_data large_output_payload;
 	memset(&large_output_payload, 0, sizeof (large_output_payload));
 
 	unsigned char output_payload[128];
@@ -123,12 +123,12 @@ void read_pcd()
 	cmd.device_handle = 1;
 	cmd.opcode = 0x06;
 	cmd.sub_opcode = 0x01;
-	cmd.large_output_payload_size = sizeof (struct pt_output_platform_config_data_configuration_header_table);
+	cmd.large_output_payload_size = sizeof (struct pt_output_platform_config_data);
 	cmd.large_output_payload = &large_output_payload;
 	cmd.output_payload = &output_payload;
 	cmd.output_payload_size = 128;
 	cmd.input_payload = &input_payload;
-	cmd.input_payload_size = sizeof (struct pt_input_platform_config_data_configuration_header_table);
+	cmd.input_payload_size = sizeof (struct pt_input_platform_config_data);
 	int scm_status = win_scm2_passthrough(&cmd, &dsm_status);
 
 	if (scm_status != 0)
@@ -141,15 +141,15 @@ void read_pcd()
 	}
 	else
 	{
-		struct fwcmd_platform_config_data_configuration_header_table_data parsed;
-		int parse_status = fis_parse_platform_config_data_configuration_header_table(&large_output_payload, &parsed);
+		struct fwcmd_platform_config_data_data parsed;
+		int parse_status = fis_parse_platform_config_data(&large_output_payload, &parsed);
 		if (!FWCMD_PARSE_SUCCESS(parse_status))
 		{
 			FAIL() << "Parse failed: " << parse_status;
 		}
 		else
 		{
-			fwcmd_platform_config_data_configuration_header_table_printer(&parsed, 0);
+			fwcmd_platform_config_data_printer(&parsed, 0);
 		}
 	}
 }
@@ -190,7 +190,7 @@ TEST_F(WinScmTests, identify_dimm_passthrough)
 
 TEST_F(WinScmTests, large_payload)
 {
-	pt_input_platform_config_data_configuration_header_table pcd_input;
+	pt_input_platform_config_data pcd_input;
 	memset(&pcd_input, 0, sizeof (pcd_input));
 	pcd_input.partition_id = 1;
 

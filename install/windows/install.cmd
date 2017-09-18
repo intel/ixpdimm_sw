@@ -10,9 +10,9 @@ cd %BUILD_DIR%
 REM register the DLL
 regsvr32 /s %CIM_LIB_SONAME%.dll 
 REM compile and load the MOF file
-mofcomp -N:root\intelwbem intelwbem.mof
+mofcomp.exe -N:root\intelwbem intelwbem.mof
 REM registration MOF file
-mofcomp -N:root\intelwbem register.mof 
+mofcomp.exe -N:root\intelwbem register.mof 
 
 REM register with default namespace
 for %%a in (%NAMESPACES%) do (

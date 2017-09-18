@@ -41,7 +41,6 @@ endif()
 
 string(REPLACE "." ";" VERSION_LIST "${BUILDNUM}")
 
-#ToDo: windows needs list as "${Listname}"
 list(GET VERSION_LIST 0 VERSION_MAJOR)
 list(GET VERSION_LIST 1 VERSION_MINOR) 
 list(GET VERSION_LIST 2 VERSION_HOTFIX) 
@@ -65,12 +64,7 @@ if (LNX_BUILD)
         set(LIB_BUILD_VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.0)
 		set(SO_BUILD_VERSION ${VERSION_MAJOR})
 		set(LINUX_PRODUCT_NAME  ${MARKETING_PRODUCT_NAME})
-		if (DATADIR)
-			set(PRODUCT_DATADIR "${DATADIR}/${LINUX_PRODUCT_NAME}")
-		else ()
-			set(PRODUCT_DATADIR "/var/lib/${LINUX_PRODUCT_NAME}")
-		endif ()
-		
+		set(PRODUCT_DATADIR "/var/lib/${LINUX_PRODUCT_NAME}")
 		if (NOT RPMBUILD_DIR)
 			set(RPMBUILD_DIR ${ROOT}/output/rpmbuild)
 		endif ()
@@ -94,35 +88,19 @@ elseif (WIN_BUILD)
 		set(OBJECT_MODULE_DIR ${ROOT}/output/obj/${OS_TYPE}/${ADAPTER_TYPE}/${BUILD_TYPE})
 elseif (ESX_BUILD)
 		set(MGMT_ENV_DIR "/opt/mgmt_env")
+		set(ESX_SUPPORT_DIR "/opt/intel/bin")
+		set(ESX_DEVKIT_PREFIX "nvm-mgmt-6.6.0")	
+		set(DEVKIT_BUILD_NUM 9648458)
+		
+		set(GLIBC_DIR /opt/vmware/toolchain/cayman_esx_glibc-${GLIBC_HASH}/sysroot)
+		set(PRODUCT_DATADIR "/opt/intel/bin")
 endif()
 
-#ToDo: Compiler setting ned to go in main makefile
-# test coverage tool
-if (CCOV)
-	set(ENV{COVFILE} "${ROOT}/bste.cov")
-		
-	# Prevent conflicts with other copies of this project on the system
-	set(COVBUILDZONE ${OUTPUT_DIR})
-	set(BULLSEYE_DIR ${MGMT_ENV_DIR}/bullseye)
-	#include(${BULLSEYE_DIR}/bullseye.mk)
-	# force bullseye to update coverage metrics at termination of executables
-	# instead of during execution
-	set(COVAUTOSAVE 0)
-	# Copy the coverage file into the build dir when it's done
-	set(COVFILE_COPY ${OUTPUT_DIR}/bste.cov)
-	
-	# Blank coverage file for validation
-	set(COVFILE_VAL_COPY ${OUTPUT_DIR}/val.cov)
-	
-	find_program(BULLSEYE_COV_ENABLE NAMES cov01 PATHS ${BULLSEYE_DIR}/bin NO_DEFAULT_PATH)
-	set (RES 1)
-	execute_process(COMMAND ${BULLSEYE_COV_ENABLE} -1 RESULT_VARIABLE RES)
-	message(RES: ${RES})
-else ()
-	set(CMAKE_C_COMPILER gcc)
-	set(CMAKE_CXX_COMPILER g++)
-endif ()
-
+# ---- COVERAGE FILES ------------------------------------------------------------------------------
+# Copy the coverage file into the build dir when it's done
+set(COVFILE_COPY ${OUTPUT_DIR}/bste.cov)
+# Blank coverage file for validation
+set(COVFILE_VAL_COPY ${OUTPUT_DIR}/val.cov)
 
 file(GLOB INCLUDE_FILES 
 		   src/lib/nvm_management.h

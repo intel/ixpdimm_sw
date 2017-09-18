@@ -320,6 +320,7 @@ int get_key_file_path(COMMON_PATH key_file)
 	s_strcat(key_file, COMMON_PATH_LEN, PUBLIC_KEY_FILE);
 	if (!file_exists(key_file, COMMON_PATH_LEN))
 	{
+		printf("\n In key_file: %s\n", key_file);
 		// try to find the config file in the install directory
 		get_install_dir(key_file);
 		s_strcat(key_file, COMMON_PATH_LEN, PUBLIC_KEY_FILE);
@@ -349,6 +350,7 @@ int rsa_encrypt(const COMMON_PATH src_file, COMMON_PATH out_file)
 	s_strncat(temp_file, COMMON_PATH_LEN, CRYPTO_FILE_EXT, sizeof (CRYPTO_FILE_EXT));
 	if (s_strnlen(temp_file, COMMON_PATH_LEN) > COMMON_PATH_LEN)
 	{
+		printf("\n Line 352 src_file: %s temp_file: %s\n", src_file, temp_file);
 		rc = COMMON_ERR_BADFILE;
 	}
 	else
@@ -374,11 +376,13 @@ int rsa_encrypt(const COMMON_PATH src_file, COMMON_PATH out_file)
 			}
 			else if ((sfd = open(src_file, O_RDWR | OS_flags, 0)) == -1)
 			{
+				printf("\n Line 379 src_file: %s\n", src_file);
 				rc = COMMON_ERR_BADFILE;
 			}
 			else if ((efd = open(out_file, O_RDWR | O_TRUNC | O_CREAT | O_EXCL | OS_flags,
 					GENERIC_NEW_FILE_PERMISSION)) == -1)
 			{
+				printf("\n Line 384 out_file: %s\n", out_file);
 				rc = COMMON_ERR_BADFILE;
 			}
 			else
@@ -412,6 +416,7 @@ int rsa_encrypt(const COMMON_PATH src_file, COMMON_PATH out_file)
 					}
 					else if (write(efd, output, cnvt_bytes) != cnvt_bytes)
 					{
+						printf("\n Line 418 out_file: %s\n", out_file);
 						rc = COMMON_ERR_BADFILE;
 						break;
 					}

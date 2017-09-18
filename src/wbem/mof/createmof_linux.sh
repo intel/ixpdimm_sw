@@ -1,6 +1,7 @@
 #!/bin/bash
 ROOT=$1
 BUILD_DIR=$2
+BUILD_ESX=$3
 WBEM_PREFIX_INPUT=Intel_
 
 ## -----------------------------
@@ -45,14 +46,13 @@ cat $BUILD_DIR/intelwbem.mof | sed 's/SubType("interval"), //' > $BUILD_DIR/inte
 mv  $BUILD_DIR/intelwbem_new.mof $BUILD_DIR/intelwbem.mof
 
 #TODO: check for esx
-#ifdef BUILD_ESX
+echo "BUILD_ESX : $BUILD_ESX"
+if [ "$BUILD_ESX" = "ON" ]; then
 	# sfcb on ESX complains about qualifier redefinitions, so use only SFCB-friendly qualifiers
-#	cat mof/sfcb_qualifiers.mof > $(BUILD_DIR)/sfcb_intelwbem.mof
-#else
-	
-echo "" > $BUILD_DIR/sfcb_intelwbem.mof
-
-#endif
+ 	cat $ROOT/src/wbem/mof/sfcb_qualifiers.mof > $BUILD_DIR/sfcb_intelwbem.mof
+else
+	echo "" > $BUILD_DIR/sfcb_intelwbem.mof
+fi
 
 cat $BUILD_DIR/intelwbem.mof >> $BUILD_DIR/sfcb_intelwbem.mof
 	
