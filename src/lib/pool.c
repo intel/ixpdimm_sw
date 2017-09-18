@@ -770,6 +770,16 @@ void add_interleave_set_to_pool(const struct pool_data *p_pool_data,
 	COMMON_LOG_EXIT();
 }
 
+void zero_pool_free_capacity_if_locked(struct pool *p_pool)
+{
+	COMMON_LOG_ENTRY();
+	if (p_pool->health == POOL_HEALTH_LOCKED)
+	{
+		p_pool->free_capacity = 0;
+	}
+	COMMON_LOG_EXIT();
+}
+
 /*
  * Create pools from interleave sets
  */
@@ -813,6 +823,7 @@ int add_interleave_sets_to_pools(struct pool_data *p_pool_data,
 		{
 			add_interleave_set_to_pool(p_pool_data, &p_pools[pool_index],
 				&p_pool_data->iset_list[i]);
+			zero_pool_free_capacity_if_locked(&p_pools[pool_index]);
 		}
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -847,6 +858,7 @@ int add_dimms_volatile_capacity_to_pools(struct pool_data *p_pool_data,
 				(*p_pool_count)++;
 			}
 			add_dimm_to_pool(p_pool_data, dimm_idx, &p_pools[pool_index]);
+			zero_pool_free_capacity_if_locked(&p_pools[pool_index]);
 		}
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -876,6 +888,7 @@ int populate_pools(struct pool_data *p_pool_data,
 			rc = pool_count;
 		}
 	}
+
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }

@@ -1792,7 +1792,12 @@ int get_pool_supported_size_ranges(const struct pool *p_pool,
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
 
-	if (p_caps->nvm_features.app_direct_mode)
+	if (p_pool->free_capacity == 0)
+	{
+		p_range->largest_possible_app_direct_ns = 0;
+		p_range->smallest_possible_app_direct_ns = 0;
+	}
+	else if (p_caps->nvm_features.app_direct_mode)
 	{
 		get_largest_app_direct_namespace(
 				p_pool, &(p_range->largest_possible_app_direct_ns),
@@ -1856,7 +1861,7 @@ int nvm_get_available_persistent_size_range(const NVM_UID pool_uid,
 			struct pool *p_pool = (struct pool *)calloc(1, sizeof (struct pool));
 			if (!p_pool)
 			{
-				COMMON_LOG_ERROR("Failed to allocate memoroy for the pool\n");
+				COMMON_LOG_ERROR("Failed to allocate memory for the pool\n");
 				rc = NVM_ERR_NOMEMORY;
 			}
 			else
