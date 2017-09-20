@@ -110,5 +110,8 @@ file(GLOB INCLUDE_FILES
 		   Help.pdf
 		   REPORTING_ISSUES
 		   TROUBLESHOOTING)
+if (WIN_BUILD)
+	list(APPEND INCLUDE_FILES ${ROOT}/install/windows/rel-release/nvdimm-mgmt-windows-installer.bom)
+endif ()
 file(COPY ${INCLUDE_FILES}
 		  DESTINATION  ${OUTPUT_DIR})
