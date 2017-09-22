@@ -41,6 +41,7 @@
 #include <uid/uid.h>
 #include "device_utilities.h"
 #include "platform_capabilities_db.h"
+#include <system.h>
 
 int support_store_host(PersistentStore *p_store, int history_id);
 int support_store_sockets(PersistentStore *p_store, int history_id);
@@ -102,127 +103,135 @@ int nvm_save_state(const char *name, const NVM_SIZE name_len)
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
 
-	PersistentStore *p_store = NULL;
-	int max_no_support_snapshots;
-	if (get_bounded_config_value_int(SQL_KEY_SUPPORT_SNAPSHOT_MAX, &max_no_support_snapshots)
-			!= COMMON_SUCCESS)
-	{ // should never get here
-		COMMON_LOG_ERROR_F("Failed to retrieve key %s.", SQL_KEY_SUPPORT_SNAPSHOT_MAX);
-	}
-
-	int history_count = 0;
-	if (!max_no_support_snapshots)
+	if (check_caller_permissions() != NVM_SUCCESS)
 	{
-		COMMON_LOG_WARN("Gather support is disabled");
-		rc = NVM_ERR_NOTSUPPORTED;
-	}
-	else if ((p_store = get_lib_store()) == NULL)
-	{
-		rc = NVM_ERR_UNKNOWN;
+		rc = NVM_ERR_INVALIDPERMISSIONS;
 	}
 	else
 	{
-		if ((rc = table_row_count(p_store, "history", &history_count)) != DB_SUCCESS)
+		PersistentStore *p_store = NULL;
+		int max_no_support_snapshots = 0;
+		if (get_bounded_config_value_int(SQL_KEY_SUPPORT_SNAPSHOT_MAX, &max_no_support_snapshots)
+				!= COMMON_SUCCESS)
+		{ // should never get here
+			COMMON_LOG_ERROR_F("Failed to retrieve key %s.", SQL_KEY_SUPPORT_SNAPSHOT_MAX);
+		}
+
+		int history_count = 0;
+		if (!max_no_support_snapshots)
 		{
-			COMMON_LOG_ERROR("Failed to get number of entries in history table.");
+			COMMON_LOG_WARN("Gather support is disabled");
+			rc = NVM_ERR_NOTSUPPORTED;
+		}
+		else if ((p_store = get_lib_store()) == NULL)
+		{
+			COMMON_LOG_ERROR("Lib store == NULL");
+			rc = NVM_ERR_UNKNOWN;
 		}
 		else
 		{
-			// add a new row to the history table
-			int history_id;
-			if ((rc = db_add_history(p_store, name, &history_id)) != DB_SUCCESS)
+			if ((rc = table_row_count(p_store, "history", &history_count)) != DB_SUCCESS)
 			{
-				COMMON_LOG_ERROR("Failed creating a history table row.");
+				COMMON_LOG_ERROR("Failed to get number of entries in history table.");
 			}
-
-			if (history_count++ >= max_no_support_snapshots)
+			else
 			{
-				COMMON_LOG_INFO_F(
-				"Roll the history tables to user specified maximum number of support snapshots %d",
-				max_no_support_snapshots);
-				db_roll_history(p_store, max_no_support_snapshots);
-			}
-
-			KEEP_ERROR(rc, support_store_host(p_store, history_id));
-
-			// clear interleave tables from store file
-			db_delete_all_interleave_set_dimm_info_v1s(p_store);
-			db_delete_all_dimm_interleave_sets(p_store);
-
-			KEEP_ERROR(rc, support_store_sockets(p_store, history_id));
-			KEEP_ERROR(rc, support_store_platform_capabilities(p_store, history_id));
-			KEEP_ERROR(rc, support_store_namespaces(p_store, history_id));
-			KEEP_ERROR(rc, support_store_driver_capabilities(p_store, history_id));
-			KEEP_ERROR(rc, support_store_interleave_sets(p_store, history_id));
-
-			// iterate through each device (for all adapters)
-			int dev_count = get_topology_count();
-			if (dev_count > 0)
-			{
-				// get topology, aka discovery info
-				struct nvm_topology topol[dev_count];
-				int temprc = get_topology(dev_count, topol);
-				if (temprc < NVM_SUCCESS)
+				// add a new row to the history table
+				int history_id;
+				if ((rc = db_add_history(p_store, name, &history_id)) != DB_SUCCESS)
 				{
-					COMMON_LOG_ERROR("Failed getting topology information");
-					KEEP_ERROR(rc, temprc);
+					COMMON_LOG_ERROR("Failed creating a history table row.");
 				}
-				else
+
+				if (history_count++ >= max_no_support_snapshots)
 				{
-					dev_count = temprc;
-					for (int i = 0; i < dev_count; i++)
+					COMMON_LOG_INFO_F(
+					"Roll the history tables to user specified maximum number of support snapshots %d",
+					max_no_support_snapshots);
+					db_roll_history(p_store, max_no_support_snapshots);
+				}
+
+				KEEP_ERROR(rc, support_store_host(p_store, history_id));
+
+				// clear interleave tables from store file
+				db_delete_all_interleave_set_dimm_info_v1s(p_store);
+				db_delete_all_dimm_interleave_sets(p_store);
+
+				KEEP_ERROR(rc, support_store_sockets(p_store, history_id));
+				KEEP_ERROR(rc, support_store_platform_capabilities(p_store, history_id));
+				KEEP_ERROR(rc, support_store_namespaces(p_store, history_id));
+				KEEP_ERROR(rc, support_store_driver_capabilities(p_store, history_id));
+				KEEP_ERROR(rc, support_store_interleave_sets(p_store, history_id));
+
+				// iterate through each device (for all adapters)
+				int dev_count = get_topology_count();
+				if (dev_count > 0)
+				{
+					// get topology, aka discovery info
+					struct nvm_topology topol[dev_count];
+					int temprc = get_topology(dev_count, topol);
+					if (temprc < NVM_SUCCESS)
 					{
-						KEEP_ERROR(rc, support_store_dimm_topology(p_store,
-								history_id, topol[i]));
-						KEEP_ERROR(rc, support_store_identify_dimm(p_store,
-								history_id,
-								topol[i].device_handle));
-						KEEP_ERROR(rc, support_store_device_characteristics(p_store,
-								history_id,
-								topol[i].device_handle));
-						KEEP_ERROR(rc, support_store_smart(p_store,
+						COMMON_LOG_ERROR("Failed getting topology information");
+						KEEP_ERROR(rc, temprc);
+					}
+					else
+					{
+						dev_count = temprc;
+						for (int i = 0; i < dev_count; i++)
+						{
+							KEEP_ERROR(rc, support_store_dimm_topology(p_store,
+									history_id, topol[i]));
+							KEEP_ERROR(rc, support_store_identify_dimm(p_store,
+									history_id,
+									topol[i].device_handle));
+							KEEP_ERROR(rc, support_store_device_characteristics(p_store,
+									history_id,
+									topol[i].device_handle));
+							KEEP_ERROR(rc, support_store_smart(p_store,
+									history_id, topol[i].device_handle));
+							KEEP_ERROR(rc, support_store_memory(p_store,
+									history_id, topol[i].device_handle));
+							KEEP_ERROR(rc, support_store_fw_image(p_store,
+									history_id, topol[i].device_handle));
+							KEEP_ERROR(rc,
+								support_store_dimm_details(p_store,
 								history_id, topol[i].device_handle));
-						KEEP_ERROR(rc, support_store_memory(p_store,
+							KEEP_ERROR(rc,
+								support_store_dimm_partition_info(p_store,
 								history_id, topol[i].device_handle));
-						KEEP_ERROR(rc, support_store_fw_image(p_store,
+							KEEP_ERROR(rc,
+								support_store_dimm_security_state(p_store,
 								history_id, topol[i].device_handle));
-						KEEP_ERROR(rc,
-							support_store_dimm_details(p_store,
-							history_id, topol[i].device_handle));
-						KEEP_ERROR(rc,
-							support_store_dimm_partition_info(p_store,
-							history_id, topol[i].device_handle));
-						KEEP_ERROR(rc,
-							support_store_dimm_security_state(p_store,
-							history_id, topol[i].device_handle));
-						KEEP_ERROR(rc,
-							support_store_fw_error_logs(p_store,
-							history_id, topol[i].device_handle));
-						KEEP_ERROR(rc,
-							support_store_fw_debug_logs(p_store,
-							history_id, topol[i].device_handle));
-						KEEP_ERROR(rc,
-							support_store_die_sparing(p_store,
-							history_id, topol[i].device_handle));
-						KEEP_ERROR(rc,
-							support_store_power_management(p_store,
-							history_id, topol[i].device_handle));
-						KEEP_ERROR(rc,
-							support_store_alarm_thresholds(p_store,
-							history_id, topol[i].device_handle));
-						KEEP_ERROR(rc,
-							support_store_optional_config_data(p_store,
-							history_id, topol[i].device_handle));
-						KEEP_ERROR(rc,
-							support_store_platform_config_data(p_store,
-							history_id, topol[i].device_handle));
-						KEEP_ERROR(rc,
-							support_store_dimm_long_operation_status(p_store,
-							history_id, topol[i].device_handle));
-					} // for each device
-				} // get topology success
-			} // if dev count > 0
-		} // added history entry ok
+							KEEP_ERROR(rc,
+								support_store_fw_error_logs(p_store,
+								history_id, topol[i].device_handle));
+							KEEP_ERROR(rc,
+								support_store_fw_debug_logs(p_store,
+								history_id, topol[i].device_handle));
+							KEEP_ERROR(rc,
+								support_store_die_sparing(p_store,
+								history_id, topol[i].device_handle));
+							KEEP_ERROR(rc,
+								support_store_power_management(p_store,
+								history_id, topol[i].device_handle));
+							KEEP_ERROR(rc,
+								support_store_alarm_thresholds(p_store,
+								history_id, topol[i].device_handle));
+							KEEP_ERROR(rc,
+								support_store_optional_config_data(p_store,
+								history_id, topol[i].device_handle));
+							KEEP_ERROR(rc,
+								support_store_platform_config_data(p_store,
+								history_id, topol[i].device_handle));
+							KEEP_ERROR(rc,
+								support_store_dimm_long_operation_status(p_store,
+								history_id, topol[i].device_handle));
+						} // for each device
+					} // get topology success
+				} // if dev count > 0
+			} // added history entry ok
+		}
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -238,12 +247,13 @@ int nvm_save_state(const char *name, const NVM_SIZE name_len)
  */
 int support_store_host(PersistentStore *p_store, int history_id)
 {
-	int rc = NVM_SUCCESS;
 	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
 
 	// get the host server information
+	int tmp_rc = NVM_SUCCESS;
 	struct host host_server;
-	if ((rc = nvm_get_host(&host_server)) == NVM_SUCCESS)
+	if ((tmp_rc = nvm_get_host(&host_server)) == NVM_SUCCESS)
 	{
 		// convert host struct to db_host struct
 		struct db_host db_host;
@@ -255,10 +265,11 @@ int support_store_host(PersistentStore *p_store, int history_id)
 		if (db_save_host_state(p_store, history_id, &db_host) != DB_SUCCESS)
 		{
 			COMMON_LOG_ERROR("Failed storing host %s history information");
+			rc = NVM_ERR_UNKNOWN;
 		}
 
 		struct sw_inventory inventory;
-		if ((rc = nvm_get_sw_inventory(&inventory)) == NVM_SUCCESS)
+		if ((tmp_rc = nvm_get_sw_inventory(&inventory)) == NVM_SUCCESS)
 		{
 			struct db_sw_inventory db_inventory;
 			s_strncpy(db_inventory.name, SW_INVENTORY_NAME_LEN, host_server.name,
@@ -271,8 +282,17 @@ int support_store_host(PersistentStore *p_store, int history_id)
 			if (db_save_sw_inventory_state(p_store, history_id, &db_inventory) != DB_SUCCESS)
 			{
 				COMMON_LOG_ERROR("Failed storing software inventory history information");
+				rc = NVM_ERR_UNKNOWN;
 			}
 		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Failed to get SW inventory, rc=%d", tmp_rc);
+		}
+	}
+	else
+	{
+		COMMON_LOG_ERROR_F("Failed to get host, rc=%d", tmp_rc);
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -290,7 +310,6 @@ int support_store_sockets(PersistentStore *p_store, int history_id)
 		if (socket_count != nvm_get_sockets(sockets, socket_count))
 		{
 			COMMON_LOG_ERROR("Failed getting socket information");
-			rc = NVM_ERR_UNKNOWN;
 		}
 		else
 		{
@@ -320,6 +339,10 @@ int support_store_sockets(PersistentStore *p_store, int history_id)
 			}
 		}
 	}
+	else if (socket_count < 0)
+	{
+		COMMON_LOG_ERROR_F("Getting socket count failed, rc=%d", socket_count);
+	}
 	return rc;
 }
 
@@ -332,14 +355,17 @@ int support_store_platform_capabilities(PersistentStore *p_store, int history_id
 	if (!p_pcat)
 	{
 		COMMON_LOG_ERROR("Unable to allocate memory for the PCAT structure");
-		rc = NVM_ERR_NOMEMORY;
 	}
 	else
 	{
-		rc = get_platform_capabilities(p_pcat);
-		if (rc == NVM_SUCCESS)
+		int tmp_rc = get_platform_capabilities(p_pcat);
+		if (tmp_rc == NVM_SUCCESS)
 		{
 			rc = update_pcat_in_db(p_store, p_pcat, history_id);
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("get PCAT failed, rc=%d", tmp_rc);
 		}
 		free(p_pcat);
 	}
@@ -360,7 +386,6 @@ int support_store_namespaces(PersistentStore *p_store, int history_id)
 		{
 			COMMON_LOG_ERROR_F(
 				"Failed to retrieve namespace list, error %d", ns_count);
-			rc = ns_count;
 		}
 		else if (ns_count > 0) // at least one namespace
 		{
@@ -382,7 +407,6 @@ int support_store_namespaces(PersistentStore *p_store, int history_id)
 					uid_copy(namespaces[i].namespace_uid, uid_str);
 					COMMON_LOG_ERROR_F(
 						"Failed to retrieve namespace details for namespace %s", uid_str);
-					KEEP_ERROR(rc, tmp_rc);
 				}
 				else
 				{
@@ -401,15 +425,18 @@ int support_store_namespaces(PersistentStore *p_store, int history_id)
 				{
 					COMMON_LOG_ERROR_F("Failed storing namespace %s history information",
 							db_namespace.friendly_name);
-					KEEP_ERROR(rc, NVM_ERR_UNKNOWN);
+					rc = NVM_ERR_UNKNOWN;
 				}
 			}
 		}
 	}
+	else if (ns_count < 0)
+	{
+		COMMON_LOG_ERROR_F("Get namespace count failed, rc=%d", ns_count);
+	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
-
 
 int support_store_dimm_topology(PersistentStore *p_store, int history_id,
 		struct nvm_topology topol)
@@ -449,7 +476,8 @@ int support_store_dimm_topology(PersistentStore *p_store, int history_id,
 
 	if (DB_SUCCESS != db_save_dimm_topology_state(p_store, history_id, &db_dimm_topo))
 	{
-		COMMON_LOG_ERROR("Failed storing topology history information");
+		COMMON_LOG_ERROR_F("Failed storing topology history information for handle %u",
+				topol.device_handle.handle);
 		rc = NVM_ERR_UNKNOWN;
 	}
 
@@ -467,8 +495,8 @@ int support_store_identify_dimm(PersistentStore *p_store, int history_id,
 	int temprc = fw_get_identify_dimm(device_handle.handle, &id_dimm);
 	if (NVM_SUCCESS != temprc)
 	{
-		COMMON_LOG_ERROR("Failed getting identify dimm information");
-		rc = temprc;
+		COMMON_LOG_ERROR_F("Failed getting identify dimm information for handle %u",
+				device_handle.handle);
 	}
 	else
 	{
@@ -502,7 +530,8 @@ int support_store_identify_dimm(PersistentStore *p_store, int history_id,
 
 		if (DB_SUCCESS != db_save_identify_dimm_state(p_store, history_id, &db_idimm))
 		{
-			COMMON_LOG_ERROR("Failed storing identify dimm history information");
+			COMMON_LOG_ERROR_F("Failed storing identify dimm history information for "
+					"handle %u", device_handle.handle);
 			rc = NVM_ERR_UNKNOWN;
 		}
 	}
@@ -522,7 +551,6 @@ int support_store_device_characteristics(PersistentStore *p_store, int history_i
 	if (!p_dev_characteristics)
 	{
 		COMMON_LOG_ERROR("Unable to allocate memory for device characteristics payload");
-		rc = NVM_ERR_NOMEMORY;
 	}
 	else
 	{
@@ -530,8 +558,8 @@ int support_store_device_characteristics(PersistentStore *p_store, int history_i
 			device_handle.handle, p_dev_characteristics);
 		if (NVM_SUCCESS != temprc)
 		{
-			COMMON_LOG_ERROR("Failed getting device characteristics information");
-			rc = temprc;
+			COMMON_LOG_ERROR_F("Failed getting device characteristics information for "
+					"handle %u", device_handle.handle);
 		}
 		else
 		{
@@ -552,7 +580,8 @@ int support_store_device_characteristics(PersistentStore *p_store, int history_i
 				if (DB_SUCCESS != db_save_device_characteristics_state(p_store,
 					history_id, p_db_device_characteristics))
 				{
-					COMMON_LOG_ERROR("Failed storing device characteristics");
+					COMMON_LOG_ERROR_F("Failed storing device characteristics for "
+							"handle %u", device_handle.handle);
 					rc = NVM_ERR_UNKNOWN;
 				}
 			}
@@ -560,7 +589,6 @@ int support_store_device_characteristics(PersistentStore *p_store, int history_i
 			{
 				COMMON_LOG_ERROR(
 					"Unable to allocate memory for device characteristic database info");
-				rc = NVM_ERR_NOMEMORY;
 			}
 			free(p_db_device_characteristics);
 		}
@@ -581,8 +609,8 @@ int support_store_smart(PersistentStore *p_store, int history_id,
 	int temprc = fw_get_smart_health(device_handle.handle, &dimm_smart);
 	if (NVM_SUCCESS != temprc)
 	{
-		COMMON_LOG_ERROR("Failed getting dimm smart information");
-		rc = temprc;
+		COMMON_LOG_ERROR_F("Failed getting dimm smart information for handle %u",
+				device_handle.handle);
 	}
 	else
 	{
@@ -627,7 +655,6 @@ int support_store_memory(PersistentStore *p_store, int history_id,
 		struct pt_payload_memory_info_page0 page;
 		temp_rc = fw_get_memory_info_page(device_handle.handle, 0,
 			&page, sizeof (page));
-		KEEP_ERROR(rc, temp_rc);
 		if (temp_rc == NVM_SUCCESS)
 		{
 			struct db_dimm_memory_info_page0 db_page = { 0 };
@@ -639,7 +666,17 @@ int support_store_memory(PersistentStore *p_store, int history_id,
 			NVM_8_BYTE_ARRAY_TO_64_BIT_VALUE(page.block_read_reqs, db_page.block_read_reqs);
 			NVM_8_BYTE_ARRAY_TO_64_BIT_VALUE(page.block_write_reqs, db_page.block_write_reqs);
 
-			db_save_dimm_memory_info_page0_state(p_store, history_id, &db_page);
+			if (db_save_dimm_memory_info_page0_state(p_store, history_id, &db_page) != DB_SUCCESS)
+			{
+				COMMON_LOG_ERROR_F("Failed storing memory page 0 information for handle %u",
+						device_handle.handle);
+				rc = NVM_ERR_UNKNOWN;
+			}
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Failed to get Memory Info Page 0 for handle %u",
+				device_handle.handle);
 		}
 	}
 
@@ -648,7 +685,6 @@ int support_store_memory(PersistentStore *p_store, int history_id,
 		struct pt_payload_memory_info_page1 page;
 		temp_rc = fw_get_memory_info_page(device_handle.handle, 1,
 			&page, sizeof (page));
-		KEEP_ERROR(rc, temp_rc);
 		if (temp_rc == NVM_SUCCESS)
 		{
 			struct db_dimm_memory_info_page1 db_page = { 0 };
@@ -662,7 +698,17 @@ int support_store_memory(PersistentStore *p_store, int history_id,
 			NVM_8_BYTE_ARRAY_TO_64_BIT_VALUE(page.total_block_write_reqs,
 				db_page.total_block_write_reqs);
 
-			db_save_dimm_memory_info_page1_state(p_store, history_id, &db_page);
+			if (db_save_dimm_memory_info_page1_state(p_store, history_id, &db_page) != DB_SUCCESS)
+			{
+				COMMON_LOG_ERROR_F("Failed storing memory page 1 information for handle %u",
+						device_handle.handle);
+				rc = NVM_ERR_UNKNOWN;
+			}
+		}
+		else
+		{
+			COMMON_LOG_ERROR_F("Failed to get Memory Info Page 1 for handle %u",
+				device_handle.handle);
 		}
 	}
 
@@ -681,8 +727,8 @@ int support_store_fw_image(PersistentStore *p_store, int history_id,
 	int temprc = fw_get_fw_image_info(device_handle.handle, &fw_image_info);
 	if (NVM_SUCCESS != temprc)
 	{
-		COMMON_LOG_ERROR("Failed getting firmware image information");
-		rc = temprc;
+		COMMON_LOG_ERROR_F("Failed getting firmware image information for "
+				"handle %u", device_handle.handle);
 	}
 	else
 	{
@@ -725,8 +771,8 @@ int support_store_dimm_details(PersistentStore *p_store, int history_id,
 	int temprc = get_dimm_details(device_handle, &dimm_details);
 	if (NVM_SUCCESS != temprc)
 	{
-		COMMON_LOG_ERROR("Failed getting dimm details information");
-		rc = temprc;
+		COMMON_LOG_ERROR_F("Failed getting dimm details information for "
+				"handle %u", device_handle.handle);
 	}
 	else
 	{
@@ -776,7 +822,7 @@ int support_store_dimm_partition_info(PersistentStore *p_store, int history_id,
 	partition_cmd.sub_opcode = SUBOP_DIMM_PARTITION_INFO;
 	partition_cmd.output_payload_size = sizeof (pi);
 	partition_cmd.output_payload = &pi;
-	if ((rc = ioctl_passthrough_cmd(&partition_cmd)) != NVM_SUCCESS)
+	if (ioctl_passthrough_cmd(&partition_cmd) != NVM_SUCCESS)
 	{
 		COMMON_LOG_ERROR_F("Failed getting dimm %u partition information",
 				device_handle.handle);
@@ -823,10 +869,9 @@ int support_store_dimm_security_state(PersistentStore *p_store, int history_id,
 	int temprc = ioctl_passthrough_cmd(&cmd);
 	if (temprc != NVM_SUCCESS)
 	{
-		COMMON_LOG_ERROR_F("Failed to get the security state for dimm %d", device_handle.handle);
-		rc = temprc;
+		COMMON_LOG_ERROR_F("Failed to get the security state for dimm %d",
+				device_handle.handle);
 	}
-	// add it to the database
 	else
 	{
 		struct db_dimm_security_info db_security;
@@ -854,11 +899,12 @@ int get_low_priority_media_logs(PersistentStore *p_store, int history_id,
 	// get the total number of low priority media log entries
 	unsigned int error_count = fw_get_fw_error_log_count(device_handle.handle,
 			DEV_FW_ERR_LOG_LOW, DEV_FW_ERR_LOG_MEDIA);
-	if (error_count <= 0)
+	if (error_count < 0)
 	{
-		rc = error_count;
+		COMMON_LOG_ERROR_F("Couldn't get low priority media log count for handle %u",
+				device_handle.handle);
 	}
-	else
+	else if (error_count > 0)
 	{
 		// get low priority media error log entries
 		NVM_UINT8 *large_buffer = calloc(1, error_count * sizeof (struct pt_fw_media_log_entry));
@@ -872,7 +918,6 @@ int get_low_priority_media_logs(PersistentStore *p_store, int history_id,
 				COMMON_LOG_ERROR_F(
 				"Failed to get low priority firmware media error logs for dimm %d",
 				device_handle.handle);
-				KEEP_ERROR(rc, temprc);
 			}
 			else
 			{
@@ -890,7 +935,13 @@ int get_low_priority_media_logs(PersistentStore *p_store, int history_id,
 					media_low_log.error_flags = p_low_media_logs[i].error_flags;
 					media_low_log.error_type = p_low_media_logs[i].error_type;
 					media_low_log.range = p_low_media_logs[i].range;
-					db_save_fw_media_low_log_entry_state(p_store, history_id, &media_low_log);
+					if (db_save_fw_media_low_log_entry_state(p_store, history_id, &media_low_log)
+							!= DB_SUCCESS)
+					{
+						COMMON_LOG_ERROR_F("Could not save low priority media logs for handle %u",
+								device_handle.handle);
+						rc = NVM_ERR_UNKNOWN;
+					}
 				}
 			}
 			free(large_buffer);
@@ -911,9 +962,10 @@ int get_high_priority_media_logs(PersistentStore *p_store, int history_id,
 	// get the total number of high priority media log entries
 	unsigned int error_count = fw_get_fw_error_log_count(device_handle.handle,
 			DEV_FW_ERR_LOG_HIGH, DEV_FW_ERR_LOG_MEDIA);
-	if (error_count <= 0)
+	if (error_count < 0)
 	{
-		rc = error_count;
+		COMMON_LOG_ERROR_F("Couldn't get high priority media log count for handle %u",
+				device_handle.handle);
 	}
 	else
 	{
@@ -929,7 +981,6 @@ int get_high_priority_media_logs(PersistentStore *p_store, int history_id,
 				COMMON_LOG_ERROR_F(
 				"Failed to get high priority firmware media error logs for dimm %d",
 				device_handle.handle);
-				KEEP_ERROR(rc, temprc);
 			}
 			else
 			{
@@ -947,7 +998,13 @@ int get_high_priority_media_logs(PersistentStore *p_store, int history_id,
 					media_high_log.error_flags = p_high_media_logs[i].error_flags;
 					media_high_log.error_type = p_high_media_logs[i].error_type;
 					media_high_log.range = p_high_media_logs[i].range;
-					db_save_fw_media_high_log_entry_state(p_store, history_id, &media_high_log);
+					if (db_save_fw_media_high_log_entry_state(p_store, history_id, &media_high_log)
+							!= DB_SUCCESS)
+					{
+						COMMON_LOG_ERROR_F("Could not save high priority media logs for handle %u",
+								device_handle.handle);
+						rc = NVM_ERR_UNKNOWN;
+					}
 				}
 			}
 			free(large_buffer);
@@ -968,9 +1025,10 @@ int get_low_priority_thermal_logs(PersistentStore *p_store, int history_id,
 	// get the total number of low priority thermal log entries
 	unsigned int error_count = fw_get_fw_error_log_count(device_handle.handle,
 			DEV_FW_ERR_LOG_LOW, DEV_FW_ERR_LOG_THERMAL);
-	if (error_count <= 0)
+	if (error_count < 0)
 	{
-		rc = error_count;
+		COMMON_LOG_ERROR_F("Couldn't get low priority therm log count for handle %u",
+				device_handle.handle);
 	}
 	else
 	{
@@ -986,7 +1044,6 @@ int get_low_priority_thermal_logs(PersistentStore *p_store, int history_id,
 				COMMON_LOG_ERROR_F(
 				"Failed to get low priority firmware thermal error logs for dimm %d",
 				device_handle.handle);
-				KEEP_ERROR(rc, temprc);
 			}
 			else
 			{
@@ -1000,7 +1057,13 @@ int get_low_priority_thermal_logs(PersistentStore *p_store, int history_id,
 					thermal_low_log.host_reported_temp_data =
 							p_thermal_logs[i].host_reported_temp_data;
 					thermal_low_log.system_timestamp = p_thermal_logs[i].system_timestamp;
-					db_save_fw_thermal_low_log_entry_state(p_store, history_id, &thermal_low_log);
+					if (db_save_fw_thermal_low_log_entry_state(p_store, history_id, &thermal_low_log)
+							!= DB_SUCCESS)
+					{
+						COMMON_LOG_ERROR_F("Could not save low priority therm logs for handle %u",
+								device_handle.handle);
+						rc = NVM_ERR_UNKNOWN;
+					}
 				}
 			}
 			free(large_buffer);
@@ -1021,9 +1084,10 @@ int get_high_priority_thermal_logs(PersistentStore *p_store, int history_id,
 	// get the total number of high priority thermal log entries
 	unsigned int error_count = fw_get_fw_error_log_count(device_handle.handle,
 		DEV_FW_ERR_LOG_HIGH, DEV_FW_ERR_LOG_THERMAL);
-	if (error_count <= 0)
+	if (error_count < 0)
 	{
-		rc = error_count;
+		COMMON_LOG_ERROR_F("Couldn't get high priority therm log count for handle %u",
+				device_handle.handle);
 	}
 	else
 	{
@@ -1039,7 +1103,6 @@ int get_high_priority_thermal_logs(PersistentStore *p_store, int history_id,
 				COMMON_LOG_ERROR_F(
 				"Failed to get high priority firmware thermal error logs for dimm %d",
 				device_handle.handle);
-				KEEP_ERROR(rc, temprc);
 			}
 			else
 			{
@@ -1053,7 +1116,13 @@ int get_high_priority_thermal_logs(PersistentStore *p_store, int history_id,
 					thermal_high_log.host_reported_temp_data =
 							p_thermal_logs[i].host_reported_temp_data;
 					thermal_high_log.system_timestamp = p_thermal_logs[i].system_timestamp;
-					db_save_fw_thermal_high_log_entry_state(p_store, history_id, &thermal_high_log);
+					if (db_save_fw_thermal_high_log_entry_state(p_store, history_id, &thermal_high_log)
+							!= DB_SUCCESS)
+					{
+						COMMON_LOG_ERROR_F("Could not save high priority therm logs for handle %u",
+								device_handle.handle);
+						rc = NVM_ERR_UNKNOWN;
+					}
 				}
 			}
 			free(large_buffer);
@@ -1081,7 +1150,6 @@ int get_high_priority_thermal_log_info(PersistentStore *p_store, int history_id,
 		COMMON_LOG_ERROR_F(
 		"Failed to get high priority firmware thermal error log info for dimm %d",
 		device_handle.handle);
-		KEEP_ERROR(rc, temprc);
 	}
 	else
 	{
@@ -1093,7 +1161,13 @@ int get_high_priority_thermal_log_info(PersistentStore *p_store, int history_id,
 		db_log_info.oldest_sequence_number = log_info_data.oldest_sequence_number;
 		db_log_info.oldest_log_entry_timestamp = log_info_data.oldest_log_entry_timestamp;
 		db_log_info.newest_log_entry_timestamp = log_info_data.newest_log_entry_timestamp;
-		db_save_fw_thermal_high_log_info_state(p_store, history_id, &db_log_info);
+		if (db_save_fw_thermal_high_log_info_state(p_store, history_id, &db_log_info)
+				!= DB_SUCCESS)
+		{
+			COMMON_LOG_ERROR_F("Could not save high priority therm log info for handle %u",
+					device_handle.handle);
+			rc = NVM_ERR_UNKNOWN;
+		}
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
@@ -1115,7 +1189,6 @@ int get_low_priority_thermal_log_info(PersistentStore *p_store, int history_id,
 		COMMON_LOG_ERROR_F(
 		"Failed to get high priority firmware thermal error log info for dimm %d",
 		device_handle.handle);
-		KEEP_ERROR(rc, temprc);
 	}
 	else
 	{
@@ -1127,7 +1200,13 @@ int get_low_priority_thermal_log_info(PersistentStore *p_store, int history_id,
 		db_log_info.oldest_sequence_number = log_info_data.oldest_sequence_number;
 		db_log_info.oldest_log_entry_timestamp = log_info_data.oldest_log_entry_timestamp;
 		db_log_info.newest_log_entry_timestamp = log_info_data.newest_log_entry_timestamp;
-		db_save_fw_thermal_low_log_info_state(p_store, history_id, &db_log_info);
+		if (db_save_fw_thermal_low_log_info_state(p_store, history_id, &db_log_info)
+				!= DB_SUCCESS)
+		{
+			COMMON_LOG_ERROR_F("Could not save low priority therm log info for handle %u",
+					device_handle.handle);
+			rc = NVM_ERR_UNKNOWN;
+		}
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
@@ -1149,7 +1228,6 @@ int get_high_priority_media_log_info(PersistentStore *p_store, int history_id,
 		COMMON_LOG_ERROR_F(
 		"Failed to get high priority firmware thermal error log info for dimm %d",
 		device_handle.handle);
-		KEEP_ERROR(rc, temprc);
 	}
 	else
 	{
@@ -1161,7 +1239,13 @@ int get_high_priority_media_log_info(PersistentStore *p_store, int history_id,
 		db_log_info.oldest_sequence_number = log_info_data.oldest_sequence_number;
 		db_log_info.oldest_log_entry_timestamp = log_info_data.oldest_log_entry_timestamp;
 		db_log_info.newest_log_entry_timestamp = log_info_data.newest_log_entry_timestamp;
-		db_save_fw_media_high_log_info_state(p_store, history_id, &db_log_info);
+		if (db_save_fw_media_high_log_info_state(p_store, history_id, &db_log_info)
+				!= DB_SUCCESS)
+		{
+			COMMON_LOG_ERROR_F("Could not save high priority media log info for handle %u",
+					device_handle.handle);
+			rc = NVM_ERR_UNKNOWN;
+		}
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
@@ -1183,7 +1267,6 @@ int get_low_priority_media_log_info(PersistentStore *p_store, int history_id,
 		COMMON_LOG_ERROR_F(
 		"Failed to get high priority firmware thermal error log info for dimm %d",
 		device_handle.handle);
-		KEEP_ERROR(rc, temprc);
 	}
 	else
 	{
@@ -1195,7 +1278,13 @@ int get_low_priority_media_log_info(PersistentStore *p_store, int history_id,
 		db_log_info.oldest_sequence_number = log_info_data.oldest_sequence_number;
 		db_log_info.oldest_log_entry_timestamp = log_info_data.oldest_log_entry_timestamp;
 		db_log_info.newest_log_entry_timestamp = log_info_data.newest_log_entry_timestamp;
-		db_save_fw_media_low_log_info_state(p_store, history_id, &db_log_info);
+		if (db_save_fw_media_low_log_info_state(p_store, history_id, &db_log_info)
+				!= DB_SUCCESS)
+		{
+			COMMON_LOG_ERROR_F("Could not save low priority media log info for handle %u",
+					device_handle.handle);
+			rc = NVM_ERR_UNKNOWN;
+		}
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
@@ -1252,8 +1341,7 @@ int support_store_fw_debug_logs(PersistentStore *p_store, int history_id,
 	cmd.output_payload_size = sizeof (output);
 	cmd.large_output_payload = NULL;
 	cmd.large_output_payload_size = 0;
-	rc = ioctl_passthrough_cmd(&cmd);
-	if (rc != NVM_SUCCESS)
+	if (ioctl_passthrough_cmd(&cmd) != NVM_SUCCESS)
 	{
 		COMMON_LOG_ERROR_F("Failed to get log size for dimm %d", device_handle.handle);
 	}
@@ -1277,8 +1365,7 @@ int support_store_fw_debug_logs(PersistentStore *p_store, int history_id,
 			cmd.large_output_payload_size = log_count * DEV_FW_LOG_PAGE_SIZE;
 			cmd.output_payload = NULL;
 			cmd.output_payload_size = 0;
-			rc = ioctl_passthrough_cmd(&cmd);
-			if (rc != NVM_SUCCESS)
+			if (ioctl_passthrough_cmd(&cmd) != NVM_SUCCESS)
 			{
 				COMMON_LOG_ERROR_F("Failed to get log for dimm %d", device_handle.handle);
 			}
@@ -1291,8 +1378,13 @@ int support_store_fw_debug_logs(PersistentStore *p_store, int history_id,
 					dimm_fw_debug_log.device_handle = device_handle.handle;
 					memmove(dimm_fw_debug_log.fw_log, fw_log_data[log_index],
 							DIMM_FW_DEBUG_LOG_FW_LOG_LEN);
-					db_save_dimm_fw_debug_log_state(p_store,
-							history_id, &dimm_fw_debug_log);
+					if (db_save_dimm_fw_debug_log_state(p_store,
+							history_id, &dimm_fw_debug_log) != DB_SUCCESS)
+					{
+						COMMON_LOG_ERROR_F("Couldn't save FW debug log for "
+								"handle %u", device_handle.handle);
+						rc = NVM_ERR_UNKNOWN;
+					}
 				}
 			}
 		}
@@ -1308,7 +1400,7 @@ int support_store_driver_capabilities(PersistentStore *p_store, int history_id)
 	int rc = NVM_SUCCESS;
 	struct nvm_driver_capabilities nvm_caps;
 	memset(&nvm_caps, 0, sizeof (nvm_caps));
-	if (NVM_SUCCESS != (rc = get_driver_capabilities(&nvm_caps)))
+	if (NVM_SUCCESS != get_driver_capabilities(&nvm_caps))
 	{
 		COMMON_LOG_ERROR("Failed to get driver capabilities information");
 	}
@@ -1359,9 +1451,11 @@ int support_store_driver_capabilities(PersistentStore *p_store, int history_id)
 		db_features.app_direct_mode = nvm_caps.features.app_direct_mode;
 		db_features.storage_mode = nvm_caps.features.storage_mode;
 
-		db_save_driver_features_state(p_store, history_id, &db_features);
-
-		rc =  NVM_SUCCESS;
+		if (db_save_driver_features_state(p_store, history_id, &db_features) != DB_SUCCESS)
+		{
+			COMMON_LOG_ERROR("Couldn't save driver features");
+			rc = NVM_ERR_UNKNOWN;
+		}
 	}
 
 	return rc;
@@ -1380,11 +1474,10 @@ int support_store_power_management(PersistentStore *p_store, int history_id,
 	struct pt_payload_power_mgmt_policy power_management;
 	memset(&power_management, 0, sizeof (power_management));
 
-	rc = get_fw_power_mgmt_policy(device_handle, &power_management);
-	if (NVM_SUCCESS != rc)
+	if (NVM_SUCCESS != get_fw_power_mgmt_policy(device_handle, &power_management))
 	{
-		COMMON_LOG_ERROR_F("Unable to get the device die sparing policy \
-				for handle: [%d]", device_handle.handle);
+		COMMON_LOG_ERROR_F("Unable to get the device die sparing policy "
+				"for handle: [%d]", device_handle.handle);
 	}
 	else
 	{
@@ -1394,7 +1487,13 @@ int support_store_power_management(PersistentStore *p_store, int history_id,
 		db_power_management.peak_power_budget = power_management.peak_power_budget;
 		db_power_management.avg_power_budget = power_management.average_power_budget;
 
-		db_save_dimm_power_management_state(p_store, history_id, &db_power_management);
+		if (db_save_dimm_power_management_state(p_store, history_id, &db_power_management)
+				!= DB_SUCCESS)
+		{
+			COMMON_LOG_ERROR_F("Could not save power management for handle %u",
+					device_handle.handle);
+			rc = NVM_ERR_UNKNOWN;
+		}
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -1414,11 +1513,10 @@ int support_store_alarm_thresholds(PersistentStore *p_store, int history_id,
 	struct pt_payload_alarm_thresholds alarm_thresholds;
 	memset(&alarm_thresholds, 0, sizeof (alarm_thresholds));
 
-	rc = fw_get_alarm_thresholds(device_handle.handle, &alarm_thresholds);
-	if (NVM_SUCCESS != rc)
+	if (NVM_SUCCESS != fw_get_alarm_thresholds(device_handle.handle, &alarm_thresholds))
 	{
-		COMMON_LOG_ERROR_F("Unable to get the device alarm thresholds \
-				for handle: [%d]", device_handle.handle);
+		COMMON_LOG_ERROR_F("Unable to get the device alarm thresholds "
+				"for handle: [%d]", device_handle.handle);
 	}
 	else
 	{
@@ -1428,7 +1526,13 @@ int support_store_alarm_thresholds(PersistentStore *p_store, int history_id,
 		db_alarm_thresholds.media_temperature = alarm_thresholds.media_temperature;
 		db_alarm_thresholds.controller_temperature =
 			alarm_thresholds.controller_temperature;
-		db_save_dimm_alarm_thresholds_state(p_store, history_id, &db_alarm_thresholds);
+		if (db_save_dimm_alarm_thresholds_state(p_store, history_id, &db_alarm_thresholds)
+				!= DB_SUCCESS)
+		{
+			COMMON_LOG_ERROR_F("Could not save alarm thresholds for handle %u",
+					device_handle.handle);
+			rc = NVM_ERR_UNKNOWN;
+		}
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -1448,11 +1552,10 @@ int support_store_die_sparing(PersistentStore *p_store, int history_id,
 	struct pt_get_die_spare_policy spare_policy;
 	memset(&spare_policy, 0, sizeof (spare_policy));
 
-	rc = get_fw_die_spare_policy(device_handle, &spare_policy);
-	if (NVM_SUCCESS != rc)
+	if (NVM_SUCCESS != get_fw_die_spare_policy(device_handle, &spare_policy))
 	{
-		COMMON_LOG_ERROR_F("Unable to get the device die sparing policy \
-				for handle: [%d]", device_handle.handle);
+		COMMON_LOG_ERROR_F("Unable to get the device die sparing policy "
+				"for handle: [%d]", device_handle.handle);
 	}
 	else
 	{
@@ -1461,7 +1564,13 @@ int support_store_die_sparing(PersistentStore *p_store, int history_id,
 		db_die_sparing.enable = spare_policy.enable;
 		db_die_sparing.supported = spare_policy.supported;
 
-		db_save_dimm_die_sparing_state(p_store, history_id, &db_die_sparing);
+		if (db_save_dimm_die_sparing_state(p_store, history_id, &db_die_sparing)
+				!= DB_SUCCESS)
+		{
+			COMMON_LOG_ERROR_F("Could not save die spare policy for handle %u",
+					device_handle.handle);
+			rc = NVM_ERR_UNKNOWN;
+		}
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -1476,12 +1585,10 @@ int support_store_optional_config_data(PersistentStore *p_store, int history_id,
 	COMMON_LOG_ENTRY();
 
 	struct pt_payload_get_config_data_policy config_data;
-	rc = fw_get_config_data_policy(
-			device_handle.handle, &config_data);
-	if (rc != NVM_SUCCESS)
+	if (fw_get_config_data_policy(device_handle.handle, &config_data) != NVM_SUCCESS)
 	{
-		COMMON_LOG_ERROR_F("Unable to get the optional configuration data policy \
-				for handle: [%d]", device_handle.handle);
+		COMMON_LOG_ERROR_F("Unable to get the optional configuration data policy "
+				"for handle: [%d]", device_handle.handle);
 	}
 	else
 	{
@@ -1493,7 +1600,13 @@ int support_store_optional_config_data(PersistentStore *p_store, int history_id,
 		db_optional_config_data.viral_policy_enable = config_data.viral_policy_enable;
 		db_optional_config_data.viral_status = config_data.viral_status;
 
-		db_save_dimm_optional_config_data_state(p_store, history_id, &db_optional_config_data);
+		if (db_save_dimm_optional_config_data_state(p_store, history_id, &db_optional_config_data)
+				!= DB_SUCCESS)
+		{
+			COMMON_LOG_ERROR_F("Could not save die spare policy for handle %u",
+					device_handle.handle);
+			rc = NVM_ERR_UNKNOWN;
+		}
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -1518,7 +1631,13 @@ int support_store_partition_change_table(PersistentStore *p_store,
 	db_partition.partition_size = p_partition->partition_size;
 	db_partition.status = p_partition->status;
 
-	rc = db_save_dimm_partition_change_state(p_store, history_id, &db_partition);
+	if (db_save_dimm_partition_change_state(p_store, history_id, &db_partition)
+			!= DB_SUCCESS)
+	{
+		COMMON_LOG_ERROR_F("Could not save partition change ext table for handle %u",
+				device_handle.handle);
+		rc = NVM_ERR_UNKNOWN;
+	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
@@ -1546,7 +1665,12 @@ int support_store_platform_config_interleave_set(PersistentStore *p_store,
 	db_set.mirror_enable = p_interleave_set->mirror_enable;
 	db_set.status = p_interleave_set->status;
 
-	rc = db_save_dimm_interleave_set_state(p_store, history_id, &db_set);
+	if (db_save_dimm_interleave_set_state(p_store, history_id, &db_set) != DB_SUCCESS)
+	{
+		COMMON_LOG_ERROR_F("Could not save interleave ext table for handle %u",
+				device_handle.handle);
+		rc = NVM_ERR_UNKNOWN;
+	}
 
 	// add the interleave table
 	int offset = sizeof (struct interleave_info_extension_table);
@@ -1558,7 +1682,6 @@ int support_store_platform_config_interleave_set(PersistentStore *p_store,
 		{
 			COMMON_LOG_ERROR_F("Interleave set table length %d invalid",
 					p_interleave_set->header.length);
-			rc = NVM_ERR_BADDEVICECONFIG;
 			break;
 		}
 
@@ -1582,7 +1705,14 @@ int support_store_platform_config_interleave_set(PersistentStore *p_store,
 			db_dimm.offset = p_dimm_info->offset;
 			db_dimm.size = p_dimm_info->size;
 
-			rc = db_save_interleave_set_dimm_info_v1_state(p_store, history_id, &db_dimm);
+			if (db_save_interleave_set_dimm_info_v1_state(p_store, history_id, &db_dimm)
+					!= DB_SUCCESS)
+			{
+				COMMON_LOG_ERROR_F("Could not save PCD interleave dimm info ext table v1 "
+						"for handle %u",
+						device_handle.handle);
+				rc = NVM_ERR_UNKNOWN;
+			}
 		}
 		else
 		{
@@ -1597,7 +1727,14 @@ int support_store_platform_config_interleave_set(PersistentStore *p_store,
 			db_dimm.offset = p_dimm_info->offset;
 			db_dimm.size = p_dimm_info->size;
 
-			rc = db_save_interleave_set_dimm_info_v2_state(p_store, history_id, &db_dimm);
+			if (db_save_interleave_set_dimm_info_v2_state(p_store, history_id, &db_dimm)
+					!= DB_SUCCESS)
+			{
+				COMMON_LOG_ERROR_F("Could not save PCD interleave dimm info ext table v2 "
+						"for handle %u",
+						device_handle.handle);
+				rc = NVM_ERR_UNKNOWN;
+			}
 		}
 		offset += sizeof (struct dimm_info_extension_table);
 	}
@@ -1624,7 +1761,6 @@ int support_store_extension_tables_in_db(PersistentStore *p_store,
 		if ((p_header->length + offset) > size)
 		{
 			COMMON_LOG_ERROR_F("Extension table length %d invalid", p_header->length);
-			rc = NVM_ERR_BADDEVICECONFIG;
 			break;
 		}
 
@@ -1632,7 +1768,7 @@ int support_store_extension_tables_in_db(PersistentStore *p_store,
 		if (p_header->type == PARTITION_CHANGE_TABLE)
 		{
 			// store it in the db
-			support_store_partition_change_table(p_store,
+			rc = support_store_partition_change_table(p_store,
 					history_id,
 					device_handle,
 					table_type,
@@ -1663,12 +1799,12 @@ int support_store_platform_config_data(PersistentStore *p_store, int history_id,
 	COMMON_LOG_ENTRY();
 
 	struct platform_config_data *p_config = NULL;
-	rc = get_dimm_platform_config(device_handle, &p_config);
+	int tmp_rc = get_dimm_platform_config(device_handle, &p_config);
 
 	// make sure we have good data
-	if (rc != NVM_SUCCESS)
+	if (tmp_rc != NVM_SUCCESS)
 	{
-		COMMON_LOG_ERROR_F("get_dimm_platform_config failed with return code = %d", rc);
+		COMMON_LOG_ERROR_F("get_dimm_platform_config failed with return code = %d", tmp_rc);
 	}
 	else
 	{
@@ -1693,7 +1829,12 @@ int support_store_platform_config_data(PersistentStore *p_store, int history_id,
 		db_config.config_input_offset = p_config->config_input_offset;
 		db_config.config_output_size = p_config->config_output_size;
 		db_config.config_output_offset = p_config->config_output_offset;
-		KEEP_ERROR(rc, db_save_dimm_platform_config_state(p_store, history_id, &db_config));
+		if (db_save_dimm_platform_config_state(p_store, history_id, &db_config) != DB_SUCCESS)
+		{
+			COMMON_LOG_ERROR_F("Could not save PCD top level table for handle %u",
+					device_handle.handle);
+			rc = NVM_ERR_UNKNOWN;
+		}
 
 		// write config input
 		if (p_config->config_input_size)
@@ -1720,8 +1861,14 @@ int support_store_platform_config_data(PersistentStore *p_store, int history_id,
 						p_config_input->header.creator_revision;
 				db_config_input.sequence_number = p_config_input->sequence_number;
 
-				KEEP_ERROR(rc, db_save_dimm_config_input_state(p_store,
-						history_id, &db_config_input));
+				if(db_save_dimm_config_input_state(p_store,
+						history_id, &db_config_input) != DB_SUCCESS)
+				{
+					COMMON_LOG_ERROR_F("Could not save PCD config input table "
+							"for handle %u",
+							device_handle.handle);
+					rc = NVM_ERR_UNKNOWN;
+				}
 
 				// write the extension tables
 				if (p_config_input->header.length > sizeof (struct config_input_table))
@@ -1761,8 +1908,14 @@ int support_store_platform_config_data(PersistentStore *p_store, int history_id,
 				db_config_output.sequence_number = p_config_output->sequence_number;
 				db_config_output.validation_status = p_config_output->validation_status;
 
-				KEEP_ERROR(rc, db_save_dimm_config_output_state(p_store,
-						history_id, &db_config_output));
+				if (db_save_dimm_config_output_state(p_store,
+						history_id, &db_config_output) != DB_SUCCESS)
+				{
+					COMMON_LOG_ERROR_F("Could not save PCD config output table "
+							"for handle %u",
+							device_handle.handle);
+					rc = NVM_ERR_UNKNOWN;
+				}
 
 				// write the extension tables
 				if (p_config_output->header.length > sizeof (struct config_output_table))
@@ -1774,7 +1927,6 @@ int support_store_platform_config_data(PersistentStore *p_store, int history_id,
 						p_config_output->header.revision,
 					(struct extension_table_header *)(NVM_UINT8 *)&p_config_output->p_ext_tables,
 						p_config_output->header.length - sizeof (struct config_output_table)));
-
 				}
 
 			}
@@ -1809,8 +1961,14 @@ int support_store_platform_config_data(PersistentStore *p_store, int history_id,
 				db_current_config.mapped_app_direct_capacity =
 						p_current_config->mapped_app_direct_capacity;
 
-				KEEP_ERROR(rc, db_save_dimm_current_config_state(p_store,
-						history_id, &db_current_config));
+				if (db_save_dimm_current_config_state(p_store,
+						history_id, &db_current_config) != DB_SUCCESS)
+				{
+					COMMON_LOG_ERROR_F("Could not save PCD current config table "
+							"for handle %u",
+							device_handle.handle);
+					rc = NVM_ERR_UNKNOWN;
+				}
 
 				// write the extension tables
 				if (p_current_config->header.length > sizeof (struct current_config_table))
@@ -1843,12 +2001,10 @@ int support_store_dimm_long_operation_status(PersistentStore *p_store, int histo
 	if (!p_payload)
 	{
 		COMMON_LOG_ERROR("Unable to allocate memory for long operation payload");
-		rc = NVM_ERR_NOMEMORY;
 	}
 	else
 	{
-		rc = fw_get_status_for_long_op(device_handle, p_payload);
-		if (rc == NVM_SUCCESS)
+		if (fw_get_status_for_long_op(device_handle, p_payload) == NVM_SUCCESS)
 		{
 			struct pt_return_address_range_scrub *p_ars_command_return_data =
 				(struct pt_return_address_range_scrub *)(p_payload->command_specific_data);
@@ -1864,8 +2020,14 @@ int support_store_dimm_long_operation_status(PersistentStore *p_store, int histo
 				p_db_lop_status->percent_complete = p_payload->percent_complete;
 				p_db_lop_status->etc = p_payload->etc;
 				p_db_lop_status->status_code = p_payload->status_code;
-				KEEP_ERROR(rc, db_save_dimm_long_op_status_state(
-					p_store, history_id, p_db_lop_status));
+				if (db_save_dimm_long_op_status_state(
+					p_store, history_id, p_db_lop_status) != DB_SUCCESS)
+				{
+					COMMON_LOG_ERROR_F("Could not save long operation status "
+							"for handle %u",
+							device_handle.handle);
+					rc = NVM_ERR_UNKNOWN;
+				}
 
 				p_db_ars_info->device_handle = device_handle.handle;
 				p_db_ars_info->num_errors = p_ars_command_return_data->num_errors;
@@ -1873,13 +2035,18 @@ int support_store_dimm_long_operation_status(PersistentStore *p_store, int histo
 				memmove(p_db_ars_info->dpa_error_address,
 					p_ars_command_return_data->dpa_error_address,
 					14*(sizeof (unsigned long long)));
-				KEEP_ERROR(rc, db_save_dimm_ars_command_specific_data_state(
-					p_store, history_id, p_db_ars_info));
+				if (db_save_dimm_ars_command_specific_data_state(
+					p_store, history_id, p_db_ars_info) != DB_SUCCESS)
+				{
+					COMMON_LOG_ERROR_F("Could not save ARS long operation data "
+							"for handle %u",
+							device_handle.handle);
+					rc = NVM_ERR_UNKNOWN;
+				}
 			}
 			else
 			{
 				COMMON_LOG_ERROR("Unable to allocate memory for long operation database info");
-				rc = NVM_ERR_NOMEMORY;
 			}
 			free(p_db_ars_info);
 			free(p_db_lop_status);
@@ -1895,12 +2062,13 @@ int support_store_interleave_sets(PersistentStore *p_store, int history_id)
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
 
-	if ((rc = get_interleave_set_count()) > 0)
+	int tmprc = 0;
+	if ((tmprc = get_interleave_set_count()) > 0)
 	{
-		int interleave_count = rc;
+		int interleave_count = tmprc;
 		struct nvm_interleave_set interleaves[interleave_count];
 		memset(interleaves, 0, sizeof (interleaves));
-		if ((rc = get_interleave_sets(interleave_count, interleaves)) > 0)
+		if ((tmprc = get_interleave_sets(interleave_count, interleaves)) > 0)
 		{
 			for (int i = 0; i < interleave_count; i++)
 			{
@@ -1925,10 +2093,22 @@ int support_store_interleave_sets(PersistentStore *p_store, int history_id)
 					db_interleave.dimm_sizes[j] = interleaves[i].dimm_sizes[j];
 				}
 
-				KEEP_ERROR(rc, db_save_interleave_set_state(p_store, history_id,
-						&db_interleave));
+				if (db_save_interleave_set_state(p_store, history_id,
+						&db_interleave) != DB_SUCCESS)
+				{
+					COMMON_LOG_ERROR("Could not save interleave sets");
+					rc = NVM_ERR_UNKNOWN;
+				}
 			}
 		}
+		else if (tmprc < 0)
+		{
+			COMMON_LOG_ERROR_F("Failed to get interleave sets, rc=%d", tmprc);
+		}
+	}
+	else if (tmprc < 0)
+	{
+		COMMON_LOG_ERROR_F("Failed to get interleave set count, rc=%d", tmprc);
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
