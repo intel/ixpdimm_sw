@@ -37,6 +37,7 @@
 #include <mem_config/PoolViewFactory.h>
 #include <uid/uid.h>
 #include <string/s_str.h>
+#include <exception/NvmExceptionLibError.h>
 
 cli::nvmcli::WbemToCli::WbemToCli()
 {
@@ -121,10 +122,26 @@ cli::framework::ErrorResult *cli::nvmcli::WbemToCli::checkPoolUid(
     try
     {
     	std::vector<struct pool> allPools = poolViewFactory.getPoolList(true);
-    	// validity of the pool target is verified in the API layer
         if (!poolTarget.empty())
         {
-        	poolUid = poolTarget;
+            bool found = false;
+            for (size_t i = 0; i < allPools.size() && !found; i++)
+            {
+                if (framework::stringsIEqual(allPools[i].pool_uid, poolTarget))
+                {
+                    found = true;
+                }
+            }
+            if(found)
+            {
+				poolUid = poolTarget;
+            }
+            else
+            {
+                wbem::exception::NvmExceptionLibError wbemException =
+                    wbem::exception::NvmExceptionLibError(NVM_ERR_BADPOOL);
+                pResult = cli::nvmcli::NvmExceptionToResult(wbemException);
+            }
         }
         // no pool target was specified.
         else
