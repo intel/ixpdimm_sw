@@ -157,6 +157,7 @@ namespace monitor
 				const std::vector<sensor> &sensors);
 
 		void processHealthChangesForDevice(const deviceInfo &device, struct db_dimm_state &dimmState);
+		void acknowledgePastHealthChangesForDevice(const deviceInfo &device);
 		void createDeviceHealthEvent(const NVM_UID uid, const device_health oldHealth, const device_health newHealth);
 		void processSanitizeChangesForDevice(const deviceInfo &device, struct db_dimm_state &dimmState);
 		void createSanitizeOperationEvent(const NVM_UID uid, const device_sanitize_status oldSanitizeStatus,

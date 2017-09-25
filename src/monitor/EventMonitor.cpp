@@ -639,7 +639,7 @@ void monitor::EventMonitor::acknowledgeEventCodeForDevice(const int eventCode, c
 	if (uid)
 	{
 		filter.filter_mask |= NVM_FILTER_ON_UID;
-		memmove(filter.uid, uid, NVM_MAX_UID_LEN);
+		uid_copy(uid, filter.uid);
 	}
 
 	acknowledge_events(&filter);
@@ -1078,11 +1078,22 @@ void monitor::EventMonitor::processHealthChangesForDevice(const deviceInfo& devi
 
 	device_health oldHealth = (device_health)dimmState.health_state;
 	device_health newHealth = device.status.health;
+
 	if (newHealth != oldHealth)
 	{
+		acknowledgePastHealthChangesForDevice(device);
+
 		createDeviceHealthEvent(device.discovery.uid, oldHealth, newHealth);
 		dimmState.health_state = newHealth;
 	}
+}
+
+void monitor::EventMonitor::acknowledgePastHealthChangesForDevice(const deviceInfo& device)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	acknowledgeEventCodeForDevice(EVENT_CODE_HEALTH_HEALTH_STATE_CHANGED,
+			device.discovery.uid);
 }
 
 void monitor::EventMonitor::createDeviceHealthEvent(const NVM_UID uid,
