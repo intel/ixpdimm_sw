@@ -9,7 +9,7 @@ License: BSD
 Group: Applications/System
 URL: https://01.org/ixpdimm-sw
 Source: https://github.com/01org/ixpdimm_sw/archive/v%{version}.tar.gz#/%{name}-%{version}.tar.gz
-Requires: ndctl-libs >= 54
+Requires: ndctl-libs >= 57.1
 Requires: libinvm-i18n >= 1.0.0.1018
 Requires: libinvm-cli >= 1.0.0.1098
 Requires: libinvm-cim >= 1.0.0.1043

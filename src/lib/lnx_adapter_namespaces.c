@@ -545,6 +545,133 @@ int get_unconfigured_namespace(struct ndctl_namespace **unconfigured_namespace,
 	return rc;
 }
 
+static int enable_labels_with_version(struct ndctl_region *region,
+	struct ndctl_dimm *dimm, enum ndctl_namespace_version v)
+{
+	COMMON_LOG_ENTRY();
+	int success = 1;
+	struct ndctl_cmd *cmd_read = NULL;
+	ndctl_dimm_foreach_in_region(region, dimm)
+	{
+
+		ndctl_cmd_unref(cmd_read);
+		cmd_read = ndctl_dimm_read_labels(dimm);
+		if (!cmd_read)
+			continue;
+
+		int num_labels = ndctl_dimm_init_labels(dimm, v);
+		if (num_labels < 0)
+			continue;
+
+		ndctl_dimm_disable(dimm);
+		ndctl_dimm_enable(dimm);
+
+		/*
+		 * Note, we increment avail by 1 to account
+		 * for the one free label that the kernel always
+		 * maintains for ongoing updates.
+		 */
+		unsigned long avail = ndctl_dimm_get_available_labels(dimm) + 1;
+		if (num_labels != avail && v == NDCTL_NS_VERSION_1_2)
+		{
+			success = 0;
+			break;
+		}
+	}
+	ndctl_cmd_unref(cmd_read);
+
+	COMMON_LOG_EXIT_RETURN("success: %d", success);
+	return success;
+}
+
+static void enable_labels(struct ndctl_region *region)
+{
+	COMMON_LOG_ENTRY();
+	int mappings = ndctl_region_get_mappings(region);
+	struct ndctl_dimm *dimm;
+	int count;
+
+	if (!mappings)
+	{
+		COMMON_LOG_INFO("No dimms to enable labels on");
+	}
+	else
+	{
+		count = 0;
+		ndctl_dimm_foreach_in_region(region, dimm)
+		{
+			if (!ndctl_dimm_is_cmd_supported(dimm, ND_CMD_GET_CONFIG_SIZE))
+				break;
+			if (!ndctl_dimm_is_cmd_supported(dimm, ND_CMD_GET_CONFIG_DATA))
+				break;
+			if (!ndctl_dimm_is_cmd_supported(dimm, ND_CMD_SET_CONFIG_DATA))
+				break;
+			count++;
+		}
+
+		if (count != mappings)
+		{
+			COMMON_LOG_WARN("Not all dimms support labelling");
+		}
+		else
+		{
+			ndctl_region_disable_invalidate(region);
+			count = 0;
+
+			// verify each DIMM is not active
+			ndctl_dimm_foreach_in_region(region, dimm)
+			{
+				if (ndctl_dimm_is_active(dimm))
+				{
+					count++;
+					break;
+				}
+			}
+			if (count)
+			{
+				COMMON_LOG_WARN("some of the dimms belong to multiple regions??");
+			}
+			else
+			{
+				/*
+				 * If the kernel appears to not understand v1.2 labels, try v1.1.
+				 */
+				if (!enable_labels_with_version(region, dimm, NDCTL_NS_VERSION_1_2))
+				{
+					enable_labels_with_version(region, dimm, NDCTL_NS_VERSION_1_1);
+				}
+			}
+
+			ndctl_region_enable(region);
+		}
+	}
+	COMMON_LOG_EXIT();
+}
+
+void fix_label_less_for_spa_index(struct ndctl_ctx *ctx, unsigned int spa_index)
+{
+	COMMON_LOG_ENTRY();
+	struct ndctl_bus *bus;
+
+	ndctl_bus_foreach(ctx, bus)
+	{
+		struct ndctl_region *region;
+		ndctl_region_foreach(bus, region)
+		{
+			if (ndctl_region_is_enabled(region) &&
+				ndctl_region_get_nstype(region) == ND_DEVICE_NAMESPACE_IO &&
+				ndctl_region_get_range_index(region) == spa_index)
+			{
+				COMMON_LOG_INFO_F("Enabling labels for spa index: %d", spa_index);
+				enable_labels(region);
+				break;
+			}
+		}
+	}
+
+	COMMON_LOG_EXIT();
+}
+
 int get_ndctl_app_direct_region_by_range_index(struct ndctl_ctx *ctx,
 		struct ndctl_region **target_region, unsigned int spa_index)
 {
@@ -552,68 +679,36 @@ int get_ndctl_app_direct_region_by_range_index(struct ndctl_ctx *ctx,
 	int rc = NVM_ERR_DRIVERFAILED;
 
 	*target_region = NULL;
-
 	struct ndctl_bus *bus;
+
 	ndctl_bus_foreach(ctx, bus)
 	{
 		struct ndctl_region *region;
 		ndctl_region_foreach(bus, region)
 		{
 			int nstype = ndctl_region_get_nstype(region);
-			if (ndctl_region_is_enabled(region) &&
-				(nstype == ND_DEVICE_NAMESPACE_PMEM))
+			if (ndctl_region_is_enabled(region))
 			{
-				if (spa_index == ndctl_region_get_range_index(region))
+				if (nstype == ND_DEVICE_NAMESPACE_PMEM)
 				{
-					*target_region = region;
-					rc = NVM_SUCCESS;
-					break;
-				}
-			}
-		}
-	}
-
-	COMMON_LOG_EXIT_RETURN_I(rc);
-	return rc;
-}
-
-int get_ndctl_storage_region_by_handle(struct ndctl_ctx *ctx,
-		struct ndctl_region **target_region, unsigned int handle)
-{
-	COMMON_LOG_ENTRY();
-	int rc = NVM_ERR_DRIVERFAILED;
-
-	*target_region = NULL;
-
-	struct ndctl_bus *bus;
-	ndctl_bus_foreach(ctx, bus)
-	{
-		struct ndctl_region *region;
-		ndctl_region_foreach(bus, region)
-		{
-			int nstype = ndctl_region_get_nstype(region);
-			if (ndctl_region_is_enabled(region) &&
-				(nstype == ND_DEVICE_NAMESPACE_BLK))
-			{
-				struct ndctl_dimm *dimm = ndctl_region_get_first_dimm(region);
-				if (dimm)
-				{
-					if (handle == ndctl_dimm_get_handle(dimm))
+					if (spa_index == ndctl_region_get_range_index(region))
 					{
 						*target_region = region;
 						rc = NVM_SUCCESS;
 						break;
 					}
 				}
-				else
+				else if (nstype == ND_DEVICE_NAMESPACE_IO)
 				{
-					rc = NVM_ERR_DRIVERFAILED;
-					break;
+					COMMON_LOG_ERROR_F("Region %s appears to be \"label-less\"",
+						ndctl_region_get_devname(region));
+					rc = NVM_ERR_NOTSUPPORTED; 	// not a driver failure, but not
+												// supported with label-less namespaces
 				}
-
 			}
 		}
 	}
+
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
@@ -766,6 +861,8 @@ int create_namespace(
 	}
 	else if ((rc = ndctl_new(&ctx)) >= 0)
 	{
+		fix_label_less_for_spa_index(ctx, p_settings->namespace_creation_id.interleave_setid);
+
 		struct ndctl_region *region;
 		if (p_settings->type == NAMESPACE_TYPE_APP_DIRECT)
 		{
