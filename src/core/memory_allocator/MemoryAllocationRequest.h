@@ -79,12 +79,8 @@ class NVM_API MemoryAllocationRequest
 		virtual std::vector<Dimm> getNonReservedDimms() const;
 
 		virtual NVM_UINT64 getAllMappableNonReservedCapacity() const;
-		virtual NVM_UINT64 getAllMappableDimmCapacityInGiB() const;
+		virtual NVM_UINT64 getTotalAlignedDimmCapacityInGiB() const;
 		virtual NVM_UINT64 getRequestedMappedCapacityInBytes() const;
-
-		// TODO: Update this function and move it to utils when nvm_get_socket
-		// is updated to get mapped memory limit (US20271)
-		virtual NVM_UINT64 getSocketLimit() const;
 
 	private:
 		NVM_UINT64 m_memoryCapacityGiB;

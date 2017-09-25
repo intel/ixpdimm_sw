@@ -191,3 +191,13 @@ core::memory_allocator::Dimm core::memory_allocator::MemoryAllocationUtil::devic
 
 	return dimm;
 }
+
+NVM_UINT64 core::memory_allocator::MemoryAllocationUtil::getSocketLimit(const
+int socketId)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	NVM_UINT64 socketLimit = m_nvmLib.getSocket(socketId).mapped_memory_limit;
+
+	return B_TO_GiB(socketLimit);
+}

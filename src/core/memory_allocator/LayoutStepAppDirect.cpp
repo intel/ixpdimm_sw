@@ -161,6 +161,13 @@ void core::memory_allocator::LayoutStepAppDirect::layoutInterleavedExtentOnSocke
 		std::vector<Dimm> interleaveDimms = getLargestSetOfInterleavableDimms(
 				remainingDimms);
 		NVM_UINT64 remainingCapacity = getRemainingBytesFromDimms(interleaveDimms, layout);
+
+		// no remaining capacity left on any dimms
+		if (remainingCapacity == 0)
+		{
+			throw core::NvmExceptionBadRequestSize();
+		}
+
 		std::vector<Dimm> includedDimms;
 		NVM_UINT64 bytesPerDimm = getLargestPerDimmSymmetricalBytes(interleaveDimms,
 				layout.goals, remainingCapacity, includedDimms);

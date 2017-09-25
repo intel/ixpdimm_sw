@@ -35,8 +35,8 @@
 #include <core/memory_allocator/LayoutStepMemory.h>
 #include <math.h>
 
-core::memory_allocator::LayoutStepLimitTotalMappedMemory::LayoutStepLimitTotalMappedMemory() :
-	m_limit(0), m_totalMappedSize(0), m_mappedCapacityExceedsLimit(0)
+core::memory_allocator::LayoutStepLimitTotalMappedMemory::LayoutStepLimitTotalMappedMemory(MemoryAllocationUtil &util) :
+	 m_limit(0), m_totalMappedSize(0), m_mappedCapacityExceedsLimit(0), m_memAllocUtil(util)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
@@ -73,6 +73,8 @@ void core::memory_allocator::LayoutStepLimitTotalMappedMemory::execute(
 		shrinkLayoutCapacities(request, layout);
 		layout.warnings.push_back(LAYOUT_WARNING_SKU_MAPPED_MEMORY_LIMITED);
 	}
+
+	layout.remainingCapacity = B_TO_GiB(getRemainingBytesFromRequestedDimms(request, layout));
 }
 
 void core::memory_allocator::LayoutStepLimitTotalMappedMemory::shrinkLayoutGoals(
@@ -145,12 +147,11 @@ void core::memory_allocator::LayoutStepLimitTotalMappedMemory::shrinkMemory(
 }
 
 
-// TODO: Get from PCAT for each socket (US20271)
-NVM_UINT64 core::memory_allocator::LayoutStepLimitTotalMappedMemory::getLimit(const MemoryAllocationRequest& request)
+NVM_UINT64 core::memory_allocator::LayoutStepLimitTotalMappedMemory::getLimit(const int socketId)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	return request.getSocketLimit();
+	return m_memAllocUtil.getSocketLimit(socketId);
 }
 
 bool core::memory_allocator::LayoutStepLimitTotalMappedMemory::mappedSizeExceedsLimit()
@@ -184,7 +185,7 @@ void core::memory_allocator::LayoutStepLimitTotalMappedMemory::initializeTotalMa
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	m_totalMappedSize = 0;
-	m_limit = getLimit(request);
+	m_limit = getLimit(socketId);
 
 	m_socketDimms.assign(m_dimmsSortedBySocket[socketId].begin(), m_dimmsSortedBySocket[socketId].end());
 	for (std::vector<core::memory_allocator::Dimm>::iterator dimm = m_socketDimms.begin();

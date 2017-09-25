@@ -45,6 +45,7 @@ class NVM_API MemoryAllocationUtil
 
 		virtual NVM_UINT16 getNextAvailableInterleaveSetId(const MemoryAllocationLayout &layout);
 		virtual interleave_format getRecommendedInterleaveFormatForWays(const interleave_ways ways);
+		virtual NVM_UINT64 getSocketLimit(const int socketId);
 
 		static Dimm deviceDiscoveryToDimm(const struct device_discovery &deviceDiscovery);
 

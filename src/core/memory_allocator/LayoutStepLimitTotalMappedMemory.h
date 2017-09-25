@@ -33,6 +33,7 @@
 #define _core_LOGIC_LAYOUTSTEPLIMITTOTALMAPPEDMEMORY_H_
 
 #include <core/memory_allocator/LayoutStep.h>
+#include "MemoryAllocationUtil.h"
 
 namespace core
 {
@@ -42,13 +43,13 @@ namespace memory_allocator
 class NVM_API LayoutStepLimitTotalMappedMemory : public LayoutStep
 {
 	public:
-		LayoutStepLimitTotalMappedMemory();
+		LayoutStepLimitTotalMappedMemory(MemoryAllocationUtil &util);
 		virtual ~LayoutStepLimitTotalMappedMemory();
 
 		virtual void execute(const MemoryAllocationRequest &request,
 				MemoryAllocationLayout &layout);
 
-		virtual NVM_UINT64 getLimit(const MemoryAllocationRequest& request);
+		virtual NVM_UINT64 getLimit(const int socketId);
 
 	private:
 
@@ -86,6 +87,7 @@ class NVM_API LayoutStepLimitTotalMappedMemory : public LayoutStep
 		NVM_UINT64 m_mappedCapacityExceedsLimit;
 		std::vector<core::memory_allocator::Dimm> m_socketDimms;
 		std::map<NVM_UINT16, std::vector<Dimm> > m_dimmsSortedBySocket;
+		MemoryAllocationUtil &m_memAllocUtil;
 };
 
 } /* namespace memory_allocator */

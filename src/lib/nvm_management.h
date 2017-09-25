@@ -1174,6 +1174,7 @@ struct socket
 	NVM_UINT16 logical_processor_count; // Logical processor count on node (incl. Hyperthreading)
 	NVM_UINT64 mapped_memory_limit; // Maximum allowed memory (via PCAT)
 	NVM_UINT64 total_mapped_memory; // Current occupied memory (via PCAT)
+	NVM_UINT64 cache_memory_limit; // cache size when in 2LM (via PCAT)
 };
 
 struct job

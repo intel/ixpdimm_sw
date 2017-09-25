@@ -116,10 +116,11 @@ void core::memory_allocator::LayoutBuilder::populateOrderedLayoutStepsForRequest
 
 	m_layoutSteps.push_back(new LayoutStepAppDirect(m_util));
 
-	// Shrink Memory and AppDirect based on SKU mapped memory limit
-	m_layoutSteps.push_back(new LayoutStepLimitTotalMappedMemory());
-
 	m_layoutSteps.push_back(new LayoutStepReserved());
+
+	// Shrink Memory and AppDirect based on SKU mapped memory limit
+	m_layoutSteps.push_back(new LayoutStepLimitTotalMappedMemory(m_util));
+
 
 	// Post layout check that adds a warning to layout object
 	m_layoutSteps.push_back(new LayoutStepCheckRequestLayoutDeviation());

@@ -88,10 +88,10 @@ bool core::memory_allocator::LayoutStepCheckRequestLayoutDeviation::isMemoryCapa
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	bool isDeviationWithinBounds = true;
-	if (request.getAllMappableDimmCapacityInGiB() > 0 && request.getMemoryModeCapacityGiB() > 0)
+	if (request.getTotalAlignedDimmCapacityInGiB() > 0 && request.getMemoryModeCapacityGiB() > 0)
 	{
 		double percentDeviation =
-				findPercentDeviation(request.getMemoryModeCapacityGiB(), layout.memoryCapacity, request.getAllMappableDimmCapacityInGiB());
+				findPercentDeviation(request.getMemoryModeCapacityGiB(), layout.memoryCapacity, request.getTotalAlignedDimmCapacityInGiB());
 
 		if ((layout.memoryCapacity == 0)  ||
 				(!isLayoutDeviationWithinBounds(percentDeviation)))
@@ -110,11 +110,11 @@ bool core::memory_allocator::LayoutStepCheckRequestLayoutDeviation::isAppDirectC
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	bool isDeviationWithinBounds = true;
-	if (request.getAllMappableDimmCapacityInGiB() > 0 && request.getAppDirectCapacityGiB() > 0)
+	if (request.getTotalAlignedDimmCapacityInGiB() > 0 && request.getAppDirectCapacityGiB() > 0)
 	{
 		NVM_UINT64 layoutAppDirectCapacity = getNonReservedAppDirectCapacityGiBFromLayout(request, layout);
 		double percentDeviation = findPercentDeviation(request.getAppDirectCapacityGiB(),
-						layoutAppDirectCapacity, request.getAllMappableDimmCapacityInGiB());
+						layoutAppDirectCapacity, request.getTotalAlignedDimmCapacityInGiB());
 
 		if(!isLayoutDeviationWithinBounds(percentDeviation))
 		{

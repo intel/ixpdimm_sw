@@ -139,11 +139,6 @@ NVM_UINT64 core::memory_allocator::LayoutStep::getRemainingBytesFromDimms(
 		bytes += getDimmUnallocatedGiBAlignedBytes(dimmIter->capacityBytes, layout.goals[dimmIter->uid]);
 	}
 
-	// no remaining capacity left on any dimms
-	if (bytes == 0)
-	{
-		throw core::NvmExceptionBadRequestSize();
-	}
 	return bytes;
 }
 

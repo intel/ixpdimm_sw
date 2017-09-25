@@ -59,6 +59,12 @@ void core::memory_allocator::LayoutStepReserved::execute(const MemoryAllocationR
 	}
 
 	layout.remainingCapacity = B_TO_GiB(getRemainingBytesFromRequestedDimms(request, layout));
+
+	// no remaining capacity left on any dimms
+	if (layout.remainingCapacity == 0)
+	{
+		throw core::NvmExceptionBadRequestSize();
+	}
 }
 
 void core::memory_allocator::LayoutStepReserved::shrinkAppDirectPerReservedCapacity(

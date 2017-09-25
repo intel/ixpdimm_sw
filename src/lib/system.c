@@ -253,6 +253,10 @@ int get_socket_sku(struct bios_capabilities *p_pcat, struct socket *p_socket)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
+	// Default value when PCAT type 6 is not available
+	p_socket->mapped_memory_limit = (NVM_UINT64) -1;
+	p_socket->total_mapped_memory = 0;
+	p_socket->cache_memory_limit = 0;
 
 	// iterate over all the extension tables
 	NVM_UINT32 offset = PCAT_TABLE_SIZE; // Size occupied by ACPI Table Header
@@ -288,6 +292,7 @@ int get_socket_sku(struct bios_capabilities *p_pcat, struct socket *p_socket)
 
 				p_socket->mapped_memory_limit = p_socket_info->mapped_memory_limit;
 				p_socket->total_mapped_memory = p_socket_info->total_mapped_memory;
+				p_socket->cache_memory_limit = p_socket_info->cache_memory_limit;
 				break;
 			}
 		}
