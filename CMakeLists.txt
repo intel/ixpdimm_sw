@@ -27,8 +27,13 @@
 cmake_minimum_required(VERSION 2.8.4)
 project(cr_mgmt)
 
-set(CMAKE_VERBOSE_MAKEFILE on )
+if (${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}.${CMAKE_PATCH_VERSION} GREATER 2.8.12)
+	cmake_policy(SET CMP0040 OLD)
+endif ()
 
+#set(CMAKE_VERBOSE_MAKEFILE on)
+
+set(CMAKE_SKIP_RPATH TRUE)
 set(SIM_BUILD 0)
 set(ADAPTER_TYPE real)
 
@@ -37,11 +42,13 @@ set(LIB_TYPE SHARED)
 option(BUILD_STATIC "Build libraries as STATIC. This will override LIB_TYPE" OFF)
 if (BUILD_STATIC)
     set(LIB_TYPE STATIC)
+	set(FRAMEWORK_OPTIONS "${FRAMEWORK_OPTIONS}-DBUILD_STATIC=ON ")
 endif()
 
 option(RELEASE "Build in simulator mode." OFF)
 if (RELEASE)
     set(BUILD_TYPE release)
+    set(FRAMEWORK_OPTIONS "${FRAMEWORK_OPTIONS}-DRELEASE=ON ")
 else ()
     set(BUILD_TYPE debug)
 endif ()
@@ -63,30 +70,38 @@ elseif (WIN_BUILD)
 endif ()
 
 get_filename_component(ROOT ./ ABSOLUTE)
-
-set(FRAMEWORK_LIBS_DIR ${ROOT}/../external CACHE STRING "Path to the invm-framework libraries")
-if ("${LIB_TYPE}" STREQUAL "STATIC")
-	find_library(invm-i18n NO_DEFAULT_PATH NAMES invm-i18n PATHS ${FRAMEWORK_LIBS_DIR})
-	find_library(invm-cli NO_DEFAULT_PATH NAMES invm-cli PATHS ${FRAMEWORK_LIBS_DIR})
-	find_library(invm-cim NO_DEFAULT_PATH NAMES invm-cim PATHS ${FRAMEWORK_LIBS_DIR})
-	
-	set(invm-i18n_include ${FRAMEWORK_LIBS_DIR}/include)
-	set(invm-cim_include ${FRAMEWORK_LIBS_DIR}/include)
-	set(invm-cli_include ${FRAMEWORK_LIBS_DIR}/include)
-else ()
-	find_library(invm-i18n NAMES invm-i18n PATHS ${FRAMEWORK_LIBS_DIR})
-	find_library(invm-cli NAMES invm-cli PATHS ${FRAMEWORK_LIBS_DIR})
-	find_library(invm-cim NAMES invm-cim PATHS ${FRAMEWORK_LIBS_DIR})
-endif ()
-
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++98")
 set(OUTPUT_DIR ${ROOT}/output/build/${OS_TYPE}/${ADAPTER_TYPE}/${BUILD_TYPE})
+
+add_subdirectory(${ROOT}/invm-frameworks/invm-i18n)
+add_subdirectory(${ROOT}/invm-frameworks/invm-cim)
+add_subdirectory(${ROOT}/invm-frameworks/invm-cli)
+set(FRAMEWORK_OUTPUT_DIR ${ROOT}/invm-frameworks/output/build/${OS_TYPE}/${BUILD_TYPE} CACHE STRING "Path to frameworks output dir")
+set(invm-i18n_include ${FRAMEWORK_OUTPUT_DIR}/include)
+set(invm-cim_include ${FRAMEWORK_OUTPUT_DIR}/include)
+set(invm-cli_include ${FRAMEWORK_OUTPUT_DIR}/include)
+
+add_custom_command(TARGET invm-i18n
+		POST_BUILD
+		COMMAND cp ${FRAMEWORK_OUTPUT_DIR}/libinvm-i18n.so* ${OUTPUT_DIR}
+		COMMENT "Copy the invm-i18n libs to the build output"
+		)
+add_custom_command(TARGET invm-cli
+		POST_BUILD
+		COMMAND cp ${FRAMEWORK_OUTPUT_DIR}/libinvm-cli.so* ${OUTPUT_DIR}
+		COMMENT "Copy the invm-cli libs to the build output"
+		)
+add_custom_command(TARGET invm-cim
+		POST_BUILD
+		COMMAND cp ${FRAMEWORK_OUTPUT_DIR}/libinvm-cim.so* ${OUTPUT_DIR}
+		COMMENT "Copy the invm-cim libs to the build output"
+		)
 
 set(CMAKE_BINARY_DIR ${OUTPUT_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
-set(extern_dir ${ROOT}/external)
 set(SCRIPTS_PATH ${ROOT}/scripts)
 
 include(cmakesetup.cmake)
@@ -113,7 +128,7 @@ if (LNX_BUILD)
 elseif (WIN_BUILD)
     target_include_directories(driver_interface PUBLIC
         	src/common
-            ${invm-i18n_include}         
+            ${invm-i18n_include}
             )
 endif ()
 
@@ -185,7 +200,7 @@ target_include_directories(common PUBLIC
         )
 if (WIN_BUILD)
 	set(win_msgs_header ${ROOT}/src/common/os/win_msgs.h)
-	
+
 	# win_msgs.h generation
     add_custom_command(
             OUTPUT ${win_msgs_header}
@@ -237,7 +252,7 @@ target_link_libraries(acpi
         crypto
         z
         )
-        
+
 # --------------------------------------------------------------------------------------------------
 # Native Library
 # --------------------------------------------------------------------------------------------------
@@ -263,7 +278,7 @@ list(APPEND LIB_SOURCE_FILES ${ADAPTER_FILES})
 add_library(${API_LIB_NAME} ${LIB_TYPE} ${LIB_SOURCE_FILES})
 # this will create the symlinks on Linux
 set_target_properties(${API_LIB_NAME}
-       PROPERTIES 
+       PROPERTIES
        VERSION ${LIB_BUILD_VERSION}
        SOVERSION ${SO_BUILD_VERSION}
        )
@@ -282,7 +297,7 @@ target_link_libraries(${API_LIB_NAME}
         sqlite3
         ssl
         crypto
-        ${invm-i18n}
+        invm-i18n
         z
         pthread
         )
@@ -319,7 +334,7 @@ target_link_libraries(db_creator
 	    )
 target_include_directories(db_creator PUBLIC
        		src/common
-            )      
+            )
 add_custom_command(TARGET db_creator POST_BUILD
        COMMAND cd ${OUTPUT_DIR} && $<TARGET_FILE:db_creator>)
 
@@ -342,7 +357,7 @@ add_library(${CORE_LIB_NAME} ${LIB_TYPE}
         ${core_SRC}
         )
 set_target_properties(${CORE_LIB_NAME}
-       PROPERTIES 
+       PROPERTIES
        VERSION ${LIB_BUILD_VERSION}
        SOVERSION ${SO_BUILD_VERSION}
        )
@@ -351,7 +366,7 @@ target_link_libraries(${CORE_LIB_NAME}
         ${API_LIB_NAME}
         firmware_interface
         )
-            
+
 # ---------------------------------------------------------------------------------------
 # WBEM
 # ---------------------------------------------------------------------------------------
@@ -375,8 +390,8 @@ file(GLOB WBEM_SOURCE_FILES
         src/monitor/EventMonitor.cpp
         src/monitor/NvmMonitorBase.cpp
         src/monitor/PerformanceMonitor.cpp
-        )        
-if (LNX_BUILD)	
+        )
+if (LNX_BUILD)
 	file(GLOB WBEM_CIMOM_FILES src/wbem/cimom/cmpi/*)
 elseif (WIN_BUILD)
 	file(GLOB WBEM_CIMOM_FILES src/wbem/cimom/wmi/*)
@@ -385,7 +400,7 @@ list(APPEND WBEM_SOURCE_FILES ${WBEM_CIMOM_FILES})
 
 add_library(${CIM_LIB_NAME} ${LIB_TYPE} ${WBEM_SOURCE_FILES})
 SET_TARGET_PROPERTIES(${CIM_LIB_NAME}
-        PROPERTIES 
+        PROPERTIES
       	VERSION ${LIB_BUILD_VERSION}
         SOVERSION ${SO_BUILD_VERSION}
         )
@@ -399,7 +414,7 @@ target_include_directories(${CIM_LIB_NAME} PUBLIC
 target_link_libraries(${CIM_LIB_NAME}
         ${API_LIB_NAME}
         ${CORE_LIB_NAME}
-        ${invm-cim}
+        invm-cim
         )
 
 # ---------------------------------------------------------------------------------------
@@ -408,7 +423,7 @@ target_link_libraries(${CIM_LIB_NAME}
 add_custom_target(generate_mofs ALL)
 if (LNX_BUILD)
   add_custom_command(TARGET generate_mofs POST_BUILD
-  				COMMAND cd ${ROOT} && 
+  				COMMAND cd ${ROOT} &&
   				/bin/sh ${ROOT}/src/wbem/mof/createmof_linux.sh ${ROOT} ${OUTPUT_DIR}
   				)
 elseif (WIN_BUILD)
@@ -433,26 +448,28 @@ file(GLOB CLI_SOURCE_FILES
         )
 add_library(${CLI_LIB_SONAME} ${LIB_TYPE} ${CLI_SOURCE_FILES})
 SET_TARGET_PROPERTIES(${CLI_LIB_SONAME}
-        PROPERTIES 
+        PROPERTIES
       	VERSION ${LIB_BUILD_VERSION}
         SOVERSION ${SO_BUILD_VERSION}
         OUTPUT_NAME ixpdimm-cli
         )
 
 target_include_directories(${CLI_LIB_SONAME} PUBLIC
-        src/
-        src/lib/
-        src/wbem/
-        src/acpi/
+		src/
+		src/lib/
+		src/wbem/
+		src/acpi/
+		${invm-cli_include}
+		${invm-i18n_include}
 		)
 target_link_libraries(${CLI_LIB_SONAME}
         acpi
         ${CORE_LIB_NAME}
         ${CIM_LIB_NAME}
         ${API_LIB_NAME}
-        ${invm-cim}
-        #{invm-cli}
-        ${invm-i18n}
+        invm-cim
+        invm-cli
+        invm-i18n
         )
 
 # --------------------------------------------------------------------------------------------------
@@ -467,8 +484,8 @@ target_include_directories(${CLI_NAME} PUBLIC
 		src/
         )
 target_link_libraries(${CLI_NAME}
-        ${invm-cli}
-        ${invm-i18n}
+        invm-cli
+        invm-i18n
         ${CIM_LIB_NAME}
         ${CLI_LIB_SONAME}
         ${API_LIB_NAME}
@@ -477,8 +494,9 @@ add_dependencies(${CLI_NAME}
         db_creator
         )
 # generating man pages
-if (LNX_BUILD) 
+if (LNX_BUILD)
 		add_custom_command(TARGET ${CLI_NAME} POST_BUILD
+					COMMAND cp ${FRAMEWORK_OUTPUT_DIR}/libinvm*.so* ${OUTPUT_DIR}
 					COMMAND cd ${SCRIPTS_PATH} && ./create_${CLI_NAME}_manpage.py dataPath=${PRODUCT_DATADIR} outputPath=${OUTPUT_DIR}
 					COMMAND cd ${SCRIPTS_PATH} && ./create_${MONITOR_NAME}_manpage.py dataPath=${PRODUCT_DATADIR}
 					COMMAND mv ${SCRIPTS_PATH}/${CLI_NAME}.8.gz ${SCRIPTS_PATH}/${MONITOR_NAME}.8.gz ${OUTPUT_DIR}
@@ -493,13 +511,13 @@ if (WIN_BUILD)
     set(EXTRA_WINDOWS ./src/monitor/win_service.cpp)
 endif ()
 
-file(GLOB MONITOR_SOURCE_FILES 
+file(GLOB MONITOR_SOURCE_FILES
 		src/monitor/${FILE_PREFIX}_main.cpp
         ${EXTRA_WINDOWS}
         src/monitor/EventMonitor.cpp
         src/monitor/NvmMonitorBase.cpp
         src/monitor/PerformanceMonitor.cpp)
-         
+
 add_executable(${MONITOR_NAME} ${MONITOR_SOURCE_FILES})
 target_include_directories(${MONITOR_NAME} PUBLIC
         src/
@@ -521,10 +539,10 @@ endif ()
 # Uninstall
 # --------------------------------------------------------------------------------------------------
 if (LNX_BUILD)
-		add_custom_target(uninstall 
+		add_custom_target(uninstall
 			COMMAND /bin/sh ${ROOT}/install/linux/uninstall.sh ${OUTPUT_DIR} ${SIM_BUILD})
 elseif (WIN_BUILD)
-		add_custom_target(uninstall 
+		add_custom_target(uninstall
 			COMMAND cmd /c ${ROOT}/install/windows/uninstall.cmd ${OUTPUT_DIR} ${SIM_BUILD})
 endif ()
 
@@ -543,34 +561,39 @@ add_custom_target(sfcb_deregister COMMAND /bin/sh ${ROOT}/install/linux/sfcb_der
 # --------------------------------------------------------------------------------------------------
 # RPM
 # --------------------------------------------------------------------------------------------------
-add_custom_target(rpm 
+add_custom_target(rpm
         COMMAND ${CMAKE_COMMAND} -E echo "Entering make rpm..."
-        # Make directories 
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${RPMBUILD_DIR} 
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${RPMBUILD_DIR}/BUILDROOT 
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${RPMBUILD_DIR}/SOURCES 
+        # Make directories
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${RPMBUILD_DIR}
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${RPMBUILD_DIR}/BUILDROOT
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${RPMBUILD_DIR}/SOURCES
         COMMAND ${CMAKE_COMMAND} -E make_directory ${RPMBUILD_DIR}/RPMS
         COMMAND ${CMAKE_COMMAND} -E make_directory ${RPMBUILD_DIR}/SRPMS
         COMMAND ${CMAKE_COMMAND} -E make_directory ${RPMBUILD_DIR}/SPECS
         COMMAND ${CMAKE_COMMAND} -E make_directory ${RPMBUILD_DIR}/BUILD/${MARKETING_PRODUCT_NAME}-${BUILDNUM}
-        # Copy spec file 
+
+        # Copy spec file
         COMMAND ${CMAKE_COMMAND} -E copy
          ${ROOT}/install/linux/${LINUX_DIST}-release/*.spec ${RPMBUILD_DIR}/SPECS/${MARKETING_PRODUCT_NAME}.spec
+
         # Update the spec file with build version
         COMMAND sed -i "s/^%define build_version .*/%define build_version ${BUILDNUM}/g" ${RPMBUILD_DIR}/SPECS/${MARKETING_PRODUCT_NAME}.spec
-        # Archive the directory 
-        COMMAND cd ${ROOT} && git archive --format=tar --prefix="${MARKETING_PRODUCT_NAME}-${BUILDNUM}/" HEAD | gzip -c > ${RPMBUILD_DIR}/SOURCES/${MARKETING_PRODUCT_NAME}-${BUILDNUM}.tar.gz
-        
+
+        COMMAND sed -i "s/^%define invm_framework_build_version .*/%define invm_framework_build_version ${BUILDNUM_FRAMEWORKS}/g" ${RPMBUILD_DIR}/SPECS/${MARKETING_PRODUCT_NAME}.spec
+
+        # Archive the directory
+        COMMAND cd ${ROOT} && tar --exclude-vcs --exclude="*output" --exclude="*.swp*" --transform="s,^.,${MARKETING_PRODUCT_NAME}-${BUILDNUM}," -zcf ${RPMBUILD_DIR}/SOURCES/${MARKETING_PRODUCT_NAME}-${BUILDNUM}.tar.gz .
+
         # rpmbuild
         COMMAND cd ${ROOT} && rpmbuild -ba ${RPMBUILD_DIR}/SPECS/${MARKETING_PRODUCT_NAME}.spec --define "_topdir ${RPMBUILD_DIR}" --define "cflag ${CFLAGS_EXTERNAL}"
-        ) 
+        )
 
 # --------------------------------------------------------------------------------------------------
 # Project wide defines and flags
 # --------------------------------------------------------------------------------------------------
 
-set(CMAKE_CXX_FLAGS "-fstack-protector-all -D_XOPEN_SOURCE=500 -Wall -Werror -Wfatal-errors -MMD")
-set(CMAKE_C_FLAGS "-std=c99 -Wformat -Wformat-security -D_FORTIFY_SOURCE=2 -ggdb ${CMAKE_CXX_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fstack-protector-all -D_XOPEN_SOURCE=500 -Wall -Werror -Wfatal-errors -MMD")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wformat -Wformat-security -D_FORTIFY_SOURCE=2 -ggdb -fstack-protector-all -D_XOPEN_SOURCE=500 -Wall -Werror -Wfatal-errors -MMD")
 
 add_definitions(
         -D__WBEM_PREFIX__=Intel_
@@ -593,7 +616,7 @@ if (RELEASE)
     add_definitions(
             -DRELEASE
     )
-    add_definitions(-O2 
+    add_definitions(-O2
     -fno-strict-aliasing
     )
     #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -fno-strict-aliasing")
@@ -607,7 +630,7 @@ if (LNX_BUILD)
             -D__LINUX__
             -D__LARGE_PAYLOAD__=1
             -D__NVM_DLL__
-            -fPIC                    
+            -fPIC
             -DCMPI_PLATFORM_LINUX_GENERIC_GNU=1
             -D__PRODUCT_DATADIR__="${PRODUCT_DATADIR}/"
     )

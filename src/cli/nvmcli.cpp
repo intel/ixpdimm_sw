@@ -44,7 +44,7 @@
 #endif
 
 #ifdef _INTEL_I18N_
-#include <libIntel_i18n.h>
+#include <libinvm-i18n/libIntel_i18n.h>
 #endif
 
 #ifndef LOCALE_DOMAIN

@@ -40,7 +40,7 @@ COPY = cp -av
 MOVE = mv
 MKDIR = mkdir -p
 RMDIR = rm -rf
-SOFTLINK = ln -s -f 
+SOFTLINK = ln -s -f
 SED = sed
 TAR = tar
 RPMBUILD = rpmbuild
@@ -58,7 +58,7 @@ BLDMK_SLASH = /
 BLDMK_SPACE = $(BLDMK_EMPTY) $(BLDMK_EMPTY)
 
 # HW specific compile flags
-LARGE_PAYLOAD = 1 #Whether or not large payloads are available 
+LARGE_PAYLOAD = 1 #Whether or not large payloads are available
 EARLY_HW = 0 #Temporary compile option for PO HW with no media
 
 #version number passed in from the build server
@@ -87,7 +87,7 @@ ADD_MANUFACTURING ?= 1
 INTEL_I18N=-D__INTEL_I18N__
 
 # initialize/define compilation flag helper variables
-C_CPP_FLAGS_CMN = -Wall -Werror -Wfatal-errors -Wformat -Wformat-security -fstack-protector-all -D_FORTIFY_SOURCE=2 -D_XOPEN_SOURCE=500 
+C_CPP_FLAGS_CMN = -Wall -Werror -Wfatal-errors -Wformat -Wformat-security -fstack-protector-all -D_FORTIFY_SOURCE=2 -D_XOPEN_SOURCE=500
 C_CPP_FLAGS_SRC = -MMD -D__VERSION_MAJOR__=$(VERSION_MAJOR) -D__VERSION_MINOR__=$(VERSION_MINOR) -D__VERSION_HOTFIX__=$(VERSION_HOTFIX) -D__VERSION_BUILDNUM__=$(VERSION_BUILDNUM) -D__VERSION_NUMBER__=$(BUILDNUM) -D__ADD_MANUFACTURING__=$(ADD_MANUFACTURING)  -D__WBEM_PREFIX__='$(WBEM_PREFIX_INPUT)' $(INTEL_I18N)
 LDFLAGS = -z noexecstack -z relro -z now -pie
 
@@ -157,9 +157,9 @@ ifeq ($(UNAME), Linux)
 
 		C_CPP_FLAGS_CMN += -fPIE -fPIC
 		C_CPP_FLAGS_SRC += -D__ESX__
-		
+
 		PRODUCT_DATADIR = $(ESX_SUPPORT_DIR)
-		
+
 		CMAKE = /opt/mgmt_env/cmake-3.6.2/bin/cmake
 		CTEST = /opt/mgmt_env/cmake-3.6.2/bin/ctest
 		CMAKE_OPTIONS = -DCMAKE_CXX_COMPILER=$(MGMT_SYSROOT)/usr/bin/g++ -DCMAKE_C_COMPILER=/build/toolchain/lin32/gcc-4.6.3-1/bin/i686-linux5.0-gcc
@@ -185,7 +185,7 @@ ifeq ($(UNAME), Linux)
 		#Linux Product Names
 		LINUX_PRODUCT_NAME = $(MARKETING_PRODUCT_NAME)
 		CIM_NAMESPACE = intelwbem
-		
+
 		# Linux Install Directories
 		uname_m = $(shell uname -m)
 		ifneq (,$(findstring i686,$(uname_m)))
@@ -214,14 +214,14 @@ ifeq ($(UNAME), Linux)
 		BIN_FILES = $(CLI_NAME) $(MONITOR_NAME)
 		PEGASUS_MOF_FILES = pegasus_register.mof profile_registration.mof intelwbem.mof
 		SFCB_MOF_FILES = sfcb_intelwbem.mof
-		SFCB_REG_FILE = INTEL_NVDIMM.reg 
+		SFCB_REG_FILE = INTEL_NVDIMM.reg
 		DATADIR_FILES = apss.dat* public.rev0.pem
 		INIT_FILES = $(MONITOR_NAME).service
 		MANPAGE_GZ_FILES = $(CLI_NAME).8.gz $(MONITOR_NAME).8.gz
 		MANPAGE_SCRIPT_FILES = create_$(CLI_NAME)_manpage.py create_$(MONITOR_NAME)_manpage.py $(CLI_NAME).manpage.footer $(CLI_NAME).manpage.header $(MONITOR_NAME).manpage.text $(CLI_NAME).sed manpage_helper.py
 
-		C_CPP_FLAGS_SRC += -D__LINUX__ 
-		
+		C_CPP_FLAGS_SRC += -D__LINUX__
+
 		ifneq ("$(wildcard /etc/redhat-release)","")
 			LINUX_DIST := rel
 		else ifneq ("$(wildcard /etc/SuSE-release)","")
@@ -274,7 +274,7 @@ endif
 # the number of make jobs to run in parallel = 2 * number of processors + 1
 # can be overriden by setting an environment variable MAX_JOBS = whatever
 MAX_JOBS ?= $(shell echo $$((2*$(CORE_COUNT)+1)))
-JOBCOUNT ?= -j $(MAX_JOBS) 
+JOBCOUNT ?= -j $(MAX_JOBS)
 
 # simulator/real build specific settings
 BUILD_DLL_FLAG = -D__NVM_DLL_EXPORTS__
@@ -287,10 +287,10 @@ else
 	ADAPTER_TYPE = real
 	CFLAGS_CMN += -D__LARGE_PAYLOAD__=$(LARGE_PAYLOAD)
 	CFLAGS_CMN += -D__EARLY_HW__=$(EARLY_HW)
-	# only export public APIs for non-simulated builds 
+	# only export public APIs for non-simulated builds
 	ifdef BUILD_WINDOWS
 		C_CPP_FLAGS_CMN += -D__NVM_DLL__
-	else 
+	else
 		C_CPP_FLAGS_CMN += -D__NVM_DLL__ -fvisibility=hidden
 	endif
 endif
@@ -323,7 +323,7 @@ TOOLS_DIR = $(ROOT_DIR)/tools
 SRC_DIR = $(ROOT_DIR)/src
 ifdef CCOV
 	OUTPUT_DIR ?= $(ROOT_DIR)/output/cov
-else 
+else
 	OUTPUT_DIR ?= $(ROOT_DIR)/output
 endif
 
@@ -340,6 +340,8 @@ CIM_FRAMEWORK_DIR = $(ROOT_DIR)/external/intel_cim_framework
 I18N_DIR = $(ROOT_DIR)/external/intel_i18n
 I18N_INCLUDE_DIR = $(EXTERN_DIR)/intel_i18n/include/
 RPMBUILD_DIR ?= $(shell pwd)/$(OUTPUT_DIR)/rpmbuild
+INVM_FRAMEWORKS_DIR=$(ROOT_DIR)/invm-frameworks
+INVM_FRAMEWORKS_OUTPUT=$(ROOT_DIR)/invm-frameworks/output/build/$(OS_TYPE)/$(BUILD_TYPE)
 
 # unit test execution directories
 COMMON_TEST_DIR = $(BUILD_DIR)/common_test
@@ -362,7 +364,7 @@ ifdef CCOV
 	JOBCOUNT := -j 1 # don't run coverage compile in parallel
 	# Prevent conflicts with other copies of this project on the system
 	export COVBUILDZONE := $(abspath $(BUILD_DIR))
-	
+
 	BULLSEYE_DIR = $(MGMT_ENV_DIR)/bullseye
 	include $(BULLSEYE_DIR)/bullseye.mk
 	# force bullseye to update coverage metrics at termination of executables
@@ -374,7 +376,7 @@ endif
 LOCALE_DOMAIN = $(CLI_NAME)
 LOCALE_DIR = $(abspath $(BUILD_DIR))/lang
 
-# output file for gettext 
+# output file for gettext
 GETTEXT_OUTPUTFILE = $(BUILD_DIR)/$(LOCALE_DOMAIN).pot
 
 # gettext (http://www.gnu.org/software/gettext/manual/gettext.html)

@@ -27,9 +27,9 @@
 if (NOT BUILDNUM)
 	execute_process(COMMAND git describe --abbrev=0 OUTPUT_VARIABLE BUILDNUM)
 
-	if ("${BUILDNUM}" MATCHES "^([a-zA-Z-]*-)(.*)$")
-		#replace 
-		string(REGEX REPLACE "^([a-zA-Z-]*-)" "" BUILDNUM "${BUILDNUM}")
+	if ("${BUILDNUM}" MATCHES "^([a-zA-Z-]*v)(.*)$")
+		#replace
+		string(REGEX REPLACE "^([a-zA-Z-]*v)" "" BUILDNUM "${BUILDNUM}")
 		string(REGEX REPLACE "\n$" "" BUILDNUM "${BUILDNUM}")
 	else ()
 		execute_process(COMMAND pwd OUTPUT_VARIABLE BUILDNUM)
@@ -42,9 +42,32 @@ endif()
 string(REPLACE "." ";" VERSION_LIST "${BUILDNUM}")
 
 list(GET VERSION_LIST 0 VERSION_MAJOR)
-list(GET VERSION_LIST 1 VERSION_MINOR) 
-list(GET VERSION_LIST 2 VERSION_HOTFIX) 
-list(GET VERSION_LIST 3 VERSION_BUILDNUM) 
+list(GET VERSION_LIST 1 VERSION_MINOR)
+list(GET VERSION_LIST 2 VERSION_HOTFIX)
+list(GET VERSION_LIST 3 VERSION_BUILDNUM)
+
+if (NOT BUILDNUM_FRAMEWORKS)
+	execute_process(COMMAND git describe --abbrev=0 OUTPUT_VARIABLE BUILDNUM_FRAMEWORKS
+					WORKING_DIRECTORY ${ROOT}/invm-frameworks)
+
+	if ("${BUILDNUM_FRAMEWORKS}" MATCHES "^([a-zA-Z-]*v)(.*)$")
+		#replace
+		string(REGEX REPLACE "^([a-zA-Z-]*v)" "" BUILDNUM_FRAMEWORKS "${BUILDNUM_FRAMEWORKS}")
+		string(REGEX REPLACE "\n$" "" BUILDNUM_FRAMEWORKS "${BUILDNUM_FRAMEWORKS}")
+	else ()
+		execute_process(COMMAND pwd OUTPUT_VARIABLE BUILDNUM_FRAMEWORKS
+						WORKING_DIRECTORY ${ROOT}/invm-frameworks)
+		set(BUILDNUM_FRAMEWORKS 99.99.99.9999)
+	endif()
+endif()
+
+string(REPLACE "." ";" FRAMEWORK_VERSION_LIST "${BUILDNUM_FRAMEWORKS}")
+
+#ToDo: windows needs list as "${Listname}"
+list(GET FRAMEWORK_VERSION_LIST 0 FRAMEWORK_VERSION_MAJOR)
+list(GET FRAMEWORK_VERSION_LIST 1 FRAMEWORK_VERSION_MINOR)
+list(GET FRAMEWORK_VERSION_LIST 2 FRAMEWORK_VERSION_HOTFIX)
+list(GET FRAMEWORK_VERSION_LIST 3 FRAMEWORK_VERSION_BUILDNUM)
 
 #Target names
 set(MARKETING_PRODUCT_NAME ixpdimm_sw)
@@ -60,7 +83,7 @@ set(MONITOR_NAME ixpdimm-monitor)
 set(CIM_NAMESPACE intelwbem)
 
 if (LNX_BUILD)
-        #Change to conditionally set        
+        #Change to conditionally set
         set(LIB_BUILD_VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.0)
 		set(SO_BUILD_VERSION ${VERSION_MAJOR})
 		set(LINUX_PRODUCT_NAME  ${MARKETING_PRODUCT_NAME})
@@ -71,14 +94,14 @@ if (LNX_BUILD)
 		set(MGMT_ENV_DIR "/opt/mgmt_env")
 		# doxygen
 		set(DOXYGEN "${MGMT_ENV_DIR}/doxygen/doxygen")
-		
+
 		if (EXISTS "/etc/redhat-release")
 			set(LINUX_DIST rel)
 		elseif (EXISTS "/etc/SuSE-release")
 			set(LINUX_DIST sle)
 		else ()
 			set(LINUX_DIST Unrecognized Linux distribution)
-		endif()		
+		endif()
 elseif (WIN_BUILD)
 		set(MGMT_ENV_DIR "C:/mgmt_env")
 		# doxygen
@@ -86,6 +109,7 @@ elseif (WIN_BUILD)
 		set(WINDMC c:/mgmt_env/mingw_w64/bin/windmc.exe)
 		set(WINDRES c:/mgmt_env/mingw_w64/bin/windres.exe)
 		set(OBJECT_MODULE_DIR ${ROOT}/output/obj/${OS_TYPE}/${ADAPTER_TYPE}/${BUILD_TYPE})
+		set(LIBSSP "${MINGW_DIR}/bin/libssp-0.dll")
 elseif (ESX_BUILD)
 		set(MGMT_ENV_DIR "/opt/mgmt_env")
 		set(ESX_SUPPORT_DIR "/opt/intel/bin")
@@ -102,7 +126,7 @@ set(COVFILE_COPY ${OUTPUT_DIR}/bste.cov)
 # Blank coverage file for validation
 set(COVFILE_VAL_COPY ${OUTPUT_DIR}/val.cov)
 
-file(GLOB INCLUDE_FILES 
+file(GLOB INCLUDE_FILES
 		   src/lib/nvm_management.h
 		   src/lib/nvm_types.h
 		   src/monitor/ixpdimm-monitor.service

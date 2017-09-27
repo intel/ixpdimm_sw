@@ -1,0 +1,3 @@
+[submodule "invm-frameworks"]
+	path = invm-frameworks
+	url = https://github.com/01org/invm-frameworks.git
