@@ -1,4 +1,4 @@
-#ixpdimm_sw
+# ixpdimm_sw
 
 ixpdimm_sw contains the following interface components:
 
@@ -14,76 +14,44 @@ common information model object managers (CIMOMs).
 
 A monitor daemon/system service for monitoring the health and status of IXPDIMMs.
 
-#Documentation
+For more information please visit our project home. https://01.org/ixpdimm-sw/
 
-https://01.org/ixpdimm-sw/
+## Build Linux
 
-#Build
-GNU Make is used to build for Linux and Windows.
-As such we recommend mingw_w64 and msys be used to build in a windows
-environment. Both of which can be found at mingw.org
+Kernel 4.12 or newer is suggested
 
-#Build Windows
-
-#The following variables must be set to find the required dependencies necessary
-to build.
-
-The default path to these dependencies for windows is: 
-	workspace/external/
-where the makefile is located in: 
-	workspace/ixpdimm/makefile
-
-* MINGW_DIR - On Windows, the path to the MinGW 64-bit tools.
-* OPENSSL_INCLUDE_DIR - The path to the openssl headers. 
-* OPENSSL_LIB_DIR - The path to openssl libraries.
-* SQLITE_INCLUDE_DIR - The path to the sqlite headers. 
-* SQLITE_LIB_DIR - The path to the sqlite libraries.
-* ZLIB_INCLUDE_DIR - The path to the zlib headers. 
-* ZLIB_LIB_DIR - The path to the zlib libraries.
-* OS_INCLUDE_DIR - The path to any OS specific driver headers. 
-* OS_LIB_DIR - The path to any OS specific driver libraries.
-* RAPIDXML_INCLUDE_DIR - The path to the rapidxml headers. 
-* GETTEXT_EXE_DIR - The path to the xgettext.exe (for string translations). 
-* INTEL_CLI_FRAMEWORK_DIR - The path to Intel NVM CLI libraries
-* INTEL_CIM_FRAMEWORK_DIR - The path to Intel NVM CIM libraries
-* INTEL_I18N_DIR - The path to Intel I18N libraries
-
-Assuming default paths have been used execute 'make RELEASE=1'
-
-build artifacts can then be found in output/build/windows/release
-
-#Build Linux
-
-Kernel 4.3 or newer is suggested, a prebuilt fedora 4.3 kernel can be found at
-
-https://kojipkgs.fedoraproject.org/packages/kernel/4.3.0/1.fc24/x86_64/
-
-libndctl is required to build, an rpm can be found at.
+libndctl is required to build, an rpm can be found at:
 
 https://copr.fedoraproject.org/coprs/djbw/ndctl/
 
-and the source can be found at
+and the source can be found at:
 
 https://github.com/pmem/ndctl
 
-invm-frameworks library is required, the source can be found at
+libinvm-cim, libinvm-cli, libinvm-il8n libraries are required and included as a submodule.
+The source can be found at:
 
 https://github.com/01org/invm-frameworks
 
-All other dependencies are widely available. This includes openssl
-sqlite and zlib.
+All other dependencies are widely available. This includes ctemplate openssl sqlite and zlib.
 
-Once dependencies have been resolved execute 'make RELEASE=1'
+```
+git submodule init
+git submodule update
+mkdir output && cd output
+cmake .. -DRELEASE=ON
+make -j all
+sudo make install
+```
+build artifacts can be found in output/build/linux/real/release
 
-build artifacts can be found in output/build/linux/release
+RPMs can also be built:
+```
+cmake ..
+make rpm
+```
+The RPMs will be in output/rpmbuild/RPMS/
 
-Artifacts can then be installed using 'make install RELEASE=1'
+## Build Windows
 
-CMake buildsystem is also supported for Linux.
-#CMake Build
-
-Create and change to output directory "mkdir output && cd output"
-
-Generate makefiles by executing "cmake .. -DRELEASE=ON"
-
-Build using "make" and install using "make install"
+WIP
