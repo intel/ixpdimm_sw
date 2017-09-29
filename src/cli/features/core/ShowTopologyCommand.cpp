@@ -149,8 +149,7 @@ void ShowTopologyCommand::filterTopologiesOnSocketIds()
 		{
 			std::string socket_id = getSocketId(m_topologies[i - 1]);
 
-			if (!m_socketIds.contains(socket_id) &&
-					socket_id.compare("N/A") != 0)
+			if (!m_socketIds.contains(socket_id))
 			{
 				m_topologies.removeAt(i - 1);
 			}
@@ -322,7 +321,7 @@ std::string ShowTopologyCommand::getDimmId(core::device::Topology &topology)
 			result << topology.getUid();
 		}
 	}
-	else if (topology.getMemoryType() == MEMORY_TYPE_DDR4)
+	else
 	{
 		result << "N/A";
 	}
@@ -339,7 +338,7 @@ std::string ShowTopologyCommand::getChannelId(core::device::Topology &topology)
 	{
 		result << topology.getChannelId();
 	}
-	else if (topology.getMemoryType() == MEMORY_TYPE_DDR4)
+	else
 	{
 		result << "N/A";
 	}
@@ -355,7 +354,7 @@ std::string ShowTopologyCommand::getChannelPosition(core::device::Topology &topo
 	{
 		result << topology.getChannelPosition();
 	}
-	else if (topology.getMemoryType() == MEMORY_TYPE_DDR4)
+	else
 	{
 		result << "N/A";
 	}
@@ -371,7 +370,7 @@ std::string ShowTopologyCommand::getMemoryControllerId(core::device::Topology &t
 	{
 		result << topology.getMemoryControllerId();
 	}
-	else if (topology.getMemoryType() == MEMORY_TYPE_DDR4)
+	else
 	{
 		result << "N/A";
 	}
@@ -387,7 +386,7 @@ std::string ShowTopologyCommand::getNodeControllerId(core::device::Topology &top
 	{
 		result << topology.getNodeControllerId();
 	}
-	else if (topology.getMemoryType() == MEMORY_TYPE_DDR4)
+	else
 	{
 		result << "N/A";
 	}
@@ -403,7 +402,7 @@ std::string ShowTopologyCommand::getSocketId(core::device::Topology &topology)
 	{
 		result << topology.getSocketId();
 	}
-	else if (topology.getMemoryType() == MEMORY_TYPE_DDR4)
+	else
 	{
 		result << "N/A";
 	}

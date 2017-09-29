@@ -47,17 +47,16 @@ core::device::TopologyCollection core::device::TopologyService::getAllTopologies
 	const std::vector<memory_topology> &mem_topology = m_lib.getMemoryTopology();
 	for (size_t i = 0; i < mem_topology.size(); i++)
 	{
-		device_discovery device;
+		const device_discovery *pDevice = NULL;
 		for (size_t j = 0; j < devices.size(); j++)
 		{
 			if (devices[j].physical_id == mem_topology[i].physical_id)
 			{
-				memset(&device, 0, sizeof(device_discovery));
-				device = devices[j];
+				pDevice = &(devices[j]);
 				break;
 			}
 		}
-		Topology topology(mem_topology[i], device);
+		Topology topology(mem_topology[i], pDevice);
 		result.push_back(topology);
 	}
 

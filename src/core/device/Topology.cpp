@@ -28,6 +28,27 @@
 #include <LogEnterExit.h>
 #include "Topology.h"
 
+const NVM_UINT32 core::device::Topology::UNKNOWN_HANDLE = (NVM_UINT32)-1;
+const NVM_UINT16 core::device::Topology::UNKNOWN_VALUE = (NVM_UINT16)-1;
+
+void core::device::Topology::initDiscovery(const device_discovery* pDevice)
+{
+	if (pDevice)
+	{
+		memmove(&m_device, pDevice, sizeof (m_device));
+	}
+	else
+	{
+		memset(&m_device, 0, sizeof (m_device));
+		m_device.device_handle.handle = UNKNOWN_HANDLE;
+		m_device.socket_id = UNKNOWN_VALUE;
+		m_device.memory_controller_id = UNKNOWN_VALUE;
+		m_device.channel_id = UNKNOWN_VALUE;
+		m_device.channel_pos = UNKNOWN_VALUE;
+		m_device.node_controller_id = UNKNOWN_VALUE;
+	}
+}
+
 const memory_topology &core::device::Topology::getTopology()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -35,43 +56,43 @@ const memory_topology &core::device::Topology::getTopology()
 }
 const device_discovery &core::device::Topology::getDiscovery()
 {
-        LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-        return m_device;
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	return m_device;
 }
 std::string core::device::Topology::getUid()
 {
-        LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-        return Helper::uidToString(getDiscovery().uid);
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	return Helper::uidToString(getDiscovery().uid);
 }
 NVM_UINT32 core::device::Topology::getDeviceHandle()
 {
-        LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-        return getDiscovery().device_handle.handle;
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	return getDiscovery().device_handle.handle;
 }
-NVM_UINT32 core::device::Topology::getChannelPosition()
+NVM_UINT16 core::device::Topology::getChannelPosition()
 {
-        LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-        return getDiscovery().device_handle.parts.mem_channel_dimm_num;
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	return getDiscovery().channel_pos;
 }
-NVM_UINT32 core::device::Topology::getChannelId()
+NVM_UINT16 core::device::Topology::getChannelId()
 {
-        LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-        return getDiscovery().device_handle.parts.mem_channel_id;
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	return getDiscovery().channel_id;
 }
 NVM_UINT16 core::device::Topology::getSocketId()
 {
-        LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-        return getDiscovery().socket_id;
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	return getDiscovery().socket_id;
 }
 NVM_UINT16 core::device::Topology::getMemoryControllerId()
 {
-        LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-        return getDiscovery().memory_controller_id;
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	return getDiscovery().memory_controller_id;
 }
 NVM_UINT16 core::device::Topology::getNodeControllerId()
 {
-        LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-        return getDiscovery().node_controller_id;
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	return getDiscovery().node_controller_id;
 }
 NVM_UINT16 core::device::Topology::getPhysicalID()
 {
