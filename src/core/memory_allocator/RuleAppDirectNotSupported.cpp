@@ -60,7 +60,7 @@ void core::memory_allocator::RuleAppDirectNotSupported::verifyAppDirectSupported
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	if (!m_systemCap.platform_capabilities.app_direct_mode.supported)
+	if (!m_systemCap.nvm_features.app_direct_mode)
 	{
 		throw core::NvmExceptionRequestNotSupported();
 	}
