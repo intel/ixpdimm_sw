@@ -10,7 +10,7 @@ License: BSD
 Group: Applications/System
 URL: https://01.org/ixpdimm-sw
 Source: https://github.com/01org/ixpdimm_sw/archive/v%{version}.tar.gz#/%{name}-%{version}.tar.gz
-Requires: ndctl-libs >= 57.1
+Requires: ndctl-libs >= 58.2
 ExclusiveArch: x86_64
 
 BuildRequires: pkgconfig(libkmod)

@@ -18,7 +18,7 @@ License: BSD
 Group: Applications/System
 URL: https://01.org/ixpdimm-sw
 Source: https://github.com/01org/ixpdimm_sw/archive/v%{version}.tar.gz#/%{name}-%{version}.tar.gz
-Requires: libndctl6 >= 54
+Requires: libndctl6 >= 58.2
 
 %define  debug_package %{nil}
 
