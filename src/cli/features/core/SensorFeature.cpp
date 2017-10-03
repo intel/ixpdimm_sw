@@ -33,6 +33,7 @@
 #include <vector>
 #include <string>
 #include <sstream>
+#include <iomanip>
 #include <LogEnterExit.h>
 
 #include <server/BaseServerFactory.h>
@@ -46,10 +47,17 @@
 #include <libinvm-cli/SyntaxErrorMissingValueResult.h>
 #include <libinvm-cli/OutputOptions.h>
 #include <physical_asset/NVDIMMFactory.h>
+#include <exception/NvmExceptionLibError.h>
 
 #include "CommandParts.h"
 #include "WbemToCli_utilities.h"
 #include "SensorFeature.h"
+#include "ShowCommandUtilities.h"
+
+#include <sstream>
+
+#define SSTR( x ) static_cast< std::ostringstream & >( \
+        ( std::ostringstream() << std::dec << x ) ).str()
 
 static std::vector<std::string> getWbemSensors()
 {
@@ -149,7 +157,6 @@ cli::framework::ResultBase * cli::nvmcli::SensorFeature::run(
 }
 
 
-
 /*
  * Show sensors provided by the NVDIMMSensorFactory::getInstances function.  If
  * a device UID or a sensor type is provided, then filter the results.
@@ -159,9 +166,10 @@ cli::framework::ResultBase* cli::nvmcli::SensorFeature::showSensor(
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	framework::ResultBase *pResult = NULL;
-
+	struct sensor sensors[NVM_MAX_DEVICE_SENSORS];
 	std::vector<std::string> dimms;
 	pResult = cli::nvmcli::getDimms(parsedCommand, dimms);
+	int rc;
 
 	if (NULL == pResult)
 	{
@@ -192,7 +200,6 @@ cli::framework::ResultBase* cli::nvmcli::SensorFeature::showSensor(
 			// make sure we have the dimm id and type in our display
 			// this would cover the case the user asks for specific display attributes, but they
 			// don't include the dimm ID or type
-
 			if (!wbem::framework_interface::NvmInstanceFactory::
 					containsAttribute(wbem::TYPE_KEY, displayAttributes))
 			{
@@ -206,22 +213,27 @@ cli::framework::ResultBase* cli::nvmcli::SensorFeature::showSensor(
 
 			// read the targets
 			std::string dimmTarget = cli::framework::Parser::getTargetValue(parsedCommand, TARGET_DIMM.name);
-			std::string sensorTargetValue = cli::framework::Parser::getTargetValue(parsedCommand,
+			std::string sensorTargetName = cli::framework::Parser::getTargetValue(parsedCommand,
 					TARGET_SENSOR_R.name);
 
-			if(!sensorTargetValue.empty() && !isValidType(sensorTargetValue))
+			if(!sensorTargetName.empty() && !isValidType(sensorTargetName))
 			{
-				pResult = new framework::SyntaxErrorBadValueResult(framework::TOKENTYPE_TARGET,
-									TARGET_SENSOR_R.name, sensorTargetValue);
+				return  new framework::SyntaxErrorBadValueResult(framework::TOKENTYPE_TARGET,
+									TARGET_SENSOR_R.name, sensorTargetName);
 			}
 			else
 			{
 				// If the user is requesting a specific type of sensor we need to include
 				// the type attribute when we get the instances
 				wbem::framework::attribute_names_t requestedAttributes = displayAttributes;
-				if (!sensorTargetValue.empty())
+				bool singleSensorTarget = false;
+				bool singleSensorTargetProcessed = false;
+
+				if (!sensorTargetName.empty())
 				{
+					singleSensorTarget = true;
 					requestedAttributes.push_back(wbem::TYPE_KEY);
+					transform(sensorTargetName.begin(), sensorTargetName.end(), sensorTargetName.begin(), ::tolower);
 				}
 				if (!dimmTarget.empty())
 				{
@@ -229,52 +241,72 @@ cli::framework::ResultBase* cli::nvmcli::SensorFeature::showSensor(
 					requestedAttributes.push_back(wbem::DIMMHANDLE_KEY);
 				}
 
-				// get all NVDIMMSensor CIM instances
-				wbem::support::NVDIMMSensorViewFactory provider;
-				wbem::framework::instances_t * pInstances = provider.getInstances(requestedAttributes);
+				//discover device topology
+				int dev_count = nvm_get_device_count();
+				struct device_discovery devices[dev_count];
+				memset(&devices, 0, dev_count * sizeof(struct device_discovery));
 
-				if (pInstances)
+				if (NVM_SUCCESS > (rc = nvm_get_devices(devices, dev_count)))
 				{
-					// create the display filters
-					cli::nvmcli::filters_t filters;
-					wbem::framework::attribute_names_t empty;
-					generateDimmFilter(parsedCommand, empty, filters);
-					if (!sensorTargetValue.empty())
-					{
-						struct instanceFilter sensorFilter;
-						sensorFilter.attributeName = wbem::TYPE_KEY;
-						sensorFilter.attributeValues.push_back(sensorTargetValue);
-						filters.push_back(sensorFilter);
-					}
-					// format the instances using the attributes list and filter. Using CLIDIMMID key
-					// as the unique attribute
-					pResult = NvmInstanceToObjectListResult(*pInstances, "Sensor",
-							wbem::DIMMID_KEY, displayAttributes, filters);
-					delete pInstances;
-
-					// validate if user supplied a dimm target that it is valid
-					if (!dimmTarget.empty() && ((framework::ObjectListResult *)pResult)->getCount() == 0)
-					{
-						if (NULL != pResult)
-						{
-							delete pResult;
-						}
-						pResult = new framework::SyntaxErrorBadValueResult(framework::TOKENTYPE_TARGET,
-								TARGET_DIMM.name, dimmTarget);
-					}
-					// Set layout to table unless the -all or -display option is present
-					else if (!framework::parsedCommandContains(parsedCommand, framework::OPTION_DISPLAY) &&
-						!framework::parsedCommandContains(parsedCommand, framework::OPTION_ALL))
-					{
-						pResult->setOutputType(framework::ResultBase::OUTPUT_TEXTTABLE);
-					}
+					throw wbem::exception::NvmExceptionLibError(rc);
 				}
-				// failures will throw an exception, this would prevent a crash due to an unexpected error
+
+				//get list of devices that we are targeting
+				std::vector<core::device::Device> devicesObjs;
+				if (!dimmTarget.empty())
+					devicesObjs = ShowCommandUtilities::getAllDevicesFromList(devices, dev_count, dimmTarget);
 				else
+					devicesObjs = ShowCommandUtilities::getAllDevices(devices, dev_count);
+
+				//object that will contain list(s) of sensor property values
+				framework::ObjectListResult *pResults = new framework::ObjectListResult();
+				pResults->setRoot("Sensor");
+
+				//iterate through all target devices
+				for (std::vector<core::device::Device>::const_iterator id = devicesObjs.begin(); id != devicesObjs.end(); ++id)
 				{
-					pResult = new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
-						TRS(nvmcli::UNKNOWN_ERROR_STR));
+					core::device::Device dev = *id;
+					if (!dev.isManageable())
+						continue;
+
+					if(NVM_SUCCESS != (rc = nvm_get_sensors(dev.getUid().c_str(), sensors, NVM_MAX_DEVICE_SENSORS)))
+					{
+						free(pResults);
+						throw wbem::exception::NvmExceptionLibError(rc);
+					}
+
+					for (int i = 0; i < NVM_MAX_DEVICE_SENSORS; ++i)
+					{
+						framework::PropertyListResult* pResultDimmProps = new framework::PropertyListResult();
+						core::device::sensor::Sensor *sensor = core::device::sensor::SensorFactory::CreateSensor(sensors[i]);
+						if (singleSensorTarget)
+						{
+							std::string sensorName = sensor->GetName();
+							//normalize string to lowercase
+							transform(sensorName.begin(), sensorName.end(), sensorName.begin(), ::tolower);
+							if (0 != sensorTargetName.compare(sensorName))
+							{
+								delete sensor;
+								continue; //skip to next sensor
+							}
+							else singleSensorTargetProcessed = true;
+						}
+						sensorToPropList(pResultDimmProps, SSTR(dev.getDeviceHandle()), sensor, displayAttributes);
+						pResults->insert(SSTR(dev.getDeviceHandle()), *pResultDimmProps);
+						delete sensor;
+
+						if (singleSensorTargetProcessed)
+							break;
+					}
 				}
+
+				if (!framework::parsedCommandContains(parsedCommand, framework::OPTION_DISPLAY) &&
+					!framework::parsedCommandContains(parsedCommand, framework::OPTION_ALL))
+				{
+					pResults->setOutputType(framework::ResultBase::OUTPUT_TEXTTABLE);
+				}
+
+				return pResults;
 			}
 		}
 		catch (wbem::framework::Exception &e)
@@ -288,6 +320,72 @@ cli::framework::ResultBase* cli::nvmcli::SensorFeature::showSensor(
 	}
 
 	return pResult;
+}
+
+
+void cli::nvmcli::SensorFeature::sensorToPropList(framework::PropertyListResult* propList, std::string dimmId, 
+			core::device::sensor::Sensor *sensor, wbem::framework::attribute_names_t attributes)
+{
+	// DimmID = handle or uid depending on user selection
+	if (wbem::framework::InstanceFactory::containsAttribute(wbem::DIMMID_KEY, attributes))
+	{
+		propList->insert(wbem::DIMMID_KEY, dimmId.c_str());
+	}
+
+	if (wbem::framework::InstanceFactory::containsAttribute(wbem::TYPE_KEY, attributes))
+	{
+		propList->insert(wbem::TYPE_KEY, sensor->GetName().c_str());
+	}
+
+	if (wbem::framework::InstanceFactory::containsAttribute(wbem::support::CURRENTVALUE_KEY, attributes))
+	{
+		propList->insert(wbem::support::CURRENTVALUE_KEY, sensor->GetReading().c_str());
+	}
+
+	if (wbem::framework::InstanceFactory::containsAttribute(wbem::ENABLEDSTATE_KEY, attributes))
+	{
+		propList->insert(wbem::ENABLEDSTATE_KEY, sensor->GetEnabledState().c_str());
+	}
+
+	if (wbem::framework::InstanceFactory::containsAttribute(wbem::LOWERTHRESHOLDCRITICAL_KEY, attributes))
+	{
+		propList->insert(wbem::LOWERTHRESHOLDCRITICAL_KEY, sensor->GetLowerCriticalThreshold().c_str());
+	}
+
+	if (wbem::framework::InstanceFactory::containsAttribute(wbem::LOWERTHRESHOLDNONCRITICAL_KEY, attributes))
+	{
+		propList->insert(wbem::LOWERTHRESHOLDNONCRITICAL_KEY, sensor->GetLowerNonCriticalThreshold().c_str());
+	}
+
+	if (wbem::framework::InstanceFactory::containsAttribute(wbem::UPPERTHRESHOLDNONCRITICAL_KEY, attributes))
+	{
+		propList->insert(wbem::UPPERTHRESHOLDNONCRITICAL_KEY, sensor->GetUpperNonCriticalThreshold().c_str());
+	}
+
+	if (wbem::framework::InstanceFactory::containsAttribute(wbem::UPPERTHRESHOLDCRITICAL_KEY, attributes))
+	{
+		propList->insert(wbem::UPPERTHRESHOLDCRITICAL_KEY, sensor->GetUpperCriticalThreshold().c_str());
+	}
+
+	if (wbem::framework::InstanceFactory::containsAttribute(wbem::UPPERTHRESHOLDFATAL_KEY, attributes))
+	{
+		propList->insert(wbem::UPPERTHRESHOLDFATAL_KEY, sensor->GetUpperFatalThreshold().c_str());
+	}
+
+	if (wbem::framework::InstanceFactory::containsAttribute(wbem::CURRENTSTATE_KEY, attributes))
+	{
+		propList->insert(wbem::CURRENTSTATE_KEY, sensor->GetState().c_str());
+	}
+
+	if (wbem::framework::InstanceFactory::containsAttribute(wbem::SUPPORTEDTHRESHOLDS_KEY, attributes))
+	{
+		propList->insert(wbem::SUPPORTEDTHRESHOLDS_KEY, ShowCommandUtilities::listToString(sensor->GetSupportedThresholdTypes()));
+	}
+
+	if (wbem::framework::InstanceFactory::containsAttribute(wbem::SETTABLETHRESHOLDS_KEY, attributes))
+	{
+		propList->insert(wbem::SETTABLETHRESHOLDS_KEY, ShowCommandUtilities::listToString(sensor->GetSettableThresholdTypes()));
+	}
 }
 
 cli::framework::ResultBase* cli::nvmcli::SensorFeature::modifySensor(

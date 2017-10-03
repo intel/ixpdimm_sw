@@ -238,5 +238,98 @@ std::string ShowCommandUtilities::getDimmIdFromDeviceUidAndHandle(const std::str
 	return result.str();
 }
 
+
+template<typename Out>
+void ShowCommandUtilities::split(const std::string &s, char delim, Out result) {
+	std::stringstream ss;
+	ss.str(s);
+	std::string item;
+	while (std::getline(ss, item, delim)) {
+		*(result++) = item;
+	}
+}
+
+std::vector<std::string> ShowCommandUtilities::split(const std::string &s, char delim) {
+	std::vector<std::string> elems;
+	split(s, delim, std::back_inserter(elems));
+	return elems;
+}
+
+std::string ShowCommandUtilities::getDeviceUid(std::string id, struct device_discovery *devices, int device_cnt)
+{
+	if (id.find('-', 0) != std::string::npos)
+		return id;
+
+	std::string invalidUid("invalid");
+	for (int i = 0; i < device_cnt; ++i)
+	{
+		std::ostringstream s;
+		s << devices[i].device_handle.handle;
+		std::string converted(s.str());
+
+		if (id.compare(converted) == 0)
+			return devices[i].uid;
+	}
+	return invalidUid;
+}
+
+std::vector<core::device::Device> ShowCommandUtilities::getAllDevices(struct device_discovery *devices, int device_cnt)
+{
+	std::vector<core::device::Device> device_list;
+	core::NvmLibrary &lib = core::NvmLibrary::getNvmLibrary();
+	for (int i = 0; i < device_cnt; ++i)
+	{
+		core::device::Device dev(lib, devices[i]);
+		device_list.push_back(dev);
+	}
+	return device_list;
+}
+
+int ShowCommandUtilities::findDeviceInDiscovery(std::string dev_uid, struct device_discovery *devices, int device_cnt)
+{
+	for (int i = 0; i < device_cnt; ++i)
+	{
+		if (dev_uid.compare(devices[i].uid) == 0)
+		{
+			return i;
+		}
+	}
+	return -1;
+}
+
+std::string ShowCommandUtilities::listToString(std::vector<std::string> list)
+{
+	std::ostringstream final_str;
+	int list_cnt = list.size();
+
+	for (int i = 0; i < list_cnt; ++i)
+	{
+		final_str << list[i];
+		if (i < list_cnt - 1)
+			final_str << ", ";
+	}
+	return final_str.str();
+}
+
+std::vector<core::device::Device> ShowCommandUtilities::getAllDevicesFromList(struct device_discovery *devices, int device_cnt, std::string device_list)
+{
+	std::vector<core::device::Device> devs;
+	core::NvmLibrary &lib = core::NvmLibrary::getNvmLibrary();
+	std::vector<std::string> dev_uid_list;
+	dev_uid_list = split(device_list, ',');
+
+	for (std::vector<std::string>::const_iterator id = dev_uid_list.begin(); id != dev_uid_list.end(); ++id)
+	{
+		std::string dev_id_unkown_format = *id;
+		std::string dev_uid = getDeviceUid(dev_id_unkown_format, devices, device_cnt);
+		int devIdx = findDeviceInDiscovery(dev_uid, devices, device_cnt);
+		if (devIdx > 0)
+		{
+			core::device::Device dev(lib, devices[devIdx]);
+			devs.push_back(dev);
+		}
+	}
+	return devs;
+}
 }
 }

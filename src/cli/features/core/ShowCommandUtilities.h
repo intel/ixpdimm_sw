@@ -62,6 +62,14 @@ class NVM_API ShowCommandUtilities
 		static std::string getFormattedEvent(const event &event);
 		static std::string getFormattedEventList(const std::vector<event> &events);
 
+		static std::vector<core::device::Device> getAllDevicesFromList(struct device_discovery *devices, int device_cnt, std::string device_list);
+		static int findDeviceInDiscovery(std::string dev_uid, struct device_discovery *devices, int device_cnt);
+		static std::vector<core::device::Device> getAllDevices(struct device_discovery *devices, int device_cnt);
+		static std::string getDeviceUid(std::string id, struct device_discovery *devices, int device_cnt);
+		static std::vector<std::string> split(const std::string &s, char delim);
+		template<typename Out>
+		static void split(const std::string &s, char delim, Out result);
+		static std::string listToString(std::vector<std::string> list);
 	protected:
 		static std::string getFirstBadDimmId(const core::StringList &dimmIds,
 				core::device::DeviceCollection &devices);

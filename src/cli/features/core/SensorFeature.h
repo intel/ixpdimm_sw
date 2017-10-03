@@ -36,6 +36,8 @@
 #include "VerboseFeatureBase.h"
 #include <support/NVDIMMSensorViewFactory.h>
 #include <nvm_types.h>
+#include <core/device/Device.h>
+#include <core/device/Sensors.h>
 
 namespace cli
 {
@@ -86,12 +88,15 @@ private:
 	framework::ResultBase *showSensor(const framework::ParsedCommand &parsedCommand);
 	framework::ResultBase *modifySensor(const framework::ParsedCommand &parsedCommand);
 	std::string getSensorName(int type);
-
+	void sensorToPropList(framework::PropertyListResult* propList, std::string dimmId,
+		core::device::sensor::Sensor *sensor, wbem::framework::attribute_names_t attributes);
 	bool isValidType(const std::string &type) const;
 	bool isSensorTypeModifiable(const std::string &type) const;
 	bool tryParseVal (const std::string& str, int *p_value) const;
 	bool tryParseVal (const std::string& str, NVM_REAL32 *p_value) const;
 	void roundToNearestSixteenth(NVM_REAL32 &val);
+	void updateResultsWithPropertyList(core::device::Device dev, framework::ObjectListResult *pResults);
+	
 	/*
 	 * Helper for modify sensor.
 	 * Fetches the properties from the parsed command, performs validation, and converts to WBEM
