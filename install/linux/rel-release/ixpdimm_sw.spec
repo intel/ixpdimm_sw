@@ -11,6 +11,7 @@ Group: Applications/System
 URL: https://01.org/ixpdimm-sw
 Source: https://github.com/01org/ixpdimm_sw/archive/v%{version}.tar.gz#/%{name}-%{version}.tar.gz
 Requires: ndctl-libs >= 58.2
+Requires: invm-frameworks >= 1.0.0.2006
 ExclusiveArch: x86_64
 
 BuildRequires: pkgconfig(libkmod)
@@ -86,7 +87,7 @@ A Command Line Interface (CLI) application for configuring and
 managing IXPDIMMs from the command line.
 
 %package -n invm-frameworks
-Version:		%{invm_framework_build_version}
+Version:	%{invm_framework_build_version}
 Summary:        Library files for invm-frameworks
 License:        BSD
 Group:          Development/Libraries
@@ -97,7 +98,7 @@ functionality, storage command line interface (CLI) applications, storage
 common information model (CIM) providers.
 
 %package -n invm-frameworks-devel
-Version:		%{invm_framework_build_version}
+Version:	%{invm_framework_build_version}
 Summary:        Development files for invm-frameworks-devel
 License:        BSD
 Group:          Development/Libraries
@@ -106,72 +107,6 @@ Requires:       invm-frameworks%{?_isa} = %{invm_framework_build_version}-%{rele
 %description -n invm-frameworks-devel
 The invm-frameworks-devel package contains header files for
 developing applications that use invm-frameworks.
-
-%package -n libinvm-i18n
-Version:		%{invm_framework_build_version}
-Summary:        Internationalization library
-License:        BSD
-Group:          Development/Libraries
-Requires:       invm-frameworks%{?_isa} = %{invm_framework_build_version}-%{release}
-
-%description -n libinvm-i18n
-The libinvm-i18n package supports a subset of Internationalization (I18N)
-functionality.
-
-%package -n libinvm-i18n-devel
-Version:		%{invm_framework_build_version}
-Summary:        Development files for libinvm-i18n
-License:        BSD
-Group:          Development/Libraries
-Requires:       invm-frameworks%{?_isa} = %{invm_framework_build_version}-%{release}
-
-%description -n libinvm-i18n-devel
-The libinvm-i18n-devel package contains header files for
-developing applications that use libinvm-i18n.
-
-%package -n libinvm-cli
-Version:		%{invm_framework_build_version}
-Summary:        Framework for Storage CLI applications
-License:        BSD
-Group:          Development/Libraries
-Requires:       invm-frameworks%{?_isa} = %{invm_framework_build_version}-%{release}
-
-%description -n libinvm-cli
-The libinvm-cli package supports storage command line interface (CLI)
-applications.
-
-%package -n libinvm-cli-devel
-Version:		%{invm_framework_build_version}
-Summary:        Development files for libinvm-cli
-License:        BSD
-Group:          Development/Libraries
-Requires:       invm-frameworks%{?_isa} = %{invm_framework_build_version}-%{release}
-
-%description -n libinvm-cli-devel
-The libinvm-cli-devel package contains header files for
-developing applications that use libinvm-cli.
-
-%package -n libinvm-cim
-Version:		%{invm_framework_build_version}
-Summary:        Framework for Storage CIM providers
-License:        BSD
-Group:          Development/Libraries
-Requires:       invm-frameworks%{?_isa} = %{invm_framework_build_version}-%{release}
-
-%description -n libinvm-cim
-The libinvm-cim package supports storage common information model (CIM)
-providers.
-
-%package -n libinvm-cim-devel
-Version:		%{invm_framework_build_version}
-Summary:        Development files for libinvm-cim
-License:        BSD
-Group:          Development/Libraries
-Requires:       invm-frameworks%{?_isa} = %{invm_framework_build_version}-%{release}
-
-%description -n libinvm-cim-devel
-The libinvm-cim-devel package contains header files for
-developing applications that use libinvm-cim.
 
 Version: %{build_version}
 
@@ -391,45 +326,6 @@ fi
 
 %post -n invm-frameworks -p /sbin/ldconfig
 %postun -n invm-frameworks -p /sbin/ldconfig
-
-%files -n libinvm-i18n
-%doc README.md
-%{_libdir}/libinvm-i18n.so.*
-%license LICENSE
-
-%files -n libinvm-i18n-devel
-%doc README.md
-%{_includedir}/libinvm-i18n
-%license LICENSE
-
-%post -n libinvm-i18n -p /sbin/ldconfig
-%postun -n libinvm-i18n -p /sbin/ldconfig
-
-%files -n libinvm-cli
-%doc README.md
-%{_libdir}/libinvm-cli.so.*
-%license LICENSE
-
-%files -n libinvm-cli-devel
-%doc README.md
-%{_includedir}/libinvm-cli
-%license LICENSE
-
-%post -n libinvm-cli -p /sbin/ldconfig
-%postun -n libinvm-cli -p /sbin/ldconfig
-
-%files -n libinvm-cim
-%doc README.md
-%{_libdir}/libinvm-cim.so.*
-%license LICENSE
-
-%files -n libinvm-cim-devel
-%doc README.md
-%{_includedir}/libinvm-cim
-%license LICENSE
-
-%post -n libinvm-cim -p /sbin/ldconfig
-%postun -n libinvm-cim -p /sbin/ldconfig
 
 %changelog
 * Mon Aug 29 2016 Namratha Kothapalli <namratha.n.kothapalli@intel.com> - 01.00.00.2113-1
