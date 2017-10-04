@@ -56,7 +56,7 @@ bool cli::nvmcli::VerboseController::getVerbose()
 bool cli::nvmcli::VerboseController::set_print_mask(int mask)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	COMMON_BOOL isSet = set_current_print_mask(mask);
+	COMMON_BOOL isSet = set_current_print_mask(mask, 0);
 	return isSet;
 }
 

@@ -254,58 +254,33 @@ void log_to_syslog(int level, const char *file_name, int line_number, const char
 	}
 }
 
-/*
- * Helper to set the global print mask
- */
-void print_mask_to_g_print_mask(int *print_mask)
-{
-	if (get_config_value_int(SQL_KEY_PRINT_MASK, print_mask) == COMMON_SUCCESS)
-	{
-		g_print_mask = *print_mask;
-	}
-	else
-	{
-		*print_mask = 0;
-	}
-}
-
 int get_current_print_mask()
 {
 	int print_mask = 0;
-	if (mutex_lock(&g_printmask_lock))
+	if (get_config_value_int(SQL_KEY_PRINT_MASK, &print_mask) != COMMON_SUCCESS)
 	{
-		print_mask = g_print_mask;
-		if (print_mask == -1)
-		{
-			print_mask_to_g_print_mask(&print_mask);
-		}
-		mutex_unlock(&g_printmask_lock);
-	}
-	else
-	{
-		if (get_config_value_int(SQL_KEY_PRINT_MASK, &print_mask) != COMMON_SUCCESS)
-		{
-			print_mask = 0;
-		}
+		print_mask = 0;
 	}
 	return print_mask;
 }
 
-COMMON_BOOL set_current_print_mask(int mask)
+COMMON_BOOL set_current_print_mask(int mask, int write_thru)
 {
-	COMMON_BOOL set = 0;
 	char mask_str[CONFIG_VALUE_LEN];
 	snprintf(mask_str, CONFIG_VALUE_LEN, "%d", mask);
-	if (add_config_value(SQL_KEY_PRINT_MASK, mask_str) == COMMON_SUCCESS)
+	if (write_thru)
 	{
-		if (mutex_lock(&g_printmask_lock))
+		if (add_config_value(SQL_KEY_PRINT_MASK, mask_str) == COMMON_SUCCESS)
 		{
-			g_print_mask = mask;
-			mutex_unlock(&g_printmask_lock);
+			return 1;
 		}
-		set = 1;
+		else return 0;
 	}
-	return set;
+	else
+	{
+		set_config_cache(SQL_KEY_PRINT_MASK, mask_str);
+	}
+	return 1;
 }
 
 /*
@@ -314,22 +289,11 @@ COMMON_BOOL set_current_print_mask(int mask)
 int get_current_log_level()
 {
 	int log_level = 0;
-
-	if (mutex_lock(&g_loglevel_lock))
+	if(COMMON_SUCCESS == get_config_value_int(SQL_KEY_LOG_LEVEL, &log_level))
 	{
-		log_level = g_log_level;
-		if (log_level < 0)
-		{
-			get_config_value_int(SQL_KEY_LOG_LEVEL, &log_level);
-			g_log_level = log_level;
-		}
-		mutex_unlock(&g_loglevel_lock);
+		return log_level;
 	}
-	else
-	{
-		get_config_value_int(SQL_KEY_LOG_LEVEL, &log_level);
-	}
-	return log_level;
+	return 0;
 }
 
 /*
@@ -337,17 +301,11 @@ int get_current_log_level()
  */
 COMMON_BOOL set_current_log_level(int level)
 {
-	COMMON_BOOL set = 0;
 	char level_str[CONFIG_VALUE_LEN];
 	snprintf(level_str, CONFIG_VALUE_LEN, "%d", level);
 	if (add_config_value(SQL_KEY_LOG_LEVEL, level_str) == COMMON_SUCCESS)
 	{
-		if (mutex_lock(&g_loglevel_lock))
-		{
-			g_log_level = level;
-			mutex_unlock(&g_loglevel_lock);
-		}
-		set = 1;
+		return 1;
 	}
-	return set;
+	return 0;
 }

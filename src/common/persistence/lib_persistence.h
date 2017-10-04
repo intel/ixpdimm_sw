@@ -184,6 +184,19 @@ extern int rm_config_value(const char *key);
  */
 extern int set_default_config_settings(PersistentStore *p_ps);
 
+/*
+* Set the configuration settings to an internal in-memory store
+* Note, only supported for specific configuration settings
+*/
+void set_config_cache(const char *key, const char *val);
+
+/*
+* Get the configuration settings from an internal in-memory store
+* Note, only supported for specific configuration settings
+*/
+const char * get_config_cache(const char *key);
+
+
 #ifdef __cplusplus
 }
 #endif

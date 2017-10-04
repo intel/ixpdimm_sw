@@ -42,6 +42,8 @@
 #include "logging.h"
 #include "config_settings.h"
 
+#define CONFIG_CACHE_SIZE	2
+
 /*!
  * Determines if we enable support data by default
  */
@@ -52,6 +54,9 @@ const char *log_destination = "1"; // log to syslog by default
 const char *max_snapshots = MAX_SUPPORT_SNAPSHOTS_DEFAULT;
 const char *log_destination = "0"; // log to DB by default
 #endif
+
+//cached config values
+struct db_config cache_configs[CONFIG_CACHE_SIZE];
 
 // GLOBAL database pointer for this process
 PersistentStore *p_store;
@@ -127,6 +132,36 @@ int create_default_config(const char *path)
 	return rc;
 }
 
+void init_config_cache()
+{
+	s_strcpy(cache_configs[0].key, SQL_KEY_PRINT_MASK, CONFIG_KEY_LEN);
+	s_strcpy(cache_configs[0].value, "", CONFIG_VALUE_LEN);
+	s_strcpy(cache_configs[1].key, SQL_KEY_LOG_LEVEL, CONFIG_KEY_LEN);
+	s_strcpy(cache_configs[1].value, "", CONFIG_VALUE_LEN);
+}
+
+const char * get_config_cache(const char *key)
+{
+	for (int i = 0; i < CONFIG_CACHE_SIZE; ++i)
+	{
+		if (0 == s_strncmp(cache_configs[i].key, key, s_strnlen(cache_configs[i].key, CONFIG_KEY_LEN)))
+		{
+			return cache_configs[i].value;
+		}
+	}
+	return NULL;
+}
+
+void set_config_cache(const char *key, const char *val)
+{
+	for (int i = 0; i < CONFIG_CACHE_SIZE; ++i)
+	{
+		if (0 == s_strncmp(cache_configs[i].key, key, s_strnlen(cache_configs[i].key, CONFIG_KEY_LEN)))
+		{
+			s_strcpy(cache_configs[i].value, val, CONFIG_VALUE_LEN);
+		}
+	}
+}
 
 /*
  * Set up the connection to the product configuration and support database.
@@ -142,6 +177,7 @@ int open_lib_store(const char *path)
 		}
 		else
 		{
+			init_config_cache();
 			p_store = open_PersistentStore(path);
 			if (p_store == NULL)
 			{
@@ -197,8 +233,6 @@ PersistentStore *open_default_lib_store()
 	return p_store;
 }
 
-
-
 /*
  * Retrieve a configuration setting from the database
  */
@@ -235,11 +269,24 @@ int get_config_value(const char *key, char *value)
 	{
 		if (p_store)
 		{
-			struct db_config config;
-			if ((rc = db_get_config_by_key(p_store, key, &config)) == DB_SUCCESS)
+			const char * cache_val = get_config_cache(key);
+			if (cache_val && (0 < s_strnlen(cache_val, CONFIG_VALUE_LEN)))
 			{
-				s_strcpy(value, config.value, CONFIG_VALUE_LEN);
-				rc = COMMON_SUCCESS;
+				s_strcpy(value, cache_val, CONFIG_VALUE_LEN);
+				return COMMON_SUCCESS;
+			}
+			else
+			{
+				struct db_config config;
+				if ((rc = db_get_config_by_key(p_store, key, &config)) == DB_SUCCESS)
+				{
+					s_strcpy(value, config.value, CONFIG_VALUE_LEN);
+					if (cache_val)
+					{
+						set_config_cache(key, value);
+					}
+					rc = COMMON_SUCCESS;
+				}
 			}
 		}
 	}
@@ -368,6 +415,9 @@ int add_config_value(const char *key, const char *value)
 		{
 			// remove it first so it doesn't error on dup key, ignore errors
 			rm_config_value(key);
+
+			//update cache
+			set_config_cache(key, value);
 
 			// add it
 			struct db_config config;

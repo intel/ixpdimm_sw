@@ -198,7 +198,7 @@ int log_gather();
 void print_mask_to_g_print_mask(int *print_mask);
 
 int get_current_print_mask();
-COMMON_BOOL set_current_print_mask(int mask);
+COMMON_BOOL set_current_print_mask(int mask, int write_thru);
 
 /*
  * Retrieve the current log level
