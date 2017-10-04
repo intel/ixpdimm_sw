@@ -395,7 +395,7 @@ void check_unmapped_device_config(NVM_UINT32 *p_results,
 				EVENT_SEVERITY_INFO,
 				EVENT_CODE_DIAG_PCONFIG_UNCONFIGURED,
 				uid,
-				1,
+				0, // action not required
 				uid_str, NULL, NULL,
 				DIAGNOSTIC_RESULT_OK);
 		(*p_results)++;

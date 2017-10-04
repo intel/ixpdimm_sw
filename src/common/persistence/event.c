@@ -238,13 +238,10 @@ const char *EVENT_MESSAGES_QUICK_DIAG[EVENT_CODE_DIAG_QUICK_UNKNOWN -
 	// EVENT_CODE_DIAG_QUICK_UNSAFE_SHUTDOWN
 	N_TR("The quick health check detected that the firmware on " NVM_DIMM_NAME " %s "
 			"experienced an unsafe shutdown before its latest restart."),
-	// EVENT_CODE_DIAG_QUICK_SANITIZE_IN_PROGRESS
-	N_TR("The quick health check detected that a sanitize operation is in progress on "
-			NVM_DIMM_NAME " %s. A reboot will be required when complete to use the "
-			NVM_DIMM_NAME "."),
-	// EVENT_CODE_DIAG_QUICK_SANITIZE_COMPLETE
-	N_TR("The quick health check detected that a sanitize operation has completed on "
-			NVM_DIMM_NAME " %s. A reboot is required to use the " NVM_DIMM_NAME "."),
+	// Available event 531
+	N_TR("Placeholder"),
+	// Available event 532
+	N_TR("Placeholder"),
 	// EVENT_CODE_DIAG_QUICK_AIT_DRAM_NOT_READY
 	N_TR("The quick health check detected that the firmware on " NVM_DIMM_NAME " %s "
 			"is reporting that the AIT Dram is not ready."),
@@ -255,7 +252,9 @@ const char *EVENT_MESSAGES_QUICK_DIAG[EVENT_CODE_DIAG_QUICK_UNKNOWN -
 			"is reporting that the AIT Dram is disabled."),
 	N_TR("The quick health check detected that the firmware on " NVM_DIMM_NAME " %s "
 			"failed to load successfully."),
-
+	// EVENT_CODE_DIAG_QUICK_INTERNAL_CPU_ERROR
+	N_TR("The quick health check detected that the firmware on " NVM_DIMM_NAME " %s "
+			"has an internal CPU_error, last known Major:Minor Checkpoint is %s."),
 	// EVENT_CODE_DIAG_QUICK_UNKNOWN
 	N_TR("The quick health check logged an unknown error code %d."),
 };

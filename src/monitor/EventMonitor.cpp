@@ -330,7 +330,7 @@ void monitor::EventMonitor::processTopologyNewDimms(const DeviceMap &devices,
 							device.discovery.uid,
 							uidStr.c_str(),
 							NULL,
-							true);
+							false); // no Action Required
 				}
 				else
 				{
@@ -353,7 +353,7 @@ void monitor::EventMonitor::processTopologyNewDimms(const DeviceMap &devices,
 							device.discovery.uid,
 							replacedUid.c_str(),
 							uidStr.c_str(),
-							true);
+							false);  // no Action Required
 				}
 				else
 				{

@@ -49,6 +49,7 @@ enum major_status_code
 {
 	NO_POST_CODE = 0x00,
 	INIT_MJ_FAILURE_CHECKPOINT = 0XA1, // Unrecoverable FW error
+	CPU_EXCEPTION = 0xE1, // CPU Exception
 	INIT_MJ_INIT_COMPLETE = 0XF0, // FW initialization complete
 };
 
@@ -489,8 +490,11 @@ void check_fw_boot_status(const struct diagnostic *p_diagnostic,
 		code = EVENT_CODE_DIAG_QUICK_NO_POST_CODE;
 		checkpoint_str[0] = 0;
 	}
-	else if ((major_status_code == INIT_MJ_FAILURE_CHECKPOINT) ||
-			(major_status_code != INIT_MJ_INIT_COMPLETE))
+	else if (major_status_code == CPU_EXCEPTION)
+	{
+		code = EVENT_CODE_DIAG_QUICK_INTERNAL_CPU_ERROR;
+	}
+	else if (major_status_code == INIT_MJ_FAILURE_CHECKPOINT)
 	{
 		code = EVENT_CODE_DIAG_QUICK_FW_INITIALIZATION_INCOMPLETE;
 	}
