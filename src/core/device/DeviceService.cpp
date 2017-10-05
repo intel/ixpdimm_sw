@@ -151,12 +151,26 @@ std::string core::device::DeviceService::getUidForDeviceIdFromCollection(
 
 std::string core::device::DeviceService::getFirmwareApiVersionByUid(const std::string &deviceUid)
 {
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	return m_lib.getDeviceDiscovery(deviceUid).fw_api_version;
+}
+
+void core::device::DeviceService::modifyDeviceSettings(const std::string& deviceUid,
+		const bool enableFirstFastRefresh, const bool enableViralPolicy)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	struct device_settings settings;
+	settings.first_fast_refresh = enableFirstFastRefresh;
+	settings.viral_policy = enableViralPolicy;
+
+	m_lib.modifyDeviceSettings(deviceUid, settings);
 }
 
 int core::device::DeviceService::dumpDeviceSupport(NVM_UID device_uid, NVM_PATH support_file,
 		NVM_SIZE support_file_len, NVM_PATH support_files[NVM_MAX_EAFD_FILES])
 {
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	int rc = m_lib.dumpDeviceSupport(device_uid, support_file, support_file_len, support_files);
 
 	if (rc < 0)
@@ -166,3 +180,5 @@ int core::device::DeviceService::dumpDeviceSupport(NVM_UID device_uid, NVM_PATH 
 
 	return rc;
 }
+
+

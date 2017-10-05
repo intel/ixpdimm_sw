@@ -243,6 +243,12 @@ private:
 	void clearError(const std::string &dimmUid,
 			struct device_error *p_error);
 
+	void updateDeviceSettingsForInstance(wbem::framework::Instance *pInstance,
+			const wbem::framework::attributes_t &modifyAttributes);
+	wbem::framework::Attribute getUpdatedAttributeForInstance(wbem::framework::Instance *pInstance,
+			const std::string &attrKey,
+			const wbem::framework::attributes_t &modifyAttributes);
+
 };
 
 } // physical_asset

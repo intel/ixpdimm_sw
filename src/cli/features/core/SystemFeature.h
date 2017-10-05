@@ -87,23 +87,18 @@ namespace nvmcli
 static const std::string UNLOCKED_PROPERTYVALUE = "Unlocked"; //!< Unlock Property value
 static const std::string DISABLED_PROPERTYVALUE = "Disabled"; //!< Disabled Property value
 static const std::string FROZEN_PROPERTYVALUE = "Frozen"; //!< Disabled Property value
-static const std::string ZERO_PROPERTYVALUE = "0"; //!< Disable property value
-static const std::string ONE_PROPERTYVALUE = "1"; //!< Enable property value
 static const std::string ERROR_PROPERTYVALUE = "Error"; // !< Error property value
 static const std::string WARNING_PROPERTYVALUE = "Warning"; // !< Warning property value
 static const std::string INFO_PROPERTYVALUE = "Info"; // !< Info property value
 static const std::string DEBUG_PROPERTYVALUE = "Debug"; // !< Debug property value
 static const std::string LOCKSTATE_PROPERTYNAME = "LockState"; //!< Lockstate Property name
 static const std::string PASSPHRASE_PROPERTYNAME = "Passphrase"; //!< Passphrase Property
-static const std::string FIRSTFASTREFRESH_PROPERTYNAME = "FirstFastRefresh"; //!< FirstFastRefresh Property
 static const std::string FWLOGLEVEL_PROPERTYNAME = "FwLogLevel"; //!< FwLogLevel Property
-static const std::string VIRALPOLICY_PROPERTYNAME = "ViralPolicy"; //!< ViralPolicy Property
 static const std::string NEWPASSPHRASE_PROPERTYNAME = "NewPassphrase"; //!< New Passphrase Property
 static const std::string CONFIRMPASSPHRASE_PROPERTYNAME = "ConfirmPassphrase"; //!< Confirm Passphrase Property
 static const std::string ERASETYPE_PROPERTYNAME = "EraseType"; //!< which type of erase
 static const std::string ERASETYPE_PROPERTY_CRYPTO = "crypto"; //!< which type of erase
 
-static const std::string MODIFYDEVICE_MSG = N_TR("Modify " NVM_DIMM_NAME ""); //!< Modify NVM-DIMM message
 static const std::string SETFWLOGGING_MSG = N_TR("Set firmware log level on " NVM_DIMM_NAME); //!< Set fw logging message
 static const std::string UNLOCK_MSG = N_TR("Unlock " NVM_DIMM_NAME); //!< Unlock passphrase success message
 static const std::string CHANGEPASSPHRASE_MSG = "Change passphrase on " NVM_DIMM_NAME; //!< Change passphrase message
@@ -116,8 +111,6 @@ static const std::string UNLOCK_ALREADYDISABLED_MSG = N_TR("Security is disabled
 static const std::string ERASEDEVICEDATA_MSG = N_TR("Erase " NVM_DIMM_NAME); //!< Unlock passphrase success message
 static const std::string ERASE_DEV_PROMPT = N_TR(
 		"Erase all data on " NVM_DIMM_NAME " %s?"); //!< prompt for user if not forced
-static const std::string MODIFY_DEV_PROMPT = N_TR(
-		"Change settings for " NVM_DIMM_NAME " %s?"); //!< prompt for user if not forced
 static const std::string PASSPHRASE_FILE_AND_COMMAND_LINE_PARAMS_MSG =
 		N_TR("An empty string is expected for the passphrase properties when using the source option.");
 static const std::string INVALID_NEW_OR_CONFIRM_PASSPHRASE_FORMAT_MSG =

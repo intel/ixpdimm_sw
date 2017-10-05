@@ -49,6 +49,7 @@
 #include <core/exceptions/InvalidArgumentException.h>
 #include <core/device/DeviceHelper.h>
 #include <iomanip>
+#include <stdexcept>
 
 namespace wbem
 {
@@ -550,12 +551,6 @@ wbem::framework::Instance *NVDIMMFactory::modifyInstance(
 
 	try
 	{
-		// get the device UID from the path
-		framework::Attribute tagAttribute = path.getKeyValue(TAG_KEY);
-		NVM_UID uid;
-		uid_copy(tagAttribute.stringValue().c_str(), uid);
-
-
 		framework::attribute_names_t attributeNames;
 		pInstance = getInstance(path, attributeNames);
 
@@ -568,31 +563,14 @@ wbem::framework::Instance *NVDIMMFactory::modifyInstance(
 
 		if (pInstance)
 		{
-			if ((attributes.count(FIRSTFASTREFRESH_KEY)) ||
-					(attributes.count(VIRALPOLICY_KEY)))
-			{
-				int rc = 0;
-				struct device_settings settings;
-
-				framework::Attribute refreshAttr = attributes[FIRSTFASTREFRESH_KEY];
-				settings.first_fast_refresh = refreshAttr.boolValue() ? 1 : 0;
-				framework::Attribute viralAttr = attributes[VIRALPOLICY_KEY];
-				settings.viral_policy = viralAttr.boolValue() ? 1 : 0;
-
-				if ((rc = nvm_modify_device_settings(uid, &settings)) == NVM_SUCCESS)
-				{
-					pInstance->setAttribute(FIRSTFASTREFRESH_KEY, refreshAttr);
-					pInstance->setAttribute(VIRALPOLICY_KEY, viralAttr);
-				}
-				else
-				{
-					COMMON_LOG_ERROR_F("nvm_modify_device_settings failed with rc = %d", rc);
-					throw exception::NvmExceptionLibError(rc);
-				}
-			}
+			updateDeviceSettingsForInstance(pInstance, attributes);
 
 			if (attributes.count(FWLOGLEVEL_KEY))
 			{
+				framework::Attribute tagAttribute = path.getKeyValue(TAG_KEY);
+				NVM_UID uid;
+				uid_copy(tagAttribute.stringValue().c_str(), uid);
+
 				int rc = NVM_SUCCESS;
 				framework::Attribute attr = attributes[FWLOGLEVEL_KEY];
 				enum fw_log_level fwLogLevel = convertToLogLevelEnum(attr.uintValue());
@@ -619,6 +597,56 @@ wbem::framework::Instance *NVDIMMFactory::modifyInstance(
 	}
 
 	return pInstance;
+}
+
+void NVDIMMFactory::updateDeviceSettingsForInstance(wbem::framework::Instance *pInstance,
+		const wbem::framework::attributes_t &modifyAttributes)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	framework::Attribute tagAttribute;
+	pInstance->getAttribute(TAG_KEY, tagAttribute);
+	std::string uid = tagAttribute.stringValue();
+
+	if ((modifyAttributes.count(FIRSTFASTREFRESH_KEY)) ||
+			(modifyAttributes.count(VIRALPOLICY_KEY)))
+	{
+		framework::Attribute refreshAttr = getUpdatedAttributeForInstance(pInstance,
+				FIRSTFASTREFRESH_KEY, modifyAttributes);
+		framework::Attribute viralAttr = getUpdatedAttributeForInstance(pInstance,
+				VIRALPOLICY_KEY, modifyAttributes);
+
+		try
+		{
+			m_deviceService.modifyDeviceSettings(uid, refreshAttr.boolValue(), viralAttr.boolValue());
+			pInstance->setAttribute(FIRSTFASTREFRESH_KEY, refreshAttr);
+			pInstance->setAttribute(VIRALPOLICY_KEY, viralAttr);
+		}
+		catch (core::LibraryException &e)
+		{
+			throw exception::NvmExceptionLibError(e.getErrorCode());
+		}
+	}
+}
+
+wbem::framework::Attribute NVDIMMFactory::getUpdatedAttributeForInstance(
+		wbem::framework::Instance *pInstance,
+		const std::string &attrKey,
+		const wbem::framework::attributes_t &modifyAttributes)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	framework::Attribute attr;
+	try
+	{
+		attr = modifyAttributes.at(attrKey);
+	}
+	catch (std::out_of_range &)
+	{
+		pInstance->getAttribute(attrKey, attr);
+	}
+
+	return attr;
 }
 
 /*

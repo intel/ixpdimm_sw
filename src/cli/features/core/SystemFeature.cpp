@@ -30,6 +30,7 @@
  */
 
 #include "SystemFeature.h"
+#include <cli/features/core/ModifyDeviceCommand.h>
 
 const std::string cli::nvmcli::SystemFeature::Name = "System";
 
@@ -62,21 +63,6 @@ void cli::nvmcli::SystemFeature::getPaths(cli::framework::CommandSpecList &list)
 			.helpText(TR("Restrict output to the " NVM_DIMM_NAME "s installed on specific sockets by "
 				"supplying the socket target and one or more comma-separated socket identifiers. "
 				"The default is to display all sockets."));
-
-	framework::CommandSpec modifyDevice(MODIFY_DEVICE, TR("Modify Device"), framework::VERB_SET,
-			TR("Change the configurable setting(s) on one or more " NVM_DIMM_NAME "s."));
-	modifyDevice.addOption(framework::OPTION_FORCE).helpText(
-			TR("Changing " NVM_DIMM_NAME " setting(s) is a potentially destructive operation which requires "
-				"confirmation from the user for each " NVM_DIMM_NAME ". This option suppresses the confirmation."));
-	modifyDevice.addTarget(TARGET_DIMM.name, true,
-			DIMMIDS_STR, false,
-			TR("Modify specific " NVM_DIMM_NAME "s by supplying one or more comma-separated " NVM_DIMM_NAME " identifiers. "
-			"However, this is not recommended as it may put the system in an undesirable state. "
-			"The default is to modify all manageable " NVM_DIMM_NAME "s."));
-	modifyDevice.addProperty(FIRSTFASTREFRESH_PROPERTYNAME, false, "0|1", true,
-			TR("Whether acceleration of the first refresh cycle is enabled."));
-	modifyDevice.addProperty(VIRALPOLICY_PROPERTYNAME, false, "0|1", true,
-			TR("Whether the viral policies are enabled."));
 
 	framework::CommandSpec setFwLogging(SET_FW_LOGGING, TR("Set Firmware Log Level"), framework::VERB_SET,
 			TR("Set the firmware logging level on one or more " NVM_DIMM_NAME "s."));
@@ -203,7 +189,7 @@ void cli::nvmcli::SystemFeature::getPaths(cli::framework::CommandSpecList &list)
 
 	list.push_back(showSystem);
 	list.push_back(showDevices);
-	list.push_back(modifyDevice);
+	list.push_back(ModifyDeviceCommand::getCommandSpec(MODIFY_DEVICE));
 	list.push_back(setFwLogging);
 	list.push_back(changeDevicePassphrase);
 	list.push_back(enableDeviceSecurity);
@@ -334,97 +320,9 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::modifyDevice(
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	std::string basePrefix;
-	std::vector<std::string> dimms;
-	framework::ResultBase *pResults = NULL;
-
-	if (parsedCommand.properties.size() == 0)
-	{
-		pResults = new framework::SyntaxErrorResult(TRS(NOMODIFIABLEPROPERTY_ERROR_STR));
-	}
-
-	if (!pResults)
-	{
-		bool hasRefreshProp, hasViralProp;
-		std::string firstFastRefresh = framework::Parser::getPropertyValue(parsedCommand, FIRSTFASTREFRESH_PROPERTYNAME, &hasRefreshProp);
-		std::string viralPolicy = framework::Parser::getPropertyValue(parsedCommand, VIRALPOLICY_PROPERTYNAME, &hasViralProp);
-
-		if (hasRefreshProp &&
-				(!cli::framework::stringsIEqual(firstFastRefresh, ZERO_PROPERTYVALUE) &&
-						!cli::framework::stringsIEqual(firstFastRefresh, ONE_PROPERTYVALUE)))
-		{
-			pResults = new framework::SyntaxErrorBadValueResult(
-					framework::TOKENTYPE_PROPERTY,
-					FIRSTFASTREFRESH_PROPERTYNAME.c_str(),
-					firstFastRefresh);
-		}
-		else if (hasViralProp &&
-				(!cli::framework::stringsIEqual(viralPolicy, ZERO_PROPERTYVALUE) &&
-						!cli::framework::stringsIEqual(viralPolicy, ONE_PROPERTYVALUE)))
-		{
-			pResults = new framework::SyntaxErrorBadValueResult(
-					framework::TOKENTYPE_PROPERTY,
-					VIRALPOLICY_PROPERTYNAME.c_str(),
-					viralPolicy);
-		}
-		else if (!pResults)
-		{
-			basePrefix = TRS(MODIFYDEVICE_MSG);
-			pResults = m_pDimmProviderAdapter->getDimms(parsedCommand, dimms);
-		}
-
-		if (!pResults)
-		{
-			wbem::physical_asset::NVDIMMFactory dimmFactory;
-
-			wbem::framework::attributes_t attributes;
-			wbem::framework::Attribute refreshAttr(!cli::framework::stringsIEqual(firstFastRefresh, ZERO_PROPERTYVALUE), false);
-			attributes[wbem::FIRSTFASTREFRESH_KEY] = refreshAttr;
-			wbem::framework::Attribute viralAttr(!cli::framework::stringsIEqual(viralPolicy, ZERO_PROPERTYVALUE), false);
-			attributes[wbem::VIRALPOLICY_KEY] = viralAttr;
-
-			framework::SimpleListResult *pListResults = new framework::SimpleListResult();
-
-			std::vector<std::string>::iterator iter = dimms.begin();
-			for (; iter != dimms.end(); iter++)
-			{
-				std::string dimmStr = m_uidToDimmIdStr((*iter));
-				std::string prefix = cli::framework::ResultBase::stringFromArgList((basePrefix + " %s").c_str(),
-						dimmStr.c_str());
-				prefix += ": ";
-
-				try
-				{
-					bool forceOption = parsedCommand.options.find(framework::OPTION_FORCE.name)
-								!= parsedCommand.options.end();
-
-					// if user didn't specify the force option, prompt them to continue
-					std::string prompt = framework::ResultBase::stringFromArgList(
-							MODIFY_DEV_PROMPT.c_str(), dimmStr.c_str());
-					if (!forceOption && !promptUserYesOrNo(prompt))
-					{
-						pListResults->insert(prefix + cli::framework::UNCHANGED_MSG);
-					}
-					else
-					{
-						wbem::framework::ObjectPath path;
-						dimmFactory.createPathFromUid(*iter, path);
-						dimmFactory.modifyInstance(path, attributes);
-
-						pListResults->insert(prefix + TRS(cli::framework::SUCCESS_MSG));
-					}
-				}
-				catch (wbem::framework::Exception &e)
-				{
-					pListResults->insert(prefix + e.what());
-					SetResultErrorCodeFromException(*pListResults, e);
-				}
-			}
-			pResults = pListResults;
-		}
-	}
-
-	return pResults;
+	cli::framework::YesNoPrompt prompt;
+	ModifyDeviceCommand command(prompt);
+	return command.execute(parsedCommand);
 }
 
 cli::framework::ResultBase *cli::nvmcli::SystemFeature::setFwLogging(
