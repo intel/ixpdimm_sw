@@ -645,11 +645,16 @@ void cli::nvmcli::RenameAttributeKey(
 		wbem::framework::attribute_names_t &attributes,
 		std::string fromStr, std::string toStr)
 {
-	wbem::framework::attribute_names_t::iterator found =
-			std::find(attributes.begin(), attributes.end(),fromStr);
-	if (found != attributes.end())
+	for (wbem::framework::attribute_names_t::iterator attr = attributes.begin();
+			attr != attributes.end(); attr++)
 	{
-		*found = toStr;
+		std::string lowercaseAttr = cli::framework::toLower(*attr);
+		std::string lowercaseFromStr = cli::framework::toLower(fromStr);
+
+		if (lowercaseAttr == lowercaseFromStr)
+		{
+			*attr = toStr;
+		}
 	}
 }
 
