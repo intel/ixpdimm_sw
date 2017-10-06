@@ -138,9 +138,8 @@ cli::framework::ErrorResult *cli::nvmcli::WbemToCli::checkPoolUid(
             }
             else
             {
-                wbem::exception::NvmExceptionLibError wbemException =
-                    wbem::exception::NvmExceptionLibError(NVM_ERR_BADPOOL);
-                pResult = cli::nvmcli::NvmExceptionToResult(wbemException);
+                pResult = new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
+                    getInvalidPoolIdErrorString(poolTarget));
             }
         }
         // no pool target was specified.

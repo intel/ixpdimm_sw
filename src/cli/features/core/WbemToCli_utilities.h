@@ -266,6 +266,8 @@ std::string AttributeToHexString(const wbem::framework::Attribute &attr);
 
 std::string getInvalidDimmIdErrorString(const std::string &invalidDimmId);
 
+std::string getInvalidPoolIdErrorString(const std::string &invalidPoolId);
+
 std::string uint64ToString(const unsigned long long &value);
 std::string uint64ToHexString(const unsigned long long &value);
 

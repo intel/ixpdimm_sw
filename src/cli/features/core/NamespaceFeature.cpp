@@ -382,30 +382,32 @@ cli::framework::ResultBase *cli::nvmcli::NamespaceFeature::showPools(cli::framew
 			wbem::framework::attribute_names_t requestedAttributes = attributes;
 			cli::nvmcli::filters_t filters;
 			generateSocketFilter(parsedCommand, requestedAttributes, filters);
-			generatePoolFilter(parsedCommand, requestedAttributes, filters);
-			pInstances = m_pPoolViewProvider->getInstances(requestedAttributes);
-			if (pInstances == NULL)
+			if (NULL == (pResult = generatePoolFilter(parsedCommand, requestedAttributes, filters)))
 			{
-				COMMON_LOG_ERROR("PoolViewFactory getInstances returned a NULL instances pointer");
-				pResult = new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
-						TRS(nvmcli::UNKNOWN_ERROR_STR));
-			}
-			else
-			{
-				for (size_t i = 0; i < pInstances->size(); i++)
+				pInstances = m_pPoolViewProvider->getInstances(requestedAttributes);
+				if (pInstances == NULL)
 				{
-					cli::nvmcli::convertCapacityAttribute((*pInstances)[i], wbem::CAPACITY_KEY, capacityUnits);
-					cli::nvmcli::convertCapacityAttribute((*pInstances)[i], wbem::FREECAPACITY_KEY, capacityUnits);
-					cli::nvmcli::convertCapacityAttribute((*pInstances)[i], wbem::APPDIRECTNAMESPACE_MAX_SIZE_KEY, capacityUnits);
-					cli::nvmcli::convertCapacityAttribute((*pInstances)[i], wbem::APPDIRECTNAMESPACE_MIN_SIZE_KEY, capacityUnits);
+					COMMON_LOG_ERROR("PoolViewFactory getInstances returned a NULL instances pointer");
+					pResult = new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
+							TRS(nvmcli::UNKNOWN_ERROR_STR));
 				}
-				pResult = NvmInstanceToObjectListResult(*pInstances, "Pool",
-						wbem::POOLID_KEY, attributes, filters);
-				// Set layout to table unless the -all or -display option is present
-				if (!framework::parsedCommandContains(parsedCommand, framework::OPTION_DISPLAY) &&
-						!framework::parsedCommandContains(parsedCommand, framework::OPTION_ALL))
+				else
 				{
-					pResult->setOutputType(framework::ResultBase::OUTPUT_TEXTTABLE);
+					for (size_t i = 0; i < pInstances->size(); i++)
+					{
+						cli::nvmcli::convertCapacityAttribute((*pInstances)[i], wbem::CAPACITY_KEY, capacityUnits);
+						cli::nvmcli::convertCapacityAttribute((*pInstances)[i], wbem::FREECAPACITY_KEY, capacityUnits);
+						cli::nvmcli::convertCapacityAttribute((*pInstances)[i], wbem::APPDIRECTNAMESPACE_MAX_SIZE_KEY, capacityUnits);
+						cli::nvmcli::convertCapacityAttribute((*pInstances)[i], wbem::APPDIRECTNAMESPACE_MIN_SIZE_KEY, capacityUnits);
+					}
+					pResult = NvmInstanceToObjectListResult(*pInstances, "Pool",
+							wbem::POOLID_KEY, attributes, filters);
+					// Set layout to table unless the -all or -display option is present
+					if (!framework::parsedCommandContains(parsedCommand, framework::OPTION_DISPLAY) &&
+							!framework::parsedCommandContains(parsedCommand, framework::OPTION_ALL))
+					{
+						pResult->setOutputType(framework::ResultBase::OUTPUT_TEXTTABLE);
+					}
 				}
 			}
 		}
@@ -430,11 +432,14 @@ cli::framework::ResultBase *cli::nvmcli::NamespaceFeature::showPools(cli::framew
 /*
  * create filters for pool ID
  */
-void cli::nvmcli::NamespaceFeature::generatePoolFilter(
+cli::framework::ErrorResult * cli::nvmcli::NamespaceFeature::generatePoolFilter(
 		const cli::framework::ParsedCommand &parsedCommand,
 		wbem::framework::attribute_names_t &attributes,
 		cli::nvmcli::filters_t &filters)
 {
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	framework::ErrorResult *pError = NULL;
 	std::vector<std::string> poolTargets =
 			cli::framework::Parser::getTargetValues(parsedCommand,
 					cli::nvmcli::TARGET_POOL.name);
@@ -443,11 +448,30 @@ void cli::nvmcli::NamespaceFeature::generatePoolFilter(
 		struct instanceFilter poolFilter;
 		poolFilter.attributeName = wbem::POOLID_KEY;
 
+		std::vector<struct pool> allPools = m_pPoolViewProvider->getPoolList(true);
+
 		for (std::vector<std::string>::const_iterator poolTargetIter = poolTargets.begin();
-			 poolTargetIter != poolTargets.end(); poolTargetIter++)
+			 poolTargetIter != poolTargets.end() && !pError; poolTargetIter++)
 		{
 			std::string target = (*poolTargetIter);
-			poolFilter.attributeValues.push_back(target);
+			bool found = false;
+			for (size_t i = 0; i < allPools.size() && !found; i++)
+			{
+				if (framework::stringsIEqual(allPools[i].pool_uid, target))
+				{
+					found = true;
+				}
+			}
+
+			if(found)
+			{
+				poolFilter.attributeValues.push_back(target);
+			}
+			else
+			{
+				pError = new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
+					getInvalidPoolIdErrorString(target));
+			}
 		}
 
 		if (!poolFilter.attributeValues.empty())
@@ -460,6 +484,7 @@ void cli::nvmcli::NamespaceFeature::generatePoolFilter(
 			}
 		}
 	}
+	return pError;
 }
 
 void cli::nvmcli::NamespaceFeature::setPersistentMemoryNamespaceProvider(

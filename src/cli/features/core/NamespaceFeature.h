@@ -274,7 +274,7 @@ protected:
 		/*
 		 * Helper function to create a filter based on user input
 		 */
-		static void generatePoolFilter(
+		framework::ErrorResult * generatePoolFilter(
 			const cli::framework::ParsedCommand& parsedCommand,
 			wbem::framework::attribute_names_t &attributes,
 			cli::nvmcli::filters_t &filters);

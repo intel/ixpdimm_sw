@@ -1455,6 +1455,13 @@ std::string cli::nvmcli::getInvalidDimmIdErrorString(const std::string& invalidD
 	return errorString;
 }
 
+std::string cli::nvmcli::getInvalidPoolIdErrorString(const std::string& invalidPoolId)
+{
+	std::string errorString = framework::ResultBase::stringFromArgList(
+		TR(INVALID_POOLID_ERROR_STR.c_str()), invalidPoolId.c_str());
+	return errorString;
+}
+
 std::string cli::nvmcli::uint64ToString(const unsigned long long &value)
 {
 	std::stringstream result;
