@@ -181,12 +181,12 @@ make %{?_smp_mflags}
 
 %install
 %cmake_install
-cp -rf ./invm-frameworks/output/build/linux/release/libinvm-i18n.so* %{buildroot}%{_libdir}
-cp -rf ./invm-frameworks/output/build/linux/release/libinvm-cim.so* %{buildroot}%{_libdir}
-cp -rf ./invm-frameworks/output/build/linux/release/libinvm-cli.so* %{buildroot}%{_libdir}
-cp -rf ./invm-frameworks/output/build/linux/release/include/libinvm-i18n %{buildroot}%{_includedir}
-cp -rf ./invm-frameworks/output/build/linux/release/include/libinvm-cim %{buildroot}%{_includedir}
-cp -rf ./invm-frameworks/output/build/linux/release/include/libinvm-cli %{buildroot}%{_includedir}
+cp -rf ./output/build/linux/real/release/libinvm-i18n.so* %{buildroot}%{_libdir}
+cp -rf ./output/build/linux/real/release/libinvm-cim.so* %{buildroot}%{_libdir}
+cp -rf ./output/build/linux/real/release/libinvm-cli.so* %{buildroot}%{_libdir}
+cp -rf ./output/build/linux/real/release/include/libinvm-i18n %{buildroot}%{_includedir}
+cp -rf ./output/build/linux/real/release/include/libinvm-cim %{buildroot}%{_includedir}
+cp -rf ./output/build/linux/real/release/include/libinvm-cli %{buildroot}%{_includedir}
 
 %post -n %corename -p /sbin/ldconfig
 

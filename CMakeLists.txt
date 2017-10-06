@@ -71,31 +71,14 @@ endif ()
 
 get_filename_component(ROOT ./ ABSOLUTE)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++98")
-set(OUTPUT_DIR ${ROOT}/output/build/${OS_TYPE}/${ADAPTER_TYPE}/${BUILD_TYPE})
+set(OUTPUT_DIR ${ROOT}/output/build/${OS_TYPE}/${ADAPTER_TYPE}/${BUILD_TYPE} CACHE PATH "Build Path")
 
 add_subdirectory(${ROOT}/invm-frameworks/invm-i18n)
 add_subdirectory(${ROOT}/invm-frameworks/invm-cim)
 add_subdirectory(${ROOT}/invm-frameworks/invm-cli)
-set(FRAMEWORK_OUTPUT_DIR ${ROOT}/invm-frameworks/output/build/${OS_TYPE}/${BUILD_TYPE} CACHE STRING "Path to frameworks output dir")
-set(invm-i18n_include ${FRAMEWORK_OUTPUT_DIR}/include)
-set(invm-cim_include ${FRAMEWORK_OUTPUT_DIR}/include)
-set(invm-cli_include ${FRAMEWORK_OUTPUT_DIR}/include)
-
-add_custom_command(TARGET invm-i18n
-		POST_BUILD
-		COMMAND cp ${FRAMEWORK_OUTPUT_DIR}/libinvm-i18n.so* ${OUTPUT_DIR}
-		COMMENT "Copy the invm-i18n libs to the build output"
-		)
-add_custom_command(TARGET invm-cli
-		POST_BUILD
-		COMMAND cp ${FRAMEWORK_OUTPUT_DIR}/libinvm-cli.so* ${OUTPUT_DIR}
-		COMMENT "Copy the invm-cli libs to the build output"
-		)
-add_custom_command(TARGET invm-cim
-		POST_BUILD
-		COMMAND cp ${FRAMEWORK_OUTPUT_DIR}/libinvm-cim.so* ${OUTPUT_DIR}
-		COMMENT "Copy the invm-cim libs to the build output"
-		)
+set(invm-i18n_include ${OUTPUT_DIR}/include)
+set(invm-cim_include ${OUTPUT_DIR}/include)
+set(invm-cli_include ${OUTPUT_DIR}/include)
 
 set(CMAKE_BINARY_DIR ${OUTPUT_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
@@ -496,7 +479,6 @@ add_dependencies(${CLI_NAME}
 # generating man pages
 if (LNX_BUILD)
 		add_custom_command(TARGET ${CLI_NAME} POST_BUILD
-					COMMAND cp ${FRAMEWORK_OUTPUT_DIR}/libinvm*.so* ${OUTPUT_DIR}
 					COMMAND cd ${SCRIPTS_PATH} && ./create_${CLI_NAME}_manpage.py dataPath=${PRODUCT_DATADIR} outputPath=${OUTPUT_DIR}
 					COMMAND cd ${SCRIPTS_PATH} && ./create_${MONITOR_NAME}_manpage.py dataPath=${PRODUCT_DATADIR}
 					COMMAND mv ${SCRIPTS_PATH}/${CLI_NAME}.8.gz ${SCRIPTS_PATH}/${MONITOR_NAME}.8.gz ${OUTPUT_DIR}

@@ -117,12 +117,9 @@ make -f Makefile %{?_smp_mflags}
 %install
 %{!?_cmake_version: cd build}
 make -f Makefile install
-cp -rf ./invm-frameworks/output/build/linux/release/libinvm-i18n.so* %{buildroot}%{_libdir}
-cp -rf ./invm-frameworks/output/build/linux/release/libinvm-cim.so* %{buildroot}%{_libdir}
-cp -rf ./invm-frameworks/output/build/linux/release/libinvm-cli.so* %{buildroot}%{_libdir}
-cp -rf ./invm-frameworks/output/build/linux/release/include/libinvm-i18n %{buildroot}%{_includedir}
-cp -rf ./invm-frameworks/output/build/linux/release/include/libinvm-cim %{buildroot}%{_includedir}
-cp -rf ./invm-frameworks/output/build/linux/release/include/libinvm-cli %{buildroot}%{_includedir}
+cp -rf ./output/build/linux/real/release/include/libinvm-i18n %{buildroot}%{_includedir}
+cp -rf ./output/build/linux/real/release/include/libinvm-cim %{buildroot}%{_includedir}
+cp -rf ./output/build/linux/real/release/include/libinvm-cli %{buildroot}%{_includedir}
 
 
 %post -n libixpdimm-core -p /sbin/ldconfig
