@@ -9,9 +9,9 @@ Summary: API for development of IXPDIMM management utilities
 License: BSD
 Group: Applications/System
 URL: https://01.org/ixpdimm-sw
-Source: https://github.com/01org/ixpdimm_sw/archive/v%{version}.tar.gz#/%{name}-%{version}.tar.gz
+Source: https://github.com/01org/ixpdimm_sw/releases/download/v%{version}/%{name}-%{version}.tar.gz
 Requires: ndctl-libs >= 58.2
-Requires: invm-frameworks >= 1.0.0.2006
+Requires: invm-frameworks >= 1.0.0.2007
 ExclusiveArch: x86_64
 
 BuildRequires: pkgconfig(libkmod)
@@ -91,6 +91,10 @@ Version:	%{invm_framework_build_version}
 Summary:        Library files for invm-frameworks
 License:        BSD
 Group:          Development/Libraries
+#The following packages are deprecated and now provided by invm-frameworks
+Conflicts:      libinvm-cim
+Conflicts:      libinvm-cli
+Conflicts:      libinvm-i18n
 
 %description -n invm-frameworks
 Framework library supporting a subset of Internationalization (I18N)
@@ -103,6 +107,10 @@ Summary:        Development files for invm-frameworks-devel
 License:        BSD
 Group:          Development/Libraries
 Requires:       invm-frameworks%{?_isa} = %{invm_framework_build_version}-%{release}
+#The following packages are deprecated and now provided by invm-frameworks-devel
+Conflicts:      libinvm-cim-devel
+Conflicts:      libinvm-cli-devel
+Conflicts:      libinvm-i18n-devel
 
 %description -n invm-frameworks-devel
 The invm-frameworks-devel package contains header files for
