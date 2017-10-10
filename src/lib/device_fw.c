@@ -403,6 +403,26 @@ int fw_get_security_state(const NVM_UINT32 device_handle,
 	return rc;
 }
 
+// get ddrt_io_init_status  using a pass through ioctl
+int fw_get_ddrt_io_init(const NVM_UINT32 device_handle,
+	struct pt_payload_ddrt_init_info *p_ddrt_init_info)
+{
+	COMMON_LOG_ENTRY();
+	memset(p_ddrt_init_info, 0, sizeof (*p_ddrt_init_info));
+
+	struct fw_cmd get_admin_cmd;
+	memset(&get_admin_cmd, 0, sizeof (struct fw_cmd));
+	get_admin_cmd.device_handle = device_handle;
+	get_admin_cmd.opcode = PT_GET_ADMIN_FEATURES;
+	get_admin_cmd.sub_opcode = SUBOP_DDRT_IO_INIT_INFO;
+	get_admin_cmd.output_payload_size = sizeof (*p_ddrt_init_info);
+	get_admin_cmd.output_payload = p_ddrt_init_info;
+	int rc = ioctl_passthrough_cmd(&get_admin_cmd);
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
 // get firmware image info using a passthrough ioctl
 int fw_get_fw_image_info(const NVM_UINT32 device_handle,
 		struct pt_payload_fw_image_info *p_fw_image_info)

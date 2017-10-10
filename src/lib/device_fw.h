@@ -117,4 +117,8 @@ unsigned short fw_convert_float_to_fw_celsius(float celsius);
 int fw_get_fa_data(const NVM_NFIT_DEVICE_HANDLE device_handle,
 		struct pt_input_payload_fa_data_register_values *p_input_register,
 		void *p_output_data);
+
+int fw_get_ddrt_io_init(const NVM_UINT32 device_handle,
+	struct pt_payload_ddrt_init_info *p_ddrt_init_info);
+
 #endif // device_fw.h

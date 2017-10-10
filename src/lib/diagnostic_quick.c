@@ -62,6 +62,8 @@ int check_dimm_health(const NVM_UID device_uid, const NVM_NFIT_DEVICE_HANDLE dev
 void check_dimm_power_limitation(const NVM_UID device_uid,
 		const NVM_NFIT_DEVICE_HANDLE device_handle,
 		const struct diagnostic *p_diagnostic, NVM_UINT32* p_results);
+int check_ddrt_io_init_done(const NVM_UID device_uid,const NVM_NFIT_DEVICE_HANDLE device_handle,
+	NVM_UINT32 *p_results);
 int check_dimm_bsr(const NVM_UID device_uid,
 		const NVM_NFIT_DEVICE_HANDLE device_handle,
 		const struct diagnostic *p_diagnostic, NVM_UINT32* p_results);
@@ -134,6 +136,10 @@ int diag_quick_health_check(const NVM_UID device_uid,
 
 					tmp_rc = check_dimm_fw_update_status(device_uid,
 						device_handle, p_diagnostic, p_results);
+					KEEP_ERROR(rc, tmp_rc);
+
+					tmp_rc = check_ddrt_io_init_done(device_uid,
+						device_handle,p_results);
 					KEEP_ERROR(rc, tmp_rc);
 				}
 			} // DIMM does not exist
@@ -613,6 +619,54 @@ void check_ait_dram_not_ready(const unsigned long long bsr,
 	}
 
 	COMMON_LOG_EXIT();
+}
+
+int check_ddrt_io_init_done(const NVM_UID device_uid,const NVM_NFIT_DEVICE_HANDLE device_handle,
+	NVM_UINT32 *p_results)
+{
+	COMMON_LOG_ENTRY();
+	struct device_discovery discovery;
+	NVM_BOOL test_passed = 0;
+	struct pt_payload_ddrt_init_info p_ddrt_init_info;
+	unsigned long long bsr = 0;
+	int rc = NVM_SUCCESS;
+	nvm_get_device_discovery(device_uid, &discovery);
+	if (atof(discovery.fw_api_version) >= 1.6)
+	{
+		if (NVM_SUCCESS == (rc = fw_get_ddrt_io_init(device_handle.handle,&p_ddrt_init_info)))
+		{
+			if(p_ddrt_init_info.ddrt_io_info!=DDRT_TRAINING_COMPLETE)
+			{
+				test_passed = 0;
+			}
+			else
+			{
+				test_passed = 1;
+			}
+		}
+	}
+	else
+	{
+	    rc = fw_get_bsr(device_handle, &bsr);
+		test_passed = (BSR_DDRT_IO_INIT_STATUS(bsr) == BSR_DDRT_NOT_READY) ? 0 : 1;
+	}
+
+	if (!test_passed)
+	{
+		store_event_by_parts(EVENT_TYPE_DIAG_QUICK,
+			EVENT_SEVERITY_CRITICAL,
+			EVENT_CODE_DIAG_QUICK_DDRT_IO_INIT_FAILED,
+			device_uid,
+			1,
+			device_uid,
+			NULL,
+			NULL,
+			DIAGNOSTIC_RESULT_FAILED);
+		(*p_results)++;
+	}
+
+	COMMON_LOG_EXIT();
+    return rc;
 }
 
 int check_dimm_bsr(const NVM_UID device_uid,
