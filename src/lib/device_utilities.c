@@ -396,7 +396,7 @@ int lookup_dev_manufacturer_serial_part(const unsigned char *manufacturer,
 		struct device_discovery *p_dev)
 {
 	int rc = NVM_ERR_BADDEVICE;
-	struct device_discovery *p_devices;
+	struct device_discovery *p_devices = NULL;
 	int dev_count = get_devices(&p_devices);
 	if (dev_count < 0)
 	{
