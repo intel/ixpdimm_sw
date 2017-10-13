@@ -100,6 +100,8 @@
 #define	NVM_REQUEST_MAX_AVAILABLE_BLOCK_COUNT	0
 #define	NVM_MIN_EAFD_FILES 1
 #define	NVM_MAX_EAFD_FILES 10
+#define NVM_TRUE 1
+#define NVM_FALSE 0
 
 /*
  * Macros for controlling what is exported by the library

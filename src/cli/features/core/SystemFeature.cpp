@@ -179,7 +179,6 @@ void cli::nvmcli::SystemFeature::getPaths(cli::framework::CommandSpecList &list)
 
 	cli::framework::CommandSpec showSocket(SHOW_SOCKET, TR("Show Socket"), framework::VERB_SHOW,
 			TR("Show basic information about the physical processors in the host server"));
-	showSocket.addOption(framework::OPTION_ALL);
 	showSocket.addOption(framework::OPTION_DISPLAY);
 	showSocket.addOption(framework::OPTION_UNITS)
 			.helpText(TR("Change the units that capacities are displayed in for this command."));

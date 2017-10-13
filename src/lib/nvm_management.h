@@ -1175,6 +1175,7 @@ struct socket
 	NVM_UINT64 mapped_memory_limit; // Maximum allowed memory (via PCAT)
 	NVM_UINT64 total_mapped_memory; // Current occupied memory (via PCAT)
 	NVM_UINT64 cache_memory_limit; // cache size when in 2LM (via PCAT)
+	NVM_BOOL is_capacity_skuing_supported; // set to 1 if PCAT type 6 table found
 };
 
 struct job

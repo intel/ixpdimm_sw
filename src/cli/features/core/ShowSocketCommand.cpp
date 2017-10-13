@@ -39,8 +39,8 @@ ShowSocketCommand::ShowSocketCommand(core::system::SystemService &service)
 	m_props.addCustom("Type", getSocketType).setIsDefault();
 	m_props.addCustom("Family", getSocketFamily).setIsDefault();
 	m_props.addCustom("Manufacturer", getSocketManufacturer).setIsDefault();
-	m_props.addCustom("MappedMemoryLimit", getMappedMemoryLimit);
-	m_props.addCustom("TotalMappedMemory", getTotalMappedMemory);
+	m_props.addCustom("MappedMemoryLimit", getMappedMemoryLimit).setIsDefault();
+	m_props.addCustom("TotalMappedMemory", getTotalMappedMemory).setIsDefault();
 }
 
 framework::ResultBase *ShowSocketCommand::execute(const framework::ParsedCommand &parsedCommand)
@@ -185,7 +185,6 @@ bool ShowSocketCommand::isPropertyDisplayed(
 		framework::IPropertyDefinition<core::system::SystemSocket> &p)
 {
 	return p.isRequired() ||
-			m_displayOptions.isAll() ||
 			(p.isDefault() && m_displayOptions.isDefault()) ||
 			m_displayOptions.contains(p.getName());
 }
@@ -227,7 +226,14 @@ std::string ShowSocketCommand::getMappedMemoryLimit(core::system::SystemSocket &
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	std::stringstream result;
 
-	result << socket.getSocketMappedMemoryLimit();
+	if (socket.isCapacitySkuingSupported())
+	{
+		result << socket.getSocketMappedMemoryLimit();
+	}
+	else
+	{
+		result << "N/A";
+	}
 
 	return result.str();
 }
@@ -237,8 +243,14 @@ std::string ShowSocketCommand::getTotalMappedMemory(core::system::SystemSocket &
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	std::stringstream result;
 
-	result << socket.getSocketTotalMappedMemory();
-
+	if (socket.isCapacitySkuingSupported())
+	{
+		result << socket.getSocketTotalMappedMemory();
+	}
+	else
+	{
+		result << "N/A";
+	}
 	return result.str();
 }
 

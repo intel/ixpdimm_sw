@@ -93,3 +93,8 @@ std::string core::system::SystemSocket::getSocketTypeStr()
 {
 	return m_smbiosUtility.getProcessorType((unsigned char)getSocketType());
 }
+
+NVM_BOOL core::system::SystemSocket::isCapacitySkuingSupported()
+{
+	return m_socket.is_capacity_skuing_supported;
+}

@@ -76,6 +76,7 @@ public:
 	virtual std::string getSocketManufacturer();
 	virtual NVM_UINT64 getSocketMappedMemoryLimit();
 	virtual NVM_UINT64 getSocketTotalMappedMemory();
+	virtual NVM_BOOL isCapacitySkuingSupported();
 
 private:
 	socket m_socket;
