@@ -323,7 +323,7 @@ std::vector<core::device::Device> ShowCommandUtilities::getAllDevicesFromList(st
 		std::string dev_id_unkown_format = *id;
 		std::string dev_uid = getDeviceUid(dev_id_unkown_format, devices, device_cnt);
 		int devIdx = findDeviceInDiscovery(dev_uid, devices, device_cnt);
-		if (devIdx > 0)
+		if (devIdx >= 0)
 		{
 			core::device::Device dev(lib, devices[devIdx]);
 			devs.push_back(dev);
