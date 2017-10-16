@@ -1390,7 +1390,9 @@ struct pt_payload_sw_triggers {
 	 * Bit 0: Die Spare Trigger
 	 * Bit 1: Used Spare Block Alarm Trip Trigger
 	 * Bit 2: Fatal Error Trigger
-	 * Bit 63-3: Reserved
+	 * Bit 3: Spare Block Percentage Trigger
+	 * Bit 4: Unsafe Shutdown Trigger
+	 * Bit 63-5: Reserved
 	 */
 	unsigned long long triggers_to_modify;
 
@@ -1417,7 +1419,23 @@ struct pt_payload_sw_triggers {
 	 */
 	unsigned char fatal_error_trigger;
 
-	unsigned char reserved_1[116];
+	/*
+	 * Spoofs spare block percentage within the DIMM.
+	 * Bit 0 - Enable/Disable Trigger
+	 * 0x0h - Do Not/Disable Trigger
+	 * 0x1h - Enable Trigger
+	 * Bits 7:1 - Spare Block Percentage (valid values are between 0 and 100)
+	 */
+	unsigned char spare_block_percentage_trigger;
+
+	/*
+	 * Spoofs an unsafe shutdown on the next power cycle.
+	 * 0x0h - Do Not/Disable Trigger
+	 * 0x1h - Enable Trigger
+	 */
+	unsigned char unsafe_shutdown_trigger;
+
+	unsigned char reserved_1[114];
 } __attribute__((packed));
 
 /*

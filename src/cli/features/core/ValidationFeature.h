@@ -47,12 +47,14 @@ static const std::string SETPOISON_MSG_PREFIX = N_TR("Poison address %llu on " N
 static const std::string SETDIESPARING_MSG_PREFIX = N_TR("Trigger die sparing on " NVM_DIMM_NAME " %s");
 static const std::string SETSPARECAPACITYALARM_MSG_PREFIX = N_TR("Trigger a spare capacity on " NVM_DIMM_NAME " %s");
 static const std::string SETFATALERROR_MSG_PREFIX = N_TR("Create a media fatal error on " NVM_DIMM_NAME " %s");
+static const std::string SETDIRTYSHUTDOWN_MSG_PREFIX = N_TR("Set dirty shutdown on " NVM_DIMM_NAME " %s");
 
 static const std::string CLEARPOISON_MSG_PREFIX = N_TR("Clear poison of address %llu on " NVM_DIMM_NAME " %s");
 static const std::string CLEARTEMPERATURE_MSG_PREFIX = N_TR("Clear injected temperature on " NVM_DIMM_NAME " %s");
 static const std::string CLEARDIESPARING_MSG_PREFIX = N_TR("Clear injected die sparing on " NVM_DIMM_NAME " %s");
 static const std::string CLEARSPARECAPACITYALARM_MSG_PREFIX = N_TR("Clear injected spare capacity alarm on " NVM_DIMM_NAME " %s");
 static const std::string CLEARFATALERROR_MSG_PREFIX = N_TR("Clear injected media fatal error on " NVM_DIMM_NAME " %s");
+static const std::string CLEARDIRTYSHUTDOWN_MSG_PREFIX = N_TR("Clear dirty shutdown on " NVM_DIMM_NAME " %s");
 
 static std::string CLEAR_PROPERTYNAME = "Clear";
 static std::string TEMPERATURE_PROPERTYNAME = "Temperature";
@@ -61,6 +63,7 @@ static std::string POISON_MEMORY_TYPE_PROPERTYNAME = "PoisonType";
 static std::string DIE_SPARING_PROPERTYNAME = "DieSparing";
 static std::string SPARE_ALARM_PROPERTYNAME = "SpareAlarm";
 static std::string FATAL_MEDIA_ERROR_PROPERTYNAME = "FatalMediaError";
+static std::string DIRTY_SHUTDOWN_PROPERTYNAME = "DirtyShutdown";
 
 // memory type to poison strings
 static std::string MEMORY_TYPE_STR_MEMORYMODE = "MemoryMode";
@@ -116,6 +119,7 @@ private:
 	bool m_dieSparingExists;
 	bool m_spareAlarmExists;
 	bool m_fatalMediaErrorExists;
+	bool m_dirtyShutdownExists;
 
 	/*
 	 * Helper for inject error.
@@ -151,6 +155,9 @@ private:
 		const framework::ParsedCommand& parsedCommand);
 
 	cli::framework::ResultBase* parseFatalMediaErrorProperty(
+		const framework::ParsedCommand& parsedCommand);
+
+	cli::framework::ResultBase* parseDirtyShutdownProperty(
 		const framework::ParsedCommand& parsedCommand);
 
 	cli::framework::ResultBase* verifyPropertyCount(

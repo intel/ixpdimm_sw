@@ -93,6 +93,8 @@ void cli::nvmcli::ValidationFeature::getPaths(cli::framework::CommandSpecList &l
 	injectError.addProperty(FATAL_MEDIA_ERROR_PROPERTYNAME, false, "1", true,
 			TR("Inject a fake media fatal error which will cause the firmware to generate an error log "
 			"and an alert."));
+	injectError.addProperty(DIRTY_SHUTDOWN_PROPERTYNAME, false, "1", true,
+			TR("Inject an ADR failure resulting in dirty shutdown upon reboot."));
 
 	list.push_back(injectError);
 }
@@ -101,7 +103,7 @@ void cli::nvmcli::ValidationFeature::getPaths(cli::framework::CommandSpecList &l
 cli::nvmcli::ValidationFeature::ValidationFeature() : cli::nvmcli::VerboseFeatureBase(),
 	m_dimmUid(""), m_poisontype(POISON_MEMORY_TYPE_PATROLSCRUB), m_temperature(0), m_poison(0), m_clearStateExists(false),
 	m_temperatureExists(false), m_poisonExists(false), m_poisonTypeExists(false), m_dieSparingExists(false),
-	m_spareAlarmExists(false), m_fatalMediaErrorExists(false)
+	m_spareAlarmExists(false), m_fatalMediaErrorExists(false), m_dirtyShutdownExists(false)
 { }
 
 /*
@@ -170,6 +172,14 @@ void cli::nvmcli::ValidationFeature::inject_error(std::string &prefixMsg,
 		m_DimmProvider.injectSoftwareTrigger(*iUid, ERROR_TYPE_MEDIA_FATAL_ERROR);
 		listResult.insert(prefixMsg + cli::framework::SUCCESS_MSG);
 	}
+	else if (m_dirtyShutdownExists)
+	{
+		prefixMsg = framework::ResultBase::stringFromArgList(
+				SETDIRTYSHUTDOWN_MSG_PREFIX.c_str(), m_dimmUid.c_str());
+		prefixMsg += ": ";
+		m_DimmProvider.injectSoftwareTrigger(*iUid, ERROR_TYPE_DIRTY_SHUTDOWN);
+		listResult.insert(prefixMsg + cli::framework::SUCCESS_MSG);
+	}
 }
 
 void cli::nvmcli::ValidationFeature::clear_injected_error(std::string &prefixMsg,
@@ -197,6 +207,14 @@ void cli::nvmcli::ValidationFeature::clear_injected_error(std::string &prefixMsg
 				CLEARDIESPARING_MSG_PREFIX.c_str(), m_dimmUid.c_str());
 		prefixMsg += ": ";
 		m_DimmProvider.clearSoftwareTrigger(*iUid, ERROR_TYPE_DIE_SPARING);
+		listResult.insert(prefixMsg + cli::framework::SUCCESS_MSG);
+	}
+	else if (m_dirtyShutdownExists)
+	{
+		prefixMsg = framework::ResultBase::stringFromArgList(
+				CLEARDIRTYSHUTDOWN_MSG_PREFIX.c_str(), m_dimmUid.c_str());
+		prefixMsg += ": ";
+		m_DimmProvider.clearSoftwareTrigger(*iUid, ERROR_TYPE_DIRTY_SHUTDOWN);
 		listResult.insert(prefixMsg + cli::framework::SUCCESS_MSG);
 	}
 }
@@ -433,6 +451,23 @@ cli::framework::ResultBase* cli::nvmcli::ValidationFeature::parseFatalMediaError
 	return pResult;
 }
 
+cli::framework::ResultBase* cli::nvmcli::ValidationFeature::parseDirtyShutdownProperty(
+		const framework::ParsedCommand& parsedCommand)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	framework::ResultBase *pResult = NULL;
+
+	std::string propValue =
+			framework::Parser::getPropertyValue(parsedCommand, DIRTY_SHUTDOWN_PROPERTYNAME, &m_dirtyShutdownExists);
+	if (m_dirtyShutdownExists)
+	{
+		pResult = verifySWTriggerPropertyValue(propValue, DIRTY_SHUTDOWN_PROPERTYNAME);
+	}
+
+	return pResult;
+}
+
+
 cli::framework::ResultBase* cli::nvmcli::ValidationFeature::getInjectErrorAttributes(
 		const framework::ParsedCommand& parsedCommand)
 {
@@ -463,6 +498,10 @@ cli::framework::ResultBase* cli::nvmcli::ValidationFeature::getInjectErrorAttrib
 	if (!pResult)
 	{
 		pResult = parseFatalMediaErrorProperty(parsedCommand);
+	}
+	if (!pResult)
+	{
+		pResult = parseDirtyShutdownProperty(parsedCommand);
 	}
 
 	if (!pResult)
@@ -498,6 +537,10 @@ cli::framework::ResultBase* cli::nvmcli::ValidationFeature::errorIfMoreThanOnePr
 	if (m_fatalMediaErrorExists)
 	{
 		list.push_back(FATAL_MEDIA_ERROR_PROPERTYNAME);
+	}
+	if (m_dirtyShutdownExists)
+	{
+		list.push_back(DIRTY_SHUTDOWN_PROPERTYNAME);
 	}
 
 	if (list.size() > 1)

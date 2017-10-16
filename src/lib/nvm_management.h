@@ -317,6 +317,7 @@ enum error_type
 	ERROR_TYPE_DIE_SPARING = 3, // Trigger or revert an artificial die sparing.
 	ERROR_TYPE_SPARE_ALARM = 4, // Trigger or clear a spare capacity threshold alarm.
 	ERROR_TYPE_MEDIA_FATAL_ERROR = 5, // Inject or clear a fake media fatal error.
+	ERROR_TYPE_DIRTY_SHUTDOWN = 6, // Inject or clear a dirty shutdown error.
 };
 
 /*

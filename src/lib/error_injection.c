@@ -42,6 +42,7 @@ int inject_temperature_error(NVM_UINT32 device_handle, NVM_UINT64 temperature,
 	NVM_BOOL enable_injection);
 int inject_software_trigger(struct device_discovery *p_discovery, enum error_type type,
 	NVM_BOOL enable_trigger);
+int inject_dirty_shutdown_trigger(struct device_discovery * p_discovery, NVM_BOOL enable_trigger);
 
 /*
  * Helper function to enable/disable software trigger
@@ -125,6 +126,37 @@ int inject_temperature_error(NVM_UINT32 device_handle, NVM_UINT64 temperature,
 	{
 		COMMON_LOG_ERROR_F("Failed to set temperature on dimm %u",
 			device_handle);
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+/*
+ * Helper function to inject dirty shutdown trigger
+ */
+int inject_dirty_shutdown_trigger(struct device_discovery *p_discovery, NVM_BOOL enable_trigger)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	// Set up input payload
+	struct pt_payload_sw_triggers input;
+	memset(&input, 0, sizeof (input));
+	input.triggers_to_modify = 0x1 << 4; // unsafe shutdown trigger
+	input.unsafe_shutdown_trigger = enable_trigger;
+
+	struct fw_cmd cmd;
+	memset(&cmd, 0, sizeof (cmd));
+	cmd.device_handle = p_discovery->device_handle.handle;
+	cmd.opcode = PT_INJECT_ERROR;
+	cmd.sub_opcode = SUBOP_ERROR_SW_TRIGGERS;
+	cmd.input_payload = &input;
+	cmd.input_payload_size = sizeof (input);
+	rc = ioctl_passthrough_cmd(&cmd);
+	if (rc != NVM_SUCCESS)
+	{
+		COMMON_LOG_ERROR_F("Failed to trigger dirty shutdown trip on dimm %u",	cmd.device_handle);
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -235,6 +267,9 @@ int nvm_inject_device_error(const NVM_UID device_uid,
 		case ERROR_TYPE_POISON:
 			rc = inject_poison_error(&discovery, p_error->dpa, p_error->memory_type, 1);
 			break;
+		case ERROR_TYPE_DIRTY_SHUTDOWN:
+			rc = inject_dirty_shutdown_trigger(&discovery, 1);
+			break;
 		case ERROR_TYPE_DIE_SPARING:
 		case ERROR_TYPE_SPARE_ALARM:
 		case ERROR_TYPE_MEDIA_FATAL_ERROR:
@@ -291,6 +326,9 @@ int nvm_clear_injected_device_error(const NVM_UID device_uid,
 			break;
 		case ERROR_TYPE_POISON:
 			rc = inject_poison_error(&discovery, p_error->dpa, p_error->memory_type, 0);
+			break;
+		case ERROR_TYPE_DIRTY_SHUTDOWN:
+			rc = inject_dirty_shutdown_trigger(&discovery, 0);
 			break;
 		case ERROR_TYPE_DIE_SPARING:
 			rc = inject_software_trigger(&discovery, p_error->type, 0);
