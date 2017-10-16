@@ -96,7 +96,8 @@ private:
 	bool tryParseVal (const std::string& str, NVM_REAL32 *p_value) const;
 	void roundToNearestSixteenth(NVM_REAL32 &val);
 	void updateResultsWithPropertyList(core::device::Device dev, framework::ObjectListResult *pResults);
-	
+	sensor_category sensorNameToCategory(std::string sensorName);
+
 	/*
 	 * Helper for modify sensor.
 	 * Fetches the properties from the parsed command, performs validation, and converts to WBEM

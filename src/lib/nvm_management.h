@@ -221,6 +221,18 @@ enum sensor_type
 	SENSOR_HEALTH = 10, // Apache Pass DIMM health as reported in the SMART log.
 };
 
+typedef NVM_UINT64 NVM_SENSOR_CATEGORY_BITMASK;
+
+/*
+* The bitmask for sensor type.
+*/
+enum sensor_category
+{
+	SENSOR_CAT_SMART_HEALTH = 0x1,
+	SENSOR_CAT_POWER = 0x2,
+	SENSOR_CAT_FW_ERROR = 0x4,
+};
+
 /*
  * The units of measurement for a sensor.
  */
@@ -240,6 +252,7 @@ enum sensor_units
  */
 enum sensor_status
 {
+	SENSOR_NOT_INITIALIZED = -1, //no attempt to read sensor value yet.
 	SENSOR_UNKNOWN = 0, // Sensor status cannot be determined.
 	SENSOR_NORMAL = 1, // Current value of the sensor is in the normal range.
 	SENSOR_NONCRITICAL = 2, // Current value of the sensor is in non critical range.
@@ -1930,6 +1943,45 @@ extern NVM_API int nvm_get_security_permission(struct device_discovery *p_discov
  */
 extern NVM_API int nvm_get_sensors(const NVM_UID device_uid, struct sensor *p_sensors,
 		const NVM_UINT16 count);
+
+/*
+* Retrieve sensors that are associated with certain sensor categories.
+* @param[in] device_uid
+* 		The device identifier.
+* @param[in,out] p_sensors
+* 		An array of #sensor structures allocated by the caller.
+* @param[in] count
+* 		The size of the array.  Should be #NVM_MAX_DEVICE_SENSORS.
+* @param[in] categories
+* 		A bitmask that specifies which sensor categories to retrieve.
+* @param[in] thresholds
+* 		A bitmask that specifies which sensor categories should include
+*		threshold information.
+* @pre The caller has administrative privileges.
+* @pre The device is manageable.
+* @remarks Sensors are used to monitor a particular aspect of a device by
+* settings thresholds against a current value.
+* @remarks The number of sensors for a device is defined as #NVM_MAX_DEVICE_SENSORS.
+* @remarks Sensor information is returned as part of the #device_details structure.
+* @return Returns one of the following @link #return_code return_codes: @endlink @n
+* 		#NVM_SUCCESS @n
+* 		#NVM_ERR_NOTSUPPORTED @n
+* 		#NVM_ERR_INVALIDPERMISSIONS @n
+* 		#NVM_ERR_INVALIDPARAMETER @n
+* 		#NVM_ERR_DRIVERFAILED @n
+* 		#NVM_ERR_ARRAYTOOSMALL @n
+* 		#NVM_ERR_BADDEVICE @n
+* 		#NVM_ERR_NOMEMORY @n
+* 		#NVM_ERR_NOTMANAGEABLE @n
+* 		#NVM_ERR_DATATRANSFERERROR @n
+*		#NVM_ERR_DEVICEERROR @n
+* 		#NVM_ERR_DEVICEBUSY @n
+* 		#NVM_ERR_UNKNOWN @n
+* 		#NVM_ERR_BADDRIVER @n
+* 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
+*/
+extern NVM_API int nvm_get_sensors_by_category(const NVM_UID device_uid, struct sensor *p_sensors, const NVM_UINT16 count,
+	NVM_SENSOR_CATEGORY_BITMASK categories, NVM_SENSOR_CATEGORY_BITMASK thresholds);
 
 /*
  * Retrieve a specific health sensor from the specified AEP DIMM.

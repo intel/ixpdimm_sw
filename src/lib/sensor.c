@@ -101,7 +101,7 @@ int get_sensor_thresholds(int device_handle, struct sensor_thresholds *p_thresho
 }
 
 int get_smart_log_sensors(const NVM_UID device_uid,
-	const NVM_UINT32 dev_handle, struct sensor *p_sensors)
+	const NVM_UINT32 dev_handle, struct sensor *p_sensors, NVM_BOOL include_thresholds)
 {
 	COMMON_LOG_ENTRY();
 
@@ -116,8 +116,11 @@ int get_smart_log_sensors(const NVM_UID device_uid,
 		 * the smart health log ... if it's successful. So if thresholds fail, just continue.
 		 */
 		struct sensor_thresholds thresholds;
-		int threshold_rc = get_sensor_thresholds(dev_handle, &thresholds);
-		KEEP_ERROR(rc, threshold_rc);
+		if (include_thresholds)
+		{
+			int threshold_rc = get_sensor_thresholds(dev_handle, &thresholds);
+			KEEP_ERROR(rc, threshold_rc);
+		}
 
 		struct sensor *p_sensor = NULL;
 		// Media Temperature
@@ -128,6 +131,10 @@ int get_smart_log_sensors(const NVM_UID device_uid,
 			{
 				media_temp_celsius = fw_convert_fw_celsius_to_float(dimm_smart.media_temperature);
 				p_sensor->reading = nvm_encode_temperature(media_temp_celsius);
+			}
+			else
+			{
+				p_sensor->current_state = SENSOR_UNKNOWN;
 			}
 			p_sensor->upper_noncritical_settable = 1;
 			p_sensor->upper_noncritical_support = 1;
@@ -174,6 +181,10 @@ int get_smart_log_sensors(const NVM_UID device_uid,
 			{
 				p_sensor->reading = (NVM_UINT64) dimm_smart.spare;
 			}
+			else
+			{
+				p_sensor->current_state = SENSOR_UNKNOWN;
+			}
 			p_sensor->lower_noncritical_settable = 1;
 			p_sensor->lower_noncritical_support = 1;
 			p_sensor->settings.enabled = thresholds.is_spare_alarm_threshold_enabled;
@@ -203,6 +214,10 @@ int get_smart_log_sensors(const NVM_UID device_uid,
 			{
 				p_sensor->reading = (NVM_UINT64) dimm_smart.percentage_used;
 			}
+			else
+			{
+				p_sensor->current_state = SENSOR_UNKNOWN;
+			}
 			if (!dimm_smart.validation_flags.parts.percentage_used_field)
 			{
 				p_sensor->current_state = SENSOR_UNKNOWN;
@@ -225,6 +240,10 @@ int get_smart_log_sensors(const NVM_UID device_uid,
 				p_sensor->reading = dimm_smart.vendor_data.power_cycles;
 				p_sensor->current_state = SENSOR_NORMAL;
 			}
+			else
+			{
+				p_sensor->current_state = SENSOR_UNKNOWN;
+			}
 		}
 
 		// Power On Time
@@ -234,6 +253,10 @@ int get_smart_log_sensors(const NVM_UID device_uid,
 			{
 				p_sensor->reading = dimm_smart.vendor_data.power_on_seconds;
 				p_sensor->current_state = SENSOR_NORMAL;
+			}
+			else
+			{
+				p_sensor->current_state = SENSOR_UNKNOWN;
 			}
 		}
 
@@ -245,6 +268,10 @@ int get_smart_log_sensors(const NVM_UID device_uid,
 				p_sensor->reading = dimm_smart.vendor_data.uptime;
 				p_sensor->current_state = SENSOR_NORMAL;
 			}
+			else
+			{
+				p_sensor->current_state = SENSOR_UNKNOWN;
+			}
 		}
 
 		// Unsafe Shutdowns
@@ -254,6 +281,10 @@ int get_smart_log_sensors(const NVM_UID device_uid,
 			{
 				p_sensor->reading = dimm_smart.vendor_data.unsafe_shutdowns;
 				p_sensor->current_state = SENSOR_NORMAL;
+			}
+			else
+			{
+				p_sensor->current_state = SENSOR_UNKNOWN;
 			}
 		}
 
@@ -266,6 +297,10 @@ int get_smart_log_sensors(const NVM_UID device_uid,
 				controller_temp_celsius =
 					fw_convert_fw_celsius_to_float(dimm_smart.controller_temperature);
 				p_sensor->reading = nvm_encode_temperature(controller_temp_celsius);
+			}
+			else
+			{
+				p_sensor->current_state = SENSOR_UNKNOWN;
 			}
 			p_sensor->upper_noncritical_settable = 1;
 			p_sensor->upper_noncritical_support = 1;
@@ -322,6 +357,10 @@ int get_smart_log_sensors(const NVM_UID device_uid,
 					p_sensor->current_state = SENSOR_UNKNOWN;
 					break;
 				}
+			}
+			else
+			{
+				p_sensor->current_state = SENSOR_UNKNOWN;
 			}
 		}
 	}
@@ -395,6 +434,7 @@ void initialize_sensors(const NVM_UID device_uid,
 	{
 		memmove(sensors[i].device_uid, device_uid, NVM_MAX_UID_LEN);
 		sensors[i].type = i;
+		sensors[i].current_state = SENSOR_NOT_INITIALIZED;
 	}
 	sensors[SENSOR_MEDIA_TEMPERATURE].units = UNIT_CELSIUS;
 	sensors[SENSOR_SPARECAPACITY].units = UNIT_PERCENT;
@@ -415,10 +455,72 @@ int get_all_sensors(const NVM_UID device_uid,
 	COMMON_LOG_ENTRY();
 
 	initialize_sensors(device_uid, sensors);
-	int rc = get_smart_log_sensors(device_uid, dev_handle, sensors);
+	int rc = get_smart_log_sensors(device_uid, dev_handle, sensors, 1);
 	KEEP_ERROR(rc, get_fw_error_log_sensors(device_uid, dev_handle, sensors));
 	KEEP_ERROR(rc, get_power_limited_sensor(device_uid, dev_handle, sensors));
 
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+int nvm_get_sensors_by_category(const NVM_UID device_uid, struct sensor *p_sensors, const NVM_UINT16 count,
+	NVM_SENSOR_CATEGORY_BITMASK categories, NVM_SENSOR_CATEGORY_BITMASK thresholds) 
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	struct device_discovery discovery;
+	if (check_caller_permissions() != COMMON_SUCCESS)
+	{
+		rc = NVM_ERR_INVALIDPERMISSIONS;
+	}
+	if (device_uid == NULL)
+	{
+		COMMON_LOG_ERROR("Invalid parameter, device_uid is NULL");
+		rc = NVM_ERR_INVALIDPARAMETER;
+	}
+	else if (p_sensors == NULL)
+	{
+		COMMON_LOG_ERROR("Invalid parameter, p_status is NULL");
+		rc = NVM_ERR_INVALIDPARAMETER;
+	}
+	else if ((rc = exists_and_manageable(device_uid, &discovery, 1)) == NVM_SUCCESS)
+	{
+		struct sensor sensors[NVM_MAX_DEVICE_SENSORS];
+		memset(sensors, 0, sizeof(sensors));
+		const NVM_UINT32 dev_handle = discovery.device_handle.handle;
+		int rc;
+		initialize_sensors(device_uid, sensors);
+		if (categories & SENSOR_CAT_SMART_HEALTH)
+		{
+			NVM_BOOL get_thresh = thresholds & SENSOR_CAT_SMART_HEALTH;
+			KEEP_ERROR(rc, get_smart_log_sensors(device_uid, dev_handle, sensors, get_thresh));
+		}
+
+		if (categories & SENSOR_CAT_POWER)
+		{
+			KEEP_ERROR(rc, get_power_limited_sensor(device_uid, dev_handle, sensors));
+		}
+
+		if (categories & SENSOR_CAT_FW_ERROR)
+		{
+			KEEP_ERROR(rc, get_fw_error_log_sensors(device_uid, dev_handle, sensors));
+		}
+
+		// even if the array is too small, we still want to fill in as many as possible.
+		// Just return the error code
+		if (count < NVM_MAX_DEVICE_SENSORS)
+		{
+			rc = NVM_ERR_ARRAYTOOSMALL;
+		}
+
+		// fill in the user provided sensor array
+		memset(p_sensors, 0, sizeof(struct sensor) * count);
+		for (int i = 0; i < count; i++)
+		{
+			memmove(&p_sensors[i], &sensors[i], sizeof(struct sensor));
+		}
+	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
@@ -444,10 +546,6 @@ int nvm_get_sensors(const NVM_UID device_uid, struct sensor *p_sensors,
 	else if (!is_supported_driver_available())
 	{
 		rc = NVM_ERR_BADDRIVER;
-	}
-	else if ((rc = IS_NVM_FEATURE_SUPPORTED(get_sensors)) != NVM_SUCCESS)
-	{
-		COMMON_LOG_ERROR("Retrieving " NVM_DIMM_NAME " sensors is not supported.");
 	}
 	else if (device_uid == NULL)
 	{

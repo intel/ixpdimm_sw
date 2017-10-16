@@ -492,7 +492,6 @@ int populate_devices(struct device_discovery *p_devices,
 				{
 					rc = fw_rc;
 				}
-
 				calculate_capabilities_for_populated_devices(p_devices,
 						populated_count);
 				calculate_uids_for_populated_devices(p_devices, populated_count);

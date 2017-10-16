@@ -95,7 +95,7 @@ void cli::nvmcli::SensorFeature::getPaths(cli::framework::CommandSpecList &list)
 	showSensor.addOption(framework::OPTION_ALL);
 	showSensor.addTarget(TARGET_SENSOR_R)
 			.valueText("MediaTemperature|ControllerTemperature|SpareCapacity|WearLevel|UnsafeShutdowns|"
-					"PowerOnTime|UpTime|PowerCycles|FWErrorCount|PowerLimited|Health")
+					"PowerOnTime|UpTime|PowerCycles|PowerLimited|Health")
 			.helpText(TR("Restrict output to a specific sensor type by supplying the name. "
 					"The default is to display all sensors."));
 	showSensor.addTarget(TARGET_DIMM)
@@ -156,6 +156,27 @@ cli::framework::ResultBase * cli::nvmcli::SensorFeature::run(
 	return pResult;
 }
 
+sensor_category cli::nvmcli::SensorFeature::sensorNameToCategory(std::string sensorName)
+{
+	transform(sensorName.begin(), sensorName.end(), sensorName.begin(), ::tolower);
+	std::string pwrLimited = core::device::sensor::PROPERTY_SENSOR_TYPE_POWERLIMITED;
+	transform(pwrLimited.begin(), pwrLimited.end(), pwrLimited.begin(), ::tolower);
+	std::string fwErrCnt = core::device::sensor::PROPERTY_SENSOR_TYPE_FWERRORLOGCOUNT;
+	transform(fwErrCnt.begin(), fwErrCnt.end(), fwErrCnt.begin(), ::tolower);
+
+	if (0 == sensorName.compare(pwrLimited))
+	{
+		return SENSOR_CAT_POWER;
+	}
+	else if (0 == sensorName.compare(fwErrCnt))
+	{
+		return SENSOR_CAT_FW_ERROR;
+	}
+	else
+	{
+		return SENSOR_CAT_SMART_HEALTH;
+	}
+}
 
 /*
  * Show sensors provided by the NVDIMMSensorFactory::getInstances function.  If
@@ -269,7 +290,20 @@ cli::framework::ResultBase* cli::nvmcli::SensorFeature::showSensor(
 					if (!dev.isManageable())
 						continue;
 
-					if(NVM_SUCCESS != (rc = nvm_get_sensors(dev.getUid().c_str(), sensors, NVM_MAX_DEVICE_SENSORS)))
+					NVM_SENSOR_CATEGORY_BITMASK sensor_categories = 0;
+					NVM_SENSOR_CATEGORY_BITMASK sensor_thresholds = 0;
+					if (singleSensorTarget)
+					{
+						sensor_categories = sensorNameToCategory(sensorTargetName);
+						sensor_thresholds = sensor_categories;
+					}
+					else
+					{
+						sensor_categories = SENSOR_CAT_SMART_HEALTH | SENSOR_CAT_POWER;
+						sensor_thresholds = sensor_categories;
+					}
+
+					if(NVM_SUCCESS != (rc = nvm_get_sensors_by_category(dev.getUid().c_str(), sensors, NVM_MAX_DEVICE_SENSORS, sensor_categories, sensor_thresholds)))
 					{
 						free(pResults);
 						throw wbem::exception::NvmExceptionLibError(rc);
@@ -277,8 +311,12 @@ cli::framework::ResultBase* cli::nvmcli::SensorFeature::showSensor(
 
 					for (int i = 0; i < NVM_MAX_DEVICE_SENSORS; ++i)
 					{
+						if (SENSOR_NOT_INITIALIZED == sensors[i].current_state)
+							continue;
+
 						framework::PropertyListResult* pResultDimmProps = new framework::PropertyListResult();
 						core::device::sensor::Sensor *sensor = core::device::sensor::SensorFactory::CreateSensor(sensors[i]);
+
 						if (singleSensorTarget)
 						{
 							std::string sensorName = sensor->GetName();
