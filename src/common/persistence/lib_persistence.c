@@ -514,13 +514,13 @@ int set_default_config_settings(PersistentStore *p_ps)
 		add_config_value_to_pstore(p_ps, SQL_KEY_DEFAULT_DIE_SPARING_AGGRESSIVENESS, "128");
 
 		// monitor configs
-		add_config_value_to_pstore(p_ps, SQL_KEY_PERFORMANCE_MONITOR_ENABLED, "1");
+		add_config_value_to_pstore(p_ps, SQL_KEY_PERFORMANCE_MONITOR_ENABLED, "0");
 		// 180 = every 3 hours
 		add_config_value_to_pstore(p_ps, SQL_KEY_PERFORMANCE_MONITOR_INTERVAL_MINUTES, "180");
 		add_config_value_to_pstore(p_ps, SQL_KEY_PERFORMANCE_LOG_MAX, "10000");
 		add_config_value_to_pstore(p_ps, SQL_KEY_PERFORMANCE_LOG_TRIM_PERCENT, "30");
 
-		add_config_value_to_pstore(p_ps, SQL_KEY_EVENT_MONITOR_ENABLED, "1");
+		add_config_value_to_pstore(p_ps, SQL_KEY_EVENT_MONITOR_ENABLED, "0");
 		add_config_value_to_pstore(p_ps, SQL_KEY_EVENT_MONITOR_INTERVAL_MINUTES, "1");
 		add_config_value_to_pstore(p_ps, SQL_KEY_EVENT_LOG_MAX, "10000");
 		add_config_value_to_pstore(p_ps, SQL_KEY_EVENT_LOG_TRIM_PERCENT, "10");
