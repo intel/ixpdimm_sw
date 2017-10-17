@@ -603,18 +603,36 @@ void check_ait_dram_not_ready(const unsigned long long bsr,
 		NVM_UINT32 *p_results)
 {
 	COMMON_LOG_ENTRY();
+	struct device_discovery discovery;
+	NVM_BOOL ait_dram_ready = 0;
+	NVM_UINT16 event_code = EVENT_CODE_DIAG_QUICK_AIT_DRAM_NOT_READY;
 
-	if (!BSR_H_AIT_DRAM_READY(bsr))
+	if (NVM_SUCCESS != nvm_get_device_discovery(device_uid, &discovery))
+	{
+		event_code = EVENT_CODE_DIAG_QUICK_UNKNOWN;
+	}
+	else
+	{
+		if (atof(discovery.fw_api_version) >= FIS_1_5)
+		{
+			ait_dram_ready = (BSR_H_AIT_DRAM_READY_1_5(bsr) == DEV_FW_BSR_AIT_DRAM_TRAINED_READY) ? 1 : 0;
+		}
+		else
+		{
+			ait_dram_ready = (BSR_H_AIT_DRAM_READY(bsr)) ? 1 : 0;
+		}
+	}
+	if (!ait_dram_ready)
 	{
 		store_event_by_parts(EVENT_TYPE_DIAG_QUICK,
-				EVENT_SEVERITY_CRITICAL,
-				EVENT_CODE_DIAG_QUICK_AIT_DRAM_NOT_READY,
-				device_uid,
-				1,
-				device_uid,
-				NULL,
-				NULL,
-				DIAGNOSTIC_RESULT_FAILED);
+			EVENT_SEVERITY_CRITICAL,
+			event_code,
+			device_uid,
+			1,
+			device_uid,
+			NULL,
+			NULL,
+			DIAGNOSTIC_RESULT_FAILED);
 		(*p_results)++;
 	}
 

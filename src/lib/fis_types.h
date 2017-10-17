@@ -39,6 +39,7 @@
  * DEFINES
  * ****************************************************************************
  */
+#define FIS_1_5	1.5
 #define	DEV_SN_LEN		4  /* DIMM Serial Number buffer length */
 #define	DEV_PASSPHRASE_LEN	32  /* Length of a passphrase buffer */
 #define	DEV_BCD_DATE_LEN		4   /* Length of a BDC Formatted Date */
@@ -118,6 +119,8 @@
 #define DEV_FW_BSR_STALLED ((long long) 0x01 << 33)
 
 #define DEV_FW_BSR_AIT_DRAM_READY ((long long) 0x01 << 34)
+#define DEV_FW_BSR_AIT_DRAM_TRAINED_READY	0x3
+#define DEV_FW_BSR_AIT_DRAM_TRAINED_READY_OFFSET 27
 
 // firmware checkpoint codes and boot status register
 #define	BSR_IS_INVALID(bits) ((bits == ULLONG_MAX) || (bits == 0))
@@ -140,6 +143,7 @@
 #define	BSR_H_ASSERTION(bits)	(bits & DEV_FW_BSR_ASSERTION)
 #define	BSR_H_MI_STALLED(bits)	(bits & DEV_FW_BSR_STALLED)
 #define	BSR_H_AIT_DRAM_READY(bits)	(bits & DEV_FW_BSR_AIT_DRAM_READY)
+#define BSR_H_AIT_DRAM_READY_1_5(bits)	((bits >> DEV_FW_BSR_AIT_DRAM_TRAINED_READY_OFFSET) & 0x3)
 
 #define DSM_VENDOR_ERROR_SHIFT (0)
 #define DSM_MAILBOX_ERROR_SHIFT (16)
