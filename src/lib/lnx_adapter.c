@@ -220,7 +220,9 @@ int enable_all_regions()
 
 				if (all_dimms_in_the_region_are_enabled)
 				{
-					rc = linux_err_to_nvm_lib_err(ndctl_region_enable(region));
+					//WA: do not return an error if ndctl_region_enable fails
+					//This should be removed when kernel 4.15 is avail.
+					linux_err_to_nvm_lib_err(ndctl_region_enable(region));
 				}
 			}
 		}
