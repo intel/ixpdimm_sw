@@ -4,7 +4,7 @@
 
 Name: ixpdimm_sw
 Version: %{build_version}
-Release: 1%{?dist}
+Release: 2%{?dist}
 Summary: API for development of IXPDIMM management utilities
 License: BSD
 Group: Applications/System
@@ -20,7 +20,7 @@ BuildRequires: pkgconfig(libndctl)
 BuildRequires: pkgconfig(openssl)
 BuildRequires: numactl-devel
 BuildRequires: sblim-cmpi-devel
-BuildRequires: python
+BuildRequires: python2
 BuildRequires: cmake
 BuildRequires: gettext
 
@@ -333,6 +333,19 @@ fi
 %postun -n invm-frameworks -p /sbin/ldconfig
 
 %changelog
+* Mon Oct 09 2017 Juston Li <juston.li@intel.com> - 01.00.00.2345-2
+- fix python requires and update changelog
+
+* Mon Oct 09 2017 Juston Li <juston.li@intel.com> - 01.00.00.2345-1
+- ixpdimm_sw release v01.00.00.2345
+- added invm-frameworks release v01.00.00.2006
+
+* Wed Aug 02 2017 Fedora Release Engineering <releng@fedoraproject.org> - 01.00.00.2264-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_27_Binutils_Mass_Rebuild
+
+* Wed Jul 26 2017 Fedora Release Engineering <releng@fedoraproject.org> - 01.00.00.2264-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_27_Mass_Rebuild
+
 * Mon Aug 29 2016 Namratha Kothapalli <namratha.n.kothapalli@intel.com> - 01.00.00.2113-1
 - Update lib version dependencies
 
