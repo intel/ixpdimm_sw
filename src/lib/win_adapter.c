@@ -415,8 +415,7 @@ int get_dimm_power_limited(NVM_UINT16 socket_id)
 			rc = win_leg_adp_get_dimm_power_limited(socket_id);
 			break;
 		case DRIVER_TYPE_SCM2:
-			COMMON_LOG_WARN_F("%s() not supported", __FUNCTION__);
-			rc = NVM_ERR_NOTSUPPORTED;
+			rc = win_scm2_adp_get_dimm_power_limited(socket_id);
 			break;
 	}
 
