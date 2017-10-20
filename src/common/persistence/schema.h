@@ -11107,7 +11107,8 @@ struct db_software_trigger_info
 	unsigned int die_sparing_trigger;
 	unsigned int user_spare_block_alarm_trip_trigger;
 	unsigned int fatal_error_trigger;
-	unsigned int dirty_shutdown_trigger;
+	unsigned int spare_block_percentage_trigger;
+	unsigned int unsafe_shutdown_trigger;
 };
 /*!
  * Helper function to print a db_software_trigger_info to the screen.

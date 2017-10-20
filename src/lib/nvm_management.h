@@ -321,6 +321,17 @@ enum fw_log_level
 };
 
 /*
+ * Triggers to modify left shift value
+ */
+enum triggers_to_modify_shift_value
+{
+	USER_SPARE_BLOCK_ALARM_TRIP_TRIGGER = 1,
+	FATAL_ERROR_TRIGGER = 2,
+	SPARE_BLOCK_PERCENTAGE_TRIGGER = 3,
+	UNSAFE_SHUTDOWN_TRIGGER = 4,
+};
+
+/*
  * Injected error type
  */
 enum error_type
@@ -328,7 +339,7 @@ enum error_type
 	ERROR_TYPE_POISON = 1, // Inject a poison error.
 	ERROR_TYPE_TEMPERATURE = 2, // Inject a media temperature error.
 	ERROR_TYPE_DIE_SPARING = 3, // Trigger or revert an artificial die sparing.
-	ERROR_TYPE_SPARE_ALARM = 4, // Trigger or clear a spare capacity threshold alarm.
+	ERROR_TYPE_SPARE_CAPACITY = 4, // Trigger or clear a spare capacity threshold alarm.
 	ERROR_TYPE_MEDIA_FATAL_ERROR = 5, // Inject or clear a fake media fatal error.
 	ERROR_TYPE_DIRTY_SHUTDOWN = 6, // Inject or clear a dirty shutdown error.
 };
@@ -1149,6 +1160,7 @@ struct device_error
 	enum poison_memory_type memory_type; // Poison type
 	NVM_UINT64 dpa; // only valid if injecting poison error
 	NVM_UINT64 temperature; // only valid if injecting temperature error
+	NVM_UINT64 spareCapacity; // only valid if injecting spare capacity error
 };
 
 /*

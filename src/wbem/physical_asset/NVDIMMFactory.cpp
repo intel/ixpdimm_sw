@@ -1051,6 +1051,19 @@ void NVDIMMFactory::clearSoftwareTrigger(
 	clearError(dimmUid, &error);
 }
 
+void NVDIMMFactory::clearSpareCapacityTrigger(
+		const std::string &dimmUid,
+		const NVM_UINT16 spareCapacity)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	struct device_error error;
+	memset(&error, 0, sizeof(error));
+	error.type = ERROR_TYPE_SPARE_CAPACITY;
+	error.spareCapacity = spareCapacity;
+	clearError(dimmUid, &error);
+}
+
 void NVDIMMFactory::injectTemperatureError(
 		const std::string &dimmUid,
 		const NVM_REAL32 temperature)
@@ -1073,6 +1086,19 @@ void NVDIMMFactory::injectSoftwareTrigger(
 	struct device_error error;
 	memset(&error, 0, sizeof(error));
 	error.type = (enum error_type)error_type;
+	injectError(dimmUid, &error);
+}
+
+void NVDIMMFactory::injectSpareCapacityTrigger(
+		const std::string &dimmUid,
+		const NVM_UINT16 spareCapacity)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	struct device_error error;
+	memset(&error, 0, sizeof(error));
+	error.type = ERROR_TYPE_SPARE_CAPACITY;
+	error.spareCapacity = spareCapacity;
 	injectError(dimmUid, &error);
 }
 

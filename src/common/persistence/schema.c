@@ -1928,7 +1928,8 @@ tables[populate_index++] = ((struct table){"software_trigger_info",
 					 die_sparing_trigger INTEGER  , \
 					 user_spare_block_alarm_trip_trigger INTEGER  , \
 					 fatal_error_trigger INTEGER  , \
-					 dirty_shutdown_trigger INTEGER   \
+					 spare_block_percentage_trigger INTEGER  , \
+					 unsafe_shutdown_trigger INTEGER   \
 					);"});
 			tables[populate_index++] = ((struct table){"software_trigger_info_history",
 				"CREATE TABLE software_trigger_info_history (       \
@@ -1937,7 +1938,8 @@ tables[populate_index++] = ((struct table){"software_trigger_info",
 					 die_sparing_trigger INTEGER , \
 					 user_spare_block_alarm_trip_trigger INTEGER , \
 					 fatal_error_trigger INTEGER , \
-					 dirty_shutdown_trigger INTEGER  \
+					 spare_block_percentage_trigger INTEGER , \
+					 unsafe_shutdown_trigger INTEGER  \
 					);"});
 tables[populate_index++] = ((struct table){"performance",
 				"CREATE TABLE performance (       \
@@ -33129,7 +33131,8 @@ void local_bind_software_trigger_info(sqlite3_stmt *p_stmt, struct db_software_t
 	BIND_INTEGER(p_stmt, "$die_sparing_trigger", (unsigned int)p_software_trigger_info->die_sparing_trigger);
 	BIND_INTEGER(p_stmt, "$user_spare_block_alarm_trip_trigger", (unsigned int)p_software_trigger_info->user_spare_block_alarm_trip_trigger);
 	BIND_INTEGER(p_stmt, "$fatal_error_trigger", (unsigned int)p_software_trigger_info->fatal_error_trigger);
-	BIND_INTEGER(p_stmt, "$dirty_shutdown_trigger", (unsigned int)p_software_trigger_info->dirty_shutdown_trigger);
+	BIND_INTEGER(p_stmt, "$spare_block_percentage_trigger", (unsigned int)p_software_trigger_info->spare_block_percentage_trigger);
+	BIND_INTEGER(p_stmt, "$unsafe_shutdown_trigger", (unsigned int)p_software_trigger_info->unsafe_shutdown_trigger);
 }
 void local_get_software_trigger_info_relationships(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt, struct db_software_trigger_info *p_software_trigger_info)
@@ -33159,7 +33162,10 @@ void local_row_to_software_trigger_info(const PersistentStore *p_ps,
 		p_software_trigger_info->fatal_error_trigger);
 	INTEGER_COLUMN(p_stmt,
 		4,
-		p_software_trigger_info->dirty_shutdown_trigger);
+		p_software_trigger_info->spare_block_percentage_trigger);
+	INTEGER_COLUMN(p_stmt,
+		5,
+		p_software_trigger_info->unsafe_shutdown_trigger);
 }
 void db_print_software_trigger_info(struct db_software_trigger_info *p_value)
 {
@@ -33167,7 +33173,8 @@ void db_print_software_trigger_info(struct db_software_trigger_info *p_value)
 	printf("software_trigger_info.die_sparing_trigger: %u\n", p_value->die_sparing_trigger);
 	printf("software_trigger_info.user_spare_block_alarm_trip_trigger: %u\n", p_value->user_spare_block_alarm_trip_trigger);
 	printf("software_trigger_info.fatal_error_trigger: %u\n", p_value->fatal_error_trigger);
-	printf("software_trigger_info.dirty_shutdown_trigger: %u\n", p_value->dirty_shutdown_trigger);
+	printf("software_trigger_info.spare_block_percentage_trigger: %u\n", p_value->spare_block_percentage_trigger);
+	printf("software_trigger_info.unsafe_shutdown_trigger: %u\n", p_value->unsafe_shutdown_trigger);
 }
 enum db_return_codes db_add_software_trigger_info(const PersistentStore *p_ps,
 	struct db_software_trigger_info *p_software_trigger_info)
@@ -33175,13 +33182,14 @@ enum db_return_codes db_add_software_trigger_info(const PersistentStore *p_ps,
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = 	"INSERT INTO software_trigger_info \
-		(device_handle, die_sparing_trigger, user_spare_block_alarm_trip_trigger, fatal_error_trigger, dirty_shutdown_trigger)  \
+		(device_handle, die_sparing_trigger, user_spare_block_alarm_trip_trigger, fatal_error_trigger, spare_block_percentage_trigger, unsafe_shutdown_trigger)  \
 		VALUES 		\
 		($device_handle, \
 		$die_sparing_trigger, \
 		$user_spare_block_alarm_trip_trigger, \
 		$fatal_error_trigger, \
-		$dirty_shutdown_trigger) ";
+		$spare_block_percentage_trigger, \
+		$unsafe_shutdown_trigger) ";
 	int sql_rc;
 	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
@@ -33219,10 +33227,11 @@ int db_get_software_trigger_infos(const PersistentStore *p_ps,
 		,  die_sparing_trigger \
 		,  user_spare_block_alarm_trip_trigger \
 		,  fatal_error_trigger \
-		,  dirty_shutdown_trigger \
+		,  spare_block_percentage_trigger \
+		,  unsafe_shutdown_trigger \
 		  \
 		FROM software_trigger_info \
-		      \
+		       \
 		 \
 		";
 	sqlite3_stmt *p_stmt;
@@ -33274,13 +33283,14 @@ enum db_return_codes db_save_software_trigger_info_state(const PersistentStore *
 	{
 		sqlite3_stmt *p_stmt;
 		char *sql = 	"INSERT INTO software_trigger_info \
-			( device_handle ,  die_sparing_trigger ,  user_spare_block_alarm_trip_trigger ,  fatal_error_trigger ,  dirty_shutdown_trigger )  \
+			( device_handle ,  die_sparing_trigger ,  user_spare_block_alarm_trip_trigger ,  fatal_error_trigger ,  spare_block_percentage_trigger ,  unsafe_shutdown_trigger )  \
 			VALUES 		\
 			($device_handle, \
 			$die_sparing_trigger, \
 			$user_spare_block_alarm_trip_trigger, \
 			$fatal_error_trigger, \
-			$dirty_shutdown_trigger) ";
+			$spare_block_percentage_trigger, \
+			$unsafe_shutdown_trigger) ";
 		int sql_rc;
 		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
@@ -33307,13 +33317,14 @@ enum db_return_codes db_save_software_trigger_info_state(const PersistentStore *
 		sqlite3_stmt *p_stmt;
 		char *sql = "INSERT INTO software_trigger_info_history \
 			(history_id, \
-				 device_handle,  die_sparing_trigger,  user_spare_block_alarm_trip_trigger,  fatal_error_trigger,  dirty_shutdown_trigger)  \
+				 device_handle,  die_sparing_trigger,  user_spare_block_alarm_trip_trigger,  fatal_error_trigger,  spare_block_percentage_trigger,  unsafe_shutdown_trigger)  \
 			VALUES 		($history_id, \
 				 $device_handle , \
 				 $die_sparing_trigger , \
 				 $user_spare_block_alarm_trip_trigger , \
 				 $fatal_error_trigger , \
-				 $dirty_shutdown_trigger )";
+				 $spare_block_percentage_trigger , \
+				 $unsafe_shutdown_trigger )";
 		int sql_rc;
 		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
@@ -33349,7 +33360,7 @@ enum db_return_codes db_get_software_trigger_info_by_device_handle(const Persist
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
-		device_handle,  die_sparing_trigger,  user_spare_block_alarm_trip_trigger,  fatal_error_trigger,  dirty_shutdown_trigger  \
+		device_handle,  die_sparing_trigger,  user_spare_block_alarm_trip_trigger,  fatal_error_trigger,  spare_block_percentage_trigger,  unsafe_shutdown_trigger  \
 		FROM software_trigger_info \
 		WHERE  device_handle = $device_handle";
 	int sql_rc;
@@ -33390,7 +33401,8 @@ enum db_return_codes db_update_software_trigger_info_by_device_handle(const Pers
 		,  die_sparing_trigger=$die_sparing_trigger \
 		,  user_spare_block_alarm_trip_trigger=$user_spare_block_alarm_trip_trigger \
 		,  fatal_error_trigger=$fatal_error_trigger \
-		,  dirty_shutdown_trigger=$dirty_shutdown_trigger \
+		,  spare_block_percentage_trigger=$spare_block_percentage_trigger \
+		,  unsafe_shutdown_trigger=$unsafe_shutdown_trigger \
 		  \
 	WHERE device_handle=$device_handle ";
 	int sql_rc;
@@ -33515,7 +33527,7 @@ int db_get_software_trigger_info_history_by_history_id(const PersistentStore *p_
 	memset(p_software_trigger_info, 0, sizeof (struct db_software_trigger_info) * software_trigger_info_count);
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
-		device_handle,  die_sparing_trigger,  user_spare_block_alarm_trip_trigger,  fatal_error_trigger,  dirty_shutdown_trigger  \
+		device_handle,  die_sparing_trigger,  user_spare_block_alarm_trip_trigger,  fatal_error_trigger,  spare_block_percentage_trigger,  unsafe_shutdown_trigger  \
 		FROM software_trigger_info_history WHERE history_id = $history_id";
 	int sql_rc;
 	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)

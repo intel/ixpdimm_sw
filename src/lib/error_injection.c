@@ -65,12 +65,11 @@ int inject_software_trigger(struct device_discovery *p_discovery,
 					p_discovery->device_handle.handle);
 			rc = NVM_ERR_NOTSUPPORTED;
 		}
+		input.triggers_to_modify = 0x1;
 		input.die_sparing_trigger = enable_trigger;
 		break;
-	case ERROR_TYPE_SPARE_ALARM:
-		input.user_spare_block_alarm_trip_trigger = enable_trigger;
-		break;
 	case ERROR_TYPE_MEDIA_FATAL_ERROR:
+		input.triggers_to_modify = 0x1 << FATAL_ERROR_TRIGGER;
 		input.fatal_error_trigger = enable_trigger;
 		break;
 	default:
@@ -92,6 +91,40 @@ int inject_software_trigger(struct device_discovery *p_discovery,
 			COMMON_LOG_ERROR_F("Failed to trigger software alarm trip on dimm %u",
 					cmd.device_handle);
 		}
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+/*
+ * Helper function to inject spare capacity error
+ */
+int inject_spare_capacity_error(struct device_discovery *p_discovery,
+		NVM_UINT16 spareCapacity, NVM_BOOL enable_trigger)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	// Set up input payload
+	struct pt_payload_sw_triggers input;
+	memset(&input, 0, sizeof (input));
+	input.triggers_to_modify = 0x1 << SPARE_BLOCK_PERCENTAGE_TRIGGER;
+	unsigned char spare_block_percentage = (unsigned char)spareCapacity;
+	input.spare_block_percentage_trigger = (spare_block_percentage << 1) | enable_trigger;
+
+	struct fw_cmd cmd;
+	memset(&cmd, 0, sizeof (cmd));
+	cmd.device_handle = p_discovery->device_handle.handle;
+	cmd.opcode = PT_INJECT_ERROR;
+	cmd.sub_opcode = SUBOP_ERROR_SW_TRIGGERS;
+	cmd.input_payload = &input;
+	cmd.input_payload_size = sizeof (input);
+	rc = ioctl_passthrough_cmd(&cmd);
+	if (rc != NVM_SUCCESS)
+	{
+		COMMON_LOG_ERROR_F("Failed to trigger software alarm trip on dimm %u",
+				cmd.device_handle);
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -143,7 +176,7 @@ int inject_dirty_shutdown_trigger(struct device_discovery *p_discovery, NVM_BOOL
 	// Set up input payload
 	struct pt_payload_sw_triggers input;
 	memset(&input, 0, sizeof (input));
-	input.triggers_to_modify = 0x1 << 4; // unsafe shutdown trigger
+	input.triggers_to_modify = 0x1 << UNSAFE_SHUTDOWN_TRIGGER;
 	input.unsafe_shutdown_trigger = enable_trigger;
 
 	struct fw_cmd cmd;
@@ -270,8 +303,10 @@ int nvm_inject_device_error(const NVM_UID device_uid,
 		case ERROR_TYPE_DIRTY_SHUTDOWN:
 			rc = inject_dirty_shutdown_trigger(&discovery, 1);
 			break;
+		case ERROR_TYPE_SPARE_CAPACITY:
+			rc = inject_spare_capacity_error(&discovery, p_error->spareCapacity, 1);
+			break;
 		case ERROR_TYPE_DIE_SPARING:
-		case ERROR_TYPE_SPARE_ALARM:
 		case ERROR_TYPE_MEDIA_FATAL_ERROR:
 			rc = inject_software_trigger(&discovery, p_error->type, 1);
 			break;
@@ -327,13 +362,15 @@ int nvm_clear_injected_device_error(const NVM_UID device_uid,
 		case ERROR_TYPE_POISON:
 			rc = inject_poison_error(&discovery, p_error->dpa, p_error->memory_type, 0);
 			break;
-		case ERROR_TYPE_DIRTY_SHUTDOWN:
-			rc = inject_dirty_shutdown_trigger(&discovery, 0);
-			break;
 		case ERROR_TYPE_DIE_SPARING:
 			rc = inject_software_trigger(&discovery, p_error->type, 0);
 			break;
-		case ERROR_TYPE_SPARE_ALARM:
+		case ERROR_TYPE_DIRTY_SHUTDOWN:
+			rc = inject_dirty_shutdown_trigger(&discovery, 0);
+			break;
+		case ERROR_TYPE_SPARE_CAPACITY:
+			rc = inject_spare_capacity_error(&discovery, p_error->spareCapacity, 0);
+			break;
 		case ERROR_TYPE_MEDIA_FATAL_ERROR:
 			rc = NVM_ERR_NOTSUPPORTED;
 			break;

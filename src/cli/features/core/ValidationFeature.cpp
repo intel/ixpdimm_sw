@@ -61,11 +61,10 @@ void cli::nvmcli::ValidationFeature::getPaths(cli::framework::CommandSpecList &l
 			"testing purposes."));
 	injectError.addTarget(TARGET_DIMM_R)
 			.helpText(TR("Inject or clean an error on specific " NVM_DIMM_NAME "s by supplying one or more comma separated "
-			"" NVM_DIMM_NAME " identifiers. The default is to inject the error on all manageable " NVM_DIMM_NAME "s. "));
+			"" NVM_DIMM_NAME " identifiers. The default is to inject the error on all manageable " NVM_DIMM_NAME "s."));
 	injectError.addProperty(CLEAR_PROPERTYNAME, false, "1", true,
-			TR("Clear a previously injected poison error. If this property is provided, it will "
-			"clear the poison error at the specified address. There is no need to clear an "
-			"injected temperature. "));
+			TR("Clear a previously injected error. This property must be combined with one of the other "
+			"properties indicating the previously injected error to clear."));
 	injectError.addProperty(TEMPERATURE_PROPERTYNAME, false, "degrees", true,
 			TR("Inject a particular artificial temperature in degrees Celsius into the "
 			"" NVM_DIMM_NAME ".  The firmware that is monitoring the temperature of the " NVM_DIMM_NAME " will "
@@ -87,9 +86,10 @@ void cli::nvmcli::ValidationFeature::getPaths(cli::framework::CommandSpecList &l
 			TR("Trigger an artificial die sparing. If die sparing is enabled and " NVM_DIMM_NAME " still "
 			"has spares remaining, this will cause the firmware to report that there are no spares "
 			"remaining."));
-	injectError.addProperty(SPARE_ALARM_PROPERTYNAME, false, "1", true,
-			TR("Trigger a spare capacity threshold alarm which will cause the firmware to generate "
-			"an error log and an alert."));
+	injectError.addProperty(SPARE_CAPACITY_PROPERTYNAME, false, "1", true,
+			TR("Inject an artificial spare capacity percentage into the " NVM_DIMM_NAME ". This "
+			" will cause the firmware to take appropriate action based on the value and if "
+			" necessary generate an error log and an alert and update the health status."));
 	injectError.addProperty(FATAL_MEDIA_ERROR_PROPERTYNAME, false, "1", true,
 			TR("Inject a fake media fatal error which will cause the firmware to generate an error log "
 			"and an alert."));
@@ -101,9 +101,9 @@ void cli::nvmcli::ValidationFeature::getPaths(cli::framework::CommandSpecList &l
 
 // Constructor, just calls super class
 cli::nvmcli::ValidationFeature::ValidationFeature() : cli::nvmcli::VerboseFeatureBase(),
-	m_dimmUid(""), m_poisontype(POISON_MEMORY_TYPE_PATROLSCRUB), m_temperature(0), m_poison(0), m_clearStateExists(false),
-	m_temperatureExists(false), m_poisonExists(false), m_poisonTypeExists(false), m_dieSparingExists(false),
-	m_spareAlarmExists(false), m_fatalMediaErrorExists(false), m_dirtyShutdownExists(false)
+	m_dimmUid(""), m_poisontype(POISON_MEMORY_TYPE_PATROLSCRUB), m_temperature(0), m_spareCapacity(0), m_poison(0),
+	m_clearStateExists(false), m_temperatureExists(false), m_poisonExists(false), m_poisonTypeExists(false),
+	m_dieSparingExists(false),	m_spareCapacityExists(false), m_fatalMediaErrorExists(false), m_dirtyShutdownExists(false)
 { }
 
 /*
@@ -156,12 +156,12 @@ void cli::nvmcli::ValidationFeature::inject_error(std::string &prefixMsg,
 		m_DimmProvider.injectSoftwareTrigger(*iUid, ERROR_TYPE_DIE_SPARING);
 		listResult.insert(prefixMsg + cli::framework::SUCCESS_MSG);
 	}
-	else if (m_spareAlarmExists)
+	else if (m_spareCapacityExists)
 	{
 		prefixMsg = framework::ResultBase::stringFromArgList(
-				SETSPARECAPACITYALARM_MSG_PREFIX.c_str(), m_dimmUid.c_str());
+				SETSPARECAPACITY_MSG_PREFIX.c_str(), m_dimmUid.c_str());
 		prefixMsg += ": ";
-		m_DimmProvider.injectSoftwareTrigger(*iUid, ERROR_TYPE_SPARE_ALARM);
+		m_DimmProvider.injectSpareCapacityTrigger(*iUid, m_spareCapacity);
 		listResult.insert(prefixMsg + cli::framework::SUCCESS_MSG);
 	}
 	else if (m_fatalMediaErrorExists)
@@ -207,6 +207,22 @@ void cli::nvmcli::ValidationFeature::clear_injected_error(std::string &prefixMsg
 				CLEARDIESPARING_MSG_PREFIX.c_str(), m_dimmUid.c_str());
 		prefixMsg += ": ";
 		m_DimmProvider.clearSoftwareTrigger(*iUid, ERROR_TYPE_DIE_SPARING);
+		listResult.insert(prefixMsg + cli::framework::SUCCESS_MSG);
+	}
+	else if (m_spareCapacityExists)
+	{
+		prefixMsg = framework::ResultBase::stringFromArgList(
+				CLEARSPARECAPACITY_MSG_PREFIX.c_str(), m_dimmUid.c_str());
+		prefixMsg += ": ";
+		m_DimmProvider.clearSpareCapacityTrigger(*iUid, m_spareCapacity);
+		listResult.insert(prefixMsg + cli::framework::SUCCESS_MSG);
+	}
+	else if (m_fatalMediaErrorExists)
+	{
+		prefixMsg = framework::ResultBase::stringFromArgList(
+				CLEARFATALERROR_MSG_PREFIX.c_str(), m_dimmUid.c_str());
+		prefixMsg += ": ";
+		m_DimmProvider.clearSoftwareTrigger(*iUid, ERROR_TYPE_MEDIA_FATAL_ERROR);
 		listResult.insert(prefixMsg + cli::framework::SUCCESS_MSG);
 	}
 	else if (m_dirtyShutdownExists)
@@ -411,21 +427,18 @@ cli::framework::ResultBase* cli::nvmcli::ValidationFeature::parseDieSparingPrope
 	return pResult;
 }
 
-cli::framework::ResultBase* cli::nvmcli::ValidationFeature::parseSpareAlarmProperty(
+cli::framework::ResultBase* cli::nvmcli::ValidationFeature::parseSpareCapacityProperty(
 		const framework::ParsedCommand& parsedCommand)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	framework::ResultBase *pResult = NULL;
 
 	std::string propValue =
-			framework::Parser::getPropertyValue(parsedCommand, SPARE_ALARM_PROPERTYNAME, &m_spareAlarmExists);
-	if (m_spareAlarmExists)
+			framework::Parser::getPropertyValue(parsedCommand, SPARE_CAPACITY_PROPERTYNAME, &m_spareCapacityExists);
+	m_spareCapacity = stringToUInt64(propValue);
+	if (m_spareCapacityExists)
 	{
-		pResult = checkClearState();
-		if (!pResult)
-		{
-			pResult = verifySWTriggerPropertyValue(propValue, SPARE_ALARM_PROPERTYNAME);
-		}
+		pResult = verifySpareCapacityPropertyValue(propValue);
 	}
 
 	return pResult;
@@ -493,7 +506,7 @@ cli::framework::ResultBase* cli::nvmcli::ValidationFeature::getInjectErrorAttrib
 	}
 	if (!pResult)
 	{
-		pResult = parseSpareAlarmProperty(parsedCommand);
+		pResult = parseSpareCapacityProperty(parsedCommand);
 	}
 	if (!pResult)
 	{
@@ -530,9 +543,9 @@ cli::framework::ResultBase* cli::nvmcli::ValidationFeature::errorIfMoreThanOnePr
 	{
 		list.push_back(DIE_SPARING_PROPERTYNAME);
 	}
-	if (m_spareAlarmExists)
+	if (m_spareCapacityExists)
 	{
-		list.push_back(SPARE_ALARM_PROPERTYNAME);
+		list.push_back(SPARE_CAPACITY_PROPERTYNAME);
 	}
 	if (m_fatalMediaErrorExists)
 	{
@@ -560,9 +573,10 @@ cli::framework::ResultBase* cli::nvmcli::ValidationFeature::verifyPropertyCount(
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	framework::ResultBase *pResult = NULL;
 
-	if ((m_clearStateExists && m_poisonExists && parsedCommand.properties.size() > 2) ||
+	NVM_BOOL m_clearPropertyExists = m_poisonExists | m_spareCapacityExists;
+	if ((m_clearStateExists && m_clearPropertyExists && parsedCommand.properties.size() > 2) ||
 			(m_clearStateExists && parsedCommand.properties.size() == 1) ||
-			(!m_clearStateExists && !m_poisonExists && parsedCommand.properties.size() > 1) ||
+			(!m_clearStateExists && !m_clearPropertyExists && parsedCommand.properties.size() > 1) ||
 			parsedCommand.properties.empty())
 	{
 		pResult = new framework::SyntaxErrorResult(TRS(INVALID_COMMAND_ERROR_STR));
@@ -598,6 +612,26 @@ cli::framework::ResultBase* cli::nvmcli::ValidationFeature::verifySWTriggerPrope
 	{
 		pResult = new framework::SyntaxErrorBadValueResult(
 				framework::TOKENTYPE_PROPERTY, propertyName.c_str(),
+				propValue);
+	}
+	else
+	{
+		pResult = errorIfMoreThanOnePropertyIsModified();
+	}
+
+	return pResult;
+}
+
+cli::framework::ResultBase* cli::nvmcli::ValidationFeature::verifySpareCapacityPropertyValue(
+		const std::string& propValue)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	framework::ResultBase *pResult = NULL;
+
+	if ((m_spareCapacity < 0) || (m_spareCapacity > 100))
+	{
+		pResult = new framework::SyntaxErrorBadValueResult(
+				framework::TOKENTYPE_PROPERTY, SPARE_CAPACITY_PROPERTYNAME.c_str(),
 				propValue);
 	}
 	else

@@ -45,14 +45,14 @@ namespace nvmcli
 static const std::string SETTEMPERATURE_MSG_PREFIX = N_TR("Set temperature on " NVM_DIMM_NAME " %s");
 static const std::string SETPOISON_MSG_PREFIX = N_TR("Poison address %llu on " NVM_DIMM_NAME " %s");
 static const std::string SETDIESPARING_MSG_PREFIX = N_TR("Trigger die sparing on " NVM_DIMM_NAME " %s");
-static const std::string SETSPARECAPACITYALARM_MSG_PREFIX = N_TR("Trigger a spare capacity on " NVM_DIMM_NAME " %s");
+static const std::string SETSPARECAPACITY_MSG_PREFIX = N_TR("Trigger a spare capacity percentage on " NVM_DIMM_NAME " %s");
 static const std::string SETFATALERROR_MSG_PREFIX = N_TR("Create a media fatal error on " NVM_DIMM_NAME " %s");
 static const std::string SETDIRTYSHUTDOWN_MSG_PREFIX = N_TR("Set dirty shutdown on " NVM_DIMM_NAME " %s");
 
 static const std::string CLEARPOISON_MSG_PREFIX = N_TR("Clear poison of address %llu on " NVM_DIMM_NAME " %s");
 static const std::string CLEARTEMPERATURE_MSG_PREFIX = N_TR("Clear injected temperature on " NVM_DIMM_NAME " %s");
 static const std::string CLEARDIESPARING_MSG_PREFIX = N_TR("Clear injected die sparing on " NVM_DIMM_NAME " %s");
-static const std::string CLEARSPARECAPACITYALARM_MSG_PREFIX = N_TR("Clear injected spare capacity alarm on " NVM_DIMM_NAME " %s");
+static const std::string CLEARSPARECAPACITY_MSG_PREFIX = N_TR("Clear injected spare capacity percentage on " NVM_DIMM_NAME " %s");
 static const std::string CLEARFATALERROR_MSG_PREFIX = N_TR("Clear injected media fatal error on " NVM_DIMM_NAME " %s");
 static const std::string CLEARDIRTYSHUTDOWN_MSG_PREFIX = N_TR("Clear dirty shutdown on " NVM_DIMM_NAME " %s");
 
@@ -61,7 +61,7 @@ static std::string TEMPERATURE_PROPERTYNAME = "Temperature";
 static std::string POISON_PROPERTYNAME = "Poison";
 static std::string POISON_MEMORY_TYPE_PROPERTYNAME = "PoisonType";
 static std::string DIE_SPARING_PROPERTYNAME = "DieSparing";
-static std::string SPARE_ALARM_PROPERTYNAME = "SpareAlarm";
+static std::string SPARE_CAPACITY_PROPERTYNAME = "SpareCapacity";
 static std::string FATAL_MEDIA_ERROR_PROPERTYNAME = "FatalMediaError";
 static std::string DIRTY_SHUTDOWN_PROPERTYNAME = "DirtyShutdown";
 
@@ -110,14 +110,14 @@ private:
 	 */
 	std::string m_dimmUid;
 	enum poison_memory_type m_poisontype;
-	NVM_UINT16 m_temperature;
+	NVM_UINT16 m_temperature, m_spareCapacity;
 	NVM_UINT64 m_poison;
 	bool m_clearStateExists;
 	bool m_temperatureExists;
 	bool m_poisonExists;
 	bool m_poisonTypeExists;
 	bool m_dieSparingExists;
-	bool m_spareAlarmExists;
+	bool m_spareCapacityExists;
 	bool m_fatalMediaErrorExists;
 	bool m_dirtyShutdownExists;
 
@@ -151,7 +151,7 @@ private:
 	cli::framework::ResultBase* parseDieSparingProperty(
 		const framework::ParsedCommand& parsedCommand);
 
-	cli::framework::ResultBase* parseSpareAlarmProperty(
+	cli::framework::ResultBase* parseSpareCapacityProperty(
 		const framework::ParsedCommand& parsedCommand);
 
 	cli::framework::ResultBase* parseFatalMediaErrorProperty(
@@ -169,6 +169,9 @@ private:
 
 	cli::framework::ResultBase* verifySWTriggerPropertyValue(
 		const std::string& propValue, std::string &propertyName);
+
+	cli::framework::ResultBase* verifySpareCapacityPropertyValue(
+		const std::string& propValue);
 
 	void inject_error(std::string &prefixMsg,
 			std::vector<std::string>::iterator iUid,

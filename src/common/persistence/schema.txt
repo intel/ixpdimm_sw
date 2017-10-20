@@ -724,7 +724,8 @@ Attributes:
 	unsigned int die_sparing_trigger
 	unsigned int user_spare_block_alarm_trip_trigger
 	unsigned int fatal_error_trigger
-	unsigned int dirty_shutdown_trigger
+	unsigned int spare_block_percentage_trigger
+	unsigned int unsafe_shutdown_trigger
 
 Table(s): db_performance 
 Description: Monitor stored DIMM performance metrics. 

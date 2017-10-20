@@ -466,10 +466,12 @@ int ioctl_passthrough_cmd(struct fw_cmd *p_fw_cmd)
 					p_fw_cmd->opcode, p_fw_cmd->sub_opcode);
 				if (p_fw_cmd->input_payload_size)
 				{
-					for (int i = 0; i < p_fw_cmd->input_payload_size; i += 8)
+					// Print one DWORD at a time starting from LSB of input_payload
+					for (int i = 0; i < p_fw_cmd->input_payload_size / sizeof(NVM_UINT32); i++)
 					{
-						COMMON_LOG_HANDOFF_F("Input[%d]: 0x%x",
-							i, ((NVM_UINT64 *) (p_fw_cmd->input_payload))[i]);
+						// Make sure entire DWORD gets printed
+						COMMON_LOG_HANDOFF_F("Input[%d]: 0x%.8x",
+							i, ((NVM_UINT32 *) (p_fw_cmd->input_payload))[i]);
 					}
 				}
 				if (rc == NVM_SUCCESS)

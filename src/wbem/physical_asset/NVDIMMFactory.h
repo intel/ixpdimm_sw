@@ -159,6 +159,9 @@ public:
 	virtual void injectSoftwareTrigger(const std::string &dimmUid,
 			const NVM_UINT16 error);
 
+	virtual void injectSpareCapacityTrigger(const std::string &dimmUid,
+			const NVM_UINT16 spareCapacity);
+
 	void clearPoisonError(const std::string &dimmUid,
 			const NVM_UINT64 dpa,const enum poison_memory_type poison_type);
 
@@ -166,6 +169,9 @@ public:
 
 	virtual void clearSoftwareTrigger(const std::string &dimmUid,
 				const NVM_UINT16 error);
+
+	virtual void clearSpareCapacityTrigger(const std::string &dimmUid,
+				const NVM_UINT16 spareCapacity);
 
 	// Helper functions
 	static void uidToHandle(const std::string &dimmUid, NVM_UINT32 &handle);
