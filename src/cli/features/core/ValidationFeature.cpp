@@ -628,7 +628,7 @@ cli::framework::ResultBase* cli::nvmcli::ValidationFeature::verifySpareCapacityP
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	framework::ResultBase *pResult = NULL;
 
-	if ((m_spareCapacity < 0) || (m_spareCapacity > 100))
+	if (m_spareCapacity > 100)
 	{
 		pResult = new framework::SyntaxErrorBadValueResult(
 				framework::TOKENTYPE_PROPERTY, SPARE_CAPACITY_PROPERTYNAME.c_str(),
