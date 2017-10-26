@@ -697,7 +697,7 @@ enum fis_parser_codes fis_parse_ddrt_io_init_info(
 	memset(p_data, 0, sizeof (*p_data));
 	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
 	p_data->ddrt_io_info = p_output_payload->ddrt_io_info;
-	p_data->ddrt_training_complete = p_output_payload->ddrt_training_complete;
+	p_data->ddrt_training_status= p_output_payload->ddrt_training_status;
 	return rc;
 }
 

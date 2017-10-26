@@ -653,7 +653,7 @@ int check_ddrt_io_init_done(const NVM_UID device_uid,const NVM_NFIT_DEVICE_HANDL
 	{
 		if (NVM_SUCCESS == (rc = fw_get_ddrt_io_init(device_handle.handle,&p_ddrt_init_info)))
 		{
-			if(p_ddrt_init_info.ddrt_io_info!=DDRT_TRAINING_COMPLETE)
+			if(p_ddrt_init_info.ddrt_training_status!=DDRT_TRAINING_COMPLETE)
 			{
 				test_passed = 0;
 			}

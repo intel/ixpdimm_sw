@@ -449,7 +449,7 @@ struct pt_output_config_lockdown
 struct pt_output_ddrt_io_init_info
 {
 	unsigned char ddrt_io_info;
-	unsigned char ddrt_training_complete;
+	unsigned char ddrt_training_status;
 	unsigned char reserverd[126];
 
 } __attribute__((packed));

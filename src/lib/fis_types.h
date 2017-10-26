@@ -1168,7 +1168,8 @@ struct pt_payload_ddrt_init_info {
 	 * Bit 7 Reserved
 	 */
 	unsigned char ddrt_io_info;
-	unsigned char rsvd[127];
+	unsigned char ddrt_training_status;
+	unsigned char rsvd[126];
 } __attribute__((packed));
 
 

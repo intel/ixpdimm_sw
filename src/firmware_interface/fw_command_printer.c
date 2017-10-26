@@ -928,7 +928,7 @@ void fwcmd_ddrt_io_init_info_field_printer(const struct fwcmd_ddrt_io_init_info_
 	print_tabs(indent_count + 1);
 	printf("DdrtIoInfo: 0x%x\n", p_value->ddrt_io_info);
 	print_tabs(indent_count + 1);
-	printf("DdrtTrainingComplete: 0x%x\n", p_value->ddrt_training_complete);
+	printf("DdrtTrainingStatus: 0x%x\n", p_value->ddrt_training_status);
 }
 
 void fwcmd_get_supported_sku_features_field_printer(const struct fwcmd_get_supported_sku_features_data *p_value, int indent_count)

@@ -768,7 +768,7 @@ void fwcmd_free_config_lockdown(struct fwcmd_config_lockdown_result *p_result);
 struct fwcmd_ddrt_io_init_info_data
 {
 	unsigned char ddrt_io_info;
-	unsigned char ddrt_training_complete;
+	unsigned char ddrt_training_status;
 
 }  __attribute__((packed));
 struct fwcmd_ddrt_io_init_info_result

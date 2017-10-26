@@ -1406,7 +1406,7 @@ std::string FwCommands::fwPayloadFieldsToString_DdrtIoInitInfo(const struct fwcm
 	std::stringstream result;
 	result << "\nDdrt Io Init Info:" << "\n";
 	result << "DdrtIoInfo: " << (int) p_data->ddrt_io_info << "\n";
-	result << "DdrtTrainingComplete: " << (int) p_data->ddrt_training_complete << "\n";
+	result << "DdrtTrainingComplete: " << (int) p_data->ddrt_training_status << "\n";
 	return result.str();
 }
 
