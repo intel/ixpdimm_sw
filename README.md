@@ -31,7 +31,7 @@ https://github.com/pmem/ndctl
 libinvm-cim, libinvm-cli, libinvm-il8n libraries are required and included as a submodule.
 The source can be found at:
 
-https://github.com/01org/invm-frameworks
+https://github.com/intel/invm-frameworks
 
 All other dependencies are widely available. This includes ctemplate openssl sqlite and zlib.
 
