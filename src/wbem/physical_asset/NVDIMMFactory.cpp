@@ -658,9 +658,6 @@ enum fw_log_level NVDIMMFactory::convertToLogLevelEnum(NVM_UINT16 logLevel)
 
 	switch (logLevel)
 	{
-		case 0:
-			level = FW_LOG_LEVEL_DISABLED;
-			break;
 		case 1:
 			level = FW_LOG_LEVEL_ERROR;
 			break;

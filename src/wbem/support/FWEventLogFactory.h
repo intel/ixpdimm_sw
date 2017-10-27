@@ -47,7 +47,6 @@ namespace support
 static const std::string FWEVENTLOG_ELEMENTNAME = "FW Debug Log for: "; //!< Element Name static
 static const std::string FWEVENTLOG_CREATIONCLASSNAME = std::string(NVM_WBEM_PREFIX) + "FWEventLog"; //!< Creation ClassName static
 
-static const int CIMFWEVENTLOG_DISABLED = 32768;
 static const int CIMFWEVENTLOG_ERROR = 32769;
 static const int CIMFWEVENTLOG_WARNING = 32770;
 static const int CIMFWEVENTLOG_INFO = 32771;

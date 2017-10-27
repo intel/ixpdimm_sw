@@ -149,10 +149,6 @@ wbem::framework::Instance* wbem::support::FWEventLogFactory::getInstance(
 			std::string FwLogLevelStr;
 			switch (curr_log_level)
 			{
-				case FW_LOG_LEVEL_DISABLED:
-					log_level = CIMFWEVENTLOG_DISABLED;
-					FwLogLevelStr = "Disabled";
-					break;
 				case FW_LOG_LEVEL_ERROR:
 					log_level = CIMFWEVENTLOG_ERROR;
 					FwLogLevelStr = "Error";

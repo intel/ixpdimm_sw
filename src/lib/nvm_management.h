@@ -312,7 +312,7 @@ enum log_level
  */
 enum fw_log_level
 {
-	FW_LOG_LEVEL_DISABLED = 0, // Logging Disabled
+	// FW_LOG_LEVEL_DISABLED = 0, has been removed in FIS 1.6 - no longer supported // Logging Disabled
 	FW_LOG_LEVEL_ERROR = 1, // Error message
 	FW_LOG_LEVEL_WARN = 2, // Warning message
 	FW_LOG_LEVEL_INFO = 3, // Informational message
