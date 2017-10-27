@@ -65,6 +65,8 @@ int win_scm_adp_get_vendor_driver_revision(NVM_VERSION version_str, const NVM_SI
 
 int win_scm_adp_ioctl_passthrough_cmd(struct fw_cmd *p_cmd);
 
+int win_scm2_adp_get_dimm_power_limited(NVM_UINT16 socket_id);
+
 int win_scm_adp_get_driver_capabilities(struct nvm_driver_capabilities *p_caps);
 
 int win_scm2_get_namespace_count();
