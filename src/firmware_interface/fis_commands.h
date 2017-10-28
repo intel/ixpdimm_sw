@@ -48,14 +48,14 @@ enum fis_error_codes
 	FIS_ERR_SYSTEM_TIME_NOT_SET = 0x09,
 	FIS_ERR_DATA_NOT_SET = 0x0A,
 	FIS_ERR_ABORTED = 0x0B,
-	FIS_ERR_NO_NEW_FW_TO_EXECUTE = 0x0C,
+	FIS_ERR_RESERVED_0C = 0x0C,
 	FIS_ERR_REVISION_FAILURE = 0x0D,
 	FIS_ERR_INJECTION_NOT_ENABLED = 0x0E,
 	FIS_ERR_CONFIG_LOCKED = 0x0F,
 	FIS_ERR_INVALID_ALIGNMENT = 0x10,
 	FIS_ERR_INCOMPATIBLE_DIMM_TYPE = 0x11,
 	FIS_ERR_TIMEOUT_OCCURRED = 0x12,
-	FIS_ERR_RESERVED = 0x13,
+	FIS_ERR_RESERVED_13 = 0x13,
 	FIS_ERR_MEDIA_DISABLED = 0x14,
 	FIS_ERR_FW_UPDATE_ALREADY_OCCURED = 0x15,
 	FIS_ERR_NO_RESOURCES_AVAILABLE = 0x16,
@@ -380,13 +380,13 @@ struct pt_output_ns_label
 } __attribute__((packed));
 struct pt_output_ns_label_v1_1
 {
-	struct pt_output_ns_label label;	
+	struct pt_output_ns_label label;
 	unsigned int unused;
 
 } __attribute__((packed));
 struct pt_output_ns_label_v1_2
 {
-	struct pt_output_ns_label label;	
+	struct pt_output_ns_label label;
 	unsigned char alignment;
 	unsigned char reserved[3];
 	unsigned char type_guid[16];
@@ -397,8 +397,8 @@ struct pt_output_ns_label_v1_2
 } __attribute__((packed));
 struct pt_output_namespace_labels
 {
-	struct pt_output_ns_index index1;	
-	struct pt_output_ns_index index2;	
+	struct pt_output_ns_index index1;
+	struct pt_output_ns_index index2;
 	unsigned char labels[129536];
 
 } __attribute__((packed));

@@ -454,8 +454,8 @@ void fis_get_error_message(unsigned int code, char *message, size_t message_size
 	case FIS_ERR_ABORTED:
 		s_strcpy(message, "Aborted", message_size);
 		break;
-	case FIS_ERR_NO_NEW_FW_TO_EXECUTE:
-		s_strcpy(message, "No New FW to Execute", message_size);
+	case FIS_ERR_RESERVED_0C:
+		s_strcpy(message, "Reserved", message_size);
 		break;
 	case FIS_ERR_REVISION_FAILURE:
 		s_strcpy(message, "Revision Failure", message_size);
@@ -475,7 +475,7 @@ void fis_get_error_message(unsigned int code, char *message, size_t message_size
 	case FIS_ERR_TIMEOUT_OCCURRED:
 		s_strcpy(message, "Timeout Occurred", message_size);
 		break;
-	case FIS_ERR_RESERVED:
+	case FIS_ERR_RESERVED_13:
 		s_strcpy(message, "Reserved", message_size);
 		break;
 	case FIS_ERR_MEDIA_DISABLED:

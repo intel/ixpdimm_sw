@@ -657,9 +657,6 @@ int fw_mb_err_to_nvm_lib_err(int status)
 		case MB_ABORTED :
 			ret = NVM_ERR_DEVICEERROR;
 			break;
-		case MB_NO_NEW_FW :
-			ret = NVM_ERR_BADFIRMWARE;
-			break;
 		case MB_REVISION_FAILURE :
 			ret = NVM_ERR_BADFIRMWARE;
 			break;

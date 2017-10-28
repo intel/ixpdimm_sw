@@ -157,7 +157,7 @@ std::string FwCommands::{{name|fw_payload_to_string}}(const struct {{name|fw_cmd
 	std::stringstream result;
 	result << "\n{{name|space}}:" << "\n";
 	result << {{name|fw_payload_fields_to_string}}(p_data);
-	
+
 //- 		for r in payload.payload_refs:
 //- 			if r.is_type_based
 //- 				for t in r.types
@@ -291,9 +291,6 @@ enum return_code FwCommands::fw_mb_err_to_nvm_lib_err(int extended_status)
 			break;
 		case MB_ABORTED :
 			rc = NVM_ERR_DEVICEERROR;
-			break;
-		case MB_NO_NEW_FW :
-			rc = NVM_ERR_BADFIRMWARE;
 			break;
 		case MB_REVISION_FAILURE :
 			rc = NVM_ERR_BADFIRMWARE;

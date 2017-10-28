@@ -413,8 +413,8 @@ enum mb_error {
 		MB_DATA_NOT_SET = 0x0A,
 	/* Command has been aborted. A long operation command has aborted. */
 		MB_ABORTED = 0x0B,
-	/* Execute FW was called prior to uploading new FW image. */
-		MB_NO_NEW_FW = 0x0C,
+	/* REMOVED in FIS 1.6! Execute FW was called prior to uploading new FW image. */
+		RESERVED = 0x0C,
 	/* Illegal rollback failure. */
 		MB_REVISION_FAILURE = 0x0D,
 	/* Error injection is not currently enabled on the device. */

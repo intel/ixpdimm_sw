@@ -652,7 +652,7 @@ std::string FwCommands::fwPayloadToString_IdentifyDimm(const struct fwcmd_identi
 	std::stringstream result;
 	result << "\nIdentify Dimm:" << "\n";
 	result << fwPayloadFieldsToString_IdentifyDimm(p_data);
-	
+
 	return result.str();
 }
 
@@ -661,7 +661,7 @@ std::string FwCommands::fwPayloadToString_IdentifyDimmCharacteristics(const stru
 	std::stringstream result;
 	result << "\nIdentify Dimm Characteristics:" << "\n";
 	result << fwPayloadFieldsToString_IdentifyDimmCharacteristics(p_data);
-	
+
 	return result.str();
 }
 
@@ -670,7 +670,7 @@ std::string FwCommands::fwPayloadToString_GetSecurityState(const struct fwcmd_ge
 	std::stringstream result;
 	result << "\nGet Security State:" << "\n";
 	result << fwPayloadFieldsToString_GetSecurityState(p_data);
-	
+
 	return result.str();
 }
 
@@ -679,7 +679,7 @@ std::string FwCommands::fwPayloadToString_GetAlarmThreshold(const struct fwcmd_g
 	std::stringstream result;
 	result << "\nGet Alarm Threshold:" << "\n";
 	result << fwPayloadFieldsToString_GetAlarmThreshold(p_data);
-	
+
 	return result.str();
 }
 
@@ -688,7 +688,7 @@ std::string FwCommands::fwPayloadToString_PowerManagementPolicy(const struct fwc
 	std::stringstream result;
 	result << "\nPower Management Policy:" << "\n";
 	result << fwPayloadFieldsToString_PowerManagementPolicy(p_data);
-	
+
 	return result.str();
 }
 
@@ -697,7 +697,7 @@ std::string FwCommands::fwPayloadToString_DieSparingPolicy(const struct fwcmd_di
 	std::stringstream result;
 	result << "\nDie Sparing Policy:" << "\n";
 	result << fwPayloadFieldsToString_DieSparingPolicy(p_data);
-	
+
 	return result.str();
 }
 
@@ -706,7 +706,7 @@ std::string FwCommands::fwPayloadToString_AddressRangeScrub(const struct fwcmd_a
 	std::stringstream result;
 	result << "\nAddress Range Scrub:" << "\n";
 	result << fwPayloadFieldsToString_AddressRangeScrub(p_data);
-	
+
 	return result.str();
 }
 
@@ -715,7 +715,7 @@ std::string FwCommands::fwPayloadToString_OptionalConfigurationDataPolicy(const 
 	std::stringstream result;
 	result << "\nOptional Configuration Data Policy:" << "\n";
 	result << fwPayloadFieldsToString_OptionalConfigurationDataPolicy(p_data);
-	
+
 	return result.str();
 }
 
@@ -724,7 +724,7 @@ std::string FwCommands::fwPayloadToString_PmonRegisters(const struct fwcmd_pmon_
 	std::stringstream result;
 	result << "\nPmon Registers:" << "\n";
 	result << fwPayloadFieldsToString_PmonRegisters(p_data);
-	
+
 	return result.str();
 }
 
@@ -733,7 +733,7 @@ std::string FwCommands::fwPayloadToString_SystemTime(const struct fwcmd_system_t
 	std::stringstream result;
 	result << "\nSystem Time:" << "\n";
 	result << fwPayloadFieldsToString_SystemTime(p_data);
-	
+
 	return result.str();
 }
 
@@ -742,7 +742,7 @@ std::string FwCommands::fwPayloadToString_DeviceIdentificationV1(const struct fw
 	std::stringstream result;
 	result << "\nDevice Identification V1:" << "\n";
 	result << fwPayloadFieldsToString_DeviceIdentificationV1(p_data);
-	
+
 	return result.str();
 }
 
@@ -751,7 +751,7 @@ std::string FwCommands::fwPayloadToString_DeviceIdentificationV2(const struct fw
 	std::stringstream result;
 	result << "\nDevice Identification V2:" << "\n";
 	result << fwPayloadFieldsToString_DeviceIdentificationV2(p_data);
-	
+
 	return result.str();
 }
 
@@ -760,7 +760,7 @@ std::string FwCommands::fwPayloadToString_IdInfoTable(const struct fwcmd_id_info
 	std::stringstream result;
 	result << "\nId Info Table:" << "\n";
 	result << fwPayloadFieldsToString_IdInfoTable(p_data);
-	
+
 	return result.str();
 }
 
@@ -769,7 +769,7 @@ std::string FwCommands::fwPayloadToString_InterleaveInformationTable(const struc
 	std::stringstream result;
 	result << "\nInterleave Information Table:" << "\n";
 	result << fwPayloadFieldsToString_InterleaveInformationTable(p_data);
-	
+
 	for (int i = 0; i < p_data->id_info_table_count; i++)
 	{
 		result << fwPayloadToString_IdInfoTable(&p_data->id_info_table[i]);
@@ -783,7 +783,7 @@ std::string FwCommands::fwPayloadToString_PartitionSizeChangeTable(const struct 
 	std::stringstream result;
 	result << "\nPartition Size Change Table:" << "\n";
 	result << fwPayloadFieldsToString_PartitionSizeChangeTable(p_data);
-	
+
 	return result.str();
 }
 
@@ -792,7 +792,7 @@ std::string FwCommands::fwPayloadToString_CurrentConfigTable(const struct fwcmd_
 	std::stringstream result;
 	result << "\nCurrent Config Table:" << "\n";
 	result << fwPayloadFieldsToString_CurrentConfigTable(p_data);
-	
+
 	for (int i = 0; i < p_data->interleave_information_table_count; i++)
 	{
 		result << fwPayloadToString_InterleaveInformationTable(&p_data->interleave_information_table[i]);
@@ -805,7 +805,7 @@ std::string FwCommands::fwPayloadToString_ConfigInputTable(const struct fwcmd_co
 	std::stringstream result;
 	result << "\nConfig Input Table:" << "\n";
 	result << fwPayloadFieldsToString_ConfigInputTable(p_data);
-	
+
 	for (int i = 0; i < p_data->interleave_information_table_count; i++)
 	{
 		result << fwPayloadToString_InterleaveInformationTable(&p_data->interleave_information_table[i]);
@@ -822,7 +822,7 @@ std::string FwCommands::fwPayloadToString_ConfigOutputTable(const struct fwcmd_c
 	std::stringstream result;
 	result << "\nConfig Output Table:" << "\n";
 	result << fwPayloadFieldsToString_ConfigOutputTable(p_data);
-	
+
 	for (int i = 0; i < p_data->interleave_information_table_count; i++)
 	{
 		result << fwPayloadToString_InterleaveInformationTable(&p_data->interleave_information_table[i]);
@@ -839,7 +839,7 @@ std::string FwCommands::fwPayloadToString_PlatformConfigData(const struct fwcmd_
 	std::stringstream result;
 	result << "\nPlatform Config Data:" << "\n";
 	result << fwPayloadFieldsToString_PlatformConfigData(p_data);
-	
+
 	result << fwPayloadToString_CurrentConfigTable(&p_data->current_config_table);
 	result << fwPayloadToString_ConfigInputTable(&p_data->config_input_table);
 	result << fwPayloadToString_ConfigOutputTable(&p_data->config_output_table);
@@ -851,7 +851,7 @@ std::string FwCommands::fwPayloadToString_NsIndex(const struct fwcmd_ns_index_da
 	std::stringstream result;
 	result << "\nNs Index:" << "\n";
 	result << fwPayloadFieldsToString_NsIndex(p_data);
-	
+
 	return result.str();
 }
 
@@ -860,7 +860,7 @@ std::string FwCommands::fwPayloadToString_NsLabel(const struct fwcmd_ns_label_da
 	std::stringstream result;
 	result << "\nNs Label:" << "\n";
 	result << fwPayloadFieldsToString_NsLabel(p_data);
-	
+
 	return result.str();
 }
 
@@ -869,7 +869,7 @@ std::string FwCommands::fwPayloadToString_NsLabelV11(const struct fwcmd_ns_label
 	std::stringstream result;
 	result << "\nNs Label V1 1:" << "\n";
 	result << fwPayloadFieldsToString_NsLabelV11(p_data);
-	
+
 	return result.str();
 }
 
@@ -878,7 +878,7 @@ std::string FwCommands::fwPayloadToString_NsLabelV12(const struct fwcmd_ns_label
 	std::stringstream result;
 	result << "\nNs Label V1 2:" << "\n";
 	result << fwPayloadFieldsToString_NsLabelV12(p_data);
-	
+
 	return result.str();
 }
 
@@ -887,7 +887,7 @@ std::string FwCommands::fwPayloadToString_NamespaceLabels(const struct fwcmd_nam
 	std::stringstream result;
 	result << "\nNamespace Labels:" << "\n";
 	result << fwPayloadFieldsToString_NamespaceLabels(p_data);
-	
+
 	return result.str();
 }
 
@@ -896,7 +896,7 @@ std::string FwCommands::fwPayloadToString_DimmPartitionInfo(const struct fwcmd_d
 	std::stringstream result;
 	result << "\nDimm Partition Info:" << "\n";
 	result << fwPayloadFieldsToString_DimmPartitionInfo(p_data);
-	
+
 	return result.str();
 }
 
@@ -905,7 +905,7 @@ std::string FwCommands::fwPayloadToString_FwDebugLogLevel(const struct fwcmd_fw_
 	std::stringstream result;
 	result << "\nFw Debug Log Level:" << "\n";
 	result << fwPayloadFieldsToString_FwDebugLogLevel(p_data);
-	
+
 	return result.str();
 }
 
@@ -914,7 +914,7 @@ std::string FwCommands::fwPayloadToString_FwLoadFlag(const struct fwcmd_fw_load_
 	std::stringstream result;
 	result << "\nFw Load Flag:" << "\n";
 	result << fwPayloadFieldsToString_FwLoadFlag(p_data);
-	
+
 	return result.str();
 }
 
@@ -923,7 +923,7 @@ std::string FwCommands::fwPayloadToString_ConfigLockdown(const struct fwcmd_conf
 	std::stringstream result;
 	result << "\nConfig Lockdown:" << "\n";
 	result << fwPayloadFieldsToString_ConfigLockdown(p_data);
-	
+
 	return result.str();
 }
 
@@ -932,7 +932,7 @@ std::string FwCommands::fwPayloadToString_DdrtIoInitInfo(const struct fwcmd_ddrt
 	std::stringstream result;
 	result << "\nDdrt Io Init Info:" << "\n";
 	result << fwPayloadFieldsToString_DdrtIoInitInfo(p_data);
-	
+
 	return result.str();
 }
 
@@ -941,7 +941,7 @@ std::string FwCommands::fwPayloadToString_GetSupportedSkuFeatures(const struct f
 	std::stringstream result;
 	result << "\nGet Supported Sku Features:" << "\n";
 	result << fwPayloadFieldsToString_GetSupportedSkuFeatures(p_data);
-	
+
 	return result.str();
 }
 
@@ -950,7 +950,7 @@ std::string FwCommands::fwPayloadToString_EnableDimm(const struct fwcmd_enable_d
 	std::stringstream result;
 	result << "\nEnable Dimm:" << "\n";
 	result << fwPayloadFieldsToString_EnableDimm(p_data);
-	
+
 	return result.str();
 }
 
@@ -959,7 +959,7 @@ std::string FwCommands::fwPayloadToString_SmartHealthInfo(const struct fwcmd_sma
 	std::stringstream result;
 	result << "\nSmart Health Info:" << "\n";
 	result << fwPayloadFieldsToString_SmartHealthInfo(p_data);
-	
+
 	return result.str();
 }
 
@@ -968,7 +968,7 @@ std::string FwCommands::fwPayloadToString_FirmwareImageInfo(const struct fwcmd_f
 	std::stringstream result;
 	result << "\nFirmware Image Info:" << "\n";
 	result << fwPayloadFieldsToString_FirmwareImageInfo(p_data);
-	
+
 	return result.str();
 }
 
@@ -977,7 +977,7 @@ std::string FwCommands::fwPayloadToString_FirmwareDebugLog(const struct fwcmd_fi
 	std::stringstream result;
 	result << "\nFirmware Debug Log:" << "\n";
 	result << fwPayloadFieldsToString_FirmwareDebugLog(p_data);
-	
+
 	return result.str();
 }
 
@@ -986,7 +986,7 @@ std::string FwCommands::fwPayloadToString_LongOperationStatus(const struct fwcmd
 	std::stringstream result;
 	result << "\nLong Operation Status:" << "\n";
 	result << fwPayloadFieldsToString_LongOperationStatus(p_data);
-	
+
 	return result.str();
 }
 
@@ -995,7 +995,7 @@ std::string FwCommands::fwPayloadToString_Bsr(const struct fwcmd_bsr_data *p_dat
 	std::stringstream result;
 	result << "\nBsr:" << "\n";
 	result << fwPayloadFieldsToString_Bsr(p_data);
-	
+
 	return result.str();
 }
 
@@ -1624,9 +1624,6 @@ enum return_code FwCommands::fw_mb_err_to_nvm_lib_err(int extended_status)
 			break;
 		case MB_ABORTED :
 			rc = NVM_ERR_DEVICEERROR;
-			break;
-		case MB_NO_NEW_FW :
-			rc = NVM_ERR_BADFIRMWARE;
 			break;
 		case MB_REVISION_FAILURE :
 			rc = NVM_ERR_BADFIRMWARE;
