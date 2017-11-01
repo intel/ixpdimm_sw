@@ -232,7 +232,8 @@ enum return_code
 	NVM_ERR_BADNAMESPACELABELS = -58, // The NS labels are corrupt
 	NVM_ERR_NAMESPACEENABLEFAILED = -59, // The driver failed to enable all the namespaces
 										// after device unlock.
-	NVM_ERR_NOFADATAAVAILABLE = -60	// No device support data available from AEP DIMM
+	NVM_ERR_NOFADATAAVAILABLE = -60, // No device support data available from AEP DIMM
+	NVM_ERR_INTERLEAVESET = -61 // Something is wrong with the interleaved set
 };
 
 /*

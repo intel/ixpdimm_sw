@@ -84,7 +84,7 @@ struct nfit_dimm
 struct nfit_interleave_set
 {
 	unsigned short id; // SPA range index
-	unsigned int proximity_domain; // socket id
+	unsigned int proximity_domain;
 	unsigned long long address; // spa range base address
 	unsigned long long size; // total interleave set size
 	unsigned long long attributes; // memory mapping attributes

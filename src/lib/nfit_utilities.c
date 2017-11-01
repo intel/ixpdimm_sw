@@ -36,6 +36,7 @@
 #include "device_utilities.h"
 #include <uid/uid.h>
 #include "nvm_context.h"
+#include "nvm_types.h"
 
 /*
  * Convert NFIT library error the NVM library error
@@ -257,22 +258,44 @@ int get_interleave_set_count_from_nfit()
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
-
-void nfit_iset_to_nvm_iset(const struct nfit_interleave_set *p_nfit_iset,
+/*
+ * Copies all of the data from the NFIT interleaved set into the corresponding
+ * parameters in the NVM interleaved set.
+ *
+ * Returns: NVM_SUCCESS if success
+ *          NVM_ERR_INTERLEAVESET if dimms from more than one socket are on
+ *                                the same interleaved set
+ */
+int nfit_iset_to_nvm_iset(const struct nfit_interleave_set *p_nfit_iset,
 		struct nvm_interleave_set *p_nvm_iset)
 {
+	int rc = NVM_SUCCESS;
 	p_nvm_iset->id = p_nfit_iset->id;
-	p_nvm_iset->socket_id = p_nfit_iset->proximity_domain;
 	p_nvm_iset->size = p_nfit_iset->size;
 	p_nvm_iset->attributes = p_nfit_iset->attributes;
 	p_nvm_iset->dimm_count = p_nfit_iset->dimm_count;
+
+	// Set socket id based on the first dimm in the interleaved set.
+	// Check that the other dimms in the set are in the same socket in the
+	// loop below
+	if (p_nvm_iset->dimm_count > 0)
+	{
+		p_nvm_iset->socket_id = ((NVM_NFIT_DEVICE_HANDLE)p_nfit_iset->dimms[0]).parts.socket_id;
+	}
+
 	for (int i = 0; i < p_nvm_iset->dimm_count; i++)
 	{
 		p_nvm_iset->dimms[i] = p_nfit_iset->dimms[i];
 		p_nvm_iset->dimm_region_pdas[i] = p_nfit_iset->dimm_region_pdas[i];
 		p_nvm_iset->dimm_region_offsets[i] = p_nfit_iset->dimm_region_offsets[i];
 		p_nvm_iset->dimm_sizes[i] = p_nfit_iset->dimm_sizes[i];
+		if (p_nvm_iset->socket_id != ((NVM_NFIT_DEVICE_HANDLE)p_nfit_iset->dimms[i]).parts.socket_id)
+		{
+			// Interleaved sets should be only over one socket
+			rc = NVM_ERR_INTERLEAVESET;
+		}
 	}
+	return rc;
 }
 
 /*
@@ -316,7 +339,14 @@ int get_interleave_sets_from_nfit(const NVM_UINT8 count,
 					memset(p_interleaves, 0, sizeof (struct nvm_interleave_set) * count);
 					for (int i = 0; i < set_count; i++)
 					{
-						nfit_iset_to_nvm_iset(&nfit_isets[i], &p_interleaves[i]);
+						if ((rc = nfit_iset_to_nvm_iset(&nfit_isets[i], &p_interleaves[i])) != NVM_SUCCESS)
+						{
+							break;
+						}
+					}
+					if (rc == NVM_SUCCESS)
+					{
+						rc = set_count;
 					}
 				}
 			}
