@@ -151,6 +151,7 @@ static std::string AVGPOWERBUDGET_KEY = "AvgPowerBudget";
 static std::string DIESPARINGENABLED_KEY = "DieSparingEnabled";
 static std::string DIESPARINGLEVEL_KEY = "DieSparingLevel";
 static std::string LASTSHUTDOWNSTATUS_KEY = "LastShutdownStatus";
+static std::string LASTSHUTDOWNSTATUSEXTENDED_KEY = "LastShutdownStatusExtended";
 static std::string DIESPARESAVAILABLE_KEY = "DieSparesAvailable";
 static std::string FIRSTFASTREFRESH_KEY = "FirstFastRefresh";
 static std::string CHANNEL_KEY = "ChannelID";

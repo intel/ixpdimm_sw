@@ -664,7 +664,7 @@ int fill_device_status_from_smart_health(unsigned int device_handle,
 	}
 	else
 	{
-		if (dimm_smart.validation_flags.parts.health_status_field)
+			if (dimm_smart.validation_flags.parts.health_status_field)
 		{
 			p_status->health = smart_health_status_to_device_health(dimm_smart.health_status);
 		}
@@ -676,6 +676,7 @@ int fill_device_status_from_smart_health(unsigned int device_handle,
 		if (dimm_smart.validation_flags.parts.sizeof_vendor_data_field)
 		{
 			p_status->last_shutdown_status = dimm_smart.vendor_data.lss_details;
+			memcpy(p_status->last_shutdown_status_extended, &dimm_smart.vendor_data.lss_extended_details, sizeof(dimm_smart.vendor_data.lss_extended_details));
 			p_status->last_shutdown_time = dimm_smart.vendor_data.last_shutdown_time;
 		}
 

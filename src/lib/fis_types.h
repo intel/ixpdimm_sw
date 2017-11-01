@@ -350,6 +350,16 @@ enum last_shutdown_status
 	LSS_THERMAL_SHUTDOWN = 1 << 6,
 	LSS_FW_FLUSH_COMPLETE = 1 << 7 // this denotes a proper clean shutdown
 };
+/*
+ * Last shutdown status for a DIMM
+ */
+enum last_shutdown_extended_status
+{
+	LSS_VIRAL_INT_RCVD = 1 << 0,
+	LSS_SURPRISE_CLK_STOP_INT_RCVD = 1 << 1,
+	LSS_WR_DATA_FLUSH_RCVD = 1 << 2,
+	LSS_S4_PWR_STATE_RCVD = 1 << 3,
+};
 
 /*
  * Values for the health_status field of pt_payload_smart_health struct
@@ -1514,6 +1524,7 @@ struct intel_smart_vendor_data
 	unsigned int unsafe_shutdowns;
 	unsigned char lss_details;
 	unsigned long long last_shutdown_time; /* seconds since 1 January 1970 */
+	unsigned char lss_extended_details[3];
 	unsigned int injected_media_errors;
 	unsigned int injected_non_media_errors;
 	unsigned char reserved_b[55];

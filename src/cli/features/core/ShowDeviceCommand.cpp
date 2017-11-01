@@ -113,6 +113,8 @@ ShowDeviceCommand::ShowDeviceCommand(core::device::DeviceService &service)
 	m_props.addUint8("DieSparesAvailable", &core::device::Device::getDieSparesAvailable);
 	m_props.addList("LastShutdownStatus", &core::device::Device::getLastShutdownStatus,
 			&convertLastShutdownStatus);
+	m_props.addList("LastShutdownStatusExtended", &core::device::Device::getLastShutdownStatusExtended,
+			&convertLastShutdownStatus);
 	m_props.addUint64("LastShutdownTime", &core::device::Device::getLastShutdownTime, &convertToDate);
 	m_props.addBool("FirstFastRefresh", &core::device::Device::isFirstFastRefresh);
 	m_props.addList("ModesSupported", &core::device::Device::getMemoryCapabilities,
@@ -303,6 +305,10 @@ std::string ShowDeviceCommand::convertLastShutdownStatus(NVM_UINT16 status)
 	map[DEVICE_LAST_SHUTDOWN_STATUS_PMIC_12V_POWER_FAIL] = TR("PMIC 12V Power Fail");
 	map[DEVICE_LAST_SHUTDOWN_STATUS_PM_WARM_RESET] = TR("PM Warm Reset");
 	map[DEVICE_LAST_SHUTDOWN_STATUS_THERMAL_SHUTDOWN] = TR("Thermal Shutdown");
+	map[DEVICE_LAST_SHUTDOWN_STATUS_VIRAL_INT_RCVD] = TR("Viral Interrupt");
+	map[DEVICE_LAST_SHUTDOWN_STATUS_SURPRISE_CLK_STOP_INT_RCVD] = TR("Surprise Clk Stop Interrupt");
+	map[DEVICE_LAST_SHUTDOWN_STATUS_WR_DATA_FLUSH_RCVD] = TR("Write Data Flush Complete");
+	map[DEVICE_LAST_SHUTDOWN_STATUS_S4_PWR_STATE_RCVD] = TR("S4 Power State");
 	return map[status];
 }
 

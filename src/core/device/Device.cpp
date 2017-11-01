@@ -481,6 +481,7 @@ std::vector<NVM_UINT16> Device::getLastShutdownStatus()
 	std::vector<NVM_UINT16> result;
 
 	NVM_UINT8 lastShutdownState = getDetails().status.last_shutdown_status;
+
 	if (lastShutdownState == SHUTDOWN_STATUS_UNKNOWN)
 	{
 		result.push_back(DEVICE_LAST_SHUTDOWN_STATUS_UKNOWN);
@@ -518,6 +519,45 @@ std::vector<NVM_UINT16> Device::getLastShutdownStatus()
 		if (lastShutdownState & SHUTDOWN_STATUS_FORCED_THERMAL)
 		{
 			result.push_back(DEVICE_LAST_SHUTDOWN_STATUS_THERMAL_SHUTDOWN);
+		}
+
+	}
+
+	return result;
+}
+
+std::vector<NVM_UINT16> Device::getLastShutdownStatusExtended()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	std::vector<NVM_UINT16> result;
+
+	NVM_UINT8 lastShutDownStateExtended[3];
+	lastShutDownStateExtended[0] = getDetails().status.last_shutdown_status_extended[0];
+	lastShutDownStateExtended[1] = getDetails().status.last_shutdown_status_extended[1];
+	lastShutDownStateExtended[2] = getDetails().status.last_shutdown_status_extended[2];
+
+	if (lastShutDownStateExtended[0] == SHUTDOWN_STATUS_UNKNOWN )
+
+	{
+		result.push_back(DEVICE_LAST_SHUTDOWN_STATUS_UKNOWN);
+	}
+	else // can't be "Unknown" and "Known"
+	{
+		if (lastShutDownStateExtended[0] & SHUTDOWN_STATUS_VIRAL_INT_RCVD)
+		{
+			result.push_back(DEVICE_LAST_SHUTDOWN_STATUS_VIRAL_INT_RCVD);
+		}
+		if (lastShutDownStateExtended[0] & SHUTDOWN_STATUS_SURPRISE_CLK_STOP_INT_RCVD)
+		{
+			result.push_back(DEVICE_LAST_SHUTDOWN_STATUS_SURPRISE_CLK_STOP_INT_RCVD);
+		}
+		if (lastShutDownStateExtended[0] & SHUTDOWN_STATUS_WR_DATA_FLUSH_RCVD)
+		{
+			result.push_back(DEVICE_LAST_SHUTDOWN_STATUS_WR_DATA_FLUSH_RCVD);
+		}
+		if (lastShutDownStateExtended[0] & SHUTDOWN_STATUS_S4_PWR_STATE_RCVD)
+		{
+			result.push_back(DEVICE_LAST_SHUTDOWN_STATUS_S4_PWR_STATE_RCVD);
 		}
 	}
 

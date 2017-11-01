@@ -284,6 +284,7 @@ Attributes:
 	unsigned int unsafe_shutdowns
 	unsigned int lss_details
 	unsigned long long last_shutdown_time
+	unsigned char lss_extended_details
 	unsigned int controller_temperature
 	unsigned int ait_dram_status
 	unsigned int injected_media_errors

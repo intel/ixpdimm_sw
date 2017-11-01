@@ -96,6 +96,7 @@ static const std::string DIESPARINGENABLED = "DieSparingEnabled";
 static const std::string DIESPARINGLEVEL = "DieSparingLevel";
 static const std::string DIESPARESAVAILABLE = "DieSparesAvailable";
 static const std::string LASTSHUTDOWNSTATUS = "LastShutdownStatus";
+static const std::string LASTSHUTDOWNSTATUSEXTENDED= "LastShutdownStatusExtended";
 static const std::string LASTSHUTDOWNTIME = "LastShutdownTime";
 static const std::string FIRSTFASTREFRESH = "FirstFastRefresh";
 static const std::string MEMORYMODESSUPPORTED = "ModesSupported";

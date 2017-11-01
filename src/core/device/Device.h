@@ -61,6 +61,10 @@ static const NVM_UINT16 DEVICE_LAST_SHUTDOWN_STATUS_DDRT_POWER_FAIL = 5;
 static const NVM_UINT16 DEVICE_LAST_SHUTDOWN_STATUS_PMIC_12V_POWER_FAIL = 6;
 static const NVM_UINT16 DEVICE_LAST_SHUTDOWN_STATUS_PM_WARM_RESET = 7;
 static const NVM_UINT16 DEVICE_LAST_SHUTDOWN_STATUS_THERMAL_SHUTDOWN = 8;
+static const NVM_UINT16 DEVICE_LAST_SHUTDOWN_STATUS_VIRAL_INT_RCVD = 9;
+static const NVM_UINT16 DEVICE_LAST_SHUTDOWN_STATUS_SURPRISE_CLK_STOP_INT_RCVD = 10;
+static const NVM_UINT16 DEVICE_LAST_SHUTDOWN_STATUS_WR_DATA_FLUSH_RCVD = 11;
+static const NVM_UINT16 DEVICE_LAST_SHUTDOWN_STATUS_S4_PWR_STATE_RCVD = 12;
 
 static const NVM_UINT16 DEVICE_BOOT_STATUS_UNKNOWN = 0;
 static const NVM_UINT16 DEVICE_BOOT_STATUS_SUCCESS = 1;
@@ -130,6 +134,7 @@ public:
 	virtual bool getIsMissing();
 	virtual NVM_UINT8 getDieSparesAvailable();
 	virtual std::vector<NVM_UINT16> getLastShutdownStatus();
+	virtual std::vector<NVM_UINT16> getLastShutdownStatusExtended();
 	virtual enum config_status getConfigStatus();
 	virtual enum device_ars_status getArsStatus();
 	virtual enum device_sanitize_status getSanitizeStatus();

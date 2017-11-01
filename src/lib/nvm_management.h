@@ -449,6 +449,13 @@ enum shutdown_status
 	SHUTDOWN_STATUS_FORCED_THERMAL = 1 << 6, // Thermal shutdown received
 	SHUTDOWN_STATUS_CLEAN = 1 << 7 // Denotes a proper clean shutdown
 };
+enum shutdown_status_extended
+{
+	SHUTDOWN_STATUS_VIRAL_INT_RCVD = 1 << 0,
+	SHUTDOWN_STATUS_SURPRISE_CLK_STOP_INT_RCVD = 1 << 1,
+	SHUTDOWN_STATUS_WR_DATA_FLUSH_RCVD = 1 << 2,
+	SHUTDOWN_STATUS_S4_PWR_STATE_RCVD = 1 << 3,
+};
 
 /*
  * Status of the device current configuration
@@ -657,6 +664,7 @@ struct device_status
 	NVM_BOOL is_missing; // If the device is missing.
 	NVM_UINT8 die_spares_available; // Number of spare devices on the AEP DIMM that are available.
 	NVM_UINT8 last_shutdown_status; // State of last AEP DIMM shutdown.
+	NVM_UINT8 last_shutdown_status_extended[3];//Extendeded fields as per FIS 1.6
 	enum config_status config_status; // Status of last configuration request.
 	NVM_UINT64 last_shutdown_time; // Time of the last shutdown - seconds since 1 January 1970
 	NVM_BOOL mixed_sku; // One or more AEP DIMMs have different SKUs.

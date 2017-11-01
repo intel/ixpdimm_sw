@@ -3665,10 +3665,11 @@ enum db_return_codes db_delete_dimm_partition_by_device_handle(const PersistentS
 	int history_id,
 	int dimm_partition_count);
 /*!
- * @defgroup dimm_smart dimm_smart 
+ * @defgroup dimm_smart dimm_smart
  * @ingroup db_schema
  */
  // Lengths for strings and arrays
+#define	DIMM_SMART_LSS_EXTENDED_DETAILS_COUNT 3 //!< Max length for lss_extended_details
 /*!
  * struct representing the dimm_smart table
  * @ingroup dimm_smart
@@ -3690,6 +3691,7 @@ struct db_dimm_smart
 	unsigned int unsafe_shutdowns;
 	unsigned int lss_details;
 	unsigned long long last_shutdown_time;
+	unsigned char lss_extended_details[DIMM_SMART_LSS_EXTENDED_DETAILS_COUNT];
 	unsigned int controller_temperature;
 	unsigned int ait_dram_status;
 	unsigned int injected_media_errors;

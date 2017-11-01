@@ -1461,7 +1461,8 @@ std::string FwCommands::fwPayloadFieldsToString_SmartHealthInfo(const struct fwc
 	result << "PowerOnTime: " << p_data->power_on_time << "\n";
 	result << "Uptime: " << p_data->uptime << "\n";
 	result << "UnsafeShutdowns: " << p_data->unsafe_shutdowns << "\n";
-	result << "LastShutdownStatusDetails: " << (int) p_data->last_shutdown_status_details << "\n";	result << "PmAdrCommandReceived: " << p_data->last_shutdown_status_details_pm_adr_command_received << "\n";
+	result << "LastShutdownStatusDetails: " << (int) p_data->last_shutdown_status_details << "\n";
+	result << "PmAdrCommandReceived: " << p_data->last_shutdown_status_details_pm_adr_command_received << "\n";
 	result << "PmS3Received: " << p_data->last_shutdown_status_details_pm_s3_received << "\n";
 	result << "PmS5Received: " << p_data->last_shutdown_status_details_pm_s5_received << "\n";
 	result << "DdrtPowerFailCommandReceived: " << p_data->last_shutdown_status_details_ddrt_power_fail_command_received << "\n";
@@ -1471,7 +1472,8 @@ std::string FwCommands::fwPayloadFieldsToString_SmartHealthInfo(const struct fwc
 	result << "FlushComplete: " << p_data->last_shutdown_status_details_flush_complete << "\n";
 
 	result << "LastShutdownTime: " << p_data->last_shutdown_time << "\n";
-	result << "LastShutdownStatusExtendedDetails: " << p_data->last_shutdown_status_extended_details << "\n";	result << "ViralInterruptReceived: " << p_data->last_shutdown_status_extended_details_viral_interrupt_received << "\n";
+	result << "LastShutdownStatusExtendedDetails: " << p_data->last_shutdown_status_extended_details[0] << "\n";
+	result << "ViralInterruptReceived: " << p_data->last_shutdown_status_extended_details_viral_interrupt_received << "\n";
 	result << "SurpriseClockStopInterruptReceived: " << p_data->last_shutdown_status_extended_details_surprise_clock_stop_interrupt_received << "\n";
 	result << "WriteDataFlushComplete: " << p_data->last_shutdown_status_extended_details_write_data_flush_complete << "\n";
 	result << "S4PowerStateReceived: " << p_data->last_shutdown_status_extended_details_s4_power_state_received << "\n";
