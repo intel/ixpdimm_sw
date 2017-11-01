@@ -36,6 +36,7 @@
 #define SRC_COMMON_SMBIOS_SMBIOS_TYPES_H_
 
 #include <common_types.h>
+#include "common.h"
 
 /*
  * For finding the SMBIOS entry point(s) in physical memory.
@@ -53,6 +54,7 @@ extern unsigned char SMBIOS_64BIT_ANCHOR_STR[SMBIOS_64BIT_ANCHOR_STR_SIZE];
 /*
  * Entry point structures - used to find the SMBIOS table in raw physical memory
  */
+PACK_STRUCT(
 struct smbios_32bit_entry_point
 {
 	COMMON_UINT8 anchor_str[SMBIOS_32BIT_ANCHOR_STR_SIZE];
@@ -69,8 +71,9 @@ struct smbios_32bit_entry_point
 	COMMON_UINT32 structure_table_address;
 	COMMON_UINT16 num_smbios_structures;
 	COMMON_UINT8 bcd_revision;
-} __attribute__((packed));
+} )
 
+PACK_STRUCT(
 struct smbios_64bit_entry_point
 {
 	COMMON_UINT8 anchor_str[SMBIOS_64BIT_ANCHOR_STR_SIZE];
@@ -83,7 +86,7 @@ struct smbios_64bit_entry_point
 	COMMON_UINT8 reserved;
 	COMMON_UINT32 structure_table_max_length;
 	COMMON_UINT64 structure_table_address;
-} __attribute__((packed));
+} )
 
 /*
  * Convenience structure that can be used for either 32-bit or 64-bit entry point
@@ -122,12 +125,13 @@ enum smbios_structure_type
 	SMBIOS_STRUCT_TYPE_SYSTEM_BOOT_INFO = 32
 };
 
+PACK_STRUCT(
 struct smbios_structure_header
 {
 	COMMON_UINT8 type;
 	COMMON_UINT8 length;
 	COMMON_UINT16 handle;
-} __attribute__((packed));
+} )
 
 // Special values for the SMBIOS Type 17 Memory Device fields
 #define SMBIOS_SIZE_KB_GRANULARITY_MASK	0x8000
@@ -154,6 +158,7 @@ struct smbios_structure_header
 #define	SMBIOS_VOLTAGE_UNKNOWN	0x0
 
 // SMBIOS Type 17 - Memory Device
+PACK_STRUCT(
 struct smbios_memory_device
 {
 	struct smbios_structure_header header;
@@ -180,6 +185,6 @@ struct smbios_memory_device
 	COMMON_UINT16 max_voltage;
 	COMMON_UINT16 configured_voltage;
 
-} __attribute__((packed));
+} )
 
 #endif /* SRC_COMMON_SMBIOS_SMBIOS_TYPES_H_ */

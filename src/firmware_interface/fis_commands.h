@@ -32,6 +32,7 @@ extern "C"
 {
 #endif
 
+#include "common.h"
 #include <driver_interface/passthrough.h>
 
 enum fis_error_codes
@@ -64,6 +65,7 @@ enum fis_error_codes
 /*
  * Payloads Structures
  */
+PACK_STRUCT(
 struct pt_output_identify_dimm
 {
 	unsigned short vendor_id;
@@ -86,7 +88,8 @@ struct pt_output_identify_dimm
 	unsigned short api_ver;
 	unsigned char reserved3[58];
 
-} __attribute__((packed));
+} )
+PACK_STRUCT(
 struct pt_output_identify_dimm_characteristics
 {
 	unsigned short controller_temp_shutdown_threshold;
@@ -95,13 +98,15 @@ struct pt_output_identify_dimm_characteristics
 	unsigned short throttling_stop_threshold;
 	unsigned char reserved[120];
 
-} __attribute__((packed));
+} )
+PACK_STRUCT(
 struct pt_output_get_security_state
 {
 	unsigned char security_state;
 	unsigned char reserved[127];
 
-} __attribute__((packed));
+} )
+PACK_STRUCT(
 struct pt_input_set_passphrase
 {
 	unsigned char current_passphrase[32];
@@ -109,25 +114,29 @@ struct pt_input_set_passphrase
 	unsigned char new_passphrase[32];
 	unsigned char reserved2[32];
 
-} __attribute__((packed));
+} )
+PACK_STRUCT(
 struct pt_input_disable_passphrase
 {
 	unsigned char current_passphrase[32];
 	unsigned char reserved[96];
 
-} __attribute__((packed));
+} )
+PACK_STRUCT(
 struct pt_input_unlock_unit
 {
 	unsigned char current_passphrase[32];
 	unsigned char reserved[96];
 
-} __attribute__((packed));
+} )
+PACK_STRUCT(
 struct pt_input_secure_erase
 {
 	unsigned char current_passphrase[32];
 	unsigned char reserved[96];
 
-} __attribute__((packed));
+} )
+PACK_STRUCT(
 struct pt_output_get_alarm_threshold
 {
 	unsigned short enable;
@@ -136,7 +145,8 @@ struct pt_output_get_alarm_threshold
 	unsigned short controller_temp_threshold;
 	unsigned char reserved[121];
 
-} __attribute__((packed));
+} )
+PACK_STRUCT(
 struct pt_output_power_management_policy
 {
 	unsigned char enable;
@@ -145,7 +155,8 @@ struct pt_output_power_management_policy
 	unsigned char max_power;
 	unsigned char reserved[122];
 
-} __attribute__((packed));
+} )
+PACK_STRUCT(
 struct pt_output_die_sparing_policy
 {
 	unsigned char enable;
@@ -153,7 +164,8 @@ struct pt_output_die_sparing_policy
 	unsigned char supported;
 	unsigned char reserved[125];
 
-} __attribute__((packed));
+} )
+PACK_STRUCT(
 struct pt_output_address_range_scrub
 {
 	unsigned char enable;
@@ -163,7 +175,8 @@ struct pt_output_address_range_scrub
 	unsigned long long dpa_current_address;
 	unsigned char reserved2[100];
 
-} __attribute__((packed));
+} )
+PACK_STRUCT(
 struct pt_output_optional_configuration_data_policy
 {
 	unsigned char first_fast_refresh;
@@ -171,7 +184,8 @@ struct pt_output_optional_configuration_data_policy
 	unsigned char viral_status;
 	unsigned char reserved[125];
 
-} __attribute__((packed));
+} )
+PACK_STRUCT(
 struct pt_output_pmon_registers
 {
 	unsigned short pmon_retreive_mask;
@@ -207,13 +221,15 @@ struct pt_output_pmon_registers
 	unsigned int pmon_14_counter;
 	unsigned int pmon_14_control;
 
-} __attribute__((packed));
+} )
+PACK_STRUCT(
 struct pt_input_pmon_registers
 {
 	unsigned short pmon_retreive_mask;
 	unsigned char reserved[126];
 
-} __attribute__((packed));
+} )
+PACK_STRUCT(
 struct pt_input_set_alarm_threshold
 {
 	unsigned char enable;
@@ -221,13 +237,15 @@ struct pt_input_set_alarm_threshold
 	unsigned short avg_power_budget;
 	unsigned char reserved[123];
 
-} __attribute__((packed));
+} )
+PACK_STRUCT(
 struct pt_output_system_time
 {
 	unsigned long long unix_time;
 	unsigned char reserved[120];
 
-} __attribute__((packed));
+} )
+PACK_STRUCT(
 struct pt_output_device_identification_v1
 {
 	unsigned short manufacturer_id;
@@ -235,20 +253,23 @@ struct pt_output_device_identification_v1
 	unsigned char model_number[20];
 	unsigned char reserved[6];
 
-} __attribute__((packed));
+} )
+PACK_STRUCT(
 struct pt_output_device_identification_v2
 {
 	unsigned char uid[9];
 	unsigned char reserved[23];
 
-} __attribute__((packed));
+} )
+PACK_STRUCT(
 struct pt_output_id_info_table
 {
 	unsigned char device_identification[32];
 	unsigned long long partition_offset;
 	unsigned long long partition_size;
 
-} __attribute__((packed));
+} )
+PACK_STRUCT(
 struct pt_output_interleave_information_table
 {
 	unsigned short type;
@@ -262,7 +283,8 @@ struct pt_output_interleave_information_table
 	unsigned char memory_spare;
 	unsigned char reserved[9];
 
-} __attribute__((packed));
+} )
+PACK_STRUCT(
 struct pt_output_partition_size_change_table
 {
 	unsigned short type;
@@ -270,7 +292,8 @@ struct pt_output_partition_size_change_table
 	unsigned int platform_config_data_partition_size_change_table;
 	unsigned long long persistent_memory_partition_size;
 
-} __attribute__((packed));
+} )
+PACK_STRUCT(
 struct pt_output_current_config_table
 {
 	unsigned char signature[4];
@@ -287,7 +310,8 @@ struct pt_output_current_config_table
 	unsigned long long volatile_memory_size;
 	unsigned long long persistent_memory_size;
 
-} __attribute__((packed));
+} )
+PACK_STRUCT(
 struct pt_output_config_input_table
 {
 	unsigned char signature[4];
@@ -302,7 +326,8 @@ struct pt_output_config_input_table
 	unsigned int sequence_number;
 	unsigned long long reserved;
 
-} __attribute__((packed));
+} )
+PACK_STRUCT(
 struct pt_output_config_output_table
 {
 	unsigned char signature[4];
@@ -318,7 +343,8 @@ struct pt_output_config_output_table
 	unsigned char validation_status;
 	unsigned char reserved[7];
 
-} __attribute__((packed));
+} )
+PACK_STRUCT(
 struct pt_output_platform_config_data
 {
 	unsigned char signature[4];
@@ -338,7 +364,8 @@ struct pt_output_platform_config_data
 	unsigned int output_config_offset;
 	unsigned char body[131012];
 
-} __attribute__((packed));
+} )
+PACK_STRUCT(
 struct pt_input_platform_config_data
 {
 	unsigned char partition_id;
@@ -346,7 +373,8 @@ struct pt_input_platform_config_data
 	unsigned int offset;
 	unsigned char reserved[122];
 
-} __attribute__((packed));
+} )
+PACK_STRUCT(
 struct pt_output_ns_index
 {
 	unsigned char signature[16];
@@ -363,7 +391,8 @@ struct pt_output_ns_index
 	unsigned char free[128];
 	unsigned char reserved[56];
 
-} __attribute__((packed));
+} )
+PACK_STRUCT(
 struct pt_output_ns_label
 {
 	unsigned char uuid[16];
@@ -377,13 +406,15 @@ struct pt_output_ns_label
 	unsigned long long rawsize;
 	unsigned int slot;
 
-} __attribute__((packed));
+} )
+PACK_STRUCT(
 struct pt_output_ns_label_v1_1
 {
 	struct pt_output_ns_label label;
 	unsigned int unused;
 
-} __attribute__((packed));
+} )
+PACK_STRUCT(
 struct pt_output_ns_label_v1_2
 {
 	struct pt_output_ns_label label;
@@ -394,14 +425,16 @@ struct pt_output_ns_label_v1_2
 	unsigned char reserved1[88];
 	unsigned long long checksum;
 
-} __attribute__((packed));
+} )
+PACK_STRUCT(
 struct pt_output_namespace_labels
 {
 	struct pt_output_ns_index index1;
 	struct pt_output_ns_index index2;
 	unsigned char labels[129536];
 
-} __attribute__((packed));
+} )
+PACK_STRUCT(
 struct pt_input_namespace_labels
 {
 	unsigned char partition_id;
@@ -409,7 +442,8 @@ struct pt_input_namespace_labels
 	unsigned int offset;
 	unsigned char reserved[122];
 
-} __attribute__((packed));
+} )
+PACK_STRUCT(
 struct pt_output_dimm_partition_info
 {
 	unsigned int volatile_capacity;
@@ -422,49 +456,57 @@ struct pt_output_dimm_partition_info
 	unsigned int enabled_capacity;
 	unsigned char reserved2[88];
 
-} __attribute__((packed));
+} )
+PACK_STRUCT(
 struct pt_output_fw_debug_log_level
 {
 	unsigned char log_level;
 	unsigned char logs;
 	unsigned char reserved[126];
 
-} __attribute__((packed));
+} )
+PACK_STRUCT(
 struct pt_input_fw_debug_log_level
 {
 	unsigned char log_id;
 
-} __attribute__((packed));
+} )
+PACK_STRUCT(
 struct pt_output_fw_load_flag
 {
 	unsigned char load_flag;
 
-} __attribute__((packed));
+} )
+PACK_STRUCT(
 struct pt_output_config_lockdown
 {
 	unsigned char locked;
 	unsigned char reserved[127];
 
-} __attribute__((packed));
+} )
+PACK_STRUCT(
 struct pt_output_ddrt_io_init_info
 {
 	unsigned char ddrt_io_info;
 	unsigned char ddrt_training_status;
 	unsigned char reserverd[126];
 
-} __attribute__((packed));
+} )
+PACK_STRUCT(
 struct pt_output_get_supported_sku_features
 {
 	unsigned int dimm_sku;
 	unsigned char reserved[124];
 
-} __attribute__((packed));
+} )
+PACK_STRUCT(
 struct pt_output_enable_dimm
 {
 	unsigned char enable;
 	unsigned char reserved[127];
 
-} __attribute__((packed));
+} )
+PACK_STRUCT(
 struct pt_output_smart_health_info
 {
 	unsigned int validation_flags;
@@ -491,7 +533,8 @@ struct pt_output_smart_health_info
 	unsigned int non_media_error_injections;
 	unsigned char reserved2[44];
 
-} __attribute__((packed));
+} )
+PACK_STRUCT(
 struct pt_output_firmware_image_info
 {
 	unsigned char firmware_revision[5];
@@ -505,13 +548,15 @@ struct pt_output_firmware_image_info
 	unsigned char build_configuration[16];
 	unsigned char reserved3[40];
 
-} __attribute__((packed));
+} )
+PACK_STRUCT(
 struct pt_output_firmware_debug_log
 {
 	unsigned char log_size;
 	unsigned char reserved[127];
 
-} __attribute__((packed));
+} )
+PACK_STRUCT(
 struct pt_input_firmware_debug_log
 {
 	unsigned char log_action;
@@ -519,7 +564,8 @@ struct pt_input_firmware_debug_log
 	unsigned char log_id;
 	unsigned char reserved[122];
 
-} __attribute__((packed));
+} )
+PACK_STRUCT(
 struct pt_output_long_operation_status
 {
 	unsigned short command;
@@ -528,7 +574,8 @@ struct pt_output_long_operation_status
 	unsigned char status_code;
 	unsigned char command_specific_return_data[119];
 
-} __attribute__((packed));
+} )
+PACK_STRUCT(
 struct pt_output_bsr
 {
 	unsigned char major_checkpoint;
@@ -536,14 +583,16 @@ struct pt_output_bsr
 	unsigned int rest1;
 	unsigned short rest2;
 
-} __attribute__((packed));
+} )
+PACK_STRUCT(
 struct pt_input_format
 {
 	unsigned char fill_pattern;
 	unsigned char preserve_pdas_write_count;
 	unsigned char reserved[126];
 
-} __attribute__((packed));
+} )
+
 /*
  * FIS Commands
  */

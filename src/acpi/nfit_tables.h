@@ -28,6 +28,8 @@
 #ifndef _NFIT_INTERFACE_NFIT_TABLES_H_
 #define _NFIT_INTERFACE_NFIT_TABLES_H_
 
+#include "common.h"
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -45,6 +47,7 @@ extern "C"
 #define	NFIT_MAPPING_ATTRIBUTE_EFI_MEMORY_NV	0x00008000
 #define	NFIT_MAPPING_ATTRIBUTE_EFI_MEMORY_MORE_RELIABLE	0x00010000
 
+PACK_STRUCT(
 struct nfit
 {
 	unsigned char signature[4];
@@ -57,8 +60,9 @@ struct nfit
 	unsigned char creator_id[4];
 	unsigned int creator_revision;
 	unsigned int reserved;
-} __attribute__((packed));
+} )
 
+PACK_STRUCT(
 struct spa
 {
 	unsigned short type;
@@ -71,8 +75,9 @@ struct spa
 	unsigned long long spa_range_base;
 	unsigned long long spa_range_length;
 	unsigned long long address_range_memory_mapping_attribute;
-} __attribute__((packed));
+} )
 
+PACK_STRUCT(
 struct region_mapping
 {
 	unsigned short type;
@@ -89,8 +94,9 @@ struct region_mapping
 	unsigned short interleave_ways;
 	unsigned short state_flag;
 	unsigned short reserved;
-} __attribute__((packed));
+} )
 
+PACK_STRUCT(
 struct interleave
 {
 	unsigned short type;
@@ -99,15 +105,17 @@ struct interleave
 	unsigned short reserved;
 	unsigned int number_of_lines;
 	unsigned int line_size_bytes;
-} __attribute__((packed));
+} )
 
+PACK_STRUCT(
 struct smbios_management_info
 {
 	unsigned short type;
 	unsigned short length;
 	unsigned int reserved;
-} __attribute__((packed));
+} )
 
+PACK_STRUCT(
 struct control_region
 {
 	unsigned short type;
@@ -133,8 +141,9 @@ struct control_region
 	unsigned long long status_register_size;
 	unsigned short region_flag;
 	unsigned char reserved_1[6];
-} __attribute__((packed));
+} )
 
+PACK_STRUCT(
 struct block_data_window_region
 {
 	unsigned short type;
@@ -145,8 +154,9 @@ struct block_data_window_region
 	unsigned long long window_size;
 	unsigned long long memory_capacity;
 	unsigned long long first_block_address;
-} __attribute__((packed));
+} )
 
+PACK_STRUCT(
 struct flush_hint_address
 {
 	unsigned short type;
@@ -154,7 +164,7 @@ struct flush_hint_address
 	unsigned int handle;
 	unsigned short address_count;
 	unsigned char reserved[6];
-} __attribute__((packed));
+} )
 
 struct parsed_nfit
 {

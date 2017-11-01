@@ -36,6 +36,7 @@
 #include <system/system.h>
 #include <windows.h>
 #include <acpi.h>
+#include "common.h"
 
 int find_numa_nodes(NVM_UINT16 *p_node_id, NVM_UINT16 count);
 int set_affinity_numa_node(NVM_UINT16 node_id);
@@ -51,6 +52,7 @@ extern DWORD string_to_dword(const char *str);
  * Standard Windows structure for SMBIOS data.
  * GetSystemFirmwareTable returns a blob in this format.
  */
+PACK_STRUCT(
 struct RawSMBIOSData
 {
     BYTE    Used20CallingMethod;
@@ -59,7 +61,7 @@ struct RawSMBIOSData
     BYTE    DmiRevision;
     DWORD   Length;
     BYTE    SMBIOSTableData[];
-} __attribute__((packed));
+} )
 
 /*
  * Load a simulator file.

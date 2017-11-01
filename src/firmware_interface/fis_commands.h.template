@@ -46,6 +46,7 @@ extern "C"
 {
 #endif
 
+#include "common.h"
 #include <driver_interface/passthrough.h>
 
 enum fis_error_codes
@@ -55,28 +56,32 @@ enum fis_error_codes
 //- endfor
 };
 
+
 /*
  * Payloads Structures
  */
 //- for cmd in commands
 //- 	for s in cmd.sub_payloads
+PACK_STRUCT(
 struct {{s.name|output_payload}}
 {
 {{ payload_fields(s.payload.fields) }}
-} __attribute__((packed));
+} )
 //- 	endfor
 //- 	if cmd.has_output
+PACK_STRUCT(
 struct {{cmd.name|output_payload}}
 {
 {{ payload_fields(cmd.output_payload.fields) }}
-} __attribute__((packed));
+} )
 //- 	endif
 
 //- 	if cmd.has_input
+PACK_STRUCT(
 struct {{cmd.name|input_payload}}
 {
 {{ payload_fields(cmd.input_payload.fields) }}
-} __attribute__((packed));
+} )
 //- 	endif
 
 //- endfor

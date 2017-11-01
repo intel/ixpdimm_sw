@@ -32,6 +32,7 @@
 #ifndef	CR_MGMT_FIS_TYPES_H
 #define	CR_MGMT_FIS_TYPES_H
 
+#include "common.h"
 #include "nvm_types.h"
 
 /*
@@ -626,6 +627,7 @@ struct fw_cmd {
  *	Small Output Payload
  * * Updated to FIS 1.3 *
  */
+PACK_STRUCT(
 struct pt_payload_identify_dimm {
 	unsigned short vendor_id;
 	unsigned short device_id;
@@ -646,7 +648,7 @@ struct pt_payload_identify_dimm {
 	unsigned short ifce; /* Interface format code extra*/
 	unsigned short api_ver; /* BCD formated api version */
 	unsigned char rsrvd_d[58]; /* Reserved */
-} __attribute__((packed));
+})
 
 /*
  * Passthrough Payload:
@@ -654,12 +656,13 @@ struct pt_payload_identify_dimm {
  * 		Sub-opcode: 0x01h (Device Characteristics)
  * 	* Updated to FIS 1.2 *
  */
+PACK_STRUCT(
 struct pt_payload_device_characteristics {
 	unsigned short controller_temp_shutdown_threshold;
 	unsigned short media_temp_shutdown_threshold;
 	unsigned short throttling_start_threshold;
 	unsigned short throttling_stop_threshold;
-} __attribute__((packed));
+})
 
 /*
  * Passthrough Payload:
@@ -667,6 +670,7 @@ struct pt_payload_device_characteristics {
  *		Sub-Opcode:	0x00h (Get Security State)
  *	Small Output Payload
  */
+PACK_STRUCT(
 struct pt_payload_get_security_state {
 	/*
 	 * Bit0: reserved
@@ -681,13 +685,14 @@ struct pt_payload_get_security_state {
 	unsigned char security_status;
 
 	unsigned char reserved[127];
-} __attribute__((packed));
+})
 
+PACK_STRUCT(
 struct pt_payload_sanitize_dimm_status {
 	unsigned char state;
 	unsigned char progress;
 	unsigned char reserved[126];
-} __attribute__((packed));
+})
 
 /*
  * Passthrough Payload:
@@ -695,6 +700,7 @@ struct pt_payload_sanitize_dimm_status {
  *		Sub-Opcode:	0x01h (Get Sanitize State)
  *	Small Output Payload
  */
+PACK_STRUCT(
 struct pt_payload_get_sanitize_state {
 	/*
 	 * 0x00 = idle
@@ -707,7 +713,7 @@ struct pt_payload_get_sanitize_state {
 	 * Percent complete the DIMM has been sanitized so far, 0-100
 	 */
 	unsigned char sanitize_progress;
-} __attribute__((packed));
+} )
 
 /*
  * Passthrough Payload:
@@ -715,6 +721,7 @@ struct pt_payload_get_sanitize_state {
  *		Sub-Opcode:	0xF1h (Set Passphrase)
  *	Small Input Payload
  */
+PACK_STRUCT(
 struct pt_payload_set_passphrase {
 	/* The current security passphrase */
 	char passphrase_current[DEV_PASSPHRASE_LEN];
@@ -722,7 +729,7 @@ struct pt_payload_set_passphrase {
 	/* The new passphrase to be set/changed to */
 	char passphrase_new[DEV_PASSPHRASE_LEN];
 	unsigned char rsvd2[32];
-} __attribute__((packed));
+} )
 
 /*
  * Passthrough Payload:
@@ -731,11 +738,12 @@ struct pt_payload_set_passphrase {
  *		Sub-Opcode:	0xF3h (Unlock Unit)
  *	Small Input Payload
  */
+PACK_STRUCT(
 struct pt_payload_passphrase {
 	/* The end user passphrase */
 	char passphrase_current[DEV_PASSPHRASE_LEN];
 	unsigned char rsvd[96];
-} __attribute__((packed));
+} )
 
 /*
  * Passthrough Payload:
@@ -743,12 +751,13 @@ struct pt_payload_passphrase {
  *             Sub-Opcode:     0x01h (Overwrite DIMM)
  *     Small Input Payload
  */
+PACK_STRUCT(
 struct pt_payload_secure_erase_unit {
 	/* the end user passphrase */
 	char passphrase_current[DEV_PASSPHRASE_LEN];
 	unsigned char invert_pattern_flag;
 	char reserved[3];
-} __attribute__((packed));
+} )
 
 /*
  * Passthrough Payload:
@@ -757,6 +766,7 @@ struct pt_payload_secure_erase_unit {
  *	Get - Small Output Payload
  *	Set - Small Input Payload
  */
+PACK_STRUCT(
 struct pt_payload_alarm_thresholds {
 
 	/*
@@ -804,7 +814,7 @@ struct pt_payload_alarm_thresholds {
 	unsigned short controller_temperature;
 
 	unsigned char reserved[121];
-} __attribute__((packed));
+} )
 
 /*
  * Passthrough Payload:
@@ -813,6 +823,7 @@ struct pt_payload_alarm_thresholds {
  *	Get - Small Output Payload
  *	Set - Small Input Payload
  */
+PACK_STRUCT(
 struct pt_payload_power_mgmt_policy {
 	/*
 	 *	Reflects whether the power management policy is enabled or disabled.
@@ -829,13 +840,14 @@ struct pt_payload_power_mgmt_policy {
 	/* Shows the current TDP DIMM power limit in W (watts) */
 	unsigned char tdp;
 	unsigned char rsvd[122];
-} __attribute__((packed));
+} )
 /*
  * Passthrough Payload:
  *		Opcode:		0x04h (Get Features)
  *		Sub-Opcode:	0x03h (Die Sparing Policy)
  *	Small Output Payload
  */
+PACK_STRUCT(
 struct pt_get_die_spare_policy {
 	/*
 	 * Reflects whether the die sparing policy is enabled or disabled
@@ -854,7 +866,7 @@ struct pt_get_die_spare_policy {
 	unsigned char supported;
 	unsigned char rsvd[125];
 
-} __attribute__((packed));
+} )
 
 /*
  * Passthrough Payload:
@@ -863,6 +875,7 @@ struct pt_get_die_spare_policy {
  *	Get - Small output payload
  *	Set - Small input payload
  */
+PACK_STRUCT(
 struct pt_ddrt_alert {
 	/*
 	 * Each byte represents a transaction type 0..127
@@ -885,7 +898,7 @@ struct pt_ddrt_alert {
 	 * (2) = AIT ERROR VIRAL ENABLE
 	 */
 	unsigned char transaction_type[DEV_DDRT_ALERT_TYPES];
-} __attribute__((packed));
+} )
 
 /*
  * Passthrough Payload:
@@ -893,6 +906,7 @@ struct pt_ddrt_alert {
  *		Sub-Opcode:	0x06h (Optional Configuration Data Policy)
  *	Get - Small Output Payload
  */
+PACK_STRUCT(
 struct pt_payload_get_config_data_policy {
 	/*
 	 * Current state of acceleration of the first refresh cycle
@@ -915,7 +929,7 @@ struct pt_payload_get_config_data_policy {
 	 */
 	unsigned char viral_status;
 	unsigned char rsvd[125];
-} __attribute__((packed));
+} )
 
 /*
  * Passthrough Payload:
@@ -923,6 +937,7 @@ struct pt_payload_get_config_data_policy {
  *		Sub-Opcode:	0x06h (Optional Configuration Data Policy)
  *	Set - Small Input Payload
  */
+PACK_STRUCT(
 struct pt_payload_set_config_data_policy {
 	/*
 	 * Enable/disable acceleration of the first refresh cycle
@@ -945,7 +960,7 @@ struct pt_payload_set_config_data_policy {
 	 */
 	unsigned char viral_clear;
 	unsigned char rsvd[125];
-} __attribute__((packed));
+} )
 
 /*
  * Passthrough Payload:
@@ -953,6 +968,7 @@ struct pt_payload_set_config_data_policy {
  *		Sub-Opcode:	0x04h (Die Sparing Policy)
  *	Small Input Payload
  */
+PACK_STRUCT(
 struct pt_set_die_spare_policy {
 	/*
 	 * Reflects whether the die sparing policy is enabled or disabled
@@ -963,7 +979,7 @@ struct pt_set_die_spare_policy {
 	/* How aggressive to be on die sparing (0...255), Default 128 */
 	unsigned char aggressiveness;
 	unsigned char rsvd[126];
-} __attribute__((packed));
+} )
 
 /*
  * Passthrough Payload:
@@ -972,6 +988,7 @@ struct pt_set_die_spare_policy {
  *	Get - Small Output Payload
  *	Set - Small Input Payload
  */
+PACK_STRUCT(
 struct pt_payload_system_time {
 	/*
 	 * The number of seconds since 1 January 1970
@@ -979,7 +996,7 @@ struct pt_payload_system_time {
 	unsigned long long time;
 
 	unsigned char rsvd[120];
-} __attribute__((packed));
+} )
 
 /*
  * Passthrough Payload:
@@ -987,6 +1004,7 @@ struct pt_payload_system_time {
  *		Sub-Opcode:	0x01h (Platform Config Data)
  *	Get - Small Input Payload + Large Ouput Payload
  */
+PACK_STRUCT(
 struct pt_payload_get_platform_cfg_data {
 	/*
 	 * Which Partition to access
@@ -1017,7 +1035,7 @@ struct pt_payload_get_platform_cfg_data {
 
 	unsigned char reserved[122];
 
-} __attribute__((packed));
+} )
 
 /*
  * Passthrough Payload:
@@ -1025,6 +1043,7 @@ struct pt_payload_get_platform_cfg_data {
  *		Sub-Opcode:	0x01h (Platform Config Data)
   *	Set - Small Input Payload + Large Input Payload
  */
+PACK_STRUCT(
 struct pt_payload_set_platform_cfg_data {
 	/*
 	 * Which Partition to access
@@ -1055,7 +1074,7 @@ struct pt_payload_set_platform_cfg_data {
 	 */
 	unsigned char data[DEV_PLT_CFG_SMALL_PAYLOAD_WRITE_SIZE];
 
-} __attribute__((packed));
+} )
 
 /*
  * Passthrough CR Payload:
@@ -1063,6 +1082,7 @@ struct pt_payload_set_platform_cfg_data {
  *		Sub-Opcode:	0x02h (DIMM Partition Info)
  *	Small Output Payload
  */
+PACK_STRUCT(
 struct pt_payload_get_dimm_partition_info {
 	/*
 	 * DIMM volatile memory capacity (in 4KB multiples of bytes).
@@ -1090,7 +1110,7 @@ struct pt_payload_get_dimm_partition_info {
 	 * (in 4KB multiples of bytes) */
 	unsigned int raw_capacity;
 	unsigned char rsvd3[92];
-} __attribute__((packed));
+} )
 
 /*
  * Passthrough Payload:
@@ -1098,6 +1118,7 @@ struct pt_payload_get_dimm_partition_info {
  *		Sub-Opcode:	0x03h (FW Debug Log Level)
  *	Small Output Payload
  */
+PACK_STRUCT(
 struct pt_payload_output_get_fw_dbg_log_level {
 	/*
 	 * The current logging level of the  FW (0-255).
@@ -1109,7 +1130,7 @@ struct pt_payload_output_get_fw_dbg_log_level {
 	 * 4 = Debug
 	 */
 	unsigned char log_level;
-} __attribute__((packed));
+} )
 
 /*
  * Passthrough Payload:
@@ -1118,6 +1139,7 @@ struct pt_payload_output_get_fw_dbg_log_level {
  *	Get - Small Output Payload
  *	Set - Small Input Payload
  */
+PACK_STRUCT(
 struct pt_payload_persistent_partition {
 
 	/*
@@ -1127,7 +1149,7 @@ struct pt_payload_persistent_partition {
 	 */
 	unsigned char enabled;
 	unsigned char rsvd[127];
-} __attribute__((packed));
+} )
 
 /*
  * Passthrough Payload:
@@ -1135,6 +1157,7 @@ struct pt_payload_persistent_partition {
  *		Sub-Opcode:	0x06h (DDRT IO Init Info)
  *	Small Output Payload
  */
+PACK_STRUCT(
 struct pt_payload_ddrt_init_info {
 
 	/*
@@ -1170,7 +1193,7 @@ struct pt_payload_ddrt_init_info {
 	unsigned char ddrt_io_info;
 	unsigned char ddrt_training_status;
 	unsigned char rsvd[126];
-} __attribute__((packed));
+} )
 
 
 /*
@@ -1179,6 +1202,7 @@ struct pt_payload_ddrt_init_info {
  *	Sub-Opcode:	0x07h (FW Load Flag)
  *	Small Output Payload
  */
+PACK_STRUCT(
 struct pt_payload_fw_load_flag {
 	/*
 	 * Type of FW load that is requested.
@@ -1187,7 +1211,7 @@ struct pt_payload_fw_load_flag {
 	 * 0x02 - Mfg FW
 	 */
 	unsigned char load_flag;
-} __attribute__((packed));
+} )
 
 /*
  * Passthrough Payload:
@@ -1195,6 +1219,7 @@ struct pt_payload_fw_load_flag {
  *		Sub-Opcode:	0x02h (DIMM Partition Info)
  *	Small Input Payload
  */
+PACK_STRUCT(
 struct pt_payload_set_dimm_partion_info {
 	/*
 	 * DIMM volatile memory capacity (in 4KB multiples of bytes).
@@ -1212,7 +1237,7 @@ struct pt_payload_set_dimm_partion_info {
 	unsigned int pmem_capacity;
 
 	unsigned char rsvd[120];
-} __attribute__((packed));
+} )
 
 /*
  * Passthrough Payload:
@@ -1220,6 +1245,7 @@ struct pt_payload_set_dimm_partion_info {
  *	Sub-Opcode:	0x03h (FW Debug Log Level)
  *	Small Payload Input
  */
+PACK_STRUCT(
 struct pt_payload_set_fw_dbg_log_level {
 	/*
 	 * The current logging level of the FW (0-255).
@@ -1231,7 +1257,7 @@ struct pt_payload_set_fw_dbg_log_level {
 	 * 4 = Debug
 	 */
 	unsigned char log_level;
-} __attribute__((packed));
+} )
 
 /*
  * Passthrough Input Payload:
@@ -1239,10 +1265,11 @@ struct pt_payload_set_fw_dbg_log_level {
  *		Sub-Opcode:	0x00h (Read CSR)
  *	Small Input Payload
  */
+PACK_STRUCT(
 struct pt_input_payload_read_csr {
 	/* The address of the CSR register to read */
 	unsigned int csr_register_address;
-} __attribute__((packed));
+} )
 
 /*
  * Passthrough Output Payload:
@@ -1253,9 +1280,10 @@ struct pt_input_payload_read_csr {
  *		Sub-Opcode:	0x00h (Write CSR)
  *	Small Output Payload
  */
+PACK_STRUCT(
 struct pt_output_payload_csr {
 	unsigned int csr_value; /* The value of the CSR register */
-} __attribute__((packed));
+} )
 
 /*
  * Passthrough Payload
@@ -1264,6 +1292,7 @@ struct pt_output_payload_csr {
  *	Get - Small Output Payload
  *	Set - Small Input Payload
  */
+PACK_STRUCT(
 struct pt_payload_err_correct_erasure_policy {
 	/**
 	 * Which policy to retrieve the policy values for.
@@ -1281,7 +1310,7 @@ struct pt_payload_err_correct_erasure_policy {
 	 * Bit 4 - Refreshed Enabled
 	 */
 	unsigned char policy;
-} __attribute__((packed));
+} )
 
 /**
  * Passthrough Payload:
@@ -1292,6 +1321,7 @@ struct pt_payload_err_correct_erasure_policy {
  *		Sub-Opcode:	0x02h (Thermal Policy)
  *	Small input payload
  */
+PACK_STRUCT(
 struct pt_payload_thermal_policy {
 	/**
 	 * Reflects whether the thermal policy is enabled or disabled
@@ -1305,7 +1335,7 @@ struct pt_payload_thermal_policy {
 	 * 7:3 RSVD
 	 */
 	unsigned char enable_flags;
-} __attribute__((packed));
+} )
 
 /*
  * Passthrough Input Payload:
@@ -1313,10 +1343,11 @@ struct pt_payload_thermal_policy {
  *		Sub-Opcode:	0x00h (Write CSR)
  *	Small Input Payload
  */
+PACK_STRUCT(
 struct pt_input_payload_write_csr {
 	unsigned int csr_register_address; /* The address of the CSR register */
 	unsigned int csr_value; /* The value to be written to the CSR register */
-} __attribute__((packed));
+} )
 
 /*
  * Passthrough Payload:
@@ -1324,6 +1355,7 @@ struct pt_input_payload_write_csr {
  *		Sub-Opcode:	0x00h (Enable Injection)
  *	Small Input Payload
  */
+PACK_STRUCT(
 struct pt_payload_enable_injection {
 	/*
 	 * Used to turn off/on injection functionality
@@ -1332,7 +1364,7 @@ struct pt_payload_enable_injection {
 	 */
 	unsigned char enable;
 	unsigned char reserved[127];
-} __attribute__((packed));
+} )
 
 /*
  * Passthrough Payload:
@@ -1340,6 +1372,7 @@ struct pt_payload_enable_injection {
  *		Sub-Opcode:	0x01h (Poison Error)
  *	Small Input Payload
  */
+PACK_STRUCT(
 struct pt_payload_poison_err {
 	/*
 	 * Allows the enabling or disabling of poison for this address
@@ -1361,13 +1394,14 @@ struct pt_payload_poison_err {
 	unsigned char reserved2;
 	unsigned long long dpa_address; /* Address to set the poison bit for */
 	unsigned char reserved3[116];
-} __attribute__((packed));
+} )
 
 /*
  * Passthrough Payload:
  *		Opcode:		0x0Ah (Inject Error)
  *		Sub-Opcode:	0x02h (Media Temperature Error)
  */
+PACK_STRUCT(
 struct pt_payload_temp_err {
 	/*
 		 * Allows the enabling or disabling of the temperature error
@@ -1382,13 +1416,14 @@ struct pt_payload_temp_err {
 	 */
 	unsigned short temperature;
 	unsigned char reserved[125];
-} __attribute__((packed));
+} )
 
 /*
  * Passthrough Payload:
  *		Opcode:		0x0Ah (Inject Error)
  *		Sub-Opcode:	0x03h (Software Triggers)
  */
+PACK_STRUCT(
 struct pt_payload_sw_triggers {
 	/*
 	 * Contains a bit field of the triggers
@@ -1441,7 +1476,7 @@ struct pt_payload_sw_triggers {
 	unsigned char unsafe_shutdown_trigger;
 
 	unsigned char reserved_1[114];
-} __attribute__((packed));
+} )
 
 /*
  * If the corresponding validation flag is not set in this field, it is indication to the
@@ -1467,6 +1502,7 @@ typedef union
 	unsigned int flags;
 } SMART_VALIDATION_FLAGS;
 
+PACK_STRUCT(
 struct intel_smart_vendor_data
 {
 	unsigned long long power_cycles; /* Number of NVM DIMM power cycles */
@@ -1481,7 +1517,7 @@ struct intel_smart_vendor_data
 	unsigned int injected_media_errors;
 	unsigned int injected_non_media_errors;
 	unsigned char reserved_b[55];
-} __attribute__((packed));
+} )
 
 /*
  * Passthrough Payload:
@@ -1489,6 +1525,7 @@ struct intel_smart_vendor_data
  *		Sub-Opcode:	0x00h (SMART & Health Info)
  *	Small payload output
  */
+PACK_STRUCT(
 struct pt_payload_smart_health {
 
 	SMART_VALIDATION_FLAGS validation_flags;
@@ -1560,7 +1597,7 @@ struct pt_payload_smart_health {
 
 
 	struct intel_smart_vendor_data vendor_data;
-} __attribute__((packed));
+} )
 
 /*
  * Passthrough Payload:
@@ -1568,6 +1605,7 @@ struct pt_payload_smart_health {
  *		Sub-Opcode:	0x01h (Firmware Image Info)
  *	Small output payload
  */
+PACK_STRUCT(
 struct pt_payload_fw_image_info {
 	/*
 	 * Contains BCD formatted revision of the FW in the following format:
@@ -1619,7 +1657,7 @@ struct pt_payload_fw_image_info {
 	char build_configuration[DEV_FW_BUILD_CONFIGURATION_LEN];
 
 	unsigned char rsvd4[40];
-} __attribute__((packed));
+} )
 
 /*
  * Passthrough Payload:
@@ -1627,6 +1665,7 @@ struct pt_payload_fw_image_info {
  *		Sub-Opcode:	0x02h (Firmware Debug Log)
  *	Small Input Payload
  */
+PACK_STRUCT(
 struct pt_payload_input_get_fw_dbg_log {
 #define RETRIEVE_LOG_SIZE 0x00
 #define GET_LOG_PAGE 0x01
@@ -1643,7 +1682,7 @@ struct pt_payload_input_get_fw_dbg_log {
 	unsigned char log_page_offset[2];
 
 	unsigned char rsvd[123];
-} __attribute__((packed));
+} )
 
 /*
  * Passthrough Payload:
@@ -1651,11 +1690,12 @@ struct pt_payload_input_get_fw_dbg_log {
  *		Sub-Opcode:	0x02h (Firmware Debug Log)
  *	Small Output Payload
  */
+PACK_STRUCT(
 struct pt_payload_output_get_fw_dbg_log {
 	/* The size of the log in MB. */
 	unsigned char log_size;
 	unsigned char rsvd[127];
-} __attribute__((packed));
+} )
 
 /*
  * Passthrough Payload:
@@ -1663,11 +1703,12 @@ struct pt_payload_output_get_fw_dbg_log {
  *		Sub-Opcode:	0x03h (Memory Info)
  *	Small Output Payload
  */
+PACK_STRUCT(
 struct pt_payload_input_memory_info {
 	/* The page of memory information you want to retrieve */
 	unsigned char memory_page;
 	unsigned char rsvd[127];
-} __attribute__((packed));
+} )
 
 /*
  * Passthrough Payload:
@@ -1675,6 +1716,7 @@ struct pt_payload_input_memory_info {
  *		Sub-Opcode:	0x03h (Memory Info)
  *	Small Output Payload
  */
+PACK_STRUCT(
 struct pt_payload_memory_info_page0 {
 	unsigned char bytes_read[16]; /* Number of  64 bytes read from the DIMM. */
 	unsigned char bytes_written[16]; /* Number of 64 bytes written to the DIMM. */
@@ -1683,7 +1725,7 @@ struct pt_payload_memory_info_page0 {
 	unsigned char block_read_reqs[16]; /* Number of BW read requests DIMM has serviced. */
 	unsigned char block_write_reqs[16]; /* Number of BW write requests DIMM has serviced. */
 	unsigned char reserved[32];
-} __attribute__((packed));
+} )
 
 /*
  * Passthrough Payload:
@@ -1691,6 +1733,7 @@ struct pt_payload_memory_info_page0 {
  *		Sub-Opcode:	0x03h (Memory Info)
  *	Small Output Payload
  */
+PACK_STRUCT(
 struct pt_payload_memory_info_page1 {
 	unsigned char total_bytes_read[16]; /* Lifetime nu of 64 bytes read from the DIMM */
 	unsigned char total_bytes_written[16]; /* Lifetime num of 64 bytes written to the DIMM */
@@ -1700,7 +1743,7 @@ struct pt_payload_memory_info_page1 {
 	unsigned char total_block_write_reqs[16]; /* Lifetime num BW write requests serviced by DIMM */
 	unsigned char rsvd[32];
 
-} __attribute__((packed));
+} )
 
 /*
  * Passthrough Payload:
@@ -1708,6 +1751,7 @@ struct pt_payload_memory_info_page1 {
  *		Sub-Opcode:	0x04h (Long Operations Status)
  *	Small Output Payload
  */
+PACK_STRUCT(
 struct pt_payload_long_op_stat {
 	/*
 	 * This will coincide with the opcode & sub-opcode
@@ -1733,13 +1777,14 @@ struct pt_payload_long_op_stat {
 	unsigned char status_code;
 
 	unsigned char command_specific_data[DEV_COMM_SPECIFIC_DATA];
-} __attribute__((packed));
+} )
 
 /*
  * return payload:
  *		Opcode:		0x04h (Get Features)
  *		Sub-Opcode:	0x04h (Address Range Scrub)
  */
+PACK_STRUCT(
 struct pt_return_address_range_scrub {
 	/*
 	 * Indicates number of errors found during address range scrub
@@ -1762,7 +1807,7 @@ struct pt_return_address_range_scrub {
 	 * Reserved
 	 */
 	unsigned char rsvd[5];
-} __attribute__((packed));
+} )
 
 /*
  * Passthrough Payload:
@@ -1770,6 +1815,7 @@ struct pt_return_address_range_scrub {
  *		Sub-Opcode:	0x05h (Get Error Log)
  *	Small Input Payload
  */
+PACK_STRUCT(
 struct pt_input_payload_fw_error_log {
 	/*
 	 * Bit 0 - Log Level
@@ -1805,13 +1851,14 @@ struct pt_input_payload_fw_error_log {
 	unsigned short request_count;
 
 	unsigned char rsvd[123];
-} __attribute__((packed));
+} )
 
 /*
  * Passthrough Payload:
  *		Opcode:		0x08h (Get Log Page)
  *		Sub-Opcode:	0x05h (Get Error Log)
  */
+PACK_STRUCT(
 struct pt_fw_media_log_entry {
 	/*
 	 * Unix Epoch Time of the log entry
@@ -1879,13 +1926,14 @@ struct pt_fw_media_log_entry {
 	unsigned char transaction_type;
 
 	char rsvd[4];
-} __attribute__((packed));
+} )
 
 /*
  * Passthrough Payload:
  *		Opcode:		0x08h (Get Log Page)
  *		Sub-Opcode:	0x05h (Get Error Log)
  */
+PACK_STRUCT(
 struct pt_fw_thermal_log_entry {
 	/*
 	 * Unix Epoch Time of the log entry
@@ -1913,7 +1961,7 @@ struct pt_fw_thermal_log_entry {
 	unsigned int host_reported_temp_data;
 
 	char rsvd[4];
-}__attribute__((packed));
+})
 
 /*
  * Passthrough Payload:
@@ -1922,6 +1970,7 @@ struct pt_fw_thermal_log_entry {
  *	Note: When the Log Entries Payload Return is set, only bytes 2-0 will be returned in the
  *	small payload. The log entries will all be returned in the large payload.
  */
+PACK_STRUCT(
 struct pt_output_payload_fw_error_log {
 	/*
 	 * Number Total Entries: Specifies the total number of valid entries
@@ -1938,7 +1987,7 @@ struct pt_output_payload_fw_error_log {
 	unsigned char return_info;
 
 	unsigned char rsvd[125];
-}__attribute__((packed));
+})
 
 /*
  * Passthrough Payload:
@@ -1947,6 +1996,7 @@ struct pt_output_payload_fw_error_log {
  *      Note: If the System Time has not been set, the timestamps will be based on the current
  *      boot time of the FW.
  */
+PACK_STRUCT(
 struct pt_payload_fw_log_info_data {
 	/*
 	 * Specifies the total number of log entries that the FW has the ability to log for the
@@ -1971,15 +2021,17 @@ struct pt_payload_fw_log_info_data {
         unsigned long long newest_log_entry_timestamp;
 
         unsigned char rsvd[106];
-}__attribute__((packed));
+})
 
+PACK_STRUCT(
 struct pt_bios_get_size {
 	unsigned int large_input_payload_size;
 	unsigned int large_output_payload_size;
 	unsigned int rw_size;
-}__attribute__((packed));
+})
 
 
+PACK_STRUCT(
 struct pt_update_fw_small_payload {
 	/*
 	 * Bit
@@ -1992,11 +2044,12 @@ struct pt_update_fw_small_payload {
 	unsigned char data[64];
 	unsigned char reserved_2[60];
 
-}__attribute__((packed));
+})
 
 /*
  * FA Data Input Payload Register Values
  */
+PACK_STRUCT(
 struct pt_input_payload_fa_data_register_values {
 	/*
 	 * This determines what type of FA operation to perform.
@@ -2022,12 +2075,13 @@ struct pt_input_payload_fa_data_register_values {
 	 * Reserved
 	 */
 		unsigned char rsvd1[116];
-}__attribute__((packed));
+})
 
 /*
  * FA Get Blob Header Action Output Payload
  * This blob header is appended at the beginning of every FA data blob
  */
+PACK_STRUCT(
 struct pt_output_payload_get_fa_blob_header {
 	/*
 	 * version of the FA Blob Data Header
@@ -2059,11 +2113,12 @@ struct pt_output_payload_get_fa_blob_header {
 	 * padding to 128 B to accomodate a full small payload
 	 */
 		unsigned char rsvd[88];
-}__attribute__((packed));
+})
 
 /*
  * FA Get Inventory Action Output Payload
  */
+PACK_STRUCT(
 struct pt_output_payload_get_fa_inventory {
 	/*
 	 * This is the last TokenID of all valid FA Data Blobs. The TokenID’s are in
@@ -2074,6 +2129,6 @@ struct pt_output_payload_get_fa_inventory {
 	 * Reserved
 	 */
 		unsigned char rsvd[124];
-}__attribute__((packed));
+})
 
 #endif // CR_MGMT_FIS_TYPES_H

@@ -27,6 +27,7 @@
 #ifndef CR_MGMT_FW_COMMANDS_H
 #define CR_MGMT_FW_COMMANDS_H
 
+#include "common.h"
 #include "fis_commands.h"
 
 #ifdef __cplusplus
@@ -111,31 +112,35 @@ enum fwcmd_error
 	FWCMD_ERR_NOMEMORY = 2
 };
 
+PACK_STRUCT(
 struct fwcmd_error_code
 {
 	enum fwcmd_error_type type;
 	unsigned int code;
-}  __attribute__((packed));
+}  )
 
 //- for cmd in commands
 /*
  * Data Structures for {{cmd.name}}
  */
 //- 	for s in cmd.sub_payloads
+PACK_STRUCT(
 struct {{s.name|fw_cmd_data}}
 {
 {{payload_fields(s.payload)}}
-}  __attribute__((packed));
+}  )
 
 //- 	endfor
 
 //- 	if cmd.has_output
+PACK_STRUCT(
 struct {{cmd.name|fw_cmd_data}}
 {
 {{payload_fields(cmd.output_payload)}}
-}  __attribute__((packed));
+}  )
 //- 	endif
 
+PACK_STRUCT(
 struct {{cmd.name|fw_cmd_result}}
 {
 	int success:1;
@@ -143,7 +148,7 @@ struct {{cmd.name|fw_cmd_result}}
 //- 	if cmd.has_output
 	struct {{cmd.name|fw_cmd_data}} *p_data;
 //- 	endif
-}  __attribute__((packed));
+}  )
 
 /*
  * Firmware Command Function {{cmd.name}}

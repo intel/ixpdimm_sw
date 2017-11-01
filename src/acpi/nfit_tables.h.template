@@ -28,6 +28,8 @@
 #ifndef _NFIT_INTERFACE_NFIT_TABLES_H_
 #define _NFIT_INTERFACE_NFIT_TABLES_H_
 
+#include "common.h"
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -45,6 +47,8 @@ extern "C"
 #define	NFIT_MAPPING_ATTRIBUTE_EFI_MEMORY_NV	0x00008000
 #define	NFIT_MAPPING_ATTRIBUTE_EFI_MEMORY_MORE_RELIABLE	0x00010000
 
+PACK_STRUCT(1)
+
 //- for t in all_tables
 struct {{t.name}}
 {
@@ -58,6 +62,8 @@ struct {{t.name}}
 } __attribute__((packed));
 
 //- endfor
+
+UNPACK_STRUCT
 
 struct parsed_nfit
 {

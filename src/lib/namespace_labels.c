@@ -25,6 +25,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "common.h"
 #include "namespace_labels.h"
 #include "device_utilities.h"
 #include "nvm_context.h"
@@ -76,13 +77,15 @@ struct ns_data
 	struct nvm_interleave_set *iset_list;
 };
 
+PACK_STRUCT(
 struct v1_1_cookie_data
 {
 	NVM_UINT64 region_offset;
 	NVM_UINT32 serial_number;
 	NVM_UINT32 reserved;
-} __attribute__((packed));
+} )
 
+PACK_STRUCT(
 struct v1_2_cookie_data
 {
 	NVM_UINT64 region_offset;
@@ -91,8 +94,7 @@ struct v1_2_cookie_data
 	NVM_UINT16 manufacturing_date;
 	NVM_UINT8 manufacturing_location;
 	NVM_UINT8 reserved[31];
-} __attribute__((packed));
-
+} )
 
 /*
  * Calculate a fletcher 64 checksum

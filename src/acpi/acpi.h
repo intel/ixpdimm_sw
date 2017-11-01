@@ -32,6 +32,8 @@
 #ifndef SRC_COMMON_ACPI_ACPI_H_
 #define	SRC_COMMON_ACPI_ACPI_H_
 
+#include "common.h"
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -55,9 +57,11 @@ enum acpi_error
 	ACPI_ERR_BADTABLESIGNATURE = -4,
 	ACPI_ERR_TABLENOTFOUND = -5
 };
+
 /*
  * ACPI Table Header
  */
+PACK_STRUCT(
 struct acpi_table_header
 {
 	char signature[ACPI_SIGNATURE_LEN];
@@ -70,17 +74,19 @@ struct acpi_table_header
 	unsigned int creator_id;
 	unsigned int creator_revision;
 	unsigned char reserved[4];
-}__attribute__((packed));
+})
 
 /*
  * ACPI Table
  */
+PACK_STRUCT(
 struct acpi_table
 {
 	struct acpi_table_header header;
 	/* Variable extension Tables */
 	unsigned char p_ext_tables[0];
-}__attribute__((packed));
+}
+)
 
 /*!
  * Retrieve the specified ACPI table.

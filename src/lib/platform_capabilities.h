@@ -33,6 +33,7 @@
 #ifndef PLATFORM_CAPABILITIES_H_
 #define	PLATFORM_CAPABILITIES_H_
 
+#include "common.h"
 #include <persistence/schema.h>
 #include "nvm_types.h"
 #include <acpi/acpi.h>
@@ -140,6 +141,7 @@ enum pmem_ras_capabilities
 /*
  * Header for PCAT extension tables
  */
+PACK_STRUCT(
 struct pcat_extension_table_header
 {
 	/*
@@ -157,12 +159,13 @@ struct pcat_extension_table_header
 	 */
 	NVM_UINT16 length;
 
-}__attribute__((packed));
+})
 
 /*
  * Platform Capability Information Extension Table
  * Type 0
  */
+PACK_STRUCT(
 struct platform_capabilities_ext_table
 {
 	/*
@@ -215,12 +218,13 @@ struct platform_capabilities_ext_table
 
 	NVM_UINT8 reserved[8];
 
-} __attribute__((packed));
+} )
 
 /*
  * Memory Interleave Capability Extension Information
  * Type 1
  */
+PACK_STRUCT(
 struct memory_interleave_capabilities_ext_table
 {
 	/*
@@ -293,13 +297,14 @@ struct memory_interleave_capabilities_ext_table
 	 */
 	NVM_UINT32 interleave_format_list[0];
 
-} __attribute__((packed));
+} )
 
 
 /*
  * Re-configuration Input Validation Extension Table
  * Type 2
  */
+PACK_STRUCT(
 struct reconfig_input_validation_ext_table
 {
 	/*
@@ -391,12 +396,13 @@ struct reconfig_input_validation_ext_table
 	 * config output structures
 	 */
 	NVM_UINT64 mask_2;
-} __attribute__((packed));
+} )
 
 /*
  * Configuration Management Attributes Extension Table
  * Type 3
  */
+PACK_STRUCT(
 struct mgmt_attributes_ext_table
 {
 	/*
@@ -421,12 +427,13 @@ struct mgmt_attributes_ext_table
 	 */
 	NVM_UINT8 uid_data[0];
 
-} __attribute__((packed));
+} )
 
 /*
  * Socket SKU Information Table
  * Type 6
  */
+PACK_STRUCT(
 struct socket_information_ext_table
 {
 	/*
@@ -453,19 +460,20 @@ struct socket_information_ext_table
 	 */
 	NVM_UINT64 cache_memory_limit;
 
-} __attribute__((packed));
+} )
 
 
 /*
  * BIOS PCAT Table
  */
+PACK_STRUCT(
 struct bios_capabilities
 {
 	struct acpi_table_header header;
 	/* Variable extension Tables */
 	NVM_UINT8 p_ext_tables[PCAT_MAX_LEN - sizeof (struct acpi_table_header)];
 
-}__attribute__((packed));
+})
 
 /*
  * Update the platform capabilities data stored in the db

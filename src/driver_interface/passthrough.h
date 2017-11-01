@@ -33,6 +33,7 @@ extern "C"
 #endif
 
 #include <stdlib.h>
+#include "common.h"
 
 struct pt_fw_cmd
 {
@@ -80,13 +81,14 @@ enum pt_ioctl_result
 #define	PT_SUBOP_READ_LARGE_PAYLOAD_OUTPUT 0x02
 #define	PT_SUBOP_GET_BOOT_STATUS 0x03
 
+PACK_STRUCT(
 struct pt_pt_bios_get_size
 {
 	unsigned int large_input_payload_size;
 	unsigned int large_output_payload_size;
 	unsigned int rw_size;
-}__attribute__((packed));
-
+}
+)
 
 typedef struct
 {

@@ -35,6 +35,7 @@
 #ifndef	_NVM_PLATFORM_CONFIG_DATA_H_
 #define	_NVM_PLATFORM_CONFIG_DATA_H_
 
+#include "common.h"
 #include "nvm_types.h"
 #include "device_adapter.h"
 #include "device_utilities.h"
@@ -81,11 +82,12 @@ enum extension_table_type
 /*
  * Header for extension tables
  */
+PACK_STRUCT(
 struct extension_table_header
 {
 	NVM_UINT16 type;
 	NVM_UINT16 length;
-}__attribute__((packed));
+})
 
 /*
  * Partition size change status
@@ -106,6 +108,7 @@ enum partition_size_change_status
 /*
  * Partition size change table
  */
+PACK_STRUCT(
 struct partition_size_change_extension_table
 {
 	struct extension_table_header header;
@@ -127,13 +130,14 @@ struct partition_size_change_extension_table
 	NVM_UINT32 status;
 
 	NVM_UINT64 partition_size; // PM partition size in bytes
-}__attribute__((packed));
+})
 
 
 /*
  * Describes a dimm in an interleave set
  * NOTE: total size is 48
  */
+PACK_STRUCT(
 struct dimm_info_extension_table
 {
 	union
@@ -144,17 +148,17 @@ struct dimm_info_extension_table
 			NVM_UINT8 serial_number[4]; // NVM-DIMM serial number
 			char part_number[20]; // NVM-DIMM serial number
 			NVM_UINT8 reserved[6];
-		}__attribute__((packed)) v1;
+		} v1;
 
 		struct // Associated with CCUR/CIN/COUT table revision 2
 		{
 			NVM_UINT8 uid[9];
 			NVM_UINT8 reserved[23];
-		}__attribute__((packed)) v2;
+		} v2;
 	} dimm_identifier;
 	NVM_UINT64 offset; // Logical offset from the base of the partition
 	NVM_UINT64 size; // Size in bytes to add to interleave set
-}__attribute__((packed));
+})
 
 enum interleave_status
 {
@@ -176,6 +180,7 @@ enum interleave_status
  * Describes an interleave set (pool)
  * Valid for current config, config input and output
  */
+PACK_STRUCT(
 struct interleave_info_extension_table
 {
 	struct extension_table_header header;
@@ -211,11 +216,12 @@ struct interleave_info_extension_table
 	NVM_UINT8 mem_spare;
 	NVM_UINT8 rsvd[9];
 	NVM_UINT8 p_dimms[0];
-}__attribute__((packed));
+})
 
 /*
  * Header for main config tables
  */
+PACK_STRUCT(
 struct config_data_table_header
 {
 	char signature[SIGNATURE_LEN]; // Table signature, 'DMHD' for this table
@@ -227,7 +233,7 @@ struct config_data_table_header
 	NVM_UINT32 oem_revision; // OEM revision of table
 	NVM_UINT32 creator_id; // Vendor ID of utility that created table
 	NVM_UINT32 creator_revision; // Revision of utility that created table
-}__attribute__((packed));
+})
 
 enum current_config_status
 {
@@ -247,6 +253,7 @@ enum current_config_status
 /*
  * BIOS CR Mgmt Interface Current Configuration Table
  */
+PACK_STRUCT(
 struct current_config_table
 {
 	struct config_data_table_header header;
@@ -275,11 +282,12 @@ struct current_config_table
 	// Extension tables
 	NVM_UINT8 p_ext_tables[0];
 
-}__attribute__((packed));
+})
 
 /*
  * Mgmt software request to BIOS
  */
+PACK_STRUCT(
 struct config_input_table
 {
 	struct config_data_table_header header;
@@ -291,7 +299,7 @@ struct config_input_table
 	// Extension tables
 	NVM_UINT8 p_ext_tables[0];
 
-}__attribute__((packed));
+})
 
 
 enum config_output_status
@@ -320,6 +328,7 @@ enum config_error
 /*
  * BIOS response to mgmt software
  */
+PACK_STRUCT(
 struct config_output_table
 {
 	struct config_data_table_header header;
@@ -343,12 +352,13 @@ struct config_output_table
 	// Extension tables
 	NVM_UINT8 p_ext_tables[0];
 
-}__attribute__((packed));
+})
 
 /*
  * The BIOS platform config data table written to the DIMM
  * during the MRC phase to represent the current configuration
  */
+PACK_STRUCT(
 struct platform_config_data
 {
 	// Header
@@ -364,8 +374,7 @@ struct platform_config_data
 	NVM_UINT32 config_output_size; // config output table size
 	NVM_UINT32 config_output_offset; // start location of config output table
 
-}__attribute__((packed));
-
+})
 
 /*
  * Cast a current config table from the platform config data

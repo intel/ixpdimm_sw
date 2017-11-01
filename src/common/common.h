@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, Intel Corporation
+ * Copyright (c) 2017, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -25,87 +25,29 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * This file contains the FW image header structures. It comes from the FW team and should
- * stay aligned with their version.
- */
-
-#ifndef	_FW_HEADER_H_
-#define	_FW_HEADER_H_
+ #ifndef _COMMON_H_
+#define	_COMMON_H_
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-#define	FW_HEADER_MODULEVENDOR 0x8086
-#define FW_HEADER_MODULETYPE 6
-
-typedef unsigned char u8;
-typedef unsigned short u16;
-typedef unsigned int u32;
-
-/* Version Struct Definition */
-typedef union
-{
-	struct _nibbles1
-	{
-		u8 digit2:4;
-		u8 digit1:4;
-	} nibble;
-	u8 version;
-} versionNibbles;
-
-typedef union
-{
-	struct _nibbles2
-	{
-		u16 digit4:4;
-		u16 digit3:4;
-		u16 digit2:4;
-		u16 digit1:4;
-	} nibble;
-	u16 build;
-} buildNibbles;
-
-#pragma pack(push,1)
-
-typedef struct
-{
-	buildNibbles   buildVer;
-	versionNibbles hotfixVer;
-	versionNibbles minorVer;
-	versionNibbles majorVer;
-}  versionStruct;
-
-/* FW Image header: Intel CSS Header (128 bytes) */
-
-typedef struct
-{
-	u32 moduleType; // Required CSS field
-	u32 headerLen; // Required CSS field
-	u32 headerVersion; // bits [31:16] are major version, bits [15:0] are minor version
-	u32 moduleID; // Required CSS field
-	u32 moduleVendor; // moduleVendor = 0x00008086
-	u32 date; // BCD format: yyyymmdd
-	u32 size; // Size of entire module (header, crypto, data) in DWORDs
-
-	u8 reserved0[12];
-
-	u8 ImageType;
-	versionStruct imageVersion;
-
-	u8 reserved1[12];
-
-	u16 fwApiVersion; // Same API as in ID DIMM
-
-	u8 reserved[68];
-} fwImageHeader;
-
-#pragma pack(pop)
+#ifdef __WINDOWS__
+/*
+	The __attribute__((packed)) doesn't work well with MinGW G++ compiler.
+	Some structure may not be packed, the problems with pointer aligment and
+	additional padding have been observed.
+	The pragma pack solves those isseus.
+*/
+#define DO_PRAGMA(x) _Pragma (#x)
+#define PACK_STRUCT(_structure_) DO_PRAGMA(pack(push,1)) _structure_; DO_PRAGMA(pack(pop))
+#else // __WINDOWS__
+#define PACK_STRUCT(_structure_) _structure_ __attribute__((packed));
+#endif // __WINDOWS__
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _FW_HEADER_H_ */
+#endif // _COMMON_H_
