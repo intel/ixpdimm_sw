@@ -904,47 +904,54 @@ int count_pools(struct pool_data *p_pool_data)
 	COMMON_LOG_ENTRY();
 	int pool_count = 0;
 
-	struct pool pools_list[MAX_POOLS];
-	for (int i = 0; i < p_pool_data->dimm_count; i++)
+	struct pool *pools_list = calloc(MAX_POOLS, sizeof (struct pool));
+	if (pools_list)
 	{
-		if (p_pool_data->dimm_capacities_list[i].memory_capacity)
+		for (int i = 0; i < p_pool_data->dimm_count; i++)
 		{
-			int pool_index = get_pool_index(-1, POOL_TYPE_VOLATILE, pools_list, pool_count);
-			if (pool_index < 0)
+			if (p_pool_data->dimm_capacities_list[i].memory_capacity)
 			{
-				pools_list[pool_count].socket_id = -1;
-				pools_list[pool_count].type = POOL_TYPE_VOLATILE;
-				pool_count++;
-			}
-		}
-	}
-
-	// is pm pool on each socket
-	if (p_pool_data->capabilities.nvm_features.app_direct_mode)
-	{
-		for (int i = 0; i < p_pool_data->iset_count; i++)
-		{
-			enum pool_type pool_type = POOL_TYPE_PERSISTENT;
-			if (MIRRORED_INTERLEAVE(p_pool_data->iset_list[i].attributes))
-			{
-				pool_type = POOL_TYPE_PERSISTENT_MIRROR;
-			}
-			// if not already created, create a new pool
-			int pool_index = get_pool_index(p_pool_data->iset_list[i].socket_id,
-					pool_type, pools_list, pool_count);
-			if (pool_index < 0)
-			{
-				pools_list[pool_count].socket_id = p_pool_data->iset_list[i].socket_id;
-				pools_list[pool_count].type = pool_type;
-				pool_count++;
-				if (pool_count > MAX_POOLS)
+				int pool_index = get_pool_index(-1, POOL_TYPE_VOLATILE, pools_list, pool_count);
+				if (pool_index < 0)
 				{
-					// Too many pools!
-					pool_count = NVM_ERR_BADPOOLHEALTH;
-					break;
+					pools_list[pool_count].socket_id = -1;
+					pools_list[pool_count].type = POOL_TYPE_VOLATILE;
+					pool_count++;
 				}
 			}
 		}
+
+		// is pm pool on each socket
+		if (p_pool_data->capabilities.nvm_features.app_direct_mode)
+		{
+			for (int i = 0; i < p_pool_data->iset_count; i++)
+			{
+				enum pool_type pool_type = POOL_TYPE_PERSISTENT;
+				if (MIRRORED_INTERLEAVE(p_pool_data->iset_list[i].attributes))
+				{
+					pool_type = POOL_TYPE_PERSISTENT_MIRROR;
+				}
+				// if not already created, create a new pool
+				int pool_index = get_pool_index(p_pool_data->iset_list[i].socket_id,
+						pool_type, pools_list, pool_count);
+				if (pool_index < 0)
+				{
+					pools_list[pool_count].socket_id = p_pool_data->iset_list[i].socket_id;
+					pools_list[pool_count].type = pool_type;
+					pool_count++;
+
+					// Check for too many pools
+					if (pool_count > MAX_POOLS)
+					{
+						pool_count = NVM_ERR_BADPOOLHEALTH;
+						break;
+					}
+				}
+			}
+		}
+
+		// clean up
+		free(pools_list);
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(pool_count);
