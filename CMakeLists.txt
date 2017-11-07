@@ -104,13 +104,13 @@ endif()
 
 add_library(driver_interface STATIC ${DRIVER_INTERFACE_FILES})
 target_include_directories(driver_interface PUBLIC
-       		src/
+            src/
+            src/common
             )
 if (LNX_BUILD)
     target_link_libraries(driver_interface ndctl)
 elseif (WIN_BUILD)
     target_include_directories(driver_interface PUBLIC
-        	src/common
             ${invm-i18n_include}
             )
 endif ()
@@ -135,6 +135,7 @@ target_link_libraries(firmware_interface driver_interface)
 target_include_directories(firmware_interface PUBLIC
         ../
         ./
+        src/common
         )
 
 #---------------------------------------------------------------------------------------------------
