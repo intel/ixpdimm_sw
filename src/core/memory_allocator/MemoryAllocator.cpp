@@ -49,12 +49,14 @@
 #include "PostLayoutAddressDecoderLimitCheck.h"
 
 core::memory_allocator::MemoryAllocator::MemoryAllocator(const struct nvm_capabilities &systemCapabilities,
-		const std::vector<struct device_discovery> &manageableDevices,
+		const std::vector<struct device_discovery> &manageableDeviceDiscoveryList,
+		const std::vector<struct device_details> &manageableDeviceDetailsList,
 		const std::vector<struct pool> &pools,
 		const NVM_UINT16 socketCount,
 		core::NvmLibrary &nvmLib) :
 		m_systemCapabilities(systemCapabilities),
-		m_manageableDevices(manageableDevices),
+		m_manageableDeviceDiscoveryList(manageableDeviceDiscoveryList),
+		m_manageableDeviceDetailsList(manageableDeviceDetailsList),
 		m_pools(pools),
 		m_socketCount(socketCount),
 		m_nvmLib(nvmLib)
@@ -77,16 +79,20 @@ core::memory_allocator::MemoryAllocator* core::memory_allocator::MemoryAllocator
 	int numSockets = nvmLib.getSocketCount();
 
 	std::vector<std::string> manageableUids = devService.getManageableUids();
-	std::vector<struct device_discovery> manageableDevices;
+	std::vector<struct device_discovery> manageableDeviceDiscoveries;
+	std::vector<struct device_details> manageableDeviceDetails;
 	for (std::vector<std::string>::iterator uidIter = manageableUids.begin();
 			uidIter != manageableUids.end(); uidIter++)
 	{
-		manageableDevices.push_back(nvmLib.getDeviceDiscovery(*uidIter));
+		struct device_details device_detail = nvmLib.getDeviceDetails(*uidIter);
+		manageableDeviceDetails.push_back(device_detail);
+		manageableDeviceDiscoveries.push_back(device_detail.discovery);
 	}
 
 	core::memory_allocator::MemoryAllocator *pAllocator = new core::memory_allocator::MemoryAllocator(
 			systemCapabilities,
-			manageableDevices,
+			manageableDeviceDiscoveries,
+			manageableDeviceDetails,
 			pools,
 			numSockets,
 			nvmLib);
@@ -114,7 +120,7 @@ core::memory_allocator::MemoryAllocationLayout core::memory_allocator::MemoryAll
 
 	validateRequest(request);
 
-	LayoutBuilder builder(m_systemCapabilities, m_nvmLib);
+	LayoutBuilder builder(m_systemCapabilities, m_nvmLib, m_manageableDeviceDetailsList);
 	core::memory_allocator::MemoryAllocationLayout layout = builder.build(request);
 
 	validateLayout(request, layout);
@@ -129,14 +135,14 @@ void core::memory_allocator::MemoryAllocator::populateRequestRules()
 	// Note that order matters
 	m_requestRules.push_back(new RuleProvisionCapacityNotSupported(m_systemCapabilities));
 	m_requestRules.push_back(new RuleNoDimms());
-	m_requestRules.push_back(new RuleDimmListInvalid(m_manageableDevices));
+	m_requestRules.push_back(new RuleDimmListInvalid(m_manageableDeviceDiscoveryList));
 	m_requestRules.push_back(new RuleMemoryModeCapacityNotSupported(m_systemCapabilities));
 	m_requestRules.push_back(new RuleAppDirectNotSupported(m_systemCapabilities));
 	m_requestRules.push_back(new RuleMirroredAppDirectNotSupported);
 	m_requestRules.push_back(new RuleDimmHasConfigGoal(m_nvmLib));
 	m_requestRules.push_back(new RuleNamespacesExist(m_nvmLib));
-	m_requestRules.push_back(new RuleRejectLockedDimms(m_manageableDevices));
-	m_requestRules.push_back(new RulePartialSocketConfigured(m_manageableDevices, m_nvmLib));
+	m_requestRules.push_back(new RuleRejectLockedDimms(m_manageableDeviceDiscoveryList));
+	m_requestRules.push_back(new RulePartialSocketConfigured(m_manageableDeviceDiscoveryList, m_nvmLib));
 }
 
 void core::memory_allocator::MemoryAllocator::populatePostLayoutChecks()
@@ -144,7 +150,7 @@ void core::memory_allocator::MemoryAllocator::populatePostLayoutChecks()
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	m_postLayoutChecks.push_back(new PostLayoutAddressDecoderLimitCheck(
-			m_manageableDevices,
+			m_manageableDeviceDiscoveryList,
 			m_pools,
 			m_socketCount));
 }

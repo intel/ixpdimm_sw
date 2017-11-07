@@ -108,7 +108,7 @@ bool core::memory_allocator::RulePartialSocketConfigured::deviceIsNew(NVM_UID ui
 	bool deviceIsNew = false;
 
 	struct device_status status = m_nvmLib.getDeviceStatus(uid);
-	if (status.is_new)
+	if (!status.is_configured)
 	{
 		deviceIsNew = true;
 	}

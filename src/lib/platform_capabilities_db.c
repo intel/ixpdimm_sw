@@ -273,7 +273,7 @@ int update_pcat_in_db(PersistentStore *p_db,
 						db_socket_sku.node_id = p_socket_info->node_id;
 						db_socket_sku.mapped_memory_limit = p_socket_info->mapped_memory_limit;
 						db_socket_sku.total_mapped_memory = p_socket_info->total_mapped_memory;
-						db_socket_sku.cache_memory_limit = p_socket_info->cache_memory_limit;
+						db_socket_sku.total_2lm_ddr_cache_memory = p_socket_info->total_2lm_ddr_cache_memory;
 
 						// store history
 						if (history_id)
@@ -529,8 +529,8 @@ int get_pcat_socket_sku_info_from_db(PersistentStore *p_db,
 							(NVM_UINT64)db_socket_skus[i].mapped_memory_limit;
 					p_socket_sku_info->total_mapped_memory =
 							(NVM_UINT64)db_socket_skus[i].total_mapped_memory;
-					p_socket_sku_info->cache_memory_limit =
-							(NVM_UINT64)db_socket_skus[i].cache_memory_limit;
+					p_socket_sku_info->total_2lm_ddr_cache_memory =
+							(NVM_UINT64)db_socket_skus[i].total_2lm_ddr_cache_memory;
 
 					*p_offset += p_socket_sku_info->header.length;
 				}

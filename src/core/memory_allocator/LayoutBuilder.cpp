@@ -48,10 +48,12 @@
 
 core::memory_allocator::LayoutBuilder::LayoutBuilder(
 		const struct nvm_capabilities &systemCapabilities,
-		core::NvmLibrary &nvmLib)
+		core::NvmLibrary &nvmLib,
+		const std::vector<device_details> deviceDetailsList)
 	: m_systemCapabilities(systemCapabilities),
 	  m_nvmLib(nvmLib),
-	  m_util(nvmLib)
+	  m_util(nvmLib),
+	  m_deviceDetailsList(deviceDetailsList)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
@@ -119,7 +121,7 @@ void core::memory_allocator::LayoutBuilder::populateOrderedLayoutStepsForRequest
 	m_layoutSteps.push_back(new LayoutStepReserved());
 
 	// Shrink Memory and AppDirect based on SKU mapped memory limit
-	m_layoutSteps.push_back(new LayoutStepLimitTotalMappedMemory(m_util));
+	m_layoutSteps.push_back(new LayoutStepLimitTotalMappedMemory(m_deviceDetailsList, m_util));
 
 
 	// Post layout check that adds a warning to layout object

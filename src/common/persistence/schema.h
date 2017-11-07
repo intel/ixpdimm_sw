@@ -1618,7 +1618,7 @@ struct db_socket_sku
 	short reserved;
 	unsigned long long mapped_memory_limit;
 	unsigned long long total_mapped_memory;
-	unsigned long long cache_memory_limit;
+	unsigned long long total_2lm_ddr_cache_memory;
 };
 /*!
  * Helper function to print a db_socket_sku to the screen.

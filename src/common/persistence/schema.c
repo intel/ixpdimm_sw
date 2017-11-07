@@ -681,7 +681,7 @@ tables[populate_index++] = ((struct table){"socket_sku",
 					 reserved INTEGER  , \
 					 mapped_memory_limit INTEGER  , \
 					 total_mapped_memory INTEGER  , \
-					 cache_memory_limit INTEGER   \
+					 total_2lm_ddr_cache_memory INTEGER   \
 					);"});
 			tables[populate_index++] = ((struct table){"socket_sku_history",
 				"CREATE TABLE socket_sku_history (       \
@@ -692,7 +692,7 @@ tables[populate_index++] = ((struct table){"socket_sku",
 					 reserved INTEGER , \
 					 mapped_memory_limit INTEGER , \
 					 total_mapped_memory INTEGER , \
-					 cache_memory_limit INTEGER  \
+					 total_2lm_ddr_cache_memory INTEGER  \
 					);"});
 tables[populate_index++] = ((struct table){"interleave_capability",
 				"CREATE TABLE interleave_capability (       \
@@ -6509,7 +6509,7 @@ void local_bind_socket_sku(sqlite3_stmt *p_stmt, struct db_socket_sku *p_socket_
 	BIND_INTEGER(p_stmt, "$reserved", (short)p_socket_sku->reserved);
 	BIND_INTEGER(p_stmt, "$mapped_memory_limit", (unsigned long long)p_socket_sku->mapped_memory_limit);
 	BIND_INTEGER(p_stmt, "$total_mapped_memory", (unsigned long long)p_socket_sku->total_mapped_memory);
-	BIND_INTEGER(p_stmt, "$cache_memory_limit", (unsigned long long)p_socket_sku->cache_memory_limit);
+	BIND_INTEGER(p_stmt, "$total_2lm_ddr_cache_memory", (unsigned long long)p_socket_sku->total_2lm_ddr_cache_memory);
 }
 void local_get_socket_sku_relationships(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt, struct db_socket_sku *p_socket_sku)
@@ -6545,7 +6545,7 @@ void local_row_to_socket_sku(const PersistentStore *p_ps,
 		p_socket_sku->total_mapped_memory);
 	INTEGER_COLUMN(p_stmt,
 		6,
-		p_socket_sku->cache_memory_limit);
+		p_socket_sku->total_2lm_ddr_cache_memory);
 }
 void db_print_socket_sku(struct db_socket_sku *p_value)
 {
@@ -6555,7 +6555,7 @@ void db_print_socket_sku(struct db_socket_sku *p_value)
 	printf("socket_sku.reserved: %hi\n", p_value->reserved);
 	printf("socket_sku.mapped_memory_limit: %llu\n", p_value->mapped_memory_limit);
 	printf("socket_sku.total_mapped_memory: %llu\n", p_value->total_mapped_memory);
-	printf("socket_sku.cache_memory_limit: %llu\n", p_value->cache_memory_limit);
+	printf("socket_sku.total_2lm_ddr_cache_memory: %llu\n", p_value->total_2lm_ddr_cache_memory);
 }
 enum db_return_codes db_add_socket_sku(const PersistentStore *p_ps,
 	struct db_socket_sku *p_socket_sku)
@@ -6563,7 +6563,7 @@ enum db_return_codes db_add_socket_sku(const PersistentStore *p_ps,
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = 	"INSERT INTO socket_sku \
-		(type, length, node_id, reserved, mapped_memory_limit, total_mapped_memory, cache_memory_limit)  \
+		(type, length, node_id, reserved, mapped_memory_limit, total_mapped_memory, total_2lm_ddr_cache_memory)  \
 		VALUES 		\
 		($type, \
 		$length, \
@@ -6571,7 +6571,7 @@ enum db_return_codes db_add_socket_sku(const PersistentStore *p_ps,
 		$reserved, \
 		$mapped_memory_limit, \
 		$total_mapped_memory, \
-		$cache_memory_limit) ";
+		$total_2lm_ddr_cache_memory) ";
 	int sql_rc;
 	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
@@ -6611,7 +6611,7 @@ int db_get_socket_skus(const PersistentStore *p_ps,
 		,  reserved \
 		,  mapped_memory_limit \
 		,  total_mapped_memory \
-		,  cache_memory_limit \
+		,  total_2lm_ddr_cache_memory \
 		  \
 		FROM socket_sku \
 		        \
@@ -6666,7 +6666,7 @@ enum db_return_codes db_save_socket_sku_state(const PersistentStore *p_ps,
 	{
 		sqlite3_stmt *p_stmt;
 		char *sql = 	"INSERT INTO socket_sku \
-			( type ,  length ,  node_id ,  reserved ,  mapped_memory_limit ,  total_mapped_memory ,  cache_memory_limit )  \
+			( type ,  length ,  node_id ,  reserved ,  mapped_memory_limit ,  total_mapped_memory ,  total_2lm_ddr_cache_memory )  \
 			VALUES 		\
 			($type, \
 			$length, \
@@ -6674,7 +6674,7 @@ enum db_return_codes db_save_socket_sku_state(const PersistentStore *p_ps,
 			$reserved, \
 			$mapped_memory_limit, \
 			$total_mapped_memory, \
-			$cache_memory_limit) ";
+			$total_2lm_ddr_cache_memory) ";
 		int sql_rc;
 		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
@@ -6701,7 +6701,7 @@ enum db_return_codes db_save_socket_sku_state(const PersistentStore *p_ps,
 		sqlite3_stmt *p_stmt;
 		char *sql = "INSERT INTO socket_sku_history \
 			(history_id, \
-				 type,  length,  node_id,  reserved,  mapped_memory_limit,  total_mapped_memory,  cache_memory_limit)  \
+				 type,  length,  node_id,  reserved,  mapped_memory_limit,  total_mapped_memory,  total_2lm_ddr_cache_memory)  \
 			VALUES 		($history_id, \
 				 $type , \
 				 $length , \
@@ -6709,7 +6709,7 @@ enum db_return_codes db_save_socket_sku_state(const PersistentStore *p_ps,
 				 $reserved , \
 				 $mapped_memory_limit , \
 				 $total_mapped_memory , \
-				 $cache_memory_limit )";
+				 $total_2lm_ddr_cache_memory )";
 		int sql_rc;
 		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
@@ -6745,7 +6745,7 @@ enum db_return_codes db_get_socket_sku_by_node_id(const PersistentStore *p_ps,
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
-		type,  length,  node_id,  reserved,  mapped_memory_limit,  total_mapped_memory,  cache_memory_limit  \
+		type,  length,  node_id,  reserved,  mapped_memory_limit,  total_mapped_memory,  total_2lm_ddr_cache_memory  \
 		FROM socket_sku \
 		WHERE  node_id = $node_id";
 	int sql_rc;
@@ -6788,7 +6788,7 @@ enum db_return_codes db_update_socket_sku_by_node_id(const PersistentStore *p_ps
 		,  reserved=$reserved \
 		,  mapped_memory_limit=$mapped_memory_limit \
 		,  total_mapped_memory=$total_mapped_memory \
-		,  cache_memory_limit=$cache_memory_limit \
+		,  total_2lm_ddr_cache_memory=$total_2lm_ddr_cache_memory \
 		  \
 	WHERE node_id=$node_id ";
 	int sql_rc;
@@ -6913,7 +6913,7 @@ int db_get_socket_sku_history_by_history_id(const PersistentStore *p_ps,
 	memset(p_socket_sku, 0, sizeof (struct db_socket_sku) * socket_sku_count);
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
-		type,  length,  node_id,  reserved,  mapped_memory_limit,  total_mapped_memory,  cache_memory_limit  \
+		type,  length,  node_id,  reserved,  mapped_memory_limit,  total_mapped_memory,  total_2lm_ddr_cache_memory  \
 		FROM socket_sku_history WHERE history_id = $history_id";
 	int sql_rc;
 	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)

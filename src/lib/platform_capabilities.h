@@ -458,7 +458,7 @@ struct socket_information_ext_table
 	/*
 	 * Total amount of physical memory in bytes that is used for caching when system is in 2LM mode
 	 */
-	NVM_UINT64 cache_memory_limit;
+	NVM_UINT64 total_2lm_ddr_cache_memory;
 
 } )
 

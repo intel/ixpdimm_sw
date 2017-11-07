@@ -32,6 +32,8 @@
 #ifndef _core_LOGIC_LAYOUTSTEPLIMITTOTALMAPPEDMEMORY_H_
 #define _core_LOGIC_LAYOUTSTEPLIMITTOTALMAPPEDMEMORY_H_
 
+#include <uid/uid.h>
+#include <core/exceptions/LibraryException.h>
 #include <core/memory_allocator/LayoutStep.h>
 #include "MemoryAllocationUtil.h"
 
@@ -43,27 +45,25 @@ namespace memory_allocator
 class NVM_API LayoutStepLimitTotalMappedMemory : public LayoutStep
 {
 	public:
-		LayoutStepLimitTotalMappedMemory(MemoryAllocationUtil &util);
+		LayoutStepLimitTotalMappedMemory(const std::vector<struct device_details> deviceDetailsList, MemoryAllocationUtil &util);
 		virtual ~LayoutStepLimitTotalMappedMemory();
 
 		virtual void execute(const MemoryAllocationRequest &request,
 				MemoryAllocationLayout &layout);
-
-		virtual NVM_UINT64 getLimit(const int socketId);
-
 	private:
+		void initCurrentDeviceDetailsMap(const MemoryAllocationRequest& request);
+		void initReqConfigGoalMap (const MemoryAllocationRequest& request,
+				const MemoryAllocationLayout& layout, const std::vector<Dimm> reqDimms);
+		void initPcatType6info();
 
-		std::map<NVM_UINT16, std::vector<core::memory_allocator::Dimm> >
-		getDimmsSortedBySocket(const MemoryAllocationRequest& request);
+		void initSocketDimms(NVM_UINT16 socketId, std::vector<Dimm> reqDimms);
 
 		void initializeExceedsLimit();
-
-		void initializeDimmsSortedBySocket(const MemoryAllocationRequest& request);
-
-		void initializeTotalMappedSizeVariablesPerSocket(const MemoryAllocationRequest& request,
-			MemoryAllocationLayout& layout, int socketId);
-
 		bool mappedSizeExceedsLimit();
+
+		void calculateTotalMappedCapacityPerSocket( NVM_UINT16 socketId,
+				std::vector<struct device_details> curDeviceDetailsVector,
+				struct socket sktType6Info, std::vector<struct config_goal> reqConfigGoalVector, std::vector<Dimm> reqDimms);
 
 		void shrinkLayoutCapacities(const MemoryAllocationRequest& request,
 			MemoryAllocationLayout& layout);
@@ -82,12 +82,15 @@ class NVM_API LayoutStepLimitTotalMappedMemory : public LayoutStep
 			const std::vector<core::memory_allocator::Dimm>& memoryDimms,
 			MemoryAllocationLayout& layout);
 
-		NVM_UINT64 m_limit;
-		NVM_UINT64 m_totalMappedSize;
-		NVM_UINT64 m_mappedCapacityExceedsLimit;
+		NVM_UINT64 m_newTotalMappedSizeOnSocketInGib;
+		NVM_UINT64 m_limitOnSocketInGib;
+		NVM_UINT64 m_exceededSocketLimitByInGib;
 		std::vector<core::memory_allocator::Dimm> m_socketDimms;
-		std::map<NVM_UINT16, std::vector<Dimm> > m_dimmsSortedBySocket;
 		MemoryAllocationUtil &m_memAllocUtil;
+		std::vector<struct device_details> m_DeviceDetailsList;
+		std::map<NVM_UINT16, std::vector<struct device_details> > m_curSocketIdDeviceDetailsMap;
+		std::map<NVM_UINT16, std::vector<struct config_goal> > m_reqSocketIdConfigGoalMap;
+		std::map<NVM_UINT16, struct socket> m_curSocketInfoFromTyep6Map;
 };
 
 } /* namespace memory_allocator */

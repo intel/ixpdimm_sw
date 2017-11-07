@@ -47,7 +47,8 @@ class NVM_API MemoryAllocator
 {
 	public:
 		MemoryAllocator(const struct nvm_capabilities &systemCapabilities,
-				const std::vector<struct device_discovery> &manageableDevices,
+				const std::vector<struct device_discovery> &manageableDeviceDiscoveries,
+				const std::vector<struct device_details> &manageableDeviceDetails,
 				const std::vector<struct pool> &pools,
 				const NVM_UINT16 socketCount,
 				core::NvmLibrary &nvmLib = core::NvmLibrary::getNvmLibrary());
@@ -79,7 +80,8 @@ class NVM_API MemoryAllocator
 		std::vector<PostLayoutCheck *> m_postLayoutChecks;
 
 		struct nvm_capabilities m_systemCapabilities;
-		std::vector<struct device_discovery> m_manageableDevices;
+		std::vector<struct device_discovery> m_manageableDeviceDiscoveryList;
+		std::vector<struct device_details> m_manageableDeviceDetailsList;
 		std::vector<struct pool> m_pools;
 		NVM_UINT16 m_socketCount;
 

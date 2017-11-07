@@ -102,7 +102,7 @@ Attributes:
 	short reserved
 	unsigned long long mapped_memory_limit
 	unsigned long long total_mapped_memory
-	unsigned long long cache_memory_limit
+	unsigned long long total_2lm_ddr_cache_memory
 
 Table(s): db_interleave_capability 
  	  db_interleave_capability_history 

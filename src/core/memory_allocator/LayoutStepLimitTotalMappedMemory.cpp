@@ -35,8 +35,11 @@
 #include <core/memory_allocator/LayoutStepMemory.h>
 #include <math.h>
 
-core::memory_allocator::LayoutStepLimitTotalMappedMemory::LayoutStepLimitTotalMappedMemory(MemoryAllocationUtil &util) :
-	 m_limit(0), m_totalMappedSize(0), m_mappedCapacityExceedsLimit(0), m_memAllocUtil(util)
+
+core::memory_allocator::LayoutStepLimitTotalMappedMemory::LayoutStepLimitTotalMappedMemory(const std::vector<struct device_details> deviceDetailsList,
+		MemoryAllocationUtil &util) :
+		m_newTotalMappedSizeOnSocketInGib(0), m_limitOnSocketInGib(0), m_exceededSocketLimitByInGib(0), m_memAllocUtil(util),
+	 m_DeviceDetailsList(deviceDetailsList), m_curSocketIdDeviceDetailsMap(), m_reqSocketIdConfigGoalMap(), m_curSocketInfoFromTyep6Map()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
@@ -52,14 +55,18 @@ void core::memory_allocator::LayoutStepLimitTotalMappedMemory::execute(
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	bool needLayoutChange = false;
+	std::vector<Dimm> reqDimms = request.getDimms();
 
-	initializeDimmsSortedBySocket(request);
+	initCurrentDeviceDetailsMap(request); // initialize a map of socketId and devicedetails of all the manageable devices in the system
+	initReqConfigGoalMap(request, layout, reqDimms);	 // this is a map of socketId and the requested dimms config_goal that is calculated based on the request
+	initPcatType6info(); // this is a map of socketId and socket info from socket struct
 
-	for (std::map<NVM_UINT16, std::vector<Dimm> >::iterator socketDimms = m_dimmsSortedBySocket.begin();
-			socketDimms != m_dimmsSortedBySocket.end(); socketDimms++)
+	for (std::map<NVM_UINT16, struct socket>::iterator socketInfo = m_curSocketInfoFromTyep6Map.begin();
+			socketInfo != m_curSocketInfoFromTyep6Map.end(); socketInfo++)
 	{
-		initializeTotalMappedSizeVariablesPerSocket(request, layout, socketDimms->first);
-
+		initSocketDimms(socketInfo->first, reqDimms);
+		calculateTotalMappedCapacityPerSocket(socketInfo->first, m_curSocketIdDeviceDetailsMap[socketInfo->first],
+							socketInfo->second, m_reqSocketIdConfigGoalMap[socketInfo->first], reqDimms);
 		if (mappedSizeExceedsLimit())
 		{
 			needLayoutChange = true;
@@ -75,6 +82,133 @@ void core::memory_allocator::LayoutStepLimitTotalMappedMemory::execute(
 	}
 
 	layout.remainingCapacity = B_TO_GiB(getRemainingBytesFromRequestedDimms(request, layout));
+}
+
+/*Capacity skuing rules
+ * -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ * | Previous configuration	|	Requested configuration (User requests WHOLE SOCKET)					|	Requested configuration(User requests only the unconfigured dimms)
+   |
+   |	1 LM + AD			|			1 LM + AD														|			1 LM + AD
+   |								TotalNewMappedCapacity = CurrentSPA - CurrentAD + RequestedTotalAD			TotalNewMappedCapacity = CurrentSPA - currentADOfRequestedDimms+ requestedTotalAD
+   |						|																			|
+   |
+ * |--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ * |						|																			|
+ * |							2 LM + AD																				2LM + AD (combination of AD and volatile could be  requested example MEMORYMODE=50)
+ * |	1 LM + AD 			|	TotalNewMappedCapacity = RequestedVolatileCapacity + RequestedAD		|
+   |																												TotalNewMappedCapacity = RequestedVolatileCapacity + RequestedAD + currentAD
+ * |						|																			|
+ * |						|																			|
+ * |------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ * 							|																			|
+ * |							1 LM + AD																				1LM + AD
+ * |	2LM + AD			|	TotalNewMappedCapacity =  RequestedAD + DDR4Capacity					|
+   |																												TotalNewMappedCapacity =  RequestedAD + currentAD + DDR4Capacity
+ * |						|																			|
+ * |-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ * */
+void core::memory_allocator::LayoutStepLimitTotalMappedMemory::calculateTotalMappedCapacityPerSocket
+					(NVM_UINT16 socketId, std::vector<struct device_details> curDeviceDetailsList,
+							struct socket sktType6Info, std::vector<struct config_goal> reqConfigGoalList, std::vector<Dimm> reqDimms)
+{
+	NVM_UINT64 totalReqSizeInGib = 0;
+	NVM_UINT64 totalCurrSizeInB = 0;
+	m_newTotalMappedSizeOnSocketInGib = 0; // re-initialize for each socket
+	m_limitOnSocketInGib = B_TO_GiB(sktType6Info.mapped_memory_limit);
+
+	bool isUserReqWholeSocket = (curDeviceDetailsList.size() == reqConfigGoalList.size()) ? true : false;
+	bool isCurrentConfigurationMemMode = false;
+	bool isReqConfigurationMemMode = false;
+
+	for (std::vector<struct config_goal>::iterator reqGoal = reqConfigGoalList.begin();
+				reqGoal != reqConfigGoalList.end(); reqGoal++)
+	{
+		// requested configuration memory mode?
+		if (reqGoal->memory_size > 0)
+		{
+			isReqConfigurationMemMode = true;
+		}
+
+		// calculate TotalRequestedMappedMemory based on the requested dimms alone
+		totalReqSizeInGib += reqGoal->memory_size;
+		totalReqSizeInGib += reqGoal->app_direct_1_size;
+		totalReqSizeInGib += reqGoal->app_direct_2_size;
+	}
+
+	// currently in memory mode?
+	for (std::vector<struct device_details>::iterator curDeviceDetail = curDeviceDetailsList.begin();
+			curDeviceDetail != curDeviceDetailsList.end(); curDeviceDetail++)
+	{
+		if (curDeviceDetail->capacities.memory_capacity > 0)
+		{
+			isCurrentConfigurationMemMode = true;
+			// the user might have requested goal for one dimm instead of whole socket, consider the dimms in current config as well for isReqmemMode
+			if (!isReqConfigurationMemMode && !isUserReqWholeSocket &&
+					curDeviceDetail->status.is_configured)
+			{
+				isReqConfigurationMemMode = true;
+				break;
+			}
+		}
+	}
+
+	if ((isCurrentConfigurationMemMode) && (0 == sktType6Info.total_2lm_ddr_cache_memory))
+	{
+		COMMON_LOG_ERROR_F("Cached memory capacity is 0 when in 2LM for socketId %d", socketId);
+		throw core::LibraryException(NVM_ERR_BADPCAT);
+	}
+
+	// 1 LM + AD -> 1 LM + AD
+	if (!isCurrentConfigurationMemMode && !isReqConfigurationMemMode)
+	{
+		totalCurrSizeInB += sktType6Info.total_mapped_memory; // get the ddr4 capacity from totalSPA and subtract out all the appdirect capacity
+
+		for (std::vector<device_details>::iterator curDeviceDetail = curDeviceDetailsList.begin();
+					curDeviceDetail != curDeviceDetailsList.end(); curDeviceDetail++)
+		{
+			if (isUserReqWholeSocket)
+			{
+				totalCurrSizeInB -= curDeviceDetail->capacities.app_direct_capacity;
+			}
+			else if (!curDeviceDetail->status.is_configured)
+			{
+				// addressing the corner case where a new dimm could be configured as AD
+				totalCurrSizeInB -= curDeviceDetail->capacities.app_direct_capacity;
+			}
+		}
+	}
+	else if (isCurrentConfigurationMemMode && !isReqConfigurationMemMode) // 2LM + AD -> 1LM + AD
+	{
+		// cached memory will now become mapped memory
+		totalCurrSizeInB += sktType6Info.total_2lm_ddr_cache_memory;
+
+		if (!isUserReqWholeSocket)
+		{
+			for (std::vector<struct device_details>::iterator curDeviceDetail = curDeviceDetailsList.begin();
+					curDeviceDetail !=  curDeviceDetailsList.end(); curDeviceDetail++)
+			{
+				if (curDeviceDetail->status.is_configured)
+				{
+					totalCurrSizeInB += curDeviceDetail->capacities.app_direct_capacity;
+				}
+			}
+		}
+	}
+	else if (isReqConfigurationMemMode && !isUserReqWholeSocket) // 2LM + AD -> 2LM +AD or 1LM +AD -> 2LM + AD
+	{
+		for (std::vector<device_details>::iterator curDeviceDetail = curDeviceDetailsList.begin();
+				curDeviceDetail != curDeviceDetailsList.end();
+				curDeviceDetail++)
+		{
+			if (curDeviceDetail->status.is_configured)
+			{
+				totalCurrSizeInB += curDeviceDetail->capacities.app_direct_capacity;
+				totalCurrSizeInB += curDeviceDetail->capacities.memory_capacity; // this will be 0 if currently in 1 LM + AD
+			}
+		}
+	}
+
+	m_newTotalMappedSizeOnSocketInGib = B_TO_GiB(totalCurrSizeInB) + totalReqSizeInGib;
 }
 
 void core::memory_allocator::LayoutStepLimitTotalMappedMemory::shrinkLayoutGoals(
@@ -94,7 +228,7 @@ void core::memory_allocator::LayoutStepLimitTotalMappedMemory::shrinkAppDirect2(
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	shrinkAD2(m_socketDimms, m_mappedCapacityExceedsLimit, layout);
+	shrinkAD2(m_socketDimms, m_exceededSocketLimitByInGib, layout);
 }
 
 void core::memory_allocator::LayoutStepLimitTotalMappedMemory::shrinkAppDirect1(
@@ -102,7 +236,7 @@ void core::memory_allocator::LayoutStepLimitTotalMappedMemory::shrinkAppDirect1(
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	shrinkAD1(m_socketDimms, m_mappedCapacityExceedsLimit, layout);
+	shrinkAD1(m_socketDimms, m_exceededSocketLimitByInGib, layout);
 }
 
 void core::memory_allocator::LayoutStepLimitTotalMappedMemory::shrinkMemory(
@@ -110,28 +244,28 @@ void core::memory_allocator::LayoutStepLimitTotalMappedMemory::shrinkMemory(
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	if (m_mappedCapacityExceedsLimit > 0)
+	if (m_exceededSocketLimitByInGib > 0)
 	{
 		std::vector<core::memory_allocator::Dimm> memDimms = get2LMDimms(m_socketDimms, layout);
 		if (!memDimms.empty())
 		{
 			// If limit exceeds 2LM, eliminate all 2LM, else shrink evenly on all 2LM DIMMs
 			NVM_UINT64 total2LMapacity = getTotal2LMCapacity(memDimms, layout);
-			if (m_mappedCapacityExceedsLimit >= total2LMapacity)
+			if (m_exceededSocketLimitByInGib >= total2LMapacity)
 			{
 				killAllCapacityByType(memDimms, layout, CAPACITY_TYPE_2LM);
 
-				m_mappedCapacityExceedsLimit =
-					m_mappedCapacityExceedsLimit - total2LMapacity;
+				m_exceededSocketLimitByInGib =
+					m_exceededSocketLimitByInGib - total2LMapacity;
 			}
 			else
 			{
-				NVM_UINT64 reduceBy = calculateCapacityToShrinkPerDimm(m_mappedCapacityExceedsLimit, memDimms.size());
+				NVM_UINT64 reduceBy = calculateCapacityToShrinkPerDimm(m_exceededSocketLimitByInGib, memDimms.size());
 
 				for (std::vector<core::memory_allocator::Dimm>::const_iterator dimm =
 						memDimms.begin(); dimm != memDimms.end(); dimm++)
 				{
-					if (m_mappedCapacityExceedsLimit > 0)
+					if (m_exceededSocketLimitByInGib > 0)
 					{
 						if (layout.goals.find(dimm->uid) != layout.goals.end())
 						{
@@ -146,59 +280,18 @@ void core::memory_allocator::LayoutStepLimitTotalMappedMemory::shrinkMemory(
 	}
 }
 
-
-NVM_UINT64 core::memory_allocator::LayoutStepLimitTotalMappedMemory::getLimit(const int socketId)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	return m_memAllocUtil.getSocketLimit(socketId);
-}
-
 bool core::memory_allocator::LayoutStepLimitTotalMappedMemory::mappedSizeExceedsLimit()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	return m_totalMappedSize > m_limit;
+	return m_newTotalMappedSizeOnSocketInGib > m_limitOnSocketInGib;
 }
 
 void core::memory_allocator::LayoutStepLimitTotalMappedMemory::initializeExceedsLimit()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	m_mappedCapacityExceedsLimit = m_totalMappedSize - m_limit;
-}
-
-void core::memory_allocator::LayoutStepLimitTotalMappedMemory::initializeDimmsSortedBySocket(
-		const MemoryAllocationRequest& request)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	m_dimmsSortedBySocket =	getDimmsSortedBySocket(request);
-}
-
-// TODO: need to get m_totalMappedSize for all dimms on socket, not just on requested dimms
-// Fixed by US20271
-void core::memory_allocator::LayoutStepLimitTotalMappedMemory::initializeTotalMappedSizeVariablesPerSocket(
-		const MemoryAllocationRequest& request,
-		MemoryAllocationLayout& layout, int socketId)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	m_totalMappedSize = 0;
-	m_limit = getLimit(socketId);
-
-	m_socketDimms.assign(m_dimmsSortedBySocket[socketId].begin(), m_dimmsSortedBySocket[socketId].end());
-	for (std::vector<core::memory_allocator::Dimm>::iterator dimm = m_socketDimms.begin();
-			dimm != m_socketDimms.end(); dimm++)
-	{
-		if (layout.goals.find(dimm->uid) != layout.goals.end())
-		{
-			m_totalMappedSize += layout.goals[dimm->uid].memory_size;
-			m_totalMappedSize +=
-					layout.goals[dimm->uid].app_direct_1_size +
-					layout.goals[dimm->uid].app_direct_2_size;
-		}
-	}
+	m_exceededSocketLimitByInGib = m_newTotalMappedSizeOnSocketInGib - m_limitOnSocketInGib;
 }
 
 void core::memory_allocator::LayoutStepLimitTotalMappedMemory::shrinkLayoutCapacities(
@@ -243,23 +336,65 @@ void core::memory_allocator::LayoutStepLimitTotalMappedMemory::shrinkSizePerDimm
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	shrinkSize(m_mappedCapacityExceedsLimit, reduceBy, size);
+	shrinkSize(m_exceededSocketLimitByInGib, reduceBy, size);
 }
 
-std::map<NVM_UINT16, std::vector<core::memory_allocator::Dimm> >
-core::memory_allocator::LayoutStepLimitTotalMappedMemory::getDimmsSortedBySocket(
-		const MemoryAllocationRequest& request)
+
+// Initialize m_currDeviceDetailsMap - a map of socketId and device_details of all the dimms with  that socket Id
+void core::memory_allocator::LayoutStepLimitTotalMappedMemory::initCurrentDeviceDetailsMap
+			(const MemoryAllocationRequest& request)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	std::map<NVM_UINT16, std::vector<Dimm> > dimmsSortedBySocket;
-
-	std::vector<Dimm> dimms = request.getDimms();
-
-	for (std::vector<Dimm>::const_iterator dimm = dimms.begin(); dimm != dimms.end(); dimm++)
+	for (std::vector<device_details>::iterator deviceDetails = m_DeviceDetailsList.begin();
+			deviceDetails != m_DeviceDetailsList.end(); deviceDetails++)
 	{
-		dimmsSortedBySocket[dimm->socket].push_back(*dimm);
+		m_curSocketIdDeviceDetailsMap[deviceDetails->discovery.socket_id].push_back(*deviceDetails);
+
+	}
+}
+
+// layout.goals does not have socketId which is important for the limit calc so create a map of socketId and config_goals
+void core::memory_allocator::LayoutStepLimitTotalMappedMemory::initReqConfigGoalMap
+			(const MemoryAllocationRequest& request, const MemoryAllocationLayout& layout, const std::vector<Dimm> reqDimms)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	for (std::vector<Dimm>::const_iterator reqDimm = reqDimms.begin(); reqDimm != reqDimms.end(); reqDimm++)
+	{
+		for (std::map<std::string, struct config_goal>::const_iterator goal = layout.goals.begin();
+				goal != layout.goals.end(); goal++)
+		{
+			if (uid_cmp(goal->first.c_str(), reqDimm->uid.c_str()))
+			{
+				m_reqSocketIdConfigGoalMap[reqDimm->socket].push_back(goal->second);
+			}
+		}
+	}
+}
+
+void core::memory_allocator::LayoutStepLimitTotalMappedMemory::initPcatType6info()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	for (std::map<NVM_UINT16, std::vector<struct config_goal> >::iterator goal = m_reqSocketIdConfigGoalMap.begin(); goal != m_reqSocketIdConfigGoalMap.end(); goal++)
+	{
+		struct socket skt = m_memAllocUtil.getSocket(goal->first);
+		if (skt.is_capacity_skuing_supported)
+		{
+			m_curSocketInfoFromTyep6Map[goal->first] = skt;
+		}
 	}
 
-	return dimmsSortedBySocket;
+}
+
+void core::memory_allocator::LayoutStepLimitTotalMappedMemory::initSocketDimms(NVM_UINT16 socketId, std::vector<Dimm> reqDimms)
+{
+	m_socketDimms.clear();
+	for (std::vector<Dimm>::const_iterator reqDimm = reqDimms.begin(); reqDimm != reqDimms.end(); reqDimm++)
+	{
+		if (reqDimm->socket == socketId)
+		{
+			m_socketDimms.push_back(*reqDimm);
+		}
+	}
 }

@@ -253,10 +253,10 @@ int get_socket_sku(struct bios_capabilities *p_pcat, struct socket *p_socket)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
-	// TODO: Will be removed when making changes to the US20268 - part2
-	p_socket->mapped_memory_limit = (NVM_UINT64) -1;
+	// Assign defaule values to socket - just in case
+	p_socket->mapped_memory_limit = 0;
 	p_socket->total_mapped_memory = 0;
-	p_socket->cache_memory_limit = 0;
+	p_socket->total_2lm_ddr_cache_memory = 0;
 	p_socket->is_capacity_skuing_supported = NVM_FALSE;
 
 	// iterate over all the extension tables
@@ -284,16 +284,23 @@ int get_socket_sku(struct bios_capabilities *p_pcat, struct socket *p_socket)
 			{
 				if (!p_socket_info->mapped_memory_limit)
 				{
-					COMMON_LOG_ERROR("Mapped memory limit is not defined");
+					COMMON_LOG_ERROR_F("Mapped memory limit is not defined for  socket %d", p_socket->id);
+					rc = NVM_ERR_BADPCAT;
 				}
 				else if (p_socket_info->total_mapped_memory >= p_socket_info->mapped_memory_limit)
 				{
-					COMMON_LOG_ERROR("Occupied mapped memory is greater than limit");
+					COMMON_LOG_ERROR_F("Occupied mapped memory is greater than limit for socket %d", p_socket->id);
+					rc = NVM_ERR_BADPCAT;
+				}
+				else if (!p_socket_info->total_mapped_memory)
+				{
+					COMMON_LOG_ERROR_F("Total mapped memory is zero for the socket %d", p_socket->id);
+					rc = NVM_ERR_BADPCAT;
 				}
 
 				p_socket->mapped_memory_limit = p_socket_info->mapped_memory_limit;
 				p_socket->total_mapped_memory = p_socket_info->total_mapped_memory;
-				p_socket->cache_memory_limit = p_socket_info->cache_memory_limit;
+				p_socket->total_2lm_ddr_cache_memory = p_socket_info->total_2lm_ddr_cache_memory;
 				p_socket->is_capacity_skuing_supported = NVM_TRUE;
 				break;
 			}

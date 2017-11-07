@@ -468,7 +468,7 @@ enum config_status
 	CONFIG_STATUS_ERR_BROKEN_INTERLEAVE = 3, // The interleave set is broken.
 	CONFIG_STATUS_ERR_REVERTED = 4, // The configuration failed and was reverted.
 	CONFIG_STATUS_ERR_NOT_SUPPORTED = 5, // The configuration is not supported by the BIOS.
-	CONFIG_STATUS_UNKNOWN = 6 // The configuration status cannot be determined
+	CONFIG_STATUS_UNKNOWN = 6, // The configuration status cannot be determined
 };
 
 /*
@@ -661,6 +661,7 @@ struct device_status
 {
 	enum device_health health; // Overall device health.
 	NVM_BOOL is_new; // Unincorporated with the rest of the devices.
+	NVM_BOOL is_configured; // only the values 1(Success) and 6 (old config used) from CCUR are considered configured
 	NVM_BOOL is_missing; // If the device is missing.
 	NVM_UINT8 die_spares_available; // Number of spare devices on the AEP DIMM that are available.
 	NVM_UINT8 last_shutdown_status; // State of last AEP DIMM shutdown.
@@ -1208,7 +1209,7 @@ struct socket
 	NVM_UINT16 logical_processor_count; // Logical processor count on node (incl. Hyperthreading)
 	NVM_UINT64 mapped_memory_limit; // Maximum allowed memory (via PCAT)
 	NVM_UINT64 total_mapped_memory; // Current occupied memory (via PCAT)
-	NVM_UINT64 cache_memory_limit; // cache size when in 2LM (via PCAT)
+	NVM_UINT64 total_2lm_ddr_cache_memory; // cache size when in 2LM (via PCAT)
 	NVM_BOOL is_capacity_skuing_supported; // set to 1 if PCAT type 6 table found
 };
 

@@ -611,7 +611,8 @@ int fill_device_config_status(const NVM_NFIT_DEVICE_HANDLE device_handle,
 
 	// get dimm platform config data to set config status
 	p_status->config_status = CONFIG_STATUS_ERR_CORRUPT;
-	p_status->is_new = 0;
+	p_status->is_new = NVM_FALSE;
+	p_status->is_configured = NVM_FALSE;
 
 	if (!p_capabilities->nvm_features.get_device_capacity)
 	{
@@ -636,7 +637,12 @@ int fill_device_config_status(const NVM_NFIT_DEVICE_HANDLE device_handle,
 				p_status->config_status = get_config_status_from_current_config(p_current_config);
 				if (p_status->config_status == CONFIG_STATUS_NOT_CONFIGURED)
 				{
-					p_status->is_new = 1;
+					p_status->is_new = NVM_TRUE;
+				}
+				if (p_current_config->config_status == CURRENT_CONFIG_STATUS_SUCCESS ||
+						p_current_config->config_status == CURRENT_CONFIG_STATUS_ERROR_USING_OLD)
+				{
+					p_status->is_configured = NVM_TRUE;
 				}
 			}
 			free(p_cfg_data);

@@ -426,7 +426,6 @@ void core::memory_allocator::LayoutStep::shrinkAD1(
 					if (shrinkAD1By > 0)
 					{
 						config_goal& goal = layout.goals[dimm->uid];
-
 						shrinkSize(shrinkAD1By, reduceBy, goal.app_direct_1_size);
 
 						killADIfSizeIsZero(goal, CAPACITY_TYPE_APPDIRECT1);
