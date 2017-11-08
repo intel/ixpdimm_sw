@@ -3665,7 +3665,7 @@ enum db_return_codes db_delete_dimm_partition_by_device_handle(const PersistentS
 	int history_id,
 	int dimm_partition_count);
 /*!
- * @defgroup dimm_smart dimm_smart
+ * @defgroup dimm_smart dimm_smart 
  * @ingroup db_schema
  */
  // Lengths for strings and arrays

@@ -45,7 +45,7 @@ def createCommandList():
 					"dd:yyyy" not in line):
 						numCommands += 1
 						commandlist.append([line, ""])
-				else:
+				elif (numCommands > 0):
 					commandlist[numCommands][1] += line	
 	return commandlist;
 	
