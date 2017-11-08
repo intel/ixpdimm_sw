@@ -449,7 +449,12 @@ int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 							}
 						}
 
-						if (!(p_diagnostic->excludes & DIAG_THRESHOLD_FW_DIE_SPARING_POLICY))
+						if(!(discovery.device_capabilities.die_sparing_capable))
+						{
+							//not a Die Sparing Capable DIMM, no need to check fw die sparing policy
+							COMMON_LOG_DEBUG("Device is not a Die Sparing Capable DIMM, do not check die sparing policy");
+						}
+						else if (!(p_diagnostic->excludes & DIAG_THRESHOLD_FW_DIE_SPARING_POLICY))
 						{
 							// verify die sparing policies are in accordance with best practices
 							struct pt_get_die_spare_policy spare_payload;
