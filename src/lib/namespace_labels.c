@@ -334,10 +334,10 @@ void calculate_iset_cookies(struct ns_data **pp_ns_data)
 
 		struct v1_1_cookie_data data_v1_1[p_set->dimm_count];
 		NVM_SIZE data_v1_1_size = sizeof (struct v1_1_cookie_data) * p_set->dimm_count;
-		memset(&data_v1_1, 0, data_v1_1_size);
+		memset(data_v1_1, 0, data_v1_1_size);
 		struct v1_2_cookie_data data_v1_2[p_set->dimm_count];
 		NVM_SIZE data_v1_2_size = sizeof (struct v1_2_cookie_data) * p_set->dimm_count;
-		memset(&data_v1_2, 0, data_v1_2_size);
+		memset(data_v1_2, 0, data_v1_2_size);
 
 		for (int dimm_idx = 0; dimm_idx < p_set->dimm_count; dimm_idx++)
 		{

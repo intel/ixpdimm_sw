@@ -151,7 +151,7 @@ int get_nvm_namespaces_details_alloc(struct nvm_namespace_details **pp_namespace
 	if (ns_count > 0)
 	{
 		struct nvm_namespace_discovery namespaces[ns_count];
-		memset(&namespaces, 0, sizeof (struct namespace_discovery) * ns_count);
+		memset(namespaces, 0, sizeof (struct nvm_namespace_discovery) * ns_count);
 		if (get_namespaces(ns_count, namespaces) == ns_count)
 		{
 			*pp_namespaces = calloc(1, sizeof (struct nvm_namespace_details) * ns_count);

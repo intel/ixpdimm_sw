@@ -530,7 +530,7 @@ NVM_UINT16 wbem::mem_config::MemoryAllocationSettingsFactory::validateAndReturnS
 	}
 
 	struct socket sockets[socketCount];
-	memset(&sockets, 0, sizeof(sockets));
+	memset(sockets, 0, sizeof(sockets));
 
 	if ((rc = nvm_get_sockets(sockets, socketCount)) != socketCount)
 	{

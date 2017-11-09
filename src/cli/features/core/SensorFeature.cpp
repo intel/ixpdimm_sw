@@ -265,7 +265,7 @@ cli::framework::ResultBase* cli::nvmcli::SensorFeature::showSensor(
 				//discover device topology
 				int dev_count = nvm_get_device_count();
 				struct device_discovery devices[dev_count];
-				memset(&devices, 0, dev_count * sizeof(struct device_discovery));
+				memset(devices, 0, dev_count * sizeof(struct device_discovery));
 
 				if (NVM_SUCCESS > (rc = nvm_get_devices(devices, dev_count)))
 				{

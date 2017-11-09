@@ -950,7 +950,7 @@ int acknowledge_events(struct event_filter *p_filter)
 		{
 			// acknowledge event
 			struct event events[count];
-			memset(&events, 0, sizeof (struct event) * count);
+			memset(events, 0, sizeof (struct event) * count);
 			count = process_events_matching_filter(p_filter, events, count, 0);
 			if (count > 0) // at least one event needs acknowledging
 			{

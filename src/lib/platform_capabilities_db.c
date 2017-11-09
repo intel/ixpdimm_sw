@@ -380,7 +380,7 @@ int get_pcat_interleave_tables_from_db(PersistentStore *p_db,
 		if (db_get_interleave_capability_count(p_db, &db_interleave_count) == DB_SUCCESS)
 		{
 			struct db_interleave_capability db_interleaves[db_interleave_count];
-			memset(&db_interleaves, 0,
+			memset(db_interleaves, 0,
 					sizeof (struct db_interleave_capability) * db_interleave_count);
 
 			db_interleave_count = db_get_interleave_capabilitys(p_db,
@@ -503,7 +503,7 @@ int get_pcat_socket_sku_info_from_db(PersistentStore *p_db,
 		if (db_get_socket_sku_count(p_db, &db_socket_sku_count) == DB_SUCCESS)
 		{
 			struct db_socket_sku db_socket_skus[db_socket_sku_count];
-			memset(&db_socket_skus, 0, sizeof (struct db_socket_sku) * db_socket_sku_count);
+			memset(db_socket_skus, 0, sizeof (struct db_socket_sku) * db_socket_sku_count);
 
 			db_socket_sku_count = db_get_socket_skus(p_db, db_socket_skus, db_socket_sku_count);
 			for (int i = 0; i < db_socket_sku_count; i++)
