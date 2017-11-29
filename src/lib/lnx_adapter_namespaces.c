@@ -41,7 +41,14 @@
 #include "utility.h"
 #include <errno.h>
 
+#define	AD_1_1_NAMESPACE_LABEL_DEFAULT_SECTOR_SIZE 512
+#define	AD_1_2_NAMESPACE_LABEL_DEFAULT_SECTOR_SIZE 4096
+
+#define	NAMESPACE_LABEL_SIZE_1_1 128
+#define	NAMESPACE_LABEL_SIZE_1_2 256
+
 #define	DEFAULT_BTT_SECTOR_SIZE	4096
+
 #define	DEFAULT_PFN_NS_ALIGNMENT	0x00200000 // == 2MB recommended data offset alignment
 
 void get_namespace_guid(struct ndctl_namespace *p_namespace, COMMON_UID guid);
@@ -204,6 +211,60 @@ int get_namespace_lba_size(struct ndctl_namespace *namespace, NVM_UINT32 *lba_si
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
+}
+
+/*
+ * Get ns label version from region based on label size
+ */
+int get_namespace_label_version_from_region(struct ndctl_region *region, enum ndctl_namespace_version *v)
+{
+        COMMON_LOG_ENTRY();
+        int rc = NVM_SUCCESS;
+
+        struct ndctl_dimm *dimm;
+        struct ndctl_cmd *cmd_read;
+        unsigned int nslabel_size = 0;
+        int v1_1 = 0;
+        int v1_2 = 0;
+
+        ndctl_dimm_foreach_in_region(region, dimm)
+        {
+                cmd_read = ndctl_dimm_read_labels(dimm);
+                if (cmd_read == NULL)
+                {
+                        COMMON_LOG_ERROR("Could not read labels");
+                        rc = NVM_ERR_UNKNOWN;
+                }
+
+                nslabel_size = ndctl_dimm_sizeof_namespace_label(dimm);
+                if (nslabel_size == NAMESPACE_LABEL_SIZE_1_1)
+                {
+                        v1_1++;
+                }
+                else if (nslabel_size == NAMESPACE_LABEL_SIZE_1_2)
+                {
+                        v1_2++;
+                }
+                else
+                {
+                        COMMON_LOG_ERROR("Unsupported label size specified in index");
+                        rc = NVM_ERR_UNKNOWN;
+                }
+        }
+
+        if ((v1_1 != 0) && (v1_2 != 0))
+        {
+                COMMON_LOG_ERROR("Label index versions mismatch");
+        }
+
+        if (v1_2 > v1_1)
+                *v = NDCTL_NS_VERSION_1_2;
+        else
+                *v = NDCTL_NS_VERSION_1_1;
+
+
+        COMMON_LOG_EXIT_RETURN_I(rc);
+        return rc;
 }
 
 int enable_namespace(struct ndctl_namespace *p_namespace)
@@ -438,7 +499,7 @@ int get_namespace_details(
 					p_details->type = NAMESPACE_TYPE_APP_DIRECT;
 					p_details->namespace_creation_id.interleave_setid =
 							ndctl_region_get_range_index(p_region);
-					p_details->block_size = DEFAULT_BTT_SECTOR_SIZE;
+					p_details->block_size = ndctl_namespace_get_sector_size(p_namespace);
 					break;
 
 				default:
@@ -848,6 +909,8 @@ int create_namespace(
 	int rc = NVM_SUCCESS;
 
 	struct ndctl_ctx *ctx;
+	enum ndctl_namespace_version v;
+	unsigned int sector_size;
 
 	if (p_settings == NULL)
 	{
@@ -875,6 +938,17 @@ int create_namespace(
 			rc = NVM_ERR_UNKNOWN;
 		}
 
+		rc = get_namespace_label_version_from_region(region, &v);
+
+		if (v == NDCTL_NS_VERSION_1_2)
+		{
+			sector_size = AD_1_2_NAMESPACE_LABEL_DEFAULT_SECTOR_SIZE;
+		}
+		else
+		{
+			sector_size = AD_1_1_NAMESPACE_LABEL_DEFAULT_SECTOR_SIZE;
+		}
+
 		struct ndctl_namespace *namespace;
 		if (rc == NVM_SUCCESS &&
 				((rc = get_unconfigured_namespace(&namespace, region)) == NVM_SUCCESS))
@@ -897,6 +971,11 @@ int create_namespace(
 				adjust_namespace_size(p_settings->block_size, p_settings->block_count)))
 			{
 				COMMON_LOG_ERROR("Set SizeFailed");
+				rc = NVM_ERR_DRIVERFAILED;
+			}
+			else if (ndctl_namespace_set_sector_size(namespace, sector_size))
+			{
+				COMMON_LOG_ERROR("Set Sector Size Failed");
 				rc = NVM_ERR_DRIVERFAILED;
 			}
 
