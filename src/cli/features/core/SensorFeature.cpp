@@ -188,8 +188,6 @@ cli::framework::ResultBase* cli::nvmcli::SensorFeature::showSensor(
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	framework::ResultBase *pResult = NULL;
 	struct sensor sensors[NVM_MAX_DEVICE_SENSORS];
-	std::vector<std::string> dimms;
-	pResult = cli::nvmcli::getDimms(parsedCommand, dimms);
 	int rc;
 
 	if (NULL == pResult)
@@ -239,113 +237,103 @@ cli::framework::ResultBase* cli::nvmcli::SensorFeature::showSensor(
 
 			if(!sensorTargetName.empty() && !isValidType(sensorTargetName))
 			{
-				return  new framework::SyntaxErrorBadValueResult(framework::TOKENTYPE_TARGET,
+				return new framework::SyntaxErrorBadValueResult(framework::TOKENTYPE_TARGET,
 									TARGET_SENSOR_R.name, sensorTargetName);
 			}
-			else
+
+			// If the user is requesting a specific type of sensor we need to include
+			// the type attribute when we get the instances
+			wbem::framework::attribute_names_t requestedAttributes = displayAttributes;
+			bool singleSensorTarget = false;
+			bool singleSensorTargetProcessed = false;
+
+			if (!sensorTargetName.empty())
 			{
-				// If the user is requesting a specific type of sensor we need to include
-				// the type attribute when we get the instances
-				wbem::framework::attribute_names_t requestedAttributes = displayAttributes;
-				bool singleSensorTarget = false;
-				bool singleSensorTargetProcessed = false;
+				singleSensorTarget = true;
+				requestedAttributes.push_back(wbem::TYPE_KEY);
+				transform(sensorTargetName.begin(), sensorTargetName.end(), sensorTargetName.begin(), ::tolower);
+			}
+			if (!dimmTarget.empty())
+			{
+				requestedAttributes.push_back(wbem::DIMMUID_KEY);
+				requestedAttributes.push_back(wbem::DIMMHANDLE_KEY);
+			}
 
-				if (!sensorTargetName.empty())
+			// populate the C++ device objects from the device discovery
+			// struct gathered in the NVM api call above
+			std::vector<core::device::Device> devicesObjs;
+			devicesObjs = ShowCommandUtilities::populateDevicesFromDimmsString(dimmTarget, NVM_FALSE);
+
+			//object that will contain list(s) of sensor property values
+			framework::ObjectListResult *pResults = new framework::ObjectListResult();
+			pResults->setRoot("Sensor");
+
+			//iterate through all target devices
+			for (std::vector<core::device::Device>::const_iterator id = devicesObjs.begin(); id != devicesObjs.end(); ++id)
+			{
+				core::device::Device dev = *id;
+				// If an unspecified device is unmanageable, skip over it
+				if (!dev.isManageable())
+					continue;
+
+				NVM_SENSOR_CATEGORY_BITMASK sensor_categories = 0;
+				NVM_SENSOR_CATEGORY_BITMASK sensor_thresholds = 0;
+				if (singleSensorTarget)
 				{
-					singleSensorTarget = true;
-					requestedAttributes.push_back(wbem::TYPE_KEY);
-					transform(sensorTargetName.begin(), sensorTargetName.end(), sensorTargetName.begin(), ::tolower);
+					sensor_categories = sensorNameToCategory(sensorTargetName);
+					sensor_thresholds = sensor_categories;
 				}
-				if (!dimmTarget.empty())
+				else
 				{
-					requestedAttributes.push_back(wbem::DIMMUID_KEY);
-					requestedAttributes.push_back(wbem::DIMMHANDLE_KEY);
+					sensor_categories = SENSOR_CAT_SMART_HEALTH | SENSOR_CAT_POWER;
+					sensor_thresholds = sensor_categories;
 				}
 
-				//discover device topology
-				int dev_count = nvm_get_device_count();
-				struct device_discovery devices[dev_count];
-				memset(devices, 0, dev_count * sizeof(struct device_discovery));
-
-				if (NVM_SUCCESS > (rc = nvm_get_devices(devices, dev_count)))
+				if(NVM_SUCCESS != (rc = nvm_get_sensors_by_category(dev.getDeviceHandle(),
+						sensors, NVM_MAX_DEVICE_SENSORS, sensor_categories, sensor_thresholds)))
 				{
+					free(pResults);
 					throw wbem::exception::NvmExceptionLibError(rc);
 				}
 
-				//get list of devices that we are targeting
-				std::vector<core::device::Device> devicesObjs;
-				if (!dimmTarget.empty())
-					devicesObjs = ShowCommandUtilities::getAllDevicesFromList(devices, dev_count, dimmTarget);
-				else
-					devicesObjs = ShowCommandUtilities::getAllDevices(devices, dev_count);
-
-				//object that will contain list(s) of sensor property values
-				framework::ObjectListResult *pResults = new framework::ObjectListResult();
-				pResults->setRoot("Sensor");
-
-				//iterate through all target devices
-				for (std::vector<core::device::Device>::const_iterator id = devicesObjs.begin(); id != devicesObjs.end(); ++id)
+				for (int i = 0; i < NVM_MAX_DEVICE_SENSORS; ++i)
 				{
-					core::device::Device dev = *id;
-					if (!dev.isManageable())
+					if (SENSOR_NOT_INITIALIZED == sensors[i].current_state)
 						continue;
 
-					NVM_SENSOR_CATEGORY_BITMASK sensor_categories = 0;
-					NVM_SENSOR_CATEGORY_BITMASK sensor_thresholds = 0;
+					framework::PropertyListResult* pResultDimmProps = new framework::PropertyListResult();
+					core::device::sensor::Sensor *sensor = core::device::sensor::SensorFactory::CreateSensor(sensors[i]);
+
 					if (singleSensorTarget)
 					{
-						sensor_categories = sensorNameToCategory(sensorTargetName);
-						sensor_thresholds = sensor_categories;
-					}
-					else
-					{
-						sensor_categories = SENSOR_CAT_SMART_HEALTH | SENSOR_CAT_POWER;
-						sensor_thresholds = sensor_categories;
-					}
-
-					if(NVM_SUCCESS != (rc = nvm_get_sensors_by_category(dev.getUid().c_str(), sensors, NVM_MAX_DEVICE_SENSORS, sensor_categories, sensor_thresholds)))
-					{
-						free(pResults);
-						throw wbem::exception::NvmExceptionLibError(rc);
-					}
-
-					for (int i = 0; i < NVM_MAX_DEVICE_SENSORS; ++i)
-					{
-						if (SENSOR_NOT_INITIALIZED == sensors[i].current_state)
-							continue;
-
-						framework::PropertyListResult* pResultDimmProps = new framework::PropertyListResult();
-						core::device::sensor::Sensor *sensor = core::device::sensor::SensorFactory::CreateSensor(sensors[i]);
-
-						if (singleSensorTarget)
+						std::string sensorName = sensor->GetName();
+						//normalize string to lowercase
+						transform(sensorName.begin(), sensorName.end(), sensorName.begin(), ::tolower);
+						if (0 != sensorTargetName.compare(sensorName))
 						{
-							std::string sensorName = sensor->GetName();
-							//normalize string to lowercase
-							transform(sensorName.begin(), sensorName.end(), sensorName.begin(), ::tolower);
-							if (0 != sensorTargetName.compare(sensorName))
-							{
-								delete sensor;
-								continue; //skip to next sensor
-							}
-							else singleSensorTargetProcessed = true;
+							delete sensor;
+							continue; //skip to next sensor
 						}
-						sensorToPropList(pResultDimmProps, SSTR(dev.getDeviceHandle()), sensor, displayAttributes);
-						pResults->insert(SSTR(dev.getDeviceHandle()), *pResultDimmProps);
-						delete sensor;
-
-						if (singleSensorTargetProcessed)
-							break;
+						else singleSensorTargetProcessed = true;
 					}
-				}
 
-				if (!framework::parsedCommandContains(parsedCommand, framework::OPTION_DISPLAY) &&
-					!framework::parsedCommandContains(parsedCommand, framework::OPTION_ALL))
-				{
-					pResults->setOutputType(framework::ResultBase::OUTPUT_TEXTTABLE);
-				}
+					std::string deviceIdString = ShowCommandUtilities::getDimmId(dev);
+					sensorToPropList(pResultDimmProps, deviceIdString, sensor, displayAttributes);
+					pResults->insert(deviceIdString, *pResultDimmProps);
+					delete sensor;
 
-				return pResults;
+					if (singleSensorTargetProcessed)
+						break;
+				}
 			}
+
+			if (!framework::parsedCommandContains(parsedCommand, framework::OPTION_DISPLAY) &&
+				!framework::parsedCommandContains(parsedCommand, framework::OPTION_ALL))
+			{
+				pResults->setOutputType(framework::ResultBase::OUTPUT_TEXTTABLE);
+			}
+
+			return pResults;
 		}
 		catch (wbem::framework::Exception &e)
 		{

@@ -100,8 +100,8 @@ int get_sensor_thresholds(int device_handle, struct sensor_thresholds *p_thresho
 	return rc;
 }
 
-int get_smart_log_sensors(const NVM_UID device_uid,
-	const NVM_UINT32 dev_handle, struct sensor *p_sensors, NVM_BOOL include_thresholds)
+int get_smart_log_sensors(const NVM_UINT32 dev_handle,
+      struct sensor *p_sensors, NVM_BOOL include_thresholds)
 {
 	COMMON_LOG_ENTRY();
 
@@ -369,8 +369,8 @@ int get_smart_log_sensors(const NVM_UID device_uid,
 	return rc;
 }
 
-int get_fw_error_log_sensors(const NVM_UID device_uid,
-	const NVM_UINT32 dev_handle, struct sensor sensors[NVM_MAX_DEVICE_SENSORS])
+int get_fw_error_log_sensors(const NVM_UINT32 dev_handle,
+      struct sensor sensors[NVM_MAX_DEVICE_SENSORS])
 {
 	COMMON_LOG_ENTRY();
 
@@ -398,25 +398,21 @@ int get_fw_error_log_sensors(const NVM_UID device_uid,
 	return rc;
 }
 
-int get_power_limited_sensor(const NVM_UID device_uid,
-	const NVM_UINT32 dev_handle, struct sensor sensors[NVM_MAX_DEVICE_SENSORS])
+// socket_id is found from device_discovery.socket_id
+int get_power_limited_sensor(NVM_UINT16 socket_id,
+      struct sensor sensors[NVM_MAX_DEVICE_SENSORS])
 {
 	COMMON_LOG_ENTRY();
-	struct device_discovery device;
-	memset(&device, 0, sizeof (device));
-	int rc = nvm_get_device_discovery(device_uid, &device);
-	if (rc == NVM_SUCCESS)
+	int rc = NVM_SUCCESS;
+	int power_reading = get_dimm_power_limited(socket_id);
+	if (power_reading >= 0)
 	{
-		int power_reading = get_dimm_power_limited(device.socket_id);
-		if (power_reading >= 0)
-		{
-			sensors[SENSOR_POWERLIMITED].reading = (NVM_UINT64) power_reading;
-			sensors[SENSOR_POWERLIMITED].current_state = SENSOR_NORMAL;
-		}
-		else
-		{
-			rc = power_reading;
-		}
+		sensors[SENSOR_POWERLIMITED].reading = (NVM_UINT64) power_reading;
+		sensors[SENSOR_POWERLIMITED].current_state = SENSOR_NORMAL;
+	}
+	else
+	{
+		rc = power_reading;
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -427,99 +423,115 @@ int get_power_limited_sensor(const NVM_UID device_uid,
  * Helper function to populate sensor information with default attributes
  * that don't require current values.
  */
-void initialize_sensors(const NVM_UID device_uid,
-	struct sensor sensors[NVM_MAX_DEVICE_SENSORS])
+void initialize_sensors(struct sensor *p_sensors, const NVM_UINT16 count)
 {
-	for (int i = 0; i < NVM_MAX_DEVICE_SENSORS; i++)
+	// Clear out all data first
+	memset(p_sensors, 0, sizeof(struct sensor)*count);
+
+	for (int i = 0; i < count; i++)
 	{
-		memmove(sensors[i].device_uid, device_uid, NVM_MAX_UID_LEN);
-		sensors[i].type = i;
-		sensors[i].current_state = SENSOR_NOT_INITIALIZED;
+		p_sensors[i].type = i;
+		p_sensors[i].current_state = SENSOR_NOT_INITIALIZED;
 	}
-	sensors[SENSOR_MEDIA_TEMPERATURE].units = UNIT_CELSIUS;
-	sensors[SENSOR_SPARECAPACITY].units = UNIT_PERCENT;
-	sensors[SENSOR_WEARLEVEL].units = UNIT_PERCENT;
-	sensors[SENSOR_POWERCYCLES].units = UNIT_CYCLES;
-	sensors[SENSOR_POWERONTIME].units = UNIT_SECONDS;
-	sensors[SENSOR_UPTIME].units = UNIT_SECONDS;
-	sensors[SENSOR_UNSAFESHUTDOWNS].units = UNIT_COUNT;
-	sensors[SENSOR_FWERRORLOGCOUNT].units = UNIT_COUNT;
-	sensors[SENSOR_POWERLIMITED].units = UNIT_COUNT;
-	sensors[SENSOR_CONTROLLER_TEMPERATURE].units = UNIT_CELSIUS;
-	sensors[SENSOR_HEALTH].units = UNIT_COUNT;
+	p_sensors[SENSOR_MEDIA_TEMPERATURE].units = UNIT_CELSIUS;
+	p_sensors[SENSOR_SPARECAPACITY].units = UNIT_PERCENT;
+	p_sensors[SENSOR_WEARLEVEL].units = UNIT_PERCENT;
+	p_sensors[SENSOR_POWERCYCLES].units = UNIT_CYCLES;
+	p_sensors[SENSOR_POWERONTIME].units = UNIT_SECONDS;
+	p_sensors[SENSOR_UPTIME].units = UNIT_SECONDS;
+	p_sensors[SENSOR_UNSAFESHUTDOWNS].units = UNIT_COUNT;
+	p_sensors[SENSOR_FWERRORLOGCOUNT].units = UNIT_COUNT;
+	p_sensors[SENSOR_POWERLIMITED].units = UNIT_COUNT;
+	p_sensors[SENSOR_CONTROLLER_TEMPERATURE].units = UNIT_CELSIUS;
+	p_sensors[SENSOR_HEALTH].units = UNIT_COUNT;
 }
 
-int get_all_sensors(const NVM_UID device_uid,
-	const NVM_UINT32 dev_handle, struct sensor sensors[NVM_MAX_DEVICE_SENSORS])
-{
-	COMMON_LOG_ENTRY();
 
-	initialize_sensors(device_uid, sensors);
-	int rc = get_smart_log_sensors(device_uid, dev_handle, sensors, 1);
-	KEEP_ERROR(rc, get_fw_error_log_sensors(device_uid, dev_handle, sensors));
-	KEEP_ERROR(rc, get_power_limited_sensor(device_uid, dev_handle, sensors));
+int get_sensors_by_category(struct device_discovery *p_discovery,
+		struct sensor *p_sensors, const NVM_UINT16 count,
+	NVM_SENSOR_CATEGORY_BITMASK categories, NVM_SENSOR_CATEGORY_BITMASK thresholds)
+{
+	int rc = NVM_SUCCESS;
+	initialize_sensors(p_sensors, count);
+	if (categories & SENSOR_CAT_SMART_HEALTH)
+	{
+		NVM_BOOL get_thresh = thresholds & SENSOR_CAT_SMART_HEALTH;
+		KEEP_ERROR(rc, get_smart_log_sensors(p_discovery->device_handle.handle,
+											p_sensors, get_thresh));
+	}
+
+	if (categories & SENSOR_CAT_POWER)
+	{
+		KEEP_ERROR(rc, get_power_limited_sensor(p_discovery->socket_id, p_sensors));
+	}
+
+	if (categories & SENSOR_CAT_FW_ERROR)
+	{
+		KEEP_ERROR(rc, get_fw_error_log_sensors(p_discovery->device_handle.handle,
+												p_sensors));
+	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
 
-int nvm_get_sensors_by_category(const NVM_UID device_uid, struct sensor *p_sensors, const NVM_UINT16 count,
-	NVM_SENSOR_CATEGORY_BITMASK categories, NVM_SENSOR_CATEGORY_BITMASK thresholds) 
+
+/*
+ * This function populates sensor information for the specified device.
+ * Sensors are used to monitor a particular aspect of a device by settings
+ * thresholds against a current value. Sensor information is returned
+ * as part of the device_details structure.
+ * The number of sensors for a given device is defined as NVM_MAX_DEVICE_SENSORS.
+ *
+ * Populate a provided sensor array with a bitmask specified category of sensor
+ * data from a particular dimm, specified by dev_handle.
+ *
+ * Returns NVM_ERR_ARRAYTOOSMALL if the input array length (indicated by count)
+ * is smaller than NVM_MAX_DEVICE_SENSORS, even if the number of requested
+ * sensors is smaller than NVM_MAX_DEVICE_SENSORS.
+ */
+int nvm_get_sensors_by_category(const NVM_UINT32 dev_handle,
+		struct sensor *p_sensors, const NVM_UINT16 count,
+	NVM_SENSOR_CATEGORY_BITMASK categories, NVM_SENSOR_CATEGORY_BITMASK thresholds)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
-
 	struct device_discovery discovery;
+
 	if (check_caller_permissions() != COMMON_SUCCESS)
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
 	}
-	if (device_uid == NULL)
+	else if (!is_supported_driver_available())
 	{
-		COMMON_LOG_ERROR("Invalid parameter, device_uid is NULL");
-		rc = NVM_ERR_INVALIDPARAMETER;
+		rc = NVM_ERR_BADDRIVER;
 	}
 	else if (p_sensors == NULL)
 	{
-		COMMON_LOG_ERROR("Invalid parameter, p_status is NULL");
+		COMMON_LOG_ERROR("Invalid parameter, p_sensors is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
-	else if ((rc = exists_and_manageable(device_uid, &discovery, 1)) == NVM_SUCCESS)
+	else if (count < NVM_MAX_DEVICE_SENSORS)
 	{
-		struct sensor sensors[NVM_MAX_DEVICE_SENSORS];
-		memset(sensors, 0, sizeof(sensors));
-		const NVM_UINT32 dev_handle = discovery.device_handle.handle;
-		int rc;
-		initialize_sensors(device_uid, sensors);
-		if (categories & SENSOR_CAT_SMART_HEALTH)
-		{
-			NVM_BOOL get_thresh = thresholds & SENSOR_CAT_SMART_HEALTH;
-			KEEP_ERROR(rc, get_smart_log_sensors(device_uid, dev_handle, sensors, get_thresh));
-		}
-
-		if (categories & SENSOR_CAT_POWER)
-		{
-			KEEP_ERROR(rc, get_power_limited_sensor(device_uid, dev_handle, sensors));
-		}
-
-		if (categories & SENSOR_CAT_FW_ERROR)
-		{
-			KEEP_ERROR(rc, get_fw_error_log_sensors(device_uid, dev_handle, sensors));
-		}
-
-		// even if the array is too small, we still want to fill in as many as possible.
-		// Just return the error code
-		if (count < NVM_MAX_DEVICE_SENSORS)
-		{
-			rc = NVM_ERR_ARRAYTOOSMALL;
-		}
-
-		// fill in the user provided sensor array
-		memset(p_sensors, 0, sizeof(struct sensor) * count);
-		for (int i = 0; i < count; i++)
-		{
-			memmove(&p_sensors[i], &sensors[i], sizeof(struct sensor));
-		}
+		rc = NVM_ERR_ARRAYTOOSMALL;
+	}
+	else if ((rc = lookup_device_nfit_by_handle(dev_handle, &discovery)) != NVM_SUCCESS)
+	{
+		COMMON_LOG_ERROR("Invalid parameter, device handle is invalid");
+		// Return already set rc
+	}
+	// Note: The firmware api version is not populated at this point because
+	// of the lookup_device_nfit call above, so it won't be checked by the
+	// IS_DEVICE_MANAGEABLE macro. However, there aren't any changes planned
+	// for the sensor api so we save on a few SMM calls.
+	else if (!IS_DEVICE_MANAGEABLE(&discovery))
+	{
+		rc = NVM_ERR_NOTMANAGEABLE;
+	}
+	else
+	{
+		rc = get_sensors_by_category(&discovery, p_sensors, count,
+				categories, thresholds);
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
@@ -531,6 +543,9 @@ int nvm_get_sensors_by_category(const NVM_UID device_uid, struct sensor *p_senso
  * thresholds against a current value.  Sensor information is returned
  * as part of the device_details structure.
  * The number of sensors for a given device is defined as NVM_MAX_DEVICE_SENSORS.
+ *
+ * Returns NVM_ERR_ARRAYTOOSMALL if the input array length (indicated by count)
+ * is smaller than NVM_MAX_DEVICE_SENSORS.
  */
 int nvm_get_sensors(const NVM_UID device_uid, struct sensor *p_sensors,
 	const NVM_UINT16 count)
@@ -554,29 +569,20 @@ int nvm_get_sensors(const NVM_UID device_uid, struct sensor *p_sensors,
 	}
 	else if (p_sensors == NULL)
 	{
-		COMMON_LOG_ERROR("Invalid parameter, p_status is NULL");
+		COMMON_LOG_ERROR("Invalid parameter, p_sensors is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
+	}
+	else if (count < NVM_MAX_DEVICE_SENSORS)
+	{
+		rc = NVM_ERR_ARRAYTOOSMALL;
 	}
 	else if ((rc = exists_and_manageable(device_uid, &discovery, 1)) == NVM_SUCCESS)
 	{
-		struct sensor sensors[NVM_MAX_DEVICE_SENSORS];
-		memset(sensors, 0, sizeof (sensors));
-		const NVM_UINT32 dev_handle = discovery.device_handle.handle;
-		get_all_sensors(device_uid, dev_handle, sensors);
-
-		// even if the array is too small, we still want to fill in as many as possible.
-		// Just return the error code
-		if (count < NVM_MAX_DEVICE_SENSORS)
-		{
-			rc = NVM_ERR_ARRAYTOOSMALL;
-		}
-
-		// fill in the user provided sensor array
-		memset(p_sensors, 0, sizeof (struct sensor) * count);
-		for (int i = 0; i < count; i++)
-		{
-			memmove(&p_sensors[i], &sensors[i], sizeof (struct sensor));
-		}
+		// Get all categories and thresholds
+		NVM_SENSOR_CATEGORY_BITMASK categories = SENSOR_CAT_ALL;
+		NVM_SENSOR_CATEGORY_BITMASK thresholds = SENSOR_CAT_ALL;
+		rc = get_sensors_by_category(&discovery, p_sensors, count,
+				categories, thresholds);
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;

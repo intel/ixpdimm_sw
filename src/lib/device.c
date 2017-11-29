@@ -461,31 +461,60 @@ void calculate_capabilities_for_populated_devices(struct device_discovery *p_dev
 	COMMON_LOG_EXIT();
 }
 
+
+
+/*
+ * Populates the device discovery struct with information about the CR DIMM
+ * devices found in the system. If the parameter count is less than the
+ * number of devices discovered, NVM_ERR_ARRAYTOOSMALL is returned.
+ *
+ * This call uses any cached information stored in the in-memory nvm context
+ * if possible, which persists until the caller's process exits.
+ *
+ * The parameter populate_all_properties specifies whether to populate only the
+ * "fast" properties from NFIT and SMBIOS, or to also include the more
+ * time-intensive properties that make calls to the DIMM.
+ *
+ * Returns:
+ *         NVM_ERR_ARRAYTOOSMALL if count is less than the number of devices
+ *         If success, it returns number of devices discovered
+ */
 int populate_devices(struct device_discovery *p_devices,
-		const NVM_UINT8 count)
+		const NVM_UINT8 count, const NVM_BOOL populate_all_properties)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_ERR_UNKNOWN;
-
 	int topo_count = get_topology_count();
 	if (topo_count <= 0)
 	{
 		rc = topo_count;
 	}
-	else
+	else if (count < topo_count)
 	{
+		rc = NVM_ERR_ARRAYTOOSMALL;
+	}
+	// read from the cache
+	// if cache isn't populated or doesn't have enough properties to fulfill
+	// the request, get the properties from the dimms and write to the cache
+	else if(((rc = get_nvm_context_devices(p_devices, count)) < 0 &&
+			rc != NVM_ERR_ARRAYTOOSMALL) ||
+			(rc > 0 && populate_all_properties == NVM_TRUE &&
+					p_devices[0].all_properties_populated == NVM_FALSE))
+	{
+
+		memset(p_devices, 0, count * sizeof (struct device_discovery));
 		struct nvm_topology topologies[topo_count];
 		if ((rc = get_topology(topo_count, topologies)) > 0)
 		{
+			// populated_count = topo_count in get_topology's
+			// implementation, but it's good practice to use the returned value
+			int populated_count = rc;
 			rc = populate_devices_from_topologies(p_devices, count,
-					topologies, topo_count);
+									topologies, topo_count);
+			add_smbios_properties_to_populated_devices(p_devices, populated_count);
 
-			int populated_count = (rc == NVM_ERR_ARRAYTOOSMALL) ?
-					count : rc;
-			if (populated_count > 0)
+			if (populate_all_properties == NVM_TRUE)
 			{
-				add_smbios_properties_to_populated_devices(p_devices, populated_count);
-
 				int fw_rc = add_firmware_properties_to_populated_devices(p_devices,
 						populated_count);
 				if (fw_rc != NVM_SUCCESS)
@@ -494,9 +523,52 @@ int populate_devices(struct device_discovery *p_devices,
 				}
 				calculate_capabilities_for_populated_devices(p_devices,
 						populated_count);
+
 				calculate_uids_for_populated_devices(p_devices, populated_count);
 			}
+
+			// Set the all_properties_populated bit as appropriate
+			for (int i = 0; i < populated_count; i++)
+			{
+				p_devices[i].all_properties_populated = populate_all_properties;
+			}
+
+			// Save to context for reuse next time
+			set_nvm_context_devices(p_devices, rc);
 		}
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
+/*
+ * Retrieve partial discovery information about each CR device in the system
+ * whether it's fully compatible with the current Management library version or not.
+ * To allocate the array of device_discovery structures, call nvm_get_device_count
+ * before calling this method.
+ */
+int nvm_get_devices_nfit(struct device_discovery *p_devices, const NVM_UINT8 count)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_ERR_UNKNOWN;
+
+	if (check_caller_permissions() != NVM_SUCCESS)
+	{
+		rc = NVM_ERR_INVALIDPERMISSIONS;
+	}
+	else if (!is_supported_driver_available())
+	{
+		rc = NVM_ERR_BADDRIVER;
+	}
+	else if (p_devices == NULL)
+	{
+		COMMON_LOG_ERROR("Invalid parameter, p_devices is NULL");
+		rc = NVM_ERR_INVALIDPARAMETER;
+	}
+	else
+	{
+		rc = populate_devices(p_devices, count, NVM_FALSE);
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -527,22 +599,15 @@ int nvm_get_devices(struct device_discovery *p_devices, const NVM_UINT8 count)
 		COMMON_LOG_ERROR("Invalid parameter, p_devices is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
-	// read from the cache
-	else if ((rc = get_nvm_context_devices(p_devices, count)) < 0 &&
-			rc != NVM_ERR_ARRAYTOOSMALL)
+	else
 	{
-		memset(p_devices, 0, count * sizeof (struct device_discovery));
-		rc = populate_devices(p_devices, count);
-		if (rc > 0)
-		{
-			// Successfully populated devices, now update the context
-			set_nvm_context_devices(p_devices, rc);
-		}
+		rc = populate_devices(p_devices, count, NVM_TRUE);
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
+
 
 /*
  * Retrieve discovery information about the device specified

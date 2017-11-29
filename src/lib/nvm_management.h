@@ -231,6 +231,7 @@ enum sensor_category
 	SENSOR_CAT_SMART_HEALTH = 0x1,
 	SENSOR_CAT_POWER = 0x2,
 	SENSOR_CAT_FW_ERROR = 0x4,
+	SENSOR_CAT_ALL = SENSOR_CAT_SMART_HEALTH | SENSOR_CAT_POWER | SENSOR_CAT_FW_ERROR
 };
 
 /*
@@ -607,9 +608,13 @@ struct device_capabilities
  */
 struct device_discovery
 {
-	// Calculated by MGMT
-	NVM_UID uid; // Unique identifier of the device.
-	enum manageability_state manageability; // Compatibility of device, FW and mgmt.
+	// Properties that are fast to access
+	///////////////////////////////////////////////////////////////////////////
+	// Indicate whether the struct was populated with the full set of
+	// properties (nvm_get_devices()) or just a minimal set (NFIT + SMBIOS)
+	// The calls originate at populate_devices() and use the
+	// parameter populate_all_properties to distinguish each
+	NVM_BOOL all_properties_populated;
 
 	// ACPI
 	NVM_NFIT_DEVICE_HANDLE device_handle; // The unique device handle of the memory module
@@ -626,7 +631,15 @@ struct device_discovery
 	// SMBIOS
 	enum memory_type memory_type; //	The type of memory used by the DIMM.
 
+	///////////////////////////////////////////////////////////////////////////
+
+
+
+	// Slow (>15ms per passthrough ioctl) properties stored on each DIMM
+	///////////////////////////////////////////////////////////////////////////
 	// Identify Intel DIMM Gen 1
+	// add_identify_dimm_properties_to_device() in device.c
+	NVM_UINT32 dimm_sku;
 	NVM_MANUFACTURER manufacturer; // The manufacturer ID code determined by JEDEC JEP-106
 	NVM_SERIAL_NUMBER serial_number;	// Serial number assigned by the vendor.
 	NVM_UINT16 subsystem_vendor_id;		// vendor identifier of the AEP DIMM non-volatile
@@ -640,17 +653,30 @@ struct device_discovery
 										// only valid if manufacturing_info_valid=1
 	NVM_UINT16 manufacturing_date;		// Date the AEP DIMM was manufactured, assigned by vendor
 										// only valid if manufacturing_info_valid=1
-
 	char part_number[NVM_PART_NUM_LEN]; 	// The manufacturer's model part number
 	NVM_VERSION fw_revision; // The current active firmware revision.
 	NVM_VERSION fw_api_version; // API version of the currently running FW
 	NVM_UINT64 capacity; // Raw capacity in bytes.
 	NVM_UINT16 interface_format_codes[NVM_MAX_IFCS_PER_DIMM];
+	// calculate_capabilities_for_populated_devices() in device.c
 	struct device_security_capabilities security_capabilities;
-	// Get Security State
-	enum lock_state lock_state;  // Indicates if the DIMM is in a locked security state
 	struct device_capabilities device_capabilities; // Capabilities supported by the device
-	NVM_UINT32 dimm_sku;
+
+	// Calculated by MGMT from NFIT table properties
+	NVM_UID uid; // Unique identifier of the device.
+
+
+	// Get Security State
+	// add_security_state_to_device() in device.c
+	enum lock_state lock_state;  // Indicates if the DIMM is in a locked security state
+	///////////////////////////////////////////////////////////////////////////
+
+	// Whether the dimm is manageable or not is derived based on what calls are
+	// made to populate this struct. If partial properties are requested, then
+	// only those properties are used to derive this value. If all properties are
+	// requested, then the partial properties plus the firmware API version
+	// (requires a DSM call) are used to set this value.
+	enum manageability_state manageability;
 };
 
 /*
@@ -718,7 +744,6 @@ struct sensor_settings
  */
 struct sensor
 {
-	NVM_UID device_uid; // The unique identifier of the device this sensor applies to.
 	enum sensor_type type; // The type of sensor.
 	enum sensor_units units; // The units of measurement for the sensor.
 	enum sensor_status current_state; // The current state of the sensor.
@@ -1413,6 +1438,7 @@ extern NVM_API int nvm_get_device_count();
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
 extern NVM_API int nvm_get_devices(struct device_discovery *p_devices, const NVM_UINT8 count);
+extern NVM_API int nvm_get_devices_nfit(struct device_discovery *p_devices, const NVM_UINT8 count);
 
 /*
  * Retrieve #device_discovery information about the device specified.
@@ -2001,8 +2027,8 @@ extern NVM_API int nvm_get_sensors(const NVM_UID device_uid, struct sensor *p_se
 * 		#NVM_ERR_BADDRIVER @n
 * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
 */
-extern NVM_API int nvm_get_sensors_by_category(const NVM_UID device_uid, struct sensor *p_sensors, const NVM_UINT16 count,
-	NVM_SENSOR_CATEGORY_BITMASK categories, NVM_SENSOR_CATEGORY_BITMASK thresholds);
+extern NVM_API int nvm_get_sensors_by_category(const NVM_UINT32 dev_handle, struct sensor *p_sensors, const NVM_UINT16 count,
+		NVM_SENSOR_CATEGORY_BITMASK categories, NVM_SENSOR_CATEGORY_BITMASK thresholds);
 
 /*
  * Retrieve a specific health sensor from the specified AEP DIMM.

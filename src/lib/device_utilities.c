@@ -275,6 +275,27 @@ int get_devices(struct device_discovery **pp_devices)
 	return rc;
 }
 
+/*
+ * Modifies a single Device Discovery struct to include NFIT data only for one
+ * dimm, specified by its handle
+ */
+int lookup_device_nfit_by_handle(const NVM_UINT32 dev_handle, struct device_discovery * p_discovery)
+{
+	int dev_count = get_topology_count();
+	struct device_discovery discovery_dimms[dev_count];
+	nvm_get_devices_nfit(discovery_dimms, dev_count);
+	for (int i = 0; i < dev_count; i++)
+	{
+		if (discovery_dimms[i].device_handle.handle == dev_handle)
+		{
+			memcpy(p_discovery, &discovery_dimms[i], sizeof(struct device_discovery));
+			return NVM_SUCCESS;
+		}
+	}
+	COMMON_LOG_ERROR("Invalid parameter, device handle can't be found");
+	return NVM_ERR_INVALIDPARAMETER;
+}
+
 int lookup_dev_uids(const NVM_UID *uids, NVM_UINT16 uid_count,
 		struct device_discovery *p_devs)
 {

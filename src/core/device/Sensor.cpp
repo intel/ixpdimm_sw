@@ -50,11 +50,6 @@ namespace core
 			{
 			}
 
-			std::string Sensor::GetDeviceUid()
-			{
-				return std::string(m_sensor.device_uid);
-			}
-
 			std::string Sensor::GetName()
 			{
 				return PROPERTY_SENSOR_TYPE_UNKNOWN;

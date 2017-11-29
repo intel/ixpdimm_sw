@@ -61,7 +61,7 @@ int nvm_create_context()
 	if (!mutex_lock(&g_context_lock))
 	{
 		COMMON_LOG_ERROR("Could not obtain the context lock");
-		rc = NVM_ERR_UNKNOWN;
+		rc = NVM_ERR_CONTEXT;
 	}
 	else
 	{
@@ -100,7 +100,7 @@ int nvm_create_context()
 		if (!mutex_unlock(&g_context_lock))
 		{
 			COMMON_LOG_ERROR("Could not release the context lock.");
-			rc = NVM_ERR_UNKNOWN;
+			rc = NVM_ERR_CONTEXT;
 		}
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -236,7 +236,7 @@ int nvm_free_context(const NVM_BOOL force)
 	if (!mutex_lock(&g_context_lock))
 	{
 		COMMON_LOG_ERROR("Could not obtain the context lock");
-		rc = NVM_ERR_UNKNOWN;
+		rc = NVM_ERR_CONTEXT;
 	}
 	else
 	{
@@ -270,7 +270,7 @@ int nvm_free_context(const NVM_BOOL force)
 		if (!mutex_unlock(&g_context_lock))
 		{
 			COMMON_LOG_ERROR("Could not release the context lock.");
-			rc = NVM_ERR_UNKNOWN;
+			rc = NVM_ERR_CONTEXT;
 		}
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -280,13 +280,13 @@ int nvm_free_context(const NVM_BOOL force)
 int get_nvm_context_capabilities(struct nvm_capabilities *p_capabilities)
 {
 	COMMON_LOG_ENTRY();
-	int rc = NVM_ERR_UNKNOWN;
+	int rc = NVM_ERR_CONTEXT;
 
 	// lock
 	if (!mutex_lock(&g_context_lock))
 	{
 		COMMON_LOG_ERROR("Could not obtain the context lock");
-		rc = NVM_ERR_UNKNOWN;
+		rc = NVM_ERR_CONTEXT;
 	}
 	else
 	{
@@ -300,7 +300,7 @@ int get_nvm_context_capabilities(struct nvm_capabilities *p_capabilities)
 		if (!mutex_unlock(&g_context_lock))
 		{
 			COMMON_LOG_ERROR("Could not release the context lock.");
-			rc = NVM_ERR_UNKNOWN;
+			rc = NVM_ERR_CONTEXT;
 		}
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -310,13 +310,13 @@ int get_nvm_context_capabilities(struct nvm_capabilities *p_capabilities)
 int set_nvm_context_capabilities(const struct nvm_capabilities *p_capabilities)
 {
 	COMMON_LOG_ENTRY();
-	int rc = NVM_ERR_UNKNOWN;
+	int rc = NVM_ERR_CONTEXT;
 
 	// lock
 	if (!mutex_lock(&g_context_lock))
 	{
 		COMMON_LOG_ERROR("Could not obtain the context lock");
-		rc = NVM_ERR_UNKNOWN;
+		rc = NVM_ERR_CONTEXT;
 	}
 	else
 	{
@@ -342,7 +342,7 @@ int set_nvm_context_capabilities(const struct nvm_capabilities *p_capabilities)
 		if (!mutex_unlock(&g_context_lock))
 		{
 			COMMON_LOG_ERROR("Could not release the context lock.");
-			rc = NVM_ERR_UNKNOWN;
+			rc = NVM_ERR_CONTEXT;
 		}
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -353,13 +353,13 @@ int set_nvm_context_capabilities(const struct nvm_capabilities *p_capabilities)
 int get_nvm_context_device_count()
 {
 	COMMON_LOG_ENTRY();
-	int rc = NVM_ERR_UNKNOWN;
+	int rc = NVM_ERR_CONTEXT;
 
 	// lock
 	if (!mutex_lock(&g_context_lock))
 	{
 		COMMON_LOG_ERROR("Could not obtain the context lock");
-		rc = NVM_ERR_UNKNOWN;
+		rc = NVM_ERR_CONTEXT;
 	}
 	else
 	{
@@ -372,7 +372,7 @@ int get_nvm_context_device_count()
 		if (!mutex_unlock(&g_context_lock))
 		{
 			COMMON_LOG_ERROR("Could not release the context lock.");
-			rc = NVM_ERR_UNKNOWN;
+			rc = NVM_ERR_CONTEXT;
 		}
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -382,55 +382,54 @@ int get_nvm_context_device_count()
 int get_nvm_context_devices(struct device_discovery *p_devices, const int dev_count)
 {
 	COMMON_LOG_ENTRY();
-	int rc = NVM_ERR_UNKNOWN;
+	int rc = NVM_ERR_CONTEXT;
 
+	if (p_context == NULL || p_context->device_count < 0 || p_context->p_devices == NULL)
+	{
+		rc = NVM_ERR_CONTEXT;
+	}
+	else if (dev_count < p_context->device_count)
+	{
+		rc = NVM_ERR_ARRAYTOOSMALL;
+	}
 	// lock
-	if (!mutex_lock(&g_context_lock))
+	else if (!mutex_lock(&g_context_lock))
 	{
 		COMMON_LOG_ERROR("Could not obtain the context lock");
-		rc = NVM_ERR_UNKNOWN;
+		rc = NVM_ERR_CONTEXT;
 	}
+
 	else
 	{
-		if (p_context && p_context->device_count > 0 && p_context->p_devices)
-		{
-			int copy_count = dev_count;
-			rc = copy_count;
-			if (dev_count > p_context->device_count)
-			{
-				copy_count = p_context->device_count;
-				rc = copy_count;
-			}
-			else if (dev_count < p_context->device_count)
-			{
-				rc = NVM_ERR_ARRAYTOOSMALL;
-			}
-			memset(p_devices, 0, copy_count * sizeof (struct device_discovery));
 
-			for (int i = 0; i < copy_count; i++)
+		int copy_count = p_context->device_count;
+		rc = copy_count;
+
+		memset(p_devices, 0, copy_count * sizeof (struct device_discovery));
+
+		for (int i = 0; i < copy_count; i++)
+		{
+			if (p_context->p_devices[i].p_device_discovery)
 			{
-				if (p_context->p_devices[i].p_device_discovery)
-				{
-					memmove(&p_devices[i], p_context->p_devices[i].p_device_discovery,
-							sizeof (struct device_discovery));
-				}
-				else
-				{
-					// pointers are invalid, clear the device cache and quit
-					free_device_list();
-					rc = NVM_ERR_UNKNOWN;
-					break;
-				}
+				memmove(&p_devices[i], p_context->p_devices[i].p_device_discovery,
+						sizeof (struct device_discovery));
+			}
+			else
+			{
+				// pointers are invalid, clear the device cache and quit
+				free_device_list();
+				rc = NVM_ERR_CONTEXT;
+				break;
 			}
 		}
-
 		// unlock
 		if (!mutex_unlock(&g_context_lock))
 		{
 			COMMON_LOG_ERROR("Could not release the context lock.");
-			rc = NVM_ERR_UNKNOWN;
+			rc = NVM_ERR_CONTEXT;
 		}
 	}
+
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
@@ -438,13 +437,13 @@ int get_nvm_context_devices(struct device_discovery *p_devices, const int dev_co
 int set_nvm_context_devices(const struct device_discovery *p_devices, const int dev_count)
 {
 	COMMON_LOG_ENTRY();
-	int rc = NVM_ERR_UNKNOWN;
+	int rc = NVM_ERR_CONTEXT;
 
 	// lock
 	if (!mutex_lock(&g_context_lock))
 	{
 		COMMON_LOG_ERROR("Could not obtain the context lock");
-		rc = NVM_ERR_UNKNOWN;
+		rc = NVM_ERR_CONTEXT;
 	}
 	else
 	{
@@ -492,7 +491,7 @@ int set_nvm_context_devices(const struct device_discovery *p_devices, const int 
 		if (!mutex_unlock(&g_context_lock))
 		{
 			COMMON_LOG_ERROR("Could not release the context lock.");
-			rc = NVM_ERR_UNKNOWN;
+			rc = NVM_ERR_CONTEXT;
 		}
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -567,13 +566,13 @@ void invalidate_device_pcd(const NVM_UID device_uid)
 int get_nvm_context_device_details(const NVM_UID device_uid, struct device_details *p_details)
 {
 	COMMON_LOG_ENTRY();
-	int rc = NVM_ERR_UNKNOWN;
+	int rc = NVM_ERR_CONTEXT;
 
 	// lock
 	if (!mutex_lock(&g_context_lock))
 	{
 		COMMON_LOG_ERROR("Could not obtain the context lock");
-		rc = NVM_ERR_UNKNOWN;
+		rc = NVM_ERR_CONTEXT;
 	}
 	else
 	{
@@ -601,7 +600,7 @@ int get_nvm_context_device_details(const NVM_UID device_uid, struct device_detai
 		if (!mutex_unlock(&g_context_lock))
 		{
 			COMMON_LOG_ERROR("Could not release the context lock.");
-			rc = NVM_ERR_UNKNOWN;
+			rc = NVM_ERR_CONTEXT;
 		}
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -612,13 +611,13 @@ int set_nvm_context_device_details(const NVM_UID device_uid,
 		const struct device_details *p_details)
 {
 	COMMON_LOG_ENTRY();
-	int rc = NVM_ERR_UNKNOWN;
+	int rc = NVM_ERR_CONTEXT;
 
 	// lock
 	if (!mutex_lock(&g_context_lock))
 	{
 		COMMON_LOG_ERROR("Could not obtain the context lock");
-		rc = NVM_ERR_UNKNOWN;
+		rc = NVM_ERR_CONTEXT;
 	}
 	else
 	{
@@ -659,7 +658,7 @@ int set_nvm_context_device_details(const NVM_UID device_uid,
 		if (!mutex_unlock(&g_context_lock))
 		{
 			COMMON_LOG_ERROR("Could not release the context lock.");
-			rc = NVM_ERR_UNKNOWN;
+			rc = NVM_ERR_CONTEXT;
 		}
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -670,13 +669,13 @@ int get_nvm_context_device_pcd(const NVM_UID device_uid,
 		struct platform_config_data **pp_pcd, NVM_SIZE *p_pcd_size)
 {
 	COMMON_LOG_ENTRY();
-	int rc = NVM_ERR_UNKNOWN;
+	int rc = NVM_ERR_CONTEXT;
 
 	// lock
 	if (!mutex_lock(&g_context_lock))
 	{
 		COMMON_LOG_ERROR("Could not obtain the context lock");
-		rc = NVM_ERR_UNKNOWN;
+		rc = NVM_ERR_CONTEXT;
 	}
 	else
 	{
@@ -714,7 +713,7 @@ int get_nvm_context_device_pcd(const NVM_UID device_uid,
 		if (!mutex_unlock(&g_context_lock))
 		{
 			COMMON_LOG_ERROR("Could not release the context lock.");
-			rc = NVM_ERR_UNKNOWN;
+			rc = NVM_ERR_CONTEXT;
 		}
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -725,13 +724,13 @@ int set_nvm_context_device_pcd(const NVM_UID device_uid,
 		const struct platform_config_data *p_pcd, const NVM_SIZE pcd_size)
 {
 	COMMON_LOG_ENTRY();
-	int rc = NVM_ERR_UNKNOWN;
+	int rc = NVM_ERR_CONTEXT;
 
 	// lock
 	if (!mutex_lock(&g_context_lock))
 	{
 		COMMON_LOG_ERROR("Could not obtain the context lock");
-		rc = NVM_ERR_UNKNOWN;
+		rc = NVM_ERR_CONTEXT;
 	}
 	else
 	{
@@ -772,7 +771,7 @@ int set_nvm_context_device_pcd(const NVM_UID device_uid,
 		if (!mutex_unlock(&g_context_lock))
 		{
 			COMMON_LOG_ERROR("Could not release the context lock.");
-			rc = NVM_ERR_UNKNOWN;
+			rc = NVM_ERR_CONTEXT;
 		}
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -803,13 +802,13 @@ void invalidate_pools()
 int get_nvm_context_pool_count()
 {
 	COMMON_LOG_ENTRY();
-	int rc = NVM_ERR_UNKNOWN;
+	int rc = NVM_ERR_CONTEXT;
 
 	// lock
 	if (!mutex_lock(&g_context_lock))
 	{
 		COMMON_LOG_ERROR("Could not obtain the context lock");
-		rc = NVM_ERR_UNKNOWN;
+		rc = NVM_ERR_CONTEXT;
 	}
 	else
 	{
@@ -822,7 +821,7 @@ int get_nvm_context_pool_count()
 		if (!mutex_unlock(&g_context_lock))
 		{
 			COMMON_LOG_ERROR("Could not release the context lock.");
-			rc = NVM_ERR_UNKNOWN;
+			rc = NVM_ERR_CONTEXT;
 		}
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -832,13 +831,13 @@ int get_nvm_context_pool_count()
 int get_nvm_context_pools(struct pool *p_pools, const int pool_count)
 {
 	COMMON_LOG_ENTRY();
-	int rc = NVM_ERR_UNKNOWN;
+	int rc = NVM_ERR_CONTEXT;
 
 	// lock
 	if (!mutex_lock(&g_context_lock))
 	{
 		COMMON_LOG_ERROR("Could not obtain the context lock");
-		rc = NVM_ERR_UNKNOWN;
+		rc = NVM_ERR_CONTEXT;
 	}
 	else
 	{
@@ -863,7 +862,7 @@ int get_nvm_context_pools(struct pool *p_pools, const int pool_count)
 		if (!mutex_unlock(&g_context_lock))
 		{
 			COMMON_LOG_ERROR("Could not release the context lock.");
-			rc = NVM_ERR_UNKNOWN;
+			rc = NVM_ERR_CONTEXT;
 		}
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -873,13 +872,13 @@ int get_nvm_context_pools(struct pool *p_pools, const int pool_count)
 int set_nvm_context_pools(const struct pool *p_pools, const int pool_count)
 {
 	COMMON_LOG_ENTRY();
-	int rc = NVM_ERR_UNKNOWN;
+	int rc = NVM_ERR_CONTEXT;
 
 	// lock
 	if (!mutex_lock(&g_context_lock))
 	{
 		COMMON_LOG_ERROR("Could not obtain the context lock");
-		rc = NVM_ERR_UNKNOWN;
+		rc = NVM_ERR_CONTEXT;
 	}
 	else
 	{
@@ -907,7 +906,7 @@ int set_nvm_context_pools(const struct pool *p_pools, const int pool_count)
 		if (!mutex_unlock(&g_context_lock))
 		{
 			COMMON_LOG_ERROR("Could not release the context lock.");
-			rc = NVM_ERR_UNKNOWN;
+			rc = NVM_ERR_CONTEXT;
 		}
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -918,13 +917,13 @@ int set_nvm_context_pools(const struct pool *p_pools, const int pool_count)
 int get_nvm_context_pool(const NVM_UID pool_uid, struct pool *p_pool)
 {
 	COMMON_LOG_ENTRY();
-	int rc = NVM_ERR_UNKNOWN;
+	int rc = NVM_ERR_CONTEXT;
 
 	// lock
 	if (!mutex_lock(&g_context_lock))
 	{
 		COMMON_LOG_ERROR("Could not obtain the context lock");
-		rc = NVM_ERR_UNKNOWN;
+		rc = NVM_ERR_CONTEXT;
 	}
 	else
 	{
@@ -947,7 +946,7 @@ int get_nvm_context_pool(const NVM_UID pool_uid, struct pool *p_pool)
 		if (!mutex_unlock(&g_context_lock))
 		{
 			COMMON_LOG_ERROR("Could not release the context lock.");
-			rc = NVM_ERR_UNKNOWN;
+			rc = NVM_ERR_CONTEXT;
 		}
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -979,13 +978,13 @@ void invalidate_namespaces()
 int get_nvm_context_namespace_count()
 {
 	COMMON_LOG_ENTRY();
-	int rc = NVM_ERR_UNKNOWN;
+	int rc = NVM_ERR_CONTEXT;
 
 	// lock
 	if (!mutex_lock(&g_context_lock))
 	{
 		COMMON_LOG_ERROR("Could not obtain the context lock");
-		rc = NVM_ERR_UNKNOWN;
+		rc = NVM_ERR_CONTEXT;
 	}
 	else
 	{
@@ -998,7 +997,7 @@ int get_nvm_context_namespace_count()
 		if (!mutex_unlock(&g_context_lock))
 		{
 			COMMON_LOG_ERROR("Could not release the context lock.");
-			rc = NVM_ERR_UNKNOWN;
+			rc = NVM_ERR_CONTEXT;
 		}
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -1009,13 +1008,13 @@ int get_nvm_context_namespaces(struct namespace_discovery *p_namespaces,
 		const int namespace_count)
 {
 	COMMON_LOG_ENTRY();
-	int rc = NVM_ERR_UNKNOWN;
+	int rc = NVM_ERR_CONTEXT;
 
 	// lock
 	if (!mutex_lock(&g_context_lock))
 	{
 		COMMON_LOG_ERROR("Could not obtain the context lock");
-		rc = NVM_ERR_UNKNOWN;
+		rc = NVM_ERR_CONTEXT;
 	}
 	else
 	{
@@ -1045,7 +1044,7 @@ int get_nvm_context_namespaces(struct namespace_discovery *p_namespaces,
 		if (!mutex_unlock(&g_context_lock))
 		{
 			COMMON_LOG_ERROR("Could not release the context lock.");
-			rc = NVM_ERR_UNKNOWN;
+			rc = NVM_ERR_CONTEXT;
 		}
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -1056,13 +1055,13 @@ int set_nvm_context_namespaces(const struct namespace_discovery *p_namespaces,
 		const int namespace_count)
 {
 	COMMON_LOG_ENTRY();
-	int rc = NVM_ERR_UNKNOWN;
+	int rc = NVM_ERR_CONTEXT;
 
 	// lock
 	if (!mutex_lock(&g_context_lock))
 	{
 		COMMON_LOG_ERROR("Could not obtain the context lock");
-		rc = NVM_ERR_UNKNOWN;
+		rc = NVM_ERR_CONTEXT;
 	}
 	else
 	{
@@ -1109,7 +1108,7 @@ int set_nvm_context_namespaces(const struct namespace_discovery *p_namespaces,
 		if (!mutex_unlock(&g_context_lock))
 		{
 			COMMON_LOG_ERROR("Could not release the context lock.");
-			rc = NVM_ERR_UNKNOWN;
+			rc = NVM_ERR_CONTEXT;
 		}
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -1120,13 +1119,13 @@ int get_nvm_context_namespace_details(const NVM_UID namespace_uid,
 		struct namespace_details *p_details)
 {
 	COMMON_LOG_ENTRY();
-	int rc = NVM_ERR_UNKNOWN;
+	int rc = NVM_ERR_CONTEXT;
 
 	// lock
 	if (!mutex_lock(&g_context_lock))
 	{
 		COMMON_LOG_ERROR("Could not obtain the context lock");
-		rc = NVM_ERR_UNKNOWN;
+		rc = NVM_ERR_CONTEXT;
 	}
 	else
 	{
@@ -1153,7 +1152,7 @@ int get_nvm_context_namespace_details(const NVM_UID namespace_uid,
 		if (!mutex_unlock(&g_context_lock))
 		{
 			COMMON_LOG_ERROR("Could not release the context lock.");
-			rc = NVM_ERR_UNKNOWN;
+			rc = NVM_ERR_CONTEXT;
 		}
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -1164,13 +1163,13 @@ int set_nvm_context_namespace_details(const NVM_UID namespace_uid,
 		const struct namespace_details *p_details)
 {
 	COMMON_LOG_ENTRY();
-	int rc = NVM_ERR_UNKNOWN;
+	int rc = NVM_ERR_CONTEXT;
 
 	// lock
 	if (!mutex_lock(&g_context_lock))
 	{
 		COMMON_LOG_ERROR("Could not obtain the context lock");
-		rc = NVM_ERR_UNKNOWN;
+		rc = NVM_ERR_CONTEXT;
 	}
 	else
 	{
@@ -1211,7 +1210,7 @@ int set_nvm_context_namespace_details(const NVM_UID namespace_uid,
 		if (!mutex_unlock(&g_context_lock))
 		{
 			COMMON_LOG_ERROR("Could not release the context lock.");
-			rc = NVM_ERR_UNKNOWN;
+			rc = NVM_ERR_CONTEXT;
 		}
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -1222,13 +1221,13 @@ int set_nvm_context_namespace_details(const NVM_UID namespace_uid,
 int get_nvm_context_pcd_namespace_count()
 {
 	COMMON_LOG_ENTRY();
-	int rc = NVM_ERR_UNKNOWN;
+	int rc = NVM_ERR_CONTEXT;
 
 	// lock
 	if (!mutex_lock(&g_context_lock))
 	{
 		COMMON_LOG_ERROR("Could not obtain the context lock");
-		rc = NVM_ERR_UNKNOWN;
+		rc = NVM_ERR_CONTEXT;
 	}
 	else
 	{
@@ -1241,7 +1240,7 @@ int get_nvm_context_pcd_namespace_count()
 		if (!mutex_unlock(&g_context_lock))
 		{
 			COMMON_LOG_ERROR("Could not release the context lock.");
-			rc = NVM_ERR_UNKNOWN;
+			rc = NVM_ERR_CONTEXT;
 		}
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -1252,13 +1251,13 @@ int get_nvm_context_pcd_namespaces(int pcd_nscount,
 		struct nvm_namespace_details *p_pcd_nslist)
 {
 	COMMON_LOG_ENTRY();
-	int rc = NVM_ERR_UNKNOWN;
+	int rc = NVM_ERR_CONTEXT;
 
 	// lock
 	if (!mutex_lock(&g_context_lock))
 	{
 		COMMON_LOG_ERROR("Could not obtain the context lock");
-		rc = NVM_ERR_UNKNOWN;
+		rc = NVM_ERR_CONTEXT;
 	}
 	else
 	{
@@ -1288,7 +1287,7 @@ int get_nvm_context_pcd_namespaces(int pcd_nscount,
 		if (!mutex_unlock(&g_context_lock))
 		{
 			COMMON_LOG_ERROR("Could not release the context lock.");
-			rc = NVM_ERR_UNKNOWN;
+			rc = NVM_ERR_CONTEXT;
 		}
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -1299,13 +1298,13 @@ int set_nvm_context_pcd_namespaces(const int pcd_nscount,
 	const struct nvm_namespace_details *p_pcd_nslist)
 {
 	COMMON_LOG_ENTRY();
-	int rc = NVM_ERR_UNKNOWN;
+	int rc = NVM_ERR_CONTEXT;
 
 	// lock
 	if (!mutex_lock(&g_context_lock))
 	{
 		COMMON_LOG_ERROR("Could not obtain the context lock");
-		rc = NVM_ERR_UNKNOWN;
+		rc = NVM_ERR_CONTEXT;
 	}
 	else
 	{
@@ -1339,7 +1338,7 @@ int set_nvm_context_pcd_namespaces(const int pcd_nscount,
 		if (!mutex_unlock(&g_context_lock))
 		{
 			COMMON_LOG_ERROR("Could not release the context lock.");
-			rc = NVM_ERR_UNKNOWN;
+			rc = NVM_ERR_CONTEXT;
 		}
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -1351,13 +1350,13 @@ int set_nvm_context_pcd_namespaces(const int pcd_nscount,
 int get_nvm_context_nfit_size()
 {
 	COMMON_LOG_ENTRY();
-	int rc = NVM_ERR_UNKNOWN;
+	int rc = NVM_ERR_CONTEXT;
 
 	// lock
 	if (!mutex_lock(&g_context_lock))
 	{
 		COMMON_LOG_ERROR("Could not obtain the context lock");
-		rc = NVM_ERR_UNKNOWN;
+		rc = NVM_ERR_CONTEXT;
 	}
 	else
 	{
@@ -1370,7 +1369,7 @@ int get_nvm_context_nfit_size()
 		if (!mutex_unlock(&g_context_lock))
 		{
 			COMMON_LOG_ERROR("Could not release the context lock.");
-			rc = NVM_ERR_UNKNOWN;
+			rc = NVM_ERR_CONTEXT;
 		}
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -1380,7 +1379,7 @@ int get_nvm_context_nfit_size()
 int get_nvm_context_nfit(int nfit_size, struct parsed_nfit *p_nfit)
 {
 	COMMON_LOG_ENTRY();
-	int rc = NVM_ERR_UNKNOWN;
+	int rc = NVM_ERR_CONTEXT;
 
 	if (nfit_size && p_nfit)
 	{
@@ -1388,7 +1387,7 @@ int get_nvm_context_nfit(int nfit_size, struct parsed_nfit *p_nfit)
 		if (!mutex_lock(&g_context_lock))
 		{
 			COMMON_LOG_ERROR("Could not obtain the context lock");
-			rc = NVM_ERR_UNKNOWN;
+			rc = NVM_ERR_CONTEXT;
 		}
 		else
 		{
@@ -1405,7 +1404,7 @@ int get_nvm_context_nfit(int nfit_size, struct parsed_nfit *p_nfit)
 			if (!mutex_unlock(&g_context_lock))
 			{
 				COMMON_LOG_ERROR("Could not release the context lock.");
-				rc = NVM_ERR_UNKNOWN;
+				rc = NVM_ERR_CONTEXT;
 			}
 		}
 	}
@@ -1416,7 +1415,7 @@ int get_nvm_context_nfit(int nfit_size, struct parsed_nfit *p_nfit)
 int set_nvm_context_nfit(int nfit_size, const struct parsed_nfit *p_nfit)
 {
 	COMMON_LOG_ENTRY();
-	int rc = NVM_ERR_UNKNOWN;
+	int rc = NVM_ERR_CONTEXT;
 
 	if (nfit_size && p_nfit)
 	{
@@ -1424,7 +1423,7 @@ int set_nvm_context_nfit(int nfit_size, const struct parsed_nfit *p_nfit)
 		if (!mutex_lock(&g_context_lock))
 		{
 			COMMON_LOG_ERROR("Could not obtain the context lock");
-			rc = NVM_ERR_UNKNOWN;
+			rc = NVM_ERR_CONTEXT;
 		}
 		else
 		{
@@ -1451,7 +1450,7 @@ int set_nvm_context_nfit(int nfit_size, const struct parsed_nfit *p_nfit)
 			if (!mutex_unlock(&g_context_lock))
 			{
 				COMMON_LOG_ERROR("Could not release the context lock.");
-				rc = NVM_ERR_UNKNOWN;
+				rc = NVM_ERR_CONTEXT;
 			}
 		}
 	}

@@ -49,6 +49,7 @@
 #define	NVM_PROCESSOR_LEN	256 // Length of host processor string
 #define	NVM_VERSION_LEN	25  // Length of version string
 #define	NVM_ERROR_LEN	256 // Length of return code description
+#define	NVM_MAX_HANDLE_LEN 11 // Max length of a uint32 in decimal + '\0'
 #define	NVM_MAX_UID_LEN	37 // Max Length of Unique ID
 #define	NVM_SOCKET_MANUFACTURER_LEN	16 // Socket manufacturer string length
 #define	NVM_MANUFACTURER_LEN	2 // Number of bytes in the manufacturer ID
@@ -233,7 +234,8 @@ enum return_code
 	NVM_ERR_NAMESPACEENABLEFAILED = -59, // The driver failed to enable all the namespaces
 										// after device unlock.
 	NVM_ERR_NOFADATAAVAILABLE = -60, // No device support data available from AEP DIMM
-	NVM_ERR_INTERLEAVESET = -61 // Something is wrong with the interleaved set
+	NVM_ERR_INTERLEAVESET = -61, // Something is wrong with the interleaved set
+	NVM_ERR_CONTEXT = -62		// Some issue with the shared context
 };
 
 /*

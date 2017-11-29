@@ -62,10 +62,11 @@ class NVM_API ShowCommandUtilities
 		static std::string getFormattedEvent(const event &event);
 		static std::string getFormattedEventList(const std::vector<event> &events);
 
-		static std::vector<core::device::Device> getAllDevicesFromList(struct device_discovery *devices, int device_cnt, std::string device_list);
-		static int findDeviceInDiscovery(std::string dev_uid, struct device_discovery *devices, int device_cnt);
-		static std::vector<core::device::Device> getAllDevices(struct device_discovery *devices, int device_cnt);
-		static std::string getDeviceUid(std::string id, struct device_discovery *devices, int device_cnt);
+		static void setUserPreferenceDimmIdToHandle();
+		static void setUserPreferenceDimmIdToUid();
+		static bool isUserPreferenceDimmIdUid();
+		static std::vector<core::device::Device> populateDevicesFromDimmsString(
+				std::string dimms_string, bool populate_all_device_properties);
 		static std::vector<std::string> split(const std::string &s, char delim);
 		template<typename Out>
 		static void split(const std::string &s, char delim, Out result);
@@ -75,6 +76,7 @@ class NVM_API ShowCommandUtilities
 				core::device::DeviceCollection &devices);
 		static std::string getFirstBadSocketId(const core::StringList &socketIds,
 				core::device::DeviceCollection &devices);
+		static bool isUid(std::string id);
 };
 
 }

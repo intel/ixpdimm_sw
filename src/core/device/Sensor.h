@@ -86,7 +86,6 @@ namespace core
 				Sensor();
 				Sensor(const struct sensor sensor);
 				virtual ~Sensor();
-				virtual std::string GetDeviceUid();
 				virtual std::string GetReading();
 				virtual std::string GetName();
 				virtual std::string GetState();

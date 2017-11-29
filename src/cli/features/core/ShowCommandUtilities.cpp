@@ -34,6 +34,9 @@
 #include <libinvm-cli/SyntaxErrorMissingValueResult.h>
 #include <persistence/lib_persistence.h>
 #include <persistence/config_settings.h>
+#include <exception/NvmExceptionLibError.h>
+#include <exception/NvmExceptionBadTarget.h>
+#include <exception/NvmExceptionNotManageable.h>
 
 namespace cli
 {
@@ -216,17 +219,7 @@ std::string ShowCommandUtilities::getDimmIdFromDeviceUidAndHandle(const std::str
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	std::stringstream result;
-	bool useHandle = true;
-	char value[CONFIG_VALUE_LEN];
-	if (get_config_value(SQL_KEY_CLI_DIMM_ID, value) == COMMON_SUCCESS)
-	{
-		// switch to uid
-		if (s_strncmpi("UID", value, strlen("UID")) == 0)
-		{
-			useHandle = false;
-		}
-	}
-
+	bool useHandle = !ShowCommandUtilities::isUserPreferenceDimmIdUid();
 	if (useHandle)
 	{
 		result << handle;
@@ -255,48 +248,6 @@ std::vector<std::string> ShowCommandUtilities::split(const std::string &s, char 
 	return elems;
 }
 
-std::string ShowCommandUtilities::getDeviceUid(std::string id, struct device_discovery *devices, int device_cnt)
-{
-	if (id.find('-', 0) != std::string::npos)
-		return id;
-
-	std::string invalidUid("invalid");
-	for (int i = 0; i < device_cnt; ++i)
-	{
-		std::ostringstream s;
-		s << devices[i].device_handle.handle;
-		std::string converted(s.str());
-
-		if (id.compare(converted) == 0)
-			return devices[i].uid;
-	}
-	return invalidUid;
-}
-
-std::vector<core::device::Device> ShowCommandUtilities::getAllDevices(struct device_discovery *devices, int device_cnt)
-{
-	std::vector<core::device::Device> device_list;
-	core::NvmLibrary &lib = core::NvmLibrary::getNvmLibrary();
-	for (int i = 0; i < device_cnt; ++i)
-	{
-		core::device::Device dev(lib, devices[i]);
-		device_list.push_back(dev);
-	}
-	return device_list;
-}
-
-int ShowCommandUtilities::findDeviceInDiscovery(std::string dev_uid, struct device_discovery *devices, int device_cnt)
-{
-	for (int i = 0; i < device_cnt; ++i)
-	{
-		if (dev_uid.compare(devices[i].uid) == 0)
-		{
-			return i;
-		}
-	}
-	return -1;
-}
-
 std::string ShowCommandUtilities::listToString(std::vector<std::string> list)
 {
 	std::ostringstream final_str;
@@ -311,25 +262,154 @@ std::string ShowCommandUtilities::listToString(std::vector<std::string> list)
 	return final_str.str();
 }
 
-std::vector<core::device::Device> ShowCommandUtilities::getAllDevicesFromList(struct device_discovery *devices, int device_cnt, std::string device_list)
+// Is the user preferences setting for the printout style for the dimm identifier
+// set to UID? (If no, it's set to the default of HANDLE)
+bool ShowCommandUtilities::isUserPreferenceDimmIdUid()
 {
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	char value[CONFIG_VALUE_LEN];
+	int rc;
+	if ((rc = get_config_value(SQL_KEY_CLI_DIMM_ID, value)) == COMMON_SUCCESS)
+	{
+		if (s_strncmpi("UID", value, strlen("UID")) == 0)
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	else
+	{
+		throw wbem::exception::NvmExceptionLibError(rc);
+	}
+}
+
+
+
+bool ShowCommandUtilities::isUid(std::string id)
+{
+	return id.find('-') != std::string::npos;
+}
+
+
+/*
+ * Given a string of comma-separated dimm identifiers (UID or handle), initialize
+ * and return the corresponding C++ Devices.
+ *
+ * populate_all_device_properties indicates whether to call nvm_get_devices (TRUE)
+ * or nvm_get_devices_nfit (FALSE) for the device discovery data.
+ *
+ * Returns a vector of Devices
+ */
+std::vector<core::device::Device> ShowCommandUtilities::populateDevicesFromDimmsString(
+		std::string dimms_string, bool populate_all_device_properties)
+{
+
+	//discover device topology
+	int dev_count = nvm_get_device_count();
+	if (dev_count < 0)
+	{
+		throw wbem::exception::NvmExceptionLibError(dev_count);
+	}
+	struct device_discovery devices[dev_count];
+	memset(devices, 0, dev_count * sizeof(struct device_discovery));
+
 	std::vector<core::device::Device> devs;
 	core::NvmLibrary &lib = core::NvmLibrary::getNvmLibrary();
-	std::vector<std::string> dev_uid_list;
-	dev_uid_list = split(device_list, ',');
+	std::vector<std::string> dimm_strings = split(dimms_string, ',');
 
-	for (std::vector<std::string>::const_iterator id = dev_uid_list.begin(); id != dev_uid_list.end(); ++id)
+	bool dimms_string_contains_uid = 0;
+	int rc;
+
+	// Determine if a dimm UID or a handle is used as a device identifier.
+	// A handle doesn't need the additional DSM calls that generating a UID
+	// requires
+	std::vector<std::string>::const_iterator id;
+	for (id = dimm_strings.begin(); id != dimm_strings.end(); ++id)
 	{
-		std::string dev_id_unkown_format = *id;
-		std::string dev_uid = getDeviceUid(dev_id_unkown_format, devices, device_cnt);
-		int devIdx = findDeviceInDiscovery(dev_uid, devices, device_cnt);
-		if (devIdx >= 0)
+		// Determine if there are any UIDs in the list
+		if (ShowCommandUtilities::isUid(*id))
 		{
-			core::device::Device dev(lib, devices[devIdx]);
+			dimms_string_contains_uid = 1;
+			break;
+		}
+	}
+
+	if (dimms_string_contains_uid || populate_all_device_properties ||
+			ShowCommandUtilities::isUserPreferenceDimmIdUid())
+	{
+		rc = nvm_get_devices(devices, dev_count);
+	}
+	else
+	{
+		rc = nvm_get_devices_nfit(devices, dev_count);
+	}
+	if (rc < NVM_SUCCESS)
+	{
+		throw wbem::exception::NvmExceptionLibError(rc);
+	}
+
+
+	// Return all dimms if none are specified
+	if (dimm_strings.empty())
+	{
+		for (int i = 0; i < dev_count; i++)
+		{
+			core::device::Device dev(lib, devices[i]);
 			devs.push_back(dev);
 		}
+		return devs;
+	}
+
+	// Get the handle from each of the identified dimms, whether they used
+	// UID or handle.
+	// We have enough properties to identify a UID because of the
+	// pre-parsing step using dimmsStringContainsUid above.
+	NVM_UINT32 handle;
+	bool idIsUid;
+	int i;
+	for (id = dimm_strings.begin();	id != dimm_strings.end(); ++id)
+	{
+		// Maybe save some work by pre-computing these values
+		idIsUid = ShowCommandUtilities::isUid(*id);
+		handle = (!idIsUid) ? atoi((*id).c_str()) : 0;
+
+		// Compare ids as appropriate
+		for (i = 0; i < dev_count; i++)
+		{
+			// Match the handle or UID
+			if ((!idIsUid && handle == devices[i].device_handle.handle) ||
+				(idIsUid && (*id).compare(devices[i].uid) == 0))
+			{
+				// We matched a handle or uid, create a C++ device
+				core::device::Device dev(lib, devices[i]);
+
+				// Raise an exception if a specified dimm is unmanageable
+				// Note: In the other cases, we skip over the dimm
+				if (!dev.isManageable())
+				{
+					throw wbem::exception::NvmExceptionNotManageable((*id).c_str());
+				}
+
+				devs.push_back(dev);
+				break;
+			}
+		}
+		// If we never found a matching UID / handle for the ID, notify the user
+		if (i == dev_count)
+		{
+			// Will get converted to a better-named error by NvmExceptionToResult
+			throw wbem::exception::NvmExceptionBadTarget("-dimm", (*id).c_str());
+		}
+
 	}
 	return devs;
 }
+
+//namespace cli
 }
+//namespace nvmcli
 }
