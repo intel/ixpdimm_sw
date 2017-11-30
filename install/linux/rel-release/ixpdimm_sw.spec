@@ -11,7 +11,7 @@ Group: Applications/System
 URL: https://01.org/ixpdimm-sw
 Source: https://github.com/01org/ixpdimm_sw/releases/download/v%{version}/%{name}-%{version}.tar.gz
 Requires: ndctl-libs >= 58.2
-Requires: invm-frameworks >= 1.0.0.2007
+Requires: invm-frameworks%{?_isa} >= %{version}-%{release}
 ExclusiveArch: x86_64
 
 BuildRequires: pkgconfig(libkmod)
@@ -87,7 +87,6 @@ A Command Line Interface (CLI) application for configuring and
 managing IXPDIMMs from the command line.
 
 %package -n invm-frameworks
-Version:	%{invm_framework_build_version}
 Summary:        Library files for invm-frameworks
 License:        BSD
 Group:          Development/Libraries
@@ -102,11 +101,10 @@ functionality, storage command line interface (CLI) applications, storage
 common information model (CIM) providers.
 
 %package -n invm-frameworks-devel
-Version:	%{invm_framework_build_version}
 Summary:        Development files for invm-frameworks-devel
 License:        BSD
 Group:          Development/Libraries
-Requires:       invm-frameworks%{?_isa} = %{invm_framework_build_version}-%{release}
+Requires:       invm-frameworks%{?_isa} = %{version}-%{release}
 #The following packages are deprecated and now provided by invm-frameworks-devel
 Conflicts:      libinvm-cim-devel
 Conflicts:      libinvm-cli-devel
@@ -116,10 +114,8 @@ Conflicts:      libinvm-i18n-devel
 The invm-frameworks-devel package contains header files for
 developing applications that use invm-frameworks.
 
-Version: %{build_version}
-
 %build
-%cmake -DBUILDNUM=%{build_version} -DRELEASE=ON -DRPM_BUILD=ON -DLINUX_PRODUCT_NAME=%{name} -DRPM_ROOT=%{buildroot} -DLIB_DIR=%{_libdir} -DINCLUDE_DIR=%{_includedir} -DBIN_DIR=%{_bindir} -DDATADIR=%{_sharedstatedir} -DUNIT_DIR=%{_unitdir} -DSYSCONF_DIR=%{_sysconfdir} -DMANPAGE_DIR=%{_mandir} -DCFLAGS_EXTERNAL="%{?optflags}"
+%cmake -DBUILDNUM=%{version} -DRELEASE=ON -DRPM_BUILD=ON -DLINUX_PRODUCT_NAME=%{name} -DRPM_ROOT=%{buildroot} -DLIB_DIR=%{_libdir} -DINCLUDE_DIR=%{_includedir} -DBIN_DIR=%{_bindir} -DDATADIR=%{_sharedstatedir} -DUNIT_DIR=%{_unitdir} -DSYSCONF_DIR=%{_sysconfdir} -DMANPAGE_DIR=%{_mandir} -DCFLAGS_EXTERNAL="%{?optflags}"
 make -f Makefile %{?_smp_mflags}
 
 %install
@@ -179,10 +175,6 @@ then
         systemctl start sblim-sfcb.service &> /dev/null
     fi
 fi
-
-%post -n ixpdimm-monitor
-%systemd_post ixpdimm-monitor.service
-/bin/systemctl --no-reload enable ixpdimm-monitor.service &> /dev/null || :
 
 %post -n ixpdimm_sw -p /sbin/ldconfig
 
@@ -333,6 +325,14 @@ fi
 %postun -n invm-frameworks -p /sbin/ldconfig
 
 %changelog
+* Tue Nov 07 2017 Juston Li <juston.li@intel.com> - 01.00.00.2366-1
+- Release v01.00.00.2366
+
+* Mon Oct 30 2017 Juston Li <juston.li@intel.com> - 01.00.00.2352-1
+- Release v01.00.00.2352
+- don't autostart ixpdimm-monitor
+- use same version for invm-frameworks
+
 * Mon Oct 09 2017 Juston Li <juston.li@intel.com> - 01.00.00.2345-2
 - fix python requires and update changelog
 
