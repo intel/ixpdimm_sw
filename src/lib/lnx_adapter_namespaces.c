@@ -500,6 +500,10 @@ int get_namespace_details(
 					p_details->namespace_creation_id.interleave_setid =
 							ndctl_region_get_range_index(p_region);
 					p_details->block_size = ndctl_namespace_get_sector_size(p_namespace);
+					if (p_details->block_size == UINT_MAX) {
+						// linux treats block size of 0 as 512
+						p_details->block_size = AD_1_1_NAMESPACE_LABEL_DEFAULT_SECTOR_SIZE;
+					}
 					break;
 
 				default:
