@@ -987,15 +987,17 @@ int create_namespace(
 			{
 				if (p_settings->btt)
 				{
+					ndctl_namespace_set_enforce_mode(namespace, NDCTL_NS_MODE_SAFE);
 					if ((rc = create_btt_namespace(namespace, p_settings)) != NVM_SUCCESS)
 					{
 						COMMON_LOG_ERROR("Create BTT Failed");
 						ndctl_namespace_delete(namespace);
 					}
 				}
-				if (p_settings->memory_page_allocation !=
+				else if (p_settings->memory_page_allocation !=
 						NAMESPACE_MEMORY_PAGE_ALLOCATION_NONE)
 				{
+					ndctl_namespace_set_enforce_mode(namespace, NDCTL_NS_MODE_MEMORY);
 					if ((rc = create_pfn_namespace(namespace, p_settings)) != NVM_SUCCESS)
 					{
 						COMMON_LOG_ERROR("Create PFN Failed");
@@ -1005,6 +1007,7 @@ int create_namespace(
 				// enable the namespace if desired (only non-btt or non-pfn namespaces)
 				else if (p_settings->enabled == NAMESPACE_ENABLE_STATE_ENABLED)
 				{
+					ndctl_namespace_set_enforce_mode(namespace, NDCTL_NS_MODE_RAW);
 					rc = enable_namespace(namespace);
 				}
 			}
