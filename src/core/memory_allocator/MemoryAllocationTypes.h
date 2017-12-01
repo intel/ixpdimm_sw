@@ -49,7 +49,6 @@ namespace memory_allocator
 static const int REQUEST_DEFAULT_INTERLEAVE_FORMAT = -1;
 static const size_t MAX_APP_DIRECT_EXTENTS = 1;
 static const NVM_UINT16 DIMMS_PER_SOCKET = 6;
-static const NVM_UINT16 IMCS_PER_SOCKET = 2;
 static const NVM_UINT16 CHANNELS_PER_IMC = 3;
 static const NVM_UINT64 PM_RECOMMENDED_ALIGNMENT_GIB = 32;
 

@@ -48,21 +48,6 @@ core::memory_allocator::RulePartialSocketConfigured::~RulePartialSocketConfigure
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
 
-std::list<NVM_UINT16> core::memory_allocator::RulePartialSocketConfigured::getRequestedSockets(std::vector<Dimm> dimms)
-{
-	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	std::list<NVM_UINT16> socketList;
-	for (std::vector<Dimm>::const_iterator iter = dimms.begin(); iter != dimms.end(); iter++)
-	{
-		socketList.push_back((*iter).socket);
-	}
-
-	socketList.unique();
-
-	return socketList;
-}
-
 std::set<std::string> core::memory_allocator::RulePartialSocketConfigured::getSetOfAllDimmsOnSocket(
 		NVM_UINT16 socketId)
 {

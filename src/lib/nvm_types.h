@@ -76,6 +76,7 @@
 #define	NVM_NAMESPACE_PURPOSE_LEN	64 // Length of namespace purpose string
 #define	NVM_MAX_SOCKETS	4 // Maximum number of sockets per system
 #define	NVM_MAX_SOCKET_DIGIT_COUNT	4 // Maximum number of digits in a socket count
+#define NVM_MAX_IMCS_PER_SOCKET		2 // Number of iMCs in a socket - this will change with CR 1.5
 #define	NVM_MEMORY_CONTROLLER_CHANNEL_COUNT	3 // expected number of channels per iMC
 #define	NVM_MAX_INTERLEAVE_SETS_PER_DIMM	2 // Max number of App Direct interleave sets per DIMM
 #define	NVM_MAX_POOLS_PER_NAMESPACE	128 // Maximum number of pools for a namespace

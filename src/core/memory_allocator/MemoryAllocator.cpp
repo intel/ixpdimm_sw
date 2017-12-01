@@ -46,6 +46,7 @@
 #include "RulePartialSocketConfigured.h"
 #include "RuleDimmListInvalid.h"
 #include "RuleRejectLockedDimms.h"
+#include "RuleReject2LMGoalWhenAEPDimmsAreNotInBothIMCs.h"
 #include "PostLayoutAddressDecoderLimitCheck.h"
 
 core::memory_allocator::MemoryAllocator::MemoryAllocator(const struct nvm_capabilities &systemCapabilities,
@@ -143,6 +144,7 @@ void core::memory_allocator::MemoryAllocator::populateRequestRules()
 	m_requestRules.push_back(new RuleNamespacesExist(m_nvmLib));
 	m_requestRules.push_back(new RuleRejectLockedDimms(m_manageableDeviceDiscoveryList));
 	m_requestRules.push_back(new RulePartialSocketConfigured(m_manageableDeviceDiscoveryList, m_nvmLib));
+	m_requestRules.push_back(new RuleReject2LMGoalWhenAEPDimmsAreNotInBothIMCs(m_manageableDeviceDiscoveryList));
 }
 
 void core::memory_allocator::MemoryAllocator::populatePostLayoutChecks()

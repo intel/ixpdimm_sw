@@ -116,6 +116,7 @@ const std::string BAD_REQUEST_GOAL_ALREADY_EXISTS_STR = N_TR("A requested " NVM_
 		" already has a configuration goal. Delete the existing goal before creating a new one.");
 const std::string BAD_REQUEST_GOAL_BREAKS_CONFIG_STR = N_TR("The requested configuration would leave an " NVM_DIMM_NAME
 		" unconfigured or break an existing configuration.");
+const std::string BAD_REQUEST_GOAL_NO_AEP_DIMM_ON_IMC_STR = N_TR("No AEP DIMM in one of the IMCs, goal cannot be created in 2LM mode");
 const std::string BAD_REQUEST_MUST_DELETE_NAMESPACES_STR = N_TR("Existing namespaces must be deleted before this method can be executed.");
 const std::string BAD_REQUEST_NOT_SUPPORTED_STR = N_TR("The requested configuration is not supported.");
 const std::string BAD_REQUEST_DIMM_SECURITY_STATE = N_TR("This method is not supported by the device in its current security state.");

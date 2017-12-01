@@ -26,46 +26,39 @@
  */
 
 /*
- * Base class for rules that verify the validity of a MemoryAllocationRequest.
- * A failed rule is expected to throw some kind of descriptive exception.
+ * Rule that checks if user requested 2LM and not allow the goal to be created if there is no AEP DIMM in one of the IMCs
  */
 
-#ifndef _core_LOGIC_REQUESTRULE_H_
-#define _core_LOGIC_REQUESTRULE_H_
+#ifndef _core_RULEREJECT2LMGOALWHENAEPDIMMSARENOTINBOTHIMCS_H_
+#define _core_RULEREJECT2LMGOALWHENAEPDIMMSARENOTINBOTHIMCS_H_
 
-#include <list>
+#include <set>
+#include<list>
 #include <nvm_types.h>
-#include <core/memory_allocator/MemoryAllocationTypes.h>
-#include <core/memory_allocator/MemoryAllocationRequest.h>
+#include "RequestRule.h"
 
 namespace core
 {
 namespace memory_allocator
 {
 
-class NVM_API RequestRule
+
+class NVM_API RuleReject2LMGoalWhenAEPDimmsAreNotInBothIMCs: public RequestRule
 {
 	public:
-		virtual ~RequestRule() {}
+		RuleReject2LMGoalWhenAEPDimmsAreNotInBothIMCs(
+				const std::vector<struct device_discovery> manageableDevices);
+		virtual ~RuleReject2LMGoalWhenAEPDimmsAreNotInBothIMCs();
+		virtual void verify(const MemoryAllocationRequest &request);
 
-		virtual void verify(const MemoryAllocationRequest &request) = 0;
+	private:
+		const std::vector<struct device_discovery> m_manageableDeviceDiscoveryList;
 
-		std::list<NVM_UINT16> getRequestedSockets(std::vector<Dimm> dimms)
-		{
+		virtual NVM_BOOL checkSocketHasAEPDimmOnBothIMCs(NVM_UINT16 socketId);
 
-			std::list<NVM_UINT16> socketList;
-			for (std::vector<Dimm>::const_iterator iter = dimms.begin(); iter != dimms.end(); iter++)
-			{
-				socketList.push_back((*iter).socket);
-			}
-
-			socketList.unique();
-
-			return socketList;
-		}
 };
 
-} /* namespace memory_allocator */
-} /* namespace core */
+}
+}
 
-#endif /* _core_LOGIC_REQUESTRULE_H_ */
+#endif /* core_RULEREJECT2LMGOALWHENAEPDIMMSARENOTINBOTHIMCS_H_ */

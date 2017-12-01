@@ -148,7 +148,7 @@ bool InterleaveableDimmSetBuilder::dimmsHaveValidChannelIds()
 	bool valid = true;
 
 	// Zero-indexed channel IDs iterating over both iMCs
-	const size_t maxChannelId = IMCS_PER_SOCKET * CHANNELS_PER_IMC - 1;
+	const size_t maxChannelId = NVM_MAX_IMCS_PER_SOCKET * CHANNELS_PER_IMC - 1;
 	std::map<NVM_UINT16, bool> socketsFound;
 	for (std::vector<Dimm>::const_iterator dimm = m_dimms.begin();
 			dimm != m_dimms.end(); dimm++)

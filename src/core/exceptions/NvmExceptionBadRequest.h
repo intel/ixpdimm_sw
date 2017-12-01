@@ -168,6 +168,14 @@ class NvmExceptionBadRequestDoesntContainRequiredDimms : public NvmExceptionBadR
 		{}
 };
 
+class NvmExceptionBadRequestNoAEPInOneOfTheiMCs : public NvmExceptionBadRequest
+{
+	public:
+	NvmExceptionBadRequestNoAEPInOneOfTheiMCs() :
+			NvmExceptionBadRequest("No " NVM_DIMM_NAME " in one of the iMCs")
+		{}
+};
+
 class NvmExceptionOverAddressDecoderLimit : public NvmExceptionBadRequest
 {
 	public:

@@ -52,7 +52,6 @@ class NVM_API RulePartialSocketConfigured : public RequestRule
 		virtual void verify(const MemoryAllocationRequest &request);
 
 	protected:
-		std::list<NVM_UINT16> getRequestedSockets(std::vector<Dimm> dimms);
 		std::set<std::string> getSetOfAllDimmsOnSocket(NVM_UINT16 socketId);
 		std::set<std::string> getSetOfRequestedDimmsOnSocket(
 				const std::vector<Dimm> &requestedDimms, NVM_UINT16 socketId);
