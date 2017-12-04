@@ -865,13 +865,6 @@ cli::framework::ErrorResult *cli::nvmcli::CoreExceptionToResult(std::exception &
 		return new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
 				TRS(BAD_REQUEST_GOAL_BREAKS_CONFIG_STR), prefix);
 	}
-	core::NvmExceptionBadRequestNoAEPInOneOfTheiMCs *pBadRequestNoAEPDimmOnIMC =
-			dynamic_cast<core::NvmExceptionBadRequestNoAEPInOneOfTheiMCs *> (&e);
-	if (pBadRequestNoAEPDimmOnIMC != NULL)
-	{
-		return new framework::ErrorResult(framework::ErrorResult::ERRORCODE_UNKNOWN,
-				TRS(BAD_REQUEST_GOAL_NO_AEP_DIMM_ON_IMC_STR), prefix);
-	}
 
 	core::NvmExceptionOverAddressDecoderLimit *pTooManyInterleaves =
 			dynamic_cast<core::NvmExceptionOverAddressDecoderLimit *>(&e);

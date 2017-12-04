@@ -33,7 +33,6 @@
 #ifndef _core_LOGIC_REQUESTRULE_H_
 #define _core_LOGIC_REQUESTRULE_H_
 
-#include <list>
 #include <nvm_types.h>
 #include <core/memory_allocator/MemoryAllocationTypes.h>
 #include <core/memory_allocator/MemoryAllocationRequest.h>
@@ -49,20 +48,6 @@ class NVM_API RequestRule
 		virtual ~RequestRule() {}
 
 		virtual void verify(const MemoryAllocationRequest &request) = 0;
-
-		std::list<NVM_UINT16> getRequestedSockets(std::vector<Dimm> dimms)
-		{
-
-			std::list<NVM_UINT16> socketList;
-			for (std::vector<Dimm>::const_iterator iter = dimms.begin(); iter != dimms.end(); iter++)
-			{
-				socketList.push_back((*iter).socket);
-			}
-
-			socketList.unique();
-
-			return socketList;
-		}
 };
 
 } /* namespace memory_allocator */
