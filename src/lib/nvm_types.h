@@ -87,7 +87,6 @@
 // so this is something to keep an eye on. 24 should be good for a while
 #define	NVM_MAX_DEVICES_PER_SOCKET	24 // Maximum number of dimms that can be on a socket
 #define	NVM_LOG_MESSAGE_LEN	2048 // Length of log message string
-#define	NVM_DRIVER_REV_LEN	16 // Driver revision length
 #define	NVM_MAX_BLOCK_SIZES_PER_POOL	16
 #define	NVM_MAX_BLOCK_SIZES	16 // maximum number of block sizes supported by the driver
 #define	NVM_MAX_TOPO_SIZE	96 // Maximum number of DIMMs possible for a given memory topology

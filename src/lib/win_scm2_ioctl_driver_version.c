@@ -29,6 +29,7 @@
 #include "win_scm2_adapter.h"
 #include "win_scm2_ioctl.h"
 #include <string.h>
+#include <string/s_str.h>
 
 #define	IOCTL_CR_GET_VENDOR_DRIVER_REVISION CTL_CODE(NVDIMM_IOCTL, 0x980, \
 	METHOD_BUFFERED, FILE_ANY_ACCESS)
@@ -44,25 +45,33 @@ struct GET_REVISION_IOCTL
 	struct GET_VENDOR_DRIVER_REVISION_OUTPUT_PAYLOAD OutputPayload;
 } CR_GET_DRIVER_REVISION_IOCTL;
 
+/*
 static int ioctl_driver_version(unsigned short nfit_handle,
 		struct GET_VENDOR_DRIVER_REVISION_OUTPUT_PAYLOAD *payload);
-
+*/
 
 int win_scm2_ioctl_driver_version(unsigned short nfit_handle,
 		char driver_revision[DRIVER_VERSION_LEN])
 {
+	int scm_rc = NVM_SUCCESS;
 	memset(driver_revision, 0, DRIVER_VERSION_LEN);
+	/*
 	struct GET_VENDOR_DRIVER_REVISION_OUTPUT_PAYLOAD payload;
 	int scm_rc = ioctl_driver_version(nfit_handle, &payload);
+
 	if (WIN_SCM2_IOCTL_SUCCESS(scm_rc))
 	{
 		memmove(driver_revision, payload.VendorDriverVersion, DRIVER_VERSION_LEN);
 	}
+	*/
+
+	// Temporary until we get Microsoft Windows inbox driver for NVDIMM
+	s_strcpy(driver_revision, "0.0.0.0", DRIVER_VERSION_LEN);
 
 	return scm_rc;
 }
 
-
+/*
 static int ioctl_driver_version(unsigned short nfit_handle,
 		struct GET_VENDOR_DRIVER_REVISION_OUTPUT_PAYLOAD *payload)
 {
@@ -90,3 +99,4 @@ static int ioctl_driver_version(unsigned short nfit_handle,
 
 	return rc;
 }
+*/
