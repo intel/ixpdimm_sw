@@ -179,6 +179,8 @@ public:
 				const NVM_UINT16 spareCapacity);
 
 	// Helper functions
+	static std::string getHexFormatFromDeviceHandle(const NVM_UINT32 device_handle);
+
 	static void uidToHandle(const std::string &dimmUid, NVM_UINT32 &handle);
 
 	static std::vector<std::string> getManageableDeviceUids();

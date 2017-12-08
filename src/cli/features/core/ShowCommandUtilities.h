@@ -29,12 +29,13 @@
 #define SHOWCOMMANDUTILITIES_H_
 
 #include <nvm_types.h>
-
 #include <libinvm-cli/ResultBase.h>
 #include <libinvm-cli/ErrorResult.h>
 #include <core/device/Device.h>
 #include <core/StringList.h>
 #include "framework/UnitsOption.h"
+#include <persistence/lib_persistence.h>
+#include <persistence/config_settings.h>
 
 namespace cli
 {
@@ -57,6 +58,7 @@ class NVM_API ShowCommandUtilities
 				core::StringList &socketIds);
 		static framework::ResultBase *getInvalidUnitsOptionResult(const framework::UnitsOption &unitsOption);
 
+		static std::string getHexFormatFromDeviceHandle(const NVM_UINT32 device_handle);
 		static std::string getDimmId(core::device::Device &device);
 		static std::string getDimmIdFromDeviceUidAndHandle(const std::string &uid, const NVM_UINT32 handle);
 		static std::string getFormattedEvent(const event &event);
@@ -71,6 +73,7 @@ class NVM_API ShowCommandUtilities
 		template<typename Out>
 		static void split(const std::string &s, char delim, Out result);
 		static std::string listToString(std::vector<std::string> list);
+		static const std::size_t min_hex_id_length = 6;
 	protected:
 		static std::string getFirstBadDimmId(const core::StringList &dimmIds,
 				core::device::DeviceCollection &devices);

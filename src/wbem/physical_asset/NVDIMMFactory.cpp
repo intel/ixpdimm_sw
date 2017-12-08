@@ -1149,6 +1149,16 @@ std::string NVDIMMFactory::uidToDimmIdStr(const std::string &dimmUid)
 	return attribute.asStr();
 }
 
+std::string NVDIMMFactory::getHexFormatFromDeviceHandle(const NVM_UINT32 device_handle)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	char output_handle[NVM_MAX_DIMMID_STR_LEN];
+	snprintf(output_handle, NVM_MAX_DIMMID_STR_LEN, "0x%04X", device_handle);
+
+	return output_handle;
+}
+
 wbem::framework::Attribute NVDIMMFactory::uidToDimmIdAttribute(
 		const std::string &dimmUid)
 {
@@ -1173,7 +1183,7 @@ wbem::framework::Attribute NVDIMMFactory::uidToDimmIdAttribute(
 	{
 		NVM_UINT32 handle;
 		NVDIMMFactory::uidToHandle(dimmUid.c_str(), handle);
-		framework::Attribute attrHandle(handle, false);
+		framework::Attribute attrHandle(getHexFormatFromDeviceHandle(handle), false);
 		dimmIdAttr = attrHandle;
 	}
 		// use UID

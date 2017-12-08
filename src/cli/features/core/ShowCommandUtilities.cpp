@@ -69,11 +69,14 @@ std::string ShowCommandUtilities::getFirstBadDimmId(
 
 	for (size_t i = 0; i < dimmIds.size() && badDimmId.empty(); i++)
 	{
+		std::string dimmId = dimmIds[i];
 		bool dimmIdFound = false;
+		bool isHandle = cli::nvmcli::isStringValidNumber(dimmId);
+		bool isValidUid = isUid(dimmId);
 		for (size_t j = 0; j < devices.size() && !dimmIdFound; j++)
 		{
-			if (framework::stringsIEqual(dimmIds[i], devices[j].getUid()) ||
-				dimmIds[i] == uint64ToString(devices[j].getDeviceHandle()))
+			if ((isValidUid && framework::stringsIEqual(dimmIds[i], devices[j].getUid())) ||
+					(isHandle && (NVM_UINT32)stringToUInt64(dimmIds[i]) == devices[j].getDeviceHandle()))
 			{
 				dimmIdFound = true;
 			}
@@ -151,13 +154,34 @@ void ShowCommandUtilities::filterDevicesOnDimmIds(core::device::DeviceCollection
 
 	if (dimmIds.size() > 0)
 	{
+		std::vector<NVM_UINT32> input_handles;
+		for (size_t i = 0; i < dimmIds.size(); i++)
+		{
+			input_handles.push_back((NVM_UINT32)stringToUInt64(dimmIds[i]));
+		}
+
 		for (size_t i = devices.size(); i > 0; i--)
 		{
 			core::device::Device &device = devices[i - 1];
+			NVM_UINT32 expected_handle = device.getDeviceHandle();
+			std::string expected_uid = device.getUid();
 
-			std::string deviceHandle = uint64ToString(device.getDeviceHandle());
+			bool device_found = false;
+			for (size_t j = 0; j < dimmIds.size(); j++)
+			{
+				std::string dimmId = dimmIds[j];
+				NVM_UINT32 input_handle = (NVM_UINT32)stringToUInt64(dimmId);
+				bool isHandle = cli::nvmcli::isStringValidNumber(dimmId);
+				bool isValidUid = isUid(dimmId);
+				if ((isHandle && (input_handle == expected_handle))
+						|| (isValidUid && (dimmIds[j] == expected_uid)))
+				{
+					device_found = true;
+					break;
+				}
+			}
 
-			if (!dimmIds.contains(device.getUid()) && !dimmIds.contains(deviceHandle))
+			if (!device_found)
 			{
 				devices.removeAt(i - 1);
 			}
@@ -206,6 +230,16 @@ framework::ResultBase* ShowCommandUtilities::getInvalidUnitsOptionResult(
 	return pResult;
 }
 
+std::string ShowCommandUtilities::getHexFormatFromDeviceHandle(const NVM_UINT32 device_handle)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	char output_handle[NVM_MAX_DIMMID_STR_LEN];
+	snprintf(output_handle, NVM_MAX_DIMMID_STR_LEN, "0x%04X", device_handle);
+
+	return output_handle;
+}
+
 std::string ShowCommandUtilities::getDimmId(core::device::Device& device)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -222,12 +256,13 @@ std::string ShowCommandUtilities::getDimmIdFromDeviceUidAndHandle(const std::str
 	bool useHandle = !ShowCommandUtilities::isUserPreferenceDimmIdUid();
 	if (useHandle)
 	{
-		result << handle;
+		result << getHexFormatFromDeviceHandle(handle);
 	}
 	else
 	{
 		result << uid;
 	}
+
 	return result.str();
 }
 
@@ -293,7 +328,6 @@ bool ShowCommandUtilities::isUid(std::string id)
 {
 	return id.find('-') != std::string::npos;
 }
-
 
 /*
  * Given a string of comma-separated dimm identifiers (UID or handle), initialize
@@ -375,14 +409,14 @@ std::vector<core::device::Device> ShowCommandUtilities::populateDevicesFromDimms
 	{
 		// Maybe save some work by pre-computing these values
 		idIsUid = ShowCommandUtilities::isUid(*id);
-		handle = (!idIsUid) ? atoi((*id).c_str()) : 0;
+		handle = (!idIsUid) ? (NVM_UINT32)stringToUInt64(*id) : 0;
 
 		// Compare ids as appropriate
 		for (i = 0; i < dev_count; i++)
 		{
 			// Match the handle or UID
-			if ((!idIsUid && handle == devices[i].device_handle.handle) ||
-				(idIsUid && (*id).compare(devices[i].uid) == 0))
+			if ((!idIsUid && (handle == devices[i].device_handle.handle)) ||
+				(idIsUid && ((*id).compare(devices[i].uid) == 0)))
 			{
 				// We matched a handle or uid, create a C++ device
 				core::device::Device dev(lib, devices[i]);
@@ -409,7 +443,5 @@ std::vector<core::device::Device> ShowCommandUtilities::populateDevicesFromDimms
 	return devs;
 }
 
-//namespace cli
 }
-//namespace nvmcli
 }

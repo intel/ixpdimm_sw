@@ -126,14 +126,28 @@ void ShowTopologyCommand::filterTopologiesOnDimmIds()
 {
 	if (m_dimmIds.size() > 0)
 	{
+		std::vector<NVM_UINT32> input_handles;
+		for (size_t i = 0; i < m_dimmIds.size(); i++)
+		{
+			input_handles.push_back((NVM_UINT32)stringToUInt64(m_dimmIds[i]));
+		}
+
 		for (size_t i = m_topologies.size(); i > 0; i--)
 		{
 			core::device::Topology &topology = m_topologies[i - 1];
+			NVM_UINT32 handle = topology.getDeviceHandle();
+			bool topology_found = false;
 
-			std::string deviceHandle = uint64ToString(topology.getDeviceHandle());
+			for (size_t j = 0; j < input_handles.size(); j++)
+			{
+				if (input_handles[j] == handle)
+				{
+					topology_found = true;
+					break;
+				}
+			}
 
-			if (!m_dimmIds.contains(topology.getUid()) &&
-					!m_dimmIds.contains(deviceHandle))
+			if (!topology_found)
 			{
 				m_topologies.removeAt(i - 1);
 			}
@@ -213,19 +227,25 @@ std::string ShowTopologyCommand::getFirstBadDimmId(core::device::TopologyCollect
 	for (size_t i = 0; i < m_dimmIds.size() && badDimmId.empty(); i++)
 	{
 		bool dimmIdFound = false;
+		std::string dimmId = m_dimmIds[i];
+		NVM_UINT32 input_handle = (NVM_UINT32)stringToUInt64(dimmId);
+		bool isHandle = cli::nvmcli::isStringValidNumber(dimmId);
 		for (size_t j = 0; j < topologies.size() && !dimmIdFound; j++)
 		{
-			if (framework::stringsIEqual(m_dimmIds[i], topologies[j].getUid()) ||
-					m_dimmIds[i] == uint64ToString(topologies[j].getDeviceHandle()))
+			if (isHandle && (input_handle == topologies[j].getDeviceHandle()))
 			{
 				dimmIdFound = true;
+				break;
 			}
 		}
+
+		// Return the bad dimmId in user specified format
 		if (!dimmIdFound)
 		{
-			badDimmId = m_dimmIds[i];
+			badDimmId = dimmId;
 		}
 	}
+
 	return badDimmId;
 }
 
@@ -299,22 +319,12 @@ std::string ShowTopologyCommand::getDimmId(core::device::Topology &topology)
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	std::stringstream result;
-	bool useHandle = true;
-	char value[CONFIG_VALUE_LEN];
-	if (get_config_value(SQL_KEY_CLI_DIMM_ID, value) == COMMON_SUCCESS)
-	{
-		// switch to uid
-		if (s_strncmpi("UID", value, strlen("UID")) == 0)
-		{
-			useHandle = false;
-		}
-	}
-
 	if (topology.getMemoryType() == MEMORY_TYPE_NVMDIMM)
 	{
-		if (useHandle)
+		if (!ShowCommandUtilities::isUserPreferenceDimmIdUid())
 		{
-			result << topology.getDeviceHandle();
+
+			result << cli::nvmcli::ShowCommandUtilities::getHexFormatFromDeviceHandle(topology.getDeviceHandle());
 		}
 		else
 		{
