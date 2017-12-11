@@ -76,27 +76,34 @@ void FormatDeviceService::startFormatForDevice(const NVM_UINT32 deviceHandle)
 	}
 }
 
-bool FormatDeviceService::isFormatComplete(const NVM_UINT32 deviceHandle)
+NVM_UINT8 FormatDeviceService::isFormatComplete(const NVM_UINT32 deviceHandle)
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
 
-	bool mailboxShutdown = false;
+	NVM_UINT8 format_success = NVM_FORMAT_BSR_POLL_INCOMPLETE;
+
 	struct fwcmd_bsr_result result = m_fwCommands.FwcmdAllocBsr(deviceHandle);
+
 	if (result.success)
 	{
-		mailboxShutdown = !result.p_data->rest1_mailbox_ready;
+		if(result.p_data->rest1_mailbox_ready == 0 && result.p_data->rest1_assertion == 0 )
+		{
+			format_success = NVM_FORMAT_SUCCESS;
+		}
+		else
+		{
+			format_success = NVM_FORMAT_FAILURE;
+		}
 	}
 	else
 	{
 		int rc = getLibraryErrorCode(result.error_code);
 		m_fwCommands.FwcmdFreeBsr(&result);
-
 		throw core::LibraryException(rc);
 	}
 
 	m_fwCommands.FwcmdFreeBsr(&result);
-
-	return mailboxShutdown;
+	return format_success;
 }
 
 int FormatDeviceService::getLibraryErrorCode(struct fwcmd_error_code& fwError)

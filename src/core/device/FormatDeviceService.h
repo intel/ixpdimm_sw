@@ -48,7 +48,7 @@ class NVM_API FormatDeviceService
 		static core::device::FormatDeviceService &getService();
 
 		virtual void startFormatForDevice(const NVM_UINT32 deviceHandle);
-		virtual bool isFormatComplete(const NVM_UINT32 deviceHandle);
+		virtual NVM_UINT8 isFormatComplete(const NVM_UINT32 deviceHandle);
 		virtual bool isDeviceInFormattableState(core::device::Device &device);
 
 	private:

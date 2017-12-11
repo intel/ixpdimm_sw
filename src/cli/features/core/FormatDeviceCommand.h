@@ -84,12 +84,11 @@ class NVM_API FormatDeviceCommand : public framework::CommandBase
 		virtual void formatDevices();
 		virtual bool hasForceOption();
 		virtual void startFormatForDevice(core::device::Device &device);
-		virtual void insertSuccessResultForDevice(framework::SimpleListResult *pResults,
-				core::device::Device &device);
-		virtual void insertErrorResultForDevice(framework::SimpleListResult *pResults,
-				core::device::Device &device, const std::string &errorMessage);
+		virtual void insertSuccessResultForDevice(framework::SimpleListResult *pResults, core::device::Device &device);
+		virtual void insertErrorResultForDevice(framework::SimpleListResult *pResults, core::device::Device &device);
+		virtual void insertNonFormattableDimmMessage(framework::SimpleListResult *pResults, core::device::Device& device, const std::string &errorMessage);
 		virtual std::string getErrorMessage(const int libError);
-		virtual std::string getMessagePrefix(core::device::Device &device);
+        virtual std::string getMessagePrefix(core::device::Device &device);
 
 		virtual void waitUntilFormatCompleteForAllDimms();
 		virtual bool isFormatCompleteForAllDimms();

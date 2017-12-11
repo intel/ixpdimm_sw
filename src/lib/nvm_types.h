@@ -235,7 +235,12 @@ enum return_code
 										// after device unlock.
 	NVM_ERR_NOFADATAAVAILABLE = -60, // No device support data available from AEP DIMM
 	NVM_ERR_INTERLEAVESET = -61, // Something is wrong with the interleaved set
-	NVM_ERR_CONTEXT = -62		// Some issue with the shared context
+	NVM_ERR_CONTEXT = -62,		// Some issue with the shared context
+
+    //Device Format Service Status Codes
+	NVM_FORMAT_BSR_POLL_INCOMPLETE = 0, //BSR Parsing not complete
+	NVM_FORMAT_SUCCESS = 1, //Device Format Success
+	NVM_FORMAT_FAILURE = 2  //Device Format Failed
 };
 
 /*

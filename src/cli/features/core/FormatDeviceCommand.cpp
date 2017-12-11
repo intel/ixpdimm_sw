@@ -247,28 +247,22 @@ void FormatDeviceCommand::startFormatForDevice(core::device::Device& device)
 
 			m_formatService.startFormatForDevice(device.getDeviceHandle());
 			m_waitingForCompletion[device.getDeviceHandle()] = true;
-
-			insertSuccessResultForDevice(pResults, device);
 			m_needsPowerCycle = true;
 		}
 		catch (core::LibraryException &e)
 		{
 			m_waitingForCompletion[device.getDeviceHandle()] = false;
-
-			insertErrorResultForDevice(pResults, device,
-					getErrorMessage(e.getErrorCode()));
+			insertNonFormattableDimmMessage(pResults,device,getErrorMessage(e.getErrorCode()));
 		}
 	}
 	else
 	{
 		m_waitingForCompletion[device.getDeviceHandle()] = false;
-		insertErrorResultForDevice(pResults, device,
-				getErrorMessage(NVM_ERR_NOTMANAGEABLE));
+		insertNonFormattableDimmMessage(pResults, device, getErrorMessage(NVM_ERR_NOTMANAGEABLE));
 	}
 }
 
-void FormatDeviceCommand::insertSuccessResultForDevice(framework::SimpleListResult* pResults,
-		core::device::Device& device)
+void FormatDeviceCommand::insertSuccessResultForDevice(framework::SimpleListResult* pResults,core::device::Device& device)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
@@ -276,7 +270,14 @@ void FormatDeviceCommand::insertSuccessResultForDevice(framework::SimpleListResu
 			getMessagePrefix(device) + ": " + TR("Success");
 	pResults->insert(message);
 }
+void FormatDeviceCommand::insertErrorResultForDevice(framework::SimpleListResult* pResults,core::device::Device& device)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
+	std::string message =
+			getMessagePrefix(device) + ": " + TR("Failure");
+	pResults->insert(message);
+}
 std::string FormatDeviceCommand::getMessagePrefix(core::device::Device &device)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -284,12 +285,12 @@ std::string FormatDeviceCommand::getMessagePrefix(core::device::Device &device)
 	std::stringstream prefix;
 	prefix << TR("Format " NVM_DIMM_NAME " ");
 	prefix << ShowCommandUtilities::getDimmId(device);
-
 	return prefix.str();
 }
 
-void FormatDeviceCommand::insertErrorResultForDevice(framework::SimpleListResult* pResults,
-		core::device::Device& device, const std::string& errorMessage)
+
+void FormatDeviceCommand::insertNonFormattableDimmMessage(framework::SimpleListResult* pResults, core::device::Device& device,
+const std::string& errorMessage)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
@@ -323,34 +324,51 @@ bool FormatDeviceCommand::isFormatCompleteForAllDimms()
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	bool completeForAll = true;
+	NVM_UINT32 handle = 0;
+	size_t i = 0;
+
 	for (std::map<NVM_UINT32, bool>::iterator stillWaiting =
-			m_waitingForCompletion.begin();
-			stillWaiting != m_waitingForCompletion.end();
-			stillWaiting++)
+		m_waitingForCompletion.begin();
+		stillWaiting != m_waitingForCompletion.end() && i < m_devices.size();
+		stillWaiting++,i++)
 	{
 		bool done = false;
-
+		NVM_UINT8 format_success = 0;
 		try
-		{
-			NVM_UINT32 handle = stillWaiting->first;
-			done = !stillWaiting->second || m_formatService.isFormatComplete(handle);
-			if (done)
 			{
-				stillWaiting->second = false;
+				handle= stillWaiting->first;
+				if (m_waitingForCompletion.at(handle) == true)
+				{
+					format_success = m_formatService.isFormatComplete(handle);
+				}
+				if(format_success == NVM_FORMAT_SUCCESS)
+				{
+					framework::SimpleListResult *pResults =
+							dynamic_cast<framework::SimpleListResult *>(m_pResult);
+					insertSuccessResultForDevice(pResults,m_devices[i]);
+				}
+				else if(format_success == NVM_FORMAT_FAILURE)
+				{
+					framework::SimpleListResult *pResults =
+							dynamic_cast<framework::SimpleListResult *>(m_pResult);
+					insertErrorResultForDevice(pResults, m_devices[i]);
+				}
+				else
+				{
+					//do nothing
+				}
+				done = !stillWaiting->second || format_success;
 			}
-		}
-		catch (core::LibraryException &)
-		{
-			// Ignore
-		}
-
-		if (!done)
-		{
-			completeForAll = false;
-			break;
-		}
+			catch (core::LibraryException &)
+			{
+					// Ignore
+			}
+			if (!done)
+			{
+				completeForAll = false;
+				break;
+			}
 	}
-
 	return completeForAll;
 }
 
