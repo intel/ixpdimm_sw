@@ -45,7 +45,6 @@
  */
 #define	POWER_LIMIT_ENABLE_BIT	0x80
 
-
 static enum return_code win_scm_to_nvm_err(int scm_rc);
 static unsigned int win_scm2_get_first_handle();
 
@@ -63,7 +62,7 @@ NVM_BOOL win_scm_adp_is_supported_driver_available()
 	COMMON_LOG_ENTRY();
 	NVM_BOOL is_supported = 0;
 
-	unsigned int handle = win_scm2_get_first_handle();
+	/*unsigned int handle = win_scm2_get_first_handle();
 	GET_INTERFACE_VERSION_OUTPUT_PAYLOAD payload;
 
 	if (WIN_SCM2_IS_SUCCESS(win_scm2_version_info(handle, &payload)))
@@ -73,17 +72,17 @@ NVM_BOOL win_scm_adp_is_supported_driver_available()
 		{
 			is_supported = 1;
 		}
-	}
+	}*/
 
 	COMMON_LOG_EXIT_RETURN_I(is_supported);
-	return is_supported;
+	return 1;//is_supported;
 }
 
 int win_scm_adp_get_vendor_driver_revision(NVM_VERSION version_str, const NVM_SIZE str_len)
 {
 	enum return_code rc = NVM_SUCCESS;
 
-	unsigned int handle = win_scm2_get_first_handle();
+	/*unsigned int handle = win_scm2_get_first_handle();
 	char tmp[DRIVER_VERSION_LEN];
 	int scm_rc = win_scm2_ioctl_driver_version(handle, tmp);
 	if (WIN_SCM2_IOCTL_SUCCESS(scm_rc))
@@ -93,7 +92,7 @@ int win_scm_adp_get_vendor_driver_revision(NVM_VERSION version_str, const NVM_SI
 	else
 	{
 		rc = win_scm_to_nvm_err(scm_rc);
-	}
+	}*/
 
 	return rc;
 }
@@ -103,7 +102,7 @@ int win_scm_adp_get_driver_capabilities(struct nvm_driver_capabilities *p_caps)
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
 
-	DRIVER_CAPABILITIES drv_caps;
+	/*DRIVER_CAPABILITIES drv_caps;
 	unsigned int handle = win_scm2_get_first_handle();
 	int scm_rc = win_scm2_ioctl_get_driver_capabilities((unsigned short)handle, &drv_caps);
 	if (!WIN_SCM2_IS_SUCCESS(scm_rc))
@@ -139,8 +138,35 @@ int win_scm_adp_get_driver_capabilities(struct nvm_driver_capabilities *p_caps)
 		p_caps->features.passthrough = drv_caps.SupportedFeatures.SendPassthru;
 		p_caps->features.app_direct_mode = 1;
 		p_caps->features.storage_mode = 0;
-	}
+	}*/
+	memset(p_caps, 0, sizeof (struct nvm_driver_capabilities));
 
+	p_caps->min_namespace_size = BYTES_PER_GIB;
+	p_caps->num_block_sizes = 1;
+	p_caps->block_sizes[0] = 1;
+	p_caps->namespace_memory_page_allocation_capable = 0;
+	p_caps->features.get_platform_capabilities = 1;
+	p_caps->features.get_topology = 0;
+	p_caps->features.get_interleave = 1;
+	p_caps->features.get_dimm_detail = 0;
+	p_caps->features.get_namespaces = 1;
+	p_caps->features.get_namespace_detail = 1;
+	p_caps->features.get_boot_status = 1;
+	p_caps->features.get_power_data = 0;
+	p_caps->features.get_security_state = 1;
+	p_caps->features.get_log_page = 1;
+	p_caps->features.get_features = 1;
+	p_caps->features.set_features = 1;
+	p_caps->features.create_namespace = 0;
+	p_caps->features.rename_namespace = 0;
+	p_caps->features.delete_namespace = 0;
+	p_caps->features.set_security_state = 1;
+	p_caps->features.enable_logging = 1;
+	p_caps->features.run_diagnostic = 0;
+	p_caps->features.passthrough = 1;
+	p_caps->features.app_direct_mode = 1;
+	p_caps->features.storage_mode = 0;
+	
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
@@ -169,13 +195,12 @@ int win_scm_adp_ioctl_passthrough_cmd(struct fw_cmd *p_cmd)
 	return rc;
 }
 
-
 static int get_dimm_power_limited_count()
 {
 	COMMON_LOG_ENTRY();
 	int rc;
 
-	unsigned int handle = win_scm2_get_first_handle();
+	/*unsigned int handle = win_scm2_get_first_handle();
 
 	// Windows expects an output payload that is exactly the size of count
 	// If Count 0 is entered and the implict payload 1 is not removed bufferoverrun will
@@ -188,7 +213,7 @@ static int get_dimm_power_limited_count()
 	// set count to 0 so we get the true count from the driver
 	ioctl_data.InputPayload.RaplCount = 0;
 
-	if ((rc = win_scm2_ioctl_execute(handle, bufSize, &ioctl_data, IOCTL_CR_GET_RAPL)) == NVM_SUCCESS)
+	if ((rc = win_scm2_ioctl_execute(handle, (WIN_SCM2_IOCTL_REQUEST *) &ioctl_data, IOCTL_CR_GET_RAPL)) == NVM_SUCCESS)
 	{
 		if ((ioctl_data.ReturnCode == CR_RETURN_CODE_BUFFER_OVERRUN) ||
 			(ioctl_data.ReturnCode == CR_RETURN_CODE_BUFFER_UNDERRUN) ||
@@ -204,8 +229,9 @@ static int get_dimm_power_limited_count()
 				ioctl_data.ReturnCode);
 			rc = win_scm_to_nvm_err(ioctl_data.ReturnCode);
 		}
-	}
-
+	}*/
+	rc = NVM_SUCCESS;
+	
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
@@ -231,7 +257,7 @@ int win_scm2_adp_get_dimm_power_limited(NVM_UINT16 socket_id)
 		// we have something we can work with
 		p_ioctl_data->InputPayload.RaplCount = actual_count;
 
-		if ((rc = win_scm2_ioctl_execute(handle, bufSize, p_ioctl_data, IOCTL_CR_GET_RAPL)) == NVM_SUCCESS)
+		if ((rc = win_scm2_ioctl_execute(handle, (WIN_SCM2_IOCTL_REQUEST *) p_ioctl_data, IOCTL_CR_GET_RAPL)) == NVM_SUCCESS)
 		{
 			if (p_ioctl_data->ReturnCode != CR_RETURN_CODE_SUCCESS)
 			{

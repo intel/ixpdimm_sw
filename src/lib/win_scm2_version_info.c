@@ -49,8 +49,8 @@ int win_scm2_version_info(unsigned short nfit_handle,
 	memset(p_version_info, 0, sizeof (*p_version_info));
 	CR_GET_INTERFACE_VERSION_IOCTL ioctl;
 
-	enum WIN_SCM2_IOCTL_RETURN_CODES ioctl_rc = win_scm2_ioctl_execute(nfit_handle, sizeof (ioctl),
-			&ioctl, IOCTL_CR_GET_INTERFACE_VERSION);
+	enum WIN_SCM2_IOCTL_RETURN_CODES ioctl_rc = win_scm2_ioctl_execute(nfit_handle,
+			(WIN_SCM2_IOCTL_REQUEST *) &ioctl, IOCTL_CR_GET_INTERFACE_VERSION);
 
 	if (!WIN_SCM2_IOCTL_SUCCESS(ioctl_rc))
 	{

@@ -36,16 +36,21 @@
 #define	SCM_LOG_ENTRY()
 #define	SCM_LOG_EXIT_RETURN_I(i)
 
-#define	SCM_LOG_INFO(str)
-#define	SCM_LOG_INFO_F(fmt, ...)
-
+//#define WIN_SCM2_DEBUG 1
 #ifdef WIN_SCM2_DEBUG
+#define	SCM_LOG_INFO(str) \
+	printf("%s:%d(%s)> "str"\n", __FILE__, __LINE__, __FUNCTION__)
+#define	SCM_LOG_INFO_F(fmt, ...) \
+	printf("%s:%d(%s)> ", __FILE__, __LINE__, __FUNCTION__);  \
+	printf(fmt"\n", __VA_ARGS__)
 #define	SCM_LOG_ERROR(str) \
 	printf("%s:%d(%s)> "str"\n", __FILE__, __LINE__, __FUNCTION__)
 #define	SCM_LOG_ERROR_F(fmt, ...) \
 	printf("%s:%d(%s)> ", __FILE__, __LINE__, __FUNCTION__);  \
 	printf(fmt"\n", __VA_ARGS__)
 #else
+#define	SCM_LOG_INFO(str) 
+#define	SCM_LOG_INFO_F(fmt, ...) 
 #define	SCM_LOG_ERROR(str)
 #define	SCM_LOG_ERROR_F(fmt, ...)
 #endif
@@ -77,5 +82,7 @@ int win_scm2_get_namespaces(const NVM_UINT32 count,
 int win_scm2_get_namespace_details(
 	const NVM_UID namespace_uid,
 	struct nvm_namespace_details *p_details);
+
+int win_scm2_adp_get_dimm_power_limited(NVM_UINT16 socket_id);
 
 #endif // CR_MGMT_WIN_SCM2_ADAPTER_H

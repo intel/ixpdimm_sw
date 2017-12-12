@@ -466,7 +466,6 @@ int collect_required_pool_data(struct pool_data **pp_pool_data,
 			}
 		}
 	}
-
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }

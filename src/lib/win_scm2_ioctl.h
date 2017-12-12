@@ -32,7 +32,26 @@
 #include <windows.h>
 #include <winioctl.h>
 
-#define	NVDIMM_IOCTL 0xC000 //!< NVDIMM IOCTLs codes base value
+#define FILE_DEVICE_PERSISTENT_MEMORY   0x00000059 // defined in devioctl.h
+
+#define	NVDIMM_IOCTL FILE_DEVICE_PERSISTENT_MEMORY //!< NVDIMM IOCTLs codes base value
+
+//
+// Functions 0 to 0x2FF are reserved for the bus device.
+// Functions 0x300 to 0x5FF are reserved for the logical disk device.
+// Functions from 0x600 are reserved for the physical NVDIMM device.
+//
+#define IOCTL_SCM_PHYSICAL_DEVICE_FUNCTION_BASE     0x600
+
+#define SCM_PHYSICAL_DEVICE_FUNCTION(x) (IOCTL_SCM_PHYSICAL_DEVICE_FUNCTION_BASE + x)
+
+typedef struct _WIN_SCM2_IOCTL_REQUEST {
+    ULONG ReturnCode;
+    size_t InputDataSize;
+    size_t OutputDataSize;
+    void * pInputData;
+    void * pOutputData;
+} WIN_SCM2_IOCTL_REQUEST;
 
 // defined in Crystal Ridge RS2+ SCM Based Windows Driver SAS
 typedef enum _CR_RETURN_CODES
@@ -59,8 +78,7 @@ enum WIN_SCM2_IOCTL_RETURN_CODES
 };
 
 enum WIN_SCM2_IOCTL_RETURN_CODES win_scm2_ioctl_execute(unsigned short nfit_handle,
-		size_t bufSize,
-		void *p_ioctl_data,
+		WIN_SCM2_IOCTL_REQUEST *p_ioctl_data,
 		int io_controlcode);
 
 #endif // CR_MGMT_SCM2_IOCTL_C_H

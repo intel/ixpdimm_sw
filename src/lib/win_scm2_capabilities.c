@@ -50,7 +50,7 @@ int win_scm2_ioctl_get_driver_capabilities(unsigned short nfit_handle,
 	memset(&cmd, 0, sizeof (cmd));
 	void *ioctl_data = &cmd;
 	enum WIN_SCM2_IOCTL_RETURN_CODES ioctl_rc = win_scm2_ioctl_execute(nfit_handle,
-			sizeof (cmd), ioctl_data, IOCTL_CR_GET_DRIVER_CAPABILITIES);
+			(WIN_SCM2_IOCTL_REQUEST *) ioctl_data, IOCTL_CR_GET_DRIVER_CAPABILITIES);
 	if (!WIN_SCM2_IOCTL_SUCCESS(ioctl_rc))
 	{
 		rc = ioctl_rc;
