@@ -47,8 +47,6 @@
 #define	NAMESPACE_LABEL_SIZE_1_1 128
 #define	NAMESPACE_LABEL_SIZE_1_2 256
 
-#define	DEFAULT_BTT_SECTOR_SIZE	4096
-
 #define	DEFAULT_PFN_NS_ALIGNMENT	0x00200000 // == 2MB recommended data offset alignment
 
 void get_namespace_guid(struct ndctl_namespace *p_namespace, COMMON_UID guid);
@@ -857,7 +855,7 @@ int create_pfn_namespace(struct ndctl_namespace *namespace,
 }
 
 int create_btt_namespace(struct ndctl_namespace *namespace,
-		const struct nvm_namespace_create_settings *p_settings)
+		const struct nvm_namespace_create_settings *p_settings, unsigned int sector_size)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
@@ -868,11 +866,6 @@ int create_btt_namespace(struct ndctl_namespace *namespace,
 	{
 		COMMON_GUID btt_guid;
 		generate_guid(btt_guid);
-
-		// always have to set a sector size for the btt backing
-		// namespace. 1 is not valid for this, so use default of 4kB
-		// for app direct namespaces
-		unsigned int sector_size = DEFAULT_BTT_SECTOR_SIZE;
 
 		if (ndctl_btt_set_uuid(btt, btt_guid))
 		{
@@ -988,7 +981,7 @@ int create_namespace(
 				if (p_settings->btt)
 				{
 					ndctl_namespace_set_enforce_mode(namespace, NDCTL_NS_MODE_SAFE);
-					if ((rc = create_btt_namespace(namespace, p_settings)) != NVM_SUCCESS)
+					if ((rc = create_btt_namespace(namespace, p_settings, sector_size)) != NVM_SUCCESS)
 					{
 						COMMON_LOG_ERROR("Create BTT Failed");
 						ndctl_namespace_delete(namespace);
