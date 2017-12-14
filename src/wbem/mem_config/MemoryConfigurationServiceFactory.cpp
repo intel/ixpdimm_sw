@@ -944,6 +944,15 @@ void wbem::mem_config::MemoryConfigurationServiceFactory::exportSystemConfigToPa
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
+	struct nvm_capabilities capabilities;
+	nvm_get_nvm_capabilities(&capabilities);
+
+	// throw exception if SKU is mixed
+	if (capabilities.sku_capabilities.mixed_sku == 1)
+	{
+		throw exception::NvmExceptionLibError(NVM_ERR_NOTFOUND);
+	}
+
 	// iterate over all manageable dimms
 	size_t unconfigured_dimm_count = 0;
 	bool append = false;
@@ -968,7 +977,7 @@ void wbem::mem_config::MemoryConfigurationServiceFactory::exportSystemConfigToPa
 		append = true;
 	}
 
-	// throw exception only if all dimms are unconfigured
+	// throw exception if all dimms are unconfigured
 	if (unconfigured_dimm_count == dimms.size())
 	{
 		throw exception::NvmExceptionLibError(NVM_ERR_NOTFOUND);
