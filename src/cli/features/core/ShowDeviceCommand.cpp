@@ -251,6 +251,7 @@ std::string ShowDeviceCommand::convertFormFactor(device_form_factor formFactor)
 std::string ShowDeviceCommand::convertFwLogLevel(fw_log_level logLevel)
 {
 	std::map<NVM_UINT64, std::string> map;
+	map[FW_LOG_LEVEL_DISABLED] = TR("Disabled");
 	map[FW_LOG_LEVEL_ERROR] = TR("Error");
 	map[FW_LOG_LEVEL_WARN] = TR("Warning");
 	map[FW_LOG_LEVEL_INFO] = TR("Info");

@@ -1119,7 +1119,11 @@ enum fw_log_level cli::nvmcli::SystemFeature::logLevelStringToEnum(std::string l
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	enum fw_log_level level;
-	if (cli::framework::stringsIEqual(logLevel, ERROR_PROPERTYVALUE))
+	if (cli::framework::stringsIEqual(logLevel, DISABLED_PROPERTYVALUE))
+	{
+		level = FW_LOG_LEVEL_DISABLED;
+	}
+	else if (cli::framework::stringsIEqual(logLevel, ERROR_PROPERTYVALUE))
 	{
 		level = FW_LOG_LEVEL_ERROR;
 	}
