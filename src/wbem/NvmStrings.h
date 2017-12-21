@@ -305,6 +305,8 @@ static std::string APPDIRECTNAMESPACE_COUNT_KEY = "AppDirectNamespaceCount";
 static std::string STORAGENAMESPACE_MIN_SIZE_KEY = "StorageNamespaceMinSize";
 static std::string STORAGENAMESPACE_COUNT_KEY = "StorageNamespaceCount";
 static std::string APP_DIRECT_SETTINGS_KEY = "AppDirectSettings";
+static std::string NAMESPACE_LABEL_MAJOR_KEY = "NamespaceLabelMajor";
+static std::string NAMESPACE_LABEL_MINOR_KEY = "NamespaceLabelMinor";
 
 // VolatileMemory
 static std::string VOLATILE_KEY = "Volatile";

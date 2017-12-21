@@ -59,6 +59,8 @@ public:
 	void addDimmIds(const std::vector<std::string> &dimmIds);
 	void addSocketIds(const std::vector<NVM_UINT16> &socketIds);
 
+	void setNamespaceLabelVersion(const NVM_UINT16 major, const NVM_UINT16 minor);
+
 protected:
 	enum PersistentType
 	{
@@ -71,6 +73,8 @@ protected:
 	PersistentType m_pmType;
 	float m_memoryRatio;
 	float m_reservedRatio;
+	NVM_UINT16 m_namespaceLabelMajor;
+	NVM_UINT16 m_namespaceLabelMinor;
 
 private:
 	core::device::DeviceService &m_service;

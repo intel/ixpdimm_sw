@@ -477,3 +477,15 @@ int reenumerate_namespaces(NVM_NFIT_DEVICE_HANDLE device_handle)
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
+
+/*
+ * Not implemented - needs implementation of namespace functions in windows driver
+ */
+int init_label_dimm(const NVM_UINT32 device_handle, NVM_UINT16 major_version, NVM_UINT16  minor_version)
+{
+        COMMON_LOG_ENTRY();
+        int rc = NVM_ERR_NOTSUPPORTED;
+
+        COMMON_LOG_EXIT_RETURN_I(rc);
+        return rc;
+}

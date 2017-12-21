@@ -735,6 +735,74 @@ void fix_label_less_for_spa_index(struct ndctl_ctx *ctx, unsigned int spa_index)
 	COMMON_LOG_EXIT();
 }
 
+int init_label_dimm(const NVM_UINT32 device_handle, NVM_UINT16 major_version, NVM_UINT16 minor_version)
+{
+	struct ndctl_ctx *ctx;
+	int rc;
+	int label_version;
+
+	if (major_version == 1 && minor_version == 1)
+	{
+		label_version = NDCTL_NS_VERSION_1_1;
+	}
+	else
+	{
+		label_version = NDCTL_NS_VERSION_1_2;
+	}
+
+	if ((rc = ndctl_new(&ctx)) >= 0)
+	{
+		rc = NVM_ERR_BADDEVICE;
+		struct ndctl_bus *bus;
+
+		ndctl_bus_foreach(ctx, bus)
+		{
+			struct ndctl_dimm *dimm;
+			struct ndctl_cmd *cmd_read;
+			struct ndctl_region *region;
+			struct ndctl_region *disabled_region = NULL;
+
+			ndctl_region_foreach(bus, region)
+			{
+				if (ndctl_region_is_enabled(region))
+				{
+					ndctl_dimm_foreach_in_region(region, dimm)
+					{
+						if (ndctl_dimm_get_handle(dimm) == device_handle)
+						{
+							ndctl_region_disable_invalidate(region);
+							disabled_region = region;
+						}
+					}
+				}
+			}
+
+			dimm = ndctl_dimm_get_by_handle(bus, device_handle);
+
+			ndctl_cmd_unref(cmd_read);
+			cmd_read = ndctl_dimm_read_labels(dimm);
+			if (!cmd_read)
+				continue;
+			ndctl_dimm_init_labels(dimm, label_version);
+
+			if (disabled_region != NULL)
+			{
+				ndctl_region_enable(disabled_region);
+			}
+
+			rc = NVM_SUCCESS;
+			break;
+		}
+	}
+	else
+	{
+		rc = linux_err_to_nvm_lib_err(rc);
+	}
+
+	return rc;
+}
+
+
 int get_ndctl_app_direct_region_by_range_index(struct ndctl_ctx *ctx,
 		struct ndctl_region **target_region, unsigned int spa_index)
 {

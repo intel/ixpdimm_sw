@@ -290,6 +290,11 @@ int run_test(enum driver_diagnostic diagnostic, const NVM_UINT32 count,
 
 int reenumerate_namespaces(NVM_NFIT_DEVICE_HANDLE device_handle);
 
+/*
+ * Initialize the namespace label index to the specified version on the specified DIMM
+ */
+int init_label_dimm(const NVM_UINT32 device_handle, NVM_UINT16 major_version, NVM_UINT16  minor_version);
+
 #ifdef __cplusplus
 }
 #endif

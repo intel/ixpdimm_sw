@@ -48,6 +48,7 @@ static const std::string MEMORYMODE_NAME = "MemoryMode";
 static const std::string PMTYPE_NAME = "PersistentMemoryType";
 static const std::string RESERVED_NAME = "Reserved";
 static const std::string CONFIG_NAME = "Config";
+static const std::string NAMESPACE_LABEL_VERSION_NAME = "NamespaceLabelVersion";
 
 static const std::string PMTYPE_VALUE_APPDIRECT = "AppDirect";
 static const std::string PMTYPE_VALUE_APPDIRECTNOTINTERLEAVED = "AppDirectNotInterleaved";
@@ -57,6 +58,9 @@ static const std::string PMTYPE_VALUE_STORAGE = "Storage";
 static const std::string CREATE_GOAL_CONFIG_MEMORY_MODE = "MM";
 static const std::string CREATE_GOAL_CONFIG_APPDIRECT_MODE = "AD";
 static const std::string CREATE_GOAL_CONFIG_MEMORY_APPDIRECT_MODE = "MM+AD";
+
+static const std::string NAMESPACE_LABEL_VERSION_1_1 = "1.1";
+static const std::string NAMESPACE_LABEL_VERSION_1_2 = "1.2";
 
 static const std::string CREATE_CONFIG_GOAL_MSG = TR("Create configuration goal: ");
 
@@ -96,6 +100,8 @@ public:
 		std::string getUnits();
 		std::vector<std::string> getDimms();
 		std::vector<NVM_UINT16> getSockets();
+		NVM_UINT16 getNamespaceLabelMajor();
+		NVM_UINT16 getNamespaceLabelMinor();
 
 	private:
 		framework::ResultBase *m_pResult;
@@ -111,6 +117,8 @@ public:
 		std::vector<std::string> m_dimms;
 		std::vector<COMMON_UINT16> m_sockets;
 		framework::ParsedCommand m_parsedCommand;
+		NVM_UINT16 m_namespaceLabelMajor;
+		NVM_UINT16 m_namespaceLabelMinor;
 
 		bool hasError();
 
@@ -129,6 +137,8 @@ public:
 		void parsePropertyReserved();
 
 		void parsePropertyConfig();
+
+		void parsePropertyNamespaceLabelVersion();
 	};
 
 	class NVM_API ShowGoalAdapter

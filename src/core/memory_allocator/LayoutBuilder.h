@@ -48,7 +48,9 @@ class NVM_API LayoutBuilder
 		LayoutBuilder(
 				const struct nvm_capabilities &systemCapabilities,
 				core::NvmLibrary &nvmLib,
-				const std::vector<device_details> deviceDetailsList);
+				const std::vector<device_details> deviceDetailsList,
+				NVM_UINT16 namespaceLabelMajor,
+				NVM_UINT16 namespaceLabelMinor);
 		virtual ~LayoutBuilder();
 
 		MemoryAllocationLayout build(const MemoryAllocationRequest &request);
@@ -66,6 +68,9 @@ class NVM_API LayoutBuilder
 		core::NvmLibrary &m_nvmLib;
 		MemoryAllocationUtil m_util;
 		std::vector<struct device_details> m_deviceDetailsList;
+
+		NVM_UINT16 m_namespaceLabelMajor;
+		NVM_UINT16 m_namespaceLabelMinor;
 };
 
 } /* namespace memory_allocator */

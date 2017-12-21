@@ -114,13 +114,16 @@ core::memory_allocator::MemoryAllocator::~MemoryAllocator()
 }
 
 core::memory_allocator::MemoryAllocationLayout core::memory_allocator::MemoryAllocator::layout(
-		const struct MemoryAllocationRequest& request)
+		const struct MemoryAllocationRequest& request,
+		NVM_UINT16 namespaceLabelMajor,
+		NVM_UINT16 namespaceLabelMinor)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	validateRequest(request);
 
-	LayoutBuilder builder(m_systemCapabilities, m_nvmLib, m_manageableDeviceDetailsList);
+	LayoutBuilder builder(m_systemCapabilities, m_nvmLib, m_manageableDeviceDetailsList,
+			      namespaceLabelMajor, namespaceLabelMinor);
 	core::memory_allocator::MemoryAllocationLayout layout = builder.build(request);
 
 	validateLayout(request, layout);

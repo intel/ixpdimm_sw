@@ -1192,6 +1192,9 @@ wbem::framework::UINT32 wbem::mem_config::MemoryConfigurationServiceFactory::exe
 	wbem::framework::UINT32 &wbemRc, wbem::framework::ObjectPath &object,
 	wbem::framework::attributes_t &inParms, wbem::framework::attributes_t &outParms)
 {
+	NVM_UINT16 namespaceLabelMajor = 1;
+	NVM_UINT16 namespaceLabelMinor = 2;
+
 	// Validate Pool attribute
 	std::string poolRef = inParms[MEMORYCONFIGURATIONSERVICE_PARENTPOOL].stringValue();
 
@@ -1207,6 +1210,35 @@ wbem::framework::UINT32 wbem::mem_config::MemoryConfigurationServiceFactory::exe
 
 	validateSettingsStrings(settingsStrings);
 	validatePool(poolRef);
+
+        // Parse the CIM XML strings
+        for (std::vector<std::string>::const_iterator iter = settingsStrings.begin(); iter != settingsStrings.end(); iter++)
+        {
+                framework::CimXml settingsInstance(*iter);
+
+                // Harvest and validate the attributes
+                framework::attributes_t settingsAttrs = settingsInstance.getProperties();
+
+                // Namespace label major version
+                framework::attributes_t::iterator attrI = settingsAttrs.find(NAMESPACE_LABEL_MAJOR_KEY);
+                if (attrI != settingsAttrs.end())
+                {
+			if (attrI->second.uintValue() == 1)
+			{
+				namespaceLabelMajor = attrI->second.uintValue();
+			}
+                }
+
+                // Namespace label minor version
+                attrI = settingsAttrs.find(NAMESPACE_LABEL_MINOR_KEY);
+                if (attrI != settingsAttrs.end())
+                {
+			if (attrI->second.uintValue() == 1)
+			{
+				namespaceLabelMinor = attrI->second.uintValue();
+			}
+                }
+	}
 
 	// We'll take all the settings that go on a socket and use them to call AllocateFromPool
 	while (!settingsStrings.empty())
@@ -1230,7 +1262,8 @@ wbem::framework::UINT32 wbem::mem_config::MemoryConfigurationServiceFactory::exe
 		{
 			core::memory_allocator::MemoryAllocator *pAllocator =
 					core::memory_allocator::MemoryAllocator::getNewMemoryAllocator();
-			core::memory_allocator::MemoryAllocationLayout layout = pAllocator->layout(request);
+			core::memory_allocator::MemoryAllocationLayout layout = pAllocator->layout(request,
+				namespaceLabelMajor, namespaceLabelMinor);
 			pAllocator->allocate(layout);
 
 			delete pAllocator;

@@ -50,6 +50,7 @@ framework::ResultBase *CreateGoalCommand::Parser::parse(
 	parsePropertyConfig();
 	parseOptionForce();
 	parseOptionUnits();
+	parsePropertyNamespaceLabelVersion();
 
 	return m_pResult;
 }
@@ -108,6 +109,18 @@ std::vector<NVM_UINT16> CreateGoalCommand::Parser::getSockets()
 	return m_sockets;
 }
 
+NVM_UINT16 CreateGoalCommand::Parser::getNamespaceLabelMajor()
+{
+        LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+        return m_namespaceLabelMajor;
+}
+
+NVM_UINT16 CreateGoalCommand::Parser::getNamespaceLabelMinor()
+{
+        LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+        return m_namespaceLabelMinor;
+}
+
 CreateGoalCommand::Parser::Parser() : m_pResult(NULL),
 	m_memoryModeValue(0),
 	m_reservedValue(0),
@@ -116,7 +129,9 @@ CreateGoalCommand::Parser::Parser() : m_pResult(NULL),
 	m_memoryModeExists(false),
 	m_pmTypeExists(false),
 	m_reserveStorageExists(false),
-	m_isForce(false) { }
+	m_isForce(false),
+	m_namespaceLabelMajor(0),
+	m_namespaceLabelMinor(0) { }
 
 framework::ResultBase *CreateGoalCommand::ShowGoalAdapter::showCurrentGoal(
 	const std::string &units) const
@@ -380,6 +395,14 @@ framework::CommandSpec CreateGoalCommand::getCommandSpec(int id)
 			.valueText("MM|AD|MM+AD")
 			.helpText(TR("Create a memory allocation goal which utilizes all of the "
 					"specified AEP DIMMs in one of pre-defined configurations."));
+
+	result.addProperty(NAMESPACE_LABEL_VERSION_NAME)
+			.isRequired(false)
+			.isValueRequired(true)
+			.valueText("1.1|1.2")
+			.helpText(TR("Namespace label version to initialize during create goal."
+				     " Default is 1.2"));
+
 	return result;
 }
 
@@ -394,7 +417,8 @@ framework::ResultBase *CreateGoalCommand::execute(const framework::ParsedCommand
 		{
 			setupRequestBuilder();
 			const core::memory_allocator::MemoryAllocationRequest &request = m_requestBuilder.build();
-			core::memory_allocator::MemoryAllocationLayout layout = m_allocator.layout(request);
+			core::memory_allocator::MemoryAllocationLayout layout = m_allocator.layout(request,
+				m_parser.getNamespaceLabelMajor(), m_parser.getNamespaceLabelMinor());
 
 			if (userReallyLikesThisLayout(layout, m_parser.getUnits()))
 			{
@@ -633,6 +657,43 @@ void CreateGoalCommand::Parser::parsePropertyConfig()
 		}
 
 	}
+}
+
+void CreateGoalCommand::Parser::parsePropertyNamespaceLabelVersion()
+{
+        if (!hasError())
+        {
+                bool versionExists = false;
+
+                std::string versionStr = framework::Parser::getPropertyValue(m_parsedCommand,
+			NAMESPACE_LABEL_VERSION_NAME, &versionExists);
+
+                if (versionExists)
+                {
+
+			if (versionStr.compare(NAMESPACE_LABEL_VERSION_1_2) == 0) {
+				m_namespaceLabelMajor = 1;
+				m_namespaceLabelMinor = 2;
+			}
+			else if (versionStr.compare(NAMESPACE_LABEL_VERSION_1_1) == 0)
+			{
+				m_namespaceLabelMajor = 1;
+				m_namespaceLabelMinor = 1;
+			}
+                        else
+                        {
+                                m_pResult = new framework::SyntaxErrorBadValueResult(framework::TOKENTYPE_PROPERTY,
+                                                NAMESPACE_LABEL_VERSION_NAME, versionStr);
+                        }
+                }
+		else
+		{
+			// default to 1.2
+			m_namespaceLabelMajor = 1;
+			m_namespaceLabelMinor = 2;
+		}
+
+        }
 }
 
 }

@@ -49,11 +49,15 @@
 core::memory_allocator::LayoutBuilder::LayoutBuilder(
 		const struct nvm_capabilities &systemCapabilities,
 		core::NvmLibrary &nvmLib,
-		const std::vector<device_details> deviceDetailsList)
+		const std::vector<device_details> deviceDetailsList,
+		NVM_UINT16 namespaceLabelMajor,
+		NVM_UINT16 namespaceLabelMinor)
 	: m_systemCapabilities(systemCapabilities),
 	  m_nvmLib(nvmLib),
 	  m_util(nvmLib),
-	  m_deviceDetailsList(deviceDetailsList)
+	  m_deviceDetailsList(deviceDetailsList),
+	  m_namespaceLabelMajor(namespaceLabelMajor),
+	  m_namespaceLabelMinor(namespaceLabelMinor)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
@@ -135,6 +139,11 @@ void core::memory_allocator::LayoutBuilder::initLayoutGoals(
 
 	struct config_goal goal;
 	memset(&goal, 0, sizeof (goal));
+
+	// set namespace label versions
+	goal.namespace_label_major = m_namespaceLabelMajor;
+	goal.namespace_label_minor = m_namespaceLabelMinor;
+
 	std::vector<struct Dimm> dimms = request.getDimms();
 	for (std::vector<struct Dimm>::const_iterator dimmIter = dimms.begin();
 			dimmIter != dimms.end(); dimmIter++)

@@ -1016,6 +1016,8 @@ struct config_goal
 	NVM_UINT16 app_direct_2_set_id; // Unique index identifying interleave set for AD 2.
 	struct app_direct_attributes app_direct_2_settings; // AD 2 QoS attributes.
 	enum config_goal_status status; // Status for the config goal. Ignored for input.
+	NVM_UINT16 namespace_label_major;
+	NVM_UINT16 namespace_label_minor;
 };
 
 /*

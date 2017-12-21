@@ -44,6 +44,7 @@
 #include "config_goal_utilities.h"
 #include "platform_config_data.h"
 #include "namespace_labels.h"
+#include "device_adapter.h"
 
 #define	DEFAULT_PCD_TABLE_REVISION	2
 
@@ -807,6 +808,13 @@ int nvm_create_config_goal(const NVM_UID device_uid,
 
 				// be a good citizen and clear out broken any old broken ns labels
 				zero_dimm_namespace_labels(discovery.device_handle.handle);
+
+				// init namespace label index here
+				// currently only implemented for linux
+				// prevents linux from auto initilizing label-less namespaces
+				init_label_dimm(discovery.device_handle.handle,
+						p_goal->namespace_label_major,
+						p_goal->namespace_label_minor);
 			}
 		}
 	}
