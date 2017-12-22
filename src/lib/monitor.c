@@ -483,7 +483,7 @@ static void *poll_events(void *arg)
 				}
 				else
 				{
-					struct event events[event_count];
+					struct event *events = malloc(event_count * sizeof(struct event));
 					event_count = process_events_matching_filter(&filter, events, event_count, 0);
 					if (event_count < 0)
 					{
@@ -516,6 +516,8 @@ static void *poll_events(void *arg)
 						// save new current event id so events aren't repeatedly sent to callbacks
 						g_current_event_id = next_event_id;
 					}
+
+                    free(events);
 				}
 			}
 			else if (next_event_id < g_current_event_id) // Should never happen

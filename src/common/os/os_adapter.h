@@ -107,7 +107,7 @@ enum system_event_type
  * @param[out] locale_dir
  * 		Base path for the language catalog
  */
-extern void get_locale_dir(COMMON_PATH locale_dir);
+NVM_COMMON_API extern void get_locale_dir(COMMON_PATH locale_dir);
 
 /*
  * ***************************************************************
@@ -125,7 +125,7 @@ extern void get_locale_dir(COMMON_PATH locale_dir);
  * 		A pointer to @c buffer. @n
  * 		@c NULL if an error occurred
  */
-extern char *get_cwd(COMMON_PATH buffer, size_t size);
+NVM_COMMON_API extern char *get_cwd(COMMON_PATH buffer, size_t size);
 
 /*!
  * Function that gets the OS system root directory
@@ -136,7 +136,7 @@ extern char *get_cwd(COMMON_PATH buffer, size_t size);
  * 		COMMON_ERR_UNKNOWN @n
  * 		COMMON_SUCCESS
  */
-extern int get_system_root(COMMON_PATH root_dir);
+NVM_COMMON_API extern int get_system_root(COMMON_PATH root_dir);
 
 /*
  * ***************************************************************
@@ -155,7 +155,7 @@ extern int get_system_root(COMMON_PATH root_dir);
  * 		COMMON_SUCCESS @n
  * 		COMMON_ERR_FAILED
  */
-extern int start_process(const char *process_name, unsigned int *p_process_id);
+NVM_COMMON_API extern int start_process(const char *process_name, unsigned int *p_process_id);
 
 /*!
  * Stop a process using a process id
@@ -165,19 +165,19 @@ extern int start_process(const char *process_name, unsigned int *p_process_id);
  * 		COMMON_SUCCESS @n
  * 		COMMON_ERR_FAILED
  */
-extern int stop_process(unsigned int process_id);
+NVM_COMMON_API extern int stop_process(unsigned int process_id);
 
 /*!
  * Blocks for the specified number of msecs.
  * @param[in] time
  * 		The amount of time to sleep, in milliseconds.
  */
-extern void nvm_sleep(unsigned long time);
+NVM_COMMON_API extern void nvm_sleep(unsigned long time);
 
 /*!
  * Create a thread on the current process
  */
-extern void create_thread(COMMON_UINT64 *p_thread_id, void *(*callback)(void *),
+NVM_COMMON_API extern void create_thread(COMMON_UINT64 *p_thread_id, void *(*callback)(void *),
 	void *callback_arg);
 
 /*!
@@ -185,7 +185,7 @@ extern void create_thread(COMMON_UINT64 *p_thread_id, void *(*callback)(void *),
  * @return
  * 		The thread ID
  */
-extern COMMON_UINT64 get_thread_id();
+NVM_COMMON_API extern COMMON_UINT64 get_thread_id();
 
 /*!
  * A function that creates (in Windows only) and initializes a mutex.
@@ -198,7 +198,7 @@ extern COMMON_UINT64 get_thread_id();
  * @return
  * 		1 for success, 0 for failure
  */
-extern int mutex_init(OS_MUTEX *p_mutex, const char *name);
+NVM_COMMON_API extern int mutex_init(OS_MUTEX *p_mutex, const char *name);
 
 /*!
  * A function that locks the mutex, guaranteeing thread independence where implemented.
@@ -210,7 +210,7 @@ extern int mutex_init(OS_MUTEX *p_mutex, const char *name);
  * @return
  * 		1 for success, 0 for failure
  */
-extern int mutex_lock(OS_MUTEX *p_mutex);
+NVM_COMMON_API extern int mutex_lock(OS_MUTEX *p_mutex);
 
 /*!
  * A function that unlocks the mutex, allowing other callers to mutex_lock to proceed
@@ -219,7 +219,7 @@ extern int mutex_lock(OS_MUTEX *p_mutex);
  * @return
  * 		1 for success, 0 for failure
  */
-extern int mutex_unlock(OS_MUTEX *p_mutex);
+NVM_COMMON_API extern int mutex_unlock(OS_MUTEX *p_mutex);
 
 /*!
  * A function that de-initializes and deallocates (Windows only) the mutex
@@ -228,7 +228,7 @@ extern int mutex_unlock(OS_MUTEX *p_mutex);
  * @return
  * 		1 for success, 0 for failure
  */
-extern int mutex_delete(OS_MUTEX *p_mutex, const char *name);
+NVM_COMMON_API extern int mutex_delete(OS_MUTEX *p_mutex, const char *name);
 
 /*!
  * A function that initializes a rwlock.
@@ -237,7 +237,7 @@ extern int mutex_delete(OS_MUTEX *p_mutex, const char *name);
  * @return
  * 		1 for success, 0 for failure
  */
-extern int rwlock_init(OS_RWLOCK *p_rwlock);
+NVM_COMMON_API extern int rwlock_init(OS_RWLOCK *p_rwlock);
 
 /*!
  * A function that applies a shared-read lock to the rwlock
@@ -246,7 +246,7 @@ extern int rwlock_init(OS_RWLOCK *p_rwlock);
  * @return
  * 		1 for success, 0 for failure
  */
-extern int rwlock_r_lock(OS_RWLOCK *p_rwlock);
+NVM_COMMON_API extern int rwlock_r_lock(OS_RWLOCK *p_rwlock);
 
 /*!
  * A function that releases a shared-read lock
@@ -255,7 +255,7 @@ extern int rwlock_r_lock(OS_RWLOCK *p_rwlock);
  * @return
  * 		1 for success, 0 for failure
  */
-extern int rwlock_r_unlock(OS_RWLOCK *p_rwlock);
+NVM_COMMON_API extern int rwlock_r_unlock(OS_RWLOCK *p_rwlock);
 
 /*!
  * A function that applies an exclusive-write lock to the rwlock
@@ -264,7 +264,7 @@ extern int rwlock_r_unlock(OS_RWLOCK *p_rwlock);
  * @return
  * 		1 for success, 0 for failure
  */
-extern int rwlock_w_lock(OS_RWLOCK *p_rwlock);
+NVM_COMMON_API extern int rwlock_w_lock(OS_RWLOCK *p_rwlock);
 
 /*!
  * A function that releases an exclusive-write lock
@@ -273,7 +273,7 @@ extern int rwlock_w_lock(OS_RWLOCK *p_rwlock);
  * @return
  * 		1 for success, 0 for failure
  */
-extern int rwlock_w_unlock(OS_RWLOCK *p_rwlock);
+NVM_COMMON_API extern int rwlock_w_unlock(OS_RWLOCK *p_rwlock);
 
 /*!
  * A function that de-initializes and deallocates the rwlock
@@ -282,7 +282,7 @@ extern int rwlock_w_unlock(OS_RWLOCK *p_rwlock);
  * @return
  * 		1 for success, 0 for failure
  */
-extern int rwlock_delete(OS_RWLOCK *p_rwlock);
+NVM_COMMON_API extern int rwlock_delete(OS_RWLOCK *p_rwlock);
 
 
 /*
@@ -302,7 +302,7 @@ extern int rwlock_delete(OS_RWLOCK *p_rwlock);
  * 		COMMON_ERR_INVALIDPARAMETER
  * 		COMMON_ERR_UNKNOWN
  */
-extern int get_host_name(char *name, const COMMON_SIZE name_len);
+NVM_COMMON_API extern int get_host_name(char *name, const COMMON_SIZE name_len);
 
 /*!
  * Retrieve the operating system name.
@@ -315,7 +315,7 @@ extern int get_host_name(char *name, const COMMON_SIZE name_len);
  * 		COMMON_ERR_INVALIDPARAMETER
  * 		COMMON_ERR_UNKNOWN
  */
-extern int get_os_name(char *os_name, const COMMON_SIZE os_name_len);
+NVM_COMMON_API extern int get_os_name(char *os_name, const COMMON_SIZE os_name_len);
 
 /*!
  * Retrieve the operating system version as a string.f
@@ -328,7 +328,7 @@ extern int get_os_name(char *os_name, const COMMON_SIZE os_name_len);
  * 		COMMON_ERR_INVALIDPARAMETER
  * 		COMMON_ERR_UNKNOWN
  */
-extern int get_os_version(char *os_version, const COMMON_SIZE os_version_len);
+NVM_COMMON_API extern int get_os_version(char *os_version, const COMMON_SIZE os_version_len);
 
 /*
  * ***************************************************************
@@ -342,7 +342,7 @@ extern int get_os_version(char *os_version, const COMMON_SIZE os_version_len);
  * 		COMMON_SUCCESS @n
  * 		COMMON_ERR_INVALIDPERMISSIONS
  */
-extern int check_admin_permissions();
+NVM_COMMON_API extern int check_admin_permissions();
 
 /*
  * ***************************************************************
@@ -359,7 +359,7 @@ extern int check_admin_permissions();
  * @param[in] message
  * 		A null terminated string containing the message to log
  */
-extern void log_system_event(enum system_event_type type, const char *source,
+NVM_COMMON_API extern void log_system_event(enum system_event_type type, const char *source,
 		const char *message);
 
 /*!
@@ -367,7 +367,7 @@ extern void log_system_event(enum system_event_type type, const char *source,
  * @param[in, out] install_dir
  * 		the buffer to hold the install directory
  */
-extern void get_install_dir(COMMON_PATH install_dir);
+NVM_COMMON_API extern void get_install_dir(COMMON_PATH install_dir);
 
 /*!
  * Create a new stream connected to a pipe running the given command
@@ -382,7 +382,7 @@ extern void get_install_dir(COMMON_PATH install_dir);
  * @return
  * 		A pointer to the FILE stream buffer containing the tty output.
  */
-extern FILE *common_popen(const char *cmd, const char *mode);
+NVM_COMMON_API extern FILE *common_popen(const char *cmd, const char *mode);
 
 /*!
  * Close a stream opened by popen() and return the status of its child
@@ -391,21 +391,21 @@ extern FILE *common_popen(const char *cmd, const char *mode);
  * @return
  * 		An integer value representing the status of the popen()'d stream
  */
-extern int common_pclose(FILE *p_fstream);
+NVM_COMMON_API extern int common_pclose(FILE *p_fstream);
 
 /*!
  * load a dynamic library at run time
  * @param lib_path
  * 		path to the library
  */
-extern void *dlib_load(const char *lib_path);
+NVM_COMMON_API extern void *dlib_load(const char *lib_path);
 
 /*!
  * close a handle to a library loaded at run time
  * @param handle
  * 		handle to close
  */
-extern int dlib_close(void *handle);
+NVM_COMMON_API extern int dlib_close(void *handle);
 
 /*!
  * Get the appropriate OS specific extension for a dynamic library
@@ -416,14 +416,14 @@ extern int dlib_close(void *handle);
  * @return
  * 		return a the buffer pointer
  */
-extern char *dlib_suffix(char *buffer, COMMON_SIZE buffer_len);
+NVM_COMMON_API extern char *dlib_suffix(char *buffer, COMMON_SIZE buffer_len);
 
 /*!
  * Find a symbol within dynamically loaded library
  * @param handle
  * @param symbol
  */
-extern void *dlib_find_symbol(void *handle, const char *symbol);
+NVM_COMMON_API extern void *dlib_find_symbol(void *handle, const char *symbol);
 
 /*!
  * Wrapper around the __get_cpuid os call. ESX doesn't support this so it becomes OS dependent
@@ -434,7 +434,7 @@ extern void *dlib_find_symbol(void *handle, const char *symbol);
  * @param edx
  * @return
  */
-extern int get_cpuid(unsigned int level, unsigned int *eax,
+NVM_COMMON_API extern int get_cpuid(unsigned int level, unsigned int *eax,
 		unsigned int *ebx, unsigned int *ecx, unsigned int *edx);
 
 /*!
@@ -445,7 +445,11 @@ extern int get_cpuid(unsigned int level, unsigned int *eax,
  * @param num
  * 	number of bytes of the memory to be cleared
  */
-extern void s_memset(void *ptr, size_t num);
+NVM_COMMON_API extern void s_memset(void *ptr, size_t num);
+
+NVM_COMMON_API extern int get_filesize(const char *filename, size_t *filesize);
+
+NVM_COMMON_API extern int does_file_exist(const char *filename);
 
 #ifdef __cplusplus
 }

@@ -40,6 +40,7 @@ extern "C"
 
 #include <stdlib.h>
 #include <stdarg.h>
+#include <export_common.h>
 
 #define	HEX_STR_LEN	20
 
@@ -72,7 +73,7 @@ extern "C"
  * @return
  * 		Pointer to the @c dst.
  */
-char *s_strncat(char *dst, size_t dst_size, const char *src, size_t src_size);
+NVM_COMMON_API char *s_strncat(char *dst, size_t dst_size, const char *src, size_t src_size);
 
 /*!
  * Safe concatenation of strings of identical sizes.
@@ -93,7 +94,7 @@ char *s_strncat(char *dst, size_t dst_size, const char *src, size_t src_size);
  * @return
  * 		Pointer to the @c dst.
  */
-char *s_strcat(char *dst, size_t dst_size, const char *src);
+NVM_COMMON_API char *s_strcat(char *dst, size_t dst_size, const char *src);
 
 /*!
  * Safely determines the length of a string up to @c max_len
@@ -107,7 +108,7 @@ char *s_strcat(char *dst, size_t dst_size, const char *src);
  * 		A value between 0 and @c max_len, denoting the size of the string,
  * 		not including the null terminator if found.
  */
-size_t s_strnlen(const char *str, size_t max_len);
+NVM_COMMON_API size_t s_strnlen(const char *str, size_t max_len);
 
 /*!
  * Safe copy of a @b char array
@@ -122,7 +123,7 @@ size_t s_strnlen(const char *str, size_t max_len);
  * @return
  * 		The number of characters that were copied including null terminator.
  */
-char *s_strncpy(char *dst, size_t dst_size, const char *src, size_t src_size);
+NVM_COMMON_API char *s_strncpy(char *dst, size_t dst_size, const char *src, size_t src_size);
 
 /*!
  * Safe copy of a @b char array.
@@ -142,7 +143,7 @@ char *s_strncpy(char *dst, size_t dst_size, const char *src, size_t src_size);
  * @return
  * 		The number of characters that were copied including null terminator.
  */
-char *s_strcpy(char *dst, const char *src, size_t dst_size);
+NVM_COMMON_API char *s_strcpy(char *dst, const char *src, size_t dst_size);
 
 /*!
  * Safe string conversion to @b unsigned char.
@@ -164,7 +165,7 @@ char *s_strcpy(char *dst, const char *src, size_t dst_size);
  * 		The number of characters consumed from @c str.  This value is zero if the conversion
  * 		fails due to invalid input arguments.
  */
-size_t s_digitstrtouc(const char *const str, size_t str_len, const char **pp_end,
+NVM_COMMON_API size_t s_digitstrtouc(const char *const str, size_t str_len, const char **pp_end,
 		unsigned char *p_result);
 
 /*!
@@ -187,7 +188,7 @@ size_t s_digitstrtouc(const char *const str, size_t str_len, const char **pp_end
  * 		The number of characters consumed from @c str.  This value is zero if the conversion
  * 		fails due to invalid input arguments.
  */
-size_t s_strtous(const char *const str, size_t str_len, const char **pp_end,
+NVM_COMMON_API size_t s_strtous(const char *const str, size_t str_len, const char **pp_end,
 		unsigned short *p_result);
 
 /*!
@@ -210,7 +211,7 @@ size_t s_strtous(const char *const str, size_t str_len, const char **pp_end,
  * 		The number of characters consumed from @c str.  This value is zero if the conversion
  * 		fails due to invalid input arguments.
  */
-size_t s_strtoui(const char *const str, size_t str_len, const char **pp_end,
+NVM_COMMON_API size_t s_strtoui(const char *const str, size_t str_len, const char **pp_end,
 		unsigned int *p_result);
 
 /*!
@@ -233,7 +234,7 @@ size_t s_strtoui(const char *const str, size_t str_len, const char **pp_end,
  * 		The number of characters consumed from @c str.  This value is zero if the conversion
  * 		fails due to invalid input arguments.
  */
-size_t s_strtoull(const char *const str, size_t str_len, const char **pp_end,
+NVM_COMMON_API size_t s_strtoull(const char *const str, size_t str_len, const char **pp_end,
 		unsigned long long *p_result);
 /*!
  * Safe copy of a @b char array, omitting the null terminator
@@ -248,7 +249,7 @@ size_t s_strtoull(const char *const str, size_t str_len, const char **pp_end,
  * @return
  * 		A pointer to the destination string
  */
-char *s_strncpy_unterm(char *dst, size_t dst_size, const char *src, size_t src_size);
+NVM_COMMON_API char *s_strncpy_unterm(char *dst, size_t dst_size, const char *src, size_t src_size);
 
 /*!
  * Safe case-insensitive string comparison
@@ -266,7 +267,7 @@ char *s_strncpy_unterm(char *dst, size_t dst_size, const char *src, size_t src_s
  * 		0 if equivalent @n
  * 		-1 if either string pointer is @b NULL or @c size is 0
  */
-int s_strncmpi(const char *const str1, const char *const str2, size_t size);
+NVM_COMMON_API int s_strncmpi(const char *const str1, const char *const str2, size_t size);
 
 /*!
  * Safe case-sensitive string comparison
@@ -284,7 +285,7 @@ int s_strncmpi(const char *const str1, const char *const str2, size_t size);
  * 		0 if equivalent @n
  * 		-1 if either string pointer is @b NULL or @c size is 0
  */
-int s_strncmp(const char *const str1, const char *const str2, size_t size);
+NVM_COMMON_API int s_strncmp(const char *const str1, const char *const str2, size_t size);
 
 /*!
  * Safe copy of a @b wchar_t array.
@@ -304,7 +305,7 @@ int s_strncmp(const char *const str1, const char *const str2, size_t size);
  * @return
  * 		A copy of the @c dst pointer.
  */
-wchar_t *ws_strcpy(wchar_t *dst, const wchar_t *src, size_t dst_size);
+NVM_COMMON_API wchar_t *ws_strcpy(wchar_t *dst, const wchar_t *src, size_t dst_size);
 
 /*!
  * Safe trim of trailing white space from the given string.
@@ -316,7 +317,7 @@ wchar_t *ws_strcpy(wchar_t *dst, const wchar_t *src, size_t dst_size);
  * @param[in] len
  * 		The size of the buffer allocated to @c s
  */
-void s_strtrim_right(char *s, unsigned int len);
+NVM_COMMON_API void s_strtrim_right(char *s, unsigned int len);
 
 /*!
  * Safe trim of leading white space from the given string.
@@ -328,7 +329,7 @@ void s_strtrim_right(char *s, unsigned int len);
  * @param[in] len
  * 		The size of the buffer allocated to @c s
  */
-void s_strtrim_left(char *s, unsigned int len);
+NVM_COMMON_API void s_strtrim_left(char *s, unsigned int len);
 
 /*!
  * Safe trim of white space at both ends of a string.
@@ -340,7 +341,7 @@ void s_strtrim_left(char *s, unsigned int len);
  * @param[in] len
  * 		The size of the buffer allocated to @c s
  */
-void s_strtrim(char *s, unsigned int len);
+NVM_COMMON_API void s_strtrim(char *s, unsigned int len);
 
 /*!
  * Safe replacement of all found instances of a specific @b char, with a given string
@@ -368,7 +369,7 @@ void s_strtrim(char *s, unsigned int len);
  * 		0 if complete replacement was successful, else @n
  * 		the number of characters from the src_str successfully processed.
  */
-int s_strrep_char(char *dst_str, size_t dst_size, const char *src_str, size_t src_size,
+NVM_COMMON_API int s_strrep_char(char *dst_str, size_t dst_size, const char *src_str, size_t src_size,
 		const char target_char, const char *rep_cstr, size_t rep_cstr_size);
 
 /*!
@@ -383,7 +384,7 @@ int s_strrep_char(char *dst_str, size_t dst_size, const char *src_str, size_t sr
  * 		A pointer to the last instance of @c ch within @c str @n
  * 		else, @b NULL if an instance of @c ch is not found.
  */
-char *s_strrchr(char *str, char ch, int max_len);
+NVM_COMMON_API char *s_strrchr(char *str, char ch, int max_len);
 
 /*!
  * @brief Safe version of snprintf
@@ -409,7 +410,7 @@ char *s_strrchr(char *str, char ch, int max_len);
  * 		"str" will be truncated to at most "size"-1 + the null terminator
  * 		If an error occurs, -1 will be returned and errno set
  */
-int s_snprintf(char *str, size_t size, const char *format, ...);
+NVM_COMMON_API int s_snprintf(char *str, size_t size, const char *format, ...);
 
 /*!
  * @brief Safe version of get_hex_string
@@ -426,7 +427,7 @@ int s_snprintf(char *str, size_t size, const char *format, ...);
  *		This function upon success returns the number of bytes
  *		(characters) placed in the string
  */
-int get_hex_string(unsigned long long val, char *destStr, size_t len);
+NVM_COMMON_API int get_hex_string(unsigned long long val, char *destStr, size_t len);
 
 #ifdef __cplusplus
 }

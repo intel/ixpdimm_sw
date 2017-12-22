@@ -73,7 +73,7 @@ static std::string MEMORY_TYPE_STR_PATROLSCRUB = "PatrolScrub";
 /*!
  * Implements for validation related commands
  */
-class NVM_API ValidationFeature : public cli::nvmcli::VerboseFeatureBase
+class NVM_CLI_API ValidationFeature : public cli::nvmcli::VerboseFeatureBase
 {
 public:
 

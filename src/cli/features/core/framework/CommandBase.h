@@ -27,6 +27,7 @@
 #ifndef CR_MGMT_COMMANDBASE_H
 #define CR_MGMT_COMMANDBASE_H
 
+#include <cli/features/ExportCli.h>
 #include <libinvm-cli/CliFrameworkTypes.h>
 #include <libinvm-cli/ResultBase.h>
 #include "DisplayOptions.h"
@@ -36,7 +37,7 @@ namespace cli
 {
 namespace framework
 {
-class CommandBase
+class NVM_CLI_API CommandBase
 {
 public:
 	CommandBase();

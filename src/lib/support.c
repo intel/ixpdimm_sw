@@ -47,7 +47,11 @@
 #include "capabilities.h"
 #include "nvm_context.h"
 #include "system.h"
+#ifdef _WIN32
+#include <windows.h>
+#else
 #include <unistd.h>
+#endif
 #include <fcntl.h>
 #include "utility.h"
 #include "namespace_labels.h"
@@ -328,7 +332,7 @@ int retrieve_all_fa_data_blobs(const NVM_NFIT_DEVICE_HANDLE device_handle,
 	int rc = NVM_SUCCESS;
 	unsigned char *p_blob = NULL;
 	unsigned int blob_file_name_size = support_file_len + COMMON_INT_LENGTH;
-	char blob_file[blob_file_name_size];
+	char *blob_file = malloc(blob_file_name_size);
 	unsigned int blob_count = 0;
 
 	for (unsigned int current_token_id = 1; current_token_id <= max_token_id; current_token_id++)
@@ -379,6 +383,8 @@ int retrieve_all_fa_data_blobs(const NVM_NFIT_DEVICE_HANDLE device_handle,
 			blob_count++;
 		}
 	}
+
+    free(blob_file);
 
 	if (blob_count == 0)
 	{
@@ -450,12 +456,14 @@ int nvm_dump_device_support(const NVM_UID device_uid, const NVM_PATH support_fil
 				== NVM_SUCCESS)
 		{
 			unsigned int fa_file_name_size = support_file_len + NVM_MAX_UID_LEN;
-			char fa_file_name[fa_file_name_size];
+			char *fa_file_name = malloc(fa_file_name_size);
 
 			snprintf(fa_file_name, fa_file_name_size, "%s_%s", support_file, discovery.uid);
 
 			rc = retrieve_all_fa_data_blobs(discovery.device_handle,
 					max_token_id, fa_file_name, fa_file_name_size, support_files);
+
+            free(fa_file_name);
 		}
 		else
 		{

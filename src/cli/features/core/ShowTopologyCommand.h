@@ -36,7 +36,7 @@
 #include <lib/nvm_types.h>
 #include <core/device/TopologyService.h>
 #include <core/device/DeviceService.h>
-#include <core/StringList.h>
+#include <cli/features/core/StringList.h>
 #include <cli/features/core/framework/CommandBase.h>
 
 namespace cli
@@ -44,7 +44,7 @@ namespace cli
 namespace nvmcli
 {
 
-class NVM_API ShowTopologyCommand : framework::CommandBase
+class NVM_CLI_API ShowTopologyCommand : framework::CommandBase
 {
 public:
 	ShowTopologyCommand(

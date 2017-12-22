@@ -511,7 +511,7 @@ int LibWrapper::getDebugLogCount() const
 	return nvm_get_debug_log_count();
 }
 
-int LibWrapper::getDebugLogs(struct log *pLogs, const NVM_UINT32 count) const
+int LibWrapper::getDebugLogs(struct nvm_log *pLogs, const NVM_UINT32 count) const
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
 	return nvm_get_debug_logs(pLogs, count);

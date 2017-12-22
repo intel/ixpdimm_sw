@@ -47,7 +47,7 @@ std::vector<core::logs::Log> core::logs::LogService::getAllLogsInDescOrderbyTime
 
 	std::vector<Log> allLogs;
 
-	std::vector<struct log> allLibLogs = m_lib.getDebugLogs();
+	std::vector<struct nvm_log> allLibLogs = m_lib.getDebugLogs();
 	for(size_t i = 0; i < allLibLogs.size(); i++)
 	{
 		Log tempLog(allLibLogs[i]);

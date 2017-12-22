@@ -42,6 +42,7 @@
 #include <core/exceptions/LibraryException.h>
 #include <core/Collection.h>
 #include <core/NvmLibrary.h>
+#include <core/ExportCore.h>
 
 static const NVM_UINT32 SECURITY_PASSPHRASE = 0;
 static const NVM_UINT32 SECURITY_UNLOCK = 1;
@@ -78,7 +79,7 @@ namespace core
 namespace device
 {
 
-class NVM_API Device
+class NVM_CORE_API Device
 {
 public:
 	Device();
@@ -192,7 +193,7 @@ private:
 	void copy(const Device &other);
 };
 
-class NVM_API DeviceCollection : public Collection<Device>
+class NVM_CORE_API DeviceCollection : public Collection<Device>
 {
 };
 

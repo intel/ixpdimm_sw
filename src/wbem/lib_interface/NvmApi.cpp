@@ -37,6 +37,7 @@
 #include <LogEnterExit.h>
 #include <os/os_adapter.h>
 #include <exception/NvmExceptionLibError.h>
+#include <memory>
 
 namespace wbem
 {
@@ -481,7 +482,7 @@ int NvmApi::getDebugLogCount()
 	return nvm_get_debug_log_count();
 }
 
-int NvmApi::getDebugLogs(struct log *pLogs, const NVM_UINT32 count)
+int NvmApi::getDebugLogs(struct nvm_log *pLogs, const NVM_UINT32 count)
 {
 	return nvm_get_debug_logs(pLogs, count);
 }
@@ -528,9 +529,9 @@ void NvmApi::getDevices(std::vector<struct device_discovery>& devices) const
 	else if (rc > 0) // don't bother if there's nothing to fetch
 	{
 		int count = rc;
-		struct device_discovery apiDevices[count];
-		memset(apiDevices, 0, sizeof (apiDevices));
-		rc = getDevices(apiDevices, count);
+		std::unique_ptr<struct device_discovery[]> apiDevices(new device_discovery[count]);
+		memset(apiDevices.get(), 0, count * sizeof(sizeof(device_discovery)));
+		rc = getDevices(apiDevices.get(), count);
 		if (rc < 0)
 		{
 			throw exception::NvmExceptionLibError(rc);
@@ -556,9 +557,9 @@ void NvmApi::getMemoryTopology(std::vector<struct memory_topology>& memoryTopolo
 	else if (rc > 0) // don't bother if there's nothing to fetch
 	{
 		int count = rc;
-		struct memory_topology apiMemTopology[count];
-		memset(apiMemTopology, 0, sizeof (apiMemTopology));
-		rc = nvm_get_memory_topology(apiMemTopology, count);
+		std::unique_ptr<struct memory_topology[]> apiMemTopology(new memory_topology[count]);
+		memset(apiMemTopology.get(), 0, count * sizeof(memory_topology));
+		rc = nvm_get_memory_topology(apiMemTopology.get(), count);
 		if (rc < 0)
 		{
 			throw exception::NvmExceptionLibError(rc);

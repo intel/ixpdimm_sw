@@ -181,9 +181,9 @@ framework::DisplayOptions CreateGoalCommand::ShowGoalAdapter::getLayoutGoalDispl
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	core::StringList displayProperties = getLayoutGoalDisplayProperties();
+	cli::framework::StringList displayProperties = getLayoutGoalDisplayProperties();
 	std::stringstream displayStr;
-	for (core::StringList::const_iterator prop = displayProperties.begin();
+	for (cli::framework::StringList::const_iterator prop = displayProperties.begin();
 			prop != displayProperties.end(); prop++)
 	{
 		if (prop != displayProperties.begin())
@@ -203,7 +203,7 @@ core::StringList CreateGoalCommand::ShowGoalAdapter::getLayoutGoalDisplayPropert
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
-	core::StringList displayProperties;
+	cli::framework::StringList displayProperties;
 	displayProperties.push_back(ShowGoalCommand::SOCKETID);
 	displayProperties.push_back(ShowGoalCommand::DIMMID);
 	displayProperties.push_back(ShowGoalCommand::MEMORYSIZE);

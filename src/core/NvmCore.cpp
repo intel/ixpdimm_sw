@@ -49,7 +49,7 @@ int nvm_close_lib();
 /*!
  * DLL Entry Point
  */
-extern "C" BOOL WINAPI NVM_API DllMain(HANDLE hModule, DWORD ulReason, LPVOID lpReserved)
+extern "C" BOOL WINAPI DllMain(HANDLE hModule, DWORD ulReason, LPVOID lpReserved)
 {
 	int rc = COMMON_SUCCESS;
 	switch (ulReason)

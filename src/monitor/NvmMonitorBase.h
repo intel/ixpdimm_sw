@@ -53,7 +53,7 @@ namespace monitor
 	 * function in lib_persistence.c. Also see MONITOR_INTERVAL_SUFFIX_KEY,
 	 * MONITOR_ENABLED_SUFFIX_KEY, and the NvmMonitorBase constructor for reference.
 	 */
-	class NVM_API NvmMonitorBase
+	class NvmMonitorBase
 	{
 
 	public:

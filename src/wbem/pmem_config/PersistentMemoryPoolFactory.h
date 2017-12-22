@@ -60,7 +60,7 @@ namespace pmem_config
 	static const NVM_UINT32 PERSISTENTMEMORYPOOL_ERR_INVALID_PARAMETER = 5;
 	static const NVM_UINT32 PERSISTENTMEMORYPOOL_ERR_INSUFFICIENT_RESOURCES = 4097;
 
-	class NVM_API PersistentMemoryPoolFactory: public wbem::framework_interface::NvmInstanceFactory
+	class NVM_CIM_API PersistentMemoryPoolFactory: public wbem::framework_interface::NvmInstanceFactory
 	{
 	public:
 		/*!

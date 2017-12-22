@@ -332,10 +332,10 @@ void calculate_iset_cookies(struct ns_data **pp_ns_data)
 	{
 		struct nvm_interleave_set *p_set = &(*pp_ns_data)->iset_list[iset_idx];
 
-		struct v1_1_cookie_data data_v1_1[p_set->dimm_count];
+		struct v1_1_cookie_data *data_v1_1 = malloc(p_set->dimm_count * sizeof(struct v1_1_cookie_data));
 		NVM_SIZE data_v1_1_size = sizeof (struct v1_1_cookie_data) * p_set->dimm_count;
 		memset(data_v1_1, 0, data_v1_1_size);
-		struct v1_2_cookie_data data_v1_2[p_set->dimm_count];
+		struct v1_2_cookie_data *data_v1_2 = malloc(p_set->dimm_count * sizeof(struct v1_2_cookie_data));
 		NVM_SIZE data_v1_2_size = sizeof (struct v1_2_cookie_data) * p_set->dimm_count;
 		memset(data_v1_2, 0, data_v1_2_size);
 
@@ -367,6 +367,9 @@ void calculate_iset_cookies(struct ns_data **pp_ns_data)
 		// cookie is the fletcher64 checksum of the cookie data data
 		checksum_fletcher64((void *)&data_v1_1, data_v1_1_size, &p_set->cookie_v1_1, 1);
 		checksum_fletcher64((void *)&data_v1_2, data_v1_2_size, &p_set->cookie_v1_2, 1);
+
+        free(data_v1_1);
+        free(data_v1_2);
 	}
 	COMMON_LOG_EXIT();
 }
@@ -888,7 +891,7 @@ int populate_namespaces(int ns_count, struct nvm_namespace_details *p_namespaces
 				// only want to parse namespaces once, so set
 				// context even if the user didn't pass in a list of
 				// namespaces
-				struct nvm_namespace_details tmp_nslist[p_ns_data->ns_count];
+				struct nvm_namespace_details *tmp_nslist = malloc(p_ns_data->ns_count * sizeof(struct nvm_namespace_details));
 				memset(tmp_nslist, 0,
 					p_ns_data->ns_count * sizeof (struct nvm_namespace_details));
 				int copy_count = 0;
@@ -918,6 +921,7 @@ int populate_namespaces(int ns_count, struct nvm_namespace_details *p_namespaces
 					rc = copy_count;
 					set_nvm_context_pcd_namespaces(copy_count, tmp_nslist);
 				}
+                free(tmp_nslist);
 			}
 			free_ns_data(p_ns_data);
 		}
@@ -943,7 +947,7 @@ int get_namespace_count_from_pcd()
 int get_namespaces_from_pcd(const NVM_UINT32 count, struct nvm_namespace_discovery *p_namespaces)
 {
 	COMMON_LOG_ENTRY();
-	struct nvm_namespace_details pcd_namespaces[count];
+	struct nvm_namespace_details *pcd_namespaces = malloc(count * sizeof(struct nvm_namespace_details));
 	memset(pcd_namespaces, 0, sizeof (struct nvm_namespace_details) * count);
 	int rc = populate_namespaces(count, pcd_namespaces);
 	if (rc >= 0)
@@ -954,6 +958,8 @@ int get_namespaces_from_pcd(const NVM_UINT32 count, struct nvm_namespace_discove
 				sizeof (struct nvm_namespace_discovery));
 		}
 	}
+
+    free(pcd_namespaces);
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
@@ -970,7 +976,7 @@ int get_namespace_details_from_pcd(
 	int ns_count = get_namespace_count_from_pcd();
 	if (ns_count > 0)
 	{
-		struct nvm_namespace_details pcd_namespaces[ns_count];
+		struct nvm_namespace_details *pcd_namespaces = malloc(ns_count * sizeof(struct nvm_namespace_details));
 		memset(pcd_namespaces, 0, sizeof (struct nvm_namespace_details) * ns_count);
 		ns_count = populate_namespaces(ns_count, pcd_namespaces);
 		if (ns_count > 0)
@@ -986,6 +992,8 @@ int get_namespace_details_from_pcd(
 				}
 			}
 		}
+
+        free(pcd_namespaces);
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;

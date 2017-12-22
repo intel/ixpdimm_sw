@@ -61,7 +61,7 @@ namespace wbem
 /*!
  * Provider Factory for Intel_PoolView
  */
-		class NVM_API PoolViewFactory : public framework_interface::NvmInstanceFactory
+		class NVM_CIM_API PoolViewFactory : public framework_interface::NvmInstanceFactory
 		{
 		public:
 

@@ -47,7 +47,7 @@ static const std::string PERFORMANCEMETRICSERVICE_NAME = "NVDIMM Performance Met
 /*!
  * Provider Factory for PerformanceMetricService
  */
-class NVM_API PerformanceMetricServiceFactory : public framework_interface::NvmInstanceFactory
+class NVM_CIM_API PerformanceMetricServiceFactory : public framework_interface::NvmInstanceFactory
 {
 public:
 

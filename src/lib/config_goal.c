@@ -44,6 +44,7 @@
 #include "config_goal_utilities.h"
 #include "platform_config_data.h"
 #include "namespace_labels.h"
+#include "config_goal.h"
 #include "device_adapter.h"
 
 #define	DEFAULT_PCD_TABLE_REVISION	2
@@ -555,7 +556,7 @@ int config_goal_to_config_input(const struct config_goal *p_goal,
 				p_input_table->header.length = cfg_size;
 
 				// copy ext tables
-				void *p_table = &(p_input_table->p_ext_tables);
+                NVM_UINT8 *p_table = (NVM_UINT8*)&(p_input_table->p_ext_tables);
 
 				NVM_UINT64 table_size = partition_table.header.length;
 				memmove(p_table, &partition_table, table_size);
@@ -650,13 +651,15 @@ NVM_UINT8 get_revision_for_new_config_input(struct current_config_table *p_curre
 		if (rc > 0)
 		{
 			int device_count = rc;
-			struct device_discovery devices[device_count];
+			struct device_discovery *devices = malloc(device_count * sizeof(struct device_discovery));
 			rc = nvm_get_devices(devices, device_count);
 			if (rc > 0)
 			{
 				rev = get_pcd_revision_from_another_device_in_list(device_handle,
 						devices, device_count);
 			}
+
+            free(devices);
 		}
 	}
 

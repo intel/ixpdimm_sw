@@ -29,6 +29,7 @@
 #define CR_MGMT_FRAMEWORKEXTENSIONS_H
 
 #include <algorithm>
+#include <wbem/ExportCim.h>
 
 #define ADD_KEY_ATTRIBUTE(keys, key, type, value) \
 	(keys)[(key)] = framework::Attribute ((type)(value), true)
@@ -46,7 +47,7 @@ namespace wbem
  * Given an attribute name, gets the current (from pInstance) value.
  * @throw Exception if the attribute is found in attributes but not pInstance
  */
-void getCurrentAttribute(const std::string &attributeName,
+ NVM_CIM_API void getCurrentAttribute(const std::string &attributeName,
 	const framework::Instance *pInstance,
 	framework::Attribute &currentAttribute)
 throw(framework::Exception);
@@ -56,11 +57,11 @@ throw(framework::Exception);
  * (from attributes) value.
  * @return true if the named attribute is found in attributes.
  */
-bool getNewModifiableAttribute(const std::string &attributeName,
+ NVM_CIM_API bool getNewModifiableAttribute(const std::string &attributeName,
 	const framework::attributes_t &attributes,
 	framework::Attribute &newAttribute);
 
-void checkAttributesAreModifiable(framework::Instance *pInstance,
+ NVM_CIM_API void checkAttributesAreModifiable(framework::Instance *pInstance,
 	framework::attributes_t &attributes,
 	framework::attribute_names_t modifiableAttributes);
 

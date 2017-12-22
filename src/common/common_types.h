@@ -33,8 +33,13 @@
 #define	_COMMON_TYPES_H
 
 #include <wchar.h>
-
 #include <limits.h>
+#include "export_common.h"
+
+#ifdef __WINDOWS__
+#include <stdlib.h>
+#define PATH_MAX _MAX_PATH
+#endif
 
 #ifdef __cplusplus
 extern "C"

@@ -48,7 +48,7 @@ enum file_lock_mode
 	FILE_LOCK_MODE_READ = 2
 };
 
-extern int create_trunc_file(const COMMON_PATH path, const COMMON_SIZE path_len);
+NVM_COMMON_API extern int create_trunc_file(const COMMON_PATH path, const COMMON_SIZE path_len);
 
 /*!
  * Creates a file with default file properties
@@ -62,7 +62,7 @@ extern int create_trunc_file(const COMMON_PATH path, const COMMON_SIZE path_len)
  * 		1 if success, @n
  * 		0 if failure
  */
-extern int create_file(const COMMON_PATH path, const COMMON_SIZE path_len);
+NVM_COMMON_API extern int create_file(const COMMON_PATH path, const COMMON_SIZE path_len);
 
 /*!
  * Creates a directory with default properties
@@ -74,7 +74,7 @@ extern int create_file(const COMMON_PATH path, const COMMON_SIZE path_len);
  * 		1 if success, @n
  * 		0 if failure
  */
-extern int create_dir(const COMMON_PATH path, const COMMON_SIZE path_len);
+NVM_COMMON_API extern int create_dir(const COMMON_PATH path, const COMMON_SIZE path_len);
 
 /*!
  * Copy a file
@@ -90,7 +90,7 @@ extern int create_dir(const COMMON_PATH path, const COMMON_SIZE path_len);
  * 		Non-zero if success, @n
  * 		0 if failure
  */
-extern int copy_file(const COMMON_PATH source, const COMMON_SIZE source_len,
+NVM_COMMON_API extern int copy_file(const COMMON_PATH source, const COMMON_SIZE source_len,
 		const COMMON_PATH destination, const COMMON_SIZE destination_len);
 
 /*!
@@ -108,7 +108,7 @@ extern int copy_file(const COMMON_PATH source, const COMMON_SIZE source_len,
  * 		Non-zero if success, @n
  * 		0 if failure
  */
-extern int copy_file_to_buffer(const COMMON_PATH path, const COMMON_SIZE path_len,
+NVM_COMMON_API extern int copy_file_to_buffer(const COMMON_PATH path, const COMMON_SIZE path_len,
 		void **pp_buf, unsigned int *p_buf_len);
 
 /*!
@@ -127,7 +127,7 @@ extern int copy_file_to_buffer(const COMMON_PATH path, const COMMON_SIZE path_le
  * 		Non-zero if failure, @n
  * 		0 if success
  */
-extern int copy_buffer_to_file(void *p_buf, unsigned int buf_size,
+NVM_COMMON_API extern int copy_buffer_to_file(void *p_buf, unsigned int buf_size,
 		const COMMON_PATH path, const COMMON_SIZE path_len, int oflags);
 /*!
  * Open a file
@@ -141,7 +141,7 @@ extern int copy_buffer_to_file(void *p_buf, unsigned int buf_size,
  * 		A pointer to the open file. @n
  * 		NULL if an error occurred.
  */
-extern FILE *open_file(const COMMON_PATH path, const COMMON_SIZE path_len, const char *args);
+NVM_COMMON_API extern FILE *open_file(const COMMON_PATH path, const COMMON_SIZE path_len, const char *args);
 
 /*!
  * Delete a file
@@ -153,7 +153,7 @@ extern FILE *open_file(const COMMON_PATH path, const COMMON_SIZE path_len, const
  * 		1 if deleted, @n
  * 		0 if not deleted
  */
-extern int delete_file(const COMMON_PATH path, const COMMON_SIZE path_len);
+NVM_COMMON_API extern int delete_file(const COMMON_PATH path, const COMMON_SIZE path_len);
 
 /*!
  * Delete a existing & empty directory
@@ -165,7 +165,7 @@ extern int delete_file(const COMMON_PATH path, const COMMON_SIZE path_len);
  * 		1 if deleted, @n
  * 		0 if not deleted
  */
-extern int delete_dir(const COMMON_PATH dir_path, const COMMON_SIZE path_len);
+NVM_COMMON_API extern int delete_dir(const COMMON_PATH dir_path, const COMMON_SIZE path_len);
 
 /*!
  * Determines if a given file exists
@@ -177,7 +177,7 @@ extern int delete_dir(const COMMON_PATH dir_path, const COMMON_SIZE path_len);
  * 		1 if the file exists, @n
  * 		0 if it does not exist
  */
-extern int file_exists(const COMMON_PATH path, const COMMON_SIZE path_len);
+NVM_COMMON_API extern int file_exists(const COMMON_PATH path, const COMMON_SIZE path_len);
 
 /*!
  * Convert a relative or absolute path to an absolute path
@@ -191,7 +191,7 @@ extern int file_exists(const COMMON_PATH path, const COMMON_SIZE path_len);
  *  	COMMON_SUCCESS
  *		COMMON_ERR_INVALIDPARAMETER
  */
-extern int get_absolute_path(const COMMON_PATH path, const COMMON_SIZE path_len,
+NVM_COMMON_API extern int get_absolute_path(const COMMON_PATH path, const COMMON_SIZE path_len,
 		COMMON_PATH abs_path);
 
 /*!
@@ -205,7 +205,7 @@ extern int get_absolute_path(const COMMON_PATH path, const COMMON_SIZE path_len,
  *  	COMMON_ERR_INVALIDPARAMETER
  *  	COMMON_ERR_FAILED
  */
-extern int lock_file(FILE *p_file, const enum file_lock_mode mode);
+NVM_COMMON_API extern int lock_file(FILE *p_file, const enum file_lock_mode mode);
 
 #ifdef __cplusplus
 }

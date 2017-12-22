@@ -31,9 +31,11 @@
 #include <string>
 #include <algorithm>
 #include <nvm_types.h>
+#include <cli/features/ExportCli.h>
+
 namespace core
 {
-class NVM_API StringList : public std::vector<std::string>
+class NVM_CLI_API StringList : public std::vector<std::string>
 {
 public:
 

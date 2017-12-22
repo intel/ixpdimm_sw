@@ -63,7 +63,7 @@ struct InterleaveSetInfo
 /*!
  * Represents the support data maintained by the management software
  */
-class NVM_API MemoryConfigurationFactory  : public framework_interface::NvmInstanceFactory
+class NVM_CIM_API MemoryConfigurationFactory  : public framework_interface::NvmInstanceFactory
 {
 	public:
 		// constructor

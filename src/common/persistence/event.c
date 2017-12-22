@@ -949,7 +949,7 @@ int acknowledge_events(struct event_filter *p_filter)
 		if (count > 0) // at least one event needs acknowledging
 		{
 			// acknowledge event
-			struct event events[count];
+			struct event *events = malloc(count * sizeof(struct event));
 			memset(events, 0, sizeof (struct event) * count);
 			count = process_events_matching_filter(p_filter, events, count, 0);
 			if (count > 0) // at least one event needs acknowledging
@@ -982,6 +982,8 @@ int acknowledge_events(struct event_filter *p_filter)
 					}
 				}
 			}
+            
+            free(events);
 		}
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);

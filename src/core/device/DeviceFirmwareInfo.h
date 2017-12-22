@@ -30,13 +30,13 @@
 
 #include <string>
 #include <nvm_management.h>
-
+#include <core/ExportCore.h>
 
 namespace core
 {
 namespace device
 {
-class NVM_API DeviceFirmwareInfo
+class NVM_CORE_API DeviceFirmwareInfo
 {
 public:
 	DeviceFirmwareInfo(std::string uid, device_fw_info fw_info) : m_uid(uid), m_info(fw_info) { }

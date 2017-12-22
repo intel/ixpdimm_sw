@@ -53,7 +53,7 @@ static const std::string PERFORMANCEMETRICDEFINITION_CREATIONCLASSNAME
 /*!
  * Provider Factory for PerformanceDefinition
  */
-class NVM_API PerformanceMetricDefinitionFactory : public framework_interface::NvmInstanceFactory
+class NVM_CIM_API PerformanceMetricDefinitionFactory : public framework_interface::NvmInstanceFactory
 {
 public:
 

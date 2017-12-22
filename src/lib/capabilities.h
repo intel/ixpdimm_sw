@@ -47,10 +47,20 @@ extern "C" {
 #define	VALUEOF_NVM_FEATURE(p_nvm_features, feature_name)	\
 	*(NVM_BOOL *)(((char *)p_nvm_features) + offsetof(struct nvm_features, feature_name))
 
+ /*
+ * Return the offset of the specified nvm feature
+ */
+
+#define	VALUEOF_NVM_FEATURE_OFFSET(p_nvm_features, feature_name_offset) \
+    *(NVM_BOOL *)(((char *)p_nvm_features) + feature_name_offset)
+
 /*
  * Determine if the specified nvm_feature is supported by
  * retrieving the capabilities and checking the specified feature_name.
  */
+#ifdef _WIN32
+#define	IS_NVM_FEATURE_SUPPORTED(feature_name)  is_nvm_feature_supported(offsetof(struct nvm_features, feature_name))
+#else
 #define	IS_NVM_FEATURE_SUPPORTED(feature_name)	\
 (\
 { \
@@ -66,12 +76,17 @@ extern "C" {
 	rc; \
 } \
 )
+#endif
 
 /*
  * Determine if the specified nvm_feature is supported by
  * retrieving the capabilities and checking the specified feature_name
  * and checking the population
  */
+#ifdef _WIN32
+#define	IS_NVM_FEATURE_LICENSED(feature_name)   is_nvm_feature_licensed(offsetof(struct nvm_features, feature_name))
+#else
+
 #define	IS_NVM_FEATURE_LICENSED(feature_name)	\
 (\
 { \
@@ -91,6 +106,12 @@ extern "C" {
 	rc; \
 } \
 )
+
+#endif
+
+int is_nvm_feature_licensed(int feature_name_offset);
+
+int is_nvm_feature_supported(int feature_name_offset);
 
 int check_device_app_direct_namespaces_for_sku_violation(struct device_discovery *p_discovery,
 		NVM_BOOL *p_sku_violation);

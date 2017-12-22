@@ -83,36 +83,8 @@ void build_revision(char *revision, size_t revision_len,
 {
 	if (revision && (revision_len != 0))
 	{
-		// dynamically build revision string format
-		char rev_format_str[64];
-		rev_format_str[0] = '\0';
-		char num_digit_buf[4];
-
-
-		// Major Revision
-		s_strcat(rev_format_str, 64, "%0");
-		snprintf(num_digit_buf, 4, "%d", COMMON_MAJOR_REVISION_LEN);
-		s_strcat(rev_format_str, 64, num_digit_buf);
-		s_strcat(rev_format_str, 64, "hd");
-
-		// Minor Revision
-		s_strcat(rev_format_str, 64, ".%0");
-		snprintf(num_digit_buf, 4, "%d", COMMON_MINOR_REVISION_LEN);
-		s_strcat(rev_format_str, 64, num_digit_buf);
-		s_strcat(rev_format_str, 64, "hd");
-
-		// Hotfix Revision
-		s_strcat(rev_format_str, 64, ".%0");
-		snprintf(num_digit_buf, 4, "%d", COMMON_HOTFIX_REVISION_LEN);
-		s_strcat(rev_format_str, 64, num_digit_buf);
-		s_strcat(rev_format_str, 64, "hd");
-
-		// Build Revision
-		s_strcat(rev_format_str, 64, ".%0");
-		snprintf(num_digit_buf, 4, "%d", COMMON_BUILD_REVISION_LEN);
-		s_strcat(rev_format_str, 64, num_digit_buf);
-		s_strcat(rev_format_str, 64, "hd");
-		s_snprintf(revision, revision_len, rev_format_str, major, minor, hotfix, build);
+        snprintf(revision, revision_len, "%02d.%02d.%02d.%04d",
+            major, minor, hotfix, build);
 	}
 }
 

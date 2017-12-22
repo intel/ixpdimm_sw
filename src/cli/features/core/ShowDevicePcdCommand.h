@@ -31,7 +31,7 @@
 #include <cli/features/core/framework/CommandBase.h>
 #include <libinvm-cli/CommandSpec.h>
 #include <core/device/DeviceService.h>
-#include <core/StringList.h>
+#include <cli/features/core/StringList.h>
 
 namespace cli
 {
@@ -40,7 +40,7 @@ namespace nvmcli
 
 static const std::string SHOWDEVICEPCD_MSG = "Show Platform Configuration Data On Device ";
 
-class NVM_API ShowDevicePcdCommand : public framework::CommandBase
+class NVM_CLI_API ShowDevicePcdCommand : public framework::CommandBase
 {
 	public:
 

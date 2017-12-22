@@ -60,7 +60,7 @@ static const std::string MEMORYTOPOLOGYVIEW_MEMORYTYPE_UNKNOWN = "Unknown";
 // Used if the attribute was requested but doesn't apply to the given memory type
 static const std::string MEMORYTOPOLOGYVIEW_NOTAPPLICABLE = "N/A";
 
-class NVM_API MemoryTopologyViewFactory : public framework_interface::NvmInstanceFactory
+class NVM_CIM_API MemoryTopologyViewFactory : public framework_interface::NvmInstanceFactory
 {
 	public:
 		/*

@@ -74,7 +74,7 @@ int diag_security_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 		else if (dev_count > 0)
 		{
 			// get device_discovery information of all dimms
-			struct device_discovery dimms[dev_count];
+			struct device_discovery *dimms = malloc(dev_count * sizeof(struct device_discovery));
 			int manageable_dev_count = 0;
 			dev_count = nvm_get_devices(dimms, dev_count);
 			if (dev_count > 0)
@@ -83,7 +83,7 @@ int diag_security_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 				// count the number of dimms in each security state.
 				int security_state_count = (int)LOCK_STATE_NOT_SUPPORTED;
 
-				int count[security_state_count+1];
+				int count[LOCK_STATE_NOT_SUPPORTED + 1];
 				memset(count, 0, sizeof (int) * (security_state_count + 1));
 				for (int i = 0; i < dev_count; i++)
 				{
@@ -161,6 +161,8 @@ int diag_security_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 			{
 				rc = dev_count;
 			}
+
+            free(dimms);
 		} // nvm_get_device_count failed
 		else
 		{

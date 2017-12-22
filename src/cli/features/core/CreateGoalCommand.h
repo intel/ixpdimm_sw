@@ -39,6 +39,7 @@
 #include <cli/features/core/framework/YesNoPrompt.h>
 #include "CommandParts.h"
 #include "WbemToCli_utilities.h"
+#include <cli/features/ExportCli.h>
 
 namespace cli
 {
@@ -81,10 +82,10 @@ static const std::string CREATE_GOAL_SKU_MAPPED_MEMORY_LIMITED_WARNING = TR("The
 		"un-mapped capacity.");
 static const std::string CREATE_GOAL_CONFIG_CANNOT_BE_COMBINED_ERROR = TR("Config cannot be combined with any other property");
 
-class NVM_API CreateGoalCommand : public framework::CommandBase
+class NVM_CLI_API CreateGoalCommand : public framework::CommandBase
 {
 public:
-	class NVM_API Parser
+	class NVM_CLI_API Parser
 	{
 	public:
 
@@ -141,7 +142,7 @@ public:
 		void parsePropertyNamespaceLabelVersion();
 	};
 
-	class NVM_API ShowGoalAdapter
+	class NVM_CLI_API ShowGoalAdapter
 	{
 	public:
 		virtual framework::ResultBase *showCurrentGoal(const std::string &units) const;
@@ -153,13 +154,13 @@ public:
 		virtual core::StringList getLayoutGoalDisplayProperties() const;
 	};
 
-	class NVM_API NoChangeResult : public framework::SimpleResult
+	class NVM_CLI_API NoChangeResult : public framework::SimpleResult
 	{
 	public:
 		NoChangeResult();
 	};
 
-	class NVM_API UserPrompt
+	class NVM_CLI_API UserPrompt
 	{
 	public:
 		UserPrompt(const framework::YesNoPrompt &prompt, const ShowGoalAdapter &showGoalAdapter);

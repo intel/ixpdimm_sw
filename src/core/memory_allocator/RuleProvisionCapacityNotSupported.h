@@ -40,7 +40,7 @@ namespace core
 namespace memory_allocator
 {
 
-class NVM_API RuleProvisionCapacityNotSupported: public RequestRule
+class NVM_CORE_API RuleProvisionCapacityNotSupported: public RequestRule
 {
 	public:
 		RuleProvisionCapacityNotSupported(const struct nvm_capabilities &systemCapabilities);

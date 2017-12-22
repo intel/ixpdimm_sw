@@ -35,6 +35,7 @@
 #include <signal.h>
 #include <sys/sendfile.h>
 #include <sys/utsname.h>
+#include <sys/stat.h>
 #include <syslog.h>
 #include <pthread.h>
 #include <dlfcn.h>
@@ -63,6 +64,25 @@ void get_locale_dir(COMMON_PATH locale_dir)
 char *get_cwd(COMMON_PATH buffer, size_t size)
 {
 	return getcwd(buffer, size);
+}
+
+int get_filesize(const char *filename, size_t *filesize)
+{
+    struct stat file_stat;
+
+    if (NULL == filesize)
+    {
+        return -1;
+    }
+
+    if (0 != stat(filename, &file_stat))
+    {
+        return -1;
+    }
+
+    *filesize = file_stat.st_size;
+    
+    return 0;
 }
 
 /*

@@ -35,6 +35,11 @@
 #include <stddef.h>
 #include <limits.h>
 
+#ifdef _WIN32 
+#include <stdlib.h>
+#define PATH_MAX _MAX_PATH
+#endif
+
 #define	NVM_PRODUCT_NAME	"Intel DIMM Gen 1 Software\0"
 #define	NVM_DIMM_NAME_LONG	"Intel DIMM Gen 1"
 #define	NVM_DIMM_NAME	"AEP DIMM"
@@ -103,29 +108,6 @@
 #define	NVM_MAX_EAFD_FILES 10
 #define NVM_TRUE 1
 #define NVM_FALSE 0
-
-/*
- * Macros for controlling what is exported by the library
- */
-#ifdef __WINDOWS__ // Windows
-#define	NVM_HELPER_DLL_IMPORT __declspec(dllimport)
-#define	NVM_HELPER_DLL_EXPORT __declspec(dllexport)
-#else // Linux/ESX
-#define	NVM_HELPER_DLL_IMPORT __attribute__((visibility("default")))
-#define	NVM_HELPER_DLL_EXPORT __attribute__((visibility("default")))
-#endif // end Linux/ESX
-
-// NVM_API is used for the public API symbols.
-// NVM_LOCAL is used for non-api symbols.
-#ifdef	__NVM_DLL__ // defined if compiled as a DLL
-#ifdef	__NVM_DLL_EXPORTS__ // defined if we are building the DLL (instead of using it)
-#define	NVM_API NVM_HELPER_DLL_EXPORT
-#else
-#define	NVM_API NVM_HELPER_DLL_IMPORT
-#endif // NVM_DLL_EXPORTS
-#else // NVM_DLL is not defined, everything is exported
-#define	NVM_API
-#endif // NVM_DLL
 
 typedef size_t NVM_SIZE; // String length size
 typedef char NVM_INT8; // 8 bit signed integer

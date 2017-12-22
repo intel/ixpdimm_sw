@@ -41,7 +41,7 @@
  * p_remaining_length must contain the length of the SMBIOS table from p_current to the end of the buffer.
  * Updates p_remaining_length with length from the returned pointer to the end of the buffer.
  */
-const struct smbios_structure_header *smbios_get_next_structure(const struct smbios_structure_header* p_current,
+NVM_COMMON_API const struct smbios_structure_header *smbios_get_next_structure(const struct smbios_structure_header* p_current,
 		size_t* p_remaining_length);
 
 /*
@@ -49,7 +49,7 @@ const struct smbios_structure_header *smbios_get_next_structure(const struct smb
  * p_remaining_length must contain the length of the SMBIOS table from p_current to the end of the buffer.
  * Updates p_remaining_length with length from the returned pointer to the end of the buffer.
  */
-const struct smbios_structure_header *smbios_get_first_structure_of_type(const enum smbios_structure_type type,
+NVM_COMMON_API const struct smbios_structure_header *smbios_get_first_structure_of_type(const enum smbios_structure_type type,
 		const struct smbios_structure_header *p_current, size_t *p_remaining_length);
 
 /*
@@ -57,7 +57,7 @@ const struct smbios_structure_header *smbios_get_first_structure_of_type(const e
  * p_remaining_length must contain the length of the SMBIOS table from p_current to the end of the buffer.
  * Updates p_remaining_length with length from the returned pointer to the end of the buffer.
  */
-const struct smbios_structure_header *smbios_get_next_structure_of_type(const enum smbios_structure_type type,
+NVM_COMMON_API const struct smbios_structure_header *smbios_get_next_structure_of_type(const enum smbios_structure_type type,
 		const struct smbios_structure_header *p_current, size_t *p_remaining_length);
 
 /*
@@ -66,27 +66,27 @@ const struct smbios_structure_header *smbios_get_next_structure_of_type(const en
  * p_remaining_length must contain the length of the SMBIOS table from p_top to the end of the buffer.
  * Updates p_remaining_length with length from the returned pointer to the end of the buffer.
  */
-const struct smbios_structure_header *smbios_get_structure_with_handle(const COMMON_UINT16 handle,
+NVM_COMMON_API const struct smbios_structure_header *smbios_get_structure_with_handle(const COMMON_UINT16 handle,
 		const struct smbios_structure_header *p_top, size_t *p_remaining_length);
 
 /*
  * Returns a pointer to the string with a given number associated with the SMBIOS structure, NULL if not found.
  * Per the SMBIOS spec, the string number is expected to be non-zero.
  */
-const char *smbios_get_structure_string(const struct smbios_structure_header *p_structure, const size_t data_length,
+NVM_COMMON_API const char *smbios_get_structure_string(const struct smbios_structure_header *p_structure, const size_t data_length,
 		const COMMON_UINT32 string_number);
 
 /*
  * Fetch an SMBIOS structure string by number and copy it into a buffer
  */
-void smbios_copy_structure_string_to_buffer(const struct smbios_structure_header *p_structure, const size_t data_length,
+NVM_COMMON_API void smbios_copy_structure_string_to_buffer(const struct smbios_structure_header *p_structure, const size_t data_length,
 		const COMMON_UINT32 string_number,
 		char *p_buf, const size_t buf_length);
 
 /*
  * Returns the number of structures of a given type in the table
  */
-int smbios_get_structure_count_of_type(const enum smbios_structure_type type,
+NVM_COMMON_API int smbios_get_structure_count_of_type(const enum smbios_structure_type type,
 		const struct smbios_structure_header *p_top, const size_t data_length);
 
 #endif /* SRC_COMMON_SMBIOS_H_ */

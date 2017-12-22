@@ -60,7 +60,7 @@ namespace support
 /*!
  * Models the physical aspects of an Intel NVDIMM
  */
-class NVM_API SupportDataServiceFactory : public framework_interface::NvmInstanceFactory
+class NVM_CIM_API SupportDataServiceFactory : public framework_interface::NvmInstanceFactory
 {
 	public:
 

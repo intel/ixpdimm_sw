@@ -16,7 +16,7 @@ def captureHelpOutput():
 	# run ixpdimm-cli and save help output to a file	
 	currpath = os.getcwd()
 	os.chdir(manpage_helper.outputPath)
-	os.environ['LD_LIBRARY_PATH'] = '.'
+	os.environ['LD_LIBRARY_PATH'] = '.:/usr/lib64'
 	oscmd = "./ixpdimm-cli > " + currpath + "/" + helpTempFile
 	rc = os.system(oscmd)
 	os.chdir(currpath)

@@ -29,6 +29,8 @@
 #ifndef CR_MGMT_RESULT_H
 #define CR_MGMT_RESULT_H
 
+#include "ExportCore.h"
+
 namespace core
 {
 template<class T>

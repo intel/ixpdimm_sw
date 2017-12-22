@@ -31,6 +31,12 @@
 #include "win_scm2_ioctl.h"
 #include "win_scm2_adapter.h"
 
+#ifdef _WIN32
+#ifndef WINBOOL
+#define WINBOOL BOOL
+#endif
+#endif
+
 static enum WIN_SCM2_IOCTL_RETURN_CODES scm2_open_ioctl_target(PHANDLE p_handle,
 		unsigned short dimm_handle)
 {

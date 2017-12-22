@@ -40,7 +40,7 @@ namespace core
 namespace memory_allocator
 {
 
-class NVM_API RuleNoDimms: public RequestRule
+class NVM_CORE_API RuleNoDimms: public RequestRule
 {
 	public:
 		RuleNoDimms();

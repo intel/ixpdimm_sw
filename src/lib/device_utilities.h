@@ -37,6 +37,7 @@
 #include "device_fw.h"
 #include "device_adapter.h"
 #include <string/revision.h>
+#include "export_api.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -74,18 +75,18 @@ int device_uid_bytes_to_string(const NVM_UINT8 *p_bytes, const size_t bytes_len,
 int calculate_device_uid(struct device_discovery *p_device);
 void calculate_uid_without_manufacturing_info(NVM_UID uid,
 		const NVM_UINT16 vendor_id, const NVM_SERIAL_NUMBER serial_number);
-void calculate_uid_with_valid_manufacturing_info(NVM_UID uid,
+NVM_API void calculate_uid_with_valid_manufacturing_info(NVM_UID uid,
 		const NVM_UINT16 vendor_id, const NVM_SERIAL_NUMBER serial_number,
 		const NVM_UINT8 manufacturing_loc, const NVM_UINT16 manufacturing_date);
 
 
-int lookup_device_nfit_by_handle(const NVM_UINT32 dev_handle, struct device_discovery * p_discovery);
-int lookup_dev_uids(const NVM_UID *uids, NVM_UINT16 uid_count, struct device_discovery *p_devs);
-int lookup_dev_uid(const NVM_UID dev_uid, struct device_discovery *p_dev);
+NVM_API int lookup_device_nfit_by_handle(const NVM_UINT32 dev_handle, struct device_discovery * p_discovery);
+NVM_API int lookup_dev_uids(const NVM_UID *uids, NVM_UINT16 uid_count, struct device_discovery *p_devs);
+NVM_API int lookup_dev_uid(const NVM_UID dev_uid, struct device_discovery *p_dev);
 
-int lookup_dev_handle(const NVM_NFIT_DEVICE_HANDLE dev_handle, struct device_discovery *p_dev);
+NVM_API int lookup_dev_handle(const NVM_NFIT_DEVICE_HANDLE dev_handle, struct device_discovery *p_dev);
 
-int lookup_dev_manufacturer_serial_part(const unsigned char *manufacturer,
+NVM_API int lookup_dev_manufacturer_serial_part(const unsigned char *manufacturer,
 		const unsigned char *serial_number, const char *part_number,
 		struct device_discovery *p_dev);
 

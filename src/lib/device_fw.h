@@ -35,6 +35,7 @@
 #include <persistence/logging.h>
 #include "nvm_types.h"
 #include "fis_types.h"
+#include "export_api.h"
 
 int fw_mb_err_to_nvm_lib_err(int status);
 
@@ -112,7 +113,7 @@ int fw_set_config_data_policy(unsigned int device_handle,
 	struct pt_payload_set_config_data_policy *p_config_data);
 
 float fw_convert_fw_celsius_to_float(unsigned short fw_celsius);
-unsigned short fw_convert_float_to_fw_celsius(float celsius);
+NVM_API unsigned short fw_convert_float_to_fw_celsius(float celsius);
 
 int fw_get_fa_data(const NVM_NFIT_DEVICE_HANDLE device_handle,
 		struct pt_input_payload_fa_data_register_values *p_input_register,

@@ -30,9 +30,16 @@
 
 #include <exception>
 #include <nvm_types.h>
+#include <core/ExportCore.h>
+
+#ifdef _MSC_VER
+ // https://stackoverflow.com/questions/24511376/how-to-dllexport-a-class-derived-from-stdruntime-error
+#pragma warning( disable : 4275 ) 
+#endif
+
 namespace core
 {
-class NVM_API NoMemoryException : std::exception
+class NVM_CORE_API NoMemoryException : public std::exception
 {
 
 };

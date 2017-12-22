@@ -42,6 +42,7 @@ extern "C"
 
 #ifdef __WINDOWS__
 #include <string.h>
+#include <export_common.h>
 
 /*!
  * Convert a UTF-16 encoded @b wchar_t array to a UTF-8 encoded @b char array.
@@ -69,7 +70,7 @@ extern "C"
  * 		-1 if an invalid combination of input arguments is detected. @n
  * 		0 if the conversion failed.  Use GetLastError() to get extended error info.
  */
-extern int wchar_to_utf8(char *dst, size_t dst_bytes, const wchar_t *src, int src_wchars);
+NVM_COMMON_API extern int wchar_to_utf8(char *dst, size_t dst_bytes, const wchar_t *src, int src_wchars);
 
 /*!
  * Convert a UTF-8 encoded @b char array to a UTF-16 encoded @b wchar_t array.
@@ -97,7 +98,7 @@ extern int wchar_to_utf8(char *dst, size_t dst_bytes, const wchar_t *src, int sr
  * 		-1 if an invalid combination of input arguments is detected. @n
  * 		0 if the conversion failed.  Use GetLastError() to get extended error info.
  */
-extern int utf8_to_wchar(wchar_t *dst, size_t dst_wchars, const char *src, int src_bytes);
+NVM_COMMON_API extern int utf8_to_wchar(wchar_t *dst, size_t dst_wchars, const char *src, int src_bytes);
 
 #endif
 

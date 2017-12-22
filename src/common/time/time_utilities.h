@@ -35,7 +35,7 @@
 #define	_TIME_UTILITIES_H_
 
 #ifdef __cplusplus
-extern "C"
+NVM_COMMON_API extern "C"
 {
 #endif
 
@@ -78,7 +78,7 @@ enum datetime_type
  * @param[out] nvm_time
  *		A pointer to the time
  */
-extern void get_current_time_msec(unsigned long long *nvm_time);
+NVM_COMMON_API extern void get_current_time_msec(unsigned long long *nvm_time);
 
 /*!
  * Get the current time string formatted as @b yyyyMMddHHmmss.mmmmmmsutc
@@ -99,7 +99,7 @@ extern void get_current_time_msec(unsigned long long *nvm_time);
  * @param[in] buf_size
  *		Number of bytes allocated to @c time_str_buf
  */
-extern void get_current_datetime(COMMON_DATETIME_STR time_str, size_t buf_size);
+NVM_COMMON_API extern void get_current_datetime(COMMON_DATETIME_STR time_str, size_t buf_size);
 
 /*!
  * Function used to convert a number of microseconds to a formatted string as defined by CIM
@@ -125,7 +125,7 @@ extern void get_current_datetime(COMMON_DATETIME_STR time_str, size_t buf_size);
  * 	@param[out] datetime_buf
  * 		Pointer to buffer where datetime string is output.
  */
-extern void convert_seconds_to_datetime_interval(const unsigned long long seconds,
+NVM_COMMON_API extern void convert_seconds_to_datetime_interval(const unsigned long long seconds,
 							COMMON_DATETIME_STR datetime_buf);
 
 /*!
@@ -147,7 +147,7 @@ extern void convert_seconds_to_datetime_interval(const unsigned long long second
  * @param[out] datetime_buf
  *		Pointer to buffer where datetime string is output
  */
-extern void convert_seconds_to_datetime(const time_t raw_time,
+NVM_COMMON_API extern void convert_seconds_to_datetime(const time_t raw_time,
 						COMMON_DATETIME_STR datetime_buf);
 /*!
  * Function used to convert from a formatted date string as defined by CIM to a number of
@@ -170,7 +170,7 @@ extern void convert_seconds_to_datetime(const time_t raw_time,
  *		The number of seconds after the epoch.
  * @return the datetime type found
  */
-extern enum datetime_type convert_datetime_string_to_seconds(const COMMON_DATETIME_STR datetime,
+NVM_COMMON_API extern enum datetime_type convert_datetime_string_to_seconds(const COMMON_DATETIME_STR datetime,
 														unsigned long long *secs);
 /*!
  * Function used to extract the timezone differential from a raw time_t assumed to be local
@@ -179,7 +179,7 @@ extern enum datetime_type convert_datetime_string_to_seconds(const COMMON_DATETI
  * @param[out] timezone_diff_min
  * 		Pointer to the difference (in minutes) between the given time, and UTC.
  */
-extern void get_timezone_diff(time_t raw_time, int *timezone_diff_min);
+NVM_COMMON_API extern void get_timezone_diff(time_t raw_time, int *timezone_diff_min);
 
 /*!
  * Helper function used to get the time zone differential (tzd), in minutes,
@@ -189,7 +189,7 @@ extern void get_timezone_diff(time_t raw_time, int *timezone_diff_min);
  * @param time_b
  * @return
  */
-int get_tm_tzd_mins(struct tm time_a, struct tm time_b);
+NVM_COMMON_API int get_tm_tzd_mins(struct tm time_a, struct tm time_b);
 
 #ifdef __cplusplus
 }

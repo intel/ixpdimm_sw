@@ -46,14 +46,14 @@ extern "C" {
  * @param path
  * @return
  */
-extern int get_lib_store_path(COMMON_PATH path);
+NVM_COMMON_API extern int get_lib_store_path(COMMON_PATH path);
 
 /*!
  * create a database with default configuration
  * @param path
  * @return
  */
-extern int create_default_config(const char *path);
+NVM_COMMON_API extern int create_default_config(const char *path);
 
 /*!
  * Open the configuration database and initialize logging.
@@ -63,7 +63,7 @@ extern int create_default_config(const char *path);
  * 		#COMMON_SUCCESS @n
  * 		#COMMON_ERR_UNKNOWN
  */
-extern int open_lib_store(const char *path);
+NVM_COMMON_API extern int open_lib_store(const char *path);
 
 /*!
  * Close the configuration database and flush the log to the database.
@@ -71,19 +71,19 @@ extern int open_lib_store(const char *path);
  * 		#COMMON_SUCCESS @n
  * 		#COMMON_ERR_UNKNOWN
  */
-extern int close_lib_store();
+NVM_COMMON_API extern int close_lib_store();
 
 /*!
  * Return a pointer to the configuration database.
  * @return
  * 		A pointer to the configuration database or NULL if not open.
  */
-extern PersistentStore *get_lib_store();
+NVM_COMMON_API extern PersistentStore *get_lib_store();
 
 /*!
  * Open the default configuration database and return the pointer to it.
  */
-PersistentStore *open_default_lib_store();
+NVM_COMMON_API PersistentStore *open_default_lib_store();
 
 /*!
  * Retrieve a configuration value given a key
@@ -95,7 +95,7 @@ PersistentStore *open_default_lib_store();
  * 		#COMMON_SUCCESS @n
  * 		#COMMON_ERR_UNKNOWN
  */
-extern int get_config_value(const char *key, char *value);
+NVM_COMMON_API extern int get_config_value(const char *key, char *value);
 
 /*!
  * Retrieve a bounded configuration value given a key, whose value is expected to be an integer.
@@ -107,7 +107,7 @@ extern int get_config_value(const char *key, char *value);
  * 		#COMMON_SUCCESS @n
  * 		#COMMON_ERR_UNKNOWN
  */
-extern int get_bounded_config_value_int(const char *key, int *value);
+NVM_COMMON_API extern int get_bounded_config_value_int(const char *key, int *value);
 
 /*!
  * Retrieve a bounded configuration value given a key
@@ -119,7 +119,7 @@ extern int get_bounded_config_value_int(const char *key, int *value);
  * 		#COMMON_SUCCESS @n
  * 		#COMMON_ERR_UNKNOWN
  */
-extern int get_bounded_config_value(const char *key, char *value);
+NVM_COMMON_API extern int get_bounded_config_value(const char *key, char *value);
 
 /*!
  * Retrieve a bounded configuration value given a key
@@ -142,7 +142,7 @@ extern int get_bounded_config_value(const char *key, char *value);
  * 		0 False
  * 		1 True
  */
-extern NVM_BOOL is_valid_value(const char *key, int value);
+NVM_COMMON_API extern NVM_BOOL is_valid_value(const char *key, int value);
 
 /*!
  * Retrieve a configuration value given a key, whose value is expected to be an integer.
@@ -154,7 +154,7 @@ extern NVM_BOOL is_valid_value(const char *key, int value);
  * 		#COMMON_SUCCESS @n
  * 		#COMMON_ERR_UNKNOWN
  */
-extern int get_config_value_int(const char *key, int *value);
+NVM_COMMON_API extern int get_config_value_int(const char *key, int *value);
 
 /*!
  * Add a new configuration setting.
@@ -167,7 +167,7 @@ extern int get_config_value_int(const char *key, int *value);
  * 		#COMMON_SUCCESS @n
  * 		#COMMON_ERR_UNKNOWN
  */
-extern int add_config_value(const char *key, const char *value);
+NVM_COMMON_API extern int add_config_value(const char *key, const char *value);
 
 /*!
  * Remove a configuration value.
@@ -177,24 +177,24 @@ extern int add_config_value(const char *key, const char *value);
  * 		#COMMON_SUCCESS @n
  * 		#COMMON_ERR_UNKNOWN
  */
-extern int rm_config_value(const char *key);
+NVM_COMMON_API extern int rm_config_value(const char *key);
 
 /*
  * Set the configuration settings to their default values
  */
-extern int set_default_config_settings(PersistentStore *p_ps);
+NVM_COMMON_API extern int set_default_config_settings(PersistentStore *p_ps);
 
 /*
 * Set the configuration settings to an internal in-memory store
 * Note, only supported for specific configuration settings
 */
-void set_config_cache(const char *key, const char *val);
+NVM_COMMON_API void set_config_cache(const char *key, const char *val);
 
 /*
 * Get the configuration settings from an internal in-memory store
 * Note, only supported for specific configuration settings
 */
-const char * get_config_cache(const char *key);
+NVM_COMMON_API const char * get_config_cache(const char *key);
 
 
 #ifdef __cplusplus

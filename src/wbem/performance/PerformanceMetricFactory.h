@@ -52,7 +52,7 @@ static const std::string PERFORMANCE_METRIC_CREATIONCLASSNAME
 /*!
  * Provider Factory for NVDIMMSensor
  */
-class NVM_API PerformanceMetricFactory : public framework_interface::NvmInstanceFactory
+class NVM_CIM_API PerformanceMetricFactory : public framework_interface::NvmInstanceFactory
 {
 public:
 

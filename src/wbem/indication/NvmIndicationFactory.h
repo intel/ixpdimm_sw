@@ -37,12 +37,13 @@
 #include <libinvm-cim/Instance.h>
 #include <libinvm-cim/Exception.h>
 #include <nvm_management.h>
+#include <wbem/ExportCim.h>
 
 namespace wbem
 {
 namespace indication
 {
-class NvmIndicationFactory
+class NVM_CIM_API NvmIndicationFactory
 {
 public:
 

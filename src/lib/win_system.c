@@ -148,7 +148,7 @@ int get_sockets(struct socket *p_sockets, NVM_UINT16 count)
 	if (rc >= 0)
 	{
 		unsigned int socket_count = rc;
-		NVM_UINT16 node_ids[socket_count];
+		NVM_UINT16 *node_ids = malloc(socket_count * sizeof(NVM_UINT16));
 		if ((rc = find_numa_nodes(node_ids, socket_count)) < 0)
 		{
 			COMMON_LOG_ERROR("Failed to identify the NUMA node_ids.");
@@ -198,6 +198,8 @@ int get_sockets(struct socket *p_sockets, NVM_UINT16 count)
 				}
 			}
 		}
+
+        free(node_ids);
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -312,7 +314,7 @@ int get_numa_nodes_logical_processor_count(NVM_UINT16 *p_lpcount, NVM_UINT16 *p_
 	// this will return in error, but it will get us the correct buffer_size
 	GetLogicalProcessorInformationEx(RelationNumaNode, NULL, &buffer_size);
 
-	BYTE buffer[buffer_size];
+	BYTE *buffer = malloc(buffer_size * sizeof(BYTE));
 	memset(buffer, 0, buffer_size);
 	if (!GetLogicalProcessorInformationEx(RelationNumaNode,
 			(SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX *)buffer, &buffer_size))
@@ -342,6 +344,8 @@ int get_numa_nodes_logical_processor_count(NVM_UINT16 *p_lpcount, NVM_UINT16 *p_
 			}
 		}
 	}
+
+    free(buffer);
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
@@ -461,7 +465,7 @@ int get_cpu_data_from_numa_nodes(NVM_UINT16 *p_node_ids, struct socket *p_socket
 	}
 	else
 	{
-		NVM_UINT16 node_lpcount[count];
+		NVM_UINT16 *node_lpcount = malloc(count * sizeof(NVM_UINT16));
 
 		rc = get_numa_nodes_logical_processor_count(node_lpcount, p_node_ids, count);
 		if ((rc < NVM_SUCCESS) && (rc != NVM_ERR_ARRAYTOOSMALL))
@@ -538,6 +542,8 @@ int get_cpu_data_from_numa_nodes(NVM_UINT16 *p_node_ids, struct socket *p_socket
 			// return any error encountered, otherwise return the number of node processed
 			KEEP_ERROR(rc, i_node);
 		}
+
+        free(node_lpcount);
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -555,7 +561,7 @@ int numa_node_id_exists(NVM_UINT16 node_id)
 	int numa_node_count = find_numa_nodes(NULL, 0);
 	if (numa_node_count > NVM_SUCCESS)
 	{
-		NVM_UINT16 node_ids[numa_node_count];
+		NVM_UINT16 *node_ids = malloc(numa_node_count * sizeof(NVM_UINT16));
 		numa_node_count = find_numa_nodes(node_ids, numa_node_count);
 
 		if (numa_node_count > NVM_SUCCESS)
@@ -570,6 +576,8 @@ int numa_node_id_exists(NVM_UINT16 node_id)
 				}
 			}
 		}
+
+        free(node_ids);
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -622,7 +630,7 @@ int get_smbios_table_alloc(NVM_UINT8 **pp_smbios_table, size_t *p_allocated_size
 	UINT buf_size = GetSystemFirmwareTable(smbios_sig, 0, NULL, 0);
 	if (buf_size > 0)
 	{
-		BYTE smbios_table_buf[buf_size];
+		BYTE *smbios_table_buf = malloc(buf_size * sizeof(BYTE));
 		UINT size_fetched = GetSystemFirmwareTable(smbios_sig, 0,
 				smbios_table_buf, buf_size);
 		if (size_fetched == 0)
@@ -641,6 +649,8 @@ int get_smbios_table_alloc(NVM_UINT8 **pp_smbios_table, size_t *p_allocated_size
 				rc = NVM_ERR_NOMEMORY;
 			}
 		}
+
+        free(smbios_table_buf);
 	}
 	else
 	{

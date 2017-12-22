@@ -36,6 +36,10 @@
 #include <string.h>
 #include <persistence/lib_persistence.h>
 
+#ifdef _WIN32
+#define S_ISREG(m) (((m) & S_IFMT) == S_IFREG)
+#define S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)
+#endif
 /*
  * Entry point for a simple tool to create the config database at build time.
  * @param arg_count

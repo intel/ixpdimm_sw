@@ -50,7 +50,7 @@ namespace software
 /*!
  * Provider Factory for NVDIMMDriverIdentity
  */
-class NVM_API NVDIMMDriverIdentityFactory : public framework_interface::NvmInstanceFactory
+class NVM_CIM_API NVDIMMDriverIdentityFactory : public framework_interface::NvmInstanceFactory
 {
 	public:
 

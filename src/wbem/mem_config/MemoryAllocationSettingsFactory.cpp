@@ -54,6 +54,7 @@
 #include <exception/NvmExceptionLibError.h>
 #include <lib_interface/NvmApi.h>
 #include <NvmStrings.h>
+#include <memory>
 
 wbem::mem_config::MemoryAllocationSettingsFactory::MemoryAllocationSettingsFactory()
 {
@@ -529,10 +530,10 @@ NVM_UINT16 wbem::mem_config::MemoryAllocationSettingsFactory::validateAndReturnS
 		throw wbem::exception::NvmExceptionLibError(socketCount);
 	}
 
-	struct socket sockets[socketCount];
-	memset(sockets, 0, sizeof(sockets));
+    std::unique_ptr<struct socket[]> sockets(new socket[socketCount]);
+	memset(sockets.get(), 0, socketCount * sizeof(struct socket));
 
-	if ((rc = nvm_get_sockets(sockets, socketCount)) != socketCount)
+	if ((rc = nvm_get_sockets(sockets.get(), socketCount)) != socketCount)
 	{
 		COMMON_LOG_ERROR("Could not retrieve sockets");
 		throw wbem::exception::NvmExceptionLibError(rc);

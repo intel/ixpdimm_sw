@@ -42,7 +42,11 @@
 
 #include <string/s_str.h>
 #include <string/unicode_utilities.h>
+#ifdef _WIN32
+#include <intrin.h>
+#else
 #include <cpuid.h>
+#endif
 
 #define	MGMTSW_REG_KEY "SOFTWARE\\INTEL\\INTEL DIMM GEN 1"
 #define	INSTALLDIR_REG_SUBKEY "InstallDir"
@@ -241,6 +245,8 @@ int mutex_delete(OS_MUTEX *p_mutex, const char *name)
 
 		// failure when CloseHandle(..) == 0
 		rc = (CloseHandle(*p_handle) != 0);
+        *p_handle = NULL;
+
 	}
 	return rc;
 }
@@ -1057,10 +1063,59 @@ void *dlib_find_symbol(void *handle, const char *symbol)
 int get_cpuid(unsigned int level, unsigned int *eax,
 		unsigned int *ebx, unsigned int *ecx, unsigned int *edx)
 {
+    if (NULL == eax || NULL == ebx || NULL == ecx || NULL == edx)
+    {
+        return 0;
+    }
+
+#ifdef _WIN32
+    int cpuInfo[4];
+
+    __cpuid(cpuInfo, level);
+
+    *eax = cpuInfo[0];
+    *ebx = cpuInfo[1];
+    *ecx = cpuInfo[2];
+    *edx = cpuInfo[3];
+
+    return 1;
+#else
 	return __get_cpuid(level, eax, ebx, ecx, edx);
+#endif
 }
 
 void s_memset(void *ptr, size_t num)
 {
 	SecureZeroMemory(ptr, num);
 }
+
+int get_filesize(const char *filename, size_t *filesize)
+{
+    BOOL                        fOk;
+    WIN32_FILE_ATTRIBUTE_DATA   fileInfo;
+
+    if (NULL == filename && NULL != filesize)
+        return -1;
+
+    fOk = GetFileAttributesEx(filename, GetFileExInfoStandard, (void*)&fileInfo);
+    if (!fOk)
+        return -1;
+
+    //assert(0 == fileInfo.nFileSizeHigh);
+    *filesize = (size_t)fileInfo.nFileSizeLow;
+
+    return 0;
+}
+
+int does_file_exist(const char *filename)
+{
+    DWORD dwAttrib = GetFileAttributes(filename);
+
+    if (!((dwAttrib != INVALID_FILE_ATTRIBUTES &&
+        !(dwAttrib & FILE_ATTRIBUTE_DIRECTORY))))
+    {
+        return FALSE;
+    }
+    return TRUE;
+}
+

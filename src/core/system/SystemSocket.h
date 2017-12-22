@@ -43,13 +43,14 @@
 #include <core/Collection.h>
 #include <core/NvmLibrary.h>
 #include "SmbiosType4Utility.h"
+#include <core/ExportCore.h>
 
 namespace core
 {
 namespace system
 {
 
-class NVM_API SystemSocket
+class NVM_CORE_API SystemSocket
 {
 public:
 	// [Comment:RYON]: No need for the lib parameter
@@ -83,7 +84,7 @@ private:
 	const SmbiosType4Utility &m_smbiosUtility;
 };
 
-class NVM_API SystemSocketCollection : public Collection<SystemSocket>
+class NVM_CORE_API SystemSocketCollection : public Collection<SystemSocket>
 {
 };
 

@@ -31,6 +31,7 @@
  */
 
 #include <string.h>
+#include <memory>
 #include <nvm_management.h>
 #include <LogEnterExit.h>
 #include <libinvm-cim/ObjectPath.h>
@@ -84,11 +85,12 @@ wbem::framework::instance_names_t* wbem::support::SanitizeJobFactory::getInstanc
 
 		if ((rc = nvm_get_job_count()) >= NVM_SUCCESS)
 		{
-			struct job jobs[rc];
-			memset(jobs, 0, sizeof(jobs));
-			if ((rc = nvm_get_jobs(jobs, rc)) >= NVM_SUCCESS)
+            int count = rc;
+			std::unique_ptr<struct job[]> jobs(new job[count]);
+			memset(jobs.get(), 0, count * sizeof(struct job));
+			if ((rc = nvm_get_jobs(jobs.get(), count)) >= NVM_SUCCESS)
 			{
-				for (int i = 0; i < rc; i++)
+				for (int i = 0; i < count; i++)
 				{
 					if (jobs[i].type == NVM_JOB_TYPE_SANITIZE)
 					{
@@ -152,9 +154,10 @@ wbem::framework::Instance* wbem::support::SanitizeJobFactory::getInstance(wbem::
 		{
 			throw exception::NvmExceptionLibError(jobCount);
 		}
-		struct job jobs[jobCount];
-		memset(jobs, 0, sizeof(jobs));
-		if ((rc = nvm_get_jobs(jobs, jobCount)) < NVM_SUCCESS)
+		
+        std::unique_ptr<struct job[]> jobs(new job[jobCount]);
+		memset(jobs.get(), 0, jobCount * sizeof(struct job));
+		if ((rc = nvm_get_jobs(jobs.get(), jobCount)) < NVM_SUCCESS)
 		{
 			throw exception::NvmExceptionLibError(rc);
 		}

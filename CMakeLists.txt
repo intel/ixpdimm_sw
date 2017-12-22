@@ -70,7 +70,7 @@ elseif (WIN_BUILD)
 endif ()
 
 get_filename_component(ROOT ./ ABSOLUTE)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++98")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 set(OUTPUT_DIR ${ROOT}/output/build/${OS_TYPE}/${ADAPTER_TYPE}/${BUILD_TYPE} CACHE PATH "Build Path")
 
 add_subdirectory(${ROOT}/invm-frameworks/invm-i18n)
@@ -430,15 +430,15 @@ file(GLOB CLI_SOURCE_FILES
         src/cli/features/core/*
         src/cli/features/core/framework/*
         )
-add_library(${CLI_LIB_SONAME} ${LIB_TYPE} ${CLI_SOURCE_FILES})
-SET_TARGET_PROPERTIES(${CLI_LIB_SONAME}
+add_library(${CLI_LIB_NAME} ${LIB_TYPE} ${CLI_SOURCE_FILES})
+SET_TARGET_PROPERTIES(${CLI_LIB_NAME}
         PROPERTIES
       	VERSION ${LIB_BUILD_VERSION}
         SOVERSION ${SO_BUILD_VERSION}
         OUTPUT_NAME ixpdimm-cli
         )
 
-target_include_directories(${CLI_LIB_SONAME} PUBLIC
+target_include_directories(${CLI_LIB_NAME} PUBLIC
 		src/
 		src/lib/
 		src/wbem/
@@ -446,7 +446,7 @@ target_include_directories(${CLI_LIB_SONAME} PUBLIC
 		${invm-cli_include}
 		${invm-i18n_include}
 		)
-target_link_libraries(${CLI_LIB_SONAME}
+target_link_libraries(${CLI_LIB_NAME}
         acpi
         ${CORE_LIB_NAME}
         ${CIM_LIB_NAME}
@@ -471,7 +471,7 @@ target_link_libraries(${CLI_NAME}
         invm-cli
         invm-i18n
         ${CIM_LIB_NAME}
-        ${CLI_LIB_SONAME}
+        ${CLI_LIB_NAME}
         ${API_LIB_NAME}
         )
 add_dependencies(${CLI_NAME}

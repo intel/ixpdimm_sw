@@ -34,13 +34,14 @@
 
 #include <nvm_types.h>
 #include <core/memory_allocator/LayoutStep.h>
+#include <core/ExportCore.h>
 
 namespace core
 {
 namespace memory_allocator
 {
 
-class NVM_API LayoutStepCheckCurrentVolatileMode : public LayoutStep
+class NVM_CORE_API LayoutStepCheckCurrentVolatileMode : public LayoutStep
 {
 	public:
 		LayoutStepCheckCurrentVolatileMode(const struct platform_capabilities &platformCapabilities);

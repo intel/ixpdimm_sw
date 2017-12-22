@@ -58,7 +58,7 @@
 #include <exception/NvmExceptionBadTarget.h>
 #include <exception/NvmExceptionNotManageable.h>
 #include <framework_interface/NvmInstanceFactory.h>
-#include <core/StringList.h>
+#include <cli/features/core/StringList.h>
 #include <cli/features/core/framework/CliHelper.h>
 #include <core/exceptions/NvmExceptionBadRequest.h>
 
@@ -998,7 +998,7 @@ bool cli::nvmcli::isStringHex(const std::string &value)
 		result = true;
 		for (size_t i = 2; i < value.size() && result; i++)
 		{
-			result &= std::isxdigit(value[i]) != 0;
+			result &= isxdigit(value[i]) != 0;
 		}
 	}
 
@@ -1012,14 +1012,14 @@ bool cli::nvmcli::isStringValidNumber(const std::string &value)
 	{
 		for (size_t i = 2; i < value.size() && result; i++)
 		{
-			result &= std::isxdigit(value[i]) != 0;
+			result &= isxdigit(value[i]) != 0;
 		}
 	}
 	else
 	{
 		for (size_t i = 0; i < value.size() && result; i++)
 		{
-			result &= std::isdigit(value[i]) != 0;
+			result &= isdigit(value[i]) != 0;
 		}
 	}
 	return result;

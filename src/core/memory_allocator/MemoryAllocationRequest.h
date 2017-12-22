@@ -33,6 +33,7 @@
 #include <exception>
 #include <nvm_types.h>
 #include <core/memory_allocator/MemoryAllocationTypes.h>
+#include <core/ExportCore.h>
 
 namespace core
 {
@@ -52,7 +53,7 @@ struct AppDirectExtent
 	int imc; // memory controller interleave size
 };
 
-class NVM_API MemoryAllocationRequest
+class NVM_CORE_API MemoryAllocationRequest
 {
 	public:
 		MemoryAllocationRequest();

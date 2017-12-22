@@ -39,15 +39,16 @@
 #include "SystemMemoryResources.h"
 #include "SoftwareInfo.h"
 #include "SystemSocket.h"
+#include <core/ExportCore.h>
 
 namespace core
 {
 namespace system
 {
-class NVM_API SystemService
+class NVM_CORE_API SystemService
 {
 public:
-	NVM_API SystemService(NvmLibrary &lib = NvmLibrary::getNvmLibrary());
+	SystemService(NvmLibrary &lib = NvmLibrary::getNvmLibrary());
 	virtual ~SystemService();
 	static SystemService &getService();
 

@@ -46,7 +46,7 @@ namespace server
 /*!
  * Provider Factory for ServerChassis
  */
-class NVM_API ServerChassisFactory : public framework_interface::NvmInstanceFactory
+class NVM_CIM_API ServerChassisFactory : public framework_interface::NvmInstanceFactory
 {
 	public:
 

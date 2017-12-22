@@ -43,7 +43,7 @@ static const std::string STATICFILTER_QUERYLANGUAGE = "CQL";
 static const std::string STATICFILTER_QUERYLANGUAGE = "DMTF:CQL";
 #endif
 
-class NVM_API StaticFilterFactory : public framework_interface::NvmInstanceFactory
+class NVM_CIM_API StaticFilterFactory : public framework_interface::NvmInstanceFactory
 {
 public:
 	StaticFilterFactory();

@@ -38,13 +38,14 @@
 #include <vector>
 #include <exception>
 #include "MemoryAllocationTypes.h"
+#include <core/ExportCore.h>
 
 namespace core
 {
 namespace memory_allocator
 {
 
-class NVM_API InterleaveableDimmSetBuilder
+class NVM_CORE_API InterleaveableDimmSetBuilder
 {
 	public:
 		InterleaveableDimmSetBuilder();

@@ -148,15 +148,18 @@ int copy_file(const COMMON_PATH source, const COMMON_SIZE source_len,
  * Windows version of open file.  Windows expects unicode to be in UTF-16 so will convert first and
  * use wide char version of "open"
  */
+// FIX ME - MSVC const issue.
+#define args_size 32
 FILE *open_file(const COMMON_PATH path, const COMMON_SIZE path_len, const char *args)
 {
+    wchar_t w_args[args_size];
+
 	// safe file name
 	COMMON_PATH file_path;
 	s_strncpy(file_path, COMMON_PATH_LEN, path, path_len);
 
 	COMMON_WPATH w_source;
-	size_t args_size = 32;
-	wchar_t w_args[args_size];
+	
 	utf8_to_wchar(w_source, (size_t)COMMON_PATH_LEN, file_path, (int)COMMON_PATH_LEN);
 	utf8_to_wchar(w_args, args_size, args, (int)args_size);
 	return _wfopen(w_source, w_args);
@@ -270,7 +273,11 @@ int lock_file(FILE *p_file, const enum file_lock_mode lock_mode)
 		}
 		if (rc == COMMON_SUCCESS)
 		{
-			if (_locking(p_file->_file, mode, MAXDWORD) != 0)
+#ifdef _WIN32
+            if (_locking(_fileno(p_file), mode, MAXLONG) != 0)
+#else
+            if (_locking(p_file->_file, mode, MAXDWORD) != 0)
+#endif
 			{
 				rc = COMMON_ERR_FAILED;
 			}

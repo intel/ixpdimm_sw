@@ -31,12 +31,13 @@
 #include <cr_i18n.h>
 #include "ConsoleAdapter.h"
 #include <nvm_types.h>
+#include <cli/features/ExportCli.h>
 
 namespace cli
 {
 namespace framework
 {
-class NVM_API YesNoPrompt
+class NVM_CLI_API YesNoPrompt
 {
 public:
 	YesNoPrompt(const ConsoleAdapter &consoleAdapter = ConsoleAdapter::getAdapter());

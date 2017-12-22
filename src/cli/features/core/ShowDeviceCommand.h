@@ -35,8 +35,9 @@
 #include <libinvm-cli/PropertyListResult.h>
 #include <lib/nvm_types.h>
 #include <core/device/DeviceService.h>
-#include <core/StringList.h>
+#include <cli/features/core/StringList.h>
 #include <cli/features/core/framework/CommandBase.h>
+#include <cli/features/ExportCli.h>
 
 namespace cli
 {
@@ -109,7 +110,7 @@ static const std::string VIRALSTATE = "ViralState";
 static const std::string INJECTEDMEDIAERRORS = "InjectedMediaErrors";
 static const std::string INJECTEDNONMEDIAERRORS = "InjectedNonMediaErrors";
 
-class NVM_API ShowDeviceCommand : framework::CommandBase
+class NVM_CLI_API ShowDeviceCommand : framework::CommandBase
 {
 public:
 	ShowDeviceCommand(

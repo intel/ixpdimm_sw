@@ -32,9 +32,9 @@
 #include "win_leg_adapter_shared.h"
 
 #include <windows.h>
-#include <windows/DiagnosticExport.h>
-#include <windows/Diagnostic.h>
-#include <windows/GetVendorDriverRevision.h>
+#include <DiagnosticExport.h>
+#include <Diagnostic.h>
+#include <GetVendorDriverRevision.h>
 
 #define	WIN_DRIVER_VERSION_MAJOR_MIN	1
 #define	WIN_DRIVER_VERSION_MAJOR_MAX	1
@@ -320,7 +320,7 @@ int win_leg_adp_get_dimm_power_limited(NVM_UINT16 socket_id)
 		// Windows expects an output payload that is exactly the size of count
 		size_t bufSize = sizeof (GET_RAPL_IOCTL) +
 				(sizeof (GET_RAPL_OUTPUT_PAYLOAD) * (actual_count - 1));
-		BYTE buffer[bufSize];
+		BYTE *buffer = malloc(bufSize * sizeof(BYTE));
 		GET_RAPL_IOCTL *p_ioctl_data = (GET_RAPL_IOCTL *)buffer;
 		memset(buffer, 0, bufSize);
 
@@ -339,6 +339,8 @@ int win_leg_adp_get_dimm_power_limited(NVM_UINT16 socket_id)
 					POWER_LIMIT_ENABLE_BIT) ? 1 : 0;
 			}
 		}
+
+        free(buffer);
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);

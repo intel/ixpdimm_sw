@@ -78,7 +78,7 @@ const NVM_UINT16 PERSISTENTMEMORY_ENABLEDSTATE_NA = 6;
 
 
 
-class NVM_API PersistentMemoryFactory : public framework_interface::NvmInstanceFactory
+class NVM_CIM_API PersistentMemoryFactory : public framework_interface::NvmInstanceFactory
 {
 	public:
 		/*!

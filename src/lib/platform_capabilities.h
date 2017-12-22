@@ -37,7 +37,7 @@
 #include <persistence/schema.h>
 #include "nvm_types.h"
 #include <acpi/acpi.h>
-
+#include "export_api.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -482,7 +482,7 @@ struct bios_capabilities
 /*
  * Given a starting offset of the extension tables, get the offset of the specfied table
  */
-NVM_UINT32 get_offset_of_ext_table(const struct bios_capabilities *p_capabilities,
+NVM_API NVM_UINT32 get_offset_of_ext_table(const struct bios_capabilities *p_capabilities,
 		enum pcat_ext_table_type type, NVM_UINT32 offset);
 
 /*
@@ -491,7 +491,7 @@ NVM_UINT32 get_offset_of_ext_table(const struct bios_capabilities *p_capabilitie
  * 		A pointer to a target buffer where the system's platform capabilities will be output
  * @return
  */
-int get_pcat(struct bios_capabilities *p_pcat);
+NVM_API int get_pcat(struct bios_capabilities *p_pcat);
 
 #ifdef __cplusplus
 }

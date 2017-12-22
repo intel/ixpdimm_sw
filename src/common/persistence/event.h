@@ -233,12 +233,12 @@ enum event_code_config
 /*
  * Store an event log entry in the db
  */
-int store_event(struct event *p_event, COMMON_BOOL syslog);
+NVM_COMMON_API int store_event(struct event *p_event, COMMON_BOOL syslog);
 
 /*
  * Helper method to convert event info into a struct to store in the db
  */
-int store_event_by_parts(const enum event_type type,
+NVM_COMMON_API int store_event_by_parts(const enum event_type type,
 		const enum event_severity severity, const NVM_UINT16 code,
 		const NVM_UID device_uid, const NVM_BOOL action_required, const NVM_EVENT_ARG arg1,
 		const NVM_EVENT_ARG arg2, const NVM_EVENT_ARG arg3,
@@ -249,12 +249,12 @@ int store_event_by_parts(const enum event_type type,
  * @remark Checks the config DB to see if we should log the event to syslog
  * @return whether it logged to syslog
  */
-NVM_BOOL log_event_in_syslog(const struct event *p_event, const char *source);
+NVM_COMMON_API NVM_BOOL log_event_in_syslog(const struct event *p_event, const char *source);
 
 /*
  * Populate the event message based on the type and code
  */
-void populate_event_message(struct event *p_event);
+NVM_COMMON_API void populate_event_message(struct event *p_event);
 
 /*
  * Retrieve all events from the database and then filter on the specified
@@ -264,13 +264,13 @@ void populate_event_message(struct event *p_event);
  * Else copy to the provided structure.
  * Returns the count of matching events.
  */
-int process_events_matching_filter(const struct event_filter *p_filter,
+NVM_COMMON_API int process_events_matching_filter(const struct event_filter *p_filter,
 		struct event *p_events, const NVM_UINT16 count, const NVM_BOOL purge);
 
 /*!
  * Acknowledge all events that meet the filter criteria
  */
-int acknowledge_events(struct event_filter *p_filter);
+NVM_COMMON_API int acknowledge_events(struct event_filter *p_filter);
 
 #ifdef __cplusplus
 }

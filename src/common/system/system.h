@@ -76,7 +76,7 @@ typedef struct
  * 		COMMON_ERR_INVALIDPARAMETER
  * 		COMMON_ERR_UNKNOWN
  */
-extern int get_processor_brand(char *brand, COMMON_SIZE brand_len);
+NVM_COMMON_API extern int get_processor_brand(char *brand, COMMON_SIZE brand_len);
 
 /*!
  * Retrieves the processor manufacturer string.
@@ -89,7 +89,7 @@ extern int get_processor_brand(char *brand, COMMON_SIZE brand_len);
  * 		COMMON_ERR_INVALIDPARAMETER
  * 		COMMON_ERR_UNKNOWN
  */
-extern int get_processor_manufacturer(char *manufacturer, COMMON_SIZE manufacturer_len);
+NVM_COMMON_API extern int get_processor_manufacturer(char *manufacturer, COMMON_SIZE manufacturer_len);
 
 /*!
  * Retrieve the processor manufacturer information.
@@ -100,7 +100,7 @@ extern int get_processor_manufacturer(char *manufacturer, COMMON_SIZE manufactur
  * 		COMMON_ERR_INVALIDPARAMETER
  * 		COMMON_ERR_UNKNOWN
  */
-extern int get_processor_info(processor_info *p_info);
+NVM_COMMON_API extern int get_processor_info(processor_info *p_info);
 
 #ifdef __cplusplus
 }

@@ -58,7 +58,7 @@ namespace support
  * There is a single instance of this class.  It serves as an aggregation point
  * for diagnostic results for all NVDIMMs within a system.
  */
-class NVM_API DiagnosticCompletionRecordFactory : public framework_interface::NvmInstanceFactory
+class NVM_CIM_API DiagnosticCompletionRecordFactory : public framework_interface::NvmInstanceFactory
 {
 	public:
 

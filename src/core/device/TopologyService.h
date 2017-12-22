@@ -28,13 +28,14 @@
 #define CR_MGMT_TOPOLOGYSERVICE_H
 
 #include <nvm_types.h>
+#include <core/ExportCore.h>
 #include "Topology.h"
 
 namespace core
 {
 namespace device
 {
-class NVM_API TopologyService
+class NVM_CORE_API TopologyService
 {
 public:
 	TopologyService(NvmLibrary &lib = NvmLibrary::getNvmLibrary()) : m_lib(lib) { }

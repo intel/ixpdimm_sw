@@ -75,7 +75,7 @@ static const wbem::framework::UINT16 VOLATILEMEMORY_OPERATIONALSTATUS_SUPPORTING
 /*!
  * Represents NVM-DIMM Memory Mode capacity.
  */
-class NVM_API VolatileMemoryFactory: public framework_interface::NvmInstanceFactory
+class NVM_CIM_API VolatileMemoryFactory: public framework_interface::NvmInstanceFactory
 {
 	public:
 		/*!

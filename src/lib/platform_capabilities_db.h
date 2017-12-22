@@ -37,6 +37,7 @@
 #include "nvm_types.h"
 #include <acpi.h>
 #include "platform_capabilities.h"
+#include "export_api.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -46,7 +47,7 @@ extern "C"
 /*
  * Helper function to retrieve pcat from db
  */
-int get_pcat_from_db(PersistentStore *p_db,
+NVM_API int get_pcat_from_db(PersistentStore *p_db,
 		struct bios_capabilities *p_capabilities,
 		const NVM_UINT32 cap_len);
 
@@ -54,7 +55,7 @@ int get_pcat_from_db(PersistentStore *p_db,
  * Helper function to get the PCAT memory interleave extension tables
  * from the database and copy the data to the bios_capabilities structure
  */
-int get_pcat_interleave_tables_from_db(PersistentStore *p_db,
+NVM_API int get_pcat_interleave_tables_from_db(PersistentStore *p_db,
 		struct bios_capabilities *p_capabilities,
 		NVM_UINT32 *p_offset, const NVM_UINT32 cap_len);
 
@@ -62,7 +63,7 @@ int get_pcat_interleave_tables_from_db(PersistentStore *p_db,
  * Helper function to get the PCAT platform capabilities extension table
  * from the database and copy the data to the bios_capabilities struct
  */
-int get_pcat_platform_info_from_db(PersistentStore *p_db,
+NVM_API int get_pcat_platform_info_from_db(PersistentStore *p_db,
 		struct bios_capabilities *p_capabilities,
 		NVM_UINT32 *p_offset, const NVM_UINT32 cap_len);
 
@@ -70,7 +71,7 @@ int get_pcat_platform_info_from_db(PersistentStore *p_db,
  * Helper function to get the PCAT runtime configuration extension table
  * from the database and copy the data to the bios_capabilities struct
  */
-int get_pcat_runtime_validation_table_from_db(PersistentStore *p_db,
+NVM_API int get_pcat_runtime_validation_table_from_db(PersistentStore *p_db,
 		struct bios_capabilities *p_capabilities,
 		NVM_UINT32 *p_offset, const NVM_UINT32 cap_len);
 
@@ -78,7 +79,7 @@ int get_pcat_runtime_validation_table_from_db(PersistentStore *p_db,
  * Helper function to get the PCAT socket SKU info extension table
  * from the database and copy the data to the bios_capabilities struct
  */
-int get_pcat_socket_sku_info_from_db(PersistentStore *p_db,
+NVM_API int get_pcat_socket_sku_info_from_db(PersistentStore *p_db,
 		struct bios_capabilities *p_capabilities,
 		NVM_UINT32 *p_offset, const NVM_UINT32 cap_len);
 
@@ -86,7 +87,7 @@ int get_pcat_socket_sku_info_from_db(PersistentStore *p_db,
  * Update the platform capabilities data stored in the db
  * Tries to store as much data as possible while propagating any errors.
  */
-int update_pcat_in_db(PersistentStore *p_db,
+NVM_API int update_pcat_in_db(PersistentStore *p_db,
 		const struct bios_capabilities *p_capabilities,
 		const int history_id);
 

@@ -39,6 +39,7 @@
 #include <libinvm-cli/Parser.h>
 #include <libinvm-cli/SyntaxErrorResult.h>
 #include <mem_config/InterleaveSet.h>
+#include <cli/features/ExportCli.h>
 
 namespace cli
 {
@@ -48,7 +49,7 @@ namespace nvmcli
 /*
  * Helper class to wrap a Memory Mode or App Direct Property
  */
-class NVM_API MemoryProperty
+class NVM_CLI_API MemoryProperty
 {
 public:
 	MemoryProperty(const framework::ParsedCommand& parsedCommand,

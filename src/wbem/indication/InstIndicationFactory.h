@@ -65,7 +65,7 @@ static const std::string SOURCEINSTANCE = SOURCEINSTANCE_KEY;
 #endif
 
 
-class NVM_API InstIndicationFactory : public NvmIndicationFactory
+class NVM_CIM_API InstIndicationFactory : public NvmIndicationFactory
 {
 public:
 	/*!

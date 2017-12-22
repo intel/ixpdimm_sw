@@ -33,6 +33,8 @@
 #ifndef	CONFIG_GOAL_H_
 #define	CONFIG_GOAL_H_
 
+#include "export_api.h"
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -50,6 +52,14 @@ int config_input_table_to_config_goal(const NVM_UID device_uid,
 
 enum config_goal_status get_config_goal_status_from_platform_config_data(
 		struct platform_config_data *p_config);
+
+NVM_API void config_goal_to_partition_ext_table(const struct config_goal *p_goal,
+    struct partition_size_change_extension_table *p_table,
+    const struct device_discovery *p_discovery);
+
+NVM_API int validate_config_goal(const struct config_goal *p_goal,
+    const struct nvm_capabilities *p_capabilities,
+    const struct device_discovery *p_discovery);
 
 #ifdef __cplusplus
 }

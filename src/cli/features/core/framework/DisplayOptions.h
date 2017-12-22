@@ -28,13 +28,13 @@
 #define CR_MGMT_DISPLAYOPTIONS_H
 
 #include <libinvm-cli/CliFrameworkTypes.h>
-#include <lib/nvm_types.h>
+#include <cli/features/ExportCli.h>
 
 namespace cli
 {
 namespace framework
 {
-class NVM_API DisplayOptions
+class NVM_CLI_API DisplayOptions
 {
 public:
 	DisplayOptions(StringMap options = StringMap()) : m_options(options) { }

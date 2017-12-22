@@ -89,7 +89,7 @@ static const NVM_UINT16 PM_SERVICE_MEMORYPAGEALLOCATION_NONE = 1;
 static const NVM_UINT16 PM_SERVICE_MEMORYPAGEALLOCATION_DRAM = 2;
 static const NVM_UINT16 PM_SERVICE_MEMORYPAGEALLOCATION_APP_DIRECT = 3;
 
-class NVM_API PersistentMemoryServiceFactory : public framework_interface::NvmInstanceFactory
+class NVM_CIM_API PersistentMemoryServiceFactory : public framework_interface::NvmInstanceFactory
 {
 public:
 	/*!

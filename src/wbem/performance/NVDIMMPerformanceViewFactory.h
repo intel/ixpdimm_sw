@@ -48,7 +48,7 @@ namespace performance
 /*!
  * Provider Factory for NVDIMMPerformanceView
  */
-class NVM_API NVDIMMPerformanceViewFactory : public framework_interface::NvmInstanceFactory
+class NVM_CIM_API NVDIMMPerformanceViewFactory : public framework_interface::NvmInstanceFactory
 {
 	public:
 

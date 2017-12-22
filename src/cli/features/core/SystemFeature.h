@@ -125,7 +125,7 @@ static const std::string CONFIRM_NEW_PASSPHRASE_PROMPT = N_TR("Confirm new passp
 /*!
  * Implements the CR show -host command to display host server information.
  */
-class NVM_API SystemFeature : public cli::nvmcli::VerboseFeatureBase
+class NVM_CLI_API SystemFeature : public cli::nvmcli::VerboseFeatureBase
 {
 	public:
 

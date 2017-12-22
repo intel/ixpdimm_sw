@@ -34,10 +34,17 @@
 #include <lib/nvm_management.h>
 #include <cr_i18n.h>
 #include <common/string/s_str.h>
+#include <core/ExportCore.h>
+
+#ifdef _MSC_VER
+ // https://stackoverflow.com/questions/24511376/how-to-dllexport-a-class-derived-from-stdruntime-error
+#pragma warning( disable : 4275 ) 
+#endif
 
 namespace core
 {
-class NVM_API LibraryException : public std::exception
+
+class NVM_CORE_API LibraryException : public std::exception
 {
 public:
 	LibraryException(int errorCode) : m_errorCode(errorCode)

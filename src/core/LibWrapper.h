@@ -28,10 +28,11 @@
 #define CR_MGMT_NVMAPI_H
 
 #include <lib/nvm_management.h>
+#include "ExportCore.h"
 
 namespace core
 {
-class NVM_API LibWrapper
+class NVM_CORE_API LibWrapper
 {
 public:
 	virtual ~LibWrapper();
@@ -212,7 +213,7 @@ public:
 
 	virtual int getDebugLogCount() const;
 
-	virtual int getDebugLogs(struct log *pLogs, const NVM_UINT32 count) const;
+	virtual int getDebugLogs(struct nvm_log *pLogs, const NVM_UINT32 count) const;
 
 	virtual int purgeDebugLog() const;
 

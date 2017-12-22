@@ -31,13 +31,14 @@
 #include <core/NvmLibrary.h>
 #include <nvm_types.h>
 #include "MemoryAllocationTypes.h"
+#include <core/ExportCore.h>
 
 namespace core
 {
 namespace memory_allocator
 {
 
-class NVM_API MemoryAllocationUtil
+class NVM_CORE_API MemoryAllocationUtil
 {
 	public:
 		MemoryAllocationUtil(core::NvmLibrary &nvmLib);

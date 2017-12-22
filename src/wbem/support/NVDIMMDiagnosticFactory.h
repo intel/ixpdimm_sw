@@ -132,7 +132,7 @@ namespace support
 /*!
  * Models the physical aspects of an Intel NVDIMM
  */
-class NVM_API NVDIMMDiagnosticFactory : public framework_interface::NvmInstanceFactory
+class NVM_CIM_API NVDIMMDiagnosticFactory : public framework_interface::NvmInstanceFactory
 {
 	public:
 

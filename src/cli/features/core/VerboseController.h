@@ -33,13 +33,14 @@
 #define _CLI_NVMCLI_VERBOSECONTROLLER_H_
 
 #include <nvm_types.h>
+#include <cli/features/ExportCli.h>
 
 namespace cli
 {
 namespace nvmcli
 {
 
-class NVM_API VerboseController
+class NVM_CLI_API VerboseController
 {
 	public:
 		VerboseController();

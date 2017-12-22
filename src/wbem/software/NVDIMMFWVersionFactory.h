@@ -63,7 +63,7 @@ namespace software
 /*!
  * Provider Factory for NVDIMMFWVersion
  */
-class NVM_API NVDIMMFWVersionFactory : public framework_interface::NvmInstanceFactory
+class NVM_CIM_API NVDIMMFWVersionFactory : public framework_interface::NvmInstanceFactory
 {
 	public:
 

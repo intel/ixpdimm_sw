@@ -30,13 +30,13 @@
 
 #include <string>
 #include <vector>
-#include <lib/nvm_types.h>
+#include <cli/features/ExportCli.h>
 
 namespace cli
 {
 namespace framework
 {
-class NVM_API CliHelper
+class NVM_CLI_API CliHelper
 {
 public:
 	static std::vector<std::string> splitCommaSeperatedString(const std::string &commaList);

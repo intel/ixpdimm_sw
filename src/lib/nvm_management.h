@@ -44,6 +44,7 @@
 #include <time.h>
 
 #include "nvm_types.h"
+#include "export_api.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -1178,7 +1179,7 @@ struct event_filter
 /*
  * An entry in the native API trace log.
  */
-struct log
+struct nvm_log
 {
 	NVM_PATH file_name; // The file that generated the log.
 	int line_number; // The line number that generated the log.
@@ -3213,7 +3214,7 @@ extern NVM_API int nvm_get_debug_log_count();
  * 		#NVM_ERR_INVALIDPERMISSIONS @n
  * 		#NVM_ERR_UNKNOWN @n
  */
-extern NVM_API int nvm_get_debug_logs(struct log *p_logs, const NVM_UINT32 count);
+extern NVM_API int nvm_get_debug_logs(struct nvm_log *p_logs, const NVM_UINT32 count);
 
 
 /*

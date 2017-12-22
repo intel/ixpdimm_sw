@@ -55,7 +55,7 @@ namespace pmem_config
 /*!
  * Provider Factory for Intel_PersistentMemoryNamespace
  */
-class NVM_API NamespaceSettingsFactory : public framework_interface::NvmInstanceFactory
+class NVM_CIM_API NamespaceSettingsFactory : public framework_interface::NvmInstanceFactory
 {
 	public:
 

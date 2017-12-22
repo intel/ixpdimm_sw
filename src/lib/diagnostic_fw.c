@@ -90,7 +90,7 @@ int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 		else if (dev_count > 0)
 		{
 			// get device_discovery information of all dimms
-			struct device_discovery dimms[dev_count];
+			struct device_discovery *dimms = malloc(dev_count * sizeof(struct device_discovery));
 			dev_count = nvm_get_devices(dimms, dev_count);
 
 			if (dev_count > 0)
@@ -514,6 +514,8 @@ int diag_firmware_check(const struct diagnostic *p_diagnostic, NVM_UINT32 *p_res
 			{
 				rc = dev_count;
 			}
+
+            free(dimms);
 		} // nvm_get_device_count failed
 		else
 		{

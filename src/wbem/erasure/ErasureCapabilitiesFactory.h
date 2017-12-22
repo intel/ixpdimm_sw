@@ -50,7 +50,7 @@ namespace erasure
 /*!
  * Provider Factory for ErasureCapabilities
  */
-class NVM_API ErasureCapabilitiesFactory : public framework_interface::NvmInstanceFactory
+class NVM_CIM_API ErasureCapabilitiesFactory : public framework_interface::NvmInstanceFactory
 {
 	public:
 

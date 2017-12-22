@@ -41,7 +41,7 @@ namespace core
 namespace memory_allocator
 {
 
-class NVM_API RuleNamespacesExist : public RequestRule
+class NVM_CORE_API RuleNamespacesExist : public RequestRule
 {
 	public:
 		RuleNamespacesExist(core::NvmLibrary &nvmLib);

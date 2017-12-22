@@ -282,16 +282,18 @@ int get_devices(struct device_discovery **pp_devices)
 int lookup_device_nfit_by_handle(const NVM_UINT32 dev_handle, struct device_discovery * p_discovery)
 {
 	int dev_count = get_topology_count();
-	struct device_discovery discovery_dimms[dev_count];
+	struct device_discovery *discovery_dimms = malloc(sizeof(struct device_discovery) * dev_count);
 	nvm_get_devices_nfit(discovery_dimms, dev_count);
 	for (int i = 0; i < dev_count; i++)
 	{
 		if (discovery_dimms[i].device_handle.handle == dev_handle)
 		{
 			memcpy(p_discovery, &discovery_dimms[i], sizeof(struct device_discovery));
+            free(discovery_dimms);
 			return NVM_SUCCESS;
 		}
 	}
+    free(discovery_dimms);
 	COMMON_LOG_ERROR("Invalid parameter, device handle can't be found");
 	return NVM_ERR_INVALIDPARAMETER;
 }
@@ -1038,7 +1040,7 @@ int get_app_direct_capacity_on_device(const struct device_discovery *p_dimm,
 	}
 	else if (set_count > 0)
 	{
-		struct nvm_interleave_set sets[set_count];
+		struct nvm_interleave_set *sets = malloc(set_count * sizeof(struct nvm_interleave_set));
 		set_count = get_interleave_sets(set_count, sets);
 		if (set_count < 0)
 		{
@@ -1067,6 +1069,8 @@ int get_app_direct_capacity_on_device(const struct device_discovery *p_dimm,
 				}
 			}
 		}
+
+        free(sets);
 	}
 	return rc;
 }
@@ -1249,7 +1253,7 @@ int dimm_has_namespaces_of_type(const NVM_NFIT_DEVICE_HANDLE dimm_handle,
 	if (rc > 0)
 	{
 		int ns_count = rc;
-		struct nvm_namespace_discovery namespaces[ns_count];
+		struct nvm_namespace_discovery *namespaces = malloc(ns_count * sizeof(struct nvm_namespace_discovery));
 		if ((rc = get_namespaces(ns_count, namespaces)) > 0)
 		{
 			ns_count = rc;
@@ -1286,6 +1290,8 @@ int dimm_has_namespaces_of_type(const NVM_NFIT_DEVICE_HANDLE dimm_handle,
 				}
 			}
 		}
+
+        free(namespaces);
 	}
 
 	if (rc == NVM_SUCCESS)

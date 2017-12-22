@@ -31,6 +31,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include "x_str.h"
 
 /*
  * Tokenize a string such that no token is omitted.

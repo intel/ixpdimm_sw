@@ -35,6 +35,7 @@
 
 #include <persistence/schema.h>
 #include "platform_config_data.h"
+#include "export_api.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -44,24 +45,24 @@ extern "C"
 /*
  * Get the size of the platform config data by counting the tables in the database
  */
-int get_dimm_platform_config_size_from_db(PersistentStore *p_db, const unsigned int device_handle);
+NVM_API int get_dimm_platform_config_size_from_db(PersistentStore *p_db, const unsigned int device_handle);
 
 /*
  * Get the the platform config data from the database
  */
-int get_dimm_platform_config_data_from_db(PersistentStore *p_db, const unsigned int device_handle,
+NVM_API int get_dimm_platform_config_data_from_db(PersistentStore *p_db, const unsigned int device_handle,
 		struct platform_config_data *p_config_data, const NVM_UINT32 size);
 
 /*
  * Write the platform config data back to the specified database
  */
-int update_dimm_platform_config_in_db(PersistentStore *p_db,
+NVM_API int update_dimm_platform_config_in_db(PersistentStore *p_db,
 		const unsigned int device_handle, struct platform_config_data *p_config_data);
 
 /*
  * Clear out existing platform config data in the database for this dimm
  */
-int clear_dimm_platform_config_from_db(PersistentStore *p_db, const unsigned int device_handle);
+NVM_API int clear_dimm_platform_config_from_db(PersistentStore *p_db, const unsigned int device_handle);
 
 
 

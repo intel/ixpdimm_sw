@@ -31,12 +31,13 @@
 #include <vector>
 #include "Log.h"
 #include <core/NvmLibrary.h>
+#include <core/ExportCore.h>
 
 namespace core
 {
 namespace logs
 {
-class NVM_API LogService
+class NVM_CORE_API LogService
 {
 public:
 	LogService(NvmLibrary &api = NvmLibrary::getNvmLibrary()) : m_lib(api) { }

@@ -30,12 +30,14 @@
 #include "DeviceFirmwareInfo.h"
 #include <string>
 #include <map>
+#include <core/ExportCore.h>
+
 namespace core
 {
 namespace device
 {
 
-class NVM_API DeviceFirmwareInfoCollection
+class NVM_CORE_API DeviceFirmwareInfoCollection
 {
 public:
 	DeviceFirmwareInfoCollection() { }

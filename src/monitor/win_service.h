@@ -36,14 +36,14 @@
 /*
  * Install the service into Windows SCM
  */
-bool NVM_API serviceInstall(std::string serviceName, std::string displayName);
+bool serviceInstall(std::string serviceName, std::string displayName);
 
 /*
  * Uninstall the service from Windows SCM
  */
-bool NVM_API serviceUninstall(const char *service_name);
+bool serviceUninstall(const char *service_name);
 
 /*
  * Initialize the service when it is starting
  */
-bool NVM_API serviceInit(std::string serviceName);
+bool serviceInit(std::string serviceName);

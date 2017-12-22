@@ -52,7 +52,7 @@ static const int NVDIMMEVENT_FATAL = 7;
 
 static const std::string NVDIMMEVENT_CLASSNAME = std::string(NVM_WBEM_PREFIX) + "NVDIMMEvent";
 
-class NVDIMMEventFactory : public NvmIndicationFactory
+class NVM_CIM_API NVDIMMEventFactory : public NvmIndicationFactory
 {
 public:
 

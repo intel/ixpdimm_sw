@@ -44,7 +44,7 @@ namespace exception
 /*!
  * An exception for a modification that failed
  */
-class NVM_API NvmExceptionUndoModifyFailed: public NvmExceptionLibError
+class NVM_CIM_API NvmExceptionUndoModifyFailed: public NvmExceptionLibError
 {
 	public:
 

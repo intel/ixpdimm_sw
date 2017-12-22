@@ -42,9 +42,10 @@ int randomSeed = 1;
 /*
  * used in hexdec to convert hex string to number
  */
-static const char hextable[] =
+//TODO: verify if this initializes correctly on all platforms!
+static const char hextable[256] =
 		{
-				[0 ... 255] = -1,
+				-1,
 				['0'] = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
 				['A'] = 10, 11, 12, 13, 14, 15,
 				['a'] = 10, 11, 12, 13, 14, 15
@@ -190,7 +191,7 @@ void generate_guid(COMMON_GUID guid)
 
 		// seed random with the current time + number
 		// (to account for multiple calls to this method within 1 sec)
-		srand(time(NULL) + randomSeed);
+		srand((unsigned int) time(NULL) + randomSeed);
 		randomSeed++;
 		for (count = 0; count < COMMON_GUID_LEN; count = count + 2)
 		{

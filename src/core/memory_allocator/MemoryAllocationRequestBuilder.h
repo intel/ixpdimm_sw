@@ -33,13 +33,14 @@
 #include <nvm_types.h>
 #include <core/device/DeviceService.h>
 #include "MemoryAllocationRequest.h"
+#include <core/ExportCore.h>
 
 namespace core
 {
 namespace memory_allocator
 {
 
-class NVM_API MemoryAllocationRequestBuilder
+class NVM_CORE_API MemoryAllocationRequestBuilder
 {
 public:
 	MemoryAllocationRequestBuilder(core::device::DeviceService &service =

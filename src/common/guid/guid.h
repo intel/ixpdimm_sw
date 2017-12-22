@@ -49,7 +49,7 @@ extern "C"
  * @param[out] destination
  * 		The character array indicating the equivalent hex value.
  */
-void int_to_hex_digits(unsigned char value, char *destination);
+NVM_COMMON_API void int_to_hex_digits(unsigned char value, char *destination);
 
 /*!
  * Convert a GUID to a string
@@ -58,7 +58,7 @@ void int_to_hex_digits(unsigned char value, char *destination);
  * @param[out] guid_str
  * 		The converted GUID string
  */
-extern void guid_to_str(const COMMON_GUID guid, COMMON_GUID_STR guid_str);
+NVM_COMMON_API extern void guid_to_str(const COMMON_GUID guid, COMMON_GUID_STR guid_str);
 
 /*!
  * Convert a string to a GUID
@@ -67,7 +67,7 @@ extern void guid_to_str(const COMMON_GUID guid, COMMON_GUID_STR guid_str);
  * @param[out] guid
  * 		The converted GUID
  */
-extern void str_to_guid(const COMMON_GUID_STR guid_str, COMMON_GUID guid);
+NVM_COMMON_API extern void str_to_guid(const COMMON_GUID_STR guid_str, COMMON_GUID guid);
 
 /*!
  * Compare two GUIDs for equality
@@ -80,21 +80,21 @@ extern void str_to_guid(const COMMON_GUID_STR guid_str, COMMON_GUID guid);
  * 		0 if different, @n
  * 		-1 if either argument is @b NULL
  */
-extern int guid_cmp(const COMMON_GUID guid1, const COMMON_GUID guid2);
+NVM_COMMON_API extern int guid_cmp(const COMMON_GUID guid1, const COMMON_GUID guid2);
 
 /*!
  * Generate a random GUID
  * @param[out] guid
  * 		The GUID to be generated
  */
-extern void generate_guid(COMMON_GUID guid);
+NVM_COMMON_API extern void generate_guid(COMMON_GUID guid);
 
 /*!
  * Generate a random GUID string
  * @param[out] guid_str
  * 		The GUID string to be generated
  */
-extern void generate_guid_str(COMMON_GUID_STR guid_str);
+NVM_COMMON_API extern void generate_guid_str(COMMON_GUID_STR guid_str);
 
 /*!
  * Create hash guid from specified input string
@@ -108,13 +108,13 @@ extern void generate_guid_str(COMMON_GUID_STR guid_str);
  * 		1 if succeeded in creating guid
  * 		0 if failed to create guid
  */
-int guid_hash(const unsigned char *source,
+NVM_COMMON_API int guid_hash(const unsigned char *source,
 		const size_t source_len, unsigned char *p_guid);
 
 /*
  * Create hash guid represented by char array
  */
-extern int guid_hash_str(const unsigned char *source, const size_t source_len, char *p_guid);
+NVM_COMMON_API extern int guid_hash_str(const unsigned char *source, const size_t source_len, char *p_guid);
 
 #ifdef __cplusplus
 }

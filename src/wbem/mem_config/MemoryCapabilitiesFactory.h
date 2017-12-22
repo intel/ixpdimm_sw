@@ -67,7 +67,7 @@ static const NVM_UINT16 RELIABILITY_MEMORYMIGRATION = 6;
 /*!
  * Represents the support data maintained by the management software
  */
-class NVM_API MemoryCapabilitiesFactory  : public framework_interface::NvmInstanceFactory
+class NVM_CIM_API MemoryCapabilitiesFactory  : public framework_interface::NvmInstanceFactory
 {
 	public:
 		// constructor

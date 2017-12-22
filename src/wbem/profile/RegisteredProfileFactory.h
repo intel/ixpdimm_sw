@@ -76,7 +76,7 @@ static const std::string REGISTEREDPROFILE_VERSION_MULTITYPESYSTEMMEMORY = "1.0.
  * This provider is only exposed in the interop namespace
  * The list of supported profiles is effectively static.
  */
-class NVM_API RegisteredProfileFactory : public framework_interface::NvmInstanceFactory
+class NVM_CIM_API RegisteredProfileFactory : public framework_interface::NvmInstanceFactory
 {
 	public:
 		/*!

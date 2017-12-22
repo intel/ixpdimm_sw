@@ -32,7 +32,8 @@
 #include <libinvm-cli/CommandSpec.h>
 #include <cli/features/core/framework/YesNoPrompt.h>
 #include <core/device/DeviceService.h>
-#include <core/StringList.h>
+#include <cli/features/core/StringList.h>
+#include <cli/features/ExportCli.h>
 
 namespace cli
 {
@@ -42,7 +43,7 @@ namespace nvmcli
 static const std::string FIRSTFASTREFRESH_PROPERTYNAME = "FirstFastRefresh";
 static const std::string VIRALPOLICY_PROPERTYNAME = "ViralPolicy";
 
-class ModifyDeviceCommand : public framework::CommandBase
+class NVM_CLI_API ModifyDeviceCommand : public framework::CommandBase
 {
 	public:
 		ModifyDeviceCommand(cli::framework::YesNoPrompt &prompt,

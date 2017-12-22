@@ -275,7 +275,7 @@ std::vector<struct db_topology_state> monitor::EventMonitor::getSavedTopologySta
 				topoStateCount > 0)
 		{
 			// Populate the previous topology state map
-			struct db_topology_state dbTopoState[topoStateCount];
+			struct db_topology_state *dbTopoState = new db_topology_state[topoStateCount];
 			if (db_get_topology_states(pStore, dbTopoState, topoStateCount)
 					== topoStateCount)
 			{
@@ -284,6 +284,7 @@ std::vector<struct db_topology_state> monitor::EventMonitor::getSavedTopologySta
 					topologyState.push_back(dbTopoState[i]);
 				}
 			}
+            delete dbTopoState;
 		}
 	}
 

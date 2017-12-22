@@ -290,7 +290,7 @@ void WINAPI ServiceMain(DWORD argc, LPTSTR *argv)
 				monitor::NvmMonitorBase::getMonitors(monitors);
 
 				size_t handleCount = monitors.size() + 1; // +1 to also add g_serviceStopEvent
-				HANDLE handles[handleCount];
+				HANDLE *handles = new HANDLE[handleCount];
 				for (size_t i = 0; i < monitors.size(); i++)
 				{
 					handles[i] =
@@ -312,6 +312,9 @@ void WINAPI ServiceMain(DWORD argc, LPTSTR *argv)
 				{
 					CloseHandle(handles[i]);
 				}
+
+                delete handles;
+
 				monitor::NvmMonitorBase::deleteMonitors(monitors);
 				close_lib_store();
 

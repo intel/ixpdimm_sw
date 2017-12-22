@@ -43,7 +43,7 @@ namespace nvmcli
 /*!
  * Simulator Feature contains the add / remove simulator commands
  */
-class NVM_API SimulatorFeature : public cli::nvmcli::VerboseFeatureBase
+class NVM_CLI_API SimulatorFeature : public cli::nvmcli::VerboseFeatureBase
 {
 public:
 

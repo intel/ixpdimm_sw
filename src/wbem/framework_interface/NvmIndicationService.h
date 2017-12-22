@@ -31,13 +31,14 @@
 #include <libinvm-cim/IndicationService.h>
 #include <lib_interface/NvmApi.h>
 #include <nvm_types.h>
+#include <wbem/ExportCim.h>
 
 namespace wbem
 {
 namespace framework_interface
 {
 
-class NVM_API NvmIndicationService: public framework::IndicationService
+class NVM_CIM_API NvmIndicationService: public framework::IndicationService
 {
 public:
 	NvmIndicationService();

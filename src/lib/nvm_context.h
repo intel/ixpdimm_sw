@@ -35,6 +35,7 @@
 #include "nvm_management.h"
 #include "adapter_types.h"
 #include <acpi/nfit_tables.h>
+#include "export_api.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -85,55 +86,57 @@ struct nvm_context
 	struct parsed_nfit *p_nfit;
 };
 
+NVM_API extern struct nvm_context *p_context;
+
 // capabilities
-int get_nvm_context_capabilities(struct nvm_capabilities *p_capabilities);
-int set_nvm_context_capabilities(const struct nvm_capabilities *p_capabilities);
+NVM_API int get_nvm_context_capabilities(struct nvm_capabilities *p_capabilities);
+NVM_API int set_nvm_context_capabilities(const struct nvm_capabilities *p_capabilities);
 
 // devices
-void invalidate_devices();
-void invalidate_device_pcd(const NVM_UID device_uid);
-int get_nvm_context_device_count();
-int get_nvm_context_devices(struct device_discovery *p_devices, const int dev_count);
-int set_nvm_context_devices(const struct device_discovery *p_devices, const int dev_count);
-int get_nvm_context_device_details(const NVM_UID device_uid,
+NVM_API void invalidate_devices();
+NVM_API void invalidate_device_pcd(const NVM_UID device_uid);
+NVM_API int get_nvm_context_device_count();
+NVM_API int get_nvm_context_devices(struct device_discovery *p_devices, const int dev_count);
+NVM_API int set_nvm_context_devices(const struct device_discovery *p_devices, const int dev_count);
+NVM_API int get_nvm_context_device_details(const NVM_UID device_uid,
 		struct device_details *p_details);
-int set_nvm_context_device_details(const NVM_UID device_uid,
+NVM_API int set_nvm_context_device_details(const NVM_UID device_uid,
 		const struct device_details *p_details);
-int get_nvm_context_device_pcd(const NVM_UID device_uid,
+NVM_API int get_nvm_context_device_pcd(const NVM_UID device_uid,
 		struct platform_config_data **pp_pcd, NVM_SIZE *p_pcd_size);
-int set_nvm_context_device_pcd(const NVM_UID device_uid,
+NVM_API int set_nvm_context_device_pcd(const NVM_UID device_uid,
 		const struct platform_config_data *p_pcd, const NVM_SIZE pcd_size);
 
 // pools
-void invalidate_pools();
-int get_nvm_context_pool_count();
-int get_nvm_context_pools(struct pool *p_pools, const int pool_count);
-int set_nvm_context_pools(const struct pool *p_pools, const int pool_count);
-int get_nvm_context_pool(const NVM_UID pool_uid, struct pool *p_pool);
+NVM_API void invalidate_pools();
+NVM_API int get_nvm_context_pool_count();
+NVM_API int get_nvm_context_pools(struct pool *p_pools, const int pool_count);
+NVM_API int set_nvm_context_pools(const struct pool *p_pools, const int pool_count);
+NVM_API int get_nvm_context_pool(const NVM_UID pool_uid, struct pool *p_pool);
 
 // namespaces
-void invalidate_namespaces();
-int get_nvm_context_namespace_count();
-int get_nvm_context_namespaces(struct namespace_discovery *p_namespaces,
+NVM_API void invalidate_namespaces();
+NVM_API int get_nvm_context_namespace_count();
+NVM_API int get_nvm_context_namespaces(struct namespace_discovery *p_namespaces,
 		const int namespace_count);
-int set_nvm_context_namespaces(const struct namespace_discovery *p_namespaces,
+NVM_API int set_nvm_context_namespaces(const struct namespace_discovery *p_namespaces,
 		const int namespace_count);
-int get_nvm_context_namespace_details(const NVM_UID namespace_uid,
+NVM_API int get_nvm_context_namespace_details(const NVM_UID namespace_uid,
 		struct namespace_details *p_namespace);
-int set_nvm_context_namespace_details(const NVM_UID namespace_uid,
+NVM_API int set_nvm_context_namespace_details(const NVM_UID namespace_uid,
 		const struct namespace_details *p_namespace);
 
 // PCD namespaces
-int get_nvm_context_pcd_namespace_count();
-int get_nvm_context_pcd_namespaces(int pcd_nscount,
+NVM_API int get_nvm_context_pcd_namespace_count();
+NVM_API int get_nvm_context_pcd_namespaces(int pcd_nscount,
 		struct nvm_namespace_details *p_pcd_nslist);
-int set_nvm_context_pcd_namespaces(const int pcd_nscount,
+NVM_API int set_nvm_context_pcd_namespaces(const int pcd_nscount,
 	const struct nvm_namespace_details *p_pcd_nslist);
 
 // NFIT
-int get_nvm_context_nfit_size();
-int get_nvm_context_nfit(int nfit_size, struct parsed_nfit *p_nfit);
-int set_nvm_context_nfit(int nfit_size, const struct parsed_nfit *p_nfit);
+NVM_API int get_nvm_context_nfit_size();
+NVM_API int get_nvm_context_nfit(int nfit_size, struct parsed_nfit *p_nfit);
+NVM_API int set_nvm_context_nfit(int nfit_size, const struct parsed_nfit *p_nfit);
 
 #ifdef __cplusplus
 }

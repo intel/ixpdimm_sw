@@ -194,7 +194,7 @@ TEST_F(WinScmTests, large_payload)
 	memset(&pcd_input, 0, sizeof (pcd_input));
 	pcd_input.partition_id = 1;
 
-	int buffer_size = 128;
+	const int buffer_size = 128;
 	unsigned char buffer[buffer_size];
 
 	unsigned int dsm_status;
@@ -214,7 +214,7 @@ TEST_F(WinScmTests, large_payload)
 	}
 	else
 	{
-		int pl_size = 128;
+		const int pl_size = 128;
 		char pl[pl_size];
 		memset(pl, 0, pl_size);
 

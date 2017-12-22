@@ -56,7 +56,7 @@ namespace memory
 /*!
  * Models the capacity of a given DIMM
  */
-class NVM_API RawMemoryFactory : public framework_interface::NvmInstanceFactory
+class NVM_CIM_API RawMemoryFactory : public framework_interface::NvmInstanceFactory
 {
 	public:
 

@@ -48,7 +48,7 @@ static const std::string PERFORMANCEMETRICSERVICECAPABILITIES_ELEMENTNAME = "NVD
 /*!
  * Provider Factory for PerformanceMetricServiceCapabilities
  */
-class NVM_API PerformanceMetricServiceCapabilitiesFactory : public framework_interface::NvmInstanceFactory
+class NVM_CIM_API PerformanceMetricServiceCapabilitiesFactory : public framework_interface::NvmInstanceFactory
 {
 public:
 

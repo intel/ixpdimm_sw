@@ -117,7 +117,7 @@ std::vector<std::string> monitor::PerformanceMonitor::getDimmList()
 	// at least one dimm
 	else if (dimmCount > 0)
 	{
-		struct device_discovery dimms[dimmCount];
+		struct device_discovery *dimms = new device_discovery[dimmCount];
 		dimmCount = nvm_get_devices(dimms, dimmCount);
 		// error getting dimms
 		if (dimmCount < 0)
@@ -138,6 +138,8 @@ std::vector<std::string> monitor::PerformanceMonitor::getDimmList()
 				}
 			}
 		}
+
+        delete dimms;
 	}
 	return dimmList;
 }

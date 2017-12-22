@@ -37,6 +37,8 @@
 #include <exception/NvmExceptionLibError.h>
 #include <exception/NvmExceptionBadTarget.h>
 #include <exception/NvmExceptionNotManageable.h>
+#include <cli/features/core/StringList.h>
+#include <memory>
 
 namespace cli
 {
@@ -348,8 +350,8 @@ std::vector<core::device::Device> ShowCommandUtilities::populateDevicesFromDimms
 	{
 		throw wbem::exception::NvmExceptionLibError(dev_count);
 	}
-	struct device_discovery devices[dev_count];
-	memset(devices, 0, dev_count * sizeof(struct device_discovery));
+    std::unique_ptr<struct device_discovery[]> devices(new device_discovery[dev_count]);
+	memset(devices.get(), 0, dev_count * sizeof(struct device_discovery));
 
 	std::vector<core::device::Device> devs;
 	core::NvmLibrary &lib = core::NvmLibrary::getNvmLibrary();
@@ -375,11 +377,11 @@ std::vector<core::device::Device> ShowCommandUtilities::populateDevicesFromDimms
 	if (dimms_string_contains_uid || populate_all_device_properties ||
 			ShowCommandUtilities::isUserPreferenceDimmIdUid())
 	{
-		rc = nvm_get_devices(devices, dev_count);
+		rc = nvm_get_devices(devices.get(), dev_count);
 	}
 	else
 	{
-		rc = nvm_get_devices_nfit(devices, dev_count);
+		rc = nvm_get_devices_nfit(devices.get(), dev_count);
 	}
 	if (rc < NVM_SUCCESS)
 	{

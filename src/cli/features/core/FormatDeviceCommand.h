@@ -31,24 +31,25 @@
 #include <nvm_types.h>
 #include <string>
 #include <map>
-#include <core/StringList.h>
+#include <cli/features/core/StringList.h>
 #include <cli/features/core/framework/CommandBase.h>
 #include <cli/features/core/framework/YesNoPrompt.h>
 #include <libinvm-cli/CommandSpec.h>
 #include <libinvm-cli/SimpleListResult.h>
 #include <core/device/DeviceService.h>
 #include <core/device/FormatDeviceService.h>
+#include <cli/features/ExportCli.h>
 
 namespace cli
 {
 namespace nvmcli
 {
 
-class NVM_API FormatDeviceCommand : public framework::CommandBase
+class NVM_CLI_API FormatDeviceCommand : public framework::CommandBase
 {
 	public:
 
-		class NVM_API UserPrompt
+		class NVM_CLI_API UserPrompt
 		{
 			public:
 				UserPrompt(const framework::YesNoPrompt &prompt);

@@ -173,7 +173,7 @@ int nfit_get_dimms_from_parsed_nfit(const int count,
 	int result = 0;
 	if (p_parsed_nfit->region_mapping_count)
 	{
-		unsigned int unique_handles[p_parsed_nfit->region_mapping_count];
+		unsigned int *unique_handles = malloc(p_parsed_nfit->region_mapping_count * sizeof(unsigned int));
 		memset(unique_handles, 0, (sizeof (unsigned int) * p_parsed_nfit->region_mapping_count));
 		result = get_unique_dimm_region_handles(p_parsed_nfit, unique_handles);
 		if (count) // retrieve dimms structs
@@ -197,6 +197,8 @@ int nfit_get_dimms_from_parsed_nfit(const int count,
 				}
 			}
 		}
+
+        free(unique_handles);
 	}
 	return result;
 }

@@ -37,6 +37,7 @@
 
 #include <nvm_management.h>
 #include <string>
+#include <wbem/ExportCim.h>
 
 namespace wbem {
 namespace mem_config {
@@ -71,7 +72,7 @@ enum MemoryAllocationSettingsReplication {
 
 
 // This class is intended to be used to create MemoryAllocationSettings
-class NVM_API InterleaveSet {
+class NVM_CIM_API InterleaveSet {
 public:
 	InterleaveSet();
 	InterleaveSet(const struct interleave_set *interleaveSet);

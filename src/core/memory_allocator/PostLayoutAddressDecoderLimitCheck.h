@@ -36,6 +36,7 @@
 #include <vector>
 #include <list>
 #include "PostLayoutCheck.h"
+#include <core/ExportCore.h>
 
 static const NVM_UINT16 criticalNumberOfSockets = 8;
 static const NVM_UINT16 criticalNumberOfIlsetsOnSocket = 7;
@@ -45,7 +46,7 @@ namespace core
 namespace memory_allocator
 {
 
-class NVM_API PostLayoutAddressDecoderLimitCheck: public PostLayoutCheck
+class NVM_CORE_API PostLayoutAddressDecoderLimitCheck: public PostLayoutCheck
 {
 	public:
 		PostLayoutAddressDecoderLimitCheck(const std::vector<struct device_discovery> &devices,

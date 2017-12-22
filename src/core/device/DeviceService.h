@@ -34,13 +34,14 @@
 #include <core/Result.h>
 #include "Device.h"
 #include <core/Collection.h>
+#include <core/ExportCore.h>
 
 namespace core
 {
 namespace device
 {
 
-class NVM_API DeviceService
+class NVM_CORE_API DeviceService
 {
 public:
 	DeviceService(NvmLibrary &api = NvmLibrary::getNvmLibrary()) : m_lib(api) { }

@@ -38,7 +38,7 @@ Log::Log()
 	memset(&m_log, 0, sizeof(m_log));
 }
 
-Log::Log(const struct log &templog)
+Log::Log(const struct nvm_log &templog)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	memmove(&m_log, &templog, sizeof(m_log));

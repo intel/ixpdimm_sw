@@ -37,7 +37,7 @@
 #include "win_scm2_passthrough.h"
 #include "win_scm2_ioctl_driver_version.h"
 #include <windows.h>
-#include <windows/GetRapl.h>
+#include <GetRapl.h>
 
  /*
  * Bit selection as defined for the MSR_DRAM_POWER_LIMIT register,
@@ -250,7 +250,12 @@ int win_scm2_adp_get_dimm_power_limited(NVM_UINT16 socket_id)
 		// Windows expects an output payload that is exactly the size of count
 		size_t bufSize = sizeof(GET_RAPL_IOCTL) +
 			(sizeof(GET_RAPL_OUTPUT_PAYLOAD) * (actual_count - 1));
-		BYTE buffer[bufSize];
+		BYTE *buffer = malloc(bufSize);
+        if (NULL == buffer)
+        {
+            return -1;
+        }
+
 		GET_RAPL_IOCTL *p_ioctl_data = (GET_RAPL_IOCTL *)buffer;
 		memset(buffer, 0, bufSize);
 
@@ -269,6 +274,8 @@ int win_scm2_adp_get_dimm_power_limited(NVM_UINT16 socket_id)
 					POWER_LIMIT_ENABLE_BIT) ? 1 : 0;
 			}
 		}
+
+        free(buffer);
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -352,7 +359,7 @@ static unsigned int win_scm2_get_first_handle()
 	{
 		// TODO-RYON(6/26/2017): Need to look through all NFIT DIMMs and return handle of first
 		// Intel DIMM (TA44191)
-		struct nfit_dimm dimms[dimm_count];
+		struct nfit_dimm dimms[NFIT_MAX_DIMMS];
 		if (nfit_get_dimms(dimm_count, dimms) > 0)
 		{
 			handle = dimms[0].handle;

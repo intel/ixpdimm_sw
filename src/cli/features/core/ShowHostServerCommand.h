@@ -31,15 +31,15 @@
 #include <libinvm-cli/ResultBase.h>
 #include "framework/PropertyDefinitionList.h"
 #include <cli/features/core/framework/CommandBase.h>
-
 #include <core/system/SystemService.h>
+#include <cli/features/ExportCli.h>
 
 namespace cli
 {
 namespace nvmcli
 {
 
-class NVM_API ShowHostServerCommand : framework::CommandBase
+class NVM_CLI_API ShowHostServerCommand : framework::CommandBase
 {
 public:
 	ShowHostServerCommand(

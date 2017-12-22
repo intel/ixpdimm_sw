@@ -30,6 +30,7 @@
 #include <libinvm-cim/AssociationFactory.h>
 #include <NvmStrings.h>
 #include <nvm_types.h>
+#include <wbem/ExportCim.h>
 
 namespace wbem
 {
@@ -69,7 +70,7 @@ static const std::string ASSOCIATION_CLASS_REFERENCEDPROFILE = std::string(NVM_W
 
 
 
-class NVM_API NvmAssociationFactory : public framework::AssociationFactory
+class NVM_CIM_API NvmAssociationFactory : public framework::AssociationFactory
 {
 
 protected:

@@ -32,6 +32,7 @@
 
 #include "VolatileMemoryFactory.h"
 
+#include <memory>
 #include <LogEnterExit.h>
 #include <nvm_management.h>
 #include <uid/uid.h>
@@ -148,8 +149,8 @@ throw (wbem::framework::Exception)
 	else if (dev_count > 0)
 	{
 		// get device_discovery information of all dimms
-		struct device_discovery dimms[dev_count];
-		dev_count = nvm_get_devices(dimms, dev_count);
+		std::unique_ptr<struct device_discovery[]> dimms(new device_discovery[dev_count]);
+		dev_count = nvm_get_devices(dimms.get(), dev_count);
 		if (dev_count > 0)
 		{
 			for (int device_index = 0; device_index < dev_count; device_index++)

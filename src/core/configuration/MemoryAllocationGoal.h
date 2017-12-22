@@ -33,13 +33,14 @@
 #include <core/device/Device.h>
 #include <core/NvmLibrary.h>
 #include <vector>
+#include <core/ExportCore.h>
 
 namespace core
 {
 namespace configuration
 {
 
-class NVM_API MemoryAllocationGoal
+class NVM_CORE_API MemoryAllocationGoal
 {
 	public:
 		MemoryAllocationGoal();

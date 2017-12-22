@@ -35,7 +35,7 @@
 
 #include <libinvm-cim/Exception.h>
 #include <nvm_types.h>
-
+#include <wbem/ExportCim.h>
 
 namespace wbem
 {
@@ -45,7 +45,7 @@ namespace exception
 /*!
  * An exception for an invalid target
  */
-class NVM_API NvmExceptionNotManageable: public framework::Exception
+class NVM_CIM_API NvmExceptionNotManageable: public framework::Exception
 {
 	public:
 	/*!

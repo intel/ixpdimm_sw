@@ -35,6 +35,7 @@
 #include "framework/DisplayOptions.h"
 #include <libinvm-cli/ResultBase.h>
 #include <libinvm-cli/SyntaxErrorBadValueResult.h>
+#include <cli/features/ExportCli.h>
 
 namespace cli
 {
@@ -42,7 +43,7 @@ namespace nvmcli
 {
 
 template<class T>
-class NVM_API ShowCommandPropertyUtilities
+class ShowCommandPropertyUtilities
 {
 	public:
 		ShowCommandPropertyUtilities() {}

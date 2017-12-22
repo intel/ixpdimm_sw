@@ -30,13 +30,14 @@
 #include <string>
 #include <nvm_types.h>
 #include <nvm_management.h>
+#include <core/ExportCore.h>
 
 namespace core
 {
 namespace system
 {
 
-class NVM_API SystemInfo
+class NVM_CORE_API SystemInfo
 {
 public:
 	SystemInfo();

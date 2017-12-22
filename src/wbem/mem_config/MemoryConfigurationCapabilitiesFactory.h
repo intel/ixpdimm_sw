@@ -53,7 +53,7 @@ static const NVM_UINT32 METHOD_ALLOCATEFROMPOOL = 2; //<! Vendor-specific method
  * Represents the support data maintained by the management software
  */
 
-class NVM_API MemoryConfigurationCapabilitiesFactory  : public framework_interface::NvmInstanceFactory
+class NVM_CIM_API MemoryConfigurationCapabilitiesFactory  : public framework_interface::NvmInstanceFactory
 {
 	public:
 		// constructor

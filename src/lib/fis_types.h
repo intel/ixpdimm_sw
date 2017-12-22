@@ -171,7 +171,7 @@
 #define	MULTIPLES_TO_BYTES(val)	(4096llu * ((NVM_UINT64)(val)))
 
 // Intel DIMM Subsystem Device IDs supported by this software
-extern const int NUM_SUPPORTED_DEVICE_IDS;
+#define NUM_SUPPORTED_DEVICE_IDS 3
 extern const NVM_UINT16 SUPPORTED_DEVICE_IDS[];
 
 // Specify that the ARS command has reached the limit+1 errors it can report and has
@@ -1676,10 +1676,11 @@ struct pt_payload_fw_image_info {
  *		Sub-Opcode:	0x02h (Firmware Debug Log)
  *	Small Input Payload
  */
-PACK_STRUCT(
-struct pt_payload_input_get_fw_dbg_log {
 #define RETRIEVE_LOG_SIZE 0x00
 #define GET_LOG_PAGE 0x01
+ PACK_STRUCT(
+struct pt_payload_input_get_fw_dbg_log {
+
 	/*
 	 *  This is used to tell the FW Debug Log command what to do
 	 *  0x00 = Retrieve Log Size (default)

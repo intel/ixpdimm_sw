@@ -94,7 +94,7 @@ int get_interleaveset_by_driver_id(NVM_UINT32 driver_id, struct nvm_interleave_s
 	int interleave_count = get_interleave_set_count();
 	if (interleave_count >= 0)
 	{
-		struct nvm_interleave_set interleaves[interleave_count];
+		struct nvm_interleave_set *interleaves = malloc(interleave_count * sizeof(struct nvm_interleave_set));
 		interleave_count = get_interleave_sets(interleave_count, interleaves);
 		if (interleave_count > 0)
 		{
@@ -108,6 +108,8 @@ int get_interleaveset_by_driver_id(NVM_UINT32 driver_id, struct nvm_interleave_s
 				}
 			}
 		}
+
+        free(interleaves);
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);

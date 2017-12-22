@@ -143,7 +143,7 @@ int get_all_driver_namespace_details(struct nvm_namespace_details *p_namespaces,
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
 
-	struct nvm_namespace_discovery namespace_discovery[namespace_count];
+	struct nvm_namespace_discovery *namespace_discovery = malloc(namespace_count * sizeof(struct nvm_namespace_discovery));
 	if ((rc = get_namespaces(namespace_count, namespace_discovery)) > 0)
 	{
 		for (int i = 0; i < namespace_count; i++)
@@ -165,6 +165,8 @@ int get_all_driver_namespace_details(struct nvm_namespace_details *p_namespaces,
 		COMMON_LOG_ERROR_F("error getting namespaces, rc = %d", rc);
 	}
 
+    free(namespace_discovery);
+
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
@@ -182,13 +184,15 @@ void check_namespace_best_practices_with_pools(NVM_UINT32 *p_results,
 	}
 	else if (ns_count > 0)
 	{
-		struct nvm_namespace_details namespaces[ns_count];
+		struct nvm_namespace_details *namespaces = malloc(ns_count * sizeof(struct nvm_namespace_details));
 		rc = get_all_driver_namespace_details(namespaces, ns_count);
 		if (rc == NVM_SUCCESS)
 		{
 			check_if_pools_need_namespaces(p_results, namespaces, ns_count,
 					p_pools, pool_count);
 		}
+
+        free(namespaces);
 	}
 
 	if (rc != NVM_SUCCESS)
@@ -660,7 +664,7 @@ int check_dimm_socket_layout_best_practices(NVM_UINT32 *p_results,
 	if (rc > 0)
 	{
 		NVM_UINT16 socket_count = rc;
-		struct socket sockets[socket_count];
+		struct socket *sockets = malloc(socket_count * sizeof(struct socket));
 		if ((rc = get_sockets(sockets, socket_count)) > 0)
 		{
 			check_dimm_socket_layout_balance(p_results, p_devices,
@@ -672,6 +676,8 @@ int check_dimm_socket_layout_best_practices(NVM_UINT32 *p_results,
 		{
 			COMMON_LOG_ERROR_F("couldn't get sockets, rc=%d", rc);
 		}
+
+        free(sockets);
 	}
 	else if (rc < 0)
 	{
@@ -857,8 +863,9 @@ int check_platform_config_best_practices(NVM_UINT32 *p_results)
 	if (rc > 0)
 	{
 		NVM_UINT32 num_devices = rc;
-		struct device_discovery devices[num_devices];
-		memset(devices, 0, sizeof (devices));
+		size_t device_size = num_devices * sizeof(struct device_discovery);
+		struct device_discovery *devices = malloc(device_size);
+		memset(devices, 0, device_size);
 		if ((rc = nvm_get_devices(devices, num_devices)) > 0)
 		{
 			KEEP_ERROR(rc, check_dimm_socket_layout_best_practices(p_results,
@@ -870,6 +877,8 @@ int check_platform_config_best_practices(NVM_UINT32 *p_results)
 		{
 			COMMON_LOG_ERROR_F("couldn't get %u devices, rc=%d", num_devices, rc);
 		}
+
+        free(devices);
 	}
 	else if (rc < 0)
 	{

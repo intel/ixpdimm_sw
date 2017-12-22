@@ -66,7 +66,7 @@ DEFINE_GUID(CLSID_instprovider,
  *           class this DLL supports.
  *
  */
-STDAPI NVM_API DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID * ppv)
+STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID * ppv)
 {
 	COMMON_LOG_ENTRY();
 	HRESULT rc = NOERROR;
@@ -100,7 +100,7 @@ STDAPI NVM_API DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID * ppv)
 /*
  * Called periodically by Ole to determine if the DLL can be freed.
  */
-STDAPI NVM_API DllCanUnloadNow(void)
+STDAPI DllCanUnloadNow(void)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
@@ -116,7 +116,7 @@ STDAPI NVM_API DllCanUnloadNow(void)
  *  Reused from
  *
  */
-STDAPI NVM_API DllRegisterServer(void)
+STDAPI DllRegisterServer(void)
 {
 	COMMON_LOG_ENTRY();
 	char       id[128];
@@ -179,7 +179,7 @@ STDAPI NVM_API DllRegisterServer(void)
 /*
  * Called when it is time to remove the registry entries.
  */
-STDAPI NVM_API DllUnregisterServer(void)
+STDAPI DllUnregisterServer(void)
 {
 	COMMON_LOG_ENTRY();
 	TCHAR	id[128];

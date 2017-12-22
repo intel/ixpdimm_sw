@@ -271,7 +271,7 @@ void build_obfuscated_dimm_uid_list_from_real_uid_list(
 	memset(obfuscated_list, 0, obfuscated_list_size);
 
 	// Mutable list for parsing
-	char original_list_copy[original_list_size];
+	char *original_list_copy = malloc(original_list_size * sizeof(char));
 	s_strcpy(original_list_copy, original_list, original_list_size);
 
 	const char *delimiter = ", ";
@@ -291,6 +291,7 @@ void build_obfuscated_dimm_uid_list_from_real_uid_list(
 		count++;
 	}
 
+    free(original_list_copy);
 	COMMON_LOG_EXIT();
 }
 

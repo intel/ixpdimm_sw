@@ -31,17 +31,18 @@
 #include <nvm_types.h>
 #include <nvm_management.h>
 #include <string>
+#include <core/ExportCore.h>
 
 namespace core
 {
 namespace logs
 {
 
-class NVM_API Log
+class NVM_CORE_API Log
 {
 public:
 	Log();
-	Log(const struct log &log);
+	Log(const struct nvm_log &log);
 	Log(const Log &other);
 	virtual ~Log();
 
@@ -59,7 +60,7 @@ public:
 	virtual enum log_level getLogLevel();
 
 private:
-	struct log m_log;
+	struct nvm_log m_log;
 };
 
 }

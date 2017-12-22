@@ -39,7 +39,7 @@ namespace cli
 namespace nvmcli
 {
 
-class NVM_API ShowMemoryResourcesCommand : framework::CommandBase
+class NVM_CLI_API ShowMemoryResourcesCommand : framework::CommandBase
 {
 public:
 	ShowMemoryResourcesCommand(

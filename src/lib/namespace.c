@@ -172,7 +172,7 @@ int nvm_get_namespaces(struct namespace_discovery *p_namespaces, const NVM_UINT8
 		}
 		else
 		{
-			struct nvm_namespace_discovery nvm_namespaces[ns_count];
+			struct nvm_namespace_discovery *nvm_namespaces = malloc(ns_count * sizeof(struct nvm_namespace_discovery));
 			ns_count = get_namespaces(ns_count, nvm_namespaces);
 			if (ns_count <= 0)
 			{
@@ -203,6 +203,8 @@ int nvm_get_namespaces(struct namespace_discovery *p_namespaces, const NVM_UINT8
 				}
 
 			} // end get_namespaces succeeded
+
+            free(nvm_namespaces);
 		} // end get namespace count succeeded
 	} // end valid input parameters
 
@@ -1115,7 +1117,7 @@ int nvm_create_namespace(NVM_UID *p_namespace_uid, const NVM_UID pool_uid,
 							// Figure out a unique ID for the default namespace name
 							// Find the max value of the ID currently present,
 							// and generate max_unique_id+1 as the ID
-							struct nvm_namespace_discovery nvm_namespaces[namespace_count];
+							struct nvm_namespace_discovery *nvm_namespaces =  malloc(namespace_count * sizeof(struct nvm_namespace_discovery));
 							get_namespaces(namespace_count, nvm_namespaces);
 							for (int ns = 0; ns < namespace_count; ns++)
 							{
@@ -1137,6 +1139,8 @@ int nvm_create_namespace(NVM_UID *p_namespace_uid, const NVM_UID pool_uid,
 									}
 								}
 							}
+
+                            free(nvm_namespaces);
 						}
 						// create a unique friendly name - NvDimmVolN.
 						char namespace_name[NVM_NAMESPACE_NAME_LEN];

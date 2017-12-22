@@ -31,6 +31,7 @@
  */
 
 #include <algorithm>
+#include <memory>
 #include <LogEnterExit.h>
 #include <libinvm-cim/ExceptionBadParameter.h>
 #include <server/BaseServerFactory.h>
@@ -101,8 +102,9 @@ wbem::framework::Instance* wbem::memory::MemoryControllerFactory::getInstance(
 		}
 
 		// get the device_discovery information for all of the dimms
-		struct device_discovery dimms[rc];
-		if ((rc = nvm_get_devices(dimms, rc)) < NVM_SUCCESS)
+        int count = rc;
+        std::unique_ptr<struct device_discovery[]> dimms(new device_discovery[count]);
+		if ((rc = nvm_get_devices(dimms.get(), count)) < NVM_SUCCESS)
 		{
 			throw exception::NvmExceptionLibError(rc);
 		}
@@ -222,7 +224,7 @@ std::string wbem::memory::MemoryControllerFactory::generateUniqueMemoryControlle
 	// note that the Memory Controller ID is only unique w.r.t a given processor ID
 	// which means that to guarantee uniqueness, we must incorporate the processor
 	// socket ID into the this key attribute
-	size_t unique_id_str_len = 100;
+	const size_t unique_id_str_len = 100;
 	char unique_memory_controller_id_cstr[unique_id_str_len];
 	snprintf(unique_memory_controller_id_cstr, unique_id_str_len, "CPU %u Memory Controller ID %u",
 			pDiscovery->socket_id, pDiscovery->memory_controller_id);
@@ -308,8 +310,8 @@ int wbem::memory::MemoryControllerFactory::getInstancesHelperLoop(
 	if ((rc = nvm_get_device_count()) > 0)
 	{
 		// get the device_discovery information for all of the dimms
-		struct device_discovery dimms[rc];
-		if ((rc = nvm_get_devices(dimms, rc)) > 0)
+		std::unique_ptr<struct device_discovery[]> dimms(new device_discovery[rc]);
+		if ((rc = nvm_get_devices(dimms.get(), rc)) > 0)
 		{
 			// store the number of dimms recovered
 			int numDimms = rc;

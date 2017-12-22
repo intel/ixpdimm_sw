@@ -72,7 +72,7 @@ static std::string PROPERTY_SENSOR_TYPE_UNKNOWN = N_TR("Unknown"); //!< unknown 
 /*!
  * Provider Factory for NVDIMMSensorView
  */
-class NVM_API NVDIMMSensorViewFactory : public framework_interface::NvmInstanceFactory
+class NVM_CIM_API NVDIMMSensorViewFactory : public framework_interface::NvmInstanceFactory
 {
 public:
 	/*!

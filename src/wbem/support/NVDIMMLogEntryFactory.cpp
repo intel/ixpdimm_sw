@@ -32,6 +32,7 @@
 
 
 #include <sstream>
+#include <memory>
 #include <string.h>
 #include <string/s_str.h>
 #include "NVDIMMEventLogFactory.h"
@@ -220,8 +221,8 @@ throw (wbem::framework::Exception)
 		}
 		if (count > 0)
 		{
-			struct event events[count];
-			count = nvm_get_events(NULL, events, count);
+			std::unique_ptr<struct event[]> events(new struct event[count]);
+			count = nvm_get_events(NULL, events.get(), count);
 			for (int i = 0; i < count; i++)
 			{
 				std::stringstream instanceIdStr;

@@ -47,7 +47,7 @@ static const std::string NVDIMMCOLLECTION_CREATIONCLASSNAME = std::string(NVM_WB
 /*!
  * Provider Factory for NVDIMMCollection
  */
-class NVM_API NVDIMMCollectionFactory : public framework_interface::NvmInstanceFactory
+class NVM_CIM_API NVDIMMCollectionFactory : public framework_interface::NvmInstanceFactory
 {
 	public:
 

@@ -46,6 +46,7 @@
 #include <pmem_config/NamespaceViewFactory.h>
 #include <core/memory_allocator/MemoryAllocationTypes.h>
 #include <mem_config/PoolViewFactory.h>
+#include <cli/features/ExportCli.h>
 
 namespace cli
 {
@@ -139,7 +140,7 @@ static const std::string NS_UNITS_OPTION_DESC = "Change the units that capacitie
 /*!
  * Implements namespace related commands
  */
-class NVM_API NamespaceFeature : public cli::nvmcli::VerboseFeatureBase
+class NVM_CLI_API NamespaceFeature : public cli::nvmcli::VerboseFeatureBase
 {
 	public:
 		NamespaceFeature();

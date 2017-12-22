@@ -29,6 +29,7 @@
 
 #include <vector>
 #include <stddef.h>
+#include "ExportCore.h"
 
 namespace core
 {

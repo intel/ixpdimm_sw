@@ -39,6 +39,7 @@
 #include "nvm_types.h"
 #include "device_adapter.h"
 #include "device_utilities.h"
+#include "export_api.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -452,7 +453,7 @@ int get_hw_dimm_platform_config_alloc(const unsigned int handle, NVM_SIZE *p_pcd
  *
  * NOTE: Callers must free the platform_config_data structure to avoid memory leaks
  */
-int get_dimm_platform_config(const NVM_NFIT_DEVICE_HANDLE handle,
+NVM_API int get_dimm_platform_config(const NVM_NFIT_DEVICE_HANDLE handle,
 		struct platform_config_data **pp_config);
 
 /*

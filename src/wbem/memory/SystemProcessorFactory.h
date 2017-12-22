@@ -46,7 +46,7 @@ namespace memory
 /*!
  * Models the physical processor/socket associated with a set of NVDIMMs.
  */
-class NVM_API SystemProcessorFactory : public framework_interface::NvmInstanceFactory
+class NVM_CIM_API SystemProcessorFactory : public framework_interface::NvmInstanceFactory
 {
 	public:
 

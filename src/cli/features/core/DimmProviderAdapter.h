@@ -30,13 +30,14 @@
 #include <string>
 #include <libinvm-cli/ErrorResult.h>
 #include <vector>
+#include <cli/features/ExportCli.h>
 
 namespace cli
 {
 namespace nvmcli
 {
 
-class DimmProviderAdapter
+class NVM_CLI_API DimmProviderAdapter
 {
 public:
 	virtual cli::framework::ErrorResult *getDimms(

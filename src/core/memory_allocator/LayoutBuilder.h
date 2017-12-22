@@ -35,6 +35,7 @@
 #include <core/NvmLibrary.h>
 #include "MemoryAllocationTypes.h"
 #include "MemoryAllocationUtil.h"
+#include <core/ExportCore.h>
 #include "LayoutStep.h"
 
 namespace core
@@ -42,7 +43,7 @@ namespace core
 namespace memory_allocator
 {
 
-class NVM_API LayoutBuilder
+class NVM_CORE_API LayoutBuilder
 {
 	public:
 		LayoutBuilder(

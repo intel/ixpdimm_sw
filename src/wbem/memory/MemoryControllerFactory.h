@@ -49,7 +49,7 @@ namespace memory
 /*!
  * Models the NVDIMM Memory Controller Configuration
  */
-class NVM_API MemoryControllerFactory : public framework_interface::NvmInstanceFactory
+class NVM_CIM_API MemoryControllerFactory : public framework_interface::NvmInstanceFactory
 {
 	public:
 

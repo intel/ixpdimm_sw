@@ -57,7 +57,7 @@ static const int CIMFWEVENTLOG_UNKNOWN = 0;
 /*!
  * Represents the support data maintained by the management software
  */
-class NVM_API FWEventLogFactory  : public framework_interface::NvmInstanceFactory
+class NVM_CIM_API FWEventLogFactory  : public framework_interface::NvmInstanceFactory
 {
 	public:
 		// constructor

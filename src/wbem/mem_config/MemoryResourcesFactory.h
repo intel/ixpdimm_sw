@@ -54,7 +54,7 @@ namespace mem_config
 /*!
  * The SNIA base server profile models the host server.
  */
-class NVM_API MemoryResourcesFactory : public framework_interface::NvmInstanceFactory
+class NVM_CIM_API MemoryResourcesFactory : public framework_interface::NvmInstanceFactory
 {
 	public:
 

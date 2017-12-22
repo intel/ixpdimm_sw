@@ -32,6 +32,7 @@
  */
 #ifndef _SCHEMA_H_
 #define	_SCHEMA_H_
+#include <export_common.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -62,7 +63,7 @@ typedef struct persistentStore PersistentStore;
  * to close the file and free memory
  * @ingroup db_schema
  */
-PersistentStore *create_PersistentStore(const char *path, int force);
+NVM_COMMON_API PersistentStore *create_PersistentStore(const char *path, int force);
 /*!
  * Creates the memory for and instantiates a new PersistentStore object.  It assumes the store already exists.
  * @param path 
@@ -71,13 +72,13 @@ PersistentStore *create_PersistentStore(const char *path, int force);
  * to close the file and free memory
  * @ingroup db_schema
  */
-PersistentStore *open_PersistentStore(const char *path);
+NVM_COMMON_API PersistentStore *open_PersistentStore(const char *path);
 /*!
  * Close and free the PersistentStore
  * @param Pointer to the PersistentStore created by create_PersistentStore or open_PersistentStore
  * @ingroup db_schema
  */
-int free_PersistentStore(PersistentStore **);
+NVM_COMMON_API int free_PersistentStore(PersistentStore **);
 /*!
  * Add a new history instance
  * @param[in] p_ps Pointer to the PersistentStore to act upon
@@ -86,7 +87,7 @@ int free_PersistentStore(PersistentStore **);
  * @return enum db_return_codes
  * @ingroup db_schema
  */
-enum db_return_codes db_add_history(PersistentStore *p_ps, const char *history_name, int *p_history_id);
+NVM_COMMON_API enum db_return_codes db_add_history(PersistentStore *p_ps, const char *history_name, int *p_history_id);
 /*!
  * Start a new Transaction.
  * @param p_ps Pointer to the PersistentStore to act upon
@@ -99,34 +100,34 @@ enum db_return_codes db_add_history(PersistentStore *p_ps, const char *history_n
  * improving performance.
  * @ingroup db_schema
  */
-enum db_return_codes db_begin_transaction(PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_begin_transaction(PersistentStore *p_ps);
 /*!
  * End a Transaction began with db_begin_transaction
  * @ingroup db_schema
  */
-enum db_return_codes db_end_transaction(PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_end_transaction(PersistentStore *p_ps);
 /*!
  * undo any changes made within a transaction
  * @ingroup db_schema
  */
-enum db_return_codes db_rollback_transaction(PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_rollback_transaction(PersistentStore *p_ps);
 /*!
  * Run a custom SQL Query
  */
- enum db_return_codes db_run_custom_sql(PersistentStore *p_ps, const char *sql);
+ NVM_COMMON_API enum db_return_codes db_run_custom_sql(PersistentStore *p_ps, const char *sql);
  /*!
  * Returns the number of rows in the table name provided.  If there is an issue with the
  * query (or the table doesn't exist) will return 0.
  */
- enum db_return_codes table_row_count(const PersistentStore *p_ps, const char *table_name, int *p_count);
+ NVM_COMMON_API enum db_return_codes table_row_count(const PersistentStore *p_ps, const char *table_name, int *p_count);
  /*!
  * Execute some SQL on a sqlite db and expect a single int value as result
  */
-enum db_return_codes run_scalar_sql(const PersistentStore *p_ps, const char *sql, int *p_scalar);
+NVM_COMMON_API enum db_return_codes run_scalar_sql(const PersistentStore *p_ps, const char *sql, int *p_scalar);
 /*!
  * Execute some SQL on a sqlite db and expect a single char* value as result
  */
-enum db_return_codes run_text_scalar_sql(const PersistentStore *p_ps, const char *sql, char *p_value, int len);
+NVM_COMMON_API enum db_return_codes run_text_scalar_sql(const PersistentStore *p_ps, const char *sql, char *p_value, int len);
 /*
  * An array containing all history table names automatically generated
  * from the Entity declarations in schema_generator/main.cpp
@@ -156,7 +157,7 @@ struct db_config
  * @return
  *		void
  */
-void db_print_config(struct db_config *p_value);
+NVM_COMMON_API void db_print_config(struct db_config *p_value);
 /*!
  * Create a new row in the config table
  * @ingroup config
@@ -166,7 +167,7 @@ void db_print_config(struct db_config *p_value);
  *		Pointer to the object to be saved to the config table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_config(const PersistentStore *p_ps, struct db_config *p_config);
+NVM_COMMON_API enum db_return_codes db_add_config(const PersistentStore *p_ps, struct db_config *p_config);
 /*!
  * Get the total number of configs
  * @param[in] p_ps
@@ -175,7 +176,7 @@ enum db_return_codes db_add_config(const PersistentStore *p_ps, struct db_config
  * 		Set to the number of configs
  * @return whether successful or not
  */
-enum db_return_codes db_get_config_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_config_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all configs
  * @ingroup config
@@ -187,7 +188,7 @@ enum db_return_codes db_get_config_count(const PersistentStore *p_ps, int *p_cou
  *		Size of p_config
  * @return The number of row (to max of config_count) on success.  DB_FAILURE on failure.
  */
-int db_get_configs(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_configs(const PersistentStore *p_ps,
 	struct db_config
 	*p_config,
 	int config_count);
@@ -198,7 +199,7 @@ int db_get_configs(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_configs(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_configs(const PersistentStore *p_ps);
 
 #if 0
 //NON-HISTORY TABLE
@@ -210,7 +211,7 @@ enum db_return_codes db_delete_all_configs(const PersistentStore *p_ps);
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_config_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_config_history(const PersistentStore *p_ps);
  
 #endif
 
@@ -225,7 +226,7 @@ enum db_return_codes db_delete_all_configs(const PersistentStore *p_ps);
  *		config to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_config_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_config_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_config *p_config);
 /*!
@@ -239,7 +240,7 @@ enum db_return_codes db_save_config_state(const PersistentStore *p_ps,
  *		struct to put the config retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_config_by_key(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_config_by_key(const PersistentStore *p_ps,
 	const char * key,
 	struct db_config *p_config);
 /*!
@@ -253,7 +254,7 @@ enum db_return_codes db_get_config_by_key(const PersistentStore *p_ps,
  *		structure with new values for the config
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_config_by_key(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_config_by_key(const PersistentStore *p_ps,
 	const char * key,
 	struct db_config *p_updated_config);
 /*!
@@ -265,7 +266,7 @@ enum db_return_codes db_update_config_by_key(const PersistentStore *p_ps,
  *		key points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_config_by_key(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_config_by_key(const PersistentStore *p_ps,
 	const char * key);
 /*!
  * Return number of matching history rows
@@ -277,7 +278,7 @@ enum db_return_codes db_delete_config_by_key(const PersistentStore *p_ps,
  *		count of rows matching this history_id
  * @return The number of row (to max of config_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_config_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_config_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -288,7 +289,7 @@ enum db_return_codes db_delete_config_by_key(const PersistentStore *p_ps,
  *		count of rows matching this history_id
  * @return The number of row (to max of config_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_config_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_config_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -301,7 +302,7 @@ enum db_return_codes db_delete_config_by_key(const PersistentStore *p_ps,
  *		history_id of rows to return
  * @return The number of row (to max of config_count) on success.  DB_FAILURE on failure.
  */
- int db_get_config_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_config_history_by_history_id(const PersistentStore *p_ps,
 	struct db_config *p_config,
 	int history_id,
 	int config_count);
@@ -334,7 +335,7 @@ struct db_log
  * @return
  *		void
  */
-void db_print_log(struct db_log *p_value);
+NVM_COMMON_API void db_print_log(struct db_log *p_value);
 /*!
  * Create a new row in the log table
  * @ingroup log
@@ -344,7 +345,7 @@ void db_print_log(struct db_log *p_value);
  *		Pointer to the object to be saved to the log table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_log(const PersistentStore *p_ps, struct db_log *p_log);
+NVM_COMMON_API enum db_return_codes db_add_log(const PersistentStore *p_ps, struct db_log *p_log);
 /*!
  * Get the total number of logs
  * @param[in] p_ps
@@ -353,7 +354,7 @@ enum db_return_codes db_add_log(const PersistentStore *p_ps, struct db_log *p_lo
  * 		Set to the number of logs
  * @return whether successful or not
  */
-enum db_return_codes db_get_log_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_log_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all logs
  * @ingroup log
@@ -365,7 +366,7 @@ enum db_return_codes db_get_log_count(const PersistentStore *p_ps, int *p_count)
  *		Size of p_log
  * @return The number of row (to max of log_count) on success.  DB_FAILURE on failure.
  */
-int db_get_logs(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_logs(const PersistentStore *p_ps,
 	struct db_log
 	*p_log,
 	int log_count);
@@ -376,7 +377,7 @@ int db_get_logs(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_logs(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_logs(const PersistentStore *p_ps);
 
 #if 0
 //NON-HISTORY TABLE
@@ -388,7 +389,7 @@ enum db_return_codes db_delete_all_logs(const PersistentStore *p_ps);
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_log_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_log_history(const PersistentStore *p_ps);
  
 #endif
 
@@ -403,7 +404,7 @@ enum db_return_codes db_delete_all_logs(const PersistentStore *p_ps);
  *		log to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_log_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_log_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_log *p_log);
 /*!
@@ -417,7 +418,7 @@ enum db_return_codes db_save_log_state(const PersistentStore *p_ps,
  *		struct to put the log retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_log_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_log_by_id(const PersistentStore *p_ps,
 	const int id,
 	struct db_log *p_log);
 /*!
@@ -431,7 +432,7 @@ enum db_return_codes db_get_log_by_id(const PersistentStore *p_ps,
  *		structure with new values for the log
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_log_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_log_by_id(const PersistentStore *p_ps,
 	const int id,
 	struct db_log *p_updated_log);
 /*!
@@ -443,7 +444,7 @@ enum db_return_codes db_update_log_by_id(const PersistentStore *p_ps,
  *		id points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_log_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_log_by_id(const PersistentStore *p_ps,
 	const int id);
 /*!
  * Return number of matching history rows
@@ -455,7 +456,7 @@ enum db_return_codes db_delete_log_by_id(const PersistentStore *p_ps,
  *		count of rows matching this history_id
  * @return The number of row (to max of log_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_log_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_log_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -466,7 +467,7 @@ enum db_return_codes db_delete_log_by_id(const PersistentStore *p_ps,
  *		count of rows matching this history_id
  * @return The number of row (to max of log_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_log_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_log_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -479,7 +480,7 @@ enum db_return_codes db_delete_log_by_id(const PersistentStore *p_ps,
  *		history_id of rows to return
  * @return The number of row (to max of log_count) on success.  DB_FAILURE on failure.
  */
- int db_get_log_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_log_history_by_history_id(const PersistentStore *p_ps,
 	struct db_log *p_log,
 	int history_id,
 	int log_count);
@@ -518,7 +519,7 @@ struct db_event
  * @return
  *		void
  */
-void db_print_event(struct db_event *p_value);
+NVM_COMMON_API void db_print_event(struct db_event *p_value);
 /*!
  * Create a new row in the event table
  * @ingroup event
@@ -528,7 +529,7 @@ void db_print_event(struct db_event *p_value);
  *		Pointer to the object to be saved to the event table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_event(const PersistentStore *p_ps, struct db_event *p_event);
+NVM_COMMON_API enum db_return_codes db_add_event(const PersistentStore *p_ps, struct db_event *p_event);
 /*!
  * Get the total number of events
  * @param[in] p_ps
@@ -537,7 +538,7 @@ enum db_return_codes db_add_event(const PersistentStore *p_ps, struct db_event *
  * 		Set to the number of events
  * @return whether successful or not
  */
-enum db_return_codes db_get_event_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_event_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all events
  * @ingroup event
@@ -549,7 +550,7 @@ enum db_return_codes db_get_event_count(const PersistentStore *p_ps, int *p_coun
  *		Size of p_event
  * @return The number of row (to max of event_count) on success.  DB_FAILURE on failure.
  */
-int db_get_events(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_events(const PersistentStore *p_ps,
 	struct db_event
 	*p_event,
 	int event_count);
@@ -560,7 +561,7 @@ int db_get_events(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_events(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_events(const PersistentStore *p_ps);
 
 #if 0
 //NON-HISTORY TABLE
@@ -572,7 +573,7 @@ enum db_return_codes db_delete_all_events(const PersistentStore *p_ps);
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_event_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_event_history(const PersistentStore *p_ps);
  
 #endif
 
@@ -587,7 +588,7 @@ enum db_return_codes db_delete_all_events(const PersistentStore *p_ps);
  *		event to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_event_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_event_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_event *p_event);
 /*!
@@ -601,7 +602,7 @@ enum db_return_codes db_save_event_state(const PersistentStore *p_ps,
  *		struct to put the event retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_event_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_event_by_id(const PersistentStore *p_ps,
 	const int id,
 	struct db_event *p_event);
 /*!
@@ -615,7 +616,7 @@ enum db_return_codes db_get_event_by_id(const PersistentStore *p_ps,
  *		structure with new values for the event
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_event_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_event_by_id(const PersistentStore *p_ps,
 	const int id,
 	struct db_event *p_updated_event);
 /*!
@@ -627,7 +628,7 @@ enum db_return_codes db_update_event_by_id(const PersistentStore *p_ps,
  *		id points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_event_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_event_by_id(const PersistentStore *p_ps,
 	const int id);
 /*!
  * Return number of matching history rows
@@ -639,7 +640,7 @@ enum db_return_codes db_delete_event_by_id(const PersistentStore *p_ps,
  *		count of rows matching this history_id
  * @return The number of row (to max of event_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_event_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_event_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -650,7 +651,7 @@ enum db_return_codes db_delete_event_by_id(const PersistentStore *p_ps,
  *		count of rows matching this history_id
  * @return The number of row (to max of event_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_event_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_event_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -663,7 +664,7 @@ enum db_return_codes db_delete_event_by_id(const PersistentStore *p_ps,
  *		history_id of rows to return
  * @return The number of row (to max of event_count) on success.  DB_FAILURE on failure.
  */
- int db_get_event_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_event_history_by_history_id(const PersistentStore *p_ps,
 	struct db_event *p_event,
 	int history_id,
 	int event_count);
@@ -678,7 +679,7 @@ enum db_return_codes db_delete_event_by_id(const PersistentStore *p_ps,
  *		Resulting count
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_event_count_by_event_type_type (const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_event_count_by_event_type_type (const PersistentStore *p_ps,
 	const unsigned int type, int *p_count);
 /*!
  * Return a list of events for a given event_type.type
@@ -693,7 +694,7 @@ enum db_return_codes db_get_event_count_by_event_type_type (const PersistentStor
  *		Size of event array passed in
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_events_by_event_type_type(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_events_by_event_type_type(const PersistentStore *p_ps,
 	unsigned int type,
 	struct db_event *p_event,
 	int event_count);
@@ -706,7 +707,7 @@ enum db_return_codes db_get_events_by_event_type_type(const PersistentStore *p_p
  *		Search event and get all with passed in type
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_event_by_event_type_type(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_event_by_event_type_type(const PersistentStore *p_ps,
 	unsigned int type);
 /*!
  * @defgroup topology_state topology_state 
@@ -737,7 +738,7 @@ struct db_topology_state
  * @return
  *		void
  */
-void db_print_topology_state(struct db_topology_state *p_value);
+NVM_COMMON_API void db_print_topology_state(struct db_topology_state *p_value);
 /*!
  * Create a new row in the topology_state table
  * @ingroup topology_state
@@ -747,7 +748,7 @@ void db_print_topology_state(struct db_topology_state *p_value);
  *		Pointer to the object to be saved to the topology_state table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_topology_state(const PersistentStore *p_ps, struct db_topology_state *p_topology_state);
+NVM_COMMON_API enum db_return_codes db_add_topology_state(const PersistentStore *p_ps, struct db_topology_state *p_topology_state);
 /*!
  * Get the total number of topology_states
  * @param[in] p_ps
@@ -756,7 +757,7 @@ enum db_return_codes db_add_topology_state(const PersistentStore *p_ps, struct d
  * 		Set to the number of topology_states
  * @return whether successful or not
  */
-enum db_return_codes db_get_topology_state_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_topology_state_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all topology_states
  * @ingroup topology_state
@@ -768,7 +769,7 @@ enum db_return_codes db_get_topology_state_count(const PersistentStore *p_ps, in
  *		Size of p_topology_state
  * @return The number of row (to max of topology_state_count) on success.  DB_FAILURE on failure.
  */
-int db_get_topology_states(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_topology_states(const PersistentStore *p_ps,
 	struct db_topology_state
 	*p_topology_state,
 	int topology_state_count);
@@ -779,7 +780,7 @@ int db_get_topology_states(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_topology_states(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_topology_states(const PersistentStore *p_ps);
 
 #if 0
 //NON-HISTORY TABLE
@@ -791,7 +792,7 @@ enum db_return_codes db_delete_all_topology_states(const PersistentStore *p_ps);
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_topology_state_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_topology_state_history(const PersistentStore *p_ps);
  
 #endif
 
@@ -806,7 +807,7 @@ enum db_return_codes db_delete_all_topology_states(const PersistentStore *p_ps);
  *		topology_state to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_topology_state_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_topology_state_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_topology_state *p_topology_state);
 /*!
@@ -820,7 +821,7 @@ enum db_return_codes db_save_topology_state_state(const PersistentStore *p_ps,
  *		struct to put the topology_state retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_topology_state_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_topology_state_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_topology_state *p_topology_state);
 /*!
@@ -834,7 +835,7 @@ enum db_return_codes db_get_topology_state_by_device_handle(const PersistentStor
  *		structure with new values for the topology_state
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_topology_state_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_topology_state_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_topology_state *p_updated_topology_state);
 /*!
@@ -846,7 +847,7 @@ enum db_return_codes db_update_topology_state_by_device_handle(const PersistentS
  *		device_handle points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_topology_state_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_topology_state_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle);
 /*!
  * Return number of matching history rows
@@ -858,7 +859,7 @@ enum db_return_codes db_delete_topology_state_by_device_handle(const PersistentS
  *		count of rows matching this history_id
  * @return The number of row (to max of topology_state_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_topology_state_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_topology_state_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -869,7 +870,7 @@ enum db_return_codes db_delete_topology_state_by_device_handle(const PersistentS
  *		count of rows matching this history_id
  * @return The number of row (to max of topology_state_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_topology_state_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_topology_state_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -882,7 +883,7 @@ enum db_return_codes db_delete_topology_state_by_device_handle(const PersistentS
  *		history_id of rows to return
  * @return The number of row (to max of topology_state_count) on success.  DB_FAILURE on failure.
  */
- int db_get_topology_state_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_topology_state_history_by_history_id(const PersistentStore *p_ps,
 	struct db_topology_state *p_topology_state,
 	int history_id,
 	int topology_state_count);
@@ -913,7 +914,7 @@ struct db_host
  * @return
  *		void
  */
-void db_print_host(struct db_host *p_value);
+NVM_COMMON_API void db_print_host(struct db_host *p_value);
 /*!
  * Create a new row in the host table
  * @ingroup host
@@ -923,7 +924,7 @@ void db_print_host(struct db_host *p_value);
  *		Pointer to the object to be saved to the host table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_host(const PersistentStore *p_ps, struct db_host *p_host);
+NVM_COMMON_API enum db_return_codes db_add_host(const PersistentStore *p_ps, struct db_host *p_host);
 /*!
  * Get the total number of hosts
  * @param[in] p_ps
@@ -932,7 +933,7 @@ enum db_return_codes db_add_host(const PersistentStore *p_ps, struct db_host *p_
  * 		Set to the number of hosts
  * @return whether successful or not
  */
-enum db_return_codes db_get_host_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_host_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all hosts
  * @ingroup host
@@ -944,7 +945,7 @@ enum db_return_codes db_get_host_count(const PersistentStore *p_ps, int *p_count
  *		Size of p_host
  * @return The number of row (to max of host_count) on success.  DB_FAILURE on failure.
  */
-int db_get_hosts(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_hosts(const PersistentStore *p_ps,
 	struct db_host
 	*p_host,
 	int host_count);
@@ -955,7 +956,7 @@ int db_get_hosts(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_hosts(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_hosts(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from host history
@@ -964,7 +965,7 @@ enum db_return_codes db_delete_all_hosts(const PersistentStore *p_ps);
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_host_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_host_history(const PersistentStore *p_ps);
  
 /*!
  * save host state
@@ -977,7 +978,7 @@ enum db_return_codes db_delete_all_hosts(const PersistentStore *p_ps);
  *		host to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_host_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_host_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_host *p_host);
 /*!
@@ -991,7 +992,7 @@ enum db_return_codes db_save_host_state(const PersistentStore *p_ps,
  *		struct to put the host retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_host_by_name(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_host_by_name(const PersistentStore *p_ps,
 	const char * name,
 	struct db_host *p_host);
 /*!
@@ -1005,7 +1006,7 @@ enum db_return_codes db_get_host_by_name(const PersistentStore *p_ps,
  *		structure with new values for the host
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_host_by_name(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_host_by_name(const PersistentStore *p_ps,
 	const char * name,
 	struct db_host *p_updated_host);
 /*!
@@ -1017,7 +1018,7 @@ enum db_return_codes db_update_host_by_name(const PersistentStore *p_ps,
  *		name points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_host_by_name(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_host_by_name(const PersistentStore *p_ps,
 	const char * name);
 /*!
  * Return number of matching history rows
@@ -1029,7 +1030,7 @@ enum db_return_codes db_delete_host_by_name(const PersistentStore *p_ps,
  *		count of rows matching this history_id
  * @return The number of row (to max of host_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_host_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_host_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -1040,7 +1041,7 @@ enum db_return_codes db_delete_host_by_name(const PersistentStore *p_ps,
  *		count of rows matching this history_id
  * @return The number of row (to max of host_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_host_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_host_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -1053,7 +1054,7 @@ enum db_return_codes db_delete_host_by_name(const PersistentStore *p_ps,
  *		history_id of rows to return
  * @return The number of row (to max of host_count) on success.  DB_FAILURE on failure.
  */
- int db_get_host_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_host_history_by_history_id(const PersistentStore *p_ps,
 	struct db_host *p_host,
 	int history_id,
 	int host_count);
@@ -1084,7 +1085,7 @@ struct db_sw_inventory
  * @return
  *		void
  */
-void db_print_sw_inventory(struct db_sw_inventory *p_value);
+NVM_COMMON_API void db_print_sw_inventory(struct db_sw_inventory *p_value);
 /*!
  * Create a new row in the sw_inventory table
  * @ingroup sw_inventory
@@ -1094,7 +1095,7 @@ void db_print_sw_inventory(struct db_sw_inventory *p_value);
  *		Pointer to the object to be saved to the sw_inventory table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_sw_inventory(const PersistentStore *p_ps, struct db_sw_inventory *p_sw_inventory);
+NVM_COMMON_API enum db_return_codes db_add_sw_inventory(const PersistentStore *p_ps, struct db_sw_inventory *p_sw_inventory);
 /*!
  * Get the total number of sw_inventorys
  * @param[in] p_ps
@@ -1103,7 +1104,7 @@ enum db_return_codes db_add_sw_inventory(const PersistentStore *p_ps, struct db_
  * 		Set to the number of sw_inventorys
  * @return whether successful or not
  */
-enum db_return_codes db_get_sw_inventory_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_sw_inventory_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all sw_inventorys
  * @ingroup sw_inventory
@@ -1115,7 +1116,7 @@ enum db_return_codes db_get_sw_inventory_count(const PersistentStore *p_ps, int 
  *		Size of p_sw_inventory
  * @return The number of row (to max of sw_inventory_count) on success.  DB_FAILURE on failure.
  */
-int db_get_sw_inventorys(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_sw_inventorys(const PersistentStore *p_ps,
 	struct db_sw_inventory
 	*p_sw_inventory,
 	int sw_inventory_count);
@@ -1126,7 +1127,7 @@ int db_get_sw_inventorys(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_sw_inventorys(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_sw_inventorys(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from sw_inventory history
@@ -1135,7 +1136,7 @@ enum db_return_codes db_delete_all_sw_inventorys(const PersistentStore *p_ps);
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_sw_inventory_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_sw_inventory_history(const PersistentStore *p_ps);
  
 /*!
  * save sw_inventory state
@@ -1148,7 +1149,7 @@ enum db_return_codes db_delete_all_sw_inventorys(const PersistentStore *p_ps);
  *		sw_inventory to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_sw_inventory_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_sw_inventory_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_sw_inventory *p_sw_inventory);
 /*!
@@ -1162,7 +1163,7 @@ enum db_return_codes db_save_sw_inventory_state(const PersistentStore *p_ps,
  *		struct to put the sw_inventory retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_sw_inventory_by_name(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_sw_inventory_by_name(const PersistentStore *p_ps,
 	const char * name,
 	struct db_sw_inventory *p_sw_inventory);
 /*!
@@ -1176,7 +1177,7 @@ enum db_return_codes db_get_sw_inventory_by_name(const PersistentStore *p_ps,
  *		structure with new values for the sw_inventory
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_sw_inventory_by_name(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_sw_inventory_by_name(const PersistentStore *p_ps,
 	const char * name,
 	struct db_sw_inventory *p_updated_sw_inventory);
 /*!
@@ -1188,7 +1189,7 @@ enum db_return_codes db_update_sw_inventory_by_name(const PersistentStore *p_ps,
  *		name points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_sw_inventory_by_name(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_sw_inventory_by_name(const PersistentStore *p_ps,
 	const char * name);
 /*!
  * Return number of matching history rows
@@ -1200,7 +1201,7 @@ enum db_return_codes db_delete_sw_inventory_by_name(const PersistentStore *p_ps,
  *		count of rows matching this history_id
  * @return The number of row (to max of sw_inventory_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_sw_inventory_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_sw_inventory_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -1211,7 +1212,7 @@ enum db_return_codes db_delete_sw_inventory_by_name(const PersistentStore *p_ps,
  *		count of rows matching this history_id
  * @return The number of row (to max of sw_inventory_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_sw_inventory_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_sw_inventory_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -1224,7 +1225,7 @@ enum db_return_codes db_delete_sw_inventory_by_name(const PersistentStore *p_ps,
  *		history_id of rows to return
  * @return The number of row (to max of sw_inventory_count) on success.  DB_FAILURE on failure.
  */
- int db_get_sw_inventory_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_sw_inventory_history_by_history_id(const PersistentStore *p_ps,
 	struct db_sw_inventory *p_sw_inventory,
 	int history_id,
 	int sw_inventory_count);
@@ -1258,7 +1259,7 @@ struct db_socket
  * @return
  *		void
  */
-void db_print_socket(struct db_socket *p_value);
+NVM_COMMON_API void db_print_socket(struct db_socket *p_value);
 /*!
  * Create a new row in the socket table
  * @ingroup socket
@@ -1268,7 +1269,7 @@ void db_print_socket(struct db_socket *p_value);
  *		Pointer to the object to be saved to the socket table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_socket(const PersistentStore *p_ps, struct db_socket *p_socket);
+NVM_COMMON_API enum db_return_codes db_add_socket(const PersistentStore *p_ps, struct db_socket *p_socket);
 /*!
  * Get the total number of sockets
  * @param[in] p_ps
@@ -1277,7 +1278,7 @@ enum db_return_codes db_add_socket(const PersistentStore *p_ps, struct db_socket
  * 		Set to the number of sockets
  * @return whether successful or not
  */
-enum db_return_codes db_get_socket_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_socket_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all sockets
  * @ingroup socket
@@ -1289,7 +1290,7 @@ enum db_return_codes db_get_socket_count(const PersistentStore *p_ps, int *p_cou
  *		Size of p_socket
  * @return The number of row (to max of socket_count) on success.  DB_FAILURE on failure.
  */
-int db_get_sockets(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_sockets(const PersistentStore *p_ps,
 	struct db_socket
 	*p_socket,
 	int socket_count);
@@ -1300,7 +1301,7 @@ int db_get_sockets(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_sockets(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_sockets(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from socket history
@@ -1309,7 +1310,7 @@ enum db_return_codes db_delete_all_sockets(const PersistentStore *p_ps);
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_socket_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_socket_history(const PersistentStore *p_ps);
  
 /*!
  * save socket state
@@ -1322,7 +1323,7 @@ enum db_return_codes db_delete_all_sockets(const PersistentStore *p_ps);
  *		socket to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_socket_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_socket_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_socket *p_socket);
 /*!
@@ -1336,7 +1337,7 @@ enum db_return_codes db_save_socket_state(const PersistentStore *p_ps,
  *		struct to put the socket retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_socket_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_socket_by_id(const PersistentStore *p_ps,
 	const unsigned short id,
 	struct db_socket *p_socket);
 /*!
@@ -1350,7 +1351,7 @@ enum db_return_codes db_get_socket_by_id(const PersistentStore *p_ps,
  *		structure with new values for the socket
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_socket_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_socket_by_id(const PersistentStore *p_ps,
 	const unsigned short id,
 	struct db_socket *p_updated_socket);
 /*!
@@ -1362,7 +1363,7 @@ enum db_return_codes db_update_socket_by_id(const PersistentStore *p_ps,
  *		id points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_socket_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_socket_by_id(const PersistentStore *p_ps,
 	const unsigned short id);
 /*!
  * Return number of matching history rows
@@ -1374,7 +1375,7 @@ enum db_return_codes db_delete_socket_by_id(const PersistentStore *p_ps,
  *		count of rows matching this history_id
  * @return The number of row (to max of socket_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_socket_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_socket_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -1385,7 +1386,7 @@ enum db_return_codes db_delete_socket_by_id(const PersistentStore *p_ps,
  *		count of rows matching this history_id
  * @return The number of row (to max of socket_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_socket_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_socket_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -1398,7 +1399,7 @@ enum db_return_codes db_delete_socket_by_id(const PersistentStore *p_ps,
  *		history_id of rows to return
  * @return The number of row (to max of socket_count) on success.  DB_FAILURE on failure.
  */
- int db_get_socket_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_socket_history_by_history_id(const PersistentStore *p_ps,
 	struct db_socket *p_socket,
 	int history_id,
 	int socket_count);
@@ -1437,7 +1438,7 @@ struct db_runtime_config_validation
  * @return
  *		void
  */
-void db_print_runtime_config_validation(struct db_runtime_config_validation *p_value);
+NVM_COMMON_API void db_print_runtime_config_validation(struct db_runtime_config_validation *p_value);
 /*!
  * Create a new row in the runtime_config_validation table
  * @ingroup runtime_config_validation
@@ -1447,7 +1448,7 @@ void db_print_runtime_config_validation(struct db_runtime_config_validation *p_v
  *		Pointer to the object to be saved to the runtime_config_validation table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_runtime_config_validation(const PersistentStore *p_ps, struct db_runtime_config_validation *p_runtime_config_validation);
+NVM_COMMON_API enum db_return_codes db_add_runtime_config_validation(const PersistentStore *p_ps, struct db_runtime_config_validation *p_runtime_config_validation);
 /*!
  * Get the total number of runtime_config_validations
  * @param[in] p_ps
@@ -1456,7 +1457,7 @@ enum db_return_codes db_add_runtime_config_validation(const PersistentStore *p_p
  * 		Set to the number of runtime_config_validations
  * @return whether successful or not
  */
-enum db_return_codes db_get_runtime_config_validation_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_runtime_config_validation_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all runtime_config_validations
  * @ingroup runtime_config_validation
@@ -1468,7 +1469,7 @@ enum db_return_codes db_get_runtime_config_validation_count(const PersistentStor
  *		Size of p_runtime_config_validation
  * @return The number of row (to max of runtime_config_validation_count) on success.  DB_FAILURE on failure.
  */
-int db_get_runtime_config_validations(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_runtime_config_validations(const PersistentStore *p_ps,
 	struct db_runtime_config_validation
 	*p_runtime_config_validation,
 	int runtime_config_validation_count);
@@ -1479,7 +1480,7 @@ int db_get_runtime_config_validations(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_runtime_config_validations(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_runtime_config_validations(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from runtime_config_validation history
@@ -1488,7 +1489,7 @@ enum db_return_codes db_delete_all_runtime_config_validations(const PersistentSt
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_runtime_config_validation_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_runtime_config_validation_history(const PersistentStore *p_ps);
  
 /*!
  * save runtime_config_validation state
@@ -1501,7 +1502,7 @@ enum db_return_codes db_delete_all_runtime_config_validations(const PersistentSt
  *		runtime_config_validation to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_runtime_config_validation_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_runtime_config_validation_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_runtime_config_validation *p_runtime_config_validation);
 /*!
@@ -1515,7 +1516,7 @@ enum db_return_codes db_save_runtime_config_validation_state(const PersistentSto
  *		struct to put the runtime_config_validation retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_runtime_config_validation_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_runtime_config_validation_by_id(const PersistentStore *p_ps,
 	const int id,
 	struct db_runtime_config_validation *p_runtime_config_validation);
 /*!
@@ -1529,7 +1530,7 @@ enum db_return_codes db_get_runtime_config_validation_by_id(const PersistentStor
  *		structure with new values for the runtime_config_validation
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_runtime_config_validation_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_runtime_config_validation_by_id(const PersistentStore *p_ps,
 	const int id,
 	struct db_runtime_config_validation *p_updated_runtime_config_validation);
 /*!
@@ -1541,7 +1542,7 @@ enum db_return_codes db_update_runtime_config_validation_by_id(const PersistentS
  *		id points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_runtime_config_validation_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_runtime_config_validation_by_id(const PersistentStore *p_ps,
 	const int id);
 /*!
  * Return number of matching history rows
@@ -1553,7 +1554,7 @@ enum db_return_codes db_delete_runtime_config_validation_by_id(const PersistentS
  *		count of rows matching this history_id
  * @return The number of row (to max of runtime_config_validation_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_runtime_config_validation_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_runtime_config_validation_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -1564,7 +1565,7 @@ enum db_return_codes db_delete_runtime_config_validation_by_id(const PersistentS
  *		count of rows matching this history_id
  * @return The number of row (to max of runtime_config_validation_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_runtime_config_validation_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_runtime_config_validation_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -1577,7 +1578,7 @@ enum db_return_codes db_delete_runtime_config_validation_by_id(const PersistentS
  *		history_id of rows to return
  * @return The number of row (to max of runtime_config_validation_count) on success.  DB_FAILURE on failure.
  */
- int db_get_runtime_config_validation_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_runtime_config_validation_history_by_history_id(const PersistentStore *p_ps,
 	struct db_runtime_config_validation *p_runtime_config_validation,
 	int history_id,
 	int runtime_config_validation_count);
@@ -1590,7 +1591,7 @@ enum db_return_codes db_delete_runtime_config_validation_by_id(const PersistentS
  *		The max table size
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_roll_runtime_config_validations_by_id(const PersistentStore *p_ps, int max_rows);
+NVM_COMMON_API enum db_return_codes db_roll_runtime_config_validations_by_id(const PersistentStore *p_ps, int max_rows);
 /*!
  * Get the max id in the runtime_config_validation table.
  * @ingroup runtime_config_validation
@@ -1600,7 +1601,7 @@ enum db_return_codes db_roll_runtime_config_validations_by_id(const PersistentSt
  *		The max id
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_next_runtime_config_validation_id(const PersistentStore *p_ps, int *p_max);
+NVM_COMMON_API enum db_return_codes db_get_next_runtime_config_validation_id(const PersistentStore *p_ps, int *p_max);
 /*!
  * @defgroup socket_sku socket_sku 
  * @ingroup db_schema
@@ -1628,7 +1629,7 @@ struct db_socket_sku
  * @return
  *		void
  */
-void db_print_socket_sku(struct db_socket_sku *p_value);
+NVM_COMMON_API void db_print_socket_sku(struct db_socket_sku *p_value);
 /*!
  * Create a new row in the socket_sku table
  * @ingroup socket_sku
@@ -1638,7 +1639,7 @@ void db_print_socket_sku(struct db_socket_sku *p_value);
  *		Pointer to the object to be saved to the socket_sku table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_socket_sku(const PersistentStore *p_ps, struct db_socket_sku *p_socket_sku);
+NVM_COMMON_API enum db_return_codes db_add_socket_sku(const PersistentStore *p_ps, struct db_socket_sku *p_socket_sku);
 /*!
  * Get the total number of socket_skus
  * @param[in] p_ps
@@ -1647,7 +1648,7 @@ enum db_return_codes db_add_socket_sku(const PersistentStore *p_ps, struct db_so
  * 		Set to the number of socket_skus
  * @return whether successful or not
  */
-enum db_return_codes db_get_socket_sku_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_socket_sku_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all socket_skus
  * @ingroup socket_sku
@@ -1659,7 +1660,7 @@ enum db_return_codes db_get_socket_sku_count(const PersistentStore *p_ps, int *p
  *		Size of p_socket_sku
  * @return The number of row (to max of socket_sku_count) on success.  DB_FAILURE on failure.
  */
-int db_get_socket_skus(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_socket_skus(const PersistentStore *p_ps,
 	struct db_socket_sku
 	*p_socket_sku,
 	int socket_sku_count);
@@ -1670,7 +1671,7 @@ int db_get_socket_skus(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_socket_skus(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_socket_skus(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from socket_sku history
@@ -1679,7 +1680,7 @@ enum db_return_codes db_delete_all_socket_skus(const PersistentStore *p_ps);
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_socket_sku_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_socket_sku_history(const PersistentStore *p_ps);
  
 /*!
  * save socket_sku state
@@ -1692,7 +1693,7 @@ enum db_return_codes db_delete_all_socket_skus(const PersistentStore *p_ps);
  *		socket_sku to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_socket_sku_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_socket_sku_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_socket_sku *p_socket_sku);
 /*!
@@ -1706,7 +1707,7 @@ enum db_return_codes db_save_socket_sku_state(const PersistentStore *p_ps,
  *		struct to put the socket_sku retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_socket_sku_by_node_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_socket_sku_by_node_id(const PersistentStore *p_ps,
 	const unsigned short node_id,
 	struct db_socket_sku *p_socket_sku);
 /*!
@@ -1720,7 +1721,7 @@ enum db_return_codes db_get_socket_sku_by_node_id(const PersistentStore *p_ps,
  *		structure with new values for the socket_sku
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_socket_sku_by_node_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_socket_sku_by_node_id(const PersistentStore *p_ps,
 	const unsigned short node_id,
 	struct db_socket_sku *p_updated_socket_sku);
 /*!
@@ -1732,7 +1733,7 @@ enum db_return_codes db_update_socket_sku_by_node_id(const PersistentStore *p_ps
  *		node_id points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_socket_sku_by_node_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_socket_sku_by_node_id(const PersistentStore *p_ps,
 	const unsigned short node_id);
 /*!
  * Return number of matching history rows
@@ -1744,7 +1745,7 @@ enum db_return_codes db_delete_socket_sku_by_node_id(const PersistentStore *p_ps
  *		count of rows matching this history_id
  * @return The number of row (to max of socket_sku_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_socket_sku_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_socket_sku_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -1755,7 +1756,7 @@ enum db_return_codes db_delete_socket_sku_by_node_id(const PersistentStore *p_ps
  *		count of rows matching this history_id
  * @return The number of row (to max of socket_sku_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_socket_sku_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_socket_sku_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -1768,7 +1769,7 @@ enum db_return_codes db_delete_socket_sku_by_node_id(const PersistentStore *p_ps
  *		history_id of rows to return
  * @return The number of row (to max of socket_sku_count) on success.  DB_FAILURE on failure.
  */
- int db_get_socket_sku_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_socket_sku_history_by_history_id(const PersistentStore *p_ps,
 	struct db_socket_sku *p_socket_sku,
 	int history_id,
 	int socket_sku_count);
@@ -1800,7 +1801,7 @@ struct db_interleave_capability
  * @return
  *		void
  */
-void db_print_interleave_capability(struct db_interleave_capability *p_value);
+NVM_COMMON_API void db_print_interleave_capability(struct db_interleave_capability *p_value);
 /*!
  * Create a new row in the interleave_capability table
  * @ingroup interleave_capability
@@ -1810,7 +1811,7 @@ void db_print_interleave_capability(struct db_interleave_capability *p_value);
  *		Pointer to the object to be saved to the interleave_capability table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_interleave_capability(const PersistentStore *p_ps, struct db_interleave_capability *p_interleave_capability);
+NVM_COMMON_API enum db_return_codes db_add_interleave_capability(const PersistentStore *p_ps, struct db_interleave_capability *p_interleave_capability);
 /*!
  * Get the total number of interleave_capabilitys
  * @param[in] p_ps
@@ -1819,7 +1820,7 @@ enum db_return_codes db_add_interleave_capability(const PersistentStore *p_ps, s
  * 		Set to the number of interleave_capabilitys
  * @return whether successful or not
  */
-enum db_return_codes db_get_interleave_capability_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_interleave_capability_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all interleave_capabilitys
  * @ingroup interleave_capability
@@ -1831,7 +1832,7 @@ enum db_return_codes db_get_interleave_capability_count(const PersistentStore *p
  *		Size of p_interleave_capability
  * @return The number of row (to max of interleave_capability_count) on success.  DB_FAILURE on failure.
  */
-int db_get_interleave_capabilitys(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_interleave_capabilitys(const PersistentStore *p_ps,
 	struct db_interleave_capability
 	*p_interleave_capability,
 	int interleave_capability_count);
@@ -1842,7 +1843,7 @@ int db_get_interleave_capabilitys(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_interleave_capabilitys(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_interleave_capabilitys(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from interleave_capability history
@@ -1851,7 +1852,7 @@ enum db_return_codes db_delete_all_interleave_capabilitys(const PersistentStore 
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_interleave_capability_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_interleave_capability_history(const PersistentStore *p_ps);
  
 /*!
  * save interleave_capability state
@@ -1864,7 +1865,7 @@ enum db_return_codes db_delete_all_interleave_capabilitys(const PersistentStore 
  *		interleave_capability to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_interleave_capability_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_interleave_capability_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_interleave_capability *p_interleave_capability);
 /*!
@@ -1878,7 +1879,7 @@ enum db_return_codes db_save_interleave_capability_state(const PersistentStore *
  *		struct to put the interleave_capability retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_interleave_capability_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_interleave_capability_by_id(const PersistentStore *p_ps,
 	const int id,
 	struct db_interleave_capability *p_interleave_capability);
 /*!
@@ -1892,7 +1893,7 @@ enum db_return_codes db_get_interleave_capability_by_id(const PersistentStore *p
  *		structure with new values for the interleave_capability
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_interleave_capability_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_interleave_capability_by_id(const PersistentStore *p_ps,
 	const int id,
 	struct db_interleave_capability *p_updated_interleave_capability);
 /*!
@@ -1904,7 +1905,7 @@ enum db_return_codes db_update_interleave_capability_by_id(const PersistentStore
  *		id points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_interleave_capability_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_interleave_capability_by_id(const PersistentStore *p_ps,
 	const int id);
 /*!
  * Return number of matching history rows
@@ -1916,7 +1917,7 @@ enum db_return_codes db_delete_interleave_capability_by_id(const PersistentStore
  *		count of rows matching this history_id
  * @return The number of row (to max of interleave_capability_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_interleave_capability_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_interleave_capability_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -1927,7 +1928,7 @@ enum db_return_codes db_delete_interleave_capability_by_id(const PersistentStore
  *		count of rows matching this history_id
  * @return The number of row (to max of interleave_capability_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_interleave_capability_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_interleave_capability_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -1940,7 +1941,7 @@ enum db_return_codes db_delete_interleave_capability_by_id(const PersistentStore
  *		history_id of rows to return
  * @return The number of row (to max of interleave_capability_count) on success.  DB_FAILURE on failure.
  */
- int db_get_interleave_capability_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_interleave_capability_history_by_history_id(const PersistentStore *p_ps,
 	struct db_interleave_capability *p_interleave_capability,
 	int history_id,
 	int interleave_capability_count);
@@ -1953,7 +1954,7 @@ enum db_return_codes db_delete_interleave_capability_by_id(const PersistentStore
  *		The max table size
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_roll_interleave_capabilitys_by_id(const PersistentStore *p_ps, int max_rows);
+NVM_COMMON_API enum db_return_codes db_roll_interleave_capabilitys_by_id(const PersistentStore *p_ps, int max_rows);
 /*!
  * Get the max id in the interleave_capability table.
  * @ingroup interleave_capability
@@ -1963,7 +1964,7 @@ enum db_return_codes db_roll_interleave_capabilitys_by_id(const PersistentStore 
  *		The max id
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_next_interleave_capability_id(const PersistentStore *p_ps, int *p_max);
+NVM_COMMON_API enum db_return_codes db_get_next_interleave_capability_id(const PersistentStore *p_ps, int *p_max);
 /*!
  * @defgroup platform_info_capability platform_info_capability 
  * @ingroup db_schema
@@ -1991,7 +1992,7 @@ struct db_platform_info_capability
  * @return
  *		void
  */
-void db_print_platform_info_capability(struct db_platform_info_capability *p_value);
+NVM_COMMON_API void db_print_platform_info_capability(struct db_platform_info_capability *p_value);
 /*!
  * Create a new row in the platform_info_capability table
  * @ingroup platform_info_capability
@@ -2001,7 +2002,7 @@ void db_print_platform_info_capability(struct db_platform_info_capability *p_val
  *		Pointer to the object to be saved to the platform_info_capability table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_platform_info_capability(const PersistentStore *p_ps, struct db_platform_info_capability *p_platform_info_capability);
+NVM_COMMON_API enum db_return_codes db_add_platform_info_capability(const PersistentStore *p_ps, struct db_platform_info_capability *p_platform_info_capability);
 /*!
  * Get the total number of platform_info_capabilitys
  * @param[in] p_ps
@@ -2010,7 +2011,7 @@ enum db_return_codes db_add_platform_info_capability(const PersistentStore *p_ps
  * 		Set to the number of platform_info_capabilitys
  * @return whether successful or not
  */
-enum db_return_codes db_get_platform_info_capability_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_platform_info_capability_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all platform_info_capabilitys
  * @ingroup platform_info_capability
@@ -2022,7 +2023,7 @@ enum db_return_codes db_get_platform_info_capability_count(const PersistentStore
  *		Size of p_platform_info_capability
  * @return The number of row (to max of platform_info_capability_count) on success.  DB_FAILURE on failure.
  */
-int db_get_platform_info_capabilitys(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_platform_info_capabilitys(const PersistentStore *p_ps,
 	struct db_platform_info_capability
 	*p_platform_info_capability,
 	int platform_info_capability_count);
@@ -2033,7 +2034,7 @@ int db_get_platform_info_capabilitys(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_platform_info_capabilitys(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_platform_info_capabilitys(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from platform_info_capability history
@@ -2042,7 +2043,7 @@ enum db_return_codes db_delete_all_platform_info_capabilitys(const PersistentSto
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_platform_info_capability_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_platform_info_capability_history(const PersistentStore *p_ps);
  
 /*!
  * save platform_info_capability state
@@ -2055,7 +2056,7 @@ enum db_return_codes db_delete_all_platform_info_capabilitys(const PersistentSto
  *		platform_info_capability to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_platform_info_capability_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_platform_info_capability_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_platform_info_capability *p_platform_info_capability);
 /*!
@@ -2069,7 +2070,7 @@ enum db_return_codes db_save_platform_info_capability_state(const PersistentStor
  *		struct to put the platform_info_capability retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_platform_info_capability_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_platform_info_capability_by_id(const PersistentStore *p_ps,
 	const int id,
 	struct db_platform_info_capability *p_platform_info_capability);
 /*!
@@ -2083,7 +2084,7 @@ enum db_return_codes db_get_platform_info_capability_by_id(const PersistentStore
  *		structure with new values for the platform_info_capability
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_platform_info_capability_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_platform_info_capability_by_id(const PersistentStore *p_ps,
 	const int id,
 	struct db_platform_info_capability *p_updated_platform_info_capability);
 /*!
@@ -2095,7 +2096,7 @@ enum db_return_codes db_update_platform_info_capability_by_id(const PersistentSt
  *		id points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_platform_info_capability_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_platform_info_capability_by_id(const PersistentStore *p_ps,
 	const int id);
 /*!
  * Return number of matching history rows
@@ -2107,7 +2108,7 @@ enum db_return_codes db_delete_platform_info_capability_by_id(const PersistentSt
  *		count of rows matching this history_id
  * @return The number of row (to max of platform_info_capability_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_platform_info_capability_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_platform_info_capability_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -2118,7 +2119,7 @@ enum db_return_codes db_delete_platform_info_capability_by_id(const PersistentSt
  *		count of rows matching this history_id
  * @return The number of row (to max of platform_info_capability_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_platform_info_capability_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_platform_info_capability_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -2131,7 +2132,7 @@ enum db_return_codes db_delete_platform_info_capability_by_id(const PersistentSt
  *		history_id of rows to return
  * @return The number of row (to max of platform_info_capability_count) on success.  DB_FAILURE on failure.
  */
- int db_get_platform_info_capability_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_platform_info_capability_history_by_history_id(const PersistentStore *p_ps,
 	struct db_platform_info_capability *p_platform_info_capability,
 	int history_id,
 	int platform_info_capability_count);
@@ -2144,7 +2145,7 @@ enum db_return_codes db_delete_platform_info_capability_by_id(const PersistentSt
  *		The max table size
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_roll_platform_info_capabilitys_by_id(const PersistentStore *p_ps, int max_rows);
+NVM_COMMON_API enum db_return_codes db_roll_platform_info_capabilitys_by_id(const PersistentStore *p_ps, int max_rows);
 /*!
  * Get the max id in the platform_info_capability table.
  * @ingroup platform_info_capability
@@ -2154,7 +2155,7 @@ enum db_return_codes db_roll_platform_info_capabilitys_by_id(const PersistentSto
  *		The max id
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_next_platform_info_capability_id(const PersistentStore *p_ps, int *p_max);
+NVM_COMMON_API enum db_return_codes db_get_next_platform_info_capability_id(const PersistentStore *p_ps, int *p_max);
 /*!
  * @defgroup platform_capabilities platform_capabilities 
  * @ingroup db_schema
@@ -2187,7 +2188,7 @@ struct db_platform_capabilities
  * @return
  *		void
  */
-void db_print_platform_capabilities(struct db_platform_capabilities *p_value);
+NVM_COMMON_API void db_print_platform_capabilities(struct db_platform_capabilities *p_value);
 /*!
  * Create a new row in the platform_capabilities table
  * @ingroup platform_capabilities
@@ -2197,7 +2198,7 @@ void db_print_platform_capabilities(struct db_platform_capabilities *p_value);
  *		Pointer to the object to be saved to the platform_capabilities table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_platform_capabilities(const PersistentStore *p_ps, struct db_platform_capabilities *p_platform_capabilities);
+NVM_COMMON_API enum db_return_codes db_add_platform_capabilities(const PersistentStore *p_ps, struct db_platform_capabilities *p_platform_capabilities);
 /*!
  * Get the total number of platform_capabilitiess
  * @param[in] p_ps
@@ -2206,7 +2207,7 @@ enum db_return_codes db_add_platform_capabilities(const PersistentStore *p_ps, s
  * 		Set to the number of platform_capabilitiess
  * @return whether successful or not
  */
-enum db_return_codes db_get_platform_capabilities_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_platform_capabilities_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all platform_capabilitiess
  * @ingroup platform_capabilities
@@ -2218,7 +2219,7 @@ enum db_return_codes db_get_platform_capabilities_count(const PersistentStore *p
  *		Size of p_platform_capabilities
  * @return The number of row (to max of platform_capabilities_count) on success.  DB_FAILURE on failure.
  */
-int db_get_platform_capabilitiess(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_platform_capabilitiess(const PersistentStore *p_ps,
 	struct db_platform_capabilities
 	*p_platform_capabilities,
 	int platform_capabilities_count);
@@ -2229,7 +2230,7 @@ int db_get_platform_capabilitiess(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_platform_capabilitiess(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_platform_capabilitiess(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from platform_capabilities history
@@ -2238,7 +2239,7 @@ enum db_return_codes db_delete_all_platform_capabilitiess(const PersistentStore 
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_platform_capabilities_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_platform_capabilities_history(const PersistentStore *p_ps);
  
 /*!
  * save platform_capabilities state
@@ -2251,7 +2252,7 @@ enum db_return_codes db_delete_all_platform_capabilitiess(const PersistentStore 
  *		platform_capabilities to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_platform_capabilities_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_platform_capabilities_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_platform_capabilities *p_platform_capabilities);
 /*!
@@ -2265,7 +2266,7 @@ enum db_return_codes db_save_platform_capabilities_state(const PersistentStore *
  *		struct to put the platform_capabilities retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_platform_capabilities_by_signature(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_platform_capabilities_by_signature(const PersistentStore *p_ps,
 	const char * signature,
 	struct db_platform_capabilities *p_platform_capabilities);
 /*!
@@ -2279,7 +2280,7 @@ enum db_return_codes db_get_platform_capabilities_by_signature(const PersistentS
  *		structure with new values for the platform_capabilities
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_platform_capabilities_by_signature(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_platform_capabilities_by_signature(const PersistentStore *p_ps,
 	const char * signature,
 	struct db_platform_capabilities *p_updated_platform_capabilities);
 /*!
@@ -2291,7 +2292,7 @@ enum db_return_codes db_update_platform_capabilities_by_signature(const Persiste
  *		signature points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_platform_capabilities_by_signature(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_platform_capabilities_by_signature(const PersistentStore *p_ps,
 	const char * signature);
 /*!
  * Return number of matching history rows
@@ -2303,7 +2304,7 @@ enum db_return_codes db_delete_platform_capabilities_by_signature(const Persiste
  *		count of rows matching this history_id
  * @return The number of row (to max of platform_capabilities_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_platform_capabilities_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_platform_capabilities_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -2314,7 +2315,7 @@ enum db_return_codes db_delete_platform_capabilities_by_signature(const Persiste
  *		count of rows matching this history_id
  * @return The number of row (to max of platform_capabilities_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_platform_capabilities_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_platform_capabilities_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -2327,7 +2328,7 @@ enum db_return_codes db_delete_platform_capabilities_by_signature(const Persiste
  *		history_id of rows to return
  * @return The number of row (to max of platform_capabilities_count) on success.  DB_FAILURE on failure.
  */
- int db_get_platform_capabilities_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_platform_capabilities_history_by_history_id(const PersistentStore *p_ps,
 	struct db_platform_capabilities *p_platform_capabilities,
 	int history_id,
 	int platform_capabilities_count);
@@ -2358,7 +2359,7 @@ struct db_driver_capabilities
  * @return
  *		void
  */
-void db_print_driver_capabilities(struct db_driver_capabilities *p_value);
+NVM_COMMON_API void db_print_driver_capabilities(struct db_driver_capabilities *p_value);
 /*!
  * Create a new row in the driver_capabilities table
  * @ingroup driver_capabilities
@@ -2368,7 +2369,7 @@ void db_print_driver_capabilities(struct db_driver_capabilities *p_value);
  *		Pointer to the object to be saved to the driver_capabilities table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_driver_capabilities(const PersistentStore *p_ps, struct db_driver_capabilities *p_driver_capabilities);
+NVM_COMMON_API enum db_return_codes db_add_driver_capabilities(const PersistentStore *p_ps, struct db_driver_capabilities *p_driver_capabilities);
 /*!
  * Get the total number of driver_capabilitiess
  * @param[in] p_ps
@@ -2377,7 +2378,7 @@ enum db_return_codes db_add_driver_capabilities(const PersistentStore *p_ps, str
  * 		Set to the number of driver_capabilitiess
  * @return whether successful or not
  */
-enum db_return_codes db_get_driver_capabilities_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_driver_capabilities_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all driver_capabilitiess
  * @ingroup driver_capabilities
@@ -2389,7 +2390,7 @@ enum db_return_codes db_get_driver_capabilities_count(const PersistentStore *p_p
  *		Size of p_driver_capabilities
  * @return The number of row (to max of driver_capabilities_count) on success.  DB_FAILURE on failure.
  */
-int db_get_driver_capabilitiess(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_driver_capabilitiess(const PersistentStore *p_ps,
 	struct db_driver_capabilities
 	*p_driver_capabilities,
 	int driver_capabilities_count);
@@ -2400,7 +2401,7 @@ int db_get_driver_capabilitiess(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_driver_capabilitiess(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_driver_capabilitiess(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from driver_capabilities history
@@ -2409,7 +2410,7 @@ enum db_return_codes db_delete_all_driver_capabilitiess(const PersistentStore *p
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_driver_capabilities_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_driver_capabilities_history(const PersistentStore *p_ps);
  
 /*!
  * save driver_capabilities state
@@ -2422,7 +2423,7 @@ enum db_return_codes db_delete_all_driver_capabilitiess(const PersistentStore *p
  *		driver_capabilities to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_driver_capabilities_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_driver_capabilities_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_driver_capabilities *p_driver_capabilities);
 /*!
@@ -2436,7 +2437,7 @@ enum db_return_codes db_save_driver_capabilities_state(const PersistentStore *p_
  *		struct to put the driver_capabilities retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_driver_capabilities_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_driver_capabilities_by_id(const PersistentStore *p_ps,
 	const int id,
 	struct db_driver_capabilities *p_driver_capabilities);
 /*!
@@ -2450,7 +2451,7 @@ enum db_return_codes db_get_driver_capabilities_by_id(const PersistentStore *p_p
  *		structure with new values for the driver_capabilities
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_driver_capabilities_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_driver_capabilities_by_id(const PersistentStore *p_ps,
 	const int id,
 	struct db_driver_capabilities *p_updated_driver_capabilities);
 /*!
@@ -2462,7 +2463,7 @@ enum db_return_codes db_update_driver_capabilities_by_id(const PersistentStore *
  *		id points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_driver_capabilities_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_driver_capabilities_by_id(const PersistentStore *p_ps,
 	const int id);
 /*!
  * Return number of matching history rows
@@ -2474,7 +2475,7 @@ enum db_return_codes db_delete_driver_capabilities_by_id(const PersistentStore *
  *		count of rows matching this history_id
  * @return The number of row (to max of driver_capabilities_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_driver_capabilities_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_driver_capabilities_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -2485,7 +2486,7 @@ enum db_return_codes db_delete_driver_capabilities_by_id(const PersistentStore *
  *		count of rows matching this history_id
  * @return The number of row (to max of driver_capabilities_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_driver_capabilities_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_driver_capabilities_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -2498,7 +2499,7 @@ enum db_return_codes db_delete_driver_capabilities_by_id(const PersistentStore *
  *		history_id of rows to return
  * @return The number of row (to max of driver_capabilities_count) on success.  DB_FAILURE on failure.
  */
- int db_get_driver_capabilities_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_driver_capabilities_history_by_history_id(const PersistentStore *p_ps,
 	struct db_driver_capabilities *p_driver_capabilities,
 	int history_id,
 	int driver_capabilities_count);
@@ -2552,7 +2553,7 @@ struct db_driver_features
  * @return
  *		void
  */
-void db_print_driver_features(struct db_driver_features *p_value);
+NVM_COMMON_API void db_print_driver_features(struct db_driver_features *p_value);
 /*!
  * Create a new row in the driver_features table
  * @ingroup driver_features
@@ -2562,7 +2563,7 @@ void db_print_driver_features(struct db_driver_features *p_value);
  *		Pointer to the object to be saved to the driver_features table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_driver_features(const PersistentStore *p_ps, struct db_driver_features *p_driver_features);
+NVM_COMMON_API enum db_return_codes db_add_driver_features(const PersistentStore *p_ps, struct db_driver_features *p_driver_features);
 /*!
  * Get the total number of driver_featuress
  * @param[in] p_ps
@@ -2571,7 +2572,7 @@ enum db_return_codes db_add_driver_features(const PersistentStore *p_ps, struct 
  * 		Set to the number of driver_featuress
  * @return whether successful or not
  */
-enum db_return_codes db_get_driver_features_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_driver_features_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all driver_featuress
  * @ingroup driver_features
@@ -2583,7 +2584,7 @@ enum db_return_codes db_get_driver_features_count(const PersistentStore *p_ps, i
  *		Size of p_driver_features
  * @return The number of row (to max of driver_features_count) on success.  DB_FAILURE on failure.
  */
-int db_get_driver_featuress(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_driver_featuress(const PersistentStore *p_ps,
 	struct db_driver_features
 	*p_driver_features,
 	int driver_features_count);
@@ -2594,7 +2595,7 @@ int db_get_driver_featuress(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_driver_featuress(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_driver_featuress(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from driver_features history
@@ -2603,7 +2604,7 @@ enum db_return_codes db_delete_all_driver_featuress(const PersistentStore *p_ps)
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_driver_features_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_driver_features_history(const PersistentStore *p_ps);
  
 /*!
  * save driver_features state
@@ -2616,7 +2617,7 @@ enum db_return_codes db_delete_all_driver_featuress(const PersistentStore *p_ps)
  *		driver_features to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_driver_features_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_driver_features_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_driver_features *p_driver_features);
 /*!
@@ -2630,7 +2631,7 @@ enum db_return_codes db_save_driver_features_state(const PersistentStore *p_ps,
  *		struct to put the driver_features retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_driver_features_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_driver_features_by_id(const PersistentStore *p_ps,
 	const int id,
 	struct db_driver_features *p_driver_features);
 /*!
@@ -2644,7 +2645,7 @@ enum db_return_codes db_get_driver_features_by_id(const PersistentStore *p_ps,
  *		structure with new values for the driver_features
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_driver_features_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_driver_features_by_id(const PersistentStore *p_ps,
 	const int id,
 	struct db_driver_features *p_updated_driver_features);
 /*!
@@ -2656,7 +2657,7 @@ enum db_return_codes db_update_driver_features_by_id(const PersistentStore *p_ps
  *		id points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_driver_features_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_driver_features_by_id(const PersistentStore *p_ps,
 	const int id);
 /*!
  * Return number of matching history rows
@@ -2668,7 +2669,7 @@ enum db_return_codes db_delete_driver_features_by_id(const PersistentStore *p_ps
  *		count of rows matching this history_id
  * @return The number of row (to max of driver_features_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_driver_features_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_driver_features_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -2679,7 +2680,7 @@ enum db_return_codes db_delete_driver_features_by_id(const PersistentStore *p_ps
  *		count of rows matching this history_id
  * @return The number of row (to max of driver_features_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_driver_features_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_driver_features_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -2692,7 +2693,7 @@ enum db_return_codes db_delete_driver_features_by_id(const PersistentStore *p_ps
  *		history_id of rows to return
  * @return The number of row (to max of driver_features_count) on success.  DB_FAILURE on failure.
  */
- int db_get_driver_features_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_driver_features_history_by_history_id(const PersistentStore *p_ps,
 	struct db_driver_features *p_driver_features,
 	int history_id,
 	int driver_features_count);
@@ -2732,7 +2733,7 @@ struct db_dimm_topology
  * @return
  *		void
  */
-void db_print_dimm_topology(struct db_dimm_topology *p_value);
+NVM_COMMON_API void db_print_dimm_topology(struct db_dimm_topology *p_value);
 /*!
  * Create a new row in the dimm_topology table
  * @ingroup dimm_topology
@@ -2742,7 +2743,7 @@ void db_print_dimm_topology(struct db_dimm_topology *p_value);
  *		Pointer to the object to be saved to the dimm_topology table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_dimm_topology(const PersistentStore *p_ps, struct db_dimm_topology *p_dimm_topology);
+NVM_COMMON_API enum db_return_codes db_add_dimm_topology(const PersistentStore *p_ps, struct db_dimm_topology *p_dimm_topology);
 /*!
  * Get the total number of dimm_topologys
  * @param[in] p_ps
@@ -2751,7 +2752,7 @@ enum db_return_codes db_add_dimm_topology(const PersistentStore *p_ps, struct db
  * 		Set to the number of dimm_topologys
  * @return whether successful or not
  */
-enum db_return_codes db_get_dimm_topology_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_dimm_topology_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all dimm_topologys
  * @ingroup dimm_topology
@@ -2763,7 +2764,7 @@ enum db_return_codes db_get_dimm_topology_count(const PersistentStore *p_ps, int
  *		Size of p_dimm_topology
  * @return The number of row (to max of dimm_topology_count) on success.  DB_FAILURE on failure.
  */
-int db_get_dimm_topologys(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_dimm_topologys(const PersistentStore *p_ps,
 	struct db_dimm_topology
 	*p_dimm_topology,
 	int dimm_topology_count);
@@ -2774,7 +2775,7 @@ int db_get_dimm_topologys(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_dimm_topologys(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_dimm_topologys(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from dimm_topology history
@@ -2783,7 +2784,7 @@ enum db_return_codes db_delete_all_dimm_topologys(const PersistentStore *p_ps);
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_dimm_topology_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_dimm_topology_history(const PersistentStore *p_ps);
  
 /*!
  * save dimm_topology state
@@ -2796,7 +2797,7 @@ enum db_return_codes db_delete_all_dimm_topologys(const PersistentStore *p_ps);
  *		dimm_topology to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_dimm_topology_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_dimm_topology_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_dimm_topology *p_dimm_topology);
 /*!
@@ -2810,7 +2811,7 @@ enum db_return_codes db_save_dimm_topology_state(const PersistentStore *p_ps,
  *		struct to put the dimm_topology retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_dimm_topology_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_dimm_topology_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_dimm_topology *p_dimm_topology);
 /*!
@@ -2824,7 +2825,7 @@ enum db_return_codes db_get_dimm_topology_by_device_handle(const PersistentStore
  *		structure with new values for the dimm_topology
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_dimm_topology_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_dimm_topology_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_dimm_topology *p_updated_dimm_topology);
 /*!
@@ -2836,7 +2837,7 @@ enum db_return_codes db_update_dimm_topology_by_device_handle(const PersistentSt
  *		device_handle points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_dimm_topology_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_dimm_topology_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle);
 /*!
  * Return number of matching history rows
@@ -2848,7 +2849,7 @@ enum db_return_codes db_delete_dimm_topology_by_device_handle(const PersistentSt
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_topology_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_topology_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_dimm_topology_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -2859,7 +2860,7 @@ enum db_return_codes db_delete_dimm_topology_by_device_handle(const PersistentSt
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_topology_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_topology_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_dimm_topology_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -2872,7 +2873,7 @@ enum db_return_codes db_delete_dimm_topology_by_device_handle(const PersistentSt
  *		history_id of rows to return
  * @return The number of row (to max of dimm_topology_count) on success.  DB_FAILURE on failure.
  */
- int db_get_dimm_topology_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_dimm_topology_history_by_history_id(const PersistentStore *p_ps,
 	struct db_dimm_topology *p_dimm_topology,
 	int history_id,
 	int dimm_topology_count);
@@ -2909,7 +2910,7 @@ struct db_namespace
  * @return
  *		void
  */
-void db_print_namespace(struct db_namespace *p_value);
+NVM_COMMON_API void db_print_namespace(struct db_namespace *p_value);
 /*!
  * Create a new row in the namespace table
  * @ingroup namespace
@@ -2919,7 +2920,7 @@ void db_print_namespace(struct db_namespace *p_value);
  *		Pointer to the object to be saved to the namespace table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_namespace(const PersistentStore *p_ps, struct db_namespace *p_namespace);
+NVM_COMMON_API enum db_return_codes db_add_namespace(const PersistentStore *p_ps, struct db_namespace *p_namespace);
 /*!
  * Get the total number of namespaces
  * @param[in] p_ps
@@ -2928,7 +2929,7 @@ enum db_return_codes db_add_namespace(const PersistentStore *p_ps, struct db_nam
  * 		Set to the number of namespaces
  * @return whether successful or not
  */
-enum db_return_codes db_get_namespace_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_namespace_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all namespaces
  * @ingroup namespace
@@ -2940,7 +2941,7 @@ enum db_return_codes db_get_namespace_count(const PersistentStore *p_ps, int *p_
  *		Size of p_namespace
  * @return The number of row (to max of namespace_count) on success.  DB_FAILURE on failure.
  */
-int db_get_namespaces(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_namespaces(const PersistentStore *p_ps,
 	struct db_namespace
 	*p_namespace,
 	int namespace_count);
@@ -2951,7 +2952,7 @@ int db_get_namespaces(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_namespaces(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_namespaces(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from namespace history
@@ -2960,7 +2961,7 @@ enum db_return_codes db_delete_all_namespaces(const PersistentStore *p_ps);
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_namespace_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_namespace_history(const PersistentStore *p_ps);
  
 /*!
  * save namespace state
@@ -2973,7 +2974,7 @@ enum db_return_codes db_delete_all_namespaces(const PersistentStore *p_ps);
  *		namespace to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_namespace_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_namespace_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_namespace *p_namespace);
 /*!
@@ -2987,7 +2988,7 @@ enum db_return_codes db_save_namespace_state(const PersistentStore *p_ps,
  *		struct to put the namespace retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_namespace_by_namespace_uid(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_namespace_by_namespace_uid(const PersistentStore *p_ps,
 	const char * namespace_uid,
 	struct db_namespace *p_namespace);
 /*!
@@ -3001,7 +3002,7 @@ enum db_return_codes db_get_namespace_by_namespace_uid(const PersistentStore *p_
  *		structure with new values for the namespace
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_namespace_by_namespace_uid(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_namespace_by_namespace_uid(const PersistentStore *p_ps,
 	const char * namespace_uid,
 	struct db_namespace *p_updated_namespace);
 /*!
@@ -3013,7 +3014,7 @@ enum db_return_codes db_update_namespace_by_namespace_uid(const PersistentStore 
  *		namespace_uid points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_namespace_by_namespace_uid(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_namespace_by_namespace_uid(const PersistentStore *p_ps,
 	const char * namespace_uid);
 /*!
  * Return number of matching history rows
@@ -3025,7 +3026,7 @@ enum db_return_codes db_delete_namespace_by_namespace_uid(const PersistentStore 
  *		count of rows matching this history_id
  * @return The number of row (to max of namespace_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_namespace_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_namespace_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -3036,7 +3037,7 @@ enum db_return_codes db_delete_namespace_by_namespace_uid(const PersistentStore 
  *		count of rows matching this history_id
  * @return The number of row (to max of namespace_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_namespace_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_namespace_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -3049,7 +3050,7 @@ enum db_return_codes db_delete_namespace_by_namespace_uid(const PersistentStore 
  *		history_id of rows to return
  * @return The number of row (to max of namespace_count) on success.  DB_FAILURE on failure.
  */
- int db_get_namespace_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_namespace_history_by_history_id(const PersistentStore *p_ps,
 	struct db_namespace *p_namespace,
 	int history_id,
 	int namespace_count);
@@ -3064,7 +3065,7 @@ enum db_return_codes db_delete_namespace_by_namespace_uid(const PersistentStore 
  *		Resulting count
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_namespace_count_by_dimm_topology_device_handle (const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_namespace_count_by_dimm_topology_device_handle (const PersistentStore *p_ps,
 	const unsigned int device_handle, int *p_count);
 /*!
  * Return a list of namespaces for a given dimm_topology.device_handle
@@ -3079,7 +3080,7 @@ enum db_return_codes db_get_namespace_count_by_dimm_topology_device_handle (cons
  *		Size of namespace array passed in
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_namespaces_by_dimm_topology_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_namespaces_by_dimm_topology_device_handle(const PersistentStore *p_ps,
 	unsigned int device_handle,
 	struct db_namespace *p_namespace,
 	int namespace_count);
@@ -3092,7 +3093,7 @@ enum db_return_codes db_get_namespaces_by_dimm_topology_device_handle(const Pers
  *		Search namespace and get all with passed in device_handle
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_namespace_by_dimm_topology_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_namespace_by_dimm_topology_device_handle(const PersistentStore *p_ps,
 	unsigned int device_handle);
 /*!
  * Return the number of namespaces for a given dimm_interleave_set.index_id
@@ -3105,7 +3106,7 @@ enum db_return_codes db_delete_namespace_by_dimm_topology_device_handle(const Pe
  *		Resulting count
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_namespace_count_by_dimm_interleave_set_index_id (const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_namespace_count_by_dimm_interleave_set_index_id (const PersistentStore *p_ps,
 	const unsigned int interleave_set_index, int *p_count);
 /*!
  * Return a list of namespaces for a given dimm_interleave_set.index_id
@@ -3120,7 +3121,7 @@ enum db_return_codes db_get_namespace_count_by_dimm_interleave_set_index_id (con
  *		Size of namespace array passed in
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_namespaces_by_dimm_interleave_set_index_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_namespaces_by_dimm_interleave_set_index_id(const PersistentStore *p_ps,
 	unsigned int interleave_set_index,
 	struct db_namespace *p_namespace,
 	int namespace_count);
@@ -3133,7 +3134,7 @@ enum db_return_codes db_get_namespaces_by_dimm_interleave_set_index_id(const Per
  *		Search namespace and get all with passed in interleave_set_index
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_namespace_by_dimm_interleave_set_index_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_namespace_by_dimm_interleave_set_index_id(const PersistentStore *p_ps,
 	unsigned int interleave_set_index);
 /*!
  * @defgroup identify_dimm identify_dimm 
@@ -3173,7 +3174,7 @@ struct db_identify_dimm
  * @return
  *		void
  */
-void db_print_identify_dimm(struct db_identify_dimm *p_value);
+NVM_COMMON_API void db_print_identify_dimm(struct db_identify_dimm *p_value);
 /*!
  * Create a new row in the identify_dimm table
  * @ingroup identify_dimm
@@ -3183,7 +3184,7 @@ void db_print_identify_dimm(struct db_identify_dimm *p_value);
  *		Pointer to the object to be saved to the identify_dimm table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_identify_dimm(const PersistentStore *p_ps, struct db_identify_dimm *p_identify_dimm);
+NVM_COMMON_API enum db_return_codes db_add_identify_dimm(const PersistentStore *p_ps, struct db_identify_dimm *p_identify_dimm);
 /*!
  * Get the total number of identify_dimms
  * @param[in] p_ps
@@ -3192,7 +3193,7 @@ enum db_return_codes db_add_identify_dimm(const PersistentStore *p_ps, struct db
  * 		Set to the number of identify_dimms
  * @return whether successful or not
  */
-enum db_return_codes db_get_identify_dimm_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_identify_dimm_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all identify_dimms
  * @ingroup identify_dimm
@@ -3204,7 +3205,7 @@ enum db_return_codes db_get_identify_dimm_count(const PersistentStore *p_ps, int
  *		Size of p_identify_dimm
  * @return The number of row (to max of identify_dimm_count) on success.  DB_FAILURE on failure.
  */
-int db_get_identify_dimms(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_identify_dimms(const PersistentStore *p_ps,
 	struct db_identify_dimm
 	*p_identify_dimm,
 	int identify_dimm_count);
@@ -3215,7 +3216,7 @@ int db_get_identify_dimms(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_identify_dimms(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_identify_dimms(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from identify_dimm history
@@ -3224,7 +3225,7 @@ enum db_return_codes db_delete_all_identify_dimms(const PersistentStore *p_ps);
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_identify_dimm_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_identify_dimm_history(const PersistentStore *p_ps);
  
 /*!
  * save identify_dimm state
@@ -3237,7 +3238,7 @@ enum db_return_codes db_delete_all_identify_dimms(const PersistentStore *p_ps);
  *		identify_dimm to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_identify_dimm_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_identify_dimm_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_identify_dimm *p_identify_dimm);
 /*!
@@ -3251,7 +3252,7 @@ enum db_return_codes db_save_identify_dimm_state(const PersistentStore *p_ps,
  *		struct to put the identify_dimm retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_identify_dimm_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_identify_dimm_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_identify_dimm *p_identify_dimm);
 /*!
@@ -3265,7 +3266,7 @@ enum db_return_codes db_get_identify_dimm_by_device_handle(const PersistentStore
  *		structure with new values for the identify_dimm
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_identify_dimm_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_identify_dimm_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_identify_dimm *p_updated_identify_dimm);
 /*!
@@ -3277,7 +3278,7 @@ enum db_return_codes db_update_identify_dimm_by_device_handle(const PersistentSt
  *		device_handle points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_identify_dimm_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_identify_dimm_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle);
 /*!
  * Return number of matching history rows
@@ -3289,7 +3290,7 @@ enum db_return_codes db_delete_identify_dimm_by_device_handle(const PersistentSt
  *		count of rows matching this history_id
  * @return The number of row (to max of identify_dimm_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_identify_dimm_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_identify_dimm_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -3300,7 +3301,7 @@ enum db_return_codes db_delete_identify_dimm_by_device_handle(const PersistentSt
  *		count of rows matching this history_id
  * @return The number of row (to max of identify_dimm_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_identify_dimm_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_identify_dimm_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -3313,7 +3314,7 @@ enum db_return_codes db_delete_identify_dimm_by_device_handle(const PersistentSt
  *		history_id of rows to return
  * @return The number of row (to max of identify_dimm_count) on success.  DB_FAILURE on failure.
  */
- int db_get_identify_dimm_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_identify_dimm_history_by_history_id(const PersistentStore *p_ps,
 	struct db_identify_dimm *p_identify_dimm,
 	int history_id,
 	int identify_dimm_count);
@@ -3324,7 +3325,7 @@ enum db_return_codes db_delete_identify_dimm_by_device_handle(const PersistentSt
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_clear_identify_dimm_serial_num(PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_clear_identify_dimm_serial_num(PersistentStore *p_ps);
 /*!
  * @defgroup device_characteristics device_characteristics 
  * @ingroup db_schema
@@ -3350,7 +3351,7 @@ struct db_device_characteristics
  * @return
  *		void
  */
-void db_print_device_characteristics(struct db_device_characteristics *p_value);
+NVM_COMMON_API void db_print_device_characteristics(struct db_device_characteristics *p_value);
 /*!
  * Create a new row in the device_characteristics table
  * @ingroup device_characteristics
@@ -3360,7 +3361,7 @@ void db_print_device_characteristics(struct db_device_characteristics *p_value);
  *		Pointer to the object to be saved to the device_characteristics table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_device_characteristics(const PersistentStore *p_ps, struct db_device_characteristics *p_device_characteristics);
+NVM_COMMON_API enum db_return_codes db_add_device_characteristics(const PersistentStore *p_ps, struct db_device_characteristics *p_device_characteristics);
 /*!
  * Get the total number of device_characteristicss
  * @param[in] p_ps
@@ -3369,7 +3370,7 @@ enum db_return_codes db_add_device_characteristics(const PersistentStore *p_ps, 
  * 		Set to the number of device_characteristicss
  * @return whether successful or not
  */
-enum db_return_codes db_get_device_characteristics_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_device_characteristics_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all device_characteristicss
  * @ingroup device_characteristics
@@ -3381,7 +3382,7 @@ enum db_return_codes db_get_device_characteristics_count(const PersistentStore *
  *		Size of p_device_characteristics
  * @return The number of row (to max of device_characteristics_count) on success.  DB_FAILURE on failure.
  */
-int db_get_device_characteristicss(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_device_characteristicss(const PersistentStore *p_ps,
 	struct db_device_characteristics
 	*p_device_characteristics,
 	int device_characteristics_count);
@@ -3392,7 +3393,7 @@ int db_get_device_characteristicss(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_device_characteristicss(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_device_characteristicss(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from device_characteristics history
@@ -3401,7 +3402,7 @@ enum db_return_codes db_delete_all_device_characteristicss(const PersistentStore
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_device_characteristics_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_device_characteristics_history(const PersistentStore *p_ps);
  
 /*!
  * save device_characteristics state
@@ -3414,7 +3415,7 @@ enum db_return_codes db_delete_all_device_characteristicss(const PersistentStore
  *		device_characteristics to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_device_characteristics_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_device_characteristics_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_device_characteristics *p_device_characteristics);
 /*!
@@ -3428,7 +3429,7 @@ enum db_return_codes db_save_device_characteristics_state(const PersistentStore 
  *		struct to put the device_characteristics retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_device_characteristics_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_device_characteristics_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_device_characteristics *p_device_characteristics);
 /*!
@@ -3442,7 +3443,7 @@ enum db_return_codes db_get_device_characteristics_by_device_handle(const Persis
  *		structure with new values for the device_characteristics
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_device_characteristics_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_device_characteristics_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_device_characteristics *p_updated_device_characteristics);
 /*!
@@ -3454,7 +3455,7 @@ enum db_return_codes db_update_device_characteristics_by_device_handle(const Per
  *		device_handle points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_device_characteristics_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_device_characteristics_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle);
 /*!
  * Return number of matching history rows
@@ -3466,7 +3467,7 @@ enum db_return_codes db_delete_device_characteristics_by_device_handle(const Per
  *		count of rows matching this history_id
  * @return The number of row (to max of device_characteristics_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_device_characteristics_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_device_characteristics_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -3477,7 +3478,7 @@ enum db_return_codes db_delete_device_characteristics_by_device_handle(const Per
  *		count of rows matching this history_id
  * @return The number of row (to max of device_characteristics_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_device_characteristics_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_device_characteristics_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -3490,7 +3491,7 @@ enum db_return_codes db_delete_device_characteristics_by_device_handle(const Per
  *		history_id of rows to return
  * @return The number of row (to max of device_characteristics_count) on success.  DB_FAILURE on failure.
  */
- int db_get_device_characteristics_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_device_characteristics_history_by_history_id(const PersistentStore *p_ps,
 	struct db_device_characteristics *p_device_characteristics,
 	int history_id,
 	int device_characteristics_count);
@@ -3520,7 +3521,7 @@ struct db_dimm_partition
  * @return
  *		void
  */
-void db_print_dimm_partition(struct db_dimm_partition *p_value);
+NVM_COMMON_API void db_print_dimm_partition(struct db_dimm_partition *p_value);
 /*!
  * Create a new row in the dimm_partition table
  * @ingroup dimm_partition
@@ -3530,7 +3531,7 @@ void db_print_dimm_partition(struct db_dimm_partition *p_value);
  *		Pointer to the object to be saved to the dimm_partition table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_dimm_partition(const PersistentStore *p_ps, struct db_dimm_partition *p_dimm_partition);
+NVM_COMMON_API enum db_return_codes db_add_dimm_partition(const PersistentStore *p_ps, struct db_dimm_partition *p_dimm_partition);
 /*!
  * Get the total number of dimm_partitions
  * @param[in] p_ps
@@ -3539,7 +3540,7 @@ enum db_return_codes db_add_dimm_partition(const PersistentStore *p_ps, struct d
  * 		Set to the number of dimm_partitions
  * @return whether successful or not
  */
-enum db_return_codes db_get_dimm_partition_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_dimm_partition_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all dimm_partitions
  * @ingroup dimm_partition
@@ -3551,7 +3552,7 @@ enum db_return_codes db_get_dimm_partition_count(const PersistentStore *p_ps, in
  *		Size of p_dimm_partition
  * @return The number of row (to max of dimm_partition_count) on success.  DB_FAILURE on failure.
  */
-int db_get_dimm_partitions(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_dimm_partitions(const PersistentStore *p_ps,
 	struct db_dimm_partition
 	*p_dimm_partition,
 	int dimm_partition_count);
@@ -3562,7 +3563,7 @@ int db_get_dimm_partitions(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_dimm_partitions(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_dimm_partitions(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from dimm_partition history
@@ -3571,7 +3572,7 @@ enum db_return_codes db_delete_all_dimm_partitions(const PersistentStore *p_ps);
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_dimm_partition_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_dimm_partition_history(const PersistentStore *p_ps);
  
 /*!
  * save dimm_partition state
@@ -3584,7 +3585,7 @@ enum db_return_codes db_delete_all_dimm_partitions(const PersistentStore *p_ps);
  *		dimm_partition to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_dimm_partition_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_dimm_partition_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_dimm_partition *p_dimm_partition);
 /*!
@@ -3598,7 +3599,7 @@ enum db_return_codes db_save_dimm_partition_state(const PersistentStore *p_ps,
  *		struct to put the dimm_partition retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_dimm_partition_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_dimm_partition_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_dimm_partition *p_dimm_partition);
 /*!
@@ -3612,7 +3613,7 @@ enum db_return_codes db_get_dimm_partition_by_device_handle(const PersistentStor
  *		structure with new values for the dimm_partition
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_dimm_partition_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_dimm_partition_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_dimm_partition *p_updated_dimm_partition);
 /*!
@@ -3624,7 +3625,7 @@ enum db_return_codes db_update_dimm_partition_by_device_handle(const PersistentS
  *		device_handle points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_dimm_partition_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_dimm_partition_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle);
 /*!
  * Return number of matching history rows
@@ -3636,7 +3637,7 @@ enum db_return_codes db_delete_dimm_partition_by_device_handle(const PersistentS
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_partition_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_partition_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_dimm_partition_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -3647,7 +3648,7 @@ enum db_return_codes db_delete_dimm_partition_by_device_handle(const PersistentS
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_partition_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_partition_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_dimm_partition_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -3660,7 +3661,7 @@ enum db_return_codes db_delete_dimm_partition_by_device_handle(const PersistentS
  *		history_id of rows to return
  * @return The number of row (to max of dimm_partition_count) on success.  DB_FAILURE on failure.
  */
- int db_get_dimm_partition_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_dimm_partition_history_by_history_id(const PersistentStore *p_ps,
 	struct db_dimm_partition *p_dimm_partition,
 	int history_id,
 	int dimm_partition_count);
@@ -3705,7 +3706,7 @@ struct db_dimm_smart
  * @return
  *		void
  */
-void db_print_dimm_smart(struct db_dimm_smart *p_value);
+NVM_COMMON_API void db_print_dimm_smart(struct db_dimm_smart *p_value);
 /*!
  * Create a new row in the dimm_smart table
  * @ingroup dimm_smart
@@ -3715,7 +3716,7 @@ void db_print_dimm_smart(struct db_dimm_smart *p_value);
  *		Pointer to the object to be saved to the dimm_smart table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_dimm_smart(const PersistentStore *p_ps, struct db_dimm_smart *p_dimm_smart);
+NVM_COMMON_API enum db_return_codes db_add_dimm_smart(const PersistentStore *p_ps, struct db_dimm_smart *p_dimm_smart);
 /*!
  * Get the total number of dimm_smarts
  * @param[in] p_ps
@@ -3724,7 +3725,7 @@ enum db_return_codes db_add_dimm_smart(const PersistentStore *p_ps, struct db_di
  * 		Set to the number of dimm_smarts
  * @return whether successful or not
  */
-enum db_return_codes db_get_dimm_smart_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_dimm_smart_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all dimm_smarts
  * @ingroup dimm_smart
@@ -3736,7 +3737,7 @@ enum db_return_codes db_get_dimm_smart_count(const PersistentStore *p_ps, int *p
  *		Size of p_dimm_smart
  * @return The number of row (to max of dimm_smart_count) on success.  DB_FAILURE on failure.
  */
-int db_get_dimm_smarts(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_dimm_smarts(const PersistentStore *p_ps,
 	struct db_dimm_smart
 	*p_dimm_smart,
 	int dimm_smart_count);
@@ -3747,7 +3748,7 @@ int db_get_dimm_smarts(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_dimm_smarts(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_dimm_smarts(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from dimm_smart history
@@ -3756,7 +3757,7 @@ enum db_return_codes db_delete_all_dimm_smarts(const PersistentStore *p_ps);
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_dimm_smart_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_dimm_smart_history(const PersistentStore *p_ps);
  
 /*!
  * save dimm_smart state
@@ -3769,7 +3770,7 @@ enum db_return_codes db_delete_all_dimm_smarts(const PersistentStore *p_ps);
  *		dimm_smart to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_dimm_smart_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_dimm_smart_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_dimm_smart *p_dimm_smart);
 /*!
@@ -3783,7 +3784,7 @@ enum db_return_codes db_save_dimm_smart_state(const PersistentStore *p_ps,
  *		struct to put the dimm_smart retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_dimm_smart_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_dimm_smart_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_dimm_smart *p_dimm_smart);
 /*!
@@ -3797,7 +3798,7 @@ enum db_return_codes db_get_dimm_smart_by_device_handle(const PersistentStore *p
  *		structure with new values for the dimm_smart
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_dimm_smart_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_dimm_smart_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_dimm_smart *p_updated_dimm_smart);
 /*!
@@ -3809,7 +3810,7 @@ enum db_return_codes db_update_dimm_smart_by_device_handle(const PersistentStore
  *		device_handle points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_dimm_smart_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_dimm_smart_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle);
 /*!
  * Return number of matching history rows
@@ -3821,7 +3822,7 @@ enum db_return_codes db_delete_dimm_smart_by_device_handle(const PersistentStore
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_smart_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_smart_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_dimm_smart_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -3832,7 +3833,7 @@ enum db_return_codes db_delete_dimm_smart_by_device_handle(const PersistentStore
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_smart_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_smart_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_dimm_smart_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -3845,7 +3846,7 @@ enum db_return_codes db_delete_dimm_smart_by_device_handle(const PersistentStore
  *		history_id of rows to return
  * @return The number of row (to max of dimm_smart_count) on success.  DB_FAILURE on failure.
  */
- int db_get_dimm_smart_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_dimm_smart_history_by_history_id(const PersistentStore *p_ps,
 	struct db_dimm_smart *p_dimm_smart,
 	int history_id,
 	int dimm_smart_count);
@@ -3873,7 +3874,7 @@ struct db_dimm_state
  * @return
  *		void
  */
-void db_print_dimm_state(struct db_dimm_state *p_value);
+NVM_COMMON_API void db_print_dimm_state(struct db_dimm_state *p_value);
 /*!
  * Create a new row in the dimm_state table
  * @ingroup dimm_state
@@ -3883,7 +3884,7 @@ void db_print_dimm_state(struct db_dimm_state *p_value);
  *		Pointer to the object to be saved to the dimm_state table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_dimm_state(const PersistentStore *p_ps, struct db_dimm_state *p_dimm_state);
+NVM_COMMON_API enum db_return_codes db_add_dimm_state(const PersistentStore *p_ps, struct db_dimm_state *p_dimm_state);
 /*!
  * Get the total number of dimm_states
  * @param[in] p_ps
@@ -3892,7 +3893,7 @@ enum db_return_codes db_add_dimm_state(const PersistentStore *p_ps, struct db_di
  * 		Set to the number of dimm_states
  * @return whether successful or not
  */
-enum db_return_codes db_get_dimm_state_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_dimm_state_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all dimm_states
  * @ingroup dimm_state
@@ -3904,7 +3905,7 @@ enum db_return_codes db_get_dimm_state_count(const PersistentStore *p_ps, int *p
  *		Size of p_dimm_state
  * @return The number of row (to max of dimm_state_count) on success.  DB_FAILURE on failure.
  */
-int db_get_dimm_states(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_dimm_states(const PersistentStore *p_ps,
 	struct db_dimm_state
 	*p_dimm_state,
 	int dimm_state_count);
@@ -3915,7 +3916,7 @@ int db_get_dimm_states(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_dimm_states(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_dimm_states(const PersistentStore *p_ps);
 
 #if 0
 //NON-HISTORY TABLE
@@ -3927,7 +3928,7 @@ enum db_return_codes db_delete_all_dimm_states(const PersistentStore *p_ps);
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_dimm_state_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_dimm_state_history(const PersistentStore *p_ps);
  
 #endif
 
@@ -3942,7 +3943,7 @@ enum db_return_codes db_delete_all_dimm_states(const PersistentStore *p_ps);
  *		dimm_state to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_dimm_state_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_dimm_state_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_dimm_state *p_dimm_state);
 /*!
@@ -3956,7 +3957,7 @@ enum db_return_codes db_save_dimm_state_state(const PersistentStore *p_ps,
  *		struct to put the dimm_state retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_dimm_state_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_dimm_state_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_dimm_state *p_dimm_state);
 /*!
@@ -3970,7 +3971,7 @@ enum db_return_codes db_get_dimm_state_by_device_handle(const PersistentStore *p
  *		structure with new values for the dimm_state
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_dimm_state_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_dimm_state_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_dimm_state *p_updated_dimm_state);
 /*!
@@ -3982,7 +3983,7 @@ enum db_return_codes db_update_dimm_state_by_device_handle(const PersistentStore
  *		device_handle points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_dimm_state_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_dimm_state_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle);
 /*!
  * Return number of matching history rows
@@ -3994,7 +3995,7 @@ enum db_return_codes db_delete_dimm_state_by_device_handle(const PersistentStore
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_state_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_state_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_dimm_state_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -4005,7 +4006,7 @@ enum db_return_codes db_delete_dimm_state_by_device_handle(const PersistentStore
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_state_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_state_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_dimm_state_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -4018,7 +4019,7 @@ enum db_return_codes db_delete_dimm_state_by_device_handle(const PersistentStore
  *		history_id of rows to return
  * @return The number of row (to max of dimm_state_count) on success.  DB_FAILURE on failure.
  */
- int db_get_dimm_state_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_dimm_state_history_by_history_id(const PersistentStore *p_ps,
 	struct db_dimm_state *p_dimm_state,
 	int history_id,
 	int dimm_state_count);
@@ -4045,7 +4046,7 @@ struct db_namespace_state
  * @return
  *		void
  */
-void db_print_namespace_state(struct db_namespace_state *p_value);
+NVM_COMMON_API void db_print_namespace_state(struct db_namespace_state *p_value);
 /*!
  * Create a new row in the namespace_state table
  * @ingroup namespace_state
@@ -4055,7 +4056,7 @@ void db_print_namespace_state(struct db_namespace_state *p_value);
  *		Pointer to the object to be saved to the namespace_state table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_namespace_state(const PersistentStore *p_ps, struct db_namespace_state *p_namespace_state);
+NVM_COMMON_API enum db_return_codes db_add_namespace_state(const PersistentStore *p_ps, struct db_namespace_state *p_namespace_state);
 /*!
  * Get the total number of namespace_states
  * @param[in] p_ps
@@ -4064,7 +4065,7 @@ enum db_return_codes db_add_namespace_state(const PersistentStore *p_ps, struct 
  * 		Set to the number of namespace_states
  * @return whether successful or not
  */
-enum db_return_codes db_get_namespace_state_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_namespace_state_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all namespace_states
  * @ingroup namespace_state
@@ -4076,7 +4077,7 @@ enum db_return_codes db_get_namespace_state_count(const PersistentStore *p_ps, i
  *		Size of p_namespace_state
  * @return The number of row (to max of namespace_state_count) on success.  DB_FAILURE on failure.
  */
-int db_get_namespace_states(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_namespace_states(const PersistentStore *p_ps,
 	struct db_namespace_state
 	*p_namespace_state,
 	int namespace_state_count);
@@ -4087,7 +4088,7 @@ int db_get_namespace_states(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_namespace_states(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_namespace_states(const PersistentStore *p_ps);
 
 #if 0
 //NON-HISTORY TABLE
@@ -4099,7 +4100,7 @@ enum db_return_codes db_delete_all_namespace_states(const PersistentStore *p_ps)
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_namespace_state_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_namespace_state_history(const PersistentStore *p_ps);
  
 #endif
 
@@ -4114,7 +4115,7 @@ enum db_return_codes db_delete_all_namespace_states(const PersistentStore *p_ps)
  *		namespace_state to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_namespace_state_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_namespace_state_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_namespace_state *p_namespace_state);
 /*!
@@ -4128,7 +4129,7 @@ enum db_return_codes db_save_namespace_state_state(const PersistentStore *p_ps,
  *		struct to put the namespace_state retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_namespace_state_by_namespace_uid(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_namespace_state_by_namespace_uid(const PersistentStore *p_ps,
 	const char * namespace_uid,
 	struct db_namespace_state *p_namespace_state);
 /*!
@@ -4142,7 +4143,7 @@ enum db_return_codes db_get_namespace_state_by_namespace_uid(const PersistentSto
  *		structure with new values for the namespace_state
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_namespace_state_by_namespace_uid(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_namespace_state_by_namespace_uid(const PersistentStore *p_ps,
 	const char * namespace_uid,
 	struct db_namespace_state *p_updated_namespace_state);
 /*!
@@ -4154,7 +4155,7 @@ enum db_return_codes db_update_namespace_state_by_namespace_uid(const Persistent
  *		namespace_uid points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_namespace_state_by_namespace_uid(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_namespace_state_by_namespace_uid(const PersistentStore *p_ps,
 	const char * namespace_uid);
 /*!
  * Return number of matching history rows
@@ -4166,7 +4167,7 @@ enum db_return_codes db_delete_namespace_state_by_namespace_uid(const Persistent
  *		count of rows matching this history_id
  * @return The number of row (to max of namespace_state_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_namespace_state_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_namespace_state_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -4177,7 +4178,7 @@ enum db_return_codes db_delete_namespace_state_by_namespace_uid(const Persistent
  *		count of rows matching this history_id
  * @return The number of row (to max of namespace_state_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_namespace_state_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_namespace_state_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -4190,7 +4191,7 @@ enum db_return_codes db_delete_namespace_state_by_namespace_uid(const Persistent
  *		history_id of rows to return
  * @return The number of row (to max of namespace_state_count) on success.  DB_FAILURE on failure.
  */
- int db_get_namespace_state_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_namespace_state_history_by_history_id(const PersistentStore *p_ps,
 	struct db_namespace_state *p_namespace_state,
 	int history_id,
 	int namespace_state_count);
@@ -4219,7 +4220,7 @@ struct db_dimm_alarm_thresholds
  * @return
  *		void
  */
-void db_print_dimm_alarm_thresholds(struct db_dimm_alarm_thresholds *p_value);
+NVM_COMMON_API void db_print_dimm_alarm_thresholds(struct db_dimm_alarm_thresholds *p_value);
 /*!
  * Create a new row in the dimm_alarm_thresholds table
  * @ingroup dimm_alarm_thresholds
@@ -4229,7 +4230,7 @@ void db_print_dimm_alarm_thresholds(struct db_dimm_alarm_thresholds *p_value);
  *		Pointer to the object to be saved to the dimm_alarm_thresholds table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_dimm_alarm_thresholds(const PersistentStore *p_ps, struct db_dimm_alarm_thresholds *p_dimm_alarm_thresholds);
+NVM_COMMON_API enum db_return_codes db_add_dimm_alarm_thresholds(const PersistentStore *p_ps, struct db_dimm_alarm_thresholds *p_dimm_alarm_thresholds);
 /*!
  * Get the total number of dimm_alarm_thresholdss
  * @param[in] p_ps
@@ -4238,7 +4239,7 @@ enum db_return_codes db_add_dimm_alarm_thresholds(const PersistentStore *p_ps, s
  * 		Set to the number of dimm_alarm_thresholdss
  * @return whether successful or not
  */
-enum db_return_codes db_get_dimm_alarm_thresholds_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_dimm_alarm_thresholds_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all dimm_alarm_thresholdss
  * @ingroup dimm_alarm_thresholds
@@ -4250,7 +4251,7 @@ enum db_return_codes db_get_dimm_alarm_thresholds_count(const PersistentStore *p
  *		Size of p_dimm_alarm_thresholds
  * @return The number of row (to max of dimm_alarm_thresholds_count) on success.  DB_FAILURE on failure.
  */
-int db_get_dimm_alarm_thresholdss(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_dimm_alarm_thresholdss(const PersistentStore *p_ps,
 	struct db_dimm_alarm_thresholds
 	*p_dimm_alarm_thresholds,
 	int dimm_alarm_thresholds_count);
@@ -4261,7 +4262,7 @@ int db_get_dimm_alarm_thresholdss(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_dimm_alarm_thresholdss(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_dimm_alarm_thresholdss(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from dimm_alarm_thresholds history
@@ -4270,7 +4271,7 @@ enum db_return_codes db_delete_all_dimm_alarm_thresholdss(const PersistentStore 
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_dimm_alarm_thresholds_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_dimm_alarm_thresholds_history(const PersistentStore *p_ps);
  
 /*!
  * save dimm_alarm_thresholds state
@@ -4283,7 +4284,7 @@ enum db_return_codes db_delete_all_dimm_alarm_thresholdss(const PersistentStore 
  *		dimm_alarm_thresholds to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_dimm_alarm_thresholds_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_dimm_alarm_thresholds_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_dimm_alarm_thresholds *p_dimm_alarm_thresholds);
 /*!
@@ -4297,7 +4298,7 @@ enum db_return_codes db_save_dimm_alarm_thresholds_state(const PersistentStore *
  *		struct to put the dimm_alarm_thresholds retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_dimm_alarm_thresholds_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_dimm_alarm_thresholds_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_dimm_alarm_thresholds *p_dimm_alarm_thresholds);
 /*!
@@ -4311,7 +4312,7 @@ enum db_return_codes db_get_dimm_alarm_thresholds_by_device_handle(const Persist
  *		structure with new values for the dimm_alarm_thresholds
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_dimm_alarm_thresholds_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_dimm_alarm_thresholds_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_dimm_alarm_thresholds *p_updated_dimm_alarm_thresholds);
 /*!
@@ -4323,7 +4324,7 @@ enum db_return_codes db_update_dimm_alarm_thresholds_by_device_handle(const Pers
  *		device_handle points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_dimm_alarm_thresholds_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_dimm_alarm_thresholds_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle);
 /*!
  * Return number of matching history rows
@@ -4335,7 +4336,7 @@ enum db_return_codes db_delete_dimm_alarm_thresholds_by_device_handle(const Pers
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_alarm_thresholds_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_alarm_thresholds_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_dimm_alarm_thresholds_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -4346,7 +4347,7 @@ enum db_return_codes db_delete_dimm_alarm_thresholds_by_device_handle(const Pers
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_alarm_thresholds_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_alarm_thresholds_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_dimm_alarm_thresholds_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -4359,7 +4360,7 @@ enum db_return_codes db_delete_dimm_alarm_thresholds_by_device_handle(const Pers
  *		history_id of rows to return
  * @return The number of row (to max of dimm_alarm_thresholds_count) on success.  DB_FAILURE on failure.
  */
- int db_get_dimm_alarm_thresholds_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_dimm_alarm_thresholds_history_by_history_id(const PersistentStore *p_ps,
 	struct db_dimm_alarm_thresholds *p_dimm_alarm_thresholds,
 	int history_id,
 	int dimm_alarm_thresholds_count);
@@ -4388,7 +4389,7 @@ struct db_dimm_power_management
  * @return
  *		void
  */
-void db_print_dimm_power_management(struct db_dimm_power_management *p_value);
+NVM_COMMON_API void db_print_dimm_power_management(struct db_dimm_power_management *p_value);
 /*!
  * Create a new row in the dimm_power_management table
  * @ingroup dimm_power_management
@@ -4398,7 +4399,7 @@ void db_print_dimm_power_management(struct db_dimm_power_management *p_value);
  *		Pointer to the object to be saved to the dimm_power_management table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_dimm_power_management(const PersistentStore *p_ps, struct db_dimm_power_management *p_dimm_power_management);
+NVM_COMMON_API enum db_return_codes db_add_dimm_power_management(const PersistentStore *p_ps, struct db_dimm_power_management *p_dimm_power_management);
 /*!
  * Get the total number of dimm_power_managements
  * @param[in] p_ps
@@ -4407,7 +4408,7 @@ enum db_return_codes db_add_dimm_power_management(const PersistentStore *p_ps, s
  * 		Set to the number of dimm_power_managements
  * @return whether successful or not
  */
-enum db_return_codes db_get_dimm_power_management_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_dimm_power_management_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all dimm_power_managements
  * @ingroup dimm_power_management
@@ -4419,7 +4420,7 @@ enum db_return_codes db_get_dimm_power_management_count(const PersistentStore *p
  *		Size of p_dimm_power_management
  * @return The number of row (to max of dimm_power_management_count) on success.  DB_FAILURE on failure.
  */
-int db_get_dimm_power_managements(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_dimm_power_managements(const PersistentStore *p_ps,
 	struct db_dimm_power_management
 	*p_dimm_power_management,
 	int dimm_power_management_count);
@@ -4430,7 +4431,7 @@ int db_get_dimm_power_managements(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_dimm_power_managements(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_dimm_power_managements(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from dimm_power_management history
@@ -4439,7 +4440,7 @@ enum db_return_codes db_delete_all_dimm_power_managements(const PersistentStore 
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_dimm_power_management_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_dimm_power_management_history(const PersistentStore *p_ps);
  
 /*!
  * save dimm_power_management state
@@ -4452,7 +4453,7 @@ enum db_return_codes db_delete_all_dimm_power_managements(const PersistentStore 
  *		dimm_power_management to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_dimm_power_management_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_dimm_power_management_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_dimm_power_management *p_dimm_power_management);
 /*!
@@ -4466,7 +4467,7 @@ enum db_return_codes db_save_dimm_power_management_state(const PersistentStore *
  *		struct to put the dimm_power_management retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_dimm_power_management_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_dimm_power_management_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_dimm_power_management *p_dimm_power_management);
 /*!
@@ -4480,7 +4481,7 @@ enum db_return_codes db_get_dimm_power_management_by_device_handle(const Persist
  *		structure with new values for the dimm_power_management
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_dimm_power_management_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_dimm_power_management_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_dimm_power_management *p_updated_dimm_power_management);
 /*!
@@ -4492,7 +4493,7 @@ enum db_return_codes db_update_dimm_power_management_by_device_handle(const Pers
  *		device_handle points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_dimm_power_management_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_dimm_power_management_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle);
 /*!
  * Return number of matching history rows
@@ -4504,7 +4505,7 @@ enum db_return_codes db_delete_dimm_power_management_by_device_handle(const Pers
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_power_management_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_power_management_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_dimm_power_management_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -4515,7 +4516,7 @@ enum db_return_codes db_delete_dimm_power_management_by_device_handle(const Pers
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_power_management_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_power_management_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_dimm_power_management_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -4528,7 +4529,7 @@ enum db_return_codes db_delete_dimm_power_management_by_device_handle(const Pers
  *		history_id of rows to return
  * @return The number of row (to max of dimm_power_management_count) on success.  DB_FAILURE on failure.
  */
- int db_get_dimm_power_management_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_dimm_power_management_history_by_history_id(const PersistentStore *p_ps,
 	struct db_dimm_power_management *p_dimm_power_management,
 	int history_id,
 	int dimm_power_management_count);
@@ -4556,7 +4557,7 @@ struct db_dimm_die_sparing
  * @return
  *		void
  */
-void db_print_dimm_die_sparing(struct db_dimm_die_sparing *p_value);
+NVM_COMMON_API void db_print_dimm_die_sparing(struct db_dimm_die_sparing *p_value);
 /*!
  * Create a new row in the dimm_die_sparing table
  * @ingroup dimm_die_sparing
@@ -4566,7 +4567,7 @@ void db_print_dimm_die_sparing(struct db_dimm_die_sparing *p_value);
  *		Pointer to the object to be saved to the dimm_die_sparing table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_dimm_die_sparing(const PersistentStore *p_ps, struct db_dimm_die_sparing *p_dimm_die_sparing);
+NVM_COMMON_API enum db_return_codes db_add_dimm_die_sparing(const PersistentStore *p_ps, struct db_dimm_die_sparing *p_dimm_die_sparing);
 /*!
  * Get the total number of dimm_die_sparings
  * @param[in] p_ps
@@ -4575,7 +4576,7 @@ enum db_return_codes db_add_dimm_die_sparing(const PersistentStore *p_ps, struct
  * 		Set to the number of dimm_die_sparings
  * @return whether successful or not
  */
-enum db_return_codes db_get_dimm_die_sparing_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_dimm_die_sparing_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all dimm_die_sparings
  * @ingroup dimm_die_sparing
@@ -4587,7 +4588,7 @@ enum db_return_codes db_get_dimm_die_sparing_count(const PersistentStore *p_ps, 
  *		Size of p_dimm_die_sparing
  * @return The number of row (to max of dimm_die_sparing_count) on success.  DB_FAILURE on failure.
  */
-int db_get_dimm_die_sparings(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_dimm_die_sparings(const PersistentStore *p_ps,
 	struct db_dimm_die_sparing
 	*p_dimm_die_sparing,
 	int dimm_die_sparing_count);
@@ -4598,7 +4599,7 @@ int db_get_dimm_die_sparings(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_dimm_die_sparings(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_dimm_die_sparings(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from dimm_die_sparing history
@@ -4607,7 +4608,7 @@ enum db_return_codes db_delete_all_dimm_die_sparings(const PersistentStore *p_ps
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_dimm_die_sparing_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_dimm_die_sparing_history(const PersistentStore *p_ps);
  
 /*!
  * save dimm_die_sparing state
@@ -4620,7 +4621,7 @@ enum db_return_codes db_delete_all_dimm_die_sparings(const PersistentStore *p_ps
  *		dimm_die_sparing to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_dimm_die_sparing_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_dimm_die_sparing_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_dimm_die_sparing *p_dimm_die_sparing);
 /*!
@@ -4634,7 +4635,7 @@ enum db_return_codes db_save_dimm_die_sparing_state(const PersistentStore *p_ps,
  *		struct to put the dimm_die_sparing retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_dimm_die_sparing_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_dimm_die_sparing_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_dimm_die_sparing *p_dimm_die_sparing);
 /*!
@@ -4648,7 +4649,7 @@ enum db_return_codes db_get_dimm_die_sparing_by_device_handle(const PersistentSt
  *		structure with new values for the dimm_die_sparing
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_dimm_die_sparing_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_dimm_die_sparing_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_dimm_die_sparing *p_updated_dimm_die_sparing);
 /*!
@@ -4660,7 +4661,7 @@ enum db_return_codes db_update_dimm_die_sparing_by_device_handle(const Persisten
  *		device_handle points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_dimm_die_sparing_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_dimm_die_sparing_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle);
 /*!
  * Return number of matching history rows
@@ -4672,7 +4673,7 @@ enum db_return_codes db_delete_dimm_die_sparing_by_device_handle(const Persisten
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_die_sparing_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_die_sparing_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_dimm_die_sparing_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -4683,7 +4684,7 @@ enum db_return_codes db_delete_dimm_die_sparing_by_device_handle(const Persisten
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_die_sparing_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_die_sparing_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_dimm_die_sparing_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -4696,7 +4697,7 @@ enum db_return_codes db_delete_dimm_die_sparing_by_device_handle(const Persisten
  *		history_id of rows to return
  * @return The number of row (to max of dimm_die_sparing_count) on success.  DB_FAILURE on failure.
  */
- int db_get_dimm_die_sparing_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_dimm_die_sparing_history_by_history_id(const PersistentStore *p_ps,
 	struct db_dimm_die_sparing *p_dimm_die_sparing,
 	int history_id,
 	int dimm_die_sparing_count);
@@ -4724,7 +4725,7 @@ struct db_dimm_optional_config_data
  * @return
  *		void
  */
-void db_print_dimm_optional_config_data(struct db_dimm_optional_config_data *p_value);
+NVM_COMMON_API void db_print_dimm_optional_config_data(struct db_dimm_optional_config_data *p_value);
 /*!
  * Create a new row in the dimm_optional_config_data table
  * @ingroup dimm_optional_config_data
@@ -4734,7 +4735,7 @@ void db_print_dimm_optional_config_data(struct db_dimm_optional_config_data *p_v
  *		Pointer to the object to be saved to the dimm_optional_config_data table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_dimm_optional_config_data(const PersistentStore *p_ps, struct db_dimm_optional_config_data *p_dimm_optional_config_data);
+NVM_COMMON_API enum db_return_codes db_add_dimm_optional_config_data(const PersistentStore *p_ps, struct db_dimm_optional_config_data *p_dimm_optional_config_data);
 /*!
  * Get the total number of dimm_optional_config_datas
  * @param[in] p_ps
@@ -4743,7 +4744,7 @@ enum db_return_codes db_add_dimm_optional_config_data(const PersistentStore *p_p
  * 		Set to the number of dimm_optional_config_datas
  * @return whether successful or not
  */
-enum db_return_codes db_get_dimm_optional_config_data_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_dimm_optional_config_data_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all dimm_optional_config_datas
  * @ingroup dimm_optional_config_data
@@ -4755,7 +4756,7 @@ enum db_return_codes db_get_dimm_optional_config_data_count(const PersistentStor
  *		Size of p_dimm_optional_config_data
  * @return The number of row (to max of dimm_optional_config_data_count) on success.  DB_FAILURE on failure.
  */
-int db_get_dimm_optional_config_datas(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_dimm_optional_config_datas(const PersistentStore *p_ps,
 	struct db_dimm_optional_config_data
 	*p_dimm_optional_config_data,
 	int dimm_optional_config_data_count);
@@ -4766,7 +4767,7 @@ int db_get_dimm_optional_config_datas(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_dimm_optional_config_datas(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_dimm_optional_config_datas(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from dimm_optional_config_data history
@@ -4775,7 +4776,7 @@ enum db_return_codes db_delete_all_dimm_optional_config_datas(const PersistentSt
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_dimm_optional_config_data_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_dimm_optional_config_data_history(const PersistentStore *p_ps);
  
 /*!
  * save dimm_optional_config_data state
@@ -4788,7 +4789,7 @@ enum db_return_codes db_delete_all_dimm_optional_config_datas(const PersistentSt
  *		dimm_optional_config_data to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_dimm_optional_config_data_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_dimm_optional_config_data_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_dimm_optional_config_data *p_dimm_optional_config_data);
 /*!
@@ -4802,7 +4803,7 @@ enum db_return_codes db_save_dimm_optional_config_data_state(const PersistentSto
  *		struct to put the dimm_optional_config_data retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_dimm_optional_config_data_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_dimm_optional_config_data_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_dimm_optional_config_data *p_dimm_optional_config_data);
 /*!
@@ -4816,7 +4817,7 @@ enum db_return_codes db_get_dimm_optional_config_data_by_device_handle(const Per
  *		structure with new values for the dimm_optional_config_data
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_dimm_optional_config_data_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_dimm_optional_config_data_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_dimm_optional_config_data *p_updated_dimm_optional_config_data);
 /*!
@@ -4828,7 +4829,7 @@ enum db_return_codes db_update_dimm_optional_config_data_by_device_handle(const 
  *		device_handle points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_dimm_optional_config_data_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_dimm_optional_config_data_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle);
 /*!
  * Return number of matching history rows
@@ -4840,7 +4841,7 @@ enum db_return_codes db_delete_dimm_optional_config_data_by_device_handle(const 
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_optional_config_data_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_optional_config_data_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_dimm_optional_config_data_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -4851,7 +4852,7 @@ enum db_return_codes db_delete_dimm_optional_config_data_by_device_handle(const 
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_optional_config_data_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_optional_config_data_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_dimm_optional_config_data_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -4864,7 +4865,7 @@ enum db_return_codes db_delete_dimm_optional_config_data_by_device_handle(const 
  *		history_id of rows to return
  * @return The number of row (to max of dimm_optional_config_data_count) on success.  DB_FAILURE on failure.
  */
- int db_get_dimm_optional_config_data_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_dimm_optional_config_data_history_by_history_id(const PersistentStore *p_ps,
 	struct db_dimm_optional_config_data *p_dimm_optional_config_data,
 	int history_id,
 	int dimm_optional_config_data_count);
@@ -4893,7 +4894,7 @@ struct db_dimm_err_correction
  * @return
  *		void
  */
-void db_print_dimm_err_correction(struct db_dimm_err_correction *p_value);
+NVM_COMMON_API void db_print_dimm_err_correction(struct db_dimm_err_correction *p_value);
 /*!
  * Create a new row in the dimm_err_correction table
  * @ingroup dimm_err_correction
@@ -4903,7 +4904,7 @@ void db_print_dimm_err_correction(struct db_dimm_err_correction *p_value);
  *		Pointer to the object to be saved to the dimm_err_correction table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_dimm_err_correction(const PersistentStore *p_ps, struct db_dimm_err_correction *p_dimm_err_correction);
+NVM_COMMON_API enum db_return_codes db_add_dimm_err_correction(const PersistentStore *p_ps, struct db_dimm_err_correction *p_dimm_err_correction);
 /*!
  * Get the total number of dimm_err_corrections
  * @param[in] p_ps
@@ -4912,7 +4913,7 @@ enum db_return_codes db_add_dimm_err_correction(const PersistentStore *p_ps, str
  * 		Set to the number of dimm_err_corrections
  * @return whether successful or not
  */
-enum db_return_codes db_get_dimm_err_correction_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_dimm_err_correction_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all dimm_err_corrections
  * @ingroup dimm_err_correction
@@ -4924,7 +4925,7 @@ enum db_return_codes db_get_dimm_err_correction_count(const PersistentStore *p_p
  *		Size of p_dimm_err_correction
  * @return The number of row (to max of dimm_err_correction_count) on success.  DB_FAILURE on failure.
  */
-int db_get_dimm_err_corrections(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_dimm_err_corrections(const PersistentStore *p_ps,
 	struct db_dimm_err_correction
 	*p_dimm_err_correction,
 	int dimm_err_correction_count);
@@ -4935,7 +4936,7 @@ int db_get_dimm_err_corrections(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_dimm_err_corrections(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_dimm_err_corrections(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from dimm_err_correction history
@@ -4944,7 +4945,7 @@ enum db_return_codes db_delete_all_dimm_err_corrections(const PersistentStore *p
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_dimm_err_correction_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_dimm_err_correction_history(const PersistentStore *p_ps);
  
 /*!
  * save dimm_err_correction state
@@ -4957,7 +4958,7 @@ enum db_return_codes db_delete_all_dimm_err_corrections(const PersistentStore *p
  *		dimm_err_correction to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_dimm_err_correction_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_dimm_err_correction_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_dimm_err_correction *p_dimm_err_correction);
 /*!
@@ -4971,7 +4972,7 @@ enum db_return_codes db_save_dimm_err_correction_state(const PersistentStore *p_
  *		struct to put the dimm_err_correction retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_dimm_err_correction_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_dimm_err_correction_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_dimm_err_correction *p_dimm_err_correction);
 /*!
@@ -4985,7 +4986,7 @@ enum db_return_codes db_get_dimm_err_correction_by_device_handle(const Persisten
  *		structure with new values for the dimm_err_correction
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_dimm_err_correction_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_dimm_err_correction_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_dimm_err_correction *p_updated_dimm_err_correction);
 /*!
@@ -4997,7 +4998,7 @@ enum db_return_codes db_update_dimm_err_correction_by_device_handle(const Persis
  *		device_handle points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_dimm_err_correction_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_dimm_err_correction_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle);
 /*!
  * Return number of matching history rows
@@ -5009,7 +5010,7 @@ enum db_return_codes db_delete_dimm_err_correction_by_device_handle(const Persis
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_err_correction_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_err_correction_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_dimm_err_correction_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -5020,7 +5021,7 @@ enum db_return_codes db_delete_dimm_err_correction_by_device_handle(const Persis
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_err_correction_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_err_correction_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_dimm_err_correction_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -5033,7 +5034,7 @@ enum db_return_codes db_delete_dimm_err_correction_by_device_handle(const Persis
  *		history_id of rows to return
  * @return The number of row (to max of dimm_err_correction_count) on success.  DB_FAILURE on failure.
  */
- int db_get_dimm_err_correction_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_dimm_err_correction_history_by_history_id(const PersistentStore *p_ps,
 	struct db_dimm_err_correction *p_dimm_err_correction,
 	int history_id,
 	int dimm_err_correction_count);
@@ -5063,7 +5064,7 @@ struct db_dimm_erasure_coding
  * @return
  *		void
  */
-void db_print_dimm_erasure_coding(struct db_dimm_erasure_coding *p_value);
+NVM_COMMON_API void db_print_dimm_erasure_coding(struct db_dimm_erasure_coding *p_value);
 /*!
  * Create a new row in the dimm_erasure_coding table
  * @ingroup dimm_erasure_coding
@@ -5073,7 +5074,7 @@ void db_print_dimm_erasure_coding(struct db_dimm_erasure_coding *p_value);
  *		Pointer to the object to be saved to the dimm_erasure_coding table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_dimm_erasure_coding(const PersistentStore *p_ps, struct db_dimm_erasure_coding *p_dimm_erasure_coding);
+NVM_COMMON_API enum db_return_codes db_add_dimm_erasure_coding(const PersistentStore *p_ps, struct db_dimm_erasure_coding *p_dimm_erasure_coding);
 /*!
  * Get the total number of dimm_erasure_codings
  * @param[in] p_ps
@@ -5082,7 +5083,7 @@ enum db_return_codes db_add_dimm_erasure_coding(const PersistentStore *p_ps, str
  * 		Set to the number of dimm_erasure_codings
  * @return whether successful or not
  */
-enum db_return_codes db_get_dimm_erasure_coding_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_dimm_erasure_coding_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all dimm_erasure_codings
  * @ingroup dimm_erasure_coding
@@ -5094,7 +5095,7 @@ enum db_return_codes db_get_dimm_erasure_coding_count(const PersistentStore *p_p
  *		Size of p_dimm_erasure_coding
  * @return The number of row (to max of dimm_erasure_coding_count) on success.  DB_FAILURE on failure.
  */
-int db_get_dimm_erasure_codings(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_dimm_erasure_codings(const PersistentStore *p_ps,
 	struct db_dimm_erasure_coding
 	*p_dimm_erasure_coding,
 	int dimm_erasure_coding_count);
@@ -5105,7 +5106,7 @@ int db_get_dimm_erasure_codings(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_dimm_erasure_codings(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_dimm_erasure_codings(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from dimm_erasure_coding history
@@ -5114,7 +5115,7 @@ enum db_return_codes db_delete_all_dimm_erasure_codings(const PersistentStore *p
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_dimm_erasure_coding_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_dimm_erasure_coding_history(const PersistentStore *p_ps);
  
 /*!
  * save dimm_erasure_coding state
@@ -5127,7 +5128,7 @@ enum db_return_codes db_delete_all_dimm_erasure_codings(const PersistentStore *p
  *		dimm_erasure_coding to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_dimm_erasure_coding_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_dimm_erasure_coding_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_dimm_erasure_coding *p_dimm_erasure_coding);
 /*!
@@ -5141,7 +5142,7 @@ enum db_return_codes db_save_dimm_erasure_coding_state(const PersistentStore *p_
  *		struct to put the dimm_erasure_coding retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_dimm_erasure_coding_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_dimm_erasure_coding_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_dimm_erasure_coding *p_dimm_erasure_coding);
 /*!
@@ -5155,7 +5156,7 @@ enum db_return_codes db_get_dimm_erasure_coding_by_device_handle(const Persisten
  *		structure with new values for the dimm_erasure_coding
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_dimm_erasure_coding_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_dimm_erasure_coding_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_dimm_erasure_coding *p_updated_dimm_erasure_coding);
 /*!
@@ -5167,7 +5168,7 @@ enum db_return_codes db_update_dimm_erasure_coding_by_device_handle(const Persis
  *		device_handle points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_dimm_erasure_coding_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_dimm_erasure_coding_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle);
 /*!
  * Return number of matching history rows
@@ -5179,7 +5180,7 @@ enum db_return_codes db_delete_dimm_erasure_coding_by_device_handle(const Persis
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_erasure_coding_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_erasure_coding_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_dimm_erasure_coding_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -5190,7 +5191,7 @@ enum db_return_codes db_delete_dimm_erasure_coding_by_device_handle(const Persis
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_erasure_coding_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_erasure_coding_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_dimm_erasure_coding_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -5203,7 +5204,7 @@ enum db_return_codes db_delete_dimm_erasure_coding_by_device_handle(const Persis
  *		history_id of rows to return
  * @return The number of row (to max of dimm_erasure_coding_count) on success.  DB_FAILURE on failure.
  */
- int db_get_dimm_erasure_coding_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_dimm_erasure_coding_history_by_history_id(const PersistentStore *p_ps,
 	struct db_dimm_erasure_coding *p_dimm_erasure_coding,
 	int history_id,
 	int dimm_erasure_coding_count);
@@ -5231,7 +5232,7 @@ struct db_dimm_thermal
  * @return
  *		void
  */
-void db_print_dimm_thermal(struct db_dimm_thermal *p_value);
+NVM_COMMON_API void db_print_dimm_thermal(struct db_dimm_thermal *p_value);
 /*!
  * Create a new row in the dimm_thermal table
  * @ingroup dimm_thermal
@@ -5241,7 +5242,7 @@ void db_print_dimm_thermal(struct db_dimm_thermal *p_value);
  *		Pointer to the object to be saved to the dimm_thermal table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_dimm_thermal(const PersistentStore *p_ps, struct db_dimm_thermal *p_dimm_thermal);
+NVM_COMMON_API enum db_return_codes db_add_dimm_thermal(const PersistentStore *p_ps, struct db_dimm_thermal *p_dimm_thermal);
 /*!
  * Get the total number of dimm_thermals
  * @param[in] p_ps
@@ -5250,7 +5251,7 @@ enum db_return_codes db_add_dimm_thermal(const PersistentStore *p_ps, struct db_
  * 		Set to the number of dimm_thermals
  * @return whether successful or not
  */
-enum db_return_codes db_get_dimm_thermal_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_dimm_thermal_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all dimm_thermals
  * @ingroup dimm_thermal
@@ -5262,7 +5263,7 @@ enum db_return_codes db_get_dimm_thermal_count(const PersistentStore *p_ps, int 
  *		Size of p_dimm_thermal
  * @return The number of row (to max of dimm_thermal_count) on success.  DB_FAILURE on failure.
  */
-int db_get_dimm_thermals(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_dimm_thermals(const PersistentStore *p_ps,
 	struct db_dimm_thermal
 	*p_dimm_thermal,
 	int dimm_thermal_count);
@@ -5273,7 +5274,7 @@ int db_get_dimm_thermals(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_dimm_thermals(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_dimm_thermals(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from dimm_thermal history
@@ -5282,7 +5283,7 @@ enum db_return_codes db_delete_all_dimm_thermals(const PersistentStore *p_ps);
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_dimm_thermal_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_dimm_thermal_history(const PersistentStore *p_ps);
  
 /*!
  * save dimm_thermal state
@@ -5295,7 +5296,7 @@ enum db_return_codes db_delete_all_dimm_thermals(const PersistentStore *p_ps);
  *		dimm_thermal to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_dimm_thermal_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_dimm_thermal_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_dimm_thermal *p_dimm_thermal);
 /*!
@@ -5309,7 +5310,7 @@ enum db_return_codes db_save_dimm_thermal_state(const PersistentStore *p_ps,
  *		struct to put the dimm_thermal retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_dimm_thermal_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_dimm_thermal_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_dimm_thermal *p_dimm_thermal);
 /*!
@@ -5323,7 +5324,7 @@ enum db_return_codes db_get_dimm_thermal_by_device_handle(const PersistentStore 
  *		structure with new values for the dimm_thermal
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_dimm_thermal_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_dimm_thermal_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_dimm_thermal *p_updated_dimm_thermal);
 /*!
@@ -5335,7 +5336,7 @@ enum db_return_codes db_update_dimm_thermal_by_device_handle(const PersistentSto
  *		device_handle points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_dimm_thermal_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_dimm_thermal_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle);
 /*!
  * Return number of matching history rows
@@ -5347,7 +5348,7 @@ enum db_return_codes db_delete_dimm_thermal_by_device_handle(const PersistentSto
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_thermal_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_thermal_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_dimm_thermal_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -5358,7 +5359,7 @@ enum db_return_codes db_delete_dimm_thermal_by_device_handle(const PersistentSto
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_thermal_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_thermal_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_dimm_thermal_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -5371,7 +5372,7 @@ enum db_return_codes db_delete_dimm_thermal_by_device_handle(const PersistentSto
  *		history_id of rows to return
  * @return The number of row (to max of dimm_thermal_count) on success.  DB_FAILURE on failure.
  */
- int db_get_dimm_thermal_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_dimm_thermal_history_by_history_id(const PersistentStore *p_ps,
 	struct db_dimm_thermal *p_dimm_thermal,
 	int history_id,
 	int dimm_thermal_count);
@@ -5406,7 +5407,7 @@ struct db_dimm_fw_image
  * @return
  *		void
  */
-void db_print_dimm_fw_image(struct db_dimm_fw_image *p_value);
+NVM_COMMON_API void db_print_dimm_fw_image(struct db_dimm_fw_image *p_value);
 /*!
  * Create a new row in the dimm_fw_image table
  * @ingroup dimm_fw_image
@@ -5416,7 +5417,7 @@ void db_print_dimm_fw_image(struct db_dimm_fw_image *p_value);
  *		Pointer to the object to be saved to the dimm_fw_image table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_dimm_fw_image(const PersistentStore *p_ps, struct db_dimm_fw_image *p_dimm_fw_image);
+NVM_COMMON_API enum db_return_codes db_add_dimm_fw_image(const PersistentStore *p_ps, struct db_dimm_fw_image *p_dimm_fw_image);
 /*!
  * Get the total number of dimm_fw_images
  * @param[in] p_ps
@@ -5425,7 +5426,7 @@ enum db_return_codes db_add_dimm_fw_image(const PersistentStore *p_ps, struct db
  * 		Set to the number of dimm_fw_images
  * @return whether successful or not
  */
-enum db_return_codes db_get_dimm_fw_image_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_dimm_fw_image_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all dimm_fw_images
  * @ingroup dimm_fw_image
@@ -5437,7 +5438,7 @@ enum db_return_codes db_get_dimm_fw_image_count(const PersistentStore *p_ps, int
  *		Size of p_dimm_fw_image
  * @return The number of row (to max of dimm_fw_image_count) on success.  DB_FAILURE on failure.
  */
-int db_get_dimm_fw_images(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_dimm_fw_images(const PersistentStore *p_ps,
 	struct db_dimm_fw_image
 	*p_dimm_fw_image,
 	int dimm_fw_image_count);
@@ -5448,7 +5449,7 @@ int db_get_dimm_fw_images(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_dimm_fw_images(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_dimm_fw_images(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from dimm_fw_image history
@@ -5457,7 +5458,7 @@ enum db_return_codes db_delete_all_dimm_fw_images(const PersistentStore *p_ps);
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_dimm_fw_image_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_dimm_fw_image_history(const PersistentStore *p_ps);
  
 /*!
  * save dimm_fw_image state
@@ -5470,7 +5471,7 @@ enum db_return_codes db_delete_all_dimm_fw_images(const PersistentStore *p_ps);
  *		dimm_fw_image to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_dimm_fw_image_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_dimm_fw_image_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_dimm_fw_image *p_dimm_fw_image);
 /*!
@@ -5484,7 +5485,7 @@ enum db_return_codes db_save_dimm_fw_image_state(const PersistentStore *p_ps,
  *		struct to put the dimm_fw_image retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_dimm_fw_image_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_dimm_fw_image_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_dimm_fw_image *p_dimm_fw_image);
 /*!
@@ -5498,7 +5499,7 @@ enum db_return_codes db_get_dimm_fw_image_by_device_handle(const PersistentStore
  *		structure with new values for the dimm_fw_image
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_dimm_fw_image_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_dimm_fw_image_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_dimm_fw_image *p_updated_dimm_fw_image);
 /*!
@@ -5510,7 +5511,7 @@ enum db_return_codes db_update_dimm_fw_image_by_device_handle(const PersistentSt
  *		device_handle points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_dimm_fw_image_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_dimm_fw_image_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle);
 /*!
  * Return number of matching history rows
@@ -5522,7 +5523,7 @@ enum db_return_codes db_delete_dimm_fw_image_by_device_handle(const PersistentSt
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_fw_image_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_fw_image_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_dimm_fw_image_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -5533,7 +5534,7 @@ enum db_return_codes db_delete_dimm_fw_image_by_device_handle(const PersistentSt
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_fw_image_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_fw_image_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_dimm_fw_image_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -5546,7 +5547,7 @@ enum db_return_codes db_delete_dimm_fw_image_by_device_handle(const PersistentSt
  *		history_id of rows to return
  * @return The number of row (to max of dimm_fw_image_count) on success.  DB_FAILURE on failure.
  */
- int db_get_dimm_fw_image_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_dimm_fw_image_history_by_history_id(const PersistentStore *p_ps,
 	struct db_dimm_fw_image *p_dimm_fw_image,
 	int history_id,
 	int dimm_fw_image_count);
@@ -5573,7 +5574,7 @@ struct db_dimm_fw_debug_log
  * @return
  *		void
  */
-void db_print_dimm_fw_debug_log(struct db_dimm_fw_debug_log *p_value);
+NVM_COMMON_API void db_print_dimm_fw_debug_log(struct db_dimm_fw_debug_log *p_value);
 /*!
  * Create a new row in the dimm_fw_debug_log table
  * @ingroup dimm_fw_debug_log
@@ -5583,7 +5584,7 @@ void db_print_dimm_fw_debug_log(struct db_dimm_fw_debug_log *p_value);
  *		Pointer to the object to be saved to the dimm_fw_debug_log table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_dimm_fw_debug_log(const PersistentStore *p_ps, struct db_dimm_fw_debug_log *p_dimm_fw_debug_log);
+NVM_COMMON_API enum db_return_codes db_add_dimm_fw_debug_log(const PersistentStore *p_ps, struct db_dimm_fw_debug_log *p_dimm_fw_debug_log);
 /*!
  * Get the total number of dimm_fw_debug_logs
  * @param[in] p_ps
@@ -5592,7 +5593,7 @@ enum db_return_codes db_add_dimm_fw_debug_log(const PersistentStore *p_ps, struc
  * 		Set to the number of dimm_fw_debug_logs
  * @return whether successful or not
  */
-enum db_return_codes db_get_dimm_fw_debug_log_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_dimm_fw_debug_log_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all dimm_fw_debug_logs
  * @ingroup dimm_fw_debug_log
@@ -5604,7 +5605,7 @@ enum db_return_codes db_get_dimm_fw_debug_log_count(const PersistentStore *p_ps,
  *		Size of p_dimm_fw_debug_log
  * @return The number of row (to max of dimm_fw_debug_log_count) on success.  DB_FAILURE on failure.
  */
-int db_get_dimm_fw_debug_logs(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_dimm_fw_debug_logs(const PersistentStore *p_ps,
 	struct db_dimm_fw_debug_log
 	*p_dimm_fw_debug_log,
 	int dimm_fw_debug_log_count);
@@ -5615,7 +5616,7 @@ int db_get_dimm_fw_debug_logs(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_dimm_fw_debug_logs(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_dimm_fw_debug_logs(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from dimm_fw_debug_log history
@@ -5624,7 +5625,7 @@ enum db_return_codes db_delete_all_dimm_fw_debug_logs(const PersistentStore *p_p
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_dimm_fw_debug_log_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_dimm_fw_debug_log_history(const PersistentStore *p_ps);
  
 /*!
  * save dimm_fw_debug_log state
@@ -5637,7 +5638,7 @@ enum db_return_codes db_delete_all_dimm_fw_debug_logs(const PersistentStore *p_p
  *		dimm_fw_debug_log to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_dimm_fw_debug_log_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_dimm_fw_debug_log_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_dimm_fw_debug_log *p_dimm_fw_debug_log);
 /*!
@@ -5651,7 +5652,7 @@ enum db_return_codes db_save_dimm_fw_debug_log_state(const PersistentStore *p_ps
  *		struct to put the dimm_fw_debug_log retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_dimm_fw_debug_log_by_fw_log(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_dimm_fw_debug_log_by_fw_log(const PersistentStore *p_ps,
 	const char * fw_log,
 	struct db_dimm_fw_debug_log *p_dimm_fw_debug_log);
 /*!
@@ -5665,7 +5666,7 @@ enum db_return_codes db_get_dimm_fw_debug_log_by_fw_log(const PersistentStore *p
  *		structure with new values for the dimm_fw_debug_log
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_dimm_fw_debug_log_by_fw_log(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_dimm_fw_debug_log_by_fw_log(const PersistentStore *p_ps,
 	const char * fw_log,
 	struct db_dimm_fw_debug_log *p_updated_dimm_fw_debug_log);
 /*!
@@ -5677,7 +5678,7 @@ enum db_return_codes db_update_dimm_fw_debug_log_by_fw_log(const PersistentStore
  *		fw_log points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_dimm_fw_debug_log_by_fw_log(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_dimm_fw_debug_log_by_fw_log(const PersistentStore *p_ps,
 	const char * fw_log);
 /*!
  * Return number of matching history rows
@@ -5689,7 +5690,7 @@ enum db_return_codes db_delete_dimm_fw_debug_log_by_fw_log(const PersistentStore
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_fw_debug_log_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_fw_debug_log_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_dimm_fw_debug_log_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -5700,7 +5701,7 @@ enum db_return_codes db_delete_dimm_fw_debug_log_by_fw_log(const PersistentStore
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_fw_debug_log_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_fw_debug_log_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_dimm_fw_debug_log_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -5713,7 +5714,7 @@ enum db_return_codes db_delete_dimm_fw_debug_log_by_fw_log(const PersistentStore
  *		history_id of rows to return
  * @return The number of row (to max of dimm_fw_debug_log_count) on success.  DB_FAILURE on failure.
  */
- int db_get_dimm_fw_debug_log_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_dimm_fw_debug_log_history_by_history_id(const PersistentStore *p_ps,
 	struct db_dimm_fw_debug_log *p_dimm_fw_debug_log,
 	int history_id,
 	int dimm_fw_debug_log_count);
@@ -5728,7 +5729,7 @@ enum db_return_codes db_delete_dimm_fw_debug_log_by_fw_log(const PersistentStore
  *		Resulting count
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_dimm_fw_debug_log_count_by_dimm_topology_device_handle (const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_dimm_fw_debug_log_count_by_dimm_topology_device_handle (const PersistentStore *p_ps,
 	const unsigned int device_handle, int *p_count);
 /*!
  * Return a list of dimm_fw_debug_logs for a given dimm_topology.device_handle
@@ -5743,7 +5744,7 @@ enum db_return_codes db_get_dimm_fw_debug_log_count_by_dimm_topology_device_hand
  *		Size of dimm_fw_debug_log array passed in
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_dimm_fw_debug_logs_by_dimm_topology_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_dimm_fw_debug_logs_by_dimm_topology_device_handle(const PersistentStore *p_ps,
 	unsigned int device_handle,
 	struct db_dimm_fw_debug_log *p_dimm_fw_debug_log,
 	int dimm_fw_debug_log_count);
@@ -5756,7 +5757,7 @@ enum db_return_codes db_get_dimm_fw_debug_logs_by_dimm_topology_device_handle(co
  *		Search dimm_fw_debug_log and get all with passed in device_handle
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_dimm_fw_debug_log_by_dimm_topology_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_dimm_fw_debug_log_by_dimm_topology_device_handle(const PersistentStore *p_ps,
 	unsigned int device_handle);
 /*!
  * @defgroup dimm_memory_info_page0 dimm_memory_info_page0 
@@ -5785,7 +5786,7 @@ struct db_dimm_memory_info_page0
  * @return
  *		void
  */
-void db_print_dimm_memory_info_page0(struct db_dimm_memory_info_page0 *p_value);
+NVM_COMMON_API void db_print_dimm_memory_info_page0(struct db_dimm_memory_info_page0 *p_value);
 /*!
  * Create a new row in the dimm_memory_info_page0 table
  * @ingroup dimm_memory_info_page0
@@ -5795,7 +5796,7 @@ void db_print_dimm_memory_info_page0(struct db_dimm_memory_info_page0 *p_value);
  *		Pointer to the object to be saved to the dimm_memory_info_page0 table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_dimm_memory_info_page0(const PersistentStore *p_ps, struct db_dimm_memory_info_page0 *p_dimm_memory_info_page0);
+NVM_COMMON_API enum db_return_codes db_add_dimm_memory_info_page0(const PersistentStore *p_ps, struct db_dimm_memory_info_page0 *p_dimm_memory_info_page0);
 /*!
  * Get the total number of dimm_memory_info_page0s
  * @param[in] p_ps
@@ -5804,7 +5805,7 @@ enum db_return_codes db_add_dimm_memory_info_page0(const PersistentStore *p_ps, 
  * 		Set to the number of dimm_memory_info_page0s
  * @return whether successful or not
  */
-enum db_return_codes db_get_dimm_memory_info_page0_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_dimm_memory_info_page0_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all dimm_memory_info_page0s
  * @ingroup dimm_memory_info_page0
@@ -5816,7 +5817,7 @@ enum db_return_codes db_get_dimm_memory_info_page0_count(const PersistentStore *
  *		Size of p_dimm_memory_info_page0
  * @return The number of row (to max of dimm_memory_info_page0_count) on success.  DB_FAILURE on failure.
  */
-int db_get_dimm_memory_info_page0s(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_dimm_memory_info_page0s(const PersistentStore *p_ps,
 	struct db_dimm_memory_info_page0
 	*p_dimm_memory_info_page0,
 	int dimm_memory_info_page0_count);
@@ -5827,7 +5828,7 @@ int db_get_dimm_memory_info_page0s(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_dimm_memory_info_page0s(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_dimm_memory_info_page0s(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from dimm_memory_info_page0 history
@@ -5836,7 +5837,7 @@ enum db_return_codes db_delete_all_dimm_memory_info_page0s(const PersistentStore
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_dimm_memory_info_page0_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_dimm_memory_info_page0_history(const PersistentStore *p_ps);
  
 /*!
  * save dimm_memory_info_page0 state
@@ -5849,7 +5850,7 @@ enum db_return_codes db_delete_all_dimm_memory_info_page0s(const PersistentStore
  *		dimm_memory_info_page0 to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_dimm_memory_info_page0_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_dimm_memory_info_page0_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_dimm_memory_info_page0 *p_dimm_memory_info_page0);
 /*!
@@ -5863,7 +5864,7 @@ enum db_return_codes db_save_dimm_memory_info_page0_state(const PersistentStore 
  *		struct to put the dimm_memory_info_page0 retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_dimm_memory_info_page0_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_dimm_memory_info_page0_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_dimm_memory_info_page0 *p_dimm_memory_info_page0);
 /*!
@@ -5877,7 +5878,7 @@ enum db_return_codes db_get_dimm_memory_info_page0_by_device_handle(const Persis
  *		structure with new values for the dimm_memory_info_page0
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_dimm_memory_info_page0_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_dimm_memory_info_page0_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_dimm_memory_info_page0 *p_updated_dimm_memory_info_page0);
 /*!
@@ -5889,7 +5890,7 @@ enum db_return_codes db_update_dimm_memory_info_page0_by_device_handle(const Per
  *		device_handle points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_dimm_memory_info_page0_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_dimm_memory_info_page0_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle);
 /*!
  * Return number of matching history rows
@@ -5901,7 +5902,7 @@ enum db_return_codes db_delete_dimm_memory_info_page0_by_device_handle(const Per
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_memory_info_page0_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_memory_info_page0_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_dimm_memory_info_page0_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -5912,7 +5913,7 @@ enum db_return_codes db_delete_dimm_memory_info_page0_by_device_handle(const Per
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_memory_info_page0_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_memory_info_page0_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_dimm_memory_info_page0_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -5925,7 +5926,7 @@ enum db_return_codes db_delete_dimm_memory_info_page0_by_device_handle(const Per
  *		history_id of rows to return
  * @return The number of row (to max of dimm_memory_info_page0_count) on success.  DB_FAILURE on failure.
  */
- int db_get_dimm_memory_info_page0_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_dimm_memory_info_page0_history_by_history_id(const PersistentStore *p_ps,
 	struct db_dimm_memory_info_page0 *p_dimm_memory_info_page0,
 	int history_id,
 	int dimm_memory_info_page0_count);
@@ -5956,7 +5957,7 @@ struct db_dimm_memory_info_page1
  * @return
  *		void
  */
-void db_print_dimm_memory_info_page1(struct db_dimm_memory_info_page1 *p_value);
+NVM_COMMON_API void db_print_dimm_memory_info_page1(struct db_dimm_memory_info_page1 *p_value);
 /*!
  * Create a new row in the dimm_memory_info_page1 table
  * @ingroup dimm_memory_info_page1
@@ -5966,7 +5967,7 @@ void db_print_dimm_memory_info_page1(struct db_dimm_memory_info_page1 *p_value);
  *		Pointer to the object to be saved to the dimm_memory_info_page1 table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_dimm_memory_info_page1(const PersistentStore *p_ps, struct db_dimm_memory_info_page1 *p_dimm_memory_info_page1);
+NVM_COMMON_API enum db_return_codes db_add_dimm_memory_info_page1(const PersistentStore *p_ps, struct db_dimm_memory_info_page1 *p_dimm_memory_info_page1);
 /*!
  * Get the total number of dimm_memory_info_page1s
  * @param[in] p_ps
@@ -5975,7 +5976,7 @@ enum db_return_codes db_add_dimm_memory_info_page1(const PersistentStore *p_ps, 
  * 		Set to the number of dimm_memory_info_page1s
  * @return whether successful or not
  */
-enum db_return_codes db_get_dimm_memory_info_page1_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_dimm_memory_info_page1_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all dimm_memory_info_page1s
  * @ingroup dimm_memory_info_page1
@@ -5987,7 +5988,7 @@ enum db_return_codes db_get_dimm_memory_info_page1_count(const PersistentStore *
  *		Size of p_dimm_memory_info_page1
  * @return The number of row (to max of dimm_memory_info_page1_count) on success.  DB_FAILURE on failure.
  */
-int db_get_dimm_memory_info_page1s(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_dimm_memory_info_page1s(const PersistentStore *p_ps,
 	struct db_dimm_memory_info_page1
 	*p_dimm_memory_info_page1,
 	int dimm_memory_info_page1_count);
@@ -5998,7 +5999,7 @@ int db_get_dimm_memory_info_page1s(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_dimm_memory_info_page1s(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_dimm_memory_info_page1s(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from dimm_memory_info_page1 history
@@ -6007,7 +6008,7 @@ enum db_return_codes db_delete_all_dimm_memory_info_page1s(const PersistentStore
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_dimm_memory_info_page1_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_dimm_memory_info_page1_history(const PersistentStore *p_ps);
  
 /*!
  * save dimm_memory_info_page1 state
@@ -6020,7 +6021,7 @@ enum db_return_codes db_delete_all_dimm_memory_info_page1s(const PersistentStore
  *		dimm_memory_info_page1 to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_dimm_memory_info_page1_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_dimm_memory_info_page1_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_dimm_memory_info_page1 *p_dimm_memory_info_page1);
 /*!
@@ -6034,7 +6035,7 @@ enum db_return_codes db_save_dimm_memory_info_page1_state(const PersistentStore 
  *		struct to put the dimm_memory_info_page1 retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_dimm_memory_info_page1_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_dimm_memory_info_page1_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_dimm_memory_info_page1 *p_dimm_memory_info_page1);
 /*!
@@ -6048,7 +6049,7 @@ enum db_return_codes db_get_dimm_memory_info_page1_by_device_handle(const Persis
  *		structure with new values for the dimm_memory_info_page1
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_dimm_memory_info_page1_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_dimm_memory_info_page1_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_dimm_memory_info_page1 *p_updated_dimm_memory_info_page1);
 /*!
@@ -6060,7 +6061,7 @@ enum db_return_codes db_update_dimm_memory_info_page1_by_device_handle(const Per
  *		device_handle points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_dimm_memory_info_page1_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_dimm_memory_info_page1_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle);
 /*!
  * Return number of matching history rows
@@ -6072,7 +6073,7 @@ enum db_return_codes db_delete_dimm_memory_info_page1_by_device_handle(const Per
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_memory_info_page1_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_memory_info_page1_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_dimm_memory_info_page1_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -6083,7 +6084,7 @@ enum db_return_codes db_delete_dimm_memory_info_page1_by_device_handle(const Per
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_memory_info_page1_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_memory_info_page1_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_dimm_memory_info_page1_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -6096,7 +6097,7 @@ enum db_return_codes db_delete_dimm_memory_info_page1_by_device_handle(const Per
  *		history_id of rows to return
  * @return The number of row (to max of dimm_memory_info_page1_count) on success.  DB_FAILURE on failure.
  */
- int db_get_dimm_memory_info_page1_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_dimm_memory_info_page1_history_by_history_id(const PersistentStore *p_ps,
 	struct db_dimm_memory_info_page1 *p_dimm_memory_info_page1,
 	int history_id,
 	int dimm_memory_info_page1_count);
@@ -6125,7 +6126,7 @@ struct db_dimm_ars_command_specific_data
  * @return
  *		void
  */
-void db_print_dimm_ars_command_specific_data(struct db_dimm_ars_command_specific_data *p_value);
+NVM_COMMON_API void db_print_dimm_ars_command_specific_data(struct db_dimm_ars_command_specific_data *p_value);
 /*!
  * Create a new row in the dimm_ars_command_specific_data table
  * @ingroup dimm_ars_command_specific_data
@@ -6135,7 +6136,7 @@ void db_print_dimm_ars_command_specific_data(struct db_dimm_ars_command_specific
  *		Pointer to the object to be saved to the dimm_ars_command_specific_data table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_dimm_ars_command_specific_data(const PersistentStore *p_ps, struct db_dimm_ars_command_specific_data *p_dimm_ars_command_specific_data);
+NVM_COMMON_API enum db_return_codes db_add_dimm_ars_command_specific_data(const PersistentStore *p_ps, struct db_dimm_ars_command_specific_data *p_dimm_ars_command_specific_data);
 /*!
  * Get the total number of dimm_ars_command_specific_datas
  * @param[in] p_ps
@@ -6144,7 +6145,7 @@ enum db_return_codes db_add_dimm_ars_command_specific_data(const PersistentStore
  * 		Set to the number of dimm_ars_command_specific_datas
  * @return whether successful or not
  */
-enum db_return_codes db_get_dimm_ars_command_specific_data_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_dimm_ars_command_specific_data_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all dimm_ars_command_specific_datas
  * @ingroup dimm_ars_command_specific_data
@@ -6156,7 +6157,7 @@ enum db_return_codes db_get_dimm_ars_command_specific_data_count(const Persisten
  *		Size of p_dimm_ars_command_specific_data
  * @return The number of row (to max of dimm_ars_command_specific_data_count) on success.  DB_FAILURE on failure.
  */
-int db_get_dimm_ars_command_specific_datas(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_dimm_ars_command_specific_datas(const PersistentStore *p_ps,
 	struct db_dimm_ars_command_specific_data
 	*p_dimm_ars_command_specific_data,
 	int dimm_ars_command_specific_data_count);
@@ -6167,7 +6168,7 @@ int db_get_dimm_ars_command_specific_datas(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_dimm_ars_command_specific_datas(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_dimm_ars_command_specific_datas(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from dimm_ars_command_specific_data history
@@ -6176,7 +6177,7 @@ enum db_return_codes db_delete_all_dimm_ars_command_specific_datas(const Persist
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_dimm_ars_command_specific_data_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_dimm_ars_command_specific_data_history(const PersistentStore *p_ps);
  
 /*!
  * save dimm_ars_command_specific_data state
@@ -6189,7 +6190,7 @@ enum db_return_codes db_delete_all_dimm_ars_command_specific_datas(const Persist
  *		dimm_ars_command_specific_data to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_dimm_ars_command_specific_data_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_dimm_ars_command_specific_data_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_dimm_ars_command_specific_data *p_dimm_ars_command_specific_data);
 /*!
@@ -6203,7 +6204,7 @@ enum db_return_codes db_save_dimm_ars_command_specific_data_state(const Persiste
  *		struct to put the dimm_ars_command_specific_data retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_dimm_ars_command_specific_data_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_dimm_ars_command_specific_data_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_dimm_ars_command_specific_data *p_dimm_ars_command_specific_data);
 /*!
@@ -6217,7 +6218,7 @@ enum db_return_codes db_get_dimm_ars_command_specific_data_by_device_handle(cons
  *		structure with new values for the dimm_ars_command_specific_data
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_dimm_ars_command_specific_data_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_dimm_ars_command_specific_data_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_dimm_ars_command_specific_data *p_updated_dimm_ars_command_specific_data);
 /*!
@@ -6229,7 +6230,7 @@ enum db_return_codes db_update_dimm_ars_command_specific_data_by_device_handle(c
  *		device_handle points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_dimm_ars_command_specific_data_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_dimm_ars_command_specific_data_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle);
 /*!
  * Return number of matching history rows
@@ -6241,7 +6242,7 @@ enum db_return_codes db_delete_dimm_ars_command_specific_data_by_device_handle(c
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_ars_command_specific_data_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_ars_command_specific_data_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_dimm_ars_command_specific_data_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -6252,7 +6253,7 @@ enum db_return_codes db_delete_dimm_ars_command_specific_data_by_device_handle(c
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_ars_command_specific_data_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_ars_command_specific_data_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_dimm_ars_command_specific_data_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -6265,7 +6266,7 @@ enum db_return_codes db_delete_dimm_ars_command_specific_data_by_device_handle(c
  *		history_id of rows to return
  * @return The number of row (to max of dimm_ars_command_specific_data_count) on success.  DB_FAILURE on failure.
  */
- int db_get_dimm_ars_command_specific_data_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_dimm_ars_command_specific_data_history_by_history_id(const PersistentStore *p_ps,
 	struct db_dimm_ars_command_specific_data *p_dimm_ars_command_specific_data,
 	int history_id,
 	int dimm_ars_command_specific_data_count);
@@ -6295,7 +6296,7 @@ struct db_dimm_long_op_status
  * @return
  *		void
  */
-void db_print_dimm_long_op_status(struct db_dimm_long_op_status *p_value);
+NVM_COMMON_API void db_print_dimm_long_op_status(struct db_dimm_long_op_status *p_value);
 /*!
  * Create a new row in the dimm_long_op_status table
  * @ingroup dimm_long_op_status
@@ -6305,7 +6306,7 @@ void db_print_dimm_long_op_status(struct db_dimm_long_op_status *p_value);
  *		Pointer to the object to be saved to the dimm_long_op_status table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_dimm_long_op_status(const PersistentStore *p_ps, struct db_dimm_long_op_status *p_dimm_long_op_status);
+NVM_COMMON_API enum db_return_codes db_add_dimm_long_op_status(const PersistentStore *p_ps, struct db_dimm_long_op_status *p_dimm_long_op_status);
 /*!
  * Get the total number of dimm_long_op_statuss
  * @param[in] p_ps
@@ -6314,7 +6315,7 @@ enum db_return_codes db_add_dimm_long_op_status(const PersistentStore *p_ps, str
  * 		Set to the number of dimm_long_op_statuss
  * @return whether successful or not
  */
-enum db_return_codes db_get_dimm_long_op_status_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_dimm_long_op_status_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all dimm_long_op_statuss
  * @ingroup dimm_long_op_status
@@ -6326,7 +6327,7 @@ enum db_return_codes db_get_dimm_long_op_status_count(const PersistentStore *p_p
  *		Size of p_dimm_long_op_status
  * @return The number of row (to max of dimm_long_op_status_count) on success.  DB_FAILURE on failure.
  */
-int db_get_dimm_long_op_statuss(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_dimm_long_op_statuss(const PersistentStore *p_ps,
 	struct db_dimm_long_op_status
 	*p_dimm_long_op_status,
 	int dimm_long_op_status_count);
@@ -6337,7 +6338,7 @@ int db_get_dimm_long_op_statuss(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_dimm_long_op_statuss(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_dimm_long_op_statuss(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from dimm_long_op_status history
@@ -6346,7 +6347,7 @@ enum db_return_codes db_delete_all_dimm_long_op_statuss(const PersistentStore *p
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_dimm_long_op_status_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_dimm_long_op_status_history(const PersistentStore *p_ps);
  
 /*!
  * save dimm_long_op_status state
@@ -6359,7 +6360,7 @@ enum db_return_codes db_delete_all_dimm_long_op_statuss(const PersistentStore *p
  *		dimm_long_op_status to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_dimm_long_op_status_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_dimm_long_op_status_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_dimm_long_op_status *p_dimm_long_op_status);
 /*!
@@ -6373,7 +6374,7 @@ enum db_return_codes db_save_dimm_long_op_status_state(const PersistentStore *p_
  *		struct to put the dimm_long_op_status retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_dimm_long_op_status_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_dimm_long_op_status_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_dimm_long_op_status *p_dimm_long_op_status);
 /*!
@@ -6387,7 +6388,7 @@ enum db_return_codes db_get_dimm_long_op_status_by_device_handle(const Persisten
  *		structure with new values for the dimm_long_op_status
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_dimm_long_op_status_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_dimm_long_op_status_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_dimm_long_op_status *p_updated_dimm_long_op_status);
 /*!
@@ -6399,7 +6400,7 @@ enum db_return_codes db_update_dimm_long_op_status_by_device_handle(const Persis
  *		device_handle points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_dimm_long_op_status_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_dimm_long_op_status_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle);
 /*!
  * Return number of matching history rows
@@ -6411,7 +6412,7 @@ enum db_return_codes db_delete_dimm_long_op_status_by_device_handle(const Persis
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_long_op_status_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_long_op_status_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_dimm_long_op_status_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -6422,7 +6423,7 @@ enum db_return_codes db_delete_dimm_long_op_status_by_device_handle(const Persis
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_long_op_status_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_long_op_status_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_dimm_long_op_status_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -6435,7 +6436,7 @@ enum db_return_codes db_delete_dimm_long_op_status_by_device_handle(const Persis
  *		history_id of rows to return
  * @return The number of row (to max of dimm_long_op_status_count) on success.  DB_FAILURE on failure.
  */
- int db_get_dimm_long_op_status_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_dimm_long_op_status_history_by_history_id(const PersistentStore *p_ps,
 	struct db_dimm_long_op_status *p_dimm_long_op_status,
 	int history_id,
 	int dimm_long_op_status_count);
@@ -6476,7 +6477,7 @@ struct db_dimm_details
  * @return
  *		void
  */
-void db_print_dimm_details(struct db_dimm_details *p_value);
+NVM_COMMON_API void db_print_dimm_details(struct db_dimm_details *p_value);
 /*!
  * Create a new row in the dimm_details table
  * @ingroup dimm_details
@@ -6486,7 +6487,7 @@ void db_print_dimm_details(struct db_dimm_details *p_value);
  *		Pointer to the object to be saved to the dimm_details table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_dimm_details(const PersistentStore *p_ps, struct db_dimm_details *p_dimm_details);
+NVM_COMMON_API enum db_return_codes db_add_dimm_details(const PersistentStore *p_ps, struct db_dimm_details *p_dimm_details);
 /*!
  * Get the total number of dimm_detailss
  * @param[in] p_ps
@@ -6495,7 +6496,7 @@ enum db_return_codes db_add_dimm_details(const PersistentStore *p_ps, struct db_
  * 		Set to the number of dimm_detailss
  * @return whether successful or not
  */
-enum db_return_codes db_get_dimm_details_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_dimm_details_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all dimm_detailss
  * @ingroup dimm_details
@@ -6507,7 +6508,7 @@ enum db_return_codes db_get_dimm_details_count(const PersistentStore *p_ps, int 
  *		Size of p_dimm_details
  * @return The number of row (to max of dimm_details_count) on success.  DB_FAILURE on failure.
  */
-int db_get_dimm_detailss(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_dimm_detailss(const PersistentStore *p_ps,
 	struct db_dimm_details
 	*p_dimm_details,
 	int dimm_details_count);
@@ -6518,7 +6519,7 @@ int db_get_dimm_detailss(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_dimm_detailss(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_dimm_detailss(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from dimm_details history
@@ -6527,7 +6528,7 @@ enum db_return_codes db_delete_all_dimm_detailss(const PersistentStore *p_ps);
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_dimm_details_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_dimm_details_history(const PersistentStore *p_ps);
  
 /*!
  * save dimm_details state
@@ -6540,7 +6541,7 @@ enum db_return_codes db_delete_all_dimm_detailss(const PersistentStore *p_ps);
  *		dimm_details to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_dimm_details_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_dimm_details_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_dimm_details *p_dimm_details);
 /*!
@@ -6554,7 +6555,7 @@ enum db_return_codes db_save_dimm_details_state(const PersistentStore *p_ps,
  *		struct to put the dimm_details retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_dimm_details_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_dimm_details_by_id(const PersistentStore *p_ps,
 	const unsigned int id,
 	struct db_dimm_details *p_dimm_details);
 /*!
@@ -6568,7 +6569,7 @@ enum db_return_codes db_get_dimm_details_by_id(const PersistentStore *p_ps,
  *		structure with new values for the dimm_details
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_dimm_details_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_dimm_details_by_id(const PersistentStore *p_ps,
 	const unsigned int id,
 	struct db_dimm_details *p_updated_dimm_details);
 /*!
@@ -6580,7 +6581,7 @@ enum db_return_codes db_update_dimm_details_by_id(const PersistentStore *p_ps,
  *		id points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_dimm_details_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_dimm_details_by_id(const PersistentStore *p_ps,
 	const unsigned int id);
 /*!
  * Return number of matching history rows
@@ -6592,7 +6593,7 @@ enum db_return_codes db_delete_dimm_details_by_id(const PersistentStore *p_ps,
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_details_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_details_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_dimm_details_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -6603,7 +6604,7 @@ enum db_return_codes db_delete_dimm_details_by_id(const PersistentStore *p_ps,
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_details_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_details_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_dimm_details_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -6616,7 +6617,7 @@ enum db_return_codes db_delete_dimm_details_by_id(const PersistentStore *p_ps,
  *		history_id of rows to return
  * @return The number of row (to max of dimm_details_count) on success.  DB_FAILURE on failure.
  */
- int db_get_dimm_details_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_dimm_details_history_by_history_id(const PersistentStore *p_ps,
 	struct db_dimm_details *p_dimm_details,
 	int history_id,
 	int dimm_details_count);
@@ -6642,7 +6643,7 @@ struct db_dimm_security_info
  * @return
  *		void
  */
-void db_print_dimm_security_info(struct db_dimm_security_info *p_value);
+NVM_COMMON_API void db_print_dimm_security_info(struct db_dimm_security_info *p_value);
 /*!
  * Create a new row in the dimm_security_info table
  * @ingroup dimm_security_info
@@ -6652,7 +6653,7 @@ void db_print_dimm_security_info(struct db_dimm_security_info *p_value);
  *		Pointer to the object to be saved to the dimm_security_info table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_dimm_security_info(const PersistentStore *p_ps, struct db_dimm_security_info *p_dimm_security_info);
+NVM_COMMON_API enum db_return_codes db_add_dimm_security_info(const PersistentStore *p_ps, struct db_dimm_security_info *p_dimm_security_info);
 /*!
  * Get the total number of dimm_security_infos
  * @param[in] p_ps
@@ -6661,7 +6662,7 @@ enum db_return_codes db_add_dimm_security_info(const PersistentStore *p_ps, stru
  * 		Set to the number of dimm_security_infos
  * @return whether successful or not
  */
-enum db_return_codes db_get_dimm_security_info_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_dimm_security_info_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all dimm_security_infos
  * @ingroup dimm_security_info
@@ -6673,7 +6674,7 @@ enum db_return_codes db_get_dimm_security_info_count(const PersistentStore *p_ps
  *		Size of p_dimm_security_info
  * @return The number of row (to max of dimm_security_info_count) on success.  DB_FAILURE on failure.
  */
-int db_get_dimm_security_infos(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_dimm_security_infos(const PersistentStore *p_ps,
 	struct db_dimm_security_info
 	*p_dimm_security_info,
 	int dimm_security_info_count);
@@ -6684,7 +6685,7 @@ int db_get_dimm_security_infos(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_dimm_security_infos(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_dimm_security_infos(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from dimm_security_info history
@@ -6693,7 +6694,7 @@ enum db_return_codes db_delete_all_dimm_security_infos(const PersistentStore *p_
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_dimm_security_info_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_dimm_security_info_history(const PersistentStore *p_ps);
  
 /*!
  * save dimm_security_info state
@@ -6706,7 +6707,7 @@ enum db_return_codes db_delete_all_dimm_security_infos(const PersistentStore *p_
  *		dimm_security_info to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_dimm_security_info_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_dimm_security_info_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_dimm_security_info *p_dimm_security_info);
 /*!
@@ -6720,7 +6721,7 @@ enum db_return_codes db_save_dimm_security_info_state(const PersistentStore *p_p
  *		struct to put the dimm_security_info retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_dimm_security_info_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_dimm_security_info_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_dimm_security_info *p_dimm_security_info);
 /*!
@@ -6734,7 +6735,7 @@ enum db_return_codes db_get_dimm_security_info_by_device_handle(const Persistent
  *		structure with new values for the dimm_security_info
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_dimm_security_info_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_dimm_security_info_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_dimm_security_info *p_updated_dimm_security_info);
 /*!
@@ -6746,7 +6747,7 @@ enum db_return_codes db_update_dimm_security_info_by_device_handle(const Persist
  *		device_handle points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_dimm_security_info_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_dimm_security_info_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle);
 /*!
  * Return number of matching history rows
@@ -6758,7 +6759,7 @@ enum db_return_codes db_delete_dimm_security_info_by_device_handle(const Persist
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_security_info_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_security_info_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_dimm_security_info_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -6769,7 +6770,7 @@ enum db_return_codes db_delete_dimm_security_info_by_device_handle(const Persist
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_security_info_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_security_info_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_dimm_security_info_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -6782,7 +6783,7 @@ enum db_return_codes db_delete_dimm_security_info_by_device_handle(const Persist
  *		history_id of rows to return
  * @return The number of row (to max of dimm_security_info_count) on success.  DB_FAILURE on failure.
  */
- int db_get_dimm_security_info_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_dimm_security_info_history_by_history_id(const PersistentStore *p_ps,
 	struct db_dimm_security_info *p_dimm_security_info,
 	int history_id,
 	int dimm_security_info_count);
@@ -6809,7 +6810,7 @@ struct db_dimm_sanitize_info
  * @return
  *		void
  */
-void db_print_dimm_sanitize_info(struct db_dimm_sanitize_info *p_value);
+NVM_COMMON_API void db_print_dimm_sanitize_info(struct db_dimm_sanitize_info *p_value);
 /*!
  * Create a new row in the dimm_sanitize_info table
  * @ingroup dimm_sanitize_info
@@ -6819,7 +6820,7 @@ void db_print_dimm_sanitize_info(struct db_dimm_sanitize_info *p_value);
  *		Pointer to the object to be saved to the dimm_sanitize_info table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_dimm_sanitize_info(const PersistentStore *p_ps, struct db_dimm_sanitize_info *p_dimm_sanitize_info);
+NVM_COMMON_API enum db_return_codes db_add_dimm_sanitize_info(const PersistentStore *p_ps, struct db_dimm_sanitize_info *p_dimm_sanitize_info);
 /*!
  * Get the total number of dimm_sanitize_infos
  * @param[in] p_ps
@@ -6828,7 +6829,7 @@ enum db_return_codes db_add_dimm_sanitize_info(const PersistentStore *p_ps, stru
  * 		Set to the number of dimm_sanitize_infos
  * @return whether successful or not
  */
-enum db_return_codes db_get_dimm_sanitize_info_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_dimm_sanitize_info_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all dimm_sanitize_infos
  * @ingroup dimm_sanitize_info
@@ -6840,7 +6841,7 @@ enum db_return_codes db_get_dimm_sanitize_info_count(const PersistentStore *p_ps
  *		Size of p_dimm_sanitize_info
  * @return The number of row (to max of dimm_sanitize_info_count) on success.  DB_FAILURE on failure.
  */
-int db_get_dimm_sanitize_infos(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_dimm_sanitize_infos(const PersistentStore *p_ps,
 	struct db_dimm_sanitize_info
 	*p_dimm_sanitize_info,
 	int dimm_sanitize_info_count);
@@ -6851,7 +6852,7 @@ int db_get_dimm_sanitize_infos(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_dimm_sanitize_infos(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_dimm_sanitize_infos(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from dimm_sanitize_info history
@@ -6860,7 +6861,7 @@ enum db_return_codes db_delete_all_dimm_sanitize_infos(const PersistentStore *p_
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_dimm_sanitize_info_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_dimm_sanitize_info_history(const PersistentStore *p_ps);
  
 /*!
  * save dimm_sanitize_info state
@@ -6873,7 +6874,7 @@ enum db_return_codes db_delete_all_dimm_sanitize_infos(const PersistentStore *p_
  *		dimm_sanitize_info to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_dimm_sanitize_info_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_dimm_sanitize_info_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_dimm_sanitize_info *p_dimm_sanitize_info);
 /*!
@@ -6887,7 +6888,7 @@ enum db_return_codes db_save_dimm_sanitize_info_state(const PersistentStore *p_p
  *		struct to put the dimm_sanitize_info retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_dimm_sanitize_info_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_dimm_sanitize_info_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_dimm_sanitize_info *p_dimm_sanitize_info);
 /*!
@@ -6901,7 +6902,7 @@ enum db_return_codes db_get_dimm_sanitize_info_by_device_handle(const Persistent
  *		structure with new values for the dimm_sanitize_info
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_dimm_sanitize_info_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_dimm_sanitize_info_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_dimm_sanitize_info *p_updated_dimm_sanitize_info);
 /*!
@@ -6913,7 +6914,7 @@ enum db_return_codes db_update_dimm_sanitize_info_by_device_handle(const Persist
  *		device_handle points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_dimm_sanitize_info_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_dimm_sanitize_info_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle);
 /*!
  * Return number of matching history rows
@@ -6925,7 +6926,7 @@ enum db_return_codes db_delete_dimm_sanitize_info_by_device_handle(const Persist
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_sanitize_info_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_sanitize_info_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_dimm_sanitize_info_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -6936,7 +6937,7 @@ enum db_return_codes db_delete_dimm_sanitize_info_by_device_handle(const Persist
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_sanitize_info_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_sanitize_info_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_dimm_sanitize_info_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -6949,7 +6950,7 @@ enum db_return_codes db_delete_dimm_sanitize_info_by_device_handle(const Persist
  *		history_id of rows to return
  * @return The number of row (to max of dimm_sanitize_info_count) on success.  DB_FAILURE on failure.
  */
- int db_get_dimm_sanitize_info_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_dimm_sanitize_info_history_by_history_id(const PersistentStore *p_ps,
 	struct db_dimm_sanitize_info *p_dimm_sanitize_info,
 	int history_id,
 	int dimm_sanitize_info_count);
@@ -6981,7 +6982,7 @@ struct db_fw_media_low_log_entry
  * @return
  *		void
  */
-void db_print_fw_media_low_log_entry(struct db_fw_media_low_log_entry *p_value);
+NVM_COMMON_API void db_print_fw_media_low_log_entry(struct db_fw_media_low_log_entry *p_value);
 /*!
  * Create a new row in the fw_media_low_log_entry table
  * @ingroup fw_media_low_log_entry
@@ -6991,7 +6992,7 @@ void db_print_fw_media_low_log_entry(struct db_fw_media_low_log_entry *p_value);
  *		Pointer to the object to be saved to the fw_media_low_log_entry table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_fw_media_low_log_entry(const PersistentStore *p_ps, struct db_fw_media_low_log_entry *p_fw_media_low_log_entry);
+NVM_COMMON_API enum db_return_codes db_add_fw_media_low_log_entry(const PersistentStore *p_ps, struct db_fw_media_low_log_entry *p_fw_media_low_log_entry);
 /*!
  * Get the total number of fw_media_low_log_entrys
  * @param[in] p_ps
@@ -7000,7 +7001,7 @@ enum db_return_codes db_add_fw_media_low_log_entry(const PersistentStore *p_ps, 
  * 		Set to the number of fw_media_low_log_entrys
  * @return whether successful or not
  */
-enum db_return_codes db_get_fw_media_low_log_entry_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_fw_media_low_log_entry_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all fw_media_low_log_entrys
  * @ingroup fw_media_low_log_entry
@@ -7012,7 +7013,7 @@ enum db_return_codes db_get_fw_media_low_log_entry_count(const PersistentStore *
  *		Size of p_fw_media_low_log_entry
  * @return The number of row (to max of fw_media_low_log_entry_count) on success.  DB_FAILURE on failure.
  */
-int db_get_fw_media_low_log_entrys(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_fw_media_low_log_entrys(const PersistentStore *p_ps,
 	struct db_fw_media_low_log_entry
 	*p_fw_media_low_log_entry,
 	int fw_media_low_log_entry_count);
@@ -7023,7 +7024,7 @@ int db_get_fw_media_low_log_entrys(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_fw_media_low_log_entrys(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_fw_media_low_log_entrys(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from fw_media_low_log_entry history
@@ -7032,7 +7033,7 @@ enum db_return_codes db_delete_all_fw_media_low_log_entrys(const PersistentStore
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_fw_media_low_log_entry_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_fw_media_low_log_entry_history(const PersistentStore *p_ps);
  
 /*!
  * save fw_media_low_log_entry state
@@ -7045,7 +7046,7 @@ enum db_return_codes db_delete_all_fw_media_low_log_entrys(const PersistentStore
  *		fw_media_low_log_entry to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_fw_media_low_log_entry_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_fw_media_low_log_entry_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_fw_media_low_log_entry *p_fw_media_low_log_entry);
 /*!
@@ -7059,7 +7060,7 @@ enum db_return_codes db_save_fw_media_low_log_entry_state(const PersistentStore 
  *		struct to put the fw_media_low_log_entry retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_fw_media_low_log_entry_by_system_timestamp(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_fw_media_low_log_entry_by_system_timestamp(const PersistentStore *p_ps,
 	const unsigned long long system_timestamp,
 	struct db_fw_media_low_log_entry *p_fw_media_low_log_entry);
 /*!
@@ -7073,7 +7074,7 @@ enum db_return_codes db_get_fw_media_low_log_entry_by_system_timestamp(const Per
  *		structure with new values for the fw_media_low_log_entry
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_fw_media_low_log_entry_by_system_timestamp(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_fw_media_low_log_entry_by_system_timestamp(const PersistentStore *p_ps,
 	const unsigned long long system_timestamp,
 	struct db_fw_media_low_log_entry *p_updated_fw_media_low_log_entry);
 /*!
@@ -7085,7 +7086,7 @@ enum db_return_codes db_update_fw_media_low_log_entry_by_system_timestamp(const 
  *		system_timestamp points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_fw_media_low_log_entry_by_system_timestamp(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_fw_media_low_log_entry_by_system_timestamp(const PersistentStore *p_ps,
 	const unsigned long long system_timestamp);
 /*!
  * Return number of matching history rows
@@ -7097,7 +7098,7 @@ enum db_return_codes db_delete_fw_media_low_log_entry_by_system_timestamp(const 
  *		count of rows matching this history_id
  * @return The number of row (to max of fw_media_low_log_entry_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_fw_media_low_log_entry_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_fw_media_low_log_entry_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -7108,7 +7109,7 @@ enum db_return_codes db_delete_fw_media_low_log_entry_by_system_timestamp(const 
  *		count of rows matching this history_id
  * @return The number of row (to max of fw_media_low_log_entry_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_fw_media_low_log_entry_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_fw_media_low_log_entry_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -7121,7 +7122,7 @@ enum db_return_codes db_delete_fw_media_low_log_entry_by_system_timestamp(const 
  *		history_id of rows to return
  * @return The number of row (to max of fw_media_low_log_entry_count) on success.  DB_FAILURE on failure.
  */
- int db_get_fw_media_low_log_entry_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_fw_media_low_log_entry_history_by_history_id(const PersistentStore *p_ps,
 	struct db_fw_media_low_log_entry *p_fw_media_low_log_entry,
 	int history_id,
 	int fw_media_low_log_entry_count);
@@ -7136,7 +7137,7 @@ enum db_return_codes db_delete_fw_media_low_log_entry_by_system_timestamp(const 
  *		Resulting count
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_fw_media_low_log_entry_count_by_dimm_topology_device_handle (const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_fw_media_low_log_entry_count_by_dimm_topology_device_handle (const PersistentStore *p_ps,
 	const unsigned int device_handle, int *p_count);
 /*!
  * Return a list of fw_media_low_log_entrys for a given dimm_topology.device_handle
@@ -7151,7 +7152,7 @@ enum db_return_codes db_get_fw_media_low_log_entry_count_by_dimm_topology_device
  *		Size of fw_media_low_log_entry array passed in
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_fw_media_low_log_entrys_by_dimm_topology_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_fw_media_low_log_entrys_by_dimm_topology_device_handle(const PersistentStore *p_ps,
 	unsigned int device_handle,
 	struct db_fw_media_low_log_entry *p_fw_media_low_log_entry,
 	int fw_media_low_log_entry_count);
@@ -7164,7 +7165,7 @@ enum db_return_codes db_get_fw_media_low_log_entrys_by_dimm_topology_device_hand
  *		Search fw_media_low_log_entry and get all with passed in device_handle
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_fw_media_low_log_entry_by_dimm_topology_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_fw_media_low_log_entry_by_dimm_topology_device_handle(const PersistentStore *p_ps,
 	unsigned int device_handle);
 /*!
  * @defgroup fw_media_high_log_entry fw_media_high_log_entry 
@@ -7194,7 +7195,7 @@ struct db_fw_media_high_log_entry
  * @return
  *		void
  */
-void db_print_fw_media_high_log_entry(struct db_fw_media_high_log_entry *p_value);
+NVM_COMMON_API void db_print_fw_media_high_log_entry(struct db_fw_media_high_log_entry *p_value);
 /*!
  * Create a new row in the fw_media_high_log_entry table
  * @ingroup fw_media_high_log_entry
@@ -7204,7 +7205,7 @@ void db_print_fw_media_high_log_entry(struct db_fw_media_high_log_entry *p_value
  *		Pointer to the object to be saved to the fw_media_high_log_entry table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_fw_media_high_log_entry(const PersistentStore *p_ps, struct db_fw_media_high_log_entry *p_fw_media_high_log_entry);
+NVM_COMMON_API enum db_return_codes db_add_fw_media_high_log_entry(const PersistentStore *p_ps, struct db_fw_media_high_log_entry *p_fw_media_high_log_entry);
 /*!
  * Get the total number of fw_media_high_log_entrys
  * @param[in] p_ps
@@ -7213,7 +7214,7 @@ enum db_return_codes db_add_fw_media_high_log_entry(const PersistentStore *p_ps,
  * 		Set to the number of fw_media_high_log_entrys
  * @return whether successful or not
  */
-enum db_return_codes db_get_fw_media_high_log_entry_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_fw_media_high_log_entry_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all fw_media_high_log_entrys
  * @ingroup fw_media_high_log_entry
@@ -7225,7 +7226,7 @@ enum db_return_codes db_get_fw_media_high_log_entry_count(const PersistentStore 
  *		Size of p_fw_media_high_log_entry
  * @return The number of row (to max of fw_media_high_log_entry_count) on success.  DB_FAILURE on failure.
  */
-int db_get_fw_media_high_log_entrys(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_fw_media_high_log_entrys(const PersistentStore *p_ps,
 	struct db_fw_media_high_log_entry
 	*p_fw_media_high_log_entry,
 	int fw_media_high_log_entry_count);
@@ -7236,7 +7237,7 @@ int db_get_fw_media_high_log_entrys(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_fw_media_high_log_entrys(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_fw_media_high_log_entrys(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from fw_media_high_log_entry history
@@ -7245,7 +7246,7 @@ enum db_return_codes db_delete_all_fw_media_high_log_entrys(const PersistentStor
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_fw_media_high_log_entry_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_fw_media_high_log_entry_history(const PersistentStore *p_ps);
  
 /*!
  * save fw_media_high_log_entry state
@@ -7258,7 +7259,7 @@ enum db_return_codes db_delete_all_fw_media_high_log_entrys(const PersistentStor
  *		fw_media_high_log_entry to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_fw_media_high_log_entry_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_fw_media_high_log_entry_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_fw_media_high_log_entry *p_fw_media_high_log_entry);
 /*!
@@ -7272,7 +7273,7 @@ enum db_return_codes db_save_fw_media_high_log_entry_state(const PersistentStore
  *		struct to put the fw_media_high_log_entry retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_fw_media_high_log_entry_by_system_timestamp(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_fw_media_high_log_entry_by_system_timestamp(const PersistentStore *p_ps,
 	const unsigned long long system_timestamp,
 	struct db_fw_media_high_log_entry *p_fw_media_high_log_entry);
 /*!
@@ -7286,7 +7287,7 @@ enum db_return_codes db_get_fw_media_high_log_entry_by_system_timestamp(const Pe
  *		structure with new values for the fw_media_high_log_entry
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_fw_media_high_log_entry_by_system_timestamp(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_fw_media_high_log_entry_by_system_timestamp(const PersistentStore *p_ps,
 	const unsigned long long system_timestamp,
 	struct db_fw_media_high_log_entry *p_updated_fw_media_high_log_entry);
 /*!
@@ -7298,7 +7299,7 @@ enum db_return_codes db_update_fw_media_high_log_entry_by_system_timestamp(const
  *		system_timestamp points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_fw_media_high_log_entry_by_system_timestamp(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_fw_media_high_log_entry_by_system_timestamp(const PersistentStore *p_ps,
 	const unsigned long long system_timestamp);
 /*!
  * Return number of matching history rows
@@ -7310,7 +7311,7 @@ enum db_return_codes db_delete_fw_media_high_log_entry_by_system_timestamp(const
  *		count of rows matching this history_id
  * @return The number of row (to max of fw_media_high_log_entry_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_fw_media_high_log_entry_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_fw_media_high_log_entry_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -7321,7 +7322,7 @@ enum db_return_codes db_delete_fw_media_high_log_entry_by_system_timestamp(const
  *		count of rows matching this history_id
  * @return The number of row (to max of fw_media_high_log_entry_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_fw_media_high_log_entry_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_fw_media_high_log_entry_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -7334,7 +7335,7 @@ enum db_return_codes db_delete_fw_media_high_log_entry_by_system_timestamp(const
  *		history_id of rows to return
  * @return The number of row (to max of fw_media_high_log_entry_count) on success.  DB_FAILURE on failure.
  */
- int db_get_fw_media_high_log_entry_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_fw_media_high_log_entry_history_by_history_id(const PersistentStore *p_ps,
 	struct db_fw_media_high_log_entry *p_fw_media_high_log_entry,
 	int history_id,
 	int fw_media_high_log_entry_count);
@@ -7349,7 +7350,7 @@ enum db_return_codes db_delete_fw_media_high_log_entry_by_system_timestamp(const
  *		Resulting count
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_fw_media_high_log_entry_count_by_dimm_topology_device_handle (const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_fw_media_high_log_entry_count_by_dimm_topology_device_handle (const PersistentStore *p_ps,
 	const unsigned int device_handle, int *p_count);
 /*!
  * Return a list of fw_media_high_log_entrys for a given dimm_topology.device_handle
@@ -7364,7 +7365,7 @@ enum db_return_codes db_get_fw_media_high_log_entry_count_by_dimm_topology_devic
  *		Size of fw_media_high_log_entry array passed in
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_fw_media_high_log_entrys_by_dimm_topology_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_fw_media_high_log_entrys_by_dimm_topology_device_handle(const PersistentStore *p_ps,
 	unsigned int device_handle,
 	struct db_fw_media_high_log_entry *p_fw_media_high_log_entry,
 	int fw_media_high_log_entry_count);
@@ -7377,7 +7378,7 @@ enum db_return_codes db_get_fw_media_high_log_entrys_by_dimm_topology_device_han
  *		Search fw_media_high_log_entry and get all with passed in device_handle
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_fw_media_high_log_entry_by_dimm_topology_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_fw_media_high_log_entry_by_dimm_topology_device_handle(const PersistentStore *p_ps,
 	unsigned int device_handle);
 /*!
  * @defgroup fw_thermal_low_log_entry fw_thermal_low_log_entry 
@@ -7402,7 +7403,7 @@ struct db_fw_thermal_low_log_entry
  * @return
  *		void
  */
-void db_print_fw_thermal_low_log_entry(struct db_fw_thermal_low_log_entry *p_value);
+NVM_COMMON_API void db_print_fw_thermal_low_log_entry(struct db_fw_thermal_low_log_entry *p_value);
 /*!
  * Create a new row in the fw_thermal_low_log_entry table
  * @ingroup fw_thermal_low_log_entry
@@ -7412,7 +7413,7 @@ void db_print_fw_thermal_low_log_entry(struct db_fw_thermal_low_log_entry *p_val
  *		Pointer to the object to be saved to the fw_thermal_low_log_entry table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_fw_thermal_low_log_entry(const PersistentStore *p_ps, struct db_fw_thermal_low_log_entry *p_fw_thermal_low_log_entry);
+NVM_COMMON_API enum db_return_codes db_add_fw_thermal_low_log_entry(const PersistentStore *p_ps, struct db_fw_thermal_low_log_entry *p_fw_thermal_low_log_entry);
 /*!
  * Get the total number of fw_thermal_low_log_entrys
  * @param[in] p_ps
@@ -7421,7 +7422,7 @@ enum db_return_codes db_add_fw_thermal_low_log_entry(const PersistentStore *p_ps
  * 		Set to the number of fw_thermal_low_log_entrys
  * @return whether successful or not
  */
-enum db_return_codes db_get_fw_thermal_low_log_entry_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_fw_thermal_low_log_entry_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all fw_thermal_low_log_entrys
  * @ingroup fw_thermal_low_log_entry
@@ -7433,7 +7434,7 @@ enum db_return_codes db_get_fw_thermal_low_log_entry_count(const PersistentStore
  *		Size of p_fw_thermal_low_log_entry
  * @return The number of row (to max of fw_thermal_low_log_entry_count) on success.  DB_FAILURE on failure.
  */
-int db_get_fw_thermal_low_log_entrys(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_fw_thermal_low_log_entrys(const PersistentStore *p_ps,
 	struct db_fw_thermal_low_log_entry
 	*p_fw_thermal_low_log_entry,
 	int fw_thermal_low_log_entry_count);
@@ -7444,7 +7445,7 @@ int db_get_fw_thermal_low_log_entrys(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_fw_thermal_low_log_entrys(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_fw_thermal_low_log_entrys(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from fw_thermal_low_log_entry history
@@ -7453,7 +7454,7 @@ enum db_return_codes db_delete_all_fw_thermal_low_log_entrys(const PersistentSto
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_fw_thermal_low_log_entry_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_fw_thermal_low_log_entry_history(const PersistentStore *p_ps);
  
 /*!
  * save fw_thermal_low_log_entry state
@@ -7466,7 +7467,7 @@ enum db_return_codes db_delete_all_fw_thermal_low_log_entrys(const PersistentSto
  *		fw_thermal_low_log_entry to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_fw_thermal_low_log_entry_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_fw_thermal_low_log_entry_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_fw_thermal_low_log_entry *p_fw_thermal_low_log_entry);
 /*!
@@ -7480,7 +7481,7 @@ enum db_return_codes db_save_fw_thermal_low_log_entry_state(const PersistentStor
  *		struct to put the fw_thermal_low_log_entry retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_fw_thermal_low_log_entry_by_system_timestamp(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_fw_thermal_low_log_entry_by_system_timestamp(const PersistentStore *p_ps,
 	const unsigned long long system_timestamp,
 	struct db_fw_thermal_low_log_entry *p_fw_thermal_low_log_entry);
 /*!
@@ -7494,7 +7495,7 @@ enum db_return_codes db_get_fw_thermal_low_log_entry_by_system_timestamp(const P
  *		structure with new values for the fw_thermal_low_log_entry
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_fw_thermal_low_log_entry_by_system_timestamp(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_fw_thermal_low_log_entry_by_system_timestamp(const PersistentStore *p_ps,
 	const unsigned long long system_timestamp,
 	struct db_fw_thermal_low_log_entry *p_updated_fw_thermal_low_log_entry);
 /*!
@@ -7506,7 +7507,7 @@ enum db_return_codes db_update_fw_thermal_low_log_entry_by_system_timestamp(cons
  *		system_timestamp points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_fw_thermal_low_log_entry_by_system_timestamp(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_fw_thermal_low_log_entry_by_system_timestamp(const PersistentStore *p_ps,
 	const unsigned long long system_timestamp);
 /*!
  * Return number of matching history rows
@@ -7518,7 +7519,7 @@ enum db_return_codes db_delete_fw_thermal_low_log_entry_by_system_timestamp(cons
  *		count of rows matching this history_id
  * @return The number of row (to max of fw_thermal_low_log_entry_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_fw_thermal_low_log_entry_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_fw_thermal_low_log_entry_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -7529,7 +7530,7 @@ enum db_return_codes db_delete_fw_thermal_low_log_entry_by_system_timestamp(cons
  *		count of rows matching this history_id
  * @return The number of row (to max of fw_thermal_low_log_entry_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_fw_thermal_low_log_entry_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_fw_thermal_low_log_entry_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -7542,7 +7543,7 @@ enum db_return_codes db_delete_fw_thermal_low_log_entry_by_system_timestamp(cons
  *		history_id of rows to return
  * @return The number of row (to max of fw_thermal_low_log_entry_count) on success.  DB_FAILURE on failure.
  */
- int db_get_fw_thermal_low_log_entry_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_fw_thermal_low_log_entry_history_by_history_id(const PersistentStore *p_ps,
 	struct db_fw_thermal_low_log_entry *p_fw_thermal_low_log_entry,
 	int history_id,
 	int fw_thermal_low_log_entry_count);
@@ -7557,7 +7558,7 @@ enum db_return_codes db_delete_fw_thermal_low_log_entry_by_system_timestamp(cons
  *		Resulting count
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_fw_thermal_low_log_entry_count_by_dimm_topology_device_handle (const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_fw_thermal_low_log_entry_count_by_dimm_topology_device_handle (const PersistentStore *p_ps,
 	const unsigned int device_handle, int *p_count);
 /*!
  * Return a list of fw_thermal_low_log_entrys for a given dimm_topology.device_handle
@@ -7572,7 +7573,7 @@ enum db_return_codes db_get_fw_thermal_low_log_entry_count_by_dimm_topology_devi
  *		Size of fw_thermal_low_log_entry array passed in
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_fw_thermal_low_log_entrys_by_dimm_topology_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_fw_thermal_low_log_entrys_by_dimm_topology_device_handle(const PersistentStore *p_ps,
 	unsigned int device_handle,
 	struct db_fw_thermal_low_log_entry *p_fw_thermal_low_log_entry,
 	int fw_thermal_low_log_entry_count);
@@ -7585,7 +7586,7 @@ enum db_return_codes db_get_fw_thermal_low_log_entrys_by_dimm_topology_device_ha
  *		Search fw_thermal_low_log_entry and get all with passed in device_handle
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_fw_thermal_low_log_entry_by_dimm_topology_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_fw_thermal_low_log_entry_by_dimm_topology_device_handle(const PersistentStore *p_ps,
 	unsigned int device_handle);
 /*!
  * @defgroup fw_thermal_high_log_entry fw_thermal_high_log_entry 
@@ -7610,7 +7611,7 @@ struct db_fw_thermal_high_log_entry
  * @return
  *		void
  */
-void db_print_fw_thermal_high_log_entry(struct db_fw_thermal_high_log_entry *p_value);
+NVM_COMMON_API void db_print_fw_thermal_high_log_entry(struct db_fw_thermal_high_log_entry *p_value);
 /*!
  * Create a new row in the fw_thermal_high_log_entry table
  * @ingroup fw_thermal_high_log_entry
@@ -7620,7 +7621,7 @@ void db_print_fw_thermal_high_log_entry(struct db_fw_thermal_high_log_entry *p_v
  *		Pointer to the object to be saved to the fw_thermal_high_log_entry table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_fw_thermal_high_log_entry(const PersistentStore *p_ps, struct db_fw_thermal_high_log_entry *p_fw_thermal_high_log_entry);
+NVM_COMMON_API enum db_return_codes db_add_fw_thermal_high_log_entry(const PersistentStore *p_ps, struct db_fw_thermal_high_log_entry *p_fw_thermal_high_log_entry);
 /*!
  * Get the total number of fw_thermal_high_log_entrys
  * @param[in] p_ps
@@ -7629,7 +7630,7 @@ enum db_return_codes db_add_fw_thermal_high_log_entry(const PersistentStore *p_p
  * 		Set to the number of fw_thermal_high_log_entrys
  * @return whether successful or not
  */
-enum db_return_codes db_get_fw_thermal_high_log_entry_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_fw_thermal_high_log_entry_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all fw_thermal_high_log_entrys
  * @ingroup fw_thermal_high_log_entry
@@ -7641,7 +7642,7 @@ enum db_return_codes db_get_fw_thermal_high_log_entry_count(const PersistentStor
  *		Size of p_fw_thermal_high_log_entry
  * @return The number of row (to max of fw_thermal_high_log_entry_count) on success.  DB_FAILURE on failure.
  */
-int db_get_fw_thermal_high_log_entrys(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_fw_thermal_high_log_entrys(const PersistentStore *p_ps,
 	struct db_fw_thermal_high_log_entry
 	*p_fw_thermal_high_log_entry,
 	int fw_thermal_high_log_entry_count);
@@ -7652,7 +7653,7 @@ int db_get_fw_thermal_high_log_entrys(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_fw_thermal_high_log_entrys(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_fw_thermal_high_log_entrys(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from fw_thermal_high_log_entry history
@@ -7661,7 +7662,7 @@ enum db_return_codes db_delete_all_fw_thermal_high_log_entrys(const PersistentSt
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_fw_thermal_high_log_entry_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_fw_thermal_high_log_entry_history(const PersistentStore *p_ps);
  
 /*!
  * save fw_thermal_high_log_entry state
@@ -7674,7 +7675,7 @@ enum db_return_codes db_delete_all_fw_thermal_high_log_entrys(const PersistentSt
  *		fw_thermal_high_log_entry to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_fw_thermal_high_log_entry_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_fw_thermal_high_log_entry_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_fw_thermal_high_log_entry *p_fw_thermal_high_log_entry);
 /*!
@@ -7688,7 +7689,7 @@ enum db_return_codes db_save_fw_thermal_high_log_entry_state(const PersistentSto
  *		struct to put the fw_thermal_high_log_entry retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_fw_thermal_high_log_entry_by_system_timestamp(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_fw_thermal_high_log_entry_by_system_timestamp(const PersistentStore *p_ps,
 	const unsigned long long system_timestamp,
 	struct db_fw_thermal_high_log_entry *p_fw_thermal_high_log_entry);
 /*!
@@ -7702,7 +7703,7 @@ enum db_return_codes db_get_fw_thermal_high_log_entry_by_system_timestamp(const 
  *		structure with new values for the fw_thermal_high_log_entry
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_fw_thermal_high_log_entry_by_system_timestamp(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_fw_thermal_high_log_entry_by_system_timestamp(const PersistentStore *p_ps,
 	const unsigned long long system_timestamp,
 	struct db_fw_thermal_high_log_entry *p_updated_fw_thermal_high_log_entry);
 /*!
@@ -7714,7 +7715,7 @@ enum db_return_codes db_update_fw_thermal_high_log_entry_by_system_timestamp(con
  *		system_timestamp points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_fw_thermal_high_log_entry_by_system_timestamp(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_fw_thermal_high_log_entry_by_system_timestamp(const PersistentStore *p_ps,
 	const unsigned long long system_timestamp);
 /*!
  * Return number of matching history rows
@@ -7726,7 +7727,7 @@ enum db_return_codes db_delete_fw_thermal_high_log_entry_by_system_timestamp(con
  *		count of rows matching this history_id
  * @return The number of row (to max of fw_thermal_high_log_entry_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_fw_thermal_high_log_entry_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_fw_thermal_high_log_entry_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -7737,7 +7738,7 @@ enum db_return_codes db_delete_fw_thermal_high_log_entry_by_system_timestamp(con
  *		count of rows matching this history_id
  * @return The number of row (to max of fw_thermal_high_log_entry_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_fw_thermal_high_log_entry_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_fw_thermal_high_log_entry_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -7750,7 +7751,7 @@ enum db_return_codes db_delete_fw_thermal_high_log_entry_by_system_timestamp(con
  *		history_id of rows to return
  * @return The number of row (to max of fw_thermal_high_log_entry_count) on success.  DB_FAILURE on failure.
  */
- int db_get_fw_thermal_high_log_entry_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_fw_thermal_high_log_entry_history_by_history_id(const PersistentStore *p_ps,
 	struct db_fw_thermal_high_log_entry *p_fw_thermal_high_log_entry,
 	int history_id,
 	int fw_thermal_high_log_entry_count);
@@ -7765,7 +7766,7 @@ enum db_return_codes db_delete_fw_thermal_high_log_entry_by_system_timestamp(con
  *		Resulting count
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_fw_thermal_high_log_entry_count_by_dimm_topology_device_handle (const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_fw_thermal_high_log_entry_count_by_dimm_topology_device_handle (const PersistentStore *p_ps,
 	const unsigned int device_handle, int *p_count);
 /*!
  * Return a list of fw_thermal_high_log_entrys for a given dimm_topology.device_handle
@@ -7780,7 +7781,7 @@ enum db_return_codes db_get_fw_thermal_high_log_entry_count_by_dimm_topology_dev
  *		Size of fw_thermal_high_log_entry array passed in
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_fw_thermal_high_log_entrys_by_dimm_topology_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_fw_thermal_high_log_entrys_by_dimm_topology_device_handle(const PersistentStore *p_ps,
 	unsigned int device_handle,
 	struct db_fw_thermal_high_log_entry *p_fw_thermal_high_log_entry,
 	int fw_thermal_high_log_entry_count);
@@ -7793,7 +7794,7 @@ enum db_return_codes db_get_fw_thermal_high_log_entrys_by_dimm_topology_device_h
  *		Search fw_thermal_high_log_entry and get all with passed in device_handle
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_fw_thermal_high_log_entry_by_dimm_topology_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_fw_thermal_high_log_entry_by_dimm_topology_device_handle(const PersistentStore *p_ps,
 	unsigned int device_handle);
 /*!
  * @defgroup fw_media_low_log_info fw_media_low_log_info 
@@ -7821,7 +7822,7 @@ struct db_fw_media_low_log_info
  * @return
  *		void
  */
-void db_print_fw_media_low_log_info(struct db_fw_media_low_log_info *p_value);
+NVM_COMMON_API void db_print_fw_media_low_log_info(struct db_fw_media_low_log_info *p_value);
 /*!
  * Create a new row in the fw_media_low_log_info table
  * @ingroup fw_media_low_log_info
@@ -7831,7 +7832,7 @@ void db_print_fw_media_low_log_info(struct db_fw_media_low_log_info *p_value);
  *		Pointer to the object to be saved to the fw_media_low_log_info table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_fw_media_low_log_info(const PersistentStore *p_ps, struct db_fw_media_low_log_info *p_fw_media_low_log_info);
+NVM_COMMON_API enum db_return_codes db_add_fw_media_low_log_info(const PersistentStore *p_ps, struct db_fw_media_low_log_info *p_fw_media_low_log_info);
 /*!
  * Get the total number of fw_media_low_log_infos
  * @param[in] p_ps
@@ -7840,7 +7841,7 @@ enum db_return_codes db_add_fw_media_low_log_info(const PersistentStore *p_ps, s
  * 		Set to the number of fw_media_low_log_infos
  * @return whether successful or not
  */
-enum db_return_codes db_get_fw_media_low_log_info_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_fw_media_low_log_info_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all fw_media_low_log_infos
  * @ingroup fw_media_low_log_info
@@ -7852,7 +7853,7 @@ enum db_return_codes db_get_fw_media_low_log_info_count(const PersistentStore *p
  *		Size of p_fw_media_low_log_info
  * @return The number of row (to max of fw_media_low_log_info_count) on success.  DB_FAILURE on failure.
  */
-int db_get_fw_media_low_log_infos(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_fw_media_low_log_infos(const PersistentStore *p_ps,
 	struct db_fw_media_low_log_info
 	*p_fw_media_low_log_info,
 	int fw_media_low_log_info_count);
@@ -7863,7 +7864,7 @@ int db_get_fw_media_low_log_infos(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_fw_media_low_log_infos(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_fw_media_low_log_infos(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from fw_media_low_log_info history
@@ -7872,7 +7873,7 @@ enum db_return_codes db_delete_all_fw_media_low_log_infos(const PersistentStore 
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_fw_media_low_log_info_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_fw_media_low_log_info_history(const PersistentStore *p_ps);
  
 /*!
  * save fw_media_low_log_info state
@@ -7885,7 +7886,7 @@ enum db_return_codes db_delete_all_fw_media_low_log_infos(const PersistentStore 
  *		fw_media_low_log_info to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_fw_media_low_log_info_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_fw_media_low_log_info_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_fw_media_low_log_info *p_fw_media_low_log_info);
 /*!
@@ -7899,7 +7900,7 @@ enum db_return_codes db_save_fw_media_low_log_info_state(const PersistentStore *
  *		struct to put the fw_media_low_log_info retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_fw_media_low_log_info_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_fw_media_low_log_info_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_fw_media_low_log_info *p_fw_media_low_log_info);
 /*!
@@ -7913,7 +7914,7 @@ enum db_return_codes db_get_fw_media_low_log_info_by_device_handle(const Persist
  *		structure with new values for the fw_media_low_log_info
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_fw_media_low_log_info_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_fw_media_low_log_info_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_fw_media_low_log_info *p_updated_fw_media_low_log_info);
 /*!
@@ -7925,7 +7926,7 @@ enum db_return_codes db_update_fw_media_low_log_info_by_device_handle(const Pers
  *		device_handle points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_fw_media_low_log_info_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_fw_media_low_log_info_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle);
 /*!
  * Return number of matching history rows
@@ -7937,7 +7938,7 @@ enum db_return_codes db_delete_fw_media_low_log_info_by_device_handle(const Pers
  *		count of rows matching this history_id
  * @return The number of row (to max of fw_media_low_log_info_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_fw_media_low_log_info_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_fw_media_low_log_info_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -7948,7 +7949,7 @@ enum db_return_codes db_delete_fw_media_low_log_info_by_device_handle(const Pers
  *		count of rows matching this history_id
  * @return The number of row (to max of fw_media_low_log_info_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_fw_media_low_log_info_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_fw_media_low_log_info_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -7961,7 +7962,7 @@ enum db_return_codes db_delete_fw_media_low_log_info_by_device_handle(const Pers
  *		history_id of rows to return
  * @return The number of row (to max of fw_media_low_log_info_count) on success.  DB_FAILURE on failure.
  */
- int db_get_fw_media_low_log_info_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_fw_media_low_log_info_history_by_history_id(const PersistentStore *p_ps,
 	struct db_fw_media_low_log_info *p_fw_media_low_log_info,
 	int history_id,
 	int fw_media_low_log_info_count);
@@ -7991,7 +7992,7 @@ struct db_fw_media_high_log_info
  * @return
  *		void
  */
-void db_print_fw_media_high_log_info(struct db_fw_media_high_log_info *p_value);
+NVM_COMMON_API void db_print_fw_media_high_log_info(struct db_fw_media_high_log_info *p_value);
 /*!
  * Create a new row in the fw_media_high_log_info table
  * @ingroup fw_media_high_log_info
@@ -8001,7 +8002,7 @@ void db_print_fw_media_high_log_info(struct db_fw_media_high_log_info *p_value);
  *		Pointer to the object to be saved to the fw_media_high_log_info table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_fw_media_high_log_info(const PersistentStore *p_ps, struct db_fw_media_high_log_info *p_fw_media_high_log_info);
+NVM_COMMON_API enum db_return_codes db_add_fw_media_high_log_info(const PersistentStore *p_ps, struct db_fw_media_high_log_info *p_fw_media_high_log_info);
 /*!
  * Get the total number of fw_media_high_log_infos
  * @param[in] p_ps
@@ -8010,7 +8011,7 @@ enum db_return_codes db_add_fw_media_high_log_info(const PersistentStore *p_ps, 
  * 		Set to the number of fw_media_high_log_infos
  * @return whether successful or not
  */
-enum db_return_codes db_get_fw_media_high_log_info_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_fw_media_high_log_info_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all fw_media_high_log_infos
  * @ingroup fw_media_high_log_info
@@ -8022,7 +8023,7 @@ enum db_return_codes db_get_fw_media_high_log_info_count(const PersistentStore *
  *		Size of p_fw_media_high_log_info
  * @return The number of row (to max of fw_media_high_log_info_count) on success.  DB_FAILURE on failure.
  */
-int db_get_fw_media_high_log_infos(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_fw_media_high_log_infos(const PersistentStore *p_ps,
 	struct db_fw_media_high_log_info
 	*p_fw_media_high_log_info,
 	int fw_media_high_log_info_count);
@@ -8033,7 +8034,7 @@ int db_get_fw_media_high_log_infos(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_fw_media_high_log_infos(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_fw_media_high_log_infos(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from fw_media_high_log_info history
@@ -8042,7 +8043,7 @@ enum db_return_codes db_delete_all_fw_media_high_log_infos(const PersistentStore
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_fw_media_high_log_info_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_fw_media_high_log_info_history(const PersistentStore *p_ps);
  
 /*!
  * save fw_media_high_log_info state
@@ -8055,7 +8056,7 @@ enum db_return_codes db_delete_all_fw_media_high_log_infos(const PersistentStore
  *		fw_media_high_log_info to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_fw_media_high_log_info_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_fw_media_high_log_info_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_fw_media_high_log_info *p_fw_media_high_log_info);
 /*!
@@ -8069,7 +8070,7 @@ enum db_return_codes db_save_fw_media_high_log_info_state(const PersistentStore 
  *		struct to put the fw_media_high_log_info retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_fw_media_high_log_info_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_fw_media_high_log_info_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_fw_media_high_log_info *p_fw_media_high_log_info);
 /*!
@@ -8083,7 +8084,7 @@ enum db_return_codes db_get_fw_media_high_log_info_by_device_handle(const Persis
  *		structure with new values for the fw_media_high_log_info
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_fw_media_high_log_info_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_fw_media_high_log_info_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_fw_media_high_log_info *p_updated_fw_media_high_log_info);
 /*!
@@ -8095,7 +8096,7 @@ enum db_return_codes db_update_fw_media_high_log_info_by_device_handle(const Per
  *		device_handle points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_fw_media_high_log_info_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_fw_media_high_log_info_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle);
 /*!
  * Return number of matching history rows
@@ -8107,7 +8108,7 @@ enum db_return_codes db_delete_fw_media_high_log_info_by_device_handle(const Per
  *		count of rows matching this history_id
  * @return The number of row (to max of fw_media_high_log_info_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_fw_media_high_log_info_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_fw_media_high_log_info_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -8118,7 +8119,7 @@ enum db_return_codes db_delete_fw_media_high_log_info_by_device_handle(const Per
  *		count of rows matching this history_id
  * @return The number of row (to max of fw_media_high_log_info_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_fw_media_high_log_info_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_fw_media_high_log_info_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -8131,7 +8132,7 @@ enum db_return_codes db_delete_fw_media_high_log_info_by_device_handle(const Per
  *		history_id of rows to return
  * @return The number of row (to max of fw_media_high_log_info_count) on success.  DB_FAILURE on failure.
  */
- int db_get_fw_media_high_log_info_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_fw_media_high_log_info_history_by_history_id(const PersistentStore *p_ps,
 	struct db_fw_media_high_log_info *p_fw_media_high_log_info,
 	int history_id,
 	int fw_media_high_log_info_count);
@@ -8161,7 +8162,7 @@ struct db_fw_thermal_low_log_info
  * @return
  *		void
  */
-void db_print_fw_thermal_low_log_info(struct db_fw_thermal_low_log_info *p_value);
+NVM_COMMON_API void db_print_fw_thermal_low_log_info(struct db_fw_thermal_low_log_info *p_value);
 /*!
  * Create a new row in the fw_thermal_low_log_info table
  * @ingroup fw_thermal_low_log_info
@@ -8171,7 +8172,7 @@ void db_print_fw_thermal_low_log_info(struct db_fw_thermal_low_log_info *p_value
  *		Pointer to the object to be saved to the fw_thermal_low_log_info table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_fw_thermal_low_log_info(const PersistentStore *p_ps, struct db_fw_thermal_low_log_info *p_fw_thermal_low_log_info);
+NVM_COMMON_API enum db_return_codes db_add_fw_thermal_low_log_info(const PersistentStore *p_ps, struct db_fw_thermal_low_log_info *p_fw_thermal_low_log_info);
 /*!
  * Get the total number of fw_thermal_low_log_infos
  * @param[in] p_ps
@@ -8180,7 +8181,7 @@ enum db_return_codes db_add_fw_thermal_low_log_info(const PersistentStore *p_ps,
  * 		Set to the number of fw_thermal_low_log_infos
  * @return whether successful or not
  */
-enum db_return_codes db_get_fw_thermal_low_log_info_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_fw_thermal_low_log_info_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all fw_thermal_low_log_infos
  * @ingroup fw_thermal_low_log_info
@@ -8192,7 +8193,7 @@ enum db_return_codes db_get_fw_thermal_low_log_info_count(const PersistentStore 
  *		Size of p_fw_thermal_low_log_info
  * @return The number of row (to max of fw_thermal_low_log_info_count) on success.  DB_FAILURE on failure.
  */
-int db_get_fw_thermal_low_log_infos(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_fw_thermal_low_log_infos(const PersistentStore *p_ps,
 	struct db_fw_thermal_low_log_info
 	*p_fw_thermal_low_log_info,
 	int fw_thermal_low_log_info_count);
@@ -8203,7 +8204,7 @@ int db_get_fw_thermal_low_log_infos(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_fw_thermal_low_log_infos(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_fw_thermal_low_log_infos(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from fw_thermal_low_log_info history
@@ -8212,7 +8213,7 @@ enum db_return_codes db_delete_all_fw_thermal_low_log_infos(const PersistentStor
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_fw_thermal_low_log_info_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_fw_thermal_low_log_info_history(const PersistentStore *p_ps);
  
 /*!
  * save fw_thermal_low_log_info state
@@ -8225,7 +8226,7 @@ enum db_return_codes db_delete_all_fw_thermal_low_log_infos(const PersistentStor
  *		fw_thermal_low_log_info to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_fw_thermal_low_log_info_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_fw_thermal_low_log_info_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_fw_thermal_low_log_info *p_fw_thermal_low_log_info);
 /*!
@@ -8239,7 +8240,7 @@ enum db_return_codes db_save_fw_thermal_low_log_info_state(const PersistentStore
  *		struct to put the fw_thermal_low_log_info retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_fw_thermal_low_log_info_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_fw_thermal_low_log_info_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_fw_thermal_low_log_info *p_fw_thermal_low_log_info);
 /*!
@@ -8253,7 +8254,7 @@ enum db_return_codes db_get_fw_thermal_low_log_info_by_device_handle(const Persi
  *		structure with new values for the fw_thermal_low_log_info
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_fw_thermal_low_log_info_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_fw_thermal_low_log_info_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_fw_thermal_low_log_info *p_updated_fw_thermal_low_log_info);
 /*!
@@ -8265,7 +8266,7 @@ enum db_return_codes db_update_fw_thermal_low_log_info_by_device_handle(const Pe
  *		device_handle points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_fw_thermal_low_log_info_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_fw_thermal_low_log_info_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle);
 /*!
  * Return number of matching history rows
@@ -8277,7 +8278,7 @@ enum db_return_codes db_delete_fw_thermal_low_log_info_by_device_handle(const Pe
  *		count of rows matching this history_id
  * @return The number of row (to max of fw_thermal_low_log_info_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_fw_thermal_low_log_info_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_fw_thermal_low_log_info_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -8288,7 +8289,7 @@ enum db_return_codes db_delete_fw_thermal_low_log_info_by_device_handle(const Pe
  *		count of rows matching this history_id
  * @return The number of row (to max of fw_thermal_low_log_info_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_fw_thermal_low_log_info_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_fw_thermal_low_log_info_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -8301,7 +8302,7 @@ enum db_return_codes db_delete_fw_thermal_low_log_info_by_device_handle(const Pe
  *		history_id of rows to return
  * @return The number of row (to max of fw_thermal_low_log_info_count) on success.  DB_FAILURE on failure.
  */
- int db_get_fw_thermal_low_log_info_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_fw_thermal_low_log_info_history_by_history_id(const PersistentStore *p_ps,
 	struct db_fw_thermal_low_log_info *p_fw_thermal_low_log_info,
 	int history_id,
 	int fw_thermal_low_log_info_count);
@@ -8331,7 +8332,7 @@ struct db_fw_thermal_high_log_info
  * @return
  *		void
  */
-void db_print_fw_thermal_high_log_info(struct db_fw_thermal_high_log_info *p_value);
+NVM_COMMON_API void db_print_fw_thermal_high_log_info(struct db_fw_thermal_high_log_info *p_value);
 /*!
  * Create a new row in the fw_thermal_high_log_info table
  * @ingroup fw_thermal_high_log_info
@@ -8341,7 +8342,7 @@ void db_print_fw_thermal_high_log_info(struct db_fw_thermal_high_log_info *p_val
  *		Pointer to the object to be saved to the fw_thermal_high_log_info table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_fw_thermal_high_log_info(const PersistentStore *p_ps, struct db_fw_thermal_high_log_info *p_fw_thermal_high_log_info);
+NVM_COMMON_API enum db_return_codes db_add_fw_thermal_high_log_info(const PersistentStore *p_ps, struct db_fw_thermal_high_log_info *p_fw_thermal_high_log_info);
 /*!
  * Get the total number of fw_thermal_high_log_infos
  * @param[in] p_ps
@@ -8350,7 +8351,7 @@ enum db_return_codes db_add_fw_thermal_high_log_info(const PersistentStore *p_ps
  * 		Set to the number of fw_thermal_high_log_infos
  * @return whether successful or not
  */
-enum db_return_codes db_get_fw_thermal_high_log_info_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_fw_thermal_high_log_info_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all fw_thermal_high_log_infos
  * @ingroup fw_thermal_high_log_info
@@ -8362,7 +8363,7 @@ enum db_return_codes db_get_fw_thermal_high_log_info_count(const PersistentStore
  *		Size of p_fw_thermal_high_log_info
  * @return The number of row (to max of fw_thermal_high_log_info_count) on success.  DB_FAILURE on failure.
  */
-int db_get_fw_thermal_high_log_infos(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_fw_thermal_high_log_infos(const PersistentStore *p_ps,
 	struct db_fw_thermal_high_log_info
 	*p_fw_thermal_high_log_info,
 	int fw_thermal_high_log_info_count);
@@ -8373,7 +8374,7 @@ int db_get_fw_thermal_high_log_infos(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_fw_thermal_high_log_infos(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_fw_thermal_high_log_infos(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from fw_thermal_high_log_info history
@@ -8382,7 +8383,7 @@ enum db_return_codes db_delete_all_fw_thermal_high_log_infos(const PersistentSto
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_fw_thermal_high_log_info_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_fw_thermal_high_log_info_history(const PersistentStore *p_ps);
  
 /*!
  * save fw_thermal_high_log_info state
@@ -8395,7 +8396,7 @@ enum db_return_codes db_delete_all_fw_thermal_high_log_infos(const PersistentSto
  *		fw_thermal_high_log_info to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_fw_thermal_high_log_info_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_fw_thermal_high_log_info_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_fw_thermal_high_log_info *p_fw_thermal_high_log_info);
 /*!
@@ -8409,7 +8410,7 @@ enum db_return_codes db_save_fw_thermal_high_log_info_state(const PersistentStor
  *		struct to put the fw_thermal_high_log_info retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_fw_thermal_high_log_info_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_fw_thermal_high_log_info_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_fw_thermal_high_log_info *p_fw_thermal_high_log_info);
 /*!
@@ -8423,7 +8424,7 @@ enum db_return_codes db_get_fw_thermal_high_log_info_by_device_handle(const Pers
  *		structure with new values for the fw_thermal_high_log_info
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_fw_thermal_high_log_info_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_fw_thermal_high_log_info_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_fw_thermal_high_log_info *p_updated_fw_thermal_high_log_info);
 /*!
@@ -8435,7 +8436,7 @@ enum db_return_codes db_update_fw_thermal_high_log_info_by_device_handle(const P
  *		device_handle points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_fw_thermal_high_log_info_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_fw_thermal_high_log_info_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle);
 /*!
  * Return number of matching history rows
@@ -8447,7 +8448,7 @@ enum db_return_codes db_delete_fw_thermal_high_log_info_by_device_handle(const P
  *		count of rows matching this history_id
  * @return The number of row (to max of fw_thermal_high_log_info_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_fw_thermal_high_log_info_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_fw_thermal_high_log_info_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -8458,7 +8459,7 @@ enum db_return_codes db_delete_fw_thermal_high_log_info_by_device_handle(const P
  *		count of rows matching this history_id
  * @return The number of row (to max of fw_thermal_high_log_info_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_fw_thermal_high_log_info_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_fw_thermal_high_log_info_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -8471,7 +8472,7 @@ enum db_return_codes db_delete_fw_thermal_high_log_info_by_device_handle(const P
  *		history_id of rows to return
  * @return The number of row (to max of fw_thermal_high_log_info_count) on success.  DB_FAILURE on failure.
  */
- int db_get_fw_thermal_high_log_info_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_fw_thermal_high_log_info_history_by_history_id(const PersistentStore *p_ps,
 	struct db_fw_thermal_high_log_info *p_fw_thermal_high_log_info,
 	int history_id,
 	int fw_thermal_high_log_info_count);
@@ -8497,7 +8498,7 @@ struct db_dimm_fw_log_level
  * @return
  *		void
  */
-void db_print_dimm_fw_log_level(struct db_dimm_fw_log_level *p_value);
+NVM_COMMON_API void db_print_dimm_fw_log_level(struct db_dimm_fw_log_level *p_value);
 /*!
  * Create a new row in the dimm_fw_log_level table
  * @ingroup dimm_fw_log_level
@@ -8507,7 +8508,7 @@ void db_print_dimm_fw_log_level(struct db_dimm_fw_log_level *p_value);
  *		Pointer to the object to be saved to the dimm_fw_log_level table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_dimm_fw_log_level(const PersistentStore *p_ps, struct db_dimm_fw_log_level *p_dimm_fw_log_level);
+NVM_COMMON_API enum db_return_codes db_add_dimm_fw_log_level(const PersistentStore *p_ps, struct db_dimm_fw_log_level *p_dimm_fw_log_level);
 /*!
  * Get the total number of dimm_fw_log_levels
  * @param[in] p_ps
@@ -8516,7 +8517,7 @@ enum db_return_codes db_add_dimm_fw_log_level(const PersistentStore *p_ps, struc
  * 		Set to the number of dimm_fw_log_levels
  * @return whether successful or not
  */
-enum db_return_codes db_get_dimm_fw_log_level_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_dimm_fw_log_level_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all dimm_fw_log_levels
  * @ingroup dimm_fw_log_level
@@ -8528,7 +8529,7 @@ enum db_return_codes db_get_dimm_fw_log_level_count(const PersistentStore *p_ps,
  *		Size of p_dimm_fw_log_level
  * @return The number of row (to max of dimm_fw_log_level_count) on success.  DB_FAILURE on failure.
  */
-int db_get_dimm_fw_log_levels(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_dimm_fw_log_levels(const PersistentStore *p_ps,
 	struct db_dimm_fw_log_level
 	*p_dimm_fw_log_level,
 	int dimm_fw_log_level_count);
@@ -8539,7 +8540,7 @@ int db_get_dimm_fw_log_levels(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_dimm_fw_log_levels(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_dimm_fw_log_levels(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from dimm_fw_log_level history
@@ -8548,7 +8549,7 @@ enum db_return_codes db_delete_all_dimm_fw_log_levels(const PersistentStore *p_p
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_dimm_fw_log_level_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_dimm_fw_log_level_history(const PersistentStore *p_ps);
  
 /*!
  * save dimm_fw_log_level state
@@ -8561,7 +8562,7 @@ enum db_return_codes db_delete_all_dimm_fw_log_levels(const PersistentStore *p_p
  *		dimm_fw_log_level to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_dimm_fw_log_level_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_dimm_fw_log_level_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_dimm_fw_log_level *p_dimm_fw_log_level);
 /*!
@@ -8575,7 +8576,7 @@ enum db_return_codes db_save_dimm_fw_log_level_state(const PersistentStore *p_ps
  *		struct to put the dimm_fw_log_level retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_dimm_fw_log_level_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_dimm_fw_log_level_by_device_handle(const PersistentStore *p_ps,
 	const int device_handle,
 	struct db_dimm_fw_log_level *p_dimm_fw_log_level);
 /*!
@@ -8589,7 +8590,7 @@ enum db_return_codes db_get_dimm_fw_log_level_by_device_handle(const PersistentS
  *		structure with new values for the dimm_fw_log_level
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_dimm_fw_log_level_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_dimm_fw_log_level_by_device_handle(const PersistentStore *p_ps,
 	const int device_handle,
 	struct db_dimm_fw_log_level *p_updated_dimm_fw_log_level);
 /*!
@@ -8601,7 +8602,7 @@ enum db_return_codes db_update_dimm_fw_log_level_by_device_handle(const Persiste
  *		device_handle points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_dimm_fw_log_level_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_dimm_fw_log_level_by_device_handle(const PersistentStore *p_ps,
 	const int device_handle);
 /*!
  * Return number of matching history rows
@@ -8613,7 +8614,7 @@ enum db_return_codes db_delete_dimm_fw_log_level_by_device_handle(const Persiste
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_fw_log_level_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_fw_log_level_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_dimm_fw_log_level_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -8624,7 +8625,7 @@ enum db_return_codes db_delete_dimm_fw_log_level_by_device_handle(const Persiste
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_fw_log_level_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_fw_log_level_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_dimm_fw_log_level_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -8637,7 +8638,7 @@ enum db_return_codes db_delete_dimm_fw_log_level_by_device_handle(const Persiste
  *		history_id of rows to return
  * @return The number of row (to max of dimm_fw_log_level_count) on success.  DB_FAILURE on failure.
  */
- int db_get_dimm_fw_log_level_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_dimm_fw_log_level_history_by_history_id(const PersistentStore *p_ps,
 	struct db_dimm_fw_log_level *p_dimm_fw_log_level,
 	int history_id,
 	int dimm_fw_log_level_count);
@@ -8663,7 +8664,7 @@ struct db_dimm_fw_time
  * @return
  *		void
  */
-void db_print_dimm_fw_time(struct db_dimm_fw_time *p_value);
+NVM_COMMON_API void db_print_dimm_fw_time(struct db_dimm_fw_time *p_value);
 /*!
  * Create a new row in the dimm_fw_time table
  * @ingroup dimm_fw_time
@@ -8673,7 +8674,7 @@ void db_print_dimm_fw_time(struct db_dimm_fw_time *p_value);
  *		Pointer to the object to be saved to the dimm_fw_time table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_dimm_fw_time(const PersistentStore *p_ps, struct db_dimm_fw_time *p_dimm_fw_time);
+NVM_COMMON_API enum db_return_codes db_add_dimm_fw_time(const PersistentStore *p_ps, struct db_dimm_fw_time *p_dimm_fw_time);
 /*!
  * Get the total number of dimm_fw_times
  * @param[in] p_ps
@@ -8682,7 +8683,7 @@ enum db_return_codes db_add_dimm_fw_time(const PersistentStore *p_ps, struct db_
  * 		Set to the number of dimm_fw_times
  * @return whether successful or not
  */
-enum db_return_codes db_get_dimm_fw_time_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_dimm_fw_time_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all dimm_fw_times
  * @ingroup dimm_fw_time
@@ -8694,7 +8695,7 @@ enum db_return_codes db_get_dimm_fw_time_count(const PersistentStore *p_ps, int 
  *		Size of p_dimm_fw_time
  * @return The number of row (to max of dimm_fw_time_count) on success.  DB_FAILURE on failure.
  */
-int db_get_dimm_fw_times(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_dimm_fw_times(const PersistentStore *p_ps,
 	struct db_dimm_fw_time
 	*p_dimm_fw_time,
 	int dimm_fw_time_count);
@@ -8705,7 +8706,7 @@ int db_get_dimm_fw_times(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_dimm_fw_times(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_dimm_fw_times(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from dimm_fw_time history
@@ -8714,7 +8715,7 @@ enum db_return_codes db_delete_all_dimm_fw_times(const PersistentStore *p_ps);
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_dimm_fw_time_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_dimm_fw_time_history(const PersistentStore *p_ps);
  
 /*!
  * save dimm_fw_time state
@@ -8727,7 +8728,7 @@ enum db_return_codes db_delete_all_dimm_fw_times(const PersistentStore *p_ps);
  *		dimm_fw_time to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_dimm_fw_time_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_dimm_fw_time_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_dimm_fw_time *p_dimm_fw_time);
 /*!
@@ -8741,7 +8742,7 @@ enum db_return_codes db_save_dimm_fw_time_state(const PersistentStore *p_ps,
  *		struct to put the dimm_fw_time retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_dimm_fw_time_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_dimm_fw_time_by_device_handle(const PersistentStore *p_ps,
 	const int device_handle,
 	struct db_dimm_fw_time *p_dimm_fw_time);
 /*!
@@ -8755,7 +8756,7 @@ enum db_return_codes db_get_dimm_fw_time_by_device_handle(const PersistentStore 
  *		structure with new values for the dimm_fw_time
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_dimm_fw_time_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_dimm_fw_time_by_device_handle(const PersistentStore *p_ps,
 	const int device_handle,
 	struct db_dimm_fw_time *p_updated_dimm_fw_time);
 /*!
@@ -8767,7 +8768,7 @@ enum db_return_codes db_update_dimm_fw_time_by_device_handle(const PersistentSto
  *		device_handle points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_dimm_fw_time_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_dimm_fw_time_by_device_handle(const PersistentStore *p_ps,
 	const int device_handle);
 /*!
  * Return number of matching history rows
@@ -8779,7 +8780,7 @@ enum db_return_codes db_delete_dimm_fw_time_by_device_handle(const PersistentSto
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_fw_time_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_fw_time_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_dimm_fw_time_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -8790,7 +8791,7 @@ enum db_return_codes db_delete_dimm_fw_time_by_device_handle(const PersistentSto
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_fw_time_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_fw_time_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_dimm_fw_time_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -8803,7 +8804,7 @@ enum db_return_codes db_delete_dimm_fw_time_by_device_handle(const PersistentSto
  *		history_id of rows to return
  * @return The number of row (to max of dimm_fw_time_count) on success.  DB_FAILURE on failure.
  */
- int db_get_dimm_fw_time_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_dimm_fw_time_history_by_history_id(const PersistentStore *p_ps,
 	struct db_dimm_fw_time *p_dimm_fw_time,
 	int history_id,
 	int dimm_fw_time_count);
@@ -8846,7 +8847,7 @@ struct db_dimm_platform_config
  * @return
  *		void
  */
-void db_print_dimm_platform_config(struct db_dimm_platform_config *p_value);
+NVM_COMMON_API void db_print_dimm_platform_config(struct db_dimm_platform_config *p_value);
 /*!
  * Create a new row in the dimm_platform_config table
  * @ingroup dimm_platform_config
@@ -8856,7 +8857,7 @@ void db_print_dimm_platform_config(struct db_dimm_platform_config *p_value);
  *		Pointer to the object to be saved to the dimm_platform_config table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_dimm_platform_config(const PersistentStore *p_ps, struct db_dimm_platform_config *p_dimm_platform_config);
+NVM_COMMON_API enum db_return_codes db_add_dimm_platform_config(const PersistentStore *p_ps, struct db_dimm_platform_config *p_dimm_platform_config);
 /*!
  * Get the total number of dimm_platform_configs
  * @param[in] p_ps
@@ -8865,7 +8866,7 @@ enum db_return_codes db_add_dimm_platform_config(const PersistentStore *p_ps, st
  * 		Set to the number of dimm_platform_configs
  * @return whether successful or not
  */
-enum db_return_codes db_get_dimm_platform_config_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_dimm_platform_config_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all dimm_platform_configs
  * @ingroup dimm_platform_config
@@ -8877,7 +8878,7 @@ enum db_return_codes db_get_dimm_platform_config_count(const PersistentStore *p_
  *		Size of p_dimm_platform_config
  * @return The number of row (to max of dimm_platform_config_count) on success.  DB_FAILURE on failure.
  */
-int db_get_dimm_platform_configs(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_dimm_platform_configs(const PersistentStore *p_ps,
 	struct db_dimm_platform_config
 	*p_dimm_platform_config,
 	int dimm_platform_config_count);
@@ -8888,7 +8889,7 @@ int db_get_dimm_platform_configs(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_dimm_platform_configs(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_dimm_platform_configs(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from dimm_platform_config history
@@ -8897,7 +8898,7 @@ enum db_return_codes db_delete_all_dimm_platform_configs(const PersistentStore *
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_dimm_platform_config_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_dimm_platform_config_history(const PersistentStore *p_ps);
  
 /*!
  * save dimm_platform_config state
@@ -8910,7 +8911,7 @@ enum db_return_codes db_delete_all_dimm_platform_configs(const PersistentStore *
  *		dimm_platform_config to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_dimm_platform_config_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_dimm_platform_config_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_dimm_platform_config *p_dimm_platform_config);
 /*!
@@ -8924,7 +8925,7 @@ enum db_return_codes db_save_dimm_platform_config_state(const PersistentStore *p
  *		struct to put the dimm_platform_config retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_dimm_platform_config_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_dimm_platform_config_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_dimm_platform_config *p_dimm_platform_config);
 /*!
@@ -8938,7 +8939,7 @@ enum db_return_codes db_get_dimm_platform_config_by_device_handle(const Persiste
  *		structure with new values for the dimm_platform_config
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_dimm_platform_config_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_dimm_platform_config_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_dimm_platform_config *p_updated_dimm_platform_config);
 /*!
@@ -8950,7 +8951,7 @@ enum db_return_codes db_update_dimm_platform_config_by_device_handle(const Persi
  *		device_handle points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_dimm_platform_config_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_dimm_platform_config_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle);
 /*!
  * Return number of matching history rows
@@ -8962,7 +8963,7 @@ enum db_return_codes db_delete_dimm_platform_config_by_device_handle(const Persi
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_platform_config_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_platform_config_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_dimm_platform_config_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -8973,7 +8974,7 @@ enum db_return_codes db_delete_dimm_platform_config_by_device_handle(const Persi
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_platform_config_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_platform_config_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_dimm_platform_config_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -8986,7 +8987,7 @@ enum db_return_codes db_delete_dimm_platform_config_by_device_handle(const Persi
  *		history_id of rows to return
  * @return The number of row (to max of dimm_platform_config_count) on success.  DB_FAILURE on failure.
  */
- int db_get_dimm_platform_config_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_dimm_platform_config_history_by_history_id(const PersistentStore *p_ps,
 	struct db_dimm_platform_config *p_dimm_platform_config,
 	int history_id,
 	int dimm_platform_config_count);
@@ -9026,7 +9027,7 @@ struct db_dimm_current_config
  * @return
  *		void
  */
-void db_print_dimm_current_config(struct db_dimm_current_config *p_value);
+NVM_COMMON_API void db_print_dimm_current_config(struct db_dimm_current_config *p_value);
 /*!
  * Create a new row in the dimm_current_config table
  * @ingroup dimm_current_config
@@ -9036,7 +9037,7 @@ void db_print_dimm_current_config(struct db_dimm_current_config *p_value);
  *		Pointer to the object to be saved to the dimm_current_config table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_dimm_current_config(const PersistentStore *p_ps, struct db_dimm_current_config *p_dimm_current_config);
+NVM_COMMON_API enum db_return_codes db_add_dimm_current_config(const PersistentStore *p_ps, struct db_dimm_current_config *p_dimm_current_config);
 /*!
  * Get the total number of dimm_current_configs
  * @param[in] p_ps
@@ -9045,7 +9046,7 @@ enum db_return_codes db_add_dimm_current_config(const PersistentStore *p_ps, str
  * 		Set to the number of dimm_current_configs
  * @return whether successful or not
  */
-enum db_return_codes db_get_dimm_current_config_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_dimm_current_config_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all dimm_current_configs
  * @ingroup dimm_current_config
@@ -9057,7 +9058,7 @@ enum db_return_codes db_get_dimm_current_config_count(const PersistentStore *p_p
  *		Size of p_dimm_current_config
  * @return The number of row (to max of dimm_current_config_count) on success.  DB_FAILURE on failure.
  */
-int db_get_dimm_current_configs(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_dimm_current_configs(const PersistentStore *p_ps,
 	struct db_dimm_current_config
 	*p_dimm_current_config,
 	int dimm_current_config_count);
@@ -9068,7 +9069,7 @@ int db_get_dimm_current_configs(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_dimm_current_configs(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_dimm_current_configs(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from dimm_current_config history
@@ -9077,7 +9078,7 @@ enum db_return_codes db_delete_all_dimm_current_configs(const PersistentStore *p
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_dimm_current_config_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_dimm_current_config_history(const PersistentStore *p_ps);
  
 /*!
  * save dimm_current_config state
@@ -9090,7 +9091,7 @@ enum db_return_codes db_delete_all_dimm_current_configs(const PersistentStore *p
  *		dimm_current_config to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_dimm_current_config_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_dimm_current_config_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_dimm_current_config *p_dimm_current_config);
 /*!
@@ -9104,7 +9105,7 @@ enum db_return_codes db_save_dimm_current_config_state(const PersistentStore *p_
  *		struct to put the dimm_current_config retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_dimm_current_config_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_dimm_current_config_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_dimm_current_config *p_dimm_current_config);
 /*!
@@ -9118,7 +9119,7 @@ enum db_return_codes db_get_dimm_current_config_by_device_handle(const Persisten
  *		structure with new values for the dimm_current_config
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_dimm_current_config_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_dimm_current_config_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_dimm_current_config *p_updated_dimm_current_config);
 /*!
@@ -9130,7 +9131,7 @@ enum db_return_codes db_update_dimm_current_config_by_device_handle(const Persis
  *		device_handle points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_dimm_current_config_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_dimm_current_config_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle);
 /*!
  * Return number of matching history rows
@@ -9142,7 +9143,7 @@ enum db_return_codes db_delete_dimm_current_config_by_device_handle(const Persis
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_current_config_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_current_config_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_dimm_current_config_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -9153,7 +9154,7 @@ enum db_return_codes db_delete_dimm_current_config_by_device_handle(const Persis
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_current_config_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_current_config_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_dimm_current_config_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -9166,7 +9167,7 @@ enum db_return_codes db_delete_dimm_current_config_by_device_handle(const Persis
  *		history_id of rows to return
  * @return The number of row (to max of dimm_current_config_count) on success.  DB_FAILURE on failure.
  */
- int db_get_dimm_current_config_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_dimm_current_config_history_by_history_id(const PersistentStore *p_ps,
 	struct db_dimm_current_config *p_dimm_current_config,
 	int history_id,
 	int dimm_current_config_count);
@@ -9204,7 +9205,7 @@ struct db_dimm_config_input
  * @return
  *		void
  */
-void db_print_dimm_config_input(struct db_dimm_config_input *p_value);
+NVM_COMMON_API void db_print_dimm_config_input(struct db_dimm_config_input *p_value);
 /*!
  * Create a new row in the dimm_config_input table
  * @ingroup dimm_config_input
@@ -9214,7 +9215,7 @@ void db_print_dimm_config_input(struct db_dimm_config_input *p_value);
  *		Pointer to the object to be saved to the dimm_config_input table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_dimm_config_input(const PersistentStore *p_ps, struct db_dimm_config_input *p_dimm_config_input);
+NVM_COMMON_API enum db_return_codes db_add_dimm_config_input(const PersistentStore *p_ps, struct db_dimm_config_input *p_dimm_config_input);
 /*!
  * Get the total number of dimm_config_inputs
  * @param[in] p_ps
@@ -9223,7 +9224,7 @@ enum db_return_codes db_add_dimm_config_input(const PersistentStore *p_ps, struc
  * 		Set to the number of dimm_config_inputs
  * @return whether successful or not
  */
-enum db_return_codes db_get_dimm_config_input_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_dimm_config_input_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all dimm_config_inputs
  * @ingroup dimm_config_input
@@ -9235,7 +9236,7 @@ enum db_return_codes db_get_dimm_config_input_count(const PersistentStore *p_ps,
  *		Size of p_dimm_config_input
  * @return The number of row (to max of dimm_config_input_count) on success.  DB_FAILURE on failure.
  */
-int db_get_dimm_config_inputs(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_dimm_config_inputs(const PersistentStore *p_ps,
 	struct db_dimm_config_input
 	*p_dimm_config_input,
 	int dimm_config_input_count);
@@ -9246,7 +9247,7 @@ int db_get_dimm_config_inputs(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_dimm_config_inputs(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_dimm_config_inputs(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from dimm_config_input history
@@ -9255,7 +9256,7 @@ enum db_return_codes db_delete_all_dimm_config_inputs(const PersistentStore *p_p
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_dimm_config_input_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_dimm_config_input_history(const PersistentStore *p_ps);
  
 /*!
  * save dimm_config_input state
@@ -9268,7 +9269,7 @@ enum db_return_codes db_delete_all_dimm_config_inputs(const PersistentStore *p_p
  *		dimm_config_input to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_dimm_config_input_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_dimm_config_input_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_dimm_config_input *p_dimm_config_input);
 /*!
@@ -9282,7 +9283,7 @@ enum db_return_codes db_save_dimm_config_input_state(const PersistentStore *p_ps
  *		struct to put the dimm_config_input retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_dimm_config_input_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_dimm_config_input_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_dimm_config_input *p_dimm_config_input);
 /*!
@@ -9296,7 +9297,7 @@ enum db_return_codes db_get_dimm_config_input_by_device_handle(const PersistentS
  *		structure with new values for the dimm_config_input
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_dimm_config_input_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_dimm_config_input_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_dimm_config_input *p_updated_dimm_config_input);
 /*!
@@ -9308,7 +9309,7 @@ enum db_return_codes db_update_dimm_config_input_by_device_handle(const Persiste
  *		device_handle points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_dimm_config_input_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_dimm_config_input_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle);
 /*!
  * Return number of matching history rows
@@ -9320,7 +9321,7 @@ enum db_return_codes db_delete_dimm_config_input_by_device_handle(const Persiste
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_config_input_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_config_input_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_dimm_config_input_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -9331,7 +9332,7 @@ enum db_return_codes db_delete_dimm_config_input_by_device_handle(const Persiste
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_config_input_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_config_input_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_dimm_config_input_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -9344,7 +9345,7 @@ enum db_return_codes db_delete_dimm_config_input_by_device_handle(const Persiste
  *		history_id of rows to return
  * @return The number of row (to max of dimm_config_input_count) on success.  DB_FAILURE on failure.
  */
- int db_get_dimm_config_input_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_dimm_config_input_history_by_history_id(const PersistentStore *p_ps,
 	struct db_dimm_config_input *p_dimm_config_input,
 	int history_id,
 	int dimm_config_input_count);
@@ -9383,7 +9384,7 @@ struct db_dimm_config_output
  * @return
  *		void
  */
-void db_print_dimm_config_output(struct db_dimm_config_output *p_value);
+NVM_COMMON_API void db_print_dimm_config_output(struct db_dimm_config_output *p_value);
 /*!
  * Create a new row in the dimm_config_output table
  * @ingroup dimm_config_output
@@ -9393,7 +9394,7 @@ void db_print_dimm_config_output(struct db_dimm_config_output *p_value);
  *		Pointer to the object to be saved to the dimm_config_output table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_dimm_config_output(const PersistentStore *p_ps, struct db_dimm_config_output *p_dimm_config_output);
+NVM_COMMON_API enum db_return_codes db_add_dimm_config_output(const PersistentStore *p_ps, struct db_dimm_config_output *p_dimm_config_output);
 /*!
  * Get the total number of dimm_config_outputs
  * @param[in] p_ps
@@ -9402,7 +9403,7 @@ enum db_return_codes db_add_dimm_config_output(const PersistentStore *p_ps, stru
  * 		Set to the number of dimm_config_outputs
  * @return whether successful or not
  */
-enum db_return_codes db_get_dimm_config_output_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_dimm_config_output_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all dimm_config_outputs
  * @ingroup dimm_config_output
@@ -9414,7 +9415,7 @@ enum db_return_codes db_get_dimm_config_output_count(const PersistentStore *p_ps
  *		Size of p_dimm_config_output
  * @return The number of row (to max of dimm_config_output_count) on success.  DB_FAILURE on failure.
  */
-int db_get_dimm_config_outputs(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_dimm_config_outputs(const PersistentStore *p_ps,
 	struct db_dimm_config_output
 	*p_dimm_config_output,
 	int dimm_config_output_count);
@@ -9425,7 +9426,7 @@ int db_get_dimm_config_outputs(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_dimm_config_outputs(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_dimm_config_outputs(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from dimm_config_output history
@@ -9434,7 +9435,7 @@ enum db_return_codes db_delete_all_dimm_config_outputs(const PersistentStore *p_
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_dimm_config_output_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_dimm_config_output_history(const PersistentStore *p_ps);
  
 /*!
  * save dimm_config_output state
@@ -9447,7 +9448,7 @@ enum db_return_codes db_delete_all_dimm_config_outputs(const PersistentStore *p_
  *		dimm_config_output to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_dimm_config_output_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_dimm_config_output_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_dimm_config_output *p_dimm_config_output);
 /*!
@@ -9461,7 +9462,7 @@ enum db_return_codes db_save_dimm_config_output_state(const PersistentStore *p_p
  *		struct to put the dimm_config_output retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_dimm_config_output_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_dimm_config_output_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_dimm_config_output *p_dimm_config_output);
 /*!
@@ -9475,7 +9476,7 @@ enum db_return_codes db_get_dimm_config_output_by_device_handle(const Persistent
  *		structure with new values for the dimm_config_output
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_dimm_config_output_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_dimm_config_output_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_dimm_config_output *p_updated_dimm_config_output);
 /*!
@@ -9487,7 +9488,7 @@ enum db_return_codes db_update_dimm_config_output_by_device_handle(const Persist
  *		device_handle points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_dimm_config_output_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_dimm_config_output_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle);
 /*!
  * Return number of matching history rows
@@ -9499,7 +9500,7 @@ enum db_return_codes db_delete_dimm_config_output_by_device_handle(const Persist
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_config_output_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_config_output_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_dimm_config_output_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -9510,7 +9511,7 @@ enum db_return_codes db_delete_dimm_config_output_by_device_handle(const Persist
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_config_output_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_config_output_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_dimm_config_output_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -9523,7 +9524,7 @@ enum db_return_codes db_delete_dimm_config_output_by_device_handle(const Persist
  *		history_id of rows to return
  * @return The number of row (to max of dimm_config_output_count) on success.  DB_FAILURE on failure.
  */
- int db_get_dimm_config_output_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_dimm_config_output_history_by_history_id(const PersistentStore *p_ps,
 	struct db_dimm_config_output *p_dimm_config_output,
 	int history_id,
 	int dimm_config_output_count);
@@ -9554,7 +9555,7 @@ struct db_dimm_partition_change
  * @return
  *		void
  */
-void db_print_dimm_partition_change(struct db_dimm_partition_change *p_value);
+NVM_COMMON_API void db_print_dimm_partition_change(struct db_dimm_partition_change *p_value);
 /*!
  * Create a new row in the dimm_partition_change table
  * @ingroup dimm_partition_change
@@ -9564,7 +9565,7 @@ void db_print_dimm_partition_change(struct db_dimm_partition_change *p_value);
  *		Pointer to the object to be saved to the dimm_partition_change table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_dimm_partition_change(const PersistentStore *p_ps, struct db_dimm_partition_change *p_dimm_partition_change);
+NVM_COMMON_API enum db_return_codes db_add_dimm_partition_change(const PersistentStore *p_ps, struct db_dimm_partition_change *p_dimm_partition_change);
 /*!
  * Get the total number of dimm_partition_changes
  * @param[in] p_ps
@@ -9573,7 +9574,7 @@ enum db_return_codes db_add_dimm_partition_change(const PersistentStore *p_ps, s
  * 		Set to the number of dimm_partition_changes
  * @return whether successful or not
  */
-enum db_return_codes db_get_dimm_partition_change_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_dimm_partition_change_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all dimm_partition_changes
  * @ingroup dimm_partition_change
@@ -9585,7 +9586,7 @@ enum db_return_codes db_get_dimm_partition_change_count(const PersistentStore *p
  *		Size of p_dimm_partition_change
  * @return The number of row (to max of dimm_partition_change_count) on success.  DB_FAILURE on failure.
  */
-int db_get_dimm_partition_changes(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_dimm_partition_changes(const PersistentStore *p_ps,
 	struct db_dimm_partition_change
 	*p_dimm_partition_change,
 	int dimm_partition_change_count);
@@ -9596,7 +9597,7 @@ int db_get_dimm_partition_changes(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_dimm_partition_changes(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_dimm_partition_changes(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from dimm_partition_change history
@@ -9605,7 +9606,7 @@ enum db_return_codes db_delete_all_dimm_partition_changes(const PersistentStore 
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_dimm_partition_change_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_dimm_partition_change_history(const PersistentStore *p_ps);
  
 /*!
  * save dimm_partition_change state
@@ -9618,7 +9619,7 @@ enum db_return_codes db_delete_all_dimm_partition_changes(const PersistentStore 
  *		dimm_partition_change to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_dimm_partition_change_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_dimm_partition_change_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_dimm_partition_change *p_dimm_partition_change);
 /*!
@@ -9632,7 +9633,7 @@ enum db_return_codes db_save_dimm_partition_change_state(const PersistentStore *
  *		struct to put the dimm_partition_change retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_dimm_partition_change_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_dimm_partition_change_by_id(const PersistentStore *p_ps,
 	const int id,
 	struct db_dimm_partition_change *p_dimm_partition_change);
 /*!
@@ -9646,7 +9647,7 @@ enum db_return_codes db_get_dimm_partition_change_by_id(const PersistentStore *p
  *		structure with new values for the dimm_partition_change
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_dimm_partition_change_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_dimm_partition_change_by_id(const PersistentStore *p_ps,
 	const int id,
 	struct db_dimm_partition_change *p_updated_dimm_partition_change);
 /*!
@@ -9658,7 +9659,7 @@ enum db_return_codes db_update_dimm_partition_change_by_id(const PersistentStore
  *		id points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_dimm_partition_change_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_dimm_partition_change_by_id(const PersistentStore *p_ps,
 	const int id);
 /*!
  * Return number of matching history rows
@@ -9670,7 +9671,7 @@ enum db_return_codes db_delete_dimm_partition_change_by_id(const PersistentStore
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_partition_change_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_partition_change_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_dimm_partition_change_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -9681,7 +9682,7 @@ enum db_return_codes db_delete_dimm_partition_change_by_id(const PersistentStore
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_partition_change_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_partition_change_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_dimm_partition_change_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -9694,7 +9695,7 @@ enum db_return_codes db_delete_dimm_partition_change_by_id(const PersistentStore
  *		history_id of rows to return
  * @return The number of row (to max of dimm_partition_change_count) on success.  DB_FAILURE on failure.
  */
- int db_get_dimm_partition_change_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_dimm_partition_change_history_by_history_id(const PersistentStore *p_ps,
 	struct db_dimm_partition_change *p_dimm_partition_change,
 	int history_id,
 	int dimm_partition_change_count);
@@ -9709,7 +9710,7 @@ enum db_return_codes db_delete_dimm_partition_change_by_id(const PersistentStore
  *		Resulting count
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_dimm_partition_change_count_by_dimm_topology_device_handle (const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_dimm_partition_change_count_by_dimm_topology_device_handle (const PersistentStore *p_ps,
 	const unsigned int device_handle, int *p_count);
 /*!
  * Return a list of dimm_partition_changes for a given dimm_topology.device_handle
@@ -9724,7 +9725,7 @@ enum db_return_codes db_get_dimm_partition_change_count_by_dimm_topology_device_
  *		Size of dimm_partition_change array passed in
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_dimm_partition_changes_by_dimm_topology_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_dimm_partition_changes_by_dimm_topology_device_handle(const PersistentStore *p_ps,
 	unsigned int device_handle,
 	struct db_dimm_partition_change *p_dimm_partition_change,
 	int dimm_partition_change_count);
@@ -9737,7 +9738,7 @@ enum db_return_codes db_get_dimm_partition_changes_by_dimm_topology_device_handl
  *		Search dimm_partition_change and get all with passed in device_handle
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_dimm_partition_change_by_dimm_topology_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_dimm_partition_change_by_dimm_topology_device_handle(const PersistentStore *p_ps,
 	unsigned int device_handle);
 /*!
  * Roll dimm_partition_changes by id to specified max.
@@ -9748,7 +9749,7 @@ enum db_return_codes db_delete_dimm_partition_change_by_dimm_topology_device_han
  *		The max table size
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_roll_dimm_partition_changes_by_id(const PersistentStore *p_ps, int max_rows);
+NVM_COMMON_API enum db_return_codes db_roll_dimm_partition_changes_by_id(const PersistentStore *p_ps, int max_rows);
 /*!
  * Get the max id in the dimm_partition_change table.
  * @ingroup dimm_partition_change
@@ -9758,7 +9759,7 @@ enum db_return_codes db_roll_dimm_partition_changes_by_id(const PersistentStore 
  *		The max id
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_next_dimm_partition_change_id(const PersistentStore *p_ps, int *p_max);
+NVM_COMMON_API enum db_return_codes db_get_next_dimm_partition_change_id(const PersistentStore *p_ps, int *p_max);
 /*!
  * @defgroup dimm_interleave_set dimm_interleave_set 
  * @ingroup db_schema
@@ -9790,7 +9791,7 @@ struct db_dimm_interleave_set
  * @return
  *		void
  */
-void db_print_dimm_interleave_set(struct db_dimm_interleave_set *p_value);
+NVM_COMMON_API void db_print_dimm_interleave_set(struct db_dimm_interleave_set *p_value);
 /*!
  * Create a new row in the dimm_interleave_set table
  * @ingroup dimm_interleave_set
@@ -9800,7 +9801,7 @@ void db_print_dimm_interleave_set(struct db_dimm_interleave_set *p_value);
  *		Pointer to the object to be saved to the dimm_interleave_set table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_dimm_interleave_set(const PersistentStore *p_ps, struct db_dimm_interleave_set *p_dimm_interleave_set);
+NVM_COMMON_API enum db_return_codes db_add_dimm_interleave_set(const PersistentStore *p_ps, struct db_dimm_interleave_set *p_dimm_interleave_set);
 /*!
  * Get the total number of dimm_interleave_sets
  * @param[in] p_ps
@@ -9809,7 +9810,7 @@ enum db_return_codes db_add_dimm_interleave_set(const PersistentStore *p_ps, str
  * 		Set to the number of dimm_interleave_sets
  * @return whether successful or not
  */
-enum db_return_codes db_get_dimm_interleave_set_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_dimm_interleave_set_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all dimm_interleave_sets
  * @ingroup dimm_interleave_set
@@ -9821,7 +9822,7 @@ enum db_return_codes db_get_dimm_interleave_set_count(const PersistentStore *p_p
  *		Size of p_dimm_interleave_set
  * @return The number of row (to max of dimm_interleave_set_count) on success.  DB_FAILURE on failure.
  */
-int db_get_dimm_interleave_sets(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_dimm_interleave_sets(const PersistentStore *p_ps,
 	struct db_dimm_interleave_set
 	*p_dimm_interleave_set,
 	int dimm_interleave_set_count);
@@ -9832,7 +9833,7 @@ int db_get_dimm_interleave_sets(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_dimm_interleave_sets(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_dimm_interleave_sets(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from dimm_interleave_set history
@@ -9841,7 +9842,7 @@ enum db_return_codes db_delete_all_dimm_interleave_sets(const PersistentStore *p
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_dimm_interleave_set_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_dimm_interleave_set_history(const PersistentStore *p_ps);
  
 /*!
  * save dimm_interleave_set state
@@ -9854,7 +9855,7 @@ enum db_return_codes db_delete_all_dimm_interleave_sets(const PersistentStore *p
  *		dimm_interleave_set to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_dimm_interleave_set_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_dimm_interleave_set_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_dimm_interleave_set *p_dimm_interleave_set);
 /*!
@@ -9868,7 +9869,7 @@ enum db_return_codes db_save_dimm_interleave_set_state(const PersistentStore *p_
  *		struct to put the dimm_interleave_set retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_dimm_interleave_set_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_dimm_interleave_set_by_id(const PersistentStore *p_ps,
 	const int id,
 	struct db_dimm_interleave_set *p_dimm_interleave_set);
 /*!
@@ -9882,7 +9883,7 @@ enum db_return_codes db_get_dimm_interleave_set_by_id(const PersistentStore *p_p
  *		structure with new values for the dimm_interleave_set
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_dimm_interleave_set_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_dimm_interleave_set_by_id(const PersistentStore *p_ps,
 	const int id,
 	struct db_dimm_interleave_set *p_updated_dimm_interleave_set);
 /*!
@@ -9894,7 +9895,7 @@ enum db_return_codes db_update_dimm_interleave_set_by_id(const PersistentStore *
  *		id points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_dimm_interleave_set_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_dimm_interleave_set_by_id(const PersistentStore *p_ps,
 	const int id);
 /*!
  * Return number of matching history rows
@@ -9906,7 +9907,7 @@ enum db_return_codes db_delete_dimm_interleave_set_by_id(const PersistentStore *
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_interleave_set_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_interleave_set_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_dimm_interleave_set_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -9917,7 +9918,7 @@ enum db_return_codes db_delete_dimm_interleave_set_by_id(const PersistentStore *
  *		count of rows matching this history_id
  * @return The number of row (to max of dimm_interleave_set_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_dimm_interleave_set_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_dimm_interleave_set_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -9930,7 +9931,7 @@ enum db_return_codes db_delete_dimm_interleave_set_by_id(const PersistentStore *
  *		history_id of rows to return
  * @return The number of row (to max of dimm_interleave_set_count) on success.  DB_FAILURE on failure.
  */
- int db_get_dimm_interleave_set_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_dimm_interleave_set_history_by_history_id(const PersistentStore *p_ps,
 	struct db_dimm_interleave_set *p_dimm_interleave_set,
 	int history_id,
 	int dimm_interleave_set_count);
@@ -9943,7 +9944,7 @@ enum db_return_codes db_delete_dimm_interleave_set_by_id(const PersistentStore *
  *		The max table size
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_roll_dimm_interleave_sets_by_id(const PersistentStore *p_ps, int max_rows);
+NVM_COMMON_API enum db_return_codes db_roll_dimm_interleave_sets_by_id(const PersistentStore *p_ps, int max_rows);
 /*!
  * Get the max id in the dimm_interleave_set table.
  * @ingroup dimm_interleave_set
@@ -9953,7 +9954,7 @@ enum db_return_codes db_roll_dimm_interleave_sets_by_id(const PersistentStore *p
  *		The max id
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_next_dimm_interleave_set_id(const PersistentStore *p_ps, int *p_max);
+NVM_COMMON_API enum db_return_codes db_get_next_dimm_interleave_set_id(const PersistentStore *p_ps, int *p_max);
 /*!
  * Return the number of dimm_interleave_sets for a given dimm_topology.device_handle
  * @ingroup dimm_interleave_set
@@ -9965,7 +9966,7 @@ enum db_return_codes db_get_next_dimm_interleave_set_id(const PersistentStore *p
  *		Resulting count
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_dimm_interleave_set_count_by_dimm_topology_device_handle (const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_dimm_interleave_set_count_by_dimm_topology_device_handle (const PersistentStore *p_ps,
 	const unsigned int device_handle, int *p_count);
 /*!
  * Return a list of dimm_interleave_sets for a given dimm_topology.device_handle
@@ -9980,7 +9981,7 @@ enum db_return_codes db_get_dimm_interleave_set_count_by_dimm_topology_device_ha
  *		Size of dimm_interleave_set array passed in
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_dimm_interleave_sets_by_dimm_topology_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_dimm_interleave_sets_by_dimm_topology_device_handle(const PersistentStore *p_ps,
 	unsigned int device_handle,
 	struct db_dimm_interleave_set *p_dimm_interleave_set,
 	int dimm_interleave_set_count);
@@ -9993,7 +9994,7 @@ enum db_return_codes db_get_dimm_interleave_sets_by_dimm_topology_device_handle(
  *		Search dimm_interleave_set and get all with passed in device_handle
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_dimm_interleave_set_by_dimm_topology_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_dimm_interleave_set_by_dimm_topology_device_handle(const PersistentStore *p_ps,
 	unsigned int device_handle);
 /*!
  * @defgroup interleave_set_dimm_info_v1 interleave_set_dimm_info_v1 
@@ -10025,7 +10026,7 @@ struct db_interleave_set_dimm_info_v1
  * @return
  *		void
  */
-void db_print_interleave_set_dimm_info_v1(struct db_interleave_set_dimm_info_v1 *p_value);
+NVM_COMMON_API void db_print_interleave_set_dimm_info_v1(struct db_interleave_set_dimm_info_v1 *p_value);
 /*!
  * Create a new row in the interleave_set_dimm_info_v1 table
  * @ingroup interleave_set_dimm_info_v1
@@ -10035,7 +10036,7 @@ void db_print_interleave_set_dimm_info_v1(struct db_interleave_set_dimm_info_v1 
  *		Pointer to the object to be saved to the interleave_set_dimm_info_v1 table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_interleave_set_dimm_info_v1(const PersistentStore *p_ps, struct db_interleave_set_dimm_info_v1 *p_interleave_set_dimm_info_v1);
+NVM_COMMON_API enum db_return_codes db_add_interleave_set_dimm_info_v1(const PersistentStore *p_ps, struct db_interleave_set_dimm_info_v1 *p_interleave_set_dimm_info_v1);
 /*!
  * Get the total number of interleave_set_dimm_info_v1s
  * @param[in] p_ps
@@ -10044,7 +10045,7 @@ enum db_return_codes db_add_interleave_set_dimm_info_v1(const PersistentStore *p
  * 		Set to the number of interleave_set_dimm_info_v1s
  * @return whether successful or not
  */
-enum db_return_codes db_get_interleave_set_dimm_info_v1_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_interleave_set_dimm_info_v1_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all interleave_set_dimm_info_v1s
  * @ingroup interleave_set_dimm_info_v1
@@ -10056,7 +10057,7 @@ enum db_return_codes db_get_interleave_set_dimm_info_v1_count(const PersistentSt
  *		Size of p_interleave_set_dimm_info_v1
  * @return The number of row (to max of interleave_set_dimm_info_v1_count) on success.  DB_FAILURE on failure.
  */
-int db_get_interleave_set_dimm_info_v1s(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_interleave_set_dimm_info_v1s(const PersistentStore *p_ps,
 	struct db_interleave_set_dimm_info_v1
 	*p_interleave_set_dimm_info_v1,
 	int interleave_set_dimm_info_v1_count);
@@ -10067,7 +10068,7 @@ int db_get_interleave_set_dimm_info_v1s(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_interleave_set_dimm_info_v1s(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_interleave_set_dimm_info_v1s(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from interleave_set_dimm_info_v1 history
@@ -10076,7 +10077,7 @@ enum db_return_codes db_delete_all_interleave_set_dimm_info_v1s(const Persistent
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_interleave_set_dimm_info_v1_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_interleave_set_dimm_info_v1_history(const PersistentStore *p_ps);
  
 /*!
  * save interleave_set_dimm_info_v1 state
@@ -10089,7 +10090,7 @@ enum db_return_codes db_delete_all_interleave_set_dimm_info_v1s(const Persistent
  *		interleave_set_dimm_info_v1 to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_interleave_set_dimm_info_v1_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_interleave_set_dimm_info_v1_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_interleave_set_dimm_info_v1 *p_interleave_set_dimm_info_v1);
 /*!
@@ -10103,7 +10104,7 @@ enum db_return_codes db_save_interleave_set_dimm_info_v1_state(const PersistentS
  *		struct to put the interleave_set_dimm_info_v1 retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_interleave_set_dimm_info_v1_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_interleave_set_dimm_info_v1_by_id(const PersistentStore *p_ps,
 	const int id,
 	struct db_interleave_set_dimm_info_v1 *p_interleave_set_dimm_info_v1);
 /*!
@@ -10117,7 +10118,7 @@ enum db_return_codes db_get_interleave_set_dimm_info_v1_by_id(const PersistentSt
  *		structure with new values for the interleave_set_dimm_info_v1
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_interleave_set_dimm_info_v1_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_interleave_set_dimm_info_v1_by_id(const PersistentStore *p_ps,
 	const int id,
 	struct db_interleave_set_dimm_info_v1 *p_updated_interleave_set_dimm_info_v1);
 /*!
@@ -10129,7 +10130,7 @@ enum db_return_codes db_update_interleave_set_dimm_info_v1_by_id(const Persisten
  *		id points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_interleave_set_dimm_info_v1_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_interleave_set_dimm_info_v1_by_id(const PersistentStore *p_ps,
 	const int id);
 /*!
  * Return number of matching history rows
@@ -10141,7 +10142,7 @@ enum db_return_codes db_delete_interleave_set_dimm_info_v1_by_id(const Persisten
  *		count of rows matching this history_id
  * @return The number of row (to max of interleave_set_dimm_info_v1_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_interleave_set_dimm_info_v1_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_interleave_set_dimm_info_v1_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -10152,7 +10153,7 @@ enum db_return_codes db_delete_interleave_set_dimm_info_v1_by_id(const Persisten
  *		count of rows matching this history_id
  * @return The number of row (to max of interleave_set_dimm_info_v1_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_interleave_set_dimm_info_v1_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_interleave_set_dimm_info_v1_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -10165,7 +10166,7 @@ enum db_return_codes db_delete_interleave_set_dimm_info_v1_by_id(const Persisten
  *		history_id of rows to return
  * @return The number of row (to max of interleave_set_dimm_info_v1_count) on success.  DB_FAILURE on failure.
  */
- int db_get_interleave_set_dimm_info_v1_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_interleave_set_dimm_info_v1_history_by_history_id(const PersistentStore *p_ps,
 	struct db_interleave_set_dimm_info_v1 *p_interleave_set_dimm_info_v1,
 	int history_id,
 	int interleave_set_dimm_info_v1_count);
@@ -10178,7 +10179,7 @@ enum db_return_codes db_delete_interleave_set_dimm_info_v1_by_id(const Persisten
  *		The max table size
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_roll_interleave_set_dimm_info_v1s_by_id(const PersistentStore *p_ps, int max_rows);
+NVM_COMMON_API enum db_return_codes db_roll_interleave_set_dimm_info_v1s_by_id(const PersistentStore *p_ps, int max_rows);
 /*!
  * Get the max id in the interleave_set_dimm_info_v1 table.
  * @ingroup interleave_set_dimm_info_v1
@@ -10188,7 +10189,7 @@ enum db_return_codes db_roll_interleave_set_dimm_info_v1s_by_id(const Persistent
  *		The max id
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_next_interleave_set_dimm_info_v1_id(const PersistentStore *p_ps, int *p_max);
+NVM_COMMON_API enum db_return_codes db_get_next_interleave_set_dimm_info_v1_id(const PersistentStore *p_ps, int *p_max);
 /*!
  * Return the number of interleave_set_dimm_info_v1s for a given dimm_interleave_set.index_id
  * @ingroup interleave_set_dimm_info_v1
@@ -10200,7 +10201,7 @@ enum db_return_codes db_get_next_interleave_set_dimm_info_v1_id(const Persistent
  *		Resulting count
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_interleave_set_dimm_info_v1_count_by_dimm_interleave_set_index_id (const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_interleave_set_dimm_info_v1_count_by_dimm_interleave_set_index_id (const PersistentStore *p_ps,
 	const unsigned int index_id, int *p_count);
 /*!
  * Return a list of interleave_set_dimm_info_v1s for a given dimm_interleave_set.index_id
@@ -10215,7 +10216,7 @@ enum db_return_codes db_get_interleave_set_dimm_info_v1_count_by_dimm_interleave
  *		Size of interleave_set_dimm_info_v1 array passed in
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_interleave_set_dimm_info_v1s_by_dimm_interleave_set_index_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_interleave_set_dimm_info_v1s_by_dimm_interleave_set_index_id(const PersistentStore *p_ps,
 	unsigned int index_id,
 	struct db_interleave_set_dimm_info_v1 *p_interleave_set_dimm_info_v1,
 	int interleave_set_dimm_info_v1_count);
@@ -10228,7 +10229,7 @@ enum db_return_codes db_get_interleave_set_dimm_info_v1s_by_dimm_interleave_set_
  *		Search interleave_set_dimm_info_v1 and get all with passed in index_id
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_interleave_set_dimm_info_v1_by_dimm_interleave_set_index_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_interleave_set_dimm_info_v1_by_dimm_interleave_set_index_id(const PersistentStore *p_ps,
 	unsigned int index_id);
 /*!
  * Return the number of interleave_set_dimm_info_v1s for a given dimm_topology.device_handle
@@ -10241,7 +10242,7 @@ enum db_return_codes db_delete_interleave_set_dimm_info_v1_by_dimm_interleave_se
  *		Resulting count
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_interleave_set_dimm_info_v1_count_by_dimm_topology_device_handle (const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_interleave_set_dimm_info_v1_count_by_dimm_topology_device_handle (const PersistentStore *p_ps,
 	const unsigned int device_handle, int *p_count);
 /*!
  * Return a list of interleave_set_dimm_info_v1s for a given dimm_topology.device_handle
@@ -10256,7 +10257,7 @@ enum db_return_codes db_get_interleave_set_dimm_info_v1_count_by_dimm_topology_d
  *		Size of interleave_set_dimm_info_v1 array passed in
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_interleave_set_dimm_info_v1s_by_dimm_topology_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_interleave_set_dimm_info_v1s_by_dimm_topology_device_handle(const PersistentStore *p_ps,
 	unsigned int device_handle,
 	struct db_interleave_set_dimm_info_v1 *p_interleave_set_dimm_info_v1,
 	int interleave_set_dimm_info_v1_count);
@@ -10269,7 +10270,7 @@ enum db_return_codes db_get_interleave_set_dimm_info_v1s_by_dimm_topology_device
  *		Search interleave_set_dimm_info_v1 and get all with passed in device_handle
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_interleave_set_dimm_info_v1_by_dimm_topology_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_interleave_set_dimm_info_v1_by_dimm_topology_device_handle(const PersistentStore *p_ps,
 	unsigned int device_handle);
 /*!
  * Clear interleave_set_dimm_info_v1.serial_num for all rows
@@ -10278,7 +10279,7 @@ enum db_return_codes db_delete_interleave_set_dimm_info_v1_by_dimm_topology_devi
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_clear_interleave_set_dimm_info_v1_serial_num(PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_clear_interleave_set_dimm_info_v1_serial_num(PersistentStore *p_ps);
 /*!
  * @defgroup interleave_set_dimm_info_v2 interleave_set_dimm_info_v2 
  * @ingroup db_schema
@@ -10307,7 +10308,7 @@ struct db_interleave_set_dimm_info_v2
  * @return
  *		void
  */
-void db_print_interleave_set_dimm_info_v2(struct db_interleave_set_dimm_info_v2 *p_value);
+NVM_COMMON_API void db_print_interleave_set_dimm_info_v2(struct db_interleave_set_dimm_info_v2 *p_value);
 /*!
  * Create a new row in the interleave_set_dimm_info_v2 table
  * @ingroup interleave_set_dimm_info_v2
@@ -10317,7 +10318,7 @@ void db_print_interleave_set_dimm_info_v2(struct db_interleave_set_dimm_info_v2 
  *		Pointer to the object to be saved to the interleave_set_dimm_info_v2 table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_interleave_set_dimm_info_v2(const PersistentStore *p_ps, struct db_interleave_set_dimm_info_v2 *p_interleave_set_dimm_info_v2);
+NVM_COMMON_API enum db_return_codes db_add_interleave_set_dimm_info_v2(const PersistentStore *p_ps, struct db_interleave_set_dimm_info_v2 *p_interleave_set_dimm_info_v2);
 /*!
  * Get the total number of interleave_set_dimm_info_v2s
  * @param[in] p_ps
@@ -10326,7 +10327,7 @@ enum db_return_codes db_add_interleave_set_dimm_info_v2(const PersistentStore *p
  * 		Set to the number of interleave_set_dimm_info_v2s
  * @return whether successful or not
  */
-enum db_return_codes db_get_interleave_set_dimm_info_v2_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_interleave_set_dimm_info_v2_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all interleave_set_dimm_info_v2s
  * @ingroup interleave_set_dimm_info_v2
@@ -10338,7 +10339,7 @@ enum db_return_codes db_get_interleave_set_dimm_info_v2_count(const PersistentSt
  *		Size of p_interleave_set_dimm_info_v2
  * @return The number of row (to max of interleave_set_dimm_info_v2_count) on success.  DB_FAILURE on failure.
  */
-int db_get_interleave_set_dimm_info_v2s(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_interleave_set_dimm_info_v2s(const PersistentStore *p_ps,
 	struct db_interleave_set_dimm_info_v2
 	*p_interleave_set_dimm_info_v2,
 	int interleave_set_dimm_info_v2_count);
@@ -10349,7 +10350,7 @@ int db_get_interleave_set_dimm_info_v2s(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_interleave_set_dimm_info_v2s(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_interleave_set_dimm_info_v2s(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from interleave_set_dimm_info_v2 history
@@ -10358,7 +10359,7 @@ enum db_return_codes db_delete_all_interleave_set_dimm_info_v2s(const Persistent
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_interleave_set_dimm_info_v2_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_interleave_set_dimm_info_v2_history(const PersistentStore *p_ps);
  
 /*!
  * save interleave_set_dimm_info_v2 state
@@ -10371,7 +10372,7 @@ enum db_return_codes db_delete_all_interleave_set_dimm_info_v2s(const Persistent
  *		interleave_set_dimm_info_v2 to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_interleave_set_dimm_info_v2_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_interleave_set_dimm_info_v2_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_interleave_set_dimm_info_v2 *p_interleave_set_dimm_info_v2);
 /*!
@@ -10385,7 +10386,7 @@ enum db_return_codes db_save_interleave_set_dimm_info_v2_state(const PersistentS
  *		struct to put the interleave_set_dimm_info_v2 retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_interleave_set_dimm_info_v2_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_interleave_set_dimm_info_v2_by_id(const PersistentStore *p_ps,
 	const int id,
 	struct db_interleave_set_dimm_info_v2 *p_interleave_set_dimm_info_v2);
 /*!
@@ -10399,7 +10400,7 @@ enum db_return_codes db_get_interleave_set_dimm_info_v2_by_id(const PersistentSt
  *		structure with new values for the interleave_set_dimm_info_v2
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_interleave_set_dimm_info_v2_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_interleave_set_dimm_info_v2_by_id(const PersistentStore *p_ps,
 	const int id,
 	struct db_interleave_set_dimm_info_v2 *p_updated_interleave_set_dimm_info_v2);
 /*!
@@ -10411,7 +10412,7 @@ enum db_return_codes db_update_interleave_set_dimm_info_v2_by_id(const Persisten
  *		id points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_interleave_set_dimm_info_v2_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_interleave_set_dimm_info_v2_by_id(const PersistentStore *p_ps,
 	const int id);
 /*!
  * Return number of matching history rows
@@ -10423,7 +10424,7 @@ enum db_return_codes db_delete_interleave_set_dimm_info_v2_by_id(const Persisten
  *		count of rows matching this history_id
  * @return The number of row (to max of interleave_set_dimm_info_v2_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_interleave_set_dimm_info_v2_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_interleave_set_dimm_info_v2_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -10434,7 +10435,7 @@ enum db_return_codes db_delete_interleave_set_dimm_info_v2_by_id(const Persisten
  *		count of rows matching this history_id
  * @return The number of row (to max of interleave_set_dimm_info_v2_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_interleave_set_dimm_info_v2_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_interleave_set_dimm_info_v2_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -10447,7 +10448,7 @@ enum db_return_codes db_delete_interleave_set_dimm_info_v2_by_id(const Persisten
  *		history_id of rows to return
  * @return The number of row (to max of interleave_set_dimm_info_v2_count) on success.  DB_FAILURE on failure.
  */
- int db_get_interleave_set_dimm_info_v2_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_interleave_set_dimm_info_v2_history_by_history_id(const PersistentStore *p_ps,
 	struct db_interleave_set_dimm_info_v2 *p_interleave_set_dimm_info_v2,
 	int history_id,
 	int interleave_set_dimm_info_v2_count);
@@ -10460,7 +10461,7 @@ enum db_return_codes db_delete_interleave_set_dimm_info_v2_by_id(const Persisten
  *		The max table size
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_roll_interleave_set_dimm_info_v2s_by_id(const PersistentStore *p_ps, int max_rows);
+NVM_COMMON_API enum db_return_codes db_roll_interleave_set_dimm_info_v2s_by_id(const PersistentStore *p_ps, int max_rows);
 /*!
  * Get the max id in the interleave_set_dimm_info_v2 table.
  * @ingroup interleave_set_dimm_info_v2
@@ -10470,7 +10471,7 @@ enum db_return_codes db_roll_interleave_set_dimm_info_v2s_by_id(const Persistent
  *		The max id
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_next_interleave_set_dimm_info_v2_id(const PersistentStore *p_ps, int *p_max);
+NVM_COMMON_API enum db_return_codes db_get_next_interleave_set_dimm_info_v2_id(const PersistentStore *p_ps, int *p_max);
 /*!
  * Return the number of interleave_set_dimm_info_v2s for a given dimm_interleave_set.index_id
  * @ingroup interleave_set_dimm_info_v2
@@ -10482,7 +10483,7 @@ enum db_return_codes db_get_next_interleave_set_dimm_info_v2_id(const Persistent
  *		Resulting count
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_interleave_set_dimm_info_v2_count_by_dimm_interleave_set_index_id (const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_interleave_set_dimm_info_v2_count_by_dimm_interleave_set_index_id (const PersistentStore *p_ps,
 	const unsigned int index_id, int *p_count);
 /*!
  * Return a list of interleave_set_dimm_info_v2s for a given dimm_interleave_set.index_id
@@ -10497,7 +10498,7 @@ enum db_return_codes db_get_interleave_set_dimm_info_v2_count_by_dimm_interleave
  *		Size of interleave_set_dimm_info_v2 array passed in
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_interleave_set_dimm_info_v2s_by_dimm_interleave_set_index_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_interleave_set_dimm_info_v2s_by_dimm_interleave_set_index_id(const PersistentStore *p_ps,
 	unsigned int index_id,
 	struct db_interleave_set_dimm_info_v2 *p_interleave_set_dimm_info_v2,
 	int interleave_set_dimm_info_v2_count);
@@ -10510,7 +10511,7 @@ enum db_return_codes db_get_interleave_set_dimm_info_v2s_by_dimm_interleave_set_
  *		Search interleave_set_dimm_info_v2 and get all with passed in index_id
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_interleave_set_dimm_info_v2_by_dimm_interleave_set_index_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_interleave_set_dimm_info_v2_by_dimm_interleave_set_index_id(const PersistentStore *p_ps,
 	unsigned int index_id);
 /*!
  * Return the number of interleave_set_dimm_info_v2s for a given dimm_topology.device_handle
@@ -10523,7 +10524,7 @@ enum db_return_codes db_delete_interleave_set_dimm_info_v2_by_dimm_interleave_se
  *		Resulting count
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_interleave_set_dimm_info_v2_count_by_dimm_topology_device_handle (const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_interleave_set_dimm_info_v2_count_by_dimm_topology_device_handle (const PersistentStore *p_ps,
 	const unsigned int device_handle, int *p_count);
 /*!
  * Return a list of interleave_set_dimm_info_v2s for a given dimm_topology.device_handle
@@ -10538,7 +10539,7 @@ enum db_return_codes db_get_interleave_set_dimm_info_v2_count_by_dimm_topology_d
  *		Size of interleave_set_dimm_info_v2 array passed in
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_interleave_set_dimm_info_v2s_by_dimm_topology_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_interleave_set_dimm_info_v2s_by_dimm_topology_device_handle(const PersistentStore *p_ps,
 	unsigned int device_handle,
 	struct db_interleave_set_dimm_info_v2 *p_interleave_set_dimm_info_v2,
 	int interleave_set_dimm_info_v2_count);
@@ -10551,7 +10552,7 @@ enum db_return_codes db_get_interleave_set_dimm_info_v2s_by_dimm_topology_device
  *		Search interleave_set_dimm_info_v2 and get all with passed in device_handle
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_interleave_set_dimm_info_v2_by_dimm_topology_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_interleave_set_dimm_info_v2_by_dimm_topology_device_handle(const PersistentStore *p_ps,
 	unsigned int device_handle);
 /*!
  * @defgroup enable_error_injection_info enable_error_injection_info 
@@ -10575,7 +10576,7 @@ struct db_enable_error_injection_info
  * @return
  *		void
  */
-void db_print_enable_error_injection_info(struct db_enable_error_injection_info *p_value);
+NVM_COMMON_API void db_print_enable_error_injection_info(struct db_enable_error_injection_info *p_value);
 /*!
  * Create a new row in the enable_error_injection_info table
  * @ingroup enable_error_injection_info
@@ -10585,7 +10586,7 @@ void db_print_enable_error_injection_info(struct db_enable_error_injection_info 
  *		Pointer to the object to be saved to the enable_error_injection_info table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_enable_error_injection_info(const PersistentStore *p_ps, struct db_enable_error_injection_info *p_enable_error_injection_info);
+NVM_COMMON_API enum db_return_codes db_add_enable_error_injection_info(const PersistentStore *p_ps, struct db_enable_error_injection_info *p_enable_error_injection_info);
 /*!
  * Get the total number of enable_error_injection_infos
  * @param[in] p_ps
@@ -10594,7 +10595,7 @@ enum db_return_codes db_add_enable_error_injection_info(const PersistentStore *p
  * 		Set to the number of enable_error_injection_infos
  * @return whether successful or not
  */
-enum db_return_codes db_get_enable_error_injection_info_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_enable_error_injection_info_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all enable_error_injection_infos
  * @ingroup enable_error_injection_info
@@ -10606,7 +10607,7 @@ enum db_return_codes db_get_enable_error_injection_info_count(const PersistentSt
  *		Size of p_enable_error_injection_info
  * @return The number of row (to max of enable_error_injection_info_count) on success.  DB_FAILURE on failure.
  */
-int db_get_enable_error_injection_infos(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_enable_error_injection_infos(const PersistentStore *p_ps,
 	struct db_enable_error_injection_info
 	*p_enable_error_injection_info,
 	int enable_error_injection_info_count);
@@ -10617,7 +10618,7 @@ int db_get_enable_error_injection_infos(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_enable_error_injection_infos(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_enable_error_injection_infos(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from enable_error_injection_info history
@@ -10626,7 +10627,7 @@ enum db_return_codes db_delete_all_enable_error_injection_infos(const Persistent
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_enable_error_injection_info_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_enable_error_injection_info_history(const PersistentStore *p_ps);
  
 /*!
  * save enable_error_injection_info state
@@ -10639,7 +10640,7 @@ enum db_return_codes db_delete_all_enable_error_injection_infos(const Persistent
  *		enable_error_injection_info to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_enable_error_injection_info_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_enable_error_injection_info_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_enable_error_injection_info *p_enable_error_injection_info);
 /*!
@@ -10653,7 +10654,7 @@ enum db_return_codes db_save_enable_error_injection_info_state(const PersistentS
  *		struct to put the enable_error_injection_info retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_enable_error_injection_info_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_enable_error_injection_info_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_enable_error_injection_info *p_enable_error_injection_info);
 /*!
@@ -10667,7 +10668,7 @@ enum db_return_codes db_get_enable_error_injection_info_by_device_handle(const P
  *		structure with new values for the enable_error_injection_info
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_enable_error_injection_info_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_enable_error_injection_info_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_enable_error_injection_info *p_updated_enable_error_injection_info);
 /*!
@@ -10679,7 +10680,7 @@ enum db_return_codes db_update_enable_error_injection_info_by_device_handle(cons
  *		device_handle points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_enable_error_injection_info_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_enable_error_injection_info_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle);
 /*!
  * Return number of matching history rows
@@ -10691,7 +10692,7 @@ enum db_return_codes db_delete_enable_error_injection_info_by_device_handle(cons
  *		count of rows matching this history_id
  * @return The number of row (to max of enable_error_injection_info_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_enable_error_injection_info_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_enable_error_injection_info_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -10702,7 +10703,7 @@ enum db_return_codes db_delete_enable_error_injection_info_by_device_handle(cons
  *		count of rows matching this history_id
  * @return The number of row (to max of enable_error_injection_info_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_enable_error_injection_info_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_enable_error_injection_info_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -10715,7 +10716,7 @@ enum db_return_codes db_delete_enable_error_injection_info_by_device_handle(cons
  *		history_id of rows to return
  * @return The number of row (to max of enable_error_injection_info_count) on success.  DB_FAILURE on failure.
  */
- int db_get_enable_error_injection_info_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_enable_error_injection_info_history_by_history_id(const PersistentStore *p_ps,
 	struct db_enable_error_injection_info *p_enable_error_injection_info,
 	int history_id,
 	int enable_error_injection_info_count);
@@ -10741,7 +10742,7 @@ struct db_temperature_error_injection_info
  * @return
  *		void
  */
-void db_print_temperature_error_injection_info(struct db_temperature_error_injection_info *p_value);
+NVM_COMMON_API void db_print_temperature_error_injection_info(struct db_temperature_error_injection_info *p_value);
 /*!
  * Create a new row in the temperature_error_injection_info table
  * @ingroup temperature_error_injection_info
@@ -10751,7 +10752,7 @@ void db_print_temperature_error_injection_info(struct db_temperature_error_injec
  *		Pointer to the object to be saved to the temperature_error_injection_info table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_temperature_error_injection_info(const PersistentStore *p_ps, struct db_temperature_error_injection_info *p_temperature_error_injection_info);
+NVM_COMMON_API enum db_return_codes db_add_temperature_error_injection_info(const PersistentStore *p_ps, struct db_temperature_error_injection_info *p_temperature_error_injection_info);
 /*!
  * Get the total number of temperature_error_injection_infos
  * @param[in] p_ps
@@ -10760,7 +10761,7 @@ enum db_return_codes db_add_temperature_error_injection_info(const PersistentSto
  * 		Set to the number of temperature_error_injection_infos
  * @return whether successful or not
  */
-enum db_return_codes db_get_temperature_error_injection_info_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_temperature_error_injection_info_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all temperature_error_injection_infos
  * @ingroup temperature_error_injection_info
@@ -10772,7 +10773,7 @@ enum db_return_codes db_get_temperature_error_injection_info_count(const Persist
  *		Size of p_temperature_error_injection_info
  * @return The number of row (to max of temperature_error_injection_info_count) on success.  DB_FAILURE on failure.
  */
-int db_get_temperature_error_injection_infos(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_temperature_error_injection_infos(const PersistentStore *p_ps,
 	struct db_temperature_error_injection_info
 	*p_temperature_error_injection_info,
 	int temperature_error_injection_info_count);
@@ -10783,7 +10784,7 @@ int db_get_temperature_error_injection_infos(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_temperature_error_injection_infos(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_temperature_error_injection_infos(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from temperature_error_injection_info history
@@ -10792,7 +10793,7 @@ enum db_return_codes db_delete_all_temperature_error_injection_infos(const Persi
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_temperature_error_injection_info_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_temperature_error_injection_info_history(const PersistentStore *p_ps);
  
 /*!
  * save temperature_error_injection_info state
@@ -10805,7 +10806,7 @@ enum db_return_codes db_delete_all_temperature_error_injection_infos(const Persi
  *		temperature_error_injection_info to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_temperature_error_injection_info_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_temperature_error_injection_info_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_temperature_error_injection_info *p_temperature_error_injection_info);
 /*!
@@ -10819,7 +10820,7 @@ enum db_return_codes db_save_temperature_error_injection_info_state(const Persis
  *		struct to put the temperature_error_injection_info retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_temperature_error_injection_info_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_temperature_error_injection_info_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_temperature_error_injection_info *p_temperature_error_injection_info);
 /*!
@@ -10833,7 +10834,7 @@ enum db_return_codes db_get_temperature_error_injection_info_by_device_handle(co
  *		structure with new values for the temperature_error_injection_info
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_temperature_error_injection_info_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_temperature_error_injection_info_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_temperature_error_injection_info *p_updated_temperature_error_injection_info);
 /*!
@@ -10845,7 +10846,7 @@ enum db_return_codes db_update_temperature_error_injection_info_by_device_handle
  *		device_handle points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_temperature_error_injection_info_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_temperature_error_injection_info_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle);
 /*!
  * Return number of matching history rows
@@ -10857,7 +10858,7 @@ enum db_return_codes db_delete_temperature_error_injection_info_by_device_handle
  *		count of rows matching this history_id
  * @return The number of row (to max of temperature_error_injection_info_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_temperature_error_injection_info_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_temperature_error_injection_info_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -10868,7 +10869,7 @@ enum db_return_codes db_delete_temperature_error_injection_info_by_device_handle
  *		count of rows matching this history_id
  * @return The number of row (to max of temperature_error_injection_info_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_temperature_error_injection_info_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_temperature_error_injection_info_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -10881,7 +10882,7 @@ enum db_return_codes db_delete_temperature_error_injection_info_by_device_handle
  *		history_id of rows to return
  * @return The number of row (to max of temperature_error_injection_info_count) on success.  DB_FAILURE on failure.
  */
- int db_get_temperature_error_injection_info_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_temperature_error_injection_info_history_by_history_id(const PersistentStore *p_ps,
 	struct db_temperature_error_injection_info *p_temperature_error_injection_info,
 	int history_id,
 	int temperature_error_injection_info_count);
@@ -10909,7 +10910,7 @@ struct db_poison_error_injection_info
  * @return
  *		void
  */
-void db_print_poison_error_injection_info(struct db_poison_error_injection_info *p_value);
+NVM_COMMON_API void db_print_poison_error_injection_info(struct db_poison_error_injection_info *p_value);
 /*!
  * Create a new row in the poison_error_injection_info table
  * @ingroup poison_error_injection_info
@@ -10919,7 +10920,7 @@ void db_print_poison_error_injection_info(struct db_poison_error_injection_info 
  *		Pointer to the object to be saved to the poison_error_injection_info table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_poison_error_injection_info(const PersistentStore *p_ps, struct db_poison_error_injection_info *p_poison_error_injection_info);
+NVM_COMMON_API enum db_return_codes db_add_poison_error_injection_info(const PersistentStore *p_ps, struct db_poison_error_injection_info *p_poison_error_injection_info);
 /*!
  * Get the total number of poison_error_injection_infos
  * @param[in] p_ps
@@ -10928,7 +10929,7 @@ enum db_return_codes db_add_poison_error_injection_info(const PersistentStore *p
  * 		Set to the number of poison_error_injection_infos
  * @return whether successful or not
  */
-enum db_return_codes db_get_poison_error_injection_info_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_poison_error_injection_info_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all poison_error_injection_infos
  * @ingroup poison_error_injection_info
@@ -10940,7 +10941,7 @@ enum db_return_codes db_get_poison_error_injection_info_count(const PersistentSt
  *		Size of p_poison_error_injection_info
  * @return The number of row (to max of poison_error_injection_info_count) on success.  DB_FAILURE on failure.
  */
-int db_get_poison_error_injection_infos(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_poison_error_injection_infos(const PersistentStore *p_ps,
 	struct db_poison_error_injection_info
 	*p_poison_error_injection_info,
 	int poison_error_injection_info_count);
@@ -10951,7 +10952,7 @@ int db_get_poison_error_injection_infos(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_poison_error_injection_infos(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_poison_error_injection_infos(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from poison_error_injection_info history
@@ -10960,7 +10961,7 @@ enum db_return_codes db_delete_all_poison_error_injection_infos(const Persistent
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_poison_error_injection_info_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_poison_error_injection_info_history(const PersistentStore *p_ps);
  
 /*!
  * save poison_error_injection_info state
@@ -10973,7 +10974,7 @@ enum db_return_codes db_delete_all_poison_error_injection_infos(const Persistent
  *		poison_error_injection_info to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_poison_error_injection_info_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_poison_error_injection_info_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_poison_error_injection_info *p_poison_error_injection_info);
 /*!
@@ -10987,7 +10988,7 @@ enum db_return_codes db_save_poison_error_injection_info_state(const PersistentS
  *		struct to put the poison_error_injection_info retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_poison_error_injection_info_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_poison_error_injection_info_by_id(const PersistentStore *p_ps,
 	const int id,
 	struct db_poison_error_injection_info *p_poison_error_injection_info);
 /*!
@@ -11001,7 +11002,7 @@ enum db_return_codes db_get_poison_error_injection_info_by_id(const PersistentSt
  *		structure with new values for the poison_error_injection_info
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_poison_error_injection_info_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_poison_error_injection_info_by_id(const PersistentStore *p_ps,
 	const int id,
 	struct db_poison_error_injection_info *p_updated_poison_error_injection_info);
 /*!
@@ -11013,7 +11014,7 @@ enum db_return_codes db_update_poison_error_injection_info_by_id(const Persisten
  *		id points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_poison_error_injection_info_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_poison_error_injection_info_by_id(const PersistentStore *p_ps,
 	const int id);
 /*!
  * Return number of matching history rows
@@ -11025,7 +11026,7 @@ enum db_return_codes db_delete_poison_error_injection_info_by_id(const Persisten
  *		count of rows matching this history_id
  * @return The number of row (to max of poison_error_injection_info_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_poison_error_injection_info_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_poison_error_injection_info_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -11036,7 +11037,7 @@ enum db_return_codes db_delete_poison_error_injection_info_by_id(const Persisten
  *		count of rows matching this history_id
  * @return The number of row (to max of poison_error_injection_info_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_poison_error_injection_info_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_poison_error_injection_info_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -11049,7 +11050,7 @@ enum db_return_codes db_delete_poison_error_injection_info_by_id(const Persisten
  *		history_id of rows to return
  * @return The number of row (to max of poison_error_injection_info_count) on success.  DB_FAILURE on failure.
  */
- int db_get_poison_error_injection_info_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_poison_error_injection_info_history_by_history_id(const PersistentStore *p_ps,
 	struct db_poison_error_injection_info *p_poison_error_injection_info,
 	int history_id,
 	int poison_error_injection_info_count);
@@ -11064,7 +11065,7 @@ enum db_return_codes db_delete_poison_error_injection_info_by_id(const Persisten
  *		Resulting count
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_poison_error_injection_info_count_by_dimm_topology_device_handle (const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_poison_error_injection_info_count_by_dimm_topology_device_handle (const PersistentStore *p_ps,
 	const unsigned int device_handle, int *p_count);
 /*!
  * Return a list of poison_error_injection_infos for a given dimm_topology.device_handle
@@ -11079,7 +11080,7 @@ enum db_return_codes db_get_poison_error_injection_info_count_by_dimm_topology_d
  *		Size of poison_error_injection_info array passed in
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_poison_error_injection_infos_by_dimm_topology_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_poison_error_injection_infos_by_dimm_topology_device_handle(const PersistentStore *p_ps,
 	unsigned int device_handle,
 	struct db_poison_error_injection_info *p_poison_error_injection_info,
 	int poison_error_injection_info_count);
@@ -11092,7 +11093,7 @@ enum db_return_codes db_get_poison_error_injection_infos_by_dimm_topology_device
  *		Search poison_error_injection_info and get all with passed in device_handle
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_poison_error_injection_info_by_dimm_topology_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_poison_error_injection_info_by_dimm_topology_device_handle(const PersistentStore *p_ps,
 	unsigned int device_handle);
 /*!
  * @defgroup software_trigger_info software_trigger_info 
@@ -11120,7 +11121,7 @@ struct db_software_trigger_info
  * @return
  *		void
  */
-void db_print_software_trigger_info(struct db_software_trigger_info *p_value);
+NVM_COMMON_API void db_print_software_trigger_info(struct db_software_trigger_info *p_value);
 /*!
  * Create a new row in the software_trigger_info table
  * @ingroup software_trigger_info
@@ -11130,7 +11131,7 @@ void db_print_software_trigger_info(struct db_software_trigger_info *p_value);
  *		Pointer to the object to be saved to the software_trigger_info table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_software_trigger_info(const PersistentStore *p_ps, struct db_software_trigger_info *p_software_trigger_info);
+NVM_COMMON_API enum db_return_codes db_add_software_trigger_info(const PersistentStore *p_ps, struct db_software_trigger_info *p_software_trigger_info);
 /*!
  * Get the total number of software_trigger_infos
  * @param[in] p_ps
@@ -11139,7 +11140,7 @@ enum db_return_codes db_add_software_trigger_info(const PersistentStore *p_ps, s
  * 		Set to the number of software_trigger_infos
  * @return whether successful or not
  */
-enum db_return_codes db_get_software_trigger_info_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_software_trigger_info_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all software_trigger_infos
  * @ingroup software_trigger_info
@@ -11151,7 +11152,7 @@ enum db_return_codes db_get_software_trigger_info_count(const PersistentStore *p
  *		Size of p_software_trigger_info
  * @return The number of row (to max of software_trigger_info_count) on success.  DB_FAILURE on failure.
  */
-int db_get_software_trigger_infos(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_software_trigger_infos(const PersistentStore *p_ps,
 	struct db_software_trigger_info
 	*p_software_trigger_info,
 	int software_trigger_info_count);
@@ -11162,7 +11163,7 @@ int db_get_software_trigger_infos(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_software_trigger_infos(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_software_trigger_infos(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from software_trigger_info history
@@ -11171,7 +11172,7 @@ enum db_return_codes db_delete_all_software_trigger_infos(const PersistentStore 
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_software_trigger_info_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_software_trigger_info_history(const PersistentStore *p_ps);
  
 /*!
  * save software_trigger_info state
@@ -11184,7 +11185,7 @@ enum db_return_codes db_delete_all_software_trigger_infos(const PersistentStore 
  *		software_trigger_info to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_software_trigger_info_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_software_trigger_info_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_software_trigger_info *p_software_trigger_info);
 /*!
@@ -11198,7 +11199,7 @@ enum db_return_codes db_save_software_trigger_info_state(const PersistentStore *
  *		struct to put the software_trigger_info retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_software_trigger_info_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_software_trigger_info_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_software_trigger_info *p_software_trigger_info);
 /*!
@@ -11212,7 +11213,7 @@ enum db_return_codes db_get_software_trigger_info_by_device_handle(const Persist
  *		structure with new values for the software_trigger_info
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_software_trigger_info_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_software_trigger_info_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_software_trigger_info *p_updated_software_trigger_info);
 /*!
@@ -11224,7 +11225,7 @@ enum db_return_codes db_update_software_trigger_info_by_device_handle(const Pers
  *		device_handle points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_software_trigger_info_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_software_trigger_info_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle);
 /*!
  * Return number of matching history rows
@@ -11236,7 +11237,7 @@ enum db_return_codes db_delete_software_trigger_info_by_device_handle(const Pers
  *		count of rows matching this history_id
  * @return The number of row (to max of software_trigger_info_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_software_trigger_info_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_software_trigger_info_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -11247,7 +11248,7 @@ enum db_return_codes db_delete_software_trigger_info_by_device_handle(const Pers
  *		count of rows matching this history_id
  * @return The number of row (to max of software_trigger_info_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_software_trigger_info_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_software_trigger_info_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -11260,7 +11261,7 @@ enum db_return_codes db_delete_software_trigger_info_by_device_handle(const Pers
  *		history_id of rows to return
  * @return The number of row (to max of software_trigger_info_count) on success.  DB_FAILURE on failure.
  */
- int db_get_software_trigger_info_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_software_trigger_info_history_by_history_id(const PersistentStore *p_ps,
 	struct db_software_trigger_info *p_software_trigger_info,
 	int history_id,
 	int software_trigger_info_count);
@@ -11294,7 +11295,7 @@ struct db_performance
  * @return
  *		void
  */
-void db_print_performance(struct db_performance *p_value);
+NVM_COMMON_API void db_print_performance(struct db_performance *p_value);
 /*!
  * Create a new row in the performance table
  * @ingroup performance
@@ -11304,7 +11305,7 @@ void db_print_performance(struct db_performance *p_value);
  *		Pointer to the object to be saved to the performance table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_performance(const PersistentStore *p_ps, struct db_performance *p_performance);
+NVM_COMMON_API enum db_return_codes db_add_performance(const PersistentStore *p_ps, struct db_performance *p_performance);
 /*!
  * Get the total number of performances
  * @param[in] p_ps
@@ -11313,7 +11314,7 @@ enum db_return_codes db_add_performance(const PersistentStore *p_ps, struct db_p
  * 		Set to the number of performances
  * @return whether successful or not
  */
-enum db_return_codes db_get_performance_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_performance_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all performances
  * @ingroup performance
@@ -11325,7 +11326,7 @@ enum db_return_codes db_get_performance_count(const PersistentStore *p_ps, int *
  *		Size of p_performance
  * @return The number of row (to max of performance_count) on success.  DB_FAILURE on failure.
  */
-int db_get_performances(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_performances(const PersistentStore *p_ps,
 	struct db_performance
 	*p_performance,
 	int performance_count);
@@ -11336,7 +11337,7 @@ int db_get_performances(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_performances(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_performances(const PersistentStore *p_ps);
 
 #if 0
 //NON-HISTORY TABLE
@@ -11348,7 +11349,7 @@ enum db_return_codes db_delete_all_performances(const PersistentStore *p_ps);
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_performance_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_performance_history(const PersistentStore *p_ps);
  
 #endif
 
@@ -11363,7 +11364,7 @@ enum db_return_codes db_delete_all_performances(const PersistentStore *p_ps);
  *		performance to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_performance_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_performance_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_performance *p_performance);
 /*!
@@ -11377,7 +11378,7 @@ enum db_return_codes db_save_performance_state(const PersistentStore *p_ps,
  *		struct to put the performance retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_performance_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_performance_by_id(const PersistentStore *p_ps,
 	const int id,
 	struct db_performance *p_performance);
 /*!
@@ -11391,7 +11392,7 @@ enum db_return_codes db_get_performance_by_id(const PersistentStore *p_ps,
  *		structure with new values for the performance
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_performance_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_performance_by_id(const PersistentStore *p_ps,
 	const int id,
 	struct db_performance *p_updated_performance);
 /*!
@@ -11403,7 +11404,7 @@ enum db_return_codes db_update_performance_by_id(const PersistentStore *p_ps,
  *		id points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_performance_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_performance_by_id(const PersistentStore *p_ps,
 	const int id);
 /*!
  * Return number of matching history rows
@@ -11415,7 +11416,7 @@ enum db_return_codes db_delete_performance_by_id(const PersistentStore *p_ps,
  *		count of rows matching this history_id
  * @return The number of row (to max of performance_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_performance_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_performance_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -11426,7 +11427,7 @@ enum db_return_codes db_delete_performance_by_id(const PersistentStore *p_ps,
  *		count of rows matching this history_id
  * @return The number of row (to max of performance_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_performance_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_performance_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -11439,7 +11440,7 @@ enum db_return_codes db_delete_performance_by_id(const PersistentStore *p_ps,
  *		history_id of rows to return
  * @return The number of row (to max of performance_count) on success.  DB_FAILURE on failure.
  */
- int db_get_performance_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_performance_history_by_history_id(const PersistentStore *p_ps,
 	struct db_performance *p_performance,
 	int history_id,
 	int performance_count);
@@ -11469,7 +11470,7 @@ struct db_driver_metadata_check_diag_result
  * @return
  *		void
  */
-void db_print_driver_metadata_check_diag_result(struct db_driver_metadata_check_diag_result *p_value);
+NVM_COMMON_API void db_print_driver_metadata_check_diag_result(struct db_driver_metadata_check_diag_result *p_value);
 /*!
  * Create a new row in the driver_metadata_check_diag_result table
  * @ingroup driver_metadata_check_diag_result
@@ -11479,7 +11480,7 @@ void db_print_driver_metadata_check_diag_result(struct db_driver_metadata_check_
  *		Pointer to the object to be saved to the driver_metadata_check_diag_result table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_driver_metadata_check_diag_result(const PersistentStore *p_ps, struct db_driver_metadata_check_diag_result *p_driver_metadata_check_diag_result);
+NVM_COMMON_API enum db_return_codes db_add_driver_metadata_check_diag_result(const PersistentStore *p_ps, struct db_driver_metadata_check_diag_result *p_driver_metadata_check_diag_result);
 /*!
  * Get the total number of driver_metadata_check_diag_results
  * @param[in] p_ps
@@ -11488,7 +11489,7 @@ enum db_return_codes db_add_driver_metadata_check_diag_result(const PersistentSt
  * 		Set to the number of driver_metadata_check_diag_results
  * @return whether successful or not
  */
-enum db_return_codes db_get_driver_metadata_check_diag_result_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_driver_metadata_check_diag_result_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all driver_metadata_check_diag_results
  * @ingroup driver_metadata_check_diag_result
@@ -11500,7 +11501,7 @@ enum db_return_codes db_get_driver_metadata_check_diag_result_count(const Persis
  *		Size of p_driver_metadata_check_diag_result
  * @return The number of row (to max of driver_metadata_check_diag_result_count) on success.  DB_FAILURE on failure.
  */
-int db_get_driver_metadata_check_diag_results(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_driver_metadata_check_diag_results(const PersistentStore *p_ps,
 	struct db_driver_metadata_check_diag_result
 	*p_driver_metadata_check_diag_result,
 	int driver_metadata_check_diag_result_count);
@@ -11511,7 +11512,7 @@ int db_get_driver_metadata_check_diag_results(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_driver_metadata_check_diag_results(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_driver_metadata_check_diag_results(const PersistentStore *p_ps);
 
 #if 0
 //NON-HISTORY TABLE
@@ -11523,7 +11524,7 @@ enum db_return_codes db_delete_all_driver_metadata_check_diag_results(const Pers
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_driver_metadata_check_diag_result_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_driver_metadata_check_diag_result_history(const PersistentStore *p_ps);
  
 #endif
 
@@ -11538,7 +11539,7 @@ enum db_return_codes db_delete_all_driver_metadata_check_diag_results(const Pers
  *		driver_metadata_check_diag_result to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_driver_metadata_check_diag_result_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_driver_metadata_check_diag_result_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_driver_metadata_check_diag_result *p_driver_metadata_check_diag_result);
 /*!
@@ -11552,7 +11553,7 @@ enum db_return_codes db_save_driver_metadata_check_diag_result_state(const Persi
  *		struct to put the driver_metadata_check_diag_result retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_driver_metadata_check_diag_result_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_driver_metadata_check_diag_result_by_id(const PersistentStore *p_ps,
 	const int id,
 	struct db_driver_metadata_check_diag_result *p_driver_metadata_check_diag_result);
 /*!
@@ -11566,7 +11567,7 @@ enum db_return_codes db_get_driver_metadata_check_diag_result_by_id(const Persis
  *		structure with new values for the driver_metadata_check_diag_result
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_driver_metadata_check_diag_result_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_driver_metadata_check_diag_result_by_id(const PersistentStore *p_ps,
 	const int id,
 	struct db_driver_metadata_check_diag_result *p_updated_driver_metadata_check_diag_result);
 /*!
@@ -11578,7 +11579,7 @@ enum db_return_codes db_update_driver_metadata_check_diag_result_by_id(const Per
  *		id points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_driver_metadata_check_diag_result_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_driver_metadata_check_diag_result_by_id(const PersistentStore *p_ps,
 	const int id);
 /*!
  * Return number of matching history rows
@@ -11590,7 +11591,7 @@ enum db_return_codes db_delete_driver_metadata_check_diag_result_by_id(const Per
  *		count of rows matching this history_id
  * @return The number of row (to max of driver_metadata_check_diag_result_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_driver_metadata_check_diag_result_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_driver_metadata_check_diag_result_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -11601,7 +11602,7 @@ enum db_return_codes db_delete_driver_metadata_check_diag_result_by_id(const Per
  *		count of rows matching this history_id
  * @return The number of row (to max of driver_metadata_check_diag_result_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_driver_metadata_check_diag_result_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_driver_metadata_check_diag_result_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -11614,7 +11615,7 @@ enum db_return_codes db_delete_driver_metadata_check_diag_result_by_id(const Per
  *		history_id of rows to return
  * @return The number of row (to max of driver_metadata_check_diag_result_count) on success.  DB_FAILURE on failure.
  */
- int db_get_driver_metadata_check_diag_result_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_driver_metadata_check_diag_result_history_by_history_id(const PersistentStore *p_ps,
 	struct db_driver_metadata_check_diag_result *p_driver_metadata_check_diag_result,
 	int history_id,
 	int driver_metadata_check_diag_result_count);
@@ -11640,7 +11641,7 @@ struct db_boot_status_register
  * @return
  *		void
  */
-void db_print_boot_status_register(struct db_boot_status_register *p_value);
+NVM_COMMON_API void db_print_boot_status_register(struct db_boot_status_register *p_value);
 /*!
  * Create a new row in the boot_status_register table
  * @ingroup boot_status_register
@@ -11650,7 +11651,7 @@ void db_print_boot_status_register(struct db_boot_status_register *p_value);
  *		Pointer to the object to be saved to the boot_status_register table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_boot_status_register(const PersistentStore *p_ps, struct db_boot_status_register *p_boot_status_register);
+NVM_COMMON_API enum db_return_codes db_add_boot_status_register(const PersistentStore *p_ps, struct db_boot_status_register *p_boot_status_register);
 /*!
  * Get the total number of boot_status_registers
  * @param[in] p_ps
@@ -11659,7 +11660,7 @@ enum db_return_codes db_add_boot_status_register(const PersistentStore *p_ps, st
  * 		Set to the number of boot_status_registers
  * @return whether successful or not
  */
-enum db_return_codes db_get_boot_status_register_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_boot_status_register_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all boot_status_registers
  * @ingroup boot_status_register
@@ -11671,7 +11672,7 @@ enum db_return_codes db_get_boot_status_register_count(const PersistentStore *p_
  *		Size of p_boot_status_register
  * @return The number of row (to max of boot_status_register_count) on success.  DB_FAILURE on failure.
  */
-int db_get_boot_status_registers(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_boot_status_registers(const PersistentStore *p_ps,
 	struct db_boot_status_register
 	*p_boot_status_register,
 	int boot_status_register_count);
@@ -11682,7 +11683,7 @@ int db_get_boot_status_registers(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_boot_status_registers(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_boot_status_registers(const PersistentStore *p_ps);
 
 #if 0
 //NON-HISTORY TABLE
@@ -11694,7 +11695,7 @@ enum db_return_codes db_delete_all_boot_status_registers(const PersistentStore *
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_boot_status_register_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_boot_status_register_history(const PersistentStore *p_ps);
  
 #endif
 
@@ -11709,7 +11710,7 @@ enum db_return_codes db_delete_all_boot_status_registers(const PersistentStore *
  *		boot_status_register to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_boot_status_register_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_boot_status_register_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_boot_status_register *p_boot_status_register);
 /*!
@@ -11723,7 +11724,7 @@ enum db_return_codes db_save_boot_status_register_state(const PersistentStore *p
  *		struct to put the boot_status_register retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_boot_status_register_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_boot_status_register_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_boot_status_register *p_boot_status_register);
 /*!
@@ -11737,7 +11738,7 @@ enum db_return_codes db_get_boot_status_register_by_device_handle(const Persiste
  *		structure with new values for the boot_status_register
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_boot_status_register_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_boot_status_register_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_boot_status_register *p_updated_boot_status_register);
 /*!
@@ -11749,7 +11750,7 @@ enum db_return_codes db_update_boot_status_register_by_device_handle(const Persi
  *		device_handle points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_boot_status_register_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_boot_status_register_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle);
 /*!
  * Return number of matching history rows
@@ -11761,7 +11762,7 @@ enum db_return_codes db_delete_boot_status_register_by_device_handle(const Persi
  *		count of rows matching this history_id
  * @return The number of row (to max of boot_status_register_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_boot_status_register_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_boot_status_register_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -11772,7 +11773,7 @@ enum db_return_codes db_delete_boot_status_register_by_device_handle(const Persi
  *		count of rows matching this history_id
  * @return The number of row (to max of boot_status_register_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_boot_status_register_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_boot_status_register_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -11785,7 +11786,7 @@ enum db_return_codes db_delete_boot_status_register_by_device_handle(const Persi
  *		history_id of rows to return
  * @return The number of row (to max of boot_status_register_count) on success.  DB_FAILURE on failure.
  */
- int db_get_boot_status_register_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_boot_status_register_history_by_history_id(const PersistentStore *p_ps,
 	struct db_boot_status_register *p_boot_status_register,
 	int history_id,
 	int boot_status_register_count);
@@ -11812,7 +11813,7 @@ struct db_eafd
  * @return
  *		void
  */
-void db_print_eafd(struct db_eafd *p_value);
+NVM_COMMON_API void db_print_eafd(struct db_eafd *p_value);
 /*!
  * Create a new row in the eafd table
  * @ingroup eafd
@@ -11822,7 +11823,7 @@ void db_print_eafd(struct db_eafd *p_value);
  *		Pointer to the object to be saved to the eafd table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_eafd(const PersistentStore *p_ps, struct db_eafd *p_eafd);
+NVM_COMMON_API enum db_return_codes db_add_eafd(const PersistentStore *p_ps, struct db_eafd *p_eafd);
 /*!
  * Get the total number of eafds
  * @param[in] p_ps
@@ -11831,7 +11832,7 @@ enum db_return_codes db_add_eafd(const PersistentStore *p_ps, struct db_eafd *p_
  * 		Set to the number of eafds
  * @return whether successful or not
  */
-enum db_return_codes db_get_eafd_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_eafd_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all eafds
  * @ingroup eafd
@@ -11843,7 +11844,7 @@ enum db_return_codes db_get_eafd_count(const PersistentStore *p_ps, int *p_count
  *		Size of p_eafd
  * @return The number of row (to max of eafd_count) on success.  DB_FAILURE on failure.
  */
-int db_get_eafds(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_eafds(const PersistentStore *p_ps,
 	struct db_eafd
 	*p_eafd,
 	int eafd_count);
@@ -11854,7 +11855,7 @@ int db_get_eafds(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_eafds(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_eafds(const PersistentStore *p_ps);
 
 #if 0
 //NON-HISTORY TABLE
@@ -11866,7 +11867,7 @@ enum db_return_codes db_delete_all_eafds(const PersistentStore *p_ps);
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_eafd_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_eafd_history(const PersistentStore *p_ps);
  
 #endif
 
@@ -11881,7 +11882,7 @@ enum db_return_codes db_delete_all_eafds(const PersistentStore *p_ps);
  *		eafd to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_eafd_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_eafd_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_eafd *p_eafd);
 /*!
@@ -11895,7 +11896,7 @@ enum db_return_codes db_save_eafd_state(const PersistentStore *p_ps,
  *		struct to put the eafd retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_eafd_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_eafd_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_eafd *p_eafd);
 /*!
@@ -11909,7 +11910,7 @@ enum db_return_codes db_get_eafd_by_device_handle(const PersistentStore *p_ps,
  *		structure with new values for the eafd
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_eafd_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_eafd_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle,
 	struct db_eafd *p_updated_eafd);
 /*!
@@ -11921,7 +11922,7 @@ enum db_return_codes db_update_eafd_by_device_handle(const PersistentStore *p_ps
  *		device_handle points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_eafd_by_device_handle(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_eafd_by_device_handle(const PersistentStore *p_ps,
 	const unsigned int device_handle);
 /*!
  * Return number of matching history rows
@@ -11933,7 +11934,7 @@ enum db_return_codes db_delete_eafd_by_device_handle(const PersistentStore *p_ps
  *		count of rows matching this history_id
  * @return The number of row (to max of eafd_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_eafd_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_eafd_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -11944,7 +11945,7 @@ enum db_return_codes db_delete_eafd_by_device_handle(const PersistentStore *p_ps
  *		count of rows matching this history_id
  * @return The number of row (to max of eafd_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_eafd_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_eafd_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -11957,7 +11958,7 @@ enum db_return_codes db_delete_eafd_by_device_handle(const PersistentStore *p_ps
  *		history_id of rows to return
  * @return The number of row (to max of eafd_count) on success.  DB_FAILURE on failure.
  */
- int db_get_eafd_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_eafd_history_by_history_id(const PersistentStore *p_ps,
 	struct db_eafd *p_eafd,
 	int history_id,
 	int eafd_count);
@@ -11998,7 +11999,7 @@ struct db_interleave_set
  * @return
  *		void
  */
-void db_print_interleave_set(struct db_interleave_set *p_value);
+NVM_COMMON_API void db_print_interleave_set(struct db_interleave_set *p_value);
 /*!
  * Create a new row in the interleave_set table
  * @ingroup interleave_set
@@ -12008,7 +12009,7 @@ void db_print_interleave_set(struct db_interleave_set *p_value);
  *		Pointer to the object to be saved to the interleave_set table
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_add_interleave_set(const PersistentStore *p_ps, struct db_interleave_set *p_interleave_set);
+NVM_COMMON_API enum db_return_codes db_add_interleave_set(const PersistentStore *p_ps, struct db_interleave_set *p_interleave_set);
 /*!
  * Get the total number of interleave_sets
  * @param[in] p_ps
@@ -12017,7 +12018,7 @@ enum db_return_codes db_add_interleave_set(const PersistentStore *p_ps, struct d
  * 		Set to the number of interleave_sets
  * @return whether successful or not
  */
-enum db_return_codes db_get_interleave_set_count(const PersistentStore *p_ps, int *p_count);
+NVM_COMMON_API enum db_return_codes db_get_interleave_set_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all interleave_sets
  * @ingroup interleave_set
@@ -12029,7 +12030,7 @@ enum db_return_codes db_get_interleave_set_count(const PersistentStore *p_ps, in
  *		Size of p_interleave_set
  * @return The number of row (to max of interleave_set_count) on success.  DB_FAILURE on failure.
  */
-int db_get_interleave_sets(const PersistentStore *p_ps,
+NVM_COMMON_API int db_get_interleave_sets(const PersistentStore *p_ps,
 	struct db_interleave_set
 	*p_interleave_set,
 	int interleave_set_count);
@@ -12040,7 +12041,7 @@ int db_get_interleave_sets(const PersistentStore *p_ps,
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */	
-enum db_return_codes db_delete_all_interleave_sets(const PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_delete_all_interleave_sets(const PersistentStore *p_ps);
 
 /*!
  * delete all entries from interleave_set history
@@ -12049,7 +12050,7 @@ enum db_return_codes db_delete_all_interleave_sets(const PersistentStore *p_ps);
  *		Pointer to the PersistentStore
  * @return return_code whether or not it was successful
  */
- enum db_return_codes db_delete_interleave_set_history(const PersistentStore *p_ps);
+ NVM_COMMON_API enum db_return_codes db_delete_interleave_set_history(const PersistentStore *p_ps);
  
 /*!
  * save interleave_set state
@@ -12062,7 +12063,7 @@ enum db_return_codes db_delete_all_interleave_sets(const PersistentStore *p_ps);
  *		interleave_set to save to history
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_save_interleave_set_state(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_save_interleave_set_state(const PersistentStore *p_ps,
 	int history_id,
 	struct db_interleave_set *p_interleave_set);
 /*!
@@ -12076,7 +12077,7 @@ enum db_return_codes db_save_interleave_set_state(const PersistentStore *p_ps,
  *		struct to put the interleave_set retrieved
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_interleave_set_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_interleave_set_by_id(const PersistentStore *p_ps,
 	const int id,
 	struct db_interleave_set *p_interleave_set);
 /*!
@@ -12090,7 +12091,7 @@ enum db_return_codes db_get_interleave_set_by_id(const PersistentStore *p_ps,
  *		structure with new values for the interleave_set
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_update_interleave_set_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_update_interleave_set_by_id(const PersistentStore *p_ps,
 	const int id,
 	struct db_interleave_set *p_updated_interleave_set);
 /*!
@@ -12102,7 +12103,7 @@ enum db_return_codes db_update_interleave_set_by_id(const PersistentStore *p_ps,
  *		id points to the record to delete
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_interleave_set_by_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_interleave_set_by_id(const PersistentStore *p_ps,
 	const int id);
 /*!
  * Return number of matching history rows
@@ -12114,7 +12115,7 @@ enum db_return_codes db_delete_interleave_set_by_id(const PersistentStore *p_ps,
  *		count of rows matching this history_id
  * @return The number of row (to max of interleave_set_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_interleave_set_history_by_history_id_count(const PersistentStore *p_ps, 
+ NVM_COMMON_API enum db_return_codes db_get_interleave_set_history_by_history_id_count(const PersistentStore *p_ps, 
 	int history_id,
 	int *p_count);
 /*!
@@ -12125,7 +12126,7 @@ enum db_return_codes db_delete_interleave_set_by_id(const PersistentStore *p_ps,
  *		count of rows matching this history_id
  * @return The number of row (to max of interleave_set_count) on success.  DB_FAILURE on failure.
  */
- enum db_return_codes db_get_interleave_set_history_count(const PersistentStore *p_ps, int *p_count);
+ NVM_COMMON_API enum db_return_codes db_get_interleave_set_history_count(const PersistentStore *p_ps, int *p_count);
 /*!
  * Return all rows of matching custom sql
  * @param[in] p_ps
@@ -12138,7 +12139,7 @@ enum db_return_codes db_delete_interleave_set_by_id(const PersistentStore *p_ps,
  *		history_id of rows to return
  * @return The number of row (to max of interleave_set_count) on success.  DB_FAILURE on failure.
  */
- int db_get_interleave_set_history_by_history_id(const PersistentStore *p_ps,
+ NVM_COMMON_API int db_get_interleave_set_history_by_history_id(const PersistentStore *p_ps,
 	struct db_interleave_set *p_interleave_set,
 	int history_id,
 	int interleave_set_count);
@@ -12151,7 +12152,7 @@ enum db_return_codes db_delete_interleave_set_by_id(const PersistentStore *p_ps,
  *		The max table size
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_roll_interleave_sets_by_id(const PersistentStore *p_ps, int max_rows);
+NVM_COMMON_API enum db_return_codes db_roll_interleave_sets_by_id(const PersistentStore *p_ps, int max_rows);
 /*!
  * Get the max id in the interleave_set table.
  * @ingroup interleave_set
@@ -12161,7 +12162,7 @@ enum db_return_codes db_roll_interleave_sets_by_id(const PersistentStore *p_ps, 
  *		The max id
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_next_interleave_set_id(const PersistentStore *p_ps, int *p_max);
+NVM_COMMON_API enum db_return_codes db_get_next_interleave_set_id(const PersistentStore *p_ps, int *p_max);
 /*!
  * Return the number of interleave_sets for a given dimm_interleave_set.index_id
  * @ingroup interleave_set
@@ -12173,7 +12174,7 @@ enum db_return_codes db_get_next_interleave_set_id(const PersistentStore *p_ps, 
  *		Resulting count
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_interleave_set_count_by_dimm_interleave_set_index_id (const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_interleave_set_count_by_dimm_interleave_set_index_id (const PersistentStore *p_ps,
 	const unsigned int pcd_interleave_index, int *p_count);
 /*!
  * Return a list of interleave_sets for a given dimm_interleave_set.index_id
@@ -12188,7 +12189,7 @@ enum db_return_codes db_get_interleave_set_count_by_dimm_interleave_set_index_id
  *		Size of interleave_set array passed in
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_get_interleave_sets_by_dimm_interleave_set_index_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_get_interleave_sets_by_dimm_interleave_set_index_id(const PersistentStore *p_ps,
 	unsigned int pcd_interleave_index,
 	struct db_interleave_set *p_interleave_set,
 	int interleave_set_count);
@@ -12201,7 +12202,7 @@ enum db_return_codes db_get_interleave_sets_by_dimm_interleave_set_index_id(cons
  *		Search interleave_set and get all with passed in pcd_interleave_index
  * @return return_code whether or not it was successful
  */
-enum db_return_codes db_delete_interleave_set_by_dimm_interleave_set_index_id(const PersistentStore *p_ps,
+NVM_COMMON_API enum db_return_codes db_delete_interleave_set_by_dimm_interleave_set_index_id(const PersistentStore *p_ps,
 	unsigned int pcd_interleave_index);
 /*!
  * Delete all history
@@ -12209,14 +12210,14 @@ enum db_return_codes db_delete_interleave_set_by_dimm_interleave_set_index_id(co
  *		Pointer to the PersistentStore
  * @ingroup db_schema
  */
-enum db_return_codes db_clear_history(PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_clear_history(PersistentStore *p_ps);
 /*!
  * Delete all state tables
  * @param[in] p_ps
  *		Pointer to the PersistentStore
  * @ingroup db_schema
  */
-enum db_return_codes db_clear_state(PersistentStore *p_ps);
+NVM_COMMON_API enum db_return_codes db_clear_state(PersistentStore *p_ps);
 /*!
  * Delete all history
  * @param[in] p_ps
@@ -12225,14 +12226,14 @@ enum db_return_codes db_clear_state(PersistentStore *p_ps);
  * 		Maximum number of histories to keep
  * @ingroup db_schema
  */
-enum db_return_codes db_roll_history(PersistentStore *p_ps, int max);
+NVM_COMMON_API enum db_return_codes db_roll_history(PersistentStore *p_ps, int max);
 /*!
  * Call sqlite3_update_hook
  * Done here to keep all the persistent store -> db access in this file.
  * @param xCallback
  *		callback to send to sqlite3_update_hook
  */
-void update_sqlite3_hook(PersistentStore *p_ps, void (*xCallback)(void*,int,char const *,char const *, long long));
+NVM_COMMON_API void update_sqlite3_hook(PersistentStore *p_ps, void (*xCallback)(void*,int,char const *,char const *, long long));
 #ifdef __cplusplus
 }
 #endif

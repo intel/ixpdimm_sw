@@ -43,7 +43,7 @@ namespace core
 {
 namespace memory_allocator
 {
-class NVM_API RulePartialSocketConfigured : public RequestRule
+class NVM_CORE_API RulePartialSocketConfigured : public RequestRule
 {
 	public:
 		RulePartialSocketConfigured(const std::vector<struct device_discovery> manageableDevices,

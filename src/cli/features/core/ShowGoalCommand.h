@@ -43,7 +43,8 @@
 #include <libinvm-cli/CommandSpec.h>
 #include <core/configuration/MemoryAllocationGoalService.h>
 #include <core/device/DeviceService.h>
-#include <core/StringList.h>
+#include <cli/features/core/StringList.h>
+#include <cli/features/ExportCli.h>
 
 namespace cli
 {
@@ -52,7 +53,7 @@ namespace nvmcli
 
 
 
-class NVM_API ShowGoalCommand : public framework::CommandBase
+class NVM_CLI_API ShowGoalCommand : public framework::CommandBase
 {
 	public:
 		static const std::string XML_ROOT;
@@ -80,7 +81,7 @@ class NVM_API ShowGoalCommand : public framework::CommandBase
 		// Caller is expected to manage returned memory
 		virtual framework::ResultBase *execute(const framework::ParsedCommand &parsedCommand);
 
-		class NVM_API ResultBuilder
+		class NVM_CLI_API ResultBuilder
 		{
 			public:
 

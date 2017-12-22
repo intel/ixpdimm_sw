@@ -379,7 +379,7 @@ int get_pcat_interleave_tables_from_db(PersistentStore *p_db,
 		int db_interleave_count = 0;
 		if (db_get_interleave_capability_count(p_db, &db_interleave_count) == DB_SUCCESS)
 		{
-			struct db_interleave_capability db_interleaves[db_interleave_count];
+			struct db_interleave_capability *db_interleaves = malloc(db_interleave_count * sizeof(struct db_interleave_capability));
 			memset(db_interleaves, 0,
 					sizeof (struct db_interleave_capability) * db_interleave_count);
 
@@ -420,6 +420,8 @@ int get_pcat_interleave_tables_from_db(PersistentStore *p_db,
 					*p_offset += p_interleave_info->header.length;
 				}
 			}
+
+            free(db_interleaves);
 		}
 		// else ignore any db read failures - tables are optional
 	}
@@ -502,7 +504,7 @@ int get_pcat_socket_sku_info_from_db(PersistentStore *p_db,
 		int db_socket_sku_count = 0;
 		if (db_get_socket_sku_count(p_db, &db_socket_sku_count) == DB_SUCCESS)
 		{
-			struct db_socket_sku db_socket_skus[db_socket_sku_count];
+			struct db_socket_sku *db_socket_skus = malloc(db_socket_sku_count * sizeof(struct db_socket_sku));
 			memset(db_socket_skus, 0, sizeof (struct db_socket_sku) * db_socket_sku_count);
 
 			db_socket_sku_count = db_get_socket_skus(p_db, db_socket_skus, db_socket_sku_count);
@@ -535,6 +537,8 @@ int get_pcat_socket_sku_info_from_db(PersistentStore *p_db,
 					*p_offset += p_socket_sku_info->header.length;
 				}
 			}
+
+            free(db_socket_skus);
 		}
 		// else ignore any db read failures - tables are optional
 	}

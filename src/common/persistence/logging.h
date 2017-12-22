@@ -132,12 +132,12 @@ enum log_dest
 	log_trace_f(LOGGING_LEVEL_DEBUG, FLAG_PRINT_HANDOFF, __FILE__, __LINE__, \
 	format, __VA_ARGS__)
 
-void print_buffer_to_file(const char *filename, char *p_buf, size_t buf_size, char *p_prefix);
+NVM_COMMON_API void print_buffer_to_file(const char *filename, char *p_buf, size_t buf_size, char *p_prefix);
 
 /*!
  * The global to contain the number of trace rows
  */
-extern int trace_rows;
+NVM_COMMON_API extern int trace_rows;
 
 /*!
  * If logging is turned on, write to the trace table
@@ -150,7 +150,7 @@ extern int trace_rows;
  * @param[in] message
  * 		The message to be logged
  */
-void log_trace(int level, int flags, const char *file_name, int line_number, const char *message);
+NVM_COMMON_API void log_trace(int level, int flags, const char *file_name, int line_number, const char *message);
 
 /*!
  * If logging is turned on, write to log using format.
@@ -165,7 +165,7 @@ void log_trace(int level, int flags, const char *file_name, int line_number, con
  * @param[in] ...
  * 		Parameters need to match the format passed
  */
-void log_trace_f(int level, int flags, const char *file_name, int line_number, const char *format, ...);
+NVM_COMMON_API void log_trace_f(int level, int flags, const char *file_name, int line_number, const char *format, ...);
 
 /*!
  * Checks if the given log level is enabled
@@ -174,17 +174,17 @@ void log_trace_f(int level, int flags, const char *file_name, int line_number, c
  * @return
  * 		1 if True, 0 if False
  */
-int log_level_check(int log_level);
+NVM_COMMON_API int log_level_check(int log_level);
 
 /*!
  * Initializes logging
  */
-int log_init();
+NVM_COMMON_API int log_init();
 
 /*!
  * Pushes all remaining log entries into the db and then de-init's the logfile.
  */
-void log_close();
+NVM_COMMON_API void log_close();
 
 /*!
  * Performs appropriate gather functions to ensure logs are in the config database
@@ -193,22 +193,22 @@ void log_close();
  * 		COMMON_ERR_BADFILE @n
  * 		COMMON_ERR_UNKNOWN
  */
-int log_gather();
+NVM_COMMON_API int log_gather();
 
-void print_mask_to_g_print_mask(int *print_mask);
+NVM_COMMON_API void print_mask_to_g_print_mask(int *print_mask);
 
-int get_current_print_mask();
-COMMON_BOOL set_current_print_mask(int mask, int write_thru);
+NVM_COMMON_API int get_current_print_mask();
+NVM_COMMON_API COMMON_BOOL set_current_print_mask(int mask, int write_thru);
 
 /*
  * Retrieve the current log level
  */
-int get_current_log_level();
+NVM_COMMON_API int get_current_log_level();
 
 /*
  * Set the current log level
  */
-COMMON_BOOL set_current_log_level(int level);
+NVM_COMMON_API COMMON_BOOL set_current_log_level(int level);
 
 #ifdef __cplusplus
 }

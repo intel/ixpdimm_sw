@@ -111,7 +111,7 @@ int nvm_get_memory_topology(struct memory_topology *p_memory_devices, const NVM_
 	{
 		memset(p_memory_devices, 0, sizeof (struct memory_topology) * count);
 
-		struct nvm_details details[count];
+		struct nvm_details *details = malloc(count * sizeof(struct nvm_details));
 		rc = get_smbios_inventory(count, details);
 		if ((rc > 0) || (rc == NVM_ERR_ARRAYTOOSMALL))
 		{
@@ -121,6 +121,8 @@ int nvm_get_memory_topology(struct memory_topology *p_memory_devices, const NVM_
 				nvm_details_to_memory_topology(&(details[i]), &(p_memory_devices[i]));
 			}
 		}
+
+        free(details);
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -503,7 +505,7 @@ int populate_devices(struct device_discovery *p_devices,
 	{
 
 		memset(p_devices, 0, count * sizeof (struct device_discovery));
-		struct nvm_topology topologies[topo_count];
+		struct nvm_topology *topologies = malloc(topo_count * sizeof(struct nvm_topology));
 		if ((rc = get_topology(topo_count, topologies)) > 0)
 		{
 			// populated_count = topo_count in get_topology's
@@ -536,6 +538,8 @@ int populate_devices(struct device_discovery *p_devices,
 			// Save to context for reuse next time
 			set_nvm_context_devices(p_devices, rc);
 		}
+		
+        free(topologies);
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -566,7 +570,6 @@ int nvm_get_devices_nfit(struct device_discovery *p_devices, const NVM_UINT8 cou
 		COMMON_LOG_ERROR("Invalid parameter, p_devices is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
-	else
 	{
 		rc = populate_devices(p_devices, count, NVM_FALSE);
 	}
@@ -826,7 +829,7 @@ int get_sku_violation_state_for_device(NVM_NFIT_DEVICE_HANDLE dimm_handle,
 	if (rc > 0)
 	{
 		int dev_count = rc;
-		struct device_discovery devices[dev_count];
+		struct device_discovery *devices =  malloc(dev_count * sizeof(struct device_discovery));
 		rc = nvm_get_devices(devices, dev_count);
 		if (rc == dev_count)
 		{
@@ -846,6 +849,8 @@ int get_sku_violation_state_for_device(NVM_NFIT_DEVICE_HANDLE dimm_handle,
 			COMMON_LOG_ERROR_F(
 				"Failed to get the correct number of devices with error %d", rc);
 		}
+
+        free(devices);
 	}
 	else
 	{
@@ -1414,7 +1419,7 @@ int nvm_get_nvm_capacities(struct device_capacities *p_capacities)
 				if (rc > 0)
 				{
 					int dev_count = rc;
-					struct device_discovery devices[dev_count];
+					struct device_discovery *devices = malloc(dev_count * sizeof(struct device_discovery));
 					rc = nvm_get_devices(devices, dev_count);
 					if (rc == dev_count)
 					{
@@ -1453,6 +1458,8 @@ int nvm_get_nvm_capacities(struct device_capacities *p_capacities)
 							}
 						}
 					}
+
+                    free(devices);
 				}
 			}
 		}

@@ -42,6 +42,7 @@
 #include <libinvm-cim/ObjectPath.h>
 #include <libinvm-cim/Attribute.h>
 #include <core/system/SystemService.h>
+#include <wbem/ExportCim.h>
 
 namespace wbem
 {
@@ -52,7 +53,7 @@ namespace framework_interface
  * The base class for Nvm CIM instance factories.
  */
 
-class NVM_API NvmInstanceFactory : public framework::InstanceFactory
+class NVM_CIM_API NvmInstanceFactory : public framework::InstanceFactory
 {
 public:
 	NvmInstanceFactory(core::system::SystemService &systemService = core::system::SystemService::getService());

@@ -240,7 +240,7 @@ void diag_clear_results(const enum diagnostic_test type,
 	if (p_store)
 	{
 		db_get_event_count_by_event_type_type(p_store, type, &event_count);
-		struct db_event events[event_count];
+		struct db_event *events = malloc(event_count * sizeof(struct db_event));
 		db_get_events_by_event_type_type(p_store, type, events, event_count);
 		for (int i = 0; i < event_count; i++)
 		{
@@ -260,5 +260,7 @@ void diag_clear_results(const enum diagnostic_test type,
 				db_delete_event_by_id(p_store, events[i].id);
 			}
 		}
+        
+        free(events);
 	}
 }

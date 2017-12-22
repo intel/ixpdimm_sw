@@ -34,7 +34,7 @@
 #define	SRC_LIB_WIN_ADAPTER_H_
 
 #include <windows.h>
-#include <windows/PrivateIoctlDefinitions.h>
+#include <PrivateIoctlDefinitions.h>
 #include <device_fw.h>
 
 // SCSI port used as IOCTL target

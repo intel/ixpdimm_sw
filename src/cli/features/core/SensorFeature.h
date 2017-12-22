@@ -38,6 +38,7 @@
 #include <nvm_types.h>
 #include <core/device/Device.h>
 #include <core/device/Sensors.h>
+#include <cli/features/ExportCli.h>
 
 namespace cli
 {
@@ -53,7 +54,7 @@ static const std::string MODIFY_SENSOR_PROMPT = N_TR(
 /*!
  * Implements the CR sensor commands
  */
-class NVM_API SensorFeature : public cli::nvmcli::VerboseFeatureBase
+class NVM_CLI_API SensorFeature : public cli::nvmcli::VerboseFeatureBase
 {
 public:
 

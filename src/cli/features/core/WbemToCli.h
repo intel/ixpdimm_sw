@@ -35,12 +35,13 @@
 #include <libinvm-cim/Instance.h>
 #include <libinvm-cli/SyntaxErrorBadValueResult.h>
 #include <framework_interface/NvmInstanceFactory.h>
+#include <cli/features/ExportCli.h>
 
 namespace cli
 {
 namespace nvmcli
 {
-class NVM_API WbemToCli
+class NVM_CLI_API WbemToCli
 {
 public:
 	/*

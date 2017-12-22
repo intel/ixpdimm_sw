@@ -82,7 +82,7 @@ static const std::string MEMORYALLOCATIONSETTINGS_ALLOCATIONUNITS = "bytes";
 /*!
  * Represents the support data maintained by the management software
  */
-class NVM_API MemoryAllocationSettingsFactory: public framework_interface::NvmInstanceFactory {
+class NVM_CIM_API MemoryAllocationSettingsFactory: public framework_interface::NvmInstanceFactory {
 public:
 	// constructor
 	MemoryAllocationSettingsFactory();

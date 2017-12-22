@@ -35,17 +35,18 @@
 extern "C"
 
 #include <nvm_types.h>
+#include <cli/features/ExportCli.h>
 
 /*!
  * register the NVMCLI core features
  */
-NVM_API void registerFeatures();
+NVM_CLI_API void registerFeatures();
 
 
 /*!
  * unregister the NVMCLI core features
  */
-NVM_API void unRegisterFeatures();
+NVM_CLI_API void unRegisterFeatures();
 
 
 #endif /* _CLI_NVMCLI_COREFEATURES_H_ */

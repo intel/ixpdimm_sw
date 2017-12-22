@@ -2,6 +2,7 @@ REM -----------------------------
 REM Create registration mofs
 REM -----------------------------
 
+@echo off
 set ROOT=%1
 set BUILD_DIR=%2
 set WBEM_PREFIX_INPUT=Intel_
@@ -69,3 +70,6 @@ REM add qualifiers for linux/windows
 type "%ROOT%\src\wbem\mof\qualifiers.mof" >> "%BUILD_DIR%\intelwbem_with_qualifiers.mof"
 type "%BUILD_DIR%\intelwbem.mof" >> "%BUILD_DIR%\intelwbem_with_qualifiers.mof"
 move /Y %BUILD_DIR%\intelwbem_with_qualifiers.mof  %BUILD_DIR%\intelwbem.mof
+
+echo "Create Windows MOFs Complete!"
+exit /b 0

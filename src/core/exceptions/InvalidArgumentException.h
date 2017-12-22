@@ -32,10 +32,11 @@
 #include <string>
 #include <nvm_types.h>
 #include <LogEnterExit.h>
+#include <core/ExportCore.h>
 
 namespace core
 {
-class NVM_API InvalidArgumentException : public std::exception
+class NVM_CORE_API InvalidArgumentException : public std::exception
 {
 public:
 	InvalidArgumentException(std::string argumentName) : m_argumentName(argumentName) { }

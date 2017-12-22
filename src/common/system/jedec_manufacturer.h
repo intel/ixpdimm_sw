@@ -45,7 +45,7 @@ extern "C"
 /*!
  * Lookup the manufacturer name given the JEDEC JEP-106 manufacturer ID.
  */
-extern int lookup_jedec_jep106_manufacturer(
+NVM_COMMON_API extern int lookup_jedec_jep106_manufacturer(
 		const unsigned char *manufacturer_id, const int manufacturer_id_len,
 		char *manufacturer, const COMMON_SIZE manufacturer_len);
 

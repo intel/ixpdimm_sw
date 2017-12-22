@@ -42,6 +42,7 @@
 #include <core/exceptions/LibraryException.h>
 #include <core/Collection.h>
 #include <core/NvmLibrary.h>
+#include <core/ExportCore.h>
 #include "SensorCelsius.h"
 #include "SensorTime.h"
 namespace core
@@ -50,13 +51,13 @@ namespace core
 	{
 		namespace sensor
 		{
-			class NVM_API SensorFactory
+			class NVM_CORE_API SensorFactory
 			{
 			public:
 				static Sensor* CreateSensor(const struct sensor sensor);
 			};
 
-			class NVM_API SensorMediaTemp: public SensorCelsius
+			class NVM_CORE_API SensorMediaTemp: public SensorCelsius
 			{
 			public:
 				SensorMediaTemp();
@@ -65,7 +66,7 @@ namespace core
 				virtual std::string GetName();
 			};
 
-			class NVM_API SensorSpareCapacity : public Sensor
+			class NVM_CORE_API SensorSpareCapacity : public Sensor
 			{
 			public:
 				SensorSpareCapacity();
@@ -77,7 +78,7 @@ namespace core
 				virtual std::string baseUnit();
 			};
 
-			class NVM_API SensorWearLevel : public Sensor
+			class NVM_CORE_API SensorWearLevel : public Sensor
 			{
 			public:
 				SensorWearLevel();
@@ -88,7 +89,7 @@ namespace core
 				virtual std::string baseUnit();
 			};
 
-			class NVM_API SensorPwrCycles : public Sensor
+			class NVM_CORE_API SensorPwrCycles : public Sensor
 			{
 			public:
 				SensorPwrCycles();
@@ -97,7 +98,7 @@ namespace core
 				virtual std::string GetName();
 			};
 
-			class NVM_API SensorPwrOnTime : public SensorTime
+			class NVM_CORE_API SensorPwrOnTime : public SensorTime
 			{
 			public:
 				SensorPwrOnTime();
@@ -106,7 +107,7 @@ namespace core
 				virtual std::string GetName();
 			};
 
-			class NVM_API SensorUpTime : public SensorTime
+			class NVM_CORE_API SensorUpTime : public SensorTime
 			{
 			public:
 				SensorUpTime();
@@ -115,7 +116,7 @@ namespace core
 				virtual std::string GetName();
 			};
 
-			class NVM_API SensorUnsafeShutdowns : public Sensor
+			class NVM_CORE_API SensorUnsafeShutdowns : public Sensor
 			{
 			public:
 				SensorUnsafeShutdowns();
@@ -124,7 +125,7 @@ namespace core
 				virtual std::string GetName();
 			};
 
-			class NVM_API SensorFwErrorLogCnt : public Sensor
+			class NVM_CORE_API SensorFwErrorLogCnt : public Sensor
 			{
 			public:
 				SensorFwErrorLogCnt();
@@ -133,7 +134,7 @@ namespace core
 				virtual std::string GetName();
 			};
 
-			class NVM_API SensorPwrLimited : public Sensor
+			class NVM_CORE_API SensorPwrLimited : public Sensor
 			{
 			public:
 				SensorPwrLimited();
@@ -142,7 +143,7 @@ namespace core
 				virtual std::string GetName();
 			};
 
-			class NVM_API SensorControllerTemp : public SensorCelsius
+			class NVM_CORE_API SensorControllerTemp : public SensorCelsius
 			{
 			public:
 				SensorControllerTemp();
@@ -151,7 +152,7 @@ namespace core
 				virtual std::string GetName();
 			};
 
-			class NVM_API SensorHealth : public Sensor
+			class NVM_CORE_API SensorHealth : public Sensor
 			{
 			public:
 				SensorHealth();

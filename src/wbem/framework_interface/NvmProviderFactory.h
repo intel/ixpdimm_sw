@@ -29,12 +29,13 @@
 
 #include <libinvm-cim/ProviderFactory.h>
 #include <nvm_types.h>
+#include <wbem/ExportCim.h>
 
 namespace wbem
 {
 namespace framework_interface
 {
-class NVM_API NvmProviderFactory : public framework::ProviderFactory
+class NVM_CIM_API NvmProviderFactory : public framework::ProviderFactory
 {
 public:
 

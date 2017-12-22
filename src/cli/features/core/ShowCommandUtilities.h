@@ -32,17 +32,18 @@
 #include <libinvm-cli/ResultBase.h>
 #include <libinvm-cli/ErrorResult.h>
 #include <core/device/Device.h>
-#include <core/StringList.h>
+#include <cli/features/core/StringList.h>
 #include "framework/UnitsOption.h"
 #include <persistence/lib_persistence.h>
 #include <persistence/config_settings.h>
+#include <cli/features/ExportCli.h>
 
 namespace cli
 {
 namespace nvmcli
 {
 
-class NVM_API ShowCommandUtilities
+class NVM_CLI_API ShowCommandUtilities
 {
 	public:
 		ShowCommandUtilities() {}

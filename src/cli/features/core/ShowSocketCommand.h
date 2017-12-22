@@ -48,7 +48,7 @@ namespace cli
 namespace nvmcli
 {
 
-class NVM_API ShowSocketCommand : framework::CommandBase
+class NVM_CLI_API ShowSocketCommand : framework::CommandBase
 {
 public:
 	ShowSocketCommand(

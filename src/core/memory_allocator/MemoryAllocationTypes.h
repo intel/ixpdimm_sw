@@ -40,6 +40,7 @@
 #include <vector>
 #include <map>
 #include <string>
+#include <core/ExportCore.h>
 
 namespace core
 {

@@ -36,13 +36,14 @@
 #include <core/exceptions/LibraryException.h>
 #include <core/memory_allocator/LayoutStep.h>
 #include "MemoryAllocationUtil.h"
+#include <core/ExportCore.h>
 
 namespace core
 {
 namespace memory_allocator
 {
 
-class NVM_API LayoutStepLimitTotalMappedMemory : public LayoutStep
+class NVM_CORE_API LayoutStepLimitTotalMappedMemory : public LayoutStep
 {
 	public:
 		LayoutStepLimitTotalMappedMemory(const std::vector<struct device_details> deviceDetailsList, MemoryAllocationUtil &util);

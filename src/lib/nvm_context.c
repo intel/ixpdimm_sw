@@ -44,7 +44,8 @@ extern pthread_mutex_t g_context_lock;
 #endif
 
 // Current context pointer - one per process
-struct nvm_context *p_context = NULL;
+NVM_API struct nvm_context *p_context = NULL;
+
 // context ref counter
 int g_ctx_count = 0;
 

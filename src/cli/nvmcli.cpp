@@ -112,10 +112,10 @@ int main(int argc, char * argv[])
 	/*
 	 * L10n
 	 */
-	setlocale(LC_MESSAGES, ""); // GNU gettext will use catalomsg to translate marked strings
+	setlocale(LC_ALL, ""); // GNU gettext will use catalomsg to translate marked strings
 	// LC_CTYPE is responsible for determining character classes with the isalnum
 	// etc functions from ctype. gettext doesn't do anything, but the clib will
-	setlocale(LC_CTYPE, "");
+	//setlocale(LC_CTYPE, "");
 
 	COMMON_PATH locale_dir;
 	get_locale_dir(locale_dir);

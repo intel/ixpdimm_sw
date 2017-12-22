@@ -151,7 +151,7 @@ int bios_write_large_payload(struct fw_cmd *p_fw_cmd)
 
 					p_write_payload->LargeInputPayloadOffset = current_offset;
 					memmove(p_write_payload->BytesToWrite,
-						p_fw_cmd->large_input_payload + current_offset,
+						(UINT8*)p_fw_cmd->large_input_payload + current_offset,
 						write_size);
 
 					if ((rc = execute_ioctl(buf_size, p_ioctl_data, IOCTL_CR_PASS_THROUGH))
@@ -254,7 +254,7 @@ int bios_read_large_payload(struct fw_cmd *p_fw_cmd)
 						if ((rc = dsm_err_to_nvm_lib_err(
 							win_dsm_status_to_int(p_outputPayload->Arg3Status))) == NVM_SUCCESS)
 						{
-							memmove(p_fw_cmd->large_output_payload + current_offset,
+							memmove((UINT8*)p_fw_cmd->large_output_payload + current_offset,
 									p_outputPayload->Arg3OutputBuffer, read_size);
 							current_offset += read_size;
 						}

@@ -49,7 +49,7 @@ namespace support
 /*!
  * Uniquely identifies a diagnostic instance
  */
-class NVM_API DiagnosticIdentityFactory : public framework_interface::NvmInstanceFactory
+class NVM_CIM_API DiagnosticIdentityFactory : public framework_interface::NvmInstanceFactory
 {
 	public:
 

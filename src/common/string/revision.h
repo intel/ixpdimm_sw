@@ -61,7 +61,7 @@ extern "C"
  * @return
  * 		1 if successfully parsed, 0 if failed
  */
-extern int format_revision(const char *rev, size_t rev_len, char *fmt_rev, size_t fmt_rev_len);
+NVM_COMMON_API extern int format_revision(const char *rev, size_t rev_len, char *fmt_rev, size_t fmt_rev_len);
 
 /*!
  * Correctly formats the version numbers in a firmware revision string
@@ -76,7 +76,7 @@ extern int format_revision(const char *rev, size_t rev_len, char *fmt_rev, size_
  * @return
  * 		1 if successfully parsed, 0 if failed
  */
-extern int format_fw_revision(const char *p_firmware_rev, size_t fw_rev_len, char *fmt_rev,
+NVM_COMMON_API extern int format_fw_revision(const char *p_firmware_rev, size_t fw_rev_len, char *fmt_rev,
 		size_t fmt_rev_len);
 
 /*!
@@ -99,7 +99,7 @@ extern int format_fw_revision(const char *p_firmware_rev, size_t fw_rev_len, cha
  * @return
  * 		1 if successfully parsed, 0 if failed
  */
-extern int parse_main_revision(unsigned short int *p_major, unsigned short int *p_minor,
+NVM_COMMON_API extern int parse_main_revision(unsigned short int *p_major, unsigned short int *p_minor,
 		unsigned short int *p_hotfix, unsigned short int *p_build, const char *const revision,
 		size_t revision_len);
 
@@ -119,7 +119,7 @@ extern int parse_main_revision(unsigned short int *p_major, unsigned short int *
  * @return
  * 		1 if successfully parsed, 0 if failed
  */
-extern int parse_fw_revision(unsigned short int *p_major, unsigned short int *p_minor,
+NVM_COMMON_API extern int parse_fw_revision(unsigned short int *p_major, unsigned short int *p_minor,
 		const char *fw_revision, size_t fw_revision_len);
 
 /*!
@@ -137,7 +137,7 @@ extern int parse_fw_revision(unsigned short int *p_major, unsigned short int *p_
  * @param[in] build
  * 		Build number
  */
-extern void build_revision(char *revision, size_t revision_len,
+NVM_COMMON_API extern void build_revision(char *revision, size_t revision_len,
 		unsigned short int major, unsigned short int minor,
 		unsigned short int hotfix, unsigned short int build);
 
@@ -152,10 +152,10 @@ extern void build_revision(char *revision, size_t revision_len,
  * @param[in] minor
  * 		Minor version number
  */
-extern void build_fw_revision(char *fw_revision, size_t fw_revision_len,
+NVM_COMMON_API extern void build_fw_revision(char *fw_revision, size_t fw_revision_len,
 		unsigned short int major, unsigned short int minor);
 
-extern void convert_fw_version_str_to_array(const char * const str, size_t len, unsigned char *arr);
+NVM_COMMON_API extern void convert_fw_version_str_to_array(const char * const str, size_t len, unsigned char *arr);
 
 
 #ifdef __cplusplus

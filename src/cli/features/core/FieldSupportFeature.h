@@ -41,6 +41,7 @@
 #include <core/Result.h>
 #include <core/device/DeviceFirmwareInfo.h>
 #include <nvm_types.h>
+#include <cli/features/ExportCli.h>
 
 namespace cli
 {
@@ -120,7 +121,7 @@ static const std::string SHOWLOGS_COUNT = "Count";
 /*!
  * Implements the CR Field Support Commands.
  */
-class NVM_API FieldSupportFeature : public cli::nvmcli::VerboseFeatureBase
+class NVM_CLI_API FieldSupportFeature : public cli::nvmcli::VerboseFeatureBase
 {
 
 public:

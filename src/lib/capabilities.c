@@ -469,7 +469,7 @@ int apply_dimm_sku_capabilities(struct nvm_capabilities *p_capabilities)
 	if (rc > 0)
 	{
 		int dev_count = rc;
-		struct device_discovery devices[dev_count];
+		struct device_discovery *devices =  malloc(dev_count * sizeof(struct device_discovery));
 		memset(devices, 0, dev_count * sizeof (struct device_discovery));
 		rc = nvm_get_devices(devices, dev_count);
 		if (rc == dev_count)
@@ -518,6 +518,8 @@ int apply_dimm_sku_capabilities(struct nvm_capabilities *p_capabilities)
 		dimm_sku_capabilities_to_nvm_features(
 				&p_capabilities->sku_capabilities,
 				&p_capabilities->nvm_features);
+
+        free(devices);
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -670,7 +672,7 @@ int system_in_sku_violation(const struct nvm_capabilities *p_capabilities,
 	if (rc > 0)
 	{
 		int device_count = rc;
-		struct device_discovery devices[device_count];
+		struct device_discovery *devices = malloc(device_count * sizeof(struct device_discovery));
 		rc = nvm_get_devices(devices, device_count);
 		if (rc > 0)
 		{
@@ -693,6 +695,8 @@ int system_in_sku_violation(const struct nvm_capabilities *p_capabilities,
 				}
 			}
 		}
+
+        free(devices);
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -728,4 +732,36 @@ int get_pcat_revision(NVM_UINT8 *p_pcat_revision)
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
+}
+
+int is_nvm_feature_supported(int feature_name_offset)
+{
+    struct nvm_capabilities capabilities;
+    int rc = nvm_get_nvm_capabilities(&capabilities);
+    if (rc == NVM_SUCCESS)
+    {
+        if (VALUEOF_NVM_FEATURE_OFFSET(&capabilities.nvm_features, feature_name_offset) != 1)
+        {
+            rc = NVM_ERR_NOTSUPPORTED;
+        }
+    }
+    return rc;
+}
+
+int is_nvm_feature_licensed(int feature_name_offset)
+{
+    struct nvm_capabilities capabilities;
+    int rc = nvm_get_nvm_capabilities(&capabilities);
+    if (rc == NVM_SUCCESS)
+    {
+        if (VALUEOF_NVM_FEATURE_OFFSET(&capabilities.nvm_features, feature_name_offset) != 1)
+        {
+            rc = NVM_ERR_NOTSUPPORTED;
+        }
+        else if (capabilities.sku_capabilities.sku_violation)
+        {
+            rc = NVM_ERR_SKUVIOLATION;
+        }
+    }
+    return rc;
 }

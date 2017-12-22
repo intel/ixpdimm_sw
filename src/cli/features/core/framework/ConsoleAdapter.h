@@ -30,6 +30,7 @@
 #include <string>
 #include <iostream>
 #include <nvm_types.h>
+#include <cli/features/ExportCli.h>
 
 namespace cli
 {
@@ -38,7 +39,7 @@ namespace framework
 /*
  * NOTE: This is a humble object and will not have unit tests
  */
-class NVM_API ConsoleAdapter
+class NVM_CLI_API ConsoleAdapter
 {
 public:
 	virtual std::string getLine() const;

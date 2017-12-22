@@ -35,11 +35,12 @@
 #include <exception>
 #include <string>
 #include <nvm_types.h>
+#include <core/ExportCore.h>
 
 namespace core
 {
 
-class NvmExceptionBadRequest : public std::exception
+class NVM_CORE_API NvmExceptionBadRequest : public std::exception
 {
 	public:
 		NvmExceptionBadRequest() :
@@ -61,7 +62,7 @@ class NvmExceptionBadRequest : public std::exception
 		std::string m_message;
 };
 
-class NvmExceptionBadRequestNoDimms : public NvmExceptionBadRequest
+class NVM_CORE_API NvmExceptionBadRequestNoDimms : public NvmExceptionBadRequest
 {
 	public:
 		NvmExceptionBadRequestNoDimms() :
@@ -69,7 +70,7 @@ class NvmExceptionBadRequestNoDimms : public NvmExceptionBadRequest
 		{}
 };
 
-class NvmExceptionBadRequestSize : public NvmExceptionBadRequest
+class NVM_CORE_API NvmExceptionBadRequestSize : public NvmExceptionBadRequest
 {
 	public:
 		NvmExceptionBadRequestSize() :
@@ -77,7 +78,7 @@ class NvmExceptionBadRequestSize : public NvmExceptionBadRequest
 		{}
 };
 
-class NvmExceptionBadRequestMemorySize : public NvmExceptionBadRequestSize
+class NVM_CORE_API NvmExceptionBadRequestMemorySize : public NvmExceptionBadRequestSize
 {
 	public:
 		NvmExceptionBadRequestMemorySize() :
@@ -87,7 +88,7 @@ class NvmExceptionBadRequestMemorySize : public NvmExceptionBadRequestSize
 		}
 };
 
-class NvmExceptionBadRequestReserveStorageSize : public NvmExceptionBadRequest
+class NVM_CORE_API NvmExceptionBadRequestReserveStorageSize : public NvmExceptionBadRequest
 {
 	public:
 	NvmExceptionBadRequestReserveStorageSize() :
@@ -95,7 +96,7 @@ class NvmExceptionBadRequestReserveStorageSize : public NvmExceptionBadRequest
 		{}
 };
 
-class NvmExceptionInvalidDimm : public NvmExceptionBadRequest
+class NVM_CORE_API NvmExceptionInvalidDimm : public NvmExceptionBadRequest
 {
 	public:
 		NvmExceptionInvalidDimm() :
@@ -103,7 +104,7 @@ class NvmExceptionInvalidDimm : public NvmExceptionBadRequest
 		{}
 };
 
-class NvmExceptionBadDimmList : public NvmExceptionBadRequest
+class NVM_CORE_API NvmExceptionBadDimmList : public NvmExceptionBadRequest
 {
 	public:
 		NvmExceptionBadDimmList() :
@@ -112,7 +113,7 @@ class NvmExceptionBadDimmList : public NvmExceptionBadRequest
 		{}
 };
 
-class NvmExceptionRequestNotSupported : public NvmExceptionBadRequest
+class NVM_CORE_API NvmExceptionRequestNotSupported : public NvmExceptionBadRequest
 {
 	public:
 		NvmExceptionRequestNotSupported() :
@@ -120,7 +121,7 @@ class NvmExceptionRequestNotSupported : public NvmExceptionBadRequest
 		{}
 };
 
-class NvmExceptionProvisionCapacityNotSupported : public NvmExceptionBadRequest
+class NVM_CORE_API NvmExceptionProvisionCapacityNotSupported : public NvmExceptionBadRequest
 {
 	public:
 		NvmExceptionProvisionCapacityNotSupported() :
@@ -128,7 +129,7 @@ class NvmExceptionProvisionCapacityNotSupported : public NvmExceptionBadRequest
 		{}
 };
 
-class NvmExceptionAppDirectSettingsNotSupported : public NvmExceptionBadRequest
+class NVM_CORE_API NvmExceptionAppDirectSettingsNotSupported : public NvmExceptionBadRequest
 {
 	public:
 		NvmExceptionAppDirectSettingsNotSupported() :
@@ -136,7 +137,7 @@ class NvmExceptionAppDirectSettingsNotSupported : public NvmExceptionBadRequest
 		{}
 };
 
-class NvmExceptionMemoryModeNotSupported : public NvmExceptionBadRequest
+class NVM_CORE_API NvmExceptionMemoryModeNotSupported : public NvmExceptionBadRequest
 {
 	public:
 		NvmExceptionMemoryModeNotSupported() :
@@ -144,7 +145,7 @@ class NvmExceptionMemoryModeNotSupported : public NvmExceptionBadRequest
 		{}
 };
 
-class NvmExceptionNamespacesExist : public NvmExceptionBadRequest
+class NVM_CORE_API NvmExceptionNamespacesExist : public NvmExceptionBadRequest
 {
 	public:
 		NvmExceptionNamespacesExist() :
@@ -152,7 +153,7 @@ class NvmExceptionNamespacesExist : public NvmExceptionBadRequest
 		{}
 };
 
-class NvmExceptionDimmHasConfigGoal : public NvmExceptionBadRequest
+class NVM_CORE_API NvmExceptionDimmHasConfigGoal : public NvmExceptionBadRequest
 {
 	public:
 		NvmExceptionDimmHasConfigGoal() :
@@ -160,7 +161,7 @@ class NvmExceptionDimmHasConfigGoal : public NvmExceptionBadRequest
 		{}
 };
 
-class NvmExceptionBadRequestDoesntContainRequiredDimms : public NvmExceptionBadRequest
+class NVM_CORE_API NvmExceptionBadRequestDoesntContainRequiredDimms : public NvmExceptionBadRequest
 {
 	public:
 		NvmExceptionBadRequestDoesntContainRequiredDimms() :
@@ -168,7 +169,7 @@ class NvmExceptionBadRequestDoesntContainRequiredDimms : public NvmExceptionBadR
 		{}
 };
 
-class NvmExceptionOverAddressDecoderLimit : public NvmExceptionBadRequest
+class NVM_CORE_API NvmExceptionOverAddressDecoderLimit : public NvmExceptionBadRequest
 {
 	public:
 		NvmExceptionOverAddressDecoderLimit() :
@@ -176,7 +177,7 @@ class NvmExceptionOverAddressDecoderLimit : public NvmExceptionBadRequest
 		{}
 };
 
-class NvmExceptionStorageNotSupported : public NvmExceptionBadRequest
+class NVM_CORE_API NvmExceptionStorageNotSupported : public NvmExceptionBadRequest
 {
 	public:
 		NvmExceptionStorageNotSupported() :
@@ -184,7 +185,7 @@ class NvmExceptionStorageNotSupported : public NvmExceptionBadRequest
 		{}
 };
 
-class NvmExceptionBadRequestReserveDimm : public NvmExceptionBadRequest
+class NVM_CORE_API NvmExceptionBadRequestReserveDimm : public NvmExceptionBadRequest
 {
 	public:
 		NvmExceptionBadRequestReserveDimm() :
@@ -193,7 +194,7 @@ class NvmExceptionBadRequestReserveDimm : public NvmExceptionBadRequest
 		{}
 };
 
-class NvmExceptionTooManyAppDirectExtents : public NvmExceptionBadRequest
+class NVM_CORE_API NvmExceptionTooManyAppDirectExtents : public NvmExceptionBadRequest
 {
 	public:
 		NvmExceptionTooManyAppDirectExtents() :
@@ -201,7 +202,7 @@ class NvmExceptionTooManyAppDirectExtents : public NvmExceptionBadRequest
 		{}
 };
 
-class NvmExceptionRequestedDimmLocked : public NvmExceptionBadRequest
+class NVM_CORE_API NvmExceptionRequestedDimmLocked : public NvmExceptionBadRequest
 {
 	public:
 		NvmExceptionRequestedDimmLocked() :
@@ -209,7 +210,7 @@ class NvmExceptionRequestedDimmLocked : public NvmExceptionBadRequest
 		{}
 };
 
-class NvmExceptionPartialResultsCouldNotBeUndone : public NvmExceptionBadRequest
+class NVM_CORE_API NvmExceptionPartialResultsCouldNotBeUndone : public NvmExceptionBadRequest
 {
 	public:
 		NvmExceptionPartialResultsCouldNotBeUndone() :

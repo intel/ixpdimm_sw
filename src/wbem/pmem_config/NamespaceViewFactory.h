@@ -76,7 +76,7 @@ namespace pmem_config
 /*!
  * Provider Factory for Intel_NamespaceView
  */
-class NVM_API NamespaceViewFactory : public framework_interface::NvmInstanceFactory
+class NVM_CIM_API NamespaceViewFactory : public framework_interface::NvmInstanceFactory
 {
 	public:
 

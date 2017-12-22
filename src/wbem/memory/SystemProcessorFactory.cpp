@@ -31,6 +31,7 @@
  */
 
 #include <string/s_str.h>
+#include <memory>
 #include <nvm_management.h>
 
 #include <LogEnterExit.h>
@@ -124,6 +125,10 @@ wbem::framework::Instance* wbem::memory::SystemProcessorFactory::getInstance(
 		// get the node_id
 		else
 		{
+            // init a buffer for string conversions
+            const size_t temp_cstr_len = 32;
+            char temp_cstr[temp_cstr_len];
+
 			unsigned short node_id = 0;
 			s_strtous(nodeIdAttr.stringValue().c_str(), nodeIdAttr.stringValue().length(),
 					NULL, &node_id);
@@ -136,15 +141,12 @@ wbem::framework::Instance* wbem::memory::SystemProcessorFactory::getInstance(
 				throw exception::NvmExceptionLibError(rc);
 			}
 
-			// init a buffer for string conversions
-			size_t temp_cstr_len = 32;
-			char temp_cstr[temp_cstr_len];
-
-			// ElementName = brand (use brand index here instead of brand string)
+            // ElementName = brand (use brand index here instead of brand string)
 			if (containsAttribute(ELEMENTNAME_KEY, attributes))
 			{
 				snprintf(temp_cstr, temp_cstr_len, "%hhu", node.brand);
-				framework::Attribute elementNameAttr(std::string(temp_cstr), false);
+                std::string temp_str(temp_cstr);
+				framework::Attribute elementNameAttr(temp_str, false);
 				pInstance->setAttribute(ELEMENTNAME_KEY, elementNameAttr, attributes);
 			}
 
@@ -252,8 +254,8 @@ wbem::framework::instance_names_t* wbem::memory::SystemProcessorFactory::getInst
 			std::string hostName = wbem::server::getHostName();
 
 			// get the device_discovery information for all of the dimms
-			struct socket nodes[nodeCount];
-			nodeCount = nvm_get_sockets(nodes, (NVM_UINT16)nodeCount);
+			std::unique_ptr<struct socket[]> nodes(new socket[nodeCount]);
+			nodeCount = nvm_get_sockets(nodes.get(), (NVM_UINT16)nodeCount);
 			if (nodeCount < NVM_SUCCESS)
 			{
 				throw exception::NvmExceptionLibError(nodeCount);
@@ -310,7 +312,7 @@ std::string wbem::memory::SystemProcessorFactory::getDeviceId(const NVM_UINT16 s
 {
 	// DeviceID = SYSTEMPROCESSOR_DEVICEID_PREFIX + NUMA node number
 	// 2^16 = 65536 -> 5 chars max, +1 for null terminator
-	size_t numa_node_log_10_complexity = 6;
+	const size_t numa_node_log_10_complexity = 6;
 	char node_id_cstr[numa_node_log_10_complexity];
 	snprintf(node_id_cstr, numa_node_log_10_complexity, "%05hu", socketId);
 	std::string device_id_str = SYSTEMPROCESSOR_DEVICEID_PREFIX

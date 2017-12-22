@@ -74,12 +74,13 @@ int win_scm2_passthrough(struct fw_cmd *p_cmd, unsigned int *p_dsm_status)
  * size 128, even if the FIS doesn't indicate there is one, or even if it's smaller than
  * 128 bytes. It should never be greater than 128 bytes.
  */
+#define PAYLOAD_SIZE 128
+
 static int do_passthrough_fix_output(int scm_err, unsigned int *p_dsm_status, unsigned int handle,
 		unsigned char opcode, unsigned char sub_op_code,
 		void *input_payload, unsigned int input_payload_size,
 		void *output_payload, unsigned int output_payload_size)
 {
-	const unsigned int PAYLOAD_SIZE = 128;
 	unsigned char tmp_output_payload[PAYLOAD_SIZE];
 	memset(tmp_output_payload, 0, PAYLOAD_SIZE);
 
@@ -148,6 +149,8 @@ static int get_large_payload_sizes(int scm_err, unsigned int *p_dsm_status, unsi
 	return scm_err;
 }
 
+#define LARGE_PAYLOAD_SIZE 4096
+
 static int write_large_input_payload(int scm_err, unsigned int *p_dsm_status, unsigned int handle,
 		void *large_input_payload,
 		unsigned int large_input_payload_size)
@@ -179,7 +182,7 @@ static int write_large_input_payload(int scm_err, unsigned int *p_dsm_status, un
 			{
 				unsigned int bytes_to_transfer;
 				unsigned int large_input_payload_offset;
-				unsigned char buffer[size.rw_size];
+                unsigned char buffer[LARGE_PAYLOAD_SIZE];
 			};
 
 			struct bios_input_payload *p_input_payload =
@@ -197,7 +200,7 @@ static int write_large_input_payload(int scm_err, unsigned int *p_dsm_status, un
 					transfer_size = total_transfer_size - current_offset;
 				}
 
-				memmove(p_input_payload->buffer, large_input_payload + current_offset,
+				memmove(p_input_payload->buffer, (unsigned char *)large_input_payload + current_offset,
 						sizeof (p_input_payload->buffer));
 
 				scm_err = do_passthrough(scm_err, p_dsm_status, handle,
@@ -262,7 +265,7 @@ static int read_large_ouptut_payload(int scm_err, unsigned int *p_dsm_status, un
 							total_transfer_size - input_payload.large_output_payload_offset;
 				}
 
-				unsigned char buffer[input_payload.bytes_to_transfer];
+				unsigned char *buffer = malloc(input_payload.bytes_to_transfer);
 
 				scm_err = do_passthrough(scm_err, p_dsm_status, handle,
 						BIOS_EMULATED_COMMAND, SUBOP_READ_LARGE_PAYLOAD_OUTPUT,
@@ -270,7 +273,9 @@ static int read_large_ouptut_payload(int scm_err, unsigned int *p_dsm_status, un
 						buffer,
 						input_payload.bytes_to_transfer);
 
-				memmove(large_output_payload + offset, buffer, input_payload.bytes_to_transfer);
+				memmove((unsigned char*)large_output_payload + offset, buffer, input_payload.bytes_to_transfer);
+                
+                free(buffer);
 
 				input_payload.large_output_payload_offset += input_payload.bytes_to_transfer;
 				offset += input_payload.bytes_to_transfer;

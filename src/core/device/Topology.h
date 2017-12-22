@@ -42,13 +42,14 @@
 #include <sstream>
 #include <core/exceptions/LibraryException.h>
 #include <core/Collection.h>
+#include <core/ExportCore.h>
 #include "Device.h"
 
 namespace core
 {
 namespace device
 {
-class NVM_API Topology
+class NVM_CORE_API Topology
 {
 	public:
 		static const NVM_UINT32 UNKNOWN_HANDLE;
@@ -106,7 +107,7 @@ class NVM_API Topology
 		device_discovery m_device;
 };
 
-class NVM_API TopologyCollection : public Collection<Topology>
+class NVM_CORE_API TopologyCollection : public Collection<Topology>
 {
 };
 }

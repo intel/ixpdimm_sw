@@ -29,20 +29,21 @@
 
 #include <string>
 #include <nvm_types.h>
+#include <core/ExportCore.h>
 
 namespace core
 {
 namespace device
 {
 
-NVM_API bool isUidValid(const std::string &uid);
+NVM_CORE_API bool isUidValid(const std::string &uid);
 
 /*
  * The following two functions are useful when needing to split a string that is part UID part
  * something else. For example: 8080-12345678temp
  */
-NVM_API int findUidEnd(const std::string &stringWithUidAtBeginning);
-NVM_API int findUidStart(const std::string &stringWithUidAtEnd);
+NVM_CORE_API int findUidEnd(const std::string &stringWithUidAtBeginning);
+NVM_CORE_API int findUidStart(const std::string &stringWithUidAtEnd);
 }
 }
 

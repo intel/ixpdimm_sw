@@ -35,13 +35,14 @@
 
 #include <libinvm-cim/Exception.h>
 #include <nvm_types.h>
+#include <wbem/ExportCim.h>
 
 namespace wbem
 {
 namespace exception
 {
 
-class NVM_API NvmExceptionInvalidPoolConfig : public framework::Exception
+class NVM_CIM_API NvmExceptionInvalidPoolConfig : public framework::Exception
 {
 	public:
 		NvmExceptionInvalidPoolConfig(const char *pReason);

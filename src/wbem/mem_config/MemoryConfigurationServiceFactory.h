@@ -74,7 +74,7 @@ namespace mem_config
 /*!
  * A service that provides access to memory configuration methods
  */
-class NVM_API MemoryConfigurationServiceFactory : public framework_interface::NvmInstanceFactory
+class NVM_CIM_API MemoryConfigurationServiceFactory : public framework_interface::NvmInstanceFactory
 {
 	public:
 

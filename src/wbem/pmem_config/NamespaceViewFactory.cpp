@@ -40,6 +40,7 @@
 #include <libinvm-cim/ExceptionBadParameter.h>
 #include <libinvm-cim/ExceptionNoMemory.h>
 #include <sstream>
+#include <memory>
 #include "NamespaceViewFactory.h"
 #include <string.h>
 #include <exception/NvmExceptionLibError.h>
@@ -218,8 +219,8 @@ throw(wbem::framework::Exception)
 				if (eventCount > 0)
 				{
 					// get the events
-					struct event events[eventCount];
-					eventCount = nvm_get_events(&filter, events, eventCount);
+					std::unique_ptr<struct event[]> events(new struct event[eventCount]);
+					eventCount = nvm_get_events(&filter, events.get(), eventCount);
 					if (eventCount < 0)
 					{
 						COMMON_LOG_ERROR_F("Failed to retrieve events for namespace %s, error %d",

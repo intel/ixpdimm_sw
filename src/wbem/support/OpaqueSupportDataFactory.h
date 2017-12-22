@@ -49,7 +49,7 @@ static const std::string OPAQUESUPPORTDATA_UNKNOWN_ELEMENTNAME = "Unknown"; //!<
 /*!
  * Represents the support data maintained by the management software
  */
-class NVM_API OpaqueSupportDataFactory  : public framework_interface::NvmInstanceFactory
+class NVM_CIM_API OpaqueSupportDataFactory  : public framework_interface::NvmInstanceFactory
 {
 	public:
 		// constructor

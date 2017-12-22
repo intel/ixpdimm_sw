@@ -42,8 +42,9 @@
 #include <libinvm-cli/SyntaxErrorMissingValueResult.h>
 #include <libinvm-cli/SyntaxErrorUnexpectedValueResult.h>
 #include <core/device/DeviceService.h>
-#include <core/StringList.h>
+#include <cli/features/core/StringList.h>
 #include <LogEnterExit.h>
+#include <cli/features/ExportCli.h>
 
 namespace cli
 {
@@ -54,7 +55,7 @@ static const std::string DUMPDEVICESUPPORT_HEADER = "Retrieving device support d
 static const std::string DUMPDEVICESUPPORT_MSG = "Dump device support data from ";
 static const std::string WRITE_SUCCESS = "Successfully written to ";
 
-class NVM_API DumpDeviceSupportCommand : public framework::CommandBase
+class NVM_CLI_API DumpDeviceSupportCommand : public framework::CommandBase
 {
 	public:
 

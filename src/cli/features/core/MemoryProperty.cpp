@@ -236,8 +236,9 @@ bool cli::nvmcli::MemoryProperty::tokenizeSettings()
 		m_settingsTokens.clear();
 
 		// Create a mutable copy to tokenize
-		char tmp[m_settingsPropertyValue.size() + 1];
-		s_strcpy(tmp, m_settingsPropertyValue.c_str(), sizeof (tmp));
+		const size_t len = m_settingsPropertyValue.size() + 1;
+		char *tmp = new char[len];
+		s_strcpy(tmp, m_settingsPropertyValue.c_str(), len);
 
 		char *pRemainder = tmp;
 		char *pToken = x_strtok(&pRemainder, wbem::mem_config::MEMORYPROP_TOKENSEP.c_str());
@@ -252,6 +253,8 @@ bool cli::nvmcli::MemoryProperty::tokenizeSettings()
 
 			pToken = x_strtok(&pRemainder, wbem::mem_config::MEMORYPROP_TOKENSEP.c_str());
 		}
+
+        delete tmp;
 	}
 
 	return result;

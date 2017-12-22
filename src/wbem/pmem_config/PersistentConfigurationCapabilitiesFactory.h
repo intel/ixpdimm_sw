@@ -44,7 +44,7 @@ static const std::string PM_CAP_INSTANCEID = "Persistent Memory Service Capabili
 static const std::string PM_CAP_ELEMENTNAME = PM_CAP_INSTANCEID;
 
 
-class NVM_API PersistentConfigurationCapabilitiesFactory : public framework_interface::NvmInstanceFactory
+class NVM_CIM_API PersistentConfigurationCapabilitiesFactory : public framework_interface::NvmInstanceFactory
 {
 public:
 	/*!

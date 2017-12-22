@@ -55,7 +55,7 @@ namespace support
 /*!
  * Uniquely identifies a job instance
  */
-class NVM_API SanitizeJobFactory : public framework_interface::NvmInstanceFactory
+class NVM_CIM_API SanitizeJobFactory : public framework_interface::NvmInstanceFactory
 {
 	public:
 

@@ -31,12 +31,13 @@
 #include <core/NvmLibrary.h>
 #include <core/Result.h>
 #include "DeviceFirmwareInfoCollection.h"
+#include <core/ExportCore.h>
 
 namespace core
 {
 namespace device
 {
-class NVM_API DeviceFirmwareService
+class NVM_CORE_API DeviceFirmwareService
 {
 public:
 	DeviceFirmwareService(NvmLibrary &lib = NvmLibrary::getNvmLibrary()) : m_lib(lib) { }

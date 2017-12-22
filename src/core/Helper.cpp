@@ -69,6 +69,7 @@ std::string core::Helper::getErrorMessage(const int errorCode)
 	return lib.getErrorMessage(errorCode);
 }
 
+#define MSG_LEN (NVM_EVENT_MSG_LEN + (3 * NVM_EVENT_ARG_LEN))
 std::string core::Helper::getFormattedEvent(const event &event)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -76,9 +77,8 @@ std::string core::Helper::getFormattedEvent(const event &event)
 	std::stringstream eventMsg;
 	eventMsg << "Event" << " " << event.event_id;
 
-	size_t msgLen = NVM_EVENT_MSG_LEN + (3 * NVM_EVENT_ARG_LEN);
-	char msg[msgLen];
-	s_snprintf(msg, msgLen,
+	char msg[MSG_LEN];
+	s_snprintf(msg, MSG_LEN,
 		event.message,
 		event.args[0],
 		event.args[1],

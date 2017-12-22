@@ -168,7 +168,7 @@ int nvm_save_state(const char *name, const NVM_SIZE name_len)
 				if (dev_count > 0)
 				{
 					// get topology, aka discovery info
-					struct nvm_topology topol[dev_count];
+					struct nvm_topology *topol = malloc(dev_count * sizeof(struct nvm_topology));
 					int temprc = get_topology(dev_count, topol);
 					if (temprc < NVM_SUCCESS)
 					{
@@ -229,6 +229,8 @@ int nvm_save_state(const char *name, const NVM_SIZE name_len)
 								history_id, topol[i].device_handle));
 						} // for each device
 					} // get topology success
+
+                    free(topol);
 				} // if dev count > 0
 			} // added history entry ok
 		}
@@ -306,7 +308,7 @@ int support_store_sockets(PersistentStore *p_store, int history_id)
 	int socket_count = nvm_get_socket_count();
 	if (socket_count > 0)
 	{
-		struct socket sockets[socket_count];
+		struct socket *sockets = malloc(socket_count * sizeof(struct socket));
 		if (socket_count != nvm_get_sockets(sockets, socket_count))
 		{
 			COMMON_LOG_ERROR("Failed getting socket information");
@@ -338,6 +340,8 @@ int support_store_sockets(PersistentStore *p_store, int history_id)
 				}
 			}
 		}
+
+        free(sockets);
 	}
 	else if (socket_count < 0)
 	{
@@ -380,7 +384,7 @@ int support_store_namespaces(PersistentStore *p_store, int history_id)
 	int ns_count = nvm_get_namespace_count();
 	if (ns_count > 0)
 	{
-		struct namespace_discovery namespaces[ns_count];
+		struct namespace_discovery *namespaces = malloc(ns_count * sizeof(struct namespace_discovery));
 		ns_count = nvm_get_namespaces(namespaces, ns_count);
 		if (ns_count < 0)
 		{
@@ -429,6 +433,8 @@ int support_store_namespaces(PersistentStore *p_store, int history_id)
 				}
 			}
 		}
+
+        free(namespaces);
 	}
 	else if (ns_count < 0)
 	{
@@ -515,7 +521,7 @@ int support_store_identify_dimm(PersistentStore *p_store, int history_id,
 		db_idimm.fw_sw_mask = id_dimm.fswr;
 		db_idimm.interface_format_code = id_dimm.ifc;
 		db_idimm.interface_format_code_extra = id_dimm.ifce;
-		db_idimm.raw_cap = MULTIPLES_TO_BYTES(id_dimm.rc);
+		db_idimm.raw_cap = id_dimm.rc; // Store this data as 4KB units
 		// convert fw version to string
 		build_revision(db_idimm.fw_revision, IDENTIFY_DIMM_FW_REVISION_LEN,
 				id_dimm.fwr[4], id_dimm.fwr[3], id_dimm.fwr[2],
@@ -1360,7 +1366,8 @@ int support_store_fw_debug_logs(PersistentStore *p_store, int history_id,
 			input.log_action = GET_LOG_PAGE;
 			cmd.input_payload_size = sizeof (input);
 			cmd.input_payload = &input;
-			char fw_log_data[log_count][DEV_FW_LOG_PAGE_SIZE];
+            // FIX ME hack for MSVC, use max size 255
+			char fw_log_data[255][DEV_FW_LOG_PAGE_SIZE];
 			cmd.large_output_payload = fw_log_data;
 			cmd.large_output_payload_size = log_count * DEV_FW_LOG_PAGE_SIZE;
 			cmd.output_payload = NULL;
@@ -2066,8 +2073,9 @@ int support_store_interleave_sets(PersistentStore *p_store, int history_id)
 	if ((tmprc = get_interleave_set_count()) > 0)
 	{
 		int interleave_count = tmprc;
-		struct nvm_interleave_set interleaves[interleave_count];
-		memset(interleaves, 0, sizeof (interleaves));
+		size_t interleaves_len = interleave_count * sizeof(struct nvm_interleave_set);
+		struct nvm_interleave_set *interleaves = malloc(interleaves_len);
+		memset(interleaves, 0, interleaves_len);
 		if ((tmprc = get_interleave_sets(interleave_count, interleaves)) > 0)
 		{
 			for (int i = 0; i < interleave_count; i++)
@@ -2105,6 +2113,8 @@ int support_store_interleave_sets(PersistentStore *p_store, int history_id)
 		{
 			COMMON_LOG_ERROR_F("Failed to get interleave sets, rc=%d", tmprc);
 		}
+
+        free(interleaves);
 	}
 	else if (tmprc < 0)
 	{

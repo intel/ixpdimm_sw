@@ -161,7 +161,7 @@ int nvm_get_debug_log_count()
 /*
  * Retrieve a list of stored debug log entries from the database
  */
-int nvm_get_debug_logs(struct log *p_logs, const NVM_UINT32 count)
+int nvm_get_debug_logs(struct nvm_log *p_logs, const NVM_UINT32 count)
 {
 	int rc = 0; // 0 logs
 
@@ -187,7 +187,7 @@ int nvm_get_debug_logs(struct log *p_logs, const NVM_UINT32 count)
 			// ignore failures because the log only exists if it's not empty
 			log_gather();
 
-			memset(p_logs, 0, (sizeof (struct log) * count));
+			memset(p_logs, 0, (sizeof (struct nvm_log) * count));
 			struct db_log *p_db_logs = (struct db_log *)malloc(sizeof (struct db_log) * count);
 
 			if (p_db_logs != NULL)

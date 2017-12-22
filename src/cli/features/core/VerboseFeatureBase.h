@@ -39,7 +39,7 @@ namespace cli
 namespace nvmcli
 {
 
-class NVM_API VerboseFeatureBase : public cli::framework::FeatureBase
+class NVM_CLI_API VerboseFeatureBase : public cli::framework::FeatureBase
 {
 	public:
 		VerboseFeatureBase();

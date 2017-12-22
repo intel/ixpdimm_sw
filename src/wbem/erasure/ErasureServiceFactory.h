@@ -70,7 +70,7 @@ namespace erasure
 /*!
  * Provider Factory for ErasureService
  */
-class NVM_API ErasureServiceFactory : public framework_interface::NvmInstanceFactory
+class NVM_CIM_API ErasureServiceFactory : public framework_interface::NvmInstanceFactory
 {
 	public:
 

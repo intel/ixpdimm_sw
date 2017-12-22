@@ -42,7 +42,7 @@ int get_first_core_id(NVM_UINT16 socket_id)
 
 	if ((socket_count = get_socket_count()) > 0)
 	{
-		struct socket sockets[socket_count];
+		struct socket *sockets =  malloc(socket_count * sizeof(struct socket));
 		if (socket_count != get_sockets(sockets, socket_count))
 		{
 			rc = NVM_ERR_UNKNOWN;
@@ -73,6 +73,8 @@ int get_first_core_id(NVM_UINT16 socket_id)
 				rc = core_id;
 			}
 		}
+
+        free(sockets);
 	}
 	else
 	{

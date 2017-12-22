@@ -234,7 +234,13 @@ void fwcmd_read_and_print(const char *filename)
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-		unsigned char buffer[fsize];
+		unsigned char *buffer = malloc(fsize);
+        if (NULL == buffer)
+        {
+            printf("Internal Error\n");
+            return;
+        }
+
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
 		pFile = NULL;
@@ -437,17 +443,19 @@ void fwcmd_read_and_print(const char *filename)
 				fis_parse_bsr((struct pt_output_bsr *)p_payload, &data);
 				fwcmd_bsr_printer(&data, 0);
             }
+
 		}
 		else
 		{
 			printf("Issue reading file.\n");
 		}
+
+        free(buffer);
 	}
 	else
 	{
 		printf("Issue opening file.\n");
 	}
-
 }
 
 int fwcmd_dump_identify_dimm(const int handle,
@@ -500,7 +508,13 @@ struct fwcmd_identify_dimm_result fwcmd_read_identify_dimm(const char *filename)
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-		unsigned char buffer[fsize];
+        unsigned char *buffer = malloc(fsize);
+        if (NULL == buffer)
+        {
+            printf("Internal Error\n");
+            return result;
+        }
+
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
 
@@ -523,6 +537,8 @@ struct fwcmd_identify_dimm_result fwcmd_read_identify_dimm(const char *filename)
 			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
 			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
+
+        free(buffer);
 	}
 	else
 	{
@@ -582,7 +598,13 @@ struct fwcmd_identify_dimm_characteristics_result fwcmd_read_identify_dimm_chara
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-		unsigned char buffer[fsize];
+        unsigned char *buffer = malloc(fsize);
+        if (NULL == buffer)
+        {
+            printf("Internal Error\n");
+            return result;
+        }
+
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
 
@@ -605,6 +627,8 @@ struct fwcmd_identify_dimm_characteristics_result fwcmd_read_identify_dimm_chara
 			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
 			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
+
+        free(buffer);
 	}
 	else
 	{
@@ -664,7 +688,13 @@ struct fwcmd_get_security_state_result fwcmd_read_get_security_state(const char 
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-		unsigned char buffer[fsize];
+        unsigned char *buffer = malloc(fsize);
+        if (NULL == buffer)
+        {
+            printf("Internal Error\n");
+            return result;
+        }
+
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
 
@@ -687,6 +717,8 @@ struct fwcmd_get_security_state_result fwcmd_read_get_security_state(const char 
 			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
 			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
+
+        free(buffer);
 	}
 	else
 	{
@@ -746,7 +778,13 @@ struct fwcmd_get_alarm_threshold_result fwcmd_read_get_alarm_threshold(const cha
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-		unsigned char buffer[fsize];
+        unsigned char *buffer = malloc(fsize);
+        if (NULL == buffer)
+        {
+            printf("Internal Error\n");
+            return result;
+        }
+
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
 
@@ -769,6 +807,8 @@ struct fwcmd_get_alarm_threshold_result fwcmd_read_get_alarm_threshold(const cha
 			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
 			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
+
+        free(buffer);
 	}
 	else
 	{
@@ -828,8 +868,14 @@ struct fwcmd_power_management_policy_result fwcmd_read_power_management_policy(c
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-		unsigned char buffer[fsize];
-		size_t bytes_read = fread(buffer, 1, fsize, pFile);
+        unsigned char *buffer = malloc(fsize);
+        if (NULL == buffer)
+        {
+            printf("Internal Error\n");
+            return result;
+        }
+
+        size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
 
 		if (bytes_read == fsize)
@@ -851,6 +897,8 @@ struct fwcmd_power_management_policy_result fwcmd_read_power_management_policy(c
 			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
 			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
+
+        free(buffer);
 	}
 	else
 	{
@@ -910,7 +958,13 @@ struct fwcmd_die_sparing_policy_result fwcmd_read_die_sparing_policy(const char 
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-		unsigned char buffer[fsize];
+        unsigned char *buffer = malloc(fsize);
+        if (NULL == buffer)
+        {
+            printf("Internal Error\n");
+            return result;
+        }
+
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
 
@@ -933,6 +987,8 @@ struct fwcmd_die_sparing_policy_result fwcmd_read_die_sparing_policy(const char 
 			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
 			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
+
+        free(buffer);
 	}
 	else
 	{
@@ -992,7 +1048,13 @@ struct fwcmd_address_range_scrub_result fwcmd_read_address_range_scrub(const cha
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-		unsigned char buffer[fsize];
+        unsigned char *buffer = malloc(fsize);
+        if (NULL == buffer)
+        {
+            printf("Internal Error\n");
+            return result;
+        }
+
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
 
@@ -1015,6 +1077,8 @@ struct fwcmd_address_range_scrub_result fwcmd_read_address_range_scrub(const cha
 			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
 			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
+
+        free(buffer);
 	}
 	else
 	{
@@ -1074,7 +1138,13 @@ struct fwcmd_optional_configuration_data_policy_result fwcmd_read_optional_confi
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-		unsigned char buffer[fsize];
+        unsigned char *buffer = malloc(fsize);
+        if (NULL == buffer)
+        {
+            printf("Internal Error\n");
+            return result;
+        }
+
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
 
@@ -1097,6 +1167,8 @@ struct fwcmd_optional_configuration_data_policy_result fwcmd_read_optional_confi
 			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
 			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
+
+        free(buffer);
 	}
 	else
 	{
@@ -1160,7 +1232,13 @@ struct fwcmd_pmon_registers_result fwcmd_read_pmon_registers(const char *filenam
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-		unsigned char buffer[fsize];
+        unsigned char *buffer = malloc(fsize);
+        if (NULL == buffer)
+        {
+            printf("Internal Error\n");
+            return result;
+        }
+
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
 
@@ -1183,6 +1261,8 @@ struct fwcmd_pmon_registers_result fwcmd_read_pmon_registers(const char *filenam
 			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
 			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
+
+        free(buffer);
 	}
 	else
 	{
@@ -1242,7 +1322,13 @@ struct fwcmd_system_time_result fwcmd_read_system_time(const char *filename)
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-		unsigned char buffer[fsize];
+        unsigned char *buffer = malloc(fsize);
+        if (NULL == buffer)
+        {
+            printf("Internal Error\n");
+            return result;
+        }
+
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
 
@@ -1265,6 +1351,8 @@ struct fwcmd_system_time_result fwcmd_read_system_time(const char *filename)
 			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
 			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
+
+        free(buffer);
 	}
 	else
 	{
@@ -1332,7 +1420,13 @@ struct fwcmd_platform_config_data_result fwcmd_read_platform_config_data(const c
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-		unsigned char buffer[fsize];
+        unsigned char *buffer = malloc(fsize);
+        if (NULL == buffer)
+        {
+            printf("Internal Error\n");
+            return result;
+        }
+
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
 
@@ -1355,6 +1449,8 @@ struct fwcmd_platform_config_data_result fwcmd_read_platform_config_data(const c
 			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
 			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
+
+        free(buffer);
 	}
 	else
 	{
@@ -1422,7 +1518,13 @@ struct fwcmd_namespace_labels_result fwcmd_read_namespace_labels(const char *fil
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-		unsigned char buffer[fsize];
+        unsigned char *buffer = malloc(fsize);
+        if (NULL == buffer)
+        {
+            printf("Internal Error\n");
+            return result;
+        }
+
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
 
@@ -1445,6 +1547,8 @@ struct fwcmd_namespace_labels_result fwcmd_read_namespace_labels(const char *fil
 			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
 			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
+
+        free(buffer);
 	}
 	else
 	{
@@ -1504,7 +1608,13 @@ struct fwcmd_dimm_partition_info_result fwcmd_read_dimm_partition_info(const cha
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-		unsigned char buffer[fsize];
+        unsigned char *buffer = malloc(fsize);
+        if (NULL == buffer)
+        {
+            printf("Internal Error\n");
+            return result;
+        }
+
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
 
@@ -1527,6 +1637,8 @@ struct fwcmd_dimm_partition_info_result fwcmd_read_dimm_partition_info(const cha
 			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
 			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
+
+        free(buffer);
 	}
 	else
 	{
@@ -1590,7 +1702,13 @@ struct fwcmd_fw_debug_log_level_result fwcmd_read_fw_debug_log_level(const char 
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-		unsigned char buffer[fsize];
+        unsigned char *buffer = malloc(fsize);
+        if (NULL == buffer)
+        {
+            printf("Internal Error\n");
+            return result;
+        }
+
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
 
@@ -1613,6 +1731,8 @@ struct fwcmd_fw_debug_log_level_result fwcmd_read_fw_debug_log_level(const char 
 			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
 			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
+
+        free(buffer);
 	}
 	else
 	{
@@ -1672,7 +1792,13 @@ struct fwcmd_fw_load_flag_result fwcmd_read_fw_load_flag(const char *filename)
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-		unsigned char buffer[fsize];
+        unsigned char *buffer = malloc(fsize);
+        if (NULL == buffer)
+        {
+            printf("Internal Error\n");
+            return result;
+        }
+
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
 
@@ -1695,6 +1821,8 @@ struct fwcmd_fw_load_flag_result fwcmd_read_fw_load_flag(const char *filename)
 			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
 			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
+
+        free(buffer);
 	}
 	else
 	{
@@ -1754,7 +1882,13 @@ struct fwcmd_config_lockdown_result fwcmd_read_config_lockdown(const char *filen
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-		unsigned char buffer[fsize];
+        unsigned char *buffer = malloc(fsize);
+        if (NULL == buffer)
+        {
+            printf("Internal Error\n");
+            return result;
+        }
+
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
 
@@ -1777,6 +1911,8 @@ struct fwcmd_config_lockdown_result fwcmd_read_config_lockdown(const char *filen
 			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
 			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
+
+        free(buffer);
 	}
 	else
 	{
@@ -1836,7 +1972,13 @@ struct fwcmd_ddrt_io_init_info_result fwcmd_read_ddrt_io_init_info(const char *f
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-		unsigned char buffer[fsize];
+        unsigned char *buffer = malloc(fsize);
+        if (NULL == buffer)
+        {
+            printf("Internal Error\n");
+            return result;
+        }
+
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
 
@@ -1859,6 +2001,8 @@ struct fwcmd_ddrt_io_init_info_result fwcmd_read_ddrt_io_init_info(const char *f
 			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
 			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
+
+        free(buffer);
 	}
 	else
 	{
@@ -1918,7 +2062,13 @@ struct fwcmd_get_supported_sku_features_result fwcmd_read_get_supported_sku_feat
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-		unsigned char buffer[fsize];
+        unsigned char *buffer = malloc(fsize);
+        if (NULL == buffer)
+        {
+            printf("Internal Error\n");
+            return result;
+        }
+
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
 
@@ -1941,6 +2091,8 @@ struct fwcmd_get_supported_sku_features_result fwcmd_read_get_supported_sku_feat
 			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
 			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
+
+        free(buffer);
 	}
 	else
 	{
@@ -2000,7 +2152,13 @@ struct fwcmd_enable_dimm_result fwcmd_read_enable_dimm(const char *filename)
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-		unsigned char buffer[fsize];
+        unsigned char *buffer = malloc(fsize);
+        if (NULL == buffer)
+        {
+            printf("Internal Error\n");
+            return result;
+        }
+
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
 
@@ -2023,6 +2181,8 @@ struct fwcmd_enable_dimm_result fwcmd_read_enable_dimm(const char *filename)
 			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
 			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
+
+        free(buffer);
 	}
 	else
 	{
@@ -2082,7 +2242,13 @@ struct fwcmd_smart_health_info_result fwcmd_read_smart_health_info(const char *f
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-		unsigned char buffer[fsize];
+        unsigned char *buffer = malloc(fsize);
+        if (NULL == buffer)
+        {
+            printf("Internal Error\n");
+            return result;
+        }
+
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
 
@@ -2105,6 +2271,8 @@ struct fwcmd_smart_health_info_result fwcmd_read_smart_health_info(const char *f
 			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
 			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
+
+        free(buffer);
 	}
 	else
 	{
@@ -2164,7 +2332,13 @@ struct fwcmd_firmware_image_info_result fwcmd_read_firmware_image_info(const cha
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-		unsigned char buffer[fsize];
+        unsigned char *buffer = malloc(fsize);
+        if (NULL == buffer)
+        {
+            printf("Internal Error\n");
+            return result;
+        }
+
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
 
@@ -2187,6 +2361,8 @@ struct fwcmd_firmware_image_info_result fwcmd_read_firmware_image_info(const cha
 			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
 			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
+
+        free(buffer);
 	}
 	else
 	{
@@ -2254,7 +2430,13 @@ struct fwcmd_firmware_debug_log_result fwcmd_read_firmware_debug_log(const char 
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-		unsigned char buffer[fsize];
+        unsigned char *buffer = malloc(fsize);
+        if (NULL == buffer)
+        {
+            printf("Internal Error\n");
+            return result;
+        }
+
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
 
@@ -2277,6 +2459,8 @@ struct fwcmd_firmware_debug_log_result fwcmd_read_firmware_debug_log(const char 
 			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
 			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
+
+        free(buffer);
 	}
 	else
 	{
@@ -2336,7 +2520,13 @@ struct fwcmd_long_operation_status_result fwcmd_read_long_operation_status(const
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-		unsigned char buffer[fsize];
+        unsigned char *buffer = malloc(fsize);
+        if (NULL == buffer)
+        {
+            printf("Internal Error\n");
+            return result;
+        }
+
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
 
@@ -2359,6 +2549,8 @@ struct fwcmd_long_operation_status_result fwcmd_read_long_operation_status(const
 			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
 			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
+
+        free(buffer);
 	}
 	else
 	{
@@ -2418,7 +2610,13 @@ struct fwcmd_bsr_result fwcmd_read_bsr(const char *filename)
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-		unsigned char buffer[fsize];
+        unsigned char *buffer = malloc(fsize);
+        if (NULL == buffer)
+        {
+            printf("Internal Error\n");
+            return result;
+        }
+
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
 
@@ -2441,6 +2639,8 @@ struct fwcmd_bsr_result fwcmd_read_bsr(const char *filename)
 			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
 			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
+
+        free(buffer);
 	}
 	else
 	{

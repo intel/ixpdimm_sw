@@ -62,7 +62,7 @@ static const framework::UINT16 SENSOR_UPPER_FATAL_THRESHOLD = 5; //!< lowest cri
 /*!
  * Provider Factory for NVDIMMSensor
  */
-class NVM_API NVDIMMSensorFactory : public framework_interface::NvmInstanceFactory
+class NVM_CIM_API NVDIMMSensorFactory : public framework_interface::NvmInstanceFactory
 {
 public:
 	/*!

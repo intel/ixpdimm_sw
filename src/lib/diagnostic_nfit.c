@@ -119,7 +119,7 @@ int check_smbios_table_for_uninitialized_dimms(NVM_UINT32 *p_results,
 	if (rc > 0)
 	{
 		NVM_UINT8 smbios_dimm_count = rc;
-		struct nvm_details smbios_dimms[smbios_dimm_count];
+		struct nvm_details *smbios_dimms = malloc(smbios_dimm_count * sizeof(struct nvm_details));
 		rc = get_smbios_inventory(smbios_dimm_count, smbios_dimms);
 		if (rc > 0)
 		{
@@ -133,6 +133,8 @@ int check_smbios_table_for_uninitialized_dimms(NVM_UINT32 *p_results,
 			COMMON_LOG_ERROR_F("error getting SMBIOS table 17 inventory, rc = %d",
 					rc);
 		}
+
+        free(smbios_dimms);
 	}
 	else if (rc < 0)
 	{
@@ -306,7 +308,7 @@ int verify_nfit(int *p_dev_count, NVM_UINT32 *p_results)
 	else
 	{
 		// get_topology verifies NFIT table
-		struct nvm_topology topol[*p_dev_count];
+		struct nvm_topology *topol = malloc(*p_dev_count * sizeof(struct nvm_topology));
 		int temprc = get_topology(*p_dev_count, topol);
 		if (temprc < NVM_SUCCESS)
 		{
@@ -329,6 +331,8 @@ int verify_nfit(int *p_dev_count, NVM_UINT32 *p_results)
 			rc = check_smbios_table_for_uninitialized_dimms(p_results, topol, *p_dev_count);
 			check_for_duplicate_serial_numbers(p_results, topol, *p_dev_count);
 		}
+
+        free(topol);
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);

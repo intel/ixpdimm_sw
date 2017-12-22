@@ -54,12 +54,12 @@ namespace server
 	 * Utility function to retrieve the host name as a standard string.
 	 * @return - std::string version of the network name of the host.
 	 */
-	const NVM_API std::string getHostName() throw (wbem::framework::Exception);
+	const NVM_CIM_API std::string getHostName() throw (wbem::framework::Exception);
 
 /*!
  * The SNIA base server profile models the host server.
  */
-class NVM_API BaseServerFactory : public framework_interface::NvmInstanceFactory
+class NVM_CIM_API BaseServerFactory : public framework_interface::NvmInstanceFactory
 {
 	public:
 

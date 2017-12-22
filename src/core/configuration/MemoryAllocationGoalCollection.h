@@ -32,13 +32,14 @@
 #include <map>
 #include <string>
 #include <core/configuration/MemoryAllocationGoal.h>
+#include <core/ExportCore.h>
 
 namespace core
 {
 namespace configuration
 {
 
-class NVM_API MemoryAllocationGoalCollection
+class NVM_CORE_API MemoryAllocationGoalCollection
 {
 	public:
 		class GoalNotFound : public std::exception {};

@@ -49,7 +49,7 @@ namespace software
 /*!
  * Provider Factory for HostSoftware
  */
-class NVM_API ManagementSoftwareIdentityFactory : public framework_interface::NvmInstanceFactory
+class NVM_CIM_API ManagementSoftwareIdentityFactory : public framework_interface::NvmInstanceFactory
 {
 	public:
 

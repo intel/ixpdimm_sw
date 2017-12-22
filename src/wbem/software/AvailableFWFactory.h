@@ -48,7 +48,7 @@ namespace software
 /*!
  * Provider Factory for AvailableFW
  */
-class NVM_API AvailableFWFactory : public framework_interface::NvmInstanceFactory
+class NVM_CIM_API AvailableFWFactory : public framework_interface::NvmInstanceFactory
 {
 	public:
 

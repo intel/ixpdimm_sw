@@ -32,6 +32,7 @@
 
 
 #include <string.h>
+#include <memory>
 #include <uid/uid.h>
 #include <string/s_str.h>
 #include "DiagnosticLogFactory.h"
@@ -230,8 +231,8 @@ throw (framework::Exception)
 	}
 	if (total_count > 0)
 	{
-		struct event events[total_count];
-		total_count = nvm_get_events(&filter, events, total_count);
+		std::unique_ptr<struct event[]> events(new struct event[total_count]);
+		total_count = nvm_get_events(&filter, events.get(), total_count);
 		if (total_count < 0)
 		{
 			throw exception::NvmExceptionLibError(total_count);

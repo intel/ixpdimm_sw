@@ -35,6 +35,8 @@
 #ifndef	_CSV_LOG_H_
 #define	_CSV_LOG_H_
 
+#include <export_common.h>
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -45,22 +47,22 @@ extern "C"
 /*
  * Initialize the lock
  */
-int csv_log_init();
+NVM_COMMON_API int csv_log_init();
 
 /*
  * Flush the cache and clean up the lock
  */
-void csv_log_close();
+NVM_COMMON_API void csv_log_close();
 
 /*
  * Write a log to the csv log cache
  */
-int csv_write_log(int level, const char *file_name, const int line_number, const char *message);
+NVM_COMMON_API int csv_write_log(int level, const char *file_name, const int line_number, const char *message);
 
 /*
  * Flush the CSV log cache to the database
  */
-int flush_csv_log_to_db(PersistentStore *p_ps);
+NVM_COMMON_API int flush_csv_log_to_db(PersistentStore *p_ps);
 
 #ifdef __cplusplus
 }

@@ -31,13 +31,14 @@
 #include <map>
 #include <LogEnterExit.h>
 #include <nvm_types.h>
+#include <core/ExportCore.h>
 
 namespace core
 {
 namespace system
 {
 
-class NVM_API SmbiosType4Utility
+class NVM_CORE_API SmbiosType4Utility
 {
 
 public:

@@ -39,7 +39,7 @@ std::vector<std::string> CliHelper::splitCommaSeperatedString(const std::string 
 	std::vector<std::string> result;
 	if (!commaList.empty())
 	{
-		char tmp[commaList.length()+1];
+		char *tmp = new char[commaList.length()+1];
 		s_strcpy(tmp, commaList.c_str(), commaList.length()+1);
 		char *list = tmp;
 		char *tok = x_strtok(&list, ",");
@@ -49,6 +49,7 @@ std::vector<std::string> CliHelper::splitCommaSeperatedString(const std::string 
 			result.push_back(std::string(tok));
 			tok = x_strtok(&list, ",");
 		}
+        delete tmp;
 	}
 	return result;
 }

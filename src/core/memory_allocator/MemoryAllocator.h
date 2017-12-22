@@ -37,13 +37,14 @@
 #include "RequestRule.h"
 #include "PostLayoutCheck.h"
 #include "MemoryAllocationRequest.h"
+#include <core/ExportCore.h>
 
 namespace core
 {
 namespace memory_allocator
 {
 
-class NVM_API MemoryAllocator
+class NVM_CORE_API MemoryAllocator
 {
 	public:
 		MemoryAllocator(const struct nvm_capabilities &systemCapabilities,

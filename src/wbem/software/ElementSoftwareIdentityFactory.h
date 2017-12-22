@@ -52,7 +52,7 @@ static const framework::UINT16 ELEMENTSOFTWAREIDENTITY_ELEMENTSOFTWARESTATUS_CUR
 static const framework::UINT16 ELEMENTSOFTWAREIDENTITY_ELEMENTSOFTWARESTATUS_NEXT = 3;
 static const framework::UINT16 ELEMENTSOFTWAREIDENTITY_ELEMENTSOFTWARESTATUS_FALLBACK = 4;
 
-class NVM_API ElementSoftwareIdentityFactory : public framework::AssociationFactory
+class NVM_CIM_API ElementSoftwareIdentityFactory : public framework::AssociationFactory
 {
 	public:
 		ElementSoftwareIdentityFactory(framework::Instance *pInstance = NULL,

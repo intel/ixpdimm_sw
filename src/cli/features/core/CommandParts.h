@@ -34,6 +34,7 @@
 
 #include <nvm_types.h>
 #include <NvmStrings.h>
+#include <cli/features/ExportCli.h>
 
 namespace cli
 {

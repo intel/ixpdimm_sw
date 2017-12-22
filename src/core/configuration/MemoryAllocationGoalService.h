@@ -35,13 +35,14 @@
 #include <core/Result.h>
 #include <exception>
 #include <core/memory_allocator/MemoryAllocationTypes.h>
+#include <core/ExportCore.h>
 
 namespace core
 {
 namespace configuration
 {
 
-class NVM_API MemoryAllocationGoalService
+class NVM_CORE_API MemoryAllocationGoalService
 {
 	public:
 		class NoGoalOnDevice : public std::exception {};

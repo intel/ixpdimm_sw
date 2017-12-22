@@ -36,7 +36,7 @@ namespace core
 namespace memory_allocator
 {
 
-class NVM_API RuleMirroredAppDirectNotSupported: public RequestRule
+class NVM_CORE_API RuleMirroredAppDirectNotSupported: public RequestRule
 {
 public:
 	RuleMirroredAppDirectNotSupported();

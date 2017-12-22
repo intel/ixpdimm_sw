@@ -31,10 +31,11 @@
 
 #include <string>
 #include <vector>
+#include "ExportCore.h"
 
 namespace core
 {
-class NVM_API NvmLibrary
+class NVM_CORE_API NvmLibrary
 {
 
 public:
@@ -133,7 +134,7 @@ public:
 	virtual bool isDebugLoggingEnabled();
 	virtual void toggleDebugLogging(const bool enabled);
 	virtual int getDebugLogCount();
-	virtual std::vector<struct log> getDebugLogs();
+	virtual std::vector<struct nvm_log> getDebugLogs();
 	virtual void purgeDebugLog();
 	virtual int dumpDeviceSupport(NVM_UID device_uid, NVM_PATH support_file,
 			NVM_SIZE support_file_len, NVM_PATH support_files[NVM_MAX_EAFD_FILES]);

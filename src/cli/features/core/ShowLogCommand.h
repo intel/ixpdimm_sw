@@ -42,7 +42,7 @@ namespace nvmcli
 
 const std::string SHOWLOG_ROOT = "Log";
 
-class NVM_API ShowLogCommand : framework::CommandBase
+class NVM_CLI_API ShowLogCommand : framework::CommandBase
 {
 public:
 	ShowLogCommand(core::logs::LogService &service = core::logs::LogService::getService());

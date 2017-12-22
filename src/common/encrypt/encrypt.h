@@ -91,7 +91,12 @@ extern "C"
  * 		Windows has no concept of group and other, thus no definitions
  * 		exist for those constants.
  */
+//MSVC
+#ifdef _WIN32
+#define	GENERIC_NEW_FILE_PERMISSION         _S_IREAD|_S_IWRITE
+#else
 #define	GENERIC_NEW_FILE_PERMISSION			S_IRUSR|S_IWUSR
+#endif
 #else
 /*!
  * The set of file permissions allowed for newly created files
@@ -111,7 +116,7 @@ extern "C"
  * 		@c COMMON_ERR_UNKNOWN @n
  * 		@c COMMON_ERR_FAILED
  */
-extern int compress_file(const COMMON_PATH src_file, COMMON_PATH out_file);
+NVM_COMMON_API extern int compress_file(const COMMON_PATH src_file, COMMON_PATH out_file);
 
 /*!
  * Decompress a compressed file.
@@ -122,7 +127,7 @@ extern int compress_file(const COMMON_PATH src_file, COMMON_PATH out_file);
  * @return
  * 		1 if success, 0 if failed
  */
-extern int decompress_file(const COMMON_PATH srcFile, COMMON_PATH outFile);
+NVM_COMMON_API extern int decompress_file(const COMMON_PATH srcFile, COMMON_PATH outFile);
 
 /*!
  * Generate an encrypted file from the contents of an input file, using an RSA public key.
@@ -135,7 +140,7 @@ extern int decompress_file(const COMMON_PATH srcFile, COMMON_PATH outFile);
  * 		@c COMMON_ERR_BADFILE @n
  * 		@c COMMON_ERR_UNKNOWN
  */
-extern int rsa_encrypt(const COMMON_PATH src_file, COMMON_PATH out_file);
+NVM_COMMON_API extern int rsa_encrypt(const COMMON_PATH src_file, COMMON_PATH out_file);
 
 /*!
  * Decrypt an encrypted file
@@ -148,7 +153,7 @@ extern int rsa_encrypt(const COMMON_PATH src_file, COMMON_PATH out_file);
  * @return
  * 		1 if success, 0 if failed
  */
-extern int rsa_decrypt(const COMMON_PATH rsaKeyFile, const COMMON_PATH encryptedFile,
+NVM_COMMON_API extern int rsa_decrypt(const COMMON_PATH rsaKeyFile, const COMMON_PATH encryptedFile,
 		const COMMON_PATH decryptedFile);
 
 

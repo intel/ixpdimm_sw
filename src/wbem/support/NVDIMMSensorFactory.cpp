@@ -116,17 +116,29 @@ const cimSensorDescriptionsMap &getSensorDescriptionMap()
 	static cimSensorDescriptionsMap result;
 	if (result.empty())
 	{
-		result[SENSOR_MEDIA_TEMPERATURE] = (cimSensorDescription) {"mediatemp", NVDIMMSENSOR_ELEMENTPREFIX + "Media Temp", SENSOR_TYPE_TEMP, ""};
-		result[SENSOR_SPARECAPACITY] = (cimSensorDescription) {"spare", NVDIMMSENSOR_ELEMENTPREFIX + "Spare", SENSOR_TYPE_OTHER, "SpareCapacity"};
-		result[SENSOR_WEARLEVEL] = (cimSensorDescription) {"wear", NVDIMMSENSOR_ELEMENTPREFIX + "Wear", SENSOR_TYPE_OTHER, "WearLevel"};
-		result[SENSOR_POWERCYCLES] = (cimSensorDescription) {"pc", NVDIMMSENSOR_ELEMENTPREFIX + "Power Cycles", SENSOR_TYPE_OTHER, "PowerCycles"};
-		result[SENSOR_POWERONTIME] = (cimSensorDescription) {"poh", NVDIMMSENSOR_ELEMENTPREFIX + "Power-on", SENSOR_TYPE_OTHER, "PowerOnTime"};
-		result[SENSOR_UPTIME] = (cimSensorDescription) {"upt", NVDIMMSENSOR_ELEMENTPREFIX + "Up", SENSOR_TYPE_OTHER, "UpTime"};
-		result[SENSOR_UNSAFESHUTDOWNS] =(cimSensorDescription) {"us", NVDIMMSENSOR_ELEMENTPREFIX + "Unsafe Shutdowns", SENSOR_TYPE_OTHER, "UnsafeShutdowns"};
-		result[SENSOR_FWERRORLOGCOUNT] = (cimSensorDescription) {"error", NVDIMMSENSOR_ELEMENTPREFIX + "FW Error Log Count", SENSOR_TYPE_OTHER, "FWError"};
-		result[SENSOR_POWERLIMITED] = (cimSensorDescription) {"pl", NVDIMMSENSOR_ELEMENTPREFIX + "Power Limited", SENSOR_TYPE_OTHER, "PowerLimited"};
-		result[SENSOR_CONTROLLER_TEMPERATURE] = (cimSensorDescription) {"controllertemp", NVDIMMSENSOR_ELEMENTPREFIX + "Controller Temp", SENSOR_TYPE_TEMP, ""};
-		result[SENSOR_HEALTH] = (cimSensorDescription) {"health", NVDIMMSENSOR_ELEMENTPREFIX + "Health", SENSOR_TYPE_OTHER, ""};
+        cimSensorDescription mt = { "mediatemp", NVDIMMSENSOR_ELEMENTPREFIX + "Media Temp", SENSOR_TYPE_TEMP, "" };
+        cimSensorDescription sc = { "spare", NVDIMMSENSOR_ELEMENTPREFIX + "Spare", SENSOR_TYPE_OTHER, "SpareCapacity" };
+        cimSensorDescription wl = { "wear", NVDIMMSENSOR_ELEMENTPREFIX + "Wear", SENSOR_TYPE_OTHER, "WearLevel" };
+        cimSensorDescription pc = { "pc", NVDIMMSENSOR_ELEMENTPREFIX + "Power Cycles", SENSOR_TYPE_OTHER, "PowerCycles" };
+        cimSensorDescription pot = { "poh", NVDIMMSENSOR_ELEMENTPREFIX + "Power-on", SENSOR_TYPE_OTHER, "PowerOnTime" };
+        cimSensorDescription ut = { "upt", NVDIMMSENSOR_ELEMENTPREFIX + "Up", SENSOR_TYPE_OTHER, "UpTime" };
+        cimSensorDescription uss = { "us", NVDIMMSENSOR_ELEMENTPREFIX + "Unsafe Shutdowns", SENSOR_TYPE_OTHER, "UnsafeShutdowns" };
+        cimSensorDescription fwlc = { "error", NVDIMMSENSOR_ELEMENTPREFIX + "FW Error Log Count", SENSOR_TYPE_OTHER, "FWError" };
+        cimSensorDescription pl = { "pl", NVDIMMSENSOR_ELEMENTPREFIX + "Power Limited", SENSOR_TYPE_OTHER, "PowerLimited" };
+        cimSensorDescription ct = { "controllertemp", NVDIMMSENSOR_ELEMENTPREFIX + "Controller Temp", SENSOR_TYPE_TEMP, "" };
+        cimSensorDescription h = { "health", NVDIMMSENSOR_ELEMENTPREFIX + "Health", SENSOR_TYPE_OTHER, "" };
+
+        result[SENSOR_MEDIA_TEMPERATURE] = mt;
+        result[SENSOR_SPARECAPACITY] = sc;
+        result[SENSOR_WEARLEVEL] = wl;
+        result[SENSOR_POWERCYCLES] = pc;
+        result[SENSOR_POWERONTIME] = pot;
+        result[SENSOR_UPTIME] = ut;
+        result[SENSOR_UNSAFESHUTDOWNS] = uss;
+        result[SENSOR_FWERRORLOGCOUNT] = fwlc;
+        result[SENSOR_POWERLIMITED] = pl;
+        result[SENSOR_CONTROLLER_TEMPERATURE] = ct;
+        result[SENSOR_HEALTH] = h;
 	}
 
 	return result;

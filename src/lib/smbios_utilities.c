@@ -46,7 +46,7 @@ int get_dimm_physical_id_from_handle(const NVM_NFIT_DEVICE_HANDLE device_handle)
 	if (rc > 0)
 	{
 		int topo_count = rc;
-		struct nvm_topology topology[topo_count];
+		struct nvm_topology *topology = malloc(topo_count * sizeof(struct nvm_topology));
 		rc = get_topology(topo_count, topology);
 		if (rc > 0)
 		{
@@ -65,6 +65,8 @@ int get_dimm_physical_id_from_handle(const NVM_NFIT_DEVICE_HANDLE device_handle)
 			COMMON_LOG_ERROR("Empty topology after we got a count");
 			rc = NVM_ERR_UNKNOWN;
 		}
+
+        free(topology);
 	}
 	else if (rc == 0)
 	{

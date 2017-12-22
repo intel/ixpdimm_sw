@@ -32,7 +32,8 @@
 #include <cli/features/core/framework/YesNoPrompt.h>
 #include <libinvm-cli/CommandSpec.h>
 #include <core/device/DeviceService.h>
-#include <core/StringList.h>
+#include <cli/features/core/StringList.h>
+#include <cli/features/ExportCli.h>
 
 namespace cli
 {
@@ -41,7 +42,7 @@ namespace nvmcli
 
 static const std::string DELETEDEVICEPCD_MSG = "Clear LSA in Platform Configuration Data On Device ";
 
-class NVM_API DeleteDevicePcdCommand : public framework::CommandBase
+class NVM_CLI_API DeleteDevicePcdCommand : public framework::CommandBase
 {
 	public:
 		DeleteDevicePcdCommand(

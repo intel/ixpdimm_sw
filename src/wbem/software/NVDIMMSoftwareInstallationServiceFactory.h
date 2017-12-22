@@ -64,7 +64,7 @@ namespace software
 /*!
  * Provider Factory for NVDIMMSoftwareInstallationService
  */
-class NVM_API NVDIMMSoftwareInstallationServiceFactory : public framework_interface::NvmInstanceFactory
+class NVM_CIM_API NVDIMMSoftwareInstallationServiceFactory : public framework_interface::NvmInstanceFactory
 {
 	public:
 		/*!

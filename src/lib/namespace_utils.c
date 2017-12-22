@@ -150,7 +150,7 @@ int get_nvm_namespaces_details_alloc(struct nvm_namespace_details **pp_namespace
 	int ns_count = get_namespace_count();
 	if (ns_count > 0)
 	{
-		struct nvm_namespace_discovery namespaces[ns_count];
+		struct nvm_namespace_discovery *namespaces = malloc(ns_count * sizeof(struct nvm_namespace_discovery));
 		memset(namespaces, 0, sizeof (struct nvm_namespace_discovery) * ns_count);
 		if (get_namespaces(ns_count, namespaces) == ns_count)
 		{
@@ -173,6 +173,8 @@ int get_nvm_namespaces_details_alloc(struct nvm_namespace_details **pp_namespace
 				}
 			}
 		}
+
+        free(namespaces);
 	}
 
 	if (rc == NVM_SUCCESS)

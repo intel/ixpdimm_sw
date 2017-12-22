@@ -190,7 +190,7 @@ int collect_namespaces(struct pool_data **pp_pool_data)
 	}
 	else if ((*pp_pool_data)->namespace_count > 0)
 	{
-		struct nvm_namespace_discovery namespaces[(*pp_pool_data)->namespace_count];
+		struct nvm_namespace_discovery *namespaces = malloc((*pp_pool_data)->namespace_count * sizeof(struct nvm_namespace_discovery));
 		(*pp_pool_data)->namespace_count =
 				get_namespaces((*pp_pool_data)->namespace_count, namespaces);
 		if ((*pp_pool_data)->namespace_count < 0)
@@ -219,6 +219,8 @@ int collect_namespaces(struct pool_data **pp_pool_data)
 				}
 			}
 		}
+
+        free(namespaces);
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -1016,6 +1018,7 @@ int nvm_get_pools(struct pool *p_pools, const NVM_UINT8 count)
 	else if ((rc = IS_NVM_FEATURE_LICENSED(get_pools)) != NVM_SUCCESS)
 	{
 		COMMON_LOG_ERROR("Retrieving pools is not supported.");
+        //FIXME why no error return code here?
 	}
 	else if (p_pools == NULL)
 	{

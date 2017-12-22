@@ -46,7 +46,7 @@ const std::string SHOWVERSION_VERSION = "Version";
 const std::string SHOWVERSION_MGMTSW_KEY = N_TR(NVM_SYSTEM" Software Version");
 const std::string SHOWVERSION_DRIVER_KEY = N_TR(NVM_SYSTEM" Driver Version");
 
-class NVM_API ShowVersionCommand : public framework::CommandBase
+class NVM_CLI_API ShowVersionCommand : public framework::CommandBase
 {
 	public:
 		ShowVersionCommand(

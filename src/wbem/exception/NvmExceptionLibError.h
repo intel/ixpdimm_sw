@@ -36,6 +36,7 @@
 
 #include <libinvm-cim/ExceptionSystemError.h>
 #include <nvm_types.h>
+#include <wbem/ExportCim.h>
 
 namespace wbem
 {
@@ -45,7 +46,7 @@ namespace exception
 /*!
  * Exception caused by a library error
  */
-class NVM_API NvmExceptionLibError: public framework::ExceptionSystemError
+class NVM_CIM_API NvmExceptionLibError: public framework::ExceptionSystemError
 {
 	public:
 		/*!

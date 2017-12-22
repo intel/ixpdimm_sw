@@ -34,13 +34,14 @@
 
 #include <nvm_types.h>
 #include <core/memory_allocator/LayoutStep.h>
+#include <core/ExportCore.h>
 
 namespace core
 {
 namespace memory_allocator
 {
 
-class NVM_API LayoutStepReserved: public LayoutStep
+class NVM_CORE_API LayoutStepReserved: public LayoutStep
 {
 	public:
 		LayoutStepReserved();

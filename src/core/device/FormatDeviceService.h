@@ -32,13 +32,14 @@
 #include <nvm_types.h>
 #include <core/firmware_interface/FwCommandsWrapper.h>
 #include <core/device/Device.h>
+#include <core/ExportCore.h>
 
 namespace core
 {
 namespace device
 {
 
-class NVM_API FormatDeviceService
+class NVM_CORE_API FormatDeviceService
 {
 	public:
 		FormatDeviceService(firmware_interface::FwCommandsWrapper &fwCommands =

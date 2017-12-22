@@ -36,13 +36,14 @@
 #include <nvm_types.h>
 #include <core/memory_allocator/MemoryAllocationTypes.h>
 #include <core/memory_allocator/MemoryAllocationRequest.h>
+#include <core/ExportCore.h>
 
 namespace core
 {
 namespace memory_allocator
 {
 
-class NVM_API PostLayoutCheck
+class NVM_CORE_API PostLayoutCheck
 {
 	public:
 		virtual ~PostLayoutCheck() {}

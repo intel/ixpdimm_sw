@@ -42,7 +42,7 @@ namespace core
 namespace memory_allocator
 {
 
-class NVM_API RuleRejectLockedDimms : public RequestRule
+class NVM_CORE_API RuleRejectLockedDimms : public RequestRule
 {
 	public:
 		RuleRejectLockedDimms(const std::vector<struct device_discovery> &manageableDevices);

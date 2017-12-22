@@ -36,13 +36,14 @@
 #include <nvm_types.h>
 #include <vector>
 #include "RequestRule.h"
+#include <core/ExportCore.h>
 
 namespace core
 {
 namespace memory_allocator
 {
 
-class NVM_API RuleDimmListInvalid: public RequestRule
+class NVM_CORE_API RuleDimmListInvalid: public RequestRule
 {
 	public:
 		RuleDimmListInvalid(const std::vector<struct device_discovery> manageableDevices);

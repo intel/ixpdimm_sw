@@ -32,10 +32,11 @@
 #include <LogEnterExit.h>
 #include <vector>
 #include <nvm_management.h>
+#include "ExportCore.h"
 
 namespace core
 {
-class NVM_API Helper
+class NVM_CORE_API Helper
 {
 public:
 	static std::string uidToString(const NVM_UID uid);

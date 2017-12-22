@@ -34,13 +34,14 @@
 
 #include <nvm_types.h>
 #include "RequestRule.h"
+#include <core/ExportCore.h>
 
 namespace core
 {
 namespace memory_allocator
 {
 
-class NVM_API RuleAppDirectNotSupported : public RequestRule
+class NVM_CORE_API RuleAppDirectNotSupported : public RequestRule
 {
 	public:
 		RuleAppDirectNotSupported(const struct nvm_capabilities &cap);

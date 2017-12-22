@@ -30,13 +30,14 @@
 
 #include <nvm_types.h>
 #include "firmware_interface/fw_commands.h"
+#include <core/ExportCore.h>
 
 namespace core
 {
 namespace firmware_interface
 {
 
-class NVM_API FwCommandsWrapper
+class NVM_CORE_API FwCommandsWrapper
 {
 public:
 	virtual ~FwCommandsWrapper();

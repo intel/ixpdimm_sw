@@ -35,13 +35,14 @@
 #include <nvm_types.h>
 #include <core/NvmLibrary.h>
 #include "RequestRule.h"
+#include <core/ExportCore.h>
 
 namespace core
 {
 namespace memory_allocator
 {
 
-class NVM_API RuleDimmHasConfigGoal: public RequestRule
+class NVM_CORE_API RuleDimmHasConfigGoal: public RequestRule
 {
 	public:
 		RuleDimmHasConfigGoal(core::NvmLibrary &nvmLib);

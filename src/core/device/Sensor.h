@@ -41,6 +41,7 @@
 #include <core/exceptions/LibraryException.h>
 #include <core/Collection.h>
 #include <core/NvmLibrary.h>
+#include <core/ExportCore.h>
 
 #define SSTR( x ) static_cast< std::ostringstream & >( \
         ( std::ostringstream() << std::dec << x ) ).str()
@@ -80,7 +81,7 @@ namespace core
 			static std::string PROPERTY_SENSOR_TYPE_HEALTH = N_TR("Health"); //!< type value
 			static std::string PROPERTY_SENSOR_TYPE_UNKNOWN = N_TR("Unknown"); //!< unknown type
 
-			class NVM_API Sensor
+			class NVM_CORE_API Sensor
 			{
 			public:
 				Sensor();

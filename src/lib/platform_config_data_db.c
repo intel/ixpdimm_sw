@@ -447,7 +447,7 @@ int get_dimm_interleave_dimms_v1_from_db(PersistentStore *p_db,
 	else if (count > 0)
 	{
 		// get all the dimms for this interleave set, then filter out the ones we want
-		struct db_interleave_set_dimm_info_v1 db_dimms[count];
+		struct db_interleave_set_dimm_info_v1 *db_dimms = malloc(count * sizeof(struct db_interleave_set_dimm_info_v1));
 		memset(db_dimms, 0, count * sizeof (struct db_interleave_set_dimm_info_v1));
 		count = db_get_interleave_set_dimm_info_v1s(p_db, db_dimms, count);
 		if (count < DB_SUCCESS)
@@ -495,6 +495,8 @@ int get_dimm_interleave_dimms_v1_from_db(PersistentStore *p_db,
 				}
 			}
 		}
+
+        free(db_dimms);
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
@@ -518,8 +520,9 @@ int get_dimm_interleave_dimms_v2_from_db(PersistentStore *p_db,
 	}
 	else if (count > 0)
 	{
-		struct db_interleave_set_dimm_info_v2 db_dimms[count];
-		memset(db_dimms, 0, sizeof (db_dimms));
+		size_t db_dimms_size = count * sizeof(struct db_interleave_set_dimm_info_v2);
+		struct db_interleave_set_dimm_info_v2 *db_dimms = malloc(db_dimms_size);
+		memset(db_dimms, 0, db_dimms_size);
 		db_rc = db_get_interleave_set_dimm_info_v2s(p_db, db_dimms, count);
 		if (db_rc < DB_SUCCESS)
 		{
@@ -559,6 +562,8 @@ int get_dimm_interleave_dimms_v2_from_db(PersistentStore *p_db,
 				}
 			}
 		}
+
+        free(db_dimms);
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
@@ -629,7 +634,7 @@ int get_dimm_interleave_tables_from_db(PersistentStore *p_db,
 	else if (count > 0)
 	{
 		// get all the interleave sets, then filter out the ones we want
-		struct db_dimm_interleave_set db_sets[count];
+		struct db_dimm_interleave_set *db_sets = malloc(count * sizeof(struct db_dimm_interleave_set));
 		memset(db_sets, 0, count * sizeof (struct db_dimm_interleave_set));
 		count = db_get_dimm_interleave_sets(p_db, db_sets, count);
 		if (count < DB_SUCCESS)
@@ -716,6 +721,8 @@ int get_dimm_interleave_tables_from_db(PersistentStore *p_db,
 				}
 			}
 		}
+
+        free(db_sets);
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
@@ -745,7 +752,7 @@ int get_dimm_partition_table_from_db(PersistentStore *p_db,
 	else if (count > 0)
 	{
 		// get all the tables and then filter
-		struct db_dimm_partition_change db_tables[count];
+		struct db_dimm_partition_change *db_tables = malloc(count * sizeof(struct db_dimm_partition_change));
 		memset(db_tables, 0, count * sizeof (struct db_dimm_partition_change));
 		db_rc = db_get_dimm_partition_changes(p_db, db_tables, count);
 		if (db_rc < DB_SUCCESS)
@@ -788,6 +795,8 @@ int get_dimm_partition_table_from_db(PersistentStore *p_db,
 				}
 			}
 		}
+
+        free(db_tables);
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;

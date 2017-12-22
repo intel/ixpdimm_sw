@@ -203,7 +203,7 @@ int get_topology_from_nfit(const NVM_UINT8 count, struct nvm_topology *p_dimm_to
 			if (rc > 0)
 			{
 				int topo_count = rc;
-				struct nfit_dimm nfit_dimms[topo_count];
+				struct nfit_dimm *nfit_dimms = malloc(topo_count * sizeof(struct nfit_dimm));
 				memset(nfit_dimms, 0, sizeof (struct nfit_dimm) * topo_count);
 				topo_count = nfit_get_dimms_from_parsed_nfit(topo_count, nfit_dimms, p_nfit);
 				if (topo_count < 0)
@@ -225,6 +225,7 @@ int get_topology_from_nfit(const NVM_UINT8 count, struct nvm_topology *p_dimm_to
 						nfit_dimm_to_nvm_topology(&nfit_dimms[i], &p_dimm_topo[i]);
 					}
 				}
+                free(nfit_dimms);
 			}
 			free(p_nfit);
 		}
@@ -280,7 +281,7 @@ int nfit_iset_to_nvm_iset(const struct nfit_interleave_set *p_nfit_iset,
 	// loop below
 	if (p_nvm_iset->dimm_count > 0)
 	{
-		p_nvm_iset->socket_id = ((NVM_NFIT_DEVICE_HANDLE)p_nfit_iset->dimms[0]).parts.socket_id;
+		p_nvm_iset->socket_id = ((NVM_NFIT_DEVICE_HANDLE*)p_nfit_iset->dimms)[0].parts.socket_id;
 	}
 
 	for (int i = 0; i < p_nvm_iset->dimm_count; i++)
@@ -289,7 +290,7 @@ int nfit_iset_to_nvm_iset(const struct nfit_interleave_set *p_nfit_iset,
 		p_nvm_iset->dimm_region_pdas[i] = p_nfit_iset->dimm_region_pdas[i];
 		p_nvm_iset->dimm_region_offsets[i] = p_nfit_iset->dimm_region_offsets[i];
 		p_nvm_iset->dimm_sizes[i] = p_nfit_iset->dimm_sizes[i];
-		if (p_nvm_iset->socket_id != ((NVM_NFIT_DEVICE_HANDLE)p_nfit_iset->dimms[i]).parts.socket_id)
+		if (p_nvm_iset->socket_id != ((NVM_NFIT_DEVICE_HANDLE*)p_nfit_iset->dimms)[i].parts.socket_id)
 		{
 			// Interleaved sets should be only over one socket
 			rc = NVM_ERR_INTERLEAVESET;
@@ -320,7 +321,7 @@ int get_interleave_sets_from_nfit(const NVM_UINT8 count,
 			if (rc > 0)
 			{
 				int set_count = rc;
-				struct nfit_interleave_set nfit_isets[set_count];
+				struct nfit_interleave_set *nfit_isets = malloc(set_count * sizeof(struct nfit_interleave_set));
 				set_count = nfit_get_interleave_sets_from_parsed_nfit(set_count,
 						nfit_isets, p_nfit);
 				if (set_count < 0)
@@ -349,6 +350,8 @@ int get_interleave_sets_from_nfit(const NVM_UINT8 count,
 						rc = set_count;
 					}
 				}
+
+                free(nfit_isets);
 			}
 			free(p_nfit);
 		}

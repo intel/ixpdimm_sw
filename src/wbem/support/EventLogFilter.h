@@ -37,6 +37,7 @@
 #include <ctime>
 #include <common_types.h>
 #include <nvm_types.h>
+#include <wbem/ExportCim.h>
 
 namespace wbem
 {
@@ -65,7 +66,7 @@ const COMMON_UINT32 EVENT_TYPE_DIAG_SECURITY = 7; //!< Security diagnostic test 
 const COMMON_UINT32 EVENT_TYPE_DIAG_FW_CONSISTENCY = 8; //!< FW consistency diagnostic test event.
 
 
-class NVM_API EventLogFilter
+class NVM_CIM_API EventLogFilter
 {
 	public:
 

@@ -35,6 +35,7 @@
 #include <vector>
 #include <string>
 #include <nvm_management.h>
+#include <wbem/ExportCim.h>
 
 namespace wbem
 {
@@ -44,7 +45,7 @@ namespace lib_interface
 int apiMutexInit();
 int apiMutexDelete();
 
-class NVM_API NvmApi
+class NVM_CIM_API NvmApi
 {
 	public:
 		virtual ~NvmApi();
@@ -429,7 +430,7 @@ class NVM_API NvmApi
 		/*
 		 * Retrieve a list of stored debug log entries
 		 */
-		virtual int getDebugLogs(struct log *pLogs, const NVM_UINT32 count);
+		virtual int getDebugLogs(struct nvm_log *pLogs, const NVM_UINT32 count);
 
 		/*
 		 * Clear all debug log entries

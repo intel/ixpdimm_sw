@@ -59,7 +59,7 @@ static const std::string RELIABILITY_MEMORY_MIGRATION = "Memory Migration";
 /*!
  * Represents the support data maintained by the management software
  */
-class NVM_API SystemCapabilitiesFactory  : public framework_interface::NvmInstanceFactory
+class NVM_CIM_API SystemCapabilitiesFactory  : public framework_interface::NvmInstanceFactory
 {
 	public:
 		// constructor

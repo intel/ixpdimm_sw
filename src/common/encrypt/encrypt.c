@@ -36,7 +36,6 @@
 #include <zlib.h>
 #include <string.h>
 #include <assert.h>
-#include <unistd.h>
 
 // file I/O
 #include <sys/stat.h>
@@ -46,6 +45,21 @@
 #include <string/s_str.h>
 #include <file_ops/file_ops_adapter.h>
 #include <os/os_adapter.h>
+
+#ifdef _WIN32
+#include <Windows.h>
+#include <io.h>
+#include <BaseTsd.h>
+#define ssize_t SSIZE_T
+// Use Posix non-deprecated versions
+#define open _open
+#define read _read
+#define write _write
+#define close _close
+#define unlink _unlink
+#else
+#include <unistd.h>
+#endif
 
 #define	PUBLIC_KEY_FILE	"public.rev0.pem"
 
@@ -344,6 +358,8 @@ int rsa_encrypt(const COMMON_PATH src_file, COMMON_PATH out_file)
 #else
 	int OS_flags = 0;
 #endif
+	COMMON_UINT8 *input = NULL;
+	COMMON_UINT8 *output = NULL;
 
 	// Create a new file, verify the resulting name is within our max allowed length
 	s_strncpy(temp_file, COMMON_PATH_LEN, src_file, COMMON_PATH_LEN);
@@ -396,8 +412,8 @@ int rsa_encrypt(const COMMON_PATH src_file, COMMON_PATH out_file)
 				// where it indicates that the limit must be
 				// modified by RSA_PKCS1_OAEP_PADDING_OFFSET.
 				const int MAX_ENCRYPTION_LENGTH = (RSA_size(rsa) - RSA_PKCS1_OAEP_PADDING_OFFSET);
-				COMMON_UINT8 input[MAX_ENCRYPTION_LENGTH];
-				COMMON_UINT8 output[RSA_size(rsa)]; // openssl lib API requires larger output buf
+				input = malloc(MAX_ENCRYPTION_LENGTH * sizeof(COMMON_UINT8));
+				output = malloc(RSA_size(rsa) * sizeof(COMMON_UINT8)); // openssl lib API requires larger output buf
 				ssize_t num_read;
 				int cnvt_bytes;
 
@@ -425,6 +441,14 @@ int rsa_encrypt(const COMMON_PATH src_file, COMMON_PATH out_file)
 		}
 	}
 
+	if (input)
+	{
+		free(input);
+	}
+	if (output)
+	{
+		free(output);
+	}
 	if (rsa != NULL)
 	{
 		RSA_free(rsa);
@@ -470,6 +494,8 @@ int rsa_decrypt(const COMMON_PATH rsaKeyFile, const COMMON_PATH encryptedFile,
 #else
 	int OS_flags = 0;
 #endif
+	COMMON_UINT8 *input = NULL;
+	COMMON_UINT8 *output = NULL;
 
 	// Read the private RSA key into a openssl data structure
 	bio = BIO_new_file(rsaKeyFile, "r");
@@ -503,12 +529,14 @@ int rsa_decrypt(const COMMON_PATH rsaKeyFile, const COMMON_PATH encryptedFile,
 		// "http://www.openssl.org/docs/crypto/RSA_public_encrypt.html" where it indicates that the
 		// limit must be modified by RSA_PKCS1_OAEP_PADDING_OFFSET.
 		const int MAX_ENCRYPTION_LENGTH = (RSA_size(rsa) - RSA_PKCS1_OAEP_PADDING_OFFSET);
-		COMMON_UINT8 output[MAX_ENCRYPTION_LENGTH];
-		COMMON_UINT8 input[RSA_size(rsa)];
+		const ssize_t output_size = MAX_ENCRYPTION_LENGTH * sizeof(COMMON_UINT8);
+		output = malloc(output_size);
+		const ssize_t input_size = RSA_size(rsa) * sizeof(COMMON_UINT8);
+		input = malloc(input_size);
 		ssize_t num_read;
 		int cnvt_bytes;
 
-		while ((num_read = read(efd, input, sizeof (input))) != 0)
+		while ((num_read = read(efd, input, input_size)) != 0)
 		{
 			cnvt_bytes = RSA_private_decrypt(num_read, input, output, rsa,
 			RSA_PKCS1_OAEP_PADDING);
@@ -527,6 +555,14 @@ int rsa_decrypt(const COMMON_PATH rsaKeyFile, const COMMON_PATH encryptedFile,
 		}
 	}
 
+	if (input)
+	{
+		free(input);
+	}
+	if (output)
+	{
+		free(output);
+	}
 	if (rsa != NULL)
 	{
 		RSA_free(rsa);

@@ -89,7 +89,7 @@ int nvm_get_jobs(struct job *p_jobs, const NVM_UINT32 count)
 		if ((rc = nvm_get_device_count()) >= 0)
 		{
 			int device_count = rc;
-			struct device_discovery devices[rc];
+			struct device_discovery *devices = malloc(rc * sizeof(struct device_discovery));
 			if ((rc = nvm_get_devices(devices, device_count)) > 0)
 			{
 				// iterate through all devices and add up the capacities
@@ -153,6 +153,8 @@ int nvm_get_jobs(struct job *p_jobs, const NVM_UINT32 count)
 			{
 				COMMON_LOG_ERROR_F("Unable to get device discovery: rc = %d", rc);
 			}
+
+            free(devices);
 		}
 		else
 		{

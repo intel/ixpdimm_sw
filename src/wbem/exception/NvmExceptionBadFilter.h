@@ -36,6 +36,7 @@
 #include <libinvm-cim/Exception.h>
 #include <cr_i18n.h>
 #include <nvm_types.h>
+#include <wbem/ExportCim.h>
 
 namespace wbem
 {
@@ -44,7 +45,7 @@ namespace exception
 
 const std::string NVMEXCEPTIONBADFILTER_MESSAGE = N_TR("A filter could not be generated from input string: ");
 
-class NVM_API NvmExceptionBadFilter : public framework::Exception
+class NVM_CIM_API NvmExceptionBadFilter : public framework::Exception
 {
 	public:
 		/*!

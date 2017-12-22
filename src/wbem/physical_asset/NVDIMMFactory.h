@@ -115,7 +115,7 @@ typedef std::vector<struct device_discovery> devices_t;
 /*!
  * Models the physical aspects of an Intel NVDIMM
  */
-class NVM_API NVDIMMFactory : public framework_interface::NvmInstanceFactory
+class NVM_CIM_API NVDIMMFactory : public framework_interface::NvmInstanceFactory
 {
 public:
 	NVDIMMFactory(

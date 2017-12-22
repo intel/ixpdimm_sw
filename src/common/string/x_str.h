@@ -32,6 +32,8 @@
 #ifndef	_X_STR_H_
 #define	_X_STR_H_
 
+#include <export_common.h>
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -57,7 +59,7 @@ extern "C"
  * 		A pointer to the first token found in @c *input, otherwise @n
  * 		@b NULL, if @c input == @b NULL, @c *input == @b NULL, @c delims == NULL @n
  */
-char *x_strtok(char **input, const char *delims);
+NVM_COMMON_API char *x_strtok(char **input, const char *delims);
 
 
 #ifdef __cplusplus

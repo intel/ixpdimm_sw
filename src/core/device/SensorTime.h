@@ -42,6 +42,7 @@
 #include <core/exceptions/LibraryException.h>
 #include <core/Collection.h>
 #include <core/NvmLibrary.h>
+#include <core/ExportCore.h>
 #include "Sensor.h"
 
 namespace core
@@ -50,7 +51,7 @@ namespace core
 	{
 		namespace sensor
 		{
-			class NVM_API SensorTime:public Sensor
+			class NVM_CORE_API SensorTime:public Sensor
 			{
 			public:
 				SensorTime();
