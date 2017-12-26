@@ -27,6 +27,7 @@
 #ifndef CR_MGMT_CREATEGOALCOMMAND_H
 #define CR_MGMT_CREATEGOALCOMMAND_H
 
+#include <physical_asset/NVDIMMFactory.h>
 #include <cli/features/core/framework/CommandBase.h>
 #include <libinvm-cli/CommandSpec.h>
 #include <libinvm-cli/ErrorResult.h>
@@ -91,6 +92,7 @@ public:
 
 		Parser();
 		framework::ResultBase *parse(const framework::ParsedCommand &parsedCommand);
+		virtual framework::ResultBase *verifySecurityState();
 		int getMemoryMode();
 		NVM_UINT64 getReserved();
 		bool isPmTypeAppDirect();

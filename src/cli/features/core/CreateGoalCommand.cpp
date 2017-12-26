@@ -415,19 +415,24 @@ framework::ResultBase *CreateGoalCommand::execute(const framework::ParsedCommand
 	{
 		try
 		{
-			setupRequestBuilder();
-			const core::memory_allocator::MemoryAllocationRequest &request = m_requestBuilder.build();
-			core::memory_allocator::MemoryAllocationLayout layout = m_allocator.layout(request,
-				m_parser.getNamespaceLabelMajor(), m_parser.getNamespaceLabelMinor());
+			m_pResult = m_parser.verifySecurityState();
 
-			if (userReallyLikesThisLayout(layout, m_parser.getUnits()))
+			if (NULL == m_pResult)
 			{
-				m_allocator.allocate(layout);
-				m_pResult = m_showGoalAdapter.showCurrentGoal(m_parser.getUnits());
-			}
-			else
-			{
-				m_pResult = new NoChangeResult();
+				setupRequestBuilder();
+				const core::memory_allocator::MemoryAllocationRequest &request = m_requestBuilder.build();
+				core::memory_allocator::MemoryAllocationLayout layout = m_allocator.layout(request,
+						m_parser.getNamespaceLabelMajor(), m_parser.getNamespaceLabelMinor());
+
+				if (userReallyLikesThisLayout(layout, m_parser.getUnits()))
+				{
+					m_allocator.allocate(layout);
+					m_pResult = m_showGoalAdapter.showCurrentGoal(m_parser.getUnits());
+				}
+				else
+				{
+					m_pResult = new NoChangeResult();
+				}
 			}
 		}
 		catch (wbem::framework::Exception &e)
@@ -657,6 +662,31 @@ void CreateGoalCommand::Parser::parsePropertyConfig()
 		}
 
 	}
+}
+
+framework::ResultBase *CreateGoalCommand::Parser::verifySecurityState()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	std::string dimms = framework::Parser::getTargetValue(m_parsedCommand, TARGET_DIMM.name);
+	std::vector<core::device::Device> devices = ShowCommandUtilities::populateDevicesFromDimmsString(dimms, NVM_TRUE);
+
+	// Check for valid device security state
+	for (std::vector<core::device::Device>::const_iterator it = devices.begin(); it != devices.end(); it++)
+	{
+		core::device::Device device = (*it);
+		if (!(LOCK_STATE_DISABLED == device.getLockState()))
+		{
+			std::string result;
+			result = "Invalid device security state. Please set device security state to 'disabled' and try again.";
+			m_pResult = new framework::ErrorResult(
+					framework::ErrorResult::ERRORCODE_NOTSUPPORTED,
+					result);
+			break;
+		}
+	}
+
+	return m_pResult;
 }
 
 void CreateGoalCommand::Parser::parsePropertyNamespaceLabelVersion()
