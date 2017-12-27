@@ -44,6 +44,7 @@ extern "C"
 
 #include <sys/stat.h>
 #include <sys/types.h>
+#include "nvm_types.h"
 
 /*
  * ************************************************************************************
@@ -132,26 +133,27 @@ NVM_COMMON_API extern int decompress_file(const COMMON_PATH srcFile, COMMON_PATH
 /*!
  * Generate an encrypted file from the contents of an input file, using an RSA public key.
  * @param[in] src_file
- * 		The input filepath
+ * The input filepath
  * @param[in] out_file
- * 		The (encrypted) output filepath
+ * The (encrypted) output filepath
  * @return
- * 		@c COMMON_SUCCESS @n
- * 		@c COMMON_ERR_BADFILE @n
- * 		@c COMMON_ERR_UNKNOWN
+ * @c NVM_SUCCESS @n
+ * @c NVM_ERR_BADFILE @n
+ * @c NVM_ERR_UNKNOWN
+ * @c NVM_ERR_NOMEMORY
  */
 NVM_COMMON_API extern int rsa_encrypt(const COMMON_PATH src_file, COMMON_PATH out_file);
 
 /*!
  * Decrypt an encrypted file
  * @param[in] rsaKeyFile
- * 		The filepath of a RSA private key file used to decrypt @c encryptedFile
+ * The filepath of a RSA private key file used to decrypt @c encryptedFile
  * @param[in] encryptedFile
- *		The (encrypted) input filepath
+ *The (encrypted) input filepath
  * @param[in] decryptedFile
- * 		The (decrypted) output filepath
+ * The (decrypted) output filepath
  * @return
- * 		1 if success, 0 if failed
+ * 0 if success, NVM_ERR_XXX if failed
  */
 NVM_COMMON_API extern int rsa_decrypt(const COMMON_PATH rsaKeyFile, const COMMON_PATH encryptedFile,
 		const COMMON_PATH decryptedFile);

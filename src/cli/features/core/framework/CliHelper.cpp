@@ -29,6 +29,7 @@
 #include <string/x_str.h>
 #include <string.h>
 #include "CliHelper.h"
+#include "ExceptionNoMemory.h"
 
 namespace cli
 {
@@ -40,6 +41,10 @@ std::vector<std::string> CliHelper::splitCommaSeperatedString(const std::string 
 	if (!commaList.empty())
 	{
 		char *tmp = new char[commaList.length()+1];
+        if (NULL == tmp)
+        {
+            throw wbem::framework::ExceptionNoMemory(__FILE__, __func__, "Failed to allocate memory.");
+        }
 		s_strcpy(tmp, commaList.c_str(), commaList.length()+1);
 		char *list = tmp;
 		char *tok = x_strtok(&list, ",");

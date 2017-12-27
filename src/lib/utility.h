@@ -476,7 +476,7 @@ static inline NVM_UINT32 get_lowest_common_multiple(
 static inline NVM_REAL32 round_to_decimal_places(NVM_REAL32 number, int decimal_places)
 {
 	// always rounding down to match UEFI
-	return floor(number * pow(10, decimal_places)) / pow(10, decimal_places);
+	return (NVM_REAL32)(floor(number * pow(10, decimal_places)) / pow(10, decimal_places));
 }
 
 static inline NVM_UINT64 round_up(const NVM_UINT64 num_to_round, const NVM_UINT64 multiple_of)
@@ -547,6 +547,8 @@ static inline int getDigit(int number, int digit)
 	return (number / (int)pow(10, digit)) % 10;
 }
 
+// Unused for now
+#if 0
 // helper function that checks if block size is a 4k variant (4096, 4160, etc)
 static inline NVM_BOOL blockSizeIs4KVariant(COMMON_UINT64 blockSize)
 {
@@ -568,6 +570,7 @@ static inline NVM_BOOL blockSizeIsPI(COMMON_UINT64 blockSize)
 	}
 	return result;
 }
+#endif
 
 static inline NVM_UINT64 bytesToConfigGoalSize(NVM_UINT64 bytes)
 {

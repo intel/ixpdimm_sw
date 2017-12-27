@@ -349,7 +349,7 @@ int rsa_encrypt(const COMMON_PATH src_file, COMMON_PATH out_file)
 {
 	int sfd = -1;		// src_file
 	int efd = -1;		// encrypted file
-	int rc = COMMON_SUCCESS;
+	int rc = NVM_SUCCESS;
 	RSA *rsa = NULL;
 	BIO *bio = NULL;
 	char temp_file[COMMON_PATH_LEN];
@@ -367,7 +367,7 @@ int rsa_encrypt(const COMMON_PATH src_file, COMMON_PATH out_file)
 	if (s_strnlen(temp_file, COMMON_PATH_LEN) > COMMON_PATH_LEN)
 	{
 		printf("\n Line 352 src_file: %s temp_file: %s\n", src_file, temp_file);
-		rc = COMMON_ERR_BADFILE;
+        rc = NVM_ERR_UNKNOWN;
 	}
 	else
 	{
@@ -388,18 +388,18 @@ int rsa_encrypt(const COMMON_PATH src_file, COMMON_PATH out_file)
 			// Convert the memory copy PEM format into an openssl data structure
 			if (PEM_read_bio_RSA_PUBKEY(bio, &rsa, NULL, NULL) == NULL)
 			{
-				rc = COMMON_ERR_UNKNOWN;
+				rc = NVM_ERR_UNKNOWN;
 			}
 			else if ((sfd = open(src_file, O_RDWR | OS_flags, 0)) == -1)
 			{
 				printf("\n Line 379 src_file: %s\n", src_file);
-				rc = COMMON_ERR_BADFILE;
+				rc = NVM_ERR_BADFILE;
 			}
 			else if ((efd = open(out_file, O_RDWR | O_TRUNC | O_CREAT | O_EXCL | OS_flags,
 					GENERIC_NEW_FILE_PERMISSION)) == -1)
 			{
 				printf("\n Line 384 out_file: %s\n", out_file);
-				rc = COMMON_ERR_BADFILE;
+				rc = NVM_ERR_BADFILE;
 			}
 			else
 			{
@@ -414,27 +414,34 @@ int rsa_encrypt(const COMMON_PATH src_file, COMMON_PATH out_file)
 				const int MAX_ENCRYPTION_LENGTH = (RSA_size(rsa) - RSA_PKCS1_OAEP_PADDING_OFFSET);
 				input = malloc(MAX_ENCRYPTION_LENGTH * sizeof(COMMON_UINT8));
 				output = malloc(RSA_size(rsa) * sizeof(COMMON_UINT8)); // openssl lib API requires larger output buf
-				ssize_t num_read;
-				int cnvt_bytes;
-
-				while ((num_read = read(sfd, input, MAX_ENCRYPTION_LENGTH)) != 0)
+				if ((NULL == input) || (NULL == output))
 				{
-					cnvt_bytes = RSA_public_encrypt(num_read, input, output, rsa,
-							RSA_PKCS1_OAEP_PADDING);
-					if (cnvt_bytes == -1)
-					{
-						char err_buf[120];
-						ERR_load_crypto_strings();
+					rc = NVM_ERR_NOMEMORY;
+				}
+				else
+				{
+					ssize_t num_read;
+					int cnvt_bytes;
 
-						ERR_error_string_n(ERR_get_error(), err_buf, sizeof (err_buf));
-						rc = COMMON_ERR_UNKNOWN;
-						break;
-					}
-					else if (write(efd, output, cnvt_bytes) != cnvt_bytes)
+					while ((num_read = read(sfd, input, MAX_ENCRYPTION_LENGTH)) != 0)
 					{
-						printf("\n Line 418 out_file: %s\n", out_file);
-						rc = COMMON_ERR_BADFILE;
-						break;
+						cnvt_bytes = RSA_public_encrypt(num_read, input, output, rsa,
+							RSA_PKCS1_OAEP_PADDING);
+						if (cnvt_bytes == -1)
+						{
+							char err_buf[120];
+							ERR_load_crypto_strings();
+
+							ERR_error_string_n(ERR_get_error(), err_buf, sizeof(err_buf));
+							rc = NVM_ERR_UNKNOWN;
+							break;
+						}
+						else if (write(efd, output, cnvt_bytes) != cnvt_bytes)
+						{
+							printf("\n Line 418 out_file: %s\n", out_file);
+							rc = NVM_ERR_UNKNOWN;
+							break;
+						}
 					}
 				}
 			}
@@ -462,7 +469,7 @@ int rsa_encrypt(const COMMON_PATH src_file, COMMON_PATH out_file)
 		close(efd);
 
 		// Delete the corrupted output if we detect a failure
-		if (rc != COMMON_SUCCESS)
+		if (rc != NVM_SUCCESS)
 		{
 			delete_file(out_file, COMMON_PATH_LEN);
 		}
@@ -488,7 +495,7 @@ int rsa_decrypt(const COMMON_PATH rsaKeyFile, const COMMON_PATH encryptedFile,
 	int dfd = -1;		// decrypted file
 	RSA *rsa = NULL;
 	BIO *bio = NULL;
-	int retval = 1;
+	int retval = NVM_SUCCESS;
 #ifdef __WINDOWS__
 	int OS_flags = O_BINARY;
 #else
@@ -502,24 +509,24 @@ int rsa_decrypt(const COMMON_PATH rsaKeyFile, const COMMON_PATH encryptedFile,
 	if (bio == NULL)
 	{
 		// Unable to read private certificate file contents
-		retval = 0;
+		retval = NVM_ERR_UNKNOWN;
 	}
 	// Convert the memory copy PEM format into an openssl data structure
 	else if (PEM_read_bio_RSAPrivateKey(bio, &rsa, NULL, NULL) == NULL)
 	{
 		// Unable to convert security data
-		retval = 0;
+		retval = NVM_ERR_UNKNOWN;
 	}
 	else if ((efd = open(encryptedFile, O_RDWR|OS_flags, 0)) == -1)
 	{
 		// Unable to open encrypted file
-		retval = 0;
+		retval = NVM_ERR_BADFILE;
 	}
 	else if ((dfd = open(decryptedFile, O_RDWR|O_TRUNC|O_CREAT|O_EXCL|OS_flags,
 		GENERIC_NEW_FILE_PERMISSION)) == -1)
 	{
 		// Unable to create decrypted file
-		retval = 0;
+		retval = NVM_ERR_BADFILE;
 	}
 	else
 	{
@@ -533,24 +540,31 @@ int rsa_decrypt(const COMMON_PATH rsaKeyFile, const COMMON_PATH encryptedFile,
 		output = malloc(output_size);
 		const ssize_t input_size = RSA_size(rsa) * sizeof(COMMON_UINT8);
 		input = malloc(input_size);
-		ssize_t num_read;
-		int cnvt_bytes;
-
-		while ((num_read = read(efd, input, input_size)) != 0)
+		if ((NULL == input) || (NULL == output))
 		{
-			cnvt_bytes = RSA_private_decrypt(num_read, input, output, rsa,
-			RSA_PKCS1_OAEP_PADDING);
-			if (cnvt_bytes == -1)
+			retval = NVM_ERR_NOMEMORY;
+		}
+		else
+		{
+			ssize_t num_read;
+			int cnvt_bytes;
+
+			while ((num_read = read(efd, input, input_size)) != 0)
 			{
-				// Unable to decrypt SQL DB file
-				retval = 0;
-				break;
-			}
-			else if (write(dfd, output, cnvt_bytes) != cnvt_bytes)
-			{
-				// Unable to write decrypted SQL DB file
-				retval = 0;
-				break;
+				cnvt_bytes = RSA_private_decrypt(num_read, input, output, rsa,
+					RSA_PKCS1_OAEP_PADDING);
+				if (cnvt_bytes == -1)
+				{
+					// Unable to decrypt SQL DB file
+					retval = NVM_ERR_UNKNOWN;
+					break;
+				}
+				else if (write(dfd, output, cnvt_bytes) != cnvt_bytes)
+				{
+					// Unable to write decrypted SQL DB file
+					retval = NVM_ERR_UNKNOWN;
+					break;
+				}
 			}
 		}
 	}

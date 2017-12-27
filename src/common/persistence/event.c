@@ -950,40 +950,47 @@ int acknowledge_events(struct event_filter *p_filter)
 		{
 			// acknowledge event
 			struct event *events = malloc(count * sizeof(struct event));
-			memset(events, 0, sizeof (struct event) * count);
-			count = process_events_matching_filter(p_filter, events, count, 0);
-			if (count > 0) // at least one event needs acknowledging
+			if (NULL == events)
 			{
-				for (int i = 0; i < count; i++)
+				rc = NVM_ERR_NOMEMORY;
+			}
+			else
+			{
+				memset(events, 0, sizeof(struct event) * count);
+				count = process_events_matching_filter(p_filter, events, count, 0);
+				if (count > 0) // at least one event needs acknowledging
 				{
-					struct db_event db_event;
-					rc = db_get_event_by_id(p_store, events[i].event_id, &db_event);
-					if (rc != DB_SUCCESS)
+					for (int i = 0; i < count; i++)
 					{
-						COMMON_LOG_ERROR_F(
-							"Failed to acknowledge event %d because it doesn't exist.",
-							events[i].event_id);
-						rc = NVM_ERR_UNKNOWN;
-					}
-					else
-					{
-						if (db_event.action_required)
+						struct db_event db_event;
+						rc = db_get_event_by_id(p_store, events[i].event_id, &db_event);
+						if (rc != DB_SUCCESS)
 						{
-							db_event.action_required = 0;
-							if (db_update_event_by_id(p_store,
-									db_event.id, &db_event) != DB_SUCCESS)
+							COMMON_LOG_ERROR_F(
+								"Failed to acknowledge event %d because it doesn't exist.",
+								events[i].event_id);
+							rc = NVM_ERR_UNKNOWN;
+						}
+						else
+						{
+							if (db_event.action_required)
 							{
-								COMMON_LOG_ERROR_F(
-									"Failed to acknowledge event %d because of a database issue.",
-									db_event.id);
-								rc = NVM_ERR_UNKNOWN;
+								db_event.action_required = 0;
+								if (db_update_event_by_id(p_store,
+									db_event.id, &db_event) != DB_SUCCESS)
+								{
+									COMMON_LOG_ERROR_F(
+										"Failed to acknowledge event %d because of a database issue.",
+										db_event.id);
+									rc = NVM_ERR_UNKNOWN;
+								}
 							}
 						}
 					}
 				}
 			}
-            
-            free(events);
+
+			free(events);
 		}
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);

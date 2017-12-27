@@ -82,7 +82,7 @@ bool core::memory_allocator::LayoutStepCheckRequestLayoutDeviation::isLayoutDevi
 }
 
 bool core::memory_allocator::LayoutStepCheckRequestLayoutDeviation::isMemoryCapacityLayoutAcceptable(
-		const struct MemoryAllocationRequest& request,
+		const MemoryAllocationRequest& request,
 		MemoryAllocationLayout& layout)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -104,7 +104,7 @@ bool core::memory_allocator::LayoutStepCheckRequestLayoutDeviation::isMemoryCapa
 }
 
 bool core::memory_allocator::LayoutStepCheckRequestLayoutDeviation::isAppDirectCapacityLayoutAcceptable(
-		const struct MemoryAllocationRequest& request,
+		const MemoryAllocationRequest& request,
 		MemoryAllocationLayout& layout)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -126,7 +126,7 @@ bool core::memory_allocator::LayoutStepCheckRequestLayoutDeviation::isAppDirectC
 }
 
 NVM_UINT64 core::memory_allocator::LayoutStepCheckRequestLayoutDeviation::getNonReservedAppDirectCapacityGiBFromLayout(
-		const struct MemoryAllocationRequest& request, const MemoryAllocationLayout& layout)
+		const MemoryAllocationRequest& request, const MemoryAllocationLayout& layout)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 

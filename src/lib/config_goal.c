@@ -652,14 +652,21 @@ NVM_UINT8 get_revision_for_new_config_input(struct current_config_table *p_curre
 		{
 			int device_count = rc;
 			struct device_discovery *devices = malloc(device_count * sizeof(struct device_discovery));
-			rc = nvm_get_devices(devices, device_count);
-			if (rc > 0)
-			{
-				rev = get_pcd_revision_from_another_device_in_list(device_handle,
-						devices, device_count);
-			}
+            if (NULL == devices)
+            {
+                rc = NVM_ERR_NOMEMORY;
+            }
+            else
+            {
+                rc = nvm_get_devices(devices, device_count);
+                if (rc > 0)
+                {
+                    rev = get_pcd_revision_from_another_device_in_list(device_handle,
+                        devices, device_count);
+                }
 
-            free(devices);
+                free(devices);
+            }
 		}
 	}
 

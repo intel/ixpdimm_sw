@@ -51,14 +51,14 @@ class NVM_CORE_API LayoutStepCheckRequestLayoutDeviation : public LayoutStep
 
 	protected:
 		bool isMemoryCapacityLayoutAcceptable(
-				const struct MemoryAllocationRequest& request,
+				const MemoryAllocationRequest& request,
 				MemoryAllocationLayout& layout);
 
 		bool isAppDirectCapacityLayoutAcceptable(
-				const struct MemoryAllocationRequest& request,
+				const MemoryAllocationRequest& request,
 				MemoryAllocationLayout& layout);
 
-		NVM_UINT64 getNonReservedAppDirectCapacityGiBFromLayout(const struct MemoryAllocationRequest& request,
+		NVM_UINT64 getNonReservedAppDirectCapacityGiBFromLayout(const MemoryAllocationRequest& request,
 				const MemoryAllocationLayout& layout);
 
 		double findPercentDeviation(NVM_UINT64 expectedValue, NVM_UINT64 observedValue, NVM_UINT64 totalCapacity);

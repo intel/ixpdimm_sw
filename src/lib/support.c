@@ -188,7 +188,7 @@ int nvm_gather_support(const NVM_PATH support_file, const NVM_SIZE support_file_
 						rc = NVM_ERR_BADFILE;
 					}
 					else if ((temp_rc = rsa_encrypt(compressed_file, encrypted_file))
-							!= COMMON_SUCCESS)
+							!= NVM_SUCCESS)
 					{
 
 						// should never get in here

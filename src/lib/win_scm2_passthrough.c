@@ -274,7 +274,7 @@ static int read_large_ouptut_payload(int scm_err, unsigned int *p_dsm_status, un
 						input_payload.bytes_to_transfer);
 
 				memmove((unsigned char*)large_output_payload + offset, buffer, input_payload.bytes_to_transfer);
-                
+
                 free(buffer);
 
 				input_payload.large_output_payload_offset += input_payload.bytes_to_transfer;

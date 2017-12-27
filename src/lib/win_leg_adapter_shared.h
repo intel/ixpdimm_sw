@@ -34,6 +34,7 @@
 #define	SRC_LIB_WIN_ADAPTER_H_
 
 #include <windows.h>
+#include <winioctl.h>
 #include <PrivateIoctlDefinitions.h>
 #include <device_fw.h>
 

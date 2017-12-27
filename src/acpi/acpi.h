@@ -79,6 +79,10 @@ struct acpi_table_header
 /*
  * ACPI Table
  */
+#if _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4200)
+#endif
 PACK_STRUCT(
 struct acpi_table
 {
@@ -87,6 +91,9 @@ struct acpi_table
 	unsigned char p_ext_tables[0];
 }
 )
+#if _MSC_VER
+#pragma warning(pop)
+#endif
 
 /*!
  * Retrieve the specified ACPI table.

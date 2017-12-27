@@ -181,6 +181,10 @@ enum interleave_status
  * Describes an interleave set (pool)
  * Valid for current config, config input and output
  */
+#if _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4200)
+#endif
 PACK_STRUCT(
 struct interleave_info_extension_table
 {
@@ -218,6 +222,9 @@ struct interleave_info_extension_table
 	NVM_UINT8 rsvd[9];
 	NVM_UINT8 p_dimms[0];
 })
+#if _MSC_VER
+#pragma warning(pop)
+#endif
 
 /*
  * Header for main config tables
@@ -254,6 +261,10 @@ enum current_config_status
 /*
  * BIOS CR Mgmt Interface Current Configuration Table
  */
+#if _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4200)
+#endif
 PACK_STRUCT(
 struct current_config_table
 {
@@ -299,9 +310,10 @@ struct config_input_table
 
 	// Extension tables
 	NVM_UINT8 p_ext_tables[0];
-
 })
-
+#if _MSC_VER
+#pragma warning(pop)
+#endif
 
 enum config_output_status
 {
@@ -329,6 +341,10 @@ enum config_error
 /*
  * BIOS response to mgmt software
  */
+#if _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4200)
+#endif
 PACK_STRUCT(
 struct config_output_table
 {
@@ -354,6 +370,9 @@ struct config_output_table
 	NVM_UINT8 p_ext_tables[0];
 
 })
+#if _MSC_VER
+#pragma warning(pop)
+#endif
 
 /*
  * The BIOS platform config data table written to the DIMM

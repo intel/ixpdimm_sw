@@ -283,6 +283,11 @@ int lookup_device_nfit_by_handle(const NVM_UINT32 dev_handle, struct device_disc
 {
 	int dev_count = get_topology_count();
 	struct device_discovery *discovery_dimms = malloc(sizeof(struct device_discovery) * dev_count);
+    if (NULL == discovery_dimms)
+    {
+        return NVM_ERR_NOMEMORY;
+    }
+
 	nvm_get_devices_nfit(discovery_dimms, dev_count);
 	for (int i = 0; i < dev_count; i++)
 	{

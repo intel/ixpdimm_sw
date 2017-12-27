@@ -371,46 +371,45 @@ enum diagnostic_test
 /*
  * Diagnostic threshold type.
  */
-enum diagnostic_threshold_type
-{
-	DIAG_THRESHOLD_QUICK_HEALTH = 1,
-	DIAG_THRESHOLD_QUICK_MEDIA_TEMP = 1 << 1,
-	DIAG_THRESHOLD_QUICK_CONTROLLER_TEMP = 1 << 2,
-	DIAG_THRESHOLD_QUICK_AVAIL_SPARE = 1 << 3,
-	DIAG_THRESHOLD_QUICK_PERC_USED = 1 << 4,
-	DIAG_THRESHOLD_QUICK_SPARE_DIE = 1 << 5,
-	DIAG_THRESHOLD_QUICK_UNCORRECT_ERRORS = 1 << 6,
-	DIAG_THRESHOLD_QUICK_CORRECTED_ERRORS = 1 << 7,
-	DIAG_THRESHOLD_QUICK_ERASURE_CODED_CORRECTED_ERRORS = 1 << 8,
-	DIAG_THRESHOLD_QUICK_VALID_VENDOR_ID = 1 << 9,
-	DIAG_THRESHOLD_QUICK_VALID_MANUFACTURER = 1 << 10,
-	DIAG_THRESHOLD_QUICK_VALID_PART_NUMBER = 1 << 11,
-	DIAG_THRESHOLD_QUICK_VIRAL = 1 << 12,
-	DIAG_THRESHOLD_SECURITY_CONSISTENT = 1 << 13,
-	DIAG_THRESHOLD_SECURITY_ALL_DISABLED = 1 << 14,
-	DIAG_THRESHOLD_SECURITY_ALL_NOTSUPPORTED = 1 << 15,
-	DIAG_THRESHOLD_FW_CONSISTENT = 1 << 16,
-	DIAG_THRESHOLD_FW_MEDIA_TEMP = 1 << 17,
-	DIAG_THRESHOLD_FW_CORE_TEMP = 1 << 18,
-	DIAG_THRESHOLD_FW_SPARE = 1 << 19,
-	DIAG_THRESHOLD_FW_POW_MGMT_POLICY = 1 << 20,
-	DIAG_THRESHOLD_FW_PEAK_POW_BUDGET_MIN = 1 << 21,
-	DIAG_THRESHOLD_FW_PEAK_POW_BUDGET_MAX = 1 << 22,
-	DIAG_THRESHOLD_FW_AVG_POW_BUDGET_MIN = 1 << 23,
-	DIAG_THRESHOLD_FW_AVG_POW_BUDGET_MAX = 1 << 24,
-	DIAG_THRESHOLD_FW_DIE_SPARING_POLICY = 1 << 25,
-	DIAG_THRESHOLD_FW_DIE_SPARING_LEVEL = 1 << 26,
-	DIAG_THRESHOLD_FW_TIME = 1 << 27,
-	DIAG_THRESHOLD_FW_DEBUGLOG = 1 << 28,
-	DIAG_THRESHOLD_PCONFIG_NFIT = 1 << 29,
-	DIAG_THRESHOLD_PCONFIG_PCAT = 1 << 30,
-	DIAG_THRESHOLD_PCONFIG_PCD = 1llu << 31,
-	DIAG_THRESHOLD_PCONFIG_CURRENT_PCD = 1llu << 32,
-	DIAG_THRESHOLD_PCONFIG_UNCONFIGURED = 1llu << 33,
-	DIAG_THRESHOLD_PCONFIG_BROKEN_ISET = 1llu << 34,
-	DIAG_THRESHOLD_PCONFIG_MAPPED_CAPACITY = 1llu << 35,
-	DIAG_THRESHOLD_PCONFIG_BEST_PRACTICES = 1llu << 36
-};
+typedef NVM_UINT64 diagnostic_threshold_type;
+
+#define DIAG_THRESHOLD_QUICK_HEALTH                         (1 << 0)
+#define DIAG_THRESHOLD_QUICK_MEDIA_TEMP                     (1 << 1)
+#define DIAG_THRESHOLD_QUICK_CONTROLLER_TEMP                (1 << 2)
+#define DIAG_THRESHOLD_QUICK_AVAIL_SPARE                    (1 << 3)
+#define DIAG_THRESHOLD_QUICK_PERC_USED                      (1 << 4)
+#define DIAG_THRESHOLD_QUICK_SPARE_DIE                      (1 << 5)
+#define DIAG_THRESHOLD_QUICK_UNCORRECT_ERRORS               (1 << 6)
+#define DIAG_THRESHOLD_QUICK_CORRECTED_ERRORS               (1 << 7)
+#define DIAG_THRESHOLD_QUICK_ERASURE_CODED_CORRECTED_ERRORS (1 << 8)
+#define DIAG_THRESHOLD_QUICK_VALID_VENDOR_ID                (1 << 9)
+#define DIAG_THRESHOLD_QUICK_VALID_MANUFACTURER             (1 << 10)
+#define DIAG_THRESHOLD_QUICK_VALID_PART_NUMBER              (1 << 11)
+#define DIAG_THRESHOLD_QUICK_VIRAL                          (1 << 12)
+#define DIAG_THRESHOLD_SECURITY_CONSISTENT                  (1 << 13)
+#define DIAG_THRESHOLD_SECURITY_ALL_DISABLED                (1 << 14)
+#define DIAG_THRESHOLD_SECURITY_ALL_NOTSUPPORTED            (1 << 15)
+#define DIAG_THRESHOLD_FW_CONSISTENT                        (1 << 16)
+#define DIAG_THRESHOLD_FW_MEDIA_TEMP                        (1 << 17)
+#define DIAG_THRESHOLD_FW_CORE_TEMP                         (1 << 18)
+#define DIAG_THRESHOLD_FW_SPARE                             (1 << 19)
+#define DIAG_THRESHOLD_FW_POW_MGMT_POLICY                   (1 << 20)
+#define DIAG_THRESHOLD_FW_PEAK_POW_BUDGET_MIN               (1 << 21)
+#define DIAG_THRESHOLD_FW_PEAK_POW_BUDGET_MAX               (1 << 22)
+#define DIAG_THRESHOLD_FW_AVG_POW_BUDGET_MIN                (1 << 23)
+#define DIAG_THRESHOLD_FW_AVG_POW_BUDGET_MAX                (1 << 24)
+#define DIAG_THRESHOLD_FW_DIE_SPARING_POLICY                (1 << 25)
+#define DIAG_THRESHOLD_FW_DIE_SPARING_LEVEL                 (1 << 26)
+#define DIAG_THRESHOLD_FW_TIME                              (1 << 27)
+#define DIAG_THRESHOLD_FW_DEBUGLOG                          (1 << 28)
+#define DIAG_THRESHOLD_PCONFIG_NFIT                         (1 << 29)
+#define DIAG_THRESHOLD_PCONFIG_PCAT                         (1 << 30)
+#define DIAG_THRESHOLD_PCONFIG_PCD                          (1llu << 31)
+#define DIAG_THRESHOLD_PCONFIG_CURRENT_PCD                  (1llu << 32)
+#define DIAG_THRESHOLD_PCONFIG_UNCONFIGURED                 (1llu << 33)
+#define DIAG_THRESHOLD_PCONFIG_BROKEN_ISET                  (1llu << 34)
+#define DIAG_THRESHOLD_PCONFIG_MAPPED_CAPACITY              (1llu << 35)
+#define DIAG_THRESHOLD_PCONFIG_BEST_PRACTICES               (1llu << 36)
 
 // The volatile memory mode currently selected by the BIOS.
 enum volatile_mode
@@ -1206,7 +1205,7 @@ struct device_error
  */
 struct diagnostic_threshold
 {
-	enum diagnostic_threshold_type type; // A diagnostic threshold indicator
+    diagnostic_threshold_type type; // A diagnostic threshold indicator
 	NVM_UINT64 threshold; // numeric threshold
 	char threshold_str[NVM_THRESHOLD_STR_LEN]; // text value used as a "threshold"
 };

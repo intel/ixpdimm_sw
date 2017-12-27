@@ -470,56 +470,63 @@ int apply_dimm_sku_capabilities(struct nvm_capabilities *p_capabilities)
 	{
 		int dev_count = rc;
 		struct device_discovery *devices =  malloc(dev_count * sizeof(struct device_discovery));
-		memset(devices, 0, dev_count * sizeof (struct device_discovery));
-		rc = nvm_get_devices(devices, dev_count);
-		if (rc == dev_count)
-		{
-			rc = NVM_SUCCESS;
-			NVM_BOOL sku_set = 0;
-			NVM_UINT32 dimm_sku = 0;
+        if (NULL == devices)
+        {
+            rc = NVM_ERR_NOMEMORY;
+        }
+        else
+        {
+            memset(devices, 0, dev_count * sizeof(struct device_discovery));
+            rc = nvm_get_devices(devices, dev_count);
+            if (rc == dev_count)
+            {
+                rc = NVM_SUCCESS;
+                NVM_BOOL sku_set = 0;
+                NVM_UINT32 dimm_sku = 0;
 
-			for (int i = 0; i < dev_count; i++)
-			{
-				// only check manageable dimms for supported modes
-				if (devices[i].manageability == MANAGEMENT_VALIDCONFIG)
-				{
-					// set the SKU to check on the first NVM-DIMM
-					// then check all others against it
-					if (!sku_set)
-					{
-						dimm_sku = devices[i].dimm_sku;
-						sku_set = 1;
-					}
-					else if (sku_value_is_different(dimm_sku, devices[i].dimm_sku))
-					{
-						p_capabilities->sku_capabilities.mixed_sku = 1;
-					}
+                for (int i = 0; i < dev_count; i++)
+                {
+                    // only check manageable dimms for supported modes
+                    if (devices[i].manageability == MANAGEMENT_VALIDCONFIG)
+                    {
+                        // set the SKU to check on the first NVM-DIMM
+                        // then check all others against it
+                        if (!sku_set)
+                        {
+                            dimm_sku = devices[i].dimm_sku;
+                            sku_set = 1;
+                        }
+                        else if (sku_value_is_different(dimm_sku, devices[i].dimm_sku))
+                        {
+                            p_capabilities->sku_capabilities.mixed_sku = 1;
+                        }
 
-					// at least one manageable dimm supports memory mode
-					if (devices[i].dimm_sku & SKU_MEMORY_MODE_ENABLED)
-					{
-						p_capabilities->sku_capabilities.memory_sku = 1;
-					}
-					// at least one manageable dimm supports app direct mode
-					if (devices[i].dimm_sku & SKU_APP_DIRECT_MODE_ENABLED)
-					{
-						p_capabilities->sku_capabilities.app_direct_sku = 1;
-					}
-					// at least one manageable dimm supports storage mode
-					if (devices[i].dimm_sku & SKU_STORAGE_MODE_ENABLED)
-					{
-						p_capabilities->sku_capabilities.storage_sku = 1;
-					}
-				}
-			}
-		}
+                        // at least one manageable dimm supports memory mode
+                        if (devices[i].dimm_sku & SKU_MEMORY_MODE_ENABLED)
+                        {
+                            p_capabilities->sku_capabilities.memory_sku = 1;
+                        }
+                        // at least one manageable dimm supports app direct mode
+                        if (devices[i].dimm_sku & SKU_APP_DIRECT_MODE_ENABLED)
+                        {
+                            p_capabilities->sku_capabilities.app_direct_sku = 1;
+                        }
+                        // at least one manageable dimm supports storage mode
+                        if (devices[i].dimm_sku & SKU_STORAGE_MODE_ENABLED)
+                        {
+                            p_capabilities->sku_capabilities.storage_sku = 1;
+                        }
+                    }
+                }
+            }
 
-		// apply dimm SKU capabilities to host SW supported features
-		dimm_sku_capabilities_to_nvm_features(
-				&p_capabilities->sku_capabilities,
-				&p_capabilities->nvm_features);
+            // apply dimm SKU capabilities to host SW supported features
+            dimm_sku_capabilities_to_nvm_features(
+                &p_capabilities->sku_capabilities,
+                &p_capabilities->nvm_features);
 
-        free(devices);
+            free(devices);
+        }
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -673,30 +680,37 @@ int system_in_sku_violation(const struct nvm_capabilities *p_capabilities,
 	{
 		int device_count = rc;
 		struct device_discovery *devices = malloc(device_count * sizeof(struct device_discovery));
-		rc = nvm_get_devices(devices, device_count);
-		if (rc > 0)
-		{
-			device_count = rc;
-			rc = NVM_SUCCESS;
-			for (int i = 0; i < device_count; i++)
-			{
-				if (devices[i].manageability == MANAGEMENT_VALIDCONFIG)
-				{
-					KEEP_ERROR(rc, device_in_sku_violation(&devices[i],
-							p_sku_violation));
-				}
-				// stop if sku violation detected
-				if (*p_sku_violation)
-				{
-					COMMON_LOG_ERROR(
-						"One more " NVM_DIMM_NAME "s are configured in "
-						"violation of the license.");
-					break;
-				}
-			}
-		}
+        if (NULL == devices)
+        {
+            rc = NVM_ERR_NOMEMORY;
+        }
+        else
+        {
+            rc = nvm_get_devices(devices, device_count);
+            if (rc > 0)
+            {
+                device_count = rc;
+                rc = NVM_SUCCESS;
+                for (int i = 0; i < device_count; i++)
+                {
+                    if (devices[i].manageability == MANAGEMENT_VALIDCONFIG)
+                    {
+                        KEEP_ERROR(rc, device_in_sku_violation(&devices[i],
+                            p_sku_violation));
+                    }
+                    // stop if sku violation detected
+                    if (*p_sku_violation)
+                    {
+                        COMMON_LOG_ERROR(
+                            "One more " NVM_DIMM_NAME "s are configured in "
+                            "violation of the license.");
+                        break;
+                    }
+                }
+            }
 
-        free(devices);
+            free(devices);
+        }
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);

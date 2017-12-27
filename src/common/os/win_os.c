@@ -44,6 +44,7 @@
 #include <string/unicode_utilities.h>
 #ifdef _WIN32
 #include <intrin.h>
+#include <winsock2.h>
 #else
 #include <cpuid.h>
 #endif

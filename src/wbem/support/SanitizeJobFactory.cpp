@@ -154,7 +154,7 @@ wbem::framework::Instance* wbem::support::SanitizeJobFactory::getInstance(wbem::
 		{
 			throw exception::NvmExceptionLibError(jobCount);
 		}
-		
+
         std::unique_ptr<struct job[]> jobs(new job[jobCount]);
 		memset(jobs.get(), 0, jobCount * sizeof(struct job));
 		if ((rc = nvm_get_jobs(jobs.get(), jobCount)) < NVM_SUCCESS)

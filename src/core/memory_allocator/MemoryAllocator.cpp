@@ -114,7 +114,7 @@ core::memory_allocator::MemoryAllocator::~MemoryAllocator()
 }
 
 core::memory_allocator::MemoryAllocationLayout core::memory_allocator::MemoryAllocator::layout(
-		const struct MemoryAllocationRequest& request,
+		const MemoryAllocationRequest& request,
 		NVM_UINT16 namespaceLabelMajor,
 		NVM_UINT16 namespaceLabelMinor)
 {
@@ -159,7 +159,7 @@ void core::memory_allocator::MemoryAllocator::populatePostLayoutChecks()
 }
 
 void core::memory_allocator::MemoryAllocator::validateLayout(
-		const struct MemoryAllocationRequest& request,
+		const MemoryAllocationRequest& request,
 		const MemoryAllocationLayout layout)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -171,7 +171,7 @@ void core::memory_allocator::MemoryAllocator::validateLayout(
 	}
 }
 
-void core::memory_allocator::MemoryAllocator::validateRequest(const struct MemoryAllocationRequest& request)
+void core::memory_allocator::MemoryAllocator::validateRequest(const MemoryAllocationRequest& request)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 

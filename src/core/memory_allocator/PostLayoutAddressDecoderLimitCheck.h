@@ -54,7 +54,7 @@ class NVM_CORE_API PostLayoutAddressDecoderLimitCheck: public PostLayoutCheck
 				const NVM_UINT16 numSystemSockets);
 		virtual ~PostLayoutAddressDecoderLimitCheck();
 		virtual void verify(
-				const struct MemoryAllocationRequest &request,
+				const MemoryAllocationRequest &request,
 				const MemoryAllocationLayout &layout);
 
 	protected:

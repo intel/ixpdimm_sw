@@ -260,7 +260,7 @@ void diag_clear_results(const enum diagnostic_test type,
 				db_delete_event_by_id(p_store, events[i].id);
 			}
 		}
-        
+
         free(events);
 	}
 }

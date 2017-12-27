@@ -125,7 +125,7 @@ NVM_UINT16 core::memory_allocator::PostLayoutAddressDecoderLimitCheck::getNumber
 }
 
 void core::memory_allocator::PostLayoutAddressDecoderLimitCheck::verify(
-		const struct MemoryAllocationRequest& request,
+		const MemoryAllocationRequest& request,
 		const struct MemoryAllocationLayout &layout)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);

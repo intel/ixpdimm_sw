@@ -112,17 +112,24 @@ int nvm_get_memory_topology(struct memory_topology *p_memory_devices, const NVM_
 		memset(p_memory_devices, 0, sizeof (struct memory_topology) * count);
 
 		struct nvm_details *details = malloc(count * sizeof(struct nvm_details));
-		rc = get_smbios_inventory(count, details);
-		if ((rc > 0) || (rc == NVM_ERR_ARRAYTOOSMALL))
-		{
-			NVM_UINT8 smbios_inv_count = (rc >= 0) ? rc : count;
-			for (NVM_UINT8 i = 0; i < smbios_inv_count; i++)
-			{
-				nvm_details_to_memory_topology(&(details[i]), &(p_memory_devices[i]));
-			}
-		}
+        if (NULL == details)
+        {
+            rc = NVM_ERR_NOMEMORY;
+        }
+        else
+        {
+            rc = get_smbios_inventory(count, details);
+            if ((rc > 0) || (rc == NVM_ERR_ARRAYTOOSMALL))
+            {
+                NVM_UINT8 smbios_inv_count = (rc >= 0) ? rc : count;
+                for (NVM_UINT8 i = 0; i < smbios_inv_count; i++)
+                {
+                    nvm_details_to_memory_topology(&(details[i]), &(p_memory_devices[i]));
+                }
+            }
 
-        free(details);
+            free(details);
+        }
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -506,40 +513,47 @@ int populate_devices(struct device_discovery *p_devices,
 
 		memset(p_devices, 0, count * sizeof (struct device_discovery));
 		struct nvm_topology *topologies = malloc(topo_count * sizeof(struct nvm_topology));
-		if ((rc = get_topology(topo_count, topologies)) > 0)
-		{
-			// populated_count = topo_count in get_topology's
-			// implementation, but it's good practice to use the returned value
-			int populated_count = rc;
-			rc = populate_devices_from_topologies(p_devices, count,
-									topologies, topo_count);
-			add_smbios_properties_to_populated_devices(p_devices, populated_count);
+        if (NULL == topologies)
+        {
+            rc = NVM_ERR_NOMEMORY;
+        }
+        else
+        {
+            if ((rc = get_topology(topo_count, topologies)) > 0)
+            {
+                // populated_count = topo_count in get_topology's
+                // implementation, but it's good practice to use the returned value
+                int populated_count = rc;
+                rc = populate_devices_from_topologies(p_devices, count,
+                    topologies, topo_count);
+                add_smbios_properties_to_populated_devices(p_devices, populated_count);
 
-			if (populate_all_properties == NVM_TRUE)
-			{
-				int fw_rc = add_firmware_properties_to_populated_devices(p_devices,
-						populated_count);
-				if (fw_rc != NVM_SUCCESS)
-				{
-					rc = fw_rc;
-				}
-				calculate_capabilities_for_populated_devices(p_devices,
-						populated_count);
+                if (populate_all_properties == NVM_TRUE)
+                {
+                    int fw_rc = add_firmware_properties_to_populated_devices(p_devices,
+                        populated_count);
+                    if (fw_rc != NVM_SUCCESS)
+                    {
+                        rc = fw_rc;
+                    }
+                    calculate_capabilities_for_populated_devices(p_devices,
+                        populated_count);
 
-				calculate_uids_for_populated_devices(p_devices, populated_count);
-			}
+                    calculate_uids_for_populated_devices(p_devices, populated_count);
+                }
 
-			// Set the all_properties_populated bit as appropriate
-			for (int i = 0; i < populated_count; i++)
-			{
-				p_devices[i].all_properties_populated = populate_all_properties;
-			}
+                // Set the all_properties_populated bit as appropriate
+                for (int i = 0; i < populated_count; i++)
+                {
+                    p_devices[i].all_properties_populated = populate_all_properties;
+                }
 
-			// Save to context for reuse next time
-			set_nvm_context_devices(p_devices, rc);
-		}
-		
-        free(topologies);
+                // Save to context for reuse next time
+                set_nvm_context_devices(p_devices, rc);
+            }
+
+            free(topologies);
+        }
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -830,27 +844,34 @@ int get_sku_violation_state_for_device(NVM_NFIT_DEVICE_HANDLE dimm_handle,
 	{
 		int dev_count = rc;
 		struct device_discovery *devices =  malloc(dev_count * sizeof(struct device_discovery));
-		rc = nvm_get_devices(devices, dev_count);
-		if (rc == dev_count)
-		{
-			rc = NVM_SUCCESS;
+        if (NULL == devices)
+        {
+            rc = NVM_ERR_NOMEMORY;
+        }
+        else
+        {
+            rc = nvm_get_devices(devices, dev_count);
+            if (rc == dev_count)
+            {
+                rc = NVM_SUCCESS;
 
-			for (int dimmIdx = 0; dimmIdx < dev_count; dimmIdx++)
-			{
-				if (devices[dimmIdx].device_handle.handle == dimm_handle.handle)
-				{
-					KEEP_ERROR(rc, device_in_sku_violation(&devices[dimmIdx],
-							p_sku_violation));
-				}
-			}
-		}
-		else
-		{
-			COMMON_LOG_ERROR_F(
-				"Failed to get the correct number of devices with error %d", rc);
-		}
+                for (int dimmIdx = 0; dimmIdx < dev_count; dimmIdx++)
+                {
+                    if (devices[dimmIdx].device_handle.handle == dimm_handle.handle)
+                    {
+                        KEEP_ERROR(rc, device_in_sku_violation(&devices[dimmIdx],
+                            p_sku_violation));
+                    }
+                }
+            }
+            else
+            {
+                COMMON_LOG_ERROR_F(
+                    "Failed to get the correct number of devices with error %d", rc);
+            }
 
-        free(devices);
+            free(devices);
+        }
 	}
 	else
 	{
@@ -1420,46 +1441,53 @@ int nvm_get_nvm_capacities(struct device_capacities *p_capacities)
 				{
 					int dev_count = rc;
 					struct device_discovery *devices = malloc(dev_count * sizeof(struct device_discovery));
-					rc = nvm_get_devices(devices, dev_count);
-					if (rc == dev_count)
-					{
-						rc = NVM_SUCCESS;
-						// iterate through all devices and add up the capacities
-						for (int i = 0; i < dev_count; i++)
-						{
-							if (devices[i].manageability == MANAGEMENT_VALIDCONFIG)
-							{
-								struct device_capacities dimm_capacities;
-								int temp_rc = get_dimm_capacities(&devices[i],
-										&capabilities, &dimm_capacities);
-								if (temp_rc == NVM_SUCCESS)
-								{
-									p_capacities->capacity +=
-											dimm_capacities.capacity;
-									p_capacities->memory_capacity +=
-											dimm_capacities.memory_capacity;
-									p_capacities->app_direct_capacity +=
-											dimm_capacities.app_direct_capacity;
-									p_capacities->unconfigured_capacity +=
-											dimm_capacities.unconfigured_capacity;
-									p_capacities->storage_capacity +=
-											dimm_capacities.storage_capacity;
-									p_capacities->inaccessible_capacity +=
-											dimm_capacities.inaccessible_capacity;
-									p_capacities->reserved_capacity +=
-											dimm_capacities.reserved_capacity;
-								}
-								// Keep error and continue looping, error is
-								// logged in get_dimm_capacities
-								else
-								{
-									KEEP_ERROR(rc, temp_rc);
-								}
-							}
-						}
-					}
+                    if (NULL == devices)
+                    {
+                        rc = NVM_ERR_NOMEMORY;
+                    }
+                    else
+                    {
+                        rc = nvm_get_devices(devices, dev_count);
+                        if (rc == dev_count)
+                        {
+                            rc = NVM_SUCCESS;
+                            // iterate through all devices and add up the capacities
+                            for (int i = 0; i < dev_count; i++)
+                            {
+                                if (devices[i].manageability == MANAGEMENT_VALIDCONFIG)
+                                {
+                                    struct device_capacities dimm_capacities;
+                                    int temp_rc = get_dimm_capacities(&devices[i],
+                                        &capabilities, &dimm_capacities);
+                                    if (temp_rc == NVM_SUCCESS)
+                                    {
+                                        p_capacities->capacity +=
+                                            dimm_capacities.capacity;
+                                        p_capacities->memory_capacity +=
+                                            dimm_capacities.memory_capacity;
+                                        p_capacities->app_direct_capacity +=
+                                            dimm_capacities.app_direct_capacity;
+                                        p_capacities->unconfigured_capacity +=
+                                            dimm_capacities.unconfigured_capacity;
+                                        p_capacities->storage_capacity +=
+                                            dimm_capacities.storage_capacity;
+                                        p_capacities->inaccessible_capacity +=
+                                            dimm_capacities.inaccessible_capacity;
+                                        p_capacities->reserved_capacity +=
+                                            dimm_capacities.reserved_capacity;
+                                    }
+                                    // Keep error and continue looping, error is
+                                    // logged in get_dimm_capacities
+                                    else
+                                    {
+                                        KEEP_ERROR(rc, temp_rc);
+                                    }
+                                }
+                            }
+                        }
 
-                    free(devices);
+                        free(devices);
+                    }
 				}
 			}
 		}

@@ -49,7 +49,7 @@ class NVM_CORE_API PostLayoutCheck
 		virtual ~PostLayoutCheck() {}
 
 		virtual void verify(
-				const struct MemoryAllocationRequest& request,
+				const MemoryAllocationRequest& request,
 				const MemoryAllocationLayout &layout) = 0;
 };
 } /* namespace memory_allocator */

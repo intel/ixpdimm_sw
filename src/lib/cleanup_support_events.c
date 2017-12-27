@@ -262,50 +262,63 @@ void append_obfuscated_uid_to_string(const char *real_uid,
 	COMMON_LOG_EXIT();
 }
 
-void build_obfuscated_dimm_uid_list_from_real_uid_list(
+int build_obfuscated_dimm_uid_list_from_real_uid_list(
 		const char *original_list, const size_t original_list_size,
 		char *obfuscated_list, const size_t obfuscated_list_size)
 {
 	COMMON_LOG_ENTRY();
+    int rc = NVM_SUCCESS;
 
 	memset(obfuscated_list, 0, obfuscated_list_size);
 
 	// Mutable list for parsing
 	char *original_list_copy = malloc(original_list_size * sizeof(char));
-	s_strcpy(original_list_copy, original_list, original_list_size);
+    if (NULL == original_list_copy)
+    {
+        rc = NVM_ERR_NOMEMORY;
+    }
+    else
+    {
+        s_strcpy(original_list_copy, original_list, original_list_size);
 
-	const char *delimiter = ", ";
-	char *p_ch = strtok(original_list_copy, delimiter);
-	int count = 0;
-	while (p_ch != NULL)
-	{
-		if (count > 0)
-		{
-			s_strcat(obfuscated_list, obfuscated_list_size, delimiter);
-		}
+        const char *delimiter = ", ";
+        char *p_ch = strtok(original_list_copy, delimiter);
+        int count = 0;
+        while (p_ch != NULL)
+        {
+            if (count > 0)
+            {
+                s_strcat(obfuscated_list, obfuscated_list_size, delimiter);
+            }
 
-		append_obfuscated_uid_to_string(p_ch,
-				obfuscated_list, obfuscated_list_size);
+            append_obfuscated_uid_to_string(p_ch,
+                obfuscated_list, obfuscated_list_size);
 
-		p_ch = strtok(NULL, delimiter);
-		count++;
-	}
+            p_ch = strtok(NULL, delimiter);
+            count++;
+        }
 
-    free(original_list_copy);
-	COMMON_LOG_EXIT();
+        free(original_list_copy);
+    }
+
+    COMMON_LOG_EXIT();
+
+    return rc;
 }
 
-void replace_dimm_uids_with_obfuscated_uids(char *uid_buffer, size_t buffer_size)
+int replace_dimm_uids_with_obfuscated_uids(char *uid_buffer, size_t buffer_size)
 {
 	COMMON_LOG_ENTRY();
 
 	NVM_EVENT_ARG original_uid_arg;
 	s_strcpy(original_uid_arg, uid_buffer, sizeof (original_uid_arg));
 
-	build_obfuscated_dimm_uid_list_from_real_uid_list(
+	int rc = build_obfuscated_dimm_uid_list_from_real_uid_list(
 			original_uid_arg, sizeof (original_uid_arg), uid_buffer, buffer_size);
 
 	COMMON_LOG_EXIT();
+
+    return rc;
 }
 
 NVM_BOOL event_uid_should_be_obfuscated(enum event_uid_type uid_type)
@@ -327,36 +340,44 @@ NVM_BOOL event_arg_should_be_obfuscated(enum event_arg_type arg_type)
 	return result;
 }
 
-void obfuscate_dimm_uids_in_event_arg(enum event_arg_type arg_type,
+int obfuscate_dimm_uids_in_event_arg(enum event_arg_type arg_type,
 		char *arg, const size_t arg_len)
 {
+    int rc = NVM_SUCCESS;
 	if (event_arg_should_be_obfuscated(arg_type))
 	{
-		replace_dimm_uids_with_obfuscated_uids(arg, arg_len);
+		rc = replace_dimm_uids_with_obfuscated_uids(arg, arg_len);
 	}
+
+    return rc;
 }
 
-void obfuscate_dimm_uid_in_event_uid(enum event_uid_type uid_type,
+int obfuscate_dimm_uid_in_event_uid(enum event_uid_type uid_type,
 		char *uid, const size_t uid_len)
 {
+    int rc = NVM_SUCCESS;
 	if (event_uid_should_be_obfuscated(uid_type))
 	{
-		replace_dimm_uids_with_obfuscated_uids(uid, uid_len);
+		rc = replace_dimm_uids_with_obfuscated_uids(uid, uid_len);
 	}
+    
+    return rc;
 }
 
-void obfuscate_dimm_uid_in_db_event(struct db_event *p_event,
+int obfuscate_dimm_uid_in_db_event(struct db_event *p_event,
 		const struct event_field_metadata *p_metadata)
 {
-	COMMON_LOG_ENTRY();
+    int rc = NVM_SUCCESS;
+    COMMON_LOG_ENTRY();
 
-	obfuscate_dimm_uid_in_event_uid(p_metadata->uid_type, p_event->uid, EVENT_UID_LEN);
+	rc |= obfuscate_dimm_uid_in_event_uid(p_metadata->uid_type, p_event->uid, EVENT_UID_LEN);
 
-	obfuscate_dimm_uids_in_event_arg(p_metadata->arg1_type, p_event->arg1, EVENT_ARG1_LEN);
-	obfuscate_dimm_uids_in_event_arg(p_metadata->arg2_type, p_event->arg2, EVENT_ARG2_LEN);
-	obfuscate_dimm_uids_in_event_arg(p_metadata->arg3_type, p_event->arg3, EVENT_ARG3_LEN);
+    rc |= obfuscate_dimm_uids_in_event_arg(p_metadata->arg1_type, p_event->arg1, EVENT_ARG1_LEN);
+    rc |= obfuscate_dimm_uids_in_event_arg(p_metadata->arg2_type, p_event->arg2, EVENT_ARG2_LEN);
+    rc |= obfuscate_dimm_uids_in_event_arg(p_metadata->arg3_type, p_event->arg3, EVENT_ARG3_LEN);
 
 	COMMON_LOG_EXIT();
+    return rc;
 }
 
 NVM_BOOL event_contains_device_uid(struct event_field_metadata *p_metadata)

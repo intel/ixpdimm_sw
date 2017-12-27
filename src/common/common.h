@@ -36,7 +36,7 @@ extern "C"
 #ifdef __MSVC__
 #define PACK_STRUCT(_structure_) __pragma(pack(push,1)) _structure_; __pragma(pack(pop))
 
-#else 
+#else
 #define PACK_STRUCT(_structure_) _structure_ __attribute__((packed));
 #endif
 

@@ -73,7 +73,7 @@ class NVM_CORE_API LayoutStep
 				const NVM_UINT64 &requestedCapacity,
 				std::vector<Dimm> &dimmsIncluded);
 		NVM_UINT64 getRemainingBytesFromRequestedDimms(
-				const struct MemoryAllocationRequest& request,
+				const MemoryAllocationRequest& request,
 				MemoryAllocationLayout& layout);
 		NVM_UINT64 getRemainingBytesFromDimms(
 				const std::vector<Dimm> &dimms,

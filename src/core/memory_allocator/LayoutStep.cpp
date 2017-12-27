@@ -118,7 +118,7 @@ NVM_UINT64 core::memory_allocator::LayoutStep::getLargestPerDimmSymmetricalBytes
 }
 
 NVM_UINT64 core::memory_allocator::LayoutStep::getRemainingBytesFromRequestedDimms(
-		const struct MemoryAllocationRequest& request,
+		const MemoryAllocationRequest& request,
 		MemoryAllocationLayout& layout)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);

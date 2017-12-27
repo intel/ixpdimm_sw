@@ -224,6 +224,10 @@ struct platform_capabilities_ext_table
  * Memory Interleave Capability Extension Information
  * Type 1
  */
+#if _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4200)
+#endif
 PACK_STRUCT(
 struct memory_interleave_capabilities_ext_table
 {
@@ -298,7 +302,9 @@ struct memory_interleave_capabilities_ext_table
 	NVM_UINT32 interleave_format_list[0];
 
 } )
-
+#if _MSC_VER
+#pragma warning(pop)
+#endif
 
 /*
  * Re-configuration Input Validation Extension Table
@@ -402,6 +408,10 @@ struct reconfig_input_validation_ext_table
  * Configuration Management Attributes Extension Table
  * Type 3
  */
+#if _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4200)
+#endif
 PACK_STRUCT(
 struct mgmt_attributes_ext_table
 {
@@ -428,6 +438,9 @@ struct mgmt_attributes_ext_table
 	NVM_UINT8 uid_data[0];
 
 } )
+#if _MSC_VER
+#pragma warning(pop)
+#endif
 
 /*
  * Socket SKU Information Table

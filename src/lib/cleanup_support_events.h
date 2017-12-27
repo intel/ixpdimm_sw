@@ -43,7 +43,7 @@ void clear_serial_num_in_db_event(struct db_event *p_event,
 		const struct event_field_metadata *p_metadata);
 
 int change_dimm_uid_in_events(PersistentStore *p_ps);
-void obfuscate_dimm_uid_in_db_event(struct db_event *p_event,
+int obfuscate_dimm_uid_in_db_event(struct db_event *p_event,
 		const struct event_field_metadata *p_metadata);
 int generate_obfuscated_dimm_uid(const NVM_UID real_uid, NVM_UID obfuscated_uid);
 

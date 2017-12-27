@@ -38,6 +38,7 @@
 #include <mem_config/MemoryCapabilitiesFactory.h>
 #include "MemoryProperty.h"
 #include <utility.h>
+#include "ExceptionNoMemory.h"
 
 namespace cli
 {
@@ -238,6 +239,10 @@ bool cli::nvmcli::MemoryProperty::tokenizeSettings()
 		// Create a mutable copy to tokenize
 		const size_t len = m_settingsPropertyValue.size() + 1;
 		char *tmp = new char[len];
+		if (NULL == tmp)
+		{
+			throw wbem::framework::ExceptionNoMemory(__FILE__, __func__, "Failed to allocate memory.");
+		}
 		s_strcpy(tmp, m_settingsPropertyValue.c_str(), len);
 
 		char *pRemainder = tmp;
