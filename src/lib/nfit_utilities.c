@@ -122,27 +122,17 @@ void nfit_dimm_to_nvm_topology(const struct nfit_dimm *p_nfit_dimm,
 {
 	p_dimm_topo->device_handle.handle = p_nfit_dimm->handle;
 	p_dimm_topo->id = p_nfit_dimm->physical_id;
-	// swap bytes for JEDEC compatibility
-	memmove(&p_dimm_topo->serial_number, &p_nfit_dimm->serial_number,
-			sizeof (NVM_SERIAL_NUMBER));
-	swap_bytes((unsigned char *)&p_dimm_topo->vendor_id,
-			(unsigned char *)&p_nfit_dimm->vendor_id,
-			sizeof (p_dimm_topo->vendor_id));
-	swap_bytes((unsigned char *)&p_dimm_topo->device_id,
-			(unsigned char *)&p_nfit_dimm->device_id,
-			sizeof (p_nfit_dimm->device_id));
-	swap_bytes((unsigned char *)&p_dimm_topo->subsystem_vendor_id,
-			(unsigned char *)&p_nfit_dimm->subsystem_vendor_id,
-			sizeof (p_dimm_topo->subsystem_vendor_id));
-	swap_bytes((unsigned char *)&p_dimm_topo->subsystem_device_id,
-			(unsigned char *)&p_nfit_dimm->subsystem_device_id,
-			sizeof (p_dimm_topo->subsystem_device_id));
-	swap_bytes((unsigned char *)&p_dimm_topo->manufacturing_location,
-			(unsigned char *)&p_nfit_dimm->manufacturing_location,
-		sizeof (p_dimm_topo->manufacturing_location));
-	swap_bytes((unsigned char *)&p_dimm_topo->manufacturing_date,
-			(unsigned char *)&p_nfit_dimm->manufacturing_date,
-			sizeof (p_dimm_topo->manufacturing_date));
+
+	p_dimm_topo->serial_number[3] = (unsigned char)(p_nfit_dimm->serial_number & 0xFF);
+	p_dimm_topo->serial_number[2] = (unsigned char)((p_nfit_dimm->serial_number >>8) & 0xFF);
+	p_dimm_topo->serial_number[1] = (unsigned char)((p_nfit_dimm->serial_number >> 16) & 0xFF);
+	p_dimm_topo->serial_number[0] = (unsigned char)((p_nfit_dimm->serial_number >> 24) & 0xFF);
+	p_dimm_topo->vendor_id = p_nfit_dimm->vendor_id;
+	p_dimm_topo->device_id = p_nfit_dimm->device_id;
+	p_dimm_topo->subsystem_vendor_id = p_nfit_dimm->subsystem_vendor_id;
+	p_dimm_topo->subsystem_device_id = p_nfit_dimm->subsystem_device_id;
+	p_dimm_topo->manufacturing_location = p_nfit_dimm->manufacturing_location;
+	p_dimm_topo->manufacturing_date = p_nfit_dimm->manufacturing_date;
 	p_dimm_topo->revision_id = p_nfit_dimm->revision_id;
 	p_dimm_topo->subsystem_revision_id = p_nfit_dimm->subsystem_revision_id;
 	p_dimm_topo->manufacturing_info_valid = p_nfit_dimm->valid_fields;
