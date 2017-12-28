@@ -28,15 +28,16 @@
 #include "nvm_management.h"
 #include "adapter_types.h"
 #include "pool_utilities.h"
+#include "export_api.h"
 
-void adjust_namespace_block_count_if_allowed(NVM_UINT64 *p_block_count,
+NVM_API void adjust_namespace_block_count_if_allowed(NVM_UINT64 *p_block_count,
 		const NVM_UINT16 block_size,
 		NVM_UINT8 ways, const NVM_BOOL allow_adjustment);
 
-NVM_UINT32 get_alignment_size(NVM_UINT32 block_size, NVM_UINT32 ways);
+NVM_API NVM_UINT32 get_alignment_size(NVM_UINT32 block_size, NVM_UINT32 ways);
 
-NVM_BOOL check_namespace_alignment(NVM_UINT64 capacity, NVM_UINT32 block_size, NVM_UINT8 ways);
+NVM_API NVM_BOOL check_namespace_alignment(NVM_UINT64 capacity, NVM_UINT32 block_size, NVM_UINT8 ways);
 
-NVM_UINT64 capacity_to_real_block_count(NVM_UINT64 capacity, NVM_UINT32 block_size);
+NVM_API NVM_UINT64 capacity_to_real_block_count(NVM_UINT64 capacity, NVM_UINT32 block_size);
 
-int get_nvm_namespaces_details_alloc(struct nvm_namespace_details **pp_namespaces);
+NVM_API int get_nvm_namespaces_details_alloc(struct nvm_namespace_details **pp_namespaces);

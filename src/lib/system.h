@@ -43,6 +43,7 @@
 #include "capabilities.h"
 #include "nvm_management.h"
 #include "platform_capabilities.h"
+#include <export_api.h>
 
 /*
  * Retrieve basic information about the host server the native API library is running on.
@@ -54,7 +55,7 @@
  * 		#NVM_ERR_INVALIDPARAMETER @n
  * 		#NVM_ERR_UNKNOWN @n
  */
-int get_host(struct host *p_host);
+NVM_API int get_host(struct host *p_host);
 
 /*
  * Load a simulator database file.  A simulator may be used to emulate
@@ -75,7 +76,7 @@ int get_host(struct host *p_host);
  * 		#NVM_ERR_BADFILE @n
  * 		#NVM_ERR_UNKNOWN @n
  */
-int add_simulator(const NVM_PATH simulator, const NVM_SIZE simulator_len);
+NVM_API int add_simulator(const NVM_PATH simulator, const NVM_SIZE simulator_len);
 
 /*
  * Remove a simulator database file previously added using #nvm_add_simulator.
@@ -90,7 +91,7 @@ int add_simulator(const NVM_PATH simulator, const NVM_SIZE simulator_len);
  * 		#NVM_ERR_NOSIMULATOR @n
  * 		#NVM_ERR_UNKNOWN @n
  */
-int remove_simulator();
+NVM_API int remove_simulator();
 
 /*!
  * Determine if the caller has permission to make changes to the system
@@ -98,7 +99,7 @@ int remove_simulator();
  * 		#COMMON_SUCCESS @n
  * 		#COMMON_ERR_INVALIDPERMISSIONS
  */
-int check_caller_permissions();
+NVM_API int check_caller_permissions();
 
 /*
  * ***************************************************

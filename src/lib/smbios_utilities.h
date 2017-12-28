@@ -36,22 +36,23 @@
 #include <smbios/smbios_types.h>
 #include <common_types.h>
 #include "device_adapter.h"
+#include "export_api.h"
 
 /*
  * Get the SMBIOS physical ID of a DIMM with a given device handle.
  */
-int get_dimm_physical_id_from_handle(const NVM_NFIT_DEVICE_HANDLE device_handle);
+NVM_API int get_dimm_physical_id_from_handle(const NVM_NFIT_DEVICE_HANDLE device_handle);
 
 /*
  * Get DIMM details for a specific DIMM physical ID from the SMBIOS table.
  */
-int get_dimm_details_for_physical_id(const NVM_UINT16 physical_id,
+NVM_API int get_dimm_details_for_physical_id(const NVM_UINT16 physical_id,
 		struct nvm_details *p_dimm_details);
 
 /*
  * Get DIMM details for a specific DIMM physical ID from the SMBIOS table.
  */
-int get_dimm_details_from_smbios_table(const NVM_UINT8 *p_smbios_table,
+NVM_API int get_dimm_details_from_smbios_table(const NVM_UINT8 *p_smbios_table,
 		const size_t smbios_data_length,
 		const NVM_UINT16 physical_id, struct nvm_details *p_dimm_details);
 
@@ -59,7 +60,7 @@ int get_dimm_details_from_smbios_table(const NVM_UINT8 *p_smbios_table,
  * Get Type 17 memory type for a specific DIMM physical ID from an SMBIOS table.
  * Returns the type or error if not found.
  */
-int get_device_memory_type_from_smbios_table(const NVM_UINT8 *p_smbios_table,
+NVM_API int get_device_memory_type_from_smbios_table(const NVM_UINT8 *p_smbios_table,
 		const size_t smbios_data_length,
 		const NVM_UINT16 physical_id);
 
@@ -68,7 +69,7 @@ int get_device_memory_type_from_smbios_table(const NVM_UINT8 *p_smbios_table,
  * Caller is responsible for null-checking inputs.
  * Returns count if successful, NVM error code if not.
  */
-int smbios_table_to_nvm_details_array(const NVM_UINT8 *p_smbios_table,
+NVM_API int smbios_table_to_nvm_details_array(const NVM_UINT8 *p_smbios_table,
 		const size_t smbios_data_length,
 		struct nvm_details *p_details, const size_t num_details);
 
@@ -76,7 +77,7 @@ int smbios_table_to_nvm_details_array(const NVM_UINT8 *p_smbios_table,
  * Copy from SMBIOS Type 17 structure to nvm_details.
  * Caller is responsible for null-checking inputs.
  */
-void smbios_memory_device_to_nvm_details(const struct smbios_memory_device *p_smbios_dev,
+NVM_API void smbios_memory_device_to_nvm_details(const struct smbios_memory_device *p_smbios_dev,
 		const size_t smbios_data_length,
 		struct nvm_details *p_details);
 
@@ -84,14 +85,14 @@ void smbios_memory_device_to_nvm_details(const struct smbios_memory_device *p_sm
  * Returns the number of Memory Device structures in the table that are populated
  * with DIMMs (not empty slots)
  */
-int smbios_get_populated_memory_device_count(const NVM_UINT8 *p_smbios_table,
+NVM_API int smbios_get_populated_memory_device_count(const NVM_UINT8 *p_smbios_table,
 		const size_t smbios_data_length);
 
 /*
  * Get the size out of the SMBIOS Type 17 structure and convert it to bytes.
  * Caller is responsible for null-checking input.
  */
-COMMON_UINT64 smbios_get_memory_device_size_in_bytes(
+NVM_API COMMON_UINT64 smbios_get_memory_device_size_in_bytes(
 		const struct smbios_memory_device *p_smbios_dev);
 
 #endif /* SRC_LIB_SMBIOS_UTILITIES_H_ */

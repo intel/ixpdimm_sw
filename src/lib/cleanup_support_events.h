@@ -36,15 +36,16 @@
 #include <nvm_types.h>
 #include <nvm_management.h>
 #include "event_field_metadata.h"
+#include <export_api.h>
 
-int change_serial_num_in_events(PersistentStore *p_ps, enum event_type event_type,
+NVM_API int change_serial_num_in_events(PersistentStore *p_ps, enum event_type event_type,
 		unsigned int event_code);
-void clear_serial_num_in_db_event(struct db_event *p_event,
+NVM_API void clear_serial_num_in_db_event(struct db_event *p_event,
 		const struct event_field_metadata *p_metadata);
 
-int change_dimm_uid_in_events(PersistentStore *p_ps);
-int obfuscate_dimm_uid_in_db_event(struct db_event *p_event,
+NVM_API int change_dimm_uid_in_events(PersistentStore *p_ps);
+NVM_API int obfuscate_dimm_uid_in_db_event(struct db_event *p_event,
 		const struct event_field_metadata *p_metadata);
-int generate_obfuscated_dimm_uid(const NVM_UID real_uid, NVM_UID obfuscated_uid);
+NVM_API int generate_obfuscated_dimm_uid(const NVM_UID real_uid, NVM_UID obfuscated_uid);
 
 #endif /* CLEANUP_SUPPORT_EVENTS_H_ */

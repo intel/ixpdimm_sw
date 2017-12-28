@@ -34,30 +34,31 @@
 #define	SRC_LIB_CONFIG_GOAL_UTILITIES_H_
 
 #include "platform_config_data.h"
+#include "export_api.h"
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-int get_devices_from_appdirect_attributes(struct device_discovery *p_devices,
+NVM_API int get_devices_from_appdirect_attributes(struct device_discovery *p_devices,
 		int num_devices,
 		const struct app_direct_attributes *p_qos);
 
-int verify_interleave_set_rules(struct device_discovery *p_devices,
+NVM_API int verify_interleave_set_rules(struct device_discovery *p_devices,
 		int num_devices);
 
-int arrange_devices_in_interleave_set_for_pcat2(struct device_discovery *p_devices,
+NVM_API int arrange_devices_in_interleave_set_for_pcat2(struct device_discovery *p_devices,
 		int num_devices);
 
-void populate_dimm_info_extension_table(struct dimm_info_extension_table *p_dimms_ext,
+NVM_API void populate_dimm_info_extension_table(struct dimm_info_extension_table *p_dimms_ext,
 		NVM_UINT8 pcd_table_revision,
 		struct device_discovery *p_devices,
 		int num_devices,
 		const NVM_UINT64 interleave_set_size,
 		const NVM_UINT64 interleave_set_offset);
 
-int populate_dimm_info_extension_tables(struct dimm_info_extension_table *p_dimms_ext,
+NVM_API int populate_dimm_info_extension_tables(struct dimm_info_extension_table *p_dimms_ext,
 		const struct app_direct_attributes *p_qos,
 		const NVM_UINT8 pcat_revision,
 		const NVM_UINT8 pcd_table_revision,

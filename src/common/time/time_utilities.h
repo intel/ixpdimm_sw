@@ -35,7 +35,7 @@
 #define	_TIME_UTILITIES_H_
 
 #ifdef __cplusplus
-NVM_COMMON_API extern "C"
+extern "C"
 {
 #endif
 

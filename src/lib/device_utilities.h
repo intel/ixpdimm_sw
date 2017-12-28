@@ -66,13 +66,13 @@ extern "C"
 #define	IS_DEVICE_MANAGEABLE(p_device) \
 	(NVM_BOOL)((p_device)->manageability == MANAGEMENT_VALIDCONFIG)
 
-int exists_and_manageable(const NVM_UID device_uid, struct device_discovery *p_dev,
+NVM_API int exists_and_manageable(const NVM_UID device_uid, struct device_discovery *p_dev,
 		NVM_BOOL check_manageability);
 
-int device_uid_string_to_bytes(const NVM_UID uid, NVM_UINT8 *p_bytes, const size_t bytes_len);
-int device_uid_bytes_to_string(const NVM_UINT8 *p_bytes, const size_t bytes_len, NVM_UID uid);
+NVM_API int device_uid_string_to_bytes(const NVM_UID uid, NVM_UINT8 *p_bytes, const size_t bytes_len);
+NVM_API int device_uid_bytes_to_string(const NVM_UINT8 *p_bytes, const size_t bytes_len, NVM_UID uid);
 
-int calculate_device_uid(struct device_discovery *p_device);
+NVM_API int calculate_device_uid(struct device_discovery *p_device);
 void calculate_uid_without_manufacturing_info(NVM_UID uid,
 		const NVM_UINT16 vendor_id, const NVM_SERIAL_NUMBER serial_number);
 NVM_API void calculate_uid_with_valid_manufacturing_info(NVM_UID uid,
@@ -97,12 +97,12 @@ int init_dev_table(COMMON_BOOL obtain_lock, struct nvm_topology *p_dimm_topo, NV
 /*
  * Helper functions to get ARS and sanitize status
  */
-int get_long_status(const NVM_NFIT_DEVICE_HANDLE dimm_handle, enum device_ars_status *p_ars_status,
+NVM_API int get_long_status(const NVM_NFIT_DEVICE_HANDLE dimm_handle, enum device_ars_status *p_ars_status,
 		enum device_sanitize_status *p_sanitize_status);
 
-enum device_ars_status translate_to_ars_status(struct pt_payload_long_op_stat *p_long_op_payload);
+NVM_API enum device_ars_status translate_to_ars_status(struct pt_payload_long_op_stat *p_long_op_payload);
 
-enum device_sanitize_status translate_to_sanitize_status(
+NVM_API enum device_sanitize_status translate_to_sanitize_status(
 		struct pt_payload_long_op_stat *p_long_op_payload);
 
 /*
@@ -120,28 +120,28 @@ int get_app_direct_capacity_on_device(const struct device_discovery *p_discovery
 /*
  * Derive DIMM manageability state from firmware
  */
-void set_device_manageability_from_firmware(
+NVM_API void set_device_manageability_from_firmware(
 	struct pt_payload_identify_dimm *p_id_dimm,
 	enum manageability_state *p_manageability);
 
 /*
  * Check device interface format code against those supported by mgmt sw
  */
-NVM_BOOL is_device_interface_format_supported(struct nvm_topology *p_topology);
+NVM_API NVM_BOOL is_device_interface_format_supported(struct nvm_topology *p_topology);
 
 /*
  * Check device memory subsystem controller information against those supported by mgmt sw
  */
-NVM_BOOL is_device_subsystem_controller_supported(struct nvm_topology *p_topology);
-NVM_BOOL is_subsystem_vendor_id_supported(NVM_UINT16 vendor_id);
-NVM_BOOL is_subsystem_device_id_supported(NVM_UINT16 device_id);
+NVM_API NVM_BOOL is_device_subsystem_controller_supported(struct nvm_topology *p_topology);
+NVM_API NVM_BOOL is_subsystem_vendor_id_supported(NVM_UINT16 vendor_id);
+NVM_API NVM_BOOL is_subsystem_device_id_supported(NVM_UINT16 device_id);
 
 
 /*
  * Compare the firmware api version to the supported versions to determine
  * if the device is manageable.
  */
-int check_firmware_revision(unsigned short fw_api_version);
+NVM_API int check_firmware_revision(unsigned short fw_api_version);
 
 /*
  * Helper function to get the health of a dimm. Used in get pools to roll up health info
@@ -185,7 +185,7 @@ NVM_BOOL device_is_erase_capable(struct device_security_capabilities security_ca
  */
 NVM_BOOL device_is_encryption_enabled(enum lock_state lock_state);
 
-void calculate_device_capabilities(struct device_discovery *p_dev);
+NVM_API void calculate_device_capabilities(struct device_discovery *p_dev);
 
 void convert_sku_to_device_capabilities(const int sku_bits,
 		struct device_capabilities *p_capabilities);
@@ -206,7 +206,7 @@ int get_dimm_capacities(const struct device_discovery *p_dimm,
 int dimm_has_namespaces_of_type(const NVM_NFIT_DEVICE_HANDLE dimm_handle,
 		const enum namespace_type ns_type);
 
-void add_ifcs_from_identify_dimm_to_device(struct device_discovery *p_device,
+NVM_API void add_ifcs_from_identify_dimm_to_device(struct device_discovery *p_device,
 		struct pt_payload_identify_dimm *p_id_dimm);
 
 /*

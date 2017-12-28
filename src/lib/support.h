@@ -32,15 +32,17 @@
 #ifndef	_SUPPORT_H_
 #define	_SUPPORT_H_
 
+#include <export_api.h>
+
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-int change_serial_num_in_topology_state(PersistentStore *p_ps);
-int change_serial_num_in_interleave_set_dimm_info(PersistentStore *p_ps);
-int change_serial_num_in_identify_dimm(PersistentStore *p_ps);
-int change_hostname_in_host(PersistentStore *p_ps);
+NVM_API int change_serial_num_in_topology_state(PersistentStore *p_ps);
+NVM_API int change_serial_num_in_interleave_set_dimm_info(PersistentStore *p_ps);
+NVM_API int change_serial_num_in_identify_dimm(PersistentStore *p_ps);
+NVM_API int change_hostname_in_host(PersistentStore *p_ps);
 
 /*
  * Enum values must be a bitmask, unique, non-overlapping values correlating to

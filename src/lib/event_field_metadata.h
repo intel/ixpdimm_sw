@@ -33,6 +33,7 @@
 #define	EVENT_FIELD_METADATA_H_
 
 #include <nvm_management.h>
+#include "export_api.h"
 
 enum event_arg_type
 {
@@ -63,10 +64,10 @@ struct event_field_metadata
 #define	EVENT_METADATA_HAS_TYPE_IN_ARG(metadata, arg_type, which_arg) \
 	(metadata.arg## which_arg ##_type == arg_type)
 
-struct event_field_metadata get_event_field_metadata(const enum event_type type,
+NVM_API struct event_field_metadata get_event_field_metadata(const enum event_type type,
 		const NVM_UINT32 code);
 
-NVM_BOOL event_field_metadata_includes_arg_type(const struct event_field_metadata *p_metadata,
+NVM_API NVM_BOOL event_field_metadata_includes_arg_type(const struct event_field_metadata *p_metadata,
 		const enum event_arg_type arg_type);
 
 #endif /* EVENT_FIELD_METADATA_H_ */

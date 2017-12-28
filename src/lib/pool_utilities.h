@@ -50,6 +50,7 @@ extern "C"
 #include "nvm_types.h"
 #include "platform_config_data.h"
 #include <acpi/nfit_tables.h>
+#include "export_api.h"
 
 #define	MIRRORED_INTERLEAVE(attributes) \
 		(attributes & NFIT_MAPPING_ATTRIBUTE_EFI_MEMORY_MORE_RELIABLE) \
@@ -111,7 +112,7 @@ int init_pool(struct pool *p_pool, const char *host_name,
 /*
  * Get an nvm_interleave set by the driver identifier
  */
-int get_interleaveset_by_driver_id(NVM_UINT32 driver_id,
+NVM_API int get_interleaveset_by_driver_id(NVM_UINT32 driver_id,
 		struct nvm_interleave_set *p_interleave);
 
 int get_pool_from_namespace_details(
@@ -122,7 +123,7 @@ int get_pool_from_namespace_details(
  * Drivers typically have offset as DPA, Platform Config Data
  * has it as offset from PM partition start.
  */
-int get_interleave_set_offset_from_pm_partition_start(
+NVM_API int get_interleave_set_offset_from_pm_partition_start(
 		const NVM_NFIT_DEVICE_HANDLE device_handle,
 		const NVM_UINT64 offset_from_dimm_start,
 		NVM_UINT64* p_offset_from_partition_start);

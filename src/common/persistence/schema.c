@@ -2275,7 +2275,7 @@ tables[populate_index++] = ((struct table){"interleave_set",
 /*
  * Create an array containing all history table names
  */
-char* history_table_names[] = {
+NVM_COMMON_API char* history_table_names[] = {
 
 #if 0
 //NON-HISTORY TABLE

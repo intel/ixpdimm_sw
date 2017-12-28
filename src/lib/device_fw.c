@@ -33,10 +33,11 @@
 #include "device_adapter.h"
 #include "utility.h"
 #include <common_types.h>
+#include "export_api.h"
 
 // Intel DIMM Device IDs running FW we support
 #define NUM_SUPPORTED_DEVICE_IDS 3
-const NVM_UINT16 SUPPORTED_DEVICE_IDS[] = {
+NVM_API const NVM_UINT16 SUPPORTED_DEVICE_IDS[] = {
 		0x7909,
 		0x7A09,
 		0x7B09

@@ -36,6 +36,7 @@
 #include "device_adapter.h"
 #include "nvm_types.h"
 #include "nvm_management.h"
+#include <export_api.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -109,22 +110,22 @@ extern "C" {
 
 #endif
 
-int is_nvm_feature_licensed(int feature_name_offset);
+NVM_API int is_nvm_feature_licensed(int feature_name_offset);
 
-int is_nvm_feature_supported(int feature_name_offset);
+NVM_API int is_nvm_feature_supported(int feature_name_offset);
 
-int check_device_app_direct_namespaces_for_sku_violation(struct device_discovery *p_discovery,
+NVM_API int check_device_app_direct_namespaces_for_sku_violation(struct device_discovery *p_discovery,
 		NVM_BOOL *p_sku_violation);
 
-int device_in_sku_violation(struct device_discovery *p_discovery,
+NVM_API int device_in_sku_violation(struct device_discovery *p_discovery,
 		NVM_BOOL *p_sku_violation);
 
-int system_in_sku_violation(const struct nvm_capabilities *p_capabilities,
+NVM_API int system_in_sku_violation(const struct nvm_capabilities *p_capabilities,
 		NVM_BOOL *p_sku_violation);
 
-NVM_BOOL sku_value_is_different(NVM_UINT32 dimm_sku1, NVM_UINT32 dimm_sku2);
+NVM_API NVM_BOOL sku_value_is_different(NVM_UINT32 dimm_sku1, NVM_UINT32 dimm_sku2);
 
-int get_pcat_revision(NVM_UINT8 *p_pcat_revision);
+NVM_API int get_pcat_revision(NVM_UINT8 *p_pcat_revision);
 
 #ifdef __cplusplus
 }

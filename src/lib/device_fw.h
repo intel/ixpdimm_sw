@@ -37,17 +37,17 @@
 #include "fis_types.h"
 #include "export_api.h"
 
-int fw_mb_err_to_nvm_lib_err(int status);
+NVM_API int fw_mb_err_to_nvm_lib_err(int status);
 
-int fw_get_bsr(const NVM_NFIT_DEVICE_HANDLE device_handle, unsigned long long *p_bsr);
+NVM_API int fw_get_bsr(const NVM_NFIT_DEVICE_HANDLE device_handle, unsigned long long *p_bsr);
 
-int dsm_err_to_nvm_lib_err(unsigned int status);
+NVM_API int dsm_err_to_nvm_lib_err(unsigned int status);
 
-void set_ioctl_passthrough_function(int (*f)(struct fw_cmd *p_cmd));
-void unset_ioctl_passthrough_function();
+NVM_API void set_ioctl_passthrough_function(int (*f)(struct fw_cmd *p_cmd));
+NVM_API void unset_ioctl_passthrough_function();
 
-unsigned int get_fw_api_major_version(const unsigned short fw_api_version);
-unsigned int get_fw_api_minor_version(const unsigned short fw_api_version);
+NVM_API unsigned int get_fw_api_major_version(const unsigned short fw_api_version);
+NVM_API unsigned int get_fw_api_minor_version(const unsigned short fw_api_version);
 
 /*
  * Compare the firmware API version to the supported version.
@@ -60,66 +60,66 @@ NVM_BOOL is_fw_api_version_supported(const unsigned int major_version,
 /*
  * Check if the fw api is downgraded
  */
-NVM_BOOL is_fw_api_version_downgraded(const unsigned int current_major_version,
+NVM_API NVM_BOOL is_fw_api_version_downgraded(const unsigned int current_major_version,
 		const unsigned int current_minor_version, const unsigned int img_major_version,
 		const unsigned int img_minor_version);
 
-int fw_get_identify_dimm(const NVM_UINT32 device_handle,
+NVM_API int fw_get_identify_dimm(const NVM_UINT32 device_handle,
 		struct pt_payload_identify_dimm *p_id_dimm);
 
-int fw_get_id_dimm_device_characteristics(unsigned int device_handle,
+NVM_API int fw_get_id_dimm_device_characteristics(unsigned int device_handle,
 	struct pt_payload_device_characteristics *p_payload);
 
-int fw_get_alarm_thresholds(NVM_UINT32 const device_handle,
+NVM_API int fw_get_alarm_thresholds(NVM_UINT32 const device_handle,
 	struct pt_payload_alarm_thresholds *p_thresholds);
 
-int fw_set_alarm_thresholds(NVM_UINT32 const device_handle,
+NVM_API int fw_set_alarm_thresholds(NVM_UINT32 const device_handle,
 	struct pt_payload_alarm_thresholds *p_thresholds);
 
-int fw_get_smart_health(const NVM_UINT32 device_handle,
+NVM_API int fw_get_smart_health(const NVM_UINT32 device_handle,
 	struct pt_payload_smart_health *p_dimm_smart);
 
-int fw_get_memory_info_page(const NVM_UINT32 device_handle, const unsigned char page_num,
+NVM_API int fw_get_memory_info_page(const NVM_UINT32 device_handle, const unsigned char page_num,
 	void *p_memory_info_page, const unsigned int page_size);
 
-int fw_get_fw_error_log_count(const NVM_UINT32 device_handle,
+NVM_API int fw_get_fw_error_log_count(const NVM_UINT32 device_handle,
 	const unsigned char log_level,
 	const unsigned char log_type);
 
-int fw_get_fw_error_logs(const NVM_UINT32 device_handle,
+NVM_API int fw_get_fw_error_logs(const NVM_UINT32 device_handle,
 		const unsigned int error_count,
 		NVM_UINT8 *large_buffer,
 		const unsigned char log_level,
 		const unsigned char log_type);
 
-int fw_get_fw_error_log_info_data(const NVM_UINT32 device_handle,
+NVM_API int fw_get_fw_error_log_info_data(const NVM_UINT32 device_handle,
 		const unsigned char log_level,
 		const unsigned char log_type,
 		struct pt_payload_fw_log_info_data *p_log_info_data);
 
-int fw_get_security_state(const NVM_UINT32 device_handle,
+NVM_API int fw_get_security_state(const NVM_UINT32 device_handle,
 	struct pt_payload_get_security_state *p_security_state);
 
-int fw_get_fw_image_info(const NVM_UINT32 device_handle,
+NVM_API int fw_get_fw_image_info(const NVM_UINT32 device_handle,
 	struct pt_payload_fw_image_info *p_fw_image_info);
 
-int fw_get_config_data_policy(unsigned int device_handle,
+NVM_API int fw_get_config_data_policy(unsigned int device_handle,
 	struct pt_payload_get_config_data_policy *payload);
 
-int fw_get_status_for_long_op(NVM_NFIT_DEVICE_HANDLE dimm_handle,
+NVM_API int fw_get_status_for_long_op(NVM_NFIT_DEVICE_HANDLE dimm_handle,
         struct pt_payload_long_op_stat *payload);
 
-int fw_set_config_data_policy(unsigned int device_handle,
+NVM_API int fw_set_config_data_policy(unsigned int device_handle,
 	struct pt_payload_set_config_data_policy *p_config_data);
 
-float fw_convert_fw_celsius_to_float(unsigned short fw_celsius);
+NVM_API float fw_convert_fw_celsius_to_float(unsigned short fw_celsius);
 NVM_API unsigned short fw_convert_float_to_fw_celsius(float celsius);
 
-int fw_get_fa_data(const NVM_NFIT_DEVICE_HANDLE device_handle,
+NVM_API int fw_get_fa_data(const NVM_NFIT_DEVICE_HANDLE device_handle,
 		struct pt_input_payload_fa_data_register_values *p_input_register,
 		void *p_output_data);
 
-int fw_get_ddrt_io_init(const NVM_UINT32 device_handle,
+NVM_API int fw_get_ddrt_io_init(const NVM_UINT32 device_handle,
 	struct pt_payload_ddrt_init_info *p_ddrt_init_info);
 
 #endif // device_fw.h

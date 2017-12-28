@@ -132,7 +132,7 @@ NVM_COMMON_API enum db_return_codes run_text_scalar_sql(const PersistentStore *p
  * An array containing all history table names automatically generated
  * from the Entity declarations in schema_generator/main.cpp
  */
- extern char* history_table_names[];
+ NVM_COMMON_API extern char* history_table_names[];
 /*!
  * @defgroup config config 
  * @ingroup db_schema

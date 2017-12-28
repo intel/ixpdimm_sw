@@ -454,7 +454,7 @@ static inline struct config_output_table *cast_config_output(
  *
  * NOTE: Caller must free the platform_config_data structure.
  */
-int build_platform_config_data(const struct current_config_table *p_current_config,
+NVM_API int build_platform_config_data(const struct current_config_table *p_current_config,
 		const struct config_input_table *p_config_input,
 		const struct config_output_table *p_config_output,
 		struct platform_config_data **pp_config);
@@ -464,7 +464,7 @@ int build_platform_config_data(const struct current_config_table *p_current_conf
  *
  * NOTE: Callers must free the platform_config_data structure to avoid memory leaks
  */
-int get_hw_dimm_platform_config_alloc(const unsigned int handle, NVM_SIZE *p_pcd_size,
+NVM_API int get_hw_dimm_platform_config_alloc(const unsigned int handle, NVM_SIZE *p_pcd_size,
 		void **pp_config);
 
 /*
@@ -478,21 +478,21 @@ NVM_API int get_dimm_platform_config(const NVM_NFIT_DEVICE_HANDLE handle,
 /*
  * Write the platform configuration data to the specified dimm
  */
-int set_dimm_platform_config(const NVM_NFIT_DEVICE_HANDLE handle,
+NVM_API int set_dimm_platform_config(const NVM_NFIT_DEVICE_HANDLE handle,
 		const struct platform_config_data *p_config);
 
 /*
  * Verify the data is good
  */
-int check_platform_config(struct platform_config_data *p_config, NVM_SIZE pcd_size);
-NVM_BOOL is_platform_config_header_valid(struct platform_config_data *p_config, NVM_SIZE pcd_size);
-NVM_BOOL is_current_config_table_valid(struct current_config_table *p_current_config,
+NVM_API int check_platform_config(struct platform_config_data *p_config, NVM_SIZE pcd_size);
+NVM_API NVM_BOOL is_platform_config_header_valid(struct platform_config_data *p_config, NVM_SIZE pcd_size);
+NVM_API NVM_BOOL is_current_config_table_valid(struct current_config_table *p_current_config,
 		const NVM_UINT32 table_length);
-NVM_BOOL is_config_input_table_valid(struct config_input_table *p_config_input,
+NVM_API NVM_BOOL is_config_input_table_valid(struct config_input_table *p_config_input,
 		const NVM_UINT32 table_length);
-NVM_BOOL is_config_output_table_valid(struct config_output_table *p_config_output,
+NVM_API NVM_BOOL is_config_output_table_valid(struct config_output_table *p_config_output,
 		const NVM_UINT32 table_length);
-NVM_BOOL is_extension_table_list_valid(NVM_UINT8 *p_ext_table_start,
+NVM_API NVM_BOOL is_extension_table_list_valid(NVM_UINT8 *p_ext_table_start,
 		const NVM_UINT32 ext_table_length);
 
 /*
@@ -500,26 +500,26 @@ NVM_BOOL is_extension_table_list_valid(NVM_UINT8 *p_ext_table_start,
  * I.e. last BIOS response.
  * If there is no config output table, returns 0.
  */
-NVM_UINT32 get_last_config_output_sequence_number(struct platform_config_data *p_config);
+NVM_API NVM_UINT32 get_last_config_output_sequence_number(struct platform_config_data *p_config);
 
 /*
  * Calculate the next sequence number for a DIMM based on existing platform config.
  * Returns NVM_SUCCESS if the calculation is successful.
  * If successful, the next sequence number is returned in *p_seq_num.
  */
-int get_next_config_input_sequence_number(const struct device_discovery *p_dev_entry,
+NVM_API int get_next_config_input_sequence_number(const struct device_discovery *p_dev_entry,
 		NVM_UINT32 *p_seq_num);
 
 /*
  * Get the next interleave index
  */
-int get_dimm_interleave_info_max_set_index(const NVM_UID device_uid,
+NVM_API int get_dimm_interleave_info_max_set_index(const NVM_UID device_uid,
 		NVM_UINT32 *p_set_index);
 
 /*
  * Harvest format and settings data for a specific interleave set from the platform config data.
  */
-int get_interleave_settings_from_platform_config_data(
+NVM_API int get_interleave_settings_from_platform_config_data(
 		const NVM_NFIT_DEVICE_HANDLE device_handle,
 		const NVM_UINT64 interleave_set_offset,
 		NVM_UINT32 *p_interleave_set_id,
@@ -529,16 +529,16 @@ int get_interleave_settings_from_platform_config_data(
  * Translate the config output table error status to a config_error.
  * Assumes caller has checked for NULL on the config output table.
  */
-enum config_error get_config_error_from_config_output(
+NVM_API enum config_error get_config_error_from_config_output(
 		struct config_output_table *p_config_output);
 
 /*
  * Translates the current config table status to a config_status.
  */
-enum config_status get_config_status_from_current_config(
+NVM_API enum config_status get_config_status_from_current_config(
 		struct current_config_table *p_current_config);
 
-int get_repaired_dimm_platform_config(const NVM_NFIT_DEVICE_HANDLE device_handle,
+NVM_API int get_repaired_dimm_platform_config(const NVM_NFIT_DEVICE_HANDLE device_handle,
 		struct platform_config_data **pp_config);
 
 #ifdef __cplusplus

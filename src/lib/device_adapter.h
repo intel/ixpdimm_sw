@@ -33,10 +33,12 @@
 #ifndef	_DEVICE_ADAPTER_H_
 #define	_DEVICE_ADAPTER_H_
 
+#include "nvm_management.h"
 #include "adapter_types.h"
 #include "device_fw.h"
 #include "nvm_types.h"
 #include "platform_capabilities.h"
+#include <export_api.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -53,7 +55,7 @@ extern "C"
  * Determine if a supported AEP DIMM driver is installed.
  * Returns 1 if a compatible driver is detected, 0 otherwise.
  */
-NVM_BOOL is_supported_driver_available();
+NVM_API NVM_BOOL is_supported_driver_available();
 
 /*
  * Retrieve the vendor specific NVDIMM driver version.
@@ -65,7 +67,7 @@ NVM_BOOL is_supported_driver_available();
  * 		#NVM_ERR_NOSIMULATOR @n
  * 		#NVM_ERR_UNKNOWN @n
  */
-int get_vendor_driver_revision(NVM_VERSION version_str, const NVM_SIZE str_len);
+NVM_API int get_vendor_driver_revision(NVM_VERSION version_str, const NVM_SIZE str_len);
 
 /*
  * Get the capabilities of the host platform
@@ -73,7 +75,7 @@ int get_vendor_driver_revision(NVM_VERSION version_str, const NVM_SIZE str_len);
  * 		A pointer to a target buffer where the system's platform capabilities will be output
  * @return
  */
-int get_platform_capabilities(struct bios_capabilities *p_capabilities);
+NVM_API int get_platform_capabilities(struct bios_capabilities *p_capabilities);
 
 /*
  * Get the number of DIMMs in the system's memory topology
@@ -85,7 +87,7 @@ int get_platform_capabilities(struct bios_capabilities *p_capabilities);
  *			#NVM_ERR_DRIVERFAILED @n
  *			#NVM_ERR_UNKNOWN @n
  */
-int get_topology_count();
+NVM_API int get_topology_count();
 
 /*
  * Get the system's memory topology
@@ -103,7 +105,7 @@ int get_topology_count();
  *			#NVM_ERR_DRIVERFAILED @n
  *			#NVM_ERR_UNKNOWN @n
  */
-int get_topology(const NVM_UINT8 count, struct nvm_topology *p_dimm_topo);
+NVM_API int get_topology(const NVM_UINT8 count, struct nvm_topology *p_dimm_topo);
 
 /*
  * Get the details of a specific dimm
@@ -121,7 +123,7 @@ int get_topology(const NVM_UINT8 count, struct nvm_topology *p_dimm_topo);
  *			#NVM_ERR_DRIVERFAILED @n
  *			#NVM_ERR_UNKNOWN @n
  */
-int get_dimm_details(NVM_NFIT_DEVICE_HANDLE id, struct nvm_details *p_dimm_details);
+NVM_API int get_dimm_details(NVM_NFIT_DEVICE_HANDLE id, struct nvm_details *p_dimm_details);
 
 /*
  * Get the number of DIMMs in the SMBIOS Type 17 tables.
@@ -133,7 +135,7 @@ int get_dimm_details(NVM_NFIT_DEVICE_HANDLE id, struct nvm_details *p_dimm_detai
  *			#NVM_ERR_DRIVERFAILED @n
  *			#NVM_ERR_UNKNOWN @n
  */
-int get_smbios_inventory_count();
+NVM_API int get_smbios_inventory_count();
 
 /*
  * Get the list of DIMMs defined in the SMBIOS Type 17 tables.
@@ -151,23 +153,23 @@ int get_smbios_inventory_count();
  *			#NVM_ERR_DRIVERFAILED @n
  *			#NVM_ERR_UNKNOWN @n
  */
-int get_smbios_inventory(const NVM_UINT8 count, struct nvm_details *p_smbios_inventory);
+NVM_API int get_smbios_inventory(const NVM_UINT8 count, struct nvm_details *p_smbios_inventory);
 
 /*
  * Fetch the interleave set count.
  */
-int get_interleave_set_count();
+NVM_API int get_interleave_set_count();
 
 /*
  * Fetch the list of interleave sets.
  */
-int get_interleave_sets(const NVM_UINT32 count, struct nvm_interleave_set *p_interleaves);
+NVM_API int get_interleave_sets(const NVM_UINT32 count, struct nvm_interleave_set *p_interleaves);
 
 /*
  * Get the number of existing namespaces
  * @return
  */
-int get_namespace_count();
+NVM_API int get_namespace_count();
 
 /*
  * Get the discovery information for a given number of namespaces
@@ -177,7 +179,7 @@ int get_namespace_count();
  * 		A pointer to the list of namespace discovery structures
  * @return
  */
-int get_namespaces(const NVM_UINT32 count,
+NVM_API int get_namespaces(const NVM_UINT32 count,
 		struct nvm_namespace_discovery *p_namespaces);
 
 /*
@@ -188,7 +190,7 @@ int get_namespaces(const NVM_UINT32 count,
  * 		The detailed namespace information returned
  * @return
  */
-int get_namespace_details(
+NVM_API int get_namespace_details(
 		const NVM_UID namespace_uid,
 		struct nvm_namespace_details *p_details);
 
@@ -200,7 +202,7 @@ int get_namespace_details(
  * 		The namespace setting
  * @return
  */
-int create_namespace(
+NVM_API int create_namespace(
 		NVM_UID *p_namespace_uid,
 		const struct nvm_namespace_create_settings *p_settings);
 
@@ -210,7 +212,7 @@ int create_namespace(
  * 		The namespace to delete
  * @return
  */
-int delete_namespace(const NVM_UID namespace_uid);
+NVM_API int delete_namespace(const NVM_UID namespace_uid);
 
 /*
  * Modify an existing namespace name property
@@ -220,7 +222,7 @@ int delete_namespace(const NVM_UID namespace_uid);
  * 		The new name of the namespace
  * @return
  */
-int modify_namespace_name(
+NVM_API int modify_namespace_name(
 		const NVM_UID namespace_uid,
 		const NVM_NAMESPACE_NAME name);
 
@@ -232,7 +234,7 @@ int modify_namespace_name(
  * 		The new block count of the namespace
  * @return
  */
-int modify_namespace_block_count(
+NVM_API int modify_namespace_block_count(
 		const NVM_UID namespace_uid,
 		const NVM_UINT64 block_count);
 
@@ -244,7 +246,7 @@ int modify_namespace_block_count(
  * 		The new enabled state of the namespace
  * @return
  */
-int modify_namespace_enabled(
+NVM_API int modify_namespace_enabled(
 		const NVM_UID namespace_uid,
 		const enum namespace_enable_state enabled);
 
@@ -256,7 +258,7 @@ int modify_namespace_enabled(
  * 		NVM_ERR_INVALIDPARAMETER
  * 		NVM_ERR_DRIVERFAILED
  */
-int get_driver_capabilities(struct nvm_driver_capabilities *p_capabilities);
+NVM_API int get_driver_capabilities(struct nvm_driver_capabilities *p_capabilities);
 
 /*
  * Execute a passthrough IOCTL
@@ -264,7 +266,7 @@ int get_driver_capabilities(struct nvm_driver_capabilities *p_capabilities);
  * 		The command structure for the passthrough command
  * @return
  */
-int ioctl_passthrough_cmd(struct fw_cmd *p_cmd);
+NVM_API int ioctl_passthrough_cmd(struct fw_cmd *p_cmd);
 
 /*
  * Determine if power is limited
@@ -273,28 +275,29 @@ int ioctl_passthrough_cmd(struct fw_cmd *p_cmd);
  * @return
  * 		Error code or whether or not power is limited
  */
-int get_dimm_power_limited(NVM_UINT16 socket_id);
+NVM_API int get_dimm_power_limited(NVM_UINT16 socket_id);
 
-int get_job_count();
+NVM_API int get_job_count();
 
 /*
  * Get the expected result count of a test run
  */
-int get_test_result_count(enum driver_diagnostic diagnostic);
+NVM_API int get_test_result_count(enum driver_diagnostic diagnostic);
 
 /*
  * Run Diagnostic
  */
-int run_test(enum driver_diagnostic diagnostic, const NVM_UINT32 count,
+NVM_API int run_test(enum driver_diagnostic diagnostic, const NVM_UINT32 count,
 		struct health_event results[]);
 
-int reenumerate_namespaces(NVM_NFIT_DEVICE_HANDLE device_handle);
+NVM_API int reenumerate_namespaces(NVM_NFIT_DEVICE_HANDLE device_handle);
 
 /*
  * Initialize the namespace label index to the specified version on the specified DIMM
  */
-int init_label_dimm(const NVM_UINT32 device_handle, NVM_UINT16 major_version, NVM_UINT16  minor_version);
+NVM_API int init_label_dimm(const NVM_UINT32 device_handle, NVM_UINT16 major_version, NVM_UINT16  minor_version);
 
+NVM_API void nvm_topology_to_device(struct nvm_topology *p_topology, struct device_discovery *p_device);
 #ifdef __cplusplus
 }
 #endif

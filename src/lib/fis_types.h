@@ -34,6 +34,7 @@
 
 #include "common.h"
 #include "nvm_types.h"
+#include "export_api.h"
 
 /*
  * ****************************************************************************
@@ -172,7 +173,7 @@
 
 // Intel DIMM Subsystem Device IDs supported by this software
 #define NUM_SUPPORTED_DEVICE_IDS 3
-extern const NVM_UINT16 SUPPORTED_DEVICE_IDS[];
+NVM_API extern const NVM_UINT16 SUPPORTED_DEVICE_IDS[];
 
 // Specify that the ARS command has reached the limit+1 errors it can report and has
 // ended prior to reaching the DPA end address
