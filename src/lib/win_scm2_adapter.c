@@ -28,7 +28,6 @@
 #include <common/persistence/logging.h>
 #include <string/s_str.h>
 #include <acpi/nfit.h>
-
 #include "device_fw.h"
 #include "win_scm2_adapter.h"
 #include "win_scm2_version_info.h"
@@ -38,6 +37,24 @@
 #include "win_scm2_ioctl_driver_version.h"
 #include <windows.h>
 #include <GetRapl.h>
+#include <Setupapi.h>
+#include <GuidDef.h>
+#include <Devpkey.h>
+#include <objbase.h>
+
+#define INITGUID
+#ifdef DEFINE_DEVPROPKEY
+#undef DEFINE_DEVPROPKEY
+#endif
+#ifdef INITGUID
+#define DEFINE_DEVPROPKEY(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8, pid) EXTERN_C const DEVPROPKEY DECLSPEC_SELECTANY name = { { l, w1, w2, { b1, b2,  b3,  b4,  b5,  b6,  b7,  b8 } }, pid }
+#else
+#define DEFINE_DEVPROPKEY(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8, pid) EXTERN_C const DEVPROPKEY name
+#endif // INITGUID
+
+DEFINE_DEVPROPKEY(DEVPKEY_Device_DriverVersion, 0xa8b865dd, 0x2e3d, 0x4094, 0xad, 0x97, 0xe5, 0x93, 0xa7, 0xc, 0x75, 0xd6, 3);
+#define SCM_INBOX_CLASS_GUID	L"{5099944a-f6b9-4057-a056-8c550228544c}"
+#define VERS_BUFFER_SZ	256
 
  /*
  * Bit selection as defined for the MSR_DRAM_POWER_LIMIT register,
@@ -78,23 +95,61 @@ NVM_BOOL win_scm_adp_is_supported_driver_available()
 	return 1;//is_supported;
 }
 
+
 int win_scm_adp_get_vendor_driver_revision(NVM_VERSION version_str, const NVM_SIZE str_len)
 {
-	enum return_code rc = NVM_SUCCESS;
+	GUID guid;
+	HANDLE enum_handle = NULL;
+	DWORD index = 0;
+	DWORD required_sz = 0;
+	WCHAR vers_buffer[VERS_BUFFER_SZ] = { 0 };
+	DEVPROPTYPE prop_type = 0;
+	SP_DEVINFO_DATA dev_info = { sizeof(SP_DEVINFO_DATA) };
+	int status = NVM_ERR_UNKNOWN;
 
-	/*unsigned int handle = win_scm2_get_first_handle();
-	char tmp[DRIVER_VERSION_LEN];
-	int scm_rc = win_scm2_ioctl_driver_version(handle, tmp);
-	if (WIN_SCM2_IOCTL_SUCCESS(scm_rc))
+	HRESULT hr = CLSIDFromString(SCM_INBOX_CLASS_GUID, (LPCLSID)&guid);
+
+	if (INVALID_HANDLE_VALUE == (enum_handle = SetupDiGetClassDevs(NULL, NULL, NULL, DIGCF_ALLCLASSES)))
 	{
-		s_strcpy(version_str, tmp, str_len);
+		COMMON_LOG_ERROR_F("SetupDiGetClassDevs failed trying to get the driver version, GetLastError: %d ",
+			GetLastError());
+		return NVM_ERR_UNKNOWN;
 	}
-	else
-	{
-		rc = win_scm_to_nvm_err(scm_rc);
-	}*/
 
-	return rc;
+	while (SetupDiEnumDeviceInfo(enum_handle, index++, &dev_info)) {
+
+		if (IsEqualGUID(&guid, &dev_info.ClassGuid))
+		{
+			if (TRUE == SetupDiGetDevicePropertyW(enum_handle, &dev_info, &DEVPKEY_Device_DriverVersion,
+							&prop_type, (PBYTE)vers_buffer, sizeof(vers_buffer), &required_sz, 0))
+			{
+				size_t chars_converted = 0;
+				if (0 == wcstombs_s(&chars_converted, version_str, str_len, vers_buffer, required_sz))
+				{
+					status = NVM_SUCCESS;
+					break;
+				}
+				else
+				{
+					COMMON_LOG_ERROR_F("wcstombs_s failed converting the driver version string, GetLastError: %d ",
+						GetLastError());
+					status = NVM_ERR_UNKNOWN;
+					break;
+				}
+			}
+			else
+			{
+				COMMON_LOG_ERROR_F("SetupDiGetDevicePropertyW failed trying to get the driver version, GetLastError: %d ",
+					GetLastError());
+				status = NVM_ERR_UNKNOWN;
+				break;
+			}
+		}
+	}
+
+	SetupDiDestroyDeviceInfoList(enum_handle);
+
+	return status;
 }
 
 int win_scm_adp_get_driver_capabilities(struct nvm_driver_capabilities *p_caps)
