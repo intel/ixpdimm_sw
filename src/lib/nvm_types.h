@@ -40,13 +40,24 @@
 #define PATH_MAX _MAX_PATH
 #endif
 
+/*
+byte swap 
+*/
+#define SWAP_BYTES_U16(u16) (((u16 >> 8)& 0x00FF) | ((u16 << 8)& 0xFF00))
+
+
 #define	NVM_PRODUCT_NAME	"Intel DIMM Gen 1 Software\0"
 #define	NVM_DIMM_NAME_LONG	"Intel DIMM Gen 1"
 #define	NVM_DIMM_NAME	"AEP DIMM"
 #define	NVM_SYSLOG_SOURCE	"NVM_MGMT"
 #define	NVM_DEFAULT_NAMESPACE_NAME	"NvDimmVol"
 #define	NVM_SYSTEM	"Intel DIMM Gen 1"
-#define	NVM_INTEL_VENDOR_ID	0x8089
+#define	NVM_INTEL_VENDOR_ID	0x8980
+#define	NVM_DIMM_SUBSYSTEM_VENDOR_ID SWAP_BYTES_U16(0x8089)
+#define NVM_DIMM_SUBSYSTEM_DEVICE_ID_1 SWAP_BYTES_U16(0x7909)
+#define NVM_DIMM_SUBSYSTEM_DEVICE_ID_2 SWAP_BYTES_U16(0x7A09)
+#define NVM_DIMM_SUBSYSTEM_DEVICE_ID_3 SWAP_BYTES_U16(0x7B09)
+
 
 #define	NVM_COMPUTERNAME_LEN 256 // Length of host string
 #define	NVM_OSNAME_LEN	256 // Length of host OS string

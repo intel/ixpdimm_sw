@@ -613,7 +613,7 @@ NVM_BOOL is_device_subsystem_controller_supported(struct nvm_topology *p_topolog
 
 NVM_BOOL is_subsystem_vendor_id_supported(NVM_UINT16 vendor_id)
 {
-	return (vendor_id == NVM_INTEL_VENDOR_ID);
+	return (vendor_id == NVM_DIMM_SUBSYSTEM_VENDOR_ID);
 }
 
 NVM_BOOL is_subsystem_device_id_supported(NVM_UINT16 device_id)
