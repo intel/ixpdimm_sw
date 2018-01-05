@@ -156,6 +156,7 @@ set(COVFILE_VAL_COPY ${OUTPUT_DIR}/val.cov)
 file(GLOB INCLUDE_FILES
 		   src/lib/nvm_management.h
 		   src/lib/nvm_types.h
+		   src/lib/export_api.h
 		   src/monitor/ixpdimm-monitor.service
 		   src/common/encrypt/public.rev0.pem
 		   Help.pdf

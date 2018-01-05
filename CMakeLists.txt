@@ -63,6 +63,29 @@ if (LNX_BUILD)
     set(OS_TYPE linux)
     set(FILE_PREFIX lnx)
     set(ADAPTER_PREFIX lnx)
+
+    include(GNUInstallDirs)
+    include(FindPkgConfig)
+
+    pkg_check_modules(SYSTEMD systemd)
+
+    if (DEFINED INSTALL_UNITDIR)
+        set(INSTALL_SYSTEMDSYSTEMUNITDIR ${INSTALL_UNITDIR})
+    else ()
+        if (SYSTEMD_FOUND)
+            if (CMAKE_VERSION VERSION_LESS 3.4.3)
+                set(INSTALL_SYSTEMDSYSTEMUNITDIR  "/usr/lib/systemd/system")
+            else ()
+                pkg_get_variable(INSTALL_SYSTEMDSYSTEMUNITDIR systemd systemdsystemunitdir)
+            endif ()
+        endif ()
+    endif ()
+
+    if (CMAKE_VERSION VERSION_LESS 3.4.3)
+        set(APSS_DAT_DIR "/var/lib/ixpdimm_sw")
+    else ()
+        set(APSS_DAT_DIR ${CMAKE_INSTALL_FULL_LOCALSTATEDIR}/lib/ixpdimm_sw)
+    endif ()
 elseif (WIN_BUILD)
     set(OS_TYPE windows)
     set(FILE_PREFIX win)
@@ -88,7 +111,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(SCRIPTS_PATH ${ROOT}/scripts)
 
 include(cmakesetup.cmake)
-
 # --------------------------------------------------------------------------------------------------
 # DRIVER INTERFACE
 # --------------------------------------------------------------------------------------------------
@@ -167,21 +189,27 @@ elseif (WIN_BUILD)
             )
 endif ()
 
-add_library(common STATIC
+add_library(${COMMON_LIB_NAME} SHARED
         ${COMMON_SOURCE_FILES}
         )
 
-target_link_libraries(common
+target_link_libraries(${COMMON_LIB_NAME}
         sqlite3
         ssl
         crypto
         m
         z
        	)
-target_include_directories(common PUBLIC
+target_include_directories(${COMMON_LIB_NAME} PUBLIC
         src/common/
         src/lib
         )
+set_target_properties(${COMMON_LIB_NAME}
+       PROPERTIES
+       VERSION ${LIB_BUILD_VERSION}
+       SOVERSION ${SO_BUILD_VERSION}
+       )
+
 if (WIN_BUILD)
 	set(win_msgs_header ${ROOT}/src/common/os/win_msgs.h)
 
@@ -201,7 +229,7 @@ if (WIN_BUILD)
     set_source_files_properties(${win_msgs_header}
         	PROPERTIES GENERATED TRUE
         	)
-    target_link_libraries(common
+    target_link_libraries(${COMMON_LIB_NAME}
             ws2_32
             mswsock
             advapi32
@@ -211,7 +239,7 @@ if (WIN_BUILD)
             iconv
             z
             )
-    add_dependencies(common
+    add_dependencies(${COMMON_LIB_NAME}
        		win_msgs_header
       		)
 endif ()
@@ -276,7 +304,7 @@ target_include_directories(${API_LIB_NAME} PUBLIC
         external/os_headers
         )
 target_link_libraries(${API_LIB_NAME}
-        common
+        ${COMMON_LIB_NAME}
         acpi
         sqlite3
         ssl
@@ -312,15 +340,15 @@ endif ()
 # ---------------------------------------------------------------------------------------
 add_executable(db_creator src/lib/create_config_db/main.c)
 target_link_libraries(db_creator
-        common
+        ${COMMON_LIB_NAME}
         sqlite3
         pthread
 	    )
 target_include_directories(db_creator PUBLIC
-       		src/common
+                    src/common/persistence
             )
 add_custom_command(TARGET db_creator POST_BUILD
-       COMMAND cd ${OUTPUT_DIR} && $<TARGET_FILE:db_creator>)
+        COMMAND export LD_LIBRARY_PATH=. && cd ${OUTPUT_DIR} && $<TARGET_FILE:db_creator>)
 
 target_link_libraries(db_creator dl ssl)
 
@@ -408,7 +436,7 @@ add_custom_target(generate_mofs ALL)
 if (LNX_BUILD)
   add_custom_command(TARGET generate_mofs POST_BUILD
   				COMMAND cd ${ROOT} &&
-  				/bin/sh ${ROOT}/src/wbem/mof/createmof_linux.sh ${ROOT} ${OUTPUT_DIR}
+				/bin/bash ${ROOT}/src/wbem/mof/createmof_linux.sh ${ROOT} ${OUTPUT_DIR}
   				)
 elseif (WIN_BUILD)
   add_custom_command(TARGET generate_mofs POST_BUILD
@@ -513,7 +541,23 @@ target_link_libraries(ixpdimm-monitor ${API_LIB_NAME} ${CORE_LIB_NAME})
 # Install
 # --------------------------------------------------------------------------------------------------
 if (LNX_BUILD)
-	install (CODE "execute_process(COMMAND /bin/sh ${ROOT}/install/linux/install.sh ${OUTPUT_DIR} ${SIM_BUILD})")
+	install (TARGETS ${API_LIB_NAME} ${CORE_LIB_NAME} ${CLI_LIB_NAME} ${CIM_LIB_NAME} ${CLI_NAME} ${MONITOR_NAME} ${COMMON_LIB_NAME}
+		RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+		LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+	install (FILES ${OUTPUT_DIR}/apss.dat ${OUTPUT_DIR}/public.rev0.pem
+		DESTINATION ${APSS_DAT_DIR})
+	install (FILES ${OUTPUT_DIR}/pegasus_register.mof ${OUTPUT_DIR}/intelwbem.mof ${OUTPUT_DIR}/profile_registration.mof
+		DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/ixpdimm_sw/Pegasus/mof)
+	install (FILES ${OUTPUT_DIR}/sfcb_intelwbem.mof ${OUTPUT_DIR}/INTEL_NVDIMM.reg
+		DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/ixpdimm_sw/sfcb)
+	install (FILES ${OUTPUT_DIR}/nvm_types.h ${OUTPUT_DIR}/nvm_management.h ${OUTPUT_DIR}/export_api.h
+		DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+	install (FILES ${OUTPUT_DIR}/ixpdimm-cli.8.gz ${OUTPUT_DIR}/ixpdimm-monitor.8.gz
+		DESTINATION ${CMAKE_INSTALL_MANDIR}/man8)
+	if (DEFINED INSTALL_SYSTEMDSYSTEMUNITDIR)
+		install (FILES ${OUTPUT_DIR}/${MONITOR_NAME}.service
+			DESTINATION ${INSTALL_SYSTEMDSYSTEMUNITDIR})
+	endif ()
 elseif (WIN_BUILD)
 	install (CODE "execute_process(COMMAND cmd /c ${ROOT}/install/windows/install.cmd ${OUTPUT_DIR} ${SIM_BUILD})")
 endif ()
@@ -521,12 +565,9 @@ endif ()
 # --------------------------------------------------------------------------------------------------
 # Uninstall
 # --------------------------------------------------------------------------------------------------
-if (LNX_BUILD)
-		add_custom_target(uninstall
-			COMMAND /bin/sh ${ROOT}/install/linux/uninstall.sh ${OUTPUT_DIR} ${SIM_BUILD})
-elseif (WIN_BUILD)
-		add_custom_target(uninstall
-			COMMAND cmd /c ${ROOT}/install/windows/uninstall.cmd ${OUTPUT_DIR} ${SIM_BUILD})
+if (WIN_BUILD)
+	add_custom_target(uninstall
+		COMMAND cmd /c ${ROOT}/install/windows/uninstall.cmd ${OUTPUT_DIR} ${SIM_BUILD})
 endif ()
 
 # --------------------------------------------------------------------------------------------------

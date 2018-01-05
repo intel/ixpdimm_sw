@@ -1,17 +1,25 @@
+%define package_name ixpdimm_sw
+%define product_name ixpdimm
+%define api_name lib%{product_name}
+%define api_dname %{product_name}-devel
+%define data_name %{product_name}-data
+%define cim_lib_name lib%{product_name}-cim
+%define monitor_name %{product_name}-monitor
+%define cli_name %{product_name}-cli
+%define cli_lib_name lib%{product_name}-cli
+
 %define build_version 99.99.99.9999
 %define invm_framework_build_version 99.99.99.9999
 %define _unpackaged_files_terminate_build 0
 
-Name: ixpdimm_sw
+Name: %{package_name}
 Version: %{build_version}
-Release: 1%{?dist}
+Release: 1
 Summary: API for development of IXPDIMM management utilities
 License: BSD
 Group: Applications/System
 URL: https://01.org/ixpdimm-sw
 Source: https://github.com/01org/ixpdimm_sw/releases/download/v%{version}/%{name}-%{version}.tar.gz
-Requires: ndctl-libs >= 58.2
-Requires: invm-frameworks%{?_isa} >= %{version}-%{release}
 ExclusiveArch: x86_64
 
 BuildRequires: pkgconfig(libkmod)
@@ -31,64 +39,75 @@ the IXPSIMM SW functionality.
 %prep
 %setup -q -n %{name}-%{version}
 
-%package -n %{name}-devel
-Summary:        Development files for %{name}
-License:        BSD
-Group:          Development/Libraries
-Requires:       %{name}%{?_isa} = %{version}-%{release}
+%package -n %{api_name}
+Summary:        API for development of %{product_name} management utilities
+Group:          System/Libraries
+Requires:       %{data_name}
+Requires:	ndctl-libs >= 58.2
+Requires:	invm-frameworks%{?_isa} >= %{version}-%{release}
 
-%description -n %{name}-devel
-The %{name}-devel package contains header files for
+%description -n %{api_name}
+An application program interface (API) which provides programmatic access to
+the IXPSIMM SW functionality.
+
+%package -n %{api_dname}
+Summary:        Development files for %{name}
+Group:          Development/Libraries
+Requires:       %{api_name}%{?_isa} = %{version}-%{release}
+
+%description -n %{api_dname}
+The %{api_dname} package contains header files for
 developing applications that use IXPDIMM SW.
 
-%package -n libixpdimm-core
-Summary:        Development files for %{name}
-License:        BSD
-Group:          Development/Libraries
-Requires:       %{name}%{?_isa} = %{version}-%{release}
+%package -n %{data_name}
+Summary:        Data files for %{package_name}
+Group:          System/Libraries
 
-%description -n libixpdimm-core
-The libixpdimm-core package contains libraries that support
-other IXPDIMM SW products.
+%description -n %{data_name}
+Data files for %{package_name}
 
-%package -n libixpdimm-cim
+%package -n %{cim_lib_name}
 Summary:        CIM provider library for IXPDIMM SW
-License:        BSD
 Group:          Development/Libraries
-Requires:       libixpdimm-core%{?_isa} = %{version}-%{release}
+Requires:       %{api_name}%{?_isa} = %{version}-%{release}
 Requires:       pywbem
 Requires(pre):  pywbem
 Requires(post): pywbem
 
-%description -n libixpdimm-cim
+%description -n %{cim_lib_name}
 A Common Information Model (CIM) provider library to expose the IXPDIMM SW
 functionality as standard CIM objects to plug-in to common information
 model object managers (CIMOMs).
 
-%package -n ixpdimm-monitor
+%package -n %{monitor_name}
 Summary:        Daemon for monitoring the status of IXPDIMM
-License:        BSD
 Group:          System Environment/Daemons
-Requires:       libixpdimm-cim%{?_isa} = %{version}-%{release}
-Requires:       systemd-units
+Requires:       %{cim_lib_name}%{?_isa} = %{version}-%{release}
+%{?systemd_requires}
 BuildRequires:  systemd
 
-%description -n ixpdimm-monitor
+%description -n %{monitor_name}
 A monitor daemon for monitoring the health and status of IXPDIMMs.
 
-%package -n ixpdimm-cli
+%package -n %{cli_name}
 Summary:        CLI for management of IXPDIMM
-License:        BSD
 Group:          Development/Tools
-Requires:       libixpdimm-cim%{?_isa} = %{version}-%{release}
+Requires:       %{cli_lib_name}%{?_isa} = %{version}-%{release}
 
-%description -n ixpdimm-cli
+%description -n %{cli_name}
 A Command Line Interface (CLI) application for configuring and
 managing IXPDIMMs from the command line.
 
+%package -n %{cli_lib_name}
+Summary:        CLI for managment of %{product_name}
+Group:          System/Management
+Requires:       %{cim_lib_name}%{?_isa} = %{version}-%{release}
+
+%description -n %{cli_lib_name}
+A library for IXPDIMM CLI applications
+
 %package -n invm-frameworks
 Summary:        Library files for invm-frameworks
-License:        BSD
 Group:          Development/Libraries
 #The following packages are deprecated and now provided by invm-frameworks
 Conflicts:      libinvm-cim
@@ -102,7 +121,6 @@ common information model (CIM) providers.
 
 %package -n invm-frameworks-devel
 Summary:        Development files for invm-frameworks-devel
-License:        BSD
 Group:          Development/Libraries
 Requires:       invm-frameworks%{?_isa} = %{version}-%{release}
 #The following packages are deprecated and now provided by invm-frameworks-devel
@@ -115,20 +133,30 @@ The invm-frameworks-devel package contains header files for
 developing applications that use invm-frameworks.
 
 %build
-%cmake -DBUILDNUM=%{version} -DRELEASE=ON -DRPM_BUILD=ON -DLINUX_PRODUCT_NAME=%{name} -DRPM_ROOT=%{buildroot} -DLIB_DIR=%{_libdir} -DINCLUDE_DIR=%{_includedir} -DBIN_DIR=%{_bindir} -DDATADIR=%{_sharedstatedir} -DUNIT_DIR=%{_unitdir} -DSYSCONF_DIR=%{_sysconfdir} -DMANPAGE_DIR=%{_mandir} -DCFLAGS_EXTERNAL="%{?optflags}"
+%cmake -DBUILDNUM=%{version} -DCMAKE_INSTALL_PREFIX=/usr -DRELEASE=ON \
+    -DRPM_BUILD=ON -DLINUX_PRODUCT_NAME=%{name} -DRPM_ROOT=%{buildroot} \
+    -DCMAKE_INSTALL_LIBDIR=%{_libdir} \
+    -DCMAKE_INSTALL_INCLUDEDIR=%{_includedir} \
+    -DCMAKE_INSTALL_BINDIR=%{_bindir} \
+    -DCMAKE_INSTALL_DATAROOTDIR=%{_datadir} \
+    -DCMAKE_INSTALL_MANDIR=%{_mandir} \
+    -DCMAKE_INSTALL_FULL_LOCALSTATEDIR=%{_localstatedir} \
+    -DINSTALL_UNITDIR=%{_unitdir} \
+    -DCFLAGS_EXTERNAL="%{?optflags}"
 make -f Makefile %{?_smp_mflags}
 
 %install
 %{!?_cmake_version: cd build}
-make -f Makefile install
-cp -rf ./output/build/linux/real/release/include/libinvm-i18n %{buildroot}%{_includedir}
-cp -rf ./output/build/linux/real/release/include/libinvm-cim %{buildroot}%{_includedir}
-cp -rf ./output/build/linux/real/release/include/libinvm-cli %{buildroot}%{_includedir}
+make -f Makefile install DESTDIR=%{buildroot}
 
+%post -n %{monitor_name}
+%systemd_post ixpdimm-monitor.service
 
-%post -n libixpdimm-core -p /sbin/ldconfig
+%post -n %{api_name} -p /sbin/ldconfig
+%post -n %{cli_lib_name} -p /sbin/ldconfig
+%post -n invm-frameworks -p /sbin/ldconfig
 
-%post -n libixpdimm-cim
+%post -n %{cim_lib_name}
 /sbin/ldconfig
 if [ -x /usr/sbin/cimserver ]
 then
@@ -147,15 +175,15 @@ then
         fi
         for ns in interop root/interop root/PG_Interop;
         do
-           $CIMMOF -E -n$ns %{_sharedstatedir}/%{name}/Pegasus/mof/pegasus_register.mof &> /dev/null
+           $CIMMOF -E -n$ns %{_datadir}/%{name}/Pegasus/mof/pegasus_register.mof &> /dev/null
            if [ $? -eq 0 ]
            then
-                $CIMMOF -uc -n$ns %{_sharedstatedir}/%{name}/Pegasus/mof/pegasus_register.mof &> /dev/null
-                $CIMMOF -uc -n$ns %{_sharedstatedir}/%{name}/Pegasus/mof/profile_registration.mof &> /dev/null
+                $CIMMOF -uc -n$ns %{_datadir}/%{name}/Pegasus/mof/pegasus_register.mof &> /dev/null
+                $CIMMOF -uc -n$ns %{_datadir}/%{name}/Pegasus/mof/profile_registration.mof &> /dev/null
                 break
            fi
        done
-       $CIMMOF -aE -uc -n root/intelwbem %{_sharedstatedir}/%{name}/Pegasus/mof/intelwbem.mof &> /dev/null
+       $CIMMOF -aE -uc -n root/intelwbem %{_datadir}/%{name}/Pegasus/mof/intelwbem.mof &> /dev/null
 fi
 if [ -x /usr/sbin/sfcbd ]
 then
@@ -167,7 +195,7 @@ then
         systemctl stop sblim-sfcb.service &> /dev/null
     fi
 
-    sfcbstage -n root/intelwbem -r %{_sharedstatedir}/%{name}/sfcb/INTEL_NVDIMM.reg %{_sharedstatedir}/%{name}/sfcb/sfcb_intelwbem.mof
+    sfcbstage -n root/intelwbem -r %{_datadir}/%{name}/sfcb/INTEL_NVDIMM.reg %{_datadir}/%{name}/sfcb/sfcb_intelwbem.mof
     sfcbrepos -f
 
     if [[ $RESTART -gt 0 ]]
@@ -176,15 +204,9 @@ then
     fi
 fi
 
-%post -n ixpdimm_sw -p /sbin/ldconfig
-
-%postun -n ixpdimm_sw
-/sbin/ldconfig
-rm -f %{_sharedstatedir}/%{name}/*.dat.log
-rm -f %{_sharedstatedir}/%{name}/*.dat-journal
-
-%postun -n libixpdimm-core -p /sbin/ldconfig
-%postun -n libixpdimm-cim -p /sbin/ldconfig
+%postun -n %{api_name} -p /sbin/ldconfig
+%postun -n %{cli_lib_name} -p /sbin/ldconfig
+%postun -n invm-frameworks -p /sbin/ldconfig
 
 %pre -n libixpdimm-cim
 # If upgrading, deregister old version
@@ -200,8 +222,8 @@ if [ "$1" -gt 1 ]; then
                 fi
                 cimprovider -d -m intelwbemprovider &> /dev/null
                 cimprovider -r -m intelwbemprovider &> /dev/null
-                mofcomp -v -r -n root/intelwbem %{_sharedstatedir}/%{name}/Pegasus/mof/intelwbem.mof &> /dev/null
-                mofcomp -v -r -n root/intelwbem %{_sharedstatedir}/%{name}/Pegasus/mof/profile_registration.mof &> /dev/null
+                mofcomp -v -r -n root/intelwbem %{_datadir}/%{name}/Pegasus/mof/intelwbem.mof &> /dev/null
+                mofcomp -v -r -n root/intelwbem %{_datadir}/%{name}/Pegasus/mof/profile_registration.mof &> /dev/null
                 if [[ $RESTART -gt 0 ]]
                 then
                     cimserver -s &> /dev/null
@@ -221,8 +243,8 @@ then
         fi
         cimprovider -d -m intelwbemprovider &> /dev/null
         cimprovider -r -m intelwbemprovider &> /dev/null
-        mofcomp -r -n root/intelwbem %{_sharedstatedir}/%{name}/Pegasus/mof/intelwbem.mof &> /dev/null
-        mofcomp -v -r -n root/intelwbem %{_sharedstatedir}/%{name}/Pegasus/mof/profile_registration.mof &> /dev/null
+        mofcomp -r -n root/intelwbem %{_datadir}/%{name}/Pegasus/mof/intelwbem.mof &> /dev/null
+        mofcomp -v -r -n root/intelwbem %{_datadir}/%{name}/Pegasus/mof/profile_registration.mof &> /dev/null
         if [[ $RESTART -gt 0 ]]
         then
             cimserver -s &> /dev/null
@@ -248,63 +270,70 @@ then
     fi
 fi
 
-%preun -n ixpdimm-monitor
+%preun -n %{monitor_name}
 %systemd_preun stop ixpdimm-monitor.service
 
-%postun -n ixpdimm-monitor
+%postun -n  %{monitor_name}
 %systemd_postun_with_restart ixpdimm-monitor.service
 
-%post -n ixpdimm-cli -p /sbin/ldconfig
-%postun -n ixpdimm-cli -p /sbin/ldconfig
-
-%files
+%files -n %{api_name}
+%defattr(-,root,root)
 %doc README.md
 %{_libdir}/libixpdimm.so.*
-%dir %{_sharedstatedir}/%{name}
-%{_sharedstatedir}/%{name}/*.pem
-%config %{_sharedstatedir}/%{name}/*.dat*
+%{_libdir}/libixpdimm-core.so.*
+%{_libdir}/libixpdimm-common.so.*
 %license LICENSE
 
-%files -n %{name}-devel
+%files -n %{api_dname}
+%defattr(-,root,root)
 %doc README.md
 %{_libdir}/libixpdimm.so
 %{_libdir}/libixpdimm-core.so
-%{_libdir}/cmpi/libixpdimm-cim.so
+%{_libdir}/libixpdimm-common.so
 %{_libdir}/libixpdimm-cli.so
-%{_includedir}/nvm_types.h
-%{_includedir}/nvm_management.h
+%{_libdir}/libixpdimm-cim.so
+%attr(644,root,root) %{_includedir}/nvm_types.h
+%attr(644,root,root) %{_includedir}/nvm_management.h
+%attr(644,root,root) %{_includedir}/export_api.h
 %license LICENSE
 
-%files -n libixpdimm-core
+%files -n %{data_name}
+%defattr(644,root,root)
+%dir %{_sharedstatedir}/%{name}
+%{_sharedstatedir}/%{name}/*.pem
+%config %{_sharedstatedir}/%{name}/*.dat*
+
+%files -n %{cim_lib_name}
+%defattr(-,root,root)
 %doc README.md
-%{_libdir}/libixpdimm-core.so*
+%{_libdir}/libixpdimm-cim.so.*
+%dir %{_datadir}/%{name}/Pegasus
+%dir %{_datadir}/%{name}/Pegasus/mof
+%dir %{_datadir}/%{name}/sfcb
+%attr(644,root,root) %{_datadir}/%{name}/sfcb/*.reg
+%attr(644,root,root) %{_datadir}/%{name}/sfcb/*.mof
+%attr(644,root,root) %{_datadir}/%{name}/Pegasus/mof/*.mof
 %license LICENSE
 
-%files -n libixpdimm-cim
-%doc README.md
-%{_libdir}/cmpi/libixpdimm-cim.so*
-%dir %{_sharedstatedir}/%{name}/Pegasus
-%dir %{_sharedstatedir}/%{name}/Pegasus/mof
-%dir %{_sharedstatedir}/%{name}/sfcb
-%{_sharedstatedir}/%{name}/sfcb/*.reg
-%{_sharedstatedir}/%{name}/sfcb/*.mof
-%{_sharedstatedir}/%{name}/Pegasus/mof/*.mof
-%config(noreplace) %{_sysconfdir}/ld.so.conf.d/%{name}-%{_arch}.conf
-%license LICENSE
-
-%files -n ixpdimm-monitor
+%files -n %{monitor_name}
+%defattr(-,root,root)
 %{_bindir}/ixpdimm-monitor
 %{_unitdir}/ixpdimm-monitor.service
+%attr(644,root,root) %{_mandir}/man8/ixpdimm-monitor*
 %license LICENSE
-%{_mandir}/man8/ixpdimm-monitor*
 
-%files -n ixpdimm-cli
+%files -n %{cli_name}
+%defattr(-,root,root)
 %{_bindir}/ixpdimm-cli
-%{_libdir}/libixpdimm-cli.so*
+%attr(644,root,root) %{_mandir}/man8/ixpdimm-cli*
 %license LICENSE
-%{_mandir}/man8/ixpdimm-cli*
+
+%files -n %{cli_lib_name}
+%defattr(-,root,root)
+%{_libdir}/libixpdimm-cli.so.*
 
 %files -n invm-frameworks
+%defattr(-,root,root)
 %doc README.md
 %{_libdir}/libinvm-i18n.so.*
 %{_libdir}/libinvm-cli.so.*
@@ -312,42 +341,17 @@ fi
 %license LICENSE
 
 %files -n invm-frameworks-devel
+%defattr(-,root,root)
 %doc README.md
 %{_libdir}/libinvm-i18n.so
-%{_includedir}/libinvm-i18n
 %{_libdir}/libinvm-cli.so
-%{_includedir}/libinvm-cli
 %{_libdir}/libinvm-cim.so
-%{_includedir}/libinvm-cim
+%dir %{_includedir}/libinvm-i18n
+%dir %{_includedir}/libinvm-cli
+%dir %{_includedir}/libinvm-cim
+%attr(644,root,root) %{_includedir}/libinvm-cli/*.h
+%attr(644,root,root) %{_includedir}/libinvm-i18n/*.h
+%attr(644,root,root) %{_includedir}/libinvm-cim/*.h
 %license LICENSE
 
-%post -n invm-frameworks -p /sbin/ldconfig
-%postun -n invm-frameworks -p /sbin/ldconfig
-
 %changelog
-* Tue Nov 07 2017 Juston Li <juston.li@intel.com> - 01.00.00.2366-1
-- Release v01.00.00.2366
-
-* Mon Oct 30 2017 Juston Li <juston.li@intel.com> - 01.00.00.2352-1
-- Release v01.00.00.2352
-- don't autostart ixpdimm-monitor
-- use same version for invm-frameworks
-
-* Mon Oct 09 2017 Juston Li <juston.li@intel.com> - 01.00.00.2345-2
-- fix python requires and update changelog
-
-* Mon Oct 09 2017 Juston Li <juston.li@intel.com> - 01.00.00.2345-1
-- ixpdimm_sw release v01.00.00.2345
-- added invm-frameworks release v01.00.00.2006
-
-* Wed Aug 02 2017 Fedora Release Engineering <releng@fedoraproject.org> - 01.00.00.2264-3
-- Rebuilt for https://fedoraproject.org/wiki/Fedora_27_Binutils_Mass_Rebuild
-
-* Wed Jul 26 2017 Fedora Release Engineering <releng@fedoraproject.org> - 01.00.00.2264-2
-- Rebuilt for https://fedoraproject.org/wiki/Fedora_27_Mass_Rebuild
-
-* Mon Aug 29 2016 Namratha Kothapalli <namratha.n.kothapalli@intel.com> - 01.00.00.2113-1
-- Update lib version dependencies
-
-* Thu Dec 24 2015 Nicholas Moulin <nicholas.w.moulin@intel.com> - 01.00.00.2111-1
-- Initial rpm release
