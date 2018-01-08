@@ -148,6 +148,7 @@ private:
 	static std::string getManufacturingDate(core::device::Device &device);
 	static std::string getManufacturingLoc(core::device::Device &device);
 	static std::string toHex(NVM_UINT16 value);
+	static std::string byteSwapandConverttoHex(NVM_UINT16 value);
 	static std::string convertInterfaceFormatCode(const NVM_UINT16 ifc);
 	static std::string getJedecStringForInterfaceFormatCode(const NVM_UINT16 ifc);
 	static std::string convertArsStatus(device_ars_status status);

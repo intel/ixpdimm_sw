@@ -67,13 +67,13 @@ ShowDeviceCommand::ShowDeviceCommand(core::device::DeviceService &service)
 	m_props.addUint32("ChannelID", &core::device::Device::getChannelId);
 	m_props.addUint32("ChannelPos", &core::device::Device::getChannelPosition);
 	m_props.addOther("MemoryType", &core::device::Device::getMemoryType, &convertMemoryType);
-	m_props.addUint16("VendorID", &core::device::Device::getVendorId, toHex);
-	m_props.addUint16("DeviceID", &core::device::Device::getDeviceId, toHex);
+	m_props.addUint16("VendorID", &core::device::Device::getVendorId, byteSwapandConverttoHex);
+	m_props.addUint16("DeviceID", &core::device::Device::getDeviceId, byteSwapandConverttoHex);
 	m_props.addUint16("RevisionID", &core::device::Device::getRevisionId, toHex);
 	// New NFIT attributes here
 	m_props.addStr("SerialNumber", &core::device::Device::getSerialNumber);
-	m_props.addUint16("SubsystemVendorID", &core::device::Device::getSubsystemVendor, toHex);
-	m_props.addUint16("SubsystemDeviceID", &core::device::Device::getSubsystemDevice, toHex);
+	m_props.addUint16("SubsystemVendorID", &core::device::Device::getSubsystemVendor, byteSwapandConverttoHex);
+	m_props.addUint16("SubsystemDeviceID", &core::device::Device::getSubsystemDevice, byteSwapandConverttoHex);
 	m_props.addUint16("SubsystemRevisionID", &core::device::Device::getSubsystemRevision, toHex);
 	m_props.addBool("ManufacturingInfoValid", &core::device::Device::isManufacturingInfoValid);
 	m_props.addCustom("ManufacturingLocation", &getManufacturingLoc);
@@ -484,6 +484,11 @@ std::string ShowDeviceCommand::toHex(NVM_UINT16 value)
 	get_hex_string(value, value_str, sizeof (value_str));
 
 	return std::string(value_str);
+}
+
+std::string ShowDeviceCommand::byteSwapandConverttoHex(NVM_UINT16 value)
+{
+	return toHex(SWAP_BYTES_U16(value));
 }
 
 std::string ShowDeviceCommand::convertInterfaceFormatCode(const NVM_UINT16 ifc)
