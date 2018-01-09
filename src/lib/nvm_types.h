@@ -35,7 +35,7 @@
 #include <stddef.h>
 #include <limits.h>
 
-#ifdef _WIN32 
+#ifdef __MSVC__
 #include <stdlib.h>
 #define PATH_MAX _MAX_PATH
 #endif

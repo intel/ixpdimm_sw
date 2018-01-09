@@ -40,6 +40,7 @@
 #include <Setupapi.h>
 #include <GuidDef.h>
 #include <Devpkey.h>
+#include <devpropdef.h>
 #include <objbase.h>
 
 #define INITGUID

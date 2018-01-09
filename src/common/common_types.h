@@ -36,7 +36,7 @@
 #include <limits.h>
 #include "export_common.h"
 
-#ifdef __WINDOWS__
+#ifdef __MSVC__
 #include <stdlib.h>
 #define PATH_MAX _MAX_PATH
 #endif

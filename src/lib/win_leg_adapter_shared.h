@@ -34,9 +34,11 @@
 #define	SRC_LIB_WIN_ADAPTER_H_
 
 #include <windows.h>
-#include <winioctl.h>
 #include <PrivateIoctlDefinitions.h>
 #include <device_fw.h>
+#ifdef __MSVC__
+#include <winioctl.h>
+#endif
 
 // SCSI port used as IOCTL target
 extern short g_scsi_port;
