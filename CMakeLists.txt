@@ -568,15 +568,15 @@ add_custom_target(rpm
         COMMAND cd ${ROOT} && tar --exclude-vcs --exclude="*output" --exclude="*.swp*" --transform="s,^.,${MARKETING_PRODUCT_NAME}-${BUILDNUM}," -zcf ${RPMBUILD_DIR}/SOURCES/${MARKETING_PRODUCT_NAME}-${BUILDNUM}.tar.gz .
 
         # rpmbuild
-        COMMAND cd ${ROOT} && rpmbuild -ba ${RPMBUILD_DIR}/SPECS/${MARKETING_PRODUCT_NAME}.spec --define "_topdir ${RPMBUILD_DIR}" --define "cflag ${CFLAGS_EXTERNAL}"
+        COMMAND cd ${ROOT} && rpmbuild -ba ${RPMBUILD_DIR}/SPECS/${MARKETING_PRODUCT_NAME}.spec --define "_topdir ${RPMBUILD_DIR}"
         )
 
 # --------------------------------------------------------------------------------------------------
 # Project wide defines and flags
 # --------------------------------------------------------------------------------------------------
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fstack-protector-all -D_XOPEN_SOURCE=500 -Wall -Werror -Wfatal-errors -MMD")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wformat -Wformat-security -D_FORTIFY_SOURCE=2 -ggdb -fstack-protector-all -D_XOPEN_SOURCE=500 -Wall -Werror -Wfatal-errors -MMD")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fstack-protector-all -D_XOPEN_SOURCE=500 -Wall -Wfatal-errors -MMD")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wformat -Wformat-security -D_FORTIFY_SOURCE=2 -ggdb -fstack-protector-all -D_XOPEN_SOURCE=500 -Wall -Wfatal-errors -MMD")
 
 add_definitions(
         -D__WBEM_PREFIX__=Intel_
