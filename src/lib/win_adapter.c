@@ -64,8 +64,8 @@ enum DRIVER_TYPE get_driver_type()
 
 NVM_BOOL is_supported_driver_available()
 {
-	NVM_BOOL result = (NVM_BOOL) (win_leg_adp_is_supported_driver_available() ||
-			win_scm_adp_is_supported_driver_available());
+	NVM_BOOL result = (NVM_BOOL) (win_scm_adp_is_supported_driver_available() ||
+		win_leg_adp_is_supported_driver_available());
 	return result;
 }
 

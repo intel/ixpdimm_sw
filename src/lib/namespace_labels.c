@@ -332,11 +332,12 @@ void calculate_iset_cookies(struct ns_data **pp_ns_data)
 	{
 		struct nvm_interleave_set *p_set = &(*pp_ns_data)->iset_list[iset_idx];
 
-		struct v1_1_cookie_data *data_v1_1 = malloc(p_set->dimm_count * sizeof(struct v1_1_cookie_data));
-		NVM_SIZE data_v1_1_size = sizeof (struct v1_1_cookie_data) * p_set->dimm_count;
+		NVM_SIZE data_v1_1_size = sizeof(struct v1_1_cookie_data) * p_set->dimm_count;
+		struct v1_1_cookie_data *data_v1_1 = malloc(data_v1_1_size);
 		memset(data_v1_1, 0, data_v1_1_size);
-		struct v1_2_cookie_data *data_v1_2 = malloc(p_set->dimm_count * sizeof(struct v1_2_cookie_data));
-		NVM_SIZE data_v1_2_size = sizeof (struct v1_2_cookie_data) * p_set->dimm_count;
+
+		NVM_SIZE data_v1_2_size = sizeof(struct v1_2_cookie_data) * p_set->dimm_count;
+		struct v1_2_cookie_data *data_v1_2 = malloc(data_v1_2_size);
 		memset(data_v1_2, 0, data_v1_2_size);
 
 		for (int dimm_idx = 0; dimm_idx < p_set->dimm_count; dimm_idx++)
@@ -352,11 +353,8 @@ void calculate_iset_cookies(struct ns_data **pp_ns_data)
 				data_v1_2[dimm_idx].region_offset = p_set->dimm_region_offsets[dimm_idx];
 				memmove(&data_v1_2[dimm_idx].serial_number,
 					dimm.serial_number, sizeof (NVM_SERIAL_NUMBER));
-				data_v1_2[dimm_idx].vendor_id = dimm.vendor_id;
-				data_v1_2[dimm_idx].vendor_id = SWAP_SHORT(data_v1_2[dimm_idx].vendor_id);
-				data_v1_2[dimm_idx].manufacturing_date = dimm.manufacturing_date;
-				data_v1_2[dimm_idx].manufacturing_date =
-						SWAP_SHORT(data_v1_2[dimm_idx].manufacturing_date);
+				data_v1_2[dimm_idx].vendor_id = SWAP_SHORT(dimm.vendor_id);
+				data_v1_2[dimm_idx].manufacturing_date = SWAP_SHORT(dimm.manufacturing_date);
 				data_v1_2[dimm_idx].manufacturing_location = dimm.manufacturing_location;
 			}
 		}
@@ -365,8 +363,8 @@ void calculate_iset_cookies(struct ns_data **pp_ns_data)
 		sort_cookie_data(data_v1_1, data_v1_2, p_set->dimm_count);
 
 		// cookie is the fletcher64 checksum of the cookie data data
-		checksum_fletcher64((void *)&data_v1_1, data_v1_1_size, &p_set->cookie_v1_1, 1);
-		checksum_fletcher64((void *)&data_v1_2, data_v1_2_size, &p_set->cookie_v1_2, 1);
+		checksum_fletcher64((void *)data_v1_1, data_v1_1_size, &p_set->cookie_v1_1, 1);
+		checksum_fletcher64((void *)data_v1_2, data_v1_2_size, &p_set->cookie_v1_2, 1);
 
         free(data_v1_1);
         free(data_v1_2);

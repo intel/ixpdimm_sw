@@ -326,7 +326,7 @@ int nvm_get_namespace_details(const NVM_UID namespace_uid, struct namespace_deta
 				free(p_pool);
 			}
 			// update the context
-			if (rc)
+			if (NVM_SUCCESS == rc)
 			{
 				set_nvm_context_namespace_details(namespace_uid, p_namespace);
 			}
