@@ -84,14 +84,20 @@ monitor::EventMonitor::~EventMonitor()
 {
 }
 
-void monitor::EventMonitor::init()
+void monitor::EventMonitor::init(SYSTEM_LOGGER logger)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-
-	NvmMonitorBase::init();
+	m_logger = logger;
+	NvmMonitorBase::init(m_logger);
 	startOfDay();
 
 	log_gather();
+}
+
+void monitor::EventMonitor::init()
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	init((SYSTEM_LOGGER)monitor::NvmMonitorBase::log);
 }
 
 void monitor::EventMonitor::cleanup()

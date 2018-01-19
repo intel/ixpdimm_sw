@@ -7394,6 +7394,7 @@ struct db_fw_thermal_low_log_entry
 	unsigned int device_handle;
 	unsigned long long system_timestamp;
 	unsigned int host_reported_temp_data;
+	unsigned short seq_num;
 };
 /*!
  * Helper function to print a db_fw_thermal_low_log_entry to the screen.

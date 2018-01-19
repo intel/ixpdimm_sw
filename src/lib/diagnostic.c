@@ -39,6 +39,25 @@
 #include "system.h"
 #include "device_adapter.h"
 
+int nvm_get_fw_error_log_entry_cmd(const NVM_UID device_uid,
+	const unsigned short seq_num, const unsigned char log_level, const unsigned char log_type, void *buffer, unsigned int buffer_size)
+{
+	struct device_discovery discovery;
+	int rc = NVM_SUCCESS;
+
+	if (NVM_SUCCESS == (rc = exists_and_manageable(device_uid, &discovery, 0)))
+	{
+		rc = fw_get_fw_error_log(discovery.device_handle.handle,
+									seq_num,
+									(NVM_UINT8*) buffer,
+									buffer_size,
+									log_level,
+									log_type);
+	}
+
+	return rc;
+}
+
 /*
  * Run a diagnostic test on the device specified.
  */
@@ -260,7 +279,6 @@ void diag_clear_results(const enum diagnostic_test type,
 				db_delete_event_by_id(p_store, events[i].id);
 			}
 		}
-
         free(events);
 	}
 }

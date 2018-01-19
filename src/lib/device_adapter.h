@@ -292,12 +292,20 @@ NVM_API int run_test(enum driver_diagnostic diagnostic, const NVM_UINT32 count,
 
 NVM_API int reenumerate_namespaces(NVM_NFIT_DEVICE_HANDLE device_handle);
 
-/*
+ /*
  * Initialize the namespace label index to the specified version on the specified DIMM
  */
 NVM_API int init_label_dimm(const NVM_UINT32 device_handle, NVM_UINT16 major_version, NVM_UINT16  minor_version);
 
 NVM_API void nvm_topology_to_device(struct nvm_topology *p_topology, struct device_discovery *p_device);
+
+NVM_API int acpi_event_create_ctx(NVM_NFIT_DEVICE_HANDLE dimm_handle, void ** ctx);
+NVM_API int acpi_event_free_ctx(void * ctx);
+NVM_API int acpi_wait_for_event(void * acpi_event_contexts[], const NVM_UINT32 dimm_cnt, const int timeout_sec, enum acpi_get_event_result * event_result);
+NVM_API int acpi_event_get_event_state(void * ctx, enum acpi_event_type event_type, enum acpi_event_state *event_state);
+NVM_API int acpi_event_get_monitor_mask(void * ctx, unsigned int * mask);
+NVM_API int acpi_event_ctx_get_dimm_handle(void * ctx, NVM_NFIT_DEVICE_HANDLE * dev_handle);
+NVM_API int acpi_event_set_monitor_mask(void * ctx, const unsigned int acpi_monitored_event_mask);
 #ifdef __cplusplus
 }
 #endif

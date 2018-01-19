@@ -44,7 +44,7 @@
 void WINAPI ServiceMain(DWORD argc, LPTSTR *argv);
 int install_event_source(const char *service_name);
 int uninstall_event_source(const char *service_name);
-
+void logMsg(enum system_event_type msg_type, std::string src, std::string msg);
 void logStartError(std::string msg);
 
 static const int MAX_SERVICE_NAME = 256;
@@ -243,7 +243,7 @@ DWORD WINAPI WorkerThread(LPVOID arg)
 		monitor::NvmMonitorBase *pMonitor = (monitor::NvmMonitorBase *) arg;
 
 		int milliseconds = pMonitor->getIntervalSeconds() * 1000;
-		pMonitor->init();
+		pMonitor->init(logMsg);
 		//  Wait for the service stop signal until it's time to run the monitor callback
 		while (WaitForSingleObject(g_serviceStopEvent, milliseconds) != WAIT_OBJECT_0)
 		{
@@ -337,13 +337,20 @@ void WINAPI ServiceMain(DWORD argc, LPTSTR *argv)
 	}
 }
 
+void logMsg(enum system_event_type msg_type, std::string src, std::string msg)
+{
+	log_system_event(msg_type, src.c_str(),
+		msg.c_str());
+}
+
 void logStartError(std::string msg)
 {
 	std::stringstream message;
-	message << "Failed to start " <<  g_serviceName << " service.";
-	log_system_event(SYSTEM_EVENT_TYPE_ERROR, message.str().c_str(),
-						msg.c_str());
+	message << "Failed to start " << g_serviceName << " service.";
+	logMsg(SYSTEM_EVENT_TYPE_ERROR, message.str().c_str(), msg);
 }
+
+
 
 /*
  * Create registry entries for installing service as an event source

@@ -1060,8 +1060,7 @@ int get_low_priority_thermal_logs(PersistentStore *p_store, int history_id,
 				{
 					memset(&thermal_low_log, 0, sizeof (thermal_low_log));
 					thermal_low_log.device_handle = device_handle.handle;
-					thermal_low_log.host_reported_temp_data =
-							p_thermal_logs[i].host_reported_temp_data;
+					thermal_low_log.host_reported_temp_data = p_thermal_logs[i].host_reported_temp_data.data;
 					thermal_low_log.system_timestamp = p_thermal_logs[i].system_timestamp;
 					if (db_save_fw_thermal_low_log_entry_state(p_store, history_id, &thermal_low_log)
 							!= DB_SUCCESS)
@@ -1119,8 +1118,7 @@ int get_high_priority_thermal_logs(PersistentStore *p_store, int history_id,
 				{
 					memset(&thermal_high_log, 0, sizeof (thermal_high_log));
 					thermal_high_log.device_handle = device_handle.handle;
-					thermal_high_log.host_reported_temp_data =
-							p_thermal_logs[i].host_reported_temp_data;
+					thermal_high_log.host_reported_temp_data = p_thermal_logs[i].host_reported_temp_data.data;
 					thermal_high_log.system_timestamp = p_thermal_logs[i].system_timestamp;
 					if (db_save_fw_thermal_high_log_entry_state(p_store, history_id, &thermal_high_log)
 							!= DB_SUCCESS)

@@ -679,6 +679,12 @@ struct device_discovery
 	enum manageability_state manageability;
 };
 
+struct fw_error_log_sequence_numbers
+{
+	NVM_UINT16 oldest;
+	NVM_UINT16 current;
+};
+
 /*
  * The status of a particular device
  */
@@ -705,6 +711,10 @@ struct device_status
 	NVM_UINT64 boot_status; // The status of the AEP DIMM as reported by the firmware in the BSR
 	NVM_UINT32 injected_media_errors; // The number of injected media errors on AEP DIMM
 	NVM_UINT32 injected_non_media_errors; // The number of injected non-media errors on AEP DIMM
+	struct fw_error_log_sequence_numbers therm_low;
+	struct fw_error_log_sequence_numbers therm_high;
+	struct fw_error_log_sequence_numbers media_low;
+	struct fw_error_log_sequence_numbers media_high;
 };
 
 /*
@@ -1249,6 +1259,32 @@ struct job
 	NVM_UID affected_element;
 	void *result;
 };
+
+
+
+typedef int(*CreateCtx)(NVM_NFIT_DEVICE_HANDLE dimm_handle, void **ctx);
+typedef int(*FreeCtx)(void *ctx);
+typedef int(*WaitForEvent)(void * acpi_event_contexts[], const NVM_UINT32 dimm_cnt, const int timeout_sec, enum acpi_get_event_result * event_result);
+typedef int(*GetDimmHandle)(void * ctx, NVM_NFIT_DEVICE_HANDLE * dev_handle);
+typedef int(*GetEventState)(void * ctx, enum acpi_event_type event_type, enum acpi_event_state *event_state);
+typedef int(*GetMonitorMask)(void * ctx, unsigned int * mask);
+typedef int(*SetMonitorMask)(void * ctx, const unsigned int acpi_monitored_event_mask);
+typedef int(*SendEvent)(const enum event_type type, const enum event_severity severity,
+	const NVM_UINT16 code, const NVM_UID device_uid, const NVM_BOOL action_required,
+	const NVM_EVENT_ARG arg1, const NVM_EVENT_ARG arg2, const NVM_EVENT_ARG arg3,
+	const enum diagnostic_result result);
+
+typedef struct _MonitorAcpiInterface
+{
+	CreateCtx create_ctx;
+	FreeCtx free_ctx;
+	WaitForEvent wait_for_event;
+	GetDimmHandle get_dimm_handle;
+	GetEventState get_event_state;
+	GetMonitorMask get_monitor_mask;
+	SetMonitorMask set_monitor_mask;
+	SendEvent send_event;
+}MonitorAcpiInterface;
 
 /*
  * ****************************************************************************
@@ -3305,6 +3341,9 @@ extern NVM_API int nvm_send_device_passthrough_cmd(const NVM_UID device_uid,
 		struct device_pt_cmd *p_cmd);
 
 #endif
+
+extern NVM_API int nvm_get_fw_error_log_entry_cmd(const NVM_UID device_uid,
+	const unsigned short seq_num, const unsigned char log_level, const unsigned char log_type, void *buffer, unsigned int buffer_size);
 
 #ifdef __cplusplus
 }

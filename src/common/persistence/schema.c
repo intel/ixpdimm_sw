@@ -1543,14 +1543,16 @@ tables[populate_index++] = ((struct table){"fw_thermal_low_log_entry",
 				"CREATE TABLE fw_thermal_low_log_entry (       \
 					 device_handle INTEGER  , \
 					 system_timestamp INTEGER  PRIMARY KEY  NOT NULL UNIQUE  , \
-					 host_reported_temp_data INTEGER   \
+					 host_reported_temp_data INTEGER  , \
+					 seq_num INTEGER   \
 					);"});
 			tables[populate_index++] = ((struct table){"fw_thermal_low_log_entry_history",
 				"CREATE TABLE fw_thermal_low_log_entry_history (       \
 					history_id INTEGER NOT NULL, \
 					 device_handle INTEGER , \
 					 system_timestamp INTEGER , \
-					 host_reported_temp_data INTEGER  \
+					 host_reported_temp_data INTEGER , \
+					 seq_num INTEGER  \
 					);"});
 tables[populate_index++] = ((struct table){"fw_thermal_high_log_entry",
 				"CREATE TABLE fw_thermal_high_log_entry (       \
@@ -22876,6 +22878,7 @@ void local_bind_fw_thermal_low_log_entry(sqlite3_stmt *p_stmt, struct db_fw_ther
 	BIND_INTEGER(p_stmt, "$device_handle", (unsigned int)p_fw_thermal_low_log_entry->device_handle);
 	BIND_INTEGER(p_stmt, "$system_timestamp", (unsigned long long)p_fw_thermal_low_log_entry->system_timestamp);
 	BIND_INTEGER(p_stmt, "$host_reported_temp_data", (unsigned int)p_fw_thermal_low_log_entry->host_reported_temp_data);
+	BIND_INTEGER(p_stmt, "$seq_num", (unsigned short)p_fw_thermal_low_log_entry->seq_num);
 }
 void local_get_fw_thermal_low_log_entry_relationships(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt, struct db_fw_thermal_low_log_entry *p_fw_thermal_low_log_entry)
@@ -22900,12 +22903,16 @@ void local_row_to_fw_thermal_low_log_entry(const PersistentStore *p_ps,
 	INTEGER_COLUMN(p_stmt,
 		2,
 		p_fw_thermal_low_log_entry->host_reported_temp_data);
+	INTEGER_COLUMN(p_stmt,
+		3,
+		p_fw_thermal_low_log_entry->seq_num);
 }
 void db_print_fw_thermal_low_log_entry(struct db_fw_thermal_low_log_entry *p_value)
 {
 	printf("fw_thermal_low_log_entry.device_handle: %u\n", p_value->device_handle);
 	printf("fw_thermal_low_log_entry.system_timestamp: %llu\n", p_value->system_timestamp);
 	printf("fw_thermal_low_log_entry.host_reported_temp_data: %u\n", p_value->host_reported_temp_data);
+	printf("fw_thermal_low_log_entry.seq_num: %hu\n", p_value->seq_num);
 }
 enum db_return_codes db_add_fw_thermal_low_log_entry(const PersistentStore *p_ps,
 	struct db_fw_thermal_low_log_entry *p_fw_thermal_low_log_entry)
@@ -22913,11 +22920,12 @@ enum db_return_codes db_add_fw_thermal_low_log_entry(const PersistentStore *p_ps
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = 	"INSERT INTO fw_thermal_low_log_entry \
-		(device_handle, system_timestamp, host_reported_temp_data)  \
+		(device_handle, system_timestamp, host_reported_temp_data, seq_num)  \
 		VALUES 		\
 		($device_handle, \
 		$system_timestamp, \
-		$host_reported_temp_data) ";
+		$host_reported_temp_data, \
+		$seq_num) ";
 	int sql_rc;
 	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
@@ -22954,9 +22962,10 @@ int db_get_fw_thermal_low_log_entrys(const PersistentStore *p_ps,
 		device_handle \
 		,  system_timestamp \
 		,  host_reported_temp_data \
+		,  seq_num \
 		  \
 		FROM fw_thermal_low_log_entry \
-		    \
+		     \
 		 \
 		";
 	sqlite3_stmt *p_stmt;
@@ -23008,11 +23017,12 @@ enum db_return_codes db_save_fw_thermal_low_log_entry_state(const PersistentStor
 	{
 		sqlite3_stmt *p_stmt;
 		char *sql = 	"INSERT INTO fw_thermal_low_log_entry \
-			( device_handle ,  system_timestamp ,  host_reported_temp_data )  \
+			( device_handle ,  system_timestamp ,  host_reported_temp_data ,  seq_num )  \
 			VALUES 		\
 			($device_handle, \
 			$system_timestamp, \
-			$host_reported_temp_data) ";
+			$host_reported_temp_data, \
+			$seq_num) ";
 		int sql_rc;
 		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
@@ -23039,11 +23049,12 @@ enum db_return_codes db_save_fw_thermal_low_log_entry_state(const PersistentStor
 		sqlite3_stmt *p_stmt;
 		char *sql = "INSERT INTO fw_thermal_low_log_entry_history \
 			(history_id, \
-				 device_handle,  system_timestamp,  host_reported_temp_data)  \
+				 device_handle,  system_timestamp,  host_reported_temp_data,  seq_num)  \
 			VALUES 		($history_id, \
 				 $device_handle , \
 				 $system_timestamp , \
-				 $host_reported_temp_data )";
+				 $host_reported_temp_data , \
+				 $seq_num )";
 		int sql_rc;
 		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
@@ -23079,7 +23090,7 @@ enum db_return_codes db_get_fw_thermal_low_log_entry_by_system_timestamp(const P
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
-		device_handle,  system_timestamp,  host_reported_temp_data  \
+		device_handle,  system_timestamp,  host_reported_temp_data,  seq_num  \
 		FROM fw_thermal_low_log_entry \
 		WHERE  system_timestamp = $system_timestamp";
 	int sql_rc;
@@ -23119,6 +23130,7 @@ enum db_return_codes db_update_fw_thermal_low_log_entry_by_system_timestamp(cons
 	device_handle=$device_handle \
 		,  system_timestamp=$system_timestamp \
 		,  host_reported_temp_data=$host_reported_temp_data \
+		,  seq_num=$seq_num \
 		  \
 	WHERE system_timestamp=$system_timestamp ";
 	int sql_rc;
@@ -23243,7 +23255,7 @@ int db_get_fw_thermal_low_log_entry_history_by_history_id(const PersistentStore 
 	memset(p_fw_thermal_low_log_entry, 0, sizeof (struct db_fw_thermal_low_log_entry) * fw_thermal_low_log_entry_count);
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
-		device_handle,  system_timestamp,  host_reported_temp_data  \
+		device_handle,  system_timestamp,  host_reported_temp_data,  seq_num  \
 		FROM fw_thermal_low_log_entry_history WHERE history_id = $history_id";
 	int sql_rc;
 	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
@@ -23353,7 +23365,7 @@ enum db_return_codes db_get_fw_thermal_low_log_entrys_by_dimm_topology_device_ha
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
-		 device_handle ,  system_timestamp ,  host_reported_temp_data  \
+		 device_handle ,  system_timestamp ,  host_reported_temp_data ,  seq_num  \
 		FROM fw_thermal_low_log_entry \
 		WHERE  device_handle = $device_handle";
 	int sql_rc;
@@ -23389,7 +23401,7 @@ enum db_return_codes db_get_fw_thermal_low_log_entrys_by_dimm_topology_device_ha
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
-		 device_handle ,  system_timestamp ,  host_reported_temp_data  \
+		 device_handle ,  system_timestamp ,  host_reported_temp_data ,  seq_num  \
 		FROM fw_thermal_low_log_entry_history \
 		WHERE  device_handle = $device_handle AND history_id=$history_id";
 	int sql_rc;

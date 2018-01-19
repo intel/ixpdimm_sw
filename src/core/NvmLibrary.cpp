@@ -1367,5 +1367,17 @@ int NvmLibrary::clearDimmLsa(const NVM_UID deviceUid)
 	return m_lib.clearDimmLsa(deviceUid);
 }
 
+int NvmLibrary::sendPassThru(const NVM_UID device_uid,
+	struct device_pt_cmd &p_cmd)
+{
+	return m_lib.sendPassThru(device_uid, &p_cmd);
+}
+
+int NvmLibrary::getFwErrLogEntry(const NVM_UID deviceUid,
+	const unsigned short seq_num, const unsigned char log_level, const unsigned char log_type, void *buffer, unsigned int buffer_size)
+{
+	return m_lib.getFwErrLogEntry(deviceUid,
+		seq_num, log_level, log_type, buffer, buffer_size);
+}
 }
 

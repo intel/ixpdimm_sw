@@ -31,20 +31,24 @@
 
 
 #include <string>
+#include <iostream>
 #include <LogEnterExit.h>
 #include "NvmMonitorBase.h"
 #include "PerformanceMonitor.h"
 #include "EventMonitor.h"
+#include "AcpiEventMonitor.h"
 
 /*
  * Constructor
  * param:  name - used to look up monitor configurations in the config database.
- * 		If config keys aren't find, then default values are used
+ *If config keys aren't find, then default values are used
  */
 monitor::NvmMonitorBase::NvmMonitorBase(std::string const &name)
 		: m_name(name)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	m_abort = false;
 	// get values from Database
 	std::string intervalKey = m_name + MONITOR_INTERVAL_SUFFIX_KEY;
 	std::string enabledKey = m_name + MONITOR_ENABLED_SUFFIX_KEY;
@@ -69,10 +73,18 @@ monitor::NvmMonitorBase::~NvmMonitorBase()
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 }
 
+void monitor::NvmMonitorBase::abort()
+{
+	m_abort = true;
+}
+
 void monitor::NvmMonitorBase::getMonitors(std::vector<monitor::NvmMonitorBase *> &monitors)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
+	AcpiMonitor *acpiMon = new AcpiMonitor();
+	monitors.push_back(acpiMon);
+	return;
 	EventMonitor *event = new EventMonitor();
 	if (event && event->isEnabled())
 	{
@@ -123,4 +135,9 @@ size_t monitor::NvmMonitorBase::getIntervalSeconds() const
 bool monitor::NvmMonitorBase::isEnabled() const
 {
 	return m_enabled;
+}
+
+void monitor::NvmMonitorBase::log(enum system_event_type type, std::string src, std::string msg)
+{
+	std::cout << "SRC: " << src << " MSG:" << msg;
 }

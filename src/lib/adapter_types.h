@@ -38,6 +38,7 @@
 #define	MAX_NUMBER_OF_BLOCK_SIZES 16
 #define	MAX_DIAGNOSTIC_RESULTS 1024
 
+
 /*
  * ------------------------------------------------------------------------------------------------
  * Enums
@@ -113,6 +114,13 @@ enum label_area_health_result
 	LABEL_AREA_HEALTH_RESULT_INSUFFICIENT_PERSISTENT_MEMORY,
 	LABEL_AREA_HEALTH_RESULT_LABELS_OVERLAP
 };
+
+
+
+
+#define DIMM_ACPI_EVENT_SMART_HEALTH_MASK	1 << ACPI_SMART_HEALTH
+#define DIMM_ACPI_EVENT_UNCORRECTABLE_MASK	1 << ACPI_UNCORRECTABLE
+
 
 /*
  * ------------------------------------------------------------------------------------------------
@@ -331,5 +339,8 @@ struct health_event
 		struct label_area_health_event label_area_event;
 	} health;
 };
+
+
+
 
 #endif /* ADAPTER_TYPES_H_ */

@@ -92,6 +92,13 @@ NVM_API int fw_get_fw_error_logs(const NVM_UINT32 device_handle,
 		const unsigned char log_level,
 		const unsigned char log_type);
 
+int fw_get_fw_error_log(const NVM_UINT32 device_handle,
+	const unsigned short seq_number,
+	NVM_UINT8 *p_small_buffer,
+	NVM_UINT32	small_buffer_size,
+	const unsigned char log_level,
+	const unsigned char log_type);
+
 NVM_API int fw_get_fw_error_log_info_data(const NVM_UINT32 device_handle,
 		const unsigned char log_level,
 		const unsigned char log_type,

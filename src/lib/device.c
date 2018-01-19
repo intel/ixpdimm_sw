@@ -800,6 +800,28 @@ int update_status_fw_error_log_info_by_type_and_level(const NVM_NFIT_DEVICE_HAND
 	{
 		p_status->newest_error_log_timestamp = p_log_info_data.newest_log_entry_timestamp;
 	}
+
+	if ((DEV_FW_ERR_LOG_MEDIA == log_type) && (DEV_FW_ERR_LOG_LOW == log_level))
+	{
+		p_status->media_low.oldest = p_log_info_data.oldest_sequence_number;
+		p_status->media_low.current = p_log_info_data.current_sequence_number;
+	}
+	else if ((DEV_FW_ERR_LOG_MEDIA == log_type) && (DEV_FW_ERR_LOG_HIGH == log_level))
+	{
+		p_status->media_high.oldest = p_log_info_data.oldest_sequence_number;
+		p_status->media_high.current = p_log_info_data.current_sequence_number;
+	}
+	else if ((DEV_FW_ERR_LOG_THERMAL == log_type) && (DEV_FW_ERR_LOG_LOW == log_level))
+	{
+		p_status->therm_low.oldest = p_log_info_data.oldest_sequence_number;
+		p_status->therm_low.current = p_log_info_data.current_sequence_number;
+	}
+	else if ((DEV_FW_ERR_LOG_THERMAL == log_type) && (DEV_FW_ERR_LOG_HIGH == log_level))
+	{
+		p_status->therm_high.oldest = p_log_info_data.oldest_sequence_number;
+		p_status->therm_high.current = p_log_info_data.current_sequence_number;
+	}
+
 	return rc;
 }
 

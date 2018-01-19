@@ -79,8 +79,9 @@ namespace monitor
 		/*!
 		 * Startup and initialization logic.
 		 */
-		virtual void init();
+		virtual void init(SYSTEM_LOGGER logger);
 
+		virtual void init();
 		/*!
 		 * Shutdown and cleanup logic.
 		 */

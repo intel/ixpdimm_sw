@@ -222,6 +222,11 @@ public:
 
 	virtual int clearDimmLsa(const NVM_UID deviceUid) const;
 
+	virtual int sendPassThru(const NVM_UID device_uid,
+		struct device_pt_cmd *p_cmd) const;
+
+	virtual int getFwErrLogEntry(const NVM_UID deviceUid,
+		const unsigned short seq_num, const unsigned char log_level, const unsigned char log_type, void *buffer, unsigned int buffer_size) const;
 protected:
 	LibWrapper();
 };

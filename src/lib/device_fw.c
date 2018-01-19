@@ -268,35 +268,19 @@ int fw_get_fw_error_log_count(const NVM_UINT32 device_handle,
 	const unsigned char log_type)
 {
 	COMMON_LOG_ENTRY();
-	struct pt_input_payload_fw_error_log input_payload;
-	memset(&input_payload, 0, sizeof (input_payload));
-	input_payload.params = log_level | log_type
-		| DEV_FW_ERR_LOG_RETRIEVE_ENTRIES | DEV_FW_ERR_LOG_SMALL_PAYLOAD;
-	// '0' is used to request the count of the logs without getting the logs
-	input_payload.request_count = 0;
+	struct pt_payload_fw_log_info_data log_info;
 
-	struct pt_output_payload_fw_error_log output_payload;
-	memset(&output_payload, 0, sizeof (output_payload));
+	int rc = fw_get_fw_error_log_info_data(device_handle,
+		log_level,
+		log_type,
+		&log_info);
 
-	struct fw_cmd cmd;
-	memset(&cmd, 0, sizeof (struct fw_cmd));
-
-	cmd.device_handle = device_handle;
-	cmd.opcode = PT_GET_LOG;
-	cmd.sub_opcode = SUBOP_ERROR_LOG;
-	cmd.input_payload_size = sizeof (input_payload);
-	cmd.input_payload = &input_payload;
-	cmd.output_payload_size = sizeof (output_payload);
-	cmd.output_payload = &output_payload;
-
-	int rc = ioctl_passthrough_cmd(&cmd);
-	if (rc == NVM_SUCCESS)
+	if (NVM_SUCCESS == rc)
 	{
-		rc = output_payload.number_total_entries;
+		return log_info.current_sequence_number - log_info.oldest_sequence_number;
 	}
+	else return rc;
 
-	COMMON_LOG_EXIT_RETURN_I(rc);
-	return rc;
 }
 
 int fw_get_fw_error_logs(const NVM_UINT32 device_handle,
@@ -353,6 +337,51 @@ int fw_get_fw_error_logs(const NVM_UINT32 device_handle,
 	return rc;
 }
 
+
+int fw_get_fw_error_log(const NVM_UINT32 device_handle,
+	const unsigned short seq_number,
+	NVM_UINT8 *p_small_buffer,
+	NVM_UINT32	small_buffer_size,
+	const unsigned char log_level,
+	const unsigned char log_type)
+{
+	int rc = NVM_SUCCESS;
+	COMMON_LOG_ENTRY();
+
+	struct pt_input_payload_fw_error_log input;
+	memset(&input, 0, sizeof(input));
+	input.sequence_number = seq_number;
+	struct pt_output_payload_fw_error_log fw_error_log;
+	memset(&fw_error_log, 0, sizeof(fw_error_log));
+
+	struct fw_cmd cmd;
+	memset(&cmd, 0, sizeof(struct fw_cmd));
+	cmd.device_handle = device_handle;
+	cmd.opcode = PT_GET_LOG;
+	cmd.sub_opcode = SUBOP_ERROR_LOG;
+	cmd.input_payload_size = sizeof(input);
+	cmd.input_payload = &input;
+
+	input.params = log_level | log_type
+		| DEV_FW_ERR_LOG_RETRIEVE_ENTRIES | DEV_FW_ERR_LOG_SMALL_PAYLOAD;
+
+
+	struct pt_payload_fw_log_info_data log_info_data;
+	memset(&log_info_data, 0, sizeof(log_info_data));
+
+	input.request_count = 1;
+	cmd.output_payload_size = sizeof(fw_error_log);
+	cmd.output_payload = &fw_error_log;
+	if (NVM_SUCCESS == (rc = ioctl_passthrough_cmd(&cmd)))
+	{
+		if (p_small_buffer != NULL && small_buffer_size >= sizeof(fw_error_log.rsvd))
+		{
+			memcpy(p_small_buffer, fw_error_log.rsvd, sizeof(fw_error_log.rsvd));
+		}
+	}
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
 int fw_get_fw_error_log_info_data(const NVM_UINT32 device_handle,
 		const unsigned char log_level,
 		const unsigned char log_type,

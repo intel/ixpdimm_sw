@@ -516,8 +516,17 @@ void populate_event_message(struct event *p_event)
 			if ((p_event->code >= EVENT_CODE_OFFSET_HEALTH) &&
 					(p_event->code < EVENT_CODE_HEALTH_UNKNOWN))
 			{
-				s_strcpy(p_event->message, EVENT_MESSAGES_HEALTH[p_event->code
+				if (EVENT_CODE_HEALTH_SMART_HEALTH == p_event->code)
+				{
+					s_snprintf(p_event->message, NVM_EVENT_MSG_LEN,
+						EVENT_MESSAGES_HEALTH[p_event->code
+						- EVENT_CODE_OFFSET_HEALTH], p_event->args[NVM_ARG0], p_event->args[NVM_ARG1], p_event->args[NVM_ARG2]);
+				}
+				else
+				{
+					s_strcpy(p_event->message, EVENT_MESSAGES_HEALTH[p_event->code
 						- EVENT_CODE_OFFSET_HEALTH], NVM_EVENT_MSG_LEN);
+				}
 			}
 			else
 			{
@@ -988,9 +997,8 @@ int acknowledge_events(struct event_filter *p_filter)
 						}
 					}
 				}
-			}
-
 			free(events);
+			}
 		}
 	}
 	COMMON_LOG_EXIT_RETURN_I(rc);

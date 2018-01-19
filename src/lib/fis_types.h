@@ -1938,9 +1938,33 @@ struct pt_fw_media_log_entry {
 	 */
 	unsigned char transaction_type;
 
-	char rsvd[4];
-} )
+	unsigned short seq_num;
 
+	char rsvd[2];
+})
+
+#define TEMP_POSITIVE		0
+#define TEMP_NEGATIVE		1
+#define TEMP_USER_ALARM		0
+#define TEMP_LOW			1
+#define TEMP_HIGH			2
+#define TEMP_CRIT			4
+#define TEMP_TYPE_MEDIA		0
+#define TEMP_TYPE_CORE		1
+
+
+typedef union
+{
+
+	struct pt_fw_thermal_log_entry_temp_data {
+	unsigned int temp : 15;
+	unsigned int sign : 1;
+	unsigned int reported : 3;
+	unsigned int type : 2;
+	unsigned int reserved : 11;
+	}parts;
+	unsigned int data;
+}SMART_TEMP;
 /*
  * Passthrough Payload:
  *		Opcode:		0x08h (Get Log Page)
@@ -1971,9 +1995,11 @@ struct pt_fw_thermal_log_entry {
 	 * 	11b - Reserved
 	 * 31:21 Reserved
 	 */
-	unsigned int host_reported_temp_data;
+	SMART_TEMP host_reported_temp_data;
 
-	char rsvd[4];
+	unsigned short seq_num;
+
+	char rsvd[2];
 })
 
 /*
@@ -1990,14 +2016,6 @@ struct pt_output_payload_fw_error_log {
 	 * in the Log (New or Old)
 	 */
 	unsigned short number_total_entries;
-
-	/*
-	 * Bit
-	 * 6:0 Return Count: Number of Log entries returned
-	 * 7 Overrun Flag: Flag to indicate that the Log FIFO had an overrun
-	 *		condition. Occurs if new entries exceed the LOG size
-	 */
-	unsigned char return_info;
 
 	unsigned char rsvd[125];
 })

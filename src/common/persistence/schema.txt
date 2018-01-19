@@ -501,6 +501,7 @@ Attributes:
 	unsigned int device_handle(FK)
 	unsigned long long system_timestamp(PK)
 	unsigned int host_reported_temp_data
+	unsigned short seq_num
 
 Table(s): db_fw_thermal_high_log_entry 
  	  db_fw_thermal_high_log_entry_history 

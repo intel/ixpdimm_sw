@@ -36,7 +36,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string>
-
+#include <syslog.h>
 #include<pthread.h>
 #include <time.h>
 #include<signal.h>
@@ -104,6 +104,12 @@ int main(int argc, char **argv)
 	return rc;
 }
 
+void logMsg(enum system_event_type msg_type, std::string src, std::string msg)
+{
+	log_system_event(msg_type, src.c_str(),
+		msg.c_str());
+}
+
 /*
  * Catch signals
  */
@@ -139,7 +145,7 @@ void *worker(void *arg)
 	if (arg != NULL)
 	{
 		monitor::NvmMonitorBase *callback = (monitor::NvmMonitorBase *)arg;
-		callback->init();
+		callback->init(logMsg);
 
 		while (!timeToQuit(callback->getIntervalSeconds()))
 		{

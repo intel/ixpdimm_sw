@@ -130,6 +130,9 @@ extern "C" {
         N_TR("The health monitor has detected that a sanitize operation "
             "has completed on " NVM_DIMM_NAME " %s. A reboot will be "
             "required to use the " NVM_DIMM_NAME "."),
+		// EVENT_CODE_HEALTH_SMART_HEALTH
+		N_TR("The health monitor has detected a smart health event "
+			"has occured on " NVM_DIMM_NAME " %s. %s error log entry details: %s"),
         // EVENT_CODE_HEALTH_UNKNOWN
         N_TR("The health monitor has logged an unknown error code %d."),
     };

@@ -123,6 +123,9 @@ byte swap
 #define	NVM_MAX_EAFD_FILES 10
 #define NVM_TRUE 1
 #define NVM_FALSE 0
+#define NVM_ARG0 0
+#define NVM_ARG1 1
+#define NVM_ARG2 2
 
 typedef size_t NVM_SIZE; // String length size
 typedef char NVM_INT8; // 8 bit signed integer
@@ -374,4 +377,23 @@ struct interleave_format
 	enum interleave_ways ways; // number of ways for this format
 };
 
+enum acpi_get_event_result
+{
+	ACPI_EVENT_SIGNALLED_RESULT = 0,
+	ACPI_EVENT_TIMED_OUT_RESULT,
+	ACPI_EVENT_UNKNOWN_RESULT
+};
+
+enum acpi_event_state
+{
+	ACPI_EVENT_SIGNALLED = 0,
+	ACPI_EVENT_NOT_SIGNALLED,
+	ACPI_EVENT_UNKNOWN
+};
+
+enum acpi_event_type
+{
+	ACPI_SMART_HEALTH = 0,
+	ACPI_UNCORRECTABLE
+};
 #endif /* NVM_TYPES_H_ */

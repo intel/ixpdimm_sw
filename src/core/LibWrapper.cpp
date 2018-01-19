@@ -28,6 +28,7 @@
 #include "LibWrapper.h"
 #include <uid/uid.h>
 #include <LogEnterExit.h>
+#include <device_fw.h>
 
 namespace core
 {
@@ -536,4 +537,18 @@ int LibWrapper::clearDimmLsa(const NVM_UID deviceUid) const
 	return nvm_clear_dimm_lsa(deviceUid);
 }
 
+int LibWrapper :: sendPassThru(const NVM_UID device_uid,
+	struct device_pt_cmd *p_cmd) const
+{
+	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
+	return nvm_send_device_passthrough_cmd(device_uid, p_cmd);
+}
+
+int LibWrapper::getFwErrLogEntry(const NVM_UID deviceUid,
+	const unsigned short seq_num, const unsigned char log_level, const unsigned char log_type, void *buffer, unsigned int buffer_size) const
+{
+	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
+	return  nvm_get_fw_error_log_entry_cmd(deviceUid,
+		seq_num, log_level, log_type, buffer, buffer_size);
+}
 }

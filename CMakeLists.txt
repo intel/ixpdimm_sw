@@ -402,6 +402,7 @@ file(GLOB WBEM_SOURCE_FILES
         src/monitor/EventMonitor.cpp
         src/monitor/NvmMonitorBase.cpp
         src/monitor/PerformanceMonitor.cpp
+        src/monitor/AcpiEventMonitor.cpp
         )
 if (LNX_BUILD)
 	file(GLOB WBEM_CIMOM_FILES src/wbem/cimom/cmpi/*)
@@ -527,7 +528,8 @@ file(GLOB MONITOR_SOURCE_FILES
         ${EXTRA_WINDOWS}
         src/monitor/EventMonitor.cpp
         src/monitor/NvmMonitorBase.cpp
-        src/monitor/PerformanceMonitor.cpp)
+        src/monitor/PerformanceMonitor.cpp
+        src/monitor/AcpiEventMonitor.cpp)
 
 add_executable(${MONITOR_NAME} ${MONITOR_SOURCE_FILES})
 target_include_directories(${MONITOR_NAME} PUBLIC
