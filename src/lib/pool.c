@@ -577,7 +577,8 @@ void add_dimm_to_pool(const struct pool_data *p_pool_data,
 		{
 			KEEP_POOL_HEALTH(p_pool->health, POOL_HEALTH_UNKNOWN);
 		}
-		else if (status.health != DEVICE_HEALTH_NORMAL ||
+		else if ((status.health != DEVICE_HEALTH_NORMAL &&
+				status.health != DEVICE_HEALTH_NONCRITICAL) ||
 				status.viral_state)
 		{
 			KEEP_POOL_HEALTH(p_pool->health, POOL_HEALTH_ERROR);
@@ -682,8 +683,8 @@ void nvm_interleave_to_interleave(
 					{
 						KEEP_INTERLEAVE_HEALTH(p_iset->health, INTERLEAVE_HEALTH_FAILED)
 					}
-					else if (p_pool_data->dimm_status_list[data_idx].health !=
-							DEVICE_HEALTH_NORMAL)
+					else if ((p_pool_data->dimm_status_list[data_idx].health != DEVICE_HEALTH_NORMAL) &&
+								(p_pool_data->dimm_status_list[data_idx].health != DEVICE_HEALTH_NONCRITICAL))
 					{
 						KEEP_INTERLEAVE_HEALTH(p_iset->health, INTERLEAVE_HEALTH_DEGRADED)
 					}
