@@ -409,14 +409,15 @@ int find_numa_nodes(NVM_UINT16 *p_node_id, NVM_UINT16 count)
 		else
 		{
 			rc = 0;
-
-			// we have the largest node number, but there could be holes
-			// windows does not provide a function to obtain the NUMA node mask, so
-			// if we can retrieve the processor mask, it is a valid NUMA node
 			GROUP_AFFINITY mask;
 			for (ULONG i = 0; i <= biggestNumaNodeNumber; ++i)
 			{
-				if (GetNumaNodeProcessorMaskEx((USHORT)i, &mask))
+				// we have the largest node number, but there could be holes
+				// windows does not provide a function to obtain the NUMA node mask, so
+				// if we can retrieve the processor mask AND mask contains valid processors,
+				// then it is a valid NUMA node.
+				// Mask contains the number of processors (logical processors)
+				if (GetNumaNodeProcessorMaskEx((USHORT)i, &mask) && (0 != mask.Mask))
 				{
 					if (p_node_id)
 					{
