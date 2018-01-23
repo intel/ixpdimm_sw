@@ -498,7 +498,7 @@ int get_namespace_details(
 					p_details->namespace_creation_id.interleave_setid =
 							ndctl_region_get_range_index(p_region);
 					p_details->block_size = ndctl_namespace_get_sector_size(p_namespace);
-					if (p_details->block_size == UINT_MAX) {
+					if (p_details->block_size == UINT_MAX || p_details->block_size == 0) {
 						// linux treats block size of 0 as 512
 						p_details->block_size = AD_1_1_NAMESPACE_LABEL_DEFAULT_SECTOR_SIZE;
 					}
@@ -972,6 +972,7 @@ int create_namespace(
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
+	int ndctl_rc = 0;
 
 	struct ndctl_ctx *ctx;
 	enum ndctl_namespace_version v;
@@ -1005,6 +1006,10 @@ int create_namespace(
 
 		rc = get_namespace_label_version_from_region(region, &v);
 
+		if (rc != NVM_SUCCESS) {
+			COMMON_LOG_ERROR("Cannot find which namespace version to use");
+		}
+
 		if (v == NDCTL_NS_VERSION_1_2)
 		{
 			sector_size = AD_1_2_NAMESPACE_LABEL_DEFAULT_SECTOR_SIZE;
@@ -1022,26 +1027,42 @@ int create_namespace(
 			generate_guid(namespace_guid);
 			guid_to_uid(namespace_guid, *p_namespace_guid);
 
-			if (ndctl_namespace_set_uuid(namespace, namespace_guid))
+			ndctl_rc = ndctl_namespace_set_uuid(namespace, namespace_guid);
+			if (ndctl_rc < 0)
 			{
-				COMMON_LOG_ERROR("Set UUID Failed");
+				COMMON_LOG_ERROR_F("Set UUID Failed Return code: %d", ndctl_rc);
 				rc = NVM_ERR_DRIVERFAILED;
 			}
-			else if (ndctl_namespace_set_alt_name(namespace, p_settings->friendly_name))
+
+			ndctl_rc = ndctl_namespace_set_alt_name(namespace, p_settings->friendly_name);
+			if (ndctl_rc < 0)
 			{
-				COMMON_LOG_ERROR("Set Alt Name Failed");
+				COMMON_LOG_ERROR_F("Set Alt Name Failed Return Code: %d", ndctl_rc);
 				rc = NVM_ERR_DRIVERFAILED;
 			}
-			else if (ndctl_namespace_set_size(namespace,
-				adjust_namespace_size(p_settings->block_size, p_settings->block_count)))
+
+			ndctl_rc = ndctl_namespace_set_size(namespace,
+				adjust_namespace_size(p_settings->block_size, p_settings->block_count));
+			if (ndctl_rc < 0)
 			{
-				COMMON_LOG_ERROR("Set SizeFailed");
+				COMMON_LOG_ERROR_F("Set Size Failed Return Code: %d", ndctl_rc);
 				rc = NVM_ERR_DRIVERFAILED;
 			}
-			else if (ndctl_namespace_set_sector_size(namespace, sector_size))
+
+			ndctl_rc = ndctl_namespace_set_sector_size(namespace, sector_size);
+			if (ndctl_rc < 0)
 			{
-				COMMON_LOG_ERROR("Set Sector Size Failed");
-				rc = NVM_ERR_DRIVERFAILED;
+				if (ndctl_rc == -ENOENT)
+				{
+					// Could not find sysfs file on older kernel
+					// Will default to 0 which is expected for 1.1 labels
+					COMMON_LOG_ERROR("Set Sector Size Not Supported");
+				}
+				else
+				{
+					COMMON_LOG_ERROR_F("Set Sector Size Failed Return Code: %d", ndctl_rc);
+					rc = NVM_ERR_DRIVERFAILED;
+				}
 			}
 
 			if (rc == NVM_SUCCESS && ndctl_namespace_is_configured(namespace))
