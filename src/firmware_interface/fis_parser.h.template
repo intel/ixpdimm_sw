@@ -43,12 +43,15 @@ enum fis_parser_codes
 };
 
 //- for cmd in commands
-//- 	if cmd.has_output
+//-		if cmd.has_output
 enum fis_parser_codes {{cmd.name|fw_cmd_parser}}(
 	const struct {{cmd.name|output_payload}} *p_output_payload,
-	struct {{cmd.name|fw_cmd_data}} *p_data);
+	struct {{cmd.name|fw_cmd_data}} *p_data
+	{%- if cmd.name == 'platform_config_data'-%}
+	, size_t pcd_size
+	{%- endif-%});
 
-	//- endif
+//-		endif
 //- endfor
 
 #ifdef __cplusplus

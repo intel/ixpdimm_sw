@@ -37,381 +37,464 @@
 unsigned int fis_identify_dimm(const unsigned int device_handle, struct pt_output_identify_dimm *p_output_payload)
 {
 	struct pt_fw_cmd cmd;
+	int rc = FIS_ERR_SUCCESS;
 	memset(&cmd, 0, sizeof (struct pt_fw_cmd));
 	cmd.device_handle = device_handle;
 	cmd.opcode = 0x01;
 	cmd.sub_opcode = 0x00;
 	cmd.output_payload_size = sizeof (struct pt_output_identify_dimm);
 	cmd.output_payload = p_output_payload;
-	return pt_ioctl_cmd(&cmd);
+	rc = pt_ioctl_cmd(&cmd);
+	return rc;
 }
 
 unsigned int fis_identify_dimm_characteristics(const unsigned int device_handle, struct pt_output_identify_dimm_characteristics *p_output_payload)
 {
 	struct pt_fw_cmd cmd;
+	int rc = FIS_ERR_SUCCESS;
 	memset(&cmd, 0, sizeof (struct pt_fw_cmd));
 	cmd.device_handle = device_handle;
 	cmd.opcode = 0x01;
 	cmd.sub_opcode = 0x01;
 	cmd.output_payload_size = sizeof (struct pt_output_identify_dimm_characteristics);
 	cmd.output_payload = p_output_payload;
-	return pt_ioctl_cmd(&cmd);
+	rc = pt_ioctl_cmd(&cmd);
+	return rc;
 }
 
 unsigned int fis_get_security_state(const unsigned int device_handle, struct pt_output_get_security_state *p_output_payload)
 {
 	struct pt_fw_cmd cmd;
+	int rc = FIS_ERR_SUCCESS;
 	memset(&cmd, 0, sizeof (struct pt_fw_cmd));
 	cmd.device_handle = device_handle;
 	cmd.opcode = 0x02;
 	cmd.sub_opcode = 0x00;
 	cmd.output_payload_size = sizeof (struct pt_output_get_security_state);
 	cmd.output_payload = p_output_payload;
-	return pt_ioctl_cmd(&cmd);
+	rc = pt_ioctl_cmd(&cmd);
+	return rc;
 }
 
 unsigned int fis_set_passphrase(const unsigned int device_handle, struct pt_input_set_passphrase *p_input_payload)
 {
 	struct pt_fw_cmd cmd;
+	int rc = FIS_ERR_SUCCESS;
 	memset(&cmd, 0, sizeof (struct pt_fw_cmd));
 	cmd.device_handle = device_handle;
 	cmd.opcode = 0x03;
 	cmd.sub_opcode = 0xF1;
 	cmd.input_payload = p_input_payload;
 	cmd.input_payload_size = sizeof (struct pt_input_set_passphrase);
-	return pt_ioctl_cmd(&cmd);
+	rc = pt_ioctl_cmd(&cmd);
+	return rc;
 }
 
 unsigned int fis_disable_passphrase(const unsigned int device_handle, struct pt_input_disable_passphrase *p_input_payload)
 {
 	struct pt_fw_cmd cmd;
+	int rc = FIS_ERR_SUCCESS;
 	memset(&cmd, 0, sizeof (struct pt_fw_cmd));
 	cmd.device_handle = device_handle;
 	cmd.opcode = 0x03;
 	cmd.sub_opcode = 0xF2;
 	cmd.input_payload = p_input_payload;
 	cmd.input_payload_size = sizeof (struct pt_input_disable_passphrase);
-	return pt_ioctl_cmd(&cmd);
+	rc = pt_ioctl_cmd(&cmd);
+	return rc;
 }
 
 unsigned int fis_unlock_unit(const unsigned int device_handle, struct pt_input_unlock_unit *p_input_payload)
 {
 	struct pt_fw_cmd cmd;
+	int rc = FIS_ERR_SUCCESS;
 	memset(&cmd, 0, sizeof (struct pt_fw_cmd));
 	cmd.device_handle = device_handle;
 	cmd.opcode = 0x03;
 	cmd.sub_opcode = 0xF3;
 	cmd.input_payload = p_input_payload;
 	cmd.input_payload_size = sizeof (struct pt_input_unlock_unit);
-	return pt_ioctl_cmd(&cmd);
+	rc = pt_ioctl_cmd(&cmd);
+	return rc;
 }
 
 unsigned int fis_secure_erase(const unsigned int device_handle, struct pt_input_secure_erase *p_input_payload)
 {
 	struct pt_fw_cmd cmd;
+	int rc = FIS_ERR_SUCCESS;
 	memset(&cmd, 0, sizeof (struct pt_fw_cmd));
 	cmd.device_handle = device_handle;
 	cmd.opcode = 0x03;
 	cmd.sub_opcode = 0xF5;
 	cmd.input_payload = p_input_payload;
 	cmd.input_payload_size = sizeof (struct pt_input_secure_erase);
-	return pt_ioctl_cmd(&cmd);
+	rc = pt_ioctl_cmd(&cmd);
+	return rc;
 }
 
 unsigned int fis_freeze_lock(const unsigned int device_handle)
 {
 	struct pt_fw_cmd cmd;
+	int rc = FIS_ERR_SUCCESS;
 	memset(&cmd, 0, sizeof (struct pt_fw_cmd));
 	cmd.device_handle = device_handle;
 	cmd.opcode = 0x03;
 	cmd.sub_opcode = 0xF6;
-	return pt_ioctl_cmd(&cmd);
+	rc = pt_ioctl_cmd(&cmd);
+	return rc;
 }
 
 unsigned int fis_get_alarm_threshold(const unsigned int device_handle, struct pt_output_get_alarm_threshold *p_output_payload)
 {
 	struct pt_fw_cmd cmd;
+	int rc = FIS_ERR_SUCCESS;
 	memset(&cmd, 0, sizeof (struct pt_fw_cmd));
 	cmd.device_handle = device_handle;
 	cmd.opcode = 0x04;
 	cmd.sub_opcode = 0x01;
 	cmd.output_payload_size = sizeof (struct pt_output_get_alarm_threshold);
 	cmd.output_payload = p_output_payload;
-	return pt_ioctl_cmd(&cmd);
+	rc = pt_ioctl_cmd(&cmd);
+	return rc;
 }
 
 unsigned int fis_power_management_policy(const unsigned int device_handle, struct pt_output_power_management_policy *p_output_payload)
 {
 	struct pt_fw_cmd cmd;
+	int rc = FIS_ERR_SUCCESS;
 	memset(&cmd, 0, sizeof (struct pt_fw_cmd));
 	cmd.device_handle = device_handle;
 	cmd.opcode = 0x04;
 	cmd.sub_opcode = 0x02;
 	cmd.output_payload_size = sizeof (struct pt_output_power_management_policy);
 	cmd.output_payload = p_output_payload;
-	return pt_ioctl_cmd(&cmd);
+	rc = pt_ioctl_cmd(&cmd);
+	return rc;
 }
 
 unsigned int fis_die_sparing_policy(const unsigned int device_handle, struct pt_output_die_sparing_policy *p_output_payload)
 {
 	struct pt_fw_cmd cmd;
+	int rc = FIS_ERR_SUCCESS;
 	memset(&cmd, 0, sizeof (struct pt_fw_cmd));
 	cmd.device_handle = device_handle;
 	cmd.opcode = 0x04;
 	cmd.sub_opcode = 0x03;
 	cmd.output_payload_size = sizeof (struct pt_output_die_sparing_policy);
 	cmd.output_payload = p_output_payload;
-	return pt_ioctl_cmd(&cmd);
+	rc = pt_ioctl_cmd(&cmd);
+	return rc;
 }
 
 unsigned int fis_address_range_scrub(const unsigned int device_handle, struct pt_output_address_range_scrub *p_output_payload)
 {
 	struct pt_fw_cmd cmd;
+	int rc = FIS_ERR_SUCCESS;
 	memset(&cmd, 0, sizeof (struct pt_fw_cmd));
 	cmd.device_handle = device_handle;
 	cmd.opcode = 0x04;
 	cmd.sub_opcode = 0x04;
 	cmd.output_payload_size = sizeof (struct pt_output_address_range_scrub);
 	cmd.output_payload = p_output_payload;
-	return pt_ioctl_cmd(&cmd);
+	rc = pt_ioctl_cmd(&cmd);
+	return rc;
 }
 
 unsigned int fis_optional_configuration_data_policy(const unsigned int device_handle, struct pt_output_optional_configuration_data_policy *p_output_payload)
 {
 	struct pt_fw_cmd cmd;
+	int rc = FIS_ERR_SUCCESS;
 	memset(&cmd, 0, sizeof (struct pt_fw_cmd));
 	cmd.device_handle = device_handle;
 	cmd.opcode = 0x04;
 	cmd.sub_opcode = 0x06;
 	cmd.output_payload_size = sizeof (struct pt_output_optional_configuration_data_policy);
 	cmd.output_payload = p_output_payload;
-	return pt_ioctl_cmd(&cmd);
+	rc = pt_ioctl_cmd(&cmd);
+	return rc;
 }
 
 unsigned int fis_pmon_registers(const unsigned int device_handle, struct pt_input_pmon_registers *p_input_payload, struct pt_output_pmon_registers *p_output_payload)
 {
 	struct pt_fw_cmd cmd;
+	int rc = FIS_ERR_SUCCESS;
 	memset(&cmd, 0, sizeof (struct pt_fw_cmd));
 	cmd.device_handle = device_handle;
 	cmd.opcode = 0x04;
 	cmd.sub_opcode = 0x07;
-	cmd.output_payload_size = sizeof (struct pt_output_pmon_registers);
-	cmd.output_payload = p_output_payload;
 	cmd.input_payload = p_input_payload;
 	cmd.input_payload_size = sizeof (struct pt_input_pmon_registers);
-	return pt_ioctl_cmd(&cmd);
+	cmd.output_payload_size = sizeof (struct pt_output_pmon_registers);
+	cmd.output_payload = p_output_payload;
+	rc = pt_ioctl_cmd(&cmd);
+	return rc;
 }
 
 unsigned int fis_set_alarm_threshold(const unsigned int device_handle, struct pt_input_set_alarm_threshold *p_input_payload)
 {
 	struct pt_fw_cmd cmd;
+	int rc = FIS_ERR_SUCCESS;
 	memset(&cmd, 0, sizeof (struct pt_fw_cmd));
 	cmd.device_handle = device_handle;
 	cmd.opcode = 0x05;
 	cmd.sub_opcode = 0x01;
 	cmd.input_payload = p_input_payload;
 	cmd.input_payload_size = sizeof (struct pt_input_set_alarm_threshold);
-	return pt_ioctl_cmd(&cmd);
+	rc = pt_ioctl_cmd(&cmd);
+	return rc;
 }
 
 unsigned int fis_system_time(const unsigned int device_handle, struct pt_output_system_time *p_output_payload)
 {
 	struct pt_fw_cmd cmd;
+	int rc = FIS_ERR_SUCCESS;
 	memset(&cmd, 0, sizeof (struct pt_fw_cmd));
 	cmd.device_handle = device_handle;
 	cmd.opcode = 0x06;
 	cmd.sub_opcode = 0x00;
 	cmd.output_payload_size = sizeof (struct pt_output_system_time);
 	cmd.output_payload = p_output_payload;
-	return pt_ioctl_cmd(&cmd);
+	rc = pt_ioctl_cmd(&cmd);
+	return rc;
 }
 
-unsigned int fis_platform_config_data(const unsigned int device_handle, struct pt_input_platform_config_data *p_input_payload, struct pt_output_platform_config_data *p_output_payload)
+unsigned int fis_platform_config_data(const unsigned int device_handle, struct pt_input_platform_config_data *p_input_payload, struct pt_output_platform_config_data *p_output_payload, size_t pcd_size)
 {
 	struct pt_fw_cmd cmd;
+	int rc = FIS_ERR_SUCCESS;
 	memset(&cmd, 0, sizeof (struct pt_fw_cmd));
 	cmd.device_handle = device_handle;
 	cmd.opcode = 0x06;
 	cmd.sub_opcode = 0x01;
-	cmd.large_output_payload_size = sizeof (struct pt_output_platform_config_data);
-	cmd.large_output_payload = p_output_payload;
 	cmd.input_payload = p_input_payload;
 	cmd.input_payload_size = sizeof (struct pt_input_platform_config_data);
-	return pt_ioctl_cmd(&cmd);
+	char out_buf[PT_DEV_SMALL_PAYLOAD_SIZE];
+	int offset = 0;
+
+	cmd.output_payload_size = PT_DEV_SMALL_PAYLOAD_SIZE;
+	cmd.output_payload = out_buf;
+
+	while (offset < pcd_size)
+	{
+		memset(out_buf, 0, sizeof(PT_DEV_SMALL_PAYLOAD_SIZE));
+		p_input_payload->offset = offset;
+		if ((rc = pt_ioctl_cmd(&cmd)) == 0)
+		{
+			int transfer_size = PT_DEV_SMALL_PAYLOAD_SIZE;
+			if ((offset + PT_DEV_SMALL_PAYLOAD_SIZE) > pcd_size)
+			{
+				transfer_size = (int) pcd_size - offset;
+			}
+
+			memmove((char *) p_output_payload + offset, out_buf, transfer_size);
+
+			offset += transfer_size;
+		}
+
+	}
+	return rc;
 }
 
 unsigned int fis_namespace_labels(const unsigned int device_handle, struct pt_input_namespace_labels *p_input_payload, struct pt_output_namespace_labels *p_output_payload)
 {
 	struct pt_fw_cmd cmd;
+	int rc = FIS_ERR_SUCCESS;
 	memset(&cmd, 0, sizeof (struct pt_fw_cmd));
 	cmd.device_handle = device_handle;
 	cmd.opcode = 0x06;
 	cmd.sub_opcode = 0x01;
-	cmd.large_output_payload_size = sizeof (struct pt_output_namespace_labels);
-	cmd.large_output_payload = p_output_payload;
 	cmd.input_payload = p_input_payload;
 	cmd.input_payload_size = sizeof (struct pt_input_namespace_labels);
-	return pt_ioctl_cmd(&cmd);
+	cmd.large_output_payload_size = sizeof (struct pt_output_namespace_labels);
+	cmd.large_output_payload = p_output_payload;
+	rc = pt_ioctl_cmd(&cmd);
+	return rc;
 }
 
 unsigned int fis_dimm_partition_info(const unsigned int device_handle, struct pt_output_dimm_partition_info *p_output_payload)
 {
 	struct pt_fw_cmd cmd;
+	int rc = FIS_ERR_SUCCESS;
 	memset(&cmd, 0, sizeof (struct pt_fw_cmd));
 	cmd.device_handle = device_handle;
 	cmd.opcode = 0x06;
 	cmd.sub_opcode = 0x02;
 	cmd.output_payload_size = sizeof (struct pt_output_dimm_partition_info);
 	cmd.output_payload = p_output_payload;
-	return pt_ioctl_cmd(&cmd);
+	rc = pt_ioctl_cmd(&cmd);
+	return rc;
 }
 
 unsigned int fis_fw_debug_log_level(const unsigned int device_handle, struct pt_input_fw_debug_log_level *p_input_payload, struct pt_output_fw_debug_log_level *p_output_payload)
 {
 	struct pt_fw_cmd cmd;
+	int rc = FIS_ERR_SUCCESS;
 	memset(&cmd, 0, sizeof (struct pt_fw_cmd));
 	cmd.device_handle = device_handle;
 	cmd.opcode = 0x06;
 	cmd.sub_opcode = 0x03;
-	cmd.output_payload_size = sizeof (struct pt_output_fw_debug_log_level);
-	cmd.output_payload = p_output_payload;
 	cmd.input_payload = p_input_payload;
 	cmd.input_payload_size = sizeof (struct pt_input_fw_debug_log_level);
-	return pt_ioctl_cmd(&cmd);
+	cmd.output_payload_size = sizeof (struct pt_output_fw_debug_log_level);
+	cmd.output_payload = p_output_payload;
+	rc = pt_ioctl_cmd(&cmd);
+	return rc;
 }
 
 unsigned int fis_fw_load_flag(const unsigned int device_handle, struct pt_output_fw_load_flag *p_output_payload)
 {
 	struct pt_fw_cmd cmd;
+	int rc = FIS_ERR_SUCCESS;
 	memset(&cmd, 0, sizeof (struct pt_fw_cmd));
 	cmd.device_handle = device_handle;
 	cmd.opcode = 0x06;
 	cmd.sub_opcode = 0x04;
 	cmd.output_payload_size = sizeof (struct pt_output_fw_load_flag);
 	cmd.output_payload = p_output_payload;
-	return pt_ioctl_cmd(&cmd);
+	rc = pt_ioctl_cmd(&cmd);
+	return rc;
 }
 
 unsigned int fis_config_lockdown(const unsigned int device_handle, struct pt_output_config_lockdown *p_output_payload)
 {
 	struct pt_fw_cmd cmd;
+	int rc = FIS_ERR_SUCCESS;
 	memset(&cmd, 0, sizeof (struct pt_fw_cmd));
 	cmd.device_handle = device_handle;
 	cmd.opcode = 0x06;
 	cmd.sub_opcode = 0x05;
 	cmd.output_payload_size = sizeof (struct pt_output_config_lockdown);
 	cmd.output_payload = p_output_payload;
-	return pt_ioctl_cmd(&cmd);
+	rc = pt_ioctl_cmd(&cmd);
+	return rc;
 }
 
 unsigned int fis_ddrt_io_init_info(const unsigned int device_handle, struct pt_output_ddrt_io_init_info *p_output_payload)
 {
 	struct pt_fw_cmd cmd;
+	int rc = FIS_ERR_SUCCESS;
 	memset(&cmd, 0, sizeof (struct pt_fw_cmd));
 	cmd.device_handle = device_handle;
 	cmd.opcode = 0x06;
 	cmd.sub_opcode = 0x06;
 	cmd.output_payload_size = sizeof (struct pt_output_ddrt_io_init_info);
 	cmd.output_payload = p_output_payload;
-	return pt_ioctl_cmd(&cmd);
+	rc = pt_ioctl_cmd(&cmd);
+	return rc;
 }
 
 unsigned int fis_get_supported_sku_features(const unsigned int device_handle, struct pt_output_get_supported_sku_features *p_output_payload)
 {
 	struct pt_fw_cmd cmd;
+	int rc = FIS_ERR_SUCCESS;
 	memset(&cmd, 0, sizeof (struct pt_fw_cmd));
 	cmd.device_handle = device_handle;
 	cmd.opcode = 0x06;
 	cmd.sub_opcode = 0x07;
 	cmd.output_payload_size = sizeof (struct pt_output_get_supported_sku_features);
 	cmd.output_payload = p_output_payload;
-	return pt_ioctl_cmd(&cmd);
+	rc = pt_ioctl_cmd(&cmd);
+	return rc;
 }
 
 unsigned int fis_enable_dimm(const unsigned int device_handle, struct pt_output_enable_dimm *p_output_payload)
 {
 	struct pt_fw_cmd cmd;
+	int rc = FIS_ERR_SUCCESS;
 	memset(&cmd, 0, sizeof (struct pt_fw_cmd));
 	cmd.device_handle = device_handle;
 	cmd.opcode = 0x06;
 	cmd.sub_opcode = 0x08;
 	cmd.output_payload_size = sizeof (struct pt_output_enable_dimm);
 	cmd.output_payload = p_output_payload;
-	return pt_ioctl_cmd(&cmd);
+	rc = pt_ioctl_cmd(&cmd);
+	return rc;
 }
 
 unsigned int fis_smart_health_info(const unsigned int device_handle, struct pt_output_smart_health_info *p_output_payload)
 {
 	struct pt_fw_cmd cmd;
+	int rc = FIS_ERR_SUCCESS;
 	memset(&cmd, 0, sizeof (struct pt_fw_cmd));
 	cmd.device_handle = device_handle;
 	cmd.opcode = 0x08;
 	cmd.sub_opcode = 0x00;
 	cmd.output_payload_size = sizeof (struct pt_output_smart_health_info);
 	cmd.output_payload = p_output_payload;
-	return pt_ioctl_cmd(&cmd);
+	rc = pt_ioctl_cmd(&cmd);
+	return rc;
 }
 
 unsigned int fis_firmware_image_info(const unsigned int device_handle, struct pt_output_firmware_image_info *p_output_payload)
 {
 	struct pt_fw_cmd cmd;
+	int rc = FIS_ERR_SUCCESS;
 	memset(&cmd, 0, sizeof (struct pt_fw_cmd));
 	cmd.device_handle = device_handle;
 	cmd.opcode = 0x08;
 	cmd.sub_opcode = 0x01;
 	cmd.output_payload_size = sizeof (struct pt_output_firmware_image_info);
 	cmd.output_payload = p_output_payload;
-	return pt_ioctl_cmd(&cmd);
+	rc = pt_ioctl_cmd(&cmd);
+	return rc;
 }
 
 unsigned int fis_firmware_debug_log(const unsigned int device_handle, struct pt_input_firmware_debug_log *p_input_payload, struct pt_output_firmware_debug_log *p_output_payload)
 {
 	struct pt_fw_cmd cmd;
+	int rc = FIS_ERR_SUCCESS;
 	memset(&cmd, 0, sizeof (struct pt_fw_cmd));
 	cmd.device_handle = device_handle;
 	cmd.opcode = 0x08;
 	cmd.sub_opcode = 0x02;
-	cmd.output_payload_size = sizeof (struct pt_output_firmware_debug_log);
-	cmd.output_payload = p_output_payload;
 	cmd.input_payload = p_input_payload;
 	cmd.input_payload_size = sizeof (struct pt_input_firmware_debug_log);
-	return pt_ioctl_cmd(&cmd);
+	cmd.output_payload_size = sizeof (struct pt_output_firmware_debug_log);
+	cmd.output_payload = p_output_payload;
+	rc = pt_ioctl_cmd(&cmd);
+	return rc;
 }
 
 unsigned int fis_long_operation_status(const unsigned int device_handle, struct pt_output_long_operation_status *p_output_payload)
 {
 	struct pt_fw_cmd cmd;
+	int rc = FIS_ERR_SUCCESS;
 	memset(&cmd, 0, sizeof (struct pt_fw_cmd));
 	cmd.device_handle = device_handle;
 	cmd.opcode = 0x08;
 	cmd.sub_opcode = 0x04;
 	cmd.output_payload_size = sizeof (struct pt_output_long_operation_status);
 	cmd.output_payload = p_output_payload;
-	return pt_ioctl_cmd(&cmd);
+	rc = pt_ioctl_cmd(&cmd);
+	return rc;
 }
 
 unsigned int fis_bsr(const unsigned int device_handle, struct pt_output_bsr *p_output_payload)
 {
 	struct pt_fw_cmd cmd;
+	int rc = FIS_ERR_SUCCESS;
 	memset(&cmd, 0, sizeof (struct pt_fw_cmd));
 	cmd.device_handle = device_handle;
 	cmd.opcode = 0xFD;
 	cmd.sub_opcode = 0x03;
 	cmd.output_payload_size = sizeof (struct pt_output_bsr);
 	cmd.output_payload = p_output_payload;
-	return pt_ioctl_cmd(&cmd);
+	rc = pt_ioctl_cmd(&cmd);
+	return rc;
 }
 
 unsigned int fis_format(const unsigned int device_handle, struct pt_input_format *p_input_payload)
 {
 	struct pt_fw_cmd cmd;
+	int rc = FIS_ERR_SUCCESS;
 	memset(&cmd, 0, sizeof (struct pt_fw_cmd));
 	cmd.device_handle = device_handle;
 	cmd.opcode = 0xF1;
 	cmd.sub_opcode = 0x0;
 	cmd.input_payload = p_input_payload;
 	cmd.input_payload_size = sizeof (struct pt_input_format);
-	return pt_ioctl_cmd(&cmd);
+	rc = pt_ioctl_cmd(&cmd);
+	return rc;
 }
 
 void fis_get_error_message(unsigned int code, char *message, size_t message_size)
@@ -455,7 +538,7 @@ void fis_get_error_message(unsigned int code, char *message, size_t message_size
 		s_strcpy(message, "Aborted", message_size);
 		break;
 	case FIS_ERR_RESERVED_0C:
-		s_strcpy(message, "Reserved", message_size);
+		s_strcpy(message, "Reserved_0C", message_size);
 		break;
 	case FIS_ERR_REVISION_FAILURE:
 		s_strcpy(message, "Revision Failure", message_size);
@@ -475,8 +558,8 @@ void fis_get_error_message(unsigned int code, char *message, size_t message_size
 	case FIS_ERR_TIMEOUT_OCCURRED:
 		s_strcpy(message, "Timeout Occurred", message_size);
 		break;
-	case FIS_ERR_RESERVED_13:
-		s_strcpy(message, "Reserved", message_size);
+	case FIS_ERR_INVALID_COMMAND_VERSION:
+		s_strcpy(message, "Invalid command version", message_size);
 		break;
 	case FIS_ERR_MEDIA_DISABLED:
 		s_strcpy(message, "Media Disabled", message_size);
@@ -490,4 +573,35 @@ void fis_get_error_message(unsigned int code, char *message, size_t message_size
 	default:
 		s_strcpy(message, "Unknown error code", message_size);
 	}
+}
+
+size_t get_pcd_size(const unsigned int handle, const unsigned char partition_id,
+	const unsigned char command_option,
+	const unsigned int offset, size_t *pcd_size)
+{
+	size_t rc = FIS_ERR_SUCCESS;
+	struct pt_fw_cmd cmd;
+	char out_buf[PT_DEV_SMALL_PAYLOAD_SIZE];
+	memset(&cmd, 0, sizeof(cmd));
+	cmd.device_handle = handle;
+	cmd.opcode = OP_GET_ADMIN_FEATURES;
+	cmd.sub_opcode = SUBOP_PLATFORM_DATA;
+	struct pt_input_platform_config_data cfg_input;
+	memset(&cfg_input, 0, sizeof(cfg_input));
+	cfg_input.partition_id = partition_id;
+	cfg_input.command_option = command_option;
+	cfg_input.offset = offset;
+	cmd.input_payload_size = sizeof(cfg_input);
+	cmd.input_payload = &cfg_input;
+	cmd.output_payload_size = PT_DEV_SMALL_PAYLOAD_SIZE;
+	cmd.output_payload = out_buf;
+
+	if ((rc = pt_ioctl_cmd(&cmd)) == FIS_ERR_SUCCESS)
+	{
+		struct pt_output_platform_config_data *tmp_pcd = (struct pt_output_platform_config_data *)out_buf;
+
+		*pcd_size = tmp_pcd->length + tmp_pcd->input_config_size
+			+ tmp_pcd->current_config_size + tmp_pcd->output_config_size;
+	}
+	return rc;
 }

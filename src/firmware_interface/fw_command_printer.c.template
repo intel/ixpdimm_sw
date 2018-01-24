@@ -24,7 +24,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
- 
+
 //- macro simple_printer(name, header, payload, tab_counter)
 //- if not header
 //-		set header = name
@@ -110,9 +110,9 @@ void fwcmd_print_error(struct fwcmd_error_code error)
 	switch (error.type)
 	{
 		case FWCMD_ERROR_TYPE_DRIVER:
-    		printf("Driver error: 0x%x\n", error.code);
+		printf("Driver error: 0x%x\n", error.code);
 			break;
-    	case FWCMD_ERROR_TYPE_PT:
+		case FWCMD_ERROR_TYPE_PT:
 		{
 			pt_result result;
 			PT_RESULT_DECODE(error.code, result);
@@ -132,11 +132,11 @@ void fwcmd_print_error(struct fwcmd_error_code error)
 
 			break;
 		}
-    	case FWCMD_ERROR_TYPE_PARSE:
+		case FWCMD_ERROR_TYPE_PARSE:
     		printf("Parsing error: 0x%x\n", error.code);
 			break;
-    	case FWCMD_ERROR_TYPE_DUMP:
-    		printf("Error: 0x%x\n", error.code);
+		case FWCMD_ERROR_TYPE_DUMP:
+			printf("Error: 0x%x\n", error.code);
 			break;
 		default:
 			printf("Unknown error type: %d\n", error.type);

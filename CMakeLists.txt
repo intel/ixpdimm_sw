@@ -199,7 +199,7 @@ target_link_libraries(${COMMON_LIB_NAME}
         crypto
         m
         z
-       	)
+        )
 target_include_directories(${COMMON_LIB_NAME} PUBLIC
         src/common/
         src/lib
@@ -221,14 +221,14 @@ if (WIN_BUILD)
             COMMAND ${WINDRES} ${OBJECT_MODULE_DIR}/common/os/win_msgs.rc -o ${OBJECT_MODULE_DIR}/common/os/win_msgs.o
             DEPENDS src/common/os/win_msgs.mc
             VERBATIM
-   			)
+			)
     add_custom_target(
             win_msgs_header
             DEPENDS ${win_msgs_header}
             )
     set_source_files_properties(${win_msgs_header}
-        	PROPERTIES GENERATED TRUE
-        	)
+						PROPERTIES GENERATED TRUE
+				)
     target_link_libraries(${COMMON_LIB_NAME}
             ws2_32
             mswsock
@@ -240,8 +240,8 @@ if (WIN_BUILD)
             z
             )
     add_dependencies(${COMMON_LIB_NAME}
-       		win_msgs_header
-      		)
+				win_msgs_header
+				)
 endif ()
 
 # --------------------------------------------------------------------------------------------------
@@ -414,7 +414,7 @@ list(APPEND WBEM_SOURCE_FILES ${WBEM_CIMOM_FILES})
 add_library(${CIM_LIB_NAME} ${LIB_TYPE} ${WBEM_SOURCE_FILES})
 SET_TARGET_PROPERTIES(${CIM_LIB_NAME}
         PROPERTIES
-      	VERSION ${LIB_BUILD_VERSION}
+		VERSION ${LIB_BUILD_VERSION}
         SOVERSION ${SO_BUILD_VERSION}
         )
 
@@ -436,14 +436,14 @@ target_link_libraries(${CIM_LIB_NAME}
 add_custom_target(generate_mofs ALL)
 if (LNX_BUILD)
   add_custom_command(TARGET generate_mofs POST_BUILD
-  				COMMAND cd ${ROOT} &&
+								COMMAND cd ${ROOT} &&
 				/bin/bash ${ROOT}/src/wbem/mof/createmof_linux.sh ${ROOT} ${OUTPUT_DIR}
-  				)
+				)
 elseif (WIN_BUILD)
   add_custom_command(TARGET generate_mofs POST_BUILD
 				WORKING_DIRECTORY ${ROOT}/src/wbem/mof
-  				COMMAND cmd \"/\"/C createmof_windows.cmd ${ROOT} ${OUTPUT_DIR}
-  				)
+				COMMAND cmd \"/\"/C createmof_windows.cmd ${ROOT} ${OUTPUT_DIR}
+				)
 endif ()
 
 # ---------------------------------------------------------------------------------------
@@ -462,7 +462,7 @@ file(GLOB CLI_SOURCE_FILES
 add_library(${CLI_LIB_NAME} ${LIB_TYPE} ${CLI_SOURCE_FILES})
 SET_TARGET_PROPERTIES(${CLI_LIB_NAME}
         PROPERTIES
-      	VERSION ${LIB_BUILD_VERSION}
+		VERSION ${LIB_BUILD_VERSION}
         SOVERSION ${SO_BUILD_VERSION}
         OUTPUT_NAME ixpdimm-cli
         )
@@ -649,12 +649,17 @@ if (RELEASE)
 else ()
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O")
 endif ()
-
+	add_definitions(
+		-D__GET_LARGE_PCD_OS_PARTITION__=0
+		-D__SET_LARGE_PCD_OS_PARTITION__=1
+		-D__GET_LARGE_PCD_NS_LABEL__=1
+		-D__SET_LARGE_FW_UPDATE__=1
+		-D__LARGE_PAYLOAD_NOT_SUPPORTED__=0  # there are few commands that works only with large payload
+	)
 if (LNX_BUILD)
     add_definitions(
             -D_GNU_SOURCE
             -D__LINUX__
-            -D__LARGE_PAYLOAD__=1
             -D__NVM_DLL__
             -fPIC
             -DCMPI_PLATFORM_LINUX_GENERIC_GNU=1
@@ -670,7 +675,6 @@ if (WIN_BUILD)
             -D_WIN32_WINNT=0x0601
             -D__NVM_DLL_EXPORTS__
             -D__EARLY_HW__=0
-            -D__LARGE_PAYLOAD__=1
             -D__INTEL_I18N__
             -D__WINDOWS__
     )

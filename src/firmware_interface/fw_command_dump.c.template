@@ -83,7 +83,15 @@ void fwcmd_read_and_print(const char *filename)
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-		unsigned char buffer[fsize];
+		unsigned char *buffer = malloc(fsize);
+		if (NULL == buffer)
+		{
+			printf("Internal Error\n");
+			fclose(pFile);
+			pFile= NULL;
+			return;
+		}
+
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
 		pFile = NULL;
@@ -99,12 +107,13 @@ void fwcmd_read_and_print(const char *filename)
 //- 		if not loop.first
 //- 			set else_str="else "
 //- 		endif
-            {{else_str}}if (s_strncmpi(command_name, "{{cmd.name}}",
-            		sizeof ("{{cmd.name}}")) == 0)
+            {{else_str}}if (s_strncmpi(command_name, "{{cmd.name}}", sizeof ("{{cmd.name}}")) == 0)
             {
-            	struct {{cmd.name|fw_cmd_data}} data;
+                struct {{cmd.name|fw_cmd_data}} data;
 
-				{{cmd.name|fw_cmd_parser}}((struct {{cmd.name|output_payload}} *)p_payload, &data);
+				{{cmd.name|fw_cmd_parser}}((struct {{cmd.name|output_payload}} *)p_payload, &data {%- if cmd.name == 'platform_config_data'-%}
+				, sizeof(buffer - COMMAND_NAME_BUFFER_SIZE)
+			{%- endif -%});
 				{{cmd.name|fw_cmd_printer}}(&data, 0);
             }
 //-		endif
@@ -114,12 +123,12 @@ void fwcmd_read_and_print(const char *filename)
 		{
 			printf("Issue reading file.\n");
 		}
+		free(buffer);
 	}
 	else
 	{
 		printf("Issue opening file.\n");
 	}
-
 }
 
 //- for cmd in commands
@@ -138,8 +147,21 @@ int {{cmd.name|fw_cmd_dump}}(const int handle,
 	int rc = 0;
 	if (pFile)
 	{
+		//- if cmd.name == 'platform_config_data'
+		struct {{cmd.name|output_payload}} *output_payload = NULL;
+		size_t pcd_size = 0;
+		get_pcd_size(handle, partition_id, command_option, offset, &pcd_size);
+		output_payload = malloc(pcd_size);
+		if (output_payload == NULL)
+		{
+			printf("Internal Error\n");
+			fclose(pFile);
+			pFile = NULL;
+			return FWCMD_ERR_NOMEMORY;
+		}
+		//- else
 		struct {{cmd.name|output_payload}} output_payload;
-
+		//- endif
 		//- if cmd.has_input
 		struct {{cmd.name|input_payload}} input_payload;
 		//- for f in cmd.input_payload.fields
@@ -154,10 +176,16 @@ int {{cmd.name|fw_cmd_dump}}(const int handle,
 		//- endif
 
 		rc = {{cmd.name|fis}}(handle,
-			//- if cmd.has_input
+			{%- if cmd.has_input -%}
 			&input_payload,
-			//- endif
-			&output_payload);
+			{%- endif -%}
+			{%- if cmd.name == 'platform_config_data' -%}
+			output_payload
+			, pcd_size
+			{%- else -%}
+			&output_payload
+			{%- endif -%}
+			);
 		if (rc == 0)
 		{
 			size_t bytes_written = 0;
@@ -166,16 +194,25 @@ int {{cmd.name|fw_cmd_dump}}(const int handle,
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
-                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+					rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 			}
 			else
 			{
+				//- if cmd.name == 'platform_config_data'
+				unsigned char *p_buffer = (unsigned char *) (output_payload);
+				bytes_written = fwrite(p_buffer, 1, pcd_size, pFile);
+				if (bytes_written != pcd_size)
+				{
+						rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+				}
+				//- else
 				unsigned char *p_buffer = (unsigned char *) (&output_payload);
 				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
 				if (bytes_written != sizeof(output_payload))
 				{
-                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+						rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 				}
+				//- endif
 			}
 			fclose(pFile);
 		}
@@ -197,14 +234,28 @@ struct {{cmd.name|fw_cmd_result}} {{cmd.name|fw_cmd_read}}(const char *filename)
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-		unsigned char buffer[fsize];
+		unsigned char *buffer = malloc(fsize);
+		if (NULL == buffer)
+		{
+			printf("Internal Error\n");
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
+			fclose(pFile);
+			pFile = NULL;
+			return result;
+		}
+
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
 
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct {{cmd.name|fw_cmd_data}} *)malloc(sizeof(*result.p_data));
-			int parse_result = {{cmd.name|fw_cmd_parser}}((const struct {{cmd.name|output_payload}}*) buffer, result.p_data);
+			int parse_result = {{cmd.name|fw_cmd_parser}}((const struct {{cmd.name|output_payload}}*) buffer, result.p_data
+			{%- if cmd.name == 'platform_config_data'-%}
+			, sizeof(fsize - COMMAND_NAME_BUFFER_SIZE)
+			{%- endif -%}
+			);
+
 			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;
@@ -220,6 +271,7 @@ struct {{cmd.name|fw_cmd_result}} {{cmd.name|fw_cmd_read}}(const char *filename)
 			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
 			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
+		free(buffer);
 	}
 	else
 	{

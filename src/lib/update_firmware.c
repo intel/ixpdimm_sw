@@ -136,7 +136,7 @@ int send_new_firmware_to_device(const NVM_NFIT_DEVICE_HANDLE device_handle,
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
 
-#if __LARGE_PAYLOAD__
+#if __SET_LARGE_FW_UPDATE__
 	// send a pass through command to update the fw
 	struct fw_cmd cmd;
 	memset(&cmd, 0, sizeof (cmd));

@@ -105,7 +105,7 @@ int fwcmd_dump(const char *command_name, unsigned int handle, const char *filena
 	{
 		rc = fwcmd_dump_platform_config_data(handle,
 			1,
-			0,
+			1,
 			0,
 			filename);
 	}
@@ -235,11 +235,13 @@ void fwcmd_read_and_print(const char *filename)
 		long fsize = ftell(pFile);
 		rewind(pFile);
 		unsigned char *buffer = malloc(fsize);
-        if (NULL == buffer)
-        {
-            printf("Internal Error\n");
-            return;
-        }
+		if (NULL == buffer)
+		{
+			printf("Internal Error\n");
+			fclose(pFile);
+			pFile= NULL;
+			return;
+		}
 
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
@@ -251,206 +253,180 @@ void fwcmd_read_and_print(const char *filename)
 			s_strcpy(command_name, (char *)buffer, COMMAND_NAME_BUFFER_SIZE);
             unsigned char *p_payload = buffer + COMMAND_NAME_BUFFER_SIZE;
 
-            if (s_strncmpi(command_name, "identify_dimm",
-            		sizeof ("identify_dimm")) == 0)
+            if (s_strncmpi(command_name, "identify_dimm", sizeof ("identify_dimm")) == 0)
             {
-            	struct fwcmd_identify_dimm_data data;
+                struct fwcmd_identify_dimm_data data;
 
 				fis_parse_identify_dimm((struct pt_output_identify_dimm *)p_payload, &data);
 				fwcmd_identify_dimm_printer(&data, 0);
             }
-            else if (s_strncmpi(command_name, "identify_dimm_characteristics",
-            		sizeof ("identify_dimm_characteristics")) == 0)
+            else if (s_strncmpi(command_name, "identify_dimm_characteristics", sizeof ("identify_dimm_characteristics")) == 0)
             {
-            	struct fwcmd_identify_dimm_characteristics_data data;
+                struct fwcmd_identify_dimm_characteristics_data data;
 
 				fis_parse_identify_dimm_characteristics((struct pt_output_identify_dimm_characteristics *)p_payload, &data);
 				fwcmd_identify_dimm_characteristics_printer(&data, 0);
             }
-            else if (s_strncmpi(command_name, "get_security_state",
-            		sizeof ("get_security_state")) == 0)
+            else if (s_strncmpi(command_name, "get_security_state", sizeof ("get_security_state")) == 0)
             {
-            	struct fwcmd_get_security_state_data data;
+                struct fwcmd_get_security_state_data data;
 
 				fis_parse_get_security_state((struct pt_output_get_security_state *)p_payload, &data);
 				fwcmd_get_security_state_printer(&data, 0);
             }
-            else if (s_strncmpi(command_name, "get_alarm_threshold",
-            		sizeof ("get_alarm_threshold")) == 0)
+            else if (s_strncmpi(command_name, "get_alarm_threshold", sizeof ("get_alarm_threshold")) == 0)
             {
-            	struct fwcmd_get_alarm_threshold_data data;
+                struct fwcmd_get_alarm_threshold_data data;
 
 				fis_parse_get_alarm_threshold((struct pt_output_get_alarm_threshold *)p_payload, &data);
 				fwcmd_get_alarm_threshold_printer(&data, 0);
             }
-            else if (s_strncmpi(command_name, "power_management_policy",
-            		sizeof ("power_management_policy")) == 0)
+            else if (s_strncmpi(command_name, "power_management_policy", sizeof ("power_management_policy")) == 0)
             {
-            	struct fwcmd_power_management_policy_data data;
+                struct fwcmd_power_management_policy_data data;
 
 				fis_parse_power_management_policy((struct pt_output_power_management_policy *)p_payload, &data);
 				fwcmd_power_management_policy_printer(&data, 0);
             }
-            else if (s_strncmpi(command_name, "die_sparing_policy",
-            		sizeof ("die_sparing_policy")) == 0)
+            else if (s_strncmpi(command_name, "die_sparing_policy", sizeof ("die_sparing_policy")) == 0)
             {
-            	struct fwcmd_die_sparing_policy_data data;
+                struct fwcmd_die_sparing_policy_data data;
 
 				fis_parse_die_sparing_policy((struct pt_output_die_sparing_policy *)p_payload, &data);
 				fwcmd_die_sparing_policy_printer(&data, 0);
             }
-            else if (s_strncmpi(command_name, "address_range_scrub",
-            		sizeof ("address_range_scrub")) == 0)
+            else if (s_strncmpi(command_name, "address_range_scrub", sizeof ("address_range_scrub")) == 0)
             {
-            	struct fwcmd_address_range_scrub_data data;
+                struct fwcmd_address_range_scrub_data data;
 
 				fis_parse_address_range_scrub((struct pt_output_address_range_scrub *)p_payload, &data);
 				fwcmd_address_range_scrub_printer(&data, 0);
             }
-            else if (s_strncmpi(command_name, "optional_configuration_data_policy",
-            		sizeof ("optional_configuration_data_policy")) == 0)
+            else if (s_strncmpi(command_name, "optional_configuration_data_policy", sizeof ("optional_configuration_data_policy")) == 0)
             {
-            	struct fwcmd_optional_configuration_data_policy_data data;
+                struct fwcmd_optional_configuration_data_policy_data data;
 
 				fis_parse_optional_configuration_data_policy((struct pt_output_optional_configuration_data_policy *)p_payload, &data);
 				fwcmd_optional_configuration_data_policy_printer(&data, 0);
             }
-            else if (s_strncmpi(command_name, "pmon_registers",
-            		sizeof ("pmon_registers")) == 0)
+            else if (s_strncmpi(command_name, "pmon_registers", sizeof ("pmon_registers")) == 0)
             {
-            	struct fwcmd_pmon_registers_data data;
+                struct fwcmd_pmon_registers_data data;
 
 				fis_parse_pmon_registers((struct pt_output_pmon_registers *)p_payload, &data);
 				fwcmd_pmon_registers_printer(&data, 0);
             }
-            else if (s_strncmpi(command_name, "system_time",
-            		sizeof ("system_time")) == 0)
+            else if (s_strncmpi(command_name, "system_time", sizeof ("system_time")) == 0)
             {
-            	struct fwcmd_system_time_data data;
+                struct fwcmd_system_time_data data;
 
 				fis_parse_system_time((struct pt_output_system_time *)p_payload, &data);
 				fwcmd_system_time_printer(&data, 0);
             }
-            else if (s_strncmpi(command_name, "platform_config_data",
-            		sizeof ("platform_config_data")) == 0)
+            else if (s_strncmpi(command_name, "platform_config_data", sizeof ("platform_config_data")) == 0)
             {
-            	struct fwcmd_platform_config_data_data data;
+                struct fwcmd_platform_config_data_data data;
 
-				fis_parse_platform_config_data((struct pt_output_platform_config_data *)p_payload, &data);
+				fis_parse_platform_config_data((struct pt_output_platform_config_data *)p_payload, &data, sizeof(buffer - COMMAND_NAME_BUFFER_SIZE));
 				fwcmd_platform_config_data_printer(&data, 0);
             }
-            else if (s_strncmpi(command_name, "namespace_labels",
-            		sizeof ("namespace_labels")) == 0)
+            else if (s_strncmpi(command_name, "namespace_labels", sizeof ("namespace_labels")) == 0)
             {
-            	struct fwcmd_namespace_labels_data data;
+                struct fwcmd_namespace_labels_data data;
 
 				fis_parse_namespace_labels((struct pt_output_namespace_labels *)p_payload, &data);
 				fwcmd_namespace_labels_printer(&data, 0);
             }
-            else if (s_strncmpi(command_name, "dimm_partition_info",
-            		sizeof ("dimm_partition_info")) == 0)
+            else if (s_strncmpi(command_name, "dimm_partition_info", sizeof ("dimm_partition_info")) == 0)
             {
-            	struct fwcmd_dimm_partition_info_data data;
+                struct fwcmd_dimm_partition_info_data data;
 
 				fis_parse_dimm_partition_info((struct pt_output_dimm_partition_info *)p_payload, &data);
 				fwcmd_dimm_partition_info_printer(&data, 0);
             }
-            else if (s_strncmpi(command_name, "fw_debug_log_level",
-            		sizeof ("fw_debug_log_level")) == 0)
+            else if (s_strncmpi(command_name, "fw_debug_log_level", sizeof ("fw_debug_log_level")) == 0)
             {
-            	struct fwcmd_fw_debug_log_level_data data;
+                struct fwcmd_fw_debug_log_level_data data;
 
 				fis_parse_fw_debug_log_level((struct pt_output_fw_debug_log_level *)p_payload, &data);
 				fwcmd_fw_debug_log_level_printer(&data, 0);
             }
-            else if (s_strncmpi(command_name, "fw_load_flag",
-            		sizeof ("fw_load_flag")) == 0)
+            else if (s_strncmpi(command_name, "fw_load_flag", sizeof ("fw_load_flag")) == 0)
             {
-            	struct fwcmd_fw_load_flag_data data;
+                struct fwcmd_fw_load_flag_data data;
 
 				fis_parse_fw_load_flag((struct pt_output_fw_load_flag *)p_payload, &data);
 				fwcmd_fw_load_flag_printer(&data, 0);
             }
-            else if (s_strncmpi(command_name, "config_lockdown",
-            		sizeof ("config_lockdown")) == 0)
+            else if (s_strncmpi(command_name, "config_lockdown", sizeof ("config_lockdown")) == 0)
             {
-            	struct fwcmd_config_lockdown_data data;
+                struct fwcmd_config_lockdown_data data;
 
 				fis_parse_config_lockdown((struct pt_output_config_lockdown *)p_payload, &data);
 				fwcmd_config_lockdown_printer(&data, 0);
             }
-            else if (s_strncmpi(command_name, "ddrt_io_init_info",
-            		sizeof ("ddrt_io_init_info")) == 0)
+            else if (s_strncmpi(command_name, "ddrt_io_init_info", sizeof ("ddrt_io_init_info")) == 0)
             {
-            	struct fwcmd_ddrt_io_init_info_data data;
+                struct fwcmd_ddrt_io_init_info_data data;
 
 				fis_parse_ddrt_io_init_info((struct pt_output_ddrt_io_init_info *)p_payload, &data);
 				fwcmd_ddrt_io_init_info_printer(&data, 0);
             }
-            else if (s_strncmpi(command_name, "get_supported_sku_features",
-            		sizeof ("get_supported_sku_features")) == 0)
+            else if (s_strncmpi(command_name, "get_supported_sku_features", sizeof ("get_supported_sku_features")) == 0)
             {
-            	struct fwcmd_get_supported_sku_features_data data;
+                struct fwcmd_get_supported_sku_features_data data;
 
 				fis_parse_get_supported_sku_features((struct pt_output_get_supported_sku_features *)p_payload, &data);
 				fwcmd_get_supported_sku_features_printer(&data, 0);
             }
-            else if (s_strncmpi(command_name, "enable_dimm",
-            		sizeof ("enable_dimm")) == 0)
+            else if (s_strncmpi(command_name, "enable_dimm", sizeof ("enable_dimm")) == 0)
             {
-            	struct fwcmd_enable_dimm_data data;
+                struct fwcmd_enable_dimm_data data;
 
 				fis_parse_enable_dimm((struct pt_output_enable_dimm *)p_payload, &data);
 				fwcmd_enable_dimm_printer(&data, 0);
             }
-            else if (s_strncmpi(command_name, "smart_health_info",
-            		sizeof ("smart_health_info")) == 0)
+            else if (s_strncmpi(command_name, "smart_health_info", sizeof ("smart_health_info")) == 0)
             {
-            	struct fwcmd_smart_health_info_data data;
+                struct fwcmd_smart_health_info_data data;
 
 				fis_parse_smart_health_info((struct pt_output_smart_health_info *)p_payload, &data);
 				fwcmd_smart_health_info_printer(&data, 0);
             }
-            else if (s_strncmpi(command_name, "firmware_image_info",
-            		sizeof ("firmware_image_info")) == 0)
+            else if (s_strncmpi(command_name, "firmware_image_info", sizeof ("firmware_image_info")) == 0)
             {
-            	struct fwcmd_firmware_image_info_data data;
+                struct fwcmd_firmware_image_info_data data;
 
 				fis_parse_firmware_image_info((struct pt_output_firmware_image_info *)p_payload, &data);
 				fwcmd_firmware_image_info_printer(&data, 0);
             }
-            else if (s_strncmpi(command_name, "firmware_debug_log",
-            		sizeof ("firmware_debug_log")) == 0)
+            else if (s_strncmpi(command_name, "firmware_debug_log", sizeof ("firmware_debug_log")) == 0)
             {
-            	struct fwcmd_firmware_debug_log_data data;
+                struct fwcmd_firmware_debug_log_data data;
 
 				fis_parse_firmware_debug_log((struct pt_output_firmware_debug_log *)p_payload, &data);
 				fwcmd_firmware_debug_log_printer(&data, 0);
             }
-            else if (s_strncmpi(command_name, "long_operation_status",
-            		sizeof ("long_operation_status")) == 0)
+            else if (s_strncmpi(command_name, "long_operation_status", sizeof ("long_operation_status")) == 0)
             {
-            	struct fwcmd_long_operation_status_data data;
+                struct fwcmd_long_operation_status_data data;
 
 				fis_parse_long_operation_status((struct pt_output_long_operation_status *)p_payload, &data);
 				fwcmd_long_operation_status_printer(&data, 0);
             }
-            else if (s_strncmpi(command_name, "bsr",
-            		sizeof ("bsr")) == 0)
+            else if (s_strncmpi(command_name, "bsr", sizeof ("bsr")) == 0)
             {
-            	struct fwcmd_bsr_data data;
+                struct fwcmd_bsr_data data;
 
 				fis_parse_bsr((struct pt_output_bsr *)p_payload, &data);
 				fwcmd_bsr_printer(&data, 0);
             }
-
 		}
 		else
 		{
 			printf("Issue reading file.\n");
 		}
-
-        free(buffer);
+		free(buffer);
 	}
 	else
 	{
@@ -466,9 +442,7 @@ int fwcmd_dump_identify_dimm(const int handle,
 	if (pFile)
 	{
 		struct pt_output_identify_dimm output_payload;
-
-		rc = fis_identify_dimm(handle,
-			&output_payload);
+		rc = fis_identify_dimm(handle,&output_payload);
 		if (rc == 0)
 		{
 			size_t bytes_written = 0;
@@ -477,7 +451,7 @@ int fwcmd_dump_identify_dimm(const int handle,
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
-                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+					rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 			}
 			else
 			{
@@ -485,7 +459,7 @@ int fwcmd_dump_identify_dimm(const int handle,
 				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
 				if (bytes_written != sizeof(output_payload))
 				{
-                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+						rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 				}
 			}
 			fclose(pFile);
@@ -508,12 +482,15 @@ struct fwcmd_identify_dimm_result fwcmd_read_identify_dimm(const char *filename)
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-        unsigned char *buffer = malloc(fsize);
-        if (NULL == buffer)
-        {
-            printf("Internal Error\n");
-            return result;
-        }
+		unsigned char *buffer = malloc(fsize);
+		if (NULL == buffer)
+		{
+			printf("Internal Error\n");
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
+			fclose(pFile);
+			pFile = NULL;
+			return result;
+		}
 
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
@@ -522,6 +499,7 @@ struct fwcmd_identify_dimm_result fwcmd_read_identify_dimm(const char *filename)
 		{
 			result.p_data = (struct fwcmd_identify_dimm_data *)malloc(sizeof(*result.p_data));
 			int parse_result = fis_parse_identify_dimm((const struct pt_output_identify_dimm*) buffer, result.p_data);
+
 			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;
@@ -537,8 +515,7 @@ struct fwcmd_identify_dimm_result fwcmd_read_identify_dimm(const char *filename)
 			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
 			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
-
-        free(buffer);
+		free(buffer);
 	}
 	else
 	{
@@ -556,9 +533,7 @@ int fwcmd_dump_identify_dimm_characteristics(const int handle,
 	if (pFile)
 	{
 		struct pt_output_identify_dimm_characteristics output_payload;
-
-		rc = fis_identify_dimm_characteristics(handle,
-			&output_payload);
+		rc = fis_identify_dimm_characteristics(handle,&output_payload);
 		if (rc == 0)
 		{
 			size_t bytes_written = 0;
@@ -567,7 +542,7 @@ int fwcmd_dump_identify_dimm_characteristics(const int handle,
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
-                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+					rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 			}
 			else
 			{
@@ -575,7 +550,7 @@ int fwcmd_dump_identify_dimm_characteristics(const int handle,
 				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
 				if (bytes_written != sizeof(output_payload))
 				{
-                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+						rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 				}
 			}
 			fclose(pFile);
@@ -598,12 +573,15 @@ struct fwcmd_identify_dimm_characteristics_result fwcmd_read_identify_dimm_chara
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-        unsigned char *buffer = malloc(fsize);
-        if (NULL == buffer)
-        {
-            printf("Internal Error\n");
-            return result;
-        }
+		unsigned char *buffer = malloc(fsize);
+		if (NULL == buffer)
+		{
+			printf("Internal Error\n");
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
+			fclose(pFile);
+			pFile = NULL;
+			return result;
+		}
 
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
@@ -612,6 +590,7 @@ struct fwcmd_identify_dimm_characteristics_result fwcmd_read_identify_dimm_chara
 		{
 			result.p_data = (struct fwcmd_identify_dimm_characteristics_data *)malloc(sizeof(*result.p_data));
 			int parse_result = fis_parse_identify_dimm_characteristics((const struct pt_output_identify_dimm_characteristics*) buffer, result.p_data);
+
 			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;
@@ -627,8 +606,7 @@ struct fwcmd_identify_dimm_characteristics_result fwcmd_read_identify_dimm_chara
 			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
 			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
-
-        free(buffer);
+		free(buffer);
 	}
 	else
 	{
@@ -646,9 +624,7 @@ int fwcmd_dump_get_security_state(const int handle,
 	if (pFile)
 	{
 		struct pt_output_get_security_state output_payload;
-
-		rc = fis_get_security_state(handle,
-			&output_payload);
+		rc = fis_get_security_state(handle,&output_payload);
 		if (rc == 0)
 		{
 			size_t bytes_written = 0;
@@ -657,7 +633,7 @@ int fwcmd_dump_get_security_state(const int handle,
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
-                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+					rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 			}
 			else
 			{
@@ -665,7 +641,7 @@ int fwcmd_dump_get_security_state(const int handle,
 				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
 				if (bytes_written != sizeof(output_payload))
 				{
-                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+						rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 				}
 			}
 			fclose(pFile);
@@ -688,12 +664,15 @@ struct fwcmd_get_security_state_result fwcmd_read_get_security_state(const char 
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-        unsigned char *buffer = malloc(fsize);
-        if (NULL == buffer)
-        {
-            printf("Internal Error\n");
-            return result;
-        }
+		unsigned char *buffer = malloc(fsize);
+		if (NULL == buffer)
+		{
+			printf("Internal Error\n");
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
+			fclose(pFile);
+			pFile = NULL;
+			return result;
+		}
 
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
@@ -702,6 +681,7 @@ struct fwcmd_get_security_state_result fwcmd_read_get_security_state(const char 
 		{
 			result.p_data = (struct fwcmd_get_security_state_data *)malloc(sizeof(*result.p_data));
 			int parse_result = fis_parse_get_security_state((const struct pt_output_get_security_state*) buffer, result.p_data);
+
 			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;
@@ -717,8 +697,7 @@ struct fwcmd_get_security_state_result fwcmd_read_get_security_state(const char 
 			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
 			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
-
-        free(buffer);
+		free(buffer);
 	}
 	else
 	{
@@ -736,9 +715,7 @@ int fwcmd_dump_get_alarm_threshold(const int handle,
 	if (pFile)
 	{
 		struct pt_output_get_alarm_threshold output_payload;
-
-		rc = fis_get_alarm_threshold(handle,
-			&output_payload);
+		rc = fis_get_alarm_threshold(handle,&output_payload);
 		if (rc == 0)
 		{
 			size_t bytes_written = 0;
@@ -747,7 +724,7 @@ int fwcmd_dump_get_alarm_threshold(const int handle,
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
-                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+					rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 			}
 			else
 			{
@@ -755,7 +732,7 @@ int fwcmd_dump_get_alarm_threshold(const int handle,
 				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
 				if (bytes_written != sizeof(output_payload))
 				{
-                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+						rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 				}
 			}
 			fclose(pFile);
@@ -778,12 +755,15 @@ struct fwcmd_get_alarm_threshold_result fwcmd_read_get_alarm_threshold(const cha
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-        unsigned char *buffer = malloc(fsize);
-        if (NULL == buffer)
-        {
-            printf("Internal Error\n");
-            return result;
-        }
+		unsigned char *buffer = malloc(fsize);
+		if (NULL == buffer)
+		{
+			printf("Internal Error\n");
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
+			fclose(pFile);
+			pFile = NULL;
+			return result;
+		}
 
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
@@ -792,6 +772,7 @@ struct fwcmd_get_alarm_threshold_result fwcmd_read_get_alarm_threshold(const cha
 		{
 			result.p_data = (struct fwcmd_get_alarm_threshold_data *)malloc(sizeof(*result.p_data));
 			int parse_result = fis_parse_get_alarm_threshold((const struct pt_output_get_alarm_threshold*) buffer, result.p_data);
+
 			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;
@@ -807,8 +788,7 @@ struct fwcmd_get_alarm_threshold_result fwcmd_read_get_alarm_threshold(const cha
 			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
 			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
-
-        free(buffer);
+		free(buffer);
 	}
 	else
 	{
@@ -826,9 +806,7 @@ int fwcmd_dump_power_management_policy(const int handle,
 	if (pFile)
 	{
 		struct pt_output_power_management_policy output_payload;
-
-		rc = fis_power_management_policy(handle,
-			&output_payload);
+		rc = fis_power_management_policy(handle,&output_payload);
 		if (rc == 0)
 		{
 			size_t bytes_written = 0;
@@ -837,7 +815,7 @@ int fwcmd_dump_power_management_policy(const int handle,
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
-                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+					rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 			}
 			else
 			{
@@ -845,7 +823,7 @@ int fwcmd_dump_power_management_policy(const int handle,
 				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
 				if (bytes_written != sizeof(output_payload))
 				{
-                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+						rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 				}
 			}
 			fclose(pFile);
@@ -868,20 +846,24 @@ struct fwcmd_power_management_policy_result fwcmd_read_power_management_policy(c
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-        unsigned char *buffer = malloc(fsize);
-        if (NULL == buffer)
-        {
-            printf("Internal Error\n");
-            return result;
-        }
+		unsigned char *buffer = malloc(fsize);
+		if (NULL == buffer)
+		{
+			printf("Internal Error\n");
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
+			fclose(pFile);
+			pFile = NULL;
+			return result;
+		}
 
-        size_t bytes_read = fread(buffer, 1, fsize, pFile);
+		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
 
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct fwcmd_power_management_policy_data *)malloc(sizeof(*result.p_data));
 			int parse_result = fis_parse_power_management_policy((const struct pt_output_power_management_policy*) buffer, result.p_data);
+
 			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;
@@ -897,8 +879,7 @@ struct fwcmd_power_management_policy_result fwcmd_read_power_management_policy(c
 			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
 			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
-
-        free(buffer);
+		free(buffer);
 	}
 	else
 	{
@@ -916,9 +897,7 @@ int fwcmd_dump_die_sparing_policy(const int handle,
 	if (pFile)
 	{
 		struct pt_output_die_sparing_policy output_payload;
-
-		rc = fis_die_sparing_policy(handle,
-			&output_payload);
+		rc = fis_die_sparing_policy(handle,&output_payload);
 		if (rc == 0)
 		{
 			size_t bytes_written = 0;
@@ -927,7 +906,7 @@ int fwcmd_dump_die_sparing_policy(const int handle,
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
-                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+					rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 			}
 			else
 			{
@@ -935,7 +914,7 @@ int fwcmd_dump_die_sparing_policy(const int handle,
 				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
 				if (bytes_written != sizeof(output_payload))
 				{
-                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+						rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 				}
 			}
 			fclose(pFile);
@@ -958,12 +937,15 @@ struct fwcmd_die_sparing_policy_result fwcmd_read_die_sparing_policy(const char 
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-        unsigned char *buffer = malloc(fsize);
-        if (NULL == buffer)
-        {
-            printf("Internal Error\n");
-            return result;
-        }
+		unsigned char *buffer = malloc(fsize);
+		if (NULL == buffer)
+		{
+			printf("Internal Error\n");
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
+			fclose(pFile);
+			pFile = NULL;
+			return result;
+		}
 
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
@@ -972,6 +954,7 @@ struct fwcmd_die_sparing_policy_result fwcmd_read_die_sparing_policy(const char 
 		{
 			result.p_data = (struct fwcmd_die_sparing_policy_data *)malloc(sizeof(*result.p_data));
 			int parse_result = fis_parse_die_sparing_policy((const struct pt_output_die_sparing_policy*) buffer, result.p_data);
+
 			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;
@@ -987,8 +970,7 @@ struct fwcmd_die_sparing_policy_result fwcmd_read_die_sparing_policy(const char 
 			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
 			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
-
-        free(buffer);
+		free(buffer);
 	}
 	else
 	{
@@ -1006,9 +988,7 @@ int fwcmd_dump_address_range_scrub(const int handle,
 	if (pFile)
 	{
 		struct pt_output_address_range_scrub output_payload;
-
-		rc = fis_address_range_scrub(handle,
-			&output_payload);
+		rc = fis_address_range_scrub(handle,&output_payload);
 		if (rc == 0)
 		{
 			size_t bytes_written = 0;
@@ -1017,7 +997,7 @@ int fwcmd_dump_address_range_scrub(const int handle,
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
-                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+					rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 			}
 			else
 			{
@@ -1025,7 +1005,7 @@ int fwcmd_dump_address_range_scrub(const int handle,
 				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
 				if (bytes_written != sizeof(output_payload))
 				{
-                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+						rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 				}
 			}
 			fclose(pFile);
@@ -1048,12 +1028,15 @@ struct fwcmd_address_range_scrub_result fwcmd_read_address_range_scrub(const cha
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-        unsigned char *buffer = malloc(fsize);
-        if (NULL == buffer)
-        {
-            printf("Internal Error\n");
-            return result;
-        }
+		unsigned char *buffer = malloc(fsize);
+		if (NULL == buffer)
+		{
+			printf("Internal Error\n");
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
+			fclose(pFile);
+			pFile = NULL;
+			return result;
+		}
 
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
@@ -1062,6 +1045,7 @@ struct fwcmd_address_range_scrub_result fwcmd_read_address_range_scrub(const cha
 		{
 			result.p_data = (struct fwcmd_address_range_scrub_data *)malloc(sizeof(*result.p_data));
 			int parse_result = fis_parse_address_range_scrub((const struct pt_output_address_range_scrub*) buffer, result.p_data);
+
 			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;
@@ -1077,8 +1061,7 @@ struct fwcmd_address_range_scrub_result fwcmd_read_address_range_scrub(const cha
 			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
 			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
-
-        free(buffer);
+		free(buffer);
 	}
 	else
 	{
@@ -1096,9 +1079,7 @@ int fwcmd_dump_optional_configuration_data_policy(const int handle,
 	if (pFile)
 	{
 		struct pt_output_optional_configuration_data_policy output_payload;
-
-		rc = fis_optional_configuration_data_policy(handle,
-			&output_payload);
+		rc = fis_optional_configuration_data_policy(handle,&output_payload);
 		if (rc == 0)
 		{
 			size_t bytes_written = 0;
@@ -1107,7 +1088,7 @@ int fwcmd_dump_optional_configuration_data_policy(const int handle,
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
-                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+					rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 			}
 			else
 			{
@@ -1115,7 +1096,7 @@ int fwcmd_dump_optional_configuration_data_policy(const int handle,
 				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
 				if (bytes_written != sizeof(output_payload))
 				{
-                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+						rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 				}
 			}
 			fclose(pFile);
@@ -1138,12 +1119,15 @@ struct fwcmd_optional_configuration_data_policy_result fwcmd_read_optional_confi
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-        unsigned char *buffer = malloc(fsize);
-        if (NULL == buffer)
-        {
-            printf("Internal Error\n");
-            return result;
-        }
+		unsigned char *buffer = malloc(fsize);
+		if (NULL == buffer)
+		{
+			printf("Internal Error\n");
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
+			fclose(pFile);
+			pFile = NULL;
+			return result;
+		}
 
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
@@ -1152,6 +1136,7 @@ struct fwcmd_optional_configuration_data_policy_result fwcmd_read_optional_confi
 		{
 			result.p_data = (struct fwcmd_optional_configuration_data_policy_data *)malloc(sizeof(*result.p_data));
 			int parse_result = fis_parse_optional_configuration_data_policy((const struct pt_output_optional_configuration_data_policy*) buffer, result.p_data);
+
 			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;
@@ -1167,8 +1152,7 @@ struct fwcmd_optional_configuration_data_policy_result fwcmd_read_optional_confi
 			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
 			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
-
-        free(buffer);
+		free(buffer);
 	}
 	else
 	{
@@ -1187,12 +1171,9 @@ int fwcmd_dump_pmon_registers(const int handle,
 	if (pFile)
 	{
 		struct pt_output_pmon_registers output_payload;
-
 		struct pt_input_pmon_registers input_payload;
 		input_payload.pmon_retreive_mask = pmon_retreive_mask;
-		rc = fis_pmon_registers(handle,
-			&input_payload,
-			&output_payload);
+		rc = fis_pmon_registers(handle,&input_payload,&output_payload);
 		if (rc == 0)
 		{
 			size_t bytes_written = 0;
@@ -1201,7 +1182,7 @@ int fwcmd_dump_pmon_registers(const int handle,
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
-                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+					rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 			}
 			else
 			{
@@ -1209,7 +1190,7 @@ int fwcmd_dump_pmon_registers(const int handle,
 				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
 				if (bytes_written != sizeof(output_payload))
 				{
-                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+						rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 				}
 			}
 			fclose(pFile);
@@ -1232,12 +1213,15 @@ struct fwcmd_pmon_registers_result fwcmd_read_pmon_registers(const char *filenam
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-        unsigned char *buffer = malloc(fsize);
-        if (NULL == buffer)
-        {
-            printf("Internal Error\n");
-            return result;
-        }
+		unsigned char *buffer = malloc(fsize);
+		if (NULL == buffer)
+		{
+			printf("Internal Error\n");
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
+			fclose(pFile);
+			pFile = NULL;
+			return result;
+		}
 
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
@@ -1246,6 +1230,7 @@ struct fwcmd_pmon_registers_result fwcmd_read_pmon_registers(const char *filenam
 		{
 			result.p_data = (struct fwcmd_pmon_registers_data *)malloc(sizeof(*result.p_data));
 			int parse_result = fis_parse_pmon_registers((const struct pt_output_pmon_registers*) buffer, result.p_data);
+
 			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;
@@ -1261,8 +1246,7 @@ struct fwcmd_pmon_registers_result fwcmd_read_pmon_registers(const char *filenam
 			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
 			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
-
-        free(buffer);
+		free(buffer);
 	}
 	else
 	{
@@ -1280,9 +1264,7 @@ int fwcmd_dump_system_time(const int handle,
 	if (pFile)
 	{
 		struct pt_output_system_time output_payload;
-
-		rc = fis_system_time(handle,
-			&output_payload);
+		rc = fis_system_time(handle,&output_payload);
 		if (rc == 0)
 		{
 			size_t bytes_written = 0;
@@ -1291,7 +1273,7 @@ int fwcmd_dump_system_time(const int handle,
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
-                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+					rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 			}
 			else
 			{
@@ -1299,7 +1281,7 @@ int fwcmd_dump_system_time(const int handle,
 				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
 				if (bytes_written != sizeof(output_payload))
 				{
-                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+						rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 				}
 			}
 			fclose(pFile);
@@ -1322,12 +1304,15 @@ struct fwcmd_system_time_result fwcmd_read_system_time(const char *filename)
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-        unsigned char *buffer = malloc(fsize);
-        if (NULL == buffer)
-        {
-            printf("Internal Error\n");
-            return result;
-        }
+		unsigned char *buffer = malloc(fsize);
+		if (NULL == buffer)
+		{
+			printf("Internal Error\n");
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
+			fclose(pFile);
+			pFile = NULL;
+			return result;
+		}
 
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
@@ -1336,6 +1321,7 @@ struct fwcmd_system_time_result fwcmd_read_system_time(const char *filename)
 		{
 			result.p_data = (struct fwcmd_system_time_data *)malloc(sizeof(*result.p_data));
 			int parse_result = fis_parse_system_time((const struct pt_output_system_time*) buffer, result.p_data);
+
 			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;
@@ -1351,8 +1337,7 @@ struct fwcmd_system_time_result fwcmd_read_system_time(const char *filename)
 			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
 			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
-
-        free(buffer);
+		free(buffer);
 	}
 	else
 	{
@@ -1372,15 +1357,23 @@ int fwcmd_dump_platform_config_data(const int handle,
 	int rc = 0;
 	if (pFile)
 	{
-		struct pt_output_platform_config_data output_payload;
-
+		struct pt_output_platform_config_data *output_payload = NULL;
+		size_t pcd_size = 0;
+		get_pcd_size(handle, partition_id, command_option, offset, &pcd_size);
+		output_payload = malloc(pcd_size);
+		if (output_payload == NULL)
+		{
+			printf("Internal Error\n");
+			fclose(pFile);
+			pFile = NULL;
+			return FWCMD_ERR_NOMEMORY;
+		}
 		struct pt_input_platform_config_data input_payload;
 		input_payload.partition_id = partition_id;
 		input_payload.command_option = command_option;
 		input_payload.offset = offset;
-		rc = fis_platform_config_data(handle,
-			&input_payload,
-			&output_payload);
+		rc = fis_platform_config_data(handle,&input_payload,output_payload
+			, pcd_size);
 		if (rc == 0)
 		{
 			size_t bytes_written = 0;
@@ -1389,15 +1382,15 @@ int fwcmd_dump_platform_config_data(const int handle,
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
-                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+					rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 			}
 			else
 			{
-				unsigned char *p_buffer = (unsigned char *) (&output_payload);
-				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
-				if (bytes_written != sizeof(output_payload))
+				unsigned char *p_buffer = (unsigned char *) (output_payload);
+				bytes_written = fwrite(p_buffer, 1, pcd_size, pFile);
+				if (bytes_written != pcd_size)
 				{
-                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+						rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 				}
 			}
 			fclose(pFile);
@@ -1420,12 +1413,15 @@ struct fwcmd_platform_config_data_result fwcmd_read_platform_config_data(const c
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-        unsigned char *buffer = malloc(fsize);
-        if (NULL == buffer)
-        {
-            printf("Internal Error\n");
-            return result;
-        }
+		unsigned char *buffer = malloc(fsize);
+		if (NULL == buffer)
+		{
+			printf("Internal Error\n");
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
+			fclose(pFile);
+			pFile = NULL;
+			return result;
+		}
 
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
@@ -1433,7 +1429,8 @@ struct fwcmd_platform_config_data_result fwcmd_read_platform_config_data(const c
 		if (bytes_read == fsize)
 		{
 			result.p_data = (struct fwcmd_platform_config_data_data *)malloc(sizeof(*result.p_data));
-			int parse_result = fis_parse_platform_config_data((const struct pt_output_platform_config_data*) buffer, result.p_data);
+			int parse_result = fis_parse_platform_config_data((const struct pt_output_platform_config_data*) buffer, result.p_data, sizeof(fsize - COMMAND_NAME_BUFFER_SIZE));
+
 			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;
@@ -1449,8 +1446,7 @@ struct fwcmd_platform_config_data_result fwcmd_read_platform_config_data(const c
 			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
 			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
-
-        free(buffer);
+		free(buffer);
 	}
 	else
 	{
@@ -1471,14 +1467,11 @@ int fwcmd_dump_namespace_labels(const int handle,
 	if (pFile)
 	{
 		struct pt_output_namespace_labels output_payload;
-
 		struct pt_input_namespace_labels input_payload;
 		input_payload.partition_id = partition_id;
 		input_payload.command_option = command_option;
 		input_payload.offset = offset;
-		rc = fis_namespace_labels(handle,
-			&input_payload,
-			&output_payload);
+		rc = fis_namespace_labels(handle,&input_payload,&output_payload);
 		if (rc == 0)
 		{
 			size_t bytes_written = 0;
@@ -1487,7 +1480,7 @@ int fwcmd_dump_namespace_labels(const int handle,
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
-                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+					rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 			}
 			else
 			{
@@ -1495,7 +1488,7 @@ int fwcmd_dump_namespace_labels(const int handle,
 				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
 				if (bytes_written != sizeof(output_payload))
 				{
-                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+						rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 				}
 			}
 			fclose(pFile);
@@ -1518,12 +1511,15 @@ struct fwcmd_namespace_labels_result fwcmd_read_namespace_labels(const char *fil
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-        unsigned char *buffer = malloc(fsize);
-        if (NULL == buffer)
-        {
-            printf("Internal Error\n");
-            return result;
-        }
+		unsigned char *buffer = malloc(fsize);
+		if (NULL == buffer)
+		{
+			printf("Internal Error\n");
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
+			fclose(pFile);
+			pFile = NULL;
+			return result;
+		}
 
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
@@ -1532,6 +1528,7 @@ struct fwcmd_namespace_labels_result fwcmd_read_namespace_labels(const char *fil
 		{
 			result.p_data = (struct fwcmd_namespace_labels_data *)malloc(sizeof(*result.p_data));
 			int parse_result = fis_parse_namespace_labels((const struct pt_output_namespace_labels*) buffer, result.p_data);
+
 			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;
@@ -1547,8 +1544,7 @@ struct fwcmd_namespace_labels_result fwcmd_read_namespace_labels(const char *fil
 			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
 			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
-
-        free(buffer);
+		free(buffer);
 	}
 	else
 	{
@@ -1566,9 +1562,7 @@ int fwcmd_dump_dimm_partition_info(const int handle,
 	if (pFile)
 	{
 		struct pt_output_dimm_partition_info output_payload;
-
-		rc = fis_dimm_partition_info(handle,
-			&output_payload);
+		rc = fis_dimm_partition_info(handle,&output_payload);
 		if (rc == 0)
 		{
 			size_t bytes_written = 0;
@@ -1577,7 +1571,7 @@ int fwcmd_dump_dimm_partition_info(const int handle,
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
-                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+					rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 			}
 			else
 			{
@@ -1585,7 +1579,7 @@ int fwcmd_dump_dimm_partition_info(const int handle,
 				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
 				if (bytes_written != sizeof(output_payload))
 				{
-                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+						rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 				}
 			}
 			fclose(pFile);
@@ -1608,12 +1602,15 @@ struct fwcmd_dimm_partition_info_result fwcmd_read_dimm_partition_info(const cha
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-        unsigned char *buffer = malloc(fsize);
-        if (NULL == buffer)
-        {
-            printf("Internal Error\n");
-            return result;
-        }
+		unsigned char *buffer = malloc(fsize);
+		if (NULL == buffer)
+		{
+			printf("Internal Error\n");
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
+			fclose(pFile);
+			pFile = NULL;
+			return result;
+		}
 
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
@@ -1622,6 +1619,7 @@ struct fwcmd_dimm_partition_info_result fwcmd_read_dimm_partition_info(const cha
 		{
 			result.p_data = (struct fwcmd_dimm_partition_info_data *)malloc(sizeof(*result.p_data));
 			int parse_result = fis_parse_dimm_partition_info((const struct pt_output_dimm_partition_info*) buffer, result.p_data);
+
 			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;
@@ -1637,8 +1635,7 @@ struct fwcmd_dimm_partition_info_result fwcmd_read_dimm_partition_info(const cha
 			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
 			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
-
-        free(buffer);
+		free(buffer);
 	}
 	else
 	{
@@ -1657,12 +1654,9 @@ int fwcmd_dump_fw_debug_log_level(const int handle,
 	if (pFile)
 	{
 		struct pt_output_fw_debug_log_level output_payload;
-
 		struct pt_input_fw_debug_log_level input_payload;
 		input_payload.log_id = log_id;
-		rc = fis_fw_debug_log_level(handle,
-			&input_payload,
-			&output_payload);
+		rc = fis_fw_debug_log_level(handle,&input_payload,&output_payload);
 		if (rc == 0)
 		{
 			size_t bytes_written = 0;
@@ -1671,7 +1665,7 @@ int fwcmd_dump_fw_debug_log_level(const int handle,
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
-                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+					rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 			}
 			else
 			{
@@ -1679,7 +1673,7 @@ int fwcmd_dump_fw_debug_log_level(const int handle,
 				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
 				if (bytes_written != sizeof(output_payload))
 				{
-                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+						rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 				}
 			}
 			fclose(pFile);
@@ -1702,12 +1696,15 @@ struct fwcmd_fw_debug_log_level_result fwcmd_read_fw_debug_log_level(const char 
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-        unsigned char *buffer = malloc(fsize);
-        if (NULL == buffer)
-        {
-            printf("Internal Error\n");
-            return result;
-        }
+		unsigned char *buffer = malloc(fsize);
+		if (NULL == buffer)
+		{
+			printf("Internal Error\n");
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
+			fclose(pFile);
+			pFile = NULL;
+			return result;
+		}
 
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
@@ -1716,6 +1713,7 @@ struct fwcmd_fw_debug_log_level_result fwcmd_read_fw_debug_log_level(const char 
 		{
 			result.p_data = (struct fwcmd_fw_debug_log_level_data *)malloc(sizeof(*result.p_data));
 			int parse_result = fis_parse_fw_debug_log_level((const struct pt_output_fw_debug_log_level*) buffer, result.p_data);
+
 			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;
@@ -1731,8 +1729,7 @@ struct fwcmd_fw_debug_log_level_result fwcmd_read_fw_debug_log_level(const char 
 			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
 			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
-
-        free(buffer);
+		free(buffer);
 	}
 	else
 	{
@@ -1750,9 +1747,7 @@ int fwcmd_dump_fw_load_flag(const int handle,
 	if (pFile)
 	{
 		struct pt_output_fw_load_flag output_payload;
-
-		rc = fis_fw_load_flag(handle,
-			&output_payload);
+		rc = fis_fw_load_flag(handle,&output_payload);
 		if (rc == 0)
 		{
 			size_t bytes_written = 0;
@@ -1761,7 +1756,7 @@ int fwcmd_dump_fw_load_flag(const int handle,
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
-                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+					rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 			}
 			else
 			{
@@ -1769,7 +1764,7 @@ int fwcmd_dump_fw_load_flag(const int handle,
 				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
 				if (bytes_written != sizeof(output_payload))
 				{
-                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+						rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 				}
 			}
 			fclose(pFile);
@@ -1792,12 +1787,15 @@ struct fwcmd_fw_load_flag_result fwcmd_read_fw_load_flag(const char *filename)
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-        unsigned char *buffer = malloc(fsize);
-        if (NULL == buffer)
-        {
-            printf("Internal Error\n");
-            return result;
-        }
+		unsigned char *buffer = malloc(fsize);
+		if (NULL == buffer)
+		{
+			printf("Internal Error\n");
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
+			fclose(pFile);
+			pFile = NULL;
+			return result;
+		}
 
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
@@ -1806,6 +1804,7 @@ struct fwcmd_fw_load_flag_result fwcmd_read_fw_load_flag(const char *filename)
 		{
 			result.p_data = (struct fwcmd_fw_load_flag_data *)malloc(sizeof(*result.p_data));
 			int parse_result = fis_parse_fw_load_flag((const struct pt_output_fw_load_flag*) buffer, result.p_data);
+
 			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;
@@ -1821,8 +1820,7 @@ struct fwcmd_fw_load_flag_result fwcmd_read_fw_load_flag(const char *filename)
 			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
 			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
-
-        free(buffer);
+		free(buffer);
 	}
 	else
 	{
@@ -1840,9 +1838,7 @@ int fwcmd_dump_config_lockdown(const int handle,
 	if (pFile)
 	{
 		struct pt_output_config_lockdown output_payload;
-
-		rc = fis_config_lockdown(handle,
-			&output_payload);
+		rc = fis_config_lockdown(handle,&output_payload);
 		if (rc == 0)
 		{
 			size_t bytes_written = 0;
@@ -1851,7 +1847,7 @@ int fwcmd_dump_config_lockdown(const int handle,
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
-                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+					rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 			}
 			else
 			{
@@ -1859,7 +1855,7 @@ int fwcmd_dump_config_lockdown(const int handle,
 				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
 				if (bytes_written != sizeof(output_payload))
 				{
-                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+						rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 				}
 			}
 			fclose(pFile);
@@ -1882,12 +1878,15 @@ struct fwcmd_config_lockdown_result fwcmd_read_config_lockdown(const char *filen
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-        unsigned char *buffer = malloc(fsize);
-        if (NULL == buffer)
-        {
-            printf("Internal Error\n");
-            return result;
-        }
+		unsigned char *buffer = malloc(fsize);
+		if (NULL == buffer)
+		{
+			printf("Internal Error\n");
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
+			fclose(pFile);
+			pFile = NULL;
+			return result;
+		}
 
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
@@ -1896,6 +1895,7 @@ struct fwcmd_config_lockdown_result fwcmd_read_config_lockdown(const char *filen
 		{
 			result.p_data = (struct fwcmd_config_lockdown_data *)malloc(sizeof(*result.p_data));
 			int parse_result = fis_parse_config_lockdown((const struct pt_output_config_lockdown*) buffer, result.p_data);
+
 			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;
@@ -1911,8 +1911,7 @@ struct fwcmd_config_lockdown_result fwcmd_read_config_lockdown(const char *filen
 			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
 			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
-
-        free(buffer);
+		free(buffer);
 	}
 	else
 	{
@@ -1930,9 +1929,7 @@ int fwcmd_dump_ddrt_io_init_info(const int handle,
 	if (pFile)
 	{
 		struct pt_output_ddrt_io_init_info output_payload;
-
-		rc = fis_ddrt_io_init_info(handle,
-			&output_payload);
+		rc = fis_ddrt_io_init_info(handle,&output_payload);
 		if (rc == 0)
 		{
 			size_t bytes_written = 0;
@@ -1941,7 +1938,7 @@ int fwcmd_dump_ddrt_io_init_info(const int handle,
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
-                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+					rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 			}
 			else
 			{
@@ -1949,7 +1946,7 @@ int fwcmd_dump_ddrt_io_init_info(const int handle,
 				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
 				if (bytes_written != sizeof(output_payload))
 				{
-                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+						rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 				}
 			}
 			fclose(pFile);
@@ -1972,12 +1969,15 @@ struct fwcmd_ddrt_io_init_info_result fwcmd_read_ddrt_io_init_info(const char *f
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-        unsigned char *buffer = malloc(fsize);
-        if (NULL == buffer)
-        {
-            printf("Internal Error\n");
-            return result;
-        }
+		unsigned char *buffer = malloc(fsize);
+		if (NULL == buffer)
+		{
+			printf("Internal Error\n");
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
+			fclose(pFile);
+			pFile = NULL;
+			return result;
+		}
 
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
@@ -1986,6 +1986,7 @@ struct fwcmd_ddrt_io_init_info_result fwcmd_read_ddrt_io_init_info(const char *f
 		{
 			result.p_data = (struct fwcmd_ddrt_io_init_info_data *)malloc(sizeof(*result.p_data));
 			int parse_result = fis_parse_ddrt_io_init_info((const struct pt_output_ddrt_io_init_info*) buffer, result.p_data);
+
 			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;
@@ -2001,8 +2002,7 @@ struct fwcmd_ddrt_io_init_info_result fwcmd_read_ddrt_io_init_info(const char *f
 			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
 			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
-
-        free(buffer);
+		free(buffer);
 	}
 	else
 	{
@@ -2020,9 +2020,7 @@ int fwcmd_dump_get_supported_sku_features(const int handle,
 	if (pFile)
 	{
 		struct pt_output_get_supported_sku_features output_payload;
-
-		rc = fis_get_supported_sku_features(handle,
-			&output_payload);
+		rc = fis_get_supported_sku_features(handle,&output_payload);
 		if (rc == 0)
 		{
 			size_t bytes_written = 0;
@@ -2031,7 +2029,7 @@ int fwcmd_dump_get_supported_sku_features(const int handle,
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
-                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+					rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 			}
 			else
 			{
@@ -2039,7 +2037,7 @@ int fwcmd_dump_get_supported_sku_features(const int handle,
 				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
 				if (bytes_written != sizeof(output_payload))
 				{
-                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+						rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 				}
 			}
 			fclose(pFile);
@@ -2062,12 +2060,15 @@ struct fwcmd_get_supported_sku_features_result fwcmd_read_get_supported_sku_feat
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-        unsigned char *buffer = malloc(fsize);
-        if (NULL == buffer)
-        {
-            printf("Internal Error\n");
-            return result;
-        }
+		unsigned char *buffer = malloc(fsize);
+		if (NULL == buffer)
+		{
+			printf("Internal Error\n");
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
+			fclose(pFile);
+			pFile = NULL;
+			return result;
+		}
 
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
@@ -2076,6 +2077,7 @@ struct fwcmd_get_supported_sku_features_result fwcmd_read_get_supported_sku_feat
 		{
 			result.p_data = (struct fwcmd_get_supported_sku_features_data *)malloc(sizeof(*result.p_data));
 			int parse_result = fis_parse_get_supported_sku_features((const struct pt_output_get_supported_sku_features*) buffer, result.p_data);
+
 			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;
@@ -2091,8 +2093,7 @@ struct fwcmd_get_supported_sku_features_result fwcmd_read_get_supported_sku_feat
 			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
 			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
-
-        free(buffer);
+		free(buffer);
 	}
 	else
 	{
@@ -2110,9 +2111,7 @@ int fwcmd_dump_enable_dimm(const int handle,
 	if (pFile)
 	{
 		struct pt_output_enable_dimm output_payload;
-
-		rc = fis_enable_dimm(handle,
-			&output_payload);
+		rc = fis_enable_dimm(handle,&output_payload);
 		if (rc == 0)
 		{
 			size_t bytes_written = 0;
@@ -2121,7 +2120,7 @@ int fwcmd_dump_enable_dimm(const int handle,
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
-                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+					rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 			}
 			else
 			{
@@ -2129,7 +2128,7 @@ int fwcmd_dump_enable_dimm(const int handle,
 				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
 				if (bytes_written != sizeof(output_payload))
 				{
-                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+						rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 				}
 			}
 			fclose(pFile);
@@ -2152,12 +2151,15 @@ struct fwcmd_enable_dimm_result fwcmd_read_enable_dimm(const char *filename)
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-        unsigned char *buffer = malloc(fsize);
-        if (NULL == buffer)
-        {
-            printf("Internal Error\n");
-            return result;
-        }
+		unsigned char *buffer = malloc(fsize);
+		if (NULL == buffer)
+		{
+			printf("Internal Error\n");
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
+			fclose(pFile);
+			pFile = NULL;
+			return result;
+		}
 
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
@@ -2166,6 +2168,7 @@ struct fwcmd_enable_dimm_result fwcmd_read_enable_dimm(const char *filename)
 		{
 			result.p_data = (struct fwcmd_enable_dimm_data *)malloc(sizeof(*result.p_data));
 			int parse_result = fis_parse_enable_dimm((const struct pt_output_enable_dimm*) buffer, result.p_data);
+
 			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;
@@ -2181,8 +2184,7 @@ struct fwcmd_enable_dimm_result fwcmd_read_enable_dimm(const char *filename)
 			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
 			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
-
-        free(buffer);
+		free(buffer);
 	}
 	else
 	{
@@ -2200,9 +2202,7 @@ int fwcmd_dump_smart_health_info(const int handle,
 	if (pFile)
 	{
 		struct pt_output_smart_health_info output_payload;
-
-		rc = fis_smart_health_info(handle,
-			&output_payload);
+		rc = fis_smart_health_info(handle,&output_payload);
 		if (rc == 0)
 		{
 			size_t bytes_written = 0;
@@ -2211,7 +2211,7 @@ int fwcmd_dump_smart_health_info(const int handle,
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
-                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+					rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 			}
 			else
 			{
@@ -2219,7 +2219,7 @@ int fwcmd_dump_smart_health_info(const int handle,
 				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
 				if (bytes_written != sizeof(output_payload))
 				{
-                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+						rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 				}
 			}
 			fclose(pFile);
@@ -2242,12 +2242,15 @@ struct fwcmd_smart_health_info_result fwcmd_read_smart_health_info(const char *f
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-        unsigned char *buffer = malloc(fsize);
-        if (NULL == buffer)
-        {
-            printf("Internal Error\n");
-            return result;
-        }
+		unsigned char *buffer = malloc(fsize);
+		if (NULL == buffer)
+		{
+			printf("Internal Error\n");
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
+			fclose(pFile);
+			pFile = NULL;
+			return result;
+		}
 
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
@@ -2256,6 +2259,7 @@ struct fwcmd_smart_health_info_result fwcmd_read_smart_health_info(const char *f
 		{
 			result.p_data = (struct fwcmd_smart_health_info_data *)malloc(sizeof(*result.p_data));
 			int parse_result = fis_parse_smart_health_info((const struct pt_output_smart_health_info*) buffer, result.p_data);
+
 			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;
@@ -2271,8 +2275,7 @@ struct fwcmd_smart_health_info_result fwcmd_read_smart_health_info(const char *f
 			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
 			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
-
-        free(buffer);
+		free(buffer);
 	}
 	else
 	{
@@ -2290,9 +2293,7 @@ int fwcmd_dump_firmware_image_info(const int handle,
 	if (pFile)
 	{
 		struct pt_output_firmware_image_info output_payload;
-
-		rc = fis_firmware_image_info(handle,
-			&output_payload);
+		rc = fis_firmware_image_info(handle,&output_payload);
 		if (rc == 0)
 		{
 			size_t bytes_written = 0;
@@ -2301,7 +2302,7 @@ int fwcmd_dump_firmware_image_info(const int handle,
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
-                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+					rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 			}
 			else
 			{
@@ -2309,7 +2310,7 @@ int fwcmd_dump_firmware_image_info(const int handle,
 				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
 				if (bytes_written != sizeof(output_payload))
 				{
-                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+						rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 				}
 			}
 			fclose(pFile);
@@ -2332,12 +2333,15 @@ struct fwcmd_firmware_image_info_result fwcmd_read_firmware_image_info(const cha
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-        unsigned char *buffer = malloc(fsize);
-        if (NULL == buffer)
-        {
-            printf("Internal Error\n");
-            return result;
-        }
+		unsigned char *buffer = malloc(fsize);
+		if (NULL == buffer)
+		{
+			printf("Internal Error\n");
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
+			fclose(pFile);
+			pFile = NULL;
+			return result;
+		}
 
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
@@ -2346,6 +2350,7 @@ struct fwcmd_firmware_image_info_result fwcmd_read_firmware_image_info(const cha
 		{
 			result.p_data = (struct fwcmd_firmware_image_info_data *)malloc(sizeof(*result.p_data));
 			int parse_result = fis_parse_firmware_image_info((const struct pt_output_firmware_image_info*) buffer, result.p_data);
+
 			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;
@@ -2361,8 +2366,7 @@ struct fwcmd_firmware_image_info_result fwcmd_read_firmware_image_info(const cha
 			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
 			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
-
-        free(buffer);
+		free(buffer);
 	}
 	else
 	{
@@ -2383,14 +2387,11 @@ int fwcmd_dump_firmware_debug_log(const int handle,
 	if (pFile)
 	{
 		struct pt_output_firmware_debug_log output_payload;
-
 		struct pt_input_firmware_debug_log input_payload;
 		input_payload.log_action = log_action;
 		input_payload.log_page_offset = log_page_offset;
 		input_payload.log_id = log_id;
-		rc = fis_firmware_debug_log(handle,
-			&input_payload,
-			&output_payload);
+		rc = fis_firmware_debug_log(handle,&input_payload,&output_payload);
 		if (rc == 0)
 		{
 			size_t bytes_written = 0;
@@ -2399,7 +2400,7 @@ int fwcmd_dump_firmware_debug_log(const int handle,
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
-                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+					rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 			}
 			else
 			{
@@ -2407,7 +2408,7 @@ int fwcmd_dump_firmware_debug_log(const int handle,
 				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
 				if (bytes_written != sizeof(output_payload))
 				{
-                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+						rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 				}
 			}
 			fclose(pFile);
@@ -2430,12 +2431,15 @@ struct fwcmd_firmware_debug_log_result fwcmd_read_firmware_debug_log(const char 
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-        unsigned char *buffer = malloc(fsize);
-        if (NULL == buffer)
-        {
-            printf("Internal Error\n");
-            return result;
-        }
+		unsigned char *buffer = malloc(fsize);
+		if (NULL == buffer)
+		{
+			printf("Internal Error\n");
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
+			fclose(pFile);
+			pFile = NULL;
+			return result;
+		}
 
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
@@ -2444,6 +2448,7 @@ struct fwcmd_firmware_debug_log_result fwcmd_read_firmware_debug_log(const char 
 		{
 			result.p_data = (struct fwcmd_firmware_debug_log_data *)malloc(sizeof(*result.p_data));
 			int parse_result = fis_parse_firmware_debug_log((const struct pt_output_firmware_debug_log*) buffer, result.p_data);
+
 			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;
@@ -2459,8 +2464,7 @@ struct fwcmd_firmware_debug_log_result fwcmd_read_firmware_debug_log(const char 
 			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
 			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
-
-        free(buffer);
+		free(buffer);
 	}
 	else
 	{
@@ -2478,9 +2482,7 @@ int fwcmd_dump_long_operation_status(const int handle,
 	if (pFile)
 	{
 		struct pt_output_long_operation_status output_payload;
-
-		rc = fis_long_operation_status(handle,
-			&output_payload);
+		rc = fis_long_operation_status(handle,&output_payload);
 		if (rc == 0)
 		{
 			size_t bytes_written = 0;
@@ -2489,7 +2491,7 @@ int fwcmd_dump_long_operation_status(const int handle,
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
-                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+					rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 			}
 			else
 			{
@@ -2497,7 +2499,7 @@ int fwcmd_dump_long_operation_status(const int handle,
 				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
 				if (bytes_written != sizeof(output_payload))
 				{
-                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+						rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 				}
 			}
 			fclose(pFile);
@@ -2520,12 +2522,15 @@ struct fwcmd_long_operation_status_result fwcmd_read_long_operation_status(const
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-        unsigned char *buffer = malloc(fsize);
-        if (NULL == buffer)
-        {
-            printf("Internal Error\n");
-            return result;
-        }
+		unsigned char *buffer = malloc(fsize);
+		if (NULL == buffer)
+		{
+			printf("Internal Error\n");
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
+			fclose(pFile);
+			pFile = NULL;
+			return result;
+		}
 
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
@@ -2534,6 +2539,7 @@ struct fwcmd_long_operation_status_result fwcmd_read_long_operation_status(const
 		{
 			result.p_data = (struct fwcmd_long_operation_status_data *)malloc(sizeof(*result.p_data));
 			int parse_result = fis_parse_long_operation_status((const struct pt_output_long_operation_status*) buffer, result.p_data);
+
 			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;
@@ -2549,8 +2555,7 @@ struct fwcmd_long_operation_status_result fwcmd_read_long_operation_status(const
 			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
 			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
-
-        free(buffer);
+		free(buffer);
 	}
 	else
 	{
@@ -2568,9 +2573,7 @@ int fwcmd_dump_bsr(const int handle,
 	if (pFile)
 	{
 		struct pt_output_bsr output_payload;
-
-		rc = fis_bsr(handle,
-			&output_payload);
+		rc = fis_bsr(handle,&output_payload);
 		if (rc == 0)
 		{
 			size_t bytes_written = 0;
@@ -2579,7 +2582,7 @@ int fwcmd_dump_bsr(const int handle,
 			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
 			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
 			{
-                rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+					rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 			}
 			else
 			{
@@ -2587,7 +2590,7 @@ int fwcmd_dump_bsr(const int handle,
 				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
 				if (bytes_written != sizeof(output_payload))
 				{
-                	rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+						rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
 				}
 			}
 			fclose(pFile);
@@ -2610,12 +2613,15 @@ struct fwcmd_bsr_result fwcmd_read_bsr(const char *filename)
 		fseek(pFile, 0, SEEK_END);
 		long fsize = ftell(pFile);
 		rewind(pFile);
-        unsigned char *buffer = malloc(fsize);
-        if (NULL == buffer)
-        {
-            printf("Internal Error\n");
-            return result;
-        }
+		unsigned char *buffer = malloc(fsize);
+		if (NULL == buffer)
+		{
+			printf("Internal Error\n");
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
+			fclose(pFile);
+			pFile = NULL;
+			return result;
+		}
 
 		size_t bytes_read = fread(buffer, 1, fsize, pFile);
 		fclose(pFile);
@@ -2624,6 +2630,7 @@ struct fwcmd_bsr_result fwcmd_read_bsr(const char *filename)
 		{
 			result.p_data = (struct fwcmd_bsr_data *)malloc(sizeof(*result.p_data));
 			int parse_result = fis_parse_bsr((const struct pt_output_bsr*) buffer, result.p_data);
+
 			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{
 				result.success = 1;
@@ -2639,8 +2646,7 @@ struct fwcmd_bsr_result fwcmd_read_bsr(const char *filename)
 			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
 			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
 		}
-
-        free(buffer);
+		free(buffer);
 	}
 	else
 	{

@@ -50,8 +50,8 @@ void {{name|fw_cmd_free_data}}(struct {{name|fw_cmd_data}} *p_data)
 	if (p_data)
 	{
 //- for r in payload.payload_refs
-//- 	if r.is_type_based
-//- 		for t in r.types
+//-		if r.is_type_based
+//-			for t in r.types
 //- 			set name=r.types[t]
 //- 			if r.is_multiple
 {{free_multiple(name)}}
@@ -83,6 +83,7 @@ struct {{cmd.name|fw_cmd_result}} {{cmd|fw_cmd_name}}(unsigned int handle
 {
 	struct {{cmd.name|fw_cmd_result}} result;
 	memset(&result, 0, sizeof (struct {{cmd.name|fw_cmd_result}}));
+	unsigned int rc  = FIS_ERR_SUCCESS;
 
 	//- if cmd.has_input
 	struct {{cmd.name|input_payload}} input_payload;
@@ -96,18 +97,29 @@ struct {{cmd.name|fw_cmd_result}} {{cmd|fw_cmd_name}}(unsigned int handle
 	//- endif
 
 	//- if cmd.has_output
+		//- if cmd.name == 'platform_config_data'
+	struct {{cmd.name|output_payload}} *output_payload = NULL;
+	size_t pcd_size = 0;
+	get_pcd_size(handle, partition_id,  command_option, offset, &pcd_size);
+	if (pcd_size > 0)
+	{
+		output_payload = calloc(1, pcd_size);
+		//- else
 	struct {{cmd.name|output_payload}} output_payload;
+		//- endif
 	//- endif
-
-	unsigned int rc = {{cmd.name|fis}}(handle
+	rc = {{cmd.name|fis}}(handle
  	{%- if cmd.has_input -%}
 		,
 		&input_payload
 	{%- endif -%}
 	{%- if cmd.has_output -%}
-		,
-		&output_payload
+	{%- if cmd.name == 'platform_config_data'-%}
+		, output_payload, pcd_size
+	{%- else -%}
+		, &output_payload
 	{%- endif -%}
+	{%- endif-%}
 		);
 
 	if (PT_IS_SUCCESS(rc))
@@ -116,7 +128,13 @@ struct {{cmd.name|fw_cmd_result}} {{cmd|fw_cmd_name}}(unsigned int handle
 		result.p_data = (struct {{cmd.name|fw_cmd_data}} *)malloc(sizeof(*result.p_data));
 		if (result.p_data)
 		{
+	//- if cmd.name == 'platform_config_data'
+			rc = {{cmd.name|fw_cmd_parser}}(output_payload, result.p_data
+		, pcd_size);
+	//- else
 			rc = {{cmd.name|fw_cmd_parser}}(&output_payload, result.p_data);
+	//- endif
+
 			if (FWCMD_PARSE_SUCCESS(rc))
 			{
 				result.success = 1;
@@ -138,8 +156,12 @@ struct {{cmd.name|fw_cmd_result}} {{cmd|fw_cmd_name}}(unsigned int handle
 	else
 	{
 		result.error_code.type = FWCMD_ERROR_TYPE_PT;
-        result.error_code.code = rc;
+		result.error_code.code = rc;
 	}
+	//- if cmd.name == 'platform_config_data'
+	free(output_payload);
+	}
+	//- endif
 	return result;
 }
 //- 	if cmd.has_output

@@ -305,7 +305,7 @@ int win_leg_adp_ioctl_passthrough_cmd(struct fw_cmd *p_cmd)
 		rc = NVM_ERR_INVALIDPARAMETER;
 	}
 	// avoid any commands that require large payloads
-#if __LARGE_PAYLOAD__ == 0
+#if __LARGE_PAYLOAD_NOT_SUPPORTED__
 	else if ((p_cmd->opcode == 0x08 && p_cmd->sub_opcode == 0x02) || // get fw debug log
 			(p_cmd->opcode == 0x08 && p_cmd->sub_opcode == 0x05) || // get error log
 			(p_cmd->opcode == 0x0A)) // inject error

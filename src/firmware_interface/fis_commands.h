@@ -35,6 +35,9 @@ extern "C"
 #include "common.h"
 #include <driver_interface/passthrough.h>
 
+#define OP_GET_ADMIN_FEATURES 0x06
+#define SUBOP_PLATFORM_DATA 0x01
+
 enum fis_error_codes
 {
 	FIS_ERR_SUCCESS = 0x0,
@@ -56,11 +59,12 @@ enum fis_error_codes
 	FIS_ERR_INVALID_ALIGNMENT = 0x10,
 	FIS_ERR_INCOMPATIBLE_DIMM_TYPE = 0x11,
 	FIS_ERR_TIMEOUT_OCCURRED = 0x12,
-	FIS_ERR_RESERVED_13 = 0x13,
+	FIS_ERR_INVALID_COMMAND_VERSION = 0x13,
 	FIS_ERR_MEDIA_DISABLED = 0x14,
 	FIS_ERR_FW_UPDATE_ALREADY_OCCURED = 0x15,
 	FIS_ERR_NO_RESOURCES_AVAILABLE = 0x16,
 };
+
 
 /*
  * Payloads Structures
@@ -362,7 +366,6 @@ struct pt_output_platform_config_data
 	unsigned int input_config_offset;
 	unsigned int output_config_size;
 	unsigned int output_config_offset;
-	unsigned char body[131012];
 
 } )
 PACK_STRUCT(
@@ -528,10 +531,11 @@ struct pt_output_smart_health_info
 	unsigned int unsafe_shutdowns;
 	unsigned char last_shutdown_status_details;
 	unsigned long long last_shutdown_time;
-	unsigned char last_shutdown_status_extended_details[3];
+	unsigned char last_shutdown_status_extended_details;
+	unsigned short reserved2;
 	unsigned int media_error_injections;
 	unsigned int non_media_error_injections;
-	unsigned char reserved2[44];
+	unsigned char reserved3[44];
 
 } )
 PACK_STRUCT(
@@ -592,7 +596,6 @@ struct pt_input_format
 	unsigned char reserved[126];
 
 } )
-
 /*
  * FIS Commands
  */
@@ -612,7 +615,7 @@ unsigned int fis_optional_configuration_data_policy(const unsigned int device_ha
 unsigned int fis_pmon_registers(const unsigned int device_handle, struct pt_input_pmon_registers *p_input_payload, struct pt_output_pmon_registers *p_output_payload);
 unsigned int fis_set_alarm_threshold(const unsigned int device_handle, struct pt_input_set_alarm_threshold *p_input_payload);
 unsigned int fis_system_time(const unsigned int device_handle, struct pt_output_system_time *p_output_payload);
-unsigned int fis_platform_config_data(const unsigned int device_handle, struct pt_input_platform_config_data *p_input_payload, struct pt_output_platform_config_data *p_output_payload);
+unsigned int fis_platform_config_data(const unsigned int device_handle, struct pt_input_platform_config_data *p_input_payload, struct pt_output_platform_config_data *p_output_payload, size_t pcd_size);
 unsigned int fis_namespace_labels(const unsigned int device_handle, struct pt_input_namespace_labels *p_input_payload, struct pt_output_namespace_labels *p_output_payload);
 unsigned int fis_dimm_partition_info(const unsigned int device_handle, struct pt_output_dimm_partition_info *p_output_payload);
 unsigned int fis_fw_debug_log_level(const unsigned int device_handle, struct pt_input_fw_debug_log_level *p_input_payload, struct pt_output_fw_debug_log_level *p_output_payload);
@@ -628,6 +631,9 @@ unsigned int fis_long_operation_status(const unsigned int device_handle, struct 
 unsigned int fis_bsr(const unsigned int device_handle, struct pt_output_bsr *p_output_payload);
 unsigned int fis_format(const unsigned int device_handle, struct pt_input_format *p_input_payload);
 void fis_get_error_message(unsigned int code, char *message, size_t message_size);
+size_t get_pcd_size(const unsigned int handle, const unsigned char partition_id,
+	const unsigned char command_option,
+	const unsigned int offset, size_t *pcd_size);
 
 #ifdef __cplusplus
 }

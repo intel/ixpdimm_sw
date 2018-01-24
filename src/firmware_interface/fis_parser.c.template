@@ -31,16 +31,20 @@
 
 enum fis_parser_codes {{name|fw_cmd_parser}}(
 	const struct {{name|output_payload}} *p_output_payload,
-	struct {{name|fw_cmd_data}} *p_data)
+	struct {{name|fw_cmd_data}} *p_data
+	{%- if name == 'platform_config_data'-%}
+	, size_t pcd_size
+	{%- endif-%}
+	)
 {
 	memset(p_data, 0, sizeof (*p_data));
 	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
 //- for f in payload.fields_not_ignored:
-//- 	if f.conversion_fn
+//-		if f.conversion_fn
 	p_data->{{f.name}} = {{f.conversion_fn}}(p_output_payload->{{f.name}});
-//- 	elif f.is_primitive
+//-		elif f.is_primitive
 	p_data->{{f.name}} = p_output_payload->{{f.name}};
-//- 	elif f.is_string
+//-		elif f.is_string
 	memmove(p_data->{{f.name}}, p_output_payload->{{f.name}}, {{f.byte_count}});
 	p_data->{{f.name}}[{{f.byte_count}}] = '\0';
 //-		elif f.is_struct
@@ -52,7 +56,7 @@ enum fis_parser_codes {{name|fw_cmd_parser}}(
 	}
 //-		elif f.is_union
 	memmove(p_data->{{f.name}}.bytes, p_output_payload->{{f.name}}, {{f.byte_count}});
-//- 	else
+//-		else
 	memmove(p_data->{{f.name}}, p_output_payload->{{f.name}}, {{f.byte_count}});
 //- 	endif
 //- 	for b in f.bits
@@ -65,20 +69,22 @@ enum fis_parser_codes {{name|fw_cmd_parser}}(
 	// Is Offset
 	if (PARSING_SUCCESS(rc))
 	{
-		if (p_output_payload->{{r.offset_field}} < sizeof(*p_output_payload))
-    	{
-    	 	if (p_data->{{r.offset_field}} > 0)
-    	 	{
+		if (p_output_payload->{{r.offset_field}} <  {%- if name == 'platform_config_data'-%}  pcd_size {%-else-%}
+		sizeof(*p_output_payload) {%- endif-%}
+		)
+		{
+			if (p_data->{{r.offset_field}} > 0)
+			{
 				struct {{r.name|output_payload}} *p_{{r.name}}  =
 					((struct {{r.name|output_payload}} *)
 						((unsigned char *) p_output_payload + p_data->{{r.offset_field}}));
 				rc = {{r.name|fw_cmd_parser}}(p_{{r.name}}, &(p_data->{{r.name}}));
-    		}
-    	}
-    	else
-    	{
-    		rc = FIS_PARSER_CODES_PARSING_WRONG_OFFSET;
-    	}
+			}
+		}
+		else
+		{
+			rc = FIS_PARSER_CODES_PARSING_WRONG_OFFSET;
+		}
 	}
 
 //- 	elif r.is_type_based
@@ -122,14 +128,13 @@ enum fis_parser_codes {{name|fw_cmd_parser}}(
 	for (int i = 0; i < (int)p_data->{{r.count_field}} && FWCMD_PARSE_SUCCESS(rc); i++)
 	{
 		p_data->{{r.name}} = realloc(p_data->{{r.name}},
-    		sizeof(struct {{r.name|fw_cmd_data}}) * (p_data->{{r.name}}_count + 1));
+			sizeof(struct {{r.name|fw_cmd_data}}) * (p_data->{{r.name}}_count + 1));
 		struct {{r.name|output_payload}} *p_sub_payloads =
 			((struct {{r.name|output_payload}} *) (base + current_offset));
 		rc = {{r.name|fw_cmd_parser}}(p_sub_payloads, &p_data->{{r.name}}[p_data->{{r.name}}_count]);
 		p_data->{{r.name}}_count++;
 		current_offset += sizeof(struct {{r.name|output_payload}});
 	}
-	
 //- endif
 //- endfor
 	return rc;
@@ -147,12 +152,12 @@ enum fis_parser_codes {{name|fw_cmd_parser}}(
 
 
 //- for cmd in commands
-//- 	if cmd.has_output
-//- 		for s in cmd.sub_payloads
+//-		if cmd.has_output
+//-			for s in cmd.sub_payloads
 {{func_createFromPayload(s.name, s.payload)}}
-//- 		endfor
+//-			endfor
 
 {{func_createFromPayload(cmd.name, cmd.output_payload)}}
 
-//- 	endif
-//- endfor
+//-		endif
+//-	endfor

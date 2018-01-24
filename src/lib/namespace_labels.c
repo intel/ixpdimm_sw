@@ -238,7 +238,7 @@ int collect_dimm_nslsa_list(struct ns_data **pp_ns_data)
 			cfg_cmd.sub_opcode = SUBOP_PLATFORM_DATA_INFO;
 			cfg_cmd.input_payload_size = sizeof (input_payload);
 
-#if __LARGE_PAYLOAD__
+#if __GET_LARGE_PCD_NS_LABEL__
 			cfg_cmd.input_payload = &input_payload;
 			cfg_cmd.large_output_payload_size = sizeof (struct pt_output_namespace_labels);
 			cfg_cmd.large_output_payload = &(*pp_ns_data)->dimm_nslsa_list[i];

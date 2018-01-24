@@ -282,14 +282,13 @@ enum fis_parser_codes fis_parse_interleave_information_table(
 	for (int i = 0; i < (int)p_data->number_of_dimms && FWCMD_PARSE_SUCCESS(rc); i++)
 	{
 		p_data->id_info_table = realloc(p_data->id_info_table,
-    		sizeof(struct fwcmd_id_info_table_data) * (p_data->id_info_table_count + 1));
+			sizeof(struct fwcmd_id_info_table_data) * (p_data->id_info_table_count + 1));
 		struct pt_output_id_info_table *p_sub_payloads =
 			((struct pt_output_id_info_table *) (base + current_offset));
 		rc = fis_parse_id_info_table(p_sub_payloads, &p_data->id_info_table[p_data->id_info_table_count]);
 		p_data->id_info_table_count++;
 		current_offset += sizeof(struct pt_output_id_info_table);
 	}
-	
 	return rc;
 }
 
@@ -476,7 +475,7 @@ enum fis_parser_codes fis_parse_config_output_table(
 
 enum fis_parser_codes fis_parse_platform_config_data(
 	const struct pt_output_platform_config_data *p_output_payload,
-	struct fwcmd_platform_config_data_data *p_data)
+	struct fwcmd_platform_config_data_data *p_data, size_t pcd_size)
 {
 	memset(p_data, 0, sizeof (*p_data));
 	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
@@ -501,58 +500,58 @@ enum fis_parser_codes fis_parse_platform_config_data(
 	// Is Offset
 	if (PARSING_SUCCESS(rc))
 	{
-		if (p_output_payload->current_config_offset < sizeof(*p_output_payload))
-    	{
-    	 	if (p_data->current_config_offset > 0)
-    	 	{
+		if (p_output_payload->current_config_offset <pcd_size)
+		{
+			if (p_data->current_config_offset > 0)
+			{
 				struct pt_output_current_config_table *p_current_config_table  =
 					((struct pt_output_current_config_table *)
 						((unsigned char *) p_output_payload + p_data->current_config_offset));
 				rc = fis_parse_current_config_table(p_current_config_table, &(p_data->current_config_table));
-    		}
-    	}
-    	else
-    	{
-    		rc = FIS_PARSER_CODES_PARSING_WRONG_OFFSET;
-    	}
+			}
+		}
+		else
+		{
+			rc = FIS_PARSER_CODES_PARSING_WRONG_OFFSET;
+		}
 	}
 
 	// Is Offset
 	if (PARSING_SUCCESS(rc))
 	{
-		if (p_output_payload->input_config_offset < sizeof(*p_output_payload))
-    	{
-    	 	if (p_data->input_config_offset > 0)
-    	 	{
+		if (p_output_payload->input_config_offset <pcd_size)
+		{
+			if (p_data->input_config_offset > 0)
+			{
 				struct pt_output_config_input_table *p_config_input_table  =
 					((struct pt_output_config_input_table *)
 						((unsigned char *) p_output_payload + p_data->input_config_offset));
 				rc = fis_parse_config_input_table(p_config_input_table, &(p_data->config_input_table));
-    		}
-    	}
-    	else
-    	{
-    		rc = FIS_PARSER_CODES_PARSING_WRONG_OFFSET;
-    	}
+			}
+		}
+		else
+		{
+			rc = FIS_PARSER_CODES_PARSING_WRONG_OFFSET;
+		}
 	}
 
 	// Is Offset
 	if (PARSING_SUCCESS(rc))
 	{
-		if (p_output_payload->output_config_offset < sizeof(*p_output_payload))
-    	{
-    	 	if (p_data->output_config_offset > 0)
-    	 	{
+		if (p_output_payload->output_config_offset <pcd_size)
+		{
+			if (p_data->output_config_offset > 0)
+			{
 				struct pt_output_config_output_table *p_config_output_table  =
 					((struct pt_output_config_output_table *)
 						((unsigned char *) p_output_payload + p_data->output_config_offset));
 				rc = fis_parse_config_output_table(p_config_output_table, &(p_data->config_output_table));
-    		}
-    	}
-    	else
-    	{
-    		rc = FIS_PARSER_CODES_PARSING_WRONG_OFFSET;
-    	}
+			}
+		}
+		else
+		{
+			rc = FIS_PARSER_CODES_PARSING_WRONG_OFFSET;
+		}
 	}
 
 	return rc;
@@ -697,7 +696,7 @@ enum fis_parser_codes fis_parse_ddrt_io_init_info(
 	memset(p_data, 0, sizeof (*p_data));
 	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
 	p_data->ddrt_io_info = p_output_payload->ddrt_io_info;
-	p_data->ddrt_training_status= p_output_payload->ddrt_training_status;
+	p_data->ddrt_training_status = p_output_payload->ddrt_training_status;
 	return rc;
 }
 
@@ -771,11 +770,11 @@ enum fis_parser_codes fis_parse_smart_health_info(
 	p_data->last_shutdown_status_details_thermal_shutdown_received = (unsigned char)((p_data->last_shutdown_status_details >> 6) & 0x01);
 	p_data->last_shutdown_status_details_flush_complete = (unsigned char)((p_data->last_shutdown_status_details >> 7) & 0x01);
 	p_data->last_shutdown_time = p_output_payload->last_shutdown_time;
-	memmove(p_data->last_shutdown_status_extended_details, p_output_payload->last_shutdown_status_extended_details, 3);
-	p_data->last_shutdown_status_extended_details_viral_interrupt_received = (unsigned char)((p_data->last_shutdown_status_extended_details[0] >> 0) & 0x01);
-	p_data->last_shutdown_status_extended_details_surprise_clock_stop_interrupt_received = (unsigned char)((p_data->last_shutdown_status_extended_details[0] >> 1) & 0x01);
-	p_data->last_shutdown_status_extended_details_write_data_flush_complete = (unsigned char)((p_data->last_shutdown_status_extended_details[0] >> 2) & 0x01);
-	p_data->last_shutdown_status_extended_details_s4_power_state_received = (unsigned char)((p_data->last_shutdown_status_extended_details[0] >> 3) & 0x01);
+	p_data->last_shutdown_status_extended_details = p_output_payload->last_shutdown_status_extended_details;
+	p_data->last_shutdown_status_extended_details_viral_interrupt_received = (unsigned char)((p_data->last_shutdown_status_extended_details >> 0) & 0x01);
+	p_data->last_shutdown_status_extended_details_surprise_clock_stop_interrupt_received = (unsigned char)((p_data->last_shutdown_status_extended_details >> 1) & 0x01);
+	p_data->last_shutdown_status_extended_details_write_data_flush_complete = (unsigned char)((p_data->last_shutdown_status_extended_details >> 2) & 0x01);
+	p_data->last_shutdown_status_extended_details_s4_power_state_received = (unsigned char)((p_data->last_shutdown_status_extended_details >> 3) & 0x01);
 	p_data->media_error_injections = p_output_payload->media_error_injections;
 	p_data->non_media_error_injections = p_output_payload->non_media_error_injections;
 	return rc;

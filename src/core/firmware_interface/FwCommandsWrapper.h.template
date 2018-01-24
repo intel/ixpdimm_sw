@@ -30,13 +30,14 @@
 
 #include <nvm_types.h>
 #include "firmware_interface/fw_commands.h"
+#include <core/ExportCore.h>
 
 namespace core
 {
 namespace firmware_interface
 {
 
-class NVM_API FwCommandsWrapper
+class  NVM_CORE_API FwCommandsWrapper
 {
 public:
 	virtual ~FwCommandsWrapper();
@@ -52,10 +53,10 @@ public:
 	{%- endfor -%}
 	) const;
 
-	//- 	if cmd.has_output
+	//-		if cmd.has_output
 	virtual void {{cmd.name|fw_cmd_free|camel}}(struct {{cmd.name|fw_cmd_result}} *p_result) const;
 
-	//- 	endif
+	//-		endif
 
 	//- endfor
 

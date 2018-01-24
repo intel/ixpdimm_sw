@@ -275,112 +275,112 @@ virtual std::string fwPayloadToString_Bsr(
     const struct fwcmd_bsr_data *p_data);
 
 virtual std::string fwPayloadFieldsToString_IdentifyDimm(
-    const struct fwcmd_identify_dimm_data *p_data);	
+    const struct fwcmd_identify_dimm_data *p_data);
 
 virtual std::string fwPayloadFieldsToString_IdentifyDimmCharacteristics(
-    const struct fwcmd_identify_dimm_characteristics_data *p_data);	
+    const struct fwcmd_identify_dimm_characteristics_data *p_data);
 
 virtual std::string fwPayloadFieldsToString_GetSecurityState(
-    const struct fwcmd_get_security_state_data *p_data);	
+    const struct fwcmd_get_security_state_data *p_data);
 
 virtual std::string fwPayloadFieldsToString_GetAlarmThreshold(
-    const struct fwcmd_get_alarm_threshold_data *p_data);	
+    const struct fwcmd_get_alarm_threshold_data *p_data);
 
 virtual std::string fwPayloadFieldsToString_PowerManagementPolicy(
-    const struct fwcmd_power_management_policy_data *p_data);	
+    const struct fwcmd_power_management_policy_data *p_data);
 
 virtual std::string fwPayloadFieldsToString_DieSparingPolicy(
-    const struct fwcmd_die_sparing_policy_data *p_data);	
+    const struct fwcmd_die_sparing_policy_data *p_data);
 
 virtual std::string fwPayloadFieldsToString_AddressRangeScrub(
-    const struct fwcmd_address_range_scrub_data *p_data);	
+    const struct fwcmd_address_range_scrub_data *p_data);
 
 virtual std::string fwPayloadFieldsToString_OptionalConfigurationDataPolicy(
-    const struct fwcmd_optional_configuration_data_policy_data *p_data);	
+    const struct fwcmd_optional_configuration_data_policy_data *p_data);
 
 virtual std::string fwPayloadFieldsToString_PmonRegisters(
-    const struct fwcmd_pmon_registers_data *p_data);	
+    const struct fwcmd_pmon_registers_data *p_data);
 
 virtual std::string fwPayloadFieldsToString_SystemTime(
-    const struct fwcmd_system_time_data *p_data);	
+    const struct fwcmd_system_time_data *p_data);
 
 virtual std::string fwPayloadFieldsToString_DeviceIdentificationV1(
-    const struct fwcmd_device_identification_v1_data *p_data);	
+    const struct fwcmd_device_identification_v1_data *p_data);
 
 virtual std::string fwPayloadFieldsToString_DeviceIdentificationV2(
-    const struct fwcmd_device_identification_v2_data *p_data);	
+    const struct fwcmd_device_identification_v2_data *p_data);
 
 virtual std::string fwPayloadFieldsToString_IdInfoTable(
-    const struct fwcmd_id_info_table_data *p_data);	
+    const struct fwcmd_id_info_table_data *p_data);
 
 virtual std::string fwPayloadFieldsToString_InterleaveInformationTable(
-    const struct fwcmd_interleave_information_table_data *p_data);	
+    const struct fwcmd_interleave_information_table_data *p_data);
 
 virtual std::string fwPayloadFieldsToString_PartitionSizeChangeTable(
-    const struct fwcmd_partition_size_change_table_data *p_data);	
+    const struct fwcmd_partition_size_change_table_data *p_data);
 
 virtual std::string fwPayloadFieldsToString_CurrentConfigTable(
-    const struct fwcmd_current_config_table_data *p_data);	
+    const struct fwcmd_current_config_table_data *p_data);
 
 virtual std::string fwPayloadFieldsToString_ConfigInputTable(
-    const struct fwcmd_config_input_table_data *p_data);	
+    const struct fwcmd_config_input_table_data *p_data);
 
 virtual std::string fwPayloadFieldsToString_ConfigOutputTable(
-    const struct fwcmd_config_output_table_data *p_data);	
+    const struct fwcmd_config_output_table_data *p_data);
 
 virtual std::string fwPayloadFieldsToString_PlatformConfigData(
-    const struct fwcmd_platform_config_data_data *p_data);	
+    const struct fwcmd_platform_config_data_data *p_data);
 
 virtual std::string fwPayloadFieldsToString_NsIndex(
-    const struct fwcmd_ns_index_data *p_data);	
+    const struct fwcmd_ns_index_data *p_data);
 
 virtual std::string fwPayloadFieldsToString_NsLabel(
-    const struct fwcmd_ns_label_data *p_data);	
+    const struct fwcmd_ns_label_data *p_data);
 
 virtual std::string fwPayloadFieldsToString_NsLabelV11(
-    const struct fwcmd_ns_label_v1_1_data *p_data);	
+    const struct fwcmd_ns_label_v1_1_data *p_data);
 
 virtual std::string fwPayloadFieldsToString_NsLabelV12(
-    const struct fwcmd_ns_label_v1_2_data *p_data);	
+    const struct fwcmd_ns_label_v1_2_data *p_data);
 
 virtual std::string fwPayloadFieldsToString_NamespaceLabels(
-    const struct fwcmd_namespace_labels_data *p_data);	
+    const struct fwcmd_namespace_labels_data *p_data);
 
 virtual std::string fwPayloadFieldsToString_DimmPartitionInfo(
-    const struct fwcmd_dimm_partition_info_data *p_data);	
+    const struct fwcmd_dimm_partition_info_data *p_data);
 
 virtual std::string fwPayloadFieldsToString_FwDebugLogLevel(
-    const struct fwcmd_fw_debug_log_level_data *p_data);	
+    const struct fwcmd_fw_debug_log_level_data *p_data);
 
 virtual std::string fwPayloadFieldsToString_FwLoadFlag(
-    const struct fwcmd_fw_load_flag_data *p_data);	
+    const struct fwcmd_fw_load_flag_data *p_data);
 
 virtual std::string fwPayloadFieldsToString_ConfigLockdown(
-    const struct fwcmd_config_lockdown_data *p_data);	
+    const struct fwcmd_config_lockdown_data *p_data);
 
 virtual std::string fwPayloadFieldsToString_DdrtIoInitInfo(
-    const struct fwcmd_ddrt_io_init_info_data *p_data);	
+    const struct fwcmd_ddrt_io_init_info_data *p_data);
 
 virtual std::string fwPayloadFieldsToString_GetSupportedSkuFeatures(
-    const struct fwcmd_get_supported_sku_features_data *p_data);	
+    const struct fwcmd_get_supported_sku_features_data *p_data);
 
 virtual std::string fwPayloadFieldsToString_EnableDimm(
-    const struct fwcmd_enable_dimm_data *p_data);	
+    const struct fwcmd_enable_dimm_data *p_data);
 
 virtual std::string fwPayloadFieldsToString_SmartHealthInfo(
-    const struct fwcmd_smart_health_info_data *p_data);	
+    const struct fwcmd_smart_health_info_data *p_data);
 
 virtual std::string fwPayloadFieldsToString_FirmwareImageInfo(
-    const struct fwcmd_firmware_image_info_data *p_data);	
+    const struct fwcmd_firmware_image_info_data *p_data);
 
 virtual std::string fwPayloadFieldsToString_FirmwareDebugLog(
-    const struct fwcmd_firmware_debug_log_data *p_data);	
+    const struct fwcmd_firmware_debug_log_data *p_data);
 
 virtual std::string fwPayloadFieldsToString_LongOperationStatus(
-    const struct fwcmd_long_operation_status_data *p_data);	
+    const struct fwcmd_long_operation_status_data *p_data);
 
 virtual std::string fwPayloadFieldsToString_Bsr(
-    const struct fwcmd_bsr_data *p_data);	
+    const struct fwcmd_bsr_data *p_data);
 
 virtual enum return_code dsm_err_to_nvm_lib_err(pt_result result);
 

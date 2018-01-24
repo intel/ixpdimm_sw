@@ -318,7 +318,6 @@ int pt_get_dimm_by_handle(struct ndctl_ctx *ctx, unsigned int handle, struct ndc
 int adapter_pt_ioctl_cmd(struct pt_fw_cmd *p_fw_cmd)
 {
 	pt_result result = {0};
-
 	struct ndctl_ctx *ctx;
 	int new_rc;
 	if ((new_rc = ndctl_new(&ctx)) >= 0)

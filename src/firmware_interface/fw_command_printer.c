@@ -24,7 +24,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
- 
+
 #include "fw_command_printer.h"
 #include <driver_interface/passthrough.h>
 #include <stdio.h>
@@ -44,9 +44,9 @@ void fwcmd_print_error(struct fwcmd_error_code error)
 	switch (error.type)
 	{
 		case FWCMD_ERROR_TYPE_DRIVER:
-    		printf("Driver error: 0x%x\n", error.code);
+		printf("Driver error: 0x%x\n", error.code);
 			break;
-    	case FWCMD_ERROR_TYPE_PT:
+		case FWCMD_ERROR_TYPE_PT:
 		{
 			pt_result result;
 			PT_RESULT_DECODE(error.code, result);
@@ -66,11 +66,11 @@ void fwcmd_print_error(struct fwcmd_error_code error)
 
 			break;
 		}
-    	case FWCMD_ERROR_TYPE_PARSE:
+		case FWCMD_ERROR_TYPE_PARSE:
     		printf("Parsing error: 0x%x\n", error.code);
 			break;
-    	case FWCMD_ERROR_TYPE_DUMP:
-    		printf("Error: 0x%x\n", error.code);
+		case FWCMD_ERROR_TYPE_DUMP:
+			printf("Error: 0x%x\n", error.code);
 			break;
 		default:
 			printf("Unknown error type: %d\n", error.type);
@@ -1034,7 +1034,7 @@ void fwcmd_smart_health_info_field_printer(const struct fwcmd_smart_health_info_
 	print_tabs(indent_count + 1);
 	printf("LastShutdownTime: 0x%llx\n", p_value->last_shutdown_time);
 	print_tabs(indent_count + 1);
-	printf("LastShutdownStatusExtendedDetails: %.3s\n", p_value->last_shutdown_status_extended_details);
+	printf("LastShutdownStatusExtendedDetails: 0x%x\n", p_value->last_shutdown_status_extended_details);
 	print_tabs(indent_count + 2);
 	printf("ViralInterruptReceived: %d\n", p_value->last_shutdown_status_extended_details_viral_interrupt_received);
 	print_tabs(indent_count + 2);

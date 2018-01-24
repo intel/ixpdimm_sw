@@ -37,28 +37,59 @@
 //- for cmd in commands
 unsigned int {{cmd.name|fis}}(const unsigned int device_handle
 	{%- if cmd.has_input %}, struct {{cmd.name|input_payload}} *p_input_payload{% endif -%}
-	{%- if cmd.has_output %}, struct {{cmd.name|output_payload}} *p_output_payload{% endif -%}
+	{%- if cmd.has_output %}, struct {{cmd.name|output_payload}} *p_output_payload{% endif -%} {%- if cmd.name == 'platform_config_data'-%}, size_t pcd_size{% endif -%}
 )
 {
 	struct pt_fw_cmd cmd;
+	int rc = FIS_ERR_SUCCESS;
 	memset(&cmd, 0, sizeof (struct pt_fw_cmd));
 	cmd.device_handle = device_handle;
 	cmd.opcode = {{cmd.op_code}};
 	cmd.sub_opcode = {{cmd.sub_op_code}};
-//- 	if cmd.has_output
-//- 		if cmd.output_is_large
-	cmd.large_output_payload_size = sizeof (struct {{cmd.name|output_payload}});
-	cmd.large_output_payload = p_output_payload;
-//- 		else
-	cmd.output_payload_size = sizeof (struct {{cmd.name|output_payload}});
-	cmd.output_payload = p_output_payload;
-//- 		endif
-//- 	endif
-//- 	if cmd.has_input
+//-		if cmd.has_input
 	cmd.input_payload = p_input_payload;
 	cmd.input_payload_size = sizeof (struct {{cmd.name|input_payload}});
-//- 	endif
-	return pt_ioctl_cmd(&cmd);
+//-		endif
+
+//- 	if cmd.has_output
+//-			if cmd.name == 'platform_config_data'
+	char out_buf[PT_DEV_SMALL_PAYLOAD_SIZE];
+	int offset = 0;
+
+	cmd.output_payload_size = PT_DEV_SMALL_PAYLOAD_SIZE;
+	cmd.output_payload = out_buf;
+
+	while (offset < pcd_size)
+	{
+		memset(out_buf, 0, sizeof(PT_DEV_SMALL_PAYLOAD_SIZE));
+		p_input_payload->offset = offset;
+		if ((rc = pt_ioctl_cmd(&cmd)) == 0)
+		{
+			int transfer_size = PT_DEV_SMALL_PAYLOAD_SIZE;
+			if ((offset + PT_DEV_SMALL_PAYLOAD_SIZE) > pcd_size)
+			{
+				transfer_size = (int) pcd_size - offset;
+			}
+
+			memmove((char *) p_output_payload + offset, out_buf, transfer_size);
+
+			offset += transfer_size;
+		}
+
+//-         elif cmd.output_is_large
+	cmd.large_output_payload_size = sizeof (struct {{cmd.name|output_payload}});
+	cmd.large_output_payload = p_output_payload;
+//-			else
+	cmd.output_payload_size = sizeof (struct {{cmd.name|output_payload}});
+	cmd.output_payload = p_output_payload;
+//- 	    endif
+//-		endif
+//-			if cmd.name == 'platform_config_data'
+	}
+//-         else
+	rc = pt_ioctl_cmd(&cmd);
+//-			endif
+	return rc;
 }
 
 //- endfor
@@ -75,4 +106,35 @@ void fis_get_error_message(unsigned int code, char *message, size_t message_size
 	default:
 		s_strcpy(message, "Unknown error code", message_size);
 	}
+}
+
+size_t get_pcd_size(const unsigned int handle, const unsigned char partition_id,
+	const unsigned char command_option,
+	const unsigned int offset, size_t *pcd_size)
+{
+	size_t rc = FIS_ERR_SUCCESS;
+	struct pt_fw_cmd cmd;
+	char out_buf[PT_DEV_SMALL_PAYLOAD_SIZE];
+	memset(&cmd, 0, sizeof(cmd));
+	cmd.device_handle = handle;
+	cmd.opcode = OP_GET_ADMIN_FEATURES;
+	cmd.sub_opcode = SUBOP_PLATFORM_DATA;
+	struct pt_input_platform_config_data cfg_input;
+	memset(&cfg_input, 0, sizeof(cfg_input));
+	cfg_input.partition_id = partition_id;
+	cfg_input.command_option = command_option;
+	cfg_input.offset = offset;
+	cmd.input_payload_size = sizeof(cfg_input);
+	cmd.input_payload = &cfg_input;
+	cmd.output_payload_size = PT_DEV_SMALL_PAYLOAD_SIZE;
+	cmd.output_payload = out_buf;
+
+	if ((rc = pt_ioctl_cmd(&cmd)) == FIS_ERR_SUCCESS)
+	{
+		struct pt_output_platform_config_data *tmp_pcd = (struct pt_output_platform_config_data *)out_buf;
+
+		*pcd_size = tmp_pcd->length + tmp_pcd->input_config_size
+			+ tmp_pcd->current_config_size + tmp_pcd->output_config_size;
+	}
+	return rc;
 }

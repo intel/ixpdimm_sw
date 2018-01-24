@@ -27,15 +27,15 @@
 
 //- macro payload_fields(fields)
 //- for f in fields
-//- 	if f.is_primitive
+//-		if f.is_primitive
 	{{f.c_type}} {{f.name}};
 //-		elif f.is_struct_array
-	struct {{f.struct_type|output_payload}} {{f.name}}[{{f.struct_array_count}}];	
+	struct {{f.struct_type|output_payload}} {{f.name}}[{{f.struct_array_count}}];
 //-		elif f.is_struct
-	struct {{f.struct_type|output_payload}} {{f.name}};	
-//- 	else
+	struct {{f.struct_type|output_payload}} {{f.name}};
+//-		else
 	unsigned char {{f.name}}[{{f.byte_count}}];
-//- 	endif
+//-		endif
 //- endfor
 //- endmacro
 
@@ -49,6 +49,9 @@ extern "C"
 #include "common.h"
 #include <driver_interface/passthrough.h>
 
+#define OP_GET_ADMIN_FEATURES 0x06
+#define SUBOP_PLATFORM_DATA 0x01
+
 enum fis_error_codes
 {
 //- for e in error_codes
@@ -61,28 +64,28 @@ enum fis_error_codes
  * Payloads Structures
  */
 //- for cmd in commands
-//- 	for s in cmd.sub_payloads
+//-		for s in cmd.sub_payloads
 PACK_STRUCT(
 struct {{s.name|output_payload}}
 {
 {{ payload_fields(s.payload.fields) }}
 } )
-//- 	endfor
-//- 	if cmd.has_output
+//-		endfor
+//-		if cmd.has_output
 PACK_STRUCT(
 struct {{cmd.name|output_payload}}
 {
 {{ payload_fields(cmd.output_payload.fields) }}
 } )
-//- 	endif
+//-		endif
 
-//- 	if cmd.has_input
+//-		if cmd.has_input
 PACK_STRUCT(
 struct {{cmd.name|input_payload}}
 {
 {{ payload_fields(cmd.input_payload.fields) }}
 } )
-//- 	endif
+//-		endif
 
 //- endfor
 
@@ -93,10 +96,14 @@ struct {{cmd.name|input_payload}}
 unsigned int {{cmd.name|fis}}(const unsigned int device_handle
 	{%- if cmd.has_input %}, struct {{cmd.name|input_payload}} *p_input_payload{% endif -%}
 {%- if cmd.has_output %}, struct {{cmd.name|output_payload}} *p_output_payload{% endif -%}
+{%- if cmd.name == 'platform_config_data'-%}, size_t pcd_size{% endif -%}
 );
 //- endfor
 
 void fis_get_error_message(unsigned int code, char *message, size_t message_size);
+size_t get_pcd_size(const unsigned int handle, const unsigned char partition_id,
+	const unsigned char command_option,
+	const unsigned int offset, size_t *pcd_size);
 
 #ifdef __cplusplus
 }

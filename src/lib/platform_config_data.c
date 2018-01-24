@@ -48,7 +48,7 @@
 
 #define	DEBUG_PCD(fmt, ...) \
 	COMMON_LOG_DEBUG_F(fmt, __VA_ARGS__)
-	// Can use this instead ot print PCD to stdout
+	// Can use this instead of print PCD to stdout
 	// printf(fmt "\n", __VA_ARGS__)
 
 /*
@@ -725,7 +725,7 @@ int get_pcd_table_size(const unsigned int handle, NVM_SIZE *pcd_size)
 	cfg_cmd.input_payload_size = sizeof (cfg_input);
 	cfg_cmd.input_payload = &cfg_input;
 	cfg_cmd.output_payload_size = DEV_SMALL_PAYLOAD_SIZE;
-	cfg_cmd.output_payload = &out_buf;
+	cfg_cmd.output_payload = out_buf;
 	if ((rc = ioctl_passthrough_cmd(&cfg_cmd)) == NVM_SUCCESS)
 	{
 		struct platform_config_data *tmp_pcd = (struct platform_config_data *)out_buf;
@@ -733,7 +733,6 @@ int get_pcd_table_size(const unsigned int handle, NVM_SIZE *pcd_size)
 		*pcd_size = tmp_pcd->header.length + tmp_pcd->config_input_size
 			+ tmp_pcd->current_config_size + tmp_pcd->config_output_size;
 	}
-
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
@@ -748,7 +747,6 @@ int get_hw_dimm_platform_config_alloc(const unsigned int handle, NVM_SIZE *p_pcd
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
-
 	NVM_SIZE tmp_pcd_size;
 	if ((rc = get_pcd_table_size(handle, &tmp_pcd_size)) != NVM_SUCCESS)
 	{
@@ -773,8 +771,9 @@ int get_hw_dimm_platform_config_alloc(const unsigned int handle, NVM_SIZE *p_pcd
 		if (*pp_config != NULL)
 		{
 			*p_pcd_size = tmp_pcd_size;
-#if __LARGE_PAYLOAD__
-			NVM_UINT8 *large_buffer = calloc(1, DEV_PLT_CFG_PART_SIZE);
+#if	__GET_LARGE_PCD_OS_PARTITION__
+
+			NVM_UINT8 *large_buffer = calloc(1, tmp_pcd_size);
 			if (large_buffer != NULL)
 			{
 				// Use Large Payload to retrieve PCD
@@ -790,14 +789,12 @@ int get_hw_dimm_platform_config_alloc(const unsigned int handle, NVM_SIZE *p_pcd
 				cfg_input.options = DEV_PLT_CFG_OPT_LARGE_DATA;
 				cfg_cmd.input_payload_size = sizeof (cfg_input);
 				cfg_cmd.input_payload = &cfg_input;
-				cfg_cmd.large_output_payload_size = DEV_PLT_CFG_PART_SIZE;
+				cfg_cmd.large_output_payload_size = (unsigned int) tmp_pcd_size;
 				cfg_cmd.large_output_payload = large_buffer;
-
 				if ((rc = ioctl_passthrough_cmd(&cfg_cmd)) == NVM_SUCCESS)
 				{
 					memmove(*pp_config, large_buffer, *p_pcd_size);
 				}
-
 				free(large_buffer);
 			}
 			else
@@ -822,7 +819,7 @@ int get_hw_dimm_platform_config_alloc(const unsigned int handle, NVM_SIZE *p_pcd
 			cfg_cmd.input_payload_size = sizeof (cfg_input);
 			cfg_cmd.input_payload = &cfg_input;
 			cfg_cmd.output_payload_size = DEV_SMALL_PAYLOAD_SIZE;
-			cfg_cmd.output_payload = &out_buf;
+			cfg_cmd.output_payload = out_buf;
 
 			while (offset < *p_pcd_size && rc == NVM_SUCCESS)
 			{
@@ -832,7 +829,7 @@ int get_hw_dimm_platform_config_alloc(const unsigned int handle, NVM_SIZE *p_pcd
 					COMMON_LOG_ERROR("Trying to read outside PCD Partition");
 					break;
 				}
-				memset(&out_buf, 0, DEV_SMALL_PAYLOAD_SIZE);
+				memset(out_buf, 0, DEV_SMALL_PAYLOAD_SIZE);
 				cfg_input.offset = offset;
 
 				if ((rc = ioctl_passthrough_cmd(&cfg_cmd)) == NVM_SUCCESS)
@@ -843,7 +840,7 @@ int get_hw_dimm_platform_config_alloc(const unsigned int handle, NVM_SIZE *p_pcd
 					{
 						transfer_size = *p_pcd_size - offset;
 					}
-					memmove((void *)*pp_config + offset, out_buf, transfer_size);
+					memmove((char *)*pp_config + offset, out_buf, transfer_size);
 					offset += DEV_SMALL_PAYLOAD_SIZE;
 				}
 			}
@@ -918,8 +915,8 @@ int set_dimm_platform_config(const NVM_NFIT_DEVICE_HANDLE handle,
 	NVM_SIZE pcd_size = p_config->header.length + p_config->config_input_size
 		+ p_config->config_output_size + p_config->current_config_size;
 
-#if __LARGE_PAYLOAD__
-	char *tmp_buffer = calloc(1, DEV_PLT_CFG_PART_SIZE);
+#if __SET_LARGE_PCD_OS_PARTITION__
+	char *tmp_buffer = calloc(1, pcd_size);
 	if (tmp_buffer != NULL)
 	{
 		memmove(tmp_buffer, p_config, pcd_size);
@@ -937,7 +934,7 @@ int set_dimm_platform_config(const NVM_NFIT_DEVICE_HANDLE handle,
 		cfg_input.payload_type = DEV_PLT_CFG_LARGE_PAY;
 		cfg_cmd.input_payload_size = sizeof (cfg_input);
 		cfg_cmd.input_payload = &cfg_input;
-		cfg_cmd.large_input_payload_size = DEV_PLT_CFG_PART_SIZE;
+		cfg_cmd.large_input_payload_size = pcd_size;
 		cfg_cmd.large_input_payload = tmp_buffer;
 
 		rc = ioctl_passthrough_cmd(&cfg_cmd);

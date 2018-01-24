@@ -32,13 +32,14 @@
 #include "string"
 #include <nvm_types.h>
 #include "firmware_interface/fw_commands.h"
+#include <core/ExportCore.h>
 
 namespace core
 {
 namespace firmware_interface
 {
 
-class NVM_API FwCommands
+class NVM_CORE_API FwCommands
 {
 
 public:
@@ -51,9 +52,9 @@ FwCommands &operator=(const FwCommands &other);
 static FwCommands &getFwCommands();
 
 //- for cmd in commands
-//- 	if cmd.has_custom_printer
+//-		if cmd.has_custom_printer
 virtual std::string {{cmd.name|fw_payload_to_string_custom}}({{cmd.name|fw_cmd_data}} *pData);
-//- 	endif
+//-		endif
 //- endfor
 
 //- for cmd in commands
@@ -77,34 +78,34 @@ virtual std::string {{name|fw_payload_to_string}}(
 //-                     set name=r.types[t]
 //-                         if r.is_multiple
 
-//-                     	endif
+//-							endif
 //-                 endfor
 //-             endif
 //-         endfor
-		
+
 //- endmacro
 
 //- macro payloadFieldsToString(name, payload)
 virtual std::string {{name|fw_payload_fields_to_string}}(
-    const struct {{name|fw_cmd_data}} *p_data);	
+    const struct {{name|fw_cmd_data}} *p_data);
 //- endmacro
 
 //- for cmd in commands
-//- 	if cmd.has_output
-//- 		for s in cmd.sub_payloads
+//-		if cmd.has_output
+//-			for s in cmd.sub_payloads
 {{payloadToString(s.name, s.payload)}}
-//- 		endfor
+//-			endfor
 {{payloadToString(cmd.name, cmd.output_payload)}}
-//- 	endif
+//-		endif
 //- endfor
 
 //- for cmd in commands
-//- 	if cmd.has_output
-//- 		for s in cmd.sub_payloads
+//-		if cmd.has_output
+//-			for s in cmd.sub_payloads
 {{payloadFieldsToString(s.name, s.payload)}}
-//- 		endfor
+//-			endfor
 {{payloadFieldsToString(cmd.name, cmd.output_payload)}}
-//- 	endif
+//-		endif
 //- endfor
 
 virtual enum return_code dsm_err_to_nvm_lib_err(pt_result result);

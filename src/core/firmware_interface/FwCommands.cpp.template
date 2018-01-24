@@ -74,9 +74,9 @@ FwCommands::~FwCommands()
 
 //- for cmd in commands
 enum return_code FwCommands::{{cmd.name|fw_get_payload}}(unsigned int handle
-{%- 	for f in cmd.input_fields_not_ignored -%}
+{%-		for f in cmd.input_fields_not_ignored -%}
 	, const {{f.c_definition}}
-{%- 	endfor -%}
+{%-		endfor -%}
 	, std::string &resultString)
 {
 	enum return_code rc = NVM_SUCCESS;
@@ -119,7 +119,7 @@ enum return_code FwCommands::{{cmd.name|fw_get_payload}}(unsigned int handle
 	{
 		result << {{f.struct_type|fw_payload_to_string}}(&p_data->{{f.name}}[i]);
 	}
-//- 	elif f.unsigned_char_needs_typecast_to_int
+//-		elif f.unsigned_char_needs_typecast_to_int
 	result << "{{f.name|camel}}: " << (int) p_data->{{f.name}} << "\n";
 {%-		elif f.is_union -%}
 //-			for u in f.union_payloads
@@ -135,17 +135,17 @@ enum return_code FwCommands::{{cmd.name|fw_get_payload}}(unsigned int handle
 
 //- macro payloadFieldsToString(name, header, payload)
 //-	if not header
-//- 	set header=name
+//-	set header=name
 //-	endif
 std::string FwCommands::{{name|fw_payload_fields_to_string}}(const struct {{name|fw_cmd_data}} *p_data)
 {
 	std::stringstream result;
 	result << "\n{{header|space}}:" << "\n";
-//- 		for f in payload.fields
-//- 			if not f.ignore
+//-			for f in payload.fields
+//-				if not f.ignore
 {{fieldToString(f)}}
-//- 			endif
-//- 		endfor
+//-				endif
+//-			endfor
 
 	return result.str();
 }
@@ -158,53 +158,53 @@ std::string FwCommands::{{name|fw_payload_to_string}}(const struct {{name|fw_cmd
 	result << "\n{{name|space}}:" << "\n";
 	result << {{name|fw_payload_fields_to_string}}(p_data);
 
-//- 		for r in payload.payload_refs:
-//- 			if r.is_type_based
-//- 				for t in r.types
-//- 					set name=r.types[t]
+//-			for r in payload.payload_refs:
+//-				if r.is_type_based
+//-					for t in r.types
+//-						set name=r.types[t]
 //-						if r.is_multiple
 	for (int i = 0; i < p_data->{{name}}_count; i++)
 	{
 		result << {{name|fw_payload_to_string}}(&p_data->{{name}}[i]);
 	}
-//- 					else
+//-						else
 	result << {{name|fw_payload_to_string}}(&p_data->{{name}});
-//- 					endif
-//- 				endfor
-//- 			else
+//-						endif
+//-					endfor
+//-				else
 //-					if r.is_multiple
 	for (int i = 0; i < p_data->{{r.name}}_count; i++)
 	{
 		result << {{r.name|fw_payload_to_string}}(&p_data->{{r.name}}[i]);
 	}
 
-//- 				else
+//-					else
 	result << {{r.name|fw_payload_to_string}}(&p_data->{{r.name}});
-//- 				endif
-//- 			endif
-//- 		endfor
+//-					endif
+//-				endif
+//-			endfor
 
 	return result.str();
 }
 //- endmacro
 
 //- for cmd in commands
-//- 	if cmd.has_output
-//- 		for s in cmd.sub_payloads
+//-		if cmd.has_output
+//-			for s in cmd.sub_payloads
 {{payloadToString(s.name, s.payload)}}
-//- 		endfor
+//-			endfor
 {{payloadToString(cmd.name, cmd.output_payload)}}
-//- 	endif
-//- endfor
+//-		endif
+//-	endfor
 
 //- for cmd in commands
-//- 	if cmd.has_output
-//- 		for s in cmd.sub_payloads
+//-		if cmd.has_output
+//-			for s in cmd.sub_payloads
 {{payloadFieldsToString(s.name, s.header, s.payload)}}
-//- 		endfor
+//-			endfor
 {{payloadFieldsToString(cmd.name, cmd.header, cmd.output_payload)}}
-//- 	endif
-//- endfor
+//-		endif
+//-	endfor
 
 enum return_code FwCommands::dsm_err_to_nvm_lib_err(pt_result result)
 {
@@ -367,6 +367,9 @@ enum return_code FwCommands::convertFwcmdErrorCodeToNvmErrorCode(struct fwcmd_er
 				break;
 			case PT_ERR_INVALIDPERMISSIONS:
 				rc = NVM_ERR_INVALIDPERMISSIONS;
+				break;
+			case PT_ERR_NOTSUPPORTED:
+				rc = NVM_ERR_NOTSUPPORTED;
 				break;
 			default:
 				rc = NVM_ERR_UNKNOWN;

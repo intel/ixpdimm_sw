@@ -931,7 +931,7 @@ struct fwcmd_smart_health_info_data
 	unsigned char last_shutdown_status_details_thermal_shutdown_received;
 	unsigned char last_shutdown_status_details_flush_complete;
 	unsigned long long last_shutdown_time;
-	unsigned char last_shutdown_status_extended_details[3];
+	unsigned char last_shutdown_status_extended_details;
 	unsigned char last_shutdown_status_extended_details_viral_interrupt_received;
 	unsigned char last_shutdown_status_extended_details_surprise_clock_stop_interrupt_received;
 	unsigned char last_shutdown_status_extended_details_write_data_flush_complete;

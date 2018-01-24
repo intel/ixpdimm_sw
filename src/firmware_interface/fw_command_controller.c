@@ -89,7 +89,7 @@ void fwcmd_print_all(unsigned int handle)
 	printf("Printing platform_config_data ... \n");
 	fwcmd_run_platform_config_data(handle
 		, 1
-		, 0
+		, 1
 		, 0
 		);
 	printf("--------------------------------------------\n");
@@ -343,7 +343,7 @@ void fwcmd_run(const char *command_name,
 		char * command_option_value = find_arg(p_args, "command_option");
 		if (!command_option_value)
 		{
-			command_option_value = "0";
+			command_option_value = "1";
 		}
 		char * offset_value = find_arg(p_args, "offset");
 		if (!offset_value)
