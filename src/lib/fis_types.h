@@ -63,7 +63,7 @@
 #define	DEV_PLT_CFG_OPT_LARGE_DATA	(DEV_PLT_CFG_LARGE_PAY | DEV_PLT_CFG_OPT_DATA)
 #define DEV_DDRT_ALERT_TYPES	128 /* Max number of different DDRT Alerts */
 #define DEV_SMALL_PAYLOAD_SIZE	128 /* 128B - Size for a passthrough command small payload */
-#define DEV_PLT_CFG_PART_SIZE	(128 << 10) /* Size of one partition in platform config data */
+#define DEV_PLT_CFG_OEM_PARTITION_SIZE	(64 << 10) /* 128K is full OEM partition size, but limiting Intel's use to the first 64K */
 #define DEV_ERR_LOG_SIZE		(1 << 20) /* Size of one FW error log */
 #define DEV_FW_LOG_PAGE_SIZE	1024 /* Size of one FW log page */
 #define	DEV_FW_BUILD_CONFIGURATION_LEN 16 /* Size of the build configuration including null */

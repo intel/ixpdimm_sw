@@ -651,7 +651,6 @@ else ()
 endif ()
 	add_definitions(
 		-D__GET_LARGE_PCD_OS_PARTITION__=0
-		-D__SET_LARGE_PCD_OS_PARTITION__=1
 		-D__GET_LARGE_PCD_NS_LABEL__=1
 		-D__SET_LARGE_FW_UPDATE__=1
 		-D__LARGE_PAYLOAD_NOT_SUPPORTED__=0  # there are few commands that works only with large payload

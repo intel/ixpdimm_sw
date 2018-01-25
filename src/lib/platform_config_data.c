@@ -588,10 +588,10 @@ int build_platform_config_data(const struct current_config_table *p_current_conf
 
 	NVM_UINT32 offset = sizeof (struct platform_config_data); // offset for first sub-table
 
-	struct platform_config_data *p_cfg_data = malloc(DEV_PLT_CFG_PART_SIZE);
+	struct platform_config_data *p_cfg_data = malloc(DEV_PLT_CFG_OEM_PARTITION_SIZE);
 	if (p_cfg_data)
 	{
-		memset(p_cfg_data, 0, DEV_PLT_CFG_PART_SIZE);
+		memset(p_cfg_data, 0, DEV_PLT_CFG_OEM_PARTITION_SIZE);
 
 		// Fill out the header
 		p_cfg_data->header.length = sizeof (struct platform_config_data);
@@ -759,7 +759,7 @@ int get_hw_dimm_platform_config_alloc(const unsigned int handle, NVM_SIZE *p_pcd
 		*p_pcd_size = sizeof (struct platform_config_data);
 	}
 	else if (tmp_pcd_size < sizeof (struct platform_config_data) ||
-			tmp_pcd_size > DEV_PLT_CFG_PART_SIZE)
+			tmp_pcd_size > DEV_PLT_CFG_OEM_PARTITION_SIZE)
 	{
 		COMMON_LOG_ERROR("PCD table size is invalid");
 		rc = NVM_ERR_UNKNOWN;
@@ -823,7 +823,7 @@ int get_hw_dimm_platform_config_alloc(const unsigned int handle, NVM_SIZE *p_pcd
 
 			while (offset < *p_pcd_size && rc == NVM_SUCCESS)
 			{
-				if (offset > (DEV_PLT_CFG_PART_SIZE - DEV_SMALL_PAYLOAD_SIZE))
+				if (offset > (DEV_PLT_CFG_OEM_PARTITION_SIZE - DEV_SMALL_PAYLOAD_SIZE))
 				{
 					rc = NVM_ERR_UNKNOWN;
 					COMMON_LOG_ERROR("Trying to read outside PCD Partition");
@@ -901,7 +901,10 @@ int get_dimm_platform_config(const NVM_NFIT_DEVICE_HANDLE handle,
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
-
+#ifdef __BUILD_SIM__
+//only here for unit testing
+NVM_SIZE g_pcd_size;
+#endif
 /*
  * Write the platform config data stored in the structure
  * to the dimm
@@ -914,81 +917,59 @@ int set_dimm_platform_config(const NVM_NFIT_DEVICE_HANDLE handle,
 
 	NVM_SIZE pcd_size = p_config->header.length + p_config->config_input_size
 		+ p_config->config_output_size + p_config->current_config_size;
-
-#if __SET_LARGE_PCD_OS_PARTITION__
-	char *tmp_buffer = calloc(1, pcd_size);
-	if (tmp_buffer != NULL)
+#ifdef __BUILD_SIM__
+	g_pcd_size = pcd_size;
+#endif
+	if (DEV_PLT_CFG_OEM_PARTITION_SIZE < pcd_size)
 	{
-		memmove(tmp_buffer, p_config, pcd_size);
-
-		// write the binary data to the dimm through large payload
+		rc = NVM_ERR_BADSIZE;
+		COMMON_LOG_ERROR("Trying to write outside PCD Partition");
+	}
+	else
+	{
 		struct fw_cmd cfg_cmd;
-		memset(&cfg_cmd, 0, sizeof (cfg_cmd));
+		memset(&cfg_cmd, 0, sizeof(cfg_cmd));
 		cfg_cmd.device_handle = handle.handle;
 		cfg_cmd.opcode = PT_SET_ADMIN_FEATURES;
 		cfg_cmd.sub_opcode = SUBOP_PLATFORM_DATA_INFO;
 
 		struct pt_payload_set_platform_cfg_data cfg_input;
-		memset(&cfg_input, 0, sizeof (cfg_input));
+		memset(&cfg_input, 0, sizeof(cfg_input));
 		cfg_input.partition_id = DEV_OS_PARTITION;
-		cfg_input.payload_type = DEV_PLT_CFG_LARGE_PAY;
-		cfg_cmd.input_payload_size = sizeof (cfg_input);
+		cfg_input.payload_type = DEV_PLT_CFG_SMALL_PAY;
+		cfg_cmd.input_payload_size = sizeof(cfg_input);
 		cfg_cmd.input_payload = &cfg_input;
-		cfg_cmd.large_input_payload_size = pcd_size;
-		cfg_cmd.large_input_payload = tmp_buffer;
 
-		rc = ioctl_passthrough_cmd(&cfg_cmd);
-		free(tmp_buffer);
-	}
-	else
-	{
-		rc = NVM_ERR_NOMEMORY;
-	}
-#else
-	struct fw_cmd cfg_cmd;
-	memset(&cfg_cmd, 0, sizeof (cfg_cmd));
-	cfg_cmd.device_handle = handle.handle;
-	cfg_cmd.opcode = PT_SET_ADMIN_FEATURES;
-	cfg_cmd.sub_opcode = SUBOP_PLATFORM_DATA_INFO;
+		NVM_SIZE offset = 0;
 
-	struct pt_payload_set_platform_cfg_data cfg_input;
-	memset(&cfg_input, 0, sizeof (cfg_input));
-	cfg_input.partition_id = DEV_OS_PARTITION;
-	cfg_input.payload_type = DEV_PLT_CFG_SMALL_PAY;
-	cfg_cmd.input_payload_size = sizeof (cfg_input);
-	cfg_cmd.input_payload = &cfg_input;
-
-	NVM_SIZE offset = 0;
-
-	while (offset < pcd_size && rc == NVM_SUCCESS)
-	{
-		if (offset > (DEV_PLT_CFG_PART_SIZE - DEV_PLT_CFG_SMALL_PAYLOAD_WRITE_SIZE))
+		while (offset < pcd_size && rc == NVM_SUCCESS)
 		{
-			rc = NVM_ERR_UNKNOWN;
-			COMMON_LOG_ERROR("Trying to write outside PCD Partition");
-			break;
+			if (offset > (DEV_PLT_CFG_OEM_PARTITION_SIZE - DEV_PLT_CFG_SMALL_PAYLOAD_WRITE_SIZE))
+			{
+				rc = NVM_ERR_UNKNOWN;
+				COMMON_LOG_ERROR("Trying to write outside PCD Partition");
+				break;
+			}
+
+			memmove(cfg_input.data, (void *)((char*)p_config + offset), DEV_PLT_CFG_SMALL_PAYLOAD_WRITE_SIZE);
+			cfg_input.offset = offset;
+
+			if ((rc = ioctl_passthrough_cmd(&cfg_cmd)) == NVM_SUCCESS)
+			{
+				offset += DEV_PLT_CFG_SMALL_PAYLOAD_WRITE_SIZE;
+			}
 		}
 
-		memmove(cfg_input.data, (void *)p_config + offset, DEV_PLT_CFG_SMALL_PAYLOAD_WRITE_SIZE);
-		cfg_input.offset = offset;
-
-		if ((rc = ioctl_passthrough_cmd(&cfg_cmd)) == NVM_SUCCESS)
+		if (rc == NVM_SUCCESS)
 		{
-			offset += DEV_PLT_CFG_SMALL_PAYLOAD_WRITE_SIZE;
+			// invalidate context
+			struct device_discovery discovery;
+			if ((rc = lookup_dev_handle(handle, &discovery)) == NVM_SUCCESS)
+			{
+				invalidate_device_pcd(discovery.uid);
+			}
 		}
 	}
-#endif
-
-	if (rc == NVM_SUCCESS)
-	{
-		// invalidate context
-		struct device_discovery discovery;
-		if ((rc = lookup_dev_handle(handle, &discovery)) == NVM_SUCCESS)
-		{
-			invalidate_device_pcd(discovery.uid);
-		}
-	}
-
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
