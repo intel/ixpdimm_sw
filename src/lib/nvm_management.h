@@ -1791,7 +1791,8 @@ extern NVM_API int nvm_get_nvm_capacities(struct device_capacities *p_capacities
  * security.c
  */
 
-/*
+/* This function is no longer supported.
+ *
  * If data at rest security is not enabled, this method enables it and
  * sets the passphrase. If data at rest security was previously enabled, this method changes
  * the passphrase to the new passphrase specified.
@@ -1813,24 +1814,7 @@ extern NVM_API int nvm_get_nvm_capacities(struct device_capacities *p_capacities
  * @post The device will be unlocked and frozen.
  * @post The device will be locked on the next reset.
  * @return Returns one of the following @link #return_code return_codes: @endlink @n
- * 		#NVM_SUCCESS @n
  * 		#NVM_ERR_NOTSUPPORTED @n
- * 		#NVM_ERR_NOMEMORY @n
- * 		#NVM_ERR_BADDEVICE @n
- * 		#NVM_ERR_INVALIDPARAMETER @n
- * 		#NVM_ERR_INVALIDPERMISSIONS @n
- * 		#NVM_ERR_NOTMANAGEABLE @n
- * 		#NVM_ERR_DRIVERFAILED @n
- * 		#NVM_ERR_SECURITYFROZEN @n
- * 		#NVM_ERR_LIMITPASSPHRASE @n
- * 		#NVM_ERR_BADPASSPHRASE @n
- * 		#NVM_ERR_INVALIDPASSPHRASE @n
- * 		#NVM_ERR_DATATRANSFERERROR @n
- * 		#NVM_ERR_DEVICEERROR @n
- * 		#NVM_ERR_DEVICEBUSY @n
- * 		#NVM_ERR_UNKNOWN @n
- * 		#NVM_ERR_BADDRIVER @n
- * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
 extern NVM_API int nvm_set_passphrase(const NVM_UID device_uid,
 		const NVM_PASSPHRASE old_passphrase, const NVM_SIZE old_passphrase_len,
@@ -1874,7 +1858,8 @@ extern NVM_API int nvm_set_passphrase(const NVM_UID device_uid,
 extern NVM_API int nvm_remove_passphrase(const NVM_UID device_uid,
 		const NVM_PASSPHRASE passphrase, const NVM_SIZE passphrase_len);
 
-/*
+/* This function is no longer supported.
+ *
  * Unlocks the device with the passphrase specified.
  * @param[in] device_uid
  * 		The device identifier.
@@ -1889,29 +1874,13 @@ extern NVM_API int nvm_remove_passphrase(const NVM_UID device_uid,
  * @pre The device passphrase limit has not been reached.
  * @post The device will be unlocked and frozen.
  * @return Returns one of the following @link #return_code return_codes: @endlink @n
- * 		#NVM_SUCCESS @n
  * 		#NVM_ERR_NOTSUPPORTED @n
- * 		#NVM_ERR_NOMEMORY @n
- * 		#NVM_ERR_BADDEVICE @n
- * 		#NVM_ERR_INVALIDPARAMETER @n
- * 		#NVM_ERR_INVALIDPERMISSIONS @n
- * 		#NVM_ERR_NOTMANAGEABLE @n
- * 		#NVM_ERR_DRIVERFAILED @n
- * 		#NVM_ERR_SECURITYFROZEN @n
- * 		#NVM_ERR_SECURITYDISABLED @n
- * 		#NVM_ERR_LIMITPASSPHRASE @n
- * 		#NVM_ERR_BADPASSPHRASE @n
- * 		#NVM_ERR_DATATRANSFERERROR @n
- *		#NVM_ERR_DEVICEERROR @n
- * 		#NVM_ERR_DEVICEBUSY @n
- *		#NVM_ERR_UNKNOWN @n
- * 		#NVM_ERR_BADDRIVER @n
- *		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
 extern NVM_API int nvm_unlock_device(const NVM_UID device_uid,
 		const NVM_PASSPHRASE passphrase, const NVM_SIZE passphrase_len);
 
-/*
+/* This function is no longer supported.
+ *
  * Prevent security lock state changes to the dimm until the next reboot
  * @param[in] device_uid
  * 		The device identifier.
@@ -1922,22 +1891,7 @@ extern NVM_API int nvm_unlock_device(const NVM_UID device_uid,
  * @post dimm security state will be frozen
  * @post Device security will be changed.
  * @return Returns one of the following @link #return_code return_codes: @endlink @n
- * 		#NVM_SUCCESS @n
  * 		#NVM_ERR_NOTSUPPORTED @n
- * 		#NVM_ERR_NOMEMORY @n
- *		#NVM_ERR_BADDEVICE @n
- * 		#NVM_ERR_INVALIDPARAMETER @n
- * 		#NVM_ERR_INVALIDPERMISSIONS @n
- * 		#NVM_ERR_NOTMANAGEABLE @n
- * 		#NVM_ERR_DRIVERFAILED @n
- * 		#NVM_ERR_SECURITYFROZEN @n
- * 		#NVM_ERR_BADPASSPHRASE @n
- * 		#NVM_ERR_DATATRANSFERERROR @n
- * 		#NVM_ERR_DEVICEERROR @n
- * 		#NVM_ERR_DEVICEBUSY @n
- * 		#NVM_ERR_UNKNOWN @n
- * 		#NVM_ERR_BADDRIVER @n
- * 		#NVM_ERR_NOSIMULATOR (Simulated builds only)
  */
 extern NVM_API int nvm_freezelock_device(const NVM_UID device_uid);
 

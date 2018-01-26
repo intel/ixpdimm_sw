@@ -52,10 +52,7 @@ static const std::string NVDIMM_CREATIONCLASSNAME =
 static const std::string NVDIMM_ELEMENTNAME_PREFIX = "Intel NVDIMM "; //!< Element Name = prefix + UID
 static const int NVDIMM_COMMUNICATION_OK = 2; //!< Communication status value for OK
 static const int NVDIMM_COMMUNICATION_NOCONTACT = 4; //!< Communication status value for no contact
-static const std::string NVDIMM_SETPASSPHRASE = "SetPassphrase"; //!< extrinsic method name
 static const std::string NVDIMM_REMOVEPASSPHRASE = "RemovePassphrase"; //!< extrinsic method name
-static const std::string NVDIMM_UNLOCK = "Unlock"; //!< extrinsic method name
-static const std::string NVDIMM_FREEZELOCK = "FreezeLock"; //!< extrinsic method name
 static const std::string NVDIMM_EXPORTSUPPORTFILE = "ExportSupportFile"; //!< extrinsic method name
 static const std::string NVDIMM_CLEARLSA = "ClearLSA"; //!< extrinsic method name
 

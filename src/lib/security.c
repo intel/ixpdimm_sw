@@ -234,78 +234,7 @@ int nvm_set_passphrase(const NVM_UID device_uid,
 		const NVM_PASSPHRASE new_passphrase, const NVM_SIZE new_passphrase_len)
 {
 	COMMON_LOG_ENTRY();
-	int rc = NVM_SUCCESS;
-	struct device_discovery discovery;
-
-	if (check_caller_permissions() != COMMON_SUCCESS)
-	{
-		rc = NVM_ERR_INVALIDPERMISSIONS;
-	}
-	else if (!is_supported_driver_available())
-	{
-		rc = NVM_ERR_BADDRIVER;
-	}
-	else if ((rc = IS_NVM_FEATURE_SUPPORTED(modify_device_security)) != NVM_SUCCESS)
-	{
-		COMMON_LOG_ERROR("Modifying " NVM_DIMM_NAME " security is not supported.");
-	}
-	else if (device_uid == NULL)
-	{
-		COMMON_LOG_ERROR("Invalid parameter, device_uid is NULL");
-		rc = NVM_ERR_INVALIDPARAMETER;
-	}
-	else if (check_passphrase(new_passphrase, new_passphrase_len) != NVM_SUCCESS)
-	{
-		// since this is a new passphrase, change the error code from BADPASSPHRASE
-		// to INVALIDPASSPHRASE because the passphrase is not BAD is
-		// for an existing passphrase and INVALID is for a new.
-		rc = NVM_ERR_INVALIDPASSPHRASE;
-	}
-	else if (old_passphrase != NULL)
-	{
-		rc = check_passphrase(old_passphrase, old_passphrase_len);
-	}
-	if (rc == NVM_SUCCESS &&
-			((rc = exists_and_manageable(device_uid, &discovery, 1)) == NVM_SUCCESS) &&
-			((rc = check_passphrase_capable(device_uid)) == NVM_SUCCESS) &&
-			((rc = security_change_prepare(&discovery, old_passphrase,
-					old_passphrase_len)) == NVM_SUCCESS))
-	{
-		// send the pass through ioctl
-		struct pt_payload_set_passphrase input_payload;
-		memset(&input_payload, 0, sizeof (input_payload));
-		if (old_passphrase_len > 0 && old_passphrase != NULL)
-		{
-			s_strncpy(input_payload.passphrase_current, NVM_PASSPHRASE_LEN,
-					old_passphrase, old_passphrase_len);
-		}
-		s_strncpy(input_payload.passphrase_new, NVM_PASSPHRASE_LEN,
-				new_passphrase, new_passphrase_len);
-
-		struct fw_cmd cmd;
-		memset(&cmd, 0, sizeof (struct fw_cmd));
-		cmd.device_handle = discovery.device_handle.handle;
-		cmd.opcode = PT_SET_SEC_INFO;
-		cmd.sub_opcode = SUBOP_SET_PASS;
-		cmd.input_payload_size = sizeof (input_payload);
-		cmd.input_payload = &input_payload;
-		if ((rc = ioctl_passthrough_cmd(&cmd)) == NVM_SUCCESS)
-		{
-			// Log an event indicating we successfully set a passphrase
-			NVM_EVENT_ARG uid_arg;
-			uid_to_event_arg(device_uid, uid_arg);
-			log_mgmt_event(EVENT_SEVERITY_INFO,
-					EVENT_CODE_MGMT_SECURITY_PASSWORD_SET,
-					device_uid,
-					0, // no action required
-					uid_arg, NULL, NULL);
-		}
-		s_memset(&input_payload, sizeof (input_payload));
-
-		// clear any device context - security state has likely changed
-		invalidate_devices();
-	}
-
+	int rc = NVM_ERR_NOTSUPPORTED;
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
@@ -416,41 +345,7 @@ int nvm_unlock_device(const NVM_UID device_uid,
 		const NVM_PASSPHRASE passphrase, const NVM_SIZE passphrase_len)
 {
 	COMMON_LOG_ENTRY();
-	int rc = NVM_SUCCESS;
-	struct device_discovery discovery;
-
-	// check user has permission to make changes
-	if (check_caller_permissions() != COMMON_SUCCESS)
-	{
-		rc = NVM_ERR_INVALIDPERMISSIONS;
-	}
-	else if (!is_supported_driver_available())
-	{
-		rc = NVM_ERR_BADDRIVER;
-	}
-	else if ((rc = IS_NVM_FEATURE_SUPPORTED(modify_device_security)) != NVM_SUCCESS)
-	{
-		COMMON_LOG_ERROR("Modifying " NVM_DIMM_NAME " security is not supported.");
-	}
-	else if (device_uid == NULL)
-	{
-		COMMON_LOG_ERROR("Invalid parameter, device_uid is NULL");
-		rc = NVM_ERR_INVALIDPARAMETER;
-	}
-	else if (((rc = check_passphrase(passphrase, passphrase_len)) == NVM_SUCCESS) &&
-			((rc = exists_and_manageable(device_uid, &discovery, 1)) == NVM_SUCCESS) &&
-			((rc = check_unlock_device_capable(device_uid)) == NVM_SUCCESS))
-	{
-		if ((rc = security_change_prepare(&discovery, passphrase,
-				passphrase_len)) == NVM_SUCCESS)
-		{
-			// security change prepare also unlocks the DIMM so don't need to do it again
-
-			// clear any device context - security state has likely changed
-			invalidate_devices();
-		}
-	}
-
+	int rc = NVM_ERR_NOTSUPPORTED;
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
@@ -461,35 +356,7 @@ int nvm_unlock_device(const NVM_UID device_uid,
 int nvm_freezelock_device(const NVM_UID device_uid)
 {
 	COMMON_LOG_ENTRY();
-	int rc = NVM_SUCCESS;
-	struct device_discovery discovery;
-
-	// check user has permission to make changes
-	if (check_caller_permissions() != COMMON_SUCCESS)
-	{
-		rc = NVM_ERR_INVALIDPERMISSIONS;
-	}
-	else if (!is_supported_driver_available())
-	{
-		rc = NVM_ERR_BADDRIVER;
-	}
-	else if ((rc = IS_NVM_FEATURE_SUPPORTED(modify_device_security)) != NVM_SUCCESS)
-	{
-		COMMON_LOG_ERROR("Modifying "NVM_DIMM_NAME" security is not supported.");
-	}
-	else if (device_uid == NULL)
-	{
-		COMMON_LOG_ERROR("Invalid parameter, device_uid is NULL");
-		rc = NVM_ERR_INVALIDPARAMETER;
-	}
-	else if ((rc = exists_and_manageable(device_uid, &discovery, 1)) == NVM_SUCCESS)
-	{
-		if ((rc = check_lock_state(&discovery)) == NVM_SUCCESS)
-		{
-			rc = freeze_security(&discovery);
-		}
-	}
-
+	int rc = NVM_ERR_NOTSUPPORTED;
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }

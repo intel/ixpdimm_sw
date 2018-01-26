@@ -74,38 +74,6 @@ void cli::nvmcli::SystemFeature::getPaths(cli::framework::CommandSpecList &list)
 	setFwLogging.addProperty(FWLOGLEVEL_PROPERTYNAME, true, "Disabled|Error|Warning|Info|Debug", true,
 			TR("The firmware logging level."));
 
-	framework::CommandSpec enableDeviceSecurity(ENABLE_DEVICE_SECURITY, TR("Enable Device Security"), framework::VERB_SET,
-			TR("Enable security by setting a passphrase on one or more " NVM_DIMM_NAME "s."));
-	enableDeviceSecurity.addOption(framework::OPTION_SOURCE)
-			.helpText(TR("File path to a local file containing the new passphrase (1-32 characters)."));
-	enableDeviceSecurity.addTarget(TARGET_DIMM.name, true,
-			DIMMIDS_STR, false,
-			TR("Set the passphrase on specific " NVM_DIMM_NAME "s by supplying one or more "
-			"comma-separated " NVM_DIMM_NAME " identifiers. However, this is not recommended as it may "
-			"put the system in an undesirable state. The default is to set the "
-			"passphrase on all manageable " NVM_DIMM_NAME "s."));
-	enableDeviceSecurity.addProperty(NEWPASSPHRASE_PROPERTYNAME, true, STRING_PARAM, false,
-			TR("The new passphrase (1-32 characters)."));
-	enableDeviceSecurity.addProperty(CONFIRMPASSPHRASE_PROPERTYNAME, true, STRING_PARAM, false,
-			TR("Confirmation of the new passphrase (1-32 characters and must match NewPassphrase)."));
-
-	framework::CommandSpec changeDevicePassphrase(CHANGE_DEVICE_PASSPHRASE, TR("Change Device Passphrase"), framework::VERB_SET,
-			TR("Change the security passphrase on one or more " NVM_DIMM_NAME "s."));
-	changeDevicePassphrase.addOption(framework::OPTION_SOURCE)
-			.helpText(TR("File path to a local file containing the new passphrase (1-32 characters)."));
-	changeDevicePassphrase.addTarget(TARGET_DIMM.name, true,
-			DIMMIDS_STR, false,
-			TR("Change the passphrase on specific " NVM_DIMM_NAME "s by supplying one or more "
-			"comma-separated " NVM_DIMM_NAME " identifiers. However, this is not recommended as it may "
-			"put the system in an undesirable state. The default is to change the "
-			"passphrase on all manageable " NVM_DIMM_NAME "s."));
-	changeDevicePassphrase.addProperty(PASSPHRASE_PROPERTYNAME, true, STRING_PARAM, false,
-			TR("The current passphrase (1-32 characters)."));
-	changeDevicePassphrase.addProperty(NEWPASSPHRASE_PROPERTYNAME, true, STRING_PARAM, false,
-			TR("The new passphrase (1-32 characters)."));
-	changeDevicePassphrase.addProperty(CONFIRMPASSPHRASE_PROPERTYNAME, true, STRING_PARAM, false,
-			TR("Confirmation of the new passphrase (1-32 characters and must match NewPassphrase)."));
-
 	framework::CommandSpec changeDeviceSecurity(CHANGE_DEVICE_SECURITY, TR("Change Device Security"), framework::VERB_SET,
 			TR("Change the data-at-rest security lock state for the persistent memory on one or more " NVM_DIMM_NAME "s."));
 	changeDeviceSecurity.addOption(framework::OPTION_SOURCE)
@@ -116,11 +84,10 @@ void cli::nvmcli::SystemFeature::getPaths(cli::framework::CommandSpecList &list)
 				"comma-separated " NVM_DIMM_NAME " identifiers. However, this is not recommended as it "
 				"may put the system in an undesirable state. The default is to modify all "
 				"manageable " NVM_DIMM_NAME "s."));
-	changeDeviceSecurity.addProperty(LOCKSTATE_PROPERTYNAME, true, "Unlocked|Disabled|Frozen", true,
+	changeDeviceSecurity.addProperty(LOCKSTATE_PROPERTYNAME, true, "Disabled", true,
 			TR("The desired lock state."));
 	changeDeviceSecurity.addProperty(PASSPHRASE_PROPERTYNAME, false, STRING_PARAM, false,
 			TR("The current passphrase (1-32 characters). The passphrase is not required to change the lock state to \"Frozen\""));
-
 
 	framework::CommandSpec eraseDeviceData(ERASE_DEVICE_DATA, TR("Erase Device Data"), framework::VERB_DELETE,
 			TR("Erase the persistent data on one or more " NVM_DIMM_NAME "s."));
@@ -190,8 +157,6 @@ void cli::nvmcli::SystemFeature::getPaths(cli::framework::CommandSpecList &list)
 	list.push_back(showDevices);
 	list.push_back(ModifyDeviceCommand::getCommandSpec(MODIFY_DEVICE));
 	list.push_back(setFwLogging);
-	list.push_back(changeDevicePassphrase);
-	list.push_back(enableDeviceSecurity);
 	list.push_back(changeDeviceSecurity);
 	list.push_back(eraseDeviceData);
 	list.push_back(showMemoryResources);
@@ -255,12 +220,6 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::run(
 		break;
 	case SHOW_DEVICES:
 		pResult = showDimms(parsedCommand);
-		break;
-	case CHANGE_DEVICE_PASSPHRASE:
-		pResult = changeDevicePassphrase(parsedCommand);
-		break;
-	case ENABLE_DEVICE_SECURITY:
-		pResult = enableDeviceSecurity(parsedCommand);
 		break;
 	case CHANGE_DEVICE_SECURITY:
 		pResult = changeDeviceSecurity(parsedCommand);

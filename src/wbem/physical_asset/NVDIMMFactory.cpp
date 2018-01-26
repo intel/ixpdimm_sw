@@ -238,29 +238,11 @@ wbem::framework::UINT32 NVDIMMFactory::executeMethod(
 	std::string deviceUid = tag.stringValue();
 	try
 	{
-		if (method == NVDIMM_SETPASSPHRASE)
-		{
-			// uint32 SetPassphrase(string NewPassphrase, string CurrentPassphrase);
-			setPassphrase(deviceUid,
-					inParms[NVDIMM_SETPASSPHRASE_NEWPASSPHRASE].stringValue(),
-					inParms[NVDIMM_SETPASSPHRASE_CURRENTPASSPHRASE].stringValue());
-		}
-		else if (method == NVDIMM_REMOVEPASSPHRASE)
+		if (method == NVDIMM_REMOVEPASSPHRASE)
 		{
 			// uint32 RemovePassphrase(string CurrentPassphrase);
 			removePassphrase(deviceUid,
 					inParms[NVDIMM_SETPASSPHRASE_CURRENTPASSPHRASE].stringValue());
-		}
-		else if (method == NVDIMM_UNLOCK)
-		{
-			// uint32 Unlock(string CurrentPassphrase);
-			unlock(deviceUid,
-					inParms[NVDIMM_SETPASSPHRASE_CURRENTPASSPHRASE].stringValue());
-		}
-		else if (method == NVDIMM_FREEZELOCK)
-		{
-			// unint32 FreezeLock();
-			freezeLock(deviceUid);
 		}
 		else if (method == NVDIMM_EXPORTSUPPORTFILE)
 		{
