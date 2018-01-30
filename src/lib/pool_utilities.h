@@ -62,6 +62,10 @@ extern "C"
 	else \
 		current -= less;
 
+#define	INCREASE_CAPACITY(current, more) \
+	if (more > current) \
+		current += (more - current);
+
 /*
  * Describes the features pertaining to the unique construction and usage of a
  * pool of memory.
@@ -133,10 +137,18 @@ NVM_API int get_interleave_set_offset_from_pm_partition_start(
  * from a DIMM in the interleave set. The DPA offset is used to
  * identify the specific interleave set on the DIMM.
  */
+#ifdef __BUILD_SIM__
+int fill_interleave_set_settings_and_id_from_dimm(
+		struct interleave_set *p_interleave_set,
+		const NVM_NFIT_DEVICE_HANDLE handle,
+		const NVM_UINT64 interleave_dpa_offset,
+		const NVM_UINT8 interleave_set_id);
+#else
 int fill_interleave_set_settings_and_id_from_dimm(
 		struct interleave_set *p_interleave_set,
 		const NVM_NFIT_DEVICE_HANDLE handle,
 		const NVM_UINT64 interleave_dpa_offset);
+#endif
 
 /*
  * Determines if a DIMM with a given UID is in a given interleave set.
@@ -148,9 +160,6 @@ int get_dimm_free_capacities(
 		const struct nvm_capabilities *p_nvm_caps,
 		const struct device_discovery *p_discovery,
 		const struct pool *p_pool,
-		const struct nvm_namespace_details *p_namespaces,
-		const int ns_count,
-		struct device_capacities *p_capacity,
 		struct device_free_capacities *p_free_capacity);
 
 NVM_BOOL interleave_set_has_namespace(const NVM_UINT32 interleave_set_driver_id,

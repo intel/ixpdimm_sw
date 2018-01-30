@@ -640,7 +640,7 @@ struct pool *NvmLibrary::getPool(const std::string &poolUid)
 }
 
 struct possible_namespace_ranges NvmLibrary::getAvailablePersistentSizeRange(
-	const std::string &poolUid)
+	const std::string &poolUid, const NVM_UINT8 ways)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	int rc;
@@ -649,7 +649,7 @@ struct possible_namespace_ranges NvmLibrary::getAvailablePersistentSizeRange(
 	core::Helper::stringToUid(poolUid, lib_poolUid);
 
 	struct possible_namespace_ranges result;
-	rc = m_lib.getAvailablePersistentSizeRange(lib_poolUid, &result);
+	rc = m_lib.getAvailablePersistentSizeRange(lib_poolUid, &result, ways);
 	if (rc < 0)
 	{
 		throw core::LibraryException(rc);

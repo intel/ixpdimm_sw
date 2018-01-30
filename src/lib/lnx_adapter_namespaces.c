@@ -972,7 +972,7 @@ int create_namespace(
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
-	int ndctl_rc = 0;
+	int ndctl_rc = NVM_SUCCESS;
 
 	struct ndctl_ctx *ctx;
 	enum ndctl_namespace_version v;
@@ -997,6 +997,11 @@ int create_namespace(
 		{
 			rc = get_ndctl_app_direct_region_by_range_index(ctx, &region,
 				p_settings->namespace_creation_id.interleave_setid);
+
+			if (NVM_ERR_NOTSUPPORTED == rc)
+			{
+				COMMON_LOG_ERROR_F("No matching region found for SPA index %u.", p_settings->namespace_creation_id.interleave_setid);
+			}
 		}
 		else
 		{
@@ -1004,19 +1009,22 @@ int create_namespace(
 			rc = NVM_ERR_UNKNOWN;
 		}
 
-		rc = get_namespace_label_version_from_region(region, &v);
-
-		if (rc != NVM_SUCCESS) {
-			COMMON_LOG_ERROR("Cannot find which namespace version to use");
-		}
-
-		if (v == NDCTL_NS_VERSION_1_2)
+		if (NVM_SUCCESS == rc)
 		{
-			sector_size = AD_1_2_NAMESPACE_LABEL_DEFAULT_SECTOR_SIZE;
-		}
-		else
-		{
-			sector_size = AD_1_1_NAMESPACE_LABEL_DEFAULT_SECTOR_SIZE;
+			rc = get_namespace_label_version_from_region(region, &v);
+			if (rc != NVM_SUCCESS)
+			{
+				COMMON_LOG_ERROR("Cannot find which namespace version to use");
+			}
+
+			if (v == NDCTL_NS_VERSION_1_2)
+			{
+				sector_size = AD_1_2_NAMESPACE_LABEL_DEFAULT_SECTOR_SIZE;
+			}
+			else
+			{
+				sector_size = AD_1_1_NAMESPACE_LABEL_DEFAULT_SECTOR_SIZE;
+			}
 		}
 
 		struct ndctl_namespace *namespace;

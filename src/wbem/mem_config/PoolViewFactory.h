@@ -124,7 +124,7 @@ namespace wbem
 			/*
 			 * Helper function to retrieve AvailablePersistentSizeRange.
 			 */
-			struct possible_namespace_ranges getAvailablePersistentSizeRange(NVM_UID pool_uid);
+			struct possible_namespace_ranges getAvailablePersistentSizeRange(NVM_UID pool_uid, const NVM_UINT8 ways);
 
 			/*
 			 * get list of underlying types of PM capacity in the pool

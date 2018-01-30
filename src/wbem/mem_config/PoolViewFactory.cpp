@@ -107,14 +107,13 @@ throw(wbem::framework::Exception)
 
 		if (!isVolatilePool)
 		{
-			possible_namespace_ranges ranges = getAvailablePersistentSizeRange(pPool->pool_uid);
-
 			// List of underlying types of PM- AppDirect,AppDirectNotInterleaved
 			if (containsAttribute(PERSISTENTMEMORYTYPE_KEY, attributes))
 			{
 				framework::Attribute a(getPersistentMemoryType(pPool), false);
 				pInstance->setAttribute(PERSISTENTMEMORYTYPE_KEY, a, attributes);
 			}
+			possible_namespace_ranges ranges = getAvailablePersistentSizeRange(pPool->pool_uid, INTERLEAVE_WAYS_0);
 
 			// Capacity - Total usable capacity, both allocated and unallocated in bytes.
 			if (containsAttribute(CAPACITY_KEY, attributes))
@@ -450,7 +449,7 @@ bool wbem::mem_config::PoolViewFactory::PoolHasAppDirectInterleaved(const struct
 	{
 		for (NVM_UINT16 i = 0; i < pPool->ilset_count; i++)
 		{
-			if (pPool->ilsets[i].settings.ways != INTERLEAVE_WAYS_1)
+			if (pPool->ilsets[i].settings.ways > INTERLEAVE_WAYS_1) // INTERLEAVE_WAYS_0 is don't care
 			{
 				result = true;
 				break;
@@ -615,7 +614,7 @@ std::string wbem::mem_config::PoolViewFactory::getInterleaveSetFormatStr(
 	return formatStr.str();
 }
 
-struct possible_namespace_ranges wbem::mem_config::PoolViewFactory::getAvailablePersistentSizeRange(NVM_UID pool_uid)
+struct possible_namespace_ranges wbem::mem_config::PoolViewFactory::getAvailablePersistentSizeRange(NVM_UID pool_uid, const NVM_UINT8 ways)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
@@ -624,7 +623,7 @@ struct possible_namespace_ranges wbem::mem_config::PoolViewFactory::getAvailable
 
 	try
 	{
-		ranges = m_nvmLib.getAvailablePersistentSizeRange(pool_uid);
+		ranges = m_nvmLib.getAvailablePersistentSizeRange(pool_uid, ways);
 	}
 	catch (core::LibraryException &e)
 	{

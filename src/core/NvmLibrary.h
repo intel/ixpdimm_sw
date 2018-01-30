@@ -82,7 +82,7 @@ public:
 	virtual int getPoolCount();
 	virtual std::vector<struct pool> getPools();
 	virtual struct pool *getPool(const std::string &poolUid);
-	virtual struct possible_namespace_ranges getAvailablePersistentSizeRange(const std::string &poolUid);
+	virtual struct possible_namespace_ranges getAvailablePersistentSizeRange(const std::string &poolUid, const NVM_UINT8 ways);
 	virtual void createConfigGoal(const std::string &deviceUid, struct config_goal &pGoal);
 	virtual struct config_goal getConfigGoal(const std::string &deviceUid);
 	virtual void deleteConfigGoal(const std::string &deviceUid);

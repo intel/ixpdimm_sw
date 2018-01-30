@@ -333,6 +333,11 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::createNamespace(
 		pResult = GetRequestedCapacityUnits(parsedCommand, m_capacityUnits);
 	}
 
+	if (!pResult)
+	{
+		pResult = parsePersistentMemoryType(parsedCommand);
+	}
+
 	// Capacity in Bytes
 	if (!pResult)
 	{
@@ -362,11 +367,6 @@ cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::createNamespace(
 	if (!pResult)
 	{
 		pResult = parseCreateNsEraseCapable(parsedCommand);
-	}
-
-	if (!pResult)
-	{
-		pResult = parsePersistentMemoryType(parsedCommand);
 	}
 
 	if (!pResult)
@@ -437,9 +437,9 @@ void cli::nvmcli::NamespaceFeature::wbemGetSupportedSizeRange(const std::string 
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 	wbem::pmem_config::PersistentMemoryPoolFactory provider;
-
+	COMMON_UINT8 ways = INTERLEAVE_WAYS_0;
 	provider.getSupportedSizeRange(poolUid, largestPossibleAdNs, smallestPossibleAdNs, adIncrement,
-			largestPossibleStorageNs, smallestPossibleStorageNs, storageIncrement);
+			largestPossibleStorageNs, smallestPossibleStorageNs, storageIncrement, ways);
 }
 
 cli::framework::ResultBase* cli::nvmcli::NamespaceFeature::parseCreateNsCapacity(
@@ -504,10 +504,10 @@ cli::framework::ResultBase * cli::nvmcli::NamespaceFeature::getCreateNsBlockCoun
 			COMMON_UINT64 minStorageNamespaceSize = 0;
 			COMMON_UINT64 maxStorageNamespaceSize = 0;
 			COMMON_UINT64 storageNamespaceDivisor = 0;
+			COMMON_UINT8 ways = m_byOne;
 			m_pPmPoolProvider->getSupportedSizeRange(m_poolUid,
 					maxAdNamespaceSize, minAdNamespaceSize, adNamespaceDivisor,
-					maxStorageNamespaceSize, minStorageNamespaceSize, storageNamespaceDivisor);
-
+					maxStorageNamespaceSize, minStorageNamespaceSize, storageNamespaceDivisor, ways);
 
 			m_blockCount = maxAdNamespaceSize; // App Direct NS has block size = 1
 		}

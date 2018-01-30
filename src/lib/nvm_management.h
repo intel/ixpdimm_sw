@@ -2291,7 +2291,7 @@ extern NVM_API int nvm_get_pools(struct pool *p_pools, const NVM_UINT8 count);
 extern NVM_API int nvm_get_pool(const NVM_UID pool_uid, struct pool *p_pool);
 
 /*
- * Takes a pool UUID and returns the largest and smallest app direct and storage namespaces
+ * Takes a pool UUID and optional user prescribed persistent memory type and returns the largest and smallest app direct and storage namespaces
  * that can be created on that pool.
  * @pre The caller has administrative privileges.
  * @param[in] pool_id
@@ -2311,7 +2311,7 @@ extern NVM_API int nvm_get_pool(const NVM_UID pool_uid, struct pool *p_pool);
  * 		#NVM_ERR_NOSIMULATOR (Simulated builds only) @n
  */
 extern NVM_API int nvm_get_available_persistent_size_range(const NVM_UID pool_uid,
-		struct possible_namespace_ranges *p_range);
+		struct possible_namespace_ranges *p_range, const NVM_UINT8 ways);
 
 /*
  * Modify how the AEP DIMM capacity is provisioned by the BIOS on the next reboot.

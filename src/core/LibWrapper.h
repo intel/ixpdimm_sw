@@ -114,7 +114,7 @@ public:
 	virtual int getPool(NVM_UID poolUid, struct pool *pPool) const;
 
 	virtual int getAvailablePersistentSizeRange(const NVM_UID poolUid,
-		struct possible_namespace_ranges *pRange) const;
+		struct possible_namespace_ranges *pRange, const NVM_UINT8 ways) const;
 
 	virtual int createConfigGoal(const NVM_UID deviceUid, struct config_goal *pGoal) const;
 

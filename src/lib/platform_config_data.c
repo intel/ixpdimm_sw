@@ -1296,6 +1296,90 @@ NVM_BOOL interleave_set_has_offset(struct interleave_info_extension_table *p_int
 	return result;
 }
 
+#ifdef __BUILD_SIM__
+int get_interleave_settings_from_platform_config_data(const NVM_NFIT_DEVICE_HANDLE device_handle,
+		const NVM_UINT64 interleave_set_offset,
+		NVM_UINT32 *p_interleave_set_id,
+		struct interleave_format *p_format, NVM_BOOL *p_mirrored, const NVM_UINT8 interleave_set_id)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	struct platform_config_data *p_cfg_data = NULL;
+	if ((rc = get_dimm_platform_config(device_handle, &p_cfg_data)) != NVM_SUCCESS)
+	{
+		COMMON_LOG_ERROR("Failed to retrieve Platform config data");
+	}
+	else
+	{
+		struct current_config_table *p_current_cfg = cast_current_config(p_cfg_data);
+		if (p_current_cfg)
+		{
+			NVM_UINT32 offset = sizeof (struct current_config_table);
+			NVM_BOOL found = 0;
+
+			// loop through all extension tables
+			while ((offset < p_current_cfg->header.length) && (rc == NVM_SUCCESS))
+			{
+				struct extension_table_header *p_header =
+						(struct extension_table_header *)((NVM_UINT8 *) p_current_cfg + offset);
+
+				if (!p_header->length || (offset + p_header->length) > p_current_cfg->header.length)
+				{
+					COMMON_LOG_ERROR_F("Extension table length %d invalid", p_header->length);
+					rc = NVM_ERR_BADDEVICECONFIG; // bad data
+					break;
+				}
+				// Only care about interleave tables
+				else if (p_header->type == INTERLEAVE_TABLE)
+				{
+					struct interleave_info_extension_table *p_interleave_table =
+							(struct interleave_info_extension_table *)((void*) p_header);
+
+					if (p_interleave_table->memory_type == INTERLEAVE_MEMORY_TYPE_APP_DIRECT &&
+							interleave_set_has_offset(p_interleave_table, interleave_set_offset) &&
+							p_interleave_table->index == interleave_set_id)
+					{
+						found = 1;
+
+						if (p_interleave_set_id)
+						{
+							*p_interleave_set_id = p_interleave_table->index;
+						}
+
+						if (p_mirrored)
+						{
+							*p_mirrored = p_interleave_table->mirror_enable;
+						}
+
+						interleave_format_to_struct(p_interleave_table->interleave_format,
+								p_format);
+						break;
+					}
+				}
+
+				// go to next extension table
+				offset += p_header->length;
+			} // end extension table loop
+
+			if (!found)
+			{
+				COMMON_LOG_ERROR_F("Unable to find interleave set with offset %llu on DIMM %u",
+						interleave_set_offset, device_handle.handle);
+				rc = NVM_ERR_NOTFOUND;
+			}
+		}
+	}
+
+	if (p_cfg_data)
+	{
+		free(p_cfg_data);
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+#else
 int get_interleave_settings_from_platform_config_data(const NVM_NFIT_DEVICE_HANDLE device_handle,
 		const NVM_UINT64 interleave_set_offset,
 		NVM_UINT32 *p_interleave_set_id,
@@ -1377,6 +1461,7 @@ int get_interleave_settings_from_platform_config_data(const NVM_NFIT_DEVICE_HAND
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
+#endif
 
 int get_repaired_dimm_platform_config(const NVM_NFIT_DEVICE_HANDLE device_handle,
 		struct platform_config_data **pp_config)

@@ -251,10 +251,10 @@ int LibWrapper::getPool(NVM_UID poolUid, struct pool *pPool) const
 }
 
 int LibWrapper::getAvailablePersistentSizeRange(const NVM_UID poolUid,
-	struct possible_namespace_ranges *pRange) const
+	struct possible_namespace_ranges *pRange, const NVM_UINT8 ways) const
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
-	return nvm_get_available_persistent_size_range(poolUid, pRange);
+	return nvm_get_available_persistent_size_range(poolUid, pRange, ways);
 }
 
 int LibWrapper::createConfigGoal(const NVM_UID deviceUid, struct config_goal *pGoal) const

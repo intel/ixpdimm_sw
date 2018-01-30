@@ -226,7 +226,7 @@ class NVM_CIM_API NvmApi
 		 * be create on a given pool
 		 */
 		virtual int getAvailablePersistentSizeRange(const NVM_UID poolUid,
-				struct possible_namespace_ranges *pRange);
+				struct possible_namespace_ranges *pRange, const NVM_UINT8 ways);
 
 		/*
 		 * Modify how the NVM-DIMM capacity will be provisioned

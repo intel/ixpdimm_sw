@@ -788,9 +788,9 @@ int get_partition_info(const NVM_NFIT_DEVICE_HANDLE device_handle,
 	if (rc == NVM_SUCCESS)
 	{
 		COMMON_LOG_DEBUG_F(
-		"Partition info for handle [%d] - Pmem Capacity:[%llu]B, "
-		"Volatile memory capacity:[%llu]B, Raw capacity:[%llu]B",
-		p_pi->pmem_capacity, p_pi->volatile_capacity, p_pi->raw_capacity);
+		"Partition info for handle [0x%.4x] - Pmem Capacity:[%llu]GiB, "
+		"Volatile memory capacity:[%llu]GiB, Raw capacity:[%llu]GiB", device_handle.handle,
+		B_TO_GiB(p_pi->pmem_capacity * BYTES_PER_4K_CHUNK), B_TO_GiB(p_pi->volatile_capacity * BYTES_PER_4K_CHUNK), B_TO_GiB(p_pi->raw_capacity * BYTES_PER_4K_CHUNK));
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);

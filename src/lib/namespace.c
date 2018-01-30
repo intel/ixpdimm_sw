@@ -84,7 +84,7 @@ int get_pool_supported_size_ranges(const struct pool *p_pool,
 		const struct nvm_capabilities *p_caps,
 		struct possible_namespace_ranges *p_range,
 		const struct nvm_namespace_details *p_namespaces,
-		int ns_count);
+		int ns_count, const NVM_UINT8 ways);
 
 /*
  * Retrieve the number of PM namespaces allocated across all devices.
@@ -848,8 +848,13 @@ int validate_namespace_create_settings(struct pool *p_pool,
 			// get the pool supported size ranges
 			struct possible_namespace_ranges range;
 			memset(&range, 0, sizeof (range));
+			NVM_UINT8 ways = INTERLEAVE_WAYS_0;
+			if (NULL != p_format)
+			{
+				ways = p_format->ways;
+			}
 			if ((rc = get_pool_supported_size_ranges(p_pool, &nvm_caps,
-					&range, p_namespaces, ns_count)) == NVM_SUCCESS)
+					&range, p_namespaces, ns_count, ways)) == NVM_SUCCESS)
 			{
 				// can we even create a ns on this pool?
 				if (p_settings->type == NAMESPACE_TYPE_APP_DIRECT)
@@ -1742,18 +1747,31 @@ int nvm_delete_namespace(const NVM_UID namespace_uid)
  * Expect pool_uid and p_size to not be NULL
  */
 void get_largest_app_direct_namespace(const struct pool *p_pool, NVM_UINT64 *p_size,
-		const struct nvm_namespace_details *p_namespaces, int ns_count)
+		const struct nvm_namespace_details *p_namespaces, int ns_count, const NVM_UINT8 ways)
 {
 	COMMON_LOG_ENTRY();
 
 	*p_size = 0;
 
 	// find the largest available space on any interleave sets in the pool
-	for (int i = 0; i < p_pool->ilset_count; i++)
+	if (ways)
 	{
-		if (p_pool->ilsets[i].available_size > *p_size)
+		for (int i = 0; i < p_pool->ilset_count; i++)
 		{
-			*p_size = p_pool->ilsets[i].available_size;
+			if (p_pool->ilsets[i].settings.ways == ways && p_pool->ilsets[i].available_size > *p_size)
+			{
+				*p_size = p_pool->ilsets[i].available_size;
+			}
+		}
+	}
+	else // No PM type preference mentioned for available interleave sets
+	{
+		for (int i = 0; i < p_pool->ilset_count; i++)
+		{
+			if (p_pool->ilsets[i].available_size > *p_size)
+			{
+				*p_size = p_pool->ilsets[i].available_size;
+			}
 		}
 	}
 
@@ -1791,7 +1809,7 @@ int get_pool_supported_size_ranges(const struct pool *p_pool,
 		const struct nvm_capabilities *p_caps,
 		struct possible_namespace_ranges *p_range,
 		const struct nvm_namespace_details *p_namespaces,
-		int ns_count)
+		int ns_count, const NVM_UINT8 ways)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
@@ -1805,7 +1823,7 @@ int get_pool_supported_size_ranges(const struct pool *p_pool,
 	{
 		get_largest_app_direct_namespace(
 				p_pool, &(p_range->largest_possible_app_direct_ns),
-				p_namespaces, ns_count);
+				p_namespaces, ns_count, ways);
 		if (p_range->largest_possible_app_direct_ns > 0)
 		{
 			NVM_UINT64 interleave_alignment_size =
@@ -1829,7 +1847,7 @@ int get_pool_supported_size_ranges(const struct pool *p_pool,
  * largest namespaces.
  */
 int nvm_get_available_persistent_size_range(const NVM_UID pool_uid,
-		struct possible_namespace_ranges *p_range)
+		struct possible_namespace_ranges *p_range, const NVM_UINT8 ways)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
@@ -1877,7 +1895,7 @@ int nvm_get_available_persistent_size_range(const NVM_UID pool_uid,
 					if (ns_count >= 0)
 					{
 						rc = get_pool_supported_size_ranges(p_pool,
-							&nvm_caps, p_range, p_namespaces, ns_count);
+							&nvm_caps, p_range, p_namespaces, ns_count, ways);
 						free(p_namespaces);
 					}
 				}

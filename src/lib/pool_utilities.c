@@ -217,6 +217,42 @@ int get_interleave_set_offset_from_pm_partition_start(const NVM_NFIT_DEVICE_HAND
 	return rc;
 }
 
+#ifdef __BUILD_SIM__
+int fill_interleave_set_settings_and_id_from_dimm(
+		struct interleave_set *p_interleave_set,
+		const NVM_NFIT_DEVICE_HANDLE handle,
+		const NVM_UINT64 interleave_dpa_offset,
+		const NVM_UINT8 interleave_set_id)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_SUCCESS;
+
+	NVM_UINT64 interleave_set_pcd_offset = 0;
+	if ((rc = get_interleave_set_offset_from_pm_partition_start(handle,
+			interleave_dpa_offset,
+			&interleave_set_pcd_offset)) != NVM_SUCCESS)
+	{
+		COMMON_LOG_ERROR("Couldn't get partition info");
+		rc = NVM_ERR_DRIVERFAILED;
+	}
+	else
+	{
+		if ((rc = get_interleave_settings_from_platform_config_data(handle,
+			interleave_set_pcd_offset,
+			&(p_interleave_set->set_index),
+			&(p_interleave_set->settings),
+			NULL,
+			interleave_set_id)) != NVM_SUCCESS)
+		{
+			COMMON_LOG_ERROR("Couldn't get PCD info");
+			rc = NVM_ERR_DRIVERFAILED;
+		}
+	}
+
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+#else
 int fill_interleave_set_settings_and_id_from_dimm(
 		struct interleave_set *p_interleave_set,
 		const NVM_NFIT_DEVICE_HANDLE handle,
@@ -249,6 +285,7 @@ int fill_interleave_set_settings_and_id_from_dimm(
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
 }
+#endif
 
 NVM_BOOL dimm_is_in_interleave_set(const NVM_UID device_uid,
 		const struct interleave_set *p_ilset)
@@ -273,53 +310,41 @@ int get_dimm_free_capacities(
 		const struct nvm_capabilities *p_nvm_caps,
 		const struct device_discovery *p_discovery,
 		const struct pool *p_pool,
-		const struct nvm_namespace_details *p_namespaces,
-		const int ns_count,
-		struct device_capacities *p_dimm_caps,
 		struct device_free_capacities *p_dimm_free_caps)
 {
 	COMMON_LOG_ENTRY();
 	int rc = NVM_SUCCESS;
 
-	if (p_nvm_caps->nvm_features.app_direct_mode)
+	NVM_UINT16 iset_idx = p_pool->ilset_count - 1;
+	// calculate app direct capacities
+	struct interleave_set iset = p_pool->ilsets[iset_idx];
+	NVM_UINT64 used_ad = 0;
+	for (int dimm_idx = 0; dimm_idx < iset.dimm_count; dimm_idx++)
 	{
-		// calculate app direct capacities
-		for (int iset_idx = 0; iset_idx < p_pool->ilset_count; iset_idx++)
+		// is this dimm in the interleave set?
+		if (uid_cmp(p_discovery->uid, iset.dimms[dimm_idx]))
 		{
-			struct interleave_set iset = p_pool->ilsets[iset_idx];
-			// is this dimm in the interleave set?
-			for (int dimm_idx = 0; dimm_idx < iset.dimm_count; dimm_idx++)
+			if (iset.mirrored)
 			{
-				if (uid_cmp(p_discovery->uid, iset.dimms[dimm_idx]))
+				used_ad = (iset.available_size / iset.dimm_count);
+				p_dimm_free_caps->app_direct_mirrored_capacity += used_ad;
+			}
+			else
+			{
+				if (iset.settings.ways == INTERLEAVE_WAYS_1)
 				{
-					if (iset.mirrored)
-					{
-						p_dimm_free_caps->app_direct_mirrored_capacity +=
-							(iset.available_size / iset.dimm_count);
-					}
-					else
-					{
-						NVM_UINT64 used_ad = 0;
-						if (iset.settings.ways == INTERLEAVE_WAYS_1)
-						{
-							p_dimm_free_caps->app_direct_byone_capacity +=
-								iset.available_size;
-							used_ad = iset.size;
-							REDUCE_CAPACITY(used_ad, iset.available_size)
-						}
-						else
-						{
-							p_dimm_free_caps->app_direct_interleaved_capacity +=
-								(iset.available_size / iset.dimm_count);
-							used_ad = (iset.size / iset.dimm_count);
-							REDUCE_CAPACITY(used_ad,
-								p_dimm_free_caps->app_direct_interleaved_capacity);
+					used_ad = iset.available_size;
+					p_dimm_free_caps->app_direct_byone_capacity += used_ad;
+				}
+				else
+				{
+					used_ad = (iset.available_size / iset.dimm_count);
+					p_dimm_free_caps->app_direct_interleaved_capacity += used_ad;
 
-						}
-					}
-					break;
 				}
 			}
+			REDUCE_CAPACITY(iset.available_size, used_ad);
+			break;
 		}
 	}
 

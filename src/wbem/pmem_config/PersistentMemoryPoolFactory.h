@@ -118,7 +118,7 @@ namespace pmem_config
 		 * @param pool_uid
 		 * 		The pool identifier.
 		 */
-		struct possible_namespace_ranges getSupportedSizeRange(const std::string &poolUid);
+		struct possible_namespace_ranges getSupportedSizeRange(const std::string &poolUid, const COMMON_UINT8 ways);
 
 		/*!
 		 * Gets the available capacities for creating a namespace.
@@ -131,7 +131,8 @@ namespace pmem_config
 				COMMON_UINT64 &adIncrement,
 				COMMON_UINT64 &largestPossibleStorageNs,
 				COMMON_UINT64 &smallestPossibleStorageNs,
-				COMMON_UINT64 &storageIncrement);
+				COMMON_UINT64 &storageIncrement,
+				COMMON_UINT8 &ways);
 
 		/*!
 		 * Provider for extern int nvm_get_available_persistent_size_range
@@ -141,7 +142,7 @@ namespace pmem_config
 		 * 		Structure that will contain the ranges
 		 */
 		int (*m_GetAvailablePersistentSizeRange)(const NVM_UID pool_uid,
-				struct possible_namespace_ranges *p_range);
+				struct possible_namespace_ranges *p_range, const COMMON_UINT8 ways);
 
 	private:
 		void populateAttributeList(framework::attribute_names_t &attributes)

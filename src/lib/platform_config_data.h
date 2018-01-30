@@ -516,6 +516,7 @@ NVM_API int get_next_config_input_sequence_number(const struct device_discovery 
 NVM_API int get_dimm_interleave_info_max_set_index(const NVM_UID device_uid,
 		NVM_UINT32 *p_set_index);
 
+#ifdef __BUILD_SIM__
 /*
  * Harvest format and settings data for a specific interleave set from the platform config data.
  */
@@ -523,7 +524,14 @@ NVM_API int get_interleave_settings_from_platform_config_data(
 		const NVM_NFIT_DEVICE_HANDLE device_handle,
 		const NVM_UINT64 interleave_set_offset,
 		NVM_UINT32 *p_interleave_set_id,
+		struct interleave_format *p_format, NVM_BOOL *p_mirrored, const NVM_UINT8 interleave_set_id);
+#else
+NVM_API int get_interleave_settings_from_platform_config_data(
+		const NVM_NFIT_DEVICE_HANDLE device_handle,
+		const NVM_UINT64 interleave_set_offset,
+		NVM_UINT32 *p_interleave_set_id,
 		struct interleave_format *p_format, NVM_BOOL *p_mirrored);
+#endif
 
 /*
  * Translate the config output table error status to a config_error.

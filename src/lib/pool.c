@@ -529,17 +529,17 @@ void add_dimm_to_pool(const struct pool_data *p_pool_data,
 		struct device_capacities caps = p_pool_data->dimm_capacities_list[data_idx];
 		struct device_status status = p_pool_data->dimm_status_list[data_idx];
 		struct config_goal goal = p_pool_data->dimm_goal_list[data_idx];
+		struct nvm_capabilities nvm_caps = p_pool_data->capabilities;
 
 		struct device_free_capacities free_caps;
-		memset(&free_caps, 0, sizeof (struct device_free_capacities));
-		get_dimm_free_capacities(
-				&p_pool_data->capabilities,
-				&dimm,
-				p_pool,
-				p_pool_data->namespace_list,
-				p_pool_data->namespace_count,
-				&caps,
-				&free_caps);
+		memset(&free_caps, 0, sizeof(struct device_free_capacities));
+
+		if (nvm_caps.nvm_features.app_direct_mode &&
+				((p_pool->type == POOL_TYPE_PERSISTENT) ||
+				(p_pool->type == POOL_TYPE_PERSISTENT_MIRROR)))
+		{
+			get_dimm_free_capacities(&nvm_caps,	&dimm, p_pool, &free_caps);
+		}
 
 		dimm_index = p_pool->dimm_count;
 		uid_copy(dimm.uid, p_pool->dimms[p_pool->dimm_count]);
@@ -589,6 +589,31 @@ void add_dimm_to_pool(const struct pool_data *p_pool_data,
 			KEEP_POOL_HEALTH(p_pool->health, POOL_HEALTH_ERROR);
 		}
 		p_pool->dimm_count++;
+	}
+	else
+	{
+		/*DIMM has already been added to pool. Check if interleave set has AD capacity for current
+		DIMM and update pool's free capacity attributes*/
+
+		struct device_discovery dimm = p_pool_data->dimm_list[data_idx];
+
+		struct device_free_capacities free_caps;
+		memset(&free_caps, 0, sizeof (struct device_free_capacities));
+		get_dimm_free_capacities(
+				&p_pool_data->capabilities,
+				&dimm,
+				p_pool,
+				&free_caps);
+
+		if (p_pool->type == POOL_TYPE_PERSISTENT)
+		{
+			p_pool->free_capacity += free_caps.app_direct_byone_capacity +
+				free_caps.app_direct_interleaved_capacity;
+		}
+		else if (p_pool->type == POOL_TYPE_PERSISTENT_MIRROR)
+		{
+			p_pool->free_capacity += free_caps.app_direct_mirrored_capacity;
+		}
 	}
 	COMMON_LOG_EXIT();
 }
@@ -694,9 +719,15 @@ void nvm_interleave_to_interleave(
 					// fill the interleave settings from pcd
 					if (!iset_settings_filled)
 					{
+#ifdef __BUILD_SIM__
+						int rc = fill_interleave_set_settings_and_id_from_dimm(
+							p_iset, p_pool_data->dimm_list[data_idx].device_handle,
+							p_nvm_iset->dimm_region_pdas[dimm_idx], p_nvm_iset->id);
+#else
 						int rc = fill_interleave_set_settings_and_id_from_dimm(
 							p_iset, p_pool_data->dimm_list[data_idx].device_handle,
 							p_nvm_iset->dimm_region_pdas[dimm_idx]);
+#endif
 						if (rc == NVM_SUCCESS)
 						{
 							iset_settings_filled = 1;

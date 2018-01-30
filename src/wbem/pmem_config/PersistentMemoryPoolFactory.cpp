@@ -219,14 +219,14 @@ wbem::framework::instance_names_t* wbem::pmem_config::PersistentMemoryPoolFactor
  * Helper function to retrieve the largest and smallest namespace that can be created
  */
 struct possible_namespace_ranges wbem::pmem_config::PersistentMemoryPoolFactory::getSupportedSizeRange(
-		const std::string &poolUid)
+		const std::string &poolUid, const COMMON_UINT8 ways)
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
 
 	struct possible_namespace_ranges range;
 	NVM_UID uid;
 	uid_copy(poolUid.c_str(), uid);
-	int rc = m_GetAvailablePersistentSizeRange(uid, &range);
+	int rc = m_GetAvailablePersistentSizeRange(uid, &range, ways);
 	if (rc < NVM_SUCCESS)
 	{
 		throw exception::NvmExceptionLibError(rc);
@@ -241,9 +241,10 @@ void wbem::pmem_config::PersistentMemoryPoolFactory::getSupportedSizeRange(
 		COMMON_UINT64 &adIncrement,
 		COMMON_UINT64 &largestPossibleStorageNs,
 		COMMON_UINT64 &smallestPossibleStorageNs,
-		COMMON_UINT64 &storageIncrement)
+		COMMON_UINT64 &storageIncrement,
+		COMMON_UINT8 &ways)
 {
-	struct possible_namespace_ranges range = getSupportedSizeRange(poolUid);
+	struct possible_namespace_ranges range = getSupportedSizeRange(poolUid, ways);
 	largestPossibleAdNs = range.largest_possible_app_direct_ns;
 	smallestPossibleAdNs = range.smallest_possible_app_direct_ns;
 	adIncrement = range.app_direct_increment;
@@ -315,7 +316,7 @@ wbem::framework::UINT32 wbem::pmem_config::PersistentMemoryPoolFactory::executeM
 			delete pGoalInstance;
 
 			// get supported namespace size range
-			struct possible_namespace_ranges p_range = getSupportedSizeRange(poolUidStr);
+			struct possible_namespace_ranges p_range = getSupportedSizeRange(poolUidStr, INTERLEAVE_WAYS_0);
 			wbemRc = wbem::framework::SUCCESS;
 
 			outParms[PERSISTENTMEMORYPOOL_MIN_NS_SIZE] =
