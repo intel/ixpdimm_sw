@@ -268,6 +268,7 @@ int add_firmware_properties_to_device(struct device_discovery *p_device)
 		if ((rc = fw_get_identify_dimm(p_device->device_handle.handle,
 				&id_dimm)) != NVM_SUCCESS)
 		{
+			p_device->manageability = MANAGEMENT_NON_FUNCTIONAL;
 			COMMON_LOG_ERROR_F(
 					"Unable to get identify dimm information for handle: [%d]",
 					p_device->device_handle.handle);
@@ -283,16 +284,6 @@ int add_firmware_properties_to_device(struct device_discovery *p_device)
 			}
 		}
 		s_memset(&id_dimm, sizeof (id_dimm));
-	}
-	else
-	{
-		COMMON_LOG_WARN_F("Device with handle %u has a controller or programming interface "
-				"that is not supported."
-				"SubsystemVendorID=%hu, SubsystemDeviceID=%hu, "
-				"first Interface Format Code=%hu",
-				p_device->device_handle.handle,
-				p_device->subsystem_vendor_id, p_device->subsystem_device_id,
-				p_device->interface_format_codes[0]);
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
@@ -349,12 +340,31 @@ void add_smbios_properties_to_populated_devices(struct device_discovery *p_devic
 enum manageability_state get_manageability_from_topology(struct nvm_topology *p_topology)
 {
 	COMMON_LOG_ENTRY();
-	enum manageability_state result = MANAGEMENT_INVALIDCONFIG;
-	if (!NFIT_DIMM_STATE_IS_DISABLED(p_topology->state_flags) &&
-		is_device_interface_format_supported(p_topology) &&
-		is_device_subsystem_controller_supported(p_topology))
+	enum manageability_state result = MANAGEMENT_VALIDCONFIG;
+	if (NFIT_DIMM_STATE_IS_DISABLED(p_topology->state_flags))
 	{
-		result = MANAGEMENT_VALIDCONFIG;
+		result = MANAGEMENT_NON_FUNCTIONAL;
+		COMMON_LOG_WARN_F("NFIT declares device with handle %u is disabled. ",
+			p_topology->device_handle.handle);
+	}
+	else if (!is_device_interface_format_supported(p_topology))
+	{
+		result = MANAGEMENT_INVALIDCONFIG;
+		COMMON_LOG_WARN_F("Device with handle %u programming interface "
+			"that is not supported."
+			"first Interface Format Code=%hu",
+			p_topology->device_handle.handle,
+			p_topology->fmt_interface_codes[0]);
+	}
+	else if (!is_device_subsystem_controller_supported(p_topology))
+	{
+		result = MANAGEMENT_INVALIDCONFIG;
+		COMMON_LOG_WARN_F("Device with handle %u has a controller "
+			"that is not supported."
+			"SubsystemVendorID=%hu, SubsystemDeviceID=%hu, ",
+			p_topology->device_handle.handle,
+			p_topology->subsystem_vendor_id,
+			p_topology->subsystem_device_id);
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(result);

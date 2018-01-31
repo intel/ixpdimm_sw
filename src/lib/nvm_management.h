@@ -128,7 +128,8 @@ enum manageability_state
 {
 	MANAGEMENT_UNKNOWN = 0,  // Device is not recognized or manageability cannot be determined.
 	MANAGEMENT_VALIDCONFIG = 1, // Device is fully manageable.
-	MANAGEMENT_INVALIDCONFIG = 2 // Device is recognized but cannot be managed.
+	MANAGEMENT_INVALIDCONFIG = 2, // Device is recognized but cannot be managed.
+	MANAGEMENT_NON_FUNCTIONAL = 3 // Device is disabled per NFIT
 };
 
 /*

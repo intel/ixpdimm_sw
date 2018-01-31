@@ -452,9 +452,20 @@ NVM_UINT32 Device::getSku()
 NVM_UINT16 Device::getHealthState()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	NVM_UINT16 healthState = isManageable() ? getDeviceStatusHealth()
-											: DEVICE_HEALTH_UNMANAGEABLE;
-	return healthState;
+	enum manageability_state manageableState = getManageabilityState();
+	if (MANAGEMENT_INVALIDCONFIG == manageableState)
+	{
+		return DEVICE_HEALTH_UNMANAGEABLE;
+	}
+	else if(MANAGEMENT_UNKNOWN == manageableState)
+	{
+		return DEVICE_HEALTH_UNMANAGEABLE;
+	}
+	else if (MANAGEMENT_NON_FUNCTIONAL == manageableState)
+	{
+		return DEVICE_HEALTH_NONFUNCTIONAL;
+	}
+	return getDeviceStatusHealth();
 }
 
 bool Device::isNew()

@@ -217,6 +217,7 @@ std::string ShowDeviceCommand::convertHealthState(NVM_UINT16 healthState)
 	map[DEVICE_HEALTH_CRITICAL] = TR("Critical Failure");
 	map[DEVICE_HEALTH_FATAL] = TR("Non-recoverable error");
 	map[DEVICE_HEALTH_UNMANAGEABLE] = TR("Unmanageable");
+	map[DEVICE_HEALTH_NONFUNCTIONAL] = TR("Non-functional");
 	return map[healthState];
 }
 
@@ -225,6 +226,7 @@ std::string ShowDeviceCommand::convertManageabilityState(manageability_state sta
 	std::map<NVM_UINT64, std::string> map;
 	map[MANAGEMENT_VALIDCONFIG] = TR("Manageable");
 	map[MANAGEMENT_INVALIDCONFIG] = TR("Unmanageable");
+	map[MANAGEMENT_NON_FUNCTIONAL] = TR("Non-functional");
 	map[MANAGEMENT_UNKNOWN] = TR("Unknown");
 	return map[state];
 }
