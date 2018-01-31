@@ -14,7 +14,7 @@
 
 Name: %{package_name}
 Version: %{build_version}
-Release: 1
+Release: 1%{?dist}
 Summary: API for development of IXPDIMM management utilities
 License: BSD
 Group: Applications/System
