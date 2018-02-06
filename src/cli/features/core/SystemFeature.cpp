@@ -859,7 +859,10 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::changeDeviceSecurity(
 }
 
 /*
- * erase all devices in list
+ * erase all devices in list - this command is NOT supported
+ * Intentionally throwing Unsupported exception for now
+ *TODO: there will be another user story in the nea future with which we will be checking if
+ *the namespace exists and also make the switch from vendor specific DSM to  the call exposed by OS API
  */
 cli::framework::ResultBase *cli::nvmcli::SystemFeature::eraseDeviceData(
 		const framework::ParsedCommand &parsedCommand)
@@ -868,76 +871,93 @@ cli::framework::ResultBase *cli::nvmcli::SystemFeature::eraseDeviceData(
 
 	std::vector<std::string> dimms;
 	framework::ResultBase *pResults = NULL;
-	pResults = m_pDimmProviderAdapter->getDimms(parsedCommand, dimms);
-	if (!pResults)
+	framework::SimpleListResult *pListResults = new framework::SimpleListResult();
+	pResults = pListResults;
+	std::string basePrefix = TRS(ERASEDEVICEDATA_MSG);
+	std::string prefix = cli::framework::ResultBase::stringFromArgList((basePrefix).c_str());
+	prefix += ": ";
+
+	try
 	{
-		std::string passphrase;
-		std::string basePrefix = TRS(ERASEDEVICEDATA_MSG);
+		throw wbem::exception::NvmExceptionLibError(NVM_ERR_NOTSUPPORTED);
 
-		framework::StringMap::const_iterator source = parsedCommand.options.find(framework::OPTION_SOURCE.name);
-		if (source != parsedCommand.options.end() && !source->second.empty())
-		{ // passphrase provided via passphrase file
-			std::string passphraseFile = source->second;
-			enum return_code rc = readPassphrases(passphraseFile.c_str(), &passphrase, NULL);
-			if ((rc != NVM_SUCCESS) ||
-					(passphrase.empty()))
-			{
-				pResults = generateErrorResult(NVM_ERR_INVALIDPASSPHRASEFILE, basePrefix, dimms);
-			}
-		}
-		else
-		{ // passphrase provided via command line
-			passphrase = framework::Parser::getPropertyValue(parsedCommand, PASSPHRASE_PROPERTYNAME);
-			if (passphrase.empty())
-			{
-				passphrase = promptUserHiddenString(TRS(PASSPHRASE_PROMPT));
-			}
-		}
-
+		pResults = m_pDimmProviderAdapter->getDimms(parsedCommand, dimms);
 		if (!pResults)
 		{
+			std::string passphrase;
 
-			framework::SimpleListResult *pListResults = new framework::SimpleListResult();
-			pResults = pListResults;
-
-			for (std::vector<std::string>::const_iterator dimmIter = dimms.begin();
-					dimmIter != dimms.end(); dimmIter++)
-			{
-				std::string dimmStr = m_uidToDimmIdStr((*dimmIter));
-				std::string prefix = cli::framework::ResultBase::stringFromArgList((basePrefix + " %s").c_str(),
-						dimmStr.c_str());
-				prefix += ": ";
-				try
+			framework::StringMap::const_iterator source = parsedCommand.options.find(framework::OPTION_SOURCE.name);
+			if (source != parsedCommand.options.end() && !source->second.empty())
+			{ // passphrase provided via passphrase file
+				std::string passphraseFile = source->second;
+				enum return_code rc = readPassphrases(passphraseFile.c_str(), &passphrase, NULL);
+				if ((rc != NVM_SUCCESS) ||
+						(passphrase.empty()))
 				{
-					bool forceOption = parsedCommand.options.find(framework::OPTION_FORCE.name)
-										!= parsedCommand.options.end();
-
-					// if user didn't specify the force option, prompt them to continue
-					std::string prompt = framework::ResultBase::stringFromArgList(
-							ERASE_DEV_PROMPT.c_str(), dimmStr.c_str());
-					if (!forceOption && !promptUserYesOrNo(prompt))
-					{
-						pListResults->insert(prefix + cli::framework::UNCHANGED_MSG);
-					}
-					else
-					{
-						m_pErasureProvider->eraseDevice((*dimmIter), passphrase);
-
-						pListResults->insert(prefix + TRS(cli::framework::SUCCESS_MSG));
-					}
-				}
-				catch (wbem::framework::Exception &e)
-				{
-					cli::framework::ErrorResult *eResult = NvmExceptionToResult(e);
-					if (eResult)
-					{
-						pListResults->insert(prefix + eResult->outputText());
-						pListResults->setErrorCode(eResult->getErrorCode());
-						delete eResult;
-					}
-					break; // don't continue on failure
+					pResults = generateErrorResult(NVM_ERR_INVALIDPASSPHRASEFILE, basePrefix, dimms);
 				}
 			}
+			else
+			{ // passphrase provided via command line
+				passphrase = framework::Parser::getPropertyValue(parsedCommand, PASSPHRASE_PROPERTYNAME);
+				if (passphrase.empty())
+				{
+					passphrase = promptUserHiddenString(TRS(PASSPHRASE_PROMPT));
+				}
+			}
+
+			if (!pResults)
+			{
+
+				for (std::vector<std::string>::const_iterator dimmIter = dimms.begin();
+						dimmIter != dimms.end(); dimmIter++)
+				{
+					std::string dimmStr = m_uidToDimmIdStr((*dimmIter));
+					prefix = cli::framework::ResultBase::stringFromArgList((basePrefix + " %s").c_str(),
+							dimmStr.c_str());
+					prefix += ": ";
+					try
+					{
+						bool forceOption = parsedCommand.options.find(framework::OPTION_FORCE.name)
+											!= parsedCommand.options.end();
+
+						// if user didn't specify the force option, prompt them to continue
+						std::string prompt = framework::ResultBase::stringFromArgList(
+								ERASE_DEV_PROMPT.c_str(), dimmStr.c_str());
+						if (!forceOption && !promptUserYesOrNo(prompt))
+						{
+							pListResults->insert(prefix + cli::framework::UNCHANGED_MSG);
+						}
+						else
+						{
+							m_pErasureProvider->eraseDevice((*dimmIter), passphrase);
+
+							pListResults->insert(prefix + TRS(cli::framework::SUCCESS_MSG));
+						}
+					}
+					catch (wbem::framework::Exception &e)
+					{
+						cli::framework::ErrorResult *eResult = NvmExceptionToResult(e);
+						if (eResult)
+						{
+							pListResults->insert(prefix + eResult->outputText());
+							pListResults->setErrorCode(eResult->getErrorCode());
+							delete eResult;
+						}
+						break; // don't continue on failure
+					}
+				}
+			}
+		}
+	}
+	catch (wbem::framework::Exception &e)
+	{
+		cli::framework::ErrorResult *eResult = NvmExceptionToResult(e);
+		if (eResult)
+		{
+			pListResults->insert(prefix + eResult->outputText());
+			pListResults->setErrorCode(eResult->getErrorCode());
+			delete eResult;
 		}
 	}
 
