@@ -483,12 +483,12 @@ enum device_ars_status translate_to_ars_status(struct pt_payload_long_op_stat *p
 	struct pt_return_address_range_scrub *ars_command_return_data =
 		(struct pt_return_address_range_scrub *)(p_long_op_payload->command_specific_data);
 
-	if (((p_long_op_payload->command & 0x00FF) == PT_GET_LOG) &&
+	if (((p_long_op_payload->command & 0x00FF) == PT_SET_FEATURES) &&
 			(((p_long_op_payload->command & 0xFF00) >> 8) == SUBOP_POLICY_ADDRESS_RANGE_SCRUB))
 	{
 		if (ars_command_return_data->ars_state == ARS_STATUS_NORMAL)
 		{
-			if (p_long_op_payload->percent_complete == 100)
+			if (p_long_op_payload->percent_complete == 0x100)
 			{
 				status = DEVICE_ARS_STATUS_COMPLETE;
 			}
