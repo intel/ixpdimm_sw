@@ -872,6 +872,7 @@ int populate_namespaces(int ns_count, struct nvm_namespace_details *p_namespaces
 	}
 	else if (rc < 0)
 	{
+		// No data is in the cache. Need to collect it from the dimms
 		struct ns_data *p_ns_data = NULL;
 		if ((rc = collect_required_ns_data(&p_ns_data) == NVM_SUCCESS))
 		{
@@ -883,6 +884,14 @@ int populate_namespaces(int ns_count, struct nvm_namespace_details *p_namespaces
 					break;
 				}
 			}
+
+			if (rc == NVM_SUCCESS)
+			{
+				// If we successfully parsed the namespace labels,
+				// make sure to cache the namespace count even if it's zero
+				rc = set_nvm_context_pcd_namespace_count(p_ns_data->ns_count);
+			}
+
 			// copy and set context
 			if (rc == NVM_SUCCESS && p_ns_data->ns_count)
 			{

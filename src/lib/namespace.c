@@ -1915,6 +1915,7 @@ int nvm_get_available_persistent_size_range(const NVM_UID pool_uid,
 int nvm_get_device_namespace_count(const NVM_UID device_uid,
 		const enum namespace_type type)
 {
+	COMMON_LOG_ENTRY();
 	int rc = 0; // return namespace count
 	struct nvm_capabilities capabilities;
 	struct device_discovery discovery;

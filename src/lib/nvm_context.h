@@ -117,6 +117,7 @@ NVM_API int get_nvm_context_pool(const NVM_UID pool_uid, struct pool *p_pool);
 // namespaces
 NVM_API void invalidate_namespaces();
 NVM_API int get_nvm_context_namespace_count();
+NVM_API int set_nvm_context_pcd_namespace_count(int pcd_nscount);
 NVM_API int get_nvm_context_namespaces(struct namespace_discovery *p_namespaces,
 		const int namespace_count);
 NVM_API int set_nvm_context_namespaces(const struct namespace_discovery *p_namespaces,

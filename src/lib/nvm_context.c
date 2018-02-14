@@ -1248,6 +1248,35 @@ int get_nvm_context_pcd_namespace_count()
 	return rc;
 }
 
+// In the case where number of namespaces are 0, we still want to save the
+// number of namespaces!
+int set_nvm_context_pcd_namespace_count(int pcd_nscount)
+{
+	COMMON_LOG_ENTRY();
+	int rc = NVM_ERR_CONTEXT;
+
+	// lock
+	if (!mutex_lock(&g_context_lock))
+	{
+		COMMON_LOG_ERROR("Could not obtain the context lock");
+		rc = NVM_ERR_CONTEXT;
+	}
+	else
+	{
+		p_context->pcd_namespace_count = pcd_nscount;
+		rc = NVM_SUCCESS;
+
+		// unlock
+		if (!mutex_unlock(&g_context_lock))
+		{
+			COMMON_LOG_ERROR("Could not release the context lock.");
+			rc = NVM_ERR_CONTEXT;
+		}
+	}
+	COMMON_LOG_EXIT_RETURN_I(rc);
+	return rc;
+}
+
 int get_nvm_context_pcd_namespaces(int pcd_nscount,
 		struct nvm_namespace_details *p_pcd_nslist)
 {
@@ -1325,7 +1354,6 @@ int set_nvm_context_pcd_namespaces(const int pcd_nscount,
 			}
 			else
 			{
-				p_context->pcd_namespace_count = pcd_nscount;
 				rc = NVM_SUCCESS;
 				for (int i = 0; i < pcd_nscount; i++)
 				{
