@@ -81,6 +81,11 @@ int nvm_run_diagnostic(const NVM_UID device_uid,
 	{
 		rc = NVM_ERR_INVALIDPERMISSIONS;
 	}
+	else if (p_diagnostic->overrides_len > 0 && p_diagnostic->p_overrides == NULL)
+	{
+		COMMON_LOG_ERROR("Invalid parameter, p_overrides is NULL");
+		rc = NVM_ERR_INVALIDPARAMETER;
+	}
 	else
 	{
 		switch (p_diagnostic->test)
