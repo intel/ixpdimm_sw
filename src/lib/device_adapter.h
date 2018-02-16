@@ -38,7 +38,7 @@
 #include "device_fw.h"
 #include "nvm_types.h"
 #include "platform_capabilities.h"
-#include <export_api.h>
+#include "export_api.h"
 
 #ifdef __cplusplus
 extern "C"
