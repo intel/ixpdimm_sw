@@ -20,7 +20,7 @@
 %define product_name ixpdimm_sw
 %define product_base_name ixpdimm
 %define build_version 99.99.99.9999
-%define api_release 01
+%define api_release 1
 %define apibase %{product_base_name}
 %define apiname lib%{apibase}%{api_release}
 %define cliname %{product_base_name}-cli
@@ -64,7 +64,9 @@ Summary:        API for development of %{product_name} management utilities
 Group:          System/Libraries
 Requires:       %{apibase}-data
 Requires:       libndctl6 >= 58.2
-Requires:	invm-frameworks >= %{version}-%{release}
+Requires:       libinvm-i18n2 >= 01.01
+Obsoletes:      ixpdimm_sw
+Obsoletes:      libixpdimm-core
 
 %description -n %{apiname}
 An application program interface (API) for configuring and managing
@@ -74,6 +76,7 @@ health monitoring, and troubleshooting.
 %package -n %{apibase}-data
 Summary:        Data files for %{apibase}
 Group:          System/Libraries
+Conflicts:      ixpdimm_sw
 
 %description -n %{apibase}-data
 An application program interface (API) for configuring and managing
@@ -84,6 +87,7 @@ health monitoring, and troubleshooting.
 Summary:        Development files for %{name}
 Group:          Development/Libraries/C and C++
 Requires:       %{apiname} = %{version}-%{release}
+Obsoletes:      ixpdimm_sw-devel
 
 %description -n %{dname}
 The %{name}-devel package contains header files for
@@ -92,7 +96,8 @@ developing applications that use %{name}.
 %package -n %{cimlibs}
 Summary:        CIM provider for %{name}
 Group:          System/Libraries
-Requires:		%{apiname}
+Requires:       %{apiname}
+Requires:       libinvm-cim2 >= 01.01
 Requires:       pywbem
 Requires(post): pywbem
 Requires(pre):  pywbem
@@ -116,6 +121,8 @@ A daemon for monitoring the health and status of %{product_name}
 Summary:        CLI for managment of %{product_name}
 Group:          System/Management
 Requires:       %{clilibname} = %{version}-%{release}
+Requires:       libinvm-cli2 >= 01.01
+Requires:       libinvm-i18n2 >= 01.01
 
 %description -n %{cliname}
 A command line interface (CLI) application for configuring and
@@ -126,37 +133,14 @@ capacity provisioning, health monitoring, and troubleshooting.
 Summary:        CLI for managment of %{product_name}
 Group:          System/Management
 Requires:       %{cimlibs}
+Requires:       libinvm-cli2 >= 01.01
+Requires:       libinvm-cim2 >= 01.01
+Requires:       libinvm-i18n2 >= 01.01
 
 %description -n %{clilibname}
 A command line interface (CLI) application for configuring and
 managing %{product_name}. Including commands for basic inventory,
 capacity provisioning, health monitoring, and troubleshooting.
-
-%package -n invm-frameworks
-Summary:        Library files for invm-frameworks
-Group:          Development/Libraries
-#The following packages are deprecated and now provided by invm-frameworks
-Conflicts:      libinvm-cim
-Conflicts:      libinvm-cli
-Conflicts:      libinvm-i18n
-
-%description -n invm-frameworks
-Framework library supporting a subset of Internationalization (I18N)
-functionality, storage command line interface (CLI) applications, storage
-common information model (CIM) providers.
-
-%package -n invm-frameworks-devel
-Summary:        Development files for invm-frameworks-devel
-Group:          Development/Libraries
-Requires:       invm-frameworks%{?_isa} = %{version}-%{release}
-#The following packages are deprecated and now provided by invm-frameworks-devel
-Conflicts:      libinvm-cim-devel
-Conflicts:      libinvm-cli-devel
-Conflicts:      libinvm-i18n-devel
-
-%description -n invm-frameworks-devel
-The invm-frameworks-devel package contains header files for
-developing applications that use invm-frameworks.
 
 %prep
 %setup -q -n %{srcname}
@@ -171,7 +155,8 @@ developing applications that use invm-frameworks.
     -DCMAKE_INSTALL_MANDIR=%{_mandir} \
     -DCMAKE_INSTALL_FULL_LOCALSTATEDIR=%{_localstatedir} \
     -DINSTALL_UNITDIR=%{_unitdir} \
-    -DCFLAGS_EXTERNAL="%{?optflags}"
+    -DCFLAGS_EXTERNAL="%{?optflags}" \
+    -DEXTERNAL=ON
 make -f Makefile %{?_smp_mflags}
 
 %install
@@ -186,8 +171,6 @@ ln -sf service %{buildroot}%{_sbindir}/rc%{monitorname}
 %post -n %{apiname} -p /sbin/ldconfig
 %post -n %{clilibname} -p /sbin/ldconfig
 %post -n %{cimlibs} -p /sbin/ldconfig
-%post -n invm-frameworks -p /sbin/ldconfig
-
 
 if [ -x %{_sbindir}/cimserver ]
 then
@@ -241,7 +224,6 @@ fi
 %postun -n %{apiname} -p /sbin/ldconfig
 %postun -n %{cimlibs} -p /sbin/ldconfig
 %postun -n %{clilibname} -p /sbin/ldconfig
-%postun -n invm-frameworks -p /sbin/ldconfig
 
 # If upgrading, deregister old version
 if [ "$1" -gt 1 ]; then
@@ -364,27 +346,5 @@ fi
 %files -n %{clilibname}
 %defattr(-,root,root)
 %{_libdir}/libixpdimm-cli.so.*
-
-%files -n invm-frameworks
-%defattr(-,root,root)
-%{_libdir}/libinvm-i18n.so.*
-%{_libdir}/libinvm-cli.so.*
-%{_libdir}/libinvm-cim.so.*
-%doc README.md
-%doc LICENSE
-
-%files -n invm-frameworks-devel
-%defattr(-,root,root)
-%{_libdir}/libinvm-i18n.so
-%{_libdir}/libinvm-cli.so
-%{_libdir}/libinvm-cim.so
-%dir %{_includedir}/libinvm-i18n
-%dir %{_includedir}/libinvm-cli
-%dir %{_includedir}/libinvm-cim
-%attr(644,root,root) %{_includedir}/libinvm-i18n/*.h
-%attr(644,root,root) %{_includedir}/libinvm-cli/*.h
-%attr(644,root,root) %{_includedir}/libinvm-cim/*.h
-%doc README.md
-%doc LICENSE
 
 %changelog

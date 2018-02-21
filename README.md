@@ -19,9 +19,9 @@ IXPDIMM SW refers to the following interface components:
 * A Command Line Interface (CLI)  application for configuring and managing Intel DIMMs from the command line.
 * A monitor daemon/system service for monitoring the health and status of Intel DIMMs.
 
-Packages are availible on Fedora.
+Packages are available on Fedora.
 
-Fedora and Centos rpms can also be found: https://copr.fedorainfracloud.org/coprs/jhli/ixpdimm_sw/
+Fedora and Epel 7 packages can be found at: https://copr.fedorainfracloud.org/coprs/jhli/ixpdimm_sw/
 
 For more information please visit our project home: https://01.org/intel-nvm-frameworks
 
@@ -32,19 +32,18 @@ For more information please visit our project home: https://01.org/intel-nvm-fra
 
 Kernel 4.12 or newer is suggested
 
-libndctl is required to build, an rpm can be found at: https://copr.fedoraproject.org/coprs/djbw/ndctl/
+libndctl is required to build, packages can be found at: https://copr.fedoraproject.org/coprs/djbw/ndctl/
 
 The source can be found at: https://github.com/pmem/ndctl
 
-invm-frameworks is required and included as a submodule.
+invm-frameworks is required to build, packages can be found at: https://copr.fedorainfracloud.org/coprs/jhli/ixpdimm_sw/
 
 The source can be found at: https://github.com/intel/invm-frameworks
 
-All other dependencies are widely available. This includes ctemplate openssl sqlite and zlib.
+All other dependencies are widely available.
+This includes openssl sqlite zlib numactl kmod sblim-cmpi.
 
 ```
-git submodule init
-git submodule update
 mkdir output && cd output
 cmake -DRELEASE=ON -DCMAKE_INSTALL_PREFIX=/usr ..
 make -j all

@@ -38,7 +38,7 @@
 #include <mem_config/MemoryCapabilitiesFactory.h>
 #include "MemoryProperty.h"
 #include <utility.h>
-#include "ExceptionNoMemory.h"
+#include <libinvm-cim/ExceptionNoMemory.h>
 
 namespace cli
 {

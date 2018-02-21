@@ -29,7 +29,7 @@
 #include <string/x_str.h>
 #include <string.h>
 #include "CliHelper.h"
-#include "ExceptionNoMemory.h"
+#include <libinvm-cim/ExceptionNoMemory.h>
 
 namespace cli
 {

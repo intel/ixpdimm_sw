@@ -44,7 +44,9 @@ Summary:        API for development of %{product_name} management utilities
 Group:          System/Libraries
 Requires:       %{data_name}
 Requires:	ndctl-libs >= 58.2
-Requires:	invm-frameworks%{?_isa} >= %{version}-%{release}
+Requires:	libinvm-i18n >= 01.01
+Obsoletes:      ixpdimm_sw
+Obsoletes:      libixpdimm-core
 
 %description -n %{api_name}
 An application program interface (API) which provides programmatic access to
@@ -54,6 +56,7 @@ the IXPSIMM SW functionality.
 Summary:        Development files for %{name}
 Group:          Development/Libraries
 Requires:       %{api_name}%{?_isa} = %{version}-%{release}
+Obsoletes:      ixpdimm_sw-devel
 
 %description -n %{api_dname}
 The %{api_dname} package contains header files for
@@ -62,6 +65,7 @@ developing applications that use IXPDIMM SW.
 %package -n %{data_name}
 Summary:        Data files for %{package_name}
 Group:          System/Libraries
+Conflicts:      ixpdimm_sw
 
 %description -n %{data_name}
 Data files for %{package_name}
@@ -70,6 +74,7 @@ Data files for %{package_name}
 Summary:        CIM provider library for IXPDIMM SW
 Group:          Development/Libraries
 Requires:       %{api_name}%{?_isa} = %{version}-%{release}
+Requires:       libinvm-cim >= 01.01
 Requires:       pywbem
 Requires(pre):  pywbem
 Requires(post): pywbem
@@ -93,6 +98,8 @@ A monitor daemon for monitoring the health and status of IXPDIMMs.
 Summary:        CLI for management of IXPDIMM
 Group:          Development/Tools
 Requires:       %{cli_lib_name}%{?_isa} = %{version}-%{release}
+Requires:       libinvm-cli >= 01.01
+Requires:       libinvm-i18n >= 01.01
 
 %description -n %{cli_name}
 A Command Line Interface (CLI) application for configuring and
@@ -102,35 +109,12 @@ managing IXPDIMMs from the command line.
 Summary:        CLI for managment of %{product_name}
 Group:          System/Management
 Requires:       %{cim_lib_name}%{?_isa} = %{version}-%{release}
+Requires:       libinvm-cli >= 01.01
+Requires:       libinvm-cim >= 01.01
+Requires:       libinvm-i18n >= 01.01
 
 %description -n %{cli_lib_name}
 A library for IXPDIMM CLI applications
-
-%package -n invm-frameworks
-Summary:        Library files for invm-frameworks
-Group:          Development/Libraries
-#The following packages are deprecated and now provided by invm-frameworks
-Conflicts:      libinvm-cim
-Conflicts:      libinvm-cli
-Conflicts:      libinvm-i18n
-
-%description -n invm-frameworks
-Framework library supporting a subset of Internationalization (I18N)
-functionality, storage command line interface (CLI) applications, storage
-common information model (CIM) providers.
-
-%package -n invm-frameworks-devel
-Summary:        Development files for invm-frameworks-devel
-Group:          Development/Libraries
-Requires:       invm-frameworks%{?_isa} = %{version}-%{release}
-#The following packages are deprecated and now provided by invm-frameworks-devel
-Conflicts:      libinvm-cim-devel
-Conflicts:      libinvm-cli-devel
-Conflicts:      libinvm-i18n-devel
-
-%description -n invm-frameworks-devel
-The invm-frameworks-devel package contains header files for
-developing applications that use invm-frameworks.
 
 %build
 %cmake -DBUILDNUM=%{version} -DCMAKE_INSTALL_PREFIX=/usr -DRELEASE=ON \
@@ -142,7 +126,8 @@ developing applications that use invm-frameworks.
     -DCMAKE_INSTALL_MANDIR=%{_mandir} \
     -DCMAKE_INSTALL_FULL_LOCALSTATEDIR=%{_localstatedir} \
     -DINSTALL_UNITDIR=%{_unitdir} \
-    -DCFLAGS_EXTERNAL="%{?optflags}"
+    -DCFLAGS_EXTERNAL="%{?optflags}" \
+    -DEXTERNAL=ON
 make -f Makefile %{?_smp_mflags}
 
 %install
@@ -154,7 +139,6 @@ make -f Makefile install DESTDIR=%{buildroot}
 
 %post -n %{api_name} -p /sbin/ldconfig
 %post -n %{cli_lib_name} -p /sbin/ldconfig
-%post -n invm-frameworks -p /sbin/ldconfig
 
 %post -n %{cim_lib_name}
 /sbin/ldconfig
@@ -206,7 +190,6 @@ fi
 
 %postun -n %{api_name} -p /sbin/ldconfig
 %postun -n %{cli_lib_name} -p /sbin/ldconfig
-%postun -n invm-frameworks -p /sbin/ldconfig
 
 %pre -n libixpdimm-cim
 # If upgrading, deregister old version
@@ -331,27 +314,5 @@ fi
 %files -n %{cli_lib_name}
 %defattr(-,root,root)
 %{_libdir}/libixpdimm-cli.so.*
-
-%files -n invm-frameworks
-%defattr(-,root,root)
-%doc README.md
-%{_libdir}/libinvm-i18n.so.*
-%{_libdir}/libinvm-cli.so.*
-%{_libdir}/libinvm-cim.so.*
-%license LICENSE
-
-%files -n invm-frameworks-devel
-%defattr(-,root,root)
-%doc README.md
-%{_libdir}/libinvm-i18n.so
-%{_libdir}/libinvm-cli.so
-%{_libdir}/libinvm-cim.so
-%dir %{_includedir}/libinvm-i18n
-%dir %{_includedir}/libinvm-cli
-%dir %{_includedir}/libinvm-cim
-%attr(644,root,root) %{_includedir}/libinvm-cli/*.h
-%attr(644,root,root) %{_includedir}/libinvm-i18n/*.h
-%attr(644,root,root) %{_includedir}/libinvm-cim/*.h
-%license LICENSE
 
 %changelog

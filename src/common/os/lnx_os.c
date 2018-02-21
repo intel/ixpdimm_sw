@@ -467,7 +467,7 @@ int dlib_close(void *handle)
  */
 char *dlib_suffix(char *buffer, COMMON_SIZE buffer_len)
 {
-	s_strncpy(buffer, buffer_len, ".so", s_strnlen(".so", 4));
+	s_strncpy(buffer, buffer_len, ".so.1", s_strnlen(".so.1", 6));
 	return buffer;
 }
 
