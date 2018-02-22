@@ -84,7 +84,7 @@ void monitor::NvmMonitorBase::getMonitors(std::vector<monitor::NvmMonitorBase *>
 
 	AcpiMonitor *acpiMon = new AcpiMonitor();
 	monitors.push_back(acpiMon);
-	return;
+
 	EventMonitor *event = new EventMonitor();
 	if (event && event->isEnabled())
 	{
