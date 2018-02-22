@@ -915,10 +915,6 @@ if(LNX_BUILD)
 		LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 	install (FILES ${OUTPUT_DIR}/apss.dat ${OUTPUT_DIR}/public.rev0.pem
 		DESTINATION ${APSS_DAT_DIR})
-	install (FILES ${OUTPUT_DIR}/pegasus_register.mof ${OUTPUT_DIR}/intelwbem.mof ${OUTPUT_DIR}/profile_registration.mof
-		DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/ixpdimm_sw/Pegasus/mof)
-	install (FILES ${OUTPUT_DIR}/sfcb_intelwbem.mof ${OUTPUT_DIR}/INTEL_NVDIMM.reg
-		DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/ixpdimm_sw/sfcb)
 	install (FILES ${OUTPUT_DIR}/nvm_types.h ${OUTPUT_DIR}/nvm_management.h ${OUTPUT_DIR}/export_api.h
 		DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 	install (FILES ${OUTPUT_DIR}/ixpdimm-cli.8.gz ${OUTPUT_DIR}/ixpdimm-monitor.8.gz
@@ -938,18 +934,6 @@ if(WIN_BUILD)
 	add_custom_target(uninstall
 		COMMAND cmd /c ${ROOT}/install/windows/uninstall.cmd ${OUTPUT_DIR} ${SIM_BUILD})
 endif()
-
-# --------------------------------------------------------------------------------------------------
-# Pegasus Register
-# --------------------------------------------------------------------------------------------------
-add_custom_target(pegasus_register COMMAND /bin/sh ${ROOT}/install/linux/pegasus_register.sh)
-add_custom_target(pegasus_deregister COMMAND /bin/sh ${ROOT}/install/linux/pegasus_deregister.sh)
-
-# --------------------------------------------------------------------------------------------------
-# Sfcb Register
-# --------------------------------------------------------------------------------------------------
-add_custom_target(sfcb_register COMMAND /bin/sh ${ROOT}/install/linux/sfcb_register.sh)
-add_custom_target(sfcb_deregister COMMAND /bin/sh ${ROOT}/install/linux/sfcb_deregister.sh)
 
 # --------------------------------------------------------------------------------------------------
 # RPM

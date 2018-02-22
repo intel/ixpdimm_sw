@@ -172,119 +172,12 @@ ln -sf service %{buildroot}%{_sbindir}/rc%{monitorname}
 %post -n %{clilibname} -p /sbin/ldconfig
 %post -n %{cimlibs} -p /sbin/ldconfig
 
-if [ -x %{_sbindir}/cimserver ]
-then
-    cimserver --status &> /dev/null
-    if [ $? -eq 0 ]
-    then
-    CIMMOF=cimmof
-    else
-    for repo in %{_localstatedir}/lib/Pegasus %{_localstatedir}/lib/pegasus %{_prefix}/local%{_localstatedir}/lib/pegasus %{_localstatedir}/local/lib/pegasus %{_localstatedir}/opt/tog-pegasus /opt/ibm/icc/cimom
-    do
-        if [ -d $repo/repository ]
-        then
-            CIMMOF="cimmofl -R $repo"
-        fi
-    done
-    fi
-    for ns in interop root/interop root/PG_Interop;
-    do
-        $CIMMOF -E -n$ns %{_datadir}/%{product_name}/Pegasus/mof/pegasus_register.mof &> /dev/null
-        if [ $? -eq 0 ]
-        then
-            $CIMMOF -uc -n$ns %{_datadir}/%{product_name}/Pegasus/mof/pegasus_register.mof &> /dev/null
-            $CIMMOF -uc -n$ns %{_datadir}/%{product_name}/Pegasus/mof/profile_registration.mof &> /dev/null
-            break
-        fi
-    done
-    $CIMMOF -aE -uc -n root/intelwbem %{_datadir}/%{product_name}/Pegasus/mof/intelwbem.mof &> /dev/null
-fi
-if [ -x %{_sbindir}/sfcbd ]
-then
-    RESTART=0
-    systemctl is-active sblim-sfcb.service &> /dev/null
-    if [ $? -eq 0 ]
-    then
-        RESTART=1
-        systemctl stop sblim-sfcb.service &> /dev/null
-    fi
-
-    sfcbstage -n root/intelwbem -r %{_datadir}/%{product_name}/sfcb/INTEL_NVDIMM.reg %{_datadir}/%{product_name}/sfcb/sfcb_intelwbem.mof
-    sfcbrepos -f
-
-    if [[ $RESTART -gt 0 ]]
-    then
-        systemctl start sblim-sfcb.service &> /dev/null
-    fi
-fi
-
 %post -n %{monitorname}
 %service_add_post ixpdimm-monitor.service
 
 %postun -n %{apiname} -p /sbin/ldconfig
 %postun -n %{cimlibs} -p /sbin/ldconfig
 %postun -n %{clilibname} -p /sbin/ldconfig
-
-# If upgrading, deregister old version
-if [ "$1" -gt 1 ]; then
-    RESTART=0
-    if [ -x %{_sbindir}/cimserver ]
-    then
-        cimserver --status &> /dev/null
-        if [ $? -gt 0 ]
-        then
-            RESTART=1
-            cimserver enableHttpConnection=false enableHttpsConnection=false enableRemotePrivilegedUserAccess=false slp=false &> /dev/null
-        fi
-        cimprovider -d -m intelwbemprovider &> /dev/null
-        cimprovider -r -m intelwbemprovider &> /dev/null
-        mofcomp -v -r -n root/intelwbem %{_datadir}/%{product_name}/Pegasus/mof/intelwbem.mof &> /dev/null
-        mofcomp -v -r -n root/intelwbem %{_datadir}/%{product_name}/Pegasus/mof/profile_registration.mof &> /dev/null
-        if [[ $RESTART -gt 0 ]]
-        then
-            cimserver -s &> /dev/null
-        fi
-    fi
-fi
-
-%preun -n %{cimlibs}
-RESTART=0
-if [ -x %{_sbindir}/cimserver ]
-then
-    cimserver --status &> /dev/null
-    if [ $? -gt 0 ]
-    then
-        RESTART=1
-        cimserver enableHttpConnection=false enableHttpsConnection=false enableRemotePrivilegedUserAccess=false slp=false &> /dev/null
-    fi
-    cimprovider -d -m intelwbemprovider &> /dev/null
-    cimprovider -r -m intelwbemprovider &> /dev/null
-    mofcomp -r -n root/intelwbem %{_datadir}/%{product_name}/Pegasus/mof/intelwbem.mof &> /dev/null
-    mofcomp -v -r -n root/intelwbem %{_datadir}/%{product_name}/Pegasus/mof/profile_registration.mof &> /dev/null
-    if [[ $RESTART -gt 0 ]]
-    then
-        cimserver -s &> /dev/null
-    fi
-fi
-
-if [ -x %{_sbindir}/sfcbd ]
-then
-    RESTART=0
-    systemctl is-active sblim-sfcb.service &> /dev/null
-    if [ $? -eq 0 ]
-    then
-        RESTART=1
-        systemctl stop sblim-sfcb.service &> /dev/null
-    fi
-
-    sfcbunstage -n root/intelwbem -r INTEL_NVDIMM.reg sfcb_intelwbem.mof
-    sfcbrepos -f
-
-    if [[ $RESTART -gt 0 ]]
-    then
-        systemctl start sblim-sfcb.service &> /dev/null
-    fi
-fi
 
 %preun -n %{monitorname}
 %service_del_preun ixpdimm-monitor.service
@@ -320,13 +213,6 @@ fi
 %files -n %{cimlibs}
 %defattr(-,root,root)
 %{_libdir}/libixpdimm-cim.so.*
-%dir %{_datadir}/%{product_name}
-%dir %{_datadir}/%{product_name}/Pegasus
-%dir %{_datadir}/%{product_name}/Pegasus/mof
-%dir %{_datadir}/%{product_name}/sfcb
-%attr(644,root,root) %{_datadir}/%{product_name}/sfcb/*.reg
-%attr(644,root,root) %{_datadir}/%{product_name}/sfcb/*.mof
-%attr(644,root,root) %{_datadir}/%{product_name}/Pegasus/mof/*.mof
 %doc LICENSE
 
 %files -n %{monitorname}

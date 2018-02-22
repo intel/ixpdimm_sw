@@ -15,7 +15,6 @@ Discover Intel DIMMs.
 IXPDIMM SW refers to the following interface components:
 
 * An Application Programming Interface (API) library which provides programmatic access to the IXPDMIM SW functionality.
-* A Common Information Model (CIM) provider library to expose the IXPDIMM SW functionality as standard CIM objects to plug-in to common information model object managers (CIMOMs).
 * A Command Line Interface (CLI)  application for configuring and managing Intel DIMMs from the command line.
 * A monitor daemon/system service for monitoring the health and status of Intel DIMMs.
 

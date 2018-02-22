@@ -43,8 +43,8 @@ the IXPSIMM SW functionality.
 Summary:        API for development of %{product_name} management utilities
 Group:          System/Libraries
 Requires:       %{data_name}
-Requires:	ndctl-libs >= 58.2
-Requires:	libinvm-i18n >= 01.01
+Requires:       ndctl-libs >= 58.2
+Requires:       libinvm-i18n >= 01.01
 Obsoletes:      ixpdimm_sw
 Obsoletes:      libixpdimm-core
 
@@ -118,7 +118,7 @@ A library for IXPDIMM CLI applications
 
 %build
 %cmake -DBUILDNUM=%{version} -DCMAKE_INSTALL_PREFIX=/usr -DRELEASE=ON \
-    -DRPM_BUILD=ON -DLINUX_PRODUCT_NAME=%{name} -DRPM_ROOT=%{buildroot} \
+    -DRPM_BUILD=ON -DLINUX_PRODUCT_NAME=%{name} \
     -DCMAKE_INSTALL_LIBDIR=%{_libdir} \
     -DCMAKE_INSTALL_INCLUDEDIR=%{_includedir} \
     -DCMAKE_INSTALL_BINDIR=%{_bindir} \
@@ -139,119 +139,11 @@ make -f Makefile install DESTDIR=%{buildroot}
 
 %post -n %{api_name} -p /sbin/ldconfig
 %post -n %{cli_lib_name} -p /sbin/ldconfig
-
-%post -n %{cim_lib_name}
-/sbin/ldconfig
-if [ -x /usr/sbin/cimserver ]
-then
-        cimserver --status &> /dev/null
-        if [ $? -eq 0 ]
-        then
-        CIMMOF=cimmof
-        else
-    for repo in /var/lib/Pegasus /var/lib/pegasus /usr/local/var/lib/pegasus /var/local/lib/pegasus /var/opt/tog-pegasus /opt/ibm/icc/cimom
-    do
-      if [ -d $repo/repository ]
-      then
-          CIMMOF="cimmofl -R $repo"
-      fi
-    done
-        fi
-        for ns in interop root/interop root/PG_Interop;
-        do
-           $CIMMOF -E -n$ns %{_datadir}/%{name}/Pegasus/mof/pegasus_register.mof &> /dev/null
-           if [ $? -eq 0 ]
-           then
-                $CIMMOF -uc -n$ns %{_datadir}/%{name}/Pegasus/mof/pegasus_register.mof &> /dev/null
-                $CIMMOF -uc -n$ns %{_datadir}/%{name}/Pegasus/mof/profile_registration.mof &> /dev/null
-                break
-           fi
-       done
-       $CIMMOF -aE -uc -n root/intelwbem %{_datadir}/%{name}/Pegasus/mof/intelwbem.mof &> /dev/null
-fi
-if [ -x /usr/sbin/sfcbd ]
-then
-    RESTART=0
-    systemctl is-active sblim-sfcb.service &> /dev/null
-    if [ $? -eq 0 ]
-    then
-        RESTART=1
-        systemctl stop sblim-sfcb.service &> /dev/null
-    fi
-
-    sfcbstage -n root/intelwbem -r %{_datadir}/%{name}/sfcb/INTEL_NVDIMM.reg %{_datadir}/%{name}/sfcb/sfcb_intelwbem.mof
-    sfcbrepos -f
-
-    if [[ $RESTART -gt 0 ]]
-    then
-        systemctl start sblim-sfcb.service &> /dev/null
-    fi
-fi
+%post -n %{cim_lib_name} -p /sbin/ldconfig
 
 %postun -n %{api_name} -p /sbin/ldconfig
 %postun -n %{cli_lib_name} -p /sbin/ldconfig
-
-%pre -n libixpdimm-cim
-# If upgrading, deregister old version
-if [ "$1" -gt 1 ]; then
-        RESTART=0
-        if [ -x /usr/sbin/cimserver ]
-        then
-                cimserver --status &> /dev/null
-                if [ $? -gt 0 ]
-                then
-                        RESTART=1
-                        cimserver enableHttpConnection=false enableHttpsConnection=false enableRemotePrivilegedUserAccess=false slp=false &> /dev/null
-                fi
-                cimprovider -d -m intelwbemprovider &> /dev/null
-                cimprovider -r -m intelwbemprovider &> /dev/null
-                mofcomp -v -r -n root/intelwbem %{_datadir}/%{name}/Pegasus/mof/intelwbem.mof &> /dev/null
-                mofcomp -v -r -n root/intelwbem %{_datadir}/%{name}/Pegasus/mof/profile_registration.mof &> /dev/null
-                if [[ $RESTART -gt 0 ]]
-                then
-                    cimserver -s &> /dev/null
-                fi
-        fi
-fi
-
-%preun -n libixpdimm-cim
-RESTART=0
-if [ -x /usr/sbin/cimserver ]
-then
-        cimserver --status &> /dev/null
-        if [ $? -gt 0 ]
-        then
-                RESTART=1
-                cimserver enableHttpConnection=false enableHttpsConnection=false enableRemotePrivilegedUserAccess=false slp=false &> /dev/null
-        fi
-        cimprovider -d -m intelwbemprovider &> /dev/null
-        cimprovider -r -m intelwbemprovider &> /dev/null
-        mofcomp -r -n root/intelwbem %{_datadir}/%{name}/Pegasus/mof/intelwbem.mof &> /dev/null
-        mofcomp -v -r -n root/intelwbem %{_datadir}/%{name}/Pegasus/mof/profile_registration.mof &> /dev/null
-        if [[ $RESTART -gt 0 ]]
-        then
-            cimserver -s &> /dev/null
-        fi
-fi
-
-if [ -x /usr/sbin/sfcbd ]
-then
-    RESTART=0
-    systemctl is-active sblim-sfcb.service &> /dev/null
-    if [ $? -eq 0 ]
-    then
-        RESTART=1
-        systemctl stop sblim-sfcb.service &> /dev/null
-    fi
-
-    sfcbunstage -n root/intelwbem -r INTEL_NVDIMM.reg sfcb_intelwbem.mof
-    sfcbrepos -f
-
-    if [[ $RESTART -gt 0 ]]
-    then
-        systemctl start sblim-sfcb.service &> /dev/null
-    fi
-fi
+%postun -n %{cim_lib_name} -p /sbin/ldconfig
 
 %preun -n %{monitor_name}
 %systemd_preun stop ixpdimm-monitor.service
@@ -290,12 +182,6 @@ fi
 %defattr(-,root,root)
 %doc README.md
 %{_libdir}/libixpdimm-cim.so.*
-%dir %{_datadir}/%{name}/Pegasus
-%dir %{_datadir}/%{name}/Pegasus/mof
-%dir %{_datadir}/%{name}/sfcb
-%attr(644,root,root) %{_datadir}/%{name}/sfcb/*.reg
-%attr(644,root,root) %{_datadir}/%{name}/sfcb/*.mof
-%attr(644,root,root) %{_datadir}/%{name}/Pegasus/mof/*.mof
 %license LICENSE
 
 %files -n %{monitor_name}
