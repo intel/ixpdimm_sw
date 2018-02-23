@@ -135,12 +135,19 @@ void ShowTopologyCommand::filterTopologiesOnDimmIds()
 		for (size_t i = m_topologies.size(); i > 0; i--)
 		{
 			core::device::Topology &topology = m_topologies[i - 1];
-			NVM_UINT32 handle = topology.getDeviceHandle();
+			NVM_UINT32 expected_handle = topology.getDeviceHandle();
+			std::string expected_uid = topology.getUid();
+
 			bool topology_found = false;
 
 			for (size_t j = 0; j < input_handles.size(); j++)
 			{
-				if (input_handles[j] == handle)
+				std::string dimmId = m_dimmIds[j];
+				NVM_UINT32 input_handle = (NVM_UINT32)stringToUInt64(dimmId);
+				bool isHandle = cli::nvmcli::isStringValidNumber(dimmId);
+				bool isValidUid = ShowCommandUtilities::isUid(dimmId);
+				if ((isHandle && (input_handle == expected_handle))
+							|| (isValidUid && (dimmId == expected_uid)))
 				{
 					topology_found = true;
 					break;
@@ -228,11 +235,12 @@ std::string ShowTopologyCommand::getFirstBadDimmId(core::device::TopologyCollect
 	{
 		bool dimmIdFound = false;
 		std::string dimmId = m_dimmIds[i];
-		NVM_UINT32 input_handle = (NVM_UINT32)stringToUInt64(dimmId);
+		bool isValidUid = ShowCommandUtilities::isUid(dimmId);
 		bool isHandle = cli::nvmcli::isStringValidNumber(dimmId);
 		for (size_t j = 0; j < topologies.size() && !dimmIdFound; j++)
 		{
-			if (isHandle && (input_handle == topologies[j].getDeviceHandle()))
+			if ((isHandle && (NVM_UINT32)stringToUInt64(dimmId) == topologies[j].getDeviceHandle())
+				|| (isValidUid && framework::stringsIEqual(dimmId, topologies[j].getUid())))
 			{
 				dimmIdFound = true;
 				break;

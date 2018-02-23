@@ -75,12 +75,13 @@ class NVM_CLI_API ShowCommandUtilities
 		static void split(const std::string &s, char delim, Out result);
 		static std::string listToString(std::vector<std::string> list);
 		static const std::size_t min_hex_id_length = 6;
+		static bool isUid(std::string id);
+
 	protected:
 		static std::string getFirstBadDimmId(const core::StringList &dimmIds,
 				core::device::DeviceCollection &devices);
 		static std::string getFirstBadSocketId(const core::StringList &socketIds,
 				core::device::DeviceCollection &devices);
-		static bool isUid(std::string id);
 };
 
 }
