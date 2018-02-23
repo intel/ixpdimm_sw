@@ -53,13 +53,14 @@ int win_scm2_ioctl_passthrough_cmd(unsigned short nfit_handle,
 	// already, we need to subtract those bytes from the total buffer size
 	ioctl_data.InputDataSize = sizeof (NVDIMM_PASSTHROUGH_IN) +
 			input_payload_size - 1; // minus 1 byte no padding cause the struct is packed
-	if(input_payload_size == 0)
-		ioctl_data.InputDataSize += 4; // Microsoft driver expects 12 bytes
-    ioctl_data.OutputDataSize = sizeof (NVDIMM_PASSTHROUGH_OUT) +
+	if (ioctl_data.InputDataSize < 12)
+		ioctl_data.InputDataSize = 12; // Microsoft driver expects 12 bytes
+
+	ioctl_data.OutputDataSize = sizeof (NVDIMM_PASSTHROUGH_OUT) +
 			output_payload_size - 1; // minus 1 byte no padding cause the struct is packed
-	if(output_payload_size == 0)
-		ioctl_data.OutputDataSize += 4; // Microsoft driver expects 12 bytes
-			
+	if(ioctl_data.OutputDataSize < 12)
+		ioctl_data.OutputDataSize = 12; // Microsoft driver expects 12 bytes
+
 	SCM_LOG_INFO_F("buf_size (%xh, %xh): in %d, out %d", op_code, sub_op_code,
                    (int)ioctl_data.InputDataSize, (int)ioctl_data.OutputDataSize);
 
@@ -81,17 +82,15 @@ int win_scm2_ioctl_passthrough_cmd(unsigned short nfit_handle,
 		// minus 1 byte no padding cause the struct is packed
 		p_input_data->DataSize = sizeof (DSM_VENDOR_SPECIFIC_COMMAND_INPUT_PAYLOAD)
 										 + input_payload_size - 1;
-		
+		if (p_input_data->DataSize < 12)
+			p_input_data->DataSize = 12; // Microsoft driver expects 12 byte
+
         // prepare the input data buffer
 		if (input_payload_size > 0)
 		{
 			memmove(p_input_data->Data.Arg3OpCodeParameterDataBuffer,
 					input_payload,
 					input_payload_size);
-		}
-		else
-		{
-			p_input_data->DataSize += 4; // Microsoft driver expects 12 bytes
 		}
 
 		enum WIN_SCM2_IOCTL_RETURN_CODES ioctl_rc = win_scm2_ioctl_execute(nfit_handle,
