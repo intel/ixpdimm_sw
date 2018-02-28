@@ -106,10 +106,6 @@ int nvm_get_namespace_count()
 	{
 		COMMON_LOG_ERROR("Retrieving namespaces is not supported.");
 	}
-	else if ((rc = is_ars_in_progress()) != NVM_SUCCESS)
-	{
-		COMMON_LOG_ERROR("Retrieving namespaces is not supported when an ARS is in progress.");
-	}
 	else
 	{
 		rc = nvm_get_pool_count();
@@ -152,10 +148,6 @@ int nvm_get_namespaces(struct namespace_discovery *p_namespaces, const NVM_UINT8
 	{
 		COMMON_LOG_ERROR("Invalid parameter, count is 0");
 		rc = NVM_ERR_INVALIDPARAMETER;
-	}
-	else if ((rc = is_ars_in_progress()) != NVM_SUCCESS)
-	{
-		COMMON_LOG_ERROR("Retrieving namespaces is not supported when an ARS is in progress.");
 	}
 	// read from the cache
 	else if ((rc = get_nvm_context_namespaces(p_namespaces, count)) < 0 &&

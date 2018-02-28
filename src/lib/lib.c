@@ -328,7 +328,7 @@ int nvm_get_error(const enum return_code code, NVM_ERROR_DESCRIPTION description
 				break;
 			case NVM_ERR_ARSINPROGRESS:
 				s_strcpy(description,
-						TR("Namespaces are unavailable because an address range scrub operation "
+						TR("Operation not possbile because an address range scrub operation "
 								"is currently in progress."),
 						description_len);
 				break;

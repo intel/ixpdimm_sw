@@ -222,6 +222,7 @@ void uint32_to_bytes(unsigned long val, unsigned char *arr, size_t len);
 
 int is_ars_in_progress();
 
+
 #ifdef __cplusplus
 }
 #endif

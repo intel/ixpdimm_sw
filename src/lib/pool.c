@@ -1011,10 +1011,6 @@ int nvm_get_pool_count()
 	{
 		COMMON_LOG_ERROR("Retrieving pools is not supported.");
 	}
-	else if ((rc = is_ars_in_progress()) != NVM_SUCCESS)
-	{
-		COMMON_LOG_ERROR("Retrieving pools is not supported when an ARS is in progress.");
-	}
 	else if ((rc = get_nvm_context_pool_count()) < 0)
 	{
 		struct pool_data *p_pool_data = NULL;
@@ -1061,10 +1057,6 @@ int nvm_get_pools(struct pool *p_pools, const NVM_UINT8 count)
 	{
 		COMMON_LOG_ERROR("Invalid parameter, count is 0");
 		rc = NVM_ERR_INVALIDPARAMETER;
-	}
-	else if ((rc = is_ars_in_progress()) != NVM_SUCCESS)
-	{
-		COMMON_LOG_ERROR("Retrieving pools is not supported when an ARS is in progress.");
 	}
 	else if ((rc = get_nvm_context_pools(p_pools, count)) < 0 &&
 			rc != NVM_ERR_ARRAYTOOSMALL)
@@ -1116,10 +1108,6 @@ int nvm_get_pool(const NVM_UID pool_uid, struct pool *p_pool)
 	{
 		COMMON_LOG_ERROR("Invalid parameter, p_pool is NULL");
 		rc = NVM_ERR_INVALIDPARAMETER;
-	}
-	else if ((rc = is_ars_in_progress()) != NVM_SUCCESS)
-	{
-		COMMON_LOG_ERROR("Retrieving pools is not supported when an ARS is in progress.");
 	}
 	else if ((rc = get_nvm_context_pool(pool_uid, p_pool)) != NVM_SUCCESS)
 	{
