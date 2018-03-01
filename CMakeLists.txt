@@ -162,14 +162,18 @@ if(RELEASE)
 		)
 	if(MSVC)
 		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /O2")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /O2")
 	else()
-		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -fno-strict-aliasing")
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_RELEASE} -O2 -fno-strict-aliasing")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE} -O2 -fno-strict-aliasing")
 	endif()
 else()
 	if(MSVC)
 		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /Od")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Od")
 	else()
 		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O1 -ggdb")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O1 -ggdb")
 	endif()
 endif()
 
@@ -951,7 +955,7 @@ add_custom_target(rpm
 
 	# Copy spec file
 	COMMAND ${CMAKE_COMMAND} -E copy
-	${ROOT}/install/linux/${LINUX_DIST}-release/*.spec ${RPMBUILD_DIR}/SPECS/${MARKETING_PRODUCT_NAME}.spec
+	${ROOT}/install/linux/${LINUX_DIST}-release/${MARKETING_PRODUCT_NAME}.spec ${RPMBUILD_DIR}/SPECS/${MARKETING_PRODUCT_NAME}.spec
 
 	# Update the spec file with build version
 	COMMAND sed -i "s/^%define build_version .*/%define build_version ${BUILDNUM}/g" ${RPMBUILD_DIR}/SPECS/${MARKETING_PRODUCT_NAME}.spec
