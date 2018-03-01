@@ -1197,6 +1197,9 @@ int get_dimm_capacities(const struct device_discovery *p_dimm,
 	else
 	{
 		memset(p_capacities, 0, sizeof (struct device_capacities));
+		// PM capacity allocated by BIOS
+		NVM_UINT64 pm_capacity = 0;
+		// PM capacity mapped to SPA
 		NVM_UINT64 ad_capacity = 0;
 		NVM_UINT64 mirrored_ad_capacity = 0;
 		int ad_rc = get_app_direct_capacity_on_device(p_dimm, &ad_capacity, &mirrored_ad_capacity);
@@ -1214,6 +1217,7 @@ int get_dimm_capacities(const struct device_discovery *p_dimm,
 		if ((rc = get_partition_info(p_dimm->device_handle, &pi)) == NVM_SUCCESS)
 		{
 			p_capacities->capacity = MULTIPLES_TO_BYTES(pi.raw_capacity);
+			pm_capacity = MULTIPLES_TO_BYTES(pi.pmem_capacity);
 
 			if (is_in_memory_mode(p_capabilities, &pi))
 			{
@@ -1225,12 +1229,13 @@ int get_dimm_capacities(const struct device_discovery *p_dimm,
 			p_capacities->mirrored_app_direct_capacity = mirrored_ad_capacity;
 			p_capacities->storage_capacity -=
 				(p_capacities->mirrored_app_direct_capacity * 2llu);
-			p_capacities->reserved_capacity = RESERVED_CAPACITY_BYTES(p_capacities->capacity);
+			p_capacities->reserved_capacity =
+				p_capacities->capacity -
+				pm_capacity -
+				p_capacities->memory_capacity;
 			p_capacities->unconfigured_capacity =
-					p_capacities->capacity -
-					p_capacities->reserved_capacity -
-					p_capacities->memory_capacity -
-					p_capacities->app_direct_capacity;
+				pm_capacity -
+				p_capacities->app_direct_capacity;
 
 			// update capacities based on DIMM SKU
 			rc = update_capacities_based_on_sku
