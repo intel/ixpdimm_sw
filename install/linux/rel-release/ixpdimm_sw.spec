@@ -26,6 +26,9 @@ BuildRequires: pkgconfig(libkmod)
 BuildRequires: pkgconfig(sqlite3)
 BuildRequires: pkgconfig(libndctl)
 BuildRequires: pkgconfig(openssl)
+BuildRequires: pkgconfig(libinvm-cli)
+BuildRequires: pkgconfig(libinvm-cim)
+BuildRequires: pkgconfig(libinvm-i18n)
 BuildRequires: numactl-devel
 BuildRequires: sblim-cmpi-devel
 BuildRequires: python2

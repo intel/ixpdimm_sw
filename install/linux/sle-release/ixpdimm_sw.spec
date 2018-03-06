@@ -33,7 +33,7 @@
 
 Name:           %{product_name}
 Version:        %{build_version}
-Release:        1
+Release:        1%{?dist}
 Summary:        API for development of IXPDIMM management utilities
 License:        BSD-3-Clause
 Group:          System/Daemons
@@ -51,6 +51,9 @@ BuildRequires:  python
 BuildRequires:  cmake
 BuildRequires:  gettext
 BuildRequires:  groff
+BuildRequires:  libinvm-cli-devel
+BuildRequires:  libinvm-cim-devel
+BuildRequires:  libinvm-i18n-devel
 
 ExclusiveArch: x86_64
 
@@ -96,7 +99,6 @@ developing applications that use %{name}.
 %package -n %{cimlibs}
 Summary:        CIM provider for %{name}
 Group:          System/Libraries
-Requires:       %{apiname}
 Requires:       libinvm-cim2 >= 01.01
 Requires:       pywbem
 Requires(post): pywbem
@@ -132,7 +134,6 @@ capacity provisioning, health monitoring, and troubleshooting.
 %package -n %{clilibname}
 Summary:        CLI for managment of %{product_name}
 Group:          System/Management
-Requires:       %{cimlibs}
 Requires:       libinvm-cli2 >= 01.01
 Requires:       libinvm-cim2 >= 01.01
 Requires:       libinvm-i18n2 >= 01.01
@@ -147,7 +148,7 @@ capacity provisioning, health monitoring, and troubleshooting.
 
 %build
 %cmake -DBUILDNUM=%{version} -DCMAKE_INSTALL_PREFIX=/usr -DRELEASE=ON \
-    -DRPM_BUILD=ON -DLINUX_PRODUCT_NAME=%{name} -DRPM_ROOT=%{buildroot} \
+    -DRPM_BUILD=ON -DLINUX_PRODUCT_NAME=%{name} \
     -DCMAKE_INSTALL_LIBDIR=%{_libdir} \
     -DCMAKE_INSTALL_INCLUDEDIR=%{_includedir} \
     -DCMAKE_INSTALL_BINDIR=%{_bindir} \
