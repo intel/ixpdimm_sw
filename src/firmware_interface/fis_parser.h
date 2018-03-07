@@ -130,6 +130,18 @@ enum fis_parser_codes fis_parse_firmware_debug_log(
 	const struct pt_output_firmware_debug_log *p_output_payload,
 	struct fwcmd_firmware_debug_log_data *p_data);
 
+enum fis_parser_codes fis_parse_memory_info_page_0(
+	const struct pt_output_memory_info_page_0 *p_output_payload,
+	struct fwcmd_memory_info_page_0_data *p_data);
+
+enum fis_parser_codes fis_parse_memory_info_page_1(
+	const struct pt_output_memory_info_page_1 *p_output_payload,
+	struct fwcmd_memory_info_page_1_data *p_data);
+
+enum fis_parser_codes fis_parse_memory_info_page_3(
+	const struct pt_output_memory_info_page_3 *p_output_payload,
+	struct fwcmd_memory_info_page_3_data *p_data);
+
 enum fis_parser_codes fis_parse_long_operation_status(
 	const struct pt_output_long_operation_status *p_output_payload,
 	struct fwcmd_long_operation_status_data *p_data);

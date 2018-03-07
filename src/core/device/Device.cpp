@@ -267,7 +267,7 @@ NVM_UINT16 Device::getSubsystemRevision()
 bool Device::isManufacturingInfoValid()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-	if (getDiscovery().manufacturing_info_valid  == 0)
+	if (getDiscovery().manufacturing_info_valid == 0)
 	{
 		return false;
 	}
@@ -838,6 +838,13 @@ NVM_UINT32 Device::getInjectedNonMediaErrors()
 	return getDetails().status.injected_non_media_errors;
 }
 
+// Temporary placeholder for existing CLI to handle some parts of IXP
+// library calls (parsing specified properties).
+NVM_UINT32 Device::ixpPropertyPlaceholder()
+{
+	return 0;
+}
+
 const device_discovery &Device::getDiscovery()
 {
 	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
@@ -893,26 +900,26 @@ const std::vector<event> &Device::getEvents()
 
 std::string Device::getFormattedManufacturingDate(NVM_UINT16 manufacturingdate)
 {
-    LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
-    NVM_UINT8 week_byte = (NVM_UINT8)(manufacturingdate >> 8);
-    NVM_UINT8 year_byte = (NVM_UINT8)(manufacturingdate & 0x00FF);
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	NVM_UINT8 week_byte = (NVM_UINT8)(manufacturingdate >> 8);
+	NVM_UINT8 year_byte = (NVM_UINT8)(manufacturingdate & 0x00FF);
 
-    NVM_UINT8 week_dec_byte = bcd_byte_to_dec(week_byte);
-    NVM_UINT8 year_dec_byte = bcd_byte_to_dec(year_byte);
+	NVM_UINT8 week_dec_byte = bcd_byte_to_dec(week_byte);
+	NVM_UINT8 year_dec_byte = bcd_byte_to_dec(year_byte);
 
-    std::stringstream date_str;
+	std::stringstream date_str;
 
-    if (week_dec_byte == 0xFF || year_dec_byte == 0xFF)
-    {
-        week_dec_byte = 0;
-        year_dec_byte = 0;
-    }
+	if (week_dec_byte == 0xFF || year_dec_byte == 0xFF)
+	{
+		week_dec_byte = 0;
+		year_dec_byte = 0;
+	}
 
-    date_str << std::setfill('0');
-    date_str << std::setw(2) << (NVM_UINT32)week_dec_byte;
-    date_str << "-";
-    date_str << std::setw(2) << (NVM_UINT32)year_dec_byte;
-    return date_str.str();
+	date_str << std::setfill('0');
+	date_str << std::setw(2) << (NVM_UINT32)week_dec_byte;
+	date_str << "-";
+	date_str << std::setw(2) << (NVM_UINT32)year_dec_byte;
+	return date_str.str();
 }
 
 }

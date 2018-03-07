@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Intel Corporation
+ * Copyright (c) 2018, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -25,57 +25,37 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _NFIT_INTERFACE_NFIT_TABLES_H_
-#define _NFIT_INTERFACE_NFIT_TABLES_H_
 
-#include "common.h"
+#ifndef SRC_IXP_PROPERTIES_H_
+#define SRC_IXP_PROPERTIES_H_
+
+#include <ixp.h>
+#include <export_api.h>
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-#define SPA_RANGE_PM_REGION_GUID_STR "79D3F066-F3B4-7440-AC43-0D3318B78CDB"
-#define	NFIT_MAPPING_ATTRIBUTE_EFI_MEMORY_UC	0x00000001
-#define	NFIT_MAPPING_ATTRIBUTE_EFI_MEMORY_WC	0x00000002
-#define	NFIT_MAPPING_ATTRIBUTE_EFI_MEMORY_WT	0x00000004
-#define	NFIT_MAPPING_ATTRIBUTE_EFI_MEMORY_WB	0x00000008
-#define	NFIT_MAPPING_ATTRIBUTE_EFI_MEMORY_UCE	0x00000010
-#define	NFIT_MAPPING_ATTRIBUTE_EFI_MEMORY_WP	0x00001000
-#define	NFIT_MAPPING_ATTRIBUTE_EFI_MEMORY_RP	0x00002000
-#define	NFIT_MAPPING_ATTRIBUTE_EFI_MEMORY_XP	0x00004000
-#define	NFIT_MAPPING_ATTRIBUTE_EFI_MEMORY_NV	0x00008000
-#define	NFIT_MAPPING_ATTRIBUTE_EFI_MEMORY_MORE_RELIABLE	0x00010000
+#define PROP_KEY_VALID(k) (k >= 0 && k < IXP_PROP_KEY_MAX)
 
-PACK_STRUCT(1)
-
-//- for t in all_tables
-struct {{t.name}}
+struct ixp_lookup_t
 {
-//-	for f in t.fields
-//-		if f.is_primitive
-	{{f.c_type}} {{f.name}};
-//-		else
-	unsigned char {{f.name}}[{{f.byte_count}}];
-//-		endif
-//- endfor
-} __attribute__((packed));
-
-//- endfor
-
-UNPACK_STRUCT
-
-struct parsed_nfit
-{
-	struct {{root_table.name}} {{root_table.name}};
-	//- for t in sub_tables
-	int {{t.name}}_count;
-	struct {{t.name}} *{{t.name}}_list;
-	//- endfor
+	// For the fis call associated with this ixp_prop_key, populate all
+	// relevant properties in props
+	int (* f_populate)(unsigned int handle, struct ixp_prop_info props[], unsigned int num_props);
+	// For the fis call associated with this ixp_prop_key, free all
+	// relevant properties in props
+	void (* f_free)(struct ixp_prop_info props[], unsigned int num_props);
+	char prop_name[IXP_MAX_PROPERTY_NAME_SZ];
 };
+
+int ixp_set_g_ixp_lookup_entry(IXP_PROP_KEY key, struct ixp_lookup_t entry);
+int ixp_get_g_ixp_lookup_entry(IXP_PROP_KEY key, struct ixp_lookup_t * entry);
+
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _NFIT_INTERFACE_NFIT_TABLES_H_ */
+#endif /* SRC_IXP_PROPERTIES_H_ */

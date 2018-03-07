@@ -455,6 +455,54 @@ unsigned int fis_firmware_debug_log(const unsigned int device_handle, struct pt_
 	return rc;
 }
 
+unsigned int fis_memory_info_page_0(const unsigned int device_handle, struct pt_input_memory_info_page_0 *p_input_payload, struct pt_output_memory_info_page_0 *p_output_payload)
+{
+	struct pt_fw_cmd cmd;
+	int rc = FIS_ERR_SUCCESS;
+	memset(&cmd, 0, sizeof (struct pt_fw_cmd));
+	cmd.device_handle = device_handle;
+	cmd.opcode = 0x08;
+	cmd.sub_opcode = 0x03;
+	cmd.input_payload = p_input_payload;
+	cmd.input_payload_size = sizeof (struct pt_input_memory_info_page_0);
+	cmd.output_payload_size = sizeof (struct pt_output_memory_info_page_0);
+	cmd.output_payload = p_output_payload;
+	rc = pt_ioctl_cmd(&cmd);
+	return rc;
+}
+
+unsigned int fis_memory_info_page_1(const unsigned int device_handle, struct pt_input_memory_info_page_1 *p_input_payload, struct pt_output_memory_info_page_1 *p_output_payload)
+{
+	struct pt_fw_cmd cmd;
+	int rc = FIS_ERR_SUCCESS;
+	memset(&cmd, 0, sizeof (struct pt_fw_cmd));
+	cmd.device_handle = device_handle;
+	cmd.opcode = 0x08;
+	cmd.sub_opcode = 0x03;
+	cmd.input_payload = p_input_payload;
+	cmd.input_payload_size = sizeof (struct pt_input_memory_info_page_1);
+	cmd.output_payload_size = sizeof (struct pt_output_memory_info_page_1);
+	cmd.output_payload = p_output_payload;
+	rc = pt_ioctl_cmd(&cmd);
+	return rc;
+}
+
+unsigned int fis_memory_info_page_3(const unsigned int device_handle, struct pt_input_memory_info_page_3 *p_input_payload, struct pt_output_memory_info_page_3 *p_output_payload)
+{
+	struct pt_fw_cmd cmd;
+	int rc = FIS_ERR_SUCCESS;
+	memset(&cmd, 0, sizeof (struct pt_fw_cmd));
+	cmd.device_handle = device_handle;
+	cmd.opcode = 0x08;
+	cmd.sub_opcode = 0x03;
+	cmd.input_payload = p_input_payload;
+	cmd.input_payload_size = sizeof (struct pt_input_memory_info_page_3);
+	cmd.output_payload_size = sizeof (struct pt_output_memory_info_page_3);
+	cmd.output_payload = p_output_payload;
+	rc = pt_ioctl_cmd(&cmd);
+	return rc;
+}
+
 unsigned int fis_long_operation_status(const unsigned int device_handle, struct pt_output_long_operation_status *p_output_payload)
 {
 	struct pt_fw_cmd cmd;

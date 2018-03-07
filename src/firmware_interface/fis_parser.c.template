@@ -58,14 +58,14 @@ enum fis_parser_codes {{name|fw_cmd_parser}}(
 	memmove(p_data->{{f.name}}.bytes, p_output_payload->{{f.name}}, {{f.byte_count}});
 //-		else
 	memmove(p_data->{{f.name}}, p_output_payload->{{f.name}}, {{f.byte_count}});
-//- 	endif
-//- 	for b in f.bits
+//-		endif
+//-		for b in f.bits
 	p_data->{{f.name}}_{{b.name}} = (unsigned char)((p_data->{{f.name}} >> {{ b.bit }}) & 0x01);
-//- 	endfor
+//-		endfor
 //- endfor
 
 //- for r in payload.payload_refs
-//- 	if r.is_offset
+//-		if r.is_offset
 	// Is Offset
 	if (PARSING_SUCCESS(rc))
 	{
@@ -87,7 +87,7 @@ enum fis_parser_codes {{name|fw_cmd_parser}}(
 		}
 	}
 
-//- 	elif r.is_type_based
+//-		elif r.is_type_based
 	// Is Type Based
 	unsigned char *base = (unsigned char *) p_output_payload;
 	const int type_offset = {{r.type_offset}};

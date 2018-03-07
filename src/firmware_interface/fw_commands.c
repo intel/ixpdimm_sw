@@ -1500,6 +1500,171 @@ void fwcmd_free_firmware_debug_log(struct fwcmd_firmware_debug_log_result *p_res
 }
 /* END firmware_debug_log */
 
+/* BEGIN memory_info_page_0 */
+struct fwcmd_memory_info_page_0_result fwcmd_alloc_memory_info_page_0(unsigned int handle)
+{
+	struct fwcmd_memory_info_page_0_result result;
+	memset(&result, 0, sizeof (struct fwcmd_memory_info_page_0_result));
+	unsigned int rc  = FIS_ERR_SUCCESS;
+
+	struct pt_input_memory_info_page_0 input_payload;
+	input_payload.memory_page = 0;
+	struct pt_output_memory_info_page_0 output_payload;
+	rc = fis_memory_info_page_0(handle,
+		&input_payload, &output_payload);
+
+	if (PT_IS_SUCCESS(rc))
+	{
+		result.p_data = (struct fwcmd_memory_info_page_0_data *)malloc(sizeof(*result.p_data));
+		if (result.p_data)
+		{
+			rc = fis_parse_memory_info_page_0(&output_payload, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(rc))
+			{
+				result.success = 1;
+			}
+			else
+			{
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = rc;
+			}
+		}
+		else
+		{
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
+		}
+	}
+	else
+	{
+		result.error_code.type = FWCMD_ERROR_TYPE_PT;
+		result.error_code.code = rc;
+	}
+	return result;
+}
+void fwcmd_free_memory_info_page_0_data(struct fwcmd_memory_info_page_0_data *p_data)
+{
+	if (p_data)
+	{
+	}
+}
+
+void fwcmd_free_memory_info_page_0(struct fwcmd_memory_info_page_0_result *p_result)
+{
+	fwcmd_free_memory_info_page_0_data(p_result->p_data);
+	free(p_result->p_data);
+}
+/* END memory_info_page_0 */
+
+/* BEGIN memory_info_page_1 */
+struct fwcmd_memory_info_page_1_result fwcmd_alloc_memory_info_page_1(unsigned int handle)
+{
+	struct fwcmd_memory_info_page_1_result result;
+	memset(&result, 0, sizeof (struct fwcmd_memory_info_page_1_result));
+	unsigned int rc  = FIS_ERR_SUCCESS;
+
+	struct pt_input_memory_info_page_1 input_payload;
+	input_payload.memory_page = 1;
+	struct pt_output_memory_info_page_1 output_payload;
+	rc = fis_memory_info_page_1(handle,
+		&input_payload, &output_payload);
+
+	if (PT_IS_SUCCESS(rc))
+	{
+		result.p_data = (struct fwcmd_memory_info_page_1_data *)malloc(sizeof(*result.p_data));
+		if (result.p_data)
+		{
+			rc = fis_parse_memory_info_page_1(&output_payload, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(rc))
+			{
+				result.success = 1;
+			}
+			else
+			{
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = rc;
+			}
+		}
+		else
+		{
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
+		}
+	}
+	else
+	{
+		result.error_code.type = FWCMD_ERROR_TYPE_PT;
+		result.error_code.code = rc;
+	}
+	return result;
+}
+void fwcmd_free_memory_info_page_1_data(struct fwcmd_memory_info_page_1_data *p_data)
+{
+	if (p_data)
+	{
+	}
+}
+
+void fwcmd_free_memory_info_page_1(struct fwcmd_memory_info_page_1_result *p_result)
+{
+	fwcmd_free_memory_info_page_1_data(p_result->p_data);
+	free(p_result->p_data);
+}
+/* END memory_info_page_1 */
+
+/* BEGIN memory_info_page_3 */
+struct fwcmd_memory_info_page_3_result fwcmd_alloc_memory_info_page_3(unsigned int handle)
+{
+	struct fwcmd_memory_info_page_3_result result;
+	memset(&result, 0, sizeof (struct fwcmd_memory_info_page_3_result));
+	unsigned int rc  = FIS_ERR_SUCCESS;
+
+	struct pt_input_memory_info_page_3 input_payload;
+	input_payload.memory_page = 3;
+	struct pt_output_memory_info_page_3 output_payload;
+	rc = fis_memory_info_page_3(handle,
+		&input_payload, &output_payload);
+
+	if (PT_IS_SUCCESS(rc))
+	{
+		result.p_data = (struct fwcmd_memory_info_page_3_data *)malloc(sizeof(*result.p_data));
+		if (result.p_data)
+		{
+			rc = fis_parse_memory_info_page_3(&output_payload, result.p_data);
+			if (FWCMD_PARSE_SUCCESS(rc))
+			{
+				result.success = 1;
+			}
+			else
+			{
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = rc;
+			}
+		}
+		else
+		{
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
+		}
+	}
+	else
+	{
+		result.error_code.type = FWCMD_ERROR_TYPE_PT;
+		result.error_code.code = rc;
+	}
+	return result;
+}
+void fwcmd_free_memory_info_page_3_data(struct fwcmd_memory_info_page_3_data *p_data)
+{
+	if (p_data)
+	{
+	}
+}
+
+void fwcmd_free_memory_info_page_3(struct fwcmd_memory_info_page_3_result *p_result)
+{
+	fwcmd_free_memory_info_page_3_data(p_result->p_data);
+	free(p_result->p_data);
+}
+/* END memory_info_page_3 */
+
 /* BEGIN long_operation_status */
 struct fwcmd_long_operation_status_result fwcmd_alloc_long_operation_status(unsigned int handle)
 {
@@ -1751,6 +1916,18 @@ int fwcmd_is_command_name(const char * cmd_name)
 	{
 		exists = 1;
 	}
+	if (s_strncmpi(cmd_name, "memory_info_page_0", sizeof ("memory_info_page_0")) == 0)
+	{
+		exists = 1;
+	}
+	if (s_strncmpi(cmd_name, "memory_info_page_1", sizeof ("memory_info_page_1")) == 0)
+	{
+		exists = 1;
+	}
+	if (s_strncmpi(cmd_name, "memory_info_page_3", sizeof ("memory_info_page_3")) == 0)
+	{
+		exists = 1;
+	}
 	if (s_strncmpi(cmd_name, "long_operation_status", sizeof ("long_operation_status")) == 0)
 	{
 		exists = 1;
@@ -1855,6 +2032,18 @@ int fwcmd_is_output_command_name(const char * cmd_name)
 		exists = 1;
 	}
 	if (s_strncmpi(cmd_name, "firmware_debug_log", sizeof ("firmware_debug_log")) == 0)
+	{
+		exists = 1;
+	}
+	if (s_strncmpi(cmd_name, "memory_info_page_0", sizeof ("memory_info_page_0")) == 0)
+	{
+		exists = 1;
+	}
+	if (s_strncmpi(cmd_name, "memory_info_page_1", sizeof ("memory_info_page_1")) == 0)
+	{
+		exists = 1;
+	}
+	if (s_strncmpi(cmd_name, "memory_info_page_3", sizeof ("memory_info_page_3")) == 0)
 	{
 		exists = 1;
 	}

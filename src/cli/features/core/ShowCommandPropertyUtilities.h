@@ -59,10 +59,11 @@ template<class T>
 inline bool ShowCommandPropertyUtilities<T>::isPropertyDisplayed(
 		framework::IPropertyDefinition<T>& p, framework::DisplayOptions& options)
 {
-	return p.isRequired() ||
-			options.isAll() ||
-			(p.isDefault() && options.isDefault()) ||
-			options.contains(p.getName());
+	return (p.isRequired() ||
+		options.isAll() ||
+		(p.isDefault() && options.isDefault()) ||
+		options.contains(p.getName())) &&
+		!p.isIxp();
 }
 
 template<class T>

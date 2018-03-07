@@ -180,6 +180,7 @@ public:
 	virtual enum fw_update_status getFwUpdateStatus();
 	virtual NVM_UINT32 getInjectedMediaErrors();
 	virtual NVM_UINT32 getInjectedNonMediaErrors();
+	virtual NVM_UINT32 ixpPropertyPlaceholder();
 
 private:
 	NvmLibrary &m_lib;

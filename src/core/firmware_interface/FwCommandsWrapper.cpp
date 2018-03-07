@@ -438,6 +438,48 @@ void FwCommandsWrapper::FwcmdFreeFirmwareDebugLog(struct fwcmd_firmware_debug_lo
 	fwcmd_free_firmware_debug_log(p_result);
 }
 
+struct fwcmd_memory_info_page_0_result FwCommandsWrapper::FwcmdAllocMemoryInfoPage0(unsigned int handle) const
+{
+	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
+
+	return fwcmd_alloc_memory_info_page_0(handle);
+}
+
+void FwCommandsWrapper::FwcmdFreeMemoryInfoPage0(struct fwcmd_memory_info_page_0_result *p_result) const
+{
+	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
+
+	fwcmd_free_memory_info_page_0(p_result);
+}
+
+struct fwcmd_memory_info_page_1_result FwCommandsWrapper::FwcmdAllocMemoryInfoPage1(unsigned int handle) const
+{
+	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
+
+	return fwcmd_alloc_memory_info_page_1(handle);
+}
+
+void FwCommandsWrapper::FwcmdFreeMemoryInfoPage1(struct fwcmd_memory_info_page_1_result *p_result) const
+{
+	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
+
+	fwcmd_free_memory_info_page_1(p_result);
+}
+
+struct fwcmd_memory_info_page_3_result FwCommandsWrapper::FwcmdAllocMemoryInfoPage3(unsigned int handle) const
+{
+	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
+
+	return fwcmd_alloc_memory_info_page_3(handle);
+}
+
+void FwCommandsWrapper::FwcmdFreeMemoryInfoPage3(struct fwcmd_memory_info_page_3_result *p_result) const
+{
+	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
+
+	fwcmd_free_memory_info_page_3(p_result);
+}
+
 struct fwcmd_long_operation_status_result FwCommandsWrapper::FwcmdAllocLongOperationStatus(unsigned int handle) const
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);

@@ -40,24 +40,22 @@ int fwcmd_dump(const char *command_name, unsigned int handle, const char *filena
 {
 	int rc = FWCMD_DUMP_RESULT_SUCCESS;
 	//- for cmd in commands
-	//- 	if cmd.has_output
-	//- 		if not loop.first
-	//- 			set else_str="else "
-	//- 		endif
+	//-		if cmd.has_output
+	//-			if not loop.first
+	//-				set else_str="else "
+	//-			endif
 	{{else_str}}if (s_strncmpi(command_name, "{{cmd.name}}",
 		sizeof ("{{cmd.name}}")) == 0)
 	{
 		rc = {{cmd.name|fw_cmd_dump}}(handle,
 			//- if cmd.has_input
-			//- for f in cmd.input_payload.fields
-			//- if not f.ignore
+			//- for f in cmd.input_fields_changeable
 			{{f.default_value}},
-			//- endif
 			//- endfor
 			//- endif
 			filename);
 	}
-	//- 	endif
+	//-		endif
 	//- endfor
 	//- if commands
 	else
@@ -100,22 +98,22 @@ void fwcmd_read_and_print(const char *filename)
 		{
 			char command_name[COMMAND_NAME_BUFFER_SIZE];
 			s_strcpy(command_name, (char *)buffer, COMMAND_NAME_BUFFER_SIZE);
-            unsigned char *p_payload = buffer + COMMAND_NAME_BUFFER_SIZE;
+			unsigned char *p_payload = buffer + COMMAND_NAME_BUFFER_SIZE;
 
 //- for cmd in commands
-//- 	if cmd.has_output
-//- 		if not loop.first
-//- 			set else_str="else "
-//- 		endif
+//-		if cmd.has_output
+//-			if not loop.first
+//-				set else_str="else "
+//-			endif
             {{else_str}}if (s_strncmpi(command_name, "{{cmd.name}}", sizeof ("{{cmd.name}}")) == 0)
-            {
+			{
                 struct {{cmd.name|fw_cmd_data}} data;
 
 				{{cmd.name|fw_cmd_parser}}((struct {{cmd.name|output_payload}} *)p_payload, &data {%- if cmd.name == 'platform_config_data'-%}
 				, sizeof(buffer - COMMAND_NAME_BUFFER_SIZE)
 			{%- endif -%});
 				{{cmd.name|fw_cmd_printer}}(&data, 0);
-            }
+			}
 //-		endif
 //- endfor
 		}
@@ -132,13 +130,11 @@ void fwcmd_read_and_print(const char *filename)
 }
 
 //- for cmd in commands
-//- 	if cmd.has_output
+//-		if cmd.has_output
 int {{cmd.name|fw_cmd_dump}}(const int handle,
 	//- if cmd.has_input
-	//- for f in cmd.input_payload.fields
-	//- if not f.ignore
+	//- for f in cmd.input_fields_changeable
 	const {{f.c_definition}},
-	//- endif
 	//- endfor
 	//- endif
 	const char * filename)
@@ -164,17 +160,22 @@ int {{cmd.name|fw_cmd_dump}}(const int handle,
 		//- endif
 		//- if cmd.has_input
 		struct {{cmd.name|input_payload}} input_payload;
-		//- for f in cmd.input_payload.fields
-		//- if not f.ignore
-		//- if f.is_primitive
+			//- for f in cmd.input_fields_not_ignored
+				//- if f.value
+					//- if f.is_primitive
+		input_payload.{{f.name}} = {{f.value}};
+					//- else
+		memmove(input_payload.{{f.name}}, {{f.value}}, {{f.byte_count}});
+					//- endif
+				//- else
+					//- if f.is_primitive
 		input_payload.{{f.name}} = {{f.name}};
-		//- else
+					//- else
 		memmove(input_payload.{{f.name}}, {{f.name}}, {{f.byte_count}});
+					//- endif
+				//- endif
+			//- endfor
 		//- endif
-		//- endif
-		//- endfor
-		//- endif
-
 		rc = {{cmd.name|fis}}(handle,
 			{%- if cmd.has_input -%}
 			&input_payload,
@@ -281,5 +282,5 @@ struct {{cmd.name|fw_cmd_result}} {{cmd.name|fw_cmd_read}}(const char *filename)
 
 	return result;
 }
-//- 	endif
-//- endfor
+//-		endif
+//-	endfor

@@ -267,7 +267,7 @@ file(GLOB FIRMWARE_INTERFACE_FILES
 
 add_library(firmware_interface STATIC ${FIRMWARE_INTERFACE_FILES})
 
-target_link_libraries(firmware_interface driver_interface)
+target_link_libraries(firmware_interface driver_interface ${COMMON_LIB_NAME})
 target_include_directories(firmware_interface PUBLIC
 	src/common
 	)
@@ -787,6 +787,7 @@ target_include_directories(${CLI_LIB_NAME} PUBLIC
 	src
 	src/common
 	src/lib
+	src/ixp
 	src/wbem
 	src/acpi
 	${INVM-CLI_INCLUDE_DIRS}
@@ -801,6 +802,7 @@ target_link_libraries(${CLI_LIB_NAME}
 	${INVM-CLI_LIBRARIES}
 	${INVM-CIM_LIBRARIES}
 	${INVM-I18N_LIBRARIES}
+	ixp
 	)
 
 if(WIN_BUILD AND NOT MSVC)
@@ -825,6 +827,7 @@ add_executable(${CLI_NAME} src/cli/nvmcli.cpp ${CLI_RESOURCE_FILE})
 target_include_directories(${CLI_NAME} PUBLIC
 	src
 	src/common
+	src/ixp/
 	${INVM-CLI_INCLUDE_DIRS}
 	${INVM-CIM_INCLUDE_DIRS}
 	)
@@ -832,6 +835,7 @@ target_include_directories(${CLI_NAME} PUBLIC
 target_link_libraries(${CLI_NAME}
 	${INVM-CLI_LIBRARIES}
 	${INVM-I18N_LIBRARIES}
+	ixp
 	${CIM_LIB_NAME}
 	${CLI_LIB_NAME}
 	${API_LIB_NAME}
@@ -850,6 +854,32 @@ if(LNX_BUILD)
 		COMMAND ${CMAKE_COMMAND} -E touch ${ROOT}/src/cli/nvmcli.cpp
 		)
 endif()
+
+# --------------------------------------------------------------------------------------------------
+# IXP Library
+# --------------------------------------------------------------------------------------------------
+file(GLOB IXP_SRC_FILES
+	src/ixp/ixp.c
+	src/ixp/ixp_properties/ixp_properties.c
+	src/ixp/ixp_properties/ixp_fis_properties.c)
+
+
+add_library(ixp STATIC ${IXP_SRC_FILES})
+
+target_include_directories(ixp PUBLIC
+	src/ixp
+	src/ixp/ixp_properties
+	src/firmware_interface
+	src/common
+	src/lib/)
+
+if (ESX_BUILD)
+	target_include_directories(ixp PUBLIC)
+endif ()
+
+target_link_libraries(ixp
+		firmware_interface
+		)
 
 # --------------------------------------------------------------------------------------------------
 # Monitor
@@ -926,7 +956,7 @@ if(LNX_BUILD)
 	if(DEFINED INSTALL_SYSTEMDSYSTEMUNITDIR)
 		install (FILES ${OUTPUT_DIR}/${MONITOR_NAME}.service
 			DESTINATION ${INSTALL_SYSTEMDSYSTEMUNITDIR})
-	endif()
+endif()
 elseif(WIN_BUILD)
 	install (CODE "execute_process(COMMAND cmd /c ${ROOT}/install/windows/install.cmd ${OUTPUT_DIR} ${SIM_BUILD})")
 endif()

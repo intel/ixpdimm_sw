@@ -50,10 +50,8 @@ void fwcmd_print_all(unsigned int handle)
 	printf("Printing {{cmd.name}} ... \n");
 	{{cmd.name|fw_cmd_print_controller}}(handle
 	//- if cmd.has_input
-		//- for f in cmd.input_payload.fields
-		//- if not f.ignore
+		//- for f in cmd.input_fields_changeable
 		, {{f.default_value}}
-		//- endif
 		//- endfor
 	//- endif
 		);
@@ -67,13 +65,13 @@ void fwcmd_run(const char *command_name,
 	fwcmd_args *p_args)
 {
 	//- for cmd in commands
-	//- 	if not loop.first
-	//- 		set else_str="else "
-	//- 	endif
+	//-		if not loop.first
+	//-			set else_str="else "
+	//-		endif
 	{{else_str}}if (s_strncmpi(command_name, "{{cmd.name}}",
 		sizeof ("{{cmd.name}}")) == 0)
 	{
-//-	for f in cmd.input_fields_not_ignored
+//-	for f in cmd.input_fields_changeable
 		char * {{f.name}}_value = find_arg(p_args, "{{f.name}}");
 		//- if f.default_value
 		if (!{{f.name}}_value)
@@ -89,12 +87,12 @@ void fwcmd_run(const char *command_name,
 		//- endif
 //- endfor
 		{{cmd.name|fw_cmd_print_controller}}(handle
-			//- for f in cmd.input_fields_not_ignored
-			//- 	if not f.is_string
+			//- for f in cmd.input_fields_changeable
+			//-		if not f.is_string
 			, to_int({{f.name}}_value)
 			//-		else
 			, {{f.name}}_value
-			//- 	endif
+			//-		endif
 			//- endfor
 
 		);
@@ -112,13 +110,13 @@ void fwcmd_run(const char *command_name,
 
 //- for cmd in commands
 void {{cmd.name|fw_cmd_print_controller}}(unsigned int handle
-{%- 	for f in cmd.input_fields_not_ignored -%}
+{%-		for f in cmd.input_fields_changeable -%}
 	, const {{f.c_definition}}
-{%- 	endfor -%}
+{%-		endfor -%}
 	)
 {
 	struct {{cmd.name|fw_cmd_result}} result = {{cmd|fw_cmd_name}}(handle
-{%-for f in cmd.input_fields_not_ignored-%}
+{%-for f in cmd.input_fields_changeable-%}
 		, {{f.name}}
 {%-endfor-%}
 		);

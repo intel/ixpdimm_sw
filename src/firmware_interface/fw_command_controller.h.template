@@ -43,9 +43,9 @@ void fwcmd_run(const char *command_name, unsigned int handle, fwcmd_args *p_args
 
 //- for cmd in commands
 void {{cmd.name|fw_cmd_print_controller}}(unsigned int handle
-{%- 	for f in cmd.input_fields_not_ignored -%}
+{%-		for f in cmd.input_fields_changeable -%}
 	, const {{f.c_definition}}
-{%- 	endfor -%}
+{%-		endfor -%}
 	);
 
 //- endfor

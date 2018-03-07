@@ -53,7 +53,7 @@ FwCommandsWrapper::~FwCommandsWrapper()
 //- for cmd in commands
 
 struct {{cmd.name|fw_cmd_result}} FwCommandsWrapper::{{cmd|fw_cmd_name|camel}}(unsigned int handle
-{%- for f in cmd.input_fields_not_ignored -%}
+{%- for f in cmd.input_fields_changeable -%}
 ,
 const {{f.c_definition}}
 {%- endfor -%}
@@ -62,14 +62,14 @@ const {{f.c_definition}}
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
 
 	return {{cmd|fw_cmd_name}}(handle
-	{%- for f in cmd.input_fields_not_ignored -%}
+	{%- for f in cmd.input_fields_changeable -%}
 	,
 	{{f.name}}
 	{%- endfor -%}
 	);
 }
 
-//- 	if cmd.has_output
+//-		if cmd.has_output
 void FwCommandsWrapper::{{cmd.name|fw_cmd_free|camel}}(struct {{cmd.name|fw_cmd_result}} *p_result) const
 {
 	LogEnterExit(__FUNCTION__, __FILE__, __LINE__);
@@ -77,7 +77,7 @@ void FwCommandsWrapper::{{cmd.name|fw_cmd_free|camel}}(struct {{cmd.name|fw_cmd_
 	{{cmd.name|fw_cmd_free}}(p_result);
 }
 
-//- 	endif
+//-		endif
 
 //- endfor
 

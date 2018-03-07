@@ -52,18 +52,18 @@ void {{name|fw_cmd_free_data}}(struct {{name|fw_cmd_data}} *p_data)
 //- for r in payload.payload_refs
 //-		if r.is_type_based
 //-			for t in r.types
-//- 			set name=r.types[t]
-//- 			if r.is_multiple
+//-				set name=r.types[t]
+//-				if r.is_multiple
 {{free_multiple(name)}}
 //-				else
 		{{name|fw_cmd_free_data}}(&p_data->{{name}});
-//- 			endif
-//- 		endfor
-//- 	elif r.is_multiple
+//-				endif
+//-			endfor
+//-		elif r.is_multiple
 {{free_multiple(r.name)}}
-//- 	else
+//-		else
 		{{r.name|fw_cmd_free_data}}(&p_data->{{r.name}});
-//- 	endif
+//-		endif
 //- endfor
 	}
 }
@@ -75,10 +75,10 @@ void {{name|fw_cmd_free_data}}(struct {{name|fw_cmd_data}} *p_data)
 
 /* BEGIN {{cmd.name}} */
 struct {{cmd.name|fw_cmd_result}} {{cmd|fw_cmd_name}}(unsigned int handle
-{%- 	for f in cmd.input_fields_not_ignored -%}
+{%-		for f in cmd.input_fields_changeable -%}
 	,
 	const {{f.c_definition}}
-{%- 	endfor -%}
+{%-		endfor -%}
 	)
 {
 	struct {{cmd.name|fw_cmd_result}} result;
@@ -88,10 +88,18 @@ struct {{cmd.name|fw_cmd_result}} {{cmd|fw_cmd_name}}(unsigned int handle
 	//- if cmd.has_input
 	struct {{cmd.name|input_payload}} input_payload;
 		//- for f in cmd.input_fields_not_ignored
-			//- if f.is_primitive
-	input_payload.{{f.name}} = {{f.name}};
+			//- if f.value
+				//- if f.is_primitive
+	input_payload.{{f.name}} = {{f.value}};
+				//- else
+	memmove(input_payload.{{f.name}}, {{f.value}}, {{f.byte_count}});
+				//- endif
 			//- else
+				//- if f.is_primitive
+	input_payload.{{f.name}} = {{f.name}};
+				//- else
 	memmove(input_payload.{{f.name}}, {{f.name}}, {{f.byte_count}});
+				//- endif
 			//- endif
 		//- endfor
 	//- endif
@@ -164,17 +172,17 @@ struct {{cmd.name|fw_cmd_result}} {{cmd|fw_cmd_name}}(unsigned int handle
 	//- endif
 	return result;
 }
-//- 	if cmd.has_output
-//- 		for s in cmd.sub_payloads
+//-		if cmd.has_output
+//-			for s in cmd.sub_payloads
 {{free_data(s.name, s.payload)}}
-//- 		endfor
+//-			endfor
 {{free_data(cmd.name, cmd.output_payload)}}
 void {{cmd.name|fw_cmd_free}}(struct {{cmd.name|fw_cmd_result}} *p_result)
 {
 	{{cmd.name|fw_cmd_free_data}}(p_result->p_data);
 	free(p_result->p_data);
 }
-//- 	endif
+//-		endif
 /* END {{cmd.name}} */
 
 //- endfor
@@ -201,7 +209,7 @@ int fwcmd_is_output_command_name(const char * cmd_name)
 	int exists = 0;
 
 //- for cmd in commands
-//- 	if cmd.has_output
+//-		if cmd.has_output
 	if (s_strncmpi(cmd_name, "{{cmd.name}}", sizeof ("{{cmd.name}}")) == 0)
 	{
 		exists = 1;

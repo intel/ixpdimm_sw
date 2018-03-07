@@ -33,8 +33,8 @@ void {{name|fw_cmd_field_printer}}(const struct {{name|fw_cmd_data}} *p_value, i
 {
 	print_tabs({{tab_counter}});
 	printf("{{header|camel}}:\n");
-//- 		for f in payload.fields
-//- 			if not f.ignore
+//-			for f in payload.fields
+//-				if not f.ignore
 	print_tabs({{tab_counter}} + 1);
 //-					if f.is_struct
 	fwcmd_{{f.struct_type}}_printer(&p_value->{{f.name}}, {{tab_counter}} + 1);
@@ -53,9 +53,9 @@ void {{name|fw_cmd_field_printer}}(const struct {{name|fw_cmd_data}} *p_value, i
 	print_tabs({{tab_counter}} + 2);
 	printf("{{b.name|camel}}: %d\n", p_value->{{f.name}}_{{b.name}});
 //-						endfor
-//- 				endif
-//- 			endif
-//- 		endfor
+//-					endif
+//-				endif
+//-			endfor
 }
 //- endmacro
 
@@ -63,31 +63,31 @@ void {{name|fw_cmd_field_printer}}(const struct {{name|fw_cmd_data}} *p_value, i
 void {{name|fw_cmd_printer}}(const struct {{name|fw_cmd_data}} *p_value, int {{tab_counter}})
 {
 	{{name|fw_cmd_field_printer}}(p_value, {{tab_counter}});
-//- 		for r in payload.payload_refs:
-//- 			if r.is_type_based
-//- 				for t in r.types
-//- 					set name=r.types[t]
+//-			for r in payload.payload_refs:
+//-				if r.is_type_based
+//-					for t in r.types
+//-						set name=r.types[t]
 //-						if r.is_multiple
 	for (size_t i = 0; i < p_value->{{name}}_count; i++)
 	{
 		{{name|fw_cmd_printer}}(&p_value->{{name}}[i], {{tab_counter}} + 1);
 	}
-//- 					else
+//-						else
 	{{name|fw_cmd_printer}}(&p_value->{{name}}, {{tab_counter}} + 1);
-//- 					endif
-//- 				endfor
-//- 			else
+//-						endif
+//-					endfor
+//-				else
 //-					if r.is_multiple
 	for (size_t i = 0; i < p_value->{{r.name}}_count; i++)
 	{
 		{{r.name|fw_cmd_printer}}(&p_value->{{r.name}}[i], {{tab_counter}} + 1);
 	}
 
-//- 				else
+//-					else
 	{{r.name|fw_cmd_printer}}(&p_value->{{r.name}}, {{tab_counter}} + 1);
-//- 				endif
-//- 			endif
-//- 		endfor
+//-					endif
+//-				endif
+//-			endfor
 }
 //- endmacro
 
@@ -156,7 +156,7 @@ void fwcmd_print_output_command_names()
 	printf("Commands with output: \n");
 
 //- for cmd in commands
-//- 	if cmd.has_output
+//-		if cmd.has_output
 	printf("\t{{cmd.name}}\n");
 //-		endif
 //-	endfor
@@ -164,19 +164,19 @@ void fwcmd_print_output_command_names()
 
 
 //- for cmd in commands
-//- 	if cmd.has_output
-//- 		for s in cmd.sub_payloads
+//-		if cmd.has_output
+//-			for s in cmd.sub_payloads
 {{printer(s.name, s.payload, "indent_count")}}
-//- 		endfor
+//-			endfor
 {{printer(cmd.name, cmd.output_payload, "indent_count")}}
-//- 	endif
+//-		endif
 //- endfor
 
 //- for cmd in commands
-//- 	if cmd.has_output
-//- 		for s in cmd.sub_payloads
+//-		if cmd.has_output
+//-			for s in cmd.sub_payloads
 {{simple_printer(s.name, s.header, s.payload, "indent_count")}}
-//- 		endfor
+//-			endfor
 {{simple_printer(cmd.name, cmd.header, cmd.output_payload, "indent_count")}}
-//- 	endif
+//-		endif
 //- endfor

@@ -47,9 +47,9 @@ struct {{f.struct_type|fw_cmd_data}} {{f.name}};
 struct {{f.struct_type|fw_cmd_data}} {{f.name}}[{{f.struct_array_count}}];
 {%-	else -%}
 {{f.c_definition}};
-{%- 	for b in f.bits %}
+{%-		for b in f.bits %}
 	unsigned char {{f.name}}_{{b.name}};
-{%- 	endfor -%}
+{%-		endfor -%}
 {%-	endif -%}
 //- endmacro
 
@@ -59,9 +59,9 @@ struct {{f.struct_type|fw_cmd_data}} {{f.name}}[{{f.struct_array_count}}];
 	union
 	{
 		unsigned char bytes[{{f.byte_count}}];
-//- 		for u in f.union_payloads
+//-			for u in f.union_payloads
 		{{simple_field(u)}}
-//- 		endfor
+//-			endfor
 	} {{f.name}};
 //-		else
 	{{simple_field(f)}}
@@ -74,25 +74,25 @@ struct {{f.struct_type|fw_cmd_data}} {{f.name}}[{{f.struct_array_count}}];
 {{field(f)}}
 {%- endfor -%}
 {%- for r in payload.payload_refs -%}
-//- 	if r.is_type_based
-//- 		for t in r.types
-//- 			if r.is_multiple
+//-		if r.is_type_based
+//-			for t in r.types
+//-				if r.is_multiple
 {{multiple_field(r.types[t])}}
-//- 			else
+//-				else
 	struct {{r.name|fw_cmd_data}} {{r.name}};
-//- 			endif
-//- 		endfor
+//-				endif
+//-			endfor
 //-		elif r.is_struct
-	struct {{r.struct_type|fw_cmd_data}} {{r.name}};    
+	struct {{r.struct_type|fw_cmd_data}} {{r.name}};
 //-		elif r.is_struct_array
-	struct {{r.struct_type|fw_cmd_data}} {{r.name}}[{{r.struct_array_count}}];  
-//- 	else
-//- 		if r.is_multiple
+	struct {{r.struct_type|fw_cmd_data}} {{r.name}}[{{r.struct_array_count}}];
+//-		else
+//-			if r.is_multiple
 {{multiple_field(r.name)}}
-//- 		else
+//-			else
 	struct {{r.name|fw_cmd_data}} {{r.name}};
-//- 		endif
-//- 	endif
+//-			endif
+//-		endif
 {%- endfor -%}
 //- endmacro
 
@@ -117,52 +117,61 @@ struct fwcmd_error_code
 {
 	enum fwcmd_error_type type;
 	unsigned int code;
-}  )
+})
+
+// Generic result struct
+PACK_STRUCT(
+struct fwcmd_result
+{
+	int success:1;
+	struct fwcmd_error_code error_code;
+	void *p_data;
+})
 
 //- for cmd in commands
 /*
  * Data Structures for {{cmd.name}}
  */
-//- 	for s in cmd.sub_payloads
+//-		for s in cmd.sub_payloads
 PACK_STRUCT(
 struct {{s.name|fw_cmd_data}}
 {
 {{payload_fields(s.payload)}}
-}  )
+})
 
-//- 	endfor
+//-		endfor
 
-//- 	if cmd.has_output
+//-		if cmd.has_output
 PACK_STRUCT(
 struct {{cmd.name|fw_cmd_data}}
 {
 {{payload_fields(cmd.output_payload)}}
-}  )
-//- 	endif
+})
+//-		endif
 
 PACK_STRUCT(
 struct {{cmd.name|fw_cmd_result}}
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
-//- 	if cmd.has_output
+//-		if cmd.has_output
 	struct {{cmd.name|fw_cmd_data}} *p_data;
-//- 	endif
-}  )
+//-		endif
+})
 
 /*
  * Firmware Command Function {{cmd.name}}
  */
 struct {{cmd.name|fw_cmd_result}} {{cmd|fw_cmd_name}}(unsigned int handle
-	{%- for f in cmd.input_fields_not_ignored -%}
+	{%- for f in cmd.input_fields_changeable -%}
 	,
 	const {{f.c_definition}}
 	{%- endfor -%}
 );
 
-//- 	if cmd.has_output
+//-		if cmd.has_output
 void {{cmd.name|fw_cmd_free}}(struct {{cmd.name|fw_cmd_result}} *p_result);
-//- 	endif
+//-		endif
 
 //- endfor
 

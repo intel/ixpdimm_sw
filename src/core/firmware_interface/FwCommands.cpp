@@ -592,6 +592,63 @@ enum return_code FwCommands::fwGetPayload_FirmwareDebugLog(unsigned int handle, 
 	return rc;
 }
 
+enum return_code FwCommands::fwGetPayload_MemoryInfoPage0(unsigned int handle, std::string &resultString)
+{
+	enum return_code rc = NVM_SUCCESS;
+
+	struct fwcmd_memory_info_page_0_result result = m_wrapper.FwcmdAllocMemoryInfoPage0(handle);
+
+	if (result.success)
+	{
+		resultString += fwPayloadToString_MemoryInfoPage0(result.p_data);
+	}
+	else
+	{
+		rc = convertFwcmdErrorCodeToNvmErrorCode(result.error_code);
+	}
+
+	m_wrapper.FwcmdFreeMemoryInfoPage0(&result);
+	return rc;
+}
+
+enum return_code FwCommands::fwGetPayload_MemoryInfoPage1(unsigned int handle, std::string &resultString)
+{
+	enum return_code rc = NVM_SUCCESS;
+
+	struct fwcmd_memory_info_page_1_result result = m_wrapper.FwcmdAllocMemoryInfoPage1(handle);
+
+	if (result.success)
+	{
+		resultString += fwPayloadToString_MemoryInfoPage1(result.p_data);
+	}
+	else
+	{
+		rc = convertFwcmdErrorCodeToNvmErrorCode(result.error_code);
+	}
+
+	m_wrapper.FwcmdFreeMemoryInfoPage1(&result);
+	return rc;
+}
+
+enum return_code FwCommands::fwGetPayload_MemoryInfoPage3(unsigned int handle, std::string &resultString)
+{
+	enum return_code rc = NVM_SUCCESS;
+
+	struct fwcmd_memory_info_page_3_result result = m_wrapper.FwcmdAllocMemoryInfoPage3(handle);
+
+	if (result.success)
+	{
+		resultString += fwPayloadToString_MemoryInfoPage3(result.p_data);
+	}
+	else
+	{
+		rc = convertFwcmdErrorCodeToNvmErrorCode(result.error_code);
+	}
+
+	m_wrapper.FwcmdFreeMemoryInfoPage3(&result);
+	return rc;
+}
+
 enum return_code FwCommands::fwGetPayload_LongOperationStatus(unsigned int handle, std::string &resultString)
 {
 	enum return_code rc = NVM_SUCCESS;
@@ -977,6 +1034,33 @@ std::string FwCommands::fwPayloadToString_FirmwareDebugLog(const struct fwcmd_fi
 	std::stringstream result;
 	result << "\nFirmware Debug Log:" << "\n";
 	result << fwPayloadFieldsToString_FirmwareDebugLog(p_data);
+
+	return result.str();
+}
+
+std::string FwCommands::fwPayloadToString_MemoryInfoPage0(const struct fwcmd_memory_info_page_0_data *p_data)
+{
+	std::stringstream result;
+	result << "\nMemory Info Page 0:" << "\n";
+	result << fwPayloadFieldsToString_MemoryInfoPage0(p_data);
+
+	return result.str();
+}
+
+std::string FwCommands::fwPayloadToString_MemoryInfoPage1(const struct fwcmd_memory_info_page_1_data *p_data)
+{
+	std::stringstream result;
+	result << "\nMemory Info Page 1:" << "\n";
+	result << fwPayloadFieldsToString_MemoryInfoPage1(p_data);
+
+	return result.str();
+}
+
+std::string FwCommands::fwPayloadToString_MemoryInfoPage3(const struct fwcmd_memory_info_page_3_data *p_data)
+{
+	std::stringstream result;
+	result << "\nMemory Info Page 3:" << "\n";
+	result << fwPayloadFieldsToString_MemoryInfoPage3(p_data);
 
 	return result.str();
 }
@@ -1499,6 +1583,47 @@ std::string FwCommands::fwPayloadFieldsToString_FirmwareDebugLog(const struct fw
 	std::stringstream result;
 	result << "\nFirmware Debug Log:" << "\n";
 	result << "LogSize: " << (int) p_data->log_size << "\n";
+	return result.str();
+}
+
+std::string FwCommands::fwPayloadFieldsToString_MemoryInfoPage0(const struct fwcmd_memory_info_page_0_data *p_data)
+{
+	std::stringstream result;
+	result << "\nMemory Info Page 0:" << "\n";
+	result << "MediaReads: " << p_data->media_reads << "\n";
+	result << "MediaWrites: " << p_data->media_writes << "\n";
+	result << "ReadRequests: " << p_data->read_requests << "\n";
+	result << "WriteRequests: " << p_data->write_requests << "\n";
+	result << "BlockReadRequests: " << p_data->block_read_requests << "\n";
+	result << "BlockWriteRequests: " << p_data->block_write_requests << "\n";
+	return result.str();
+}
+
+std::string FwCommands::fwPayloadFieldsToString_MemoryInfoPage1(const struct fwcmd_memory_info_page_1_data *p_data)
+{
+	std::stringstream result;
+	result << "\nMemory Info Page 1:" << "\n";
+	result << "TotalMediaReads: " << p_data->total_media_reads << "\n";
+	result << "TotalMediaWrites: " << p_data->total_media_writes << "\n";
+	result << "TotalReadRequests: " << p_data->total_read_requests << "\n";
+	result << "TotalWriteRequests: " << p_data->total_write_requests << "\n";
+	result << "TotalBlockReadRequests: " << p_data->total_block_read_requests << "\n";
+	result << "TotalBlockWriteRequests: " << p_data->total_block_write_requests << "\n";
+	return result.str();
+}
+
+std::string FwCommands::fwPayloadFieldsToString_MemoryInfoPage3(const struct fwcmd_memory_info_page_3_data *p_data)
+{
+	std::stringstream result;
+	result << "\nMemory Info Page 3:" << "\n";
+	result << "ErrorInjectionStatus: " << p_data->error_injection_status << "\n";	result << "ErrorInjectionEnabled: " << p_data->error_injection_status_error_injection_enabled << "\n";
+	result << "MediaTemperatureInjectionEnabled: " << p_data->error_injection_status_media_temperature_injection_enabled << "\n";
+	result << "SoftwareTriggersEnabled: " << p_data->error_injection_status_software_triggers_enabled << "\n";
+
+	result << "PoisonErrorInjectionsCounter: " << p_data->poison_error_injections_counter << "\n";
+	result << "PoisonErrorClearCounter: " << p_data->poison_error_clear_counter << "\n";
+	result << "MediaTemperatureInjectionsCounter: " << p_data->media_temperature_injections_counter << "\n";
+	result << "SoftwareTriggersCounter: " << p_data->software_triggers_counter << "\n";
 	return result.str();
 }
 

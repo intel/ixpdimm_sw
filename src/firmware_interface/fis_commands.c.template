@@ -51,7 +51,7 @@ unsigned int {{cmd.name|fis}}(const unsigned int device_handle
 	cmd.input_payload_size = sizeof (struct {{cmd.name|input_payload}});
 //-		endif
 
-//- 	if cmd.has_output
+//-		if cmd.has_output
 //-			if cmd.name == 'platform_config_data'
 	char out_buf[PT_DEV_SMALL_PAYLOAD_SIZE];
 	int offset = 0;
@@ -82,7 +82,7 @@ unsigned int {{cmd.name|fis}}(const unsigned int device_handle
 //-			else
 	cmd.output_payload_size = sizeof (struct {{cmd.name|output_payload}});
 	cmd.output_payload = p_output_payload;
-//- 	    endif
+//-		    endif
 //-		endif
 //-			if cmd.name == 'platform_config_data'
 	}

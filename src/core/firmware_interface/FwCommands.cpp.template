@@ -74,7 +74,7 @@ FwCommands::~FwCommands()
 
 //- for cmd in commands
 enum return_code FwCommands::{{cmd.name|fw_get_payload}}(unsigned int handle
-{%-		for f in cmd.input_fields_not_ignored -%}
+{%-		for f in cmd.input_fields_changeable -%}
 	, const {{f.c_definition}}
 {%-		endfor -%}
 	, std::string &resultString)
@@ -82,7 +82,7 @@ enum return_code FwCommands::{{cmd.name|fw_get_payload}}(unsigned int handle
 	enum return_code rc = NVM_SUCCESS;
 
 	struct {{cmd.name|fw_cmd_result}} result = m_wrapper.{{cmd|fw_cmd_name|camel}}(handle
-{%-for f in cmd.input_fields_not_ignored-%}
+{%-for f in cmd.input_fields_changeable-%}
 		, {{f.name}}
 {%-endfor-%}
 		);

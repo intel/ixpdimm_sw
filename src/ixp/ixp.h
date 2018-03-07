@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Intel Corporation
+ * Copyright (c) 2018, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -25,57 +25,49 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _NFIT_INTERFACE_NFIT_TABLES_H_
-#define _NFIT_INTERFACE_NFIT_TABLES_H_
 
-#include "common.h"
+#ifndef SRC_IXP_H_
+#define	SRC_IXP_H_
+
+#include <nvm_types.h>
+#include <ixp_types.h>
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-#define SPA_RANGE_PM_REGION_GUID_STR "79D3F066-F3B4-7440-AC43-0D3318B78CDB"
-#define	NFIT_MAPPING_ATTRIBUTE_EFI_MEMORY_UC	0x00000001
-#define	NFIT_MAPPING_ATTRIBUTE_EFI_MEMORY_WC	0x00000002
-#define	NFIT_MAPPING_ATTRIBUTE_EFI_MEMORY_WT	0x00000004
-#define	NFIT_MAPPING_ATTRIBUTE_EFI_MEMORY_WB	0x00000008
-#define	NFIT_MAPPING_ATTRIBUTE_EFI_MEMORY_UCE	0x00000010
-#define	NFIT_MAPPING_ATTRIBUTE_EFI_MEMORY_WP	0x00001000
-#define	NFIT_MAPPING_ATTRIBUTE_EFI_MEMORY_RP	0x00002000
-#define	NFIT_MAPPING_ATTRIBUTE_EFI_MEMORY_XP	0x00004000
-#define	NFIT_MAPPING_ATTRIBUTE_EFI_MEMORY_NV	0x00008000
-#define	NFIT_MAPPING_ATTRIBUTE_EFI_MEMORY_MORE_RELIABLE	0x00010000
+struct ixp_context;
 
-PACK_STRUCT(1)
+#define IXP_PROP_KEY  unsigned int
 
-//- for t in all_tables
-struct {{t.name}}
+#define IXP_MAX_PROPERTY_NAME_SZ	256
+
+struct ixp_prop_info
 {
-//-	for f in t.fields
-//-		if f.is_primitive
-	{{f.c_type}} {{f.name}};
-//-		else
-	unsigned char {{f.name}}[{{f.byte_count}}];
-//-		endif
-//- endfor
-} __attribute__((packed));
-
-//- endfor
-
-UNPACK_STRUCT
-
-struct parsed_nfit
-{
-	struct {{root_table.name}} {{root_table.name}};
-	//- for t in sub_tables
-	int {{t.name}}_count;
-	struct {{t.name}} *{{t.name}}_list;
-	//- endfor
+	IXP_PROP_KEY prop_key;
+	char prop_name[IXP_MAX_PROPERTY_NAME_SZ];
+	void *prop_value;
+	int prop_value_size;
 };
+
+
+int ixp_create_ctx_nfit_handle(struct ixp_context **ctx, const NVM_NFIT_DEVICE_HANDLE handle, void *user_data);
+int ixp_create_ctx_uid(struct ixp_context **ctx, const NVM_UID uid, void *user_data);
+int ixp_get_ctx_user_data(struct ixp_context *ctx, void **user_data);
+int ixp_free_ctx(struct ixp_context *ctx);
+int ixp_init_prop(struct ixp_prop_info *prop, IXP_PROP_KEY prop_key);
+int ixp_get_prop_value(struct ixp_prop_info *prop, void **prop_value, unsigned int *prop_value_size);
+int ixp_get_prop_name(struct ixp_prop_info *prop, char **prop_name);
+int ixp_get_prop(struct ixp_context *ctx, struct ixp_prop_info *prop);
+int ixp_free_prop(struct ixp_prop_info *prop);
+int ixp_get_props(struct ixp_context *ctx, struct ixp_prop_info *props, unsigned int num_props);
+int ixp_free_props(struct ixp_prop_info *props, unsigned int num_props);
+int ixp_get_props(struct ixp_context *ctx, struct ixp_prop_info *props, unsigned int num_props);
+int ixp_get_prop_key_by_name(char * name, unsigned int length, IXP_PROP_KEY * key);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _NFIT_INTERFACE_NFIT_TABLES_H_ */
+#endif /* SRC_IXP_H_ */

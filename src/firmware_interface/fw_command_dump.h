@@ -168,6 +168,21 @@ int fwcmd_dump_firmware_debug_log(const int handle,
 
 struct fwcmd_firmware_debug_log_result fwcmd_read_firmware_debug_log(const char *filename);
 
+int fwcmd_dump_memory_info_page_0(const int handle,
+	const char * filename);
+
+struct fwcmd_memory_info_page_0_result fwcmd_read_memory_info_page_0(const char *filename);
+
+int fwcmd_dump_memory_info_page_1(const int handle,
+	const char * filename);
+
+struct fwcmd_memory_info_page_1_result fwcmd_read_memory_info_page_1(const char *filename);
+
+int fwcmd_dump_memory_info_page_3(const int handle,
+	const char * filename);
+
+struct fwcmd_memory_info_page_3_result fwcmd_read_memory_info_page_3(const char *filename);
+
 int fwcmd_dump_long_operation_status(const int handle,
 	const char * filename);
 

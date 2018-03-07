@@ -810,6 +810,56 @@ enum fis_parser_codes fis_parse_firmware_debug_log(
 }
 
 
+enum fis_parser_codes fis_parse_memory_info_page_0(
+	const struct pt_output_memory_info_page_0 *p_output_payload,
+	struct fwcmd_memory_info_page_0_data *p_data)
+{
+	memset(p_data, 0, sizeof (*p_data));
+	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
+	memmove(p_data->media_reads, p_output_payload->media_reads, 16);
+	memmove(p_data->media_writes, p_output_payload->media_writes, 16);
+	memmove(p_data->read_requests, p_output_payload->read_requests, 16);
+	memmove(p_data->write_requests, p_output_payload->write_requests, 16);
+	memmove(p_data->block_read_requests, p_output_payload->block_read_requests, 16);
+	memmove(p_data->block_write_requests, p_output_payload->block_write_requests, 16);
+	return rc;
+}
+
+
+enum fis_parser_codes fis_parse_memory_info_page_1(
+	const struct pt_output_memory_info_page_1 *p_output_payload,
+	struct fwcmd_memory_info_page_1_data *p_data)
+{
+	memset(p_data, 0, sizeof (*p_data));
+	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
+	memmove(p_data->total_media_reads, p_output_payload->total_media_reads, 16);
+	memmove(p_data->total_media_writes, p_output_payload->total_media_writes, 16);
+	memmove(p_data->total_read_requests, p_output_payload->total_read_requests, 16);
+	memmove(p_data->total_write_requests, p_output_payload->total_write_requests, 16);
+	memmove(p_data->total_block_read_requests, p_output_payload->total_block_read_requests, 16);
+	memmove(p_data->total_block_write_requests, p_output_payload->total_block_write_requests, 16);
+	return rc;
+}
+
+
+enum fis_parser_codes fis_parse_memory_info_page_3(
+	const struct pt_output_memory_info_page_3 *p_output_payload,
+	struct fwcmd_memory_info_page_3_data *p_data)
+{
+	memset(p_data, 0, sizeof (*p_data));
+	enum fis_parser_codes rc = FIS_PARSER_CODES_SUCCESS;
+	p_data->error_injection_status = p_output_payload->error_injection_status;
+	p_data->error_injection_status_error_injection_enabled = (unsigned char)((p_data->error_injection_status >> 0) & 0x01);
+	p_data->error_injection_status_media_temperature_injection_enabled = (unsigned char)((p_data->error_injection_status >> 1) & 0x01);
+	p_data->error_injection_status_software_triggers_enabled = (unsigned char)((p_data->error_injection_status >> 2) & 0x01);
+	p_data->poison_error_injections_counter = p_output_payload->poison_error_injections_counter;
+	p_data->poison_error_clear_counter = p_output_payload->poison_error_clear_counter;
+	p_data->media_temperature_injections_counter = p_output_payload->media_temperature_injections_counter;
+	p_data->software_triggers_counter = p_output_payload->software_triggers_counter;
+	return rc;
+}
+
+
 enum fis_parser_codes fis_parse_long_operation_status(
 	const struct pt_output_long_operation_status *p_output_payload,
 	struct fwcmd_long_operation_status_data *p_data)

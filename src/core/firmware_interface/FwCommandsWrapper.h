@@ -163,6 +163,18 @@ public:
 
 	virtual void FwcmdFreeFirmwareDebugLog(struct fwcmd_firmware_debug_log_result *p_result) const;
 
+	virtual struct fwcmd_memory_info_page_0_result FwcmdAllocMemoryInfoPage0(unsigned int handle) const;
+
+	virtual void FwcmdFreeMemoryInfoPage0(struct fwcmd_memory_info_page_0_result *p_result) const;
+
+	virtual struct fwcmd_memory_info_page_1_result FwcmdAllocMemoryInfoPage1(unsigned int handle) const;
+
+	virtual void FwcmdFreeMemoryInfoPage1(struct fwcmd_memory_info_page_1_result *p_result) const;
+
+	virtual struct fwcmd_memory_info_page_3_result FwcmdAllocMemoryInfoPage3(unsigned int handle) const;
+
+	virtual void FwcmdFreeMemoryInfoPage3(struct fwcmd_memory_info_page_3_result *p_result) const;
+
 	virtual struct fwcmd_long_operation_status_result FwcmdAllocLongOperationStatus(unsigned int handle) const;
 
 	virtual void FwcmdFreeLongOperationStatus(struct fwcmd_long_operation_status_result *p_result) const;

@@ -59,7 +59,6 @@ enum fis_error_codes
 //- endfor
 };
 
-
 /*
  * Payloads Structures
  */

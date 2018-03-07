@@ -1,0 +1,193 @@
+/*
+ * Copyright (c) 2018, Intel Corporation
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *   * Redistributions of source code must retain the above copyright notice,
+ *     this list of conditions and the following disclaimer.
+ *   * Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *   * Neither the name of Intel Corporation nor the names of its contributors
+ *     may be used to endorse or promote products derived from this software
+ *     without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#include <string.h>
+#include <ixp.h>
+#include <ixp_prv.h>
+#include "ixp_fis_properties.h"
+#include "ixp_properties.h"
+
+// TODO: Add more types of entries in here, not just fw
+// TODO: Change passing a handle to passing ... something else (not context)
+//       Will probably require a conversion function
+// An array indexed by ixp_prop_key properties that contains useful information
+// defined in the ixp_lookup_t struct
+static struct ixp_lookup_t g_ixp_lookup[] = {
+//- for (cmd, var_name, size, pretty_name) in ixp_fw_lookup_entry_data
+	{{'{get_fis_' + cmd.name + '_properties, free_fis_' + cmd.name + '_properties, "' + pretty_name|camel + '"},'}}
+//- endfor
+};
+
+int ixp_init_prop(struct ixp_prop_info *prop, IXP_PROP_KEY prop_key)
+{
+	if (!prop)
+	{
+		return IXP_NULL_INPUT_PARAM;
+	}
+	prop->prop_key = prop_key;
+	prop->prop_value = NULL;
+	prop->prop_value_size = 0;
+	//todo: pprop_info->prop_name
+	return IXP_SUCCESS;
+}
+
+int ixp_get_prop_value(struct ixp_prop_info *prop, void **prop_value, unsigned int *prop_value_size)
+{
+	if(!prop || !prop_value || !*prop_value || !prop_value_size)
+		return IXP_NULL_INPUT_PARAM;
+
+	*prop_value = prop->prop_value;
+	*prop_value_size = prop->prop_value_size;
+	return IXP_SUCCESS;
+}
+
+int ixp_get_prop_name(struct ixp_prop_info *prop, char **prop_name)
+{
+	if (!prop || !prop_name || !*prop_name)
+	{
+		return IXP_NULL_INPUT_PARAM;
+	}
+
+	*prop_name = prop->prop_name;
+	return IXP_SUCCESS;
+}
+
+int ixp_get_prop(struct ixp_context *ctx, struct ixp_prop_info *prop)
+{
+	if (!ctx || !prop)
+	{
+		return IXP_NULL_INPUT_PARAM;
+	}
+	return ixp_get_props(ctx, prop, 1);
+}
+
+int ixp_free_prop(struct ixp_prop_info *prop)
+{
+	if (!prop)
+	{
+		return IXP_NULL_INPUT_PARAM;
+	}
+	return ixp_free_props(prop, 1);
+}
+
+int ixp_get_props(struct ixp_context *ctx, struct ixp_prop_info *props, unsigned int num_props)
+{
+	int status;
+
+	if (!ctx || !props || !props)
+	{
+		return IXP_NULL_INPUT_PARAM;
+	}
+
+	// Check all properties first for an invalid prop_key as callees iterate
+	// through the full props array before this function does
+	for (int index = 0; index < num_props; index++)
+	{
+		if (!PROP_KEY_VALID(props[index].prop_key))
+		{
+			return IXP_INVALID_PROP_KEY;
+		}
+	}
+
+	for (int index = 0; index < num_props; index++)
+	{
+		// Check if already populated
+		if (NULL != props[index].prop_value)
+		{
+			continue;
+		}
+
+		// If property value is uninitialized, call the associated function to populate it
+		// NOTE: The callee will populate all possible properties in props
+		if (IXP_SUCCESS != (status = (g_ixp_lookup[props[index].prop_key].f_populate)(
+			(unsigned int)ctx->handle.handle, props, num_props)))
+		{
+			// TODO: How should we deal with errors? Continue on? Free all and return?
+			ixp_free_props(props, num_props);
+			return status;
+		}
+	}
+	return IXP_SUCCESS;
+}
+
+int ixp_free_props(struct ixp_prop_info *props, unsigned int num_props)
+{
+	if (!props)
+	{
+		return IXP_NULL_INPUT_PARAM;
+	}
+
+	for (int index = 0; index < num_props; index++)
+	{
+		// Check if already freed
+		if (NULL == props[index].prop_value)
+		{
+			continue;
+		}
+
+		g_ixp_lookup[props[index].prop_key].f_free(props, num_props);
+	}
+
+	return IXP_SUCCESS;
+}
+
+int ixp_get_prop_key_by_name(char * name, unsigned int length, IXP_PROP_KEY * key)
+{
+	// TODO: Can optimize by making large string of all props and running
+	//       strstr on it
+	// TODO: There are duplicate key user string names still. Need to make
+	//       them appropriately unique
+	// TODO: Currently only doing mem info page keys to avoid duplicating
+	//       properties already done by normal C++ show dimm flow
+	for (int i = FIS_MEMORY_INFO_PAGE_0_MEDIA_READS;
+		i < FIS_MEMORY_INFO_PAGE_3_SOFTWARE_TRIGGERS_COUNTER; i++)
+	{
+		if (length == strlen(g_ixp_lookup[i].prop_name) &&
+		strncmp(g_ixp_lookup[i].prop_name, name, length) == 0)
+		{
+			*key = i;
+			return IXP_SUCCESS;
+		}
+	}
+	return IXP_INVALID_PROP_KEY;
+}
+
+int ixp_get_g_ixp_lookup_entry(IXP_PROP_KEY key, struct ixp_lookup_t * entry)
+{
+	if (!PROP_KEY_VALID(key))
+	{
+		return IXP_INVALID_PROP_KEY;
+	}
+	*entry = g_ixp_lookup[key];
+	return IXP_SUCCESS;
+}
+
+int ixp_set_g_ixp_lookup_entry(IXP_PROP_KEY key, struct ixp_lookup_t entry)
+{
+	g_ixp_lookup[key] = entry;
+	return IXP_SUCCESS;
+}

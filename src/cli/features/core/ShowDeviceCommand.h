@@ -158,6 +158,7 @@ private:
 	static std::string convertSpeed(NVM_UINT64 speed);
 	static std::string convertPowerLimit(NVM_UINT8 powerLimit);
 	static std::string convertPowerBudget(NVM_UINT16 powerBudget);
+	static std::string convertCounts(unsigned long long * value);
 
 	framework::ResultBase *m_pResult;
 	framework::PropertyDefinitionList<core::device::Device> m_props;

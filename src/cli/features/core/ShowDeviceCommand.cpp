@@ -38,6 +38,9 @@
 #include "ShowCommandPropertyUtilities.h"
 #include "ShowCommandUtilities.h"
 #include <common/string/s_str.h>
+#include <ixp.h>
+#include <ixp_types.h>
+#include <exception/NvmExceptionLibError.h>
 
 namespace cli
 {
@@ -46,6 +49,33 @@ namespace nvmcli
 
 static const std::string ZERO_FW_VERSION = "00.00.00.0000";
 std::string ShowDeviceCommand::m_capacityUnits = "";
+
+// Properties that are populated from the ixp library
+static const IXP_PROP_KEY show_dimm_ixp_props[] =
+{
+  FIS_MEMORY_INFO_PAGE_0_MEDIA_READS,
+  FIS_MEMORY_INFO_PAGE_0_MEDIA_WRITES,
+  FIS_MEMORY_INFO_PAGE_0_READ_REQUESTS,
+  FIS_MEMORY_INFO_PAGE_0_WRITE_REQUESTS,
+  FIS_MEMORY_INFO_PAGE_0_BLOCK_READ_REQUESTS,
+  FIS_MEMORY_INFO_PAGE_0_BLOCK_WRITE_REQUESTS,
+  FIS_MEMORY_INFO_PAGE_1_TOTAL_MEDIA_READS,
+  FIS_MEMORY_INFO_PAGE_1_TOTAL_MEDIA_WRITES,
+  FIS_MEMORY_INFO_PAGE_1_TOTAL_READ_REQUESTS,
+  FIS_MEMORY_INFO_PAGE_1_TOTAL_WRITE_REQUESTS,
+  FIS_MEMORY_INFO_PAGE_1_TOTAL_BLOCK_READ_REQUESTS,
+  FIS_MEMORY_INFO_PAGE_1_TOTAL_BLOCK_WRITE_REQUESTS,
+  // Skipping error_injection_status
+  FIS_MEMORY_INFO_PAGE_3_ERROR_INJECTION_STATUS_ERROR_INJECTION_ENABLED,
+  FIS_MEMORY_INFO_PAGE_3_ERROR_INJECTION_STATUS_MEDIA_TEMPERATURE_INJECTION_ENABLED,
+  FIS_MEMORY_INFO_PAGE_3_ERROR_INJECTION_STATUS_SOFTWARE_TRIGGERS_ENABLED,
+  FIS_MEMORY_INFO_PAGE_3_POISON_ERROR_INJECTIONS_COUNTER,
+  FIS_MEMORY_INFO_PAGE_3_POISON_ERROR_CLEAR_COUNTER,
+  FIS_MEMORY_INFO_PAGE_3_MEDIA_TEMPERATURE_INJECTIONS_COUNTER,
+  FIS_MEMORY_INFO_PAGE_3_SOFTWARE_TRIGGERS_COUNTER,
+};
+
+#define LEN_SHOW_DIMM_IXP_PROPS sizeof(show_dimm_ixp_props)/sizeof(IXP_PROP_KEY)
 
 ShowDeviceCommand::ShowDeviceCommand(core::device::DeviceService &service)
 	: m_service(service), m_pResult(NULL)
@@ -132,6 +162,28 @@ ShowDeviceCommand::ShowDeviceCommand(core::device::DeviceService &service)
 	m_props.addList("BootStatus", &core::device::Device::getBootStatus, &convertBootStatus);
 	m_props.addUint32("InjectedMediaErrors", &core::device::Device::getInjectedMediaErrors);
 	m_props.addUint32("InjectedNonMediaErrors", &core::device::Device::getInjectedNonMediaErrors);
+	// Properties handled by an IXP library call, this is only for rejecting
+	// incorrect user-entered property names, not actually doing the call
+	m_props.addOther("MediaReads", &core::device::Device::ixpPropertyPlaceholder).setIsIxp();
+  m_props.addOther("MediaWrites", &core::device::Device::ixpPropertyPlaceholder).setIsIxp();
+	m_props.addOther("ReadRequests", &core::device::Device::ixpPropertyPlaceholder).setIsIxp();
+	m_props.addOther("WriteRequests", &core::device::Device::ixpPropertyPlaceholder).setIsIxp();
+	m_props.addOther("BlockReadRequests", &core::device::Device::ixpPropertyPlaceholder).setIsIxp();
+	m_props.addOther("BlockWriteRequests", &core::device::Device::ixpPropertyPlaceholder).setIsIxp();
+	m_props.addOther("TotalMediaReads", &core::device::Device::ixpPropertyPlaceholder).setIsIxp();
+	m_props.addOther("TotalMediaWrites", &core::device::Device::ixpPropertyPlaceholder).setIsIxp();
+	m_props.addOther("TotalReadRequests", &core::device::Device::ixpPropertyPlaceholder).setIsIxp();
+	m_props.addOther("TotalWriteRequests", &core::device::Device::ixpPropertyPlaceholder).setIsIxp();
+	m_props.addOther("TotalBlockReadRequests", &core::device::Device::ixpPropertyPlaceholder).setIsIxp();
+	m_props.addOther("TotalBlockWriteRequests", &core::device::Device::ixpPropertyPlaceholder).setIsIxp();
+	// Skipping ErrorInjectionStatus
+	m_props.addOther("ErrorInjectionEnabled", &core::device::Device::ixpPropertyPlaceholder).setIsIxp();
+	m_props.addOther("MediaTemperatureInjectionEnabled", &core::device::Device::ixpPropertyPlaceholder).setIsIxp();
+	m_props.addOther("SoftwareTriggersEnabled", &core::device::Device::ixpPropertyPlaceholder).setIsIxp();
+	m_props.addOther("PoisonErrorInjectionsCounter", &core::device::Device::ixpPropertyPlaceholder).setIsIxp();
+	m_props.addOther("PoisonErrorClearCounter", &core::device::Device::ixpPropertyPlaceholder).setIsIxp();
+	m_props.addOther("MediaTemperatureInjectionsCounter", &core::device::Device::ixpPropertyPlaceholder).setIsIxp();
+	m_props.addOther("SoftwareTriggersCounter", &core::device::Device::ixpPropertyPlaceholder).setIsIxp();
 }
 
 framework::ResultBase *ShowDeviceCommand::execute(const framework::ParsedCommand &parsedCommand)
@@ -403,6 +455,91 @@ void ShowDeviceCommand::createResults()
 			}
 		}
 
+
+
+		// Do IXP calls ////////////
+
+		// It's not using the properties array above as it's a little tricky to
+		// make these calls look like the C++ calls
+
+		struct ixp_context * ctx;
+		NVM_NFIT_DEVICE_HANDLE handle;
+		unsigned int numProps = 0;
+		handle.handle = m_devices[i].getDeviceHandle();
+		ixp_create_ctx_nfit_handle(&ctx, handle, (void *) NULL);
+
+		// Malloc space for all properties that we might gather from ixp
+		// Not strictly necessary but it's simpler this way
+		struct ixp_prop_info * props = (struct ixp_prop_info *)malloc(sizeof(struct ixp_prop_info)
+			*LEN_SHOW_DIMM_IXP_PROPS);
+		if (props == NULL)
+		{
+			throw wbem::exception::NvmExceptionLibError(NVM_ERR_NOMEMORY);
+		}
+
+		const std::vector<std::string> &displayNames = m_displayOptions.getDisplay();
+		// If the user specified property names, display only those properties
+		if (displayNames.size() > 0)
+		{
+			numProps = 0;
+			IXP_PROP_KEY key;
+			for (size_t i = 0; i < displayNames.size(); i++)
+			{
+				char * name = const_cast<char*>(displayNames[i].c_str());
+				if (IXP_SUCCESS == ixp_get_prop_key_by_name(name,
+						(unsigned int)displayNames[i].size(), &key))
+				{
+					ixp_init_prop(&props[numProps], key);
+					numProps++;
+				}
+
+				// Improperly named properties have already been handled
+			}
+			ixp_get_props(ctx, props, numProps);
+		}
+		// Process list of ixp-implemented properties, they are only shown
+		// in the "-a" case or if they're user specified
+		else if (m_displayOptions.isAll())
+		{
+			// Print out all ixp properties
+			numProps = LEN_SHOW_DIMM_IXP_PROPS;
+			for (unsigned int j = 0; j < LEN_SHOW_DIMM_IXP_PROPS; j++)
+			{
+				ixp_init_prop(&props[j], show_dimm_ixp_props[j]);
+			}
+			if (IXP_SUCCESS != ixp_get_props(ctx, props, LEN_SHOW_DIMM_IXP_PROPS))
+			{
+				throw wbem::exception::NvmExceptionLibError(NVM_ERR_UNKNOWN);
+			}
+		}
+
+		// Now do printf conversion
+		for (unsigned int j = 0; j < numProps; j++)
+		{
+			// 16-byte counts
+			if (props[j].prop_key < FIS_MEMORY_INFO_PAGE_3_ERROR_INJECTION_STATUS &&
+				props[j].prop_key >= FIS_MEMORY_INFO_PAGE_0_MEDIA_READS)
+			{
+				// Name, string version of value
+				value.insert(std::string(props[j].prop_name), ShowDeviceCommand::convertCounts((unsigned long long *)(props[j].prop_value)));
+			}
+			// Boolean
+			else if (props[j].prop_key < FIS_MEMORY_INFO_PAGE_3_POISON_ERROR_INJECTIONS_COUNTER &&
+					props[j].prop_key >= FIS_MEMORY_INFO_PAGE_3_ERROR_INJECTION_STATUS_ERROR_INJECTION_ENABLED)
+			{
+				value.insert(std::string(props[j].prop_name), *((char *)props[j].prop_value) ? "1" : "0");
+			}
+			// Integer
+			else
+			{
+				value.insert(std::string(props[j].prop_name), std::to_string(*((int *)(props[j].prop_value))));
+			}
+		}
+
+		ixp_free_props(props, numProps);
+		free(props);
+		////////////////////////////
+
 		pList->insert(ROOT, value);
 	}
 
@@ -439,7 +576,7 @@ std::string ShowDeviceCommand::getManufacturingDate(core::device::Device &device
 
 	std::string result;
 
-	bool isValid =  device.isManufacturingInfoValid();
+	bool isValid = device.isManufacturingInfoValid();
 
 	if (isValid)
 	{
@@ -460,7 +597,7 @@ std::string ShowDeviceCommand::getManufacturingLoc(core::device::Device &device)
 
 	std::stringstream result;
 
-	bool isValid =  device.isManufacturingInfoValid();
+	bool isValid = device.isManufacturingInfoValid();
 
 	if (isValid)
 	{
@@ -572,5 +709,27 @@ std::string ShowDeviceCommand::convertPowerBudget(NVM_UINT16 powerBudget)
 	powerBudgetWithUnits << powerBudget << " mW";
 	return powerBudgetWithUnits.str();
 }
+
+// Print a non-standard number of bytes. Assume size == 16 bytes for now
+std::string ShowDeviceCommand::convertCounts(unsigned long long * value)
+{
+	// should only be 36, but including some extra in case I'm wrong
+	char str[40];
+	// The calculator says at 1 read per 100 ns (10 million reads per second),
+	// this will take 58000 years to roll over to bit 65...
+	// Print out as separate hex values if so
+	if (value[1] > 0)
+	{
+		s_snprintf(str, 22, "0x%016llx %016llx", value[1], value[0]);
+	}
+	else
+	{
+		// Print as a decimal value
+		s_snprintf(str, 22, "%llu", value[0]);
+	}
+
+	return std::string(str);
+}
+
 }
 }

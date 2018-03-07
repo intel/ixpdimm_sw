@@ -48,20 +48,18 @@ void fwcmd_read_and_print(const char *filename);
 
 
 //- for cmd in commands
-//- 	if cmd.has_output
+//-		if cmd.has_output
 int {{cmd.name|fw_cmd_dump}}(const int handle,
-//- 		if cmd.has_input
-//- 			for f in cmd.input_payload.fields
-//- 				if not f.ignore
+//-			if cmd.has_input
+//-				for f in cmd.input_fields_changeable
 	const {{f.c_definition}},
-//- 				endif
-//- 			endfor
-//- 		endif
+//-				endfor
+//-			endif
 	const char * filename);
 
 struct {{cmd.name|fw_cmd_result}} {{cmd.name|fw_cmd_read}}(const char *filename);
 
-//- 	endif
+//-		endif
 //- endfor
 
 #ifdef __cplusplus

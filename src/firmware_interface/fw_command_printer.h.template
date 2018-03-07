@@ -41,29 +41,29 @@ void print_tabs(int tab_count);
 
 
 //- for cmd in commands
-//- 	if cmd.has_output
+//-		if cmd.has_output
 //-			for s in cmd.sub_payloads
 void {{s.name|fw_cmd_printer}}(const struct {{s.name|fw_cmd_data}} *p_value, 
 	int {{tab_counter}});	
 	
-//- 		endfor
+//-			endfor
 void {{cmd.name|fw_cmd_printer}}(const struct {{cmd.name|fw_cmd_data}} *p_value,
 	int {{tab_counter}});
 
-//- 	endif
+//-		endif
 //- endfor
 
 //- for cmd in commands
-//- 	if cmd.has_output
+//-		if cmd.has_output
 //-			for s in cmd.sub_payloads
 void {{s.name|fw_cmd_field_printer}}(const struct {{s.name|fw_cmd_data}} *p_value, 
 	int {{tab_counter}});	
 	
-//- 		endfor
+//-			endfor
 void {{cmd.name|fw_cmd_field_printer}}(const struct {{cmd.name|fw_cmd_data}} *p_value,
 	int {{tab_counter}});
 
-//- 	endif
+//-		endif
 //- endfor
 
 #ifdef __cplusplus

@@ -65,7 +65,6 @@ enum fis_error_codes
 	FIS_ERR_NO_RESOURCES_AVAILABLE = 0x16,
 };
 
-
 /*
  * Payloads Structures
  */
@@ -570,6 +569,62 @@ struct pt_input_firmware_debug_log
 
 } )
 PACK_STRUCT(
+struct pt_output_memory_info_page_0
+{
+	unsigned char media_reads[16];
+	unsigned char media_writes[16];
+	unsigned char read_requests[16];
+	unsigned char write_requests[16];
+	unsigned char block_read_requests[16];
+	unsigned char block_write_requests[16];
+	unsigned char reserved[32];
+
+} )
+PACK_STRUCT(
+struct pt_input_memory_info_page_0
+{
+	unsigned char memory_page;
+	unsigned char reserved[127];
+
+} )
+PACK_STRUCT(
+struct pt_output_memory_info_page_1
+{
+	unsigned char total_media_reads[16];
+	unsigned char total_media_writes[16];
+	unsigned char total_read_requests[16];
+	unsigned char total_write_requests[16];
+	unsigned char total_block_read_requests[16];
+	unsigned char total_block_write_requests[16];
+	unsigned char reserved[32];
+
+} )
+PACK_STRUCT(
+struct pt_input_memory_info_page_1
+{
+	unsigned char memory_page;
+	unsigned char reserved[127];
+
+} )
+PACK_STRUCT(
+struct pt_output_memory_info_page_3
+{
+	unsigned int error_injection_status;
+	unsigned int poison_error_injections_counter;
+	unsigned int poison_error_clear_counter;
+	unsigned int media_temperature_injections_counter;
+	unsigned int software_triggers_counter;
+	unsigned char reserved[108];
+
+} )
+PACK_STRUCT(
+struct pt_input_memory_info_page_3
+{
+	unsigned char memory_page;
+	unsigned char reserved[127];
+
+} )
+PACK_STRUCT(
 struct pt_output_long_operation_status
 {
 	unsigned short command;
@@ -627,6 +682,9 @@ unsigned int fis_enable_dimm(const unsigned int device_handle, struct pt_output_
 unsigned int fis_smart_health_info(const unsigned int device_handle, struct pt_output_smart_health_info *p_output_payload);
 unsigned int fis_firmware_image_info(const unsigned int device_handle, struct pt_output_firmware_image_info *p_output_payload);
 unsigned int fis_firmware_debug_log(const unsigned int device_handle, struct pt_input_firmware_debug_log *p_input_payload, struct pt_output_firmware_debug_log *p_output_payload);
+unsigned int fis_memory_info_page_0(const unsigned int device_handle, struct pt_input_memory_info_page_0 *p_input_payload, struct pt_output_memory_info_page_0 *p_output_payload);
+unsigned int fis_memory_info_page_1(const unsigned int device_handle, struct pt_input_memory_info_page_1 *p_input_payload, struct pt_output_memory_info_page_1 *p_output_payload);
+unsigned int fis_memory_info_page_3(const unsigned int device_handle, struct pt_input_memory_info_page_3 *p_input_payload, struct pt_output_memory_info_page_3 *p_output_payload);
 unsigned int fis_long_operation_status(const unsigned int device_handle, struct pt_output_long_operation_status *p_output_payload);
 unsigned int fis_bsr(const unsigned int device_handle, struct pt_output_bsr *p_output_payload);
 unsigned int fis_format(const unsigned int device_handle, struct pt_input_format *p_input_payload);

@@ -43,7 +43,8 @@ public:
 	IPropertyDefinition(const std::string &name) :
 		m_name(name),
 		m_isRequired(false),
-		m_isDefault(false) { }
+		m_isDefault(false),
+		m_isIxp(false){ }
 	virtual ~IPropertyDefinition() { }
 
 	virtual std::string getValue(T &obj) = 0;
@@ -56,11 +57,15 @@ public:
 	void setIsDefault() { m_isDefault = true; }
 	bool isDefault() { return m_isDefault; }
 
+	void setIsIxp() { m_isIxp = true; }
+	bool isIxp() { return m_isIxp; }
+
 protected:
 	std::string m_name;
 
 	bool m_isRequired;
 	bool m_isDefault;
+	bool m_isIxp;
 };
 
 template<class T>

@@ -144,6 +144,18 @@ void fwcmd_print_all(unsigned int handle)
 		, 0
 		);
 	printf("--------------------------------------------\n");
+	printf("Printing memory_info_page_0 ... \n");
+	fwcmd_run_memory_info_page_0(handle
+		);
+	printf("--------------------------------------------\n");
+	printf("Printing memory_info_page_1 ... \n");
+	fwcmd_run_memory_info_page_1(handle
+		);
+	printf("--------------------------------------------\n");
+	printf("Printing memory_info_page_3 ... \n");
+	fwcmd_run_memory_info_page_3(handle
+		);
+	printf("--------------------------------------------\n");
 	printf("Printing long_operation_status ... \n");
 	fwcmd_run_long_operation_status(handle
 		);
@@ -476,6 +488,27 @@ void fwcmd_run(const char *command_name,
 		);
 
 	}
+	else if (s_strncmpi(command_name, "memory_info_page_0",
+		sizeof ("memory_info_page_0")) == 0)
+	{
+		fwcmd_run_memory_info_page_0(handle
+		);
+
+	}
+	else if (s_strncmpi(command_name, "memory_info_page_1",
+		sizeof ("memory_info_page_1")) == 0)
+	{
+		fwcmd_run_memory_info_page_1(handle
+		);
+
+	}
+	else if (s_strncmpi(command_name, "memory_info_page_3",
+		sizeof ("memory_info_page_3")) == 0)
+	{
+		fwcmd_run_memory_info_page_3(handle
+		);
+
+	}
 	else if (s_strncmpi(command_name, "long_operation_status",
 		sizeof ("long_operation_status")) == 0)
 	{
@@ -542,6 +575,9 @@ void fwcmd_run(const char *command_name,
 		printf("\tsmart_health_info\n");
 		printf("\tfirmware_image_info\n");
 		printf("\tfirmware_debug_log\n");
+		printf("\tmemory_info_page_0\n");
+		printf("\tmemory_info_page_1\n");
+		printf("\tmemory_info_page_3\n");
 		printf("\tlong_operation_status\n");
 		printf("\tbsr\n");
 		printf("\tformat\n");
@@ -1010,6 +1046,57 @@ void fwcmd_run_firmware_debug_log(unsigned int handle, const unsigned char log_a
 		fwcmd_print_error(result.error_code);
 	}
 	fwcmd_free_firmware_debug_log(&result);
+}
+
+void fwcmd_run_memory_info_page_0(unsigned int handle)
+{
+	struct fwcmd_memory_info_page_0_result result = fwcmd_alloc_memory_info_page_0(handle);
+
+	if (result.success)
+	{
+		printf("0x%x: Success!\n", handle);
+		fwcmd_memory_info_page_0_printer(result.p_data, 0);
+	}
+	else
+	{
+		printf("There was an issue executing memory_info_page_0. \n");
+		fwcmd_print_error(result.error_code);
+	}
+	fwcmd_free_memory_info_page_0(&result);
+}
+
+void fwcmd_run_memory_info_page_1(unsigned int handle)
+{
+	struct fwcmd_memory_info_page_1_result result = fwcmd_alloc_memory_info_page_1(handle);
+
+	if (result.success)
+	{
+		printf("0x%x: Success!\n", handle);
+		fwcmd_memory_info_page_1_printer(result.p_data, 0);
+	}
+	else
+	{
+		printf("There was an issue executing memory_info_page_1. \n");
+		fwcmd_print_error(result.error_code);
+	}
+	fwcmd_free_memory_info_page_1(&result);
+}
+
+void fwcmd_run_memory_info_page_3(unsigned int handle)
+{
+	struct fwcmd_memory_info_page_3_result result = fwcmd_alloc_memory_info_page_3(handle);
+
+	if (result.success)
+	{
+		printf("0x%x: Success!\n", handle);
+		fwcmd_memory_info_page_3_printer(result.p_data, 0);
+	}
+	else
+	{
+		printf("There was an issue executing memory_info_page_3. \n");
+		fwcmd_print_error(result.error_code);
+	}
+	fwcmd_free_memory_info_page_3(&result);
 }
 
 void fwcmd_run_long_operation_status(unsigned int handle)

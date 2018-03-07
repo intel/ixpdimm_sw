@@ -182,6 +182,24 @@ int fwcmd_dump(const char *command_name, unsigned int handle, const char *filena
 			0,
 			filename);
 	}
+	else if (s_strncmpi(command_name, "memory_info_page_0",
+		sizeof ("memory_info_page_0")) == 0)
+	{
+		rc = fwcmd_dump_memory_info_page_0(handle,
+			filename);
+	}
+	else if (s_strncmpi(command_name, "memory_info_page_1",
+		sizeof ("memory_info_page_1")) == 0)
+	{
+		rc = fwcmd_dump_memory_info_page_1(handle,
+			filename);
+	}
+	else if (s_strncmpi(command_name, "memory_info_page_3",
+		sizeof ("memory_info_page_3")) == 0)
+	{
+		rc = fwcmd_dump_memory_info_page_3(handle,
+			filename);
+	}
 	else if (s_strncmpi(command_name, "long_operation_status",
 		sizeof ("long_operation_status")) == 0)
 	{
@@ -219,6 +237,9 @@ int fwcmd_dump(const char *command_name, unsigned int handle, const char *filena
 		printf("\tsmart_health_info\n");
 		printf("\tfirmware_image_info\n");
 		printf("\tfirmware_debug_log\n");
+		printf("\tmemory_info_page_0\n");
+		printf("\tmemory_info_page_1\n");
+		printf("\tmemory_info_page_3\n");
 		printf("\tlong_operation_status\n");
 		printf("\tbsr\n");
 		rc = FWCMD_DUMP_RESULT_ERR;
@@ -251,176 +272,197 @@ void fwcmd_read_and_print(const char *filename)
 		{
 			char command_name[COMMAND_NAME_BUFFER_SIZE];
 			s_strcpy(command_name, (char *)buffer, COMMAND_NAME_BUFFER_SIZE);
-            unsigned char *p_payload = buffer + COMMAND_NAME_BUFFER_SIZE;
+			unsigned char *p_payload = buffer + COMMAND_NAME_BUFFER_SIZE;
 
             if (s_strncmpi(command_name, "identify_dimm", sizeof ("identify_dimm")) == 0)
-            {
+			{
                 struct fwcmd_identify_dimm_data data;
 
 				fis_parse_identify_dimm((struct pt_output_identify_dimm *)p_payload, &data);
 				fwcmd_identify_dimm_printer(&data, 0);
-            }
+			}
             else if (s_strncmpi(command_name, "identify_dimm_characteristics", sizeof ("identify_dimm_characteristics")) == 0)
-            {
+			{
                 struct fwcmd_identify_dimm_characteristics_data data;
 
 				fis_parse_identify_dimm_characteristics((struct pt_output_identify_dimm_characteristics *)p_payload, &data);
 				fwcmd_identify_dimm_characteristics_printer(&data, 0);
-            }
+			}
             else if (s_strncmpi(command_name, "get_security_state", sizeof ("get_security_state")) == 0)
-            {
+			{
                 struct fwcmd_get_security_state_data data;
 
 				fis_parse_get_security_state((struct pt_output_get_security_state *)p_payload, &data);
 				fwcmd_get_security_state_printer(&data, 0);
-            }
+			}
             else if (s_strncmpi(command_name, "get_alarm_threshold", sizeof ("get_alarm_threshold")) == 0)
-            {
+			{
                 struct fwcmd_get_alarm_threshold_data data;
 
 				fis_parse_get_alarm_threshold((struct pt_output_get_alarm_threshold *)p_payload, &data);
 				fwcmd_get_alarm_threshold_printer(&data, 0);
-            }
+			}
             else if (s_strncmpi(command_name, "power_management_policy", sizeof ("power_management_policy")) == 0)
-            {
+			{
                 struct fwcmd_power_management_policy_data data;
 
 				fis_parse_power_management_policy((struct pt_output_power_management_policy *)p_payload, &data);
 				fwcmd_power_management_policy_printer(&data, 0);
-            }
+			}
             else if (s_strncmpi(command_name, "die_sparing_policy", sizeof ("die_sparing_policy")) == 0)
-            {
+			{
                 struct fwcmd_die_sparing_policy_data data;
 
 				fis_parse_die_sparing_policy((struct pt_output_die_sparing_policy *)p_payload, &data);
 				fwcmd_die_sparing_policy_printer(&data, 0);
-            }
+			}
             else if (s_strncmpi(command_name, "address_range_scrub", sizeof ("address_range_scrub")) == 0)
-            {
+			{
                 struct fwcmd_address_range_scrub_data data;
 
 				fis_parse_address_range_scrub((struct pt_output_address_range_scrub *)p_payload, &data);
 				fwcmd_address_range_scrub_printer(&data, 0);
-            }
+			}
             else if (s_strncmpi(command_name, "optional_configuration_data_policy", sizeof ("optional_configuration_data_policy")) == 0)
-            {
+			{
                 struct fwcmd_optional_configuration_data_policy_data data;
 
 				fis_parse_optional_configuration_data_policy((struct pt_output_optional_configuration_data_policy *)p_payload, &data);
 				fwcmd_optional_configuration_data_policy_printer(&data, 0);
-            }
+			}
             else if (s_strncmpi(command_name, "pmon_registers", sizeof ("pmon_registers")) == 0)
-            {
+			{
                 struct fwcmd_pmon_registers_data data;
 
 				fis_parse_pmon_registers((struct pt_output_pmon_registers *)p_payload, &data);
 				fwcmd_pmon_registers_printer(&data, 0);
-            }
+			}
             else if (s_strncmpi(command_name, "system_time", sizeof ("system_time")) == 0)
-            {
+			{
                 struct fwcmd_system_time_data data;
 
 				fis_parse_system_time((struct pt_output_system_time *)p_payload, &data);
 				fwcmd_system_time_printer(&data, 0);
-            }
+			}
             else if (s_strncmpi(command_name, "platform_config_data", sizeof ("platform_config_data")) == 0)
-            {
+			{
                 struct fwcmd_platform_config_data_data data;
 
 				fis_parse_platform_config_data((struct pt_output_platform_config_data *)p_payload, &data, sizeof(buffer - COMMAND_NAME_BUFFER_SIZE));
 				fwcmd_platform_config_data_printer(&data, 0);
-            }
+			}
             else if (s_strncmpi(command_name, "namespace_labels", sizeof ("namespace_labels")) == 0)
-            {
+			{
                 struct fwcmd_namespace_labels_data data;
 
 				fis_parse_namespace_labels((struct pt_output_namespace_labels *)p_payload, &data);
 				fwcmd_namespace_labels_printer(&data, 0);
-            }
+			}
             else if (s_strncmpi(command_name, "dimm_partition_info", sizeof ("dimm_partition_info")) == 0)
-            {
+			{
                 struct fwcmd_dimm_partition_info_data data;
 
 				fis_parse_dimm_partition_info((struct pt_output_dimm_partition_info *)p_payload, &data);
 				fwcmd_dimm_partition_info_printer(&data, 0);
-            }
+			}
             else if (s_strncmpi(command_name, "fw_debug_log_level", sizeof ("fw_debug_log_level")) == 0)
-            {
+			{
                 struct fwcmd_fw_debug_log_level_data data;
 
 				fis_parse_fw_debug_log_level((struct pt_output_fw_debug_log_level *)p_payload, &data);
 				fwcmd_fw_debug_log_level_printer(&data, 0);
-            }
+			}
             else if (s_strncmpi(command_name, "fw_load_flag", sizeof ("fw_load_flag")) == 0)
-            {
+			{
                 struct fwcmd_fw_load_flag_data data;
 
 				fis_parse_fw_load_flag((struct pt_output_fw_load_flag *)p_payload, &data);
 				fwcmd_fw_load_flag_printer(&data, 0);
-            }
+			}
             else if (s_strncmpi(command_name, "config_lockdown", sizeof ("config_lockdown")) == 0)
-            {
+			{
                 struct fwcmd_config_lockdown_data data;
 
 				fis_parse_config_lockdown((struct pt_output_config_lockdown *)p_payload, &data);
 				fwcmd_config_lockdown_printer(&data, 0);
-            }
+			}
             else if (s_strncmpi(command_name, "ddrt_io_init_info", sizeof ("ddrt_io_init_info")) == 0)
-            {
+			{
                 struct fwcmd_ddrt_io_init_info_data data;
 
 				fis_parse_ddrt_io_init_info((struct pt_output_ddrt_io_init_info *)p_payload, &data);
 				fwcmd_ddrt_io_init_info_printer(&data, 0);
-            }
+			}
             else if (s_strncmpi(command_name, "get_supported_sku_features", sizeof ("get_supported_sku_features")) == 0)
-            {
+			{
                 struct fwcmd_get_supported_sku_features_data data;
 
 				fis_parse_get_supported_sku_features((struct pt_output_get_supported_sku_features *)p_payload, &data);
 				fwcmd_get_supported_sku_features_printer(&data, 0);
-            }
+			}
             else if (s_strncmpi(command_name, "enable_dimm", sizeof ("enable_dimm")) == 0)
-            {
+			{
                 struct fwcmd_enable_dimm_data data;
 
 				fis_parse_enable_dimm((struct pt_output_enable_dimm *)p_payload, &data);
 				fwcmd_enable_dimm_printer(&data, 0);
-            }
+			}
             else if (s_strncmpi(command_name, "smart_health_info", sizeof ("smart_health_info")) == 0)
-            {
+			{
                 struct fwcmd_smart_health_info_data data;
 
 				fis_parse_smart_health_info((struct pt_output_smart_health_info *)p_payload, &data);
 				fwcmd_smart_health_info_printer(&data, 0);
-            }
+			}
             else if (s_strncmpi(command_name, "firmware_image_info", sizeof ("firmware_image_info")) == 0)
-            {
+			{
                 struct fwcmd_firmware_image_info_data data;
 
 				fis_parse_firmware_image_info((struct pt_output_firmware_image_info *)p_payload, &data);
 				fwcmd_firmware_image_info_printer(&data, 0);
-            }
+			}
             else if (s_strncmpi(command_name, "firmware_debug_log", sizeof ("firmware_debug_log")) == 0)
-            {
+			{
                 struct fwcmd_firmware_debug_log_data data;
 
 				fis_parse_firmware_debug_log((struct pt_output_firmware_debug_log *)p_payload, &data);
 				fwcmd_firmware_debug_log_printer(&data, 0);
-            }
+			}
+            else if (s_strncmpi(command_name, "memory_info_page_0", sizeof ("memory_info_page_0")) == 0)
+			{
+                struct fwcmd_memory_info_page_0_data data;
+
+				fis_parse_memory_info_page_0((struct pt_output_memory_info_page_0 *)p_payload, &data);
+				fwcmd_memory_info_page_0_printer(&data, 0);
+			}
+            else if (s_strncmpi(command_name, "memory_info_page_1", sizeof ("memory_info_page_1")) == 0)
+			{
+                struct fwcmd_memory_info_page_1_data data;
+
+				fis_parse_memory_info_page_1((struct pt_output_memory_info_page_1 *)p_payload, &data);
+				fwcmd_memory_info_page_1_printer(&data, 0);
+			}
+            else if (s_strncmpi(command_name, "memory_info_page_3", sizeof ("memory_info_page_3")) == 0)
+			{
+                struct fwcmd_memory_info_page_3_data data;
+
+				fis_parse_memory_info_page_3((struct pt_output_memory_info_page_3 *)p_payload, &data);
+				fwcmd_memory_info_page_3_printer(&data, 0);
+			}
             else if (s_strncmpi(command_name, "long_operation_status", sizeof ("long_operation_status")) == 0)
-            {
+			{
                 struct fwcmd_long_operation_status_data data;
 
 				fis_parse_long_operation_status((struct pt_output_long_operation_status *)p_payload, &data);
 				fwcmd_long_operation_status_printer(&data, 0);
-            }
+			}
             else if (s_strncmpi(command_name, "bsr", sizeof ("bsr")) == 0)
-            {
+			{
                 struct fwcmd_bsr_data data;
 
 				fis_parse_bsr((struct pt_output_bsr *)p_payload, &data);
 				fwcmd_bsr_printer(&data, 0);
-            }
+			}
 		}
 		else
 		{
@@ -2448,6 +2490,285 @@ struct fwcmd_firmware_debug_log_result fwcmd_read_firmware_debug_log(const char 
 		{
 			result.p_data = (struct fwcmd_firmware_debug_log_data *)malloc(sizeof(*result.p_data));
 			int parse_result = fis_parse_firmware_debug_log((const struct pt_output_firmware_debug_log*) buffer, result.p_data);
+
+			if (FWCMD_PARSE_SUCCESS(parse_result))
+			{
+				result.success = 1;
+			}
+			else
+			{
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = parse_result;
+			}
+		}
+		else
+		{
+			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
+		}
+		free(buffer);
+	}
+	else
+	{
+		result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+		result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
+	}
+
+	return result;
+}
+int fwcmd_dump_memory_info_page_0(const int handle,
+	const char * filename)
+{
+	FILE *pFile = fopen(filename, "wb");
+	int rc = 0;
+	if (pFile)
+	{
+		struct pt_output_memory_info_page_0 output_payload;
+		struct pt_input_memory_info_page_0 input_payload;
+		input_payload.memory_page = 0;
+		rc = fis_memory_info_page_0(handle,&input_payload,&output_payload);
+		if (rc == 0)
+		{
+			size_t bytes_written = 0;
+			char name[COMMAND_NAME_BUFFER_SIZE] = {0};
+			s_strcpy(name, "memory_info_page_0", COMMAND_NAME_BUFFER_SIZE);
+			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
+			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
+			{
+					rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+			}
+			else
+			{
+				unsigned char *p_buffer = (unsigned char *) (&output_payload);
+				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
+				if (bytes_written != sizeof(output_payload))
+				{
+						rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+				}
+			}
+			fclose(pFile);
+		}
+	}
+	else
+	{
+		rc = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
+	}
+
+	return rc;
+}
+
+struct fwcmd_memory_info_page_0_result fwcmd_read_memory_info_page_0(const char *filename)
+{
+	struct fwcmd_memory_info_page_0_result result = {0,};
+	FILE *pFile = fopen(filename, "rb");
+	if (pFile)
+	{
+		fseek(pFile, 0, SEEK_END);
+		long fsize = ftell(pFile);
+		rewind(pFile);
+		unsigned char *buffer = malloc(fsize);
+		if (NULL == buffer)
+		{
+			printf("Internal Error\n");
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
+			fclose(pFile);
+			pFile = NULL;
+			return result;
+		}
+
+		size_t bytes_read = fread(buffer, 1, fsize, pFile);
+		fclose(pFile);
+
+		if (bytes_read == fsize)
+		{
+			result.p_data = (struct fwcmd_memory_info_page_0_data *)malloc(sizeof(*result.p_data));
+			int parse_result = fis_parse_memory_info_page_0((const struct pt_output_memory_info_page_0*) buffer, result.p_data);
+
+			if (FWCMD_PARSE_SUCCESS(parse_result))
+			{
+				result.success = 1;
+			}
+			else
+			{
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = parse_result;
+			}
+		}
+		else
+		{
+			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
+		}
+		free(buffer);
+	}
+	else
+	{
+		result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+		result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
+	}
+
+	return result;
+}
+int fwcmd_dump_memory_info_page_1(const int handle,
+	const char * filename)
+{
+	FILE *pFile = fopen(filename, "wb");
+	int rc = 0;
+	if (pFile)
+	{
+		struct pt_output_memory_info_page_1 output_payload;
+		struct pt_input_memory_info_page_1 input_payload;
+		input_payload.memory_page = 1;
+		rc = fis_memory_info_page_1(handle,&input_payload,&output_payload);
+		if (rc == 0)
+		{
+			size_t bytes_written = 0;
+			char name[COMMAND_NAME_BUFFER_SIZE] = {0};
+			s_strcpy(name, "memory_info_page_1", COMMAND_NAME_BUFFER_SIZE);
+			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
+			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
+			{
+					rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+			}
+			else
+			{
+				unsigned char *p_buffer = (unsigned char *) (&output_payload);
+				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
+				if (bytes_written != sizeof(output_payload))
+				{
+						rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+				}
+			}
+			fclose(pFile);
+		}
+	}
+	else
+	{
+		rc = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
+	}
+
+	return rc;
+}
+
+struct fwcmd_memory_info_page_1_result fwcmd_read_memory_info_page_1(const char *filename)
+{
+	struct fwcmd_memory_info_page_1_result result = {0,};
+	FILE *pFile = fopen(filename, "rb");
+	if (pFile)
+	{
+		fseek(pFile, 0, SEEK_END);
+		long fsize = ftell(pFile);
+		rewind(pFile);
+		unsigned char *buffer = malloc(fsize);
+		if (NULL == buffer)
+		{
+			printf("Internal Error\n");
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
+			fclose(pFile);
+			pFile = NULL;
+			return result;
+		}
+
+		size_t bytes_read = fread(buffer, 1, fsize, pFile);
+		fclose(pFile);
+
+		if (bytes_read == fsize)
+		{
+			result.p_data = (struct fwcmd_memory_info_page_1_data *)malloc(sizeof(*result.p_data));
+			int parse_result = fis_parse_memory_info_page_1((const struct pt_output_memory_info_page_1*) buffer, result.p_data);
+
+			if (FWCMD_PARSE_SUCCESS(parse_result))
+			{
+				result.success = 1;
+			}
+			else
+			{
+				result.error_code.type = FWCMD_ERROR_TYPE_PARSE;
+				result.error_code.code = parse_result;
+			}
+		}
+		else
+		{
+			result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+			result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_READ;
+		}
+		free(buffer);
+	}
+	else
+	{
+		result.error_code.type = FWCMD_ERROR_TYPE_DUMP;
+		result.error_code.code = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
+	}
+
+	return result;
+}
+int fwcmd_dump_memory_info_page_3(const int handle,
+	const char * filename)
+{
+	FILE *pFile = fopen(filename, "wb");
+	int rc = 0;
+	if (pFile)
+	{
+		struct pt_output_memory_info_page_3 output_payload;
+		struct pt_input_memory_info_page_3 input_payload;
+		input_payload.memory_page = 3;
+		rc = fis_memory_info_page_3(handle,&input_payload,&output_payload);
+		if (rc == 0)
+		{
+			size_t bytes_written = 0;
+			char name[COMMAND_NAME_BUFFER_SIZE] = {0};
+			s_strcpy(name, "memory_info_page_3", COMMAND_NAME_BUFFER_SIZE);
+			bytes_written = fwrite(name, 1, COMMAND_NAME_BUFFER_SIZE, pFile);
+			if (bytes_written != COMMAND_NAME_BUFFER_SIZE)
+			{
+					rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+			}
+			else
+			{
+				unsigned char *p_buffer = (unsigned char *) (&output_payload);
+				bytes_written = fwrite(p_buffer, 1, sizeof(output_payload), pFile);
+				if (bytes_written != sizeof(output_payload))
+				{
+						rc = FWCMD_DUMP_RESULT_ERR_FILE_WRITE;
+				}
+			}
+			fclose(pFile);
+		}
+	}
+	else
+	{
+		rc = FWCMD_DUMP_RESULT_ERR_FILE_OPEN;
+	}
+
+	return rc;
+}
+
+struct fwcmd_memory_info_page_3_result fwcmd_read_memory_info_page_3(const char *filename)
+{
+	struct fwcmd_memory_info_page_3_result result = {0,};
+	FILE *pFile = fopen(filename, "rb");
+	if (pFile)
+	{
+		fseek(pFile, 0, SEEK_END);
+		long fsize = ftell(pFile);
+		rewind(pFile);
+		unsigned char *buffer = malloc(fsize);
+		if (NULL == buffer)
+		{
+			printf("Internal Error\n");
+			result.error_code.code = FWCMD_ERR_NOMEMORY;
+			fclose(pFile);
+			pFile = NULL;
+			return result;
+		}
+
+		size_t bytes_read = fread(buffer, 1, fsize, pFile);
+		fclose(pFile);
+
+		if (bytes_read == fsize)
+		{
+			result.p_data = (struct fwcmd_memory_info_page_3_data *)malloc(sizeof(*result.p_data));
+			int parse_result = fis_parse_memory_info_page_3((const struct pt_output_memory_info_page_3*) buffer, result.p_data);
 
 			if (FWCMD_PARSE_SUCCESS(parse_result))
 			{

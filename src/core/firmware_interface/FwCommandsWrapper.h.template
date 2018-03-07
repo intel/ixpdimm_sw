@@ -47,7 +47,7 @@ public:
 	//- for cmd in commands
 
 	virtual struct {{cmd.name|fw_cmd_result}} {{cmd|fw_cmd_name|camel}}(unsigned int handle
-	{%- for f in cmd.input_fields_not_ignored -%}
+	{%- for f in cmd.input_fields_changeable -%}
 	,
 	const {{f.c_definition}}
 	{%- endfor -%}

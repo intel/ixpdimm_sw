@@ -142,6 +142,15 @@ void fwcmd_firmware_image_info_printer(const struct fwcmd_firmware_image_info_da
 void fwcmd_firmware_debug_log_printer(const struct fwcmd_firmware_debug_log_data *p_value,
 	int );
 
+void fwcmd_memory_info_page_0_printer(const struct fwcmd_memory_info_page_0_data *p_value,
+	int );
+
+void fwcmd_memory_info_page_1_printer(const struct fwcmd_memory_info_page_1_data *p_value,
+	int );
+
+void fwcmd_memory_info_page_3_printer(const struct fwcmd_memory_info_page_3_data *p_value,
+	int );
+
 void fwcmd_long_operation_status_printer(const struct fwcmd_long_operation_status_data *p_value,
 	int );
 
@@ -248,6 +257,15 @@ void fwcmd_firmware_image_info_field_printer(const struct fwcmd_firmware_image_i
 	int );
 
 void fwcmd_firmware_debug_log_field_printer(const struct fwcmd_firmware_debug_log_data *p_value,
+	int );
+
+void fwcmd_memory_info_page_0_field_printer(const struct fwcmd_memory_info_page_0_data *p_value,
+	int );
+
+void fwcmd_memory_info_page_1_field_printer(const struct fwcmd_memory_info_page_1_data *p_value,
+	int );
+
+void fwcmd_memory_info_page_3_field_printer(const struct fwcmd_memory_info_page_3_data *p_value,
 	int );
 
 void fwcmd_long_operation_status_field_printer(const struct fwcmd_long_operation_status_data *p_value,

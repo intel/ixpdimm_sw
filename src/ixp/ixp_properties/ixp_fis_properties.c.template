@@ -1,0 +1,159 @@
+/*
+ * Copyright (c) 2018, Intel Corporation
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *   * Redistributions of source code must retain the above copyright notice,
+ *     this list of conditions and the following disclaimer.
+ *   * Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *   * Neither the name of Intel Corporation nor the names of its contributors
+ *     may be used to endorse or promote products derived from this software
+ *     without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#include <stdio.h>
+#include <string.h>
+#include "ixp_fis_properties.h"
+#include <fw_commands.h>
+#include <ixp.h>
+
+
+
+struct ixp_fw_lookup_t
+{
+	int struct_offset;
+	int size;
+	char name[IXP_MAX_PROPERTY_NAME_SZ];
+};
+
+// Unfortunately we can't use named struct elements here (.fwcmd = ...)
+// Visual Studio doesn't like it for some reason. Un-named it is then!
+static const struct ixp_fw_lookup_t g_ixp_fw_lookup[] = {
+//- for (cmd, var_name, size, pretty_name) in ixp_fw_lookup_entry_data
+	{offsetof(struct {{cmd.name|fw_cmd_data}}, {{var_name}}), {{size}}, "{{pretty_name|camel}}"},
+//- endfor
+};
+
+
+// Get result from lower-level fwcmd and then populate any relevant properties
+// in the props array
+int get_fw_cmd(struct fwcmd_result (* fwcmd)(unsigned int),
+void (* fwcmd_free)(struct fwcmd_result *),
+unsigned int prop_key_first, unsigned int prop_key_length, unsigned int handle,
+struct ixp_prop_info props[], unsigned int num_props, const struct ixp_fw_lookup_t ixp_fw_lookup[])
+{
+	struct fwcmd_result result = (*fwcmd)(handle);
+	if (!result.success)
+	{
+		// TODO: Convert fw error code into IXP error code
+		return IXP_INTERNAL_ERROR;
+	}
+
+	struct ixp_prop_info * prop;
+	for (int props_index = 0; props_index < num_props; props_index++)
+	{
+		prop = &(props[props_index]);
+
+		if (prop->prop_key < prop_key_first ||
+		prop->prop_key >= prop_key_first + prop_key_length)
+		{
+			continue;
+		}
+
+		prop->prop_value_size = ixp_fw_lookup[prop->prop_key].size;
+		prop->prop_value = malloc(ixp_fw_lookup[prop->prop_key].size);
+		if (NULL == prop->prop_value)
+		{
+			return IXP_NO_MEM_RESOURCES;
+		}
+
+		// TODO: Linux doesn't have memcpy_s??
+		// Copy property data
+		// dest, src, size
+		memcpy(prop->prop_value,
+		(char *)result.p_data + ixp_fw_lookup[prop->prop_key].struct_offset,
+		ixp_fw_lookup[prop->prop_key].size);
+
+		// Copy name string
+		// TODO: Verify with Kelly/Dan this is the proper implementation
+		// Use strcat?? https://stackoverflow.com/questions/1258550/why-should-you-use-strncpy-instead-of-strcpy
+		if (snprintf(prop->prop_name, IXP_MAX_PROPERTY_NAME_SZ,
+		"%s", ixp_fw_lookup[prop->prop_key].name) >= IXP_MAX_PROPERTY_NAME_SZ)
+		{
+			fwcmd_free(&result);
+			// Pretty print string name is >= IXP_MAX_PROPERTY_NAME_SZ
+			return IXP_INTERNAL_ERROR;
+		}
+	}
+
+	fwcmd_free(&result);
+	return IXP_SUCCESS;
+}
+
+void free_fw_cmd(unsigned int prop_key_first, unsigned int prop_key_length,
+struct ixp_prop_info props[], unsigned int num_props)
+{
+	struct ixp_prop_info * prop;
+	// Only need to free the data portion of struct
+	for (int props_index = 0; props_index < num_props; props_index++)
+	{
+		prop = &(props[props_index]);
+
+		if (prop->prop_key < prop_key_first ||
+		prop->prop_key >= prop_key_first + prop_key_length ||
+		prop->prop_value == NULL)
+		{
+			continue;
+		}
+
+		free(prop->prop_value);
+		prop->prop_value = NULL;
+		prop->prop_value_size = 0;
+	}
+}
+
+//- macro ixp_fw_lookup_function(cmd, prop_key_first, prop_key_length)
+int get_fis_{{cmd.name}}_properties(unsigned int handle,
+struct ixp_prop_info props[], unsigned int num_props)
+{
+	return get_fw_cmd(
+	(struct fwcmd_result (*)(unsigned int))&{{cmd.name|fw_cmd_create}},
+	(void (*)(struct fwcmd_result*))&{{cmd.name|fw_cmd_free}},
+	{{prop_key_first}}, {{prop_key_length}}, handle, props, num_props, g_ixp_fw_lookup);
+}
+//- endmacro
+
+//- for data in ixp_fw_lookup_function_data
+{{ixp_fw_lookup_function(*data)}}
+//- endfor
+
+
+//- macro ixp_fw_lookup_free_function(cmd, prop_key_first, prop_key_length)
+void free_fis_{{cmd.name}}_properties(
+struct ixp_prop_info props[], unsigned int num_props)
+{
+	free_fw_cmd({{prop_key_first}}, {{prop_key_length}}, props, num_props);
+}
+//- endmacro
+
+
+//- for data in ixp_fw_lookup_function_data
+{{ixp_fw_lookup_free_function(*data)}}
+//- endfor
+
+
+

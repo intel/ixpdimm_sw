@@ -56,7 +56,16 @@ struct fwcmd_error_code
 {
 	enum fwcmd_error_type type;
 	unsigned int code;
-}  )
+})
+
+// Generic result struct
+PACK_STRUCT(
+struct fwcmd_result
+{
+	int success:1;
+	struct fwcmd_error_code error_code;
+	void *p_data;
+})
 
 /*
  * Data Structures for identify_dimm
@@ -89,14 +98,14 @@ struct fwcmd_identify_dimm_data
 	unsigned short interface_format_code_extra;
 	unsigned short api_ver;
 
-}  )
+})
 PACK_STRUCT(
 struct fwcmd_identify_dimm_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
 	struct fwcmd_identify_dimm_data *p_data;
-}  )
+})
 
 /*
  * Firmware Command Function identify_dimm
@@ -115,14 +124,14 @@ struct fwcmd_identify_dimm_characteristics_data
 	unsigned short throttling_start_threshold;
 	unsigned short throttling_stop_threshold;
 
-}  )
+})
 PACK_STRUCT(
 struct fwcmd_identify_dimm_characteristics_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
 	struct fwcmd_identify_dimm_characteristics_data *p_data;
-}  )
+})
 
 /*
  * Firmware Command Function identify_dimm_characteristics
@@ -143,14 +152,14 @@ struct fwcmd_get_security_state_data
 	unsigned char security_state_count_expired;
 	unsigned char security_state_not_supported;
 
-}  )
+})
 PACK_STRUCT(
 struct fwcmd_get_security_state_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
 	struct fwcmd_get_security_state_data *p_data;
-}  )
+})
 
 /*
  * Firmware Command Function get_security_state
@@ -166,7 +175,7 @@ struct fwcmd_set_passphrase_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
-}  )
+})
 
 /*
  * Firmware Command Function set_passphrase
@@ -183,7 +192,7 @@ struct fwcmd_disable_passphrase_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
-}  )
+})
 
 /*
  * Firmware Command Function disable_passphrase
@@ -199,7 +208,7 @@ struct fwcmd_unlock_unit_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
-}  )
+})
 
 /*
  * Firmware Command Function unlock_unit
@@ -215,7 +224,7 @@ struct fwcmd_secure_erase_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
-}  )
+})
 
 /*
  * Firmware Command Function secure_erase
@@ -231,7 +240,7 @@ struct fwcmd_freeze_lock_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
-}  )
+})
 
 /*
  * Firmware Command Function freeze_lock
@@ -252,14 +261,14 @@ struct fwcmd_get_alarm_threshold_data
 	unsigned short media_temp_threshold;
 	unsigned short controller_temp_threshold;
 
-}  )
+})
 PACK_STRUCT(
 struct fwcmd_get_alarm_threshold_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
 	struct fwcmd_get_alarm_threshold_data *p_data;
-}  )
+})
 
 /*
  * Firmware Command Function get_alarm_threshold
@@ -278,14 +287,14 @@ struct fwcmd_power_management_policy_data
 	unsigned short average_power_budget;
 	unsigned char max_power;
 
-}  )
+})
 PACK_STRUCT(
 struct fwcmd_power_management_policy_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
 	struct fwcmd_power_management_policy_data *p_data;
-}  )
+})
 
 /*
  * Firmware Command Function power_management_policy
@@ -307,14 +316,14 @@ struct fwcmd_die_sparing_policy_data
 	unsigned char supported_rank_2;
 	unsigned char supported_rank_3;
 
-}  )
+})
 PACK_STRUCT(
 struct fwcmd_die_sparing_policy_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
 	struct fwcmd_die_sparing_policy_data *p_data;
-}  )
+})
 
 /*
  * Firmware Command Function die_sparing_policy
@@ -333,14 +342,14 @@ struct fwcmd_address_range_scrub_data
 	unsigned long long dpa_end_address;
 	unsigned long long dpa_current_address;
 
-}  )
+})
 PACK_STRUCT(
 struct fwcmd_address_range_scrub_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
 	struct fwcmd_address_range_scrub_data *p_data;
-}  )
+})
 
 /*
  * Firmware Command Function address_range_scrub
@@ -358,14 +367,14 @@ struct fwcmd_optional_configuration_data_policy_data
 	unsigned char viral_policy_enabled;
 	unsigned char viral_status;
 
-}  )
+})
 PACK_STRUCT(
 struct fwcmd_optional_configuration_data_policy_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
 	struct fwcmd_optional_configuration_data_policy_data *p_data;
-}  )
+})
 
 /*
  * Firmware Command Function optional_configuration_data_policy
@@ -407,14 +416,14 @@ struct fwcmd_pmon_registers_data
 	unsigned int pmon_14_counter;
 	unsigned int pmon_14_control;
 
-}  )
+})
 PACK_STRUCT(
 struct fwcmd_pmon_registers_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
 	struct fwcmd_pmon_registers_data *p_data;
-}  )
+})
 
 /*
  * Firmware Command Function pmon_registers
@@ -431,7 +440,7 @@ struct fwcmd_set_alarm_threshold_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
-}  )
+})
 
 /*
  * Firmware Command Function set_alarm_threshold
@@ -449,14 +458,14 @@ struct fwcmd_system_time_data
 {
 	unsigned long long unix_time;
 
-}  )
+})
 PACK_STRUCT(
 struct fwcmd_system_time_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
 	struct fwcmd_system_time_data *p_data;
-}  )
+})
 
 /*
  * Firmware Command Function system_time
@@ -474,14 +483,14 @@ struct fwcmd_device_identification_v1_data
 	unsigned int serial_number;
 	char model_number[21];
 
-}  )
+})
 
 PACK_STRUCT(
 struct fwcmd_device_identification_v2_data
 {
 	unsigned char uid[9];
 
-}  )
+})
 
 PACK_STRUCT(
 struct fwcmd_id_info_table_data
@@ -495,7 +504,7 @@ struct fwcmd_id_info_table_data
 	unsigned long long partition_offset;
 	unsigned long long partition_size;
 
-}  )
+})
 
 PACK_STRUCT(
 struct fwcmd_interleave_information_table_data
@@ -513,7 +522,7 @@ struct fwcmd_interleave_information_table_data
 	struct fwcmd_id_info_table_data *id_info_table;
 
 
-}  )
+})
 
 PACK_STRUCT(
 struct fwcmd_partition_size_change_table_data
@@ -523,7 +532,7 @@ struct fwcmd_partition_size_change_table_data
 	unsigned int platform_config_data_partition_size_change_table;
 	unsigned long long persistent_memory_partition_size;
 
-}  )
+})
 
 PACK_STRUCT(
 struct fwcmd_current_config_table_data
@@ -544,7 +553,7 @@ struct fwcmd_current_config_table_data
 	struct fwcmd_interleave_information_table_data *interleave_information_table;
 
 
-}  )
+})
 
 PACK_STRUCT(
 struct fwcmd_config_input_table_data
@@ -566,7 +575,7 @@ struct fwcmd_config_input_table_data
 	struct fwcmd_partition_size_change_table_data *partition_size_change_table;
 
 
-}  )
+})
 
 PACK_STRUCT(
 struct fwcmd_config_output_table_data
@@ -589,7 +598,7 @@ struct fwcmd_config_output_table_data
 	struct fwcmd_partition_size_change_table_data *partition_size_change_table;
 
 
-}  )
+})
 
 PACK_STRUCT(
 struct fwcmd_platform_config_data_data
@@ -613,14 +622,14 @@ struct fwcmd_platform_config_data_data
 	struct fwcmd_config_input_table_data config_input_table;
 	struct fwcmd_config_output_table_data config_output_table;
 
-}  )
+})
 PACK_STRUCT(
 struct fwcmd_platform_config_data_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
 	struct fwcmd_platform_config_data_data *p_data;
-}  )
+})
 
 /*
  * Firmware Command Function platform_config_data
@@ -649,7 +658,7 @@ struct fwcmd_ns_index_data
 	unsigned short label_minor_version;
 	unsigned long long checksum;
 
-}  )
+})
 
 PACK_STRUCT(
 struct fwcmd_ns_label_data
@@ -668,7 +677,7 @@ struct fwcmd_ns_label_data
 	unsigned long long rawsize;
 	unsigned int slot;
 
-}  )
+})
 
 PACK_STRUCT(
 struct fwcmd_ns_label_v1_1_data
@@ -676,7 +685,7 @@ struct fwcmd_ns_label_v1_1_data
 	struct fwcmd_ns_label_data label;
 	unsigned int unused;
 
-}  )
+})
 
 PACK_STRUCT(
 struct fwcmd_ns_label_v1_2_data
@@ -689,7 +698,7 @@ struct fwcmd_ns_label_v1_2_data
 	unsigned char reserved1[88];
 	unsigned long long checksum;
 
-}  )
+})
 
 PACK_STRUCT(
 struct fwcmd_namespace_labels_data
@@ -697,14 +706,14 @@ struct fwcmd_namespace_labels_data
 	struct fwcmd_ns_index_data index1;
 	struct fwcmd_ns_index_data index2;
 
-}  )
+})
 PACK_STRUCT(
 struct fwcmd_namespace_labels_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
 	struct fwcmd_namespace_labels_data *p_data;
-}  )
+})
 
 /*
  * Firmware Command Function namespace_labels
@@ -728,14 +737,14 @@ struct fwcmd_dimm_partition_info_data
 	unsigned int raw_capacity;
 	unsigned int enabled_capacity;
 
-}  )
+})
 PACK_STRUCT(
 struct fwcmd_dimm_partition_info_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
 	struct fwcmd_dimm_partition_info_data *p_data;
-}  )
+})
 
 /*
  * Firmware Command Function dimm_partition_info
@@ -752,14 +761,14 @@ struct fwcmd_fw_debug_log_level_data
 	unsigned char log_level;
 	unsigned char logs;
 
-}  )
+})
 PACK_STRUCT(
 struct fwcmd_fw_debug_log_level_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
 	struct fwcmd_fw_debug_log_level_data *p_data;
-}  )
+})
 
 /*
  * Firmware Command Function fw_debug_log_level
@@ -776,14 +785,14 @@ struct fwcmd_fw_load_flag_data
 {
 	unsigned char load_flag;
 
-}  )
+})
 PACK_STRUCT(
 struct fwcmd_fw_load_flag_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
 	struct fwcmd_fw_load_flag_data *p_data;
-}  )
+})
 
 /*
  * Firmware Command Function fw_load_flag
@@ -799,14 +808,14 @@ struct fwcmd_config_lockdown_data
 {
 	unsigned char locked;
 
-}  )
+})
 PACK_STRUCT(
 struct fwcmd_config_lockdown_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
 	struct fwcmd_config_lockdown_data *p_data;
-}  )
+})
 
 /*
  * Firmware Command Function config_lockdown
@@ -823,14 +832,14 @@ struct fwcmd_ddrt_io_init_info_data
 	unsigned char ddrt_io_info;
 	unsigned char ddrt_training_status;
 
-}  )
+})
 PACK_STRUCT(
 struct fwcmd_ddrt_io_init_info_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
 	struct fwcmd_ddrt_io_init_info_data *p_data;
-}  )
+})
 
 /*
  * Firmware Command Function ddrt_io_init_info
@@ -846,14 +855,14 @@ struct fwcmd_get_supported_sku_features_data
 {
 	unsigned int dimm_sku;
 
-}  )
+})
 PACK_STRUCT(
 struct fwcmd_get_supported_sku_features_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
 	struct fwcmd_get_supported_sku_features_data *p_data;
-}  )
+})
 
 /*
  * Firmware Command Function get_supported_sku_features
@@ -869,14 +878,14 @@ struct fwcmd_enable_dimm_data
 {
 	unsigned char enable;
 
-}  )
+})
 PACK_STRUCT(
 struct fwcmd_enable_dimm_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
 	struct fwcmd_enable_dimm_data *p_data;
-}  )
+})
 
 /*
  * Firmware Command Function enable_dimm
@@ -939,14 +948,14 @@ struct fwcmd_smart_health_info_data
 	unsigned int media_error_injections;
 	unsigned int non_media_error_injections;
 
-}  )
+})
 PACK_STRUCT(
 struct fwcmd_smart_health_info_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
 	struct fwcmd_smart_health_info_data *p_data;
-}  )
+})
 
 /*
  * Firmware Command Function smart_health_info
@@ -967,14 +976,14 @@ struct fwcmd_firmware_image_info_data
 	char commit_id[41];
 	char build_configuration[17];
 
-}  )
+})
 PACK_STRUCT(
 struct fwcmd_firmware_image_info_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
 	struct fwcmd_firmware_image_info_data *p_data;
-}  )
+})
 
 /*
  * Firmware Command Function firmware_image_info
@@ -990,14 +999,14 @@ struct fwcmd_firmware_debug_log_data
 {
 	unsigned char log_size;
 
-}  )
+})
 PACK_STRUCT(
 struct fwcmd_firmware_debug_log_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
 	struct fwcmd_firmware_debug_log_data *p_data;
-}  )
+})
 
 /*
  * Firmware Command Function firmware_debug_log
@@ -1008,6 +1017,92 @@ struct fwcmd_firmware_debug_log_result fwcmd_alloc_firmware_debug_log(unsigned i
 	const unsigned char log_id);
 
 void fwcmd_free_firmware_debug_log(struct fwcmd_firmware_debug_log_result *p_result);
+/*
+ * Data Structures for memory_info_page_0
+ */
+PACK_STRUCT(
+struct fwcmd_memory_info_page_0_data
+{
+	unsigned char media_reads[16];
+	unsigned char media_writes[16];
+	unsigned char read_requests[16];
+	unsigned char write_requests[16];
+	unsigned char block_read_requests[16];
+	unsigned char block_write_requests[16];
+
+})
+PACK_STRUCT(
+struct fwcmd_memory_info_page_0_result
+{
+	int success:1;
+	struct fwcmd_error_code error_code;
+	struct fwcmd_memory_info_page_0_data *p_data;
+})
+
+/*
+ * Firmware Command Function memory_info_page_0
+ */
+struct fwcmd_memory_info_page_0_result fwcmd_alloc_memory_info_page_0(unsigned int handle);
+
+void fwcmd_free_memory_info_page_0(struct fwcmd_memory_info_page_0_result *p_result);
+/*
+ * Data Structures for memory_info_page_1
+ */
+PACK_STRUCT(
+struct fwcmd_memory_info_page_1_data
+{
+	unsigned char total_media_reads[16];
+	unsigned char total_media_writes[16];
+	unsigned char total_read_requests[16];
+	unsigned char total_write_requests[16];
+	unsigned char total_block_read_requests[16];
+	unsigned char total_block_write_requests[16];
+
+})
+PACK_STRUCT(
+struct fwcmd_memory_info_page_1_result
+{
+	int success:1;
+	struct fwcmd_error_code error_code;
+	struct fwcmd_memory_info_page_1_data *p_data;
+})
+
+/*
+ * Firmware Command Function memory_info_page_1
+ */
+struct fwcmd_memory_info_page_1_result fwcmd_alloc_memory_info_page_1(unsigned int handle);
+
+void fwcmd_free_memory_info_page_1(struct fwcmd_memory_info_page_1_result *p_result);
+/*
+ * Data Structures for memory_info_page_3
+ */
+PACK_STRUCT(
+struct fwcmd_memory_info_page_3_data
+{
+	unsigned int error_injection_status;
+	unsigned char error_injection_status_error_injection_enabled;
+	unsigned char error_injection_status_media_temperature_injection_enabled;
+	unsigned char error_injection_status_software_triggers_enabled;
+	unsigned int poison_error_injections_counter;
+	unsigned int poison_error_clear_counter;
+	unsigned int media_temperature_injections_counter;
+	unsigned int software_triggers_counter;
+
+})
+PACK_STRUCT(
+struct fwcmd_memory_info_page_3_result
+{
+	int success:1;
+	struct fwcmd_error_code error_code;
+	struct fwcmd_memory_info_page_3_data *p_data;
+})
+
+/*
+ * Firmware Command Function memory_info_page_3
+ */
+struct fwcmd_memory_info_page_3_result fwcmd_alloc_memory_info_page_3(unsigned int handle);
+
+void fwcmd_free_memory_info_page_3(struct fwcmd_memory_info_page_3_result *p_result);
 /*
  * Data Structures for long_operation_status
  */
@@ -1020,14 +1115,14 @@ struct fwcmd_long_operation_status_data
 	unsigned char status_code;
 	unsigned char command_specific_return_data[119];
 
-}  )
+})
 PACK_STRUCT(
 struct fwcmd_long_operation_status_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
 	struct fwcmd_long_operation_status_data *p_data;
-}  )
+})
 
 /*
  * Firmware Command Function long_operation_status
@@ -1060,14 +1155,14 @@ struct fwcmd_bsr_data
 	unsigned char rest1_ait_dram_ready;
 	unsigned short rest2;
 
-}  )
+})
 PACK_STRUCT(
 struct fwcmd_bsr_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
 	struct fwcmd_bsr_data *p_data;
-}  )
+})
 
 /*
  * Firmware Command Function bsr
@@ -1083,7 +1178,7 @@ struct fwcmd_format_result
 {
 	int success:1;
 	struct fwcmd_error_code error_code;
-}  )
+})
 
 /*
  * Firmware Command Function format

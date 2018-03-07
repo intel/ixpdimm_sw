@@ -97,6 +97,12 @@ void fwcmd_run_firmware_image_info(unsigned int handle);
 
 void fwcmd_run_firmware_debug_log(unsigned int handle, const unsigned char log_action, const unsigned int log_page_offset, const unsigned char log_id);
 
+void fwcmd_run_memory_info_page_0(unsigned int handle);
+
+void fwcmd_run_memory_info_page_1(unsigned int handle);
+
+void fwcmd_run_memory_info_page_3(unsigned int handle);
+
 void fwcmd_run_long_operation_status(unsigned int handle);
 
 void fwcmd_run_bsr(unsigned int handle);

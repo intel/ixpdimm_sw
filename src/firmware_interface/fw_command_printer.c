@@ -108,6 +108,9 @@ void fwcmd_print_command_names()
 	printf("\tsmart_health_info\n");
 	printf("\tfirmware_image_info\n");
 	printf("\tfirmware_debug_log\n");
+	printf("\tmemory_info_page_0\n");
+	printf("\tmemory_info_page_1\n");
+	printf("\tmemory_info_page_3\n");
 	printf("\tlong_operation_status\n");
 	printf("\tbsr\n");
 	printf("\tformat\n");
@@ -139,6 +142,9 @@ void fwcmd_print_output_command_names()
 	printf("\tsmart_health_info\n");
 	printf("\tfirmware_image_info\n");
 	printf("\tfirmware_debug_log\n");
+	printf("\tmemory_info_page_0\n");
+	printf("\tmemory_info_page_1\n");
+	printf("\tmemory_info_page_3\n");
 	printf("\tlong_operation_status\n");
 	printf("\tbsr\n");
 }
@@ -340,6 +346,21 @@ void fwcmd_firmware_image_info_printer(const struct fwcmd_firmware_image_info_da
 void fwcmd_firmware_debug_log_printer(const struct fwcmd_firmware_debug_log_data *p_value, int indent_count)
 {
 	fwcmd_firmware_debug_log_field_printer(p_value, indent_count);
+}
+
+void fwcmd_memory_info_page_0_printer(const struct fwcmd_memory_info_page_0_data *p_value, int indent_count)
+{
+	fwcmd_memory_info_page_0_field_printer(p_value, indent_count);
+}
+
+void fwcmd_memory_info_page_1_printer(const struct fwcmd_memory_info_page_1_data *p_value, int indent_count)
+{
+	fwcmd_memory_info_page_1_field_printer(p_value, indent_count);
+}
+
+void fwcmd_memory_info_page_3_printer(const struct fwcmd_memory_info_page_3_data *p_value, int indent_count)
+{
+	fwcmd_memory_info_page_3_field_printer(p_value, indent_count);
 }
 
 void fwcmd_long_operation_status_printer(const struct fwcmd_long_operation_status_data *p_value, int indent_count)
@@ -1073,6 +1094,64 @@ void fwcmd_firmware_debug_log_field_printer(const struct fwcmd_firmware_debug_lo
 	printf("FirmwareDebugLog:\n");
 	print_tabs(indent_count + 1);
 	printf("LogSize: 0x%x\n", p_value->log_size);
+}
+
+void fwcmd_memory_info_page_0_field_printer(const struct fwcmd_memory_info_page_0_data *p_value, int indent_count)
+{
+	print_tabs(indent_count);
+	printf("MemoryInfoPage0:\n");
+	print_tabs(indent_count + 1);
+	printf("MediaReads: %.16s\n", p_value->media_reads);
+	print_tabs(indent_count + 1);
+	printf("MediaWrites: %.16s\n", p_value->media_writes);
+	print_tabs(indent_count + 1);
+	printf("ReadRequests: %.16s\n", p_value->read_requests);
+	print_tabs(indent_count + 1);
+	printf("WriteRequests: %.16s\n", p_value->write_requests);
+	print_tabs(indent_count + 1);
+	printf("BlockReadRequests: %.16s\n", p_value->block_read_requests);
+	print_tabs(indent_count + 1);
+	printf("BlockWriteRequests: %.16s\n", p_value->block_write_requests);
+}
+
+void fwcmd_memory_info_page_1_field_printer(const struct fwcmd_memory_info_page_1_data *p_value, int indent_count)
+{
+	print_tabs(indent_count);
+	printf("MemoryInfoPage1:\n");
+	print_tabs(indent_count + 1);
+	printf("TotalMediaReads: %.16s\n", p_value->total_media_reads);
+	print_tabs(indent_count + 1);
+	printf("TotalMediaWrites: %.16s\n", p_value->total_media_writes);
+	print_tabs(indent_count + 1);
+	printf("TotalReadRequests: %.16s\n", p_value->total_read_requests);
+	print_tabs(indent_count + 1);
+	printf("TotalWriteRequests: %.16s\n", p_value->total_write_requests);
+	print_tabs(indent_count + 1);
+	printf("TotalBlockReadRequests: %.16s\n", p_value->total_block_read_requests);
+	print_tabs(indent_count + 1);
+	printf("TotalBlockWriteRequests: %.16s\n", p_value->total_block_write_requests);
+}
+
+void fwcmd_memory_info_page_3_field_printer(const struct fwcmd_memory_info_page_3_data *p_value, int indent_count)
+{
+	print_tabs(indent_count);
+	printf("MemoryInfoPage3:\n");
+	print_tabs(indent_count + 1);
+	printf("ErrorInjectionStatus: 0x%x\n", p_value->error_injection_status);
+	print_tabs(indent_count + 2);
+	printf("ErrorInjectionEnabled: %d\n", p_value->error_injection_status_error_injection_enabled);
+	print_tabs(indent_count + 2);
+	printf("MediaTemperatureInjectionEnabled: %d\n", p_value->error_injection_status_media_temperature_injection_enabled);
+	print_tabs(indent_count + 2);
+	printf("SoftwareTriggersEnabled: %d\n", p_value->error_injection_status_software_triggers_enabled);
+	print_tabs(indent_count + 1);
+	printf("PoisonErrorInjectionsCounter: 0x%x\n", p_value->poison_error_injections_counter);
+	print_tabs(indent_count + 1);
+	printf("PoisonErrorClearCounter: 0x%x\n", p_value->poison_error_clear_counter);
+	print_tabs(indent_count + 1);
+	printf("MediaTemperatureInjectionsCounter: 0x%x\n", p_value->media_temperature_injections_counter);
+	print_tabs(indent_count + 1);
+	printf("SoftwareTriggersCounter: 0x%x\n", p_value->software_triggers_counter);
 }
 
 void fwcmd_long_operation_status_field_printer(const struct fwcmd_long_operation_status_data *p_value, int indent_count)

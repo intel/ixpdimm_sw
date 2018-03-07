@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Intel Corporation
+ * Copyright (c) 2018, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -24,58 +24,57 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <common_types.h>
+#include "ixp.h"
+#include "ixp_prv.h"
 
-#ifndef _NFIT_INTERFACE_NFIT_TABLES_H_
-#define _NFIT_INTERFACE_NFIT_TABLES_H_
 
-#include "common.h"
-
-#ifdef __cplusplus
-extern "C"
+int ixp_create_ctx_nfit_handle(struct ixp_context **ctx, const NVM_NFIT_DEVICE_HANDLE handle, void *user_data)
 {
-#endif
+	if (NULL == ctx)
+		return IXP_NULL_INPUT_PARAM;
 
-#define SPA_RANGE_PM_REGION_GUID_STR "79D3F066-F3B4-7440-AC43-0D3318B78CDB"
-#define	NFIT_MAPPING_ATTRIBUTE_EFI_MEMORY_UC	0x00000001
-#define	NFIT_MAPPING_ATTRIBUTE_EFI_MEMORY_WC	0x00000002
-#define	NFIT_MAPPING_ATTRIBUTE_EFI_MEMORY_WT	0x00000004
-#define	NFIT_MAPPING_ATTRIBUTE_EFI_MEMORY_WB	0x00000008
-#define	NFIT_MAPPING_ATTRIBUTE_EFI_MEMORY_UCE	0x00000010
-#define	NFIT_MAPPING_ATTRIBUTE_EFI_MEMORY_WP	0x00001000
-#define	NFIT_MAPPING_ATTRIBUTE_EFI_MEMORY_RP	0x00002000
-#define	NFIT_MAPPING_ATTRIBUTE_EFI_MEMORY_XP	0x00004000
-#define	NFIT_MAPPING_ATTRIBUTE_EFI_MEMORY_NV	0x00008000
-#define	NFIT_MAPPING_ATTRIBUTE_EFI_MEMORY_MORE_RELIABLE	0x00010000
+	if (NULL == (*ctx = (struct ixp_context *)malloc(sizeof(struct ixp_context))))
+		return IXP_NO_MEM_RESOURCES;
 
-PACK_STRUCT(1)
-
-//- for t in all_tables
-struct {{t.name}}
-{
-//-	for f in t.fields
-//-		if f.is_primitive
-	{{f.c_type}} {{f.name}};
-//-		else
-	unsigned char {{f.name}}[{{f.byte_count}}];
-//-		endif
-//- endfor
-} __attribute__((packed));
-
-//- endfor
-
-UNPACK_STRUCT
-
-struct parsed_nfit
-{
-	struct {{root_table.name}} {{root_table.name}};
-	//- for t in sub_tables
-	int {{t.name}}_count;
-	struct {{t.name}} *{{t.name}}_list;
-	//- endfor
-};
-
-#ifdef __cplusplus
+	struct ixp_context *pctx = (struct ixp_context*)*ctx;
+	pctx->handle = handle;
+	pctx->user_data = user_data;
+	return IXP_SUCCESS;
 }
-#endif
 
-#endif /* _NFIT_INTERFACE_NFIT_TABLES_H_ */
+int ixp_create_ctx_uid(struct ixp_context **ctx, const NVM_UID uid, void *user_data)
+{
+	if (!ctx || !uid || !user_data)
+	{
+		return IXP_NULL_INPUT_PARAM;
+	}
+	return IXP_NOT_YET_IMPLEMENTED;
+}
+
+int ixp_get_ctx_user_data(struct ixp_context *ctx, void **user_data)
+{
+	if (ctx && user_data)
+	{
+		*user_data = ctx->user_data;
+		return IXP_SUCCESS;
+	}
+	else return IXP_NULL_INPUT_PARAM;
+}
+
+int ixp_free_ctx(struct ixp_context *ctx)
+{
+	if (!ctx)
+	{
+		return IXP_NULL_INPUT_PARAM;
+	}
+	else
+	{
+		free(ctx);
+	}
+	return IXP_SUCCESS;
+}
+

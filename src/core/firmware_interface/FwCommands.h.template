@@ -51,62 +51,62 @@ virtual ~FwCommands();
 FwCommands &operator=(const FwCommands &other);
 static FwCommands &getFwCommands();
 
-//- for cmd in commands
+//-	for cmd in commands
 //-		if cmd.has_custom_printer
 virtual std::string {{cmd.name|fw_payload_to_string_custom}}({{cmd.name|fw_cmd_data}} *pData);
 //-		endif
-//- endfor
+//-	endfor
 
-//- for cmd in commands
+//-	for cmd in commands
 
 virtual enum return_code {{cmd.name|fw_get_payload}}(unsigned int handle
-	{%- for f in cmd.input_fields_not_ignored -%}
+	{%- for f in cmd.input_fields_changeable -%}
 	,
 	const {{f.c_definition}}
 	{%- endfor -%}
 	,
-    std::string &resultString);
+	std::string &resultString);
 
-//- endfor
+//-	endfor
 
-//- macro payloadToString(name, payload)
+//-	macro payloadToString(name, payload)
 virtual std::string {{name|fw_payload_to_string}}(
-    const struct {{name|fw_cmd_data}} *p_data);
-//-         for r in payload.payload_refs:
-//-             if r.is_type_based
-//-                 for t in r.types
-//-                     set name=r.types[t]
-//-                         if r.is_multiple
+	const struct {{name|fw_cmd_data}} *p_data);
+//-		for r in payload.payload_refs:
+//-			if r.is_type_based
+//-				for t in r.types
+//-					set name=r.types[t]
+//-						if r.is_multiple
 
 //-							endif
-//-                 endfor
-//-             endif
-//-         endfor
+//-				endfor
+//-			endif
+//-		endfor
 
-//- endmacro
+//-	endmacro
 
-//- macro payloadFieldsToString(name, payload)
+//-	macro payloadFieldsToString(name, payload)
 virtual std::string {{name|fw_payload_fields_to_string}}(
-    const struct {{name|fw_cmd_data}} *p_data);
-//- endmacro
+	const struct {{name|fw_cmd_data}} *p_data);
+//-	endmacro
 
-//- for cmd in commands
+//-	for cmd in commands
 //-		if cmd.has_output
 //-			for s in cmd.sub_payloads
 {{payloadToString(s.name, s.payload)}}
 //-			endfor
 {{payloadToString(cmd.name, cmd.output_payload)}}
 //-		endif
-//- endfor
+//-	endfor
 
-//- for cmd in commands
+//-	for cmd in commands
 //-		if cmd.has_output
 //-			for s in cmd.sub_payloads
 {{payloadFieldsToString(s.name, s.payload)}}
 //-			endfor
 {{payloadFieldsToString(cmd.name, cmd.output_payload)}}
 //-		endif
-//- endfor
+//-	endfor
 
 virtual enum return_code dsm_err_to_nvm_lib_err(pt_result result);
 
