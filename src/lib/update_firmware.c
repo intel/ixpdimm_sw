@@ -282,7 +282,6 @@ int update_firmware(const NVM_NFIT_DEVICE_HANDLE device_handle, const NVM_PATH p
 			{
 				nvm_sleep(1000); // 1 second
 			}
-
 			// Changing the state invalidates the device cache
 			invalidate_devices();
 		}

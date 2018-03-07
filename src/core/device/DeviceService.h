@@ -52,6 +52,7 @@ public:
 	virtual DeviceCollection getAllDevices();
 	virtual Result<Device> getDevice(std::string uid);
 	virtual std::string getFirmwareApiVersionByUid(const std::string &deviceUid);
+	virtual NVM_UINT32 getHandleByUid(const std::string &deviceUid);
 
 	virtual void modifyDeviceSettings(const std::string &deviceUid,
 			const bool enableFirstFastRefresh, const bool enableViralPolicy);

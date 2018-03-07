@@ -155,6 +155,13 @@ std::string core::device::DeviceService::getFirmwareApiVersionByUid(const std::s
 	return m_lib.getDeviceDiscovery(deviceUid).fw_api_version;
 }
 
+NVM_UINT32 core::device::DeviceService::getHandleByUid(const std::string &deviceUid)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	return m_lib.getDeviceDiscovery(deviceUid).device_handle.handle;
+}
+
+
 void core::device::DeviceService::modifyDeviceSettings(const std::string& deviceUid,
 		const bool enableFirstFastRefresh, const bool enableViralPolicy)
 {

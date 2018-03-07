@@ -44,8 +44,11 @@
 #include "NVDIMMSoftwareInstallationServiceFactory.h"
 #include "NVDIMMCollectionFactory.h"
 
+
 #include <algorithm>
 #include <string.h>
+#include <string/s_str.h>
+
 
 #include <exception/NvmExceptionLibError.h>
 #include <NvmStrings.h>
@@ -54,7 +57,8 @@
 wbem::software::NVDIMMSoftwareInstallationServiceFactory::NVDIMMSoftwareInstallationServiceFactory()
 throw (wbem::framework::Exception) : m_UpdateDeviceFw(nvm_update_device_fw),
 m_ExamineFwImage(nvm_examine_device_fw),
-m_GetManageableDeviceUids(physical_asset::NVDIMMFactory::getManageableDeviceUids)
+m_GetManageableDeviceUids(physical_asset::NVDIMMFactory::getManageableDeviceUids),
+m_GetDeviceDetails(nvm_get_device_details)
 { }
 
 wbem::software::NVDIMMSoftwareInstallationServiceFactory::~NVDIMMSoftwareInstallationServiceFactory()
@@ -456,5 +460,51 @@ throw (framework::Exception)
 	}
 
 	version = fw_version;
+	return rc;
+}
+
+void wbem::software::NVDIMMSoftwareInstallationServiceFactory::waitForARSToComplete( ) const
+throw (framework::Exception)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	std::vector<std::string> devices = m_GetManageableDeviceUids();
+	for (size_t i = 0; i < devices.size(); i++)
+	{
+		waitForARSToComplete(devices[i]);
+	}
+}
+
+int wbem::software::NVDIMMSoftwareInstallationServiceFactory::waitForARSToComplete(
+		const std::string& deviceUid) const
+throw (framework::Exception)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+
+	if (!core::device::isUidValid(deviceUid))
+	{
+		throw framework::ExceptionBadParameter("deviceUid");
+	}
+	struct device_status status;
+	NVM_UID lib_deviceUid;
+	int rc = NVM_SUCCESS;
+
+	core::Helper::stringToUid(deviceUid, lib_deviceUid);
+
+	rc = nvm_get_device_status(lib_deviceUid, &status);
+	if(status.ars_status == DEVICE_ARS_STATUS_INPROGRESS)
+	{
+		printf("Cannot stage FW while ARS is in Progress. Waiting for ARS Completion\n");
+
+	}
+
+	while (status.ars_status == DEVICE_ARS_STATUS_INPROGRESS)
+	{
+		nvm_sleep(1000); // 1 second
+		printf(".");
+		fflush(stdout);
+		rc = nvm_get_device_status(lib_deviceUid, &status);
+	}
+	printf("\n");
 	return rc;
 }

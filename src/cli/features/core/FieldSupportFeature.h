@@ -48,7 +48,7 @@ namespace cli
 namespace nvmcli
 {
 
-static const std::string UPDATEFIRMWARE_MSG = N_TR("Load FW on " NVM_DIMM_NAME " %s"); //!< update firmware success message
+static const std::string UPDATEFIRMWARE_MSG = N_TR("Load FW on " NVM_DIMM_NAME " %s"); //!< update firmware message
 static const std::string UPDATEFIRMWARE_RESET_MSG = N_TR(", a power cycle is required to activate the FW.");
 static const std::string UPDATEFIRMWARE_EXAMINE_VALID_MSG = N_TR(
 		"Valid"); //!< examine FW valid message
@@ -62,6 +62,7 @@ static const std::string UPDATEFIRMWARE_ERROR_MSG = N_TR(
 		"Load FW on " NVM_DIMM_NAME " (%s): Error - %s"); //!< update firmware error message
 static const std::string DOWNGRADE_FW_PROMPT = TR(
 		"Downgrade firmware on " NVM_DIMM_NAME " %s?"); //!< prompt for user if not forced
+
 static const std::string CREATESNAPSHOT_MSG = N_TR(
 		"Create support snapshot"); //!< create support snapshot success message
 static const std::string DUMPSUPPORT_MSG = N_TR(
@@ -219,6 +220,12 @@ public:
 	std::string (*m_uidToDimmIdStr)(const std::string &dimmUid)
 			throw (wbem::framework::Exception);
 
+	/*!
+	 * API for allowing ARS to complete
+	 * @param deviceUid
+	 */
+	void (*m_WaitForARSToComplete)(const std::string &deviceUid);
+
 	/*
 	 * Retrieve a list of supported preferences
 	 */
@@ -290,6 +297,13 @@ private:
 	 */
 	static int wbemExamineFwImage(const std::string &deviceUid, const std::string &path,
 			std::string &fwVersion);
+
+	/*!
+	 * Wrapper around wbem waitForARSToComplete
+	 * @param deviceUid
+	 * @return
+	 */
+	static void wbemWaitForARSToComplete(const std::string &deviceUid);
 
 	/*!
 	 * Wrapper around wbem

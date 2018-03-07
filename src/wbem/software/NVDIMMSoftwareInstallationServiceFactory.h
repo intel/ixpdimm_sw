@@ -159,6 +159,22 @@ class NVM_CIM_API NVDIMMSoftwareInstallationServiceFactory : public framework_in
 		throw (framework::Exception);
 
 		/*!
+		 * Wait for ARS to complete
+		 * @param deviceUid
+		 *		Device to allow ARS for completion
+		 * @return
+		 */
+		int waitForARSToComplete(const std::string &deviceUid) const
+		throw (framework::Exception);
+
+		/*!
+		 * Wait for ARS to complete for all devices.
+		 * @return
+		 */
+		void waitForARSToComplete( ) const
+		throw (framework::Exception);
+
+		/*!
 		 * API indirection
 		 * @param device_uid
 		 * @param path
@@ -187,6 +203,14 @@ class NVM_CIM_API NVDIMMSoftwareInstallationServiceFactory : public framework_in
 		 * @return
 		 */
 		std::vector<std::string> (*m_GetManageableDeviceUids)();
+
+		/*!
+		 * API for getting device details
+		 * @param device_uid
+		 * @return status of operation
+		 */
+		int (*m_GetDeviceDetails)(const NVM_UID device_uid,
+				struct device_details *p_details);
 
 	private:
 		void populateAttributeList(framework::attribute_names_t &attributes)

@@ -128,6 +128,8 @@ void cli::nvmcli::FieldSupportFeature::getPaths(cli::framework::CommandSpecList 
 	updateFirmware.addOption(framework::OPTION_EXAMINE)
 			.helpText(TR("Verify the firmware image specified in the source option and return its version "
 					"without actually downloading the image to the specified " NVM_DIMM_NAME "(s)."));
+	updateFirmware.addOption(framework::OPTION_WAIT)
+			.helpText(TR("If any long-operations are pending, wait for them to complete and then continue the firmware update."));
 	updateFirmware.addTarget(TARGET_DIMM_R)
 			.valueText(DIMMIDS_STR)
 			.helpText(TR("Update the firmware on specific " NVM_DIMM_NAME "s by supplying one or more comma-separated "
@@ -340,7 +342,8 @@ cli::nvmcli::FieldSupportFeature::FieldSupportFeature() :
 		m_DumpSupport(wbemDumpSupport),
 		m_ClearSupport(wbemClearSupport),
 		m_getEvents(wbemGetEvents),
-		m_uidToDimmIdStr(wbem::physical_asset::NVDIMMFactory::uidToDimmIdStr)
+		m_uidToDimmIdStr(wbem::physical_asset::NVDIMMFactory::uidToDimmIdStr),
+		m_WaitForARSToComplete(wbemWaitForARSToComplete)
 {
 }
 
@@ -543,6 +546,8 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::updateFirmware(
 				!= parsedCommand.options.end();
 		bool examineOption = parsedCommand.options.find(framework::OPTION_EXAMINE.name)
 				!= parsedCommand.options.end();
+		bool waitOption = parsedCommand.options.find(framework::OPTION_WAIT.name)
+				!= parsedCommand.options.end();
 
 		std::vector<std::string> uids;
 		pResult = m_getDimms(parsedCommand, uids);
@@ -627,6 +632,10 @@ cli::framework::ResultBase *cli::nvmcli::FieldSupportFeature::updateFirmware(
 						}
 						else
 						{
+							if (waitOption)
+							{
+								m_WaitForARSToComplete(uids[i]);
+							}
 							m_InstallFromPath(uids[i], path, true);
 							pSimpleList->insert(prefix +
 									std::string(TRS(cli::framework::SUCCESS_MSG)) + TRS(UPDATEFIRMWARE_RESET_MSG));
@@ -680,6 +689,13 @@ int cli::nvmcli::FieldSupportFeature::wbemExamineFwImage(const std::string &devi
 	wbem::software::NVDIMMSoftwareInstallationServiceFactory provider;
 
 	return provider.examineFwImage(deviceUid, path, fwVersion);
+}
+
+void cli::nvmcli::FieldSupportFeature::wbemWaitForARSToComplete(const std::string &deviceUid)
+{
+	LogEnterExit logging(__FUNCTION__, __FILE__, __LINE__);
+	wbem::software::NVDIMMSoftwareInstallationServiceFactory provider;
+	provider.waitForARSToComplete(deviceUid);
 }
 
 /*
