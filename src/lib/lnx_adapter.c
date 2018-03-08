@@ -672,57 +672,6 @@ int send_ioctl_command(int fd, unsigned long request, void* parg)
 	return rc;
 }
 
-/*
- * Determine if power is limited
- * Return error code or whether or not power is limited
- */
-int get_dimm_power_limited(NVM_UINT16 socket_id)
-{
-	COMMON_LOG_ENTRY();
-	int rc = NVM_SUCCESS;
-
-	int core_id;
-	if ((core_id = get_first_core_id(socket_id)) >= 0)
-	{
-		int fd;
-		char target[PATH_MAX];
-		snprintf(target, sizeof (target), "/dev/cpu/%d/msr", core_id);
-		fd = open(target, O_RDONLY);
-		if (fd < 0)
-		{
-			switch (errno)
-			{
-				case ENXIO:
-					rc = NVM_ERR_BADFILE;
-					break;
-				case EACCES:
-					rc = NVM_ERR_INVALIDPERMISSIONS;
-					break;
-				default:
-					rc = NVM_ERR_DRIVERFAILED;
-					break;
-			}
-			COMMON_LOG_ERROR_F("Unable to open the " NVM_DIMM_NAME " device %s. Error: %s",
-					target, strerror(errno));
-		}
-		else
-		{
-			unsigned long long msr_dram_power_limit;
-
-			if ((pread(fd, &msr_dram_power_limit, sizeof (msr_dram_power_limit),
-				MSR_DRAM_POWER_LIMIT)) == sizeof (msr_dram_power_limit))
-			{
-				rc = msr_dram_power_limit & MSR_DRAM_POWER_LIMIT_ENABLE ? 1 : 0;
-			}
-			close(fd);
-		}
-	}
-
-	COMMON_LOG_EXIT_RETURN_I(rc);
-	return rc;
-}
-
-
 int get_test_result_count(enum driver_diagnostic diagnostic)
 {
 	int rc = NVM_ERR_NOTSUPPORTED;

@@ -59,9 +59,6 @@ int check_dimm_manageability(const NVM_UID device_uid,
 		const struct diagnostic *p_diagnostic, NVM_UINT32* p_results);
 int check_dimm_health(const NVM_UID device_uid, const NVM_NFIT_DEVICE_HANDLE device_handle,
 		const struct diagnostic *p_diagnostic, NVM_UINT32 *p_results);
-void check_dimm_power_limitation(const NVM_UID device_uid,
-		const NVM_NFIT_DEVICE_HANDLE device_handle,
-		const struct diagnostic *p_diagnostic, NVM_UINT32* p_results);
 int check_ddrt_io_init_done(const NVM_UID device_uid,const NVM_NFIT_DEVICE_HANDLE device_handle,
 	NVM_UINT32 *p_results);
 int check_dimm_bsr(const NVM_UID device_uid,
@@ -126,9 +123,6 @@ int diag_quick_health_check(const NVM_UID device_uid,
 					tmp_rc = check_dimm_health(device_uid,
 						device_handle, p_diagnostic, p_results);
 					KEEP_ERROR(rc, tmp_rc);
-
-					check_dimm_power_limitation(device_uid,
-						device_handle, p_diagnostic, p_results);
 
 					tmp_rc = check_dimm_viral_state(device_uid,
 						device_handle, p_diagnostic, p_results);
@@ -763,32 +757,6 @@ int check_dimm_health(const NVM_UID device_uid,
 
 	COMMON_LOG_EXIT_RETURN_I(rc);
 	return rc;
-}
-
-void check_dimm_power_limitation(const NVM_UID device_uid,
-	const NVM_NFIT_DEVICE_HANDLE device_handle,
-	const struct diagnostic *p_diagnostic, NVM_UINT32 *p_results)
-{
-	COMMON_LOG_ENTRY();
-
-	NVM_UINT16 socket = device_handle.parts.socket_id;
-	if (get_dimm_power_limited(socket) == 1)
-	{
-		char socket_number[8];
-		s_snprintf(socket_number, sizeof (socket_number), "%hu", socket);
-
-		store_event_by_parts(EVENT_TYPE_DIAG_QUICK,
-				EVENT_SEVERITY_WARN,
-				EVENT_CODE_DIAG_QUICK_BAD_POWER_LIMITATION,
-				NULL,
-				0,
-				socket_number,
-				NULL, NULL,
-				DIAGNOSTIC_RESULT_WARNING);
-		(*p_results)++;
-	}
-
-	COMMON_LOG_EXIT();
 }
 
 NVM_UINT64 get_error_threshold_from_config_db(const char *threshold_sql_key)

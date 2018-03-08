@@ -268,15 +268,6 @@ NVM_API int get_driver_capabilities(struct nvm_driver_capabilities *p_capabiliti
  */
 NVM_API int ioctl_passthrough_cmd(struct fw_cmd *p_cmd);
 
-/*
- * Determine if power is limited
- * @param[in] socket_id
- * 		Socket ID that the DIMM belongs too
- * @return
- * 		Error code or whether or not power is limited
- */
-NVM_API int get_dimm_power_limited(NVM_UINT16 socket_id);
-
 NVM_API int get_job_count();
 
 /*

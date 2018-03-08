@@ -39,12 +39,6 @@
 #define	WIN_DRIVER_VERSION_MAJOR_MIN	1
 #define	WIN_DRIVER_VERSION_MAJOR_MAX	1
 
-/*
- * Bit selection as defined for the MSR_DRAM_POWER_LIMIT register,
- * 618h from the IA64/32 Software Developers Manual
- */
-#define	POWER_LIMIT_ENABLE_BIT	0x80
-
 enum ns_health_result convert_ns_health_status(NAMESPACE_HEALTH_EVENT event)
 {
 	enum ns_health_result result = (enum ns_health_result)0;
@@ -263,84 +257,6 @@ int win_leg_adp_get_driver_capabilities(struct nvm_driver_capabilities *p_capabi
 			p_capabilities->features.storage_mode =
 					ioctl_data.OutputPayload.Capabilities.SupportedFeatures.BlockNamespace;
 		}
-	}
-
-	COMMON_LOG_EXIT_RETURN_I(rc);
-	return rc;
-}
-
-int get_dimm_power_limited_count()
-{
-	COMMON_LOG_ENTRY();
-	int rc;
-
-	// Windows expects an output payload that is exactly the size of count
-	// If Count 0 is entered and the implict payload 1 is not removed bufferoverrun will
-	// be returned as error.
-	size_t bufSize = sizeof (GET_RAPL_IOCTL) - sizeof (GET_RAPL_OUTPUT_PAYLOAD);
-
-	GET_RAPL_IOCTL ioctl_data;
-	memset(&ioctl_data, 0, bufSize);
-
-	// set count to 0 so we get the true count from the driver
-	ioctl_data.InputPayload.RaplCount = 0;
-
-	if ((rc = execute_ioctl(bufSize, &ioctl_data, IOCTL_CR_GET_RAPL)) == NVM_SUCCESS)
-	{
-		if ((ioctl_data.ReturnCode == CR_RETURN_CODE_BUFFER_OVERRUN) ||
-			(ioctl_data.ReturnCode == CR_RETURN_CODE_BUFFER_UNDERRUN) ||
-			ioctl_data.ReturnCode == CR_RETURN_CODE_SUCCESS)
-		{
-			// on overrun or underrun return, actual count was set by driver
-			rc = ioctl_data.InputPayload.RaplCount;
-		}
-		else
-		{
-			// anything else is a failure
-			COMMON_LOG_ERROR_F("unexpected driver error code (%u) getting dimm power limit count.",
-				ioctl_data.ReturnCode);
-			rc = ind_err_to_nvm_lib_err(ioctl_data.ReturnCode);
-		}
-	}
-
-	COMMON_LOG_EXIT_RETURN_I(rc);
-	return rc;
-}
-
-
-int win_leg_adp_get_dimm_power_limited(NVM_UINT16 socket_id)
-{
-	COMMON_LOG_ENTRY();
-	int rc;
-
-	if ((rc = get_dimm_power_limited_count()) > socket_id)
-	{
-		int actual_count = rc;
-
-		// Windows expects an output payload that is exactly the size of count
-		size_t bufSize = sizeof (GET_RAPL_IOCTL) +
-				(sizeof (GET_RAPL_OUTPUT_PAYLOAD) * (actual_count - 1));
-		BYTE *buffer = malloc(bufSize * sizeof(BYTE));
-		GET_RAPL_IOCTL *p_ioctl_data = (GET_RAPL_IOCTL *)buffer;
-		memset(buffer, 0, bufSize);
-
-		// we have something we can work with
-		p_ioctl_data->InputPayload.RaplCount = actual_count;
-
-		if ((rc = execute_ioctl(bufSize, p_ioctl_data, IOCTL_CR_GET_RAPL)) == NVM_SUCCESS)
-		{
-			if (p_ioctl_data->ReturnCode != CR_RETURN_CODE_SUCCESS)
-			{
-				rc = ind_err_to_nvm_lib_err(p_ioctl_data->ReturnCode);
-			}
-			else
-			{
-				rc = (p_ioctl_data->OutputPayload.RaplData[socket_id].PowerLimitMsr &
-					POWER_LIMIT_ENABLE_BIT) ? 1 : 0;
-			}
-		}
-
-        free(buffer);
 	}
 
 	COMMON_LOG_EXIT_RETURN_I(rc);

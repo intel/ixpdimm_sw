@@ -76,7 +76,6 @@ namespace core
 			static std::string PROPERTY_SENSOR_TYPE_UPTIME = N_TR("UpTime"); //!< type value
 			static std::string PROPERTY_SENSOR_TYPE_UNSAFESHUTDOWNS = N_TR("UnsafeShutDowns"); //!< type value
 			static std::string PROPERTY_SENSOR_TYPE_FWERRORLOGCOUNT = N_TR("FWErrorCount"); //!< type value
-			static std::string PROPERTY_SENSOR_TYPE_POWERLIMITED = N_TR("PowerLimited"); //!< type value
 			static std::string PROPERTY_SENSOR_TYPE_CONTROLLERTEMP = N_TR("ControllerTemperature"); //!< type value
 			static std::string PROPERTY_SENSOR_TYPE_HEALTH = N_TR("Health"); //!< type value
 			static std::string PROPERTY_SENSOR_TYPE_UNKNOWN = N_TR("Unknown"); //!< unknown type

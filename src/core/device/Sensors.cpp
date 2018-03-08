@@ -57,8 +57,6 @@ namespace core
 					return new SensorUnsafeShutdowns(sensor);
 				case SENSOR_FWERRORLOGCOUNT:
 					return new SensorFwErrorLogCnt(sensor);
-				case SENSOR_POWERLIMITED:
-					return new SensorPwrLimited(sensor);
 				case SENSOR_CONTROLLER_TEMPERATURE:
 					return new SensorControllerTemp(sensor);
 				case SENSOR_HEALTH:
@@ -246,27 +244,6 @@ namespace core
 			std::string SensorFwErrorLogCnt::GetName()
 			{
 				return PROPERTY_SENSOR_TYPE_FWERRORLOGCOUNT;
-			}
-
-			/*
-			* SensorPwrLimited.
-			*/
-			SensorPwrLimited::SensorPwrLimited()
-			{
-			}
-
-			SensorPwrLimited::SensorPwrLimited(const struct sensor sensor) :
-				Sensor(sensor)
-			{
-			}
-
-			SensorPwrLimited::~SensorPwrLimited()
-			{
-			}
-
-			std::string SensorPwrLimited::GetName()
-			{
-				return PROPERTY_SENSOR_TYPE_POWERLIMITED;
 			}
 
 			/*

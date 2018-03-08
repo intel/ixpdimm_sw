@@ -32,16 +32,6 @@
 #include <nvm_types.h>
 
 /*
- * MSR register addresses
- */
-#define	MSR_DRAM_POWER_LIMIT		0x618
-
-/*
- * MSR register value bitmasks
- */
-#define	MSR_DRAM_POWER_LIMIT_ENABLE	0x8000
-
-/*
  * Find the core_id number of a given socket_id
  */
 int get_first_core_id(NVM_UINT16 socket_id);

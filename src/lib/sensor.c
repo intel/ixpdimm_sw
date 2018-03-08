@@ -398,27 +398,6 @@ int get_fw_error_log_sensors(const NVM_UINT32 dev_handle,
 	return rc;
 }
 
-// socket_id is found from device_discovery.socket_id
-int get_power_limited_sensor(NVM_UINT16 socket_id,
-      struct sensor sensors[NVM_MAX_DEVICE_SENSORS])
-{
-	COMMON_LOG_ENTRY();
-	int rc = NVM_SUCCESS;
-	int power_reading = get_dimm_power_limited(socket_id);
-	if (power_reading >= 0)
-	{
-		sensors[SENSOR_POWERLIMITED].reading = (NVM_UINT64) power_reading;
-		sensors[SENSOR_POWERLIMITED].current_state = SENSOR_NORMAL;
-	}
-	else
-	{
-		rc = power_reading;
-	}
-
-	COMMON_LOG_EXIT_RETURN_I(rc);
-	return rc;
-}
-
 /*
  * Helper function to populate sensor information with default attributes
  * that don't require current values.
@@ -441,7 +420,6 @@ void initialize_sensors(struct sensor *p_sensors, const NVM_UINT16 count)
 	p_sensors[SENSOR_UPTIME].units = UNIT_SECONDS;
 	p_sensors[SENSOR_UNSAFESHUTDOWNS].units = UNIT_COUNT;
 	p_sensors[SENSOR_FWERRORLOGCOUNT].units = UNIT_COUNT;
-	p_sensors[SENSOR_POWERLIMITED].units = UNIT_COUNT;
 	p_sensors[SENSOR_CONTROLLER_TEMPERATURE].units = UNIT_CELSIUS;
 	p_sensors[SENSOR_HEALTH].units = UNIT_COUNT;
 }
@@ -458,11 +436,6 @@ int get_sensors_by_category(struct device_discovery *p_discovery,
 		NVM_BOOL get_thresh = thresholds & SENSOR_CAT_SMART_HEALTH;
 		KEEP_ERROR(rc, get_smart_log_sensors(p_discovery->device_handle.handle,
 											p_sensors, get_thresh));
-	}
-
-	if (categories & SENSOR_CAT_POWER)
-	{
-		KEEP_ERROR(rc, get_power_limited_sensor(p_discovery->socket_id, p_sensors));
 	}
 
 	if (categories & SENSOR_CAT_FW_ERROR)
@@ -637,8 +610,6 @@ static const char *SENSOR_STRINGS[NVM_MAX_DEVICE_SENSORS] =
 		N_TR("Unsafe Shutdowns"),
 		// SENSOR_FWERRORLOGCOUNT
 		N_TR("FW Error Log Count"),
-		// SENSOR_POWERLIMITED
-		N_TR("Power Limited"),
 		// SENSOR_CONTROLLER_TEMPERATURE
 		N_TR("Controller Temperature"),
 		// SENSOR_HEALTH

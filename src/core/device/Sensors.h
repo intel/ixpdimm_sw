@@ -134,15 +134,6 @@ namespace core
 				virtual std::string GetName();
 			};
 
-			class NVM_CORE_API SensorPwrLimited : public Sensor
-			{
-			public:
-				SensorPwrLimited();
-				SensorPwrLimited(const struct sensor sensor);
-				virtual ~SensorPwrLimited();
-				virtual std::string GetName();
-			};
-
 			class NVM_CORE_API SensorControllerTemp : public SensorCelsius
 			{
 			public:

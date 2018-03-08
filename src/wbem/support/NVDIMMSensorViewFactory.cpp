@@ -169,10 +169,6 @@ std::string NVDIMMSensorViewFactory::getSensorNameStr(int type)
 	{
 		result = PROPERTY_SENSOR_TYPE_UPTIME;
 	}
-	else if (type == NVDIMMSensorFactory::SENSORTYPE_POWERLIMITED)
-	{
-		result = PROPERTY_SENSOR_TYPE_POWERLIMITED;
-	}
 	else if (type ==  NVDIMMSensorFactory::SENSORTYPE_CONTROLLER_TEMPERATURE)
 	{
 		result = PROPERTY_SENSOR_TYPE_CONTROLLERTEMP;

@@ -330,7 +330,6 @@ int support_store_sockets(PersistentStore *p_store, int history_id)
 				db_socket.logical_processor_count = sockets[i].logical_processor_count;
 				s_strncpy(db_socket.manufacturer, SOCKET_MANUFACTURER_LEN, sockets[i].manufacturer,
 						NVM_SOCKET_MANUFACTURER_LEN);
-				db_socket.rapl_limited = get_dimm_power_limited(sockets[i].id);
 
 				// save the numa nodes to the history tables
 				if (DB_SUCCESS != db_save_socket_state(p_store, history_id, &db_socket))

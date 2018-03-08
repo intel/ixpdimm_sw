@@ -403,25 +403,6 @@ int ioctl_passthrough_cmd(struct fw_cmd *p_cmd)
 	return rc;
 }
 
-int get_dimm_power_limited(NVM_UINT16 socket_id)
-{
-	int rc = NVM_ERR_UNKNOWN;
-	switch (get_driver_type())
-	{
-		case DRIVER_TYPE_UNKNOWN:
-			rc = NVM_ERR_BADDRIVER;
-			break;
-		case DRIVER_TYPE_LEGACY:
-			rc = win_leg_adp_get_dimm_power_limited(socket_id);
-			break;
-		case DRIVER_TYPE_SCM2:
-			rc = win_scm2_adp_get_dimm_power_limited(socket_id);
-			break;
-	}
-
-	return rc;
-}
-
 int get_job_count()
 {
 	int rc = NVM_ERR_NOTSUPPORTED;

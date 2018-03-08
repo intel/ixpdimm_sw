@@ -63,7 +63,6 @@ const int NVDIMMSensorFactory::SENSORTYPE_POWERONTIME = SENSOR_POWERONTIME;
 const int NVDIMMSensorFactory::SENSORTYPE_UPTIME = SENSOR_UPTIME;
 const int NVDIMMSensorFactory::SENSORTYPE_UNSAFESHUTDOWNS = SENSOR_UNSAFESHUTDOWNS;
 const int NVDIMMSensorFactory::SENSORTYPE_FWERRORLOGCOUNT = SENSOR_FWERRORLOGCOUNT;
-const int NVDIMMSensorFactory::SENSORTYPE_POWERLIMITED = SENSOR_POWERLIMITED;
 const int NVDIMMSensorFactory::SENSORTYPE_CONTROLLER_TEMPERATURE = SENSOR_CONTROLLER_TEMPERATURE;
 const int NVDIMMSensorFactory::SENSORTYPE_HEALTH = SENSOR_HEALTH;
 /*
@@ -124,7 +123,6 @@ const cimSensorDescriptionsMap &getSensorDescriptionMap()
         cimSensorDescription ut = { "upt", NVDIMMSENSOR_ELEMENTPREFIX + "Up", SENSOR_TYPE_OTHER, "UpTime" };
         cimSensorDescription uss = { "us", NVDIMMSENSOR_ELEMENTPREFIX + "Unsafe Shutdowns", SENSOR_TYPE_OTHER, "UnsafeShutdowns" };
         cimSensorDescription fwlc = { "error", NVDIMMSENSOR_ELEMENTPREFIX + "FW Error Log Count", SENSOR_TYPE_OTHER, "FWError" };
-        cimSensorDescription pl = { "pl", NVDIMMSENSOR_ELEMENTPREFIX + "Power Limited", SENSOR_TYPE_OTHER, "PowerLimited" };
         cimSensorDescription ct = { "controllertemp", NVDIMMSENSOR_ELEMENTPREFIX + "Controller Temp", SENSOR_TYPE_TEMP, "" };
         cimSensorDescription h = { "health", NVDIMMSENSOR_ELEMENTPREFIX + "Health", SENSOR_TYPE_OTHER, "" };
 
@@ -136,7 +134,6 @@ const cimSensorDescriptionsMap &getSensorDescriptionMap()
         result[SENSOR_UPTIME] = ut;
         result[SENSOR_UNSAFESHUTDOWNS] = uss;
         result[SENSOR_FWERRORLOGCOUNT] = fwlc;
-        result[SENSOR_POWERLIMITED] = pl;
         result[SENSOR_CONTROLLER_TEMPERATURE] = ct;
         result[SENSOR_HEALTH] = h;
 	}

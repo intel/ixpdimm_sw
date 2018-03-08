@@ -57,8 +57,6 @@ int win_leg_adp_modify_namespace_enabled(const NVM_UID namespace_uid,
 
 int win_leg_adp_ioctl_passthrough_cmd(struct fw_cmd *p_cmd);
 
-int win_leg_adp_get_dimm_power_limited(NVM_UINT16 socket_id);
-
 int win_leg_adp_get_test_result_count(enum driver_diagnostic diagnostic);
 
 

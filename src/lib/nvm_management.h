@@ -218,9 +218,8 @@ enum sensor_type
 	SENSOR_UPTIME = 5, // Total power-on time since the last power cycle of the device.
 	SENSOR_UNSAFESHUTDOWNS = 6, // Device shutdowns without notification.
 	SENSOR_FWERRORLOGCOUNT = 7, // The total number of firmware error log entries.
-	SENSOR_POWERLIMITED = 8, // Whether or not the AEP DIMM is power limited.
-	SENSOR_CONTROLLER_TEMPERATURE = 9, // Device media temperature in degrees Celsius.
-	SENSOR_HEALTH = 10, // Apache Pass DIMM health as reported in the SMART log.
+	SENSOR_CONTROLLER_TEMPERATURE = 8, // Device media temperature in degrees Celsius.
+	SENSOR_HEALTH = 9, // Apache Pass DIMM health as reported in the SMART log.
 };
 
 typedef NVM_UINT64 NVM_SENSOR_CATEGORY_BITMASK;

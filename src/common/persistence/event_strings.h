@@ -130,9 +130,9 @@ extern "C" {
         N_TR("The health monitor has detected that a sanitize operation "
             "has completed on " NVM_DIMM_NAME " %s. A reboot will be "
             "required to use the " NVM_DIMM_NAME "."),
-		// EVENT_CODE_HEALTH_SMART_HEALTH
-		N_TR("The health monitor has detected a smart health event "
-			"has occured on " NVM_DIMM_NAME " %s. %s error log entry details: %s"),
+        // EVENT_CODE_HEALTH_SMART_HEALTH
+        N_TR("The health monitor has detected a smart health event "
+            "has occured on " NVM_DIMM_NAME " %s. %s error log entry details: %s"),
         // EVENT_CODE_HEALTH_UNKNOWN
         N_TR("The health monitor has logged an unknown error code %d."),
     };
@@ -183,8 +183,8 @@ extern "C" {
         N_TR("The quick health check detected that " NVM_DIMM_NAME " %s "
             "is reporting a core temperature of %s C which is above "
             "the alarm threshold %s C."),
-        // EVENT_CODE_DIAG_QUICK_BAD_POWER_LIMITATION
-        N_TR("The quick health check detected that power is limited on socket %s."),
+        // Available event 512
+        N_TR("Placeholder"),
         // EVENT_CODE_DIAG_QUICK_UNREADABLE_BSR
         N_TR("The quick health check detected that the boot status register "
             "of " NVM_DIMM_NAME " %s is not readable."),

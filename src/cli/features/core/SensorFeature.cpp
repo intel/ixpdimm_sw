@@ -71,7 +71,6 @@ static std::vector<std::string> getWbemSensors()
 	result.push_back(wbem::support::PROPERTY_SENSOR_TYPE_UPTIME);
 	result.push_back(wbem::support::PROPERTY_SENSOR_TYPE_UNSAFESHUTDOWNS);
 	result.push_back(wbem::support::PROPERTY_SENSOR_TYPE_FWERRORLOGCOUNT);
-	result.push_back(wbem::support::PROPERTY_SENSOR_TYPE_POWERLIMITED);
 	result.push_back(wbem::support::PROPERTY_SENSOR_TYPE_HEALTH);
 	return result;
 }
@@ -95,7 +94,7 @@ void cli::nvmcli::SensorFeature::getPaths(cli::framework::CommandSpecList &list)
 	showSensor.addOption(framework::OPTION_ALL);
 	showSensor.addTarget(TARGET_SENSOR_R)
 			.valueText("MediaTemperature|ControllerTemperature|SpareCapacity|WearLevel|UnsafeShutdowns|"
-					"PowerOnTime|UpTime|PowerCycles|PowerLimited|Health")
+					"PowerOnTime|UpTime|PowerCycles|Health")
 			.helpText(TR("Restrict output to a specific sensor type by supplying the name. "
 					"The default is to display all sensors."));
 	showSensor.addTarget(TARGET_DIMM)
@@ -159,16 +158,10 @@ cli::framework::ResultBase * cli::nvmcli::SensorFeature::run(
 sensor_category cli::nvmcli::SensorFeature::sensorNameToCategory(std::string sensorName)
 {
 	transform(sensorName.begin(), sensorName.end(), sensorName.begin(), ::tolower);
-	std::string pwrLimited = core::device::sensor::PROPERTY_SENSOR_TYPE_POWERLIMITED;
-	transform(pwrLimited.begin(), pwrLimited.end(), pwrLimited.begin(), ::tolower);
 	std::string fwErrCnt = core::device::sensor::PROPERTY_SENSOR_TYPE_FWERRORLOGCOUNT;
 	transform(fwErrCnt.begin(), fwErrCnt.end(), fwErrCnt.begin(), ::tolower);
 
-	if (0 == sensorName.compare(pwrLimited))
-	{
-		return SENSOR_CAT_POWER;
-	}
-	else if (0 == sensorName.compare(fwErrCnt))
+	if (0 == sensorName.compare(fwErrCnt))
 	{
 		return SENSOR_CAT_FW_ERROR;
 	}

@@ -57,12 +57,6 @@ DEFINE_DEVPROPKEY(DEVPKEY_Device_DriverVersion, 0xa8b865dd, 0x2e3d, 0x4094, 0xad
 #define SCM_INBOX_CLASS_GUID	L"{5099944a-f6b9-4057-a056-8c550228544c}"
 #define VERS_BUFFER_SZ	256
 
- /*
- * Bit selection as defined for the MSR_DRAM_POWER_LIMIT register,
- * 618h from the IA64/32 Software Developers Manual
- */
-#define	POWER_LIMIT_ENABLE_BIT	0x80
-
 static enum return_code win_scm_to_nvm_err(int scm_rc);
 static unsigned int win_scm2_get_first_handle();
 
@@ -250,94 +244,6 @@ int win_scm_adp_ioctl_passthrough_cmd(struct fw_cmd *p_cmd)
 
 	return rc;
 }
-
-static int get_dimm_power_limited_count()
-{
-	COMMON_LOG_ENTRY();
-	int rc;
-
-	/*unsigned int handle = win_scm2_get_first_handle();
-
-	// Windows expects an output payload that is exactly the size of count
-	// If Count 0 is entered and the implict payload 1 is not removed bufferoverrun will
-	// be returned as error.
-	size_t bufSize = sizeof(GET_RAPL_IOCTL) - sizeof(GET_RAPL_OUTPUT_PAYLOAD);
-
-	GET_RAPL_IOCTL ioctl_data;
-	memset(&ioctl_data, 0, bufSize);
-
-	// set count to 0 so we get the true count from the driver
-	ioctl_data.InputPayload.RaplCount = 0;
-
-	if ((rc = win_scm2_ioctl_execute(handle, (WIN_SCM2_IOCTL_REQUEST *) &ioctl_data, IOCTL_CR_GET_RAPL)) == NVM_SUCCESS)
-	{
-		if ((ioctl_data.ReturnCode == CR_RETURN_CODE_BUFFER_OVERRUN) ||
-			(ioctl_data.ReturnCode == CR_RETURN_CODE_BUFFER_UNDERRUN) ||
-			ioctl_data.ReturnCode == CR_RETURN_CODE_SUCCESS)
-		{
-			// on overrun or underrun return, actual count was set by driver
-			rc = ioctl_data.InputPayload.RaplCount;
-		}
-		else
-		{
-			// anything else is a failure
-			COMMON_LOG_ERROR_F("unexpected driver error code (%u) getting dimm power limit count.",
-				ioctl_data.ReturnCode);
-			rc = win_scm_to_nvm_err(ioctl_data.ReturnCode);
-		}
-	}*/
-	rc = NVM_SUCCESS;
-	
-	COMMON_LOG_EXIT_RETURN_I(rc);
-	return rc;
-}
-
-
-int win_scm2_adp_get_dimm_power_limited(NVM_UINT16 socket_id)
-{
-	COMMON_LOG_ENTRY();
-	int rc;
-
-	if ((rc = get_dimm_power_limited_count()) > socket_id)
-	{
-		int actual_count = rc;
-		unsigned int handle = win_scm2_get_first_handle();
-
-		// Windows expects an output payload that is exactly the size of count
-		size_t bufSize = sizeof(GET_RAPL_IOCTL) +
-			(sizeof(GET_RAPL_OUTPUT_PAYLOAD) * (actual_count - 1));
-		BYTE *buffer = malloc(bufSize);
-        if (NULL == buffer)
-        {
-            return -1;
-        }
-
-		GET_RAPL_IOCTL *p_ioctl_data = (GET_RAPL_IOCTL *)buffer;
-		memset(buffer, 0, bufSize);
-
-		// we have something we can work with
-		p_ioctl_data->InputPayload.RaplCount = actual_count;
-
-		if ((rc = win_scm2_ioctl_execute(handle, (WIN_SCM2_IOCTL_REQUEST *) p_ioctl_data, IOCTL_CR_GET_RAPL)) == NVM_SUCCESS)
-		{
-			if (p_ioctl_data->ReturnCode != CR_RETURN_CODE_SUCCESS)
-			{
-				rc = win_scm_to_nvm_err(p_ioctl_data->ReturnCode);
-			}
-			else
-			{
-				rc = (p_ioctl_data->OutputPayload.RaplData[socket_id].PowerLimitMsr &
-					POWER_LIMIT_ENABLE_BIT) ? 1 : 0;
-			}
-		}
-
-        free(buffer);
-	}
-
-	COMMON_LOG_EXIT_RETURN_I(rc);
-	return rc;
-}
-
 
 static enum return_code win_scm_to_nvm_err(int scm_rc)
 {

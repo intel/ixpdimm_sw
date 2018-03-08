@@ -71,7 +71,6 @@ Attributes:
 	unsigned char stepping
 	char * manufacturer
 	unsigned short logical_processor_count
-	unsigned int rapl_limited
 
 Table(s): db_runtime_config_validation 
  	  db_runtime_config_validation_history 

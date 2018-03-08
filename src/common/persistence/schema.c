@@ -600,8 +600,7 @@ tables[populate_index++] = ((struct table){"socket",
 					 family INTEGER  , \
 					 stepping INTEGER  , \
 					 manufacturer TEXT  , \
-					 logical_processor_count INTEGER  , \
-					 rapl_limited INTEGER   \
+					 logical_processor_count INTEGER   \
 					);"});
 			tables[populate_index++] = ((struct table){"socket_history",
 				"CREATE TABLE socket_history (       \
@@ -613,8 +612,7 @@ tables[populate_index++] = ((struct table){"socket",
 					 family INTEGER , \
 					 stepping INTEGER , \
 					 manufacturer TEXT , \
-					 logical_processor_count INTEGER , \
-					 rapl_limited INTEGER  \
+					 logical_processor_count INTEGER  \
 					);"});
 tables[populate_index++] = ((struct table){"runtime_config_validation",
 				"CREATE TABLE runtime_config_validation (       \
@@ -5357,7 +5355,6 @@ void local_bind_socket(sqlite3_stmt *p_stmt, struct db_socket *p_socket)
 	BIND_INTEGER(p_stmt, "$stepping", (unsigned char)p_socket->stepping);
 	BIND_TEXT(p_stmt, "$manufacturer", (char *)p_socket->manufacturer);
 	BIND_INTEGER(p_stmt, "$logical_processor_count", (unsigned short)p_socket->logical_processor_count);
-	BIND_INTEGER(p_stmt, "$rapl_limited", (unsigned int)p_socket->rapl_limited);
 }
 void local_get_socket_relationships(const PersistentStore *p_ps,
 	sqlite3_stmt *p_stmt, struct db_socket *p_socket)
@@ -5398,9 +5395,6 @@ void local_row_to_socket(const PersistentStore *p_ps,
 	INTEGER_COLUMN(p_stmt,
 		7,
 		p_socket->logical_processor_count);
-	INTEGER_COLUMN(p_stmt,
-		8,
-		p_socket->rapl_limited);
 }
 void db_print_socket(struct db_socket *p_value)
 {
@@ -5412,7 +5406,6 @@ void db_print_socket(struct db_socket *p_value)
 	printf("socket.stepping: %hhu\n", p_value->stepping);
 	printf("socket.manufacturer: %s\n", p_value->manufacturer);
 	printf("socket.logical_processor_count: %hu\n", p_value->logical_processor_count);
-	printf("socket.rapl_limited: %u\n", p_value->rapl_limited);
 }
 enum db_return_codes db_add_socket(const PersistentStore *p_ps,
 	struct db_socket *p_socket)
@@ -5420,7 +5413,7 @@ enum db_return_codes db_add_socket(const PersistentStore *p_ps,
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = 	"INSERT INTO socket \
-		(id, type, model, brand, family, stepping, manufacturer, logical_processor_count, rapl_limited)  \
+		(id, type, model, brand, family, stepping, manufacturer, logical_processor_count)  \
 		VALUES 		\
 		($id, \
 		$type, \
@@ -5429,8 +5422,7 @@ enum db_return_codes db_add_socket(const PersistentStore *p_ps,
 		$family, \
 		$stepping, \
 		$manufacturer, \
-		$logical_processor_count, \
-		$rapl_limited) ";
+		$logical_processor_count) ";
 	int sql_rc;
 	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 	{
@@ -5472,10 +5464,9 @@ int db_get_sockets(const PersistentStore *p_ps,
 		,  stepping \
 		,  manufacturer \
 		,  logical_processor_count \
-		,  rapl_limited \
 		  \
 		FROM socket \
-		          \
+		         \
 		 \
 		";
 	sqlite3_stmt *p_stmt;
@@ -5527,7 +5518,7 @@ enum db_return_codes db_save_socket_state(const PersistentStore *p_ps,
 	{
 		sqlite3_stmt *p_stmt;
 		char *sql = 	"INSERT INTO socket \
-			( id ,  type ,  model ,  brand ,  family ,  stepping ,  manufacturer ,  logical_processor_count ,  rapl_limited )  \
+			( id ,  type ,  model ,  brand ,  family ,  stepping ,  manufacturer ,  logical_processor_count )  \
 			VALUES 		\
 			($id, \
 			$type, \
@@ -5536,8 +5527,7 @@ enum db_return_codes db_save_socket_state(const PersistentStore *p_ps,
 			$family, \
 			$stepping, \
 			$manufacturer, \
-			$logical_processor_count, \
-			$rapl_limited) ";
+			$logical_processor_count) ";
 		int sql_rc;
 		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
@@ -5564,7 +5554,7 @@ enum db_return_codes db_save_socket_state(const PersistentStore *p_ps,
 		sqlite3_stmt *p_stmt;
 		char *sql = "INSERT INTO socket_history \
 			(history_id, \
-				 id,  type,  model,  brand,  family,  stepping,  manufacturer,  logical_processor_count,  rapl_limited)  \
+				 id,  type,  model,  brand,  family,  stepping,  manufacturer,  logical_processor_count)  \
 			VALUES 		($history_id, \
 				 $id , \
 				 $type , \
@@ -5573,8 +5563,7 @@ enum db_return_codes db_save_socket_state(const PersistentStore *p_ps,
 				 $family , \
 				 $stepping , \
 				 $manufacturer , \
-				 $logical_processor_count , \
-				 $rapl_limited )";
+				 $logical_processor_count )";
 		int sql_rc;
 		if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)
 		{
@@ -5610,7 +5599,7 @@ enum db_return_codes db_get_socket_by_id(const PersistentStore *p_ps,
 	enum db_return_codes rc = DB_ERR_FAILURE;
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
-		id,  type,  model,  brand,  family,  stepping,  manufacturer,  logical_processor_count,  rapl_limited  \
+		id,  type,  model,  brand,  family,  stepping,  manufacturer,  logical_processor_count  \
 		FROM socket \
 		WHERE  id = $id";
 	int sql_rc;
@@ -5655,7 +5644,6 @@ enum db_return_codes db_update_socket_by_id(const PersistentStore *p_ps,
 		,  stepping=$stepping \
 		,  manufacturer=$manufacturer \
 		,  logical_processor_count=$logical_processor_count \
-		,  rapl_limited=$rapl_limited \
 		  \
 	WHERE id=$id ";
 	int sql_rc;
@@ -5780,7 +5768,7 @@ int db_get_socket_history_by_history_id(const PersistentStore *p_ps,
 	memset(p_socket, 0, sizeof (struct db_socket) * socket_count);
 	sqlite3_stmt *p_stmt;
 	char *sql = "SELECT \
-		id,  type,  model,  brand,  family,  stepping,  manufacturer,  logical_processor_count,  rapl_limited  \
+		id,  type,  model,  brand,  family,  stepping,  manufacturer,  logical_processor_count  \
 		FROM socket_history WHERE history_id = $history_id";
 	int sql_rc;
 	if ((sql_rc = SQLITE_PREPARE(p_ps->db, sql, p_stmt)) == SQLITE_OK)

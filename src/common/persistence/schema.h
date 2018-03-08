@@ -1249,7 +1249,6 @@ struct db_socket
 	unsigned char stepping;
 	char   manufacturer[SOCKET_MANUFACTURER_LEN];
 	unsigned short logical_processor_count;
-	unsigned int rapl_limited;
 };
 /*!
  * Helper function to print a db_socket to the screen.
