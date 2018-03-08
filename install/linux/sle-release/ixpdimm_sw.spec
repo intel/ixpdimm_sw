@@ -40,6 +40,7 @@ Group:          System/Daemons
 Url:            https://01.org/ixpdimm-sw
 Source:         https://github.com/01org/%{product_name}/archive/ixpdimm_sw-%{build_version}.tar.gz
 BuildRequires:  distribution-release
+BuildRequires:  gcc
 BuildRequires:  gcc-c++
 BuildRequires:  pkgconfig(libkmod)
 BuildRequires:  pkgconfig(sqlite3)

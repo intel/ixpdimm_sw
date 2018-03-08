@@ -34,6 +34,8 @@ BuildRequires: sblim-cmpi-devel
 BuildRequires: python2
 BuildRequires: cmake
 BuildRequires: gettext
+BuildRequires: gcc
+BuildRequires: gcc-c++
 
 %description
 An application program interface (API) which provides programmatic access to
