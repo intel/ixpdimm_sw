@@ -64,6 +64,7 @@ extern "C"
 #define	PCAT_FORMAT_IMC_SHIFT	8
 #define	PCAT_FORMAT_WAYS_SHIFT	16
 #define	CURRENT_VOLATILE_MODE(bits)	((bits) & 0b11) // bits 1:0
+#define	ALLOWED_VOLATILE_MODE(bits)	((bits >> 4) & 0b11) // bits 5:4
 
 /*
  * Extension Table Type

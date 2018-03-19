@@ -273,6 +273,8 @@ int apply_bios_capabilities(struct nvm_capabilities *p_capabilities)
 								RUNTIME_CONFIG_SUPPORTED(p_plat_info->mgmt_sw_config_support);
 						p_capabilities->platform_capabilities.current_volatile_mode =
 								CURRENT_VOLATILE_MODE(p_plat_info->current_mem_mode);
+						p_capabilities->platform_capabilities.allowed_volatile_mode =
+								ALLOWED_VOLATILE_MODE(p_plat_info->current_mem_mode);
 						p_capabilities->platform_capabilities.current_app_direct_mode =
 								get_current_app_direct_mode(p_plat_info->current_mem_mode);
 						p_capabilities->platform_capabilities.memory_mirror_supported =

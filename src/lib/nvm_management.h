@@ -414,10 +414,11 @@ typedef NVM_UINT64 diagnostic_threshold_type;
 // The volatile memory mode currently selected by the BIOS.
 enum volatile_mode
 {
-	VOLATILE_MODE_1LM = 0, // 1LM Mode
-	VOLATILE_MODE_MEMORY = 1, // Memory Mode
-	VOLATILE_MODE_AUTO = 2, // Memory Mode if DDR4 + AEP DIMM present, 1LM otherwise
-	VOLATILE_MODE_UNKNOWN = 3, // The current volatile memory mode cannot be determined.
+	VOLATILE_MODE_1LM = 0,		// 1LM Mode
+	VOLATILE_MODE_MEMORY = 1,	// 2LM Mode (Memory Mode)
+	VOLATILE_MODE_AUTO = 2,		// Not possible anymore as PCAT will only have 1LM and 2LM.
+								// However, I don't think there's harm to keep this
+	VOLATILE_MODE_UNKNOWN = 3,	// The current volatile memory mode cannot be determined.
 };
 
 // The App Direct mode currently selected by the BIOS.
@@ -875,7 +876,9 @@ struct platform_capabilities
 	struct memory_capabilities one_lm_mode; // capabilities for 1LM mode
 	struct memory_capabilities memory_mode; // capabilities for Memory mode
 	struct memory_capabilities app_direct_mode; // capabilities for App Direct mode
-	enum volatile_mode current_volatile_mode; // The volatile memory mode selected by the BIOS.
+	enum volatile_mode current_volatile_mode;	// The volatile memory mode selected by the BIOS during boot.
+	enum volatile_mode allowed_volatile_mode;	// The volatile memory mode selected in the BIOS setup menu.
+												// 1LM will always be allowed, even if 2LM is allowed.
 	enum app_direct_mode current_app_direct_mode; // The App Direct mode selected by the BIOS.
 };
 
