@@ -1,0 +1,4 @@
+usr/lib/*/libixpdimm.so.*
+usr/lib/*/libixpdimm-common.so.*
+usr/lib/*/libixpdimm-core.so.*
+

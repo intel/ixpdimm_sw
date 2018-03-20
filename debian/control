@@ -1,0 +1,91 @@
+Source: ixpdimm-sw
+Section: libs
+Priority: extra
+Maintainer: Juston Li <juston.li@intel.com>
+Build-Depends: cmake, debhelper (>=10)
+Standards-Version: 3.9.8
+Homepage: https://github.com/intel/ixpdimm_sw
+
+Package: ixpdimm-cli
+Architecture: amd64
+Depends: libixpdimm (= ${binary:Version}),
+         libixpdimm-cim (= ${binary:Version}),
+         libixpdimm-cli (= ${binary:Version}),
+         libinvm-cli (>=1.01),
+         ${misc:Depends},
+         ${shlibs:Depends}
+Description: auto-generated package by debmake: bin #1
+ This package contains the compiled binary executable.: #1
+
+Package: ixpdimm-data
+Architecture: amd64
+Depends: libixpdimm (= ${binary:Version}),
+         libixpdimm-cim (= ${binary:Version}),
+         libixpdimm-cli (= ${binary:Version}),
+         ${misc:Depends},
+         ${shlibs:Depends}
+Description: auto-generated package by debmake: bin #2
+ This package contains the compiled binary executable.: #2
+
+Package: libixpdimm-dev
+Section: libdevel
+Architecture: amd64
+Depends: libixpdimm (= ${binary:Version}), ${misc:Depends}
+Description: auto-generated package by debmake: dev #3
+ This package contains the development files.: #3
+
+Package: libixpdimm-cli-dev
+Section: libdevel
+Architecture: amd64
+Depends: libixpdimm-cli (= ${binary:Version}), ${misc:Depends}
+Description: auto-generated package by debmake: dev #4
+ This package contains the development files.: #4
+
+Package: libixpdimm-cim-dev
+Section: libdevel
+Architecture: amd64
+Depends: libixpdimm-cim (= ${binary:Version}), ${misc:Depends}
+Description: auto-generated package by debmake: dev #5
+ This package contains the development files.: #5
+
+Package: ixpdimm-monitor
+Architecture: amd64
+Depends: libixpdimm (= ${binary:Version}),
+         libixpdimm-cim (= ${binary:Version}),
+         libixpdimm-cli (= ${binary:Version}),
+         ${misc:Depends},
+         ${shlibs:Depends}
+Description: auto-generated package by debmake: bin #6
+ This package contains the compiled binary executable.: #6
+
+Package: libixpdimm
+Section: libs
+Architecture: amd64
+Pre-Depends: ${misc:Pre-Depends}
+Depends: libinvm-i18n (>=1.01),
+         ${misc:Depends},
+         ${shlibs:Depends}
+Description: auto-generated package by debmake: lib #7
+ This package contains the shared library.: #7
+
+Package: libixpdimm-cli
+Section: libs
+Architecture: amd64
+Pre-Depends: ${misc:Pre-Depends}
+Depends: libinvm-cli (>=1.01),
+         libinvm-cim (>=1.01),
+         libinvm-i18n (>=1.01),
+         ${misc:Depends},
+         ${shlibs:Depends}
+Description: auto-generated package by debmake: lib #8
+ This package contains the shared library.: #8
+
+Package: libixpdimm-cim
+Section: libs
+Architecture: amd64
+Multi-Arch: same
+Depends: libinvm-cim (>=1.01),
+         ${misc:Depends},
+         ${shlibs:Depends}
+Description: auto-generated package by debmake: lib #9
+ This package contains the shared library.: #9

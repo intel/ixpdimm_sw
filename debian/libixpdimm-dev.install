@@ -1,0 +1,6 @@
+usr/lib/*/libixpdimm.so
+usr/lib/*/libixpdimm-common.so
+usr/lib/*/libixpdimm-core.so
+usr/include/export_api.h
+usr/include/nvm_management.h
+usr/include/nvm_types.h

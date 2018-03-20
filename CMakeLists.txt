@@ -998,6 +998,37 @@ add_custom_target(rpm
 	)
 
 # --------------------------------------------------------------------------------------------------
+# Deb build
+# --------------------------------------------------------------------------------------------------
+if(LNX_BUILD)
+	set(DEBUILD_DIR ${ROOT}/output/debuild)
+
+	add_custom_target(deb
+		COMMAND ${CMAKE_COMMAND} -E echo "Entering make deb..."
+
+		# Make directories
+		COMMAND ${CMAKE_COMMAND} -E make_directory ${DEBUILD_DIR}
+
+		# update debian/changelog
+		COMMAND cd ${ROOT} && dch -m -v ${BUILDNUM}-1 "Release ${BUILDNUM}"
+
+		# Archive the directory
+		COMMAND cd ${ROOT} && tar --exclude-vcs --exclude="*output" --exclude="*.swp*" --transform="s,^.,ixpdimm-sw-${BUILDNUM}," -zcf ${DEBUILD_DIR}/ixpdimm-sw_${BUILDNUM}.orig.tar.gz .
+
+		# Extract archive
+		COMMAND cd ${DEBUILD_DIR} && tar -xzf ixpdimm-sw_${BUILDNUM}.orig.tar.gz
+
+		# Replace rules buildnum
+		COMMAND sed -i "s/-DBUILDNUM=99.99.99.9999/-DBUILDNUM=${BUILDNUM}/g" ${DEBUILD_DIR}/ixpdimm-sw-${BUILDNUM}/debian/rules
+
+		# debuild
+		COMMAND cd ${DEBUILD_DIR}/ixpdimm-sw-${BUILDNUM} && debuild -us -uc
+
+		COMMAND ${CMAKE_COMMAND} -E echo "Exiting make deb..."
+		)
+endif()
+
+# --------------------------------------------------------------------------------------------------
 # Internal Includes
 # --------------------------------------------------------------------------------------------------
 if(BUILD_INTERNAL)
