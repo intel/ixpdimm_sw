@@ -30,9 +30,11 @@
 #  MATH_INCLUDE_DIRS - math include directories
 #  MATH_LIBRARIES - libraries needed to use math
 
-find_path(MATH_INCLUDE_DIR math.h)
+find_path(MATH_INCLUDE_DIR math.h
+	HINTS ${MATH_INCLUDE_PATH})
 
-find_library(MATH_LIBRARY NAMES m)
+find_library(MATH_LIBRARY NAMES m
+	HINTS ${MATH_LIBRARY_PATH})
 
 include(FindPackageHandleStandardArgs)
 # handle the QUIETLY and REQUIRED arguments and set MATH_FOUND to TRUE

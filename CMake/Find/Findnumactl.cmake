@@ -30,9 +30,11 @@
 #  NUMACTL_INCLUDE_DIRS - numactl include directories
 #  NUMACTL_LIBRARIES - libraries needed to use numactl
 
-find_path(NUMACTL_INCLUDE_DIR numa.h)
+find_path(NUMACTL_INCLUDE_DIR numa.h
+	HINTS ${NUMACTL_INCLUDE_PATH})
 
-find_library(NUMACTL_LIBRARY NAMES numa)
+find_library(NUMACTL_LIBRARY NAMES numa
+	HINTS ${NUMACTL_LIBRARY_PATH})
 
 include(FindPackageHandleStandardArgs)
 # handle the QUIETLY and REQUIRED arguments and set NUMACTL_FOUND to TRUE

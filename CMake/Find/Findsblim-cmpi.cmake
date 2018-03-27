@@ -29,7 +29,9 @@
 #  SBLIM-CMPI_FOUND - sblim-cmpi found
 #  SBLIM-CMPI_INCLUDE_DIRS - sblim-cmpi include directories
 
-find_path(SBLIM-CMPI_INCLUDE_DIR cmpidt.h PATH_SUFFIXES cmpi)
+find_path(SBLIM-CMPI_INCLUDE_DIR cmpidt.h
+	HINTS ${SBLIM-CMPI_INCLUDE_PATH}
+	PATH_SUFFIXES cmpi)
 
 include(FindPackageHandleStandardArgs)
 # handle the QUIETLY and REQUIRED arguments and set SMLIM_CMPI_FOUND to TRUE
