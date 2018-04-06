@@ -34,6 +34,7 @@
 #define	LNX_ADAPTER_H_
 
 #include <stddef.h>
+#include <sys/user.h>
 #include <linux/ndctl.h>
 #include <ndctl/libndctl.h>
 
