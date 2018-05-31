@@ -1,4 +1,6 @@
-# ixpdimm_sw
+# ixpdimm_sw [deprecated]
+
+### This project has been replaced by ipmctl located at https://github.com/intel/ipmctl. This repo is not active and pull requests are no longer being accepted.
 
 IXPDIMM SW is application-level software for configuring and managing Intel DIMMs.
 It supports functionality to:
